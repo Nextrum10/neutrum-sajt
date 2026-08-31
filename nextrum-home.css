@@ -1,0 +1,785 @@
+/* ============================================================
+   NEXTRUM — STARTSIDA
+   Laddas bara av index.html, ovanpå nextrum.css.
+
+   Varför en egen fil: foralder.html och larare.html delar
+   nextrum.css. Allt som är unikt för startsidan ligger här så
+   att de två inloggade vyerna inte påverkas av en layoutändring.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   tillägg till design tokens
+   ------------------------------------------------------------ */
+:root{
+  /* Accent. Används sparsamt: siffror, highlights, progress,
+     erbjudande. Aldrig som stor yta. */
+  --acc:#FF5B34;
+  --acc-ink:#FFFFFF;
+  --acc-text:#D6410F;          /* accent som bär text på ljus yta */
+  --acc-soft:#FFF1EC;
+  --acc-line:rgba(255,91,52,.30);
+
+  --r-2xl:34px;
+  --r-3xl:44px;
+
+  --sh-sm:0 1px 2px rgba(10,10,10,.04), 0 3px 10px rgba(10,10,10,.04);
+  --sh-md:0 2px 6px rgba(10,10,10,.04), 0 16px 40px rgba(10,10,10,.07);
+  --sh-lg:0 4px 12px rgba(10,10,10,.05), 0 34px 80px rgba(10,10,10,.12);
+
+  --sec-tight:clamp(56px,7vw,104px);
+
+  /* något bredare sidyta än de inloggade vyerna — hero behöver luften */
+  --maxw:1320px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --acc-text:#FF8A66;
+    --acc-soft:rgba(255,91,52,.12);
+    --acc-line:rgba(255,91,52,.34);
+    --sh-sm:0 1px 2px rgba(0,0,0,.4);
+    --sh-md:0 2px 6px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.45);
+    --sh-lg:0 4px 12px rgba(0,0,0,.45), 0 34px 80px rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  --acc-text:#FF8A66;
+  --acc-soft:rgba(255,91,52,.12);
+  --acc-line:rgba(255,91,52,.34);
+  --sh-sm:0 1px 2px rgba(0,0,0,.4);
+  --sh-md:0 2px 6px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.45);
+  --sh-lg:0 4px 12px rgba(0,0,0,.45), 0 34px 80px rgba(0,0,0,.55);
+}
+
+/* ------------------------------------------------------------
+   typografi och småbitar som bara startsidan använder
+   ------------------------------------------------------------ */
+.d0{
+  font-size:clamp(2.6rem,5.1vw,4.6rem);
+  letter-spacing:-.05em;font-weight:800;line-height:.94;
+  text-wrap:balance;
+}
+.lede-lg{font-size:clamp(1.06rem,1.55vw,1.32rem);color:var(--muted);line-height:1.5;max-width:54ch}
+
+/* eyebrow med accentprick istället för streck — samma familj, mer liv */
+.eyebrow.acc{color:var(--acc-text)}
+.eyebrow.acc::before{
+  width:6px;height:6px;border-radius:100px;background:var(--acc);opacity:1;
+}
+
+.nx-kicker{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--f-mono);font-size:11px;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;
+  padding:7px 13px 7px 10px;border-radius:100px;
+  border:1px solid var(--line);background:var(--surface);color:var(--muted);
+}
+.nx-kicker i{width:6px;height:6px;border-radius:100px;background:var(--acc);flex:none}
+.on-band .nx-kicker{border-color:var(--band-line);background:var(--band-surface);color:var(--band-muted)}
+
+/* stor grafisk siffra */
+.nx-num{
+  font-family:var(--f-mono);font-weight:500;
+  font-size:clamp(2.4rem,4.6vw,3.4rem);
+  letter-spacing:-.04em;line-height:1;
+  color:var(--line-2);
+  font-variant-numeric:tabular-nums;
+  transition:color .3s var(--ease);
+}
+
+/* sektionsrubrik med plats för en åtgärd till höger */
+.nx-head{
+  display:grid;gap:clamp(20px,3vw,40px);
+  align-items:end;margin-bottom:clamp(38px,5vw,64px);
+}
+@media (min-width:900px){
+  .nx-head.split{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+  .nx-head.split .nx-head-aside{justify-self:end;text-align:left;max-width:42ch}
+}
+.nx-head .eyebrow{margin-bottom:18px}
+.nx-head h2{max-width:18ch}
+.nx-head .lede,.nx-head .lede-lg{margin-top:20px}
+
+/* ------------------------------------------------------------
+   header — renare, luftigare
+   ------------------------------------------------------------ */
+.hdr .nav{height:74px;gap:20px}
+.nav-links a{font-size:.875rem;font-weight:500}
+.nav-links a::after{
+  content:"";position:absolute;left:0;right:0;bottom:-7px;height:1.5px;
+  background:var(--acc);border-radius:2px;
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .28s var(--ease);
+}
+.nav-links a.active::after{transform:scaleX(1)}
+.nav-actions .login{color:var(--muted);transition:color .18s}
+.nav-actions .login:hover{color:var(--fg)}
+
+@media (min-width:1120px){.nav-links{display:flex}.nav-actions{display:flex}.burger{display:none}}
+@media (max-width:1119px){.nav-links{display:none}.nav-actions{display:none}.burger{display:flex}}
+.mobile-menu{inset:74px 0 0}
+.mobile-menu .m-foot{
+  margin-top:34px;padding-top:24px;border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+}
+
+/* ------------------------------------------------------------
+   1. HERO
+   ------------------------------------------------------------ */
+.nx-hero{
+  position:relative;overflow:clip;
+  padding-top:clamp(36px,5vw,64px);
+  padding-bottom:clamp(48px,6vw,88px);
+}
+.nx-hero::before{
+  /* mjuk ljuskälla uppe till höger, gör ytan mindre platt */
+  content:"";position:absolute;z-index:-1;
+  top:-360px;right:-240px;width:820px;height:820px;border-radius:100%;
+  background:radial-gradient(circle, var(--acc-soft) 0%, transparent 68%);
+  pointer-events:none;
+}
+@media (max-width:760px){
+  /* på liten skärm täcker en 820px-cirkel hela hero — krymp den */
+  .nx-hero::before{width:460px;height:460px;top:-230px;right:-160px;opacity:.75}
+}
+.nx-hero-grid{display:grid;gap:clamp(40px,5vw,60px);grid-template-columns:1fr;align-items:center}
+@media (min-width:1000px){
+  .nx-hero-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(40px,4vw,64px)}
+}
+.nx-hero h1{margin-top:24px}
+.nx-hero .lede-lg{margin-top:26px}
+.nx-hero-ctas{margin-top:34px;display:flex;flex-wrap:wrap;gap:12px}
+@media (max-width:520px){
+  .nx-hero-ctas{gap:10px}
+  .nx-hero-ctas .btn{width:100%}
+}
+.nx-hero-trust{
+  margin-top:30px;display:flex;flex-wrap:wrap;align-items:center;
+  gap:8px 16px;font-size:.83rem;color:var(--muted-2);
+}
+.nx-hero-trust li{display:flex;align-items:center;gap:8px}
+.nx-hero-trust li::before{
+  content:"";width:5px;height:5px;border-radius:100px;background:var(--acc);flex:none;
+}
+
+/* --- hero-visualen: designad bildyta, inte stockfoto --- */
+.nx-visual{position:relative;isolation:isolate}
+.nx-plate{
+  position:relative;border-radius:var(--r-2xl);overflow:hidden;
+  border:1px solid var(--line);
+  background:
+    radial-gradient(120% 90% at 78% 8%, rgba(255,91,52,.16) 0%, transparent 58%),
+    radial-gradient(100% 80% at 8% 96%, rgba(10,10,10,.06) 0%, transparent 60%),
+    var(--surface);
+  box-shadow:var(--sh-md);
+  aspect-ratio:1/1;
+}
+@media (min-width:1000px){.nx-plate{aspect-ratio:auto;min-height:520px}}
+.nx-plate svg.scene{position:absolute;inset:0;width:100%;height:100%}
+
+/* figur- och objektfärger i illustrationen */
+.scene .ink{fill:var(--fg)}
+.scene .ink-2{fill:var(--fg);opacity:.62}
+.scene .ink-3{fill:var(--fg);opacity:.16}
+.scene .paper{fill:var(--bg)}
+.scene .acc{fill:var(--acc)}
+.scene .acc-2{fill:var(--acc);opacity:.42}
+.scene .ln{fill:none;stroke:var(--fg);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.scene .ln-soft{fill:none;stroke:var(--fg);stroke-width:2;stroke-linecap:round;opacity:.28}
+.scene .glow{fill:var(--acc);opacity:.14}
+.scene .halo{fill:var(--fg);opacity:.045}
+.scene .ln-acc{fill:none;stroke:var(--acc);stroke-width:16;stroke-linecap:round;stroke-linejoin:round}
+.scene .ln-ink{fill:none;stroke:var(--fg);stroke-width:15;stroke-linecap:round;stroke-linejoin:round}
+
+/* flytande gränssnittskort ovanpå bildytan */
+.nx-chip{
+  position:absolute;z-index:2;
+  display:flex;align-items:center;gap:11px;
+  padding:12px 15px;border-radius:16px;
+  background:color-mix(in srgb, var(--bg) 86%, transparent);
+  border:1px solid var(--line);
+  box-shadow:var(--sh-md);
+  backdrop-filter:blur(14px) saturate(160%);
+  -webkit-backdrop-filter:blur(14px) saturate(160%);
+  animation:nx-float 7s var(--ease) infinite;
+}
+.nx-chip b{font-size:.83rem;font-weight:700;letter-spacing:-.015em;display:block}
+.nx-chip span{font-size:.72rem;color:var(--muted-2);display:block;margin-top:1px}
+.nx-chip .dot{
+  width:30px;height:30px;border-radius:100px;flex:none;display:grid;place-items:center;
+  background:var(--acc-soft);color:var(--acc-text);
+}
+.nx-chip .dot svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nx-chip.c1{left:-10px;top:16%}
+.nx-chip.c2{right:-8px;bottom:22%;animation-delay:-3.5s}
+.nx-chip.c3{left:8%;bottom:-16px;animation-delay:-1.8s}
+@media (max-width:620px){
+  /* på liten yta får korten inte lägga sig över figurerna */
+  .nx-chip{padding:10px 13px;border-radius:14px}
+  .nx-chip b{font-size:.79rem}
+  .nx-chip span{font-size:.68rem}
+  .nx-chip .dot{width:26px;height:26px}
+  .nx-chip.c1{left:-6px;top:6%;transform:scale(.94);transform-origin:left top}
+  .nx-chip.c2{right:-6px;bottom:-14px;transform:scale(.94);transform-origin:right bottom}
+  .nx-chip.c3{display:none}
+}
+@keyframes nx-float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-9px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .nx-chip{animation:none}
+  .nx-chip.c1,.nx-chip.c2{transform:none}
+}
+
+/* mini-progress inne i ett chip */
+.nx-chip-bar{width:74px;height:4px;border-radius:100px;background:var(--surface-2);overflow:hidden;margin-top:6px}
+.nx-chip-bar i{display:block;height:100%;width:72%;background:var(--acc);border-radius:100px}
+
+/* ------------------------------------------------------------
+   2. MER ÄN BARA LÄXHJÄLP — asymmetriskt rutnät
+   ------------------------------------------------------------ */
+.nx-bento{display:grid;gap:14px;grid-template-columns:1fr}
+@media (min-width:700px){.nx-bento{grid-template-columns:repeat(12,1fr)}}
+.nx-tile{
+  position:relative;overflow:hidden;
+  border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:clamp(26px,3vw,38px);
+  background:var(--bg);
+  display:flex;flex-direction:column;gap:14px;
+  transition:border-color .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease);
+}
+.nx-tile:hover{border-color:var(--line-2);transform:translateY(-3px);box-shadow:var(--sh-md)}
+.nx-tile:hover .nx-num{color:var(--acc)}
+.nx-tile h3{font-size:clamp(1.15rem,1.7vw,1.45rem);letter-spacing:-.028em}
+.nx-tile p{font-size:.95rem;color:var(--muted);line-height:1.55;max-width:46ch}
+.nx-tile .nx-num{margin-bottom:auto}
+@media (min-width:700px){
+  .nx-tile.w7{grid-column:span 7}
+  .nx-tile.w5{grid-column:span 5}
+}
+/* första brickan får en dekorativ yta så att raden inte blir fyra likadana kort */
+.nx-tile.lead{
+  background:
+    radial-gradient(90% 120% at 100% 0%, var(--acc-soft) 0%, transparent 62%),
+    var(--bg);
+}
+.nx-tile.lead h3{font-size:clamp(1.35rem,2.3vw,1.9rem)}
+.nx-tile.dark{
+  background:var(--band-bg);border-color:var(--band-line);color:var(--band-fg);
+}
+.nx-tile.dark h3{color:var(--band-fg)}
+.nx-tile.dark p{color:var(--band-muted)}
+.nx-tile.dark .nx-num{color:rgba(255,255,255,.28)}
+.nx-tile.dark:hover .nx-num{color:var(--acc)}
+
+/* ------------------------------------------------------------
+   3. SÅ HÄR GÅR DET TILL — 5 steg
+   ------------------------------------------------------------ */
+.nx-steps{display:grid;gap:0}
+@media (min-width:960px){.nx-steps{grid-template-columns:repeat(5,1fr);gap:0 clamp(16px,2vw,30px)}}
+
+.nx-step{
+  position:relative;padding:24px 0 24px 56px;
+  border-top:1px solid var(--line);
+}
+.nx-step:last-child{border-bottom:1px solid var(--line)}
+.nx-step h3{font-size:1.08rem;letter-spacing:-.025em;margin-bottom:8px}
+.nx-step p{font-size:.9rem;color:var(--muted);line-height:1.55;max-width:40ch}
+.nx-step .n{
+  position:absolute;left:0;top:22px;
+  font-weight:800;font-size:1.6rem;letter-spacing:-.05em;line-height:1;
+  color:var(--line-2);font-variant-numeric:tabular-nums;
+  transition:color .3s var(--ease);
+}
+.nx-step:hover .n{color:var(--acc)}
+
+@media (min-width:960px){
+  .nx-step{
+    padding:26px 0 0;border-top:2px solid var(--line);border-bottom:none;
+  }
+  .nx-step:last-child{border-bottom:none}
+  .nx-step .n{
+    position:static;display:block;margin-bottom:20px;
+    font-size:clamp(2.2rem,3.4vw,3rem);
+  }
+  .nx-step p{max-width:24ch}
+  .nx-step::before{
+    content:"";position:absolute;left:0;top:-2px;height:2px;width:0;
+    background:var(--acc);transition:width .5s var(--ease);
+  }
+  .nx-step:hover::before{width:100%}
+}
+
+/* ------------------------------------------------------------
+   4. STUDIEHJÄLPARE
+   ------------------------------------------------------------ */
+.showcase{display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:620px){.showcase{grid-template-columns:1fr 1fr}}
+@media (min-width:1040px){.showcase{grid-template-columns:repeat(3,1fr)}}
+
+.showcase .sc-card{
+  border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:0;overflow:hidden;background:var(--bg);
+  display:flex;flex-direction:column;gap:0;
+  transition:border-color .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease);
+}
+.showcase .sc-card:hover{border-color:var(--line-2);transform:translateY(-3px);box-shadow:var(--sh-md)}
+.sc-top{
+  display:flex;align-items:center;gap:14px;
+  padding:22px 22px 18px;border-bottom:1px solid var(--line);
+}
+.sc-face{
+  width:56px;height:56px;flex:none;border-radius:18px;
+  display:grid;place-items:center;
+  font-weight:800;font-size:1.25rem;letter-spacing:-.03em;
+  color:var(--fg);
+  background:linear-gradient(140deg, var(--acc-soft) 0%, var(--surface-2) 100%);
+  border:1px solid var(--line);
+}
+.sc-card .sc-name{font-weight:700;font-size:1.05rem;letter-spacing:-.025em}
+.sc-card .sc-role{font-size:.79rem;color:var(--muted-2);margin-top:3px;line-height:1.4}
+.sc-body{padding:20px 22px 22px;display:flex;flex-direction:column;gap:16px;flex:1}
+.sc-card p{font-size:.92rem;color:var(--muted);line-height:1.55;flex:1;margin:0}
+.showcase .tutor-meta{gap:6px;margin-top:auto}
+.showcase .tag{border-radius:100px;padding:5px 10px}
+
+/* empty state — ska se avsiktlig ut, inte trasig */
+.nx-empty{
+  border:1px dashed var(--line-2);border-radius:var(--r-lg);
+  padding:clamp(40px,6vw,72px) clamp(24px,4vw,40px);
+  text-align:center;background:var(--surface);
+}
+.nx-empty .ico{
+  width:52px;height:52px;margin:0 auto 20px;border-radius:100px;
+  display:grid;place-items:center;background:var(--bg);border:1px solid var(--line);
+  color:var(--acc-text);
+}
+.nx-empty .ico svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nx-empty b{display:block;font-size:1.15rem;letter-spacing:-.028em;margin-bottom:10px}
+.nx-empty p{font-size:.95rem;color:var(--muted);max-width:46ch;margin:0 auto;line-height:1.6}
+.nx-empty .btn,.nx-empty .link-arrow{margin-top:24px}
+.on-band .nx-empty{background:var(--band-surface);border-color:var(--band-line)}
+
+/* fallbacken som kollaKoppling() skriver in ska se lika omsorgsfull ut */
+.showcase .empty{
+  grid-column:1/-1;border-radius:var(--r-lg);background:var(--surface);
+  padding:clamp(40px,6vw,64px) clamp(24px,4vw,40px);line-height:1.6;
+}
+
+/* ------------------------------------------------------------
+   5. VARFÖR NEXTRUM — produktsektion
+   ------------------------------------------------------------ */
+.nx-product{
+  background:var(--surface);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.nx-product-grid{display:grid;gap:clamp(40px,5vw,72px);grid-template-columns:1fr;align-items:center}
+@media (min-width:1000px){.nx-product-grid{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr)}}
+
+.nx-pillar{
+  border-top:1px solid var(--line-2);padding-top:22px;margin-top:26px;
+}
+.nx-pillar .eyebrow{margin-bottom:12px}
+.nx-pillar h3{font-size:clamp(1.15rem,1.9vw,1.4rem);letter-spacing:-.03em;margin-bottom:10px}
+.nx-pillar p{font-size:.95rem;color:var(--muted);line-height:1.6;max-width:44ch}
+
+/* --- studievyn: mockup --- */
+.nx-mock{
+  border:1px solid var(--line-2);border-radius:var(--r-lg);
+  background:var(--bg);overflow:hidden;box-shadow:var(--sh-lg);
+}
+.nx-mock-bar{
+  display:flex;align-items:center;gap:8px;padding:12px 16px;
+  border-bottom:1px solid var(--line);background:var(--surface);
+}
+.nx-mock-bar i{width:9px;height:9px;border-radius:100px;background:var(--line-2);display:block;flex:none}
+.nx-mock-bar .url{
+  margin-left:8px;font-family:var(--f-mono);font-size:10.5px;color:var(--muted-2);
+  background:var(--bg);border:1px solid var(--line);border-radius:100px;
+  padding:5px 12px;letter-spacing:.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.nx-mock-body{padding:clamp(16px,2.2vw,22px);display:grid;gap:12px}
+@media (min-width:520px){.nx-mock-body{grid-template-columns:1.15fr .85fr}}
+
+.nx-mock-top{
+  grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;margin-bottom:2px;
+}
+.nx-mock-top b{font-size:1rem;letter-spacing:-.03em}
+.nx-mock-top .who{display:flex;align-items:center;gap:9px}
+.nx-mock-top .who .av{
+  width:30px;height:30px;border-radius:100px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(140deg,var(--acc-soft),var(--surface-2));
+  border:1px solid var(--line);font-size:.72rem;font-weight:800;
+}
+.nx-mock-top .who span{font-size:.74rem;color:var(--muted-2);display:block}
+
+.nx-card{
+  border:1px solid var(--line);border-radius:var(--r-md);padding:16px;
+  background:var(--bg);min-width:0;
+}
+.nx-card h6{
+  margin:0 0 14px;font-family:var(--f-mono);font-size:9.5px;font-weight:500;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--muted-2);
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+}
+.nx-card h6 em{font-style:normal;color:var(--acc-text)}
+.nx-card.span2{grid-column:1/-1}
+
+/* progressrader */
+.nx-prog{display:flex;flex-direction:column;gap:7px}
+.nx-prog+.nx-prog{margin-top:14px}
+.nx-prog .t{display:flex;justify-content:space-between;align-items:baseline;font-size:.82rem;gap:10px}
+.nx-prog .t b{font-weight:600}
+.nx-prog .t span{font-family:var(--f-mono);font-size:.72rem;color:var(--muted-2)}
+.nx-bar{height:6px;border-radius:100px;background:var(--surface-2);overflow:hidden}
+.nx-bar i{
+  display:block;height:100%;width:0;border-radius:100px;background:var(--fg);
+  transition:width 1.2s var(--ease) .25s;
+}
+.nx-bar i.is-acc{background:var(--acc)}
+.rv.in .nx-bar i{width:var(--w,50%)}
+@media (prefers-reduced-motion:reduce){.nx-bar i{transition:none;width:var(--w,50%)}}
+
+/* lista med kommande pass */
+.nx-row{
+  display:flex;align-items:center;gap:11px;padding:10px 0;
+  border-bottom:1px solid var(--line);font-size:.83rem;
+}
+.nx-row:last-child{border-bottom:none;padding-bottom:0}
+.nx-row:first-of-type{padding-top:0}
+.nx-row .when{
+  font-family:var(--f-mono);font-size:.71rem;color:var(--muted-2);
+  width:58px;flex:none;
+}
+.nx-row .what{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nx-row .st{
+  margin-left:auto;flex:none;font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;
+  text-transform:uppercase;padding:3px 8px;border-radius:100px;
+  border:1px solid var(--line);color:var(--muted-2);
+}
+.nx-row .st.ok{border-color:var(--acc-line);color:var(--acc-text);background:var(--acc-soft)}
+
+/* liten plan-/rapporttext */
+.nx-note{font-size:.83rem;color:var(--muted);line-height:1.6}
+.nx-note b{color:var(--fg);font-weight:600}
+.nx-chips{display:flex;flex-wrap:wrap;gap:6px}
+.nx-chips span{
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid var(--line);border-radius:100px;color:var(--muted-2);
+}
+
+/* ------------------------------------------------------------
+   6. INTRESSEANMÄLAN
+   ------------------------------------------------------------ */
+.nx-lead-grid{display:grid;gap:clamp(32px,4vw,60px);grid-template-columns:1fr;align-items:start}
+@media (min-width:940px){.nx-lead-grid{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr)}}
+.nx-panel{
+  border:1px solid var(--line);border-radius:var(--r-xl);
+  padding:clamp(24px,3.2vw,40px);background:var(--bg);box-shadow:var(--sh-sm);
+}
+.nx-panel .form-grid{gap:16px}
+.nx-steplist{display:grid;gap:2px;margin-top:32px}
+.nx-steplist li{
+  display:flex;gap:14px;align-items:flex-start;padding:14px 0;
+  border-top:1px solid var(--line);
+}
+.nx-steplist li:last-child{border-bottom:1px solid var(--line)}
+.nx-steplist em{
+  font-family:var(--f-mono);font-style:normal;font-size:.72rem;letter-spacing:.1em;
+  color:var(--muted-2);flex:none;padding-top:2px;width:26px;
+}
+.nx-steplist b{display:block;font-size:.94rem;font-weight:600;letter-spacing:-.015em}
+.nx-steplist span{display:block;font-size:.85rem;color:var(--muted);margin-top:2px}
+.nx-steplist li.on em{color:var(--acc-text)}
+
+/* fältetiketter lite tydligare i det stora formuläret */
+.nx-panel .pay-field label{font-size:.78rem;color:var(--muted);font-weight:600}
+.nx-panel .inp,.nx-panel .sel{border-radius:var(--r-sm)}
+.nx-submit-row{
+  grid-column:1/-1;display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+  padding-top:4px;
+}
+.nx-fineprint{font-size:.8rem;color:var(--muted-2);grid-column:1/-1;line-height:1.5}
+
+/* ------------------------------------------------------------
+   7. BLI STUDIEHJÄLPARE (mörkt band)
+   ------------------------------------------------------------ */
+.nx-perks{display:grid;gap:1px;background:var(--band-line);border:1px solid var(--band-line);border-radius:var(--r-lg);overflow:hidden}
+@media (min-width:600px){.nx-perks{grid-template-columns:1fr 1fr}}
+@media (min-width:960px){.nx-perks{grid-template-columns:repeat(5,1fr)}}
+.nx-perk{background:var(--band-bg);padding:26px 22px;display:flex;flex-direction:column;gap:12px}
+.nx-perk .i{
+  width:34px;height:34px;border-radius:100px;display:grid;place-items:center;
+  background:var(--band-surface);border:1px solid var(--band-line);color:var(--acc);
+}
+.nx-perk .i svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nx-perk b{font-size:.98rem;font-weight:700;letter-spacing:-.022em;color:var(--band-fg)}
+.nx-perk p{font-size:.85rem;color:var(--band-muted);line-height:1.5}
+
+.nx-apply-flow{display:grid;gap:14px;grid-template-columns:1fr;counter-reset:s}
+@media (min-width:640px){.nx-apply-flow{grid-template-columns:repeat(4,1fr)}}
+.nx-apply-step{
+  border:1px solid var(--band-line);border-radius:var(--r-md);
+  padding:20px;background:var(--band-surface);
+}
+.nx-apply-step em{
+  font-family:var(--f-mono);font-style:normal;font-size:10px;letter-spacing:.14em;
+  color:var(--acc);display:block;margin-bottom:10px;
+}
+.nx-apply-step b{font-size:1rem;font-weight:700;letter-spacing:-.02em;color:var(--band-fg);display:block}
+.nx-apply-step p{font-size:.82rem;color:var(--band-muted);margin-top:6px;line-height:1.5}
+
+/* ------------------------------------------------------------
+   8. PRIS
+   ------------------------------------------------------------ */
+.nx-price-grid{display:grid;gap:clamp(20px,3vw,32px);grid-template-columns:1fr;align-items:start}
+@media (min-width:900px){.nx-price-grid{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)}}
+
+.nx-price-card{
+  border:1px solid var(--line-2);border-radius:var(--r-2xl);
+  padding:clamp(30px,4vw,52px);background:var(--bg);box-shadow:var(--sh-sm);
+  position:relative;overflow:hidden;
+}
+.nx-price-card::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(80% 60% at 100% 0%, var(--acc-soft) 0%, transparent 60%);
+}
+.nx-price-card>*{position:relative}
+.nx-amount{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:18px 0 6px}
+.nx-amount b{
+  font-size:clamp(3.4rem,8vw,5.6rem);font-weight:800;letter-spacing:-.055em;line-height:.9;
+  font-variant-numeric:tabular-nums;
+}
+.nx-amount .per{font-size:1.05rem;color:var(--muted);font-weight:500}
+.nx-price-sub{font-size:.92rem;color:var(--muted)}
+.nx-incl{margin:30px 0;display:grid;gap:13px}
+@media (min-width:640px){.nx-incl{grid-template-columns:1fr 1fr;gap:13px 24px}}
+.nx-incl li{display:flex;gap:11px;align-items:flex-start;font-size:.93rem}
+.nx-incl .ck{
+  width:19px;height:19px;flex:none;margin-top:1px;border-radius:100px;
+  display:grid;place-items:center;background:var(--acc-soft);color:var(--acc-text);
+}
+.nx-incl .ck svg{width:11px;height:11px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+.nx-offer{
+  border:1px solid var(--acc-line);border-radius:var(--r-2xl);
+  padding:clamp(26px,3.4vw,38px);
+  background:linear-gradient(165deg, var(--acc-soft) 0%, var(--bg) 78%);
+  position:relative;overflow:hidden;
+}
+.nx-offer .tagline{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  padding:6px 12px;border-radius:100px;background:var(--acc);color:var(--acc-ink);
+  font-weight:500;
+}
+.nx-offer h3{font-size:clamp(1.5rem,2.6vw,2.05rem);letter-spacing:-.035em;margin:20px 0 12px}
+.nx-offer p{font-size:.95rem;color:var(--muted);line-height:1.6;max-width:38ch}
+.nx-offer .btn{margin-top:24px}
+.nx-terms{
+  margin-top:20px;border-top:1px solid var(--line);padding-top:18px;
+  font-size:.8rem;color:var(--muted-2);line-height:1.55;
+}
+
+/* ------------------------------------------------------------
+   9. TRYGGHET
+   ------------------------------------------------------------ */
+.nx-safe{display:grid;gap:14px;grid-template-columns:1fr}
+@media (min-width:640px){.nx-safe{grid-template-columns:1fr 1fr}}
+@media (min-width:1040px){.nx-safe{grid-template-columns:repeat(4,1fr)}}
+.nx-safe-card{
+  border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:clamp(24px,2.8vw,30px);background:var(--bg);
+  display:flex;flex-direction:column;gap:14px;
+  transition:border-color .3s var(--ease),transform .3s var(--ease);
+}
+.nx-safe-card:hover{border-color:var(--line-2);transform:translateY(-3px)}
+.nx-safe-card .i{
+  width:40px;height:40px;border-radius:13px;display:grid;place-items:center;
+  border:1px solid var(--line);background:var(--surface);color:var(--fg);
+}
+.nx-safe-card .i svg{width:19px;height:19px;stroke:currentColor;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nx-safe-card b{font-size:1rem;font-weight:700;letter-spacing:-.024em}
+.nx-safe-card p{font-size:.89rem;color:var(--muted);line-height:1.55}
+
+.nx-statement{
+  margin-top:clamp(40px,5vw,68px);
+  border-top:1px solid var(--line);padding-top:clamp(32px,4vw,52px);
+  text-align:center;
+}
+.nx-statement p{
+  font-size:clamp(1.5rem,3.4vw,2.4rem);font-weight:700;letter-spacing:-.038em;
+  line-height:1.15;max-width:20ch;margin:0 auto;text-wrap:balance;
+}
+.nx-statement p em{font-style:normal;color:var(--acc-text)}
+
+/* ------------------------------------------------------------
+   10-11. FAQ
+   ------------------------------------------------------------ */
+.nx-faq-grid{display:grid;gap:clamp(28px,4vw,56px);grid-template-columns:1fr;align-items:start}
+@media (min-width:960px){.nx-faq-grid{grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr)}}
+@media (min-width:960px){.nx-faq-aside{position:sticky;top:110px}}
+
+.faq{border-top:1px solid var(--line)}
+.faq-item{border-bottom:1px solid var(--line)}
+.faq-q{padding:24px 0;gap:24px;transition:color .2s}
+.faq-q:hover{color:var(--acc-text)}
+.faq-q .pm{
+  width:30px;height:30px;border-radius:100px;border:1px solid var(--line);
+  display:grid;place-items:center;transition:border-color .25s,background .25s;
+}
+.faq-q:hover .pm{border-color:var(--line-2)}
+.faq-q[aria-expanded="true"] .pm{background:var(--fg);border-color:var(--fg)}
+.faq-q[aria-expanded="true"] .pm::before,
+.faq-q[aria-expanded="true"] .pm::after{background:var(--bg)}
+.faq-a p{padding-bottom:26px;font-size:.96rem;line-height:1.65}
+
+/* ------------------------------------------------------------
+   12. KONTAKT
+   ------------------------------------------------------------ */
+.nx-contact-card{
+  border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:22px;background:var(--surface);display:grid;gap:6px;
+}
+.nx-contact-card+.nx-contact-card{margin-top:12px}
+.nx-contact-card .k{
+  font-family:var(--f-mono);font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted-2);
+}
+.nx-contact-card a{font-size:1.08rem;font-weight:700;letter-spacing:-.025em}
+.nx-contact-card a:hover{color:var(--acc-text)}
+.nx-contact-card span.v{font-size:1rem;font-weight:600;letter-spacing:-.02em}
+
+/* ------------------------------------------------------------
+   13. FINAL CTA
+   ------------------------------------------------------------ */
+.nx-final{
+  position:relative;overflow:hidden;
+  background:var(--band-bg);color:var(--band-fg);
+  border-top:1px solid var(--band-line);
+}
+.nx-final::before{
+  content:"";position:absolute;inset:auto 50% -420px auto;transform:translateX(50%);
+  width:900px;height:900px;border-radius:100%;
+  background:radial-gradient(circle, rgba(255,91,52,.20) 0%, transparent 62%);
+  pointer-events:none;
+}
+.nx-final .inner{position:relative;text-align:center}
+.nx-final h2{color:var(--band-fg);max-width:15ch;margin:0 auto}
+.nx-final p{color:var(--band-muted);margin:24px auto 0;max-width:46ch;font-size:clamp(1rem,1.4vw,1.16rem)}
+.nx-final .nx-hero-ctas{justify-content:center;margin-top:36px}
+.nx-final .nx-hero-trust{justify-content:center;color:var(--band-muted);margin-top:28px}
+@media (max-width:520px){.nx-final .nx-hero-ctas .btn{width:100%}}
+
+/* ------------------------------------------------------------
+   footer
+   ------------------------------------------------------------ */
+.ftr{border-top:1px solid var(--band-line)}
+.ftr-top{gap:44px}
+@media (min-width:820px){.ftr-top{grid-template-columns:1.5fr 1fr 1fr 1fr;gap:32px}}
+.ftr ul a{font-size:.88rem}
+.ftr ul a:hover{color:var(--band-fg)}
+.ftr-bot{
+  margin-top:clamp(40px,5vw,64px);padding-top:24px;border-top:1px solid var(--band-line);
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  font-size:.8rem;color:var(--band-muted);
+}
+
+/* ------------------------------------------------------------
+   delade småfixar för startsidan
+   ------------------------------------------------------------ */
+.sec-tight{padding-top:var(--sec-tight);padding-bottom:var(--sec-tight)}
+.nx-surface{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.link-arrow{border-bottom-color:var(--line-2)}
+.link-arrow:hover{color:var(--acc-text);border-color:var(--acc-line)}
+.on-band .link-arrow:hover{color:var(--acc);border-color:var(--acc-line)}
+
+/* knapparna: lite mjukare hover än ren opacity */
+.btn-primary:hover{opacity:1;background:color-mix(in srgb, var(--btn-bg) 86%, var(--acc) 14%)}
+.btn-lg{padding:16px 30px}
+
+/* reveal: låt barnen i ett avslöjat block komma in stegvis */
+.rv-stagger>*{opacity:0;transform:translateY(16px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.rv-stagger.in>*{opacity:1;transform:none}
+.rv-stagger.in>*:nth-child(1){transition-delay:.04s}
+.rv-stagger.in>*:nth-child(2){transition-delay:.10s}
+.rv-stagger.in>*:nth-child(3){transition-delay:.16s}
+.rv-stagger.in>*:nth-child(4){transition-delay:.22s}
+.rv-stagger.in>*:nth-child(5){transition-delay:.28s}
+@media (prefers-reduced-motion:reduce){
+  .rv-stagger>*{opacity:1;transform:none;transition:none}
+}
+
+/* ------------------------------------------------------------
+   UNDERSIDOR (priser.html, faq.html, bli-studiehjalpare.html)
+   Samma formspråk som startsidan, men en kompaktare toppsektion.
+   ------------------------------------------------------------ */
+.nx-page-hero{
+  position:relative;overflow:clip;
+  padding-top:clamp(40px,5vw,72px);
+  padding-bottom:clamp(36px,4.5vw,64px);
+}
+.nx-page-hero::before{
+  content:"";position:absolute;z-index:-1;
+  top:-380px;right:-220px;width:760px;height:760px;border-radius:100%;
+  background:radial-gradient(circle, var(--acc-soft) 0%, transparent 66%);
+  pointer-events:none;
+}
+@media (max-width:760px){
+  .nx-page-hero::before{width:440px;height:440px;top:-240px;right:-150px;opacity:.75}
+}
+.nx-page-hero .nx-back{margin-bottom:2px}
+.nx-page-hero h1{margin-top:20px;max-width:15ch}
+.nx-page-hero .lede-lg{margin-top:22px}
+.nx-page-hero .nx-hero-ctas{margin-top:30px}
+.nx-page-hero.on-band{background:var(--band-bg);color:var(--band-fg)}
+.nx-page-hero.on-band h1{color:var(--band-fg)}
+.nx-page-hero.on-band .lede-lg{color:var(--band-muted)}
+.nx-page-hero.on-band::before{background:radial-gradient(circle, rgba(255,91,52,.20) 0%, transparent 62%)}
+
+/* tillbakalänk högst upp på undersidor */
+.nx-back{
+  display:inline-flex;align-items:center;gap:8px;
+  width:fit-content;
+  font-size:.83rem;color:var(--muted-2);
+  transition:color .18s var(--ease),gap .18s var(--ease);
+}
+.nx-back:hover{color:var(--fg);gap:11px}
+.nx-back svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.on-band .nx-back{color:var(--band-muted)}
+.on-band .nx-back:hover{color:var(--band-fg)}
+
+/* grupperad FAQ */
+.nx-faq-group+.nx-faq-group{margin-top:clamp(40px,5vw,64px)}
+.nx-faq-group>.eyebrow{margin-bottom:18px}
+
+/* enkel tvåkolumnstext */
+.nx-two{display:grid;gap:clamp(28px,4vw,56px);grid-template-columns:1fr;align-items:start}
+@media (min-width:900px){.nx-two{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
+@media (min-width:900px){.nx-two.even{grid-template-columns:1fr 1fr}}
+@media (min-width:900px){.nx-two-sticky{position:sticky;top:110px}}
+
+/* krav-/punktlista med accentmarkör */
+.nx-list{display:grid;gap:0}
+.nx-list li{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:18px 0;border-top:1px solid var(--line);
+}
+.nx-list li:last-child{border-bottom:1px solid var(--line)}
+.nx-list em{
+  font-family:var(--f-mono);font-style:normal;font-size:.72rem;letter-spacing:.1em;
+  color:var(--acc-text);flex:none;padding-top:3px;width:24px;
+}
+.nx-list b{display:block;font-size:1rem;font-weight:600;letter-spacing:-.02em}
+.nx-list p{font-size:.9rem;color:var(--muted);margin-top:4px;line-height:1.55}
+.on-band .nx-list li{border-color:var(--band-line)}
+.on-band .nx-list b{color:var(--band-fg)}
+.on-band .nx-list p{color:var(--band-muted)}
+
+/* formulärpanel som fyller en egen sektion */
+.nx-form-section{display:grid;gap:clamp(30px,4vw,56px);grid-template-columns:1fr;align-items:start}
+@media (min-width:940px){.nx-form-section{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
+.nx-panel .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:460px){.nx-panel .row2{grid-template-columns:1fr}}

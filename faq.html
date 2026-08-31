@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vanliga frågor — Nextrum</title>
+<meta name="description" content="Svar på det ni brukar undra om Nextrum: matchning, priser, betalning, trygghet och hur det är att jobba som studiehjälpare.">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css">
+</head>
+<body>
+<!-- ==========================================================
+     HEADER — identisk på alla publika sidor.
+     Ändrar du här måste du ändra i index.html, priser.html,
+     faq.html och bli-studiehjalpare.html. Länkarna skrivs som
+     "index.html#om"; på startsidan kortar nextrum-app.js ner dem
+     till rena ankare så att man scrollar istället för att ladda om.
+     ========================================================== -->
+<header class="hdr" id="hdr">
+  <div class="wrap nav">
+    <a href="index.html" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true">
+        <rect width="26" height="26" rx="7"/>
+        <path d="M8 18.5V7.5L18 18.5V7.5"/>
+      </svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Huvudmeny">
+      <a href="index.html#om" data-nav>Om oss</a>
+      <a href="index.html#hur" data-nav>Så fungerar det</a>
+      <a href="index.html#plattformen" data-nav>För föräldrar</a>
+      <a href="bli-studiehjalpare.html" data-nav>Bli studiehjälpare</a>
+      <a href="priser.html" data-nav>Priser</a>
+      <a href="faq.html" data-nav>FAQ</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="login" href="foralder.html" id="login-link">Logga in</a>
+      <a class="btn btn-primary btn-sm" href="index.html#intresse">Intresseanmälan</a>
+    </div>
+
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="index.html#om">Om oss <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#hur">Så fungerar det <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#plattformen">För föräldrar <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="bli-studiehjalpare.html">Bli studiehjälpare <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="priser.html">Priser <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="faq.html">FAQ <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions">
+    <a class="btn btn-primary btn-block btn-lg" href="index.html#intresse">Skicka intresseanmälan</a>
+    <a class="btn btn-ghost btn-block btn-lg" href="foralder.html">Logga in</a>
+  </div>
+  <div class="m-foot">
+    <span class="xsmall">Av unga, för unga.</span>
+    <a class="xsmall" href="mailto:hej@nextrum.se">hej@nextrum.se</a>
+  </div>
+</div>
+
+<main>
+
+<section class="wrap nx-page-hero">
+  <a class="nx-back" href="index.html"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
+  <span class="eyebrow acc rv" style="display:flex;margin-top:22px">FAQ</span>
+  <h1 class="d0 rv">Vanliga frågor</h1>
+  <p class="lede-lg rv">Det ni brukar undra, samlat. Hittar du inte svaret — <a href="index.html#kontakt" style="color:var(--fg);text-decoration:underline;text-underline-offset:3px">skriv till oss</a> så svarar vi.</p>
+</section>
+
+<section class="sec wrap" style="padding-top:clamp(24px,3vw,40px)">
+  <div class="rv">
+      <div class="nx-faq-group">
+        <span class="eyebrow acc">Om Nextrum</span>
+        <h2 class="d3" style="margin:0 0 22px">Hur det fungerar</h2>
+        <div class="faq">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Hur fungerar matchningen?<span class="pm"></span></button>
+          <div class="faq-a"><p>Ni skickar in en intresseanmälan, vi går igenom behovet tillsammans med er och väljer sedan ut den studiehjälpare som passar eleven bäst — utifrån ämne, nivå, behov och personlighet. Ni bläddrar alltså inte i en katalog: vi gör matchningen åt er, eftersom fel match är värre än ingen match.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Varför kan jag inte boka en studiehjälpare direkt på sidan?<span class="pm"></span></button>
+          <div class="faq-a"><p>För att en studiehjälpare som är grym på matte i åk 9 inte automatiskt är rätt person för ett barn i åk 4 som tappat självförtroendet. Vi går igenom behovet med er först och väljer sedan ut en person. Det tar oss någon dag extra och sparar er veckor.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vilka ämnen erbjuder ni?<span class="pm"></span></button>
+          <div class="faq-a"><p>Vanligast är matematik, svenska och engelska, men vi förmedlar även hjälp i NO-ämnen, SO-ämnen, moderna språk och programmering. Berätta i intresseanmälan vad ni behöver så säger vi till om vi har rätt person.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Kan läxhjälpen ske online?<span class="pm"></span></button>
+          <div class="faq-a"><p>Ja. Ni väljer själva om passen ska hållas online eller på plats, och kan byta mellan formaten från pass till pass. Online fungerar för de flesta ämnen och gör det lättare att hitta rätt person oavsett var ni bor.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vad händer efter varje pass?<span class="pm"></span></button>
+          <div class="faq-a"><p>Studiehjälparen skriver en rapport om vad ni gick igenom och hur det gick, och ni får tillgång till extra digitala uppgifter. Rapporterna samlas i studievyn så att ni ser utvecklingen över tid.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vad är studievyn?<span class="pm"></span></button>
+          <div class="faq-a"><p>Det är den inloggade vyn där elev och förälder ser studieplanen, kommande pass, rapporter och utvecklingen på ett och samma ställe. Den låses upp när matchningen är klar.</p></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="nx-faq-group">
+        <span class="eyebrow acc">Priser och betalning</span>
+        <h2 class="d3" style="margin:0 0 22px">Vad det kostar</h2>
+        <div class="faq">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vad kostar Nextrum?<span class="pm"></span></button>
+          <div class="faq-a"><p>Läxhjälp kostar <span data-stat="pris-inline">349 kr</span> i timmen. I priset ingår matchning, studieplan, bokning, administration och betalningshantering. Det finns ingen anmälningsavgift och ingen bindningstid. <a href="priser.html" style="text-decoration:underline;text-underline-offset:3px">Se hela prissidan</a>.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Hur fungerar betalningen?<span class="pm"></span></button>
+          <div class="faq-a"><p>Betalningen sker genom Nextrum. Ni betalar aldrig studiehjälparen direkt, och inga pengar byter händer under passet. Det gör det tryggare för båda parter och enklare att hålla koll på vad som faktiskt utförts.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Hur ofta måste vi boka?<span class="pm"></span></button>
+          <div class="faq-a"><p>Ni bestämmer själva. Vissa familjer bokar ett pass i veckan, andra bara inför ett prov. Det finns ingen miniminivå ni måste upp i.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Kan jag avsluta när som helst?<span class="pm"></span></button>
+          <div class="faq-a"><p>Ja. Det finns ingen bindningstid och ingen uppsägningstid. Ni kan pausa, byta studiehjälpare eller avsluta helt — hör bara av er.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Kostar det något att skicka in en intresseanmälan?<span class="pm"></span></button>
+          <div class="faq-a"><p>Nej. Att skicka in en intresseanmälan och prata med oss om vad ni behöver är gratis, och ni binder er inte till något.</p></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="nx-faq-group">
+        <span class="eyebrow acc">För dig som vill jobba</span>
+        <h2 class="d3" style="margin:0 0 22px">Att vara studiehjälpare</h2>
+        <div class="faq">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vem kan bli studiehjälpare?<span class="pm"></span></button>
+          <div class="faq-a"><p>Du som går på gymnasiet eller högskolan och är trygg i de ämnen du vill hjälpa till med. Vi tittar lika mycket på hur du förklarar och bemöter andra som på vilka betyg du har. <a href="bli-studiehjalpare.html" style="text-decoration:underline;text-underline-offset:3px">Läs mer och ansök</a>.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Hur väljer ni studiehjälpare?<span class="pm"></span></button>
+          <div class="faq-a"><p>Alla som ansöker går igenom ansökan, en intervju och Nextrums kontroller innan de godkänns. Först därefter kan de matchas med en elev. Efter varje pass samlar vi in återkoppling, och den som inte håller måttet får inte fler uppdrag.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Hur mycket behöver jag jobba?<span class="pm"></span></button>
+          <div class="faq-a"><p>Du bestämmer själv vilka ämnen du tar, hur mycket du jobbar och när. Det finns ingen miniminivå — men eleven mår bäst av att ha samma person vecka efter vecka, så räkna med att det du tackar ja till är något du håller.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Hur får jag betalt?<span class="pm"></span></button>
+          <div class="faq-a"><p>All betalning går genom Nextrum, aldrig direkt mellan elev och studiehjälpare. Du ser dina arbetade timmar i studiehjälparvyn.</p></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="nx-faq-group">
+        <span class="eyebrow acc">Trygghet</span>
+        <h2 class="d3" style="margin:0 0 22px">Trygghet och integritet</h2>
+        <div class="faq">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Är det tryggt?<span class="pm"></span></button>
+          <div class="faq-a"><p>Alla studiehjälpare går igenom Nextrums urvals- och kontrollprocess innan de matchas med en elev. Betalningen sker genom Nextrum och kommunikationen via plattformen, så att föräldern alltid har insyn i vad som bokas och sägs.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vad händer med våra uppgifter?<span class="pm"></span></button>
+          <div class="faq-a"><p>Vi säljer aldrig vidare era uppgifter. Vi använder dem för att kunna matcha er, kontakta er och sköta bokning och betalning.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vad gör jag om matchningen inte känns rätt?<span class="pm"></span></button>
+          <div class="faq-a"><p>Hör av dig till oss så byter vi. Det är inget krångel och kostar ingenting — en match som inte fungerar är sämre för alla.</p></div>
+        </div>
+        </div>
+      </div>
+  </div>
+</section>
+
+<section class="nx-surface">
+  <div class="sec wrap">
+    <div class="nx-empty rv">
+      <span class="ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H11l-5 4v-4H4z"/></svg></span>
+      <b>Fick du inte svar?</b>
+      <p>Skriv till oss så återkommer vi på mejlen du anger. Vi svarar på allt — även frågor du tycker känns dumma.</p>
+      <a class="btn btn-primary" href="index.html#kontakt">Kontakta oss <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ==========================================================
+     FOOTER — identisk på alla publika sidor, se kommentaren
+     vid headern.
+     ========================================================== -->
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        <a href="index.html" class="logo">
+          <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+          <span class="logo-text">Nextrum</span>
+        </a>
+        <p>Av unga, för unga.</p>
+        <div class="socials">
+          <a href="index.html#kontakt" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm8.4-11.2a1.55 1.55 0 11-3.1 0 1.55 1.55 0 013.1 0z"/></svg></a>
+          <a href="index.html#kontakt" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M16.6 2h-3.1v13.2a2.6 2.6 0 11-2.2-2.6v-3.2a5.8 5.8 0 105.3 5.8V9.1a6.9 6.9 0 004 1.3V7.2a3.9 3.9 0 01-4-4z"/></svg></a>
+          <a href="index.html#kontakt" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9.5 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.75-1.95 4 0 4.75 2.5 4.75 5.8V21h-4v-5.6c0-1.35-.03-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.7h-4z"/></svg></a>
+        </div>
+      </div>
+
+      <div>
+        <h6>Nextrum</h6>
+        <ul>
+          <li><a href="index.html#om">Om oss</a></li>
+          <li><a href="index.html#hur">Så fungerar det</a></li>
+          <li><a href="index.html#studiehjalpare">Studiehjälpare</a></li>
+          <li><a href="priser.html">Priser</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>För dig</h6>
+        <ul>
+          <li><a href="index.html#plattformen">För föräldrar</a></li>
+          <li><a href="bli-studiehjalpare.html">Bli studiehjälpare</a></li>
+          <li><a href="index.html#intresse">Intresseanmälan</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>Hjälp</h6>
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="index.html#kontakt">Kontakt</a></li>
+          <li><a href="index.html#kontakt">Integritetspolicy</a></li>
+          <li><a href="index.html#kontakt">Användarvillkor</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ftr-bot">
+      <span>© <span id="year">2026</span> Nextrum.</span>
+      <span>Byggd i Sverige.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="nextrum-config.js"></script>
+<script src="nextrum-app.js"></script>
+<script>
+(function () {
+  'use strict';
+  NX.initHeader();
+  NX.initReveal();
+  NX.initFaq();
+  NX.initPris();
+  NX.märkInloggad();
+})();
+</script>
+</body>
+</html>

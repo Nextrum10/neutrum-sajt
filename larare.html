@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Studiehjälparvy — Nextrum</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nextrum.css">
+</head>
+<body>
+
+<header class="hdr stuck" id="hdr">
+  <div class="wrap nav">
+    <a href="index.html" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+    <nav class="nav-links" aria-label="Meny">
+      <a href="index.html">Startsidan</a>
+    </nav>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="index.html">Startsidan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions" id="m-actions"></div>
+</div>
+
+<main class="wrap" style="padding-top:var(--sec);padding-bottom:var(--sec);min-height:70vh">
+
+  <div id="view-loading"><div class="loading">Laddar din vy</div></div>
+
+  <!-- ============ INLOGGNING ============ -->
+  <div id="view-auth" hidden>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h1 id="auth-title">Logga in</h1>
+        <p class="lede" id="auth-sub">Här ser du dina elever, dina pass och dina arbetade timmar.</p>
+
+        <div class="auth-tabs" role="tablist">
+          <button type="button" role="tab" data-auth="in" aria-selected="true">Logga in</button>
+          <button type="button" role="tab" data-auth="up" aria-selected="false">Skapa konto</button>
+        </div>
+
+        <form id="auth-form" novalidate>
+          <div class="fgroup" id="namn-grupp" hidden>
+            <label for="a-name">Ditt namn</label>
+            <input class="inp" id="a-name" autocomplete="name" placeholder="För- och efternamn">
+          </div>
+          <div class="fgroup">
+            <label for="a-email">E-post</label>
+            <input class="inp" id="a-email" type="email" autocomplete="email" required>
+          </div>
+          <div class="fgroup">
+            <label for="a-pass">Lösenord</label>
+            <input class="inp" id="a-pass" type="password" autocomplete="current-password" required minlength="6">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="auth-submit">Logga in</button>
+          <p class="ok-msg" id="auth-msg" style="margin-top:16px"></p>
+        </form>
+
+        <p class="auth-alt">
+          Är du förälder? <a href="foralder.html">Gå till föräldravyn</a><br>
+          Har du inte ansökt om att jobba hos oss än? <a href="index.html#bli">Gör det här</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VÄNTAR PÅ GODKÄNNANDE ============ -->
+  <div id="view-pending" hidden>
+    <div class="locked rv in">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      <h2>Din ansökan granskas</h2>
+      <p id="pending-text">Ditt konto är skapat men inte godkänt än. Vi går igenom varje ansökan manuellt innan någon får träffa en elev. Det tar oss några dagar.</p>
+      <div class="hero-ctas" style="justify-content:center;margin-top:28px">
+        <a class="btn btn-ghost" href="mailto:hej@nextrum.se">Hör av dig till oss</a>
+        <button class="btn btn-ghost" data-logout>Logga ut</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FEL ROLL ============ -->
+  <div id="view-wrongrole" hidden>
+    <div class="locked rv in">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 20h18L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+      <h2>Det här är studiehjälparvyn</h2>
+      <p>Ditt konto är registrerat som förälder. Din vy ligger på en annan sida.</p>
+      <div class="hero-ctas" style="justify-content:center;margin-top:28px">
+        <a class="btn btn-primary" href="foralder.html">Till föräldravyn</a>
+        <button class="btn btn-ghost" data-logout>Logga ut</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SJÄLVA VYN ============ -->
+  <div id="view-app" hidden>
+
+    <div class="sec-head rv in" style="margin-bottom:32px">
+      <span class="eyebrow">Studiehjälparvy</span>
+      <h1 class="d2" id="hej">Hej.</h1>
+      <p class="lede">Dina elever, dina pass och dina timmar.</p>
+    </div>
+
+    <div class="kpis rv in">
+      <div class="kpi"><b id="kpi-timmar">0</b><span>Genomförda pass</span></div>
+      <div class="kpi"><b id="kpi-kommande">0</b><span>Kommande pass</span></div>
+      <div class="kpi"><b id="kpi-elever">0</b><span>Elever</span></div>
+    </div>
+
+    <div class="split">
+      <div class="stack">
+
+        <!-- pass -->
+        <div class="dbox rv in">
+          <h5>Dina pass <em id="pass-antal"></em></h5>
+          <div id="pass-lista"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <!-- rapport -->
+        <div class="dbox rv in">
+          <h5>Skriv lektionsrapport</h5>
+          <p class="xsmall" style="color:var(--muted-2);margin-bottom:16px;line-height:1.6">
+            Skriv i punktform, precis som du tänker. Vill du kan du sedan låta AI:n göra om det till några meningar riktade till föräldern. Den lägger inte till något du inte skrivit.
+          </p>
+          <form id="rapport-form">
+            <div class="form-grid">
+              <div class="pay-field"><label for="r-elev">Elev</label><select class="sel" id="r-elev"></select></div>
+              <div class="pay-field"><label for="r-datum">Datum</label><input class="inp" id="r-datum" type="date"></div>
+              <div class="pay-field full"><label for="r-notes">Vad gjorde ni, och hur gick det?</label>
+                <textarea class="inp" id="r-notes" placeholder="t.ex. Körde bråk och procent. Kämpigt i början men hon fixade de fem sista själv. Nästa gång: ekvationer." required></textarea>
+              </div>
+              <div class="full" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                <button class="btn btn-primary btn-sm" type="submit" id="r-spara">Spara rapport</button>
+                <label class="xsmall" style="display:flex;gap:7px;align-items:center;cursor:pointer">
+                  <input type="checkbox" id="r-ai" checked> Låt AI:n formulera om den åt föräldern
+                </label>
+              </div>
+              <p class="ok-msg" id="r-msg"></p>
+            </div>
+          </form>
+        </div>
+
+        <!-- tidigare rapporter -->
+        <div class="dbox rv in">
+          <h5>Dina tidigare rapporter <em id="mina-rapporter-antal"></em></h5>
+          <div id="mina-rapporter"><div class="loading">Hämtar</div></div>
+        </div>
+
+      </div>
+
+      <div class="stack">
+
+        <!-- elever -->
+        <div class="dbox rv in">
+          <h5>Dina elever</h5>
+          <div id="elev-lista"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <!-- studieplan -->
+        <div class="dbox rv in">
+          <h5>Studieplan</h5>
+          <form id="plan-form">
+            <div class="fgroup">
+              <label for="p-elev">Elev</label>
+              <select class="sel" id="p-elev"></select>
+            </div>
+            <div class="fgroup">
+              <label for="p-amne">Ämne</label>
+              <input class="inp" id="p-amne" placeholder="t.ex. Matematik">
+            </div>
+            <div class="fgroup">
+              <label for="p-mal">Mål</label>
+              <input class="inp" id="p-mal" placeholder="t.ex. Klara nationella provet i åk 9">
+            </div>
+            <div class="fgroup">
+              <label for="p-text">Planen</label>
+              <textarea class="inp" id="p-text" style="min-height:150px" placeholder="Vecka 1: bråk och procent.&#10;Vecka 2: ekvationer.&#10;Vecka 3: repetition och gammalt prov."></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm btn-block" type="submit">Spara studieplan</button>
+            <p class="ok-msg" id="p-msg"></p>
+          </form>
+        </div>
+
+        <!-- din profil -->
+        <div class="dbox rv in">
+          <h5>Din profil <em>syns på startsidan</em></h5>
+          <form id="profil-form">
+            <div class="fgroup"><label for="pr-skola">Skola</label><input class="inp" id="pr-skola"></div>
+            <div class="fgroup"><label for="pr-ort">Ort</label><input class="inp" id="pr-ort"></div>
+            <div class="fgroup"><label for="pr-amnen">Ämnen (kommaseparerat)</label><input class="inp" id="pr-amnen" placeholder="Matematik, Fysik"></div>
+            <div class="fgroup"><label for="pr-bio">Kort text om dig</label><textarea class="inp" id="pr-bio" style="min-height:90px"></textarea></div>
+            <button class="btn btn-ghost btn-sm btn-block" type="submit">Spara profil</button>
+            <p class="ok-msg" id="pr-msg"></p>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-bot" style="border:none;padding-top:0">
+      <span>© <span id="year"></span> Nextrum</span>
+      <a href="mailto:hej@nextrum.se">hej@nextrum.se</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="nextrum-config.js"></script>
+<script src="nextrum-app.js"></script>
+<script>
+(function () {
+  'use strict';
+  const { $, $$, esc, säg, rensa, felText, datumText, isoFor } = NX;
+
+  NX.initHeader();
+
+  const S = { user: null, profil: null, tutorProfil: null, elever: [], bokningar: [], föräldrar: {} };
+
+  function visa(id) {
+    ['view-loading', 'view-auth', 'view-pending', 'view-wrongrole', 'view-app']
+      .forEach(v => { const el = $('#' + v); if (el) el.hidden = (v !== id); });
+  }
+
+  function ritaHeader() {
+    const na = $('#nav-actions'), ma = $('#m-actions');
+    if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
+    const namn = (S.profil && S.profil.full_name) || S.user.email;
+    na.innerHTML = '<span class="who-chip"><b>' + esc(namn) + '</b><span class="roll">Studiehjälpare</span></span>'
+      + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
+    ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
+  }
+
+  document.addEventListener('click', async e => {
+    if (e.target.closest('[data-logout]')) {
+      if (supa) await supa.auth.signOut();
+      location.reload();
+    }
+  });
+
+  /* ============ inloggning ============ */
+  let läge = 'in';
+  function ritaAuth() {
+    const upp = läge === 'up';
+    $$('[data-auth]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.auth === läge)));
+    $('#namn-grupp').hidden = !upp;
+    $('#a-name').required = upp;
+    $('#a-pass').autocomplete = upp ? 'new-password' : 'current-password';
+    $('#auth-title').textContent = upp ? 'Skapa studiehjälparkonto' : 'Logga in';
+    $('#auth-sub').textContent = upp
+      ? 'Skapa kontot nu. Vi granskar din ansökan innan du får träffa någon elev.'
+      : 'Här ser du dina elever, dina pass och dina arbetade timmar.';
+    $('#auth-submit').textContent = upp ? 'Skapa konto' : 'Logga in';
+    rensa($('#auth-msg'));
+  }
+  $$('[data-auth]').forEach(b => b.addEventListener('click', () => { läge = b.dataset.auth; ritaAuth(); }));
+
+  $('#auth-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#auth-msg'), knapp = $('#auth-submit');
+    rensa(msg);
+    if (!supa) { säg(msg, 'Databasen är inte kopplad. Fyll i nextrum-config.js.', false); return; }
+
+    const epost = $('#a-email').value.trim(), lösen = $('#a-pass').value, namn = $('#a-name').value.trim();
+    if (!epost || !lösen) { säg(msg, 'Fyll i e-post och lösenord.', false); return; }
+    if (läge === 'up' && !namn) { säg(msg, 'Fyll i ditt namn.', false); return; }
+    if (läge === 'up' && lösen.length < 6) { säg(msg, 'Lösenordet måste vara minst 6 tecken.', false); return; }
+
+    knapp.setAttribute('aria-busy', 'true');
+    const res = (läge === 'up')
+      ? await supa.auth.signUp({ email: epost, password: lösen, options: { data: { full_name: namn, role: 'tutor' } } })
+      : await supa.auth.signInWithPassword({ email: epost, password: lösen });
+    knapp.removeAttribute('aria-busy');
+
+    if (res.error) { säg(msg, felText(res.error), false); return; }
+    if (läge === 'up' && res.data && res.data.session === null) {
+      säg(msg, 'Kontot är skapat. Vi har skickat en bekräftelse till ' + epost + '. Klicka på länken i mejlet och logga sedan in här.', true);
+      return;
+    }
+    location.reload();
+  });
+
+  /* ============ elever ============ */
+  async function laddaElever() {
+    const { data, error } = await supa
+      .from('students').select('id, name, grade, parent_id').order('name');
+    const host = $('#elev-lista');
+
+    if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
+    S.elever = data || [];
+    $('#kpi-elever').textContent = S.elever.length;
+
+    // förälderns namn per elev
+    const föräldraIds = Array.from(new Set(S.elever.map(e => e.parent_id)));
+    if (föräldraIds.length) {
+      const p = await supa.from('profiles').select('id, full_name, email').in('id', föräldraIds);
+      (p.data || []).forEach(r => { S.föräldrar[r.id] = r; });
+    }
+
+    if (!S.elever.length) {
+      host.innerHTML = '<div class="empty">Inga elever tilldelade än.<br><br>'
+        + 'Nextrum matchar dig med en familj, sedan dyker eleven upp här.</div>';
+    } else {
+      host.innerHTML = S.elever.map(e => {
+        const f = S.föräldrar[e.parent_id];
+        return '<div class="sess">'
+          + '<span><span class="who">' + esc(e.name) + '</span>'
+          + (e.grade ? '<br><span class="xsmall" style="color:var(--muted-2)">' + esc(e.grade) + '</span>' : '')
+          + '</span>'
+          + (f ? '<span class="st-badge" title="' + esc(f.email || '') + '">' + esc((f.full_name || '').split(' ')[0]) + '</span>' : '')
+          + '</div>';
+      }).join('');
+    }
+
+    const val = S.elever.length
+      ? S.elever.map(e => '<option value="' + e.id + '">' + esc(e.name) + (e.grade ? ' · ' + esc(e.grade) : '') + '</option>').join('')
+      : '<option value="">Ingen elev än</option>';
+    $('#r-elev').innerHTML = val;
+    $('#p-elev').innerHTML = val;
+    $('#r-elev').disabled = $('#p-elev').disabled = !S.elever.length;
+    if (S.elever.length) laddaPlanIFormulär();
+  }
+
+  /* ============ pass ============ */
+  async function laddaPass() {
+    const host = $('#pass-lista');
+    const { data, error } = await supa
+      .from('bookings').select('id, subject, format, wanted_date, wanted_time, status, student_id, parent_id')
+      .eq('tutor_id', S.user.id).order('wanted_date', { ascending: true });
+
+    if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
+    S.bokningar = data || [];
+
+    const genomförda = S.bokningar.filter(b => b.status === 'completed').length;
+    const kommande = S.bokningar.filter(b => b.status === 'requested' || b.status === 'confirmed').length;
+    $('#kpi-timmar').textContent = genomförda;
+    $('#kpi-kommande').textContent = kommande;
+    $('#pass-antal').textContent = S.bokningar.length ? S.bokningar.length + ' st' : '';
+
+    if (!S.bokningar.length) { host.innerHTML = '<div class="empty">Inga bokade pass än.</div>'; return; }
+
+    const etikett = { requested: 'Önskad', confirmed: 'Bekräftad', completed: 'Genomförd', cancelled: 'Avbokad' };
+    host.innerHTML = S.bokningar.map(b => {
+      const elev = S.elever.find(e => e.id === b.student_id);
+      const kan = b.status === 'requested' || b.status === 'confirmed';
+      return '<div class="sess">'
+        + '<span class="when">' + esc(datumText(b.wanted_date)) + '<br>' + esc(b.wanted_time || '') + '</span>'
+        + '<span><span class="who">' + esc(b.subject || 'Pass') + '</span>'
+        + (elev ? '<br><span class="xsmall" style="color:var(--muted-2)">' + esc(elev.name) + '</span>' : '')
+        + '</span>'
+        + '<span class="st-badge">' + esc(etikett[b.status] || b.status) + '</span>'
+        + (b.status === 'requested' ? '<button class="btn btn-ghost btn-sm" data-status="confirmed" data-id="' + b.id + '" style="padding:5px 10px">Bekräfta</button>' : '')
+        + (kan ? '<button class="btn btn-primary btn-sm" data-status="completed" data-id="' + b.id + '" style="padding:5px 10px">Genomförd</button>' : '')
+        + '</div>';
+    }).join('');
+  }
+
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('[data-status]');
+    if (!btn) return;
+    btn.setAttribute('aria-busy', 'true');
+    const { error } = await supa.from('bookings').update({ status: btn.dataset.status }).eq('id', btn.dataset.id);
+    btn.removeAttribute('aria-busy');
+    if (error) { alert('Kunde inte uppdatera: ' + felText(error)); return; }
+    await laddaPass();
+  });
+
+  /* ============ studieplan ============ */
+  async function laddaPlanIFormulär() {
+    const elevId = $('#p-elev').value;
+    if (!elevId) return;
+    const { data } = await supa
+      .from('study_plans').select('subject, goals, plan_text')
+      .eq('student_id', elevId).eq('tutor_id', S.user.id)
+      .order('updated_at', { ascending: false }).limit(1);
+    const p = (data && data[0]) || {};
+    $('#p-amne').value = p.subject || '';
+    $('#p-mal').value = p.goals || '';
+    $('#p-text').value = p.plan_text || '';
+  }
+  $('#p-elev').addEventListener('change', () => { rensa($('#p-msg')); laddaPlanIFormulär(); });
+
+  $('#plan-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#p-msg');
+    rensa(msg);
+    const elevId = $('#p-elev').value;
+    if (!elevId) { säg(msg, 'Du har ingen elev att skriva plan för än.', false); return; }
+
+    const fält = {
+      subject: $('#p-amne').value.trim() || null,
+      goals: $('#p-mal').value.trim() || null,
+      plan_text: $('#p-text').value.trim() || null,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data: fanns } = await supa
+      .from('study_plans').select('id').eq('student_id', elevId).eq('tutor_id', S.user.id).limit(1);
+
+    const res = (fanns && fanns.length)
+      ? await supa.from('study_plans').update(fält).eq('id', fanns[0].id)
+      : await supa.from('study_plans').insert(Object.assign({ student_id: elevId, tutor_id: S.user.id }, fält));
+
+    if (res.error) { säg(msg, 'Kunde inte spara: ' + felText(res.error), false); return; }
+    säg(msg, 'Studieplanen är sparad. Föräldern ser den direkt.', true);
+  });
+
+  /* ============ lektionsrapport ============ */
+  $('#rapport-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#r-msg'), knapp = $('#r-spara');
+    rensa(msg);
+
+    const elevId = $('#r-elev').value;
+    const anteckningar = $('#r-notes').value.trim();
+    if (!elevId) { säg(msg, 'Du har ingen elev att rapportera om än.', false); return; }
+    if (!anteckningar) { säg(msg, 'Skriv något om lektionen först.', false); return; }
+
+    knapp.setAttribute('aria-busy', 'true');
+    const { data, error } = await supa.from('lesson_reports').insert({
+      student_id: elevId,
+      tutor_id: S.user.id,
+      lesson_date: $('#r-datum').value || isoFor(new Date()),
+      raw_notes: anteckningar
+    }).select('id').single();
+
+    if (error) {
+      knapp.removeAttribute('aria-busy');
+      säg(msg, 'Kunde inte spara: ' + felText(error), false);
+      return;
+    }
+
+    if ($('#r-ai').checked) {
+      säg(msg, 'Rapporten är sparad. Formulerar om den åt föräldern...', true);
+      const { error: aiErr } = await supa.functions.invoke('generate-feedback', { body: { report_id: data.id } });
+      knapp.removeAttribute('aria-busy');
+      if (aiErr) {
+        säg(msg, 'Rapporten är sparad, men AI-omskrivningen gick inte: ' + felText(aiErr)
+          + ' Föräldern ser dina anteckningar precis som du skrev dem. Det är inget fel, bara mindre polerat.', false);
+      } else {
+        säg(msg, 'Klart. Rapporten är sparad och omskriven åt föräldern.', true);
+      }
+    } else {
+      knapp.removeAttribute('aria-busy');
+      säg(msg, 'Rapporten är sparad. Föräldern ser dina anteckningar som de står.', true);
+    }
+
+    $('#r-notes').value = '';
+    await laddaMinaRapporter();
+  });
+
+  async function laddaMinaRapporter() {
+    const host = $('#mina-rapporter');
+    const { data, error } = await supa
+      .from('lesson_reports').select('id, lesson_date, raw_notes, ai_feedback, student_id')
+      .eq('tutor_id', S.user.id).order('lesson_date', { ascending: false }).limit(20);
+
+    if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
+    if (!data || !data.length) { host.innerHTML = '<div class="empty">Inga rapporter skrivna än.</div>'; return; }
+
+    $('#mina-rapporter-antal').textContent = data.length + ' st';
+    host.innerHTML = data.map(r => {
+      const elev = S.elever.find(e => e.id === r.student_id);
+      return '<div class="report">'
+        + '<div class="report-head"><b>' + esc(elev ? elev.name : 'Elev') + '</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
+        + (r.ai_feedback
+            ? '<p>' + esc(r.ai_feedback) + '</p>'
+            : '<span class="raw-note">Inte omskriven, föräldern ser detta</span><p class="raw">' + esc(r.raw_notes) + '</p>')
+        + (r.ai_feedback ? '' : '<button class="btn btn-ghost btn-sm" data-ai="' + r.id + '" style="margin-top:12px">Skriv om åt föräldern</button>')
+        + '</div>';
+    }).join('');
+  }
+
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('[data-ai]');
+    if (!btn) return;
+    btn.setAttribute('aria-busy', 'true');
+    const { error } = await supa.functions.invoke('generate-feedback', { body: { report_id: btn.dataset.ai } });
+    btn.removeAttribute('aria-busy');
+    if (error) { alert('Gick inte: ' + felText(error) + '\n\nÄr generate-feedback deployad? Se DEPLOY-AI-FUNKTION.md.'); return; }
+    await laddaMinaRapporter();
+  });
+
+  /* ============ egen profil ============ */
+  function fyllProfil() {
+    const t = S.tutorProfil || {};
+    $('#pr-skola').value = t.school || '';
+    $('#pr-ort').value = t.city || '';
+    $('#pr-amnen').value = (t.subjects || []).join(', ');
+    $('#pr-bio').value = t.bio || '';
+  }
+
+  $('#profil-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#pr-msg');
+    rensa(msg);
+    const ämnen = $('#pr-amnen').value.split(',').map(s => s.trim()).filter(Boolean);
+    const { error } = await supa.from('tutor_profiles').update({
+      school: $('#pr-skola').value.trim() || null,
+      city: $('#pr-ort').value.trim() || null,
+      subjects: ämnen,
+      bio: $('#pr-bio').value.trim() || null
+    }).eq('id', S.user.id);
+    if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+    säg(msg, 'Profilen är sparad.', true);
+  });
+
+  /* ============ start ============ */
+  (async function start() {
+    $('#r-datum').value = isoFor(new Date());
+
+    if (!supa) {
+      visa('view-auth');
+      ritaAuth();
+      säg($('#auth-msg'), 'Databasen är inte kopplad än. Öppna nextrum-config.js, klistra in din Supabase-URL och anon-nyckel, spara och ladda om.', false);
+      return;
+    }
+
+    S.user = await NX.hämtaSession();
+    if (!S.user) { visa('view-auth'); ritaAuth(); return; }
+
+    S.profil = await NX.hämtaProfil(S.user.id);
+    ritaHeader();
+
+    if (!S.profil) {
+      visa('view-auth');
+      ritaAuth();
+      säg($('#auth-msg'), 'Kontot finns men saknar profil i databasen. Har du kört schema.sql i Supabase?', false);
+      return;
+    }
+
+    if (S.profil.role !== 'tutor') { visa('view-wrongrole'); return; }
+
+    const tp = await supa.from('tutor_profiles')
+      .select('status, school, city, subjects, bio, age').eq('id', S.user.id).maybeSingle();
+    S.tutorProfil = tp.data;
+
+    if (!S.tutorProfil) {
+      visa('view-pending');
+      $('#pending-text').textContent = 'Ditt konto saknar en studiehjälparprofil i databasen. Det brukar betyda att kontot skapades innan schema.sql kördes. Hör av dig så fixar vi det.';
+      return;
+    }
+
+    if (S.tutorProfil.status !== 'approved') {
+      visa('view-pending');
+      if (S.tutorProfil.status === 'rejected') {
+        $('#pending-text').textContent = 'Din ansökan gick tyvärr inte vidare den här gången. Hör gärna av dig om du vill veta mer.';
+      }
+      return;
+    }
+
+    visa('view-app');
+    const förnamn = (S.profil.full_name || '').split(' ')[0];
+    $('#hej').textContent = förnamn ? 'Hej ' + förnamn + '.' : 'Hej.';
+    fyllProfil();
+
+    await laddaElever();
+    await Promise.all([laddaPass(), laddaMinaRapporter()]);
+  })();
+})();
+</script>
+</body>
+</html>

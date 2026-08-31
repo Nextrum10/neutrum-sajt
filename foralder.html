@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Föräldravy — Nextrum</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nextrum.css">
+</head>
+<body>
+
+<header class="hdr stuck" id="hdr">
+  <div class="wrap nav">
+    <a href="index.html" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+    <nav class="nav-links" aria-label="Meny">
+      <a href="index.html">Startsidan</a>
+    </nav>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="index.html">Startsidan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions" id="m-actions"></div>
+</div>
+
+<main class="wrap" style="padding-top:var(--sec);padding-bottom:var(--sec);min-height:70vh">
+
+  <!-- laddar -->
+  <div id="view-loading"><div class="loading">Laddar din vy</div></div>
+
+  <!-- ============ INLOGGNING ============ -->
+  <div id="view-auth" hidden>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h1 id="auth-title">Logga in</h1>
+        <p class="lede" id="auth-sub">Här ser du ditt barns studieplan, bokar pass och följer utvecklingen.</p>
+
+        <div class="auth-tabs" role="tablist">
+          <button type="button" role="tab" data-auth="in" aria-selected="true">Logga in</button>
+          <button type="button" role="tab" data-auth="up" aria-selected="false">Skapa konto</button>
+        </div>
+
+        <form id="auth-form" novalidate>
+          <div class="fgroup" id="namn-grupp" hidden>
+            <label for="a-name">Ditt namn</label>
+            <input class="inp" id="a-name" autocomplete="name" placeholder="För- och efternamn">
+          </div>
+          <div class="fgroup">
+            <label for="a-email">E-post</label>
+            <input class="inp" id="a-email" type="email" autocomplete="email" required>
+          </div>
+          <div class="fgroup">
+            <label for="a-pass">Lösenord</label>
+            <input class="inp" id="a-pass" type="password" autocomplete="current-password" required minlength="6">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="auth-submit">Logga in</button>
+          <p class="ok-msg" id="auth-msg" style="margin-top:16px"></p>
+        </form>
+
+        <p class="auth-alt">
+          Är du studiehjälpare? <a href="larare.html">Gå till studiehjälparvyn</a><br>
+          Har ni inte skickat intresseanmälan än? <a href="index.html#intresse">Gör det här</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VÄNTAR PÅ MATCHNING ============ -->
+  <div id="view-locked" hidden>
+    <div class="locked rv in">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+      <h2>Vi jobbar på er matchning</h2>
+      <p>Ditt konto är skapat, men ni är inte matchade med en studiehjälpare än. Så fort vi hittat rätt person låses den här vyn upp med studieplan, bokning och rapporter.</p>
+      <p style="margin-top:16px">Har ni inte skickat in en intresseanmälan än är det steget som saknas.</p>
+      <div class="hero-ctas" style="justify-content:center;margin-top:28px">
+        <a class="btn btn-primary" href="index.html#intresse">Skicka intresseanmälan</a>
+        <a class="btn btn-ghost" href="mailto:hej@nextrum.se">Hör av dig till oss</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FEL ROLL ============ -->
+  <div id="view-wrongrole" hidden>
+    <div class="locked rv in">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 20h18L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+      <h2>Det här är föräldravyn</h2>
+      <p>Ditt konto är registrerat som studiehjälpare. Din vy ligger på en annan sida.</p>
+      <div class="hero-ctas" style="justify-content:center;margin-top:28px">
+        <a class="btn btn-primary" href="larare.html">Till studiehjälparvyn</a>
+        <button class="btn btn-ghost" data-logout>Logga ut</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SJÄLVA VYN ============ -->
+  <div id="view-app" hidden>
+
+    <div class="sec-head rv in" style="margin-bottom:36px">
+      <span class="eyebrow">Föräldravy</span>
+      <h1 class="d2" id="hej">Hej.</h1>
+      <p class="lede" id="hej-sub">Här är allt om ditt barns studiepass.</p>
+    </div>
+
+    <!-- barnväljare -->
+    <div class="dbox rv in" style="margin-bottom:20px">
+      <div class="between">
+        <div style="flex:1;min-width:220px">
+          <h5 style="margin-bottom:10px">Barn <em id="barn-antal"></em></h5>
+          <select class="sel" id="barn-val" style="max-width:320px"></select>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="lagg-till-barn">Lägg till barn</button>
+      </div>
+      <form id="barn-form" hidden style="margin-top:18px;border-top:1px solid var(--line);padding-top:18px">
+        <div class="form-grid">
+          <div class="pay-field"><label for="b-namn">Barnets namn</label><input class="inp" id="b-namn" required></div>
+          <div class="pay-field"><label for="b-ak">Årskurs</label>
+            <select class="sel" id="b-ak">
+              <option value="">Välj</option>
+              <option>Åk 1</option><option>Åk 2</option><option>Åk 3</option><option>Åk 4</option><option>Åk 5</option>
+              <option>Åk 6</option><option>Åk 7</option><option>Åk 8</option><option>Åk 9</option>
+            </select>
+          </div>
+          <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" type="submit">Spara</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="avbryt-barn">Avbryt</button>
+          </div>
+          <p class="ok-msg" id="barn-msg"></p>
+        </div>
+      </form>
+    </div>
+
+    <div class="split">
+      <div class="stack">
+
+        <!-- studieplan -->
+        <div class="dbox rv in">
+          <h5>Studieplan <em id="plan-uppdaterad"></em></h5>
+          <div id="plan-body"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <!-- boka -->
+        <div class="dbox rv in">
+          <h5>Boka nästa pass <em id="boka-hos"></em></h5>
+          <div id="boka-inner">
+            <div class="form-grid" style="margin-bottom:18px">
+              <div class="pay-field"><label for="bk-amne">Ämne</label>
+                <select class="sel" id="bk-amne">
+                  <option>Matematik</option><option>Svenska</option><option>Engelska</option>
+                  <option>NO / Fysik / Kemi / Biologi</option><option>SO / Historia / Samhällskunskap</option><option>Annat</option>
+                </select>
+              </div>
+              <div class="pay-field"><label for="bk-format">Format</label>
+                <select class="sel" id="bk-format"><option>Online</option><option>På plats</option></select>
+              </div>
+            </div>
+            <div id="kalender"></div>
+            <div class="between" style="margin-top:20px">
+              <span class="small" id="boka-sammanfattning">Välj ett datum och en tid.</span>
+              <button class="btn btn-primary btn-sm" id="boka-knapp" disabled>Boka passet</button>
+            </div>
+            <p class="ok-msg" id="boka-msg"></p>
+          </div>
+        </div>
+
+        <!-- rapporter -->
+        <div class="dbox rv in">
+          <h5>Rapporter efter lektionerna <em id="rapport-antal"></em></h5>
+          <div id="rapporter"><div class="loading">Hämtar</div></div>
+        </div>
+
+      </div>
+
+      <div class="stack">
+        <!-- studiehjälparen -->
+        <div class="dbox rv in">
+          <h5>Er studiehjälpare</h5>
+          <div id="tutor-kort"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <!-- kommande pass -->
+        <div class="dbox rv in">
+          <h5>Pass <em id="pass-antal"></em></h5>
+          <div id="pass-lista"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <!-- pris -->
+        <div class="dbox rv in">
+          <h5>Pris</h5>
+          <div class="sum-line"><span>Per timme</span><span data-pris>349 kr</span></div>
+          <div class="sum-line"><span>Anmälningsavgift</span><span>0 kr</span></div>
+          <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
+          <p class="xsmall" style="margin-top:14px;color:var(--muted-2)">Betalning sker utanför plattformen tills vidare. Vi hör av oss om upplägget.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-bot" style="border:none;padding-top:0">
+      <span>© <span id="year"></span> Nextrum</span>
+      <a href="mailto:hej@nextrum.se">hej@nextrum.se</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="nextrum-config.js"></script>
+<script src="nextrum-app.js"></script>
+<script>
+(function () {
+  'use strict';
+  const { $, $$, esc, kr, säg, rensa, felText, datumText } = NX;
+
+  NX.initHeader();
+
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [] };
+
+  function visa(id) {
+    ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app']
+      .forEach(v => { const el = $('#' + v); if (el) el.hidden = (v !== id); });
+  }
+
+  /* ============ header ============ */
+  function ritaHeader() {
+    const na = $('#nav-actions'), ma = $('#m-actions');
+    if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
+    const namn = (S.profil && S.profil.full_name) || S.user.email;
+    na.innerHTML = '<span class="who-chip"><b>' + esc(namn) + '</b><span class="roll">Förälder</span></span>'
+      + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
+    ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
+  }
+
+  document.addEventListener('click', async e => {
+    if (e.target.closest('[data-logout]')) {
+      if (supa) await supa.auth.signOut();
+      location.reload();
+    }
+  });
+
+  /* ============ inloggning ============ */
+  let läge = 'in';
+  function ritaAuth() {
+    const upp = läge === 'up';
+    $$('[data-auth]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.auth === läge)));
+    $('#namn-grupp').hidden = !upp;
+    $('#a-name').required = upp;
+    $('#a-pass').autocomplete = upp ? 'new-password' : 'current-password';
+    $('#auth-title').textContent = upp ? 'Skapa föräldrakonto' : 'Logga in';
+    $('#auth-sub').textContent = upp
+      ? 'Skapa kontot nu. Vyn låses upp så fort vi matchat er med en studiehjälpare.'
+      : 'Här ser du ditt barns studieplan, bokar pass och följer utvecklingen.';
+    $('#auth-submit').textContent = upp ? 'Skapa konto' : 'Logga in';
+    rensa($('#auth-msg'));
+  }
+  $$('[data-auth]').forEach(b => b.addEventListener('click', () => { läge = b.dataset.auth; ritaAuth(); }));
+
+  $('#auth-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#auth-msg'), knapp = $('#auth-submit');
+    rensa(msg);
+    if (!supa) { säg(msg, 'Databasen är inte kopplad. Fyll i nextrum-config.js.', false); return; }
+
+    const epost = $('#a-email').value.trim();
+    const lösen = $('#a-pass').value;
+    const namn = $('#a-name').value.trim();
+
+    if (!epost || !lösen) { säg(msg, 'Fyll i e-post och lösenord.', false); return; }
+    if (läge === 'up' && !namn) { säg(msg, 'Fyll i ditt namn.', false); return; }
+    if (läge === 'up' && lösen.length < 6) { säg(msg, 'Lösenordet måste vara minst 6 tecken.', false); return; }
+
+    knapp.setAttribute('aria-busy', 'true');
+    let res;
+    if (läge === 'up') {
+      res = await supa.auth.signUp({
+        email: epost, password: lösen,
+        options: { data: { full_name: namn, role: 'parent' } }
+      });
+    } else {
+      res = await supa.auth.signInWithPassword({ email: epost, password: lösen });
+    }
+    knapp.removeAttribute('aria-busy');
+
+    if (res.error) { säg(msg, felText(res.error), false); return; }
+
+    if (läge === 'up' && res.data && res.data.session === null) {
+      säg(msg, 'Kontot är skapat. Vi har skickat en bekräftelse till ' + epost + '. Klicka på länken i mejlet och logga sedan in här.', true);
+      return;
+    }
+    location.reload();
+  });
+
+  /* ============ studiehjälparkortet ============ */
+  async function laddaTutor() {
+    const host = $('#tutor-kort');
+    const id = S.profil.matched_tutor_id;
+    if (!id) { host.innerHTML = '<div class="empty">Ingen studiehjälpare tilldelad än.</div>'; return; }
+
+    const [p, tp] = await Promise.all([
+      supa.from('profiles').select('id, full_name, email').eq('id', id).maybeSingle(),
+      supa.from('tutor_profiles').select('age, school, city, subjects, grade_levels, bio, formats').eq('id', id).maybeSingle()
+    ]);
+
+    if (p.error || !p.data) {
+      host.innerHTML = '<div class="empty">Kunde inte hämta studiehjälparen.<br><span class="xsmall">'
+        + esc((p.error && p.error.message) || 'Ingen profil hittades') + '</span></div>';
+      return;
+    }
+    S.tutor = Object.assign({}, p.data, tp.data || {});
+
+    const t = S.tutor;
+    host.innerHTML =
+      '<div class="tutor-top" style="margin-bottom:14px">'
+      + '<span class="avatar"><svg viewBox="0 0 46 46"><circle class="st" cx="23" cy="18" r="8"/><path class="st" d="M9 42c0-8 6.3-14 14-14s14 6 14 14"/></svg></span>'
+      + '<div><div class="tutor-name">' + esc(t.full_name) + (t.age ? ', ' + esc(t.age) : '') + '</div>'
+      + '<div class="tutor-role">Gymnasieelev' + (t.school ? ' · ' + esc(t.school) : '') + '</div></div></div>'
+      + (t.bio ? '<p class="small" style="margin-bottom:14px;line-height:1.6">' + esc(t.bio) + '</p>' : '')
+      + ((t.subjects && t.subjects.length)
+          ? '<div class="tutor-meta">' + t.subjects.map(s => '<span class="tag">' + esc(s) + '</span>').join('') + '</div>'
+          : '')
+      + '<div class="sum-line" style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">'
+      + '<span>Kontakt</span><a href="mailto:' + esc(t.email) + '" data-mailtext="keep">' + esc(t.email) + '</a></div>';
+
+    $('#boka-hos').textContent = 'hos ' + t.full_name.split(' ')[0];
+  }
+
+  /* ============ barn ============ */
+  async function laddaBarn() {
+    const { data, error } = await supa
+      .from('students').select('id, name, grade').eq('parent_id', S.user.id).order('created_at');
+    if (error) { console.warn(error.message); return; }
+    S.barn = data || [];
+    const val = $('#barn-val');
+
+    if (!S.barn.length) {
+      val.innerHTML = '<option value="">Inget barn tillagt än</option>';
+      val.disabled = true;
+      S.valtBarn = null;
+      $('#barn-antal').textContent = '';
+    } else {
+      val.disabled = false;
+      val.innerHTML = S.barn.map(b =>
+        '<option value="' + b.id + '">' + esc(b.name) + (b.grade ? ' · ' + esc(b.grade) : '') + '</option>').join('');
+      $('#barn-antal').textContent = S.barn.length === 1 ? '' : S.barn.length + ' st';
+      if (!S.valtBarn || !S.barn.some(b => b.id === S.valtBarn)) S.valtBarn = S.barn[0].id;
+      val.value = S.valtBarn;
+    }
+    uppdateraBokaKnapp();
+  }
+
+  $('#barn-val').addEventListener('change', e => {
+    S.valtBarn = e.target.value || null;
+    laddaPlan(); laddaRapporter(); uppdateraBokaKnapp();
+  });
+
+  $('#lagg-till-barn').addEventListener('click', () => {
+    const f = $('#barn-form');
+    f.hidden = !f.hidden;
+    if (!f.hidden) $('#b-namn').focus();
+  });
+  $('#avbryt-barn').addEventListener('click', () => { $('#barn-form').hidden = true; rensa($('#barn-msg')); });
+
+  $('#barn-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#barn-msg');
+    rensa(msg);
+    const namn = $('#b-namn').value.trim();
+    if (!namn) { säg(msg, 'Fyll i barnets namn.', false); return; }
+
+    const { error } = await supa.from('students').insert({
+      parent_id: S.user.id, name: namn, grade: $('#b-ak').value || null
+    });
+    if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+    $('#barn-form').reset();
+    $('#barn-form').hidden = true;
+    await laddaBarn();
+    await laddaPlan(); await laddaRapporter();
+  });
+
+  /* ============ studieplan ============ */
+  async function laddaPlan() {
+    const host = $('#plan-body');
+    $('#plan-uppdaterad').textContent = '';
+    if (!S.valtBarn) {
+      host.innerHTML = '<div class="empty">Lägg till ditt barn ovan, så skriver studiehjälparen en plan.</div>';
+      return;
+    }
+    host.innerHTML = '<div class="loading">Hämtar</div>';
+    const { data, error } = await supa
+      .from('study_plans').select('subject, goals, plan_text, updated_at')
+      .eq('student_id', S.valtBarn).order('updated_at', { ascending: false }).limit(1);
+
+    if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
+    if (!data || !data.length) {
+      host.innerHTML = '<div class="empty">Studieplanen är inte skriven än.<br><br>'
+        + 'Er studiehjälpare skriver den efter första kontakten, utifrån vad ditt barn behöver.</div>';
+      return;
+    }
+    const p = data[0];
+    $('#plan-uppdaterad').textContent = p.updated_at ? 'uppdaterad ' + datumText(String(p.updated_at).slice(0, 10)) : '';
+    host.innerHTML =
+      '<div class="plan-meta">'
+      + (p.subject ? '<span class="tag">' + esc(p.subject) + '</span>' : '')
+      + '</div>'
+      + (p.goals ? '<p class="small" style="margin-bottom:16px"><b>Mål:</b> ' + esc(p.goals) + '</p>' : '')
+      + '<div class="plan-body">' + esc(p.plan_text || '') + '</div>';
+  }
+
+  /* ============ rapporter ============ */
+  async function laddaRapporter() {
+    const host = $('#rapporter');
+    $('#rapport-antal').textContent = '';
+    if (!S.valtBarn) { host.innerHTML = '<div class="empty">Välj ett barn för att se rapporterna.</div>'; return; }
+
+    host.innerHTML = '<div class="loading">Hämtar</div>';
+    const { data, error } = await supa
+      .from('lesson_reports').select('id, lesson_date, raw_notes, ai_feedback')
+      .eq('student_id', S.valtBarn).order('lesson_date', { ascending: false });
+
+    if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
+    if (!data || !data.length) {
+      host.innerHTML = '<div class="empty">Inga rapporter än. Den första kommer efter första passet.</div>';
+      return;
+    }
+    $('#rapport-antal').textContent = data.length + ' st';
+    host.innerHTML = data.map(r =>
+      '<div class="report">'
+      + '<div class="report-head"><b>Lektion</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
+      + (r.ai_feedback
+          ? '<p>' + esc(r.ai_feedback) + '</p>'
+          : '<span class="raw-note">Studiehjälparens anteckningar</span><p class="raw">' + esc(r.raw_notes) + '</p>')
+      + '</div>').join('');
+  }
+
+  /* ============ pass ============ */
+  async function laddaPass() {
+    const host = $('#pass-lista');
+    const { data, error } = await supa
+      .from('bookings').select('id, subject, wanted_date, wanted_time, status, student_id')
+      .eq('parent_id', S.user.id).order('wanted_date', { ascending: true });
+
+    if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
+    S.bokningar = data || [];
+    if (!S.bokningar.length) { host.innerHTML = '<div class="empty">Inga bokade pass än.</div>'; return; }
+
+    const idag = new Date().toISOString().slice(0, 10);
+    const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
+    $('#pass-antal').textContent = aktiva.length + ' st';
+
+    const etikett = { requested: 'Önskad', confirmed: 'Bekräftad', completed: 'Genomförd', cancelled: 'Avbokad' };
+    host.innerHTML = S.bokningar.map(b => {
+      const barn = S.barn.find(x => x.id === b.student_id);
+      const kommande = b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed');
+      return '<div class="sess">'
+        + '<span class="when">' + esc(datumText(b.wanted_date)) + '<br>' + esc(b.wanted_time || '') + '</span>'
+        + '<span><span class="who">' + esc(b.subject || 'Pass') + '</span>'
+        + (barn ? '<br><span class="xsmall" style="color:var(--muted-2)">' + esc(barn.name) + '</span>' : '') + '</span>'
+        + '<span class="st-badge">' + esc(etikett[b.status] || b.status) + '</span>'
+        + (kommande ? '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '" style="padding:5px 10px">Avboka</button>' : '')
+        + '</div>';
+    }).join('');
+  }
+
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('[data-avboka]');
+    if (!btn) return;
+    if (!confirm('Avboka det här passet?')) return;
+    btn.setAttribute('aria-busy', 'true');
+    const { error } = await supa.from('bookings').update({ status: 'cancelled' }).eq('id', btn.dataset.avboka);
+    btn.removeAttribute('aria-busy');
+    if (error) { alert('Kunde inte avboka: ' + felText(error)); return; }
+    await laddaPass();
+    await byggKalender();
+  });
+
+  /* ============ bokning ============ */
+  function uppdateraBokaKnapp() {
+    const knapp = $('#boka-knapp'), sam = $('#boka-sammanfattning');
+    if (!knapp) return;
+    const st = S.kal && S.kal.state;
+    if (!S.valtBarn) {
+      knapp.disabled = true;
+      sam.textContent = 'Lägg till ditt barn först.';
+      return;
+    }
+    if (!st || !st.valtDatum || !st.valdTid) {
+      knapp.disabled = true;
+      sam.textContent = 'Välj ett datum och en tid.';
+      return;
+    }
+    knapp.disabled = false;
+    sam.textContent = datumText(st.valtDatum) + ' kl. ' + st.valdTid + ' · ' + kr(NX.CFG.PRIS_PER_TIMME || 349);
+  }
+
+  async function byggKalender() {
+    const upptagna = await NX.hämtaUpptagna(S.profil.matched_tutor_id);
+    if (S.kal) { S.kal.sättUpptagna(upptagna); uppdateraBokaKnapp(); return; }
+    S.kal = NX.byggKalender({
+      host: $('#kalender'),
+      upptagna,
+      onChange: uppdateraBokaKnapp
+    });
+  }
+
+  $('#boka-knapp').addEventListener('click', async () => {
+    const msg = $('#boka-msg'), knapp = $('#boka-knapp');
+    rensa(msg);
+    const st = S.kal.state;
+    if (!st.valtDatum || !st.valdTid || !S.valtBarn) return;
+
+    knapp.setAttribute('aria-busy', 'true');
+    const { error } = await supa.from('bookings').insert({
+      parent_id: S.user.id,
+      tutor_id: S.profil.matched_tutor_id,
+      student_id: S.valtBarn,
+      subject: $('#bk-amne').value,
+      format: $('#bk-format').value,
+      wanted_date: st.valtDatum,
+      wanted_time: st.valdTid,
+      status: 'requested'
+    });
+    knapp.removeAttribute('aria-busy');
+
+    if (error) {
+      if (error.code === '23505') {
+        säg(msg, 'Den tiden hann bli bokad. Välj en annan tid, kalendern är uppdaterad nu.', false);
+        await byggKalender();
+        S.kal.nollställ();
+        uppdateraBokaKnapp();
+        return;
+      }
+      säg(msg, 'Kunde inte boka: ' + felText(error), false);
+      return;
+    }
+
+    säg(msg, 'Passet är bokat. Din studiehjälpare får en notis och bekräftar.', true);
+    S.kal.nollställ();
+    uppdateraBokaKnapp();
+    await laddaPass();
+    await byggKalender();
+  });
+
+  /* ============ start ============ */
+  (async function start() {
+    $$('[data-pris]').forEach(el => el.textContent = kr(NX.CFG.PRIS_PER_TIMME || 349));
+
+    if (!supa) {
+      visa('view-auth');
+      ritaAuth();
+      säg($('#auth-msg'), 'Databasen är inte kopplad än. Öppna nextrum-config.js, klistra in din Supabase-URL och anon-nyckel, spara och ladda om.', false);
+      return;
+    }
+
+    S.user = await NX.hämtaSession();
+    if (!S.user) { visa('view-auth'); ritaAuth(); return; }
+
+    S.profil = await NX.hämtaProfil(S.user.id);
+    ritaHeader();
+
+    if (!S.profil) {
+      visa('view-auth');
+      ritaAuth();
+      säg($('#auth-msg'), 'Kontot finns men saknar profil i databasen. Har du kört schema.sql i Supabase? Triggern som skapar profilraden ligger där.', false);
+      return;
+    }
+
+    if (S.profil.role === 'tutor') { visa('view-wrongrole'); return; }
+    if (S.profil.match_status !== 'matched') { visa('view-locked'); return; }
+
+    visa('view-app');
+    const förnamn = (S.profil.full_name || '').split(' ')[0];
+    $('#hej').textContent = förnamn ? 'Hej ' + förnamn + '.' : 'Hej.';
+
+    await laddaBarn();
+    await Promise.all([laddaTutor(), laddaPlan(), laddaRapporter(), laddaPass(), byggKalender()]);
+    uppdateraBokaKnapp();
+  })();
+})();
+</script>
+</body>
+</html>

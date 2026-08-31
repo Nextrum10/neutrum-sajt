@@ -1,0 +1,374 @@
+/* ============================================================
+   NEXTRUM — delad kod för alla tre sidor.
+   Ligger separat så att en fix hamnar på alla sidor samtidigt
+   istället för att behöva klistras in tre gånger.
+   ============================================================ */
+
+const CFG = window.NEXTRUM_CONFIG || {};
+
+/* Supabase-klienten. null om nycklarna inte är ifyllda än, då visar
+   sidorna en tydlig ruta istället för att bara vara trasiga. */
+const supa = (String(CFG.SUPABASE_URL || '').startsWith('https://') && window.supabase)
+  ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY)
+  : null;
+
+const NX = (function () {
+  'use strict';
+
+  const $  = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const kr = n => Number(n).toLocaleString('sv-SE') + ' kr';
+
+  const DAGAR = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'];
+  const MANADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni',
+    'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
+
+  const pad = n => String(n).padStart(2, '0');
+  const isoFor = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+
+  function datumText(iso) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-').map(Number);
+    return d + ' ' + MANADER[m - 1] + (y !== new Date().getFullYear() ? ' ' + y : '');
+  }
+
+  /* ---------- litet meddelandefält ---------- */
+  function säg(el, text, ok) {
+    if (!el) return;
+    el.textContent = text;
+    el.classList.add('show');
+    el.classList.toggle('is-err', ok === false);
+  }
+  function rensa(el) {
+    if (!el) return;
+    el.textContent = '';
+    el.classList.remove('show', 'is-err');
+  }
+
+  /* ---------- felmeddelanden på svenska ---------- */
+  function felText(error) {
+    const m = String(error && (error.message || error) || '');
+    if (/Invalid login credentials/i.test(m)) return 'Fel e-post eller lösenord.';
+    if (/Email not confirmed/i.test(m)) return 'Du måste bekräfta din e-postadress först. Kolla inkorgen (och skräpposten).';
+    if (/User already registered/i.test(m)) return 'Det finns redan ett konto med den e-postadressen. Logga in istället.';
+    if (/Password should be at least/i.test(m)) return 'Lösenordet måste vara minst 6 tecken.';
+    if (/rate limit|too many/i.test(m)) return 'För många försök. Vänta en stund och prova igen.';
+    if (/Failed to fetch|NetworkError/i.test(m)) return 'Når inte databasen. Kontrollera din internetanslutning, och att URL:en i nextrum-config.js är rätt.';
+    return m || 'Något gick fel.';
+  }
+
+  /* ---------- header: sticky + burgare ---------- */
+  function initHeader() {
+    const hdr = $('#hdr');
+    if (hdr) {
+      const onScroll = () => hdr.classList.toggle('stuck', window.scrollY > 8);
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+    }
+    const burger = $('#burger'), mmenu = $('#mobile-menu');
+    if (burger && mmenu) {
+      const setMenu = open => {
+        burger.setAttribute('aria-expanded', String(open));
+        mmenu.classList.toggle('open', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+      };
+      burger.addEventListener('click', () => setMenu(burger.getAttribute('aria-expanded') !== 'true'));
+      $$('#mobile-menu a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+    }
+    /* Menyn skrivs likadant på alla publika sidor, med länkar som
+       "index.html#om". På startsidan vore det en onödig omladdning,
+       så där kortas de ner till rena ankare. Utan JS fungerar de
+       ändå — då blir det bara en omladdning istället för en scroll. */
+    const sida = location.pathname.split('/').pop() || 'index.html';
+    if (sida === 'index.html') {
+      $$('a[href^="index.html#"]').forEach(a =>
+        a.setAttribute('href', a.getAttribute('href').slice('index.html'.length)));
+    }
+    /* markera vilken sida besökaren står på */
+    $$('.nav-links a, .mobile-menu a.m-link').forEach(a => {
+      if (a.getAttribute('href') === sida) a.classList.add('active');
+    });
+
+    const y = $('#year');
+    if (y) y.textContent = new Date().getFullYear();
+    $$('a[href^="mailto:"]').forEach(a => {
+      a.href = 'mailto:' + (CFG.EPOST || 'hej@nextrum.se');
+      if (a.dataset.mailtext !== 'keep') a.textContent = CFG.EPOST || 'hej@nextrum.se';
+    });
+  }
+
+  /* ---------- reveal-animation ---------- */
+  function initReveal() {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if ('IntersectionObserver' in window && !reduce) {
+      const io = new IntersectionObserver(entries => {
+        entries.forEach((e, i) => {
+          if (!e.isIntersecting) return;
+          setTimeout(() => e.target.classList.add('in'), Math.min(i * 70, 280));
+          io.unobserve(e.target);
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+      $$('.rv').forEach(el => io.observe(el));
+    } else {
+      $$('.rv').forEach(el => el.classList.add('in'));
+    }
+  }
+
+  /* ---------- varning om databasen inte är kopplad ---------- */
+  function kollaKoppling() {
+    if (supa) return true;
+    $$('[data-needs-db]').forEach(el => {
+      el.innerHTML = '<div class="empty">Databasen är inte kopplad än.<br><br>'
+        + 'Öppna <b>nextrum-config.js</b>, klistra in din Supabase-URL och anon-nyckel, '
+        + 'spara och ladda om sidan. Har du inte kört <b>schema.sql</b> i Supabase SQL Editor än, gör det först.</div>';
+    });
+    console.warn('Nextrum: nextrum-config.js är inte ifylld, eller så laddades inte supabase-js.');
+    return false;
+  }
+
+  /* ---------- FAQ-dragspel ----------
+     CSS animerar height, så det är height som ska sättas här.
+     Finns på startsidan, priser.html och faq.html. */
+  function initFaq() {
+    const frågor = $$('.faq-q');
+    if (!frågor.length) return;
+
+    frågor.forEach(q => {
+      const svar = q.nextElementSibling;
+      q.addEventListener('click', () => {
+        const öppen = q.getAttribute('aria-expanded') === 'true';
+        frågor.forEach(o => {
+          o.setAttribute('aria-expanded', 'false');
+          const a = o.nextElementSibling;
+          if (a) a.style.height = '0px';
+        });
+        if (!öppen && svar) {
+          q.setAttribute('aria-expanded', 'true');
+          svar.style.height = svar.scrollHeight + 'px';
+        }
+      });
+    });
+
+    /* håll höjden rätt om fönstret ändrar storlek med en öppen fråga */
+    window.addEventListener('resize', () => {
+      const öppen = $('.faq-q[aria-expanded="true"]');
+      if (!öppen) return;
+      const a = öppen.nextElementSibling;
+      if (a) { a.style.height = 'auto'; a.style.height = a.scrollHeight + 'px'; }
+    });
+  }
+
+  /* ---------- priset ----------
+     Skrivs in från nextrum-config.js så att det bara finns på ett
+     ställe, och räknas upp när siffran kommer in i vyn. */
+  function initPris() {
+    const pris = Number(CFG.PRIS_PER_TIMME) || 349;
+    $$('[data-stat="pris"], [data-stat="pris-inline"]').forEach(el => el.textContent = kr(pris));
+
+    const stor = $('[data-stat="pris"]');
+    const lugnt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!stor || lugnt || !('IntersectionObserver' in window)) return;
+
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        io.unobserve(e.target);
+        const start = performance.now(), tid = 900;
+        const steg = nu => {
+          const p = Math.min((nu - start) / tid, 1);
+          const ease = 1 - Math.pow(1 - p, 3);
+          stor.textContent = kr(Math.round(pris * ease));
+          if (p < 1) requestAnimationFrame(steg);
+        };
+        requestAnimationFrame(steg);
+      });
+    }, { threshold: 0.6 });
+    io.observe(stor);
+  }
+
+  /* ---------- ansökan om att bli studiehjälpare ----------
+     Samma formulär finns i modalen på startsidan och som vanligt
+     formulär på bli-studiehjalpare.html. Logiken bor här så att en
+     fix hamnar på båda ställena samtidigt. */
+  function kopplaAnsökan(form, msg) {
+    if (!form) return;
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      rensa(msg);
+
+      const f = new FormData(form);
+      const namn = String(f.get('namn') || '').trim();
+      const epost = String(f.get('epost') || '').trim();
+      if (!namn || !epost) { säg(msg, 'Fyll i namn och e-post.', false); return; }
+      if (!supa) { säg(msg, 'Databasen är inte kopplad än.', false); return; }
+
+      const knapp = form.querySelector('button[type="submit"]');
+      if (knapp) knapp.setAttribute('aria-busy', 'true');
+
+      const ålderRaw = String(f.get('alder') || '').trim();
+      const { error } = await supa.from('applications').insert({
+        name: namn,
+        age: ålderRaw ? Number(ålderRaw) : null,
+        email: epost,
+        school: String(f.get('skola') || '').trim() || null,
+        subjects: String(f.get('amnen') || '').trim() || null,
+        availability: String(f.get('tider') || '').trim() || null,
+        why: String(f.get('varfor') || '').trim() || null
+      });
+
+      if (knapp) knapp.removeAttribute('aria-busy');
+      if (error) { säg(msg, 'Kunde inte skicka: ' + felText(error), false); return; }
+      form.reset();
+      säg(msg, 'Tack för din ansökan. Vi läser alla och hör av oss.', true);
+    });
+  }
+
+  /* ---------- session + profil ---------- */
+  async function hämtaSession() {
+    if (!supa) return null;
+    const { data } = await supa.auth.getSession();
+    return (data && data.session && data.session.user) || null;
+  }
+
+  async function hämtaProfil(userId) {
+    if (!supa || !userId) return null;
+    const { data, error } = await supa
+      .from('profiles')
+      .select('id, role, full_name, email, is_admin, match_status, matched_tutor_id')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error) { console.warn('profiles:', error.message); return null; }
+    return data;
+  }
+
+  /* Är besökaren redan inloggad? Peka då "Logga in" mot rätt vy. */
+  async function märkInloggad() {
+    if (!supa) return;
+    const user = await hämtaSession();
+    if (!user) return;
+    const profil = await hämtaProfil(user.id);
+    const mål = vyFörRoll(profil && profil.role);
+    $$('#login-link, .m-actions a[href="foralder.html"]').forEach(a => {
+      a.href = mål;
+      a.textContent = 'Min vy';
+    });
+  }
+
+  /* Vart hör den här användaren hemma? Används av inloggningen på
+     huvudsidan för att skicka rätt person till rätt vy. */
+  function vyFörRoll(role) {
+    return role === 'tutor' ? 'larare.html' : 'foralder.html';
+  }
+
+  /* ---------- kalender ----------
+     Delas av bokningsflödet. onPick(isoDatum) körs vid klick.
+     upptagna = Set med "YYYY-MM-DD|HH:MM". */
+  function byggKalender(opts) {
+    const host = opts.host;
+    const state = { visad: new Date(), valtDatum: null, valdTid: null, upptagna: opts.upptagna || new Set() };
+    const TIDER = opts.tider || ['15:00', '16:00', '17:00', '18:00', '19:00'];
+
+    host.innerHTML = `
+      <div class="cal-head">
+        <b class="cal-title"></b>
+        <div class="cal-nav">
+          <button type="button" data-cal="prev" aria-label="Föregående månad"><svg viewBox="0 0 12 12"><path d="M7.5 2.5 4 6l3.5 3.5"/></svg></button>
+          <button type="button" data-cal="next" aria-label="Nästa månad"><svg viewBox="0 0 12 12"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></button>
+        </div>
+      </div>
+      <div class="cal"></div>
+      <div class="slots"></div>`;
+
+    const title = $('.cal-title', host), grid = $('.cal', host), slots = $('.slots', host);
+
+    function ritaTider() {
+      if (!state.valtDatum) { slots.innerHTML = ''; return; }
+      slots.innerHTML = TIDER.map(t => {
+        const taken = state.upptagna.has(state.valtDatum + '|' + t);
+        return `<button type="button" class="slot${taken ? ' taken' : ''}" ${taken ? 'disabled' : ''}
+                  aria-pressed="${state.valdTid === t && !taken}" data-tid="${t}">${t}</button>`;
+      }).join('');
+    }
+
+    function rita() {
+      const d = state.visad;
+      const år = d.getFullYear(), mån = d.getMonth();
+      title.textContent = MANADER[mån] + ' ' + år;
+
+      const first = new Date(år, mån, 1);
+      // måndag först: getDay() ger 0 för söndag
+      const offset = (first.getDay() + 6) % 7;
+      const dagarIMån = new Date(år, mån + 1, 0).getDate();
+
+      const idag = new Date(); idag.setHours(0, 0, 0, 0);
+
+      let html = DAGAR.map(x => `<div class="dow">${x}</div>`).join('');
+      for (let i = 0; i < offset; i++) html += '<div class="day off"></div>';
+      for (let dag = 1; dag <= dagarIMån; dag++) {
+        const datum = new Date(år, mån, dag);
+        const iso = isoFor(datum);
+        const helg = datum.getDay() === 0 || datum.getDay() === 6;
+        const förbi = datum < idag;
+        const valbar = !förbi && !helg;
+        html += `<div class="day ${valbar ? 'avail' : 'off'}${state.valtDatum === iso ? ' sel' : ''}"
+                   ${valbar ? `role="button" tabindex="0" data-dag="${iso}"` : ''}>${dag}</div>`;
+      }
+      grid.innerHTML = html;
+      ritaTider();
+    }
+
+    host.addEventListener('click', e => {
+      const nav = e.target.closest('[data-cal]');
+      if (nav) {
+        state.visad = new Date(state.visad.getFullYear(), state.visad.getMonth() + (nav.dataset.cal === 'next' ? 1 : -1), 1);
+        rita(); return;
+      }
+      const dag = e.target.closest('[data-dag]');
+      if (dag) {
+        state.valtDatum = dag.dataset.dag;
+        state.valdTid = null;
+        rita();
+        if (opts.onChange) opts.onChange(state);
+        return;
+      }
+      const tid = e.target.closest('[data-tid]');
+      if (tid && !tid.disabled) {
+        state.valdTid = tid.dataset.tid;
+        ritaTider();
+        if (opts.onChange) opts.onChange(state);
+      }
+    });
+
+    rita();
+    return {
+      state,
+      rita,
+      sättUpptagna(set) { state.upptagna = set; rita(); },
+      nollställ() { state.valtDatum = null; state.valdTid = null; rita(); }
+    };
+  }
+
+  /* ---------- upptagna tider för en lärare ---------- */
+  async function hämtaUpptagna(tutorId) {
+    const set = new Set();
+    if (!supa || !tutorId) return set;
+    const { data, error } = await supa
+      .from('tutor_busy_slots')
+      .select('wanted_date, wanted_time')
+      .eq('tutor_id', tutorId);
+    if (error) { console.warn('tutor_busy_slots:', error.message); return set; }
+    (data || []).forEach(r => set.add(r.wanted_date + '|' + r.wanted_time));
+    return set;
+  }
+
+  return {
+    $, $$, esc, kr, isoFor, datumText, säg, rensa, felText,
+    initHeader, initReveal, kollaKoppling,
+    initFaq, initPris, kopplaAnsökan, märkInloggad,
+    hämtaSession, hämtaProfil, vyFörRoll,
+    byggKalender, hämtaUpptagna,
+    MANADER, DAGAR, CFG
+  };
+})();

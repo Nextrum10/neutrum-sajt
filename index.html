@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nextrum — Läxhjälp av unga för unga.</title>
+<meta name="description" content="Nextrum matchar elever med engagerade unga studiehjälpare. Personlig matchning, skräddarsydd studieplan och uppföljning efter varje pass. 349 kr i timmen, ingen bindningstid.">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css">
+</head>
+<body>
+
+<!-- ==========================================================
+     HEADER — identisk på alla publika sidor.
+     Ändrar du här måste du ändra i index.html, priser.html,
+     faq.html och bli-studiehjalpare.html. Länkarna skrivs som
+     "index.html#om"; på startsidan kortar nextrum-app.js ner dem
+     till rena ankare så att man scrollar istället för att ladda om.
+     ========================================================== -->
+<header class="hdr" id="hdr">
+  <div class="wrap nav">
+    <a href="index.html" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true">
+        <rect width="26" height="26" rx="7"/>
+        <path d="M8 18.5V7.5L18 18.5V7.5"/>
+      </svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Huvudmeny">
+      <a href="index.html#om" data-nav>Om oss</a>
+      <a href="index.html#hur" data-nav>Så fungerar det</a>
+      <a href="index.html#plattformen" data-nav>För föräldrar</a>
+      <a href="bli-studiehjalpare.html" data-nav>Bli studiehjälpare</a>
+      <a href="priser.html" data-nav>Priser</a>
+      <a href="faq.html" data-nav>FAQ</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="login" href="foralder.html" id="login-link">Logga in</a>
+      <a class="btn btn-primary btn-sm" href="index.html#intresse">Intresseanmälan</a>
+    </div>
+
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="index.html#om">Om oss <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#hur">Så fungerar det <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#plattformen">För föräldrar <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="bli-studiehjalpare.html">Bli studiehjälpare <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="priser.html">Priser <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="faq.html">FAQ <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions">
+    <a class="btn btn-primary btn-block btn-lg" href="index.html#intresse">Skicka intresseanmälan</a>
+    <a class="btn btn-ghost btn-block btn-lg" href="foralder.html">Logga in</a>
+  </div>
+  <div class="m-foot">
+    <span class="xsmall">Av unga, för unga.</span>
+    <a class="xsmall" href="mailto:hej@nextrum.se">hej@nextrum.se</a>
+  </div>
+</div>
+
+<main>
+
+<!-- ==========================================================
+     1 — HERO
+     ========================================================== -->
+<section class="wrap nx-hero" id="hem">
+  <div class="nx-hero-grid">
+    <div>
+      <span class="nx-kicker rv"><i></i> Nextrum — av unga, för unga</span>
+      <h1 class="d0 rv">Läxhjälp av unga<br>för unga.</h1>
+      <p class="lede-lg rv">Vi matchar elever med engagerade unga studiehjälpare som förstår hur det är att gå i skolan idag. Personlig matchning, skräddarsydd studieplan och uppföljning efter varje pass.</p>
+
+      <div class="nx-hero-ctas rv">
+        <a class="btn btn-primary btn-lg" href="#intresse">
+          Skicka intresseanmälan
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+        <a class="btn btn-ghost btn-lg" href="bli-studiehjalpare.html">Bli studiehjälpare</a>
+      </div>
+
+      <ul class="nx-hero-trust rv">
+        <li>Personlig matchning</li>
+        <li>Skräddarsydd studieplan</li>
+        <li>Uppföljning efter varje pass</li>
+      </ul>
+    </div>
+
+    <div class="nx-visual rv">
+      <div class="nx-plate">
+        <svg class="scene" viewBox="0 0 600 560" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Två unga personer som pluggar tillsammans vid ett bord med en laptop">
+          <!-- bakgrundsformer -->
+          <circle class="glow" cx="452" cy="132" r="152"/>
+          <circle class="halo" cx="300" cy="262" r="196"/>
+          <rect class="ink-3" x="44" y="118" width="66" height="66" rx="18"/>
+          <circle class="acc-2" cx="96" cy="300" r="9"/>
+          <circle class="acc-2" cx="524" cy="352" r="7"/>
+
+          <!-- figur A: hals + kropp -->
+          <rect class="ink-2" x="203" y="278" width="26" height="30" rx="10"/>
+          <path class="acc" d="M148 424 L155 350 C159 314 182 297 216 297 C250 297 273 314 277 350 L284 424 Z"/>
+          <!-- arm mot laptopen -->
+          <path class="ln-acc" d="M266 336 C 288 352 296 380 292 400"/>
+          <!-- huvud + hår -->
+          <circle class="ink-2" cx="216" cy="250" r="41"/>
+          <path class="ink" d="M175 250 A41 41 0 0 1 257 250 Z"/>
+          <rect class="ink" x="175" y="246" width="14" height="58" rx="7"/>
+          <rect class="ink" x="243" y="246" width="14" height="58" rx="7"/>
+
+          <!-- figur B: hals + kropp -->
+          <rect class="ink-2" x="381" y="292" width="22" height="26" rx="9"/>
+          <path class="ink" d="M338 424 L344 362 C347 332 365 316 392 316 C419 316 437 332 440 362 L446 424 Z"/>
+          <path class="ln-ink" d="M352 352 C 336 366 330 388 332 402"/>
+          <!-- huvud + hår + knut -->
+          <circle class="ink-2" cx="392" cy="266" r="35"/>
+          <circle class="ink" cx="392" cy="223" r="13"/>
+          <path class="ink" d="M357 266 A35 35 0 0 1 427 266 Z"/>
+
+          <!-- bord -->
+          <rect class="ink" x="38" y="420" width="524" height="13" rx="6.5"/>
+          <rect class="ink-2" x="104" y="433" width="12" height="76" rx="6"/>
+          <rect class="ink-2" x="484" y="433" width="12" height="76" rx="6"/>
+
+          <!-- laptop -->
+          <rect class="paper" x="266" y="350" width="70" height="52" rx="5"/>
+          <rect class="ln" x="266" y="350" width="70" height="52" rx="5"/>
+          <rect class="ink-3" x="277" y="363" width="30" height="5" rx="2.5"/>
+          <rect class="acc" x="277" y="376" width="46" height="5" rx="2.5"/>
+          <rect class="ink-3" x="277" y="389" width="20" height="5" rx="2.5"/>
+          <path class="ink-2" d="M262 402h78l7 18h-92z"/>
+
+          <!-- böcker -->
+          <rect class="ink-3" x="62" y="396" width="94" height="11" rx="4"/>
+          <rect class="acc-2" x="70" y="384" width="94" height="11" rx="4"/>
+          <rect class="ink-2" x="58" y="408" width="94" height="12" rx="4"/>
+
+          <!-- anteckningsblock + penna -->
+          <rect class="paper" x="366" y="404" width="80" height="16" rx="3"/>
+          <rect class="ln" x="366" y="404" width="80" height="16" rx="3"/>
+          <path class="ln-soft" d="M376 412h30"/>
+          <rect class="acc" x="456" y="400" width="7" height="20" rx="3.5"/>
+
+          <!-- kopp -->
+          <rect class="ink-2" x="492" y="392" width="34" height="28" rx="5"/>
+          <path class="ln-soft" d="M528 399c8 0 8 12 0 12"/>
+        </svg>
+      </div>
+
+      <div class="nx-chip c1">
+        <span class="dot"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
+        <div><b>Matchad</b><span>Studiehjälpare vald</span></div>
+      </div>
+
+      <div class="nx-chip c2">
+        <span class="dot"><svg viewBox="0 0 20 20"><path d="M10 3v14M3 10h14"/></svg></span>
+        <div><b>Studieplan klar</b><span>Anpassad efter eleven</span></div>
+      </div>
+
+      <div class="nx-chip c3">
+        <div>
+          <b>Ekvationer</b>
+          <span>Förståelse ökar</span>
+          <span class="nx-chip-bar"><i></i></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     2 — MER ÄN BARA LÄXHJÄLP
+     ========================================================== -->
+<section class="sec wrap" id="om">
+  <div class="nx-head split rv">
+    <div>
+      <span class="eyebrow acc">Mer än bara läxhjälp</span>
+      <h2 class="d2">Vi bygger en plattform där unga hjälper unga.</h2>
+    </div>
+    <div class="nx-head-aside">
+      <p class="lede">Nextrum handlar om mer än att hjälpa till med en matteläxa. Vi skapar en plattform där yngre elever får stöd av någon som nyligen själv varit där — samtidigt som nästa generation får sitt första jobb, bygger erfarenhet och växer.</p>
+    </div>
+  </div>
+
+  <div class="nx-bento rv">
+    <article class="nx-tile lead w7">
+      <span class="nx-num">01</span>
+      <h3>Av unga, för unga</h3>
+      <p>Våra studiehjälpare är unga själva och vet hur det är att gå i skolan idag.</p>
+    </article>
+
+    <article class="nx-tile w5">
+      <span class="nx-num">02</span>
+      <h3>Personlig matchning</h3>
+      <p>Vi matchar eleven utifrån ämne, nivå, behov och personlighet.</p>
+    </article>
+
+    <article class="nx-tile w5">
+      <span class="nx-num">03</span>
+      <h3>Tryggt &amp; enkelt</h3>
+      <p>Vi sköter matchning, bokning, betalning och uppföljning.</p>
+    </article>
+
+    <article class="nx-tile dark w7">
+      <span class="nx-num">04</span>
+      <h3>Resultat som märks</h3>
+      <p>Eleven får inte bara hjälp med dagens uppgift — utan bättre förståelse, självförtroende och studievanor.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ==========================================================
+     3 — SÅ HÄR GÅR DET TILL
+     ========================================================== -->
+<section class="nx-surface" id="hur">
+  <div class="sec wrap">
+    <div class="nx-head split rv">
+      <div>
+        <span class="eyebrow acc">Så fungerar det</span>
+        <h2 class="d2">Så enkelt är det.</h2>
+      </div>
+      <div class="nx-head-aside">
+        <p class="lede">Från första kontakt till färdig studieplan — vi gör det enkelt.</p>
+      </div>
+    </div>
+
+    <div class="nx-steps rv rv-stagger">
+      <div class="nx-step">
+        <span class="n">01</span>
+        <h3>Intresseanmälan</h3>
+        <p>Berätta vad eleven behöver hjälp med, vilken årskurs och vilka ämnen.</p>
+      </div>
+      <div class="nx-step">
+        <span class="n">02</span>
+        <h3>Vi hör av oss</h3>
+        <p>Vi går igenom behovet tillsammans med er.</p>
+      </div>
+      <div class="nx-step">
+        <span class="n">03</span>
+        <h3>Matchning</h3>
+        <p>Vi hittar den studiehjälpare som passar eleven bäst.</p>
+      </div>
+      <div class="nx-step">
+        <span class="n">04</span>
+        <h3>Studieplan &amp; bokning</h3>
+        <p>Den matchade studiehjälparen skapar en individuell studieplan och ni bokar era pass.</p>
+      </div>
+      <div class="nx-step">
+        <span class="n">05</span>
+        <h3>Uppföljning</h3>
+        <p>Efter varje pass får ni en rapport och tillgång till extra digitala uppgifter.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     4 — STUDIEHJÄLPARNA (hämtas från Supabase)
+     ========================================================== -->
+<section class="sec wrap" id="studiehjalpare">
+  <div class="nx-head split rv">
+    <div>
+      <span class="eyebrow acc">Några av de som hjälper</span>
+      <h2 class="d2">Möt några av våra studiehjälpare.</h2>
+    </div>
+    <div class="nx-head-aside">
+      <p class="lede">Unga, engagerade och själva mitt i skolan. Våra studiehjälpare vet hur det känns att plugga inför prov, fastna på en uppgift och försöka förstå något för första gången.</p>
+    </div>
+  </div>
+
+  <div class="showcase rv" id="showcase" data-needs-db>
+    <div class="loading">Hämtar studiehjälpare</div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     5 — VARFÖR NEXTRUM / PLATTFORMEN
+     ========================================================== -->
+<section class="nx-product" id="plattformen">
+  <span id="foraldrar" aria-hidden="true"></span>
+  <div class="sec wrap">
+    <div class="nx-product-grid">
+      <div class="rv">
+        <span class="eyebrow acc">Varför Nextrum</span>
+        <h2 class="d2" style="margin-top:18px">Vi utvecklar en ny typ av studiehjälp.</h2>
+        <p class="lede" style="margin-top:22px">Traditionell läxhjälp handlar ofta om att hitta någon som kan ett ämne. Nextrum handlar om hela elevens utveckling.</p>
+
+        <div class="nx-pillar">
+          <span class="eyebrow">Individuell studieplan</span>
+          <h3>En plan, skriven för en elev</h3>
+          <p>Vi skräddarsyr en studieplan utifrån elevens behov, förutsättningar, mål och aktuella skoluppgifter.</p>
+        </div>
+
+        <div class="nx-pillar">
+          <span class="eyebrow">En smart studievy</span>
+          <h3>Du ser vad som händer</h3>
+          <p>Genom Nextrums studievy kan elev och förälder följa utvecklingen, se studieplanen, boka pass och få återkoppling — på ett och samma ställe.</p>
+        </div>
+
+        <div style="margin-top:32px;display:flex;gap:12px;flex-wrap:wrap">
+          <a class="btn btn-primary" href="#intresse">Kom igång</a>
+          <a class="btn btn-ghost" href="foralder.html">Till föräldravyn</a>
+        </div>
+      </div>
+
+      <!-- studievyn: visuell mockup, inte en fungerande vy -->
+      <div class="rv">
+        <div class="nx-mock" role="img" aria-label="Illustration av Nextrums studievy med utveckling, kommande pass, studieplan och senaste rapport">
+          <div class="nx-mock-bar">
+            <i></i><i></i><i></i>
+            <span class="url">nextrum.se / studievy</span>
+          </div>
+          <div class="nx-mock-body">
+
+            <div class="nx-mock-top">
+              <div class="who">
+                <span class="av">A</span>
+                <div><b style="display:block;font-size:.86rem">Studievy</b><span>Matchad studiehjälpare</span></div>
+              </div>
+              <span class="nx-chips"><span>Vecka 12</span></span>
+            </div>
+
+            <div class="nx-card span2">
+              <h6>Elevens utveckling <em>Senaste 6 veckorna</em></h6>
+              <div class="nx-prog">
+                <div class="t"><b>Matematik</b><span>78%</span></div>
+                <div class="nx-bar"><i class="is-acc" style="--w:78%"></i></div>
+              </div>
+              <div class="nx-prog">
+                <div class="t"><b>Svenska</b><span>64%</span></div>
+                <div class="nx-bar"><i style="--w:64%"></i></div>
+              </div>
+              <div class="nx-prog">
+                <div class="t"><b>Engelska</b><span>52%</span></div>
+                <div class="nx-bar"><i style="--w:52%"></i></div>
+              </div>
+            </div>
+
+            <div class="nx-card">
+              <h6>Kommande studiepass</h6>
+              <div class="nx-row"><span class="when">Tis 16:00</span><span class="what">Ekvationer</span><span class="st">Online</span></div>
+              <div class="nx-row"><span class="when">Tors 17:00</span><span class="what">Provplugg</span><span class="st">På plats</span></div>
+              <div class="nx-row"><span class="when">Sön 14:00</span><span class="what">Textanalys</span><span class="st">Online</span></div>
+            </div>
+
+            <div class="nx-card">
+              <h6>Studieplan</h6>
+              <p class="nx-note"><b>Mål:</b> trygg med ekvationer inför provet v.14. Vi går igenom en uppgiftstyp per pass och avslutar med repetition.</p>
+              <div class="nx-chips" style="margin-top:12px"><span>Matematik</span><span>Åk 8</span></div>
+            </div>
+
+            <div class="nx-card span2">
+              <h6>Senaste rapport <em>Skickad efter passet</em></h6>
+              <p class="nx-note">Vi repeterade ekvationer med parenteser. Det gick trögt i början men lossnade mot slutet — hen löste de tre sista uppgifterna själv. Till nästa gång: uppgift 12–18 i boken.</p>
+              <div class="nx-row" style="margin-top:14px;border-bottom:none;padding-bottom:0">
+                <span class="when">Igår</span><span class="what">Pass genomfört</span><span class="st ok">Rapport klar</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     6 — INTRESSEANMÄLAN
+     ========================================================== -->
+<section class="sec wrap" id="intresse" style="scroll-margin-top:96px">
+  <div class="nx-lead-grid">
+    <div class="rv">
+      <span class="eyebrow acc">Intresseanmälan</span>
+      <h2 class="d2" style="margin-top:18px">Berätta vad ni behöver hjälp med.</h2>
+      <p class="lede" style="margin-top:20px">Fyll i några enkla uppgifter så kontaktar vi er och hjälper er vidare.</p>
+
+      <ul class="nx-steplist">
+        <li class="on"><em>01</em><div><b>Du skickar in formuläret</b><span>Tar ungefär två minuter.</span></div></li>
+        <li><em>02</em><div><b>Vi hör av oss</b><span>Vi går igenom behovet tillsammans med er.</span></div></li>
+        <li><em>03</em><div><b>Ni blir matchade</b><span>Studieplanen skrivs och föräldravyn låses upp.</span></div></li>
+      </ul>
+    </div>
+
+    <div class="nx-panel rv">
+      <form class="form-grid" id="lead-form" novalidate>
+        <div class="pay-field"><label for="l-name">Namn</label><input class="inp" id="l-name" name="parent_name" required autocomplete="name"></div>
+        <div class="pay-field"><label for="l-email">E-post</label><input class="inp" id="l-email" name="email" type="email" required autocomplete="email"></div>
+        <div class="pay-field"><label for="l-child">Barnets namn</label><input class="inp" id="l-child" name="child_name"></div>
+        <div class="pay-field"><label for="l-grade">Årskurs</label>
+          <select class="sel" id="l-grade" name="grade">
+            <option value="">Välj årskurs</option>
+            <option>Åk 1</option><option>Åk 2</option><option>Åk 3</option><option>Åk 4</option>
+            <option>Åk 5</option><option>Åk 6</option><option>Åk 7</option><option>Åk 8</option><option>Åk 9</option>
+          </select>
+        </div>
+        <div class="pay-field full"><label for="l-subject">Ämne</label>
+          <select class="sel" id="l-subject" name="subject">
+            <option value="">Välj ämne</option>
+            <option>Matematik</option><option>Svenska</option><option>Engelska</option>
+            <option>NO / Fysik / Kemi / Biologi</option><option>SO / Historia / Samhällskunskap</option>
+            <option>Flera ämnen</option><option>Vet inte än</option>
+          </select>
+        </div>
+        <div class="pay-field full"><label for="l-msg">Vad eleven behöver hjälp med</label>
+          <textarea class="inp" id="l-msg" name="message" placeholder="Vad går trögt just nu? Finns det något vi bör veta för att välja rätt person?"></textarea>
+        </div>
+        <div class="nx-submit-row">
+          <button class="btn btn-primary btn-lg" type="submit" id="lead-submit">
+            Skicka intresseanmälan
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </button>
+        </div>
+        <p class="nx-fineprint">Ingen bindningstid. Att skicka in en intresseanmälan kostar ingenting.</p>
+        <p class="ok-msg" id="lead-msg"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     7 — BLI STUDIEHJÄLPARE
+     ========================================================== -->
+<section class="band on-band" id="bli" style="scroll-margin-top:74px">
+  <span id="unga" aria-hidden="true"></span>
+  <div class="sec wrap">
+    <div class="nx-head split rv">
+      <div>
+        <span class="nx-kicker"><i></i> För dig som vill jobba</span>
+        <h2 class="d2" style="margin-top:22px">Ditt första jobb kan börja här.</h2>
+      </div>
+      <div class="nx-head-aside">
+        <p class="lede">Vill du tjäna pengar, hjälpa yngre elever och samtidigt bygga erfarenhet? Hos Nextrum får du möjlighet att göra alla tre.</p>
+        <div style="margin-top:24px">
+          <a class="btn btn-primary btn-lg" href="bli-studiehjalpare.html">
+            Läs mer och ansök
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="nx-perks rv">
+      <div class="nx-perk">
+        <span class="i"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <b>Flexibelt</b>
+        <p>Välj när du vill arbeta.</p>
+      </div>
+      <div class="nx-perk">
+        <span class="i"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7h6a3 3 0 010 6H9a3 3 0 000 6h7"/></svg></span>
+        <b>Tjäna pengar</b>
+        <p>Få betalt för din tid och kunskap.</p>
+      </div>
+      <div class="nx-perk">
+        <span class="i"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></span>
+        <b>Arbetslivserfarenhet</b>
+        <p>Få erfarenhet som faktiskt går att skriva på CV:t.</p>
+      </div>
+      <div class="nx-perk">
+        <span class="i"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19V3"/></svg></span>
+        <b>Utvecklas</b>
+        <p>Bli bättre på kommunikation, ledarskap och pedagogik.</p>
+      </div>
+      <div class="nx-perk">
+        <span class="i"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-9a4 4 0 017-2.6A4 4 0 0119 11c0 4.5-7 9-7 9z"/></svg></span>
+        <b>Gör skillnad</b>
+        <p>Hjälp en yngre elev att lyckas.</p>
+      </div>
+    </div>
+
+    <div class="rv" style="margin-top:clamp(40px,5vw,64px)">
+      <span class="eyebrow" style="margin-bottom:20px;display:inline-flex">Så går ansökan till</span>
+      <div class="nx-apply-flow">
+        <div class="nx-apply-step"><em>01</em><b>Ansök</b><p>Fyll i ansökan med ämnen, årskurser och tider som funkar för dig.</p></div>
+        <div class="nx-apply-step"><em>02</em><b>Intervju</b><p>Ett kort samtal där vi lär känna dig och hur du förklarar.</p></div>
+        <div class="nx-apply-step"><em>03</em><b>Bli godkänd</b><p>Vi går igenom våra kontroller och du får din studiehjälparprofil.</p></div>
+        <div class="nx-apply-step"><em>04</em><b>Börja arbeta</b><p>Ta emot förfrågningar och håll ditt första pass.</p></div>
+      </div>
+      <div style="margin-top:28px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-primary btn-lg" data-open="apply">Skicka ansökan</button>
+        <span class="small" style="color:var(--band-muted)">Redan studiehjälpare? <a href="larare.html" style="color:var(--band-fg);text-decoration:underline;text-underline-offset:3px">Logga in</a></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     8 — PRIS
+     ========================================================== -->
+<section class="sec wrap" id="priser">
+  <div class="nx-head split rv">
+    <div>
+      <span class="eyebrow acc">Priser</span>
+      <h2 class="d2">Enkelt pris. Inga överraskningar.</h2>
+    </div>
+    <div class="nx-head-aside">
+      <p class="lede">Samma timpris oavsett ämne. Du ser hela kostnaden innan ni bokar.</p>
+    </div>
+  </div>
+
+  <div class="nx-price-grid">
+    <div class="nx-price-card rv">
+      <span class="eyebrow">Läxhjälp</span>
+      <div class="nx-amount">
+        <b class="tnum" data-stat="pris">349 kr</b>
+        <span class="per">/ timme</span>
+      </div>
+      <p class="nx-price-sub">Inga dolda avgifter. Ingen bindningstid.</p>
+
+      <ul class="nx-incl">
+        <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span>Personlig matchning</span></li>
+        <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span>Individuell studieplan</span></li>
+        <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span>Flexibla tider</span></li>
+        <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span>Online eller på plats</span></li>
+        <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span>Rapport efter varje pass</span></li>
+        <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span>Bokning och betalning via Nextrum</span></li>
+      </ul>
+
+      <a class="btn btn-primary btn-lg" href="#intresse">Skicka intresseanmälan</a>
+      <p class="nx-terms">Ingen bindningstid · Avsluta när du vill · Flexibla tider. Hur ofta ni bokar bestämmer ni själva.</p>
+      <a class="link-arrow" href="priser.html" style="margin-top:18px;display:inline-flex">Se hur betalningen fungerar
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <div class="nx-offer rv">
+      <span class="tagline">Starterbjudande</span>
+      <h3>Första timmen på köpet</h3>
+      <p>Vi bjuder på första läxhjälpstimmen när ni köper två timmar.</p>
+      <a class="btn btn-primary btn-lg" href="#intresse">
+        Kom igång
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <p class="nx-terms">Erbjudandet gäller nya familjer och dras av på er första faktura.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     9 — TRYGGHET
+     ========================================================== -->
+<section class="nx-surface" id="trygghet">
+  <div class="sec wrap">
+    <div class="nx-head split rv">
+      <div>
+        <span class="eyebrow acc">Trygghet</span>
+        <h2 class="d2">Trygghet först.</h2>
+      </div>
+      <div class="nx-head-aside">
+        <p class="lede">När unga hjälper unga måste det vara tryggt för alla. Därför bygger vi in trygghet i varje steg.</p>
+      </div>
+    </div>
+
+    <div class="nx-safe rv rv-stagger">
+      <div class="nx-safe-card">
+        <span class="i"><svg viewBox="0 0 24 24"><path d="M12 2l8 3.5v6.2c0 5.3-3.4 8.6-8 10-4.6-1.4-8-4.7-8-10V5.5z"/><path d="M8.5 12l2.6 2.6L16 9.5"/></svg></span>
+        <b>Verifierade studiehjälpare</b>
+        <p>Alla studiehjälpare går igenom Nextrums urvals- och kontrollprocess.</p>
+      </div>
+      <div class="nx-safe-card">
+        <span class="i"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="3"/><path d="M7.5 8V6a4.5 4.5 0 019 0v2M12 13.5v3"/></svg></span>
+        <b>Trygg betalning</b>
+        <p>Betalning sker genom Nextrum.</p>
+      </div>
+      <div class="nx-safe-card">
+        <span class="i"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H10l-4.5 3.5V17H4z"/><path d="M8.5 9.5h7M8.5 12.5h4.5"/></svg></span>
+        <b>Säker kommunikation</b>
+        <p>Kommunikationen sker via plattformen.</p>
+      </div>
+      <div class="nx-safe-card">
+        <span class="i"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg></span>
+        <b>Kvalitetssäkring</b>
+        <p>Vi följer upp passen och samlar in återkoppling.</p>
+      </div>
+    </div>
+
+    <div class="nx-statement rv">
+      <p>Vi bygger nästa generation <em>tillsammans.</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     10 — RÖSTER / REVIEWS
+     ========================================================== -->
+<section class="sec wrap" id="rost">
+  <div class="nx-head rv" style="max-width:62ch">
+    <div>
+      <span class="eyebrow acc">Röster</span>
+      <h2 class="d2">Vad säger våra användare?</h2>
+    </div>
+  </div>
+
+  <div class="nx-empty rv" id="reviews">
+    <span class="ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H11l-5 4v-4H4z"/></svg></span>
+    <b>Vi är precis i början.</b>
+    <p>Våra första familjer och studiehjälpare blir också de första som får berätta om sin upplevelse. Tills dess visar vi hellre ingenting än något påhittat.</p>
+    <a class="btn btn-ghost" href="#intresse">
+      Bli en av de första
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ==========================================================
+     11 — FAQ (urval, hela listan ligger på faq.html)
+     ========================================================== -->
+<section class="sec wrap" id="faq">
+  <div class="nx-faq-grid">
+    <div class="nx-faq-aside rv">
+      <span class="eyebrow acc">FAQ</span>
+      <h2 class="d2" style="margin-top:18px">Vanliga frågor</h2>
+      <p class="lede" style="margin-top:20px">De vanligaste svaren finns här. Resten hittar du på vår FAQ-sida.</p>
+      <a class="link-arrow" href="faq.html" style="margin-top:24px;display:inline-flex">Alla frågor och svar
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <div class="faq rv" id="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Vad kostar Nextrum?<span class="pm"></span></button>
+        <div class="faq-a"><p>Läxhjälp kostar <span data-stat="pris-inline">349 kr</span> i timmen. I priset ingår matchning, studieplan, bokning, administration och betalningshantering. Det finns ingen anmälningsavgift och ingen bindningstid. <a href="priser.html" style="text-decoration:underline;text-underline-offset:3px">Se hela prissidan</a>.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Hur fungerar matchningen?<span class="pm"></span></button>
+        <div class="faq-a"><p>Ni skickar in en intresseanmälan, vi går igenom behovet tillsammans med er och väljer sedan ut den studiehjälpare som passar eleven bäst — utifrån ämne, nivå, behov och personlighet. Ni bläddrar alltså inte i en katalog: vi gör matchningen åt er, eftersom fel match är värre än ingen match.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Vem kan bli studiehjälpare?<span class="pm"></span></button>
+        <div class="faq-a"><p>Du som går på gymnasiet eller högskolan och är trygg i de ämnen du vill hjälpa till med. Vi tittar lika mycket på hur du förklarar och bemöter andra som på vilka betyg du har. <a href="bli-studiehjalpare.html" style="text-decoration:underline;text-underline-offset:3px">Läs mer och ansök</a>.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Kan läxhjälpen ske online?<span class="pm"></span></button>
+        <div class="faq-a"><p>Ja. Ni väljer själva om passen ska hållas online eller på plats, och kan byta mellan formaten från pass till pass. Online fungerar för de flesta ämnen och gör det lättare att hitta rätt person oavsett var ni bor.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Kan jag avsluta när som helst?<span class="pm"></span></button>
+        <div class="faq-a"><p>Ja. Det finns ingen bindningstid och ingen uppsägningstid. Ni kan pausa, byta studiehjälpare eller avsluta helt — hör bara av er.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     12 — KONTAKT
+     ========================================================== -->
+<section class="nx-surface" id="kontakt">
+  <div class="sec wrap">
+    <div class="contact">
+      <div class="rv">
+        <span class="eyebrow acc">Kontakt</span>
+        <h2 class="d2" style="margin-top:18px">Har du frågor? Vi hjälper dig.</h2>
+        <p class="lede" style="margin-top:20px">Är du förälder, elev, gymnasieelev eller representerar en skola? Hör av dig.</p>
+
+        <div style="margin-top:30px">
+          <div class="nx-contact-card">
+            <span class="k">E-post</span>
+            <a href="mailto:hej@nextrum.se">hej@nextrum.se</a>
+          </div>
+          <div class="nx-contact-card">
+            <span class="k">Ort</span>
+            <span class="v">Stockholm, Sverige</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nx-panel rv">
+        <form class="form-grid" id="contact-form" novalidate>
+          <div class="pay-field"><label for="c-name">Namn</label><input class="inp" id="c-name" name="namn" required></div>
+          <div class="pay-field"><label for="c-email">E-post</label><input class="inp" id="c-email" name="epost" type="email" required></div>
+          <div class="pay-field full"><label for="c-role">Jag är</label>
+            <select class="sel" id="c-role" name="roll">
+              <option>Förälder</option><option>Elev</option><option>Gymnasieelev som vill jobba</option><option>Skola</option><option>Annat</option>
+            </select>
+          </div>
+          <div class="pay-field full"><label for="c-msg">Meddelande</label><textarea class="inp" id="c-msg" name="meddelande" required></textarea></div>
+          <div class="nx-submit-row">
+            <button class="btn btn-primary btn-lg" type="submit">Skicka meddelande</button>
+            <span class="xsmall">Vi återkommer på mejlen du anger.</span>
+          </div>
+          <p class="ok-msg" id="contact-ok"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     13 — FINAL CTA
+     ========================================================== -->
+<section class="nx-final on-band">
+  <div class="sec wrap">
+    <div class="inner">
+      <h2 class="d1 rv">Redo att ta nästa steg?</h2>
+      <p class="rv">För dig som vill lära dig mer. För dig som vill hjälpa andra.</p>
+      <div class="nx-hero-ctas rv">
+        <a class="btn btn-primary btn-lg" href="#intresse">
+          Skicka intresseanmälan
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+        <a class="btn btn-ghost btn-lg" href="bli-studiehjalpare.html">
+          Bli studiehjälpare
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
+      <ul class="nx-hero-trust rv">
+        <li>Ingen bindningstid</li>
+        <li>Kostar ingenting att fråga</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ==========================================================
+     FOOTER — identisk på alla publika sidor, se kommentaren
+     vid headern.
+     ========================================================== -->
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        <a href="index.html" class="logo">
+          <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+          <span class="logo-text">Nextrum</span>
+        </a>
+        <p>Av unga, för unga.</p>
+        <div class="socials">
+          <a href="index.html#kontakt" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm8.4-11.2a1.55 1.55 0 11-3.1 0 1.55 1.55 0 013.1 0z"/></svg></a>
+          <a href="index.html#kontakt" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M16.6 2h-3.1v13.2a2.6 2.6 0 11-2.2-2.6v-3.2a5.8 5.8 0 105.3 5.8V9.1a6.9 6.9 0 004 1.3V7.2a3.9 3.9 0 01-4-4z"/></svg></a>
+          <a href="index.html#kontakt" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9.5 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.75-1.95 4 0 4.75 2.5 4.75 5.8V21h-4v-5.6c0-1.35-.03-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.7h-4z"/></svg></a>
+        </div>
+      </div>
+
+      <div>
+        <h6>Nextrum</h6>
+        <ul>
+          <li><a href="index.html#om">Om oss</a></li>
+          <li><a href="index.html#hur">Så fungerar det</a></li>
+          <li><a href="index.html#studiehjalpare">Studiehjälpare</a></li>
+          <li><a href="priser.html">Priser</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>För dig</h6>
+        <ul>
+          <li><a href="index.html#plattformen">För föräldrar</a></li>
+          <li><a href="bli-studiehjalpare.html">Bli studiehjälpare</a></li>
+          <li><a href="index.html#intresse">Intresseanmälan</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>Hjälp</h6>
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="index.html#kontakt">Kontakt</a></li>
+          <li><a href="index.html#kontakt">Integritetspolicy</a></li>
+          <li><a href="index.html#kontakt">Användarvillkor</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ftr-bot">
+      <span>© <span id="year">2026</span> Nextrum.</span>
+      <span>Byggd i Sverige.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ==========================================================
+     MODAL — ANSÖKAN SOM STUDIEHJÄLPARE
+     ========================================================== -->
+<div class="modal" id="m-apply" role="dialog" aria-modal="true" aria-labelledby="m-apply-t">
+  <div class="modal-box" style="max-width:540px">
+    <div class="modal-head">
+      <b id="m-apply-t">Ansök som studiehjälpare</b>
+      <button class="modal-close" data-close aria-label="Stäng"><svg viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <form id="apply-form" novalidate>
+        <div class="row2">
+          <div class="pay-field"><label for="ap-name">Namn</label><input class="inp" id="ap-name" name="namn" required autocomplete="name"></div>
+          <div class="pay-field"><label for="ap-age">Ålder</label><input class="inp" id="ap-age" name="alder" inputmode="numeric" required></div>
+        </div>
+        <div class="pay-field"><label for="ap-email">E-post</label><input class="inp" id="ap-email" name="epost" type="email" required autocomplete="email"></div>
+        <div class="pay-field"><label for="ap-school">Skola &amp; program</label><input class="inp" id="ap-school" name="skola" placeholder="t.ex. Kungsholmens gymnasium, NA"></div>
+        <div class="pay-field"><label for="ap-subj">Ämnen du vill hjälpa till med</label><input class="inp" id="ap-subj" name="amnen" placeholder="t.ex. matematik, fysik, engelska"></div>
+        <div class="pay-field"><label for="ap-avail">Tider som funkar för dig</label><input class="inp" id="ap-avail" name="tider" placeholder="t.ex. vardagar efter 16, helger"></div>
+        <div class="pay-field"><label for="ap-why">Varför vill du bli studiehjälpare?</label><textarea class="inp" id="ap-why" name="varfor" style="min-height:90px"></textarea></div>
+        <button class="btn btn-primary btn-block btn-lg" type="submit" style="margin-top:6px">Skicka ansökan</button>
+        <p class="ok-msg" id="apply-ok" style="margin-top:14px"></p>
+        <p class="xsmall" style="margin-top:12px;text-align:center">Sparas direkt i Nextrums databas, inte via mejl.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="nextrum-config.js"></script>
+<script src="nextrum-app.js"></script>
+<script>
+(function () {
+  'use strict';
+  const { $, $$, esc, säg, rensa, felText } = NX;
+
+  NX.initHeader();
+  NX.initReveal();
+  NX.kollaKoppling();
+  NX.initPris();
+  NX.märkInloggad();
+
+  /* ---------- scrollspy ---------- */
+  const navLinks = $$('[data-nav]').filter(a => (a.getAttribute('href') || '').startsWith('#'));
+  const targets = navLinks.map(a => $(a.getAttribute('href'))).filter(Boolean);
+  if ('IntersectionObserver' in window && targets.length) {
+    const spy = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    targets.forEach(t => spy.observe(t));
+  }
+
+  NX.initFaq();
+
+  /* ---------- modaler (ansökan) ---------- */
+  let senastFokus = null;
+  function öppna(id) {
+    const m = document.getElementById('m-' + id);
+    if (!m) return;
+    senastFokus = document.activeElement;
+    m.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    const first = m.querySelector('input, textarea, select, button');
+    if (first) setTimeout(() => first.focus(), 60);
+  }
+  function stäng(m) {
+    if (!m) return;
+    m.classList.remove('open');
+    document.body.style.overflow = '';
+    if (senastFokus) { senastFokus.focus(); senastFokus = null; }
+  }
+  document.addEventListener('click', e => {
+    const o = e.target.closest('[data-open]');
+    if (o) { e.preventDefault(); öppna(o.dataset.open); return; }
+    const c = e.target.closest('[data-close]');
+    if (c) { stäng(c.closest('.modal')); return; }
+    if (e.target.classList.contains('modal')) stäng(e.target);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') $$('.modal.open').forEach(stäng);
+  });
+
+  /* ---------- studiehjälpare från Supabase (godkända) ---------- */
+  function initial(namn) {
+    const n = String(namn || '').trim();
+    return n ? n[0].toUpperCase() : 'N';
+  }
+
+  function tomState() {
+    return '<div class="nx-empty" style="grid-column:1/-1">'
+      + '<span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg></span>'
+      + '<b>Inga studiehjälpare är publicerade än.</b>'
+      + '<p>Så fort den första är godkänd dyker hen upp här. Vi visar hellre en tom lista än påhittade personer.</p>'
+      + '<a class="btn btn-ghost" href="bli-studiehjalpare.html">Bli den första</a>'
+      + '</div>';
+  }
+
+  async function laddaShowcase() {
+    const host = $('#showcase');
+    if (!host || !supa) return;
+
+    const { data, error } = await supa
+      .from('tutor_profiles')
+      .select('id, age, school, city, subjects, grade_levels, bio, profiles ( full_name )')
+      .eq('status', 'approved')
+      .limit(6);
+
+    if (error) {
+      host.innerHTML = '<div class="nx-empty" style="grid-column:1/-1">'
+        + '<b>Kunde inte hämta studiehjälpare just nu.</b>'
+        + '<p class="xsmall" style="margin-top:8px">' + esc(error.message) + '</p></div>';
+      return;
+    }
+
+    if (!data || !data.length) { host.innerHTML = tomState(); return; }
+
+    host.innerHTML = data.map(t => {
+      const namn = (t.profiles && t.profiles.full_name) || 'Studiehjälpare';
+      const bio = t.bio || 'Ung studiehjälpare som hjälper yngre elever att förstå, inte bara att bli klara med läxan.';
+      const rad = ['Studiehjälpare', t.school, t.city].filter(Boolean).map(esc).join(' · ');
+      const ämnen = (t.subjects || []).map(s => '<span class="tag">' + esc(s) + '</span>').join('');
+      return '<article class="sc-card">'
+        + '<div class="sc-top">'
+        + '<span class="sc-face" aria-hidden="true">' + esc(initial(namn)) + '</span>'
+        + '<div><div class="sc-name">' + esc(namn) + (t.age ? ', ' + esc(t.age) : '') + '</div>'
+        + '<div class="sc-role">' + rad + '</div></div>'
+        + '</div>'
+        + '<div class="sc-body">'
+        + '<p>' + esc(bio) + '</p>'
+        + (ämnen ? '<div class="tutor-meta">' + ämnen + '</div>' : '')
+        + '</div>'
+        + '</article>';
+    }).join('');
+  }
+  laddaShowcase();
+
+  /* ---------- intresseanmälan ---------- */
+  const leadForm = $('#lead-form');
+  if (leadForm) {
+    leadForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const msg = $('#lead-msg'), knapp = $('#lead-submit');
+      rensa(msg);
+
+      const namn = $('#l-name').value.trim();
+      const epost = $('#l-email').value.trim();
+      if (!namn || !epost) { säg(msg, 'Fyll i namn och e-post.', false); return; }
+      if (!supa) { säg(msg, 'Databasen är inte kopplad än, så anmälan kan inte skickas. Fyll i nextrum-config.js.', false); return; }
+
+      knapp.setAttribute('aria-busy', 'true');
+      const { error } = await supa.from('leads').insert({
+        parent_name: namn,
+        email: epost,
+        child_name: $('#l-child').value.trim() || null,
+        grade: $('#l-grade').value || null,
+        subject: $('#l-subject').value || null,
+        message: $('#l-msg').value.trim() || null
+      });
+      knapp.removeAttribute('aria-busy');
+
+      if (error) { säg(msg, 'Kunde inte skicka: ' + felText(error), false); return; }
+      leadForm.reset();
+      säg(msg, 'Tack. Vi har fått din anmälan och hör av oss på ' + epost + ' inom ett par dagar.', true);
+    });
+  }
+
+  /* ---------- ansökan om att bli studiehjälpare ----------
+     Samma formulär finns på bli-studiehjalpare.html, därför ligger
+     logiken i nextrum-app.js. */
+  NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'));
+
+  /* ---------- kontaktformulär ---------- */
+  const contactForm = $('#contact-form');
+  if (contactForm) {
+    contactForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const msg = $('#contact-ok');
+      rensa(msg);
+      const f = new FormData(contactForm);
+      const namn = String(f.get('namn') || '').trim();
+      const epost = String(f.get('epost') || '').trim();
+      const med = String(f.get('meddelande') || '').trim();
+      if (!namn || !epost || !med) { säg(msg, 'Fyll i namn, e-post och meddelande.', false); return; }
+      if (!supa) { säg(msg, 'Databasen är inte kopplad än.', false); return; }
+
+      const { error } = await supa.from('contact_messages').insert({
+        name: namn, email: epost,
+        role: String(f.get('roll') || '').trim() || null,
+        message: med
+      });
+      if (error) { säg(msg, 'Kunde inte skicka: ' + felText(error), false); return; }
+      contactForm.reset();
+      säg(msg, 'Mottaget. Vi återkommer på mejlen du angav.', true);
+    });
+  }
+})();
+</script>
+</body>
+</html>
