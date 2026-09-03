@@ -192,8 +192,9 @@ const NX = (function () {
      Samma formulär finns i modalen på startsidan och som vanligt
      formulär på bli-studiehjalpare.html. Logiken bor här så att en
      fix hamnar på båda ställena samtidigt. */
-  function kopplaAnsökan(form, msg) {
+  function kopplaAnsökan(form, msg, opts) {
     if (!form) return;
+    const o = opts || {};
     form.addEventListener('submit', async e => {
       e.preventDefault();
       rensa(msg);
@@ -202,12 +203,54 @@ const NX = (function () {
       const namn = String(f.get('namn') || '').trim();
       const epost = String(f.get('epost') || '').trim();
       if (!namn || !epost) { säg(msg, 'Fyll i namn och e-post.', false); return; }
+
+      /* Kryssrutan för samtycke finns bara där den efterfrågas.
+         Utan opts.krävSamtycke beter sig funktionen precis som förut. */
+      if (o.krävSamtycke) {
+        const ruta = document.querySelector(o.krävSamtycke);
+        if (ruta && !ruta.checked) {
+          säg(msg, 'Du behöver godkänna att vi sparar uppgifterna för att kunna behandla ansökan.', false);
+          return;
+        }
+      }
       if (!supa) { säg(msg, 'Databasen är inte kopplad än.', false); return; }
 
       const knapp = form.querySelector('button[type="submit"]');
       if (knapp) knapp.setAttribute('aria-busy', 'true');
 
       const ålderRaw = String(f.get('alder') || '').trim();
+
+      /* Fält utan egen kolumn (telefon, erfarenhet, samtycke) läggs
+         sist i "why" som märkta rader. Då slipper schemat ändras och
+         ingenting som fylls i går förlorat. */
+      const fritext = String(f.get('varfor') || '').trim();
+      /* Ett valfritt CV laddas upp till lagringshinken "cv" och länken
+         läggs i "why". Finns ingen hink (eller är den stängd) ska
+         ansökan ändå gå igenom — då noteras filnamnet så att vi vet
+         att vi ska be om filen. Uppladdningen ligger här och inte hos
+         anroparen, eftersom "supa" är privat i den här modulen.
+         Skapa hinken i Supabase → Storage om du vill ha filerna. */
+      let cvRad = '';
+      const cvInp = o.cv ? document.querySelector(o.cv) : null;
+      const cvFil = cvInp && cvInp.files && cvInp.files[0];
+      if (cvFil) {
+        try {
+          const rent = cvFil.name.replace(/[^\w.\-]+/g, '_');
+          const väg = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '-' + rent;
+          const upp = await supa.storage.from('cv').upload(väg, cvFil, { upsert: false });
+          if (!upp.error) {
+            const { data } = supa.storage.from('cv').getPublicUrl(väg);
+            cvRad = 'CV: ' + ((data && data.publicUrl) || väg);
+          }
+        } catch (e) { /* faller igenom till noteringen nedan */ }
+        if (!cvRad) cvRad = 'CV: bifogad fil "' + cvFil.name + '" kunde inte laddas upp — be om den via mejl';
+      }
+
+      /* extra() får vara async. Sync-varianter fungerar precis som förut. */
+      const extraRader = typeof o.extra === 'function' ? String((await o.extra()) || '').trim() : '';
+      const tillägg = [cvRad, extraRader].filter(Boolean).join('\n');
+      const why = [fritext, tillägg].filter(Boolean).join('\n\n');
+
       const { error } = await supa.from('applications').insert({
         name: namn,
         age: ålderRaw ? Number(ålderRaw) : null,
@@ -215,13 +258,86 @@ const NX = (function () {
         school: String(f.get('skola') || '').trim() || null,
         subjects: String(f.get('amnen') || '').trim() || null,
         availability: String(f.get('tider') || '').trim() || null,
-        why: String(f.get('varfor') || '').trim() || null
+        why: why || null
       });
 
       if (knapp) knapp.removeAttribute('aria-busy');
       if (error) { säg(msg, 'Kunde inte skicka: ' + felText(error), false); return; }
       form.reset();
       säg(msg, 'Tack för din ansökan. Vi läser alla och hör av oss.', true);
+    });
+  }
+
+
+  /* ---------- foton tonar in ----------
+     Ramen (.nx-fig) bär bildens medelfärg. När filen väl är dekodad
+     tonar bilden upp ovanpå den. Ingen yta blinkar vitt, och inget
+     hoppar, eftersom width/height står i markupen. */
+  function bildIntoning(rot) {
+    $$('.nx-fig .nx-img', rot).forEach(img => {
+      if (img.dataset.intonad) return;
+      img.dataset.intonad = '1';
+      if (img.complete && img.naturalWidth) { img.classList.add('nx-laddad'); return; }
+      img.addEventListener('load', () => img.classList.add('nx-laddad'), { once: true });
+      /* trasig bild ska inte lämna en färgad ruta som ser avsiktlig ut */
+      img.addEventListener('error', () => {
+        img.classList.add('nx-laddad');
+        console.warn('Nextrum: bilden kunde inte laddas —', img.currentSrc || img.src);
+      }, { once: true });
+    });
+  }
+
+  /* ---------- vyväljaren ----------
+     "Logga in" öppnar ett val mellan föräldravyn och
+     studiehjälparvyn. Inloggningen i sig ligger kvar i
+     foralder.html och larare.html och är orörd.
+
+     Utan JavaScript är länken en vanlig länk till foralder.html,
+     och är man redan inloggad har märkInloggad() redan skrivit om
+     den till "Min vy" — då ska vi inte lägga oss i. */
+  function initVagval() {
+    const ruta = $('#nx-vagval');
+    if (!ruta) return;
+    let senast = null;
+
+    const öppna = () => {
+      senast = document.activeElement;
+      ruta.hidden = false;
+      /* En framtvingad omflödning i stället för requestAnimationFrame:
+         övergången startar likadant, men rutan öppnas även när rAF är
+         strypt (dold flik, batterisparläge). Annars kunde man låsa
+         sidan bakom en dialog som aldrig blev synlig. */
+      void ruta.offsetWidth;
+      ruta.classList.add('open');
+      document.body.classList.add('nx-låst');
+      document.body.style.overflow = 'hidden';
+      const f = ruta.querySelector('a');
+      if (f) f.focus();
+    };
+    const stäng = () => {
+      ruta.classList.remove('open');
+      document.body.classList.remove('nx-låst');
+      document.body.style.overflow = '';
+      setTimeout(() => { ruta.hidden = true; }, 340);
+      if (senast) { senast.focus(); senast = null; }
+    };
+
+    document.addEventListener('click', e => {
+      const öppnare = e.target.closest('[data-vagval]');
+      if (öppnare && !öppnare.dataset.inloggad) { e.preventDefault(); öppna(); return; }
+      if (e.target.closest('[data-vagval-stang]') || e.target === ruta) stäng();
+    });
+    document.addEventListener('keydown', e => {
+      if (ruta.hidden) return;
+      if (e.key === 'Escape') { stäng(); return; }
+      /* fokus stannar i rutan så länge den är öppen */
+      if (e.key === 'Tab') {
+        const kan = $$('a, button', ruta).filter(el => !el.disabled);
+        if (!kan.length) return;
+        const först = kan[0], sist = kan[kan.length - 1];
+        if (e.shiftKey && document.activeElement === först) { e.preventDefault(); sist.focus(); }
+        else if (!e.shiftKey && document.activeElement === sist) { e.preventDefault(); först.focus(); }
+      }
     });
   }
 
@@ -250,9 +366,12 @@ const NX = (function () {
     if (!user) return;
     const profil = await hämtaProfil(user.id);
     const mål = vyFörRoll(profil && profil.role);
-    $$('#login-link, .m-actions a[href="foralder.html"]').forEach(a => {
+    $$('#login-link, .m-actions a[href="foralder.html"], .ftr a[data-vagval]').forEach(a => {
       a.href = mål;
       a.textContent = 'Min vy';
+      /* markerar att vyväljaren inte ska fånga klicket — man vet
+         redan vem man är, då ska man rakt in i sin vy */
+      a.dataset.inloggad = '1';
     });
   }
 
@@ -367,6 +486,7 @@ const NX = (function () {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText,
     initHeader, initReveal, kollaKoppling,
     initFaq, initPris, kopplaAnsökan, märkInloggad,
+    bildIntoning, initVagval,
     hämtaSession, hämtaProfil, vyFörRoll,
     byggKalender, hämtaUpptagna,
     MANADER, DAGAR, CFG

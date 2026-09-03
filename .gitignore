@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Bildoriginalen.
+# Sajten laddar aldrig en PNG — den använder JPG-varianterna som
+# genereras ur originalen (se receptet i nextrum-images.js). De 15
+# originalen väger ~50 MB av mappens 72, och skulle klonas och
+# byggas om vid varje deploy utan att någon besökare får nytta av
+# dem. De ligger kvar lokalt i bilder/ men versionshanteras inte —
+# tappar du datorn finns de ingen annanstans.
+bilder/*.png

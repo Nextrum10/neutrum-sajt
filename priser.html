@@ -3,23 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Priser — Nextrum</title>
-<meta name="description" content="349 kr i timmen. Inga dolda avgifter, ingen bindningstid. I priset ingår matchning, studieplan, bokning och rapport efter varje pass.">
-<meta name="theme-color" content="#0A0A0A">
+<meta name="description" content="Ett timpris oavsett ämne. Inga dolda avgifter, ingen bindningstid. I priset ingår matchning, studieplan, bokning och rapport efter varje pass.">
+<link rel="canonical" href="https://nextrum.se/priser.html">
+<meta name="theme-color" content="#FBFAF8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<!-- delning -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nextrum">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:title" content="Priser — Nextrum">
+<meta property="og:description" content="Ett timpris oavsett ämne. Inga dolda avgifter, ingen bindningstid. I priset ingår matchning, studieplan, bokning och rapport efter varje pass.">
+<meta property="og:url" content="https://nextrum.se/priser.html">
+<meta property="og:image" content="https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="En ung studiehjälpare och en elev pluggar tillsammans vid ett ljust träbord.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Priser — Nextrum">
+<meta name="twitter:description" content="Ett timpris oavsett ämne. Inga dolda avgifter, ingen bindningstid. I priset ingår matchning, studieplan, bokning och rapport efter varje pass.">
+<meta name="twitter:image" content="https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css">
+<link rel="stylesheet" href="nextrum-cinema.css">
 </head>
 <body>
+
 <!-- ==========================================================
-     HEADER — identisk på alla publika sidor.
+     HEADER — identisk markup på alla fyra publika sidor.
      Ändrar du här måste du ändra i index.html, priser.html,
      faq.html och bli-studiehjalpare.html. Länkarna skrivs som
-     "index.html#om"; på startsidan kortar nextrum-app.js ner dem
+     "index.html#hur"; på startsidan kortar nextrum-app.js ner dem
      till rena ankare så att man scrollar istället för att ladda om.
      ========================================================== -->
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
 <header class="hdr" id="hdr">
   <div class="wrap nav">
     <a href="index.html" class="logo" aria-label="Nextrum, till startsidan">
@@ -31,17 +58,20 @@
     </a>
 
     <nav class="nav-links" aria-label="Huvudmeny">
-      <a href="index.html#om" data-nav>Om oss</a>
-      <a href="index.html#hur" data-nav>Så fungerar det</a>
-      <a href="index.html#plattformen" data-nav>För föräldrar</a>
+      <a href="index.html#hur" data-nav>Så fungerar Nextrum</a>
+      <a href="index.html#foraldrar" data-nav>För elever &amp; föräldrar</a>
       <a href="bli-studiehjalpare.html" data-nav>Bli studiehjälpare</a>
       <a href="priser.html" data-nav>Priser</a>
-      <a href="faq.html" data-nav>FAQ</a>
     </nav>
 
     <div class="nav-actions">
-      <a class="login" href="foralder.html" id="login-link">Logga in</a>
-      <a class="btn btn-primary btn-sm" href="index.html#intresse">Intresseanmälan</a>
+      <!-- href pekar på föräldravyn så att länken fungerar utan JS.
+           Med JS öppnas vyväljaren istället — utom när man redan är
+           inloggad, då skriver NX.märkInloggad() om länken. -->
+      <a class="login" href="foralder.html" id="login-link" data-vagval>Logga in</a>
+      <span class="nx-magnet" data-magnet>
+        <a class="btn btn-primary btn-sm" href="index.html#intresse">Intresseanmälan</a>
+      </span>
     </div>
 
     <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
@@ -51,9 +81,9 @@
 </header>
 
 <div class="mobile-menu" id="mobile-menu">
-  <a class="m-link" href="index.html#om">Om oss <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
-  <a class="m-link" href="index.html#hur">Så fungerar det <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
-  <a class="m-link" href="index.html#plattformen">För föräldrar <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#om">Vår idé <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#hur">Så fungerar Nextrum <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#foraldrar">För elever &amp; föräldrar <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <a class="m-link" href="bli-studiehjalpare.html">Bli studiehjälpare <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <a class="m-link" href="priser.html">Priser <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <a class="m-link" href="faq.html">FAQ <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
@@ -67,21 +97,30 @@
   </div>
 </div>
 
-<main>
+<main id="innehall">
 
 <section class="wrap nx-page-hero">
   <a class="nx-back" href="index.html"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
-  <span class="eyebrow acc rv" style="display:flex;margin-top:22px">Priser</span>
-  <h1 class="d0 rv">Enkelt pris. Inga överraskningar.</h1>
-  <p class="lede-lg rv">Samma timpris oavsett ämne. Du ser hela kostnaden innan ni bokar, och ni binder er inte till något.</p>
+  <span class="nx-et acc" data-stig style="margin-top:22px">Priser</span>
+  <h1 class="nx-d1" data-avslöj>Enkelt pris. Inga överraskningar.</h1>
+  <p class="nx-lede" data-stig data-fördröj="1">Samma timpris oavsett ämne. Du ser hela kostnaden innan ni bokar, och ni binder er inte till något.</p>
+  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#9E8F79">
+    <img class="nx-img" src="bilder/02-personlig-anpassning-1280.jpg"
+         srcset="bilder/02-personlig-anpassning-640.jpg 640w, bilder/02-personlig-anpassning-960.jpg 960w, bilder/02-personlig-anpassning-1280.jpg 1280w, bilder/02-personlig-anpassning-1600.jpg 1600w, bilder/02-personlig-anpassning-1920.jpg 1920w"
+         sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
+         style="object-position:50% 40%"
+         alt="En studiehjälpare står lutad över ett bord där två elever arbetar med varsin uppgift.">
+  </figure>
+
 </section>
 
-<section class="sec wrap" style="padding-top:clamp(24px,3vw,40px)">
+<section class="sec wrap" style="padding-top:clamp(24px,3vw,40px)" aria-labelledby="pris-t">
+  <h2 class="nx-dold" id="pris-t">Vad läxhjälpen kostar</h2>
   <div class="nx-price-grid">
     <div class="nx-price-card rv">
       <span class="eyebrow">Läxhjälp</span>
       <div class="nx-amount">
-        <b class="tnum" data-stat="pris">349 kr</b>
+        <b class="tnum" data-stat="pris">379 kr</b>
         <span class="per">/ timme</span>
       </div>
       <p class="nx-price-sub">Inga dolda avgifter. Ingen bindningstid.</p>
@@ -132,7 +171,7 @@
 
 <section class="sec wrap">
   <div class="nx-two">
-    <div class="rv nx-two-sticky">
+    <div class="nx-two-sticky rv">
       <span class="eyebrow acc">Varför priset ser ut så här</span>
       <h2 class="d2" style="margin-top:18px">Unga hjälper unga — det märks på priset.</h2>
     </div>
@@ -185,7 +224,7 @@
     <div class="inner">
       <h2 class="d1 rv">Redo att ta nästa steg?</h2>
       <p class="rv">För dig som vill lära dig mer. För dig som vill hjälpa andra.</p>
-      <div class="nx-hero-ctas rv">
+      <div class="nx-story-ctas" data-stig data-fördröj="2">
         <a class="btn btn-primary btn-lg" href="index.html#intresse">Skicka intresseanmälan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
         <a class="btn btn-ghost btn-lg" href="bli-studiehjalpare.html">Bli studiehjälpare <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
       </div>
@@ -198,6 +237,7 @@
 </section>
 
 </main>
+
 
 <!-- ==========================================================
      FOOTER — identisk på alla publika sidor, se kommentaren
@@ -219,32 +259,33 @@
         </div>
       </div>
 
-      <div>
-        <h6>Nextrum</h6>
+      <nav aria-labelledby="ftr-nextrum">
+        <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
         <ul>
-          <li><a href="index.html#om">Om oss</a></li>
-          <li><a href="index.html#hur">Så fungerar det</a></li>
+          <li><a href="index.html#om">Vår idé</a></li>
+          <li><a href="index.html#hur">Så fungerar Nextrum</a></li>
           <li><a href="index.html#studiehjalpare">Studiehjälpare</a></li>
           <li><a href="priser.html">Priser</a></li>
         </ul>
-      </div>
-      <div>
-        <h6>För dig</h6>
+      </nav>
+      <nav aria-labelledby="ftr-fordig">
+        <h2 class="ftr-rubrik" id="ftr-fordig">För dig</h2>
         <ul>
-          <li><a href="index.html#plattformen">För föräldrar</a></li>
+          <li><a href="index.html#foraldrar">För elever &amp; föräldrar</a></li>
           <li><a href="bli-studiehjalpare.html">Bli studiehjälpare</a></li>
           <li><a href="index.html#intresse">Intresseanmälan</a></li>
+          <li><a href="foralder.html" data-vagval>Logga in</a></li>
         </ul>
-      </div>
-      <div>
-        <h6>Hjälp</h6>
+      </nav>
+      <nav aria-labelledby="ftr-hjalp">
+        <h2 class="ftr-rubrik" id="ftr-hjalp">Hjälp</h2>
         <ul>
           <li><a href="faq.html">FAQ</a></li>
           <li><a href="index.html#kontakt">Kontakt</a></li>
           <li><a href="index.html#kontakt">Integritetspolicy</a></li>
           <li><a href="index.html#kontakt">Användarvillkor</a></li>
         </ul>
-      </div>
+      </nav>
     </div>
 
     <div class="ftr-bot">
@@ -252,16 +293,59 @@
       <span>Byggd i Sverige.</span>
     </div>
   </div>
+
+  <!-- sista intrycket: bara ordet, mycket stort, mycket tyst -->
+  <div class="nx-ftr-ord" aria-hidden="true"><span>Nextrum</span></div>
 </footer>
+
+<!-- ==========================================================
+     VYVÄLJARE — dörren in till inloggningen.
+     Själva inloggningen ligger kvar i foralder.html och
+     larare.html och är orörd.
+     ========================================================== -->
+<div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
+  <button class="nx-vagval-stang" data-vagval-stang aria-label="Stäng"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  <div class="nx-vagval-box">
+    <span class="nx-et">Logga in</span>
+    <h2 id="vagval-t" style="margin-top:18px">Välkommen tillbaka.</h2>
+    <p class="nx-lede-s">Vilken vy vill du till?</p>
+
+    <div class="nx-vagval-val">
+      <a href="foralder.html">
+        <span>
+          <b>Förälder eller elev</b>
+          <span>Studieplan, bokning, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="larare.html">
+        <span>
+          <b>Studiehjälpare</b>
+          <span>Dina elever, ditt schema, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <p class="nx-vagval-fot">
+      Har ni inte skickat intresseanmälan än? <a href="index.html#intresse">Gör det här</a>.
+    </p>
+  </div>
+</div>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="nextrum-config.js"></script>
+<script src="nextrum-images.js"></script>
 <script src="nextrum-app.js"></script>
+<script src="nextrum-motion.js"></script>
 <script>
 (function () {
   'use strict';
   NX.initHeader();
   NX.initReveal();
+  NXFin.allt();
+  NX.bildIntoning();
+  NX.initVagval();
   NX.initFaq();
   NX.initPris();
   NX.märkInloggad();

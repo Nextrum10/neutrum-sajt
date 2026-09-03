@@ -1,0 +1,1828 @@
+/* ============================================================
+   NEXTRUM — CINEMA
+   Det premiumlager som ligger ovanpå nextrum.css och
+   nextrum-home.css. Laddas bara av de fyra publika sidorna;
+   foralder.html och larare.html rörs inte av den här filen.
+
+   Ordningen i <head> spelar roll:
+     nextrum.css  →  nextrum-home.css  →  nextrum-cinema.css
+
+   Färgerna är hämtade ur fotografierna. Väggarna i bilderna är
+   varmt gråbeige, inte vita, så sidans papper är det också.
+   ============================================================ */
+
+:root{
+  /* --- papper och bläck ---
+     Terrakotta-temat: espressobrun ersätter rent svart som bläck
+     och som botten i mörka sektioner, kräm-vitt blir varmare.
+     Terrakottan är inte längre bara en accent i marginalen — den
+     är knapparnas färg, det första man ser. --acc/--acc-lugn är
+     mörkare än gamla orangea versionen med flit, annars klarar
+     inte knapptexten AA (4.5:1) mot kräm-botten. */
+  --pap:#EFE6D6;          /* lin — botten. Varm havre, INTE off-white */
+  --pap-2:#E5D8C2;        /* lugn yta */
+  --pap-3:#D8C7AB;        /* djupare yta, kant mot foto */
+  --bl:#2E2A20;           /* bark — mörk gröngrå-brun, INTE svart */
+  --bl-2:#4F4738;         /* brödtext på lin (7.4:1) */
+  --bl-3:#665C49;         /* dämpat, klarar AA även mot --pap-2 */
+  --ln:#DDCDB2;           /* linjer */
+  --ln-2:#C9B492;
+
+  /* --- mörka partier: bark, inte svart --- */
+  --nt:#2E2A20;
+  --nt-fg:#EFE6D6;
+  --nt-mut:#B3A88F;
+  --nt-ln:rgba(239,230,214,.15);
+
+  /* --- jordpaletten ---
+     Tre färger, inte en accent på neutralt. Det var felet förra
+     gången: terrakotta bara i knappar gav fortfarande ett svart/vitt
+     helhetsintryck. Nu bär lera, mossa och ockra egna ytor.
+     Varje par är kontrollerat mot AA — se README-kommentaren nedan.
+       lera   #9C4520 → 5.16:1 mot lin, åt båda hållen
+       mossa  #546343 → 5.23:1 mot lin
+       ockra  #7E5714 → 5.20:1 mot lin
+     Ljusvarianterna (-l) är BARA till mörk bark-botten, de faller
+     under AA mot lin. */
+  --acc:#9C4520;          /* lera — knappar, CTA, primär handling */
+  --acc-lugn:#7A3417;     /* lera mörk — hover och fristående text */
+  --lera-l:#D9814F;       /* lera ljus — endast på bark */
+  --mossa:#546343;        /* mossa — figurer, märken, andrahandsyta */
+  --mossa-l:#9DAD86;      /* mossa ljus — endast på bark */
+  --ockra:#7E5714;        /* ockra — sifferrader, understrykningar */
+  --ockra-l:#C08A2E;      /* ockra ljus — endast på bark */
+
+  /* --- rytm --- */
+  --w-text:1180px;        /* text och formulär */
+  --w-bred:1440px;        /* redaktionella bildkompositioner */
+  --m:clamp(20px,4.6vw,64px);
+  --luft:clamp(88px,12vw,190px);   /* mellan sektioner */
+  --luft-s:clamp(56px,7vw,104px);
+
+  /* --- skuggor: varma, aldrig blå --- */
+  --sk-1:0 1px 2px rgba(28,24,18,.05), 0 8px 20px -12px rgba(28,24,18,.14);
+  --sk-2:0 2px 6px rgba(28,24,18,.05), 0 24px 50px -26px rgba(28,24,18,.24);
+  --sk-3:0 4px 12px rgba(28,24,18,.06), 0 48px 96px -40px rgba(28,24,18,.34);
+  --sk-foto:0 2px 8px rgba(28,24,18,.06), 0 40px 88px -36px rgba(28,24,18,.40);
+
+  /* --- kurvor --- */
+  --e:cubic-bezier(.22,.61,.36,1);
+  --e-mjuk:cubic-bezier(.4,0,.2,1);
+  --e-ut:cubic-bezier(.16,1,.3,1);
+}
+
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --pap:#0C0C0B;
+    --pap-2:#141413;
+    --pap-3:#1C1B19;
+    --bl:#F4F2EE;
+    --bl-2:#A8A49C;
+    --bl-3:#8A857A;
+    --ln:rgba(244,242,238,.10);
+    --ln-2:rgba(244,242,238,.18);
+    --nt:#141413;
+    --nt-fg:#F4F2EE;
+    --nt-mut:#969188;
+    --nt-ln:rgba(244,242,238,.12);
+    --sk-1:0 1px 2px rgba(0,0,0,.4);
+    --sk-2:0 24px 50px -26px rgba(0,0,0,.7);
+    --sk-3:0 48px 96px -40px rgba(0,0,0,.8);
+    --sk-foto:0 40px 88px -36px rgba(0,0,0,.75);
+  }
+}
+:root[data-theme="dark"]{
+  --pap:#0C0C0B; --pap-2:#141413; --pap-3:#1C1B19;
+  --bl:#F4F2EE; --bl-2:#A8A49C; --bl-3:#8A857A;
+  --ln:rgba(244,242,238,.10); --ln-2:rgba(244,242,238,.18);
+  --nt:#141413; --nt-fg:#F4F2EE; --nt-mut:#969188; --nt-ln:rgba(244,242,238,.12);
+  --sk-foto:0 40px 88px -36px rgba(0,0,0,.75);
+}
+
+/* Papperet slår igenom till bastokens så att allt gammalt
+   följer med in i den varmare tonen utan att skrivas om. */
+body{background:var(--pap);color:var(--bl)}
+:root{--bg:var(--pap);--fg:var(--bl);--muted:var(--bl-2);--muted-2:var(--bl-3);
+      --line:var(--ln);--line-2:var(--ln-2);--surface:var(--pap-2);--surface-2:var(--pap-3)}
+
+/* ============================================================
+   TYPOGRAFI — större, tightare, mer redaktionell
+   ============================================================ */
+.nx-d0{
+  /* Graden mäts mot spaltbredden, inte mot hela fönstret: hero-
+     spalten är knappt halva vyn, så 9vw sprängde raden. */
+  font-size:clamp(2.6rem,7vw,6.6rem);
+  line-height:.92;
+  letter-spacing:-.05em;
+  font-weight:800;
+  text-wrap:balance;
+}
+.nx-d1{
+  font-size:clamp(2.2rem,5.4vw,4.6rem);
+  line-height:.96;
+  letter-spacing:-.043em;
+  font-weight:800;
+}
+.nx-d2{
+  font-size:clamp(2rem,4.4vw,3.6rem);
+  line-height:1.0;
+  letter-spacing:-.038em;
+  font-weight:700;
+}
+.nx-d3{
+  font-size:clamp(1.35rem,2.3vw,1.9rem);
+  line-height:1.14;
+  letter-spacing:-.028em;
+  font-weight:700;
+}
+.nx-lede{
+  font-size:clamp(1.06rem,1.35vw,1.28rem);
+  line-height:1.52;
+  color:var(--bl-2);
+  max-width:46ch;
+  letter-spacing:-.011em;
+  text-wrap:pretty;
+}
+.nx-lede-s{font-size:1rem;line-height:1.58;color:var(--bl-2);max-width:52ch}
+
+/* Etikett i versalgemener med streck framför. Sitter på nästan
+   varje sektion och är det som håller ihop rytmen. */
+.nx-et{
+  display:inline-flex;align-items:center;gap:11px;
+  font-family:var(--f-mono);
+  font-size:11px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;
+  color:var(--bl-3);
+}
+.nx-et::before{content:"";width:20px;height:1px;background:currentColor;opacity:.55;flex:none}
+.nx-et.acc{color:var(--acc-lugn)}
+.on-nt .nx-et,.nx-mork .nx-et{color:var(--nt-mut)}
+
+.nx-wrap{max-width:var(--w-text);margin-inline:auto;padding-inline:var(--m)}
+.nx-wrap-bred{max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m)}
+.nx-sek{padding-block:var(--luft)}
+.nx-sek-s{padding-block:var(--luft-s)}
+
+/* ============================================================
+   RÖRELSEPRIMITIV
+   ============================================================ */
+
+/* Rubrik som kommer in rad för rad. Raderna klipps av en mask
+   så att texten stiger upp bakom en osynlig kant. */
+[data-avslöj]{display:block}
+/* Masken måste vara högre än radhöjden, annars klipper overflow
+   bort prickarna på Ä/Ö och nedslaget på j — svensk text har dem
+   överallt. Paddingen tas tillbaka med lika stor negativ marginal
+   så att layouten inte flyttar sig. */
+.nx-rad{
+  display:block;overflow:hidden;
+  padding-top:.18em;margin-top:-.18em;
+  padding-bottom:.12em;margin-bottom:-.12em;
+}
+.nx-rad-i{
+  display:block;
+  transform:translateY(105%);
+  opacity:0;
+  transition:transform .92s var(--e-ut),opacity .62s var(--e-ut);
+}
+.nx-in .nx-rad-i{transform:translateY(0);opacity:1}
+.nx-in .nx-rad:nth-child(2) .nx-rad-i{transition-delay:.085s}
+.nx-in .nx-rad:nth-child(3) .nx-rad-i{transition-delay:.17s}
+.nx-in .nx-rad:nth-child(4) .nx-rad-i{transition-delay:.255s}
+
+/* Block som stiger in. Låg amplitud — 18px, inte 60.
+
+   Starttillståndet gäller BARA när rörelsemotorn har startat
+   (html[data-motion] sätts av nextrum-motion.js). Utan det villkoret
+   skulle halva sidan bli permanent osynlig om skriptet inte laddar. */
+html[data-motion] [data-stig]{
+  opacity:0;
+  transform:translate3d(0,18px,0);
+  transition:opacity .8s var(--e-ut),transform .8s var(--e-ut);
+}
+html[data-motion] [data-stig].nx-in{opacity:1;transform:none}
+[data-stig][data-fördröj="1"]{transition-delay:.08s}
+[data-stig][data-fördröj="2"]{transition-delay:.16s}
+[data-stig][data-fördröj="3"]{transition-delay:.24s}
+[data-stig][data-fördröj="4"]{transition-delay:.32s}
+[data-stig][data-fördröj="5"]{transition-delay:.4s}
+
+/* ============================================================
+   MARKÖREN — bara mus, bara stor skärm
+   ============================================================ */
+#nx-cursor{
+  position:fixed;top:0;left:0;z-index:9999;
+  width:26px;height:26px;border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--bl) 48%,transparent);
+  pointer-events:none;
+  opacity:0;
+  display:grid;place-items:center;
+  transition:width .28s var(--e-ut),height .28s var(--e-ut),
+             background .28s var(--e-ut),border-color .28s var(--e-ut),
+             opacity .25s linear;
+  mix-blend-mode:normal;
+}
+body.nx-har-markör #nx-cursor{opacity:1}
+#nx-cursor.is-borta{opacity:0}
+#nx-cursor.is-länk{
+  width:46px;height:46px;
+  background:color-mix(in srgb,var(--bl) 9%,transparent);
+  border-color:color-mix(in srgb,var(--bl) 26%,transparent);
+}
+#nx-cursor.is-nere{width:20px;height:20px}
+#nx-cursor.is-text{width:2px;height:24px;border-radius:1px;background:var(--bl);border-color:transparent}
+#nx-cursor.is-etikett{
+  width:82px;height:82px;
+  background:var(--bl);border-color:var(--bl);
+}
+.nx-cursor-etikett{
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--pap);
+  opacity:0;transition:opacity .2s .06s linear;white-space:nowrap;
+}
+#nx-cursor.is-etikett .nx-cursor-etikett{opacity:1}
+
+/* Systemmarkören blir kvar överallt utom där vår ring är tydlig
+   nog att ersätta den — vi tar aldrig bort den från text och
+   formulärfält, för då blir sidan svårare att använda. */
+@media (hover:hover) and (pointer:fine) and (min-width:901px){
+  html[data-motion="full"] body.nx-har-markör a,
+  html[data-motion="full"] body.nx-har-markör button,
+  html[data-motion="full"] body.nx-har-markör [data-open]{cursor:none}
+}
+@media (hover:none),(pointer:coarse),(max-width:900px){#nx-cursor{display:none}}
+
+/* ============================================================
+   HEADER
+   Genomskinlig över hero. Efter scroll: mindre, ljus, med lätt
+   oskärpa bakom. Aldrig visuellt dominant.
+   ============================================================ */
+.hdr{
+  position:fixed;top:0;left:0;right:0;z-index:800;
+  background:transparent;
+  border-bottom:1px solid transparent;
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  transition:transform .38s var(--e),background .3s var(--e),
+             border-color .3s var(--e),box-shadow .3s var(--e);
+  will-change:transform;
+}
+.hdr .nav{
+  max-width:var(--w-bred);
+  display:flex;align-items:center;gap:clamp(20px,3vw,44px);
+  padding-block:clamp(18px,2.2vw,26px);
+  transition:padding .32s var(--e);
+}
+.hdr.stuck{
+  background:color-mix(in srgb,var(--pap) 78%,transparent);
+  backdrop-filter:saturate(180%) blur(16px);
+  -webkit-backdrop-filter:saturate(180%) blur(16px);
+  border-bottom-color:var(--ln);
+}
+.hdr.djup{
+  background:color-mix(in srgb,var(--pap) 90%,transparent);
+  box-shadow:0 1px 0 rgba(28,24,18,.04),0 12px 30px -24px rgba(28,24,18,.3);
+}
+.hdr.stuck .nav{padding-block:clamp(11px,1.3vw,15px)}
+.hdr.bort{transform:translateY(-102%)}
+
+.hdr .logo{display:inline-flex;align-items:center;gap:10px;flex:none}
+.hdr .logo .mark{width:25px;height:25px;transition:transform .4s var(--e-ut)}
+.hdr .logo:hover .mark{transform:rotate(-90deg)}
+.hdr .logo-text{
+  font-weight:700;font-size:1.06rem;letter-spacing:-.035em;
+}
+.hdr .mark rect{fill:var(--bl)}
+.hdr .mark path{stroke:var(--pap);stroke-width:2.3;fill:none;stroke-linecap:square}
+
+/* Menyn: liten, låg kontrast tills man är där. Understrykningen
+   växer ut från vänster. */
+.hdr .nav-links{display:flex;gap:clamp(14px,2vw,30px);margin-left:auto}
+.hdr .nav-links a{
+  position:relative;
+  font-size:.905rem;font-weight:500;letter-spacing:-.012em;
+  color:var(--bl-2);
+  padding-block:5px;
+  transition:color .22s var(--e);
+}
+.hdr .nav-links a::after{
+  content:"";position:absolute;left:0;bottom:0;height:1px;width:100%;
+  background:currentColor;
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .34s var(--e-ut);
+}
+.hdr .nav-links a:hover,.hdr .nav-links a.active{color:var(--bl)}
+.hdr .nav-links a:hover::after,.hdr .nav-links a.active::after{transform:scaleX(1)}
+
+.hdr .nav-actions{display:flex;align-items:center;gap:14px;flex:none}
+.hdr .login{
+  font-size:.905rem;font-weight:500;color:var(--bl-2);
+  transition:color .2s var(--e);
+}
+.hdr .login:hover{color:var(--bl)}
+
+/* Över hero är headern ljus mot mörkt foto? Nej — hero är ljus,
+   så headern behåller mörk text. Den här klassen finns för de
+   sidor som har mörk sidtopp (bli-studiehjalpare). */
+.hdr.pa-mork:not(.stuck) .logo-text,
+.hdr.pa-mork:not(.stuck) .nav-links a,
+.hdr.pa-mork:not(.stuck) .login{color:var(--nt-fg)}
+.hdr.pa-mork:not(.stuck) .nav-links a{color:color-mix(in srgb,var(--nt-fg) 72%,transparent)}
+.hdr.pa-mork:not(.stuck) .mark rect{fill:var(--nt-fg)}
+.hdr.pa-mork:not(.stuck) .mark path{stroke:var(--nt)}
+.hdr.pa-mork:not(.stuck) .btn-primary{background:var(--nt-fg);color:var(--nt)}
+.hdr.pa-mork:not(.stuck) .burger span{background:var(--nt-fg)}
+
+@media (max-width:1040px){
+  .hdr .nav-links,.hdr .nav-actions{display:none}
+}
+
+/* De tre strecken ska finnas kvar även i full datorvy. Menyn bakom
+   dem rymmer sidor som inte får plats i den vanliga raden — "Om oss"
+   och FAQ — så den är inte bara en mobilgenväg. */
+body .mobile-menu{display:block}
+@media (min-width:1041px){
+  /* margin-left:auto gäller kvar på små skärmar, där knappen är
+     ensam i raden och ska ligga längst ut. Här står den sist i en
+     full rad och tar samma mellanrum som resten av headern. */
+  .hdr .burger{display:flex;flex:none;margin-left:0}
+}
+
+/* ============================================================
+   KNAPPAR OCH LÄNKAR
+   Pilen rör sig, ytan lyfter någon pixel, knappen söker sig mot
+   pekaren. Ingenting av det ska synas — bara kännas.
+   ============================================================ */
+.btn{
+  position:relative;
+  border-radius:100px;
+  padding:15px 26px;
+  font-size:.945rem;font-weight:600;letter-spacing:-.014em;
+  transition:background .24s var(--e),color .24s var(--e),
+             border-color .24s var(--e),box-shadow .28s var(--e),
+             transform .34s var(--e-ut);
+}
+.btn svg{transition:transform .34s var(--e-ut)}
+.btn:hover svg{transform:translateX(4px)}
+.btn:active{transform:scale(.985)}
+
+.btn-primary{background:var(--acc);color:var(--pap);box-shadow:var(--sk-1)}
+.btn-primary:hover{background:var(--acc-lugn);box-shadow:var(--sk-2)}
+.btn-ghost{
+  border-color:var(--ln-2);color:var(--bl);background:transparent;
+}
+.btn-ghost:hover{border-color:var(--bl);background:color-mix(in srgb,var(--bl) 4%,transparent)}
+.btn-lg{padding:17px 30px;font-size:1rem}
+
+.on-band .btn-primary,.on-nt .btn-primary{background:var(--nt-fg);color:var(--nt)}
+.on-band .btn-ghost,.on-nt .btn-ghost{border-color:var(--nt-ln);color:var(--nt-fg)}
+.on-band .btn-ghost:hover,.on-nt .btn-ghost:hover{
+  border-color:var(--nt-fg);background:color-mix(in srgb,var(--nt-fg) 8%,transparent);
+}
+
+/* Magnetiska knappar flyttas av JS via transform. Wrappern tar
+   rörelsen så att :active-skalningen inte krockar med den. */
+.nx-magnet{display:inline-block;will-change:transform}
+
+/* Länk med streck som ritas från vänster och pil som glider */
+.nx-lank{
+  position:relative;display:inline-flex;align-items:center;gap:9px;
+  font-weight:600;font-size:.95rem;letter-spacing:-.014em;
+  color:var(--bl);padding-bottom:3px;
+}
+.nx-lank::after{
+  content:"";position:absolute;left:0;bottom:0;height:1px;width:100%;
+  background:currentColor;transform:scaleX(0);transform-origin:left;
+  transition:transform .42s var(--e-ut);
+}
+.nx-lank:hover::after{transform:scaleX(1)}
+.nx-lank svg{width:14px;height:14px;transition:transform .4s var(--e-ut)}
+.nx-lank:hover svg{transform:translateX(5px)}
+.on-nt .nx-lank{color:var(--nt-fg)}
+
+/* ============================================================
+   BILDSYSTEMET
+   .nx-fig är ramen. Den bär tint-färgen som platshållare, klipper
+   bilden och kastar skuggan. Bilden inuti rörs aldrig — all
+   rörelse ligger på ramen, så webbläsaren slipper räkna om layout.
+   ============================================================ */
+.nx-fig{
+  position:relative;
+  margin:0;
+  overflow:hidden;
+  border-radius:var(--fig-r,18px);
+  background:var(--tint,#ACA193);
+  box-shadow:var(--sk-foto);
+  transform-style:preserve-3d;
+  backface-visibility:hidden;
+}
+.nx-fig .nx-img{
+  width:100%;height:100%;
+  object-fit:cover;
+  display:block;
+  /* Bilden tonar in när den laddat, ovanpå sin egen medelfärg,
+     så att ingen yta någonsin blinkar vitt. */
+  opacity:0;
+  transition:opacity .7s var(--e-mjuk);
+}
+.nx-fig .nx-img.nx-laddad{opacity:1}
+
+/* Papperskant: en hårfin ljus linje som ger fotot fysisk tjocklek
+   utan att bli en "kortdesign". */
+.nx-fig::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.13),
+             inset 0 1px 0 rgba(255,255,255,.16);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .nx-fig::after{
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);
+  }
+}
+
+.nx-fig.r-s{--fig-r:12px}
+.nx-fig.r-l{--fig-r:26px}
+.nx-fig.r-xl{--fig-r:34px}
+
+/* Bildtext i mono under ett foto — redaktionell, inte dekorativ */
+.nx-bildtext{
+  margin-top:14px;
+  font-family:var(--f-mono);font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--bl-3);
+  display:flex;align-items:center;gap:9px;
+}
+.nx-bildtext::before{content:"";width:14px;height:1px;background:currentColor;opacity:.5}
+
+/* ============================================================
+   HERO — FILMEN
+   Videon ligger i full bredd, budskapet ovanpå. Slöjan är en
+   dubbel gradient (mörk i botten, svag överallt) — utan den
+   vandrar kontrasten mot texten när videon rör sig, och rubriken
+   blir oläslig i ljusa bildrutor. Texten är centrerad eftersom
+   det bara finns ett budskap här; en vänsterställd rubrik hade
+   lämnat ett tomt högerfält mitt i bilden.
+   ============================================================ */
+.nx-hero-film{
+  position:relative;
+  min-height:min(92svh,860px);
+  display:grid;
+  place-items:center;
+  padding:clamp(120px,15vw,180px) var(--m) clamp(70px,9vw,110px);
+  overflow:hidden;
+  background:var(--nt);
+  isolation:isolate;
+}
+.nx-hero-media{position:absolute;inset:0;z-index:-2}
+.nx-hero-video{
+  width:100%;height:100%;
+  object-fit:cover;object-position:50% 46%;
+  display:block;
+  /* Klippet är filmat mot vit vägg i motljus. Utan dämpning här
+     hamnar brödtexten på ~2:1 mot fönstret bakom, och då hjälper
+     ingen slöja utan att grumla bilden helt. */
+  filter:brightness(.54) saturate(.92) contrast(1.04);
+}
+/* Slöjan: botten mörkast (knapparna står där), plus ett jämnt
+   lager över hela ytan så rubriken håller kontrast även när
+   kameran svepar förbi en ljus vägg. */
+.nx-hero-slöja{
+  position:absolute;inset:0;z-index:-1;
+  background:
+    /* mitten mörkast — det är där rubrik och brödtext står */
+    radial-gradient(ellipse 92% 70% at 50% 52%,
+      color-mix(in srgb,var(--nt) 58%,transparent) 0%,
+      color-mix(in srgb,var(--nt) 40%,transparent) 48%,
+      transparent 100%),
+    linear-gradient(to top,
+      color-mix(in srgb,var(--nt) 88%,transparent) 0%,
+      color-mix(in srgb,var(--nt) 56%,transparent) 40%,
+      color-mix(in srgb,var(--nt) 36%,transparent) 74%,
+      color-mix(in srgb,var(--nt) 52%,transparent) 100%),
+    color-mix(in srgb,var(--nt) 22%,transparent);
+}
+.nx-hero-inne{
+  position:relative;
+  width:100%;max-width:820px;
+  text-align:center;
+  display:flex;flex-direction:column;align-items:center;
+}
+.nx-hero-et{
+  color:var(--lera-l);
+  margin-bottom:clamp(20px,2.6vw,30px);
+}
+.nx-hero-rubrik{
+  font-size:clamp(3rem,9.5vw,6.4rem);
+  line-height:.93;letter-spacing:-.042em;font-weight:800;
+  color:var(--nt-fg);
+  text-wrap:balance;
+}
+.nx-hero-lede{
+  margin-top:clamp(22px,2.8vw,32px);
+  max-width:56ch;
+  font-size:clamp(1.02rem,1.35vw,1.17rem);
+  line-height:1.58;
+  color:color-mix(in srgb,var(--nt-fg) 88%,transparent);
+}
+.nx-hero-knappar{
+  margin-top:clamp(30px,3.6vw,44px);
+  display:flex;flex-wrap:wrap;gap:13px;justify-content:center;
+}
+/* Ghost-knappen står på film, inte på papper — den behöver en egen
+   variant med ljus kant och lätt bakgrundsdis, annars försvinner
+   den i bildrutor som råkar vara ljusa. */
+.btn-hero-ghost{
+  border:1px solid color-mix(in srgb,var(--nt-fg) 42%,transparent);
+  color:var(--nt-fg);
+  background:color-mix(in srgb,var(--nt) 34%,transparent);
+  backdrop-filter:blur(7px);
+}
+.btn-hero-ghost:hover{
+  border-color:var(--nt-fg);
+  background:color-mix(in srgb,var(--nt-fg) 14%,transparent);
+}
+
+@media (max-width:640px){
+  .nx-hero-film{min-height:min(88svh,700px)}
+  /* Magnet-spannet måste också gå ut i kanten, annars blir den ena
+     knappen smalare än den andra när de staplas. */
+  .nx-hero-knappar{width:100%}
+  .nx-hero-knappar .nx-magnet{width:100%}
+  .nx-hero-knappar .btn{width:100%;justify-content:center}
+}
+
+/* Rörelsen bort: videon fryser på sin poster. Budskapet är
+   detsamma, bara stilla. */
+@media (prefers-reduced-motion:reduce){
+  .nx-hero-video{display:none}
+  .nx-hero-media{
+    background:var(--nt) center/cover no-repeat url("bilder/08-teamet-1280.jpg");
+    filter:brightness(.54) saturate(.92);
+  }
+}
+
+/* ============================================================
+   HERO — FILMRUTAN
+   Tyst loopande video i full bredd, budskapet centrerat ovanpå.
+   Slöjan är två lager: en mörk botten som garanterar kontrast mot
+   ROERLIG bild (där man aldrig kan lita på en enskild bildruta),
+   och en varm barkton som drar videon in i jordpaletten så den
+   inte ser ut som ett inklistrat stockklipp.
+   ============================================================ */
+.nx-hero-film{
+  position:relative;
+  min-height:min(92svh,880px);
+  display:grid;place-items:center;
+  padding-block:clamp(120px,15vw,180px) clamp(72px,9vw,120px);
+  padding-inline:var(--m);
+  overflow:hidden;
+  background:var(--bl);
+  isolation:isolate;
+}
+.nx-hero-media{position:absolute;inset:0;z-index:0}
+.nx-hero-video{
+  width:100%;height:100%;
+  object-fit:cover;object-position:50% 42%;
+  display:block;
+}
+.nx-hero-slöja{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(to bottom,
+      rgba(46,42,32,.88) 0%,
+      rgba(46,42,32,.68) 34%,
+      rgba(46,42,32,.80) 70%,
+      rgba(46,42,32,.94) 100%),
+    /* varm barkton över hela rutan: binder klippet till paletten */
+    linear-gradient(to bottom, rgba(124,52,23,.20), rgba(84,99,67,.22));
+}
+
+.nx-hero-inne{
+  position:relative;z-index:1;
+  width:100%;max-width:940px;
+  margin-inline:auto;
+  text-align:center;
+  color:var(--nt-fg);
+}
+.nx-hero-et{
+  color:var(--ockra-l);
+  display:inline-flex;align-items:center;gap:clamp(12px,1.5vw,18px);
+  /* Större än standardetiketten: här är ordet vårt namn, inte en
+     sektionsrubrik, och 11px försvann helt mot videon. */
+  font-size:clamp(15px,2.1vw,23px);
+  font-weight:600;
+  letter-spacing:.2em;
+}
+.nx-hero-et::before,.nx-hero-et::after{
+  content:"";width:clamp(26px,3vw,42px);height:1px;background:currentColor;opacity:.55;flex:none;
+}
+.nx-hero-rubrik{
+  margin-top:clamp(20px,2.6vw,30px);
+  font-size:clamp(3rem,9.2vw,7.4rem);
+  line-height:.92;letter-spacing:-.045em;font-weight:800;
+  color:var(--nt-fg);
+  text-wrap:balance;
+}
+.nx-hero-lede{
+  margin:clamp(22px,3vw,34px) auto 0;
+  max-width:56ch;
+  font-size:clamp(1.02rem,1.5vw,1.22rem);
+  line-height:1.55;
+  color:color-mix(in srgb,var(--nt-fg) 84%,transparent);
+}
+.nx-hero-knappar{
+  margin-top:clamp(30px,4vw,44px);
+  display:flex;flex-wrap:wrap;gap:13px;justify-content:center;
+}
+/* Egen spökknapp: den vanliga .btn-ghost tar sin ram från --ln-2,
+   som är en linjefärg för ljus botten och försvinner mot video. */
+.btn-hero-ghost{
+  border:1px solid color-mix(in srgb,var(--nt-fg) 42%,transparent);
+  color:var(--nt-fg);
+  background:color-mix(in srgb,var(--nt-fg) 7%,transparent);
+  backdrop-filter:blur(6px);
+}
+.btn-hero-ghost:hover{
+  border-color:var(--nt-fg);
+  background:color-mix(in srgb,var(--nt-fg) 15%,transparent);
+}
+
+@media (max-width:640px){
+  .nx-hero-film{min-height:auto;padding-block:clamp(104px,26vw,140px) clamp(56px,14vw,80px)}
+  .nx-hero-video{object-position:52% 40%}
+}
+
+/* Rörelse bortvald: videon står stilla på sin poster-bildruta.
+   Budskapet är detsamma, bara utan rörelsen. */
+@media (prefers-reduced-motion:reduce){
+  .nx-hero-video{display:none}
+  .nx-hero-media{
+    background:var(--bl) center/cover no-repeat url("bilder/08-teamet-1280.jpg");
+  }
+}
+
+/* ============================================================
+   BERÄTTELSESCENEN
+   En hög behållare där innehållet sitter fast (sticky) medan man
+   scrollar förbi. Ingen scroll-jacking: sidan rör sig precis som
+   vanligt, det är innehållet som står stilla.
+   ============================================================ */
+.nx-story{position:relative}
+.nx-story-fast{
+  position:sticky;top:0;
+  height:100svh;min-height:600px;
+  display:flex;align-items:center;
+  overflow:hidden;
+}
+.nx-story-grid{
+  width:100%;
+  max-width:var(--w-bred);
+  margin-inline:auto;padding-inline:var(--m);
+  display:grid;
+  grid-template-columns:minmax(0,1.1fr) minmax(0,1.04fr);
+  gap:clamp(28px,4.5vw,72px);
+  align-items:center;
+}
+
+/* --- textspalten: alla budskap ligger på varandra --- */
+.nx-story-text{position:relative;grid-column:1;min-height:clamp(340px,44vh,460px)}
+.nx-story-kort{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;justify-content:center;
+  will-change:transform,opacity;
+}
+.nx-story-kort .nx-et{margin-bottom:clamp(20px,2.4vw,30px)}
+.nx-story-kort .nx-lede{margin-top:clamp(20px,2.2vw,28px)}
+.nx-story-kort .nx-story-ctas{margin-top:clamp(28px,3vw,40px)}
+
+/* Det första kortet är hero och får inte ligga absolut innan JS
+   kört — annars hoppar sidan innan motorn hunnit måla. */
+.nx-story-kort:first-child{position:relative}
+
+.nx-story-ctas{display:flex;flex-wrap:wrap;gap:13px;align-items:center}
+
+/* --- bildspalten: 3D-rummet --- */
+.nx-story-scenrum{
+  grid-column:2;
+  position:relative;
+  perspective:1500px;
+  perspective-origin:56% 48%;
+}
+.nx-story-scen{
+  position:relative;
+  aspect-ratio:5/4;
+  transform-style:preserve-3d;
+}
+.nx-story-lager{
+  position:absolute;inset:0;
+  --fig-r:22px;
+  will-change:transform,opacity;
+  transform-origin:52% 50%;
+}
+.nx-story-lager .nx-img{height:100%}
+
+/* Räknaren nere till höger — visar var i berättelsen man är.
+   Liten, monospace, aldrig i vägen. */
+.nx-story-mat{
+  position:absolute;left:var(--m);bottom:clamp(22px,3.4vh,42px);
+  display:flex;align-items:center;gap:12px;
+  font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--bl-3);
+  z-index:5;
+}
+.nx-story-spar{
+  position:relative;width:clamp(56px,7vw,104px);height:1px;
+  background:var(--ln-2);overflow:hidden;
+}
+.nx-story-spar i{
+  position:absolute;inset:0;transform-origin:left;
+  transform:scaleX(var(--p,0));
+  background:var(--bl);
+}
+
+/* Scrollhint under hero — försvinner så fort man rört sig */
+.nx-hint{
+  position:absolute;right:var(--m);bottom:clamp(22px,3.4vh,42px);
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--bl-3);
+  transition:opacity .5s var(--e);z-index:5;
+}
+.nx-hint i{
+  width:1px;height:26px;background:currentColor;opacity:.4;
+  transform-origin:top;animation:nx-drag 2.4s var(--e-mjuk) infinite;
+}
+@keyframes nx-drag{
+  0%{transform:scaleY(0);opacity:0}
+  35%{transform:scaleY(1);opacity:.5}
+  100%{transform:scaleY(1) translateY(26px);opacity:0}
+}
+.nx-story.nx-rord .nx-hint{opacity:0}
+
+/* ============================================================
+   SEKTIONSÖVERGÅNGAR
+   Sektionerna ska hänga ihop. Ingen hård kant mellan två block —
+   ytorna glider in i varandra och bilder får sticka ut ur sin
+   sektion in i nästa.
+   ============================================================ */
+.nx-yta{background:var(--pap-2);position:relative}
+.nx-yta::before,.nx-yta::after{
+  content:"";position:absolute;left:0;right:0;height:clamp(60px,8vw,120px);
+  pointer-events:none;
+}
+.nx-yta::before{top:0;background:linear-gradient(var(--pap),transparent)}
+.nx-yta::after{bottom:0;background:linear-gradient(transparent,var(--pap))}
+
+.nx-mork{
+  background:var(--nt);color:var(--nt-fg);
+  position:relative;
+}
+.nx-mork h1,.nx-mork h2,.nx-mork h3{color:var(--nt-fg)}
+.nx-mork .nx-lede,.nx-mork .nx-lede-s,.nx-mork p{color:var(--nt-mut)}
+
+/* ============================================================
+   MANIFEST — "Inte bara läxhjälp. Någon som förstår."
+   Stor typografi som fotot glider bakom.
+   ============================================================ */
+.nx-manifest{position:relative;overflow:hidden;padding-block:clamp(120px,17vw,240px)}
+.nx-manifest-inner{
+  position:relative;z-index:2;
+  max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m);
+}
+.nx-manifest h2{
+  font-size:clamp(2.6rem,8.4vw,7.6rem);
+  line-height:.92;letter-spacing:-.05em;font-weight:800;
+  max-width:20ch;
+}
+.nx-manifest h2 em{
+  font-style:normal;
+  color:var(--acc-lugn);
+}
+.nx-manifest-fot{
+  margin-top:clamp(40px,6vw,80px);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:clamp(24px,3vw,48px);
+  max-width:900px;
+}
+.nx-manifest-fot p{color:var(--bl-2);font-size:1.02rem;line-height:1.55;max-width:36ch}
+
+/* Tre spalter under manifestet: Nextrum, läxhjälp, försäljning.
+   Ingen numrering — det är parallella kategorier, inte en ordning.
+   En tunn linje över varje spalt håller dem på samma rad. */
+.nx-ide{
+  margin-top:clamp(48px,6vw,88px);
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:clamp(26px,3.4vw,60px);
+}
+.nx-ide-sp{
+  border-top:1px solid var(--ln);
+  padding-top:clamp(22px,2.4vw,30px);
+}
+.nx-ide-sp .id-fig{
+  display:grid;place-items:center;
+  width:38px;height:38px;border-radius:11px;
+  background:color-mix(in srgb,var(--mossa) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--mossa) 30%,transparent);
+  margin-bottom:clamp(16px,1.8vw,22px);
+}
+.nx-ide-sp .id-fig svg{
+  width:19px;height:19px;
+  fill:none;stroke:var(--mossa);stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.nx-ide-sp h3{
+  font-size:clamp(1.2rem,2vw,1.6rem);
+  letter-spacing:-.03em;line-height:1.12;font-weight:700;
+}
+.nx-ide-sp p{
+  margin-top:12px;color:var(--bl-2);
+  font-size:.985rem;line-height:1.58;max-width:40ch;
+}
+/* Sluttrappan i sektionen: hur unga jobbar hos oss. Två spalter,
+   för det är två vägar in — läxhjälp och försäljning. */
+.nx-ide-fot{margin-top:clamp(62px,7.5vw,116px)}
+.nx-ide-fot .nx-ide{margin-top:clamp(30px,3.6vw,46px)}
+.nx-ide.tva{grid-template-columns:repeat(2,1fr);max-width:1000px}
+@media (max-width:900px){
+  /* .tva måste nämnas här också, annars vinner den på specificitet */
+  .nx-ide,.nx-ide.tva{grid-template-columns:1fr;gap:0}
+  .nx-ide-sp{padding-block:clamp(24px,3vw,32px)}
+  .nx-ide-sp:last-child{border-bottom:1px solid var(--ln)}
+}
+
+@media (max-width:1000px){
+  .nx-manifest{padding-block:clamp(80px,12vw,120px)}
+}
+
+/* ============================================================
+   SÅ FUNGERAR NEXTRUM — pinnad stegberättelse
+   Stegen till vänster, fotot till höger byts när steget byts.
+   ============================================================ */
+.nx-hur{position:relative}
+.nx-hur-fast{
+  position:sticky;top:0;height:100svh;min-height:600px;
+  display:flex;align-items:center;overflow:hidden;
+}
+.nx-hur-grid{
+  width:100%;max-width:var(--w-bred);
+  margin-inline:auto;padding-inline:var(--m);
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  gap:clamp(32px,5vw,80px);align-items:center;
+}
+.nx-hur-steg{list-style:none;margin:0;padding:0;display:grid;gap:clamp(6px,1vw,12px)}
+.nx-hur-steg li{
+  display:grid;grid-template-columns:auto 1fr;gap:clamp(16px,2vw,26px);
+  align-items:start;
+  padding:clamp(16px,2vw,24px) 0;
+  border-top:1px solid var(--ln);
+  transition:opacity .5s var(--e);
+  opacity:.32;
+}
+.nx-hur-steg li:last-child{border-bottom:1px solid var(--ln)}
+.nx-hur-steg li.pa{opacity:1}
+.nx-hur-steg em{
+  font-family:var(--f-mono);font-style:normal;
+  font-size:11px;letter-spacing:.14em;color:var(--bl-3);
+  padding-top:.45em;
+  transition:color .4s var(--e);
+}
+.nx-hur-steg li.pa em{color:var(--acc-lugn)}
+.nx-hur-steg h3{
+  font-size:clamp(1.3rem,2.5vw,2.05rem);
+  letter-spacing:-.032em;line-height:1.08;font-weight:700;
+}
+.nx-hur-steg p{
+  margin-top:9px;color:var(--bl-2);
+  font-size:1rem;line-height:1.55;max-width:40ch;
+  /* stängda steg visar bara rubriken — texten fälls ut */
+  max-height:0;opacity:0;overflow:hidden;
+  transition:max-height .55s var(--e-ut),opacity .4s var(--e),margin-top .55s var(--e-ut);
+  margin-top:0;
+}
+.nx-hur-steg li.pa p{max-height:9em;opacity:1;margin-top:9px}
+
+.nx-hur .nx-d2{margin-top:20px;margin-bottom:clamp(28px,3.4vw,44px)}
+.nx-hur-cta{margin-top:clamp(28px,3.4vw,42px)}
+
+/* Kort skärm — en bärbar med bokmärkesrad ligger ofta på 700–780px.
+   Den pinnade spalten är ~830px hög och .nx-hur-fast har
+   overflow:hidden, så sista stegen och knappen klipptes bort utan
+   att något såg trasigt ut: det läste som att scrollen hängt sig.
+   Här krymper rubrik, luft och radavstånd tills det ryms igen. */
+@media (min-width:901px) and (max-height:880px){
+  .nx-hur-fast{min-height:0}
+  .nx-hur .nx-d2{
+    font-size:clamp(1.7rem,2.6vw,2.3rem);
+    margin-top:14px;margin-bottom:clamp(16px,2vw,24px);
+  }
+  .nx-hur-steg li{padding:11px 0}
+  .nx-hur-steg li.pa p{max-height:7em}
+  .nx-hur-cta{margin-top:clamp(18px,2.2vw,26px)}
+  .nx-hur .nx-et{font-size:10px}
+  /* Fotot är 4:5 av spaltbredden och blir därmed högre än rutan på
+     en kort skärm. Fast höjd i stället, så att över- och underkant
+     inte hamnar utanför och klipps. */
+  .nx-hur-bild{aspect-ratio:auto;height:min(76svh,780px)}
+}
+@media (min-width:901px) and (max-height:720px){
+  .nx-hur .nx-d2{font-size:clamp(1.5rem,2.2vw,1.95rem)}
+  .nx-hur-steg li{padding:8px 0}
+  .nx-hur-steg h3{font-size:1.05rem}
+  .nx-hur-steg li.pa p{max-height:6em}
+}
+
+.nx-hur-bild{position:relative;aspect-ratio:4/5;perspective:1400px}
+.nx-hur-bild .nx-fig{
+  position:absolute;inset:0;--fig-r:22px;
+  opacity:0;
+  transform:scale(1.04) translateZ(-40px);
+  transition:opacity .8s var(--e-ut),transform 1.1s var(--e-ut);
+  will-change:transform,opacity;
+}
+.nx-hur-bild .nx-fig.pa{opacity:1;transform:none;z-index:2}
+.nx-hur-bild .nx-img{height:100%}
+
+@media (max-width:900px){
+  .nx-hur-fast{position:static;height:auto;min-height:0;padding-block:var(--luft-s)}
+  .nx-hur-grid{grid-template-columns:1fr;gap:32px}
+  .nx-hur-bild{aspect-ratio:16/11;order:-1}
+  .nx-hur-steg li{opacity:1}
+  .nx-hur-steg li p{max-height:none;opacity:1;margin-top:9px}
+}
+
+/* ============================================================
+   BILDVÄGGEN — redaktionell komposition, ingen bildruta-grid
+   Fyra foton i olika storlek och djup som förskjuts när man
+   scrollar förbi. Mycket luft mellan dem.
+   ============================================================ */
+.nx-vagg{position:relative;overflow:hidden;padding-block:clamp(80px,11vw,170px)}
+.nx-vagg-inner{
+  max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m);
+  position:relative;
+}
+.nx-vagg-rubrik{max-width:34ch;margin-bottom:clamp(46px,6vw,88px)}
+/* Tätare komposition: förskjutningarna var så stora att bilderna
+   läste som fyra separata sektioner i stället för en vägg. Kortare
+   marginaler och mindre glapp håller ihop dem. */
+.nx-vagg-grid{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  gap:clamp(12px,1.5vw,20px);
+  align-items:start;
+}
+.nx-vagg-grid figure{--fig-r:16px;will-change:transform}
+.nx-vagg-grid .v1{grid-column:1/7;aspect-ratio:4/3}
+.nx-vagg-grid .v2{grid-column:7/13;aspect-ratio:3/4;margin-top:clamp(16px,3vw,52px)}
+.nx-vagg-grid .v3{grid-column:1/5;aspect-ratio:1/1;margin-top:clamp(10px,1.4vw,20px)}
+.nx-vagg-grid .v4{grid-column:5/13;aspect-ratio:16/10;margin-top:clamp(-28px,-2.4vw,-8px)}
+.nx-vagg-grid .nx-img{height:100%}
+
+/* Ett citat mitt i väggen — bryter bildrytmen med ren typografi.
+   Mindre än en rubrik med flit: det ska läsas som något någon sagt,
+   inte som ännu en rubrik som konkurrerar med sektionens egen. */
+.nx-vagg-ord{
+  grid-column:1/6;
+  align-self:center;
+  margin:0;
+  padding-block:clamp(18px,2.4vw,34px);
+  padding-right:clamp(12px,2vw,28px);
+}
+.nx-vagg-ord::before{
+  content:"”";
+  display:block;
+  font-size:clamp(3rem,5.2vw,4.6rem);
+  line-height:.62;
+  color:var(--acc-lugn);
+  margin-bottom:clamp(8px,1vw,14px);
+}
+.nx-vagg-ord p{
+  font-size:clamp(1.1rem,1.75vw,1.5rem);
+  line-height:1.44;letter-spacing:-.02em;font-weight:500;
+  color:var(--bl);text-wrap:pretty;
+}
+.nx-vagg-ord cite{font-style:normal}
+
+@media (max-width:860px){
+  .nx-vagg-grid{grid-template-columns:repeat(6,1fr);gap:14px}
+  .nx-vagg-grid .v1{grid-column:1/6;aspect-ratio:4/3}
+  .nx-vagg-grid .v2{grid-column:3/7;aspect-ratio:3/4;margin-top:20px}
+  .nx-vagg-grid .v3{grid-column:1/4;aspect-ratio:1/1;margin-top:16px}
+  .nx-vagg-grid .v4{grid-column:2/7;aspect-ratio:16/10;margin-top:16px}
+  .nx-vagg-ord{grid-column:1/7;padding-block:22px}
+}
+
+/* ============================================================
+   SPLIT — foto på ena sidan, innehåll på den andra
+   Används av föräldrasektionen och rekryteringssektionen.
+   ============================================================ */
+.nx-split{
+  max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m);
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:clamp(32px,5.5vw,96px);align-items:center;
+}
+.nx-split.omvand .nx-split-bild{order:2}
+.nx-split-bild{position:relative;aspect-ratio:4/5;--fig-r:24px}
+.nx-split-bild .nx-fig{position:absolute;inset:0}
+.nx-split-bild .nx-img{height:100%}
+.nx-split-text h2{margin-bottom:clamp(20px,2.4vw,30px)}
+.nx-split-text .nx-et{margin-bottom:clamp(20px,2.4vw,28px)}
+
+/* Punktlista med hårfina linjer istället för kort */
+.nx-punkter{margin-top:clamp(28px,3.4vw,44px);display:grid}
+.nx-punkter li{
+  display:grid;grid-template-columns:auto 1fr;gap:16px;
+  padding:16px 0;border-top:1px solid var(--ln);
+  align-items:start;
+}
+.nx-punkter li:last-child{border-bottom:1px solid var(--ln)}
+.nx-punkter b{font-size:1rem;font-weight:600;letter-spacing:-.018em;display:block}
+.nx-punkter span{display:block;color:var(--bl-2);font-size:.95rem;line-height:1.5;margin-top:3px}
+.nx-punkter .pk{
+  width:22px;height:22px;border-radius:50%;
+  border:1px solid var(--ln-2);
+  display:grid;place-items:center;margin-top:1px;flex:none;
+}
+.nx-punkter .pk svg{width:11px;height:11px;stroke:var(--bl);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nx-mork .nx-punkter li{border-color:var(--nt-ln)}
+.nx-mork .nx-punkter .pk{border-color:var(--nt-ln)}
+.nx-mork .nx-punkter .pk svg{stroke:var(--nt-fg)}
+.nx-mork .nx-punkter span{color:var(--nt-mut)}
+
+.nx-cta-rad{margin-top:clamp(30px,3.6vw,46px);display:flex;flex-wrap:wrap;gap:13px;align-items:center}
+
+@media (max-width:900px){
+  .nx-split{grid-template-columns:1fr;gap:32px}
+  .nx-split.omvand .nx-split-bild{order:0}
+  .nx-split-bild{aspect-ratio:16/11}
+}
+
+/* ============================================================
+   RÖSTER — platshållare tills det finns riktiga omdömen.
+   Vi hittar inte på recensioner. Ytan ska ändå se avsiktlig ut.
+   ============================================================ */
+.nx-roster{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:clamp(14px,1.8vw,24px);
+  margin-top:clamp(40px,5vw,64px);
+}
+.nx-rost-plats{
+  border:1px solid var(--ln);
+  border-radius:var(--r-lg,18px);
+  padding:clamp(24px,2.6vw,34px);
+  min-height:clamp(200px,22vw,268px);
+  display:flex;flex-direction:column;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0 9px,
+      color-mix(in srgb,var(--bl) 2.6%,transparent) 9px 10px
+    );
+}
+.nx-rost-plats .rl{
+  font-family:var(--f-mono);font-size:10px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--bl-3);
+}
+.nx-rost-plats .rt{
+  margin-top:auto;
+  font-size:1.06rem;line-height:1.42;letter-spacing:-.02em;
+  color:var(--bl-3);max-width:26ch;
+}
+/* de tre tomma raderna som visar var citatet kommer att stå */
+.nx-rost-rader{margin-top:22px;display:grid;gap:9px}
+.nx-rost-rader i{display:block;height:1px;background:var(--ln)}
+.nx-rost-rader i:nth-child(1){width:100%}
+.nx-rost-rader i:nth-child(2){width:88%}
+.nx-rost-rader i:nth-child(3){width:54%}
+@media (max-width:820px){.nx-roster{grid-template-columns:1fr}
+  .nx-rost-plats{min-height:0}}
+
+/* ============================================================
+   INLOGGNING — val av vy
+   Ersätter inte inloggningen, den ligger kvar i foralder.html och
+   larare.html. Det här är bara dörren dit.
+   ============================================================ */
+.nx-vagval{
+  position:fixed;inset:0;z-index:900;
+  display:grid;place-items:center;
+  padding:var(--m);
+  background:color-mix(in srgb,var(--bl) 42%,transparent);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  opacity:0;visibility:hidden;
+  /* visibility hoppar i stället för att tona. Vid stängning ska
+     hoppet ske EFTER uttoningen, vid öppning direkt — annars är
+     rutan osynlig i en tredjedels sekund och fokus fastnar i body. */
+  transition:opacity .34s var(--e),visibility 0s linear .34s;
+}
+.nx-vagval.open{
+  opacity:1;visibility:visible;
+  transition:opacity .34s var(--e),visibility 0s linear 0s;
+}
+.nx-vagval-box{
+  width:min(560px,100%);
+  background:var(--pap);
+  border-radius:26px;
+  padding:clamp(30px,4vw,46px);
+  box-shadow:var(--sk-3);
+  transform:translateY(14px) scale(.985);
+  transition:transform .42s var(--e-ut);
+}
+.nx-vagval.open .nx-vagval-box{transform:none}
+.nx-vagval h2{font-size:clamp(1.8rem,3.4vw,2.5rem);letter-spacing:-.04em;line-height:1.02}
+.nx-vagval .nx-lede-s{margin-top:14px}
+.nx-vagval-val{margin-top:clamp(26px,3vw,34px);display:grid;gap:11px}
+.nx-vagval-val a{
+  display:grid;grid-template-columns:1fr auto;align-items:center;gap:16px;
+  padding:20px 22px;
+  border:1px solid var(--ln);border-radius:16px;
+  transition:border-color .24s var(--e),background .24s var(--e),transform .3s var(--e-ut);
+}
+.nx-vagval-val a:hover{
+  border-color:var(--bl);background:color-mix(in srgb,var(--bl) 3.5%,transparent);
+  transform:translateY(-1px);
+}
+.nx-vagval-val b{display:block;font-size:1.06rem;font-weight:600;letter-spacing:-.022em}
+.nx-vagval-val span{display:block;font-size:.9rem;color:var(--bl-2);margin-top:3px}
+.nx-vagval-val svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.7;fill:none;
+  stroke-linecap:round;stroke-linejoin:round;transition:transform .34s var(--e-ut)}
+.nx-vagval-val a:hover svg{transform:translateX(4px)}
+.nx-vagval-stang{
+  position:absolute;top:calc(var(--m) * .7);right:calc(var(--m) * .7);
+  width:42px;height:42px;border-radius:50%;
+  display:grid;place-items:center;
+  background:color-mix(in srgb,var(--pap) 18%,transparent);
+  color:var(--pap);
+}
+.nx-vagval-stang svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round}
+.nx-vagval-fot{
+  margin-top:24px;padding-top:20px;border-top:1px solid var(--ln);
+  font-size:.9rem;color:var(--bl-2);
+}
+.nx-vagval-fot a{text-decoration:underline;text-underline-offset:3px;color:var(--bl)}
+
+/* ============================================================
+   FOTEN
+   ============================================================ */
+.ftr{background:var(--nt);color:var(--nt-fg);padding-block:clamp(64px,8vw,110px) clamp(28px,3vw,40px)}
+.ftr .wrap{max-width:var(--w-bred)}
+.ftr-brand p{color:var(--nt-mut)}
+/* Kolumnrubrikerna i foten är h2 för rubrikordningens skull, men
+   ska se ut som små etiketter — inte som rubriker. */
+.ftr .ftr-rubrik{
+  font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--nt-mut);font-weight:500;
+  margin:0 0 18px;line-height:1.4;
+}
+.ftr ul li a{
+  color:color-mix(in srgb,var(--nt-fg) 78%,transparent);
+  font-size:.95rem;
+  transition:color .2s var(--e);
+  position:relative;
+}
+.ftr ul li a:hover{color:var(--nt-fg)}
+.ftr ul li{margin-bottom:11px}
+.ftr .mark rect{fill:var(--nt-fg)}
+.ftr .mark path{stroke:var(--nt)}
+
+/* En sista, mycket stor ordbild längst ned. Ren typografi, inget
+   annat — det är sista intrycket. */
+.nx-ftr-ord{
+  max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m);
+  padding-top:clamp(50px,7vw,96px);
+}
+.nx-ftr-ord span{
+  display:block;
+  font-size:clamp(3rem,15.5vw,15rem);
+  line-height:.82;letter-spacing:-.055em;font-weight:800;
+  color:color-mix(in srgb,var(--nt-fg) 11%,transparent);
+  user-select:none;
+}
+
+/* ============================================================
+   FORMULÄR — intresseanmälan och ansökan
+   Samma fält som förut, ny yta. Ingen backend rörd.
+   ============================================================ */
+.nx-form-yta{
+  background:var(--pap);
+  border:1px solid var(--ln);
+  border-radius:26px;
+  padding:clamp(26px,3.4vw,44px);
+  box-shadow:var(--sk-2);
+}
+.nx-mork .nx-form-yta{
+  background:color-mix(in srgb,var(--nt-fg) 4%,transparent);
+  border-color:var(--nt-ln);
+}
+.inp,.sel{
+  border-radius:12px;
+  border:1px solid var(--ln-2);
+  background:var(--pap);
+  padding:13px 15px;
+  font-size:.98rem;
+  transition:border-color .2s var(--e),box-shadow .2s var(--e);
+}
+.inp:focus,.sel:focus{
+  outline:none;
+  border-color:var(--bl);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--bl) 9%,transparent);
+}
+.pay-field label{
+  font-family:var(--f-mono);font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--bl-3);margin-bottom:8px;display:block;
+}
+
+/* Rollväljaren överst i intresseanmälan. Två knappar, den valda
+   får ett fyllt läge. Byter vilket formulär som visas. */
+.nx-roll{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px;
+  padding:5px;border:1px solid var(--ln);border-radius:100px;
+  background:var(--pap-2);
+  margin-bottom:clamp(24px,3vw,32px);
+}
+.nx-roll button{
+  padding:12px 14px;border-radius:100px;
+  font-size:.925rem;font-weight:600;letter-spacing:-.014em;
+  color:var(--bl-2);
+  transition:background .28s var(--e),color .28s var(--e),box-shadow .28s var(--e);
+}
+.nx-roll button[aria-selected="true"]{
+  background:var(--pap);color:var(--bl);box-shadow:var(--sk-1);
+}
+.nx-roll button:hover{color:var(--bl)}
+@media (max-width:520px){.nx-roll{grid-template-columns:1fr}.nx-roll{border-radius:18px}
+  .nx-roll button{border-radius:14px}}
+
+/* Panelerna som byts när rollen byts */
+.nx-roll-panel[hidden]{display:none}
+
+/* Kvittensen efter skickat formulär */
+.ok-msg.show{
+  display:block;margin-top:16px;padding:14px 16px;
+  border-radius:12px;font-size:.93rem;line-height:1.5;
+  background:color-mix(in srgb,var(--bl) 4%,transparent);
+  border:1px solid var(--ln);
+  color:var(--bl);
+}
+.ok-msg.show.is-err{
+  background:color-mix(in srgb,var(--acc) 8%,transparent);
+  border-color:color-mix(in srgb,var(--acc) 34%,transparent);
+}
+
+/* ============================================================
+   SIFFROR OCH SMÅ MÄRKEN — accenten används bara här
+   ============================================================ */
+.nx-siffra{
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;
+  color:var(--acc-lugn);
+}
+
+/* ============================================================
+   MOBIL
+   Inte en hopkrympt skrivbordssida. Berättelsen är densamma men
+   staplad: bild, sedan text, med rejäl luft. 3D-rotationen är
+   nästan borta (se DÄMPNING i nextrum-motion.js), perspektivet
+   grundare, och den pinnade scenen släpper taget.
+   ============================================================ */
+@media (max-width:900px){
+  :root{--luft:clamp(64px,13vw,96px);--luft-s:clamp(44px,8vw,64px)}
+
+  /* Berättelsen är kvar — samma tre budskap, samma tre foton —
+     men staplad: fotot överst, texten under. 3D-rotationen är
+     nästan borta (DÄMPNING 'lite' i nextrum-motion.js) och
+     perspektivet grundare, så rörelsen blir en mjuk förskjutning
+     istället för en vridning. */
+  /* height:auto + min-height gör att scenen växer om texten är lång
+     i stället för att klippa bort knapparna. Sticky fungerar likadant. */
+  .nx-story-fast{
+    height:auto;min-height:100svh;
+    padding-top:clamp(76px,17vw,96px);
+    padding-bottom:clamp(20px,5vw,32px);
+    align-items:center;
+  }
+  .nx-story-grid{
+    grid-template-columns:1fr;
+    grid-template-rows:auto 1fr;
+    gap:clamp(18px,4vw,26px);
+    align-content:center;
+  }
+  .nx-story-scenrum{grid-column:1;grid-row:1;perspective:1000px;perspective-origin:50% 50%}
+  .nx-story-scen{aspect-ratio:16/11}
+  .nx-story-lager{--fig-r:16px}
+  .nx-story-text{grid-column:1;grid-row:2;min-height:clamp(280px,40vh,360px)}
+  .nx-story-kort{justify-content:flex-start}
+  .nx-story-kort .nx-et{margin-bottom:12px;font-size:10px;letter-spacing:.13em}
+  .nx-story-kort .nx-lede{margin-top:12px;font-size:.98rem;line-height:1.48}
+  .nx-story-kort .nx-story-ctas{margin-top:18px;gap:9px}
+  .nx-d0{font-size:clamp(2.3rem,10.6vw,3.4rem);line-height:.96}
+  .nx-d1{font-size:clamp(2rem,9vw,2.9rem);line-height:.98}
+  .nx-hint{display:none}
+  /* mätaren är dekor — den får inte konkurrera om plats på mobil */
+  .nx-story-mat{display:none}
+  .btn-lg{padding:15px 24px;font-size:.95rem}
+
+  .nx-manifest h2{font-size:clamp(2.4rem,10vw,3.6rem)}
+  .nx-ftr-ord{padding-top:40px}
+}
+
+@media (max-width:560px){
+  .nx-story-scen{aspect-ratio:5/4}
+  .nx-story-ctas .btn{width:100%;justify-content:center}
+  .nx-vagg-ord p{font-size:1.06rem}
+}
+
+/* ============================================================
+   REDUCERAD RÖRELSE
+   Sidan ska vara vacker utan rörelse, inte bara användbar.
+   Allt ligger i sitt slutläge, inget hoppar, inget tonar.
+   ============================================================ */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+    scroll-behavior:auto !important;
+  }
+  .nx-rad-i{transform:none !important;opacity:1 !important}
+  [data-stig]{opacity:1 !important;transform:none !important}
+  .nx-fig .nx-img{opacity:1 !important}
+  #nx-cursor{display:none !important}
+  .nx-hint{display:none}
+
+  /* Den pinnade scenen släpper — man scrollar igenom en vanlig,
+     lugn sida där varje budskap står för sig med sin bild. */
+  .nx-story-fast,.nx-hur-fast{
+    position:static;height:auto;min-height:0;
+    padding-block:var(--luft-s);align-items:flex-start;
+  }
+  .nx-story-grid,.nx-hur-grid{grid-template-columns:1fr;gap:34px}
+  .nx-story-text{min-height:0}
+  .nx-story-kort{position:relative;inset:auto}
+  .nx-story-scen{aspect-ratio:16/10}
+  .nx-story-lager{position:absolute}
+  .nx-hur-steg li{opacity:1}
+  .nx-hur-steg li p{max-height:none;opacity:1;margin-top:9px}
+  .nx-hur-bild .nx-fig{opacity:0}
+  .nx-hur-bild .nx-fig:first-child{opacity:1;transform:none}
+  .nx-vagg-grid figure{transform:none !important}
+}
+
+/* Samma sak när JS inte kört ännu eller inte alls: sidan ska
+   fungera utan skript. Berättelsens text ligger då i flödet. */
+html:not([data-motion]) .nx-story-fast,
+html:not([data-motion]) .nx-hur-fast{position:static;height:auto;min-height:0}
+html:not([data-motion]) .nx-story-kort{position:relative;inset:auto}
+
+/* ============================================================
+   TILLGÄNGLIGHET
+   ============================================================ */
+:focus-visible{
+  outline:2px solid var(--bl);
+  outline-offset:3px;
+  border-radius:3px;
+}
+.nx-mork :focus-visible,.on-band :focus-visible{outline-color:var(--nt-fg)}
+
+/* Hoppa till innehåll — syns bara vid tangentbordsfokus */
+.nx-hoppa{
+  position:absolute;left:var(--m);top:12px;z-index:1000;
+  transform:translateY(-160%);
+  background:var(--bl);color:var(--pap);
+  padding:12px 20px;border-radius:100px;
+  font-size:.9rem;font-weight:600;
+  transition:transform .24s var(--e);
+}
+.nx-hoppa:focus-visible{transform:none}
+
+/* Text som bara finns för skärmläsare */
+.nx-dold{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+
+/* ============================================================
+   SCROLLSTRÄCKOR FÖR DE PINNADE SCENERNA
+   Höjden här är hur länge scenen sitter fast. 100svh av den går
+   åt till själva vyn — resten är den sträcka man scrollar genom
+   berättelsen. 200svh ger alltså ungefär 100svh koreografi.
+   Kortades ner 2026-09-03 (från 280/320svh) — två pinnade sektioner
+   efter varandra krävde ~6 skärmhöjders scroll innan man kom förbi
+   dem, vilket kändes som att bildspelet hängt sig fast man bara
+   inte scrollat tillräckligt långt än. Ändrar du siffran ändrar
+   du tempot: högre = långsammare.
+   ============================================================ */
+.nx-story{height:200svh}
+.nx-hur{height:230svh}
+
+@media (max-width:900px){
+  .nx-story{height:190svh}
+  .nx-hur{height:auto}
+}
+@media (prefers-reduced-motion:reduce){
+  .nx-story,.nx-hur{height:auto}
+}
+html:not([data-motion]) .nx-story,
+html:not([data-motion]) .nx-hur{height:auto}
+
+/* ============================================================
+   DEN STILLA BERÄTTELSEN
+   Samma budskap som den pinnade scenen, men i vanligt flöde.
+   Visas bara när rörelse är bortvald eller JS inte kört — då
+   tappar ingen innehållet bara för att det låg i en animation.
+   ============================================================ */
+.nx-story-stilla{display:none}
+@media (prefers-reduced-motion:reduce){
+  .nx-story-stilla{display:block;padding-block:var(--luft-s)}
+}
+html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-s)}
+
+.nx-stilla-rad{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:clamp(28px,4vw,64px);align-items:center;
+  padding-block:clamp(32px,4vw,56px);
+}
+.nx-stilla-rad:nth-child(even) figure{order:2}
+.nx-stilla-rad figure{aspect-ratio:4/3;--fig-r:20px}
+.nx-stilla-rad .nx-img{height:100%}
+.nx-stilla-rad h2{margin-top:18px}
+.nx-stilla-rad .nx-lede{margin-top:16px}
+@media (max-width:820px){
+  .nx-stilla-rad{grid-template-columns:1fr;gap:24px}
+  .nx-stilla-rad:nth-child(even) figure{order:0}
+}
+
+/* ============================================================
+   HÅLLPUNKTERNA — fyra rader istället för fyra kort
+   ============================================================ */
+/* Fyra hållpunkter som redaktionella rader. Figuren står ovanför
+   rubriken, inte bredvid den — en liten markör i vänsterkant fick
+   rubriken att hänga obalanserat ut åt sidan. */
+.nx-holdpunkter{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:0 clamp(32px,5vw,88px);
+  border-top:1px solid var(--ln);
+}
+.nx-holdpunkter li{
+  padding:clamp(28px,3vw,40px) 0;
+  border-bottom:1px solid var(--ln);
+}
+.nx-holdpunkter .hp-mark{
+  display:grid;place-items:center;
+  width:38px;height:38px;border-radius:11px;
+  background:color-mix(in srgb,var(--mossa) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--mossa) 30%,transparent);
+  margin-bottom:clamp(16px,1.8vw,22px);
+}
+.nx-holdpunkter .hp-mark svg{
+  width:19px;height:19px;
+  fill:none;stroke:var(--mossa);stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.nx-holdpunkter h3{
+  font-size:clamp(1.15rem,1.9vw,1.5rem);
+  letter-spacing:-.028em;line-height:1.14;font-weight:700;
+}
+.nx-holdpunkter p{
+  margin-top:10px;color:var(--bl-2);
+  font-size:.985rem;line-height:1.55;max-width:40ch;
+}
+@media (max-width:760px){.nx-holdpunkter{grid-template-columns:1fr}}
+
+/* ============================================================
+   SAMTYCKE
+   ============================================================ */
+.nx-samtycke{
+  display:grid;grid-template-columns:auto 1fr;gap:12px;
+  align-items:start;
+  margin-top:6px;
+  font-size:.88rem;line-height:1.5;color:var(--bl-2);
+  cursor:pointer;
+}
+.nx-samtycke input{
+  width:18px;height:18px;margin:1px 0 0;
+  accent-color:var(--bl);
+  cursor:pointer;flex:none;
+}
+.nx-samtycke a{color:var(--bl);text-decoration:underline;text-underline-offset:3px}
+.nx-mork .nx-samtycke{color:var(--nt-mut)}
+.nx-mork .nx-samtycke a{color:var(--nt-fg)}
+
+/* ============================================================
+   SISTA STEGET
+   ============================================================ */
+.nx-final-cinema{padding-block:clamp(96px,14vw,200px)}
+.nx-final-inner{max-width:34ch}
+
+/* Centrerad avslutning: samma som slutrutan på undersidorna, så att
+   sista skärmen ser likadan ut oavsett var man kommer ifrån. */
+.nx-final-cinema .nx-final-inner{
+  margin-inline:auto;text-align:center;max-width:none;
+}
+/* Rubriken tar hela bredden — storleken följer fönstret i stället
+   för en teckenbredd, så raden slutar där sidan slutar. */
+.nx-final-rubrik{
+  /* Mellanläge: 89px mot 117px i första försöket. Raden håller sig
+     på en rad och tar knappt sjuttio procent av bredden. */
+  font-size:clamp(1.9rem,6.2vw,5.6rem);
+  line-height:1.0;letter-spacing:-.045em;font-weight:800;
+  text-wrap:balance;
+}
+.nx-final-cinema .nx-lede{max-width:46ch}
+.nx-final-cinema .nx-lede{margin-inline:auto}
+.nx-final-cinema .nx-story-ctas{justify-content:center}
+/* Ordet som bär hela meningen får palettens ljusa lera — den enda
+   av de tre jordfärgerna som håller kontrast mot bark. */
+.nx-final-cinema h2 em{font-style:normal;color:var(--lera-l)}
+
+/* Spökknappen ärver annars --fg, som är barkbrunt: mörk text på mörk
+   botten. På ljus botten är den rätt, här måste den vara krämvit. */
+.nx-mork .btn-ghost{
+  color:var(--nt-fg);
+  border-color:color-mix(in srgb,var(--nt-fg) 34%,transparent);
+}
+.nx-mork .btn-ghost:hover{
+  border-color:var(--nt-fg);
+  background:color-mix(in srgb,var(--nt-fg) 10%,transparent);
+}
+
+.nx-final-cinema .nx-hero-trust{margin-top:clamp(30px,3.6vw,44px);justify-content:center}
+.nx-final-cinema .nx-hero-trust li{color:var(--nt-mut)}
+.nx-final-cinema .nx-hero-trust li::before{background:var(--nt-mut)}
+
+
+/* ============================================================
+   CENTRERAD SEKTIONSRUBRIK + DRAGLISTA
+   Ersätter den gamla bild/text-splitten. Rubriken står mitt på,
+   punkterna i tre kolumner med var sin figur ovanför — samma
+   princip som hållpunkterna, så sidan får en igenkännbar rytm.
+   ============================================================ */
+.nx-mitt-head{
+  max-width:60ch;margin-inline:auto;text-align:center;
+  margin-bottom:clamp(46px,6vw,80px);
+}
+.nx-mitt-head .nx-lede{margin-inline:auto;max-width:52ch}
+
+.nx-drag{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:clamp(26px,3.4vw,52px) clamp(28px,4vw,68px);
+}
+.nx-drag li{
+  padding-top:clamp(18px,2vw,24px);
+  border-top:1px solid var(--ln);
+}
+.nx-drag .dr-fig{
+  display:grid;place-items:center;
+  width:40px;height:40px;border-radius:12px;
+  background:color-mix(in srgb,var(--acc) 11%,transparent);
+  border:1px solid color-mix(in srgb,var(--acc) 26%,transparent);
+  margin-bottom:16px;
+}
+.nx-drag .dr-fig svg{
+  width:20px;height:20px;
+  fill:none;stroke:var(--acc-lugn);stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.nx-drag b{
+  display:block;
+  font-size:1.06rem;font-weight:700;letter-spacing:-.022em;
+}
+.nx-drag p{
+  margin-top:8px;color:var(--bl-2);
+  font-size:.965rem;line-height:1.55;
+}
+.nx-cta-mitt{justify-content:center;margin-top:clamp(46px,5.5vw,76px)}
+
+@media (max-width:900px){.nx-drag{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.nx-drag{grid-template-columns:1fr}}
+
+
+/* ============================================================
+   SVARSBLOCK BREDVID FORMULÄRET + FILFÄLT
+   ============================================================ */
+.nx-lead-svar{
+  margin-top:clamp(34px,4vw,54px);
+  display:grid;gap:clamp(20px,2.4vw,28px);
+  border-top:1px solid var(--ln);
+  padding-top:clamp(24px,2.8vw,34px);
+}
+.nx-lead-svar b{
+  display:block;font-size:.97rem;font-weight:700;letter-spacing:-.018em;
+}
+.nx-lead-svar p{
+  margin-top:7px;color:var(--bl-2);
+  font-size:.925rem;line-height:1.56;max-width:42ch;
+}
+.nx-lank-in{
+  color:var(--acc-lugn);text-decoration:underline;text-underline-offset:2px;
+}
+
+/* Filväljaren: den riktiga inputen göms men behåller fokus och
+   tangentbord — etiketten är knappen, filnamnet står bredvid. */
+.lbl-valfri{
+  font-weight:400;color:var(--bl-3);font-size:.86em;margin-left:6px;
+}
+.nx-fil{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.nx-fil input[type="file"]{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+.nx-fil-knapp{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:100px;cursor:pointer;
+  border:1px solid var(--ln-2);background:var(--pap);
+  font-size:.9rem;font-weight:600;letter-spacing:-.012em;
+  transition:border-color .2s var(--e),background .2s var(--e);
+}
+.nx-fil-knapp:hover{border-color:var(--bl);background:color-mix(in srgb,var(--bl) 4%,transparent)}
+.nx-fil-knapp svg{width:16px;height:16px}
+.nx-fil input[type="file"]:focus-visible + .nx-fil-knapp{
+  outline:2px solid var(--bl);outline-offset:2px;
+}
+.nx-fil-namn{font-size:.88rem;color:var(--bl-3)}
+.nx-fil-namn.fel{color:var(--acc-lugn);font-weight:600}
+.nx-fil-hjalp{
+  margin-top:9px;font-size:.85rem;line-height:1.5;color:var(--bl-3);
+}
+.nx-mork .nx-fil-knapp{
+  background:transparent;border-color:var(--nt-ln);color:var(--nt-fg);
+}
+.nx-mork .nx-fil-namn,.nx-mork .nx-fil-hjalp,.nx-mork .lbl-valfri{color:var(--nt-mut)}
+
+/* ============================================================
+   ÖVERSTYRNINGAR AV DE ÄRVDA BLOCKEN
+   Klasserna kommer från nextrum-home.css. Här får de bara den
+   nya rytmen och de nya färgerna — strukturen rörs inte.
+   ============================================================ */
+/* Sektionsrubrik med sidotext.
+   Var 50/50 med align-items:end, vilket lät stycket till höger
+   flyta upp och hänga löst i toppen när rubriken var kortare än
+   texten — det såg ut som ett misstag på fem sektioner samtidigt.
+   Nu: rubriken får mer plats, sidotexten är smalare, båda börjar
+   i överkant, och en kort lerfärgad regel binder ihop dem så att
+   sidotexten läser som ett medvetet marginalstycke. */
+.nx-head.split{
+  display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.85fr);
+  gap:clamp(24px,4vw,72px);align-items:start;
+  margin-bottom:clamp(38px,5vw,72px);
+}
+.nx-head.split .nx-head-aside{
+  padding-top:clamp(10px,1.4vw,18px);
+  border-top:2px solid var(--acc);
+}
+.nx-head.split .nx-head-aside .nx-lede{
+  margin-top:clamp(12px,1.4vw,18px);
+  font-size:1rem;line-height:1.6;max-width:44ch;
+}
+@media (max-width:820px){
+  .nx-head.split{grid-template-columns:1fr;gap:22px}
+  .nx-head.split .nx-head-aside{padding-top:16px}
+}
+
+/* Formuläret får mer bredd än textspalten — det är det som ska
+   fyllas i. Gapet var också för stort: det lämnade ett tomt band
+   mitt i sektionen. */
+.nx-lead-grid{
+  display:grid;grid-template-columns:minmax(0,.68fr) minmax(0,1.32fr);
+  gap:clamp(28px,3.4vw,56px);align-items:start;
+}
+@media (max-width:900px){.nx-lead-grid{grid-template-columns:1fr;gap:36px}}
+
+.showcase{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:clamp(14px,1.8vw,24px)}
+.sc-card{
+  border:1px solid var(--ln);border-radius:20px;
+  padding:clamp(20px,2.2vw,28px);
+  background:var(--pap);
+  transition:transform .4s var(--e-ut),box-shadow .4s var(--e-ut),border-color .3s var(--e);
+}
+.sc-card:hover{transform:translateY(-3px);box-shadow:var(--sk-2);border-color:var(--ln-2)}
+
+.nx-safe{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(14px,1.8vw,24px)}
+@media (max-width:900px){.nx-safe{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.nx-safe{grid-template-columns:1fr}}
+.nx-safe-card{
+  border:1px solid var(--ln);border-radius:20px;
+  padding:clamp(22px,2.4vw,30px);background:var(--pap);
+  transition:transform .4s var(--e-ut),box-shadow .4s var(--e-ut);
+}
+.nx-safe-card:hover{transform:translateY(-3px);box-shadow:var(--sk-2)}
+
+.nx-price-grid{
+  display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
+  gap:clamp(18px,2.4vw,32px);align-items:start;
+}
+@media (max-width:860px){.nx-price-grid{grid-template-columns:1fr}}
+.nx-price-card,.nx-offer{border-radius:26px}
+.nx-price-card{border:1px solid var(--ln);padding:clamp(28px,3.4vw,46px);background:var(--pap);box-shadow:var(--sk-1)}
+.nx-amount b{font-size:clamp(2.6rem,5.4vw,4.2rem);letter-spacing:-.045em;font-weight:800;line-height:1}
+
+.nx-faq-grid{
+  display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);
+  gap:clamp(30px,5vw,88px);align-items:start;
+}
+@media (max-width:900px){.nx-faq-grid{grid-template-columns:1fr;gap:32px}}
+.faq-q{
+  width:100%;display:flex;justify-content:space-between;align-items:center;gap:20px;
+  text-align:left;padding:clamp(18px,2vw,24px) 0;
+  font-size:clamp(1.02rem,1.5vw,1.16rem);font-weight:600;letter-spacing:-.02em;
+  border-top:1px solid var(--ln);
+  transition:color .2s var(--e);
+}
+.faq-item:last-child .faq-q[aria-expanded="false"]{border-bottom:1px solid var(--ln)}
+.faq-a p a{text-decoration:underline;text-underline-offset:3px}
+
+.contact{
+  display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  gap:clamp(32px,5vw,88px);align-items:start;
+}
+@media (max-width:900px){.contact{grid-template-columns:1fr;gap:34px}}
+
+.nx-statement{
+  margin-top:clamp(56px,7vw,104px);
+  padding-top:clamp(40px,5vw,72px);
+  border-top:1px solid var(--ln);
+}
+.nx-statement p{
+  font-size:clamp(1.7rem,4.4vw,3.2rem);
+  line-height:1.06;letter-spacing:-.04em;font-weight:700;
+  color:var(--bl);max-width:20ch;
+}
+.nx-statement em{font-style:normal;color:var(--bl-3)}
+
+/* ============================================================
+   SIDHUVUD PÅ UNDERSIDORNA
+   Rubrik, ingress och ett foto i full bredd som binder ihop
+   undersidan med startsidans bildspråk.
+   ============================================================ */
+.nx-page-hero{
+  max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m);
+  padding-top:clamp(120px,15vw,190px);
+  padding-bottom:clamp(32px,4vw,56px);
+}
+.nx-page-hero .wrap{max-width:none;padding-inline:0}
+.nx-page-hero .nx-back{display:inline-flex}
+/* etiketten ska stå på egen rad under tillbakalänken, inte bredvid */
+.nx-page-hero .nx-et{display:flex;width:fit-content}
+.nx-page-hero h1{max-width:17ch;margin-top:clamp(18px,2.2vw,26px)}
+.nx-page-hero .nx-lede{margin-top:clamp(18px,2.2vw,26px);max-width:52ch}
+.nx-page-hero .nx-story-ctas{margin-top:clamp(26px,3vw,38px)}
+
+.nx-page-hero-foto{
+  margin-top:clamp(40px,5.5vw,80px);
+  aspect-ratio:21/9;
+  --fig-r:26px;
+}
+.nx-page-hero-foto .nx-img{height:100%}
+@media (max-width:720px){.nx-page-hero-foto{aspect-ratio:16/10;--fig-r:18px}}
+
+/* mörkt sidhuvud (bli-studiehjalpare) */
+.nx-page-hero.on-band{
+  background:var(--nt);color:var(--nt-fg);
+  max-width:none;padding-inline:0;
+}
+.nx-page-hero.on-band .wrap{max-width:var(--w-bred);padding-inline:var(--m)}
+.nx-page-hero.on-band .nx-lede{color:var(--nt-mut)}
+.nx-page-hero.on-band .nx-back{color:var(--nt-mut)}
+.nx-page-hero.on-band .nx-page-hero-foto{
+  max-width:var(--w-bred);margin-inline:auto;
+  margin-bottom:calc(clamp(40px,5.5vw,80px) * -1 - 40px);
+  position:relative;z-index:2;
+}
+@media (max-width:900px){
+  .nx-page-hero.on-band .nx-page-hero-foto{margin-bottom:-24px}
+}
+
+.nx-back{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--bl-3);
+  transition:color .2s var(--e),gap .3s var(--e-ut);
+}
+.nx-back:hover{color:var(--bl);gap:13px}
+.nx-back svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.on-band .nx-back:hover,.nx-mork .nx-back:hover{color:var(--nt-fg)}
+
+/* ============================================================
+   ÄRVDA TYPKLASSER → NYA SKALAN
+   .d0/.d1/.d2/.lede kommer från nextrum-home.css och används av
+   markup vi inte skrivit om. De pekas om hit så att hela sajten
+   har samma rytm, utan att någon fil behöver ändras.
+   ============================================================ */
+.d0{font-size:clamp(2.6rem,7vw,6.6rem);line-height:.92;letter-spacing:-.05em;font-weight:800}
+.d1{font-size:clamp(2.2rem,5.4vw,4.6rem);line-height:.96;letter-spacing:-.043em;font-weight:800}
+.d2{font-size:clamp(2rem,4.4vw,3.6rem);line-height:1;letter-spacing:-.038em;font-weight:700}
+.d3{font-size:clamp(1.35rem,2.3vw,1.9rem);line-height:1.14;letter-spacing:-.028em;font-weight:700}
+.lede,.lede-lg{
+  font-size:clamp(1.06rem,1.35vw,1.28rem);line-height:1.52;
+  color:var(--bl-2);letter-spacing:-.011em;
+}
+.lede{max-width:46ch}
+.lede-lg{max-width:52ch}
+.eyebrow{
+  font-family:var(--f-mono);font-size:11px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--bl-3);
+}
+.eyebrow.acc{color:var(--acc-lugn)}
+.on-band .eyebrow,.nx-mork .eyebrow{color:var(--nt-mut)}
+
+/* nx-kicker används av bli-studiehjalpare */
+.nx-kicker{
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--bl-3);
+}

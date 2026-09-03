@@ -4,8 +4,8 @@
     {
       "name": "nextrum-static",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8934"],
-      "port": 8934
+      "runtimeArgs": [".claude/serve.py", "8936"],
+      "port": 8936
     }
   ]
 }

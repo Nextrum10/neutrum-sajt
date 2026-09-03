@@ -3,23 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Bli studiehjälpare — Nextrum</title>
 <meta name="description" content="Ditt första jobb kan börja här. Hjälp yngre elever med skolan, tjäna pengar och bygg erfarenhet som går att skriva på CV:t. Ansök till Nextrum.">
-<meta name="theme-color" content="#0A0A0A">
+<link rel="canonical" href="https://nextrum.se/bli-studiehjalpare.html">
+<meta name="theme-color" content="#FBFAF8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<!-- delning -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nextrum">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:title" content="Bli studiehjälpare — Nextrum">
+<meta property="og:description" content="Ditt första jobb kan börja här. Hjälp yngre elever med skolan, tjäna pengar och bygg erfarenhet som går att skriva på CV:t. Ansök till Nextrum.">
+<meta property="og:url" content="https://nextrum.se/bli-studiehjalpare.html">
+<meta property="og:image" content="https://nextrum.se/bilder/05-av-unga-for-unga-1280.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="En ung studiehjälpare och en elev pluggar tillsammans vid ett ljust träbord.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bli studiehjälpare — Nextrum">
+<meta name="twitter:description" content="Ditt första jobb kan börja här. Hjälp yngre elever med skolan, tjäna pengar och bygg erfarenhet som går att skriva på CV:t. Ansök till Nextrum.">
+<meta name="twitter:image" content="https://nextrum.se/bilder/05-av-unga-for-unga-1280.jpg">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css">
+<link rel="stylesheet" href="nextrum-cinema.css">
 </head>
 <body>
+
 <!-- ==========================================================
-     HEADER — identisk på alla publika sidor.
+     HEADER — identisk markup på alla fyra publika sidor.
      Ändrar du här måste du ändra i index.html, priser.html,
      faq.html och bli-studiehjalpare.html. Länkarna skrivs som
-     "index.html#om"; på startsidan kortar nextrum-app.js ner dem
+     "index.html#hur"; på startsidan kortar nextrum-app.js ner dem
      till rena ankare så att man scrollar istället för att ladda om.
      ========================================================== -->
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
 <header class="hdr" id="hdr">
   <div class="wrap nav">
     <a href="index.html" class="logo" aria-label="Nextrum, till startsidan">
@@ -31,17 +58,20 @@
     </a>
 
     <nav class="nav-links" aria-label="Huvudmeny">
-      <a href="index.html#om" data-nav>Om oss</a>
-      <a href="index.html#hur" data-nav>Så fungerar det</a>
-      <a href="index.html#plattformen" data-nav>För föräldrar</a>
+      <a href="index.html#hur" data-nav>Så fungerar Nextrum</a>
+      <a href="index.html#foraldrar" data-nav>För elever &amp; föräldrar</a>
       <a href="bli-studiehjalpare.html" data-nav>Bli studiehjälpare</a>
       <a href="priser.html" data-nav>Priser</a>
-      <a href="faq.html" data-nav>FAQ</a>
     </nav>
 
     <div class="nav-actions">
-      <a class="login" href="foralder.html" id="login-link">Logga in</a>
-      <a class="btn btn-primary btn-sm" href="index.html#intresse">Intresseanmälan</a>
+      <!-- href pekar på föräldravyn så att länken fungerar utan JS.
+           Med JS öppnas vyväljaren istället — utom när man redan är
+           inloggad, då skriver NX.märkInloggad() om länken. -->
+      <a class="login" href="foralder.html" id="login-link" data-vagval>Logga in</a>
+      <span class="nx-magnet" data-magnet>
+        <a class="btn btn-primary btn-sm" href="index.html#intresse">Intresseanmälan</a>
+      </span>
     </div>
 
     <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
@@ -51,9 +81,9 @@
 </header>
 
 <div class="mobile-menu" id="mobile-menu">
-  <a class="m-link" href="index.html#om">Om oss <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
-  <a class="m-link" href="index.html#hur">Så fungerar det <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
-  <a class="m-link" href="index.html#plattformen">För föräldrar <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#om">Vår idé <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#hur">Så fungerar Nextrum <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#foraldrar">För elever &amp; föräldrar <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <a class="m-link" href="bli-studiehjalpare.html">Bli studiehjälpare <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <a class="m-link" href="priser.html">Priser <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <a class="m-link" href="faq.html">FAQ <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
@@ -67,19 +97,27 @@
   </div>
 </div>
 
-<main>
+<main id="innehall">
 
 <section class="nx-page-hero on-band">
   <div class="wrap">
     <a class="nx-back" href="index.html"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
-    <span class="nx-kicker rv" style="display:flex;width:fit-content;margin-top:22px">Bli studiehjälpare</span>
-    <h1 class="d0 rv">Ditt första jobb kan börja här.</h1>
-    <p class="lede-lg rv">Vill du tjäna pengar, hjälpa yngre elever och samtidigt bygga erfarenhet? Hos Nextrum får du möjlighet att göra alla tre.</p>
-    <div class="nx-hero-ctas rv">
+    <span class="nx-et" data-stig style="margin-top:22px">Bli studiehjälpare</span>
+    <h1 class="nx-d1" data-avslöj>Ditt första jobb kan börja här.</h1>
+    <p class="nx-lede" data-stig data-fördröj="1">Vill du tjäna pengar, hjälpa yngre elever och samtidigt bygga erfarenhet? Hos Nextrum får du möjlighet att göra alla tre.</p>
+    <div class="nx-story-ctas" data-stig data-fördröj="2">
       <a class="btn btn-primary btn-lg" href="#ansok">Ansök nu <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
       <a class="btn btn-ghost btn-lg" href="larare.html">Redan studiehjälpare? Logga in</a>
     </div>
   </div>
+  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#8E8C84">
+    <img class="nx-img" src="bilder/05-av-unga-for-unga-1280.jpg"
+         srcset="bilder/05-av-unga-for-unga-640.jpg 640w, bilder/05-av-unga-for-unga-960.jpg 960w, bilder/05-av-unga-for-unga-1280.jpg 1280w, bilder/05-av-unga-for-unga-1600.jpg 1600w, bilder/05-av-unga-for-unga-1920.jpg 1920w"
+         sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
+         style="object-position:60% 42%"
+         alt="Fem unga studiehjälpare står och pratar med varandra framför en bokhylla i ett bibliotek.">
+  </figure>
+
 </section>
 
 <section class="band on-band" style="border-top:none">
@@ -112,7 +150,7 @@
       </div>
     </div>
 
-    <div class="rv" style="margin-top:clamp(40px,5vw,64px)">
+    <div style="margin-top:clamp(40px,5vw,64px)" class="rv">
       <span class="eyebrow" style="margin-bottom:20px;display:inline-flex">Så går ansökan till</span>
       <div class="nx-apply-flow">
       <div class="nx-apply-step"><em>01</em><b>Ansök</b><p>Fyll i ansökan med ämnen, årskurser och tider som funkar för dig. Tar några minuter.</p></div>
@@ -126,7 +164,7 @@
 
 <section class="sec wrap">
   <div class="nx-two">
-    <div class="rv nx-two-sticky">
+    <div class="nx-two-sticky rv">
       <span class="eyebrow acc">Vem kan söka</span>
       <h2 class="d2" style="margin-top:18px">Du behöver inte vara lärare. Du behöver kunna förklara.</h2>
     </div>
@@ -171,6 +209,21 @@
           <div class="pay-field"><label for="ap-subj">Ämnen du vill hjälpa till med</label><input class="inp" id="ap-subj" name="amnen" placeholder="t.ex. matematik, fysik, engelska"></div>
           <div class="pay-field"><label for="ap-avail">Tider som funkar för dig</label><input class="inp" id="ap-avail" name="tider" placeholder="t.ex. vardagar efter 16, helger"></div>
           <div class="pay-field"><label for="ap-why">Varför vill du bli studiehjälpare?</label><textarea class="inp" id="ap-why" name="varfor" style="min-height:110px"></textarea></div>
+
+          <div class="pay-field">
+            <label for="ap-cv">CV <span class="lbl-valfri">valfritt</span></label>
+            <div class="nx-fil">
+              <input type="file" id="ap-cv" name="cv"
+                     accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+              <label class="nx-fil-knapp" for="ap-cv">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14V4M6.5 7.5 10 4l3.5 3.5M4 15.5v1A1.5 1.5 0 0 0 5.5 18h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
+                Välj fil
+              </label>
+              <span class="nx-fil-namn" id="ap-cv-namn">Ingen fil vald</span>
+            </div>
+            <p class="nx-fil-hjalp">PDF eller Word, högst 5 MB. Du kan skicka in utan CV — vi läser ansökan ändå.</p>
+          </div>
+
           <button class="btn btn-primary btn-block btn-lg" type="submit" style="margin-top:8px">Skicka ansökan</button>
           <p class="ok-msg" id="apply-ok" style="margin-top:14px"></p>
           <p class="xsmall" style="margin-top:12px;text-align:center">Sparas direkt i Nextrums databas, inte via mejl.</p>
@@ -227,6 +280,7 @@
 
 </main>
 
+
 <!-- ==========================================================
      FOOTER — identisk på alla publika sidor, se kommentaren
      vid headern.
@@ -247,32 +301,33 @@
         </div>
       </div>
 
-      <div>
-        <h6>Nextrum</h6>
+      <nav aria-labelledby="ftr-nextrum">
+        <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
         <ul>
-          <li><a href="index.html#om">Om oss</a></li>
-          <li><a href="index.html#hur">Så fungerar det</a></li>
+          <li><a href="index.html#om">Vår idé</a></li>
+          <li><a href="index.html#hur">Så fungerar Nextrum</a></li>
           <li><a href="index.html#studiehjalpare">Studiehjälpare</a></li>
           <li><a href="priser.html">Priser</a></li>
         </ul>
-      </div>
-      <div>
-        <h6>För dig</h6>
+      </nav>
+      <nav aria-labelledby="ftr-fordig">
+        <h2 class="ftr-rubrik" id="ftr-fordig">För dig</h2>
         <ul>
-          <li><a href="index.html#plattformen">För föräldrar</a></li>
+          <li><a href="index.html#foraldrar">För elever &amp; föräldrar</a></li>
           <li><a href="bli-studiehjalpare.html">Bli studiehjälpare</a></li>
           <li><a href="index.html#intresse">Intresseanmälan</a></li>
+          <li><a href="foralder.html" data-vagval>Logga in</a></li>
         </ul>
-      </div>
-      <div>
-        <h6>Hjälp</h6>
+      </nav>
+      <nav aria-labelledby="ftr-hjalp">
+        <h2 class="ftr-rubrik" id="ftr-hjalp">Hjälp</h2>
         <ul>
           <li><a href="faq.html">FAQ</a></li>
           <li><a href="index.html#kontakt">Kontakt</a></li>
           <li><a href="index.html#kontakt">Integritetspolicy</a></li>
           <li><a href="index.html#kontakt">Användarvillkor</a></li>
         </ul>
-      </div>
+      </nav>
     </div>
 
     <div class="ftr-bot">
@@ -280,21 +335,84 @@
       <span>Byggd i Sverige.</span>
     </div>
   </div>
+
+  <!-- sista intrycket: bara ordet, mycket stort, mycket tyst -->
+  <div class="nx-ftr-ord" aria-hidden="true"><span>Nextrum</span></div>
 </footer>
+
+<!-- ==========================================================
+     VYVÄLJARE — dörren in till inloggningen.
+     Själva inloggningen ligger kvar i foralder.html och
+     larare.html och är orörd.
+     ========================================================== -->
+<div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
+  <button class="nx-vagval-stang" data-vagval-stang aria-label="Stäng"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  <div class="nx-vagval-box">
+    <span class="nx-et">Logga in</span>
+    <h2 id="vagval-t" style="margin-top:18px">Välkommen tillbaka.</h2>
+    <p class="nx-lede-s">Vilken vy vill du till?</p>
+
+    <div class="nx-vagval-val">
+      <a href="foralder.html">
+        <span>
+          <b>Förälder eller elev</b>
+          <span>Studieplan, bokning, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="larare.html">
+        <span>
+          <b>Studiehjälpare</b>
+          <span>Dina elever, ditt schema, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <p class="nx-vagval-fot">
+      Har ni inte skickat intresseanmälan än? <a href="index.html#intresse">Gör det här</a>.
+    </p>
+  </div>
+</div>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="nextrum-config.js"></script>
+<script src="nextrum-images.js"></script>
 <script src="nextrum-app.js"></script>
+<script src="nextrum-motion.js"></script>
 <script>
 (function () {
   'use strict';
   const { $ } = NX;
   NX.initHeader();
   NX.initReveal();
+  NXFin.allt();
+  NX.bildIntoning();
+  NX.initVagval();
   NX.kollaKoppling();
   NX.initFaq();
   NX.märkInloggad();
-  NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'));
+  /* CV: filnamnet syns när man valt, och filen laddas upp till
+     lagringshinken "cv". Saknas hinken går ansökan ändå igenom —
+     då noteras filnamnet i "why" så vi vet att vi ska be om den. */
+  const cv = $('#ap-cv'), cvNamn = $('#ap-cv-namn');
+  if (cv && cvNamn) {
+    const MAX = 5 * 1024 * 1024;
+    cv.addEventListener('change', () => {
+      const f = cv.files && cv.files[0];
+      if (!f) { cvNamn.textContent = 'Ingen fil vald'; cvNamn.classList.remove('fel'); return; }
+      if (f.size > MAX) {
+        cv.value = '';
+        cvNamn.textContent = 'Filen är större än 5 MB — välj en mindre';
+        cvNamn.classList.add('fel');
+        return;
+      }
+      cvNamn.textContent = f.name;
+      cvNamn.classList.remove('fel');
+    });
+  }
+
+  NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'), { cv: '#ap-cv' });
 })();
 </script>
 </body>

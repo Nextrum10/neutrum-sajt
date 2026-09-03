@@ -3,14 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Föräldravy — Nextrum</title>
+<title>Studievy — Nextrum</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Samma fyra lager som de publika sidorna, plus vy-lagret sist.
+     nextrum-cinema.css är den som mappar om färgnamnen till
+     jordpaletten — utan den blir vyn vit och främmande. -->
 <link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css">
+<link rel="stylesheet" href="nextrum-cinema.css">
+<link rel="stylesheet" href="nextrum-vy.css">
 </head>
-<body>
+<body class="vy">
+
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
 
 <header class="hdr stuck" id="hdr">
   <div class="wrap nav">
@@ -20,6 +28,8 @@
     </a>
     <nav class="nav-links" aria-label="Meny">
       <a href="index.html">Startsidan</a>
+      <a href="index.html#hur">Så fungerar Nextrum</a>
+      <a href="priser.html">Priser</a>
     </nav>
     <div class="nav-actions" id="nav-actions"></div>
     <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
@@ -30,20 +40,39 @@
 
 <div class="mobile-menu" id="mobile-menu">
   <a class="m-link" href="index.html">Startsidan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#hur">Så fungerar Nextrum <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="priser.html">Priser <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="faq.html">FAQ <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <div class="m-actions" id="m-actions"></div>
 </div>
 
-<main class="wrap" style="padding-top:var(--sec);padding-bottom:var(--sec);min-height:70vh">
+<main class="wrap" id="innehall">
 
-  <!-- laddar -->
   <div id="view-loading"><div class="loading">Laddar din vy</div></div>
 
-  <!-- ============ INLOGGNING ============ -->
+  <!-- ============================================================
+       INLOGGNING
+       Rollvalet står först, inte i finstilt text under formuläret.
+       Det var det gamla felet: två sidor som såg identiska ut, och
+       studiehjälpare som skapade föräldrakonton av misstag.
+       ============================================================ -->
   <div id="view-auth" hidden>
     <div class="auth-wrap">
       <div class="auth-card">
-        <h1 id="auth-title">Logga in</h1>
-        <p class="lede" id="auth-sub">Här ser du ditt barns studieplan, bokar pass och följer utvecklingen.</p>
+        <span class="nx-et acc">Logga in</span>
+        <h1 id="auth-title" style="margin-top:16px">Studievyn</h1>
+        <p class="nx-lede" id="auth-sub">För dig som är förälder eller elev: studieplanen, bokningen, kontakten med er studiehjälpare och rapporten efter varje pass.</p>
+
+        <div class="vy-roller">
+          <a class="vy-roll" href="foralder.html" aria-current="page">
+            <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>Förälder eller elev</b>
+            <span>Studieplan, bokning, meddelanden och rapporter.</span>
+          </a>
+          <a class="vy-roll" href="larare.html">
+            <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg>Studiehjälpare</b>
+            <span>Dina elever, ditt schema, dina timmar och rapporter.</span>
+          </a>
+        </div>
 
         <div class="auth-tabs" role="tablist">
           <button type="button" role="tab" data-auth="in" aria-selected="true">Logga in</button>
@@ -68,8 +97,8 @@
         </form>
 
         <p class="auth-alt">
-          Är du studiehjälpare? <a href="larare.html">Gå till studiehjälparvyn</a><br>
-          Har ni inte skickat intresseanmälan än? <a href="index.html#intresse">Gör det här</a>
+          Kontot du skapar här blir ett <b>föräldrakonto</b>.<br>
+          Har ni inte skickat intresseanmälan än? <a href="index.html#intresse">Gör det här</a>.
         </p>
       </div>
     </div>
@@ -77,12 +106,12 @@
 
   <!-- ============ VÄNTAR PÅ MATCHNING ============ -->
   <div id="view-locked" hidden>
-    <div class="locked rv in">
+    <div class="locked">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
       <h2>Vi jobbar på er matchning</h2>
-      <p>Ditt konto är skapat, men ni är inte matchade med en studiehjälpare än. Så fort vi hittat rätt person låses den här vyn upp med studieplan, bokning och rapporter.</p>
+      <p>Ditt konto är skapat, men ni är inte matchade med en studiehjälpare än. Så fort vi hittat rätt person låses vyn upp med studieplan, bokning, meddelanden och rapporter.</p>
       <p style="margin-top:16px">Har ni inte skickat in en intresseanmälan än är det steget som saknas.</p>
-      <div class="hero-ctas" style="justify-content:center;margin-top:28px">
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
         <a class="btn btn-primary" href="index.html#intresse">Skicka intresseanmälan</a>
         <a class="btn btn-ghost" href="mailto:hej@nextrum.se">Hör av dig till oss</a>
       </div>
@@ -91,11 +120,11 @@
 
   <!-- ============ FEL ROLL ============ -->
   <div id="view-wrongrole" hidden>
-    <div class="locked rv in">
+    <div class="locked">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 20h18L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
-      <h2>Det här är föräldravyn</h2>
-      <p>Ditt konto är registrerat som studiehjälpare. Din vy ligger på en annan sida.</p>
-      <div class="hero-ctas" style="justify-content:center;margin-top:28px">
+      <h2>Det här är studievyn</h2>
+      <p>Ditt konto är registrerat som studiehjälpare. Din vy ligger på en annan sida — där ser du dina elever, ditt schema och dina rapporter.</p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
         <a class="btn btn-primary" href="larare.html">Till studiehjälparvyn</a>
         <button class="btn btn-ghost" data-logout>Logga ut</button>
       </div>
@@ -105,18 +134,24 @@
   <!-- ============ SJÄLVA VYN ============ -->
   <div id="view-app" hidden>
 
-    <div class="sec-head rv in" style="margin-bottom:36px">
-      <span class="eyebrow">Föräldravy</span>
-      <h1 class="d2" id="hej">Hej.</h1>
-      <p class="lede" id="hej-sub">Här är allt om ditt barns studiepass.</p>
+    <div class="vy-topp">
+      <div>
+        <span class="nx-et acc">Studievy</span>
+        <h1 id="hej">Hej.</h1>
+        <p class="vy-lede" id="hej-sub">Här är allt om ditt barns studiepass — planen, tiderna, kontakten och vad som hände på varje pass.</p>
+      </div>
+      <span class="vy-marke">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>
+        <span>Förälder eller elev<span class="vy-marke-sub">Nextrum studievy</span></span>
+      </span>
     </div>
 
     <!-- barnväljare -->
-    <div class="dbox rv in" style="margin-bottom:20px">
+    <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+      <h5>Barn <em id="barn-antal"></em></h5>
       <div class="between">
         <div style="flex:1;min-width:220px">
-          <h5 style="margin-bottom:10px">Barn <em id="barn-antal"></em></h5>
-          <select class="sel" id="barn-val" style="max-width:320px"></select>
+          <select class="sel" id="barn-val" style="max-width:340px" aria-label="Välj barn"></select>
         </div>
         <button class="btn btn-ghost btn-sm" id="lagg-till-barn">Lägg till barn</button>
       </div>
@@ -128,6 +163,7 @@
               <option value="">Välj</option>
               <option>Åk 1</option><option>Åk 2</option><option>Åk 3</option><option>Åk 4</option><option>Åk 5</option>
               <option>Åk 6</option><option>Åk 7</option><option>Åk 8</option><option>Åk 9</option>
+              <option>Gymnasiet år 1</option><option>Gymnasiet år 2</option><option>Gymnasiet år 3</option>
             </select>
           </div>
           <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
@@ -142,14 +178,20 @@
     <div class="split">
       <div class="stack">
 
-        <!-- studieplan -->
-        <div class="dbox rv in">
-          <h5>Studieplan <em id="plan-uppdaterad"></em></h5>
-          <div id="plan-body"><div class="loading">Hämtar</div></div>
+        <!-- ============ KONTAKT ============ -->
+        <div class="dbox">
+          <h5>Kontakt <span class="vy-larm" id="tr-larm" hidden></span><em id="tr-vem"></em></h5>
+          <div class="tr" id="trad"><div class="loading">Hämtar</div></div>
+          <div class="tr-skriv">
+            <textarea class="inp" id="tr-text" rows="1" placeholder="Skriv till er studiehjälpare…" aria-label="Skriv ett meddelande"></textarea>
+            <button class="btn btn-primary" id="tr-skicka" type="button">Skicka</button>
+          </div>
+          <p class="tr-tips">Enter skickar · Skift + Enter ny rad</p>
+          <p class="ok-msg" id="tr-msg"></p>
         </div>
 
-        <!-- boka -->
-        <div class="dbox rv in">
+        <!-- ============ BOKA ============ -->
+        <div class="dbox">
           <h5>Boka nästa pass <em id="boka-hos"></em></h5>
           <div id="boka-inner">
             <div class="form-grid" style="margin-bottom:18px">
@@ -172,35 +214,43 @@
           </div>
         </div>
 
+        <!-- studieplan -->
+        <div class="dbox">
+          <h5>Studieplan <em id="plan-uppdaterad"></em></h5>
+          <div id="plan-body"><div class="loading">Hämtar</div></div>
+        </div>
+
         <!-- rapporter -->
-        <div class="dbox rv in">
-          <h5>Rapporter efter lektionerna <em id="rapport-antal"></em></h5>
+        <div class="dbox">
+          <h5>Efter passen <em id="rapport-antal"></em></h5>
           <div id="rapporter"><div class="loading">Hämtar</div></div>
         </div>
 
       </div>
 
       <div class="stack">
+
         <!-- studiehjälparen -->
-        <div class="dbox rv in">
+        <div class="dbox">
           <h5>Er studiehjälpare</h5>
           <div id="tutor-kort"><div class="loading">Hämtar</div></div>
         </div>
 
-        <!-- kommande pass -->
-        <div class="dbox rv in">
+        <!-- pass -->
+        <div class="dbox">
           <h5>Pass <em id="pass-antal"></em></h5>
           <div id="pass-lista"><div class="loading">Hämtar</div></div>
         </div>
 
         <!-- pris -->
-        <div class="dbox rv in">
+        <div class="dbox">
           <h5>Pris</h5>
-          <div class="sum-line"><span>Per timme</span><span data-pris>349 kr</span></div>
+          <div class="sum-line"><span>Per timme</span><span data-pris>379 kr</span></div>
           <div class="sum-line"><span>Anmälningsavgift</span><span>0 kr</span></div>
           <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
-          <p class="xsmall" style="margin-top:14px;color:var(--muted-2)">Betalning sker utanför plattformen tills vidare. Vi hör av oss om upplägget.</p>
+          <p class="xsmall" style="margin-top:14px;color:var(--muted-2);line-height:1.6">Betalning sker utanför plattformen tills vidare. Vi hör av oss om upplägget.</p>
         </div>
+
       </div>
     </div>
   </div>
@@ -218,6 +268,7 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="nextrum-config.js"></script>
 <script src="nextrum-app.js"></script>
+<script src="nextrum-kontakt.js"></script>
 <script>
 (function () {
   'use strict';
@@ -225,7 +276,7 @@
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [] };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null };
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app']
@@ -257,10 +308,10 @@
     $('#namn-grupp').hidden = !upp;
     $('#a-name').required = upp;
     $('#a-pass').autocomplete = upp ? 'new-password' : 'current-password';
-    $('#auth-title').textContent = upp ? 'Skapa föräldrakonto' : 'Logga in';
+    $('#auth-title').textContent = upp ? 'Skapa föräldrakonto' : 'Studievyn';
     $('#auth-sub').textContent = upp
-      ? 'Skapa kontot nu. Vyn låses upp så fort vi matchat er med en studiehjälpare.'
-      : 'Här ser du ditt barns studieplan, bokar pass och följer utvecklingen.';
+      ? 'Kontot är gratis. Vyn låses upp så fort vi matchat er med en studiehjälpare.'
+      : 'För dig som är förälder eller elev: studieplanen, bokningen, kontakten med er studiehjälpare och rapporten efter varje pass.';
     $('#auth-submit').textContent = upp ? 'Skapa konto' : 'Logga in';
     rensa($('#auth-msg'));
   }
@@ -324,15 +375,46 @@
       '<div class="tutor-top" style="margin-bottom:14px">'
       + '<span class="avatar"><svg viewBox="0 0 46 46"><circle class="st" cx="23" cy="18" r="8"/><path class="st" d="M9 42c0-8 6.3-14 14-14s14 6 14 14"/></svg></span>'
       + '<div><div class="tutor-name">' + esc(t.full_name) + (t.age ? ', ' + esc(t.age) : '') + '</div>'
-      + '<div class="tutor-role">Gymnasieelev' + (t.school ? ' · ' + esc(t.school) : '') + '</div></div></div>'
+      + '<div class="tutor-role">Studiehjälpare' + (t.school ? ' · ' + esc(t.school) : '') + '</div></div></div>'
       + (t.bio ? '<p class="small" style="margin-bottom:14px;line-height:1.6">' + esc(t.bio) + '</p>' : '')
       + ((t.subjects && t.subjects.length)
           ? '<div class="tutor-meta">' + t.subjects.map(s => '<span class="tag">' + esc(s) + '</span>').join('') + '</div>'
           : '')
-      + '<div class="sum-line" style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">'
-      + '<span>Kontakt</span><a href="mailto:' + esc(t.email) + '" data-mailtext="keep">' + esc(t.email) + '</a></div>';
+      + '<p class="xsmall" style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted-2);line-height:1.6">'
+      + 'Skriv hellre i rutan Kontakt än via mejl — då hamnar allt på ett ställe och vi kan hjälpa till om något krånglar.</p>';
 
     $('#boka-hos').textContent = 'hos ' + t.full_name.split(' ')[0];
+    $('#tr-vem').textContent = t.full_name.split(' ')[0];
+    $('#tr-text').placeholder = 'Skriv till ' + t.full_name.split(' ')[0] + '…';
+  }
+
+  /* ============ kontakt ============ */
+  function startaTråd() {
+    if (!S.profil.matched_tutor_id) {
+      $('#trad').innerHTML = '<div class="empty">Ni är inte kopplade till någon studiehjälpare än, '
+        + 'så det finns ingen att skriva till.</div>';
+      $('#tr-text').disabled = $('#tr-skicka').disabled = true;
+      return;
+    }
+    S.trad = NXKontakt.tråd({
+      host: $('#trad'),
+      skriv: $('#tr-text'),
+      knapp: $('#tr-skicka'),
+      jag: S.user.id,
+      parentId: S.user.id,
+      tutorId: S.profil.matched_tutor_id,
+      motpart: (S.tutor && S.tutor.full_name) || '',
+      onFel: t => säg($('#tr-msg'), 'Meddelandet gick inte iväg: ' + t, false),
+      onNytt: rader => {
+        /* Räknaren i panelrubriken visar bara det som kommit in medan
+           man varit borta — den nollas av samma laddning som markerar
+           raderna som lästa, så den blinkar inte till i onödan. */
+        const olästa = rader.filter(m => !m.read_at && m.sender_id !== S.user.id).length;
+        const märke = $('#tr-larm');
+        märke.hidden = !olästa;
+        märke.textContent = olästa ? olästa + ' ny' + (olästa > 1 ? 'a' : '') : '';
+      }
+    });
   }
 
   /* ============ barn ============ */
@@ -385,7 +467,7 @@
     $('#barn-form').reset();
     $('#barn-form').hidden = true;
     await laddaBarn();
-    await laddaPlan(); await laddaRapporter();
+    await laddaPlan(); await laddaRapporter(); await laddaPass();
   });
 
   /* ============ studieplan ============ */
@@ -393,7 +475,7 @@
     const host = $('#plan-body');
     $('#plan-uppdaterad').textContent = '';
     if (!S.valtBarn) {
-      host.innerHTML = '<div class="empty">Lägg till ditt barn ovan, så skriver studiehjälparen en plan.</div>';
+      host.innerHTML = '<div class="empty">Lägg till ditt barn ovan, så skriver vi planen.</div>';
       return;
     }
     host.innerHTML = '<div class="loading">Hämtar</div>';
@@ -404,7 +486,7 @@
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
     if (!data || !data.length) {
       host.innerHTML = '<div class="empty">Studieplanen är inte skriven än.<br><br>'
-        + 'Er studiehjälpare skriver den efter första kontakten, utifrån vad ditt barn behöver.</div>';
+        + 'Vi tar fram den efter första kontakten, utifrån vad ditt barn behöver.</div>';
       return;
     }
     const p = data[0];
@@ -436,7 +518,7 @@
     $('#rapport-antal').textContent = data.length + ' st';
     host.innerHTML = data.map(r =>
       '<div class="report">'
-      + '<div class="report-head"><b>Lektion</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
+      + '<div class="report-head"><b>Pass</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
       + (r.ai_feedback
           ? '<p>' + esc(r.ai_feedback) + '</p>'
           : '<span class="raw-note">Studiehjälparens anteckningar</span><p class="raw">' + esc(r.raw_notes) + '</p>')
@@ -447,32 +529,54 @@
   async function laddaPass() {
     const host = $('#pass-lista');
     const { data, error } = await supa
-      .from('bookings').select('id, subject, wanted_date, wanted_time, status, student_id')
+      .from('bookings').select('id, subject, format, note, wanted_date, wanted_time, status, student_id, created_by')
       .eq('parent_id', S.user.id).order('wanted_date', { ascending: true });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
     S.bokningar = data || [];
-    if (!S.bokningar.length) { host.innerHTML = '<div class="empty">Inga bokade pass än.</div>'; return; }
+    if (!S.bokningar.length) { host.innerHTML = '<div class="empty">Inga bokade pass än. Välj en tid i kalendern.</div>'; return; }
 
     const idag = new Date().toISOString().slice(0, 10);
     const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
     $('#pass-antal').textContent = aktiva.length + ' st';
 
-    const etikett = { requested: 'Önskad', confirmed: 'Bekräftad', completed: 'Genomförd', cancelled: 'Avbokad' };
     host.innerHTML = S.bokningar.map(b => {
       const barn = S.barn.find(x => x.id === b.student_id);
       const kommande = b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed');
-      return '<div class="sess">'
-        + '<span class="when">' + esc(datumText(b.wanted_date)) + '<br>' + esc(b.wanted_time || '') + '</span>'
-        + '<span><span class="who">' + esc(b.subject || 'Pass') + '</span>'
-        + (barn ? '<br><span class="xsmall" style="color:var(--muted-2)">' + esc(barn.name) + '</span>' : '') + '</span>'
-        + '<span class="st-badge">' + esc(etikett[b.status] || b.status) + '</span>'
-        + (kommande ? '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '" style="padding:5px 10px">Avboka</button>' : '')
-        + '</div>';
+      /* Ett förslag från studiehjälparen ser likadant ut i databasen
+         som en egen bokning — created_by är det enda som skiljer, och
+         det avgör om raden ska ha "Bekräfta" eller "Avboka". */
+      const derasFörslag = b.created_by && b.created_by !== S.user.id;
+
+      let knappar = '';
+      if (derasFörslag && b.status === 'requested') {
+        knappar = '<button class="btn btn-primary btn-sm" data-svar="confirmed" data-id="' + b.id + '">Passar bra</button>'
+                + '<button class="btn btn-ghost btn-sm" data-svar="cancelled" data-id="' + b.id + '">Avböj</button>';
+      } else if (kommande) {
+        knappar = '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
+      }
+
+      const under = [b.format, barn ? barn.name : null].filter(Boolean).join(' · ');
+      return NXKontakt.passRad(b, {
+        under: under,
+        vem: derasFörslag ? 'Föreslaget av er studiehjälpare' : null,
+        atgarder: knappar
+      }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
     }).join('');
   }
 
   document.addEventListener('click', async e => {
+    const svar = e.target.closest('[data-svar]');
+    if (svar) {
+      svar.setAttribute('aria-busy', 'true');
+      const { error } = await supa.from('bookings').update({ status: svar.dataset.svar }).eq('id', svar.dataset.id);
+      svar.removeAttribute('aria-busy');
+      if (error) { alert('Kunde inte svara: ' + felText(error)); return; }
+      await laddaPass();
+      await byggKalender();
+      return;
+    }
+
     const btn = e.target.closest('[data-avboka]');
     if (!btn) return;
     if (!confirm('Avboka det här passet?')) return;
@@ -500,7 +604,7 @@
       return;
     }
     knapp.disabled = false;
-    sam.textContent = datumText(st.valtDatum) + ' kl. ' + st.valdTid + ' · ' + kr(NX.CFG.PRIS_PER_TIMME || 349);
+    sam.textContent = datumText(st.valtDatum) + ' kl. ' + st.valdTid + ' · ' + kr(NX.CFG.PRIS_PER_TIMME || 379);
   }
 
   async function byggKalender() {
@@ -524,6 +628,7 @@
       parent_id: S.user.id,
       tutor_id: S.profil.matched_tutor_id,
       student_id: S.valtBarn,
+      created_by: S.user.id,
       subject: $('#bk-amne').value,
       format: $('#bk-format').value,
       wanted_date: st.valtDatum,
@@ -544,7 +649,7 @@
       return;
     }
 
-    säg(msg, 'Passet är bokat. Din studiehjälpare får en notis och bekräftar.', true);
+    säg(msg, 'Passet är önskat. Er studiehjälpare ser det direkt och bekräftar.', true);
     S.kal.nollställ();
     uppdateraBokaKnapp();
     await laddaPass();
@@ -553,7 +658,7 @@
 
   /* ============ start ============ */
   (async function start() {
-    $$('[data-pris]').forEach(el => el.textContent = kr(NX.CFG.PRIS_PER_TIMME || 349));
+    $$('[data-pris]').forEach(el => el.textContent = kr(NX.CFG.PRIS_PER_TIMME || 379));
 
     if (!supa) {
       visa('view-auth');
@@ -583,7 +688,9 @@
     $('#hej').textContent = förnamn ? 'Hej ' + förnamn + '.' : 'Hej.';
 
     await laddaBarn();
-    await Promise.all([laddaTutor(), laddaPlan(), laddaRapporter(), laddaPass(), byggKalender()]);
+    await laddaTutor();
+    startaTråd();
+    await Promise.all([laddaPlan(), laddaRapporter(), laddaPass(), byggKalender()]);
     uppdateraBokaKnapp();
   })();
 })();
