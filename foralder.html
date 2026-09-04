@@ -202,6 +202,12 @@
           <div id="prg-lista"><div class="loading">Hämtar</div></div>
         </div>
 
+        <!-- ============ MATERIAL ============ -->
+        <div class="dbox">
+          <h5>Material <em id="mat-antal"></em></h5>
+          <div id="mat-lista"><div class="loading">Hämtar</div></div>
+        </div>
+
         <!-- ============ BOKA ============ -->
         <div class="dbox">
           <h5>Boka nästa pass <em id="boka-hos"></em></h5>
@@ -254,6 +260,36 @@
           <div id="pass-lista"><div class="loading">Hämtar</div></div>
         </div>
 
+        <!-- ============ DITT KONTO ============ -->
+        <div class="dbox">
+          <h5>Ditt konto</h5>
+
+          <div class="nx-bildrad">
+            <span id="konto-avatar"></span>
+            <div class="nx-bildrad-knappar">
+              <input type="file" id="av-fil" accept="image/jpeg,image/png,image/webp">
+              <label class="btn btn-ghost btn-sm" for="av-fil">Byt bild</label>
+              <button class="btn btn-ghost btn-sm" type="button" id="av-bort" hidden>Ta bort</button>
+            </div>
+            <p class="nx-bild-hjalp">JPG, PNG eller WEBP, högst 5 MB. Du får beskära den innan den sparas.</p>
+          </div>
+          <p class="ok-msg" id="av-msg"></p>
+
+          <form id="konto-form">
+            <div class="fgroup"><label for="k-namn">Namn</label><input class="inp" id="k-namn" autocomplete="name"></div>
+            <div class="fgroup"><label for="k-tel">Telefon <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><input class="inp" id="k-tel" type="tel" autocomplete="tel"></div>
+            <button class="btn btn-primary btn-sm btn-block" type="submit">Spara uppgifter</button>
+            <p class="ok-msg" id="k-msg"></p>
+          </form>
+
+          <form id="losen-form" class="vy-fall">
+            <div class="fgroup"><label for="k-losen">Nytt lösenord</label><input class="inp" id="k-losen" type="password" autocomplete="new-password" minlength="6"></div>
+            <div class="fgroup"><label for="k-losen2">Upprepa lösenordet</label><input class="inp" id="k-losen2" type="password" autocomplete="new-password"></div>
+            <button class="btn btn-ghost btn-sm btn-block" type="submit">Byt lösenord</button>
+            <p class="ok-msg" id="kl-msg"></p>
+          </form>
+        </div>
+
         <!-- pris -->
         <div class="dbox">
           <h5>Pris</h5>
@@ -282,15 +318,17 @@
 <script src="nextrum-app.js"></script>
 <script src="nextrum-kontakt.js"></script>
 <script src="nextrum-studie.js"></script>
+<script src="nextrum-media.js"></script>
 <script>
 (function () {
   'use strict';
   const { $, $$, esc, kr, säg, rensa, felText, datumText } = NX;
-  const { bekräfta, medan, tomt, laddar } = NXStudie;
+  const { bekräfta, medan, kolla, tomt, laddar } = NXStudie;
+  const M = NXMedia;
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null };
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app']
@@ -302,7 +340,8 @@
     const na = $('#nav-actions'), ma = $('#m-actions');
     if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
     const namn = (S.profil && S.profil.full_name) || S.user.email;
-    na.innerHTML = '<span class="who-chip"><b>' + esc(namn) + '</b><span class="roll">Förälder</span></span>'
+    na.innerHTML = '<span class="who-chip">' + M.avatar(namn, S.minAvatar, { liten: true })
+      + '<b>' + esc(namn) + '</b><span class="roll">Förälder</span></span>'
       + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
     ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
   }
@@ -373,7 +412,7 @@
     if (!id) { host.innerHTML = '<div class="empty">Ingen studiehjälpare tilldelad än.</div>'; return; }
 
     const [p, tp] = await Promise.all([
-      supa.from('profiles').select('id, full_name, email').eq('id', id).maybeSingle(),
+      supa.from('profiles').select('id, full_name, email, avatar_url, bio').eq('id', id).maybeSingle(),
       supa.from('tutor_profiles').select('age, school, city, subjects, grade_levels, bio, formats').eq('id', id).maybeSingle()
     ]);
 
@@ -383,11 +422,12 @@
       return;
     }
     S.tutor = Object.assign({}, p.data, tp.data || {});
+    S.tutorAvatar = p.data.avatar_url ? await M.signera('avatarer', p.data.avatar_url) : null;
 
     const t = S.tutor;
     host.innerHTML =
       '<div class="tutor-top" style="margin-bottom:14px">'
-      + '<span class="avatar"><svg viewBox="0 0 46 46"><circle class="st" cx="23" cy="18" r="8"/><path class="st" d="M9 42c0-8 6.3-14 14-14s14 6 14 14"/></svg></span>'
+      + M.avatar(t.full_name, S.tutorAvatar, { stor: true })
       + '<div><div class="tutor-name">' + esc(t.full_name) + (t.age ? ', ' + esc(t.age) : '') + '</div>'
       + '<div class="tutor-role">Studiehjälpare' + (t.school ? ' · ' + esc(t.school) : '') + '</div></div></div>'
       + (t.bio ? '<p class="small" style="margin-bottom:14px;line-height:1.6">' + esc(t.bio) + '</p>' : '')
@@ -457,7 +497,7 @@
 
   $('#barn-val').addEventListener('change', e => {
     S.valtBarn = e.target.value || null;
-    laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); uppdateraBokaKnapp();
+    laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); laddaMaterial(); uppdateraBokaKnapp();
   });
 
   $('#lagg-till-barn').addEventListener('click', () => {
@@ -481,7 +521,7 @@
     $('#barn-form').reset();
     $('#barn-form').hidden = true;
     await laddaBarn();
-    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass()]);
+    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPass()]);
   });
 
   /* ============================================================
@@ -561,6 +601,157 @@
     $('#prg-antal').textContent = data.length + ' områden';
     host.innerHTML = NXStudie.progressPerÄmne(data, {});
   }
+
+  /* ============================================================
+     MATERIAL
+     Läsvy. Filerna ligger i en privat hink, så adressen skapas
+     först när någon klickar och slutar gälla av sig själv.
+     ============================================================ */
+  const MAT_IKON = {
+    fil: '<path d="M6 2.5h6l4 4v11H6z"/><path d="M12 2.5v4h4"/>',
+    lank: '<path d="M9 12a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5L10 6"/><path d="M13 10a3.5 3.5 0 0 0-5 0L5.5 12.5a3.5 3.5 0 0 0 5 5L12 16"/>',
+    anteckning: '<path d="M5 3.5h11v15H5z"/><path d="M8 8h5M8 11.5h5M8 15h3"/>'
+  };
+
+  async function laddaMaterial() {
+    const host = $('#mat-lista');
+    $('#mat-antal').textContent = '';
+    if (!S.valtBarn) { host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn högst upp.'); return; }
+
+    host.innerHTML = laddar();
+    const { data, error } = await supa
+      .from('materials').select('id, title, kind, url, body, subject, file_name, file_size')
+      .eq('student_id', S.valtBarn).order('created_at', { ascending: false });
+
+    if (error) { host.innerHTML = tomt('Kunde inte hämta materialet', felText(error)); return; }
+    if (!data.length) {
+      host.innerHTML = tomt('Inget material än', 'Här samlas övningar, länkar och anteckningar som er studiehjälpare delar.');
+      return;
+    }
+    $('#mat-antal').textContent = data.length + ' st';
+    S.material = data;
+
+    host.innerHTML = data.map(m => {
+      const etikett = m.kind === 'fil'
+        ? [m.file_name || 'Fil', m.file_size ? M.filstorlek(m.file_size) : ''].filter(Boolean).join(' · ')
+        : m.kind === 'lank' ? 'Länk' : 'Anteckning';
+
+      let knapp = '';
+      if (m.kind === 'fil') knapp = '<button class="btn btn-ghost btn-sm" data-mat-oppna="' + m.id + '">Öppna</button>';
+      if (m.kind === 'lank') knapp = '<a class="btn btn-ghost btn-sm" href="' + esc(m.url || '#') + '" target="_blank" rel="noopener noreferrer">Öppna</a>';
+
+      return '<div class="mat">'
+        + '<span class="mat-ikon"><svg viewBox="0 0 22 22">' + (MAT_IKON[m.kind] || MAT_IKON.fil) + '</svg></span>'
+        + '<span class="mat-vad"><b>' + esc(m.title) + '</b><span>'
+        + esc([etikett, m.subject].filter(Boolean).join(' · ')) + '</span></span>'
+        + '<span class="mat-atg">' + knapp + '</span>'
+        + (m.kind === 'anteckning' && m.body ? '<div class="mat-text">' + esc(m.body) + '</div>' : '')
+        + '</div>';
+    }).join('');
+  }
+
+  document.addEventListener('click', async e => {
+    const öppna = e.target.closest('[data-mat-oppna]');
+    if (!öppna) return;
+    const m = S.material.find(x => x.id === öppna.dataset.matOppna);
+    if (!m || !m.url) return;
+    await medan(öppna, 'Öppnar…', async () => {
+      const url = await M.signera('material', m.url, 300);
+      if (!url) { alert('Filen kunde inte öppnas. Ladda om sidan och försök igen.'); return; }
+      window.open(url, '_blank', 'noopener');
+    });
+  });
+
+  /* ============================================================
+     DITT KONTO
+     ============================================================ */
+  function ritaKontoAvatar() {
+    const namn = (S.profil && S.profil.full_name) || S.user.email;
+    $('#konto-avatar').innerHTML = M.avatar(namn, S.minAvatar, { stor: true });
+    $('#av-bort').hidden = !S.minAvatar;
+  }
+
+  $('#av-fil').addEventListener('change', async e => {
+    const fil = (e.target.files || [])[0];
+    e.target.value = '';
+    if (!fil) return;
+    rensa($('#av-msg'));
+
+    const fel = M.granska(fil);
+    if (fel) { säg($('#av-msg'), '⚠️ ' + fel, false); return; }
+
+    const blob = await M.beskär(fil);
+    if (!blob) return;
+
+    säg($('#av-msg'), 'Laddar upp…', true);
+    const res = await M.sparaAvatar(S.user.id, blob);
+    if (res.fel) { säg($('#av-msg'), 'Bilden kunde inte sparas: ' + res.fel, false); return; }
+
+    S.minAvatar = res.url;
+    ritaKontoAvatar();
+    ritaHeader();
+    säg($('#av-msg'), '✓ Profilbilden har uppdaterats.', true);
+  });
+
+  $('#av-bort').addEventListener('click', async () => {
+    const ja = await bekräfta({
+      titel: 'Ta bort profilbild?',
+      text: 'Är du säker på att du vill ta bort din profilbild? Dina initialer visas i stället.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+
+    await medan($('#av-bort'), 'Tar bort…', async () => {
+      const res = await M.taBortAvatar(S.user.id);
+      if (res.fel) { säg($('#av-msg'), 'Kunde inte ta bort: ' + res.fel, false); return; }
+      S.minAvatar = null;
+      ritaKontoAvatar();
+      ritaHeader();
+      säg($('#av-msg'), '✓ Profilbilden är borttagen.', true);
+    });
+  });
+
+  $('#konto-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#k-msg');
+    rensa(msg);
+    const namn = $('#k-namn').value.trim();
+    const fel = kolla([{ fel: !namn, text: 'Vänligen fyll i ditt namn.', falt: $('#k-namn') }]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
+    await medan(e.submitter, 'Sparar…', async () => {
+      const { error } = await supa.from('profiles')
+        .update({ full_name: namn, phone: $('#k-tel').value.trim() || null })
+        .eq('id', S.user.id);
+      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+      S.profil.full_name = namn;
+      ritaHeader();
+      ritaKontoAvatar();
+      const förnamn = namn.split(' ')[0];
+      $('#hej').textContent = förnamn ? 'Hej ' + förnamn + '.' : 'Hej.';
+      säg(msg, '✓ Uppgifterna har sparats.', true);
+    });
+  });
+
+  $('#losen-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#kl-msg');
+    rensa(msg);
+    const a = $('#k-losen').value, b = $('#k-losen2').value;
+    const fel = kolla([
+      { fel: !a, text: 'Skriv ett nytt lösenord.', falt: $('#k-losen') },
+      { fel: a.length < 6, text: 'Lösenordet måste vara minst 6 tecken.', falt: $('#k-losen') },
+      { fel: a !== b, text: 'Lösenorden är inte lika.', falt: $('#k-losen2') }
+    ]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
+    await medan(e.submitter, 'Byter…', async () => {
+      const { error } = await supa.auth.updateUser({ password: a });
+      if (error) { säg(msg, felText(error), false); return; }
+      $('#losen-form').reset();
+      säg(msg, '✓ Lösenordet är bytt.', true);
+    });
+  });
 
   /* ============ studieplan ============ */
   async function laddaPlan() {
@@ -782,10 +973,16 @@
     const förnamn = (S.profil.full_name || '').split(' ')[0];
     $('#hej').textContent = förnamn ? 'Hej ' + förnamn + '.' : 'Hej.';
 
+    if (S.profil.avatar_url) S.minAvatar = await M.signera('avatarer', S.profil.avatar_url);
+    $('#k-namn').value = S.profil.full_name || '';
+    $('#k-tel').value = S.profil.phone || '';
+    ritaKontoAvatar();
+    ritaHeader();
+
     await laddaBarn();
     await laddaTutor();
     startaTråd();
-    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass(), byggKalender()]);
+    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPass(), byggKalender()]);
     uppdateraBokaKnapp();
   })();
 })();

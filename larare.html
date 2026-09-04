@@ -253,6 +253,61 @@
           <div id="prg-lista" style="margin-top:20px"><div class="loading">Hämtar</div></div>
         </div>
 
+        <!-- ============ MATERIAL ============ -->
+        <div class="dbox">
+          <h5>Material <em id="mat-antal"></em></h5>
+
+          <div class="mat-typ" id="mat-typ" role="group" aria-label="Vad vill du lägga till?">
+            <button type="button" data-mtyp="fil" aria-pressed="true">Fil</button>
+            <button type="button" data-mtyp="lank" aria-pressed="false">Länk</button>
+            <button type="button" data-mtyp="anteckning" aria-pressed="false">Anteckning</button>
+          </div>
+
+          <form id="mat-form">
+            <div class="vy-form-rad">
+              <div class="pay-field">
+                <label for="mt-titel">Rubrik</label>
+                <input class="inp" id="mt-titel" maxlength="200" placeholder="t.ex. Övningsblad ekvationer">
+              </div>
+              <div class="pay-field">
+                <label for="mt-amne">Ämne <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
+                <input class="inp" id="mt-amne" placeholder="t.ex. Matematik">
+              </div>
+            </div>
+
+            <div class="fgroup" id="mt-fil-grupp" style="margin-top:12px">
+              <label for="mt-fil">Fil</label>
+              <div class="nx-fil">
+                <input type="file" id="mt-fil"
+                       accept=".pdf,.doc,.docx,.txt,image/jpeg,image/png,image/webp">
+                <label class="nx-fil-knapp" for="mt-fil">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14V4M6.5 7.5 10 4l3.5 3.5M4 15.5v1A1.5 1.5 0 0 0 5.5 18h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
+                  Välj fil
+                </label>
+                <span class="nx-fil-namn" id="mt-fil-namn">Ingen fil vald</span>
+              </div>
+              <p class="nx-fil-hjalp">PDF, Word, text eller bild. Högst 10 MB.</p>
+            </div>
+
+            <div class="fgroup" id="mt-lank-grupp" hidden style="margin-top:12px">
+              <label for="mt-lank">Adress</label>
+              <input class="inp" id="mt-lank" type="url" placeholder="https://…">
+            </div>
+
+            <div class="fgroup" id="mt-text-grupp" hidden style="margin-top:12px">
+              <label for="mt-text">Anteckningen</label>
+              <textarea class="inp" id="mt-text" style="min-height:100px" placeholder="Det eleven ska ha framme när hen övar."></textarea>
+            </div>
+
+            <div class="vy-knapprad">
+              <button class="btn btn-primary btn-sm" type="submit" id="mt-spara">Lägg till</button>
+            </div>
+            <p class="ok-msg" id="mt-msg"></p>
+          </form>
+
+          <div id="mat-lista" style="margin-top:20px"><div class="loading">Hämtar</div></div>
+        </div>
+
         <!-- ============ FÖRESLÅ EN TID ============ -->
         <div class="dbox">
           <h5>Föreslå en tid <em id="forslag-till"></em></h5>
@@ -418,6 +473,36 @@
           </form>
         </div>
 
+        <!-- ============ DITT KONTO ============ -->
+        <div class="dbox">
+          <h5>Ditt konto</h5>
+
+          <div class="nx-bildrad">
+            <span id="konto-avatar"></span>
+            <div class="nx-bildrad-knappar">
+              <input type="file" id="av-fil" accept="image/jpeg,image/png,image/webp">
+              <label class="btn btn-ghost btn-sm" for="av-fil">Byt bild</label>
+              <button class="btn btn-ghost btn-sm" type="button" id="av-bort" hidden>Ta bort</button>
+            </div>
+            <p class="nx-bild-hjalp">JPG, PNG eller WEBP, högst 5 MB. Du får beskära den innan den sparas.</p>
+          </div>
+          <p class="ok-msg" id="av-msg"></p>
+
+          <form id="konto-form">
+            <div class="fgroup"><label for="k-namn">Namn</label><input class="inp" id="k-namn" autocomplete="name"></div>
+            <div class="fgroup"><label for="k-tel">Telefon <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><input class="inp" id="k-tel" type="tel" autocomplete="tel"></div>
+            <button class="btn btn-primary btn-sm btn-block" type="submit">Spara uppgifter</button>
+            <p class="ok-msg" id="k-msg"></p>
+          </form>
+
+          <form id="losen-form" class="vy-fall">
+            <div class="fgroup"><label for="k-losen">Nytt lösenord</label><input class="inp" id="k-losen" type="password" autocomplete="new-password" minlength="6"></div>
+            <div class="fgroup"><label for="k-losen2">Upprepa lösenordet</label><input class="inp" id="k-losen2" type="password" autocomplete="new-password"></div>
+            <button class="btn btn-ghost btn-sm btn-block" type="submit">Byt lösenord</button>
+            <p class="ok-msg" id="kl-msg"></p>
+          </form>
+        </div>
+
         <!-- ============ DIN PROFIL ============ -->
         <div class="dbox">
           <h5>Din profil <em>syns på startsidan</em></h5>
@@ -450,11 +535,13 @@
 <script src="nextrum-app.js"></script>
 <script src="nextrum-kontakt.js"></script>
 <script src="nextrum-studie.js"></script>
+<script src="nextrum-media.js"></script>
 <script>
 (function () {
   'use strict';
   const { $, $$, esc, kr, säg, rensa, felText, datumText, isoFor } = NX;
   const { bekräfta, medan, kolla, tomt, laddar } = NXStudie;
+  const M = NXMedia;
 
   NX.initHeader();
 
@@ -462,7 +549,8 @@
     user: null, profil: null, tutorProfil: null,
     familjer: [], aktivFamilj: null,
     elever: [], aktivElev: null,
-    bokningar: [], trad: null, kal: null, olästa: {}
+    bokningar: [], trad: null, kal: null, olästa: {},
+    minAvatar: null, matTyp: 'fil'
   };
 
   const elev = () => S.elever.find(e => e.id === S.aktivElev) || null;
@@ -476,7 +564,8 @@
     const na = $('#nav-actions'), ma = $('#m-actions');
     if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
     const namn = (S.profil && S.profil.full_name) || S.user.email;
-    na.innerHTML = '<span class="who-chip"><b>' + esc(namn) + '</b><span class="roll">Studiehjälpare</span></span>'
+    na.innerHTML = '<span class="who-chip">' + M.avatar(namn, S.minAvatar, { liten: true })
+      + '<b>' + esc(namn) + '</b><span class="roll">Studiehjälpare</span></span>'
       + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
     ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
   }
@@ -690,7 +779,7 @@
     ritaElevProfil();
     fyllElevFormulär();
     fyllPassVal();
-    await Promise.all([laddaLaxor(), laddaProgress(), laddaPlanIFormulär()]);
+    await Promise.all([laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPlanIFormulär()]);
     uppdateraFörslag();
   }
 
@@ -1215,6 +1304,251 @@
   });
 
   /* ============================================================
+     MATERIAL
+     Tre sorter i samma tabell: en fil i hinken, en länk utåt, eller
+     en ren anteckning. kind avgör vilket, och därmed vad raden ska
+     göra när man klickar på den.
+     ============================================================ */
+  $('#mat-typ').addEventListener('click', e => {
+    const k = e.target.closest('[data-mtyp]');
+    if (!k) return;
+    S.matTyp = k.dataset.mtyp;
+    $$('#mat-typ button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mtyp === S.matTyp)));
+    $('#mt-fil-grupp').hidden = S.matTyp !== 'fil';
+    $('#mt-lank-grupp').hidden = S.matTyp !== 'lank';
+    $('#mt-text-grupp').hidden = S.matTyp !== 'anteckning';
+    rensa($('#mt-msg'));
+  });
+
+  $('#mt-fil').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    $('#mt-fil-namn').textContent = f ? f.name + ' · ' + M.filstorlek(f.size) : 'Ingen fil vald';
+    if (f && !$('#mt-titel').value.trim()) {
+      $('#mt-titel').value = f.name.replace(/\.[^.]+$/, '').slice(0, 200);
+    }
+  });
+
+  $('#mat-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#mt-msg');
+    rensa(msg);
+
+    const titel = $('#mt-titel').value.trim();
+    const fil = ($('#mt-fil').files || [])[0];
+    const länk = $('#mt-lank').value.trim();
+    const text = $('#mt-text').value.trim();
+
+    const fel = kolla([
+      { fel: !S.aktivElev, text: 'Välj en elev högst upp först.' },
+      { fel: !titel, text: 'Ge materialet en rubrik.', falt: $('#mt-titel') },
+      { fel: S.matTyp === 'fil' && !fil, text: 'Välj en fil att ladda upp.', falt: $('#mt-fil') },
+      { fel: S.matTyp === 'lank' && !länk, text: 'Klistra in adressen.', falt: $('#mt-lank') },
+      { fel: S.matTyp === 'lank' && länk && !/^https?:\/\//i.test(länk),
+        text: 'Adressen måste börja med http:// eller https://.', falt: $('#mt-lank') },
+      { fel: S.matTyp === 'anteckning' && !text, text: 'Skriv anteckningen.', falt: $('#mt-text') },
+      { fel: S.matTyp === 'fil' && fil && !!M.granskaFil(fil), text: fil ? M.granskaFil(fil) : '', falt: $('#mt-fil') }
+    ]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
+    await medan($('#mt-spara'), S.matTyp === 'fil' ? 'Laddar upp…' : 'Sparar…', async () => {
+      const rad = {
+        student_id: S.aktivElev,
+        tutor_id: S.user.id,
+        title: titel,
+        kind: S.matTyp,
+        subject: $('#mt-amne').value.trim() || null
+      };
+
+      if (S.matTyp === 'fil') {
+        const upp = await M.sparaMaterialfil(S.aktivElev, fil);
+        if (upp.fel) { säg(msg, 'Filen kunde inte laddas upp: ' + upp.fel, false); return; }
+        rad.url = upp.sökväg;
+        rad.file_name = fil.name;
+        rad.file_size = fil.size;
+      } else if (S.matTyp === 'lank') {
+        rad.url = länk;
+      } else {
+        rad.body = text;
+      }
+
+      const { error } = await supa.from('materials').insert(rad);
+      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+
+      säg(msg, '✓ Materialet har lagts till. Familjen ser det direkt.', true);
+      $('#mat-form').reset();
+      $('#mt-fil-namn').textContent = 'Ingen fil vald';
+      await laddaMaterial();
+    });
+  });
+
+  const MAT_IKON = {
+    fil: '<path d="M6 2.5h6l4 4v11H6z"/><path d="M12 2.5v4h4"/>',
+    lank: '<path d="M9 12a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5L10 6"/><path d="M13 10a3.5 3.5 0 0 0-5 0L5.5 12.5a3.5 3.5 0 0 0 5 5L12 16"/>',
+    anteckning: '<path d="M5 3.5h11v15H5z"/><path d="M8 8h5M8 11.5h5M8 15h3"/>'
+  };
+
+  function matRad(m, egen) {
+    const etikett = m.kind === 'fil'
+      ? [M.filEtikett(''), m.file_size ? M.filstorlek(m.file_size) : ''].filter(Boolean).join(' · ')
+      : m.kind === 'lank' ? 'Länk' : 'Anteckning';
+
+    let knappar = '';
+    if (m.kind === 'fil') knappar += '<button class="btn btn-ghost btn-sm" data-mat-oppna="' + m.id + '">Öppna</button>';
+    if (m.kind === 'lank') knappar += '<a class="btn btn-ghost btn-sm" href="' + esc(m.url || '#') + '" target="_blank" rel="noopener noreferrer">Öppna</a>';
+    if (egen) knappar += '<button class="btn btn-ghost btn-sm" data-mat-bort="' + m.id + '">Ta bort</button>';
+
+    return '<div class="mat">'
+      + '<span class="mat-ikon"><svg viewBox="0 0 22 22">' + (MAT_IKON[m.kind] || MAT_IKON.fil) + '</svg></span>'
+      + '<span class="mat-vad"><b>' + esc(m.title) + '</b><span>'
+      + esc([etikett, m.subject].filter(Boolean).join(' · ')) + '</span></span>'
+      + '<span class="mat-atg">' + knappar + '</span>'
+      + (m.kind === 'anteckning' && m.body ? '<div class="mat-text">' + esc(m.body) + '</div>' : '')
+      + '</div>';
+  }
+
+  async function laddaMaterial() {
+    const host = $('#mat-lista');
+    $('#mat-antal').textContent = '';
+    if (!S.aktivElev) { host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp.'); return; }
+
+    host.innerHTML = laddar();
+    const { data, error } = await supa
+      .from('materials').select('id, title, kind, url, body, subject, file_name, file_size')
+      .eq('student_id', S.aktivElev).order('created_at', { ascending: false });
+
+    if (error) { host.innerHTML = tomt('Kunde inte hämta materialet', felText(error)); return; }
+    if (!data.length) {
+      host.innerHTML = tomt('Inget material än', 'Lägg upp ett övningsblad, en länk eller en anteckning — familjen når det från sin vy.');
+      return;
+    }
+    $('#mat-antal').textContent = data.length + ' st';
+    S.material = data;
+    host.innerHTML = data.map(m => matRad(m, true)).join('');
+  }
+
+  /* Filen ligger i en privat hink, så adressen skapas i klicket och
+     slutar gälla av sig själv. */
+  document.addEventListener('click', async e => {
+    const öppna = e.target.closest('[data-mat-oppna]');
+    if (öppna) {
+      const m = (S.material || []).find(x => x.id === öppna.dataset.matOppna);
+      if (!m || !m.url) return;
+      await medan(öppna, 'Öppnar…', async () => {
+        const url = await M.signera('material', m.url, 300);
+        if (!url) { alert('Filen kunde inte öppnas. Ladda om sidan och försök igen.'); return; }
+        window.open(url, '_blank', 'noopener');
+      });
+      return;
+    }
+
+    const bort = e.target.closest('[data-mat-bort]');
+    if (!bort) return;
+    const m = (S.material || []).find(x => x.id === bort.dataset.matBort);
+    const ja = await bekräfta({
+      titel: 'Ta bort materialet?',
+      text: '"' + ((m && m.title) || 'Materialet') + '" försvinner för både dig och familjen.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+
+    await medan(bort, 'Tar bort…', async () => {
+      if (m && m.kind === 'fil' && m.url) await supa.storage.from('material').remove([m.url]);
+      const { error } = await supa.from('materials').delete().eq('id', bort.dataset.matBort);
+      if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+      await laddaMaterial();
+    });
+  });
+
+  /* ============================================================
+     DITT KONTO
+     ============================================================ */
+  async function ritaKontoAvatar() {
+    const namn = (S.profil && S.profil.full_name) || S.user.email;
+    $('#konto-avatar').innerHTML = M.avatar(namn, S.minAvatar, { stor: true });
+    $('#av-bort').hidden = !S.minAvatar;
+  }
+
+  $('#av-fil').addEventListener('change', async e => {
+    const fil = (e.target.files || [])[0];
+    e.target.value = '';
+    if (!fil) return;
+    rensa($('#av-msg'));
+
+    const fel = M.granska(fil);
+    if (fel) { säg($('#av-msg'), '⚠️ ' + fel, false); return; }
+
+    const blob = await M.beskär(fil);
+    if (!blob) return;
+
+    säg($('#av-msg'), 'Laddar upp…', true);
+    const res = await M.sparaAvatar(S.user.id, blob);
+    if (res.fel) { säg($('#av-msg'), 'Bilden kunde inte sparas: ' + res.fel, false); return; }
+
+    S.minAvatar = res.url;
+    ritaKontoAvatar();
+    ritaHeader();
+    säg($('#av-msg'), '✓ Profilbilden har uppdaterats.', true);
+  });
+
+  $('#av-bort').addEventListener('click', async () => {
+    const ja = await bekräfta({
+      titel: 'Ta bort profilbild?',
+      text: 'Är du säker på att du vill ta bort din profilbild? Dina initialer visas i stället.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+
+    await medan($('#av-bort'), 'Tar bort…', async () => {
+      const res = await M.taBortAvatar(S.user.id);
+      if (res.fel) { säg($('#av-msg'), 'Kunde inte ta bort: ' + res.fel, false); return; }
+      S.minAvatar = null;
+      ritaKontoAvatar();
+      ritaHeader();
+      säg($('#av-msg'), '✓ Profilbilden är borttagen.', true);
+    });
+  });
+
+  $('#konto-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#k-msg');
+    rensa(msg);
+    const namn = $('#k-namn').value.trim();
+    const fel = kolla([{ fel: !namn, text: 'Vänligen fyll i ditt namn.', falt: $('#k-namn') }]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
+    await medan(e.submitter, 'Sparar…', async () => {
+      const { error } = await supa.from('profiles')
+        .update({ full_name: namn, phone: $('#k-tel').value.trim() || null })
+        .eq('id', S.user.id);
+      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+      S.profil.full_name = namn;
+      ritaHeader();
+      ritaKontoAvatar();
+      säg(msg, '✓ Uppgifterna har sparats.', true);
+    });
+  });
+
+  $('#losen-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#kl-msg');
+    rensa(msg);
+    const a = $('#k-losen').value, b = $('#k-losen2').value;
+    const fel = kolla([
+      { fel: !a, text: 'Skriv ett nytt lösenord.', falt: $('#k-losen') },
+      { fel: a.length < 6, text: 'Lösenordet måste vara minst 6 tecken.', falt: $('#k-losen') },
+      { fel: a !== b, text: 'Lösenorden är inte lika.', falt: $('#k-losen2') }
+    ]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
+    await medan(e.submitter, 'Byter…', async () => {
+      const { error } = await supa.auth.updateUser({ password: a });
+      if (error) { säg(msg, felText(error), false); return; }
+      $('#losen-form').reset();
+      säg(msg, '✓ Lösenordet är bytt.', true);
+    });
+  });
+
+  /* ============================================================
      STUDIEPLAN
      ============================================================ */
   async function laddaPlanIFormulär() {
@@ -1333,6 +1667,12 @@
     const förnamn = (S.profil.full_name || '').split(' ')[0];
     $('#hej').textContent = förnamn ? 'Hej ' + förnamn + '.' : 'Hej.';
     fyllProfil();
+
+    if (S.profil.avatar_url) S.minAvatar = await M.signera('avatarer', S.profil.avatar_url);
+    $('#k-namn').value = S.profil.full_name || '';
+    $('#k-tel').value = S.profil.phone || '';
+    ritaKontoAvatar();
+    ritaHeader();
 
     await laddaFamiljer();
     S.olästa = await NXKontakt.olästa(S.user.id);

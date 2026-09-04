@@ -352,7 +352,7 @@ const NX = (function () {
     if (!supa || !userId) return null;
     const { data, error } = await supa
       .from('profiles')
-      .select('id, role, full_name, email, is_admin, match_status, matched_tutor_id')
+      .select('id, role, full_name, email, is_admin, match_status, matched_tutor_id, avatar_url, bio, phone')
       .eq('id', userId)
       .maybeSingle();
     if (error) { console.warn('profiles:', error.message); return null; }

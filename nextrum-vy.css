@@ -510,3 +510,101 @@
   font-size:.84rem;line-height:1.6;color:var(--bl-3);
   margin-top:14px;padding-top:14px;border-top:1px solid var(--ln);
 }
+
+/* ============================================================
+   PROFILBILDER
+   Utan bild står initialerna i mossa. En tom cirkel ser trasig ut.
+   ============================================================ */
+.nx-avatar{
+  width:44px;height:44px;flex:none;
+  border-radius:50%;overflow:hidden;
+  display:inline-grid;place-items:center;
+  background:var(--pap-3);border:1px solid var(--ln);
+  font-size:.86rem;font-weight:700;letter-spacing:-.01em;
+  color:var(--mossa);text-transform:uppercase;
+  user-select:none;
+}
+.nx-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.nx-avatar.liten{width:30px;height:30px;font-size:.7rem}
+.nx-avatar.stor{width:88px;height:88px;font-size:1.5rem}
+
+/* raden i kontoinställningarna */
+.nx-bildrad{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+.nx-bildrad-knappar{display:flex;gap:9px;flex-wrap:wrap}
+.nx-bildrad input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.nx-bildrad .btn{padding:7px 14px;font-size:.82rem}
+.nx-bild-hjalp{
+  font-size:.82rem;color:var(--bl-3);line-height:1.55;
+  flex-basis:100%;margin-top:2px;
+}
+
+/* avatar i sidhuvudets namnbricka */
+.who-chip .nx-avatar{width:26px;height:26px;font-size:.62rem;margin-right:-4px}
+
+/* ============================================================
+   BESKÄRAREN
+   ============================================================ */
+.nx-bildbox{max-width:400px}
+.nx-besk{
+  margin:18px auto 0;width:320px;max-width:100%;
+  border-radius:50%;overflow:hidden;
+  border:1px solid var(--ln-2);background:var(--pap-2);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bl) 6%,transparent);
+}
+.nx-besk canvas{display:block;width:100%;height:auto;cursor:grab;touch-action:none}
+.nx-besk canvas:active{cursor:grabbing}
+.nx-besk-zoom{
+  display:flex;align-items:center;gap:12px;margin-top:16px;
+  font-family:var(--f-mono);font-size:9.5px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3);
+}
+.nx-besk-zoom input{flex:1;accent-color:var(--acc)}
+
+/* ============================================================
+   MATERIAL
+   ============================================================ */
+.mat{
+  display:grid;grid-template-columns:auto 1fr auto;
+  gap:6px 14px;align-items:center;
+  padding:13px 0;border-bottom:1px solid var(--ln);
+}
+.mat:last-child{border-bottom:none;padding-bottom:0}
+.mat:first-child{padding-top:0}
+.mat-ikon{
+  width:38px;height:38px;border-radius:11px;flex:none;
+  display:grid;place-items:center;
+  background:var(--pap-2);border:1px solid var(--ln);
+}
+.mat-ikon svg{
+  width:17px;height:17px;fill:none;stroke:var(--mossa);
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+.mat-vad b{display:block;font-size:.95rem;font-weight:600;letter-spacing:-.018em}
+.mat-vad span{
+  font-family:var(--f-mono);font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
+  display:block;margin-top:4px;
+}
+.mat-atg{display:flex;gap:8px;flex-wrap:wrap;justify-self:end}
+.mat-atg .btn{padding:5px 11px;font-size:.78rem}
+.mat-text{
+  grid-column:1/-1;font-size:.9rem;line-height:1.6;
+  color:var(--bl-2);white-space:pre-wrap;
+  background:var(--pap-2);border:1px solid var(--ln);
+  border-radius:11px;padding:12px 14px;margin-top:4px;
+}
+@media (max-width:560px){
+  .mat{grid-template-columns:auto 1fr}
+  .mat-atg{grid-column:1/-1;justify-self:start;margin-top:4px}
+}
+
+/* segmenterad väljare: fil / länk / anteckning */
+.mat-typ{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.mat-typ button{
+  border:1px solid var(--ln);border-radius:100px;
+  padding:7px 14px;font-size:.83rem;font-weight:600;
+  color:var(--bl-2);background:var(--pap);
+  transition:border-color .2s var(--e),color .2s var(--e),background .2s var(--e);
+}
+.mat-typ button:hover{border-color:var(--ln-2);color:var(--bl)}
+.mat-typ button[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--nt-fg)}
