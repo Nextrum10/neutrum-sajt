@@ -368,3 +368,145 @@
 @media (max-width:940px){
   .vy-topp{align-items:flex-start}
 }
+
+/* ============================================================
+   LÄXOR
+   Ett kort per läxa. Avklarade tonas ner men försvinner inte —
+   familjen ska kunna se vad som gjorts, inte bara vad som återstår.
+   ============================================================ */
+.lax{
+  border:1px solid var(--ln);border-radius:14px;
+  padding:16px 18px;background:var(--pap);
+  transition:border-color .2s var(--e),opacity .2s var(--e);
+}
+.lax + .lax{margin-top:12px}
+.lax.avklarad{opacity:.62;background:var(--pap-2)}
+.lax.avklarad .lax-topp b{text-decoration:line-through;text-decoration-thickness:1px}
+.lax-topp{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:12px;margin-bottom:9px;
+}
+.lax-topp b{font-size:1rem;font-weight:600;letter-spacing:-.02em;line-height:1.3}
+.lax-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lax-datum{
+  font-family:var(--f-mono);font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
+}
+.lax-datum.sen{color:var(--acc);font-weight:500}
+.lax-text{
+  font-size:.92rem;line-height:1.6;color:var(--bl-2);
+  margin-top:11px;white-space:pre-wrap;
+}
+.lax-atg{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.lax-atg .btn{padding:6px 12px;font-size:.8rem}
+
+/* lägena — samma märke som passen, egna färger */
+.lage.ej{color:var(--bl-3)}
+.lage.pa{border-color:color-mix(in srgb,var(--ockra) 42%,transparent);color:var(--ockra)}
+.lage.klar{border-color:color-mix(in srgb,var(--mossa) 45%,transparent);color:var(--mossa)}
+.lage.sen{border-color:color-mix(in srgb,var(--acc) 45%,transparent);color:var(--acc)}
+
+/* ============================================================
+   KUNSKAPSOMRÅDEN
+   Tre segment som fylls. En siffra hade blivit ett betyg; det här
+   är en riktning.
+   ============================================================ */
+.prg-grupp + .prg-grupp{margin-top:clamp(20px,2.4vw,28px)}
+.prg-grupp h6{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:500;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
+  margin-bottom:12px;
+}
+.prg{padding:13px 0;border-bottom:1px solid var(--ln)}
+.prg:last-child{border-bottom:none;padding-bottom:0}
+.prg-topp{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.prg-topp b{font-size:.96rem;font-weight:600;letter-spacing:-.018em}
+.prg-niva{
+  font-family:var(--f-mono);font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
+  display:block;margin-top:4px;
+}
+.prg-kommentar{font-size:.88rem;line-height:1.55;color:var(--bl-2);margin-top:7px}
+.prg-atg{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.prg-atg .btn{padding:5px 11px;font-size:.78rem}
+
+.niva{display:inline-flex;gap:4px;flex:none}
+.niva i{
+  width:22px;height:5px;border-radius:100px;
+  background:var(--ln-2);display:block;
+  transition:background .3s var(--e);
+}
+.niva i.fylld{background:var(--mossa)}
+
+/* ============================================================
+   BEKRÄFTELSERUTAN
+   Egen i stället för confirm(): den kan skrivas på svenska och
+   säga vad som faktiskt försvinner.
+   ============================================================ */
+.nx-fraga{
+  position:fixed;inset:0;z-index:900;
+  display:grid;place-items:center;padding:24px;
+  background:color-mix(in srgb,var(--bl) 46%,transparent);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  opacity:0;transition:opacity .22s var(--e);
+}
+.nx-fraga.open{opacity:1}
+.nx-fraga-box{
+  background:var(--pap);border:1px solid var(--ln);
+  border-radius:20px;box-shadow:var(--sk-3);
+  padding:clamp(24px,3vw,34px);max-width:420px;width:100%;
+  transform:translateY(8px) scale(.98);
+  transition:transform .26s var(--e);
+}
+.nx-fraga.open .nx-fraga-box{transform:none}
+.nx-fraga-box h3{
+  font-size:1.2rem;font-weight:700;letter-spacing:-.03em;
+  margin-bottom:10px;
+}
+.nx-fraga-box p{font-size:.94rem;line-height:1.6;color:var(--bl-2)}
+.nx-fraga-knappar{
+  display:flex;gap:10px;justify-content:flex-end;
+  margin-top:clamp(20px,2.4vw,28px);flex-wrap:wrap;
+}
+
+/* ============================================================
+   TOMMA LÄGEN
+   Rubriken säger vad som saknas, raden under vad som händer sen.
+   ============================================================ */
+.vy .empty b{
+  display:block;font-size:.98rem;font-weight:600;
+  letter-spacing:-.02em;color:var(--bl-2);margin-bottom:6px;
+}
+.vy .empty span{font-size:.89rem;color:var(--bl-3);line-height:1.6}
+
+/* ============================================================
+   SMÅ FORMULÄR I PANELERNA
+   ============================================================ */
+.vy-form-rad{
+  display:grid;gap:12px;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  align-items:end;
+}
+.vy-form-rad .pay-field{margin-bottom:0}
+.vy-knapprad{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+
+/* fällbart formulär i en panel */
+.vy-fall{
+  margin-top:16px;border-top:1px solid var(--ln);padding-top:16px;
+}
+
+/* timmar och ersättning */
+.tim-rad{
+  display:flex;justify-content:space-between;align-items:baseline;
+  gap:14px;padding:11px 0;border-bottom:1px solid var(--ln);
+  font-size:.9rem;color:var(--bl-2);
+}
+.tim-rad:last-child{border-bottom:none}
+.tim-rad b{
+  font-size:1.15rem;font-weight:700;letter-spacing:-.03em;color:var(--bl);
+  font-variant-numeric:tabular-nums;
+}
+.tim-not{
+  font-size:.84rem;line-height:1.6;color:var(--bl-3);
+  margin-top:14px;padding-top:14px;border-top:1px solid var(--ln);
+}

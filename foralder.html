@@ -190,6 +190,18 @@
           <p class="ok-msg" id="tr-msg"></p>
         </div>
 
+        <!-- ============ LÄXOR ============ -->
+        <div class="dbox">
+          <h5>Läxor <em id="lax-antal"></em></h5>
+          <div id="lax-lista"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <!-- ============ UTVECKLING ============ -->
+        <div class="dbox">
+          <h5>Utveckling <em id="prg-antal"></em></h5>
+          <div id="prg-lista"><div class="loading">Hämtar</div></div>
+        </div>
+
         <!-- ============ BOKA ============ -->
         <div class="dbox">
           <h5>Boka nästa pass <em id="boka-hos"></em></h5>
@@ -269,10 +281,12 @@
 <script src="nextrum-config.js"></script>
 <script src="nextrum-app.js"></script>
 <script src="nextrum-kontakt.js"></script>
+<script src="nextrum-studie.js"></script>
 <script>
 (function () {
   'use strict';
   const { $, $$, esc, kr, säg, rensa, felText, datumText } = NX;
+  const { bekräfta, medan, tomt, laddar } = NXStudie;
 
   NX.initHeader();
 
@@ -443,7 +457,7 @@
 
   $('#barn-val').addEventListener('change', e => {
     S.valtBarn = e.target.value || null;
-    laddaPlan(); laddaRapporter(); uppdateraBokaKnapp();
+    laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); uppdateraBokaKnapp();
   });
 
   $('#lagg-till-barn').addEventListener('click', () => {
@@ -467,8 +481,86 @@
     $('#barn-form').reset();
     $('#barn-form').hidden = true;
     await laddaBarn();
-    await laddaPlan(); await laddaRapporter(); await laddaPass();
+    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass()]);
   });
+
+  /* ============================================================
+     LÄXOR
+     Familjen kan bara flytta status — titel, instruktion och
+     deadline ägs av studiehjälparen. Det är en trigger i databasen
+     som håller den gränsen, inte det här formuläret.
+     ============================================================ */
+  async function laddaLaxor() {
+    const host = $('#lax-lista');
+    $('#lax-antal').textContent = '';
+    if (!S.valtBarn) { host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn högst upp.'); return; }
+
+    host.innerHTML = laddar();
+    const { data, error } = await supa
+      .from('homework')
+      .select('id, title, instructions, subject, due_date, status, completed_at')
+      .eq('student_id', S.valtBarn)
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false });
+
+    if (error) { host.innerHTML = tomt('Kunde inte hämta läxorna', felText(error)); return; }
+    if (!data.length) {
+      host.innerHTML = tomt('Inga läxor än', 'När er studiehjälpare ger en läxa dyker den upp här.');
+      return;
+    }
+
+    const öppna = data.filter(h => h.status !== 'klar').length;
+    $('#lax-antal').textContent = öppna ? öppna + ' att göra' : 'allt klart';
+
+    host.innerHTML = data.map(h => {
+      let knappar = '';
+      if (h.status === 'ej_paborjad') {
+        knappar = '<button class="btn btn-ghost btn-sm" data-lax="pagaende" data-id="' + h.id + '">Jag har börjat</button>'
+                + '<button class="btn btn-primary btn-sm" data-lax="klar" data-id="' + h.id + '">Klar</button>';
+      } else if (h.status === 'pagaende') {
+        knappar = '<button class="btn btn-primary btn-sm" data-lax="klar" data-id="' + h.id + '">Klar</button>'
+                + '<button class="btn btn-ghost btn-sm" data-lax="ej_paborjad" data-id="' + h.id + '">Inte börjat än</button>';
+      } else {
+        knappar = '<button class="btn btn-ghost btn-sm" data-lax="pagaende" data-id="' + h.id + '">Ångra</button>';
+      }
+      return NXStudie.läxRad(h, { atgarder: knappar });
+    }).join('');
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-lax]');
+    if (!knapp) return;
+    await medan(knapp, '…', async () => {
+      const { error } = await supa.from('homework')
+        .update({ status: knapp.dataset.lax }).eq('id', knapp.dataset.id);
+      if (error) { alert('Kunde inte uppdatera läxan: ' + felText(error)); return; }
+      await laddaLaxor();
+    });
+  });
+
+  /* ============================================================
+     UTVECKLING
+     Läsvy. Det är studiehjälparen som sätter nivåerna.
+     ============================================================ */
+  async function laddaProgress() {
+    const host = $('#prg-lista');
+    $('#prg-antal').textContent = '';
+    if (!S.valtBarn) { host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn högst upp.'); return; }
+
+    host.innerHTML = laddar();
+    const { data, error } = await supa
+      .from('progress_items').select('id, subject, area, level, comment')
+      .eq('student_id', S.valtBarn).order('subject').order('area');
+
+    if (error) { host.innerHTML = tomt('Kunde inte hämta utvecklingen', felText(error)); return; }
+    if (!data.length) {
+      host.innerHTML = tomt('Inget att visa än',
+        'Efter några pass fyller er studiehjälpare i vilka områden som sitter och vilka som behöver mer träning.');
+      return;
+    }
+    $('#prg-antal').textContent = data.length + ' områden';
+    host.innerHTML = NXStudie.progressPerÄmne(data, {});
+  }
 
   /* ============ studieplan ============ */
   async function laddaPlan() {
@@ -507,7 +599,7 @@
 
     host.innerHTML = '<div class="loading">Hämtar</div>';
     const { data, error } = await supa
-      .from('lesson_reports').select('id, lesson_date, raw_notes, ai_feedback')
+      .from('lesson_reports').select('id, lesson_date, raw_notes, ai_feedback, went_well, needs_practice, next_focus')
       .eq('student_id', S.valtBarn).order('lesson_date', { ascending: false });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
@@ -522,6 +614,9 @@
       + (r.ai_feedback
           ? '<p>' + esc(r.ai_feedback) + '</p>'
           : '<span class="raw-note">Studiehjälparens anteckningar</span><p class="raw">' + esc(r.raw_notes) + '</p>')
+      + (r.went_well ? '<p class="small" style="margin-top:10px"><b>Hur det gick:</b> ' + esc(r.went_well) + '</p>' : '')
+      + (r.needs_practice ? '<p class="small" style="margin-top:6px"><b>Behöver träna på:</b> ' + esc(r.needs_practice) + '</p>' : '')
+      + (r.next_focus ? '<p class="small" style="margin-top:6px"><b>Nästa fokus:</b> ' + esc(r.next_focus) + '</p>' : '')
       + '</div>').join('');
   }
 
@@ -690,7 +785,7 @@
     await laddaBarn();
     await laddaTutor();
     startaTråd();
-    await Promise.all([laddaPlan(), laddaRapporter(), laddaPass(), byggKalender()]);
+    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass(), byggKalender()]);
     uppdateraBokaKnapp();
   })();
 })();

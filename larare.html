@@ -128,7 +128,7 @@
       <div>
         <span class="nx-et acc">Studiehjälparvy</span>
         <h1 id="hej">Hej.</h1>
-        <p class="vy-lede">Dina familjer, dina pass och dina timmar. Skriv till familjen och föreslå tider härifrån.</p>
+        <p class="vy-lede">Dina elever, ditt schema och dina timmar. Allt du gör här syns hos familjen direkt.</p>
       </div>
       <span class="vy-marke">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg>
@@ -137,9 +137,30 @@
     </div>
 
     <div class="kpis">
-      <div class="kpi"><b id="kpi-timmar">0</b><span>Genomförda pass</span></div>
+      <div class="kpi"><b id="kpi-timmar">0</b><span>Arbetade timmar</span></div>
       <div class="kpi"><b id="kpi-kommande">0</b><span>Kommande pass</span></div>
       <div class="kpi"><b id="kpi-elever">0</b><span>Elever</span></div>
+    </div>
+
+    <!-- ============================================================
+         VEM JOBBAR DU MED
+         Ett val högst upp som styr allt nedanför. Tidigare fanns tre
+         separata elevlistor i tre formulär, och det gick att skriva
+         en rapport om ett barn medan planen gällde ett annat.
+         ============================================================ -->
+    <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+      <h5>Elev <em id="elev-antal"></em></h5>
+      <div class="tr-val" id="familj-val" hidden></div>
+      <div class="vy-form-rad">
+        <div class="pay-field">
+          <label for="elev-val">Du jobbar med</label>
+          <select class="sel" id="elev-val" aria-describedby="elev-hjalp"></select>
+        </div>
+      </div>
+      <div id="elev-profil"></div>
+      <p class="xsmall" id="elev-hjalp" style="margin-top:12px;color:var(--muted-2);line-height:1.6">
+        Läxor, kunskapsområden, rapporter och studieplan gäller eleven du valt här.
+      </p>
     </div>
 
     <div class="split">
@@ -148,7 +169,6 @@
         <!-- ============ KONTAKT ============ -->
         <div class="dbox">
           <h5>Kontakt <span class="vy-larm" id="tr-larm" hidden></span><em id="tr-vem"></em></h5>
-          <div class="tr-val" id="familj-val" hidden></div>
           <div class="tr" id="trad"><div class="loading">Hämtar</div></div>
           <div class="tr-skriv">
             <textarea class="inp" id="tr-text" rows="1" placeholder="Skriv till familjen…" aria-label="Skriv ett meddelande"></textarea>
@@ -158,6 +178,81 @@
           <p class="ok-msg" id="tr-msg"></p>
         </div>
 
+        <!-- ============ LÄXOR ============ -->
+        <div class="dbox">
+          <h5>Läxor <em id="lax-antal"></em></h5>
+          <div class="vy-knapprad" style="margin-top:0;margin-bottom:16px">
+            <button class="btn btn-primary btn-sm" type="button" id="ny-lax">Ny läxa</button>
+          </div>
+
+          <form id="lax-form" class="vy-fall" hidden>
+            <div class="vy-form-rad">
+              <div class="pay-field">
+                <label for="lx-titel">Vad ska eleven göra?</label>
+                <input class="inp" id="lx-titel" maxlength="200" placeholder="t.ex. Ekvationer, uppgift 12–20">
+              </div>
+              <div class="pay-field">
+                <label for="lx-amne">Ämne</label>
+                <input class="inp" id="lx-amne" placeholder="t.ex. Matematik">
+              </div>
+              <div class="pay-field">
+                <label for="lx-datum">Klar senast</label>
+                <input class="inp" id="lx-datum" type="date">
+              </div>
+            </div>
+            <div class="fgroup" style="margin-top:12px">
+              <label for="lx-text">Instruktion <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
+              <textarea class="inp" id="lx-text" style="min-height:80px" placeholder="Hur eleven ska tänka, vad som är viktigast, vad hen kan hoppa över."></textarea>
+            </div>
+            <div class="vy-knapprad">
+              <button class="btn btn-primary btn-sm" type="submit" id="lx-spara">Skapa läxa</button>
+              <button class="btn btn-ghost btn-sm" type="button" id="lx-avbryt">Avbryt</button>
+            </div>
+            <p class="ok-msg" id="lx-msg"></p>
+          </form>
+
+          <div id="lax-lista"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <!-- ============ KUNSKAPSOMRÅDEN ============ -->
+        <div class="dbox">
+          <h5>Kunskapsområden <em id="prg-antal"></em></h5>
+          <p class="xsmall" style="color:var(--muted-2);margin-bottom:16px;line-height:1.6">
+            Det här är vad familjen ser som utveckling. Ett område i taget — lägg till samma område igen för att flytta nivån.
+          </p>
+
+          <form id="prg-form">
+            <div class="vy-form-rad">
+              <div class="pay-field">
+                <label for="pg-amne">Ämne</label>
+                <input class="inp" id="pg-amne" placeholder="t.ex. Matematik">
+              </div>
+              <div class="pay-field">
+                <label for="pg-omrade">Område</label>
+                <input class="inp" id="pg-omrade" placeholder="t.ex. Ekvationer">
+              </div>
+              <div class="pay-field">
+                <label for="pg-niva">Nivå</label>
+                <select class="sel" id="pg-niva">
+                  <option value="behover_trana">Behöver träna</option>
+                  <option value="pa_god_vag">På god väg</option>
+                  <option value="bra">Bra</option>
+                </select>
+              </div>
+            </div>
+            <div class="fgroup" style="margin-top:12px">
+              <label for="pg-kommentar">Kommentar <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
+              <input class="inp" id="pg-kommentar" placeholder="t.ex. Klarar enkla ekvationer själv, fastnar på parenteser">
+            </div>
+            <div class="vy-knapprad">
+              <button class="btn btn-primary btn-sm" type="submit" id="pg-spara">Spara område</button>
+            </div>
+            <p class="ok-msg" id="pg-msg"></p>
+          </form>
+
+          <div id="prg-lista" style="margin-top:20px"><div class="loading">Hämtar</div></div>
+        </div>
+
         <!-- ============ FÖRESLÅ EN TID ============ -->
         <div class="dbox">
           <h5>Föreslå en tid <em id="forslag-till"></em></h5>
@@ -165,7 +260,6 @@
             Familjen får förslaget i sin vy och svarar med ett klick. Tider som redan är bokade hos dig går inte att välja.
           </p>
           <div class="forslag-rad" style="margin-bottom:18px">
-            <div class="pay-field"><label for="f-elev">Elev</label><select class="sel" id="f-elev"></select></div>
             <div class="pay-field"><label for="f-amne">Ämne</label>
               <select class="sel" id="f-amne">
                 <option>Matematik</option><option>Svenska</option><option>Engelska</option>
@@ -174,6 +268,13 @@
             </div>
             <div class="pay-field"><label for="f-format">Format</label>
               <select class="sel" id="f-format"><option>Online</option><option>På plats</option></select>
+            </div>
+            <div class="pay-field"><label for="f-langd">Längd</label>
+              <select class="sel" id="f-langd">
+                <option value="60">60 minuter</option>
+                <option value="90">90 minuter</option>
+                <option value="30">30 minuter</option>
+              </select>
             </div>
           </div>
           <div id="kalender"></div>
@@ -188,37 +289,86 @@
           <p class="ok-msg" id="forslag-msg"></p>
         </div>
 
-        <!-- pass -->
+        <!-- ============ PASS ============ -->
         <div class="dbox">
           <h5>Dina pass <em id="pass-antal"></em></h5>
           <div id="pass-lista"><div class="loading">Hämtar</div></div>
         </div>
 
-        <!-- rapport -->
+        <!-- ============ RAPPORT ============ -->
         <div class="dbox">
-          <h5>Skriv rapport</h5>
+          <h5>Efter passet</h5>
           <p class="xsmall" style="color:var(--muted-2);margin-bottom:16px;line-height:1.6">
-            Skriv i punktform, precis som du tänker. Vill du kan du sedan låta AI:n göra om det till några meningar riktade till föräldern. Den lägger inte till något du inte skrivit.
+            Rapporten är det familjen läser. Väljer du ett pass markeras det samtidigt som genomfört, och timmarna räknas upp.
           </p>
           <form id="rapport-form">
-            <div class="form-grid">
-              <div class="pay-field"><label for="r-elev">Elev</label><select class="sel" id="r-elev"></select></div>
-              <div class="pay-field"><label for="r-datum">Datum</label><input class="inp" id="r-datum" type="date"></div>
-              <div class="pay-field full"><label for="r-notes">Vad gjorde ni, och hur gick det?</label>
-                <textarea class="inp" id="r-notes" placeholder="t.ex. Körde bråk och procent. Kämpigt i början men hon fixade de fem sista själv. Nästa gång: ekvationer." required></textarea>
+            <div class="vy-form-rad">
+              <div class="pay-field">
+                <label for="r-pass">Vilket pass</label>
+                <select class="sel" id="r-pass"></select>
               </div>
-              <div class="full" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-                <button class="btn btn-primary btn-sm" type="submit" id="r-spara">Spara rapport</button>
-                <label class="xsmall" style="display:flex;gap:7px;align-items:center;cursor:pointer">
-                  <input type="checkbox" id="r-ai" checked> Låt AI:n formulera om den åt föräldern
-                </label>
+              <div class="pay-field">
+                <label for="r-datum">Datum</label>
+                <input class="inp" id="r-datum" type="date">
               </div>
-              <p class="ok-msg" id="r-msg"></p>
+              <div class="pay-field">
+                <label for="r-narvaro">Närvaro</label>
+                <select class="sel" id="r-narvaro">
+                  <option value="narvarande">Närvarande</option>
+                  <option value="sen">Kom sent</option>
+                  <option value="franvarande">Uteblev</option>
+                </select>
+              </div>
             </div>
+
+            <div class="fgroup" style="margin-top:14px">
+              <label for="r-notes">Vad gjorde ni?</label>
+              <textarea class="inp" id="r-notes" style="min-height:90px" placeholder="t.ex. Körde bråk och procent, sedan fem uppgifter från gamla provet."></textarea>
+            </div>
+            <div class="fgroup">
+              <label for="r-gick">Hur gick det? <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
+              <textarea class="inp" id="r-gick" style="min-height:70px" placeholder="t.ex. Kämpigt i början, men hon löste de fem sista helt själv."></textarea>
+            </div>
+            <div class="vy-form-rad">
+              <div class="pay-field">
+                <label for="r-trana">Behöver träna på</label>
+                <input class="inp" id="r-trana" placeholder="t.ex. Parenteser i ekvationer">
+              </div>
+              <div class="pay-field">
+                <label for="r-fokus">Nästa fokus</label>
+                <input class="inp" id="r-fokus" placeholder="t.ex. Ekvationer med bråk">
+              </div>
+            </div>
+
+            <div class="vy-fall" style="margin-top:16px">
+              <label class="xsmall" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600">
+                <input type="checkbox" id="r-lax"> Skapa en läxa direkt
+              </label>
+              <div id="r-lax-falt" hidden style="margin-top:12px">
+                <div class="vy-form-rad">
+                  <div class="pay-field">
+                    <label for="r-lax-titel">Läxan</label>
+                    <input class="inp" id="r-lax-titel" maxlength="200" placeholder="t.ex. Uppgift 12–20 i kapitel 4">
+                  </div>
+                  <div class="pay-field">
+                    <label for="r-lax-datum">Klar senast</label>
+                    <input class="inp" id="r-lax-datum" type="date">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="vy-knapprad">
+              <button class="btn btn-primary btn-sm" type="submit" id="r-spara">Spara rapport</button>
+              <label class="xsmall" style="display:flex;gap:7px;align-items:center;cursor:pointer">
+                <input type="checkbox" id="r-ai" checked> Låt AI:n formulera om den åt föräldern
+              </label>
+            </div>
+            <p class="ok-msg" id="r-msg"></p>
           </form>
         </div>
 
-        <!-- tidigare rapporter -->
+        <!-- ============ TIDIGARE RAPPORTER ============ -->
         <div class="dbox">
           <h5>Dina tidigare rapporter <em id="mina-rapporter-antal"></em></h5>
           <div id="mina-rapporter"><div class="loading">Hämtar</div></div>
@@ -228,20 +378,29 @@
 
       <div class="stack">
 
-        <!-- elever -->
+        <!-- ============ ELEVENS UPPGIFTER ============ -->
         <div class="dbox">
-          <h5>Dina elever</h5>
-          <div id="elev-lista"><div class="loading">Hämtar</div></div>
+          <h5>Om eleven</h5>
+          <form id="elev-form">
+            <div class="fgroup"><label for="e-arskurs">Årskurs</label><input class="inp" id="e-arskurs" placeholder="t.ex. Åk 8"></div>
+            <div class="fgroup"><label for="e-skola">Skola</label><input class="inp" id="e-skola"></div>
+            <div class="fgroup"><label for="e-amnen">Ämnen (kommaseparerat)</label><input class="inp" id="e-amnen" placeholder="Matematik, Fysik"></div>
+            <div class="fgroup"><label for="e-mal">Studiemål</label><textarea class="inp" id="e-mal" style="min-height:80px" placeholder="t.ex. Höja betyget i matte till våren"></textarea></div>
+            <button class="btn btn-ghost btn-sm btn-block" type="submit">Spara om eleven</button>
+            <p class="ok-msg" id="e-msg"></p>
+          </form>
         </div>
 
-        <!-- studieplan -->
+        <!-- ============ TIMMAR ============ -->
+        <div class="dbox">
+          <h5>Timmar <em>bara genomförda pass</em></h5>
+          <div id="timmar"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <!-- ============ STUDIEPLAN ============ -->
         <div class="dbox">
           <h5>Studieplan</h5>
           <form id="plan-form">
-            <div class="fgroup">
-              <label for="p-elev">Elev</label>
-              <select class="sel" id="p-elev"></select>
-            </div>
             <div class="fgroup">
               <label for="p-amne">Ämne</label>
               <input class="inp" id="p-amne" placeholder="t.ex. Matematik">
@@ -259,7 +418,7 @@
           </form>
         </div>
 
-        <!-- din profil -->
+        <!-- ============ DIN PROFIL ============ -->
         <div class="dbox">
           <h5>Din profil <em>syns på startsidan</em></h5>
           <form id="profil-form">
@@ -290,18 +449,23 @@
 <script src="nextrum-config.js"></script>
 <script src="nextrum-app.js"></script>
 <script src="nextrum-kontakt.js"></script>
+<script src="nextrum-studie.js"></script>
 <script>
 (function () {
   'use strict';
-  const { $, $$, esc, säg, rensa, felText, datumText, isoFor } = NX;
+  const { $, $$, esc, kr, säg, rensa, felText, datumText, isoFor } = NX;
+  const { bekräfta, medan, kolla, tomt, laddar } = NXStudie;
 
   NX.initHeader();
 
   const S = {
     user: null, profil: null, tutorProfil: null,
-    elever: [], familjer: [], aktivFamilj: null,
+    familjer: [], aktivFamilj: null,
+    elever: [], aktivElev: null,
     bokningar: [], trad: null, kal: null, olästa: {}
   };
+
+  const elev = () => S.elever.find(e => e.id === S.aktivElev) || null;
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-pending', 'view-wrongrole', 'view-app']
@@ -351,36 +515,34 @@
     const lösen = $('#a-pass').value;
     const namn = $('#a-name').value.trim();
 
-    if (!epost || !lösen) { säg(msg, 'Fyll i e-post och lösenord.', false); return; }
-    if (läge === 'up' && !namn) { säg(msg, 'Fyll i ditt namn.', false); return; }
-    if (läge === 'up' && lösen.length < 6) { säg(msg, 'Lösenordet måste vara minst 6 tecken.', false); return; }
+    const fel = kolla([
+      { fel: !epost, text: 'Fyll i din e-postadress.', falt: $('#a-email') },
+      { fel: !lösen, text: 'Fyll i ditt lösenord.', falt: $('#a-pass') },
+      { fel: läge === 'up' && !namn, text: 'Fyll i ditt namn.', falt: $('#a-name') },
+      { fel: läge === 'up' && lösen.length < 6, text: 'Lösenordet måste vara minst 6 tecken.', falt: $('#a-pass') }
+    ]);
+    if (fel) { säg(msg, fel, false); return; }
 
-    knapp.setAttribute('aria-busy', 'true');
-    let res;
-    if (läge === 'up') {
-      res = await supa.auth.signUp({
-        email: epost, password: lösen,
-        options: { data: { full_name: namn, role: 'tutor' } }
-      });
-    } else {
-      res = await supa.auth.signInWithPassword({ email: epost, password: lösen });
-    }
-    knapp.removeAttribute('aria-busy');
+    await medan(knapp, läge === 'up' ? 'Skapar…' : 'Loggar in…', async () => {
+      const res = läge === 'up'
+        ? await supa.auth.signUp({ email: epost, password: lösen, options: { data: { full_name: namn, role: 'tutor' } } })
+        : await supa.auth.signInWithPassword({ email: epost, password: lösen });
 
-    if (res.error) { säg(msg, felText(res.error), false); return; }
-
-    if (läge === 'up' && res.data && res.data.session === null) {
-      säg(msg, 'Kontot är skapat. Vi har skickat en bekräftelse till ' + epost + '. Klicka på länken i mejlet och logga sedan in här.', true);
-      return;
-    }
-    location.reload();
+      if (res.error) { säg(msg, felText(res.error), false); return; }
+      if (läge === 'up' && res.data && res.data.session === null) {
+        säg(msg, 'Kontot är skapat. Vi har skickat en bekräftelse till ' + epost + '. Klicka på länken i mejlet och logga sedan in här.', true);
+        return;
+      }
+      location.reload();
+    });
   });
 
-  /* ============ familjer och elever ============ */
-  /* Familjerna hämtas ur profiles, inte ur students. Skälet: en familj
-     kan vara matchad med dig innan de lagt in sitt barn. Hämtade vi
-     dem via students såg du ingenting, och kunde inte skriva till dem
-     för att fråga varför. */
+  /* ============================================================
+     FAMILJER OCH ELEVER
+     Familjerna hämtas ur profiles, inte ur students: en familj kan
+     vara matchad innan de lagt in sitt barn, och då måste du kunna
+     skriva till dem och fråga varför.
+     ============================================================ */
   async function laddaFamiljer() {
     const { data, error } = await supa
       .from('profiles').select('id, full_name, email').eq('matched_tutor_id', S.user.id);
@@ -392,56 +554,106 @@
   }
 
   async function laddaElever() {
-    const host = $('#elev-lista');
     const { data, error } = await supa
-      .from('students').select('id, name, grade, parent_id').order('created_at');
-
-    if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
+      .from('students')
+      .select('id, name, grade, school, goals, subjects, parent_id')
+      .order('created_at');
+    if (error) { console.warn(error.message); return; }
     S.elever = data || [];
     $('#kpi-elever').textContent = S.elever.length;
-
-    if (!S.familjer.length) {
-      host.innerHTML = '<div class="empty">Ingen familj tilldelad än.<br><br>'
-        + 'Nextrum matchar dig med en familj, sedan dyker de upp här — och du kan skriva till dem direkt.</div>';
-    } else {
-      host.innerHTML = S.familjer.map(f => {
-        const barn = S.elever.filter(e => e.parent_id === f.id);
-        return '<div class="pass" style="grid-template-columns:1fr auto">'
-          + '<span class="pass-vad"><b>' + esc(f.full_name || 'Familj') + '</b>'
-          + '<span>' + (barn.length
-              ? barn.map(b => esc(b.name) + (b.grade ? ' · ' + esc(b.grade) : '')).join('<br>')
-              : 'Inget barn tillagt än') + '</span></span>'
-          + '<span class="pass-atg"><button class="btn btn-ghost btn-sm" data-familj="' + f.id + '">Skriv</button></span>'
-          + '</div>';
-      }).join('');
-    }
-
-    fyllElevväljare();
-    if (S.elever.length) laddaPlanIFormulär();
   }
 
-  /* Elevlistorna i formulären visar bara den familj man jobbar med
-     just nu — annars är det alldeles för lätt att skriva en rapport
-     om fel barn. */
+  /* Elevlistan visar bara den familj man jobbar med just nu. */
   function fyllElevväljare() {
     const mina = S.elever.filter(e => !S.aktivFamilj || e.parent_id === S.aktivFamilj);
-    const val = mina.length
-      ? mina.map(e => '<option value="' + e.id + '">' + esc(e.name) + (e.grade ? ' · ' + esc(e.grade) : '') + '</option>').join('')
-      : '<option value="">Ingen elev än</option>';
-    ['#r-elev', '#p-elev', '#f-elev'].forEach(id => {
-      const el = $(id);
-      if (!el) return;
-      const förra = el.value;
-      el.innerHTML = val;
-      el.disabled = !mina.length;
-      if (mina.some(e => e.id === förra)) el.value = förra;
-    });
+    const val = $('#elev-val');
+
+    if (!mina.length) {
+      val.innerHTML = '<option value="">Ingen elev tillagd än</option>';
+      val.disabled = true;
+      S.aktivElev = null;
+      $('#elev-antal').textContent = '';
+    } else {
+      val.disabled = false;
+      val.innerHTML = mina.map(e =>
+        '<option value="' + e.id + '">' + esc(e.name) + (e.grade ? ' · ' + esc(e.grade) : '') + '</option>').join('');
+      $('#elev-antal').textContent = mina.length === 1 ? '' : mina.length + ' st';
+      if (!S.aktivElev || !mina.some(e => e.id === S.aktivElev)) S.aktivElev = mina[0].id;
+      val.value = S.aktivElev;
+    }
   }
+
+  function ritaElevProfil() {
+    const host = $('#elev-profil');
+    const e = elev();
+    if (!e) {
+      host.innerHTML = '<div class="empty" style="margin-top:14px"><b>Ingen elev än</b>'
+        + '<br><span>Familjen lägger in sitt barn i sin vy. Skriv till dem om det dröjer.</span></div>';
+      return;
+    }
+    const familj = S.familjer.find(f => f.id === e.parent_id);
+    const bitar = [
+      e.grade ? '<span class="tag">' + esc(e.grade) + '</span>' : '',
+      e.school ? '<span class="tag">' + esc(e.school) + '</span>' : '',
+      ...(e.subjects || []).map(s => '<span class="tag">' + esc(s) + '</span>')
+    ].filter(Boolean).join('');
+
+    host.innerHTML = '<div style="margin-top:16px">'
+      + (bitar ? '<div class="tutor-meta" style="margin-bottom:12px">' + bitar + '</div>' : '')
+      + (e.goals ? '<p class="small" style="line-height:1.6"><b>Mål:</b> ' + esc(e.goals) + '</p>' : '')
+      + (familj ? '<p class="xsmall" style="margin-top:10px;color:var(--muted-2)">Familj: ' + esc(familj.full_name || familj.email) + '</p>' : '')
+      + '</div>';
+  }
+
+  function fyllElevFormulär() {
+    const e = elev();
+    $('#e-arskurs').value = (e && e.grade) || '';
+    $('#e-skola').value = (e && e.school) || '';
+    $('#e-amnen').value = ((e && e.subjects) || []).join(', ');
+    $('#e-mal').value = (e && e.goals) || '';
+    ['#e-arskurs', '#e-skola', '#e-amnen', '#e-mal'].forEach(id => { $(id).disabled = !e; });
+  }
+
+  $('#elev-form').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const msg = $('#e-msg');
+    rensa(msg);
+    if (!S.aktivElev) { säg(msg, 'Välj en elev först.', false); return; }
+
+    await medan(ev.submitter, 'Sparar…', async () => {
+      const { error } = await supa.from('students').update({
+        grade: $('#e-arskurs').value.trim() || null,
+        school: $('#e-skola').value.trim() || null,
+        subjects: $('#e-amnen').value.split(',').map(s => s.trim()).filter(Boolean),
+        goals: $('#e-mal').value.trim() || null
+      }).eq('id', S.aktivElev);
+
+      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+      säg(msg, '✓ Sparat. Familjen ser uppgifterna i sin vy.', true);
+      await laddaElever();
+      ritaElevProfil();
+    });
+  });
+
+  /* ============ byte av familj eller elev ============ */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-familj]');
+    if (!knapp) return;
+    S.aktivFamilj = knapp.dataset.familj;
+    S.aktivElev = null;
+    S.olästa = await NXKontakt.olästa(S.user.id);
+    fyllElevväljare();
+    await byggFamilj();
+    await byggElev();
+  });
+
+  $('#elev-val').addEventListener('change', async e => {
+    S.aktivElev = e.target.value || null;
+    await byggElev();
+  });
 
   function ritaFamiljval() {
     const host = $('#familj-val');
-    /* En enda familj behöver inga flikar — då säger rubriken redan
-       vem man skriver med. */
     if (S.familjer.length < 2) { host.hidden = true; host.innerHTML = ''; return; }
     host.hidden = false;
     host.innerHTML = S.familjer.map(f => {
@@ -463,25 +675,24 @@
     $('#forslag-till').textContent = namn ? 'till ' + namn.split(' ')[0] : '';
     $('#tr-text').placeholder = namn ? 'Skriv till ' + namn.split(' ')[0] + '…' : 'Skriv till familjen…';
     ritaFamiljval();
-    fyllElevväljare();
 
     if (!S.aktivFamilj) {
-      $('#trad').innerHTML = '<div class="empty">Ingen familj matchad än, så det finns ingen att skriva till.</div>';
+      $('#trad').innerHTML = tomt('Ingen familj matchad än', 'Nextrum kopplar ihop dig med en familj, sedan dyker de upp här.');
+      $('#tr-text').disabled = $('#tr-skicka').disabled = true;
       return;
     }
     if (S.trad) await S.trad.byt({ parentId: S.aktivFamilj, motpart: namn });
     else startaTråd();
   }
 
-  document.addEventListener('click', async e => {
-    const knapp = e.target.closest('[data-familj]');
-    if (!knapp) return;
-    S.aktivFamilj = knapp.dataset.familj;
-    S.olästa = await NXKontakt.olästa(S.user.id);
-    await byggFamilj();
-    await laddaPass();
-    $('#trad').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  /* Allt som hör till EN elev laddas om på ett ställe. */
+  async function byggElev() {
+    ritaElevProfil();
+    fyllElevFormulär();
+    fyllPassVal();
+    await Promise.all([laddaLaxor(), laddaProgress(), laddaPlanIFormulär()]);
+    uppdateraFörslag();
+  }
 
   /* ============ kontakt ============ */
   function startaTråd() {
@@ -504,16 +715,239 @@
     });
   }
 
-  /* ============ föreslå en tid ============ */
+  /* ============================================================
+     LÄXOR
+     ============================================================ */
+  $('#ny-lax').addEventListener('click', () => {
+    const f = $('#lax-form');
+    f.hidden = !f.hidden;
+    $('#ny-lax').textContent = f.hidden ? 'Ny läxa' : 'Stäng';
+    if (!f.hidden) $('#lx-titel').focus();
+  });
+  $('#lx-avbryt').addEventListener('click', () => {
+    $('#lax-form').hidden = true;
+    $('#ny-lax').textContent = 'Ny läxa';
+    rensa($('#lx-msg'));
+  });
+
+  $('#lax-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#lx-msg');
+    rensa(msg);
+
+    const titel = $('#lx-titel').value.trim();
+    const datum = $('#lx-datum').value;
+    const fel = kolla([
+      { fel: !S.aktivElev, text: 'Välj en elev högst upp först.' },
+      { fel: !titel, text: 'Skriv vad eleven ska göra.', falt: $('#lx-titel') },
+      { fel: titel.length > 200, text: 'Rubriken är för lång. Håll den under 200 tecken.', falt: $('#lx-titel') },
+      { fel: !!datum && datum < isoFor(new Date()), text: 'Deadline kan inte ligga bakåt i tiden.', falt: $('#lx-datum') }
+    ]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
+    await medan($('#lx-spara'), 'Skapar…', async () => {
+      const { error } = await supa.from('homework').insert({
+        student_id: S.aktivElev,
+        tutor_id: S.user.id,
+        title: titel,
+        subject: $('#lx-amne').value.trim() || null,
+        instructions: $('#lx-text').value.trim() || null,
+        due_date: datum || null
+      });
+      if (error) { säg(msg, 'Kunde inte skapa läxan: ' + felText(error), false); return; }
+
+      säg(msg, '✓ Läxan har skapats. Familjen ser den direkt.', true);
+      $('#lax-form').reset();
+      $('#lax-form').hidden = true;
+      $('#ny-lax').textContent = 'Ny läxa';
+      await laddaLaxor();
+    });
+  });
+
+  async function laddaLaxor() {
+    const host = $('#lax-lista');
+    $('#lax-antal').textContent = '';
+    if (!S.aktivElev) { host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp för att se läxorna.'); return; }
+
+    host.innerHTML = laddar();
+    const { data, error } = await supa
+      .from('homework')
+      .select('id, title, instructions, subject, due_date, status, completed_at')
+      .eq('student_id', S.aktivElev)
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false });
+
+    if (error) { host.innerHTML = tomt('Kunde inte hämta läxorna', felText(error)); return; }
+    if (!data.length) {
+      host.innerHTML = tomt('Inga läxor än', 'Skapa den första med knappen ovanför — den dyker upp hos familjen direkt.');
+      return;
+    }
+
+    const öppna = data.filter(h => h.status !== 'klar').length;
+    $('#lax-antal').textContent = öppna ? öppna + ' öppna' : 'alla klara';
+
+    host.innerHTML = data.map(h => NXStudie.läxRad(h, {
+      atgarder: '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
+    })).join('');
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-lax-bort]');
+    if (!knapp) return;
+    const rad = knapp.closest('.lax');
+    const titel = rad ? rad.querySelector('b').textContent : 'läxan';
+
+    const ja = await bekräfta({
+      titel: 'Ta bort läxan?',
+      text: '"' + titel + '" försvinner för både dig och familjen. Det går inte att ångra.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+
+    await medan(knapp, 'Tar bort…', async () => {
+      const { error } = await supa.from('homework').delete().eq('id', knapp.dataset.laxBort);
+      if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+      await laddaLaxor();
+    });
+  });
+
+  /* ============================================================
+     KUNSKAPSOMRÅDEN
+     ============================================================ */
+  $('#prg-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#pg-msg');
+    rensa(msg);
+
+    const ämne = $('#pg-amne').value.trim();
+    const område = $('#pg-omrade').value.trim();
+    const fel = kolla([
+      { fel: !S.aktivElev, text: 'Välj en elev högst upp först.' },
+      { fel: !ämne, text: 'Fyll i vilket ämne det gäller.', falt: $('#pg-amne') },
+      { fel: !område, text: 'Fyll i vilket område inom ämnet.', falt: $('#pg-omrade') }
+    ]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
+    await medan($('#pg-spara'), 'Sparar…', async () => {
+      /* upsert på (elev, ämne, område): samma område igen flyttar
+         nivån i stället för att lägga till en dubblett. */
+      const { error } = await supa.from('progress_items').upsert({
+        student_id: S.aktivElev,
+        tutor_id: S.user.id,
+        subject: ämne,
+        area: område,
+        level: $('#pg-niva').value,
+        comment: $('#pg-kommentar').value.trim() || null,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'student_id,subject,area' });
+
+      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+      säg(msg, '✓ Sparat. Familjen ser utvecklingen direkt.', true);
+      $('#pg-omrade').value = '';
+      $('#pg-kommentar').value = '';
+      await laddaProgress();
+    });
+  });
+
+  async function laddaProgress() {
+    const host = $('#prg-lista');
+    $('#prg-antal').textContent = '';
+    if (!S.aktivElev) { host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp.'); return; }
+
+    host.innerHTML = laddar();
+    const { data, error } = await supa
+      .from('progress_items').select('id, subject, area, level, comment')
+      .eq('student_id', S.aktivElev)
+      .order('subject').order('area');
+
+    if (error) { host.innerHTML = tomt('Kunde inte hämta områdena', felText(error)); return; }
+    if (!data.length) {
+      host.innerHTML = tomt('Inga områden än', 'Lägg till det första ovanför — det är så familjen ser att det går framåt.');
+      return;
+    }
+    $('#prg-antal').textContent = data.length + ' st';
+    host.innerHTML = NXStudie.progressPerÄmne(data, {
+      atgarder: null
+    }).replace(/<div class="prg">/g, '<div class="prg">');
+
+    /* borttagningsknappar läggs på efteråt så att progressPerÄmne
+       kan hållas fri från vy-specifika knappar */
+    $$('#prg-lista .prg').forEach((rad, i) => {
+      const p = data[i];
+      if (!p) return;
+      const atg = document.createElement('div');
+      atg.className = 'prg-atg';
+      atg.innerHTML = '<button class="btn btn-ghost btn-sm" data-prg-bort="' + p.id + '">Ta bort</button>';
+      rad.appendChild(atg);
+    });
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-prg-bort]');
+    if (!knapp) return;
+    const rad = knapp.closest('.prg');
+    const namn = rad ? rad.querySelector('b').textContent : 'området';
+
+    const ja = await bekräfta({
+      titel: 'Ta bort området?',
+      text: '"' + namn + '" försvinner ur elevens utveckling.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+
+    const { error } = await supa.from('progress_items').delete().eq('id', knapp.dataset.prgBort);
+    if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+    await laddaProgress();
+  });
+
+  /* ============================================================
+     TIMMAR OCH ERSÄTTNING
+     ============================================================ */
+  async function laddaTimmar() {
+    const host = $('#timmar');
+    const { data, error } = await supa
+      .from('arbetade_timmar')
+      .select('timmar_totalt, timmar_vecka, timmar_manad, pass_totalt')
+      .eq('tutor_id', S.user.id).maybeSingle();
+
+    if (error) { host.innerHTML = tomt('Kunde inte hämta timmarna', felText(error)); return; }
+
+    const t = data || { timmar_totalt: 0, timmar_vecka: 0, timmar_manad: 0, pass_totalt: 0 };
+    $('#kpi-timmar').textContent = Number(t.timmar_totalt || 0);
+
+    const rate = S.tutorProfil && S.tutorProfil.hourly_rate;
+    const pengar = n => rate ? kr(Math.round(Number(n || 0) * Number(rate))) : '—';
+
+    host.innerHTML =
+        rad('Den här veckan', t.timmar_vecka, pengar(t.timmar_vecka))
+      + rad('Den här månaden', t.timmar_manad, pengar(t.timmar_manad))
+      + rad('Totalt', t.timmar_totalt, pengar(t.timmar_totalt))
+      + '<p class="tim-not">' + (rate
+          ? 'Räknat på ' + kr(rate) + ' i timmen. Bara genomförda pass räknas — ett bokat pass blir en timme först när du skrivit rapporten.'
+          : 'Din timpenning är inte satt än, så ersättningen kan inte räknas ut. Hör av dig till oss så fyller vi i den.')
+      + '</p>';
+
+    function rad(etikett, timmar, summa) {
+      return '<div class="tim-rad"><span>' + esc(etikett) + '</span>'
+        + '<span><b>' + Number(timmar || 0).toLocaleString('sv-SE') + ' h</b>'
+        + (rate ? ' <span style="color:var(--muted-2)">· ' + esc(summa) + '</span>' : '')
+        + '</span></div>';
+    }
+  }
+
+  /* ============================================================
+     FÖRESLÅ EN TID
+     ============================================================ */
   function uppdateraFörslag() {
     const knapp = $('#forslag-knapp'), sam = $('#forslag-sammanfattning');
     const st = S.kal && S.kal.state;
     if (!S.aktivFamilj) { knapp.disabled = true; sam.textContent = 'Ingen familj matchad än.'; return; }
-    if (!$('#f-elev').value) { knapp.disabled = true; sam.textContent = 'Familjen har inte lagt in sitt barn än — skriv till dem om det.'; return; }
+    if (!S.aktivElev) { knapp.disabled = true; sam.textContent = 'Familjen har inte lagt in sitt barn än — skriv till dem om det.'; return; }
     if (!st || !st.valtDatum || !st.valdTid) { knapp.disabled = true; sam.textContent = 'Välj ett datum och en tid.'; return; }
     knapp.disabled = false;
-    sam.textContent = datumText(st.valtDatum) + ' kl. ' + st.valdTid;
+    sam.textContent = datumText(st.valtDatum) + ' kl. ' + st.valdTid + ' · ' + $('#f-langd').value + ' min';
   }
+  $('#f-langd').addEventListener('change', uppdateraFörslag);
 
   async function byggKalender() {
     const upptagna = await NX.hämtaUpptagna(S.user.id);
@@ -521,69 +955,79 @@
     S.kal = NX.byggKalender({ host: $('#kalender'), upptagna, onChange: uppdateraFörslag });
   }
 
-  $('#f-elev').addEventListener('change', uppdateraFörslag);
-
   $('#forslag-knapp').addEventListener('click', async () => {
-    const msg = $('#forslag-msg'), knapp = $('#forslag-knapp');
+    const msg = $('#forslag-msg');
     rensa(msg);
     const st = S.kal.state;
-    if (!st.valtDatum || !st.valdTid || !S.aktivFamilj) return;
+    if (!st.valtDatum || !st.valdTid || !S.aktivFamilj || !S.aktivElev) return;
 
-    knapp.setAttribute('aria-busy', 'true');
-    const { error } = await supa.from('bookings').insert({
-      parent_id: S.aktivFamilj,
-      tutor_id: S.user.id,
-      student_id: $('#f-elev').value || null,
-      created_by: S.user.id,
-      subject: $('#f-amne').value,
-      format: $('#f-format').value,
-      note: $('#f-not').value.trim() || null,
-      wanted_date: st.valtDatum,
-      wanted_time: st.valdTid,
-      status: 'requested'
-    });
-    knapp.removeAttribute('aria-busy');
-
-    if (error) {
-      if (error.code === '23505') {
-        säg(msg, 'Du har redan något inbokat den tiden. Kalendern är uppdaterad nu.', false);
-        await byggKalender();
-        S.kal.nollställ();
-        uppdateraFörslag();
-        return;
-      }
-      säg(msg, 'Kunde inte skicka förslaget: ' + felText(error), false);
+    /* En tid bakåt i tiden är alltid ett misstag, oavsett vad
+       kalendern råkar erbjuda. */
+    if (st.valtDatum < isoFor(new Date())) {
+      säg(msg, '⚠️ Den tiden har redan varit. Välj ett datum framåt.', false);
       return;
     }
 
-    säg(msg, 'Förslaget är skickat. Familjen ser det i sin vy och svarar därifrån.', true);
-    $('#f-not').value = '';
-    S.kal.nollställ();
-    uppdateraFörslag();
-    await laddaPass();
-    await byggKalender();
+    await medan($('#forslag-knapp'), 'Skickar…', async () => {
+      const { error } = await supa.from('bookings').insert({
+        parent_id: S.aktivFamilj,
+        tutor_id: S.user.id,
+        student_id: S.aktivElev,
+        created_by: S.user.id,
+        subject: $('#f-amne').value,
+        format: $('#f-format').value,
+        duration_min: Number($('#f-langd').value) || 60,
+        note: $('#f-not').value.trim() || null,
+        wanted_date: st.valtDatum,
+        wanted_time: st.valdTid,
+        status: 'requested'
+      });
+
+      if (error) {
+        if (error.code === '23505') {
+          säg(msg, '⚠️ Du har redan något inbokat den tiden. Kalendern är uppdaterad nu.', false);
+          await byggKalender();
+          S.kal.nollställ();
+          uppdateraFörslag();
+          return;
+        }
+        säg(msg, 'Kunde inte skicka förslaget: ' + felText(error), false);
+        return;
+      }
+
+      säg(msg, '✓ Förslaget är skickat. Familjen svarar från sin vy.', true);
+      $('#f-not').value = '';
+      S.kal.nollställ();
+      uppdateraFörslag();
+      await laddaPass();
+      await byggKalender();
+    });
   });
 
-  /* ============ pass ============ */
+  /* ============================================================
+     PASSEN
+     ============================================================ */
   async function laddaPass() {
     const host = $('#pass-lista');
     const { data, error } = await supa
-      .from('bookings').select('id, subject, format, note, wanted_date, wanted_time, status, student_id, parent_id, created_by')
+      .from('bookings')
+      .select('id, subject, format, note, wanted_date, wanted_time, duration_min, status, attendance, student_id, parent_id, created_by')
       .eq('tutor_id', S.user.id).order('wanted_date', { ascending: true });
 
-    if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
+    if (error) { host.innerHTML = tomt('Kunde inte hämta passen', felText(error)); return; }
     S.bokningar = data || [];
 
-    const genomförda = S.bokningar.filter(b => b.status === 'completed').length;
     const kommande = S.bokningar.filter(b => b.status === 'requested' || b.status === 'confirmed').length;
-    $('#kpi-timmar').textContent = genomförda;
     $('#kpi-kommande').textContent = kommande;
     $('#pass-antal').textContent = S.bokningar.length ? S.bokningar.length + ' st' : '';
 
-    if (!S.bokningar.length) { host.innerHTML = '<div class="empty">Inga pass än. Föreslå en tid ovan, eller vänta på att familjen bokar.</div>'; return; }
+    if (!S.bokningar.length) {
+      host.innerHTML = tomt('Inga pass än', 'Föreslå en tid ovanför, eller vänta på att familjen bokar.');
+      return;
+    }
 
     host.innerHTML = S.bokningar.map(b => {
-      const elev = S.elever.find(e => e.id === b.student_id);
+      const e = S.elever.find(x => x.id === b.student_id);
       const familj = S.familjer.find(f => f.id === b.parent_id);
       const mitt = b.created_by === S.user.id;
       const kan = b.status === 'requested' || b.status === 'confirmed';
@@ -593,132 +1037,168 @@
         knappar += '<button class="btn btn-primary btn-sm" data-status="confirmed" data-id="' + b.id + '">Bekräfta</button>';
       }
       if (kan) {
-        knappar += '<button class="btn btn-ghost btn-sm" data-status="completed" data-id="' + b.id + '">Genomförd</button>'
-                 + '<button class="btn btn-ghost btn-sm" data-status="cancelled" data-id="' + b.id + '">Avboka</button>';
+        knappar += '<button class="btn btn-ghost btn-sm" data-status="cancelled" data-id="' + b.id + '">Avboka</button>';
       }
 
-      const under = [b.format, elev ? elev.name : (familj ? familj.full_name : null)].filter(Boolean).join(' · ');
+      const under = [b.format, (b.duration_min || 60) + ' min', e ? e.name : (familj ? familj.full_name : null)]
+        .filter(Boolean).join(' · ');
+
       return NXKontakt.passRad(b, {
         under: under,
-        vem: b.status === 'requested' ? (mitt ? 'Ditt förslag — väntar på svar' : 'Familjen önskade den här tiden') : null,
+        vem: b.status === 'requested'
+          ? (mitt ? 'Ditt förslag — väntar på svar' : 'Familjen önskade den här tiden')
+          : (b.attendance === 'franvarande' ? 'Eleven uteblev'
+            : b.attendance === 'sen' ? 'Eleven kom sent' : null),
         atgarder: knappar
       }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
     }).join('');
   }
 
+  /* Passväljaren i rapportformuläret: bara den valda elevens pass
+     som inte redan är rapporterade. */
+  function fyllPassVal() {
+    const val = $('#r-pass');
+    const mina = S.bokningar.filter(b =>
+      b.student_id === S.aktivElev && (b.status === 'requested' || b.status === 'confirmed'));
+
+    val.innerHTML = '<option value="">Inget pass — fristående rapport</option>'
+      + mina.map(b => '<option value="' + b.id + '">' + esc(datumText(b.wanted_date))
+          + ' kl. ' + esc(b.wanted_time || '') + ' · ' + esc(b.subject || 'Pass') + '</option>').join('');
+  }
+
+  $('#r-pass').addEventListener('change', e => {
+    const b = S.bokningar.find(x => x.id === e.target.value);
+    if (b) $('#r-datum').value = b.wanted_date;
+  });
+
   document.addEventListener('click', async e => {
     const btn = e.target.closest('[data-status]');
     if (!btn) return;
-    if (btn.dataset.status === 'cancelled' && !confirm('Avboka det här passet?')) return;
-    btn.setAttribute('aria-busy', 'true');
-    const { error } = await supa.from('bookings').update({ status: btn.dataset.status }).eq('id', btn.dataset.id);
-    btn.removeAttribute('aria-busy');
-    if (error) { alert('Kunde inte uppdatera: ' + felText(error)); return; }
-    await laddaPass();
-    await byggKalender();
+
+    if (btn.dataset.status === 'cancelled') {
+      const ja = await bekräfta({
+        titel: 'Avboka passet?',
+        text: 'Familjen ser att passet är avbokat. Vill du hellre flytta det, skriv till dem först.',
+        knapp: 'Avboka'
+      });
+      if (!ja) return;
+    }
+
+    await medan(btn, '…', async () => {
+      const { error } = await supa.from('bookings').update({ status: btn.dataset.status }).eq('id', btn.dataset.id);
+      if (error) { alert('Kunde inte uppdatera: ' + felText(error)); return; }
+      await laddaPass();
+      fyllPassVal();
+      await Promise.all([byggKalender(), laddaTimmar()]);
+    });
   });
 
-  /* ============ studieplan ============ */
-  async function laddaPlanIFormulär() {
-    const elevId = $('#p-elev').value;
-    if (!elevId) return;
-    const { data } = await supa
-      .from('study_plans').select('subject, goals, plan_text')
-      .eq('student_id', elevId).eq('tutor_id', S.user.id)
-      .order('updated_at', { ascending: false }).limit(1);
-    const p = (data && data[0]) || {};
-    $('#p-amne').value = p.subject || '';
-    $('#p-mal').value = p.goals || '';
-    $('#p-text').value = p.plan_text || '';
-  }
-  $('#p-elev').addEventListener('change', () => { rensa($('#p-msg')); laddaPlanIFormulär(); });
+  /* ============================================================
+     RAPPORTEN
+     Den här är navet: den skriver rapporten, markerar passet som
+     genomfört, sätter närvaron, kan skapa läxan — och därmed
+     räknas timmen upp. Ett formulär, hela slingan.
+     ============================================================ */
+  $('#r-lax').addEventListener('change', e => { $('#r-lax-falt').hidden = !e.target.checked; });
 
-  $('#plan-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const msg = $('#p-msg');
-    rensa(msg);
-    const elevId = $('#p-elev').value;
-    if (!elevId) { säg(msg, 'Du har ingen elev att skriva plan för än.', false); return; }
-
-    const fält = {
-      subject: $('#p-amne').value.trim() || null,
-      goals: $('#p-mal').value.trim() || null,
-      plan_text: $('#p-text').value.trim() || null,
-      updated_at: new Date().toISOString()
-    };
-
-    const { data: fanns } = await supa
-      .from('study_plans').select('id').eq('student_id', elevId).eq('tutor_id', S.user.id).limit(1);
-
-    const res = (fanns && fanns.length)
-      ? await supa.from('study_plans').update(fält).eq('id', fanns[0].id)
-      : await supa.from('study_plans').insert(Object.assign({ student_id: elevId, tutor_id: S.user.id }, fält));
-
-    if (res.error) { säg(msg, 'Kunde inte spara: ' + felText(res.error), false); return; }
-    säg(msg, 'Studieplanen är sparad. Familjen ser den direkt.', true);
-  });
-
-  /* ============ lektionsrapport ============ */
   $('#rapport-form').addEventListener('submit', async e => {
     e.preventDefault();
-    const msg = $('#r-msg'), knapp = $('#r-spara');
+    const msg = $('#r-msg');
     rensa(msg);
 
-    const elevId = $('#r-elev').value;
     const anteckningar = $('#r-notes').value.trim();
-    if (!elevId) { säg(msg, 'Du har ingen elev att rapportera om än.', false); return; }
-    if (!anteckningar) { säg(msg, 'Skriv något om passet först.', false); return; }
+    const laxTitel = $('#r-lax-titel').value.trim();
+    const fel = kolla([
+      { fel: !S.aktivElev, text: 'Välj en elev högst upp först.' },
+      { fel: !anteckningar, text: 'Skriv något om vad ni gjorde.', falt: $('#r-notes') },
+      { fel: $('#r-lax').checked && !laxTitel, text: 'Skriv vad läxan går ut på, eller kryssa ur rutan.', falt: $('#r-lax-titel') }
+    ]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
 
-    knapp.setAttribute('aria-busy', 'true');
-    const { data, error } = await supa.from('lesson_reports').insert({
-      student_id: elevId,
-      tutor_id: S.user.id,
-      lesson_date: $('#r-datum').value || isoFor(new Date()),
-      raw_notes: anteckningar
-    }).select('id').single();
+    const passId = $('#r-pass').value || null;
+    const datum = $('#r-datum').value || isoFor(new Date());
 
-    if (error) {
-      knapp.removeAttribute('aria-busy');
-      säg(msg, 'Kunde inte spara: ' + felText(error), false);
-      return;
-    }
+    await medan($('#r-spara'), 'Sparar…', async () => {
+      const { data, error } = await supa.from('lesson_reports').insert({
+        student_id: S.aktivElev,
+        tutor_id: S.user.id,
+        booking_id: passId,
+        lesson_date: datum,
+        raw_notes: anteckningar,
+        went_well: $('#r-gick').value.trim() || null,
+        needs_practice: $('#r-trana').value.trim() || null,
+        next_focus: $('#r-fokus').value.trim() || null
+      }).select('id').single();
 
-    if ($('#r-ai').checked) {
-      säg(msg, 'Rapporten är sparad. Formulerar om den åt föräldern...', true);
-      const { error: aiErr } = await supa.functions.invoke('generate-feedback', { body: { report_id: data.id } });
-      knapp.removeAttribute('aria-busy');
-      if (aiErr) {
-        säg(msg, 'Rapporten är sparad, men AI-omskrivningen gick inte: ' + felText(aiErr)
-          + ' Föräldern ser dina anteckningar precis som du skrev dem. Det är inget fel, bara mindre polerat.', false);
-      } else {
-        säg(msg, 'Klart. Rapporten är sparad och omskriven åt föräldern.', true);
+      if (error) { säg(msg, 'Kunde inte spara rapporten: ' + felText(error), false); return; }
+
+      /* passet blir genomfört i samma veva — det är rapporten som
+         gör en bokning till en arbetad timme */
+      let varning = '';
+      if (passId) {
+        const { error: bErr } = await supa.from('bookings')
+          .update({ status: 'completed', attendance: $('#r-narvaro').value })
+          .eq('id', passId);
+        if (bErr) varning += ' Passet kunde dock inte markeras som genomfört: ' + felText(bErr);
       }
-    } else {
-      knapp.removeAttribute('aria-busy');
-      säg(msg, 'Rapporten är sparad. Föräldern ser dina anteckningar som de står.', true);
-    }
 
-    $('#r-notes').value = '';
-    await laddaMinaRapporter();
+      if ($('#r-lax').checked && laxTitel) {
+        const { error: lErr } = await supa.from('homework').insert({
+          student_id: S.aktivElev,
+          tutor_id: S.user.id,
+          title: laxTitel,
+          subject: $('#r-fokus').value.trim() || null,
+          instructions: $('#r-trana').value.trim() || null,
+          due_date: $('#r-lax-datum').value || null
+        });
+        if (lErr) varning += ' Läxan kunde inte skapas: ' + felText(lErr);
+      }
+
+      if ($('#r-ai').checked) {
+        säg(msg, 'Rapporten är sparad. Formulerar om den åt föräldern…', true);
+        const { error: aiErr } = await supa.functions.invoke('generate-feedback', { body: { report_id: data.id } });
+        if (aiErr) {
+          säg(msg, 'Rapporten är sparad, men AI-omskrivningen gick inte. Föräldern ser dina anteckningar precis som du skrev dem.' + varning, false);
+        } else {
+          säg(msg, '✓ Klart. Rapporten är sparad och omskriven åt föräldern.' + varning, !varning);
+        }
+      } else {
+        säg(msg, '✓ Rapporten är sparad. Föräldern ser den direkt.' + varning, !varning);
+      }
+
+      $('#r-notes').value = '';
+      $('#r-gick').value = '';
+      $('#r-trana').value = '';
+      $('#r-fokus').value = '';
+      $('#r-lax').checked = false;
+      $('#r-lax-falt').hidden = true;
+      $('#r-lax-titel').value = '';
+
+      await laddaPass();
+      fyllPassVal();
+      await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaLaxor(), byggKalender()]);
+    });
   });
 
   async function laddaMinaRapporter() {
     const host = $('#mina-rapporter');
     const { data, error } = await supa
-      .from('lesson_reports').select('id, lesson_date, raw_notes, ai_feedback, student_id')
+      .from('lesson_reports')
+      .select('id, lesson_date, raw_notes, ai_feedback, went_well, needs_practice, next_focus, student_id')
       .eq('tutor_id', S.user.id).order('lesson_date', { ascending: false }).limit(20);
 
-    if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
-    if (!data || !data.length) { host.innerHTML = '<div class="empty">Inga rapporter skrivna än.</div>'; return; }
+    if (error) { host.innerHTML = tomt('Kunde inte hämta rapporterna', felText(error)); return; }
+    if (!data.length) { host.innerHTML = tomt('Inga rapporter än', 'Den första skriver du efter ditt första pass.'); return; }
 
     $('#mina-rapporter-antal').textContent = data.length + ' st';
     host.innerHTML = data.map(r => {
-      const elev = S.elever.find(e => e.id === r.student_id);
+      const e = S.elever.find(x => x.id === r.student_id);
       return '<div class="report">'
-        + '<div class="report-head"><b>' + esc(elev ? elev.name : 'Elev') + '</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
+        + '<div class="report-head"><b>' + esc(e ? e.name : 'Elev') + '</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
         + (r.ai_feedback
             ? '<p>' + esc(r.ai_feedback) + '</p>'
             : '<span class="raw-note">Inte omskriven, föräldern ser detta</span><p class="raw">' + esc(r.raw_notes) + '</p>')
+        + (r.next_focus ? '<p class="xsmall" style="margin-top:10px;color:var(--muted-2)">Nästa fokus: ' + esc(r.next_focus) + '</p>' : '')
         + (r.ai_feedback ? '' : '<button class="btn btn-ghost btn-sm" data-ai="' + r.id + '" style="margin-top:12px">Skriv om åt föräldern</button>')
         + '</div>';
     }).join('');
@@ -727,14 +1207,58 @@
   document.addEventListener('click', async e => {
     const btn = e.target.closest('[data-ai]');
     if (!btn) return;
-    btn.setAttribute('aria-busy', 'true');
-    const { error } = await supa.functions.invoke('generate-feedback', { body: { report_id: btn.dataset.ai } });
-    btn.removeAttribute('aria-busy');
-    if (error) { alert('Gick inte: ' + felText(error) + '\n\nÄr generate-feedback deployad? Se DEPLOY-AI-FUNKTION.md.'); return; }
-    await laddaMinaRapporter();
+    await medan(btn, 'Skriver om…', async () => {
+      const { error } = await supa.functions.invoke('generate-feedback', { body: { report_id: btn.dataset.ai } });
+      if (error) { alert('Gick inte: ' + felText(error) + '\n\nÄr generate-feedback deployad? Se DEPLOY-AI-FUNKTION.md.'); return; }
+      await laddaMinaRapporter();
+    });
   });
 
-  /* ============ egen profil ============ */
+  /* ============================================================
+     STUDIEPLAN
+     ============================================================ */
+  async function laddaPlanIFormulär() {
+    ['#p-amne', '#p-mal', '#p-text'].forEach(id => { $(id).disabled = !S.aktivElev; });
+    if (!S.aktivElev) { $('#p-amne').value = $('#p-mal').value = $('#p-text').value = ''; return; }
+    const { data } = await supa
+      .from('study_plans').select('subject, goals, plan_text')
+      .eq('student_id', S.aktivElev).eq('tutor_id', S.user.id)
+      .order('updated_at', { ascending: false }).limit(1);
+    const p = (data && data[0]) || {};
+    $('#p-amne').value = p.subject || '';
+    $('#p-mal').value = p.goals || '';
+    $('#p-text').value = p.plan_text || '';
+  }
+
+  $('#plan-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#p-msg');
+    rensa(msg);
+    if (!S.aktivElev) { säg(msg, '⚠️ Välj en elev högst upp först.', false); return; }
+
+    await medan(e.submitter, 'Sparar…', async () => {
+      const fält = {
+        subject: $('#p-amne').value.trim() || null,
+        goals: $('#p-mal').value.trim() || null,
+        plan_text: $('#p-text').value.trim() || null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data: fanns } = await supa
+        .from('study_plans').select('id').eq('student_id', S.aktivElev).eq('tutor_id', S.user.id).limit(1);
+
+      const res = (fanns && fanns.length)
+        ? await supa.from('study_plans').update(fält).eq('id', fanns[0].id)
+        : await supa.from('study_plans').insert(Object.assign({ student_id: S.aktivElev, tutor_id: S.user.id }, fält));
+
+      if (res.error) { säg(msg, 'Kunde inte spara: ' + felText(res.error), false); return; }
+      säg(msg, '✓ Studieplanen är sparad. Familjen ser den direkt.', true);
+    });
+  });
+
+  /* ============================================================
+     EGEN PROFIL
+     ============================================================ */
   function fyllProfil() {
     const t = S.tutorProfil || {};
     $('#pr-skola').value = t.school || '';
@@ -747,18 +1271,21 @@
     e.preventDefault();
     const msg = $('#pr-msg');
     rensa(msg);
-    const ämnen = $('#pr-amnen').value.split(',').map(s => s.trim()).filter(Boolean);
-    const { error } = await supa.from('tutor_profiles').update({
-      school: $('#pr-skola').value.trim() || null,
-      city: $('#pr-ort').value.trim() || null,
-      subjects: ämnen,
-      bio: $('#pr-bio').value.trim() || null
-    }).eq('id', S.user.id);
-    if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
-    säg(msg, 'Profilen är sparad.', true);
+    await medan(e.submitter, 'Sparar…', async () => {
+      const { error } = await supa.from('tutor_profiles').update({
+        school: $('#pr-skola').value.trim() || null,
+        city: $('#pr-ort').value.trim() || null,
+        subjects: $('#pr-amnen').value.split(',').map(s => s.trim()).filter(Boolean),
+        bio: $('#pr-bio').value.trim() || null
+      }).eq('id', S.user.id);
+      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+      säg(msg, '✓ Profilen är sparad.', true);
+    });
   });
 
-  /* ============ start ============ */
+  /* ============================================================
+     START
+     ============================================================ */
   (async function start() {
     $('#r-datum').value = isoFor(new Date());
 
@@ -785,7 +1312,7 @@
     if (S.profil.role !== 'tutor') { visa('view-wrongrole'); return; }
 
     const tp = await supa.from('tutor_profiles')
-      .select('status, school, city, subjects, bio, age').eq('id', S.user.id).maybeSingle();
+      .select('status, school, city, subjects, bio, age, hourly_rate').eq('id', S.user.id).maybeSingle();
     S.tutorProfil = tp.data;
 
     if (!S.tutorProfil) {
@@ -810,8 +1337,11 @@
     await laddaFamiljer();
     S.olästa = await NXKontakt.olästa(S.user.id);
     await laddaElever();
+    fyllElevväljare();
+    await laddaPass();
     await byggFamilj();
-    await Promise.all([laddaPass(), laddaMinaRapporter(), byggKalender()]);
+    await byggElev();
+    await Promise.all([laddaMinaRapporter(), laddaTimmar(), byggKalender()]);
     uppdateraFörslag();
   })();
 })();
