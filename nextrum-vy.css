@@ -608,3 +608,54 @@
 }
 .mat-typ button:hover{border-color:var(--ln-2);color:var(--bl)}
 .mat-typ button[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--nt-fg)}
+
+/* ============================================================
+   NOTISER
+   En siffra i sidhuvudet med det som väntar på användaren.
+   ============================================================ */
+.nx-notis-hus{position:relative;display:inline-flex}
+.nx-notis{
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--ln);border-radius:100px;
+  padding:7px 14px 7px 11px;background:var(--pap-2);
+  font-size:.84rem;font-weight:700;color:var(--bl);
+  font-variant-numeric:tabular-nums;
+  transition:border-color .2s var(--e),background .2s var(--e);
+}
+.nx-notis:hover{border-color:var(--ln-2);background:var(--pap-3)}
+.nx-notis-prick{
+  width:7px;height:7px;border-radius:50%;background:var(--acc);flex:none;
+}
+.nx-notis-lista{
+  position:absolute;top:calc(100% + 10px);right:0;z-index:820;
+  min-width:290px;max-width:min(360px,84vw);
+  background:var(--pap);border:1px solid var(--ln);
+  border-radius:16px;box-shadow:var(--sk-2);
+  padding:7px;overflow:hidden;
+}
+.nx-notis-rad{
+  display:block;width:100%;text-align:left;
+  padding:11px 13px;border-radius:11px;
+  transition:background .18s var(--e);
+}
+.nx-notis-rad:hover{background:var(--pap-2)}
+.nx-notis-rad b{
+  display:block;font-size:.9rem;font-weight:600;
+  letter-spacing:-.018em;color:var(--bl);
+}
+.nx-notis-rad span{
+  display:block;font-size:.82rem;line-height:1.5;
+  color:var(--bl-3);margin-top:3px;
+}
+
+/* panelen man hoppade till blinkar till, annars vet man inte
+   vart man hamnade */
+.nx-blink{animation:nx-blink 1.6s var(--e)}
+@keyframes nx-blink{
+  0%,100%{box-shadow:var(--sk-1)}
+  22%{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 30%,transparent),var(--sk-1)}
+}
+
+@media (max-width:1040px){
+  .nx-notis-lista{right:auto;left:0}
+}

@@ -204,7 +204,162 @@ window.NXStudie = (function () {
     return null;
   }
 
+  /* ============================================================
+     FLYTTA ETT PASS
+     Samma ruta som bekräftelsen, men med ett datum och en tid i.
+     Tiderna räknas fram ur studiehjälparens tillgänglighet, precis
+     som i kalendern — man ska inte kunna flytta ett pass till en
+     tid som inte gick att boka från början.
+     ============================================================ */
+  function flyttaRuta(opts) {
+    var o = opts || {};
+    return new Promise(function (klar) {
+      var ruta = document.createElement('div');
+      ruta.className = 'nx-fraga';
+      ruta.innerHTML =
+        '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="flytt-t">'
+        + '<h3 id="flytt-t">Flytta passet</h3>'
+        + '<p>Passet ligger nu ' + esc(datumText(o.datum)) + ' kl. ' + esc(o.tid || '') + '. '
+        + 'Motparten får bekräfta den nya tiden.</p>'
+        + '<div class="vy-form-rad" style="margin-top:18px">'
+        + '<div class="pay-field"><label for="fl-datum">Nytt datum</label>'
+        + '<input class="inp" id="fl-datum" type="date" value="' + esc(o.datum) + '" min="' + isoFor(new Date()) + '"></div>'
+        + '<div class="pay-field"><label for="fl-tid">Ny tid</label>'
+        + '<select class="sel" id="fl-tid"></select></div>'
+        + '</div>'
+        + '<p class="ok-msg" id="fl-msg"></p>'
+        + '<div class="nx-fraga-knappar">'
+        + '<button type="button" class="btn btn-ghost" data-flytt="nej">Avbryt</button>'
+        + '<button type="button" class="btn btn-primary" data-flytt="ja">Flytta passet</button>'
+        + '</div></div>';
+
+      var dat = ruta.querySelector('#fl-datum');
+      var tid = ruta.querySelector('#fl-tid');
+      var msg = ruta.querySelector('#fl-msg');
+
+      function fyllTider() {
+        var tider = NX.tiderFörDatum(dat.value, o.tillgang || [], o.blockerade || []);
+        /* Passets egen tid ska gå att behålla när man bara byter dag,
+           trots att den ligger i upptagna-listan. */
+        var upptagna = o.upptagna || new Set();
+        var val = tider.filter(function (t) {
+          if (dat.value === o.datum && t === o.tid) return true;
+          return !upptagna.has(dat.value + '|' + t);
+        });
+
+        if (!val.length) {
+          tid.innerHTML = '<option value="">Inga lediga tider</option>';
+          tid.disabled = true;
+          NX.säg(msg, 'Inga lediga tider den dagen. Prova ett annat datum.', false);
+        } else {
+          tid.disabled = false;
+          tid.innerHTML = val.map(function (t) {
+            return '<option value="' + t + '"' + (t === o.tid ? ' selected' : '') + '>' + t + '</option>';
+          }).join('');
+          NX.rensa(msg);
+        }
+      }
+
+      dat.addEventListener('change', fyllTider);
+
+      function stäng(svar) {
+        ruta.remove();
+        document.body.style.overflow = '';
+        klar(svar);
+      }
+
+      ruta.addEventListener('click', function (e) {
+        if (e.target === ruta) return stäng(null);
+        var k = e.target.closest('[data-flytt]');
+        if (!k) return;
+        if (k.dataset.flytt === 'nej') return stäng(null);
+        if (!tid.value) { NX.säg(msg, '⚠️ Välj en tid som går att boka.', false); return; }
+        if (dat.value === o.datum && tid.value === o.tid) {
+          NX.säg(msg, '⚠️ Det är samma tid som passet redan har.', false); return;
+        }
+        stäng({ datum: dat.value, tid: tid.value });
+      });
+
+      document.addEventListener('keydown', function esc3(e) {
+        if (e.key === 'Escape' && document.body.contains(ruta)) {
+          document.removeEventListener('keydown', esc3);
+          stäng(null);
+        }
+      });
+
+      document.body.appendChild(ruta);
+      document.body.style.overflow = 'hidden';
+      void ruta.offsetWidth;
+      ruta.classList.add('open');
+      fyllTider();
+      dat.focus();
+    });
+  }
+
+  /* ============================================================
+     NOTISER
+     En knapp i sidhuvudet med det som faktiskt kräver något av
+     användaren. Inte en logg över allt som hänt — en lista över
+     det som väntar.
+     ============================================================ */
+  function notiser(host, poster) {
+    if (!host) return;
+    var öppen = false;
+
+    if (!poster.length) { host.innerHTML = ''; sättTitel(0); return; }
+
+    host.innerHTML =
+      '<button type="button" class="nx-notis" aria-expanded="false" aria-label="'
+      + poster.length + ' saker som väntar">'
+      + '<span class="nx-notis-prick"></span>' + poster.length
+      + '</button>'
+      + '<div class="nx-notis-lista" hidden>'
+      + poster.map(function (p) {
+          return '<button type="button" class="nx-notis-rad" data-mal="' + esc(p.mål || '') + '">'
+            + '<b>' + esc(p.rubrik) + '</b><span>' + esc(p.text) + '</span></button>';
+        }).join('')
+      + '</div>';
+
+    var knapp = host.querySelector('.nx-notis');
+    var lista = host.querySelector('.nx-notis-lista');
+
+    function stäng() { öppen = false; lista.hidden = true; knapp.setAttribute('aria-expanded', 'false'); }
+
+    knapp.addEventListener('click', function (e) {
+      e.stopPropagation();
+      öppen = !öppen;
+      lista.hidden = !öppen;
+      knapp.setAttribute('aria-expanded', String(öppen));
+    });
+
+    lista.addEventListener('click', function (e) {
+      var rad = e.target.closest('[data-mal]');
+      if (!rad) return;
+      stäng();
+      var mål = document.querySelector(rad.dataset.mal);
+      if (mål) {
+        mål.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        mål.classList.add('nx-blink');
+        setTimeout(function () { mål.classList.remove('nx-blink'); }, 1600);
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (öppen && !host.contains(e.target)) stäng();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && öppen) stäng(); });
+
+    sättTitel(poster.length);
+  }
+
+  /* Antalet syns i fliken också — man har sällan vyn framme. */
+  function sättTitel(n) {
+    var ren = document.title.replace(/^\(\d+\)\s*/, '');
+    document.title = n ? '(' + n + ') ' + ren : ren;
+  }
+
   return {
+    flyttaRuta: flyttaRuta, notiser: notiser,
     LAGE: LAGE, NIVA: NIVA,
     läxläge: läxläge, deadlineText: deadlineText,
     läxRad: läxRad, nivåMätare: nivåMätare,

@@ -331,6 +331,14 @@
                 <option value="30">30 minuter</option>
               </select>
             </div>
+            <div class="pay-field"><label for="f-upprepa">Upprepa</label>
+              <select class="sel" id="f-upprepa">
+                <option value="1">Bara den här gången</option>
+                <option value="4">Varje vecka i 4 veckor</option>
+                <option value="8">Varje vecka i 8 veckor</option>
+                <option value="12">Varje vecka i 12 veckor</option>
+              </select>
+            </div>
           </div>
           <div id="kalender"></div>
           <div class="fgroup" style="margin-top:18px">
@@ -613,9 +621,11 @@
     const na = $('#nav-actions'), ma = $('#m-actions');
     if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
     const namn = (S.profil && S.profil.full_name) || S.user.email;
-    na.innerHTML = '<span class="who-chip">' + M.avatar(namn, S.minAvatar, { liten: true })
+    na.innerHTML = '<span class="nx-notis-hus" id="notis-hus"></span>'
+      + '<span class="who-chip">' + M.avatar(namn, S.minAvatar, { liten: true })
       + '<b>' + esc(namn) + '</b><span class="roll">Studiehjälpare</span></span>'
       + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
+    ritaNotiser();
     ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
   }
 
@@ -1112,34 +1122,63 @@
       return;
     }
 
-    await medan($('#forslag-knapp'), 'Skickar…', async () => {
-      const { error } = await supa.from('bookings').insert({
-        parent_id: S.aktivFamilj,
-        tutor_id: S.user.id,
-        student_id: S.aktivElev,
-        created_by: S.user.id,
-        subject: $('#f-amne').value,
-        format: $('#f-format').value,
-        duration_min: Number($('#f-langd').value) || 60,
-        note: $('#f-not').value.trim() || null,
-        wanted_date: st.valtDatum,
-        wanted_time: st.valdTid,
-        status: 'requested'
-      });
+    const antal = Number($('#f-upprepa').value) || 1;
+    const serie = antal > 1 ? crypto.randomUUID() : null;
 
-      if (error) {
-        if (error.code === '23505') {
-          säg(msg, '⚠️ Du har redan något inbokat den tiden. Kalendern är uppdaterad nu.', false);
-          await byggKalender();
-          S.kal.nollställ();
-          uppdateraFörslag();
-          return;
+    await medan($('#forslag-knapp'), 'Skickar…', async () => {
+      /* Ett återkommande pass är flera vanliga pass som delar
+         series_id. Krockar en vecka hoppas just den över — resten
+         ska inte falla för det. */
+      let skapade = 0, hoppade = 0, sistaFel = null;
+
+      for (let v = 0; v < antal; v++) {
+        const d = new Date(st.valtDatum + 'T12:00:00');
+        d.setDate(d.getDate() + v * 7);
+        const datum = isoFor(d);
+
+        if (v > 0 && !NX.tiderFörDatum(datum, S.tillgang, S.blockerade).includes(st.valdTid)) {
+          hoppade++;
+          continue;
         }
-        säg(msg, 'Kunde inte skicka förslaget: ' + felText(error), false);
+
+        const { error } = await supa.from('bookings').insert({
+          parent_id: S.aktivFamilj,
+          tutor_id: S.user.id,
+          student_id: S.aktivElev,
+          created_by: S.user.id,
+          series_id: serie,
+          subject: $('#f-amne').value,
+          format: $('#f-format').value,
+          duration_min: Number($('#f-langd').value) || 60,
+          note: $('#f-not').value.trim() || null,
+          wanted_date: datum,
+          wanted_time: st.valdTid,
+          status: 'requested'
+        });
+
+        if (error) {
+          if (error.code === '23505') { hoppade++; continue; }
+          sistaFel = error;
+          break;
+        }
+        skapade++;
+      }
+
+      if (!skapade) {
+        säg(msg, sistaFel
+          ? 'Kunde inte skicka förslaget: ' + felText(sistaFel)
+          : '⚠️ Den tiden är upptagen. Kalendern är uppdaterad nu.', false);
+        await byggKalender();
+        S.kal.nollställ();
+        uppdateraFörslag();
         return;
       }
 
-      säg(msg, '✓ Förslaget är skickat. Familjen svarar från sin vy.', true);
+      säg(msg, skapade === 1
+        ? '✓ Förslaget är skickat. Familjen svarar från sin vy.'
+        : '✓ ' + skapade + ' pass föreslagna.'
+          + (hoppade ? ' ' + hoppade + ' vecka' + (hoppade > 1 ? 'or' : '') + ' hoppades över, tiden var upptagen.' : ''),
+        true);
       $('#f-not').value = '';
       S.kal.nollställ();
       uppdateraFörslag();
@@ -1301,6 +1340,47 @@
   });
 
   /* ============================================================
+     NOTISER
+     Bara sådant som väntar på ett svar från dig.
+     ============================================================ */
+  function ritaNotiser() {
+    const hus = $('#notis-hus');
+    if (!hus) return;
+    const poster = [];
+
+    const olästa = Object.values(S.olästa || {}).reduce((a, b) => a + b, 0);
+    if (olästa) {
+      poster.push({
+        rubrik: olästa + ' olä' + (olästa > 1 ? 'sta meddelanden' : 'st meddelande'),
+        text: 'En familj väntar på svar.',
+        mål: '#trad'
+      });
+    }
+
+    const väntar = (S.bokningar || []).filter(b =>
+      b.status === 'requested' && b.created_by !== S.user.id).length;
+    if (väntar) {
+      poster.push({
+        rubrik: väntar + ' pass att bekräfta',
+        text: 'En familj har önskat en tid som du inte svarat på.',
+        mål: '#pass-lista'
+      });
+    }
+
+    const orapporterade = (S.bokningar || []).filter(b =>
+      b.status === 'confirmed' && b.wanted_date < isoFor(new Date())).length;
+    if (orapporterade) {
+      poster.push({
+        rubrik: orapporterade + ' pass utan rapport',
+        text: 'Passet har varit. Rapporten gör det till en arbetad timme.',
+        mål: '#rapport-form'
+      });
+    }
+
+    NXStudie.notiser(hus, poster);
+  }
+
+  /* ============================================================
      PASSEN
      ============================================================ */
   async function laddaPass() {
@@ -1316,6 +1396,8 @@
     const kommande = S.bokningar.filter(b => b.status === 'requested' || b.status === 'confirmed').length;
     $('#kpi-kommande').textContent = kommande;
     $('#pass-antal').textContent = S.bokningar.length ? S.bokningar.length + ' st' : '';
+
+    ritaNotiser();
 
     if (!S.bokningar.length) {
       host.innerHTML = tomt('Inga pass än', 'Föreslå en tid ovanför, eller vänta på att familjen bokar.');
@@ -1333,7 +1415,8 @@
         knappar += '<button class="btn btn-primary btn-sm" data-status="confirmed" data-id="' + b.id + '">Bekräfta</button>';
       }
       if (kan) {
-        knappar += '<button class="btn btn-ghost btn-sm" data-status="cancelled" data-id="' + b.id + '">Avboka</button>';
+        knappar += '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>'
+                 + '<button class="btn btn-ghost btn-sm" data-status="cancelled" data-id="' + b.id + '">Avboka</button>';
       }
 
       const under = [b.format, (b.duration_min || 60) + ' min', e ? e.name : (familj ? familj.full_name : null)]
@@ -1386,6 +1469,42 @@
       await laddaPass();
       fyllPassVal();
       await Promise.all([byggKalender(), laddaTimmar()]);
+    });
+  });
+
+  /* Flytta ett pass: ny tid, och motparten får bekräfta igen. */
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-flytta]');
+    if (!k) return;
+    const b = S.bokningar.find(x => x.id === k.dataset.flytta);
+    if (!b) return;
+
+    const ny = await NXStudie.flyttaRuta({
+      datum: b.wanted_date,
+      tid: b.wanted_time,
+      tillgang: S.tillgang,
+      blockerade: S.blockerade,
+      upptagna: await NX.hämtaUpptagna(S.user.id)
+    });
+    if (!ny) return;
+
+    await medan(k, 'Flyttar…', async () => {
+      const { error } = await supa.from('bookings').update({
+        wanted_date: ny.datum,
+        wanted_time: ny.tid,
+        status: 'requested',
+        created_by: S.user.id
+      }).eq('id', b.id);
+
+      if (error) {
+        alert(error.code === '23505'
+          ? 'Den tiden hann bli upptagen. Välj en annan.'
+          : 'Kunde inte flytta passet: ' + felText(error));
+        return;
+      }
+      await laddaPass();
+      fyllPassVal();
+      await byggKalender();
     });
   });
 
@@ -1890,6 +2009,9 @@
     await byggElev();
     await laddaTider();
     await Promise.all([laddaMinaRapporter(), laddaTimmar(), byggKalender()]);
+    ritaNotiser();
+    /* Stämpla besöket sist — notiserna räknas mot den förra. */
+    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
     uppdateraFörslag();
   })();
 })();

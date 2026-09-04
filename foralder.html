@@ -153,8 +153,31 @@
         <div style="flex:1;min-width:220px">
           <select class="sel" id="barn-val" style="max-width:340px" aria-label="Välj barn"></select>
         </div>
-        <button class="btn btn-ghost btn-sm" id="lagg-till-barn">Lägg till barn</button>
+        <div style="display:flex;gap:9px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" id="andra-barn">Ändra uppgifter</button>
+          <button class="btn btn-ghost btn-sm" id="lagg-till-barn">Lägg till barn</button>
+        </div>
       </div>
+
+      <form id="barn-andra" hidden class="vy-fall">
+        <div class="vy-form-rad">
+          <div class="pay-field"><label for="b-skola">Skola</label><input class="inp" id="b-skola"></div>
+          <div class="pay-field"><label for="b-amnen">Ämnen (kommaseparerat)</label><input class="inp" id="b-amnen" placeholder="Matematik, Svenska"></div>
+        </div>
+        <div class="fgroup" style="margin-top:12px">
+          <label for="b-mal">Studiemål <span style="font-weight:400;color:var(--muted-2)">(er studiehjälpare ser det här)</span></label>
+          <textarea class="inp" id="b-mal" style="min-height:70px" placeholder="t.ex. Höja betyget i matte till våren"></textarea>
+        </div>
+        <div class="fgroup">
+          <label for="b-egna">Era egna anteckningar <span style="font-weight:400;color:var(--muted-2)">(bara ni ser dem)</span></label>
+          <textarea class="inp" id="b-egna" style="min-height:70px" placeholder="Sådant ni vill komma ihåg själva."></textarea>
+        </div>
+        <div class="vy-knapprad">
+          <button class="btn btn-primary btn-sm" type="submit">Spara</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="andra-avbryt">Avbryt</button>
+        </div>
+        <p class="ok-msg" id="b-andra-msg"></p>
+      </form>
       <form id="barn-form" hidden style="margin-top:18px;border-top:1px solid var(--line);padding-top:18px">
         <div class="form-grid">
           <div class="pay-field"><label for="b-namn">Barnets namn</label><input class="inp" id="b-namn" required></div>
@@ -278,6 +301,7 @@
           <form id="konto-form">
             <div class="fgroup"><label for="k-namn">Namn</label><input class="inp" id="k-namn" autocomplete="name"></div>
             <div class="fgroup"><label for="k-tel">Telefon <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><input class="inp" id="k-tel" type="tel" autocomplete="tel"></div>
+            <div class="fgroup"><label for="k-bio">Kort om er <span style="font-weight:400;color:var(--muted-2)">(syns för er studiehjälpare)</span></label><textarea class="inp" id="k-bio" style="min-height:80px" placeholder="t.ex. Vi bor i Uppsala och Alma pluggar helst på eftermiddagar."></textarea></div>
             <button class="btn btn-primary btn-sm btn-block" type="submit">Spara uppgifter</button>
             <p class="ok-msg" id="k-msg"></p>
           </form>
@@ -328,7 +352,7 @@
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], olästaAntal: 0 };
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app']
@@ -340,9 +364,11 @@
     const na = $('#nav-actions'), ma = $('#m-actions');
     if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
     const namn = (S.profil && S.profil.full_name) || S.user.email;
-    na.innerHTML = '<span class="who-chip">' + M.avatar(namn, S.minAvatar, { liten: true })
+    na.innerHTML = '<span class="nx-notis-hus" id="notis-hus"></span>'
+      + '<span class="who-chip">' + M.avatar(namn, S.minAvatar, { liten: true })
       + '<b>' + esc(namn) + '</b><span class="roll">Förälder</span></span>'
       + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
+    ritaNotiser();
     ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
   }
 
@@ -467,6 +493,8 @@
         const märke = $('#tr-larm');
         märke.hidden = !olästa;
         märke.textContent = olästa ? olästa + ' ny' + (olästa > 1 ? 'a' : '') : '';
+        S.olästaAntal = olästa;
+        ritaNotiser();
       }
     });
   }
@@ -474,7 +502,8 @@
   /* ============ barn ============ */
   async function laddaBarn() {
     const { data, error } = await supa
-      .from('students').select('id, name, grade').eq('parent_id', S.user.id).order('created_at');
+      .from('students').select('id, name, grade, school, subjects, goals')
+      .eq('parent_id', S.user.id).order('created_at');
     if (error) { console.warn(error.message); return; }
     S.barn = data || [];
     const val = $('#barn-val');
@@ -498,6 +527,64 @@
   $('#barn-val').addEventListener('change', e => {
     S.valtBarn = e.target.value || null;
     laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); laddaMaterial(); uppdateraBokaKnapp();
+  });
+
+  /* Familjen äger barnets uppgifter. Studiemålet ser studiehjälparen,
+     de egna anteckningarna gör hen inte — family_notes har ingen
+     policy som släpper fram den åt andra hållet. */
+  async function fyllBarnFormulär() {
+    const b = S.barn.find(x => x.id === S.valtBarn);
+    $('#b-skola').value = (b && b.school) || '';
+    $('#b-amnen').value = ((b && b.subjects) || []).join(', ');
+    $('#b-mal').value = (b && b.goals) || '';
+
+    /* Anteckningen ligger i en egen tabell som bara familjen når.
+       I students hade studiehjälparen kunnat läsa den via API:t —
+       RLS gäller rader, inte kolumner. */
+    $('#b-egna').value = '';
+    const { data } = await supa.from('student_notes')
+      .select('notes').eq('student_id', S.valtBarn).maybeSingle();
+    if (data) $('#b-egna').value = data.notes || '';
+  }
+
+  $('#andra-barn').addEventListener('click', () => {
+    if (!S.valtBarn) { säg($('#b-andra-msg'), '⚠️ Lägg till ett barn först.', false); return; }
+    const f = $('#barn-andra');
+    f.hidden = !f.hidden;
+    $('#andra-barn').textContent = f.hidden ? 'Ändra uppgifter' : 'Stäng';
+    if (!f.hidden) { fyllBarnFormulär(); $('#b-skola').focus(); }
+  });
+  $('#andra-avbryt').addEventListener('click', () => {
+    $('#barn-andra').hidden = true;
+    $('#andra-barn').textContent = 'Ändra uppgifter';
+    rensa($('#b-andra-msg'));
+  });
+
+  $('#barn-andra').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#b-andra-msg');
+    rensa(msg);
+    if (!S.valtBarn) { säg(msg, '⚠️ Välj ett barn först.', false); return; }
+
+    await medan(e.submitter, 'Sparar…', async () => {
+      const { error } = await supa.from('students').update({
+        school: $('#b-skola').value.trim() || null,
+        subjects: $('#b-amnen').value.split(',').map(x => x.trim()).filter(Boolean),
+        goals: $('#b-mal').value.trim() || null
+      }).eq('id', S.valtBarn);
+
+      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+
+      const { error: aErr } = await supa.from('student_notes').upsert({
+        student_id: S.valtBarn,
+        parent_id: S.user.id,
+        notes: $('#b-egna').value.trim() || null,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'student_id' });
+      if (aErr) { säg(msg, 'Uppgifterna sparades, men anteckningen gick inte: ' + felText(aErr), false); return; }
+      säg(msg, '✓ Sparat.', true);
+      await laddaBarn();
+    });
   });
 
   $('#lagg-till-barn').addEventListener('click', () => {
@@ -548,6 +635,9 @@
       host.innerHTML = tomt('Inga läxor än', 'När er studiehjälpare ger en läxa dyker den upp här.');
       return;
     }
+
+    S.laxor = data;
+    ritaNotiser();
 
     const öppna = data.filter(h => h.status !== 'klar').length;
     $('#lax-antal').textContent = öppna ? öppna + ' att göra' : 'allt klart';
@@ -721,7 +811,7 @@
 
     await medan(e.submitter, 'Sparar…', async () => {
       const { error } = await supa.from('profiles')
-        .update({ full_name: namn, phone: $('#k-tel').value.trim() || null })
+        .update({ full_name: namn, phone: $('#k-tel').value.trim() || null, bio: $('#k-bio').value.trim() || null })
         .eq('id', S.user.id);
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
       S.profil.full_name = namn;
@@ -820,7 +910,8 @@
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
     S.bokningar = data || [];
-    if (!S.bokningar.length) { host.innerHTML = '<div class="empty">Inga bokade pass än. Välj en tid i kalendern.</div>'; return; }
+    ritaNotiser();
+    if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Välj en tid i kalendern nedanför.'); return; }
 
     const idag = new Date().toISOString().slice(0, 10);
     const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
@@ -839,7 +930,8 @@
         knappar = '<button class="btn btn-primary btn-sm" data-svar="confirmed" data-id="' + b.id + '">Passar bra</button>'
                 + '<button class="btn btn-ghost btn-sm" data-svar="cancelled" data-id="' + b.id + '">Avböj</button>';
       } else if (kommande) {
-        knappar = '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
+        knappar = '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>'
+                + '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
       }
 
       const under = [b.format, barn ? barn.name : null].filter(Boolean).join(' · ');
@@ -872,6 +964,81 @@
     if (error) { alert('Kunde inte avboka: ' + felText(error)); return; }
     await laddaPass();
     await byggKalender();
+  });
+
+  /* ============================================================
+     NOTISER
+     Bara det som väntar på er.
+     ============================================================ */
+  function ritaNotiser() {
+    const hus = $('#notis-hus');
+    if (!hus) return;
+    const poster = [];
+
+    if (S.olästaAntal) {
+      poster.push({
+        rubrik: S.olästaAntal + (S.olästaAntal > 1 ? ' nya meddelanden' : ' nytt meddelande'),
+        text: 'Från er studiehjälpare. Svara i kontaktrutan.',
+        mål: '#trad'
+      });
+    }
+
+    const idag = isoFor(new Date());
+    const brådskande = (S.laxor || []).filter(h => h.status !== 'klar' && h.due_date && h.due_date <= idag);
+    if (brådskande.length) {
+      const sena = brådskande.filter(h => h.due_date < idag).length;
+      poster.push({
+        rubrik: brådskande.length + ' läx' + (brådskande.length > 1 ? 'or' : 'a') + ' att göra',
+        text: sena ? sena + ' av dem skulle redan ha varit klara.' : 'Ska vara klar idag.',
+        mål: '#lax-lista'
+      });
+    }
+
+    const föreslagna = (S.bokningar || []).filter(b =>
+      b.status === 'requested' && b.created_by && b.created_by !== S.user.id).length;
+    if (föreslagna) {
+      poster.push({
+        rubrik: föreslagna > 1 ? föreslagna + ' föreslagna tider' : 'En föreslagen tid',
+        text: 'Er studiehjälpare väntar på svar.',
+        mål: '#pass-lista'
+      });
+    }
+
+    NXStudie.notiser(hus, poster);
+  }
+
+  /* Flytta ett pass — samma tider som bokningen lyder. */
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-flytta]');
+    if (!k) return;
+    const b = S.bokningar.find(x => x.id === k.dataset.flytta);
+    if (!b) return;
+
+    const [upptagna, tider] = await Promise.all([
+      NX.hämtaUpptagna(S.profil.matched_tutor_id),
+      NX.hämtaTillganglighet(S.profil.matched_tutor_id)
+    ]);
+
+    const ny = await NXStudie.flyttaRuta({
+      datum: b.wanted_date, tid: b.wanted_time,
+      tillgang: tider.tillgang, blockerade: tider.blockerade, upptagna
+    });
+    if (!ny) return;
+
+    await medan(k, 'Flyttar…', async () => {
+      const { error } = await supa.from('bookings').update({
+        wanted_date: ny.datum, wanted_time: ny.tid,
+        status: 'requested', created_by: S.user.id
+      }).eq('id', b.id);
+      if (error) {
+        alert(error.code === '23505'
+          ? 'Den tiden hann bli upptagen. Välj en annan.'
+          : 'Kunde inte flytta passet: ' + felText(error));
+        return;
+      }
+      await laddaPass();
+      await byggKalender();
+    });
   });
 
   /* ============ bokning ============ */
@@ -989,6 +1156,7 @@
     if (S.profil.avatar_url) S.minAvatar = await M.signera('avatarer', S.profil.avatar_url);
     $('#k-namn').value = S.profil.full_name || '';
     $('#k-tel').value = S.profil.phone || '';
+    $('#k-bio').value = S.profil.bio || '';
     ritaKontoAvatar();
     ritaHeader();
 
@@ -997,6 +1165,8 @@
     startaTråd();
     await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPass(), byggKalender()]);
     uppdateraBokaKnapp();
+    ritaNotiser();
+    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
   })();
 })();
 </script>
