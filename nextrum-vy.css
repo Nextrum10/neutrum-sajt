@@ -103,7 +103,7 @@
 }
 .vy .dbox h5 .vy-larm{
   margin-left:auto;
-  background:var(--acc);color:#fff;
+  background:var(--acc);color:var(--pap);
   font-size:9.5px;letter-spacing:.06em;
   border-radius:100px;padding:3px 8px;
 }
@@ -158,7 +158,7 @@
   color:var(--bl);border-bottom-left-radius:6px;
 }
 .tr-rad.min .tr-bubbla{
-  background:var(--bl);color:var(--nt-fg);
+  background:var(--bl);color:var(--pap);
   border-bottom-right-radius:6px;
 }
 .tr-tid{
@@ -201,7 +201,7 @@
 }
 .tr-val button:hover{border-color:var(--ln-2);color:var(--bl)}
 .tr-val button[aria-pressed="true"]{
-  background:var(--bl);border-color:var(--bl);color:var(--nt-fg);
+  background:var(--bl);border-color:var(--bl);color:var(--pap);
 }
 .tr-val .prick{
   width:7px;height:7px;border-radius:50%;background:var(--acc);flex:none;
@@ -607,7 +607,7 @@
   transition:border-color .2s var(--e),color .2s var(--e),background .2s var(--e);
 }
 .mat-typ button:hover{border-color:var(--ln-2);color:var(--bl)}
-.mat-typ button[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--nt-fg)}
+.mat-typ button[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--pap)}
 
 /* ============================================================
    NOTISER
@@ -659,3 +659,42 @@
 @media (max-width:1040px){
   .nx-notis-lista{right:auto;left:0}
 }
+
+/* ============================================================
+   MÖRKT LÄGE I VYERNA
+   Panelerna ligger på samma ton som bottnen i ljust läge och
+   hålls isär av kanten. På mörk botten räcker inte en kant —
+   ytan måste lyfta.
+   ============================================================ */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .vy .dbox{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .vy .kpi{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .vy .auth-card{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .vy .locked{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .lax{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .lax.avklarad{background:var(--pap-3)}
+  :root:not([data-theme="light"]) .vy-roll{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .vy-roll[aria-current="page"]{background:var(--pap-3)}
+  :root:not([data-theme="light"]) .tr-rad.deras .tr-bubbla{background:var(--pap-3)}
+  :root:not([data-theme="light"]) .nx-fraga-box{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .nx-notis-lista{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .nx-notis{background:var(--pap-3)}
+  :root:not([data-theme="light"]) .tr-val button{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .mat-typ button{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .nx-avatar{background:var(--pap-3)}
+}
+:root[data-theme="dark"] .vy .dbox,
+:root[data-theme="dark"] .vy .kpi,
+:root[data-theme="dark"] .vy .auth-card,
+:root[data-theme="dark"] .vy .locked,
+:root[data-theme="dark"] .lax,
+:root[data-theme="dark"] .vy-roll,
+:root[data-theme="dark"] .nx-fraga-box,
+:root[data-theme="dark"] .nx-notis-lista,
+:root[data-theme="dark"] .tr-val button,
+:root[data-theme="dark"] .mat-typ button{background:var(--pap-2)}
+:root[data-theme="dark"] .lax.avklarad,
+:root[data-theme="dark"] .vy-roll[aria-current="page"],
+:root[data-theme="dark"] .tr-rad.deras .tr-bubbla,
+:root[data-theme="dark"] .nx-notis,
+:root[data-theme="dark"] .nx-avatar{background:var(--pap-3)}
