@@ -121,6 +121,21 @@
     </div>
   </div>
 
+
+  <!-- ============ NÅGOT GICK FEL ============ -->
+  <div id="view-fel" hidden>
+    <div class="locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <h2>Vyn kunde inte laddas</h2>
+      <p id="fel-text">Något gick fel när vyn skulle hämtas.</p>
+      <p class="xsmall" id="fel-detalj" style="margin-top:14px;font-family:var(--f-mono);font-size:10px;color:var(--muted-2);word-break:break-word"></p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
+        <button class="btn btn-primary" id="fel-igen">Försök igen</button>
+        <a class="btn btn-ghost" href="mailto:hej@nextrum.se">Hör av dig till oss</a>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ SJÄLVA VYN ============ -->
   <div id="view-app" hidden>
 
@@ -594,6 +609,38 @@
 <script src="nextrum-studie.js"></script>
 <script src="nextrum-media.js"></script>
 <script>
+/* ============================================================
+   MODULVAKT
+   Om en av modulerna inte laddat dör hela skriptet på första
+   raden som rör den — före all felhantering — och vyn står kvar
+   på "Laddar din vy" utan ett ord om varför. Det här körs först
+   och fångar just det fallet: en avbruten nedladdning, en gammal
+   fil i cachen, ett nät som glappade.
+   ============================================================ */
+(function () {
+  var saknas = [];
+  if (typeof NX === 'undefined') saknas.push('nextrum-app.js');
+  if (typeof NXKontakt === 'undefined') saknas.push('nextrum-kontakt.js');
+  if (typeof NXStudie === 'undefined' || !NXStudie.bekräfta) saknas.push('nextrum-studie.js');
+  if (typeof NXMedia === 'undefined' || !NXMedia.beskär) saknas.push('nextrum-media.js');
+  if (!saknas.length) return;
+
+  var visa = function (id) {
+    ['view-loading', 'view-auth', 'view-fel'].forEach(function (v) {
+      var el = document.getElementById(v);
+      if (el) el.hidden = (v !== id);
+    });
+  };
+  visa('view-fel');
+  var t = document.getElementById('fel-text');
+  var d = document.getElementById('fel-detalj');
+  if (t) t.textContent = 'Sidan laddades inte färdigt. Ladda om med Cmd+Shift+R (eller Ctrl+Shift+R) så hämtas den på nytt.';
+  if (d) d.textContent = 'Kunde inte läsa: ' + saknas.join(', ');
+  var k = document.getElementById('fel-igen');
+  if (k) k.addEventListener('click', function () { location.reload(true); });
+})();
+</script>
+<script>
 (function () {
   'use strict';
   const { $, $$, esc, kr, säg, rensa, felText, datumText, isoFor } = NX;
@@ -613,7 +660,7 @@
   const elev = () => S.elever.find(e => e.id === S.aktivElev) || null;
 
   function visa(id) {
-    ['view-loading', 'view-auth', 'view-pending', 'view-wrongrole', 'view-app']
+    ['view-loading', 'view-auth', 'view-pending', 'view-wrongrole', 'view-app', 'view-fel']
       .forEach(v => { const el = $('#' + v); if (el) el.hidden = (v !== id); });
   }
 
@@ -1943,10 +1990,44 @@
     });
   });
 
+
+  /* ============================================================
+     NÄR NÅGOT GÅR SÖNDER
+     Utan det här står vyn kvar på "Laddar din vy" i all evighet så
+     fort en enda fråga kastar — man får varken veta vad som hände
+     eller en väg vidare. Nu syns felet, och man kan försöka igen
+     utan att ladda om sidan.
+     ============================================================ */
+  function visaFel(fel, sammanhang) {
+    console.error('Nextrum:', sammanhang || '', fel);
+    visa('view-fel');
+    const text = $('#fel-text'), detalj = $('#fel-detalj');
+    if (text) {
+      text.textContent = sammanhang
+        ? 'Något gick fel när ' + sammanhang + '. Försök igen — går det inte, hör av dig så tittar vi på det.'
+        : 'Något gick fel. Försök igen — går det inte, hör av dig så tittar vi på det.';
+    }
+    if (detalj) detalj.textContent = (fel && (fel.message || fel.error_description || fel.msg)) || String(fel || '');
+  }
+
+  const felKnapp = $('#fel-igen');
+  if (felKnapp) {
+    felKnapp.addEventListener('click', () => {
+      visa('view-loading');
+      start();
+    });
+  }
+
+  /* Ett fel som ingen fångat ska inte heller lämna vyn tom. */
+  window.addEventListener('unhandledrejection', e => {
+    if ($('#view-loading') && !$('#view-loading').hidden) visaFel(e.reason, 'vyn skulle hämtas');
+  });
+
   /* ============================================================
      START
      ============================================================ */
-  (async function start() {
+  async function start() {
+   try {
     $('#r-datum').value = isoFor(new Date());
 
     if (!supa) {
@@ -2013,7 +2094,12 @@
     /* Stämpla besöket sist — notiserna räknas mot den förra. */
     supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
     uppdateraFörslag();
-  })();
+   } catch (fel) {
+     visaFel(fel, 'vyn skulle hämtas');
+   }
+  }
+
+  start();
 })();
 </script>
 </body>
