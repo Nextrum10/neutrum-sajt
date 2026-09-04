@@ -1270,7 +1270,8 @@
     if (S.kal) S.kal.sättTider(t);
 
     const host = $('#tillg-lista');
-    $('#tid-antal').textContent = t.tillgang.length ? t.tillgang.length + ' tider' : 'standard';
+    $('#tid-antal').textContent = !t.tillgang.length ? 'standard'
+      : (t.tillgang.length === 1 ? '1 tid' : t.tillgang.length + ' tider');
 
     if (!t.tillgang.length) {
       host.innerHTML = tomt('Inga egna tider', 'Just nu gäller vardagar 15–19. Lägg till en tid ovanför för att styra själv.');
