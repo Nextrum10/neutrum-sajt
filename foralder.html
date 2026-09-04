@@ -894,11 +894,23 @@
   }
 
   async function byggKalender() {
-    const upptagna = await NX.hämtaUpptagna(S.profil.matched_tutor_id);
-    if (S.kal) { S.kal.sättUpptagna(upptagna); uppdateraBokaKnapp(); return; }
+    /* Kalendern visar studiehjälparens egna tider. Har hen inte lagt
+       in några gäller vardagar 15–19, som förut. */
+    const [upptagna, tider] = await Promise.all([
+      NX.hämtaUpptagna(S.profil.matched_tutor_id),
+      NX.hämtaTillganglighet(S.profil.matched_tutor_id)
+    ]);
+    if (S.kal) {
+      S.kal.sättUpptagna(upptagna);
+      S.kal.sättTider(tider);
+      uppdateraBokaKnapp();
+      return;
+    }
     S.kal = NX.byggKalender({
       host: $('#kalender'),
       upptagna,
+      tillgang: tider.tillgang,
+      blockerade: tider.blockerade,
       onChange: uppdateraBokaKnapp
     });
   }
@@ -919,6 +931,7 @@
       format: $('#bk-format').value,
       wanted_date: st.valtDatum,
       wanted_time: st.valdTid,
+      duration_min: 60,
       status: 'requested'
     });
     knapp.removeAttribute('aria-busy');

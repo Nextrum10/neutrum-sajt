@@ -452,6 +452,55 @@
           <div id="timmar"><div class="loading">Hämtar</div></div>
         </div>
 
+        <!-- ============ DINA TIDER ============ -->
+        <div class="dbox">
+          <h5>Dina tider <em id="tid-antal"></em></h5>
+          <p class="xsmall" style="color:var(--muted-2);margin-bottom:16px;line-height:1.6">
+            Familjen kan bara boka inom de här tiderna. Lägger du inte in några gäller vardagar 15–19.
+          </p>
+
+          <form id="tillg-form">
+            <div class="vy-form-rad">
+              <div class="pay-field">
+                <label for="tg-dag">Dag</label>
+                <select class="sel" id="tg-dag">
+                  <option value="0">Måndag</option><option value="1">Tisdag</option>
+                  <option value="2">Onsdag</option><option value="3">Torsdag</option>
+                  <option value="4">Fredag</option><option value="5">Lördag</option>
+                  <option value="6">Söndag</option>
+                </select>
+              </div>
+              <div class="pay-field"><label for="tg-fran">Från</label><select class="sel" id="tg-fran"></select></div>
+              <div class="pay-field"><label for="tg-till">Till</label><select class="sel" id="tg-till"></select></div>
+            </div>
+            <div class="vy-knapprad">
+              <button class="btn btn-primary btn-sm" type="submit" id="tg-spara">Lägg till tid</button>
+            </div>
+            <p class="ok-msg" id="tg-msg"></p>
+          </form>
+
+          <div id="tillg-lista" style="margin-top:18px"></div>
+
+          <div class="vy-fall">
+            <h6 style="font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);margin-bottom:14px">Spärra en dag eller tid</h6>
+            <form id="sparr-form">
+              <div class="vy-form-rad">
+                <div class="pay-field"><label for="sp-datum">Datum</label><input class="inp" id="sp-datum" type="date"></div>
+                <div class="pay-field">
+                  <label for="sp-tid">Vad spärras</label>
+                  <select class="sel" id="sp-tid"><option value="">Hela dagen</option></select>
+                </div>
+                <div class="pay-field"><label for="sp-skal">Skäl <span style="font-weight:400;color:var(--muted-2)">(bara du ser det)</span></label><input class="inp" id="sp-skal" placeholder="t.ex. prov"></div>
+              </div>
+              <div class="vy-knapprad">
+                <button class="btn btn-ghost btn-sm" type="submit" id="sp-spara">Spärra</button>
+              </div>
+              <p class="ok-msg" id="sp-msg"></p>
+            </form>
+            <div id="sparr-lista" style="margin-top:16px"></div>
+          </div>
+        </div>
+
         <!-- ============ STUDIEPLAN ============ -->
         <div class="dbox">
           <h5>Studieplan</h5>
@@ -550,7 +599,7 @@
     familjer: [], aktivFamilj: null,
     elever: [], aktivElev: null,
     bokningar: [], trad: null, kal: null, olästa: {},
-    minAvatar: null, matTyp: 'fil'
+    minAvatar: null, matTyp: 'fil', tillgang: [], blockerade: []
   };
 
   const elev = () => S.elever.find(e => e.id === S.aktivElev) || null;
@@ -1041,7 +1090,13 @@
   async function byggKalender() {
     const upptagna = await NX.hämtaUpptagna(S.user.id);
     if (S.kal) { S.kal.sättUpptagna(upptagna); uppdateraFörslag(); return; }
-    S.kal = NX.byggKalender({ host: $('#kalender'), upptagna, onChange: uppdateraFörslag });
+    S.kal = NX.byggKalender({
+      host: $('#kalender'),
+      upptagna,
+      tillgang: S.tillgang || [],
+      blockerade: S.blockerade || [],
+      onChange: uppdateraFörslag
+    });
   }
 
   $('#forslag-knapp').addEventListener('click', async () => {
@@ -1090,6 +1145,158 @@
       uppdateraFörslag();
       await laddaPass();
       await byggKalender();
+    });
+  });
+
+  /* ============================================================
+     DINA TIDER
+     Veckotiderna säger när familjen får boka. Spärrarna tar bort
+     enstaka dagar eller timmar ur dem.
+     ============================================================ */
+  const DAGNAMN = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag', 'Söndag'];
+
+  (function fyllTidsval() {
+    const tvåsiffrig = n => String(n).padStart(2, '0');
+    let från = '', till = '', spärr = '';
+    for (let h = 7; h <= 21; h++) från += '<option value="' + tvåsiffrig(h) + ':00">' + tvåsiffrig(h) + ':00</option>';
+    for (let h = 8; h <= 22; h++) till += '<option value="' + tvåsiffrig(h) + ':00">' + tvåsiffrig(h) + ':00</option>';
+    for (let h = 7; h <= 21; h++) spärr += '<option value="' + tvåsiffrig(h) + ':00">Bara ' + tvåsiffrig(h) + ':00</option>';
+    $('#tg-fran').innerHTML = från;
+    $('#tg-till').innerHTML = till;
+    $('#tg-fran').value = '15:00';
+    $('#tg-till').value = '19:00';
+    $('#sp-tid').innerHTML = '<option value="">Hela dagen</option>' + spärr;
+  })();
+
+  async function laddaTider() {
+    const t = await NX.hämtaTillganglighet(S.user.id);
+    S.tillgang = t.tillgang;
+    S.blockerade = t.blockerade;
+
+    /* kalendern för tidsförslag ska lyda samma tider */
+    if (S.kal) S.kal.sättTider(t);
+
+    const host = $('#tillg-lista');
+    $('#tid-antal').textContent = t.tillgang.length ? t.tillgang.length + ' tider' : 'standard';
+
+    if (!t.tillgang.length) {
+      host.innerHTML = tomt('Inga egna tider', 'Just nu gäller vardagar 15–19. Lägg till en tid ovanför för att styra själv.');
+    } else {
+      const sorterad = t.tillgang.slice().sort((a, b) =>
+        a.weekday - b.weekday || String(a.start_time).localeCompare(String(b.start_time)));
+      host.innerHTML = sorterad.map(rad =>
+        '<div class="mat" style="grid-template-columns:1fr auto">'
+        + '<span class="mat-vad"><b>' + esc(DAGNAMN[rad.weekday]) + '</b>'
+        + '<span>' + esc(String(rad.start_time).slice(0, 5)) + '–' + esc(String(rad.end_time).slice(0, 5)) + '</span></span>'
+        + '<span class="mat-atg"><button class="btn btn-ghost btn-sm" data-tid-bort="'
+        + rad.weekday + '|' + rad.start_time + '|' + rad.end_time + '">Ta bort</button></span>'
+        + '</div>').join('');
+    }
+
+    const sHost = $('#sparr-lista');
+    const framåt = t.blockerade
+      .filter(b => b.block_date >= isoFor(new Date()))
+      .sort((a, b) => a.block_date.localeCompare(b.block_date));
+
+    sHost.innerHTML = !framåt.length
+      ? '<p class="xsmall" style="color:var(--muted-2)">Inga spärrar framåt.</p>'
+      : framåt.map(b =>
+          '<div class="mat" style="grid-template-columns:1fr auto">'
+          + '<span class="mat-vad"><b>' + esc(datumText(b.block_date)) + '</b>'
+          + '<span>' + (b.block_time ? esc(String(b.block_time).slice(0, 5)) : 'Hela dagen') + '</span></span>'
+          + '<span class="mat-atg"><button class="btn btn-ghost btn-sm" data-sparr-bort="'
+          + b.block_date + '|' + (b.block_time || '') + '">Ta bort</button></span>'
+          + '</div>').join('');
+  }
+
+  $('#tillg-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#tg-msg');
+    rensa(msg);
+
+    const dag = Number($('#tg-dag').value);
+    const från = $('#tg-fran').value, till = $('#tg-till').value;
+
+    const krock = (S.tillgang || []).some(t =>
+      t.weekday === dag &&
+      String(t.start_time).slice(0, 5) < till &&
+      från < String(t.end_time).slice(0, 5));
+
+    const fel = kolla([
+      { fel: till <= från, text: 'Sluttiden måste vara efter starttiden.', falt: $('#tg-till') },
+      { fel: krock, text: 'Du har redan en tid som överlappar den här på ' + DAGNAMN[dag].toLowerCase() + '.', falt: $('#tg-fran') }
+    ]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
+    await medan($('#tg-spara'), 'Sparar…', async () => {
+      const { error } = await supa.from('tutor_availability').insert({
+        tutor_id: S.user.id, weekday: dag, start_time: från, end_time: till
+      });
+      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+      säg(msg, '✓ Tiden är tillagd. Familjen kan boka den direkt.', true);
+      await laddaTider();
+    });
+  });
+
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-tid-bort]');
+    if (!k) return;
+    const [dag, från, till] = k.dataset.tidBort.split('|');
+
+    const ja = await bekräfta({
+      titel: 'Ta bort tiden?',
+      text: DAGNAMN[Number(dag)] + ' ' + String(från).slice(0, 5) + '–' + String(till).slice(0, 5)
+            + ' försvinner. Redan bokade pass påverkas inte.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+
+    await medan(k, 'Tar bort…', async () => {
+      const { error } = await supa.from('tutor_availability').delete()
+        .eq('tutor_id', S.user.id).eq('weekday', Number(dag))
+        .eq('start_time', från).eq('end_time', till);
+      if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+      await laddaTider();
+    });
+  });
+
+  $('#sparr-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#sp-msg');
+    rensa(msg);
+
+    const datum = $('#sp-datum').value;
+    const fel = kolla([
+      { fel: !datum, text: 'Välj vilket datum som ska spärras.', falt: $('#sp-datum') },
+      { fel: !!datum && datum < isoFor(new Date()), text: 'Det datumet har redan varit.', falt: $('#sp-datum') }
+    ]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
+    await medan($('#sp-spara'), 'Spärrar…', async () => {
+      const { error } = await supa.from('tutor_blocked').insert({
+        tutor_id: S.user.id,
+        block_date: datum,
+        block_time: $('#sp-tid').value || null,
+        reason: $('#sp-skal').value.trim() || null
+      });
+      if (error) { säg(msg, 'Kunde inte spärra: ' + felText(error), false); return; }
+      säg(msg, '✓ Spärrat. Tiden går inte att boka.', true);
+      $('#sparr-form').reset();
+      await laddaTider();
+    });
+  });
+
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-sparr-bort]');
+    if (!k) return;
+    const [datum, tid] = k.dataset.sparrBort.split('|');
+
+    await medan(k, 'Tar bort…', async () => {
+      let q = supa.from('tutor_blocked').delete().eq('tutor_id', S.user.id).eq('block_date', datum);
+      q = tid ? q.eq('block_time', tid) : q.is('block_time', null);
+      const { error } = await q;
+      if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+      await laddaTider();
     });
   });
 
@@ -1681,6 +1888,7 @@
     await laddaPass();
     await byggFamilj();
     await byggElev();
+    await laddaTider();
     await Promise.all([laddaMinaRapporter(), laddaTimmar(), byggKalender()]);
     uppdateraFörslag();
   })();

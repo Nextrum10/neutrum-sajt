@@ -384,10 +384,63 @@ const NX = (function () {
   /* ---------- kalender ----------
      Delas av bokningsflödet. onPick(isoDatum) körs vid klick.
      upptagna = Set med "YYYY-MM-DD|HH:MM". */
+  /* Standardtider när en studiehjälpare inte lagt in någon egen
+     tillgänglighet. Utan det här hade kalendern blivit helt tom för
+     alla som fanns innan tillgängligheten byggdes — vardagar efter
+     skolan är vad verksamheten faktiskt kört hittills. */
+  const STANDARDTIDER = ['15:00', '16:00', '17:00', '18:00', '19:00'];
+
+  const tim = t => Number(String(t).slice(0, 2));
+  const tvåsiffrig = n => String(n).padStart(2, '0');
+
+  /* Vilka tider går att välja en viss dag?
+       · ligger dagen bakåt i tiden finns inga
+       · är hela dagen spärrad finns inga
+       · annars: timmarna inom studiehjälparens fönster för den
+         veckodagen, minus enskilt spärrade timmar
+     Upptagna tider tas INTE bort här. De visas som gråa, för
+     "redan bokad" och "jobbar inte då" är två olika besked. */
+  function tiderFörDatum(iso, tillgang, blockerade) {
+    const idag = isoFor(new Date());
+    if (iso < idag) return [];
+
+    if ((blockerade || []).some(b => b.block_date === iso && !b.block_time)) return [];
+
+    const d = new Date(iso + 'T12:00:00');
+    const veckodag = (d.getDay() + 6) % 7;          // 0 = måndag
+
+    let tider;
+    if (tillgang && tillgang.length) {
+      const fönster = tillgang.filter(t => t.weekday === veckodag);
+      const ut = [];
+      fönster.forEach(f => {
+        for (let h = tim(f.start_time); h < tim(f.end_time); h++) ut.push(tvåsiffrig(h) + ':00');
+      });
+      tider = Array.from(new Set(ut)).sort();
+    } else {
+      tider = (veckodag <= 4) ? STANDARDTIDER.slice() : [];
+    }
+
+    tider = tider.filter(t =>
+      !(blockerade || []).some(b => b.block_date === iso && b.block_time === t));
+
+    /* Idag räknas bara tider som ligger minst en timme fram — man
+       bokar inte ett pass som börjar om tio minuter. */
+    if (iso === idag) {
+      const gräns = new Date().getHours() + 1;
+      tider = tider.filter(t => tim(t) >= gräns);
+    }
+    return tider;
+  }
+
   function byggKalender(opts) {
     const host = opts.host;
-    const state = { visad: new Date(), valtDatum: null, valdTid: null, upptagna: opts.upptagna || new Set() };
-    const TIDER = opts.tider || ['15:00', '16:00', '17:00', '18:00', '19:00'];
+    const state = {
+      visad: new Date(), valtDatum: null, valdTid: null,
+      upptagna: opts.upptagna || new Set(),
+      tillgang: opts.tillgang || [],
+      blockerade: opts.blockerade || []
+    };
 
     host.innerHTML = `
       <div class="cal-head">
@@ -404,7 +457,12 @@ const NX = (function () {
 
     function ritaTider() {
       if (!state.valtDatum) { slots.innerHTML = ''; return; }
-      slots.innerHTML = TIDER.map(t => {
+      const tider = tiderFörDatum(state.valtDatum, state.tillgang, state.blockerade);
+      if (!tider.length) {
+        slots.innerHTML = '<p class="small" style="grid-column:1/-1;color:var(--muted)">Inga lediga tider den dagen.</p>';
+        return;
+      }
+      slots.innerHTML = tider.map(t => {
         const taken = state.upptagna.has(state.valtDatum + '|' + t);
         return `<button type="button" class="slot${taken ? ' taken' : ''}" ${taken ? 'disabled' : ''}
                   aria-pressed="${state.valdTid === t && !taken}" data-tid="${t}">${t}</button>`;
@@ -428,9 +486,10 @@ const NX = (function () {
       for (let dag = 1; dag <= dagarIMån; dag++) {
         const datum = new Date(år, mån, dag);
         const iso = isoFor(datum);
-        const helg = datum.getDay() === 0 || datum.getDay() === 6;
         const förbi = datum < idag;
-        const valbar = !förbi && !helg;
+        /* En dag är valbar när den faktiskt har en tid att erbjuda —
+           helgregeln ligger nu i tillgängligheten i stället. */
+        const valbar = !förbi && tiderFörDatum(iso, state.tillgang, state.blockerade).length > 0;
         html += `<div class="day ${valbar ? 'avail' : 'off'}${state.valtDatum === iso ? ' sel' : ''}"
                    ${valbar ? `role="button" tabindex="0" data-dag="${iso}"` : ''}>${dag}</div>`;
       }
@@ -465,6 +524,15 @@ const NX = (function () {
       state,
       rita,
       sättUpptagna(set) { state.upptagna = set; rita(); },
+      sättTider(t) {
+        state.tillgang = t.tillgang || [];
+        state.blockerade = t.blockerade || [];
+        /* Ett valt datum kan ha blivit omöjligt av de nya tiderna. */
+        if (state.valtDatum && !tiderFörDatum(state.valtDatum, state.tillgang, state.blockerade).length) {
+          state.valtDatum = null; state.valdTid = null;
+        }
+        rita();
+      },
       nollställ() { state.valtDatum = null; state.valdTid = null; rita(); }
     };
   }
@@ -482,13 +550,27 @@ const NX = (function () {
     return set;
   }
 
+  /* Studiehjälparens veckotider och spärrar. Båda är läsbara för
+     den som ska boka — vyn blockerade_tider lämnar inte ut skälet. */
+  async function hämtaTillganglighet(tutorId) {
+    const tomt = { tillgang: [], blockerade: [] };
+    if (!supa || !tutorId) return tomt;
+    const [a, b] = await Promise.all([
+      supa.from('tutor_availability').select('weekday, start_time, end_time').eq('tutor_id', tutorId),
+      supa.from('blockerade_tider').select('block_date, block_time').eq('tutor_id', tutorId)
+    ]);
+    if (a.error) console.warn('tutor_availability:', a.error.message);
+    if (b.error) console.warn('blockerade_tider:', b.error.message);
+    return { tillgang: a.data || [], blockerade: b.data || [] };
+  }
+
   return {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText,
     initHeader, initReveal, kollaKoppling,
     initFaq, initPris, kopplaAnsökan, märkInloggad,
     bildIntoning, initVagval,
     hämtaSession, hämtaProfil, vyFörRoll,
-    byggKalender, hämtaUpptagna,
+    byggKalender, hämtaUpptagna, hämtaTillganglighet, tiderFörDatum,
     MANADER, DAGAR, CFG
   };
 })();
