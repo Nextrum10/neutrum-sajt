@@ -462,7 +462,14 @@
     if (läge === 'up') {
       res = await supa.auth.signUp({
         email: epost, password: lösen,
-        options: { data: { full_name: namn, role: 'parent' } }
+        options: {
+            data: { full_name: namn, role: 'parent' },
+            /* Utan den här landar bekräftelselänken på Site URL i
+               Supabase — alltså startsidan, eller värre: localhost.
+               Nu kommer man tillbaka hit, till vyn man skapade
+               kontot i, oavsett var sajten körs. */
+            emailRedirectTo: location.origin + location.pathname
+          }
       });
     } else {
       res = await supa.auth.signInWithPassword({ email: epost, password: lösen });
