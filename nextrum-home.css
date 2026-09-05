@@ -167,8 +167,8 @@
   position:relative;border-radius:var(--r-2xl);overflow:hidden;
   border:1px solid var(--line);
   background:
-    radial-gradient(120% 90% at 78% 8%, rgba(255,91,52,.16) 0%, transparent 58%),
-    radial-gradient(100% 80% at 8% 96%, rgba(10,10,10,.06) 0%, transparent 60%),
+    radial-gradient(120% 90% at 78% 8%, color-mix(in srgb, var(--acc) 16%, transparent) 0%, transparent 58%),
+    radial-gradient(100% 80% at 8% 96%, rgba(46,42,32,.06) 0%, transparent 60%),
     var(--surface);
   box-shadow:var(--sh-md);
   aspect-ratio:1/1;
@@ -526,7 +526,7 @@
 }
 .nx-apply-step em{
   font-family:var(--f-mono);font-style:normal;font-size:10px;letter-spacing:.14em;
-  color:var(--acc);display:block;margin-bottom:10px;
+  color:var(--acc-lugn);display:block;margin-bottom:10px;
 }
 .nx-apply-step b{font-size:1rem;font-weight:700;letter-spacing:-.02em;color:var(--band-fg);display:block}
 .nx-apply-step p{font-size:.82rem;color:var(--band-muted);margin-top:6px;line-height:1.5}

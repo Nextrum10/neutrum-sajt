@@ -52,6 +52,30 @@
   --ockra:#7E5714;        /* ockra — sifferrader, understrykningar */
   --ockra-l:#C08A2E;      /* ockra ljus — endast på bark */
 
+  /* --- de mörka banden ---
+     Banden låg kvar i det gamla schemat: kallsvart botten, rent vitt
+     bläck. De gränsar direkt till footern, som är bark — två olika
+     sorters mörker vägg i vägg. Samma toner som --nt nu, så att ett
+     band och footern läser som samma material.
+       kräm  #EFE6D6 på bark → 11,6:1
+       dämpat #B3A88F på bark → 6,1:1 */
+  --band-bg:#2E2A20;
+  --band-fg:#EFE6D6;
+  --band-muted:#B3A88F;
+  --band-line:rgba(239,230,214,.15);
+  --band-surface:rgba(239,230,214,.05);
+
+  /* --- hjälptoner till accenten ---
+     home-lagret sätter dem i den gamla signalorangea och cinema
+     skrev bara om --acc, så de överlevde. --acc-text låg på 3,67:1
+     mot lin och var alltså underkänt, inte bara fel kulör.
+       lera mörk #7A3417 på lin → 7,3:1, på --acc-soft → 6,0:1
+       lin #EFE6D6 på lera #9C4520 → 5,2:1 */
+  --acc-ink:#EFE6D6;
+  --acc-text:#7A3417;
+  --acc-soft:#E3CFBD;
+  --acc-line:rgba(156,69,32,.28);
+
   /* --- rytm --- */
   --w-text:1180px;        /* text och formulär */
   --w-bred:1440px;        /* redaktionella bildkompositioner */
@@ -113,6 +137,7 @@
        måste vändas när accenten blir ljus, annars blir det vitt på
        ljus lera. Den mjuka tonen och kanten byts mot varma. */
     --acc-ink:#1A1813;
+    --acc-text:#D9814F;     /* home-lagret sätter #FF8A66 här — gammal signalorange */
     --acc-soft:rgba(217,129,79,.14);
     --acc-line:rgba(217,129,79,.34);
 
@@ -151,7 +176,8 @@
   --acc:#D9814F; --acc-lugn:#E89A6D; --mossa:#9DAD86; --ockra:#C08A2E;
   --band-bg:#22201A; --band-fg:#EFE6D6; --band-muted:#A99E88;
   --band-line:rgba(239,230,214,.14); --band-surface:rgba(239,230,214,.05);
-  --acc-ink:#1A1813; --acc-soft:rgba(217,129,79,.14); --acc-line:rgba(217,129,79,.34);
+  --acc-ink:#1A1813; --acc-text:#D9814F;
+  --acc-soft:rgba(217,129,79,.14); --acc-line:rgba(217,129,79,.34);
   --bg:var(--pap-2); --fg:var(--bl); --muted:var(--bl-2); --muted-2:var(--bl-3);
   --line:var(--ln); --line-2:var(--ln-2); --surface:var(--pap-3); --surface-2:var(--pap-3);
   --btn-bg:var(--bl); --btn-fg:var(--pap); --focus:var(--bl);
@@ -261,7 +287,7 @@ body{background:var(--pap);color:var(--bl)}
 }
 .nx-et::before{content:"";width:20px;height:1px;background:currentColor;opacity:.55;flex:none}
 .nx-et.acc{color:var(--acc-lugn)}
-.on-nt .nx-et,.nx-mork .nx-et{color:var(--nt-mut)}
+.on-nt .nx-et,.nx-mork .nx-et,.on-band .nx-et{color:var(--nt-mut)}
 
 .nx-wrap{max-width:var(--w-text);margin-inline:auto;padding-inline:var(--m)}
 .nx-wrap-bred{max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m)}
@@ -470,7 +496,10 @@ body .mobile-menu{display:block}
 .btn:hover svg{transform:translateX(4px)}
 .btn:active{transform:scale(.985)}
 
-.btn-primary{background:var(--acc);color:var(--pap);box-shadow:var(--sk-1)}
+/* --acc-ink, inte --pap: på en mörk sektion är accenten den ljusa
+   leran, och då måste bläcket bli mörkt. --pap är grädde överallt
+   i ljust läge och gav 2,35:1 på ljus lera. */
+.btn-primary{background:var(--acc);color:var(--acc-ink);box-shadow:var(--sk-1)}
 .btn-primary:hover{background:var(--acc-lugn);box-shadow:var(--sk-2)}
 .btn-ghost{
   border-color:var(--ln-2);color:var(--bl);background:transparent;
@@ -502,7 +531,7 @@ body .mobile-menu{display:block}
 .nx-lank:hover::after{transform:scaleX(1)}
 .nx-lank svg{width:14px;height:14px;transition:transform .4s var(--e-ut)}
 .nx-lank:hover svg{transform:translateX(5px)}
-.on-nt .nx-lank{color:var(--nt-fg)}
+.on-nt .nx-lank,.nx-mork .nx-lank,.on-band .nx-lank{color:var(--nt-fg)}
 
 /* ============================================================
    BILDSYSTEMET
@@ -680,7 +709,9 @@ body .mobile-menu{display:block}
   padding-block:clamp(120px,15vw,180px) clamp(72px,9vw,120px);
   padding-inline:var(--m);
   overflow:hidden;
-  background:var(--bl);
+  /* --nt, inte --bl: bläcket vänds till grädde i mörkt läge, och en
+     hjältesektion som ska vara mörk blev då ljus med ljus text på. */
+  background:var(--nt);
   isolation:isolate;
 }
 .nx-hero-media{position:absolute;inset:0;z-index:0}
@@ -1930,4 +1961,37 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .nx-kicker{
   font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--bl-3);
+}
+
+/* ------------------------------------------------------------
+   glöden bakom de mörka banden
+   Glöden låg kvar i den gamla signalorangea. Botten är bark nu,
+   och den mörka leran som bär knapparna i ljust läge syns inte
+   alls mot brunt — här måste det vara det ljusa syskonet.
+   ------------------------------------------------------------ */
+.nx-final::before,
+.nx-page-hero.on-band::before{
+  background:radial-gradient(circle, color-mix(in srgb, var(--lera-l) 22%, transparent) 0%, transparent 62%);
+}
+
+/* ------------------------------------------------------------
+   jordfärgerna på bark
+   Band, footer och mörka sektioner har brun botten i BÅDA lägena.
+   De mörka jordtonerna är framtagna för lin och faller ihop mot
+   brunt — lera #9C4520 mot bark ger 2,2:1. Därför gäller
+   ljusvarianterna härinne oavsett läge, precis som regeln säger
+   i :root. Mörkt läge ser likadant ut som förut: --acc var redan
+   #D9814F där, alltså samma värde som --lera-l.
+     lera ljus  #D9814F mot bark      → 5,6:1
+     bark       #1A1813 mot ljus lera → 6,1:1
+   ------------------------------------------------------------ */
+.band,.on-band,.nx-mork,.ftr{
+  --acc:var(--lera-l);
+  --acc-lugn:#E89A6D;     /* hover ska ljusna, inte stå still */
+  --acc-text:var(--lera-l);
+  --mossa:var(--mossa-l);
+  --ockra:var(--ockra-l);
+  --acc-ink:#1A1813;
+  --acc-soft:rgba(217,129,79,.14);
+  --acc-line:rgba(217,129,79,.34);
 }
