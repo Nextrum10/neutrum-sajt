@@ -83,9 +83,9 @@
 }
 .vy .dbox h5{
   font-family:var(--f-mono);
-  font-size:10.5px;font-weight:500;
+  font-size:10.5px;font-weight:600;
   letter-spacing:.15em;text-transform:uppercase;
-  color:var(--bl-3);
+  color:var(--bl-2);
   /* justify-content måste sättas om: .dbox h5 i nextrum.css står på
      space-between, vilket här hade kastat etiketten åt höger med
      bara strecket kvar till vänster. */
@@ -99,7 +99,8 @@
 }
 .vy .dbox h5 em{
   margin-left:auto;font-style:normal;
-  font-size:9.5px;letter-spacing:.1em;color:var(--bl-3);
+  font-size:9.5px;letter-spacing:.1em;color:var(--bl-2);
+  font-weight:600;
 }
 .vy .dbox h5 .vy-larm{
   margin-left:auto;
@@ -123,8 +124,8 @@
 .vy .kpi{background:var(--pap);padding:clamp(16px,2vw,24px)}
 .vy .kpi b{font-size:clamp(1.5rem,2.6vw,2.1rem);letter-spacing:-.04em;color:var(--bl)}
 .vy .kpi span{
-  font-family:var(--f-mono);font-size:9.5px;
-  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3);
+  font-family:var(--f-mono);font-weight:600;font-size:9.5px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
 }
 
 /* ============================================================
@@ -180,7 +181,7 @@
 .tr-tips{
   font-family:var(--f-mono);font-size:9.5px;
   letter-spacing:.1em;text-transform:uppercase;
-  color:var(--bl-3);margin-top:10px;
+  color:var(--bl-2);margin-top:10px;
 }
 
 /* hidden måste vinna över display-reglerna nedan: .tr-val sätts till
@@ -226,7 +227,7 @@
   border:1px solid var(--ln);border-radius:12px;
   padding:8px 4px;background:var(--pap-2);
   font-family:var(--f-mono);font-size:9.5px;
-  letter-spacing:.08em;text-transform:uppercase;color:var(--bl-3);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--bl-2);
   line-height:1.35;
 }
 .pass-nar b{
@@ -235,7 +236,7 @@
 }
 .pass-vad b{font-size:.96rem;font-weight:600;letter-spacing:-.018em;display:block}
 .pass-vad span{
-  font-size:.82rem;color:var(--bl-3);display:block;margin-top:3px;
+  font-size:.82rem;color:var(--bl-2);display:block;margin-top:3px;
 }
 .pass-atg{display:flex;gap:8px;flex-wrap:wrap;justify-self:end}
 .pass-atg .btn{padding:6px 12px;font-size:.8rem}
@@ -268,7 +269,7 @@
 /* "du föreslog" / "familjen önskade" */
 .pass-vem{
   font-family:var(--f-mono);font-size:9px;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
   display:block;margin-top:4px;
 }
 
@@ -311,7 +312,7 @@
 }
 .vy-roll span{
   display:block;margin-top:6px;
-  font-size:.83rem;line-height:1.5;color:var(--bl-3);
+  font-size:.83rem;line-height:1.5;color:var(--bl-2);
 }
 .vy-roll[aria-current="page"]{
   border-color:var(--bl);background:var(--pap-2);
@@ -340,7 +341,7 @@
 .vy .auth-card h1{letter-spacing:-.04em;font-weight:800}
 .vy .auth-alt{
   margin-top:22px;padding-top:18px;border-top:1px solid var(--ln);
-  font-size:.86rem;line-height:1.7;color:var(--bl-3);
+  font-size:.86rem;line-height:1.7;color:var(--bl-2);
 }
 .vy .auth-alt a{color:var(--acc-lugn);text-decoration:underline;text-underline-offset:3px}
 
@@ -359,7 +360,7 @@
    ============================================================ */
 .vy .empty{
   border:1px dashed var(--ln-2);border-radius:14px;
-  padding:34px 20px;color:var(--bl-3);font-size:.92rem;line-height:1.6;
+  padding:34px 20px;color:var(--bl-2);font-size:.92rem;line-height:1.6;
 }
 .vy .report{border-radius:14px;background:var(--pap-2);border-color:var(--ln)}
 .vy .tag{border-radius:100px;padding:4px 10px}
@@ -389,8 +390,8 @@
 .lax-topp b{font-size:1rem;font-weight:600;letter-spacing:-.02em;line-height:1.3}
 .lax-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .lax-datum{
-  font-family:var(--f-mono);font-size:9.5px;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
+  font-family:var(--f-mono);font-weight:600;font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
 }
 .lax-datum.sen{color:var(--acc);font-weight:500}
 .lax-text{
@@ -413,8 +414,8 @@
    ============================================================ */
 .prg-grupp + .prg-grupp{margin-top:clamp(20px,2.4vw,28px)}
 .prg-grupp h6{
-  font-family:var(--f-mono);font-size:9.5px;font-weight:500;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-2);
   margin-bottom:12px;
 }
 .prg{padding:13px 0;border-bottom:1px solid var(--ln)}
@@ -422,8 +423,8 @@
 .prg-topp{display:flex;align-items:center;justify-content:space-between;gap:14px}
 .prg-topp b{font-size:.96rem;font-weight:600;letter-spacing:-.018em}
 .prg-niva{
-  font-family:var(--f-mono);font-size:9px;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
+  font-family:var(--f-mono);font-weight:600;font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
   display:block;margin-top:4px;
 }
 .prg-kommentar{font-size:.88rem;line-height:1.55;color:var(--bl-2);margin-top:7px}
@@ -477,7 +478,7 @@
   display:block;font-size:.98rem;font-weight:600;
   letter-spacing:-.02em;color:var(--bl-2);margin-bottom:6px;
 }
-.vy .empty span{font-size:.89rem;color:var(--bl-3);line-height:1.6}
+.vy .empty span{font-size:.89rem;color:var(--bl-2);line-height:1.6}
 
 /* ============================================================
    SMÅ FORMULÄR I PANELERNA
@@ -507,7 +508,7 @@
   font-variant-numeric:tabular-nums;
 }
 .tim-not{
-  font-size:.84rem;line-height:1.6;color:var(--bl-3);
+  font-size:.84rem;line-height:1.6;color:var(--bl-2);
   margin-top:14px;padding-top:14px;border-top:1px solid var(--ln);
 }
 
@@ -534,7 +535,7 @@
 .nx-bildrad input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .nx-bildrad .btn{padding:7px 14px;font-size:.82rem}
 .nx-bild-hjalp{
-  font-size:.82rem;color:var(--bl-3);line-height:1.55;
+  font-size:.82rem;color:var(--bl-2);line-height:1.55;
   flex-basis:100%;margin-top:2px;
 }
 
@@ -581,8 +582,8 @@
 }
 .mat-vad b{display:block;font-size:.95rem;font-weight:600;letter-spacing:-.018em}
 .mat-vad span{
-  font-family:var(--f-mono);font-size:9px;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
+  font-family:var(--f-mono);font-weight:600;font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
   display:block;margin-top:4px;
 }
 .mat-atg{display:flex;gap:8px;flex-wrap:wrap;justify-self:end}
@@ -645,7 +646,7 @@
 }
 .nx-notis-rad span{
   display:block;font-size:.82rem;line-height:1.5;
-  color:var(--bl-3);margin-top:3px;
+  color:var(--bl-2);margin-top:3px;
 }
 
 /* panelen man hoppade till blinkar till, annars vet man inte
@@ -679,8 +680,12 @@
   :root:not([data-theme="light"]) .nx-fraga-box{background:var(--pap-2)}
   :root:not([data-theme="light"]) .nx-notis-lista{background:var(--pap-2)}
   :root:not([data-theme="light"]) .nx-notis{background:var(--pap-3)}
-  :root:not([data-theme="light"]) .tr-val button{background:var(--pap-2)}
-  :root:not([data-theme="light"]) .mat-typ button{background:var(--pap-2)}
+  /* :not() på det valda läget är nödvändigt: den här selektorn har
+     högre specificitet än .tr-val button[aria-pressed="true"], så utan
+     den skrev lyftet över den valda knappens botten och lämnade ljus
+     text på ljus botten — 1,09:1. */
+  :root:not([data-theme="light"]) .tr-val button:not([aria-pressed="true"]){background:var(--pap-2)}
+  :root:not([data-theme="light"]) .mat-typ button:not([aria-pressed="true"]){background:var(--pap-2)}
   :root:not([data-theme="light"]) .nx-avatar{background:var(--pap-3)}
 }
 :root[data-theme="dark"] .vy .dbox,
@@ -691,10 +696,172 @@
 :root[data-theme="dark"] .vy-roll,
 :root[data-theme="dark"] .nx-fraga-box,
 :root[data-theme="dark"] .nx-notis-lista,
-:root[data-theme="dark"] .tr-val button,
-:root[data-theme="dark"] .mat-typ button{background:var(--pap-2)}
+:root[data-theme="dark"] .tr-val button:not([aria-pressed="true"]),
+:root[data-theme="dark"] .mat-typ button:not([aria-pressed="true"]){background:var(--pap-2)}
 :root[data-theme="dark"] .lax.avklarad,
 :root[data-theme="dark"] .vy-roll[aria-current="page"],
 :root[data-theme="dark"] .tr-rad.deras .tr-bubbla,
 :root[data-theme="dark"] .nx-notis,
 :root[data-theme="dark"] .nx-avatar{background:var(--pap-3)}
+
+/* ============================================================
+   SIDOMENYN
+   Vyerna var tidigare en enda lång sida där allt låg framme
+   samtidigt. Menyn är nu navigationen: Översikt sammanfattar,
+   menyn leder vidare, sektionerna bär djupet.
+
+   På smal skärm blir menyn en vågrät rad som går att svepa. En
+   lodrät meny hade ätit halva förstaskärmen på en telefon, och
+   det är telefonen de flesta familjer öppnar vyn i.
+   ============================================================ */
+.vy-layout{
+  max-width:var(--w-bred);
+  margin-inline:auto;
+  display:grid;
+  gap:clamp(18px,2.4vw,32px);
+  grid-template-columns:minmax(0,1fr);
+  align-items:start;
+}
+@media (min-width:900px){
+  .vy-layout{grid-template-columns:230px minmax(0,1fr)}
+}
+
+.vy-sido{
+  display:flex;gap:6px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--ln);
+}
+.vy-sido::-webkit-scrollbar{display:none}
+@media (min-width:900px){
+  .vy-sido{
+    position:sticky;
+    /* sidhuvudet ligger fixed — utan offset hamnar första posten
+       under det när man scrollar */
+    top:clamp(96px,10vw,124px);
+    flex-direction:column;gap:2px;
+    overflow:visible;
+    border-bottom:none;padding-bottom:0;
+  }
+}
+
+.vy-sido a{
+  display:flex;align-items:center;gap:10px;
+  flex:none;
+  padding:10px 14px;
+  border-radius:11px;
+  font-size:.92rem;font-weight:500;
+  color:var(--bl-2);
+  white-space:nowrap;
+  transition:background .18s var(--e),color .18s var(--e);
+}
+.vy-sido a:hover{background:var(--pap-2);color:var(--bl)}
+
+/* --bl/--pap är ett par som vänder rätt i båda lägena: bark på lin
+   i ljust, kräm på bark i mörkt. Ett hårdkodat vitt hade blivit
+   osynligt i mörkt läge. */
+.vy-sido a.ar-har,
+.vy-sido a.ar-har:hover{background:var(--bl);color:var(--pap);font-weight:600}
+
+.vy-sido svg{
+  width:16px;height:16px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+
+/* Siffran vid en post. Tas bort helt vid noll — en tom prick läser
+   som "noll nya" i stället för "inget att visa". */
+.vy-sido-mark{
+  margin-left:auto;flex:none;
+  background:var(--acc);color:var(--acc-ink);
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  border-radius:100px;padding:3px 7px;
+}
+@media (max-width:899px){.vy-sido-mark{margin-left:2px}}
+.vy-sido a.ar-har .vy-sido-mark{background:var(--pap);color:var(--bl)}
+
+/* ------------------------------------------------------------
+   SEKTIONERNA
+   ------------------------------------------------------------ */
+.vy-sek-topp{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:18px;flex-wrap:wrap;
+  margin-bottom:clamp(16px,1.8vw,22px);
+}
+.vy-sek h2{
+  font-size:clamp(1.3rem,2.2vw,1.72rem);
+  line-height:1.1;letter-spacing:-.032em;font-weight:700;
+  color:var(--bl);
+}
+.vy-sek h2:focus{outline:none}
+.vy-sek-topp p{
+  margin-top:7px;color:var(--bl-2);
+  font-size:.93rem;line-height:1.55;max-width:52ch;
+}
+
+/* Eleven man jobbar med följer med mellan sektionerna: läxor,
+   material och rapporter gäller alla den som är vald. */
+.vy-kontext{margin-bottom:clamp(16px,1.8vw,22px)}
+
+/* ------------------------------------------------------------
+   VISA ALLA
+   Översikten visar några rader och pekar vidare. Länken är en
+   vanlig ankarlänk till sektionen, så bakåtknappen fungerar.
+   ------------------------------------------------------------ */
+.vy-mer{
+  display:inline-flex;align-items:center;gap:7px;
+  margin-top:16px;
+  font-size:.88rem;font-weight:600;
+  color:var(--acc-text);
+  transition:gap .18s var(--e);
+}
+.vy-mer:hover{gap:11px}
+.vy-mer svg{
+  width:13px;height:13px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+
+/* ------------------------------------------------------------
+   SAMTALEN PÅ ÖVERSIKT
+   Inte en andra chatt — en lista över trådarna med det senast
+   sagda. Själva skrivandet sker i Meddelanden.
+   ------------------------------------------------------------ */
+.vy-samtal{display:flex;flex-direction:column;gap:2px}
+.vy-samtal a{
+  display:flex;align-items:center;gap:13px;
+  padding:11px 12px;border-radius:12px;
+  transition:background .18s var(--e);
+}
+.vy-samtal a:hover{background:var(--pap-2)}
+.vy-samtal-text{min-width:0;flex:1}
+.vy-samtal-text b{
+  display:block;font-size:.93rem;font-weight:600;
+  color:var(--bl);letter-spacing:-.012em;
+}
+.vy-samtal-text span{
+  display:block;margin-top:2px;
+  font-size:.85rem;color:var(--bl-2);line-height:1.45;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.vy-samtal-nar{
+  flex:none;align-self:flex-start;margin-top:3px;
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.06em;color:var(--bl-3);
+}
+.vy-samtal .oläst-prick{
+  flex:none;width:8px;height:8px;border-radius:100px;
+  background:var(--acc);
+}
+
+/* .split delar vid 940px fönsterbredd, men inuti vy-layouten har
+   innehållet redan tappat 230px till menyn. Utan det här kläms två
+   paneler ihop på en bärbar skärm. */
+@media (max-width:1180px){
+  .vy-layout .split{grid-template-columns:minmax(0,1fr)}
+}
+
+/* Sektioner med en ensam panel: ett formulär i 1100px bredd blir
+   en rad fält med ett fält per skärm. */
+.vy-sek-smal{max-width:820px}

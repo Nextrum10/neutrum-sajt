@@ -297,6 +297,92 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
+     SIDOMENYN
+     Vyerna var en enda lång sida där allt låg framme samtidigt: man
+     fick skrolla förbi läxor och rapporter för att komma åt sina
+     tider. Nu är varje del en egen sektion och menyn är vägen dit.
+
+     Sektionerna byter inte dokument — de ligger kvar och göms med
+     hidden. Det är hela poängen: befintlig JS skriver till sina #id
+     precis som förut, oavsett vilken sektion som är framme, så
+     ingenting av datalogiken behöver röras.
+
+     Adressen bär sektionen (#laxor), så ett "Visa alla" och en
+     notisrad är vanliga ankarlänkar. Det ger också bakåtknappen
+     rätt beteende gratis.
+     ============================================================ */
+  function sidomeny(opts) {
+    var o = opts || {};
+    var nav = o.nav;
+    var rot = o.rot || document;
+    if (!nav) return null;
+
+    var länkar = NX.$$('a[data-sek]', nav);
+    var sektioner = NX.$$('section[data-sek]', rot);
+    var namn = sektioner.map(function (s) { return s.dataset.sek; });
+    if (!namn.length) return null;
+    var standard = namn.indexOf(o.standard) !== -1 ? o.standard : namn[0];
+    var första = true;
+
+    function giltig(n) { return namn.indexOf(n) !== -1 ? n : standard; }
+
+    function visa(önskad) {
+      var vald = giltig(önskad);
+      sektioner.forEach(function (s) { s.hidden = s.dataset.sek !== vald; });
+      länkar.forEach(function (a) {
+        var här = a.dataset.sek === vald;
+        a.classList.toggle('ar-har', här);
+        if (här) a.setAttribute('aria-current', 'page');
+        else a.removeAttribute('aria-current');
+      });
+
+      /* Vid första ritningen står man redan högst upp. Att scrolla
+         då skulle rycka undan sidan medan den laddar. */
+      if (!första) {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        var rubrik = rot.querySelector('section[data-sek="' + vald + '"] h2, section[data-sek="' + vald + '"] h5');
+        if (rubrik) {
+          rubrik.setAttribute('tabindex', '-1');
+          rubrik.focus({ preventScroll: true });
+        }
+      }
+      första = false;
+
+      if (typeof o.onByt === 'function') o.onByt(vald);
+      return vald;
+    }
+
+    function frånHash() { return visa(String(location.hash || '').replace(/^#/, '')); }
+
+    window.addEventListener('hashchange', frånHash);
+    frånHash();
+
+    return {
+      öppna: function (n) {
+        var vald = giltig(n);
+        if (String(location.hash).replace(/^#/, '') === vald) visa(vald);
+        else location.hash = '#' + vald;
+      },
+      /* Siffran vid en menypost. 0 tar bort den helt — en tom prick
+         läser som "noll nya", inte som "inget att visa". */
+      märke: function (sek, antal) {
+        länkar.forEach(function (a) {
+          if (a.dataset.sek !== sek) return;
+          var m = a.querySelector('.vy-sido-mark');
+          if (!antal) { if (m) m.remove(); return; }
+          if (!m) {
+            m = document.createElement('span');
+            m.className = 'vy-sido-mark';
+            a.appendChild(m);
+          }
+          m.textContent = antal > 99 ? '99+' : String(antal);
+          m.setAttribute('aria-label', antal + ' nya');
+        });
+      }
+    };
+  }
+
+  /* ============================================================
      NOTISER
      En knapp i sidhuvudet med det som faktiskt kräver något av
      användaren. Inte en logg över allt som hänt — en lista över
@@ -337,11 +423,23 @@ window.NXStudie = (function () {
       if (!rad) return;
       stäng();
       var mål = document.querySelector(rad.dataset.mal);
-      if (mål) {
+      if (!mål) return;
+
+      /* Målet kan ligga i en sektion som inte är framme. Byt dit
+         först — annars scrollar vi till något som är hidden och
+         ingenting händer. */
+      var sek = mål.closest('section[data-sek]');
+      if (sek && sek.hidden) {
+        location.hash = '#' + sek.dataset.sek;
+      }
+
+      /* Sektionsbytet nollställer scrollen, så markeringen måste
+         vänta tills den bytt. */
+      requestAnimationFrame(function () {
         mål.scrollIntoView({ behavior: 'smooth', block: 'center' });
         mål.classList.add('nx-blink');
         setTimeout(function () { mål.classList.remove('nx-blink'); }, 1600);
-      }
+      });
     });
 
     document.addEventListener('click', function (e) {
@@ -359,7 +457,7 @@ window.NXStudie = (function () {
   }
 
   return {
-    flyttaRuta: flyttaRuta, notiser: notiser,
+    flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny,
     LAGE: LAGE, NIVA: NIVA,
     läxläge: läxläge, deadlineText: deadlineText,
     läxRad: läxRad, nivåMätare: nivåMätare,

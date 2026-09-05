@@ -172,6 +172,11 @@ window.NXKontakt = (function () {
 
     start();
 
+    /* Första hämtningen. Utan den ritas tråden först när pollningen
+       tickar, alltså upp till 20 sekunder efter att vyn öppnats — och
+       under tiden står det "Hämtar" över en tråd som redan finns. */
+    ladda();
+
     return {
       ladda: ladda,
       byt: function (nytt) {
