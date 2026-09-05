@@ -33,12 +33,12 @@
 --     on a.tutor_id = b.tutor_id and a.wanted_date = b.wanted_date and a.id < b.id
 --  where a.status in ('requested','confirmed')
 --    and b.status in ('requested','confirmed')
---    and tsrange(a.wanted_date + a.wanted_time::time,
---                a.wanted_date + a.wanted_time::time
---                  + (coalesce(a.duration_min,60) || ' minutes')::interval)
---     && tsrange(b.wanted_date + b.wanted_time::time,
---                b.wanted_date + b.wanted_time::time
---                  + (coalesce(b.duration_min,60) || ' minutes')::interval);
+--    and public.pass_intervall(a.wanted_date, a.wanted_time, a.duration_min)
+--     && public.pass_intervall(b.wanted_date, b.wanted_time, b.duration_min);
+--
+-- OBS: funktionen skapas längre ned i filen. Vill du köra kontrollen
+-- innan resten, använd tsrange direkt — utanför ett index spelar
+-- volatiliteten ingen roll.
 
 
 -- ============================================================
@@ -48,11 +48,43 @@
 -- Med en rad per påbörjad timme blir ett tvåtimmarspass två
 -- upptagna timmar, och kalendern kan sluta ljuga.
 -- ============================================================
+-- ============================================================
+-- PASSETS TIDSINTERVALL — som en IMMUTABLE funktion
+--
+-- Första versionen räknade fram intervallet direkt i villkoret med
+-- wanted_time::time och (... || ' minutes')::interval. Postgres
+-- vägrade: båda casterna är STABLE, inte immutable, och får därför
+-- inte förekomma i ett indexuttryck. (text_in är immutable, men
+-- time_in och interval_in är det inte — kontrollera i pg_proc om du
+-- undrar över någon annan.)
+--
+-- Att bara märka en wrapper som immutable vore ett löfte man inte
+-- kan hålla, och ett brutet löfte här ger ett tyst trasigt index.
+-- Det här räknar i stället ur heltal: split_part, int4in, make_time
+-- och make_interval är alla genuint immutable.
+-- ============================================================
+create or replace function public.pass_intervall(d date, t text, minuter int)
+returns tsrange
+language sql
+immutable
+as $$
+  select tsrange(
+    d + make_time(split_part(t, ':', 1)::int, split_part(t, ':', 2)::int, 0),
+    d + make_time(split_part(t, ':', 1)::int, split_part(t, ':', 2)::int, 0)
+      + make_interval(mins => coalesce(minuter, 60))
+  );
+$$;
+
+
 create or replace view public.tutor_busy_slots as
   select
     b.tutor_id,
     b.wanted_date,
-    to_char(b.wanted_time::time + (n || ' hour')::interval, 'HH24:MI') as wanted_time
+    to_char(
+      make_time(split_part(b.wanted_time, ':', 1)::int,
+                split_part(b.wanted_time, ':', 2)::int, 0)
+        + make_interval(hours => n),
+      'HH24:MI') as wanted_time
   from public.bookings b
   cross join lateral generate_series(
     0,
@@ -88,11 +120,7 @@ alter table public.bookings
   add constraint bookings_ingen_overlapp
   exclude using gist (
     tutor_id with =,
-    tsrange(
-      wanted_date + wanted_time::time,
-      wanted_date + wanted_time::time
-        + (coalesce(duration_min, 60) || ' minutes')::interval
-    ) with &&
+    public.pass_intervall(wanted_date, wanted_time, duration_min) with &&
   )
   where (
     status in ('requested','confirmed')
@@ -126,6 +154,11 @@ alter table public.bookings
 
 -- ============================================================
 -- KLART.
+--
+-- Körd mot produktion 2026-09-05. Verifierat med fyra prov, alla
+-- återställda: överlapp stoppas, angränsande pass tillåts (18:00
+-- direkt efter ett pass 16–18 går igenom), 90 minuter nekas, och ett
+-- tvåtimmarspass upptar två timmar i tutor_busy_slots.
 --
 -- Vad som INTE ändras här, med flit:
 --
