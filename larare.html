@@ -2460,9 +2460,20 @@
     if (S.profil.role !== 'tutor') { visa('view-wrongrole'); return; }
 
     const tp = await supa.from('tutor_profiles')
-      .select('status, school, city, subjects, bio, age, hourly_rate, stripe_account_id, stripe_klar')
+      .select('status, school, city, subjects, bio, age, hourly_rate')
       .eq('id', S.user.id).maybeSingle();
     S.tutorProfil = tp.data;
+
+    /* Stripe-kolumnerna hämtas för sig, med flit. De kommer med
+       schema-v8, och innan det är kört svarar frågan med fel. Låg de
+       i selecten ovan skulle hela profilen bli null och varenda
+       studiehjälpare mötas av "ditt konto saknar en profil" — en vy
+       som är låst för att en betalfunktion inte är driftsatt än. */
+    if (S.tutorProfil) {
+      const st = await supa.from('tutor_profiles')
+        .select('stripe_account_id, stripe_klar').eq('id', S.user.id).maybeSingle();
+      if (st.data) Object.assign(S.tutorProfil, st.data);
+    }
 
     if (!S.tutorProfil) {
       visa('view-pending');
