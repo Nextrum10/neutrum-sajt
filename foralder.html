@@ -315,6 +315,11 @@
             <p>Boka nya pass, se kommande och läs rapporterna efteråt.</p>
           </div>
         </div>
+        <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+          <h5>Schema <em>era pass</em></h5>
+          <div id="schema"><div class="loading">Hämtar</div></div>
+        </div>
+
         <div class="split">
           <div class="stack">
                     <!-- ============ BOKA ============ -->
@@ -576,7 +581,7 @@
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0 };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null };
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel']
@@ -1162,6 +1167,7 @@
     ritaNotiser();
     ritaNästaPass();
     ritaStatistik();
+    byggSchema();
     if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Välj en tid i kalendern nedanför.'); return; }
 
     const idag = new Date().toISOString().slice(0, 10);
@@ -1613,6 +1619,66 @@
           ? 'Bara genomförda pass räknas. Ett pass blir genomfört när er studiehjälpare skrivit rapporten.'
           : 'Inga genomförda pass än — grafen fylls i efter första passet.')
       + '</p>';
+  }
+
+  /* ============================================================
+     SCHEMAT
+     Kalendern nedanför svarar på "när kan vi ses?". Schemat svarar på
+     "vad ligger redan?". Båda läser S.bokningar, så en avbokning syns
+     i båda utan att något behöver hållas i synk.
+     ============================================================ */
+  function byggSchema() {
+    const host = $('#schema');
+    if (!host) return;
+    if (S.schema) { S.schema.sättBokningar(S.bokningar); return; }
+    S.schema = NXStudie.schema({
+      host: host,
+      bokningar: S.bokningar,
+      namn: b => {
+        const barn = S.barn.find(x => x.id === b.student_id);
+        return barn ? barn.name : ((S.tutor && S.tutor.full_name) || '');
+      },
+      onOppna: visaPass
+    });
+  }
+
+  /* Knapparna bär samma data-attribut som raderna i passlistan, så de
+     delegerade hanterarna tar hand om dem. Ingen andra uppsättning
+     logik som kan hamna ur synk med den första. */
+  function visaPass(b) {
+    const barn = S.barn.find(x => x.id === b.student_id);
+    const l = NXKontakt.LÄGEN[b.status] || { text: b.status };
+    const idag = isoFor(new Date());
+    const kommande = b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed');
+    const derasFörslag = b.created_by && b.created_by !== S.user.id;
+
+    let knappar = '';
+    if (derasFörslag && b.status === 'requested') {
+      knappar = '<button type="button" class="btn btn-primary" data-svar="confirmed" data-id="' + esc(b.id) + '">Passar bra</button>'
+              + '<button type="button" class="btn btn-ghost" data-svar="cancelled" data-id="' + esc(b.id) + '">Avböj</button>';
+    } else if (kommande) {
+      knappar = '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Flytta</button>'
+              + '<button type="button" class="btn btn-ghost" data-avboka="' + esc(b.id) + '">Avboka</button>';
+    }
+
+    const laxor = (S.laxor || [])
+      .filter(h => h.status !== 'klar' && h.due_date && h.due_date >= b.wanted_date)
+      .slice(0, 3);
+
+    NXStudie.passRuta({
+      titel: b.subject || 'Pass',
+      under: datumText(b.wanted_date) + (b.wanted_time ? ' kl. ' + b.wanted_time : ''),
+      rader: [
+        ['Status', l.text],
+        ['Format', b.format],
+        ['Elev', barn ? barn.name : null],
+        ['Studiehjälpare', (S.tutor && S.tutor.full_name) || null],
+        ['Bokades av', b.created_by ? (derasFörslag ? 'Er studiehjälpare' : 'Ni') : null]
+      ],
+      anteckning: b.note,
+      laxor: laxor,
+      atgarder: knappar
+    });
   }
 
   function visaFel(fel, sammanhang) {

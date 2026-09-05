@@ -297,6 +297,270 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
+     ETT PASS I DETALJ
+     Öppnas från schemat. Visar det man behöver veta, och tar EMOT
+     knapparnas markup i stället för att bygga egna: vyerna har redan
+     delegerade hanterare för bekräfta, flytta och avboka, och en
+     andra uppsättning hade förr eller senare hamnat ur synk med den
+     första.
+
+     Därför stängs rutan efter att klicket hunnit bubbla vidare. Tas
+     noden bort direkt når händelsen aldrig document, och knappen gör
+     ingenting.
+     ============================================================ */
+  function passRuta(opts) {
+    var o = opts || {};
+    var ruta = document.createElement('div');
+    ruta.className = 'nx-fraga';
+
+    var fakta = (o.rader || [])
+      .filter(function (r) { return r && r[1]; })
+      .map(function (r) {
+        return '<div class="pass-fakta-rad"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>';
+      }).join('');
+
+    ruta.innerHTML =
+      '<div class="nx-fraga-box nx-passbox" role="dialog" aria-modal="true" aria-labelledby="pass-t">'
+      + '<h3 id="pass-t">' + esc(o.titel || 'Passet') + '</h3>'
+      + (o.under ? '<p>' + esc(o.under) + '</p>' : '')
+      + (fakta ? '<div class="pass-fakta">' + fakta + '</div>' : '')
+      + (o.anteckning
+          ? '<div class="pass-block"><h6>Anteckning</h6><p>' + esc(o.anteckning) + '</p></div>' : '')
+      + (o.rapport
+          ? '<div class="pass-block"><h6>Efter passet</h6><p>' + esc(o.rapport) + '</p></div>' : '')
+      + (o.laxor && o.laxor.length
+          ? '<div class="pass-block"><h6>Läxor omkring passet</h6>'
+            + o.laxor.map(function (h) {
+                return '<div class="pass-lank">' + esc(h.title)
+                  + (h.due_date ? '<span>Till ' + esc(deadlineText(h.due_date)) + '</span>' : '')
+                  + '</div>';
+              }).join('') + '</div>'
+          : '')
+      + '<div class="nx-fraga-knappar">'
+      + '<button type="button" class="btn btn-ghost" data-pass-stang>Stäng</button>'
+      + (o.atgarder || '')
+      + '</div></div>';
+
+    var sistaFokus = document.activeElement;
+    function stäng() {
+      if (!document.body.contains(ruta)) return;
+      ruta.remove();
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', tangent);
+      if (sistaFokus && sistaFokus.focus) sistaFokus.focus();
+    }
+    function tangent(e) { if (e.key === 'Escape') stäng(); }
+
+    ruta.addEventListener('click', function (e) {
+      if (e.target === ruta) return stäng();
+      if (!e.target.closest('button')) return;
+      /* Låt klicket nå document först — det är där de riktiga
+         hanterarna sitter. */
+      setTimeout(stäng, 0);
+    });
+    document.addEventListener('keydown', tangent);
+
+    document.body.appendChild(ruta);
+    document.body.style.overflow = 'hidden';
+    void ruta.offsetWidth;
+    ruta.classList.add('open');
+    var f = ruta.querySelector('[data-pass-stang]');
+    if (f) f.focus();
+    return { stäng: stäng };
+  }
+
+  /* ============================================================
+     SCHEMAT
+     Kalendern som redan fanns är en bokningsväljare: välj en dag,
+     välj en tid. Det här är det andra man vill av en kalender —
+     att se vad som redan ligger där.
+
+     Tre lägen, samma data. Månad för att få överblick, vecka för att
+     planera, dag för att se vad som faktiskt händer idag. Lägena är
+     inte tre komponenter utan tre sätt att rita samma lista, så en
+     bokning kan aldrig visas olika beroende på vilket läge man står i.
+
+     opts: { host, bokningar, lage, namn(b), onOppna(b) }
+     ============================================================ */
+  var SCHEMA_LAGE = {
+    requested: 'onskad', confirmed: 'bekraftad',
+    completed: 'genomford', cancelled: 'avbokad'
+  };
+
+  function schema(opts) {
+    var o = opts || {};
+    var host = o.host;
+    if (!host) return null;
+
+    var läge = ['manad', 'vecka', 'dag'].indexOf(o.lage) !== -1 ? o.lage : 'manad';
+    var visad = new Date(); visad.setHours(12, 0, 0, 0);
+    var bokningar = o.bokningar || [];
+
+    function namnFör(b) { return typeof o.namn === 'function' ? (o.namn(b) || '') : ''; }
+
+    /* En avbokad rad ska synas i historiken men inte skräpa i
+       överblicken — den som tittar på månaden vill veta vad som
+       gäller, inte vad som ställdes in. */
+    function förDag(iso, medAvbokade) {
+      return bokningar
+        .filter(function (b) {
+          if (String(b.wanted_date) !== iso) return false;
+          return medAvbokade || b.status !== 'cancelled';
+        })
+        .sort(function (a, c) { return String(a.wanted_time || '').localeCompare(String(c.wanted_time || '')); });
+    }
+
+    function måndagFör(d) {
+      var m = new Date(d);
+      m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
+      m.setHours(12, 0, 0, 0);
+      return m;
+    }
+
+    function titel() {
+      if (läge === 'manad') return NX.MANADER[visad.getMonth()] + ' ' + visad.getFullYear();
+      if (läge === 'dag') return NX.DAGAR[(visad.getDay() + 6) % 7] + ' ' + datumText(isoFor(visad));
+      var m = måndagFör(visad), s = new Date(m); s.setDate(s.getDate() + 6);
+      return datumText(isoFor(m)) + ' – ' + datumText(isoFor(s));
+    }
+
+    function flytta(steg) {
+      if (läge === 'manad') visad.setMonth(visad.getMonth() + steg);
+      else if (läge === 'vecka') visad.setDate(visad.getDate() + steg * 7);
+      else visad.setDate(visad.getDate() + steg);
+      rita();
+    }
+
+    function chip(b) {
+      return '<button type="button" class="sch-pass ' + (SCHEMA_LAGE[b.status] || '')
+        + '" data-pass="' + esc(b.id) + '">'
+        + '<i></i><b>' + esc(b.wanted_time || '') + '</b>'
+        + '<span>' + esc(b.subject || 'Pass') + '</span></button>';
+    }
+
+    function ritaManad() {
+      var år = visad.getFullYear(), mån = visad.getMonth();
+      var första = new Date(år, mån, 1);
+      var offset = (första.getDay() + 6) % 7;
+      var dagar = new Date(år, mån + 1, 0).getDate();
+      var idag = isoFor(new Date());
+
+      var ut = NX.DAGAR.map(function (d) { return '<div class="dow">' + d + '</div>'; }).join('');
+      for (var i = 0; i < offset; i++) ut += '<div class="sch-dag tom"></div>';
+
+      for (var d = 1; d <= dagar; d++) {
+        var iso = isoFor(new Date(år, mån, d));
+        var pass = förDag(iso);
+        ut += '<div class="sch-dag' + (iso === idag ? ' idag' : '') + '" data-dag="' + iso + '">'
+          + '<span class="sch-datum">' + d + '</span>'
+          + pass.slice(0, 2).map(chip).join('')
+          + (pass.length > 2
+              ? '<button type="button" class="sch-fler" data-dag-oppna="' + iso + '">+'
+                + (pass.length - 2) + ' till</button>'
+              : '')
+          + '</div>';
+      }
+      return '<div class="sch-manad">' + ut + '</div>';
+    }
+
+    function ritaVecka() {
+      var m = måndagFör(visad);
+      var idag = isoFor(new Date());
+      var ut = '';
+      for (var i = 0; i < 7; i++) {
+        var d = new Date(m); d.setDate(d.getDate() + i);
+        var iso = isoFor(d);
+        var pass = förDag(iso);
+        ut += '<div class="sch-rad' + (iso === idag ? ' idag' : '') + '">'
+          + '<div class="sch-rad-dag"><b>' + NX.DAGAR[i] + '</b><span>' + d.getDate() + '</span></div>'
+          + '<div class="sch-rad-pass">'
+          + (pass.length ? pass.map(chip).join('') : '<span class="sch-tom">—</span>')
+          + '</div></div>';
+      }
+      return '<div class="sch-vecka">' + ut + '</div>';
+    }
+
+    function ritaDag() {
+      var iso = isoFor(visad);
+      var pass = förDag(iso, true);
+      if (!pass.length) {
+        return '<div class="empty"><b>Inga pass den här dagen</b>'
+          + '<br><span>Bläddra vidare, eller byt till månad för att se var de ligger.</span></div>';
+      }
+      return '<div class="sch-lista">' + pass.map(function (b) {
+        return NXKontaktRad(b);
+      }).join('') + '</div>';
+    }
+
+    /* Dagvyn visar hela raden, inte ett chip: det är den vyn man har
+       framme när passet faktiskt ska hållas. */
+    function NXKontaktRad(b) {
+      return '<button type="button" class="sch-full ' + (SCHEMA_LAGE[b.status] || '')
+        + '" data-pass="' + esc(b.id) + '">'
+        + '<span class="sch-full-tid">' + esc(b.wanted_time || '—') + '</span>'
+        + '<span class="sch-full-vad"><b>' + esc(b.subject || 'Pass') + '</b>'
+        + '<span>' + esc([b.format, (b.duration_min || 60) + ' min', namnFör(b)]
+            .filter(Boolean).join(' · ')) + '</span></span>'
+        + '</button>';
+    }
+
+    function rita() {
+      var kropp = läge === 'manad' ? ritaManad() : läge === 'vecka' ? ritaVecka() : ritaDag();
+      host.innerHTML =
+          '<div class="sch-topp">'
+        + '<div class="cal-head" style="margin-bottom:0">'
+        + '<b class="sch-titel">' + esc(titel()) + '</b>'
+        + '<div class="cal-nav">'
+        + '<button type="button" data-sch="bak" aria-label="Bakåt"><svg viewBox="0 0 12 12"><path d="M7.5 2.5 4 6l3.5 3.5"/></svg></button>'
+        + '<button type="button" data-sch="idag" class="sch-idag">Idag</button>'
+        + '<button type="button" data-sch="fram" aria-label="Framåt"><svg viewBox="0 0 12 12"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></button>'
+        + '</div></div>'
+        + '<div class="sch-val" role="group" aria-label="Visa som">'
+        + ['manad', 'vecka', 'dag'].map(function (l) {
+            return '<button type="button" data-sch-lage="' + l + '" aria-pressed="' + (l === läge) + '">'
+              + { manad: 'Månad', vecka: 'Vecka', dag: 'Dag' }[l] + '</button>';
+          }).join('')
+        + '</div></div>' + kropp;
+    }
+
+    host.addEventListener('click', function (e) {
+      var nav = e.target.closest('[data-sch]');
+      if (nav) {
+        if (nav.dataset.sch === 'idag') { visad = new Date(); visad.setHours(12, 0, 0, 0); rita(); }
+        else flytta(nav.dataset.sch === 'fram' ? 1 : -1);
+        return;
+      }
+      var byt = e.target.closest('[data-sch-lage]');
+      if (byt) { läge = byt.dataset.schLage; rita(); return; }
+
+      /* "+2 till" hoppar till dagvyn i stället för att fälla ut en
+         ruta i rutan — dagvyn finns redan och visar allt. */
+      var fler = e.target.closest('[data-dag-oppna]');
+      if (fler) {
+        visad = new Date(fler.dataset.dagOppna + 'T12:00:00');
+        läge = 'dag'; rita(); return;
+      }
+      var pass = e.target.closest('[data-pass]');
+      if (pass && typeof o.onOppna === 'function') {
+        var b = bokningar.filter(function (x) { return String(x.id) === pass.dataset.pass; })[0];
+        if (b) o.onOppna(b);
+      }
+    });
+
+    rita();
+
+    return {
+      rita: rita,
+      sättBokningar: function (nya) { bokningar = nya || []; rita(); },
+      gåTill: function (iso, nyttLäge) {
+        visad = new Date(iso + 'T12:00:00');
+        if (nyttLäge) läge = nyttLäge;
+        rita();
+      }
+    };
+  }
+
+  /* ============================================================
      SIDOMENYN
      Vyerna var en enda lång sida där allt låg framme samtidigt: man
      fick skrolla förbi läxor och rapporter för att komma åt sina
@@ -457,7 +721,7 @@ window.NXStudie = (function () {
   }
 
   return {
-    flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny,
+    flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     LAGE: LAGE, NIVA: NIVA,
     läxläge: läxläge, deadlineText: deadlineText,
     läxRad: läxRad, nivåMätare: nivåMätare,

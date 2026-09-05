@@ -1080,3 +1080,153 @@
   font-family:var(--f-mono);font-size:9px;font-weight:600;
   letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
 }
+
+/* ============================================================
+   SCHEMAT
+   Månad, vecka, dag — samma pass, tre sätt att titta. Månaden ger
+   överblick, veckan planering, dagen det som faktiskt händer nu.
+
+   Bokningsväljaren (#kalender) är kvar orörd. Den svarar på "när
+   kan vi ses?", det här svarar på "vad ligger redan?".
+   ============================================================ */
+.sch-topp{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:14px;flex-wrap:wrap;margin-bottom:16px;
+}
+.sch-titel{font-size:.98rem;font-weight:700;letter-spacing:-.02em;color:var(--bl)}
+.sch-idag{
+  width:auto !important;padding:0 11px;
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+}
+.sch-val{display:flex;gap:4px}
+.sch-val button{
+  border:1px solid var(--ln);border-radius:100px;
+  padding:6px 13px;font-size:.8rem;font-weight:600;
+  color:var(--bl-2);background:var(--pap);
+  transition:border-color .2s var(--e),color .2s var(--e),background .2s var(--e);
+}
+.sch-val button:hover{border-color:var(--ln-2);color:var(--bl)}
+.sch-val button[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--pap)}
+
+/* ---------- månad ---------- */
+.sch-manad{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.sch-manad .dow{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
+  text-align:center;padding-bottom:6px;
+}
+.sch-dag{
+  min-height:78px;border:1px solid var(--ln);border-radius:10px;
+  padding:6px 5px;display:flex;flex-direction:column;gap:3px;
+  background:var(--pap);
+}
+.sch-dag.tom{border-color:transparent;background:transparent}
+.sch-dag.idag{border-color:var(--acc)}
+.sch-datum{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.06em;color:var(--bl-2);padding-left:3px;
+}
+.sch-dag.idag .sch-datum{color:var(--acc)}
+
+/* Ett pass i månadsrutan: färgen bär status, texten bär tiden.
+   Ämnet får plats när rutan är bred nog och göms annars — bättre
+   än att bryta ett ord mitt itu i en 40px kolumn. */
+.sch-pass{
+  display:flex;align-items:center;gap:5px;width:100%;
+  border-radius:6px;padding:3px 5px;text-align:left;
+  background:var(--pap-2);
+  font-size:.72rem;line-height:1.25;color:var(--bl);
+  overflow:hidden;
+}
+.sch-pass:hover{background:var(--pap-3)}
+.sch-pass i{
+  width:4px;height:14px;border-radius:100px;flex:none;
+  background:var(--bl-3);
+}
+.sch-pass.onskad i{background:var(--ockra)}
+.sch-pass.bekraftad i{background:var(--mossa)}
+.sch-pass.genomford i{background:var(--bl-3)}
+.sch-pass.avbokad{opacity:.5}
+.sch-pass.avbokad i{background:var(--acc)}
+.sch-pass b{font-family:var(--f-mono);font-size:9px;font-weight:600;flex:none}
+.sch-pass span{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--bl-2);
+}
+@container (max-width:620px){.sch-pass span{display:none}}
+
+.sch-fler{
+  font-family:var(--f-mono);font-size:8.5px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--acc-text);
+  text-align:left;padding-left:5px;
+}
+
+/* ---------- vecka ---------- */
+.sch-vecka{display:flex;flex-direction:column;gap:2px}
+.sch-rad{
+  display:grid;grid-template-columns:58px 1fr;gap:14px;
+  padding:11px 0;border-bottom:1px solid var(--ln);align-items:start;
+}
+.sch-rad:last-child{border-bottom:none}
+.sch-rad.idag .sch-rad-dag b{color:var(--acc)}
+.sch-rad-dag{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
+  text-align:center;
+}
+.sch-rad-dag b{display:block;font-size:1.05rem;letter-spacing:-.02em;color:var(--bl);font-family:var(--f-sans)}
+.sch-rad-dag span{display:block;margin-top:2px}
+.sch-rad-pass{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sch-tom{color:var(--bl-3);font-size:.85rem}
+
+/* ---------- dag ---------- */
+.sch-lista{display:flex;flex-direction:column;gap:2px}
+.sch-full{
+  display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;
+  width:100%;text-align:left;
+  padding:13px 12px;border-radius:12px;
+  border:1px solid var(--ln);background:var(--pap);
+  transition:border-color .18s var(--e),background .18s var(--e);
+}
+.sch-full:hover{border-color:var(--ln-2);background:var(--pap-2)}
+.sch-full.avbokad{opacity:.55}
+.sch-full-tid{
+  font-family:var(--f-mono);font-size:.92rem;font-weight:600;
+  letter-spacing:.02em;color:var(--bl);
+  border-right:1px solid var(--ln);padding-right:14px;
+}
+.sch-full-vad b{display:block;font-size:.96rem;font-weight:600;letter-spacing:-.018em;color:var(--bl)}
+.sch-full-vad span{display:block;margin-top:3px;font-size:.82rem;color:var(--bl-2)}
+
+/* ---------- passet i detalj ---------- */
+.nx-passbox{max-width:520px}
+.pass-fakta{
+  margin-top:18px;border:1px solid var(--ln);border-radius:12px;overflow:hidden;
+}
+.pass-fakta-rad{
+  display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+  padding:11px 14px;border-bottom:1px solid var(--ln);
+}
+.pass-fakta-rad:last-child{border-bottom:none}
+.pass-fakta-rad span{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
+}
+.pass-fakta-rad b{font-size:.92rem;font-weight:600;color:var(--bl);text-align:right}
+.pass-block{margin-top:20px}
+.pass-block h6{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-2);
+  margin-bottom:8px;
+}
+.pass-block p{font-size:.9rem;line-height:1.6;color:var(--bl-2);white-space:pre-wrap}
+.pass-lank{
+  display:flex;justify-content:space-between;gap:12px;
+  padding:9px 0;border-bottom:1px solid var(--ln);
+  font-size:.88rem;color:var(--bl);
+}
+.pass-lank:last-child{border-bottom:none}
+.pass-lank span{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--bl-2);flex:none;
+}
