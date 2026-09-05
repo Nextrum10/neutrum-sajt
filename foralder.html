@@ -336,6 +336,13 @@
                           <div class="pay-field"><label for="bk-format">Format</label>
                             <select class="sel" id="bk-format"><option>Online</option><option>På plats</option></select>
                           </div>
+                          <div class="pay-field"><label for="bk-langd">Längd</label>
+                            <select class="sel" id="bk-langd">
+                              <option value="60">1 timme</option>
+                              <option value="120">2 timmar</option>
+                              <option value="180">3 timmar</option>
+                            </select>
+                          </div>
                         </div>
                         <div id="kalender"></div>
                         <div class="between" style="margin-top:20px">
@@ -581,7 +588,7 @@
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel']
@@ -1278,7 +1285,8 @@
 
     const ny = await NXStudie.flyttaRuta({
       datum: b.wanted_date, tid: b.wanted_time,
-      tillgang: tider.tillgang, blockerade: tider.blockerade, upptagna
+      tillgang: tider.tillgang, blockerade: tider.blockerade, upptagna,
+      minuter: b.duration_min || 60
     });
     if (!ny) return;
 
@@ -1299,31 +1307,63 @@
   });
 
   /* ============ bokning ============ */
+  /* Pass bokas i hela timmar eftersom vi fakturerar per timme. */
+  function timmarValda() {
+    return Math.max(1, Math.round((Number(($('#bk-langd') || {}).value) || 60) / 60));
+  }
+  function längdText(t) { return t === 1 ? '1 timme' : t + ' timmar'; }
+
   function uppdateraBokaKnapp() {
     const knapp = $('#boka-knapp'), sam = $('#boka-sammanfattning');
     if (!knapp) return;
     const st = S.kal && S.kal.state;
+
     if (!S.valtBarn) {
       knapp.disabled = true;
       sam.textContent = 'Lägg till ditt barn först.';
       return;
     }
+
+    /* Har studiehjälparen inte lagt in några tider finns inget att
+       boka. Förr fylldes kalendern med vardagar 15–19 som ingen
+       lovat, och familjen bokade in sig på en tid som fick avböjas i
+       efterhand. Nu står det rakt ut, med vägen vidare: fråga hen. */
+    if (!S.tillgangFinns) {
+      knapp.disabled = true;
+      sam.innerHTML = 'Er studiehjälpare har inte lagt in några tider än. '
+        + '<a href="#meddelanden" class="vy-mer" style="margin-top:0">Fråga när hen kan '
+        + '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>';
+      return;
+    }
+
     if (!st || !st.valtDatum || !st.valdTid) {
       knapp.disabled = true;
       sam.textContent = 'Välj ett datum och en tid.';
       return;
     }
+
+    const timmar = timmarValda();
     knapp.disabled = false;
-    sam.textContent = datumText(st.valtDatum) + ' kl. ' + st.valdTid + ' · ' + kr(NX.CFG.PRIS_PER_TIMME || 379);
+    sam.textContent = datumText(st.valtDatum) + ' kl. ' + st.valdTid
+      + ' · ' + längdText(timmar)
+      + ' · ' + kr((NX.CFG.PRIS_PER_TIMME || 379) * timmar);
   }
 
+  document.addEventListener('change', e => {
+    if (!e.target || e.target.id !== 'bk-langd') return;
+    if (S.kal) S.kal.sättMinuter(e.target.value);
+    uppdateraBokaKnapp();
+  });
+
   async function byggKalender() {
-    /* Kalendern visar studiehjälparens egna tider. Har hen inte lagt
-       in några gäller vardagar 15–19, som förut. */
+    /* Kalendern visar studiehjälparens egna tider — bara dem. Har hen
+       inte lagt in några finns inget att boka, och det är rätt: en
+       gissad tid är en tid någon får säga nej till. */
     const [upptagna, tider] = await Promise.all([
       NX.hämtaUpptagna(S.profil.matched_tutor_id),
       NX.hämtaTillganglighet(S.profil.matched_tutor_id)
     ]);
+    S.tillgangFinns = (tider.tillgang || []).length > 0;
     if (S.kal) {
       S.kal.sättUpptagna(upptagna);
       S.kal.sättTider(tider);
@@ -1335,6 +1375,7 @@
       upptagna,
       tillgang: tider.tillgang,
       blockerade: tider.blockerade,
+      minuter: timmarValda() * 60,
       onChange: uppdateraBokaKnapp
     });
   }
@@ -1355,14 +1396,16 @@
       format: $('#bk-format').value,
       wanted_date: st.valtDatum,
       wanted_time: st.valdTid,
-      duration_min: 60,
+      duration_min: Number($('#bk-langd').value) || 60,
       status: 'requested'
     });
     knapp.removeAttribute('aria-busy');
 
     if (error) {
-      if (error.code === '23505') {
-        säg(msg, 'Den tiden hann bli bokad. Välj en annan tid, kalendern är uppdaterad nu.', false);
+      /* 23505 = samma starttid, 23P01 = passet krockar med ett
+         annat som redan pågår. Samma sak för den som bokar. */
+      if (error.code === '23505' || error.code === '23P01') {
+        säg(msg, 'Den tiden hann bli bokad, eller krockar med ett annat pass. Välj en annan tid — kalendern är uppdaterad nu.', false);
         await byggKalender();
         S.kal.nollställ();
         uppdateraBokaKnapp();

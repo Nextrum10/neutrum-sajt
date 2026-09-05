@@ -387,9 +387,9 @@
                         </div>
                         <div class="pay-field"><label for="f-langd">Längd</label>
                           <select class="sel" id="f-langd">
-                            <option value="60">60 minuter</option>
-                            <option value="90">90 minuter</option>
-                            <option value="30">30 minuter</option>
+                            <option value="60">1 timme</option>
+                            <option value="120">2 timmar</option>
+                            <option value="180">3 timmar</option>
                           </select>
                         </div>
                         <div class="pay-field"><label for="f-upprepa">Upprepa</label>
@@ -1375,16 +1375,35 @@
   /* ============================================================
      FÖRESLÅ EN TID
      ============================================================ */
+  /* Pass bokas i hela timmar eftersom vi fakturerar per timme. */
+  function längdText(minuter) {
+    const t = Math.round((Number(minuter) || 60) / 60);
+    return t === 1 ? '1 timme' : t + ' timmar';
+  }
+
   function uppdateraFörslag() {
     const knapp = $('#forslag-knapp'), sam = $('#forslag-sammanfattning');
     const st = S.kal && S.kal.state;
     if (!S.aktivFamilj) { knapp.disabled = true; sam.textContent = 'Ingen familj matchad än.'; return; }
+
+    /* Kalendern bygger bara på dina egna tider nu — reservtiderna
+       15–19 är borta. Har du inte lagt in något finns inget att
+       föreslå, och det ska stå varför. */
+    if (!(S.tillgang || []).length) {
+      knapp.disabled = true;
+      sam.textContent = 'Lägg in dina tider under "Dina tider" först — familjen kan bara boka inom dem.';
+      return;
+    }
     if (!S.aktivElev) { knapp.disabled = true; sam.textContent = 'Familjen har inte lagt in sitt barn än — skriv till dem om det.'; return; }
     if (!st || !st.valtDatum || !st.valdTid) { knapp.disabled = true; sam.textContent = 'Välj ett datum och en tid.'; return; }
     knapp.disabled = false;
-    sam.textContent = datumText(st.valtDatum) + ' kl. ' + st.valdTid + ' · ' + $('#f-langd').value + ' min';
+    sam.textContent = datumText(st.valtDatum) + ' kl. ' + st.valdTid
+      + ' · ' + längdText($('#f-langd').value);
   }
-  $('#f-langd').addEventListener('change', uppdateraFörslag);
+  $('#f-langd').addEventListener('change', () => {
+    if (S.kal) S.kal.sättMinuter($('#f-langd').value);
+    uppdateraFörslag();
+  });
 
   async function byggKalender() {
     const upptagna = await NX.hämtaUpptagna(S.user.id);
@@ -1777,6 +1796,7 @@
       tid: b.wanted_time,
       tillgang: S.tillgang,
       blockerade: S.blockerade,
+      minuter: b.duration_min || 60,
       upptagna: await NX.hämtaUpptagna(S.user.id)
     });
     if (!ny) return;

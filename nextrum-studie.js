@@ -238,13 +238,27 @@ window.NXStudie = (function () {
       var msg = ruta.querySelector('#fl-msg');
 
       function fyllTider() {
-        var tider = NX.tiderFörDatum(dat.value, o.tillgang || [], o.blockerade || []);
-        /* Passets egen tid ska gå att behålla när man bara byter dag,
-           trots att den ligger i upptagna-listan. */
+        /* Längden följer med: ett tvåtimmarspass går inte att flytta
+           till en tid där bara en timme är ledig. */
+        var timmar = Math.max(1, Math.ceil((Number(o.minuter) || 60) / 60));
+        var tider = NX.tiderFörDatum(dat.value, o.tillgang || [], o.blockerade || [], o.minuter);
         var upptagna = o.upptagna || new Set();
+
+        function krockar(t) {
+          var h0 = Number(String(t).slice(0, 2));
+          for (var i = 0; i < timmar; i++) {
+            var h = String(h0 + i).padStart(2, '0') + ':00';
+            /* Passets egna timmar räknas inte som upptagna av det
+               själv — annars gick det inte att bara byta dag. */
+            if (dat.value === o.datum && h === o.tid) continue;
+            if (upptagna.has(dat.value + '|' + h)) return true;
+          }
+          return false;
+        }
+
         var val = tider.filter(function (t) {
           if (dat.value === o.datum && t === o.tid) return true;
-          return !upptagna.has(dat.value + '|' + t);
+          return !krockar(t);
         });
 
         if (!val.length) {
@@ -451,7 +465,10 @@ window.NXStudie = (function () {
       for (var d = 1; d <= dagar; d++) {
         var iso = isoFor(new Date(år, mån, d));
         var pass = förDag(iso);
-        ut += '<div class="sch-dag' + (iso === idag ? ' idag' : '') + '" data-dag="' + iso + '">'
+        /* data-sch-dag, inte data-dag: bokningskalendern i NX använder
+           data-dag på sina dagrutor, och sedan schemat hamnade i samma
+           sektion är en delad attributnamn en fälla som väntar. */
+        ut += '<div class="sch-dag' + (iso === idag ? ' idag' : '') + '" data-sch-dag="' + iso + '">'
           + '<span class="sch-datum">' + d + '</span>'
           + pass.slice(0, 2).map(chip).join('')
           + (pass.length > 2

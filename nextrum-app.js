@@ -384,23 +384,38 @@ const NX = (function () {
   /* ---------- kalender ----------
      Delas av bokningsflödet. onPick(isoDatum) körs vid klick.
      upptagna = Set med "YYYY-MM-DD|HH:MM". */
-  /* Standardtider när en studiehjälpare inte lagt in någon egen
-     tillgänglighet. Utan det här hade kalendern blivit helt tom för
-     alla som fanns innan tillgängligheten byggdes — vardagar efter
-     skolan är vad verksamheten faktiskt kört hittills. */
-  const STANDARDTIDER = ['15:00', '16:00', '17:00', '18:00', '19:00'];
+  /* Det fanns reservtider här: vardagar 15–19 när en studiehjälpare
+     inte lagt in något eget. De är borta med flit.
+
+     En gissning om när någon annan kan jobba hör inte hemma i ett
+     bokningssystem. Familjen kunde boka en tisdag kl. 18 hos någon
+     som aldrig sagt att den kunde då, och studiehjälparen fick säga
+     nej i efterhand. Nu gäller bara det som faktiskt lagts in — och
+     har ingen lagt in något finns inga tider, vilket vyerna säger
+     rakt ut i stället för att visa en tom kalender.
+
+     Det tog också bort helgspärren på köpet: reservtiderna hoppade
+     över lördag och söndag, men tutor_availability har alltid tagit
+     veckodag 0–6. Lägger studiehjälparen in en lördag går den att
+     boka. */
 
   const tim = t => Number(String(t).slice(0, 2));
   const tvåsiffrig = n => String(n).padStart(2, '0');
 
-  /* Vilka tider går att välja en viss dag?
+  /* Vilka tider går att BÖRJA ett pass en viss dag?
        · ligger dagen bakåt i tiden finns inga
        · är hela dagen spärrad finns inga
-       · annars: timmarna inom studiehjälparens fönster för den
-         veckodagen, minus enskilt spärrade timmar
-     Upptagna tider tas INTE bort här. De visas som gråa, för
-     "redan bokad" och "jobbar inte då" är två olika besked. */
-  function tiderFörDatum(iso, tillgang, blockerade) {
+       · har studiehjälparen inte lagt in den veckodagen finns inga
+       · annars: varje timme där HELA passet får plats i ett och
+         samma fönster, utan spärrad timme på vägen
+
+     Längden spelar roll, och det är hela poängen. Ett tretimmarspass
+     kan inte börja 18:00 i ett fönster som slutar 19:00 — förr
+     erbjöds den tiden ändå, och passet gick över kanten.
+
+     Upptagna tider tas INTE bort här. De visas som gråa, för "redan
+     bokad" och "jobbar inte då" är två olika besked. */
+  function tiderFörDatum(iso, tillgang, blockerade, minuter) {
     const idag = isoFor(new Date());
     if (iso < idag) return [];
 
@@ -408,21 +423,24 @@ const NX = (function () {
 
     const d = new Date(iso + 'T12:00:00');
     const veckodag = (d.getDay() + 6) % 7;          // 0 = måndag
+    const timmar = Math.max(1, Math.ceil((Number(minuter) || 60) / 60));
 
-    let tider;
-    if (tillgang && tillgang.length) {
-      const fönster = tillgang.filter(t => t.weekday === veckodag);
-      const ut = [];
-      fönster.forEach(f => {
-        for (let h = tim(f.start_time); h < tim(f.end_time); h++) ut.push(tvåsiffrig(h) + ':00');
-      });
-      tider = Array.from(new Set(ut)).sort();
-    } else {
-      tider = (veckodag <= 4) ? STANDARDTIDER.slice() : [];
-    }
+    const fönster = (tillgang || []).filter(t => t.weekday === veckodag);
+    if (!fönster.length) return [];
 
-    tider = tider.filter(t =>
-      !(blockerade || []).some(b => b.block_date === iso && b.block_time === t));
+    const spärrad = h => (blockerade || []).some(b =>
+      b.block_date === iso && b.block_time === tvåsiffrig(h) + ':00');
+
+    const ut = [];
+    fönster.forEach(f => {
+      const start = tim(f.start_time), slut = tim(f.end_time);
+      for (let h = start; h + timmar <= slut; h++) {
+        let ledig = true;
+        for (let i = 0; i < timmar; i++) if (spärrad(h + i)) { ledig = false; break; }
+        if (ledig) ut.push(tvåsiffrig(h) + ':00');
+      }
+    });
+    let tider = Array.from(new Set(ut)).sort();
 
     /* Idag räknas bara tider som ligger minst en timme fram — man
        bokar inte ett pass som börjar om tio minuter. */
@@ -439,7 +457,8 @@ const NX = (function () {
       visad: new Date(), valtDatum: null, valdTid: null,
       upptagna: opts.upptagna || new Set(),
       tillgang: opts.tillgang || [],
-      blockerade: opts.blockerade || []
+      blockerade: opts.blockerade || [],
+      minuter: opts.minuter || 60
     };
 
     host.innerHTML = `
@@ -455,15 +474,27 @@ const NX = (function () {
 
     const title = $('.cal-title', host), grid = $('.cal', host), slots = $('.slots', host);
 
+    /* Ett pass är upptaget om NÅGON av dess timmar krockar. Med bara
+       starttiden kollad gick det att boka 17:00 mitt i ett pass som
+       började 16:00 och höll på i två timmar. */
+    function upptagen(t) {
+      const timmar = Math.max(1, Math.ceil((Number(state.minuter) || 60) / 60));
+      const h0 = tim(t);
+      for (let i = 0; i < timmar; i++) {
+        if (state.upptagna.has(state.valtDatum + '|' + tvåsiffrig(h0 + i) + ':00')) return true;
+      }
+      return false;
+    }
+
     function ritaTider() {
       if (!state.valtDatum) { slots.innerHTML = ''; return; }
-      const tider = tiderFörDatum(state.valtDatum, state.tillgang, state.blockerade);
+      const tider = tiderFörDatum(state.valtDatum, state.tillgang, state.blockerade, state.minuter);
       if (!tider.length) {
         slots.innerHTML = '<p class="small" style="grid-column:1/-1;color:var(--muted)">Inga lediga tider den dagen.</p>';
         return;
       }
       slots.innerHTML = tider.map(t => {
-        const taken = state.upptagna.has(state.valtDatum + '|' + t);
+        const taken = upptagen(t);
         return `<button type="button" class="slot${taken ? ' taken' : ''}" ${taken ? 'disabled' : ''}
                   aria-pressed="${state.valdTid === t && !taken}" data-tid="${t}">${t}</button>`;
       }).join('');
@@ -489,7 +520,7 @@ const NX = (function () {
         const förbi = datum < idag;
         /* En dag är valbar när den faktiskt har en tid att erbjuda —
            helgregeln ligger nu i tillgängligheten i stället. */
-        const valbar = !förbi && tiderFörDatum(iso, state.tillgang, state.blockerade).length > 0;
+        const valbar = !förbi && tiderFörDatum(iso, state.tillgang, state.blockerade, state.minuter).length > 0;
         html += `<div class="day ${valbar ? 'avail' : 'off'}${state.valtDatum === iso ? ' sel' : ''}"
                    ${valbar ? `role="button" tabindex="0" data-dag="${iso}"` : ''}>${dag}</div>`;
       }
@@ -528,10 +559,22 @@ const NX = (function () {
         state.tillgang = t.tillgang || [];
         state.blockerade = t.blockerade || [];
         /* Ett valt datum kan ha blivit omöjligt av de nya tiderna. */
-        if (state.valtDatum && !tiderFörDatum(state.valtDatum, state.tillgang, state.blockerade).length) {
+        if (state.valtDatum && !tiderFörDatum(state.valtDatum, state.tillgang, state.blockerade, state.minuter).length) {
           state.valtDatum = null; state.valdTid = null;
         }
         rita();
+      },
+      /* Byter man längd kan den valda tiden ha blivit omöjlig — ett
+         tretimmarspass får inte plats där ett entimmes gjorde det. */
+      sättMinuter(m) {
+        state.minuter = Number(m) || 60;
+        const kvar = tiderFörDatum(state.valtDatum || '', state.tillgang, state.blockerade, state.minuter);
+        if (state.valdTid && (kvar.indexOf(state.valdTid) === -1 || upptagen(state.valdTid))) {
+          state.valdTid = null;
+        }
+        if (state.valtDatum && !kvar.length) { state.valtDatum = null; state.valdTid = null; }
+        rita();
+        return state;
       },
       nollställ() { state.valtDatum = null; state.valdTid = null; rita(); }
     };
