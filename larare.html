@@ -367,11 +367,68 @@
           <div id="schema"><div class="loading">Hämtar</div></div>
         </div>
 
-        <div class="split">
-          <div class="stack">
-                    <!-- ============ FÖRESLÅ EN TID ============ -->
+        <div class="stack">
+
                     <div class="dbox">
                       <h5>Föreslå en tid <em id="forslag-till"></em></h5>
+            <!-- Tiderna låg förr i en egen panel längre ned på sidan.
+                 Man fick veta att kalendern var tom och hänvisas till
+                 något man inte kunde se — nästan två tusen pixlar bort.
+                 Nu ligger de här, överst i samma ruta, öppna när de
+                 saknas och hopfällda med en sammanfattning när de finns. -->
+            <details class="vy-tider" id="tider-block">
+              <summary>
+                <span class="vy-tider-namn">Dina tider</span>
+                <span class="vy-tider-sam" id="tid-sammanfattning"></span>
+                <svg class="vy-tider-pil" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg>
+              </summary>
+              <div class="vy-tider-kropp">
+                  <p class="xsmall" style="color:var(--muted-2);margin-bottom:16px;line-height:1.6">
+                    Familjen kan bara boka inom de här tiderna — och bara inom dem. Lägger du inte in några kan ingen boka.
+                  </p>
+
+                  <form id="tillg-form">
+                    <div class="vy-form-rad">
+                      <div class="pay-field">
+                        <label for="tg-dag">Dag</label>
+                        <select class="sel" id="tg-dag">
+                          <option value="0">Måndag</option><option value="1">Tisdag</option>
+                          <option value="2">Onsdag</option><option value="3">Torsdag</option>
+                          <option value="4">Fredag</option><option value="5">Lördag</option>
+                          <option value="6">Söndag</option>
+                        </select>
+                      </div>
+                      <div class="pay-field"><label for="tg-fran">Från</label><select class="sel" id="tg-fran"></select></div>
+                      <div class="pay-field"><label for="tg-till">Till</label><select class="sel" id="tg-till"></select></div>
+                    </div>
+                    <div class="vy-knapprad">
+                      <button class="btn btn-primary btn-sm" type="submit" id="tg-spara">Lägg till tid</button>
+                    </div>
+                    <p class="ok-msg" id="tg-msg"></p>
+                  </form>
+
+                  <div id="tillg-lista" style="margin-top:18px"></div>
+
+                  <div class="vy-fall">
+                    <h6 style="font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);margin-bottom:14px">Spärra en dag eller tid</h6>
+                    <form id="sparr-form">
+                      <div class="vy-form-rad">
+                        <div class="pay-field"><label for="sp-datum">Datum</label><input class="inp" id="sp-datum" type="date"></div>
+                        <div class="pay-field">
+                          <label for="sp-tid">Vad spärras</label>
+                          <select class="sel" id="sp-tid"><option value="">Hela dagen</option></select>
+                        </div>
+                        <div class="pay-field"><label for="sp-skal">Skäl <span style="font-weight:400;color:var(--muted-2)">(bara du ser det)</span></label><input class="inp" id="sp-skal" placeholder="t.ex. prov"></div>
+                      </div>
+                      <div class="vy-knapprad">
+                        <button class="btn btn-ghost btn-sm" type="submit" id="sp-spara">Spärra</button>
+                      </div>
+                      <p class="ok-msg" id="sp-msg"></p>
+                    </form>
+                    <div id="sparr-lista" style="margin-top:16px"></div>
+                  </div>
+              </div>
+            </details>
                       <p class="xsmall" style="color:var(--muted-2);margin-bottom:18px;line-height:1.6">
                         Familjen får förslaget i sin vy och svarar med ett klick. Tider som redan är bokade hos dig går inte att välja.
                       </p>
@@ -412,57 +469,6 @@
                       </div>
                       <p class="ok-msg" id="forslag-msg"></p>
                     </div>
-          </div>
-          <div class="stack">
-                    <!-- ============ DINA TIDER ============ -->
-                    <div class="dbox">
-                      <h5>Dina tider <em id="tid-antal"></em></h5>
-                      <p class="xsmall" style="color:var(--muted-2);margin-bottom:16px;line-height:1.6">
-                        Familjen kan bara boka inom de här tiderna. Lägger du inte in några gäller vardagar 15–19.
-                      </p>
-
-                      <form id="tillg-form">
-                        <div class="vy-form-rad">
-                          <div class="pay-field">
-                            <label for="tg-dag">Dag</label>
-                            <select class="sel" id="tg-dag">
-                              <option value="0">Måndag</option><option value="1">Tisdag</option>
-                              <option value="2">Onsdag</option><option value="3">Torsdag</option>
-                              <option value="4">Fredag</option><option value="5">Lördag</option>
-                              <option value="6">Söndag</option>
-                            </select>
-                          </div>
-                          <div class="pay-field"><label for="tg-fran">Från</label><select class="sel" id="tg-fran"></select></div>
-                          <div class="pay-field"><label for="tg-till">Till</label><select class="sel" id="tg-till"></select></div>
-                        </div>
-                        <div class="vy-knapprad">
-                          <button class="btn btn-primary btn-sm" type="submit" id="tg-spara">Lägg till tid</button>
-                        </div>
-                        <p class="ok-msg" id="tg-msg"></p>
-                      </form>
-
-                      <div id="tillg-lista" style="margin-top:18px"></div>
-
-                      <div class="vy-fall">
-                        <h6 style="font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);margin-bottom:14px">Spärra en dag eller tid</h6>
-                        <form id="sparr-form">
-                          <div class="vy-form-rad">
-                            <div class="pay-field"><label for="sp-datum">Datum</label><input class="inp" id="sp-datum" type="date"></div>
-                            <div class="pay-field">
-                              <label for="sp-tid">Vad spärras</label>
-                              <select class="sel" id="sp-tid"><option value="">Hela dagen</option></select>
-                            </div>
-                            <div class="pay-field"><label for="sp-skal">Skäl <span style="font-weight:400;color:var(--muted-2)">(bara du ser det)</span></label><input class="inp" id="sp-skal" placeholder="t.ex. prov"></div>
-                          </div>
-                          <div class="vy-knapprad">
-                            <button class="btn btn-ghost btn-sm" type="submit" id="sp-spara">Spärra</button>
-                          </div>
-                          <p class="ok-msg" id="sp-msg"></p>
-                        </form>
-                        <div id="sparr-lista" style="margin-top:16px"></div>
-                      </div>
-                    </div>
-          </div>
         </div>
       </section>
       <section class="vy-sek" data-sek="lektioner" hidden>
@@ -1391,7 +1397,7 @@
        föreslå, och det ska stå varför. */
     if (!(S.tillgang || []).length) {
       knapp.disabled = true;
-      sam.textContent = 'Lägg in dina tider under "Dina tider" först — familjen kan bara boka inom dem.';
+      sam.textContent = 'Lägg in dina tider högst upp i rutan först — familjen kan bara boka inom dem.';
       return;
     }
     if (!S.aktivElev) { knapp.disabled = true; sam.textContent = 'Familjen har inte lagt in sitt barn än — skriv till dem om det.'; return; }
@@ -1524,14 +1530,24 @@
     if (S.kal) S.kal.sättTider(t);
 
     const host = $('#tillg-lista');
-    $('#tid-antal').textContent = !t.tillgang.length ? 'standard'
-      : (t.tillgang.length === 1 ? '1 tid' : t.tillgang.length + ' tider');
+    const block = $('#tider-block');
+    const sam = $('#tid-sammanfattning');
 
+    /* Sammanfattningen står i den hopfällda rubriken, så man ser sina
+       tider utan att öppna. Saknas de fälls blocket ut av sig självt —
+       det är det man måste göra innan något annat i rutan fungerar. */
     if (!t.tillgang.length) {
-      host.innerHTML = tomt('Inga egna tider', 'Just nu gäller vardagar 15–19. Lägg till en tid ovanför för att styra själv.');
+      sam.textContent = 'inga inlagda än';
+      if (block) { block.open = true; block.classList.add('tom'); }
+      host.innerHTML = tomt('Inga tider inlagda',
+        'Ingen kan boka förrän du lagt in när du kan. Lägg till din första tid ovanför.');
     } else {
       const sorterad = t.tillgang.slice().sort((a, b) =>
         a.weekday - b.weekday || String(a.start_time).localeCompare(String(b.start_time)));
+      sam.textContent = sorterad.map(r =>
+        DAGNAMN[r.weekday].slice(0, 3) + ' ' + String(r.start_time).slice(0, 5)
+        + '–' + String(r.end_time).slice(0, 5)).join(' · ');
+      if (block) block.classList.remove('tom');
       host.innerHTML = sorterad.map(rad =>
         '<div class="mat" style="grid-template-columns:1fr auto">'
         + '<span class="mat-vad"><b>' + esc(DAGNAMN[rad.weekday]) + '</b>'

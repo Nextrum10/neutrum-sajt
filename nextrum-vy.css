@@ -1230,3 +1230,52 @@
   font-family:var(--f-mono);font-size:9px;font-weight:600;
   letter-spacing:.08em;text-transform:uppercase;color:var(--bl-2);flex:none;
 }
+
+/* ============================================================
+   DINA TIDER — inbakat i förslagsrutan
+   Tiderna låg i en egen panel längre ned. Man fick veta att
+   kalendern var tom och hänvisas till något man inte kunde se.
+   Nu sitter de överst i samma ruta: öppna när de saknas, hopfällda
+   med en sammanfattning när de finns.
+   ============================================================ */
+.vy-tider{
+  border:1px solid var(--ln);border-radius:14px;
+  background:var(--pap-2);
+  margin-bottom:clamp(18px,2.2vw,26px);
+}
+.vy-tider > summary{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;cursor:pointer;
+  list-style:none;
+  border-radius:14px;
+}
+.vy-tider > summary::-webkit-details-marker{display:none}
+.vy-tider > summary:hover{background:var(--pap-3)}
+.vy-tider-namn{
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl);
+  flex:none;
+}
+.vy-tider-sam{
+  flex:1;min-width:0;
+  font-size:.85rem;color:var(--bl-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.vy-tider-pil{
+  width:12px;height:12px;flex:none;
+  fill:none;stroke:var(--bl-2);stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .2s var(--e);
+}
+.vy-tider[open] > summary .vy-tider-pil{transform:rotate(180deg)}
+.vy-tider-kropp{
+  padding:4px 16px 18px;
+  border-top:1px solid var(--ln);
+  margin-top:2px;
+}
+
+/* Utan tider fungerar ingenting nedanför. Då ska rutan säga det med
+   färg, inte bara med text. */
+.vy-tider.tom{border-color:var(--acc-line);background:var(--acc-soft)}
+.vy-tider.tom .vy-tider-sam{color:var(--acc-text);font-weight:600}
+.vy-tider.tom .vy-tider-pil{stroke:var(--acc-text)}
