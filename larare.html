@@ -265,6 +265,15 @@
         </div>
         <div class="split">
           <div class="stack">
+            <div class="dbox">
+              <h5>Mina elever <em id="elever-antal"></em></h5>
+              <div class="vy-sok">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.75" cy="8.75" r="5.25"/><path d="M12.6 12.6 16.5 16.5"/></svg>
+                <input class="inp" id="elev-sok" type="search" placeholder="Sök namn, ämne, skola eller familj" aria-label="Sök elev" autocomplete="off">
+              </div>
+              <div id="elev-lista"><div class="loading">Hämtar</div></div>
+            </div>
+
                     <!-- ============ ELEVENS UPPGIFTER ============ -->
                     <div class="dbox">
                       <h5>Om eleven</h5>
@@ -300,6 +309,11 @@
                     </div>
           </div>
           <div class="stack">
+            <div class="dbox">
+              <h5>Elevens läge <em id="elev-lage-vem"></em></h5>
+              <div id="elev-oversikt"><div class="loading">Hämtar</div></div>
+            </div>
+
                     <!-- ============ KUNSKAPSOMRÅDEN ============ -->
                     <div class="dbox">
                       <h5>Kunskapsområden <em id="prg-antal"></em></h5>
@@ -667,18 +681,32 @@
                   <p class="ok-msg" id="tr-msg"></p>
                 </div>
       </section>
-      <section class="vy-sek vy-sek-smal" data-sek="statistik" hidden>
+      <section class="vy-sek" data-sek="statistik" hidden>
         <div class="vy-sek-topp">
           <div>
             <h2>Min statistik</h2>
-            <p>Genomförda pass och vad de gett.</p>
+            <p>Genomförda pass, timmar och elever. Allt räknat på riktiga pass — ett pass räknas när rapporten är skriven.</p>
           </div>
         </div>
-                <!-- ============ TIMMAR ============ -->
-                <div class="dbox">
-                  <h5>Timmar <em>bara genomförda pass</em></h5>
-                  <div id="timmar"><div class="loading">Hämtar</div></div>
-                </div>
+        <div class="stack">
+
+          <div class="dbox">
+            <h5>I siffror</h5>
+            <div id="stat-tal"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <div class="dbox">
+            <h5>Pass över tid <em>senaste sex månaderna</em></h5>
+            <div id="stat-graf"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- ============ TIMMAR ============ -->
+          <div class="dbox">
+            <h5>Timmar <em>bara genomförda pass</em></h5>
+            <div id="timmar"><div class="loading">Hämtar</div></div>
+          </div>
+
+        </div>
       </section>
       <section class="vy-sek vy-sek-smal" data-sek="ersattning" hidden>
         <div class="vy-sek-topp">
@@ -833,7 +861,7 @@
     elever: [], aktivElev: null,
     bokningar: [], trad: null, kal: null, olästa: {},
     minAvatar: null, matTyp: 'fil', tillgang: [], blockerade: [],
-    laxor: [], avatarer: {}, sido: null
+    laxor: [], avatarer: {}, sido: null, progressAntal: 0
   };
 
   const elev = () => S.elever.find(e => e.id === S.aktivElev) || null;
@@ -942,6 +970,7 @@
     if (error) { console.warn(error.message); return; }
     S.elever = data || [];
     $('#kpi-elever').textContent = S.elever.length;
+    ritaStatistik();
   }
 
   /* Elevlistan visar bara den familj man jobbar med just nu. */
@@ -1069,6 +1098,8 @@
   /* Allt som hör till EN elev laddas om på ett ställe. */
   async function byggElev() {
     ritaElevProfil();
+    ritaElevLista();
+    ritaElevOversikt();
     fyllElevFormulär();
     fyllPassVal();
     await Promise.all([laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPlanIFormulär()]);
@@ -1176,6 +1207,8 @@
     const öppna = data.filter(h => h.status !== 'klar').length;
     $('#lax-antal').textContent = öppna ? öppna + ' öppna' : 'alla klara';
     ritaÖvLaxor();
+    ritaElevLista();
+    ritaElevOversikt();
 
     host.innerHTML = data.map(h => NXStudie.läxRad(h, {
       atgarder: '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
@@ -1243,7 +1276,11 @@
   async function laddaProgress() {
     const host = $('#prg-lista');
     $('#prg-antal').textContent = '';
-    if (!S.aktivElev) { host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp.'); return; }
+    if (!S.aktivElev) {
+      S.progressAntal = 0;
+      host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp.');
+      return;
+    }
 
     host.innerHTML = laddar();
     const { data, error } = await supa
@@ -1253,9 +1290,13 @@
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta områdena', felText(error)); return; }
     if (!data.length) {
+      S.progressAntal = 0;
       host.innerHTML = tomt('Inga områden än', 'Lägg till det första ovanför — det är så familjen ser att det går framåt.');
+      ritaElevOversikt();
       return;
     }
+    S.progressAntal = data.length;
+    ritaElevOversikt();
     $('#prg-antal').textContent = data.length + ' st';
     host.innerHTML = NXStudie.progressPerÄmne(data, {
       atgarder: null
@@ -1641,6 +1682,7 @@
     $('#kpi-kommande').textContent = kommande;
     $('#pass-antal').textContent = S.bokningar.length ? S.bokningar.length + ' st' : '';
     ritaNästaPass();
+    ritaStatistik();
 
     ritaNotiser();
 
@@ -2404,6 +2446,201 @@
       location.href = res.data.url;
     });
   });
+
+  /* ============================================================
+     MINA ELEVER
+     Rullgardinen i kontextraden visar bara den valda familjens barn.
+     Listan här visar alla, och söker på det man faktiskt minns: ett
+     namn, ett ämne, en skola. Väljer man en elev ur en annan familj
+     byter den familj också — annars vore det två handgrepp för en
+     sak, och det är just sådant den här ombyggnaden ska bort med.
+     ============================================================ */
+  function elevTräffar() {
+    const fält = $('#elev-sok');
+    const q = ((fält && fält.value) || '').trim().toLowerCase();
+    if (!q) return S.elever;
+    return S.elever.filter(e => {
+      const familj = S.familjer.find(f => f.id === e.parent_id);
+      return [e.name, e.grade, e.school, (e.subjects || []).join(' '),
+              familj && familj.full_name]
+        .filter(Boolean).join(' ').toLowerCase().includes(q);
+    });
+  }
+
+  function ritaElevLista() {
+    const host = $('#elev-lista');
+    if (!host) return;
+    $('#elever-antal').textContent = S.elever.length ? S.elever.length + ' st' : '';
+
+    if (!S.elever.length) {
+      host.innerHTML = tomt('Inga elever än',
+        'Familjen lägger in sitt barn i sin egen vy. Skriv till dem om det dröjer.');
+      return;
+    }
+    const träff = elevTräffar();
+    if (!träff.length) {
+      host.innerHTML = tomt('Ingen elev matchar', 'Prova ett annat ord, eller töm sökrutan.');
+      return;
+    }
+
+    host.innerHTML = '<div class="elev-lista">' + träff.map(e => {
+      const familj = S.familjer.find(f => f.id === e.parent_id);
+      const under = [e.grade, e.school, familj && (familj.full_name || '').split(' ')[0]]
+        .filter(Boolean).join(' · ');
+      /* Läxsiffran finns bara för den valda eleven — S.laxor rymmer
+         en elev i taget, och att hämta alla vore en fråga per rad. */
+      const öppna = e.id === S.aktivElev
+        ? (S.laxor || []).filter(h => h.status !== 'klar').length : 0;
+      return '<button type="button" class="elev-kort" data-elev="' + esc(e.id) + '"'
+        + ' aria-pressed="' + (e.id === S.aktivElev) + '">'
+        + M.avatar(e.name, null, { liten: true })
+        + '<span class="elev-kort-text"><b>' + esc(e.name) + '</b>'
+        + (under ? '<span>' + esc(under) + '</span>' : '') + '</span>'
+        + (öppna ? '<span class="elev-kort-tal">' + öppna + ' läx'
+                 + (öppna > 1 ? 'or' : 'a') + '</span>' : '')
+        + '</button>';
+    }).join('') + '</div>';
+  }
+
+  /* Det man vill veta innan ett pass, samlat: hur många pass som
+     ligger framför, hur många som är gjorda, vad som är olöst. */
+  function ritaElevOversikt() {
+    const host = $('#elev-oversikt');
+    if (!host) return;
+    const e = elev();
+    $('#elev-lage-vem').textContent = e ? (e.name || '').split(' ')[0] : '';
+    if (!e) {
+      host.innerHTML = tomt('Ingen elev vald', 'Välj en elev i listan bredvid.');
+      return;
+    }
+
+    const idag = isoFor(new Date());
+    const hens = S.bokningar.filter(b => b.student_id === e.id);
+    const ordning = b => b.wanted_date + (b.wanted_time || '');
+    const kommande = hens
+      .filter(b => b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed'))
+      .sort((a, b) => ordning(a).localeCompare(ordning(b)));
+    const tidigare = hens
+      .filter(b => b.status === 'completed')
+      .sort((a, b) => ordning(b).localeCompare(ordning(a)));
+    const öppna = (S.laxor || []).filter(h => h.status !== 'klar').length;
+
+    const rad = b => NXKontakt.passRad(b, {
+      under: [b.format, (b.duration_min || 60) + ' min'].filter(Boolean).join(' · ')
+    });
+
+    host.innerHTML =
+        '<div class="elev-tal">'
+      + '<div><b>' + kommande.length + '</b><span>Kommande pass</span></div>'
+      + '<div><b>' + tidigare.length + '</b><span>Genomförda pass</span></div>'
+      + '<div><b>' + öppna + '</b><span>Öppna läxor</span></div>'
+      + '<div><b>' + (S.progressAntal || 0) + '</b><span>Kunskapsområden</span></div>'
+      + '</div>'
+      + '<p class="elev-rubrik">Kommande</p>'
+      + (kommande.length
+          ? kommande.slice(0, 3).map(rad).join('')
+          : '<div class="empty" style="padding:16px 0">Inga inbokade pass.</div>')
+      + '<p class="elev-rubrik">Tidigare</p>'
+      + (tidigare.length
+          ? tidigare.slice(0, 3).map(rad).join('')
+          : '<div class="empty" style="padding:16px 0">Inga genomförda pass än.</div>');
+  }
+
+  document.addEventListener('input', e => {
+    if (e.target && e.target.id === 'elev-sok') ritaElevLista();
+  });
+
+  document.addEventListener('click', async e => {
+    const kort = e.target.closest('[data-elev]');
+    if (!kort) return;
+    const id = kort.dataset.elev;
+    if (id === S.aktivElev) return;
+    const vald = S.elever.find(x => x.id === id);
+    if (!vald) return;
+
+    const bytFamilj = vald.parent_id !== S.aktivFamilj;
+    S.aktivFamilj = vald.parent_id;
+    S.aktivElev = id;
+
+    if (bytFamilj) {
+      S.olästa = await NXKontakt.olästa(S.user.id);
+      fyllElevväljare();
+      S.aktivElev = id;
+      $('#elev-val').value = id;
+      await byggFamilj();
+    } else {
+      $('#elev-val').value = id;
+    }
+    await byggElev();
+  });
+
+  /* ============================================================
+     STATISTIK
+     Allt räknas ur S.bokningar, alltså ur riktiga pass. Ingen siffra
+     här är påhittad eller uppskattad — står det 12 så finns det tolv
+     rapporterade pass i databasen.
+
+     "Aktiv elev" betyder ett pass de senaste 60 dagarna, framåt eller
+     bakåt. En elev som haft uppehåll över sommaren ska inte räknas
+     som borta, men en som slutat i våras ska inte räknas som kvar.
+     ============================================================ */
+  var AKTIV_DAGAR = 60;
+
+  function ritaStatistik() {
+    const tal = $('#stat-tal'), graf = $('#stat-graf');
+    if (!tal) return;
+
+    const genomforda = S.bokningar.filter(b => b.status === 'completed');
+    const minuter = genomforda.reduce((a, b) => a + Number(b.duration_min || 60), 0);
+
+    const grans = new Date();
+    grans.setDate(grans.getDate() - AKTIV_DAGAR);
+    const gransIso = isoFor(grans);
+    const aktiva = new Set(
+      S.bokningar
+        .filter(b => b.status !== 'cancelled' && b.wanted_date >= gransIso && b.student_id)
+        .map(b => b.student_id)
+    );
+
+    tal.innerHTML = '<div class="stat-tal">'
+      + '<div><b>' + genomforda.length + '</b><span>Genomförda pass</span></div>'
+      + '<div><b>' + NXBetalning.timmar(minuter).replace(' h', '') + '</b><span>Undervisade timmar</span></div>'
+      + '<div><b>' + S.elever.length + '</b><span>Elever</span></div>'
+      + '<div><b>' + aktiva.size + '</b><span>Aktiva elever</span></div>'
+      + '</div>';
+
+    /* Sex månader bakåt, alltid sex staplar även när några är tomma.
+       En graf som byter bredd med datan går inte att jämföra med sig
+       själv från en månad till nästa. */
+    const månader = [];
+    const nu = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
+      månader.push({
+        nyckel: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
+        namn: NX.MANADER[d.getMonth()].slice(0, 3),
+        antal: 0
+      });
+    }
+    genomforda.forEach(b => {
+      const nyckel = String(b.wanted_date || '').slice(0, 7);
+      const m = månader.find(x => x.nyckel === nyckel);
+      if (m) m.antal++;
+    });
+
+    const hogst = Math.max(1, ...månader.map(m => m.antal));
+    graf.innerHTML = '<div class="graf">' + månader.map((m, i) =>
+        '<div class="graf-stapel' + (i === månader.length - 1 ? ' nu' : '') + '">'
+      + '<b>' + m.antal + '</b>'
+      + '<i style="height:' + Math.round((m.antal / hogst) * 100) + '%"></i>'
+      + '<span>' + esc(m.namn) + '</span>'
+      + '</div>').join('') + '</div>'
+      + '<p class="graf-not">'
+      + (genomforda.length
+          ? 'Bara rapporterade pass räknas. Skriver du rapporten senare flyttas passet till den månad det hölls, inte den månad du skrev.'
+          : 'Inga rapporterade pass än — grafen fylls i när du skrivit din första rapport.')
+      + '</p>';
+  }
 
   function visaFel(fel, sammanhang) {
     console.error('Nextrum:', sammanhang || '', fel);

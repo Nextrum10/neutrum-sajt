@@ -956,3 +956,127 @@
 .bet-post:first-child{padding-top:0}
 .bet-post:last-child{border-bottom:none;padding-bottom:0}
 .bet-post .bet{padding:0;border-bottom:none}
+
+/* ============================================================
+   ELEVLISTAN
+   Rullgardinen visade bara namnen på den familj man råkade ha vald.
+   Listan visar alla, med det man faktiskt söker på: ämne, skola,
+   familj. Att välja en elev ur en annan familj byter familj också —
+   annars hade man fått leta i två steg för att göra en sak.
+   ============================================================ */
+.vy-sok{position:relative;margin-bottom:14px}
+.vy-sok input{padding-left:38px}
+.vy-sok svg{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  width:15px;height:15px;pointer-events:none;
+  fill:none;stroke:var(--bl-3);stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+
+.elev-lista{display:flex;flex-direction:column;gap:2px}
+.elev-kort{
+  display:flex;align-items:center;gap:13px;width:100%;
+  padding:11px 12px;border-radius:12px;text-align:left;
+  background:transparent;border:1px solid transparent;
+  transition:background .18s var(--e),border-color .18s var(--e);
+}
+.elev-kort:hover{background:var(--pap-2)}
+.elev-kort[aria-pressed="true"]{
+  background:var(--pap-2);border-color:var(--ln-2);
+}
+.elev-kort-text{min-width:0;flex:1}
+.elev-kort-text b{
+  display:block;font-size:.94rem;font-weight:600;
+  letter-spacing:-.014em;color:var(--bl);
+}
+.elev-kort-text span{
+  display:block;margin-top:2px;font-size:.82rem;color:var(--bl-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.elev-kort-tal{
+  flex:none;font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
+  border:1px solid var(--ln);border-radius:100px;padding:4px 9px;
+}
+
+/* ------------------------------------------------------------
+   ELEVENS LÄGE
+   Siffrorna man vill ha före ett pass, på ett ställe.
+   ------------------------------------------------------------ */
+.elev-tal{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:1px;background:var(--ln);
+  border:1px solid var(--ln);border-radius:14px;overflow:hidden;
+  margin-bottom:18px;
+}
+.elev-tal div{background:var(--pap);padding:14px 16px}
+.elev-tal b{
+  display:block;font-size:1.4rem;font-weight:700;
+  letter-spacing:-.035em;color:var(--bl);line-height:1;
+}
+.elev-tal span{
+  display:block;margin-top:7px;
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
+}
+.elev-rubrik{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-2);
+  margin:20px 0 10px;
+}
+.elev-rubrik:first-child{margin-top:0}
+
+/* ============================================================
+   STATISTIK
+   Staplarna är rena div:ar med en höjd i procent. Ett diagrambibliotek
+   för sex staplar vore mer kod än diagrammet, och skulle dessutom
+   komma med egna färger som inte hör hemma i paletten.
+   ============================================================ */
+.graf{
+  display:flex;align-items:flex-end;gap:clamp(6px,1.4vw,14px);
+  height:180px;margin-top:4px;
+}
+.graf-stapel{
+  flex:1;min-width:0;height:100%;
+  display:flex;flex-direction:column;justify-content:flex-end;gap:8px;
+}
+.graf-stapel i{
+  display:block;width:100%;
+  background:var(--mossa);border-radius:7px 7px 0 0;
+  min-height:3px;
+  transition:background .18s var(--e);
+}
+.graf-stapel.nu i{background:var(--acc)}
+.graf-stapel b{
+  display:block;text-align:center;
+  font-size:.92rem;font-weight:700;letter-spacing:-.02em;color:var(--bl);
+  line-height:1;
+}
+.graf-stapel span{
+  display:block;text-align:center;
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--bl-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.graf-not{
+  margin-top:16px;font-size:.83rem;line-height:1.6;color:var(--bl-2);
+}
+
+/* Samma rutnät som elevens läge, men fyra tal i bredd när det finns
+   plats — statistiken är hela panelens ärende, inte en detalj i den. */
+.stat-tal{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:1px;background:var(--ln);
+  border:1px solid var(--ln);border-radius:14px;overflow:hidden;
+}
+@container (min-width:520px){.stat-tal{grid-template-columns:repeat(4,1fr)}}
+.stat-tal div{background:var(--pap);padding:16px 18px}
+.stat-tal b{
+  display:block;font-size:clamp(1.35rem,2.6vw,1.75rem);font-weight:700;
+  letter-spacing:-.04em;color:var(--bl);line-height:1;
+}
+.stat-tal span{
+  display:block;margin-top:8px;
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
+}

@@ -371,14 +371,28 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Min utveckling</h2>
-            <p>Kunskapsområden och hur de rör sig.</p>
+            <p>Kunskapsområden, avklarade uppgifter och hur det rört sig över tid. Allt räknat på riktiga pass och riktiga läxor.</p>
           </div>
         </div>
-                <!-- ============ UTVECKLING ============ -->
-                <div class="dbox">
-                  <h5>Utveckling <em id="prg-antal"></em></h5>
-                  <div id="prg-lista"><div class="loading">Hämtar</div></div>
-                </div>
+        <div class="stack">
+
+          <div class="dbox">
+            <h5>I siffror</h5>
+            <div id="stat-tal"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <div class="dbox">
+            <h5>Pass över tid <em>senaste sex månaderna</em></h5>
+            <div id="stat-graf"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- ============ UTVECKLING ============ -->
+          <div class="dbox">
+            <h5>Utveckling <em id="prg-antal"></em></h5>
+            <div id="prg-lista"><div class="loading">Hämtar</div></div>
+          </div>
+
+        </div>
       </section>
       <section class="vy-sek" data-sek="material" hidden>
         <div class="vy-sek-topp">
@@ -562,7 +576,7 @@
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], olästaAntal: 0, plan: null, sido: null };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0 };
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel']
@@ -864,6 +878,7 @@
     S.laxor = data;
     ritaNotiser();
     ritaÖvLaxor();
+    ritaStatistik();
 
     const öppna = data.filter(h => h.status !== 'klar').length;
     $('#lax-antal').textContent = öppna ? öppna + ' att göra' : 'allt klart';
@@ -910,10 +925,14 @@
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta utvecklingen', felText(error)); return; }
     if (!data.length) {
+      S.progressAntal = 0;
+      ritaStatistik();
       host.innerHTML = tomt('Inget att visa än',
         'Efter några pass fyller er studiehjälpare i vilka områden som sitter och vilka som behöver mer träning.');
       return;
     }
+    S.progressAntal = data.length;
+    ritaStatistik();
     $('#prg-antal').textContent = data.length + ' områden';
     host.innerHTML = NXStudie.progressPerÄmne(data, {});
   }
@@ -1142,6 +1161,7 @@
     S.bokningar = data || [];
     ritaNotiser();
     ritaNästaPass();
+    ritaStatistik();
     if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Välj en tid i kalendern nedanför.'); return; }
 
     const idag = new Date().toISOString().slice(0, 10);
@@ -1540,6 +1560,59 @@
         + B.radLista(per[f.id])
         + '</div>';
     }).join('');
+  }
+
+  /* ============================================================
+     I SIFFROR
+     Allt räknas ur passen och läxorna som faktiskt finns. Ingen
+     siffra är uppskattad: står det tre avklarade läxor så är tre
+     läxor avbockade i databasen.
+     ============================================================ */
+  function ritaStatistik() {
+    const tal = $('#stat-tal'), graf = $('#stat-graf');
+    if (!tal) return;
+
+    const genomforda = S.bokningar.filter(b => b.status === 'completed');
+    const klara = (S.laxor || []).filter(h => h.status === 'klar').length;
+    const öppna = (S.laxor || []).filter(h => h.status !== 'klar').length;
+
+    tal.innerHTML = '<div class="stat-tal">'
+      + '<div><b>' + genomforda.length + '</b><span>Genomförda pass</span></div>'
+      + '<div><b>' + klara + '</b><span>Avklarade läxor</span></div>'
+      + '<div><b>' + öppna + '</b><span>Kvar att göra</span></div>'
+      + '<div><b>' + (S.progressAntal || 0) + '</b><span>Kunskapsområden</span></div>'
+      + '</div>';
+
+    /* Alltid sex staplar, även när några är tomma. En graf som byter
+       bredd med datan går inte att jämföra med sig själv i nästa
+       månad. */
+    const månader = [];
+    const nu = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
+      månader.push({
+        nyckel: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
+        namn: NX.MANADER[d.getMonth()].slice(0, 3),
+        antal: 0
+      });
+    }
+    genomforda.forEach(b => {
+      const m = månader.find(x => x.nyckel === String(b.wanted_date || '').slice(0, 7));
+      if (m) m.antal++;
+    });
+
+    const hogst = Math.max(1, ...månader.map(m => m.antal));
+    graf.innerHTML = '<div class="graf">' + månader.map((m, i) =>
+        '<div class="graf-stapel' + (i === månader.length - 1 ? ' nu' : '') + '">'
+      + '<b>' + m.antal + '</b>'
+      + '<i style="height:' + Math.round((m.antal / hogst) * 100) + '%"></i>'
+      + '<span>' + esc(m.namn) + '</span>'
+      + '</div>').join('') + '</div>'
+      + '<p class="graf-not">'
+      + (genomforda.length
+          ? 'Bara genomförda pass räknas. Ett pass blir genomfört när er studiehjälpare skrivit rapporten.'
+          : 'Inga genomförda pass än — grafen fylls i efter första passet.')
+      + '</p>';
   }
 
   function visaFel(fel, sammanhang) {
