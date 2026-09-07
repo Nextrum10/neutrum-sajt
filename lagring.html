@@ -125,6 +125,7 @@
         ingenting.</p>
       <p>Vi har mätt det, inte antagit det: på de öppna sidorna sätts noll cookies, och ingenting
         lagras i webbläsaren förrän du loggar in.</p>
+      <p>Vi räknar däremot besök. Hur det går till utan cookies står strax nedanför.</p>
     </div>
 
     <h2>Vad som lagras när du loggar in</h2>
@@ -137,19 +138,32 @@
         inställningar för webbplatsdata.</li>
     </ul>
 
+    <h2>Hur vi räknar besök</h2>
+    <p>Vi använder Vercel Web Analytics för att se hur många som hittar hit och vilka sidor de
+      läser. Den fungerar utan cookies, vilket är hela skälet till att vi valde den.</p>
+    <p>I stället för att märka din webbläsare räknas unika besökare fram ur en hash av din
+      IP-adress och din webbläsartyp, med ett salt som byts varje dygn. Den råa IP-adressen
+      sparas inte, och hashen går inte att räkna baklänges. Efter ett dygn byts saltet och samma
+      besökare får ett annat värde — det finns alltså inget som följer dig över tid.</p>
+    <p>Det som samlas in är vilken sida som lästes, varifrån du kom, land, operativsystem,
+      webbläsare och om du satt vid dator eller telefon. Inget av det pekar ut dig.</p>
+    <p>Mätningen finns bara på de öppna sidorna. Studievyn och studiehjälparvyn mäts inte alls.</p>
+
     <h2>Vad som inte finns här</h2>
     <ul>
-      <li>Ingen analys- eller statistikcookie</li>
+      <li>Ingen cookie — inte heller för statistiken ovan</li>
       <li>Ingen annonsspårning, ingen pixel från något socialt nätverk</li>
       <li>Inga tredjepartscookies över huvud taget</li>
       <li>Ingen profilering och inga automatiska beslut om dig</li>
+      <li>Ingenting som följer dig mellan sajter, eller mellan dagar</li>
     </ul>
 
     <h2>De tredjeparter som ändå laddas</h2>
     <p>Även utan cookies innebär varje besök att din webbläsare hämtar filer från någon. Det här
       är hela listan:</p>
     <ul>
-      <li><b>Vercel</b> — webbplatsen ligger där, så all trafik går genom dem.</li>
+      <li><b>Vercel</b> — webbplatsen ligger där, så all trafik går genom dem. Det är också de
+        som räknar besöken, på det sätt som beskrivs ovan.</li>
       <li><b>Supabase</b> — databasen och inloggningen. Kontaktas när du skickar ett formulär
         eller loggar in. Servrarna står inom EU.</li>
       <li><b>unpkg.com</b> — ett programbibliotek som inloggningen behöver. Din IP-adress syns
@@ -159,9 +173,11 @@
       De ligger nu hos oss, och den överföringen finns inte längre.</p>
 
     <h2>Om det ändras</h2>
-    <p>Lägger vi någon gång till något som faktiskt kräver ditt samtycke — besöksstatistik,
-      inbäddad video, något liknande — kommer vi fråga först, och den här sidan uppdateras
-      samtidigt. Vi lägger inte en samtyckesruta på sidan i förväg för sakens skull.</p>
+    <p>Lägger vi någon gång till något som faktiskt kräver ditt samtycke — inbäddad video,
+      annonsverktyg, något som följer dig mellan sajter — kommer vi fråga först, och den här
+      sidan uppdateras samtidigt. Vi lägger inte en samtyckesruta på sidan i förväg för sakens
+      skull, och vi lägger inte till mätning i smyg: besöksräkningen ovan kom till efter att den
+      här sidan först publicerats, och då skrevs sidan om samma dag.</p>
 
     <p class="jur-datum">Senast uppdaterad 7 september 2026.</p>
   </div>
@@ -267,6 +283,21 @@
 </div>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- Vercel Web Analytics.
+
+     Sätter INGA cookies: unika besökare räknas via en hash av
+     IP och webbläsare med ett salt som byts dagligen, och den råa
+     IP-adressen sparas inte. Därför krävs inget samtycke — men det
+     står ändå i integritetspolicyn och på lagring.html, eftersom
+     "vi mäter ingenting" inte längre är sant.
+
+     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
+     finns inget att optimera för besökarens skull, och det vore ett
+     onödigt anrop från en sida där någon sköter sitt barns skolgång.
+
+     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
+     vilket är ofarligt — inget mäts när man utvecklar. -->
+<script defer src="/_vercel/insights/script.js"></script>
 <script src="nextrum-config.js"></script>
 <script src="nextrum-images.js"></script>
 <script src="nextrum-app.js"></script>

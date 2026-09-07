@@ -1141,6 +1141,21 @@
 
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- Vercel Web Analytics.
+
+     Sätter INGA cookies: unika besökare räknas via en hash av
+     IP och webbläsare med ett salt som byts dagligen, och den råa
+     IP-adressen sparas inte. Därför krävs inget samtycke — men det
+     står ändå i integritetspolicyn och på lagring.html, eftersom
+     "vi mäter ingenting" inte längre är sant.
+
+     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
+     finns inget att optimera för besökarens skull, och det vore ett
+     onödigt anrop från en sida där någon sköter sitt barns skolgång.
+
+     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
+     vilket är ofarligt — inget mäts när man utvecklar. -->
+<script defer src="/_vercel/insights/script.js"></script>
 <script src="nextrum-config.js"></script>
 <script src="nextrum-images.js"></script>
 <script src="nextrum-app.js"></script>

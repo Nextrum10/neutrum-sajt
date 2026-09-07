@@ -136,7 +136,10 @@
       genomföra passen, hålla er informerade om vad som händer, och fakturera för det som
       genomförts. Inget mer än så.</p>
     <p>Vi säljer inte uppgifter. Vi lämnar dem inte vidare för marknadsföring. Vi sätter inga
-      cookies. Det finns ingen spårning på sidan.</p>
+      cookies.</p>
+    <p>Vi räknar hur många som besöker de öppna sidorna, men utan cookies och utan något som
+      följer dig över tid. Hur det går till står under
+      <a href="lagring.html">Cookies och lagring</a>.</p>
 
     <h2>Vad vi sparar</h2>
 
@@ -192,7 +195,10 @@
     <h2>Var uppgifterna finns</h2>
     <ul>
       <li><b>Supabase</b> — databas, inloggning och filer. Servrarna står inom EU (Irland).</li>
-      <li><b>Vercel</b> — värd för själva webbplatsen.</li>
+      <li><b>Vercel</b> — värd för själva webbplatsen, och den som räknar besöken på de öppna
+        sidorna. Räkningen sker utan cookies: unika besökare härleds ur en hash av IP och
+        webbläsartyp med ett dygnsvis skiftande salt, och den råa IP-adressen sparas inte.
+        Studievyn och studiehjälparvyn mäts inte.</li>
     </ul>
     <p>Typsnitten låg tidigare hos Google, vilket innebar att varje sidvisning skickade din
       IP-adress dit. De ligger nu hos oss och den överföringen är borta. Ett bibliotek som
@@ -228,8 +234,8 @@
       Hör gärna av dig till oss först — det går oftast snabbare att reda ut.</p>
 
     <h2>Cookies och lagring i webbläsaren</h2>
-    <p>Vi sätter inga cookies. Vad som faktiskt lagras, och varför, står på en egen sida:
-      <a href="lagring.html">Cookies och lagring</a>.</p>
+    <p>Vi sätter inga cookies — inte heller för besöksräkningen. Vad som faktiskt lagras, vad som
+      mäts och varför, står på en egen sida: <a href="lagring.html">Cookies och lagring</a>.</p>
 
     <h2>Ändringar</h2>
     <p>Ändrar vi något väsentligt uppdaterar vi datumet nedan, och hör av oss till er som har
@@ -339,6 +345,21 @@
 </div>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- Vercel Web Analytics.
+
+     Sätter INGA cookies: unika besökare räknas via en hash av
+     IP och webbläsare med ett salt som byts dagligen, och den råa
+     IP-adressen sparas inte. Därför krävs inget samtycke — men det
+     står ändå i integritetspolicyn och på lagring.html, eftersom
+     "vi mäter ingenting" inte längre är sant.
+
+     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
+     finns inget att optimera för besökarens skull, och det vore ett
+     onödigt anrop från en sida där någon sköter sitt barns skolgång.
+
+     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
+     vilket är ofarligt — inget mäts när man utvecklar. -->
+<script defer src="/_vercel/insights/script.js"></script>
 <script src="nextrum-config.js"></script>
 <script src="nextrum-images.js"></script>
 <script src="nextrum-app.js"></script>
