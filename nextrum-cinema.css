@@ -2031,7 +2031,12 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 }
 
 /* ============================================================
-   ANSÖKNINGSFORMULÄRET — en ö av ljus i mörkt läge
+   DE STORA FORMULÄREN — öar av ljus i mörkt läge
+   Gäller ansökan (.nx-panel) och intresseanmälan/kontakt
+   (.nx-form-yta). Det sistnämnda var mätbart osynligt: panelens
+   bakgrund och sektionens var SAMMA värde, #22201A mot #22201A,
+   alltså kontrast 1,00:1. Kortet fanns men syntes inte som kort.
+
    Panelen försvann mot den mörka ytan omkring. I stället för att
    färga om den bit för bit sätts hela paletten om HÄR, på panelen:
    varje fält, etikett, knapp och skugga inuti ärver de ljusa
@@ -2041,7 +2046,8 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    ärvs slår rotens värde för allt inuti, oavsett specificitet.
    ============================================================ */
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) .nx-panel{
+  :root:not([data-theme="light"]) .nx-panel,
+  :root:not([data-theme="light"]) .nx-form-yta{
     --pap:#EFE6D6; --pap-2:#E5D8C2; --pap-3:#D8C7AB;
     --bl:#2E2A20; --bl-2:#4F4738; --bl-3:#665C49;
     --ln:#DDCDB2; --ln-2:#C9B492;
@@ -2063,7 +2069,8 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
     box-shadow:0 4px 14px rgba(0,0,0,.28), 0 34px 70px -30px rgba(0,0,0,.5);
   }
 }
-:root[data-theme="dark"] .nx-panel{
+:root[data-theme="dark"] .nx-panel,
+:root[data-theme="dark"] .nx-form-yta{
   --pap:#EFE6D6; --pap-2:#E5D8C2; --pap-3:#D8C7AB;
   --bl:#2E2A20; --bl-2:#4F4738; --bl-3:#665C49;
   --ln:#DDCDB2; --ln-2:#C9B492;
