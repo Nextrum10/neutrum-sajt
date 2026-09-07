@@ -27,9 +27,17 @@
 <meta name="twitter:description" content="Nextrum matchar elever med unga studiehjälpare som förstår hur det är att gå i skolan idag. Personlig matchning, individuell studieplan och rapport efter varje pass.">
 <meta name="twitter:image" content="https://nextrum.se/bilder/hero-nextrum-1280.jpg">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
+     besökarens IP vid varje sidvisning är därmed borta, och två
+     värdnamn färre ska slås upp innan första texten kan ritas.
+
+     Ingen <link rel="preload"> här med flit: mätt gav den en DUBBEL
+     nedladdning av samma 46 kB. Allt i taggen var rätt — samma
+     adress, as="font", crossorigin, rätt typ — men utan cache-
+     direktiv på svaret återanvänder webbläsaren inte den förladdade
+     kroppen. Cachningen ligger i vercel.json i stället, och där gör
+     den nytta vid varje återbesök i ett år. -->
+<link rel="stylesheet" href="nextrum-typsnitt.css">
 
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">

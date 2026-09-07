@@ -5,9 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Studievy — Nextrum</title>
 <meta name="robots" content="noindex">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
+     besökarens IP vid varje sidvisning är därmed borta, och två
+     värdnamn färre ska slås upp innan första texten kan ritas.
+
+     Ingen <link rel="preload"> här med flit: mätt gav den en DUBBEL
+     nedladdning av samma 46 kB. Allt i taggen var rätt — samma
+     adress, as="font", crossorigin, rätt typ — men utan cache-
+     direktiv på svaret återanvänder webbläsaren inte den förladdade
+     kroppen. Cachningen ligger i vercel.json i stället, och där gör
+     den nytta vid varje återbesök i ett år. -->
+<link rel="stylesheet" href="nextrum-typsnitt.css">
 <!-- Samma fyra lager som de publika sidorna, plus vy-lagret sist.
      nextrum-cinema.css är den som mappar om färgnamnen till
      jordpaletten — utan den blir vyn vit och främmande. -->
