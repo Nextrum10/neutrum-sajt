@@ -495,7 +495,18 @@
 .nx-steplist li.on em{color:var(--acc-text)}
 
 /* fältetiketter lite tydligare i det stora formuläret */
-.nx-panel .pay-field label{font-size:.78rem;color:var(--muted);font-weight:600}
+/* Etiketterna i de stora formulären. Grundregeln i cinema sätter
+   10px, och versaler i mono med bred spärr är svårast av alla i den
+   graden: över- och underlängderna som ögat känner igen ord på finns
+   inte. Ansökan har legat på .78rem sedan tidigare — intresseanmälan
+   och kontakt matchar den nu i stället för att vara 20% mindre.
+
+   Medvetet INTE ändrat i grundregeln: .pay-field används även i de
+   inloggade vyerna, där 33 etiketter hade följt med utan att någon
+   bett om det. --muted ger dessutom bättre kontrast än grundens
+   --bl-3 (6,5:1 mot 4,7:1), också inuti ljusön i mörkt läge. */
+.nx-panel .pay-field label,
+.nx-form-yta .pay-field label{font-size:.78rem;color:var(--muted);font-weight:600}
 .nx-panel .inp,.nx-panel .sel{border-radius:var(--r-sm)}
 .nx-submit-row{
   grid-column:1/-1;display:flex;gap:14px;align-items:center;flex-wrap:wrap;
