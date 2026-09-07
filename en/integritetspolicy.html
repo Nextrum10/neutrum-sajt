@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Privacy policy — Nextrum</title>
+<meta name="description" content="What Nextrum stores about you and your child, who can see it, how long it is kept and what rights you have.">
+<link rel="canonical" href="https://nextrum.se/en/integritetspolicy.html">
+<link rel="alternate" hreflang="sv" href="https://nextrum.se/integritetspolicy.html">
+<link rel="alternate" hreflang="en" href="https://nextrum.se/en/integritetspolicy.html">
+<link rel="alternate" hreflang="x-default" href="https://nextrum.se/integritetspolicy.html">
+<meta name="theme-color" content="#FBFAF8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<!-- delning -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nextrum">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:title" content="Privacy policy — Nextrum">
+<meta property="og:description" content="What Nextrum stores about you and your child, who can see it, how long it is kept and what rights you have.">
+<meta property="og:url" content="https://nextrum.se/en/integritetspolicy.html">
+<meta property="og:image" content="https://nextrum.se/bilder/04-sjalvfortroende-1280.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="A young tutor and a student studying together at a light wooden table.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Privacy policy — Nextrum">
+<meta name="twitter:description" content="What Nextrum stores about you and your child, who can see it, how long it is kept and what rights you have.">
+<meta name="twitter:image" content="https://nextrum.se/bilder/04-sjalvfortroende-1280.jpg">
+
+<!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
+     besökarens IP vid varje sidvisning är därmed borta, and två
+     värdnamn färre ska slås upp innan första texten kan ritas.
+
+     Ingen <link rel="preload"> här med flit: mätt gav den en DUBBEL
+     nedladdning av samma 46 kB. Allt i taggen var rätt — samma
+     adress, as="font", crossorigin, rätt typ — men utan cache-
+     direktiv på svaret återanvänder webbläsaren inte den förladdade
+     kroppen. Cachningen ligger i vercel.json i stället, and där gör
+     den nytta vid varje återbesök i ett år. -->
+<link rel="stylesheet" href="../nextrum-typsnitt.css">
+
+<!-- ordningen spelar roll: bas → startsida → cinema -->
+<link rel="stylesheet" href="../nextrum.css">
+<link rel="stylesheet" href="../nextrum-home.css">
+<link rel="stylesheet" href="../nextrum-cinema.css">
+</head>
+<body>
+
+<!-- ==========================================================
+     HEADER — identisk markup på alla fyra publika sidor.
+     Ändrar du här måste du ändra i index.html, priser.html,
+     faq.html and bli-studiehjalpare.html. Länkarna skrivs som
+     "index.html#hur"; på startsidan kortar nextrum-app.js ner dem
+     till rena ankare så att man scrollar istället för att ladda om.
+     ========================================================== -->
+<a class="nx-hoppa" href="#innehall">Skip to content</a>
+
+<header class="hdr" id="hdr">
+  <div class="wrap nav">
+    <!-- Språkval, övre vänstra hörnet. Det aktiva språket är ett
+         <b>, inte en länk: en länk till sidan man redan står på ser
+         ut som ett val men gör ingenting. -->
+    <div class="sprakval" role="group" aria-label="Language / Språk">
+      <a lang="sv" hreflang="sv" href="../integritetspolicy.html">SV</a>
+      <i aria-hidden="true"></i>
+      <b lang="en" aria-current="true">ENG</b>
+    </div>
+
+    <a href="index.html" class="logo" aria-label="Nextrum, to the home page">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true">
+        <rect width="26" height="26" rx="7"/>
+        <path d="M8 18.5V7.5L18 18.5V7.5"/>
+      </svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Main menu">
+      <a href="index.html#hur" data-nav>How Nextrum works</a>
+      <a href="index.html#foraldrar" data-nav>For students &amp; parents</a>
+      <a href="bli-studiehjalpare.html" data-nav>Become a tutor</a>
+      <a href="priser.html" data-nav>Pricing</a>
+    </nav>
+
+    <div class="nav-actions">
+      <!-- href pekar på föräldravyn så att länken fungerar utan JS.
+           Med JS öppnas vyväljaren istället — utom när man redan är
+           inloggad, då skriver NX.märkInloggad() om länken. -->
+      <a class="login" href="../foralder.html" id="login-link" data-vagval>Log in</a>
+      <span class="nx-magnet" data-magnet>
+        <a class="btn btn-primary btn-sm" href="index.html#intresse">Get started</a>
+      </span>
+    </div>
+
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="index.html#om">Our idea <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#hur">How Nextrum works <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#foraldrar">For students &amp; parents <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="bli-studiehjalpare.html">Become a tutor <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="priser.html">Pricing <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="faq.html">FAQ <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions">
+    <a class="btn btn-primary btn-block btn-lg" href="index.html#intresse">Get started</a>
+    <a class="btn btn-ghost btn-block btn-lg" href="../foralder.html">Log in</a>
+  </div>
+  <div class="m-foot">
+    <span class="xsmall">By young people, for young people.</span>
+    <a class="xsmall" href="mailto:hej@nextrum.se">hej@nextrum.se</a>
+  </div>
+</div>
+
+<main id="innehall">
+
+<section class="wrap nx-page-hero">
+  <a class="nx-back" href="index.html"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> To the home page</a>
+  <span class="nx-et acc" style="margin-top:22px">Privacy</span>
+  <h1 class="nx-d1">Privacy policy</h1>
+  <p class="nx-lede">What we store, why, who can see it and for how long. Written to be read, not to hide behind.</p>
+</section>
+
+<section class="sec wrap" style="padding-top:clamp(16px,2vw,28px)">
+  <!-- Ingen rv-klass här med flit: den gör innehållet osynligt tills
+       JavaScript avslöjar det. Ett juridiskt dokument som kan bli blankt
+       för att ett skript inte laddade är värdelöst. -->
+  <div class="juridisk">
+    <div class="jur-ruta">
+      <h2>Who is responsible</h2>
+      <p>Nextrum is run by <b>Leo Constantinos Thriskos</b> and <b>Alexandar Jovanovic</b>.</p>
+      <p>The limited company Nextrum AB is being formed and is not yet registered. Until then we are
+        the data controllers as private individuals — not a company. We say so plainly because it
+        is true, and so that you know who you are actually giving your details to. Once the
+        company is registered this page will be updated with its registration number.</p>
+      <p class="jur-adress">Mönsteråsgränd 4<br>122 42 Enskede<br>Stockholm, Sweden</p>
+      <p>Questions about your data: <a href="mailto:info@nextrum.se">info@nextrum.se</a>. We reply as soon as we can, and at the latest within one month.</p>
+    </div>
+
+    <h2>In short</h2>
+    <p>We store what is needed to match a student with the right tutor, to book and run the
+      sessions, to keep you informed about what is happening, and to invoice for what took
+      place. Nothing beyond that.</p>
+    <p>We do not sell data. We do not pass it on for marketing. We set no cookies.</p>
+    <p>We do count how many people visit the public pages, but without cookies and without anything
+      that follows you over time. How that works is explained under
+      <a href="lagring.html">Cookies and storage</a>.</p>
+
+    <h2>What we store</h2>
+
+    <h3>About you as a parent or student with an account</h3>
+    <ul>
+      <li>Name, email address and — if you fill it in — phone number</li>
+      <li>A profile picture, if you upload one</li>
+      <li>We never see your password. It is handled encrypted by our login provider and is
+        inaccessible even to us.</li>
+    </ul>
+
+    <h3>About the child</h3>
+    <ul>
+      <li>Name, year group, school and the subjects concerned</li>
+      <li>Study goals, if you fill them in</li>
+      <li>Homework, skill areas and material the tutor adds</li>
+      <li>Reports after each session: what you did, how it went, what needs practice</li>
+    </ul>
+    <p class="jur-vikt">Your own notes about the child are private even from us. They sit in a separate table where
+      neither tutor nor administrator has read access — that is a technical barrier in the
+      database, not a promise to refrain from looking. We moved them there for exactly that
+      reason: as long as they sat in the same row as the rest of the student record, a tutor
+      could have read them through the API even though no screen displayed them.</p>
+
+    <h3>About you if you apply to be a tutor</h3>
+    <ul>
+      <li>Name, age, email, school, subjects and when you can work</li>
+      <li>What you write in the free-text field, and your CV if you attach one</li>
+      <li>If you are accepted: your profile text, town, subjects and the hourly rate we agreed</li>
+    </ul>
+
+    <h3>About the sessions and the contact</h3>
+    <ul>
+      <li>Date, time, subject, length and format for each booked session</li>
+      <li>Messages between family and tutor in the platform’s chat</li>
+      <li>Invoices and payment statements: periods, hours and amounts</li>
+    </ul>
+
+    <h2>Who can see what</h2>
+    <p>Access is restricted in the database, row by row — not only in the interface. That means the
+      restriction holds even for someone who tried to go around the site.</p>
+    <ul>
+      <li><b>A tutor</b> sees only the students they are matched with, and only their own sessions, homework,
+        material and messages.</li>
+      <li><b>A family</b> sees only their own children, sessions, invoices and messages.</li>
+      <li><b>We</b> can reach what is needed to run the service and solve problems — with the exception of
+        your private notes, described above.</li>
+      <li><b>Files</b> — material and profile pictures — sit in closed storage. Each file opens through a
+        time-limited link that expires after an hour. If such a link is passed on, it does not
+        work for long.</li>
+    </ul>
+
+    <h2>Where the data lives</h2>
+    <ul>
+      <li><b>Supabase</b> — database, login and files. The servers are within the EU (Ireland).</li>
+      <li><b>Vercel</b> — host of the site itself, and the party counting visits on the public pages. The counting
+        happens without cookies: unique visitors are derived from a hash of IP and browser type
+        with a salt that changes daily, and the raw IP address is not stored. The student view
+        and the tutor view are not measured.</li>
+    </ul>
+    <p>Beyond those, nothing is fetched from anyone else. The fonts used to sit with Google and the
+      library the login needs used to sit with unpkg.com — both sent your IP address there on
+      every page view. Both now sit with us.</p>
+
+    <h2>How long we keep things</h2>
+    <ul>
+      <li><b>Account and study history</b> — for as long as you are customers, and after that until you ask us to delete them.</li>
+      <li><b>Invoice records</b> — seven years. That is required by Swedish accounting law and is not something we can
+        shorten, not even on request.</li>
+      <li><b>Applications that do not lead to work</b> — at most one year, so that we can get in touch if something comes up. If you want it
+        deleted sooner, write to us.</li>
+      <li><b>Enquiries</b> — until we have replied and the matter is closed.</li>
+    </ul>
+
+    <h2>Children’s data</h2>
+    <p>The service is about children, and their data is therefore the most sensitive thing we handle.</p>
+    <ul>
+      <li>Children do not have their own accounts. It is the parent who registers, accepts the terms
+        and enters the details about the child.</li>
+      <li>We collect only what the teaching requires — year group, school, subjects and goals. No
+        personal identity numbers, no diagnoses, no grades.</li>
+      <li>As a parent you can see, change and delete what is recorded about your child at any time.</li>
+    </ul>
+
+    <h2>Your rights</h2>
+    <p>You have the right to know what we have stored about you, to have it corrected if it is
+      wrong, to have it erased, to restrict how we use it, to object to the processing, and to
+      receive your data in a format you can take with you. Write to <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</p>
+    <p>If you think we are handling your data wrongly, you have the right to complain to the
+      <a href="https://www.imy.se" target="_blank" rel="noopener noreferrer">Swedish Authority for Privacy Protection (IMY)</a>.
+      Do get in touch with us first — it is usually quicker to sort out.</p>
+
+    <h2>Cookies and browser storage</h2>
+    <p>We set no cookies — not even for the visit counting. What is actually stored, what is
+      measured and why, is on its own page: <a href="lagring.html">Cookies and storage</a>.</p>
+
+    <h2>Changes</h2>
+    <p>If we change anything material we update the date below, and contact those of you with an
+      account if the change affects you.</p>
+
+    <p class="jur-datum">Last updated 7 September 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ==========================================================
+     FOOTER — identisk på alla publika sidor, se kommentaren
+     vid headern.
+     ========================================================== -->
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        <a href="index.html" class="logo">
+          <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+          <span class="logo-text">Nextrum</span>
+        </a>
+        <p>By young people, for young people.</p>
+        <div class="socials">
+          <a href="https://www.instagram.com/nextrum.se" aria-label="Nextrum on Instagram" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm8.4-11.2a1.55 1.55 0 11-3.1 0 1.55 1.55 0 013.1 0z"/></svg></a>
+          <a href="https://www.tiktok.com/@nextrum.ab" aria-label="Nextrum on TikTok" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.1v13.2a2.6 2.6 0 11-2.2-2.6v-3.2a5.8 5.8 0 105.3 5.8V9.1a6.9 6.9 0 004 1.3V7.2a3.9 3.9 0 01-4-4z"/></svg></a>
+          <a href="https://www.facebook.com/share/1DuLomKfy8/" aria-label="Nextrum on Facebook" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg></a>
+          <a href="https://www.linkedin.com/company/nextrum-se/" aria-label="Nextrum on LinkedIn" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9.5 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.75-1.95 4 0 4.75 2.5 4.75 5.8V21h-4v-5.6c0-1.35-.03-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.7h-4z"/></svg></a>
+        </div>
+      </div>
+
+      <nav aria-labelledby="ftr-nextrum">
+        <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
+        <ul>
+          <li><a href="index.html#om">Our idea</a></li>
+          <li><a href="index.html#hur">How Nextrum works</a></li>
+          <li><a href="index.html#studiehjalpare">Tutors</a></li>
+          <li><a href="priser.html">Pricing</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-fordig">
+        <h2 class="ftr-rubrik" id="ftr-fordig">For you</h2>
+        <ul>
+          <li><a href="index.html#foraldrar">For students &amp; parents</a></li>
+          <li><a href="bli-studiehjalpare.html">Become a tutor</a></li>
+          <li><a href="index.html#intresse">Get started</a></li>
+          <li><a href="../foralder.html" data-vagval>Log in</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-hjalp">
+        <h2 class="ftr-rubrik" id="ftr-hjalp">Help</h2>
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="index.html#kontakt">Contact</a></li>
+          <li><a href="integritetspolicy.html">Privacy policy</a></li>
+          <li><a href="anvandarvillkor.html">Terms of use</a></li>
+          <li><a href="lagring.html">Cookies and storage</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="ftr-bot">
+      <span>© <span id="year">2026</span> Nextrum.</span>
+      <span>Built in Sweden.</span>
+    </div>
+  </div>
+
+  <!-- sista intrycket: bara ordet, mycket stort, mycket tyst -->
+  <div class="nx-ftr-ord" aria-hidden="true"><span>Nextrum</span></div>
+</footer>
+
+<!-- ==========================================================
+     VYVÄLJARE — dörren in till inloggningen.
+     Själva inloggningen ligger kvar i foralder.html och
+     larare.html and är orörd.
+     ========================================================== -->
+<div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
+  <button class="nx-vagval-stang" data-vagval-stang aria-label="Close"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  <div class="nx-vagval-box">
+    <span class="nx-et">Log in</span>
+    <h2 id="vagval-t" style="margin-top:18px">Welcome back.</h2>
+    <p class="nx-lede-s">Which view do you want?</p>
+
+    <div class="nx-vagval-val">
+      <a href="../foralder.html">
+        <span>
+          <b>Parent or student</b>
+          <span>Study plan, booking, messages and reports.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="../larare.html">
+        <span>
+          <b>Tutors</b>
+          <span>Your students, your schedule, messages and reports.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <p class="nx-vagval-fot">
+      Haven't got in touch yet? <a href="index.html#intresse">Start here</a>.
+    </p>
+  </div>
+</div>
+
+<!-- Biblioteket ligger hos oss, med fast version.
+
+     Låg förr på unpkg.com som @2 — alltså "vad unpkg råkar mena med
+     tvåan just nu". Under en timmes arbete flyttade den sig från
+     2.115.0 till 2.116.0 av sig själv. Den raden körde på varje sida,
+     också de inloggade, där någon skriver sitt lösenord and ett barns
+     namn and anteckningar visas. En tredjepart med fri versionsrätt
+     på just de sidorna är inte en risk värd att bära för att slippa
+     en fil i repot.
+
+     Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
+<script src="../bibliotek/supabase-js-2.116.0.js"></script>
+<!-- Vercel Web Analytics.
+
+     Sätter INGA cookies: unika besökare räknas via en hash av
+     IP and webbläsare med ett salt som byts dagligen, and den råa
+     IP-adressen sparas inte. Därför krävs inget samtycke — men det
+     står ändå i integritetspolicyn and på lagring.html, eftersom
+     "vi mäter ingenting" inte längre är sant.
+
+     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
+     finns inget att optimera för besökarens skull, and det vore ett
+     onödigt anrop från en sida där någon sköter sitt barns skolgång.
+
+     Sökvägen är absolut and serveras av Vercel. Lokalt ger den 404,
+     vilket är ofarligt — inget mäts när man utvecklar. -->
+<script defer src="/_vercel/insights/script.js"></script>
+<!-- Speed Insights: Core Web Wetals från riktiga besökare i stället
+     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
+<script defer src="/_vercel/speed-insights/script.js"></script>
+<script src="../nextrum-config.js"></script>
+<script src="../nextrum-images.js"></script>
+<script src="../nextrum-fel.js"></script>
+<script src="../nextrum-app.js"></script>
+<script src="../nextrum-motion.js"></script>
+<script>
+(function () {
+  'use strict';
+  NX.initHeader();
+  NX.initReveal();
+  NXFin.allt();
+  NX.bildIntoning();
+  NX.initVagval();
+  NX.initFaq();
+  NX.initPris();
+  NX.märkInloggad();
+})();
+</script>
+</body>
+</html>

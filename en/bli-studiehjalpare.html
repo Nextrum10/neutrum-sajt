@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Become a tutor — Nextrum</title>
+<meta name="description" content="Earn money, help younger students and build real work experience. Apply to become a tutor at Nextrum.">
+<link rel="canonical" href="https://nextrum.se/en/bli-studiehjalpare.html">
+<link rel="alternate" hreflang="sv" href="https://nextrum.se/bli-studiehjalpare.html">
+<link rel="alternate" hreflang="en" href="https://nextrum.se/en/bli-studiehjalpare.html">
+<link rel="alternate" hreflang="x-default" href="https://nextrum.se/bli-studiehjalpare.html">
+<meta name="theme-color" content="#FBFAF8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<!-- delning -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nextrum">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:title" content="Become a tutor — Nextrum">
+<meta property="og:description" content="Earn money, help younger students and build real work experience. Apply to become a tutor at Nextrum.">
+<meta property="og:url" content="https://nextrum.se/en/bli-studiehjalpare.html">
+<meta property="og:image" content="https://nextrum.se/bilder/05-av-unga-for-unga-1280.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="A young tutor and a student studying together at a light wooden table.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Become a tutor — Nextrum">
+<meta name="twitter:description" content="Earn money, help younger students and build real work experience. Apply to become a tutor at Nextrum.">
+<meta name="twitter:image" content="https://nextrum.se/bilder/05-av-unga-for-unga-1280.jpg">
+
+<!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
+     besökarens IP vid varje sidvisning är därmed borta, och två
+     värdnamn färre ska slås upp innan första texten kan ritas.
+
+     Ingen <link rel="preload"> här med flit: mätt gav den en DUBBEL
+     nedladdning av samma 46 kB. Allt i taggen var rätt — samma
+     adress, as="font", crossorigin, rätt typ — men utan cache-
+     direktiv på svaret återanvänder webbläsaren inte den förladdade
+     kroppen. Cachningen ligger i vercel.json i stället, och där gör
+     den nytta vid varje återbesök i ett år. -->
+<link rel="stylesheet" href="../nextrum-typsnitt.css">
+
+<!-- ordningen spelar roll: bas → startsida → cinema -->
+<link rel="stylesheet" href="../nextrum.css">
+<link rel="stylesheet" href="../nextrum-home.css">
+<link rel="stylesheet" href="../nextrum-cinema.css">
+</head>
+<body>
+
+<!-- ==========================================================
+     HEADER — identisk markup på alla fyra publika sidor.
+     Ändrar du här måste du ändra i index.html, priser.html,
+     faq.html och bli-studiehjalpare.html. Länkarna skrivs som
+     "index.html#hur"; på startsidan kortar nextrum-app.js ner dem
+     till rena ankare så att man scrollar istället för att ladda om.
+     ========================================================== -->
+<a class="nx-hoppa" href="#innehall">Skip to content</a>
+
+<header class="hdr" id="hdr">
+  <div class="wrap nav">
+    <!-- Språkval, övre vänstra hörnet. Det aktiva språket är ett
+         <b>, inte en länk: en länk till sidan man redan står på ser
+         ut som ett val men gör ingenting. -->
+    <div class="sprakval" role="group" aria-label="Language / Språk">
+      <a lang="sv" hreflang="sv" href="../bli-studiehjalpare.html">SV</a>
+      <i aria-hidden="true"></i>
+      <b lang="en" aria-current="true">ENG</b>
+    </div>
+
+    <a href="index.html" class="logo" aria-label="Nextrum, to the home page">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true">
+        <rect width="26" height="26" rx="7"/>
+        <path d="M8 18.5V7.5L18 18.5V7.5"/>
+      </svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Main menu">
+      <a href="index.html#hur" data-nav>How Nextrum works</a>
+      <a href="index.html#foraldrar" data-nav>For students &amp; parents</a>
+      <a href="bli-studiehjalpare.html" data-nav>Become a tutor</a>
+      <a href="priser.html" data-nav>Pricing</a>
+    </nav>
+
+    <div class="nav-actions">
+      <!-- href pekar på föräldravyn så att länken fungerar utan JS.
+           Med JS öppnas vyväljaren istället — utom när man redan är
+           inloggad, då skriver NX.märkInloggad() om länken. -->
+      <a class="login" href="../foralder.html" id="login-link" data-vagval>Log in</a>
+      <span class="nx-magnet" data-magnet>
+        <a class="btn btn-primary btn-sm" href="index.html#intresse">Get started</a>
+      </span>
+    </div>
+
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="index.html#om">Our idea <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#hur">How Nextrum works <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#foraldrar">For students &amp; parents <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="bli-studiehjalpare.html">Become a tutor <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="priser.html">Pricing <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="faq.html">FAQ <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions">
+    <a class="btn btn-primary btn-block btn-lg" href="index.html#intresse">Get started</a>
+    <a class="btn btn-ghost btn-block btn-lg" href="../foralder.html">Log in</a>
+  </div>
+  <div class="m-foot">
+    <span class="xsmall">By young people, for young people.</span>
+    <a class="xsmall" href="mailto:hej@nextrum.se">hej@nextrum.se</a>
+  </div>
+</div>
+
+<main id="innehall">
+
+<section class="nx-page-hero on-band">
+  <div class="wrap">
+    <a class="nx-back" href="index.html"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> To the home page</a>
+    <span class="nx-et" data-stig style="margin-top:22px">Become a tutor</span>
+    <h1 class="nx-d1" data-avslöj>Your first job can start here.</h1>
+    <p class="nx-lede" data-stig data-fördröj="1">Want to earn money, help younger students and build experience at the same time? At Nextrum you get to do all three.</p>
+    <div class="nx-story-ctas" data-stig data-fördröj="2">
+      <a class="btn btn-primary btn-lg" href="#ansok">Apply now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+      <a class="btn btn-ghost btn-lg" href="../larare.html">Already a tutor? Log in</a>
+    </div>
+  </div>
+  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#8E8C84">
+    <img class="nx-img" src="../bilder/05-av-unga-for-unga-1280.jpg"
+         srcset="../bilder/05-av-unga-for-unga-640.jpg 640w, ../bilder/05-av-unga-for-unga-960.jpg 960w, ../bilder/05-av-unga-for-unga-1280.jpg 1280w, ../bilder/05-av-unga-for-unga-1600.jpg 1600w, ../bilder/05-av-unga-for-unga-1920.jpg 1920w"
+         sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
+         style="object-position:60% 42%"
+         alt="Five young tutors standing and talking with each other in front of a bookshelf in a library.">
+  </figure>
+
+</section>
+
+<section class="band on-band" style="border-top:none">
+  <div class="sec wrap" style="padding-top:clamp(24px,3vw,40px)">
+    <div class="nx-perks rv">
+      <div class="nx-perk">
+        <span class="i"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <b>Flexible</b>
+        <p>Choose when you want to work.</p>
+      </div>
+      <div class="nx-perk">
+        <span class="i"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7h6a3 3 0 010 6H9a3 3 0 000 6h7"/></svg></span>
+        <b>Earn money</b>
+        <p>Get paid for your time and knowledge.</p>
+      </div>
+      <div class="nx-perk">
+        <span class="i"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></span>
+        <b>Work experience</b>
+        <p>Experience that genuinely belongs on your CV.</p>
+      </div>
+      <div class="nx-perk">
+        <span class="i"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19V3"/></svg></span>
+        <b>Grow</b>
+        <p>Get better at communication, leadership and teaching.</p>
+      </div>
+      <div class="nx-perk">
+        <span class="i"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-9a4 4 0 017-2.6A4 4 0 0119 11c0 4.5-7 9-7 9z"/></svg></span>
+        <b>Make a difference</b>
+        <p>Help a younger student succeed.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:clamp(40px,5vw,64px)" class="rv">
+      <span class="eyebrow" style="margin-bottom:20px;display:inline-flex">How applying works</span>
+      <div class="nx-apply-flow">
+      <div class="nx-apply-step"><em>01</em><b>Apply</b><p>Fill in the application with subjects, year groups and times that suit you. Takes a few minutes.</p></div>
+      <div class="nx-apply-step"><em>02</em><b>Interview</b><p>A short conversation where we get to know you and how you explain things.</p></div>
+      <div class="nx-apply-step"><em>03</em><b>Get approved</b><p>We run our checks and you get your tutor profile.</p></div>
+      <div class="nx-apply-step"><em>04</em><b>Start working</b><p>Accept requests and hold your first session.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="nx-two">
+    <div class="nx-two-sticky rv">
+      <span class="eyebrow acc">Who can apply</span>
+      <h2 class="d2" style="margin-top:18px">You do not need to be a teacher. You need to be able to explain.</h2>
+    </div>
+    <div class="rv">
+      <ul class="nx-list">
+        <li><em>01</em><div><b>You are at upper-secondary school or university</b><p>Both upper-secondary and university students are welcome to apply.</p></div></li>
+        <li><em>02</em><div><b>You are confident in your subjects</b><p>You do not have to be top of the class in everything — just sure of what you want to help with.</p></div></li>
+        <li><em>03</em><div><b>You can explain so that someone understands</b><p>That is the most important quality, and the one we look at most in the interview.</p></div></li>
+        <li><em>04</em><div><b>You keep your word</b><p>The student does best with the same person week after week. If you say yes to a session, you turn up.</p></div></li>
+      </ul>
+      <p class="small" style="margin-top:22px">If you are under 18 we may need a guardian’s consent before your first session. We will get in touch if that applies to you.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     ANSÖKAN — samma tabell och fält som modalen på startsidan.
+     Logiken ligger i nextrum-app.js (NX.kopplaApplication).
+     ========================================================== -->
+<section class="nx-surface" id="ansok" style="scroll-margin-top:96px">
+  <div class="sec wrap">
+    <div class="nx-form-section">
+      <div class="rv">
+        <span class="eyebrow acc">Application</span>
+        <h2 class="d2" style="margin-top:18px">Send in your application.</h2>
+        <p class="lede" style="margin-top:20px">We read every application and get back to you. Applying costs nothing and commits you to nothing.</p>
+        <ul class="nx-steplist">
+          <li class="on"><em>01</em><div><b>You fill in the form</b><span>Takes a few minutes.</span></div></li>
+          <li><em>02</em><div><b>We get in touch</b><span>If there is a conversation, we book it in.</span></div></li>
+          <li><em>03</em><div><b>You get approved</b><span>Then you are matched with your first student.</span></div></li>
+        </ul>
+      </div>
+
+      <div class="nx-panel rv">
+        <form id="apply-form" novalidate>
+          <div class="row2">
+            <div class="pay-field"><label for="ap-name">Name</label><input class="inp" id="ap-name" name="namn" required autocomplete="name"></div>
+            <div class="pay-field"><label for="ap-age">Age</label><input class="inp" id="ap-age" name="alder" inputmode="numeric" required></div>
+          </div>
+          <div class="pay-field"><label for="ap-email">Email</label><input class="inp" id="ap-email" name="epost" type="email" required autocomplete="email"></div>
+          <div class="pay-field"><label for="ap-school">School &amp; programme</label><input class="inp" id="ap-school" name="skola" placeholder="e.g. Kungsholmens gymnasium, science programme"></div>
+          <div class="pay-field"><label for="ap-subj">Subjects you want to help with</label><input class="inp" id="ap-subj" name="amnen" placeholder="e.g. maths, physics, English"></div>
+          <div class="pay-field"><label for="ap-avail">Times that suit you</label><input class="inp" id="ap-avail" name="tider" placeholder="e.g. weekdays after 4pm, weekends"></div>
+          <div class="pay-field"><label for="ap-why">Why do you want to become a tutor?</label><textarea class="inp" id="ap-why" name="varfor" style="min-height:110px"></textarea></div>
+
+          <div class="pay-field">
+            <label for="ap-cv">CV <span class="lbl-valfri">optional</span></label>
+            <div class="nx-fil">
+              <input type="file" id="ap-cv" name="cv"
+                     accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+              <label class="nx-fil-knapp" for="ap-cv">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14V4M6.5 7.5 10 4l3.5 3.5M4 15.5v1A1.5 1.5 0 0 0 5.5 18h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
+                Choose file
+              </label>
+              <span class="nx-fil-namn" id="ap-cv-namn">No file chosen</span>
+            </div>
+            <p class="nx-fil-hjalp">PDF or Word, 5 MB maximum. You can apply without a CV — we will read the application anyway.</p>
+          </div>
+
+          <button class="btn btn-primary btn-block btn-lg" type="submit" style="margin-top:8px">Send application</button>
+          <p class="ok-msg" id="apply-ok" style="margin-top:14px"></p>
+          <p class="xsmall" style="margin-top:12px;text-align:center">Saved straight into Nextrum’s database, not by email.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="nx-faq-grid">
+    <div class="nx-faq-aside rv">
+      <span class="eyebrow acc">FAQ</span>
+      <h2 class="d2" style="margin-top:18px">Questions about the job</h2>
+      <p class="lede" style="margin-top:20px">More questions are answered in our <a href="faq.html" style="color:var(--fg);text-decoration:underline;text-underline-offset:3px">FAQ</a>.</p>
+    </div>
+    <div class="faq rv">
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Do I need top grades?<span class="pm"></span></button>
+        <div class="faq-a"><p>No. We look just as much at how you explain things and treat others as at your grades. You need to be confident in the subjects you want to help with — not top of the class in everything.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">How much do I need to work?<span class="pm"></span></button>
+        <div class="faq-a"><p>You decide which subjects you take, how much you work and when. There is no minimum. But the student does best with the same person week after week, so expect to keep to what you say yes to.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">How do I get paid?<span class="pm"></span></button>
+        <div class="faq-a"><p>All payment goes through Nextrum, never directly between student and tutor. You can see your hours worked in the tutor view.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">What happens after I apply?<span class="pm"></span></button>
+        <div class="faq-a"><p>We read every application and get back to you. If there is a conversation we book it in, and after that we run our checks before you can be matched with a student.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Can I work if I am at university?<span class="pm"></span></button>
+        <div class="faq-a"><p>Yes. Both upper-secondary and university students are welcome to apply.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="nx-final on-band">
+  <div class="sec wrap">
+    <div class="inner">
+      <h2 class="d1 rv">We are building the next generation together.</h2>
+      <p class="rv">Every session helps a younger student — and gives you your first real work experience.</p>
+      <div class="nx-hero-ctas rv">
+        <a class="btn btn-primary btn-lg" href="#ansok">Send application <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        <a class="btn btn-ghost btn-lg" href="index.html">Read more about Nextrum</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ==========================================================
+     FOOTER — identisk på alla publika sidor, se kommentaren
+     vid headern.
+     ========================================================== -->
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        <a href="index.html" class="logo">
+          <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+          <span class="logo-text">Nextrum</span>
+        </a>
+        <p>By young people, for young people.</p>
+        <div class="socials">
+          <a href="https://www.instagram.com/nextrum.se" aria-label="Nextrum on Instagram" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm8.4-11.2a1.55 1.55 0 11-3.1 0 1.55 1.55 0 013.1 0z"/></svg></a>
+          <a href="https://www.tiktok.com/@nextrum.ab" aria-label="Nextrum on TikTok" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.1v13.2a2.6 2.6 0 11-2.2-2.6v-3.2a5.8 5.8 0 105.3 5.8V9.1a6.9 6.9 0 004 1.3V7.2a3.9 3.9 0 01-4-4z"/></svg></a>
+          <a href="https://www.facebook.com/share/1DuLomKfy8/" aria-label="Nextrum on Facebook" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg></a>
+          <a href="https://www.linkedin.com/company/nextrum-se/" aria-label="Nextrum on LinkedIn" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9.5 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.75-1.95 4 0 4.75 2.5 4.75 5.8V21h-4v-5.6c0-1.35-.03-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.7h-4z"/></svg></a>
+        </div>
+      </div>
+
+      <nav aria-labelledby="ftr-nextrum">
+        <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
+        <ul>
+          <li><a href="index.html#om">Our idea</a></li>
+          <li><a href="index.html#hur">How Nextrum works</a></li>
+          <li><a href="index.html#studiehjalpare">Tutors</a></li>
+          <li><a href="priser.html">Pricing</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-fordig">
+        <h2 class="ftr-rubrik" id="ftr-fordig">For you</h2>
+        <ul>
+          <li><a href="index.html#foraldrar">For students &amp; parents</a></li>
+          <li><a href="bli-studiehjalpare.html">Become a tutor</a></li>
+          <li><a href="index.html#intresse">Get started</a></li>
+          <li><a href="../foralder.html" data-vagval>Log in</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-hjalp">
+        <h2 class="ftr-rubrik" id="ftr-hjalp">Help</h2>
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="index.html#kontakt">Contact</a></li>
+          <li><a href="integritetspolicy.html">Privacy policy</a></li>
+          <li><a href="anvandarvillkor.html">Terms of use</a></li>
+          <li><a href="lagring.html">Cookies and storage</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="ftr-bot">
+      <span>© <span id="year">2026</span> Nextrum.</span>
+      <span>Built in Sweden.</span>
+    </div>
+  </div>
+
+  <!-- sista intrycket: bara ordet, mycket stort, mycket tyst -->
+  <div class="nx-ftr-ord" aria-hidden="true"><span>Nextrum</span></div>
+</footer>
+
+<!-- ==========================================================
+     VYVÄLJARE — dörren in till inloggningen.
+     Själva inloggningen ligger kvar i foralder.html och
+     larare.html och är orörd.
+     ========================================================== -->
+<div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
+  <button class="nx-vagval-stang" data-vagval-stang aria-label="Close"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  <div class="nx-vagval-box">
+    <span class="nx-et">Log in</span>
+    <h2 id="vagval-t" style="margin-top:18px">Welcome back.</h2>
+    <p class="nx-lede-s">Which view do you want?</p>
+
+    <div class="nx-vagval-val">
+      <a href="../foralder.html">
+        <span>
+          <b>Parent or student</b>
+          <span>Study plan, booking, messages and reports.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="../larare.html">
+        <span>
+          <b>Tutors</b>
+          <span>Your students, your schedule, messages and reports.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <p class="nx-vagval-fot">
+      Haven't got in touch yet? <a href="index.html#intresse">Start here</a>.
+    </p>
+  </div>
+</div>
+
+<!-- Biblioteket ligger hos oss, med fast version.
+
+     Låg förr på unpkg.com som @2 — alltså "vad unpkg råkar mena med
+     tvåan just nu". Under en timmes arbete flyttade den sig från
+     2.115.0 till 2.116.0 av sig själv. Den raden körde på varje sida,
+     också de inloggade, där någon skriver sitt lösenord och ett barns
+     namn och anteckningar visas. En tredjepart med fri versionsrätt
+     på just de sidorna är inte en risk värd att bära för att slippa
+     en fil i repot.
+
+     Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
+<script src="../bibliotek/supabase-js-2.116.0.js"></script>
+<!-- Vercel Web Analytics.
+
+     Sätter INGA cookies: unika besökare räknas via en hash av
+     IP och webbläsare med ett salt som byts dagligen, och den råa
+     IP-adressen sparas inte. Därför krävs inget samtycke — men det
+     står ändå i integritetspolicyn och på lagring.html, eftersom
+     "vi mäter ingenting" inte längre är sant.
+
+     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
+     finns inget att optimera för besökarens skull, och det vore ett
+     onödigt anrop från en sida där någon sköter sitt barns skolgång.
+
+     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
+     vilket är ofarligt — inget mäts när man utvecklar. -->
+<script defer src="/_vercel/insights/script.js"></script>
+<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
+     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
+<script defer src="/_vercel/speed-insights/script.js"></script>
+<script src="../nextrum-config.js"></script>
+<script src="../nextrum-images.js"></script>
+<script src="../nextrum-fel.js"></script>
+<script src="../nextrum-app.js"></script>
+<script src="../nextrum-motion.js"></script>
+<script>
+(function () {
+  'use strict';
+  const { $ } = NX;
+  NX.initHeader();
+  NX.initReveal();
+  NXFin.allt();
+  NX.bildIntoning();
+  NX.initVagval();
+  NX.kollaKoppling();
+  NX.initFaq();
+  NX.märkInloggad();
+  /* CV: filnamnet syns när man valt, och filen laddas upp till
+     lagringshinken "cv". Saknas hinken går ansökan ändå igenom —
+     då noteras filnamnet i "why" så vi vet att vi ska be om den. */
+  const cv = $('#ap-cv'), cvNamn = $('#ap-cv-namn');
+  if (cv && cvNamn) {
+    const MAX = 5 * 1024 * 1024;
+    cv.addEventListener('change', () => {
+      const f = cv.files && cv.files[0];
+      if (!f) { cvNamn.textContent = 'Ingen fil vald'; cvNamn.classList.remove('fel'); return; }
+      if (f.size > MAX) {
+        cv.value = '';
+        cvNamn.textContent = 'Filen är större än 5 MB — välj en mindre';
+        cvNamn.classList.add('fel');
+        return;
+      }
+      cvNamn.textContent = f.name;
+      cvNamn.classList.remove('fel');
+    });
+  }
+
+  NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'), { cv: '#ap-cv' });
+})();
+</script>
+</body>
+</html>

@@ -2127,3 +2127,49 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   letter-spacing:.12em;text-transform:uppercase;
   color:var(--bl-3) !important;
 }
+
+/* ============================================================
+   SPRÅKVÄXLAREN
+   Ligger först i sidhuvudet, alltså i övre vänstra hörnet. Den ska
+   synas för den som letar efter den och annars vara tyst — ett
+   språkval är inte sidans budskap.
+
+   Det aktiva språket är inte en länk. Att kunna klicka på "SV" när
+   man redan står på svenska ser ut som ett val men gör ingenting.
+   ============================================================ */
+.sprakval{
+  display:inline-flex;align-items:center;gap:9px;
+  flex:none;
+}
+.sprakval a,
+.sprakval b{
+  font-family:var(--f-mono);
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;
+  padding:3px 1px;
+  transition:color .18s var(--e);
+}
+.sprakval b{color:var(--bl)}
+.sprakval a{color:var(--bl-3)}
+.sprakval a:hover{color:var(--bl)}
+
+/* "ett streck emellan" — ritat, inte ett tecken, så att det sitter
+   still oavsett typsnitt och radhöjd. */
+.sprakval i{
+  display:block;width:1px;height:11px;flex:none;
+  background:var(--ln-2);
+}
+
+/* Sidhuvudet ligger över hjältebilden på startsidan, och där är
+   allt ljust tills man scrollat. */
+.hdr.pa-mork:not(.stuck) .sprakval b{color:var(--nt-fg)}
+.hdr.pa-mork:not(.stuck) .sprakval a{color:var(--nt-mut)}
+.hdr.pa-mork:not(.stuck) .sprakval a:hover{color:var(--nt-fg)}
+.hdr.pa-mork:not(.stuck) .sprakval i{background:var(--nt-ln)}
+
+/* På telefon tar logotypen och hamburgaren all plats. Växlaren får
+   stå kvar men krymper — den ska aldrig knuffa ut något annat. */
+@media (max-width:560px){
+  .sprakval{gap:7px}
+  .sprakval a,.sprakval b{font-size:9px;letter-spacing:.08em}
+}
