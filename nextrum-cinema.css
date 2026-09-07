@@ -771,6 +771,27 @@ body .mobile-menu{display:block}
   color:var(--nt-fg);
   text-wrap:balance;
 }
+
+/* Rubriken är inte större på engelska — den är lika stor, och det är
+   problemet. Klampen ovan är ritad för "Av unga, för unga.", som tar
+   halva raden. "By young people, for young people." är tre gånger så
+   många tecken och fyller 99% av bredden vid 1280px; på 375px spricker
+   den från två rader till fyra och trycker ner knapparna under vikning.
+
+   Minimivärdet är det som gör ont på mobil: 3rem = 48px kommer från
+   klampens undre gräns, inte från vw-termen, så en ändring av vw
+   ensam hade inte rört mobilen alls.
+
+   Uppmätt vid 320/360/375/414/480/600/768/1024/1280/1600px: två rader
+   hela vägen, 65–90% fyllnad, inget spill. Svenskan rörs inte —
+   html[lang="en"] gör att regeln bara gäller sidorna under /en/.
+
+   Specificiteten är (0,2,1) mot klassregelns (0,1,0), så den vinner
+   oavsett filordning. Det är med flit: i det här projektet har
+   omskrivningar förlorat på specificitet mer än en gång. */
+html[lang="en"] .nx-hero-rubrik{
+  font-size:clamp(2rem,7.5vw,6rem);
+}
 .nx-hero-lede{
   margin:clamp(22px,3vw,34px) auto 0;
   max-width:56ch;

@@ -241,7 +241,12 @@ const NXImg = (function () {
 
   const REG = window.NEXTRUM_IMAGES || {};
   const BREDDER = window.NEXTRUM_IMAGE_WIDTHS || [640, 960, 1280, 1600, 1920];
-  const MAPP = 'bilder/';
+  /* Absolut sökväg, inte relativ. Med 'bilder/' pekade den på
+     /en/bilder/ från de engelska sidorna, och alla fem bilderna i
+     "Så fungerar Nextrum" blev 404. En sökväg som byggs i JavaScript
+     vet inte vilken mapp sidan ligger i — då måste den utgå från
+     roten. */
+  const MAPP = '/bilder/';
 
   function hämta(key) {
     const b = REG[key];
