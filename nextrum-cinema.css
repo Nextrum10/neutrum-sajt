@@ -314,12 +314,16 @@ body{background:var(--pap);color:var(--bl)}
   display:block;
   transform:translateY(105%);
   opacity:0;
-  transition:transform .92s var(--e-ut),opacity .62s var(--e-ut);
+  /* Var .92s med .255s trappa — sista raden landade först efter
+     nästan 1,2 sekunder. Rörelsen pågick alltså fortfarande när man
+     scrollat förbi, vilket läses som tröghet, inte som omsorg.
+     Kurvan --e-ut är kraftigt utgående, så den bär en kort tid bra. */
+  transition:transform .52s var(--e-ut),opacity .34s var(--e-ut);
 }
 .nx-in .nx-rad-i{transform:translateY(0);opacity:1}
-.nx-in .nx-rad:nth-child(2) .nx-rad-i{transition-delay:.085s}
-.nx-in .nx-rad:nth-child(3) .nx-rad-i{transition-delay:.17s}
-.nx-in .nx-rad:nth-child(4) .nx-rad-i{transition-delay:.255s}
+.nx-in .nx-rad:nth-child(2) .nx-rad-i{transition-delay:.055s}
+.nx-in .nx-rad:nth-child(3) .nx-rad-i{transition-delay:.11s}
+.nx-in .nx-rad:nth-child(4) .nx-rad-i{transition-delay:.165s}
 
 /* Block som stiger in. Låg amplitud — 18px, inte 60.
 
@@ -328,15 +332,24 @@ body{background:var(--pap);color:var(--bl)}
    skulle halva sidan bli permanent osynlig om skriptet inte laddar. */
 html[data-motion] [data-stig]{
   opacity:0;
-  transform:translate3d(0,18px,0);
-  transition:opacity .8s var(--e-ut),transform .8s var(--e-ut);
+  transform:translate3d(0,13px,0);
+  transition:opacity .5s var(--e-ut),transform .5s var(--e-ut);
 }
 html[data-motion] [data-stig].nx-in{opacity:1;transform:none}
-[data-stig][data-fördröj="1"]{transition-delay:.08s}
-[data-stig][data-fördröj="2"]{transition-delay:.16s}
-[data-stig][data-fördröj="3"]{transition-delay:.24s}
-[data-stig][data-fördröj="4"]{transition-delay:.32s}
-[data-stig][data-fördröj="5"]{transition-delay:.4s}
+/* html[data-motion] måste stå med. Utan det väger de här reglerna
+   (0,2,0) mot startlägets (0,2,1), och kortformen "transition" där
+   nollställer transition-delay. Trappan var alltså skriven men slog
+   aldrig igenom — allt kom in samtidigt. Samma sorts fälla som gjorde
+   mörkt läge kallt: en högre specificitet som tyst skriver över.
+
+   Tiderna är också nedkortade. Trappan låg förr på .08–.4s ovanpå
+   .8s, så femte blocket hade kommit in efter 1,2 sekunder — långt
+   efter att man läst det första. */
+html[data-motion] [data-stig][data-fördröj="1"]{transition-delay:.05s}
+html[data-motion] [data-stig][data-fördröj="2"]{transition-delay:.1s}
+html[data-motion] [data-stig][data-fördröj="3"]{transition-delay:.15s}
+html[data-motion] [data-stig][data-fördröj="4"]{transition-delay:.2s}
+html[data-motion] [data-stig][data-fördröj="5"]{transition-delay:.25s}
 
 /* ============================================================
    MARKÖREN — bara mus, bara stor skärm
@@ -1994,4 +2007,57 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   --acc-ink:#1A1813;
   --acc-soft:rgba(217,129,79,.14);
   --acc-line:rgba(217,129,79,.34);
+}
+
+/* ============================================================
+   ANSÖKNINGSFORMULÄRET — en ö av ljus i mörkt läge
+   Panelen försvann mot den mörka ytan omkring. I stället för att
+   färga om den bit för bit sätts hela paletten om HÄR, på panelen:
+   varje fält, etikett, knapp och skugga inuti ärver de ljusa
+   värdena och blir därmed exakt det formulär man ser i ljust läge.
+
+   Att sätta variablerna på elementet räcker — en egenskap som
+   ärvs slår rotens värde för allt inuti, oavsett specificitet.
+   ============================================================ */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .nx-panel{
+    --pap:#EFE6D6; --pap-2:#E5D8C2; --pap-3:#D8C7AB;
+    --bl:#2E2A20; --bl-2:#4F4738; --bl-3:#665C49;
+    --ln:#DDCDB2; --ln-2:#C9B492;
+    --nt:#2E2A20; --nt-fg:#EFE6D6; --nt-mut:#B3A88F;
+    --acc:#9C4520; --acc-lugn:#7A3417;
+    --mossa:#546343; --ockra:#7E5714;
+    --acc-ink:#EFE6D6; --acc-text:#7A3417;
+    --acc-soft:#E3CFBD; --acc-line:rgba(156,69,32,.28);
+    --bg:var(--pap-2); --fg:var(--bl);
+    --muted:var(--bl-2); --muted-2:var(--bl-3);
+    --line:var(--ln); --line-2:var(--ln-2);
+    --surface:var(--pap-3); --surface-2:var(--pap-3);
+    --btn-bg:var(--bl); --btn-fg:var(--pap); --focus:var(--bl);
+    --sk-1:0 1px 2px rgba(28,24,18,.05), 0 8px 20px -12px rgba(28,24,18,.14);
+    --sk-2:0 2px 6px rgba(28,24,18,.05), 0 24px 50px -26px rgba(28,24,18,.24);
+    color:var(--bl);
+    /* Skuggan gör att ön ligger PÅ den mörka ytan i stället för att
+       vara ett hål i den. */
+    box-shadow:0 4px 14px rgba(0,0,0,.28), 0 34px 70px -30px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"] .nx-panel{
+  --pap:#EFE6D6; --pap-2:#E5D8C2; --pap-3:#D8C7AB;
+  --bl:#2E2A20; --bl-2:#4F4738; --bl-3:#665C49;
+  --ln:#DDCDB2; --ln-2:#C9B492;
+  --nt:#2E2A20; --nt-fg:#EFE6D6; --nt-mut:#B3A88F;
+  --acc:#9C4520; --acc-lugn:#7A3417;
+  --mossa:#546343; --ockra:#7E5714;
+  --acc-ink:#EFE6D6; --acc-text:#7A3417;
+  --acc-soft:#E3CFBD; --acc-line:rgba(156,69,32,.28);
+  --bg:var(--pap-2); --fg:var(--bl);
+  --muted:var(--bl-2); --muted-2:var(--bl-3);
+  --line:var(--ln); --line-2:var(--ln-2);
+  --surface:var(--pap-3); --surface-2:var(--pap-3);
+  --btn-bg:var(--bl); --btn-fg:var(--pap); --focus:var(--bl);
+  --sk-1:0 1px 2px rgba(28,24,18,.05), 0 8px 20px -12px rgba(28,24,18,.14);
+  --sk-2:0 2px 6px rgba(28,24,18,.05), 0 24px 50px -26px rgba(28,24,18,.24);
+  color:var(--bl);
+  box-shadow:0 4px 14px rgba(0,0,0,.28), 0 34px 70px -30px rgba(0,0,0,.5);
 }
