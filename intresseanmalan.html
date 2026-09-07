@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Intresseanmälan — Nextrum</title>
+<meta name="description" content="Berätta vad ni behöver hjälp med. Att skicka in är gratis och binder er inte vid något — vi hör av oss inom ett par dagar.">
+<link rel="canonical" href="https://nextrum.se/intresseanmalan.html">
+<link rel="alternate" hreflang="sv" href="https://nextrum.se/intresseanmalan.html">
+<link rel="alternate" hreflang="en" href="https://nextrum.se/en/intresseanmalan.html">
+<link rel="alternate" hreflang="x-default" href="https://nextrum.se/intresseanmalan.html">
+<meta name="theme-color" content="#FBFAF8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<!-- delning -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nextrum">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:title" content="Intresseanmälan — Nextrum">
+<meta property="og:description" content="Berätta vad ni behöver hjälp med. Att skicka in är gratis och binder er inte vid något — vi hör av oss inom ett par dagar.">
+<meta property="og:url" content="https://nextrum.se/intresseanmalan.html">
+<meta property="og:image" content="https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="En ung studiehjälpare och en elev pluggar tillsammans vid ett ljust träbord.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Intresseanmälan — Nextrum">
+<meta name="twitter:description" content="Berätta vad ni behöver hjälp med. Att skicka in är gratis och binder er inte vid något — vi hör av oss inom ett par dagar.">
+<meta name="twitter:image" content="https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg">
+
+<!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
+     besökarens IP vid varje sidvisning är därmed borta, och två
+     värdnamn färre ska slås upp innan första texten kan ritas.
+
+     Ingen <link rel="preload"> här med flit: mätt gav den en DUBBEL
+     nedladdning av samma 46 kB. Allt i taggen var rätt — samma
+     adress, as="font", crossorigin, rätt typ — men utan cache-
+     direktiv på svaret återanvänder webbläsaren inte den förladdade
+     kroppen. Cachningen ligger i vercel.json i stället, och där gör
+     den nytta vid varje återbesök i ett år. -->
+<link rel="stylesheet" href="nextrum-typsnitt.css">
+
+<!-- ordningen spelar roll: bas → startsida → cinema -->
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css">
+<link rel="stylesheet" href="nextrum-cinema.css">
+</head>
+<body>
+
+<!-- ==========================================================
+     HEADER — identisk markup på alla fyra publika sidor.
+     Ändrar du här måste du ändra i index.html, priser.html,
+     faq.html och bli-studiehjalpare.html. Länkarna skrivs som
+     "index.html#hur"; på startsidan kortar nextrum-app.js ner dem
+     till rena ankare så att man scrollar istället för att ladda om.
+     ========================================================== -->
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
+<header class="hdr" id="hdr">
+  <div class="wrap nav">
+    <!-- Språkval, övre vänstra hörnet. Det aktiva språket är ett
+         <b>, inte en länk: en länk till sidan man redan står på ser
+         ut som ett val men gör ingenting. -->
+    <div class="sprakval" role="group" aria-label="Språk / Language">
+      <b lang="sv" aria-current="true">SV</b>
+      <i aria-hidden="true"></i>
+      <a lang="en" hreflang="en" href="en/intresseanmalan.html">ENG</a>
+    </div>
+
+    <a href="index.html" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true">
+        <rect width="26" height="26" rx="7"/>
+        <path d="M8 18.5V7.5L18 18.5V7.5"/>
+      </svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Huvudmeny">
+      <a href="index.html#hur" data-nav>Så fungerar Nextrum</a>
+      <a href="index.html#foraldrar" data-nav>För elever &amp; föräldrar</a>
+      <a href="bli-studiehjalpare.html" data-nav>Bli studiehjälpare</a>
+      <a href="priser.html" data-nav>Priser</a>
+    </nav>
+
+    <div class="nav-actions">
+      <!-- href pekar på föräldravyn så att länken fungerar utan JS.
+           Med JS öppnas vyväljaren istället — utom när man redan är
+           inloggad, då skriver NX.märkInloggad() om länken. -->
+      <a class="login" href="foralder.html" id="login-link" data-vagval>Logga in</a>
+      <span class="nx-magnet" data-magnet>
+        <a class="btn btn-primary btn-sm" href="intresseanmalan.html">Intresseanmälan</a>
+      </span>
+    </div>
+
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="index.html#om">Vår idé <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#hur">Så fungerar Nextrum <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="index.html#foraldrar">För elever &amp; föräldrar <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="bli-studiehjalpare.html">Bli studiehjälpare <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="priser.html">Priser <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="faq.html">FAQ / Kontakt <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions">
+    <a class="btn btn-primary btn-block btn-lg" href="intresseanmalan.html">Skicka intresseanmälan</a>
+    <a class="btn btn-ghost btn-block btn-lg" href="foralder.html">Logga in</a>
+  </div>
+  <div class="m-foot">
+    <span class="xsmall">Av unga, för unga.</span>
+    <a class="xsmall" href="mailto:hej@nextrum.se">hej@nextrum.se</a>
+  </div>
+</div>
+
+<main id="innehall">
+
+<section class="wrap nx-page-hero">
+  <a class="nx-back" href="index.html"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
+  <span class="nx-et acc" data-stig style="margin-top:22px">Intresseanmälan</span>
+  <h1 class="nx-d1" data-avslöj>Berätta vad ni<br>behöver hjälp med.</h1>
+  <p class="nx-lede" data-stig data-fördröj="1">Fyll i några enkla uppgifter
+          så hör vi av oss. Att skicka in kostar ingenting och binder er inte vid något.</p>
+</section>
+
+<section class="nx-yta nx-sek" id="intresse">
+  <div class="nx-wrap-bred">
+    <div class="nx-lead-grid">
+
+      <div>
+
+        <ul class="nx-steplist" data-stig data-fördröj="2">
+          <li class="on"><em>01</em><div><b>Du skickar in formuläret</b><span>Tar ungefär två minuter.</span></div></li>
+          <li><em>02</em><div><b>Vi hör av oss</b><span>Vi går igenom behovet tillsammans med er.</span></div></li>
+          <li><em>03</em><div><b>Ni blir matchade</b><span>Studieplanen skrivs och föräldravyn låses upp.</span></div></li>
+        </ul>
+
+        <!-- Fyller spalten under stegen: det stod tomt hela vägen ner
+             bredvid formuläret. Svaren här är de frågor folk annars
+             mejlar om innan de vågar skicka in. -->
+        <div class="nx-lead-svar" data-stig data-fördröj="3">
+          <div>
+            <b>Kostar det något att skicka in?</b>
+            <p>Nej. Intresseanmälan är gratis och binder er inte vid något. Ni betalar
+              först när ni bokat ett pass.</p>
+          </div>
+          <div>
+            <b>Hur snabbt hör ni av er?</b>
+            <p>Vi svarar normalt inom ett par dagar. Vet ni inte exakt vad ni behöver
+              hjälp med går det bra att skriva ungefär — vi reder ut det tillsammans.</p>
+          </div>
+          <div>
+            <b>Vad händer med uppgifterna?</b>
+            <p>De används bara för att kunna kontakta er om anmälan. Inget delas vidare.
+              <a class="nx-lank-in" href="faq.html#kontakt">Så hanterar vi uppgifter</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="nx-form-yta" data-stig data-fördröj="1">
+
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend class="nx-et" style="margin-bottom:16px">Jag är…</legend>
+          <div class="nx-roll" role="tablist" aria-label="Välj vilken anmälan du vill göra">
+            <button type="button" role="tab" id="roll-familj" aria-selected="true"
+                    aria-controls="panel-familj" data-roll="familj">Förälder eller elev</button>
+            <button type="button" role="tab" id="roll-tutor" aria-selected="false"
+                    aria-controls="panel-tutor" data-roll="tutor">Vill bli studiehjälpare</button>
+          </div>
+        </fieldset>
+
+        <!-- ---------- FÖRÄLDER / ELEV → leads ---------- -->
+        <div class="nx-roll-panel" id="panel-familj" role="tabpanel" aria-labelledby="roll-familj">
+          <form class="form-grid" id="lead-form" novalidate>
+            <div class="pay-field"><label for="l-name">Namn</label>
+              <input class="inp" id="l-name" name="parent_name" required autocomplete="name"></div>
+            <div class="pay-field"><label for="l-email">E-post</label>
+              <input class="inp" id="l-email" name="email" type="email" required autocomplete="email"></div>
+            <div class="pay-field"><label for="l-phone">Telefon</label>
+              <input class="inp" id="l-phone" name="phone" type="tel" autocomplete="tel" placeholder="Valfritt"></div>
+            <div class="pay-field"><label for="l-child">Elevens namn</label>
+              <input class="inp" id="l-child" name="child_name"></div>
+            <div class="pay-field"><label for="l-grade">Årskurs</label>
+              <select class="sel" id="l-grade" name="grade">
+                <option value="">Välj årskurs</option>
+                <option>Åk 1</option><option>Åk 2</option><option>Åk 3</option><option>Åk 4</option>
+                <option>Åk 5</option><option>Åk 6</option><option>Åk 7</option><option>Åk 8</option><option>Åk 9</option>
+                <option>Gymnasiet</option>
+              </select>
+            </div>
+            <div class="pay-field"><label for="l-subject">Ämne</label>
+              <select class="sel" id="l-subject" name="subject">
+                <option value="">Välj ämne</option>
+                <option>Matematik</option><option>Svenska</option><option>Engelska</option>
+                <option>NO / Fysik / Kemi / Biologi</option><option>SO / Historia / Samhällskunskap</option>
+                <option>Flera ämnen</option><option>Andra ämnen</option><option>Vet inte än</option>
+              </select>
+            </div>
+            <!-- Fälls ut när "Andra ämnen" väljs. hidden tas bort av
+                 skriptet längst ner, och required sätts samtidigt. -->
+            <div class="pay-field full" id="l-subject-annat-falt" hidden>
+              <label for="l-subject-annat">Vilka ämnen?</label>
+              <input class="inp" id="l-subject-annat" name="subject_annat"
+                     placeholder="t.ex. spanska, programmering, musikteori">
+            </div>
+            <div class="pay-field"><label for="l-format">Önskat upplägg</label>
+              <select class="sel" id="l-format" name="format">
+                <option value="">Spelar ingen roll</option>
+                <option>Online</option><option>På plats</option><option>Blandat</option>
+              </select>
+            </div>
+            <div class="pay-field"><label for="l-tider">Tider som passar</label>
+              <input class="inp" id="l-tider" name="tider" placeholder="t.ex. vardagar efter 16"></div>
+            <div class="pay-field full"><label for="l-msg">Vad eleven behöver hjälp med</label>
+              <textarea class="inp" id="l-msg" name="message" placeholder="Vad går trögt just nu? Finns det något vi bör veta för att välja rätt person?"></textarea>
+            </div>
+
+            <label class="nx-samtycke full" for="l-gdpr">
+              <input type="checkbox" id="l-gdpr" required>
+              <span>Jag godkänner att Nextrum sparar uppgifterna för att kunna kontakta oss om
+                intresseanmälan. <a href="faq.html#kontakt">Så hanterar vi uppgifter</a>.</span>
+            </label>
+
+            <div class="nx-submit-row">
+              <span class="nx-magnet" data-magnet>
+                <button class="btn btn-primary btn-lg" type="submit" id="lead-submit">
+                  Skicka intresseanmälan
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+                </button>
+              </span>
+            </div>
+            <p class="nx-fineprint">Ingen bindningstid. Att skicka in en intresseanmälan kostar ingenting.</p>
+            <p class="ok-msg" id="lead-msg" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <!-- ---------- STUDIEHJÄLPARE → applications ---------- -->
+        <div class="nx-roll-panel" id="panel-tutor" role="tabpanel" aria-labelledby="roll-tutor" hidden>
+          <form class="form-grid" id="apply-form" novalidate>
+            <div class="pay-field"><label for="ap-name">Namn</label>
+              <input class="inp" id="ap-name" name="namn" required autocomplete="name"></div>
+            <div class="pay-field"><label for="ap-age">Ålder</label>
+              <input class="inp" id="ap-age" name="alder" inputmode="numeric" required></div>
+            <div class="pay-field"><label for="ap-email">E-post</label>
+              <input class="inp" id="ap-email" name="epost" type="email" required autocomplete="email"></div>
+            <div class="pay-field"><label for="ap-phone">Telefon</label>
+              <input class="inp" id="ap-phone" name="telefon" type="tel" autocomplete="tel" placeholder="Valfritt"></div>
+            <div class="pay-field full"><label for="ap-school">Skola och program</label>
+              <input class="inp" id="ap-school" name="skola" placeholder="t.ex. Kungsholmens gymnasium, NA"></div>
+            <div class="pay-field full"><label for="ap-subj">Ämnen du vill hjälpa till med</label>
+              <input class="inp" id="ap-subj" name="amnen" placeholder="t.ex. matematik, fysik, engelska"></div>
+            <div class="pay-field full"><label for="ap-avail">Tider som funkar för dig</label>
+              <input class="inp" id="ap-avail" name="tider" placeholder="t.ex. vardagar efter 16, helger"></div>
+            <div class="pay-field full"><label for="ap-erf">Erfarenhet av att förklara för andra</label>
+              <textarea class="inp" id="ap-erf" name="erfarenhet" style="min-height:74px" placeholder="Läxhjälp, ledarskap, träning, syskon — allt räknas. Har du ingen alls är det också helt okej."></textarea></div>
+            <div class="pay-field full"><label for="ap-why">Varför vill du bli studiehjälpare?</label>
+              <textarea class="inp" id="ap-why" name="varfor" style="min-height:74px"></textarea></div>
+
+            <div class="pay-field full">
+              <label for="ap-cv">CV <span class="lbl-valfri">valfritt</span></label>
+              <div class="nx-fil">
+                <input type="file" id="ap-cv" name="cv"
+                       accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                <label class="nx-fil-knapp" for="ap-cv">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14V4M6.5 7.5 10 4l3.5 3.5M4 15.5v1A1.5 1.5 0 0 0 5.5 18h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
+                  Välj fil
+                </label>
+                <span class="nx-fil-namn" id="ap-cv-namn">Ingen fil vald</span>
+              </div>
+              <p class="nx-fil-hjalp">PDF eller Word, högst 5 MB. Du kan skicka in utan CV —
+                vi läser ansökan ändå.</p>
+            </div>
+
+            <label class="nx-samtycke full" for="ap-gdpr">
+              <input type="checkbox" id="ap-gdpr" required>
+              <span>Jag godkänner att Nextrum sparar uppgifterna för att kunna behandla min
+                ansökan. <a href="faq.html#kontakt">Så hanterar vi uppgifter</a>.</span>
+            </label>
+
+            <div class="nx-submit-row">
+              <span class="nx-magnet" data-magnet>
+                <button class="btn btn-primary btn-lg" type="submit">
+                  Skicka ansökan
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+                </button>
+              </span>
+            </div>
+            <p class="nx-fineprint">Vi läser alla ansökningar. Du behöver inga toppbetyg — vi tittar
+              lika mycket på hur du förklarar.</p>
+            <p class="ok-msg" id="apply-ok" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ==========================================================
+     FOOTER — identisk på alla publika sidor, se kommentaren
+     vid headern.
+     ========================================================== -->
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        <a href="index.html" class="logo">
+          <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+          <span class="logo-text">Nextrum</span>
+        </a>
+        <p>Av unga, för unga.</p>
+        <div class="socials">
+          <a href="https://www.instagram.com/nextrum.se" aria-label="Nextrum på Instagram" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm8.4-11.2a1.55 1.55 0 11-3.1 0 1.55 1.55 0 013.1 0z"/></svg></a>
+          <a href="https://www.tiktok.com/@nextrum.ab" aria-label="Nextrum på TikTok" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.1v13.2a2.6 2.6 0 11-2.2-2.6v-3.2a5.8 5.8 0 105.3 5.8V9.1a6.9 6.9 0 004 1.3V7.2a3.9 3.9 0 01-4-4z"/></svg></a>
+          <a href="https://www.facebook.com/share/1DuLomKfy8/" aria-label="Nextrum på Facebook" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg></a>
+          <a href="https://www.linkedin.com/company/nextrum-se/" aria-label="Nextrum på LinkedIn" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9.5 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.75-1.95 4 0 4.75 2.5 4.75 5.8V21h-4v-5.6c0-1.35-.03-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.7h-4z"/></svg></a>
+        </div>
+      </div>
+
+      <nav aria-labelledby="ftr-nextrum">
+        <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
+        <ul>
+          <li><a href="index.html#om">Vår idé</a></li>
+          <li><a href="index.html#hur">Så fungerar Nextrum</a></li>
+          <li><a href="index.html#studiehjalpare">Studiehjälpare</a></li>
+          <li><a href="priser.html">Priser</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-fordig">
+        <h2 class="ftr-rubrik" id="ftr-fordig">För dig</h2>
+        <ul>
+          <li><a href="index.html#foraldrar">För elever &amp; föräldrar</a></li>
+          <li><a href="bli-studiehjalpare.html">Bli studiehjälpare</a></li>
+          <li><a href="intresseanmalan.html">Intresseanmälan</a></li>
+          <li><a href="foralder.html" data-vagval>Logga in</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-hjalp">
+        <h2 class="ftr-rubrik" id="ftr-hjalp">Hjälp</h2>
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="faq.html#kontakt">Kontakt</a></li>
+          <li><a href="integritetspolicy.html">Integritetspolicy</a></li>
+          <li><a href="anvandarvillkor.html">Användarvillkor</a></li>
+          <li><a href="lagring.html">Cookies och lagring</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="ftr-bot">
+      <span>© <span id="year">2026</span> Nextrum.</span>
+      <span>Byggd i Sverige.</span>
+    </div>
+  </div>
+
+  <!-- sista intrycket: bara ordet, mycket stort, mycket tyst -->
+  <div class="nx-ftr-ord" aria-hidden="true"><span>Nextrum</span></div>
+</footer>
+
+<!-- ==========================================================
+     VYVÄLJARE — dörren in till inloggningen.
+     Själva inloggningen ligger kvar i foralder.html och
+     larare.html och är orörd.
+     ========================================================== -->
+<div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
+  <button class="nx-vagval-stang" data-vagval-stang aria-label="Stäng"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  <div class="nx-vagval-box">
+    <span class="nx-et">Logga in</span>
+    <h2 id="vagval-t" style="margin-top:18px">Välkommen tillbaka.</h2>
+    <p class="nx-lede-s">Vilken vy vill du till?</p>
+
+    <div class="nx-vagval-val">
+      <a href="foralder.html">
+        <span>
+          <b>Förälder eller elev</b>
+          <span>Studieplan, bokning, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="larare.html">
+        <span>
+          <b>Studiehjälpare</b>
+          <span>Dina elever, ditt schema, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <p class="nx-vagval-fot">
+      Har ni inte skickat intresseanmälan än? <a href="intresseanmalan.html">Gör det här</a>.
+    </p>
+  </div>
+</div>
+
+<!-- Biblioteket ligger hos oss, med fast version.
+
+     Låg förr på unpkg.com som @2 — alltså "vad unpkg råkar mena med
+     tvåan just nu". Under en timmes arbete flyttade den sig från
+     2.115.0 till 2.116.0 av sig själv. Den raden körde på varje sida,
+     också de inloggade, där någon skriver sitt lösenord och ett barns
+     namn och anteckningar visas. En tredjepart med fri versionsrätt
+     på just de sidorna är inte en risk värd att bära för att slippa
+     en fil i repot.
+
+     Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
+<script src="bibliotek/supabase-js-2.116.0.js"></script>
+<!-- Vercel Web Analytics.
+
+     Sätter INGA cookies: unika besökare räknas via en hash av
+     IP och webbläsare med ett salt som byts dagligen, och den råa
+     IP-adressen sparas inte. Därför krävs inget samtycke — men det
+     står ändå i integritetspolicyn och på lagring.html, eftersom
+     "vi mäter ingenting" inte längre är sant.
+
+     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
+     finns inget att optimera för besökarens skull, och det vore ett
+     onödigt anrop från en sida där någon sköter sitt barns skolgång.
+
+     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
+     vilket är ofarligt — inget mäts när man utvecklar. -->
+<script defer src="/_vercel/insights/script.js"></script>
+<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
+     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
+<script defer src="/_vercel/speed-insights/script.js"></script>
+<script src="nextrum-config.js"></script>
+<script src="nextrum-images.js"></script>
+<script src="nextrum-fel.js"></script>
+<script src="nextrum-app.js"></script>
+<script src="nextrum-motion.js"></script>
+<script>
+(function () {
+  'use strict';
+  const { $, $$, esc, säg, rensa, felText } = NX;
+
+  NX.initHeader();
+  NX.initReveal();
+  NX.kollaKoppling();
+  NX.märkInloggad();
+  NXFin.allt();
+  NX.bildIntoning();
+  NX.initVagval();
+
+  /* ==========================================================
+     ROLLVÄLJAREN I INTRESSEANMÄLAN
+     Byter mellan de två formulären. Båda fanns redan och skriver
+     till samma tabeller som förut.
+     ========================================================== */
+
+  /* ==========================================================
+     "ANDRA ÄMNEN" OCH CV
+     Två små fält som beter sig som folk förväntar sig: rutan för
+     fritext dyker upp först när den behövs, och filnamnet syns när
+     man valt en fil (annars vet man inte om klicket tog).
+     ========================================================== */
+  const ämne = $('#l-subject'), ämneFält = $('#l-subject-annat-falt'), ämneInp = $('#l-subject-annat');
+  if (ämne && ämneFält && ämneInp) {
+    const växla = () => {
+      const på = ämne.value === 'Andra ämnen';
+      ämneFält.hidden = !på;
+      ämneInp.required = på;
+      if (!på) ämneInp.value = '';
+    };
+    ämne.addEventListener('change', växla);
+    växla();
+  }
+
+  const cv = $('#ap-cv'), cvNamn = $('#ap-cv-namn');
+  if (cv && cvNamn) {
+    const MAX = 5 * 1024 * 1024;
+    cv.addEventListener('change', () => {
+      const f = cv.files && cv.files[0];
+      if (!f) { cvNamn.textContent = 'Ingen fil vald'; cvNamn.classList.remove('fel'); return; }
+      if (f.size > MAX) {
+        cv.value = '';
+        cvNamn.textContent = 'Filen är större än 5 MB — välj en mindre';
+        cvNamn.classList.add('fel');
+        return;
+      }
+      cvNamn.textContent = f.name;
+      cvNamn.classList.remove('fel');
+    });
+  }
+
+  const rollKnappar = $$('[data-roll]');
+  function väljRoll(roll, flyttaFokus) {
+    rollKnappar.forEach(b => b.setAttribute('aria-selected', String(b.dataset.roll === roll)));
+    $$('.nx-roll-panel').forEach(p => { p.hidden = (p.id !== 'panel-' + roll); });
+    if (flyttaFokus) {
+      const f = $('#panel-' + roll + ' input, #panel-' + roll + ' select');
+      if (f) f.focus({ preventScroll: true });
+    }
+  }
+  rollKnappar.forEach(b => b.addEventListener('click', () => väljRoll(b.dataset.roll, true)));
+
+  /* pilar mellan flikarna, som en riktig tablist */
+  $('.nx-roll') && $('.nx-roll').addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    const i = rollKnappar.findIndex(b => b.getAttribute('aria-selected') === 'true');
+    const nästa = rollKnappar[(i + (e.key === 'ArrowRight' ? 1 : rollKnappar.length - 1)) % rollKnappar.length];
+    nästa.focus(); väljRoll(nästa.dataset.roll, false);
+  });
+
+  /* "Ansök direkt här" hoppar hit och slår om till rätt flik */
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-open="apply"]');
+    if (!t) return;
+    e.preventDefault();
+    väljRoll('tutor', false);
+    const mål = $('#intresse');
+    if (mål) mål.scrollIntoView({ behavior: NXMotion.reducerad ? 'auto' : 'smooth', block: 'start' });
+    setTimeout(() => { const f = $('#ap-name'); if (f) f.focus({ preventScroll: true }); }, 620);
+  });
+
+  /* ?roll=tutor i adressen öppnar studiehjälparfliken direkt */
+  if (/[?&]roll=tutor/.test(location.search)) väljRoll('tutor', false);
+
+  /* ==========================================================
+     INTRESSEANMÄLAN → tabellen "leads"
+     De fält som inte har någon egen kolumn (telefon, upplägg,
+     tider, samtycke) läggs sist i "message" som märkta rader.
+     Då behöver schemat inte ändras och ingenting går förlorat.
+     ========================================================== */
+  const leadForm = $('#lead-form');
+  if (leadForm) {
+    leadForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const msg = $('#lead-msg'), knapp = $('#lead-submit');
+      rensa(msg);
+
+      const namn = $('#l-name').value.trim();
+      const epost = $('#l-email').value.trim();
+      if (!namn || !epost) { säg(msg, 'Fyll i namn och e-post.', false); return; }
+      if (!$('#l-gdpr').checked) { säg(msg, 'Du behöver godkänna att vi sparar uppgifterna för att kunna höra av oss.', false); return; }
+      if (!supa) { säg(msg, 'Databasen är inte kopplad än, så anmälan kan inte skickas. Fyll i nextrum-config.js.', false); return; }
+
+      const extra = [];
+      const tel = $('#l-phone').value.trim();
+      const format = $('#l-format').value;
+      const tider = $('#l-tider').value.trim();
+      if (tel) extra.push('Telefon: ' + tel);
+      if (format) extra.push('Önskat upplägg: ' + format);
+      if (tider) extra.push('Tider som passar: ' + tider);
+      extra.push('Samtycke till lagring: ja (' + new Date().toISOString().slice(0, 10) + ')');
+
+      const fritext = $('#l-msg').value.trim();
+      const message = [fritext, extra.join('\n')].filter(Boolean).join('\n\n');
+
+      /* Valde de "Andra ämnen" är fritexten det som faktiskt betyder
+         något — skriv den i subject-kolumnen i stället för etiketten. */
+      const annat = $('#l-subject-annat') ? $('#l-subject-annat').value.trim() : '';
+      const ämnesval = ($('#l-subject').value === 'Andra ämnen' && annat)
+        ? 'Andra ämnen: ' + annat
+        : ($('#l-subject').value || null);
+
+      knapp.setAttribute('aria-busy', 'true');
+      const { error } = await supa.from('leads').insert({
+        parent_name: namn,
+        email: epost,
+        child_name: $('#l-child').value.trim() || null,
+        grade: $('#l-grade').value || null,
+        subject: ämnesval,
+        message: message || null
+      });
+      knapp.removeAttribute('aria-busy');
+
+      if (error) { säg(msg, 'Kunde inte skicka: ' + felText(error), false); return; }
+      leadForm.reset();
+      säg(msg, 'Tack. Vi har tagit emot er intresseanmälan och återkommer på ' + epost + ' så snart vi kan.', true);
+    });
+  }
+
+  /* ==========================================================
+     ANSÖKAN → tabellen "applications"
+     Samma implementation som på bli-studiehjalpare.html, den bor
+     i nextrum-app.js. Telefon, erfarenhet och samtycke läggs till
+     i "why" på samma sätt som ovan.
+     ========================================================== */
+  NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'), {
+    krävSamtycke: '#ap-gdpr',
+    cv: '#ap-cv',
+    extra: () => {
+      const rader = [];
+      const tel = $('#ap-phone') && $('#ap-phone').value.trim();
+      const erf = $('#ap-erf') && $('#ap-erf').value.trim();
+      if (tel) rader.push('Telefon: ' + tel);
+      if (erf) rader.push('Erfarenhet: ' + erf);
+
+      rader.push('Samtycke till lagring: ja (' + new Date().toISOString().slice(0, 10) + ')');
+      return rader.join('\n');
+    }
+  });
+})();
+</script>
+</body>
+</html>

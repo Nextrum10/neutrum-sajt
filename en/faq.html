@@ -90,7 +90,7 @@
            inloggad, då skriver NX.märkInloggad() om länken. -->
       <a class="login" href="../foralder.html" id="login-link" data-vagval>Log in</a>
       <span class="nx-magnet" data-magnet>
-        <a class="btn btn-primary btn-sm" href="index.html#intresse">Get started</a>
+        <a class="btn btn-primary btn-sm" href="intresseanmalan.html">Get started</a>
       </span>
     </div>
 
@@ -106,9 +106,9 @@
   <a class="m-link" href="index.html#foraldrar">For students &amp; parents <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <a class="m-link" href="bli-studiehjalpare.html">Become a tutor <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <a class="m-link" href="priser.html">Pricing <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
-  <a class="m-link" href="faq.html">FAQ <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="faq.html">FAQ / Contact <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <div class="m-actions">
-    <a class="btn btn-primary btn-block btn-lg" href="index.html#intresse">Get started</a>
+    <a class="btn btn-primary btn-block btn-lg" href="intresseanmalan.html">Get started</a>
     <a class="btn btn-ghost btn-block btn-lg" href="../foralder.html">Log in</a>
   </div>
   <div class="m-foot">
@@ -123,7 +123,7 @@
   <a class="nx-back" href="index.html"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> To the home page</a>
   <span class="nx-et acc" data-stig style="margin-top:22px">FAQ</span>
   <h1 class="nx-d1" data-avslöj>Frequently asked questions</h1>
-  <p class="nx-lede" data-stig data-fördröj="1">The things people usually ask, collected. If you cannot find the answer — <a href="index.html#kontakt" style="color:var(--fg);text-decoration:underline;text-underline-offset:3px">write to us</a> and we will reply.</p>
+  <p class="nx-lede" data-stig data-fördröj="1">The things people usually ask, collected. If you cannot find the answer — <a href="#kontakt" style="color:var(--fg);text-decoration:underline;text-underline-offset:3px">write to us</a> and we will reply.</p>
   <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#897D6A">
     <img class="nx-img" src="../bilder/04-sjalvfortroende-1280.jpg"
          srcset="../bilder/04-sjalvfortroende-640.jpg 640w, ../bilder/04-sjalvfortroende-960.jpg 960w, ../bilder/04-sjalvfortroende-1280.jpg 1280w, ../bilder/04-sjalvfortroende-1600.jpg 1600w, ../bilder/04-sjalvfortroende-1920.jpg 1920w"
@@ -238,19 +238,51 @@
   </div>
 </section>
 
-<section class="nx-surface">
-  <div class="sec wrap">
-    <div class="nx-empty rv">
-      <span class="ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H11l-5 4v-4H4z"/></svg></span>
-      <b>Did you not find your answer?</b>
-      <p>Write to us and we will reply to the email you give. We answer everything — including questions you think sound silly.</p>
-      <a class="btn btn-primary" href="index.html#kontakt">Contact us <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+<section class="nx-yta nx-sek" id="kontakt">
+  <div class="nx-wrap-bred">
+    <div class="contact">
+      <div>
+        <span class="nx-et acc" data-stig>Contact</span>
+        <h2 class="nx-d2" data-avslöj style="margin-top:20px">Got questions?<br>We are here to help.</h2>
+        <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:20px">Are you a parent, a student, an upper-secondary student, or representing a school? Get in
+          touch.</p>
+
+        <div style="margin-top:32px" data-stig data-fördröj="2">
+          <div class="nx-contact-card">
+            <span class="k">Email</span>
+            <a href="mailto:hej@nextrum.se">hej@nextrum.se</a>
+          </div>
+          <div class="nx-contact-card">
+            <span class="k">Location</span>
+            <span class="v">Stockholm, Sweden</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nx-form-yta" data-stig data-fördröj="1">
+        <form class="form-grid" id="contact-form" novalidate>
+          <div class="pay-field"><label for="c-name">Name</label><input class="inp" id="c-name" name="namn" required autocomplete="name"></div>
+          <div class="pay-field"><label for="c-email">Email</label><input class="inp" id="c-email" name="epost" type="email" required autocomplete="email"></div>
+          <div class="pay-field full"><label for="c-role">I am</label>
+            <select class="sel" id="c-role" name="roll">
+              <option>Parent</option><option>Student</option><option>An upper-secondary student looking for work</option><option>A school</option><option>Other</option>
+            </select>
+          </div>
+          <div class="pay-field full"><label for="c-msg">Message</label><textarea class="inp" id="c-msg" name="meddelande" required></textarea></div>
+          <div class="nx-submit-row">
+            <span class="nx-magnet" data-magnet>
+              <button class="btn btn-primary btn-lg" type="submit">Send message</button>
+            </span>
+            <span class="xsmall">We will reply to the email you give.</span>
+          </div>
+          <p class="ok-msg" id="contact-ok" role="status" aria-live="polite"></p>
+        </form>
+      </div>
     </div>
   </div>
 </section>
 
 </main>
-
 
 <!-- ==========================================================
      FOOTER — identisk på alla publika sidor, se kommentaren
@@ -287,7 +319,7 @@
         <ul>
           <li><a href="index.html#foraldrar">For students &amp; parents</a></li>
           <li><a href="bli-studiehjalpare.html">Become a tutor</a></li>
-          <li><a href="index.html#intresse">Get started</a></li>
+          <li><a href="intresseanmalan.html">Get started</a></li>
           <li><a href="../foralder.html" data-vagval>Log in</a></li>
         </ul>
       </nav>
@@ -295,7 +327,7 @@
         <h2 class="ftr-rubrik" id="ftr-hjalp">Help</h2>
         <ul>
           <li><a href="faq.html">FAQ</a></li>
-          <li><a href="index.html#kontakt">Contact</a></li>
+          <li><a href="#kontakt">Contact</a></li>
           <li><a href="integritetspolicy.html">Privacy policy</a></li>
           <li><a href="anvandarvillkor.html">Terms of use</a></li>
           <li><a href="lagring.html">Cookies and storage</a></li>
@@ -343,7 +375,7 @@
     </div>
 
     <p class="nx-vagval-fot">
-      Haven't got in touch yet? <a href="index.html#intresse">Start here</a>.
+      Haven't got in touch yet? <a href="intresseanmalan.html">Start here</a>.
     </p>
   </div>
 </div>
@@ -386,14 +418,44 @@
 <script>
 (function () {
   'use strict';
+  const { $, säg, felText } = NX;
+
   NX.initHeader();
   NX.initReveal();
+  NX.kollaKoppling();
   NXFin.allt();
   NX.bildIntoning();
   NX.initVagval();
   NX.initFaq();
   NX.initPris();
   NX.märkInloggad();
+
+  /* ==========================================================
+     KONTAKTFORMULÄR → tabellen "contact_messages"
+     ========================================================== */
+  const contactForm = $('#contact-form');
+  if (contactForm) {
+    contactForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const msg = $('#contact-ok');
+      rensa(msg);
+      const f = new FormData(contactForm);
+      const namn = String(f.get('namn') || '').trim();
+      const epost = String(f.get('epost') || '').trim();
+      const med = String(f.get('meddelande') || '').trim();
+      if (!namn || !epost || !med) { säg(msg, 'Fyll i namn, e-post och meddelande.', false); return; }
+      if (!supa) { säg(msg, 'Databasen är inte kopplad än.', false); return; }
+
+      const { error } = await supa.from('contact_messages').insert({
+        name: namn, email: epost,
+        role: String(f.get('roll') || '').trim() || null,
+        message: med
+      });
+      if (error) { säg(msg, 'Kunde inte skicka: ' + felText(error), false); return; }
+      contactForm.reset();
+      säg(msg, 'Mottaget. Vi återkommer på mejlen du angav.', true);
+    });
+  }
 })();
 </script>
 </body>
