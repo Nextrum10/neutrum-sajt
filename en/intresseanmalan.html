@@ -156,25 +156,17 @@
           <div>
             <b>What happens to the details?</b>
             <p>They are used only to contact you about your enquiry. Nothing is shared further.
-              <a class="nx-lank-in" href="faq.html#kontakt">How we handle your data</a>.</p>
+              <a class="nx-lank-in" href="integritetspolicy.html">How we handle your data</a>.</p>
           </div>
         </div>
       </div>
 
       <div class="nx-form-yta" data-stig data-fördröj="1">
 
-        <fieldset style="border:0;padding:0;margin:0">
-          <legend class="nx-et" style="margin-bottom:16px">I am…</legend>
-          <div class="nx-roll" role="tablist" aria-label="Choose which form you want">
-            <button type="button" role="tab" id="roll-familj" aria-selected="true"
-                    aria-controls="panel-familj" data-roll="familj">Parent or student</button>
-            <button type="button" role="tab" id="roll-tutor" aria-selected="false"
-                    aria-controls="panel-tutor" data-roll="tutor">Want to become a tutor</button>
-          </div>
-        </fieldset>
+        <p class="nx-fineprint" style="margin:0 0 22px">This form is for students and parents.
+          Would you rather become a tutor —
+          <a href="bli-studiehjalpare.html#ansok">apply here</a>.</p>
 
-        <!-- ---------- FÖRÄLDER / ELEV → leads ---------- -->
-        <div class="nx-roll-panel" id="panel-familj" role="tabpanel" aria-labelledby="roll-familj">
           <form class="form-grid" id="lead-form" novalidate>
             <div class="pay-field"><label for="l-name">Name</label>
               <input class="inp" id="l-name" name="parent_name" required autocomplete="name"></div>
@@ -221,7 +213,7 @@
 
             <label class="nx-samtycke full" for="l-gdpr">
               <input type="checkbox" id="l-gdpr" required>
-              <span>I agree that Nextrum may store these details in order to contact us about the enquiry. <a href="faq.html#kontakt">How we handle your data</a>.</span>
+              <span>I agree that Nextrum may store these details in order to contact you about the enquiry. <a href="integritetspolicy.html">How we handle your data</a>.</span>
             </label>
 
             <div class="nx-submit-row">
@@ -235,62 +227,6 @@
             <p class="nx-fineprint">No minimum term. Getting in touch costs nothing.</p>
             <p class="ok-msg" id="lead-msg" role="status" aria-live="polite"></p>
           </form>
-        </div>
-
-        <!-- ---------- STUDIEHJÄLPARE → applications ---------- -->
-        <div class="nx-roll-panel" id="panel-tutor" role="tabpanel" aria-labelledby="roll-tutor" hidden>
-          <form class="form-grid" id="apply-form" novalidate>
-            <div class="pay-field"><label for="ap-name">Name</label>
-              <input class="inp" id="ap-name" name="namn" required autocomplete="name"></div>
-            <div class="pay-field"><label for="ap-age">Age</label>
-              <input class="inp" id="ap-age" name="alder" inputmode="numeric" required></div>
-            <div class="pay-field"><label for="ap-email">Email</label>
-              <input class="inp" id="ap-email" name="epost" type="email" required autocomplete="email"></div>
-            <div class="pay-field"><label for="ap-phone">Phone</label>
-              <input class="inp" id="ap-phone" name="telefon" type="tel" autocomplete="tel" placeholder="Optional"></div>
-            <div class="pay-field full"><label for="ap-school">School and programme</label>
-              <input class="inp" id="ap-school" name="skola" placeholder="e.g. Kungsholmens gymnasium, science programme"></div>
-            <div class="pay-field full"><label for="ap-subj">Subjects you want to help with</label>
-              <input class="inp" id="ap-subj" name="amnen" placeholder="e.g. maths, physics, English"></div>
-            <div class="pay-field full"><label for="ap-avail">Times that suit you</label>
-              <input class="inp" id="ap-avail" name="tider" placeholder="e.g. weekdays after 4pm, weekends"></div>
-            <div class="pay-field full"><label for="ap-erf">Experience of explaining things to others</label>
-              <textarea class="inp" id="ap-erf" name="erfarenhet" style="min-height:74px" placeholder="Tutoring, leadership, coaching, siblings — it all counts. If you have none at all, that is fine too."></textarea></div>
-            <div class="pay-field full"><label for="ap-why">Why do you want to become a tutor?</label>
-              <textarea class="inp" id="ap-why" name="varfor" style="min-height:74px"></textarea></div>
-
-            <div class="pay-field full">
-              <label for="ap-cv">CV <span class="lbl-valfri">optional</span></label>
-              <div class="nx-fil">
-                <input type="file" id="ap-cv" name="cv"
-                       accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                <label class="nx-fil-knapp" for="ap-cv">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14V4M6.5 7.5 10 4l3.5 3.5M4 15.5v1A1.5 1.5 0 0 0 5.5 18h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
-                  Choose file
-                </label>
-                <span class="nx-fil-namn" id="ap-cv-namn">No file chosen</span>
-              </div>
-              <p class="nx-fil-hjalp">PDF or Word, 5 MB maximum. You can apply without a CV — we will read the application anyway.</p>
-            </div>
-
-            <label class="nx-samtycke full" for="ap-gdpr">
-              <input type="checkbox" id="ap-gdpr" required>
-              <span>I agree that Nextrum may store these details in order to process my application. <a href="faq.html#kontakt">How we handle your data</a>.</span>
-            </label>
-
-            <div class="nx-submit-row">
-              <span class="nx-magnet" data-magnet>
-                <button class="btn btn-primary btn-lg" type="submit">
-                  Send application
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-                </button>
-              </span>
-            </div>
-            <p class="nx-fineprint">We read every application. You do not need top grades — we look just as much at how you
-              explain things.</p>
-            <p class="ok-msg" id="apply-ok" role="status" aria-live="polite"></p>
-          </form>
-        </div>
 
       </div>
     </div>
@@ -298,7 +234,6 @@
 </section>
 
 </main>
-
 
 <!-- ==========================================================
      FOOTER — identisk på alla publika sidor, se kommentaren
@@ -474,57 +409,6 @@
     växla();
   }
 
-  const cv = $('#ap-cv'), cvNamn = $('#ap-cv-namn');
-  if (cv && cvNamn) {
-    const MAX = 5 * 1024 * 1024;
-    cv.addEventListener('change', () => {
-      const f = cv.files && cv.files[0];
-      if (!f) { cvNamn.textContent = 'Ingen fil vald'; cvNamn.classList.remove('fel'); return; }
-      if (f.size > MAX) {
-        cv.value = '';
-        cvNamn.textContent = 'Filen är större än 5 MB — välj en mindre';
-        cvNamn.classList.add('fel');
-        return;
-      }
-      cvNamn.textContent = f.name;
-      cvNamn.classList.remove('fel');
-    });
-  }
-
-  const rollKnappar = $$('[data-roll]');
-  function väljRoll(roll, flyttaFokus) {
-    rollKnappar.forEach(b => b.setAttribute('aria-selected', String(b.dataset.roll === roll)));
-    $$('.nx-roll-panel').forEach(p => { p.hidden = (p.id !== 'panel-' + roll); });
-    if (flyttaFokus) {
-      const f = $('#panel-' + roll + ' input, #panel-' + roll + ' select');
-      if (f) f.focus({ preventScroll: true });
-    }
-  }
-  rollKnappar.forEach(b => b.addEventListener('click', () => väljRoll(b.dataset.roll, true)));
-
-  /* pilar mellan flikarna, som en riktig tablist */
-  $('.nx-roll') && $('.nx-roll').addEventListener('keydown', e => {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    e.preventDefault();
-    const i = rollKnappar.findIndex(b => b.getAttribute('aria-selected') === 'true');
-    const nästa = rollKnappar[(i + (e.key === 'ArrowRight' ? 1 : rollKnappar.length - 1)) % rollKnappar.length];
-    nästa.focus(); väljRoll(nästa.dataset.roll, false);
-  });
-
-  /* "Ansök direkt här" hoppar hit och slår om till rätt flik */
-  document.addEventListener('click', e => {
-    const t = e.target.closest('[data-open="apply"]');
-    if (!t) return;
-    e.preventDefault();
-    väljRoll('tutor', false);
-    const mål = $('#intresse');
-    if (mål) mål.scrollIntoView({ behavior: NXMotion.reducerad ? 'auto' : 'smooth', block: 'start' });
-    setTimeout(() => { const f = $('#ap-name'); if (f) f.focus({ preventScroll: true }); }, 620);
-  });
-
-  /* ?roll=tutor i adressen öppnar studiehjälparfliken direkt */
-  if (/[?&]roll=tutor/.test(location.search)) väljRoll('tutor', false);
-
   /* ==========================================================
      INTRESSEANMÄLAN → tabellen "leads"
      De fält som inte har någon egen kolumn (telefon, upplägg,
@@ -581,26 +465,6 @@
     });
   }
 
-  /* ==========================================================
-     ANSÖKAN → tabellen "applications"
-     Samma implementation som på bli-studiehjalpare.html, den bor
-     i nextrum-app.js. Telefon, erfarenhet och samtycke läggs till
-     i "why" på samma sätt som ovan.
-     ========================================================== */
-  NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'), {
-    krävSamtycke: '#ap-gdpr',
-    cv: '#ap-cv',
-    extra: () => {
-      const rader = [];
-      const tel = $('#ap-phone') && $('#ap-phone').value.trim();
-      const erf = $('#ap-erf') && $('#ap-erf').value.trim();
-      if (tel) rader.push('Telefon: ' + tel);
-      if (erf) rader.push('Erfarenhet: ' + erf);
-
-      rader.push('Samtycke till lagring: ja (' + new Date().toISOString().slice(0, 10) + ')');
-      return rader.join('\n');
-    }
-  });
 })();
 </script>
 </body>

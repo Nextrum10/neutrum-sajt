@@ -156,25 +156,17 @@
           <div>
             <b>Vad händer med uppgifterna?</b>
             <p>De används bara för att kunna kontakta er om anmälan. Inget delas vidare.
-              <a class="nx-lank-in" href="faq.html#kontakt">Så hanterar vi uppgifter</a>.</p>
+              <a class="nx-lank-in" href="integritetspolicy.html">Så hanterar vi uppgifter</a>.</p>
           </div>
         </div>
       </div>
 
       <div class="nx-form-yta" data-stig data-fördröj="1">
 
-        <fieldset style="border:0;padding:0;margin:0">
-          <legend class="nx-et" style="margin-bottom:16px">Jag är…</legend>
-          <div class="nx-roll" role="tablist" aria-label="Välj vilken anmälan du vill göra">
-            <button type="button" role="tab" id="roll-familj" aria-selected="true"
-                    aria-controls="panel-familj" data-roll="familj">Förälder eller elev</button>
-            <button type="button" role="tab" id="roll-tutor" aria-selected="false"
-                    aria-controls="panel-tutor" data-roll="tutor">Vill bli studiehjälpare</button>
-          </div>
-        </fieldset>
+        <p class="nx-fineprint" style="margin:0 0 22px">Det här formuläret är för elever och
+          föräldrar. Vill du i stället bli studiehjälpare —
+          <a href="bli-studiehjalpare.html#ansok">ansök här</a>.</p>
 
-        <!-- ---------- FÖRÄLDER / ELEV → leads ---------- -->
-        <div class="nx-roll-panel" id="panel-familj" role="tabpanel" aria-labelledby="roll-familj">
           <form class="form-grid" id="lead-form" novalidate>
             <div class="pay-field"><label for="l-name">Namn</label>
               <input class="inp" id="l-name" name="parent_name" required autocomplete="name"></div>
@@ -221,8 +213,8 @@
 
             <label class="nx-samtycke full" for="l-gdpr">
               <input type="checkbox" id="l-gdpr" required>
-              <span>Jag godkänner att Nextrum sparar uppgifterna för att kunna kontakta oss om
-                intresseanmälan. <a href="faq.html#kontakt">Så hanterar vi uppgifter</a>.</span>
+              <span>Jag godkänner att Nextrum sparar uppgifterna för att kunna kontakta er om
+                intresseanmälan. <a href="integritetspolicy.html">Så hanterar vi uppgifter</a>.</span>
             </label>
 
             <div class="nx-submit-row">
@@ -236,64 +228,6 @@
             <p class="nx-fineprint">Ingen bindningstid. Att skicka in en intresseanmälan kostar ingenting.</p>
             <p class="ok-msg" id="lead-msg" role="status" aria-live="polite"></p>
           </form>
-        </div>
-
-        <!-- ---------- STUDIEHJÄLPARE → applications ---------- -->
-        <div class="nx-roll-panel" id="panel-tutor" role="tabpanel" aria-labelledby="roll-tutor" hidden>
-          <form class="form-grid" id="apply-form" novalidate>
-            <div class="pay-field"><label for="ap-name">Namn</label>
-              <input class="inp" id="ap-name" name="namn" required autocomplete="name"></div>
-            <div class="pay-field"><label for="ap-age">Ålder</label>
-              <input class="inp" id="ap-age" name="alder" inputmode="numeric" required></div>
-            <div class="pay-field"><label for="ap-email">E-post</label>
-              <input class="inp" id="ap-email" name="epost" type="email" required autocomplete="email"></div>
-            <div class="pay-field"><label for="ap-phone">Telefon</label>
-              <input class="inp" id="ap-phone" name="telefon" type="tel" autocomplete="tel" placeholder="Valfritt"></div>
-            <div class="pay-field full"><label for="ap-school">Skola och program</label>
-              <input class="inp" id="ap-school" name="skola" placeholder="t.ex. Kungsholmens gymnasium, NA"></div>
-            <div class="pay-field full"><label for="ap-subj">Ämnen du vill hjälpa till med</label>
-              <input class="inp" id="ap-subj" name="amnen" placeholder="t.ex. matematik, fysik, engelska"></div>
-            <div class="pay-field full"><label for="ap-avail">Tider som funkar för dig</label>
-              <input class="inp" id="ap-avail" name="tider" placeholder="t.ex. vardagar efter 16, helger"></div>
-            <div class="pay-field full"><label for="ap-erf">Erfarenhet av att förklara för andra</label>
-              <textarea class="inp" id="ap-erf" name="erfarenhet" style="min-height:74px" placeholder="Läxhjälp, ledarskap, träning, syskon — allt räknas. Har du ingen alls är det också helt okej."></textarea></div>
-            <div class="pay-field full"><label for="ap-why">Varför vill du bli studiehjälpare?</label>
-              <textarea class="inp" id="ap-why" name="varfor" style="min-height:74px"></textarea></div>
-
-            <div class="pay-field full">
-              <label for="ap-cv">CV <span class="lbl-valfri">valfritt</span></label>
-              <div class="nx-fil">
-                <input type="file" id="ap-cv" name="cv"
-                       accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                <label class="nx-fil-knapp" for="ap-cv">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14V4M6.5 7.5 10 4l3.5 3.5M4 15.5v1A1.5 1.5 0 0 0 5.5 18h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
-                  Välj fil
-                </label>
-                <span class="nx-fil-namn" id="ap-cv-namn">Ingen fil vald</span>
-              </div>
-              <p class="nx-fil-hjalp">PDF eller Word, högst 5 MB. Du kan skicka in utan CV —
-                vi läser ansökan ändå.</p>
-            </div>
-
-            <label class="nx-samtycke full" for="ap-gdpr">
-              <input type="checkbox" id="ap-gdpr" required>
-              <span>Jag godkänner att Nextrum sparar uppgifterna för att kunna behandla min
-                ansökan. <a href="faq.html#kontakt">Så hanterar vi uppgifter</a>.</span>
-            </label>
-
-            <div class="nx-submit-row">
-              <span class="nx-magnet" data-magnet>
-                <button class="btn btn-primary btn-lg" type="submit">
-                  Skicka ansökan
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-                </button>
-              </span>
-            </div>
-            <p class="nx-fineprint">Vi läser alla ansökningar. Du behöver inga toppbetyg — vi tittar
-              lika mycket på hur du förklarar.</p>
-            <p class="ok-msg" id="apply-ok" role="status" aria-live="polite"></p>
-          </form>
-        </div>
 
       </div>
     </div>
@@ -301,7 +235,6 @@
 </section>
 
 </main>
-
 
 <!-- ==========================================================
      FOOTER — identisk på alla publika sidor, se kommentaren
@@ -477,57 +410,6 @@
     växla();
   }
 
-  const cv = $('#ap-cv'), cvNamn = $('#ap-cv-namn');
-  if (cv && cvNamn) {
-    const MAX = 5 * 1024 * 1024;
-    cv.addEventListener('change', () => {
-      const f = cv.files && cv.files[0];
-      if (!f) { cvNamn.textContent = 'Ingen fil vald'; cvNamn.classList.remove('fel'); return; }
-      if (f.size > MAX) {
-        cv.value = '';
-        cvNamn.textContent = 'Filen är större än 5 MB — välj en mindre';
-        cvNamn.classList.add('fel');
-        return;
-      }
-      cvNamn.textContent = f.name;
-      cvNamn.classList.remove('fel');
-    });
-  }
-
-  const rollKnappar = $$('[data-roll]');
-  function väljRoll(roll, flyttaFokus) {
-    rollKnappar.forEach(b => b.setAttribute('aria-selected', String(b.dataset.roll === roll)));
-    $$('.nx-roll-panel').forEach(p => { p.hidden = (p.id !== 'panel-' + roll); });
-    if (flyttaFokus) {
-      const f = $('#panel-' + roll + ' input, #panel-' + roll + ' select');
-      if (f) f.focus({ preventScroll: true });
-    }
-  }
-  rollKnappar.forEach(b => b.addEventListener('click', () => väljRoll(b.dataset.roll, true)));
-
-  /* pilar mellan flikarna, som en riktig tablist */
-  $('.nx-roll') && $('.nx-roll').addEventListener('keydown', e => {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    e.preventDefault();
-    const i = rollKnappar.findIndex(b => b.getAttribute('aria-selected') === 'true');
-    const nästa = rollKnappar[(i + (e.key === 'ArrowRight' ? 1 : rollKnappar.length - 1)) % rollKnappar.length];
-    nästa.focus(); väljRoll(nästa.dataset.roll, false);
-  });
-
-  /* "Ansök direkt här" hoppar hit och slår om till rätt flik */
-  document.addEventListener('click', e => {
-    const t = e.target.closest('[data-open="apply"]');
-    if (!t) return;
-    e.preventDefault();
-    väljRoll('tutor', false);
-    const mål = $('#intresse');
-    if (mål) mål.scrollIntoView({ behavior: NXMotion.reducerad ? 'auto' : 'smooth', block: 'start' });
-    setTimeout(() => { const f = $('#ap-name'); if (f) f.focus({ preventScroll: true }); }, 620);
-  });
-
-  /* ?roll=tutor i adressen öppnar studiehjälparfliken direkt */
-  if (/[?&]roll=tutor/.test(location.search)) väljRoll('tutor', false);
-
   /* ==========================================================
      INTRESSEANMÄLAN → tabellen "leads"
      De fält som inte har någon egen kolumn (telefon, upplägg,
@@ -584,26 +466,6 @@
     });
   }
 
-  /* ==========================================================
-     ANSÖKAN → tabellen "applications"
-     Samma implementation som på bli-studiehjalpare.html, den bor
-     i nextrum-app.js. Telefon, erfarenhet och samtycke läggs till
-     i "why" på samma sätt som ovan.
-     ========================================================== */
-  NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'), {
-    krävSamtycke: '#ap-gdpr',
-    cv: '#ap-cv',
-    extra: () => {
-      const rader = [];
-      const tel = $('#ap-phone') && $('#ap-phone').value.trim();
-      const erf = $('#ap-erf') && $('#ap-erf').value.trim();
-      if (tel) rader.push('Telefon: ' + tel);
-      if (erf) rader.push('Erfarenhet: ' + erf);
-
-      rader.push('Samtycke till lagring: ja (' + new Date().toISOString().slice(0, 10) + ')');
-      return rader.join('\n');
-    }
-  });
 })();
 </script>
 </body>

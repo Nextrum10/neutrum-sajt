@@ -225,9 +225,11 @@
             <div class="pay-field"><label for="ap-age">Ålder</label><input class="inp" id="ap-age" name="alder" inputmode="numeric" required></div>
           </div>
           <div class="pay-field"><label for="ap-email">E-post</label><input class="inp" id="ap-email" name="epost" type="email" required autocomplete="email"></div>
+          <div class="pay-field"><label for="ap-phone">Telefon</label><input class="inp" id="ap-phone" name="telefon" type="tel" autocomplete="tel" placeholder="Valfritt"></div>
           <div class="pay-field"><label for="ap-school">Skola &amp; program</label><input class="inp" id="ap-school" name="skola" placeholder="t.ex. Kungsholmens gymnasium, NA"></div>
           <div class="pay-field"><label for="ap-subj">Ämnen du vill hjälpa till med</label><input class="inp" id="ap-subj" name="amnen" placeholder="t.ex. matematik, fysik, engelska"></div>
           <div class="pay-field"><label for="ap-avail">Tider som funkar för dig</label><input class="inp" id="ap-avail" name="tider" placeholder="t.ex. vardagar efter 16, helger"></div>
+          <div class="pay-field"><label for="ap-erf">Erfarenhet av att förklara för andra</label><textarea class="inp" id="ap-erf" name="erfarenhet" style="min-height:74px" placeholder="Läxhjälp, ledarskap, träning, syskon — allt räknas. Har du ingen alls är det också helt okej."></textarea></div>
           <div class="pay-field"><label for="ap-why">Varför vill du bli studiehjälpare?</label><textarea class="inp" id="ap-why" name="varfor" style="min-height:110px"></textarea></div>
 
           <div class="pay-field">
@@ -243,6 +245,12 @@
             </div>
             <p class="nx-fil-hjalp">PDF eller Word, högst 5 MB. Du kan skicka in utan CV — vi läser ansökan ändå.</p>
           </div>
+
+          <label class="nx-samtycke" for="ap-gdpr">
+            <input type="checkbox" id="ap-gdpr" required>
+            <span>Jag godkänner att Nextrum sparar uppgifterna för att kunna behandla min
+              ansökan. <a href="integritetspolicy.html">Så hanterar vi uppgifter</a>.</span>
+          </label>
 
           <button class="btn btn-primary btn-block btn-lg" type="submit" style="margin-top:8px">Skicka ansökan</button>
           <p class="ok-msg" id="apply-ok" style="margin-top:14px"></p>
@@ -464,7 +472,23 @@
     });
   }
 
-  NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'), { cv: '#ap-cv' });
+  /* Samma tillval som formuläret hade när det låg som en flik på
+     intresseanmälan. Utan krävSamtycke gick ansökan igenom fastän
+     rutan var okryssad — och utan extra försvann telefon och
+     erfarenhet, eftersom de saknar egen kolumn. */
+  NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'), {
+    krävSamtycke: '#ap-gdpr',
+    cv: '#ap-cv',
+    extra: () => {
+      const rader = [];
+      const tel = $('#ap-phone') && $('#ap-phone').value.trim();
+      const erf = $('#ap-erf') && $('#ap-erf').value.trim();
+      if (tel) rader.push('Telefon: ' + tel);
+      if (erf) rader.push('Erfarenhet: ' + erf);
+      rader.push('Samtycke till lagring: ja (' + new Date().toISOString().slice(0, 10) + ')');
+      return rader.join('\n');
+    }
+  });
 })();
 </script>
 </body>
