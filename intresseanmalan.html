@@ -197,7 +197,7 @@
                 <option value="">Välj ämne</option>
                 <option>Matematik</option><option>Svenska</option><option>Engelska</option>
                 <option>NO / Fysik / Kemi / Biologi</option><option>SO / Historia / Samhällskunskap</option>
-                <option>Flera ämnen</option><option>Andra ämnen</option><option>Vet inte än</option>
+                <option>Flera ämnen</option><option data-annat>Andra ämnen</option><option>Vet inte än</option>
               </select>
             </div>
             <!-- Fälls ut när "Andra ämnen" väljs. hidden tas bort av
@@ -462,7 +462,13 @@
   const ämne = $('#l-subject'), ämneFält = $('#l-subject-annat-falt'), ämneInp = $('#l-subject-annat');
   if (ämne && ämneFält && ämneInp) {
     const växla = () => {
-      const på = ämne.value === 'Andra ämnen';
+      /* Märket sitter på <option>, inte i en jämförelse mot texten.
+         Etiketten översätts — "Andra ämnen" heter "Other subjects" på
+         engelska — så en strängjämförelse blev aldrig sann där, och
+         fältet för VILKA ämnen gick inte att få fram. Ett attribut
+         överlever översättningen; generatorn rör inte taggar. */
+      const valt = ämne.selectedOptions[0];
+      const på = !!(valt && valt.hasAttribute('data-annat'));
       ämneFält.hidden = !på;
       ämneInp.required = på;
       if (!på) ämneInp.value = '';
@@ -556,8 +562,9 @@
       /* Valde de "Andra ämnen" är fritexten det som faktiskt betyder
          något — skriv den i subject-kolumnen i stället för etiketten. */
       const annat = $('#l-subject-annat') ? $('#l-subject-annat').value.trim() : '';
-      const ämnesval = ($('#l-subject').value === 'Andra ämnen' && annat)
-        ? 'Andra ämnen: ' + annat
+      const valtÄmne = $('#l-subject').selectedOptions[0];
+      const ämnesval = (valtÄmne && valtÄmne.hasAttribute('data-annat') && annat)
+        ? $('#l-subject').value + ': ' + annat
         : ($('#l-subject').value || null);
 
       knapp.setAttribute('aria-busy', 'true');
