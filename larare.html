@@ -825,8 +825,20 @@
   </div>
 </footer>
 
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- Biblioteket ligger hos oss, med fast version.
+
+     Låg förr på unpkg.com som @2 — alltså "vad unpkg råkar mena med
+     tvåan just nu". Under en timmes arbete flyttade den sig från
+     2.115.0 till 2.116.0 av sig själv. Den raden körde på varje sida,
+     också de inloggade, där någon skriver sitt lösenord och ett barns
+     namn och anteckningar visas. En tredjepart med fri versionsrätt
+     på just de sidorna är inte en risk värd att bära för att slippa
+     en fil i repot.
+
+     Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
+<script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js"></script>
+<script src="nextrum-fel.js"></script>
 <script src="nextrum-app.js"></script>
 <script src="nextrum-kontakt.js"></script>
 <script src="nextrum-studie.js"></script>
@@ -2442,18 +2454,18 @@
     /* Utbetalningskontot ligger hos Stripe, inte hos oss. Vi sparar
        bara id:t — kontonummer och legitimation stannar där. */
     const klar = S.tutorProfil && S.tutorProfil.stripe_klar;
-    const har = S.tutorProfil && S.tutorProfil.stripe_account_id;
     konto.innerHTML = klar
       ? '<div class="bet-pagaende"><span style="margin-top:0">Kopplat</span>'
         + '<p class="bet-not">Utbetalningarna går till kontot du registrerat hos Stripe. '
         + 'Vill du byta konto gör du det hos Stripe, inte här.</p></div>'
-      : '<p class="bet-not" style="margin-top:0">'
-        + (har ? 'Din registrering hos Stripe är påbörjad men inte klar. Fortsätt där du slutade.'
-               : 'För att kunna få betalt behöver du registrera dig hos Stripe. Vi ser aldrig ditt '
-                 + 'kontonummer — det stannar hos dem.')
-        + '</p><div class="vy-knapprad"><button class="btn btn-primary btn-sm" type="button" id="ers-koppla">'
-        + (har ? 'Fortsätt registreringen' : 'Koppla utbetalningskonto') + '</button></div>'
-        + '<p class="ok-msg" id="ers-konto-msg"></p>';
+      /* Knappen "Koppla utbetalningskonto" är borttagen tills
+         edge-funktionen stripe-konto finns. Den anropade något som
+         inte var byggt och kunde bara misslyckas — en knapp som inte
+         går att trycka på är sämre än ingen knapp. Texten säger vad
+         som gäller under tiden i stället för att låtsas. */
+      : '<p class="bet-not" style="margin-top:0">Utbetalningarna sköts för hand så länge. '
+        + 'Ditt underlag nedan är det vi betalar efter — hör av dig om något ser fel ut. '
+        + 'När vi kopplat på automatiska utbetalningar registrerar du ditt konto här.</p>';
 
     if (ut.error) { lista.innerHTML = tomt('Kunde inte hämta utbetalningarna', felText(ut.error)); return; }
     const rader = ut.data || [];
@@ -2479,23 +2491,14 @@
     }).join('');
   }
 
-  /* Registreringen sker hos Stripe. Edge-funktionen skapar länken,
-     eftersom den kräver en hemlig nyckel som aldrig får finnas här. */
-  document.addEventListener('click', async e => {
-    const knapp = e.target.closest('#ers-koppla');
-    if (!knapp) return;
-    const msg = $('#ers-konto-msg');
-    rensa(msg);
-    await medan(knapp, 'Öppnar…', async () => {
-      const res = await supa.functions.invoke('stripe-konto', { body: { retur: location.href } });
-      if (res.error || !res.data || !res.data.url) {
-        säg(msg, 'Kunde inte öppna registreringen. Är edge-funktionen stripe-konto driftsatt? '
-               + 'Se DEPLOY-BETALNING.md.', false);
-        return;
-      }
-      location.href = res.data.url;
-    });
-  });
+  /* Här satt hanteraren för "Koppla utbetalningskonto". Den anropade
+     edge-funktionen stripe-konto, som aldrig blev byggd, så knappen
+     kunde bara misslyckas. Båda är borttagna tills funktionen finns —
+     återställningen är knappen plus det här anropet:
+
+       supa.functions.invoke('stripe-konto', { body: { retur: location.href } })
+
+     Se steg 7 i DEPLOY-BETALNING.md. */
 
   /* ============================================================
      MINA ELEVER

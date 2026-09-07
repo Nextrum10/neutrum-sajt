@@ -166,11 +166,11 @@
         som räknar besöken, på det sätt som beskrivs ovan.</li>
       <li><b>Supabase</b> — databasen och inloggningen. Kontaktas när du skickar ett formulär
         eller loggar in. Servrarna står inom EU.</li>
-      <li><b>unpkg.com</b> — ett programbibliotek som inloggningen behöver. Din IP-adress syns
-        för dem när filen hämtas.</li>
     </ul>
-    <p>Typsnitten låg tidigare hos Google och skickade din IP-adress dit vid varje sidvisning.
-      De ligger nu hos oss, och den överföringen finns inte längre.</p>
+    <p>Det är hela listan — och den har blivit kortare. Typsnitten låg tidigare hos Google och
+      programbiblioteket som inloggningen behöver låg hos unpkg.com. Båda skickade din IP-adress
+      till en tredjepart vid varje sidvisning. Båda ligger nu hos oss, och de överföringarna
+      finns inte längre.</p>
 
     <h2>Om det ändras</h2>
     <p>Lägger vi någon gång till något som faktiskt kräver ditt samtycke — inbäddad video,
@@ -282,7 +282,18 @@
   </div>
 </div>
 
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- Biblioteket ligger hos oss, med fast version.
+
+     Låg förr på unpkg.com som @2 — alltså "vad unpkg råkar mena med
+     tvåan just nu". Under en timmes arbete flyttade den sig från
+     2.115.0 till 2.116.0 av sig själv. Den raden körde på varje sida,
+     också de inloggade, där någon skriver sitt lösenord och ett barns
+     namn och anteckningar visas. En tredjepart med fri versionsrätt
+     på just de sidorna är inte en risk värd att bära för att slippa
+     en fil i repot.
+
+     Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
+<script src="bibliotek/supabase-js-2.116.0.js"></script>
 <!-- Vercel Web Analytics.
 
      Sätter INGA cookies: unika besökare räknas via en hash av
@@ -303,6 +314,7 @@
 <script defer src="/_vercel/speed-insights/script.js"></script>
 <script src="nextrum-config.js"></script>
 <script src="nextrum-images.js"></script>
+<script src="nextrum-fel.js"></script>
 <script src="nextrum-app.js"></script>
 <script src="nextrum-motion.js"></script>
 <script>
