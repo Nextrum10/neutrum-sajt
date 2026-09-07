@@ -1394,9 +1394,16 @@ html[lang="en"] .nx-hero-rubrik{
   border-color:var(--bl);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--bl) 9%,transparent);
 }
+/* Fältetiketter, hela sajten. Versaler i mono med bred spärr är det
+   svåraste fallet i liten grad: över- och underlängderna som ögat
+   känner igen ordbilder på finns inte, och spärren drar isär resten.
+   Låg därför på 10px och --bl-3, medan nextrum.css redan hade .76rem
+   och --muted — cinema krympte alltså det som var rätt från början.
+   Nu .78rem och --muted, samma värde på alla fyra formulärytorna:
+   ansökan, intresseanmälan, kontakt och de två inloggade vyerna. */
 .pay-field label{
-  font-family:var(--f-mono);font-size:10px;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--bl-3);margin-bottom:8px;display:block;
+  font-family:var(--f-mono);font-size:.78rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;
 }
 
 /* Rollväljaren överst i intresseanmälan. Två knappar, den valda
