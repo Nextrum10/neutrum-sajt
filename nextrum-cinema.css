@@ -756,8 +756,10 @@ body .mobile-menu{display:block}
   color:var(--ockra-l);
   display:inline-flex;align-items:center;gap:clamp(12px,1.5vw,18px);
   /* Större än standardetiketten: här är ordet vårt namn, inte en
-     sektionsrubrik, och 11px försvann helt mot videon. */
-  font-size:clamp(15px,2.1vw,23px);
+     sektionsrubrik, och 11px försvann helt mot videon. Uppskruvad
+     ytterligare ett steg — mot en rörlig bild tål ett namn att ta
+     plats, och de spärrade versalerna läses ändå som en etikett. */
+  font-size:clamp(18px,2.7vw,30px);
   font-weight:600;
   letter-spacing:.2em;
 }
@@ -953,7 +955,13 @@ html[lang="en"] .nx-hero-rubrik{
    MANIFEST — "Inte bara läxhjälp. Någon som förstår."
    Stor typografi som fotot glider bakom.
    ============================================================ */
-.nx-manifest{position:relative;overflow:hidden;padding-block:clamp(120px,17vw,240px)}
+/* Toppluften nedskuren: sektionen började så långt ner att "Vår idé"
+   låg under vikning på de flesta skärmar. Botten behåller sitt
+   utrymme — det är övergången till nästa sektion. */
+.nx-manifest{
+  position:relative;overflow:hidden;
+  padding-block:clamp(76px,10vw,140px) clamp(120px,17vw,240px);
+}
 .nx-manifest-inner{
   position:relative;z-index:2;
   max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m);
