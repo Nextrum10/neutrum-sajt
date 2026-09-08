@@ -1072,7 +1072,13 @@
        alt: 'Porträtt av en ung studiehjälpare i grågrön tröja.',
        bio: 'Jag pluggade själv inför nationella proven för ett år sedan och minns precis '
           + 'vad som var svårt. Svenska och engelska är det jag hjälper till med mest.',
-       ämnen: ['Svenska', 'Engelska', 'Samhällskunskap'] }]
+       ämnen: ['Svenska', 'Engelska', 'Samhällskunskap'] },
+     { namn: 'Maja', ålder: 22, skola: 'Stockholms universitet, Lärarprogrammet',
+       ort: 'Stockholm', bild: 'studiehjalpare-3',
+       alt: 'Porträtt av en ung studiehjälpare i mörk tröja.',
+       bio: 'Jag läser till lärare och tycker om att hitta förklaringen som fastnar. '
+          + 'Ofta räcker det att vända på uppgiften en gång till.',
+       ämnen: ['Matematik', 'Biologi', 'Studieteknik'] }]
     .map(t =>
       '<article class="sc-card">'
       + '<div class="sc-top">'
@@ -1109,9 +1115,13 @@
       return;
     }
 
-    if (!data || !data.length) { host.innerHTML = tomState(); return; }
+    /* En profil utan namn visas som "Studiehjälpare, 19" och ser
+       ofärdig ut bredvid de andra korten. Den hör hemma i raden först
+       när personen fyllt i sitt namn — då dyker den upp av sig själv. */
+    const klara = (data || []).filter(t => t.profiles && (t.profiles.full_name || '').trim());
+    if (!klara.length && !EXEMPELKORT) { host.innerHTML = tomState(); return; }
 
-    host.innerHTML = data.map(t => {
+    host.innerHTML = klara.map(t => {
       const namn = (t.profiles && t.profiles.full_name) || 'Studiehjälpare';
       const bio = t.bio || 'Ung studiehjälpare som hjälper yngre elever att förstå, inte bara att bli klara med läxan.';
       const rad = ['Studiehjälpare', t.school, t.city].filter(Boolean).map(esc).join(' · ');
