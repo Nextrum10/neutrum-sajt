@@ -21,6 +21,68 @@ const NX = (function () {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const kr = n => Number(n).toLocaleString('sv-SE') + ' kr';
 
+
+  /* ============================================================
+     SPRÅK
+     Generatorn som bygger /en/ översätter aldrig skript — svensk kod
+     ska inte översättas, och ett tidigt försök åt sig in i
+     identifieraren kopplaAnsökan. Följden var att allt som skrivs
+     till användaren FRÅN javascript förblev svenskt på de engelska
+     sidorna: kvittensen efter ett skickat formulär, felmeddelanden,
+     spärren för samtycke.
+
+     Texterna bor därför i par här, och språket läses ur <html lang>
+     vid körning. Då är koden identisk på båda språken — vilket är
+     precis vad generatorn behöver för att kunna kopiera den rakt av.
+
+     OBS: bara det som VISAS. Strängar som skrivs till databasen
+     ("Telefon: ", "Samtycke till lagring: ja") ska förbli svenska —
+     de läses av oss, inte av besökaren.
+     ============================================================ */
+  const SPRÅK = /^en/i.test(document.documentElement.getAttribute('lang') || 'sv') ? 1 : 0;
+  const ORD = {
+    fyllNamnEpost:   ['Fyll i namn och e-post.',
+                      'Please fill in your name and email.'],
+    fyllKontakt:     ['Fyll i namn, e-post och meddelande.',
+                      'Please fill in your name, email and message.'],
+    samtyckeAnsokan: ['Du behöver godkänna att vi sparar uppgifterna för att kunna behandla ansökan.',
+                      'You need to agree to us storing your details so we can process your application.'],
+    samtyckeIntresse:['Du behöver godkänna att vi sparar uppgifterna för att kunna höra av oss.',
+                      'You need to agree to us storing your details so we can get back to you.'],
+    ingenDatabas:    ['Databasen är inte kopplad än.',
+                      'The database is not connected yet.'],
+    ingenDatabasForm:['Databasen är inte kopplad än, så anmälan kan inte skickas. Fyll i nextrum-config.js.',
+                      'The database is not connected yet, so the form cannot be sent. Fill in nextrum-config.js.'],
+    kundeInteSkicka: ['Kunde inte skicka: ', 'Could not send: '],
+    tackAnsokan:     ['Tack för din ansökan. Vi läser alla och hör av oss.',
+                      'Thank you for your application. We read every one and will be in touch.'],
+    tackIntresse:    ['Tack. Vi har tagit emot er intresseanmälan och återkommer på {e} så snart vi kan.',
+                      'Thank you. We have received your enquiry and will get back to you at {e} as soon as we can.'],
+    tackKontakt:     ['Mottaget. Vi återkommer på mejlen du angav.',
+                      'Received. We will reply to the email address you gave.'],
+    ingenFil:        ['Ingen fil vald', 'No file chosen'],
+    filForStor:      ['Filen är större än 5 MB — välj en mindre',
+                      'The file is larger than 5 MB — please choose a smaller one'],
+    felLosen:        ['Fel e-post eller lösenord.', 'Wrong email or password.'],
+    felBekrafta:     ['Du måste bekräfta din e-postadress först. Kolla inkorgen (och skräpposten).',
+                      'You need to confirm your email address first. Check your inbox (and spam folder).'],
+    felFinns:        ['Det finns redan ett konto med den e-postadressen. Logga in istället.',
+                      'There is already an account with that email address. Log in instead.'],
+    felKortLosen:    ['Lösenordet måste vara minst 6 tecken.',
+                      'The password must be at least 6 characters.'],
+    felForManga:     ['För många försök. Vänta en stund och prova igen.',
+                      'Too many attempts. Wait a moment and try again.'],
+    felNatverk:      ['Når inte databasen. Kontrollera din internetanslutning, och att URL:en i nextrum-config.js är rätt.',
+                      'Cannot reach the database. Check your internet connection, and that the URL in nextrum-config.js is correct.'],
+    felOkant:        ['Något gick fel.', 'Something went wrong.']
+  };
+  function t(nyckel, vars) {
+    const par = ORD[nyckel];
+    let ut = par ? par[SPRÅK] : nyckel;
+    if (vars) for (const k in vars) ut = ut.replace('{' + k + '}', vars[k]);
+    return ut;
+  }
+
   const DAGAR = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'];
   const MANADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni',
     'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
@@ -50,13 +112,13 @@ const NX = (function () {
   /* ---------- felmeddelanden på svenska ---------- */
   function felText(error) {
     const m = String(error && (error.message || error) || '');
-    if (/Invalid login credentials/i.test(m)) return 'Fel e-post eller lösenord.';
-    if (/Email not confirmed/i.test(m)) return 'Du måste bekräfta din e-postadress först. Kolla inkorgen (och skräpposten).';
-    if (/User already registered/i.test(m)) return 'Det finns redan ett konto med den e-postadressen. Logga in istället.';
-    if (/Password should be at least/i.test(m)) return 'Lösenordet måste vara minst 6 tecken.';
-    if (/rate limit|too many/i.test(m)) return 'För många försök. Vänta en stund och prova igen.';
-    if (/Failed to fetch|NetworkError/i.test(m)) return 'Når inte databasen. Kontrollera din internetanslutning, och att URL:en i nextrum-config.js är rätt.';
-    return m || 'Något gick fel.';
+    if (/Invalid login credentials/i.test(m)) return t('felLosen');
+    if (/Email not confirmed/i.test(m)) return t('felBekrafta');
+    if (/User already registered/i.test(m)) return t('felFinns');
+    if (/Password should be at least/i.test(m)) return t('felKortLosen');
+    if (/rate limit|too many/i.test(m)) return t('felForManga');
+    if (/Failed to fetch|NetworkError/i.test(m)) return t('felNatverk');
+    return m || t('felOkant');
   }
 
   /* ---------- header: sticky + burgare ---------- */
@@ -202,18 +264,18 @@ const NX = (function () {
       const f = new FormData(form);
       const namn = String(f.get('namn') || '').trim();
       const epost = String(f.get('epost') || '').trim();
-      if (!namn || !epost) { säg(msg, 'Fyll i namn och e-post.', false); return; }
+      if (!namn || !epost) { säg(msg, t('fyllNamnEpost'), false); return; }
 
       /* Kryssrutan för samtycke finns bara där den efterfrågas.
          Utan opts.krävSamtycke beter sig funktionen precis som förut. */
       if (o.krävSamtycke) {
         const ruta = document.querySelector(o.krävSamtycke);
         if (ruta && !ruta.checked) {
-          säg(msg, 'Du behöver godkänna att vi sparar uppgifterna för att kunna behandla ansökan.', false);
+          säg(msg, t('samtyckeAnsokan'), false);
           return;
         }
       }
-      if (!supa) { säg(msg, 'Databasen är inte kopplad än.', false); return; }
+      if (!supa) { säg(msg, t('ingenDatabas'), false); return; }
 
       const knapp = form.querySelector('button[type="submit"]');
       if (knapp) knapp.setAttribute('aria-busy', 'true');
@@ -262,9 +324,9 @@ const NX = (function () {
       });
 
       if (knapp) knapp.removeAttribute('aria-busy');
-      if (error) { säg(msg, 'Kunde inte skicka: ' + felText(error), false); return; }
+      if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }
       form.reset();
-      säg(msg, 'Tack för din ansökan. Vi läser alla och hör av oss.', true);
+      säg(msg, t('tackAnsokan'), true);
     });
   }
 
@@ -608,7 +670,7 @@ const NX = (function () {
   }
 
   return {
-    $, $$, esc, kr, isoFor, datumText, säg, rensa, felText,
+    $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t,
     initHeader, initReveal, kollaKoppling,
     initFaq, initPris, kopplaAnsökan, märkInloggad,
     bildIntoning, initVagval,

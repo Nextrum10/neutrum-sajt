@@ -443,7 +443,7 @@
 <script>
 (function () {
   'use strict';
-  const { $ } = NX;
+  const { $, t } = NX;
   NX.initHeader();
   NX.initReveal();
   NXFin.allt();
@@ -460,10 +460,10 @@
     const MAX = 5 * 1024 * 1024;
     cv.addEventListener('change', () => {
       const f = cv.files && cv.files[0];
-      if (!f) { cvNamn.textContent = 'Ingen fil vald'; cvNamn.classList.remove('fel'); return; }
+      if (!f) { cvNamn.textContent = t('ingenFil'); cvNamn.classList.remove('fel'); return; }
       if (f.size > MAX) {
         cv.value = '';
-        cvNamn.textContent = 'Filen är större än 5 MB — välj en mindre';
+        cvNamn.textContent = t('filForStor');
         cvNamn.classList.add('fel');
         return;
       }

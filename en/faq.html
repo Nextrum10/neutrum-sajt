@@ -418,7 +418,7 @@
 <script>
 (function () {
   'use strict';
-  const { $, säg, felText } = NX;
+  const { $, säg, rensa, felText, t } = NX;
 
   NX.initHeader();
   NX.initReveal();
@@ -443,17 +443,17 @@
       const namn = String(f.get('namn') || '').trim();
       const epost = String(f.get('epost') || '').trim();
       const med = String(f.get('meddelande') || '').trim();
-      if (!namn || !epost || !med) { säg(msg, 'Fyll i namn, e-post och meddelande.', false); return; }
-      if (!supa) { säg(msg, 'Databasen är inte kopplad än.', false); return; }
+      if (!namn || !epost || !med) { säg(msg, t('fyllKontakt'), false); return; }
+      if (!supa) { säg(msg, t('ingenDatabas'), false); return; }
 
       const { error } = await supa.from('contact_messages').insert({
         name: namn, email: epost,
         role: String(f.get('roll') || '').trim() || null,
         message: med
       });
-      if (error) { säg(msg, 'Kunde inte skicka: ' + felText(error), false); return; }
+      if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }
       contactForm.reset();
-      säg(msg, 'Mottaget. Vi återkommer på mejlen du angav.', true);
+      säg(msg, t('tackKontakt'), true);
     });
   }
 })();

@@ -370,7 +370,7 @@
 <script>
 (function () {
   'use strict';
-  const { $, $$, esc, säg, rensa, felText } = NX;
+  const { $, $$, esc, säg, rensa, felText, t } = NX;
 
   NX.initHeader();
   NX.initReveal();
@@ -425,9 +425,9 @@
 
       const namn = $('#l-name').value.trim();
       const epost = $('#l-email').value.trim();
-      if (!namn || !epost) { säg(msg, 'Fyll i namn och e-post.', false); return; }
-      if (!$('#l-gdpr').checked) { säg(msg, 'Du behöver godkänna att vi sparar uppgifterna för att kunna höra av oss.', false); return; }
-      if (!supa) { säg(msg, 'Databasen är inte kopplad än, så anmälan kan inte skickas. Fyll i nextrum-config.js.', false); return; }
+      if (!namn || !epost) { säg(msg, t('fyllNamnEpost'), false); return; }
+      if (!$('#l-gdpr').checked) { säg(msg, t('samtyckeIntresse'), false); return; }
+      if (!supa) { säg(msg, t('ingenDatabasForm'), false); return; }
 
       const extra = [];
       const tel = $('#l-phone').value.trim();
@@ -460,9 +460,9 @@
       });
       knapp.removeAttribute('aria-busy');
 
-      if (error) { säg(msg, 'Kunde inte skicka: ' + felText(error), false); return; }
+      if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }
       leadForm.reset();
-      säg(msg, 'Tack. Vi har tagit emot er intresseanmälan och återkommer på ' + epost + ' så snart vi kan.', true);
+      säg(msg, t('tackIntresse', { e: epost }), true);
     });
   }
 
