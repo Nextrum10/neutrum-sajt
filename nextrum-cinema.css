@@ -2383,3 +2383,26 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   text-decoration-thickness:1.5px;
 }
 .nx-lank-stark:hover{color:var(--acc-lugn)}
+
+/* ============================================================
+   TILLÄGG PÅ PRISSIDAN
+   Kortet till vänster, räkneexemplet till höger. Exemplet finns
+   för att "69 kr per barn och timme" är en regel, inte en summa —
+   och det är summan folk vill se innan de bokar.
+   ============================================================ */
+.nx-tillagg{
+  display:grid;gap:clamp(20px,3vw,34px);
+  grid-template-columns:minmax(0,320px) minmax(0,1fr);
+  align-items:start;
+}
+@media (max-width:760px){.nx-tillagg{grid-template-columns:1fr}}
+
+.nx-rakne{list-style:none;margin:0;padding:0;display:grid;gap:1px;background:var(--ln);border-radius:14px;overflow:hidden}
+.nx-rakne li{
+  display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+  padding:14px 18px;background:var(--pap);
+}
+.nx-rakne li span{font-size:.94rem;color:var(--muted)}
+.nx-rakne li b{font-size:1.02rem;font-weight:600;letter-spacing:-.01em;color:var(--bl)}
+/* Sista raden är den ovanligaste — den ska inte skrika. */
+.nx-rakne li:first-child b{color:var(--acc-text)}

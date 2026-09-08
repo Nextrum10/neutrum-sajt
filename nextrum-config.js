@@ -21,6 +21,11 @@ window.NEXTRUM_CONFIG = {
   // Pris per timme i kronor, visas på sidan och i bokningen.
   PRIS_PER_TIMME: 379,
 
+  /* Tillägg per extra barn i samma pass, per timme. Ett syskon som
+     sitter med kostar alltså inte ett helt nytt pass — men
+     studiehjälparen delar sin uppmärksamhet, och det ska synas. */
+  PRIS_EXTRA_BARN: 69,
+
   // Kontaktuppgifter som visas i sidfoten och i formulärsvar.
   EPOST: 'info@nextrum.se',
 };

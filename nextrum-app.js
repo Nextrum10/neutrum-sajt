@@ -229,6 +229,14 @@ const NX = (function () {
     const pris = Number(CFG.PRIS_PER_TIMME) || 349;
     $$('[data-stat="pris"], [data-stat="pris-inline"]').forEach(el => el.textContent = kr(pris));
 
+    /* Tillägget bor i samma konfiguration som timpriset. Räkne-
+       exemplen på prissidan skrivs också härifrån, så att en ändrad
+       siffra inte lämnar kvar en summa som inte går ihop. */
+    const extra = Number(CFG.PRIS_EXTRA_BARN) || 0;
+    $$('[data-stat="extra-barn"]').forEach(el => el.textContent = kr(extra));
+    $$('[data-stat="tva-barn"]').forEach(el => el.textContent = kr(pris + extra));
+    $$('[data-stat="tre-barn"]').forEach(el => el.textContent = kr(pris + extra * 2));
+
     const stor = $('[data-stat="pris"]');
     const lugnt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!stor || lugnt || !('IntersectionObserver' in window)) return;
