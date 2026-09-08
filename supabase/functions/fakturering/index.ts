@@ -33,7 +33,10 @@ const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const NYCKEL = Deno.env.get('FAKTURERING_NYCKEL');
 
 // Hur många dagar familjen har på sig att betala.
-const BETALNINGSVILLKOR_DAGAR = 20;
+// Måste stämma med det som står på prissidan, i FAQ:n och i
+// användarvillkoren — en faktura som förfaller på en annan dag än
+// villkoret lovar är en tvist, inte ett skrivfel.
+const BETALNINGSVILLKOR_DAGAR = 14;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
