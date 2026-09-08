@@ -23,7 +23,7 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 // Kolla https://docs.claude.com/en/docs/about-claude/models för det
 // senaste modellnamnet om det här börjar ge fel, modellnamn ändras
 // över tid.
-const MODEL = 'claude-sonnet-4-5';
+const MODEL = 'claude-sonnet-5';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
