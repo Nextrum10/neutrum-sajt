@@ -1317,3 +1317,14 @@
 @media (max-width:520px){
   .vy-forslag-tid{flex:1 1 100%}
 }
+
+/* Meddelandefältet med utkastknappen bredvid. Knappen krymper inte
+   ihop på små skärmar — den hamnar under i stället, för en knapp
+   vars text bryts i två rader ser trasig ut. */
+.vy-utkast{display:flex;gap:8px;align-items:stretch}
+.vy-utkast .inp{flex:1;min-width:0}
+.vy-utkast .btn{flex:none;white-space:nowrap}
+@media (max-width:560px){
+  .vy-utkast{flex-direction:column}
+  .vy-utkast .btn{width:100%}
+}
