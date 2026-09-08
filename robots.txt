@@ -8,7 +8,7 @@
 
 User-agent: *
 Allow: /
-Disallow: /foralder.html
-Disallow: /larare.html
+Disallow: /foralder
+Disallow: /larare
 
 Sitemap: https://nextrum.se/sitemap.xml

@@ -143,14 +143,19 @@ const NX = (function () {
        "index.html#om". På startsidan vore det en onödig omladdning,
        så där kortas de ner till rena ankare. Utan JS fungerar de
        ändå — då blir det bara en omladdning istället för en scroll. */
-    const sida = location.pathname.split('/').pop() || 'index.html';
-    if (sida === 'index.html') {
-      $$('a[href^="index.html#"]').forEach(a =>
-        a.setAttribute('href', a.getAttribute('href').slice('index.html'.length)));
+    /* Adresserna är rena sedan cleanUrls slogs på: "/priser", inte
+       "/priser.html", och startsidan är "/". Jämför därför hela
+       sökvägen och inte filnamnet — .pop() ger "" på "/" och
+       "priser" på "/priser", vilket inte matchar något href. */
+    const här = location.pathname.replace(/\/index\.html$/, '/').replace(/\.html$/, '');
+    if (här === '/' || här === '/en/') {
+      $$('a[href^="/#"], a[href^="/en/#"]').forEach(a =>
+        a.setAttribute('href', a.getAttribute('href').replace(/^\/(en\/)?/, '')));
     }
     /* markera vilken sida besökaren står på */
     $$('.nav-links a, .mobile-menu a.m-link').forEach(a => {
-      if (a.getAttribute('href') === sida) a.classList.add('active');
+      const h = (a.getAttribute('href') || '').split('#')[0];
+      if (h && h === här) a.classList.add('active');
     });
 
     const y = $('#year');
@@ -448,7 +453,7 @@ const NX = (function () {
   /* Vart hör den här användaren hemma? Används av inloggningen på
      huvudsidan för att skicka rätt person till rätt vy. */
   function vyFörRoll(role) {
-    return role === 'tutor' ? 'larare.html' : 'foralder.html';
+    return role === 'tutor' ? '/larare' : '/foralder';
   }
 
   /* ---------- kalender ----------
