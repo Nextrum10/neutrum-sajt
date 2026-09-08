@@ -2426,3 +2426,76 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 /* Knappen ligger sist i kortet och trycks ner av tomrum, så alla tre
    knapparna hamnar på samma höjd även när biografierna är olika långa. */
 .sc-cta{margin-top:auto;align-self:flex-start}
+
+/* ============================================================
+   UNDERSIDORNAS INNEHÅLL
+   Komponenterna på Vår idé, Så fungerar Nextrum och För elever
+   & föräldrar.
+   ============================================================ */
+
+/* Textspalten. ALLA stycken samma radlängd och samma färg — det var
+   skillnaden mellan .lede-lg (539 px) och de inline-satta styckena
+   (582 px) som fick textrutorna att se olika breda ut. */
+.nx-text p{
+  max-width:60ch;
+  font-size:1.06rem;line-height:1.65;color:var(--muted);
+  margin:0 0 20px;
+}
+.nx-text p:first-child{color:var(--bl)}
+.nx-text p:last-of-type{margin-bottom:0}
+.nx-text .nx-lank{margin-top:26px}
+
+/* Förloppet. Ligger BARA på Så fungerar Nextrum — tre sidor med
+   samma stegtrappa läste som en mall, inte som tre sidor. */
+.nx-forlopp{
+  list-style:none;margin:36px 0 0;padding:0;
+  display:grid;gap:1px;background:var(--ln);
+  border:1px solid var(--ln);border-radius:18px;overflow:hidden;
+}
+.nx-forlopp li{
+  display:grid;grid-template-columns:auto 1fr;gap:clamp(18px,2.4vw,32px);
+  align-items:start;padding:clamp(20px,2.4vw,30px);background:var(--pap);
+}
+.nx-forlopp-nr{
+  font:600 .78rem/1 var(--f-mono);letter-spacing:.12em;
+  color:var(--acc-text);padding-top:5px;
+}
+.nx-forlopp li b{display:block;font-size:1.06rem;font-weight:600;letter-spacing:-.015em}
+.nx-forlopp li p{margin:6px 0 0;max-width:62ch;color:var(--muted);line-height:1.6;font-size:.98rem}
+@media (max-width:560px){
+  .nx-forlopp li{grid-template-columns:1fr;gap:8px}
+}
+
+/* Tre kort i stället för ännu en trappa. */
+.nx-trio{
+  display:grid;gap:clamp(14px,1.8vw,22px);
+  grid-template-columns:repeat(3,1fr);margin-top:36px;
+}
+@media (max-width:860px){.nx-trio{grid-template-columns:1fr}}
+.nx-trio-kort{
+  border:1px solid var(--ln);border-radius:20px;
+  padding:clamp(24px,2.6vw,32px);background:var(--pap);
+  display:flex;flex-direction:column;
+  transition:transform .4s var(--e-ut),box-shadow .4s var(--e-ut),border-color .3s var(--e);
+}
+.nx-trio-kort:hover{transform:translateY(-3px);box-shadow:var(--sk-2);border-color:var(--ln-2)}
+.nx-trio-et{
+  font:600 .68rem/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--acc-text);margin-bottom:16px;
+}
+.nx-trio-kort b{font-size:1.1rem;font-weight:600;letter-spacing:-.02em;margin-bottom:8px}
+.nx-trio-kort p{margin:0;color:var(--muted);line-height:1.6;font-size:.96rem}
+
+/* Dragspelet återanvänder FAQ:ns mekanik — den drivs redan av
+   NX.initFaq(), som de här sidorna anropar. En egen interaktion hade
+   varit en till sak som kan gå sönder. */
+.nx-dragspel{max-width:78ch}
+
+/* Avslutet: utan brödtext, tätare, och med orange knapp. Inne i
+   .on-band gör .btn-primary knappen gräddvit — accenten måste
+   återställas här, annars ser den ut som spökknappen bredvid. */
+.nx-final-tat .sec{padding-block:clamp(52px,6vw,80px)}
+.nx-final-tat .inner h2{max-width:18ch}
+.nx-final-tat .nx-story-ctas{margin-top:30px;justify-content:center}
+.nx-final .btn-primary{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.nx-final .btn-primary:hover{background:var(--acc-lugn);opacity:1}
