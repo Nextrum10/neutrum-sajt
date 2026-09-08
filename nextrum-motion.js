@@ -636,6 +636,16 @@ const NXFin = (function () {
       const träff = e.target.closest('a, button, [data-open], .nx-cursor-mål, input, select, textarea, summary');
       const etikett = e.target.closest('[data-markör]');
       ring.classList.toggle('is-länk', !!träff);
+
+      /* Ringen ritas med --bl, bläckfärgen, och ligger position:fixed
+         på body — den ärver alltså aldrig en mörk sektions variabler.
+         Över footern blev kanten exakt footerns egen färg, kontrast
+         1,00, samtidigt som cursor:none gömde systempilen. Följden var
+         ingen pekare alls på policylänkarna längst ner.
+         --nt-fg är den ljusa förgrunden på permanent mörka ytor och
+         är ljus i BÅDA lägena, till skillnad från --pap. */
+      ring.classList.toggle('pa-mork',
+        !!e.target.closest('.ftr, .band, .on-band, .nx-mork, .nx-hero-film'));
       ring.classList.toggle('is-text', !!e.target.closest('input, textarea'));
       const txt = etikett ? etikett.dataset.markör : '';
       ring.classList.toggle('is-etikett', !!txt);

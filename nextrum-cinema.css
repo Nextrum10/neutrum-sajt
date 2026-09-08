@@ -368,6 +368,16 @@ html[data-motion] [data-stig][data-fördröj="5"]{transition-delay:.25s}
 }
 body.nx-har-markör #nx-cursor{opacity:1}
 #nx-cursor.is-borta{opacity:0}
+
+/* Över mörka ytor vänds ringen till ljus. Utan det försvann pekaren
+   helt i footern: kanten var --bl mot en botten som också är --bl,
+   och cursor:none hade redan tagit systempilen. */
+#nx-cursor.pa-mork{border-color:color-mix(in srgb,var(--nt-fg) 55%,transparent)}
+#nx-cursor.pa-mork.is-länk{
+  background:color-mix(in srgb,var(--nt-fg) 12%,transparent);
+  border-color:color-mix(in srgb,var(--nt-fg) 50%,transparent);
+}
+#nx-cursor.pa-mork.is-text{background:var(--nt-fg);border-color:var(--nt-fg)}
 #nx-cursor.is-länk{
   width:46px;height:46px;
   background:color-mix(in srgb,var(--bl) 9%,transparent);
