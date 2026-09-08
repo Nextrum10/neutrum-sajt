@@ -2241,6 +2241,15 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .mk-mark rect{fill:var(--bl)}
 .mk-mark path{stroke:var(--pap);stroke-width:2.3;fill:none;stroke-linecap:square}
 
+/* MÅSTE stå före .mk-panel-regeln nedan i tanken, men vinner ändå:
+   [hidden] i webbläsarens egen stilmall sätter display:none, men en
+   FÖRFATTARREGEL slår alltid webbläsarens — och .mk-panel sätter
+   display:flex. Följden var att panelen aldrig doldes. Den låg över
+   sidan från första sidladdningen, och krysset satte ett attribut
+   som inte hade någon verkan alls.
+   Den här regeln är .mk-panel[hidden] och slår därför .mk-panel. */
+.mk-panel[hidden]{display:none}
+
 .mk-panel{
   position:absolute;right:0;bottom:calc(100% + 12px);
   width:min(374px,calc(100vw - 28px));
