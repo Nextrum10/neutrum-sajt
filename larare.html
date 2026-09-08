@@ -469,6 +469,14 @@
                           </select>
                         </div>
                       </div>
+                      <!-- Färdiga förslag. Att leta en ledig tid är en sökning,
+                           inte en formulering — kalendern vet redan vilka fönster
+                           som finns och vilka timmar som är bokade. -->
+                      <div class="vy-forslag" id="tid-forslag" hidden>
+                        <span class="vy-forslag-et">Lediga tider</span>
+                        <div class="vy-forslag-rad" id="tid-forslag-rad"></div>
+                      </div>
+
                       <div id="kalender"></div>
                       <div class="fgroup" style="margin-top:18px">
                         <label for="f-not">Meddelande med förslaget <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
@@ -1432,11 +1440,61 @@
   $('#f-langd').addEventListener('change', () => {
     if (S.kal) S.kal.sättMinuter($('#f-langd').value);
     uppdateraFörslag();
+    ritaTidsförslag();
+  });
+
+  /* ============================================================
+     FÖRESLAGNA TIDER
+     Fem lediga tider, en per dag, närmast först — men en tid familjen
+     redan brukar ha lyfts före. Fasta tider är lättare att komma ihåg
+     än bra tider.
+
+     Ingen språkmodell: kalendern vet redan vilka fönster som finns,
+     vilka timmar som är bokade och hur långt passet är. Det är en
+     sökning med ett exakt svar.
+     ============================================================ */
+  function ritaTidsförslag() {
+    const rut = $('#tid-forslag'), rad = $('#tid-forslag-rad');
+    if (!rut || !rad) return;
+    if (!(S.tillgang || []).length || !S.kal) { rut.hidden = true; return; }
+
+    /* Familjens vana hämtas ur pass som redan är laddade. Ett inställt
+       pass säger inget om vilken tid som passar. */
+    const tidigare = (S.bokningar || [])
+      .filter(b => b.student_id === S.aktivElev && b.status !== 'cancelled');
+
+    const förslag = NX.föreslåTider({
+      tillgang: S.tillgang,
+      blockerade: S.blockerade,
+      upptagna: S.kal.state.upptagna,
+      minuter: $('#f-langd').value,
+      tidigare
+    });
+
+    rut.hidden = false;
+    if (!förslag.length) {
+      rad.innerHTML = '<span class="vy-forslag-tom">Inga lediga tider de närmaste tre veckorna. '
+        + 'Lägg in fler tider ovanför, eller titta längre fram i kalendern.</span>';
+      return;
+    }
+    rad.innerHTML = förslag.map(f =>
+      '<button type="button" class="vy-forslag-tid' + (f.vanlig ? ' vanlig' : '') + '"'
+      + ' data-datum="' + f.datum + '" data-tid="' + f.tid + '">'
+      + '<b>' + NX.datumText(f.datum) + '</b>'
+      + '<span>' + f.tid + (f.vanlig ? ' · som vanligt' : '') + '</span>'
+      + '</button>').join('');
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('#tid-forslag-rad [data-datum]');
+    if (!b || !S.kal) return;
+    S.kal.välj(b.dataset.datum, b.dataset.tid);
+    $('#kalender').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 
   async function byggKalender() {
     const upptagna = await NX.hämtaUpptagna(S.user.id);
-    if (S.kal) { S.kal.sättUpptagna(upptagna); uppdateraFörslag(); return; }
+    if (S.kal) { S.kal.sättUpptagna(upptagna); uppdateraFörslag(); ritaTidsförslag(); return; }
     S.kal = NX.byggKalender({
       host: $('#kalender'),
       upptagna,
@@ -1444,6 +1502,7 @@
       blockerade: S.blockerade || [],
       onChange: uppdateraFörslag
     });
+    ritaTidsförslag();
   }
 
   $('#forslag-knapp').addEventListener('click', async () => {
@@ -1550,7 +1609,7 @@
     S.blockerade = t.blockerade;
 
     /* kalendern för tidsförslag ska lyda samma tider */
-    if (S.kal) S.kal.sättTider(t);
+    if (S.kal) { S.kal.sättTider(t); ritaTidsförslag(); }
 
     const host = $('#tillg-lista');
     const block = $('#tider-block');

@@ -513,6 +513,70 @@ const NX = (function () {
     return tider;
   }
 
+  /* ============================================================
+     FÖRESLÅ TIDER
+
+     Att leta en ledig tid är en sökning, inte en formulering. Den
+     som vet vilka fönster som finns, vilka timmar som är bokade och
+     hur långt passet är kan räkna fram svaret exakt — och blir aldrig
+     osäker på om 17:00 krockar med ett tvåtimmarspass som började
+     16:00. Därför ingen språkmodell här.
+
+     Ordningen är närmast först, men ett pass som ligger på samma
+     veckodag och tid som familjen redan brukar ha lyfts före. Fasta
+     tider är lättare att komma ihåg än bra tider.
+     ============================================================ */
+  function föreslåTider(o) {
+    const minuter = Number(o.minuter) || 60;
+    const timmar = Math.max(1, Math.ceil(minuter / 60));
+    const upptagna = o.upptagna || new Set();
+    const dagar = Number(o.dagar) || 21;
+    const antal = Number(o.antal) || 5;
+
+    /* Familjens vana: veckodag + klockslag som återkommer i tidigare
+       pass. Ett enda tidigare pass räcker som mönster — det är ändå
+       den tid de tackat ja till förut. */
+    const vana = new Set();
+    (o.tidigare || []).forEach(b => {
+      if (!b.wanted_date || !b.wanted_time) return;
+      const d = new Date(b.wanted_date + 'T12:00:00');
+      vana.add(((d.getDay() + 6) % 7) + '|' + String(b.wanted_time).slice(0, 5));
+    });
+
+    const krockar = (iso, t) => {
+      const h0 = tim(t);
+      for (let i = 0; i < timmar; i++) {
+        if (upptagna.has(iso + '|' + tvåsiffrig(h0 + i) + ':00')) return true;
+      }
+      return false;
+    };
+
+    const ut = [];
+    const start = new Date();
+    for (let i = 0; i < dagar && ut.length < antal * 4; i++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      const iso = isoFor(d);
+      const veckodag = (d.getDay() + 6) % 7;
+      tiderFörDatum(iso, o.tillgang, o.blockerade, minuter).forEach(t => {
+        if (krockar(iso, t)) return;
+        ut.push({ datum: iso, tid: t, minuter,
+                  vanlig: vana.has(veckodag + '|' + t) });
+      });
+    }
+
+    /* Vanliga tider först, därefter kronologiskt. Sorteringen är
+       stabil i alla motorer vi bryr oss om, så lika poster behåller
+       sin ordning i tiden. */
+    ut.sort((a, b) => (b.vanlig - a.vanlig)
+      || (a.datum + a.tid).localeCompare(b.datum + b.tid));
+
+    /* Högst ett förslag per dag. Fem tider samma eftermiddag är fem
+       varianter av samma erbjudande, inte fem alternativ. */
+    const sedda = new Set();
+    return ut.filter(f => !sedda.has(f.datum) && sedda.add(f.datum)).slice(0, antal);
+  }
+
   function byggKalender(opts) {
     const host = opts.host;
     const state = {
@@ -638,7 +702,20 @@ const NX = (function () {
         rita();
         return state;
       },
-      nollställ() { state.valtDatum = null; state.valdTid = null; rita(); }
+      nollställ() { state.valtDatum = null; state.valdTid = null; rita(); },
+      /* Väljer datum och tid utifrån, t.ex. när man trycker på ett
+         färdigt förslag. Månaden flyttas med, annars pekar valet på en
+         dag som inte syns i rutan. onChange körs så att allt som
+         lyssnar på kalendern uppdateras precis som vid ett klick. */
+      välj(datum, tid) {
+        if (!datum) return state;
+        state.visad = new Date(datum + 'T12:00:00');
+        state.valtDatum = datum;
+        state.valdTid = tid || null;
+        rita();
+        if (typeof opts.onChange === 'function') opts.onChange(state);
+        return state;
+      }
     };
   }
 
@@ -675,7 +752,7 @@ const NX = (function () {
     initFaq, initPris, kopplaAnsökan, märkInloggad,
     bildIntoning, initVagval,
     hämtaSession, hämtaProfil, vyFörRoll,
-    byggKalender, hämtaUpptagna, hämtaTillganglighet, tiderFörDatum,
+    byggKalender, hämtaUpptagna, hämtaTillganglighet, tiderFörDatum, föreslåTider,
     MANADER, DAGAR, CFG
   };
 })();
