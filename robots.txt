@@ -1,0 +1,14 @@
+# Nextrum — nextrum.se
+#
+# De inloggade vyerna hålls utanför sökresultaten. Inte för att de är
+# hemliga i sig — RLS i databasen är det som faktiskt skyddar
+# innehållet — utan för att en tom inloggningssida inte hjälper någon
+# som söker efter läxhjälp, och för att de inte har något eget
+# innehåll att indexera.
+
+User-agent: *
+Allow: /
+Disallow: /foralder.html
+Disallow: /larare.html
+
+Sitemap: https://nextrum.se/sitemap.xml

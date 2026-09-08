@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
+
 <title>Nextrum — Tutoring by young people, for young people</title>
 <meta name="description" content="Personal tutoring matched to your child, and a first real job for young people. No registration fee and no minimum term.">
 <link rel="canonical" href="https://nextrum.se/en/index.html">
@@ -51,6 +54,50 @@
 <link rel="preload" as="image" href="../bilder/hero-nextrum-1280.jpg"
       imagesrcset="../bilder/hero-nextrum-640.jpg 640w, ../bilder/hero-nextrum-960.jpg 960w, ../bilder/hero-nextrum-1280.jpg 1280w, ../bilder/hero-nextrum-1600.jpg 1600w, ../bilder/hero-nextrum-1920.jpg 1920w"
       imagesizes="(max-width: 900px) 92vw, 52vw" fetchpriority="high">
+
+<!-- Strukturerad data. Ger Google namn, logotyp, beskrivning och
+     våra konton att knyta ihop sidan med. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "name": "Nextrum",
+      "url": "https://nextrum.se/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://nextrum.se/favicon.svg",
+        "width": 512,
+        "height": 512
+      },
+      "image": "https://nextrum.se/bilder/hero-nextrum-1280.jpg",
+      "email": "info@nextrum.se",
+      "areaServed": {
+        "@type": "Country",
+        "name": "Sweden"
+      },
+      "sameAs": [
+        "https://www.instagram.com/nextrum.se",
+        "https://www.tiktok.com/@nextrum.ab",
+        "https://www.facebook.com/share/1DuLomKfy8/",
+        "https://www.linkedin.com/company/nextrum-se/"
+      ],
+      "description": "Nextrum matches students with young tutors who understand what school is like today. Personal matching, an individual study plan and a report after every session.",
+      "@id": "https://nextrum.se/#org"
+    },
+    {
+      "@type": "WebSite",
+      "name": "Nextrum",
+      "url": "https://nextrum.se/",
+      "inLanguage": "en",
+      "publisher": {
+        "@id": "https://nextrum.se/#org"
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 

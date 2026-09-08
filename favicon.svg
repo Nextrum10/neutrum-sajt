@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26" width="26" height="26">
+  <!-- Samma märke som i sidhuvudet, men med färgerna inbakade.
+       En favicon laddas utan sidans CSS, så var(--bl) och var(--pap)
+       hade blivit svart på svart. Bark #2E2A20 och lin #EFE6D6. -->
+  <rect width="26" height="26" rx="7" fill="#2E2A20"/>
+  <path d="M8 18.5V7.5L18 18.5V7.5"
+        stroke="#EFE6D6" stroke-width="2.3" fill="none" stroke-linecap="square"/>
+</svg>
