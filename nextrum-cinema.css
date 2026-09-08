@@ -2359,3 +2359,19 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   .mk-knapp{transition:none}
   .mk-knapp:hover{transform:none}
 }
+
+/* En länk som ska hittas, inte bara finnas. Används på
+   intresseanmälan, där den som kommit fel ska se vägen vidare.
+
+   --acc och inte --acc-text: den förra är den orangea leran och ger
+   5,16:1 mot linpanelen vid 12,8 px, alltså över AA-kravet 4,5. Den
+   senare är mörkare och läser mer som brunt än som orange, vilket är
+   fel signal för just den här länken. */
+.nx-lank-stark{
+  color:var(--acc);
+  font-weight:700;
+  text-decoration:underline;
+  text-underline-offset:3px;
+  text-decoration-thickness:1.5px;
+}
+.nx-lank-stark:hover{color:var(--acc-lugn)}
