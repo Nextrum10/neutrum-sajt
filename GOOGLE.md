@@ -42,15 +42,28 @@ Cloudflare spridit posten.
 
 ### Steg 3. Skicka in kartan över sidan
 
-I vänstermenyn: **Sitemaps**. Skriv in
+**Sitemaps ligger inte fritt i vänstermenyn.** Den är nästlad:
 
 ```
-sitemap.xml
+Vänstermenyn  ->  Indexering  ->  Sitemaps
 ```
 
-och klicka **Skicka**. Status ska bli *Lyckades* med 16 upptäckta
-adresser. Blir det fel, kontrollera att `https://nextrum.se/sitemap.xml`
-öppnas i webbläsaren.
+Syns ingen meny alls är egendomen inte tillagd än — gör Steg 2 först.
+På smal skärm är menyn hopfälld bakom hamburgerikonen uppe till
+vänster.
+
+Väl inne: skriv `sitemap.xml` i rutan och klicka **Skicka**. Status
+ska bli *Lyckades* med 16 upptäckta adresser.
+
+Kartan är kontrollerad och fungerar — `https://nextrum.se/sitemap.xml`
+svarar 200 med giltig XML och 16 adresser. Öppna den i webbläsaren om
+du vill se själv. Går den inte att skicka in är det något i Search
+Console, inte i filen.
+
+**Och om det ändå strular:** att skicka in kartan är inte nödvändigt.
+robots.txt pekar redan ut den, så Google hittar den på egen hand.
+Inskickningen gör det bara snabbare och ger dig en statusrad att titta
+på. **Steg 4 är det som faktiskt betyder något** — hoppa dit.
 
 ### Steg 4. Be Google hämta startsidan nu
 
