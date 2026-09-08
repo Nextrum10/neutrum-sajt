@@ -2208,3 +2208,122 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   .sprakval{gap:7px}
   .sprakval a,.sprakval b{font-size:9px;letter-spacing:.08em}
 }
+
+/* ============================================================
+   MASKOTEN
+   Hjälprutan nere till höger. Färgerna kommer ur paletten, så den
+   följer ljust och mörkt läge utan egna varianter.
+
+   z-index 850: över sidhuvudet (800) men under vyväljaren (900) och
+   hopplänken (1000). En hjälpruta ska aldrig ligga över ett öppet
+   modalt val eller över det första en tangentbordsanvändare når.
+   ============================================================ */
+.mk{position:fixed;right:clamp(14px,2.4vw,26px);bottom:clamp(14px,2.4vw,26px);z-index:850}
+
+.mk-knapp{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 18px 8px 8px;border:1px solid var(--ln);border-radius:100px;
+  background:var(--pap);color:var(--bl);cursor:pointer;
+  box-shadow:var(--sk-2);
+  font:600 .92rem/1 var(--f);letter-spacing:-.01em;
+  transition:transform .3s var(--e-ut),box-shadow .3s var(--e-ut);
+}
+.mk-knapp:hover{transform:translateY(-2px)}
+.mk-knapp:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+
+/* Bilden och märket ligger i samma ruta. Saknas maskotfilen tar
+   skriptet bort <img>, och då blir märket kvar av sig självt. */
+.mk-bild{display:grid;place-items:center;width:44px;height:44px;flex:none}
+.mk-bild>*{grid-area:1/1}
+.mk-bild img{width:44px;height:44px;object-fit:contain}
+.mk-bild img+.mk-mark{display:none}
+.mk-mark{width:30px;height:30px}
+.mk-mark rect{fill:var(--bl)}
+.mk-mark path{stroke:var(--pap);stroke-width:2.3;fill:none;stroke-linecap:square}
+
+.mk-panel{
+  position:absolute;right:0;bottom:calc(100% + 12px);
+  width:min(374px,calc(100vw - 28px));
+  max-height:min(560px,calc(100vh - 120px));
+  display:flex;flex-direction:column;
+  background:var(--pap);border:1px solid var(--ln);border-radius:22px;
+  box-shadow:var(--sk-2);overflow:hidden;
+}
+.mk-topp{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:16px 16px 14px;border-bottom:1px solid var(--ln);
+}
+.mk-avatar{display:grid;place-items:center;width:34px;height:34px;flex:none}
+.mk-avatar>*{grid-area:1/1}
+.mk-avatar img{width:34px;height:34px;object-fit:contain}
+.mk-avatar img+.mk-mark{display:none}
+.mk-avatar .mk-mark{width:26px;height:26px}
+.mk-topp b{display:block;font-size:.97rem;letter-spacing:-.02em}
+.mk-topp span{display:block;font-size:.82rem;line-height:1.5;color:var(--muted);margin-top:3px}
+.mk-stang{
+  margin-left:auto;flex:none;width:28px;height:28px;border:0;border-radius:50%;
+  background:transparent;color:var(--muted);cursor:pointer;
+}
+.mk-stang:hover{background:var(--pap-2);color:var(--bl)}
+.mk-stang svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round}
+
+.mk-flode{padding:14px 16px;overflow-y:auto;display:grid;gap:12px;align-content:start}
+.mk-bubbla{font-size:.88rem;line-height:1.6}
+.mk-bubbla b{display:block;font-weight:600;letter-spacing:-.01em;margin-bottom:5px}
+.mk-bubbla p{margin:0}
+.mk-mk{
+  background:var(--pap-2);border-radius:4px 16px 16px 16px;padding:13px 15px;color:var(--bl);
+}
+.mk-du{
+  background:var(--bl);color:var(--pap);border-radius:16px 16px 4px 16px;
+  padding:10px 14px;justify-self:end;max-width:85%;
+}
+.mk-mer{
+  display:block;margin:12px 0 5px;font:600 .68rem/1 var(--f-mono);
+  letter-spacing:.13em;text-transform:uppercase;color:var(--muted-2);
+}
+.mk-bubbla ul{margin:0;padding:0;list-style:none;display:grid;gap:5px}
+.mk-bubbla ul a{color:var(--bl);text-decoration:underline;text-underline-offset:3px;font-size:.85rem}
+
+/* Vägen vidare ska se ut som något man trycker på, inte som en rad
+   till i svaret. */
+.mk-vag{
+  display:block;margin-top:11px;padding:11px 14px;
+  border:1px solid var(--acc-line);border-radius:13px;background:var(--acc-soft);
+  text-decoration:none;color:var(--bl);
+}
+.mk-vag b{margin-bottom:2px;color:var(--acc-text)}
+.mk-vag span{display:block;font-size:.8rem;line-height:1.45;color:var(--muted)}
+.mk-vag:hover{border-color:var(--acc)}
+
+.mk-snabb{display:grid;gap:6px;margin-top:11px}
+.mk-snabb button{
+  text-align:left;padding:9px 13px;border:1px solid var(--ln);border-radius:11px;
+  background:var(--pap);color:var(--bl);cursor:pointer;font:inherit;font-size:.84rem;
+}
+.mk-snabb button:hover{border-color:var(--bl-3);background:var(--pap)}
+
+.mk-form{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--ln)}
+.mk-falt{
+  flex:1;min-width:0;padding:11px 13px;border:1px solid var(--ln-2);border-radius:11px;
+  background:var(--pap);color:var(--bl);font:inherit;font-size:.88rem;
+}
+.mk-falt:focus{outline:2px solid var(--acc);outline-offset:1px;border-color:transparent}
+.mk-skicka{
+  flex:none;padding:11px 16px;border:0;border-radius:11px;
+  background:var(--acc);color:var(--acc-ink);cursor:pointer;
+  font:600 .86rem/1 var(--f);
+}
+.mk-skicka:hover{background:var(--acc-lugn)}
+
+/* På mobil tar knappen bara ikonen — texten intill äter bredd som
+   sidans egna knappar behöver. */
+@media (max-width:520px){
+  .mk-knapp{padding:7px}
+  .mk-knapp-text{display:none}
+  .mk-panel{width:calc(100vw - 24px);right:-4px}
+}
+@media (prefers-reduced-motion:reduce){
+  .mk-knapp{transition:none}
+  .mk-knapp:hover{transform:none}
+}
