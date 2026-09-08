@@ -2427,6 +2427,20 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    knapparna hamnar på samma höjd även när biografierna är olika långa. */
 .sc-cta{margin-top:auto;align-self:flex-start}
 
+/* Betoningen i en rubrik ska vara orange och UPPRÄTT, inte kursiv.
+   .nx-manifest h2 em på startsidan gör redan så, men .nx-d1 och
+   .nx-d2 hade ingen egen regel — <em> föll därför tillbaka på
+   webbläsarens kursiv och ärvde bläckfärgen. Det blev en helt annan
+   stil på just de nya sidornas rubriker.
+
+   --acc-lugn är samma ton som startsidan använder, och den vänds
+   till sitt ljusa syskon i mörkt läge av palettblocket. */
+.nx-d1 em,
+.nx-d2 em{
+  font-style:normal;
+  color:var(--acc-lugn);
+}
+
 /* ============================================================
    UNDERSIDORNAS INNEHÅLL
    Komponenterna på Vår idé, Så fungerar Nextrum och För elever
