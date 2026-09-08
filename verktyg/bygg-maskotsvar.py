@@ -16,16 +16,35 @@ ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def plocka(p):
-    """Q&A-paren ur en FAQ-sida, grupperade under sin rubrik."""
+    """Alla fråga/svar-par på en sida, oavsett vilken rubrikklass som
+       omger dem.
+
+       Första versionen delade på <h2 class="d3"> och hittade därför
+       bara FAQ-sidan. priser.html och bli-studiehjalpare.html
+       använder d2, och deras tio frågor blev osynliga för maskoten
+       fastän de stod skrivna. Nu letas paren upp där de står, och
+       gruppen härleds ur närmaste rubrik före dem.
+    """
     s = io.open(os.path.join(ROT, p), encoding='utf-8').read()
+    rubriker = [(m.start(), html.unescape(re.sub(r'<[^>]+>', '', m.group(1))).strip())
+                for m in re.finditer(r'<h2[^>]*>(.*?)</h2>', s, re.S)]
+
+    def grupp_för(pos):
+        namn = ''
+        for start, txt in rubriker:
+            if start < pos and txt:
+                namn = txt
+            else:
+                break
+        return namn
+
     ut = []
-    for grupp in re.split(r'<h2 class="d3"[^>]*>', s)[1:]:
-        rub = html.unescape(re.sub(r'<[^>]+>', '', grupp.split('</h2>')[0])).strip()
-        for m in re.finditer(r'<button class="faq-q"[^>]*>(.*?)<span class="pm">.*?'
-                             r'<div class="faq-a">(.*?)</div>', grupp, re.S):
-            f = html.unescape(re.sub(r'<[^>]+>', '', m.group(1))).strip()
-            sv = html.unescape(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', m.group(2)))).strip()
-            ut.append({"g": rub, "f": f, "s": sv})
+    for m in re.finditer(r'<button class="faq-q"[^>]*>(.*?)<span class="pm">.*?'
+                         r'<div class="faq-a">(.*?)</div>', s, re.S):
+        f = html.unescape(re.sub(r'<[^>]+>', '', m.group(1))).strip()
+        sv = html.unescape(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', m.group(2)))).strip()
+        if f and sv:
+            ut.append({"g": grupp_för(m.start()), "f": f, "s": sv})
     return ut
 
 
@@ -120,10 +139,23 @@ def bygg():
     data = {}
     LEAD = {'sv': ('intresseanmalan.html', 'Innan ni skickar in'),
             'en': ('en/intresseanmalan.html', 'Before you send')}
-    for kod, faqfil in (('sv', 'faq.html'), ('en', 'en/faq.html')):
-        faq = plocka(faqfil) + plocka_lead(*LEAD[kod])
-        if len(faq) < 5:
-            sys.exit('Bara %d frågor ur %s — har markupen ändrats?' % (len(faq), faqfil))
+    # Alla sidor som har skrivna svar, inte bara FAQ:n.
+    KÄLLOR = {'sv': ['faq.html', 'priser.html', 'bli-studiehjalpare.html'],
+              'en': ['en/faq.html', 'en/priser.html', 'en/bli-studiehjalpare.html']}
+    for kod in ('sv', 'en'):
+        faq = []
+        for fil in KÄLLOR[kod]:
+            faq += plocka(fil)
+        faq += plocka_lead(*LEAD[kod])
+        # Samma fråga kan stå på två sidor - behall den forsta.
+        sedda, unika = set(), []
+        for x in faq:
+            n = x['f'].lower()
+            if n not in sedda:
+                sedda.add(n); unika.append(x)
+        faq = unika
+        if len(faq) < 15:
+            sys.exit('Bara %d frågor för %s — har markupen ändrats?' % (len(faq), kod))
         data[kod] = {"faq": faq, "vagar": VAGAR[kod], "stopp": STOPP[kod]}
 
     js = ("/* GENERERAD FIL — ändra inte för hand.\n"

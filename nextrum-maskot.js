@@ -173,9 +173,21 @@
     bubbla(h, 'mk');
   }
 
+  /* Knappen är en växel, och det ska synas. Med samma ikon och
+     samma text i båda lägena ser den öppna rutan ut som något man
+     bara kan lämna via krysset — och hittar man inte det sitter man
+     fast. */
+  function lägeKnapp(öppen) {
+    knapp.setAttribute('aria-expanded', String(öppen));
+    knapp.classList.toggle('ar-oppen', öppen);
+    const txt = knapp.querySelector('.mk-knapp-text');
+    if (txt) txt.textContent = öppen ? T.stang : T.knapp;
+    knapp.setAttribute('aria-label', öppen ? T.stang : T.knapp);
+  }
+
   function öppna() {
     panel.hidden = false;
-    knapp.setAttribute('aria-expanded', 'true');
+    lägeKnapp(true);
     if (!flöde.childElementCount) {
       bubbla('<b>' + esc(T.rubrik) + '</b><div class="mk-snabb">' +
         T.snabb.map(f => '<button type="button" data-snabb="' + esc(f) + '">' +
@@ -183,10 +195,10 @@
     }
     setTimeout(() => fält.focus(), 60);
   }
-  function stäng() {
+  function stäng(flyttaFokus) {
     panel.hidden = true;
-    knapp.setAttribute('aria-expanded', 'false');
-    knapp.focus();
+    lägeKnapp(false);
+    if (flyttaFokus !== false) knapp.focus();
   }
 
   knapp.addEventListener('click', () => (panel.hidden ? öppna() : stäng()));
@@ -212,5 +224,14 @@
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !panel.hidden) stäng();
+  });
+
+  /* Att trycka utanför är det man förväntar sig av en ruta som den
+     här, och på en telefon finns ingen Escape-tangent att ta till.
+     Utan det här fanns exakt en väg ut: ett kryss på 28 pixlar. */
+  document.addEventListener('pointerdown', e => {
+    if (panel.hidden) return;
+    if (rot.contains(e.target)) return;
+    stäng(false);
   });
 })();

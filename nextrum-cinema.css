@@ -2260,12 +2260,35 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .mk-avatar .mk-mark{width:26px;height:26px}
 .mk-topp b{display:block;font-size:.97rem;letter-spacing:-.02em}
 .mk-topp span{display:block;font-size:.82rem;line-height:1.5;color:var(--muted);margin-top:3px}
+/* 28 px utan bakgrund var för litet. Riktlinjen för en pekyta är
+   44 px, och ett hårfint kryss utan knappform läser inte som något
+   man trycker på — det var enda vägen ut ur rutan. Nu en synlig
+   knapp med full pekyta, och två vägar till: klick utanför och
+   samma knapp som öppnade. */
 .mk-stang{
-  margin-left:auto;flex:none;width:28px;height:28px;border:0;border-radius:50%;
-  background:transparent;color:var(--muted);cursor:pointer;
+  margin-left:auto;flex:none;
+  display:grid;place-items:center;
+  width:34px;height:34px;border:1px solid var(--ln);border-radius:50%;
+  background:var(--pap-2);color:var(--bl);cursor:pointer;
+  transition:background .2s var(--e),border-color .2s var(--e);
 }
-.mk-stang:hover{background:var(--pap-2);color:var(--bl)}
-.mk-stang svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round}
+.mk-stang::after{
+  /* Osynlig men träffbar marginal upp till 44 px, utan att knappen
+     behöver ta den plats visuellt. */
+  content:"";position:absolute;width:44px;height:44px;
+  margin:-5px 0 0 -5px;
+}
+.mk-topp{position:relative}
+.mk-stang{position:relative}
+.mk-stang:hover{background:var(--pap-3);border-color:var(--bl-3)}
+.mk-stang:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.mk-stang svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round}
+
+/* Öppen ruta: knappen nere i hörnet är samma växel tillbaka, och
+   det ska synas på den. */
+.mk-knapp.ar-oppen{background:var(--bl);color:var(--pap);border-color:var(--bl)}
+.mk-knapp.ar-oppen .mk-mark rect{fill:var(--pap)}
+.mk-knapp.ar-oppen .mk-mark path{stroke:var(--bl)}
 
 .mk-flode{padding:14px 16px;overflow-y:auto;display:grid;gap:12px;align-content:start}
 .mk-bubbla{font-size:.88rem;line-height:1.6}
