@@ -1048,6 +1048,50 @@
       + '</div>';
   }
 
+  /* ============================================================
+     EXEMPELKORT
+
+     De här två ligger MEDVETET i markupen och inte i databasen.
+     En rad i tutor_profiles hade dykt upp i admin, kunnat matchas
+     mot en riktig familj och blandats in i bokningar och
+     fakturaunderlag. Här kan de aldrig läcka in i driften — de är
+     presentation på en marknadssida, ingenting annat.
+
+     De faller också bort av sig själva den dag riktiga profiler
+     fyller raden: ta bort konstanten och anropet nedan.
+     ============================================================ */
+  const EXEMPELKORT =
+    [{ namn: 'Elsa', ålder: 19, skola: 'Norra Real, Naturvetenskapsprogrammet',
+       ort: 'Stockholm', bild: 'studiehjalpare-1',
+       alt: 'Porträtt av en ung studiehjälpare i beige stickad tröja.',
+       bio: 'Jag läser naturvetenskap och hjälper helst till med matte och fysik. '
+          + 'Det roligaste är när någon plötsligt ser varför en formel ser ut som den gör.',
+       ämnen: ['Matematik', 'Fysik', 'Kemi'] },
+     { namn: 'Hugo', ålder: 18, skola: 'Södra Latins gymnasium, Samhällsprogrammet',
+       ort: 'Stockholm', bild: 'studiehjalpare-2',
+       alt: 'Porträtt av en ung studiehjälpare i grågrön tröja.',
+       bio: 'Jag pluggade själv inför nationella proven för ett år sedan och minns precis '
+          + 'vad som var svårt. Svenska och engelska är det jag hjälper till med mest.',
+       ämnen: ['Svenska', 'Engelska', 'Samhällskunskap'] }]
+    .map(t =>
+      '<article class="sc-card">'
+      + '<div class="sc-top">'
+      + '<span class="sc-face sc-foto">'
+      + '<img src="bilder/' + t.bild + '-200.jpg" '
+      + 'srcset="bilder/' + t.bild + '-200.jpg 200w, bilder/' + t.bild + '-400.jpg 400w" '
+      + 'sizes="56px" width="56" height="56" loading="lazy" decoding="async" '
+      + 'alt="' + esc(t.alt) + '">'
+      + '</span>'
+      + '<div><div class="sc-name">' + esc(t.namn) + ', ' + t.ålder + '</div>'
+      + '<div class="sc-role">Studiehjälpare · ' + esc(t.skola) + ' · ' + esc(t.ort) + '</div></div>'
+      + '</div>'
+      + '<div class="sc-body">'
+      + '<p>' + esc(t.bio) + '</p>'
+      + '<div class="tutor-meta">' + t.ämnen.map(ä => '<span class="tag">' + esc(ä) + '</span>').join('') + '</div>'
+      + '<a class="btn btn-ghost btn-sm sc-cta" href="intresseanmalan.html">Hitta din studiehjälpare</a>'
+      + '</div>'
+      + '</article>').join('');
+
   async function laddaShowcase() {
     const host = $('#showcase');
     if (!host || !supa) return;
@@ -1081,9 +1125,11 @@
         + '<div class="sc-body">'
         + '<p>' + esc(bio) + '</p>'
         + (ämnen ? '<div class="tutor-meta">' + ämnen + '</div>' : '')
+        + '<a class="btn btn-ghost btn-sm sc-cta" href="intresseanmalan.html">'
+        + 'Hitta din studiehjälpare</a>'
         + '</div>'
         + '</article>';
-    }).join('');
+    }).join('') + EXEMPELKORT;
   }
   laddaShowcase();
 })();
