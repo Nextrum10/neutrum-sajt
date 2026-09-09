@@ -470,7 +470,7 @@
 <script>
 (function () {
   'use strict';
-  const { $, säg, rensa, felText, t } = NX;
+  const { $, säg, rensa, felText, t, epostOk } = NX;
 
   NX.initHeader();
   NX.initReveal();
@@ -496,6 +496,7 @@
       const epost = String(f.get('epost') || '').trim();
       const med = String(f.get('meddelande') || '').trim();
       if (!namn || !epost || !med) { säg(msg, t('fyllKontakt'), false); return; }
+      if (!epostOk(epost)) { säg(msg, t('felEpost'), false); return; }
       if (!supa) { säg(msg, t('ingenDatabas'), false); return; }
 
       const { error } = await supa.from('contact_messages').insert({

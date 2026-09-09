@@ -74,7 +74,9 @@ const NX = (function () {
                       'Too many attempts. Wait a moment and try again.'],
     felNatverk:      ['Når inte databasen. Kontrollera din internetanslutning, och att URL:en i nextrum-config.js är rätt.',
                       'Cannot reach the database. Check your internet connection, and that the URL in nextrum-config.js is correct.'],
-    felOkant:        ['Något gick fel.', 'Something went wrong.']
+    felOkant:        ['Något gick fel.', 'Something went wrong.'],
+    felEpost:        ['Kontrollera e-postadressen — den ser inte ut som en adress.',
+                      'Please check the email address — it does not look like an address.']
   };
   function t(nyckel, vars) {
     const par = ORD[nyckel];
@@ -103,6 +105,26 @@ const NX = (function () {
     el.classList.add('show');
     el.classList.toggle('is-err', ok === false);
   }
+  /* ============================================================
+     Ser adressen ut som en adress?
+
+     Formulären har novalidate — valideringen ska tala samma språk
+     som resten av sidan, och webbläsarens egen bubbla gör inte det.
+     Följden var att type="email" aldrig kontrollerades av någon:
+     en intresseanmälan med adressen "junior" gick rakt in i leads.
+     Raden gick inte att svara på, och aviseringen till oss dog med
+     422 från Resend, som vägrar en ogiltig svarsadress.
+
+     Medvetet grov. Den fångar det som uppenbart inte är en adress
+     och släpper igenom resten — en fullständig kontroll enligt
+     standarden avvisar adresser som faktiskt fungerar, och det är
+     ett värre fel än att släppa in en felstavad. Om adressen går
+     fram avgörs ändå först när mejlet skickas.
+     ============================================================ */
+  function epostOk(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v || '').trim());
+  }
+
   function rensa(el) {
     if (!el) return;
     el.textContent = '';
@@ -278,6 +300,7 @@ const NX = (function () {
       const namn = String(f.get('namn') || '').trim();
       const epost = String(f.get('epost') || '').trim();
       if (!namn || !epost) { säg(msg, t('fyllNamnEpost'), false); return; }
+      if (!epostOk(epost)) { säg(msg, t('felEpost'), false); return; }
 
       /* Kryssrutan för samtycke finns bara där den efterfrågas.
          Utan opts.krävSamtycke beter sig funktionen precis som förut. */
@@ -763,7 +786,7 @@ const NX = (function () {
   }
 
   return {
-    $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t,
+    $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling,
     initFaq, initPris, kopplaAnsökan, märkInloggad,
     bildIntoning, initVagval,

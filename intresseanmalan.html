@@ -378,7 +378,7 @@
 <script>
 (function () {
   'use strict';
-  const { $, $$, esc, säg, rensa, felText, t } = NX;
+  const { $, $$, esc, säg, rensa, felText, t, epostOk } = NX;
 
   NX.initHeader();
   NX.initReveal();
@@ -434,6 +434,7 @@
       const namn = $('#l-name').value.trim();
       const epost = $('#l-email').value.trim();
       if (!namn || !epost) { säg(msg, t('fyllNamnEpost'), false); return; }
+      if (!epostOk(epost)) { säg(msg, t('felEpost'), false); return; }
       if (!$('#l-gdpr').checked) { säg(msg, t('samtyckeIntresse'), false); return; }
       if (!supa) { säg(msg, t('ingenDatabasForm'), false); return; }
 

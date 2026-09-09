@@ -36,6 +36,14 @@ function rad(etikett: string, varde: unknown): string {
   return v ? `${etikett}: ${v}\n` : '';
 }
 
+/* Ser adressen ut som en adress? Samma grova kontroll som i
+   formuläret. Den finns HÄR också, för databasen kan fyllas på
+   från annat håll än sidan och en trasig rad får inte kunna
+   stoppa aviseringen om sig själv. */
+function epostOk(v: unknown): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v ?? '').trim());
+}
+
 function esc(s: unknown): string {
   return String(s ?? '').replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -82,8 +90,14 @@ Deno.serve(async (req) => {
         from: FRAN,
         to: [TILL],
         /* Svara-knappen ska gå till familjen, inte till no-reply.
-           Utan det här måste man kopiera adressen ur mejlet. */
-        reply_to: r.email ? [String(r.email)] : undefined,
+           Utan det här måste man kopiera adressen ur mejlet.
+
+           Bara när adressen ser giltig ut. Resend avvisar HELA
+           utskicket med 422 på en ogiltig svarsadress, och då dog
+           aviseringen om just den anmälan som behövde granskas mest.
+           Adressen står ändå i texten ovan, så ingenting går
+           förlorat — mejlet kommer fram, utan svara-knapp. */
+        reply_to: epostOk(r.email) ? [String(r.email).trim()] : undefined,
         subject: `Intresseanmälan: ${r.parent_name ?? 'okänd'}${r.grade ? ' — ' + r.grade : ''}`,
         text,
         html,
