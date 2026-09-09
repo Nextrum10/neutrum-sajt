@@ -1132,7 +1132,14 @@ html[lang="en"] .nx-hero-rubrik{
 .nx-hur-steg li.pa p{max-height:9em;opacity:1;margin-top:9px}
 
 .nx-hur .nx-d2{margin-top:20px;margin-bottom:clamp(28px,3.4vw,44px)}
-.nx-hur-cta{margin-top:clamp(28px,3.4vw,42px)}
+/* Två knappar sedan prislänken flyttades hit. Samma flex, samma
+   mellanrum och samma radbrytning som .nx-cta-rad, så de två
+   knappraderna på sidan beter sig likadant — utan flex hade
+   knapparna suttit ihop utan luft emellan. */
+.nx-hur-cta{
+  margin-top:clamp(28px,3.4vw,42px);
+  display:flex;flex-wrap:wrap;gap:13px;align-items:center;
+}
 
 /* Kort skärm — en bärbar med bokmärkesrad ligger ofta på 700–780px.
    Den pinnade spalten är ~830px hög och .nx-hur-fast har
