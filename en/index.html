@@ -1037,11 +1037,64 @@
   function tomState() {
     return '<div class="nx-empty" style="grid-column:1/-1">'
       + '<span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg></span>'
-      + '<b>Inga studiehjälpare är publicerade än.</b>'
-      + '<p>Så fort den första är godkänd dyker hen upp här. Vi visar hellre en tom lista än påhittade personer.</p>'
-      + '<a class="btn btn-ghost" href="/en/bli-studiehjalpare">Bli den första</a>'
+      + '<b>No tutors have been published yet.</b>'
+      + '<p>The first approved tutor appears here as soon as we have one.</p>'
+      + '<a class="btn btn-ghost" href="/en/bli-studiehjalpare">Be the first</a>'
       + '</div>';
   }
+
+  /* ============================================================
+     EXEMPELKORT
+
+     De tre ligger MEDVETET i markupen och inte i databasen. En rad i
+     tutor_profiles hade dykt upp i admin, kunnat matchas mot en riktig
+     familj och blandats in i bokningar och fakturaunderlag. Här kan de
+     aldrig läcka in i driften — de är presentation på en marknadssida,
+     ingenting annat.
+
+     De faller också bort av sig själva den dag riktiga profiler fyller
+     raden: ta bort konstanten och anropet nedan.
+
+     Måste hållas i takt med index.html i roten. Sidans egna script
+     översätts inte av generatorn — ändras korten där ska de ändras här.
+     ============================================================ */
+  const EXEMPELKORT =
+    [{ namn: 'Elsa', ålder: 19, skola: 'Norra Real, natural sciences programme',
+       ort: 'Stockholm', bild: 'studiehjalpare-1',
+       alt: 'Portrait of a young tutor in a beige knitted jumper.',
+       bio: 'I study natural sciences and mostly help out with maths and physics. '
+          + 'The best part is when someone suddenly sees why a formula looks the way it does.',
+       ämnen: ['Mathematics', 'Physics', 'Chemistry'] },
+     { namn: 'Hugo', ålder: 18, skola: 'Södra Latin upper secondary, social sciences programme',
+       ort: 'Stockholm', bild: 'studiehjalpare-2',
+       alt: 'Portrait of a young tutor in a grey-green jumper.',
+       bio: 'I revised for the national tests myself a year ago and remember exactly what was '
+          + 'difficult. Swedish and English are what I help with most.',
+       ämnen: ['Swedish', 'English', 'Social studies'] },
+     { namn: 'Maja', ålder: 22, skola: 'Stockholm University, teacher training',
+       ort: 'Stockholm', bild: 'studiehjalpare-3',
+       alt: 'Portrait of a young tutor in a dark jumper.',
+       bio: 'I am training to be a teacher and like finding the explanation that sticks. '
+          + 'Often it is enough to turn the problem around one more time.',
+       ämnen: ['Mathematics', 'Biology', 'Study skills'] }]
+    .map(t =>
+      '<article class="sc-card">'
+      + '<div class="sc-top">'
+      + '<span class="sc-face sc-foto">'
+      + '<img src="/bilder/' + t.bild + '-200.jpg" '
+      + 'srcset="/bilder/' + t.bild + '-200.jpg 200w, /bilder/' + t.bild + '-400.jpg 400w" '
+      + 'sizes="56px" width="56" height="56" loading="lazy" decoding="async" '
+      + 'alt="' + esc(t.alt) + '">'
+      + '</span>'
+      + '<div><div class="sc-name">' + esc(t.namn) + ', ' + t.ålder + '</div>'
+      + '<div class="sc-role">Tutor · ' + esc(t.skola) + ' · ' + esc(t.ort) + '</div></div>'
+      + '</div>'
+      + '<div class="sc-body">'
+      + '<p>' + esc(t.bio) + '</p>'
+      + '<div class="tutor-meta">' + t.ämnen.map(ä => '<span class="tag">' + esc(ä) + '</span>').join('') + '</div>'
+      + '<a class="btn btn-ghost btn-sm sc-cta" href="/en/intresseanmalan">Find your tutor</a>'
+      + '</div>'
+      + '</article>').join('');
 
   async function laddaShowcase() {
     const host = $('#showcase');
@@ -1055,17 +1108,21 @@
 
     if (error) {
       host.innerHTML = '<div class="nx-empty" style="grid-column:1/-1">'
-        + '<b>Kunde inte hämta studiehjälpare just nu.</b>'
+        + '<b>Could not load tutors right now.</b>'
         + '<p class="xsmall" style="margin-top:8px">' + esc(error.message) + '</p></div>';
       return;
     }
 
-    if (!data || !data.length) { host.innerHTML = tomState(); return; }
+    /* En profil utan namn visas som "Tutor, 19" och ser ofärdig ut
+       bredvid de andra korten. Den hör hemma i raden först när personen
+       fyllt i sitt namn — då dyker den upp av sig själv. */
+    const klara = (data || []).filter(t => t.profiles && (t.profiles.full_name || '').trim());
+    if (!klara.length && !EXEMPELKORT) { host.innerHTML = tomState(); return; }
 
-    host.innerHTML = data.map(t => {
-      const namn = (t.profiles && t.profiles.full_name) || 'Studiehjälpare';
-      const bio = t.bio || 'Ung studiehjälpare som hjälper yngre elever att förstå, inte bara att bli klara med läxan.';
-      const rad = ['Studiehjälpare', t.school, t.city].filter(Boolean).map(esc).join(' · ');
+    host.innerHTML = klara.map(t => {
+      const namn = (t.profiles && t.profiles.full_name) || 'Tutor';
+      const bio = t.bio || 'A young tutor who helps younger students understand, not just get the homework done.';
+      const rad = ['Tutor', t.school, t.city].filter(Boolean).map(esc).join(' · ');
       const ämnen = (t.subjects || []).map(s => '<span class="tag">' + esc(s) + '</span>').join('');
       return '<article class="sc-card">'
         + '<div class="sc-top">'
@@ -1076,9 +1133,11 @@
         + '<div class="sc-body">'
         + '<p>' + esc(bio) + '</p>'
         + (ämnen ? '<div class="tutor-meta">' + ämnen + '</div>' : '')
+        + '<a class="btn btn-ghost btn-sm sc-cta" href="/en/intresseanmalan">'
+        + 'Find your tutor</a>'
         + '</div>'
         + '</article>';
-    }).join('');
+    }).join('') + EXEMPELKORT;
   }
   laddaShowcase();
 })();

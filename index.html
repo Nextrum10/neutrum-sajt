@@ -1043,7 +1043,7 @@
     return '<div class="nx-empty" style="grid-column:1/-1">'
       + '<span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg></span>'
       + '<b>Inga studiehjälpare är publicerade än.</b>'
-      + '<p>Så fort den första är godkänd dyker hen upp här. Vi visar hellre en tom lista än påhittade personer.</p>'
+      + '<p>Så fort den första är godkänd dyker hen upp här.</p>'
       + '<a class="btn btn-ghost" href="/bli-studiehjalpare">Bli den första</a>'
       + '</div>';
   }
@@ -1051,7 +1051,7 @@
   /* ============================================================
      EXEMPELKORT
 
-     De här två ligger MEDVETET i markupen och inte i databasen.
+     De tre ligger MEDVETET i markupen och inte i databasen.
      En rad i tutor_profiles hade dykt upp i admin, kunnat matchas
      mot en riktig familj och blandats in i bokningar och
      fakturaunderlag. Här kan de aldrig läcka in i driften — de är
@@ -1059,6 +1059,10 @@
 
      De faller också bort av sig själva den dag riktiga profiler
      fyller raden: ta bort konstanten och anropet nedan.
+
+     Måste hållas i takt med en/index.html. Sidans egna script
+     översätts inte av generatorn — ändras korten här ska de ändras
+     där också.
      ============================================================ */
   const EXEMPELKORT =
     [{ namn: 'Elsa', ålder: 19, skola: 'Norra Real, Naturvetenskapsprogrammet',
@@ -1083,8 +1087,8 @@
       '<article class="sc-card">'
       + '<div class="sc-top">'
       + '<span class="sc-face sc-foto">'
-      + '<img src="bilder/' + t.bild + '-200.jpg" '
-      + 'srcset="bilder/' + t.bild + '-200.jpg 200w, bilder/' + t.bild + '-400.jpg 400w" '
+      + '<img src="/bilder/' + t.bild + '-200.jpg" '
+      + 'srcset="/bilder/' + t.bild + '-200.jpg 200w, /bilder/' + t.bild + '-400.jpg 400w" '
       + 'sizes="56px" width="56" height="56" loading="lazy" decoding="async" '
       + 'alt="' + esc(t.alt) + '">'
       + '</span>'
