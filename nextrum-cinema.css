@@ -1916,6 +1916,12 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .sc-card:hover{translate:0 -3px;box-shadow:var(--sk-2);border-color:var(--ln-2)}
 
 .nx-safe{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(14px,1.8vw,24px)}
+/* Trygghetskorten ligger sedan sammanslagningen direkt under
+   dragens sista kolumn, "Trygghet i varje steg". Utan luft här
+   klistrar de i kolumnernas text och de två raderna läses som en.
+   Regeln är bunden till grannskapet med flit: samma kort används
+   ensamma på sa-fungerar-nextrum och ska inte få marginalen där. */
+.nx-drag + .nx-safe{margin-top:clamp(40px,5vw,72px)}
 @media (max-width:900px){.nx-safe{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:560px){.nx-safe{grid-template-columns:1fr}}
 .nx-safe-card{
