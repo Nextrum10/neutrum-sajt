@@ -79,11 +79,16 @@ Det här är steget som faktiskt sätter fart på det.
 Upprepa för de sidor som är viktigast:
 
 ```
-https://nextrum.se/priser.html
-https://nextrum.se/bli-studiehjalpare.html
-https://nextrum.se/intresseanmalan.html
-https://nextrum.se/faq.html
+https://nextrum.se/priser
+https://nextrum.se/bli-studiehjalpare
+https://nextrum.se/intresseanmalan
+https://nextrum.se/faq
 ```
+
+**Utan `.html`.** Adresserna är rena sedan september 2026 och
+`.html`-varianten svarar med en omdirigering. Skickar du in den
+gamla formen ber du Google indexera en vidarebefordran i stället
+för sidan, och du bränner en plats i kvoten på den.
 
 Det finns en kvot på ungefär tio per dygn. Ta startsidan först.
 

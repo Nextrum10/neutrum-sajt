@@ -1106,10 +1106,17 @@
     const host = $('#showcase');
     if (!host || !supa) return;
 
+    /* Vyn studiehjalpare_publika, inte tutor_profiles med en join.
+       Joinen mot profiles kom ALLTID tillbaka som null för en besökare
+       som inte är inloggad — RLS på profiles släpper bara in egen rad,
+       admin och matchad motpart — och varje riktig studiehjälpare
+       filtrerades därför bort en bit ner. Vyn ger förnamn, ålder,
+       skola, ort, ämnen och text, och ingenting annat ur profiles:
+       e-post och telefon ligger i samma rad och en radbaserad policy
+       hade släppt fram dem också. Se schema-v11.sql. */
     const { data, error } = await supa
-      .from('tutor_profiles')
-      .select('id, age, school, city, subjects, grade_levels, bio, profiles ( full_name )')
-      .eq('status', 'approved')
+      .from('studiehjalpare_publika')
+      .select('id, fornamn, age, school, city, subjects, grade_levels, bio')
       .limit(6);
 
     if (error) {
@@ -1119,14 +1126,14 @@
       return;
     }
 
-    /* En profil utan namn visas som "Studiehjälpare, 19" och ser
-       ofärdig ut bredvid de andra korten. Den hör hemma i raden först
-       när personen fyllt i sitt namn — då dyker den upp av sig själv. */
-    const klara = (data || []).filter(t => t.profiles && (t.profiles.full_name || '').trim());
+    /* Sållningen ligger numera i vyn. En profil utan namn visades som
+       "Studiehjälpare, 19" och såg ofärdig ut bredvid de andra korten;
+       den kommer med av sig själv när personen fyllt i sitt namn. */
+    const klara = data || [];
     if (!klara.length && !EXEMPELKORT) { host.innerHTML = tomState(); return; }
 
     host.innerHTML = klara.map(t => {
-      const namn = (t.profiles && t.profiles.full_name) || 'Studiehjälpare';
+      const namn = t.fornamn || 'Studiehjälpare';
       const bio = t.bio || 'Ung studiehjälpare som hjälper yngre elever att förstå, inte bara att bli klara med läxan.';
       const rad = ['Studiehjälpare', t.school, t.city].filter(Boolean).map(esc).join(' · ');
       const ämnen = (t.subjects || []).map(s => '<span class="tag">' + esc(s) + '</span>').join('');

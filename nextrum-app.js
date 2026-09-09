@@ -299,12 +299,11 @@ const NX = (function () {
          sist i "why" som märkta rader. Då slipper schemat ändras och
          ingenting som fylls i går förlorat. */
       const fritext = String(f.get('varfor') || '').trim();
-      /* Ett valfritt CV laddas upp till lagringshinken "cv" och länken
-         läggs i "why". Finns ingen hink (eller är den stängd) ska
-         ansökan ändå gå igenom — då noteras filnamnet så att vi vet
+      /* Ett valfritt CV laddas upp till lagringshinken "cv" och
+         sökvägen läggs i "why". Finns ingen hink (eller är den stängd)
+         ska ansökan ändå gå igenom — då noteras filnamnet så att vi vet
          att vi ska be om filen. Uppladdningen ligger här och inte hos
-         anroparen, eftersom "supa" är privat i den här modulen.
-         Skapa hinken i Supabase → Storage om du vill ha filerna. */
+         anroparen, eftersom "supa" är privat i den här modulen. */
       let cvRad = '';
       const cvInp = o.cv ? document.querySelector(o.cv) : null;
       const cvFil = cvInp && cvInp.files && cvInp.files[0];
@@ -314,8 +313,12 @@ const NX = (function () {
           const väg = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '-' + rent;
           const upp = await supa.storage.from('cv').upload(väg, cvFil, { upsert: false });
           if (!upp.error) {
-            const { data } = supa.storage.from('cv').getPublicUrl(väg);
-            cvRad = 'CV: ' + ((data && data.publicUrl) || väg);
+            /* Sökvägen, inte en publik länk. Hinken är privat med
+               flit — ett CV bär namn, skola och ofta personnummer —
+               så getPublicUrl hade gett en adress som svarar 400 och
+               sett ut som en trasig fil i stället för en skyddad.
+               Filen öppnas i Supabase → Storage → cv. */
+            cvRad = 'CV: cv/' + väg;
           }
         } catch (e) { /* faller igenom till noteringen nedan */ }
         if (!cvRad) cvRad = 'CV: bifogad fil "' + cvFil.name + '" kunde inte laddas upp — be om den via mejl';
