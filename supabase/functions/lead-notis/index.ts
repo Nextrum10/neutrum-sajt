@@ -23,6 +23,18 @@ const NOTIS_HEMLIGHET = Deno.env.get('NOTIS_HEMLIGHET');
 const FRAN = 'Nextrum <no-reply@nextrum.se>';
 const TILL = 'info@nextrum.se';
 
+/* Reservavsändare. Resend låter varje konto skicka från den här
+   adressen utan att någon domän är verifierad — men BARA till
+   kontots egen e-postadress. Den finns här för att en overifierad
+   domän inte ska betyda noll avisering: hellre ett mejl med fel
+   avsändare än ingen aning om att en familj hört av sig.
+
+   Den används först när det riktiga försöket fått 403, alltså
+   precis det svar Resend ger på en domän som inte är klar. Så fort
+   nextrum.se verifieras slutar reserven användas av sig själv,
+   utan att någon behöver komma ihåg att ta bort den. */
+const RESERV_FRAN = 'Nextrum <onboarding@resend.dev>';
+
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {
     status,
@@ -80,14 +92,14 @@ Deno.serve(async (req) => {
       `<h2 style="font:600 18px system-ui;margin:0 0 14px">Ny intresseanmälan</h2>` +
       `<pre style="font:14px/1.6 ui-monospace,monospace;white-space:pre-wrap;margin:0">${esc(text)}</pre>`;
 
-    const svar = await fetch('https://api.resend.com/emails', {
+    const skicka = (avsandare: string) => fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: FRAN,
+        from: avsandare,
         to: [TILL],
         /* Svara-knappen ska gå till familjen, inte till no-reply.
            Utan det här måste man kopiera adressen ur mejlet.
@@ -103,6 +115,34 @@ Deno.serve(async (req) => {
         html,
       }),
     });
+
+    const svar = await skicka(FRAN);
+
+    /* 403 = domänen är inte verifierad hos Resend. Allt annat är ett
+       riktigt fel och ska synas som det. Kroppen läses ut här, för en
+       Response går bara att läsa en gång och orsaken ska med i svaret
+       även när reserven lyckas — annars ser loggen ut som att allt är
+       bra medan avsändaren i själva verket är fel. */
+    if (svar.status === 403) {
+      const orsak = await svar.text();
+      const reserv = await skicka(RESERV_FRAN);
+      if (reserv.ok) {
+        return json({
+          ok: true,
+          reserv: true,
+          avsandare: RESERV_FRAN,
+          varning: 'nextrum.se är inte verifierad hos Resend — mejlet gick '
+                 + 'via reservavsändaren och når bara Resend-kontots egen adress.',
+          orsak,
+          id: (await reserv.json())?.id ?? null,
+        }, 200);
+      }
+      return json({
+        error: 'Resend svarade 403 på ' + FRAN + ' och '
+             + reserv.status + ' på reserven: ' + (await reserv.text()),
+        orsak,
+      }, 502);
+    }
 
     if (!svar.ok) {
       return json({ error: 'Resend svarade ' + svar.status + ': ' + (await svar.text()) }, 502);
