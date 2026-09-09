@@ -9,14 +9,9 @@ ovanpå — går mejlet fel ligger raden kvar i `leads`.
 
 ---
 
-## 1. SPF och DMARC saknas i DNS (gör detta oavsett)
+## 1. SPF och DMARC — KLART, men en post för mycket
 
-MX pekar på Google Workspace och DKIM är uppsatt, men det finns
-**ingen SPF-post** och **ingen DMARC-post** för nextrum.se. Utan SPF
-kan mottagare avvisa eller skräppostmärka post som skickas från
-@nextrum.se — även den ni skriver för hand från Gmail.
-
-Lägg till i Cloudflare (DNS → Records):
+Posterna är inlagda i Cloudflare:
 
 | Typ | Namn | Innehåll |
 |-----|------|----------|
@@ -27,10 +22,21 @@ Lägg till i Cloudflare (DNS → Records):
 sett ett par veckors rapporter och vet att allt legitimt går igenom
 kan ni skärpa till `p=quarantine`.
 
-Kontrollera efteråt:
+### ⚠ Det ligger TVÅ DMARC-poster på `_dmarc`
+
+Den ena är `v=DMARC1; p=none;` utan rapportadress, den andra är raden
+i tabellen ovan. **Ta bort den utan `rua=`.**
+
+Två poster är inte "dubbelt så mycket DMARC" — det är noll. Hittar en
+mottagare mer än en giltig DMARC-post på namnet ska hela kontrollen
+hoppas över (RFC 7489, avsnitt 6.6.3). Domänen står alltså utan
+DMARC så länge båda ligger kvar, och rapporterna ni satte upp `rua`
+för kommer aldrig.
+
+Kontrollera efteråt att BARA en rad kommer tillbaka:
 
 ```bash
-dig +short nextrum.se TXT; dig +short _dmarc.nextrum.se TXT
+dig +short _dmarc.nextrum.se TXT
 ```
 
 ---
@@ -45,15 +51,26 @@ dig +short nextrum.se TXT; dig +short _dmarc.nextrum.se TXT
 Domänen måste vara verifierad. Utan det vägrar Resend skicka med
 `no-reply@nextrum.se` som avsändare, och funktionen svarar 502.
 
-**Obs om SPF:** har ni redan SPF-posten från steg 1 ska ni inte lägga
-till en andra. En domän får bara ha **en** SPF-post. Behöver Resend
-komma med i den slås de ihop till en rad:
+**Rör INTE SPF-posten på roten.** Det är lätt att tro att Resend
+behöver läggas till där. Det gör de inte i den här uppsättningen.
 
-```
-v=spf1 include:_spf.google.com include:amazonses.com ~all
-```
+Resend skickar med `send.nextrum.se` som retursökväg, och SPF kollas
+mot retursökvägen — inte mot det som står i Från-fältet. Den posten
+är en CNAME till Resends egen värd, som publicerar sin egen SPF med
+sina IP-adresser. Kedjan går alltså ihop av sig själv.
 
-Resend visar vilken `include` som gäller när ni lägger till domänen.
+Roten ska därför fortsätta säga bara `include:_spf.google.com`. Den
+gäller posten ni skriver för hand från Gmail. Lägger ni till Resend
+där löser det ingenting och tar en av de tio DNS-uppslag en SPF-post
+får kosta innan den underkänns.
+
+Kontrollera hela kedjan så här — alla tre ska svara:
+
+```bash
+dig +short send.nextrum.se TXT
+dig +short resend._domainkey.nextrum.se TXT
+dig +short nextrum.se TXT
+```
 
 ---
 
