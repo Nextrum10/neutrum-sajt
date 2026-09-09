@@ -161,8 +161,8 @@ const NX = (function () {
     const y = $('#year');
     if (y) y.textContent = new Date().getFullYear();
     $$('a[href^="mailto:"]').forEach(a => {
-      a.href = 'mailto:' + (CFG.EPOST || 'hej@nextrum.se');
-      if (a.dataset.mailtext !== 'keep') a.textContent = CFG.EPOST || 'hej@nextrum.se';
+      a.href = 'mailto:' + (CFG.EPOST || 'info@nextrum.se');
+      if (a.dataset.mailtext !== 'keep') a.textContent = CFG.EPOST || 'info@nextrum.se';
     });
   }
 
