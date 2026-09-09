@@ -360,7 +360,23 @@ body{background:var(--pap);color:var(--bl)}
 html[data-motion] [data-stig]{
   opacity:0;
   transform:translate3d(0,13px,0);
-  transition:opacity .5s var(--e-ut),transform .5s var(--e-ut);
+  /* Fyra egenskaper till i listan, och de har ingenting med
+     avslöjandet att göra. De står HÄR ändå, för den här regeln väger
+     (0,2,1) och slår varje transition ett kort sätter på sin egen
+     klass. Ett kort som bär data-stig fick alltså sitt lyft utan
+     övergång: det hoppade i stället för att glida, och det syntes
+     bara om man tittade efter. Egenskaperna måste bo i samma lista
+     som vinner, annars finns de inte.
+
+     Tiden läses ur --tryck-tid, som korten själva sätter och sänker
+     medan de hålls nere. Se TRYCKBARA YTOR längre ner. */
+  transition:
+    opacity .5s var(--e-ut),
+    transform .5s var(--e-ut),
+    translate var(--tryck-tid,.38s) var(--e-ut),
+    box-shadow var(--tryck-tid,.38s) var(--e-ut),
+    border-color var(--tryck-tid,.38s) var(--e),
+    background-color var(--tryck-tid,.38s) var(--e);
 }
 html[data-motion] [data-stig].nx-in{opacity:1;transform:none}
 /* html[data-motion] måste stå med. Utan det väger de här reglerna
@@ -372,11 +388,11 @@ html[data-motion] [data-stig].nx-in{opacity:1;transform:none}
    Tiderna är också nedkortade. Trappan låg förr på .08–.4s ovanpå
    .8s, så femte blocket hade kommit in efter 1,2 sekunder — långt
    efter att man läst det första. */
-html[data-motion] [data-stig][data-fördröj="1"]{transition-delay:.05s}
-html[data-motion] [data-stig][data-fördröj="2"]{transition-delay:.1s}
-html[data-motion] [data-stig][data-fördröj="3"]{transition-delay:.15s}
-html[data-motion] [data-stig][data-fördröj="4"]{transition-delay:.2s}
-html[data-motion] [data-stig][data-fördröj="5"]{transition-delay:.25s}
+html[data-motion] [data-stig][data-fördröj="1"]{transition-delay:.05s,.05s,0s,0s,0s,0s}
+html[data-motion] [data-stig][data-fördröj="2"]{transition-delay:.1s,.1s,0s,0s,0s,0s}
+html[data-motion] [data-stig][data-fördröj="3"]{transition-delay:.15s,.15s,0s,0s,0s,0s}
+html[data-motion] [data-stig][data-fördröj="4"]{transition-delay:.2s,.2s,0s,0s,0s,0s}
+html[data-motion] [data-stig][data-fördröj="5"]{transition-delay:.25s,.25s,0s,0s,0s,0s}
 
 /* ============================================================
    MARKÖREN — bara mus, bara stor skärm
@@ -2655,9 +2671,29 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   border:1px solid var(--ln);border-radius:20px;
   padding:clamp(24px,2.6vw,32px);background:var(--pap);
   display:flex;flex-direction:column;
-  transition:transform .4s var(--e-ut),box-shadow .4s var(--e-ut),border-color .3s var(--e);
+  -webkit-tap-highlight-color:transparent;
+  /* translate, inte transform: korten bär data-stig och
+     avslöjningsanimationens .nx-in-regel äger transform med högre
+     specificitet. Lyftet nedan hade aldrig kunnat synas annars —
+     samma fälla som satt på .nx-safe-card. */
+  --tryck-tid:.38s;
+  transition:
+    translate var(--tryck-tid) var(--e-ut),
+    box-shadow var(--tryck-tid) var(--e-ut),
+    border-color var(--tryck-tid) var(--e),
+    background-color var(--tryck-tid) var(--e);
 }
-.nx-trio-kort:hover{transform:translateY(-3px);box-shadow:var(--sk-2);border-color:var(--ln-2)}
+.nx-trio-kort:hover{translate:0 -3px;box-shadow:var(--sk-2);border-color:var(--ln-2)}
+.nx-trio-kort:active{
+  --tryck-tid:.09s;
+  translate:0 1px;
+  background-color:var(--tryck-yta);
+  border-color:var(--ln-2);
+  box-shadow:var(--sk-1);
+}
+@media (prefers-reduced-motion:reduce){
+  .nx-trio-kort:hover,.nx-trio-kort:active{translate:none}
+}
 .nx-trio-et{
   font:600 .68rem/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;
   color:var(--acc-text);margin-bottom:16px;
