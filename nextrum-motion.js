@@ -720,8 +720,21 @@ const NXFin = (function () {
     }, 2000);
   }
 
+  /* ============================================================
+     Utan det här händer ingenting när man trycker på ett kort i en
+     iPhone. Safari låter :active gälla på länkar och knappar, men
+     inte på ett vanligt element — om det inte finns någon
+     touch-lyssnare på sidan. Då, och bara då, slås beteendet på för
+     allt. Lyssnaren är tom med flit; det är själva existensen som
+     räknas. passive:true så att den inte kan bromsa scrollningen.
+     ============================================================ */
+  function tryckbart() {
+    document.addEventListener('touchstart', function () {}, { passive: true });
+  }
+
   function allt() {
     header();
+    tryckbart();
     radAvslöj('[data-avslöj]');
     stiga('[data-stig]');
     magnetiska('[data-magnet]');
@@ -730,5 +743,5 @@ const NXFin = (function () {
     nödbroms();
   }
 
-  return { allt, header, radAvslöj, stiga, magnetiska, parallax, markör, nödbroms };
+  return { allt, header, radAvslöj, stiga, magnetiska, parallax, markör, nödbroms, tryckbart };
 })();

@@ -28,6 +28,28 @@
   --ln:#DDCDB2;           /* linjer */
   --ln-2:#C9B492;
 
+  /* --- nedtryckt yta ---
+     I LJUST sjunker den nedtryckta ytan, i MÖRKT stiger den. Det är
+     samma regel som redan gäller de mörka partierna längre ner i
+     filen: ett mörkt fält på en mörk sida måste ljusna för att synas.
+     Räknat blir steget lika stort åt båda hållen — 1,14:1 i ljust och
+     1,12:1 i mörkt — så trycket känns likadant oavsett läge.
+
+     Att sänka även i mörkt var första försöket och det gick inte.
+     Botten ligger redan på #1A1813, så det fanns knappt något kvar
+     att sjunka till: kolumnerna landade på 1,06:1, vilket ingen ser.
+
+     Alla fyra värdena är toner som redan finns i trappan. Brödtexten
+     är kontrollerad mot varenda en, sämsta fallet är dämpad text på
+     nedtryckt kort och ligger på 4,68:1.
+
+     Tvätten är till kolumnerna, som inte har någon egen yta att byta.
+     Den läggs ovanpå vad de nu råkar ligga på och måste därför vara
+     genomskinlig: hållpunkterna ligger på lin, dragen på den lugna
+     ytan, och en fast ton hade varit osynlig på den ena av dem. */
+  --tryck-yta:var(--pap-2);
+  --tryck-tvatt:rgba(46,42,32,.07);
+
   /* --- mörka partier: bark, inte svart --- */
   --nt:#2E2A20;
   --nt-fg:#EFE6D6;
@@ -117,6 +139,10 @@
     --ln:rgba(239,230,214,.13);
     --ln-2:rgba(239,230,214,.24);
 
+    /* Uppåt här, inte nedåt. Se kommentaren i det ljusa blocket. */
+    --tryck-yta:var(--pap-3);
+    --tryck-tvatt:rgba(239,230,214,.05);
+
     /* Ett mörkt parti på en mörk sida måste ljusna för att synas.
        I ljust läge sjunker det ner, här stiger det upp. */
     --nt:#262319;
@@ -172,6 +198,7 @@
   --pap:#1A1813; --pap-2:#22201A; --pap-3:#2C2921;
   --bl:#EFE6D6; --bl-2:#C4BAA6; --bl-3:#9C927E;
   --ln:rgba(239,230,214,.13); --ln-2:rgba(239,230,214,.24);
+  --tryck-yta:var(--pap-3); --tryck-tvatt:rgba(239,230,214,.05);
   --nt:#262319; --nt-fg:#EFE6D6; --nt-mut:#A99E88; --nt-ln:rgba(239,230,214,.16);
   --acc:#D9814F; --acc-lugn:#E89A6D; --mossa:#9DAD86; --ockra:#C08A2E;
   --band-bg:#22201A; --band-fg:#EFE6D6; --band-muted:#A99E88;
@@ -1886,7 +1913,7 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   background:var(--pap);
   transition:transform .4s var(--e-ut),box-shadow .4s var(--e-ut),border-color .3s var(--e);
 }
-.sc-card:hover{transform:translateY(-3px);box-shadow:var(--sk-2);border-color:var(--ln-2)}
+.sc-card:hover{translate:0 -3px;box-shadow:var(--sk-2);border-color:var(--ln-2)}
 
 .nx-safe{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(14px,1.8vw,24px)}
 @media (max-width:900px){.nx-safe{grid-template-columns:repeat(2,1fr)}}
@@ -1896,7 +1923,98 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   padding:clamp(22px,2.4vw,30px);background:var(--pap);
   transition:transform .4s var(--e-ut),box-shadow .4s var(--e-ut);
 }
-.nx-safe-card:hover{transform:translateY(-3px);box-shadow:var(--sk-2)}
+.nx-safe-card:hover{translate:0 -3px;box-shadow:var(--sk-2)}
+
+/* ============================================================
+   TRYCKBARA YTOR
+
+   Korten och kolumnerna svarar när man tar i dem: de sjunker en
+   aning och tonar ett steg mörkare, och släpper man går de tillbaka.
+
+   Det händer ingenting utöver det. De leder inte vidare någonstans,
+   och därför står det INGEN cursor:pointer här och ingen tabindex.
+   En pekande hand lovar en destination som inte finns, och ett
+   tomt stopp i tabbordningen är rent besvär för den som inte
+   använder mus. Känslan ska vara att materialet ger efter, inte
+   att en knapp väntar.
+
+   translate, inte transform. Avslöjningsanimationen äger transform
+   på allt som bär data-stig, och dess .nx-in-regel väger (0,3,1) mot
+   ett .kort:hover på (0,2,0). Lyftet som stod på .nx-safe-card:hover
+   kunde alltså aldrig synas — det skrevs tyst över så fort kortet
+   stigit in, precis som den gamla kalla paletten vann i mörkt läge.
+   translate är en egen egenskap som LÄGGS TILL transform i stället
+   för att ersätta den, så de två systemen slutar slåss om samma rad.
+
+   Ner går fortare än upp, med flit. Ett finger vill ha svar direkt;
+   återgången får ta tid, för då är blicken redan på väg vidare.
+   Växlingen sköts av --tryck-tid, som ärvs ner till kolumnernas
+   ::before och därför inte behöver upprepas där.
+   ============================================================ */
+
+.sc-card,
+.nx-safe-card,
+.nx-holdpunkter li,
+.nx-drag li{
+  /* iOS lägger en egen grå platta över det man rör vid. Den kommer
+     före vår egen tvätt och gör den omöjlig att se. */
+  -webkit-tap-highlight-color:transparent;
+}
+
+.sc-card,
+.nx-safe-card{
+  --tryck-tid:.38s;
+  transition:
+    translate var(--tryck-tid) var(--e-ut),
+    box-shadow var(--tryck-tid) var(--e-ut),
+    border-color var(--tryck-tid) var(--e),
+    background-color var(--tryck-tid) var(--e);
+}
+.sc-card:active,
+.nx-safe-card:active{
+  --tryck-tid:.09s;
+  translate:0 1px;
+  background-color:var(--tryck-yta);
+  border-color:var(--ln-2);
+  box-shadow:var(--sk-1);
+}
+
+/* Hållpunkterna och dragen är inga kort — de har varken egen yta
+   eller ram, bara en linje mellan sig. Att ge dem en bakgrund vid
+   tryck hade gjort om dem till kort, så tvätten läggs i stället i
+   ett ::before som bara finns medan fingret är nere. Den bleder ut
+   en bit i sidled så att den läser som en yta man tagit i, inte som
+   en markering av texten.
+
+   isolation:isolate hör ihop med z-index:-1. Utan den kryper
+   pseudoelementet bakom sektionens egen bakgrund och syns aldrig;
+   med den stannar det i kolumnens eget lager, bakom texten men
+   framför ytan. */
+.nx-holdpunkter li,
+.nx-drag li{position:relative;isolation:isolate;--tryck-tid:.38s}
+
+.nx-holdpunkter li::before,
+.nx-drag li::before{
+  content:"";
+  position:absolute;
+  inset:0 calc(clamp(12px,1.4vw,20px) * -1);
+  z-index:-1;
+  border-radius:14px;
+  background-color:transparent;
+  pointer-events:none;
+  transition:background-color var(--tryck-tid) var(--e);
+}
+.nx-holdpunkter li:active,
+.nx-drag li:active{--tryck-tid:.09s}
+.nx-holdpunkter li:active::before,
+.nx-drag li:active::before{background-color:var(--tryck-tvatt)}
+
+/* Färgbytet är information om att ytan svarade och stannar kvar.
+   Det som tas bort är förflyttningen. */
+@media (prefers-reduced-motion:reduce){
+  .sc-card:hover,.nx-safe-card:hover,
+  .sc-card:active,.nx-safe-card:active{translate:none}
+}
 
 .nx-price-grid{
   display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
