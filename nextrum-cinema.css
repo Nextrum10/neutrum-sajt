@@ -1089,7 +1089,7 @@ html[lang="en"] .nx-hero-rubrik{
   align-items:start;
   padding:clamp(16px,2vw,24px) 0;
   border-top:1px solid var(--ln);
-  transition:opacity .5s var(--e);
+  transition:opacity .5s var(--e),translate .38s var(--e-ut);
   opacity:.32;
 }
 .nx-hur-steg li:last-child{border-bottom:1px solid var(--ln)}
@@ -2004,6 +2004,45 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   pointer-events:none;
   transition:background-color var(--tryck-tid) var(--e);
 }
+/* Lyftet vid muspekaren. Bakom en hover-fråga med flit: på en
+   pekskärm finns ingen pekare, och :hover fastnar där i tänt läge
+   efter en tryckning tills man rör något annat. Då hade kolumnen
+   blivit stående lyft utan anledning.
+
+   Tvätten är svagare här än vid tryck — 1,07:1 mot tryckets 1,13:1,
+   och samma förhållande i mörkt läge. Att dra förbi med musen är inte
+   samma sak som att ta i något, och lika mörk hade den läst som att
+   kolumnen redan var vald. */
+@media (hover:hover) and (pointer:fine){
+  .nx-holdpunkter li:hover,
+  .nx-drag li:hover{translate:0 -3px}
+  .nx-holdpunkter li:hover::before,
+  .nx-drag li:hover::before{
+    background-color:color-mix(in srgb,var(--tryck-tvatt) 55%,transparent);
+  }
+}
+
+/* Stegen i "Så fungerar Nextrum" är inga kolumner utan ett dragspel
+   som scrollen styr: det aktiva steget står på full opacitet med sin
+   text utfälld, resten ligger nedtonade på .32. Ett lyft ensamt syns
+   knappt på något som är genomskinligt till en tredjedel, så det
+   nedtonade steget klarnar också en aning. Det säger "du når mig"
+   utan att ta över den roll scrollen delar ut.
+
+   Bara det som INTE är aktivt. Samma regel på .pa hade dämpat det
+   tända steget när man förde musen över det, alltså precis tvärtemot.
+
+   Opaciteten byter snabbt in och långsamt ut. Övergången i hover-
+   regeln gäller vägen in; på vägen ut gäller grundregelns halva
+   sekund, som är scrollkoreografins egen takt och inte ska röras. */
+@media (hover:hover) and (pointer:fine){
+  .nx-hur-steg li:hover{translate:0 -3px}
+  .nx-hur-steg li:not(.pa):hover{
+    opacity:.62;
+    transition:opacity .12s var(--e),translate .12s var(--e-ut);
+  }
+}
+
 .nx-holdpunkter li:active,
 .nx-drag li:active{--tryck-tid:.09s}
 .nx-holdpunkter li:active::before,
@@ -2013,7 +2052,9 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    Det som tas bort är förflyttningen. */
 @media (prefers-reduced-motion:reduce){
   .sc-card:hover,.nx-safe-card:hover,
-  .sc-card:active,.nx-safe-card:active{translate:none}
+  .sc-card:active,.nx-safe-card:active,
+  .nx-holdpunkter li:hover,.nx-drag li:hover,
+  .nx-hur-steg li:hover{translate:none}
 }
 
 .nx-price-grid{
