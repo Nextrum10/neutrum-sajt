@@ -264,6 +264,25 @@ const NX = (function () {
     $$('[data-stat="tva-barn"]').forEach(el => el.textContent = kr(pris + extra));
     $$('[data-stat="tre-barn"]').forEach(el => el.textContent = kr(pris + extra * 2));
 
+    /* Prissidans strukturerade data håller samma siffra som sidan.
+       Siffran i HTML är en reserv för den som läser utan javascript;
+       källan är CFG.PRIS_PER_TIMME, och den skrivs in här så att ett
+       ändrat pris inte lämnar kvar ett gammalt belopp i det Google
+       läser. Ett fel där är värre än på sidan: en träff som lovar
+       ett pris ni inte tar är en diskussion i första samtalet. */
+    const schema = $('#pris-schema');
+    if (schema) {
+      try {
+        const d = JSON.parse(schema.textContent);
+        const belopp = String(pris);
+        d.offers.price = belopp;
+        d.offers.priceSpecification.price = belopp;
+        schema.textContent = JSON.stringify(d, null, 2);
+      } catch (e) {
+        console.warn('Nextrum: kunde inte uppdatera pris-schema —', e.message);
+      }
+    }
+
     const stor = $('[data-stat="pris"]');
     const lugnt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!stor || lugnt || !('IntersectionObserver' in window)) return;

@@ -7,7 +7,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
-<title>Priser — Nextrum</title>
+<title>Vad kostar läxhjälp? Priser och villkor — Nextrum</title>
 <meta name="description" content="Ett timpris oavsett ämne. Inga dolda avgifter, ingen bindningstid. I priset ingår matchning, studieplan, bokning och rapport efter varje pass.">
 <link rel="canonical" href="https://nextrum.se/priser">
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/priser">
@@ -21,7 +21,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="sv_SE">
-<meta property="og:title" content="Priser — Nextrum">
+<meta property="og:title" content="Vad kostar läxhjälp? Priser och villkor — Nextrum">
 <meta property="og:description" content="Ett timpris oavsett ämne. Inga dolda avgifter, ingen bindningstid. I priset ingår matchning, studieplan, bokning och rapport efter varje pass.">
 <meta property="og:url" content="https://nextrum.se/priser">
 <meta property="og:image" content="https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg">
@@ -29,7 +29,7 @@
 <meta property="og:image:height" content="720">
 <meta property="og:image:alt" content="En ung studiehjälpare och en elev pluggar tillsammans vid ett ljust träbord.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Priser — Nextrum">
+<meta name="twitter:title" content="Vad kostar läxhjälp? Priser och villkor — Nextrum">
 <meta name="twitter:description" content="Ett timpris oavsett ämne. Inga dolda avgifter, ingen bindningstid. I priset ingår matchning, studieplan, bokning och rapport efter varje pass.">
 <meta name="twitter:image" content="https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg">
 
@@ -49,6 +49,53 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css">
 <link rel="stylesheet" href="nextrum-cinema.css">
+
+<!-- Strukturerad data för tjänsten och timpriset. Ger Google en
+     chans att visa priset direkt i träffen på "vad kostar läxhjälp".
+
+     SIFFRAN HÄR ÄR EN RESERV, inte källan. Priset bor i
+     nextrum-config.js, och initPris() i nextrum-app.js skriver om
+     både det synliga beloppet och den här blocket vid sidladdning.
+     Ändrar du priset ändrar du det på ETT ställe, i konfigurationen.
+     Reserven står kvar för den som läser sidan utan att köra
+     javascript — då ska det stå något rimligt, inte noll. -->
+<script type="application/ld+json" id="pris-schema">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Läxhjälp",
+  "name": "Läxhjälp med personlig studiehjälpare",
+  "description": "Ett timpris oavsett ämne. I priset ingår matchning, studieplan, bokning, administration och rapport efter varje pass.",
+  "provider": {
+    "@type": "Organization",
+    "name": "Nextrum",
+    "url": "https://nextrum.se/",
+    "email": "info@nextrum.se"
+  },
+  "areaServed": {
+    "@type": "Country",
+    "name": "Sverige"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "https://nextrum.se/priser",
+    "priceCurrency": "SEK",
+    "price": "379",
+    "availability": "https://schema.org/InStock",
+    "priceSpecification": {
+      "@type": "UnitPriceSpecification",
+      "priceCurrency": "SEK",
+      "price": "379",
+      "unitCode": "HUR",
+      "referenceQuantity": {
+        "@type": "QuantitativeValue",
+        "value": 1,
+        "unitCode": "HUR"
+      }
+    }
+  }
+}
+</script>
 </head>
 <body>
 

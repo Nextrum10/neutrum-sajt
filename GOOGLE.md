@@ -5,7 +5,7 @@ Allt på sajtens sida är gjort och kontrollerat:
 | | |
 |---|---|
 | favicon | finns, svarar 200 |
-| sitemap.xml | 16 adresser, båda språken |
+| sitemap.xml | 22 adresser, båda språken |
 | robots.txt | pekar på sitemap, blockerar inget publikt |
 | strukturerad data | Organization + WebSite med namn, beskrivning, slogan, sociala konton |
 | verifieringspost i DNS | finns redan (`google-site-verification=5o3n…`) |
@@ -53,10 +53,10 @@ På smal skärm är menyn hopfälld bakom hamburgerikonen uppe till
 vänster.
 
 Väl inne: skriv `sitemap.xml` i rutan och klicka **Skicka**. Status
-ska bli *Lyckades* med 16 upptäckta adresser.
+ska bli *Lyckades* med 22 upptäckta adresser.
 
 Kartan är kontrollerad och fungerar — `https://nextrum.se/sitemap.xml`
-svarar 200 med giltig XML och 16 adresser. Öppna den i webbläsaren om
+svarar 200 med giltig XML och 22 adresser. Öppna den i webbläsaren om
 du vill se själv. Går den inte att skicka in är det något i Search
 Console, inte i filen.
 
@@ -149,13 +149,39 @@ Google råkar titta förbi.
 
 ## Om one.com fortfarande kommer upp
 
-Det är ett gammalt indexerat spår, inte var sidan ligger. DNS pekar
-redan rätt: Cloudflare → Vercel. Spåret försvinner av sig självt när
-Google indexerat nextrum.se på riktigt.
+Det gör det, och det är kontrollerat 2026-09-09: träffen heter
+*"nextrum.se is hosted by one.com"* och pekar på **`http://nextrum.se`**
+— med `http`, inte `https`. Det är hela förklaringen.
 
-Ligger det kvar efter att er egen sida börjat synas, går det att be
-Google ta bort den gamla adressen under **Borttagningar** i Search
-Console.
+Google sparar en träff per adress, och `http://nextrum.se` var en egen
+adress redan innan sajten flyttade. Den posten ligger kvar i indexet
+med den gamla parkeringssidans text tills Google går tillbaka och
+tittar på just den adressen igen.
+
+**Servern gör redan rätt.** Kontrollerat med `curl`:
+
+| adress | svar |
+|---|---|
+| `http://nextrum.se/` | 308 → `https://nextrum.se/` |
+| `http://www.nextrum.se/` | 308 → `https://www.nextrum.se/` |
+| `https://www.nextrum.se/` | 307 → `https://nextrum.se/` |
+
+Alla vägar leder alltså till rätt sida. Det finns ingenting att laga i
+koden, i DNS eller hos Vercel. Det som saknas är att Google ska hämta
+om den gamla adressen och se omdirigeringen.
+
+**Så snabbar ni på det.** I Search Console: **Inspektera URL** på
+`http://nextrum.se/` (skriv `http` med flit) och klicka **Begär
+indexering**. Google följer då omdirigeringen och byter ut träffen mot
+den riktiga sidan.
+
+Vill ni ha bort den fortare kan ni be om en tillfällig borttagning
+under **Borttagningar**. Den gäller ungefär ett halvår och döljer bara
+träffen — det är omindexeringen ovan som löser det på riktigt.
+
+Vänta er inte att det går över en natt. Den gamla posten kan ligga kvar
+i veckor, och den försvinner snabbare ju fler gånger Google hämtar den
+riktiga sidan.
 
 ---
 
@@ -167,3 +193,26 @@ Console.
   Googlebot på varenda adress vi testat.
 - **Lägga till fler nyckelord i koden.** Meta keywords ignoreras av
   Google sedan 2009.
+
+---
+
+## Vad som gjordes på sidan 2026-09-09
+
+- **Titlarna skrevs om.** De var märkesnamn först och nyckelord sist,
+  eller inget nyckelord alls: *Priser — Nextrum* var sexton tecken av
+  sextio möjliga. Nu står det man faktiskt söker på först och Nextrum
+  sist, och ingen titel kapas av Google. *Så fungerar Nextrum — Nextrum*
+  sa dessutom märket två gånger.
+- **Prissidan fick strukturerad data** med tjänst och timpris, så att
+  Google kan visa priset i träffen. Siffran hämtas från
+  `nextrum-config.js` vid sidladdning — ändra priset på ett ställe.
+- **FAQ:n fick FAQPage-märkning**, byggd av
+  `python3 verktyg/bygg-faq-schema.py`. **Kör om den när en fråga
+  ändras.** Märkningen måste säga samma sak som sidan; gör den inte det
+  är den ett fel och inte en bonus. Notera att Google sedan 2023 bara
+  visar utfällbara FAQ-träffar för myndigheter och vården, så den ger
+  inte den rika träffen här — den beskriver sidan maskinläsbart för
+  andra läsare.
+- **Nio av tjugonio frågor låg utanför sina grupplådor** på FAQ-sidan
+  och tog med sig avståndet mellan rubrikerna. Det syntes som att
+  frågorna hängde löst under fel rubrik. Rättat i båda språken.
