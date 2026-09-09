@@ -1056,23 +1056,33 @@
      De faller också bort av sig själva den dag riktiga profiler fyller
      raden: ta bort konstanten och anropet nedan.
 
+     INGEN SKOLA HÄR. Korten löd förut med namngivna gymnasier och
+     lärosäten knutna till personer som inte finns. Att sätta en
+     påhittad elev på en namngiven skola är att påstå något om den
+     skolan. Namn, ålder, ort, text och ämnen räcker för att visa vad
+     ett kort är.
+
+     Skolnamnen skrivs inte ut här heller. En HTML-kommentar följer
+     med till varje besökares webbläsare, så att räkna upp dem som
+     avskräckande exempel hade lagt tillbaka precis det vi tog bort.
+
      Måste hållas i takt med index.html i roten. Sidans egna script
      översätts inte av generatorn — ändras korten där ska de ändras här.
      ============================================================ */
   const EXEMPELKORT =
-    [{ namn: 'Elsa', ålder: 19, skola: 'Norra Real, natural sciences programme',
+    [{ namn: 'Elsa', ålder: 19,
        ort: 'Stockholm', bild: 'studiehjalpare-1',
        alt: 'Portrait of a young tutor in a beige knitted jumper.',
        bio: 'I study natural sciences and mostly help out with maths and physics. '
           + 'The best part is when someone suddenly sees why a formula looks the way it does.',
        ämnen: ['Mathematics', 'Physics', 'Chemistry'] },
-     { namn: 'Hugo', ålder: 18, skola: 'Södra Latin upper secondary, social sciences programme',
+     { namn: 'Hugo', ålder: 18,
        ort: 'Stockholm', bild: 'studiehjalpare-2',
        alt: 'Portrait of a young tutor in a grey-green jumper.',
        bio: 'I revised for the national tests myself a year ago and remember exactly what was '
           + 'difficult. Swedish and English are what I help with most.',
        ämnen: ['Swedish', 'English', 'Social studies'] },
-     { namn: 'Maja', ålder: 22, skola: 'Stockholm University, teacher training',
+     { namn: 'Maja', ålder: 22,
        ort: 'Stockholm', bild: 'studiehjalpare-3',
        alt: 'Portrait of a young tutor in a dark jumper.',
        bio: 'I am training to be a teacher and like finding the explanation that sticks. '
@@ -1088,7 +1098,7 @@
       + 'alt="' + esc(t.alt) + '">'
       + '</span>'
       + '<div><div class="sc-name">' + esc(t.namn) + ', ' + t.ålder + '</div>'
-      + '<div class="sc-role">Tutor · ' + esc(t.skola) + ' · ' + esc(t.ort) + '</div></div>'
+      + '<div class="sc-role">Tutor · ' + esc(t.ort) + '</div></div>'
       + '</div>'
       + '<div class="sc-body">'
       + '<p>' + esc(t.bio) + '</p>'
@@ -1106,12 +1116,18 @@
        som inte är inloggad — RLS på profiles släpper bara in egen rad,
        admin och matchad motpart — och varje riktig studiehjälpare
        filtrerades därför bort en bit ner. Vyn ger förnamn, ålder,
-       skola, ort, ämnen och text, och ingenting annat ur profiles:
-       e-post och telefon ligger i samma rad och en radbaserad policy
-       hade släppt fram dem också. Se schema-v11.sql. */
+       ort, ämnen och text, och ingenting annat ur profiles: e-post
+       och telefon ligger i samma rad och en radbaserad policy hade
+       släppt fram dem också. Se schema-v11.sql.
+
+       SKOLAN HÄMTAS INTE och ligger inte längre i vyn. Att skriva ut
+       vilken skola en namngiven, ofta minderårig person går på är att
+       publicera mer om henne än tjänsten behöver — och för
+       exempelkorten var det dessutom riktiga skolors namn knutna till
+       personer som inte finns. Lägg inte tillbaka fältet. */
     const { data, error } = await supa
       .from('studiehjalpare_publika')
-      .select('id, fornamn, age, school, city, subjects, grade_levels, bio')
+      .select('id, fornamn, age, city, subjects, grade_levels, bio')
       .limit(6);
 
     if (error) {
@@ -1130,7 +1146,7 @@
     host.innerHTML = klara.map(t => {
       const namn = t.fornamn || 'Tutor';
       const bio = t.bio || 'A young tutor who helps younger students understand, not just get the homework done.';
-      const rad = ['Tutor', t.school, t.city].filter(Boolean).map(esc).join(' · ');
+      const rad = ['Tutor', t.city].filter(Boolean).map(esc).join(' · ');
       const ämnen = (t.subjects || []).map(s => '<span class="tag">' + esc(s) + '</span>').join('');
       return '<article class="sc-card">'
         + '<div class="sc-top">'
