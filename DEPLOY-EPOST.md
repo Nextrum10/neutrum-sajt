@@ -41,36 +41,63 @@ dig +short _dmarc.nextrum.se TXT
 
 ---
 
-## 2. Resend: konto och domän
+## 2. Resend: konto och domän — KLART
 
-1. Skapa konto på resend.com.
-2. Lägg till domänen `nextrum.se`.
-3. Resend ger er 2–3 DNS-poster (en DKIM-post och en för retursökväg).
-   Lägg in dem i Cloudflare och vänta på att Resend visar *Verified*.
+Domänen är verifierad och funktionen skickar skarpt från
+`no-reply@nextrum.se`. Så här ser den ut, region **Irland
+(eu-west-1)**:
 
-Domänen måste vara verifierad. Utan det vägrar Resend skicka med
-`no-reply@nextrum.se` som avsändare, och funktionen svarar 502.
+| Typ | Namn | Innehåll |
+|-----|------|----------|
+| MX | `send` | `feedback-smtp.eu-west-1.amazonses.com`, prioritet 10 |
+| TXT | `send` | `v=spf1 include:amazonses.com ~all` |
+| TXT | `resend._domainkey` | `p=…` från Resend |
 
-**Rör INTE SPF-posten på roten.** Det är lätt att tro att Resend
-behöver läggas till där. Det gör de inte i den här uppsättningen.
+### ⚠ Två fällor, båda kostade en hel kväll
 
-Resend skickar med `send.nextrum.se` som retursökväg, och SPF kollas
-mot retursökvägen — inte mot det som står i Från-fältet. Den posten
-är en CNAME till Resends egen värd, som publicerar sin egen SPF med
-sina IP-adresser. Kedjan går alltså ihop av sig själv.
+**Läs domännamnet bokstav för bokstav.** Domänen som först lades till
+hos Resend hette `neutrum.se`, inte `nextrum.se`. `neutrum.se` är en
+riktig men främmande domän som ligger hos Loopia, så Resend letade
+efter posterna där medan de låg hos Cloudflare — och verifieringen
+kunde aldrig gå igenom. Ledtråden stod i Resends egen panel: den skrev
+*Provider: Loopia* där det skulle ha stått Cloudflare. Felmeddelandet
+sa hela tiden sanningen, att *nextrum.se* inte var tillagd. Repot
+heter dessutom `neutrum-sajt`, så stavfelet är ett mönster här.
+
+**En CNAME kan inte samsas med andra poster på samma namn.** Det låg
+en CNAME på `send` från en äldre uppsättning. Den MÅSTE tas bort innan
+MX- och TXT-posterna ovan kan läggas till — annars vägrar Cloudflare,
+eller så ligger den kvar och blockerar tyst. Samma sak gällde en
+`rsend`-CNAME som inte längre står i Resends lista.
+
+### Rör INTE SPF-posten på roten
+
+Det är lätt att tro att Resend ska läggas till där. Det ska de inte.
+SPF kontrolleras mot retursökvägen, inte mot det som står i
+Från-fältet, och Resends retursökväg är `send.nextrum.se` med sin egen
+SPF-post. Kedjan går ihop utan roten.
 
 Roten ska därför fortsätta säga bara `include:_spf.google.com`. Den
 gäller posten ni skriver för hand från Gmail. Lägger ni till Resend
 där löser det ingenting och tar en av de tio DNS-uppslag en SPF-post
 får kosta innan den underkänns.
 
-Kontrollera hela kedjan så här — alla tre ska svara:
+Kontrollera hela kedjan så här — alla fyra ska svara:
 
 ```bash
+dig +short send.nextrum.se MX
 dig +short send.nextrum.se TXT
 dig +short resend._domainkey.nextrum.se TXT
 dig +short nextrum.se TXT
 ```
+
+### Reservavsändaren
+
+`lead-notis` provar `no-reply@nextrum.se` först och faller bara vid
+403 tillbaka på `onboarding@resend.dev`, som når kontots egen adress.
+Den är vilande nu och kostar ingenting, men fångar samma fel igen om
+domänen någon gång faller ur. Ser ni `"reserv": true` i svaret är
+domänen inte verifierad längre.
 
 ---
 
