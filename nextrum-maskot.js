@@ -102,21 +102,17 @@
   rot.className = 'mk';
   rot.innerHTML =
     '<button class="mk-knapp" type="button" aria-expanded="false" aria-controls="mk-panel">' +
-      '<span class="mk-bild">' +
-        /* Riktig maskotbild om den finns, annars märket. onerror gör
-           att en saknad fil inte lämnar ett trasigt bildkryss. */
-        '<img src="/bilder/maskot.png" alt="" width="44" height="44" loading="lazy" ' +
-        'onerror="this.remove()">' + MÄRKE +
-      '</span>' +
+      /* Ingen maskotbild. Filen har aldrig funnits, och onerror-
+         varianten kostade två 404-anrop per sidvisning för en bild
+         som ändå togs bort direkt. Märket ritas i SVG och behöver
+         inget nätverk. */
+      '<span class="mk-bild">' + MÄRKE + '</span>' +
       '<span class="mk-knapp-text">' + esc(T.knapp) + '</span>' +
     '</button>' +
     '<div class="mk-panel" id="mk-panel" role="dialog" aria-modal="false" ' +
          'aria-label="' + esc(T.rubrik) + '" hidden>' +
       '<div class="mk-topp">' +
-        '<span class="mk-avatar">' +
-          '<img src="/bilder/maskot.png" alt="" width="34" height="34" loading="lazy" ' +
-          'onerror="this.remove()">' + MÄRKE +
-        '</span>' +
+        '<span class="mk-avatar">' + MÄRKE + '</span>' +
         '<div><b>' + esc(T.rubrik) + '</b><span>' + esc(T.ingress) + '</span></div>' +
         '<button class="mk-stang" type="button" aria-label="' + esc(T.stang) + '">' +
           '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>' +

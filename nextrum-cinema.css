@@ -2441,8 +2441,6 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    skriptet bort <img>, och då blir märket kvar av sig självt. */
 .mk-bild{display:grid;place-items:center;width:44px;height:44px;flex:none}
 .mk-bild>*{grid-area:1/1}
-.mk-bild img{width:44px;height:44px;object-fit:contain}
-.mk-bild img+.mk-mark{display:none}
 .mk-mark{width:30px;height:30px}
 .mk-mark rect{fill:var(--bl)}
 .mk-mark path{stroke:var(--pap);stroke-width:2.3;fill:none;stroke-linecap:square}
@@ -2470,8 +2468,6 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 }
 .mk-avatar{display:grid;place-items:center;width:34px;height:34px;flex:none}
 .mk-avatar>*{grid-area:1/1}
-.mk-avatar img{width:34px;height:34px;object-fit:contain}
-.mk-avatar img+.mk-mark{display:none}
 .mk-avatar .mk-mark{width:26px;height:26px}
 .mk-topp b{display:block;font-size:.97rem;letter-spacing:-.02em}
 .mk-topp span{display:block;font-size:.82rem;line-height:1.5;color:var(--muted);margin-top:3px}
