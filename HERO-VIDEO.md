@@ -28,7 +28,27 @@ fallback att felsöka, bara två lager där det översta råkar vara tomt.
 Två versioner, båda **Seedance 2.0**, 8 sekunder, 1280x720, utan ljud,
 med `bilder/hero-nextrum-1920.jpg` som startbild. 36 krediter styck.
 
-### 1. Kameran glider åt höger medan de pratar — använd den här
+### Den som ska användas: låst kamera
+
+Bildutsnittet står still, bara personerna rör sig.
+
+```
+https://d8j0ntlcm91z4.cloudfront.net/user_3J8MIQmxILCJh11pLXUSkMe4fKw/hf_20260910_203944_b4034a63-ee02-4718-b0cd-a59f82034a7f.mp4
+```
+
+Kör i projektets rot:
+
+```
+./verktyg/hamta-hero-video.sh <adressen ovan>
+```
+
+Ingen `--pendel` här. Första och sista bildrutan har samma utsnitt, så
+loopen går ihop av sig själv — flaggan skulle bara fördubbla filen och
+låta pennan skriva baklänges i andra halvan utan att lösa något.
+
+### Alternativet: kameran glider åt höger
+
+Finns kvar om ni ändrar er. Mer liv i bilden, men loopen behöver pendeln.
 
 ```
 https://d8j0ntlcm91z4.cloudfront.net/user_3J8MIQmxILCJh11pLXUSkMe4fKw/hf_20260910_204643_c501b623-0835-475a-8ecd-5a6a0ae3e80d.mp4
@@ -38,21 +58,8 @@ https://d8j0ntlcm91z4.cloudfront.net/user_3J8MIQmxILCJh11pLXUSkMe4fKw/hf_2026091
 ./verktyg/hamta-hero-video.sh <adressen ovan> --pendel
 ```
 
-`--pendel` behövs just för att kameran rör sig. Utan den syns skarven var
-åttonde sekund. Se kommentaren i skriptet för vad det kostar.
-
-### 2. Låst kamera, bara personerna rör sig
-
-```
-https://d8j0ntlcm91z4.cloudfront.net/user_3J8MIQmxILCJh11pLXUSkMe4fKw/hf_20260910_203944_b4034a63-ee02-4718-b0cd-a59f82034a7f.mp4
-```
-
-```
-./verktyg/hamta-hero-video.sh <adressen ovan>
-```
-
-Ingen pendel behövs — bildutsnittet är detsamma i första och sista rutan,
-så loopen går ihop av sig själv.
+Utan `--pendel` hoppar bilden tillbaka var åttonde sekund, eftersom sista
+rutan ligger en bit till höger om den första.
 
 Båda lägger resultatet på `bilder/hero-studievy.mp4`, och vyerna börjar
 spela det utan att en rad kod ändras.
@@ -60,11 +67,12 @@ spela det utan att en rad kod ändras.
 ### Varför den inte redan ligger där
 
 Utvecklingsmiljön som genererade klippet får inte hämta hem det.
-`d8j0ntlcm91z4.cloudfront.net` är blockerad av organisationens
-nätverkspolicy — filen finns hos Higgsfield, men inte i containern. Antingen
-kör ni skriptet lokalt, eller så släpper en administratör fram den värden.
+Higgsfields båda CDN-värdar, `d8j0ntlcm91z4.cloudfront.net` och
+`d2ol7oe51mr4n9.cloudfront.net`, nekas av organisationens nätverkspolicy.
+Filen finns hos Higgsfield, men når inte containern. Antingen kör ni
+skriptet lokalt, eller så släpper en administratör fram värdarna.
 
-### Prompten till version 1 (kameran åt höger)
+### Prompten till alternativet (kameran åt höger)
 
 > The camera glides slowly and steadily to the right — a gentle, even
 > truck/dolly move that continues at the same speed from the first frame
@@ -78,7 +86,7 @@ kör ni skriptet lokalt, eller så släpper en administratör fram den värden.
 > Warm, calm, unhurried documentary feeling. No cuts, no new objects or
 > people entering the frame, no text.
 
-### Prompten till version 2 (låst kamera)
+### Prompten till den som ska användas (låst kamera)
 
 > Locked-off camera. No zoom, no pan, no dolly — the framing stays exactly
 > as in the reference image from first frame to last. A young male tutor in
