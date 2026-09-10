@@ -86,6 +86,22 @@ ok('ordagrant citat blir blockquote',
   NXAgent.formatera('"Konsumenten har rätt att frånträda avtalet inom fjorton dagar."', []),
   s => s.startsWith('<blockquote>'));
 
+/* De två nedan hittades genom att faktiskt titta på sidan i en
+   webbläsare, inte genom att läsa koden. Modellen radbryter sin text
+   där den råkar hamna, och båda felen såg ut som designfel. */
+
+ok('radbrutet stycke blir ETT stycke, inte tre',
+  NXAgent.formatera('Ja, lagen gäller när en familj\nbokar ett pass via sidan.\nNi har en informationsplikt.', []),
+  '<p>Ja, lagen gäller när en familj bokar ett pass via sidan. Ni har en informationsplikt.</p>');
+
+ok('citat som spänner över flera rader hittas ändå',
+  NXAgent.formatera('"Konsumenten har rätt att frånträda avtalet genom att\nlämna ett meddelande inom 14 dagar."', []),
+  s => s.startsWith('<blockquote>') && !s.includes('<p>'));
+
+ok('tomrad delar två stycken',
+  NXAgent.formatera('Första.\n\nAndra.', []),
+  '<p>Första.</p><p>Andra.</p>');
+
 ok('källdelen klipps bort ur brödtexten och ritas för sig',
   NXAgent.formatera('Svaret.\n\nKÄLLOR\n' + EKTA, [EKTA]),
   s => !s.includes('riksdagen'));

@@ -657,11 +657,15 @@
       senaste.innerHTML = '<p class="xsmall" style="color:var(--bl-3)">Inga körningar än. Ställ din första fråga.</p>';
       return;
     }
+    /* Märket bär STATUS, aldrig agentnamnet. Färgen på märket betyder
+       något: rött är ett kastat svar. Sätter man agentnamnet i ett
+       rött märke läser raden som att juridikagenten är trasig, inte
+       som att ett svar stoppades. Agenten står som text bredvid. */
     senaste.innerHTML = sen.map(k =>
       '<a href="#' + k.agent + '" style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--ln);text-decoration:none">'
-      + '<span class="ag-status" data-s="' + esc(k.status) + '">' + esc(k.agent) + '</span>'
+      + '<span class="ag-status" data-s="' + esc(k.status) + '">' + esc(k.status.replace(/_/g, ' ')) + '</span>'
       + '<span style="flex:1;min-width:0;font-size:12px;color:var(--bl-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
-      + esc(k.fraga) + '</span></a>'
+      + '<b style="color:var(--bl-3);font-weight:500">' + esc(k.agent) + '</b> · ' + esc(k.fraga) + '</span></a>'
     ).join('');
   }
 

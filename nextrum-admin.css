@@ -113,8 +113,17 @@
   line-height:1.66;
   color:var(--bl-2);
 }
-.ag-svar ul{ margin:0 0 16px; padding-left:20px; }
-.ag-svar li{ color:var(--bl-2); line-height:1.7; margin-bottom:7px; }
+/* list-style sätts uttryckligen. Basstilarna nollställer listor för
+   menyer och kortrader, och utan den här raden ritas agentens punkter
+   som indragen text utan punkt. */
+.ag-svar ul{ margin:0 0 16px; padding-left:22px; list-style:disc; }
+.ag-svar li{
+  color:var(--bl-2);
+  line-height:1.7;
+  margin-bottom:7px;
+  list-style:disc;
+}
+.ag-svar li::marker{ color:var(--ockra); }
 
 
 /* ---------- källorna ---------- */

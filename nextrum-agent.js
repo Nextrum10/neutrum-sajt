@@ -86,45 +86,63 @@ const NXAgent = (function () {
   function formatera(text, kallor) {
     const rader = String(text || '').split('\n');
     const ut = [];
+    let stycke = [];      // rader som hör till samma stycke
     let iLista = false;
     let iKallor = false;
 
     function stängLista() { if (iLista) { ut.push('</ul>'); iLista = false; } }
+
+    /* Ett stycke är alla rader fram till nästa tomrad, hopfogade.
+       Modellen radbryter sin text där den råkar hamna, och en rad är
+       därför inte ett stycke. Skrev vi ett <p> per rad blev en enda
+       mening tre luftiga block, vilket är precis vad det såg ut som
+       innan den här funktionen slogs ihop.
+
+       Citat känns igen på HELA stycket, inte på raden. Ett ordagrant
+       lagcitat är nästan alltid längre än en rad, så en radvis koll
+       hittade i praktiken aldrig något. */
+    function stängStycke() {
+      if (!stycke.length) return;
+      const hel = stycke.join(' ').replace(/\s+/g, ' ').trim();
+      stycke = [];
+      if (!hel) return;
+
+      if (/^[”"„][\s\S]*[”"]$/.test(hel) && hel.length > 30) {
+        ut.push('<blockquote>' + länka(hel.replace(/^[”"„]|[”"]$/g, ''), kallor) + '</blockquote>');
+        return;
+      }
+      ut.push('<p>' + länka(hel, kallor) + '</p>');
+    }
 
     rader.forEach(function (rad) {
       const r = rad.trim();
 
       /* Allt efter KÄLLOR-rubriken hör till källistan och ritas av
          ritaKallor i stället. */
-      if (/^källor:?$/i.test(r)) { iKallor = true; return; }
+      if (/^källor:?$/i.test(r)) { stängStycke(); stängLista(); iKallor = true; return; }
       if (iKallor) return;
 
-      if (!r) { stängLista(); return; }
+      if (!r) { stängStycke(); stängLista(); return; }
 
       if (ärRubrik(r)) {
+        stängStycke();
         stängLista();
         ut.push('<h4>' + esc(r.replace(/:$/, '')) + '</h4>');
         return;
       }
 
       if (/^[·•\-*]\s+/.test(r)) {
+        stängStycke();
         if (!iLista) { ut.push('<ul>'); iLista = true; }
         ut.push('<li>' + länka(r.replace(/^[·•\-*]\s+/, ''), kallor) + '</li>');
         return;
       }
 
-      /* Ordagrant citat ur lagtexten: hela raden ligger inom
-         citattecken. Det är så systemprompten ber den citera. */
-      if (/^[”"„][\s\S]*[”"]$/.test(r) && r.length > 30) {
-        stängLista();
-        ut.push('<blockquote>' + länka(r.replace(/^[”"„]|[”"]$/g, ''), kallor) + '</blockquote>');
-        return;
-      }
-
       stängLista();
-      ut.push('<p>' + länka(r, kallor) + '</p>');
+      stycke.push(r);
     });
 
+    stängStycke();
     stängLista();
     return ut.join('');
   }
