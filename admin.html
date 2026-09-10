@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
+<title>Admin — Nextrum</title>
+<meta name="robots" content="noindex,nofollow">
+
+<link rel="stylesheet" href="nextrum-typsnitt.css">
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css">
+<link rel="stylesheet" href="nextrum-cinema.css">
+<link rel="stylesheet" href="nextrum-vy.css">
+<link rel="stylesheet" href="nextrum-arbetsyta.css">
+</head>
+<body class="vy vy-admin">
+
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
+<header class="hdr stuck" id="hdr">
+  <div class="wrap nav">
+    <a href="/" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+    <nav class="nav-links" aria-label="Meny">
+      <a href="/foralder">Studievyn</a>
+      <a href="/larare">Studiehjälparvyn</a>
+    </nav>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="/foralder">Studievyn <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/larare">Studiehjälparvyn <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions" id="m-actions"></div>
+</div>
+
+<main class="wrap" id="innehall">
+
+  <div id="view-loading"><div class="loading">Laddar adminvyn</div></div>
+
+  <!-- ============================================================
+       INLOGGNING
+       Inget "skapa konto" här, med flit. Ett adminkonto är ett
+       vanligt konto med profiles.is_admin = true, och flaggan går
+       bara att sätta i Table Editor — triggern i schema-v3.sql
+       vägrar ändra den från en inloggad session. Ett registrerings-
+       formulär på den här sidan hade antytt något annat.
+       ============================================================ -->
+  <div id="view-auth" hidden>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <span class="nx-et acc">Logga in</span>
+        <h1 style="margin-top:16px">Adminvyn</h1>
+        <p class="nx-lede">För dig som jobbar på Nextrum. Intresseanmälningar, matchning, bokningar, fakturor och utbetalningar.</p>
+
+        <form id="auth-form" novalidate>
+          <div class="fgroup">
+            <label for="a-email">E-post</label>
+            <input class="inp" id="a-email" type="email" autocomplete="email" required>
+          </div>
+          <div class="fgroup">
+            <label for="a-pass">Lösenord</label>
+            <input class="inp" id="a-pass" type="password" autocomplete="current-password" required minlength="6">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="auth-submit">Logga in</button>
+          <p class="ok-msg" id="auth-msg" style="margin-top:16px"></p>
+        </form>
+
+        <p class="auth-alt">
+          Du loggar in med samma konto som i de andra vyerna.<br>
+          Saknar du behörighet? Be någon sätta <code>is_admin</code> på din rad.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ INTE ADMIN ============
+       Ett konto som finns men saknar flaggan. Skillnaden mot fel
+       lösenord är viktig: här är det inte inloggningen som är fel,
+       och att skicka tillbaka någon till inloggningen hade fått
+       dem att prova lösenordet om och om igen. -->
+  <div id="view-nekad" hidden>
+    <div class="locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+      <h2>Du har inte behörighet hit</h2>
+      <p>Kontot fungerar, men det är inte markerat som admin. Adminvyn visar alla familjers och studiehjälpares uppgifter, så den öppnas inte automatiskt för någon.</p>
+      <p style="margin-top:16px">Ska du ha åtkomst: be någon som redan är admin sätta <code>is_admin</code> på din rad i Supabase.</p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
+        <a class="btn btn-primary" href="/foralder">Till studievyn</a>
+        <button class="btn btn-ghost" data-logout>Logga ut</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ NÅGOT GICK FEL ============ -->
+  <div id="view-fel" hidden>
+    <div class="locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <h2>Vyn kunde inte laddas</h2>
+      <p id="fel-text">Något gick fel när adminvyn skulle hämtas.</p>
+      <p class="xsmall" id="fel-detalj" style="margin-top:14px;font-family:var(--f-mono);font-size:10px;color:var(--muted-2);word-break:break-word"></p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
+        <button class="btn btn-primary" id="fel-igen">Försök igen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SJÄLVA VYN ============ -->
+  <div id="view-app" hidden>
+
+    <section class="vy-hero" id="vy-hero" aria-labelledby="hej"></section>
+
+
+    <div class="vy-layout">
+
+      <nav class="vy-sido" id="vy-sido" aria-label="Delar av adminvyn">
+        <a href="#oversikt" data-sek="oversikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Översikt</a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Inkommande</span>
+        <a href="#leads" data-sek="leads"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h17v11h-17z"/><path d="m3.5 8 8.5 6 8.5-6"/></svg>Intresseanmälningar</a>
+        <a href="#ansokningar" data-sek="ansokningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/></svg>Ansökningar</a>
+        <a href="#meddelanden" data-sek="meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>Meddelanden</a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Personer</span>
+        <a href="#familjer" data-sek="familjer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3"/><path d="M3 19c0-2.8 2.5-4.5 5.5-4.5S14 16.2 14 19"/><path d="M16 5.5a3 3 0 0 1 0 5.8M21 19c0-2.2-1.4-3.7-3.5-4.3"/></svg>Familjer</a>
+        <a href="#studiehjalpare" data-sek="studiehjalpare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg>Studiehjälpare</a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Drift</span>
+        <a href="#bokningar" data-sek="bokningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Bokningar</a>
+        <a href="#ekonomi" data-sek="ekonomi"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg>Ekonomi</a>
+        <a href="#system" data-sek="system"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h11M18 7.5h2.5M3.5 16.5h5M11.5 16.5h9"/><circle cx="16" cy="7.5" r="2.2"/><circle cx="10" cy="16.5" r="2.2"/></svg>System</a>
+      </nav>
+
+      <div>
+
+        <!-- ============================================================
+             ÖVERSIKT
+             ============================================================ -->
+        <section class="vy-sek" data-sek="oversikt">
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Översikt</h2>
+              <p>Vad som väntar på någon av oss. Siffrorna kommer från vyn admin_lage — en fråga, inte elva.</p>
+            </div>
+          </div>
+
+          <div class="adm-tal-rad" id="adm-tal"><div class="loading">Hämtar</div></div>
+
+          <div class="split">
+            <div class="stack">
+              <div class="dbox">
+                <h5>Senaste intresseanmälningarna</h5>
+                <div id="ov-leads"><div class="loading">Hämtar</div></div>
+                <a class="vy-mer" href="#leads">Alla intresseanmälningar
+                  <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+              </div>
+
+              <div class="dbox">
+                <h5>Väntar på matchning</h5>
+                <div id="ov-omatchade"><div class="loading">Hämtar</div></div>
+                <a class="vy-mer" href="#familjer">Alla familjer
+                  <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="dbox">
+                <h5>Studiehjälpare att godkänna</h5>
+                <div id="ov-vantande"><div class="loading">Hämtar</div></div>
+                <a class="vy-mer" href="#studiehjalpare">Alla studiehjälpare
+                  <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+              </div>
+
+              <div class="dbox">
+                <h5>Närmaste passen</h5>
+                <div id="ov-pass"><div class="loading">Hämtar</div></div>
+                <a class="vy-mer" href="#bokningar">Alla bokningar
+                  <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             INTRESSEANMÄLNINGAR
+             ============================================================ -->
+        <section class="vy-sek" data-sek="leads" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Intresseanmälningar</h2>
+              <p>Familjer som hört av sig. Statusen säger var i samtalet ni är — den ändras här, inte i Table Editor.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="leads-sok" type="search" placeholder="Sök namn, e-post, ämne" aria-label="Sök intresseanmälan" autocomplete="off">
+              <select class="sel" id="leads-status" aria-label="Filtrera på status">
+                <option value="">Alla lägen</option>
+                <option value="new">Nya</option>
+                <option value="contacted">Kontaktade</option>
+                <option value="matched">Matchade</option>
+                <option value="declined">Avböjda</option>
+              </select>
+              <span class="small" id="leads-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="leads-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             ANSÖKNINGAR
+             ============================================================ -->
+        <section class="vy-sek" data-sek="ansokningar" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Ansökningar</h2>
+              <p>Unga som vill jobba. Att godkänna ansökan är inte samma sak som att godkänna kontot — kontot ligger under Studiehjälpare, och skapas först när personen registrerat sig.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="ans-sok" type="search" placeholder="Sök namn, e-post, ämne" aria-label="Sök ansökan" autocomplete="off">
+              <select class="sel" id="ans-status" aria-label="Filtrera på status">
+                <option value="">Alla lägen</option>
+                <option value="new">Nya</option>
+                <option value="contacted">Kontaktade</option>
+                <option value="approved">Godkända</option>
+                <option value="rejected">Avböjda</option>
+              </select>
+              <span class="small" id="ans-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="ans-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             MEDDELANDEN
+             Två inkorgar som ser lika ut men inte är det: formuläret
+             på faq.html (contact_messages) är från folk utan konto,
+             chattarna (messages) är mellan matchade parter. Flikar,
+             så att det syns att de är olika saker.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="meddelanden" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Meddelanden</h2>
+              <p>Inkorgen från kontaktformuläret, och en insyn i chattarna mellan familj och studiehjälpare.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Vilken inkorg">
+            <button class="vy-flik" type="button" role="tab" data-flik="inkorg"
+                    id="flik-inkorg" aria-controls="panel-inkorg">Kontaktformuläret
+              <span class="vy-flik-mark" id="flik-inkorg-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="chattar"
+                    id="flik-chattar" aria-controls="panel-chattar">Chattar</button>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="inkorg"
+               id="panel-inkorg" aria-labelledby="flik-inkorg">
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <input class="inp adm-sok" id="msg-sok" type="search" placeholder="Sök namn, e-post, text" aria-label="Sök meddelande" autocomplete="off">
+                <label class="xsmall" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600">
+                  <input type="checkbox" id="msg-ohanterade" checked> Bara ohanterade
+                </label>
+                <span class="small" id="msg-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="msg-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="chattar"
+               id="panel-chattar" aria-labelledby="flik-chattar" hidden>
+            <div class="dbox">
+              <h5>Chattar <em>senaste raden i varje tråd</em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
+                Ni kan läsa trådarna, inte skriva i dem. Insynen finns för att en
+                förälder ska kunna lita på att plattformen inte är en privat kanal
+                till deras barn — inte för att ni ska delta i samtalet.
+              </p>
+              <div id="chatt-lista"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             FAMILJER
+             ============================================================ -->
+        <section class="vy-sek" data-sek="familjer" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Familjer</h2>
+              <p>Matchningen görs här. Sätter du en studiehjälpare låses familjens vy upp direkt — studieplan, bokning och chatt.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="fam-sok" type="search" placeholder="Sök namn eller e-post" aria-label="Sök familj" autocomplete="off">
+              <select class="sel" id="fam-status" aria-label="Filtrera på matchning">
+                <option value="">Alla</option>
+                <option value="pending">Väntar på matchning</option>
+                <option value="matched">Matchade</option>
+              </select>
+              <span class="small" id="fam-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="fam-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             STUDIEHJÄLPARE
+             ============================================================ -->
+        <section class="vy-sek" data-sek="studiehjalpare" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Studiehjälpare</h2>
+              <p>Godkänn eller pausa. En godkänd studiehjälpare syns på startsidan och kan matchas med en familj — det är samma knapp som styr båda.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="sh-sok" type="search" placeholder="Sök namn, ort, ämne" aria-label="Sök studiehjälpare" autocomplete="off">
+              <select class="sel" id="sh-status" aria-label="Filtrera på status">
+                <option value="">Alla lägen</option>
+                <option value="pending">Väntar</option>
+                <option value="approved">Godkända</option>
+                <option value="rejected">Avböjda</option>
+              </select>
+              <span class="small" id="sh-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="sh-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             BOKNINGAR
+             ============================================================ -->
+        <section class="vy-sek" data-sek="bokningar" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Bokningar</h2>
+              <p>Alla pass, alla familjer. Ett pass räknas som genomfört när studiehjälparen skrivit rapporten — och det är den regeln som avgör vad som hamnar på fakturan.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="bok-sok" type="search" placeholder="Sök familj, studiehjälpare, ämne" aria-label="Sök bokning" autocomplete="off">
+              <select class="sel" id="bok-status" aria-label="Filtrera på status">
+                <option value="">Alla lägen</option>
+                <option value="requested">Önskade</option>
+                <option value="confirmed">Bekräftade</option>
+                <option value="completed">Genomförda</option>
+                <option value="cancelled">Avbokade</option>
+              </select>
+              <select class="sel" id="bok-nar" aria-label="Filtrera på tid">
+                <option value="framat">Framåt</option>
+                <option value="bakat">Bakåt</option>
+                <option value="alla">Alla</option>
+              </select>
+              <span class="small" id="bok-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="bok-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             EKONOMI
+             Fakturan till familjen och underlaget till studiehjälparen
+             är två sidor av samma pass. Två flikar, inte två sidor.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="ekonomi" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Ekonomi</h2>
+              <p>Vad familjerna ska betala och vad studiehjälparna ska få. Samma pass, två sidor av samma rad i bookings.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Fakturor eller utbetalningar">
+            <button class="vy-flik" type="button" role="tab" data-flik="fakturor"
+                    id="flik-fakturor" aria-controls="panel-fakturor">Fakturor
+              <span class="vy-flik-mark" id="flik-fakt-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="utbetalningar"
+                    id="flik-utbetalningar" aria-controls="panel-utbetalningar">Utbetalningar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="korning"
+                    id="flik-korning" aria-controls="panel-korning">Månadskörning</button>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="fakturor"
+               id="panel-fakturor" aria-labelledby="flik-fakturor">
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <input class="inp adm-sok" id="fakt-sok" type="search" placeholder="Sök familj" aria-label="Sök faktura" autocomplete="off">
+                <select class="sel" id="fakt-status" aria-label="Filtrera på status">
+                  <option value="">Alla lägen</option>
+                  <option value="utkast">Utkast</option>
+                  <option value="skickad">Skickade</option>
+                  <option value="betald">Betalda</option>
+                  <option value="forfallen">Förfallna</option>
+                  <option value="makulerad">Makulerade</option>
+                </select>
+                <span class="small" id="fakt-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="fakt-tabell"><div class="loading">Hämtar</div></div>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
+                <b>Skicka</b> mejlar fakturan till familjen på riktigt. Du får läsa igenom
+                den först, och läget sätts till <em>Skickad</em> bara om mejlet faktiskt
+                gick iväg. Rullgardinen bredvid ändrar bara ordet i tabellen — den skickar
+                ingenting, och det är med flit att de är två olika knappar.
+              </p>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
+                Beloppen går inte att ändra härifrån. De räknas fram av edge-funktionen
+                <code>fakturering</code> ur de pass som faktiskt hållits, och en trigger
+                vägrar skriva om dem från en webbläsare.
+              </p>
+            </div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="utbetalningar"
+               id="panel-utbetalningar" aria-labelledby="flik-utbetalningar" hidden>
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <input class="inp adm-sok" id="utb-sok" type="search" placeholder="Sök studiehjälpare" aria-label="Sök utbetalning" autocomplete="off">
+                <select class="sel" id="utb-status" aria-label="Filtrera på status">
+                  <option value="">Alla lägen</option>
+                  <option value="utkast">Utkast</option>
+                  <option value="godkand">Godkända</option>
+                  <option value="utbetald">Utbetalda</option>
+                  <option value="misslyckad">Misslyckade</option>
+                </select>
+                <span class="small" id="utb-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="utb-tabell"><div class="loading">Hämtar</div></div>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
+                <b>Skicka underlag</b> mejlar studiehjälparen vad hen kommer att få, så att
+                hen hinner säga ifrån innan pengarna går. Det ändrar ingen status — att
+                visa ett underlag är inte att godkänna det.
+              </p>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
+                Godkänd betyder att ni granskat underlaget. Utbetald betyder att pengarna
+                lämnat kontot. <b>Själva överföringen sker utanför plattformen</b> — det
+                finns ingen betaltjänst kopplad än, så ingen knapp här flyttar pengar. Att
+                sätta Utbetald innan ni faktiskt betalat är hur ett bokföringsfel börjar.
+              </p>
+            </div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="korning"
+               id="panel-korning" aria-labelledby="flik-korning" hidden>
+            <div class="dbox">
+              <h5>Månadskörningen</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:18px">
+                En gång i månaden samlas alla genomförda och rapporterade pass till
+                en faktura per familj och ett underlag per studiehjälpare. Körningen
+                sker i edge-funktionen <code>fakturering</code>, som skyddas av en
+                nyckel på servern — den kan alltså inte startas härifrån, och ska
+                inte kunna det.
+              </p>
+              <div class="sum-line"><span>Så körs den torrt först</span><span class="adm-tal">torrkorning: true</span></div>
+              <div class="sum-line"><span>Betalningsvillkor</span><span class="adm-tal">14 dagar</span></div>
+              <div class="sum-line total"><span>Pris per timme</span><span class="adm-tal" id="kor-pris">—</span></div>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-top:16px">
+                Hela anropet står i <code>DEPLOY-BETALNING.md</code>. Kör alltid torrt
+                först: den räknar ut allt och svarar med vad som <em>skulle</em> skapas,
+                utan att skriva en rad.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             SYSTEM
+             ============================================================ -->
+        <section class="vy-sek" data-sek="system" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>System</h2>
+              <p>Priset, kopplingarna till Google och Fortnox, och felen som användarna råkat på.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Delar av systemet">
+            <button class="vy-flik" type="button" role="tab" data-flik="integrationer"
+                    id="flik-integrationer" aria-controls="panel-integrationer">Integrationer</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="pris"
+                    id="flik-pris" aria-controls="panel-pris">Pris</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="fel"
+                    id="flik-fel" aria-controls="panel-fel">Fel
+              <span class="vy-flik-mark" id="flik-fel-mark" hidden></span></button>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="integrationer"
+               id="panel-integrationer" aria-labelledby="flik-integrationer">
+            <div id="int-kort"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="pris"
+               id="panel-pris" aria-labelledby="flik-pris" hidden>
+            <div class="dbox vy-sek-smal">
+              <h5>Pris per timme <em id="pris-uppdaterad"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:18px">
+                Gäller nya fakturarader. Redan skapade rader har sitt pris sparat på
+                sig — en prisändring får aldrig ändra vad någon redan fakturerats.
+                Ändrar du här måste priset också ändras på prissidan, i FAQ:n och i
+                användarvillkoren. Ett pris som står olika på tre ställen är en tvist.
+              </p>
+              <form id="pris-form">
+                <div class="fgroup">
+                  <label for="pris-kr">Kronor per timme</label>
+                  <input class="inp" id="pris-kr" type="number" min="1" max="5000" step="1" inputmode="numeric">
+                </div>
+                <button class="btn btn-primary btn-sm" type="submit" id="pris-spara">Spara priset</button>
+                <p class="ok-msg" id="pris-msg"></p>
+              </form>
+            </div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="fel"
+               id="panel-fel" aria-labelledby="flik-fel" hidden>
+            <div class="dbox">
+              <h5>Klientfel <em id="fel-antal"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
+                Fel som inträffade i någons webbläsare. Ett fel här betyder att någon
+                såg en trasig sida — inte att något kan gå sönder i framtiden.
+              </p>
+              <div id="fel-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-bot" style="border:none;padding-top:0">
+      <span>© <span id="year"></span> Nextrum</span>
+      <a href="mailto:info@nextrum.se">info@nextrum.se</a>
+    </div>
+  </div>
+</footer>
+
+<script src="bibliotek/supabase-js-2.116.0.js"></script>
+<script src="nextrum-config.js"></script>
+<script src="nextrum-fel.js"></script>
+<script src="nextrum-app.js"></script>
+<script src="nextrum-kontakt.js"></script>
+<script src="nextrum-studie.js"></script>
+<script src="nextrum-arbetsyta.js"></script>
+<script src="nextrum-media.js"></script>
+<script src="nextrum-betalning.js"></script>
+<script src="nextrum-admin.js"></script>
+</body>
+</html>

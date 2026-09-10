@@ -135,6 +135,12 @@ window.NXStudie = (function () {
         '<div class="nx-fraga-box" role="alertdialog" aria-modal="true" aria-labelledby="fraga-t">'
         + '<h3 id="fraga-t">' + esc(o.titel || 'Är du säker?') + '</h3>'
         + (o.text ? '<p>' + esc(o.text) + '</p>' : '')
+        /* Förhandsvisning: text som ska läsas exakt som den står,
+           med sina radbrytningar. Ett <p> hade klämt ihop ett helt
+           fakturamejl till en enda mening. Fortfarande escapad —
+           innehållet kommer från servern, inte från oss. */
+        + (o.forhandsvisning
+          ? '<pre class="nx-fraga-prov">' + esc(o.forhandsvisning) + '</pre>' : '')
         + '<div class="nx-fraga-knappar">'
         + '<button type="button" class="btn btn-ghost" data-svar="nej">' + esc(o.avbryt || 'Avbryt') + '</button>'
         + '<button type="button" class="btn btn-primary" data-svar="ja">' + esc(o.knapp || 'Ta bort') + '</button>'
@@ -633,7 +639,14 @@ window.NXStudie = (function () {
       return vald;
     }
 
-    function frånHash() { return visa(String(location.hash || '').replace(/^#/, '')); }
+    /* Adressen kan bära en flik efter sektionen: #lektioner/plan.
+       Sidomenyn bryr sig bara om delen före snedstrecket — fliken
+       sköts av NXArbete.flikar. Utan splitten läste menyn hela
+       strängen som ett sektionsnamn, hittade den inte, och föll
+       tillbaka på Översikt: varje länk till en flik landade fel. */
+    function frånHash() {
+      return visa(String(location.hash || '').replace(/^#/, '').split('/')[0]);
+    }
 
     window.addEventListener('hashchange', frånHash);
     frånHash();
@@ -641,7 +654,7 @@ window.NXStudie = (function () {
     return {
       öppna: function (n) {
         var vald = giltig(n);
-        if (String(location.hash).replace(/^#/, '') === vald) visa(vald);
+        if (String(location.hash).replace(/^#/, '').split('/')[0] === vald) visa(vald);
         else location.hash = '#' + vald;
       },
       /* Siffran vid en menypost. 0 tar bort den helt — en tom prick
@@ -713,6 +726,10 @@ window.NXStudie = (function () {
       if (sek && sek.hidden) {
         location.hash = '#' + sek.dataset.sek;
       }
+      /* Och i en flik som inte är framme. Efter sammanslagningen av
+         sektionerna ligger #rapport-form och #lax-lista i flikpaneler,
+         och en gömd panel är lika ogenomtränglig som en gömd sektion. */
+      if (window.NXArbete) NXArbete.visaFör(mål);
 
       /* Sektionsbytet nollställer scrollen, så markeringen måste
          vänta tills den bytt. */

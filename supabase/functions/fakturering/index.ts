@@ -175,10 +175,21 @@ Deno.serve(async (req) => {
     const problem: string[] = [];
 
     for (const [parentId, rader] of perFamilj) {
+      /* UTKAST, inte "skickad".
+         Fakturan skapades förut som skickad, med en skickad_at-stämpel
+         — trots att ingenting lämnade huset. Det var ofarligt så länge
+         ingen KUNDE skicka: ordet betydde bara "klar att visa i
+         familjens vy".
+
+         Nu finns edge-funktionen faktura-utskick, och då måste ordet
+         betyda vad det säger. "Skickad" sätts av den funktionen, och
+         bara efter att Resend svarat att mejlet gick iväg. En faktura
+         som står som skickad utan att någon fått den är en faktura
+         ingen letar efter — och den upptäcks först när betalningen
+         uteblir. */
       const f = await db.from('invoices').insert({
-        parent_id: parentId, period, status: 'skickad',
+        parent_id: parentId, period, status: 'utkast',
         belopp_ore: summa(rader), forfaller: forfallerIso,
-        skickad_at: new Date().toISOString(),
       }).select('id').single();
 
       if (f.error) { problem.push(`faktura ${parentId}: ${f.error.message}`); continue; }
