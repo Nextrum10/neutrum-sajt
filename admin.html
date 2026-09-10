@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
+<title>Admin — Nextrum</title>
+<meta name="robots" content="noindex">
+
+<link rel="stylesheet" href="nextrum-typsnitt.css">
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css">
+<link rel="stylesheet" href="nextrum-cinema.css">
+<link rel="stylesheet" href="nextrum-vy.css">
+<link rel="stylesheet" href="nextrum-admin.css">
+</head>
+<body class="vy">
+
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
+<header class="hdr stuck" id="hdr">
+  <div class="wrap nav">
+    <a href="/" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+    <nav class="nav-links" aria-label="Meny">
+      <a href="/">Startsidan</a>
+      <a href="/larare">Studiehjälparvyn</a>
+      <a href="/foralder">Studievyn</a>
+    </nav>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="/">Startsidan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/larare">Studiehjälparvyn <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions" id="m-actions"></div>
+</div>
+
+<main class="wrap" id="innehall">
+
+  <div id="view-loading"><div class="loading">Laddar adminvyn</div></div>
+
+  <!-- ============ INLOGGNING ============ -->
+  <div id="view-auth" hidden>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <span class="nx-et acc">Logga in</span>
+        <h1 style="margin-top:16px">Adminvyn</h1>
+        <p class="nx-lede">Bolagets egna verktyg: juridikagenten, ekonomiagenten och det som styr dem.</p>
+
+        <form id="auth-form" novalidate>
+          <div class="fgroup">
+            <label for="a-email">E-post</label>
+            <input class="inp" id="a-email" type="email" autocomplete="email" required>
+          </div>
+          <div class="fgroup">
+            <label for="a-pass">Lösenord</label>
+            <input class="inp" id="a-pass" type="password" autocomplete="current-password" required minlength="6">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="auth-submit">Logga in</button>
+          <p class="ok-msg" id="auth-msg" style="margin-top:16px"></p>
+        </form>
+
+        <p class="auth-alt">
+          Det går inte att skapa ett adminkonto här. Adminrättigheten sätts på en befintlig
+          rad i <b>profiles</b>, av någon som redan har den.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ INTE ADMIN ============ -->
+  <div id="view-nekad" hidden>
+    <div class="locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      <h2>Den här vyn är bara för admin</h2>
+      <p>Ditt konto finns, men har inte adminrättighet. Den sätts genom att
+         <b>is_admin</b> ställs på <b>true</b> på din rad i tabellen profiles.</p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
+        <a class="btn btn-primary" href="/foralder">Till studievyn</a>
+        <button class="btn btn-ghost" data-logout>Logga ut</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ NÅGOT GICK FEL ============ -->
+  <div id="view-fel" hidden>
+    <div class="locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <h2>Vyn kunde inte laddas</h2>
+      <p id="fel-text">Något gick fel när vyn skulle hämtas.</p>
+      <p class="xsmall" id="fel-detalj" style="margin-top:14px;font-family:var(--f-mono);font-size:10px;color:var(--muted-2);word-break:break-word"></p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
+        <button class="btn btn-primary" id="fel-igen">Försök igen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SJÄLVA VYN ============ -->
+  <div id="view-app" hidden>
+
+    <div class="vy-topp">
+      <div>
+        <span class="nx-et acc">Adminvy</span>
+        <h1 id="hej">Hej.</h1>
+        <p class="vy-lede">Agenterna, deras logg och det som styr dem. Ingenting här syns för familjer eller studiehjälpare.</p>
+      </div>
+      <span class="vy-marke">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.5 3.5v5c0 4.3-3 8.2-7.5 9.5-4.5-1.3-7.5-5.2-7.5-9.5v-5z"/><path d="M9.5 12l1.8 1.8 3.5-3.6"/></svg>
+        <span>Admin<span class="vy-marke-sub">Nextrum bolagsvy</span></span>
+      </span>
+    </div>
+
+    <div class="vy-layout">
+
+      <nav class="vy-sido" id="vy-sido" aria-label="Delar av adminvyn">
+        <a href="#oversikt" data-sek="oversikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Översikt</a>
+        <a href="#juridik" data-sek="juridik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M5 8h14M7.5 8 5 14h5zM16.5 8 14 14h5z"/></svg>Juridik</a>
+        <a href="#ekonomi" data-sek="ekonomi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8A1.5 1.5 0 0 1 5 6.5h14A1.5 1.5 0 0 1 20.5 8v9a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17z"/><path d="M20.5 11h-3.2a1.5 1.5 0 0 0 0 3h3.2"/></svg>Ekonomi</a>
+        <a href="#bolaget" data-sek="bolaget"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V8l7-4 7 4v12"/><path d="M9.5 20v-5h5v5M9 11h1.5M13.5 11H15"/></svg>Bolagsfakta</a>
+        <a href="#aterkoppling" data-sek="aterkoppling"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>Återkoppling</a>
+      </nav>
+
+      <div>
+
+        <!-- ============ ÖVERSIKT ============ -->
+        <section class="vy-sek" data-sek="oversikt">
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Översikt</h2>
+              <p>Läget för agenterna och det de behöver för att fungera.</p>
+            </div>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi"><b id="kpi-korningar">0</b><span>Körningar totalt</span></div>
+            <div class="kpi"><b id="kpi-kastade">0</b><span>Kastade utan källa</span></div>
+            <div class="kpi"><b id="kpi-tokens">0</b><span>Tokens förbrukade</span></div>
+          </div>
+
+          <div class="split">
+            <div class="stack">
+
+              <div class="dbox">
+                <h5>Självtest</h5>
+                <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:16px">
+                  Kontrollerar att agenterna når sina rättskällor, och lika viktigt: att de
+                  <b>inte</b> når något annat. Rör inte modellen och kostar ingenting.
+                </p>
+                <button class="btn btn-primary btn-sm btn-block" id="sjalvtest-knapp">Kör självtestet</button>
+                <div id="sjalvtest-ut" style="margin-top:16px"></div>
+              </div>
+
+              <div class="dbox">
+                <h5>Vad agenterna är</h5>
+                <p class="xsmall" style="color:var(--bl-2);line-height:1.7">
+                  <b>Juridik</b> slår upp svensk rätt inom sex avgränsade områden och vägrar
+                  resten. Den svarar aldrig ur minnet: den hämtar lagtexten och citerar den.
+                  Kan den inte peka på en källa den läst lämnas svaret inte ut.
+                </p>
+                <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-top:12px">
+                  <b>Ekonomi</b> läser era siffror, läser Fortnox och slår upp Skatteverket.
+                  Alla dess verktyg är läsande. Den bokför ingenting, och det är designen,
+                  inte en tillfällig försiktighet.
+                </p>
+                <p class="xsmall" style="color:var(--bl-3);line-height:1.7;margin-top:12px">
+                  Ingen av dem ersätter en jurist eller en redovisningskonsult.
+                </p>
+              </div>
+
+            </div>
+            <div class="stack">
+
+              <div class="dbox">
+                <h5>Senaste körningarna</h5>
+                <div id="ov-korningar"><div class="loading">Hämtar</div></div>
+              </div>
+
+              <div class="dbox">
+                <h5>Ställ en fråga</h5>
+                <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:16px">
+                  Juridik för avtal, dataskydd och arbetsrätt. Ekonomi för bokföring,
+                  moms och deklarationer.
+                </p>
+                <a class="btn btn-primary btn-sm btn-block" href="#juridik" style="margin-bottom:10px">Fråga juridikagenten</a>
+                <a class="btn btn-ghost btn-sm btn-block" href="#ekonomi">Fråga ekonomiagenten</a>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ JURIDIK ============ -->
+        <section class="vy-sek" data-sek="juridik" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Juridikagenten</h2>
+              <p>Distansavtal, konsumenttjänst, dataskydd, arbetsrätt, minderårigas arbete och bokföringsformalia. Frågor utanför de sex områdena avvisas.</p>
+            </div>
+          </div>
+
+          <div class="dbox">
+            <div class="ag-fraga">
+              <label for="jur-fraga" style="display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--bl-3);margin-bottom:10px">Din fråga</label>
+              <textarea id="jur-fraga" placeholder="Till exempel: gäller ångerrätt när en familj bokar ett pass hos oss, och vad måste vi informera om innan de bokar?"></textarea>
+            </div>
+
+            <div class="ag-exempel" id="jur-exempel">
+              <button type="button">Gäller ångerrätt när en familj bokar ett läxhjälpspass hos oss, och vad måste vi informera om innan de bokar?</button>
+              <button type="button">Vilka krav ställs på oss när vi behandlar personuppgifter om barn under 13 år?</button>
+              <button type="button">Vad gäller för arbetstider när en studiehjälpare är under 18 år?</button>
+              <button type="button">Behöver vi personuppgiftsbiträdesavtal med Supabase och Vercel, och vad ska stå i dem?</button>
+            </div>
+
+            <div class="ag-rad">
+              <button class="btn btn-primary" id="jur-skicka">Ställ frågan</button>
+              <button class="btn btn-ghost btn-sm" id="jur-rensa" type="button">Rensa</button>
+              <span class="ag-tid">Tar normalt 30–90 sekunder</span>
+            </div>
+
+            <div id="jur-ut"></div>
+          </div>
+
+          <div class="dbox" style="margin-top:20px">
+            <h5>Tidigare frågor</h5>
+            <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:16px">
+              Fäll ut en rad för att se vilka källor svaret faktiskt vilade på. Det är därför
+              agenten loggar varje steg.
+            </p>
+            <div id="jur-logg"></div>
+          </div>
+        </section>
+
+        <!-- ============ EKONOMI ============ -->
+        <section class="vy-sek" data-sek="ekonomi" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Ekonomiagenten</h2>
+              <p>Bokföring, moms, deklarationer och avstämningar. Läser era siffror och Fortnox. Skriver aldrig något, någonstans.</p>
+            </div>
+          </div>
+
+          <div class="dbox">
+            <div class="ag-fraga">
+              <label for="eko-fraga" style="display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--bl-3);margin-bottom:10px">Din fråga</label>
+              <textarea id="eko-fraga" placeholder="Till exempel: vilka genomförda pass har aldrig hamnat på en faktura, och vad borde vi göra åt dem?"></textarea>
+            </div>
+
+            <div class="ag-exempel" id="eko-exempel">
+              <button type="button">Vilka genomförda pass har aldrig hamnat på en faktura, och vad borde vi göra åt dem?</button>
+              <button type="button">Hur mycket ligger obetalt just nu, och vad är äldst?</button>
+              <button type="button">Vad måste stå på våra fakturor för att de ska uppfylla formkraven?</button>
+              <button type="button">Vad ska vi ha gjort innan bokslutet, och i vilken ordning?</button>
+            </div>
+
+            <div class="ag-rad">
+              <button class="btn btn-primary" id="eko-skicka">Ställ frågan</button>
+              <button class="btn btn-ghost btn-sm" id="eko-rensa" type="button">Rensa</button>
+              <span class="ag-tid">Tar normalt 30–90 sekunder</span>
+            </div>
+
+            <div id="eko-ut"></div>
+          </div>
+
+          <div class="dbox" style="margin-top:20px">
+            <h5>Tidigare frågor</h5>
+            <div id="eko-logg"></div>
+          </div>
+        </section>
+
+        <!-- ============ BOLAGSFAKTA ============ -->
+        <section class="vy-sek" data-sek="bolaget" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Bolagsfakta</h2>
+              <p>Vad ekonomiagenten vet om bolaget. Inga datum, inga belopp, inga procentsatser — sådant hämtas från Skatteverket vid varje fråga i stället för att ligga och bli inaktuellt här.</p>
+            </div>
+          </div>
+
+          <div class="dbox">
+            <div class="ag-viktig" id="form-larm">
+              <b style="font-size:14px;color:var(--bl)">Anställda eller uppdragstagare?</b>
+              <p>
+                Det här är den viktigaste uppgiften på sidan. Om studiehjälparna är anställda
+                eller uppdragstagare avgör arbetsgivaravgifter, skatteavdrag, AGI, försäkringar
+                och arbetsmiljöansvar. Står den kvar på <b>oklart</b> vägrar ekonomiagenten
+                svara på personalfrågor, och den vägran är rätt. Vet ni inte svaret är det den
+                frågan ni ska ställa till en redovisningskonsult först.
+              </p>
+              <div class="fgroup" style="margin-top:16px;max-width:320px">
+                <label for="bf-form">Studiehjälparnas form</label>
+                <select class="inp" id="bf-form">
+                  <option value="oklart">Oklart — inte utrett än</option>
+                  <option value="anstallda">Anställda</option>
+                  <option value="uppdragstagare">Uppdragstagare</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="ag-faltrad">
+              <div class="fgroup">
+                <label for="bf-orgnr">Organisationsnummer</label>
+                <input class="inp" id="bf-orgnr" placeholder="000000-0000">
+              </div>
+              <div class="fgroup">
+                <label for="bf-bolagsform">Bolagsform</label>
+                <input class="inp" id="bf-bolagsform" placeholder="ab, enskild firma, hb">
+              </div>
+              <div class="fgroup">
+                <label for="bf-rakenskapsar">Räkenskapsårets slut</label>
+                <input class="inp" id="bf-rakenskapsar" placeholder="12-31">
+              </div>
+              <div class="fgroup">
+                <label for="bf-momsperiod">Momsperiod</label>
+                <select class="inp" id="bf-momsperiod">
+                  <option value="">Inte angivet</option>
+                  <option value="manad">Varje månad</option>
+                  <option value="kvartal">Varje kvartal</option>
+                  <option value="helar">Helår</option>
+                </select>
+              </div>
+              <div class="fgroup">
+                <label for="bf-system">Bokföringssystem</label>
+                <input class="inp" id="bf-system" placeholder="fortnox, inget">
+              </div>
+              <div class="fgroup">
+                <label for="bf-konsult">Redovisningskonsult</label>
+                <input class="inp" id="bf-konsult" placeholder="Namn, eller tomt om ni sköter det själva">
+              </div>
+            </div>
+
+            <div style="margin-top:8px">
+              <label class="ag-kryss"><input type="checkbox" id="bf-moms"> Momsregistrerade</label>
+              <label class="ag-kryss"><input type="checkbox" id="bf-fskatt"> Godkända för F-skatt</label>
+              <label class="ag-kryss"><input type="checkbox" id="bf-arbetsgivare"> Registrerade som arbetsgivare</label>
+            </div>
+
+            <div class="fgroup" style="margin-top:16px">
+              <label for="bf-anteckningar">Anteckningar</label>
+              <textarea class="inp" id="bf-anteckningar" rows="3" placeholder="Sådant agenten bör känna till som inte passar i något fält ovan."></textarea>
+            </div>
+
+            <div class="ag-rad">
+              <button class="btn btn-primary" id="bf-spara">Spara</button>
+              <p class="ok-msg" id="bf-msg" style="margin:0"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ ÅTERKOPPLING ============ -->
+        <section class="vy-sek" data-sek="aterkoppling" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Återkoppling till föräldrar</h2>
+              <p>Lektionsrapporter där studiehjälparens råa anteckningar ännu inte polerats till något en förälder kan läsa.</p>
+            </div>
+          </div>
+
+          <div class="dbox">
+            <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:20px">
+              Funktionen <b>generate-feedback</b> har funnits deployad sedan länge utan att
+              någon knapp anropade den. Här är knappen. Den skriver om anteckningarna med
+              det som faktiskt står i dem och hittar inte på framsteg som inte nämnts.
+            </p>
+            <div id="ak-lista"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-bot" style="border:none;padding-top:0">
+      <span>© <span id="year"></span> Nextrum</span>
+      <a href="mailto:info@nextrum.se">info@nextrum.se</a>
+    </div>
+  </div>
+</footer>
+
+<script src="bibliotek/supabase-js-2.116.0.js"></script>
+<script src="nextrum-config.js"></script>
+<script src="nextrum-fel.js"></script>
+<script src="nextrum-app.js"></script>
+<script src="nextrum-studie.js"></script>
+<script src="nextrum-agent.js"></script>
+<script>
+(function () {
+  'use strict';
+  const { $, esc, säg, rensa, felText } = NX;
+  const { medan } = NXStudie;
+
+  NX.initHeader();
+  $('#year').textContent = new Date().getFullYear();
+
+  const S = { user: null, profil: null, sido: null };
+
+  function visa(id) {
+    ['view-loading', 'view-auth', 'view-nekad', 'view-app', 'view-fel']
+      .forEach(v => { const el = $('#' + v); if (el) el.hidden = (v !== id); });
+  }
+
+  function visaFel(fel, vad) {
+    $('#fel-text').textContent = 'Något gick fel när ' + vad + '.';
+    $('#fel-detalj').textContent = String(fel && (fel.message || fel) || '');
+    visa('view-fel');
+  }
+  $('#fel-igen').addEventListener('click', () => location.reload());
+
+  document.addEventListener('click', async e => {
+    if (e.target.closest('[data-logout]')) {
+      if (supa) await supa.auth.signOut();
+      location.reload();
+    }
+  });
+
+  /* ============ inloggning ============ */
+  $('#auth-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#auth-msg'), knapp = $('#auth-submit');
+    rensa(msg);
+    if (!supa) { säg(msg, 'Databasen är inte kopplad.', false); return; }
+
+    await medan(knapp, 'Loggar in', async () => {
+      const { error } = await supa.auth.signInWithPassword({
+        email: $('#a-email').value.trim(),
+        password: $('#a-pass').value
+      });
+      if (error) { säg(msg, felText(error), false); return; }
+      location.reload();
+    });
+  });
+
+  /* ============ agentpanelerna ============
+     Två identiska paneler med olika agent bakom. Kopplas med samma
+     funktion, för det ENDA som skiljer dem är namnet på funktionen
+     som anropas. */
+  function kopplaAgent(agent, prefix) {
+    const ruta = $('#' + prefix + '-fraga');
+    const ut = $('#' + prefix + '-ut');
+    const knapp = $('#' + prefix + '-skicka');
+    const logg = $('#' + prefix + '-logg');
+
+    $('#' + prefix + '-exempel').addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      ruta.value = b.textContent.trim();
+      ruta.focus();
+    });
+
+    $('#' + prefix + '-rensa').addEventListener('click', () => {
+      ruta.value = '';
+      ut.innerHTML = '';
+      ruta.focus();
+    });
+
+    async function skicka() {
+      if (!ruta.value.trim()) { ruta.focus(); return; }
+      await NXAgent.stall({ agent, fraga: ruta.value, ut, knapp });
+      /* Loggen ritas om efteråt oavsett utfall. En kastad körning är
+         också en körning och ska synas i historiken. */
+      await NXAgent.laddaKorningar(agent, logg, 20);
+      await ritaÖversikt();
+    }
+
+    knapp.addEventListener('click', skicka);
+
+    /* Ctrl+Enter skickar. En textarea där Enter skickar går inte att
+       skriva en flerradig fråga i. */
+    ruta.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') skicka();
+    });
+
+    return () => NXAgent.laddaKorningar(agent, logg, 20);
+  }
+
+  /* ============ självtest ============ */
+  $('#sjalvtest-knapp').addEventListener('click', async e => {
+    const ut = $('#sjalvtest-ut');
+    await medan(e.target, 'Kör', async () => {
+      ut.innerHTML = '<div class="loading">Kör</div>';
+      const rader = [];
+
+      for (const namn of ['juridik', 'ekonomi']) {
+        try {
+          const { data, error } = await supa.functions.invoke(namn, { body: { sjalvtest: true } });
+          if (error || !data) throw error || new Error('Tomt svar');
+          rader.push('<b style="display:block;margin:14px 0 6px;font-size:12px">' + namn + '</b>');
+
+          if (namn === 'juridik') {
+            rader.push(prick(data.hamtning_fungerar, 'Når rättskällorna'));
+            /* Den här raden är viktigare än den ovanför. Den visar att
+               agenten INTE kan hämta vad som helst från nätet. */
+            rader.push(prick(data.domanspärr_stoppade_example_com, 'Domänspärren stoppar allt annat'));
+          } else {
+            rader.push(prick(data.bolagsfakta_ifylld, 'Bolagsfakta ifylld'));
+            rader.push(prick(data.studiehjalpare_form !== 'oklart',
+              'Studiehjälparnas form angiven (' + esc(data.studiehjalpare_form || '?') + ')'));
+            rader.push(prick(data.fortnox === 'kopplat', 'Fortnox kopplat', true));
+          }
+        } catch (fel) {
+          rader.push('<b style="display:block;margin:14px 0 6px;font-size:12px">' + namn + '</b>'
+            + prick(false, esc(felText(fel))));
+        }
+      }
+      ut.innerHTML = rader.join('');
+    });
+  });
+
+  /* valfri: en bock som inte är ett fel om den saknas, bara en upplysning */
+  function prick(ok, text, valfri) {
+    const färg = ok ? 'var(--mossa)' : (valfri ? 'var(--bl-3)' : 'var(--acc-lugn)');
+    const tecken = ok ? '✓' : (valfri ? '–' : '✗');
+    return '<div style="display:flex;gap:9px;align-items:baseline;font-size:12px;line-height:1.6;color:var(--bl-2);padding:3px 0">'
+      + '<span style="color:' + färg + ';font-weight:600">' + tecken + '</span>'
+      + '<span>' + text + '</span></div>';
+  }
+
+  /* ============ bolagsfakta ============ */
+  async function laddaBolagsfakta() {
+    const { data } = await supa.from('foretagsfakta').select('*').eq('id', 1).maybeSingle();
+    const f = data || {};
+    $('#bf-orgnr').value = f.organisationsnummer || '';
+    $('#bf-bolagsform').value = f.bolagsform || '';
+    $('#bf-rakenskapsar').value = f.rakenskapsar_slut || '';
+    $('#bf-momsperiod').value = f.momsperiod || '';
+    $('#bf-system').value = f.bokforingssystem || '';
+    $('#bf-konsult').value = f.redovisningskonsult || '';
+    $('#bf-form').value = f.studiehjalpare_form || 'oklart';
+    $('#bf-moms').checked = !!f.momsregistrerad;
+    $('#bf-fskatt').checked = !!f.f_skatt;
+    $('#bf-arbetsgivare').checked = !!f.arbetsgivarregistrerad;
+    $('#bf-anteckningar').value = f.anteckningar || '';
+    märkLarm();
+  }
+
+  /* Larmrutan lugnar ner sig när fältet är ifyllt. En permanent röd
+     ruta slutar man se efter tredje besöket. */
+  function märkLarm() {
+    $('#form-larm').classList.toggle('ifylld', $('#bf-form').value !== 'oklart');
+  }
+  $('#bf-form').addEventListener('change', märkLarm);
+
+  $('#bf-spara').addEventListener('click', async e => {
+    const msg = $('#bf-msg');
+    rensa(msg);
+    await medan(e.target, 'Sparar', async () => {
+      const { error } = await supa.from('foretagsfakta').update({
+        organisationsnummer: $('#bf-orgnr').value.trim() || null,
+        bolagsform: $('#bf-bolagsform').value.trim() || null,
+        rakenskapsar_slut: $('#bf-rakenskapsar').value.trim() || null,
+        momsperiod: $('#bf-momsperiod').value || null,
+        bokforingssystem: $('#bf-system').value.trim() || null,
+        redovisningskonsult: $('#bf-konsult').value.trim() || null,
+        studiehjalpare_form: $('#bf-form').value,
+        momsregistrerad: $('#bf-moms').checked,
+        f_skatt: $('#bf-fskatt').checked,
+        arbetsgivarregistrerad: $('#bf-arbetsgivare').checked,
+        anteckningar: $('#bf-anteckningar').value.trim() || null,
+        uppdaterad: new Date().toISOString()
+      }).eq('id', 1);
+
+      if (error) { säg(msg, 'Kunde inte spara: ' + error.message, false); return; }
+      säg(msg, 'Sparat. Ekonomiagenten läser det här vid nästa fråga.', true);
+      märkLarm();
+    });
+  });
+
+  /* ============ återkoppling ============ */
+  async function laddaAterkoppling() {
+    const ut = $('#ak-lista');
+    const { data, error } = await supa
+      .from('lesson_reports')
+      .select('id, raw_notes, ai_feedback, created_at, students(name)')
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (error) { ut.innerHTML = '<p class="xsmall">Kunde inte hämta: ' + esc(error.message) + '</p>'; return; }
+    if (!data || !data.length) { ut.innerHTML = '<p class="xsmall" style="color:var(--bl-3)">Inga rapporter än.</p>'; return; }
+
+    ut.innerHTML = data.map(r => {
+      const namn = (r.students && r.students.name) || 'eleven';
+      const nar = new Date(r.created_at).toLocaleDateString('sv-SE');
+      return '<details class="ag-korning" data-rapport="' + esc(r.id) + '">'
+        + '<summary>'
+        + '<span class="ag-status" data-s="' + (r.ai_feedback ? 'klar' : 'pagar') + '">'
+        + (r.ai_feedback ? 'klar' : 'väntar') + '</span>'
+        + '<span class="ag-korning-fraga">' + esc(namn) + ' — ' + esc((r.raw_notes || '').slice(0, 90)) + '</span>'
+        + '<span class="ag-korning-nar">' + nar + '</span>'
+        + '</summary>'
+        + '<div class="ag-korning-kropp">'
+        + '<p class="xsmall" style="margin-top:16px;color:var(--bl-3)">Studiehjälparens anteckningar</p>'
+        + '<p class="xsmall" style="color:var(--bl-2);line-height:1.7">' + esc(r.raw_notes || '') + '</p>'
+        + '<div class="ak-resultat" style="margin-top:16px">'
+        + (r.ai_feedback
+            ? '<p class="xsmall" style="color:var(--bl-3)">Återkoppling till föräldern</p>'
+              + '<p class="xsmall" style="color:var(--bl-2);line-height:1.7">' + esc(r.ai_feedback) + '</p>'
+            : '<button class="btn btn-primary btn-sm" data-generera="' + esc(r.id) + '">Skriv återkoppling</button>')
+        + '</div></div></details>';
+    }).join('');
+  }
+
+  $('#ak-lista').addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-generera]');
+    if (!knapp) return;
+    const rutan = knapp.closest('.ak-resultat');
+
+    await medan(knapp, 'Skriver', async () => {
+      const { data, error } = await supa.functions.invoke('generate-feedback', {
+        body: { report_id: knapp.dataset.generera }
+      });
+      if (error || !data || !data.ai_feedback) {
+        rutan.innerHTML = '<p class="xsmall" style="color:var(--acc-lugn)">Gick inte: '
+          + esc(felText(error) || (data && data.error) || 'okänt fel') + '</p>';
+        return;
+      }
+      rutan.innerHTML = '<p class="xsmall" style="color:var(--bl-3)">Återkoppling till föräldern</p>'
+        + '<p class="xsmall" style="color:var(--bl-2);line-height:1.7">' + esc(data.ai_feedback) + '</p>';
+      const märke = rutan.closest('details').querySelector('.ag-status');
+      märke.dataset.s = 'klar';
+      märke.textContent = 'klar';
+    });
+  });
+
+  /* ============ översikt ============ */
+  async function ritaÖversikt() {
+    const { data } = await supa
+      .from('agent_korningar')
+      .select('status, in_tokens, ut_tokens');
+
+    const rader = data || [];
+    $('#kpi-korningar').textContent = rader.length;
+    $('#kpi-kastade').textContent = rader.filter(r => r.status === 'ingen_kalla').length;
+    $('#kpi-tokens').textContent = rader
+      .reduce((s, r) => s + (r.in_tokens || 0) + (r.ut_tokens || 0), 0)
+      .toLocaleString('sv-SE');
+
+    const senaste = $('#ov-korningar');
+    const { data: sen } = await supa
+      .from('agent_korningar')
+      .select('agent, fraga, status, skapad')
+      .order('skapad', { ascending: false })
+      .limit(5);
+
+    if (!sen || !sen.length) {
+      senaste.innerHTML = '<p class="xsmall" style="color:var(--bl-3)">Inga körningar än. Ställ din första fråga.</p>';
+      return;
+    }
+    senaste.innerHTML = sen.map(k =>
+      '<a href="#' + k.agent + '" style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--ln);text-decoration:none">'
+      + '<span class="ag-status" data-s="' + esc(k.status) + '">' + esc(k.agent) + '</span>'
+      + '<span style="flex:1;min-width:0;font-size:12px;color:var(--bl-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+      + esc(k.fraga) + '</span></a>'
+    ).join('');
+  }
+
+  /* ============ start ============ */
+  async function start() {
+   try {
+    if (!supa) { visaFel(new Error('nextrum-config.js saknar nycklar'), 'databasen skulle kopplas'); return; }
+
+    S.user = await NX.hämtaSession();
+    if (!S.user) { visa('view-auth'); return; }
+
+    S.profil = await NX.hämtaProfil(S.user.id);
+    if (!S.profil || !S.profil.is_admin) { visa('view-nekad'); return; }
+
+    visa('view-app');
+
+    S.sido = NXStudie.sidomeny({ nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt' });
+
+    const förnamn = (S.profil.full_name || '').split(' ')[0];
+    $('#hej').textContent = förnamn ? 'Hej ' + förnamn + '.' : 'Hej.';
+
+    $('#nav-actions').innerHTML = '<span class="who-chip"><b>' + esc(S.profil.full_name || S.user.email)
+      + '</b><span class="roll">Admin</span></span>'
+      + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
+    $('#m-actions').innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
+
+    const laddaJur = kopplaAgent('juridik', 'jur');
+    const laddaEko = kopplaAgent('ekonomi', 'eko');
+
+    await Promise.all([
+      ritaÖversikt(),
+      laddaJur(),
+      laddaEko(),
+      laddaBolagsfakta(),
+      laddaAterkoppling()
+    ]);
+   } catch (fel) {
+     visaFel(fel, 'vyn skulle hämtas');
+   }
+  }
+
+  start();
+})();
+</script>
+</body>
+</html>

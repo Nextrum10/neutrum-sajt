@@ -10,5 +10,6 @@ User-agent: *
 Allow: /
 Disallow: /foralder
 Disallow: /larare
+Disallow: /admin
 
 Sitemap: https://nextrum.se/sitemap.xml

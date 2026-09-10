@@ -1,0 +1,401 @@
+/* ============================================================
+   NEXTRUM — adminvyn
+
+   Ligger efter nextrum-vy.css och lånar allt därifrån: .dbox, .kpi,
+   .vy-sek, knappar, formulärfält. Här står bara det som är eget för
+   agenterna, och det är i praktiken tre saker: hur ett svar ser ut,
+   hur källorna under det ser ut, och hur en tidigare körning läses.
+
+   En sak är värd att säga rakt ut, för den är inte kosmetik:
+
+   EN PÅHITTAD ADRESS BLIR ALDRIG EN LÄNK.
+
+   Agenten skiljer på adresser den faktiskt hämtat och adresser den
+   skrivit ur minnet. De första blir klickbara källor. De andra ritas
+   som överstruken text i en varningsruta och går inte att klicka.
+   Att göra dem klickbara vore att bygga in exakt det fel hela
+   agenten är byggd för att undvika — en källhänvisning som ser äkta
+   ut för att den är blå och understruken.
+   ============================================================ */
+
+
+/* ---------- frågerutan ---------- */
+
+.ag-fraga textarea{
+  width:100%;
+  min-height:96px;
+  resize:vertical;
+  font:inherit;
+  line-height:1.6;
+  color:var(--bl);
+  background:var(--pap);
+  border:1px solid var(--ln-2);
+  border-radius:var(--r-md);
+  padding:14px 16px;
+}
+.ag-fraga textarea:focus-visible{
+  outline:2px solid var(--acc);
+  outline-offset:2px;
+  border-color:var(--acc);
+}
+
+.ag-rad{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+.ag-rad .ag-tid{
+  font-family:var(--f-mono);
+  font-size:11px;
+  color:var(--bl-3);
+  margin-left:auto;
+}
+
+/* Exempelfrågor. Inte pynt: en tom ruta med en blinkande markör är
+   det snabbaste sättet att få någon att stänga sidan igen. */
+.ag-exempel{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+}
+.ag-exempel button{
+  font:inherit;
+  font-size:12px;
+  line-height:1.4;
+  text-align:left;
+  color:var(--bl-2);
+  background:var(--pap-2);
+  border:1px solid var(--ln);
+  border-radius:100px;
+  padding:7px 14px;
+  cursor:pointer;
+  transition:background .18s var(--ease), border-color .18s var(--ease);
+}
+.ag-exempel button:hover{ background:var(--pap-3); border-color:var(--ln-2); }
+
+
+/* ---------- svaret ---------- */
+
+.ag-svar{
+  margin-top:22px;
+  padding-top:22px;
+  border-top:1px solid var(--ln);
+}
+.ag-svar p{
+  color:var(--bl-2);
+  line-height:1.72;
+  margin:0 0 14px;
+}
+/* Rader som agenten själv satt som rubrik. Den skriver dem i
+   versaler eller som "Vad detta betyder för Nextrum". */
+.ag-svar h4{
+  font-size:13px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--bl);
+  margin:26px 0 12px;
+}
+.ag-svar h4:first-child{ margin-top:0; }
+
+/* Citat ur lagtexten. Agenten citerar ordagrant, och ett citat som
+   ser ut som brödtext är ett citat man slutar lita på. */
+.ag-svar blockquote{
+  margin:0 0 16px;
+  padding:12px 18px;
+  border-left:3px solid var(--ockra);
+  background:var(--pap-2);
+  border-radius:0 var(--r-sm) var(--r-sm) 0;
+  font-family:var(--f-mono);
+  font-size:13px;
+  line-height:1.66;
+  color:var(--bl-2);
+}
+.ag-svar ul{ margin:0 0 16px; padding-left:20px; }
+.ag-svar li{ color:var(--bl-2); line-height:1.7; margin-bottom:7px; }
+
+
+/* ---------- källorna ---------- */
+
+.ag-kallor{
+  margin-top:24px;
+  padding:18px 20px;
+  background:var(--pap-2);
+  border:1px solid var(--ln);
+  border-radius:var(--r-md);
+}
+.ag-kallor h5{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--bl-3);
+  margin:0 0 12px;
+}
+.ag-kallor a{
+  display:block;
+  font-family:var(--f-mono);
+  font-size:12px;
+  line-height:1.5;
+  color:var(--acc-text);
+  word-break:break-all;
+  padding:5px 0;
+  border-bottom:1px solid var(--ln);
+}
+.ag-kallor a:last-child{ border-bottom:0; }
+.ag-kallor a:hover{ color:var(--acc); }
+
+/* Adresser agenten skrev men aldrig hämtade. Överstrukna, i grått,
+   och medvetet INTE länkar. Se filhuvudet. */
+.ag-pahittad{
+  margin-top:14px;
+  padding:12px 16px;
+  background:var(--pap-3);
+  border-radius:var(--r-sm);
+}
+.ag-pahittad b{
+  display:block;
+  font-size:11px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--bl-3);
+  margin-bottom:8px;
+}
+.ag-pahittad span{
+  display:block;
+  font-family:var(--f-mono);
+  font-size:11px;
+  line-height:1.6;
+  color:var(--bl-3);
+  text-decoration:line-through;
+  word-break:break-all;
+}
+
+
+/* ---------- när agenten vägrar ----------
+   Tre olika vägranden, tre olika toner. En fråga utanför området är
+   normal och ska se lugn ut. Ett svar som kastades för att det saknade
+   källa är allvarligare och ska se ut som något att lägga märke till,
+   för det betyder att modellen försökte svara på känsla. */
+
+.ag-vagran{
+  margin-top:22px;
+  padding:20px 22px;
+  border-radius:var(--r-md);
+  border:1px solid var(--ln-2);
+  background:var(--pap-2);
+}
+.ag-vagran.allvar{
+  border-color:var(--acc-line);
+  background:var(--acc-soft);
+}
+.ag-vagran h4{
+  font-size:15px;
+  margin:0 0 10px;
+  color:var(--bl);
+}
+.ag-vagran p{
+  color:var(--bl-2);
+  line-height:1.7;
+  margin:0 0 10px;
+  font-size:14px;
+}
+.ag-vagran pre{
+  margin:14px 0 0;
+  padding:14px 16px;
+  background:var(--pap);
+  border-radius:var(--r-sm);
+  font-family:var(--f-mono);
+  font-size:11px;
+  line-height:1.7;
+  color:var(--bl-2);
+  white-space:pre-wrap;
+  max-height:280px;
+  overflow:auto;
+}
+
+
+/* ---------- körningar ---------- */
+
+.ag-korning{
+  border:1px solid var(--ln);
+  border-radius:var(--r-md);
+  background:var(--pap-2);
+  margin-bottom:12px;
+  overflow:hidden;
+}
+.ag-korning summary{
+  cursor:pointer;
+  padding:14px 18px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  list-style:none;
+}
+.ag-korning summary::-webkit-details-marker{ display:none; }
+.ag-korning summary:hover{ background:var(--pap-3); }
+.ag-korning-fraga{
+  flex:1;
+  min-width:0;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--bl);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.ag-korning-nar{
+  font-family:var(--f-mono);
+  font-size:11px;
+  color:var(--bl-3);
+  flex-shrink:0;
+}
+.ag-korning-kropp{
+  padding:0 18px 18px;
+  border-top:1px solid var(--ln);
+}
+
+/* Stegloggen. Det här är hela anledningen till att agenterna
+   loggar: att kunna se VAD ett svar vilade på, inte bara vad det
+   sa. Utan den här listan är loggen bortkastad. */
+.ag-steg{
+  margin:16px 0 0;
+  padding:0;
+  list-style:none;
+  counter-reset:steg;
+}
+.ag-steg li{
+  position:relative;
+  padding:10px 0 10px 34px;
+  border-bottom:1px solid var(--ln);
+  font-size:12px;
+  line-height:1.6;
+  color:var(--bl-2);
+}
+.ag-steg li:last-child{ border-bottom:0; }
+.ag-steg li::before{
+  counter-increment:steg;
+  content:counter(steg);
+  position:absolute;
+  left:0; top:10px;
+  width:22px; height:22px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:var(--pap-3);
+  font-family:var(--f-mono);
+  font-size:10px;
+  color:var(--bl-3);
+}
+.ag-steg code{
+  font-family:var(--f-mono);
+  font-size:11px;
+  color:var(--acc-text);
+  background:var(--pap);
+  padding:2px 6px;
+  border-radius:var(--r-xs);
+}
+.ag-steg .ag-steg-fel{ color:var(--acc-lugn); }
+
+
+/* ---------- statusmärken ---------- */
+
+.ag-status{
+  flex-shrink:0;
+  font-family:var(--f-mono);
+  font-size:10px;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  padding:4px 9px;
+  border-radius:100px;
+  border:1px solid var(--ln-2);
+  color:var(--bl-3);
+  background:var(--pap);
+}
+.ag-status[data-s="klar"]{
+  color:var(--mossa);
+  border-color:var(--mossa);
+}
+.ag-status[data-s="ingen_kalla"],
+.ag-status[data-s="fel"]{
+  color:var(--acc-lugn);
+  border-color:var(--acc-line);
+  background:var(--acc-soft);
+}
+.ag-status[data-s="pagar"]{
+  color:var(--ockra);
+  border-color:var(--ockra);
+}
+
+
+/* ---------- bolagsfakta ---------- */
+
+/* Fältet som avgör om ekonomiagenten kan svara på personalfrågor
+   alls. Står det "oklart" ska det synas att det är en lucka, inte
+   en inställning bland andra. */
+.ag-viktig{
+  border:1px solid var(--acc-line);
+  background:var(--acc-soft);
+  border-radius:var(--r-md);
+  padding:18px 20px;
+  margin-bottom:20px;
+}
+.ag-viktig p{
+  font-size:13px;
+  line-height:1.7;
+  color:var(--bl-2);
+  margin:10px 0 0;
+}
+.ag-viktig.ifylld{
+  border-color:var(--ln);
+  background:var(--pap-2);
+}
+
+.ag-faltrad{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px;
+}
+.ag-kryss{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:14px;
+  color:var(--bl-2);
+  padding:10px 0;
+}
+.ag-kryss input{ width:17px; height:17px; accent-color:var(--acc); }
+
+
+/* ---------- läge ---------- */
+
+.ag-arbetar{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:22px;
+  padding:16px 18px;
+  background:var(--pap-2);
+  border-radius:var(--r-md);
+  font-size:13px;
+  color:var(--bl-2);
+}
+.ag-snurra{
+  width:16px; height:16px;
+  border:2px solid var(--ln-2);
+  border-top-color:var(--acc);
+  border-radius:50%;
+  animation:ag-snurr .8s linear infinite;
+  flex-shrink:0;
+}
+@keyframes ag-snurr{ to{ transform:rotate(360deg); } }
+
+@media (prefers-reduced-motion:reduce){
+  .ag-snurra{ animation-duration:2.4s; }
+}
+
+@media (max-width:640px){
+  .ag-korning summary{ flex-wrap:wrap; }
+  .ag-korning-fraga{ white-space:normal; flex-basis:100%; order:3; }
+}
