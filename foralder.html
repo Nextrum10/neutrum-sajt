@@ -26,6 +26,9 @@
 <link rel="stylesheet" href="nextrum-home.css">
 <link rel="stylesheet" href="nextrum-cinema.css">
 <link rel="stylesheet" href="nextrum-vy.css">
+<!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
+     det förenklade bokningsflödet. Sist, så den vinner. -->
+<link rel="stylesheet" href="nextrum-arbetsyta.css">
 </head>
 <body class="vy">
 
@@ -160,12 +163,22 @@
   <!-- ============ SJÄLVA VYN ============ -->
   <div id="view-app" hidden>
 
-    <div class="vy-topp">
-      <div>
-        <span class="nx-et acc">Studievy</span>
-        <h1 id="hej">Hej.</h1>
-        <p class="vy-lede" id="hej-sub">Här är allt om ditt barns studiepass — planen, tiderna, kontakten och vad som hände på varje pass.</p>
-      </div>
+    <!-- ============================================================
+         HÄLSNINGEN
+         Samma anslag som hero på startsidan, men den här vet vem som
+         tittar och vad klockan är. Innehållet ritas av NXArbete.hero
+         när profilen kommit hem — markupen är tom med flit, för
+         "Hej." som sedan byter till "Godkväll, Alma." blinkar.
+
+         Bakgrunden är bilder/hero-studievy.mp4 om filen finns, annars
+         hero-fotot. <video poster> gör det av sig självt: postern står
+         kvar om videon aldrig kan spela. Filmen kan alltså läggas till
+         senare utan att någon rad här ändras.
+         ============================================================ -->
+    <section class="vy-hero" id="vy-hero" aria-labelledby="hej"></section>
+
+    <div class="vy-topp" style="margin-bottom:clamp(20px,2.4vw,28px)">
+      <div></div>
       <span class="vy-marke">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>
         <span>Förälder eller elev<span class="vy-marke-sub">Nextrum studievy</span></span>
@@ -176,23 +189,34 @@
 
       <!-- ============================================================
            SIDOMENYN
-           Varje post är en sektion i det HÄR dokumentet. Sektionerna
-           göms med hidden, så all befintlig JS skriver till sina #id
-           precis som förut. Adressen bär vilken som är framme, vilket
-           gör "Visa alla" och notisraderna till vanliga ankarlänkar.
+           Elva poster blev sju. Sammanslagningarna:
+
+             studieplan  → in i Mina lektioner (flik)
+             material    → in i Uppgifter & material (flik)
+             studiehjälpare → in i Meddelanden (kortet överst)
+             inställningar  → in i Profil & inställningar (flik)
+
+           Ingen sektion är borttagen, bara flyttad in i en annan. Det
+           är skillnaden mot att stryka: allt går fortfarande att nå,
+           men man behöver inte välja mellan elva saker för att komma
+           dit. De gamla adresserna (#studieplan, #material …) fångas
+           upp i JS och leder till rätt flik, så gamla bokmärken och
+           länkar inifrån vyn fortsätter fungera.
            ============================================================ -->
       <nav class="vy-sido" id="vy-sido" aria-label="Delar av studievyn">
         <a href="#oversikt" data-sek="oversikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Översikt</a>
-        <a href="#studieplan" data-sek="studieplan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1z"/><path d="M8 11h8M8 15h5"/></svg>Min studieplan</a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Studier</span>
         <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Mina lektioner</a>
-        <a href="#uppgifter" data-sek="uppgifter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Mina uppgifter</a>
+        <a href="#uppgifter" data-sek="uppgifter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Uppgifter &amp; material</a>
         <a href="#utveckling" data-sek="utveckling"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15.5 7H20v4.5"/></svg>Min utveckling</a>
-        <a href="#material" data-sek="material"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h3.8l1.7 2H19a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/></svg>Material</a>
-        <a href="#studiehjalpare" data-sek="studiehjalpare"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8"/></svg>Min studiehjälpare</a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Kontakt</span>
         <a href="#meddelanden" data-sek="meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>Meddelanden</a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Konto</span>
         <a href="#betalning" data-sek="betalning"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg>Betalning</a>
-        <a href="#profil" data-sek="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8"/></svg>Min profil</a>
-        <a href="#installningar" data-sek="installningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h11M18 7.5h2.5M3.5 16.5h5M11.5 16.5h9"/><circle cx="16" cy="7.5" r="2.2"/><circle cx="10" cy="16.5" r="2.2"/></svg>Inställningar</a>
+        <a href="#profil" data-sek="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8"/></svg>Profil &amp; inställningar</a>
       </nav>
 
       <div>
@@ -293,7 +317,7 @@
             <div class="dbox">
               <h5>Aktuellt mål</h5>
               <div id="ov-mal"><div class="loading">Hämtar</div></div>
-              <a class="vy-mer" href="#studieplan">Se studieplanen <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+              <a class="vy-mer" href="#lektioner/plan">Se studieplanen <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
             </div>
 
             <div class="dbox">
@@ -307,88 +331,106 @@
           </div>
         </div>
       </section>
-      <section class="vy-sek vy-sek-smal" data-sek="studieplan" hidden>
-        <div class="vy-sek-topp">
-          <div>
-            <h2>Min studieplan</h2>
-            <p>Målet och vägen dit, skriven av er studiehjälpare.</p>
-          </div>
-        </div>
-                <div class="dbox">
-                  <h5>Studieplan <em id="plan-uppdaterad"></em></h5>
-                  <div id="plan-body"><div class="loading">Hämtar</div></div>
-                </div>
-      </section>
+      <!-- ============================================================
+           MINA LEKTIONER
+           Var två sektioner: "Min studieplan" och "Mina lektioner".
+           De hörde ihop hela tiden — planen säger vad passen ska
+           leda till, rapporterna säger om de gjorde det. Nu en
+           sektion med tre flikar.
+           ============================================================ -->
       <section class="vy-sek" data-sek="lektioner" hidden>
         <div class="vy-sek-topp">
           <div>
             <h2>Mina lektioner</h2>
-            <p>Boka nya pass, se kommande och läs rapporterna efteråt.</p>
+            <p>Boka tider, se planen och läs vad som hände på varje pass.</p>
           </div>
         </div>
-        <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-          <h5>Schema <em>era pass</em></h5>
-          <div id="schema"><div class="loading">Hämtar</div></div>
+
+        <div class="vy-flikar" role="tablist" aria-label="Delar av lektionerna">
+          <button class="vy-flik" type="button" role="tab" data-flik="pass"
+                  id="flik-pass" aria-controls="panel-pass">Pass</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="plan"
+                  id="flik-plan" aria-controls="panel-plan">Studieplan</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="rapporter"
+                  id="flik-rapporter" aria-controls="panel-rapporter">Efter passen</button>
         </div>
 
-        <div class="split">
-          <div class="stack">
-                    <!-- ============ BOKA ============ -->
-                    <div class="dbox">
-                      <h5>Boka nästa pass <em id="boka-hos"></em></h5>
-                      <div id="boka-inner">
-                        <div class="form-grid" style="margin-bottom:18px">
-                          <div class="pay-field"><label for="bk-amne">Ämne</label>
-                            <select class="sel" id="bk-amne">
-                              <option>Matematik</option><option>Svenska</option><option>Engelska</option>
-                              <option>NO / Fysik / Kemi / Biologi</option><option>SO / Historia / Samhällskunskap</option><option>Annat</option>
-                            </select>
-                          </div>
-                          <div class="pay-field"><label for="bk-format">Format</label>
-                            <select class="sel" id="bk-format"><option>Online</option><option>På plats</option></select>
-                          </div>
-                          <div class="pay-field"><label for="bk-langd">Längd</label>
-                            <select class="sel" id="bk-langd">
-                              <option value="60">1 timme</option>
-                              <option value="120">2 timmar</option>
-                              <option value="180">3 timmar</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div id="kalender"></div>
-                        <div class="between" style="margin-top:20px">
-                          <span class="small" id="boka-sammanfattning">Välj ett datum och en tid.</span>
-                          <button class="btn btn-primary btn-sm" id="boka-knapp" disabled>Boka passet</button>
-                        </div>
-                        <p class="ok-msg" id="boka-msg"></p>
-                      </div>
-                    </div>
+        <div class="vy-flik-panel" role="tabpanel" data-flik="pass"
+             id="panel-pass" aria-labelledby="flik-pass">
+          <!-- ============ BOKA ============
+               Bokningen ritas av NXArbete.bokning. Markupen är tom med
+               flit: den gamla hade tre rullgardiner och en kalender som
+               låg där oavsett om studiehjälparen lagt in några tider. -->
+          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+            <h5>Boka nästa pass <em id="boka-hos"></em></h5>
+            <div id="boka-inner"><div class="loading">Hämtar</div></div>
           </div>
-          <div class="stack">
-                    <div class="dbox">
-                      <h5>Pass <em id="pass-antal"></em></h5>
-                      <div id="pass-lista"><div class="loading">Hämtar</div></div>
-                    </div>
 
-                    <div class="dbox">
-                      <h5>Efter passen <em id="rapport-antal"></em></h5>
-                      <div id="rapporter"><div class="loading">Hämtar</div></div>
-                    </div>
+          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+            <h5>Pass <em id="pass-antal"></em></h5>
+            <div id="pass-lista"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <div class="dbox">
+            <h5>Schema <em>era pass</em></h5>
+            <div id="schema"><div class="loading">Hämtar</div></div>
+          </div>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="plan"
+             id="panel-plan" aria-labelledby="flik-plan" hidden>
+          <div class="dbox">
+            <h5>Studieplan <em id="plan-uppdaterad"></em></h5>
+            <div id="plan-body"><div class="loading">Hämtar</div></div>
+          </div>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="rapporter"
+             id="panel-rapporter" aria-labelledby="flik-rapporter" hidden>
+          <div class="dbox">
+            <h5>Efter passen <em id="rapport-antal"></em></h5>
+            <div id="rapporter"><div class="loading">Hämtar</div></div>
           </div>
         </div>
       </section>
+
+      <!-- ============================================================
+           UPPGIFTER & MATERIAL
+           Var "Mina uppgifter" och "Material", två menyposter för
+           samma sak: det studiehjälparen lämnat över. Läxan är det
+           man ska göra, materialet det man gör det med.
+           ============================================================ -->
       <section class="vy-sek" data-sek="uppgifter" hidden>
         <div class="vy-sek-topp">
           <div>
-            <h2>Mina uppgifter</h2>
-            <p>Läxorna från er studiehjälpare. Bocka av när de är klara.</p>
+            <h2>Uppgifter &amp; material</h2>
+            <p>Läxorna att bocka av, och filerna ni fått till dem.</p>
           </div>
         </div>
-                <!-- ============ LÄXOR ============ -->
-                <div class="dbox">
-                  <h5>Läxor <em id="lax-antal"></em></h5>
-                  <div id="lax-lista"><div class="loading">Hämtar</div></div>
-                </div>
+
+        <div class="vy-flikar" role="tablist" aria-label="Uppgifter eller material">
+          <button class="vy-flik" type="button" role="tab" data-flik="laxor"
+                  id="flik-laxor" aria-controls="panel-laxor">Läxor
+            <span class="vy-flik-mark" id="flik-lax-mark" hidden></span></button>
+          <button class="vy-flik" type="button" role="tab" data-flik="material"
+                  id="flik-material" aria-controls="panel-material">Material</button>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="laxor"
+             id="panel-laxor" aria-labelledby="flik-laxor">
+          <div class="dbox">
+            <h5>Läxor <em id="lax-antal"></em></h5>
+            <div id="lax-lista"><div class="loading">Hämtar</div></div>
+          </div>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="material"
+             id="panel-material" aria-labelledby="flik-material" hidden>
+          <div class="dbox">
+            <h5>Material <em id="mat-antal"></em></h5>
+            <div id="mat-lista"><div class="loading">Hämtar</div></div>
+          </div>
+        </div>
       </section>
       <section class="vy-sek" data-sek="utveckling" hidden>
         <div class="vy-sek-topp">
@@ -417,49 +459,36 @@
 
         </div>
       </section>
-      <section class="vy-sek" data-sek="material" hidden>
-        <div class="vy-sek-topp">
-          <div>
-            <h2>Material</h2>
-            <p>Filer, länkar och anteckningar ni fått.</p>
-          </div>
-        </div>
-                <!-- ============ MATERIAL ============ -->
-                <div class="dbox">
-                  <h5>Material <em id="mat-antal"></em></h5>
-                  <div id="mat-lista"><div class="loading">Hämtar</div></div>
-                </div>
-      </section>
-      <section class="vy-sek vy-sek-smal" data-sek="studiehjalpare" hidden>
-        <div class="vy-sek-topp">
-          <div>
-            <h2>Min studiehjälpare</h2>
-            <p>Vem ni jobbar med.</p>
-          </div>
-        </div>
-                <div class="dbox">
-                  <h5>Er studiehjälpare</h5>
-                  <div id="tutor-kort"><div class="loading">Hämtar</div></div>
-                </div>
-      </section>
-      <section class="vy-sek" data-sek="meddelanden" hidden>
+      <!-- ============================================================
+           MEDDELANDEN
+           "Min studiehjälpare" var en egen menypost med ett enda kort
+           på. Kortet hör hemma här: man vill veta vem man skriver till,
+           inte navigera till en sida för att se det.
+           ============================================================ -->
+      <section class="vy-sek vy-sek-smal" data-sek="meddelanden" hidden>
         <div class="vy-sek-topp">
           <div>
             <h2>Meddelanden</h2>
             <p>Kontakten med er studiehjälpare. Samma tråd som på Översikt.</p>
           </div>
         </div>
-                <!-- ============ KONTAKT ============ -->
-                <div class="dbox">
-                  <h5>Kontakt <span class="vy-larm" id="tr-larm" hidden></span><em id="tr-vem"></em></h5>
-                  <div class="tr" id="trad"><div class="loading">Hämtar</div></div>
-                  <div class="tr-skriv">
-                    <textarea class="inp" id="tr-text" rows="1" placeholder="Skriv till er studiehjälpare…" aria-label="Skriv ett meddelande"></textarea>
-                    <button class="btn btn-primary" id="tr-skicka" type="button">Skicka</button>
-                  </div>
-                  <p class="tr-tips">Enter skickar · Skift + Enter ny rad</p>
-                  <p class="ok-msg" id="tr-msg"></p>
-                </div>
+
+        <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+          <h5>Er studiehjälpare</h5>
+          <div id="tutor-kort"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <!-- ============ KONTAKT ============ -->
+        <div class="dbox">
+          <h5>Kontakt <span class="vy-larm" id="tr-larm" hidden></span><em id="tr-vem"></em></h5>
+          <div class="tr" id="trad"><div class="loading">Hämtar</div></div>
+          <div class="tr-skriv">
+            <textarea class="inp" id="tr-text" rows="1" placeholder="Skriv till er studiehjälpare…" aria-label="Skriv ett meddelande"></textarea>
+            <button class="btn btn-primary" id="tr-skicka" type="button">Skicka</button>
+          </div>
+          <p class="tr-tips">Enter skickar · Skift + Enter ny rad</p>
+          <p class="ok-msg" id="tr-msg"></p>
+        </div>
       </section>
       <section class="vy-sek vy-sek-smal" data-sek="betalning" hidden>
         <div class="vy-sek-topp">
@@ -483,13 +512,29 @@
         </div>
       </section>
 
+      <!-- ============================================================
+           PROFIL & INSTÄLLNINGAR
+           Inställningarna var en egen menypost med en prislista på
+           fyra rader. Den hör hemma bredvid kontot, inte som ett eget
+           steg i navigationen.
+           ============================================================ -->
       <section class="vy-sek vy-sek-smal" data-sek="profil" hidden>
         <div class="vy-sek-topp">
           <div>
-            <h2>Min profil</h2>
-            <p>Ditt konto, din bild och ditt lösenord.</p>
+            <h2>Profil &amp; inställningar</h2>
+            <p>Ditt konto, din bild, ditt lösenord — och vad passen kostar.</p>
           </div>
         </div>
+
+        <div class="vy-flikar" role="tablist" aria-label="Profil eller inställningar">
+          <button class="vy-flik" type="button" role="tab" data-flik="konto"
+                  id="flik-konto" aria-controls="panel-konto">Mitt konto</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="pris"
+                  id="flik-pris" aria-controls="panel-pris">Pris &amp; villkor</button>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="konto"
+             id="panel-konto" aria-labelledby="flik-konto">
                 <!-- ============ DITT KONTO ============ -->
                 <div class="dbox">
                   <h5>Ditt konto</h5>
@@ -520,21 +565,18 @@
                     <p class="ok-msg" id="kl-msg"></p>
                   </form>
                 </div>
-      </section>
-      <section class="vy-sek vy-sek-smal" data-sek="installningar" hidden>
-        <div class="vy-sek-topp">
-          <div>
-            <h2>Inställningar</h2>
-            <p>Vad passen kostar.</p>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="pris"
+             id="panel-pris" aria-labelledby="flik-pris" hidden>
+          <div class="dbox">
+            <h5>Pris</h5>
+            <div class="sum-line"><span>Per timme</span><span data-pris>379 kr</span></div>
+            <div class="sum-line"><span>Anmälningsavgift</span><span>0 kr</span></div>
+            <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
+            <p class="xsmall" style="margin-top:14px;color:var(--muted-2);line-height:1.6">Ni betalar i efterskott, en gång i månaden, för de pass som faktiskt genomförts. Fakturorna ligger under Betalning.</p>
           </div>
         </div>
-                <div class="dbox">
-                  <h5>Pris</h5>
-                  <div class="sum-line"><span>Per timme</span><span data-pris>379 kr</span></div>
-                  <div class="sum-line"><span>Anmälningsavgift</span><span>0 kr</span></div>
-                  <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
-                  <p class="xsmall" style="margin-top:14px;color:var(--muted-2);line-height:1.6">Betalning sker utanför plattformen tills vidare. Vi hör av oss om upplägget.</p>
-                </div>
       </section>
       </div>
     </div>
@@ -567,6 +609,7 @@
 <script src="nextrum-app.js"></script>
 <script src="nextrum-kontakt.js"></script>
 <script src="nextrum-studie.js"></script>
+<script src="nextrum-arbetsyta.js"></script>
 <script src="nextrum-media.js"></script>
 <script src="nextrum-betalning.js"></script>
 <script>
@@ -788,12 +831,12 @@
       if (!S.valtBarn || !S.barn.some(b => b.id === S.valtBarn)) S.valtBarn = S.barn[0].id;
       val.value = S.valtBarn;
     }
-    uppdateraBokaKnapp();
+    laddaBokning();
   }
 
   $('#barn-val').addEventListener('change', e => {
     S.valtBarn = e.target.value || null;
-    laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); laddaMaterial(); uppdateraBokaKnapp();
+    laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); laddaMaterial(); laddaBokning();
   });
 
   /* Familjen äger barnets uppgifter. Studiemålet ser studiehjälparen,
@@ -1097,8 +1140,7 @@
       S.profil.full_name = namn;
       ritaHeader();
       ritaKontoAvatar();
-      const förnamn = namn.split(' ')[0];
-      $('#hej').textContent = förnamn ? 'Hej ' + förnamn + '.' : 'Hej.';
+      if (S.hero) S.hero.uppdatera({ namn });
       säg(msg, '✓ Uppgifterna har sparats.', true);
     });
   });
@@ -1198,7 +1240,7 @@
     ritaNästaPass();
     ritaStatistik();
     byggSchema();
-    if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Välj en tid i kalendern nedanför.'); return; }
+    if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Välj en av de lediga tiderna i rutan ovanför.'); return; }
 
     const idag = new Date().toISOString().slice(0, 10);
     const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
@@ -1238,7 +1280,7 @@
       svar.removeAttribute('aria-busy');
       if (error) { alert('Kunde inte svara: ' + felText(error)); return; }
       await laddaPass();
-      await byggKalender();
+      await laddaBokning();
       return;
     }
 
@@ -1250,7 +1292,7 @@
     btn.removeAttribute('aria-busy');
     if (error) { alert('Kunde inte avboka: ' + felText(error)); return; }
     await laddaPass();
-    await byggKalender();
+    await laddaBokning();
   });
 
   /* ============================================================
@@ -1325,126 +1367,97 @@
         return;
       }
       await laddaPass();
-      await byggKalender();
+      await laddaBokning();
     });
   });
 
-  /* ============ bokning ============ */
-  /* Pass bokas i hela timmar eftersom vi fakturerar per timme. */
-  function timmarValda() {
-    return Math.max(1, Math.round((Number(($('#bk-langd') || {}).value) || 60) / 60));
-  }
-  function längdText(t) { return t === 1 ? '1 timme' : t + ' timmar'; }
+  /* ============================================================
+     BOKNINGEN
 
-  function uppdateraBokaKnapp() {
-    const knapp = $('#boka-knapp'), sam = $('#boka-sammanfattning');
-    if (!knapp) return;
-    const st = S.kal && S.kal.state;
+     Vad som togs bort och varför:
 
-    if (!S.valtBarn) {
-      knapp.disabled = true;
-      sam.textContent = 'Lägg till ditt barn först.';
-      return;
-    }
+     Förr låg tre rullgardiner (ämne, format, längd) ovanför en
+     månadskalender, och knappen var avstängd tills alla fyra
+     stämde överens. Familjen fick alltså leta efter en ledig timme
+     i en kalender där de flesta dagar var tomma — studiehjälparen
+     jobbar tre kvällar i veckan, inte trettio dagar i månaden.
 
-    /* Har studiehjälparen inte lagt in några tider finns inget att
-       boka. Förr fylldes kalendern med vardagar 15–19 som ingen
-       lovat, och familjen bokade in sig på en tid som fick avböjas i
-       efterhand. Nu står det rakt ut, med vägen vidare: fråga hen. */
-    if (!S.tillgangFinns) {
-      knapp.disabled = true;
-      sam.innerHTML = 'Er studiehjälpare har inte lagt in några tider än. '
-        + '<a href="#meddelanden" class="vy-mer" style="margin-top:0">Fråga när hen kan '
-        + '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>';
-      return;
-    }
+     Nu räknas de lediga timmarna fram först och visas som knappar.
+     NX.föreslåTider gjorde redan exakt det i studiehjälparvyn; den
+     hade bara aldrig kopplats in här. Månadskalendern finns kvar
+     bakom "Fler tider" för den som vill boka långt fram.
 
-    if (!st || !st.valtDatum || !st.valdTid) {
-      knapp.disabled = true;
-      sam.textContent = 'Välj ett datum och en tid.';
-      return;
-    }
+     Själva ritandet ligger i NXArbete.bokning. Det här är kopplingen
+     till databasen: vad som hämtas, och vad som skrivs.
+     ============================================================ */
+  const BOKA_AMNEN = ['Matematik', 'Svenska', 'Engelska',
+    'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap', 'Annat'];
 
-    const timmar = timmarValda();
-    knapp.disabled = false;
-    sam.textContent = datumText(st.valtDatum) + ' kl. ' + st.valdTid
-      + ' · ' + längdText(timmar)
-      + ' · ' + kr((NX.CFG.PRIS_PER_TIMME || 379) * timmar);
-  }
+  S.boka = NXArbete.bokning({
+    host: $('#boka-inner'),
+    amnen: BOKA_AMNEN,
+    pris: NX.CFG.PRIS_PER_TIMME || 379,
 
-  document.addEventListener('change', e => {
-    if (!e.target || e.target.id !== 'bk-langd') return;
-    if (S.kal) S.kal.sättMinuter(e.target.value);
-    uppdateraBokaKnapp();
-  });
-
-  async function byggKalender() {
-    /* Kalendern visar studiehjälparens egna tider — bara dem. Har hen
-       inte lagt in några finns inget att boka, och det är rätt: en
-       gissad tid är en tid någon får säga nej till. */
-    const [upptagna, tider] = await Promise.all([
-      NX.hämtaUpptagna(S.profil.matched_tutor_id),
-      NX.hämtaTillganglighet(S.profil.matched_tutor_id)
-    ]);
-    S.tillgangFinns = (tider.tillgang || []).length > 0;
-    if (S.kal) {
-      S.kal.sättUpptagna(upptagna);
-      S.kal.sättTider(tider);
-      uppdateraBokaKnapp();
-      return;
-    }
-    S.kal = NX.byggKalender({
-      host: $('#kalender'),
-      upptagna,
-      tillgang: tider.tillgang,
-      blockerade: tider.blockerade,
-      minuter: timmarValda() * 60,
-      onChange: uppdateraBokaKnapp
-    });
-  }
-
-  $('#boka-knapp').addEventListener('click', async () => {
-    const msg = $('#boka-msg'), knapp = $('#boka-knapp');
-    rensa(msg);
-    const st = S.kal.state;
-    if (!st.valtDatum || !st.valdTid || !S.valtBarn) return;
-
-    knapp.setAttribute('aria-busy', 'true');
-    const { error } = await supa.from('bookings').insert({
-      parent_id: S.user.id,
-      tutor_id: S.profil.matched_tutor_id,
-      student_id: S.valtBarn,
-      created_by: S.user.id,
-      subject: $('#bk-amne').value,
-      format: $('#bk-format').value,
-      wanted_date: st.valtDatum,
-      wanted_time: st.valdTid,
-      duration_min: Number($('#bk-langd').value) || 60,
-      status: 'requested'
-    });
-    knapp.removeAttribute('aria-busy');
-
-    if (error) {
-      /* 23505 = samma starttid, 23P01 = passet krockar med ett
-         annat som redan pågår. Samma sak för den som bokar. */
-      if (error.code === '23505' || error.code === '23P01') {
-        säg(msg, 'Den tiden hann bli bokad, eller krockar med ett annat pass. Välj en annan tid — kalendern är uppdaterad nu.', false);
-        await byggKalender();
-        S.kal.nollställ();
-        uppdateraBokaKnapp();
-        return;
+    /* Två spärrar som förr yttrade sig som en avstängd knapp utan
+       förklaring. Nu står skälet där tiderna skulle ha stått. */
+    ladda: async () => {
+      if (!S.valtBarn) {
+        return { spärr: NXStudie.tomt('Lägg till ditt barn först',
+          'Bokningen behöver veta vem passet gäller. Barnraden ligger högst upp på sidan.') };
       }
-      säg(msg, 'Kunde inte boka: ' + felText(error), false);
-      return;
-    }
+      const [upptagna, tider] = await Promise.all([
+        NX.hämtaUpptagna(S.profil.matched_tutor_id),
+        NX.hämtaTillganglighet(S.profil.matched_tutor_id)
+      ]);
+      if (!(tider.tillgang || []).length) {
+        return { spärr: '<div class="empty"><b>Er studiehjälpare har inga tider inlagda än</b>'
+          + '<br><span>Familjen kan bara boka inom de tider hen lagt in. Fråga när hen kan, '
+          + 'så dyker tiderna upp här.</span>'
+          + '<div class="vy-tomt-atg"><a class="btn btn-ghost btn-sm" href="#meddelanden">'
+          + 'Fråga i chatten</a></div></div>' };
+      }
+      return {
+        tillgang: tider.tillgang,
+        blockerade: tider.blockerade,
+        upptagna,
+        /* Familjens vana: tidigare pass gör att "brukar passa"
+           kan markeras på rätt tider. */
+        tidigare: (S.bokningar || []).filter(b => b.status !== 'cancelled')
+      };
+    },
 
-    säg(msg, 'Passet är önskat. Er studiehjälpare ser det direkt och bekräftar.', true);
-    S.kal.nollställ();
-    uppdateraBokaKnapp();
-    await laddaPass();
-    await byggKalender();
+    boka: async v => {
+      const { error } = await supa.from('bookings').insert({
+        parent_id: S.user.id,
+        tutor_id: S.profil.matched_tutor_id,
+        student_id: S.valtBarn,
+        created_by: S.user.id,
+        subject: v.amne,
+        format: v.format,
+        wanted_date: v.datum,
+        wanted_time: v.tid,
+        duration_min: v.minuter,
+        status: 'requested'
+      });
+      if (error) {
+        /* 23505 = samma starttid, 23P01 = passet krockar med ett
+           annat som redan pågår. Samma sak för den som bokar. */
+        if (error.code === '23505' || error.code === '23P01') {
+          return 'Den tiden hann bli bokad, eller krockar med ett annat pass. Tiderna nedan är uppdaterade — välj en annan.';
+        }
+        return 'Kunde inte boka: ' + felText(error);
+      }
+      await laddaPass();
+      return null;
+    }
   });
 
+  /* Hette byggKalender() förut. Namnet ljög efter ombyggnaden: det
+     som laddas om är tiderna, kalendern är en detalj bakom en lucka. */
+  async function laddaBokning() {
+    if (!S.boka) return;
+    await S.boka.ladda();
+  }
 
   /* ============================================================
      NÄR NÅGOT GÅR SÖNDER
@@ -1480,15 +1493,34 @@
     $('#kpi-klara').textContent = S.bokningar.filter(b => b.status === 'completed').length;
     $('#kpi-kommande').textContent = kommande.length;
 
-    const host = $('#ov-nasta');
-    if (!host) return;
     const b = kommande.sort((x, y) => (x.wanted_date + (x.wanted_time || ''))
       .localeCompare(y.wanted_date + (y.wanted_time || '')))[0];
+    const barn = b ? S.barn.find(x => x.id === b.student_id) : null;
+
+    /* Samma pass på två ställen: som kort i hälsningen högst upp och
+       som rad på Översikt. Hälsningen är det första man ser, och
+       "nästa pass" är det oftast enda man kom för att kolla. */
+    if (S.hero) {
+      S.hero.uppdatera({
+        nasta: b ? {
+          href: '#lektioner',
+          text: 'Nästa pass · ' + datumText(b.wanted_date)
+                + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
+          under: [b.subject, barn ? barn.name : null].filter(Boolean).join(' · ')
+        } : {
+          href: '#lektioner',
+          text: 'Inga pass inbokade',
+          under: 'Boka en tid hos er studiehjälpare'
+        }
+      });
+    }
+
+    const host = $('#ov-nasta');
+    if (!host) return;
     if (!b) {
       host.innerHTML = tomt('Inga pass inbokade', 'Boka en tid, så står nästa pass här.');
       return;
     }
-    const barn = S.barn.find(x => x.id === b.student_id);
     host.innerHTML = NXKontakt.passRad(b, {
       under: [b.format, barn ? barn.name : null].filter(Boolean).join(' · ')
     });
@@ -1500,6 +1532,13 @@
     const öppna = (S.laxor || []).filter(h => h.status !== 'klar');
     $('#kpi-laxor').textContent = öppna.length;
     $('#ov-laxor-antal').textContent = öppna.length ? öppna.length + ' att göra' : '';
+
+    /* Läxorna ligger numera under en flik. En siffra i menyn och en
+       på fliken, annars måste man öppna sektionen för att få veta om
+       det finns något där. */
+    if (S.sido) S.sido.märke('uppgifter', öppna.length);
+    const mark = $('#flik-lax-mark');
+    if (mark) { mark.hidden = !öppna.length; mark.textContent = öppna.length || ''; }
     if (!S.valtBarn) {
       host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn, så visas läxorna här.');
       return;
@@ -1534,6 +1573,16 @@
     larm.hidden = !S.olästaAntal;
     larm.textContent = S.olästaAntal ? S.olästaAntal + ' ny' + (S.olästaAntal > 1 ? 'a' : '') : '';
     if (S.sido) S.sido.märke('meddelanden', S.olästaAntal);
+    if (S.hero) {
+      S.hero.uppdatera({
+        chatt: {
+          href: '#meddelanden', text: 'Meddelanden',
+          under: S.olästaAntal
+            ? S.olästaAntal + ' oläst' + (S.olästaAntal > 1 ? 'a' : '')
+            : 'Skriv till er studiehjälpare'
+        }
+      });
+    }
 
     if (!S.profil.matched_tutor_id) {
       host.innerHTML = tomt('Ingen studiehjälpare än', 'Vi kopplar ihop er, sedan syns tråden här.');
@@ -1801,15 +1850,72 @@
     if (S.profil.match_status !== 'matched') { visa('view-locked'); return; }
 
     visa('view-app');
+
+    /* Flikarna först. Sidomenyn ropar på dem när den byter sektion,
+       och en flikrad som inte finns än hade svalt det anropet. */
+    S.flikar = {
+      lektioner: NXArbete.flikar($('section[data-sek="lektioner"]')),
+      uppgifter: NXArbete.flikar($('section[data-sek="uppgifter"]')),
+      profil: NXArbete.flikar($('section[data-sek="profil"]'))
+    };
+
     /* Barnraden hör bara hemma där innehållet gäller ett valt barn.
        På Översikt och kontosidorna är den brus överst. */
-    const MED_KONTEXT = ['uppgifter', 'utveckling', 'material', 'lektioner', 'studieplan'];
+    const MED_KONTEXT = ['uppgifter', 'utveckling', 'lektioner'];
     S.sido = NXStudie.sidomeny({
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
       onByt: sek => { $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1; }
     });
-    const förnamn = (S.profil.full_name || '').split(' ')[0];
-    $('#hej').textContent = förnamn ? 'Hej ' + förnamn + '.' : 'Hej.';
+
+    /* De fyra sektioner som slogs ihop hade egna adresser. Bokmärken,
+       länkar i gamla mejl och "visa alla"-raderna inne i vyn pekar på
+       dem. Alltså översätts de i stället för att gå sönder: adressen
+       #studieplan blir sektionen Mina lektioner med rätt flik framme.
+
+       Formen är #sektion/flik. Att skriva den direkt fungerar också,
+       så ett internt "se studieplanen" kan länka #lektioner/plan. */
+    const ALIAS = {
+      studieplan: ['lektioner', 'plan'],
+      rapporter: ['lektioner', 'rapporter'],
+      material: ['uppgifter', 'material'],
+      laxor: ['uppgifter', 'laxor'],
+      studiehjalpare: ['meddelanden', null],
+      installningar: ['profil', 'pris']
+    };
+    function följHash() {
+      const [huvud, flik] = String(location.hash || '').replace(/^#/, '').split('/');
+      const alias = ALIAS[huvud];
+      if (alias) {
+        /* Ett gammalt namn: byt adressen mot det nya, så att
+           bakåtknappen och delade länkar pekar rätt hädanefter.
+           replace() utlöser hashchange, och då kör den här funktionen
+           en gång till — men med ett namn som inte finns i ALIAS,
+           så det blir en omgång, inte en snurra. */
+        location.replace('#' + alias[0] + (alias[1] ? '/' + alias[1] : ''));
+        return;
+      }
+      /* Sektionen sköts av NXStudie.sidomeny, som lyssnar på samma
+         händelse och läser delen före snedstrecket. Här återstår
+         fliken. */
+      if (flik && S.flikar[huvud]) S.flikar[huvud].visa(flik);
+    }
+    window.addEventListener('hashchange', följHash);
+    följHash();
+
+    /* ============ HÄLSNINGEN ============
+       Ritas först när namnet finns. Att visa "Hej." och byta till
+       "Godkväll, Alma." en halv sekund senare är en blinkning, och
+       den blinkningen ligger överst på sidan. */
+    S.hero = NXArbete.hero({
+      host: $('#vy-hero'),
+      namn: S.profil.full_name,
+      etikett: 'Studievy',
+      lede: 'Planen, tiderna, kontakten och vad som hände på varje pass.',
+      video: 'bilder/hero-studievy.mp4',
+      bild: 'bilder/hero-nextrum-1280.jpg',
+      chatt: { href: '#meddelanden', text: 'Meddelanden', under: 'Skriv till er studiehjälpare' }
+    });
+    ritaNästaPass();
 
     if (S.profil.avatar_url) S.minAvatar = await M.signera('avatarer', S.profil.avatar_url);
     $('#k-namn').value = S.profil.full_name || '';
@@ -1821,8 +1927,7 @@
     await laddaBarn();
     await laddaTutor();
     startaTråd();
-    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPass(), byggKalender()]);
-    uppdateraBokaKnapp();
+    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPass(), laddaBokning()]);
     ritaNotiser();
     await Promise.all([ritaÖvSamtal(), laddaBetalning()]);
     supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);

@@ -1,0 +1,576 @@
+/* ============================================================
+   NEXTRUM — arbetsytan
+   Laddas sist av foralder.html, larare.html och admin.html, efter
+   nextrum-vy.css. Allt här hör till ombyggnaden av de inloggade
+   vyerna: hälsningsblocket, grupperad sidomeny, flikar inne i en
+   sektion, det förenklade bokningsflödet, veckorutnätet för tider
+   och adminbordet.
+
+   Varför en egen fil och inte mer i nextrum-vy.css: den filen är
+   femtio kilobyte och beskriver vyerna som de såg ut innan. Den här
+   beskriver hur de fungerar nu. Går ombyggnaden fel är det en
+   länk som ska bort, inte ett hundratal rader som ska letas fram.
+
+   Färgnamnen kommer från nextrum-cinema.css. Ingenting här hårdkodar
+   en färg som inte vänder rätt i mörkt läge — --bl/--pap är ett par
+   som byter plats, ett rent vitt gör det inte.
+   ============================================================ */
+
+/* ============================================================
+   1. HÄLSNINGSBLOCKET
+   Samma anslag som hero på startsidan: rörlig bild, slöja, text
+   ovanpå. Skillnaden är att här vet sidan vem som tittar och vad
+   klockan är, så rubriken kan säga det rakt ut.
+
+   Videon är dekor. Den ligger bakom en slöja, den har aria-hidden
+   och den saknar ljud — saknas filen visas poster-bilden i stället
+   och ingenting går sönder. Det är med flit: filmen kan komma
+   senare utan att markupen behöver röras.
+   ============================================================ */
+.vy-hero{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border-radius:clamp(16px,2vw,26px);
+  margin-bottom:clamp(26px,3.4vw,44px);
+  min-height:clamp(280px,34vw,420px);
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:clamp(22px,3.2vw,44px);
+  background:var(--pap-3);
+}
+.vy-hero-media{position:absolute;inset:0;z-index:-2}
+.vy-hero-media img,
+.vy-hero-media video{
+  width:100%;height:100%;
+  object-fit:cover;object-position:50% 42%;
+  display:block;
+}
+/* Slöjan gör texten läsbar oavsett vad som råkar ligga under den.
+   Mörkast nedtill, där rubriken står; nästan genomskinlig upptill
+   så att bilden fortfarande får vara en bild. */
+.vy-hero-sloja{
+  position:absolute;inset:0;z-index:-1;
+  background:
+    linear-gradient(to top,rgba(20,17,12,.88) 0%,rgba(20,17,12,.55) 42%,rgba(20,17,12,.18) 100%),
+    linear-gradient(to right,rgba(20,17,12,.5) 0%,rgba(20,17,12,0) 62%);
+}
+
+.vy-hero-inne{position:relative;max-width:46ch}
+.vy-hero-et{
+  display:inline-block;
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(239,230,214,.72);
+  margin-bottom:12px;
+}
+.vy-hero h1{
+  font-size:clamp(1.9rem,4.2vw,3rem);
+  line-height:1.04;letter-spacing:-.04em;font-weight:800;
+  color:#EFE6D6;
+  margin:0;
+}
+.vy-hero-lede{
+  margin-top:12px;
+  color:rgba(239,230,214,.82);
+  font-size:1rem;line-height:1.55;
+}
+
+/* Raden under rubriken: nästa pass och chatten. Två kort, inte en
+   meny — det är de två sakerna någon faktiskt öppnar vyn för. */
+.vy-hero-kort{
+  position:relative;
+  display:flex;gap:12px;flex-wrap:wrap;
+  margin-top:clamp(20px,2.6vw,30px);
+}
+.vy-hero-kort > *{
+  display:flex;align-items:center;gap:12px;
+  min-width:min(100%,268px);
+  padding:13px 17px;
+  border-radius:14px;
+  border:1px solid rgba(239,230,214,.22);
+  background:rgba(20,17,12,.44);
+  backdrop-filter:blur(9px) saturate(150%);
+  -webkit-backdrop-filter:blur(9px) saturate(150%);
+  color:#EFE6D6;
+  text-decoration:none;
+  transition:background .2s var(--e),border-color .2s var(--e),transform .2s var(--e);
+}
+.vy-hero-kort a:hover{
+  background:rgba(20,17,12,.62);
+  border-color:rgba(239,230,214,.4);
+  transform:translateY(-1px);
+}
+.vy-hero-kort svg{
+  width:19px;height:19px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;
+  opacity:.85;
+}
+.vy-hero-kort b{
+  display:block;
+  font-size:.95rem;font-weight:650;line-height:1.25;
+}
+.vy-hero-kort span{
+  display:block;
+  font-size:.78rem;line-height:1.4;
+  color:rgba(239,230,214,.68);
+  margin-top:2px;
+}
+.vy-hero-kort .vy-hero-prick{
+  width:7px;height:7px;border-radius:100px;
+  background:var(--acc);flex:none;margin:0;
+  box-shadow:0 0 0 4px rgba(156,69,32,.24);
+}
+
+@media (max-width:640px){
+  .vy-hero{min-height:auto;padding:20px}
+  .vy-hero-kort > *{min-width:100%}
+}
+
+/* Den som bett systemet lugna sig ska inte få en loopande film. */
+@media (prefers-reduced-motion:reduce){
+  .vy-hero-media video{display:none}
+}
+
+/* ============================================================
+   2. GRUPPERAD SIDOMENY
+   Elva poster blev sju. De som är kvar behöver ändå en paus
+   emellan sig: en rubrik säger vad nästa handfull handlar om,
+   så att ögat kan hoppa dit i stället för att läsa allt.
+   ============================================================ */
+.vy-sido-rubrik{
+  font-family:var(--f-mono);
+  font-size:9.5px;font-weight:600;
+  letter-spacing:.15em;text-transform:uppercase;
+  color:var(--bl-3);
+  padding:0 14px;
+  margin:18px 0 7px;
+  flex:none;
+  align-self:center;
+  white-space:nowrap;
+}
+.vy-sido-rubrik:first-child{margin-top:0}
+
+/* På telefon är menyn en vågrät svepbar rad. Där blir en rubrik
+   ovanför posterna omöjlig — den skulle stå bredvid dem. Ett
+   lodrätt streck gör samma jobb på en bråkdel av bredden. */
+@media (max-width:899px){
+  .vy-sido-rubrik{
+    width:1px;padding:0;margin:0 6px;
+    overflow:hidden;text-indent:-999em;
+    background:var(--ln);
+    align-self:stretch;
+  }
+  .vy-sido-rubrik:first-child{display:none}
+}
+
+/* ============================================================
+   3. FLIKAR INNE I EN SEKTION
+   När två gamla sektioner slås ihop måste båda fortfarande gå att
+   nå. Flikar gör det utan att lägga tillbaka posten i menyn:
+   valet bor i sektionen, inte i navigationen.
+   ============================================================ */
+.vy-flikar{
+  display:flex;gap:4px;
+  padding:4px;
+  margin-bottom:clamp(16px,2vw,22px);
+  background:var(--pap-2);
+  border:1px solid var(--ln);
+  border-radius:13px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.vy-flikar::-webkit-scrollbar{display:none}
+.vy-flik{
+  flex:1 1 auto;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:9px 16px;
+  border:none;background:transparent;
+  border-radius:10px;
+  font:inherit;font-size:.9rem;font-weight:550;
+  color:var(--bl-2);
+  white-space:nowrap;
+  cursor:pointer;
+  transition:background .18s var(--e),color .18s var(--e);
+}
+.vy-flik:hover{color:var(--bl)}
+.vy-flik[aria-selected="true"]{
+  background:var(--pap);
+  color:var(--bl);
+  font-weight:650;
+  box-shadow:0 1px 2px rgba(46,42,32,.09);
+}
+.vy-flik-mark{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  background:var(--acc);color:var(--acc-ink);
+  border-radius:100px;padding:2px 6px;
+}
+.vy-flik-panel[hidden]{display:none}
+
+/* ============================================================
+   4. BOKNINGEN
+   Förr: tre rullgardiner, en månadskalender och en knapp som var
+   avstängd tills man gissat rätt i alla fyra. Nu: tiderna först,
+   som knappar. Att hitta en ledig timme är en sökning, och sidan
+   kan redan räkna ut svaret — den ska inte be någon leta.
+   ============================================================ */
+.vy-boka-steg{
+  display:flex;align-items:center;gap:9px;
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;
+  color:var(--bl-3);
+  margin-bottom:13px;
+}
+.vy-boka-steg::after{
+  content:"";flex:1;height:1px;background:var(--ln);
+}
+.vy-boka-steg b{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;border-radius:100px;
+  background:var(--bl);color:var(--pap);
+  font-size:9.5px;
+}
+
+/* Tidsknapparna. En rad per dag hade blivit en kalender igen — de
+   här ligger som chips och de fem första räcker nästan alltid. */
+.vy-tidrad{display:flex;gap:8px;flex-wrap:wrap}
+.vy-tid{
+  display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;
+  padding:10px 15px;
+  border:1px solid var(--ln-2);
+  border-radius:12px;
+  background:var(--pap);
+  font:inherit;text-align:left;
+  color:var(--bl);
+  cursor:pointer;
+  transition:border-color .16s var(--e),background .16s var(--e),transform .16s var(--e);
+}
+.vy-tid:hover{border-color:var(--bl-3);transform:translateY(-1px)}
+.vy-tid[aria-pressed="true"]{
+  background:var(--bl);color:var(--pap);border-color:var(--bl);
+}
+.vy-tid b{font-size:.95rem;font-weight:650;line-height:1.2}
+.vy-tid span{
+  font-size:.75rem;line-height:1.3;
+  color:var(--bl-3);
+  font-family:var(--f-mono);letter-spacing:.02em;
+}
+.vy-tid[aria-pressed="true"] span{color:rgba(239,230,214,.72)}
+/* En tid familjen redan brukar ta. Värd en markering: det är oftast
+   den de väljer igen. */
+.vy-tid-vanlig::after{
+  content:"brukar passa";
+  font-family:var(--f-mono);font-size:8.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--acc-text);
+  margin-top:3px;
+}
+.vy-tid[aria-pressed="true"].vy-tid-vanlig::after{color:rgba(239,230,214,.8)}
+
+/* Valen som förr var tre rullgardiner. Ämnet är det enda som
+   verkligen varierar; längd och format har ett svar som stämmer
+   nio gånger av tio, så de ligger som segment i stället. */
+.vy-val{display:flex;gap:6px;flex-wrap:wrap}
+.vy-val button{
+  padding:8px 15px;
+  border:1px solid var(--ln-2);
+  border-radius:100px;
+  background:var(--pap);
+  font:inherit;font-size:.87rem;font-weight:550;
+  color:var(--bl-2);
+  cursor:pointer;
+  transition:border-color .16s var(--e),background .16s var(--e),color .16s var(--e);
+}
+.vy-val button:hover{border-color:var(--bl-3);color:var(--bl)}
+.vy-val button[aria-pressed="true"]{
+  background:var(--bl);color:var(--pap);border-color:var(--bl);font-weight:650;
+}
+
+/* Kvittot. Priset ska stå framme innan man trycker, inte efteråt. */
+.vy-kvitto{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;
+  margin-top:clamp(18px,2.2vw,24px);
+  padding:15px 18px;
+  border:1px solid var(--ln);
+  border-radius:14px;
+  background:var(--pap-2);
+}
+.vy-kvitto-vad{font-size:.93rem;line-height:1.45;color:var(--bl)}
+.vy-kvitto-vad b{font-weight:650}
+.vy-kvitto-vad em{
+  display:block;font-style:normal;
+  font-size:.8rem;color:var(--bl-3);margin-top:2px;
+}
+.vy-kvitto-pris{
+  font-family:var(--f-mono);font-size:1.05rem;font-weight:600;
+  color:var(--bl);
+}
+
+/* Den fällbara månadskalendern. Kvar för den som vill bläddra,
+   men stängd tills någon ber om den. */
+.vy-mer-tider{
+  margin-top:14px;
+  border-top:1px solid var(--ln);
+  padding-top:14px;
+}
+.vy-mer-tider > summary{
+  list-style:none;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:.88rem;font-weight:550;color:var(--bl-2);
+}
+.vy-mer-tider > summary::-webkit-details-marker{display:none}
+.vy-mer-tider > summary:hover{color:var(--bl)}
+.vy-mer-tider > summary svg{
+  width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .2s var(--e);
+}
+.vy-mer-tider[open] > summary svg{transform:rotate(180deg)}
+.vy-mer-tider-kropp{padding-top:16px}
+
+/* ============================================================
+   5. VECKORUTNÄTET
+   Studiehjälparens tider. Förr tre rullgardiner och en knapp per
+   fönster, alltså sex klick för "vardagar 16–20" och en lista att
+   granska efteråt. Nu är veckan ritad: klicka i rutorna, dra över
+   flera, se allt på en gång.
+   ============================================================ */
+.vy-vecka-verktyg{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  margin-bottom:16px;
+}
+.vy-vecka-skal{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  margin-inline:-2px;padding:2px;
+}
+.vy-vecka{
+  display:grid;
+  grid-template-columns:52px repeat(7,minmax(46px,1fr));
+  gap:3px;
+  min-width:430px;
+  user-select:none;
+  touch-action:pan-y;
+}
+.vy-vecka-dag,
+.vy-vecka-tim{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--bl-3);
+  display:flex;align-items:center;justify-content:center;
+}
+.vy-vecka-tim{justify-content:flex-end;padding-right:9px;letter-spacing:0;font-size:10px}
+.vy-vecka-dag{padding-bottom:7px}
+
+.vy-ruta{
+  height:30px;
+  border:1px solid var(--ln);
+  border-radius:6px;
+  background:var(--pap);
+  cursor:pointer;
+  padding:0;
+  transition:background .12s linear,border-color .12s linear;
+}
+.vy-ruta:hover{border-color:var(--bl-3)}
+.vy-ruta[aria-pressed="true"]{
+  background:var(--acc);
+  border-color:var(--acc);
+}
+/* Under dragningen ska rutan svara direkt, innan modellen hunnit
+   uppdateras — annars känns rutnätet trögt fast det inte är det. */
+.vy-ruta.ar-pa-vag{background:var(--acc-soft);border-color:var(--acc-line)}
+.vy-vecka:focus-within .vy-ruta:focus-visible{
+  outline:2px solid var(--bl);outline-offset:1px;
+}
+
+.vy-vecka-fot{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;
+  margin-top:16px;padding-top:16px;
+  border-top:1px solid var(--ln);
+}
+.vy-vecka-sam{
+  font-size:.88rem;line-height:1.5;color:var(--bl-2);
+}
+.vy-vecka-sam b{color:var(--bl);font-weight:650}
+
+/* ============================================================
+   6. ADMINBORDET
+   Ledningens vy. Andra krav än familjens: här ska många rader
+   kunna läsas fort, inte en enda läsas noga. Alltså tabell, inte
+   kort — och en tabell som får rulla i sidled hellre än att
+   trängas ihop tills siffrorna inte går att jämföra.
+   ============================================================ */
+.adm-verktyg{
+  display:flex;gap:9px;flex-wrap:wrap;align-items:center;
+  margin-bottom:16px;
+}
+.adm-verktyg .inp,
+.adm-verktyg .sel{max-width:230px}
+.adm-sok{flex:1 1 180px;max-width:300px}
+
+.adm-skal{
+  overflow-x:auto;
+  border:1px solid var(--ln);
+  border-radius:14px;
+  background:var(--pap);
+}
+table.adm{
+  width:100%;
+  border-collapse:collapse;
+  font-size:.89rem;
+  min-width:640px;
+}
+table.adm th{
+  text-align:left;
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;
+  color:var(--bl-3);
+  padding:13px 14px;
+  border-bottom:1px solid var(--ln);
+  background:var(--pap-2);
+  white-space:nowrap;
+  position:sticky;top:0;z-index:1;
+}
+table.adm td{
+  padding:13px 14px;
+  border-bottom:1px solid var(--ln);
+  color:var(--bl-2);
+  vertical-align:top;
+  line-height:1.45;
+}
+table.adm tr:last-child td{border-bottom:none}
+table.adm tbody tr:hover td{background:var(--pap-2)}
+table.adm td b{color:var(--bl);font-weight:650;font-size:.92rem}
+table.adm td .adm-und{
+  display:block;font-size:.79rem;color:var(--bl-3);margin-top:2px;
+}
+table.adm td.adm-atg{white-space:nowrap;text-align:right}
+table.adm .adm-tal{
+  font-family:var(--f-mono);font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+/* Statusprickar. Färgen är en genväg, aldrig hela beskedet — texten
+   står alltid kvar bredvid, för färgen ensam funkar inte för alla. */
+.adm-status{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.8rem;font-weight:600;
+  padding:3px 10px 3px 8px;
+  border-radius:100px;
+  border:1px solid var(--ln-2);
+  background:var(--pap-2);
+  color:var(--bl-2);
+  white-space:nowrap;
+}
+.adm-status::before{
+  content:"";width:6px;height:6px;border-radius:100px;
+  background:var(--bl-3);flex:none;
+}
+.adm-status.ar-ny::before{background:var(--acc)}
+.adm-status.ar-ny{color:var(--acc-text);border-color:var(--acc-line)}
+.adm-status.ar-klar::before{background:var(--mossa,#9DAD86)}
+.adm-status.ar-vantar::before{background:var(--ockra,#C08A2E)}
+
+/* Nyckeltalen överst. Samma idé som .kpi i vy-lagret, men de får
+   vara fler och smalare — ledningen läser åtta tal, familjen tre. */
+.adm-tal-rad{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
+  gap:11px;
+  margin-bottom:clamp(20px,2.4vw,28px);
+}
+.adm-kpi{
+  border:1px solid var(--ln);
+  border-radius:14px;
+  background:var(--pap);
+  padding:16px 17px;
+}
+.adm-kpi b{
+  display:block;
+  font-size:1.7rem;font-weight:750;letter-spacing:-.03em;
+  color:var(--bl);line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.adm-kpi span{
+  display:block;margin-top:7px;
+  font-size:.79rem;line-height:1.35;color:var(--bl-3);
+}
+.adm-kpi.ar-larm{border-color:var(--acc-line);background:var(--acc-soft)}
+.adm-kpi.ar-larm b{color:var(--acc-text)}
+
+/* Integrationskorten. Ett kort per tjänst, med ett rakt besked om
+   den är kopplad eller inte. Ingen halvsanning: "kopplad" står bara
+   där servern faktiskt svarat att den är det. */
+.adm-koppling{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(268px,1fr));
+  gap:14px;
+}
+.adm-koppling-kort{
+  border:1px solid var(--ln);
+  border-radius:16px;
+  background:var(--pap);
+  padding:20px;
+  display:flex;flex-direction:column;gap:11px;
+}
+.adm-koppling-kort h6{
+  display:flex;align-items:center;gap:10px;
+  font-size:1rem;font-weight:700;color:var(--bl);
+  letter-spacing:-.01em;
+}
+.adm-koppling-kort h6 svg{
+  width:20px;height:20px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;
+  color:var(--bl-3);
+}
+.adm-koppling-kort p{
+  font-size:.86rem;line-height:1.55;color:var(--bl-2);
+  flex:1;
+}
+.adm-koppling-kort .adm-krav{
+  font-family:var(--f-mono);font-size:10px;line-height:1.7;
+  color:var(--bl-3);
+  border-top:1px solid var(--ln);
+  padding-top:11px;
+  word-break:break-word;
+}
+
+/* Adminvyn får vara bredare än familjevyn — tabeller mår illa av
+   att klämmas ihop, och den som sitter här sitter vid en skärm. */
+.vy-admin .vy-layout{max-width:var(--w-bred)}
+@media (min-width:900px){
+  .vy-admin .vy-layout{grid-template-columns:212px minmax(0,1fr)}
+}
+
+/* ============================================================
+   7. SMÅSAKER SOM SAKNADES
+   ============================================================ */
+
+/* En avstängd knapp såg ut precis som en påslagen. Det märktes
+   knappt förut, för de flesta knappar börjar påslagna — men
+   bokningen och "Spara tiderna" öppnar avstängda, och en knapp som
+   ser tryckbar ut men inte gör något läser som en trasig sida. */
+.btn[disabled],
+.btn:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+  box-shadow:none;
+  transform:none !important;
+}
+.btn[disabled]:hover,
+.btn:disabled:hover{transform:none !important;filter:none}
+
+/* Tom yta med en väg vidare. Fanns som JS-sträng förut men utan
+   knapp — och "inget här än" utan nästa steg är en återvändsgränd. */
+.vy-tomt-atg{margin-top:14px}
+
+/* Två knappar bredvid varandra i en panelfot. */
+.vy-fot{
+  display:flex;gap:9px;flex-wrap:wrap;align-items:center;
+  margin-top:16px;padding-top:16px;
+  border-top:1px solid var(--ln);
+}
+.vy-fot .vy-fot-hoger{margin-left:auto}
