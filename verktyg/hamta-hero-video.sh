@@ -7,9 +7,16 @@
 # hämtar ett färdigt klipp från Higgsfield, komprimerar det och
 # lägger det på rätt plats.
 #
-#   ./verktyg/hamta-hero-video.sh <url-till-mp4> [--pendel]
+#   ./verktyg/hamta-hero-video.sh <url-eller-sökväg> [--pendel]
 #
-# Kör det från projektets rot. Kräver curl och ffmpeg.
+# Tar antingen en adress att hämta ifrån, eller en fil du redan
+# laddat ner:
+#
+#   ./verktyg/hamta-hero-video.sh https://…/hf_2026….mp4
+#   ./verktyg/hamta-hero-video.sh ~/Downloads/hf_2026….mp4
+#
+# Kör det från projektets rot. Kräver ffmpeg, och curl bara när
+# källan är en adress.
 #
 # --pendel löser loopskarven på ett klipp där kameran rör sig.
 # Se kommentaren vid PENDEL nedan innan du använder den.
@@ -36,8 +43,9 @@ RA="$(mktemp -t hero-ra-XXXXXX.mp4)"
 trap 'rm -f "$RA"' EXIT
 
 if [ -z "$URL" ]; then
-  echo "Användning: $0 <url-till-mp4>" >&2
-  echo "Adressen står i HERO-VIDEO.md, eller i Higgsfields generationslista." >&2
+  echo "Användning: $0 <url-eller-sökväg> [--pendel]" >&2
+  echo "Adressen står i HERO-VIDEO.md. Har du redan laddat ner filen" >&2
+  echo "går det lika bra att peka på den: $0 ~/Downloads/klippet.mp4" >&2
   exit 1
 fi
 
@@ -46,12 +54,32 @@ if [ ! -d bilder ]; then
   exit 1
 fi
 
-for verktyg in curl ffmpeg; do
-  command -v "$verktyg" >/dev/null || { echo "$verktyg saknas." >&2; exit 1; }
-done
+command -v ffmpeg >/dev/null || { echo "ffmpeg saknas." >&2; exit 1; }
 
-echo "Hämtar…"
-curl -fSL --progress-bar -o "$RA" "$URL"
+# En lokal fil kopieras i stället för att hämtas. Skälet är inte
+# bekvämlighet: när CDN:et är blockerat, som det är från vissa nät,
+# är en redan nedladdad fil enda vägen in — och då ska skriptet inte
+# kräva en adress som ändå inte går att nå.
+if [ -f "$URL" ]; then
+  echo "Läser $URL"
+  cp "$URL" "$RA"
+else
+  case "$URL" in
+    *://*) ;;
+    *) echo "Hittar ingen fil på '$URL', och det ser inte ut som en adress." >&2
+       exit 1 ;;
+  esac
+  command -v curl >/dev/null || { echo "curl saknas." >&2; exit 1; }
+  echo "Hämtar…"
+  curl -fSL --progress-bar -o "$RA" "$URL"
+fi
+
+# En tom eller trasig fil ska stoppas här, inte visa sig som ett
+# kryptiskt ffmpeg-fel tre rader ner.
+if [ ! -s "$RA" ]; then
+  echo "Källan gav ingen data." >&2
+  exit 1
+fi
 
 echo "Komprimerar…"
 # -an        tar bort ljudspåret helt. Videon är dekor bakom text,

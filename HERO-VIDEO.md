@@ -36,10 +36,22 @@ Bildutsnittet står still, bara personerna rör sig.
 https://d8j0ntlcm91z4.cloudfront.net/user_3J8MIQmxILCJh11pLXUSkMe4fKw/hf_20260910_203944_b4034a63-ee02-4718-b0cd-a59f82034a7f.mp4
 ```
 
-Kör i projektets rot:
+Kör i projektets rot, med adressen:
 
 ```
 ./verktyg/hamta-hero-video.sh <adressen ovan>
+```
+
+Eller, om du redan laddat ner filen, peka på den i stället:
+
+```
+./verktyg/hamta-hero-video.sh ~/Downloads/hf_20260910_203944_b4034a63-….mp4
+```
+
+Sedan checkar du in resultatet:
+
+```
+git add bilder/hero-studievy.mp4 && git commit -m "Hero-videon i vyerna"
 ```
 
 Ingen `--pendel` här. Första och sista bildrutan har samma utsnitt, så
