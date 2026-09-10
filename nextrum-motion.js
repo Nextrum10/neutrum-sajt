@@ -732,9 +732,56 @@ const NXFin = (function () {
     document.addEventListener('touchstart', function () {}, { passive: true });
   }
 
+  /* ============================================================
+     HERO-VIDEON
+
+     Klippet väger 4,9 MB. Med preload="auto" i markupen hämtades det
+     på varje besök, telefoner inräknat — 91 % av startsidans hela
+     vikt för en bakgrund som ingen bett om. Filen har därför ingen
+     src i HTML:en alls; den sätts här, och bara när den ska synas.
+
+     Tre lägen visar affischbilden i stället, som redan ligger i
+     poster-attributet och alltså inte kostar något extra:
+       - smal skärm, där rörelsen syns minst och datan kostar mest
+       - besökaren har valt bort rörelse i sitt system
+       - webbläsaren säger att uppkopplingen är dyr eller långsam
+
+     Laddningen väntar dessutom på load, så att den aldrig konkurrerar
+     med hjältens egen bild om bandbredden.
+     ============================================================ */
+  function heroVideo() {
+    const v = document.querySelector('.nx-hero-video[data-video]');
+    if (!v) return;
+
+    const n = navigator.connection || {};
+    const avstå =
+      matchMedia('(max-width:640px)').matches ||
+      matchMedia('(prefers-reduced-motion:reduce)').matches ||
+      n.saveData === true ||
+      /(^|-)(2g|slow-2g)$/.test(n.effectiveType || '');
+    if (avstå) return;
+
+    function ladda() {
+      if (v.querySelector('source')) return;
+      const s = document.createElement('source');
+      s.src = v.dataset.video;
+      s.type = 'video/mp4';
+      v.appendChild(s);
+      v.load();
+      /* play() avvisas om webbläsaren nekar autouppspelning. Då står
+         affischbilden kvar, vilket är precis rätt utfall. */
+      const p = v.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+
+    if (document.readyState === 'complete') ladda();
+    else window.addEventListener('load', ladda, { once: true });
+  }
+
   function allt() {
     header();
     tryckbart();
+    heroVideo();
     radAvslöj('[data-avslöj]');
     stiga('[data-stig]');
     magnetiska('[data-magnet]');
@@ -743,5 +790,5 @@ const NXFin = (function () {
     nödbroms();
   }
 
-  return { allt, header, radAvslöj, stiga, magnetiska, parallax, markör, nödbroms, tryckbart };
+  return { allt, header, heroVideo, radAvslöj, stiga, magnetiska, parallax, markör, nödbroms, tryckbart };
 })();

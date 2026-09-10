@@ -180,6 +180,8 @@ const NX = (function () {
       if (h && h === här) a.classList.add('active');
     });
 
+    initSpamskydd();
+
     const y = $('#year');
     if (y) y.textContent = new Date().getFullYear();
     $$('a[href^="mailto:"]').forEach(a => {
@@ -302,6 +304,55 @@ const NX = (function () {
       });
     }, { threshold: 0.6 });
     io.observe(stor);
+  }
+
+  /* ============================================================
+     SPAMSKYDD
+
+     leads, applications och contact_messages tar emot rader från vem
+     som helst — det MÅSTE de, formulären är öppna. Varje ny
+     intresseanmälan skickar dessutom ett mejl, så en robot fyller
+     inte bara databasen utan också inkorgen.
+
+     Fällan är ett fält som ligger utanför skärmen. En människa ser
+     det aldrig och kan inte tabba dit; en robot som fyller i allt den
+     hittar fyller i det. Är det ifyllt stoppas inskicket tyst: roboten
+     får inget felmeddelande att lära sig av.
+
+     Lyssnaren sitter på document med capture, inte på formuläret. Vid
+     målet självt körs lyssnare i registreringsordning oavsett
+     capture-flagga, och då hade sidans egen kod kunnat hinna först.
+     Från document går capture-fasen alltid före.
+     ============================================================ */
+  const SPAM_FÄLT = 'webbplats';
+
+  function spamskydd(form) {
+    if (!form || form.dataset.spamRedo) return;
+    form.dataset.spamRedo = '1';
+    const bur = document.createElement('div');
+    bur.setAttribute('aria-hidden', 'true');
+    bur.style.cssText =
+      'position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden';
+    const f = document.createElement('input');
+    f.type = 'text';
+    f.name = SPAM_FÄLT;
+    f.tabIndex = -1;
+    f.autocomplete = 'off';
+    bur.appendChild(f);
+    form.appendChild(bur);
+  }
+
+  function initSpamskydd() {
+    $$('form[data-spamskydd]').forEach(spamskydd);
+    document.addEventListener('submit', e => {
+      const form = e.target;
+      if (!form || !form.dataset || !form.dataset.spamRedo) return;
+      const f = form.elements[SPAM_FÄLT];
+      if (!f || !String(f.value || '').trim()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      form.reset();
+    }, true);
   }
 
   /* ---------- ansökan om att bli studiehjälpare ----------
@@ -806,7 +857,7 @@ const NX = (function () {
 
   return {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
-    initHeader, initReveal, kollaKoppling,
+    initHeader, initReveal, kollaKoppling, spamskydd,
     initFaq, initPris, kopplaAnsökan, märkInloggad,
     bildIntoning, initVagval,
     hämtaSession, hämtaProfil, vyFörRoll,

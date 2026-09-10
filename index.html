@@ -8,7 +8,7 @@
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
 <title>Läxhjälp av unga, för unga — Nextrum</title>
-<meta name="description" content="Nextrum matchar elever med unga studiehjälpare som förstår hur det är att gå i skolan idag. Personlig matchning, individuell studieplan och rapport efter varje pass.">
+<meta name="description" content="Nextrum matchar elever med unga studiehjälpare som nyligen läst samma kurser. Individuell studieplan och rapport efter varje pass.">
 <link rel="canonical" href="https://nextrum.se/">
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/">
 <link rel="alternate" hreflang="en" href="https://nextrum.se/en/">
@@ -22,7 +22,7 @@
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="sv_SE">
 <meta property="og:title" content="Läxhjälp av unga, för unga — Nextrum">
-<meta property="og:description" content="Nextrum matchar elever med unga studiehjälpare som förstår hur det är att gå i skolan idag. Personlig matchning, individuell studieplan och rapport efter varje pass.">
+<meta property="og:description" content="Nextrum matchar elever med unga studiehjälpare som nyligen läst samma kurser. Individuell studieplan och rapport efter varje pass.">
 <meta property="og:url" content="https://nextrum.se/">
 <meta property="og:image" content="https://nextrum.se/bilder/hero-nextrum-1280.jpg">
 <meta property="og:image:width" content="1280">
@@ -30,7 +30,7 @@
 <meta property="og:image:alt" content="En ung studiehjälpare och en elev pluggar tillsammans vid ett ljust träbord.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Läxhjälp av unga, för unga — Nextrum">
-<meta name="twitter:description" content="Nextrum matchar elever med unga studiehjälpare som förstår hur det är att gå i skolan idag. Personlig matchning, individuell studieplan och rapport efter varje pass.">
+<meta name="twitter:description" content="Nextrum matchar elever med unga studiehjälpare som nyligen läst samma kurser. Individuell studieplan och rapport efter varje pass.">
 <meta name="twitter:image" content="https://nextrum.se/bilder/hero-nextrum-1280.jpg">
 
 <!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
@@ -184,11 +184,10 @@
      ========================================================== -->
 <section class="nx-hero-film" id="hem">
   <div class="nx-hero-media">
-    <video class="nx-hero-video" poster="bilder/08-teamet-1280.jpg"
-           muted playsinline preload="auto" autoplay loop
-           aria-hidden="true" tabindex="-1">
-      <source src="bilder/08-teamet-orbit.mp4" type="video/mp4">
-    </video>
+    <video class="nx-hero-video" poster="/bilder/08-teamet-1280.jpg"
+           muted playsinline preload="none" autoplay loop
+           data-video="/bilder/08-teamet-orbit.mp4"
+           aria-hidden="true" tabindex="-1"></video>
     <span class="nx-hero-slöja" aria-hidden="true"></span>
   </div>
 
@@ -1085,7 +1084,8 @@
       + 'sizes="56px" width="56" height="56" loading="lazy" decoding="async" '
       + 'alt="' + esc(t.alt) + '">'
       + '</span>'
-      + '<div><div class="sc-name">' + esc(t.namn) + ', ' + t.ålder + '</div>'
+      + '<div><div class="sc-name">' + esc(t.namn) + ', ' + t.ålder
+      + ' <span class="sc-exempel">Exempel</span></div>'
       + '<div class="sc-role">Studiehjälpare · ' + esc(t.ort) + '</div></div>'
       + '</div>'
       + '<div class="sc-body">'
