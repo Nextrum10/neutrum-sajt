@@ -23,26 +23,39 @@ fallback att felsöka, bara två lager där det översta råkar vara tomt.
 
 ---
 
-## Klippet är gjort — det ligger bara inte i repot än
+## Klippen är gjorda — de ligger bara inte i repot än
 
-Genererat 10 september 2026 med **Seedance 2.0**, 8 sekunder, 1280x720,
-utan ljud, med `bilder/hero-nextrum-1920.jpg` som startbild. Kostade 36
-krediter.
+Två versioner, båda **Seedance 2.0**, 8 sekunder, 1280x720, utan ljud,
+med `bilder/hero-nextrum-1920.jpg` som startbild. 36 krediter styck.
 
-**Adress:**
+### 1. Kameran glider åt höger medan de pratar — använd den här
+
+```
+https://d8j0ntlcm91z4.cloudfront.net/user_3J8MIQmxILCJh11pLXUSkMe4fKw/hf_20260910_204643_c501b623-0835-475a-8ecd-5a6a0ae3e80d.mp4
+```
+
+```
+./verktyg/hamta-hero-video.sh <adressen ovan> --pendel
+```
+
+`--pendel` behövs just för att kameran rör sig. Utan den syns skarven var
+åttonde sekund. Se kommentaren i skriptet för vad det kostar.
+
+### 2. Låst kamera, bara personerna rör sig
 
 ```
 https://d8j0ntlcm91z4.cloudfront.net/user_3J8MIQmxILCJh11pLXUSkMe4fKw/hf_20260910_203944_b4034a63-ee02-4718-b0cd-a59f82034a7f.mp4
 ```
 
-Hämta och komprimera den med skriptet:
-
 ```
 ./verktyg/hamta-hero-video.sh <adressen ovan>
 ```
 
-Det lägger den på `bilder/hero-studievy.mp4`, och vyerna börjar spela den
-utan att en rad kod ändras.
+Ingen pendel behövs — bildutsnittet är detsamma i första och sista rutan,
+så loopen går ihop av sig själv.
+
+Båda lägger resultatet på `bilder/hero-studievy.mp4`, och vyerna börjar
+spela det utan att en rad kod ändras.
 
 ### Varför den inte redan ligger där
 
@@ -51,7 +64,21 @@ Utvecklingsmiljön som genererade klippet får inte hämta hem det.
 nätverkspolicy — filen finns hos Higgsfield, men inte i containern. Antingen
 kör ni skriptet lokalt, eller så släpper en administratör fram den värden.
 
-### Prompten som användes
+### Prompten till version 1 (kameran åt höger)
+
+> The camera glides slowly and steadily to the right — a gentle, even
+> truck/dolly move that continues at the same speed from the first frame
+> to the last. No zoom, no tilt, no handheld shake, no easing or stopping.
+> A young male tutor in a cream sweater sits at a light wood table next to
+> a teenage girl in a white t-shirt, and they are talking with each other.
+> He explains something and points at the open notebook with his pen; she
+> answers, nods, looks down and writes on her paper. Mouths moving in
+> natural conversation, small head turns, relaxed gestures. Soft daylight
+> from the window on the right stays constant and unchanged throughout.
+> Warm, calm, unhurried documentary feeling. No cuts, no new objects or
+> people entering the frame, no text.
+
+### Prompten till version 2 (låst kamera)
 
 > Locked-off camera. No zoom, no pan, no dolly — the framing stays exactly
 > as in the reference image from first frame to last. A young male tutor in
@@ -66,10 +93,13 @@ kör ni skriptet lokalt, eller så släpper en administratör fram den värden.
 > feeling. No cuts, no camera shake, no new objects or people entering the
 > frame, no text.
 
-Två saker i den är inte utsmyckning. **Låst kamera** gör loopen osynlig: en
-inzoomning slutar i en annan bildutsnitt än den började i, och skarven syns
-varje varv. **Tom vägg till vänster** är där hälsningen står — händer det
+En sak går igen i båda och är inte utsmyckning: **den tomma väggen till
+vänster ska förbli tom**. Där står hälsningen och korten, och händer det
 något där blir texten oläslig.
+
+Skillnaden mellan dem är loopen. En låst kamera slutar i samma bildutsnitt
+som den började i, så varvet går ihop av sig självt. En kamera som rör sig
+gör det inte, och då behövs `--pendel`.
 
 ### Om ni gör om den
 
