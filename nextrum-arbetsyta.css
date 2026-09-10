@@ -38,12 +38,38 @@
   padding:clamp(22px,3.2vw,44px);
   background:var(--pap-3);
 }
-.vy-hero-media{position:absolute;inset:0;z-index:-2}
+.vy-hero-media{position:absolute;inset:0;z-index:-2;overflow:hidden}
 .vy-hero-media img,
 .vy-hero-media video{
+  position:absolute;inset:0;
   width:100%;height:100%;
   object-fit:cover;object-position:50% 42%;
   display:block;
+}
+
+/* Videon ligger ovanpå bilden och är genomskinlig tills den faktiskt
+   spelar. Saknas filen blir den aldrig synlig, och bilden står kvar —
+   inget fallback att felsöka, bara två lager där det översta råkar
+   vara tomt. */
+.vy-hero-media video{opacity:0;transition:opacity .9s var(--e)}
+.vy-hero-media video.spelar{opacity:1}
+
+/* Stillbilden driver långsamt så att blocket lever även utan film.
+   Fyrtio sekunder och tre procent: tillräckligt för att ögat ska
+   ana att något rör sig, för lite för att någon ska titta på det i
+   stället för att läsa. En poster på en <video> kan inte göra det
+   här — därför är bilden ett eget element. */
+@keyframes vy-hero-drift{
+  from{transform:scale(1) translate3d(0,0,0)}
+  to{transform:scale(1.03) translate3d(-.8%,-.6%,0)}
+}
+.vy-hero-still{
+  animation:vy-hero-drift 40s var(--e-mjuk) infinite alternate;
+  will-change:transform;
+}
+/* Den som bett systemet lugna sig ska inte få något som rör sig alls. */
+@media (prefers-reduced-motion:reduce){
+  .vy-hero-still{animation:none}
 }
 /* Slöjan gör texten läsbar oavsett vad som råkar ligga under den.
    Mörkast nedtill, där rubriken står; nästan genomskinlig upptill

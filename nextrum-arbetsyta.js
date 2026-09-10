@@ -95,11 +95,27 @@ window.NXArbete = (function () {
       return ut;
     }
 
+    /* Bilden ligger ALLTID där, och videon ovanpå den — genomskinlig
+       tills den faktiskt spelar. Två skäl:
+
+       1. Filen behöver inte finnas. Saknas bilder/hero-studievy.mp4
+          händer ingenting alls: videon blir aldrig synlig, bilden
+          står kvar, och konsolen får ett 404 ingen användare ser.
+          Filmen kan alltså läggas till senare utan att en rad
+          markup ändras.
+
+       2. En poster går inte att röra på. Med bilden som ett eget
+          element kan den driva långsamt (se .vy-hero-still i
+          arbetsyta.css) så att blocket lever även utan film — och
+          rörelsen tas över av videon i samma sekund den spelar,
+          i stället för att ligga kvar ovanpå den. */
     var bild = o.bild || 'bilder/hero-nextrum-1280.jpg';
-    var media = o.video
-      ? '<video autoplay muted loop playsinline preload="auto" poster="' + esc(bild) + '"'
-        + ' aria-hidden="true" tabindex="-1"><source src="' + esc(o.video) + '" type="video/mp4"></video>'
-      : '<img src="' + esc(bild) + '" alt="" aria-hidden="true">';
+    var media = '<img class="vy-hero-still" src="' + esc(bild) + '" alt="" aria-hidden="true">'
+      + (o.video
+        ? '<video autoplay muted loop playsinline preload="auto"'
+          + ' aria-hidden="true" tabindex="-1"><source src="' + esc(o.video)
+          + '" type="video/mp4"></video>'
+        : '');
 
     host.innerHTML =
       '<div class="vy-hero-media">' + media + '</div>'
@@ -114,6 +130,22 @@ window.NXArbete = (function () {
       + (o.lede ? '<p class="vy-hero-lede">' + esc(o.lede) + '</p>' : '')
       + '</div>'
       + '<div class="vy-hero-kort">' + kort() + '</div>';
+
+    /* "playing", inte "canplay": canplay lovar att den KAN spela.
+       Tonar vi in där och filen sedan stannar står vi med en svart
+       ruta över bilden. */
+    var film = host.querySelector('video');
+    if (film) {
+      film.addEventListener('playing', function () { film.classList.add('spelar'); });
+      /* autoplay-attributet räcker inte alltid. Ett element som
+         skapats med innerHTML efter sidladdningen får inte alltid
+         samma behandling som ett som stod i dokumentet, och vissa
+         webbläsare kräver ett anrop även för en ljudlös film.
+         Avvisas löftet händer ingenting: bilden står kvar, vilket är
+         precis rätt beteende. */
+      var försök = film.play();
+      if (försök && försök.catch) försök.catch(function () {});
+    }
 
     return {
       /* Nästa pass och olästa ändras medan vyn står öppen. Att rita
