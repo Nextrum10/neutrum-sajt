@@ -30,13 +30,25 @@ set -euo pipefail
 
 URL=""
 PENDEL=0
+SLUTEN=0
 for arg in "$@"; do
   case "$arg" in
     --pendel) PENDEL=1 ;;
+    --sluten) SLUTEN=1 ;;
     -*)       echo "Okänd flagga: $arg" >&2; exit 1 ;;
     *)        URL="$arg" ;;
   esac
 done
+
+if [ "$PENDEL" = "1" ] && [ "$SLUTEN" = "1" ]; then
+  echo "--pendel och --sluten löser samma problem på två sätt. Välj en." >&2
+  exit 1
+fi
+
+# Övertoningens längd i sekunder. 0,8 räcker för att dölja en liten
+# glidning utan att kännas som en effekt. Blir skarven för stor för
+# det är klippet fel, inte siffran.
+TONING=0.8
 
 MAL="bilder/hero-studievy.mp4"
 RA="$(mktemp -t hero-ra-XXXXXX.mp4)"
@@ -109,7 +121,36 @@ echo "Komprimerar…"
 #
 # Längden fördubblas, filstorleken inte fullt ut — andra halvan är
 # samma bilder och komprimerar hårt.
-if [ "$PENDEL" = "1" ]; then
+# SLUTEN
+# Den bästa loopfixen när kameran nästan står still men glider en
+# aning: tona slutet tillbaka in i början.
+#
+# Klippet börjar om vid TONING sekunder i stället för vid noll, och
+# de sista TONING sekunderna korsklipps med de första. Sista rutan
+# blir då exakt samma bild som den första, och skarven upphör att
+# finnas — utan att något går baklänges, till skillnad från pendeln.
+#
+# Kostnaden är TONING sekunder av klippet, inget annat.
+if [ "$SLUTEN" = "1" ]; then
+  D=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$RA")
+  # Kroppen är klippet från TONING och framåt. Huvudet, de första
+  # TONING sekunderna, tonas in ovanpå dess sista TONING sekunder.
+  FORSKJUT=$(awk "BEGIN{printf \"%.3f\", $D - 2*$TONING}")
+  if awk "BEGIN{exit !($FORSKJUT <= 0)}"; then
+    echo "Klippet är för kort för en övertoning på ${TONING}s." >&2
+    exit 1
+  fi
+  echo "  (sluten: slutet tonas tillbaka in i början, ${TONING}s)"
+  ffmpeg -y -loglevel error -i "$RA" -filter_complex "\
+[0:v]scale=1600:-2,split[kropp][huvud];\
+[huvud]trim=duration=$TONING,format=yuva420p,fade=t=in:st=0:d=$TONING:alpha=1,setpts=PTS+$FORSKJUT/TB[in];\
+[kropp]trim=start=$TONING,setpts=PTS-STARTPTS[bas];\
+[bas][in]overlay=eof_action=pass:format=auto[ut]" \
+    -map "[ut]" -an \
+    -c:v libx264 -crf 30 -preset slow -pix_fmt yuv420p \
+    -movflags +faststart \
+    "$MAL"
+elif [ "$PENDEL" = "1" ]; then
   echo "  (pendel: klippet speglas så att loopen går ihop)"
   ffmpeg -y -loglevel error -i "$RA" \
     -filter_complex "[0:v]scale=1600:-2,split[a][b];[b]reverse[r];[a][r]concat=n=2:v=1[ut]" \

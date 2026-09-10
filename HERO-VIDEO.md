@@ -6,10 +6,10 @@ Studievyn, studiehjälparvyn och adminvyn letar alla efter samma fil:
 bilder/hero-studievy.mp4
 ```
 
-**Filen finns inte än.** Tills den gör det visar blocket `bilder/hero-nextrum.jpg`
-med en långsam drift över fyrtio sekunder, så att ytan lever ändå. Läggs
-filen dit tonas videon in i samma sekund den börjar spela — ingen kod
-behöver ändras, ingen inställning slås på.
+Filen ligger på plats. Saknas den — eller går den inte att avkoda, eller
+blockerar webbläsaren autoplay — visar blocket `bilder/hero-nextrum.jpg`
+med en långsam drift över fyrtio sekunder i stället, så att ytan lever
+ändå.
 
 Så här är det byggt (`NXArbete.hero` i `nextrum-arbetsyta.js`):
 
@@ -23,68 +23,73 @@ fallback att felsöka, bara två lager där det översta råkar vara tomt.
 
 ---
 
-## Klippen är gjorda — de ligger bara inte i repot än
+## Videon ligger i repot
 
-Två versioner, båda **Seedance 2.0**, 8 sekunder, 1280x720, utan ljud,
-med `bilder/hero-nextrum-1920.jpg` som startbild. 36 krediter styck.
+`bilder/hero-studievy.mp4` — 1600x900, 16 sekunder, ljudlös, 524 kB.
 
-### Den som ska användas: låst kamera
+Gjord av det klipp som genererades med låst kamera, körd genom
+`verktyg/hamta-hero-video.sh … --pendel`.
 
-Bildutsnittet står still, bara personerna rör sig.
+### Varför pendel, och inte klippet rakt av
+
+Klippet skulle inte loopa. Kameran står inte riktigt still och personerna
+rör sig hela tiden, så sista bildrutan liknar inte den första. Mätt som
+PSNR mellan sista och första rutan — lägre tal betyder större hopp:
+
+| | PSNR | Följd |
+|---|---|---|
+| Vanlig rörelse i klippet, två rutor 0,2 s isär | 32,8 dB | referensvärdet |
+| Klippet rakt av | 19,8 dB | tydligt hopp var åttonde sekund |
+| Övertoning slut mot början | 32,6 dB | **dubbelbild** — flickan syns två gånger |
+| Pendel | 33,1 dB | sömlöst |
+
+Övertoningen mätte bra men såg fel ut: när personerna rört sig, och inte
+bara kameran, blir korsklippet en dubbelexponering. Siffran fångade inte
+det, ögat gör det direkt. Därför pendeln.
+
+En bättre loop-punkt finns inte heller. Sista rutan jämfördes mot alla
+rutor i de tre första sekunderna, och den bästa träffen låg på 22,6 dB
+och blev bara bättre ju närmare slutet man kom. Det är inte en loop-punkt,
+det är bara att närliggande rutor liknar varandra. Scenen driver
+kontinuerligt och har ingen punkt där den går ihop.
+
+### Vad pendeln kostar
+
+Andra halvan spelas baklänges. Pennan skriver bort det den nyss skrev och
+ett nickande huvud nickar uppåt. Bakom slöjan, i den storleken, är det
+svårt att se — men det finns där.
+
+Vill ni hellre slippa det: kör om utan flaggan och ta hoppet i stället,
+
+```
+./verktyg/hamta-hero-video.sh <källan> 
+```
+
+eller ta bort `loop` från `<video>` i `NXArbete.hero` så spelas klippet en
+gång vid inloggning och fryser sedan. Ingen skarv alls, men ingen levande
+bakgrund efter åtta sekunder heller.
+
+### Adresserna till originalen
+
+Låst kamera, den som används:
 
 ```
 https://d8j0ntlcm91z4.cloudfront.net/user_3J8MIQmxILCJh11pLXUSkMe4fKw/hf_20260910_203944_b4034a63-ee02-4718-b0cd-a59f82034a7f.mp4
 ```
 
-Kör i projektets rot, med adressen:
-
-```
-./verktyg/hamta-hero-video.sh <adressen ovan>
-```
-
-Eller, om du redan laddat ner filen, peka på den i stället:
-
-```
-./verktyg/hamta-hero-video.sh ~/Downloads/hf_20260910_203944_b4034a63-….mp4
-```
-
-Sedan checkar du in resultatet:
-
-```
-git add bilder/hero-studievy.mp4 && git commit -m "Hero-videon i vyerna"
-```
-
-Ingen `--pendel` här. Första och sista bildrutan har samma utsnitt, så
-loopen går ihop av sig själv — flaggan skulle bara fördubbla filen och
-låta pennan skriva baklänges i andra halvan utan att lösa något.
-
-### Alternativet: kameran glider åt höger
-
-Finns kvar om ni ändrar er. Mer liv i bilden, men loopen behöver pendeln.
+Kameran glider åt höger, alternativet:
 
 ```
 https://d8j0ntlcm91z4.cloudfront.net/user_3J8MIQmxILCJh11pLXUSkMe4fKw/hf_20260910_204643_c501b623-0835-475a-8ecd-5a6a0ae3e80d.mp4
 ```
 
-```
-./verktyg/hamta-hero-video.sh <adressen ovan> --pendel
-```
+Båda **Seedance 2.0**, 8 sekunder, 1280x720, utan ljud, med
+`bilder/hero-nextrum-1920.jpg` som startbild. 36 krediter styck.
 
-Utan `--pendel` hoppar bilden tillbaka var åttonde sekund, eftersom sista
-rutan ligger en bit till höger om den första.
+Higgsfields CDN-värdar nekas av vissa nätverkspolicyer. Går de inte att
+nå: ladda ner filen i webbläsaren och peka skriptet på den i stället.
 
-Båda lägger resultatet på `bilder/hero-studievy.mp4`, och vyerna börjar
-spela det utan att en rad kod ändras.
-
-### Varför den inte redan ligger där
-
-Utvecklingsmiljön som genererade klippet får inte hämta hem det.
-Higgsfields båda CDN-värdar, `d8j0ntlcm91z4.cloudfront.net` och
-`d2ol7oe51mr4n9.cloudfront.net`, nekas av organisationens nätverkspolicy.
-Filen finns hos Higgsfield, men når inte containern. Antingen kör ni
-skriptet lokalt, eller så släpper en administratör fram värdarna.
-
-### Prompten till alternativet (kameran åt höger)
+### Prompten till alternativet (kameran glider åt höger)
 
 > The camera glides slowly and steadily to the right — a gentle, even
 > truck/dolly move that continues at the same speed from the first frame
@@ -98,7 +103,7 @@ skriptet lokalt, eller så släpper en administratör fram värdarna.
 > Warm, calm, unhurried documentary feeling. No cuts, no new objects or
 > people entering the frame, no text.
 
-### Prompten till den som ska användas (låst kamera)
+### Prompten till den som används (låst kamera)
 
 > Locked-off camera. No zoom, no pan, no dolly — the framing stays exactly
 > as in the reference image from first frame to last. A young male tutor in
