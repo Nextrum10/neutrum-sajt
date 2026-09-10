@@ -45,6 +45,20 @@ misstro.
 
 ---
 
+## Vad som redan är gjort
+
+Steg 1, 3 och 4 nedan är körda mot projektet `ddkfiuvcppalutfulvbi`. De står
+kvar för att de behövs om ni någon gång sätter upp en ny miljö, men just nu
+är det bara steg 2 och 5 som väntar på er.
+
+| Steg | Läge |
+|---|---|
+| 1. Schemat | Applicerat, fyra tabeller på plats |
+| 2. Bolagsfakta | **Väntar på er** |
+| 3. `ANTHROPIC_API_KEY` | Satt, samma som `generate-feedback` använder |
+| 4. Deploy | Båda funktionerna ACTIVE, version 1 |
+| 5. Självtest | **Väntar på er**, kräver inloggad admin |
+
 ## 1. Kör schemat
 
 Supabase → SQL Editor → New query. Klistra in `schema-v13.sql` och kör.

@@ -1,7 +1,8 @@
 -- ============================================================
 -- NEXTRUM — schema v13
 --
--- Körs efter schema-v12.sql.
+-- Körs efter schema-v12.sql. ÄR applicerad i projektet
+-- ddkfiuvcppalutfulvbi.
 --
 -- Bord för de två agenterna: juridik och ekonomi. Inget här ändrar
 -- något som redan finns, det lägger bara till fyra tabeller.
