@@ -274,53 +274,39 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Översikt</h2>
-            <p>Läget just nu. Menyn leder vidare till varje del.</p>
+            <p>Boka nästa pass och se hur det går. Menyn leder vidare till varje del.</p>
           </div>
         </div>
-        <div class="kpis">
-          <div class="kpi"><b id="kpi-klara">0</b><span>Genomförda pass</span></div>
-          <div class="kpi"><b id="kpi-kommande">0</b><span>Kommande pass</span></div>
-          <div class="kpi"><b id="kpi-laxor">0</b><span>Öppna läxor</span></div>
+        <!-- Nyckeltalsraden som låg här är borttagen. När statistiken
+             flyttade upp till Översikt stod genomförda pass och öppna
+             läxor två gånger på samma skärm, en gång som stor siffra
+             och en gång som "Kvar att göra". Numren finns kvar allihop
+             i "I siffror" nedanför, en gång var. -->
+
+        <!-- ============ BOKA ============
+             Bokningen låg förut under Mina lektioner, och Översikt hade
+             ett kort som bara länkade dit. Ett steg i vägen för det man
+             oftast kommer hit för att göra. Nu står den här.
+
+             Widgeten ritas av NXArbete.bokning; markupen är tom med
+             flit. -->
+        <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+          <h5>Boka nästa pass <em id="boka-hos"></em></h5>
+          <div id="boka-inner"><div class="loading">Hämtar</div></div>
         </div>
 
-        <div class="split">
-          <div class="stack">
-
-            <div class="dbox">
-              <h5>Nästa pass</h5>
-              <div id="ov-nasta"><div class="loading">Hämtar</div></div>
-              <a class="vy-mer" href="#lektioner">Visa alla pass <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
-            </div>
-
-            <div class="dbox">
-              <h5>Aktuella läxor <em id="ov-laxor-antal"></em></h5>
-              <div id="ov-laxor"><div class="loading">Hämtar</div></div>
-              <a class="vy-mer" href="#uppgifter">Visa alla läxor <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
-            </div>
-
+        <!-- ============ STATISTIK ============
+             Låg under Min utveckling. Men "hur går det" är en
+             översiktsfråga, och Utveckling handlar om kunskapsområden
+             ämne för ämne — en annan sak, på en annan detaljnivå. -->
+        <div class="stack">
+          <div class="dbox">
+            <h5>I siffror</h5>
+            <div id="stat-tal"><div class="loading">Hämtar</div></div>
           </div>
-          <div class="stack">
-
-            <div class="dbox">
-              <h5>Meddelanden <span class="vy-larm" id="ov-samtal-larm" hidden></span></h5>
-              <div id="ov-samtal"><div class="loading">Hämtar</div></div>
-              <a class="vy-mer" href="#meddelanden">Visa alla meddelanden <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
-            </div>
-
-            <div class="dbox">
-              <h5>Aktuellt mål</h5>
-              <div id="ov-mal"><div class="loading">Hämtar</div></div>
-              <a class="vy-mer" href="#lektioner/plan">Se studieplanen <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
-            </div>
-
-            <div class="dbox">
-              <h5>Boka</h5>
-              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
-                Välj en tid som passar er hos er studiehjälpare.
-              </p>
-              <a class="btn btn-primary btn-sm btn-block" href="#lektioner">Boka nästa pass</a>
-            </div>
-
+          <div class="dbox">
+            <h5>Pass över tid <em>senaste sex månaderna</em></h5>
+            <div id="stat-graf"><div class="loading">Hämtar</div></div>
           </div>
         </div>
       </section>
@@ -335,7 +321,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Mina lektioner</h2>
-            <p>Boka tider, se planen och läs vad som hände på varje pass.</p>
+            <p>Era pass, planen bakom dem och vad som hände på varje. Bokningen står på Översikt.</p>
           </div>
         </div>
 
@@ -350,15 +336,6 @@
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="pass"
              id="panel-pass" aria-labelledby="flik-pass">
-          <!-- ============ BOKA ============
-               Bokningen ritas av NXArbete.bokning. Markupen är tom med
-               flit: den gamla hade tre rullgardiner och en kalender som
-               låg där oavsett om studiehjälparen lagt in några tider. -->
-          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-            <h5>Boka nästa pass <em id="boka-hos"></em></h5>
-            <div id="boka-inner"><div class="loading">Hämtar</div></div>
-          </div>
-
           <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
             <h5>Pass <em id="pass-antal"></em></h5>
             <div id="pass-lista"><div class="loading">Hämtar</div></div>
@@ -429,20 +406,10 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Min utveckling</h2>
-            <p>Kunskapsområden, avklarade uppgifter och hur det rört sig över tid. Allt räknat på riktiga pass och riktiga läxor.</p>
+            <p>Kunskapsområden ämne för ämne, satta av er studiehjälpare. Siffrorna för helheten står på Översikt.</p>
           </div>
         </div>
         <div class="stack">
-
-          <div class="dbox">
-            <h5>I siffror</h5>
-            <div id="stat-tal"><div class="loading">Hämtar</div></div>
-          </div>
-
-          <div class="dbox">
-            <h5>Pass över tid <em>senaste sex månaderna</em></h5>
-            <div id="stat-graf"><div class="loading">Hämtar</div></div>
-          </div>
 
           <!-- ============ UTVECKLING ============ -->
           <div class="dbox">
@@ -1176,14 +1143,12 @@
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
     if (!data || !data.length) {
       S.plan = null;
-      ritaÖvMal();
       host.innerHTML = '<div class="empty">Studieplanen är inte skriven än.<br><br>'
         + 'Vi tar fram den efter första kontakten, utifrån vad ditt barn behöver.</div>';
       return;
     }
     const p = data[0];
     S.plan = p;
-    ritaÖvMal();
     $('#plan-uppdaterad').textContent = p.updated_at ? 'uppdaterad ' + datumText(String(p.updated_at).slice(0, 10)) : '';
     host.innerHTML =
       '<div class="plan-meta">'
@@ -1235,7 +1200,7 @@
     ritaNästaPass();
     ritaStatistik();
     byggSchema();
-    if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Välj en av de lediga tiderna i rutan ovanför.'); return; }
+    if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Boka en ledig tid på Översikt, så står passet här.'); return; }
 
     const idag = new Date().toISOString().slice(0, 10);
     const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
@@ -1485,16 +1450,22 @@
     const kommande = aktiva.filter(b => b.wanted_date >= idag &&
       (b.status === 'requested' || b.status === 'confirmed'));
 
-    $('#kpi-klara').textContent = S.bokningar.filter(b => b.status === 'completed').length;
-    $('#kpi-kommande').textContent = kommande.length;
+    /* Kommande pass räknas här, men visas av ritaStatistik. Den här
+       funktionen körs varje gång bokningarna ändras, statistiken
+       läser bara vidare. */
+    S.kommandeAntal = kommande.length;
+    ritaStatistik();
 
     const b = kommande.sort((x, y) => (x.wanted_date + (x.wanted_time || ''))
       .localeCompare(y.wanted_date + (y.wanted_time || '')))[0];
     const barn = b ? S.barn.find(x => x.id === b.student_id) : null;
 
-    /* Samma pass på två ställen: som kort i hälsningen högst upp och
-       som rad på Översikt. Hälsningen är det första man ser, och
-       "nästa pass" är det oftast enda man kom för att kolla. */
+    /* Kortet i hälsningen högst upp. Det är det första man ser, och
+       "nästa pass" är det oftast enda man kom för att kolla.
+
+       Två olika mål: finns ett pass leder kortet till listan, finns
+       inget leder det till bokningen — som numera står på Översikt,
+       inte under Mina lektioner. */
     if (S.hero) {
       S.hero.uppdatera({
         nasta: b ? {
@@ -1503,70 +1474,28 @@
                 + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
           under: [b.subject, barn ? barn.name : null].filter(Boolean).join(' · ')
         } : {
-          href: '#lektioner',
+          href: '#oversikt',
           text: 'Inga pass inbokade',
           under: 'Boka en tid hos er studiehjälpare'
         }
       });
     }
-
-    const host = $('#ov-nasta');
-    if (!host) return;
-    if (!b) {
-      host.innerHTML = tomt('Inga pass inbokade', 'Boka en tid, så står nästa pass här.');
-      return;
-    }
-    host.innerHTML = NXKontakt.passRad(b, {
-      under: [b.format, barn ? barn.name : null].filter(Boolean).join(' · ')
-    });
   }
 
+  /* Öppna läxor räknas på ett ställe och visas på två: en siffra i
+     sidomenyn och en på fliken. Ingen ska behöva öppna sektionen för
+     att få veta om det ligger något där. */
   function ritaÖvLaxor() {
-    const host = $('#ov-laxor');
-    if (!host) return;
     const öppna = (S.laxor || []).filter(h => h.status !== 'klar');
-    $('#kpi-laxor').textContent = öppna.length;
-    $('#ov-laxor-antal').textContent = öppna.length ? öppna.length + ' att göra' : '';
-
-    /* Läxorna ligger numera under en flik. En siffra i menyn och en
-       på fliken, annars måste man öppna sektionen för att få veta om
-       det finns något där. */
     if (S.sido) S.sido.märke('uppgifter', öppna.length);
     const mark = $('#flik-lax-mark');
     if (mark) { mark.hidden = !öppna.length; mark.textContent = öppna.length || ''; }
-    if (!S.valtBarn) {
-      host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn, så visas läxorna här.');
-      return;
-    }
-    if (!öppna.length) {
-      host.innerHTML = tomt('Inga läxor att göra', 'Allt ni fått är avbockat.');
-      return;
-    }
-    host.innerHTML = öppna.slice(0, 3).map(h => NXStudie.läxRad(h)).join('');
   }
 
-  function ritaÖvMal() {
-    const host = $('#ov-mal');
-    if (!host) return;
-    if (!S.plan || !(S.plan.goals || S.plan.subject)) {
-      host.innerHTML = tomt('Inget mål satt än', 'Studieplanen skrivs efter första kontakten.');
-      return;
-    }
-    host.innerHTML =
-      (S.plan.subject ? '<span class="tag">' + esc(S.plan.subject) + '</span>' : '')
-      + (S.plan.goals ? '<p class="small" style="margin-top:12px;color:var(--bl-2);line-height:1.6">'
-          + esc(S.plan.goals) + '</p>' : '');
-  }
-
-  /* Tråden med er studiehjälpare, sammanfattad. Skrivandet sker i
-     Meddelanden — det här är vägen dit, inte en andra chatt. */
+  /* Olästa meddelanden: siffra i sidomenyn och undertext på
+     hälsningens chattkort. Själva tråden ligger i Meddelanden — det
+     här är vägen dit, inte en andra chatt. */
   async function ritaÖvSamtal() {
-    const host = $('#ov-samtal');
-    if (!host) return;
-
-    const larm = $('#ov-samtal-larm');
-    larm.hidden = !S.olästaAntal;
-    larm.textContent = S.olästaAntal ? S.olästaAntal + ' ny' + (S.olästaAntal > 1 ? 'a' : '') : '';
     if (S.sido) S.sido.märke('meddelanden', S.olästaAntal);
     if (S.hero) {
       S.hero.uppdatera({
@@ -1578,30 +1507,6 @@
         }
       });
     }
-
-    if (!S.profil.matched_tutor_id) {
-      host.innerHTML = tomt('Ingen studiehjälpare än', 'Vi kopplar ihop er, sedan syns tråden här.');
-      return;
-    }
-
-    const res = await supa.from('messages')
-      .select('body, sender_id, created_at')
-      .eq('parent_id', S.user.id)
-      .eq('tutor_id', S.profil.matched_tutor_id)
-      .order('created_at', { ascending: false })
-      .limit(1);
-    if (res.error) { host.innerHTML = tomt('Kunde inte hämta meddelandena', felText(res.error)); return; }
-
-    const m = (res.data || [])[0];
-    const namn = (S.tutor && S.tutor.full_name) || 'Er studiehjälpare';
-    host.innerHTML = '<div class="vy-samtal"><a href="#meddelanden">'
-      + M.avatar(namn, S.tutorAvatar || null, { liten: true })
-      + '<span class="vy-samtal-text"><b>' + esc(namn) + '</b><span>'
-      + (m ? esc((m.sender_id === S.user.id ? 'Du: ' : '') + m.body) : 'Inga meddelanden än')
-      + '</span></span>'
-      + (S.olästaAntal ? '<span class="oläst-prick" aria-label="' + S.olästaAntal + ' olästa"></span>' : '')
-      + (m ? '<span class="vy-samtal-nar">' + esc(kortTid(m.created_at)) + '</span>' : '')
-      + '</a></div>';
   }
 
   /* ============================================================
@@ -1692,8 +1597,9 @@
     const klara = (S.laxor || []).filter(h => h.status === 'klar').length;
     const öppna = (S.laxor || []).filter(h => h.status !== 'klar').length;
 
-    tal.innerHTML = '<div class="stat-tal">'
+    tal.innerHTML = '<div class="stat-tal stat-tal-5">'
       + '<div><b>' + genomforda.length + '</b><span>Genomförda pass</span></div>'
+      + '<div><b>' + (S.kommandeAntal || 0) + '</b><span>Kommande pass</span></div>'
       + '<div><b>' + klara + '</b><span>Avklarade läxor</span></div>'
       + '<div><b>' + öppna + '</b><span>Kvar att göra</span></div>'
       + '<div><b>' + (S.progressAntal || 0) + '</b><span>Kunskapsområden</span></div>'
@@ -1856,7 +1762,9 @@
 
     /* Barnraden hör bara hemma där innehållet gäller ett valt barn.
        På Översikt och kontosidorna är den brus överst. */
-    const MED_KONTEXT = ['uppgifter', 'utveckling', 'lektioner'];
+    /* Översikt är med sedan bokningen flyttade dit: ett pass bokas
+       åt ett visst barn, och då måste barnväljaren synas. */
+    const MED_KONTEXT = ['oversikt', 'uppgifter', 'utveckling', 'lektioner'];
     S.sido = NXStudie.sidomeny({
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
       onByt: sek => { $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1; }

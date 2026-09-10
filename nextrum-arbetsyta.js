@@ -117,9 +117,14 @@ window.NXArbete = (function () {
           + '" type="video/mp4"></video>'
         : '');
 
+    /* Blocket går kant i kant med skärmen, men texten ska ändå stå
+       i linje med sidomenyn under. Därför en inre yta med samma
+       maxbredd och samma sidmarginal som resten av sidan: sektionen
+       bär bilden, ytan bär innehållet. */
     host.innerHTML =
       '<div class="vy-hero-media">' + media + '</div>'
       + '<span class="vy-hero-sloja" aria-hidden="true"></span>'
+      + '<div class="vy-hero-yta">'
       + (o.marke
         ? '<span class="vy-hero-marke">' + (o.marke.ikon || '')
           + esc(o.marke.text) + '</span>'
@@ -129,7 +134,8 @@ window.NXArbete = (function () {
       + '<h1>' + esc(hälsningsrad(o.namn)) + '</h1>'
       + (o.lede ? '<p class="vy-hero-lede">' + esc(o.lede) + '</p>' : '')
       + '</div>'
-      + '<div class="vy-hero-kort">' + kort() + '</div>';
+      + '<div class="vy-hero-kort">' + kort() + '</div>'
+      + '</div>';
 
     /* "playing", inte "canplay": canplay lovar att den KAN spela.
        Tonar vi in där och filen sedan stannar står vi med en svart

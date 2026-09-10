@@ -31,13 +31,51 @@
   position:relative;
   isolation:isolate;
   overflow:hidden;
-  border-radius:clamp(16px,2vw,26px);
-  margin-bottom:clamp(26px,3.4vw,44px);
-  min-height:clamp(280px,34vw,420px);
-  display:flex;flex-direction:column;justify-content:flex-end;
-  padding:clamp(22px,3.2vw,44px);
   background:var(--pap-3);
+  display:flex;flex-direction:column;
+
+  /* Kant i kant med skärmen. Blocket ligger i .wrap, som är
+     begränsad till 1240px med sidmarginal — de här två raderna tar
+     bort båda utan att elementet behöver flyttas i markupen.
+
+     100vw och inte 100%: procenten skulle räkna på wrappen, alltså
+     precis den bredd vi vill ifrån. */
+  width:100vw;
+  margin-inline:calc(50% - 50vw);
+  border-radius:0;
+
+  /* Upp under sidhuvudet. .vy main har en padding-top som håller
+     innehållet undan det fixerade sidhuvudet — bra för text, men den
+     lämnade en remsa sidbakgrund ovanför blocket som fick det att se
+     löst placerat ut. Marginalen äter upp den, och samma mått läggs
+     tillbaka som padding så att hälsningen inte hamnar bakom
+     sidhuvudet. Att videons översta rader döljs gör inget: den är
+     bakgrund, och sidhuvudet är ogenomskinligt i vyerna. */
+  margin-top:calc(-1 * clamp(104px,11vw,150px));
+  padding-top:calc(clamp(104px,11vw,150px) + clamp(20px,2.4vw,36px));
+
+  margin-bottom:clamp(26px,3.4vw,44px);
+  min-height:clamp(430px,52vw,700px);
+  padding-bottom:clamp(28px,4vw,56px);
 }
+
+/* Innehållets yta. Samma maxbredd och sidmarginal som resten av
+   sidan, så att hälsningen står rakt ovanför sidomenyn i stället
+   för att glida ut mot skärmkanten när blocket blev bredare. */
+.vy-hero-yta{
+  position:relative;
+  flex:1;
+  width:100%;
+  max-width:var(--maxw);
+  margin-inline:auto;
+  padding-inline:var(--pad);
+  display:flex;flex-direction:column;justify-content:flex-end;
+}
+
+/* Adminvyn är ett arbetsbord, inte en ankomstskärm. Där ska
+   tabellerna synas utan att man scrollar förbi en halv skärm bild
+   först. Samma block, kortare. */
+.vy-admin .vy-hero{min-height:clamp(240px,26vw,340px)}
 .vy-hero-media{position:absolute;inset:0;z-index:-2;overflow:hidden}
 .vy-hero-media img,
 .vy-hero-media video{
@@ -85,7 +123,10 @@
    ensam bricka mitt på sidan, utan rubrik att höra ihop med. Här
    sitter den där sådant sitter: uppe till höger i det den beskriver. */
 .vy-hero-marke{
-  position:absolute;top:clamp(16px,2.2vw,26px);right:clamp(16px,2.2vw,26px);
+  /* Ligger i den inre ytan, inte i sektionen. Efter att blocket gick
+     kant i kant hade den annars klistrat sig mot skärmkanten i
+     stället för att linjera med innehållet. */
+  position:absolute;top:0;right:var(--pad);
   display:inline-flex;align-items:center;gap:9px;
   padding:7px 14px 7px 10px;
   border-radius:100px;
@@ -174,8 +215,40 @@
 }
 
 @media (max-width:640px){
-  .vy-hero{min-height:auto;padding:20px}
+  /* Blocket får krympa i höjd på en telefon, men kompensationen för
+     marginalen upp under sidhuvudet måste följa med. En kort
+     padding-genväg här nollställde den, och då drog marginalen upp
+     hälsningen bakom det ogenomskinliga sidhuvudet. Sidmarginalen
+     sätts inte här alls — den sitter på .vy-hero-yta. */
+  .vy-hero{
+    min-height:auto;
+    padding-top:calc(clamp(104px,11vw,150px) + 18px);
+    padding-bottom:26px;
+  }
   .vy-hero-kort > *{min-width:100%}
+}
+
+/* Fem tal, inte fyra. Studievyns "I siffror" fick ett femte tal när
+   nyckeltalsraden överst på Översikt togs bort — den upprepade
+   genomförda pass och öppna läxor som redan stod i kortet nedanför,
+   och kommande pass flyttade in hit i stället.
+
+   Basregeln i nextrum-vy.css lägger fyra i bredd, och då blev det
+   femte talet ensamt. Studiehjälparvyn har fortfarande fyra tal och
+   ska inte röras, därför en egen klass och inte #stat-tal.
+
+   Dubbelklassen är med flit: den vinner över basregeln oavsett i
+   vilken ordning stilmallarna råkar laddas. */
+@container (min-width:620px){
+  .stat-tal.stat-tal-5{grid-template-columns:repeat(5,1fr)}
+}
+
+/* Smalare än så delar talen på två eller fyra spalter, och då blir
+   det femte över. Det får ta hela sista raden i stället för att lämna
+   en tom ruta bredvid sig — rutnätets fogar är synliga, så en tom
+   cell ser ut som ett fel och inte som luft. */
+@container (max-width:619.98px){
+  .stat-tal.stat-tal-5 > div:last-child{grid-column:1 / -1}
 }
 
 /* Den som bett systemet lugna sig ska inte få en loopande film. */
