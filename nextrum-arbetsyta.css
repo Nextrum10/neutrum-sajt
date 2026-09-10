@@ -251,6 +251,40 @@
   .stat-tal.stat-tal-5 > div:last-child{grid-column:1 / -1}
 }
 
+/* ------------------------------------------------------------
+   BARNVÄLJAREN I SEKTIONSRUBRIKEN
+
+   Barnen hanteras under Profil & inställningar. Det här är bara
+   omkopplaren: vilket barn sektionen nedanför gäller.
+
+   Den ligger i .vy-sek-topp, som redan är en flexrad med
+   space-between, så den hamnar till höger om rubriken av sig själv
+   och lägger sig under den på en smal skärm.
+
+   Har familjen ett enda barn sätter JS hidden på hela raden. Då
+   syns ingenting, vilket är rätt: en rullgardin med ett alternativ
+   är en fråga utan svar.
+   ------------------------------------------------------------ */
+.vy-barnvaxel{
+  display:inline-flex;align-items:center;gap:10px;
+  flex:none;padding-bottom:2px;
+}
+.vy-barnvaxel > span{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
+  white-space:nowrap;
+}
+/* Smalare än .sel, som är byggd för formulärkolumner och tar hela
+   bredden. Här ska den ta plats efter innehållet, inte före. */
+.vy-barnvaxel .sel{
+  width:auto;min-width:170px;max-width:260px;
+  padding:7px 30px 7px 11px;font-size:.85rem;
+}
+@media (max-width:640px){
+  .vy-barnvaxel{width:100%}
+  .vy-barnvaxel .sel{flex:1;max-width:none}
+}
+
 /* Den som bett systemet lugna sig ska inte få en loopande film. */
 @media (prefers-reduced-motion:reduce){
   .vy-hero-media video{display:none}

@@ -214,61 +214,6 @@
 
       <div>
 
-        <!-- Barnet allt nedanför gäller. Ligger utanför sektionerna
-             eftersom läxor, material, plan och rapporter alla utgår
-             från det som är valt. -->
-        <div class="vy-kontext">
-    <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-      <h5>Barn <em id="barn-antal"></em></h5>
-      <div class="between">
-        <div style="flex:1;min-width:220px">
-          <select class="sel" id="barn-val" style="max-width:340px" aria-label="Välj barn"></select>
-        </div>
-        <div style="display:flex;gap:9px;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" id="andra-barn">Ändra uppgifter</button>
-          <button class="btn btn-ghost btn-sm" id="lagg-till-barn">Lägg till barn</button>
-        </div>
-      </div>
-
-      <form id="barn-andra" hidden class="vy-fall">
-        <div class="vy-form-rad">
-          <div class="pay-field"><label for="b-skola">Skola</label><input class="inp" id="b-skola"></div>
-          <div class="pay-field"><label for="b-amnen">Ämnen (kommaseparerat)</label><input class="inp" id="b-amnen" placeholder="Matematik, Svenska"></div>
-        </div>
-        <div class="fgroup" style="margin-top:12px">
-          <label for="b-mal">Studiemål <span style="font-weight:400;color:var(--muted-2)">(er studiehjälpare ser det här)</span></label>
-          <textarea class="inp" id="b-mal" style="min-height:70px" placeholder="t.ex. Höja betyget i matte till våren"></textarea>
-        </div>
-        <div class="fgroup">
-          <label for="b-egna">Era egna anteckningar <span style="font-weight:400;color:var(--muted-2)">(bara ni ser dem)</span></label>
-          <textarea class="inp" id="b-egna" style="min-height:70px" placeholder="Sådant ni vill komma ihåg själva."></textarea>
-        </div>
-        <div class="vy-knapprad">
-          <button class="btn btn-primary btn-sm" type="submit">Spara</button>
-          <button class="btn btn-ghost btn-sm" type="button" id="andra-avbryt">Avbryt</button>
-        </div>
-        <p class="ok-msg" id="b-andra-msg"></p>
-      </form>
-      <form id="barn-form" hidden style="margin-top:18px;border-top:1px solid var(--line);padding-top:18px">
-        <div class="form-grid">
-          <div class="pay-field"><label for="b-namn">Barnets namn</label><input class="inp" id="b-namn" required></div>
-          <div class="pay-field"><label for="b-ak">Årskurs</label>
-            <select class="sel" id="b-ak">
-              <option value="">Välj</option>
-              <option>Åk 1</option><option>Åk 2</option><option>Åk 3</option><option>Åk 4</option><option>Åk 5</option>
-              <option>Åk 6</option><option>Åk 7</option><option>Åk 8</option><option>Åk 9</option>
-              <option>Gymnasiet år 1</option><option>Gymnasiet år 2</option><option>Gymnasiet år 3</option>
-            </select>
-          </div>
-          <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
-            <button class="btn btn-primary btn-sm" type="submit">Spara</button>
-            <button class="btn btn-ghost btn-sm" type="button" id="avbryt-barn">Avbryt</button>
-          </div>
-          <p class="ok-msg" id="barn-msg"></p>
-        </div>
-      </form>
-    </div>
-        </div>
 
       <section class="vy-sek" data-sek="oversikt">
         <div class="vy-sek-topp">
@@ -276,6 +221,14 @@
             <h2>Översikt</h2>
             <p>Boka nästa pass och se hur det går. Menyn leder vidare till varje del.</p>
           </div>
+          <!-- Barnväljaren. Tom och osynlig när familjen har ett
+               enda barn, vilket de flesta har — då finns inget att
+               välja mellan och raden vore bara brus. Fylls av
+               ritaBarnvaxel(). -->
+          <label class="vy-barnvaxel" data-barnvaxel hidden>
+            <span>Visar</span>
+            <select class="sel sel-sm" aria-label="Byt barn"></select>
+          </label>
         </div>
         <!-- Nyckeltalsraden som låg här är borttagen. När statistiken
              flyttade upp till Översikt stod genomförda pass och öppna
@@ -323,6 +276,14 @@
             <h2>Mina lektioner</h2>
             <p>Era pass, planen bakom dem och vad som hände på varje. Bokningen står på Översikt.</p>
           </div>
+          <!-- Barnväljaren. Tom och osynlig när familjen har ett
+               enda barn, vilket de flesta har — då finns inget att
+               välja mellan och raden vore bara brus. Fylls av
+               ritaBarnvaxel(). -->
+          <label class="vy-barnvaxel" data-barnvaxel hidden>
+            <span>Visar</span>
+            <select class="sel sel-sm" aria-label="Byt barn"></select>
+          </label>
         </div>
 
         <div class="vy-flikar" role="tablist" aria-label="Delar av lektionerna">
@@ -376,6 +337,14 @@
             <h2>Uppgifter &amp; material</h2>
             <p>Läxorna att bocka av, och filerna ni fått till dem.</p>
           </div>
+          <!-- Barnväljaren. Tom och osynlig när familjen har ett
+               enda barn, vilket de flesta har — då finns inget att
+               välja mellan och raden vore bara brus. Fylls av
+               ritaBarnvaxel(). -->
+          <label class="vy-barnvaxel" data-barnvaxel hidden>
+            <span>Visar</span>
+            <select class="sel sel-sm" aria-label="Byt barn"></select>
+          </label>
         </div>
 
         <div class="vy-flikar" role="tablist" aria-label="Uppgifter eller material">
@@ -408,6 +377,14 @@
             <h2>Min utveckling</h2>
             <p>Kunskapsområden ämne för ämne, satta av er studiehjälpare. Siffrorna för helheten står på Översikt.</p>
           </div>
+          <!-- Barnväljaren. Tom och osynlig när familjen har ett
+               enda barn, vilket de flesta har — då finns inget att
+               välja mellan och raden vore bara brus. Fylls av
+               ritaBarnvaxel(). -->
+          <label class="vy-barnvaxel" data-barnvaxel hidden>
+            <span>Visar</span>
+            <select class="sel sel-sm" aria-label="Byt barn"></select>
+          </label>
         </div>
         <div class="stack">
 
@@ -482,13 +459,17 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Profil &amp; inställningar</h2>
-            <p>Ditt konto, din bild, ditt lösenord — och vad passen kostar.</p>
+            <p>Ditt konto, barnen och vad passen kostar. Kontot här är
+               ditt som förälder: det är du som står för betalningen och
+               får fakturorna, oavsett hur många barn som pluggar.</p>
           </div>
         </div>
 
         <div class="vy-flikar" role="tablist" aria-label="Profil eller inställningar">
           <button class="vy-flik" type="button" role="tab" data-flik="konto"
                   id="flik-konto" aria-controls="panel-konto">Mitt konto</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="barn"
+                  id="flik-barn" aria-controls="panel-barn">Barn</button>
           <button class="vy-flik" type="button" role="tab" data-flik="pris"
                   id="flik-pris" aria-controls="panel-pris">Pris &amp; villkor</button>
         </div>
@@ -525,6 +506,74 @@
                     <p class="ok-msg" id="kl-msg"></p>
                   </form>
                 </div>
+        </div>
+
+        <!-- ============ BARNEN ============
+             Låg förut som ett kort överst på fyra sektioner, som det
+             första man mötte varje gång. Men man lägger till ett barn
+             en gång och ändrar skolan kanske en gång om året — det är
+             en kontoinställning, inte något man behöver se dagligen.
+
+             Väljaren som byter barn finns kvar där den behövs, som en
+             smal rad i sektionsrubriken, och bara när det finns mer
+             än ett barn att välja mellan. -->
+        <div class="vy-flik-panel" role="tabpanel" data-flik="barn"
+             id="panel-barn" aria-labelledby="flik-barn" hidden>
+
+          <div class="dbox">
+            <h5>Barnen <em id="barn-antal"></em></h5>
+            <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
+              Lägg till ett barn per elev. Läxor, material, studieplan och
+              rapporter hör till ett barn, och passen bokas åt ett barn.
+            </p>
+            <div class="between">
+              <div style="flex:1;min-width:220px">
+                <select class="sel" id="barn-val" style="max-width:340px" aria-label="Välj barn"></select>
+              </div>
+              <div style="display:flex;gap:9px;flex-wrap:wrap">
+                <button class="btn btn-ghost btn-sm" id="andra-barn">Ändra uppgifter</button>
+                <button class="btn btn-ghost btn-sm" id="lagg-till-barn">Lägg till barn</button>
+              </div>
+            </div>
+
+            <form id="barn-andra" hidden class="vy-fall">
+              <div class="vy-form-rad">
+                <div class="pay-field"><label for="b-skola">Skola</label><input class="inp" id="b-skola"></div>
+                <div class="pay-field"><label for="b-amnen">Ämnen (kommaseparerat)</label><input class="inp" id="b-amnen" placeholder="Matematik, Svenska"></div>
+              </div>
+              <div class="fgroup" style="margin-top:12px">
+                <label for="b-mal">Studiemål <span style="font-weight:400;color:var(--muted-2)">(er studiehjälpare ser det här)</span></label>
+                <textarea class="inp" id="b-mal" style="min-height:70px" placeholder="t.ex. Höja betyget i matte till våren"></textarea>
+              </div>
+              <div class="fgroup">
+                <label for="b-egna">Era egna anteckningar <span style="font-weight:400;color:var(--muted-2)">(bara ni ser dem)</span></label>
+                <textarea class="inp" id="b-egna" style="min-height:70px" placeholder="Sådant ni vill komma ihåg själva."></textarea>
+              </div>
+              <div class="vy-knapprad">
+                <button class="btn btn-primary btn-sm" type="submit">Spara</button>
+                <button class="btn btn-ghost btn-sm" type="button" id="andra-avbryt">Avbryt</button>
+              </div>
+              <p class="ok-msg" id="b-andra-msg"></p>
+            </form>
+            <form id="barn-form" hidden style="margin-top:18px;border-top:1px solid var(--line);padding-top:18px">
+              <div class="form-grid">
+                <div class="pay-field"><label for="b-namn">Barnets namn</label><input class="inp" id="b-namn" required></div>
+                <div class="pay-field"><label for="b-ak">Årskurs</label>
+                  <select class="sel" id="b-ak">
+                    <option value="">Välj</option>
+                    <option>Åk 1</option><option>Åk 2</option><option>Åk 3</option><option>Åk 4</option><option>Åk 5</option>
+                    <option>Åk 6</option><option>Åk 7</option><option>Åk 8</option><option>Åk 9</option>
+                    <option>Gymnasiet år 1</option><option>Gymnasiet år 2</option><option>Gymnasiet år 3</option>
+                  </select>
+                </div>
+                <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
+                  <button class="btn btn-primary btn-sm" type="submit">Spara</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="avbryt-barn">Avbryt</button>
+                </div>
+                <p class="ok-msg" id="barn-msg"></p>
+              </div>
+            </form>
+          </div>
         </div>
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="pris"
@@ -793,12 +842,46 @@
       if (!S.valtBarn || !S.barn.some(b => b.id === S.valtBarn)) S.valtBarn = S.barn[0].id;
       val.value = S.valtBarn;
     }
+    ritaBarnväxel();
     laddaBokning();
   }
 
-  $('#barn-val').addEventListener('change', e => {
-    S.valtBarn = e.target.value || null;
+  /* Väljaren i sektionsrubrikerna. Själva hanteringen av barnen bor
+     under Profil & inställningar — man lägger till ett barn en gång
+     och ändrar skolan kanske en gång om året. Men VILKET barn man
+     tittar på är en fråga varje sektion ställer, och att gå till
+     kontosidan för att byta vore fel.
+
+     Därför en smal rad, och bara när det finns något att välja
+     mellan: har familjen ett barn syns ingenting alls. Det är fallet
+     för nästan alla, och en rullgardin med ett val är bara brus. */
+  function ritaBarnväxel() {
+    const flera = S.barn.length > 1;
+    document.querySelectorAll('[data-barnvaxel]').forEach(rad => {
+      rad.hidden = !flera;
+      if (!flera) return;
+      const sel = rad.querySelector('select');
+      sel.innerHTML = S.barn.map(b =>
+        '<option value="' + b.id + '">' + esc(b.name) + (b.grade ? ' · ' + esc(b.grade) : '') + '</option>').join('');
+      sel.value = S.valtBarn;
+    });
+  }
+
+  /* Ett enda ställe som byter barn, oavsett vilken rullgardin som
+     rördes. Alternativet vore att varje väljare laddade om sitt eget
+     och sedan glömde att uppdatera de andra. */
+  function bytBarn(id) {
+    S.valtBarn = id || null;
+    const val = $('#barn-val');
+    if (val && !val.disabled) val.value = S.valtBarn || '';
+    ritaBarnväxel();
     laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); laddaMaterial(); laddaBokning();
+  }
+
+  $('#barn-val').addEventListener('change', e => bytBarn(e.target.value));
+
+  document.querySelectorAll('[data-barnvaxel] select').forEach(sel => {
+    sel.addEventListener('change', e => bytBarn(e.target.value));
   });
 
   /* Familjen äger barnets uppgifter. Studiemålet ser studiehjälparen,
@@ -894,7 +977,7 @@
     $('#lax-antal').textContent = '';
     if (!S.valtBarn) {
       S.laxor = [];
-      host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn högst upp.');
+      host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.');
       ritaÖvLaxor();
       return;
     }
@@ -956,7 +1039,7 @@
   async function laddaProgress() {
     const host = $('#prg-lista');
     $('#prg-antal').textContent = '';
-    if (!S.valtBarn) { host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn högst upp.'); return; }
+    if (!S.valtBarn) { host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.'); return; }
 
     host.innerHTML = laddar();
     const { data, error } = await supa
@@ -991,7 +1074,7 @@
   async function laddaMaterial() {
     const host = $('#mat-lista');
     $('#mat-antal').textContent = '';
-    if (!S.valtBarn) { host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn högst upp.'); return; }
+    if (!S.valtBarn) { host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.'); return; }
 
     host.innerHTML = laddar();
     const { data, error } = await supa
@@ -1363,7 +1446,7 @@
     ladda: async () => {
       if (!S.valtBarn) {
         return { spärr: NXStudie.tomt('Lägg till ditt barn först',
-          'Bokningen behöver veta vem passet gäller. Barnraden ligger högst upp på sidan.') };
+          'Bokningen behöver veta vem passet gäller. Barnen läggs till under Profil & inställningar.') };
       }
       const [upptagna, tider] = await Promise.all([
         NX.hämtaUpptagna(S.profil.matched_tutor_id),
@@ -1760,14 +1843,8 @@
       profil: NXArbete.flikar($('section[data-sek="profil"]'))
     };
 
-    /* Barnraden hör bara hemma där innehållet gäller ett valt barn.
-       På Översikt och kontosidorna är den brus överst. */
-    /* Översikt är med sedan bokningen flyttade dit: ett pass bokas
-       åt ett visst barn, och då måste barnväljaren synas. */
-    const MED_KONTEXT = ['oversikt', 'uppgifter', 'utveckling', 'lektioner'];
     S.sido = NXStudie.sidomeny({
-      nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
-      onByt: sek => { $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1; }
+      nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt'
     });
 
     /* De fyra sektioner som slogs ihop hade egna adresser. Bokmärken,
