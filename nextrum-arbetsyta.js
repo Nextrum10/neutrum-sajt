@@ -104,6 +104,10 @@ window.NXArbete = (function () {
     host.innerHTML =
       '<div class="vy-hero-media">' + media + '</div>'
       + '<span class="vy-hero-sloja" aria-hidden="true"></span>'
+      + (o.marke
+        ? '<span class="vy-hero-marke">' + (o.marke.ikon || '')
+          + esc(o.marke.text) + '</span>'
+        : '')
       + '<div class="vy-hero-inne">'
       + (o.etikett ? '<span class="vy-hero-et">' + esc(o.etikett) + '</span>' : '')
       + '<h1>' + esc(hälsningsrad(o.namn)) + '</h1>'

@@ -162,13 +162,6 @@
          ============================================================ -->
     <section class="vy-hero" id="vy-hero" aria-labelledby="hej"></section>
 
-    <div class="vy-topp" style="margin-bottom:clamp(20px,2.4vw,28px)">
-      <div></div>
-      <span class="vy-marke">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg>
-        <span>Studiehjälpare<span class="vy-marke-sub">Nextrum arbetsvy</span></span>
-      </span>
-    </div>
 
     <div class="vy-layout">
 
@@ -984,6 +977,8 @@
     na.innerHTML = '<span class="nx-notis-hus" id="notis-hus"></span>'
       + '<span class="who-chip">' + M.avatar(namn, S.minAvatar, { liten: true })
       + '<b>' + esc(namn) + '</b><span class="roll">Studiehjälpare</span></span>'
+      + (S.profil && S.profil.is_admin
+        ? '<a class="btn btn-ghost btn-sm" href="/admin">Admin</a>' : '')
       + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
     ritaNotiser();
     ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
@@ -3080,6 +3075,7 @@
       lede: 'Dina pass, dina elever och vad du tjänat.',
       video: 'bilder/hero-studievy.mp4',
       bild: 'bilder/hero-nextrum-1280.jpg',
+      marke: { text: 'Studiehjälpare', ikon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg>' },
       chatt: { href: '#meddelanden', text: 'Meddelanden', under: 'Skriv till familjerna' }
     });
 

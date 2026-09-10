@@ -55,6 +55,31 @@
     linear-gradient(to right,rgba(20,17,12,.5) 0%,rgba(20,17,12,0) 62%);
 }
 
+/* Rollmärket. Låg förut i ett eget block under hero och blev då en
+   ensam bricka mitt på sidan, utan rubrik att höra ihop med. Här
+   sitter den där sådant sitter: uppe till höger i det den beskriver. */
+.vy-hero-marke{
+  position:absolute;top:clamp(16px,2.2vw,26px);right:clamp(16px,2.2vw,26px);
+  display:inline-flex;align-items:center;gap:9px;
+  padding:7px 14px 7px 10px;
+  border-radius:100px;
+  border:1px solid rgba(239,230,214,.24);
+  background:rgba(20,17,12,.44);
+  backdrop-filter:blur(9px) saturate(150%);
+  -webkit-backdrop-filter:blur(9px) saturate(150%);
+  color:#EFE6D6;
+  font-size:.82rem;font-weight:600;
+  white-space:nowrap;
+}
+.vy-hero-marke svg{
+  width:16px;height:16px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;opacity:.8;
+}
+/* På telefon konkurrerar märket med rubriken om samma hörn, och
+   rubriken vinner den — den säger vem du är, märket bara var du är. */
+@media (max-width:640px){.vy-hero-marke{display:none}}
+
 .vy-hero-inne{position:relative;max-width:46ch}
 .vy-hero-et{
   display:inline-block;
