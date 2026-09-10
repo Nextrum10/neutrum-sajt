@@ -9,3 +9,15 @@
 # dem. De ligger kvar lokalt i bilder/ men versionshanteras inte —
 # tappar du datorn finns de ingen annanstans.
 bilder/*.png
+
+# Higgsfield-skills, installerade med `npx skills add higgsfield-ai/skills`.
+# Verktyg för den som bygger sajten, inte en del av sajten. De ligger
+# kvar lokalt men versionshanteras inte — annars hamnar åtta
+# leverantörskataloger i webbplatsens repo vid nästa `git add -A`.
+#
+# Följden: de försvinner när utvecklingsmiljön återskapas och måste
+# installeras om. Vill ni hellre att de följer med repot, ta bort de
+# tre raderna nedan och checka in dem.
+.agents/
+.claude/skills/
+skills-lock.json
