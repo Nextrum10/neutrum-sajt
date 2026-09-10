@@ -160,11 +160,68 @@ Platsen där punkt 1–2 ska in är utmärkt med en kommentar i
 
 ---
 
+## 8. Driftsätt fakturautskicket
+
+Månadskörningen SKAPAR fakturor. Den skickar dem inte. Utskicket ligger i en egen
+funktion, `faktura-utskick`, som knappen **Skicka** i adminvyn anropar.
+
+```
+supabase functions deploy faktura-utskick
+```
+
+Den behöver ingen ny secret: `RESEND_API_KEY` sattes redan för `lead-notis`
+(se `DEPLOY-EPOST.md`), och `SUPABASE_URL`, `SUPABASE_ANON_KEY` och
+`SUPABASE_SERVICE_ROLE_KEY` finns automatiskt i varje funktion.
+
+**Låt `verify_jwt` vara på.** Funktionen anropas av en inloggad admin, inte av ett
+schema. Att det är på räcker dock inte som skydd — varje inloggad familj har också
+en giltig token — så funktionen kontrollerar `is_admin` med anroparens EGEN token
+innan den rör `service_role`. Ordningen står kommenterad i filen.
+
+### Vad knappen faktiskt gör
+
+1. Torrkörning först. Adminvyn visar exakt vad familjen kommer att läsa, och
+   ingenting har skickats än.
+2. Trycker du *Skicka nu* går mejlet via Resend.
+3. **Först därefter** sätts `status = 'skickad'` och `skickad_at`. Går mejlet fel
+   står fakturan kvar som utkast och går att försöka igen.
+
+Den ordningen är hela poängen. Ett läge som säger "skickad" om ett mejl som aldrig
+gick är värre än ingen knapp: det får någon att sluta undra var fakturan tog vägen,
+och felet upptäcks först när betalningen uteblir.
+
+**Ingen reservavsändare här.** `lead-notis` faller tillbaka på
+`onboarding@resend.dev` när nextrum.se inte är verifierad — rätt där, för det
+mejlet går till oss ändå. Reserven når bara Resend-kontots egen adress, alltså
+aldrig familjen. Att markera en faktura som skickad när den landade hos oss själva
+vore att skriva in en osanning i databasen och sedan fakturera på den. Är domänen
+inte verifierad får ni ett fel och fakturan står kvar som utkast.
+
+### Förfallodagen
+
+Räknas från när fakturan **skickas**, inte från när körningen skapade den. Villkoret
+lovar familjen fjorton dagar; skapas fakturan den 1:a och skickas den 5:e vore det
+tio. En påminnelse flyttar aldrig fram datumet.
+
+### Utbetalningarna
+
+Knappen **Skicka underlag** mejlar studiehjälparen vad hen kommer att få, så att hen
+hinner säga ifrån innan pengarna går. Den ändrar ingen status — att visa ett underlag
+är inte att godkänna det.
+
+**Själva överföringen finns inte.** Det finns ingen betaltjänst kopplad, så ingen
+knapp i adminvyn flyttar pengar. `Utbetald` betyder "vi har betalat från banken", och
+det måste ni ha gjort innan ni sätter det. Se avsnitt 7 för Stripe Connect.
+
+---
+
 ## Om något ser fel ut
 
-Fakturan skapas som `skickad` direkt. Vill ni hellre granska först, ändra
-`status: 'skickad'` till `status: 'utkast'` i funktionen — familjens vy visar då
-"Utkast" och ingen betalknapp.
+Fakturan skapas som `utkast` och blir `skickad` först när någon tryckt Skicka i
+adminvyn och mejlet gått iväg. Vill ni att körningen ska skapa dem färdigskickade
+i stället — utan mejl — ändra `status: 'utkast'` tillbaka i funktionen. Tänk efter
+en gång till innan ni gör det: då betyder ordet "skickad" inte längre att någon
+fått fakturan.
 
 Behöver ni ta bort en felaktig faktura: ta bort den i Table Editor. Raderna följer
 med (`on delete cascade`), och passen blir automatiskt ofakturerade igen och

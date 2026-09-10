@@ -600,6 +600,21 @@ table.adm .adm-tal{
    7. SMÅSAKER SOM SAKNADES
    ============================================================ */
 
+/* Förhandsvisningen i en bekräftelseruta: mejlet som det kommer att
+   läsas. Egen rullning, för ett fakturamejl är längre än rutan och
+   knapparna måste synas hela tiden — annars trycker man Skicka utan
+   att ha sett slutet. */
+.nx-fraga-prov{
+  font-family:var(--f-mono);
+  font-size:11.5px;line-height:1.65;
+  white-space:pre-wrap;word-break:break-word;
+  text-align:left;
+  max-height:34vh;overflow:auto;
+  margin:16px 0 0;padding:14px 16px;
+  border:1px solid var(--ln);border-radius:12px;
+  background:var(--pap-2);color:var(--bl-2);
+}
+
 /* En avstängd knapp såg ut precis som en påslagen. Det märktes
    knappt förut, för de flesta knappar börjar påslagna — men
    bokningen och "Spara tiderna" öppnar avstängda, och en knapp som

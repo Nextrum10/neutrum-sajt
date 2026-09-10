@@ -135,6 +135,12 @@ window.NXStudie = (function () {
         '<div class="nx-fraga-box" role="alertdialog" aria-modal="true" aria-labelledby="fraga-t">'
         + '<h3 id="fraga-t">' + esc(o.titel || 'Är du säker?') + '</h3>'
         + (o.text ? '<p>' + esc(o.text) + '</p>' : '')
+        /* Förhandsvisning: text som ska läsas exakt som den står,
+           med sina radbrytningar. Ett <p> hade klämt ihop ett helt
+           fakturamejl till en enda mening. Fortfarande escapad —
+           innehållet kommer från servern, inte från oss. */
+        + (o.forhandsvisning
+          ? '<pre class="nx-fraga-prov">' + esc(o.forhandsvisning) + '</pre>' : '')
         + '<div class="nx-fraga-knappar">'
         + '<button type="button" class="btn btn-ghost" data-svar="nej">' + esc(o.avbryt || 'Avbryt') + '</button>'
         + '<button type="button" class="btn btn-primary" data-svar="ja">' + esc(o.knapp || 'Ta bort') + '</button>'

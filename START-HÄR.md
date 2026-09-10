@@ -104,7 +104,11 @@ Postgres RLS kan inte begränsa enskilda kolumner, så lösningen är två trigg
 
 ## Vad som fortfarande saknas
 
-- **Betalning.** Ingen Stripe. Priset visas men inga pengar rör sig. Sköts utanför plattformen tills vidare.
+- **Betalning.** Fakturor skapas av månadskörningen och **skickas på riktigt** med
+  knappen i adminvyn (`faktura-utskick`, se `DEPLOY-BETALNING.md`). Men ingen
+  betaltjänst är kopplad: familjen betalar utanför plattformen, och `Betald` är
+  något ni kryssar i när pengarna kommit. Utbetalningarna likaså — underlaget går
+  att mejla, själva överföringen gör ni från banken.
 - **AI-återkopplingen är inte deployad.** Koden finns i `supabase/functions/generate-feedback/`, se `DEPLOY-AI-FUNKTION.md`. Tills den är uppe visas studiehjälparens råa anteckningar rakt av för föräldern. Det är en fallback, inte ett fel.
 - **Notiser.** Ingen får mejl när något händer. Ni får kolla adminvyn.
 - **Hero-videon i vyerna.** De inloggade vyerna letar efter

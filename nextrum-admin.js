@@ -545,7 +545,19 @@
       { namn: 'Familj', rita: f => esc(f.familj) },
       { namn: 'Belopp', rita: f => '<span class="adm-tal">' + esc(kronor(f.belopp_ore)) + '</span>' },
       { namn: 'Förfaller', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.forfaller)) + '</span>' },
+      { namn: 'Skickad', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.skickad_at)) + '</span>' },
       { namn: 'Betald', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.betald_at)) + '</span>' },
+      /* Knappen skickar ett riktigt mejl. Rullgardinen bredvid ändrar
+         bara vad som står i tabellen — de gör olika saker med flit,
+         och det ska synas att de gör det. */
+      { namn: '', höger: true, rita: f => {
+        if (f.status === 'makulerad' || f.status === 'betald') return '';
+        const påminn = f.status === 'skickad' || f.status === 'forfallen';
+        return '<button class="btn ' + (påminn ? 'btn-ghost' : 'btn-primary') + ' btn-sm"'
+          + ' data-skicka="faktura" data-id="' + f.id + '"'
+          + (påminn ? ' data-paminnelse="1"' : '') + '>'
+          + (påminn ? 'Påminn' : 'Skicka') + '</button>';
+      } },
       { namn: 'Läge', höger: true, rita: f => väljare('fakt', FAKT_LAGE, f.status, 'data-fakt="' + f.id + '"') }
     ], rader, 'Inga fakturor än');
   }
@@ -566,6 +578,12 @@
       { namn: 'Belopp', rita: u => '<span class="adm-tal">' + esc(kronor(u.belopp_ore)) + '</span>' },
       { namn: 'Utbetald', rita: u => '<span class="adm-tal">' + esc(kortDatum(u.utbetald_at)) + '</span>'
         + (u.fel ? '<span class="adm-und" style="color:var(--acc-text)">' + esc(u.fel) + '</span>' : '') },
+      /* Underlaget, inte pengarna. Studiehjälparen får se vad hen
+         kommer att få och hinner säga ifrån innan beloppet betalas
+         ut — det är billigare än att rätta en utbetalning efteråt. */
+      { namn: '', höger: true, rita: u => u.status === 'utbetald' ? ''
+        : '<button class="btn btn-ghost btn-sm" data-skicka="utbetalning" data-id="'
+          + u.id + '">Skicka underlag</button>' },
       { namn: 'Läge', höger: true, rita: u => väljare('utb', UTB_LAGE, u.status, 'data-utb="' + u.id + '"') }
     ], rader, 'Inga utbetalningar än');
   }
@@ -759,6 +777,24 @@
      tabell ritas om, och det är precis då de tappas bort.
      ============================================================ */
 
+  /* supabase-js lägger edge-funktionens felkropp i error.context, inte
+     i meddelandet. Utan det här ser varje fel likadant ut — "Edge
+     Function returned a non-2xx status code" — och den som tryckte får
+     veta att något gick fel men aldrig vad. Serverns svar säger till
+     exempel att familjen saknar e-postadress, eller att domänen inte
+     är verifierad hos Resend. Det är skillnaden mellan ett fel man kan
+     åtgärda och ett man måste felsöka. */
+  async function funktionsFel(fel) {
+    if (typeof fel === 'string') return fel;
+    if (fel && fel.context && typeof fel.context.json === 'function') {
+      try {
+        const kropp = await fel.context.json();
+        if (kropp && kropp.error) return kropp.error;
+      } catch (_) { /* svaret var inte JSON — fall igenom */ }
+    }
+    return (fel && fel.message) || 'Okänt fel.';
+  }
+
   async function skriv(tabellNamn, id, fält, efteråt) {
     const { error } = await supa.from(tabellNamn).update(fält).eq('id', id);
     if (error) { alert('Kunde inte spara: ' + felText(error)); return false; }
@@ -873,6 +909,61 @@
         b.status = 'cancelled';
         await skriv('bookings', b.id, { status: 'cancelled' });
         ritaBokningar(); ritaÖversikt();
+      });
+      return;
+    }
+
+    /* ============ SKICKA FAKTURA ELLER UNDERLAG ============
+       Två anrop till samma edge-funktion. Det första är en
+       torrkörning som svarar med vad mottagaren KOMMER att läsa;
+       det andra skickar. Ett mejl som lämnat huset går inte att
+       ångra, så det ska gå att läsa igenom först.
+
+       Statusen sätts av servern, och bara om Resend svarat att
+       mejlet gick iväg. Rullgardinen här bredvid ändrar bara ordet
+       i tabellen — det är två olika saker och de ska förbli det. */
+    const skicka = e.target.closest('[data-skicka]');
+    if (skicka) {
+      const typ = skicka.dataset.skicka;
+      const id = skicka.dataset.id;
+      const påminnelse = skicka.dataset.paminnelse === '1';
+
+      const prov = await medan(skicka, 'Hämtar…', () =>
+        supa.functions.invoke('faktura-utskick',
+          { body: { typ, id, paminnelse: påminnelse, torrkorning: true } }));
+
+      const fel = prov.error || (prov.data && prov.data.error);
+      if (fel) { alert(await funktionsFel(fel)); return; }
+
+      const ja = await bekräfta({
+        titel: påminnelse ? 'Skicka påminnelse?'
+          : typ === 'faktura' ? 'Skicka fakturan?' : 'Skicka underlaget?',
+        text: 'Går till ' + prov.data.till + '. Så här ser det ut:',
+        forhandsvisning: prov.data.text,
+        knapp: 'Skicka nu'
+      });
+      if (!ja) return;
+
+      await medan(skicka, 'Skickar…', async () => {
+        const res = await supa.functions.invoke('faktura-utskick',
+          { body: { typ, id, paminnelse: påminnelse } });
+        const f2 = res.error || (res.data && res.data.error);
+        if (f2) { alert(await funktionsFel(f2)); return; }
+        if (res.data && res.data.varning) alert('⚠️ ' + res.data.varning);
+
+        /* Servern har ändrat statusen. Hämta om raden i stället för
+           att gissa vad den blev — gissar vi fel står tabellen och
+           ljuger tills någon laddar om sidan. */
+        if (typ === 'faktura' && !påminnelse) {
+          const { data } = await supa.from('invoices').select('*').eq('id', id).maybeSingle();
+          if (data) {
+            const i = S.fakturor.findIndex(x => x.id === id);
+            if (i !== -1) S.fakturor[i] = data;
+          }
+          ritaFakturor();
+          await ritaÖversikt();
+        }
+        alert('✓ Skickat till ' + res.data.till + '.');
       });
       return;
     }
