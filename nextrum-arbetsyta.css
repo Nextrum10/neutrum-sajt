@@ -1421,3 +1421,79 @@ table.adm .adm-tal{
   content:"";width:6px;height:6px;border-radius:100px;
   background:var(--mossa);
 }
+
+/* ============================================================
+   8. TRATTEN
+   Intresseanmälan → kontakt → matchning → kund.
+
+   Vågräta staplar och inte en trattform. En riktig tratt smalnar
+   av i BÅDA kanterna, vilket ser ut som att något går förlorat
+   symmetriskt — men bortfallet sker på ett ställe och ska kunna
+   pekas på. Med staplar från samma vänsterkant går längderna att
+   jämföra mot varandra, och tappet mellan två steg står utskrivet
+   i siffror bredvid.
+   ============================================================ */
+.tratt{display:flex;flex-direction:column;gap:3px}
+.tratt-steg{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;gap:14px;
+  padding:11px 0;
+}
+.tratt-steg + .tratt-steg{border-top:1px solid var(--ln)}
+.tratt-namn{
+  display:flex;align-items:baseline;gap:10px;
+  margin-bottom:8px;min-width:0;
+}
+.tratt-namn b{
+  font-size:.9rem;font-weight:650;color:var(--bl);
+  white-space:nowrap;
+}
+.tratt-namn span{
+  font-size:.79rem;color:var(--bl-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+/* display:block är inte pynt. Elementet är ett <span>, och en
+   inline-box ignorerar height — utan raden ritades stapeln som
+   ingenting alls. */
+.tratt-stapel{
+  display:block;
+  height:9px;border-radius:100px;
+  background:var(--pap-3);overflow:hidden;
+}
+.tratt-stapel i{
+  display:block;height:100%;border-radius:100px;
+  background:var(--acc);
+  transition:width .4s var(--e);
+}
+/* Sista steget är målet, inte ett bortfall. Det får mossa i
+   stället för lera så att ögat ser var man vill hamna. */
+.tratt-steg:last-child .tratt-stapel i{background:var(--mossa)}
+
+.tratt-tal{
+  text-align:right;flex:none;min-width:64px;
+}
+.tratt-tal b{
+  display:block;font-size:1.25rem;font-weight:700;
+  letter-spacing:-.02em;color:var(--bl);line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.tratt-tal span{
+  display:block;margin-top:4px;
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.08em;color:var(--bl-2);
+  white-space:nowrap;
+}
+.tratt-tal span.ar-tapp{color:var(--acc-text)}
+
+/* ------------------------------------------------------------
+   RAPPORTLÄGET PÅ EN LEKTION
+   Tre lägen, och det mittersta är det som kostar pengar: ett pass
+   som hållits men inte rapporterats blir aldrig genomfört, och
+   hamnar därför aldrig på en faktura.
+   ------------------------------------------------------------ */
+.lekt-fakturerad{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mossa);white-space:nowrap;
+}

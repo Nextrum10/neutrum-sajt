@@ -52,7 +52,7 @@
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [],
     integrationer: [], pris: null, saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
-    matchunderlag: [], matchunderlagFel: null, valdElev: null,
+    matchunderlag: [], matchunderlagFel: null, valdElev: null, kalender: null,
     valdPerson: null
   };
 
@@ -401,6 +401,11 @@
           : S.kontakt.filter(k => !k.hanterad_at).length,
         rubrik: 'meddelanden i inkorgen', ental: 'meddelande i inkorgen',
         under: 'Från kontaktformuläret, ingen har svarat än.', till: '#meddelanden' },
+      { antal: S.bokningar.filter(b =>
+          b.status !== 'cancelled' && b.status !== 'completed'
+          && String(b.wanted_date) < idag).length,
+        rubrik: 'pass saknar rapport', ental: 'pass saknar rapport',
+        under: 'Hållna men orapporterade. De faktureras inte.', till: '#lektioner' },
       { antal: obetalda,
         rubrik: 'obetalda fakturor', ental: 'obetald faktura',
         under: 'Skickade men inte betalda.', till: '#ekonomi' },
@@ -569,6 +574,7 @@
       S.sido.märke('studiehjalpare', av('#studiehjalpare'));
       S.sido.märke('matchning', av('#matchning'));
       S.sido.märke('bokningar', av('#bokningar'));
+      S.sido.märke('lektioner', av('#lektioner'));
       S.sido.märke('ekonomi', av('#ekonomi'));
     }
   }
@@ -1342,15 +1348,21 @@
     const rader = S.bokningar
       .filter(b => !st || b.status === st)
       .filter(b => när === 'alla' || (när === 'framat' ? b.wanted_date >= idag : b.wanted_date < idag))
-      .map(b => ({ ...b, familj: namnFör(b.parent_id), hjalpare: namnFör(b.tutor_id) }))
-      .filter(b => matchar(b, ['familj', 'hjalpare', 'subject', 'format'], sök));
+      .map(b => ({ ...b, familj: namnFör(b.parent_id), hjalpare: namnFör(b.tutor_id),
+                   elev: elevNamn(b.student_id) || '' }))
+      /* elev är med i söket sedan matchningen blev en elevfråga. Utan
+         den gick ett pass inte att hitta på barnets namn, vilket är
+         det man har när en familj ringer. */
+      .filter(b => matchar(b, ['familj', 'elev', 'hjalpare', 'subject', 'format'], sök));
 
     $('#bok-antal').textContent = rader.length + ' av ' + S.bokningar.length;
     $('#bok-tabell').innerHTML = tabell([
       { namn: 'När', rita: b => '<b>' + esc(kortDatum(b.wanted_date)) + '</b>'
         + '<span class="adm-und">' + esc(b.wanted_time ? String(b.wanted_time).slice(0, 5) : '')
         + ' · ' + ((b.duration_min || 60) / 60) + ' h</span>' },
-      { namn: 'Familj', rita: b => esc(b.familj) },
+      { namn: 'Elev', rita: b => b.elev
+        ? '<b>' + esc(b.elev) + '</b><span class="adm-und">' + esc(b.familj) + '</span>'
+        : esc(b.familj) + '<span class="adm-und">inget barn valt</span>' },
       { namn: 'Studiehjälpare', rita: b => esc(b.hjalpare) },
       { namn: 'Ämne', rita: b => esc(b.subject || '—')
         + (b.format ? '<span class="adm-und">' + esc(b.format) + '</span>' : '') },
@@ -1362,9 +1374,362 @@
     ], rader, tomtText(sök || st, 'Ingen bokning matchar filtret', 'Inga bokningar än'));
   }
 
+
+  /* ============================================================
+     LEKTIONER
+
+     En lektion är inget eget objekt i databasen, och ska inte bli
+     det: ett genomfört pass PLUS dess rapport ÄR lektionen. En
+     tredje tabell hade gett två sanningar om samma timme.
+
+     Sektionen finns ändå, för den svarar på en annan fråga än
+     Bokningar. Bokningar tittar framåt. Lektioner tittar bakåt:
+     hände det, skrevs det en rapport, kan det faktureras.
+
+     RAPPORTEN ÄR PENGAR
+
+     Ett pass blir 'completed' när studiehjälparen skrivit
+     rapporten, och bara completed-pass hamnar på fakturan. Ett
+     hållet men orapporterat pass är alltså en timme ingen får
+     betalt för — varken familjen faktureras eller studiehjälparen
+     ersätts. Därför är "rapport saknas" sektionens första siffra
+     och dess enda larm.
+     ============================================================ */
+
+  /* Pass som redan varit, oavsett om någon rapporterat dem.
+     Avbokade räknas inte: de hände aldrig. */
+  function hållnaPass() {
+    const idag = isoFor(new Date());
+    return S.bokningar.filter(b =>
+      b.status !== 'cancelled' && String(b.wanted_date) < idag);
+  }
+
+  function ritaLektionstal() {
+    const host = $('#lekt-tal');
+    if (!host) return;
+    const hållna = hållnaPass();
+    const genomförda = hållna.filter(b => b.status === 'completed');
+    const utanRapport = hållna.filter(b => b.status !== 'completed');
+    const minuter = genomförda.reduce((n, b) => n + (b.duration_min || 60), 0);
+
+    /* Frånvaro räknas bara på pass där någon faktiskt fyllt i det.
+       Ett tomt fält betyder "ingen sa något", inte "eleven kom". */
+    const markerade = hållna.filter(b => b.attendance);
+    const uteblev = markerade.filter(b => b.attendance === 'franvarande').length;
+
+    host.innerHTML =
+      '<div class="adm-kpi' + (utanRapport.length ? ' ar-larm' : '') + '">'
+      + '<b>' + utanRapport.length + '</b><span>Rapport saknas</span>'
+      + '<span class="adm-kpi-diff">' + (utanRapport.length
+        ? 'faktureras inte förrän den skrivs' : 'allt hållet är rapporterat') + '</span></div>'
+      + '<div class="adm-kpi"><b>' + genomförda.length + '</b><span>Genomförda pass</span>'
+      + '<span class="adm-kpi-diff">totalt</span></div>'
+      + '<div class="adm-kpi"><b>' + NXBetalning.timmar(minuter) + '</b><span>Undervisad tid</span>'
+      + '<span class="adm-kpi-diff">i genomförda pass</span></div>'
+      + '<div class="adm-kpi"><b>' + uteblev + '</b><span>Uteblivna</span>'
+      + '<span class="adm-kpi-diff">' + (markerade.length
+        ? 'av ' + markerade.length + ' markerade' : 'ingen har markerats') + '</span></div>';
+  }
+
+  function ritaLektioner() {
+    ritaLektionstal();
+    const host = $('#lekt-tabell');
+    if (!host) return;
+
+    const sök = $('#lekt-sok').value.trim().toLowerCase();
+    const rapportFilter = $('#lekt-rapport').value;
+    const dagar = $('#lekt-period').value;
+
+    let alla = hållnaPass();
+    if (dagar) {
+      const från = dagarSedan(Number(dagar));
+      alla = alla.filter(b => String(b.wanted_date) >= från);
+    }
+    alla.sort((a, b) => String(b.wanted_date + (b.wanted_time || ''))
+      .localeCompare(String(a.wanted_date + (a.wanted_time || ''))));
+
+    const rader = alla
+      .filter(b => {
+        if (!rapportFilter) return true;
+        const har = b.status === 'completed';
+        return rapportFilter === 'finns' ? har : !har;
+      })
+      .filter(b => {
+        if (!sök) return true;
+        return [b.subject, b.format, elevNamn(b.student_id),
+          namnFör(b.parent_id), namnFör(b.tutor_id)]
+          .filter(Boolean).join(' ').toLowerCase().indexOf(sök) !== -1;
+      });
+
+    $('#lekt-antal').textContent = rader.length + ' av ' + alla.length;
+    host.innerHTML = tabell([
+      { namn: 'När', rita: b => '<b>' + esc(kortDatum(b.wanted_date)) + '</b>'
+        + '<span class="adm-und">' + esc((b.wanted_time ? String(b.wanted_time).slice(0, 5) + ' · ' : '')
+          + (b.duration_min || 60) + ' min') + '</span>' },
+      { namn: 'Elev', rita: b => esc(elevNamn(b.student_id) || namnFör(b.parent_id))
+        + '<span class="adm-und">' + esc(namnFör(b.parent_id)) + '</span>' },
+      { namn: 'Studiehjälpare', rita: b => esc(namnFör(b.tutor_id)) },
+      { namn: 'Ämne', rita: b => esc(b.subject || '—')
+        + (b.format ? '<span class="adm-und">' + esc(b.format) + '</span>' : '') },
+      { namn: 'Närvaro', rita: b => {
+        if (b.attendance === 'franvarande') return pill('Uteblev', 'ar-ny');
+        if (b.attendance === 'narvarande') return pill('Närvarade', 'ar-klar');
+        return '<span style="color:var(--bl-2)">Ej markerad</span>';
+      } },
+      { namn: 'Rapport', höger: true, rita: b => {
+        if (b.status === 'completed') {
+          return pill('Skriven', 'ar-klar')
+            + '<span class="adm-und lekt-fakturerad">Kan faktureras</span>';
+        }
+        /* Inte ett fel att laga härifrån: rapporten skrivs av
+           studiehjälparen i hens egen vy. Adminvyn kan se att den
+           saknas och påminna, inte skriva den. */
+        return pill('Saknas', 'ar-ny')
+          + '<span class="adm-und">Passet är ' + esc(BOK_LAGE[b.status] ? BOK_LAGE[b.status][0].toLowerCase() : b.status) + '</span>';
+      } }
+    /* Periodfiltret står på 30 dagar från början, så det räknas inte
+       som ett filter användaren satt. Annars fick en tom databas
+       beskedet "matchar filtret", vilket skickar folk att leta efter
+       ett filter de aldrig rört. Finns det inga hållna pass alls är
+       det den sanningen som ska stå. */
+    ], rader, tomtText(hållnaPass().length && (sök || rapportFilter),
+      'Ingen lektion matchar filtret',
+      hållnaPass().length
+        ? 'Inga pass i den här perioden'
+        : 'Inga pass har hållits än'));
+  }
+
+  ['#lekt-sok', '#lekt-rapport', '#lekt-period'].forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener('input', ritaLektioner);
+  });
+
+
+  /* ============================================================
+     STATISTIK
+
+     Fyra frågor, fyra bilder. Inte fler: en sida med tolv grafer
+     är en sida ingen läser, och den som vill gräva har rådatan i
+     sektionerna ovanför.
+
+     Staplarna ritas med .graf, samma komponent som studievyn och
+     studiehjälparvyn använder för sina sex månader. Samma höjd,
+     samma färg för innevarande månad, samma sätt att läsa. En
+     egen graf hade gjort adminvyn till en annan produkt.
+
+     ALLTID SEX STAPLAR
+
+     Även när några är tomma. En graf som byter bredd med datan
+     går inte att jämföra med sig själv nästa månad, och det är
+     hela poängen med att titta på den.
+     ============================================================ */
+
+  function sexManader() {
+    const ut = [];
+    const nu = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
+      ut.push({
+        nyckel: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
+        namn: NX.MANADER[d.getMonth()].slice(0, 3),
+        antal: 0
+      });
+    }
+    return ut;
+  }
+
+  /* format(v) gör om ett värde till texten över stapeln. Utan den
+     hade kronor ritats som ören, och en stapel med "75800" över
+     sig säger ingenting. */
+  function ritaGraf(host, månader, not, format) {
+    if (!host) return;
+    const högst = Math.max(1, ...månader.map(m => m.antal));
+    const något = månader.some(m => m.antal);
+    host.innerHTML = '<div class="graf">' + månader.map((m, i) =>
+      '<div class="graf-stapel' + (i === månader.length - 1 ? ' nu' : '') + '">'
+      + '<b>' + esc(format ? format(m.antal) : String(m.antal)) + '</b>'
+      + '<i style="height:' + Math.round((m.antal / högst) * 100) + '%"></i>'
+      + '<span>' + esc(m.namn) + '</span>'
+      + '</div>').join('') + '</div>'
+      + '<p class="graf-not">' + esc(något ? not : 'Inget att visa än — grafen fylls i allteftersom.') + '</p>';
+  }
+
+  function ritaStatistik() {
+    if (!$('#stat-pass')) return;
+
+    /* ---- Genomförda pass ---- */
+    const pass = sexManader();
+    S.bokningar.filter(b => b.status === 'completed').forEach(b => {
+      const m = pass.find(x => x.nyckel === String(b.wanted_date || '').slice(0, 7));
+      if (m) m.antal++;
+    });
+    ritaGraf($('#stat-pass'), pass,
+      'Bara genomförda pass räknas. Ett pass blir genomfört när studiehjälparen skrivit rapporten.');
+
+    /* ---- Nya elever ---- */
+    const elever = sexManader();
+    S.elevlista.forEach(e => {
+      const m = elever.find(x => x.nyckel === String(e.created_at || '').slice(0, 7));
+      if (m) m.antal++;
+    });
+    ritaGraf($('#stat-elever'), elever,
+      'När eleven lades till av familjen, inte när första passet hölls.');
+
+    /* ---- Fakturerat ----
+       Makulerade räknas inte: en makulerad faktura är en som aldrig
+       skulle ha skickats, och att räkna den vore att räkna ett
+       misstag som intäkt. */
+    const intäkt = sexManader();
+    S.fakturor.filter(f => f.status !== 'makulerad').forEach(f => {
+      const m = intäkt.find(x => x.nyckel === String(f.period || '').slice(0, 7));
+      if (m) m.antal += (f.belopp_ore || 0);
+    });
+    ritaGraf($('#stat-intakt'), intäkt,
+      'Fakturerat belopp per period, makulerade borträknade. Inte detsamma som betalt.',
+      v => kronor(v));
+
+    ritaStatTal();
+    ritaTratt();
+  }
+
+  /* Talen här är TOTALER, till skillnad från Översiktens som är
+     "just nu". Samma komponent, annan fråga: Översikt svarar på hur
+     det ser ut idag, Statistik på hur långt vi kommit. */
+  function ritaStatTal() {
+    const host = $('#stat-tal');
+    if (!host) return;
+    const genomförda = S.bokningar.filter(b => b.status === 'completed');
+    const minuter = genomförda.reduce((n, b) => n + (b.duration_min || 60), 0);
+    const familjer = Object.values(S.personer).filter(p => p.role === 'parent').length;
+    const fakturerat = S.fakturor.filter(f => f.status !== 'makulerad')
+      .reduce((n, f) => n + (f.belopp_ore || 0), 0);
+    const betalt = S.fakturor.filter(f => f.status === 'betald')
+      .reduce((n, f) => n + (f.belopp_ore || 0), 0);
+
+    host.innerHTML =
+      '<div class="adm-kpi"><b>' + genomförda.length + '</b><span>Genomförda pass</span>'
+      + '<span class="adm-kpi-diff">sedan starten</span></div>'
+      + '<div class="adm-kpi"><b>' + NXBetalning.timmar(minuter) + '</b><span>Undervisad tid</span>'
+      + '<span class="adm-kpi-diff">i genomförda pass</span></div>'
+      + '<div class="adm-kpi"><b>' + familjer + '</b><span>Familjer</span>'
+      + '<span class="adm-kpi-diff">' + S.elevlista.length
+      + (S.elevlista.length === 1 ? ' elev' : ' elever') + '</span></div>'
+      + '<div class="adm-kpi"><b>' + kronor(fakturerat) + '</b><span>Fakturerat</span>'
+      + '<span class="adm-kpi-diff">' + (fakturerat
+        ? kronor(betalt) + ' betalt' : 'ingen faktura än') + '</span></div>';
+  }
+
+  /* ------------------------------------------------------------
+     TRATTEN
+     Intresseanmälan → kontakt → matchning → kund.
+
+     De tre första stegen är lägen i leads.status. Det fjärde är
+     inte det: en "kund" är en familj som faktiskt finns i
+     profiles med ett matchat barn, inte en anmälan någon kryssat
+     i. Att läsa det sista steget ur samma tabell som de andra
+     hade varit snyggare och fel.
+
+     Bortfallet mellan stegen är det enda värda att titta på, så
+     det står i siffror bredvid varje stapel och inte bara som en
+     smalnande form.
+     ------------------------------------------------------------ */
+  function ritaTratt() {
+    const host = $('#stat-tratt');
+    if (!host) return;
+
+    const L = S.leads;
+    const kom = L.length;
+    /* Kumulativt, inte per läge: en anmälan som blivit matchad HAR
+       varit kontaktad, även om statusfältet bara minns det sista.
+       Räknat per läge hade tratten sett ut att smalna och sedan
+       breddas igen. */
+    const kontaktade = L.filter(l => l.status !== 'new').length;
+    const matchade = L.filter(l => l.status === 'matched').length;
+    const kunder = Object.values(S.personer).filter(p =>
+      p.role === 'parent' && (S.elever[p.id] || []).some(e =>
+        e.matched_tutor_id && e.match_status === 'matched')).length;
+
+    const steg = [
+      ['Intresseanmälningar', 'allt som kommit in', kom],
+      ['Kontaktade', 'någon har hört av sig tillbaka', kontaktade],
+      ['Matchade', 'anmälan ledde till en studiehjälpare', matchade],
+      ['Aktiva familjer', 'har minst ett matchat barn i systemet', kunder]
+    ];
+
+    const störst = Math.max(1, ...steg.map(s => s[2]));
+
+    host.innerHTML = '<div class="tratt">' + steg.map((s, i) => {
+      const föregående = i ? steg[i - 1][2] : null;
+      const tapp = föregående !== null ? föregående - s[2] : null;
+      let under;
+      if (tapp === null) under = 'ingång';
+      else if (tapp > 0) under = '−' + tapp + ' här';
+      else if (s[2] > föregående) under = '+' + (s[2] - föregående) + ' utanför';
+      else under = 'inget tapp';
+      return '<div class="tratt-steg"><div>'
+        + '<span class="tratt-namn"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></span>'
+        + '<span class="tratt-stapel"><i style="width:'
+        + Math.max(2, Math.round((s[2] / störst) * 100)) + '%"></i></span>'
+        + '</div>'
+        + '<span class="tratt-tal"><b>' + s[2] + '</b>'
+        + '<span' + (tapp > 0 ? ' class="ar-tapp"' : '') + '>' + esc(under) + '</span></span>'
+        + '</div>';
+    }).join('') + '</div>'
+      /* "+N utanför" behöver en förklaring första gången man ser
+         det, annars läser det som ett räknefel. */
+      + '<p class="graf-not">Aktiva familjer kan vara fler än matchade anmälningar: '
+      + 'alla familjer kom inte in via formuläret.</p>';
+  }
+
+
   /* ============================================================
      EKONOMI
      ============================================================ */
+
+  /* ------------------------------------------------------------
+     KALENDERN
+
+     Ritas av NXStudie.schema — samma modul som studievyn och
+     studiehjälparvyn använder. Månad, vecka, dag, samma färg per
+     läge, samma chip.
+
+     Att bygga en egen hade gett ledningen en kalender som ser ut
+     som en annan produkt än den familjen ser, och två uppsättningar
+     buggar att laga. Skillnaden här är bara etiketten på ett pass:
+     familjen ser sitt barns namn, ledningen ser båda parterna.
+     ------------------------------------------------------------ */
+  function ritaKalender() {
+    const host = $('#bok-kalender');
+    if (!host) return;
+
+    /* Avbokade är med. I familjens kalender är de brus, i
+       ledningens är de en fråga: varför ställdes det in? */
+    const namn = b => [elevNamn(b.student_id) || namnFör(b.parent_id), namnFör(b.tutor_id)]
+      .filter(Boolean).join(' → ');
+
+    if (S.kalender) { S.kalender.sättBokningar(S.bokningar); return; }
+    S.kalender = NXStudie.schema({
+      host: host,
+      bokningar: S.bokningar,
+      lage: 'manad',
+      namn: namn,
+      onOppna: b => {
+        /* Listan är där man ändrar ett pass. Kalendern säger var
+           det ligger och skickar vidare — två vyer som båda kan
+           skriva vore två ställen att glömma uppdatera. */
+        const f = S.flikar.bokningar;
+        if (f) f.visa('lista');
+        /* Tidsfiltret står på "framåt" som standard. Ett passerat
+           pass hade alltså försvunnit i samma sekund man klickat på
+           det i kalendern — filtret nollas därför här. */
+        const när = $('#bok-nar');
+        if (när) när.value = 'alla';
+        const sök = $('#bok-sok');
+        if (sök) sök.value = elevNamn(b.student_id) || namnFör(b.parent_id);
+        ritaBokningar();
+      }
+    });
+  }
 
   function ritaFakturor() {
     const sök = $('#fakt-sok').value.trim();
@@ -1731,7 +2096,11 @@
       await medan(avboka, 'Avbokar…', async () => {
         b.status = 'cancelled';
         await skriv('bookings', b.id, { status: 'cancelled' });
-        ritaBokningar(); ritaÖversikt();
+        /* Samma rad syns på fyra ställen. Ritas bara listan om blir
+           kalendern och lektionslistan kvar med det gamla läget, och
+           då står det två olika saker om samma pass på samma skärm. */
+        ritaBokningar(); ritaKalender(); ritaLektioner(); ritaStatistik();
+        await ritaÖversikt();
       });
       return;
     }
@@ -1881,6 +2250,7 @@
     oversikt: 'Översikt', leads: 'Intresseanmälningar', ansokningar: 'Ansökningar',
     meddelanden: 'Meddelanden', familjer: 'Familjer', elever: 'Elever',
     studiehjalpare: 'Studiehjälpare', matchning: 'Matchning', bokningar: 'Bokningar',
+    lektioner: 'Lektioner', statistik: 'Statistik',
     ekonomi: 'Fakturor & utbetalningar', system: 'System'
   };
 
@@ -2204,6 +2574,7 @@
 
       S.flikar = {
         meddelanden: NXArbete.flikar($('section[data-sek="meddelanden"]')),
+        bokningar: NXArbete.flikar($('section[data-sek="bokningar"]')),
         ekonomi: NXArbete.flikar($('section[data-sek="ekonomi"]')),
         system: NXArbete.flikar($('section[data-sek="system"]'))
       };
@@ -2247,6 +2618,9 @@
       ritaMatchning();
       ritaStudiehjalpare();
       ritaBokningar();
+      ritaKalender();
+      ritaLektioner();
+      ritaStatistik();
       ritaFakturor();
       ritaUtbetalningar();
       ritaIntegrationer();
