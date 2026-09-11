@@ -747,3 +747,514 @@ table.adm .adm-tal{
   border-top:1px solid var(--ln);
 }
 .vy-fot .vy-fot-hoger{margin-left:auto}
+
+/* ============================================================
+   6. ADMINSKALET
+   Adminvyn är inte en sida man läser, den är ett bord man sitter
+   vid. Den skiljer sig därför från familje- och studiehjälpar-
+   vyerna på tre punkter, och bara de tre: en sidomeny som går att
+   fälla ihop, en rad överst med sök och notiser, och en högre
+   textkontrast eftersom man läser tabeller här hela dagen.
+
+   Allt annat är samma komponenter som de andra vyerna. Det ska
+   kännas som samma produkt, inte som ett separat system.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   KONTRAST
+   Den gamla adminvyn satte mikrotexter på --bl-3, den svagaste
+   tonen i paletten. Den klarar AA, men nätt och jämnt, och vid
+   9–10px versaler i monospace är "klarar AA" inte samma sak som
+   "går att läsa på en eftermiddag".
+
+   Tokenen ändras inte — den används på hundra ställen i de andra
+   vyerna där texten är större. I stället flyttas adminvyns egna
+   mikrotexter upp ett steg, och storleken med dem.
+   ------------------------------------------------------------ */
+.vy-admin table.adm th{
+  font-size:10.5px;
+  letter-spacing:.11em;
+  color:var(--bl-2);
+}
+.vy-admin table.adm td{color:var(--bl-2)}
+.vy-admin table.adm td .adm-und{color:var(--bl-2);opacity:.86;font-size:.8rem}
+.vy-admin .adm-kpi span{color:var(--bl-2);font-size:.81rem}
+.vy-admin .adm-koppling-kort .adm-krav{font-size:10.5px;color:var(--bl-2)}
+.vy-admin .vy-sido-rubrik{color:var(--bl-2)}
+
+/* ------------------------------------------------------------
+   TOPPRADEN
+   Sitter under det fixerade sidhuvudet och följer med när man
+   scrollar. Innehåller tre saker som gäller hela vyn och inte
+   någon enskild sektion: var man är, global sök, och vad som
+   hänt sedan sist.
+
+   Den är avsiktligt låg. Sidhuvudet tar redan en remsa, och två
+   fasta rader ovanför innehållet börjar bli en hiss.
+   ------------------------------------------------------------ */
+.adm-topp{
+  position:sticky;
+  top:clamp(64px,7vw,84px);
+  z-index:30;
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:clamp(16px,2vw,22px);
+  padding:9px 0;
+  background:var(--pap);
+  border-bottom:1px solid var(--ln);
+}
+.adm-topp-var{
+  display:flex;align-items:center;gap:9px;
+  min-width:0;flex:1;
+}
+.adm-topp-var b{
+  font-size:1rem;font-weight:700;color:var(--bl);
+  letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.adm-topp-var .adm-topp-hem{
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
+  white-space:nowrap;
+}
+.adm-topp-var .adm-topp-hem::after{content:"/";margin-left:9px;opacity:.5}
+
+/* Knappen som fäller ihop menyn. Bara på skärmar där menyn står
+   som en kolumn — under det ligger den redan som en rad flikar
+   och har inget att fälla. */
+.adm-fall{display:none}
+@media (min-width:900px){
+  .adm-fall{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:34px;height:34px;flex:none;
+    border:1px solid var(--ln-2);border-radius:10px;
+    background:var(--pap);color:var(--bl-2);
+    transition:background .18s var(--e),color .18s var(--e),border-color .18s var(--e);
+  }
+  .adm-fall:hover{background:var(--pap-2);color:var(--bl);border-color:var(--bl-3)}
+  .adm-fall svg{
+    width:17px;height:17px;fill:none;stroke:currentColor;
+    stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+  }
+}
+
+/* ------------------------------------------------------------
+   SÖK OCH NOTISER
+   Två knappar som öppnar var sin panel. De delar all styling
+   utom bredden: söket behöver plats för namn, notiserna för en
+   mening.
+   ------------------------------------------------------------ */
+.adm-verktygsfalt{display:flex;align-items:center;gap:8px;flex:none}
+
+.adm-sokfalt{position:relative;flex:0 1 320px;min-width:0}
+@media (max-width:760px){.adm-sokfalt{flex:1 1 auto}}
+.adm-sokfalt .inp{
+  width:100%;padding-left:36px;
+  font-size:.88rem;
+}
+.adm-sokfalt > svg{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  width:15px;height:15px;pointer-events:none;
+  fill:none;stroke:var(--bl-3);stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+
+.adm-knapp{
+  position:relative;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:38px;height:38px;flex:none;
+  border:1px solid var(--ln-2);border-radius:11px;
+  background:var(--pap);color:var(--bl-2);
+  transition:background .18s var(--e),color .18s var(--e),border-color .18s var(--e);
+}
+.adm-knapp:hover,
+.adm-knapp[aria-expanded="true"]{background:var(--pap-2);color:var(--bl);border-color:var(--bl-3)}
+.adm-knapp svg{
+  width:18px;height:18px;fill:none;stroke:currentColor;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+/* Pricken säger bara ATT det finns något. Antalet står i panelen —
+   en tvåsiffrig siffra i ett hörn blir ändå oläslig. */
+.adm-knapp .adm-prick{
+  position:absolute;top:7px;right:8px;
+  width:7px;height:7px;border-radius:100px;
+  background:var(--acc);
+  box-shadow:0 0 0 2px var(--pap);
+}
+
+/* Panelen som fälls ut. Ligger absolut under sin knapp och
+   stängs av ett klick utanför — samma mönster som noteringarna
+   redan använder, så det finns bara ett sätt att stänga något. */
+.adm-panel{
+  position:absolute;right:0;top:calc(100% + 8px);
+  z-index:40;
+  width:min(360px,calc(100vw - 32px));
+  max-height:min(440px,60vh);overflow-y:auto;
+  border:1px solid var(--ln-2);border-radius:16px;
+  background:var(--pap);
+  box-shadow:0 18px 44px rgba(46,42,32,.16);
+  padding:7px;
+}
+.adm-panel[hidden]{display:none}
+.adm-panel-rubrik{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 11px 10px;
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
+  border-bottom:1px solid var(--ln);
+  margin-bottom:5px;
+}
+.adm-panel-rubrik button{
+  font-family:var(--f-sans);font-size:.78rem;font-weight:600;
+  letter-spacing:0;text-transform:none;color:var(--acc-text);
+}
+.adm-panel-rubrik button:hover{text-decoration:underline}
+.adm-panel-tom{
+  padding:22px 12px 26px;text-align:center;
+  font-size:.86rem;line-height:1.6;color:var(--bl-2);
+}
+
+/* En rad i panelen. Klickbar hela vägen ut i kanterna — en
+   träffyta som bara är texten är en missad träff varannan gång. */
+.adm-rad{
+  display:flex;align-items:flex-start;gap:11px;
+  width:100%;text-align:left;
+  padding:10px 11px;border-radius:11px;
+  transition:background .16s var(--e);
+}
+.adm-rad:hover{background:var(--pap-2)}
+.adm-rad-ikon{
+  display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;flex:none;margin-top:1px;
+  border-radius:9px;background:var(--pap-2);color:var(--bl-2);
+}
+.adm-rad-ikon svg{
+  width:15px;height:15px;fill:none;stroke:currentColor;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+.adm-rad.ar-larm .adm-rad-ikon{background:var(--acc-soft);color:var(--acc-text)}
+.adm-rad-text{min-width:0;flex:1}
+.adm-rad-text b{
+  display:block;font-size:.88rem;font-weight:650;color:var(--bl);
+  line-height:1.35;
+}
+.adm-rad-text span{
+  display:block;margin-top:2px;
+  font-size:.8rem;line-height:1.45;color:var(--bl-2);
+}
+.adm-rad-nar{
+  font-family:var(--f-mono);font-size:10px;color:var(--bl-2);
+  white-space:nowrap;flex:none;margin-top:3px;
+}
+/* Sökträffarnas typetikett. Säger vilken sorts sak raden är, så
+   att två personer med samma namn går att skilja åt. */
+.adm-rad-typ{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
+  border:1px solid var(--ln-2);border-radius:100px;
+  padding:2px 7px;flex:none;margin-top:2px;
+}
+
+/* ------------------------------------------------------------
+   HOPFÄLLD SIDOMENY
+   Ikonerna står kvar, texten försvinner. Titeln tar över som
+   etikett så att muspekaren fortfarande säger vad posten är, och
+   skärmläsaren läser länktexten oavsett — den är dold visuellt,
+   inte borttagen.
+   ------------------------------------------------------------ */
+@media (min-width:900px){
+  .vy-admin .vy-layout.ar-hopfalld{grid-template-columns:64px minmax(0,1fr)}
+  .vy-layout.ar-hopfalld .vy-sido a{
+    justify-content:center;
+    padding-inline:0;
+  }
+  .vy-layout.ar-hopfalld .vy-sido a > span.adm-etikett{
+    position:absolute;width:1px;height:1px;
+    padding:0;margin:-1px;overflow:hidden;
+    clip-path:inset(50%);white-space:nowrap;
+  }
+  /* Rubrikerna blir ett streck. Grupperingen ska synas även utan
+     ord, annars blir menyn tio likadana ikoner på rad. */
+  .vy-layout.ar-hopfalld .vy-sido-rubrik{
+    font-size:0;letter-spacing:0;
+    margin:12px 14px 8px;padding:0;
+    border-top:1px solid var(--ln);
+  }
+  /* Märket flyttar in i ikonen när texten är borta. */
+  .vy-layout.ar-hopfalld .vy-sido .vy-sido-mark{
+    position:absolute;top:4px;right:8px;
+    min-width:0;width:7px;height:7px;padding:0;
+    font-size:0;border-radius:100px;
+  }
+  .vy-layout.ar-hopfalld .vy-sido a{position:relative}
+}
+
+/* ------------------------------------------------------------
+   MENYNS FOT
+   Vem är inloggad, och vägen ut. Sitter längst ner i kolumnen
+   och inte i sidhuvudet, för i adminvyn är sidomenyn det man
+   tittar på — sidhuvudet är sajtens, inte verktygets.
+   ------------------------------------------------------------ */
+.adm-sido-fot{
+  margin-top:16px;padding-top:14px;
+  border-top:1px solid var(--ln);
+  display:flex;align-items:center;gap:10px;
+}
+
+/* Sidomenyn är klistrad, och nu ligger toppraden klistrad ovanför
+   den. Utan det här tillägget glider menyns första post in under
+   toppraden när man scrollar — offseten i vy-lagret räknar bara
+   med sidhuvudet, som är det enda klistrade i de andra vyerna. */
+@media (min-width:900px){
+  .vy-admin .vy-sido{top:calc(clamp(64px,7vw,84px) + 66px)}
+}
+@media (max-width:899px){.adm-sido-fot{display:none}}
+.adm-sido-fot .nx-avatar{flex:none}
+.adm-sido-fot-text{min-width:0;flex:1}
+
+/* Logga ut är en ikon, inte en knapp med text. Raden har plats för
+   en avatar, ett namn och en sak till — och namnet är det som
+   måste få stå helt utskrivet. */
+.adm-sido-ut{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;flex:none;
+  border:1px solid var(--ln-2);border-radius:9px;
+  background:var(--pap);color:var(--bl-2);
+  transition:background .18s var(--e),color .18s var(--e),border-color .18s var(--e);
+}
+.adm-sido-ut:hover{background:var(--acc-soft);color:var(--acc-text);border-color:var(--acc-line)}
+.adm-sido-ut svg{
+  width:16px;height:16px;fill:none;stroke:currentColor;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+.adm-sido-fot-text b{
+  display:block;font-size:.85rem;font-weight:650;color:var(--bl);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.adm-sido-fot-text span{
+  display:block;font-family:var(--f-mono);font-size:9.5px;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
+  margin-top:2px;
+}
+.vy-layout.ar-hopfalld .adm-sido-fot{justify-content:center}
+.vy-layout.ar-hopfalld .adm-sido-fot-text,
+.vy-layout.ar-hopfalld .adm-sido-ut{display:none}
+
+/* ------------------------------------------------------------
+   NYCKELTAL MED FÖRÄNDRING
+   Ett tal utan jämförelse säger "24 elever". Ett med säger "24
+   elever, fyra fler än förra månaden", vilket är det man faktiskt
+   vill veta.
+
+   Raden visas bara när det GÅR att jämföra. Finns ingen föregående
+   period står inget där — en nolla eller ett streck läser som
+   "ingen förändring", vilket är ett annat påstående än "vi vet
+   inte än".
+   ------------------------------------------------------------ */
+.adm-kpi-diff{
+  display:inline-flex;align-items:center;gap:5px;
+  margin-top:9px;
+  font-family:var(--f-mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.03em;
+  color:var(--bl-2);
+}
+.adm-kpi-diff svg{
+  width:11px;height:11px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.adm-kpi-diff.ar-upp{color:var(--mossa)}
+.adm-kpi-diff.ar-ner{color:var(--acc-text)}
+
+/* De fyra stora talen överst på Översikt får vara större än
+   larmraden under. De besvarar "hur går det", inte "vad ska jag
+   göra nu", och ska gå att läsa på håll. */
+/* 155px och inte 200: på en telefon ger 200 en enda spalt, och fyra
+   tal staplade på varandra blir en halv skärm innan man ens kommit
+   till arbetskön. Med 155 ryms två i bredd vid 350px innehållsyta,
+   och auto-fit ger ändå fyra i bredd på en skärm. */
+.adm-tal-stor{grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}
+.adm-tal-stor .adm-kpi{padding:20px 21px}
+.adm-tal-stor .adm-kpi b{font-size:2.1rem}
+
+/* ------------------------------------------------------------
+   KRÄVER DIN UPPMÄRKSAMHET
+   Det viktigaste blocket på hela sidan. Varje rad är en sak som
+   ligger och väntar på en människa, och varje rad är en väg dit.
+
+   Tonen är avsiktligt lugn. Ett larmblock som skriker i rött
+   varje morgon slutar man se efter en vecka — accenten sitter på
+   siffran och pilen, inte på hela ytan.
+   ------------------------------------------------------------ */
+.adm-att-gora{display:flex;flex-direction:column;gap:2px}
+.adm-att-gora a{
+  display:flex;align-items:center;gap:13px;
+  padding:13px 14px;
+  border-radius:12px;
+  transition:background .16s var(--e);
+}
+.adm-att-gora a:hover{background:var(--pap-2)}
+.adm-att-gora a + a{box-shadow:0 -1px 0 var(--ln)}
+.adm-att-gora a:hover + a,
+.adm-att-gora a:hover{box-shadow:none}
+
+/* Siffran först. Ögat söker antal före ord när listan är en
+   arbetskö. */
+.adm-att-antal{
+  display:flex;align-items:center;justify-content:center;
+  min-width:30px;height:30px;flex:none;padding:0 7px;
+  border-radius:9px;
+  background:var(--acc-soft);color:var(--acc-text);
+  font-family:var(--f-mono);font-size:.88rem;font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+.adm-att-text{min-width:0;flex:1}
+.adm-att-text b{
+  display:block;font-size:.92rem;font-weight:650;color:var(--bl);
+  line-height:1.35;
+}
+.adm-att-text span{
+  display:block;margin-top:2px;
+  font-size:.81rem;line-height:1.45;color:var(--bl-2);
+}
+.adm-att-gora a > svg{
+  width:16px;height:16px;flex:none;
+  fill:none;stroke:var(--bl-3);stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke .16s var(--e),transform .16s var(--e);
+}
+.adm-att-gora a:hover > svg{stroke:var(--acc-text);transform:translateX(2px)}
+
+/* Allt avklarat. Den här ytan ska kännas som ett besked, inte som
+   ett tomt block där något borde ha stått. */
+.adm-lugnt{
+  display:flex;align-items:center;gap:13px;
+  padding:18px 16px;
+  border-radius:12px;
+  background:var(--pap-2);
+}
+.adm-lugnt svg{
+  width:22px;height:22px;flex:none;
+  fill:none;stroke:var(--mossa);stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.adm-lugnt b{display:block;font-size:.92rem;font-weight:650;color:var(--bl)}
+.adm-lugnt span{display:block;margin-top:2px;font-size:.82rem;color:var(--bl-2)}
+
+/* ------------------------------------------------------------
+   AKTIVITETSFLÖDE
+   Vad som hänt, nyast först. Tidsstämpeln står i egen kolumn med
+   monospace, så raderna linjerar och man kan skumma nedåt utan
+   att läsa varje rad.
+
+   Linjen till vänster är en enda border på behållaren, inte en
+   per rad. En bruten linje mellan varje punkt läser som separata
+   händelser i stället för ett förlopp.
+   ------------------------------------------------------------ */
+.adm-flode{
+  position:relative;
+  padding-left:22px;
+  display:flex;flex-direction:column;gap:3px;
+}
+.adm-flode::before{
+  content:"";position:absolute;
+  left:5px;top:12px;bottom:12px;width:1px;
+  background:var(--ln);
+}
+.adm-flode-post{
+  position:relative;
+  display:flex;align-items:baseline;gap:12px;
+  padding:9px 10px 9px 0;border-radius:9px;
+}
+.adm-flode-post::before{
+  content:"";position:absolute;
+  left:-21px;top:15px;
+  width:9px;height:9px;border-radius:100px;
+  background:var(--pap);
+  border:2px solid var(--ln-2);
+}
+.adm-flode-post.ar-ny::before{border-color:var(--acc);background:var(--acc)}
+.adm-flode-nar{
+  font-family:var(--f-mono);font-size:10.5px;font-weight:600;
+  color:var(--bl-2);white-space:nowrap;flex:none;
+  min-width:40px;
+}
+.adm-flode-text{min-width:0;flex:1}
+.adm-flode-text b{
+  font-size:.88rem;font-weight:650;color:var(--bl);
+}
+.adm-flode-text span{
+  display:block;margin-top:2px;
+  font-size:.82rem;line-height:1.45;color:var(--bl-2);
+}
+
+/* ------------------------------------------------------------
+   KOMMANDE PASS
+   Ett kort per pass, inte en tabellrad. Tiden är det man söker
+   efter, så den står först och stor.
+   ------------------------------------------------------------ */
+.adm-passrad{display:flex;flex-direction:column;gap:9px}
+.adm-pass{
+  display:flex;align-items:center;gap:15px;
+  width:100%;text-align:left;
+  padding:14px 16px;
+  border:1px solid var(--ln);border-radius:14px;
+  background:var(--pap);
+  transition:border-color .18s var(--e),transform .18s var(--e),box-shadow .18s var(--e);
+}
+.adm-pass:hover{
+  border-color:var(--ln-2);
+  transform:translateY(-1px);
+  box-shadow:0 6px 18px rgba(46,42,32,.07);
+}
+.adm-pass-nar{
+  flex:none;text-align:center;min-width:58px;
+  padding-right:15px;border-right:1px solid var(--ln);
+}
+.adm-pass-nar b{
+  display:block;font-size:1.12rem;font-weight:700;color:var(--bl);
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.adm-pass-nar span{
+  display:block;margin-top:3px;
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
+}
+.adm-pass-vad{min-width:0;flex:1}
+.adm-pass-vad b{
+  display:block;font-size:.94rem;font-weight:650;color:var(--bl);
+  line-height:1.3;
+}
+.adm-pass-vem{
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  margin-top:5px;
+  font-size:.82rem;color:var(--bl-2);
+}
+.adm-pass-vem .adm-pil{color:var(--bl-3)}
+
+/* Format: online eller på plats. En liten bricka, inte en färg — 
+   färgen ensam säger inget för den som inte lärt sig koden. */
+.adm-format{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--bl-2);
+  border:1px solid var(--ln-2);border-radius:100px;
+  padding:3px 9px;flex:none;white-space:nowrap;
+}
+.adm-format.ar-plats{color:var(--mossa);border-color:var(--mossa)}
+
+/* På en telefon ryms inte tid, ämne, två namn och ett format på en
+   rad. Kortet bryts i två i stället för att klämmas ihop: när och
+   format överst, vad och vem under. Ordningen sätts med order, så
+   markupen kan stå i läsordning. */
+@media (max-width:560px){
+  .adm-pass{align-items:baseline;flex-wrap:wrap;gap:10px}
+  .adm-pass-nar{
+    order:1;min-width:0;text-align:left;
+    padding-right:0;border-right:none;
+    display:flex;align-items:baseline;gap:8px;
+  }
+  .adm-pass-nar span{margin-top:0}
+  .adm-pass .adm-format{order:2;margin-left:auto}
+  .adm-pass-vad{order:3;flex:1 0 100%}
+  .adm-pass-vem{margin-top:4px}
+}

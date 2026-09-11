@@ -120,24 +120,73 @@
     <section class="vy-hero" id="vy-hero" aria-labelledby="hej"></section>
 
 
-    <div class="vy-layout">
+
+    <!-- ============================================================
+         TOPPRADEN
+         Tre saker som gäller hela vyn och ingen enskild sektion:
+         var man är, global sök, och vad som hänt sedan sist.
+         ============================================================ -->
+    <div class="adm-topp" id="adm-topp" hidden>
+      <button class="adm-fall" id="adm-fall" type="button"
+              aria-expanded="true" aria-controls="adm-layout"
+              aria-label="Fäll ihop menyn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+
+      <div class="adm-topp-var">
+        <span class="adm-topp-hem">Admin</span>
+        <b id="adm-var">Översikt</b>
+      </div>
+
+      <div class="adm-verktygsfalt">
+        <div class="adm-sokfalt">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+          <input class="inp" id="adm-sok" type="search" autocomplete="off"
+                 placeholder="Sök familj, elev, studiehjälpare…"
+                 aria-label="Sök i adminvyn" aria-expanded="false"
+                 aria-controls="adm-sokresultat">
+          <div class="adm-panel" id="adm-sokresultat" role="listbox" hidden></div>
+        </div>
+
+        <div style="position:relative">
+          <button class="adm-knapp" id="adm-notis-knapp" type="button"
+                  aria-expanded="false" aria-controls="adm-notiser"
+                  aria-label="Notiser">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16S18 14 18 9z"/><path d="M13.7 19a2 2 0 0 1-3.4 0"/></svg>
+          </button>
+          <div class="adm-panel" id="adm-notiser" hidden></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vy-layout" id="adm-layout">
 
       <nav class="vy-sido" id="vy-sido" aria-label="Delar av adminvyn">
-        <a href="#oversikt" data-sek="oversikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Översikt</a>
+        <a href="#oversikt" data-sek="oversikt" title="Översikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg><span class="adm-etikett">Översikt</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Inkommande</span>
-        <a href="#leads" data-sek="leads"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h17v11h-17z"/><path d="m3.5 8 8.5 6 8.5-6"/></svg>Intresseanmälningar</a>
-        <a href="#ansokningar" data-sek="ansokningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/></svg>Ansökningar</a>
-        <a href="#meddelanden" data-sek="meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>Meddelanden</a>
+        <a href="#leads" data-sek="leads" title="Intresseanmälningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h17v11h-17z"/><path d="m3.5 8 8.5 6 8.5-6"/></svg><span class="adm-etikett">Intresseanmälningar</span></a>
+        <a href="#ansokningar" data-sek="ansokningar" title="Ansökningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/></svg><span class="adm-etikett">Ansökningar</span></a>
+        <a href="#meddelanden" data-sek="meddelanden" title="Meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Meddelanden</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Personer</span>
-        <a href="#familjer" data-sek="familjer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3"/><path d="M3 19c0-2.8 2.5-4.5 5.5-4.5S14 16.2 14 19"/><path d="M16 5.5a3 3 0 0 1 0 5.8M21 19c0-2.2-1.4-3.7-3.5-4.3"/></svg>Familjer</a>
-        <a href="#studiehjalpare" data-sek="studiehjalpare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg>Studiehjälpare</a>
+        <a href="#familjer" data-sek="familjer" title="Familjer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3"/><path d="M3 19c0-2.8 2.5-4.5 5.5-4.5S14 16.2 14 19"/><path d="M16 5.5a3 3 0 0 1 0 5.8M21 19c0-2.2-1.4-3.7-3.5-4.3"/></svg><span class="adm-etikett">Familjer</span></a>
+        <a href="#elever" data-sek="elever" title="Elever"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.2"/><path d="M4.5 20c0-3.4 3.2-5.5 7.5-5.5s7.5 2.1 7.5 5.5"/></svg><span class="adm-etikett">Elever</span></a>
+        <a href="#studiehjalpare" data-sek="studiehjalpare" title="Studiehjälpare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg><span class="adm-etikett">Studiehjälpare</span></a>
 
-        <span class="vy-sido-rubrik" aria-hidden="true">Drift</span>
-        <a href="#bokningar" data-sek="bokningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Bokningar</a>
-        <a href="#ekonomi" data-sek="ekonomi"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg>Ekonomi</a>
-        <a href="#system" data-sek="system"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h11M18 7.5h2.5M3.5 16.5h5M11.5 16.5h9"/><circle cx="16" cy="7.5" r="2.2"/><circle cx="10" cy="16.5" r="2.2"/></svg>System</a>
+        <span class="vy-sido-rubrik" aria-hidden="true">Verksamhet</span>
+        <a href="#bokningar" data-sek="bokningar" title="Bokningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg><span class="adm-etikett">Bokningar</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Ekonomi</span>
+        <a href="#ekonomi" data-sek="ekonomi" title="Fakturor &amp; utbetalningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg><span class="adm-etikett">Fakturor &amp; utbetalningar</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">System</span>
+        <a href="#system" data-sek="system" title="System"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h11M18 7.5h2.5M3.5 16.5h5M11.5 16.5h9"/><circle cx="16" cy="7.5" r="2.2"/><circle cx="10" cy="16.5" r="2.2"/></svg><span class="adm-etikett">System</span></a>
+
+        <!-- Vem som är inloggad, och vägen ut. Sitter här och inte i
+             sidhuvudet: i adminvyn är sidomenyn verktyget, sidhuvudet
+             är sajtens. Fylls av ritaSidofot(). -->
+        <div class="adm-sido-fot" id="adm-sido-fot" hidden></div>
       </nav>
 
       <div>
@@ -149,42 +198,47 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Översikt</h2>
-              <p>Vad som väntar på någon av oss. Siffrorna kommer från vyn admin_lage — en fråga, inte elva.</p>
+              <p>Det viktigaste som händer på Nextrum just nu.</p>
             </div>
           </div>
 
-          <div class="adm-tal-rad" id="adm-tal"><div class="loading">Hämtar</div></div>
+          <!-- ============ HUR GÅR DET ============
+               Fyra tal om verksamheten, inte om arbetskön. De
+               besvarar "hur går det", och kön står i blocket under.
+               Jämförelsen mot förra månaden visas bara när det finns
+               en förra månad att jämföra med. -->
+          <div class="adm-tal-rad adm-tal-stor" id="adm-tal"><div class="loading">Hämtar</div></div>
+
+          <!-- ============ KRÄVER DIN UPPMÄRKSAMHET ============
+               Sidans viktigaste block. En rad per sak som ligger och
+               väntar på en människa, och varje rad är vägen dit.
+               Tomt block betyder att allt är avklarat, och det får
+               synas som ett besked. -->
+          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+            <h5>Kräver din uppmärksamhet <em id="adm-att-antal"></em></h5>
+            <div id="adm-att-gora"><div class="loading">Hämtar</div></div>
+          </div>
 
           <div class="split">
             <div class="stack">
               <div class="dbox">
-                <h5>Senaste intresseanmälningarna</h5>
-                <div id="ov-leads"><div class="loading">Hämtar</div></div>
-                <a class="vy-mer" href="#leads">Alla intresseanmälningar
-                  <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
-              </div>
-
-              <div class="dbox">
-                <h5>Väntar på matchning</h5>
-                <div id="ov-omatchade"><div class="loading">Hämtar</div></div>
-                <a class="vy-mer" href="#familjer">Alla familjer
+                <h5>Närmaste passen <em id="adm-pass-antal"></em></h5>
+                <div id="ov-pass"><div class="loading">Hämtar</div></div>
+                <a class="vy-mer" href="#bokningar">Alla bokningar
                   <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
               </div>
             </div>
 
             <div class="stack">
+              <!-- ============ SENASTE AKTIVITET ============
+                   Sammanställs i klienten ur leads, ansökningar,
+                   bokningar, rapporter, meddelanden och betalningar.
+                   Ingen händelsetabell: den hade krävt att någon
+                   skriver till den vid varje händelse, och blivit
+                   fel den dagen någon glömmer. -->
               <div class="dbox">
-                <h5>Studiehjälpare att godkänna</h5>
-                <div id="ov-vantande"><div class="loading">Hämtar</div></div>
-                <a class="vy-mer" href="#studiehjalpare">Alla studiehjälpare
-                  <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
-              </div>
-
-              <div class="dbox">
-                <h5>Närmaste passen</h5>
-                <div id="ov-pass"><div class="loading">Hämtar</div></div>
-                <a class="vy-mer" href="#bokningar">Alla bokningar
-                  <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+                <h5>Senaste aktivitet</h5>
+                <div id="adm-flode"><div class="loading">Hämtar</div></div>
               </div>
             </div>
           </div>
@@ -314,6 +368,41 @@
               <span class="small" id="fam-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
             <div id="fam-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             ELEVER
+             Eleven är den centrala enheten i hela systemet: läxor,
+             material, studieplan, rapporter och utveckling hänger
+             alla på ett student_id, och ett pass bokas åt en elev.
+
+             Ändå saknade adminvyn en elevlista helt. Raderna fanns
+             redan i minnet — hämtaAllt laddar students för att kunna
+             räkna dem per familj — de hade bara ingen egen sida.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="elever" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Elever</h2>
+              <p>Alla elever i systemet, vilken familj de hör till och vem som hjälper dem.</p>
+            </div>
+          </div>
+
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="elev-sok" type="search" placeholder="Sök namn, skola, ämne" aria-label="Sök elev" autocomplete="off">
+              <select class="sel" id="elev-ak" aria-label="Filtrera på årskurs">
+                <option value="">Alla årskurser</option>
+              </select>
+              <select class="sel" id="elev-match" aria-label="Filtrera på matchning">
+                <option value="">Matchad eller inte</option>
+                <option value="ja">Har studiehjälpare</option>
+                <option value="nej">Saknar studiehjälpare</option>
+              </select>
+              <span class="small" id="elev-antal" style="margin-left:auto;color:var(--bl-2)"></span>
+            </div>
+            <div id="elev-tabell"><div class="loading">Hämtar</div></div>
           </div>
         </section>
 

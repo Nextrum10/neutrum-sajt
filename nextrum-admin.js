@@ -51,6 +51,7 @@
     leads: [], ansokningar: [], kontakt: [], bokningar: [],
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [],
     integrationer: [], pris: null, saknasV13: [],
+    elevlista: [], rapporter: [], lage: null, attGora: [],
     valdPerson: null
   };
 
@@ -137,6 +138,14 @@
     return datumText(String(iso).slice(0, 10));
   }
 
+  /* Tom lista eller tomt filter är två olika besked. "Inga familjer
+     matchar" i en databas utan familjer skickar folk på jakt efter
+     ett filter som inte är satt. Alla listor nedan väljer därför
+     text utifrån om något faktiskt filtrerats bort. */
+  function tomtText(filtrerat, medFilter, utanFilter) {
+    return filtrerat ? medFilter : utanFilter;
+  }
+
   /* Ett fält som filtreras på: namn, e-post, ämne. Sökningen är
      avsiktligt dum — allt i en sträng, skiftlägesokänsligt. En
      smartare sökning som ibland missar är värre än en trög som
@@ -166,11 +175,16 @@
     (elever.data || []).forEach(e => {
       (S.elever[e.parent_id] = S.elever[e.parent_id] || []).push(e);
     });
+    /* Samma rader platt. Familjesidan vill ha dem grupperade per
+       förälder, elevsidan och söket vill ha dem i en lista — och
+       att bygga om kartan till en lista vid varje omritning är
+       arbete för något som aldrig ändrar sig mellan hämtningar. */
+    S.elevlista = elever.data || [];
 
     S.tutorProfiler = {};
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
-    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, pris, integ] = await Promise.all([
+    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, pris, integ, rapporter] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -180,7 +194,12 @@
       supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400),
       supa.from('klientfel').select('*').order('created_at', { ascending: false }).limit(100),
       supa.from('prissattning').select('*').limit(1),
-      supa.from('integrationer').select('*')
+      supa.from('integrationer').select('*'),
+      /* Rapporterna används bara av aktivitetsflödet, och bara de
+         senaste. Ett "lektion genomförd" i flödet är ett pass som
+         faktiskt rapporterats, inte ett pass vars datum passerat. */
+      supa.from('lesson_reports').select('id, student_id, tutor_id, lesson_date, created_at')
+        .order('created_at', { ascending: false }).limit(40)
     ]);
 
     S.leads = leads.data || [];
@@ -192,6 +211,7 @@
     S.klientfel = fel.data || [];
     S.pris = (pris.data || [])[0] || null;
     S.integrationer = integ.data || [];
+    S.rapporter = rapporter.data || [];
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */
@@ -215,84 +235,326 @@
 
   /* ============================================================
      ÖVERSIKTEN
+
+     Fyra block, i den ordning man behöver dem:
+
+       1. Hur går det        — fyra tal om verksamheten
+       2. Vad ska jag göra   — arbetskön, en rad per sak
+       3. Vad händer härnäst — de närmaste passen
+       4. Vad har hänt       — aktivitetsflödet
+
+     Inget av det är påhittat. Saknas data står det tomt, och ett
+     jämförelsetal visas bara när det finns en föregående period
+     att jämföra med. En nolla där sanningen är "vi vet inte än"
+     är ett annat påstående, och det felaktiga.
      ============================================================ */
 
-  async function ritaÖversikt() {
-    const host = $('#adm-tal');
-    const { data, error } = await supa.from('admin_lage').select('*').limit(1);
+  const DAG = 86400000;
 
-    /* Vyn ligger i schema-v13.sql. Är den inte körd säger vi det
-       rakt ut med filnamnet, i stället för att visa nollor som
-       läser som "inget att göra". */
-    if (error || !data || !data.length) {
-      host.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>Nyckeltalen saknas</b><br>'
-        + '<span>Vyn <code>admin_lage</code> finns inte i databasen än. Kör '
-        + '<code>schema-v13.sql</code> i Supabase → SQL Editor, så fylls den här raden.</span></div>';
-      ritaÖversiktslistor();
+  function dagarSedan(n) {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return isoFor(d);
+  }
+
+  /* En elev räknas som aktiv om hen haft ett pass de senaste 30
+     dagarna eller har ett inbokat framåt. Definitionen är vår egen
+     — det finns ingen "aktiv"-kolumn — och därför står den också i
+     hjälptexten under talet, så att ingen tolkar siffran som något
+     annat än vad den är. */
+  function aktivaElever(från, till) {
+    const set = {};
+    S.bokningar.forEach(b => {
+      if (!b.student_id || b.status === 'cancelled') return;
+      if (b.wanted_date >= från && b.wanted_date <= till) set[b.student_id] = 1;
+    });
+    return Object.keys(set).length;
+  }
+
+  function pil(upp) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true">'
+      + (upp ? '<path d="M12 19V5M6 11l6-6 6 6"/>' : '<path d="M12 5v14M6 13l6 6 6-6"/>')
+      + '</svg>';
+  }
+
+  /* Talet, etiketten, och en förändring bara när den är sann.
+     jämför === null betyder "ingen föregående period", och då
+     ritas raden inte alls. */
+  function kpi(tal, etikett, jämför, extra) {
+    let diff = '';
+    if (jämför !== null && jämför !== undefined) {
+      const upp = jämför >= 0;
+      diff = '<span class="adm-kpi-diff ' + (upp ? 'ar-upp' : 'ar-ner') + '">'
+        + pil(upp) + esc((upp ? '+' : '') + jämför + ' sedan förra månaden') + '</span>';
+    } else if (extra) {
+      diff = '<span class="adm-kpi-diff">' + esc(extra) + '</span>';
+    }
+    return '<div class="adm-kpi"><b>' + esc(String(tal)) + '</b>'
+      + '<span>' + esc(etikett) + '</span>' + diff + '</div>';
+  }
+
+  function ritaTal() {
+    const idag = isoFor(new Date());
+    const fram = isoFor(new Date(Date.now() + 365 * DAG));
+
+    /* Senaste 30 dagarna plus allt framåt, mot de 30 dagarna
+       dessförinnan. Båda räknas ur bokningarna, alltså ur samma
+       källa — jämförelsen blir då äpplen mot äpplen. */
+    const nu = aktivaElever(dagarSedan(30), fram);
+    const förr = aktivaElever(dagarSedan(60), dagarSedan(31));
+
+    const godkända = Object.values(S.tutorProfiler).filter(t => t.status === 'approved');
+    const nyaShDennaMånad = godkända.filter(t =>
+      String(t.created_at || '').slice(0, 7) === idag.slice(0, 7)).length;
+
+    const kommande = S.bokningar.filter(b =>
+      b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed')).length;
+
+    /* Intäkten är summan av fakturorna för innevarande period.
+       Finns inga fakturor alls står 0 kr, och ingen jämförelse —
+       det är sant, och det ändras den dagen faktureringen körts
+       första gången. */
+    const period = idag.slice(0, 7);
+    const iMånaden = S.fakturor.filter(f => String(f.period || '').slice(0, 7) === period
+      && f.status !== 'makulerad');
+    const belopp = iMånaden.reduce((n, f) => n + (f.belopp_ore || 0), 0);
+    const förraPeriod = (() => {
+      const d = new Date(); d.setMonth(d.getMonth() - 1);
+      return isoFor(d).slice(0, 7);
+    })();
+    const förraRader = S.fakturor.filter(f => String(f.period || '').slice(0, 7) === förraPeriod
+      && f.status !== 'makulerad');
+    const förraBelopp = förraRader.reduce((n, f) => n + (f.belopp_ore || 0), 0);
+
+    /* Intäkten får INGEN procentjämförelse. Månaden är inte slut,
+       och en halv månad mot en hel månad är alltid en nedgång —
+       ett tal som säger "det går sämre" var enda gång det visas
+       säger ingenting alls. Förra månadens summa står som kontext
+       i stället, och den är entydig. */
+    $('#adm-tal').innerHTML =
+      kpi(nu, 'Aktiva elever', förr ? nu - förr : null,
+        förr ? null : 'pass senaste 30 dagarna')
+      + kpi(godkända.length, 'Aktiva studiehjälpare', null,
+        nyaShDennaMånad ? '+' + nyaShDennaMånad + ' denna månad' : 'godkända konton')
+      + kpi(kommande, 'Kommande lektioner', null, 'bekräftade och önskade')
+      + kpi(kronor(belopp), 'Intäkt denna månad', null,
+        förraRader.length ? 'förra månaden ' + kronor(förraBelopp)
+          : (iMånaden.length ? 'fakturerat hittills' : 'inget fakturerat än'));
+  }
+
+  /* ------------------------------------------------------------
+     ARBETSKÖN
+     Varje post är en sak som ligger och väntar på en människa, och
+     varje post är vägen dit. Listan byggs ur admin_lage där den
+     finns och ur lokal data där den inte täcker — elever utan
+     studiehjälpare räknas här, för vyn känner bara till familjer.
+     ------------------------------------------------------------ */
+  function byggAttGöra() {
+    const l = S.lage || {};
+    const idag = isoFor(new Date());
+
+    const utanHjälpare = S.elevlista.filter(e => {
+      const f = S.personer[e.parent_id];
+      return !f || f.match_status !== 'matched' || !f.matched_tutor_id;
+    }).length;
+
+    const obetalda = S.fakturor.filter(f =>
+      f.status === 'skickad' || f.status === 'forfallen').length;
+    const attBetalaUt = S.utbetalningar.filter(u =>
+      u.status === 'utkast' || u.status === 'godkand').length;
+    const obekräftade = S.bokningar.filter(b =>
+      b.status === 'requested' && b.wanted_date >= idag).length;
+
+    return [
+      { antal: l.nya_leads != null ? l.nya_leads : S.leads.filter(x => x.status === 'new').length,
+        rubrik: 'nya intresseanmälningar', ental: 'ny intresseanmälan',
+        under: 'Familjer som hört av sig och väntar på svar.', till: '#leads' },
+      { antal: l.nya_ansokningar != null ? l.nya_ansokningar : S.ansokningar.filter(x => x.status === 'new').length,
+        rubrik: 'nya ansökningar', ental: 'ny ansökan',
+        under: 'Unga som vill bli studiehjälpare.', till: '#ansokningar' },
+      { antal: Object.values(S.tutorProfiler).filter(t => t.status === 'pending').length,
+        rubrik: 'studiehjälpare att godkänna', ental: 'studiehjälpare att godkänna',
+        under: 'Kontot fungerar men vyn är låst tills någon godkänner.', till: '#studiehjalpare' },
+      { antal: utanHjälpare,
+        rubrik: 'elever saknar studiehjälpare', ental: 'elev saknar studiehjälpare',
+        under: 'Ingen är kopplad till dem än.', till: '#elever' },
+      { antal: obekräftade,
+        rubrik: 'passförfrågningar väntar', ental: 'passförfrågan väntar',
+        under: 'Bokade men inte bekräftade av studiehjälparen.', till: '#bokningar' },
+      { antal: l.ohanterade_meddelanden != null ? l.ohanterade_meddelanden
+          : S.kontakt.filter(k => !k.hanterad_at).length,
+        rubrik: 'meddelanden i inkorgen', ental: 'meddelande i inkorgen',
+        under: 'Från kontaktformuläret, ingen har svarat än.', till: '#meddelanden' },
+      { antal: obetalda,
+        rubrik: 'obetalda fakturor', ental: 'obetald faktura',
+        under: 'Skickade men inte betalda.', till: '#ekonomi' },
+      { antal: attBetalaUt,
+        rubrik: 'utbetalningar att göra', ental: 'utbetalning att göra',
+        under: 'Studiehjälpare som väntar på sin ersättning.', till: '#ekonomi/utbetalningar' }
+    ].filter(p => p.antal > 0);
+  }
+
+  function ritaAttGöra() {
+    S.attGora = byggAttGöra();
+    const host = $('#adm-att-gora');
+    const summa = S.attGora.reduce((n, p) => n + p.antal, 0);
+    $('#adm-att-antal').textContent = summa ? summa + ' st' : '';
+
+    if (!S.attGora.length) {
+      host.innerHTML = '<div class="adm-lugnt">'
+        + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>'
+        + '<span><b>Ingenting väntar just nu</b>'
+        + '<span>Inkorgen är tom, alla konton är avgjorda och alla pass är bekräftade.</span></span>'
+        + '</div>';
       return;
     }
 
-    const l = data[0];
-    const tal = [
-      ['Nya intresseanmälningar', l.nya_leads, l.nya_leads > 0],
-      ['Nya ansökningar', l.nya_ansokningar, l.nya_ansokningar > 0],
-      ['Studiehjälpare att godkänna', l.vantande_studiehjalpare, l.vantande_studiehjalpare > 0],
-      ['Familjer utan match', l.omatchade_familjer, l.omatchade_familjer > 0],
-      ['Ohanterade meddelanden', l.ohanterade_meddelanden, l.ohanterade_meddelanden > 0],
-      ['Obesvarade passförfrågningar', l.obesvarade_pass, l.obesvarade_pass > 0],
-      ['Kommande pass', l.kommande_pass, false],
-      ['Obetalda fakturor', l.obetalda_fakturor, l.obetalda_fakturor > 0],
-      ['Utestående belopp', kronor(l.obetalt_ore), false],
-      ['Att betala ut', kronor(l.att_betala_ut_ore), false]
-    ];
-    host.innerHTML = tal.map(t =>
-      '<div class="adm-kpi' + (t[2] ? ' ar-larm' : '') + '">'
-      + '<b>' + esc(String(t[1])) + '</b><span>' + esc(t[0]) + '</span></div>').join('');
-
-    märkFlik('#flik-fakt-mark', l.obetalda_fakturor);
-    märkFlik('#flik-inkorg-mark', l.ohanterade_meddelanden);
-    if (S.sido) {
-      S.sido.märke('leads', l.nya_leads);
-      S.sido.märke('ansokningar', l.nya_ansokningar);
-      S.sido.märke('meddelanden', l.ohanterade_meddelanden);
-      S.sido.märke('studiehjalpare', l.vantande_studiehjalpare);
-    }
-    ritaÖversiktslistor();
+    host.innerHTML = '<div class="adm-att-gora">' + S.attGora.map(p =>
+      '<a href="' + esc(p.till) + '">'
+      + '<span class="adm-att-antal">' + p.antal + '</span>'
+      + '<span class="adm-att-text"><b>' + esc(p.antal === 1 ? p.ental : p.rubrik) + '</b>'
+      + '<span>' + esc(p.under) + '</span></span>'
+      + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7"/></svg>'
+      + '</a>').join('') + '</div>';
   }
 
-  function ritaÖversiktslistor() {
-    const nya = S.leads.filter(l => l.status === 'new').slice(0, 4);
-    $('#ov-leads').innerHTML = !nya.length
-      ? tomt('Inga nya intresseanmälningar', 'Allt inkommet är påbörjat.')
-      : nya.map(l => rad(l.parent_name, [l.subject, l.grade].filter(Boolean).join(' · ') || l.email,
-        kortDatum(l.created_at))).join('');
+  /* ------------------------------------------------------------
+     AKTIVITETSFLÖDET
+     Sammanställs i klienten ur de tabeller som redan är hämtade.
+     Ingen händelsetabell: en sådan kräver att någon skriver till
+     den vid varje händelse, och blir tyst fel den dagen någon
+     glömmer. Härledningen kan inte hamna ur synk med sanningen,
+     för den ÄR sanningen, läst en gång till.
+     ------------------------------------------------------------ */
+  function närText(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const gått = Date.now() - d.getTime();
+    if (gått < 0) return d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+    if (gått < 60000) return 'nu';
+    if (gått < DAG && d.getDate() === new Date().getDate()) {
+      return d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+    }
+    if (gått < 2 * DAG) return 'igår';
+    return datumText(isoFor(d));
+  }
 
-    const omatchade = Object.values(S.personer)
-      .filter(p => p.role === 'parent' && p.match_status !== 'matched').slice(0, 4);
-    $('#ov-omatchade').innerHTML = !omatchade.length
-      ? tomt('Alla familjer är matchade', 'Ingen står och väntar.')
-      : omatchade.map(p => rad(p.full_name || p.email,
-        (S.elever[p.id] || []).map(e => e.name).join(', ') || 'Inga barn inlagda än',
-        kortDatum(p.created_at))).join('');
+  function byggFlöde() {
+    const p = [];
+    const lägg = (när, rubrik, under) => { if (när) p.push({ när, rubrik, under }); };
 
-    const väntande = Object.values(S.tutorProfiler).filter(t => t.status === 'pending').slice(0, 4);
-    $('#ov-vantande').innerHTML = !väntande.length
-      ? tomt('Inga som väntar', 'Alla konton är avgjorda.')
-      : väntande.map(t => rad(namnFör(t.id),
-        [t.city, (t.subjects || []).join(', ')].filter(Boolean).join(' · '),
-        kortDatum(t.created_at))).join('');
+    S.leads.forEach(l => lägg(l.created_at, 'Ny intresseanmälan',
+      (l.parent_name || l.email || 'Någon') + ' skickade in en intresseanmälan.'));
+    S.ansokningar.forEach(a => lägg(a.created_at, 'Ny ansökan',
+      (a.name || 'Någon') + ' vill bli studiehjälpare.'));
+    S.kontakt.forEach(k => lägg(k.created_at, 'Nytt meddelande',
+      (k.name || 'Någon') + ' skrev via kontaktformuläret.'));
+    S.rapporter.forEach(r => lägg(r.created_at, 'Lektion rapporterad',
+      namnFör(r.tutor_id) + ' skrev rapport för passet ' + kortDatum(r.lesson_date) + '.'));
+    S.bokningar.forEach(b => lägg(b.created_at, 'Pass bokat',
+      namnFör(b.parent_id) + ' · ' + (b.subject || 'Pass') + ' ' + kortDatum(b.wanted_date) + '.'));
+    S.fakturor.forEach(f => {
+      lägg(f.betald_at, 'Betalning registrerad', namnFör(f.parent_id) + ' betalade ' + kronor(f.belopp_ore) + '.');
+      lägg(f.skickad_at, 'Faktura skickad', namnFör(f.parent_id) + ' · ' + kronor(f.belopp_ore) + '.');
+    });
+    S.utbetalningar.forEach(u => lägg(u.utbetald_at, 'Ersättning utbetald',
+      namnFör(u.tutor_id) + ' · ' + kronor(u.belopp_ore) + '.'));
 
+    return p.sort((a, b) => String(b.när).localeCompare(String(a.när)));
+  }
+
+  function ritaFlöde() {
+    const alla = byggFlöde();
+    const host = $('#adm-flode');
+    if (!alla.length) {
+      host.innerHTML = tomt('Inget har hänt än',
+        'Anmälningar, bokningar och betalningar dyker upp här allteftersom.');
+      return;
+    }
+    const dygnet = Date.now() - DAG;
+    host.innerHTML = '<div class="adm-flode">' + alla.slice(0, 6).map(h =>
+      '<div class="adm-flode-post' + (new Date(h.när).getTime() > dygnet ? ' ar-ny' : '') + '">'
+      + '<span class="adm-flode-nar">' + esc(närText(h.när)) + '</span>'
+      + '<span class="adm-flode-text"><b>' + esc(h.rubrik) + '</b>'
+      + '<span>' + esc(h.under) + '</span></span>'
+      + '</div>').join('') + '</div>';
+  }
+
+  /* ------------------------------------------------------------
+     NÄRMASTE PASSEN
+     Ett kort per pass i stället för en tabellrad. Tiden är det man
+     letar efter och står därför först och störst.
+     ------------------------------------------------------------ */
+  function elevNamn(id) {
+    const e = S.elevlista.find(x => x.id === id);
+    return e ? e.name : null;
+  }
+
+  function ritaNärmastePass() {
     const idag = isoFor(new Date());
     const kommande = S.bokningar
       .filter(b => b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed'))
-      .sort((a, b) => (a.wanted_date + (a.wanted_time || '')).localeCompare(b.wanted_date + (b.wanted_time || '')))
-      .slice(0, 4);
-    $('#ov-pass').innerHTML = !kommande.length
-      ? tomt('Inga pass framåt', 'Ingen har bokat något ännu.')
-      : kommande.map(b => rad(
-        kortDatum(b.wanted_date) + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
-        namnFör(b.parent_id) + ' · ' + namnFör(b.tutor_id),
-        BOK_LAGE[b.status] ? BOK_LAGE[b.status][0] : b.status)).join('');
+      .sort((a, b) => (a.wanted_date + (a.wanted_time || ''))
+        .localeCompare(b.wanted_date + (b.wanted_time || '')));
+
+    $('#adm-pass-antal').textContent = kommande.length ? kommande.length + ' framåt' : '';
+    const host = $('#ov-pass');
+    if (!kommande.length) {
+      host.innerHTML = tomt('Inga pass framåt', 'Ingen har bokat något ännu.');
+      return;
+    }
+
+    host.innerHTML = '<div class="adm-passrad">' + kommande.slice(0, 5).map(b => {
+      const online = String(b.format || '').toLowerCase().indexOf('online') !== -1;
+      const elev = elevNamn(b.student_id);
+      return '<a class="adm-pass" href="#bokningar">'
+        + '<span class="adm-pass-nar"><b>'
+        + esc(b.wanted_time ? String(b.wanted_time).slice(0, 5) : '—')
+        + '</b><span>' + esc(kortDatum(b.wanted_date)) + '</span></span>'
+        + '<span class="adm-pass-vad"><b>' + esc(b.subject || 'Pass') + '</b>'
+        + '<span class="adm-pass-vem">' + esc(elev || namnFör(b.parent_id))
+        + '<span class="adm-pil">→</span>' + esc(namnFör(b.tutor_id))
+        + '</span></span>'
+        + '<span class="adm-format' + (online ? '' : ' ar-plats') + '">'
+        + esc(online ? 'Online' : (b.format || 'På plats')) + '</span>'
+        + '</a>';
+    }).join('') + '</div>';
+  }
+
+  async function ritaÖversikt() {
+    const { data, error } = await supa.from('admin_lage').select('*').limit(1);
+
+    /* Vyn admin_lage räknar samma saker i databasen som klienten
+       kan räkna själv, men på ALLA rader — inte bara de RLS släppt
+       igenom och de gränser hämtningen satte. Finns den används
+       den. Finns den inte räknar vi lokalt i stället för att visa
+       ett fel: siffrorna blir desamma i den här storleken. */
+    S.lage = (!error && data && data.length) ? data[0] : null;
+
+    ritaTal();
+    ritaAttGöra();
+    ritaNärmastePass();
+    ritaFlöde();
+    ritaNotiser();
+
+    const l = S.lage;
+    if (l) {
+      märkFlik('#flik-fakt-mark', l.obetalda_fakturor);
+      märkFlik('#flik-inkorg-mark', l.ohanterade_meddelanden);
+    }
+    if (S.sido) {
+      const av = nyckel => {
+        const p = S.attGora.find(x => x.till === nyckel || x.till.indexOf(nyckel + '/') === 0);
+        return p ? p.antal : 0;
+      };
+      S.sido.märke('leads', av('#leads'));
+      S.sido.märke('ansokningar', av('#ansokningar'));
+      S.sido.märke('meddelanden', av('#meddelanden'));
+      S.sido.märke('studiehjalpare', av('#studiehjalpare'));
+      S.sido.märke('elever', av('#elever'));
+      S.sido.märke('bokningar', av('#bokningar'));
+      S.sido.märke('ekonomi', av('#ekonomi'));
+    }
   }
 
   function rad(rubrik, under, höger) {
@@ -334,7 +596,7 @@
         : '<span style="color:var(--bl-3)">—</span>' },
       { namn: 'Inkom', rita: l => '<span class="adm-tal">' + esc(kortDatum(l.created_at)) + '</span>' },
       { namn: 'Läge', höger: true, rita: l => väljare('lead', LEAD_LAGE, l.status, 'data-lead="' + l.id + '"') }
-    ], rader, 'Inga intresseanmälningar matchar');
+    ], rader, tomtText(sök || st, 'Ingen intresseanmälan matchar filtret', 'Inga intresseanmälningar än'));
   }
 
   /* ============================================================
@@ -361,7 +623,7 @@
         : '<span style="color:var(--bl-3)">—</span>' },
       { namn: 'Inkom', rita: a => '<span class="adm-tal">' + esc(kortDatum(a.created_at)) + '</span>' },
       { namn: 'Läge', höger: true, rita: a => väljare('ans', ANS_LAGE, a.status, 'data-ans="' + a.id + '"') }
-    ], rader, 'Inga ansökningar matchar');
+    ], rader, tomtText(sök || st, 'Ingen ansökan matchar filtret', 'Inga ansökningar än'));
   }
 
   /* ============================================================
@@ -386,7 +648,7 @@
         : '<a class="btn btn-ghost btn-sm" href="mailto:' + esc(m.email)
           + '" data-mailtext="keep" style="margin-right:7px">Svara</a>'
           + '<button class="btn btn-primary btn-sm" data-hanterad="' + m.id + '">Klart</button>' }
-    ], rader, bara ? 'Inget ohanterat kvar' : 'Inga meddelanden matchar');
+    ], rader, bara ? 'Inget ohanterat kvar' : tomtText(sök, 'Inget meddelande matchar filtret', 'Inga meddelanden än'));
   }
 
   function ritaChattar() {
@@ -452,8 +714,131 @@
           + '<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-not="' + p.id
           + '" title="Anteckningar" aria-label="Anteckningar om ' + esc(p.full_name || p.email || '') + '">✎</button>';
       } }
-    ], rader, 'Inga familjer matchar');
+    ], rader, tomtText(sök || st, 'Ingen familj matchar filtret', 'Inga familjer registrerade än'));
   }
+
+
+  /* ============================================================
+     ELEVER
+
+     Eleven är den enhet allt annat hänger på: läxor, material,
+     studieplan, rapporter och utveckling bär ett student_id, och
+     ett pass bokas åt en elev.
+
+     Matchningen gör det ännu inte. Den sitter på familjen
+     (profiles.matched_tutor_id), vilket betyder att två syskon i
+     olika ämnen måste dela studiehjälpare. Kolumnen nedan visar
+     därför familjens studiehjälpare och säger det rakt ut, tills
+     matchningen flyttat ner på elevnivå.
+     ============================================================ */
+
+  function elevHjälpare(e) {
+    const f = S.personer[e.parent_id];
+    if (!f || f.match_status !== 'matched' || !f.matched_tutor_id) return null;
+    return S.personer[f.matched_tutor_id] || null;
+  }
+
+  function nästaPassFör(elevId) {
+    const idag = isoFor(new Date());
+    return S.bokningar
+      .filter(b => b.student_id === elevId && b.wanted_date >= idag && b.status !== 'cancelled')
+      .sort((a, b) => (a.wanted_date + (a.wanted_time || ''))
+        .localeCompare(b.wanted_date + (b.wanted_time || '')))[0] || null;
+  }
+
+  function fyllÅrskurser() {
+    const sel = $('#elev-ak');
+    if (!sel || sel.dataset.fylld) return;
+    const åk = [];
+    S.elevlista.forEach(e => { if (e.grade && åk.indexOf(e.grade) === -1) åk.push(e.grade); });
+    åk.sort();
+    sel.insertAdjacentHTML('beforeend',
+      åk.map(a => '<option value="' + esc(a) + '">' + esc(a) + '</option>').join(''));
+    sel.dataset.fylld = '1';
+  }
+
+  function ritaElever() {
+    fyllÅrskurser();
+    const sök = $('#elev-sok').value.trim();
+    const åk = $('#elev-ak').value;
+    const m = $('#elev-match').value;
+
+    const alla = S.elevlista.slice()
+      .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+
+    const rader = alla
+      .filter(e => !åk || e.grade === åk)
+      .filter(e => !m || (m === 'ja' ? !!elevHjälpare(e) : !elevHjälpare(e)))
+      .filter(e => {
+        if (!sök) return true;
+        const f = S.personer[e.parent_id];
+        const text = [e.name, e.grade, e.school, (e.subjects || []).join(' '),
+          f && f.full_name, f && f.email].filter(Boolean).join(' ');
+        return text.toLowerCase().indexOf(sök.toLowerCase()) !== -1;
+      });
+
+    $('#elev-antal').textContent = rader.length + ' av ' + alla.length;
+    $('#elev-tabell').innerHTML = tabell([
+      { namn: 'Elev', rita: e => '<b>' + esc(e.name || '(namn saknas)') + '</b>'
+        + '<span class="adm-und">' + esc([e.grade, e.school].filter(Boolean).join(' · ') || 'Årskurs saknas') + '</span>' },
+      { namn: 'Familj', rita: e => {
+        const f = S.personer[e.parent_id];
+        if (!f) return '<span style="color:var(--bl-2)">Okänd</span>';
+        return esc(f.full_name || f.email || '—')
+          + '<span class="adm-und">' + esc(f.email || '') + '</span>';
+      } },
+      { namn: 'Ämnen', rita: e => (e.subjects && e.subjects.length)
+        ? esc(e.subjects.join(', '))
+        : '<span style="color:var(--bl-2)">Inga angivna</span>' },
+      { namn: 'Studiehjälpare', rita: e => {
+        const t = elevHjälpare(e);
+        return t
+          ? esc(t.full_name || t.email || '—')
+          : pill('Saknas', 'ar-ny');
+      } },
+      { namn: 'Nästa pass', rita: e => {
+        const b = nästaPassFör(e.id);
+        if (!b) return '<span style="color:var(--bl-2)">—</span>';
+        return '<span class="adm-tal">' + esc(kortDatum(b.wanted_date)
+          + (b.wanted_time ? ' ' + String(b.wanted_time).slice(0, 5) : '')) + '</span>'
+          + '<span class="adm-und">' + esc(b.subject || '') + '</span>';
+      } },
+      { namn: 'Pass', rita: e => {
+        const n = S.bokningar.filter(b => b.student_id === e.id && b.status === 'completed').length;
+        return '<span class="adm-tal">' + n + '</span>';
+      } },
+      { namn: '', höger: true, rita: e => {
+        const f = S.personer[e.parent_id];
+        return f
+          ? '<button class="btn btn-ghost btn-sm" data-elev-familj="' + esc(f.id) + '">Öppna familjen</button>'
+          : '';
+      } }
+    ], rader, tomtText(sök || åk || m, 'Ingen elev matchar filtret', 'Inga elever inlagda än'));
+  }
+
+  ['#elev-sok', '#elev-ak', '#elev-match'].forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener('input', ritaElever);
+  });
+
+  /* Vägen från en elev till familjens rad. Elevens egna uppgifter
+     ägs av familjen i studievyn, och noteringarna hänger på
+     profilen — alltså på föräldern.
+
+     Fördröjningen är inte kosmetisk: sektionen byts av hashen, och
+     noteringspanelen flyttas in i den sektion som är synlig. Görs
+     det i samma tick hamnar panelen i en sektion som just blivit
+     dold. */
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-elev-familj]');
+    if (!k) return;
+    const id = k.dataset.elevFamilj;
+    location.hash = '#familjer';
+    setTimeout(() => {
+      const sek = $('section[data-sek="familjer"]');
+      if (sek) öppnaNoteringar(id, sek);
+    }, 80);
+  });
 
   /* ============================================================
      STUDIEHJÄLPARE
@@ -491,7 +876,7 @@
       { namn: 'Läge', höger: true, rita: t => väljare('sh', SH_LAGE, t.status, 'data-sh="' + t.id + '"')
         + '<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-not="' + t.id
         + '" title="Anteckningar" aria-label="Anteckningar om ' + esc(t.namn) + '">✎</button>' }
-    ], rader, 'Inga studiehjälpare matchar');
+    ], rader, tomtText(sök || st, 'Ingen studiehjälpare matchar filtret', 'Inga studiehjälpare registrerade än'));
   }
 
   /* ============================================================
@@ -524,7 +909,7 @@
       { namn: '', höger: true, rita: b => (b.status === 'requested' || b.status === 'confirmed')
         ? '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>'
         : '' }
-    ], rader, 'Inga bokningar matchar');
+    ], rader, tomtText(sök || st, 'Ingen bokning matchar filtret', 'Inga bokningar än'));
   }
 
   /* ============================================================
@@ -1048,6 +1433,293 @@
   });
 
   /* ============ header ============ */
+  /* ============================================================
+     SKALET
+     Topprad, global sök, notiser, hopfällbar sidomeny och menyns
+     fot. Fyra saker som gäller hela vyn och ingen enskild sektion.
+     ============================================================ */
+
+  const SEKTIONSNAMN = {
+    oversikt: 'Översikt', leads: 'Intresseanmälningar', ansokningar: 'Ansökningar',
+    meddelanden: 'Meddelanden', familjer: 'Familjer', elever: 'Elever',
+    studiehjalpare: 'Studiehjälpare', bokningar: 'Bokningar',
+    ekonomi: 'Fakturor & utbetalningar', system: 'System'
+  };
+
+  function ritaVar() {
+    const sek = String(location.hash || '').replace(/^#/, '').split('/')[0] || 'oversikt';
+    const el = $('#adm-var');
+    if (el) el.textContent = SEKTIONSNAMN[sek] || 'Översikt';
+  }
+
+  /* ------------------------------------------------------------
+     HOPFÄLLD SIDOMENY
+     Valet sparas per webbläsare. Den som jobbar på en liten skärm
+     vill ha den hopfälld varje dag, inte varje gång.
+     ------------------------------------------------------------ */
+  const FALL_NYCKEL = 'nx-admin-meny-hopfalld';
+
+  function sättFall(hopfälld) {
+    const layout = $('#adm-layout'), knapp = $('#adm-fall');
+    if (!layout || !knapp) return;
+    layout.classList.toggle('ar-hopfalld', hopfälld);
+    knapp.setAttribute('aria-expanded', hopfälld ? 'false' : 'true');
+    knapp.setAttribute('aria-label', hopfälld ? 'Fäll ut menyn' : 'Fäll ihop menyn');
+    try { localStorage.setItem(FALL_NYCKEL, hopfälld ? '1' : '0'); } catch (e) {}
+  }
+
+  function startaFall() {
+    const knapp = $('#adm-fall');
+    if (!knapp) return;
+    let sparat = '0';
+    try { sparat = localStorage.getItem(FALL_NYCKEL) || '0'; } catch (e) {}
+    sättFall(sparat === '1');
+    knapp.addEventListener('click', () => {
+      sättFall(!$('#adm-layout').classList.contains('ar-hopfalld'));
+    });
+  }
+
+  /* ------------------------------------------------------------
+     MENYNS FOT
+     ------------------------------------------------------------ */
+  function ritaSidofot() {
+    const host = $('#adm-sido-fot');
+    if (!host || !S.profil) return;
+    const namn = S.profil.full_name || S.user.email;
+    host.hidden = false;
+    host.innerHTML = M.avatar(namn, S.profil.avatar_url || null, { liten: true })
+      + '<span class="adm-sido-fot-text"><b>' + esc(namn) + '</b><span>Admin</span></span>'
+      + '<button class="adm-sido-ut" type="button" data-logout title="Logga ut" aria-label="Logga ut">'
+      + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4.5H5.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H9"/>'
+      + '<path d="M15.5 8.5 19 12l-3.5 3.5M19 12H9"/></svg></button>';
+  }
+
+  /* ------------------------------------------------------------
+     PANELERNA
+     Sök och notiser öppnar var sin. Bara en åt gången, och ett
+     klick utanför stänger — samma regel för båda, så att det
+     bara finns ett sätt att stänga något.
+     ------------------------------------------------------------ */
+  function stängPaneler(utom) {
+    [['#adm-sokresultat', '#adm-sok'], ['#adm-notiser', '#adm-notis-knapp']].forEach(par => {
+      if (par[0] === utom) return;
+      const p = $(par[0]), k = $(par[1]);
+      if (p) p.hidden = true;
+      if (k) k.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  document.addEventListener('click', e => {
+    if (e.target.closest('.adm-verktygsfalt')) return;
+    stängPaneler(null);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') stängPaneler(null);
+  });
+
+  /* ------------------------------------------------------------
+     GLOBAL SÖK
+     Går mot det som redan ligger i minnet. Ingen fråga till
+     databasen per tangenttryck: allt adminvyn kan visa är redan
+     hämtat, och en sökning som är klar innan fingret lämnat
+     tangenten slår en som är korrekt men kommer en halv sekund
+     senare.
+
+     Träffarna är typade. Två personer kan heta samma sak, och
+     "Adam" kan vara både en elev och en familj.
+     ------------------------------------------------------------ */
+  const SOK_IKON = {
+    Familj: '<circle cx="8.5" cy="8" r="3"/><path d="M3 19c0-2.8 2.5-4.5 5.5-4.5S14 16.2 14 19"/><path d="M16 5.5a3 3 0 0 1 0 5.8M21 19c0-2.2-1.4-3.7-3.5-4.3"/>',
+    Elev: '<circle cx="12" cy="7.5" r="3.2"/><path d="M4.5 20c0-3.4 3.2-5.5 7.5-5.5s7.5 2.1 7.5 5.5"/>',
+    Studiehjälpare: '<path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/>',
+    Anmälan: '<path d="M3.5 7.5h17v11h-17z"/><path d="m3.5 8 8.5 6 8.5-6"/>',
+    Ansökan: '<path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/>',
+    Bokning: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>'
+  };
+
+  function träffar(sök) {
+    const s = sök.toLowerCase();
+    const i = text => String(text || '').toLowerCase().indexOf(s) !== -1;
+    const ut = [];
+
+    Object.values(S.personer).forEach(p => {
+      if (!i(p.full_name) && !i(p.email) && !i(p.phone)) return;
+      const typ = p.role === 'tutor' ? 'Studiehjälpare' : 'Familj';
+      ut.push({ typ, namn: p.full_name || p.email || '—',
+        under: p.email || '', till: p.role === 'tutor' ? '#studiehjalpare' : '#familjer' });
+    });
+
+    S.elevlista.forEach(e => {
+      if (!i(e.name) && !i(e.school) && !i((e.subjects || []).join(' '))) return;
+      const f = S.personer[e.parent_id];
+      ut.push({ typ: 'Elev', namn: e.name,
+        under: [e.grade, f && (f.full_name || f.email)].filter(Boolean).join(' · '),
+        till: '#elever' });
+    });
+
+    S.leads.forEach(l => {
+      if (!i(l.parent_name) && !i(l.email) && !i(l.child_name)) return;
+      ut.push({ typ: 'Anmälan', namn: l.parent_name || l.email || '—',
+        under: [l.child_name, l.subject].filter(Boolean).join(' · '), till: '#leads' });
+    });
+
+    S.ansokningar.forEach(a => {
+      if (!i(a.name) && !i(a.email) && !i(a.school)) return;
+      ut.push({ typ: 'Ansökan', namn: a.name || a.email || '—',
+        under: [a.school, a.subjects].filter(Boolean).join(' · '), till: '#ansokningar' });
+    });
+
+    S.bokningar.forEach(b => {
+      const elev = elevNamn(b.student_id);
+      if (!i(b.subject) && !i(elev) && !i(namnFör(b.parent_id)) && !i(namnFör(b.tutor_id))) return;
+      ut.push({ typ: 'Bokning', namn: (b.subject || 'Pass') + ' · ' + kortDatum(b.wanted_date),
+        under: (elev || namnFör(b.parent_id)) + ' → ' + namnFör(b.tutor_id), till: '#bokningar' });
+    });
+
+    return ut;
+  }
+
+  function ritaSok() {
+    const fält = $('#adm-sok'), panel = $('#adm-sokresultat');
+    if (!fält || !panel) return;
+    const sök = fält.value.trim();
+
+    if (sök.length < 2) {
+      panel.hidden = true;
+      fält.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    const alla = träffar(sök);
+    panel.hidden = false;
+    fält.setAttribute('aria-expanded', 'true');
+
+    if (!alla.length) {
+      panel.innerHTML = '<div class="adm-panel-tom">Inget matchar <b>' + esc(sök) + '</b>.<br>'
+        + 'Söket går mot namn, e-post, skola och ämne.</div>';
+      return;
+    }
+
+    panel.innerHTML = '<div class="adm-panel-rubrik"><span>'
+      + alla.length + (alla.length === 1 ? ' träff' : ' träffar') + '</span></div>'
+      + alla.slice(0, 12).map(t =>
+        '<a class="adm-rad" href="' + esc(t.till) + '" data-stang-sok>'
+        + '<span class="adm-rad-ikon"><svg viewBox="0 0 24 24" aria-hidden="true">'
+        + (SOK_IKON[t.typ] || '') + '</svg></span>'
+        + '<span class="adm-rad-text"><b>' + esc(t.namn) + '</b>'
+        + (t.under ? '<span>' + esc(t.under) + '</span>' : '') + '</span>'
+        + '<span class="adm-rad-typ">' + esc(t.typ) + '</span>'
+        + '</a>').join('')
+      + (alla.length > 12
+        ? '<div class="adm-panel-tom" style="padding:10px 12px 14px">'
+          + (alla.length - 12) + ' till. Skriv mer för att smalna av.</div>'
+        : '');
+  }
+
+  (function startaSok() {
+    const fält = $('#adm-sok');
+    if (!fält) return;
+    fält.addEventListener('input', () => { stängPaneler('#adm-sokresultat'); ritaSok(); });
+    fält.addEventListener('focus', ritaSok);
+    document.addEventListener('click', e => {
+      if (!e.target.closest('[data-stang-sok]')) return;
+      fält.value = '';
+      $('#adm-sokresultat').hidden = true;
+      fält.setAttribute('aria-expanded', 'false');
+    });
+  })();
+
+  /* ------------------------------------------------------------
+     NOTISER
+     Härledda ur samma arbetskö som Översikt visar, plus de senaste
+     händelserna ur flödet. Ingen notistabell: en sådan kräver att
+     någon skriver till den vid varje händelse och blir tyst fel
+     den dagen någon glömmer.
+
+     Vad som är LÄST sparas däremot lokalt, för det är det enda
+     som inte går att härleda ur datan. Nyckeln är tidsstämpeln på
+     den senaste händelsen man sett.
+     ------------------------------------------------------------ */
+  const LAST_NYCKEL = 'nx-admin-notiser-lasta';
+
+  function läsMarkering() {
+    try { return localStorage.getItem(LAST_NYCKEL) || ''; } catch (e) { return ''; }
+  }
+
+  function byggNotiser() {
+    const sedd = läsMarkering();
+    const ut = S.attGora.map(p => ({
+      larm: true, när: '',
+      rubrik: p.antal + ' ' + (p.antal === 1 ? p.ental : p.rubrik),
+      under: p.under, till: p.till
+    }));
+    byggFlöde().slice(0, 6).forEach(h => {
+      if (sedd && String(h.när) <= sedd) return;
+      ut.push({ larm: false, när: närText(h.när), rubrik: h.rubrik, under: h.under, till: '#oversikt' });
+    });
+    return ut;
+  }
+
+  function ritaNotiser() {
+    const knapp = $('#adm-notis-knapp'), panel = $('#adm-notiser');
+    if (!knapp || !panel) return;
+
+    const alla = byggNotiser();
+    let prick = knapp.querySelector('.adm-prick');
+    if (alla.length && !prick) {
+      prick = document.createElement('span');
+      prick.className = 'adm-prick';
+      prick.setAttribute('aria-hidden', 'true');
+      knapp.appendChild(prick);
+    } else if (!alla.length && prick) {
+      prick.remove();
+    }
+    knapp.setAttribute('aria-label', alla.length ? alla.length + ' notiser' : 'Notiser');
+
+    if (!alla.length) {
+      panel.innerHTML = '<div class="adm-panel-tom">Inget nytt.<br>'
+        + 'Anmälningar, bokningar och betalningar dyker upp här.</div>';
+      return;
+    }
+
+    panel.innerHTML = '<div class="adm-panel-rubrik"><span>Notiser</span>'
+      + '<button type="button" id="adm-notis-lasta">Markera som lästa</button></div>'
+      + alla.map(n =>
+        '<a class="adm-rad' + (n.larm ? ' ar-larm' : '') + '" href="' + esc(n.till) + '" data-stang-notis>'
+        + '<span class="adm-rad-ikon"><svg viewBox="0 0 24 24" aria-hidden="true">'
+        + (n.larm
+          ? '<path d="M12 8.5v4M12 16h.01"/><circle cx="12" cy="12" r="9"/>'
+          : '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>')
+        + '</svg></span>'
+        + '<span class="adm-rad-text"><b>' + esc(n.rubrik) + '</b>'
+        + '<span>' + esc(n.under) + '</span></span>'
+        + (n.när ? '<span class="adm-rad-nar">' + esc(n.när) + '</span>' : '')
+        + '</a>').join('');
+  }
+
+  (function startaNotiser() {
+    const knapp = $('#adm-notis-knapp');
+    if (!knapp) return;
+    knapp.addEventListener('click', () => {
+      const panel = $('#adm-notiser');
+      const öppen = !panel.hidden;
+      stängPaneler('#adm-notiser');
+      panel.hidden = öppen;
+      knapp.setAttribute('aria-expanded', öppen ? 'false' : 'true');
+    });
+
+    document.addEventListener('click', e => {
+      if (e.target.closest('[data-stang-notis]')) { stängPaneler(null); return; }
+      if (!e.target.closest('#adm-notis-lasta')) return;
+      /* Läst betyder "jag har sett allt fram till nu". Arbetskön
+         står kvar oavsett — den försvinner när arbetet är gjort,
+         inte när någon tittat på den. */
+      const senaste = (byggFlöde()[0] || {}).när;
+      try { localStorage.setItem(LAST_NYCKEL, senaste || new Date().toISOString()); } catch (err) {}
+      ritaNotiser();
+    });
+  })();
+
   function ritaHeader() {
     const na = $('#nav-actions'), ma = $('#m-actions');
     if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
@@ -1102,9 +1774,15 @@
         nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt'
       });
 
+      $('#adm-topp').hidden = false;
+      startaFall();
+      ritaSidofot();
+      ritaVar();
+
       function följHash() {
         const [huvud, flik] = String(location.hash || '').replace(/^#/, '').split('/');
         if (flik && S.flikar[huvud]) S.flikar[huvud].visa(flik);
+        ritaVar();
       }
       window.addEventListener('hashchange', följHash);
       följHash();
@@ -1113,7 +1791,7 @@
         host: $('#vy-hero'),
         namn: S.profil.full_name,
         etikett: 'Adminvy',
-        lede: 'Intresseanmälningar, matchning, bokningar, fakturor och utbetalningar.',
+        lede: 'Här är läget på Nextrum idag.',
         video: 'bilder/hero-studievy.mp4',
         bild: 'bilder/hero-nextrum-1280.jpg',
         marke: { text: 'Ledningen', ikon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20V8.5l8.5-5 8.5 5V20"/><path d="M9.5 20v-6h5v6"/></svg>' }
@@ -1126,6 +1804,7 @@
       ritaKontakt();
       ritaChattar();
       ritaFamiljer();
+      ritaElever();
       ritaStudiehjalpare();
       ritaBokningar();
       ritaFakturor();
@@ -1140,8 +1819,11 @@
         .filter(b => b.wanted_date >= idag && b.status !== 'cancelled')
         .sort((a, b) => (a.wanted_date + (a.wanted_time || ''))
           .localeCompare(b.wanted_date + (b.wanted_time || '')))[0];
-      const attGöra = S.leads.filter(l => l.status === 'new').length
-        + Object.values(S.tutorProfiler).filter(t => t.status === 'pending').length;
+      /* Samma summa som arbetskön på Översikt visar, inte en egen
+         räkning. Två tal som båda heter "saker att göra" och säger
+         olika saker är värre än inget tal alls. */
+      const attGöra = S.attGora.reduce((n, p) => n + p.antal, 0);
+      const främst = S.attGora[0];
 
       S.hero.uppdatera({
         nasta: nästa ? {
@@ -1151,9 +1833,12 @@
           under: namnFör(nästa.parent_id) + ' · ' + namnFör(nästa.tutor_id)
         } : { href: '#bokningar', text: 'Inga pass framåt', under: 'Ingen har bokat ännu' },
         chatt: attGöra
-          ? { href: '#leads', text: attGöra + (attGöra === 1 ? ' sak att göra' : ' saker att göra'),
-              under: 'Nya anmälningar och konton att godkänna' }
-          : { href: '#leads', text: 'Inget som väntar', under: 'Inkorgen är tom' }
+          ? { href: främst ? främst.till : '#oversikt',
+              text: attGöra + (attGöra === 1 ? ' sak att göra' : ' saker att göra'),
+              under: främst
+                ? 'Främst: ' + (främst.antal === 1 ? främst.ental : främst.antal + ' ' + främst.rubrik)
+                : 'Se Översikt' }
+          : { href: '#oversikt', text: 'Inget som väntar', under: 'Allt är avklarat' }
       });
 
       supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
