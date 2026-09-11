@@ -52,6 +52,7 @@
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [],
     integrationer: [], pris: null, saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
+    matchunderlag: [], matchunderlagFel: null, valdElev: null,
     valdPerson: null
   };
 
@@ -163,7 +164,7 @@
   async function hämtaAllt() {
     const [profiler, elever, tutorer] = await Promise.all([
       supa.from('profiles').select('id, role, full_name, email, is_admin, match_status, matched_tutor_id, phone, created_at, last_seen_at'),
-      supa.from('students').select('id, parent_id, name, grade, school, subjects, goals'),
+      supa.from('students').select('id, parent_id, name, grade, school, subjects, goals, created_at, matched_tutor_id, match_status'),
       supa.from('tutor_profiles').select('id, age, school, city, subjects, grade_levels, status, hourly_rate, created_at')
     ]);
     if (profiler.error) throw profiler.error;
@@ -231,6 +232,19 @@
     if (kontakt.data && kontakt.data.length && !('hanterad_at' in kontakt.data[0])) {
       S.saknasV13.push('contact_messages.hanterad_at');
     }
+  }
+
+  /* Vyn matchningsunderlag räknar antal_elever och genomforda_pass
+     per studiehjälpare. Båda ändras när en matchning sätts, så den
+     hämtas om i stället för att räknas vidare i minnet. En egen
+     funktion, och inte en del av hämtaAllt, just därför.
+
+     Saknas vyn — schema-v14 inte körd — blir listan tom och
+     matchningssektionen säger det, i stället för att hela vyn dör. */
+  async function hämtaMatchunderlag() {
+    const { data, error } = await supa.from('matchningsunderlag').select('*');
+    S.matchunderlagFel = error ? felText(error) : null;
+    S.matchunderlag = data || [];
   }
 
   /* ============================================================
@@ -353,10 +367,12 @@
     const l = S.lage || {};
     const idag = isoFor(new Date());
 
-    const utanHjälpare = S.elevlista.filter(e => {
-      const f = S.personer[e.parent_id];
-      return !f || f.match_status !== 'matched' || !f.matched_tutor_id;
-    }).length;
+    /* Elevens egen matchning sedan schema-v14, inte familjens.
+       En familj kan vara "matchad" och ändå ha ett barn utan
+       studiehjälpare — det är precis det fallet den här raden
+       finns för att hitta. */
+    const utanHjälpare = S.elevlista.filter(e =>
+      !e.matched_tutor_id || e.match_status !== 'matched').length;
 
     const obetalda = S.fakturor.filter(f =>
       f.status === 'skickad' || f.status === 'forfallen').length;
@@ -377,7 +393,7 @@
         under: 'Kontot fungerar men vyn är låst tills någon godkänner.', till: '#studiehjalpare' },
       { antal: utanHjälpare,
         rubrik: 'elever saknar studiehjälpare', ental: 'elev saknar studiehjälpare',
-        under: 'Ingen är kopplad till dem än.', till: '#elever' },
+        under: 'Ingen är kopplad till dem än.', till: '#matchning' },
       { antal: obekräftade,
         rubrik: 'passförfrågningar väntar', ental: 'passförfrågan väntar',
         under: 'Bokade men inte bekräftade av studiehjälparen.', till: '#bokningar' },
@@ -551,7 +567,7 @@
       S.sido.märke('ansokningar', av('#ansokningar'));
       S.sido.märke('meddelanden', av('#meddelanden'));
       S.sido.märke('studiehjalpare', av('#studiehjalpare'));
-      S.sido.märke('elever', av('#elever'));
+      S.sido.märke('matchning', av('#matchning'));
       S.sido.märke('bokningar', av('#bokningar'));
       S.sido.märke('ekonomi', av('#ekonomi'));
     }
@@ -661,15 +677,12 @@
   }
 
   /* ============================================================
-     FAMILJER — matchningen
-     ============================================================ */
+     FAMILJER
 
-  function godkändaTutorer() {
-    return Object.values(S.tutorProfiler)
-      .filter(t => t.status === 'approved')
-      .map(t => ({ id: t.id, namn: namnFör(t.id), ort: t.city, amnen: (t.subjects || []).join(', ') }))
-      .sort((a, b) => a.namn.localeCompare(b.namn, 'sv'));
-  }
+     Ingen matchning här längre. Den flyttade till sin egen
+     sektion när den blev en elevfråga — se kommentaren vid
+     kolumnen Studiehjälpare nedan.
+     ============================================================ */
 
   function ritaFamiljer() {
     const sök = $('#fam-sok').value.trim();
@@ -679,8 +692,6 @@
     const rader = alla
       .filter(p => !st || (st === 'matched' ? p.match_status === 'matched' : p.match_status !== 'matched'))
       .filter(p => matchar(p, ['full_name', 'email', 'phone'], sök));
-
-    const tutorer = godkändaTutorer();
 
     $('#fam-antal').textContent = rader.length + ' av ' + alla.length;
     $('#fam-tabell').innerHTML = tabell([
@@ -697,22 +708,45 @@
         return '<span class="adm-tal">' + n + '</span>';
       } },
       { namn: 'Studiehjälpare', höger: true, rita: p => {
-        /* Matchningen ÄR den här rullgardinen. Förr var den två
-           kolumner i Table Editor: matched_tutor_id och
-           match_status, som måste sättas i rätt ordning för att
-           vyn skulle låsas upp. Här är det ett val. */
-        if (!tutorer.length) {
-          return '<span class="xsmall" style="color:var(--bl-3)">Inga godkända studiehjälpare än</span>';
+        /* Här satt förr en rullgardin som skrev
+           profiles.matched_tutor_id. Den är borttagen med flit.
+
+           Sedan schema-v14 äger ELEVEN sin matchning, och
+           profiles-kolumnen skrivs av en trigger som räknar om
+           den ur barnen. En rullgardin här hade alltså varit en
+           andra väg att skriva samma sak, som inte höll ihop med
+           den första: familjen hade fått en studiehjälpare som
+           inget av barnen var kopplat till.
+
+           Två skrivvägar till samma sanning är inte en bekvämlighet,
+           det är en bugg som väntar. Här står resultatet, och
+           knappen leder dit arbetet faktiskt görs. */
+        const barn = S.elever[p.id] || [];
+        const matchade = barn.filter(e => e.matched_tutor_id && e.match_status === 'matched');
+        const namn = [];
+        matchade.forEach(e => {
+          const t = S.personer[e.matched_tutor_id];
+          const n = t ? (t.full_name || t.email) : null;
+          if (n && namn.indexOf(n) === -1) namn.push(n);
+        });
+
+        let text;
+        if (!barn.length) text = '<span style="color:var(--bl-2)">Inga barn inlagda</span>';
+        else if (!matchade.length) text = pill('Ingen matchad', 'ar-ny');
+        else if (matchade.length < barn.length) {
+          text = esc(namn.join(', ')) + '<span class="adm-und">'
+            + matchade.length + ' av ' + barn.length + ' barn matchade</span>';
+        } else {
+          text = esc(namn.join(', '))
+            + (namn.length > 1 ? '<span class="adm-und">olika per barn</span>' : '');
         }
-        return '<select class="sel" style="min-width:168px;max-width:200px;padding:7px 28px 7px 10px;font-size:.84rem" '
-          + 'data-match="' + p.id + '" aria-label="Matcha med studiehjälpare">'
-          + '<option value="">Ingen — väntar</option>'
-          + tutorer.map(t => '<option value="' + t.id + '"'
-            + (p.matched_tutor_id === t.id ? ' selected' : '') + '>'
-            + esc(t.namn) + (t.ort ? ' · ' + esc(t.ort) : '') + '</option>').join('')
-          + '</select>'
-          + '<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-not="' + p.id
-          + '" title="Anteckningar" aria-label="Anteckningar om ' + esc(p.full_name || p.email || '') + '">✎</button>';
+
+        return text
+          + '<span style="display:inline-flex;gap:6px;margin-left:10px;vertical-align:middle">'
+          + '<a class="btn btn-ghost btn-sm" href="#matchning">Matcha</a>'
+          + '<button class="btn btn-ghost btn-sm" data-not="' + p.id
+          + '" title="Anteckningar" aria-label="Anteckningar om ' + esc(p.full_name || p.email || '') + '">✎</button>'
+          + '</span>';
       } }
     ], rader, tomtText(sök || st, 'Ingen familj matchar filtret', 'Inga familjer registrerade än'));
   }
@@ -725,17 +759,19 @@
      studieplan, rapporter och utveckling bär ett student_id, och
      ett pass bokas åt en elev.
 
-     Matchningen gör det ännu inte. Den sitter på familjen
-     (profiles.matched_tutor_id), vilket betyder att två syskon i
-     olika ämnen måste dela studiehjälpare. Kolumnen nedan visar
-     därför familjens studiehjälpare och säger det rakt ut, tills
-     matchningen flyttat ner på elevnivå.
+     Sedan schema-v14 gäller det matchningen också: en elev har en
+     egen studiehjälpare, och syskon kan ha var sin. Själva
+     matchandet sker under Matchning — här visas bara resultatet,
+     med en väg dit för den som saknar.
      ============================================================ */
 
+  /* Elevens egen studiehjälpare sedan schema-v14. Föll tidigare
+     tillbaka på familjens, vilket var hela problemet: två syskon
+     i olika ämnen kunde inte ha var sin. */
   function elevHjälpare(e) {
-    const f = S.personer[e.parent_id];
-    if (!f || f.match_status !== 'matched' || !f.matched_tutor_id) return null;
-    return S.personer[f.matched_tutor_id] || null;
+    if (!e.matched_tutor_id || e.match_status !== 'matched') return null;
+    return S.personer[e.matched_tutor_id]
+      || { id: e.matched_tutor_id, full_name: null };
   }
 
   function nästaPassFör(elevId) {
@@ -792,9 +828,11 @@
         : '<span style="color:var(--bl-2)">Inga angivna</span>' },
       { namn: 'Studiehjälpare', rita: e => {
         const t = elevHjälpare(e);
-        return t
-          ? esc(t.full_name || t.email || '—')
-          : pill('Saknas', 'ar-ny');
+        if (t) return esc(t.full_name || t.email || '—');
+        /* Ett larm som inte går att trycka på är en påminnelse om
+           arbete någon annanstans. Den här tar dig dit. */
+        return '<a href="#matchning" data-mt-hoppa="' + esc(e.id) + '">'
+          + pill('Matcha', 'ar-ny') + '</a>';
       } },
       { namn: 'Nästa pass', rita: e => {
         const b = nästaPassFör(e.id);
@@ -815,6 +853,16 @@
       } }
     ], rader, tomtText(sök || åk || m, 'Ingen elev matchar filtret', 'Inga elever inlagda än'));
   }
+
+  /* Från elevlistan rakt in i matchningen med rätt elev vald.
+     Utan det får man leta upp samma elev en gång till i en annan
+     lista, vilket är precis det som gör ett system tröttsamt. */
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-mt-hoppa]');
+    if (!k) return;
+    S.valdElev = k.dataset.mtHoppa;
+    ritaMatchning();
+  });
 
   ['#elev-sok', '#elev-ak', '#elev-match'].forEach(id => {
     const el = $(id);
@@ -839,6 +887,408 @@
       if (sek) öppnaNoteringar(id, sek);
     }, 80);
   });
+
+
+  /* ============================================================
+     MATCHNING
+
+     En elev, en studiehjälpare. Inte en familj och en
+     studiehjälpare, vilket det var till schema-v14: två syskon
+     som läser olika ämnen i olika årskurser ska inte behöva dela.
+
+     RANKNINGEN RÄKNAS HÄR, INTE I SQL
+
+     Det hade varit enklare att sortera i vyn. Men en ORDER BY
+     lämnar ut en ordning, och det man behöver när en förälder
+     frågar "varför just hen?" är skälen. Därför lämnar
+     matchningsunderlag ut rådata, och varje poäng nedan bär med
+     sig vad den kom ifrån.
+
+     FYRA VIKTER, OCH VARFÖR JUST DE
+
+       Ämne      50  Utan rätt ämne spelar resten ingen roll.
+       Årskurs   30  En duktig gymnasiematematiker är fel person
+                     för en femma, och tvärtom.
+       Utrymme   12  Den som har fem elever bör inte få en sjätte
+                     före den som har noll.
+       Erfarenhet 8  Tie-break, inte mer. En ny studiehjälpare är
+                     inte sämre, hen är bara oprövad — och att
+                     vikta det tungt hade gjort nya omöjliga att
+                     komma igång med.
+
+     "VET EJ" ÄR INTE "NEJ"
+
+     En elev utan angivna ämnen har inte fel ämne, vi vet bara
+     inte. Sådana kriterier ger halva poängen och märks med ett
+     frågetecken i stället för ett kryss. Att ge noll hade
+     straffat en elev för att någon glömt fylla i ett fält.
+     ============================================================ */
+
+  const VIKT = { amne: 50, arskurs: 30, utrymme: 12, erfarenhet: 8 };
+
+  /* Årskursen kommer in som fritext från två håll som aldrig
+     pratat med varandra: elevens "Åk 8" eller "Gymnasiet år 2"
+     från studievyns rullgardin, och studiehjälparens "Åk 7–9"
+     eller "Gymnasiet" som aldrig skrivits av någon kod alls utan
+     står handskrivet i databasen.
+
+     Parsern läser därför siffror och ordet gymnasiet, och bryr
+     sig inte om resten. Tankstreck och bindestreck är samma sak
+     för den, vilket de inte är för en jämförelse av strängar. */
+  function tolkaNiva(text) {
+    const t = String(text || '').toLowerCase();
+    const gym = t.indexOf('gymnas') !== -1;
+    const siffror = (t.match(/\d+/g) || []).map(Number);
+    if (gym) return { gym: true, från: siffror[0] || null, till: siffror[1] || siffror[0] || null };
+    if (!siffror.length) return null;
+    return { gym: false, från: siffror[0], till: siffror.length > 1 ? siffror[1] : siffror[0] };
+  }
+
+  function nivåTäcker(tutorNivåer, elevNivå) {
+    const e = tolkaNiva(elevNivå);
+    if (!e) return null;                     // vet ej
+    const lista = (tutorNivåer || []).map(tolkaNiva).filter(Boolean);
+    if (!lista.length) return null;          // vet ej
+    return lista.some(n => {
+      if (e.gym) return n.gym;
+      if (n.gym) return false;
+      return e.från >= n.från && e.från <= n.till;
+    });
+  }
+
+  /* Ämnen jämförs normaliserat. "NO / Fysik / Kemi / Biologi" i
+     bokningen och "Fysik" hos studiehjälparen ska räknas som en
+     träff, så jämförelsen sker på delsträngar åt båda håll. */
+  function normalisera(s) {
+    return String(s || '').toLowerCase().replace(/[^a-zåäö0-9]+/g, ' ').trim();
+  }
+
+  function ämnenSomMöts(elevÄmnen, tutorÄmnen) {
+    const e = (elevÄmnen || []).map(normalisera).filter(Boolean);
+    const t = (tutorÄmnen || []).map(normalisera).filter(Boolean);
+    if (!e.length || !t.length) return null;   // vet ej
+    const träffar = e.filter(x => t.some(y => y.indexOf(x) !== -1 || x.indexOf(y) !== -1));
+    return { träffar, andel: träffar.length / e.length };
+  }
+
+  function poängFör(elev, tutor) {
+    const skäl = [];
+    let poäng = 0;
+
+    const ä = ämnenSomMöts(elev.subjects, tutor.amnen);
+    if (ä === null) {
+      poäng += VIKT.amne / 2;
+      skäl.push(['vet-ej', elev.subjects && elev.subjects.length
+        ? 'Studiehjälparen har inga ämnen angivna'
+        : 'Eleven har inga ämnen angivna']);
+    } else if (ä.träffar.length) {
+      poäng += VIKT.amne * ä.andel;
+      skäl.push([ä.andel === 1 ? 'ja' : 'ja',
+        ä.andel === 1 ? 'Täcker alla elevens ämnen'
+          : 'Täcker ' + ä.träffar.length + ' av ' + (elev.subjects || []).length + ' ämnen']);
+    } else {
+      skäl.push(['nej', 'Inget gemensamt ämne']);
+    }
+
+    const n = nivåTäcker(tutor.arskurser, elev.grade);
+    if (n === null) {
+      poäng += VIKT.arskurs / 2;
+      skäl.push(['vet-ej', elev.grade ? 'Studiehjälparen har inga årskurser angivna' : 'Eleven saknar årskurs']);
+    } else if (n) {
+      poäng += VIKT.arskurs;
+      skäl.push(['ja', 'Undervisar ' + elev.grade]);
+    } else {
+      skäl.push(['nej', 'Undervisar inte ' + elev.grade]);
+    }
+
+    /* Full poäng vid noll elever, ingen vid fem. Taket är satt
+       efter vad en gymnasieelev hinner vid sidan av skolan, inte
+       efter vad som ser bra ut i en graf. */
+    const antal = Number(tutor.antal_elever || 0);
+    const utrymme = Math.max(0, 1 - antal / 5);
+    poäng += VIKT.utrymme * utrymme;
+    skäl.push([antal < 3 ? 'ja' : 'nej',
+      antal === 0 ? 'Har inga elever än'
+        : antal + (antal === 1 ? ' elev sedan tidigare' : ' elever sedan tidigare')]);
+
+    const pass = Number(tutor.genomforda_pass || 0);
+    poäng += VIKT.erfarenhet * Math.min(1, pass / 10);
+    if (pass) skäl.push(['ja', pass + (pass === 1 ? ' genomfört pass' : ' genomförda pass')]);
+    else skäl.push(['vet-ej', 'Inga genomförda pass än']);
+
+    /* TAKET VID ETT HÅRT NEJ
+
+       Utan det här hände följande med riktig data: en
+       studiehjälpare som täckte båda ämnena men INTE elevens
+       årskurs hamnade över en som täckte årskursen och halva
+       ämnena. Två poängs skillnad, och fel person överst.
+
+       Ämne och årskurs är inte gradvisa kriterier som väger mot
+       varandra. Fel årskurs är fel person, hur många pass hen än
+       har kört. Ett nej på något av dem kapar därför poängen
+       under 50, så att den aldrig kan gå om någon utan hårt nej.
+
+       Skälen står kvar oavsett — man ska kunna se att hen ändå
+       kan matteämnena, och överrida om man vet något systemet
+       inte vet. */
+    const hårtNej = skäl.some(x => x[0] === 'nej'
+      && (x[1].indexOf('ämne') !== -1 || x[1].indexOf('Undervisar inte') !== -1));
+    if (hårtNej) poäng = Math.min(poäng, 49);
+
+    return { poäng: Math.round(poäng), skäl, hårtNej };
+  }
+
+  function skälIkon(sort) {
+    if (sort === 'ja') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg>';
+    if (sort === 'nej') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg>';
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 9a2.9 2.9 0 1 1 3.6 2.8c-.5.2-.8.7-.8 1.2v.8M12 17h.01"/></svg>';
+  }
+
+  /* ------------------------------------------------------------
+     KÖN
+     ------------------------------------------------------------ */
+  function elevMatchad(e) {
+    return !!(e.matched_tutor_id && e.match_status === 'matched');
+  }
+
+  function ritaMatchKö() {
+    const host = $('#mt-ko');
+    if (!host) return;
+    const sök = ($('#mt-sok') || {}).value ? $('#mt-sok').value.trim().toLowerCase() : '';
+
+    /* Omatchade först. Det är dem man är här för, och att sortera
+       dem sist hade betytt att man scrollar förbi tio matchade
+       elever varje gång man ska göra det man kom för. */
+    const alla = S.elevlista.slice().sort((a, b) => {
+      const am = elevMatchad(a), bm = elevMatchad(b);
+      if (am !== bm) return am ? 1 : -1;
+      return String(a.name || '').localeCompare(String(b.name || ''), 'sv');
+    }).filter(e => {
+      if (!sök) return true;
+      const f = S.personer[e.parent_id];
+      return [e.name, e.grade, f && f.full_name].filter(Boolean)
+        .join(' ').toLowerCase().indexOf(sök) !== -1;
+    });
+
+    const omatchade = S.elevlista.filter(e => !elevMatchad(e)).length;
+    $('#mt-ko-antal').textContent = omatchade
+      ? omatchade + (omatchade === 1 ? ' väntar' : ' väntar')
+      : 'alla matchade';
+
+    if (!alla.length) {
+      host.innerHTML = tomt(sök ? 'Ingen elev matchar' : 'Inga elever inlagda än',
+        sök ? '' : 'Elever läggs till av familjen i studievyn.');
+      return;
+    }
+
+    host.innerHTML = '<div class="mt-ko">' + alla.map(e => {
+      const f = S.personer[e.parent_id];
+      const m = elevMatchad(e);
+      return '<button class="mt-elev" type="button" data-mt-elev="' + esc(e.id) + '"'
+        + ' aria-pressed="' + (S.valdElev === e.id ? 'true' : 'false') + '">'
+        + '<span class="mt-elev-prick' + (m ? ' ar-matchad' : '') + '" aria-hidden="true"></span>'
+        + '<span class="mt-elev-text"><b>' + esc(e.name || '(namn saknas)') + '</b>'
+        + '<span>' + esc([e.grade, f && (f.full_name || f.email)].filter(Boolean).join(' · ')
+          || 'Årskurs saknas') + '</span></span>'
+        + '</button>';
+    }).join('') + '</div>';
+  }
+
+  /* ------------------------------------------------------------
+     FÖRSLAGEN
+     ------------------------------------------------------------ */
+  function ritaMatchPanel() {
+    const host = $('#mt-panel');
+    if (!host) return;
+
+    const elev = S.elevlista.find(e => e.id === S.valdElev);
+    if (!elev) {
+      $('#mt-forslag-antal').textContent = '';
+      host.innerHTML = tomt('Välj en elev',
+        S.elevlista.length ? 'Listan till vänster. Omatchade står överst.'
+          : 'Det finns inga elever att matcha än.');
+      return;
+    }
+
+    /* Vyn matchningsunderlag ligger i schema-v14. Är den inte
+       körd säger vi det med filnamnet, i stället för att visa en
+       tom lista som läser som "ingen passar". */
+    if (S.matchunderlagFel) {
+      host.innerHTML = '<div class="empty"><b>Matchningsunderlaget saknas</b><br>'
+        + '<span>Vyn <code>matchningsunderlag</code> finns inte i databasen än. Kör '
+        + '<code>schema-v14.sql</code> i Supabase → SQL Editor, så fylls den här sidan.</span></div>';
+      return;
+    }
+
+    const f = S.personer[elev.parent_id];
+    const nuvarande = elev.matched_tutor_id;
+
+    const förslag = S.matchunderlag
+      .map(t => Object.assign({ tutor: t }, poängFör(elev, t)))
+      .sort((a, b) => {
+        /* Den nuvarande studiehjälparen ligger alltid först,
+           oavsett poäng. Man är här för att se hur den valda
+           ligger till, inte för att leta rätt på den. */
+        if (a.tutor.tutor_id === nuvarande) return -1;
+        if (b.tutor.tutor_id === nuvarande) return 1;
+        return b.poäng - a.poäng;
+      });
+
+    $('#mt-forslag-antal').textContent = förslag.length
+      ? förslag.length + ' godkända' : '';
+
+    const fakta = [];
+    if (elev.grade) fakta.push(['', elev.grade]);
+    else fakta.push(['ar-tom', 'Årskurs saknas']);
+    if (elev.subjects && elev.subjects.length) {
+      elev.subjects.forEach(a => fakta.push(['', a]));
+    } else {
+      fakta.push(['ar-tom', 'Inga ämnen angivna']);
+    }
+    if (elev.school) fakta.push(['', elev.school]);
+
+    let ut = '<div class="mt-vald">'
+      + M.avatar(elev.name || '?', null, {})
+      + '<span class="mt-vald-text"><b>' + esc(elev.name || '(namn saknas)') + '</b>'
+      + '<span class="xsmall" style="color:var(--bl-2)">Familj: '
+      + esc(f ? (f.full_name || f.email || '—') : 'okänd') + '</span>'
+      + '<span class="mt-vald-fakta">'
+      + fakta.map(x => '<span class="mt-fakta ' + x[0] + '">' + esc(x[1]) + '</span>').join('')
+      + '</span></span>'
+      + (nuvarande
+        ? '<button class="btn btn-ghost btn-sm" type="button" data-mt-loss="' + esc(elev.id) + '">Ta bort matchningen</button>'
+        : '')
+      + '</div>';
+
+    if (!förslag.length) {
+      host.innerHTML = ut + tomt('Inga godkända studiehjälpare',
+        'Godkänn någon under Studiehjälpare, så dyker de upp här.');
+      return;
+    }
+
+    ut += '<div class="mt-forslag">' + förslag.map(x => {
+      const t = x.tutor;
+      const är = t.tutor_id === nuvarande;
+      return '<div class="mt-kort' + (är ? ' ar-nuvarande' : '') + '">'
+        + '<div class="mt-kort-topp">'
+        + M.avatar(t.namn || '?', null, { liten: true })
+        + '<span class="mt-kort-namn"><b>' + esc(t.namn || '—') + '</b>'
+        + '<span>' + esc([t.ort, (t.amnen || []).join(', ')].filter(Boolean).join(' · ') || 'Inga ämnen angivna') + '</span></span>'
+        + '<span class="mt-poang"><b>' + x.poäng + '%</b>'
+        + '<span>' + (x.hårtNej ? 'Passar illa' : 'Passar') + '</span>'
+        + '<span class="mt-stapel' + (x.hårtNej ? ' ar-svag' : '') + '">'
+        + '<i style="width:' + Math.max(3, x.poäng) + '%"></i></span></span>'
+        + '</div>'
+        + '<div class="mt-skal">' + x.skäl.map(s =>
+          '<span class="ar-' + s[0] + '">' + skälIkon(s[0]) + esc(s[1]) + '</span>').join('') + '</div>'
+        + '<div class="mt-kort-fot">'
+        + (är
+          ? '<span class="mt-nuvarande-marke">Nuvarande</span>'
+          /* Den som passar illa får en dämpad knapp, inte en
+             saknad. Ibland vet den som sitter här något systemet
+             inte vet — familjen känner personen, eller ämnet står
+             fel i profilen. Men den ska inte se ut som ett
+             självklart val bredvid en som passar. */
+          : '<button class="btn btn-sm ' + (x.hårtNej ? 'btn-ghost' : 'btn-primary')
+            + '" type="button" data-mt-valj="' + esc(t.tutor_id) + '">Matcha '
+            + esc(förnamn(t.namn)) + '</button>')
+        + (t.timpris ? '<span class="xsmall">' + esc(NX.kr(t.timpris)) + '/tim</span>' : '')
+        + '</div></div>';
+    }).join('') + '</div>';
+
+    host.innerHTML = ut;
+  }
+
+  function förnamn(namn) {
+    return String(namn || '').trim().split(/\s+/)[0] || 'hen';
+  }
+
+  /* ------------------------------------------------------------
+     HANDLINGARNA
+     ------------------------------------------------------------ */
+  async function sättMatchning(elevId, tutorId) {
+    const elev = S.elevlista.find(e => e.id === elevId);
+    if (!elev) return;
+
+    const ok = await skriv('students', elevId, {
+      matched_tutor_id: tutorId,
+      match_status: tutorId ? 'matched' : 'pending'
+    });
+    if (!ok) return;
+
+    elev.matched_tutor_id = tutorId;
+    elev.match_status = tutorId ? 'matched' : 'pending';
+
+    /* Triggern synka_familjens_match har just skrivit om
+       förälderns rad i databasen. Kartan i minnet vet inte om
+       det, och familjelistan läser den — alltså räknas samma
+       sak om här, med samma regel som triggern. */
+    const syskon = S.elevlista.filter(e => e.parent_id === elev.parent_id);
+    const först = syskon.filter(elevMatchad)
+      .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))[0];
+    const f = S.personer[elev.parent_id];
+    if (f) {
+      f.matched_tutor_id = först ? först.matched_tutor_id : null;
+      f.match_status = först ? 'matched' : 'pending';
+    }
+
+    await hämtaMatchunderlag();
+    ritaMatchKö();
+    ritaMatchPanel();
+    ritaElever();
+    ritaFamiljer();
+    ritaStudiehjalpare();
+    await ritaÖversikt();
+  }
+
+  document.addEventListener('click', async e => {
+    const välj = e.target.closest('[data-mt-elev]');
+    if (välj) {
+      S.valdElev = välj.dataset.mtElev;
+      ritaMatchKö();
+      ritaMatchPanel();
+      return;
+    }
+
+    const matcha = e.target.closest('[data-mt-valj]');
+    if (matcha) {
+      const elev = S.elevlista.find(x => x.id === S.valdElev);
+      const t = S.matchunderlag.find(x => x.tutor_id === matcha.dataset.mtValj);
+      if (!elev || !t) return;
+      const ja = await bekräfta({
+        titel: 'Matcha ' + (elev.name || 'eleven') + ' med ' + (t.namn || 'studiehjälparen') + '?',
+        text: 'De får se varandras uppgifter och kan börja boka pass och skriva till varandra.'
+          + (elev.matched_tutor_id ? ' Den nuvarande matchningen ersätts.' : '')
+          + ' Det går att ändra efteråt.',
+        knapp: 'Matcha'
+      });
+      if (!ja) return;
+      await sättMatchning(elev.id, t.tutor_id);
+      return;
+    }
+
+    const loss = e.target.closest('[data-mt-loss]');
+    if (loss) {
+      const elev = S.elevlista.find(x => x.id === loss.dataset.mtLoss);
+      if (!elev) return;
+      const ja = await bekräfta({
+        titel: 'Ta bort matchningen för ' + (elev.name || 'eleven') + '?',
+        text: 'De slutar se varandras uppgifter. Bokade pass, läxor och rapporter ligger kvar '
+          + 'i databasen men blir oåtkomliga för studiehjälparen.',
+        knapp: 'Ta bort'
+      });
+      if (!ja) return;
+      await sättMatchning(elev.id, null);
+    }
+  });
+
+  const mtSök = $('#mt-sok');
+  if (mtSök) mtSök.addEventListener('input', ritaMatchKö);
+
+  function ritaMatchning() {
+    ritaMatchKö();
+    ritaMatchPanel();
+  }
 
   /* ============================================================
      STUDIEHJÄLPARE
@@ -1217,22 +1667,10 @@
       return;
     }
 
-    /* Matchningen. Två fält, alltid tillsammans: en familj med en
-       studiehjälpare men match_status = 'pending' ser en låst vy
-       och förstår inte varför. Det var det gamla felet i Table
-       Editor, där de var två kolumner man kunde glömma. */
-    if (el.dataset && el.dataset.match) {
-      const p = S.personer[el.dataset.match];
-      const nyTutor = el.value || null;
-      const gammal = { t: p.matched_tutor_id, s: p.match_status };
-      p.matched_tutor_id = nyTutor;
-      p.match_status = nyTutor ? 'matched' : 'pending';
-      const ok = await skriv('profiles', p.id,
-        { matched_tutor_id: nyTutor, match_status: p.match_status });
-      if (!ok) { p.matched_tutor_id = gammal.t; p.match_status = gammal.s; }
-      ritaFamiljer(); ritaStudiehjalpare(); ritaÖversikt();
-      return;
-    }
+    /* Här låg hanteraren för familjens matchningsrullgardin. Den
+       är borttagen tillsammans med rullgardinen: sedan schema-v14
+       ägs matchningen av eleven, och profiles.matched_tutor_id
+       skrivs av en trigger. Se kommentaren i ritaFamiljer. */
 
     /* Fakturans läge. Tidsstämplarna sätts av läget, inte av
        handen: "betald" utan betald_at är en rad ingen kan följa
@@ -1442,7 +1880,7 @@
   const SEKTIONSNAMN = {
     oversikt: 'Översikt', leads: 'Intresseanmälningar', ansokningar: 'Ansökningar',
     meddelanden: 'Meddelanden', familjer: 'Familjer', elever: 'Elever',
-    studiehjalpare: 'Studiehjälpare', bokningar: 'Bokningar',
+    studiehjalpare: 'Studiehjälpare', matchning: 'Matchning', bokningar: 'Bokningar',
     ekonomi: 'Fakturor & utbetalningar', system: 'System'
   };
 
@@ -1805,6 +2243,8 @@
       ritaChattar();
       ritaFamiljer();
       ritaElever();
+      await hämtaMatchunderlag();
+      ritaMatchning();
       ritaStudiehjalpare();
       ritaBokningar();
       ritaFakturor();
