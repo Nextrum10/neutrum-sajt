@@ -175,6 +175,7 @@
         <a href="#studiehjalpare" data-sek="studiehjalpare" title="Studiehjälpare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg><span class="adm-etikett">Studiehjälpare</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Verksamhet</span>
+        <a href="#matchning" data-sek="matchning" title="Matchning"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6.5" cy="8" r="2.8"/><circle cx="17.5" cy="16" r="2.8"/><path d="M9.3 8h2.2a3 3 0 0 1 3 3v2"/><path d="m12.5 11.5 2 1.5 2-1.5"/></svg><span class="adm-etikett">Matchning</span></a>
         <a href="#bokningar" data-sek="bokningar" title="Bokningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg><span class="adm-etikett">Bokningar</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Ekonomi</span>
@@ -434,6 +435,41 @@
         <!-- ============================================================
              BOKNINGAR
              ============================================================ -->
+        <!-- ============================================================
+             MATCHNING
+
+             Vänster: kön. Höger: beslutsunderlaget för den valda.
+
+             Poängen räknas i klienten, inte i SQL. Skälet är att en
+             ranking i databasen blir en siffra utan förklaring, och
+             det man behöver när en förälder frågar "varför hen?" är
+             just förklaringen. Vyn matchningsunderlag lämnar därför
+             ut rådata och rankar ingenting.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="matchning" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Matchning</h2>
+              <p>Välj en elev, se vilka studiehjälpare som passar och varför. Matchningen gäller eleven, inte familjen — syskon kan ha var sin.</p>
+            </div>
+          </div>
+
+          <div class="mt-layout">
+            <div class="dbox">
+              <h5>Elever <em id="mt-ko-antal"></em></h5>
+              <div class="adm-verktyg" style="margin-bottom:11px">
+                <input class="inp adm-sok" id="mt-sok" type="search" placeholder="Sök elev" aria-label="Sök elev" autocomplete="off" style="max-width:none">
+              </div>
+              <div id="mt-ko"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox">
+              <h5>Förslag <em id="mt-forslag-antal"></em></h5>
+              <div id="mt-panel"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
         <section class="vy-sek" data-sek="bokningar" hidden>
           <div class="vy-sek-topp">
             <div>

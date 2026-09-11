@@ -14,7 +14,7 @@ hittar de inte varandra.
 | `nextrum-app.js` | Delad kod (inloggning, kalender, felmeddelanden). |
 | `nextrum-arbetsyta.js` / `.css` | Hälsningsblocket, flikarna, bokningen, veckorutnätet. |
 | `nextrum-admin.js` | Bara adminvyn. |
-| `schema.sql` → … → `schema-v13.sql` | Databasen. Kör i nummerordning. |
+| `schema.sql` → … → `schema-v14.sql` | Databasen. Kör i nummerordning. |
 
 ---
 
@@ -22,16 +22,24 @@ hittar de inte varandra.
 
 Supabase → **SQL Editor** → New query. Klistra in **en fil i taget**, i
 nummerordning, och tryck Run mellan varje: `schema.sql`, `schema-v2.sql`,
-… fram till `schema-v13.sql`.
+… fram till `schema-v14.sql`.
 
 Kör du dem i fel ordning får du fel om saknade tabeller. Kör om
 `schema.sql` bara om du vill börja om från noll, den rensar tabellerna
 först.
 
-**`schema-v13.sql` är den senaste och behövs för adminvyn.** Utan den
-fungerar sidan, men nyckeltalen saknas, statusarna går inte att ändra och
-anteckningarna går inte att spara — vyn säger till vilken fil som saknas i
-stället för att visa nollor.
+**`schema-v14.sql` är den senaste.** De två sista behövs för adminvyn:
+
+- Utan `schema-v13.sql` fungerar sidan, men nyckeltalen saknas, statusarna
+  går inte att ändra och anteckningarna går inte att spara.
+- Utan `schema-v14.sql` fungerar allt utom Matchning, som säger till att
+  filen saknas.
+
+Vyerna säger vilken fil som fattas i stället för att visa nollor.
+
+`schema-v14.sql` flyttar matchningen från familjen till eleven, så att
+syskon kan ha var sin studiehjälpare. Den är additiv: inga kolumner tas
+bort och de inloggade vyerna fortsätter fungera oförändrat.
 
 ## Steg 2 — klistra in nycklarna
 

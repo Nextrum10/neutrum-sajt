@@ -1258,3 +1258,166 @@ table.adm .adm-tal{
   .adm-pass-vad{order:3;flex:1 0 100%}
   .adm-pass-vem{margin-top:4px}
 }
+
+/* ============================================================
+   7. MATCHNINGEN
+
+   Två kolumner: vilka elever som väntar, och vem som passar den
+   valda. Den vänstra är en kö, den högra ett beslutsunderlag.
+
+   Poängen är avsiktligt underordnad skälen. Ett tal säger "94%"
+   och betyder ingenting för den som ska svara en förälder på
+   varför; raderna under säger "rätt ämne, rätt årskurs, har
+   plats" och gör beslutet möjligt att förklara.
+   ============================================================ */
+.mt-layout{
+  display:grid;gap:clamp(16px,2vw,22px);
+  grid-template-columns:minmax(0,1fr);
+  align-items:start;
+}
+@media (min-width:1000px){
+  .mt-layout{grid-template-columns:minmax(0,300px) minmax(0,1fr)}
+}
+
+/* ------------------------------------------------------------
+   KÖN
+   Omatchade först, för det är dem man är här för. De matchade
+   står kvar under — man byter studiehjälpare ibland, och att
+   behöva leta upp eleven i en annan sektion för det vore fel.
+   ------------------------------------------------------------ */
+.mt-ko{display:flex;flex-direction:column;gap:2px;max-height:560px;overflow-y:auto}
+.mt-elev{
+  display:flex;align-items:center;gap:11px;
+  width:100%;text-align:left;
+  padding:11px 12px;border-radius:11px;
+  border:1px solid transparent;
+  transition:background .16s var(--e),border-color .16s var(--e);
+}
+.mt-elev:hover{background:var(--pap-2)}
+.mt-elev[aria-pressed="true"]{
+  background:var(--pap-2);
+  border-color:var(--bl-3);
+}
+.mt-elev-text{min-width:0;flex:1}
+.mt-elev-text b{
+  display:block;font-size:.9rem;font-weight:650;color:var(--bl);
+  line-height:1.3;
+}
+.mt-elev-text span{
+  display:block;margin-top:2px;
+  font-size:.79rem;line-height:1.4;color:var(--bl-2);
+}
+.mt-elev-prick{
+  width:7px;height:7px;border-radius:100px;flex:none;
+  background:var(--acc);
+  box-shadow:0 0 0 3px var(--acc-soft);
+}
+.mt-elev-prick.ar-matchad{background:var(--mossa);box-shadow:none;opacity:.55}
+
+/* ------------------------------------------------------------
+   DEN VALDA ELEVEN
+   Står överst i högerkolumnen som ett kvitto på vad man tittar
+   på. Utan den blir listan under en lista över ingenting.
+   ------------------------------------------------------------ */
+.mt-vald{
+  display:flex;align-items:flex-start;gap:15px;flex-wrap:wrap;
+  padding:16px 18px;margin-bottom:16px;
+  border:1px solid var(--ln);border-radius:14px;
+  background:var(--pap-2);
+}
+.mt-vald-text{min-width:0;flex:1}
+.mt-vald-text b{
+  display:block;font-size:1.05rem;font-weight:700;color:var(--bl);
+  letter-spacing:-.015em;
+}
+.mt-vald-fakta{
+  display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;
+}
+.mt-fakta{
+  font-size:.79rem;font-weight:500;color:var(--bl-2);
+  border:1px solid var(--ln-2);border-radius:100px;
+  padding:3px 10px;background:var(--pap);
+}
+.mt-fakta.ar-tom{color:var(--acc-text);border-color:var(--acc-line);background:var(--acc-soft)}
+
+/* ------------------------------------------------------------
+   FÖRSLAGEN
+   ------------------------------------------------------------ */
+.mt-forslag{display:flex;flex-direction:column;gap:11px}
+.mt-kort{
+  border:1px solid var(--ln);border-radius:15px;
+  background:var(--pap);
+  padding:16px 18px;
+  transition:border-color .18s var(--e),box-shadow .18s var(--e);
+}
+.mt-kort:hover{border-color:var(--ln-2);box-shadow:0 5px 16px rgba(46,42,32,.06)}
+.mt-kort.ar-nuvarande{border-color:var(--mossa);background:var(--pap-2)}
+
+.mt-kort-topp{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+.mt-kort-namn{min-width:0;flex:1}
+.mt-kort-namn b{
+  display:block;font-size:.98rem;font-weight:650;color:var(--bl);
+  line-height:1.3;
+}
+.mt-kort-namn span{
+  display:block;margin-top:2px;
+  font-size:.8rem;color:var(--bl-2);
+}
+
+/* Poängen. En stapel och inte en ring: stapeln går att jämföra
+   mellan två kort som ligger på varandra, ringen gör det inte. */
+.mt-poang{flex:none;text-align:right;min-width:82px}
+.mt-poang b{
+  display:block;font-size:1.15rem;font-weight:700;
+  color:var(--bl);letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1;
+}
+.mt-poang span{
+  display:block;margin-top:3px;
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
+}
+.mt-stapel{
+  height:4px;border-radius:100px;background:var(--pap-3);
+  margin-top:7px;overflow:hidden;
+}
+.mt-stapel i{display:block;height:100%;background:var(--acc);border-radius:100px}
+.mt-stapel.ar-svag i{background:var(--bl-3)}
+
+/* Skälen. Bock för det som stämmer, streck för det som inte gör
+   det, frågetecken för det vi inte vet — och det sista är inte
+   detsamma som ett nej. En elev utan ämnen angivna har inte "fel
+   ämne", vi vet bara inte, och det ska stå så. */
+.mt-skal{
+  display:flex;flex-wrap:wrap;gap:7px 16px;
+  margin-top:13px;padding-top:13px;
+  border-top:1px solid var(--ln);
+}
+.mt-skal > span{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:.82rem;color:var(--bl-2);
+}
+.mt-skal svg{
+  width:13px;height:13px;flex:none;
+  fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;
+}
+.mt-skal .ar-ja{color:var(--bl)}
+.mt-skal .ar-ja svg{stroke:var(--mossa)}
+.mt-skal .ar-nej svg{stroke:var(--bl-3)}
+.mt-skal .ar-vet-ej svg{stroke:var(--ockra)}
+
+.mt-kort-fot{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-top:14px;
+}
+.mt-kort-fot .xsmall{color:var(--bl-2)}
+.mt-nuvarande-marke{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mossa);
+}
+.mt-nuvarande-marke::before{
+  content:"";width:6px;height:6px;border-radius:100px;
+  background:var(--mossa);
+}
