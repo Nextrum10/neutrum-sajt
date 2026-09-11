@@ -350,6 +350,67 @@ grant select on public.matchningsunderlag to authenticated;
 
 
 -- ============================================================
+-- 6b. TRIGGERFUNKTIONERNA UR DET PUBLIKA API:ET
+
+-- Postgres vägrar redan anropa en funktion som returnerar trigger
+-- utanför en trigger, så ingen kunde köra dem via /rest/v1/rpc. De
+-- dök ändå upp som tjugo varningar i Supabases säkerhetsgranskare,
+-- och en lista med tjugo falska fynd är en lista ingen läser —
+-- riktiga fynd drunknar i den.
+--
+-- Det räcker inte att återkalla från anon och authenticated. Postgres
+-- ger PUBLIC rätten EXECUTE på nya funktioner som standard, och båda
+-- rollerna ärver därifrån. Rättighetslistan såg ut så här, där det
+-- inledande "=X" ÄR PUBLIC:
+--
+--   {=X/postgres,postgres=X/postgres,anon=X/postgres,...}
+--
+-- Att återkalla bryter ingenting. Rättigheten prövas när triggern
+-- SKAPAS, inte när den avfyras — triggern körs som en del av
+-- tabelloperationen, inte som ett anrop från den inloggade.
+-- ============================================================
+
+revoke execute on function public.handle_new_user()        from public, anon, authenticated;
+revoke execute on function public.las_fakturabelopp()      from public, anon, authenticated;
+revoke execute on function public.las_utbetalningsbelopp() from public, anon, authenticated;
+revoke execute on function public.skydda_laxa()            from public, anon, authenticated;
+revoke execute on function public.skydda_meddelande()      from public, anon, authenticated;
+revoke execute on function public.skydda_profilfalt()      from public, anon, authenticated;
+revoke execute on function public.skydda_studentfalt()     from public, anon, authenticated;
+revoke execute on function public.skydda_studentfalt_ny()  from public, anon, authenticated;
+revoke execute on function public.skydda_tutorfalt()       from public, anon, authenticated;
+revoke execute on function public.synka_familjens_match()  from public, anon, authenticated;
+
+
+-- ============================================================
+-- 6c. TVÅ SOM STÅR KVAR, OCH VARFÖR
+
+-- Sex SECURITY DEFINER-funktioner GÅR att anropa via REST. Fyra av
+-- dem är ofarliga: is_my_matched_tutor, is_matched_tutor_of,
+-- is_my_student och ar_min_elev utgår alla från auth.uid(), så den
+-- som frågar kan bara få veta något om sina egna relationer.
+--
+-- Två gör det inte:
+--
+--   is_admin(uid)              — svarar om VILKEN uuid som helst är admin
+--   ar_matchade(parent, tutor) — svarar om två FRÄMMANDE uuid:n är matchade
+--
+-- Båda kräver att man känner till ett uuid, och uuid:n läcker inte av
+-- sig själva. Men den som fått tag i ett kan fråga saker om någon
+-- annan, och det är ett läckage.
+--
+-- De är INTE åtgärdade här, med flit. Båda anropas inifrån
+-- RLS-policyer, och en policy utvärderas som den frågande rollen —
+-- att återkalla EXECUTE kan alltså låsa ute anonyma läsare från
+-- startsidans lista över godkända studiehjälpare. Rätt fix är att
+-- ta bort argumentversionen och bara behålla den som utgår från
+-- auth.uid(), vilket kräver att varje policy som använder dem gås
+-- igenom. Det hör hemma i en egen migration med egen testning, inte
+-- som en efterrätt i den här.
+-- ============================================================
+
+
+-- ============================================================
 -- 7. EFTERÅT
 --
 -- Kontrollera att backfillen tog:
