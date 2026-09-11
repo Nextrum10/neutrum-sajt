@@ -784,6 +784,10 @@
       + 'Skriv hellre i rutan Kontakt än via mejl — då hamnar allt på ett ställe och vi kan hjälpa till om något krånglar.</p>';
 
     $('#boka-hos').textContent = 'hos ' + t.full_name.split(' ')[0];
+    /* Namnet står också i bekräftelsesteget. Det är där man läser
+       igenom vad man håller på att boka, och "hos vem" hör hemma
+       i den listan och inte bara i rubriken ovanför. */
+    if (S.boka && S.boka.sättHos) S.boka.sättHos(t.full_name);
     $('#tr-vem').textContent = t.full_name.split(' ')[0];
     $('#tr-text').placeholder = 'Skriv till ' + t.full_name.split(' ')[0] + '…';
   }

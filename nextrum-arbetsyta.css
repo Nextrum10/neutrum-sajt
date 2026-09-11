@@ -372,21 +372,120 @@
    som knappar. Att hitta en ledig timme är en sökning, och sidan
    kan redan räkna ut svaret — den ska inte be någon leta.
    ============================================================ */
-.vy-boka-steg{
-  display:flex;align-items:center;gap:9px;
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.14em;text-transform:uppercase;
-  color:var(--bl-3);
-  margin-bottom:13px;
+/* ------------------------------------------------------------
+   BOKNINGEN, STEG FÖR STEG
+
+   Alla val låg framme samtidigt: tre rader chips, en tidsrad och
+   en kvittorad, allt synligt på en gång. Det gick att boka på ett
+   klick, men ytan såg ut som ett formulär och man visste inte var
+   man skulle börja.
+
+   Nu är det fyra steg där bara ett är öppet. Ett besvarat steg
+   fälls ihop till en rad som säger vad man valde, och den raden
+   går att klicka på för att ändra sig.
+
+   VARFÖR DET INTE BLEV LÅNGSAMMARE
+
+   Steg 1 och 3 svarar sig själva. Ämne, längd och format tas från
+   familjens förra bokning, och har man inte bokat förut används
+   det vanligaste. En familj som bokar sitt tionde pass landar
+   alltså direkt på steg 2 med de andra ifyllda — och det är
+   fortfarande ett klick på en tid och ett på Boka.
+
+   Det som blev bättre är att man SER vad som är valt, och att
+   ytan är en sak i taget i stället för fem.
+   ------------------------------------------------------------ */
+.bk-steg{
+  border:1px solid var(--ln);
+  border-radius:14px;
+  background:var(--pap);
+  overflow:hidden;
 }
-.vy-boka-steg::after{
-  content:"";flex:1;height:1px;background:var(--ln);
+.bk-steg + .bk-steg{margin-top:9px}
+.bk-steg.ar-oppen{border-color:var(--ln-2)}
+/* Ett steg man inte kan svara på än. Inte dolt — man ska se att
+   det kommer, annars vet man inte hur långt det är kvar. */
+.bk-steg.ar-last{opacity:.5}
+
+.bk-huvud{
+  display:flex;align-items:center;gap:12px;
+  width:100%;text-align:left;
+  padding:14px 16px;
+  transition:background .16s var(--e);
 }
-.vy-boka-steg b{
+.bk-steg:not(.ar-last) .bk-huvud{cursor:pointer}
+.bk-steg:not(.ar-last):not(.ar-oppen) .bk-huvud:hover{background:var(--pap-2)}
+.bk-steg.ar-last .bk-huvud{cursor:default}
+
+/* Siffran, eller en bock när steget är besvarat. */
+.bk-nr{
   display:inline-flex;align-items:center;justify-content:center;
-  width:18px;height:18px;border-radius:100px;
-  background:var(--bl);color:var(--pap);
-  font-size:9.5px;
+  width:24px;height:24px;flex:none;border-radius:100px;
+  background:var(--pap-3);color:var(--bl-2);
+  font-family:var(--f-mono);font-size:10.5px;font-weight:700;
+}
+.bk-steg.ar-oppen .bk-nr{background:var(--bl);color:var(--pap)}
+.bk-steg.ar-klar .bk-nr{background:var(--mossa);color:var(--pap)}
+.bk-nr svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+
+.bk-etikett{min-width:0;flex:1}
+.bk-etikett > b{
+  display:block;font-size:.92rem;font-weight:650;color:var(--bl);
+  line-height:1.3;
+}
+/* Sammanfattningen av ett ihopfällt steg. Den ÄR svaret, så den
+   får inte vara svagare än frågan ovanför. */
+.bk-etikett > span{
+  display:block;margin-top:2px;
+  font-size:.83rem;line-height:1.4;color:var(--bl-2);
+}
+.bk-steg.ar-klar .bk-etikett > span{color:var(--bl);font-weight:550}
+
+.bk-andra{
+  flex:none;
+  font-size:.8rem;font-weight:600;color:var(--acc-text);
+  white-space:nowrap;
+}
+.bk-steg.ar-oppen .bk-andra,
+.bk-steg.ar-last .bk-andra{display:none}
+
+.bk-kropp{padding:0 16px 16px}
+.bk-kropp[hidden]{display:none}
+
+/* Längden bor i steg 2 och inte i ett eget steg. Den styr vilka
+   timmar som får plats, så den måste stå före tiderna — och ett
+   eget steg för ett val de flesta aldrig ändrar vore ett steg för
+   mycket. */
+.bk-langd{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding-bottom:14px;margin-bottom:14px;
+  border-bottom:1px solid var(--ln);
+}
+.bk-langd > span{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
+}
+
+/* ------------------------------------------------------------
+   BEKRÄFTELSEN
+   Sista steget är inte ett val, det är ett kvitto. Därför en
+   annan yta: mörkare botten, uppställda rader, priset störst.
+   ------------------------------------------------------------ */
+.bk-kvitto-rad{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:14px;padding:9px 0;
+  font-size:.89rem;
+}
+.bk-kvitto-rad + .bk-kvitto-rad{border-top:1px solid var(--ln)}
+.bk-kvitto-rad > span:first-child{color:var(--bl-2);flex:none}
+.bk-kvitto-rad > span:last-child{color:var(--bl);font-weight:600;text-align:right}
+.bk-kvitto-rad.ar-summa{
+  margin-top:6px;padding-top:13px;
+  border-top:1px solid var(--ln-2);
+}
+.bk-kvitto-rad.ar-summa > span:last-child{
+  font-size:1.32rem;font-weight:700;letter-spacing:-.025em;
+  font-variant-numeric:tabular-nums;
 }
 
 /* Tidsknapparna. En rad per dag hade blivit en kalender igen — de

@@ -246,19 +246,33 @@ window.NXArbete = (function () {
   /* ============================================================
      BOKNINGEN
 
-     Vad som togs bort och varför:
+     FÖRSTA OMGÅNGEN tog bort tre rullgardiner och en månadskalender
+     och ersatte dem med lediga timmar som knappar. Det gjorde
+     bokningen möjlig på ett klick.
 
-     Förr fanns tre rullgardiner, en månadskalender och en knapp som
-     låg avstängd tills alla fyra stämde. Det är fyra beslut innan
-     man ens vet om tiden finns — och kalendern visade en månad där
-     de flesta dagarna var tomma, för studiehjälparen jobbar tre
-     kvällar i veckan.
+     DEN HÄR OMGÅNGEN tar bort resten av formulärkänslan. Allt låg
+     framme samtidigt — ämnen, längder, format, tider, kvitto — och
+     ytan såg ut som en blankett även om den bara krävde ett klick.
 
-     Nu räknas de lediga timmarna fram först (NX.föreslåTider gör
-     redan exakt det åt studiehjälparvyn) och visas som knappar.
-     Ett klick är hela bokningen om längden är den vanliga.
-     Månadskalendern finns kvar bakom "Fler tider" för den som
-     vill boka långt fram.
+     Fyra steg, ett öppet i taget:
+
+       1  Vad ska ni göra      ämne
+       2  När passar det       längd + lediga tider
+       3  Hur vill ni ha det   online eller på plats
+       4  Bekräfta             sammanfattning, pris, knapp
+
+     Längden bor i steg 2 och inte i ett eget. Den styr vilka timmar
+     som får plats, alltså måste den stå före tiderna — och ett eget
+     steg för ett val de flesta aldrig ändrar vore ett steg för
+     mycket.
+
+     DET BLEV INTE LÅNGSAMMARE
+
+     Steg 1 och 3 svarar sig själva från familjens förra bokning.
+     Har man bokat Matematik online tidigare står det redan ifyllt,
+     ihopfällt, med "Ändra" bredvid. Man landar alltså på steg 2 och
+     är klar efter ett klick på en tid och ett på Boka — samma
+     antal som förut.
 
      opts:
        host     — elementet
@@ -274,82 +288,76 @@ window.NXArbete = (function () {
     var host = o.host;
     if (!host) return null;
 
+    var LANGDER = [[60, '1 timme'], [120, '2 timmar'], [180, '3 timmar']];
+    var FORMAT = ['Online', 'På plats'];
+
     var st = {
       amne: o.amne || (o.amnen || [])[0] || 'Matematik',
       minuter: 60,
       format: 'Online',
       datum: null,
       tid: null,
+      /* Beskedet efter en bokning. Det låg förut i steg 4, som
+         fälls ihop och töms i samma andetag som bokningen lyckas —
+         alltså försvann kvittot i samma klick som gjorde det sant.
+         Här ligger det utanför stegen och överlever omritningen. */
+      besked: null,
+      /* Vilka steg användaren själv har bekräftat. Steg 1 och 3
+         räknas som besvarade från start eftersom de har ett
+         vettigt förval — men de får en bock först när de faktiskt
+         stämmer, inte för att de är ifyllda. */
+      svarat: { 1: true, 3: true },
+      oppet: 2,
       data: { tillgang: [], blockerade: [], upptagna: new Set(), tidigare: [] },
       kal: null,
       spärr: null
     };
 
-    var LANGDER = [[60, '1 timme'], [120, '2 timmar'], [180, '3 timmar']];
-    var FORMAT = ['Online', 'På plats'];
-
-    host.innerHTML =
-      '<div class="vy-boka-rot">'
-      + '<div class="vy-boka-steg"><b>1</b>Vad ska ni göra</div>'
-      + '<div class="vy-val" id="bk-amnen" role="group" aria-label="Ämne"></div>'
-      + '<div class="vy-val" id="bk-langder" role="group" aria-label="Längd" style="margin-top:9px"></div>'
-      + '<div class="vy-val" id="bk-format" role="group" aria-label="Format" style="margin-top:9px"></div>'
-
-      + '<div class="vy-boka-steg" style="margin-top:24px"><b>2</b>När</div>'
-      + '<div id="bk-tider"><div class="loading">Hämtar lediga tider</div></div>'
-
-      + '<details class="vy-mer-tider" id="bk-fler">'
-      + '<summary>Fler tider och andra veckor'
-      + '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></summary>'
-      + '<div class="vy-mer-tider-kropp"><div id="bk-kalender"></div></div>'
-      + '</details>'
-
-      + '<div class="vy-kvitto">'
-      + '<span class="vy-kvitto-vad" id="bk-kvitto">Välj en tid ovan.</span>'
-      + '<span class="vy-kvitto-pris" id="bk-pris"></span>'
-      + '</div>'
-      + '<div class="vy-fot" style="border:none;padding-top:14px;margin-top:0">'
-      + '<button class="btn btn-primary" id="bk-boka" type="button" disabled>Boka passet</button>'
-      + '<span class="small" id="bk-hjalp" style="color:var(--bl-3)"></span>'
-      + '</div>'
-      + '<p class="ok-msg" id="bk-msg"></p>'
-      + '</div>';
-
-    function segment(host2, poster, valt, påVal) {
-      host2.innerHTML = poster.map(function (p) {
-        return '<button type="button" data-v="' + esc(String(p[0])) + '" aria-pressed="'
-          + (String(p[0]) === String(valt) ? 'true' : 'false') + '">' + esc(p[1]) + '</button>';
-      }).join('');
-      host2.onclick = function (e) {
-        var k = e.target.closest('button[data-v]');
-        if (!k) return;
-        NX.$$('button', host2).forEach(function (b) {
-          b.setAttribute('aria-pressed', b === k ? 'true' : 'false');
-        });
-        påVal(k.dataset.v);
-      };
+    /* Förra bokningen bestämmer förvalen. En familj som alltid
+       bokar matte online ska inte välja matte online varje gång.
+       tidigare[] kommer från o.ladda och är sorterad nyast först. */
+    function ärvFrånTidigare() {
+      var f = (st.data.tidigare || [])[0];
+      if (!f) return;
+      if (f.subject && (o.amnen || []).indexOf(f.subject) !== -1) st.amne = f.subject;
+      if (f.duration_min) st.minuter = f.duration_min;
+      if (f.format && FORMAT.indexOf(f.format) !== -1) st.format = f.format;
     }
 
-    function ritaVal() {
-      segment($('#bk-amnen', host), (o.amnen || []).map(function (a) { return [a, a]; }),
-        st.amne, function (v) { st.amne = v; ritaKvitto(); });
-      segment($('#bk-langder', host), LANGDER.map(function (l) { return [String(l[0]), l[1]]; }),
-        String(st.minuter), function (v) {
-          st.minuter = Number(v);
-          /* Längden ändrar vilka timmar som ryms. En vald tid som
-             inte längre får plats måste släppas, annars bokar man
-             två timmar i ett enda ledigt hål. */
-          st.datum = null; st.tid = null;
-          if (st.kal) { st.kal.sättMinuter(st.minuter); st.kal.nollställ(); }
-          ritaTider(); ritaKvitto();
-        });
-      segment($('#bk-format', host), FORMAT.map(function (f) { return [f, f]; }),
-        st.format, function (v) { st.format = v; ritaKvitto(); });
+    function timmar() { return Math.max(1, Math.round(st.minuter / 60)); }
+    function längdText() {
+      var t = timmar();
+      return t === 1 ? '1 timme' : t + ' timmar';
     }
 
-    function ritaTider() {
-      var rut = $('#bk-tider', host);
-      if (st.spärr) { rut.innerHTML = st.spärr; return; }
+    var BOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg>';
+
+    function steg(nr, rubrik, sammanfattning, kropp, läge) {
+      var klar = läge === 'klar', öppen = läge === 'oppen', låst = läge === 'last';
+      return '<div class="bk-steg ' + (öppen ? 'ar-oppen' : klar ? 'ar-klar' : låst ? 'ar-last' : '')
+        + '" data-bk-steg="' + nr + '">'
+        + '<' + (låst ? 'div' : 'button type="button"') + ' class="bk-huvud"'
+        + (låst ? '' : ' data-bk-oppna="' + nr + '" aria-expanded="' + (öppen ? 'true' : 'false') + '"')
+        + '>'
+        + '<span class="bk-nr">' + (klar ? BOCK : nr) + '</span>'
+        + '<span class="bk-etikett"><b>' + esc(rubrik) + '</b>'
+        + (sammanfattning && !öppen ? '<span>' + sammanfattning + '</span>' : '') + '</span>'
+        + '<span class="bk-andra">Ändra</span>'
+        + '</' + (låst ? 'div' : 'button') + '>'
+        + '<div class="bk-kropp"' + (öppen ? '' : ' hidden') + '>' + kropp + '</div>'
+        + '</div>';
+    }
+
+    function chips(id, poster, valt, etikett) {
+      return '<div class="vy-val" id="' + id + '" role="group" aria-label="' + esc(etikett) + '">'
+        + poster.map(function (p) {
+          return '<button type="button" data-v="' + esc(String(p[0])) + '" aria-pressed="'
+            + (String(p[0]) === String(valt) ? 'true' : 'false') + '">' + esc(p[1]) + '</button>';
+        }).join('') + '</div>';
+    }
+
+    function tiderHtml() {
+      if (st.spärr) return st.spärr;
 
       var förslag = NX.föreslåTider({
         tillgang: st.data.tillgang,
@@ -362,13 +370,12 @@ window.NXArbete = (function () {
       });
 
       if (!förslag.length) {
-        rut.innerHTML = NXStudie.tomt('Inga lediga tider de närmaste veckorna',
+        return NXStudie.tomt('Inga lediga tider de närmaste veckorna',
           'Er studiehjälpare har tider inlagda, men de är bokade eller för korta för '
-          + (st.minuter / 60) + ' timmar. Prova en kortare längd, eller fråga hen i chatten.');
-        return;
+          + längdText().toLowerCase() + '. Prova en kortare längd, eller fråga hen i chatten.');
       }
 
-      rut.innerHTML = '<div class="vy-tidrad">' + förslag.map(function (f) {
+      return '<div class="vy-tidrad">' + förslag.map(function (f) {
         var d = new Date(f.datum + 'T12:00:00');
         var dag = DAGAR_KORTA[(d.getDay() + 6) % 7];
         return '<button type="button" class="vy-tid' + (f.vanlig ? ' vy-tid-vanlig' : '') + '"'
@@ -379,45 +386,131 @@ window.NXArbete = (function () {
       }).join('') + '</div>';
     }
 
-    function ritaKvitto() {
-      var kvitto = $('#bk-kvitto', host), pris = $('#bk-pris', host), knapp = $('#bk-boka', host);
-      var timmar = Math.max(1, Math.round(st.minuter / 60));
+    function rita() {
+      var valdTid = st.datum && st.tid;
 
-      if (st.spärr) { knapp.disabled = true; kvitto.textContent = ''; pris.textContent = ''; return; }
-      if (!st.datum || !st.tid) {
-        knapp.disabled = true;
-        kvitto.textContent = 'Välj en tid ovan.';
-        pris.textContent = '';
-        return;
-      }
-      knapp.disabled = false;
-      kvitto.innerHTML = '<b>' + esc(datumText(st.datum) + ' kl. ' + st.tid.slice(0, 5)) + '</b>'
-        + '<em>' + esc(st.amne + ' · ' + (timmar === 1 ? '1 timme' : timmar + ' timmar')
-          + ' · ' + st.format) + '</em>';
-      pris.textContent = kr((o.pris || 379) * timmar);
+      var s1 = steg(1, 'Vad ska ni göra',
+        '<b>' + esc(st.amne) + '</b>',
+        chips('bk-amnen', (o.amnen || []).map(function (a) { return [a, a]; }), st.amne, 'Ämne'),
+        st.oppet === 1 ? 'oppen' : 'klar');
+
+      var s2kropp =
+        '<div class="bk-langd"><span>Hur länge</span>'
+        + chips('bk-langder', LANGDER.map(function (l) { return [String(l[0]), l[1]]; }),
+            String(st.minuter), 'Längd')
+        + '</div>'
+        + '<div id="bk-tider">' + tiderHtml() + '</div>'
+        + (st.spärr ? '' :
+          '<details class="vy-mer-tider" id="bk-fler">'
+          + '<summary>Fler tider och andra veckor'
+          + '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></summary>'
+          + '<div class="vy-mer-tider-kropp"><div id="bk-kalender"></div></div>'
+          + '</details>');
+
+      var s2 = steg(2, 'När passar det',
+        valdTid
+          ? '<b>' + esc(datumText(st.datum) + ' kl. ' + st.tid.slice(0, 5)) + '</b> · ' + esc(längdText())
+          : '',
+        s2kropp,
+        st.oppet === 2 ? 'oppen' : valdTid ? 'klar' : '');
+
+      var s3 = steg(3, 'Hur vill ni ha det',
+        '<b>' + esc(st.format) + '</b>',
+        chips('bk-format', FORMAT.map(function (f) { return [f, f]; }), st.format, 'Format'),
+        st.oppet === 3 ? 'oppen' : 'klar');
+
+      /* Steg 4 är låst tills en tid är vald. Det syns ändå, så att
+         man ser att det bara är ett steg kvar. */
+      var s4kropp = valdTid
+        ? '<div class="bk-kvitto-rad"><span>Ämne</span><span>' + esc(st.amne) + '</span></div>'
+          + '<div class="bk-kvitto-rad"><span>När</span><span>'
+          + esc(datumText(st.datum) + ' kl. ' + st.tid.slice(0, 5)) + '</span></div>'
+          + '<div class="bk-kvitto-rad"><span>Längd</span><span>' + esc(längdText()) + '</span></div>'
+          + '<div class="bk-kvitto-rad"><span>Format</span><span>' + esc(st.format) + '</span></div>'
+          + (o.hos ? '<div class="bk-kvitto-rad"><span>Studiehjälpare</span><span>'
+              + esc(o.hos) + '</span></div>' : '')
+          + '<div class="bk-kvitto-rad ar-summa"><span>Att betala</span><span>'
+          + esc(kr((o.pris || 379) * timmar())) + '</span></div>'
+          + '<div class="vy-fot" style="border:none;padding-top:16px;margin-top:0">'
+          + '<button class="btn btn-primary" id="bk-boka" type="button">Boka passet</button>'
+          + '<span class="small" style="color:var(--bl-2)">Ni betalar i efterskott, '
+          + 'först när passet är genomfört.</span>'
+          + '</div>'
+          + '<p class="ok-msg" id="bk-msg"></p>'
+        : '';
+
+      var s4 = steg(4, 'Bekräfta',
+        valdTid ? '' : 'Välj en tid först',
+        s4kropp,
+        valdTid ? (st.oppet === 4 ? 'oppen' : 'oppen') : 'last');
+
+      host.innerHTML = '<div class="vy-boka-rot">' + s1 + s2 + s3 + s4
+        /* .show, inte ett eget attribut: .ok-msg är display:none
+           tills klassen sitter där, precis som NX.säg sätter den. */
+        + '<p class="ok-msg' + (st.besked ? ' show' : '') + '" id="bk-besked">'
+        + (st.besked ? esc(st.besked) : '') + '</p>'
+        + '</div>';
+    }
+
+    /* ---- val ---- */
+    function öppna(nr) {
+      st.oppet = st.oppet === nr ? null : nr;
+      rita();
     }
 
     function välj(datum, tid) {
+      /* Ett nytt val betyder att man är på väg att boka igen. Att
+         låta förra kvittot stå kvar under det hade läst som att
+         det här passet redan var bokat. */
+      st.besked = null;
       st.datum = datum; st.tid = tid;
-      NX.$$('.vy-tid', host).forEach(function (b) {
-        b.setAttribute('aria-pressed',
-          b.dataset.datum === datum && b.dataset.tid === tid ? 'true' : 'false');
-      });
-      ritaKvitto();
+      /* Vald tid fäller ihop steg 2 och lämnar bekräftelsen öppen.
+         Att stanna kvar i tidslistan efter ett val hade betytt att
+         man scrollar ner för att hitta knappen. */
+      st.oppet = 4;
+      rita();
     }
 
     host.addEventListener('click', function (e) {
-      var k = e.target.closest('.vy-tid');
-      if (!k) return;
-      välj(k.dataset.datum, k.dataset.tid);
-      if (st.kal) st.kal.välj(k.dataset.datum, k.dataset.tid);
+      var öpp = e.target.closest('[data-bk-oppna]');
+      if (öpp) { öppna(Number(öpp.dataset.bkOppna)); return; }
+
+      var tid = e.target.closest('.vy-tid');
+      if (tid) {
+        välj(tid.dataset.datum, tid.dataset.tid);
+        if (st.kal) st.kal.välj(tid.dataset.datum, tid.dataset.tid);
+        return;
+      }
+
+      var val = e.target.closest('.vy-val button[data-v]');
+      if (val) {
+        var grupp = val.closest('.vy-val').id;
+        if (grupp === 'bk-amnen') { st.amne = val.dataset.v; st.oppet = st.datum ? 4 : 2; rita(); }
+        else if (grupp === 'bk-format') { st.format = val.dataset.v; st.oppet = st.datum ? 4 : 2; rita(); }
+        else if (grupp === 'bk-langder') {
+          st.minuter = Number(val.dataset.v);
+          /* Längden ändrar vilka timmar som ryms. En vald tid som
+             inte längre får plats måste släppas, annars bokar man
+             två timmar i ett enda ledigt hål. */
+          st.datum = null; st.tid = null;
+          if (st.kal) { st.kal.sättMinuter(st.minuter); st.kal.nollställ(); }
+          st.kal = null;
+          st.oppet = 2;
+          rita();
+        }
+        return;
+      }
+
+      var boka = e.target.closest('#bk-boka');
+      if (boka) skicka();
     });
 
     /* Månadskalendern byggs först när någon fäller ut den. Att rita
-       en kalender ingen bett om kostar en layout på varje sidladdning
+       en kalender ingen bett om kostar en layout på varje omritning,
        och de flesta bokar en av tiderna ovanför. */
-    $('#bk-fler', host).addEventListener('toggle', function () {
-      if (!$('#bk-fler', host).open || st.kal) return;
+    host.addEventListener('toggle', function (e) {
+      var d = e.target;
+      if (!d || d.id !== 'bk-fler' || !d.open || st.kal) return;
       st.kal = NX.byggKalender({
         host: $('#bk-kalender', host),
         upptagna: st.data.upptagna,
@@ -429,27 +522,35 @@ window.NXArbete = (function () {
           välj(s.valtDatum, s.valdTid);
         }
       });
-    });
+    }, true);
 
-    $('#bk-boka', host).addEventListener('click', function () {
+    function skicka() {
       var knapp = $('#bk-boka', host), msg = $('#bk-msg', host);
-      NX.rensa(msg);
+      if (msg) NX.rensa(msg);
       if (!st.datum || !st.tid) return;
+      st.besked = null;
       NXStudie.medan(knapp, 'Bokar…', async function () {
         var fel = await o.boka({
           datum: st.datum, tid: st.tid, minuter: st.minuter,
           amne: st.amne, format: st.format
         });
-        if (fel) { NX.säg(msg, fel, false); await ladda(); return; }
-        NX.säg(msg, 'Passet är önskat. Er studiehjälpare ser det direkt och bekräftar.', true);
+        if (fel) {
+          var m = $('#bk-msg', host);
+          if (m) NX.säg(m, fel, false);
+          await ladda();
+          return;
+        }
+        st.besked = 'Passet är önskat. Er studiehjälpare ser det direkt och bekräftar.';
         st.datum = null; st.tid = null;
-        if (st.kal) st.kal.nollställ();
+        st.kal = null;
+        st.oppet = 2;
         await ladda();
       });
-    });
+    }
 
     async function ladda() {
       var d = await o.ladda();
+      var första = !st.data.tidigare.length;
       st.data = {
         tillgang: d.tillgang || [],
         blockerade: d.blockerade || [],
@@ -457,17 +558,18 @@ window.NXArbete = (function () {
         tidigare: d.tidigare || []
       };
       st.spärr = d.spärr || null;
+      /* Bara vid första laddningen. Att ärva om vid varje omladdning
+         hade skrivit över ett val användaren precis gjort. */
+      if (första) ärvFrånTidigare();
       if (st.kal) {
         st.kal.sättTider({ tillgang: st.data.tillgang, blockerade: st.data.blockerade });
         st.kal.sättUpptagna(st.data.upptagna);
       }
-      $('#bk-fler', host).hidden = !!st.spärr;
-      ritaTider();
-      ritaKvitto();
+      if (st.spärr) st.oppet = 2;
+      rita();
     }
 
-    ritaVal();
-    ritaKvitto();
+    rita();
 
     return {
       ladda: ladda,
@@ -475,8 +577,9 @@ window.NXArbete = (function () {
         if (lista && lista.length) o.amnen = lista;
         if (förvalt) st.amne = förvalt;
         else if ((o.amnen || []).indexOf(st.amne) === -1) st.amne = (o.amnen || [])[0] || st.amne;
-        ritaVal(); ritaKvitto();
-      }
+        rita();
+      },
+      sättHos: function (namn) { o.hos = namn; rita(); }
     };
   }
 
