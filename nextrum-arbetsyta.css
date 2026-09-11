@@ -1497,3 +1497,181 @@ table.adm .adm-tal{
   letter-spacing:.1em;text-transform:uppercase;
   color:var(--mossa);white-space:nowrap;
 }
+
+/* ============================================================
+   9. DETALJPANELEN
+
+   En utfällbar panel från höger, inte en egen sida. Skälet är
+   konkret: man öppnar en familj för att svara på en fråga —
+   "när hade de senast ett pass?" — och ska tillbaka till listan
+   direkt. En sida hade betytt en navigering bort och en tillbaka,
+   och att listans filter och scrollposition går förlorade.
+
+   Panelen ligger fixed över allt. Inte i dokumentflödet: en
+   panel som skjuter isär tabellen bakom sig gör att raden man
+   just klickade på flyttar sig, och nästa klick hamnar fel.
+   ============================================================ */
+/* z-index 850, och siffran är inte tagen ur luften.
+
+   Sidhuvudet står som 80 i nextrum.css men cinema-lagret höjer det
+   till 800, och panelens huvud hamnade därför bakom Nextrum-loggan —
+   namnet på den man tittade på var dolt. Bekräftelserutan ligger på
+   900 och måste fortsätta ligga över panelen, eftersom den öppnas
+   inifrån den. 850 är alltså det enda intervallet som fungerar. */
+.dp-bak{
+  position:fixed;inset:0;z-index:850;
+  background:rgba(46,42,32,.34);
+  opacity:0;transition:opacity .22s var(--e);
+}
+.dp-bak.ar-oppen{opacity:1}
+.dp-bak[hidden]{display:none}
+
+.dp{
+  position:fixed;top:0;right:0;bottom:0;z-index:851;
+  width:min(560px,100vw);
+  display:flex;flex-direction:column;
+  background:var(--pap);
+  border-left:1px solid var(--ln);
+  box-shadow:-18px 0 50px rgba(46,42,32,.18);
+  transform:translateX(100%);
+  transition:transform .28s var(--e);
+}
+.dp.ar-oppen{transform:translateX(0)}
+.dp[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){
+  .dp,.dp-bak{transition:none}
+}
+
+/* Huvudet står still medan innehållet rullar. Man ska alltid se
+   vems uppgifter man tittar på — panelerna är långa, och att
+   scrolla ner i en elevprofil och tappa namnet är hur man råkar
+   skriva en anteckning på fel person. */
+.dp-topp{
+  flex:none;
+  display:flex;align-items:flex-start;gap:14px;
+  padding:20px 22px 16px;
+  border-bottom:1px solid var(--ln);
+  background:var(--pap-2);
+}
+.dp-topp .nx-avatar{flex:none}
+.dp-namn{min-width:0;flex:1}
+.dp-namn b{
+  display:block;font-size:1.12rem;font-weight:700;color:var(--bl);
+  letter-spacing:-.02em;line-height:1.2;
+}
+.dp-namn > span{
+  display:block;margin-top:4px;
+  font-size:.84rem;color:var(--bl-2);line-height:1.45;
+}
+.dp-marken{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+
+.dp-stang{
+  flex:none;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;
+  border:1px solid var(--ln-2);border-radius:10px;
+  background:var(--pap);color:var(--bl-2);
+  transition:background .18s var(--e),color .18s var(--e);
+}
+.dp-stang:hover{background:var(--pap-3);color:var(--bl)}
+.dp-stang svg{
+  width:16px;height:16px;fill:none;stroke:currentColor;
+  stroke-width:1.9;stroke-linecap:round;
+}
+
+/* Flikarna i panelen är smalare än sektionernas: de sitter i en
+   560px-kolumn och ska rymma fyra ord utan att bryta rad. */
+.dp-flikar{
+  flex:none;display:flex;gap:2px;
+  padding:10px 16px 0;
+  border-bottom:1px solid var(--ln);
+  overflow-x:auto;scrollbar-width:none;
+}
+.dp-flikar::-webkit-scrollbar{display:none}
+.dp-flik{
+  flex:none;padding:9px 13px 11px;
+  font-size:.86rem;font-weight:600;color:var(--bl-2);
+  border-bottom:2px solid transparent;
+  white-space:nowrap;
+  transition:color .16s var(--e),border-color .16s var(--e);
+}
+.dp-flik:hover{color:var(--bl)}
+.dp-flik[aria-selected="true"]{color:var(--bl);border-bottom-color:var(--acc)}
+
+.dp-kropp{
+  flex:1;overflow-y:auto;
+  padding:20px 22px 32px;
+}
+.dp-panel[hidden]{display:none}
+
+/* Nyckeltal i panelen. Tre eller fyra små tal överst i en flik,
+   smalare än adminvyns egna eftersom kolumnen är 560px. */
+.dp-tal{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));
+  gap:1px;background:var(--ln);
+  border:1px solid var(--ln);border-radius:13px;overflow:hidden;
+  margin-bottom:18px;
+}
+.dp-tal > div{background:var(--pap);padding:13px 14px}
+.dp-tal b{
+  display:block;font-size:1.22rem;font-weight:700;color:var(--bl);
+  letter-spacing:-.025em;line-height:1;font-variant-numeric:tabular-nums;
+}
+.dp-tal span{
+  display:block;margin-top:6px;
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
+  line-height:1.4;
+}
+
+/* En rubrik inne i en flik. Mindre än en h5 i en dbox — panelen
+   har redan ett huvud och en flik ovanför, en tredje stor rubrik
+   blir en till nivå att läsa förbi. */
+.dp-rubrik{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
+  margin:22px 0 11px;
+}
+.dp-rubrik:first-child{margin-top:0}
+.dp-rubrik em{font-style:normal;font-weight:500;text-transform:none;letter-spacing:0;font-size:.78rem}
+
+/* Fält och värde. Två kolumner på en bred panel, staplade på en
+   telefon där 560px är hela skärmen. */
+.dp-fakta{display:flex;flex-direction:column;gap:1px;background:var(--ln);
+  border:1px solid var(--ln);border-radius:12px;overflow:hidden}
+.dp-fakta > div{
+  display:grid;grid-template-columns:minmax(96px,34%) minmax(0,1fr);
+  gap:14px;padding:11px 14px;background:var(--pap);
+  font-size:.87rem;line-height:1.5;
+}
+.dp-fakta dt,
+.dp-fakta > div > span:first-child{color:var(--bl-2)}
+.dp-fakta > div > span:last-child{color:var(--bl);word-break:break-word}
+.dp-fakta .ar-tom{color:var(--bl-2);font-style:italic}
+@media (max-width:520px){
+  .dp-fakta > div{grid-template-columns:1fr;gap:3px}
+}
+
+/* En rad i en lista inne i panelen: tid till vänster, sak i
+   mitten, läge till höger. Samma rytm som passraden i vyerna. */
+.dp-rad{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;align-items:center;
+  padding:11px 0;
+}
+.dp-rad + .dp-rad{border-top:1px solid var(--ln)}
+.dp-rad b{display:block;font-size:.88rem;font-weight:650;color:var(--bl);line-height:1.35}
+.dp-rad > div > span{
+  display:block;margin-top:2px;
+  font-size:.8rem;line-height:1.45;color:var(--bl-2);
+}
+.dp-rad-hoger{text-align:right;flex:none;white-space:nowrap}
+
+/* Fritext som ska läsas som den skrevs: studieplan, mål,
+   rapporttext. Ett <p> hade klämt ihop styckena. */
+.dp-text{
+  font-size:.87rem;line-height:1.65;color:var(--bl-2);
+  white-space:pre-wrap;word-break:break-word;
+  background:var(--pap-2);border-radius:12px;padding:14px 16px;
+}

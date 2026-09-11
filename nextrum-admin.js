@@ -53,7 +53,7 @@
     integrationer: [], pris: null, saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
     matchunderlag: [], matchunderlagFel: null, valdElev: null, kalender: null,
-    valdPerson: null
+    detaljCache: {}
   };
 
   function visa(id) {
@@ -749,9 +749,13 @@
 
         return text
           + '<span style="display:inline-flex;gap:6px;margin-left:10px;vertical-align:middle">'
-          + '<a class="btn btn-ghost btn-sm" href="#matchning">Matcha</a>'
-          + '<button class="btn btn-ghost btn-sm" data-not="' + p.id
-          + '" title="Anteckningar" aria-label="Anteckningar om ' + esc(p.full_name || p.email || '') + '">✎</button>'
+          + (matchade.length < barn.length
+            ? '<a class="btn btn-ghost btn-sm" href="#matchning">Matcha</a>' : '')
+          /* Anteckningsknappen är borta. Anteckningarna är en flik i
+             detaljpanelen nu, tillsammans med allt annat om samma
+             person — två knappar som öppnade två olika paneler om
+             samma familj var en uppdelning utan skäl. */
+          + '<button class="btn btn-ghost btn-sm" data-dp="familj:' + esc(p.id) + '">Öppna</button>'
           + '</span>';
       } }
     ], rader, tomtText(sök || st, 'Ingen familj matchar filtret', 'Inga familjer registrerade än'));
@@ -851,12 +855,8 @@
         const n = S.bokningar.filter(b => b.student_id === e.id && b.status === 'completed').length;
         return '<span class="adm-tal">' + n + '</span>';
       } },
-      { namn: '', höger: true, rita: e => {
-        const f = S.personer[e.parent_id];
-        return f
-          ? '<button class="btn btn-ghost btn-sm" data-elev-familj="' + esc(f.id) + '">Öppna familjen</button>'
-          : '';
-      } }
+      { namn: '', höger: true, rita: e =>
+        '<button class="btn btn-ghost btn-sm" data-dp="elev:' + esc(e.id) + '">Öppna</button>' }
     ], rader, tomtText(sök || åk || m, 'Ingen elev matchar filtret', 'Inga elever inlagda än'));
   }
 
@@ -873,25 +873,6 @@
   ['#elev-sok', '#elev-ak', '#elev-match'].forEach(id => {
     const el = $(id);
     if (el) el.addEventListener('input', ritaElever);
-  });
-
-  /* Vägen från en elev till familjens rad. Elevens egna uppgifter
-     ägs av familjen i studievyn, och noteringarna hänger på
-     profilen — alltså på föräldern.
-
-     Fördröjningen är inte kosmetisk: sektionen byts av hashen, och
-     noteringspanelen flyttas in i den sektion som är synlig. Görs
-     det i samma tick hamnar panelen i en sektion som just blivit
-     dold. */
-  document.addEventListener('click', e => {
-    const k = e.target.closest('[data-elev-familj]');
-    if (!k) return;
-    const id = k.dataset.elevFamilj;
-    location.hash = '#familjer';
-    setTimeout(() => {
-      const sek = $('section[data-sek="familjer"]');
-      if (sek) öppnaNoteringar(id, sek);
-    }, 80);
   });
 
 
@@ -1330,8 +1311,8 @@
         ? '<span class="adm-tal">' + esc(NX.kr(t.hourly_rate)) + '</span>'
         : '<span style="color:var(--bl-3)">Ej satt</span>' },
       { namn: 'Läge', höger: true, rita: t => väljare('sh', SH_LAGE, t.status, 'data-sh="' + t.id + '"')
-        + '<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-not="' + t.id
-        + '" title="Anteckningar" aria-label="Anteckningar om ' + esc(t.namn) + '">✎</button>' }
+        + '<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-dp="studiehjalpare:'
+        + esc(t.id) + '">Öppna</button>' }
     ], rader, tomtText(sök || st, 'Ingen studiehjälpare matchar filtret', 'Inga studiehjälpare registrerade än'));
   }
 
@@ -1882,93 +1863,11 @@
     ], S.klientfel, 'Inga fel rapporterade');
   }
 
-  /* ============================================================
-     ANTECKNINGAR
-
-     En panel under tabellen, inte en modal. Anteckningar skrivs
-     medan man läser raden bredvid — en ruta som lägger sig över
-     tabellen döljer just det man antecknar om.
-
-     Det som står här läses aldrig av den det gäller. Hela
-     admin_noteringar är stängd utom för admin, så det finns ingen
-     väg dit ens av misstag. Det är också därför den är en egen
-     tabell och inte en kolumn på profiles: RLS är radbaserad, och
-     en kolumn på en rad som den matchade motparten får läsa hade
-     följt med ut.
-     ============================================================ */
-  /* Ett enda panelelement som flyttas dit knappen trycktes. Två
-     paneler med samma id hade varit ogiltig markup, och två med
-     olika id hade betytt två uppsättningar kod som gör samma sak. */
-  const notPanel = document.createElement('div');
-  notPanel.id = 'not-panel';
-  notPanel.hidden = true;
-
-  async function öppnaNoteringar(profilId, iSektion) {
-    const panel = notPanel;
-    if (iSektion) iSektion.appendChild(panel);
-
-    /* Andra klicket på samma person stänger. En panel som bara går
-       att öppna blir liggande kvar och pekar på fel rad. */
-    if (S.valdPerson === profilId && !panel.hidden) {
-      panel.hidden = true;
-      S.valdPerson = null;
-      return;
-    }
-    S.valdPerson = profilId;
-    panel.hidden = false;
-    panel.innerHTML = '<div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">'
-      + '<h5>Anteckningar om ' + esc(namnFör(profilId)) + '</h5>' + laddar() + '</div>';
-
-    const { data, error } = await supa.from('admin_noteringar')
-      .select('id, text, skriven_av, created_at')
-      .eq('om_profil', profilId).order('created_at', { ascending: false });
-
-    const lista = error
-      ? tomt('Kunde inte hämta anteckningarna',
-          felText(error) + ' — är schema-v13.sql kört?')
-      : (data || []).length
-        ? (data || []).map(n => '<div class="mat" style="grid-template-columns:1fr auto">'
-            + '<span class="mat-vad"><b>' + esc(n.text) + '</b>'
-            + '<span>' + esc(namnFör(n.skriven_av)) + ' · ' + esc(kortDatum(n.created_at)) + '</span></span>'
-            + '</div>').join('')
-        : tomt('Inga anteckningar än', 'Det som skrivs här ser bara ledningen.');
-
-    panel.innerHTML = '<div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">'
-      + '<h5>Anteckningar om ' + esc(namnFör(profilId))
-      + ' <em>bara ledningen ser dem</em></h5>'
-      + '<div style="max-height:32vh;overflow:auto">' + lista + '</div>'
-      + '<div class="fgroup" style="margin-top:16px">'
-      + '<label for="not-text">Ny anteckning</label>'
-      + '<textarea class="inp" id="not-text" style="min-height:70px" '
-      + 'placeholder="t.ex. Ringde 3/9, vill helst tisdagar."></textarea></div>'
-      + '<div class="vy-knapprad">'
-      + '<button class="btn btn-primary btn-sm" type="button" id="not-spara">Spara anteckningen</button>'
-      + '<button class="btn btn-ghost btn-sm" type="button" id="not-stang">Stäng</button>'
-      + '</div><p class="ok-msg" id="not-msg"></p></div>';
-  }
-
-  document.addEventListener('click', async e => {
-    if (e.target.closest('#not-stang')) {
-      notPanel.hidden = true;
-      S.valdPerson = null;
-      return;
-    }
-    const spara = e.target.closest('#not-spara');
-    if (!spara) return;
-    const text = ($('#not-text').value || '').trim();
-    const msg = $('#not-msg');
-    rensa(msg);
-    if (!text) { säg(msg, 'Skriv något först.', false); return; }
-    await medan(spara, 'Sparar…', async () => {
-      const { error } = await supa.from('admin_noteringar').insert({
-        om_profil: S.valdPerson, text, skriven_av: S.user.id
-      });
-      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
-      const vem = S.valdPerson;
-      S.valdPerson = null;          // tvinga en omritning i stället för en stängning
-      await öppnaNoteringar(vem, null);
-    });
-  });
+  /* Anteckningarna låg här som en egen panel med en egen
+     hämtning och ett eget formulär. De är nu en flik i
+     detaljpanelen, tillsammans med allt annat om samma person —
+     två paneler om en familj var en uppdelning utan skäl. Se
+     dpNoteringar. */
 
   /* ============================================================
      HANDLINGARNA
@@ -2160,9 +2059,6 @@
       return;
     }
 
-    const not = e.target.closest('[data-not]');
-    if (not) { await öppnaNoteringar(not.dataset.not, not.closest('section[data-sek]')); return; }
-
     const felbort = e.target.closest('[data-felbort]');
     if (felbort) {
       const { error } = await supa.from('klientfel').delete().eq('id', felbort.dataset.felbort);
@@ -2240,6 +2136,686 @@
   });
 
   /* ============ header ============ */
+
+  /* ============================================================
+     DETALJPANELEN
+
+     En familj, en elev eller en studiehjälpare, öppnad från vilken
+     lista som helst. Samma panel för alla tre — det som skiljer är
+     vilka flikar den har och vad som hämtas.
+
+     HÄMTAS NÄR DEN ÖPPNAS, INTE I FÖRVÄG
+
+     Studieplaner, läxor, material, utvecklingsområden, rapporter
+     och tillgänglighet för ALLA vore sju frågor till vid varje
+     sidladdning, och nästan ingenting av det tittar man på. Med
+     två elever spelar det ingen roll. Med hundra gör det det, och
+     då är det för sent att ändra arkitektur.
+
+     Panelen cachar per person i S.detaljCache: öppnar man samma
+     familj två gånger i rad hämtas ingenting andra gången.
+     ============================================================ */
+
+  const DP = {
+    bak: null, panel: null, typ: null, id: null, flik: null
+  };
+
+  function byggPanel() {
+    if (DP.panel) return;
+
+    DP.bak = document.createElement('div');
+    DP.bak.className = 'dp-bak';
+    DP.bak.hidden = true;
+    DP.bak.addEventListener('click', stängDetalj);
+
+    DP.panel = document.createElement('aside');
+    DP.panel.className = 'dp';
+    DP.panel.hidden = true;
+    DP.panel.setAttribute('role', 'dialog');
+    DP.panel.setAttribute('aria-modal', 'true');
+    DP.panel.setAttribute('aria-label', 'Detaljer');
+
+    document.body.appendChild(DP.bak);
+    document.body.appendChild(DP.panel);
+
+    DP.panel.addEventListener('click', e => {
+      if (e.target.closest('[data-dp-stang]')) { stängDetalj(); return; }
+      const f = e.target.closest('[data-dp-flik]');
+      if (f) { DP.flik = f.dataset.dpFlik; ritaDetalj(); }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && DP.panel && !DP.panel.hidden) stängDetalj();
+    });
+  }
+
+  function stängDetalj() {
+    if (!DP.panel) return;
+    DP.panel.classList.remove('ar-oppen');
+    DP.bak.classList.remove('ar-oppen');
+    DP.typ = null; DP.id = null;
+    /* Vänta ut övergången innan hidden sätts, annars hoppar
+       panelen bort i stället för att glida. */
+    setTimeout(() => {
+      if (DP.typ) return;           // hann öppnas igen
+      DP.panel.hidden = true;
+      DP.bak.hidden = true;
+    }, 280);
+    if (DP.sistaFokus && DP.sistaFokus.focus) DP.sistaFokus.focus();
+  }
+
+  /* ------------------------------------------------------------
+     HÄMTNINGEN
+     En fråga per tabell panelen behöver, alla parallellt. Vad som
+     behövs beror på typ: en studiehjälpare har ingen studieplan,
+     en familj har ingen tillgänglighet.
+     ------------------------------------------------------------ */
+  async function hämtaDetalj(typ, id) {
+    const nyckel = typ + ':' + id;
+    if (S.detaljCache[nyckel]) return S.detaljCache[nyckel];
+
+    const d = { fel: null };
+    const frågor = [];
+    const namn = [];
+
+    function lägg(n, q) { namn.push(n); frågor.push(q); }
+
+    if (typ === 'elev') {
+      lägg('plan', supa.from('study_plans')
+        .select('subject, goals, plan_text, updated_at').eq('student_id', id)
+        .order('updated_at', { ascending: false }).limit(1));
+      lägg('laxor', supa.from('homework')
+        .select('id, title, subject, due_date, status, created_at').eq('student_id', id)
+        .order('due_date', { ascending: false }).limit(50));
+      lägg('material', supa.from('materials')
+        .select('id, title, kind, subject, url, created_at').eq('student_id', id)
+        .order('created_at', { ascending: false }).limit(50));
+      lägg('utveckling', supa.from('progress_items')
+        .select('id, subject, area, level, comment, updated_at').eq('student_id', id)
+        .order('subject').order('area'));
+      lägg('rapporter', supa.from('lesson_reports')
+        .select('id, lesson_date, went_well, needs_practice, next_focus, ai_feedback, created_at')
+        .eq('student_id', id).order('lesson_date', { ascending: false }).limit(30));
+    } else if (typ === 'studiehjalpare') {
+      lägg('tillgang', supa.from('tutor_availability')
+        .select('weekday, start_time, end_time').eq('tutor_id', id).order('weekday'));
+      lägg('blockerat', supa.from('tutor_blocked')
+        .select('block_date, block_time, reason').eq('tutor_id', id)
+        .gte('block_date', isoFor(new Date())).order('block_date').limit(30));
+      lägg('rapporter', supa.from('lesson_reports')
+        .select('id, student_id, lesson_date, created_at').eq('tutor_id', id)
+        .order('lesson_date', { ascending: false }).limit(30));
+      lägg('noteringar', supa.from('admin_noteringar')
+        .select('id, text, skriven_av, created_at').eq('om_profil', id)
+        .order('created_at', { ascending: false }));
+    } else {
+      lägg('noteringar', supa.from('admin_noteringar')
+        .select('id, text, skriven_av, created_at').eq('om_profil', id)
+        .order('created_at', { ascending: false }));
+    }
+
+    /* Varje fråga fångas var för sig.
+
+       Promise.all avvisar vid FÖRSTA felet, och då kastades
+       undantaget hela vägen ut — panelen blev stående på "Hämtar"
+       i varenda flik, även de som inte hade med den trasiga
+       frågan att göra. En saknad tabell eller ett tappat nät
+       räckte för att frysa hela vyn.
+
+       Nu blir ett fel ett fel i EN flik. Resten ritas. */
+    const svar = await Promise.all(frågor.map(q =>
+      Promise.resolve(q).then(
+        r => r,
+        e => ({ data: null, error: e })
+      )));
+
+    svar.forEach((r, i) => {
+      d[namn[i]] = (r && r.data) || [];
+      if (r && r.error) d[namn[i] + 'Fel'] = felText(r.error);
+    });
+
+    S.detaljCache[nyckel] = d;
+    return d;
+  }
+
+  /* ------------------------------------------------------------
+     FLIKARNA PER TYP
+     ------------------------------------------------------------ */
+  const DP_FLIKAR = {
+    familj:         [['oversikt', 'Översikt'], ['barn', 'Barn'], ['pass', 'Pass'],
+                     ['ekonomi', 'Ekonomi'], ['anteckningar', 'Anteckningar']],
+    elev:           [['oversikt', 'Översikt'], ['pass', 'Pass'], ['uppgifter', 'Uppgifter'],
+                     ['utveckling', 'Utveckling'], ['rapporter', 'Rapporter']],
+    studiehjalpare: [['oversikt', 'Översikt'], ['elever', 'Elever'], ['pass', 'Pass'],
+                     ['tider', 'Tider'], ['ersattning', 'Ersättning'],
+                     ['anteckningar', 'Anteckningar']]
+  };
+
+  async function öppnaDetalj(typ, id) {
+    if (!DP_FLIKAR[typ]) return;
+    byggPanel();
+    DP.sistaFokus = document.activeElement;
+    DP.typ = typ; DP.id = id;
+    DP.flik = DP_FLIKAR[typ][0][0];
+
+    DP.bak.hidden = false;
+    DP.panel.hidden = false;
+    /* Två bildrutor innan klassen sätts, annars hinner webbläsaren
+       inte se starttillståndet och övergången uteblir. */
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      DP.bak.classList.add('ar-oppen');
+      DP.panel.classList.add('ar-oppen');
+    }));
+
+    ritaDetalj(true);
+    await hämtaDetalj(typ, id);
+    if (DP.typ === typ && DP.id === id) ritaDetalj();
+  }
+
+
+  /* ------------------------------------------------------------
+     RITNINGEN
+     ------------------------------------------------------------ */
+  function dpFakta(rader) {
+    return '<div class="dp-fakta">' + rader.map(r =>
+      '<div><span>' + esc(r[0]) + '</span>'
+      + (r[1] ? '<span>' + r[1] + '</span>'
+              : '<span class="ar-tom">' + esc(r[2] || 'ej angivet') + '</span>')
+      + '</div>').join('') + '</div>';
+  }
+
+  function dpRubrik(text, extra) {
+    return '<div class="dp-rubrik"><span>' + esc(text) + '</span>'
+      + (extra ? '<em>' + esc(extra) + '</em>' : '') + '</div>';
+  }
+
+  function dpTal(par) {
+    return '<div class="dp-tal">' + par.map(p =>
+      '<div><b>' + esc(String(p[0])) + '</b><span>' + esc(p[1]) + '</span></div>').join('') + '</div>';
+  }
+
+  function dpRad(rubrik, under, höger) {
+    return '<div class="dp-rad"><div><b>' + esc(rubrik) + '</b>'
+      + (under ? '<span>' + esc(under) + '</span>' : '') + '</div>'
+      + '<span class="dp-rad-hoger">' + (höger || '') + '</span></div>';
+  }
+
+  function passFör(filter) {
+    return S.bokningar.filter(filter).sort((a, b) =>
+      String(b.wanted_date + (b.wanted_time || ''))
+        .localeCompare(String(a.wanted_date + (a.wanted_time || ''))));
+  }
+
+  function passLista(pass, visaVem) {
+    if (!pass.length) return tomt('Inga pass', 'Bokade pass dyker upp här.');
+    return pass.slice(0, 30).map(b => dpRad(
+      kortDatum(b.wanted_date) + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
+      [b.subject, b.format, (b.duration_min || 60) + ' min',
+        visaVem ? visaVem(b) : null].filter(Boolean).join(' · '),
+      läge(BOK_LAGE, b.status))).join('');
+  }
+
+  const NIVA_TEXT = {
+    behover_traning: ['Behöver träning', 'ar-ny'],
+    pa_god_vag: ['På god väg', 'ar-vantar'],
+    sitter: ['Sitter', 'ar-klar']
+  };
+
+  function dpFamilj(p, d) {
+    const barn = S.elever[p.id] || [];
+    const pass = passFör(b => b.parent_id === p.id);
+    const genomförda = pass.filter(b => b.status === 'completed');
+    const fakturor = S.fakturor.filter(f => f.parent_id === p.id);
+    const obetalt = fakturor.filter(f => f.status === 'skickad' || f.status === 'forfallen')
+      .reduce((n, f) => n + (f.belopp_ore || 0), 0);
+    const idag = isoFor(new Date());
+    const nästa = pass.filter(b => b.wanted_date >= idag && b.status !== 'cancelled').pop();
+
+    if (DP.flik === 'barn') {
+      if (!barn.length) return tomt('Inga barn inlagda', 'Familjen lägger till dem i studievyn.');
+      return barn.map(e => {
+        const t = elevHjälpare(e);
+        return '<div class="dp-rad"><div>'
+          + '<b>' + esc(e.name) + '</b>'
+          + '<span>' + esc([e.grade, e.school, (e.subjects || []).join(', ')]
+              .filter(Boolean).join(' · ') || 'Inga uppgifter') + '</span>'
+          + '<span>' + (t ? 'Studiehjälpare: ' + esc(t.full_name || t.email || '—')
+                          : 'Ingen studiehjälpare') + '</span></div>'
+          + '<span class="dp-rad-hoger">'
+          + '<button class="btn btn-ghost btn-sm" data-dp="elev:' + esc(e.id) + '">Öppna</button>'
+          + '</span></div>';
+      }).join('');
+    }
+
+    if (DP.flik === 'pass') return passLista(pass, b => elevNamn(b.student_id) || '');
+
+    if (DP.flik === 'ekonomi') {
+      return dpTal([
+        [kronor(obetalt), 'Utestående'],
+        [fakturor.length, 'Fakturor'],
+        [genomförda.length, 'Fakturerbara pass']
+      ])
+      + dpRubrik('Fakturor')
+      + (fakturor.length
+        ? fakturor.map(f => dpRad(
+            NX.MANADER[Number(String(f.period).slice(5, 7)) - 1] + ' ' + String(f.period).slice(0, 4),
+            kronor(f.belopp_ore) + (f.forfaller ? ' · förfaller ' + kortDatum(f.forfaller) : ''),
+            läge(FAKT_LAGE, f.status))).join('')
+        : tomt('Inga fakturor än', 'Den första skapas när en månad med genomförda pass är slut.'));
+    }
+
+    if (DP.flik === 'anteckningar') return dpNoteringar(p.id, d);
+
+    return dpTal([
+      [barn.length, barn.length === 1 ? 'Barn' : 'Barn'],
+      [genomförda.length, 'Genomförda pass'],
+      [kronor(obetalt), 'Utestående']
+    ])
+    + dpRubrik('Kontakt')
+    + dpFakta([
+      ['E-post', p.email ? esc(p.email) : null],
+      ['Telefon', p.phone ? esc(p.phone) : null],
+      ['Konto skapat', p.created_at ? esc(kortDatum(p.created_at)) : null],
+      ['Senast inloggad', p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : null, 'aldrig'],
+      ['Om familjen', p.bio ? esc(p.bio) : null]
+    ])
+    + dpRubrik('Nästa pass')
+    + (nästa
+      ? dpRad(kortDatum(nästa.wanted_date)
+          + (nästa.wanted_time ? ' kl. ' + String(nästa.wanted_time).slice(0, 5) : ''),
+          [elevNamn(nästa.student_id), nästa.subject, namnFör(nästa.tutor_id)]
+            .filter(Boolean).join(' · '),
+          läge(BOK_LAGE, nästa.status))
+      : tomt('Inget pass inbokat', 'Familjen bokar i studievyn.'));
+  }
+
+  function dpElev(e, d) {
+    const f = S.personer[e.parent_id];
+    const t = elevHjälpare(e);
+    const pass = passFör(b => b.student_id === e.id);
+    const genomförda = pass.filter(b => b.status === 'completed');
+    const plan = (d.plan || [])[0];
+
+    if (DP.flik === 'pass') return passLista(pass, b => namnFör(b.tutor_id));
+
+    if (DP.flik === 'uppgifter') {
+      const öppna = (d.laxor || []).filter(h => h.status !== 'klar');
+      return dpRubrik('Läxor', öppna.length ? öppna.length + ' öppna' : 'allt avbockat')
+        + ((d.laxor || []).length
+          ? d.laxor.map(h => dpRad(h.title,
+              [h.subject, h.due_date ? 'till ' + kortDatum(h.due_date) : null]
+                .filter(Boolean).join(' · '),
+              pill(h.status === 'klar' ? 'Klar' : h.status === 'paborjad' ? 'Påbörjad' : 'Ej påbörjad',
+                h.status === 'klar' ? 'ar-klar' : h.status === 'paborjad' ? 'ar-vantar' : ''))).join('')
+          : tomt('Inga läxor', 'Studiehjälparen lägger upp dem i sin vy.'))
+        + dpRubrik('Material')
+        + ((d.material || []).length
+          ? d.material.map(m => dpRad(m.title,
+              [m.subject, m.kind === 'lank' ? 'länk' : m.kind].filter(Boolean).join(' · '),
+              kortDatum(m.created_at))).join('')
+          : tomt('Inget material', 'Filer och länkar från studiehjälparen hamnar här.'));
+    }
+
+    if (DP.flik === 'utveckling') {
+      const u = d.utveckling || [];
+      if (!u.length) return tomt('Inga områden satta',
+        'Studiehjälparen sätter dem efter hand som de arbetar.');
+      return u.map(x => dpRad(x.area, [x.subject, x.comment].filter(Boolean).join(' · '),
+        pill((NIVA_TEXT[x.level] || [x.level])[0], (NIVA_TEXT[x.level] || [, ''])[1]))).join('');
+    }
+
+    if (DP.flik === 'rapporter') {
+      const r = d.rapporter || [];
+      if (!r.length) return tomt('Inga rapporter än',
+        'Studiehjälparen skriver en efter varje pass. Utan den faktureras inte passet.');
+      return r.map(x => '<div style="margin-bottom:18px">'
+        + dpRubrik(kortDatum(x.lesson_date))
+        + dpFakta([
+          ['Gick bra', x.went_well ? esc(x.went_well) : null],
+          ['Att öva på', x.needs_practice ? esc(x.needs_practice) : null],
+          ['Nästa gång', x.next_focus ? esc(x.next_focus) : null]
+        ]) + '</div>').join('');
+    }
+
+    return dpTal([
+      [genomförda.length, 'Genomförda pass'],
+      [(d.laxor || []).filter(h => h.status !== 'klar').length, 'Öppna läxor'],
+      [(d.utveckling || []).length, 'Områden']
+    ])
+    + dpRubrik('Eleven')
+    + dpFakta([
+      ['Årskurs', e.grade ? esc(e.grade) : null],
+      ['Skola', e.school ? esc(e.school) : null],
+      ['Ämnen', (e.subjects || []).length ? esc(e.subjects.join(', ')) : null],
+      ['Mål', e.goals ? esc(e.goals) : null],
+      ['Familj', f ? '<button class="btn btn-ghost btn-sm" data-dp="familj:' + esc(f.id) + '">'
+        + esc(f.full_name || f.email || '—') + '</button>' : null],
+      ['Studiehjälpare', t
+        ? '<button class="btn btn-ghost btn-sm" data-dp="studiehjalpare:' + esc(t.id) + '">'
+          + esc(t.full_name || t.email || '—') + '</button>'
+        : null, 'ingen matchad än']
+    ])
+    + dpRubrik('Studieplan', plan && plan.updated_at ? 'uppdaterad ' + kortDatum(plan.updated_at) : '')
+    + (plan && (plan.plan_text || plan.goals)
+      ? '<div class="dp-text">' + esc(plan.plan_text || plan.goals) + '</div>'
+      : tomt('Ingen studieplan', 'Studiehjälparen skriver den efter första passet.'));
+  }
+
+  function dpStudiehjalpare(p, d) {
+    const tp = S.tutorProfiler[p.id] || {};
+    const elever = S.elevlista.filter(e => e.matched_tutor_id === p.id && e.match_status === 'matched');
+    const pass = passFör(b => b.tutor_id === p.id);
+    const genomförda = pass.filter(b => b.status === 'completed');
+    const minuter = genomförda.reduce((n, b) => n + (b.duration_min || 60), 0);
+    const utb = S.utbetalningar.filter(u => u.tutor_id === p.id);
+
+    if (DP.flik === 'elever') {
+      if (!elever.length) return tomt('Inga elever',
+        'Matcha någon under Matchning, så syns de här.');
+      return elever.map(e => {
+        const fam = S.personer[e.parent_id];
+        return '<div class="dp-rad"><div><b>' + esc(e.name) + '</b>'
+          + '<span>' + esc([e.grade, fam && (fam.full_name || fam.email)]
+              .filter(Boolean).join(' · ')) + '</span></div>'
+          + '<span class="dp-rad-hoger">'
+          + '<button class="btn btn-ghost btn-sm" data-dp="elev:' + esc(e.id) + '">Öppna</button>'
+          + '</span></div>';
+      }).join('');
+    }
+
+    if (DP.flik === 'pass') return passLista(pass, b => elevNamn(b.student_id) || namnFör(b.parent_id));
+
+    if (DP.flik === 'tider') {
+      const t = d.tillgang || [];
+      const bl = d.blockerat || [];
+      return dpRubrik('Kan jobba', t.length ? t.length + ' block' : 'inga tider inlagda')
+        + (t.length
+          /* weekday är 0 = måndag i tutor_availability, precis som
+             NX.DAGAR. Ingen omräkning, och framför allt ingen
+             (+6)%7 — den hör hemma när man kommer från
+             Date.getDay(), som börjar på söndag. */
+          ? t.map(x => dpRad(NX.DAGAR[x.weekday] || 'Dag ' + x.weekday,
+              String(x.start_time).slice(0, 5) + '–' + String(x.end_time).slice(0, 5), '')).join('')
+          : tomt('Inga tider inlagda',
+              'Familjen kan bara boka inom tiderna hen lagt in. Utan dem går inga pass att boka.'))
+        + dpRubrik('Spärrade tider framåt')
+        + (bl.length
+          ? bl.map(x => dpRad(kortDatum(x.block_date),
+              [x.block_time ? String(x.block_time).slice(0, 5) : 'hela dagen', x.reason]
+                .filter(Boolean).join(' · '), '')).join('')
+          : tomt('Inget spärrat', 'Inga undantag framåt.'));
+    }
+
+    if (DP.flik === 'ersattning') {
+      const väntar = utb.filter(u => u.status === 'utkast' || u.status === 'godkand')
+        .reduce((n, u) => n + (u.belopp_ore || 0), 0);
+      const utbetalt = utb.filter(u => u.status === 'utbetald')
+        .reduce((n, u) => n + (u.belopp_ore || 0), 0);
+      return dpTal([
+        [kronor(väntar), 'Väntar'],
+        [kronor(utbetalt), 'Utbetalt'],
+        [tp.hourly_rate ? NX.kr(tp.hourly_rate) : '—', 'Per timme']
+      ])
+      + dpRubrik('Underlag')
+      + (utb.length
+        ? utb.map(u => dpRad(
+            NX.MANADER[Number(String(u.period).slice(5, 7)) - 1] + ' ' + String(u.period).slice(0, 4),
+            kronor(u.belopp_ore) + ' · ' + NXBetalning.timmar(u.minuter || 0),
+            läge(UTB_LAGE, u.status))).join('')
+        : tomt('Inga underlag än', 'De skapas av faktureringskörningen efter varje månad.'));
+    }
+
+    if (DP.flik === 'anteckningar') return dpNoteringar(p.id, d);
+
+    return dpTal([
+      [elever.length, 'Elever'],
+      [genomförda.length, 'Genomförda pass'],
+      [NXBetalning.timmar(minuter), 'Undervisad tid']
+    ])
+    + dpRubrik('Profilen')
+    + dpFakta([
+      ['E-post', p.email ? esc(p.email) : null],
+      ['Telefon', p.phone ? esc(p.phone) : null],
+      ['Ålder', tp.age ? esc(String(tp.age) + ' år') : null],
+      ['Skola', tp.school ? esc(tp.school) : null],
+      ['Ort', tp.city ? esc(tp.city) : null],
+      ['Ämnen', (tp.subjects || []).length ? esc(tp.subjects.join(', ')) : null],
+      ['Årskurser', (tp.grade_levels || []).length ? esc(tp.grade_levels.join(', ')) : null],
+      ['Format', (tp.formats || []).length ? esc(tp.formats.join(', ')) : null],
+      ['Timpenning', tp.hourly_rate ? esc(NX.kr(tp.hourly_rate)) : null, 'ej satt'],
+      ['Stripe', tp.stripe_klar ? 'Klar' : null, 'inte kopplad — ingen utbetalning går'],
+      ['Senast inloggad', p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : null, 'aldrig']
+    ])
+    + (tp.bio ? dpRubrik('Om hen') + '<div class="dp-text">' + esc(tp.bio) + '</div>' : '');
+  }
+
+  function dpNoteringar(profilId, d) {
+    const n = d.noteringar || [];
+    return dpRubrik('Interna anteckningar', 'syns bara för admin')
+      + '<form data-dp-not="' + esc(profilId) + '" style="margin-bottom:16px">'
+      + '<textarea class="inp" name="text" style="min-height:74px" '
+      + 'placeholder="Vad behöver vi minnas om den här personen?" required></textarea>'
+      + '<button class="btn btn-primary btn-sm" type="submit" style="margin-top:9px">Spara anteckning</button>'
+      + '<p class="ok-msg" data-dp-not-msg></p></form>'
+      + (d.noteringarFel
+        ? tomt('Kunde inte hämta anteckningarna', d.noteringarFel + ' — är schema-v13.sql kört?')
+        : n.length
+          ? n.map(x => dpRad(x.text, namnFör(x.skriven_av) + ' · ' + kortDatum(x.created_at), ''))
+              .join('')
+          : tomt('Inga anteckningar än', 'Den första du skriver hamnar överst.'));
+  }
+
+  function ritaDetalj(laddarÄn) {
+    if (!DP.panel || !DP.typ) return;
+    const flikar = DP_FLIKAR[DP.typ] || [];
+    let person, rubrik, under, märken = '';
+
+    if (DP.typ === 'elev') {
+      person = S.elevlista.find(x => x.id === DP.id);
+      if (!person) { stängDetalj(); return; }
+      const f = S.personer[person.parent_id];
+      rubrik = person.name || '(namn saknas)';
+      under = [person.grade, person.school, f && (f.full_name || f.email)]
+        .filter(Boolean).join(' · ');
+      märken = elevHjälpare(person) ? pill('Matchad', 'ar-klar') : pill('Ingen studiehjälpare', 'ar-ny');
+    } else {
+      person = S.personer[DP.id];
+      if (!person) { stängDetalj(); return; }
+      rubrik = person.full_name || person.email || '(namn saknas)';
+      under = person.email || '';
+      if (DP.typ === 'studiehjalpare') {
+        const tp = S.tutorProfiler[DP.id] || {};
+        märken = läge(SH_LAGE, tp.status);
+      } else {
+        const barn = S.elever[DP.id] || [];
+        const matchade = barn.filter(e => e.matched_tutor_id && e.match_status === 'matched').length;
+        märken = pill(barn.length
+          ? matchade + ' av ' + barn.length + (barn.length === 1 ? ' barn matchat' : ' barn matchade')
+          : 'Inga barn inlagda', matchade === barn.length && barn.length ? 'ar-klar' : 'ar-ny');
+      }
+      if (person.is_admin) märken += ' ' + pill('Admin', 'ar-vantar');
+    }
+
+    const d = S.detaljCache[DP.typ + ':' + DP.id];
+    let kropp;
+    if (laddarÄn || !d) kropp = laddar();
+    else if (DP.typ === 'familj') kropp = dpFamilj(person, d);
+    else if (DP.typ === 'elev') kropp = dpElev(person, d);
+    else kropp = dpStudiehjalpare(person, d);
+
+    DP.panel.innerHTML =
+      '<div class="dp-topp">'
+      + M.avatar(rubrik, (person.avatar_url || null), {})
+      + '<span class="dp-namn"><b>' + esc(rubrik) + '</b>'
+      + (under ? '<span>' + esc(under) + '</span>' : '')
+      + (märken ? '<span class="dp-marken">' + märken + '</span>' : '')
+      + '</span>'
+      + '<button class="dp-stang" type="button" data-dp-stang aria-label="Stäng">'
+      + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>'
+      + '</div>'
+      + '<div class="dp-flikar" role="tablist">'
+      + flikar.map(f => '<button class="dp-flik" type="button" role="tab" data-dp-flik="' + f[0] + '"'
+        + ' aria-selected="' + (f[0] === DP.flik) + '">' + esc(f[1]) + '</button>').join('')
+      + '</div>'
+      + '<div class="dp-kropp">' + kropp + '</div>';
+  }
+
+  /* Öppnas från vilken lista som helst, och från panelen själv:
+     en elev leder till sin familj, en familj till sina barn. */
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-dp]');
+    if (!k) return;
+    const [typ, id] = String(k.dataset.dp).split(':');
+    öppnaDetalj(typ, id);
+  });
+
+  document.addEventListener('submit', async e => {
+    const f = e.target.closest('[data-dp-not]');
+    if (!f) return;
+    e.preventDefault();
+    const msg = f.querySelector('[data-dp-not-msg]');
+    const text = f.text.value.trim();
+    if (!text) return;
+    const profilId = f.dataset.dpNot;
+    const { error } = await supa.from('admin_noteringar')
+      .insert({ om_profil: profilId, text, skriven_av: S.user.id });
+    if (error) { säg(msg, '⚠️ ' + felText(error), false); return; }
+    /* Cachen är nu inaktuell för den här personen. Att tömma den
+       och hämta om är billigare än att gissa vad servern satte
+       för id och tidsstämpel. */
+    delete S.detaljCache[DP.typ + ':' + profilId];
+    await hämtaDetalj(DP.typ, profilId);
+    ritaDetalj();
+  });
+
+
+  /* ============================================================
+     ADMINANVÄNDARE
+
+     is_admin är den enda flaggan som avgör vem som ser den här
+     sidan. Att sätta den har krävt Table Editor, vilket betyder att
+     den som skulle ge en kollega behörighet först behövde
+     databasåtkomst — alltså mer än behörigheten själv ger.
+
+     Triggern skydda_profilfalt släpper igenom en admin, så det går
+     från appen. Två saker går inte, och ska inte gå:
+
+       1. Ta bort sin EGEN behörighet. En ensam admin som klickar
+          fel låser ut hela bolaget ur adminvyn, och vägen tillbaka
+          är Table Editor — precis det vi försöker slippa.
+
+       2. Ta bort den sista. Samma sak, en klick senare.
+
+     Båda är spärrade i knapparna OCH kontrollerade igen precis
+     innan skrivningen. Det första är för att det ska synas, det
+     andra för att en dold knapp inte är ett skydd.
+     ============================================================ */
+
+  function adminer() {
+    return Object.values(S.personer)
+      .filter(p => p.is_admin)
+      .sort((a, b) => String(a.full_name || a.email || '')
+        .localeCompare(String(b.full_name || b.email || ''), 'sv'));
+  }
+
+  function ritaAdminanvandare() {
+    const host = $('#adm-anv');
+    if (!host) return;
+    const lista = adminer();
+    $('#adm-anv-antal').textContent = lista.length
+      + (lista.length === 1 ? ' person' : ' personer');
+
+    host.innerHTML = lista.map(p => {
+      const jag = p.id === S.user.id;
+      const ensam = lista.length === 1;
+      return '<div class="dp-rad"><div>'
+        + '<b>' + esc(p.full_name || p.email || '—') + (jag ? ' (du)' : '') + '</b>'
+        + '<span>' + esc([p.email, p.role === 'tutor' ? 'studiehjälpare'
+            : p.role === 'parent' ? 'förälder' : p.role].filter(Boolean).join(' · ')) + '</span>'
+        + '</div><span class="dp-rad-hoger">'
+        + (jag || ensam
+          ? '<span class="xsmall" style="color:var(--bl-2)">'
+            + (jag ? 'kan inte tas bort av dig' : 'sista adminen') + '</span>'
+          : '<button class="btn btn-ghost btn-sm" data-admin-bort="' + esc(p.id) + '">Ta bort</button>')
+        + '</span></div>';
+    }).join('');
+  }
+
+  function ritaAdminTraffar() {
+    const host = $('#adm-anv-traffar');
+    const fält = $('#adm-anv-sok');
+    if (!host || !fält) return;
+    const sök = fält.value.trim().toLowerCase();
+    if (sök.length < 2) { host.innerHTML = ''; return; }
+
+    const träffar = Object.values(S.personer)
+      .filter(p => !p.is_admin)
+      .filter(p => [p.full_name, p.email].filter(Boolean).join(' ')
+        .toLowerCase().indexOf(sök) !== -1)
+      .slice(0, 8);
+
+    host.innerHTML = träffar.length
+      ? träffar.map(p => '<div class="dp-rad"><div>'
+          + '<b>' + esc(p.full_name || p.email || '—') + '</b>'
+          + '<span>' + esc(p.email || '') + '</span></div>'
+          + '<span class="dp-rad-hoger">'
+          + '<button class="btn btn-primary btn-sm" data-admin-ge="' + esc(p.id) + '">Gör till admin</button>'
+          + '</span></div>').join('')
+      : tomt('Ingen matchar', 'Personen måste ha ett konto på sidan först.');
+  }
+
+  const admSök = $('#adm-anv-sok');
+  if (admSök) admSök.addEventListener('input', ritaAdminTraffar);
+
+  async function sättAdmin(profilId, värde) {
+    const p = S.personer[profilId];
+    if (!p) return;
+
+    /* Kontrollerad igen, inte bara i knappen. En dold knapp är
+       inget skydd — den som öppnar konsolen ser samma DOM. */
+    if (!värde) {
+      if (profilId === S.user.id) {
+        alert('Du kan inte ta bort din egen behörighet härifrån.');
+        return;
+      }
+      if (adminer().length <= 1) {
+        alert('Det här är den sista adminen. Ge någon annan behörighet först.');
+        return;
+      }
+    }
+
+    const namn = p.full_name || p.email || 'personen';
+    const ja = await bekräfta(värde ? {
+      titel: 'Ge ' + namn + ' adminbehörighet?',
+      text: 'Hen kommer åt alla familjers och studiehjälpares uppgifter, alla meddelanden, '
+        + 'alla fakturor och alla utbetalningar. Det går att ta bort igen.',
+      knapp: 'Ge behörighet'
+    } : {
+      titel: 'Ta bort adminbehörigheten för ' + namn + '?',
+      text: 'Hen blir utelåst ur adminvyn direkt. Kontot i övrigt påverkas inte.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+
+    const gammalt = p.is_admin;
+    p.is_admin = värde;
+    if (!await skriv('profiles', profilId, { is_admin: värde })) {
+      p.is_admin = gammalt;
+      return;
+    }
+    ritaAdminanvandare();
+    ritaAdminTraffar();
+    /* Panelen kan stå öppen på samma person och visa gamla märken. */
+    if (DP.typ && DP.id === profilId) ritaDetalj();
+  }
+
+  document.addEventListener('click', async e => {
+    const ge = e.target.closest('[data-admin-ge]');
+    if (ge) { await sättAdmin(ge.dataset.adminGe, true); return; }
+    const bort = e.target.closest('[data-admin-bort]');
+    if (bort) await sättAdmin(bort.dataset.adminBort, false);
+  });
+
   /* ============================================================
      SKALET
      Topprad, global sök, notiser, hopfällbar sidomeny och menyns
@@ -2624,6 +3200,7 @@
       ritaFakturor();
       ritaUtbetalningar();
       ritaIntegrationer();
+      ritaAdminanvandare();
       ritaPris();
       ritaFel();
       await ritaÖversikt();
