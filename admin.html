@@ -751,9 +751,47 @@
                     id="flik-integrationer" aria-controls="panel-integrationer">Integrationer</button>
             <button class="vy-flik" type="button" role="tab" data-flik="pris"
                     id="flik-pris" aria-controls="panel-pris">Pris</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="adminanvandare"
+                    id="flik-adminanvandare" aria-controls="panel-adminanvandare">Adminanvändare</button>
             <button class="vy-flik" type="button" role="tab" data-flik="fel"
                     id="flik-fel" aria-controls="panel-fel">Fel
               <span class="vy-flik-mark" id="flik-fel-mark" hidden></span></button>
+          </div>
+
+          <!-- ============ ADMINANVÄNDARE ============
+               is_admin är den enda flaggan i systemet som avgör vem
+               som ser den här sidan. Att sätta den har krävt Table
+               Editor, vilket betyder att den som skulle ge en ny
+               kollega behörighet behövde databasåtkomst — och då har
+               hen redan mer än behörigheten ger.
+
+               Triggern skydda_profilfalt släpper igenom en admin, så
+               det går från appen. Det som INTE går, och inte ska gå,
+               är att ta bort sin egen: en ensam admin som klickar
+               fel låser ut hela bolaget ur sin egen adminvy. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="adminanvandare"
+               id="panel-adminanvandare" aria-labelledby="flik-adminanvandare" hidden>
+            <div class="dbox">
+              <h5>Har behörighet <em id="adm-anv-antal"></em></h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
+                En admin ser alla familjers och studiehjälpares uppgifter, alla meddelanden,
+                alla fakturor och alla utbetalningar. Ge den bara till den som ska ha den.
+              </p>
+              <div id="adm-anv"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+              <h5>Ge behörighet</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:14px">
+                Personen behöver ha ett konto på sidan först. Sök på namn eller e-post.
+              </p>
+              <div class="adm-verktyg">
+                <input class="inp adm-sok" id="adm-anv-sok" type="search"
+                       placeholder="Sök namn eller e-post" aria-label="Sök person" autocomplete="off"
+                       style="max-width:none">
+              </div>
+              <div id="adm-anv-traffar"></div>
+            </div>
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="integrationer"
