@@ -777,9 +777,17 @@
       + '<div><div class="tutor-name">' + esc(t.full_name) + (t.age ? ', ' + esc(t.age) : '') + '</div>'
       + '<div class="tutor-role">Studiehjälpare' + (t.school ? ' · ' + esc(t.school) : '') + '</div></div></div>'
       + (t.bio ? '<p class="small" style="margin-bottom:14px;line-height:1.6">' + esc(t.bio) + '</p>' : '')
-      + ((t.subjects && t.subjects.length)
-          ? '<div class="tutor-meta">' + t.subjects.map(s => '<span class="tag">' + esc(s) + '</span>').join('') + '</div>'
-          : '')
+      /* Årskurser och format hämtades redan men ritades aldrig ut.
+         "Matematik" säger inte om hen tar åk 4 eller gymnasiet, och
+         det är den frågan familjen faktiskt har. */
+      + (() => {
+          const märken = (t.subjects || [])
+            .concat(t.grade_levels || [])
+            .concat(t.formats || []);
+          return märken.length
+            ? '<div class="tutor-meta">' + märken.map(m => '<span class="tag">' + esc(m) + '</span>').join('') + '</div>'
+            : '';
+        })()
       + '<p class="xsmall" style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted-2);line-height:1.6">'
       + 'Skriv hellre i rutan Kontakt än via mejl — då hamnar allt på ett ställe och vi kan hjälpa till om något krånglar.</p>';
 

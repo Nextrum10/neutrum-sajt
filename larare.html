@@ -893,7 +893,35 @@
                   <form id="profil-form">
                     <div class="fgroup"><label for="pr-skola">Skola</label><input class="inp" id="pr-skola"></div>
                     <div class="fgroup"><label for="pr-ort">Ort</label><input class="inp" id="pr-ort"></div>
-                    <div class="fgroup"><label for="pr-amnen">Ämnen (kommaseparerat)</label><input class="inp" id="pr-amnen" placeholder="Matematik, Fysik"></div>
+                    <!-- ============ ÄMNEN, ÅRSKURSER, FORMAT ============
+                         Det här är inte pynt på profilen. Matchningen i
+                         adminvyn poängsätter på exakt de tre fälten, och
+                         två av dem gick inte att fylla i alls: årskurserna
+                         hade ingen ruta någonstans i hela sajten, så 30 av
+                         100 matchningspoäng stod permanent på "vet ej".
+
+                         Ämnena låg i ett kommaseparerat fält, där "matte"
+                         och "Matematik" blev två olika ämnen. -->
+                    <div class="fgroup">
+                      <label>Ämnen du hjälper till med</label>
+                      <div class="vy-val" id="pr-amne-val" role="group" aria-label="Ämnen"></div>
+                      <div class="pr-lagg">
+                        <input class="inp" id="pr-amne-nytt" maxlength="40" placeholder="Annat ämne, t.ex. Spanska">
+                        <button class="btn btn-ghost btn-sm" type="button" id="pr-amne-lagg">Lägg till</button>
+                      </div>
+                    </div>
+                    <div class="fgroup">
+                      <label>Årskurser du tar</label>
+                      <div class="vy-val" id="pr-arskurs-val" role="group" aria-label="Årskurser"></div>
+                    </div>
+                    <div class="fgroup">
+                      <label>Format</label>
+                      <div class="vy-val" id="pr-format-val" role="group" aria-label="Format"></div>
+                      <p class="xsmall" style="margin-top:9px;color:var(--bl-2);line-height:1.6">
+                        Ämnen, årskurser och format styr vilka elever vi föreslår dig för.
+                        Lämnar du dem tomma syns du som "vet ej" i matchningen.
+                      </p>
+                    </div>
                     <div class="fgroup"><label for="pr-bio">Kort text om dig</label><textarea class="inp" id="pr-bio" style="min-height:90px"></textarea></div>
                     <button class="btn btn-ghost btn-sm btn-block" type="submit">Spara profil</button>
                     <p class="ok-msg" id="pr-msg"></p>
@@ -2702,13 +2730,91 @@
 
   /* ============================================================
      EGEN PROFIL
+
+     Ämnena skrivs likadant som i bokningen och årskurserna likadant
+     som matchningen läser dem — "Åk 7–9", inte "sjuan till nian".
+     Matchningen tolkar siffror och ordet gymnasium, så listan här är
+     det som gör att den tolkningen alltid lyckas.
      ============================================================ */
+  const PR_AMNEN = ['Matematik', 'Svenska', 'Engelska',
+    'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap',
+    'Moderna språk', 'Programmering'];
+  const PR_ARSKURSER = ['Åk 1–3', 'Åk 4–6', 'Åk 7–9', 'Gymnasiet'];
+  const PR_FORMAT = ['Online', 'På plats'];
+
+  const PR_LISTOR = {
+    'pr-amne-val':    { nyckel: 'amnen',     fasta: PR_AMNEN },
+    'pr-arskurs-val': { nyckel: 'arskurser', fasta: PR_ARSKURSER },
+    'pr-format-val':  { nyckel: 'format',    fasta: PR_FORMAT }
+  };
+  const prVal = { amnen: [], arskurser: [], format: [] };
+
+  /* "Åk 7-9" med bindestreck och "Åk 7–9" med tankstreck är samma
+     årskurser för en människa och två olika för en array. Sparade
+     värden matchas därför mot listan utan hänsyn till streck,
+     mellanslag och versaler, och skrivs om till listans stavning. */
+  function prNyckel(v) {
+    return String(v || '').toLowerCase().replace(/[\u2010-\u2015]/g, '-')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  function prKanonisk(fasta, v) {
+    const n = prNyckel(v);
+    const träff = fasta.filter(x => prNyckel(x) === n)[0];
+    return träff || v;
+  }
+
+  function ritaPrVal(id) {
+    const cfg = PR_LISTOR[id];
+    const valda = prVal[cfg.nyckel];
+    /* Ett eget ämne som inte står i den fasta listan ska inte
+       försvinna bara för att det inte var förtryckt. */
+    const lista = cfg.fasta.concat(valda.filter(v => cfg.fasta.indexOf(v) === -1));
+    $('#' + id).innerHTML = lista.map(v =>
+      '<button type="button" data-v="' + esc(v) + '" aria-pressed="'
+      + (valda.indexOf(v) !== -1 ? 'true' : 'false') + '">' + esc(v) + '</button>').join('');
+  }
+
+  function ritaAllaPrVal() { Object.keys(PR_LISTOR).forEach(id => ritaPrVal(id)); }
+
+  Object.keys(PR_LISTOR).forEach(id => {
+    $('#' + id).addEventListener('click', e => {
+      const b = e.target.closest('[data-v]');
+      if (!b) return;
+      const lista = prVal[PR_LISTOR[id].nyckel];
+      const i = lista.indexOf(b.dataset.v);
+      if (i === -1) lista.push(b.dataset.v); else lista.splice(i, 1);
+      ritaPrVal(id);
+    });
+  });
+
+  function läggTillÄmne() {
+    const fält = $('#pr-amne-nytt');
+    const v = fält.value.trim();
+    if (!v) return;
+    /* jämför utan hänsyn till versaler, annars blir "spanska" och
+       "Spanska" två ämnen igen — precis det fältet skulle bort från */
+    const kanon = prKanonisk(PR_AMNEN, v);
+    const finns = prVal.amnen.some(x => prNyckel(x) === prNyckel(kanon));
+    if (!finns) prVal.amnen.push(kanon);
+    fält.value = '';
+    ritaPrVal('pr-amne-val');
+  }
+
+  $('#pr-amne-lagg').addEventListener('click', läggTillÄmne);
+  $('#pr-amne-nytt').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); läggTillÄmne(); }
+  });
+
   function fyllProfil() {
     const t = S.tutorProfil || {};
     $('#pr-skola').value = t.school || '';
     $('#pr-ort').value = t.city || '';
-    $('#pr-amnen').value = (t.subjects || []).join(', ');
     $('#pr-bio').value = t.bio || '';
+    prVal.amnen = (t.subjects || []).map(v => prKanonisk(PR_AMNEN, v));
+    prVal.arskurser = (t.grade_levels || []).map(v => prKanonisk(PR_ARSKURSER, v));
+    prVal.format = (t.formats || []).map(v => prKanonisk(PR_FORMAT, v));
+    ritaAllaPrVal();
   }
 
   $('#profil-form').addEventListener('submit', async e => {
@@ -2716,14 +2822,25 @@
     const msg = $('#pr-msg');
     rensa(msg);
     await medan(e.submitter, 'Sparar…', async () => {
-      const { error } = await supa.from('tutor_profiles').update({
+      const ändring = {
         school: $('#pr-skola').value.trim() || null,
         city: $('#pr-ort').value.trim() || null,
-        subjects: $('#pr-amnen').value.split(',').map(s => s.trim()).filter(Boolean),
+        subjects: prVal.amnen.slice(),
+        grade_levels: prVal.arskurser.slice(),
+        formats: prVal.format.slice(),
         bio: $('#pr-bio').value.trim() || null
-      }).eq('id', S.user.id);
+      };
+      const { error } = await supa.from('tutor_profiles').update(ändring).eq('id', S.user.id);
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
-      säg(msg, '✓ Profilen är sparad.', true);
+
+      /* Ämnena är förslagen i rapporten. Utan det här står gamla
+         ämnen kvar i chipsen tills sidan laddas om. */
+      Object.assign(S.tutorProfil || {}, ändring);
+      fyllÄmnesval();
+
+      säg(msg, prVal.amnen.length
+        ? '✓ Profilen är sparad.'
+        : '✓ Profilen är sparad. Utan ämnen kan vi inte föreslå dig för någon elev.', true);
     });
   });
 
@@ -3293,7 +3410,7 @@
     if (S.profil.role !== 'tutor') { visa('view-wrongrole'); return; }
 
     const tp = await supa.from('tutor_profiles')
-      .select('status, school, city, subjects, bio, age, hourly_rate')
+      .select('status, school, city, subjects, grade_levels, formats, bio, age, hourly_rate')
       .eq('id', S.user.id).maybeSingle();
     S.tutorProfil = tp.data;
 

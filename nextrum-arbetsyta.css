@@ -1905,3 +1905,9 @@ table.adm .adm-tal{
 .rp-marke[data-v="bra"] i{background:var(--ockra)}
 .rp-marke[data-v="folja_upp"] i{background:var(--acc)}
 .rp-marke[data-v="folja_upp"]{border-color:var(--acc-line);color:var(--acc-text)}
+
+/* Fältet för ett ämne som inte står i listan. Ligger under chipsen,
+   inte bredvid: på en telefon får de aldrig plats på samma rad. */
+.pr-lagg{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pr-lagg .inp{flex:1 1 200px;min-width:0}
+.pr-lagg .btn{flex:0 0 auto}
