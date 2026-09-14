@@ -1062,6 +1062,7 @@ table.adm .adm-tal{
    ------------------------------------------------------------ */
 @media (min-width:900px){
   .vy-admin .vy-layout.ar-hopfalld{grid-template-columns:64px minmax(0,1fr)}
+  .vy .vy-layout.ar-hopfalld{grid-template-columns:64px minmax(0,1fr)}
   .vy-layout.ar-hopfalld .vy-sido a{
     justify-content:center;
     padding-inline:0;
@@ -2088,3 +2089,33 @@ table.adm .adm-tal{
   font-size:.78rem;color:var(--bl-2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
+
+/* Filtret över läxlistan. Antalet står i knappen så att man ser
+   vad man får innan man klickar. */
+.lx-filter{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.lx-filter .chip span{
+  margin-left:5px;
+  font-family:var(--f-mono);font-size:.74rem;
+  opacity:.65;
+}
+.lx-filter .chip[aria-pressed="true"] span{opacity:.8}
+
+/* Knappen som fäller ihop menyn i arbetsytorna. Sitter överst i
+   kolumnen och inte i sidhuvudet: sidhuvudet är sajtens, menyn är
+   vyns, och kontrollen hör till det den styr. */
+.vy-sido-fall{
+  display:none;
+  align-self:flex-start;
+  width:34px;height:34px;margin-bottom:6px;
+  align-items:center;justify-content:center;
+  border:1px solid transparent;border-radius:10px;
+  background:transparent;
+  color:var(--bl-2);
+  cursor:pointer;
+  transition:background .16s var(--e),color .16s var(--e),border-color .16s var(--e);
+}
+.vy-sido-fall svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.vy-sido-fall:hover{background:var(--pap-2);border-color:var(--ln-2);color:var(--bl)}
+@media (min-width:900px){ .vy-sido-fall{display:flex} }
+/* Hopfälld står den mitt i den smala kolumnen, som ikonerna under. */
+.vy-layout.ar-hopfalld .vy-sido-fall{align-self:center}

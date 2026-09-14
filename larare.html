@@ -717,6 +717,7 @@
                     <p class="ok-msg" id="lx-msg"></p>
                   </form>
 
+                  <div class="lx-filter" id="lax-filter" role="group" aria-label="Visa läxor" hidden></div>
                   <div id="lax-lista"><div class="loading">Hämtar</div></div>
                 </div>
         </div>
@@ -1053,7 +1054,7 @@
     elever: [], aktivElev: null,
     bokningar: [], trad: null, kal: null, olästa: {},
     minAvatar: null, matTyp: 'fil', tillgang: [], blockerade: [],
-    laxor: [], laxräkning: {}, avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
+    laxor: [], laxFilter: 'attgora', laxräkning: {}, avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
     senaste: {}
   };
 
@@ -1575,11 +1576,34 @@
     ritaÖvLaxor();
     ritaElevLista();
     ritaElevOversikt();
+    ritaLaxFilter();
 
-    host.innerHTML = data.map(h => NXStudie.läxRad(h, {
+    const urval = NXStudie.läxUrval(data, S.laxFilter);
+    if (!urval.length) {
+      host.innerHTML = tomt(S.laxFilter === 'klart' ? 'Inget avklarat än' : 'Inget öppet just nu',
+        S.laxFilter === 'klart' ? 'Läxor eleven markerat som klara samlas här.' : 'Eleven har gjort allt hen fått.');
+      return;
+    }
+
+    host.innerHTML = urval.map(h => NXStudie.läxRad(h, {
       atgarder: '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
     })).join('');
   }
+
+  /* Vilket läge läxlistan står i. Lever i S så att det överlever en
+     omritning — annars hoppar listan tillbaka varje gång någon
+     lägger till eller tar bort en läxa. */
+  function ritaLaxFilter() {
+    NXStudie.läxFilter({ host: $('#lax-filter'), laxor: S.laxor, valt: S.laxFilter });
+  }
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-laxfilter]');
+    if (!k) return;
+    S.laxFilter = k.dataset.laxfilter;
+    ritaLaxFilter();
+    laddaLaxor();
+  });
 
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-lax-bort]');
@@ -3556,6 +3580,7 @@
        250px brus överst — precis den scrollning menyn ska bort med. */
     const MED_KONTEXT = ['laxor', 'lektioner', 'kalender', 'meddelanden'];
     S.sido = NXStudie.sidomeny({
+      fall: 'larare',
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
       onByt: sek => { $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1; }
     });

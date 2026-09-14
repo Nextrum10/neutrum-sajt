@@ -648,6 +648,60 @@ window.NXStudie = (function () {
       return visa(String(location.hash || '').replace(/^#/, '').split('/')[0]);
     }
 
+    /* ---------- hopfällning ----------
+       Adminvyn har haft den här sedan den byggdes, och skälet är
+       detsamma i arbetsytorna: på en liten bärbar är 250px meny en
+       fjärdedel av det man arbetar i.
+
+       Ritas bara för den som ber om den med o.fall. Adminvyn har
+       en egen knapp i sin topprad och ska inte få två.
+
+       Etiketterna får ett eget span så att de går att gömma utan
+       att gömma länken. Skärmläsaren läser dem ändå — de är dolda
+       visuellt, inte borttagna, och title ger musen samma ord. */
+    if (o.fall) {
+      var layout = nav.closest('.vy-layout');
+
+      länkar.forEach(function (a) {
+        if (a.querySelector('.adm-etikett')) return;
+        var text = '';
+        Array.prototype.slice.call(a.childNodes).forEach(function (n) {
+          if (n.nodeType === 3) { text += n.textContent; n.remove(); }
+        });
+        text = text.trim();
+        if (!text) return;
+        var sp = document.createElement('span');
+        sp.className = 'adm-etikett';
+        sp.textContent = text;
+        a.appendChild(sp);
+        a.title = text;
+      });
+
+      if (layout) {
+        var FALL_NYCKEL = 'nx-meny-hopfalld-' + o.fall;
+        var knappFall = document.createElement('button');
+        knappFall.type = 'button';
+        knappFall.className = 'vy-sido-fall';
+        knappFall.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true">'
+          + '<path d="M2 4h12M2 8h12M2 12h12"/></svg>';
+        nav.insertBefore(knappFall, nav.firstChild);
+
+        var sättFall = function (hopfälld) {
+          layout.classList.toggle('ar-hopfalld', hopfälld);
+          knappFall.setAttribute('aria-expanded', hopfälld ? 'false' : 'true');
+          knappFall.setAttribute('aria-label', hopfälld ? 'Fäll ut menyn' : 'Fäll ihop menyn');
+          try { localStorage.setItem(FALL_NYCKEL, hopfälld ? '1' : '0'); } catch (e) {}
+        };
+
+        var sparat = '0';
+        try { sparat = localStorage.getItem(FALL_NYCKEL) || '0'; } catch (e) {}
+        sättFall(sparat === '1');
+        knappFall.addEventListener('click', function () {
+          sättFall(!layout.classList.contains('ar-hopfalld'));
+        });
+      }
+    }
+
     window.addEventListener('hashchange', frånHash);
     frånHash();
 
@@ -749,6 +803,50 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
+     LÄXFILTRET
+
+     Läxlistan var allt eleven någonsin fått, med de klara kvar i
+     ordningen. Efter en termin låg veckans läxa mellan tjugo
+     avklarade, och den enda vägen till "vad ska jag göra nu" var
+     att läsa varje rad.
+
+     Tre lägen, med antalet i knappen så att man ser vad man får
+     innan man klickar. Klart ligger kvar och går att gå tillbaka
+     till — det är bevis på vad som gjorts.
+     ============================================================ */
+  var LÄX_LÄGEN = [
+    ['attgora', 'Att göra'],
+    ['klart', 'Klart'],
+    ['alla', 'Alla']
+  ];
+
+  function läxUrval(laxor, valt) {
+    var lista = laxor || [];
+    if (valt === 'attgora') return lista.filter(function (h) { return h.status !== 'klar'; });
+    if (valt === 'klart') return lista.filter(function (h) { return h.status === 'klar'; });
+    return lista;
+  }
+
+  function läxFilter(o) {
+    var host = o.host;
+    if (!host) return;
+    var laxor = o.laxor || [];
+    var valt = o.valt || 'attgora';
+
+    /* Med tre läxor totalt är ett filter tre knappar som gör
+       ingenting. Det ritas när det finns något att sålla i. */
+    if (laxor.length < 4) { host.innerHTML = ''; host.hidden = true; return; }
+    host.hidden = false;
+
+    host.innerHTML = LÄX_LÄGEN.map(function (l) {
+      var n = läxUrval(laxor, l[0]).length;
+      return '<button type="button" class="chip" data-laxfilter="' + l[0] + '"'
+        + ' aria-pressed="' + (l[0] === valt ? 'true' : 'false') + '">'
+        + esc(l[1]) + ' <span>' + n + '</span></button>';
+    }).join('');
+  }
+
+  /* ============================================================
      PASSLISTAN
 
      Listan var varje bokning som någonsin gjorts, sorterad i
@@ -835,7 +933,7 @@ window.NXStudie = (function () {
 
   return {
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
-    passLista: passLista,
+    passLista: passLista, läxFilter: läxFilter, läxUrval: läxUrval,
     LAGE: LAGE, NIVA: NIVA,
     läxläge: läxläge, deadlineText: deadlineText,
     läxRad: läxRad, nivåMätare: nivåMätare,

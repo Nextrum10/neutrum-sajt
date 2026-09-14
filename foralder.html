@@ -359,6 +359,7 @@
              id="panel-laxor" aria-labelledby="flik-laxor">
           <div class="dbox">
             <h5>Läxor <em id="lax-antal"></em></h5>
+            <div class="lx-filter" id="lax-filter" role="group" aria-label="Visa läxor" hidden></div>
             <div id="lax-lista"><div class="loading">Hämtar</div></div>
           </div>
         </div>
@@ -663,7 +664,7 @@
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], laxFilter: 'attgora', olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel']
@@ -984,6 +985,21 @@
      deadline ägs av studiehjälparen. Det är en trigger i databasen
      som håller den gränsen, inte det här formuläret.
      ============================================================ */
+  /* Vilket läge läxlistan står i. Lever i S så att det överlever
+     en omritning — annars hoppar listan tillbaka till "Att göra"
+     varje gång någon kryssar i en läxa. */
+  function ritaLaxFilter() {
+    NXStudie.läxFilter({ host: $('#lax-filter'), laxor: S.laxor, valt: S.laxFilter });
+  }
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-laxfilter]');
+    if (!k) return;
+    S.laxFilter = k.dataset.laxfilter;
+    ritaLaxFilter();
+    laddaLaxor();
+  });
+
   async function laddaLaxor() {
     const host = $('#lax-lista');
     $('#lax-antal').textContent = '';
@@ -1014,11 +1030,19 @@
     ritaNotiser();
     ritaÖvLaxor();
     ritaStatistik();
+    ritaLaxFilter();
 
     const öppna = data.filter(h => h.status !== 'klar').length;
     $('#lax-antal').textContent = öppna ? öppna + ' att göra' : 'allt klart';
 
-    host.innerHTML = data.map(h => {
+    const urval = NXStudie.läxUrval(data, S.laxFilter);
+    if (!urval.length) {
+      host.innerHTML = tomt(S.laxFilter === 'klart' ? 'Inget avklarat än' : 'Inget att göra just nu',
+        S.laxFilter === 'klart' ? 'Läxor ni markerar som klara samlas här.' : 'Allt ni fått är avklarat.');
+      return;
+    }
+
+    host.innerHTML = urval.map(h => {
       let knappar = '';
       if (h.status === 'ej_paborjad') {
         knappar = '<button class="btn btn-ghost btn-sm" data-lax="pagaende" data-id="' + h.id + '">Jag har börjat</button>'
@@ -1861,6 +1885,7 @@
     };
 
     S.sido = NXStudie.sidomeny({
+      fall: 'foralder',
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt'
     });
 
