@@ -1301,7 +1301,11 @@
     const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
     $('#pass-antal').textContent = aktiva.length + ' st';
 
-    host.innerHTML = S.bokningar.map(b => {
+    NXStudie.passLista({
+      host: host,
+      bokningar: S.bokningar,
+      tomtKommande: 'Inga kommande pass. Boka en ledig tid på Översikt, så står passet här.',
+      rad: b => {
       const barn = S.barn.find(x => x.id === b.student_id);
       const kommande = b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed');
       /* Ett förslag från studiehjälparen ser likadant ut i databasen
@@ -1324,7 +1328,8 @@
         vem: derasFörslag ? 'Föreslaget av er studiehjälpare' : null,
         atgarder: knappar
       }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
-    }).join('');
+      }
+    });
   }
 
   document.addEventListener('click', async e => {

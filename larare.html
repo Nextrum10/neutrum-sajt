@@ -2064,7 +2064,11 @@
       return;
     }
 
-    host.innerHTML = S.bokningar.map(b => {
+    NXStudie.passLista({
+      host: host,
+      bokningar: S.bokningar,
+      tomtKommande: 'Inga kommande pass. Föreslå en tid under Kalender, eller vänta på att familjen bokar.',
+      rad: b => {
       const e = S.elever.find(x => x.id === b.student_id);
       const familj = S.familjer.find(f => f.id === b.parent_id);
       const mitt = b.created_by === S.user.id;
@@ -2090,7 +2094,8 @@
             : b.attendance === 'sen' ? 'Eleven kom sent' : null),
         atgarder: knappar
       }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
-    }).join('');
+      }
+    });
   }
 
   /* Passväljaren i rapportformuläret: bara den valda elevens pass

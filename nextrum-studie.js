@@ -748,6 +748,85 @@ window.NXStudie = (function () {
     sättTitel(poster.length);
   }
 
+  /* ============================================================
+     PASSLISTAN
+
+     Listan var varje bokning som någonsin gjorts, sorterad i
+     datumordning uppåt. Efter ett halvår låg nästa pass under
+     femtio hållna, och man fick skrolla förbi allt som redan hänt
+     för att komma åt det som inte hade hänt.
+
+     Nu är kommande pass listan. Det som varit ligger under den,
+     tre rader djupt, med resten bakom en knapp. Ingenting
+     försvinner — historiken är kvitto på vad som fakturerats och
+     får inte gå att tappa bort, bara att lägga undan.
+
+     opts: { host, bokningar, rad(b), tomtKommande, tomtAllt }
+     ============================================================ */
+  var PASS_SYNLIGA = 3;
+
+  function passLista(opts) {
+    var o = opts || {};
+    var host = o.host;
+    if (!host) return;
+
+    var alla = o.bokningar || [];
+    var idag = isoFor(new Date());
+
+    /* Avbokat är aldrig kommande, hur långt fram det än ligger.
+       Ett pass som inte blir av är historik i samma stund. */
+    function ärKommande(b) {
+      return (b.status === 'requested' || b.status === 'confirmed')
+        && String(b.wanted_date || '') >= idag;
+    }
+
+    function nyckel(b) { return String(b.wanted_date || '') + String(b.wanted_time || ''); }
+
+    var kommande = alla.filter(ärKommande)
+      .sort(function (a, c) { return nyckel(a).localeCompare(nyckel(c)); });
+    var tidigare = alla.filter(function (b) { return !ärKommande(b); })
+      .sort(function (a, c) { return nyckel(c).localeCompare(nyckel(a)); });
+
+    if (!alla.length) {
+      host.innerHTML = o.tomtAllt || tomt('Inga pass än', '');
+      return;
+    }
+
+    var ut = '';
+
+    ut += kommande.length
+      ? '<div class="pl-grupp">' + kommande.map(o.rad).join('') + '</div>'
+      : '<div class="pl-inget">' + esc(o.tomtKommande || 'Inga kommande pass just nu.') + '</div>';
+
+    if (tidigare.length) {
+      var visade = tidigare.slice(0, PASS_SYNLIGA);
+      var resten = tidigare.slice(PASS_SYNLIGA);
+
+      ut += '<div class="pl-grupp pl-tidigare">'
+        + '<div class="pl-rubrik">Tidigare pass <em>' + tidigare.length + ' st</em></div>'
+        + visade.map(o.rad).join('')
+        + (resten.length
+            ? '<div class="pl-resten" id="pl-resten" hidden>' + resten.map(o.rad).join('') + '</div>'
+              + '<button type="button" class="pl-mer" data-pl-mer aria-expanded="false">'
+              + 'Visa alla ' + tidigare.length + '</button>'
+            : '')
+        + '</div>';
+    }
+
+    host.innerHTML = ut;
+
+    var knapp = host.querySelector('[data-pl-mer]');
+    if (knapp) {
+      knapp.addEventListener('click', function () {
+        var lådan = host.querySelector('#pl-resten');
+        var öppet = !lådan.hidden;
+        lådan.hidden = öppet;
+        knapp.setAttribute('aria-expanded', öppet ? 'false' : 'true');
+        knapp.textContent = öppet ? 'Visa alla ' + tidigare.length : 'Visa färre';
+      });
+    }
+  }
+
   /* Antalet syns i fliken också — man har sällan vyn framme. */
   function sättTitel(n) {
     var ren = document.title.replace(/^\(\d+\)\s*/, '');
@@ -756,6 +835,7 @@ window.NXStudie = (function () {
 
   return {
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
+    passLista: passLista,
     LAGE: LAGE, NIVA: NIVA,
     läxläge: läxläge, deadlineText: deadlineText,
     läxRad: läxRad, nivåMätare: nivåMätare,

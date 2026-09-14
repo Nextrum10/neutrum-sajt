@@ -1911,3 +1911,44 @@ table.adm .adm-tal{
 .pr-lagg{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .pr-lagg .inp{flex:1 1 200px;min-width:0}
 .pr-lagg .btn{flex:0 0 auto}
+
+/* ============================================================
+   PASSLISTAN
+   Kommande pass överst utan rubrik — de ÄR listan. Det som varit
+   får en rubrik och en tunn linje ovanför, eftersom det är en
+   annan sorts rad: något att slå upp, inte något att göra.
+   ============================================================ */
+.pl-inget{
+  padding:16px 18px;
+  border:1px dashed var(--ln-2);border-radius:14px;
+  font-size:.87rem;color:var(--bl-2);
+}
+.pl-tidigare{
+  margin-top:clamp(18px,2.2vw,26px);
+  padding-top:clamp(14px,1.8vw,18px);
+  border-top:1px solid var(--ln);
+}
+.pl-rubrik{
+  display:flex;align-items:baseline;gap:9px;
+  margin-bottom:12px;
+  font-size:.72rem;font-weight:650;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--bl-2);
+}
+.pl-rubrik em{
+  font-style:normal;font-weight:500;letter-spacing:0;text-transform:none;
+  font-size:.78rem;color:var(--bl-3);
+}
+/* Hållna pass ska gå att läsa men inte dra blicken från det som
+   inte hänt än. */
+.pl-tidigare .pass{opacity:.72}
+.pl-tidigare .pass:hover{opacity:1}
+.pl-mer{
+  margin-top:4px;
+  padding:9px 16px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  background:transparent;
+  font:inherit;font-size:.82rem;font-weight:600;color:var(--bl-2);
+  cursor:pointer;
+  transition:border-color .16s var(--e),color .16s var(--e);
+}
+.pl-mer:hover{border-color:var(--bl-3);color:var(--bl)}
