@@ -1993,3 +1993,98 @@ table.adm .adm-tal{
   .vy-layout .split{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
   .stat-tal-5{grid-template-columns:repeat(5,minmax(0,1fr))}
 }
+
+/* ============================================================
+   CHATTEN
+
+   Familjerna till vänster, den öppna tråden till höger. Förr låg
+   familjebytet som en rad små chips ovanför tråden: den som hade
+   fyra familjer fick klicka sig igenom alla fyra för att se vem
+   som faktiskt hade skrivit, eftersom ett chip bara bar ett
+   förnamn och en prick.
+
+   Med en enda familj ritas listan ändå, men smal — den säger vem
+   man skriver till, vilket rubriken förr fick göra ensam.
+   ============================================================ */
+.ch{
+  display:grid;
+  gap:clamp(14px,1.6vw,20px);
+  grid-template-columns:minmax(0,1fr);
+  align-items:start;
+}
+@media (min-width:900px){
+  .ch{grid-template-columns:clamp(260px,26%,330px) minmax(0,1fr)}
+}
+
+.ch-lista{
+  display:flex;flex-direction:column;gap:4px;
+  padding:10px;
+  border:1px solid var(--ln);border-radius:16px;
+  background:var(--pap-2);
+  max-height:clamp(320px,52vh,620px);
+  overflow-y:auto;
+}
+.ch-tom{padding:14px;font-size:.85rem;color:var(--bl-2)}
+
+.ch-rad{
+  display:flex;align-items:flex-start;gap:11px;
+  width:100%;padding:11px 12px;
+  border:1px solid transparent;border-radius:12px;
+  background:transparent;
+  font:inherit;text-align:left;
+  cursor:pointer;
+  transition:background .16s var(--e),border-color .16s var(--e);
+}
+.ch-rad:hover{background:var(--pap)}
+.ch-rad[aria-pressed="true"]{background:var(--pap);border-color:var(--ln-2)}
+.ch-rad .av{flex:0 0 auto}
+
+.ch-rad-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
+.ch-rad-topp{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+.ch-rad-topp b{
+  font-size:.88rem;font-weight:650;color:var(--bl);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ch-rad-topp time{
+  flex:0 0 auto;
+  font-family:var(--f-mono);font-size:.68rem;color:var(--bl-3);
+}
+.ch-rad-barn{
+  font-size:.74rem;color:var(--bl-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* En rad, aldrig två. Ett långt meddelande får inte knuffa ned
+   familjen under det. */
+.ch-rad-sist{
+  font-size:.79rem;color:var(--bl-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ch-rad-sist.ar-oläst{color:var(--bl);font-weight:600}
+.ch-rad-larm{
+  flex:0 0 auto;align-self:center;
+  min-width:20px;height:20px;padding:0 6px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:100px;
+  background:var(--acc);color:#fff;
+  font-size:.7rem;font-weight:700;
+}
+
+.ch-rum{
+  display:flex;flex-direction:column;
+  min-width:0;
+  border:1px solid var(--ln);border-radius:16px;
+  background:var(--pap-2);
+  padding:clamp(14px,1.8vw,20px);
+}
+.ch-topp{
+  display:flex;align-items:center;gap:11px;
+  padding-bottom:14px;margin-bottom:14px;
+  border-bottom:1px solid var(--ln);
+}
+.ch-topp:empty{display:none}
+.ch-topp-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+.ch-topp-text b{font-size:.95rem;font-weight:650;color:var(--bl)}
+.ch-topp-text span{
+  font-size:.78rem;color:var(--bl-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
