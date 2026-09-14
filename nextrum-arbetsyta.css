@@ -1952,3 +1952,44 @@ table.adm .adm-tal{
   transition:border-color .16s var(--e),color .16s var(--e);
 }
 .pl-mer:hover{border-color:var(--bl-3);color:var(--bl)}
+
+/* ============================================================
+   STORA SKÄRMAR
+
+   1320px är ett läsmått. Det är rätt för en textsida och fel för
+   en arbetsyta: på en 27-tummare låg 672px tom beige på varje
+   sida av dashboarden medan korten trängdes i mitten.
+
+   Måtten växer i två steg och stannar sedan. En arbetsyta som
+   följer skärmen hur bred den än är slutar med en passrad på två
+   meter, och då är avståndet mellan datumet och knappen längre än
+   ögat orkar följa. Det som blir över får vara marginal.
+
+   Marknadssidorna rörs inte. Där ÄR 1320px rätt, eftersom det som
+   ska läsas är löptext och inte ett rutnät.
+   ============================================================ */
+@media (min-width:1500px){
+  .vy main.wrap{max-width:1560px}
+  .vy .vy-layout,
+  .vy-admin .vy-layout{max-width:none}
+  .vy-layout{grid-template-columns:250px minmax(0,1fr);gap:clamp(28px,2.4vw,40px)}
+  .vy-hero-inne{max-width:54ch}
+}
+
+@media (min-width:1900px){
+  .vy main.wrap{max-width:1720px}
+  .vy-layout{grid-template-columns:268px minmax(0,1fr)}
+}
+
+/* Adminvyn får mer. Den är tabeller och listor, och en kolumn till
+   är skillnaden mellan att se en månad och att skrolla efter den. */
+@media (min-width:1500px){ .vy-admin main.wrap{max-width:1680px} }
+@media (min-width:1900px){ .vy-admin main.wrap{max-width:1860px} }
+
+/* Rutnät som redan räknar själva får fler kolumner av att de får
+   plats, utan att någon siffra behöver ändras här. Det här är de
+   som står på ett fast antal. */
+@media (min-width:1500px){
+  .vy-layout .split{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+  .stat-tal-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
