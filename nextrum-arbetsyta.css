@@ -1774,3 +1774,134 @@ table.adm .adm-tal{
   white-space:pre-wrap;word-break:break-word;
   background:var(--pap-2);border-radius:12px;padding:14px 16px;
 }
+
+/* ============================================================
+   10. STUDIEHJÄLPARVYN: ELEVER OCH RAPPORT
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   ELEVVÄLJAREN
+
+   Var en rullgardin med etiketten "Du jobbar med". Den dolde
+   allt utom namnet: man såg inte vem som hade pass imorgon,
+   vem som saknade läxa, eller ens hur många elever man hade.
+
+   Nu är varje elev ett kort med det man behöver veta för att
+   välja rätt. Har man en enda elev ritas ingen väljare alls —
+   ett val mellan ett alternativ är ingen fråga.
+   ------------------------------------------------------------ */
+.ev-rad{
+  display:grid;gap:9px;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+}
+.ev-kort{
+  display:flex;align-items:flex-start;gap:12px;
+  width:100%;text-align:left;
+  padding:14px 15px;
+  border:1px solid var(--ln);border-radius:14px;
+  background:var(--pap);
+  transition:border-color .18s var(--e),background .18s var(--e),transform .18s var(--e);
+}
+.ev-kort:hover{border-color:var(--ln-2);transform:translateY(-1px)}
+.ev-kort[aria-pressed="true"]{
+  border-color:var(--bl);
+  background:var(--pap-2);
+}
+.ev-kort-text{min-width:0;flex:1}
+.ev-kort-text b{
+  display:block;font-size:.95rem;font-weight:650;color:var(--bl);
+  line-height:1.3;
+}
+.ev-kort-text > span{
+  display:block;margin-top:3px;
+  font-size:.8rem;line-height:1.45;color:var(--bl-2);
+}
+/* Nästa pass är det man oftast letar efter i listan. Det står
+   sist och i monospace, så det går att skumma nedför kolumnen. */
+.ev-nasta{
+  display:block;margin-top:8px;
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.04em;color:var(--bl-2);
+}
+.ev-nasta.ar-idag{color:var(--acc-text)}
+.ev-kort .vy-sido-mark{margin-left:0;align-self:flex-start}
+
+/* ------------------------------------------------------------
+   RAPPORTEN
+
+   Fyra fritextfält blev en fråga med tre svar, plus två korta
+   fält. Den som skrivit tio rapporter vet att fält tre och fyra
+   blir tomma — och den som LÄSER dem fick ingen aning om hur
+   det gick utan att läsa varje ord.
+   ------------------------------------------------------------ */
+.rp-fraga{
+  font-size:.92rem;font-weight:650;color:var(--bl);
+  margin-bottom:10px;
+}
+.rp-fraga em{
+  font-style:normal;font-weight:400;color:var(--bl-2);
+  font-size:.85rem;margin-left:6px;
+}
+
+/* De tre omdömena. Större än vanliga chips: det här är formulärets
+   enda obligatoriska val och ska vara svårt att missa. */
+.rp-gick{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.rp-gick button{
+  display:flex;align-items:center;gap:10px;
+  padding:13px 15px;
+  border:1px solid var(--ln-2);border-radius:13px;
+  background:var(--pap);
+  font:inherit;font-size:.89rem;font-weight:600;
+  color:var(--bl-2);text-align:left;
+  cursor:pointer;
+  transition:border-color .16s var(--e),background .16s var(--e),color .16s var(--e);
+}
+.rp-gick button:hover{border-color:var(--bl-3);color:var(--bl)}
+.rp-gick button i{
+  width:11px;height:11px;border-radius:100px;flex:none;
+  border:2px solid var(--ln-2);
+  transition:background .16s var(--e),border-color .16s var(--e);
+}
+.rp-gick button[aria-pressed="true"]{border-color:var(--bl);color:var(--bl);background:var(--pap-2)}
+.rp-gick button[aria-pressed="true"] i{border-color:transparent}
+.rp-gick button[data-v="mycket_bra"][aria-pressed="true"] i{background:var(--mossa)}
+.rp-gick button[data-v="bra"][aria-pressed="true"] i{background:var(--ockra)}
+.rp-gick button[data-v="folja_upp"][aria-pressed="true"] i{background:var(--acc)}
+
+/* Kunskapsområdet. Öppnas bara om man vill — de flesta pass
+   handlar om samma sak som förra gången, och att kräva ett
+   område varje gång är att kräva en dubblett. */
+.rp-omrade{
+  margin-top:6px;
+  border-top:1px solid var(--ln);
+  padding-top:16px;
+}
+.rp-nivaer{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.rp-fraga + .rp-nivaer{margin-top:0}
+
+/* Ett tidigare område som går att återanvända med ett klick. */
+.rp-tidigare{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.rp-tidigare button{
+  padding:5px 11px;
+  border:1px dashed var(--ln-2);border-radius:100px;
+  background:transparent;
+  font:inherit;font-size:.8rem;color:var(--bl-2);
+  cursor:pointer;
+  transition:border-color .16s var(--e),color .16s var(--e);
+}
+.rp-tidigare button:hover{border-style:solid;border-color:var(--bl-3);color:var(--bl)}
+
+/* Hur passet gick, i listan över egna rapporter. Prickens färg är
+   samma som i formuläret: en rad ska gå att sortera med ögat. */
+.rp-marke{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:3px 10px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  font-size:.72rem;font-weight:600;color:var(--bl-2);
+  white-space:nowrap;
+}
+.rp-marke i{width:7px;height:7px;border-radius:50%;background:var(--bl-3)}
+.rp-marke[data-v="mycket_bra"] i{background:var(--mossa)}
+.rp-marke[data-v="bra"] i{background:var(--ockra)}
+.rp-marke[data-v="folja_upp"] i{background:var(--acc)}
+.rp-marke[data-v="folja_upp"]{border-color:var(--acc-line);color:var(--acc-text)}
