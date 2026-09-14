@@ -1254,6 +1254,26 @@
     await byggElev();
   });
 
+  /* ------------------------------------------------------------
+     ELEVPROFILEN
+
+     En rubrik med namn, årskurs, ämnen och nästa pass, och sedan
+     vägarna vidare. Förr var det en rad taggar utan namn ovanför —
+     man såg vad eleven läste men inte vem det var, eftersom namnet
+     stod i rullgardinen som numera är dold.
+
+     Länkarna går till sektionerna som redan finns. En egen flikad
+     elevvy hade betytt en andra uppsättning listor över samma
+     läxor och samma pass, och två listor över samma sak hinner
+     alltid bli oense.
+     ------------------------------------------------------------ */
+  const ELEV_VAGAR = [
+    ['#lektioner', 'Pass & rapport'],
+    ['#laxor', 'Uppgifter'],
+    ['#lektioner/plan', 'Utveckling'],
+    ['#meddelanden', 'Meddelanden']
+  ];
+
   function ritaElevProfil() {
     const host = $('#elev-profil');
     const e = elev();
@@ -1263,16 +1283,34 @@
       return;
     }
     const familj = S.familjer.find(f => f.id === e.parent_id);
+    const b = nästaPassFör(e.id);
+    const öppna = S.laxräkning[e.id] || 0;
+
     const bitar = [
       e.grade ? '<span class="tag">' + esc(e.grade) + '</span>' : '',
       e.school ? '<span class="tag">' + esc(e.school) + '</span>' : '',
-      ...(e.subjects || []).map(s => '<span class="tag">' + esc(s) + '</span>')
+      ...(e.subjects || []).map(x => '<span class="tag">' + esc(x) + '</span>')
     ].filter(Boolean).join('');
 
-    host.innerHTML = '<div style="margin-top:16px">'
-      + (bitar ? '<div class="tutor-meta" style="margin-bottom:12px">' + bitar + '</div>' : '')
-      + (e.goals ? '<p class="small" style="line-height:1.6"><b>Mål:</b> ' + esc(e.goals) + '</p>' : '')
-      + (familj ? '<p class="xsmall" style="margin-top:10px;color:var(--muted-2)">Familj: ' + esc(familj.full_name || familj.email) + '</p>' : '')
+    host.innerHTML = '<div class="ep">'
+      + '<div class="ep-topp">'
+      + M.avatar(e.name, null, { stor: true })
+      + '<div class="ep-namn"><b>' + esc(e.name) + '</b>'
+      + '<span>' + esc([e.grade, familj ? (familj.full_name || familj.email) : null]
+          .filter(Boolean).join(' · ')) + '</span></div>'
+      + '<div class="ep-nasta">'
+      + (b
+          ? '<b>' + esc(datumText(b.wanted_date)
+              + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '')) + '</b>'
+            + '<span>' + esc(b.subject || 'Nästa pass') + '</span>'
+          : '<b>Inget pass inbokat</b><span>Föreslå en tid under Kalender</span>')
+      + '</div></div>'
+      + (bitar ? '<div class="tutor-meta ep-taggar">' + bitar + '</div>' : '')
+      + (e.goals ? '<p class="small ep-mal"><b>Mål:</b> ' + esc(e.goals) + '</p>' : '')
+      + '<div class="ep-vagar">'
+      + ELEV_VAGAR.map(v => '<a href="' + v[0] + '">' + esc(v[1])
+          + (v[0] === '#laxor' && öppna ? '<span>' + öppna + '</span>' : '') + '</a>').join('')
+      + '</div>'
       + '</div>';
   }
 
@@ -1448,9 +1486,10 @@
     fyllPassVal();
     fyllÄmnesval();
     await Promise.all([laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPlanIFormulär()]);
-    /* korten visar nästa pass och antal öppna läxor, och inget av det
-       är hämtat när de ritas första gången */
+    /* korten och profilrubriken visar nästa pass och antal öppna
+       läxor, och inget av det är hämtat när de ritas första gången */
     ritaElevkort();
+    ritaElevProfil();
     uppdateraFörslag();
   }
 

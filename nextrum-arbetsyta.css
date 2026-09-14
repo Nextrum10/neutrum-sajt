@@ -2119,3 +2119,90 @@ table.adm .adm-tal{
 @media (min-width:900px){ .vy-sido-fall{display:flex} }
 /* Hopfälld står den mitt i den smala kolumnen, som ikonerna under. */
 .vy-layout.ar-hopfalld .vy-sido-fall{align-self:center}
+
+/* ============================================================
+   ELEVPROFILEN
+   Namn, årskurs och nästa pass överst, sedan vägarna vidare till
+   sektionerna som redan finns. Förr stod här en rad taggar utan
+   namn ovanför: man såg vad eleven läste men inte vem det var.
+   ============================================================ */
+.ep{margin-top:16px;padding-top:16px;border-top:1px solid var(--ln)}
+.ep-topp{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ep-namn{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 180px}
+.ep-namn b{font-size:1.06rem;font-weight:700;letter-spacing:-.015em;color:var(--bl)}
+.ep-namn span{font-size:.82rem;color:var(--bl-2)}
+/* Nästa pass står till höger och inte i en egen ruta: det är ett
+   faktum om personen, inte ett eget kort. */
+.ep-nasta{
+  display:flex;flex-direction:column;gap:1px;text-align:right;
+  padding-left:16px;border-left:1px solid var(--ln);
+}
+.ep-nasta b{font-size:.86rem;font-weight:650;color:var(--bl)}
+.ep-nasta span{font-size:.74rem;color:var(--bl-3)}
+@media (max-width:560px){
+  .ep-nasta{text-align:left;padding-left:0;border-left:0;flex-basis:100%}
+}
+.ep-taggar{margin-top:14px}
+.ep-mal{margin-top:12px;line-height:1.6}
+
+.ep-vagar{display:flex;gap:7px;flex-wrap:wrap;margin-top:16px}
+.ep-vagar a{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 14px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  font-size:.83rem;font-weight:600;color:var(--bl-2);
+  text-decoration:none;
+  transition:border-color .16s var(--e),color .16s var(--e),background .16s var(--e);
+}
+.ep-vagar a:hover{border-color:var(--bl-3);color:var(--bl);background:var(--pap)}
+.ep-vagar a span{
+  min-width:18px;height:18px;padding:0 5px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:100px;background:var(--acc);color:#fff;
+  font-size:.68rem;font-weight:700;
+}
+
+/* ============================================================
+   KLICKYTOR
+   WCAG 2.2 vill ha 24px i minsta led. Kryssrutorna låg på 13,
+   vilket är webbläsarens förval och har varit för litet sedan
+   pekskärmen uppfanns; passchipsen i kalendern och "Visa alla"
+   låg på 20–22 för att raden var byggd efter texthöjden.
+   ============================================================ */
+.inp[type="checkbox"],
+input[type="checkbox"]{
+  width:18px;height:18px;
+  accent-color:var(--bl);
+  flex:0 0 auto;
+}
+/* Etiketten runt kryssrutan är den riktiga träffytan, så den får
+   höjden i stället — rutan ska inte växa till en knapp. */
+label:has(> input[type="checkbox"]){min-height:24px}
+
+.vy-mer{min-height:24px}
+.sch-pass{min-height:24px}
+
+/* Datumfältet får ringen på :focus och inte :focus-visible.
+   Chromium lägger fokus på delfälten inuti kontrollen (dag, månad,
+   år) och matchar då inte :focus-visible på själva input-elementet,
+   så fältet blev det enda i formuläret utan markering. */
+.inp[type="date"]:focus,
+.inp[type="time"]:focus{
+  outline:2px solid var(--focus,var(--bl));
+  outline-offset:2px;
+}
+
+/* Sidfotens adress är en ensam länk och inte en länk mitt i en
+   mening, så undantaget för löptext gäller inte den. */
+footer a[href^="mailto:"]{
+  display:inline-flex;align-items:center;
+  min-height:24px;
+}
+
+/* En etikett inlindad i en länk är en knapp så långt användaren
+   är bekymrad, och då ska den vara stor nog att träffa. Länken
+   själv hade ingen egen höjd och föll ihop till etikettens 18px. */
+a:has(> .adm-status){
+  display:inline-flex;align-items:center;
+  min-height:24px;
+}

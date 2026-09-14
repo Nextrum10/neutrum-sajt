@@ -1462,6 +1462,18 @@ html[lang="en"] .nx-hero-rubrik{
   border-color:var(--bl);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--bl) 9%,transparent);
 }
+/* Tangentbordsfokus måste synas, och 9 procents skugga gör det inte.
+   Knapparna hade den globala ringen från nextrum.css, fälten hade
+   den släckt av outline:none ovanför — den som tabbade genom ett
+   formulär tappade bort sig mellan fält två och tre.
+
+   Musklicket får behålla den lugna skuggan. Det är bara
+   tangentbordet som behöver veta var det står, och :focus-visible
+   är exakt den skillnaden. */
+.inp:focus-visible,.sel:focus-visible{
+  outline:2px solid var(--focus,var(--bl));
+  outline-offset:2px;
+}
 /* Fältetiketter, hela sajten. Versaler i mono med bred spärr är det
    svåraste fallet i liten grad: över- och underlängderna som ögat
    känner igen ordbilder på finns inte, och spärren drar isär resten.
