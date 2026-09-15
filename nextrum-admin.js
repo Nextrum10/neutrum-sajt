@@ -621,7 +621,11 @@
           + (l.message.length > 90 ? '…' : '') + '</span>'
         : '<span style="color:var(--bl-3)">—</span>' },
       { namn: 'Inkom', rita: l => '<span class="adm-tal">' + esc(kortDatum(l.created_at)) + '</span>' },
-      { namn: 'Läge', höger: true, rita: l => väljare('lead', LEAD_LAGE, l.status, 'data-lead="' + l.id + '"') }
+      { namn: 'Läge', höger: true, rita: l => väljare('lead', LEAD_LAGE, l.status, 'data-lead="' + l.id + '"')
+        /* Vägen vidare. En anmälan som inte kan bli en elev fastnar
+           här: matchningskön arbetar på elever, inte på anmälningar,
+           så utan det här steget når ingen familj någonsin fram. */
+        + ' <button class="btn btn-ghost btn-sm" data-lead-elev="' + l.id + '">Skapa elev</button>' }
     ], rader, tomtText(sök || st, 'Ingen intresseanmälan matchar filtret', 'Inga intresseanmälningar än'));
   }
 
@@ -2192,6 +2196,120 @@
   ].forEach(([sel, fn]) => {
     const el = $(sel);
     if (el) el.addEventListener('input', fn);
+  });
+
+  /* ============================================================
+     FRÅN ANMÄLAN TILL ELEV
+
+     Matchningskön arbetar på rader i `students`. En intresseanmälan
+     är en rad i `leads` och blir aldrig en elev av sig själv, så
+     tratten tog slut mellan de två — familjen hörde av sig, hamnade
+     i en lista, och kunde sedan inte matchas med någon.
+
+     VARFÖR FAMILJEN MÅSTE FINNAS FÖRST
+
+     En elev hänger på ett parent_id, och ett parent_id är en rad i
+     profiles, som i sin tur skapas av triggern handle_new_user när
+     någon registrerar ett konto. Adminvyn kan alltså inte trolla
+     fram en familj — kontot måste finnas.
+
+     Att bjuda in någon som INTE registrerat sig kräver
+     auth.admin.inviteUserByEmail, som bara går att anropa med
+     service_role från en edge-funktion. Den finns inte byggd, och
+     rutan nedan säger det rakt ut i stället för att erbjuda en knapp
+     som inte gör något.
+     ============================================================ */
+  function familjeVal(valt) {
+    const familjer = Object.values(S.personer)
+      .filter(p => p.role === 'parent')
+      .sort((a, b) => String(a.full_name || a.email || '')
+        .localeCompare(String(b.full_name || b.email || ''), 'sv'));
+
+    return '<select class="inp" id="le-familj">'
+      + '<option value="">Välj familj…</option>'
+      + familjer.map(f => '<option value="' + esc(f.id) + '"'
+          + (f.id === valt ? ' selected' : '') + '>'
+          + esc(f.full_name || f.email || f.id) + (f.email ? ' · ' + esc(f.email) : '')
+          + '</option>').join('')
+      + '</select>';
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-lead-elev]');
+    if (!knapp) return;
+
+    const lead = S.leads.find(l => l.id === knapp.dataset.leadElev);
+    if (!lead) return;
+
+    /* Har familjen redan ett konto med samma adress är det nästan
+       säkert deras. Förvalt, inte automatiskt — två familjer kan
+       dela en adress, och ett barn på fel förälder är svårt att
+       upptäcka i efterhand. */
+    const trolig = Object.values(S.personer).find(p =>
+      p.role === 'parent' && p.email
+      && String(p.email).toLowerCase() === String(lead.email || '').toLowerCase());
+
+    const ruta = document.createElement('div');
+    ruta.className = 'nx-fraga';
+    ruta.innerHTML =
+      '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="le-t">'
+      + '<h3 id="le-t">Skapa elev ur anmälan</h3>'
+      + '<p>Eleven hamnar i matchningskön så fort den finns. '
+      + 'Familjen måste ha ett konto — har de inget får de registrera sig på '
+      + 'nextrum.se, sedan dyker de upp i listan här.</p>'
+      + '<div class="fgroup"><label for="le-familj">Familj</label>' + familjeVal(trolig && trolig.id) + '</div>'
+      + '<div class="ag-faltrad" style="margin-top:12px">'
+      + '<div class="fgroup"><label for="le-namn">Elevens namn</label>'
+      + '<input class="inp" id="le-namn" value="' + esc(lead.child_name || '') + '"></div>'
+      + '<div class="fgroup"><label for="le-arskurs">Årskurs</label>'
+      + '<input class="inp" id="le-arskurs" value="' + esc(lead.grade || '') + '"></div>'
+      + '<div class="fgroup"><label for="le-amnen">Ämnen</label>'
+      + '<input class="inp" id="le-amnen" value="' + esc(lead.subject || '') + '"></div>'
+      + '</div>'
+      + '<p class="ok-msg" id="le-msg"></p>'
+      + '<div class="nx-fraga-knappar">'
+      + '<button type="button" class="btn btn-ghost" data-le-stang>Avbryt</button>'
+      + '<button type="button" class="btn btn-primary" id="le-skapa">Skapa elev</button>'
+      + '</div></div>';
+
+    document.body.appendChild(ruta);
+    document.body.style.overflow = 'hidden';
+    const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
+    ruta.addEventListener('click', ev => {
+      if (ev.target === ruta || ev.target.closest('[data-le-stang]')) stäng();
+    });
+
+    $('#le-skapa', ruta).addEventListener('click', async () => {
+      const msg = $('#le-msg', ruta);
+      rensa(msg);
+      const parent = $('#le-familj', ruta).value;
+      const namn = $('#le-namn', ruta).value.trim();
+      if (!parent) { säg(msg, 'Välj vilken familj eleven hör till.', false); return; }
+      if (!namn) { säg(msg, 'Eleven behöver ett namn.', false); return; }
+
+      await medan($('#le-skapa', ruta), 'Skapar…', async () => {
+        const { error } = await supa.from('students').insert({
+          parent_id: parent,
+          name: namn,
+          grade: $('#le-arskurs', ruta).value.trim() || null,
+          subjects: $('#le-amnen', ruta).value.trim() || null
+        });
+        if (error) { säg(msg, 'Kunde inte skapa: ' + felText(error), false); return; }
+
+        /* Anmälan är avklarad när den blivit en elev. Står den kvar
+           som "ny" ligger den i arbetskön för alltid. */
+        await supa.from('leads').update({ status: 'matched' }).eq('id', lead.id);
+        lead.status = 'matched';
+
+        stäng();
+        await hämtaAllt();
+        ritaLeads();
+        ritaElever();
+        await hämtaMatchunderlag();
+        ritaMatchning();
+        await ritaÖversikt();
+      });
+    });
   });
 
   /* ============ rabattkoderna ============ */
