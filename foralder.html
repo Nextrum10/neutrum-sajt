@@ -367,6 +367,7 @@
              id="panel-laxor" aria-labelledby="flik-laxor">
           <div class="dbox">
             <h5>Läxor <em id="lax-antal"></em></h5>
+            <div class="lx-filter" id="lax-filter" role="group" aria-label="Visa läxor" hidden></div>
             <div id="lax-lista"><div class="loading">Hämtar</div></div>
           </div>
         </div>
@@ -671,7 +672,7 @@
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], laxFilter: 'attgora', olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel']
@@ -785,9 +786,17 @@
       + '<div><div class="tutor-name">' + esc(t.full_name) + (t.age ? ', ' + esc(t.age) : '') + '</div>'
       + '<div class="tutor-role">Studiehjälpare' + (t.school ? ' · ' + esc(t.school) : '') + '</div></div></div>'
       + (t.bio ? '<p class="small" style="margin-bottom:14px;line-height:1.6">' + esc(t.bio) + '</p>' : '')
-      + ((t.subjects && t.subjects.length)
-          ? '<div class="tutor-meta">' + t.subjects.map(s => '<span class="tag">' + esc(s) + '</span>').join('') + '</div>'
-          : '')
+      /* Årskurser och format hämtades redan men ritades aldrig ut.
+         "Matematik" säger inte om hen tar åk 4 eller gymnasiet, och
+         det är den frågan familjen faktiskt har. */
+      + (() => {
+          const märken = (t.subjects || [])
+            .concat(t.grade_levels || [])
+            .concat(t.formats || []);
+          return märken.length
+            ? '<div class="tutor-meta">' + märken.map(m => '<span class="tag">' + esc(m) + '</span>').join('') + '</div>'
+            : '';
+        })()
       + '<p class="xsmall" style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted-2);line-height:1.6">'
       + 'Skriv hellre i rutan Kontakt än via mejl — då hamnar allt på ett ställe och vi kan hjälpa till om något krånglar.</p>';
 
@@ -984,6 +993,21 @@
      deadline ägs av studiehjälparen. Det är en trigger i databasen
      som håller den gränsen, inte det här formuläret.
      ============================================================ */
+  /* Vilket läge läxlistan står i. Lever i S så att det överlever
+     en omritning — annars hoppar listan tillbaka till "Att göra"
+     varje gång någon kryssar i en läxa. */
+  function ritaLaxFilter() {
+    NXStudie.läxFilter({ host: $('#lax-filter'), laxor: S.laxor, valt: S.laxFilter });
+  }
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-laxfilter]');
+    if (!k) return;
+    S.laxFilter = k.dataset.laxfilter;
+    ritaLaxFilter();
+    laddaLaxor();
+  });
+
   async function laddaLaxor() {
     const host = $('#lax-lista');
     $('#lax-antal').textContent = '';
@@ -1014,11 +1038,19 @@
     ritaNotiser();
     ritaÖvLaxor();
     ritaStatistik();
+    ritaLaxFilter();
 
     const öppna = data.filter(h => h.status !== 'klar').length;
     $('#lax-antal').textContent = öppna ? öppna + ' att göra' : 'allt klart';
 
-    host.innerHTML = data.map(h => {
+    const urval = NXStudie.läxUrval(data, S.laxFilter);
+    if (!urval.length) {
+      host.innerHTML = tomt(S.laxFilter === 'klart' ? 'Inget avklarat än' : 'Inget att göra just nu',
+        S.laxFilter === 'klart' ? 'Läxor ni markerar som klara samlas här.' : 'Allt ni fått är avklarat.');
+      return;
+    }
+
+    host.innerHTML = urval.map(h => {
       let knappar = '';
       if (h.status === 'ej_paborjad') {
         knappar = '<button class="btn btn-ghost btn-sm" data-lax="pagaende" data-id="' + h.id + '">Jag har börjat</button>'
@@ -1301,7 +1333,11 @@
     const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
     $('#pass-antal').textContent = aktiva.length + ' st';
 
-    const rad = b => {
+    NXStudie.passLista({
+      host: host,
+      bokningar: S.bokningar,
+      tomtKommande: 'Inga kommande pass. Boka en ledig tid på Översikt, så står passet här.',
+      rad: b => {
       const barn = S.barn.find(x => x.id === b.student_id);
       const kommande = b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed');
       /* Ett förslag från studiehjälparen ser likadant ut i databasen
@@ -1326,26 +1362,8 @@
         vem: derasFörslag ? 'Föreslaget av er studiehjälpare' : null,
         atgarder: knappar
       }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
-    };
-
-    /* Genomförda pass ligger kvar men bakom en pil: de blir bara
-       fler, och den som öppnar listan vill se vad som är kvar att
-       komma på. Pilen minns vad man valde. */
-    const klara = S.bokningar.filter(b => b.status === 'completed');
-    const kvar = S.bokningar.filter(b => b.status !== 'completed');
-
-    host.innerHTML = (kvar.length
-        ? kvar.map(rad).join('')
-        : '<p class="xsmall" style="color:var(--muted-2);margin:0 0 4px">Inga pass framåt just nu.</p>')
-      + (klara.length
-        ? NXArbete.fallGrupp({
-            nyckel: 'foralder.pass.klara',
-            etikett: 'Genomförda pass',
-            antal: klara.length + ' st',
-            namn: 'Dölj genomförda pass',
-            kropp: klara.map(rad).join('')
-          })
-        : '');
+      }
+    });
   }
 
   document.addEventListener('click', async e => {
@@ -1883,6 +1901,7 @@
     NXArbete.fallStall($('#view-app'));
 
     S.sido = NXStudie.sidomeny({
+      fall: 'foralder',
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt'
     });
 

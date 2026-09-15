@@ -204,16 +204,23 @@
          en rapport om ett barn medan planen gällde ett annat.
          ============================================================ -->
     <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-      <h5>Elev <em id="elev-antal"></em></h5>
+      <h5>Mina elever <em id="elev-antal"></em></h5>
       <div class="tr-val" id="familj-val" hidden></div>
-      <div class="vy-form-rad">
-        <div class="pay-field">
-          <label for="elev-val">Du jobbar med</label>
-          <select class="sel" id="elev-val" aria-describedby="elev-hjalp"></select>
-        </div>
-      </div>
+
+      <!-- Korten ritas av ritaElevkort(). Rullgardinen som låg här
+           dolde allt utom namnet: man såg inte vem som hade pass
+           imorgon eller vem som saknade läxa.
+
+           Den finns kvar, dold, eftersom ett fyrtiotal rader kod
+           läser och skriver #elev-val. Att byta ut varje sådan
+           hade varit en omskrivning av halva filen för en
+           rullgardin ingen ser. Korten skriver till den i stället,
+           och den fortsätter vara sanningen om vem som är vald. -->
+      <select class="sel" id="elev-val" hidden aria-hidden="true" tabindex="-1"></select>
+      <div id="elev-kort"></div>
+
       <div id="elev-profil"></div>
-      <p class="xsmall" id="elev-hjalp" style="margin-top:12px;color:var(--muted-2);line-height:1.6">
+      <p class="xsmall" id="elev-hjalp" style="margin-top:12px;color:var(--bl-2);line-height:1.6">
         Läxor, kunskapsområden, rapporter och studieplan gäller eleven du valt här.
       </p>
     </div>
@@ -306,11 +313,26 @@
                     <!-- ============ RAPPORT ============ -->
                     <div class="dbox">
                       <h5>Efter passet</h5>
-                      <p class="xsmall" style="color:var(--muted-2);margin-bottom:16px;line-height:1.6">
-                        Rapporten är det familjen läser. Väljer du ett pass markeras det samtidigt som genomfört, och timmarna räknas upp.
+                      <p class="xsmall" style="color:var(--bl-2);margin-bottom:18px;line-height:1.6">
+                        Rapporten är det familjen läser. Väljer du ett pass markeras det samtidigt som
+                        genomfört — och det är först då timmarna räknas och passet kan faktureras.
                       </p>
                       <form id="rapport-form">
-                        <div class="vy-form-rad">
+
+                        <!-- ============ HUR GICK DET ============
+                             Formulärets enda obligatoriska val, och
+                             det enda som går att räkna på. Fyra
+                             fritextfält sa ingenting om hur passet
+                             gick utan att man läste varje ord. -->
+                        <p class="rp-fraga">Hur gick lektionen?</p>
+                        <div class="rp-gick" id="r-gick-val" role="group" aria-label="Hur gick lektionen">
+                          <button type="button" data-v="mycket_bra" aria-pressed="false"><i></i>Mycket bra</button>
+                          <button type="button" data-v="bra" aria-pressed="false"><i></i>Bra</button>
+                          <button type="button" data-v="folja_upp" aria-pressed="false"><i></i>Behöver följas upp</button>
+                        </div>
+
+                        <!-- ============ VILKET PASS ============ -->
+                        <div class="vy-form-rad" style="margin-top:20px">
                           <div class="pay-field">
                             <label for="r-pass">Vilket pass</label>
                             <select class="sel" id="r-pass"></select>
@@ -329,25 +351,59 @@
                           </div>
                         </div>
 
-                        <div class="fgroup" style="margin-top:14px">
-                          <label for="r-notes">Vad gjorde ni?</label>
-                          <textarea class="inp" id="r-notes" style="min-height:90px" placeholder="t.ex. Körde bråk och procent, sedan fem uppgifter från gamla provet."></textarea>
+                        <!-- ============ VAD ARBETADE NI MED ============
+                             Ämnet fylls i från passet när ett är valt.
+                             Chipsen finns för de gånger man gjorde något
+                             annat än det som stod i bokningen. -->
+                        <p class="rp-fraga" style="margin-top:20px">Vad arbetade ni med?</p>
+                        <div class="vy-val" id="r-amne-val" role="group" aria-label="Ämne"></div>
+
+                        <div class="fgroup" style="margin-top:18px">
+                          <label for="r-notes">Kommentar <span style="font-weight:400;color:var(--bl-2)">— det familjen läser</span></label>
+                          <textarea class="inp" id="r-notes" style="min-height:84px" placeholder="t.ex. Körde bråk och procent. Kämpigt i början, men hon löste de fem sista helt själv."></textarea>
                         </div>
+
                         <div class="fgroup">
-                          <label for="r-gick">Hur gick det? <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
-                          <textarea class="inp" id="r-gick" style="min-height:70px" placeholder="t.ex. Kämpigt i början, men hon löste de fem sista helt själv."></textarea>
+                          <label for="r-fokus">Nästa steg <span style="font-weight:400;color:var(--bl-2)">(valfritt)</span></label>
+                          <input class="inp" id="r-fokus" placeholder="t.ex. Ekvationer med bråk">
                         </div>
-                        <div class="vy-form-rad">
-                          <div class="pay-field">
-                            <label for="r-trana">Behöver träna på</label>
-                            <input class="inp" id="r-trana" placeholder="t.ex. Parenteser i ekvationer">
-                          </div>
-                          <div class="pay-field">
-                            <label for="r-fokus">Nästa fokus</label>
-                            <input class="inp" id="r-fokus" placeholder="t.ex. Ekvationer med bråk">
+
+                        <!-- ============ KUNSKAPSOMRÅDE ============
+                             Öppnas bara om man vill. De flesta pass
+                             handlar om samma sak som förra gången, och
+                             att kräva ett område varje gång är att
+                             kräva en dubblett.
+
+                             Fylls det i skapas eller uppdateras raden i
+                             progress_items — alltså det familjen ser
+                             under Min utveckling. Ett formulär i
+                             stället för två. -->
+                        <div class="rp-omrade">
+                          <label class="xsmall" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600">
+                            <input type="checkbox" id="r-omrade-pa"> Uppdatera ett kunskapsområde
+                          </label>
+                          <div id="r-omrade-falt" hidden style="margin-top:12px">
+                            <div class="vy-form-rad">
+                              <div class="pay-field">
+                                <label for="r-omrade">Område</label>
+                                <input class="inp" id="r-omrade" maxlength="80" placeholder="t.ex. Ekvationer">
+                              </div>
+                              <div class="pay-field">
+                                <label for="r-trana">Behöver träna på <span style="font-weight:400;color:var(--bl-2)">(valfritt)</span></label>
+                                <input class="inp" id="r-trana" placeholder="t.ex. Parenteser">
+                              </div>
+                            </div>
+                            <p class="rp-fraga" style="margin-top:14px;font-size:.82rem">Var ligger eleven nu?</p>
+                            <div class="rp-nivaer" id="r-niva-val" role="group" aria-label="Nivå">
+                              <button type="button" class="chip" data-v="behover_trana" aria-pressed="false">Behöver träna</button>
+                              <button type="button" class="chip" data-v="pa_god_vag" aria-pressed="true">På god väg</button>
+                              <button type="button" class="chip" data-v="bra" aria-pressed="false">Bra</button>
+                            </div>
+                            <div class="rp-tidigare" id="r-omrade-tidigare"></div>
                           </div>
                         </div>
 
+                        <!-- ============ LÄXA ============ -->
                         <div class="vy-fall" style="margin-top:16px">
                           <label class="xsmall" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600">
                             <input type="checkbox" id="r-lax"> Skapa en läxa direkt
@@ -653,6 +709,7 @@
                     <p class="ok-msg" id="lx-msg"></p>
                   </form>
 
+                  <div class="lx-filter" id="lax-filter" role="group" aria-label="Visa läxor" hidden></div>
                   <div id="lax-lista"><div class="loading">Hämtar</div></div>
                 </div>
         </div>
@@ -723,16 +780,25 @@
             <p>Kontakten med familjen. Samma tråd som på Översikt.</p>
           </div>
         </div>
-                <!-- ============ KONTAKT ============ -->
-                <div class="dbox">
-                  <h5>Kontakt <span class="vy-larm" id="tr-larm" hidden></span><em id="tr-vem"></em></h5>
-                  <div class="tr" id="trad"><div class="loading">Hämtar</div></div>
-                  <div class="tr-skriv">
-                    <textarea class="inp" id="tr-text" rows="1" placeholder="Skriv till familjen…" aria-label="Skriv ett meddelande"></textarea>
-                    <button class="btn btn-primary" id="tr-skicka" type="button">Skicka</button>
+                <!-- ============ KONTAKT ============
+                     Tvåspaltigt: familjerna till vänster, den öppna
+                     tråden till höger. Förr var familjebytet en rad
+                     små chips ovanför tråden, och den som hade fyra
+                     familjer fick klicka sig igenom alla fyra för
+                     att se vem som faktiskt hade skrivit. -->
+                <div class="ch">
+                  <aside class="ch-lista" id="ch-lista" aria-label="Familjer"></aside>
+
+                  <div class="ch-rum">
+                    <div class="ch-topp" id="ch-topp"></div>
+                    <div class="tr" id="trad"><div class="loading">Hämtar</div></div>
+                    <div class="tr-skriv">
+                      <textarea class="inp" id="tr-text" rows="1" placeholder="Skriv till familjen…" aria-label="Skriv ett meddelande"></textarea>
+                      <button class="btn btn-primary" id="tr-skicka" type="button">Skicka</button>
+                    </div>
+                    <p class="tr-tips">Enter skickar · Skift + Enter ny rad</p>
+                    <p class="ok-msg" id="tr-msg"></p>
                   </div>
-                  <p class="tr-tips">Enter skickar · Skift + Enter ny rad</p>
-                  <p class="ok-msg" id="tr-msg"></p>
                 </div>
       </section>
 
@@ -829,7 +895,35 @@
                   <form id="profil-form">
                     <div class="fgroup"><label for="pr-skola">Skola</label><input class="inp" id="pr-skola"></div>
                     <div class="fgroup"><label for="pr-ort">Ort</label><input class="inp" id="pr-ort"></div>
-                    <div class="fgroup"><label for="pr-amnen">Ämnen (kommaseparerat)</label><input class="inp" id="pr-amnen" placeholder="Matematik, Fysik"></div>
+                    <!-- ============ ÄMNEN, ÅRSKURSER, FORMAT ============
+                         Det här är inte pynt på profilen. Matchningen i
+                         adminvyn poängsätter på exakt de tre fälten, och
+                         två av dem gick inte att fylla i alls: årskurserna
+                         hade ingen ruta någonstans i hela sajten, så 30 av
+                         100 matchningspoäng stod permanent på "vet ej".
+
+                         Ämnena låg i ett kommaseparerat fält, där "matte"
+                         och "Matematik" blev två olika ämnen. -->
+                    <div class="fgroup">
+                      <label>Ämnen du hjälper till med</label>
+                      <div class="vy-val" id="pr-amne-val" role="group" aria-label="Ämnen"></div>
+                      <div class="pr-lagg">
+                        <input class="inp" id="pr-amne-nytt" maxlength="40" placeholder="Annat ämne, t.ex. Spanska">
+                        <button class="btn btn-ghost btn-sm" type="button" id="pr-amne-lagg">Lägg till</button>
+                      </div>
+                    </div>
+                    <div class="fgroup">
+                      <label>Årskurser du tar</label>
+                      <div class="vy-val" id="pr-arskurs-val" role="group" aria-label="Årskurser"></div>
+                    </div>
+                    <div class="fgroup">
+                      <label>Format</label>
+                      <div class="vy-val" id="pr-format-val" role="group" aria-label="Format"></div>
+                      <p class="xsmall" style="margin-top:9px;color:var(--bl-2);line-height:1.6">
+                        Ämnen, årskurser och format styr vilka elever vi föreslår dig för.
+                        Lämnar du dem tomma syns du som "vet ej" i matchningen.
+                      </p>
+                    </div>
                     <div class="fgroup"><label for="pr-bio">Kort text om dig</label><textarea class="inp" id="pr-bio" style="min-height:90px"></textarea></div>
                     <button class="btn btn-ghost btn-sm btn-block" type="submit">Spara profil</button>
                     <p class="ok-msg" id="pr-msg"></p>
@@ -952,7 +1046,8 @@
     elever: [], aktivElev: null,
     bokningar: [], trad: null, kal: null, olästa: {},
     minAvatar: null, matTyp: 'fil', tillgang: [], blockerade: [],
-    laxor: [], avatarer: {}, sido: null, progressAntal: 0, schema: null
+    laxor: [], laxFilter: 'attgora', laxräkning: {}, avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
+    senaste: {}
   };
 
   const elev = () => S.elever.find(e => e.id === S.aktivElev) || null;
@@ -1067,8 +1162,12 @@
   }
 
   /* Elevlistan visar bara den familj man jobbar med just nu. */
+  function minaElever() {
+    return S.elever.filter(e => !S.aktivFamilj || e.parent_id === S.aktivFamilj);
+  }
+
   function fyllElevväljare() {
-    const mina = S.elever.filter(e => !S.aktivFamilj || e.parent_id === S.aktivFamilj);
+    const mina = minaElever();
     const val = $('#elev-val');
 
     if (!mina.length) {
@@ -1084,7 +1183,88 @@
       if (!S.aktivElev || !mina.some(e => e.id === S.aktivElev)) S.aktivElev = mina[0].id;
       val.value = S.aktivElev;
     }
+    ritaElevkort();
   }
+
+  /* ------------------------------------------------------------
+     ELEVKORTEN
+
+     Rullgardinen dolde allt utom namnet. Man såg inte vem som hade
+     pass imorgon, vem som saknade läxa, eller ens hur många elever
+     man hade — och det är precis de tre sakerna man väljer utifrån.
+
+     Korten skriver till den gömda rullgardinen i stället för att
+     ersätta den. Ett fyrtiotal rader läser #elev-val, och att byta
+     ut varje sådan hade varit en omskrivning av halva filen för
+     något ingen ser.
+
+     Med en enda elev ritas ingenting. Ett val mellan ett
+     alternativ är ingen fråga.
+     ------------------------------------------------------------ */
+  function nästaPassFör(elevId) {
+    const idag = isoFor(new Date());
+    return (S.bokningar || [])
+      .filter(b => b.student_id === elevId && b.wanted_date >= idag && b.status !== 'cancelled')
+      .sort((a, b) => (a.wanted_date + (a.wanted_time || ''))
+        .localeCompare(b.wanted_date + (b.wanted_time || '')))[0] || null;
+  }
+
+  function ritaElevkort() {
+    const host = $('#elev-kort');
+    if (!host) return;
+    const mina = minaElever();
+
+    if (mina.length < 2) { host.innerHTML = ''; return; }
+
+    const idag = isoFor(new Date());
+    host.innerHTML = '<div class="ev-rad">' + mina.map(e => {
+      const b = nästaPassFör(e.id);
+      const öppnaLäxor = S.laxräkning[e.id] || 0;
+      return '<button type="button" class="ev-kort" data-elevkort="' + esc(e.id) + '"'
+        + ' aria-pressed="' + (e.id === S.aktivElev ? 'true' : 'false') + '">'
+        + NXMedia.avatar(e.name, null, { liten: true })
+        + '<span class="ev-kort-text"><b>' + esc(e.name) + '</b>'
+        + '<span>' + esc([e.grade, (e.subjects || [])[0]].filter(Boolean).join(' · ')
+            || 'Inga uppgifter') + '</span>'
+        + '<span class="ev-nasta' + (b && b.wanted_date === idag ? ' ar-idag' : '') + '">'
+        + esc(b
+            ? (b.wanted_date === idag ? 'IDAG ' + String(b.wanted_time || '').slice(0, 5)
+               : datumText(b.wanted_date) + (b.wanted_time ? ' ' + String(b.wanted_time).slice(0, 5) : ''))
+            : 'inget pass inbokat')
+        + '</span></span>'
+        + (öppnaLäxor ? '<span class="vy-sido-mark">' + öppnaLäxor + '</span>' : '')
+        + '</button>';
+    }).join('') + '</div>';
+  }
+
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-elevkort]');
+    if (!k) return;
+    if (k.dataset.elevkort === S.aktivElev) return;
+    S.aktivElev = k.dataset.elevkort;
+    $('#elev-val').value = S.aktivElev;
+    await byggElev();
+  });
+
+  /* ------------------------------------------------------------
+     ELEVPROFILEN
+
+     En rubrik med namn, årskurs, ämnen och nästa pass, och sedan
+     vägarna vidare. Förr var det en rad taggar utan namn ovanför —
+     man såg vad eleven läste men inte vem det var, eftersom namnet
+     stod i rullgardinen som numera är dold.
+
+     Länkarna går till sektionerna som redan finns. En egen flikad
+     elevvy hade betytt en andra uppsättning listor över samma
+     läxor och samma pass, och två listor över samma sak hinner
+     alltid bli oense.
+     ------------------------------------------------------------ */
+  const ELEV_VAGAR = [
+    ['#lektioner', 'Pass & rapport'],
+    ['#laxor', 'Uppgifter'],
+    ['#lektioner/plan', 'Utveckling'],
+    ['#meddelanden', 'Meddelanden']
+  ];
 
   function ritaElevProfil() {
     const host = $('#elev-profil');
@@ -1095,16 +1275,34 @@
       return;
     }
     const familj = S.familjer.find(f => f.id === e.parent_id);
+    const b = nästaPassFör(e.id);
+    const öppna = S.laxräkning[e.id] || 0;
+
     const bitar = [
       e.grade ? '<span class="tag">' + esc(e.grade) + '</span>' : '',
       e.school ? '<span class="tag">' + esc(e.school) + '</span>' : '',
-      ...(e.subjects || []).map(s => '<span class="tag">' + esc(s) + '</span>')
+      ...(e.subjects || []).map(x => '<span class="tag">' + esc(x) + '</span>')
     ].filter(Boolean).join('');
 
-    host.innerHTML = '<div style="margin-top:16px">'
-      + (bitar ? '<div class="tutor-meta" style="margin-bottom:12px">' + bitar + '</div>' : '')
-      + (e.goals ? '<p class="small" style="line-height:1.6"><b>Mål:</b> ' + esc(e.goals) + '</p>' : '')
-      + (familj ? '<p class="xsmall" style="margin-top:10px;color:var(--muted-2)">Familj: ' + esc(familj.full_name || familj.email) + '</p>' : '')
+    host.innerHTML = '<div class="ep">'
+      + '<div class="ep-topp">'
+      + M.avatar(e.name, null, { stor: true })
+      + '<div class="ep-namn"><b>' + esc(e.name) + '</b>'
+      + '<span>' + esc([e.grade, familj ? (familj.full_name || familj.email) : null]
+          .filter(Boolean).join(' · ')) + '</span></div>'
+      + '<div class="ep-nasta">'
+      + (b
+          ? '<b>' + esc(datumText(b.wanted_date)
+              + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '')) + '</b>'
+            + '<span>' + esc(b.subject || 'Nästa pass') + '</span>'
+          : '<b>Inget pass inbokat</b><span>Föreslå en tid under Kalender</span>')
+      + '</div></div>'
+      + (bitar ? '<div class="tutor-meta ep-taggar">' + bitar + '</div>' : '')
+      + (e.goals ? '<p class="small ep-mal"><b>Mål:</b> ' + esc(e.goals) + '</p>' : '')
+      + '<div class="ep-vagar">'
+      + ELEV_VAGAR.map(v => '<a href="' + v[0] + '">' + esc(v[1])
+          + (v[0] === '#laxor' && öppna ? '<span>' + öppna + '</span>' : '') + '</a>').join('')
+      + '</div>'
       + '</div>';
   }
 
@@ -1145,6 +1343,7 @@
     S.aktivFamilj = knapp.dataset.familj;
     S.aktivElev = null;
     S.olästa = await NXKontakt.olästa(S.user.id);
+    await laddaSenaste();
     fyllElevväljare();
     await byggFamilj();
     await byggElev();
@@ -1154,6 +1353,87 @@
     S.aktivElev = e.target.value || null;
     await byggElev();
   });
+
+  /* ============================================================
+     CHATTLISTAN
+
+     Ett meddelande utan avsändare är inget meddelande. Listan visar
+     vem som skrev, vad som stod och när — samma tre saker som varje
+     meddelandeapp visar, och exakt de tre som chipsen dolde.
+
+     Den senaste raden per familj hämtas en gång och räknas om
+     lokalt. En fråga per familj hade blivit en fråga per familj.
+     ============================================================ */
+  async function laddaSenaste() {
+    const { data, error } = await supa
+      .from('messages')
+      .select('parent_id, body, sender_id, created_at')
+      .eq('tutor_id', S.user.id)
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    if (error) return;
+    const karta = {};
+    (data || []).forEach(m => { if (!karta[m.parent_id]) karta[m.parent_id] = m; });
+    S.senaste = karta;
+  }
+
+  function ritaChattlista() {
+    const host = $('#ch-lista');
+    if (!host) return;
+
+    if (!S.familjer.length) {
+      host.innerHTML = '<p class="ch-tom">Ingen familj matchad än.</p>';
+      return;
+    }
+
+    /* Den som skrev sist ligger överst. Det är den ordning man
+       faktiskt letar i. */
+    const ordnade = S.familjer.slice().sort((a, b) => {
+      const ma = S.senaste[a.id], mb = S.senaste[b.id];
+      if (!ma && !mb) return String(a.full_name || '').localeCompare(String(b.full_name || ''));
+      if (!ma) return 1;
+      if (!mb) return -1;
+      return String(mb.created_at).localeCompare(String(ma.created_at));
+    });
+
+    host.innerHTML = ordnade.map(f => {
+      const m = S.senaste[f.id];
+      const oläst = S.olästa[f.id + '|' + S.user.id] || 0;
+      const barn = S.elever.filter(e => e.parent_id === f.id).map(e => e.name);
+      const namn = f.full_name || f.email || 'Familj';
+      const rad = m
+        ? (m.sender_id === S.user.id ? 'Du: ' : '') + String(m.body || '').replace(/\s+/g, ' ')
+        : 'Ingen konversation än';
+
+      return '<button type="button" class="ch-rad" data-familj="' + esc(f.id) + '"'
+        + ' aria-pressed="' + (f.id === S.aktivFamilj ? 'true' : 'false') + '">'
+        + M.avatar(namn, S.avatarer[f.id] || null, { liten: true })
+        + '<span class="ch-rad-text">'
+        + '<span class="ch-rad-topp"><b>' + esc(namn) + '</b>'
+        + (m ? '<time>' + esc(NXKontakt.dagText(m.created_at)) + '</time>' : '')
+        + '</span>'
+        + (barn.length ? '<span class="ch-rad-barn">' + esc(barn.join(', ')) + '</span>' : '')
+        + '<span class="ch-rad-sist' + (oläst ? ' ar-oläst' : '') + '">' + esc(rad) + '</span>'
+        + '</span>'
+        + (oläst ? '<span class="ch-rad-larm">' + oläst + '</span>' : '')
+        + '</button>';
+    }).join('');
+  }
+
+  /* Vem man skriver till ska stå kvar i rutan, inte bara i listan
+     man just klickade bort blicken från. */
+  function ritaChattTopp() {
+    const host = $('#ch-topp');
+    if (!host) return;
+    const f = S.familjer.find(x => x.id === S.aktivFamilj);
+    if (!f) { host.innerHTML = ''; return; }
+    const namn = f.full_name || f.email || 'Familj';
+    const barn = S.elever.filter(e => e.parent_id === f.id).map(e => e.name);
+    host.innerHTML = M.avatar(namn, S.avatarer[f.id] || null, { liten: true })
+      + '<span class="ch-topp-text"><b>' + esc(namn) + '</b>'
+      + '<span>' + esc(barn.length ? barn.join(', ') : (f.email || '')) + '</span></span>';
+  }
 
   function ritaFamiljval() {
     const host = $('#familj-val');
@@ -1174,10 +1454,11 @@
 
   async function byggFamilj() {
     const namn = aktivNamn();
-    $('#tr-vem').textContent = namn ? namn.split(' ')[0] : '';
     $('#forslag-till').textContent = namn ? 'till ' + namn.split(' ')[0] : '';
     $('#tr-text').placeholder = namn ? 'Skriv till ' + namn.split(' ')[0] + '…' : 'Skriv till familjen…';
     ritaFamiljval();
+    ritaChattlista();
+    ritaChattTopp();
 
     if (!S.aktivFamilj) {
       $('#trad').innerHTML = tomt('Ingen familj matchad än', 'Nextrum kopplar ihop dig med en familj, sedan dyker de upp här.');
@@ -1195,7 +1476,12 @@
     ritaElevOversikt();
     fyllElevFormulär();
     fyllPassVal();
+    fyllÄmnesval();
     await Promise.all([laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPlanIFormulär()]);
+    /* korten och profilrubriken visar nästa pass och antal öppna
+       läxor, och inget av det är hämtat när de ritas första gången */
+    ritaElevkort();
+    ritaElevProfil();
     uppdateraFörslag();
   }
 
@@ -1210,12 +1496,13 @@
       tutorId: S.user.id,
       motpart: aktivNamn(),
       onFel: t => säg($('#tr-msg'), 'Meddelandet gick inte iväg: ' + t, false),
-      onNytt: async rader => {
-        const olästa = rader.filter(m => !m.read_at && m.sender_id !== S.user.id).length;
-        const märke = $('#tr-larm');
-        märke.hidden = !olästa;
-        märke.textContent = olästa ? olästa + ' ny' + (olästa > 1 ? 'a' : '') : '';
+      onNytt: async () => {
+        /* Antalet olästa står på raden i listan. I en tråd man
+           redan har uppe är "1 ny" en upplysning om något man
+           just läser. */
         if (S.familjer.length > 1) { S.olästa = await NXKontakt.olästa(S.user.id); ritaFamiljval(); }
+        await laddaSenaste();
+        ritaChattlista();
         ritaÖvSamtal();
       }
     });
@@ -1270,8 +1557,26 @@
     });
   });
 
+  /* Antalet öppna läxor per elev, för märket på elevkorten.
+     S.laxor innehåller bara den valda elevens läxor, så den går inte
+     att räkna på: märket hade bara kunnat stå på kortet man redan
+     klickat på, vilket är det enda kort man inte behöver det på. */
+  async function laddaLaxräkning() {
+    const { data, error } = await supa
+      .from('homework')
+      .select('student_id, status')
+      .eq('tutor_id', S.user.id)
+      .neq('status', 'klar');
+
+    if (error) return;
+    const räkning = {};
+    (data || []).forEach(h => { räkning[h.student_id] = (räkning[h.student_id] || 0) + 1; });
+    S.laxräkning = räkning;
+  }
+
   async function laddaLaxor() {
     const host = $('#lax-lista');
+    await laddaLaxräkning();
     $('#lax-antal').textContent = '';
     if (!S.aktivElev) {
       S.laxor = [];
@@ -1302,11 +1607,34 @@
     ritaÖvLaxor();
     ritaElevLista();
     ritaElevOversikt();
+    ritaLaxFilter();
 
-    host.innerHTML = data.map(h => NXStudie.läxRad(h, {
+    const urval = NXStudie.läxUrval(data, S.laxFilter);
+    if (!urval.length) {
+      host.innerHTML = tomt(S.laxFilter === 'klart' ? 'Inget avklarat än' : 'Inget öppet just nu',
+        S.laxFilter === 'klart' ? 'Läxor eleven markerat som klara samlas här.' : 'Eleven har gjort allt hen fått.');
+      return;
+    }
+
+    host.innerHTML = urval.map(h => NXStudie.läxRad(h, {
       atgarder: '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
     })).join('');
   }
+
+  /* Vilket läge läxlistan står i. Lever i S så att det överlever en
+     omritning — annars hoppar listan tillbaka varje gång någon
+     lägger till eller tar bort en läxa. */
+  function ritaLaxFilter() {
+    NXStudie.läxFilter({ host: $('#lax-filter'), laxor: S.laxor, valt: S.laxFilter });
+  }
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-laxfilter]');
+    if (!k) return;
+    S.laxFilter = k.dataset.laxfilter;
+    ritaLaxFilter();
+    laddaLaxor();
+  });
 
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-lax-bort]');
@@ -1370,7 +1698,9 @@
     const host = $('#prg-lista');
     $('#prg-antal').textContent = '';
     if (!S.aktivElev) {
+      S.progress = [];
       S.progressAntal = 0;
+      ritaTidigareOmraden();
       host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp.');
       return;
     }
@@ -1382,6 +1712,12 @@
       .order('subject').order('area');
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta områdena', felText(error)); return; }
+
+    /* samma rader används av chipsen i rapporten, så de sparas undan
+       i stället för att hämtas en gång till */
+    S.progress = data;
+    ritaTidigareOmraden();
+
     if (!data.length) {
       S.progressAntal = 0;
       host.innerHTML = tomt('Inga områden än', 'Lägg till det första ovanför — det är så familjen ser att det går framåt.');
@@ -2014,7 +2350,11 @@
       return;
     }
 
-    const rad = b => {
+    NXStudie.passLista({
+      host: host,
+      bokningar: S.bokningar,
+      tomtKommande: 'Inga kommande pass. Föreslå en tid under Kalender, eller vänta på att familjen bokar.',
+      rad: b => {
       const e = S.elever.find(x => x.id === b.student_id);
       const familj = S.familjer.find(f => f.id === b.parent_id);
       const mitt = b.created_by === S.user.id;
@@ -2042,27 +2382,8 @@
             : b.attendance === 'sen' ? 'Eleven kom sent' : null),
         atgarder: knappar
       }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
-    };
-
-    /* Genomförda pass växer varje vecka och krymper aldrig. Efter en
-       termin ligger trettio avklarade överst i vägen för de tre som
-       faktiskt är kvar att göra något åt. De ligger kvar — men bakom
-       en pil, och pilen minns vad man valde. */
-    const klara = S.bokningar.filter(b => b.status === 'completed');
-    const kvar = S.bokningar.filter(b => b.status !== 'completed');
-
-    host.innerHTML = (kvar.length
-        ? kvar.map(rad).join('')
-        : '<p class="xsmall" style="color:var(--muted-2);margin:0 0 4px">Inga pass framåt just nu.</p>')
-      + (klara.length
-        ? NXArbete.fallGrupp({
-            nyckel: 'larare.pass.klara',
-            etikett: 'Genomförda pass',
-            antal: klara.length + ' st',
-            namn: 'Dölj genomförda pass',
-            kropp: klara.map(rad).join('')
-          })
-        : '');
+      }
+    });
   }
 
   /* Passväljaren i rapportformuläret: bara den valda elevens pass
@@ -2079,7 +2400,9 @@
 
   $('#r-pass').addEventListener('change', e => {
     const b = S.bokningar.find(x => x.id === e.target.value);
-    if (b) $('#r-datum').value = b.wanted_date;
+    if (!b) return;
+    $('#r-datum').value = b.wanted_date;
+    sättÄmneFrånPass(b);
   });
 
   document.addEventListener('click', async e => {
@@ -2147,6 +2470,132 @@
      genomfört, sätter närvaron, kan skapa läxan — och därmed
      räknas timmen upp. Ett formulär, hela slingan.
      ============================================================ */
+  /* Valen ligger här i stället för i fyra fritextfält. Ett svar på
+     "hur gick det" går att räkna på; fyra stycken löptext gick bara
+     att läsa, en rapport i taget. */
+  const rap = { gick: null, amne: null, niva: 'pa_god_vag' };
+
+  const GICK = { mycket_bra: 'Mycket bra', bra: 'Bra', folja_upp: 'Behöver följas upp' };
+
+  /* aria-pressed är sanningen för skärmläsaren och för CSS:en, rap
+     är sanningen för koden. De sätts alltid tillsammans. */
+  function väljChip(host, värde) {
+    $$('[data-v]', host).forEach(b =>
+      b.setAttribute('aria-pressed', b.dataset.v === värde ? 'true' : 'false'));
+  }
+
+  $('#r-gick-val').addEventListener('click', e => {
+    const b = e.target.closest('[data-v]');
+    if (!b) return;
+    rap.gick = b.dataset.v;
+    väljChip($('#r-gick-val'), rap.gick);
+    rensa($('#r-msg'));
+  });
+
+  $('#r-amne-val').addEventListener('click', e => {
+    const b = e.target.closest('[data-v]');
+    if (!b) return;
+    /* går att klicka bort igen: ämnet är valfritt, och ett chip som
+       inte går att ångra tvingar fram ett svar man inte har */
+    rap.amne = (rap.amne === b.dataset.v) ? null : b.dataset.v;
+    väljChip($('#r-amne-val'), rap.amne);
+  });
+
+  $('#r-niva-val').addEventListener('click', e => {
+    const b = e.target.closest('[data-v]');
+    if (!b) return;
+    rap.niva = b.dataset.v;
+    väljChip($('#r-niva-val'), rap.niva);
+  });
+
+  /* Ämnena kommer från tre håll: dina egna, elevens, och det som
+     faktiskt stod i bokningarna. Ingen hårdkodad lista — den som
+     hjälper till i spanska ska inte välja mellan matte och NO. */
+  function ämnesFörslag() {
+    const e = elev();
+    const ur = []
+      .concat((S.tutorProfil && S.tutorProfil.subjects) || [])
+      .concat((e && e.subjects) || [])
+      .concat(S.bokningar.filter(b => b.student_id === S.aktivElev).map(b => b.subject));
+    const ut = [];
+    ur.forEach(x => {
+      const v = String(x || '').trim();
+      if (v && ut.indexOf(v) === -1) ut.push(v);
+    });
+    return ut;
+  }
+
+  function fyllÄmnesval() {
+    const host = $('#r-amne-val');
+    const lista = ämnesFörslag();
+    if (rap.amne && lista.indexOf(rap.amne) === -1) lista.push(rap.amne);
+
+    if (!lista.length) {
+      host.innerHTML = '<span class="xsmall" style="color:var(--bl-2)">'
+        + 'Lägg in dina ämnen under Min profil, så står de här.</span>';
+      return;
+    }
+    host.innerHTML = lista.map(a =>
+      '<button type="button" data-v="' + esc(a) + '" aria-pressed="'
+      + (a === rap.amne ? 'true' : 'false') + '">' + esc(a) + '</button>').join('');
+  }
+
+  $('#r-omrade-pa').addEventListener('change', e => {
+    $('#r-omrade-falt').hidden = !e.target.checked;
+  });
+
+  /* De områden eleven redan har. Att skriva "Ekvationer" på nytt för
+     hand varje gång ger dubbletter som ser ut som framsteg utan att
+     vara det — unikt är (elev, ämne, område), och stavfel bryter det. */
+  function ritaTidigareOmraden() {
+    const host = $('#r-omrade-tidigare');
+    if (!host) return;
+    const rader = (S.progress || []).slice(0, 8);
+    if (!rader.length) { host.innerHTML = ''; return; }
+    host.innerHTML = '<span class="xsmall" style="color:var(--bl-2)">Tidigare:</span>'
+      + rader.map((p, i) => '<button type="button" class="chip" data-tidigare="' + i + '">'
+          + esc(p.area) + '</button>').join('');
+  }
+
+  $('#r-omrade-tidigare').addEventListener('click', e => {
+    const b = e.target.closest('[data-tidigare]');
+    if (!b) return;
+    const p = (S.progress || [])[Number(b.dataset.tidigare)];
+    if (!p) return;
+    $('#r-omrade').value = p.area || '';
+    if (p.subject) { rap.amne = p.subject; fyllÄmnesval(); }
+    if (p.level) { rap.niva = p.level; }
+    väljChip($('#r-niva-val'), rap.niva);
+  });
+
+  /* Passet vet oftast vilket ämne det gällde. Det som står i
+     bokningen är ett bättre förval än tomt. */
+  function sättÄmneFrånPass(b) {
+    if (!b || !b.subject) return;
+    rap.amne = b.subject;
+    fyllÄmnesval();
+  }
+
+  function nollställRapport() {
+    rap.gick = null;
+    rap.amne = null;
+    rap.niva = 'pa_god_vag';
+    väljChip($('#r-gick-val'), null);
+    väljChip($('#r-niva-val'), rap.niva);
+    fyllÄmnesval();
+    $('#r-notes').value = '';
+    $('#r-fokus').value = '';
+    $('#r-omrade').value = '';
+    $('#r-trana').value = '';
+    $('#r-omrade-pa').checked = false;
+    $('#r-omrade-falt').hidden = true;
+    $('#r-lax').checked = false;
+    $('#r-lax-falt').hidden = true;
+    $('#r-lax-titel').value = '';
+    $('#r-lax-datum').value = '';
+    sättÄmneFrånPass(S.bokningar.find(x => x.id === $('#r-pass').value));
+  }
+
   $('#r-lax').addEventListener('change', e => { $('#r-lax-falt').hidden = !e.target.checked; });
 
   $('#rapport-form').addEventListener('submit', async e => {
@@ -2156,9 +2605,18 @@
 
     const anteckningar = $('#r-notes').value.trim();
     const laxTitel = $('#r-lax-titel').value.trim();
+    const områdePå = $('#r-omrade-pa').checked;
+    const område = $('#r-omrade').value.trim();
+    const träna = $('#r-trana').value.trim();
+
     const fel = kolla([
       { fel: !S.aktivElev, text: 'Välj en elev högst upp först.' },
+      { fel: !rap.gick, text: 'Välj hur lektionen gick.' },
       { fel: !anteckningar, text: 'Skriv något om vad ni gjorde.', falt: $('#r-notes') },
+      { fel: områdePå && !område, text: 'Skriv vilket område ni jobbade med, eller kryssa ur rutan.', falt: $('#r-omrade') },
+      /* progress_items är unikt per (elev, ämne, område). Utan ämne
+         finns ingen rad att uppdatera, bara en att skapa på nytt. */
+      { fel: områdePå && !rap.amne, text: 'Välj vilket ämne området hör till.' },
       { fel: $('#r-lax').checked && !laxTitel, text: 'Skriv vad läxan går ut på, eller kryssa ur rutan.', falt: $('#r-lax-titel') }
     ]);
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
@@ -2173,8 +2631,9 @@
         booking_id: passId,
         lesson_date: datum,
         raw_notes: anteckningar,
-        went_well: $('#r-gick').value.trim() || null,
-        needs_practice: $('#r-trana').value.trim() || null,
+        gick: rap.gick,
+        amne: rap.amne || null,
+        needs_practice: träna || null,
         next_focus: $('#r-fokus').value.trim() || null
       }).select('id').single();
 
@@ -2190,13 +2649,28 @@
         if (bErr) varning += ' Passet kunde dock inte markeras som genomfört: ' + felText(bErr);
       }
 
+      /* Samma formulär skriver utvecklingen. Förr låg den i ett eget
+         formulär längre ned, och därför fylldes den nästan aldrig i. */
+      if (områdePå && område && rap.amne) {
+        const { error: pErr } = await supa.from('progress_items').upsert({
+          student_id: S.aktivElev,
+          tutor_id: S.user.id,
+          subject: rap.amne,
+          area: område,
+          level: rap.niva,
+          comment: träna ? 'Behöver träna på: ' + träna : null,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'student_id,subject,area' });
+        if (pErr) varning += ' Kunskapsområdet kunde inte uppdateras: ' + felText(pErr);
+      }
+
       if ($('#r-lax').checked && laxTitel) {
         const { error: lErr } = await supa.from('homework').insert({
           student_id: S.aktivElev,
           tutor_id: S.user.id,
           title: laxTitel,
-          subject: $('#r-fokus').value.trim() || null,
-          instructions: $('#r-trana').value.trim() || null,
+          subject: rap.amne || null,
+          instructions: $('#r-fokus').value.trim() || null,
           due_date: $('#r-lax-datum').value || null
         });
         if (lErr) varning += ' Läxan kunde inte skapas: ' + felText(lErr);
@@ -2214,17 +2688,11 @@
         säg(msg, '✓ Rapporten är sparad. Föräldern ser den direkt.' + varning, !varning);
       }
 
-      $('#r-notes').value = '';
-      $('#r-gick').value = '';
-      $('#r-trana').value = '';
-      $('#r-fokus').value = '';
-      $('#r-lax').checked = false;
-      $('#r-lax-falt').hidden = true;
-      $('#r-lax-titel').value = '';
+      nollställRapport();
 
       await laddaPass();
       fyllPassVal();
-      await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaLaxor(), byggKalender()]);
+      await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaLaxor(), laddaProgress(), byggKalender()]);
     });
   });
 
@@ -2232,7 +2700,7 @@
     const host = $('#mina-rapporter');
     const { data, error } = await supa
       .from('lesson_reports')
-      .select('id, lesson_date, raw_notes, ai_feedback, went_well, needs_practice, next_focus, student_id')
+      .select('id, lesson_date, raw_notes, ai_feedback, gick, amne, needs_practice, next_focus, student_id')
       .eq('tutor_id', S.user.id).order('lesson_date', { ascending: false }).limit(20);
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta rapporterna', felText(error)); return; }
@@ -2241,8 +2709,12 @@
     $('#mina-rapporter-antal').textContent = data.length + ' st';
     host.innerHTML = data.map(r => {
       const e = S.elever.find(x => x.id === r.student_id);
+      const g = GICK[r.gick];
       return '<div class="report">'
-        + '<div class="report-head"><b>' + esc(e ? e.name : 'Elev') + '</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
+        + '<div class="report-head"><b>' + esc(e ? e.name : 'Elev') + '</b>'
+        + (g ? '<span class="rp-marke" data-v="' + esc(r.gick) + '"><i></i>' + esc(g) + '</span>' : '')
+        + (r.amne ? '<span class="rp-marke"><i></i>' + esc(r.amne) + '</span>' : '')
+        + '<time>' + esc(datumText(r.lesson_date)) + '</time></div>'
         + (r.ai_feedback
             ? '<p>' + esc(r.ai_feedback) + '</p>'
             : '<span class="raw-note">Inte omskriven, föräldern ser detta</span><p class="raw">' + esc(r.raw_notes) + '</p>')
@@ -2551,13 +3023,91 @@
 
   /* ============================================================
      EGEN PROFIL
+
+     Ämnena skrivs likadant som i bokningen och årskurserna likadant
+     som matchningen läser dem — "Åk 7–9", inte "sjuan till nian".
+     Matchningen tolkar siffror och ordet gymnasium, så listan här är
+     det som gör att den tolkningen alltid lyckas.
      ============================================================ */
+  const PR_AMNEN = ['Matematik', 'Svenska', 'Engelska',
+    'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap',
+    'Moderna språk', 'Programmering'];
+  const PR_ARSKURSER = ['Åk 1–3', 'Åk 4–6', 'Åk 7–9', 'Gymnasiet'];
+  const PR_FORMAT = ['Online', 'På plats'];
+
+  const PR_LISTOR = {
+    'pr-amne-val':    { nyckel: 'amnen',     fasta: PR_AMNEN },
+    'pr-arskurs-val': { nyckel: 'arskurser', fasta: PR_ARSKURSER },
+    'pr-format-val':  { nyckel: 'format',    fasta: PR_FORMAT }
+  };
+  const prVal = { amnen: [], arskurser: [], format: [] };
+
+  /* "Åk 7-9" med bindestreck och "Åk 7–9" med tankstreck är samma
+     årskurser för en människa och två olika för en array. Sparade
+     värden matchas därför mot listan utan hänsyn till streck,
+     mellanslag och versaler, och skrivs om till listans stavning. */
+  function prNyckel(v) {
+    return String(v || '').toLowerCase().replace(/[\u2010-\u2015]/g, '-')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  function prKanonisk(fasta, v) {
+    const n = prNyckel(v);
+    const träff = fasta.filter(x => prNyckel(x) === n)[0];
+    return träff || v;
+  }
+
+  function ritaPrVal(id) {
+    const cfg = PR_LISTOR[id];
+    const valda = prVal[cfg.nyckel];
+    /* Ett eget ämne som inte står i den fasta listan ska inte
+       försvinna bara för att det inte var förtryckt. */
+    const lista = cfg.fasta.concat(valda.filter(v => cfg.fasta.indexOf(v) === -1));
+    $('#' + id).innerHTML = lista.map(v =>
+      '<button type="button" data-v="' + esc(v) + '" aria-pressed="'
+      + (valda.indexOf(v) !== -1 ? 'true' : 'false') + '">' + esc(v) + '</button>').join('');
+  }
+
+  function ritaAllaPrVal() { Object.keys(PR_LISTOR).forEach(id => ritaPrVal(id)); }
+
+  Object.keys(PR_LISTOR).forEach(id => {
+    $('#' + id).addEventListener('click', e => {
+      const b = e.target.closest('[data-v]');
+      if (!b) return;
+      const lista = prVal[PR_LISTOR[id].nyckel];
+      const i = lista.indexOf(b.dataset.v);
+      if (i === -1) lista.push(b.dataset.v); else lista.splice(i, 1);
+      ritaPrVal(id);
+    });
+  });
+
+  function läggTillÄmne() {
+    const fält = $('#pr-amne-nytt');
+    const v = fält.value.trim();
+    if (!v) return;
+    /* jämför utan hänsyn till versaler, annars blir "spanska" och
+       "Spanska" två ämnen igen — precis det fältet skulle bort från */
+    const kanon = prKanonisk(PR_AMNEN, v);
+    const finns = prVal.amnen.some(x => prNyckel(x) === prNyckel(kanon));
+    if (!finns) prVal.amnen.push(kanon);
+    fält.value = '';
+    ritaPrVal('pr-amne-val');
+  }
+
+  $('#pr-amne-lagg').addEventListener('click', läggTillÄmne);
+  $('#pr-amne-nytt').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); läggTillÄmne(); }
+  });
+
   function fyllProfil() {
     const t = S.tutorProfil || {};
     $('#pr-skola').value = t.school || '';
     $('#pr-ort').value = t.city || '';
-    $('#pr-amnen').value = (t.subjects || []).join(', ');
     $('#pr-bio').value = t.bio || '';
+    prVal.amnen = (t.subjects || []).map(v => prKanonisk(PR_AMNEN, v));
+    prVal.arskurser = (t.grade_levels || []).map(v => prKanonisk(PR_ARSKURSER, v));
+    prVal.format = (t.formats || []).map(v => prKanonisk(PR_FORMAT, v));
+    ritaAllaPrVal();
   }
 
   $('#profil-form').addEventListener('submit', async e => {
@@ -2565,14 +3115,25 @@
     const msg = $('#pr-msg');
     rensa(msg);
     await medan(e.submitter, 'Sparar…', async () => {
-      const { error } = await supa.from('tutor_profiles').update({
+      const ändring = {
         school: $('#pr-skola').value.trim() || null,
         city: $('#pr-ort').value.trim() || null,
-        subjects: $('#pr-amnen').value.split(',').map(s => s.trim()).filter(Boolean),
+        subjects: prVal.amnen.slice(),
+        grade_levels: prVal.arskurser.slice(),
+        formats: prVal.format.slice(),
         bio: $('#pr-bio').value.trim() || null
-      }).eq('id', S.user.id);
+      };
+      const { error } = await supa.from('tutor_profiles').update(ändring).eq('id', S.user.id);
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
-      säg(msg, '✓ Profilen är sparad.', true);
+
+      /* Ämnena är förslagen i rapporten. Utan det här står gamla
+         ämnen kvar i chipsen tills sidan laddas om. */
+      Object.assign(S.tutorProfil || {}, ändring);
+      fyllÄmnesval();
+
+      säg(msg, prVal.amnen.length
+        ? '✓ Profilen är sparad.'
+        : '✓ Profilen är sparad. Utan ämnen kan vi inte föreslå dig för någon elev.', true);
     });
   });
 
@@ -3143,7 +3704,7 @@
     if (S.profil.role !== 'tutor') { visa('view-wrongrole'); return; }
 
     const tp = await supa.from('tutor_profiles')
-      .select('status, school, city, subjects, bio, age, hourly_rate')
+      .select('status, school, city, subjects, grade_levels, formats, bio, age, hourly_rate')
       .eq('id', S.user.id).maybeSingle();
     S.tutorProfil = tp.data;
 
@@ -3195,6 +3756,7 @@
        250px brus överst — precis den scrollning menyn ska bort med. */
     const MED_KONTEXT = ['laxor', 'lektioner', 'kalender', 'meddelanden'];
     S.sido = NXStudie.sidomeny({
+      fall: 'larare',
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
       onByt: sek => { $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1; }
     });
@@ -3251,6 +3813,7 @@
     S.avatarer = await M.avatarKarta(S.familjer.map(f => f.id));
     S.olästa = await NXKontakt.olästa(S.user.id);
     await laddaElever();
+    await laddaSenaste();
     fyllElevväljare();
     await laddaPass();
     await byggFamilj();
