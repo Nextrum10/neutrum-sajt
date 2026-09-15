@@ -1706,6 +1706,15 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .nx-mork .nx-samtycke{color:var(--nt-mut)}
 .nx-mork .nx-samtycke a{color:var(--nt-fg)}
 
+/* Glömd kryssruta. Outline i stället för ram och utfyllnad, så att
+   formuläret inte hoppar till när markeringen sätts och tas bort. */
+.nx-samtycke.fel{
+  outline:2px solid color-mix(in srgb,var(--acc) 55%,transparent);
+  outline-offset:10px;border-radius:6px;color:var(--bl);
+}
+.nx-samtycke.fel input{accent-color:var(--acc)}
+.nx-mork .nx-samtycke.fel{color:var(--nt-fg)}
+
 /* ============================================================
    SISTA STEGET
    ============================================================ */
