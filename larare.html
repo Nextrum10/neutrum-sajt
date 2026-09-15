@@ -180,7 +180,7 @@
 
         <span class="vy-sido-rubrik" aria-hidden="true">Arbete</span>
         <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.2 2"/></svg>Lektioner &amp; elever</a>
-        <a href="#kalender" data-sek="kalender"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Kalender</a>
+        <a href="#tider" data-sek="tider"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/><path d="m9.5 15 1.8 1.8L15 13"/></svg>Dina tider</a>
         <a href="#laxor" data-sek="laxor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Läxor &amp; material</a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Kontakt</span>
@@ -270,7 +270,7 @@
               <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
                 Föreslå en tid till familjen. De svarar med ett klick.
               </p>
-              <a class="btn btn-primary btn-sm btn-block" href="#kalender">Föreslå en tid</a>
+              <a class="btn btn-primary btn-sm btn-block" href="#tider">Föreslå en tid</a>
             </div>
 
           </div>
@@ -303,14 +303,26 @@
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="pass"
              id="panel-pass" aria-labelledby="flik-pass">
+                    <!-- ============ SCHEMA ============
+                         Låg under Kalender, som nu heter Dina tider
+                         och handlar om när du kan arbeta. Schemat
+                         handlar om vad som faktiskt är bokat, alltså
+                         hör det hemma bland passen. -->
+                    <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+                      <h5>Schema <em>alla dina pass</em></h5>
+                      <div id="schema"><div class="loading">Hämtar</div></div>
+                    </div>
+
                     <!-- ============ PASS ============ -->
                     <div class="dbox">
                       <h5>Dina pass <em id="pass-antal"></em></h5>
                       <div id="pass-lista"><div class="loading">Hämtar</div></div>
                     </div>
 
-                    <!-- ============ RAPPORT ============ -->
-                    <div class="dbox">
+                    <!-- ============ RAPPORT ============
+                         Rutan har ett id nu, så att "Skriv rapport"
+                         på en passrad kan ta en hit. -->
+                    <div class="dbox" id="rapport-ruta">
                       <h5>Efter passet</h5>
                       <p class="xsmall" style="color:var(--bl-2);margin-bottom:18px;line-height:1.6">
                         Rapporten är det familjen läser. Väljer du ett pass markeras det samtidigt som
@@ -564,20 +576,46 @@
            markera när du kan och att föreslå en tid är samma rörelse
            mot samma ruta.
            ============================================================ -->
-      <section class="vy-sek" data-sek="kalender" hidden>
+      <!-- ============================================================
+           DINA TIDER
+
+           Hette Kalender och gjorde tre saker i en sektion: visade
+           alla dina pass, lät dig markera när du kan, och lät dig
+           föreslå en tid till en familj. Tre uppgifter i samma ruta
+           blir ingen av dem.
+
+           Sektionen handlar nu om EN sak: när du kan arbeta. Det är
+           den enda uppgiften här som familjerna är beroende av —
+           utan dina tider kan ingen boka något alls.
+
+           Förslaget till en familj ligger kvar, som en andra ruta
+           under, eftersom det använder samma kalender: man väljer en
+           timme i rutan ovanför och skickar den nedanför.
+
+           Schemat över dina pass har flyttat till Lektioner & elever,
+           där passen hör hemma.
+           ============================================================ -->
+      <section class="vy-sek" data-sek="tider" hidden>
         <div class="vy-sek-topp">
           <div>
-            <h2>Kalender</h2>
-            <p>Markera när du kan och föreslå tider till familjerna — i samma kalender.</p>
+            <h2>Dina tider</h2>
+            <p>Lägg in när du kan arbeta. Familjerna kan bara boka inom de timmar du markerat — har du inga inlagda kan ingen boka dig.</p>
           </div>
         </div>
+
         <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-          <h5>Schema <em>alla dina pass</em></h5>
-          <div id="schema"><div class="loading">Hämtar</div></div>
+          <h5>När kan du? <em>tryck på en timme för att lägga till eller ta bort</em></h5>
+          <p class="kal-hjalp">
+            <b>Dina tider</b>
+            <span id="tid-sammanfattning"></span>
+          </p>
+          <div id="kalender"></div>
+          <div class="kal-fot" id="kal-fot"></div>
+          <div id="sparr-lista"></div>
         </div>
 
         <div class="dbox">
-          <h5>Föreslå en tid <em id="forslag-till"></em></h5>
+          <h5>Föreslå en tid till en familj <em id="forslag-till"></em></h5>
           <p class="xsmall" style="color:var(--muted-2);margin-bottom:18px;line-height:1.6">
             Familjen får förslaget i sin vy och svarar med ett klick. Tider som redan är bokade hos dig går inte att välja.
           </p>
@@ -625,14 +663,6 @@
             <span class="vy-forslag-et">Lediga tider</span>
             <div class="vy-forslag-rad" id="tid-forslag-rad"></div>
           </div>
-
-          <p class="kal-hjalp">
-            <b>Dina tider</b>
-            <span id="tid-sammanfattning"></span>
-          </p>
-          <div id="kalender"></div>
-          <div class="kal-fot" id="kal-fot"></div>
-          <div id="sparr-lista"></div>
 
           <div class="fgroup" style="margin-top:18px">
             <label for="f-not">Meddelande med förslaget <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
@@ -2361,13 +2391,25 @@
       const mitt = b.created_by === S.user.id;
       const kan = b.status === 'requested' || b.status === 'confirmed';
 
+      /* Har passet varit och saknar rapport är det EN sak man ska
+         göra med raden, och då ska den knappen vara den primära.
+         Flytta och Avboka hör till pass som ligger framåt — ett pass
+         som redan hållits går inte att flytta. */
+      const idag = isoFor(new Date());
+      const harVarit = kan && String(b.wanted_date || '') <= idag;
+
       let knappar = '';
-      if (b.status === 'requested' && !mitt) {
+      if (b.status === 'requested' && !mitt && !harVarit) {
         knappar += '<button class="btn btn-primary btn-sm" data-status="confirmed" data-id="' + b.id + '">Bekräfta</button>';
       }
+      if (harVarit) {
+        knappar += '<button class="btn btn-primary btn-sm" data-rapportera="' + b.id + '">Skriv rapport</button>';
+      }
+      if (kan && !harVarit) {
+        knappar += '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>';
+      }
       if (kan) {
-        knappar += '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>'
-                 + '<button class="btn btn-ghost btn-sm" data-status="cancelled" data-id="' + b.id + '">Avboka</button>';
+        knappar += '<button class="btn btn-ghost btn-sm" data-status="cancelled" data-id="' + b.id + '">Avboka</button>';
       }
 
       /* Platsen står direkt på raden, inte bara i detaljvyn. Ett pass
@@ -2377,7 +2419,9 @@
 
       return NXKontakt.passRad(b, {
         under: under,
-        vem: b.status === 'requested'
+        vem: harVarit
+          ? 'Passet har varit — rapporten saknas'
+          : b.status === 'requested'
           ? (mitt ? 'Ditt förslag — väntar på svar' : 'Familjen önskade den här tiden')
           : (b.attendance === 'franvarande' ? 'Eleven uteblev'
             : b.attendance === 'sen' ? 'Eleven kom sent' : null),
@@ -2389,15 +2433,67 @@
 
   /* Passväljaren i rapportformuläret: bara den valda elevens pass
      som inte redan är rapporterade. */
+  /* Pass som VÄNTAR på en rapport.
+
+     Listan innehöll förut varje bokat pass, också de som ligger en
+     månad fram. Man kunde alltså rapportera ett pass som inte hänt
+     — och eftersom rapporten sätter passet till genomfört försvann
+     det ur listan i samma stund, vilket såg ut som att det bokade
+     passet raderats.
+
+     Rätt urval är: passet är inte avbokat, det är inte redan
+     rapporterat (status completed sätts av rapporten), och det har
+     faktiskt ägt rum. Nyast först — man rapporterar gårdagens pass,
+     inte det från i förrgår. */
+  function passUtanRapport() {
+    const idag = isoFor(new Date());
+    return S.bokningar
+      .filter(b => b.student_id === S.aktivElev
+        && (b.status === 'requested' || b.status === 'confirmed')
+        && String(b.wanted_date || '') <= idag)
+      .sort((a, c) => String(c.wanted_date + (c.wanted_time || ''))
+        .localeCompare(String(a.wanted_date + (a.wanted_time || ''))));
+  }
+
   function fyllPassVal() {
     const val = $('#r-pass');
-    const mina = S.bokningar.filter(b =>
-      b.student_id === S.aktivElev && (b.status === 'requested' || b.status === 'confirmed'));
+    const mina = passUtanRapport();
 
-    val.innerHTML = '<option value="">Inget pass — fristående rapport</option>'
-      + mina.map(b => '<option value="' + b.id + '">' + esc(datumText(b.wanted_date))
-          + ' kl. ' + esc(b.wanted_time || '') + ' · ' + esc(b.subject || 'Pass') + '</option>').join('');
+    val.innerHTML = mina.map(b => '<option value="' + b.id + '">' + esc(datumText(b.wanted_date))
+          + ' kl. ' + esc(b.wanted_time || '') + ' · ' + esc(b.subject || 'Pass') + '</option>').join('')
+      /* Sist, inte först: det vanliga är att rapportera ett pass. En
+         fristående rapport är undantaget och ska inte vara förvalet. */
+      + '<option value="">Inget pass — fristående rapport</option>';
+
+    /* Är inget pass valt ännu, välj det senaste som väntar. Att låta
+       rutan stå på "fristående" när det finns tre orapporterade pass
+       är att be om en rapport som inte hör ihop med något. */
+    if (mina.length && !val.value) {
+      val.value = mina[0].id;
+      val.dispatchEvent(new Event('change'));
+    }
   }
+
+  /* "Skriv rapport" på en passrad. Väljer passet i formuläret och
+     tar en dit — i stället för att lämna en att leta rätt på samma
+     pass en gång till i en rullgardin man just scrollat förbi. */
+  document.addEventListener('click', e => {
+    const knapp = e.target.closest('[data-rapportera]');
+    if (!knapp) return;
+
+    const val = $('#r-pass');
+    val.value = knapp.dataset.rapportera;
+    val.dispatchEvent(new Event('change'));
+
+    const ruta = $('#rapport-ruta') || val.closest('.dbox');
+    if (ruta) {
+      ruta.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      /* Fokus på första fältet man faktiskt ska fylla i. Utan det
+         landar man på rutan men måste klicka en gång till. */
+      const forst = $('#r-gick-val button');
+      if (forst) setTimeout(() => forst.focus(), 380);
+    }
+  });
 
   $('#r-pass').addEventListener('change', e => {
     const b = S.bokningar.find(x => x.id === e.target.value);
@@ -3189,7 +3285,7 @@
                 + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
           under: [vem, b.subject].filter(Boolean).join(' · ')
         } : {
-          href: '#kalender',
+          href: '#tider',
           text: 'Inga pass inbokade',
           under: 'Föreslå en tid till en familj'
         }
@@ -3751,7 +3847,7 @@
     /* Elevraden hör bara hemma där innehållet faktiskt gäller en
        vald elev eller familj. På Översikt och kontosidorna är den
        250px brus överst — precis den scrollning menyn ska bort med. */
-    const MED_KONTEXT = ['laxor', 'lektioner', 'kalender', 'meddelanden'];
+    const MED_KONTEXT = ['laxor', 'lektioner', 'tider', 'meddelanden'];
     S.sido = NXStudie.sidomeny({
       fall: 'larare',
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
@@ -3772,10 +3868,13 @@
       material: ['laxor', 'material'],
       ersattning: ['statistik', 'ersattning'],
       installningar: ['profil', 'konto'],
-      /* #tider är bokmärkt hos dem som hade veckorutnätet framme.
-         Det finns ingen flik kvar att peka på — kalendern ÄR tiderna
-         nu — så aliaset har bara en del. */
-      tider: ['kalender']
+      /* Vänt håll sedan sektionen bytte namn. Den hette Kalender,
+         heter Dina tider, och #kalender är bokmärkt hos dem som
+         använde den förut — plus att gamla länkar i vyn pekade dit.
+         Aliaset får dem att landa rätt i stället för på en tom sida.
+         Det som INTE går är att låta båda finnas: ett alias som
+         pekar på sig självt blir en oändlig omdirigering. */
+      kalender: ['tider']
     };
     function följHash() {
       const [huvud, flik] = String(location.hash || '').replace(/^#/, '').split('/');

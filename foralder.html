@@ -200,6 +200,7 @@
         <a href="#oversikt" data-sek="oversikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Översikt</a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Studier</span>
+        <a href="#boka" data-sek="boka"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M12 13v4M10 15h4"/></svg>Boka pass</a>
         <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Mina lektioner</a>
         <a href="#uppgifter" data-sek="uppgifter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Uppgifter &amp; material</a>
         <a href="#utveckling" data-sek="utveckling"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15.5 7H20v4.5"/></svg>Min utveckling</a>
@@ -236,18 +237,6 @@
              och en gång som "Kvar att göra". Numren finns kvar allihop
              i "I siffror" nedanför, en gång var. -->
 
-        <!-- ============ BOKA ============
-             Bokningen låg förut under Mina lektioner, och Översikt hade
-             ett kort som bara länkade dit. Ett steg i vägen för det man
-             oftast kommer hit för att göra. Nu står den här.
-
-             Widgeten ritas av NXArbete.bokning; markupen är tom med
-             flit. -->
-        <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-          <h5>Boka nästa pass <em id="boka-hos"></em></h5>
-          <div id="boka-inner"><div class="loading">Hämtar</div></div>
-        </div>
-
         <!-- ============ STATISTIK ============
              Låg under Min utveckling. Men "hur går det" är en
              översiktsfråga, och Utveckling handlar om kunskapsområden
@@ -264,6 +253,38 @@
         </div>
       </section>
       <!-- ============================================================
+           BOKA PASS
+
+           Bokningen har flyttat tre gånger, och det är inget bra
+           tecken. Den låg under Mina lektioner, flyttades till
+           Översikt för att den var ett steg bort — och stod då mitt
+           i en sida som i övrigt handlar om att LÄSA. Att boka är
+           det enda på hela sidan som tar flera beslut i rad, och
+           det tålde inte att ligga inklämt mellan nyckeltal och en
+           graf.
+
+           Nu en egen sektion, direkt efter Översikt, med bokningen
+           som sidans enda uppgift. Widgeten ritas av
+           NXArbete.bokning; markupen är tom med flit.
+           ============================================================ -->
+      <section class="vy-sek" data-sek="boka" hidden>
+        <div class="vy-sek-topp">
+          <div>
+            <h2>Boka pass <em id="boka-hos"></em></h2>
+            <p>Välj ämne, tid och upplägg. Ni betalar i efterskott, först när passet är genomfört.</p>
+          </div>
+          <label class="vy-barnvaxel" data-barnvaxel hidden>
+            <span>Bokar åt</span>
+            <select class="sel sel-sm" aria-label="Byt barn"></select>
+          </label>
+        </div>
+
+        <div class="dbox">
+          <div id="boka-inner"><div class="loading">Hämtar</div></div>
+        </div>
+      </section>
+
+      <!-- ============================================================
            MINA LEKTIONER
            Var två sektioner: "Min studieplan" och "Mina lektioner".
            De hörde ihop hela tiden — planen säger vad passen ska
@@ -274,7 +295,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Mina lektioner</h2>
-            <p>Era pass, planen bakom dem och vad som hände på varje. Bokningen står på Översikt.</p>
+            <p>Era pass, planen bakom dem och vad som hände på varje. Nya pass bokar ni under Boka pass.</p>
           </div>
           <!-- Barnväljaren. Tom och osynlig när familjen har ett
                enda barn, vilket de flesta har — då finns inget att
@@ -1441,7 +1462,7 @@
     ritaNästaPass();
     ritaStatistik();
     byggSchema();
-    if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Boka en ledig tid på Översikt, så står passet här.'); return; }
+    if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Boka en tid under Boka pass, så står passet här.'); return; }
 
     const idag = new Date().toISOString().slice(0, 10);
     const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
@@ -1450,7 +1471,7 @@
     NXStudie.passLista({
       host: host,
       bokningar: S.bokningar,
-      tomtKommande: 'Inga kommande pass. Boka en ledig tid på Översikt, så står passet här.',
+      tomtKommande: 'Inga kommande pass. Boka en tid under Boka pass, så står passet här.',
       rad: b => {
       const barn = S.barn.find(x => x.id === b.student_id);
       const kommande = b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed');
@@ -1734,7 +1755,9 @@
                 + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
           under: [b.subject, barn ? barn.name : null].filter(Boolean).join(' · ')
         } : {
-          href: '#oversikt',
+          /* Kortet ska ta en någonstans. #oversikt är sidan man
+             redan står på — ett klick som inte gör något. */
+          href: '#boka',
           text: 'Inga pass inbokade',
           under: 'Boka en tid hos er studiehjälpare'
         }
