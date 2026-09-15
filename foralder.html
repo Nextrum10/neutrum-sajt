@@ -1533,6 +1533,28 @@
     if (!hus) return;
     const poster = [];
 
+    /* Föreslagen tid FÖRST. Det är den enda notisen som väntar på
+       ett svar från familjen — meddelanden och läxor kan läsas när
+       som helst, men en föreslagen tid blockerar studiehjälparens
+       kalender tills någon säger ja eller nej. */
+    const föreslagna = (S.bokningar || []).filter(b =>
+      b.status === 'requested' && b.created_by && b.created_by !== S.user.id);
+    if (föreslagna.length) {
+      const f = föreslagna[0];
+      poster.push({
+        rubrik: föreslagna.length > 1
+          ? föreslagna.length + ' föreslagna tider'
+          : 'Ny tid föreslagen',
+        text: föreslagna.length > 1
+          ? 'Er studiehjälpare väntar på svar.'
+          : (datumText(f.wanted_date)
+              + (f.wanted_time ? ' kl. ' + String(f.wanted_time).slice(0, 5) : '')
+              + (f.subject ? ' · ' + f.subject : '')
+              + ' — svara ja eller nej.'),
+        mål: '#pass-lista'
+      });
+    }
+
     if (S.olästaAntal) {
       poster.push({
         rubrik: S.olästaAntal + (S.olästaAntal > 1 ? ' nya meddelanden' : ' nytt meddelande'),
@@ -1552,15 +1574,6 @@
       });
     }
 
-    const föreslagna = (S.bokningar || []).filter(b =>
-      b.status === 'requested' && b.created_by && b.created_by !== S.user.id).length;
-    if (föreslagna) {
-      poster.push({
-        rubrik: föreslagna > 1 ? föreslagna + ' föreslagna tider' : 'En föreslagen tid',
-        text: 'Er studiehjälpare väntar på svar.',
-        mål: '#pass-lista'
-      });
-    }
 
     NXStudie.notiser(hus, poster);
   }

@@ -652,7 +652,11 @@
           + (a.why.length > 90 ? '…' : '') + '</span>'
         : '<span style="color:var(--bl-3)">—</span>' },
       { namn: 'Inkom', rita: a => '<span class="adm-tal">' + esc(kortDatum(a.created_at)) + '</span>' },
-      { namn: 'Läge', höger: true, rita: a => väljare('ans', ANS_LAGE, a.status, 'data-ans="' + a.id + '"') }
+      { namn: 'Läge', höger: true, rita: a => väljare('ans', ANS_LAGE, a.status, 'data-ans="' + a.id + '"')
+        /* Vägen in i poolen. Utan den här knappen blir en ansökan
+           aldrig en studiehjälpare som går att matcha — den byter
+           bara etikett i en lista. */
+        + ' <button class="btn btn-ghost btn-sm" data-ans-pool="' + a.id + '">Ta in i poolen</button>' }
     ], rader, tomtText(sök || st, 'Ingen ansökan matchar filtret', 'Inga ansökningar än'));
   }
 
@@ -2196,6 +2200,135 @@
   ].forEach(([sel, fn]) => {
     const el = $(sel);
     if (el) el.addEventListener('input', fn);
+  });
+
+  /* ============================================================
+     FRÅN ANSÖKAN TILL POOL
+
+     Poolen är `tutor_profiles` med status 'approved' — det är exakt
+     det urvalet vyn matchningsunderlag lämnar ut, och alltså det
+     matchningen kan välja ur.
+
+     En ansökan i `applications` är inte en profil. Den kunde förut
+     bara byta etikett i en lista, och "Godkänd" på en ansökan gjorde
+     ingenting åt vem som gick att matcha. Poolen var därför alltid
+     tom utom för dem som råkat fylla i sin profil själva.
+
+     TIMPENNINGEN ÄR OBLIGATORISK HÄR
+
+     Utan hourly_rate hoppar edge-funktionen fakturering över
+     studiehjälparen helt när ersättningar räknas ut. Hen håller pass
+     och får ingen utbetalning, och det upptäcks först när någon
+     frågar var pengarna blev av. Bättre att kräva talet i samma
+     stund som personen släpps in.
+     ============================================================ */
+  function tutorVal(valt) {
+    /* Bara konton som INTE redan är i poolen. Att erbjuda en redan
+       godkänd studiehjälpare i listan är att be om att någons ämnen
+       skrivs över av en ansökan från en annan person. */
+    const kandidater = Object.values(S.personer)
+      .filter(p => p.role === 'tutor')
+      .filter(p => (S.tutorProfiler[p.id] || {}).status !== 'approved')
+      .sort((a, b) => String(a.full_name || a.email || '')
+        .localeCompare(String(b.full_name || b.email || ''), 'sv'));
+
+    if (!kandidater.length) {
+      return '<p class="xsmall" style="color:var(--acc-text);margin:0">'
+        + 'Inga konton att koppla till. Den sökande måste registrera sig som '
+        + 'studiehjälpare på nextrum.se först — sedan dyker hen upp här.</p>';
+    }
+
+    return '<select class="inp" id="ap-konto">'
+      + '<option value="">Välj konto…</option>'
+      + kandidater.map(t => '<option value="' + esc(t.id) + '"'
+          + (t.id === valt ? ' selected' : '') + '>'
+          + esc(t.full_name || t.email || t.id) + (t.email ? ' · ' + esc(t.email) : '')
+          + '</option>').join('')
+      + '</select>';
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-ans-pool]');
+    if (!knapp) return;
+
+    const ans = S.ansokningar.find(a => a.id === knapp.dataset.ansPool);
+    if (!ans) return;
+
+    const trolig = Object.values(S.personer).find(p =>
+      p.role === 'tutor' && p.email
+      && String(p.email).toLowerCase() === String(ans.email || '').toLowerCase());
+
+    const ruta = document.createElement('div');
+    ruta.className = 'nx-fraga';
+    ruta.innerHTML =
+      '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="ap-t">'
+      + '<h3 id="ap-t">Ta in ' + esc(ans.name || 'den sökande') + ' i poolen</h3>'
+      + '<p>Profilen blir godkänd och dyker upp i matchningen direkt. '
+      + 'Uppgifterna nedan kommer från ansökan — ändra det som behöver ändras.</p>'
+      + '<div class="fgroup"><label for="ap-konto">Konto</label>' + tutorVal(trolig && trolig.id) + '</div>'
+      + '<div class="ag-faltrad" style="margin-top:12px">'
+      + '<div class="fgroup"><label for="ap-amnen">Ämnen (kommaseparerat)</label>'
+      + '<input class="inp" id="ap-amnen" value="' + esc(ans.subjects || '') + '"></div>'
+      + '<div class="fgroup"><label for="ap-ort">Ort</label>'
+      + '<input class="inp" id="ap-ort" value="Stockholm"></div>'
+      + '<div class="fgroup"><label for="ap-timpenning">Timpenning, kronor</label>'
+      + '<input class="inp" id="ap-timpenning" type="number" min="1" step="1" inputmode="numeric" placeholder="t.ex. 180"></div>'
+      + '</div>'
+      + '<p class="xsmall" style="color:var(--muted-2);margin-top:12px;line-height:1.6">'
+      + 'Utan timpenning räknas ingen ersättning ut — passen hålls men utbetalningen uteblir.</p>'
+      + '<p class="ok-msg" id="ap-msg"></p>'
+      + '<div class="nx-fraga-knappar">'
+      + '<button type="button" class="btn btn-ghost" data-ap-stang>Avbryt</button>'
+      + '<button type="button" class="btn btn-primary" id="ap-godkann">Ta in i poolen</button>'
+      + '</div></div>';
+
+    document.body.appendChild(ruta);
+    document.body.style.overflow = 'hidden';
+    const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
+    ruta.addEventListener('click', ev => {
+      if (ev.target === ruta || ev.target.closest('[data-ap-stang]')) stäng();
+    });
+
+    $('#ap-godkann', ruta).addEventListener('click', async () => {
+      const msg = $('#ap-msg', ruta);
+      rensa(msg);
+      const konto = $('#ap-konto', ruta) ? $('#ap-konto', ruta).value : '';
+      const timpenning = Number($('#ap-timpenning', ruta).value);
+      if (!konto) { säg(msg, 'Välj vilket konto ansökan hör till.', false); return; }
+      if (!timpenning || timpenning < 1) { säg(msg, 'Fyll i timpenningen.', false); return; }
+
+      await medan($('#ap-godkann', ruta), 'Tar in…', async () => {
+        /* Ämnena lagras som en array. Fritexten från ansökan delas på
+           komma; tomma bitar bort, annars blir "matte, " till två ämnen
+           varav ett heter ingenting. */
+        const ämnen = String($('#ap-amnen', ruta).value || '')
+          .split(',').map(x => x.trim()).filter(Boolean);
+
+        const { error } = await supa.from('tutor_profiles').update({
+          status: 'approved',
+          subjects: ämnen.length ? ämnen : null,
+          city: $('#ap-ort', ruta).value.trim() || null,
+          school: ans.school || null,
+          age: ans.age || null,
+          availability: ans.availability || null,
+          hourly_rate: timpenning,
+          tjanster: (ans.tjanster && ans.tjanster.length) ? ans.tjanster : ['laxhjalp']
+        }).eq('id', konto);
+
+        if (error) { säg(msg, 'Kunde inte ta in: ' + felText(error), false); return; }
+
+        await supa.from('applications').update({ status: 'approved' }).eq('id', ans.id);
+        ans.status = 'approved';
+
+        stäng();
+        await hämtaAllt();
+        ritaAnsokningar();
+        ritaStudiehjalpare();
+        await hämtaMatchunderlag();
+        ritaMatchning();
+        await ritaÖversikt();
+      });
+    });
   });
 
   /* ============================================================
