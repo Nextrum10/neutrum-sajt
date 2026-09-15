@@ -1021,8 +1021,8 @@
           <div class="vy-flikar" role="tablist" aria-label="Delar av systemet">
             <button class="vy-flik" type="button" role="tab" data-flik="integrationer"
                     id="flik-integrationer" aria-controls="panel-integrationer">Integrationer</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="pris"
-                    id="flik-pris" aria-controls="panel-pris">Pris</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="tjanster"
+                    id="flik-tjanster" aria-controls="panel-tjanster">Tjänster &amp; priser</button>
             <button class="vy-flik" type="button" role="tab" data-flik="adminanvandare"
                     id="flik-adminanvandare" aria-controls="panel-adminanvandare">Adminanvändare</button>
             <button class="vy-flik" type="button" role="tab" data-flik="fel"
@@ -1071,25 +1071,35 @@
             <div id="int-kort"><div class="loading">Hämtar</div></div>
           </div>
 
-          <div class="vy-flik-panel" role="tabpanel" data-flik="pris"
-               id="panel-pris" aria-labelledby="flik-pris" hidden>
-            <div class="dbox vy-sek-smal">
-              <h5>Pris per timme <em id="pris-uppdaterad"></em></h5>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:18px">
-                Gäller nya fakturarader. Redan skapade rader har sitt pris sparat på
-                sig — en prisändring får aldrig ändra vad någon redan fakturerats.
-                Ändrar du här måste priset också ändras på prissidan, i FAQ:n och i
-                användarvillkoren. Ett pris som står olika på tre ställen är en tvist.
+          <!-- ============ TJÄNSTER & PRISER ============
+               Tabellen tjanster (schema-v18.sql) är källan till vad
+               Nextrum erbjuder. Den ersatte den gamla Pris-fliken,
+               som skrev direkt i prissattning — nu speglar en trigger
+               läxhjälpens pris dit, så att edge-funktionen fakturering
+               fortsätter läsa det den alltid läst. Två redigerare för
+               samma tal hade förr eller senare gett två olika tal.
+
+               `aktiv` är det enda som styr vad besökare ser. En tjänst
+               utan pris ska aldrig kunna slås på, och knappen nedan
+               vägrar det. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="tjanster"
+               id="panel-tjanster" aria-labelledby="flik-tjanster" hidden>
+            <div class="dbox">
+              <h5>Vad vi erbjuder <em id="tj-uppdaterad"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:6px">
+                <b>Aktiv</b> avgör vad familjer och sökande ser. Slår du på en tjänst dyker
+                den upp i intresseanmälan, i ansökan och i bokningen — direkt, utan att
+                någon behöver ändra i koden.
               </p>
-              <form id="pris-form">
-                <div class="fgroup">
-                  <label for="pris-kr">Kronor per timme</label>
-                  <input class="inp" id="pris-kr" type="number" min="1" max="5000" step="1" inputmode="numeric">
-                </div>
-                <button class="btn btn-primary btn-sm" type="submit" id="pris-spara">Spara priset</button>
-                <p class="ok-msg" id="pris-msg"></p>
-              </form>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:0">
+                Priset gäller <b>nya fakturarader</b>. Redan skapade rader har sitt pris
+                sparat på sig; en prisändring får aldrig ändra vad någon redan fakturerats.
+                Ändrar du läxhjälpens pris måste det också ändras på prissidan, i FAQ:n och
+                i användarvillkoren — ett pris som står olika på tre ställen är en tvist.
+              </p>
             </div>
+
+            <div id="tj-kort" style="margin-top:clamp(16px,1.8vw,22px)"><div class="loading">Hämtar</div></div>
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="fel"
@@ -1123,6 +1133,7 @@
 <script src="nextrum-config.js"></script>
 <script src="nextrum-fel.js"></script>
 <script src="nextrum-app.js"></script>
+<script src="nextrum-tjanster.js"></script>
 <script src="nextrum-kontakt.js"></script>
 <script src="nextrum-studie.js"></script>
 <script src="nextrum-arbetsyta.js"></script>

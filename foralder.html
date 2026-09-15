@@ -625,6 +625,7 @@
 <script src="nextrum-config.js"></script>
 <script src="nextrum-fel.js"></script>
 <script src="nextrum-app.js"></script>
+<script src="nextrum-tjanster.js"></script>
 <script src="nextrum-kontakt.js"></script>
 <script src="nextrum-studie.js"></script>
 <script src="nextrum-arbetsyta.js"></script>
@@ -1527,6 +1528,7 @@
         student_id: S.valtBarn,
         created_by: S.user.id,
         subject: v.amne,
+        tjanst: NXTjanster.standard(),
         format: v.format,
         location: v.plats || null,
         wanted_date: v.datum,
@@ -1887,6 +1889,11 @@
     if (S.profil.match_status !== 'matched') { visa('view-locked'); return; }
 
     visa('view-app');
+
+    /* Tjänstekatalogen först. Bokningen skriver `tjanst` på varje
+       rad, och passlistan märker ut den när fler än en tjänst är
+       aktiv — båda behöver katalogen innan de ritar något. */
+    await NXTjanster.ladda();
 
     /* Flikarna först. Sidomenyn ropar på dem när den byter sektion,
        och en flikrad som inte finns än hade svalt det anropet. */

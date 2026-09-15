@@ -993,6 +993,7 @@
 <script src="nextrum-config.js"></script>
 <script src="nextrum-fel.js"></script>
 <script src="nextrum-app.js"></script>
+<script src="nextrum-tjanster.js"></script>
 <script src="nextrum-kontakt.js"></script>
 <script src="nextrum-studie.js"></script>
 <script src="nextrum-arbetsyta.js"></script>
@@ -1985,6 +1986,7 @@
           created_by: S.user.id,
           series_id: serie,
           subject: $('#f-amne').value,
+          tjanst: NXTjanster.standard(),
           format: $('#f-format').value,
           location: $('#f-format').value === 'På plats'
             ? ($('#f-plats').value.trim() || null) : null,
@@ -3734,6 +3736,11 @@
     }
 
     visa('view-app');
+
+    /* Tjänstekatalogen först. Bokningen skriver `tjanst` på varje
+       rad, och passlistan märker ut den när fler än en tjänst är
+       aktiv — båda behöver katalogen innan de ritar något. */
+    await NXTjanster.ladda();
 
     /* Flikarna först. Sidomenyn och hash-översättningen ropar på dem
        när de byter sektion, och en flikrad som inte finns än hade

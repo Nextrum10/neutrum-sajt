@@ -229,6 +229,11 @@
           </div>
           <div class="pay-field"><label for="ap-email">E-post</label><input class="inp" id="ap-email" name="epost" type="email" required autocomplete="email"></div>
           <div class="pay-field"><label for="ap-phone">Telefon</label><input class="inp" id="ap-phone" name="telefon" type="tel" autocomplete="tel" placeholder="Valfritt"></div>
+          <!-- Vilka uppdrag du vill ta. Ritas av NXTjanster ur
+               tabellen tjanster; bara aktiva tjänster med for_jobb
+               syns, så listan växer av sig själv den dag barnvakt
+               och försäljning slås på i adminvyn. -->
+          <div class="pay-field" id="ap-tjanster-falt"></div>
           <div class="pay-field"><label for="ap-school">Skola &amp; program</label><input class="inp" id="ap-school" name="skola" placeholder="t.ex. gymnasiet, naturvetenskapsprogrammet"></div>
           <div class="pay-field"><label for="ap-subj">Ämnen du vill hjälpa till med</label><input class="inp" id="ap-subj" name="amnen" placeholder="t.ex. matematik, fysik, engelska"></div>
           <div class="pay-field"><label for="ap-avail">Tider som funkar för dig</label><input class="inp" id="ap-avail" name="tider" placeholder="t.ex. vardagar efter 16, helger"></div>
@@ -443,6 +448,7 @@
 <script src="nextrum-images.js"></script>
 <script src="nextrum-fel.js"></script>
 <script src="nextrum-app.js"></script>
+<script src="nextrum-tjanster.js"></script>
 <script src="nextrum-motion.js"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
@@ -485,6 +491,20 @@
      intresseanmälan. Utan krävSamtycke gick ansökan igenom fastän
      rutan var okryssad — och utan extra försvann telefon och
      erfarenhet, eftersom de saknar egen kolumn. */
+  /* Tjänstevalet ritas in innan någon hinner skicka. Med bara
+     läxhjälp aktiv blir det en rad text och ett dolt fält, och
+     kopplaAnsökan plockar upp värdet ur formuläret precis som alla
+     andra fält. */
+  NXTjanster.ladda().then(() => {
+    NXTjanster.valjare({
+      host: $('#ap-tjanster-falt'),
+      falt: 'tjanster',
+      typ: 'jobb',
+      flera: true,
+      valt: ['laxhjalp']
+    });
+  });
+
   NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'), {
     krävSamtycke: '#ap-gdpr',
     cv: '#ap-cv',

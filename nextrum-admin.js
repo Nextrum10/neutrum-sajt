@@ -50,7 +50,7 @@
     tutorProfiler: {}, // id → tutor_profiles-rad
     leads: [], ansokningar: [], kontakt: [], bokningar: [],
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [],
-    integrationer: [], pris: null, saknasV13: [],
+    integrationer: [], pris: null, tjanster: [], saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
     matchunderlag: [], matchunderlagFel: null, valdElev: null, kalender: null,
     detaljCache: {}
@@ -185,17 +185,18 @@
     S.tutorProfiler = {};
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
-    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, pris, integ, rapporter] = await Promise.all([
+    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, pris, integ, tj, rapporter] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
-      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, format, wanted_date, wanted_time, duration_min, status, attendance, created_at').order('wanted_date', { ascending: false }),
+      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at').order('wanted_date', { ascending: false }),
       supa.from('invoices').select('*').order('period', { ascending: false }),
       supa.from('payouts').select('*').order('period', { ascending: false }),
       supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400),
       supa.from('klientfel').select('*').order('created_at', { ascending: false }).limit(100),
       supa.from('prissattning').select('*').limit(1),
       supa.from('integrationer').select('*'),
+      supa.from('tjanster').select('*').order('ordning'),
       /* Rapporterna används bara av aktivitetsflödet, och bara de
          senaste. Ett "lektion genomförd" i flödet är ett pass som
          faktiskt rapporterats, inte ett pass vars datum passerat. */
@@ -212,6 +213,7 @@
     S.klientfel = fel.data || [];
     S.pris = (pris.data || [])[0] || null;
     S.integrationer = integ.data || [];
+    S.tjanster = tj.data || [];
     S.rapporter = rapporter.data || [];
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
@@ -1840,12 +1842,69 @@
         : '');
   }
 
+  /* Priset redigeras inte längre här — det gör tjänstekatalogen
+     nedan. Kvar är talet i månadskörningens sammanfattning, som
+     visar vad fakturering FAKTISKT kommer att räkna med: värdet i
+     prissattning, dit triggern speglar läxhjälpens pris. Läser man
+     tjanster här i stället skulle rutan visa vad någon nyss skrev
+     medan funktionen räknade på något annat. */
   function ritaPris() {
     const öre = S.pris ? S.pris.pris_per_timme_ore : (NX.CFG.PRIS_PER_TIMME || 379) * 100;
-    $('#pris-kr').value = Math.round(öre / 100);
-    $('#kor-pris').textContent = kronor(öre);
-    $('#pris-uppdaterad').textContent = S.pris && S.pris.uppdaterad
-      ? 'ändrat ' + kortDatum(S.pris.uppdaterad) : '';
+    const ruta = $('#kor-pris');
+    if (ruta) ruta.textContent = kronor(öre);
+  }
+
+  /* ------------------------------------------------------------
+     TJÄNSTEKATALOGEN
+
+     Ett kort per tjänst. `aktiv` är det enda som avgör vad
+     besökare ser, så den kryssrutan är sidans vassaste kontroll —
+     och den vägrar slås på för en tjänst utan pris. En tjänst som
+     går att boka men inte prissätta blir en faktura ingen kan
+     skriva.
+     ------------------------------------------------------------ */
+  function ritaTjanster() {
+    const host = $('#tj-kort');
+    if (!host) return;
+
+    if (!S.tjanster.length) {
+      host.innerHTML = tomt('Tjänstekatalogen saknas',
+        'Kör schema-v18.sql i Supabase → SQL Editor. Tills dess är läxhjälp den enda tjänsten, '
+        + 'vilket råkar vara sant.');
+      return;
+    }
+
+    const senast = S.tjanster
+      .map(t => t.uppdaterad).filter(Boolean).sort().pop();
+    const stämpel = $('#tj-uppdaterad');
+    if (stämpel) stämpel.textContent = senast ? 'ändrat ' + kortDatum(senast) : '';
+
+    host.innerHTML = '<div class="adm-koppling">' + S.tjanster.map(t => {
+      const kr = t.pris_per_timme_ore ? Math.round(t.pris_per_timme_ore / 100) : '';
+      const märken = [
+        t.for_kund ? pill('Bokas av kund', 'ar-klar') : '',
+        t.for_jobb ? pill('Sökbart uppdrag', 'ar-vantar') : ''
+      ].filter(Boolean).join(' ');
+
+      return '<div class="adm-koppling-kort">'
+        + '<h6>' + esc(t.namn)
+        + '<span class="adm-und" style="font-family:var(--f-mono);font-size:10px;margin-left:auto">'
+        + esc(t.kod) + '</span></h6>'
+        + '<p>' + esc(t.kort || '') + '</p>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:6px">' + märken + '</div>'
+        + '<div class="fgroup" style="margin:0">'
+        + '<label for="tj-pris-' + esc(t.kod) + '">Kronor per timme</label>'
+        + '<input class="inp" id="tj-pris-' + esc(t.kod) + '" data-tj-pris="' + esc(t.kod) + '"'
+        + ' type="number" min="1" max="5000" step="1" inputmode="numeric"'
+        + ' placeholder="Inte bestämt" value="' + kr + '">'
+        + '</div>'
+        + '<label class="ag-kryss" style="margin:0">'
+        + '<input type="checkbox" data-tj-aktiv="' + esc(t.kod) + '"' + (t.aktiv ? ' checked' : '') + '> '
+        + 'Aktiv — syns för besökare</label>'
+        + '<button class="btn btn-primary btn-sm" data-tj-spara="' + esc(t.kod) + '">Spara</button>'
+        + '<p class="ok-msg" data-tj-msg="' + esc(t.kod) + '" style="margin:0"></p>'
+        + '</div>';
+    }).join('') + '</div>';
   }
 
   function ritaFel() {
@@ -2084,31 +2143,88 @@
     if (el) el.addEventListener('input', fn);
   });
 
-  /* ============ priset ============ */
-  $('#pris-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const msg = $('#pris-msg');
+  /* ============ tjänsterna ============
+     Ett spara per kort. Delegerat, eftersom korten ritas om varje
+     gång något sparas — en lyssnare per knapp hade tappats bort vid
+     första omritningen. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-tj-spara]');
+    if (!knapp) return;
+
+    const kod = knapp.dataset.tjSpara;
+    const rad = S.tjanster.find(t => t.kod === kod);
+    const msg = $('[data-tj-msg="' + kod + '"]');
+    const prisFalt = $('[data-tj-pris="' + kod + '"]');
+    const aktivRuta = $('[data-tj-aktiv="' + kod + '"]');
+    if (!rad || !prisFalt || !aktivRuta) return;
     rensa(msg);
-    const kr = Number($('#pris-kr').value);
-    if (!kr || kr < 1) { säg(msg, 'Fyll i ett pris i hela kronor.', false); return; }
 
-    const ja = await bekräfta({
-      titel: 'Ändra priset till ' + kr + ' kr i timmen?',
-      text: 'Gäller nya fakturarader. Redan skapade rader behåller sitt pris — en '
-        + 'prisändring får aldrig ändra vad någon redan fakturerats. Kom ihåg att ändra '
-        + 'priset på prissidan, i FAQ:n och i användarvillkoren också.',
-      knapp: 'Ändra priset'
-    });
-    if (!ja) return;
+    const rå = String(prisFalt.value).trim();
+    const kr = rå === '' ? null : Number(rå);
+    const aktiv = aktivRuta.checked;
 
-    await medan($('#pris-spara'), 'Sparar…', async () => {
-      const { error } = await supa.from('prissattning')
-        .update({ pris_per_timme_ore: kr * 100, uppdaterad: new Date().toISOString() })
-        .eq('id', true);
+    if (kr !== null && (!Number.isFinite(kr) || kr < 1)) {
+      säg(msg, 'Fyll i ett pris i hela kronor, eller lämna tomt.', false);
+      return;
+    }
+
+    /* Den enda regel som är värd en spärr: en tjänst utan pris får
+       inte slås på. Familjen skulle kunna boka den, och ingen skulle
+       kunna fakturera den. */
+    if (aktiv && kr === null) {
+      säg(msg, 'Sätt ett pris först. En tjänst utan pris går att boka men inte att fakturera.', false);
+      aktivRuta.checked = false;
+      return;
+    }
+
+    const öre = kr === null ? null : kr * 100;
+    const slårPå = aktiv && !rad.aktiv;
+    const prisÄndrat = öre !== rad.pris_per_timme_ore;
+
+    /* Bekräfta bara det som är värt att bekräfta. En dialog vid varje
+       spara lär folk att klicka bort dialoger. */
+    if (slårPå || (prisÄndrat && rad.kod === 'laxhjalp')) {
+      const ja = await bekräfta({
+        titel: slårPå
+          ? 'Slå på ' + rad.namn.toLowerCase() + ' för besökare?'
+          : 'Ändra läxhjälpens pris till ' + kr + ' kr i timmen?',
+        text: slårPå
+          ? 'Tjänsten dyker upp i intresseanmälan, i ansökan och i bokningen så fort '
+            + 'någon laddar om sidan. Skriv texten om den på de publika sidorna först, '
+            + 'annars kan man beställa något sajten inte beskriver.'
+          : 'Gäller nya fakturarader. Redan skapade rader behåller sitt pris — en '
+            + 'prisändring får aldrig ändra vad någon redan fakturerats. Kom ihåg att '
+            + 'ändra priset på prissidan, i FAQ:n och i användarvillkoren också.',
+        knapp: slårPå ? 'Slå på' : 'Ändra priset'
+      });
+      if (!ja) return;
+    }
+
+    await medan(knapp, 'Sparar…', async () => {
+      const nu = new Date().toISOString();
+      const { error } = await supa.from('tjanster')
+        .update({ pris_per_timme_ore: öre, aktiv: aktiv, uppdaterad: nu })
+        .eq('kod', kod);
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
-      S.pris = { pris_per_timme_ore: kr * 100, uppdaterad: new Date().toISOString() };
-      ritaPris();
-      säg(msg, '✓ Priset är ändrat. Glöm inte de publika sidorna.', true);
+
+      rad.pris_per_timme_ore = öre;
+      rad.aktiv = aktiv;
+      rad.uppdaterad = nu;
+
+      /* Läxhjälpens pris speglas till prissattning av en trigger i
+         databasen. Den lokala kopian måste följa med, annars visar
+         månadskörningens sammanfattning det gamla talet tills någon
+         laddar om. */
+      if (kod === 'laxhjalp' && öre !== null) {
+        S.pris = { pris_per_timme_ore: öre, uppdaterad: nu };
+        ritaPris();
+      }
+
+      ritaTjanster();
+      const nyMsg = $('[data-tj-msg="' + kod + '"]');
+      säg(nyMsg, aktiv
+        ? '✓ Sparat. ' + rad.namn + ' syns för besökare.'
+        : '✓ Sparat. ' + rad.namn + ' syns inte för besökare.', true);
     });
   });
 
@@ -3209,6 +3325,7 @@
       ritaIntegrationer();
       ritaAdminanvandare();
       ritaPris();
+      ritaTjanster();
       ritaFel();
       await ritaÖversikt();
 

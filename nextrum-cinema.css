@@ -2760,3 +2760,98 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   .nx-omr-kort{padding:16px 17px;gap:11px}
   .nx-omr-kort b{font-size:.92rem}
 }
+
+/* ============================================================
+   TJÄNSTEVÄLJAREN
+
+   Ritas av NXTjanster.valjare() ur tabellen tjanster. Ligger här
+   och inte i nextrum-vy.css eller nextrum-arbetsyta.css eftersom
+   den dyker upp på BÅDA sidor om inloggningen: i intresseanmälan
+   och ansökan på de öppna sidorna, och i bokningen och adminvyn
+   innanför. Alla fem sidor laddar den här filen.
+
+   Kortet är hela klickytan, inte bara den lilla ringen. En
+   radioknapp på 16 px är en träffyta man missar på en telefon, och
+   det här är formulärets första val.
+   ============================================================ */
+.nx-tjval-et{
+  display:block;margin-bottom:10px;
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);
+}
+.nx-tjval-rad{display:grid;gap:9px}
+@media (min-width:620px){
+  .nx-tjval-rad{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+}
+
+/* Kortet är ett <label>, och i intresseanmälan och ansökan ligger
+   det i en .pay-field — där sätter .pay-field label mono, 13 em
+   spärr och VERSALER, avsett för fältetiketter på ett ord. Utan
+   återställningen här blev hela kortet "LÄXHJÄLP 379 KR/TIM | EN
+   STUDIEHJÄLPARE SOM NYLIGEN LÄST SAMMA KURSER", vilket är en
+   rubrik, inte en mening. Etiketten ovanför korten behåller sina
+   versaler; den sätter dem själv i .nx-tjval-et. */
+.nx-tjval,
+.nx-tjval b,
+.nx-tjval span{
+  font-family:var(--f-sans,inherit);
+  text-transform:none;
+  letter-spacing:normal;
+  margin-bottom:0;
+}
+
+.nx-tjval{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:14px 16px;
+  border:1px solid var(--line);border-radius:14px;
+  background:var(--surface);
+  cursor:pointer;
+  transition:border-color .18s var(--ease), background .18s var(--ease);
+}
+.nx-tjval:hover{border-color:var(--muted-2)}
+
+/* Ringen ska inte krympa när texten bredvid går i två rader, och
+   den ska ligga i linje med första raden — inte mitt i kortet. */
+.nx-tjval input{
+  flex:none;width:17px;height:17px;margin:2px 0 0;
+  accent-color:var(--acc);
+}
+.nx-tjval > span{display:block;min-width:0}
+.nx-tjval b{
+  display:block;font-size:.9rem;font-weight:650;letter-spacing:-.01em;
+  color:var(--fg);
+}
+/* Priset står i samma rad som namnet men ska inte läsas som en del
+   av det. Kursivt bort med font-style:normal — em används här för
+   betydelsen, inte för lutningen. */
+.nx-tjval b em{
+  font-style:normal;font-weight:500;color:var(--muted-2);
+  font-variant-numeric:tabular-nums;
+}
+.nx-tjval b + span{
+  display:block;margin-top:4px;
+  font-size:.79rem;line-height:1.5;color:var(--muted-2);
+}
+
+/* Det valda kortet. :has() bär det här — alla webbläsare sajten
+   stödjer har det sedan 2023, och alternativet hade varit en
+   klasstoggle i JS för något som är rent visuellt. */
+.nx-tjval:has(input:checked){
+  border-color:var(--acc);
+  background:var(--acc-soft);
+}
+.nx-tjval:has(input:focus-visible){
+  outline:2px solid var(--focus,var(--fg));
+  outline-offset:2px;
+}
+
+/* Märket på en bokningsrad. Ritas bara när mer än en tjänst är
+   aktiv — se NXTjanster.marke(). */
+.nx-tjmarke{
+  display:inline-block;
+  padding:2px 8px;border-radius:100px;
+  border:1px solid var(--line);
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);
+  vertical-align:middle;
+}

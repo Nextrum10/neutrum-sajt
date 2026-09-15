@@ -422,8 +422,16 @@ const NX = (function () {
       const tillägg = [cvRad, extraRader].filter(Boolean).join('\n');
       const why = [fritext, tillägg].filter(Boolean).join('\n\n');
 
+      /* Vilka uppdrag den sökande vill ta. Läses ur formuläret med
+         getAll, så markupen styr och funktionen slipper veta vilka
+         tjänster som finns. Saknas fältet helt — vilket det gör
+         medan bara läxhjälp är aktiv — blir det läxhjälp, samma
+         sak som kolumnens default. */
+      const tjanster = f.getAll ? f.getAll('tjanster').filter(Boolean) : [];
+
       const { error } = await supa.from('applications').insert({
         name: namn,
+        tjanster: tjanster.length ? tjanster : ['laxhjalp'],
         age: ålderRaw ? Number(ålderRaw) : null,
         email: epost,
         school: String(f.get('skola') || '').trim() || null,

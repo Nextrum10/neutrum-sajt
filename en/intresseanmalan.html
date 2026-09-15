@@ -171,6 +171,11 @@
           <a class="nx-lank-stark" href="/en/bli-studiehjalpare#ansok">apply here</a>.</p>
 
           <form class="form-grid" id="lead-form" novalidate data-spamskydd>
+            <!-- Tjänstevalet först: vad ni vill ha hjälp med avgör
+                 hur resten av formuläret ska läsas. Ritas av
+                 NXTjanster ur tabellen tjanster — med bara läxhjälp
+                 aktiv blir det en rad text och ett dolt fält. -->
+            <div class="pay-field" id="l-tjanst-falt" style="grid-column:1/-1"></div>
             <div class="pay-field"><label for="l-name">Name</label>
               <input class="inp" id="l-name" name="parent_name" required autocomplete="name"></div>
             <div class="pay-field"><label for="l-email">Email</label>
@@ -369,6 +374,7 @@
 <script src="../nextrum-images.js"></script>
 <script src="../nextrum-fel.js"></script>
 <script src="../nextrum-app.js"></script>
+<script src="../nextrum-tjanster.js"></script>
 <script src="../nextrum-motion.js"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
@@ -418,6 +424,20 @@
     växla();
   }
 
+  /* Tjänstekatalogen ritas in innan formuläret används. Await här
+     är ofarligt: allt nedanför är lyssnare, och katalogen är fyra
+     rader. Skulle hämtningen fallera ger NXTjanster läxhjälp, som
+     är vad formuläret erbjöd innan katalogen fanns. */
+  let tjanstVal = null;
+  (async () => {
+    await NXTjanster.ladda();
+    tjanstVal = NXTjanster.valjare({
+      host: $('#l-tjanst-falt'),
+      falt: 'tjanst',
+      typ: 'kund'
+    });
+  })();
+
   /* ==========================================================
      INTRESSEANMÄLAN → tabellen "leads"
      De fält som inte har någon egen kolumn (telefon, upplägg,
@@ -465,6 +485,7 @@
         child_name: $('#l-child').value.trim() || null,
         grade: $('#l-grade').value || null,
         subject: ämnesval,
+        tjanst: tjanstVal ? tjanstVal.varde() : NXTjanster.standard(),
         message: message || null
       });
       knapp.removeAttribute('aria-busy');
