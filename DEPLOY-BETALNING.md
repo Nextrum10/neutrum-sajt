@@ -9,6 +9,28 @@ före den första skarpa körningen, och den är hela poängen med den här ordn
 
 ---
 
+## Vad som redan är gjort
+
+Driftsatt mot projektet `ddkfiuvcppalutfulvbi`. Stegen står kvar nedan för att de
+behövs om ni sätter upp en ny miljö.
+
+| Steg | Läge |
+|---|---|
+| 1. Schemat | Applicerat |
+| 2. Priset | Satt: 37900 ören, alltså 379 kr — samma som prissidan |
+| 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
+| 4. Deploy `fakturering` | ACTIVE, version 5 — betalningsvillkor 10 dagar |
+| 5. Torrkörning | **Väntar på er**, kräver `FAKTURERING_NYCKEL` |
+| 6. Schemaläggning | **Väntar på er** |
+| 7. Stripe | Inte påbörjat, och behöver inte vara det |
+| 8. Deploy `faktura-utskick` | ACTIVE, version 2 — betalningsvillkor 10 dagar |
+
+Databasen är tom på fakturor: `invoices`, `invoice_lines` och `payouts` har noll
+rader. Den första skarpa körningen har alltså inte skett, och torrkörningen i
+steg 5 är fortfarande det första som ska göras.
+
+---
+
 ## Så fungerar modellen
 
 Familjen betalar **i efterskott**, en gång i månaden, för de pass som faktiskt
@@ -231,7 +253,8 @@ Två saker klarar den inte, och de får ni göra för hand:
   på siffran. Läs igenom dem.
 - **Det som faktiskt körs.** Konstanten i repot är inte konstanten i Supabase förrän
   båda funktionerna har driftsatts om (avsnitt 4 och 8). Fram till dess säger sajten
-  en sak och fakturan en annan.
+  en sak och fakturan en annan. Tio dagar är utrullat; nästa ändring måste rullas ut
+  på samma sätt.
 
 ### Utbetalningarna
 
