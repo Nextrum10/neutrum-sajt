@@ -25,15 +25,17 @@
 //
 // Anropas av en databastrigger, aldrig av en webbläsare. Skyddas av
 // samma sorts delade hemlighet som lead-notis: x-nextrum-notis måste
-// matcha en secret på servern. Sätt verify_jwt = false.
+// matcha en secret på servern. verify_jwt = false.
 //
 //
-// DEPLOY
+// INNAN DEN FUNGERAR
 //
-//   supabase secrets set PASS_NOTIS_HEMLIGHET="<slumpa 32 tecken>"
-//   supabase functions deploy pass-notis --no-verify-jwt
+//   1. supabase secrets set PASS_NOTIS_HEMLIGHET="<slumpa 32 tecken>"
+//      (eller Dashboard → Edge Functions → Secrets)
+//   2. schema-v22.sql med samma sträng i triggern.
 //
-// Sedan triggern, i SQL Editor: se schema-v22.sql.
+// Utan secreten svarar funktionen 401 på varje anrop. Det är med
+// flit: hellre tyst och stoppad än öppen för vem som helst.
 // ============================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';

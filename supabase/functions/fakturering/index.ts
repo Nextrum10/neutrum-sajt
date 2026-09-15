@@ -200,6 +200,12 @@ Deno.serve(async (req) => {
         // Utan timpenning kan vi inte räkna ut ersättningen, och att
         // gissa vore värre än att låta passet ligga kvar till nästa
         // körning. Det rapporteras i svaret så att någon kan fylla i den.
+        //
+        // Studiehjälparens ersättning påverkas ALDRIG av familjens
+        // rabatt, och räknar inte heller med tillägget för flera barn.
+        // En kampanj är vår kostnad, inte hens; och tillägget är vad
+        // familjen betalar för att två syskon sitter med, inte en
+        // löneförhöjning.
         if (!timpenning) { utanTimpenning.push(b.tutor_id); continue; }
         const lista = perTutor.get(b.tutor_id) ?? [];
         lista.push({ booking_id: b.id, beskrivning: text, minuter, belopp_ore: belopp(minuter, timpenning) });
