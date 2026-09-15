@@ -844,6 +844,15 @@
             <div id="stat-graf"><div class="loading">Hämtar</div></div>
           </div>
 
+          <!-- Antalet pass säger hur mycket du hunnit, inte hur det
+               gått. Det här är den enda siffran i vyn som säger
+               något om kvaliteten på arbetet, och den kommer ur
+               dina egna omdömen. -->
+          <div class="dbox">
+            <h5>Hur passen gick <em id="stat-gick-antal"></em></h5>
+            <div id="stat-gick"></div>
+          </div>
+
           <!-- ============ TIMMAR ============ -->
           <div class="dbox">
             <h5>Timmar <em>bara genomförda pass</em></h5>
@@ -1054,7 +1063,7 @@
     elever: [], aktivElev: null,
     bokningar: [], trad: null, kal: null, olästa: {},
     minAvatar: null, matTyp: 'fil', tillgang: [], blockerade: [],
-    laxor: [], laxFilter: 'attgora', laxräkning: {}, avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
+    laxor: [], laxFilter: 'attgora', laxräkning: {}, minaRapporter: [], avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
     senaste: {}
   };
 
@@ -2573,6 +2582,10 @@
       .eq('tutor_id', S.user.id).order('lesson_date', { ascending: false }).limit(20);
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta rapporterna', felText(error)); return; }
+
+    S.minaRapporter = data;
+    ritaGickFordelning();
+
     if (!data.length) { host.innerHTML = tomt('Inga rapporter än', 'Den första skriver du efter ditt första pass.'); return; }
 
     $('#mina-rapporter-antal').textContent = data.length + ' st';
@@ -3394,9 +3407,42 @@
      ============================================================ */
   var AKTIV_DAGAR = 60;
 
+  /* Samma lägen och samma färger som i rapportformuläret. Ett
+     omdöme ska se likadant ut där man sätter det och där man
+     räknar på det. */
+  const GICK_LAGEN = [
+    ['mycket_bra', 'Mycket bra', 'ar-bra'],
+    ['bra', 'Bra', 'ar-mitten'],
+    ['folja_upp', 'Behöver följas upp', 'ar-folj']
+  ];
+
+  function ritaGickFordelning() {
+    const rapporter = S.minaRapporter || [];
+    /* Rapporter skrivna innan omdömet fanns har gick = null, och
+       antalet i rubriken säger hur många som faktiskt ligger bakom
+       stapeln. En andel av ingenting är inte en andel. */
+    const medOmdome = rapporter.filter(r => r.gick);
+    const märke = $('#stat-gick-antal');
+    if (märke) {
+      märke.textContent = medOmdome.length
+        ? medOmdome.length + ' av ' + rapporter.length + ' rapporter'
+        : '';
+    }
+    NXStudie.fordelning({
+      host: $('#stat-gick'),
+      lagen: GICK_LAGEN,
+      rader: rapporter,
+      av: r => r.gick,
+      tom: rapporter.length
+        ? 'Rapporterna hittills skrevs innan omdömet fanns. Nästa pass syns här.'
+        : 'Ingen rapport än. Den första skriver du efter ditt första pass.'
+    });
+  }
+
   function ritaStatistik() {
     const tal = $('#stat-tal'), graf = $('#stat-graf');
     if (!tal) return;
+    ritaGickFordelning();
 
     const genomforda = S.bokningar.filter(b => b.status === 'completed');
     const minuter = genomforda.reduce((a, b) => a + Number(b.duration_min || 60), 0);

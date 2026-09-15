@@ -2206,3 +2206,39 @@ a:has(> .adm-status){
   display:inline-flex;align-items:center;
   min-height:24px;
 }
+
+/* ============================================================
+   FÖRDELNINGEN
+   En liggande stapel och en förklaring. Färgerna är samma som i
+   rapportformuläret och i nivåmätaren: mossa för det som går bra,
+   ockra för mitten, lera för det som behöver följas upp. Samma
+   sak ska ha samma färg i hela produkten, annars får man lära sig
+   färgerna en gång per vy.
+   ============================================================ */
+.fd-tom{font-size:.85rem;color:var(--bl-2);line-height:1.6}
+.fd-stapel{
+  display:flex;gap:3px;
+  height:14px;
+  margin-bottom:14px;
+}
+.fd-stapel i{
+  display:block;border-radius:100px;min-width:4px;
+  background:var(--bl-3);
+}
+.fd-stapel i.ar-bra{background:var(--mossa)}
+.fd-stapel i.ar-mitten{background:var(--ockra)}
+.fd-stapel i.ar-folj{background:var(--acc)}
+
+.fd-lista{display:flex;gap:7px 20px;flex-wrap:wrap}
+.fd-post{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.82rem;color:var(--bl-2);
+}
+.fd-post.ar-tom{opacity:.45}
+.fd-post i{width:9px;height:9px;border-radius:50%;background:var(--bl-3);flex:0 0 auto}
+.fd-post i.ar-bra{background:var(--mossa)}
+.fd-post i.ar-mitten{background:var(--ockra)}
+.fd-post i.ar-folj{background:var(--acc)}
+.fd-post b{
+  font-family:var(--f-mono);font-size:.82rem;font-weight:600;color:var(--bl);
+}
