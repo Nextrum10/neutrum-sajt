@@ -1023,6 +1023,8 @@
                     id="flik-integrationer" aria-controls="panel-integrationer">Integrationer</button>
             <button class="vy-flik" type="button" role="tab" data-flik="tjanster"
                     id="flik-tjanster" aria-controls="panel-tjanster">Tjänster &amp; priser</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="rabattkoder"
+                    id="flik-rabattkoder" aria-controls="panel-rabattkoder">Rabattkoder</button>
             <button class="vy-flik" type="button" role="tab" data-flik="adminanvandare"
                     id="flik-adminanvandare" aria-controls="panel-adminanvandare">Adminanvändare</button>
             <button class="vy-flik" type="button" role="tab" data-flik="fel"
@@ -1100,6 +1102,72 @@
             </div>
 
             <div id="tj-kort" style="margin-top:clamp(16px,1.8vw,22px)"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- ============ RABATTKODER ============
+               Tabellen är stängd för alla utom admin, med flit: en
+               inloggad familj som kan LÄSA den kan läsa alla koder
+               och välja den som är mest värd. Bokningen kontrollerar
+               i stället en kod i taget via kolla_rabattkod().
+
+               Rabatten fryser vid bokningen. Ändrar ni en kod i
+               efterhand påverkas inga redan bokade pass — en faktura
+               får inte ändra sig för att en kampanj justerats. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="rabattkoder"
+               id="panel-rabattkoder" aria-labelledby="flik-rabattkoder" hidden>
+            <div class="dbox">
+              <h5>Ny kod</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
+                Koden lagras i versaler och familjen skriver den vid bokningen. Lämna
+                <b>Max antal</b> tomt för obegränsat, och <b>Gäller till</b> tomt för ingen
+                slutdag.
+              </p>
+              <form id="rk-form">
+                <div class="ag-faltrad">
+                  <div class="fgroup">
+                    <label for="rk-kod">Kod</label>
+                    <input class="inp" id="rk-kod" maxlength="24" placeholder="SOMMAR25"
+                           autocomplete="off" spellcheck="false" style="text-transform:uppercase">
+                  </div>
+                  <div class="fgroup">
+                    <label for="rk-typ">Typ</label>
+                    <select class="inp" id="rk-typ">
+                      <option value="procent">Procent av passet</option>
+                      <option value="belopp">Fast belopp i kronor</option>
+                    </select>
+                  </div>
+                  <div class="fgroup">
+                    <label for="rk-varde">Värde</label>
+                    <input class="inp" id="rk-varde" type="number" min="1" step="1" inputmode="numeric" placeholder="10">
+                  </div>
+                  <div class="fgroup">
+                    <label for="rk-tjanst">Gäller tjänst</label>
+                    <select class="inp" id="rk-tjanst"><option value="">Alla tjänster</option></select>
+                  </div>
+                  <div class="fgroup">
+                    <label for="rk-till">Gäller till</label>
+                    <input class="inp" id="rk-till" type="date">
+                  </div>
+                  <div class="fgroup">
+                    <label for="rk-max">Max antal</label>
+                    <input class="inp" id="rk-max" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
+                  </div>
+                </div>
+                <div class="fgroup" style="margin-top:14px">
+                  <label for="rk-text">Beskrivning</label>
+                  <input class="inp" id="rk-text" maxlength="80" placeholder="Syns för familjen när koden godkänns">
+                </div>
+                <div class="ag-rad">
+                  <button class="btn btn-primary btn-sm" type="submit" id="rk-spara">Skapa koden</button>
+                  <p class="ok-msg" id="rk-msg" style="margin:0"></p>
+                </div>
+              </form>
+            </div>
+
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+              <h5>Koder <em id="rk-antal"></em></h5>
+              <div id="rk-tabell"><div class="loading">Hämtar</div></div>
+            </div>
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="fel"

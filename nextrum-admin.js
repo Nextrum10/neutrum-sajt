@@ -50,7 +50,7 @@
     tutorProfiler: {}, // id → tutor_profiles-rad
     leads: [], ansokningar: [], kontakt: [], bokningar: [],
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [],
-    integrationer: [], pris: null, tjanster: [], saknasV13: [],
+    integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
     matchunderlag: [], matchunderlagFel: null, valdElev: null, kalender: null,
     detaljCache: {}
@@ -185,7 +185,7 @@
     S.tutorProfiler = {};
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
-    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, pris, integ, tj, rapporter] = await Promise.all([
+    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, pris, integ, tj, rk, rapporter] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -197,6 +197,7 @@
       supa.from('prissattning').select('*').limit(1),
       supa.from('integrationer').select('*'),
       supa.from('tjanster').select('*').order('ordning'),
+      supa.from('rabattkoder').select('*').order('skapad', { ascending: false }),
       /* Rapporterna används bara av aktivitetsflödet, och bara de
          senaste. Ett "lektion genomförd" i flödet är ett pass som
          faktiskt rapporterats, inte ett pass vars datum passerat. */
@@ -214,6 +215,7 @@
     S.pris = (pris.data || [])[0] || null;
     S.integrationer = integ.data || [];
     S.tjanster = tj.data || [];
+    S.rabattkoder = rk.data || [];
     S.rapporter = rapporter.data || [];
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
@@ -1907,6 +1909,55 @@
     }).join('') + '</div>';
   }
 
+  /* ------------------------------------------------------------
+     RABATTKODERNA
+
+     Koder tas inte bort, de stängs av. En borttagen kod tar med sig
+     svaret på frågan "varför blev det här passet billigare" — och
+     bookings.rabattkod pekar på raden.
+     ------------------------------------------------------------ */
+  function rabattText(r) {
+    return r.typ === 'procent' ? r.varde + ' %' : kronor(r.varde);
+  }
+
+  function ritaRabattkoder() {
+    const host = $('#rk-tabell');
+    if (!host) return;
+
+    /* Rullgardinen för tjänst fylls ur katalogen, inte ur en lista
+       här — annars går de isär den dag en tjänst tillkommer. */
+    const val = $('#rk-tjanst');
+    if (val && val.options.length <= 1 && S.tjanster.length) {
+      val.innerHTML = '<option value="">Alla tjänster</option>'
+        + S.tjanster.map(t => '<option value="' + esc(t.kod) + '">' + esc(t.namn) + '</option>').join('');
+    }
+
+    $('#rk-antal').textContent = S.rabattkoder.length ? S.rabattkoder.length + ' st' : '';
+
+    host.innerHTML = tabell([
+      { namn: 'Kod', rita: r => '<b style="font-family:var(--f-mono);letter-spacing:.06em">'
+          + esc(r.kod) + '</b>'
+          + (r.beskrivning ? '<span class="adm-und">' + esc(r.beskrivning) + '</span>' : '') },
+      { namn: 'Rabatt', rita: r => '<span class="adm-tal">' + esc(rabattText(r)) + '</span>' },
+      { namn: 'Gäller', rita: r => esc(r.tjanst ? (S.tjanster.find(t => t.kod === r.tjanst) || {}).namn || r.tjanst : 'Alla tjänster') },
+      { namn: 'Till', rita: r => '<span class="adm-tal">' + esc(r.giltig_till ? kortDatum(r.giltig_till) : '—') + '</span>' },
+      { namn: 'Använd', rita: r => '<span class="adm-tal">' + r.antal_anvandningar
+          + (r.max_anvandningar ? ' / ' + r.max_anvandningar : '') + '</span>' },
+      { namn: 'Läge', rita: r => {
+          /* Slut och utgången är två olika skäl att koden inte
+             fungerar, och den som felsöker behöver veta vilket. */
+          const slut = r.max_anvandningar && r.antal_anvandningar >= r.max_anvandningar;
+          const ute = r.giltig_till && r.giltig_till < isoFor(new Date());
+          if (!r.aktiv) return pill('Avstängd', '');
+          if (slut) return pill('Slut', 'ar-vantar');
+          if (ute) return pill('Utgången', 'ar-vantar');
+          return pill('Aktiv', 'ar-klar');
+        } },
+      { namn: '', höger: true, rita: r => '<button class="btn btn-ghost btn-sm" data-rk-vaxla="'
+          + esc(r.kod) + '">' + (r.aktiv ? 'Stäng av' : 'Slå på') + '</button>' }
+    ], S.rabattkoder, 'Inga rabattkoder än');
+  }
+
   function ritaFel() {
     $('#fel-antal').textContent = S.klientfel.length ? S.klientfel.length + ' st' : '';
     märkFlik('#flik-fel-mark', S.klientfel.length);
@@ -2141,6 +2192,75 @@
   ].forEach(([sel, fn]) => {
     const el = $(sel);
     if (el) el.addEventListener('input', fn);
+  });
+
+  /* ============ rabattkoderna ============ */
+  (function kopplaRabattkoder() {
+    const form = $('#rk-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const msg = $('#rk-msg');
+      rensa(msg);
+
+      const kod = String($('#rk-kod').value || '').trim().toUpperCase();
+      const typ = $('#rk-typ').value;
+      const varde = Number($('#rk-varde').value);
+
+      /* Samma villkor som check-constraintet i databasen. Det här är
+         inte säkerheten — den ligger i basen — utan ett begripligt
+         besked i stället för ett constraint-fel. */
+      if (!/^[A-Z0-9-]{3,24}$/.test(kod)) {
+        säg(msg, 'Koden får bara innehålla A–Z, 0–9 och bindestreck, 3–24 tecken.', false); return;
+      }
+      if (!varde || varde < 1) { säg(msg, 'Fyll i ett värde.', false); return; }
+      if (typ === 'procent' && varde > 100) {
+        säg(msg, 'Mer än 100 procent är inte en rabatt.', false); return;
+      }
+
+      await medan($('#rk-spara'), 'Skapar…', async () => {
+        const { error } = await supa.from('rabattkoder').insert({
+          kod,
+          typ,
+          // Fast belopp skrivs i kronor och lagras i öre, som allt annat.
+          varde: typ === 'belopp' ? Math.round(varde * 100) : Math.round(varde),
+          tjanst: $('#rk-tjanst').value || null,
+          giltig_till: $('#rk-till').value || null,
+          max_anvandningar: Number($('#rk-max').value) || null,
+          beskrivning: String($('#rk-text').value || '').trim() || null
+        });
+
+        if (error) {
+          säg(msg, error.code === '23505'
+            ? 'Det finns redan en kod som heter ' + kod + '.'
+            : 'Kunde inte skapa: ' + felText(error), false);
+          return;
+        }
+
+        const ny = await supa.from('rabattkoder').select('*').order('skapad', { ascending: false });
+        S.rabattkoder = ny.data || [];
+        ritaRabattkoder();
+        form.reset();
+        säg(msg, '✓ ' + kod + ' är skapad och gäller direkt.', true);
+      });
+    });
+  })();
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-rk-vaxla]');
+    if (!knapp) return;
+    const kod = knapp.dataset.rkVaxla;
+    const rad = S.rabattkoder.find(r => r.kod === kod);
+    if (!rad) return;
+
+    await medan(knapp, '…', async () => {
+      const { error } = await supa.from('rabattkoder')
+        .update({ aktiv: !rad.aktiv }).eq('kod', kod);
+      if (error) { alert('Kunde inte ändra: ' + felText(error)); return; }
+      rad.aktiv = !rad.aktiv;
+      ritaRabattkoder();
+    });
   });
 
   /* ============ tjänsterna ============
@@ -3326,6 +3446,7 @@
       ritaAdminanvandare();
       ritaPris();
       ritaTjanster();
+      ritaRabattkoder();
       ritaFel();
       await ritaÖversikt();
 

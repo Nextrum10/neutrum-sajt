@@ -328,6 +328,16 @@
             </h5>
             <div class="vy-fall-kropp">
               <div id="rapporter"><div class="loading">Hämtar</div></div>
+              <!-- Frågan om en recension ställs HÄR och ingen
+                   annanstans: det är den enda platsen där föräldern
+                   just läst vad passet gav. En vecka senare är
+                   känslan borta, och en påminnelse i mejlen är en
+                   påminnelse man stänger.
+
+                   Ritas bara när GOOGLE_RECENSION_URL är satt i
+                   nextrum-config.js, och bara när det faktiskt finns
+                   en rapport att ha en åsikt om. -->
+              <div id="recension" hidden></div>
             </div>
           </div>
         </div>
@@ -1286,6 +1296,34 @@
       + '<div class="plan-body">' + esc(p.plan_text || '') + '</div>';
   }
 
+  /* Frågan om en recension.
+
+     Två villkor, båda nödvändiga: en länk måste finnas i
+     nextrum-config.js, och familjen måste ha minst två rapporter.
+     Det andra är inte godtyckligt — efter ETT pass vet ingen ännu
+     om det hjälpte, och en recension skriven då säger inget om
+     något. Efter två har man en uppfattning.
+
+     Vi frågar. Vi bjuder inte, lockar inte och upprepar inte —
+     köpta eller framtvingade recensioner stänger profilen, och
+     det är dessutom vilseledande mot nästa förälder. */
+  function ritaRecension(antal) {
+    const ruta = $('#recension');
+    if (!ruta) return;
+    const lank = (NX.CFG && NX.CFG.GOOGLE_RECENSION_URL) || '';
+    if (!lank || antal < 2) { ruta.hidden = true; ruta.innerHTML = ''; return; }
+
+    ruta.hidden = false;
+    ruta.innerHTML =
+      '<div class="vy-recension">'
+      + '<b>Har det hjälpt?</b>'
+      + '<p>Två rader om hur det gått betyder mycket för nästa familj som '
+      + 'letar. Det tar en minut.</p>'
+      + '<a class="btn btn-ghost btn-sm" href="' + esc(lank) + '" '
+      + 'target="_blank" rel="noopener noreferrer">Skriv en recension på Google</a>'
+      + '</div>';
+  }
+
   /* ============ rapporter ============ */
   async function laddaRapporter() {
     const host = $('#rapporter');
@@ -1300,9 +1338,11 @@
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
     if (!data || !data.length) {
       host.innerHTML = '<div class="empty">Inga rapporter än. Den första kommer efter första passet.</div>';
+      ritaRecension(0);
       return;
     }
     $('#rapport-antal').textContent = data.length + ' st';
+    ritaRecension(data.length);
     host.innerHTML = data.map(r =>
       '<div class="report">'
       + '<div class="report-head"><b>Pass</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
@@ -1492,6 +1532,9 @@
     host: $('#boka-inner'),
     amnen: BOKA_AMNEN,
     pris: NX.CFG.PRIS_PER_TIMME || 379,
+    /* Vilken tjänst bokningen gäller. Styr både tillägget för flera
+       barn och vilka rabattkoder som får användas. */
+    tjanst: NXTjanster.standard(),
 
     /* Två spärrar som förr yttrade sig som en avstängd knapp utan
        förklaring. Nu står skälet där tiderna skulle ha stått. */
@@ -1529,6 +1572,13 @@
         created_by: S.user.id,
         subject: v.amne,
         tjanst: NXTjanster.standard(),
+        antal_barn: v.barn || 1,
+        /* Rabatten räknas OM av triggern skydda_rabatt i databasen.
+           Talet härifrån är ett förslag, inte ett facit — en
+           manipulerad webbläsare kan skicka vad som helst, och
+           servern sätter ner det till vad koden faktiskt ger. */
+        rabattkod: v.kod || null,
+        rabatt_ore: v.rabattOre || null,
         format: v.format,
         location: v.plats || null,
         wanted_date: v.datum,

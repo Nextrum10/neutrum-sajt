@@ -2273,3 +2273,65 @@ a:has(> .adm-status){
   display:inline-flex;align-items:center;
   min-height:24px;
 }
+
+/* ============================================================
+  13. RABATTKODEN I BOKNINGEN
+
+   Fältet ligger i kvittot, sist före summan, för att det är där
+   man tittar när man undrar vad det kostar. Ovanför tiderna hade
+   det varit en fråga ingen ställt sig än.
+
+   Koden kontrolleras på servern, en i taget. Klienten vet aldrig
+   vilka koder som finns — se kolla_rabattkod() i schema-v20.
+   ============================================================ */
+.bk-kod{
+  margin:14px 0 4px;
+  padding-top:14px;
+  border-top:1px solid var(--ln);
+}
+.bk-kod label{
+  display:block;margin-bottom:8px;
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
+}
+.bk-kod-rad{display:flex;gap:8px;align-items:stretch}
+
+/* Fältet krymper inte bort när knappen är bred, och versalerna är
+   inte kosmetik: koden LAGRAS i versaler, så fältet ska visa exakt
+   det som skickas. */
+.bk-kod-rad .inp{
+  flex:1;min-width:0;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  font-family:var(--f-mono);font-size:.85rem;
+}
+.bk-kod-rad .btn{flex:none;white-space:nowrap}
+
+.bk-kod-ok,
+.bk-kod-fel{
+  display:block;margin-top:9px;
+  font-size:.8rem;line-height:1.5;
+}
+.bk-kod-ok{color:var(--mossa)}
+.bk-kod-fel{color:var(--acc-lugn)}
+
+/* Rabattraden i kvittot ska läsas som ett avdrag, inte som ännu en
+   post. Minustecknet räcker inte i en kolumn med högerställda tal. */
+.bk-kvitto-rad.ar-rabatt span:last-child{color:var(--mossa)}
+
+/* Frågan om en Google-recension, under rapporterna i studievyn.
+   Låg ton med flit: den ska gå att gå förbi. En ruta som ropar
+   efter beröm direkt efter att någon läst om sitt barns skolgång
+   läser som att vi bryr oss om fel sak. */
+.vy-recension{
+  margin-top:18px;padding-top:16px;
+  border-top:1px solid var(--ln);
+}
+.vy-recension b{
+  display:block;font-size:.9rem;font-weight:650;color:var(--bl);
+}
+.vy-recension p{
+  margin:6px 0 12px;
+  font-size:.83rem;line-height:1.6;color:var(--bl-2);
+  max-width:52ch;
+}

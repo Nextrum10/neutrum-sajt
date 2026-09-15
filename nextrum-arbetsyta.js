@@ -306,6 +306,17 @@ window.NXArbete = (function () {
       plats: '',
       datum: null,
       tid: null,
+      /* Hur många barn passet gäller. Tillägget är EN summa oavsett
+         om de är två eller tre — regeln och taket står i tjanster,
+         inte här, så priset går att ändra utan att röra koden. */
+      barn: 1,
+      /* Rabattkoden i tre delar: vad som står i fältet, vad servern
+         svarade, och hur mycket det blev. Fältet ensamt räcker inte —
+         en kod som skrivits men inte kontrollerats får inte se ut som
+         en rabatt i kvittot. */
+      kod: '',
+      kodSvar: null,
+      rabatt: 0,
       /* Beskedet efter en bokning. Det låg förut i steg 4, som
          fälls ihop och töms i samma andetag som bokningen lyckas —
          alltså försvann kvittot i samma klick som gjorde det sant.
@@ -335,6 +346,31 @@ window.NXArbete = (function () {
     }
 
     function timmar() { return Math.max(1, Math.round(st.minuter / 60)); }
+
+    /* Taket för antal barn kommer ur tjänstekatalogen. Saknas den —
+       gammal sida, trasig hämtning — är svaret 1, och då ritas ingen
+       väljare alls. */
+    function barnTak() {
+      var t = (typeof NXTjanster !== 'undefined' && NXTjanster.hitta)
+        ? NXTjanster.hitta(o.tjanst || 'laxhjalp') : null;
+      return t && t.extra_personer_max > 1 ? t.extra_personer_max : 1;
+    }
+    function extraOre() {
+      var t = (typeof NXTjanster !== 'undefined' && NXTjanster.hitta)
+        ? NXTjanster.hitta(o.tjanst || 'laxhjalp') : null;
+      return (t && t.extra_personer_ore) || 0;
+    }
+
+    /* Bruttot i ÖRE, för det är vad servern räknar i. Kronorna i
+       kvittot härleds ur den här siffran, aldrig tvärtom — två
+       uträkningar av samma pris blir förr eller senare två priser. */
+    function bruttoOre() {
+      var tim = (o.pris || 379) * 100 + (st.barn > 1 ? extraOre() : 0);
+      return Math.round(tim * st.minuter / 60);
+    }
+    function nettoOre() {
+      return Math.max(0, bruttoOre() - (st.rabatt || 0));
+    }
     function längdText() {
       var t = timmar();
       return t === 1 ? '1 timme' : t + ' timmar';
@@ -364,6 +400,41 @@ window.NXArbete = (function () {
           return '<button type="button" data-v="' + esc(String(p[0])) + '" aria-pressed="'
             + (String(p[0]) === String(valt) ? 'true' : 'false') + '">' + esc(p[1]) + '</button>';
         }).join('') + '</div>';
+    }
+
+    /* Antal barn som knappar, inte en rullgardin: det är tre val och
+       de ska gå att se utan att öppna något. Taket kommer ur
+       katalogen, så en tjänst som bara tar ett barn får ingen rad
+       alls. */
+    function barnChips() {
+      var poster = [];
+      for (var i = 1; i <= barnTak(); i++) poster.push([i, String(i)]);
+      return chips('bk-barn', poster, st.barn, 'Antal barn');
+    }
+
+    /* Koden kontrolleras på SERVERN, aldrig här. Klienten vet inte
+       vilka koder som finns och ska inte veta det — kolla_rabattkod()
+       svarar på en kod i taget och lämnar aldrig ut listan. */
+    function rabattRad() {
+      var svar = st.kodSvar;
+      var status = '';
+      if (svar && svar.giltig) {
+        status = '<span class="bk-kod-ok">✓ ' + esc(svar.beskrivning || 'Rabatt tillagd') + '</span>';
+      } else if (svar) {
+        status = '<span class="bk-kod-fel">' + esc(svar.orsak || 'Koden gäller inte.') + '</span>';
+      }
+
+      return '<div class="bk-kod">'
+        + '<label for="bk-kod-falt">Rabattkod</label>'
+        + '<div class="bk-kod-rad">'
+        + '<input class="inp" id="bk-kod-falt" maxlength="24" autocomplete="off"'
+        + ' spellcheck="false" placeholder="Har ni en kod?"'
+        + ' value="' + esc(st.kod) + '">'
+        + '<button class="btn btn-ghost btn-sm" type="button" id="bk-kod-knapp">'
+        + (st.rabatt > 0 ? 'Ta bort' : 'Använd') + '</button>'
+        + '</div>'
+        + status
+        + '</div>';
     }
 
     function tiderHtml() {
@@ -454,8 +525,21 @@ window.NXArbete = (function () {
               : '')
           + (o.hos ? '<div class="bk-kvitto-rad"><span>Studiehjälpare</span><span>'
               + esc(o.hos) + '</span></div>' : '')
+          + (barnTak() > 1
+              ? '<div class="bk-kvitto-rad"><span>Antal barn</span><span>'
+                + barnChips() + '</span></div>'
+              : '')
+          + (st.barn > 1
+              ? '<div class="bk-kvitto-rad"><span>Tillägg, flera barn</span><span>'
+                + esc(kr(extraOre() / 100 * timmar())) + '</span></div>'
+              : '')
+          + rabattRad()
+          + (st.rabatt > 0
+              ? '<div class="bk-kvitto-rad"><span>Rabatt</span><span>−'
+                + esc(kr(st.rabatt / 100)) + '</span></div>'
+              : '')
           + '<div class="bk-kvitto-rad ar-summa"><span>Att betala</span><span>'
-          + esc(kr((o.pris || 379) * timmar())) + '</span></div>'
+          + esc(kr(nettoOre() / 100)) + '</span></div>'
           + '<div class="vy-fot" style="border:none;padding-top:16px;margin-top:0">'
           + '<button class="btn btn-primary" id="bk-boka" type="button">Boka passet</button>'
           + '<span class="small" style="color:var(--bl-2)">Ni betalar i efterskott, '
@@ -502,6 +586,14 @@ window.NXArbete = (function () {
        något annat skäl. */
     host.addEventListener('input', function (e) {
       if (e.target && e.target.id === 'bk-plats-falt') st.plats = e.target.value;
+      /* Koden lagras i versaler. Servern jämför mot versaler, och att
+         låta fältet visa något annat än det som skickas är ett fel som
+         bara syns för den som skrev med gemener. */
+      if (e.target && e.target.id === 'bk-kod-falt') {
+        var nytt = e.target.value.toUpperCase();
+        if (e.target.value !== nytt) e.target.value = nytt;
+        st.kod = nytt;
+      }
     });
 
     host.addEventListener('click', function (e) {
@@ -529,17 +621,34 @@ window.NXArbete = (function () {
           st.oppet = st.format === 'På plats' ? 3 : (st.datum ? 4 : 2);
           rita();
         }
+        else if (grupp === 'bk-barn') {
+          st.barn = Number(val.dataset.v) || 1;
+          /* Bruttot ändras, alltså är rabatten uträknad på fel
+             underlag. Den måste hämtas om — en procentrabatt på ett
+             annat belopp är ett annat belopp. */
+          if (st.rabatt > 0) { kollaKod(true); return; }
+          rita();
+        }
         else if (grupp === 'bk-langder') {
           st.minuter = Number(val.dataset.v);
           /* Längden ändrar vilka timmar som ryms. En vald tid som
              inte längre får plats måste släppas, annars bokar man
              två timmar i ett enda ledigt hål. */
           st.datum = null; st.tid = null;
+          /* Och den ändrar bruttot, alltså rabatten. Se bk-barn. */
+          if (st.rabatt > 0) { st.rabatt = 0; st.kodSvar = null; }
           if (st.kal) { st.kal.sättMinuter(st.minuter); st.kal.nollställ(); }
           st.kal = null;
           st.oppet = 2;
           rita();
         }
+        return;
+      }
+
+      var kodKnapp = e.target.closest('#bk-kod-knapp');
+      if (kodKnapp) {
+        if (st.rabatt > 0) { st.kod = ''; st.kodSvar = null; st.rabatt = 0; rita(); }
+        else kollaKod();
         return;
       }
 
@@ -566,6 +675,37 @@ window.NXArbete = (function () {
       });
     }, true);
 
+    /* Kontrollen går till funktionen kolla_rabattkod i databasen, som
+       svarar på EN kod och aldrig lämnar ut listan. Rabatten den ger
+       är också den servern räknar om vid inserten — klientens siffra
+       är bara till för att visa något innan man trycker Boka.
+
+       tyst = räkna om efter att bruttot ändrats, utan att blinka till
+       med ett nytt meddelande om en kod användaren redan godkänt. */
+    function kollaKod(tyst) {
+      var kod = (st.kod || '').trim();
+      if (!kod) { st.kodSvar = { giltig: false, orsak: 'Skriv en kod.' }; rita(); return; }
+      if (typeof supa === 'undefined' || !supa) return;
+
+      var knapp = $('#bk-kod-knapp', host);
+      NXStudie.medan(knapp, tyst ? '' : 'Kollar…', async function () {
+        var r = await supa.rpc('kolla_rabattkod', {
+          p_kod: kod,
+          p_tjanst: o.tjanst || 'laxhjalp',
+          p_belopp_ore: bruttoOre()
+        });
+        var rad = (r.data || [])[0];
+        if (r.error || !rad) {
+          st.kodSvar = { giltig: false, orsak: 'Kunde inte kontrollera koden just nu.' };
+          st.rabatt = 0;
+        } else {
+          st.kodSvar = rad;
+          st.rabatt = rad.giltig ? Number(rad.rabatt_ore || 0) : 0;
+        }
+        rita();
+      });
+    }
+
     function skicka() {
       var knapp = $('#bk-boka', host), msg = $('#bk-msg', host);
       if (msg) NX.rensa(msg);
@@ -575,7 +715,13 @@ window.NXArbete = (function () {
         var fel = await o.boka({
           datum: st.datum, tid: st.tid, minuter: st.minuter,
           amne: st.amne, format: st.format,
-          plats: st.format === 'På plats' ? st.plats.trim() : ''
+          plats: st.format === 'På plats' ? st.plats.trim() : '',
+          barn: st.barn,
+          /* Bara en kod som faktiskt gett rabatt skickas med. En kod
+             som skrivits men inte godkänts ska inte följa med och
+             räknas upp som använd. */
+          kod: st.rabatt > 0 ? (st.kod || '').trim() : null,
+          rabattOre: st.rabatt > 0 ? st.rabatt : null
         });
         if (fel) {
           var m = $('#bk-msg', host);
@@ -585,6 +731,10 @@ window.NXArbete = (function () {
         }
         st.besked = 'Passet är önskat. Er studiehjälpare ser det direkt och bekräftar.';
         st.datum = null; st.tid = null;
+        /* Koden är förbrukad på det här passet. Att låta den stå kvar
+           i fältet hade sett ut som att nästa bokning också får den,
+           och en kod med max antal användningar hade då lovat fel. */
+        st.kod = ''; st.kodSvar = null; st.rabatt = 0; st.barn = 1;
         st.kal = null;
         st.oppet = 2;
         await ladda();

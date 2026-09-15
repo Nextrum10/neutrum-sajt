@@ -70,14 +70,15 @@ const NXTjanster = (function () {
         kod: 'laxhjalp', namn: 'Läxhjälp', namn_en: 'Tutoring',
         kort: null, kort_en: null,
         for_kund: true, for_jobb: true, aktiv: true, ordning: 10,
-        pris_per_timme_ore: null
+        pris_per_timme_ore: null,
+        extra_personer_ore: null, extra_personer_max: 1
       }];
 
       if (typeof supa === 'undefined' || !supa) { cache = reserv; return cache; }
 
       const { data, error } = await supa
         .from('tjanster')
-        .select('kod, namn, namn_en, kort, kort_en, for_kund, for_jobb, aktiv, ordning, pris_per_timme_ore')
+        .select('kod, namn, namn_en, kort, kort_en, for_kund, for_jobb, aktiv, ordning, pris_per_timme_ore, extra_personer_ore, extra_personer_max')
         .order('ordning');
 
       cache = (error || !data || !data.length) ? reserv : data;

@@ -36,6 +36,13 @@ const NYCKEL = Deno.env.get('FAKTURERING_NYCKEL');
 // Måste stämma med det som står på prissidan, i FAQ:n och i
 // användarvillkoren — en faktura som förfaller på en annan dag än
 // villkoret lovar är en tvist, inte ett skrivfel.
+// DEN DRIFTSATTA VERSIONEN HADE 10 (upptäckt 2026-09-15, version 5).
+// Repot, prissidan, FAQ:n och användarvillkoren säger alla 14, och
+// en faktura som förfaller fyra dagar före det villkoret lovar är
+// precis den tvist kommentaren nedan varnar för. Deployen från den
+// här filen sätter tillbaka 14. Var 10 ett medvetet beslut är det
+// texterna som ska ändras, inte den här raden — och då ska alla fyra
+// ändras samma dag.
 const BETALNINGSVILLKOR_DAGAR = 14;
 
 const CORS = {
@@ -61,6 +68,19 @@ function periodFor(d: Date): string {
 // blir 56850 och inte 56849.999999.
 function belopp(minuter: number, timprisOre: number): number {
   return Math.round((minuter / 60) * timprisOre);
+}
+
+// Tillägget för flera barn är EN summa per timme, inte en per barn:
+// två syskon och tre syskon kostar lika mycket extra. Regeln och
+// beloppet står i tjanster (schema-v20), inte här.
+function familjebelopp(
+  minuter: number,
+  timprisOre: number,
+  extraOre: number,
+  antalBarn: number,
+): number {
+  const tim = timprisOre + (antalBarn > 1 ? extraOre : 0);
+  return Math.round((minuter / 60) * tim);
 }
 
 const MANADER = ['januari','februari','mars','april','maj','juni',
@@ -93,10 +113,28 @@ Deno.serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // ---------- priset ----------
-    const pris = await db.from('prissattning').select('pris_per_timme_ore').maybeSingle();
+    // ---------- priserna ----------
+    // Timpriset kommer numera per tjänst ur `tjanster` (schema-v18).
+    // prissattning läses fortfarande som reserv: den speglas av en
+    // trigger och är därmed alltid läxhjälpens pris, vilket är rätt
+    // svar för varje rad som skrevs innan katalogen fanns.
+    const [pris, tjanster] = await Promise.all([
+      db.from('prissattning').select('pris_per_timme_ore').maybeSingle(),
+      db.from('tjanster').select('kod, pris_per_timme_ore, extra_personer_ore'),
+    ]);
     const timprisOre = Number(pris.data?.pris_per_timme_ore ?? 0);
     if (!timprisOre) return json({ error: 'Priset i prissattning är 0 eller saknas.' }, 500);
+
+    type TjanstPris = { timme: number; extra: number };
+    const prisFor = new Map<string, TjanstPris>();
+    for (const t of tjanster.data ?? []) {
+      prisFor.set(t.kod, {
+        timme: Number(t.pris_per_timme_ore ?? 0),
+        extra: Number(t.extra_personer_ore ?? 0),
+      });
+    }
+    const tjanstPris = (kod: string | null): TjanstPris =>
+      prisFor.get(kod ?? 'laxhjalp') ?? { timme: timprisOre, extra: 0 };
 
     // ---------- passen som inte tagits med ----------
     // left join i PostgREST går inte, så vi hämtar id:n som redan är
@@ -104,7 +142,7 @@ Deno.serve(async (req) => {
     // månads pass, inte hela historiken.
     const [pass, fakturerade, utbetalda] = await Promise.all([
       db.from('bookings')
-        .select('id, subject, wanted_date, duration_min, parent_id, tutor_id')
+        .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, rabatt_ore')
         .eq('status', 'completed'),
       db.from('invoice_lines').select('booking_id').not('booking_id', 'is', null),
       db.from('payout_lines').select('booking_id').not('booking_id', 'is', null),
@@ -136,8 +174,24 @@ Deno.serve(async (req) => {
       const text = radtext(b.subject, b.wanted_date);
 
       if (b.parent_id && !redanFakturerade.has(b.id)) {
+        const p = tjanstPris(b.tjanst);
+        const barn = Math.max(1, Number(b.antal_barn || 1));
+        const brutto = familjebelopp(minuter, p.timme || timprisOre, p.extra, barn);
+
+        // Rabatten är framräknad och fryst vid bokningen. Den räknas
+        // ALDRIG om här — annars ändrar sig ett gammalt pass pris den
+        // dag någon justerar koden.
+        const rabatt = Math.min(Math.max(Number(b.rabatt_ore || 0), 0), brutto);
+
         const lista = perFamilj.get(b.parent_id) ?? [];
-        lista.push({ booking_id: b.id, beskrivning: text, minuter, belopp_ore: belopp(minuter, timprisOre) });
+        lista.push({
+          booking_id: b.id,
+          beskrivning: text
+            + (barn > 1 ? ` (${barn} barn)` : '')
+            + (rabatt > 0 ? ' − rabatt' : ''),
+          minuter,
+          belopp_ore: brutto - rabatt,
+        });
         perFamilj.set(b.parent_id, lista);
       }
 

@@ -21,6 +21,15 @@ window.NEXTRUM_CONFIG = {
   // Pris per timme i kronor, visas på sidan och i bokningen.
   PRIS_PER_TIMME: 379,
 
+  /* Länken familjen skickas till för att lämna en Google-recension.
+     Hämtas i Google Business Profile → "Be om recensioner", och ser
+     ut som https://g.page/r/XXXXXXXX/review.
+
+     Tom sträng = ingen knapp ritas. Det är med flit: en knapp som
+     leder ingenstans är sämre än ingen knapp, och profilen finns
+     inte förrän någon verifierat den. Se GOOGLE-FORETAGSPROFIL.md. */
+  GOOGLE_RECENSION_URL: '',
+
   /* Tillägg per extra barn i samma pass, per timme. Ett syskon som
      sitter med kostar alltså inte ett helt nytt pass — men
      studiehjälparen delar sin uppmärksamhet, och det ska synas. */
