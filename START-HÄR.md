@@ -14,7 +14,7 @@ hittar de inte varandra.
 | `nextrum-app.js` | Delad kod (inloggning, kalender, felmeddelanden). |
 | `nextrum-arbetsyta.js` / `.css` | Hälsningsblocket, flikarna, bokningen, veckorutnätet. |
 | `nextrum-admin.js` | Bara adminvyn. |
-| `schema.sql` → … → `schema-v14.sql` | Databasen. Kör i nummerordning. |
+| `schema.sql` → … → `schema-v16.sql` | Databasen. Kör i nummerordning. |
 
 ---
 
@@ -22,13 +22,13 @@ hittar de inte varandra.
 
 Supabase → **SQL Editor** → New query. Klistra in **en fil i taget**, i
 nummerordning, och tryck Run mellan varje: `schema.sql`, `schema-v2.sql`,
-… fram till `schema-v14.sql`.
+… fram till `schema-v16.sql`.
 
 Kör du dem i fel ordning får du fel om saknade tabeller. Kör om
 `schema.sql` bara om du vill börja om från noll, den rensar tabellerna
 först.
 
-**`schema-v14.sql` är den senaste.** De två sista behövs för adminvyn:
+**`schema-v16.sql` är den senaste.** De sista behövs så här:
 
 - Utan `schema-v13.sql` fungerar sidan, men nyckeltalen saknas, statusarna
   går inte att ändra och anteckningarna går inte att spara.
@@ -40,6 +40,16 @@ Vyerna säger vilken fil som fattas i stället för att visa nollor.
 `schema-v14.sql` flyttar matchningen från familjen till eleven, så att
 syskon kan ha var sin studiehjälpare. Den är additiv: inga kolumner tas
 bort och de inloggade vyerna fortsätter fungera oförändrat.
+
+`schema-v15.sql` lägger till `gick` och `amne` på lektionsrapporterna,
+så att "hur gick det" blir ett val i stället för fritext.
+
+`schema-v16.sql` stänger två informationsläckor. `is_admin` och
+`ar_matchade` är SECURITY DEFINER och ligger i `public`, vilket betyder
+att PostgREST lade ut dem på `/rest/v1/rpc/`. Vem som helst kunde alltså
+fråga om ett givet konto var admin, utan att vara inloggad. Nu svarar de
+bara om den som frågar, eller om vem som helst om frågaren är admin.
+Den ändrar ingen policy och rör ingen data.
 
 ## Steg 2 — klistra in nycklarna
 
