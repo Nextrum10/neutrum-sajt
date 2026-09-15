@@ -524,9 +524,10 @@ body .mobile-menu{display:block}
   border-color:var(--nt-fg);background:color-mix(in srgb,var(--nt-fg) 8%,transparent);
 }
 
-/* Magnetiska knappar flyttas av JS via transform. Wrappern tar
-   rörelsen så att :active-skalningen inte krockar med den. */
-.nx-magnet{display:inline-block;will-change:transform}
+/* Wrapper runt primära knappar. Den bär ingen egen rörelse — den
+   finns kvar för att hjältens knappar ska kunna gå ut i kanten när
+   de staplas på smal skärm (se .nx-hero-knappar längre ned). */
+.nx-magnet{display:inline-block}
 
 /* Länk med streck som ritas från vänster och pil som glider */
 .nx-lank{

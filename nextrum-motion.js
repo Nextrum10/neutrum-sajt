@@ -558,34 +558,6 @@ const NXFin = (function () {
     });
   }
 
-  /* ---------- knappar som söker sig mot pekaren ----------
-     Max några pixlar. Effekten ska kännas, inte synas. */
-  function magnetiska(sel) {
-    if (NXMotion.tier !== 'full') return;
-    $$(sel).forEach(el => {
-      let rå = null, rafId = 0, mx = 0, my = 0;
-
-      const flytta = () => {
-        rafId = 0;
-        el.style.transform = 'translate3d(' + mx.toFixed(1) + 'px,' + my.toFixed(1) + 'px,0)';
-      };
-      el.addEventListener('pointerenter', () => { rå = el.getBoundingClientRect(); });
-      el.addEventListener('pointermove', e => {
-        if (!rå) rå = el.getBoundingClientRect();
-        const styrka = Number(el.dataset.magnet || 0.22);
-        mx = (e.clientX - (rå.left + rå.width / 2)) * styrka;
-        my = (e.clientY - (rå.top + rå.height / 2)) * styrka;
-        if (!rafId) rafId = requestAnimationFrame(flytta);
-      });
-      const släpp = () => {
-        rå = null; mx = 0; my = 0;
-        el.style.transform = '';
-      };
-      el.addEventListener('pointerleave', släpp);
-      el.addEventListener('blur', släpp);
-    });
-  }
-
   /* ---------- parallax ----------
      data-parallax="-8" = elementet rör sig 8% av sin egen höjd
      långsammare än sidan. Negativt = uppåt. */
@@ -730,10 +702,9 @@ const NXFin = (function () {
     heroVideo();
     radAvslöj('[data-avslöj]');
     stiga('[data-stig]');
-    magnetiska('[data-magnet]');
     parallax('[data-parallax]');
     nödbroms();
   }
 
-  return { allt, header, heroVideo, radAvslöj, stiga, magnetiska, parallax, nödbroms, tryckbart };
+  return { allt, header, heroVideo, radAvslöj, stiga, parallax, nödbroms, tryckbart };
 })();
