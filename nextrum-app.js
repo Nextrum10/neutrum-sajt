@@ -56,8 +56,8 @@ const NX = (function () {
     kundeInteSkicka: ['Kunde inte skicka: ', 'Could not send: '],
     tackAnsokan:     ['Tack för din ansökan. Vi läser alla och hör av oss.',
                       'Thank you for your application. We read every one and will be in touch.'],
-    tackIntresse:    ['Tack. Vi har tagit emot er intresseanmälan och återkommer på {e} så snart vi kan.',
-                      'Thank you. We have received your enquiry and will get back to you at {e} as soon as we can.'],
+    tackIntresse:    ['Tack. Vi har tagit emot er intresseanmälan och hör av oss på {e} inom 24 timmar.',
+                      'Thank you. We have received your enquiry and will get back to you at {e} within 24 hours.'],
     tackKontakt:     ['Mottaget. Vi återkommer på mejlen du angav.',
                       'Received. We will reply to the email address you gave.'],
     ingenFil:        ['Ingen fil vald', 'No file chosen'],
@@ -355,6 +355,102 @@ const NX = (function () {
     }, true);
   }
 
+  /* ---------- varifrån besökaren kom ----------
+     Hela poängen: när en intresseanmälan väl ligger i "leads" ska
+     det gå att se vilken kanal som skickade hit familjen. Utan det
+     går det inte att veta om annonserna, Facebook-gruppen eller
+     mun-mot-mun är det som funkar — och då går pengarna åt fel håll.
+
+     Först i sessionen vinner. Klickar någon på en Google-annons,
+     läser prissidan och skickar in först på tredje sidan är det
+     annonsen som gjorde jobbet, inte "nextrum.se" som hänvisare.
+
+     sessionStorage kan kasta (privat läge, blockerade kakor) och
+     ska aldrig fälla ett formulär — därför try/catch runt varje
+     åtkomst och ett svar som fungerar även när lagringen är död. */
+  const KÄLL_NYCKEL = 'nx-kalla';
+
+  function läsLagrad() {
+    try {
+      const rå = sessionStorage.getItem(KÄLL_NYCKEL);
+      return rå ? JSON.parse(rå) : null;
+    } catch (e) { return null; }
+  }
+
+  function skrivLagrad(k) {
+    try { sessionStorage.setItem(KÄLL_NYCKEL, JSON.stringify(k)); } catch (e) { /* strunt i det */ }
+  }
+
+  function källa() {
+    const lagrad = läsLagrad();
+    if (lagrad) return lagrad;
+
+    let p;
+    try { p = new URLSearchParams(location.search); } catch (e) { p = new URLSearchParams(); }
+    const par = n => (p.get(n) || '').trim().slice(0, 120) || null;
+
+    let hänvisare = null;
+    try {
+      if (document.referrer) {
+        const h = new URL(document.referrer).hostname.replace(/^www\./, '');
+        if (h && h !== location.hostname.replace(/^www\./, '')) hänvisare = h;
+      }
+    } catch (e) { /* trasig referrer räknas som ingen */ }
+
+    /* Kanalen i fallande ordning av hur mycket vi vet. En utm-tagg
+       är något vi själva satt och väger tyngst; klick-id:na kommer
+       från annonsnätverken; hänvisaren är en gissning; kvar blir
+       "direkt", vilket i praktiken betyder mun-mot-mun, en QR-kod
+       eller något vi inte taggat. */
+    let kanal = par('utm_source');
+    let medium = par('utm_medium');
+    if (!kanal && par('gclid')) { kanal = 'google'; medium = medium || 'cpc'; }
+    if (!kanal && par('fbclid')) { kanal = 'facebook'; medium = medium || 'social'; }
+    if (!kanal && hänvisare) { kanal = hänvisare; medium = medium || 'hänvisning'; }
+    if (!kanal) { kanal = 'direkt'; medium = medium || 'okänt'; }
+    /* utm_source utan utm_medium är vanligt i handskrivna länkar —
+       utan den här raden blev strängen "facebook / null". */
+    if (!medium) medium = 'okänt';
+
+    const k = {
+      kanal: kanal,
+      medium: medium,
+      kampanj: par('utm_campaign'),
+      innehåll: par('utm_content'),
+      term: par('utm_term'),
+      hänvisare: hänvisare,
+      landning: (location.pathname + location.search).slice(0, 200),
+      tid: new Date().toISOString()
+    };
+    skrivLagrad(k);
+    return k;
+  }
+
+  /* Raderna som följer med in i "message" på anmälan. Samma trick som
+     telefon och tider redan använder: inga nya kolumner, inget som
+     kan gå sönder i schemat, och allt syns i adminvyn direkt. */
+  function källrader() {
+    const k = källa();
+    const rader = ['Källa: ' + k.kanal + ' / ' + k.medium];
+    if (k.kampanj)   rader.push('Kampanj: ' + k.kampanj);
+    if (k.innehåll)  rader.push('Annonsvariant: ' + k.innehåll);
+    if (k.term)      rader.push('Sökord: ' + k.term);
+    if (k.hänvisare) rader.push('Hänvisad från: ' + k.hänvisare);
+    rader.push('Landningssida: ' + k.landning);
+    return rader;
+  }
+
+  /* Konverteringar till Vercel Analytics. window.va finns först när
+     insights-skriptet laddat, och saknas helt lokalt (sökvägen ger
+     404 på egen dator) — därför den tysta utgången. En mätning som
+     kraschar ett formulär är värre än ingen mätning alls. */
+  function händelse(namn, data) {
+    try {
+      if (typeof window.va !== 'function') return;
+      window.va('event', { name: namn, data: data || {} });
+    } catch (e) { /* mätning får aldrig stoppa något */ }
+  }
+
   /* ---------- ansökan om att bli studiehjälpare ----------
      Samma formulär finns i modalen på startsidan och som vanligt
      formulär på bli-studiehjalpare.html. Logiken bor här så att en
@@ -419,7 +515,7 @@ const NX = (function () {
 
       /* extra() får vara async. Sync-varianter fungerar precis som förut. */
       const extraRader = typeof o.extra === 'function' ? String((await o.extra()) || '').trim() : '';
-      const tillägg = [cvRad, extraRader].filter(Boolean).join('\n');
+      const tillägg = [cvRad, extraRader, källrader().join('\n')].filter(Boolean).join('\n');
       const why = [fritext, tillägg].filter(Boolean).join('\n\n');
 
       const { error } = await supa.from('applications').insert({
@@ -436,6 +532,7 @@ const NX = (function () {
       if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }
       form.reset();
       säg(msg, t('tackAnsokan'), true);
+      händelse('ansokan_studiehjalpare', { kanal: källa().kanal, kampanj: källa().kampanj || 'ingen' });
     });
   }
 
@@ -947,6 +1044,7 @@ const NX = (function () {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling, spamskydd,
     initFaq, initPris, kopplaAnsökan, märkInloggad,
+    källa, källrader, händelse,
     bildIntoning, initVagval,
     hämtaSession, hämtaProfil, vyFörRoll,
     byggKalender, hämtaUpptagna, hämtaTillganglighet, tiderFörDatum, föreslåTider,
