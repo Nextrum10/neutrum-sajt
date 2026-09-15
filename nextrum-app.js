@@ -686,8 +686,33 @@ const NX = (function () {
     return ut.filter(f => !sedda.has(f.datum) && sedda.add(f.datum)).slice(0, antal);
   }
 
+  /* ============================================================
+     MÅNADSKALENDERN
+
+     Två lägen, samma kalender:
+
+       vanligt   — man väljer bland de timmar studiehjälparen lagt
+                   in. Så ser familjen den.
+
+       markera   — studiehjälparens eget läge. Dygnets timmar står
+                   framme, inte bara de inlagda: en timme du redan
+                   kan väljs till förslaget, en du inte har markerat
+                   läggs till i dina tider när du trycker på den.
+                   Det var förut en egen flik med ett veckorutnät,
+                   och att först fylla i en vecka i ett rutnät för
+                   att sedan få välja en dag i en kalender var två
+                   sätt att säga samma sak.
+
+     opts.markera   — slår på det andra läget
+     opts.onMarkera — (datum, tid) => void, när en omarkerad timme
+                      trycks på. Kalendern skriver aldrig själv till
+                      databasen; sidan gör det och kommer tillbaka
+                      med sättTider().
+     ============================================================ */
   function byggKalender(opts) {
     const host = opts.host;
+    const MARKERA = !!opts.markera;
+    const FRAN = Number(opts.fran) || 7, TILL = Number(opts.till) || 22;
     const state = {
       visad: new Date(), valtDatum: null, valdTid: null,
       upptagna: opts.upptagna || new Set(),
@@ -721,8 +746,46 @@ const NX = (function () {
       return false;
     }
 
+    /* Timmarna som får plats en viss dag, oavsett om de är inlagda.
+       Samma två regler som tiderFörDatum: passet måste rymmas innan
+       dagen tar slut, och idag räknas bara timmar minst en timme
+       fram — man bokar inte ett pass som börjar om tio minuter. */
+    function allaTimmar(iso) {
+      const timmar = Math.max(1, Math.ceil((Number(state.minuter) || 60) / 60));
+      const idag = isoFor(new Date());
+      const gräns = iso === idag ? new Date().getHours() + 1 : -1;
+      const ut = [];
+      for (let h = FRAN; h + timmar <= TILL; h++) {
+        if (h < gräns) continue;
+        ut.push(tvåsiffrig(h) + ':00');
+      }
+      return ut;
+    }
+
+    function ritaTiderMarkera() {
+      const iso = state.valtDatum;
+      const timmar = allaTimmar(iso);
+      if (!timmar.length) {
+        slots.innerHTML = '<p class="small" style="grid-column:1/-1;color:var(--muted)">'
+          + 'Dagen är slut. Välj en dag framåt.</p>';
+        return;
+      }
+      const mina = new Set(tiderFörDatum(iso, state.tillgang, state.blockerade, state.minuter));
+      slots.innerHTML = timmar.map(t => {
+        const taken = upptagen(t);
+        const min = mina.has(t);
+        const klass = taken ? ' taken' : min ? ' ar-min' : ' ar-omarkerad';
+        return `<button type="button" class="slot${klass}" ${taken ? 'disabled' : ''}
+                  data-min="${min ? '1' : '0'}"
+                  aria-pressed="${state.valdTid === t && !taken ? 'true' : 'false'}"
+                  title="${taken ? 'Redan bokad' : min ? 'En av dina tider' : 'Lägg till i dina tider'}"
+                  data-tid="${t}">${t}</button>`;
+      }).join('');
+    }
+
     function ritaTider() {
       if (!state.valtDatum) { slots.innerHTML = ''; return; }
+      if (MARKERA) { ritaTiderMarkera(); return; }
       const tider = tiderFörDatum(state.valtDatum, state.tillgang, state.blockerade, state.minuter);
       if (!tider.length) {
         slots.innerHTML = '<p class="small" style="grid-column:1/-1;color:var(--muted)">Inga lediga tider den dagen.</p>';
@@ -754,9 +817,15 @@ const NX = (function () {
         const iso = isoFor(datum);
         const förbi = datum < idag;
         /* En dag är valbar när den faktiskt har en tid att erbjuda —
-           helgregeln ligger nu i tillgängligheten i stället. */
-        const valbar = !förbi && tiderFörDatum(iso, state.tillgang, state.blockerade, state.minuter).length > 0;
-        html += `<div class="day ${valbar ? 'avail' : 'off'}${state.valtDatum === iso ? ' sel' : ''}"
+           helgregeln ligger nu i tillgängligheten i stället.
+
+           I markeringsläget är varje dag framåt valbar: poängen är
+           just att komma åt en dag man INTE har lagt in än. Pricken
+           visar vilka dagar som redan har tider, så veckan går att
+           läsa av utan att öppna en dag i taget. */
+        const egna = tiderFörDatum(iso, state.tillgang, state.blockerade, state.minuter).length > 0;
+        const valbar = !förbi && (MARKERA || egna);
+        html += `<div class="day ${valbar ? 'avail' : 'off'}${egna ? ' ar-mina' : ''}${state.valtDatum === iso ? ' ar-vald' : ''}"
                    ${valbar ? `role="button" tabindex="0" data-dag="${iso}"` : ''}>${dag}</div>`;
       }
       grid.innerHTML = html;
@@ -779,6 +848,14 @@ const NX = (function () {
       }
       const tid = e.target.closest('[data-tid]');
       if (tid && !tid.disabled) {
+        /* En omarkerad timme är inte ett val utan ett besked om när
+           man kan. Sidan skriver den till tiderna och kommer
+           tillbaka med sättTider() — kalendern rör aldrig databasen
+           själv, för RLS-reglerna skiljer sig mellan vyerna. */
+        if (MARKERA && tid.dataset.min === '0') {
+          if (opts.onMarkera) opts.onMarkera(state.valtDatum, tid.dataset.tid);
+          return;
+        }
         state.valdTid = tid.dataset.tid;
         ritaTider();
         if (opts.onChange) opts.onChange(state);
@@ -793,11 +870,22 @@ const NX = (function () {
       sättTider(t) {
         state.tillgang = t.tillgang || [];
         state.blockerade = t.blockerade || [];
-        /* Ett valt datum kan ha blivit omöjligt av de nya tiderna. */
-        if (state.valtDatum && !tiderFörDatum(state.valtDatum, state.tillgang, state.blockerade, state.minuter).length) {
+        /* Ett valt datum kan ha blivit omöjligt av de nya tiderna.
+           Inte i markeringsläget: där är en tom dag hela poängen,
+           och att kastas ut ur dagen man just öppnat för att lägga
+           in en tid hade gjort läget obrukbart. */
+        if (!MARKERA && state.valtDatum
+            && !tiderFörDatum(state.valtDatum, state.tillgang, state.blockerade, state.minuter).length) {
           state.valtDatum = null; state.valdTid = null;
         }
         rita();
+      },
+      /* Ligger den valda timmen i studiehjälparens egna tider? Fötterna
+         under kalendern visar olika saker för en timme man kan och en
+         man just lagt till. */
+      ärMin(datum, tid) {
+        if (!datum || !tid) return false;
+        return tiderFörDatum(datum, state.tillgang, state.blockerade, state.minuter).indexOf(tid) !== -1;
       },
       /* Byter man längd kan den valda tiden ha blivit omöjlig — ett
          tretimmarspass får inte plats där ett entimmes gjorde det. */
@@ -807,7 +895,7 @@ const NX = (function () {
         if (state.valdTid && (kvar.indexOf(state.valdTid) === -1 || upptagen(state.valdTid))) {
           state.valdTid = null;
         }
-        if (state.valtDatum && !kvar.length) { state.valtDatum = null; state.valdTid = null; }
+        if (!MARKERA && state.valtDatum && !kvar.length) { state.valtDatum = null; state.valdTid = null; }
         rita();
         return state;
       },

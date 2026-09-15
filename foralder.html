@@ -318,9 +318,17 @@
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="rapporter"
              id="panel-rapporter" aria-labelledby="flik-rapporter" hidden>
-          <div class="dbox">
-            <h5>Efter passen <em id="rapport-antal"></em></h5>
-            <div id="rapporter"><div class="loading">Hämtar</div></div>
+          <!-- Fällbar. Rapporterna blir bara fler, och den som kom
+               hit för att läsa den senaste ska inte behöva scrolla
+               förbi hela terminen. Pilen sparar sitt läge. -->
+          <div class="dbox vy-fall" data-fall="foralder.rapporter">
+            <h5>Efter passen <em id="rapport-antal"></em>
+              <button type="button" class="vy-fall-pil" data-fall-knapp
+                      aria-expanded="true" aria-label="Dölj rapporterna"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
+            </h5>
+            <div class="vy-fall-kropp">
+              <div id="rapporter"><div class="loading">Hämtar</div></div>
+            </div>
           </div>
         </div>
       </section>
@@ -1278,7 +1286,7 @@
   async function laddaPass() {
     const host = $('#pass-lista');
     const { data, error } = await supa
-      .from('bookings').select('id, subject, format, note, wanted_date, wanted_time, status, student_id, created_by')
+      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, status, student_id, created_by')
       .eq('parent_id', S.user.id).order('wanted_date', { ascending: true });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
@@ -1293,7 +1301,7 @@
     const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
     $('#pass-antal').textContent = aktiva.length + ' st';
 
-    host.innerHTML = S.bokningar.map(b => {
+    const rad = b => {
       const barn = S.barn.find(x => x.id === b.student_id);
       const kommande = b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed');
       /* Ett förslag från studiehjälparen ser likadant ut i databasen
@@ -1310,13 +1318,34 @@
                 + '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
       }
 
-      const under = [b.format, barn ? barn.name : null].filter(Boolean).join(' · ');
+      /* Platsen står direkt på raden. Ett pass på plats är en resa —
+         var man ska vara är halva beskedet. */
+      const under = [b.format, b.location, barn ? barn.name : null].filter(Boolean).join(' · ');
       return NXKontakt.passRad(b, {
         under: under,
         vem: derasFörslag ? 'Föreslaget av er studiehjälpare' : null,
         atgarder: knappar
       }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
-    }).join('');
+    };
+
+    /* Genomförda pass ligger kvar men bakom en pil: de blir bara
+       fler, och den som öppnar listan vill se vad som är kvar att
+       komma på. Pilen minns vad man valde. */
+    const klara = S.bokningar.filter(b => b.status === 'completed');
+    const kvar = S.bokningar.filter(b => b.status !== 'completed');
+
+    host.innerHTML = (kvar.length
+        ? kvar.map(rad).join('')
+        : '<p class="xsmall" style="color:var(--muted-2);margin:0 0 4px">Inga pass framåt just nu.</p>')
+      + (klara.length
+        ? NXArbete.fallGrupp({
+            nyckel: 'foralder.pass.klara',
+            etikett: 'Genomförda pass',
+            antal: klara.length + ' st',
+            namn: 'Dölj genomförda pass',
+            kropp: klara.map(rad).join('')
+          })
+        : '');
   }
 
   document.addEventListener('click', async e => {
@@ -1481,6 +1510,7 @@
         created_by: S.user.id,
         subject: v.amne,
         format: v.format,
+        location: v.plats || null,
         wanted_date: v.datum,
         wanted_time: v.tid,
         duration_min: v.minuter,
@@ -1774,6 +1804,7 @@
       rader: [
         ['Status', l.text],
         ['Format', b.format],
+        ['Plats', b.location],
         ['Elev', barn ? barn.name : null],
         ['Studiehjälpare', (S.tutor && S.tutor.full_name) || null],
         ['Bokades av', b.created_by ? (derasFörslag ? 'Er studiehjälpare' : 'Ni') : null]
@@ -1846,6 +1877,10 @@
       uppgifter: NXArbete.flikar($('section[data-sek="uppgifter"]')),
       profil: NXArbete.flikar($('section[data-sek="profil"]'))
     };
+
+    /* Pilarna som står i markupen läses av en gång här, så ett sparat
+       läge syns direkt och inte först vid första klicket. */
+    NXArbete.fallStall($('#view-app'));
 
     S.sido = NXStudie.sidomeny({
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt'

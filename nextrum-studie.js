@@ -522,7 +522,7 @@ window.NXStudie = (function () {
         + '" data-pass="' + esc(b.id) + '">'
         + '<span class="sch-full-tid">' + esc(b.wanted_time || '—') + '</span>'
         + '<span class="sch-full-vad"><b>' + esc(b.subject || 'Pass') + '</b>'
-        + '<span>' + esc([b.format, (b.duration_min || 60) + ' min', namnFör(b)]
+        + '<span>' + esc([b.format, b.location, (b.duration_min || 60) + ' min', namnFör(b)]
             .filter(Boolean).join(' · ')) + '</span></span>'
         + '</button>';
     }
