@@ -120,45 +120,49 @@ i svaret, i stället för att aviseringen försvinner tyst.
 
 ---
 
-## 3. Två secrets i Supabase
+## 3. En secret i Supabase
 
 Project Settings → Edge Functions → Secrets:
 
 | Namn | Värde |
 |------|-------|
 | `RESEND_API_KEY` | API-nyckeln från Resend |
-| `NOTIS_HEMLIGHET` | En lång slumpsträng ni hittar på själva |
 
-Generera hemligheten med:
+Det är den enda som behövs. `SUPABASE_URL` och
+`SUPABASE_SERVICE_ROLE_KEY` injicerar Supabase själv i varje Edge
+Function.
 
-```bash
-openssl rand -hex 32
-```
+### `NOTIS_HEMLIGHET` är avvecklad — ta bort den
 
-Den finns för att funktionen ska kunna skilja ett riktigt
-webhook-anrop från vem som helst som hittat adressen. Spara den — ni
-behöver samma sträng i steg 4.
+Den delade hemligheten ligger nu i tabellen `public.notis_konfig`
+(`schema-v17.sql`), inte i en secret. Funktionen läser den med
+service_role-nyckeln vid kall start och cachar den sedan.
 
-### ⚠ Hemligheten är just nu själva kommandot, inte dess utdata
+Secreten `NOTIS_HEMLIGHET` används inte längre av någon kod. **Radera
+den** i Supabase-panelen så att ingen tror att den betyder något.
 
-Både secreten och webhook-headern är satta till den bokstavliga
-strängen `openssl rand -hex 32`. Kommandot kopierades in i stället för
-att köras. Notiserna fungerar — de två strängarna matchar varandra —
-men skyddet är borta: vem som helst som ser den här filen kan anropa
-funktionen och fylla era tre inkorgar.
+#### Varför den flyttades
 
-Byt så här, och gör stegen i den här ordningen:
+Den var satt till den bokstavliga strängen `openssl rand -hex 32`.
+Kommandot hade klistrats in i stället för körts, och webhookens header
+var satt till exakt samma sträng. Notiserna fungerade — de två
+matchade varandra — men skyddet var noll: vem som helst som sett den
+här filen kunde anropa funktionen och fylla alla tre inkorgarna med
+påhittade anmälningar.
 
-1. Kör `openssl rand -hex 32` **i en terminal** och kopiera de 64
-   tecknen den skriver ut.
-2. Project Settings → Edge Functions → Secrets → sätt
-   `NOTIS_HEMLIGHET` till den strängen.
-3. Först därefter, byt headern i webhooken (steg 4 nedan) till samma
-   sträng.
+En secret går bara att byta i panelen, och headern bara i databasen.
+Två fönster, två steg, fel ordning ger 401 på varje anmälan som kommer
+in emellan. I en tabell byts båda i samma transaktion i stället.
 
-Gör ni 3 före 2 svarar funktionen 401 på varje anmälan som kommer in
-emellan, och de mejlen kommer aldrig. Raderna ligger kvar i `leads`,
-så ingenting går förlorat — men ni får inte veta om dem.
+Tabellen har RLS på utan en enda policy, så `anon` och `authenticated`
+får noll rader. Databaslintern flaggar det som INFO — det är avsikten,
+precis som för `fortnox_token`.
+
+#### Rotera hemligheten
+
+Hela blocket ligger längst ned i `schema-v17.sql`. Kör det i SQL
+Editor: det byter tabellen och webhookens header i samma transaktion,
+och värdet syns aldrig på skärmen.
 
 ---
 
@@ -171,22 +175,12 @@ Database → Webhooks → Create a new hook:
 - **Events:** ✅ Insert (bara Insert)
 - **Type:** Supabase Edge Functions
 - **Edge Function:** `lead-notis`
-- **HTTP Headers:** lägg till `x-nextrum-notis` med hemligheten från steg 3
+- **HTTP Headers:** lägg till `x-nextrum-notis` med hemligheten ur
+  `public.notis_konfig`
 
-Webhooken finns redan och heter `ny-intresseanmalan`. Ska bara headern
-bytas går det från SQL Editor, utan att röra resten:
-
-```sql
-create or replace trigger "ny-intresseanmalan"
-  after insert on public.leads
-  for each row execute function supabase_functions.http_request(
-    'https://ddkfiuvcppalutfulvbi.supabase.co/functions/v1/lead-notis',
-    'POST',
-    '{"x-nextrum-notis":"DIN-NYA-HEMLIGHET-HAR"}',
-    '{}',
-    '5000'
-  );
-```
+Webhooken finns redan och heter `ny-intresseanmalan`, med rätt header.
+Sätt den inte för hand igen — använd roteringsblocket i
+`schema-v17.sql`, som skriver både tabellen och headern på en gång.
 
 ### Varför en webhook och inte ett anrop från formuläret
 
@@ -206,8 +200,11 @@ Skicka en riktig intresseanmälan på nextrum.se. Kom det inget mejl:
 
 - **Database → Webhooks → Logs** visar om webhooken avfyrades och vad
   funktionen svarade.
-- `401 Fel eller saknad hemlighet` → headern i steg 4 stämmer inte med
-  secreten i steg 3.
+- `401 Fel eller saknad hemlighet` → headern i webhooken stämmer inte
+  med raden i `public.notis_konfig`. Kör roteringsblocket i
+  `schema-v17.sql`, så sätts båda om.
+- `503 Hemligheten gick inte att läsa` → tabellen `notis_konfig` är
+  tom eller borta. Kör `schema-v17.sql`.
 - `502 Resend svarade…` → domänen är inte verifierad än, eller
   nyckeln är fel.
 - Inget alls i loggen → webhooken är inte påslagen, eller lyssnar på

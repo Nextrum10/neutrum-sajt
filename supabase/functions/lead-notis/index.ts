@@ -15,10 +15,22 @@
 // verify_jwt är av, eftersom en webhook inte har någon inloggad
 // användare. I stället krävs en delad hemlighet i en egen header.
 // Utan den svarar funktionen 401 och gör ingenting.
+//
+// HEMLIGHETEN LIGGER I public.notis_konfig, inte i en secret. Den
+// låg förut i Deno.env som NOTIS_HEMLIGHET och var satt till den
+// bokstavliga strängen "openssl rand -hex 32" — kommandot hade
+// klistrats in i stället för körts. I en tabell kan den roteras med
+// en SQL-rad, i samma transaktion som webhookens header, i stället
+// för att kräva ett dashboard-besök och rätt ordning mellan två
+// fönster. Tabellen har RLS på utan en enda policy, så bara
+// service_role ser den.
 // ============================================================
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-const NOTIS_HEMLIGHET = Deno.env.get('NOTIS_HEMLIGHET');
+
+/* Injiceras av Supabase i varje Edge Function, behöver inte sättas. */
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const FRAN = 'Nextrum <info@nextrum.se>';
 
@@ -50,6 +62,32 @@ const RESERV_FRAN = 'Nextrum <onboarding@resend.dev>';
    reserven — men då står orsaken i svaret i stället för att
    aviseringen försvinner tyst. */
 const RESERV_TILL = 'info@nextrum.se';
+
+/* Läses en gång per instans. En kall start kostar ett anrop, sedan
+   ligger den kvar tills instansen återvinns. Roteras hemligheten
+   hinner en varm instans ha den gamla kvar en kort stund — därför
+   sker bytet i tabellen och i webhooken i SAMMA transaktion, så att
+   de två aldrig glider isär mer än en instanslivstid. */
+let cachadHemlighet: string | null = null;
+
+async function hämtaHemlighet(): Promise<string | null> {
+  if (cachadHemlighet) return cachadHemlighet;
+  if (!SUPABASE_URL || !SERVICE_ROLE) return null;
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/notis_konfig?select=hemlighet&id=eq.1`,
+      { headers: { apikey: SERVICE_ROLE, authorization: `Bearer ${SERVICE_ROLE}` } },
+    );
+    if (!r.ok) return null;
+    const rader = await r.json();
+    const h = Array.isArray(rader) && rader[0] ? rader[0].hemlighet : null;
+    if (typeof h !== 'string' || !h) return null;
+    cachadHemlighet = h;
+    return h;
+  } catch (_e) {
+    return null;
+  }
+}
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {
@@ -83,8 +121,20 @@ Deno.serve(async (req) => {
        "RESEND_API_KEY saknas" till vem som helst som pingade
        adressen — ett litet läckage om serverns tillstånd till någon
        som inte ens fått visa att de hör hemma här. Nu får en
-       oautentiserad anropare bara 401, oavsett hur servern mår. */
-    if (!NOTIS_HEMLIGHET || req.headers.get('x-nextrum-notis') !== NOTIS_HEMLIGHET) {
+       oautentiserad anropare bara 401, oavsett hur servern mår.
+
+       Saknas headern helt svarar vi innan uppslaget mot tabellen. Den
+       som bara pingar adressen får alltså 401 och lär sig ingenting,
+       medan en riktig webhook — som alltid skickar headern — får 503
+       och en begriplig rad i webhookloggen om tabellen är trasig. */
+    const presenterad = req.headers.get('x-nextrum-notis');
+    if (!presenterad) return json({ error: 'Fel eller saknad hemlighet.' }, 401);
+
+    const hemlighet = await hämtaHemlighet();
+    if (!hemlighet) {
+      return json({ error: 'Hemligheten gick inte att läsa ur public.notis_konfig.' }, 503);
+    }
+    if (presenterad !== hemlighet) {
       return json({ error: 'Fel eller saknad hemlighet.' }, 401);
     }
 
