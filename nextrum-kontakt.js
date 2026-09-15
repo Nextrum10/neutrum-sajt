@@ -238,5 +238,5 @@ window.NXKontakt = (function () {
       + '</div>';
   }
 
-  return { tråd: tråd, olästa: olästa, passRad: passRad, LÄGEN: LÄGEN };
+  return { tråd: tråd, olästa: olästa, passRad: passRad, dagText: dagText, LÄGEN: LÄGEN };
 })();

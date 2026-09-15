@@ -648,6 +648,60 @@ window.NXStudie = (function () {
       return visa(String(location.hash || '').replace(/^#/, '').split('/')[0]);
     }
 
+    /* ---------- hopfällning ----------
+       Adminvyn har haft den här sedan den byggdes, och skälet är
+       detsamma i arbetsytorna: på en liten bärbar är 250px meny en
+       fjärdedel av det man arbetar i.
+
+       Ritas bara för den som ber om den med o.fall. Adminvyn har
+       en egen knapp i sin topprad och ska inte få två.
+
+       Etiketterna får ett eget span så att de går att gömma utan
+       att gömma länken. Skärmläsaren läser dem ändå — de är dolda
+       visuellt, inte borttagna, och title ger musen samma ord. */
+    if (o.fall) {
+      var layout = nav.closest('.vy-layout');
+
+      länkar.forEach(function (a) {
+        if (a.querySelector('.adm-etikett')) return;
+        var text = '';
+        Array.prototype.slice.call(a.childNodes).forEach(function (n) {
+          if (n.nodeType === 3) { text += n.textContent; n.remove(); }
+        });
+        text = text.trim();
+        if (!text) return;
+        var sp = document.createElement('span');
+        sp.className = 'adm-etikett';
+        sp.textContent = text;
+        a.appendChild(sp);
+        a.title = text;
+      });
+
+      if (layout) {
+        var FALL_NYCKEL = 'nx-meny-hopfalld-' + o.fall;
+        var knappFall = document.createElement('button');
+        knappFall.type = 'button';
+        knappFall.className = 'vy-sido-fall';
+        knappFall.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true">'
+          + '<path d="M2 4h12M2 8h12M2 12h12"/></svg>';
+        nav.insertBefore(knappFall, nav.firstChild);
+
+        var sättFall = function (hopfälld) {
+          layout.classList.toggle('ar-hopfalld', hopfälld);
+          knappFall.setAttribute('aria-expanded', hopfälld ? 'false' : 'true');
+          knappFall.setAttribute('aria-label', hopfälld ? 'Fäll ut menyn' : 'Fäll ihop menyn');
+          try { localStorage.setItem(FALL_NYCKEL, hopfälld ? '1' : '0'); } catch (e) {}
+        };
+
+        var sparat = '0';
+        try { sparat = localStorage.getItem(FALL_NYCKEL) || '0'; } catch (e) {}
+        sättFall(sparat === '1');
+        knappFall.addEventListener('click', function () {
+          sättFall(!layout.classList.contains('ar-hopfalld'));
+        });
+      }
+    }
+
     window.addEventListener('hashchange', frånHash);
     frånHash();
 
@@ -748,6 +802,129 @@ window.NXStudie = (function () {
     sättTitel(poster.length);
   }
 
+  /* ============================================================
+     LÄXFILTRET
+
+     Läxlistan var allt eleven någonsin fått, med de klara kvar i
+     ordningen. Efter en termin låg veckans läxa mellan tjugo
+     avklarade, och den enda vägen till "vad ska jag göra nu" var
+     att läsa varje rad.
+
+     Tre lägen, med antalet i knappen så att man ser vad man får
+     innan man klickar. Klart ligger kvar och går att gå tillbaka
+     till — det är bevis på vad som gjorts.
+     ============================================================ */
+  var LÄX_LÄGEN = [
+    ['attgora', 'Att göra'],
+    ['klart', 'Klart'],
+    ['alla', 'Alla']
+  ];
+
+  function läxUrval(laxor, valt) {
+    var lista = laxor || [];
+    if (valt === 'attgora') return lista.filter(function (h) { return h.status !== 'klar'; });
+    if (valt === 'klart') return lista.filter(function (h) { return h.status === 'klar'; });
+    return lista;
+  }
+
+  function läxFilter(o) {
+    var host = o.host;
+    if (!host) return;
+    var laxor = o.laxor || [];
+    var valt = o.valt || 'attgora';
+
+    /* Med tre läxor totalt är ett filter tre knappar som gör
+       ingenting. Det ritas när det finns något att sålla i. */
+    if (laxor.length < 4) { host.innerHTML = ''; host.hidden = true; return; }
+    host.hidden = false;
+
+    host.innerHTML = LÄX_LÄGEN.map(function (l) {
+      var n = läxUrval(laxor, l[0]).length;
+      return '<button type="button" class="chip" data-laxfilter="' + l[0] + '"'
+        + ' aria-pressed="' + (l[0] === valt ? 'true' : 'false') + '">'
+        + esc(l[1]) + ' <span>' + n + '</span></button>';
+    }).join('');
+  }
+
+  /* ============================================================
+     PASSLISTAN
+
+     Listan var varje bokning som någonsin gjorts, sorterad i
+     datumordning uppåt. Efter ett halvår låg nästa pass under
+     femtio hållna, och man fick skrolla förbi allt som redan hänt
+     för att komma åt det som inte hade hänt.
+
+     Nu är kommande pass listan. Det som varit ligger under den,
+     tre rader djupt, med resten bakom en knapp. Ingenting
+     försvinner — historiken är kvitto på vad som fakturerats och
+     får inte gå att tappa bort, bara att lägga undan.
+
+     opts: { host, bokningar, rad(b), tomtKommande, tomtAllt }
+     ============================================================ */
+  var PASS_SYNLIGA = 3;
+
+  function passLista(opts) {
+    var o = opts || {};
+    var host = o.host;
+    if (!host) return;
+
+    var alla = o.bokningar || [];
+    var idag = isoFor(new Date());
+
+    /* Avbokat är aldrig kommande, hur långt fram det än ligger.
+       Ett pass som inte blir av är historik i samma stund. */
+    function ärKommande(b) {
+      return (b.status === 'requested' || b.status === 'confirmed')
+        && String(b.wanted_date || '') >= idag;
+    }
+
+    function nyckel(b) { return String(b.wanted_date || '') + String(b.wanted_time || ''); }
+
+    var kommande = alla.filter(ärKommande)
+      .sort(function (a, c) { return nyckel(a).localeCompare(nyckel(c)); });
+    var tidigare = alla.filter(function (b) { return !ärKommande(b); })
+      .sort(function (a, c) { return nyckel(c).localeCompare(nyckel(a)); });
+
+    if (!alla.length) {
+      host.innerHTML = o.tomtAllt || tomt('Inga pass än', '');
+      return;
+    }
+
+    var ut = '';
+
+    ut += kommande.length
+      ? '<div class="pl-grupp">' + kommande.map(o.rad).join('') + '</div>'
+      : '<div class="pl-inget">' + esc(o.tomtKommande || 'Inga kommande pass just nu.') + '</div>';
+
+    if (tidigare.length) {
+      var visade = tidigare.slice(0, PASS_SYNLIGA);
+      var resten = tidigare.slice(PASS_SYNLIGA);
+
+      ut += '<div class="pl-grupp pl-tidigare">'
+        + '<div class="pl-rubrik">Tidigare pass <em>' + tidigare.length + ' st</em></div>'
+        + visade.map(o.rad).join('')
+        + (resten.length
+            ? '<div class="pl-resten" id="pl-resten" hidden>' + resten.map(o.rad).join('') + '</div>'
+              + '<button type="button" class="pl-mer" data-pl-mer aria-expanded="false">'
+              + 'Visa alla ' + tidigare.length + '</button>'
+            : '')
+        + '</div>';
+    }
+
+    host.innerHTML = ut;
+
+    var knapp = host.querySelector('[data-pl-mer]');
+    if (knapp) {
+      knapp.addEventListener('click', function () {
+        var lådan = host.querySelector('#pl-resten');
+        var öppet = !lådan.hidden;
+        lådan.hidden = öppet;
+        knapp.setAttribute('aria-expanded', öppet ? 'false' : 'true');
+        knapp.textContent = öppet ? 'Visa alla ' + tidigare.length : 'Visa färre';
+      });
+    }
+  }
+
   /* Antalet syns i fliken också — man har sällan vyn framme. */
   function sättTitel(n) {
     var ren = document.title.replace(/^\(\d+\)\s*/, '');
@@ -756,6 +933,7 @@ window.NXStudie = (function () {
 
   return {
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
+    passLista: passLista, läxFilter: läxFilter, läxUrval: läxUrval,
     LAGE: LAGE, NIVA: NIVA,
     läxläge: läxläge, deadlineText: deadlineText,
     läxRad: läxRad, nivåMätare: nivåMätare,

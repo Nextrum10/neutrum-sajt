@@ -996,6 +996,7 @@ table.adm .adm-tal{
    ------------------------------------------------------------ */
 @media (min-width:900px){
   .vy-admin .vy-layout.ar-hopfalld{grid-template-columns:64px minmax(0,1fr)}
+  .vy .vy-layout.ar-hopfalld{grid-template-columns:64px minmax(0,1fr)}
   .vy-layout.ar-hopfalld .vy-sido a{
     justify-content:center;
     padding-inline:0;
@@ -1840,4 +1841,435 @@ table.adm .adm-tal{
 .bk-plats .xsmall{
   display:block;margin-top:7px;
   font-size:.76rem;line-height:1.5;color:var(--bl-3);
+}
+
+/* ============================================================
+   12. STUDIEHJÄLPARVYN: ELEVER OCH RAPPORT
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   ELEVVÄLJAREN
+
+   Var en rullgardin med etiketten "Du jobbar med". Den dolde
+   allt utom namnet: man såg inte vem som hade pass imorgon,
+   vem som saknade läxa, eller ens hur många elever man hade.
+
+   Nu är varje elev ett kort med det man behöver veta för att
+   välja rätt. Har man en enda elev ritas ingen väljare alls —
+   ett val mellan ett alternativ är ingen fråga.
+   ------------------------------------------------------------ */
+.ev-rad{
+  display:grid;gap:9px;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+}
+.ev-kort{
+  display:flex;align-items:flex-start;gap:12px;
+  width:100%;text-align:left;
+  padding:14px 15px;
+  border:1px solid var(--ln);border-radius:14px;
+  background:var(--pap);
+  transition:border-color .18s var(--e),background .18s var(--e),transform .18s var(--e);
+}
+.ev-kort:hover{border-color:var(--ln-2);transform:translateY(-1px)}
+.ev-kort[aria-pressed="true"]{
+  border-color:var(--bl);
+  background:var(--pap-2);
+}
+.ev-kort-text{min-width:0;flex:1}
+.ev-kort-text b{
+  display:block;font-size:.95rem;font-weight:650;color:var(--bl);
+  line-height:1.3;
+}
+.ev-kort-text > span{
+  display:block;margin-top:3px;
+  font-size:.8rem;line-height:1.45;color:var(--bl-2);
+}
+/* Nästa pass är det man oftast letar efter i listan. Det står
+   sist och i monospace, så det går att skumma nedför kolumnen. */
+.ev-nasta{
+  display:block;margin-top:8px;
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.04em;color:var(--bl-2);
+}
+.ev-nasta.ar-idag{color:var(--acc-text)}
+.ev-kort .vy-sido-mark{margin-left:0;align-self:flex-start}
+
+/* ------------------------------------------------------------
+   RAPPORTEN
+
+   Fyra fritextfält blev en fråga med tre svar, plus två korta
+   fält. Den som skrivit tio rapporter vet att fält tre och fyra
+   blir tomma — och den som LÄSER dem fick ingen aning om hur
+   det gick utan att läsa varje ord.
+   ------------------------------------------------------------ */
+.rp-fraga{
+  font-size:.92rem;font-weight:650;color:var(--bl);
+  margin-bottom:10px;
+}
+.rp-fraga em{
+  font-style:normal;font-weight:400;color:var(--bl-2);
+  font-size:.85rem;margin-left:6px;
+}
+
+/* De tre omdömena. Större än vanliga chips: det här är formulärets
+   enda obligatoriska val och ska vara svårt att missa. */
+.rp-gick{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.rp-gick button{
+  display:flex;align-items:center;gap:10px;
+  padding:13px 15px;
+  border:1px solid var(--ln-2);border-radius:13px;
+  background:var(--pap);
+  font:inherit;font-size:.89rem;font-weight:600;
+  color:var(--bl-2);text-align:left;
+  cursor:pointer;
+  transition:border-color .16s var(--e),background .16s var(--e),color .16s var(--e);
+}
+.rp-gick button:hover{border-color:var(--bl-3);color:var(--bl)}
+.rp-gick button i{
+  width:11px;height:11px;border-radius:100px;flex:none;
+  border:2px solid var(--ln-2);
+  transition:background .16s var(--e),border-color .16s var(--e);
+}
+.rp-gick button[aria-pressed="true"]{border-color:var(--bl);color:var(--bl);background:var(--pap-2)}
+.rp-gick button[aria-pressed="true"] i{border-color:transparent}
+.rp-gick button[data-v="mycket_bra"][aria-pressed="true"] i{background:var(--mossa)}
+.rp-gick button[data-v="bra"][aria-pressed="true"] i{background:var(--ockra)}
+.rp-gick button[data-v="folja_upp"][aria-pressed="true"] i{background:var(--acc)}
+
+/* Kunskapsområdet. Öppnas bara om man vill — de flesta pass
+   handlar om samma sak som förra gången, och att kräva ett
+   område varje gång är att kräva en dubblett. */
+.rp-omrade{
+  margin-top:6px;
+  border-top:1px solid var(--ln);
+  padding-top:16px;
+}
+.rp-nivaer{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.rp-fraga + .rp-nivaer{margin-top:0}
+
+/* Ett tidigare område som går att återanvända med ett klick. */
+.rp-tidigare{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.rp-tidigare button{
+  padding:5px 11px;
+  border:1px dashed var(--ln-2);border-radius:100px;
+  background:transparent;
+  font:inherit;font-size:.8rem;color:var(--bl-2);
+  cursor:pointer;
+  transition:border-color .16s var(--e),color .16s var(--e);
+}
+.rp-tidigare button:hover{border-style:solid;border-color:var(--bl-3);color:var(--bl)}
+
+/* Hur passet gick, i listan över egna rapporter. Prickens färg är
+   samma som i formuläret: en rad ska gå att sortera med ögat. */
+.rp-marke{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:3px 10px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  font-size:.72rem;font-weight:600;color:var(--bl-2);
+  white-space:nowrap;
+}
+.rp-marke i{width:7px;height:7px;border-radius:50%;background:var(--bl-3)}
+.rp-marke[data-v="mycket_bra"] i{background:var(--mossa)}
+.rp-marke[data-v="bra"] i{background:var(--ockra)}
+.rp-marke[data-v="folja_upp"] i{background:var(--acc)}
+.rp-marke[data-v="folja_upp"]{border-color:var(--acc-line);color:var(--acc-text)}
+
+/* Fältet för ett ämne som inte står i listan. Ligger under chipsen,
+   inte bredvid: på en telefon får de aldrig plats på samma rad. */
+.pr-lagg{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pr-lagg .inp{flex:1 1 200px;min-width:0}
+.pr-lagg .btn{flex:0 0 auto}
+
+/* ============================================================
+   PASSLISTAN
+   Kommande pass överst utan rubrik — de ÄR listan. Det som varit
+   får en rubrik och en tunn linje ovanför, eftersom det är en
+   annan sorts rad: något att slå upp, inte något att göra.
+   ============================================================ */
+.pl-inget{
+  padding:16px 18px;
+  border:1px dashed var(--ln-2);border-radius:14px;
+  font-size:.87rem;color:var(--bl-2);
+}
+.pl-tidigare{
+  margin-top:clamp(18px,2.2vw,26px);
+  padding-top:clamp(14px,1.8vw,18px);
+  border-top:1px solid var(--ln);
+}
+.pl-rubrik{
+  display:flex;align-items:baseline;gap:9px;
+  margin-bottom:12px;
+  font-size:.72rem;font-weight:650;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--bl-2);
+}
+.pl-rubrik em{
+  font-style:normal;font-weight:500;letter-spacing:0;text-transform:none;
+  font-size:.78rem;color:var(--bl-3);
+}
+/* Hållna pass ska gå att läsa men inte dra blicken från det som
+   inte hänt än. */
+.pl-tidigare .pass{opacity:.72}
+.pl-tidigare .pass:hover{opacity:1}
+.pl-mer{
+  margin-top:4px;
+  padding:9px 16px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  background:transparent;
+  font:inherit;font-size:.82rem;font-weight:600;color:var(--bl-2);
+  cursor:pointer;
+  transition:border-color .16s var(--e),color .16s var(--e);
+}
+.pl-mer:hover{border-color:var(--bl-3);color:var(--bl)}
+
+/* ============================================================
+   STORA SKÄRMAR
+
+   1320px är ett läsmått. Det är rätt för en textsida och fel för
+   en arbetsyta: på en 27-tummare låg 672px tom beige på varje
+   sida av dashboarden medan korten trängdes i mitten.
+
+   Måtten växer i två steg och stannar sedan. En arbetsyta som
+   följer skärmen hur bred den än är slutar med en passrad på två
+   meter, och då är avståndet mellan datumet och knappen längre än
+   ögat orkar följa. Det som blir över får vara marginal.
+
+   Marknadssidorna rörs inte. Där ÄR 1320px rätt, eftersom det som
+   ska läsas är löptext och inte ett rutnät.
+   ============================================================ */
+@media (min-width:1500px){
+  .vy main.wrap{max-width:1560px}
+  .vy .vy-layout,
+  .vy-admin .vy-layout{max-width:none}
+  .vy-layout{grid-template-columns:250px minmax(0,1fr);gap:clamp(28px,2.4vw,40px)}
+  .vy-hero-inne{max-width:54ch}
+}
+
+@media (min-width:1900px){
+  .vy main.wrap{max-width:1720px}
+  .vy-layout{grid-template-columns:268px minmax(0,1fr)}
+}
+
+/* Adminvyn får mer. Den är tabeller och listor, och en kolumn till
+   är skillnaden mellan att se en månad och att skrolla efter den. */
+@media (min-width:1500px){ .vy-admin main.wrap{max-width:1680px} }
+@media (min-width:1900px){ .vy-admin main.wrap{max-width:1860px} }
+
+/* Rutnät som redan räknar själva får fler kolumner av att de får
+   plats, utan att någon siffra behöver ändras här. Det här är de
+   som står på ett fast antal. */
+@media (min-width:1500px){
+  .vy-layout .split{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+  .stat-tal-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+
+/* ============================================================
+   CHATTEN
+
+   Familjerna till vänster, den öppna tråden till höger. Förr låg
+   familjebytet som en rad små chips ovanför tråden: den som hade
+   fyra familjer fick klicka sig igenom alla fyra för att se vem
+   som faktiskt hade skrivit, eftersom ett chip bara bar ett
+   förnamn och en prick.
+
+   Med en enda familj ritas listan ändå, men smal — den säger vem
+   man skriver till, vilket rubriken förr fick göra ensam.
+   ============================================================ */
+.ch{
+  display:grid;
+  gap:clamp(14px,1.6vw,20px);
+  grid-template-columns:minmax(0,1fr);
+  align-items:start;
+}
+@media (min-width:900px){
+  .ch{grid-template-columns:clamp(260px,26%,330px) minmax(0,1fr)}
+}
+
+.ch-lista{
+  display:flex;flex-direction:column;gap:4px;
+  padding:10px;
+  border:1px solid var(--ln);border-radius:16px;
+  background:var(--pap-2);
+  max-height:clamp(320px,52vh,620px);
+  overflow-y:auto;
+}
+.ch-tom{padding:14px;font-size:.85rem;color:var(--bl-2)}
+
+.ch-rad{
+  display:flex;align-items:flex-start;gap:11px;
+  width:100%;padding:11px 12px;
+  border:1px solid transparent;border-radius:12px;
+  background:transparent;
+  font:inherit;text-align:left;
+  cursor:pointer;
+  transition:background .16s var(--e),border-color .16s var(--e);
+}
+.ch-rad:hover{background:var(--pap)}
+.ch-rad[aria-pressed="true"]{background:var(--pap);border-color:var(--ln-2)}
+.ch-rad .av{flex:0 0 auto}
+
+.ch-rad-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
+.ch-rad-topp{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+.ch-rad-topp b{
+  font-size:.88rem;font-weight:650;color:var(--bl);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ch-rad-topp time{
+  flex:0 0 auto;
+  font-family:var(--f-mono);font-size:.68rem;color:var(--bl-3);
+}
+.ch-rad-barn{
+  font-size:.74rem;color:var(--bl-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* En rad, aldrig två. Ett långt meddelande får inte knuffa ned
+   familjen under det. */
+.ch-rad-sist{
+  font-size:.79rem;color:var(--bl-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ch-rad-sist.ar-oläst{color:var(--bl);font-weight:600}
+.ch-rad-larm{
+  flex:0 0 auto;align-self:center;
+  min-width:20px;height:20px;padding:0 6px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:100px;
+  background:var(--acc);color:#fff;
+  font-size:.7rem;font-weight:700;
+}
+
+.ch-rum{
+  display:flex;flex-direction:column;
+  min-width:0;
+  border:1px solid var(--ln);border-radius:16px;
+  background:var(--pap-2);
+  padding:clamp(14px,1.8vw,20px);
+}
+.ch-topp{
+  display:flex;align-items:center;gap:11px;
+  padding-bottom:14px;margin-bottom:14px;
+  border-bottom:1px solid var(--ln);
+}
+.ch-topp:empty{display:none}
+.ch-topp-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+.ch-topp-text b{font-size:.95rem;font-weight:650;color:var(--bl)}
+.ch-topp-text span{
+  font-size:.78rem;color:var(--bl-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* Filtret över läxlistan. Antalet står i knappen så att man ser
+   vad man får innan man klickar. */
+.lx-filter{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.lx-filter .chip span{
+  margin-left:5px;
+  font-family:var(--f-mono);font-size:.74rem;
+  opacity:.65;
+}
+.lx-filter .chip[aria-pressed="true"] span{opacity:.8}
+
+/* Knappen som fäller ihop menyn i arbetsytorna. Sitter överst i
+   kolumnen och inte i sidhuvudet: sidhuvudet är sajtens, menyn är
+   vyns, och kontrollen hör till det den styr. */
+.vy-sido-fall{
+  display:none;
+  align-self:flex-start;
+  width:34px;height:34px;margin-bottom:6px;
+  align-items:center;justify-content:center;
+  border:1px solid transparent;border-radius:10px;
+  background:transparent;
+  color:var(--bl-2);
+  cursor:pointer;
+  transition:background .16s var(--e),color .16s var(--e),border-color .16s var(--e);
+}
+.vy-sido-fall svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.vy-sido-fall:hover{background:var(--pap-2);border-color:var(--ln-2);color:var(--bl)}
+@media (min-width:900px){ .vy-sido-fall{display:flex} }
+/* Hopfälld står den mitt i den smala kolumnen, som ikonerna under. */
+.vy-layout.ar-hopfalld .vy-sido-fall{align-self:center}
+
+/* ============================================================
+   ELEVPROFILEN
+   Namn, årskurs och nästa pass överst, sedan vägarna vidare till
+   sektionerna som redan finns. Förr stod här en rad taggar utan
+   namn ovanför: man såg vad eleven läste men inte vem det var.
+   ============================================================ */
+.ep{margin-top:16px;padding-top:16px;border-top:1px solid var(--ln)}
+.ep-topp{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ep-namn{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 180px}
+.ep-namn b{font-size:1.06rem;font-weight:700;letter-spacing:-.015em;color:var(--bl)}
+.ep-namn span{font-size:.82rem;color:var(--bl-2)}
+/* Nästa pass står till höger och inte i en egen ruta: det är ett
+   faktum om personen, inte ett eget kort. */
+.ep-nasta{
+  display:flex;flex-direction:column;gap:1px;text-align:right;
+  padding-left:16px;border-left:1px solid var(--ln);
+}
+.ep-nasta b{font-size:.86rem;font-weight:650;color:var(--bl)}
+.ep-nasta span{font-size:.74rem;color:var(--bl-3)}
+@media (max-width:560px){
+  .ep-nasta{text-align:left;padding-left:0;border-left:0;flex-basis:100%}
+}
+.ep-taggar{margin-top:14px}
+.ep-mal{margin-top:12px;line-height:1.6}
+
+.ep-vagar{display:flex;gap:7px;flex-wrap:wrap;margin-top:16px}
+.ep-vagar a{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 14px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  font-size:.83rem;font-weight:600;color:var(--bl-2);
+  text-decoration:none;
+  transition:border-color .16s var(--e),color .16s var(--e),background .16s var(--e);
+}
+.ep-vagar a:hover{border-color:var(--bl-3);color:var(--bl);background:var(--pap)}
+.ep-vagar a span{
+  min-width:18px;height:18px;padding:0 5px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:100px;background:var(--acc);color:#fff;
+  font-size:.68rem;font-weight:700;
+}
+
+/* ============================================================
+   KLICKYTOR
+   WCAG 2.2 vill ha 24px i minsta led. Kryssrutorna låg på 13,
+   vilket är webbläsarens förval och har varit för litet sedan
+   pekskärmen uppfanns; passchipsen i kalendern och "Visa alla"
+   låg på 20–22 för att raden var byggd efter texthöjden.
+   ============================================================ */
+.inp[type="checkbox"],
+input[type="checkbox"]{
+  width:18px;height:18px;
+  accent-color:var(--bl);
+  flex:0 0 auto;
+}
+/* Etiketten runt kryssrutan är den riktiga träffytan, så den får
+   höjden i stället — rutan ska inte växa till en knapp. */
+label:has(> input[type="checkbox"]){min-height:24px}
+
+.vy-mer{min-height:24px}
+.sch-pass{min-height:24px}
+
+/* Datumfältet får ringen på :focus och inte :focus-visible.
+   Chromium lägger fokus på delfälten inuti kontrollen (dag, månad,
+   år) och matchar då inte :focus-visible på själva input-elementet,
+   så fältet blev det enda i formuläret utan markering. */
+.inp[type="date"]:focus,
+.inp[type="time"]:focus{
+  outline:2px solid var(--focus,var(--bl));
+  outline-offset:2px;
+}
+
+/* Sidfotens adress är en ensam länk och inte en länk mitt i en
+   mening, så undantaget för löptext gäller inte den. */
+footer a[href^="mailto:"]{
+  display:inline-flex;align-items:center;
+  min-height:24px;
+}
+
+/* En etikett inlindad i en länk är en knapp så långt användaren
+   är bekymrad, och då ska den vara stor nog att träffa. Länken
+   själv hade ingen egen höjd och föll ihop till etikettens 18px. */
+a:has(> .adm-status){
+  display:inline-flex;align-items:center;
+  min-height:24px;
 }

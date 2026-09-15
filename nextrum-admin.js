@@ -3152,8 +3152,15 @@
         meddelanden: NXArbete.flikar($('section[data-sek="meddelanden"]')),
         bokningar: NXArbete.flikar($('section[data-sek="bokningar"]')),
         ekonomi: NXArbete.flikar($('section[data-sek="ekonomi"]')),
+        agenter: NXArbete.flikar($('section[data-sek="agenter"]')),
         system: NXArbete.flikar($('section[data-sek="system"]'))
       };
+
+      /* Agenterna bor i en egen fil och läser egna bord. Den startas
+         här, där vi vet att den inloggade är admin, men INTE med
+         await: en agentfråga som tar nittio sekunder att hämta logg
+         för ska inte hålla resten av vyn tom under tiden. */
+      if (typeof NXAdminAgenter !== 'undefined') NXAdminAgenter.start();
 
       S.sido = NXStudie.sidomeny({
         nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt'

@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="nextrum-cinema.css">
 <link rel="stylesheet" href="nextrum-vy.css">
 <link rel="stylesheet" href="nextrum-arbetsyta.css">
+<link rel="stylesheet" href="nextrum-agent.css">
 </head>
 <body class="vy vy-admin">
 
@@ -184,6 +185,9 @@
 
         <span class="vy-sido-rubrik" aria-hidden="true">Analys</span>
         <a href="#statistik" data-sek="statistik" title="Statistik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="adm-etikett">Statistik</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Agenter</span>
+        <a href="#agenter" data-sek="agenter" title="Agenter"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7.5" width="16" height="11" rx="3"/><path d="M12 7.5V4M9 12.5h.01M15 12.5h.01M9.5 15.5h5"/></svg><span class="adm-etikett">Agenter</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">System</span>
         <a href="#system" data-sek="system" title="System"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h11M18 7.5h2.5M3.5 16.5h5M11.5 16.5h9"/><circle cx="16" cy="7.5" r="2.2"/><circle cx="10" cy="16.5" r="2.2"/></svg><span class="adm-etikett">System</span></a>
@@ -738,6 +742,274 @@
           </div>
         </section>
 
+        <!-- ============================================================
+             AGENTER
+
+             Två agenter, juridik och ekonomi, plus det de behöver för
+             att fungera. Allt ligger under EN post i menyn och fyra
+             flikar inuti: menyn var redan tretton rader lång, och
+             agenterna är en sak man går till, inte fyra.
+
+             Det viktiga i vyn är inte svaren utan loggen under dem.
+             En agent som läser lagen eller er ekonomi måste gå att
+             granska i efterhand — inte "vad svarade den" utan "vad
+             läste den innan den svarade". Därför en rad per körning i
+             agent_korningar och en rad per verktygsanrop i agent_steg,
+             och därför är "Tidigare frågor" inte en historik utan
+             själva kvittot.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="agenter" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Agenter</h2>
+              <p>Juridik och ekonomi. De svarar aldrig ur minnet — kan de inte peka på en källa de faktiskt läst lämnas svaret inte ut.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Delar av agentvyn">
+            <button class="vy-flik" type="button" role="tab" data-flik="lage"
+                    id="flik-ag-lage" aria-controls="panel-ag-lage">Läget</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="juridik"
+                    id="flik-ag-juridik" aria-controls="panel-ag-juridik">Juridik</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="ekonomi"
+                    id="flik-ag-ekonomi" aria-controls="panel-ag-ekonomi">Ekonomi</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="bolaget"
+                    id="flik-ag-bolaget" aria-controls="panel-ag-bolaget">Bolagsfakta</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="aterkoppling"
+                    id="flik-ag-aterkoppling" aria-controls="panel-ag-aterkoppling">Återkoppling</button>
+          </div>
+
+          <!-- ---------- LÄGET ---------- -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="lage"
+               id="panel-ag-lage" aria-labelledby="flik-ag-lage">
+
+            <div class="adm-tal-rad">
+              <div class="adm-kpi"><b id="kpi-korningar">0</b><span>Körningar totalt</span></div>
+              <div class="adm-kpi"><b id="kpi-kastade">0</b><span>Kastade utan källa</span></div>
+              <div class="adm-kpi"><b id="kpi-tokens">0</b><span>Tokens förbrukade</span></div>
+            </div>
+
+            <div class="split">
+              <div class="stack">
+
+                <div class="dbox">
+                  <h5>Självtest</h5>
+                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:16px">
+                    Kontrollerar att agenterna når sina rättskällor, och lika viktigt: att de
+                    <b>inte</b> når något annat. Rör inte modellen och kostar ingenting.
+                  </p>
+                  <button class="btn btn-primary btn-sm btn-block" id="sjalvtest-knapp">Kör självtestet</button>
+                  <div id="sjalvtest-ut" style="margin-top:16px"></div>
+                </div>
+
+                <div class="dbox">
+                  <h5>Vad agenterna är</h5>
+                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7">
+                    <b>Juridik</b> slår upp svensk rätt inom sex avgränsade områden och vägrar
+                    resten. Den svarar aldrig ur minnet: den hämtar lagtexten och citerar den.
+                    Kan den inte peka på en källa den läst lämnas svaret inte ut.
+                  </p>
+                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-top:12px">
+                    <b>Ekonomi</b> läser era siffror, läser Fortnox och slår upp Skatteverket.
+                    Alla dess verktyg är läsande. Den bokför ingenting, och det är designen,
+                    inte en tillfällig försiktighet.
+                  </p>
+                  <p class="xsmall" style="color:var(--bl-3);line-height:1.7;margin-top:12px">
+                    Ingen av dem ersätter en jurist eller en redovisningskonsult.
+                  </p>
+                </div>
+
+              </div>
+              <div class="stack">
+
+                <div class="dbox">
+                  <h5>Senaste körningarna</h5>
+                  <div id="ov-korningar"><div class="loading">Hämtar</div></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- JURIDIK ---------- -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="juridik"
+               id="panel-ag-juridik" aria-labelledby="flik-ag-juridik" hidden>
+
+            <div class="dbox">
+              <h5>Juridikagenten</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
+                Distansavtal, konsumenttjänst, dataskydd, arbetsrätt, minderårigas arbete och
+                bokföringsformalia. Frågor utanför de sex områdena avvisas.
+              </p>
+
+              <div class="ag-fraga">
+                <label for="jur-fraga" style="display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--bl-3);margin-bottom:10px">Din fråga</label>
+                <textarea id="jur-fraga" placeholder="Till exempel: gäller ångerrätt när en familj bokar ett pass hos oss, och vad måste vi informera om innan de bokar?"></textarea>
+              </div>
+
+              <div class="ag-exempel" id="jur-exempel">
+                <button type="button">Gäller ångerrätt när en familj bokar ett läxhjälpspass hos oss, och vad måste vi informera om innan de bokar?</button>
+                <button type="button">Vilka krav ställs på oss när vi behandlar personuppgifter om barn under 13 år?</button>
+                <button type="button">Vad gäller för arbetstider när en studiehjälpare är under 18 år?</button>
+                <button type="button">Behöver vi personuppgiftsbiträdesavtal med Supabase och Vercel, och vad ska stå i dem?</button>
+              </div>
+
+              <div class="ag-rad">
+                <button class="btn btn-primary" id="jur-skicka">Ställ frågan</button>
+                <button class="btn btn-ghost btn-sm" id="jur-rensa" type="button">Rensa</button>
+                <span class="ag-tid">Tar normalt 30–90 sekunder</span>
+              </div>
+
+              <div id="jur-ut"></div>
+            </div>
+
+            <div class="dbox" style="margin-top:20px">
+              <h5>Tidigare frågor</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:16px">
+                Fäll ut en rad för att se vilka källor svaret faktiskt vilade på. Det är därför
+                agenten loggar varje steg.
+              </p>
+              <div id="jur-logg"></div>
+            </div>
+          </div>
+
+          <!-- ---------- EKONOMI ---------- -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="ekonomi"
+               id="panel-ag-ekonomi" aria-labelledby="flik-ag-ekonomi" hidden>
+
+            <div class="dbox">
+              <h5>Ekonomiagenten</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
+                Bokföring, moms, deklarationer och avstämningar. Läser era siffror och Fortnox.
+                Skriver aldrig något, någonstans.
+              </p>
+
+              <div class="ag-fraga">
+                <label for="eko-fraga" style="display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--bl-3);margin-bottom:10px">Din fråga</label>
+                <textarea id="eko-fraga" placeholder="Till exempel: vilka genomförda pass har aldrig hamnat på en faktura, och vad borde vi göra åt dem?"></textarea>
+              </div>
+
+              <div class="ag-exempel" id="eko-exempel">
+                <button type="button">Vilka genomförda pass har aldrig hamnat på en faktura, och vad borde vi göra åt dem?</button>
+                <button type="button">Hur mycket ligger obetalt just nu, och vad är äldst?</button>
+                <button type="button">Vad måste stå på våra fakturor för att de ska uppfylla formkraven?</button>
+                <button type="button">Vad ska vi ha gjort innan bokslutet, och i vilken ordning?</button>
+              </div>
+
+              <div class="ag-rad">
+                <button class="btn btn-primary" id="eko-skicka">Ställ frågan</button>
+                <button class="btn btn-ghost btn-sm" id="eko-rensa" type="button">Rensa</button>
+                <span class="ag-tid">Tar normalt 30–90 sekunder</span>
+              </div>
+
+              <div id="eko-ut"></div>
+            </div>
+
+            <div class="dbox" style="margin-top:20px">
+              <h5>Tidigare frågor</h5>
+              <div id="eko-logg"></div>
+            </div>
+          </div>
+
+          <!-- ---------- BOLAGSFAKTA ---------- -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="bolaget"
+               id="panel-ag-bolaget" aria-labelledby="flik-ag-bolaget" hidden>
+
+            <div class="dbox">
+              <h5>Bolagsfakta</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
+                Vad ekonomiagenten vet om bolaget. Inga datum, inga belopp, inga procentsatser
+                — sådant hämtas från Skatteverket vid varje fråga i stället för att ligga och
+                bli inaktuellt här.
+              </p>
+
+              <div class="ag-viktig" id="form-larm">
+                <b style="font-size:14px;color:var(--bl)">Anställda eller uppdragstagare?</b>
+                <p>
+                  Det här är den viktigaste uppgiften på sidan. Om studiehjälparna är anställda
+                  eller uppdragstagare avgör arbetsgivaravgifter, skatteavdrag, AGI, försäkringar
+                  och arbetsmiljöansvar. Står den kvar på <b>oklart</b> vägrar ekonomiagenten
+                  svara på personalfrågor, och den vägran är rätt. Vet ni inte svaret är det den
+                  frågan ni ska ställa till en redovisningskonsult först.
+                </p>
+                <div class="fgroup" style="margin-top:16px;max-width:320px">
+                  <label for="bf-form">Studiehjälparnas form</label>
+                  <select class="inp" id="bf-form">
+                    <option value="oklart">Oklart — inte utrett än</option>
+                    <option value="anstallda">Anställda</option>
+                    <option value="uppdragstagare">Uppdragstagare</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="ag-faltrad">
+                <div class="fgroup">
+                  <label for="bf-orgnr">Organisationsnummer</label>
+                  <input class="inp" id="bf-orgnr" placeholder="000000-0000">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-bolagsform">Bolagsform</label>
+                  <input class="inp" id="bf-bolagsform" placeholder="ab, enskild firma, hb">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-rakenskapsar">Räkenskapsårets slut</label>
+                  <input class="inp" id="bf-rakenskapsar" placeholder="12-31">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-momsperiod">Momsperiod</label>
+                  <select class="inp" id="bf-momsperiod">
+                    <option value="">Inte angivet</option>
+                    <option value="manad">Varje månad</option>
+                    <option value="kvartal">Varje kvartal</option>
+                    <option value="helar">Helår</option>
+                  </select>
+                </div>
+                <div class="fgroup">
+                  <label for="bf-system">Bokföringssystem</label>
+                  <input class="inp" id="bf-system" placeholder="fortnox, inget">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-konsult">Redovisningskonsult</label>
+                  <input class="inp" id="bf-konsult" placeholder="Namn, eller tomt om ni sköter det själva">
+                </div>
+              </div>
+
+              <div style="margin-top:8px">
+                <label class="ag-kryss"><input type="checkbox" id="bf-moms"> Momsregistrerade</label>
+                <label class="ag-kryss"><input type="checkbox" id="bf-fskatt"> Godkända för F-skatt</label>
+                <label class="ag-kryss"><input type="checkbox" id="bf-arbetsgivare"> Registrerade som arbetsgivare</label>
+              </div>
+
+              <div class="fgroup" style="margin-top:16px">
+                <label for="bf-anteckningar">Anteckningar</label>
+                <textarea class="inp" id="bf-anteckningar" rows="3" placeholder="Sådant agenten bör känna till som inte passar i något fält ovan."></textarea>
+              </div>
+
+              <div class="ag-rad">
+                <button class="btn btn-primary" id="bf-spara">Spara</button>
+                <p class="ok-msg" id="bf-msg" style="margin:0"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- ÅTERKOPPLING ---------- -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="aterkoppling"
+               id="panel-ag-aterkoppling" aria-labelledby="flik-ag-aterkoppling" hidden>
+
+            <div class="dbox">
+              <h5>Återkoppling till föräldrar</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:20px">
+                Lektionsrapporter där studiehjälparens råa anteckningar ännu inte polerats till
+                något en förälder kan läsa. Studiehjälparen gör det normalt själv i sin egen vy
+                — listan här är för de rapporter där det inte blivit gjort. Knappen skriver om
+                anteckningarna med det som faktiskt står i dem och hittar inte på framsteg som
+                ingen nämnt.
+              </p>
+              <div id="ak-lista"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
         <section class="vy-sek" data-sek="system" hidden>
           <div class="vy-sek-topp">
             <div>
@@ -856,6 +1128,8 @@
 <script src="nextrum-arbetsyta.js"></script>
 <script src="nextrum-media.js"></script>
 <script src="nextrum-betalning.js"></script>
+<script src="nextrum-agent.js"></script>
+<script src="nextrum-admin-agenter.js"></script>
 <script src="nextrum-admin.js"></script>
 </body>
 </html>
