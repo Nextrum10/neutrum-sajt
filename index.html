@@ -7,8 +7,8 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
-<title>Läxhjälp av unga, för unga — Nextrum</title>
-<meta name="description" content="Nextrum matchar elever med unga studiehjälpare som nyligen läst samma kurser. Individuell studieplan och rapport efter varje pass.">
+<title>Läxhjälp i Stockholm av unga, för unga — Nextrum</title>
+<meta name="description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er, på biblioteket eller online. Individuell studieplan och rapport efter varje pass.">
 <link rel="canonical" href="https://nextrum.se/">
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/">
 <link rel="alternate" hreflang="en" href="https://nextrum.se/en/">
@@ -21,16 +21,16 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="sv_SE">
-<meta property="og:title" content="Läxhjälp av unga, för unga — Nextrum">
-<meta property="og:description" content="Nextrum matchar elever med unga studiehjälpare som nyligen läst samma kurser. Individuell studieplan och rapport efter varje pass.">
+<meta property="og:title" content="Läxhjälp i Stockholm av unga, för unga — Nextrum">
+<meta property="og:description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er, på biblioteket eller online. Individuell studieplan och rapport efter varje pass.">
 <meta property="og:url" content="https://nextrum.se/">
 <meta property="og:image" content="https://nextrum.se/bilder/hero-nextrum-1280.jpg">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
 <meta property="og:image:alt" content="En ung studiehjälpare och en elev pluggar tillsammans vid ett ljust träbord.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Läxhjälp av unga, för unga — Nextrum">
-<meta name="twitter:description" content="Nextrum matchar elever med unga studiehjälpare som nyligen läst samma kurser. Individuell studieplan och rapport efter varje pass.">
+<meta name="twitter:title" content="Läxhjälp i Stockholm av unga, för unga — Nextrum">
+<meta name="twitter:description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er, på biblioteket eller online. Individuell studieplan och rapport efter varje pass.">
 <meta name="twitter:image" content="https://nextrum.se/bilder/hero-nextrum-1280.jpg">
 
 <!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
@@ -73,10 +73,17 @@
       },
       "image": "https://nextrum.se/bilder/hero-nextrum-1280.jpg",
       "email": "info@nextrum.se",
-      "areaServed": {
-        "@type": "Country",
-        "name": "Sverige"
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Stockholm",
+        "addressRegion": "Stockholms län",
+        "addressCountry": "SE"
       },
+      "areaServed": [
+        { "@type": "City", "name": "Stockholm" },
+        { "@type": "AdministrativeArea", "name": "Stockholms län" },
+        { "@type": "Country", "name": "Sverige" }
+      ],
       "sameAs": [
         "https://www.instagram.com/nextrum.se",
         "https://www.tiktok.com/@nextrum.ab",
@@ -90,6 +97,22 @@
         "sv",
         "en"
       ]
+    },
+    {
+      "@type": "Service",
+      "@id": "https://nextrum.se/#laxhjalp",
+      "serviceType": "Läxhjälp",
+      "name": "Läxhjälp med personlig studiehjälpare",
+      "url": "https://nextrum.se/laxhjalp-stockholm",
+      "provider": { "@id": "https://nextrum.se/#org" },
+      "areaServed": [
+        { "@type": "City", "name": "Stockholm" },
+        { "@type": "AdministrativeArea", "name": "Stockholms län" }
+      ],
+      "audience": {
+        "@type": "EducationalAudience",
+        "educationalRole": "student"
+      }
     },
     {
       "@type": "WebSite",
@@ -196,7 +219,7 @@
     <h1 class="nx-hero-rubrik">Av unga,<br>för unga.</h1>
     <p class="nx-hero-lede">Vi skapar möjligheter för unga att ta sina första steg in i
       arbetslivet. Hos Nextrum får du chansen att arbeta, utvecklas och bygga erfarenhet
-      — samtidigt erbjuder vi personlig läxhjälp för elever som vill utvecklas och nå
+      — samtidigt erbjuder vi personlig läxhjälp i Stockholm för elever som vill utvecklas och nå
       sina mål.</p>
 
     <!-- Två knappar, en per publik: familjen som vill ha läxhjälp och
@@ -229,7 +252,7 @@
       <p data-stig data-fördröj="2">Ni får en personlig studieplan, kan boka pass online eller på
         plats och får en strukturerad rapport efter varje tillfälle. På så sätt kan ni enkelt följa
         elevens utveckling mellan passen. Vi tar hand om matchning, bokning och planering — utan
-        anmälningsavgift eller bindningstid.</p>
+        anmälningsavgift eller bindningstid. Så här fungerar <a href="/laxhjalp-stockholm" style="color:inherit;text-decoration:underline;text-underline-offset:3px">läxhjälpen i Stockholm</a>.</p>
     </div>
 
     <div class="nx-cta-rad" data-stig data-fördröj="3">
@@ -822,6 +845,7 @@
         <ul>
           <li><a href="/var-ide">Vår idé</a></li>
           <li><a href="/sa-fungerar-nextrum">Så fungerar Nextrum</a></li>
+          <li><a href="/laxhjalp-stockholm">Läxhjälp i Stockholm</a></li>
           <li><a href="/#studiehjalpare">Studiehjälpare</a></li>
           <li><a href="/priser">Priser</a></li>
         </ul>

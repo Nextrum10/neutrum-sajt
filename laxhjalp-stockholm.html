@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
+
+<title>Läxhjälp i Stockholm med personlig studiehjälpare — Nextrum</title>
+<meta name="description" content="Läxhjälp i Stockholm med en personlig studiehjälpare, hemma hos er, på biblioteket eller online. Matte, svenska, engelska och NO för grundskola och gymnasium. 379 kr i timmen, ingen bindningstid.">
+<link rel="canonical" href="https://nextrum.se/laxhjalp-stockholm">
+
+<!-- Sidan finns bara på svenska, med flit: den är skriven för en
+     förälder som söker "läxhjälp Stockholm" på svenska. Därför
+     pekar hreflang sv och x-default hit, och det finns ingen
+     en-alternativ att ange. Språkväljaren i huvudet går till
+     startsidan på engelska, eftersom det är närmaste sida som
+     faktiskt finns. -->
+<link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-stockholm">
+<link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-stockholm">
+<meta name="theme-color" content="#FBFAF8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<!-- delning -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nextrum">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:title" content="Läxhjälp i Stockholm med personlig studiehjälpare — Nextrum">
+<meta property="og:description" content="Läxhjälp i Stockholm med en personlig studiehjälpare, hemma hos er, på biblioteket eller online. Matte, svenska, engelska och NO för grundskola och gymnasium.">
+<meta property="og:url" content="https://nextrum.se/laxhjalp-stockholm">
+<meta property="og:image" content="https://nextrum.se/bilder/01-en-till-en-1280.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="En studiehjälpare pekar med pennan på en uppgift i elevens räknebok och förklarar.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Läxhjälp i Stockholm med personlig studiehjälpare — Nextrum">
+<meta name="twitter:description" content="Läxhjälp i Stockholm med en personlig studiehjälpare, hemma hos er, på biblioteket eller online. Matte, svenska, engelska och NO för grundskola och gymnasium.">
+<meta name="twitter:image" content="https://nextrum.se/bilder/01-en-till-en-1280.jpg">
+
+<link rel="stylesheet" href="nextrum-typsnitt.css">
+
+<!-- ordningen spelar roll: bas → startsida → cinema -->
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css">
+<link rel="stylesheet" href="nextrum-cinema.css">
+
+<!-- Tjänsten, med orten i sig.
+
+     Organisationen och webbplatsen beskrivs på startsidan; här
+     beskrivs bara tjänsten, och den pekar tillbaka på samma
+     organisations-id så att Google förstår att det är ett och
+     samma företag och inte två.
+
+     areaServed är det som gör den här sidan lokal. Kommunerna är
+     de vi faktiskt åtar oss att åka till — lägg inte till en
+     kommun här förrän det finns en studiehjälpare som kan ta ett
+     pass där, eftersom en träff ni inte kan leverera på är värre
+     än ingen träff.
+
+     SIFFRAN ÄR EN RESERV, inte källan. Priset bor i
+     nextrum-config.js och initPris() skriver om det här blocket
+     vid sidladdning — samma mekanik som på prissidan, därav
+     samma id och samma form på offers. -->
+<script type="application/ld+json" id="pris-schema">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Läxhjälp",
+  "name": "Läxhjälp i Stockholm med personlig studiehjälpare",
+  "description": "Personlig läxhjälp i Stockholm med en ung studiehjälpare som nyligen läst samma kurser. Passen hålls hemma hos er, på ett bibliotek eller online. Ett timpris oavsett ämne, ingen bindningstid.",
+  "url": "https://nextrum.se/laxhjalp-stockholm",
+  "provider": {
+    "@type": "Organization",
+    "@id": "https://nextrum.se/#org",
+    "name": "Nextrum",
+    "url": "https://nextrum.se/",
+    "email": "info@nextrum.se"
+  },
+  "areaServed": [
+    { "@type": "City", "name": "Stockholm" },
+    { "@type": "AdministrativeArea", "name": "Stockholms län" },
+    { "@type": "City", "name": "Solna" },
+    { "@type": "City", "name": "Sundbyberg" },
+    { "@type": "City", "name": "Nacka" },
+    { "@type": "City", "name": "Lidingö" },
+    { "@type": "City", "name": "Danderyd" },
+    { "@type": "City", "name": "Täby" },
+    { "@type": "City", "name": "Sollentuna" },
+    { "@type": "City", "name": "Huddinge" }
+  ],
+  "availableLanguage": ["sv", "en"],
+  "offers": {
+    "@type": "Offer",
+    "url": "https://nextrum.se/priser",
+    "priceCurrency": "SEK",
+    "price": "379",
+    "availability": "https://schema.org/InStock",
+    "priceSpecification": {
+      "@type": "UnitPriceSpecification",
+      "priceCurrency": "SEK",
+      "price": "379",
+      "unitCode": "HUR",
+      "referenceQuantity": {
+        "@type": "QuantitativeValue",
+        "value": 1,
+        "unitCode": "HUR"
+      }
+    }
+  }
+}
+</script>
+
+<!-- Frågorna nedanför är samma frågor som står i sidans FAQ-del.
+     Står det olika i de två är det HTML:en som gäller för läsaren
+     och det här som gäller för Google, och då ljuger en av dem.
+     Ändrar du i den ena, ändra i den andra. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Nextrum", "item": "https://nextrum.se/" },
+        { "@type": "ListItem", "position": 2, "name": "Läxhjälp i Stockholm", "item": "https://nextrum.se/laxhjalp-stockholm" }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "url": "https://nextrum.se/laxhjalp-stockholm",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Var i Stockholm håller ni läxhjälpen?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Passen hålls där det passar er: hemma vid köksbordet, på ett stadsdelsbibliotek eller online. Vi matchar i första hand med en studiehjälpare som bor nära er, så att restiden inte äter upp tiden som skulle gått till plugget. Finns ingen i närheten just nu föreslår vi online i stället för att tacka nej."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Vad kostar läxhjälp i Stockholm?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "379 kronor i timmen, oavsett ämne och oavsett var i Stockholm passet hålls. Vi tar inget extra för restid, ingen anmälningsavgift och ingen månadsavgift. Sitter ett syskon med i samma pass kostar det 69 kronor extra i timmen."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Hur snabbt kan vi komma igång?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ni skickar en intresseanmälan, vi hör av oss inom ett par dagar och går igenom behovet. Därefter väljer vi ut en studiehjälpare och föreslår en första tid. Vanligtvis sitter ni med någon inom en vecka, snabbare om det brådskar inför ett prov."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Vilka årskurser hjälper ni?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Från mellanstadiet upp till gymnasiets sista år. Vanligast är matematik i högstadiet och gymnasiets Matte 1 till 4, men vi förmedlar hjälp i svenska, engelska, NO-ämnen, SO-ämnen, moderna språk och programmering."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Går det att få hjälp inför nationella proven?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ja. Många hör av sig några veckor innan och bokar en serie pass fram till provet. Eftersom det inte finns någon bindningstid kan ni boka just den perioden och sedan pausa."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Får vi RUT-avdrag på läxhjälpen?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Nej. RUT-avdraget för läxhjälp togs bort 2015, så priset ni ser är det ni betalar. Det gäller alla läxhjälpsföretag i Sverige, inte bara oss."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<!-- ==========================================================
+     HEADER — identisk markup på alla publika sidor.
+     Ändrar du här måste du ändra på de andra också.
+     ========================================================== -->
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
+<header class="hdr" id="hdr">
+  <div class="wrap nav">
+    <div class="sprakval" role="group" aria-label="Språk / Language">
+      <b lang="sv" aria-current="true">SV</b>
+      <i aria-hidden="true"></i>
+      <a lang="en" hreflang="en" href="/en/">ENG</a>
+    </div>
+
+    <a href="/" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true">
+        <rect width="26" height="26" rx="7"/>
+        <path d="M8 18.5V7.5L18 18.5V7.5"/>
+      </svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Huvudmeny">
+      <a href="/sa-fungerar-nextrum" data-nav>Så fungerar Nextrum</a>
+      <a href="/for-elever-och-foraldrar" data-nav>För elever &amp; föräldrar</a>
+      <a href="/bli-studiehjalpare" data-nav>Bli studiehjälpare</a>
+      <a href="/priser" data-nav>Priser</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="login" href="/foralder" id="login-link" data-vagval>Logga in</a>
+      <span class="nx-magnet" data-magnet>
+        <a class="btn btn-primary btn-sm" href="/intresseanmalan">Intresseanmälan</a>
+      </span>
+    </div>
+
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="/var-ide">Vår idé <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/sa-fungerar-nextrum">Så fungerar Nextrum <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/for-elever-och-foraldrar">För elever &amp; föräldrar <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/bli-studiehjalpare">Bli studiehjälpare <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/priser">Priser <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/faq">FAQ / Kontakt <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions">
+    <a class="btn btn-primary btn-block btn-lg" href="/intresseanmalan">Skicka intresseanmälan</a>
+    <a class="btn btn-ghost btn-block btn-lg" href="/foralder">Logga in</a>
+  </div>
+  <div class="m-foot">
+    <span class="xsmall">Av unga, för unga.</span>
+    <a class="xsmall" href="mailto:info@nextrum.se">info@nextrum.se</a>
+  </div>
+</div>
+
+<main id="innehall">
+
+<section class="wrap nx-page-hero">
+  <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
+  <span class="nx-et acc" data-stig style="margin-top:22px">Stockholm</span>
+  <h1 class="nx-d1" data-avslöj>Läxhjälp i Stockholm,<br><em>av någon som nyss satt där.</em></h1>
+  <p class="nx-lede" data-stig data-fördröj="1">Vi matchar er med en studiehjälpare som läst samma kurser för något år sedan. Passen hålls hemma hos er, på biblioteket eller online — i hela Stockholm och närmaste kranskommuner. <span data-stat="pris">379 kr</span> i timmen, ingen bindningstid.</p>
+  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#8B8069">
+    <img class="nx-img" src="bilder/01-en-till-en-1280.jpg"
+         srcset="bilder/01-en-till-en-640.jpg 640w, bilder/01-en-till-en-960.jpg 960w, bilder/01-en-till-en-1280.jpg 1280w, bilder/01-en-till-en-1600.jpg 1600w, bilder/01-en-till-en-1920.jpg 1920w"
+         sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
+         alt="En studiehjälpare pekar med pennan på en uppgift i elevens räknebok och förklarar.">
+  </figure>
+</section>
+
+<section class="sec wrap">
+  <div class="nx-two">
+    <div class="nx-two-sticky rv">
+      <span class="nx-et acc">Var passen hålls</span>
+      <h2 class="nx-d2" style="margin-top:18px">Köksbordet, biblioteket<br>eller <em>skärmen.</em></h2>
+    </div>
+    <div class="nx-text rv">
+        <p>De flesta familjer vi möter i Stockholm väljer att ha passen hemma. Eleven slipper resa efter en full skoldag, materialet ligger redan framme och föräldern hör hur det går utan att behöva fråga efteråt.</p>
+        <p>Vill ni hellre ha en neutral plats fungerar stadsdelsbiblioteken bra, och de finns i nästan varje område. Online går lika bra för de flesta ämnen, och är det självklara valet när rätt person råkar bo i fel ände av staden.</p>
+        <p>Ni väljer format pass för pass. Ett pass hemma i veckan och ett online inför provet är ett helt vanligt upplägg, och kostar likadant.</p>
+        <a class="nx-lank" href="/sa-fungerar-nextrum">Så fungerar det, steg för steg <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<section class="nx-surface">
+  <div class="sec wrap">
+    <div class="nx-head split" data-stig>
+      <div><span class="nx-et acc">Så går det till</span>
+        <h2 class="nx-d2" style="margin-top:18px">Från anmälan till<br>första <em>passet.</em></h2></div>
+      <div class="nx-head-aside"><p class="nx-lede">Ni bläddrar inte i en katalog. Vi går igenom behovet och väljer ut en person, för fel match är värre än ingen match.</p></div>
+    </div>
+    <div class="nx-trio">
+      <div class="nx-trio-kort" data-stig data-fördröj="1">
+        <span class="nx-trio-et">Steg ett</span>
+        <b>Ni berättar vad som behövs</b>
+        <p>Ämne, årskurs, var i Stockholm ni bor och vilka tider som fungerar. Att skicka in är gratis och binder er inte vid något.</p>
+      </div>
+      <div class="nx-trio-kort" data-stig data-fördröj="2">
+        <span class="nx-trio-et">Steg två</span>
+        <b>Vi matchar, oftast nära er</b>
+        <p>Vi väljer studiehjälpare utifrån ämne, nivå och personlighet — och utifrån vem som faktiskt tar sig till er utan en timmes resa.</p>
+      </div>
+      <div class="nx-trio-kort" data-stig data-fördröj="3">
+        <span class="nx-trio-et">Steg tre</span>
+        <b>Första passet bokas</b>
+        <p>Ni väljer tid bland studiehjälparens lediga timmar. Efter passet får ni en rapport om vad ni gick igenom och hur det gick.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="nx-two">
+    <div class="nx-two-sticky rv">
+      <span class="nx-et acc">Områden</span>
+      <h2 class="nx-d2" style="margin-top:18px">Innerstaden, söderort,<br>västerort och <em>norrort.</em></h2>
+    </div>
+    <div class="nx-text rv">
+        <p>Vi tar pass i hela Stockholms stad och i kranskommunerna runt omkring. I innerstaden är det oftast <b>Södermalm</b>, <b>Vasastan</b>, <b>Östermalm</b>, <b>Kungsholmen</b> och <b>Norrmalm</b>. I söderort <b>Hammarby Sjöstad</b>, <b>Årsta</b>, <b>Liljeholmen</b>, <b>Enskede</b>, <b>Farsta</b> och <b>Skarpnäck</b>.</p>
+        <p>I västerort <b>Bromma</b>, <b>Vällingby</b> och <b>Hässelby</b>. Norrut <b>Solna</b>, <b>Sundbyberg</b>, <b>Sollentuna</b>, <b>Täby</b>, <b>Danderyd</b> och <b>Lidingö</b>. Söder om staden <b>Nacka</b>, <b>Huddinge</b>, <b>Tyresö</b> och <b>Haninge</b>.</p>
+        <p>Ett ärligt förbehåll: vi växer fortfarande, och vi har inte alltid någon ledig i varje område varje vecka. Bor ni i ett område där vi just då saknar rätt person säger vi det rakt ut och föreslår online i stället. Vi skickar hellre en bra match över nätet än en halvbra match som råkar bo på rätt gata.</p>
+    </div>
+  </div>
+</section>
+
+<section class="nx-surface">
+  <div class="sec wrap">
+    <div class="nx-head split" data-stig>
+      <div><span class="nx-et acc">Ämnen</span>
+        <h2 class="nx-d2" style="margin-top:18px">Mellanstadiet upp<br>till <em>gymnasiet.</em></h2></div>
+      <div class="nx-head-aside"><p class="nx-lede">Samma timpris oavsett ämne. Matematik kostar inte mer än svenska, och en svår kurs kostar inte mer än en lätt.</p></div>
+    </div>
+    <ul class="nx-list rv">
+      <li><em>01</em><div><b>Matematik</b><p>Vårt vanligaste ämne. Högstadiets matte, och gymnasiets Matte 1 till 4 — inklusive derivata, integraler och allt annat som brukar få det att stanna.</p></div></li>
+      <li><em>02</em><div><b>Svenska och engelska</b><p>Läsförståelse, uppsatser, grammatik och muntliga redovisningar. Också för elever med svenska som andraspråk.</p></div></li>
+      <li><em>03</em><div><b>NO och SO</b><p>Fysik, kemi och biologi, samt historia, religion och samhällskunskap. Vanligt inför prov och inlämningar.</p></div></li>
+      <li><em>04</em><div><b>Moderna språk och programmering</b><p>Spanska, tyska och franska, och programmering för den som fastnat i gymnasiets kurser. Fråga i anmälan så säger vi om vi har rätt person.</p></div></li>
+    </ul>
+    <p class="nx-note" style="margin-top:22px">Nationella prov och inför-provet-pass är en egen liten säsong hos oss. Hör av er i god tid, så hinner vi matcha rätt person i stället för den som råkar vara ledig.</p>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="nx-two">
+    <div class="nx-two-sticky rv">
+      <span class="nx-et acc">Pris</span>
+      <h2 class="nx-d2" style="margin-top:18px"><span data-stat="pris">379 kr</span> i timmen.<br>Ingen restidsavgift.</h2>
+    </div>
+    <div class="nx-text rv">
+        <p>Samma pris oavsett var i Stockholm passet hålls. Vi lägger inte på för att någon åker till Farsta i stället för till Vasastan, och vi tar inget för resan.</p>
+        <p>Ingen anmälningsavgift, ingen månadsavgift och ingen bindningstid. Ni betalar i efterskott för de pass som faktiskt hållits — ett pass som aldrig blev av faktureras aldrig.</p>
+        <p>Sitter ett syskon med i samma pass kostar det <span data-stat="extra-barn">69 kr</span> extra i timmen, inte ett helt nytt pass.</p>
+        <a class="nx-lank" href="/priser">Se hela prislistan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="rv">
+    <div class="nx-faq-group">
+      <span class="eyebrow acc">Vanliga frågor</span>
+      <h2 class="d3" style="margin:0 0 22px">Om läxhjälp i Stockholm</h2>
+      <div class="faq">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Var i Stockholm håller ni läxhjälpen?<span class="pm"></span></button>
+          <div class="faq-a"><p>Passen hålls där det passar er: hemma vid köksbordet, på ett stadsdelsbibliotek eller online. Vi matchar i första hand med en studiehjälpare som bor nära er, så att restiden inte äter upp tiden som skulle gått till plugget. Finns ingen i närheten just nu föreslår vi online i stället för att tacka nej.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vad kostar läxhjälp i Stockholm?<span class="pm"></span></button>
+          <div class="faq-a"><p><span data-stat="pris">379 kr</span> i timmen, oavsett ämne och oavsett var i Stockholm passet hålls. Vi tar inget extra för restid, ingen anmälningsavgift och ingen månadsavgift. Sitter ett syskon med i samma pass kostar det <span data-stat="extra-barn">69 kr</span> extra i timmen.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Hur snabbt kan vi komma igång?<span class="pm"></span></button>
+          <div class="faq-a"><p>Ni skickar en intresseanmälan, vi hör av oss inom ett par dagar och går igenom behovet. Därefter väljer vi ut en studiehjälpare och föreslår en första tid. Vanligtvis sitter ni med någon inom en vecka, snabbare om det brådskar inför ett prov.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vilka årskurser hjälper ni?<span class="pm"></span></button>
+          <div class="faq-a"><p>Från mellanstadiet upp till gymnasiets sista år. Vanligast är matematik i högstadiet och gymnasiets Matte 1 till 4, men vi förmedlar hjälp i svenska, engelska, NO-ämnen, SO-ämnen, moderna språk och programmering.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Går det att få hjälp inför nationella proven?<span class="pm"></span></button>
+          <div class="faq-a"><p>Ja. Många hör av sig några veckor innan och bokar en serie pass fram till provet. Eftersom det inte finns någon bindningstid kan ni boka just den perioden och sedan pausa.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Får vi RUT-avdrag på läxhjälpen?<span class="pm"></span></button>
+          <div class="faq-a"><p>Nej. RUT-avdraget för läxhjälp togs bort 2015, så priset ni ser är det ni betalar. Det gäller alla läxhjälpsföretag i Sverige, inte bara oss.</p></div>
+        </div>
+      </div>
+      <p class="nx-note" style="margin-top:22px">Fler frågor finns samlade i <a href="/faq">FAQ:n</a>. Hittar ni inte svaret, <a href="/faq#kontakt">skriv till oss</a> så svarar vi.</p>
+    </div>
+  </div>
+</section>
+
+<section class="nx-mork nx-final-cinema">
+  <div class="nx-wrap-bred">
+    <div class="nx-final-inner">
+      <span class="nx-et" data-stig>Nästa steg</span>
+      <h2 class="nx-final-rubrik" data-avslöj>Berätta vad ni <em>behöver</em>.</h2>
+      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:24px">Vi hör av oss inom ett par dagar och går igenom
+        behovet innan ni bestämmer något.</p>
+
+      <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
+        <span class="nx-magnet" data-magnet>
+          <a class="btn btn-primary btn-lg" href="/intresseanmalan">
+            Skicka intresseanmälan
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </span>
+        <a class="btn btn-ghost btn-lg" href="/priser">
+          Se priserna
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
+
+      <ul class="nx-hero-trust" data-stig data-fördröj="3">
+        <li>Ingen bindningstid</li>
+        <li>Kostar ingenting att fråga</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ==========================================================
+     FOOTER — identisk på alla publika sidor, se kommentaren
+     vid headern.
+     ========================================================== -->
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        <a href="/" class="logo">
+          <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+          <span class="logo-text">Nextrum</span>
+        </a>
+        <p>Av unga, för unga.</p>
+        <div class="socials">
+          <a href="https://www.instagram.com/nextrum.se" aria-label="Nextrum på Instagram" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm8.4-11.2a1.55 1.55 0 11-3.1 0 1.55 1.55 0 013.1 0z"/></svg></a>
+          <a href="https://www.tiktok.com/@nextrum.ab" aria-label="Nextrum på TikTok" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.1v13.2a2.6 2.6 0 11-2.2-2.6v-3.2a5.8 5.8 0 105.3 5.8V9.1a6.9 6.9 0 004 1.3V7.2a3.9 3.9 0 01-4-4z"/></svg></a>
+          <a href="https://www.facebook.com/share/1DuLomKfy8/" aria-label="Nextrum på Facebook" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg></a>
+          <a href="https://www.linkedin.com/company/nextrum-se/" aria-label="Nextrum på LinkedIn" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9.5 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.75-1.95 4 0 4.75 2.5 4.75 5.8V21h-4v-5.6c0-1.35-.03-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.7h-4z"/></svg></a>
+        </div>
+      </div>
+
+      <nav aria-labelledby="ftr-nextrum">
+        <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
+        <ul>
+          <li><a href="/var-ide">Vår idé</a></li>
+          <li><a href="/sa-fungerar-nextrum">Så fungerar Nextrum</a></li>
+          <li><a href="/laxhjalp-stockholm">Läxhjälp i Stockholm</a></li>
+          <li><a href="/#studiehjalpare">Studiehjälpare</a></li>
+          <li><a href="/priser">Priser</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-fordig">
+        <h2 class="ftr-rubrik" id="ftr-fordig">För dig</h2>
+        <ul>
+          <li><a href="/for-elever-och-foraldrar">För elever &amp; föräldrar</a></li>
+          <li><a href="/bli-studiehjalpare">Bli studiehjälpare</a></li>
+          <li><a href="/intresseanmalan">Intresseanmälan</a></li>
+          <li><a href="/foralder" data-vagval>Logga in</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-hjalp">
+        <h2 class="ftr-rubrik" id="ftr-hjalp">Hjälp</h2>
+        <ul>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/faq#kontakt">Kontakt</a></li>
+          <li><a href="/integritetspolicy">Integritetspolicy</a></li>
+          <li><a href="/anvandarvillkor">Användarvillkor</a></li>
+          <li><a href="/lagring">Cookies och lagring</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="ftr-bot">
+      <span>© <span id="year">2026</span> Nextrum.</span>
+      <span>Byggd i Sverige.</span>
+    </div>
+  </div>
+
+  <!-- sista intrycket: bara ordet, mycket stort, mycket tyst -->
+  <div class="nx-ftr-ord" aria-hidden="true"><span>Nextrum</span></div>
+</footer>
+
+<!-- ==========================================================
+     VYVÄLJARE — dörren in till inloggningen.
+     Själva inloggningen ligger kvar i foralder.html och
+     larare.html och är orörd.
+     ========================================================== -->
+<div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
+  <button class="nx-vagval-stang" data-vagval-stang aria-label="Stäng"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  <div class="nx-vagval-box">
+    <span class="nx-et">Logga in</span>
+    <h2 id="vagval-t" style="margin-top:18px">Välkommen tillbaka.</h2>
+    <p class="nx-lede-s">Vilken vy vill du till?</p>
+
+    <div class="nx-vagval-val">
+      <a href="/foralder">
+        <span>
+          <b>Förälder eller elev</b>
+          <span>Studieplan, bokning, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="/larare">
+        <span>
+          <b>Studiehjälpare</b>
+          <span>Dina elever, ditt schema, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <p class="nx-vagval-fot">
+      Har ni inte skickat intresseanmälan än? <a href="/intresseanmalan">Gör det här</a>.
+    </p>
+  </div>
+</div>
+
+<!-- Biblioteket ligger hos oss, med fast version.
+
+     Låg förr på unpkg.com som @2 — alltså "vad unpkg råkar mena med
+     tvåan just nu". Under en timmes arbete flyttade den sig från
+     2.115.0 till 2.116.0 av sig själv. Den raden körde på varje sida,
+     också de inloggade, där någon skriver sitt lösenord och ett barns
+     namn och anteckningar visas. En tredjepart med fri versionsrätt
+     på just de sidorna är inte en risk värd att bära för att slippa
+     en fil i repot.
+
+     Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
+<script src="bibliotek/supabase-js-2.116.0.js"></script>
+<!-- Vercel Web Analytics.
+
+     Sätter INGA cookies: unika besökare räknas via en hash av
+     IP och webbläsare med ett salt som byts dagligen, och den råa
+     IP-adressen sparas inte. Därför krävs inget samtycke — men det
+     står ändå i integritetspolicyn och på lagring.html, eftersom
+     "vi mäter ingenting" inte längre är sant.
+
+     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
+     finns inget att optimera för besökarens skull, och det vore ett
+     onödigt anrop från en sida där någon sköter sitt barns skolgång.
+
+     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
+     vilket är ofarligt — inget mäts när man utvecklar. -->
+<script defer src="/_vercel/insights/script.js"></script>
+<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
+     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
+<script defer src="/_vercel/speed-insights/script.js"></script>
+<script src="nextrum-config.js"></script>
+<script src="nextrum-images.js"></script>
+<script src="nextrum-fel.js"></script>
+<script src="nextrum-app.js"></script>
+<script src="nextrum-motion.js"></script>
+<!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
+     bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
+     Inga nätverksanrop. -->
+<script src="nextrum-maskot-svar.js"></script>
+<script src="nextrum-maskot.js" defer></script>
+<script>
+(function () {
+  'use strict';
+  NX.initHeader();
+  NX.initReveal();
+  NXFin.allt();
+  NX.bildIntoning();
+  NX.initVagval();
+  NX.initFaq();
+  NX.initPris();
+  NX.märkInloggad();
+})();
+</script>
+</body>
+</html>
