@@ -1,8 +1,21 @@
-# Intresseanmälan → info@nextrum.se
+# Intresseanmälan → notis till ledningen
 
 Funktionen `lead-notis` är byggd och driftsatt. Den mejlar er varje
-gång någon skickar en intresseanmälan. Fyra steg återstår, och tre av
-dem kräver konton eller DNS som bara ni kommer åt.
+gång någon skickar en intresseanmälan.
+
+| | |
+|---|---|
+| Avsändare | `Nextrum <info@nextrum.se>` |
+| Mottagare | `alexandarjovanoviccc@gmail.com`, `leo.thriskos@gmail.com`, `info@nextrum.se` |
+| Svara-knapp | går till familjen, inte till oss |
+
+Alla tre får samma mejl med flit. Den som ser det först kan ringa, och
+24-timmarslöftet på sajten håller inte om aviseringen ligger i en
+inkorg ingen öppnar förrän på måndag.
+
+Vill ni ändra listan står den i `TILL` överst i
+`supabase/functions/lead-notis/index.ts`. Funktionen måste driftsättas
+om efteråt — det räcker inte att ändra i repot.
 
 Anmälan sparas i databasen precis som förut. Det här är en avisering
 ovanpå — går mejlet fel ligger raden kvar i `leads`.
@@ -44,7 +57,7 @@ dig +short _dmarc.nextrum.se TXT
 ## 2. Resend: konto och domän — KLART
 
 Domänen är verifierad och funktionen skickar skarpt från
-`no-reply@nextrum.se`. Så här ser den ut, region **Irland
+`info@nextrum.se`. Så här ser den ut, region **Irland
 (eu-west-1)**:
 
 | Typ | Namn | Innehåll |
@@ -93,11 +106,17 @@ dig +short nextrum.se TXT
 
 ### Reservavsändaren
 
-`lead-notis` provar `no-reply@nextrum.se` först och faller bara vid
-403 tillbaka på `onboarding@resend.dev`, som når kontots egen adress.
-Den är vilande nu och kostar ingenting, men fångar samma fel igen om
-domänen någon gång faller ur. Ser ni `"reserv": true` i svaret är
-domänen inte verifierad längre.
+`lead-notis` provar `info@nextrum.se` först och faller bara vid 403
+tillbaka på `onboarding@resend.dev`. Den är vilande nu och kostar
+ingenting, men fångar samma fel igen om domänen någon gång faller ur.
+Ser ni `"reserv": true` i svaret är domänen inte verifierad längre.
+
+**Reserven går bara till `info@nextrum.se`, inte till hela listan.**
+`onboarding@resend.dev` får bara leverera till Resend-kontots egen
+adress, så ett försök med tre mottagare hade avvisats i sin helhet och
+reserven vore meningslös. Är kontot registrerat på någon av
+gmail-adresserna i stället faller även reserven — men då står orsaken
+i svaret, i stället för att aviseringen försvinner tyst.
 
 ---
 
@@ -120,6 +139,27 @@ Den finns för att funktionen ska kunna skilja ett riktigt
 webhook-anrop från vem som helst som hittat adressen. Spara den — ni
 behöver samma sträng i steg 4.
 
+### ⚠ Hemligheten är just nu själva kommandot, inte dess utdata
+
+Både secreten och webhook-headern är satta till den bokstavliga
+strängen `openssl rand -hex 32`. Kommandot kopierades in i stället för
+att köras. Notiserna fungerar — de två strängarna matchar varandra —
+men skyddet är borta: vem som helst som ser den här filen kan anropa
+funktionen och fylla era tre inkorgar.
+
+Byt så här, och gör stegen i den här ordningen:
+
+1. Kör `openssl rand -hex 32` **i en terminal** och kopiera de 64
+   tecknen den skriver ut.
+2. Project Settings → Edge Functions → Secrets → sätt
+   `NOTIS_HEMLIGHET` till den strängen.
+3. Först därefter, byt headern i webhooken (steg 4 nedan) till samma
+   sträng.
+
+Gör ni 3 före 2 svarar funktionen 401 på varje anmälan som kommer in
+emellan, och de mejlen kommer aldrig. Raderna ligger kvar i `leads`,
+så ingenting går förlorat — men ni får inte veta om dem.
+
 ---
 
 ## 4. Databaswebhook
@@ -132,6 +172,21 @@ Database → Webhooks → Create a new hook:
 - **Type:** Supabase Edge Functions
 - **Edge Function:** `lead-notis`
 - **HTTP Headers:** lägg till `x-nextrum-notis` med hemligheten från steg 3
+
+Webhooken finns redan och heter `ny-intresseanmalan`. Ska bara headern
+bytas går det från SQL Editor, utan att röra resten:
+
+```sql
+create or replace trigger "ny-intresseanmalan"
+  after insert on public.leads
+  for each row execute function supabase_functions.http_request(
+    'https://ddkfiuvcppalutfulvbi.supabase.co/functions/v1/lead-notis',
+    'POST',
+    '{"x-nextrum-notis":"DIN-NYA-HEMLIGHET-HAR"}',
+    '{}',
+    '5000'
+  );
+```
 
 ### Varför en webhook och inte ett anrop från formuläret
 
