@@ -8,7 +8,7 @@
 //   · ett underlag per studiehjälpare (vad de ska få)
 //
 // Samma pass, två sidor. Priset familjen betalar kommer från
-// prissattning, ersättningen från tutor_profiles.hourly_rate.
+// tjanster, ersättningen från tutor_profiles.hourly_rate.
 //
 // SÄKERHET
 // Den här funktionen använder service_role, för invoices och payouts
@@ -114,16 +114,34 @@ Deno.serve(async (req) => {
     });
 
     // ---------- priserna ----------
-    // Timpriset kommer numera per tjänst ur `tjanster` (schema-v18).
-    // prissattning läses fortfarande som reserv: den speglas av en
-    // trigger och är därmed alltid läxhjälpens pris, vilket är rätt
-    // svar för varje rad som skrevs innan katalogen fanns.
     const [pris, tjanster] = await Promise.all([
       db.from('prissattning').select('pris_per_timme_ore').maybeSingle(),
       db.from('tjanster').select('kod, pris_per_timme_ore, extra_personer_ore'),
     ]);
-    const timprisOre = Number(pris.data?.pris_per_timme_ore ?? 0);
-    if (!timprisOre) return json({ error: 'Priset i prissattning är 0 eller saknas.' }, 500);
+
+    // Priset tas i första hand ur `tjanster`, som är källan sedan
+    // schema-v18. prissattning är reserv.
+    //
+    // Ordningen var tvärtom och gjorde funktionen omöjlig att köra:
+    // prissattning har RLS med läsrätt bara för `authenticated`,
+    // medan `tjanster` är läsbar för alla. En äkta service_role-nyckel
+    // går förbi RLS och ser båda — men gör den inte det, till exempel
+    // för att SUPABASE_SERVICE_ROLE_KEY råkar vara den publicerbara
+    // nyckeln, läser klienten som anon och prissattning blir tom.
+    // Funktionen avbröt då med "Priset i prissattning är 0", vilket
+    // pekade på fel sak: priset fanns, men nyckeln räckte inte.
+    const laxhjalp = (tjanster.data ?? []).find((t) => t.kod === 'laxhjalp');
+    const timprisOre = Number(laxhjalp?.pris_per_timme_ore ?? 0)
+      || Number(pris.data?.pris_per_timme_ore ?? 0);
+
+    if (!timprisOre) {
+      return json({
+        error: 'Hittar inget timpris. Varken tjanster.laxhjalp eller prissattning gick att läsa.',
+        trolig_orsak: 'SUPABASE_SERVICE_ROLE_KEY på funktionen är sannolikt inte en '
+          + 'service_role-nyckel. Utan den läser funktionen som anon, och kan då '
+          + 'varken läsa priset eller skriva fakturor.',
+      }, 500);
+    }
 
     type TjanstPris = { timme: number; extra: number };
     const prisFor = new Map<string, TjanstPris>();
