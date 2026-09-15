@@ -510,7 +510,7 @@ const NXStory = (function () {
 /* ============================================================
    NXFin — det man inte märker att man märker
 
-   Magnetiska knappar, parallax, textavslöjande, markör, header.
+   Magnetiska knappar, parallax, textavslöjande, header.
    Allt stängs av i 'still', och allt som bygger på mus stängs av
    på pekskärm.
    ============================================================ */
@@ -602,60 +602,6 @@ const NXFin = (function () {
         }
       });
     });
-  }
-
-  /* ---------- markören ----------
-     En liten ring som följer musen och växer över det man kan
-     klicka på. Bara mus, bara stor skärm, aldrig på pekskärm. */
-  function markör() {
-    if (NXMotion.tier !== 'full') return;
-    if (document.getElementById('nx-cursor')) return;
-
-    const ring = document.createElement('div');
-    ring.id = 'nx-cursor';
-    ring.setAttribute('aria-hidden', 'true');
-    ring.innerHTML = '<span class="nx-cursor-etikett"></span>';
-    document.body.appendChild(ring);
-
-    let x = -100, y = -100, rx = -100, ry = -100, rafId = 0, aktiv = false;
-
-    const loop = () => {
-      rx += (x - rx) * 0.19;
-      ry += (y - ry) * 0.19;
-      ring.style.transform = 'translate3d(' + rx.toFixed(1) + 'px,' + ry.toFixed(1) + 'px,0) translate(-50%,-50%)';
-      rafId = (Math.abs(x - rx) > 0.3 || Math.abs(y - ry) > 0.3) ? requestAnimationFrame(loop) : 0;
-    };
-    const knuffa = () => { if (!rafId) rafId = requestAnimationFrame(loop); };
-
-    window.addEventListener('pointermove', e => {
-      if (e.pointerType !== 'mouse') return;
-      x = e.clientX; y = e.clientY;
-      if (!aktiv) { aktiv = true; document.body.classList.add('nx-har-markör'); }
-      knuffa();
-
-      const träff = e.target.closest('a, button, [data-open], .nx-cursor-mål, input, select, textarea, summary');
-      const etikett = e.target.closest('[data-markör]');
-      ring.classList.toggle('is-länk', !!träff);
-
-      /* Ringen ritas med --bl, bläckfärgen, och ligger position:fixed
-         på body — den ärver alltså aldrig en mörk sektions variabler.
-         Över footern blev kanten exakt footerns egen färg, kontrast
-         1,00, samtidigt som cursor:none gömde systempilen. Följden var
-         ingen pekare alls på policylänkarna längst ner.
-         --nt-fg är den ljusa förgrunden på permanent mörka ytor och
-         är ljus i BÅDA lägena, till skillnad från --pap. */
-      ring.classList.toggle('pa-mork',
-        !!e.target.closest('.ftr, .band, .on-band, .nx-mork, .nx-hero-film'));
-      ring.classList.toggle('is-text', !!e.target.closest('input, textarea'));
-      const txt = etikett ? etikett.dataset.markör : '';
-      ring.classList.toggle('is-etikett', !!txt);
-      if (ring.firstChild.textContent !== txt) ring.firstChild.textContent = txt;
-    }, { passive: true });
-
-    window.addEventListener('pointerdown', () => ring.classList.add('is-nere'));
-    window.addEventListener('pointerup', () => ring.classList.remove('is-nere'));
-    document.addEventListener('mouseleave', () => ring.classList.add('is-borta'));
-    document.addEventListener('mouseenter', () => ring.classList.remove('is-borta'));
   }
 
   /* ---------- header ----------
@@ -786,9 +732,8 @@ const NXFin = (function () {
     stiga('[data-stig]');
     magnetiska('[data-magnet]');
     parallax('[data-parallax]');
-    markör();
     nödbroms();
   }
 
-  return { allt, header, heroVideo, radAvslöj, stiga, magnetiska, parallax, markör, nödbroms, tryckbart };
+  return { allt, header, heroVideo, radAvslöj, stiga, magnetiska, parallax, nödbroms, tryckbart };
 })();

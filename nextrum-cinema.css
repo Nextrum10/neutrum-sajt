@@ -395,61 +395,6 @@ html[data-motion] [data-stig][data-fördröj="4"]{transition-delay:.2s,.2s,0s,0s
 html[data-motion] [data-stig][data-fördröj="5"]{transition-delay:.25s,.25s,0s,0s,0s,0s}
 
 /* ============================================================
-   MARKÖREN — bara mus, bara stor skärm
-   ============================================================ */
-#nx-cursor{
-  position:fixed;top:0;left:0;z-index:9999;
-  width:26px;height:26px;border-radius:50%;
-  border:1px solid color-mix(in srgb,var(--bl) 48%,transparent);
-  pointer-events:none;
-  opacity:0;
-  display:grid;place-items:center;
-  transition:width .28s var(--e-ut),height .28s var(--e-ut),
-             background .28s var(--e-ut),border-color .28s var(--e-ut),
-             opacity .25s linear;
-  mix-blend-mode:normal;
-}
-body.nx-har-markör #nx-cursor{opacity:1}
-#nx-cursor.is-borta{opacity:0}
-
-/* Över mörka ytor vänds ringen till ljus. Utan det försvann pekaren
-   helt i footern: kanten var --bl mot en botten som också är --bl,
-   och cursor:none hade redan tagit systempilen. */
-#nx-cursor.pa-mork{border-color:color-mix(in srgb,var(--nt-fg) 55%,transparent)}
-#nx-cursor.pa-mork.is-länk{
-  background:color-mix(in srgb,var(--nt-fg) 12%,transparent);
-  border-color:color-mix(in srgb,var(--nt-fg) 50%,transparent);
-}
-#nx-cursor.pa-mork.is-text{background:var(--nt-fg);border-color:var(--nt-fg)}
-#nx-cursor.is-länk{
-  width:46px;height:46px;
-  background:color-mix(in srgb,var(--bl) 9%,transparent);
-  border-color:color-mix(in srgb,var(--bl) 26%,transparent);
-}
-#nx-cursor.is-nere{width:20px;height:20px}
-#nx-cursor.is-text{width:2px;height:24px;border-radius:1px;background:var(--bl);border-color:transparent}
-#nx-cursor.is-etikett{
-  width:82px;height:82px;
-  background:var(--bl);border-color:var(--bl);
-}
-.nx-cursor-etikett{
-  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--pap);
-  opacity:0;transition:opacity .2s .06s linear;white-space:nowrap;
-}
-#nx-cursor.is-etikett .nx-cursor-etikett{opacity:1}
-
-/* Systemmarkören blir kvar överallt utom där vår ring är tydlig
-   nog att ersätta den — vi tar aldrig bort den från text och
-   formulärfält, för då blir sidan svårare att använda. */
-@media (hover:hover) and (pointer:fine) and (min-width:901px){
-  html[data-motion="full"] body.nx-har-markör a,
-  html[data-motion="full"] body.nx-har-markör button,
-  html[data-motion="full"] body.nx-har-markör [data-open]{cursor:none}
-}
-@media (hover:none),(pointer:coarse),(max-width:900px){#nx-cursor{display:none}}
-
-/* ============================================================
    HEADER
    Genomskinlig över hero. Efter scroll: mindre, ljus, med lätt
    oskärpa bakom. Aldrig visuellt dominant.
@@ -1588,7 +1533,6 @@ html[lang="en"] .nx-hero-rubrik{
   .nx-rad-i{transform:none !important;opacity:1 !important}
   [data-stig]{opacity:1 !important;transform:none !important}
   .nx-fig .nx-img{opacity:1 !important}
-  #nx-cursor{display:none !important}
   .nx-hint{display:none}
 
   /* Den pinnade scenen släpper — man scrollar igenom en vanlig,
