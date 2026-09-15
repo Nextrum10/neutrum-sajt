@@ -289,12 +289,21 @@ window.NXArbete = (function () {
     if (!host) return null;
 
     var LANGDER = [[60, '1 timme'], [120, '2 timmar'], [180, '3 timmar']];
-    var FORMAT = ['Online', 'På plats'];
+    /* På plats står först, och är förvalet. Läxhjälpen är tänkt att
+       ske hemma hos familjen eller någonstans de kommer överens om —
+       online finns kvar för den som behöver det, men ska inte vara
+       det man råkar boka för att det låg först. */
+    var FORMAT = ['På plats', 'Online'];
 
     var st = {
       amne: o.amne || (o.amnen || [])[0] || 'Matematik',
       minuter: 60,
-      format: 'Online',
+      format: 'På plats',
+      /* Var ni ses. Frivillig: många vet redan, och den som inte vet
+         ska inte hindras från att boka. Står den tom säger kvittot
+         att platsen bestäms i chatten, i stället för att låtsas att
+         frågan är avklarad. */
+      plats: '',
       datum: null,
       tid: null,
       /* Beskedet efter en bokning. Det låg förut i steg 4, som
@@ -322,6 +331,7 @@ window.NXArbete = (function () {
       if (f.subject && (o.amnen || []).indexOf(f.subject) !== -1) st.amne = f.subject;
       if (f.duration_min) st.minuter = f.duration_min;
       if (f.format && FORMAT.indexOf(f.format) !== -1) st.format = f.format;
+      if (f.location) st.plats = f.location;
     }
 
     function timmar() { return Math.max(1, Math.round(st.minuter / 60)); }
@@ -414,9 +424,20 @@ window.NXArbete = (function () {
         s2kropp,
         st.oppet === 2 ? 'oppen' : valdTid ? 'klar' : '');
 
+      var påPlats = st.format === 'På plats';
       var s3 = steg(3, 'Hur vill ni ha det',
-        '<b>' + esc(st.format) + '</b>',
-        chips('bk-format', FORMAT.map(function (f) { return [f, f]; }), st.format, 'Format'),
+        '<b>' + esc(st.format) + '</b>'
+          + (påPlats && st.plats ? ' · ' + esc(st.plats) : ''),
+        chips('bk-format', FORMAT.map(function (f) { return [f, f]; }), st.format, 'Format')
+          + (påPlats
+            ? '<div class="bk-plats">'
+              + '<label for="bk-plats-falt">Var ses ni?</label>'
+              + '<input class="inp" id="bk-plats-falt" maxlength="120"'
+              + ' value="' + esc(st.plats) + '"'
+              + ' placeholder="t.ex. Hemma hos oss, Storgatan 4">'
+              + '<span class="xsmall">Frivilligt. Lämnar ni det tomt kommer ni överens i chatten.</span>'
+              + '</div>'
+            : ''),
         st.oppet === 3 ? 'oppen' : 'klar');
 
       /* Steg 4 är låst tills en tid är vald. Det syns ändå, så att
@@ -427,6 +448,10 @@ window.NXArbete = (function () {
           + esc(datumText(st.datum) + ' kl. ' + st.tid.slice(0, 5)) + '</span></div>'
           + '<div class="bk-kvitto-rad"><span>Längd</span><span>' + esc(längdText()) + '</span></div>'
           + '<div class="bk-kvitto-rad"><span>Format</span><span>' + esc(st.format) + '</span></div>'
+          + (st.format === 'På plats'
+              ? '<div class="bk-kvitto-rad"><span>Plats</span><span>'
+                + (st.plats ? esc(st.plats) : 'Bestäms i chatten') + '</span></div>'
+              : '')
           + (o.hos ? '<div class="bk-kvitto-rad"><span>Studiehjälpare</span><span>'
               + esc(o.hos) + '</span></div>' : '')
           + '<div class="bk-kvitto-rad ar-summa"><span>Att betala</span><span>'
@@ -471,6 +496,14 @@ window.NXArbete = (function () {
       rita();
     }
 
+    /* Ingen omritning medan man skriver: rita() byter ut hela
+       innerHTML, och fältet hade tappat både innehåll och fokus vid
+       varje tangenttryck. Värdet läses ur st när steget ritas om av
+       något annat skäl. */
+    host.addEventListener('input', function (e) {
+      if (e.target && e.target.id === 'bk-plats-falt') st.plats = e.target.value;
+    });
+
     host.addEventListener('click', function (e) {
       var öpp = e.target.closest('[data-bk-oppna]');
       if (öpp) { öppna(Number(öpp.dataset.bkOppna)); return; }
@@ -486,7 +519,16 @@ window.NXArbete = (function () {
       if (val) {
         var grupp = val.closest('.vy-val').id;
         if (grupp === 'bk-amnen') { st.amne = val.dataset.v; st.oppet = st.datum ? 4 : 2; rita(); }
-        else if (grupp === 'bk-format') { st.format = val.dataset.v; st.oppet = st.datum ? 4 : 2; rita(); }
+        else if (grupp === 'bk-format') {
+          st.format = val.dataset.v;
+          /* På plats öppnar ett fält under knapparna, så steget ska
+             stå öppet efteråt — annars göms frågan i samma klick som
+             ställer den, och den som byter tillbaka från Online ser
+             aldrig fältet dyka upp. Online har inget mer att fråga
+             om och fäller ihop. */
+          st.oppet = st.format === 'På plats' ? 3 : (st.datum ? 4 : 2);
+          rita();
+        }
         else if (grupp === 'bk-langder') {
           st.minuter = Number(val.dataset.v);
           /* Längden ändrar vilka timmar som ryms. En vald tid som
@@ -532,7 +574,8 @@ window.NXArbete = (function () {
       NXStudie.medan(knapp, 'Bokar…', async function () {
         var fel = await o.boka({
           datum: st.datum, tid: st.tid, minuter: st.minuter,
-          amne: st.amne, format: st.format
+          amne: st.amne, format: st.format,
+          plats: st.format === 'På plats' ? st.plats.trim() : ''
         });
         if (fel) {
           var m = $('#bk-msg', host);
@@ -804,6 +847,92 @@ window.NXArbete = (function () {
     };
   }
 
+  /* ============================================================
+     FÄLLBARA DELAR
+
+     Passen och rapporterna växer varje vecka och krymper aldrig.
+     Efter en termin ligger trettio genomförda pass överst i vägen
+     för de tre som faktiskt är kvar att göra något åt.
+
+     En pil längst till höger i rubriken fäller ihop delen. Valet
+     sparas per webbläsare — den som gömt de genomförda passen har
+     gömt dem, inte gömt dem tills sidan laddas om.
+
+     Markupen bär allt, så en lista som ritas om med innerHTML
+     behåller sitt läge utan att sidan behöver koppla om något:
+
+       <div class="vy-fall" data-fall="NYCKEL">
+         <button data-fall-knapp aria-expanded="true">…</button>
+         <div class="vy-fall-kropp"> … </div>
+       </div>
+     ============================================================ */
+  var FALL_PIL = '<svg viewBox="0 0 12 12" aria-hidden="true">'
+    + '<path d="M2.5 4.5 6 8l3.5-3.5"/></svg>';
+
+  /* localStorage kastar i privat läge i vissa webbläsare. Ett gömt
+     pass är inte värt en trasig vy, så allt här får misslyckas tyst
+     och falla tillbaka på utfällt. */
+  function fallDolt(nyckel) {
+    try { return window.localStorage.getItem('nx.fall.' + nyckel) === 'dolt'; }
+    catch (e) { return false; }
+  }
+  function fallSpara(nyckel, dolt) {
+    try { window.localStorage.setItem('nx.fall.' + nyckel, dolt ? 'dolt' : 'oppet'); }
+    catch (e) { /* strunt samma */ }
+  }
+
+  /* Pilen som sitter i en rubrik. Etiketten talar om vad den gömmer,
+     för den som hör sidan i stället för att se den. */
+  function fallKnapp(nyckel, namn) {
+    var dolt = fallDolt(nyckel);
+    return '<button type="button" class="vy-fall-pil" data-fall-knapp'
+      + ' aria-expanded="' + (dolt ? 'false' : 'true') + '"'
+      + ' aria-label="' + esc(namn || 'Dölj') + '">' + FALL_PIL + '</button>';
+  }
+
+  /* En grupp inne i en lista: egen rubrikrad med antal och pil.
+     Returnerar html i stället för en nod — listorna ritas om med
+     innerHTML vid varje laddning, och en nod hade ändå varit borta
+     nästa gång. */
+  function fallGrupp(o) {
+    var nyckel = o.nyckel, dolt = fallDolt(nyckel);
+    return '<div class="vy-fall" data-fall="' + esc(nyckel) + '">'
+      + '<div class="vy-fall-rad">'
+      + '<span class="vy-fall-et">' + esc(o.etikett)
+      + (o.antal ? ' <em>' + esc(String(o.antal)) + '</em>' : '') + '</span>'
+      + fallKnapp(nyckel, o.namn || ('Dölj ' + String(o.etikett).toLowerCase()))
+      + '</div>'
+      + '<div class="vy-fall-kropp"' + (dolt ? ' hidden' : '') + '>'
+      + (o.kropp || '') + '</div>'
+      + '</div>';
+  }
+
+  /* Rutor vars pil står i markupen läses av en gång när vyn öppnas,
+     så ett sparat läge syns direkt och inte först vid första klicket. */
+  function fallStall(rot) {
+    var host = rot || document;
+    Array.prototype.forEach.call(host.querySelectorAll('.vy-fall[data-fall]'), function (f) {
+      var knapp = f.querySelector('[data-fall-knapp]');
+      var kropp = f.querySelector('.vy-fall-kropp');
+      if (!knapp || !kropp) return;
+      var dolt = fallDolt(f.dataset.fall);
+      knapp.setAttribute('aria-expanded', dolt ? 'false' : 'true');
+      kropp.hidden = dolt;
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var knapp = e.target.closest('[data-fall-knapp]');
+    if (!knapp) return;
+    var rot = knapp.closest('.vy-fall');
+    var kropp = rot && rot.querySelector('.vy-fall-kropp');
+    if (!rot || !kropp) return;
+    var dolt = !kropp.hidden;
+    kropp.hidden = dolt;
+    knapp.setAttribute('aria-expanded', dolt ? 'false' : 'true');
+    fallSpara(rot.dataset.fall, dolt);
+  });
+
   return {
     hälsning: hälsning,
     hälsningsrad: hälsningsrad,
@@ -813,6 +942,8 @@ window.NXArbete = (function () {
     visaFör: visaFör,
     bokning: bokning,
     veckorutnat: veckorutnat,
+    fallGrupp: fallGrupp,
+    fallStall: fallStall,
     DAGAR_LANGA: DAGAR_LANGA,
     DAGAR_KORTA: DAGAR_KORTA
   };

@@ -410,7 +410,11 @@ blockquote,figure{margin:0}
 }
 .cal .day.avail{border-color:var(--line-2);color:var(--fg);cursor:pointer}
 .cal .day.avail:hover{background:var(--surface)}
-.cal .day.sel{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+/* ar-vald, inte sel: .sel är klassen på <select> i formulären, och
+   cinema-paletten färgar den med formulärets botten. Den regeln har
+   högre specificitet än den här, så en vald dag fick fältbakgrund i
+   mörkt läge och blev osynlig — samma färg på text som på botten. */
+.cal .day.ar-vald{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .cal .day.off{opacity:.3}
 .slots{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
 .slot{padding:8px 14px;border:1px solid var(--line-2);border-radius:var(--r-sm);font-size:.82rem;font-family:var(--f-mono)}

@@ -1774,3 +1774,136 @@ table.adm .adm-tal{
   white-space:pre-wrap;word-break:break-word;
   background:var(--pap-2);border-radius:12px;padding:14px 16px;
 }
+
+/* ============================================================
+  10. FÄLLBARA DELAR
+
+   Passen och rapporterna växer varje vecka och krymper aldrig.
+   En pil längst till höger fäller ihop det som redan är avklarat.
+
+   Pilen finns i två lägen och ser likadan ut i båda: i en rubrik
+   (h5), där den gömmer hela rutans innehåll, och i en rad inne i
+   en lista, där den gömmer en grupp. Samma klass, samma riktning,
+   samma vridning nedåt när något är ihopfällt.
+   ============================================================ */
+.vy-fall-pil{
+  flex:none;width:26px;height:26px;
+  display:grid;place-items:center;
+  border:1px solid var(--ln);border-radius:8px;
+  color:var(--bl-2);background:transparent;
+  transition:transform .18s ease, border-color .18s ease, color .18s ease;
+}
+.vy-fall-pil svg{width:11px;height:11px;stroke:currentColor;stroke-width:1.8;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+.vy-fall-pil:hover{border-color:var(--ln-2);color:var(--bl)}
+/* Ihopfälld: pilen pekar åt höger, som en stängd mapp. Utfälld pekar
+   den ner mot det den visar. */
+.vy-fall-pil[aria-expanded="false"]{transform:rotate(-90deg)}
+
+/* I en rubrik ligger pilen längst till höger. .vy .dbox h5 em har
+   margin-left:auto, så pilen behöver bara ett eget avstånd — men
+   saknas etiketten är det pilen som ska knuffas ut. */
+.vy .dbox h5 > .vy-fall-pil{margin-left:10px}
+.vy .dbox h5 > .vy-fall-pil:first-of-type:not(em + .vy-fall-pil){margin-left:auto}
+
+/* En grupp inne i en lista. Strecket ovanför skiljer den från raderna
+   före utan att bli ännu en ruta i rutan. */
+.vy-fall{display:block}
+.vy-fall-rad{
+  display:flex;align-items:center;gap:12px;
+  margin-top:18px;padding-top:15px;
+  border-top:1px solid var(--ln);
+}
+.vy-fall-et{
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-2);
+  margin-right:auto;
+}
+.vy-fall-et em{font-style:normal;letter-spacing:.1em;color:var(--bl-3)}
+.vy-fall-kropp[hidden]{display:none}
+
+/* ============================================================
+  11. KALENDERN I STUDIEHJÄLPARVYN
+
+   Samma kalender som familjen ser, med ett läge till: dygnets
+   timmar står framme, inte bara de inlagda. En timme du redan kan
+   är fylld, en du inte lagt in är streckad. Skillnaden måste synas
+   utan färg allena — därför streck mot heldraget, inte bara två
+   nyanser av samma kant.
+   ============================================================ */
+.slot.ar-omarkerad{
+  border-style:dashed;border-color:var(--ln);
+  color:var(--bl-3);background:transparent;
+}
+.slot.ar-omarkerad:hover{border-color:var(--acc);color:var(--acc)}
+.slot.ar-min{border-color:var(--ln-2);color:var(--bl)}
+.slot.ar-min:hover{background:var(--pap-2)}
+
+/* Vald timme. Måste stå EFTER de två ovan och nämna klassen: de har
+   samma specificitet som .slot[aria-pressed="true"] i nextrum.css och
+   ligger senare i kaskaden, så utan det här vann de färgen och den
+   valda timmen blev kräm på kräm. */
+.slot.ar-min[aria-pressed="true"],
+.slot.ar-omarkerad[aria-pressed="true"]{
+  background:var(--fg);color:var(--bg);border-color:var(--fg);
+}
+
+/* Dagar med tider inlagda får en prick, så veckan går att läsa av
+   utan att öppna en dag i taget. Vald dag har omvänd botten, och
+   pricken måste byta färg med den. */
+.cal .day.ar-mina{position:relative}
+.cal .day.ar-mina::after{
+  content:"";position:absolute;left:50%;bottom:5px;
+  width:3px;height:3px;border-radius:50%;
+  transform:translateX(-50%);
+  background:var(--acc);
+}
+.cal .day.ar-mina.ar-vald::after{background:var(--pap)}
+
+/* Sammanfattningen ovanför kalendern: hela veckan på en rad. */
+.kal-hjalp{
+  display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;
+  margin:0 0 14px;font-size:.8rem;line-height:1.5;color:var(--bl-2);
+}
+.kal-hjalp b{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
+}
+
+/* Foten under kalendern. Texten säger vad den valda timmen är, och
+   knapparna skiljer på "varje vecka" och "bara den här dagen" —
+   en skillnad man inte kan gissa sig till från en enda knapp. */
+.kal-fot{margin-top:16px}
+.kal-fot-hjalp{
+  margin:0;font-size:.82rem;line-height:1.6;color:var(--bl-2);
+}
+.kal-fot-hjalp b{color:var(--bl);font-weight:650}
+.kal-fot-atg{display:flex;flex-wrap:wrap;gap:9px;margin-top:11px}
+
+/* Spärrarna. Syns redan som luckor i kalendern — listan finns för
+   den som spärrat fel dag och vill ångra sig utan att leta. */
+.kal-sparr-et{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
+  margin:20px 0 9px;
+}
+.kal-sparr{
+  display:flex;align-items:center;gap:12px;
+  padding:9px 0;font-size:.85rem;color:var(--bl-2);
+}
+.kal-sparr + .kal-sparr{border-top:1px solid var(--ln)}
+.kal-sparr span{margin-right:auto}
+.kal-sparr b{color:var(--bl);font-weight:650}
+
+/* Platsen i bokningens steg 3. Fältet fälls ut under knapparna när
+   passet är på plats, och steget står kvar öppet så att frågan hinner
+   ställas innan den göms. */
+.bk-plats{margin-top:16px}
+.bk-plats label{
+  display:block;margin-bottom:7px;
+  font-size:.82rem;font-weight:650;color:var(--bl);
+}
+.bk-plats .xsmall{
+  display:block;margin-top:7px;
+  font-size:.76rem;line-height:1.5;color:var(--bl-3);
+}
