@@ -7,42 +7,35 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
-<title>Läxhjälp för elever och föräldrar — Nextrum</title>
-<meta name="description" content="Studievyn samlar studieplan, kommande pass och rapporten efter varje tillfälle — så att ni ser elevens utveckling mellan passen, inte bara under dem.">
-<link rel="canonical" href="https://nextrum.se/for-elever-och-foraldrar">
-<link rel="alternate" hreflang="sv" href="https://nextrum.se/for-elever-och-foraldrar">
-<link rel="alternate" hreflang="en" href="https://nextrum.se/en/for-elever-och-foraldrar">
-<link rel="alternate" hreflang="x-default" href="https://nextrum.se/for-elever-och-foraldrar">
+<title>Läxhjälp i Bromma — hemma hos er eller online | Nextrum</title>
+<meta name="description" content="Läxhjälp i Bromma med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er eller online, 379 kr i timmen, ingen bindningstid.">
+<link rel="canonical" href="https://nextrum.se/laxhjalp-bromma">
+<!-- Sidan finns bara på svenska. Ingen hreflang="en" här: att peka ut
+     en engelsk version som inte finns är sämre än att inte peka alls. -->
+<link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-bromma">
+<link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-bromma">
 <meta name="theme-color" content="#FBFAF8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
+<meta name="geo.region" content="SE-AB">
+<meta name="geo.placename" content="Bromma">
 
 <!-- delning -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="sv_SE">
-<meta property="og:title" content="Läxhjälp för elever och föräldrar — Nextrum">
-<meta property="og:description" content="Studievyn samlar studieplan, kommande pass och rapporten efter varje tillfälle — så att ni ser elevens utveckling mellan passen, inte bara under dem.">
-<meta property="og:url" content="https://nextrum.se/for-elever-och-foraldrar">
-<meta property="og:image" content="https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg">
+<meta property="og:title" content="Läxhjälp i Bromma — hemma hos er eller online | Nextrum">
+<meta property="og:description" content="Läxhjälp i Bromma med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er eller online, 379 kr i timmen, ingen bindningstid.">
+<meta property="og:url" content="https://nextrum.se/laxhjalp-bromma">
+<meta property="og:image" content="https://nextrum.se/bilder/10-forsta-motet-1280.jpg">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
-<meta property="og:image:alt" content="En ung studiehjälpare och en elev pluggar tillsammans vid ett ljust träbord.">
+<meta property="og:image:alt" content="En studiehjälpare och en elev hälsar på varandra vid ett köksbord inför sitt första pass.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Läxhjälp för elever och föräldrar — Nextrum">
-<meta name="twitter:description" content="Studievyn samlar studieplan, kommande pass och rapporten efter varje tillfälle — så att ni ser elevens utveckling mellan passen, inte bara under dem.">
-<meta name="twitter:image" content="https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg">
+<meta name="twitter:title" content="Läxhjälp i Bromma — hemma hos er eller online | Nextrum">
+<meta name="twitter:description" content="Läxhjälp i Bromma med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er eller online, 379 kr i timmen, ingen bindningstid.">
+<meta name="twitter:image" content="https://nextrum.se/bilder/10-forsta-motet-1280.jpg">
 
-<!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
-     besökarens IP vid varje sidvisning är därmed borta, och två
-     värdnamn färre ska slås upp innan första texten kan ritas.
-
-     Ingen <link rel="preload"> här med flit: mätt gav den en DUBBEL
-     nedladdning av samma 46 kB. Allt i taggen var rätt — samma
-     adress, as="font", crossorigin, rätt typ — men utan cache-
-     direktiv på svaret återanvänder webbläsaren inte den förladdade
-     kroppen. Cachningen ligger i vercel.json i stället, och där gör
-     den nytta vid varje återbesök i ett år. -->
 <link rel="stylesheet" href="nextrum-typsnitt.css">
 
 <!-- ordningen spelar roll: bas → startsida → cinema -->
@@ -69,7 +62,7 @@
     <div class="sprakval" role="group" aria-label="Språk / Language">
       <b lang="sv" aria-current="true">SV</b>
       <i aria-hidden="true"></i>
-      <a lang="en" hreflang="en" href="/en/for-elever-och-foraldrar">ENG</a>
+      <a lang="en" hreflang="en" href="/en/">ENG</a>
     </div>
 
     <a href="/" class="logo" aria-label="Nextrum, till startsidan">
@@ -123,140 +116,118 @@
 <main id="innehall">
 
 <section class="wrap nx-page-hero">
-  <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
-  <span class="nx-et acc" data-stig style="margin-top:22px">För elever & föräldrar</span>
-  <h1 class="nx-d1" data-avslöj>Utveckling ni<br><em>kan följa.</em></h1>
-  <p class="nx-lede" data-stig data-fördröj="1">Det svåraste med läxhjälp är sällan själva passet. Det är att veta vad som händer mellan dem.</p>
-  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#ACA193">
-    <img class="nx-img" src="bilder/01-en-till-en-1280.jpg"
-         srcset="bilder/01-en-till-en-640.jpg 640w, bilder/01-en-till-en-960.jpg 960w, bilder/01-en-till-en-1280.jpg 1280w, bilder/01-en-till-en-1600.jpg 1600w, bilder/01-en-till-en-1920.jpg 1920w"
+  <a class="nx-back" href="/laxhjalp-stockholm"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Läxhjälp i Stockholm</a>
+  <span class="nx-et acc" data-stig style="margin-top:22px">Läxhjälp i Bromma</span>
+  <h1 class="nx-d1" data-avslöj>Läxhjälp i<br><em>Bromma.</em></h1>
+  <p class="nx-lede" data-stig data-fördröj="1">Vi matchar elever i Bromma med en studiehjälpare som nyligen läst samma kurser själv. Passen sker hemma hos er eller online.</p>
+  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#948979">
+    <img class="nx-img" src="bilder/10-forsta-motet-1280.jpg"
+         srcset="bilder/10-forsta-motet-640.jpg 640w, bilder/10-forsta-motet-960.jpg 960w, bilder/10-forsta-motet-1280.jpg 1280w, bilder/10-forsta-motet-1600.jpg 1600w, bilder/10-forsta-motet-1920.jpg 1920w"
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
-         style="object-position:68% 44%" alt="En studiehjälpare pekar med pennan på en uppgift i elevens räknebok och förklarar.">
+         style="object-position:50% 42%" alt="En studiehjälpare och en elev hälsar på varandra vid ett köksbord inför sitt första pass.">
   </figure>
 </section>
 
 <section class="sec wrap">
   <div class="nx-two">
     <div class="nx-two-sticky rv">
-      <span class="nx-et acc">Studievyn</span>
-      <h2 class="nx-d2" style="margin-top:18px">Allt på ett ställe.</h2>
+      <span class="nx-et acc">Så går det till</span>
+      <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
     </div>
     <div class="nx-text rv">
-        <p>När matchningen är klar låses studievyn upp. Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle.</p>
-        <p>Rapporten skrivs av studiehjälparen efter passet och beskriver vad ni gick igenom och hur det gick. Den är inte en formalitet — ett pass räknas som genomfört först när den är skriven.</p>
-        <p>Elev och förälder ser samma sak. Ingen behöver fråga hur det gick, och ingen behöver komma ihåg att berätta.</p>
-    </div>
-  </div>
-
-  <div class="nx-studievy" data-stig data-fördröj="2">
-    <div class="nx-mock" role="img" aria-label="Illustration av Nextrums studievy med utveckling, kommande pass, studieplan och senaste rapport. Innehållet är ett exempel.">
-          <div class="nx-mock-bar">
-            <i></i><i></i><i></i>
-            <span class="url">nextrum.se / studievy</span>
-          </div>
-          <div class="nx-mock-body">
-    
-            <div class="nx-mock-top">
-              <div class="who">
-                <span class="av">A</span>
-                <div><b style="display:block;font-size:.86rem">Studievy</b><span>Matchad studiehjälpare</span></div>
-              </div>
-              <span class="nx-chips"><span>Vecka 12</span></span>
-            </div>
-    
-            <div class="nx-card span2">
-              <h6>Elevens utveckling <em>Senaste 6 veckorna</em></h6>
-              <div class="nx-prog">
-                <div class="t"><b>Matematik</b><span>78%</span></div>
-                <div class="nx-bar"><i class="is-acc" style="--w:78%"></i></div>
-              </div>
-              <div class="nx-prog">
-                <div class="t"><b>Svenska</b><span>64%</span></div>
-                <div class="nx-bar"><i style="--w:64%"></i></div>
-              </div>
-              <div class="nx-prog">
-                <div class="t"><b>Engelska</b><span>52%</span></div>
-                <div class="nx-bar"><i style="--w:52%"></i></div>
-              </div>
-            </div>
-    
-            <div class="nx-card">
-              <h6>Kommande studiepass</h6>
-              <div class="nx-row"><span class="when">Tis 16:00</span><span class="what">Ekvationer</span><span class="st">Online</span></div>
-              <div class="nx-row"><span class="when">Tors 17:00</span><span class="what">Provplugg</span><span class="st">På plats</span></div>
-              <div class="nx-row"><span class="when">Sön 14:00</span><span class="what">Textanalys</span><span class="st">Online</span></div>
-            </div>
-    
-            <div class="nx-card">
-              <h6>Studieplan</h6>
-              <p class="nx-note"><b>Mål:</b> trygg med ekvationer inför provet v.14. Vi går igenom en uppgiftstyp per pass och avslutar med repetition.</p>
-              <div class="nx-chips" style="margin-top:12px"><span>Matematik</span><span>Åk 8</span></div>
-            </div>
-    
-            <div class="nx-card span2">
-              <h6>Senaste rapport <em>Skickad efter passet</em></h6>
-              <p class="nx-note">Vi repeterade ekvationer med parenteser. Det gick trögt i början men lossnade mot slutet — hen löste de tre sista uppgifterna själv. Till nästa gång: uppgift 12–18 i boken.</p>
-              <div class="nx-row" style="margin-top:14px;border-bottom:none;padding-bottom:0">
-                <span class="when">Igår</span><span class="what">Pass genomfört</span><span class="st ok">Rapport klar</span>
-              </div>
-            </div>
-    
-          </div>
-        </div>
-  </div>
-</section>
-
-<section class="nx-surface">
-  <div class="sec wrap">
-    <div class="nx-head split" data-stig>
-      <div><span class="nx-et acc">I praktiken</span>
-        <h2 class="nx-d2" style="margin-top:18px">Så kan ett pass se ut.</h2></div>
-      <div class="nx-head-aside"><p class="nx-lede">Passen ser olika ut beroende på ämne och behov, men rytmen brukar likna det här.</p></div>
-    </div>
-    <div class="nx-trio">
-      <div class="nx-trio-kort" data-stig data-fördröj="1">
-        <span class="nx-trio-et">Före</span>
-        <b>Ni väljer tid</b>
-        <p>Boka inom studiehjälparens tider, online eller på plats, en till tre timmar.</p>
-      </div>
-      <div class="nx-trio-kort" data-stig data-fördröj="2">
-        <span class="nx-trio-et">Under</span>
-        <b>Eleven arbetar med sin studiehjälpare</b>
-        <p>Studiehjälparen utgår från studieplanen och det som var svårt sist. Målet är inte att bli klar med läxan, utan att förstå den.</p>
-      </div>
-      <div class="nx-trio-kort" data-stig data-fördröj="3">
-        <span class="nx-trio-et">Efter</span>
-        <b>Rapporten skrivs</b>
-        <p>Vad ni gick igenom, hur det gick och vad som är nästa steg. Ni läser den i studievyn samma kväll.</p>
-      </div>
+      <p>Ni skickar in en intresseanmälan och berättar vad eleven behöver hjälp med. Vi går igenom behovet tillsammans med er och väljer sedan ut den studiehjälpare som passar bäst — utifrån ämne, nivå och person. Ni bläddrar alltså inte bland profiler: fel match är värre än ingen match.</p>
+      <p>När matchningen är klar låses studievyn upp. Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Rapporten skrivs av studiehjälparen efteråt och beskriver vad ni gick igenom och hur det gick — ett pass räknas som genomfört först när den är skriven.</p>
+      <p>Gröna linjen går till Alvik, Abrahamsberg, Åkeshov och Brommaplan, och därifrån tar Nockebybanan vid ut mot Ålsten, Höglandet och Nockeby. Villaområdena västerut är alltså närmare än de ser ut på kartan, så länge man åker kollektivt och inte räknar i kilometer.</p>
     </div>
   </div>
 </section>
 
-<section class="nx-surface">
-  <div class="sec wrap">
-    <div class="nx-head split" data-stig>
-      <div><span class="nx-et acc">Vad ni får</span>
-        <h2 class="nx-d2" style="margin-top:18px">Fyra saker vi står för.</h2></div>
-      <div class="nx-head-aside"><p class="nx-lede">Inget av det här är extratjänster. Det ingår i timpriset, oavsett ämne.</p></div>
+<section class="sec wrap">
+  <div class="rv">
+    <span class="nx-et acc">Området</span>
+    <h2 class="nx-d2" style="margin-top:18px">Var vi matchar elever</h2>
+    <div class="nx-omr-chips" style="margin-top:clamp(20px,2.4vw,28px)"><span>Alvik</span><span>Traneberg</span><span>Abrahamsberg</span><span>Åkeshov</span><span>Brommaplan</span><span>Ålsten</span><span>Höglandet</span><span>Nockeby</span><span>Bromma Kyrka</span><span>Riksby</span><span>Ulvsunda</span><span>Mariehäll</span></div>
+    <p class="xsmall" style="margin-top:22px;max-width:62ch">
+      Om ett pass sker hemma hos er eller online avgörs av matchningen, inte av adressen.
+      Hittar vi ingen studiehjälpare som kan ta sig till er varje vecka börjar ni online —
+      samma person, samma studieplan, samma rapport efteråt.
+    </p>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="nx-two">
+    <div class="nx-two-sticky rv">
+      <span class="nx-et acc">Priset</span>
+      <h2 class="nx-d2" style="margin-top:18px">379 kr<br>i timmen.</h2>
     </div>
-    <div class="nx-dragspel" style="margin-top:32px">
+    <div class="nx-text rv">
+      <p>Samma timpris oavsett ämne och oavsett var i Stockholm passet hålls. Varje barn utöver det första kostar 69 kr i timmen, så två barn en timme blir 448 kr och tre barn 517 kr.</p>
+      <p>Ingen bindningstid och ingen månadsavgift. Studieplanen, matchningen och rapporten efter varje pass ingår i timpriset — det är inga tillval. All betalning går genom Nextrum, samlat på ett ställe.</p>
+      <p><a href="/priser">Se hela prissidan</a> för vad som ingår och hur faktureringen fungerar.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="rv">
+    <span class="nx-et acc">Vanliga frågor</span>
+    <h2 class="nx-d2" style="margin-top:18px">Läxhjälp i Bromma — det ni brukar undra</h2>
+    <div class="faq" style="margin-top:clamp(24px,3vw,34px)">
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Personlig matchning<span class="pm"></span></button>
-          <div class="faq-a"><p>Vi väljer studiehjälpare utifrån ämne, nivå, behov och personlighet — inte utifrån vem som råkar vara ledig. Känns matchningen fel gör vi om den.</p></div>
+          <button class="faq-q" aria-expanded="false">Vilka delar av Bromma?<span class="pm"></span></button>
+          <div class="faq-a"><p>Alvik, Traneberg, Abrahamsberg, Åkeshov, Brommaplan, Ålsten, Höglandet, Nockeby, Bromma Kyrka, Riksby, Ulvsunda och Mariehäll. Om passet sker hemma hos er avgörs av matchningen.</p></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Individuell studieplan<span class="pm"></span></button>
-          <div class="faq-a"><p>Skriven för eleven, inte för årskursen. Den utgår från var eleven faktiskt står och uppdateras allteftersom.</p></div>
+          <button class="faq-q" aria-expanded="false">Kan vi få samma studiehjälpare varje gång?<span class="pm"></span></button>
+          <div class="faq-a"><p>Ja, det är hela poängen. Matchningen är en person, inte en pool — den som kommer nästa vecka vet vad som var svårt förra veckan, för hen var där.</p></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Rapport efter varje pass<span class="pm"></span></button>
-          <div class="faq-a"><p>Så att utvecklingen går att följa mellan tillfällena. Rapporten är också det som avgör att passet räknas som genomfört.</p></div>
+          <button class="faq-q" aria-expanded="false">Vad händer om det inte funkar mellan eleven och studiehjälparen?<span class="pm"></span></button>
+          <div class="faq-a"><p>Säg till oss. Fel match är värre än ingen match, och det är därför vi gör matchningen åt er i stället för att låta er bläddra i en katalog. Det finns ingen bindningstid som gör det krångligt att byta.</p></div>
         </div>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Trygghet i varje steg<span class="pm"></span></button>
-          <div class="faq-a"><p>Verifierade studiehjälpare, och betalning och kommunikation samlat i plattformen.</p></div>
-        </div>
+    </div>
+    <p class="xsmall" style="margin-top:26px">
+      Fler frågor och svar finns på <a href="/faq">FAQ-sidan</a>.
+    </p>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="rv">
+    <span class="nx-et acc">Områden</span>
+    <h2 class="nx-d2" style="margin-top:18px">Andra områden</h2>
+    <div class="nx-omr-rutnat" style="margin-top:clamp(24px,3vw,34px)">
+      <a class="nx-omr-kort" href="/laxhjalp-stockholm">
+        <b>Läxhjälp i Stockholm</b>
+        <span>Södermalm, Hammarby Sjöstad, Vasastan, Östermalm med flera</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/laxhjalp-sodermalm">
+        <b>Läxhjälp på Södermalm</b>
+        <span>Mariatorget, Hornstull, Zinkensdamm, Skanstull med flera</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/laxhjalp-farsta">
+        <b>Läxhjälp i Farsta</b>
+        <span>Farsta centrum, Farsta strand, Hökarängen, Gubbängen med flera</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/laxhjalp-nacka">
+        <b>Läxhjälp i Nacka</b>
+        <span>Sickla, Finntorp, Järla, Nacka Forum med flera</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/laxhjalp-hammarby-sjostad">
+        <b>Läxhjälp i Hammarby Sjöstad</b>
+        <span>Sickla Udde, Sickla Kaj, Lumaparken, Henriksdal med flera</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/laxhjalp-solna">
+        <b>Läxhjälp i Solna</b>
+        <span>Solna centrum, Råsunda, Hagalund, Huvudsta med flera</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
     </div>
   </div>
 </section>
@@ -265,9 +236,8 @@
   <div class="nx-wrap-bred">
     <div class="nx-final-inner">
       <span class="nx-et" data-stig>Nästa steg</span>
-      <h2 class="nx-final-rubrik" data-avslöj>Redo att ta nästa <em>steg</em>?</h2>
-      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:24px">För dig som vill lära dig mer.
-        För dig som vill hjälpa andra.</p>
+      <h2 class="nx-final-rubrik" data-avslöj>Läxhjälp i Bromma, <em>när ni vill</em>.</h2>
+      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:24px">Berätta vad eleven behöver hjälp med,<br>så återkommer vi med en matchning.</p>
 
       <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
         <span class="nx-magnet" data-magnet>
@@ -276,8 +246,8 @@
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
           </a>
         </span>
-        <a class="btn btn-ghost btn-lg" href="/bli-studiehjalpare">
-          Bli studiehjälpare
+        <a class="btn btn-ghost btn-lg" href="/sa-fungerar-nextrum">
+          Så fungerar Nextrum
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a>
       </div>
@@ -442,6 +412,66 @@
   NX.initPris();
   NX.märkInloggad();
 })();
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Service",
+      "@id": "https://nextrum.se/laxhjalp-bromma#tjanst",
+      "name": "Läxhjälp i Bromma",
+      "serviceType": "Läxhjälp",
+      "description": "Läxhjälp i Bromma med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er eller online, 379 kr i timmen, ingen bindningstid.",
+      "provider": { "@id": "https://nextrum.se/#org" },
+      "areaServed": [
+        {"@type":"Place","name":"Bromma"},
+          {"@type":"Place","name":"Alvik"},
+          {"@type":"Place","name":"Traneberg"},
+          {"@type":"Place","name":"Abrahamsberg"},
+          {"@type":"Place","name":"Åkeshov"},
+          {"@type":"Place","name":"Brommaplan"},
+          {"@type":"Place","name":"Ålsten"},
+          {"@type":"Place","name":"Höglandet"},
+          {"@type":"Place","name":"Nockeby"},
+          {"@type":"Place","name":"Bromma Kyrka"},
+          {"@type":"Place","name":"Riksby"},
+          {"@type":"Place","name":"Ulvsunda"},
+          {"@type":"Place","name":"Mariehäll"}
+      ],
+      "availableChannel": [
+        {"@type":"ServiceChannel","name":"På plats","serviceLocation":{"@type":"Place","name":"Bromma"}},
+        {"@type":"ServiceChannel","name":"Online","serviceUrl":"https://nextrum.se/intresseanmalan"}
+      ],
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "SEK",
+        "price": "379",
+        "unitText": "timme",
+        "url": "https://nextrum.se/priser",
+        "availability": "https://schema.org/InStock"
+      },
+      "audience": {"@type":"EducationalAudience","educationalRole":"student"}
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://nextrum.se/laxhjalp-bromma#faq",
+      "mainEntity": [
+        {"@type":"Question","name":"Vilka delar av Bromma?","acceptedAnswer":{"@type":"Answer","text":"Alvik, Traneberg, Abrahamsberg, Åkeshov, Brommaplan, Ålsten, Höglandet, Nockeby, Bromma Kyrka, Riksby, Ulvsunda och Mariehäll. Om passet sker hemma hos er avgörs av matchningen."}},
+        {"@type":"Question","name":"Kan vi få samma studiehjälpare varje gång?","acceptedAnswer":{"@type":"Answer","text":"Ja, det är hela poängen. Matchningen är en person, inte en pool — den som kommer nästa vecka vet vad som var svårt förra veckan, för hen var där."}},
+        {"@type":"Question","name":"Vad händer om det inte funkar mellan eleven och studiehjälparen?","acceptedAnswer":{"@type":"Answer","text":"Säg till oss. Fel match är värre än ingen match, och det är därför vi gör matchningen åt er i stället för att låta er bläddra i en katalog. Det finns ingen bindningstid som gör det krångligt att byta."}}
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"Nextrum","item":"https://nextrum.se/"},
+        {"@type":"ListItem","position":2,"name":"Läxhjälp i Stockholm","item":"https://nextrum.se/laxhjalp-stockholm"},
+        {"@type":"ListItem","position":3,"name":"Läxhjälp i Bromma","item":"https://nextrum.se/laxhjalp-bromma"}
+      ]
+    }
+  ]
+}
 </script>
 </body>
 </html>
