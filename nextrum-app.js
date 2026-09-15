@@ -56,8 +56,8 @@ const NX = (function () {
     kundeInteSkicka: ['Kunde inte skicka: ', 'Could not send: '],
     tackAnsokan:     ['Tack för din ansökan. Vi läser alla och hör av oss.',
                       'Thank you for your application. We read every one and will be in touch.'],
-    tackIntresse:    ['Tack. Vi har tagit emot er intresseanmälan och återkommer på {e} så snart vi kan.',
-                      'Thank you. We have received your enquiry and will get back to you at {e} as soon as we can.'],
+    tackIntresse:    ['Tack för din ansökan. Vi hör av oss så fort som möjligt.',
+                      'Thank you for your application. We will get back to you as soon as possible.'],
     tackKontakt:     ['Mottaget. Vi återkommer på mejlen du angav.',
                       'Received. We will reply to the email address you gave.'],
     ingenFil:        ['Ingen fil vald', 'No file chosen'],
@@ -622,10 +622,17 @@ const NX = (function () {
     let tider = Array.from(new Set(ut)).sort();
 
     /* Idag räknas bara tider som ligger minst en timme fram — man
-       bokar inte ett pass som börjar om tio minuter. */
+       bokar inte ett pass som börjar om tio minuter.
+
+       Räknat i MINUTER, inte i hela timmar. getHours() + 1 gav
+       "nästa hela timme", vilket klockan 13.59 betydde fjorton noll
+       noll — en minut fram, inte en timme. Att boka samma dag ska
+       gå; att boka något som börjar innan man hunnit ta på sig
+       skorna ska det inte. */
     if (iso === idag) {
-      const gräns = new Date().getHours() + 1;
-      tider = tider.filter(t => tim(t) >= gräns);
+      const nu = new Date();
+      const minsta = nu.getHours() * 60 + nu.getMinutes() + 60;
+      tider = tider.filter(t => tim(t) * 60 >= minsta);
     }
     return tider;
   }

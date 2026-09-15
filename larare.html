@@ -249,12 +249,11 @@
                 <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
             </div>
 
-            <div class="dbox">
-              <h5>Aktuella läxor <em id="ov-laxor-antal"></em></h5>
-              <div id="ov-laxor"><div class="loading">Hämtar</div></div>
-              <a class="vy-mer" href="#laxor">Visa alla läxor
-                <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
-            </div>
+            <!-- "Aktuella läxor" låg här och är borttagen. Samma tre
+                 rader stod redan under Läxor, en flik bort, och en
+                 översikt som upprepar nästa sektion är inte en
+                 översikt. Räkningen finns kvar som märke i sidomenyn
+                 och på fliken — se laxRakning() nedan. -->
 
           </div>
           <div class="stack">
@@ -1582,7 +1581,7 @@
     if (!S.aktivElev) {
       S.laxor = [];
       host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp för att se läxorna.');
-      ritaÖvLaxor();
+      laxRakning();
       return;
     }
 
@@ -1598,14 +1597,14 @@
     if (!data.length) {
       S.laxor = [];
       host.innerHTML = tomt('Inga läxor än', 'Skapa den första med knappen ovanför — den dyker upp hos familjen direkt.');
-      ritaÖvLaxor();
+      laxRakning();
       return;
     }
 
     S.laxor = data;
     const öppna = data.filter(h => h.status !== 'klar').length;
     $('#lax-antal').textContent = öppna ? öppna + ' öppna' : 'alla klara';
-    ritaÖvLaxor();
+    laxRakning();
     ritaElevLista();
     ritaElevOversikt();
     ritaLaxFilter();
@@ -3219,25 +3218,16 @@
     m.textContent = antal || '';
   }
 
-  function ritaÖvLaxor() {
-    const host = $('#ov-laxor');
-    if (!host) return;
-    const räknare = $('#ov-laxor-antal');
-    if (!S.aktivElev) {
-      räknare.textContent = '';
-      märkFlik('#flik-lax-mark', 0);
-      host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp, så visas läxorna här.');
-      return;
-    }
-    const öppna = (S.laxor || []).filter(h => h.status !== 'klar');
-    räknare.textContent = öppna.length ? öppna.length + ' öppna' : '';
+  /* Hette ritaÖvLaxor och ritade en ruta på Översikt. Rutan är
+     borta; räkningen är inte det — den styr märket på fliken och
+     siffran i sidomenyn, och de ska fortfarande säga hur mycket som
+     är kvar att göra. */
+  function laxRakning() {
+    const öppna = S.aktivElev
+      ? (S.laxor || []).filter(h => h.status !== 'klar')
+      : [];
     märkFlik('#flik-lax-mark', öppna.length);
     if (S.sido) S.sido.märke('laxor', öppna.length);
-    if (!öppna.length) {
-      host.innerHTML = tomt('Inga öppna läxor', 'Allt eleven fått är avklarat.');
-      return;
-    }
-    host.innerHTML = öppna.slice(0, 3).map(h => NXStudie.läxRad(h)).join('');
   }
 
   /* Trådlistan med det senast sagda. Skrivandet sker i Meddelanden —

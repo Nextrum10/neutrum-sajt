@@ -526,7 +526,20 @@ body .mobile-menu{display:block}
 
 /* Magnetiska knappar flyttas av JS via transform. Wrappern tar
    rörelsen så att :active-skalningen inte krockar med den. */
-.nx-magnet{display:inline-block;will-change:transform}
+/* Omslaget står STILLA — det är hela rättningen av darrningen (se
+   magnetiska() i nextrum-motion.js). Det som förskjuts är barnet,
+   alltså är det barnet som ska ha will-change, inte omslaget.
+
+   Övergången gäller bara återgången: under pointermove skriver JS
+   en ny transform varje bildruta, och en transition ovanpå det hade
+   gjort rörelsen sirapig. När musen lämnar nollställs transformen i
+   ett svep, och då är de 240 ms skillnaden mellan att knappen glider
+   hem och att den hoppar. */
+.nx-magnet{display:inline-block}
+.nx-magnet > *{
+  will-change:transform;
+  transition:transform .24s var(--ease, cubic-bezier(.22,1,.36,1));
+}
 
 /* Länk med streck som ritas från vänster och pil som glider */
 .nx-lank{

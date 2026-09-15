@@ -3317,6 +3317,94 @@
         + '</a>').join('');
   }
 
+  /* ------------------------------------------------------------
+     BEVAKNINGEN
+
+     Adminvyn hämtade allt EN gång, vid inloggning. Kom en ansökan in
+     medan fliken stod öppen fanns den i databasen men inte på
+     skärmen, och den som satt och väntade på just den ansökan fick
+     veta genom att ladda om av en slump. "Vi får ingen notis när
+     någon söker in" var bokstavligen sant.
+
+     Polling och inte realtid, med flit: realtidskanalen kräver
+     konfiguration per tabell, håller en öppen socket, och det här är
+     en vy där två minuters fördröjning inte spelar någon roll. Det
+     som spelar roll är att siffran ändrar sig utan att någon laddar
+     om.
+
+     Bara de tre borden som kommer utifrån. Fakturor och pass ändras
+     av oss själva, och de raderna ritas redan om när vi ändrar dem.
+     ------------------------------------------------------------ */
+  (function startaBevakning() {
+    const INTERVALL = 60000;
+    let senastAntal = null;
+
+    async function kolla() {
+      /* Ingen hämtning när fliken ligger i bakgrunden. Den som inte
+         tittar behöver ingen uppdatering, och en vy som pollar i en
+         bortglömd flik i åtta timmar är bara trafik. */
+      if (document.hidden || !S.user) return;
+
+      const [leads, ans, kontakt] = await Promise.all([
+        supa.from('leads').select('id', { count: 'exact', head: true }),
+        supa.from('applications').select('id', { count: 'exact', head: true }),
+        supa.from('contact_messages').select('id', { count: 'exact', head: true })
+      ]);
+
+      const nu = {
+        leads: leads.count ?? 0,
+        ans: ans.count ?? 0,
+        kontakt: kontakt.count ?? 0
+      };
+
+      if (!senastAntal) { senastAntal = nu; return; }
+
+      const nytt = (nu.leads - senastAntal.leads)
+        + (nu.ans - senastAntal.ans)
+        + (nu.kontakt - senastAntal.kontakt);
+
+      if (nytt <= 0) { senastAntal = nu; return; }
+      senastAntal = nu;
+
+      /* Hämta om de tre listorna och rita om allt som räknar på dem.
+         hämtaAllt() hade hämtat om hela vyn, inklusive fakturor och
+         matchningsunderlag — fyra gånger så mycket arbete för en rad
+         som tillkommit. */
+      const [l2, a2, k2] = await Promise.all([
+        supa.from('leads').select('*').order('created_at', { ascending: false }),
+        supa.from('applications').select('*').order('created_at', { ascending: false }),
+        supa.from('contact_messages').select('*').order('created_at', { ascending: false })
+      ]);
+      S.leads = l2.data || S.leads;
+      S.ansokningar = a2.data || S.ansokningar;
+      S.kontakt = k2.data || S.kontakt;
+
+      ritaLeads();
+      ritaAnsokningar();
+      ritaKontakt();
+      await ritaÖversikt();
+
+      /* Titeln är det enda som syns när fliken ligger bakom en annan.
+         Den nollställs av sättTitel(0) när man öppnar notiserna. */
+      sättTitel(nytt);
+    }
+
+    /* Titeln bär antalet nya, som i studievyerna. */
+    function sättTitel(n) {
+      const ren = document.title.replace(/^\(\d+\)\s*/, '');
+      document.title = n ? '(' + n + ') ' + ren : ren;
+    }
+
+    setInterval(kolla, INTERVALL);
+    /* Och direkt när man kommer tillbaka till fliken, i stället för
+       att vänta ut resten av minuten. */
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) kolla(); });
+
+    document.addEventListener('click', e => {
+      if (e.target.closest('#adm-notis-knapp')) sättTitel(0);
+    });
+  })();
+
   (function startaNotiser() {
     const knapp = $('#adm-notis-knapp');
     if (!knapp) return;

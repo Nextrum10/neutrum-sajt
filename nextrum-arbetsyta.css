@@ -2335,3 +2335,48 @@ a:has(> .adm-status){
   font-size:.83rem;line-height:1.6;color:var(--bl-2);
   max-width:52ch;
 }
+
+/* Genomfört pass på ett datum som passerat. Struket, inte gömt:
+   månaden ska gå att läsa som "det här är gjort, det här är kvar",
+   och ett avklarat pass är fortfarande svaret på frågan "vad hände
+   den veckan".
+
+   Strecket ligger på texten, inte på hela knappen — en genomstruken
+   prick och en genomstruken klockslagssiffra blir grötigt. */
+.sch-pass.ar-passerad{opacity:.55}
+.sch-pass.ar-passerad b,
+.sch-pass.ar-passerad span{
+  text-decoration:line-through;
+  text-decoration-thickness:1px;
+  text-underline-offset:2px;
+}
+.sch-pass.ar-passerad:hover{opacity:1}
+
+/* Barnlistan under Profil & inställningar. Barnen syntes förut bara
+   som rader i en rullgardin — man kunde lägga till ett barn men
+   aldrig se vad som stod på det, och inte ta bort ett man lagt till
+   av misstag.
+
+   Raden visar bara ifyllda fält. Ett tomt "Skola: —" får en
+   halvfylld profil att se ut som ett fel i stället för som något
+   man fyller i sedan. */
+.barn-rad{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:14px 0;
+}
+.barn-rad + .barn-rad{border-top:1px solid var(--ln)}
+.barn-namn{flex:1;min-width:0}
+.barn-namn b{
+  display:block;font-size:.95rem;font-weight:650;color:var(--bl);
+}
+.barn-namn span{
+  display:block;margin-top:3px;
+  font-size:.82rem;line-height:1.5;color:var(--bl-2);
+}
+.barn-namn .barn-mal{color:var(--bl-3);font-style:italic}
+.barn-rad .btn{flex:none}
+
+@media (max-width:480px){
+  .barn-rad{flex-direction:column;gap:10px}
+  .barn-rad .btn{align-self:flex-start}
+}

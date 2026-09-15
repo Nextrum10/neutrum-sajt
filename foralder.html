@@ -545,6 +545,17 @@
               Lägg till ett barn per elev. Läxor, material, studieplan och
               rapporter hör till ett barn, och passen bokas åt ett barn.
             </p>
+            <!-- Barnen syntes förut BARA som rader i rullgardinen
+                 nedan. Man kunde alltså lägga till ett barn utan att
+                 sedan kunna se vad man skrivit in, och inte ta bort
+                 ett man lagt till av misstag.
+
+                 Listan visar vad som faktiskt står på varje barn.
+                 Rullgardinen står kvar under den: den styr VILKET
+                 barn de andra sektionerna handlar om, vilket är en
+                 annan fråga än "vilka barn har vi". -->
+            <div id="barn-lista"></div>
+
             <div class="between">
               <div style="flex:1;min-width:220px">
                 <select class="sel" id="barn-val" style="max-width:340px" aria-label="Välj barn"></select>
@@ -874,8 +885,33 @@
       if (!S.valtBarn || !S.barn.some(b => b.id === S.valtBarn)) S.valtBarn = S.barn[0].id;
       val.value = S.valtBarn;
     }
+    ritaBarnLista();
     ritaBarnväxel();
     laddaBokning();
+  }
+
+  /* Listan över barnen. Visar det som faktiskt är ifyllt — ett tomt
+     fält ritas inte som "Skola: —", för då ser en halvfylld profil
+     ut som ett fel i stället för som något man kan fylla i sedan. */
+  function ritaBarnLista() {
+    const host = $('#barn-lista');
+    if (!host) return;
+
+    if (!S.barn.length) {
+      host.innerHTML = '';
+      return;
+    }
+
+    host.innerHTML = S.barn.map(b => {
+      const under = [b.grade, b.school, b.subjects].filter(Boolean).join(' · ');
+      return '<div class="barn-rad" data-barn="' + esc(b.id) + '">'
+        + '<div class="barn-namn"><b>' + esc(b.name) + '</b>'
+        + (under ? '<span>' + esc(under) + '</span>' : '')
+        + (b.goals ? '<span class="barn-mal">' + esc(b.goals) + '</span>' : '')
+        + '</div>'
+        + '<button class="btn btn-ghost btn-sm" data-barn-bort="' + esc(b.id) + '">Ta bort</button>'
+        + '</div>';
+    }).join('');
   }
 
   /* Väljaren i sektionsrubrikerna. Själva hanteringen av barnen bor
@@ -911,6 +947,43 @@
   }
 
   $('#barn-val').addEventListener('change', e => bytBarn(e.target.value));
+
+  /* Ta bort ett barn.
+
+     Spärren ligger i DATABASEN (schema-v21): ett barn med pass eller
+     rapporter går inte att ta bort, för raderingen hade kaskaderat
+     bort rapporterna och lämnat fakturerade pass utan elev. Det här
+     är bara frågan och beskedet — kontrollen görs inte här, för en
+     kontroll i webbläsaren är ingen kontroll. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-barn-bort]');
+    if (!knapp) return;
+
+    const id = knapp.dataset.barnBort;
+    const barn = S.barn.find(b => b.id === id);
+    if (!barn) return;
+
+    const ja = await NXStudie.bekräfta({
+      titel: 'Ta bort ' + barn.name + '?',
+      text: 'Allt som hör till barnet försvinner: studieplan, läxor och material. '
+        + 'Har barnet haft pass eller fått rapporter går det inte att ta bort — '
+        + 'hör av er till oss i stället.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+
+    await NXStudie.medan(knapp, 'Tar bort…', async () => {
+      const { error } = await supa.from('students').delete().eq('id', id);
+      if (error) {
+        /* Triggerns meddelande är skrivet för att läsas av en
+           förälder, så det visas som det är. */
+        alert(felText(error));
+        return;
+      }
+      if (S.valtBarn === id) S.valtBarn = null;
+      await laddaBarn();
+    });
+  });
 
   document.querySelectorAll('[data-barnvaxel] select').forEach(sel => {
     sel.addEventListener('change', e => bytBarn(e.target.value));

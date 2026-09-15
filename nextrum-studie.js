@@ -452,7 +452,20 @@ window.NXStudie = (function () {
     }
 
     function chip(b) {
+      /* Ett genomfört pass på ett datum som passerat stryks. Månaden
+         ska gå att läsa som "det här är gjort, det här är kvar" utan
+         att man öppnar en ruta i taget — och ett avklarat pass som
+         ser likadant ut som ett kommande är precis det som gör en
+         kalender svårläst.
+
+         Datumet måste vara med i villkoret. Ett pass kan rapporteras
+         som genomfört samma dag det hålls, och att stryka dagens pass
+         på förmiddagen hade sagt att det redan varit. */
+      var passerat = b.status === 'completed'
+        && String(b.wanted_date || '') < isoFor(new Date());
+
       return '<button type="button" class="sch-pass ' + (SCHEMA_LAGE[b.status] || '')
+        + (passerat ? ' ar-passerad' : '')
         + '" data-pass="' + esc(b.id) + '">'
         + '<i></i><b>' + esc(b.wanted_time || '') + '</b>'
         + '<span>' + esc(b.subject || 'Pass') + '</span></button>';
