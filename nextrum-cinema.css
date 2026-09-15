@@ -503,8 +503,11 @@ body .mobile-menu{display:block}
              border-color .24s var(--e),box-shadow .28s var(--e),
              transform .34s var(--e-ut);
 }
-.btn svg{transition:transform .34s var(--e-ut)}
-.btn:hover svg{transform:translateX(4px)}
+/* Pilen i knappen gled 4 px åt höger vid hover. Själva knappen stod
+   still, men rörelsen inuti lästes som att knappen kröp undan under
+   pekaren. Den är borttagen: hover byter färg och skugga, inget mer.
+   :active-skalningen står kvar — den utlöses av ett klick, inte av
+   att pekaren råkar passera. */
 .btn:active{transform:scale(.985)}
 
 /* --acc-ink, inte --pap: på en mörk sektion är accenten den ljusa
