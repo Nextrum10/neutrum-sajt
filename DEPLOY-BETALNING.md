@@ -200,8 +200,38 @@ inte verifierad får ni ett fel och fakturan står kvar som utkast.
 ### Förfallodagen
 
 Räknas från när fakturan **skickas**, inte från när körningen skapade den. Villkoret
-lovar familjen tio dagar; skapas fakturan den 1:a och skickas den 5:e vore det
-sex. En påminnelse flyttar aldrig fram datumet.
+lovar familjen tio dagar; skapas fakturan den 1:a och skickas den 5:e vore det sex.
+En påminnelse flyttar aldrig fram datumet.
+
+### Ändra betalningsvillkoret
+
+Antalet dagar står på **femton ställen**: konstanten `BETALNINGSVILLKOR_DAGAR` i både
+`fakturering` och `faktura-utskick`, den synliga texten i FAQ:n, på prissidan och i
+användarvillkoren på båda språken, FAQ-schemat, raden i adminvyn och maskotens
+svarsfil. Alla måste säga samma sak. En faktura som förfaller på en annan dag än
+prissidan lovar är en tvist, inte ett skrivfel — och den diskussionen tas mitt i en
+betalningspåminnelse, vilket är sämsta tänkbara läge.
+
+Efter en ändring:
+
+```bash
+python3 verktyg/bygg-faq-schema.py        # FAQ-schemat ur den synliga texten
+python3 verktyg/bygg-maskotsvar.py        # maskotens svar ur FAQ:n
+python3 verktyg/kolla-betalningsvillkor.py
+```
+
+Den sista läser siffran på alla femton ställen och säger ifrån om de spretar. Den
+säger också ifrån om en mening har formulerats om så att den slutat bevaka ett
+ställe — ett sökuttryck som inte hittar något ser annars ut som ett godkännande.
+
+Två saker klarar den inte, och de får ni göra för hand:
+
+- **Texten som skriver ut antalet med bokstäver.** Avsnittet ovan och kommentaren om
+  förfallodagen i `faktura-utskick` säger "tio dagar" och räknar dessutom ett exempel
+  på siffran. Läs igenom dem.
+- **Det som faktiskt körs.** Konstanten i repot är inte konstanten i Supabase förrän
+  båda funktionerna har driftsatts om (avsnitt 4 och 8). Fram till dess säger sajten
+  en sak och fakturan en annan.
 
 ### Utbetalningarna
 
