@@ -53,7 +53,7 @@ const SVARA_TILL = 'info@nextrum.se';
 // Måste stämma med prissidan, FAQ:n och användarvillkoren. Samma
 // konstant finns i fakturering — en faktura som förfaller på en annan
 // dag än villkoret lovar är en tvist, inte ett skrivfel.
-const BETALNINGSVILLKOR_DAGAR = 14;
+const BETALNINGSVILLKOR_DAGAR = 10;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -271,9 +271,9 @@ Deno.serve(async (req) => {
       if (!epostOk(p?.email)) return json({ error: 'Familjen saknar en giltig e-postadress.' }, 409);
 
       /* Förfallodagen räknas från när fakturan SKICKAS, inte från när
-         månadskörningen skapade den. Villkoret lovar familjen fjorton
+         månadskörningen skapade den. Villkoret lovar familjen tio
          dagar; skapas fakturan den 1:a och skickas den 5:e vore det
-         tio. Att den som skickar sent äter upp mottagarens betaltid är
+         sex. Att den som skickar sent äter upp mottagarens betaltid är
          inte ett villkor någon gått med på.
 
          Bara vid första utskicket. En påminnelse ska aldrig flytta

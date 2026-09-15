@@ -36,7 +36,7 @@ const NYCKEL = Deno.env.get('FAKTURERING_NYCKEL');
 // Måste stämma med det som står på prissidan, i FAQ:n och i
 // användarvillkoren — en faktura som förfaller på en annan dag än
 // villkoret lovar är en tvist, inte ett skrivfel.
-const BETALNINGSVILLKOR_DAGAR = 14;
+const BETALNINGSVILLKOR_DAGAR = 10;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',

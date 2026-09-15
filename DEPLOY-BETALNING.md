@@ -200,8 +200,8 @@ inte verifierad får ni ett fel och fakturan står kvar som utkast.
 ### Förfallodagen
 
 Räknas från när fakturan **skickas**, inte från när körningen skapade den. Villkoret
-lovar familjen fjorton dagar; skapas fakturan den 1:a och skickas den 5:e vore det
-tio. En påminnelse flyttar aldrig fram datumet.
+lovar familjen tio dagar; skapas fakturan den 1:a och skickas den 5:e vore det
+sex. En påminnelse flyttar aldrig fram datumet.
 
 ### Utbetalningarna
 
