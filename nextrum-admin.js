@@ -53,7 +53,7 @@
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
     matchunderlag: [], matchunderlagFel: null, valdElev: null, kalender: null,
-    detaljCache: {}
+    matForslag: [], detaljCache: {}
   };
 
   function visa(id) {
@@ -3182,12 +3182,7 @@
               pill(h.status === 'klar' ? 'Klar' : h.status === 'paborjad' ? 'Påbörjad' : 'Ej påbörjad',
                 h.status === 'klar' ? 'ar-klar' : h.status === 'paborjad' ? 'ar-vantar' : ''))).join('')
           : tomt('Inga läxor', 'Studiehjälparen lägger upp dem i sin vy.'))
-        + dpRubrik('Material')
-        + ((d.material || []).length
-          ? d.material.map(m => dpRad(m.title,
-              [m.subject, m.kind === 'lank' ? 'länk' : m.kind].filter(Boolean).join(' · '),
-              kortDatum(m.created_at))).join('')
-          : tomt('Inget material', 'Filer och länkar från studiehjälparen hamnar här.'));
+        + dpMaterial(e, d);
     }
 
     if (DP.flik === 'utveckling') {
@@ -3338,6 +3333,245 @@
               .join('')
           : tomt('Inga anteckningar än', 'Den första du skriver hamnar överst.'));
   }
+
+  /* ------------------------------------------------------------
+     MATERIAL, INLAGT AV ADMIN
+
+     Material har hittills bara kunnat läggas upp av studiehjälparen
+     själv, i sin egen vy. Det förutsätter att en gymnasieelev som
+     håller sitt tredje pass också vet vilka uppgifter som ligger på
+     rätt nivå — och det stödet är precis vad vi säger att vi ger.
+
+     Här kan admin lägga in uppgifter åt en elev, med AI som skriver
+     ut förslag. Förslagen är uppgifter i KLARTEXT, aldrig länkar.
+     Skälet står i supabase/functions/material-forslag/index.ts och
+     är värt en rad även här: en modell som ombeds hitta en länk
+     hittar på en länk, och det märks först när eleven sitter med
+     läxan på söndagkvällen.
+
+     TVÅ VAL SOM MED FLIT INTE FINNS HÄR
+
+     Filuppladdning. Hinken "material" har en policy som kräver att
+     den som laddar upp är elevens studiehjälpare. Att öppna hinken
+     för admin vore att lossa ett lås för en bekvämlighets skull.
+     Filer läggs upp av studiehjälparen, som förut.
+
+     Att välja avsändare. tutor_id sätts till elevens matchade
+     studiehjälpare när det finns en, annars till den admin som lade
+     in raden. Familjen ska se materialet komma från sin egen
+     studiehjälpare, inte från ett kontor de aldrig träffat — och
+     studiehjälparen ska kunna ta bort det i sin egen vy, vilket RLS
+     bara tillåter för rader där tutor_id är hen.
+     ------------------------------------------------------------ */
+  const MAT_SORT = { fil: 'fil', lank: 'länk', anteckning: 'uppgift' };
+
+  function matForslagHtml() {
+    const f = S.matForslag || [];
+    if (!f.length) return '';
+    return '<div class="dp-forslag">' + f.map((x, i) =>
+      '<div class="dp-forslag-kort"><b>' + esc(x.titel) + '</b>'
+      + '<pre>' + esc(x.uppgift) + '</pre>'
+      + '<button class="btn btn-ghost btn-sm" type="button" data-dp-mat-anv="' + i + '">'
+      + 'Använd den här</button></div>').join('') + '</div>';
+  }
+
+  function dpMaterial(e, d) {
+    const lista = d.material || [];
+
+    return dpRubrik('Material', lista.length ? lista.length + ' st' : '')
+      + (d.materialFel
+        ? tomt('Kunde inte hämta materialet', d.materialFel)
+        : lista.length
+          ? lista.map(m => dpRad(m.title,
+              [m.subject, MAT_SORT[m.kind] || m.kind, kortDatum(m.created_at)]
+                .filter(Boolean).join(' · '),
+              '<button class="btn btn-ghost btn-sm" type="button" data-dp-mat-bort="'
+                + esc(m.id) + '">Ta bort</button>')).join('')
+          : tomt('Inget material än',
+              'Lägg in en uppgift här nedanför. Filer laddar studiehjälparen upp i sin egen vy.'))
+
+      + dpRubrik('Lägg till', 'syns hos familjen direkt')
+      + '<form data-dp-mat="' + esc(e.id) + '" class="dp-mat">'
+      + '<div class="dp-mat-par">'
+      + '<input class="inp" name="titel" placeholder="Rubrik" maxlength="200" required>'
+      + '<input class="inp" name="amne" placeholder="Ämne" maxlength="80">'
+      + '</div>'
+      + '<div class="dp-mat-typ" role="group" aria-label="Sorts material">'
+      + '<button class="btn btn-ghost btn-sm" type="button" data-dp-mat-typ="anteckning"'
+      + ' aria-pressed="true">Uppgift</button>'
+      + '<button class="btn btn-ghost btn-sm" type="button" data-dp-mat-typ="lank"'
+      + ' aria-pressed="false">Länk</button>'
+      + '</div>'
+      + '<textarea class="inp" name="text" data-dp-mat-falt="anteckning"'
+      + ' placeholder="Skriv uppgiften — eller hämta ett förslag längre ned."></textarea>'
+      + '<input class="inp" name="url" data-dp-mat-falt="lank" hidden'
+      + ' placeholder="https://…" maxlength="500">'
+      + '<button class="btn btn-primary btn-sm" type="submit">Spara material</button>'
+      + '<p class="ok-msg" data-dp-mat-msg></p>'
+      + '</form>'
+
+      + dpRubrik('Föreslå uppgifter med AI', 'skrivs ut i klartext, aldrig som länk')
+      + '<div class="dp-mat" data-dp-ai>'
+      + '<div class="dp-mat-par">'
+      + '<input class="inp" data-ai-amne placeholder="Ämne, t.ex. Matematik" maxlength="80">'
+      + '<input class="inp" data-ai-arskurs placeholder="Årskurs" maxlength="40" value="'
+      + esc(e.grade || '') + '">'
+      + '</div>'
+      + '<input class="inp" data-ai-fokus maxlength="400"'
+      + ' placeholder="Vad behöver eleven öva på? T.ex. ekvationer med parentes">'
+      + '<button class="btn btn-ghost btn-sm" type="button" data-dp-mat-ai>'
+      + 'Föreslå tre uppgifter</button>'
+      + '<p class="ok-msg" data-dp-ai-msg></p>'
+      + '<div data-dp-ai-lista>' + matForslagHtml() + '</div>'
+      + '</div>';
+  }
+
+  /* En lyssnare för hela materialrutan: typväxlaren, AI-knappen,
+     "Använd den här" och borttagningen. Panelen ritas om i sin
+     helhet vid varje flikbyte, så inget får bindas vid uppritning. */
+  document.addEventListener('click', async ev => {
+    const typ = ev.target.closest('[data-dp-mat-typ]');
+    if (typ) {
+      const form = typ.closest('form');
+      const v = typ.dataset.dpMatTyp;
+      form.querySelectorAll('[data-dp-mat-typ]').forEach(b =>
+        b.setAttribute('aria-pressed', String(b.dataset.dpMatTyp === v)));
+      form.querySelectorAll('[data-dp-mat-falt]').forEach(f => {
+        f.hidden = f.dataset.dpMatFalt !== v;
+      });
+      rensa(form.querySelector('[data-dp-mat-msg]'));
+      return;
+    }
+
+    const anv = ev.target.closest('[data-dp-mat-anv]');
+    if (anv) {
+      const x = (S.matForslag || [])[Number(anv.dataset.dpMatAnv)];
+      const form = DP.panel && DP.panel.querySelector('[data-dp-mat]');
+      if (!x || !form) return;
+      form.titel.value = x.titel;
+      form.text.value = x.uppgift;
+      const ämne = DP.panel.querySelector('[data-ai-amne]');
+      if (ämne && ämne.value.trim() && !form.amne.value.trim()) {
+        form.amne.value = ämne.value.trim().slice(0, 80);
+      }
+      /* Ett förslag är alltid en uppgift, aldrig en länk. */
+      form.querySelectorAll('[data-dp-mat-typ]').forEach(b =>
+        b.setAttribute('aria-pressed', String(b.dataset.dpMatTyp === 'anteckning')));
+      form.querySelectorAll('[data-dp-mat-falt]').forEach(f => {
+        f.hidden = f.dataset.dpMatFalt !== 'anteckning';
+      });
+      form.titel.focus();
+      return;
+    }
+
+    const ai = ev.target.closest('[data-dp-mat-ai]');
+    if (ai) {
+      const ruta = ai.closest('[data-dp-ai]');
+      const msg = ruta.querySelector('[data-dp-ai-msg]');
+      const amne = ruta.querySelector('[data-ai-amne]').value.trim();
+      rensa(msg);
+      if (!amne) { säg(msg, '⚠️ Skriv vilket ämne det gäller.', false); return; }
+
+      await medan(ai, 'Tänker…', async () => {
+        const { data, error } = await supa.functions.invoke('material-forslag', {
+          body: {
+            amne: amne,
+            arskurs: ruta.querySelector('[data-ai-arskurs]').value.trim(),
+            fokus: ruta.querySelector('[data-ai-fokus]').value.trim(),
+            antal: 3
+          }
+        });
+
+        /* invoke ger error på allt som inte är 2xx, men funktionen
+           lägger sin förklaring i svarskroppen. Utan det här steget
+           blir en saknad API-nyckel "non-2xx status code". */
+        let svar = data;
+        if (error && error.context && typeof error.context.json === 'function') {
+          try { svar = await error.context.json(); } catch (e2) { /* behåll error */ }
+        }
+        if (!svar || svar.error || !Array.isArray(svar.forslag)) {
+          säg(msg, '⚠️ ' + ((svar && svar.error) || felText(error) || 'Tomt svar.'), false);
+          return;
+        }
+
+        S.matForslag = svar.forslag;
+        ruta.querySelector('[data-dp-ai-lista]').innerHTML = matForslagHtml();
+        säg(msg, '✓ Läs igenom dem innan du sparar. Facit står sist i varje uppgift.', true);
+      });
+      return;
+    }
+
+    const bort = ev.target.closest('[data-dp-mat-bort]');
+    if (!bort) return;
+    const d = S.detaljCache['elev:' + DP.id];
+    const m = ((d && d.material) || []).find(x => x.id === bort.dataset.dpMatBort);
+    const ja = await bekräfta({
+      titel: 'Ta bort materialet?',
+      text: '"' + ((m && m.title) || 'Materialet') + '" försvinner för både eleven och studiehjälparen.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+
+    await medan(bort, 'Tar bort…', async () => {
+      /* Filen i hinken först. Går raden bort men filen ligger kvar
+         blir den omöjlig att nå och omöjlig att städa: sökvägen
+         fanns bara i raden. */
+      if (m && m.kind === 'fil' && m.url) {
+        await supa.storage.from('material').remove([m.url]);
+      }
+      const { error } = await supa.from('materials').delete().eq('id', bort.dataset.dpMatBort);
+      if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+      delete S.detaljCache['elev:' + DP.id];
+      await hämtaDetalj('elev', DP.id);
+      ritaDetalj();
+    });
+  });
+
+  document.addEventListener('submit', async ev => {
+    const form = ev.target.closest('[data-dp-mat]');
+    if (!form) return;
+    ev.preventDefault();
+
+    const msg = form.querySelector('[data-dp-mat-msg]');
+    rensa(msg);
+
+    const elevId = form.dataset.dpMat;
+    const elev = S.elevlista.find(x => x.id === elevId);
+    const vald = form.querySelector('[data-dp-mat-typ][aria-pressed="true"]');
+    const sort = (vald && vald.dataset.dpMatTyp) || 'anteckning';
+    const titel = form.titel.value.trim();
+    const text = form.text.value.trim();
+    const url = form.url.value.trim();
+
+    const fel = !titel ? 'Ge materialet en rubrik.'
+      : sort === 'anteckning' && !text ? 'Skriv uppgiften.'
+      : sort === 'lank' && !url ? 'Klistra in adressen.'
+      : sort === 'lank' && !/^https?:\/\//i.test(url)
+        ? 'Adressen måste börja med http:// eller https://.'
+        : null;
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
+    /* Se kommentaren över dpMaterial: hellre studiehjälparens namn
+       än vårt, och alltid någon som får ta bort raden igen. */
+    const hjälpare = elev && elevHjälpare(elev);
+    const rad = {
+      student_id: elevId,
+      tutor_id: (hjälpare && hjälpare.id) || S.user.id,
+      title: titel.slice(0, 200),
+      kind: sort,
+      subject: form.amne.value.trim() || null
+    };
+    if (sort === 'lank') rad.url = url; else rad.body = text;
+
+    await medan(form.querySelector('[type="submit"]'), 'Sparar…', async () => {
+      const { error } = await supa.from('materials').insert(rad);
+      if (error) { säg(msg, '⚠️ ' + felText(error), false); return; }
+      S.matForslag = [];
+      delete S.detaljCache['elev:' + elevId];
+      await hämtaDetalj('elev', elevId);
+      ritaDetalj();
+    });
+  });
 
   function ritaDetalj(laddarÄn) {
     if (!DP.panel || !DP.typ) return;

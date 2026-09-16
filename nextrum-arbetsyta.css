@@ -1702,6 +1702,36 @@ table.adm .adm-tal{
 }
 .dp-rad-hoger{text-align:right;flex:none;white-space:nowrap}
 
+/* Formulären i panelen: materialrutan och AI-förslagen.
+
+   Panelen är smal — 420 px på en laptop, hela bredden på en telefon
+   — så fälten staplas hellre än trängs. Paret rubrik/ämne står
+   bredvid varandra bara när det får plats. */
+.dp-mat{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.dp-mat-par{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.dp-mat textarea.inp{min-height:132px;resize:vertical}
+.dp-mat-typ{display:flex;gap:6px}
+.dp-mat-typ [aria-pressed="true"]{
+  background:var(--bl);color:var(--pap);border-color:var(--bl);
+}
+.dp-mat [type="submit"]{align-self:flex-start;margin-top:2px}
+
+/* Ett AI-förslag visas i sin helhet, med radbrytningarna kvar:
+   facit står sist i texten och ska gå att läsa innan man sparar.
+   Höjden är kapad — fyra förslag ska rymmas utan att knappen
+   "Använd den här" hamnar utanför skärmen. */
+.dp-forslag{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.dp-forslag-kort{
+  background:var(--pap-2);border:1px solid var(--ln);
+  border-radius:12px;padding:13px 15px;
+}
+.dp-forslag-kort b{display:block;font-size:.88rem;font-weight:650;color:var(--bl)}
+.dp-forslag-kort pre{
+  margin:6px 0 10px;max-height:240px;overflow:auto;
+  font-size:.82rem;line-height:1.6;font-family:inherit;
+  white-space:pre-wrap;word-break:break-word;color:var(--bl-2);
+}
+
 /* Fritext som ska läsas som den skrevs: studieplan, mål,
    rapporttext. Ett <p> hade klämt ihop styckena. */
 .dp-text{

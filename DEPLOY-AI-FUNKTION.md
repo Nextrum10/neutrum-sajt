@@ -77,8 +77,26 @@ har uppdaterats med den polerade texten.
   `supabase/functions/generate-feedback/index.ts`, byt värdet på `MODEL` mot ett
   giltigt namn från docs.claude.com/en/docs/about-claude/models, deploya om.
 
-## Vad som saknas efter detta
+## Nyckeln gäller fler funktioner än den här
 
-Funktionen finns och går att anropa, men själva knappen "generera återkoppling" i
-lärarens gränssnitt är inte byggd än, det är nästa steg när vi bygger lärar- och
-föräldravyerna på riktigt.
+`ANTHROPIC_API_KEY` är en enda hemlighet som **fem** funktioner läser. Sätts den
+inte svarar alla fem `500` med texten "ANTHROPIC_API_KEY är inte satt som secret
+på servern" — och det är den texten som i dag syns som "error" i adminvyn under
+Agenter och på knappen "skriv om med AI".
+
+| Funktion | Vem får använda den | Vad den gör |
+|---|---|---|
+| `generate-feedback` | studiehjälpare | Skriver om passrapporten till familjen |
+| `generate-message` | studiehjälpare | Utkast till hälsningen vid ett tidsförslag |
+| `material-forslag` | admin | Föreslår övningsuppgifter till en elev |
+| `juridik` | admin | Frågor om regelverk, med hämtade källor |
+| `ekonomi` | admin | Frågor om siffrorna i er egen databas |
+
+Alla fem kontrollerar behörigheten mot databasen, inte mot vad webbläsaren
+påstår. Ingen av dem använder service-role.
+
+**Om `material-forslag`:** den ber aldrig modellen leta rätt på ett övningsblad
+och ge länken. En modell som ombeds hitta en länk hittar på en länk, och det
+märks först när eleven sitter med läxan på söndagkvällen. Uppgifterna skrivs
+därför ut i klartext, med facit sist. Vill man lägga in en riktig länk gör man
+det för hand i samma formulär.
