@@ -30,9 +30,12 @@ window.NEXTRUM_CONFIG = {
      inte förrän någon verifierat den. Se GOOGLE-FORETAGSPROFIL.md. */
   GOOGLE_RECENSION_URL: '',
 
-  /* Tillägg per extra barn i samma pass, per timme. Ett syskon som
-     sitter med kostar alltså inte ett helt nytt pass — men
-     studiehjälparen delar sin uppmärksamhet, och det ska synas. */
+  /* Tillägg när fler än ett barn sitter med i samma pass, per timme.
+
+     FAST, inte per barn: två barn och tre barn kostar samma sak, och
+     tre är taket (tjanster.extra_personer_max). Ett syskon som sitter
+     med kostar alltså inte ett helt nytt pass — men studiehjälparen
+     delar sin uppmärksamhet, och det ska synas. */
   PRIS_EXTRA_BARN: 69,
 
   // Kontaktuppgifter som visas i sidfoten och i formulärsvar.

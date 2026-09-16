@@ -36,8 +36,21 @@ import sys
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKAL = os.path.join(ROT, 'var-ide.html')
 
-PRIS = '379 kr'
-EXTRA_BARN = '69 kr'
+PRIS_KR = 379
+EXTRA_KR = 69
+
+PRIS = f'{PRIS_KR} kr'
+EXTRA_BARN = f'{EXTRA_KR} kr'
+
+# Tillägget är FAST när fler än ett barn sitter med, inte per barn:
+# två barn och tre barn kostar samma sak, och tre är taket. Så räknar
+# servern (familjebelopp() i fakturering lägger på extraOre en gång
+# när antalBarn > 1), och sidorna ska säga vad som faktiskt
+# faktureras. Summan räknas fram här i stället för att skrivas ut, så
+# att ett ändrat pris inte lämnar kvar ett belopp som inte går ihop —
+# det var precis så '517 kr' blev kvar när tillägget slutade vara per
+# barn.
+FLERA_BARN = f'{PRIS_KR + EXTRA_KR} kr'
 
 
 # ============================================================
@@ -102,7 +115,8 @@ OMRADEN = [
              'i övrigt.'),
             ('Kostar det mer om vi bor långt från centrum?',
              f'Nej. Timpriset är {PRIS} oavsett var i Stockholm passet hålls och oavsett ämne. '
-             f'Varje barn utöver det första kostar {EXTRA_BARN} i timmen.'),
+             f'Sitter syskon med i samma pass kostar det {EXTRA_BARN} extra i timmen totalt, '
+             f'upp till tre barn.'),
             ('Kan vi byta mellan på plats och online?',
              'Ja. Format väljs per pass när ni bokar, så ni kan ta ett pass hemma i veckan och '
              'ett online veckan efter utan att ändra något i avtalet — det finns inget avtal '
@@ -193,8 +207,9 @@ OMRADEN = [
              'ekvationer inför provet" är precis den sortens mål den är gjord för. Efter varje '
              'pass får ni en rapport om hur det gick.'),
             ('Vad kostar det?',
-             f'{PRIS} i timmen, {EXTRA_BARN} i timmen för varje barn utöver det första. Ingen '
-             'bindningstid och ingen månadsavgift. Se prissidan för vad som ingår.'),
+             f'{PRIS} i timmen, plus {EXTRA_BARN} i timmen om syskon sitter med i samma pass — '
+             'samma tillägg upp till tre barn. Ingen bindningstid och ingen månadsavgift. '
+             'Se prissidan för vad som ingår.'),
         ],
     },
     {
@@ -238,8 +253,9 @@ OMRADEN = [
              'rapport efteråt. För de flesta ämnen fungerar det lika bra; för de yngsta eleverna '
              'brukar på plats fungera bättre.'),
             ('Kan ett syskon vara med på samma pass?',
-             f'Ja. Varje barn utöver det första kostar {EXTRA_BARN} i timmen, så två barn en timme '
-             f'blir 448 kr. Det förutsätter att de kan arbeta med ungefär samma sak.'),
+             f'Ja. Tillägget är {EXTRA_BARN} i timmen totalt och gäller upp till tre barn, så två '
+             f'barn en timme blir {FLERA_BARN} — och tre barn kostar lika mycket. Det förutsätter '
+             'att de kan arbeta med ungefär samma sak.'),
         ],
     },
     {
@@ -648,7 +664,7 @@ def sida(o):
       <h2 class="nx-d2" style="margin-top:18px">{PRIS}<br>i timmen.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Samma timpris oavsett ämne och oavsett var i Stockholm passet hålls. Varje barn utöver det första kostar {EXTRA_BARN} i timmen, så två barn en timme blir 448 kr och tre barn 517 kr.</p>
+      <p>Samma timpris oavsett ämne och oavsett var i Stockholm passet hålls. Sitter syskon med i samma pass kostar det {EXTRA_BARN} extra i timmen totalt — lika mycket för tre barn som för två. Två eller tre barn en timme blir alltså {FLERA_BARN}.</p>
       <p>Ingen bindningstid och ingen månadsavgift. Studieplanen, matchningen och rapporten efter varje pass ingår i timpriset — det är inga tillval. All betalning går genom Nextrum, samlat på ett ställe.</p>
       <p><a href="/priser">Se hela prissidan</a> för vad som ingår och hur faktureringen fungerar.</p>
     </div>

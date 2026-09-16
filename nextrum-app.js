@@ -291,11 +291,22 @@ const NX = (function () {
 
     /* Tillägget bor i samma konfiguration som timpriset. Räkne-
        exemplen på prissidan skrivs också härifrån, så att en ändrad
-       siffra inte lämnar kvar en summa som inte går ihop. */
+       siffra inte lämnar kvar en summa som inte går ihop.
+
+       Tillägget är FAST när fler än ett barn sitter med — inte per
+       barn. Två barn och tre barn kostar samma sak, och tre är taket.
+       Så räknar servern: familjebelopp() i fakturering lägger på
+       extraOre EN gång när antalBarn > 1, och tjanster.
+       extra_personer_max är 3.
+
+       Här stod tre barn = pris + extra * 2, alltså 517 kr mot
+       systemets 448. En prissida som lovar ett annat belopp än
+       fakturan är en diskussion i första samtalet — även när den,
+       som här, lovade för mycket. */
     const extra = Number(CFG.PRIS_EXTRA_BARN) || 0;
     $$('[data-stat="extra-barn"]').forEach(el => el.textContent = kr(extra));
     $$('[data-stat="tva-barn"]').forEach(el => el.textContent = kr(pris + extra));
-    $$('[data-stat="tre-barn"]').forEach(el => el.textContent = kr(pris + extra * 2));
+    $$('[data-stat="tre-barn"]').forEach(el => el.textContent = kr(pris + extra));
 
     /* Prissidans strukturerade data håller samma siffra som sidan.
        Siffran i HTML är en reserv för den som läser utan javascript;
