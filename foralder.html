@@ -250,6 +250,18 @@
             <h5>Pass över tid <em>senaste sex månaderna</em></h5>
             <div id="stat-graf"><div class="loading">Hämtar</div></div>
           </div>
+          <!-- Två frågor som båda är "hur går det", på olika
+               tidsskalor: hur passen gick, och var kunskapen ligger
+               nu. Antalet pass säger hur mycket ni hunnit, inte hur
+               det gått. -->
+          <div class="dbox">
+            <h5>Hur passen gick <em id="stat-gick-antal"></em></h5>
+            <div id="stat-gick"></div>
+          </div>
+          <div class="dbox">
+            <h5>Kunskapsområdena <em id="stat-niva-antal"></em></h5>
+            <div id="stat-niva"></div>
+          </div>
         </div>
       </section>
       <!-- ============================================================
@@ -715,7 +727,7 @@
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], laxFilter: 'attgora', olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], laxFilter: 'attgora', rapporter: [], progress: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel']
@@ -1196,6 +1208,8 @@
       .eq('student_id', S.valtBarn).order('subject').order('area');
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta utvecklingen', felText(error)); return; }
+
+    S.progress = data;
     if (!data.length) {
       S.progressAntal = 0;
       ritaStatistik();
@@ -1426,10 +1440,14 @@
 
     host.innerHTML = '<div class="loading">Hämtar</div>';
     const { data, error } = await supa
-      .from('lesson_reports').select('id, lesson_date, raw_notes, ai_feedback, went_well, needs_practice, next_focus')
+      .from('lesson_reports').select('id, lesson_date, raw_notes, ai_feedback, gick, amne, needs_practice, next_focus')
       .eq('student_id', S.valtBarn).order('lesson_date', { ascending: false });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
+
+    S.rapporter = data || [];
+    ritaStatistik();
+
     if (!data || !data.length) {
       host.innerHTML = '<div class="empty">Inga rapporter än. Den första kommer efter första passet.</div>';
       ritaRecension(0);
@@ -1885,21 +1903,75 @@
      siffra är uppskattad: står det tre avklarade läxor så är tre
      läxor avbockade i databasen.
      ============================================================ */
+  /* De två fördelningarna. Lägena och färgerna är samma som i
+     rapportformuläret och i nivåmätaren — samma sak ska ha samma
+     färg i hela produkten. */
+  const GICK_LAGEN = [
+    ['mycket_bra', 'Mycket bra', 'ar-bra'],
+    ['bra', 'Bra', 'ar-mitten'],
+    ['folja_upp', 'Behöver följas upp', 'ar-folj']
+  ];
+  const NIVA_LAGEN = [
+    ['bra', 'Sitter', 'ar-bra'],
+    ['pa_god_vag', 'På god väg', 'ar-mitten'],
+    ['behover_trana', 'Behöver träna', 'ar-folj']
+  ];
+
+  function ritaFordelningar() {
+    const rapporter = S.rapporter || [];
+    /* Rapporter skrivna innan omdömet fanns har gick = null. De
+       räknas inte med, och antalet i rubriken säger hur många som
+       faktiskt ligger bakom stapeln. */
+    const medOmdome = rapporter.filter(r => r.gick);
+    $('#stat-gick-antal').textContent = medOmdome.length
+      ? medOmdome.length + ' av ' + rapporter.length + ' rapporter'
+      : '';
+
+    NXStudie.fordelning({
+      host: $('#stat-gick'),
+      lagen: GICK_LAGEN,
+      rader: rapporter,
+      av: r => r.gick,
+      tom: rapporter.length
+        ? 'Rapporterna hittills skrevs innan omdömet fanns. Nästa pass syns här.'
+        : 'Ingen rapport än. Den första kommer efter första passet.'
+    });
+
+    const progress = S.progress || [];
+    $('#stat-niva-antal').textContent = progress.length ? progress.length + ' st' : '';
+    NXStudie.fordelning({
+      host: $('#stat-niva'),
+      lagen: NIVA_LAGEN,
+      rader: progress,
+      av: p => p.level,
+      tom: 'Inga områden än. Er studiehjälpare fyller i dem efter några pass.'
+    });
+  }
+
   function ritaStatistik() {
     const tal = $('#stat-tal'), graf = $('#stat-graf');
     if (!tal) return;
 
     const genomforda = S.bokningar.filter(b => b.status === 'completed');
     const klara = (S.laxor || []).filter(h => h.status === 'klar').length;
-    const öppna = (S.laxor || []).filter(h => h.status !== 'klar').length;
+
+    /* Studietiden räknas på passens längd och inte på antalet, så
+       ett tvåtimmarspass räknas som två timmar. Bara genomförda
+       pass — ett inbokat pass är ingen studietid än. */
+    const minuter = genomforda.reduce((n, b) => n + (b.duration_min || 60), 0);
+    const timmar = minuter >= 60
+      ? Math.round(minuter / 6) / 10 + ' h'
+      : minuter + ' min';
 
     tal.innerHTML = '<div class="stat-tal stat-tal-5">'
       + '<div><b>' + genomforda.length + '</b><span>Genomförda pass</span></div>'
+      + '<div><b>' + esc(timmar) + '</b><span>Studietid</span></div>'
       + '<div><b>' + (S.kommandeAntal || 0) + '</b><span>Kommande pass</span></div>'
       + '<div><b>' + klara + '</b><span>Avklarade läxor</span></div>'
-      + '<div><b>' + öppna + '</b><span>Kvar att göra</span></div>'
       + '<div><b>' + (S.progressAntal || 0) + '</b><span>Kunskapsområden</span></div>'
       + '</div>';
+
+    ritaFordelningar();
 
     /* Alltid sex staplar, även när några är tomma. En graf som byter
        bredd med datan går inte att jämföra med sig själv i nästa

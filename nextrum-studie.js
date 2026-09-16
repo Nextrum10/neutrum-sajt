@@ -816,6 +816,65 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
+     FÖRDELNINGEN
+
+     En liggande stapel med hela sanningen i sig, och en förklaring
+     under. Används till två frågor som båda är "hur går det" fast
+     på olika tidsskalor: hur passen gick, och var kunskapsområdena
+     ligger nu.
+
+     Andelar och inte antal, eftersom frågan är hur det fördelar sig
+     och inte hur mycket som hunnits med — men antalet står i
+     förklaringen, för en andel av tre pass är inte en trend.
+
+     opts: { host, lagen: [[nyckel, text, klass]], rader, av(r), tom }
+     ============================================================ */
+  function fordelning(o) {
+    var host = o.host;
+    if (!host) return;
+
+    var rader = o.rader || [];
+    var av = typeof o.av === 'function' ? o.av : function (r) { return r; };
+
+    var räknat = o.lagen.map(function (l) {
+      return { nyckel: l[0], text: l[1], klass: l[2] || '', antal: 0 };
+    });
+    var totalt = 0;
+    rader.forEach(function (r) {
+      var v = av(r);
+      var träff = räknat.filter(function (x) { return x.nyckel === v; })[0];
+      if (!träff) return;              // null och okända värden räknas inte
+      träff.antal++;
+      totalt++;
+    });
+
+    if (!totalt) {
+      host.innerHTML = '<p class="fd-tom">' + esc(o.tom || 'Inget att visa än.') + '</p>';
+      return;
+    }
+
+    /* Ett segment som avrundas till noll procent syns inte alls,
+       och då ljuger stapeln om att läget inte finns. Minsta bredd
+       är därför en dryg procent så länge antalet är minst ett. */
+    host.innerHTML = '<div class="fd">'
+      + '<div class="fd-stapel" role="img" aria-label="'
+      + esc(räknat.filter(function (x) { return x.antal; })
+              .map(function (x) { return x.antal + ' ' + x.text.toLowerCase(); }).join(', ')) + '">'
+      + räknat.filter(function (x) { return x.antal; }).map(function (x) {
+          return '<i class="' + esc(x.klass) + '" style="flex:'
+            + Math.max(x.antal / totalt, 0.012) + '"></i>';
+        }).join('')
+      + '</div>'
+      + '<div class="fd-lista">'
+      + räknat.map(function (x) {
+          return '<span class="fd-post' + (x.antal ? '' : ' ar-tom') + '">'
+            + '<i class="' + esc(x.klass) + '"></i>'
+            + esc(x.text) + '<b>' + x.antal + '</b></span>';
+        }).join('')
+      + '</div></div>';
+  }
+
+  /* ============================================================
      LÄXFILTRET
 
      Läxlistan var allt eleven någonsin fått, med de klara kvar i
@@ -947,6 +1006,7 @@ window.NXStudie = (function () {
   return {
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxFilter: läxFilter, läxUrval: läxUrval,
+    fordelning: fordelning,
     LAGE: LAGE, NIVA: NIVA,
     läxläge: läxläge, deadlineText: deadlineText,
     läxRad: läxRad, nivåMätare: nivåMätare,
