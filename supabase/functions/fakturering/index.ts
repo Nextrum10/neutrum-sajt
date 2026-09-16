@@ -36,14 +36,23 @@ const NYCKEL = Deno.env.get('FAKTURERING_NYCKEL');
 // Måste stämma med det som står på prissidan, i FAQ:n och i
 // användarvillkoren — en faktura som förfaller på en annan dag än
 // villkoret lovar är en tvist, inte ett skrivfel.
-// DEN DRIFTSATTA VERSIONEN HADE 10 (upptäckt 2026-09-15, version 5).
-// Repot, prissidan, FAQ:n och användarvillkoren säger alla 14, och
-// en faktura som förfaller fyra dagar före det villkoret lovar är
-// precis den tvist kommentaren nedan varnar för. Deployen från den
-// här filen sätter tillbaka 14. Var 10 ett medvetet beslut är det
-// texterna som ska ändras, inte den här raden — och då ska alla fyra
-// ändras samma dag.
-const BETALNINGSVILLKOR_DAGAR = 14;
+//
+// TIO, INTE FJORTON — OCH EN RÄTTELSE
+//
+// Den driftsatta funktionen hade 10 medan main och alla publika
+// texter sa 14. Jag läste det som drift och deployade tillbaka 14
+// 2026-09-15. Det var fel: tio dagar var ett medvetet beslut, taget
+// på grenen vibrant-davinci, som ändrade siffran på ALLA nio ställen
+// samtidigt. Den grenen var bara inte mergad än.
+//
+// Lärdomen är att en siffra som skiljer sig mellan drift och repo
+// inte behöver vara ett misstag i driften — den kan vara ett beslut
+// som inte hunnit hem. Kontrollera omergade grenar innan du
+// "rättar" något som ser ut som drift.
+//
+// verktyg/kolla-betalningsvillkor.py kontrollerar att siffran
+// stämmer överens överallt. Kör den efter varje ändring.
+const BETALNINGSVILLKOR_DAGAR = 10;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
