@@ -429,61 +429,75 @@
         afterwards.</p>
     </div>
 
-    <ul class="nx-drag">
-      <li data-stig>
-        <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg></span>
-        <b>Personal tutoring</b>
-        <p>One tutor, one student, one plan. No group and no template.</p>
+    <!-- Sex punkter som en dragbar rad, inte ett rutnät med tolv
+         rutor. Rutnätet plus de fyra trygghetskorten under blev tio
+         påståenden på en skärm, och tio påståenden läses som noll.
+
+         Korten är knappar: ett tryck fäller ut en längre förklaring.
+         Det som stod i de fyra borttagna korten — kontrollen,
+         betalningen, kommunikationen, uppföljningen — finns kvar i
+         utfällningarna, fast bara på ett ställe var.
+
+         Raden scrollar med scroll-snap, så den går att dra på både
+         mus och pekskärm. JS sköter bara utfällningen. -->
+    <ul class="nx-drag" data-drag>
+      <li>
+        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-0">
+          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg></span>
+          <b>Personal tutoring</b>
+          <p>One tutor, one student, one plan. No group and no template.</p>
+          <span class="dr-pil" aria-hidden="true"></span>
+        </button>
+        <div class="dr-mer" id="dr-mer-0" hidden><p>The same person every time. They remember what was hard last week, because they were there — so no session starts over with a fresh assessment.</p></div>
       </li>
-      <li data-stig data-fördröj="1">
-        <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
-        <b>Matching we stand behind</b>
-        <p>You do not browse a catalogue. We choose, because the wrong match is worse than no match.</p>
+      <li>
+        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-1">
+          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
+          <b>Matching we stand behind</b>
+          <p>You do not browse a catalogue. We choose, because the wrong match is worse than no match.</p>
+          <span class="dr-pil" aria-hidden="true"></span>
+        </button>
+        <div class="dr-mer" id="dr-mer-1" hidden><p>We go through the need with you first, then pick someone based on subject, level and personality. If it does not work, say so and we rematch. There is no lock-in that makes it awkward.</p></div>
       </li>
-      <li data-stig data-fördröj="2">
-        <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="10" rx="2"/><path d="M16 9h3.2l1.8 2.4V15H16z"/><path d="M6.5 19h2M15 19h2"/></svg></span>
-        <b>Flexible</b>
-        <p>Online or in person, and you switch between the two from session to session.</p>
+      <li>
+        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-2">
+          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="10" rx="2"/><path d="M16 9h3.2l1.8 2.4V15H16z"/><path d="M6.5 19h2M15 19h2"/></svg></span>
+          <b>Flexible</b>
+          <p>Online or in person, and you switch between the two from session to session.</p>
+          <span class="dr-pil" aria-hidden="true"></span>
+        </button>
+        <div class="dr-mer" id="dr-mer-2" hidden><p>The format is chosen per session, not in a contract. One session at home this week and one online the next needs no change anywhere. Sessions run one to three hours, within the times the tutor has set.</p></div>
       </li>
-      <li data-stig data-fördröj="3">
-        <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H10.5L6 20v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span>
-        <b>Everything in one place</b>
-        <p>Booking, messages and payment in the platform — nothing scattered across apps.</p>
+      <li>
+        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-3">
+          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H10.5L6 20v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span>
+          <b>Everything in one place</b>
+          <p>Booking, messages and payment in the platform — nothing scattered across apps.</p>
+          <span class="dr-pil" aria-hidden="true"></span>
+        </button>
+        <div class="dr-mer" id="dr-mer-3" hidden><p>Booking, messages and payment happen in the platform. Communication goes through us, and booking, session and invoice are linked — so it is always possible to see what was actually delivered.</p></div>
       </li>
-      <li data-stig data-fördröj="4">
-        <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19v-4.5M12 19V9M17 19v-7"/><path d="M6 10.5l5-4 3 2.2 4.5-4"/></svg></span>
-        <b>Progress you can follow</b>
-        <p>The study plan, the sessions and the report after each one — collected in the student view.</p>
+      <li>
+        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-4">
+          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19v-4.5M12 19V9M17 19v-7"/><path d="M6 10.5l5-4 3 2.2 4.5-4"/></svg></span>
+          <b>Progress you can follow</b>
+          <p>The study plan, the sessions and the report after each one — collected in the student view.</p>
+          <span class="dr-pil" aria-hidden="true"></span>
+        </button>
+        <div class="dr-mer" id="dr-mer-4" hidden><p>The tutor writes a report after every session describing what you covered and how it went. A session only counts as completed once it is written. Student and parent see the same thing.</p></div>
       </li>
-      <li data-stig data-fördröj="5">
-        <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M12 9.5v3.2M12 15.4v.1"/></svg></span>
-        <b>Safety at every step</b>
-        <p>Vetted tutors, payment through Nextrum and follow-up after sessions.</p>
+      <li>
+        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-5">
+          <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M12 9.5v3.2M12 15.4v.1"/></svg></span>
+          <b>Safety at every step</b>
+          <p>Vetted tutors, payment through Nextrum and follow-up after sessions.</p>
+          <span class="dr-pil" aria-hidden="true"></span>
+        </button>
+        <div class="dr-mer" id="dr-mer-5" hidden><p>Every tutor goes through our selection and vetting process. All payment goes through Nextrum — never directly between family and tutor. We follow up on sessions and collect feedback.</p></div>
       </li>
     </ul>
 
-    <div class="nx-safe">
-      <div class="nx-safe-card" data-stig>
-        <span class="i"><svg viewBox="0 0 24 24"><path d="M12 2l8 3.5v6.2c0 5.3-3.4 8.6-8 10-4.6-1.4-8-4.7-8-10V5.5z"/><path d="M8.5 12l2.6 2.6L16 9.5"/></svg></span>
-        <b>Vetted tutors</b>
-        <p>Every tutor goes through Nextrum’s selection and vetting process.</p>
-      </div>
-      <div class="nx-safe-card" data-stig data-fördröj="1">
-        <span class="i"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="3"/><path d="M7.5 8V6a4.5 4.5 0 019 0v2M12 13.5v3"/></svg></span>
-        <b>Safe payment</b>
-        <p>Payment goes through Nextrum. Booking, session and invoice all connect, so what took place is always visible.</p>
-      </div>
-      <div class="nx-safe-card" data-stig data-fördröj="2">
-        <span class="i"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H10l-4.5 3.5V17H4z"/><path d="M8.5 9.5h7M8.5 12.5h4.5"/></svg></span>
-        <b>Secure communication</b>
-        <p>Communication takes place through the platform.</p>
-      </div>
-      <div class="nx-safe-card" data-stig data-fördröj="3">
-        <span class="i"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg></span>
-        <b>Quality assurance</b>
-        <p>We follow up sessions and collect feedback.</p>
-      </div>
-    </div>
+    
 
     <div class="nx-statement" data-stig>
       <p>We are building the next generation <em>together.</em></p>
@@ -957,6 +971,7 @@
 
   /* ---------- rörelsen ---------- */
   NXFin.allt();         /* header, radavslöjning, magnetknappar, parallax, markör */
+  NX.initDrag();       /* de sex punkterna fälls ut vid tryck */
   NX.initVagval();      /* vyväljaren bakom "Logga in" */
   NX.bildIntoning();    /* de foton som ligger i markupen */
 

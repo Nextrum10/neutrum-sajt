@@ -1774,9 +1774,81 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 }
 .nx-mitt-head .nx-lede{margin-inline:auto;max-width:52ch}
 
+/* ============================================================
+   DE SEX PUNKTERNA — EN DRAGBAR RAD
+
+   Var ett 3x2-rutnät med fyra trygghetskort under: tio påståenden
+   på en skärm. Tio påståenden läses som noll.
+
+   Nu en rad man drar i. Korten är lika breda och snäpper på plats,
+   så man ser alltid att det finns mer åt höger. Ingen JS för
+   dragandet — scroll-snap och overflow-x räcker, och en rad som
+   scrollar med webbläsarens egen mekanik fungerar med
+   tangentbord, styrplatta och pekskärm utan att vi skriver en rad.
+
+   Kortet är en <button>: ett tryck fäller ut den längre texten.
+   ============================================================ */
 .nx-drag{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:clamp(26px,3.4vw,52px) clamp(28px,4vw,68px);
+  display:flex;
+  gap:clamp(14px,1.6vw,20px);
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  /* Plats för fokusringen och kortens kant, som annars kapas av
+     overflow. Negativ marginal så raden ändå går kant i kant. */
+  padding:4px 4px clamp(14px,2vw,20px);
+  margin:0 -4px;
+  scrollbar-width:thin;
+  list-style:none;
+}
+.nx-drag > li{
+  flex:0 0 clamp(250px,78vw,330px);
+  scroll-snap-align:start;
+  border-top:0;
+  padding-top:0;
+}
+@media (min-width:760px){
+  .nx-drag > li{flex-basis:clamp(280px,31%,360px)}
+}
+
+/* Hela kortet är klickytan. text-align:left för att en <button>
+   centrerar sitt innehåll som standard, vilket hade gjort en
+   brödtext oläslig. */
+.dr-kort{
+  display:block;width:100%;height:100%;text-align:left;
+  padding:clamp(18px,2vw,24px);
+  border:1px solid var(--line);border-radius:18px;
+  background:var(--surface);
+  cursor:pointer;
+  position:relative;
+  transition:border-color .2s var(--ease), background .2s var(--ease);
+}
+.dr-kort:hover{border-color:var(--muted-2)}
+.dr-kort[aria-expanded="true"]{
+  border-color:var(--acc);
+  background:var(--acc-soft);
+}
+
+/* Pilen vänder nedåt när kortet är utfällt. Ren CSS: den ritas av
+   två kanter, så ingen SVG behöver bytas ut av JS. */
+.dr-pil{
+  position:absolute;right:clamp(16px,2vw,22px);top:clamp(20px,2.2vw,26px);
+  width:9px;height:9px;
+  border-right:1.6px solid var(--muted-2);
+  border-bottom:1.6px solid var(--muted-2);
+  transform:rotate(-45deg);
+  transition:transform .22s var(--ease);
+}
+.dr-kort[aria-expanded="true"] .dr-pil{
+  transform:rotate(45deg);
+  border-color:var(--acc);
+}
+
+.dr-mer{
+  padding:0 clamp(18px,2vw,24px) clamp(16px,2vw,20px);
+}
+.dr-mer p{
+  margin:14px 0 0;
+  font-size:.88rem;line-height:1.68;color:var(--muted-2);
 }
 .nx-drag li{
   padding-top:clamp(18px,2vw,24px);

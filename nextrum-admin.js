@@ -165,7 +165,7 @@
     const [profiler, elever, tutorer] = await Promise.all([
       supa.from('profiles').select('id, role, full_name, email, is_admin, match_status, matched_tutor_id, phone, created_at, last_seen_at'),
       supa.from('students').select('id, parent_id, name, grade, school, subjects, goals, created_at, matched_tutor_id, match_status'),
-      supa.from('tutor_profiles').select('id, age, school, city, subjects, grade_levels, status, hourly_rate, created_at')
+      supa.from('tutor_profiles').select('id, age, school, city, subjects, grade_levels, status, hourly_rate, visa_publikt, created_at')
     ]);
     if (profiler.error) throw profiler.error;
 
@@ -1322,6 +1322,13 @@
       { namn: 'Timpenning', rita: t => t.hourly_rate
         ? '<span class="adm-tal">' + esc(NX.kr(t.hourly_rate)) + '</span>'
         : '<span style="color:var(--bl-3)">Ej satt</span>' },
+      /* Publicering är ett EGET beslut, inte en följd av att vara
+         godkänd — se schema-v23. Kolumnen står bredvid läget just
+         för att de två inte ska förväxlas. */
+      { namn: 'På startsidan', rita: t => t.status !== 'approved'
+        ? '<span style="color:var(--bl-3)">—</span>'
+        : '<button class="btn btn-ghost btn-sm" data-sh-publik="' + esc(t.id) + '">'
+          + (t.visa_publikt ? 'Syns' : 'Dold') + '</button>' },
       { namn: 'Läge', höger: true, rita: t => väljare('sh', SH_LAGE, t.status, 'data-sh="' + t.id + '"')
         + '<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-dp="studiehjalpare:'
         + esc(t.id) + '">Öppna</button>' }
@@ -2442,6 +2449,39 @@
         ritaMatchning();
         await ritaÖversikt();
       });
+    });
+  });
+
+  /* ============ publicering på startsidan ============
+     Frågan bekräftas när den slås PÅ, inte när den slås av. Att
+     publicera en ung persons förnamn, ålder och text på en
+     marknadssida är ett beslut med en annan tyngd än att ta bort
+     den igen. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-sh-publik]');
+    if (!knapp) return;
+
+    const id = knapp.dataset.shPublik;
+    const t = S.tutorProfiler[id];
+    if (!t) return;
+
+    if (!t.visa_publikt) {
+      const ja = await bekräfta({
+        titel: 'Visa ' + namnFör(id) + ' på startsidan?',
+        text: 'Förnamn, ålder, ort, ämnen och den personliga texten blir synliga för alla '
+          + 'besökare på nextrum.se. E-post, telefon och skola visas aldrig. '
+          + 'Fråga personen först — särskilt om hen är under arton.',
+        knapp: 'Visa på startsidan'
+      });
+      if (!ja) return;
+    }
+
+    await medan(knapp, '…', async () => {
+      const { error } = await supa.from('tutor_profiles')
+        .update({ visa_publikt: !t.visa_publikt }).eq('id', id);
+      if (error) { alert('Kunde inte ändra: ' + felText(error)); return; }
+      t.visa_publikt = !t.visa_publikt;
+      ritaStudiehjalpare();
     });
   });
 
@@ -3789,24 +3829,18 @@
       ritaFel();
       await ritaÖversikt();
 
-      const idag = isoFor(new Date());
-      const nästa = S.bokningar
-        .filter(b => b.wanted_date >= idag && b.status !== 'cancelled')
-        .sort((a, b) => (a.wanted_date + (a.wanted_time || ''))
-          .localeCompare(b.wanted_date + (b.wanted_time || '')))[0];
       /* Samma summa som arbetskön på Översikt visar, inte en egen
          räkning. Två tal som båda heter "saker att göra" och säger
          olika saker är värre än inget tal alls. */
       const attGöra = S.attGora.reduce((n, p) => n + p.antal, 0);
       const främst = S.attGora[0];
 
+      /* "Nästa pass" stod här förut. Det är familjens och
+         studiehjälparens fråga, inte ledningens — och det står redan
+         under Bokningar. Vad ledningen behöver veta av hjältebilden
+         är hur mycket som väntar på någon, och det är det enda kort
+         som är kvar. */
       S.hero.uppdatera({
-        nasta: nästa ? {
-          href: '#bokningar',
-          text: 'Nästa pass · ' + kortDatum(nästa.wanted_date)
-            + (nästa.wanted_time ? ' kl. ' + String(nästa.wanted_time).slice(0, 5) : ''),
-          under: namnFör(nästa.parent_id) + ' · ' + namnFör(nästa.tutor_id)
-        } : { href: '#bokningar', text: 'Inga pass framåt', under: 'Ingen har bokat ännu' },
         chatt: attGöra
           ? { href: främst ? främst.till : '#oversikt',
               text: attGöra + (attGöra === 1 ? ' sak att göra' : ' saker att göra'),

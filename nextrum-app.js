@@ -222,6 +222,37 @@ const NX = (function () {
   /* ---------- FAQ-dragspel ----------
      CSS animerar height, så det är height som ska sättas här.
      Finns på startsidan, priser.html och faq.html. */
+  /* ---------- de sex punkterna på startsidan ----------
+     Korten i .nx-drag fäller ut en längre text. Ett i taget: två
+     öppna kort gör raden olika hög och snäppningen hoppig.
+
+     Ingen höjdanimering här, till skillnad från FAQ:n. Korten
+     ligger i en vågrät rad som scrollar, och en höjd som räknas i
+     JS medan raden rör sig blir fel precis när man drar. */
+  function initDrag() {
+    const kort = $$('.nx-drag .dr-kort');
+    if (!kort.length) return;
+
+    kort.forEach(k => {
+      k.addEventListener('click', () => {
+        const öppet = k.getAttribute('aria-expanded') === 'true';
+        kort.forEach(o => {
+          o.setAttribute('aria-expanded', 'false');
+          const m = o.parentElement.querySelector('.dr-mer');
+          if (m) m.hidden = true;
+        });
+        if (!öppet) {
+          k.setAttribute('aria-expanded', 'true');
+          const m = k.parentElement.querySelector('.dr-mer');
+          if (m) m.hidden = false;
+          /* Kortet kan ligga halvt utanför raden när man trycker på
+             det. Utan det här fälls texten ut på något man inte ser. */
+          k.closest('li').scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        }
+      });
+    });
+  }
+
   function initFaq() {
     const frågor = $$('.faq-q');
     if (!frågor.length) return;
@@ -1058,7 +1089,7 @@ const NX = (function () {
   return {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling, spamskydd,
-    initFaq, initPris, kopplaAnsökan, märkInloggad,
+    initFaq, initDrag, initPris, kopplaAnsökan, märkInloggad,
     källa, källrader, händelse,
     bildIntoning, initVagval,
     hämtaSession, hämtaProfil, vyFörRoll,
