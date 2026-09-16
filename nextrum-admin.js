@@ -625,6 +625,8 @@
         /* Vägen vidare. En anmälan som inte kan bli en elev fastnar
            här: matchningskön arbetar på elever, inte på anmälningar,
            så utan det här steget når ingen familj någonsin fram. */
+        + ' <button class="btn btn-ghost btn-sm" data-lead-kontakt="' + l.id + '">'
+        + (l.kontaktad_at ? 'Skriv igen' : 'Kontakta') + '</button>'
         + ' <button class="btn btn-ghost btn-sm" data-lead-elev="' + l.id + '">Skapa elev</button>' }
     ], rader, tomtText(sök || st, 'Ingen intresseanmälan matchar filtret', 'Inga intresseanmälningar än'));
   }
@@ -652,6 +654,15 @@
           + (a.why.length > 90 ? '…' : '') + '</span>'
         : '<span style="color:var(--bl-3)">—</span>' },
       { namn: 'Inkom', rita: a => '<span class="adm-tal">' + esc(kortDatum(a.created_at)) + '</span>' },
+      /* Rekryteringens fyra steg som ett spår. En tom stämpel säger
+         "inte gjort" utan att det behöver vara en egen status, och
+         datumet svarar på det man faktiskt undrar: hur länge har det
+         här legat still? */
+      { namn: 'Steg', rita: a => '<div class="adm-spar">'
+        + steg('Kontakt', a.kontaktad_at, 'data-ans-kontakt="' + esc(a.id) + '"')
+        + steg('Intervju', a.intervju_at, 'data-ans-steg="intervju:' + esc(a.id) + '"')
+        + steg('Utbildad', a.utbildad_at, 'data-ans-steg="utbildad:' + esc(a.id) + '"')
+        + '</div>' },
       { namn: 'Läge', höger: true, rita: a => väljare('ans', ANS_LAGE, a.status, 'data-ans="' + a.id + '"')
         /* Vägen in i poolen. Utan den här knappen blir en ansökan
            aldrig en studiehjälpare som går att matcha — den byter
@@ -1931,6 +1942,17 @@
      svaret på frågan "varför blev det här passet billigare" — och
      bookings.rabattkod pekar på raden.
      ------------------------------------------------------------ */
+  /* Ett steg i rekryteringsspåret. Gjort = datumet; ogjort = en
+     knapp som gör det. Samma element i båda lägena, så raden inte
+     hoppar när något klickas. */
+  function steg(namn, tid, attr) {
+    return '<button type="button" class="adm-steg' + (tid ? ' ar-gjord' : '') + '" '
+      + attr + ' title="' + esc(namn) + (tid ? ' ' + kortDatum(tid) : ' — inte gjort') + '">'
+      + '<i></i>' + esc(namn)
+      + (tid ? '<em>' + esc(kortDatum(tid)) + '</em>' : '')
+      + '</button>';
+  }
+
   function rabattText(r) {
     return r.typ === 'procent' ? r.varde + ' %' : kronor(r.varde);
   }
@@ -2210,6 +2232,167 @@
   });
 
   /* ============================================================
+     KONTAKTRUTAN
+
+     Adminvyn kunde se att någon hört av sig men inte svara dem.
+     Enda vägen var att kopiera adressen och byta program, och det
+     som hände där syntes aldrig i systemet — en anmälan såg
+     obesvarad ut för alltid.
+
+     VARFÖR mailto: OCH INTE ETT UTSKICK HÄRIFRÅN
+
+     Svaret ska komma från en riktig person och gå att svara på. Ett
+     mejl skickat av servern har vår avsändare men ingen som läser
+     svaret, och det första en familj gör är att svara. Med mailto:
+     hamnar utkastet i ert eget mejlprogram, med er adress som
+     avsändare och hela tråden där ni sedan letar efter den.
+
+     Systemet stämplar kontaktad_at när utkastet öppnas. Det är inte
+     bevis på att mejlet skickades — men "vi öppnade ett svar till
+     den här personen" är oändligt mycket mer än vad som fanns förut,
+     och stämpeln går att ta bort om man ångrar sig.
+     ============================================================ */
+  function kontaktaRuta(o) {
+    const ruta = document.createElement('div');
+    ruta.className = 'nx-fraga';
+    ruta.innerHTML =
+      '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="kt-t">'
+      + '<h3 id="kt-t">' + esc(o.titel || 'Skriv till ' + (o.namn || '')) + '</h3>'
+      + '<p>Utkastet öppnas i ditt mejlprogram med din adress som avsändare, så att '
+      + 'svaret kommer till dig. Ändra fritt innan du skickar.</p>'
+      + '<div class="fgroup"><label for="kt-till">Till</label>'
+      + '<input class="inp" id="kt-till" value="' + esc(o.till || '') + '"></div>'
+      + '<div class="fgroup" style="margin-top:12px"><label for="kt-amne">Ämne</label>'
+      + '<input class="inp" id="kt-amne" value="' + esc(o.amne || '') + '"></div>'
+      + '<div class="fgroup" style="margin-top:12px"><label for="kt-text">Meddelande</label>'
+      + '<textarea class="inp" id="kt-text" rows="12">' + esc(o.text || '') + '</textarea></div>'
+      + '<p class="ok-msg" id="kt-msg"></p>'
+      + '<div class="nx-fraga-knappar">'
+      + '<button type="button" class="btn btn-ghost" data-kt-stang>Avbryt</button>'
+      + '<button type="button" class="btn btn-primary" id="kt-oppna">Öppna i mejl</button>'
+      + '</div></div>';
+
+    document.body.appendChild(ruta);
+    document.body.style.overflow = 'hidden';
+    const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
+    ruta.addEventListener('click', ev => {
+      if (ev.target === ruta || ev.target.closest('[data-kt-stang]')) stäng();
+    });
+
+    $('#kt-oppna', ruta).addEventListener('click', async () => {
+      const till = $('#kt-till', ruta).value.trim();
+      if (!till) { säg($('#kt-msg', ruta), 'Fyll i en adress.', false); return; }
+
+      /* encodeURIComponent på både ämne och kropp. Ett svenskt
+         tecken eller en radbrytning i klartext kapar annars mejlet
+         på vägen till mejlprogrammet. */
+      const url = 'mailto:' + encodeURIComponent(till)
+        + '?subject=' + encodeURIComponent($('#kt-amne', ruta).value)
+        + '&body=' + encodeURIComponent($('#kt-text', ruta).value);
+      window.location.href = url;
+
+      if (typeof o.efterat === 'function') await o.efterat();
+      stäng();
+    });
+  }
+
+  /* Mallarna. Skrivna för att kunna skickas som de är, men de är
+     utkast: rutan är redigerbar just för att ingen familj ska få ett
+     mejl som låter som ett formulär. */
+  function mallIntervju(a) {
+    return 'Hej ' + (String(a.name || '').split(' ')[0] || '') + ',\n\n'
+      + 'Tack för din ansökan till Nextrum. Vi har läst den och skulle gärna '
+      + 'prata med dig en kvart om hur du tänker kring att hjälpa andra att plugga.\n\n'
+      + 'Passar någon av de här tiderna?\n'
+      + '  · \n  · \n  · \n\n'
+      + 'Det är ett samtal, inget prov. Vi vill veta hur du förklarar saker och '
+      + 'vilka ämnen du känner dig trygg i.\n\n'
+      + 'Hälsningar,\nNextrum';
+  }
+
+  function mallLead(l) {
+    return 'Hej ' + (String(l.parent_name || '').split(' ')[0] || '') + ',\n\n'
+      + 'Tack för er intresseanmälan. '
+      + (l.child_name ? 'Vi har läst vad ni skrev om ' + l.child_name + ' och ' : 'Vi har läst den och ')
+      + 'vill gärna veta lite mer innan vi väljer studiehjälpare.\n\n'
+      + 'Två frågor:\n'
+      + '  · Vad går trögast just nu?\n'
+      + '  · Vilka tider i veckan brukar fungera?\n\n'
+      + 'När vi vet det väljer vi ut en person som passar, och återkommer med '
+      + 'ett förslag. Ni bläddrar alltså inte i en katalog — vi gör matchningen '
+      + 'åt er, för fel match är värre än ingen match.\n\n'
+      + 'Hälsningar,\nNextrum';
+  }
+
+  /* ---- kontakta en familj som skickat intresseanmälan ---- */
+  document.addEventListener('click', e => {
+    const knapp = e.target.closest('[data-lead-kontakt]');
+    if (!knapp) return;
+    const l = S.leads.find(x => x.id === knapp.dataset.leadKontakt);
+    if (!l) return;
+
+    kontaktaRuta({
+      titel: 'Svara ' + (l.parent_name || l.email || ''),
+      namn: l.parent_name, till: l.email,
+      amne: 'Er intresseanmälan till Nextrum',
+      text: mallLead(l),
+      efterat: async () => {
+        const nu = new Date().toISOString();
+        await supa.from('leads')
+          .update({ kontaktad_at: nu, status: l.status === 'new' ? 'contacted' : l.status })
+          .eq('id', l.id);
+        l.kontaktad_at = nu;
+        if (l.status === 'new') l.status = 'contacted';
+        ritaLeads();
+      }
+    });
+  });
+
+  /* ---- kontakta en sökande för intervju ---- */
+  document.addEventListener('click', e => {
+    const knapp = e.target.closest('[data-ans-kontakt]');
+    if (!knapp) return;
+    const a = S.ansokningar.find(x => x.id === knapp.dataset.ansKontakt);
+    if (!a) return;
+
+    kontaktaRuta({
+      titel: 'Kalla ' + (a.name || a.email || '') + ' till intervju',
+      namn: a.name, till: a.email,
+      amne: 'Din ansökan till Nextrum',
+      text: mallIntervju(a),
+      efterat: async () => {
+        const nu = new Date().toISOString();
+        await supa.from('applications')
+          .update({ kontaktad_at: nu, status: a.status === 'new' ? 'contacted' : a.status })
+          .eq('id', a.id);
+        a.kontaktad_at = nu;
+        if (a.status === 'new') a.status = 'contacted';
+        ritaAnsokningar();
+      }
+    });
+  });
+
+  /* ---- stegen i rekryteringen ---- */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-ans-steg]');
+    if (!knapp) return;
+    const [steg, id] = knapp.dataset.ansSteg.split(':');
+    const a = S.ansokningar.find(x => x.id === id);
+    if (!a) return;
+
+    const kolumn = steg === 'intervju' ? 'intervju_at' : 'utbildad_at';
+    const nu = a[kolumn] ? null : new Date().toISOString();
+
+    await medan(knapp, '…', async () => {
+      const { error } = await supa.from('applications')
+        .update({ [kolumn]: nu }).eq('id', id);
+      if (error) { alert('Kunde inte spara: ' + felText(error)); return; }
+      a[kolumn] = nu;
+      ritaAnsokningar();
+    });
+  });
+
+  /* ============================================================
      FRÅN ANSÖKAN TILL POOL
 
      Poolen är `tutor_profiles` med status 'approved' — det är exakt
@@ -2260,6 +2443,23 @@
 
     const ans = S.ansokningar.find(a => a.id === knapp.dataset.ansPool);
     if (!ans) return;
+
+    /* Utbildningen är inte en artighet. En studiehjälpare som inte
+       vet hur rapporten fungerar lämnar inga rapporter — och utan
+       rapport blir passet aldrig genomfört, alltså aldrig fakturerat
+       och aldrig utbetalt. Kedjan går isär i andra änden. */
+    if (!ans.utbildad_at) {
+      const ändå = await bekräfta({
+        titel: 'Introduktionen är inte gjord',
+        text: (ans.name || 'Den sökande') + ' är inte markerad som utbildad. En studiehjälpare '
+          + 'som inte vet hur rapporten fungerar lämnar inga rapporter, och då blir passen '
+          + 'aldrig genomförda — varken fakturerade eller utbetalda. Markera Utbildad i spåret '
+          + 'först, eller fortsätt om introduktionen är gjord ändå.',
+        knapp: 'Ta in ändå',
+        avbryt: 'Avbryt'
+      });
+      if (!ändå) return;
+    }
 
     const trolig = Object.values(S.personer).find(p =>
       p.role === 'tutor' && p.email
@@ -2428,12 +2628,12 @@
       if (!namn) { säg(msg, 'Eleven behöver ett namn.', false); return; }
 
       await medan($('#le-skapa', ruta), 'Skapar…', async () => {
-        const { error } = await supa.from('students').insert({
+        const { data: ny, error } = await supa.from('students').insert({
           parent_id: parent,
           name: namn,
           grade: $('#le-arskurs', ruta).value.trim() || null,
           subjects: $('#le-amnen', ruta).value.trim() || null
-        });
+        }).select('id').single();
         if (error) { säg(msg, 'Kunde inte skapa: ' + felText(error), false); return; }
 
         /* Anmälan är avklarad när den blivit en elev. Står den kvar
@@ -2446,8 +2646,15 @@
         ritaLeads();
         ritaElever();
         await hämtaMatchunderlag();
+
+        /* Rakt in i matchningen med den nya eleven vald. Att skapa
+           en elev och sedan lämna någon på anmälningslistan är att
+           be dem leta rätt på namnet de nyss skrev in — och
+           matchningen är hela skälet till att eleven skapades. */
+        if (ny && ny.id) S.valdElev = ny.id;
         ritaMatchning();
         await ritaÖversikt();
+        location.hash = '#matchning';
       });
     });
   });

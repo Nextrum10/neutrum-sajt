@@ -2496,3 +2496,47 @@ a:has(> .adm-status){
   font-family:var(--f-mono);font-size:10px;font-weight:600;
   letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
 }
+
+/* ============================================================
+  16. REKRYTERINGSSPÅRET OCH KONTAKTRUTAN
+
+   Fyra steg på en ansökan: kontakt, intervju, utbildad, poolen.
+   Ett gjort steg visar sitt datum, ett ogjort är en knapp som gör
+   det. Samma element i båda lägena — annars hoppar raden när man
+   klickar, och en tabell som hoppar är en tabell man slutar lita
+   på.
+   ============================================================ */
+.adm-spar{display:flex;flex-wrap:wrap;gap:6px}
+
+.adm-steg{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 10px 4px 8px;
+  border:1px solid var(--ln);border-radius:100px;
+  background:transparent;
+  font-size:.76rem;color:var(--bl-3);
+  white-space:nowrap;
+  transition:border-color .16s ease, color .16s ease;
+}
+.adm-steg:hover{border-color:var(--ln-2);color:var(--bl-2)}
+
+/* Pricken är hela statusen. Tom ring = inte gjort, fylld = gjort. */
+.adm-steg i{
+  width:7px;height:7px;border-radius:50%;flex:none;
+  border:1.5px solid var(--bl-3);
+}
+.adm-steg.ar-gjord{border-color:var(--mossa);color:var(--bl-2)}
+.adm-steg.ar-gjord i{background:var(--mossa);border-color:var(--mossa)}
+.adm-steg em{
+  font-style:normal;font-family:var(--f-mono);font-size:.68rem;
+  color:var(--bl-3);margin-left:2px;
+}
+
+/* Kontaktrutan behöver mer bredd än en ja/nej-fråga: man skriver ett
+   helt mejl i den, och en textarea på 320 px gör varje mening till
+   fyra rader. */
+.nx-fraga-bred{max-width:min(640px, calc(100vw - 32px))}
+.nx-fraga-bred textarea{
+  font-family:var(--f-sans,inherit);
+  font-size:.88rem;line-height:1.65;
+  resize:vertical;
+}

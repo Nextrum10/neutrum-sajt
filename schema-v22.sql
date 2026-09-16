@@ -1,4 +1,18 @@
 -- ============================================================
+-- ERSATT AV schema-v25.sql — KÖR INTE DEN HÄR FILEN.
+--
+-- Den blev aldrig körd. Den krävde att någon slumpade en sträng,
+-- satte den som secreten PASS_NOTIS_HEMLIGHET, och klistrade in
+-- exakt samma sträng där det står HEMLIGHET nedan. Kör man filen som
+-- den står får triggern ordet "HEMLIGHET" som header, och pass-notis
+-- svarar 401 på varje förslag — tyst, eftersom triggern sväljer felet.
+--
+-- schema-v25.sql skapar samma trigger men hämtar hemligheten ur
+-- notis_konfig. Resonemanget nedan står kvar för att det fortfarande
+-- förklarar VARFÖR triggern ser ut som den gör.
+-- ============================================================
+
+-- ============================================================
 -- NEXTRUM — schema v22
 -- MEJL NÄR STUDIEHJÄLPAREN FÖRESLÅR EN TID
 --
