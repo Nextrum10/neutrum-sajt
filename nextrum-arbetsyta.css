@@ -2416,3 +2416,83 @@ a:has(> .adm-status){
 .fd-post b{
   font-family:var(--f-mono);font-size:.82rem;font-weight:600;color:var(--bl);
 }
+
+/* Förslaget till familjen, inne i samma ruta som kalendern.
+   Strecket skiljer de två utan att göra dem till två uppgifter:
+   man väljer en timme ovanför och skickar den nedanför. */
+.tid-forslag{
+  margin-top:clamp(22px,2.6vw,30px);
+  padding-top:clamp(20px,2.4vw,26px);
+  border-top:1px solid var(--ln);
+}
+.tid-forslag h5{margin-bottom:4px}
+
+/* ============================================================
+  15. MIN UTVECKLING — ÖVERBLICKEN
+
+   Listan under svarar på VAD som är svårt. Den här svarar på "hur
+   ligger vi till", vilket är frågan man ställer först.
+
+   Ringen är en andel av verkliga rader, inte ett betyg: står det
+   29 % är det för att sju områden finns och två är satta till bra
+   av studiehjälparen. Talet under säger samma sak i klartext, så
+   att ringen aldrig är den enda källan.
+   ============================================================ */
+.ut-oversikt{margin-bottom:clamp(22px,2.6vw,30px)}
+
+.ut-sammanfattning{
+  display:flex;align-items:center;gap:clamp(16px,2vw,22px);
+  padding-bottom:clamp(18px,2.2vw,24px);
+  border-bottom:1px solid var(--ln);
+}
+.ut-sammanfattning-text b{
+  display:block;font-size:1rem;font-weight:700;letter-spacing:-.015em;color:var(--bl);
+}
+.ut-sammanfattning-text span{
+  display:block;margin-top:5px;
+  font-size:.83rem;line-height:1.6;color:var(--bl-2);
+}
+
+/* Ringen. transform:rotate(-90deg) på svg:n så att fyllningen
+   börjar klockan tolv i stället för klockan tre — annars läser den
+   som en godtycklig båge i stället för som en mätare. */
+.ut-ring{position:relative;flex:none;width:72px;height:72px}
+.ut-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ut-ring circle{fill:none;stroke-width:5;stroke-linecap:round}
+.ut-ring-bas{stroke:var(--ln)}
+.ut-ring-fyll{stroke:var(--mossa)}
+.ut-ring-tal{
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+}
+.ut-ring-tal b{
+  font-family:var(--f-mono);font-size:1.05rem;font-weight:700;
+  color:var(--bl);font-variant-numeric:tabular-nums;letter-spacing:-.03em;
+}
+/* Procenttecknet mindre och tystare: siffran är budskapet. */
+.ut-ring-tal i{font-style:normal;font-size:.62em;color:var(--bl-3);margin-left:1px}
+
+.ut-amnen{
+  display:grid;gap:clamp(14px,1.8vw,18px);
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  margin-top:clamp(18px,2.2vw,24px);
+}
+.ut-amne-topp{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  margin-bottom:9px;
+}
+.ut-amne-topp b{font-size:.9rem;font-weight:650;color:var(--bl)}
+.ut-amne-topp span{
+  font-family:var(--f-mono);font-size:.8rem;color:var(--bl-3);
+  font-variant-numeric:tabular-nums;
+}
+.ut-amne-topp span i{font-style:normal;opacity:.5;margin:0 1px}
+.ut-amne .fd-stapel{height:8px;margin-bottom:0}
+
+/* Rubriken över detaljlistan. Den behövs först nu när något står
+   ovanför den. */
+.ut-detalj-et{
+  display:block;margin-bottom:14px;
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
+}

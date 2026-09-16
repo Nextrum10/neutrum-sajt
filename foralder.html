@@ -1220,7 +1220,12 @@
     S.progressAntal = data.length;
     ritaStatistik();
     $('#prg-antal').textContent = data.length + ' områden';
-    host.innerHTML = NXStudie.progressPerÄmne(data, {});
+    /* Överblicken först, detaljerna sedan. Listan svarar på VAD som
+       är svårt; översikten svarar på "hur ligger vi till i matte",
+       och det är den frågan man ställer först. */
+    host.innerHTML = NXStudie.utvecklingPerÄmne(data)
+      + '<div class="ut-detalj"><span class="ut-detalj-et">Område för område</span>'
+      + NXStudie.progressPerÄmne(data, {}) + '</div>';
   }
 
   /* ============================================================

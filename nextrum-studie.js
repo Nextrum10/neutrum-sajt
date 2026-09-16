@@ -875,6 +875,84 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
+     UTVECKLINGEN PER ÄMNE
+
+     Listan under visar varje kunskapsområde för sig. Den är rätt
+     när man vill veta VAD som är svårt — men den svarar inte på
+     "hur ligger vi till i matte", och det är den frågan en förälder
+     ställer först.
+
+     En rad per ämne: namnet, en stapel med områdenas lägen, och
+     antalet som nått Bra. Samma tre färger som nivåmätaren och
+     rapportformuläret, för samma sak ska ha samma färg i hela
+     produkten.
+
+     Ringen visar andelen områden på Bra. Den är en ANDEL av
+     verkliga rader, inte ett påhittat betyg — står det 2 av 7 är
+     det för att sju områden finns och två av dem är satta till bra
+     av studiehjälparen.
+     ============================================================ */
+  function utvecklingPerÄmne(rader) {
+    if (!rader || !rader.length) return '';
+
+    var ämnen = {};
+    rader.forEach(function (p) { (ämnen[p.subject] = ämnen[p.subject] || []).push(p); });
+
+    var klassFör = { bra: 'ar-bra', pa_god_vag: 'ar-mitten', behover_trana: 'ar-folj' };
+
+    var totalt = rader.length;
+    var bra = rader.filter(function (p) { return p.level === 'bra'; }).length;
+    var andel = Math.round(bra / totalt * 100);
+
+    /* Ringen ritas med stroke-dasharray på en cirkel. r=26 ger en
+       omkrets på ~163,4 — det talet är hårdkodat nedan eftersom SVG
+       inte kan räkna, och det måste följa med om radien ändras. */
+    var omkrets = 2 * Math.PI * 26;
+    var fylld = omkrets * bra / totalt;
+
+    var ring = '<div class="ut-ring" role="img" aria-label="'
+      + bra + ' av ' + totalt + ' kunskapsområden på nivån bra">'
+      + '<svg viewBox="0 0 60 60" aria-hidden="true">'
+      + '<circle class="ut-ring-bas" cx="30" cy="30" r="26"></circle>'
+      + '<circle class="ut-ring-fyll" cx="30" cy="30" r="26"'
+      + ' stroke-dasharray="' + fylld.toFixed(1) + ' ' + omkrets.toFixed(1) + '"></circle>'
+      + '</svg>'
+      + '<span class="ut-ring-tal"><b>' + andel + '<i>%</i></b></span>'
+      + '</div>';
+
+    var rutor = Object.keys(ämnen).sort().map(function (ämne) {
+      var lista = ämnen[ämne];
+      var n = { bra: 0, pa_god_vag: 0, behover_trana: 0 };
+      lista.forEach(function (p) { if (n[p.level] !== undefined) n[p.level]++; });
+
+      var segment = ['bra', 'pa_god_vag', 'behover_trana']
+        .filter(function (k) { return n[k]; })
+        .map(function (k) {
+          return '<i class="' + klassFör[k] + '" style="flex:'
+            + Math.max(n[k] / lista.length, 0.04) + '"></i>';
+        }).join('');
+
+      return '<div class="ut-amne">'
+        + '<div class="ut-amne-topp"><b>' + esc(ämne) + '</b>'
+        + '<span>' + n.bra + '<i>/</i>' + lista.length + '</span></div>'
+        + '<div class="fd-stapel">' + segment + '</div>'
+        + '</div>';
+    }).join('');
+
+    return '<div class="ut-oversikt">'
+      + '<div class="ut-sammanfattning">'
+      + ring
+      + '<div class="ut-sammanfattning-text">'
+      + '<b>' + bra + ' av ' + totalt + ' områden är på Bra</b>'
+      + '<span>' + Object.keys(ämnen).length
+      + (Object.keys(ämnen).length === 1 ? ' ämne' : ' ämnen') + ' följs just nu. '
+      + 'Nivåerna sätts av er studiehjälpare efter passen.</span>'
+      + '</div></div>'
+      + '<div class="ut-amnen">' + rutor + '</div>'
+      + '</div>';
+  }
+
+  /* ============================================================
      LÄXFILTRET
 
      Läxlistan var allt eleven någonsin fått, med de klara kvar i
@@ -1006,7 +1084,7 @@ window.NXStudie = (function () {
   return {
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxFilter: läxFilter, läxUrval: läxUrval,
-    fordelning: fordelning,
+    fordelning: fordelning, utvecklingPerÄmne: utvecklingPerÄmne,
     LAGE: LAGE, NIVA: NIVA,
     läxläge: läxläge, deadlineText: deadlineText,
     läxRad: läxRad, nivåMätare: nivåMätare,

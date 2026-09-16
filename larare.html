@@ -603,7 +603,7 @@
           </div>
         </div>
 
-        <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+        <div class="dbox">
           <h5>När kan du? <em>tryck på en timme för att lägga till eller ta bort</em></h5>
           <p class="kal-hjalp">
             <b>Dina tider</b>
@@ -612,13 +612,21 @@
           <div id="kalender"></div>
           <div class="kal-fot" id="kal-fot"></div>
           <div id="sparr-lista"></div>
-        </div>
 
-        <div class="dbox">
-          <h5>Föreslå en tid till en familj <em id="forslag-till"></em></h5>
-          <p class="xsmall" style="color:var(--muted-2);margin-bottom:18px;line-height:1.6">
-            Familjen får förslaget i sin vy och svarar med ett klick. Tider som redan är bokade hos dig går inte att välja.
-          </p>
+          <!-- ============ FÖRESLÅ TIDEN ============
+               Låg som en EGEN ruta under kalendern, vilket lät som
+               två uppgifter. Det är det inte: man väljer en timme
+               ovanför och skickar den nedanför — knappen har hela
+               tiden varit avstängd tills en tid är vald.
+
+               Nu i samma ruta, under ett streck. Sambandet syns i
+               stället för att stå i en hjälptext. -->
+          <div class="tid-forslag">
+            <h5>Föreslå tiden till en familj <em id="forslag-till"></em></h5>
+            <p class="xsmall" style="color:var(--muted-2);margin-bottom:18px;line-height:1.6">
+              Välj en timme i kalendern ovanför, fyll i vad passet gäller och skicka.
+              Familjen svarar med ett klick. Tider som redan är bokade hos dig går inte att välja.
+            </p>
           <div class="forslag-rad" style="margin-bottom:18px">
             <div class="pay-field"><label for="f-amne">Ämne</label>
               <select class="sel" id="f-amne">
@@ -678,7 +686,8 @@
             <span class="small" id="forslag-sammanfattning">Välj ett datum och en tid.</span>
             <button class="btn btn-primary btn-sm" id="forslag-knapp" disabled>Skicka förslaget</button>
           </div>
-          <p class="ok-msg" id="forslag-msg"></p>
+            <p class="ok-msg" id="forslag-msg"></p>
+          </div>
         </div>
       </section>
 
