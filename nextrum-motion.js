@@ -558,69 +558,6 @@ const NXFin = (function () {
     });
   }
 
-  /* ---------- knappar som söker sig mot pekaren ----------
-
-     VARFÖR DEN SKAKADE
-
-     Förra versionen flyttade elementet som LYSSNADE. Knappen gled
-     mot pekaren, pekaren hamnade därmed utanför knappens nya läge,
-     pointerleave sköt tillbaka den, pekaren var inne igen,
-     pointerenter — och så vidare, många gånger i sekunden. Det såg
-     ut som att knappen darrade, och med styrka 0,22 och ingen gräns
-     kunde den dessutom dras flera centimeter från sin plats.
-
-     RÄTTNINGEN ÄR TVÅ SAKER
-
-     1. Lyssnaren sitter på omslaget (.nx-magnet), som står stilla.
-        Det som rör sig är knappen INUTI. Träffytan flyttar sig
-        alltså aldrig, och återkopplingen som gav darrningen finns
-        inte längre.
-
-     2. Utslaget är hårt begränsat: tre pixlar. Effekten ska kännas
-        i ögonvrån, inte gå att leka med. En knapp som går att dra
-        runt läser som att den inte sitter fast.
-     ---------------------------------------------------------- */
-  const MAGNET_MAX_PX = 3;
-
-  function magnetiska(sel) {
-    if (NXMotion.tier !== 'full') return;
-    $$(sel).forEach(el => {
-      /* Omslaget står stilla, barnet rör sig. Saknas ett barn är det
-         inget att flytta — hellre ingen effekt än den gamla
-         darrningen. */
-      const rör = el.firstElementChild;
-      if (!rör) return;
-
-      let rå = null, rafId = 0, mx = 0, my = 0;
-
-      const flytta = () => {
-        rafId = 0;
-        rör.style.transform = 'translate3d(' + mx.toFixed(1) + 'px,' + my.toFixed(1) + 'px,0)';
-      };
-
-      const gräns = v => Math.max(-MAGNET_MAX_PX, Math.min(MAGNET_MAX_PX, v));
-
-      el.addEventListener('pointerenter', () => { rå = el.getBoundingClientRect(); });
-      el.addEventListener('pointermove', e => {
-        if (!rå) rå = el.getBoundingClientRect();
-        const styrka = Number(el.dataset.magnet || 0.12);
-        mx = gräns((e.clientX - (rå.left + rå.width / 2)) * styrka);
-        my = gräns((e.clientY - (rå.top + rå.height / 2)) * styrka);
-        if (!rafId) rafId = requestAnimationFrame(flytta);
-      });
-
-      const släpp = () => {
-        rå = null; mx = 0; my = 0;
-        if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
-        rör.style.transform = '';
-      };
-      el.addEventListener('pointerleave', släpp);
-      /* blur bubblar inte, så den måste fångas i capture-läget —
-         annars satt knappen kvar förskjuten efter ett tabbklick. */
-      el.addEventListener('blur', släpp, true);
-    });
-  }
-
   /* ---------- parallax ----------
      data-parallax="-8" = elementet rör sig 8% av sin egen höjd
      långsammare än sidan. Negativt = uppåt. */
@@ -765,10 +702,9 @@ const NXFin = (function () {
     heroVideo();
     radAvslöj('[data-avslöj]');
     stiga('[data-stig]');
-    magnetiska('[data-magnet]');
     parallax('[data-parallax]');
     nödbroms();
   }
 
-  return { allt, header, heroVideo, radAvslöj, stiga, magnetiska, parallax, nödbroms, tryckbart };
+  return { allt, header, heroVideo, radAvslöj, stiga, parallax, nödbroms, tryckbart };
 })();

@@ -92,7 +92,7 @@
            Med JS öppnas vyväljaren istället — utom när man redan är
            inloggad, då skriver NX.märkInloggad() om länken. -->
       <a class="login" href="/foralder" id="login-link" data-vagval>Logga in</a>
-      <span class="nx-magnet" data-magnet>
+      <span class="nx-magnet">
         <a class="btn btn-primary btn-sm" href="/intresseanmalan">Intresseanmälan</a>
       </span>
     </div>
@@ -226,7 +226,7 @@
             </label>
 
             <div class="nx-submit-row">
-              <span class="nx-magnet" data-magnet>
+              <span class="nx-magnet">
                 <button class="btn btn-primary btn-lg" type="submit" id="lead-submit">
                   Skicka intresseanmälan
                   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
@@ -447,16 +447,41 @@
      ========================================================== */
   const leadForm = $('#lead-form');
   if (leadForm) {
+    /* Samtycket är obligatoriskt: utan lagrade uppgifter finns ingen
+       väg tillbaka till familjen, och då är anmälan värdelös för båda
+       parter. Skicka-knappen stoppas redan av kontrollen nedan, men
+       enbart en rad text under knappen räcker inte — markeringen ska
+       sitta på rutan man missade, annars letar man i hela formuläret
+       efter vad som är fel. */
+    const gdpr = $('#l-gdpr');
+    const märkSamtycke = på => {
+      if (!gdpr) return;
+      const ruta = gdpr.closest('.nx-samtycke');
+      if (ruta) ruta.classList.toggle('fel', på);
+      if (på) gdpr.setAttribute('aria-invalid', 'true');
+      else gdpr.removeAttribute('aria-invalid');
+    };
+    if (gdpr) {
+      gdpr.addEventListener('change', () => { if (gdpr.checked) märkSamtycke(false); });
+    }
+
     leadForm.addEventListener('submit', async e => {
       e.preventDefault();
       const msg = $('#lead-msg'), knapp = $('#lead-submit');
       rensa(msg);
+      märkSamtycke(false);
 
       const namn = $('#l-name').value.trim();
       const epost = $('#l-email').value.trim();
       if (!namn || !epost) { säg(msg, t('fyllNamnEpost'), false); return; }
       if (!epostOk(epost)) { säg(msg, t('felEpost'), false); return; }
-      if (!$('#l-gdpr').checked) { säg(msg, t('samtyckeIntresse'), false); return; }
+      if (!gdpr.checked) {
+        säg(msg, t('samtyckeIntresse'), false);
+        märkSamtycke(true);
+        gdpr.focus({ preventScroll: true });
+        gdpr.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return;
+      }
       if (!supa) { säg(msg, t('ingenDatabasForm'), false); return; }
 
       const extra = [];

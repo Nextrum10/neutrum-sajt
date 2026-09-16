@@ -658,7 +658,7 @@ def sida(o):
       <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:24px">Berätta vad eleven behöver hjälp med,<br>så återkommer vi med en matchning.</p>
 
       <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
-        <span class="nx-magnet" data-magnet>
+        <span class="nx-magnet">
           <a class="btn btn-primary btn-lg" href="/intresseanmalan">
             Skicka intresseanmälan
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>

@@ -503,8 +503,11 @@ body .mobile-menu{display:block}
              border-color .24s var(--e),box-shadow .28s var(--e),
              transform .34s var(--e-ut);
 }
-.btn svg{transition:transform .34s var(--e-ut)}
-.btn:hover svg{transform:translateX(4px)}
+/* Pilen i knappen gled 4 px åt höger vid hover. Själva knappen stod
+   still, men rörelsen inuti lästes som att knappen kröp undan under
+   pekaren. Den är borttagen: hover byter färg och skugga, inget mer.
+   :active-skalningen står kvar — den utlöses av ett klick, inte av
+   att pekaren råkar passera. */
 .btn:active{transform:scale(.985)}
 
 /* --acc-ink, inte --pap: på en mörk sektion är accenten den ljusa
@@ -524,24 +527,14 @@ body .mobile-menu{display:block}
   border-color:var(--nt-fg);background:color-mix(in srgb,var(--nt-fg) 8%,transparent);
 }
 
-/* Magnetiska knappar flyttas av JS via transform. Wrappern tar
-   rörelsen så att :active-skalningen inte krockar med den. */
-/* Omslaget står STILLA — det är hela rättningen av darrningen (se
-   magnetiska() i nextrum-motion.js). Det som förskjuts är barnet,
-   alltså är det barnet som ska ha will-change, inte omslaget.
-
-   Övergången gäller bara återgången: under pointermove skriver JS
-   en ny transform varje bildruta, och en transition ovanpå det hade
-   gjort rörelsen sirapig. När musen lämnar nollställs transformen i
-   ett svep, och då är de 240 ms skillnaden mellan att knappen glider
-   hem och att den hoppar. */
+/* Wrapper runt primära knappar. Den bär ingen egen rörelse — den
+   finns kvar för att hjältens knappar ska kunna gå ut i kanten när
+   de staplas på smal skärm (se .nx-hero-knappar längre ned). */
 .nx-magnet{display:inline-block}
-.nx-magnet > *{
-  will-change:transform;
-  transition:transform .24s var(--ease, cubic-bezier(.22,1,.36,1));
-}
 
-/* Länk med streck som ritas från vänster och pil som glider */
+/* Länk med streck som ritas från vänster. Pilen står stilla: den gled
+   5 px åt höger vid hover, och rörelsen inuti lästes som att länken
+   kröp undan under pekaren. Strecket räcker som återkoppling. */
 .nx-lank{
   position:relative;display:inline-flex;align-items:center;gap:9px;
   font-weight:600;font-size:.95rem;letter-spacing:-.014em;
@@ -553,8 +546,7 @@ body .mobile-menu{display:block}
   transition:transform .42s var(--e-ut);
 }
 .nx-lank:hover::after{transform:scaleX(1)}
-.nx-lank svg{width:14px;height:14px;transition:transform .4s var(--e-ut)}
-.nx-lank:hover svg{transform:translateX(5px)}
+.nx-lank svg{width:14px;height:14px}
 .on-nt .nx-lank,.nx-mork .nx-lank,.on-band .nx-lank{color:var(--nt-fg)}
 
 /* ============================================================
@@ -1329,17 +1321,17 @@ html[lang="en"] .nx-hero-rubrik{
   display:grid;grid-template-columns:1fr auto;align-items:center;gap:16px;
   padding:20px 22px;
   border:1px solid var(--ln);border-radius:16px;
-  transition:border-color .24s var(--e),background .24s var(--e),transform .3s var(--e-ut);
+  transition:border-color .24s var(--e),background .24s var(--e);
 }
+/* Raden lyfte 1 px och pilen gled 4 px. Båda borta — hover byter ram
+   och bakgrund, raden står kvar där man siktade. */
 .nx-vagval-val a:hover{
   border-color:var(--bl);background:color-mix(in srgb,var(--bl) 3.5%,transparent);
-  transform:translateY(-1px);
 }
 .nx-vagval-val b{display:block;font-size:1.06rem;font-weight:600;letter-spacing:-.022em}
 .nx-vagval-val span{display:block;font-size:.9rem;color:var(--bl-2);margin-top:3px}
 .nx-vagval-val svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.7;fill:none;
-  stroke-linecap:round;stroke-linejoin:round;transition:transform .34s var(--e-ut)}
-.nx-vagval-val a:hover svg{transform:translateX(4px)}
+  stroke-linecap:round;stroke-linejoin:round}
 .nx-vagval-stang{
   position:absolute;top:calc(var(--m) * .7);right:calc(var(--m) * .7);
   width:42px;height:42px;border-radius:50%;
@@ -1717,6 +1709,15 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .nx-samtycke a{color:var(--bl);text-decoration:underline;text-underline-offset:3px}
 .nx-mork .nx-samtycke{color:var(--nt-mut)}
 .nx-mork .nx-samtycke a{color:var(--nt-fg)}
+
+/* Glömd kryssruta. Outline i stället för ram och utfyllnad, så att
+   formuläret inte hoppar till när markeringen sätts och tas bort. */
+.nx-samtycke.fel{
+  outline:2px solid color-mix(in srgb,var(--acc) 55%,transparent);
+  outline-offset:10px;border-radius:6px;color:var(--bl);
+}
+.nx-samtycke.fel input{accent-color:var(--acc)}
+.nx-mork .nx-samtycke.fel{color:var(--nt-fg)}
 
 /* ============================================================
    SISTA STEGET
