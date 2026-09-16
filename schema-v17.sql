@@ -1,95 +1,76 @@
 -- ============================================================
 -- NEXTRUM — schema v17
--- TVÅ LÅS SOM STOD OLÅSTA
+-- Den delade hemligheten mellan webhooken och lead-notis.
 --
--- Körs efter schema-v16.sql. Idempotent, och ändrar ingenting
--- som syns i någon vy. Båda punkterna kommer från Supabases egen
--- databaslinter (2026-09-15), inte från en bugg någon märkt av.
+-- Låg förut som Edge Function-secret NOTIS_HEMLIGHET, satt till den
+-- bokstavliga strängen "openssl rand -hex 32" — kommandot hade
+-- klistrats in i stället för körts. Notiserna fungerade, eftersom
+-- headern var satt till exakt samma sträng, men skyddet var noll.
 --
+-- I en tabell går den att rotera med en SQL-rad i stället för ett
+-- dashboard-besök, och båda sidorna kan bytas i SAMMA transaktion.
+-- Det spelar roll: byter man secreten och headern i två olika
+-- fönster svarar funktionen 401 på varje anmälan som kommer in
+-- emellan, och de mejlen kommer aldrig.
 --
--- 1. SÖKVÄGEN I TVÅ FUNKTIONER
---
--- mapp_uuid() och pass_intervall() saknade `search_path`. En
--- funktion utan satt sökväg slår upp sina egna anrop i den sökväg
--- den som ANROPAR den råkar ha. För en SECURITY DEFINER-funktion
--- är det en känd väg till rättighetseskalering; de här två är
--- SECURITY INVOKER, så det är hängslen snarare än bälte — men
--- pass_intervall sitter i ett GiST-index på bookings, och ett
--- index vars uttryck kan betyda olika saker vid olika anrop är en
--- dålig idé oavsett rättigheter.
---
--- Sökvägen sätts som metadata. Funktionskropparna rörs inte, så
--- indexet bookings_ingen_overlapp påverkas inte och behöver inte
--- byggas om.
---
---
--- 2. BORDSRÄTTIGHETERNA PÅ fortnox_token
---
--- Tabellen har RLS påslaget och noll policyer. Det är MED FLIT:
--- en tabell med ett API-token ska inte kunna läsas av någon som
--- kommer via PostgREST, bara av edge-funktionerna som går in med
--- service_role och därmed förbi RLS.
---
--- Men anon och authenticated hade fortfarande Supabases
--- standardgrants på bordet. RLS stoppar dem idag. Den dagen
--- någon lägger till en policy "bara för att kunna läsa status"
--- öppnas hela tabellen, och det är precis den sortens ändring
--- som görs i förbifarten. Grants bort = två lås i stället för
--- ett, och nästa policy räcker inte längre för att läcka token.
+-- Additiv. Inga kolumner tas bort och inga vyer påverkas.
 -- ============================================================
 
+create extension if not exists pgcrypto;
 
--- ============================================================
--- 1. SÖKVÄGEN
--- ============================================================
+create table if not exists public.notis_konfig (
+  id          smallint primary key default 1,
+  hemlighet   text not null,
+  uppdaterad  timestamptz not null default now(),
+  constraint notis_konfig_en_rad check (id = 1)
+);
 
--- mapp_uuid läser storage.foldername, alltså måste storage stå med.
-alter function public.mapp_uuid(text)
-  set search_path = pg_catalog, storage, public;
+-- RLS på utan en enda policy: anon och authenticated får noll rader.
+-- service_role går förbi RLS och är den enda som ser hemligheten.
+-- Databaslintern flaggar det här som INFO ("RLS enabled, no policy").
+-- Det är avsikten, precis som för fortnox_token.
+alter table public.notis_konfig enable row level security;
 
--- pass_intervall använder bara pg_catalog (make_time, make_interval,
--- split_part, tsrange). public står med för typerna i signaturen.
-alter function public.pass_intervall(date, text, integer)
-  set search_path = pg_catalog, public;
+revoke all on public.notis_konfig from anon, authenticated;
 
-
--- ============================================================
--- 2. fortnox_token
--- ============================================================
-
-revoke all on public.fortnox_token from anon;
-revoke all on public.fortnox_token from authenticated;
-
-comment on table public.fortnox_token is
-  'Fortnox OAuth-token. RLS på, noll policyer, och inga grants till anon eller authenticated — med flit. Läses bara av edge-funktionen ekonomi, som går in med service_role och därmed förbi RLS. Lägg ALDRIG till en policy här.';
+-- Skapas bara första gången. Körs filen om ligger hemligheten kvar
+-- och webhooken fortsätter fungera.
+insert into public.notis_konfig (id, hemlighet)
+values (1, encode(gen_random_bytes(32), 'hex'))
+on conflict (id) do nothing;
 
 
--- ============================================================
--- EFTERÅT
+-- ------------------------------------------------------------
+-- ROTERA HEMLIGHETEN
 --
---   select proname, proconfig from pg_proc
---   where proname in ('mapp_uuid','pass_intervall');
---   -- båda ska visa en search_path-rad
+-- Kör hela blocket. Det byter tabellen och webhookens header i
+-- samma transaktion, så de två kan aldrig glida isär. Värdet syns
+-- aldrig på skärmen och behöver aldrig kopieras för hand.
 --
---   select grantee from information_schema.role_table_grants
---   where table_name = 'fortnox_token';
---   -- bara postgres och service_role ska stå kvar
+-- En redan startad Edge Function-instans har den gamla hemligheten
+-- cachad tills den återvinns. Fönstret är kort och en anmälan som
+-- råkar hamna där ligger kvar i "leads" — men mejlet uteblir.
+-- Rotera alltså hellre en söndagskväll än en måndagmorgon.
+-- ------------------------------------------------------------
 --
+-- do $$
+-- declare h text;
+-- begin
+--   update public.notis_konfig
+--      set hemlighet = encode(gen_random_bytes(32), 'hex'),
+--          uppdaterad = now()
+--    where id = 1
+--   returning hemlighet into strict h;
 --
--- KVAR, MEDVETET INTE GJORT HÄR
---
--- Lintern varnar också för att sex SECURITY DEFINER-funktioner
--- (is_admin, is_my_student, is_my_matched_tutor,
--- is_matched_tutor_of, ar_min_elev, ar_matchade) går att anropa
--- som RPC av vem som helst. Fyra av dem jämför mot auth.uid() och
--- berättar alltså bara om anroparen själv. Två gör det inte:
--- is_admin(uid) och ar_matchade(parent, tutor) svarar ja eller nej
--- om ANDRAS id:n — fast bara för den som redan har ett internt
--- uuid, som inte står någonstans publikt.
---
--- Rätt åtgärd är att flytta dem till ett schema PostgREST inte
--- exponerar. Det går inte att göra i förbifarten: is_admin ensam
--- står i 31 policyer, och en policy som pekar på en funktion som
--- flyttat slutar släppa igenom någon alls. Den migrationen ska
--- skrivas och verifieras för sig, inte klämmas in här.
--- ============================================================
+--   execute format(
+--     'create or replace trigger "ny-intresseanmalan"
+--        after insert on public.leads
+--        for each row execute function supabase_functions.http_request(
+--          %L, %L, %L, %L, %L)',
+--     'https://ddkfiuvcppalutfulvbi.supabase.co/functions/v1/lead-notis',
+--     'POST',
+--     json_build_object('x-nextrum-notis', h)::text,
+--     '{}',
+--     '5000'
+--   );
+-- end $$;

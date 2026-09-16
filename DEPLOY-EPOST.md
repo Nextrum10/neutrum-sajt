@@ -1,8 +1,21 @@
-# Intresseanmälan → info@nextrum.se
+# Intresseanmälan → notis till ledningen
 
 Funktionen `lead-notis` är byggd och driftsatt. Den mejlar er varje
-gång någon skickar en intresseanmälan. Fyra steg återstår, och tre av
-dem kräver konton eller DNS som bara ni kommer åt.
+gång någon skickar en intresseanmälan.
+
+| | |
+|---|---|
+| Avsändare | `Nextrum <info@nextrum.se>` |
+| Mottagare | `alexandarjovanoviccc@gmail.com`, `leo.thriskos@gmail.com`, `info@nextrum.se` |
+| Svara-knapp | går till familjen, inte till oss |
+
+Alla tre får samma mejl med flit. Den som ser det först kan ringa, och
+24-timmarslöftet på sajten håller inte om aviseringen ligger i en
+inkorg ingen öppnar förrän på måndag.
+
+Vill ni ändra listan står den i `TILL` överst i
+`supabase/functions/lead-notis/index.ts`. Funktionen måste driftsättas
+om efteråt — det räcker inte att ändra i repot.
 
 Anmälan sparas i databasen precis som förut. Det här är en avisering
 ovanpå — går mejlet fel ligger raden kvar i `leads`.
@@ -44,7 +57,7 @@ dig +short _dmarc.nextrum.se TXT
 ## 2. Resend: konto och domän — KLART
 
 Domänen är verifierad och funktionen skickar skarpt från
-`no-reply@nextrum.se`. Så här ser den ut, region **Irland
+`info@nextrum.se`. Så här ser den ut, region **Irland
 (eu-west-1)**:
 
 | Typ | Namn | Innehåll |
@@ -93,32 +106,63 @@ dig +short nextrum.se TXT
 
 ### Reservavsändaren
 
-`lead-notis` provar `no-reply@nextrum.se` först och faller bara vid
-403 tillbaka på `onboarding@resend.dev`, som når kontots egen adress.
-Den är vilande nu och kostar ingenting, men fångar samma fel igen om
-domänen någon gång faller ur. Ser ni `"reserv": true` i svaret är
-domänen inte verifierad längre.
+`lead-notis` provar `info@nextrum.se` först och faller bara vid 403
+tillbaka på `onboarding@resend.dev`. Den är vilande nu och kostar
+ingenting, men fångar samma fel igen om domänen någon gång faller ur.
+Ser ni `"reserv": true` i svaret är domänen inte verifierad längre.
+
+**Reserven går bara till `info@nextrum.se`, inte till hela listan.**
+`onboarding@resend.dev` får bara leverera till Resend-kontots egen
+adress, så ett försök med tre mottagare hade avvisats i sin helhet och
+reserven vore meningslös. Är kontot registrerat på någon av
+gmail-adresserna i stället faller även reserven — men då står orsaken
+i svaret, i stället för att aviseringen försvinner tyst.
 
 ---
 
-## 3. Två secrets i Supabase
+## 3. En secret i Supabase
 
 Project Settings → Edge Functions → Secrets:
 
 | Namn | Värde |
 |------|-------|
 | `RESEND_API_KEY` | API-nyckeln från Resend |
-| `NOTIS_HEMLIGHET` | En lång slumpsträng ni hittar på själva |
 
-Generera hemligheten med:
+Det är den enda som behövs. `SUPABASE_URL` och
+`SUPABASE_SERVICE_ROLE_KEY` injicerar Supabase själv i varje Edge
+Function.
 
-```bash
-openssl rand -hex 32
-```
+### `NOTIS_HEMLIGHET` är avvecklad — ta bort den
 
-Den finns för att funktionen ska kunna skilja ett riktigt
-webhook-anrop från vem som helst som hittat adressen. Spara den — ni
-behöver samma sträng i steg 4.
+Den delade hemligheten ligger nu i tabellen `public.notis_konfig`
+(`schema-v17.sql`), inte i en secret. Funktionen läser den med
+service_role-nyckeln vid kall start och cachar den sedan.
+
+Secreten `NOTIS_HEMLIGHET` används inte längre av någon kod. **Radera
+den** i Supabase-panelen så att ingen tror att den betyder något.
+
+#### Varför den flyttades
+
+Den var satt till den bokstavliga strängen `openssl rand -hex 32`.
+Kommandot hade klistrats in i stället för körts, och webhookens header
+var satt till exakt samma sträng. Notiserna fungerade — de två
+matchade varandra — men skyddet var noll: vem som helst som sett den
+här filen kunde anropa funktionen och fylla alla tre inkorgarna med
+påhittade anmälningar.
+
+En secret går bara att byta i panelen, och headern bara i databasen.
+Två fönster, två steg, fel ordning ger 401 på varje anmälan som kommer
+in emellan. I en tabell byts båda i samma transaktion i stället.
+
+Tabellen har RLS på utan en enda policy, så `anon` och `authenticated`
+får noll rader. Databaslintern flaggar det som INFO — det är avsikten,
+precis som för `fortnox_token`.
+
+#### Rotera hemligheten
+
+Hela blocket ligger längst ned i `schema-v17.sql`. Kör det i SQL
+Editor: det byter tabellen och webhookens header i samma transaktion,
+och värdet syns aldrig på skärmen.
 
 ---
 
@@ -131,7 +175,12 @@ Database → Webhooks → Create a new hook:
 - **Events:** ✅ Insert (bara Insert)
 - **Type:** Supabase Edge Functions
 - **Edge Function:** `lead-notis`
-- **HTTP Headers:** lägg till `x-nextrum-notis` med hemligheten från steg 3
+- **HTTP Headers:** lägg till `x-nextrum-notis` med hemligheten ur
+  `public.notis_konfig`
+
+Webhooken finns redan och heter `ny-intresseanmalan`, med rätt header.
+Sätt den inte för hand igen — använd roteringsblocket i
+`schema-v17.sql`, som skriver både tabellen och headern på en gång.
 
 ### Varför en webhook och inte ett anrop från formuläret
 
@@ -151,8 +200,11 @@ Skicka en riktig intresseanmälan på nextrum.se. Kom det inget mejl:
 
 - **Database → Webhooks → Logs** visar om webhooken avfyrades och vad
   funktionen svarade.
-- `401 Fel eller saknad hemlighet` → headern i steg 4 stämmer inte med
-  secreten i steg 3.
+- `401 Fel eller saknad hemlighet` → headern i webhooken stämmer inte
+  med raden i `public.notis_konfig`. Kör roteringsblocket i
+  `schema-v17.sql`, så sätts båda om.
+- `503 Hemligheten gick inte att läsa` → tabellen `notis_konfig` är
+  tom eller borta. Kör `schema-v17.sql`.
 - `502 Resend svarade…` → domänen är inte verifierad än, eller
   nyckeln är fel.
 - Inget alls i loggen → webhooken är inte påslagen, eller lyssnar på

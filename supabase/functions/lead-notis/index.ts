@@ -1,7 +1,7 @@
 // ============================================================
 // NEXTRUM — Edge Function: lead-notis
 //
-// Mejlar info@nextrum.se när någon skickar en intresseanmälan.
+// Mejlar ledningen när någon skickar en intresseanmälan.
 // Anmälan sparas i databasen som förut; det här är en avisering
 // ovanpå, inte i stället för. Går mejlet fel ligger raden kvar.
 //
@@ -15,13 +15,33 @@
 // verify_jwt är av, eftersom en webhook inte har någon inloggad
 // användare. I stället krävs en delad hemlighet i en egen header.
 // Utan den svarar funktionen 401 och gör ingenting.
+//
+// HEMLIGHETEN LIGGER I public.notis_konfig, inte i en secret. Den
+// låg förut i Deno.env som NOTIS_HEMLIGHET och var satt till den
+// bokstavliga strängen "openssl rand -hex 32" — kommandot hade
+// klistrats in i stället för körts. I en tabell kan den roteras med
+// en SQL-rad, i samma transaktion som webhookens header, i stället
+// för att kräva ett dashboard-besök och rätt ordning mellan två
+// fönster. Tabellen har RLS på utan en enda policy, så bara
+// service_role ser den.
 // ============================================================
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-const NOTIS_HEMLIGHET = Deno.env.get('NOTIS_HEMLIGHET');
 
-const FRAN = 'Nextrum <no-reply@nextrum.se>';
-const TILL = 'info@nextrum.se';
+/* Injiceras av Supabase i varje Edge Function, behöver inte sättas. */
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+const FRAN = 'Nextrum <info@nextrum.se>';
+
+/* Alla tre får samma mejl. Det är med flit: den som råkar se det
+   först kan ringa, och 24-timmarslöftet på sajten håller inte om
+   aviseringen ligger i en inkorg som ingen öppnar förrän på måndag. */
+const TILL = [
+  'alexandarjovanoviccc@gmail.com',
+  'leo.thriskos@gmail.com',
+  'info@nextrum.se',
+];
 
 /* Reservavsändare. Resend låter varje konto skicka från den här
    adressen utan att någon domän är verifierad — men BARA till
@@ -34,6 +54,40 @@ const TILL = 'info@nextrum.se';
    nextrum.se verifieras slutar reserven användas av sig själv,
    utan att någon behöver komma ihåg att ta bort den. */
 const RESERV_FRAN = 'Nextrum <onboarding@resend.dev>';
+
+/* Reserven går bara till EN adress. onboarding@resend.dev får bara
+   leverera till Resend-kontots egen adress, så ett försök med hela
+   listan avvisas i sin helhet och reserven vore meningslös. Är
+   kontot registrerat på en annan adress än den här faller även
+   reserven — men då står orsaken i svaret i stället för att
+   aviseringen försvinner tyst. */
+const RESERV_TILL = 'info@nextrum.se';
+
+/* Läses en gång per instans. En kall start kostar ett anrop, sedan
+   ligger den kvar tills instansen återvinns. Roteras hemligheten
+   hinner en varm instans ha den gamla kvar en kort stund — därför
+   sker bytet i tabellen och i webhooken i SAMMA transaktion, så att
+   de två aldrig glider isär mer än en instanslivstid. */
+let cachadHemlighet: string | null = null;
+
+async function hämtaHemlighet(): Promise<string | null> {
+  if (cachadHemlighet) return cachadHemlighet;
+  if (!SUPABASE_URL || !SERVICE_ROLE) return null;
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/notis_konfig?select=hemlighet&id=eq.1`,
+      { headers: { apikey: SERVICE_ROLE, authorization: `Bearer ${SERVICE_ROLE}` } },
+    );
+    if (!r.ok) return null;
+    const rader = await r.json();
+    const h = Array.isArray(rader) && rader[0] ? rader[0].hemlighet : null;
+    if (typeof h !== 'string' || !h) return null;
+    cachadHemlighet = h;
+    return h;
+  } catch (_e) {
+    return null;
+  }
+}
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {
@@ -67,8 +121,20 @@ Deno.serve(async (req) => {
        "RESEND_API_KEY saknas" till vem som helst som pingade
        adressen — ett litet läckage om serverns tillstånd till någon
        som inte ens fått visa att de hör hemma här. Nu får en
-       oautentiserad anropare bara 401, oavsett hur servern mår. */
-    if (!NOTIS_HEMLIGHET || req.headers.get('x-nextrum-notis') !== NOTIS_HEMLIGHET) {
+       oautentiserad anropare bara 401, oavsett hur servern mår.
+
+       Saknas headern helt svarar vi innan uppslaget mot tabellen. Den
+       som bara pingar adressen får alltså 401 och lär sig ingenting,
+       medan en riktig webhook — som alltid skickar headern — får 503
+       och en begriplig rad i webhookloggen om tabellen är trasig. */
+    const presenterad = req.headers.get('x-nextrum-notis');
+    if (!presenterad) return json({ error: 'Fel eller saknad hemlighet.' }, 401);
+
+    const hemlighet = await hämtaHemlighet();
+    if (!hemlighet) {
+      return json({ error: 'Hemligheten gick inte att läsa ur public.notis_konfig.' }, 503);
+    }
+    if (presenterad !== hemlighet) {
       return json({ error: 'Fel eller saknad hemlighet.' }, 401);
     }
 
@@ -92,7 +158,7 @@ Deno.serve(async (req) => {
       `<h2 style="font:600 18px system-ui;margin:0 0 14px">Ny intresseanmälan</h2>` +
       `<pre style="font:14px/1.6 ui-monospace,monospace;white-space:pre-wrap;margin:0">${esc(text)}</pre>`;
 
-    const skicka = (avsandare: string) => fetch('https://api.resend.com/emails', {
+    const skicka = (avsandare: string, mottagare: string[]) => fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -100,8 +166,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: avsandare,
-        to: [TILL],
-        /* Svara-knappen ska gå till familjen, inte till no-reply.
+        to: mottagare,
+        /* Svara-knappen ska gå till familjen, inte till avsändaren.
            Utan det här måste man kopiera adressen ur mejlet.
 
            Bara när adressen ser giltig ut. Resend avvisar HELA
@@ -116,7 +182,7 @@ Deno.serve(async (req) => {
       }),
     });
 
-    const svar = await skicka(FRAN);
+    const svar = await skicka(FRAN, TILL);
 
     /* 403 = domänen är inte verifierad hos Resend. Allt annat är ett
        riktigt fel och ska synas som det. Kroppen läses ut här, för en
@@ -125,14 +191,15 @@ Deno.serve(async (req) => {
        bra medan avsändaren i själva verket är fel. */
     if (svar.status === 403) {
       const orsak = await svar.text();
-      const reserv = await skicka(RESERV_FRAN);
+      const reserv = await skicka(RESERV_FRAN, [RESERV_TILL]);
       if (reserv.ok) {
         return json({
           ok: true,
           reserv: true,
           avsandare: RESERV_FRAN,
-          varning: 'nextrum.se är inte verifierad hos Resend — mejlet gick '
-                 + 'via reservavsändaren och når bara Resend-kontots egen adress.',
+          mottagare: RESERV_TILL,
+          varning: 'nextrum.se är inte verifierad hos Resend — mejlet gick via '
+                 + 'reservavsändaren och nådde bara ' + RESERV_TILL + ', inte hela listan.',
           orsak,
           id: (await reserv.json())?.id ?? null,
         }, 200);

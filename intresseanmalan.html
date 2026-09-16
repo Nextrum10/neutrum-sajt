@@ -8,7 +8,7 @@
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
 <title>Intresseanmälan för läxhjälp — Nextrum</title>
-<meta name="description" content="Berätta vad ni behöver hjälp med. Att skicka in är gratis och binder er inte vid något — vi hör av oss inom ett par dagar.">
+<meta name="description" content="Berätta vad ni behöver hjälp med. Att skicka in är gratis och binder er inte vid något — vi hör av oss inom 24 timmar.">
 <link rel="canonical" href="https://nextrum.se/intresseanmalan">
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/intresseanmalan">
 <link rel="alternate" hreflang="en" href="https://nextrum.se/en/intresseanmalan">
@@ -22,7 +22,7 @@
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="sv_SE">
 <meta property="og:title" content="Intresseanmälan för läxhjälp — Nextrum">
-<meta property="og:description" content="Berätta vad ni behöver hjälp med. Att skicka in är gratis och binder er inte vid något — vi hör av oss inom ett par dagar.">
+<meta property="og:description" content="Berätta vad ni behöver hjälp med. Att skicka in är gratis och binder er inte vid något — vi hör av oss inom 24 timmar.">
 <meta property="og:url" content="https://nextrum.se/intresseanmalan">
 <meta property="og:image" content="https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg">
 <meta property="og:image:width" content="1280">
@@ -30,7 +30,7 @@
 <meta property="og:image:alt" content="En ung studiehjälpare och en elev pluggar tillsammans vid ett ljust träbord.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Intresseanmälan för läxhjälp — Nextrum">
-<meta name="twitter:description" content="Berätta vad ni behöver hjälp med. Att skicka in är gratis och binder er inte vid något — vi hör av oss inom ett par dagar.">
+<meta name="twitter:description" content="Berätta vad ni behöver hjälp med. Att skicka in är gratis och binder er inte vid något — vi hör av oss inom 24 timmar.">
 <meta name="twitter:image" content="https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg">
 
 <!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
@@ -127,7 +127,7 @@
   <span class="nx-et acc" data-stig style="margin-top:22px">Intresseanmälan</span>
   <h1 class="nx-d1" data-avslöj>Berätta vad ni<br>behöver hjälp med.</h1>
   <p class="nx-lede" data-stig data-fördröj="1">Fyll i några enkla uppgifter
-          så hör vi av oss. Att skicka in kostar ingenting och binder er inte vid något.</p>
+          så hör vi av oss inom 24 timmar. Att skicka in kostar ingenting och binder er inte vid något.</p>
 </section>
 
 <section class="nx-yta nx-sek" id="intresse">
@@ -138,7 +138,7 @@
 
         <ul class="nx-steplist" data-stig data-fördröj="2">
           <li class="on"><em>01</em><div><b>Du skickar in formuläret</b><span>Tar ungefär två minuter.</span></div></li>
-          <li><em>02</em><div><b>Vi hör av oss</b><span>Vi går igenom behovet tillsammans med er.</span></div></li>
+          <li><em>02</em><div><b>Vi hör av oss inom 24 timmar</b><span>Vi går igenom behovet tillsammans med er.</span></div></li>
           <li><em>03</em><div><b>Ni blir matchade</b><span>Studieplanen skrivs och föräldravyn låses upp.</span></div></li>
         </ul>
 
@@ -153,7 +153,7 @@
           </div>
           <div>
             <b>Hur snabbt hör ni av er?</b>
-            <p>Vi svarar normalt inom ett par dagar. Vet ni inte exakt vad ni behöver
+            <p>Inom 24 timmar från att ni skickat in. Vet ni inte exakt vad ni behöver
               hjälp med går det bra att skriva ungefär — vi reder ut det tillsammans.</p>
           </div>
           <div>
@@ -233,7 +233,7 @@
                 </button>
               </span>
             </div>
-            <p class="nx-fineprint">Ingen bindningstid. Att skicka in en intresseanmälan kostar ingenting.</p>
+            <p class="nx-fineprint">Vi hör av oss inom 24 timmar. Ingen bindningstid, och att skicka in en intresseanmälan kostar ingenting.</p>
             <p class="ok-msg" id="lead-msg" role="status" aria-live="polite"></p>
           </form>
 
@@ -493,6 +493,12 @@
       if (tider) extra.push('Tider som passar: ' + tider);
       extra.push('Samtycke till lagring: ja (' + new Date().toISOString().slice(0, 10) + ')');
 
+      /* Varifrån familjen kom. Ligger sist i "message" av samma skäl
+         som raderna ovan: inga nya kolumner, och det syns i adminvyn
+         direkt. Det är det här som avgör vilken kanal som faktiskt
+         ger kunder. */
+      extra.push.apply(extra, NX.källrader());
+
       const fritext = $('#l-msg').value.trim();
       const message = [fritext, extra.join('\n')].filter(Boolean).join('\n\n');
 
@@ -504,12 +510,17 @@
         ? $('#l-subject').value + ': ' + annat
         : ($('#l-subject').value || null);
 
+      /* Läses ut före insert: formuläret nollställs innan mätningen
+         hinner skickas, och då rapporterades varje anmälan som
+         "ej angiven" årskurs. */
+      const årskurs = $('#l-grade').value || null;
+
       knapp.setAttribute('aria-busy', 'true');
       const { error } = await supa.from('leads').insert({
         parent_name: namn,
         email: epost,
         child_name: $('#l-child').value.trim() || null,
-        grade: $('#l-grade').value || null,
+        grade: årskurs,
         subject: ämnesval,
         tjanst: tjanstVal ? tjanstVal.varde() : NXTjanster.standard(),
         message: message || null
@@ -519,6 +530,11 @@
       if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }
       leadForm.reset();
       säg(msg, t('tackIntresse', { e: epost }), true);
+      NX.händelse('intresseanmalan', {
+        kanal: NX.källa().kanal,
+        kampanj: NX.källa().kampanj || 'ingen',
+        arskurs: årskurs || 'ej angiven'
+      });
     });
   }
 

@@ -14,7 +14,11 @@ hittar de inte varandra.
 | `nextrum-app.js` | Delad kod (inloggning, kalender, felmeddelanden). |
 | `nextrum-arbetsyta.js` / `.css` | Hälsningsblocket, flikarna, bokningen, veckorutnätet. |
 | `nextrum-admin.js` | Bara adminvyn. |
+<<<<<<< HEAD
 | `schema.sql` → … → `schema-v16.sql` | Databasen. Kör i nummerordning. |
+=======
+| `schema.sql` → … → `schema-v17.sql` | Databasen. Kör i nummerordning. |
+>>>>>>> origin/claude/charming-pasteur-ayz1kd
 
 ---
 
@@ -22,18 +26,29 @@ hittar de inte varandra.
 
 Supabase → **SQL Editor** → New query. Klistra in **en fil i taget**, i
 nummerordning, och tryck Run mellan varje: `schema.sql`, `schema-v2.sql`,
+<<<<<<< HEAD
 … fram till `schema-v16.sql`.
+=======
+… fram till `schema-v17.sql`.
+>>>>>>> origin/claude/charming-pasteur-ayz1kd
 
 Kör du dem i fel ordning får du fel om saknade tabeller. Kör om
 `schema.sql` bara om du vill börja om från noll, den rensar tabellerna
 först.
 
+<<<<<<< HEAD
 **`schema-v16.sql` är den senaste.** De sista behövs så här:
+=======
+**`schema-v17.sql` är den senaste.** Stannar du för tidigt:
+>>>>>>> origin/claude/charming-pasteur-ayz1kd
 
 - Utan `schema-v13.sql` fungerar sidan, men nyckeltalen saknas, statusarna
   går inte att ändra och anteckningarna går inte att spara.
 - Utan `schema-v14.sql` fungerar allt utom Matchning, som säger till att
   filen saknas.
+- Utan `schema-v17.sql` sparas intresseanmälningarna som vanligt, men
+  notismejlet uteblir: funktionen hittar ingen hemlighet att jämföra
+  webhookens header mot och svarar 503. Se `DEPLOY-EPOST.md`.
 
 Vyerna säger vilken fil som fattas i stället för att visa nollor.
 
