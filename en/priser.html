@@ -68,14 +68,16 @@
   "description": "One hourly rate whatever the subject. It covers matching, the study plan, booking, administration and a report after every session.",
   "provider": {
     "@type": "Organization",
+    "@id": "https://nextrum.se/#org",
     "name": "Nextrum",
     "url": "https://nextrum.se/",
     "email": "info@nextrum.se"
   },
-  "areaServed": {
-    "@type": "Country",
-    "name": "Sweden"
-  },
+  "areaServed": [
+    { "@type": "City", "name": "Stockholm" },
+    { "@type": "AdministrativeArea", "name": "Stockholms län" },
+    { "@type": "Country", "name": "Sweden" }
+  ],
   "offers": {
     "@type": "Offer",
     "url": "https://nextrum.se/en/priser",

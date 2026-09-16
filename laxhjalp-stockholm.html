@@ -7,34 +7,37 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
-<title>Läxhjälp i Stockholm — hemma hos er eller online | Nextrum</title>
-<meta name="description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er eller online, 379 kr i timmen, ingen bindningstid. Studieplan och rapport efter varje pass.">
+<title>Läxhjälp i Stockholm med personlig studiehjälpare — Nextrum</title>
+<meta name="description" content="Läxhjälp i Stockholm med en personlig studiehjälpare, hemma hos er, på biblioteket eller online. Matte, svenska, engelska och NO för grundskola och gymnasium. 379 kr i timmen, ingen bindningstid.">
 <link rel="canonical" href="https://nextrum.se/laxhjalp-stockholm">
-<!-- Sidan finns bara på svenska. Ingen hreflang="en" här: att peka ut
-     en engelsk version som inte finns är sämre än att inte peka alls. -->
+
+<!-- Sidan finns bara på svenska, med flit: den är skriven för en
+     förälder som söker "läxhjälp Stockholm" på svenska. Därför
+     pekar hreflang sv och x-default hit, och det finns ingen
+     en-alternativ att ange. Språkväljaren i huvudet går till
+     startsidan på engelska, eftersom det är närmaste sida som
+     faktiskt finns. -->
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-stockholm">
 <link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-stockholm">
 <meta name="theme-color" content="#FBFAF8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
-<meta name="geo.region" content="SE-AB">
-<meta name="geo.placename" content="Stockholm">
 
 <!-- delning -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="sv_SE">
-<meta property="og:title" content="Läxhjälp i Stockholm — hemma hos er eller online | Nextrum">
-<meta property="og:description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er eller online, 379 kr i timmen, ingen bindningstid. Studieplan och rapport efter varje pass.">
+<meta property="og:title" content="Läxhjälp i Stockholm med personlig studiehjälpare — Nextrum">
+<meta property="og:description" content="Läxhjälp i Stockholm med en personlig studiehjälpare, hemma hos er, på biblioteket eller online. Matte, svenska, engelska och NO för grundskola och gymnasium.">
 <meta property="og:url" content="https://nextrum.se/laxhjalp-stockholm">
-<meta property="og:image" content="https://nextrum.se/bilder/05-av-unga-for-unga-1280.jpg">
+<meta property="og:image" content="https://nextrum.se/bilder/01-en-till-en-1280.jpg">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
-<meta property="og:image:alt" content="Fyra unga studiehjälpare sitter runt ett bord och arbetar tillsammans i ett ljust rum.">
+<meta property="og:image:alt" content="En studiehjälpare pekar med pennan på en uppgift i elevens räknebok och förklarar.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Läxhjälp i Stockholm — hemma hos er eller online | Nextrum">
-<meta name="twitter:description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er eller online, 379 kr i timmen, ingen bindningstid. Studieplan och rapport efter varje pass.">
-<meta name="twitter:image" content="https://nextrum.se/bilder/05-av-unga-for-unga-1280.jpg">
+<meta name="twitter:title" content="Läxhjälp i Stockholm med personlig studiehjälpare — Nextrum">
+<meta name="twitter:description" content="Läxhjälp i Stockholm med en personlig studiehjälpare, hemma hos er, på biblioteket eller online. Matte, svenska, engelska och NO för grundskola och gymnasium.">
+<meta name="twitter:image" content="https://nextrum.se/bilder/01-en-till-en-1280.jpg">
 
 <link rel="stylesheet" href="nextrum-typsnitt.css">
 
@@ -42,23 +45,156 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css">
 <link rel="stylesheet" href="nextrum-cinema.css">
+
+<!-- Tjänsten, med orten i sig.
+
+     Organisationen och webbplatsen beskrivs på startsidan; här
+     beskrivs bara tjänsten, och den pekar tillbaka på samma
+     organisations-id så att Google förstår att det är ett och
+     samma företag och inte två.
+
+     areaServed är det som gör den här sidan lokal. Kommunerna är
+     de vi faktiskt åtar oss att åka till — lägg inte till en
+     kommun här förrän det finns en studiehjälpare som kan ta ett
+     pass där, eftersom en träff ni inte kan leverera på är värre
+     än ingen träff.
+
+     SIFFRAN ÄR EN RESERV, inte källan. Priset bor i
+     nextrum-config.js och initPris() skriver om det här blocket
+     vid sidladdning — samma mekanik som på prissidan, därav
+     samma id och samma form på offers. -->
+<script type="application/ld+json" id="pris-schema">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Läxhjälp",
+  "name": "Läxhjälp i Stockholm med personlig studiehjälpare",
+  "description": "Personlig läxhjälp i Stockholm med en ung studiehjälpare som nyligen läst samma kurser. Passen hålls hemma hos er, på ett bibliotek eller online. Ett timpris oavsett ämne, ingen bindningstid.",
+  "url": "https://nextrum.se/laxhjalp-stockholm",
+  "provider": {
+    "@type": "Organization",
+    "@id": "https://nextrum.se/#org",
+    "name": "Nextrum",
+    "url": "https://nextrum.se/",
+    "email": "info@nextrum.se"
+  },
+  "areaServed": [
+    { "@type": "City", "name": "Stockholm" },
+    { "@type": "AdministrativeArea", "name": "Stockholms län" },
+    { "@type": "City", "name": "Solna" },
+    { "@type": "City", "name": "Sundbyberg" },
+    { "@type": "City", "name": "Nacka" },
+    { "@type": "City", "name": "Lidingö" },
+    { "@type": "City", "name": "Danderyd" },
+    { "@type": "City", "name": "Täby" },
+    { "@type": "City", "name": "Sollentuna" },
+    { "@type": "City", "name": "Huddinge" }
+  ],
+  "availableLanguage": ["sv", "en"],
+  "offers": {
+    "@type": "Offer",
+    "url": "https://nextrum.se/priser",
+    "priceCurrency": "SEK",
+    "price": "379",
+    "availability": "https://schema.org/InStock",
+    "priceSpecification": {
+      "@type": "UnitPriceSpecification",
+      "priceCurrency": "SEK",
+      "price": "379",
+      "unitCode": "HUR",
+      "referenceQuantity": {
+        "@type": "QuantitativeValue",
+        "value": 1,
+        "unitCode": "HUR"
+      }
+    }
+  }
+}
+</script>
+
+<!-- Frågorna nedanför är samma frågor som står i sidans FAQ-del.
+     Står det olika i de två är det HTML:en som gäller för läsaren
+     och det här som gäller för Google, och då ljuger en av dem.
+     Ändrar du i den ena, ändra i den andra. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Nextrum", "item": "https://nextrum.se/" },
+        { "@type": "ListItem", "position": 2, "name": "Läxhjälp i Stockholm", "item": "https://nextrum.se/laxhjalp-stockholm" }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "url": "https://nextrum.se/laxhjalp-stockholm",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Var i Stockholm håller ni läxhjälpen?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Passen hålls där det passar er: hemma vid köksbordet, på ett stadsdelsbibliotek eller online. Vi matchar i första hand med en studiehjälpare som bor nära er, så att restiden inte äter upp tiden som skulle gått till plugget. Finns ingen i närheten just nu föreslår vi online i stället för att tacka nej."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Vad kostar läxhjälp i Stockholm?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "379 kronor i timmen, oavsett ämne och oavsett var i Stockholm passet hålls. Vi tar inget extra för restid, ingen anmälningsavgift och ingen månadsavgift. Sitter ett syskon med i samma pass kostar det 69 kronor extra i timmen."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Hur snabbt kan vi komma igång?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ni skickar en intresseanmälan, vi hör av oss inom ett par dagar och går igenom behovet. Därefter väljer vi ut en studiehjälpare och föreslår en första tid. Vanligtvis sitter ni med någon inom en vecka, snabbare om det brådskar inför ett prov."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Vilka årskurser hjälper ni?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Från mellanstadiet upp till gymnasiets sista år. Vanligast är matematik i högstadiet och gymnasiets Matte 1 till 4, men vi förmedlar hjälp i svenska, engelska, NO-ämnen, SO-ämnen, moderna språk och programmering."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Går det att få hjälp inför nationella proven?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ja. Många hör av sig några veckor innan och bokar en serie pass fram till provet. Eftersom det inte finns någon bindningstid kan ni boka just den perioden och sedan pausa."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Får vi RUT-avdrag på läxhjälpen?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Nej. RUT-avdraget för läxhjälp togs bort 2015, så priset ni ser är det ni betalar. Det gäller alla läxhjälpsföretag i Sverige, inte bara oss."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
 <!-- ==========================================================
-     HEADER — identisk markup på alla fyra publika sidor.
-     Ändrar du här måste du ändra i index.html, priser.html,
-     faq.html och bli-studiehjalpare.html. Länkarna skrivs som
-     "index.html#hur"; på startsidan kortar nextrum-app.js ner dem
-     till rena ankare så att man scrollar istället för att ladda om.
+     HEADER — identisk markup på alla publika sidor.
+     Ändrar du här måste du ändra på de andra också.
      ========================================================== -->
 <a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
 
 <header class="hdr" id="hdr">
   <div class="wrap nav">
-    <!-- Språkval, övre vänstra hörnet. Det aktiva språket är ett
-         <b>, inte en länk: en länk till sidan man redan står på ser
-         ut som ett val men gör ingenting. -->
     <div class="sprakval" role="group" aria-label="Språk / Language">
       <b lang="sv" aria-current="true">SV</b>
       <i aria-hidden="true"></i>
@@ -81,11 +217,8 @@
     </nav>
 
     <div class="nav-actions">
-      <!-- href pekar på föräldravyn så att länken fungerar utan JS.
-           Med JS öppnas vyväljaren istället — utom när man redan är
-           inloggad, då skriver NX.märkInloggad() om länken. -->
       <a class="login" href="/foralder" id="login-link" data-vagval>Logga in</a>
-      <span class="nx-magnet">
+      <span class="nx-magnet" data-magnet>
         <a class="btn btn-primary btn-sm" href="/intresseanmalan">Intresseanmälan</a>
       </span>
     </div>
@@ -117,86 +250,149 @@
 
 <section class="wrap nx-page-hero">
   <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
-  <span class="nx-et acc" data-stig style="margin-top:22px">Läxhjälp i Stockholm</span>
-  <h1 class="nx-d1" data-avslöj>Läxhjälp i<br><em>Stockholm.</em></h1>
-  <p class="nx-lede" data-stig data-fördröj="1">Vi matchar elever i Stockholm med en studiehjälpare som nyligen läst samma kurser själv. Passen sker hemma hos er eller online.</p>
-  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#8E8C84">
-    <img class="nx-img" src="bilder/05-av-unga-for-unga-1280.jpg"
-         srcset="bilder/05-av-unga-for-unga-640.jpg 640w, bilder/05-av-unga-for-unga-960.jpg 960w, bilder/05-av-unga-for-unga-1280.jpg 1280w, bilder/05-av-unga-for-unga-1600.jpg 1600w, bilder/05-av-unga-for-unga-1920.jpg 1920w"
+  <span class="nx-et acc" data-stig style="margin-top:22px">Stockholm</span>
+  <h1 class="nx-d1" data-avslöj>Läxhjälp i Stockholm,<br><em>av någon som nyss satt där.</em></h1>
+  <p class="nx-lede" data-stig data-fördröj="1">Vi matchar er med en studiehjälpare som läst samma kurser för något år sedan. Passen hålls hemma hos er, på biblioteket eller online — i hela Stockholm och närmaste kranskommuner. <span data-stat="pris">379 kr</span> i timmen, ingen bindningstid.</p>
+  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#8B8069">
+    <img class="nx-img" src="bilder/01-en-till-en-1280.jpg"
+         srcset="bilder/01-en-till-en-640.jpg 640w, bilder/01-en-till-en-960.jpg 960w, bilder/01-en-till-en-1280.jpg 1280w, bilder/01-en-till-en-1600.jpg 1600w, bilder/01-en-till-en-1920.jpg 1920w"
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
-         style="object-position:60% 42%" alt="Fyra unga studiehjälpare sitter runt ett bord och arbetar tillsammans i ett ljust rum.">
+         alt="En studiehjälpare pekar med pennan på en uppgift i elevens räknebok och förklarar.">
   </figure>
 </section>
 
 <section class="sec wrap">
   <div class="nx-two">
     <div class="nx-two-sticky rv">
-      <span class="nx-et acc">Så går det till</span>
-      <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
+      <span class="nx-et acc">Var passen hålls</span>
+      <h2 class="nx-d2" style="margin-top:18px">Köksbordet, biblioteket<br>eller <em>skärmen.</em></h2>
     </div>
     <div class="nx-text rv">
-      <p>Ni skickar in en intresseanmälan och berättar vad eleven behöver hjälp med. Vi går igenom behovet tillsammans med er och väljer sedan ut den studiehjälpare som passar bäst — utifrån ämne, nivå och person. Ni bläddrar alltså inte bland profiler: fel match är värre än ingen match.</p>
-      <p>När matchningen är klar låses studievyn upp. Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Rapporten skrivs av studiehjälparen efteråt och beskriver vad ni gick igenom och hur det gick — ett pass räknas som genomfört först när den är skriven.</p>
-      <p>Stockholm är stort, och det är den praktiska frågan som avgör om ett pass blir av på plats eller online. Vi utgår från var eleven bor när vi matchar, så att resan dit är rimlig för studiehjälparen varje vecka — inte bara första gången.</p>
+        <p>De flesta familjer vi möter i Stockholm väljer att ha passen hemma. Eleven slipper resa efter en full skoldag, materialet ligger redan framme och föräldern hör hur det går utan att behöva fråga efteråt.</p>
+        <p>Vill ni hellre ha en neutral plats fungerar stadsdelsbiblioteken bra, och de finns i nästan varje område. Online går lika bra för de flesta ämnen, och är det självklara valet när rätt person råkar bo i fel ände av staden.</p>
+        <p>Ni väljer format pass för pass. Ett pass hemma i veckan och ett online inför provet är ett helt vanligt upplägg, och kostar likadant.</p>
+        <a class="nx-lank" href="/sa-fungerar-nextrum">Så fungerar det, steg för steg <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
     </div>
   </div>
 </section>
 
-<section class="sec wrap">
-  <div class="rv">
-    <span class="nx-et acc">Området</span>
-    <h2 class="nx-d2" style="margin-top:18px">Var vi matchar elever</h2>
-    <div class="nx-omr-chips" style="margin-top:clamp(20px,2.4vw,28px)"><span>Södermalm</span><span>Hammarby Sjöstad</span><span>Vasastan</span><span>Östermalm</span><span>Kungsholmen</span><span>Norrmalm</span><span>Årsta</span><span>Enskede</span><span>Farsta</span><span>Hägersten</span><span>Liljeholmen</span><span>Bromma</span><span>Solna</span><span>Nacka</span></div>
-    <p class="xsmall" style="margin-top:22px;max-width:62ch">
-      Om ett pass sker hemma hos er eller online avgörs av matchningen, inte av adressen.
-      Hittar vi ingen studiehjälpare som kan ta sig till er varje vecka börjar ni online —
-      samma person, samma studieplan, samma rapport efteråt.
-    </p>
+<section class="nx-surface">
+  <div class="sec wrap">
+    <div class="nx-head split" data-stig>
+      <div><span class="nx-et acc">Så går det till</span>
+        <h2 class="nx-d2" style="margin-top:18px">Från anmälan till<br>första <em>passet.</em></h2></div>
+      <div class="nx-head-aside"><p class="nx-lede">Ni bläddrar inte i en katalog. Vi går igenom behovet och väljer ut en person, för fel match är värre än ingen match.</p></div>
+    </div>
+    <div class="nx-trio">
+      <div class="nx-trio-kort" data-stig data-fördröj="1">
+        <span class="nx-trio-et">Steg ett</span>
+        <b>Ni berättar vad som behövs</b>
+        <p>Ämne, årskurs, var i Stockholm ni bor och vilka tider som fungerar. Att skicka in är gratis och binder er inte vid något.</p>
+      </div>
+      <div class="nx-trio-kort" data-stig data-fördröj="2">
+        <span class="nx-trio-et">Steg två</span>
+        <b>Vi matchar, oftast nära er</b>
+        <p>Vi väljer studiehjälpare utifrån ämne, nivå och personlighet — och utifrån vem som faktiskt tar sig till er utan en timmes resa.</p>
+      </div>
+      <div class="nx-trio-kort" data-stig data-fördröj="3">
+        <span class="nx-trio-et">Steg tre</span>
+        <b>Första passet bokas</b>
+        <p>Ni väljer tid bland studiehjälparens lediga timmar. Efter passet får ni en rapport om vad ni gick igenom och hur det gick.</p>
+      </div>
+    </div>
   </div>
 </section>
 
 <section class="sec wrap">
   <div class="nx-two">
     <div class="nx-two-sticky rv">
-      <span class="nx-et acc">Priset</span>
-      <h2 class="nx-d2" style="margin-top:18px">379 kr<br>i timmen.</h2>
+      <span class="nx-et acc">Områden</span>
+      <h2 class="nx-d2" style="margin-top:18px">Innerstaden, söderort,<br>västerort och <em>norrort.</em></h2>
     </div>
     <div class="nx-text rv">
-      <p>Samma timpris oavsett ämne och oavsett var i Stockholm passet hålls. Varje barn utöver det första kostar 69 kr i timmen, så två barn en timme blir 448 kr och tre barn 517 kr.</p>
-      <p>Ingen bindningstid och ingen månadsavgift. Studieplanen, matchningen och rapporten efter varje pass ingår i timpriset — det är inga tillval. All betalning går genom Nextrum, samlat på ett ställe.</p>
-      <p><a href="/priser">Se hela prissidan</a> för vad som ingår och hur faktureringen fungerar.</p>
+        <p>Vi tar pass i hela Stockholms stad och i kranskommunerna runt omkring. I innerstaden är det oftast <b>Södermalm</b>, <b>Vasastan</b>, <b>Östermalm</b>, <b>Kungsholmen</b> och <b>Norrmalm</b>. I söderort <b>Hammarby Sjöstad</b>, <b>Årsta</b>, <b>Liljeholmen</b>, <b>Enskede</b>, <b>Farsta</b> och <b>Skarpnäck</b>.</p>
+        <p>I västerort <b>Bromma</b>, <b>Vällingby</b> och <b>Hässelby</b>. Norrut <b>Solna</b>, <b>Sundbyberg</b>, <b>Sollentuna</b>, <b>Täby</b>, <b>Danderyd</b> och <b>Lidingö</b>. Söder om staden <b>Nacka</b>, <b>Huddinge</b>, <b>Tyresö</b> och <b>Haninge</b>.</p>
+        <p>Ett ärligt förbehåll: vi växer fortfarande, och vi har inte alltid någon ledig i varje område varje vecka. Bor ni i ett område där vi just då saknar rätt person säger vi det rakt ut och föreslår online i stället. Vi skickar hellre en bra match över nätet än en halvbra match som råkar bo på rätt gata.</p>
+    </div>
+  </div>
+</section>
+
+<section class="nx-surface">
+  <div class="sec wrap">
+    <div class="nx-head split" data-stig>
+      <div><span class="nx-et acc">Ämnen</span>
+        <h2 class="nx-d2" style="margin-top:18px">Mellanstadiet upp<br>till <em>gymnasiet.</em></h2></div>
+      <div class="nx-head-aside"><p class="nx-lede">Samma timpris oavsett ämne. Matematik kostar inte mer än svenska, och en svår kurs kostar inte mer än en lätt.</p></div>
+    </div>
+    <ul class="nx-list rv">
+      <li><em>01</em><div><b>Matematik</b><p>Vårt vanligaste ämne. Högstadiets matte, och gymnasiets Matte 1 till 4 — inklusive derivata, integraler och allt annat som brukar få det att stanna.</p></div></li>
+      <li><em>02</em><div><b>Svenska och engelska</b><p>Läsförståelse, uppsatser, grammatik och muntliga redovisningar. Också för elever med svenska som andraspråk.</p></div></li>
+      <li><em>03</em><div><b>NO och SO</b><p>Fysik, kemi och biologi, samt historia, religion och samhällskunskap. Vanligt inför prov och inlämningar.</p></div></li>
+      <li><em>04</em><div><b>Moderna språk och programmering</b><p>Spanska, tyska och franska, och programmering för den som fastnat i gymnasiets kurser. Fråga i anmälan så säger vi om vi har rätt person.</p></div></li>
+    </ul>
+    <p class="nx-note" style="margin-top:22px">Nationella prov och inför-provet-pass är en egen liten säsong hos oss. Hör av er i god tid, så hinner vi matcha rätt person i stället för den som råkar vara ledig.</p>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="nx-two">
+    <div class="nx-two-sticky rv">
+      <span class="nx-et acc">Pris</span>
+      <h2 class="nx-d2" style="margin-top:18px"><span data-stat="pris">379 kr</span> i timmen.<br>Ingen restidsavgift.</h2>
+    </div>
+    <div class="nx-text rv">
+        <p>Samma pris oavsett var i Stockholm passet hålls. Vi lägger inte på för att någon åker till Farsta i stället för till Vasastan, och vi tar inget för resan.</p>
+        <p>Ingen anmälningsavgift, ingen månadsavgift och ingen bindningstid. Ni betalar i efterskott för de pass som faktiskt hållits — ett pass som aldrig blev av faktureras aldrig.</p>
+        <p>Sitter ett syskon med i samma pass kostar det <span data-stat="extra-barn">69 kr</span> extra i timmen, inte ett helt nytt pass.</p>
+        <a class="nx-lank" href="/priser">Se hela prislistan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
     </div>
   </div>
 </section>
 
 <section class="sec wrap">
   <div class="rv">
-    <span class="nx-et acc">Vanliga frågor</span>
-    <h2 class="nx-d2" style="margin-top:18px">Läxhjälp i Stockholm — det ni brukar undra</h2>
-    <div class="faq" style="margin-top:clamp(24px,3vw,34px)">
+    <div class="nx-faq-group">
+      <span class="eyebrow acc">Vanliga frågor</span>
+      <h2 class="d3" style="margin:0 0 22px">Om läxhjälp i Stockholm</h2>
+      <div class="faq">
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Vilka delar av Stockholm tar ni pass i?<span class="pm"></span></button>
-          <div class="faq-a"><p>Vi matchar elever i hela Stockholms stad och i närkommunerna. Om det ska ske hemma hos er beror på om vi hittar en studiehjälpare som kan ta sig dit med rimlig restid. Gör vi inte det börjar ni online, och passen fungerar likadant i övrigt.</p></div>
+          <button class="faq-q" aria-expanded="false">Var i Stockholm håller ni läxhjälpen?<span class="pm"></span></button>
+          <div class="faq-a"><p>Passen hålls där det passar er: hemma vid köksbordet, på ett stadsdelsbibliotek eller online. Vi matchar i första hand med en studiehjälpare som bor nära er, så att restiden inte äter upp tiden som skulle gått till plugget. Finns ingen i närheten just nu föreslår vi online i stället för att tacka nej.</p></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Kostar det mer om vi bor långt från centrum?<span class="pm"></span></button>
-          <div class="faq-a"><p>Nej. Timpriset är 379 kr oavsett var i Stockholm passet hålls och oavsett ämne. Varje barn utöver det första kostar 69 kr i timmen.</p></div>
+          <button class="faq-q" aria-expanded="false">Vad kostar läxhjälp i Stockholm?<span class="pm"></span></button>
+          <div class="faq-a"><p><span data-stat="pris">379 kr</span> i timmen, oavsett ämne och oavsett var i Stockholm passet hålls. Vi tar inget extra för restid, ingen anmälningsavgift och ingen månadsavgift. Sitter ett syskon med i samma pass kostar det <span data-stat="extra-barn">69 kr</span> extra i timmen.</p></div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Kan vi byta mellan på plats och online?<span class="pm"></span></button>
-          <div class="faq-a"><p>Ja. Format väljs per pass när ni bokar, så ni kan ta ett pass hemma i veckan och ett online veckan efter utan att ändra något i avtalet — det finns inget avtal att ändra.</p></div>
+          <button class="faq-q" aria-expanded="false">Hur snabbt kan vi komma igång?<span class="pm"></span></button>
+          <div class="faq-a"><p>Ni skickar en intresseanmälan, vi hör av oss inom ett par dagar och går igenom behovet. Därefter väljer vi ut en studiehjälpare och föreslår en första tid. Vanligtvis sitter ni med någon inom en vecka, snabbare om det brådskar inför ett prov.</p></div>
         </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vilka årskurser hjälper ni?<span class="pm"></span></button>
+          <div class="faq-a"><p>Från mellanstadiet upp till gymnasiets sista år. Vanligast är matematik i högstadiet och gymnasiets Matte 1 till 4, men vi förmedlar hjälp i svenska, engelska, NO-ämnen, SO-ämnen, moderna språk och programmering.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Går det att få hjälp inför nationella proven?<span class="pm"></span></button>
+          <div class="faq-a"><p>Ja. Många hör av sig några veckor innan och bokar en serie pass fram till provet. Eftersom det inte finns någon bindningstid kan ni boka just den perioden och sedan pausa.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Får vi RUT-avdrag på läxhjälpen?<span class="pm"></span></button>
+          <div class="faq-a"><p>Nej. RUT-avdraget för läxhjälp togs bort 2015, så priset ni ser är det ni betalar. Det gäller alla läxhjälpsföretag i Sverige, inte bara oss.</p></div>
+        </div>
+      </div>
+      <p class="nx-note" style="margin-top:22px">Fler frågor finns samlade i <a href="/faq">FAQ:n</a>. Hittar ni inte svaret, <a href="/faq#kontakt">skriv till oss</a> så svarar vi.</p>
     </div>
-    <p class="xsmall" style="margin-top:26px">
-      Fler frågor och svar finns på <a href="/faq">FAQ-sidan</a>.
-    </p>
   </div>
 </section>
 
+<!-- Korslänkarna till stadsdelssidorna. Den här sidan är handskriven
+     och genereras inte, så blocket står i markupen — men korten
+     hämtas ur samma lista som generatorn använder, så en ny stadsdel
+     bara behöver läggas till på ett ställe. -->
 <section class="sec wrap">
   <div class="rv">
     <span class="nx-et acc">Områden</span>
-    <h2 class="nx-d2" style="margin-top:18px">Läxhjälp i resten av Stockholm</h2>
+    <h2 class="nx-d2" style="margin-top:18px">Läxhjälp i din stadsdel</h2>
     <div class="nx-omr-rutnat" style="margin-top:clamp(24px,3vw,34px)">
       <a class="nx-omr-kort" href="/laxhjalp-sodermalm">
         <b>Läxhjälp på Södermalm</b>
@@ -236,18 +432,19 @@
   <div class="nx-wrap-bred">
     <div class="nx-final-inner">
       <span class="nx-et" data-stig>Nästa steg</span>
-      <h2 class="nx-final-rubrik" data-avslöj>Läxhjälp i Stockholm, <em>när ni vill</em>.</h2>
-      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:24px">Berätta vad eleven behöver hjälp med,<br>så återkommer vi med en matchning.</p>
+      <h2 class="nx-final-rubrik" data-avslöj>Berätta vad ni <em>behöver</em>.</h2>
+      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:24px">Vi hör av oss inom ett par dagar och går igenom
+        behovet innan ni bestämmer något.</p>
 
       <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
-        <span class="nx-magnet">
+        <span class="nx-magnet" data-magnet>
           <a class="btn btn-primary btn-lg" href="/intresseanmalan">
             Skicka intresseanmälan
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
           </a>
         </span>
-        <a class="btn btn-ghost btn-lg" href="/sa-fungerar-nextrum">
-          Så fungerar Nextrum
+        <a class="btn btn-ghost btn-lg" href="/priser">
+          Se priserna
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a>
       </div>
@@ -261,7 +458,6 @@
 </section>
 
 </main>
-
 
 <!-- ==========================================================
      FOOTER — identisk på alla publika sidor, se kommentaren
@@ -289,9 +485,9 @@
         <ul>
           <li><a href="/var-ide">Vår idé</a></li>
           <li><a href="/sa-fungerar-nextrum">Så fungerar Nextrum</a></li>
+          <li><a href="/laxhjalp-stockholm">Läxhjälp i Stockholm</a></li>
           <li><a href="/#studiehjalpare">Studiehjälpare</a></li>
           <li><a href="/priser">Priser</a></li>
-          <li><a href="/laxhjalp-stockholm">Läxhjälp i Stockholm</a></li>
         </ul>
       </nav>
       <nav aria-labelledby="ftr-fordig">
@@ -412,67 +608,6 @@
   NX.initPris();
   NX.märkInloggad();
 })();
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Service",
-      "@id": "https://nextrum.se/laxhjalp-stockholm#tjanst",
-      "name": "Läxhjälp i Stockholm",
-      "serviceType": "Läxhjälp",
-      "description": "Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er eller online, 379 kr i timmen, ingen bindningstid. Studieplan och rapport efter varje pass.",
-      "provider": { "@id": "https://nextrum.se/#org" },
-      "areaServed": [
-        {"@type":"Place","name":"Stockholm"},
-          {"@type":"Place","name":"Södermalm"},
-          {"@type":"Place","name":"Hammarby Sjöstad"},
-          {"@type":"Place","name":"Vasastan"},
-          {"@type":"Place","name":"Östermalm"},
-          {"@type":"Place","name":"Kungsholmen"},
-          {"@type":"Place","name":"Norrmalm"},
-          {"@type":"Place","name":"Årsta"},
-          {"@type":"Place","name":"Enskede"},
-          {"@type":"Place","name":"Farsta"},
-          {"@type":"Place","name":"Hägersten"},
-          {"@type":"Place","name":"Liljeholmen"},
-          {"@type":"Place","name":"Bromma"},
-          {"@type":"Place","name":"Solna"},
-          {"@type":"Place","name":"Nacka"}
-      ],
-      "availableChannel": [
-        {"@type":"ServiceChannel","name":"På plats","serviceLocation":{"@type":"Place","name":"Stockholm"}},
-        {"@type":"ServiceChannel","name":"Online","serviceUrl":"https://nextrum.se/intresseanmalan"}
-      ],
-      "offers": {
-        "@type": "Offer",
-        "priceCurrency": "SEK",
-        "price": "379",
-        "unitText": "timme",
-        "url": "https://nextrum.se/priser",
-        "availability": "https://schema.org/InStock"
-      },
-      "audience": {"@type":"EducationalAudience","educationalRole":"student"}
-    },
-    {
-      "@type": "FAQPage",
-      "@id": "https://nextrum.se/laxhjalp-stockholm#faq",
-      "mainEntity": [
-        {"@type":"Question","name":"Vilka delar av Stockholm tar ni pass i?","acceptedAnswer":{"@type":"Answer","text":"Vi matchar elever i hela Stockholms stad och i närkommunerna. Om det ska ske hemma hos er beror på om vi hittar en studiehjälpare som kan ta sig dit med rimlig restid. Gör vi inte det börjar ni online, och passen fungerar likadant i övrigt."}},
-        {"@type":"Question","name":"Kostar det mer om vi bor långt från centrum?","acceptedAnswer":{"@type":"Answer","text":"Nej. Timpriset är 379 kr oavsett var i Stockholm passet hålls och oavsett ämne. Varje barn utöver det första kostar 69 kr i timmen."}},
-        {"@type":"Question","name":"Kan vi byta mellan på plats och online?","acceptedAnswer":{"@type":"Answer","text":"Ja. Format väljs per pass när ni bokar, så ni kan ta ett pass hemma i veckan och ett online veckan efter utan att ändra något i avtalet — det finns inget avtal att ändra."}}
-      ]
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type":"ListItem","position":1,"name":"Nextrum","item":"https://nextrum.se/"},
-        {"@type":"ListItem","position":2,"name":"Läxhjälp i Stockholm","item":"https://nextrum.se/laxhjalp-stockholm"}
-      ]
-    }
-  ]
-}
 </script>
 </body>
 </html>

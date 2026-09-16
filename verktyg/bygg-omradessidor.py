@@ -54,6 +54,11 @@ EXTRA_BARN = '69 kr'
 
 OMRADEN = [
     {
+        # HANDSKRIVEN, GENERERAS INTE. Posten står kvar för att
+        # stadsdelssidornas korslänkar ska kunna peka hit och hämta
+        # namn och stadsdelslista härifrån — men main() hoppar över
+        # den, se 'handskriven' nedan.
+        'handskriven': True,
         'slug': 'laxhjalp-stockholm',
         'namn': 'Stockholm',
         # i_namn bär prepositionen, för den skiljer sig: "i Farsta" men
@@ -703,6 +708,9 @@ def main():
     if not os.path.exists(SKAL):
         sys.exit(f'hittar inte skalsidan {SKAL}')
     for o in OMRADEN:
+        if o.get('handskriven'):
+            print(f'  hoppar över {o["slug"]}.html (handskriven)')
+            continue
         p = os.path.join(ROT, o['slug'] + '.html')
         open(p, 'w', encoding='utf-8').write(sida(o))
         print(f'  skrev {o["slug"]}.html')
