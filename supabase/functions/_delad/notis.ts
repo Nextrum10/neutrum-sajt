@@ -100,10 +100,16 @@ export async function hemlighetOk(req: Request, klient: SupabaseClient): Promise
 const FRAN = 'Nextrum <no-reply@nextrum.se>';
 const RESERV_FRAN = 'Nextrum <onboarding@resend.dev>';
 
+// Resends testavsändare når BARA kontots egen adress. Till en familj
+// eller en studiehjälpare går reserven aldrig fram, och försöket gömde
+// bara det egentliga felet — att vår egen domän inte är verifierad.
+// Reserven används därför bara när mottagaren är vi.
+const RESERV_NAR = ['info@nextrum.se'];
+
 /**
  * Skickar via Resend, med fallback till deras testdomän när vår
- * egen inte är verifierad (403). Allt annat är ett riktigt fel och
- * ska synas som det.
+ * egen inte är verifierad (403) och mejlet går till Nextrum självt.
+ * Allt annat är ett riktigt fel och ska synas som det.
  */
 export async function skickaMejl(o: {
   till: string; amne: string; text: string; html: string; svaraTill?: string;
@@ -127,6 +133,10 @@ export async function skickaMejl(o: {
   const svar = await skicka(FRAN);
   if (svar.status === 403) {
     const orsak = await svar.text();
+    if (!RESERV_NAR.includes(o.till.trim().toLowerCase())) {
+      return json({ error: 'Resend vägrar skicka från ' + FRAN + ', och reservavsändaren når inte '
+        + 'den här mottagaren. Ingenting skickades.', orsak }, 502);
+    }
     const reserv = await skicka(RESERV_FRAN);
     if (reserv.ok) return json({ skickat: true, avsandare: RESERV_FRAN, notering: orsak }, 200);
     return json({ error: 'Kunde inte skicka: ' + (await reserv.text()) }, 502);
