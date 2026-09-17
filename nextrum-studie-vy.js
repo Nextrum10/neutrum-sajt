@@ -871,18 +871,11 @@
   /* ============================================================
      BOKNINGEN
 
-     Vad som togs bort och varför:
-
-     Förr låg tre rullgardiner (ämne, format, längd) ovanför en
-     månadskalender, och knappen var avstängd tills alla fyra
-     stämde överens. Familjen fick alltså leta efter en ledig timme
-     i en kalender där de flesta dagar var tomma — studiehjälparen
-     jobbar tre kvällar i veckan, inte trettio dagar i månaden.
-
-     Nu räknas de lediga timmarna fram först och visas som knappar.
-     NX.föreslåTider gjorde redan exakt det i studiehjälparvyn; den
-     hade bara aldrig kopplats in här. Månadskalendern finns kvar
-     bakom "Fler tider" för den som vill boka långt fram.
+     Ytan är en skärm: ämne, längd och format som knappar överst,
+     studiehjälparens vecka under, och en rad längst ned med pris och
+     knapp. Det som togs bort på vägen hit var först tre rullgardiner
+     och en månadskalender, sedan fyra numrerade steg — båda gjorde
+     samma sak fel, de gömde veckan bakom något annat.
 
      Själva ritandet ligger i NXArbete.bokning. Det här är kopplingen
      till databasen: vad som hämtas, och vad som skrivs.
