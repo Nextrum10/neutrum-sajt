@@ -135,7 +135,7 @@ Function.
 ### `NOTIS_HEMLIGHET` är avvecklad — ta bort den
 
 Den delade hemligheten ligger nu i tabellen `public.notis_konfig`
-(`schema-v17.sql`), inte i en secret. Funktionen läser den med
+(`supabase/migrations/arkiv/schema-v17.sql`), inte i en secret. Funktionen läser den med
 service_role-nyckeln vid kall start och cachar den sedan.
 
 Secreten `NOTIS_HEMLIGHET` används inte längre av någon kod. **Radera
@@ -160,7 +160,7 @@ precis som för `fortnox_token`.
 
 #### Rotera hemligheten
 
-Hela blocket ligger längst ned i `schema-v17.sql`. Kör det i SQL
+Hela blocket ligger längst ned i `supabase/migrations/arkiv/schema-v17.sql`. Kör det i SQL
 Editor: det byter tabellen och webhookens header i samma transaktion,
 och värdet syns aldrig på skärmen.
 
@@ -180,7 +180,7 @@ Database → Webhooks → Create a new hook:
 
 Webhooken finns redan och heter `ny-intresseanmalan`, med rätt header.
 Sätt den inte för hand igen — använd roteringsblocket i
-`schema-v17.sql`, som skriver både tabellen och headern på en gång.
+`supabase/migrations/arkiv/schema-v17.sql`, som skriver både tabellen och headern på en gång.
 
 ### Varför en webhook och inte ett anrop från formuläret
 
@@ -202,9 +202,9 @@ Skicka en riktig intresseanmälan på nextrum.se. Kom det inget mejl:
   funktionen svarade.
 - `401 Fel eller saknad hemlighet` → headern i webhooken stämmer inte
   med raden i `public.notis_konfig`. Kör roteringsblocket i
-  `schema-v17.sql`, så sätts båda om.
+  `supabase/migrations/arkiv/schema-v17.sql`, så sätts båda om.
 - `503 Hemligheten gick inte att läsa` → tabellen `notis_konfig` är
-  tom eller borta. Kör `schema-v17.sql`.
+  tom eller borta. Kör `supabase/migrations/arkiv/schema-v17.sql`.
 - `502 Resend svarade…` → domänen är inte verifierad än, eller
   nyckeln är fel.
 - Inget alls i loggen → webhooken är inte påslagen, eller lyssnar på

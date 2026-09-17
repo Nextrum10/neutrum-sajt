@@ -14,57 +14,42 @@ hittar de inte varandra.
 | `nextrum-app.js` | Delad kod (inloggning, kalender, felmeddelanden). |
 | `nextrum-arbetsyta.js` / `.css` | Hälsningsblocket, flikarna, bokningen, veckorutnätet. |
 | `nextrum-admin.js` | Bara adminvyn. |
-<<<<<<< HEAD
-| `schema.sql` → … → `schema-v16.sql` | Databasen. Kör i nummerordning. |
-=======
-| `schema.sql` → … → `schema-v17.sql` | Databasen. Kör i nummerordning. |
->>>>>>> origin/claude/charming-pasteur-ayz1kd
+| `supabase/migrations/` | Databasen. Se steg 1. |
 
 ---
 
-## Steg 1 — kör de tre SQL-filerna
+## Steg 1 — databasen
 
-Supabase → **SQL Editor** → New query. Klistra in **en fil i taget**, i
-nummerordning, och tryck Run mellan varje: `schema.sql`, `schema-v2.sql`,
-<<<<<<< HEAD
-… fram till `schema-v16.sql`.
-=======
-… fram till `schema-v17.sql`.
->>>>>>> origin/claude/charming-pasteur-ayz1kd
+**Sedan Fas 3 (september 2026) ligger all SQL i `supabase/migrations/`.**
+Varje fil heter `<version>_<namn>.sql`, där versionen är exakt den som
+står i Supabases migrationstabell (`supabase_migrations.schema_migrations`).
+Filen och databasen säger alltså samma sak om vad som är kört — fråga
+databasen, inte filnamnet:
 
-Kör du dem i fel ordning får du fel om saknade tabeller. Kör om
-`schema.sql` bara om du vill börja om från noll, den rensar tabellerna
-först.
+```sql
+select version, name from supabase_migrations.schema_migrations order by version;
+```
 
-<<<<<<< HEAD
-**`schema-v16.sql` är den senaste.** De sista behövs så här:
-=======
-**`schema-v17.sql` är den senaste.** Stannar du för tidigt:
->>>>>>> origin/claude/charming-pasteur-ayz1kd
+De gamla numrerade filerna, `schema.sql` till `schema-v25.sql`, ligger kvar
+i `supabase/migrations/arkiv/`. `arkiv/README.md` säger vilken version i
+databasen varje fil motsvarar, och vilka som aldrig kördes.
 
-- Utan `schema-v13.sql` fungerar sidan, men nyckeltalen saknas, statusarna
-  går inte att ändra och anteckningarna går inte att spara.
-- Utan `schema-v14.sql` fungerar allt utom Matchning, som säger till att
-  filen saknas.
-- Utan `schema-v17.sql` sparas intresseanmälningarna som vanligt, men
-  notismejlet uteblir: funktionen hittar ingen hemlighet att jämföra
-  webhookens header mot och svarar 503. Se `DEPLOY-EPOST.md`.
+**Ny miljö från noll:** kör arkivets filer i den ordning README:n anger,
+sedan filerna i `supabase/migrations/` i namnordning. Kör aldrig
+`arkiv/schema-v22.sql` — den ersattes av `arkiv/schema-v25.sql`. Och kör om
+`arkiv/schema.sql` bara om du vill börja om från noll: den rensar
+tabellerna först.
 
-Vyerna säger vilken fil som fattas i stället för att visa nollor.
+**Befintlig miljö:** ny SQL skrivs som en ny fil i `supabase/migrations/`
+och körs med Supabases migrationsverktyg, så att den hamnar i tabellen.
+Klistra inte in SQL i SQL Editor utan att den också blir en fil här —
+det var så tre nummer kom att tas två gånger.
 
-`schema-v14.sql` flyttar matchningen från familjen till eleven, så att
-syskon kan ha var sin studiehjälpare. Den är additiv: inga kolumner tas
-bort och de inloggade vyerna fortsätter fungera oförändrat.
-
-`schema-v15.sql` lägger till `gick` och `amne` på lektionsrapporterna,
-så att "hur gick det" blir ett val i stället för fritext.
-
-`schema-v16.sql` stänger två informationsläckor. `is_admin` och
-`ar_matchade` är SECURITY DEFINER och ligger i `public`, vilket betyder
-att PostgREST lade ut dem på `/rest/v1/rpc/`. Vem som helst kunde alltså
-fråga om ett givet konto var admin, utan att vara inloggad. Nu svarar de
-bara om den som frågar, eller om vem som helst om frågaren är admin.
-Den ändrar ingen policy och rör ingen data.
+Några äldre som vyerna märker om de saknas: utan `schema-v13` går
+statusarna inte att ändra i adminvyn, utan `schema-v14` säger Matchning
+att vyn fattas, och utan `schema-v17` uteblir notismejlen (se
+`DEPLOY-EPOST.md`). Vyerna säger vilken fil som fattas i stället för att
+visa nollor.
 
 ## Steg 2 — klistra in nycklarna
 
@@ -117,13 +102,13 @@ update public.profiles set is_admin = true where email = 'din@adress.se';
 Då kommer du in på `admin.html`.
 
 Det går **inte** att sätta flaggan från någon av vyerna, inte ens som
-admin. Triggern i `schema-v3.sql` vägrar ändra `is_admin` från en inloggad
+admin. Triggern i `supabase/migrations/arkiv/schema-v3.sql` vägrar ändra `is_admin` från en inloggad
 session, och det är med flit: den som kan göra sig själv till admin i sin
 egen vy är inte begränsad av något.
 
 ---
 
-## Två säkerhetshål som fixades i `schema-v3.sql`
+## Två säkerhetshål som fixades i `supabase/migrations/arkiv/schema-v3.sql`
 
 Värt att förstå, för det förklarar varför filen finns.
 

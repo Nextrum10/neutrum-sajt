@@ -62,8 +62,8 @@ kvar för att de behövs om ni någon gång sätter upp en ny miljö, men just n
 
 ## 1. Kör schemat
 
-Supabase → SQL Editor → New query. Klistra in `schema-v13-agenter.sql`
-och kör. (Filen hette `schema-v13.sql` här på grenen, men main hade
+Supabase → SQL Editor → New query. Klistra in `supabase/migrations/arkiv/schema-v13-agenter.sql`
+och kör. (Filen hette `supabase/migrations/arkiv/schema-v13.sql` här på grenen, men main hade
 redan en annan v13 — adminvyns skrivrätt. Båda är körda mot samma
 databas; filnamnet är det enda som skiljer dem åt.)
 

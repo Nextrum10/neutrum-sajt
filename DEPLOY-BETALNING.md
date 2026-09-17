@@ -70,7 +70,7 @@ måste reda ut för hand.
 
 ## 1. Kör schemat
 
-Öppna Supabase → SQL Editor, klistra in hela `schema-v8.sql` och kör.
+Öppna Supabase → SQL Editor, klistra in hela `supabase/migrations/arkiv/schema-v8.sql` och kör.
 
 Den skapar `invoices`, `invoice_lines`, `payouts`, `payout_lines`, `prissattning`
 och två vyer. Den rensar ingenting.

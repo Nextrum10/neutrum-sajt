@@ -1,8 +1,10 @@
 -- ============================================================
 -- NEXTRUM — schema v13
 --
--- Körs efter schema-v12.sql. INTE applicerad än — kör i
--- Supabase → SQL Editor.
+-- Körs efter schema-v12.sql. ÄR applicerad i projektet
+-- ddkfiuvcppalutfulvbi, som migrationen schema_v13_admin
+-- (20260910211538). Rubriken sa länge "INTE applicerad än" fast
+-- tabellerna fanns i drift — rättad i Fas 3.
 --
 -- Adminsidan (admin.html) behöver kunna ÄNDRA, inte bara läsa.
 --
