@@ -57,11 +57,22 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
+    /* Vem som anropar avgörs av Auth, inte av vilken rad RLS råkar
+       släppa fram. Förr frågade kontrollen efter "en" profil utan
+       filter och fungerade bara för att policyn då lät alla läsa
+       varje godkänd profil: med en studiehjälpare i poolen släpptes
+       alla inloggade igenom, med två föll kontrollen för alla. */
+    const { data: vem, error: authErr } = await supa.auth.getUser();
+    if (authErr || !vem?.user) {
+      return json({ error: 'Ogiltig inloggning.' }, 401);
+    }
+
     /* Bara godkända studiehjälpare. Kollas mot databasen, inte mot
        något klienten påstår om sig själv. */
     const { data: profil } = await supa
       .from('tutor_profiles')
       .select('id, status')
+      .eq('id', vem.user.id)
       .maybeSingle();
 
     if (!profil || profil.status !== 'approved') {

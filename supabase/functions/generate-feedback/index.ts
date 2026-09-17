@@ -58,14 +58,32 @@ Deno.serve(async (req) => {
     const { report_id } = await req.json();
     if (!report_id) return json({ error: 'report_id saknas i anropet.' }, 400);
 
+    const { data: vem, error: authErr } = await supa.auth.getUser();
+    if (authErr || !vem?.user) {
+      return json({ error: 'Ogiltig inloggning.' }, 401);
+    }
+
     const { data: report, error: readErr } = await supa
       .from('lesson_reports')
-      .select('id, raw_notes, student_id, students ( name, grade )')
+      .select('id, raw_notes, student_id, tutor_id, students ( name, grade )')
       .eq('id', report_id)
       .single();
 
     if (readErr || !report) {
       return json({ error: 'Hittar ingen rapport, eller så saknar du behörighet till den.' }, 404);
+    }
+
+    /* Att få LÄSA rapporten räcker inte. Familjen läser sitt barns
+       rapporter, och fick därför förr starta AI-anropet på Nextrums
+       bekostnad — det var bara sparandet som sedan inte träffade
+       någon rad. Rapportens egen studiehjälpare, eller admin
+       (återkopplingsfliken i adminvyn), är de enda som skriver här. */
+    if (report.tutor_id !== vem.user.id) {
+      const { data: jag } = await supa
+        .from('profiles').select('is_admin').eq('id', vem.user.id).maybeSingle();
+      if (!jag?.is_admin) {
+        return json({ error: 'Bara rapportens studiehjälpare kan skriva om den.' }, 403);
+      }
     }
 
     const student = (report as any).students;
