@@ -86,7 +86,7 @@ Agenter och på knappen "skriv om med AI".
 
 | Funktion | Vem får använda den | Vad den gör |
 |---|---|---|
-| `generate-feedback` | studiehjälpare | Skriver om passrapporten till familjen |
+| `generate-feedback` | rapportens studiehjälpare, och admin | Skriver om passrapporten till familjen |
 | `generate-message` | studiehjälpare | Utkast till hälsningen vid ett tidsförslag |
 | `material-forslag` | admin | Föreslår övningsuppgifter till en elev |
 | `juridik` | admin | Frågor om regelverk, med hämtade källor |
@@ -94,6 +94,11 @@ Agenter och på knappen "skriv om med AI".
 
 Alla fem kontrollerar behörigheten mot databasen, inte mot vad webbläsaren
 påstår. Ingen av dem använder service-role.
+
+**Alla fem driftsätts med `verify_jwt` på** — alltså utan `--no-verify-jwt`.
+Porten avvisar då anrop utan giltig inloggning innan koden ens körs, och
+kontrollen i koden blir det andra låset i stället för det enda.
+`material-forslag` låg tidigare med det avstängt (Fas 1.7).
 
 **Om `material-forslag`:** den ber aldrig modellen leta rätt på ett övningsblad
 och ge länken. En modell som ombeds hitta en länk hittar på en länk, och det
