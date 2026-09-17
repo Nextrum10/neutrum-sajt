@@ -38,6 +38,16 @@
 // databasen och sedan fakturera på den. Alltså: 403 är ett fel,
 // fakturan står kvar som utkast, och den som tryckte får veta att
 // domänen inte är klar.
+//
+// SAMMA FAKTURA SKICKAS BARA EN GÅNG (Fas 2.5)
+// En faktura som redan gått iväg kan bara få en PÅMINNELSE, och en
+// som aldrig skickats kan inte påminnas om. Förut gick det att
+// skicka samma faktura en gång till som om den vore ny — familjen
+// hade fått två fakturor för samma månad.
+//
+// Varje utskick bär dessutom en idempotensnyckel till Resend. Trycker
+// någon två gånger i snabb följd, eller skickar två flikar samtidigt,
+// skickar Resend bara det första.
 // ============================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -262,6 +272,12 @@ Deno.serve(async (req) => {
       // knappen kan vara ritad ur en lista som är någon minut gammal.
       if (f.status === 'makulerad') return json({ error: 'Fakturan är makulerad.' }, 409);
       if (f.status === 'betald') return json({ error: 'Fakturan är redan betald.' }, 409);
+      if (!paminnelse && f.status !== 'utkast') {
+        return json({ error: 'Fakturan är redan skickad. Skicka en påminnelse i stället.' }, 409);
+      }
+      if (paminnelse && f.status === 'utkast') {
+        return json({ error: 'Fakturan har inte skickats än, så det finns inget att påminna om.' }, 409);
+      }
 
       const [{ data: rader }, { data: p }] = await Promise.all([
         db.from('invoice_lines').select('beskrivning, minuter, belopp_ore').eq('invoice_id', f.id),
@@ -319,9 +335,22 @@ Deno.serve(async (req) => {
     if (!RESEND_API_KEY) return json({ error: 'RESEND_API_KEY saknas som secret.' }, 500);
 
     // ---------- 3. Skicka ----------
+    // Samma nyckel för samma sak inom samma minut. Det stoppar ett
+    // dubbelklick eller två flikar som skickar samtidigt, men låter ett
+    // nytt försök efter ett rättat fel gå igenom — en nyckel som gällde
+    // hela dygnet hade kunnat låsa fast ett misslyckat svar till nästa
+    // dag. Att samma faktura inte skickas två gånger efter att den
+    // lyckats sköter statuskontrollen ovan.
+    const minut = new Date().toISOString().slice(0, 16);
+    const idempotens = `${typ}-${rad.id}-${paminnelse ? 'paminnelse' : 'utskick'}-${minut}`;
+
     const svar = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${RESEND_API_KEY}` },
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${RESEND_API_KEY}`,
+        'Idempotency-Key': idempotens,
+      },
       body: JSON.stringify({
         from: FRAN,
         to: [mottagare],
