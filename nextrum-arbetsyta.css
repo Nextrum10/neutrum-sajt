@@ -1858,65 +1858,17 @@ table.adm .adm-tal{
 .vy-fall-kropp[hidden]{display:none}
 
 /* ============================================================
-  11. KALENDERN I STUDIEHJÄLPARVYN
+  11. UNDANTAGEN I STUDIEHJÄLPARVYN
 
-   Samma kalender som familjen ser, med ett läge till: dygnets
-   timmar står framme, inte bara de inlagda. En timme du redan kan
-   är fylld, en du inte lagt in är streckad. Skillnaden måste synas
-   utan färg allena — därför streck mot heldraget, inte bara två
-   nyanser av samma kant.
+   Kalenderns egna stilar låg här: streckade timmar, prickar på
+   dagar med tider, en fot med två knappar. Kalendern är borta —
+   veckoschemat (.vs) och veckovyn (.bk-vecka) ersatte den — och
+   reglerna togs bort med den. Kvar står listan över dagar man
+   sagt att man inte kan.
    ============================================================ */
-.slot.ar-omarkerad{
-  border-style:dashed;border-color:var(--ln);
-  color:var(--bl-3);background:transparent;
-}
-.slot.ar-omarkerad:hover{border-color:var(--acc);color:var(--acc)}
-.slot.ar-min{border-color:var(--ln-2);color:var(--bl)}
-.slot.ar-min:hover{background:var(--pap-2)}
 
-/* Vald timme. Måste stå EFTER de två ovan och nämna klassen: de har
-   samma specificitet som .slot[aria-pressed="true"] i nextrum.css och
-   ligger senare i kaskaden, så utan det här vann de färgen och den
-   valda timmen blev kräm på kräm. */
-.slot.ar-min[aria-pressed="true"],
-.slot.ar-omarkerad[aria-pressed="true"]{
-  background:var(--fg);color:var(--bg);border-color:var(--fg);
-}
-
-/* Dagar med tider inlagda får en prick, så veckan går att läsa av
-   utan att öppna en dag i taget. Vald dag har omvänd botten, och
-   pricken måste byta färg med den. */
-.cal .day.ar-mina{position:relative}
-.cal .day.ar-mina::after{
-  content:"";position:absolute;left:50%;bottom:5px;
-  width:3px;height:3px;border-radius:50%;
-  transform:translateX(-50%);
-  background:var(--acc);
-}
-.cal .day.ar-mina.ar-vald::after{background:var(--pap)}
-
-/* Sammanfattningen ovanför kalendern: hela veckan på en rad. */
-.kal-hjalp{
-  display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;
-  margin:0 0 14px;font-size:.8rem;line-height:1.5;color:var(--bl-2);
-}
-.kal-hjalp b{
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
-}
-
-/* Foten under kalendern. Texten säger vad den valda timmen är, och
-   knapparna skiljer på "varje vecka" och "bara den här dagen" —
-   en skillnad man inte kan gissa sig till från en enda knapp. */
-.kal-fot{margin-top:16px}
-.kal-fot-hjalp{
-  margin:0;font-size:.82rem;line-height:1.6;color:var(--bl-2);
-}
-.kal-fot-hjalp b{color:var(--bl);font-weight:650}
-.kal-fot-atg{display:flex;flex-wrap:wrap;gap:9px;margin-top:11px}
-
-/* Spärrarna. Syns redan som luckor i kalendern — listan finns för
-   den som spärrat fel dag och vill ångra sig utan att leta. */
+/* Listan över undantag. Den finns för den som lagt in fel dag och
+   vill ångra sig utan att leta rätt på den igen. */
 .kal-sparr-et{
   font-family:var(--f-mono);font-size:9.5px;font-weight:600;
   letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
