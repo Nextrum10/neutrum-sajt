@@ -288,7 +288,73 @@ window.NXMedia = (function () {
 
   function filEtikett(mime) { return FILTYPER[mime] || 'Fil'; }
 
+  /* ============================================================
+     MATERIALLISTAN OCH KONTOBILDEN (Fas 3)
+     Låg i var sin kopia i studievyn och studiehjälparvyn. Det som
+     skiljer — vilken elev, vad den tomma listan säger, om raderna
+     kan tas bort och om filnamnet visas — skickas in.
+     ============================================================ */
+  var MAT_IKON = {
+    fil: '<path d="M6 2.5h6l4 4v11H6z"/><path d="M12 2.5v4h4"/>',
+    lank: '<path d="M9 12a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5L10 6"/><path d="M13 10a3.5 3.5 0 0 0-5 0L5.5 12.5a3.5 3.5 0 0 0 5 5L12 16"/>',
+    anteckning: '<path d="M5 3.5h11v15H5z"/><path d="M8 8h5M8 11.5h5M8 15h3"/>'
+  };
+
+  /* En materialrad. o.egen ger en Ta bort-knapp; o.filnamn visar
+     filens namn i stället för bara ordet Fil. */
+  function materialRad(m, o) {
+    o = o || {};
+    var etikett = m.kind === 'fil'
+      ? [o.filnamn ? (m.file_name || 'Fil') : filEtikett(''),
+         m.file_size ? filstorlek(m.file_size) : ''].filter(Boolean).join(' · ')
+      : m.kind === 'lank' ? 'Länk' : 'Anteckning';
+
+    var knappar = '';
+    if (m.kind === 'fil') knappar += '<button class="btn btn-ghost btn-sm" data-mat-oppna="' + m.id + '">Öppna</button>';
+    if (m.kind === 'lank') knappar += '<a class="btn btn-ghost btn-sm" href="' + esc(m.url || '#') + '" target="_blank" rel="noopener noreferrer">Öppna</a>';
+    if (o.egen) knappar += '<button class="btn btn-ghost btn-sm" data-mat-bort="' + m.id + '">Ta bort</button>';
+
+    return '<div class="mat">'
+      + '<span class="mat-ikon"><svg viewBox="0 0 22 22">' + (MAT_IKON[m.kind] || MAT_IKON.fil) + '</svg></span>'
+      + '<span class="mat-vad"><b>' + esc(m.title) + '</b><span>'
+      + esc([etikett, m.subject].filter(Boolean).join(' · ')) + '</span></span>'
+      + '<span class="mat-atg">' + knappar + '</span>'
+      + (m.kind === 'anteckning' && m.body ? '<div class="mat-text">' + esc(m.body) + '</div>' : '')
+      + '</div>';
+  }
+
+  /* Materialet för en elev, i #mat-lista, sparat i S.material.
+     o: elev, tomElev [rubrik, text], tomLista [rubrik, text], egen,
+     filnamn. */
+  async function laddaMaterial(S, o) {
+    var tomt = NXStudie.tomt;
+    var host = NX.$('#mat-lista');
+    NX.$('#mat-antal').textContent = '';
+    if (!o.elev) { host.innerHTML = tomt(o.tomElev[0], o.tomElev[1]); return; }
+
+    host.innerHTML = NXStudie.laddar();
+    var res = await supa
+      .from('materials').select('id, title, kind, url, body, subject, file_name, file_size')
+      .eq('student_id', o.elev).order('created_at', { ascending: false });
+
+    if (res.error) { host.innerHTML = tomt('Kunde inte hämta materialet', NX.felText(res.error)); return; }
+    if (!res.data.length) { host.innerHTML = tomt(o.tomLista[0], o.tomLista[1]); return; }
+    NX.$('#mat-antal').textContent = res.data.length + ' st';
+    S.material = res.data;
+    host.innerHTML = res.data.map(function (m) {
+      return materialRad(m, { egen: o.egen, filnamn: o.filnamn });
+    }).join('');
+  }
+
+  /* Den stora profilbilden under Profil & inställningar. */
+  function kontoAvatar(S) {
+    var namn = (S.profil && S.profil.full_name) || S.user.email;
+    NX.$('#konto-avatar').innerHTML = avatar(namn, S.minAvatar, { stor: true });
+    NX.$('#av-bort').hidden = !S.minAvatar;
+  }
+
   return {
+    materialRad: materialRad, laddaMaterial: laddaMaterial, kontoAvatar: kontoAvatar,
     filstorlek: filstorlek, filEtikett: filEtikett,
     signera: signera, glömSignerad: glömSignerad,
     avatar: avatar, avatarKarta: avatarKarta, initialer: initialer,

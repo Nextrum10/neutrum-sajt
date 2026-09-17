@@ -28,24 +28,10 @@
 
   const elev = () => S.elever.find(e => e.id === S.aktivElev) || null;
 
-  function visa(id) {
-    ['view-loading', 'view-auth', 'view-pending', 'view-wrongrole', 'view-app', 'view-fel']
-      .forEach(v => { const el = $('#' + v); if (el) el.hidden = (v !== id); });
-  }
+  const VYER = ['view-loading', 'view-auth', 'view-pending', 'view-wrongrole', 'view-app', 'view-fel'];
+  function visa(id) { NXStudie.visaVy(VYER, id); }
 
-  function ritaHeader() {
-    const na = $('#nav-actions'), ma = $('#m-actions');
-    if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
-    const namn = (S.profil && S.profil.full_name) || S.user.email;
-    na.innerHTML = '<span class="nx-notis-hus" id="notis-hus"></span>'
-      + '<span class="who-chip">' + M.avatar(namn, S.minAvatar, { liten: true })
-      + '<b>' + esc(namn) + '</b><span class="roll">Studiehjälpare</span></span>'
-      + (S.profil && S.profil.is_admin
-        ? '<a class="btn btn-ghost btn-sm" href="/admin">Admin</a>' : '')
-      + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
-    ritaNotiser();
-    ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
-  }
+  function ritaHeader() { NXStudie.vyHuvud(S, 'Studiehjälpare', ritaNotiser); }
 
   document.addEventListener('click', async e => {
     if (e.target.closest('[data-logout]')) {
@@ -57,17 +43,12 @@
   /* ============ inloggning ============ */
   let läge = 'in';
   function ritaAuth() {
-    const upp = läge === 'up';
-    $$('[data-auth]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.auth === läge)));
-    $('#namn-grupp').hidden = !upp;
-    $('#a-name').required = upp;
-    $('#a-pass').autocomplete = upp ? 'new-password' : 'current-password';
-    $('#auth-title').textContent = upp ? 'Skapa studiehjälparkonto' : 'Studiehjälparvyn';
-    $('#auth-sub').textContent = upp
-      ? 'Skapa kontot här. Vyn öppnas när vi gått igenom din ansökan och godkänt dig.'
-      : 'För dig som jobbar hos oss: dina elever, ditt schema, kontakten med familjerna och dina rapporter.';
-    $('#auth-submit').textContent = upp ? 'Skapa konto' : 'Logga in';
-    rensa($('#auth-msg'));
+    NXStudie.inloggningsruta(läge, {
+      titel: 'Studiehjälparvyn',
+      titelUpp: 'Skapa studiehjälparkonto',
+      under: 'För dig som jobbar hos oss: dina elever, ditt schema, kontakten med familjerna och dina rapporter.',
+      underUpp: 'Skapa kontot här. Vyn öppnas när vi gått igenom din ansökan och godkänt dig.'
+    });
   }
   $$('[data-auth]').forEach(b => b.addEventListener('click', () => { läge = b.dataset.auth; ritaAuth(); }));
 
@@ -1868,49 +1849,13 @@
     });
   });
 
-  const MAT_IKON = {
-    fil: '<path d="M6 2.5h6l4 4v11H6z"/><path d="M12 2.5v4h4"/>',
-    lank: '<path d="M9 12a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5L10 6"/><path d="M13 10a3.5 3.5 0 0 0-5 0L5.5 12.5a3.5 3.5 0 0 0 5 5L12 16"/>',
-    anteckning: '<path d="M5 3.5h11v15H5z"/><path d="M8 8h5M8 11.5h5M8 15h3"/>'
-  };
-
-  function matRad(m, egen) {
-    const etikett = m.kind === 'fil'
-      ? [M.filEtikett(''), m.file_size ? M.filstorlek(m.file_size) : ''].filter(Boolean).join(' · ')
-      : m.kind === 'lank' ? 'Länk' : 'Anteckning';
-
-    let knappar = '';
-    if (m.kind === 'fil') knappar += '<button class="btn btn-ghost btn-sm" data-mat-oppna="' + m.id + '">Öppna</button>';
-    if (m.kind === 'lank') knappar += '<a class="btn btn-ghost btn-sm" href="' + esc(m.url || '#') + '" target="_blank" rel="noopener noreferrer">Öppna</a>';
-    if (egen) knappar += '<button class="btn btn-ghost btn-sm" data-mat-bort="' + m.id + '">Ta bort</button>';
-
-    return '<div class="mat">'
-      + '<span class="mat-ikon"><svg viewBox="0 0 22 22">' + (MAT_IKON[m.kind] || MAT_IKON.fil) + '</svg></span>'
-      + '<span class="mat-vad"><b>' + esc(m.title) + '</b><span>'
-      + esc([etikett, m.subject].filter(Boolean).join(' · ')) + '</span></span>'
-      + '<span class="mat-atg">' + knappar + '</span>'
-      + (m.kind === 'anteckning' && m.body ? '<div class="mat-text">' + esc(m.body) + '</div>' : '')
-      + '</div>';
-  }
-
-  async function laddaMaterial() {
-    const host = $('#mat-lista');
-    $('#mat-antal').textContent = '';
-    if (!S.aktivElev) { host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp.'); return; }
-
-    host.innerHTML = laddar();
-    const { data, error } = await supa
-      .from('materials').select('id, title, kind, url, body, subject, file_name, file_size')
-      .eq('student_id', S.aktivElev).order('created_at', { ascending: false });
-
-    if (error) { host.innerHTML = tomt('Kunde inte hämta materialet', felText(error)); return; }
-    if (!data.length) {
-      host.innerHTML = tomt('Inget material än', 'Lägg upp ett övningsblad, en länk eller en anteckning — familjen når det från sin vy.');
-      return;
-    }
-    $('#mat-antal').textContent = data.length + ' st';
-    S.material = data;
-    host.innerHTML = data.map(m => matRad(m, true)).join('');
+  function laddaMaterial() {
+    return M.laddaMaterial(S, {
+      elev: S.aktivElev,
+      tomElev: ['Ingen elev vald', 'Välj en elev högst upp.'],
+      tomLista: ['Inget material än', 'Lägg upp ett övningsblad, en länk eller en anteckning — familjen når det från sin vy.'],
+      egen: true
+    });
   }
 
   /* Filen ligger i en privat hink, så adressen skapas i klicket och
@@ -1949,11 +1894,7 @@
   /* ============================================================
      DITT KONTO
      ============================================================ */
-  async function ritaKontoAvatar() {
-    const namn = (S.profil && S.profil.full_name) || S.user.email;
-    $('#konto-avatar').innerHTML = M.avatar(namn, S.minAvatar, { stor: true });
-    $('#av-bort').hidden = !S.minAvatar;
-  }
+  function ritaKontoAvatar() { M.kontoAvatar(S); }
 
   $('#av-fil').addEventListener('change', async e => {
     const fil = (e.target.files || [])[0];
@@ -2193,7 +2134,6 @@
     });
   });
 
-
   /* ============================================================
      NÄR NÅGOT GÅR SÖNDER
      Utan det här står vyn kvar på "Laddar din vy" i all evighet så
@@ -2210,14 +2150,7 @@
      två tillstånd hade förr eller senare glidit isär, och då hade
      Översikten visat en läxa som redan var bortplockad.
      ============================================================ */
-  function kortTid(iso) {
-    const d = new Date(iso), dag = String(iso).slice(0, 10);
-    if (dag === isoFor(new Date())) {
-      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-    }
-    const igår = new Date(); igår.setDate(igår.getDate() - 1);
-    return dag === isoFor(igår) ? 'Igår' : datumText(dag);
-  }
+  function kortTid(iso) { return NXStudie.kortTid(iso); }
 
   function nästaPass() {
     const idag = isoFor(new Date());
@@ -2668,12 +2601,7 @@
      båda utan att något behöver hållas i synk.
      ============================================================ */
   function byggSchema() {
-    const host = $('#schema');
-    if (!host) return;
-    if (S.schema) { S.schema.sättBokningar(S.bokningar); return; }
-    S.schema = NXStudie.schema({
-      host: host,
-      bokningar: S.bokningar,
+    NXStudie.schemaI(S, {
       namn: b => {
         const e = S.elever.find(x => x.id === b.student_id);
         if (e) return e.name;
@@ -2729,17 +2657,7 @@
     });
   }
 
-  function visaFel(fel, sammanhang) {
-    console.error('Nextrum:', sammanhang || '', fel);
-    visa('view-fel');
-    const text = $('#fel-text'), detalj = $('#fel-detalj');
-    if (text) {
-      text.textContent = sammanhang
-        ? 'Något gick fel när ' + sammanhang + '. Försök igen — går det inte, hör av dig så tittar vi på det.'
-        : 'Något gick fel. Försök igen — går det inte, hör av dig så tittar vi på det.';
-    }
-    if (detalj) detalj.textContent = (fel && (fel.message || fel.error_description || fel.msg)) || String(fel || '');
-  }
+  function visaFel(fel, sammanhang) { NXStudie.felvy(visa, fel, sammanhang); }
 
   const felKnapp = $('#fel-igen');
   if (felKnapp) {

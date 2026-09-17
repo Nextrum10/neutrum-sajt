@@ -1081,7 +1081,97 @@ window.NXStudie = (function () {
     document.title = n ? '(' + n + ') ' + ren : ren;
   }
 
+  /* ============================================================
+     VYSKALET (Fas 3)
+     Det studievyn och studiehjälparvyn gjorde likadant, i var sin
+     ordagrann kopia. Skillnaderna — vilka vyer sidan har, vilken roll
+     som står i menyn, vad inloggningen säger — skickas in. Vyerna
+     behåller korta funktioner med de gamla namnen, så att inget
+     anropsställe behövde ändras.
+     ============================================================ */
+
+  /* Visa en av sidans huvudvyer och dölj resten. */
+  function visaVy(vyer, id) {
+    vyer.forEach(function (v) {
+      var el = document.getElementById(v);
+      if (el) el.hidden = (v !== id);
+    });
+  }
+
+  /* Felvyn. visa är vyns egen visa(), så att rätt uppsättning vyer
+     döljs. */
+  function felvy(visa, fel, sammanhang) {
+    console.error('Nextrum:', sammanhang || '', fel);
+    visa('view-fel');
+    var text = NX.$('#fel-text'), detalj = NX.$('#fel-detalj');
+    if (text) {
+      text.textContent = sammanhang
+        ? 'Något gick fel när ' + sammanhang + '. Försök igen — går det inte, hör av dig så tittar vi på det.'
+        : 'Något gick fel. Försök igen — går det inte, hör av dig så tittar vi på det.';
+    }
+    if (detalj) detalj.textContent = (fel && (fel.message || fel.error_description || fel.msg)) || String(fel || '');
+  }
+
+  /* Klockslag om det var idag, "Igår", annars datumet. */
+  function kortTid(iso) {
+    var d = new Date(iso), dag = String(iso).slice(0, 10);
+    if (dag === isoFor(new Date())) {
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+    var igår = new Date(); igår.setDate(igår.getDate() - 1);
+    return dag === isoFor(igår) ? 'Igår' : datumText(dag);
+  }
+
+  /* Namnet, rollen och utloggningen uppe i menyn. efter() körs när
+     notishuset finns i DOM:en — vyn ritar sina notiser där. */
+  function vyHuvud(S, roll, efter) {
+    var na = NX.$('#nav-actions'), ma = NX.$('#m-actions');
+    if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
+    var namn = (S.profil && S.profil.full_name) || S.user.email;
+    na.innerHTML = '<span class="nx-notis-hus" id="notis-hus"></span>'
+      + '<span class="who-chip">' + NXMedia.avatar(namn, S.minAvatar, { liten: true })
+      + '<b>' + esc(namn) + '</b><span class="roll">' + esc(roll) + '</span></span>'
+      + (S.profil && S.profil.is_admin
+        ? '<a class="btn btn-ghost btn-sm" href="/admin">Admin</a>' : '')
+      + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
+    if (efter) efter();
+    ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
+  }
+
+  /* Inloggningsrutan i läge 'in' eller 'up'. t har titel, titelUpp,
+     under och underUpp. */
+  function inloggningsruta(läge, t) {
+    var upp = läge === 'up';
+    NX.$$('[data-auth]').forEach(function (b) {
+      b.setAttribute('aria-selected', String(b.dataset.auth === läge));
+    });
+    NX.$('#namn-grupp').hidden = !upp;
+    NX.$('#a-name').required = upp;
+    NX.$('#a-pass').autocomplete = upp ? 'new-password' : 'current-password';
+    NX.$('#auth-title').textContent = upp ? t.titelUpp : t.titel;
+    NX.$('#auth-sub').textContent = upp ? t.underUpp : t.under;
+    NX.$('#auth-submit').textContent = upp ? 'Skapa konto' : 'Logga in';
+    NX.rensa(NX.$('#auth-msg'));
+  }
+
+  /* Veckoschemat i #schema. Byggs en gång och får sedan nya
+     bokningar; namn(b) säger vad som står på ett pass i just den här
+     vyn. */
+  function schemaI(S, o) {
+    var host = NX.$('#schema');
+    if (!host) return;
+    if (S.schema) { S.schema.sättBokningar(S.bokningar); return; }
+    S.schema = schema({
+      host: host,
+      bokningar: S.bokningar,
+      namn: o.namn,
+      onOppna: o.onOppna
+    });
+  }
+
   return {
+    visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
+    inloggningsruta: inloggningsruta, schemaI: schemaI,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxFilter: läxFilter, läxUrval: läxUrval,
     fordelning: fordelning, utvecklingPerÄmne: utvecklingPerÄmne,
