@@ -68,6 +68,14 @@ Supabase → **Project Settings → API**. Du behöver två saker:
 
 **Viktigt:** en Claude-artefaktlänk (`claude.ai/...`) kan aldrig prata med Supabase, den blockerar externa anrop av säkerhetsskäl. Testa alltid mot den riktiga filen, eller lägg upp mappen på Netlify Drop (gratis, dra in mappen, klart).
 
+### Den automatiska kontrollen
+
+`.github/workflows/kontroll.yml` körs på varje push och pull request. Den kör samma verktyg som finns i `verktyg/`: syntaxen i all JavaScript, `testa-agent.js`, betalningsvillkoret, migrationsnamnen, att maskotsvaren och FAQ-schemat är ombyggda, att engelskan följt med (mot `verktyg/jamfor-sprak-baslinje.txt`), samt `deno check` och `deno test` för edge-funktionerna. Den ska vara grön innan en gren mergas.
+
+### Content-Security-Policy
+
+`/admin`, `/larare` och `/foralder` får en skarp CSP från `vercel.json`: bara skript från den egna domänen, anrop bara till den egna domänen och Supabase. Ingen JavaScript får stå direkt i de tre sidorna — inga `<script>` utan `src`, inga `onclick="…"`. `verktyg/kolla-csp.py` kontrollerar det. De publika sidorna har kvar policyn i läget Report-Only, eftersom de fortfarande har inline-skript.
+
 ---
 
 ## Så här matchar ni en familj

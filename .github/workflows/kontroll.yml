@@ -1,0 +1,88 @@
+# ============================================================
+# NEXTRUM — kontroll före release (Fas 3.4)
+#
+# Körs på varje push och varje pull request. Vercel bygger
+# förhandsversionerna som förut; det här är det som ska vara grönt
+# innan en gren mergas.
+#
+# Varje steg är ett verktyg som redan fanns i verktyg/ och som
+# tidigare bara kördes när någon kom ihåg det.
+# ============================================================
+
+name: Kontroll
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  sajten:
+    name: Sajten och verktygen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: JavaScript går att tolka
+        run: |
+          for f in *.js verktyg/*.js; do
+            node --check "$f" || exit 1
+          done
+
+      - name: Agentsvaren blir rätt html
+        run: node verktyg/testa-agent.js
+
+      - name: Betalningsvillkoret säger samma sak överallt
+        run: python3 verktyg/kolla-betalningsvillkor.py
+
+      - name: Migrationsfilerna har versionsnamn
+        run: python3 verktyg/kolla-migrationer.py
+
+      # /admin, /larare och /foralder har skarp CSP (vercel.json).
+      # Inline-kod där fungerar inte i produktion.
+      - name: Vyerna tål den skarpa CSP:n
+        run: python3 verktyg/kolla-csp.py
+
+      # Maskotens svar och FAQ-schemat byggs ur sidorna. Står något
+      # annat i repot har någon ändrat sidan utan att bygga om.
+      - name: Genererade filer är aktuella
+        run: |
+          python3 verktyg/bygg-maskotsvar.py
+          python3 verktyg/bygg-faq-schema.py
+          git diff --exit-code -- nextrum-maskot-svar.js faq.html en/faq.html
+
+      # jamfor-sprak.py rapporterar avvikelser som är avsiktliga, till
+      # exempel språkväljaren (<b>SV</b> på svenska, <a> på engelska)
+      # och namn som inte översätts. De står i baslinjen. Allt NYTT är
+      # ett fel: kör verktyget, läs skillnaden, och uppdatera baslinjen
+      # bara om avvikelsen är avsiktlig.
+      - name: Engelskan har följt med
+        run: |
+          python3 verktyg/jamfor-sprak.py > "$RUNNER_TEMP/jamfor.txt" || true
+          diff -u verktyg/jamfor-sprak-baslinje.txt "$RUNNER_TEMP/jamfor.txt"
+
+  funktioner:
+    name: Edge-funktionerna
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Typkontroll
+        run: deno check supabase/functions/*/index.ts
+
+      - name: Tester
+        run: deno test --allow-env supabase/functions/_delad/
