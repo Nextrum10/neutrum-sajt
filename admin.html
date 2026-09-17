@@ -598,6 +598,9 @@
               <span class="vy-flik-mark" id="flik-fakt-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="utbetalningar"
                     id="flik-utbetalningar" aria-controls="panel-utbetalningar">Utbetalningar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="avvikelser"
+                    id="flik-avvikelser" aria-controls="panel-avvikelser">Avvikelser
+              <span class="vy-flik-mark" id="flik-avv-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="korning"
                     id="flik-korning" aria-controls="panel-korning">Månadskörning</button>
           </div>
@@ -661,24 +664,64 @@
             </div>
           </div>
 
+          <!-- Avvikelser: det som hindrar ett genomfört pass från att
+               bli en fakturarad. Ett pass utan rapport tas aldrig med
+               av månadskörningen, och det ska synas här i stället för
+               att bara utebli från fakturan. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="avvikelser"
+               id="panel-avvikelser" aria-labelledby="flik-avvikelser" hidden>
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Genomförda pass utan rapport</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                ⚠️ Pass saknar rapport och kan därför inte behandlas automatiskt.
+                Koppla den rapport som hör till passet, eller undanta passet — ett
+                undantaget pass kommer varken på familjens faktura eller på
+                studiehjälparens underlag.
+              </p>
+              <div id="avv-utan-rapport"><div class="loading">Hämtar</div></div>
+            </div>
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Rapporter som inte hör till något pass</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Fristående rapporter faktureras aldrig av sig själva. Hör en av dem
+                till ett pass ovanför, koppla den därifrån.
+              </p>
+              <div id="avv-fristaende"><div class="loading">Hämtar</div></div>
+            </div>
+            <div class="dbox">
+              <h5>Undantagna pass</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Pass som någon tagit bort ur faktureringen, med anledningen. Ångra
+                om det var fel — passet kommer då med på nästa körning.
+              </p>
+              <div id="avv-undantagna"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
           <div class="vy-flik-panel" role="tabpanel" data-flik="korning"
                id="panel-korning" aria-labelledby="flik-korning" hidden>
             <div class="dbox">
               <h5>Månadskörningen</h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:18px">
                 En gång i månaden samlas alla genomförda och rapporterade pass till
-                en faktura per familj och ett underlag per studiehjälpare. Körningen
-                sker i edge-funktionen <code>fakturering</code>, som skyddas av en
-                nyckel på servern — den kan alltså inte startas härifrån, och ska
-                inte kunna det.
+                en faktura per familj och ett underlag per studiehjälpare. Här körs
+                den med din inloggning. Kör alltid torrt först: den räknar ut allt
+                och visar vad som <em>skulle</em> skapas, utan att skriva en rad.
               </p>
-              <div class="sum-line"><span>Så körs den torrt först</span><span class="adm-tal">torrkorning: true</span></div>
+              <div class="adm-verktyg">
+                <select class="sel" id="kor-period" aria-label="Vilken månad som faktureras"></select>
+                <button class="btn btn-ghost btn-sm" type="button" id="kor-torr">Torrkör</button>
+                <button class="btn btn-primary btn-sm" type="button" id="kor-skapa" disabled>Skapa utkast</button>
+              </div>
+              <div id="kor-resultat" aria-live="polite" style="margin:6px 0 18px"></div>
+              <div class="sum-line"><span>Vilka pass</span><span class="adm-tal">genomförda och rapporterade, till och med månadens slut</span></div>
               <div class="sum-line"><span>Betalningsvillkor</span><span class="adm-tal">10 dagar</span></div>
               <div class="sum-line total"><span>Pris per timme</span><span class="adm-tal" id="kor-pris">—</span></div>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-top:16px">
-                Hela anropet står i <code>DEPLOY-BETALNING.md</code>. Kör alltid torrt
-                först: den räknar ut allt och svarar med vad som <em>skulle</em> skapas,
-                utan att skriva en rad.
+                <b>Skapa utkast</b> skriver fakturor och underlag som utkast. Ingenting
+                skickas — det gör du sedan per faktura under Fakturor, efter att ha
+                läst den. Ett schema som kör det här av sig självt kommer senare, och
+                använder då en nyckel på servern i stället för en inloggning.
               </p>
             </div>
           </div>

@@ -238,6 +238,25 @@
     }
   }
 
+  /* Passunderlaget (Fas 2): varje genomfört pass, och om det kan
+     faktureras — har det en rapport, är det undantaget, är det redan
+     med. Samma vy som månadskörningen väljer ur, så att avvikelserna
+     här är exakt de pass körningen hoppar över.
+
+     Till det de fristående rapporterna, som kan kopplas till ett pass
+     som saknar sin. Saknas vyn — migrationen inte körd — säger
+     avvikelsefliken det, i stället för att hela vyn dör. */
+  async function hämtaEkonomiunderlag() {
+    const [pu, fri] = await Promise.all([
+      supa.from('passunderlag').select('*').order('wanted_date', { ascending: false }),
+      supa.from('lesson_reports').select('id, student_id, tutor_id, lesson_date, created_at, raw_notes')
+        .is('booking_id', null).order('lesson_date', { ascending: false })
+    ]);
+    S.passunderlagFel = pu.error ? felText(pu.error) : null;
+    S.passunderlag = pu.data || [];
+    S.fristaendeRapporter = fri.data || [];
+  }
+
   /* Vyn matchningsunderlag räknar antal_elever och genomforda_pass
      per studiehjälpare. Båda ändras när en matchning sätts, så den
      hämtas om i stället för att räknas vidare i minnet. En egen
@@ -410,6 +429,9 @@
           && String(b.wanted_date) < idag).length,
         rubrik: 'pass saknar rapport', ental: 'pass saknar rapport',
         under: 'Hållna men orapporterade. De faktureras inte.', till: '#lektioner' },
+      { antal: utanRapport().length,
+        rubrik: 'genomförda pass saknar rapport', ental: 'genomfört pass saknar rapport',
+        under: 'Pass saknar rapport och kan därför inte behandlas automatiskt.', till: '#ekonomi/avvikelser' },
       { antal: obetalda,
         rubrik: 'obetalda fakturor', ental: 'obetald faktura',
         under: 'Skickade men inte betalda.', till: '#ekonomi' },
@@ -567,6 +589,7 @@
       märkFlik('#flik-fakt-mark', l.obetalda_fakturor);
       märkFlik('#flik-inkorg-mark', l.ohanterade_meddelanden);
     }
+    märkFlik('#flik-avv-mark', utanRapport().length);
     if (S.sido) {
       const av = nyckel => {
         const p = S.attGora.find(x => x.till === nyckel || x.till.indexOf(nyckel + '/') === 0);
@@ -1800,6 +1823,319 @@
   }
 
   /* ============================================================
+     AVVIKELSER (Fas 2)
+
+     Ett genomfört pass utan rapport kommer aldrig med i
+     månadskörningen. Rapporten är det som visar att passet hölls,
+     och det är den som motiverar raden på familjens faktura och på
+     studiehjälparens underlag. Här tar någon ställning, ett pass i
+     taget: koppla rätt rapport, eller undanta passet.
+     ============================================================ */
+  function utanRapport() {
+    return (S.passunderlag || []).filter(p =>
+      p.fakturerbar && !p.har_rapport && !p.fakturerad && !p.pa_underlag);
+  }
+
+  function elevNamn(id) {
+    const e = (S.elevlista || []).find(x => x.id === id);
+    return e ? (e.name || '—') : '—';
+  }
+
+  const dagnummer = iso => Math.round(Date.parse(String(iso || '').slice(0, 10)) / DAG) || 0;
+
+  /* Rapporter som kan höra till passet: samma studiehjälpare, samma
+     elev, inte kopplade till något annat. Närmast i tid först — en
+     rapport skriven dagen efter är troligare än en från förra månaden. */
+  function kandidater(p) {
+    return (S.fristaendeRapporter || [])
+      .filter(r => r.tutor_id === p.tutor_id && (!p.student_id || r.student_id === p.student_id))
+      .sort((a, b) => Math.abs(dagnummer(a.lesson_date) - dagnummer(p.wanted_date))
+        - Math.abs(dagnummer(b.lesson_date) - dagnummer(p.wanted_date)));
+  }
+
+  function ritaAvvikelser() {
+    const host = $('#avv-utan-rapport');
+    if (!host) return;
+
+    if (S.passunderlagFel) {
+      host.innerHTML = tomt('Passunderlaget gick inte att läsa', S.passunderlagFel);
+      $('#avv-fristaende').innerHTML = '';
+      $('#avv-undantagna').innerHTML = '';
+      return;
+    }
+
+    const saknar = utanRapport();
+    host.innerHTML = tabell([
+      { namn: 'Pass', rita: p => '<b>' + esc(kortDatum(p.wanted_date)) + '</b>'
+        + '<span class="adm-und">' + esc(p.subject || 'Pass') + '</span>' },
+      { namn: 'Familj', rita: p => esc(namnFör(p.parent_id)) },
+      { namn: 'Elev', rita: p => esc(elevNamn(p.student_id)) },
+      { namn: 'Studiehjälpare', rita: p => esc(namnFör(p.tutor_id)) },
+      { namn: 'Rapporter att välja', rita: p => {
+        const n = kandidater(p).length;
+        return n ? pill(n + ' fristående', 'ar-vantar')
+          : '<span class="xsmall" style="color:var(--bl-3)">Ingen</span>';
+      } },
+      { namn: '', höger: true, rita: p =>
+        (kandidater(p).length
+          ? '<button class="btn btn-primary btn-sm" type="button" data-avv-koppla="' + p.id + '">Koppla rapport</button> '
+          : '')
+        + '<button class="btn btn-ghost btn-sm" type="button" data-avv-undanta="' + p.id + '">Undanta</button>' }
+    ], saknar, 'Alla genomförda pass har en rapport');
+
+    $('#avv-fristaende').innerHTML = tabell([
+      { namn: 'Datum', rita: r => '<b>' + esc(kortDatum(r.lesson_date)) + '</b>' },
+      { namn: 'Studiehjälpare', rita: r => esc(namnFör(r.tutor_id)) },
+      { namn: 'Elev', rita: r => esc(elevNamn(r.student_id)) },
+      { namn: 'Anteckning', rita: r => '<span class="xsmall">'
+        + esc(String(r.raw_notes || '').slice(0, 90)) + '</span>' }
+    ], S.fristaendeRapporter || [], 'Inga fristående rapporter');
+
+    const undantagna = (S.passunderlag || []).filter(p => !p.fakturerbar);
+    $('#avv-undantagna').innerHTML = tabell([
+      { namn: 'Pass', rita: p => '<b>' + esc(kortDatum(p.wanted_date)) + '</b>'
+        + '<span class="adm-und">' + esc(p.subject || 'Pass') + '</span>' },
+      { namn: 'Familj', rita: p => esc(namnFör(p.parent_id)) },
+      { namn: 'Studiehjälpare', rita: p => esc(namnFör(p.tutor_id)) },
+      { namn: 'Anledning', rita: p => esc(p.fakturerbar_anledning || '—') },
+      { namn: '', höger: true, rita: p =>
+        '<button class="btn btn-ghost btn-sm" type="button" data-avv-ateruppta="' + p.id + '">Ångra</button>' }
+    ], undantagna, 'Inga undantagna pass');
+
+    märkFlik('#flik-avv-mark', saknar.length);
+  }
+
+  /* En ruta med ett eget fält. bekräfta() räcker när svaret är ja
+     eller nej; här behövs ett val eller en text. läs() får rutan och
+     svarar { värde } eller { fel } — ett fel stänger inte rutan. */
+  function fråga(o) {
+    return new Promise(klar => {
+      const ruta = document.createElement('div');
+      ruta.className = 'nx-fraga';
+      ruta.innerHTML =
+        '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="fr-t">'
+        + '<h3 id="fr-t">' + esc(o.titel) + '</h3>'
+        + (o.text ? '<p>' + esc(o.text) + '</p>' : '')
+        + o.innehåll
+        + '<p class="ok-msg" id="fr-msg"></p>'
+        + '<div class="nx-fraga-knappar">'
+        + '<button type="button" class="btn btn-ghost" data-fr="nej">Avbryt</button>'
+        + '<button type="button" class="btn btn-primary" data-fr="ja">' + esc(o.knapp) + '</button>'
+        + '</div></div>';
+      document.body.appendChild(ruta);
+      document.body.style.overflow = 'hidden';
+
+      const stäng = v => { ruta.remove(); document.body.style.overflow = ''; klar(v); };
+      ruta.addEventListener('click', ev => {
+        if (ev.target === ruta || ev.target.closest('[data-fr="nej"]')) { stäng(null); return; }
+        if (!ev.target.closest('[data-fr="ja"]')) return;
+        const svar = o.läs(ruta) || {};
+        if (svar.fel) { säg($('#fr-msg', ruta), svar.fel, false); return; }
+        stäng(svar.värde);
+      });
+      ruta.addEventListener('keydown', ev => { if (ev.key === 'Escape') stäng(null); });
+      const först = ruta.querySelector('input, textarea, select') || ruta.querySelector('[data-fr="ja"]');
+      if (först) först.focus();
+    });
+  }
+
+  async function laddaOmEkonomi() {
+    await hämtaEkonomiunderlag();
+    ritaAvvikelser();
+    await ritaÖversikt();
+  }
+
+  document.addEventListener('click', async e => {
+    const koppla = e.target.closest('[data-avv-koppla]');
+    const undanta = e.target.closest('[data-avv-undanta]');
+    const återta = e.target.closest('[data-avv-ateruppta]');
+    if (!koppla && !undanta && !återta) return;
+
+    const id = (koppla || undanta || återta).dataset.avvKoppla
+      || (koppla || undanta || återta).dataset.avvUndanta
+      || (koppla || undanta || återta).dataset.avvAteruppta;
+    const p = (S.passunderlag || []).find(x => x.id === id);
+    if (!p) return;
+    const vad = kortDatum(p.wanted_date) + ' · ' + namnFör(p.parent_id) + ' · ' + namnFör(p.tutor_id);
+
+    if (koppla) {
+      const lista = kandidater(p);
+      const valt = await fråga({
+        titel: 'Vilken rapport hör till passet?',
+        text: vad + '. Rapporten kopplas till passet, och passet kommer med på nästa körning.',
+        innehåll: '<div style="margin:14px 0 4px">' + lista.map((r, i) =>
+          '<label style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)">'
+          + '<input type="radio" name="avv-rapport" value="' + r.id + '"' + (i === 0 ? ' checked' : '') + '>'
+          + '<span><b>' + esc(kortDatum(r.lesson_date)) + '</b> · ' + esc(elevNamn(r.student_id))
+          + '<br><span class="xsmall" style="color:var(--bl-3)">'
+          + esc(String(r.raw_notes || '').slice(0, 140)) + '</span></span></label>').join('') + '</div>',
+        knapp: 'Koppla',
+        läs: ruta => {
+          const v = ruta.querySelector('input[name="avv-rapport"]:checked');
+          return v ? { värde: v.value } : { fel: 'Välj en rapport.' };
+        }
+      });
+      if (!valt) return;
+      await medan(koppla, 'Kopplar…', async () => {
+        /* is('booking_id', null): hann någon annan koppla rapporten
+           under tiden ska den inte flyttas härifrån. */
+        const { data, error } = await supa.from('lesson_reports')
+          .update({ booking_id: p.id }).eq('id', valt).is('booking_id', null).select('id');
+        if (error) { alert('Kunde inte koppla: ' + felText(error)); return; }
+        if (!data || !data.length) alert('Rapporten hann kopplas till något annat. Listan laddas om.');
+        await laddaOmEkonomi();
+      });
+      return;
+    }
+
+    if (undanta) {
+      const anledning = await fråga({
+        titel: 'Undanta passet?',
+        text: vad + '. Passet kommer varken på familjens faktura eller på studiehjälparens underlag.',
+        innehåll: '<div class="fgroup" style="margin-top:14px"><label for="avv-anledning">Varför?</label>'
+          + '<textarea class="inp" id="avv-anledning" rows="3" maxlength="300" '
+          + 'placeholder="Till exempel: testpass, inte ett riktigt pass"></textarea></div>',
+        knapp: 'Undanta',
+        läs: ruta => {
+          const t = $('#avv-anledning', ruta).value.trim();
+          return t ? { värde: t } : { fel: 'Skriv varför — ett undantag utan anledning går inte att följa upp.' };
+        }
+      });
+      if (!anledning) return;
+      await medan(undanta, 'Sparar…', async () => {
+        if (await skriv('bookings', p.id, { fakturerbar: false, fakturerbar_anledning: anledning })) {
+          await laddaOmEkonomi();
+        }
+      });
+      return;
+    }
+
+    const ja = await bekräfta({
+      titel: 'Ta med passet igen?',
+      text: vad + '. Passet kommer med på nästa körning, om det har en rapport.',
+      knapp: 'Ta med'
+    });
+    if (!ja) return;
+    await medan(återta, 'Sparar…', async () => {
+      if (await skriv('bookings', p.id, { fakturerbar: true, fakturerbar_anledning: null })) {
+        await laddaOmEkonomi();
+      }
+    });
+  });
+
+  /* ============================================================
+     MÅNADSKÖRNINGEN (Fas 2)
+
+     Två steg, som vid utskicket: först en torrkörning som visar vad
+     som skulle skapas, sedan det skarpa anropet — och det går bara
+     för samma månad som torrkörningen gällde. Det skarpa steget
+     skapar UTKAST. Ingenting skickas härifrån.
+     ============================================================ */
+  function fyllPerioder() {
+    const val = $('#kor-period');
+    if (!val || val.options.length) return;
+    const nu = new Date();
+    const alt = [];
+    for (let i = 1; i <= 6; i++) {
+      const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
+      const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      alt.push('<option value="' + iso + '">' + esc(NXBetalning.periodText(iso + '-01')) + '</option>');
+    }
+    const iår = nu.getFullYear() + '-' + String(nu.getMonth() + 1).padStart(2, '0');
+    alt.push('<option value="' + iår + '">' + esc(NXBetalning.periodText(iår + '-01'))
+      + ' (pågår)</option>');
+    val.innerHTML = alt.join('');
+    val.addEventListener('change', () => { $('#kor-skapa').disabled = true; S.korning = null; });
+  }
+
+  function ritaKörning(d, torr) {
+    const summa = lista => (lista || []).reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
+    const rad = (vänster, höger, total) => '<div class="sum-line' + (total ? ' total' : '') + '">'
+      + '<span>' + vänster + '</span><span class="adm-tal">' + höger + '</span></div>';
+    const fakturor = d.fakturor || [];
+    const underlag = d.utbetalningar || [];
+
+    let h = '<p class="small" style="margin:14px 0 8px"><b>'
+      + esc((torr ? 'Torrkörning' : 'Skapat') + ' · ' + NXBetalning.periodText(d.period)) + '</b>'
+      + ' <span class="xsmall" style="color:var(--bl-3)">pass till och med '
+      + esc(kortDatum(d.pass_till_och_med)) + '</span></p>';
+
+    h += fakturor.map(f => rad(esc(namnFör(f.parent_id)) + ' · ' + f.pass + ' pass',
+      esc(kronor(f.belopp_ore)))).join('');
+    h += rad('Familjerna, ' + fakturor.length + (fakturor.length === 1 ? ' faktura' : ' fakturor'),
+      esc(kronor(summa(fakturor))), true);
+
+    h += underlag.map(u => rad(esc(namnFör(u.tutor_id)) + ' · ' + u.pass + ' pass',
+      esc(kronor(u.belopp_ore)))).join('');
+    h += rad('Studiehjälparna, ' + underlag.length + ' underlag', esc(kronor(summa(underlag))), true);
+
+    const noter = [];
+    const utan = d.hoppade_over_utan_rapport || [];
+    if (utan.length) {
+      noter.push('⚠️ ' + utan.length + (utan.length === 1 ? ' pass saknar' : ' pass saknar')
+        + ' rapport och kom inte med. <a href="#ekonomi/avvikelser">Se avvikelser</a>.');
+    }
+    (d.hoppade_over_utan_timpenning || []).forEach(id => noter.push('⚠️ ' + esc(namnFör(id))
+      + ' har ingen timpenning, så hens pass väntar till nästa körning.'));
+    if (d.undantagna_pass) noter.push(d.undantagna_pass + ' undantagna pass räknades inte.');
+    if (d.skapade) noter.push('Skapade: ' + d.skapade.fakturor + ' fakturor och '
+      + d.skapade.utbetalningar + ' underlag, alla som utkast.');
+    (d.problem || []).forEach(p => noter.push('⚠️ ' + esc(p)));
+    if (!fakturor.length && !underlag.length && torr) noter.push('Inget att skapa för den här månaden.');
+
+    return h + noter.map(n => '<p class="xsmall" style="margin:8px 0 0;line-height:1.6">' + n + '</p>').join('');
+  }
+
+  document.addEventListener('click', async e => {
+    const torr = e.target.closest('#kor-torr');
+    const skapa = e.target.closest('#kor-skapa');
+    if (!torr && !skapa) return;
+
+    const period = $('#kor-period').value;
+    const host = $('#kor-resultat');
+
+    if (torr) {
+      $('#kor-skapa').disabled = true;
+      S.korning = null;
+      const res = await medan(torr, 'Räknar…', () =>
+        supa.functions.invoke('fakturering', { body: { torrkorning: true, period } }));
+      const fel = res.error || (res.data && res.data.error);
+      if (fel) { host.innerHTML = tomt('Torrkörningen gick inte', await funktionsFel(fel)); return; }
+      S.korning = { period, torr: res.data };
+      host.innerHTML = ritaKörning(res.data, true);
+      $('#kor-skapa').disabled = !((res.data.fakturor || []).length || (res.data.utbetalningar || []).length);
+      return;
+    }
+
+    if (!S.korning || S.korning.period !== period) { skapa.disabled = true; return; }
+    const t = S.korning.torr;
+    const summa = lista => (lista || []).reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
+    const ja = await bekräfta({
+      titel: 'Skapa utkast för ' + NXBetalning.periodText(t.period) + '?',
+      text: t.fakturor.length + ' fakturor på ' + kronor(summa(t.fakturor)) + ' och '
+        + t.utbetalningar.length + ' underlag på ' + kronor(summa(t.utbetalningar))
+        + '. De skapas som utkast — ingenting skickas.',
+      knapp: 'Skapa utkast'
+    });
+    if (!ja) return;
+
+    const res = await medan(skapa, 'Skapar…', () =>
+      supa.functions.invoke('fakturering', { body: { period } }));
+    const fel = res.error || (res.data && res.data.error);
+    skapa.disabled = true;
+    S.korning = null;
+    if (fel) { host.innerHTML = tomt('Körningen gick inte', await funktionsFel(fel)); return; }
+    host.innerHTML = ritaKörning(res.data, false);
+
+    await hämtaAllt();
+    await hämtaEkonomiunderlag();
+    ritaFakturor();
+    ritaUtbetalningar();
+    ritaAvvikelser();
+    await ritaÖversikt();
+  });
+
+  /* ============================================================
      SYSTEM
      ============================================================ */
 
@@ -2101,9 +2437,39 @@
 
     if (el.dataset && el.dataset.utb) {
       const u = S.utbetalningar.find(x => x.id === el.dataset.utb);
+
+      /* Utbetald betyder att pengarna lämnat kontot. Det ska bara gå
+         efter att någon granskat underlaget och satt Godkänd — och
+         aldrig av misstag i en rullgardin. Överföringen görs utanför
+         plattformen, så den här markeringen är det enda spåret av
+         den. (Fas 2.6) */
+      if (el.value === 'utbetald' && u.status !== 'godkand') {
+        alert('Godkänn underlaget först. Utbetald går bara att sätta på ett godkänt underlag.');
+        el.value = u.status;
+        return;
+      }
+      if (el.value === 'utbetald') {
+        const ja = await bekräfta({
+          titel: 'Har pengarna lämnat kontot?',
+          text: kronor(u.belopp_ore) + ' till ' + namnFör(u.tutor_id) + ' för '
+            + NXBetalning.periodText(u.period) + '. Markera bara som utbetald när '
+            + 'överföringen faktiskt är gjord.',
+          knapp: 'Ja, den är gjord'
+        });
+        if (!ja) { el.value = u.status; return; }
+      }
+      if (u.status === 'utbetald' && el.value !== 'utbetald') {
+        const ja = await bekräfta({
+          titel: 'Ångra utbetald?',
+          text: 'Utbetalningsdatumet tas bort. Gör det bara om överföringen aldrig gick iväg.',
+          knapp: 'Ångra'
+        });
+        if (!ja) { el.value = u.status; return; }
+      }
+
       const fält = { status: el.value };
       if (el.value === 'utbetald' && !u.utbetald_at) fält.utbetald_at = new Date().toISOString();
-      if (el.value === 'utkast') fält.utbetald_at = null;
+      if (el.value !== 'utbetald') fält.utbetald_at = null;
       Object.assign(u, fält);
       await skriv('payouts', u.id, fält);
       ritaUtbetalningar(); ritaÖversikt();
@@ -2553,11 +2919,10 @@
      någon registrerar ett konto. Adminvyn kan alltså inte trolla
      fram en familj — kontot måste finnas.
 
-     Att bjuda in någon som INTE registrerat sig kräver
-     auth.admin.inviteUserByEmail, som bara går att anropa med
-     service_role från en edge-funktion. Den finns inte byggd, och
-     rutan nedan säger det rakt ut i stället för att erbjuda en knapp
-     som inte gör något.
+     Har familjen inget konto kan den bjudas in härifrån (Fas 2.8).
+     Edge-funktionen bjud-in kör auth.admin.inviteUserByEmail med
+     service_role; familjen får ett mejl, väljer lösenord, och då
+     finns kontot. Eleven skapas efter det, i samma ruta.
      ============================================================ */
   function familjeVal(valt) {
     const familjer = Object.values(S.personer)
@@ -2595,9 +2960,15 @@
       '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="le-t">'
       + '<h3 id="le-t">Skapa elev ur anmälan</h3>'
       + '<p>Eleven hamnar i matchningskön så fort den finns. '
-      + 'Familjen måste ha ett konto — har de inget får de registrera sig på '
-      + 'nextrum.se, sedan dyker de upp i listan här.</p>'
+      + 'Familjen måste ha ett konto. Har de inget kan du bjuda in dem härifrån.</p>'
       + '<div class="fgroup"><label for="le-familj">Familj</label>' + familjeVal(trolig && trolig.id) + '</div>'
+      + (!trolig && NX.epostOk(lead.email || '')
+        ? '<div style="margin:10px 0 4px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px">'
+          + '<p class="xsmall" style="margin:0 0 8px;line-height:1.6">Inget konto har adressen <b>'
+          + esc(lead.email) + '</b>. Bjud in familjen, så får de ett mejl där de väljer lösenord. '
+          + 'När de gjort det finns kontot i listan ovan.</p>'
+          + '<button type="button" class="btn btn-ghost btn-sm" id="le-bjud">Bjud in familjen</button></div>'
+        : '')
       + '<div class="ag-faltrad" style="margin-top:12px">'
       + '<div class="fgroup"><label for="le-namn">Elevens namn</label>'
       + '<input class="inp" id="le-namn" value="' + esc(lead.child_name || '') + '"></div>'
@@ -2617,6 +2988,28 @@
     const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
     ruta.addEventListener('click', ev => {
       if (ev.target === ruta || ev.target.closest('[data-le-stang]')) stäng();
+    });
+
+    const bjud = $('#le-bjud', ruta);
+    if (bjud) bjud.addEventListener('click', async () => {
+      const msg = $('#le-msg', ruta);
+      rensa(msg);
+      const ja = await bekräfta({
+        titel: 'Bjud in ' + lead.email + '?',
+        text: 'Ett mejl från Nextrum går till adressen, med en länk där familjen väljer lösenord.',
+        knapp: 'Skicka inbjudan'
+      });
+      if (!ja) return;
+      const res = await medan(bjud, 'Skickar…', () => supa.functions.invoke('bjud-in', {
+        body: { epost: lead.email, namn: lead.parent_name || '', lead_id: lead.id }
+      }));
+      const fel = res.error || (res.data && res.data.error);
+      if (fel) { säg(msg, await funktionsFel(fel), false); return; }
+      if (lead.status === 'new') lead.status = 'contacted';
+      bjud.disabled = true;
+      säg(msg, '✓ Inbjudan skickad till ' + res.data.till + '. När familjen valt lösenord '
+        + 'finns kontot i listan — öppna rutan igen då.', true);
+      ritaLeads();
     });
 
     $('#le-skapa', ruta).addEventListener('click', async () => {
@@ -4246,6 +4639,7 @@
       });
 
       await hämtaAllt();
+      await hämtaEkonomiunderlag();
 
       ritaLeads();
       ritaAnsokningar();
@@ -4262,6 +4656,8 @@
       ritaStatistik();
       ritaFakturor();
       ritaUtbetalningar();
+      ritaAvvikelser();
+      fyllPerioder();
       ritaIntegrationer();
       ritaAdminanvandare();
       ritaPris();
