@@ -95,15 +95,19 @@ function periodSlut(period: string): string {
 
 // PostgREST lämnar ut högst tusen rader per fråga. En lista som tyst
 // kapas är värre än ingen lista, så urvalet hämtas i sidor.
+//
+// Raderna tas emot som unknown[] och får sin typ här. supabase-js kan
+// inte härleda typen ur en kolumnlista som byggs av flera strängar,
+// och ger den då typen GenericStringError[].
 async function allaRader<T>(
-  fraga: (fran: number, till: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  fraga: (fran: number, till: number) => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>,
 ): Promise<T[]> {
   const SIDA = 500;
   const ut: T[] = [];
   for (let fran = 0; ; fran += SIDA) {
     const { data, error } = await fraga(fran, fran + SIDA - 1);
     if (error) throw new Error(error.message);
-    ut.push(...(data ?? []));
+    ut.push(...((data ?? []) as T[]));
     if (!data || data.length < SIDA) return ut;
   }
 }
