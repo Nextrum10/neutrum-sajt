@@ -38,25 +38,12 @@
 // ska läsas igenom och ändras innan de blir material hos en elev.
 // ============================================================
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { json, preflight } from '../_delad/http.ts';
+import { kravAdmin } from '../_delad/auth.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 
 const MODEL = 'claude-sonnet-5';
-
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-function json(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, 'content-type': 'application/json' },
-  });
-}
 
 /* Fri text från klienten går in i prompten. Den kapas, så att ett
    långt fält inte kan användas för att skicka iväg en uppsats på
@@ -66,27 +53,11 @@ function kort(v: unknown, max: number): string {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  if (req.method === 'OPTIONS') return preflight();
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return json({ error: 'Saknar Authorization-header, du måste vara inloggad.' }, 401);
-    }
-
-    const supa = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: anv } = await supa.auth.getUser();
-    if (!anv?.user) return json({ error: 'Ingen giltig session.' }, 401);
-
-    const { data: profil } = await supa
-      .from('profiles').select('is_admin').eq('id', anv.user.id).maybeSingle();
-
-    if (!profil?.is_admin) {
-      return json({ error: 'Bara admin kan använda det här.' }, 403);
-    }
+    const vem = await kravAdmin(req.headers.get('Authorization'));
+    if (!vem.ok) return vem.svar;
 
     if (!ANTHROPIC_API_KEY) {
       return json({ error: 'ANTHROPIC_API_KEY är inte satt som secret på servern.' }, 500);

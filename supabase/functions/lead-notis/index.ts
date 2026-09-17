@@ -26,6 +26,10 @@
 // service_role ser den.
 // ============================================================
 
+import { json as jsonMed, esc, epostOk } from '../_delad/http.ts';
+import { lika } from '../_delad/auth.ts';
+import { skickaViaResend } from '../_delad/mejl.ts';
+
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
 /* Injiceras av Supabase i varje Edge Function, behöver inte sättas. */
@@ -89,12 +93,8 @@ async function hämtaHemlighet(): Promise<string | null> {
   }
 }
 
-function json(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'content-type': 'application/json' },
-  });
-}
+/* Webhooken är ingen webbläsare, så svaren har inga CORS-headers. */
+const json = (body: unknown, status: number) => jsonMed(body, status, {});
 
 /* Rader som saknas ska inte bli tomma etiketter i mejlet. */
 function rad(etikett: string, varde: unknown): string {
@@ -102,18 +102,9 @@ function rad(etikett: string, varde: unknown): string {
   return v ? `${etikett}: ${v}\n` : '';
 }
 
-/* Ser adressen ut som en adress? Samma grova kontroll som i
-   formuläret. Den finns HÄR också, för databasen kan fyllas på
-   från annat håll än sidan och en trasig rad får inte kunna
+/* epostOk (från _delad/http.ts) kollas HÄR också, för databasen kan
+   fyllas på från annat håll än sidan och en trasig rad får inte kunna
    stoppa aviseringen om sig själv. */
-function epostOk(v: unknown): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v ?? '').trim());
-}
-
-function esc(s: unknown): string {
-  return String(s ?? '').replace(/[&<>"']/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
-}
 
 Deno.serve(async (req) => {
   try {
@@ -134,7 +125,7 @@ Deno.serve(async (req) => {
     if (!hemlighet) {
       return json({ error: 'Hemligheten gick inte att läsa ur public.notis_konfig.' }, 503);
     }
-    if (presenterad !== hemlighet) {
+    if (!lika(presenterad, hemlighet)) {
       return json({ error: 'Fel eller saknad hemlighet.' }, 401);
     }
 
@@ -158,28 +149,21 @@ Deno.serve(async (req) => {
       `<h2 style="font:600 18px system-ui;margin:0 0 14px">Ny intresseanmälan</h2>` +
       `<pre style="font:14px/1.6 ui-monospace,monospace;white-space:pre-wrap;margin:0">${esc(text)}</pre>`;
 
-    const skicka = (avsandare: string, mottagare: string[]) => fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: avsandare,
-        to: mottagare,
-        /* Svara-knappen ska gå till familjen, inte till avsändaren.
-           Utan det här måste man kopiera adressen ur mejlet.
+    const skicka = (avsandare: string, mottagare: string[]) => skickaViaResend({
+      fran: avsandare,
+      till: mottagare,
+      /* Svara-knappen ska gå till familjen, inte till avsändaren.
+         Utan det här måste man kopiera adressen ur mejlet.
 
-           Bara när adressen ser giltig ut. Resend avvisar HELA
-           utskicket med 422 på en ogiltig svarsadress, och då dog
-           aviseringen om just den anmälan som behövde granskas mest.
-           Adressen står ändå i texten ovan, så ingenting går
-           förlorat — mejlet kommer fram, utan svara-knapp. */
-        reply_to: epostOk(r.email) ? [String(r.email).trim()] : undefined,
-        subject: `Intresseanmälan: ${r.parent_name ?? 'okänd'}${r.grade ? ' — ' + r.grade : ''}`,
-        text,
-        html,
-      }),
+         Bara när adressen ser giltig ut. Resend avvisar HELA
+         utskicket med 422 på en ogiltig svarsadress, och då dog
+         aviseringen om just den anmälan som behövde granskas mest.
+         Adressen står ändå i texten ovan, så ingenting går
+         förlorat — mejlet kommer fram, utan svara-knapp. */
+      svaraTill: epostOk(r.email) ? [String(r.email).trim()] : undefined,
+      amne: `Intresseanmälan: ${r.parent_name ?? 'okänd'}${r.grade ? ' — ' + r.grade : ''}`,
+      text,
+      html,
     });
 
     const svar = await skicka(FRAN, TILL);

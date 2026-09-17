@@ -46,46 +46,20 @@
 // första skarpa körningen.
 // ============================================================
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { cors, json as jsonMed, preflight } from '../_delad/http.ts';
+import { kravAdmin, lika, serviceklient } from '../_delad/auth.ts';
+import { BETALNINGSVILLKOR_DAGAR, MANADER } from '../_delad/konstanter.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 const NYCKEL = Deno.env.get('FAKTURERING_NYCKEL');
 
-// Hur många dagar familjen har på sig att betala.
-// Måste stämma med det som står på prissidan, i FAQ:n och i
-// användarvillkoren — en faktura som förfaller på en annan dag än
-// villkoret lovar är en tvist, inte ett skrivfel.
-//
-// TIO, INTE FJORTON — OCH EN RÄTTELSE
-//
-// Den driftsatta funktionen hade 10 medan main och alla publika
-// texter sa 14. Jag läste det som drift och deployade tillbaka 14
-// 2026-09-15. Det var fel: tio dagar var ett medvetet beslut, taget
-// på grenen vibrant-davinci, som ändrade siffran på ALLA nio ställen
-// samtidigt. Den grenen var bara inte mergad än.
-//
-// Lärdomen är att en siffra som skiljer sig mellan drift och repo
-// inte behöver vara ett misstag i driften — den kan vara ett beslut
-// som inte hunnit hem. Kontrollera omergade grenar innan du
-// "rättar" något som ser ut som drift.
-//
-// verktyg/kolla-betalningsvillkor.py kontrollerar att siffran
-// stämmer överens överallt. Kör den efter varje ändring.
-const BETALNINGSVILLKOR_DAGAR = 10;
+// Betalningsvillkoret ligger i _delad/konstanter.ts, en gång för alla
+// funktioner. Den driftsatta versionen av den här filen hade 14 dagar
+// när allt annat sa 10 — det är skälet till att siffran flyttade.
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-fakturering-nyckel',
-};
-
-function json(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, 'content-type': 'application/json' },
-  });
-}
+const CORS = cors('x-fakturering-nyckel');
+const json = (body: unknown, status: number) => jsonMed(body, status, CORS);
 
 // Periodens första dag som YYYY-MM-DD. Alla belopp hör till en månad,
 // och unique(parent_id, period) gör att en omkörning inte kan skapa
@@ -117,16 +91,6 @@ function periodSlut(period: string): string {
   const a = man === 12 ? ar + 1 : ar;
   const m = man === 12 ? 1 : man + 1;
   return `${a}-${String(m).padStart(2, '0')}-01`;
-}
-
-// Jämför nyckeln utan att svarstiden avslöjar hur många tecken som
-// stämde.
-function lika(a: string, b: string): boolean {
-  const x = new TextEncoder().encode(a);
-  const y = new TextEncoder().encode(b);
-  let skillnad = x.length ^ y.length;
-  for (let i = 0; i < Math.max(x.length, y.length); i++) skillnad |= (x[i] ?? 0) ^ (y[i] ?? 0);
-  return skillnad === 0;
 }
 
 // PostgREST lämnar ut högst tusen rader per fråga. En lista som tyst
@@ -163,16 +127,13 @@ function familjebelopp(
   return Math.round((minuter / 60) * tim);
 }
 
-const MANADER = ['januari','februari','mars','april','maj','juni',
-                 'juli','augusti','september','oktober','november','december'];
-
 function radtext(subject: string | null, datum: string): string {
   const [, m, d] = datum.split('-');
   return `${subject || 'Pass'} ${Number(d)} ${MANADER[Number(m) - 1]}`;
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  if (req.method === 'OPTIONS') return preflight(CORS);
 
   try {
     if (!SUPABASE_URL || !SERVICE_ROLE) {
@@ -189,19 +150,10 @@ Deno.serve(async (req) => {
       if (!lika(nyckel, NYCKEL)) return json({ error: 'Fel nyckel.' }, 401);
       korningAv = 'nyckel';
     } else {
-      const auth = req.headers.get('Authorization') ?? '';
-      if (!auth.startsWith('Bearer ') || !ANON_KEY) {
-        return json({ error: 'Ingen nyckel och ingen inloggning.' }, 401);
-      }
-      const somAnvandare = createClient(SUPABASE_URL, ANON_KEY, {
-        global: { headers: { Authorization: auth } },
-        auth: { persistSession: false },
-      });
-      const { data: jag, error: jagFel } = await somAnvandare.auth.getUser();
-      if (jagFel || !jag?.user) return json({ error: 'Inloggningen gick inte att verifiera.' }, 401);
-      const { data: profil } = await somAnvandare
-        .from('profiles').select('is_admin').eq('id', jag.user.id).maybeSingle();
-      if (!profil?.is_admin) return json({ error: 'Bara admin kan köra faktureringen.' }, 403);
+      const auth = req.headers.get('Authorization');
+      if (!auth) return json({ error: 'Ingen nyckel och ingen inloggning.' }, 401);
+      const vem = await kravAdmin(auth);
+      if (!vem.ok) return vem.svar;
       korningAv = 'admin';
     }
 
@@ -213,9 +165,7 @@ Deno.serve(async (req) => {
     if (!period) return json({ error: 'Perioden ska skrivas ÅÅÅÅ-MM, till exempel 2026-09.' }, 400);
     const slut = periodSlut(period);
 
-    const db = createClient(SUPABASE_URL, SERVICE_ROLE, {
-      auth: { persistSession: false },
-    });
+    const db = serviceklient();
 
     // ---------- priserna ----------
     const [pris, tjanster] = await Promise.all([

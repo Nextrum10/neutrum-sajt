@@ -50,7 +50,10 @@
 // skickar Resend bara det första.
 // ============================================================
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { json, preflight, esc, epostOk } from '../_delad/http.ts';
+import { kravAdmin, serviceklient } from '../_delad/auth.ts';
+import { BETALNINGSVILLKOR_DAGAR, MANADER } from '../_delad/konstanter.ts';
+import { skickaViaResend } from '../_delad/mejl.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -60,31 +63,8 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const FRAN = 'Nextrum <no-reply@nextrum.se>';
 const SVARA_TILL = 'info@nextrum.se';
 
-// Måste stämma med prissidan, FAQ:n och användarvillkoren. Samma
-// konstant finns i fakturering — en faktura som förfaller på en annan
-// dag än villkoret lovar är en tvist, inte ett skrivfel.
-const BETALNINGSVILLKOR_DAGAR = 10;
-
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-function json(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, 'content-type': 'application/json' },
-  });
-}
-
-function esc(s: unknown): string {
-  return String(s ?? '').replace(/[&<>"']/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
-}
-
-function epostOk(v: unknown): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v ?? '').trim());
-}
+// Betalningsvillkoret (tio dagar) ligger i _delad/konstanter.ts och
+// delas med fakturering.
 
 // Ören in, kronor ut. Decimalerna visas bara när de finns: "379 kr"
 // är lättare att läsa än "379,00 kr", men 90 minuter blir 568,50 och
@@ -98,9 +78,6 @@ function kronor(ore: number): string {
     maximumFractionDigits: 2,
   }) + ' kr';
 }
-
-const MANADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni',
-                 'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
 
 function periodText(iso: string): string {
   const [ar, man] = String(iso).split('-').map(Number);
@@ -216,7 +193,7 @@ function utbetalningsMejl(u: any, rader: any[], namn: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  if (req.method === 'OPTIONS') return preflight();
 
   try {
     if (!SUPABASE_URL || !SERVICE_ROLE || !ANON_KEY) {
@@ -224,22 +201,9 @@ Deno.serve(async (req) => {
     }
 
     // ---------- 1. Vem frågar? ----------
-    const auth = req.headers.get('Authorization') ?? '';
-    if (!auth.startsWith('Bearer ')) return json({ error: 'Ingen inloggning.' }, 401);
-
-    // Anroparens egen token mot RLS. Läser bara den egna profilraden,
-    // för det är allt RLS släpper fram — vilket är precis vad vi vill
-    // veta något om.
-    const somAnvandare = createClient(SUPABASE_URL, ANON_KEY, {
-      global: { headers: { Authorization: auth } },
-    });
-    const { data: jag, error: jagFel } = await somAnvandare.auth.getUser();
-    if (jagFel || !jag?.user) return json({ error: 'Inloggningen gick inte att verifiera.' }, 401);
-
-    const { data: profil } = await somAnvandare
-      .from('profiles').select('is_admin, full_name').eq('id', jag.user.id).maybeSingle();
-
-    if (!profil?.is_admin) return json({ error: 'Bara admin får skicka fakturor.' }, 403);
+    // Anroparens egen token mot Auth och RLS, i _delad/auth.ts.
+    const vem = await kravAdmin(req.headers.get('Authorization'));
+    if (!vem.ok) return vem.svar;
 
     // ---------- 2. Vad ska skickas? ----------
     const kropp = await req.json().catch(() => ({}));
@@ -253,7 +217,7 @@ Deno.serve(async (req) => {
     // Först härifrån används service_role. Kontrollen ovan är redan
     // gjord; allt nedan går förbi RLS med flit, eftersom en faktura
     // hör till en familj som admin inte är part i.
-    const db = createClient(SUPABASE_URL, SERVICE_ROLE);
+    const db = serviceklient();
 
     let mottagare = '';
     let namn = '';
@@ -344,21 +308,14 @@ Deno.serve(async (req) => {
     const minut = new Date().toISOString().slice(0, 16);
     const idempotens = `${typ}-${rad.id}-${paminnelse ? 'paminnelse' : 'utskick'}-${minut}`;
 
-    const svar = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${RESEND_API_KEY}`,
-        'Idempotency-Key': idempotens,
-      },
-      body: JSON.stringify({
-        from: FRAN,
-        to: [mottagare],
-        reply_to: [SVARA_TILL],
-        subject: mejl.amne,
-        text: mejl.text,
-        html: mejl.html,
-      }),
+    const svar = await skickaViaResend({
+      fran: FRAN,
+      till: [mottagare],
+      svaraTill: [SVARA_TILL],
+      amne: mejl.amne,
+      text: mejl.text,
+      html: mejl.html,
+      idempotens,
     });
 
     if (svar.status === 403) {

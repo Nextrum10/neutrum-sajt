@@ -14,54 +14,31 @@
 // rapporter, exakt som databasen redan garanterar.
 // ============================================================
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { json, preflight } from '../_delad/http.ts';
+import { arAdmin, kravInloggad } from '../_delad/auth.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 
 // Kolla https://docs.claude.com/en/docs/about-claude/models för det
 // senaste modellnamnet om det här börjar ge fel, modellnamn ändras
 // över tid.
 const MODEL = 'claude-sonnet-5';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-function json(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, 'content-type': 'application/json' },
-  });
-}
-
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  if (req.method === 'OPTIONS') return preflight();
 
   try {
     if (!ANTHROPIC_API_KEY) {
       return json({ error: 'ANTHROPIC_API_KEY är inte satt som secret på servern.' }, 500);
     }
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return json({ error: 'Saknar Authorization-header, du måste vara inloggad.' }, 401);
-    }
-
     // Agerar SOM den inloggade läraren, inte som admin. RLS gäller.
-    const supa = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const vem = await kravInloggad(req.headers.get('Authorization'));
+    if (!vem.ok) return vem.svar;
+    const supa = vem.klient;
 
     const { report_id } = await req.json();
     if (!report_id) return json({ error: 'report_id saknas i anropet.' }, 400);
-
-    const { data: vem, error: authErr } = await supa.auth.getUser();
-    if (authErr || !vem?.user) {
-      return json({ error: 'Ogiltig inloggning.' }, 401);
-    }
 
     const { data: report, error: readErr } = await supa
       .from('lesson_reports')
@@ -78,12 +55,8 @@ Deno.serve(async (req) => {
        bekostnad — det var bara sparandet som sedan inte träffade
        någon rad. Rapportens egen studiehjälpare, eller admin
        (återkopplingsfliken i adminvyn), är de enda som skriver här. */
-    if (report.tutor_id !== vem.user.id) {
-      const { data: jag } = await supa
-        .from('profiles').select('is_admin').eq('id', vem.user.id).maybeSingle();
-      if (!jag?.is_admin) {
-        return json({ error: 'Bara rapportens studiehjälpare kan skriva om den.' }, 403);
-      }
+    if (report.tutor_id !== vem.anvandare && !await arAdmin(supa, vem.anvandare)) {
+      return json({ error: 'Bara rapportens studiehjälpare kan skriva om den.' }, 403);
     }
 
     const student = (report as any).students;

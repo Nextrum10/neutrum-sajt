@@ -270,8 +270,9 @@ En påminnelse flyttar aldrig fram datumet.
 
 ### Ändra betalningsvillkoret
 
-Antalet dagar står på **femton ställen**: konstanten `BETALNINGSVILLKOR_DAGAR` i både
-`fakturering` och `faktura-utskick`, den synliga texten i FAQ:n, på prissidan och i
+Antalet dagar står på **fjorton ställen**: konstanten `BETALNINGSVILLKOR_DAGAR` i
+`supabase/functions/_delad/konstanter.ts` (som både `fakturering` och
+`faktura-utskick` importerar — driftsätt båda efter en ändring), den synliga texten i FAQ:n, på prissidan och i
 användarvillkoren på båda språken, FAQ-schemat, raden i adminvyn och maskotens
 svarsfil. Alla måste säga samma sak. En faktura som förfaller på en annan dag än
 prissidan lovar är en tvist, inte ett skrivfel — och den diskussionen tas mitt i en
@@ -285,7 +286,7 @@ python3 verktyg/bygg-maskotsvar.py        # maskotens svar ur FAQ:n
 python3 verktyg/kolla-betalningsvillkor.py
 ```
 
-Den sista läser siffran på alla femton ställen och säger ifrån om de spretar. Den
+Den sista läser siffran på alla fjorton ställen och säger ifrån om de spretar. Den
 säger också ifrån om en mening har formulerats om så att den slutat bevaka ett
 ställe — ett sökuttryck som inte hittar något ser annars ut som ett godkännande.
 

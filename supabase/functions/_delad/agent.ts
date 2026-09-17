@@ -38,7 +38,7 @@
 // ============================================================
 
 import Anthropic from 'npm:@anthropic-ai/sdk@0.124.0';
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Kolla https://docs.claude.com/en/docs/about-claude/models om det här
 // börjar ge fel. Modellnamn ändras över tid.
@@ -50,64 +50,20 @@ export const MODELL = 'claude-opus-5';
 // svar, och höj då med ett i taget.
 export const MAX_STEG = 6;
 
-export const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-export function json(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, 'content-type': 'application/json' },
-  });
-}
-
 // ============================================================
-// Åtkomst
+// Svar och åtkomst
 //
 // Båda agenterna är adminverktyg. Kontrollen görs mot profiles med
 // användarens EGEN token, alltså under RLS, precis som resten av
 // koden. Vi litar aldrig på att anroparen säger sig vara admin.
+//
+// Implementationen ligger sedan Fas 3 i http.ts och auth.ts, som
+// alla funktioner delar. Den exporteras vidare härifrån, så att
+// agenterna importerar som förut.
 // ============================================================
 
-export function anvandarklient(authHeader: string): SupabaseClient {
-  return createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } },
-  );
-}
-
-export function serviceklient(): SupabaseClient {
-  return createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  );
-}
-
-export async function kravAdmin(authHeader: string | null): Promise<{ ok: true; anvandare: string } | { ok: false; svar: Response }> {
-  if (!authHeader) {
-    return { ok: false, svar: json({ error: 'Du måste vara inloggad.' }, 401) };
-  }
-
-  const supa = anvandarklient(authHeader);
-  const { data: u } = await supa.auth.getUser();
-  if (!u?.user) {
-    return { ok: false, svar: json({ error: 'Inloggningen gick inte att verifiera.' }, 401) };
-  }
-
-  const { data: profil } = await supa
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', u.user.id)
-    .single();
-
-  if (!profil?.is_admin) {
-    return { ok: false, svar: json({ error: 'Den här funktionen är bara för admin.' }, 403) };
-  }
-
-  return { ok: true, anvandare: u.user.id };
-}
+export { CORS, json } from './http.ts';
+export { anvandarklient, serviceklient, kravAdmin } from './auth.ts';
 
 // ============================================================
 // Hämtning

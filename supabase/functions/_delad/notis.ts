@@ -19,30 +19,24 @@
 // hemligheten blev den bokstavliga texten "openssl rand -hex 32".
 //
 // Tabellen har RLS på och noll policyer. Bara service_role ser den.
+//
+// Sedan Fas 3 bygger modulen på http.ts, auth.ts och mejl.ts, som
+// alla funktioner delar. Exporterna här är desamma som förut.
 // ============================================================
 
-import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { cors, json as jsonMed, esc as escHtml } from './http.ts';
+import { lika, serviceklient } from './auth.ts';
+import { skickaViaResend } from './mejl.ts';
+import { MANADER } from './konstanter.ts';
 
-export const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, x-nextrum-notis',
-};
+export const CORS = cors('x-nextrum-notis');
 
 export function json(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, 'content-type': 'application/json' },
-  });
+  return jsonMed(body, status, CORS);
 }
 
-export function esc(t: string): string {
-  return String(t).replace(/[&<>"]/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
-}
-
-const MANADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni',
-                 'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
+export const esc = escHtml;
 
 export function datumText(iso: string): string {
   const [, m, d] = String(iso).split('-');
@@ -51,14 +45,14 @@ export function datumText(iso: string): string {
 
 /** Klient med service_role. Den enda som ser notis_konfig. */
 export function db(): SupabaseClient {
-  const url = Deno.env.get('SUPABASE_URL');
-  const nyckel = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!url || !nyckel) throw new Error('SUPABASE_URL eller SUPABASE_SERVICE_ROLE_KEY saknas.');
-  return createClient(url, nyckel, { auth: { persistSession: false } });
+  if (!Deno.env.get('SUPABASE_URL') || !Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+    throw new Error('SUPABASE_URL eller SUPABASE_SERVICE_ROLE_KEY saknas.');
+  }
+  return serviceklient();
 }
 
 /**
- * Jämför headern mot hemligheten i notis_konfig.
+ * Jämför headern mot hemligheten i notis_konfig, i konstant tid.
  *
  * FEL HEMLIGHET OCH TRASIG LÄSNING ÄR INTE SAMMA SAK
  *
@@ -88,7 +82,7 @@ export async function hemlighetOk(req: Request, klient: SupabaseClient): Promise
     const { data, error } = await klient
       .from('notis_konfig').select('hemlighet').eq('id', 1).maybeSingle();
 
-    if (!error && data?.hemlighet) return header === data.hemlighet;
+    if (!error && data?.hemlighet) return lika(header, data.hemlighet);
 
     senasteFel = error?.message ?? 'raden saknas';
     console.error(`notis_konfig gick inte att läsa (försök ${forsok}):`, senasteFel);
@@ -114,20 +108,15 @@ const RESERV_NAR = ['info@nextrum.se'];
 export async function skickaMejl(o: {
   till: string; amne: string; text: string; html: string; svaraTill?: string;
 }): Promise<Response> {
-  const nyckel = Deno.env.get('RESEND_API_KEY');
-  if (!nyckel) return json({ error: 'RESEND_API_KEY saknas som secret.' }, 500);
+  if (!Deno.env.get('RESEND_API_KEY')) return json({ error: 'RESEND_API_KEY saknas som secret.' }, 500);
 
-  const skicka = (avsandare: string) => fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${nyckel}` },
-    body: JSON.stringify({
-      from: avsandare,
-      to: [o.till],
-      reply_to: o.svaraTill ? [o.svaraTill] : undefined,
-      subject: o.amne,
-      text: o.text,
-      html: o.html,
-    }),
+  const skicka = (avsandare: string) => skickaViaResend({
+    fran: avsandare,
+    till: [o.till],
+    svaraTill: o.svaraTill ? [o.svaraTill] : undefined,
+    amne: o.amne,
+    text: o.text,
+    html: o.html,
   });
 
   const svar = await skicka(FRAN);

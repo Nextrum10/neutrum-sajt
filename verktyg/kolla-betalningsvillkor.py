@@ -3,11 +3,12 @@
 
        python3 verktyg/kolla-betalningsvillkor.py
 
-Villkoret står på femton ställen i fyra olika sorters filer: två
-konstanter i edge-funktionerna, den synliga texten på fyra sidor på två
-språk, FAQ-schemat, raden i adminvyn och maskotens svarsfil. Koden vet
-om det — båda konstanterna bär en kommentar om att de måste stämma med
-prissidan, FAQ:n och användarvillkoren. Men en kommentar kan inte köras.
+Villkoret står på fjorton ställen i fyra olika sorters filer: en
+konstant i edge-funktionernas delade _delad/konstanter.ts (sedan Fas 3,
+förut två kopior), den synliga texten på fyra sidor på två språk,
+FAQ-schemat, raden i adminvyn och maskotens svarsfil. Koden vet om det —
+konstanten bär en kommentar om att den måste stämma med prissidan,
+FAQ:n och användarvillkoren. Men en kommentar kan inte köras.
 
 Det som gör det här värt ett verktyg är vad felet kostar. En faktura
 som förfaller på en annan dag än villkoret lovar är en tvist, inte ett
@@ -41,12 +42,11 @@ ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # prissidan slutar mönstret matcha, och utan den här siffran skulle
 # verktyget tiga om ett ställe det har slutat bevaka.
 STALLEN = [
-    ('supabase/functions/fakturering/index.ts',
-     r'^const BETALNINGSVILLKOR_DAGAR = (\d+);$', 1,
-     'sätter förfallodagen när fakturan skapas'),
-    ('supabase/functions/faktura-utskick/index.ts',
-     r'^const BETALNINGSVILLKOR_DAGAR = (\d+);$', 1,
-     'räknar om förfallodagen när fakturan skickas'),
+    # En konstant, importerad av fakturering (förfallodagen när fakturan
+    # skapas) och faktura-utskick (förfallodagen när den skickas).
+    ('supabase/functions/_delad/konstanter.ts',
+     r'^export const BETALNINGSVILLKOR_DAGAR = (\d+);$', 1,
+     'förfallodagen i fakturering och faktura-utskick'),
 
     ('faq.html', r'(\d+) dagars betalningsvillkor', 2,
      'FAQ: hur betalningen fungerar (text + schema)'),

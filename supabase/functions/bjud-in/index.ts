@@ -24,7 +24,8 @@
 // Funktionen skickar ett riktigt mejl. Adminvyn frågar därför först.
 // ============================================================
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { json, preflight, epostOk } from '../_delad/http.ts';
+import { kravAdmin, serviceklient } from '../_delad/auth.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -34,24 +35,8 @@ const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 // finnas bland de tillåtna i Supabase Auth; annars används Site URL.
 const TILLBAKA = 'https://nextrum.se/foralder';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-function json(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, 'content-type': 'application/json' },
-  });
-}
-
-function epostOk(v: unknown): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v ?? '').trim());
-}
-
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  if (req.method === 'OPTIONS') return preflight();
 
   try {
     if (!SUPABASE_URL || !SERVICE_ROLE || !ANON_KEY) {
@@ -59,19 +44,8 @@ Deno.serve(async (req) => {
     }
 
     // ---------- 1. Vem frågar? ----------
-    const auth = req.headers.get('Authorization') ?? '';
-    if (!auth.startsWith('Bearer ')) return json({ error: 'Ingen inloggning.' }, 401);
-
-    const somAnvandare = createClient(SUPABASE_URL, ANON_KEY, {
-      global: { headers: { Authorization: auth } },
-      auth: { persistSession: false },
-    });
-    const { data: jag, error: jagFel } = await somAnvandare.auth.getUser();
-    if (jagFel || !jag?.user) return json({ error: 'Inloggningen gick inte att verifiera.' }, 401);
-
-    const { data: profil } = await somAnvandare
-      .from('profiles').select('is_admin').eq('id', jag.user.id).maybeSingle();
-    if (!profil?.is_admin) return json({ error: 'Bara admin kan bjuda in.' }, 403);
+    const vem = await kravAdmin(req.headers.get('Authorization'));
+    if (!vem.ok) return vem.svar;
 
     // ---------- 2. Vem bjuds in? ----------
     const kropp = await req.json().catch(() => ({}));
@@ -81,7 +55,7 @@ Deno.serve(async (req) => {
 
     if (!epostOk(epost)) return json({ error: 'Adressen ser inte ut som en e-postadress.' }, 400);
 
-    const db = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+    const db = serviceklient();
 
     // Finns kontot redan ska det användas, inte bjudas in en gång till.
     const { data: finns } = await db.from('profiles').select('id').eq('email', epost).maybeSingle();
