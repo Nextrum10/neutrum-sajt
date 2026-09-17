@@ -4,11 +4,7 @@
     {
       "name": "nextrum-static",
       "runtimeExecutable": "python3",
-      "runtimeArgs": [
-        "/private/tmp/claude-501/-Users-leothriskos-Downloads-nextrum-sajt--claude-worktrees-fixa-allt-ej-gatt-igenom-5899a5/1b653cd6-ac06-412e-9119-c108058f5f09/scratchpad/serve-worktree.py",
-        "/private/tmp/claude-501/-Users-leothriskos-Downloads-nextrum-sajt--claude-worktrees-fixa-allt-ej-gatt-igenom-5899a5/1b653cd6-ac06-412e-9119-c108058f5f09/scratchpad/site",
-        "8951"
-      ],
+      "runtimeArgs": [".claude/serve.py", "8951"],
       "port": 8951
     }
   ]
