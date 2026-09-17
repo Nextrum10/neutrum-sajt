@@ -217,70 +217,68 @@ window.NXStudie = (function () {
      som i kalendern — man ska inte kunna flytta ett pass till en
      tid som inte gick att boka från början.
      ============================================================ */
+  /* ============================================================
+     FLYTTA ETT PASS
+
+     Rutan hade ett datumfält och en rullgardin med tider: man valde
+     ett datum i blindo, läste i listan om något var ledigt, och
+     provade nästa datum om den var tom. Samma leta-själv som
+     bokningen hade innan veckan kom.
+
+     Nu är det veckan, precis som när man bokar. Passets nuvarande
+     tid står kvar som markerad, så man ser vad man flyttar FRÅN.
+     ============================================================ */
   function flyttaRuta(opts) {
     var o = opts || {};
     return new Promise(function (klar) {
+      var vecka = NXArbete.måndagen(o.datum || isoFor(new Date()));
+      var valt = null;
+
       var ruta = document.createElement('div');
       ruta.className = 'nx-fraga';
-      ruta.innerHTML =
-        '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="flytt-t">'
-        + '<h3 id="flytt-t">Flytta passet</h3>'
-        + '<p>Passet ligger nu ' + esc(datumText(o.datum)) + ' kl. ' + esc(o.tid || '') + '. '
-        + 'Motparten får bekräfta den nya tiden.</p>'
-        + '<div class="vy-form-rad" style="margin-top:18px">'
-        + '<div class="pay-field"><label for="fl-datum">Nytt datum</label>'
-        + '<input class="inp" id="fl-datum" type="date" value="' + esc(o.datum) + '" min="' + isoFor(new Date()) + '"></div>'
-        + '<div class="pay-field"><label for="fl-tid">Ny tid</label>'
-        + '<select class="sel" id="fl-tid"></select></div>'
-        + '</div>'
-        + '<p class="ok-msg" id="fl-msg"></p>'
-        + '<div class="nx-fraga-knappar">'
-        + '<button type="button" class="btn btn-ghost" data-flytt="nej">Avbryt</button>'
-        + '<button type="button" class="btn btn-primary" data-flytt="ja">Flytta passet</button>'
-        + '</div></div>';
+      document.body.appendChild(ruta);
 
-      var dat = ruta.querySelector('#fl-datum');
-      var tid = ruta.querySelector('#fl-tid');
-      var msg = ruta.querySelector('#fl-msg');
-
-      function fyllTider() {
-        /* Längden följer med: ett tvåtimmarspass går inte att flytta
-           till en tid där bara en timme är ledig. */
+      /* Timmarna en dag, med passets egna timmar räknade som lediga:
+         annars gick det inte att bara byta dag och behålla klockan. */
+      function tider(datum) {
         var timmar = Math.max(1, Math.ceil((Number(o.minuter) || 60) / 60));
-        var tider = NX.tiderFörDatum(dat.value, o.tillgang || [], o.blockerade || [], o.minuter);
         var upptagna = o.upptagna || new Set();
-
-        function krockar(t) {
-          var h0 = Number(String(t).slice(0, 2));
-          for (var i = 0; i < timmar; i++) {
-            var h = String(h0 + i).padStart(2, '0') + ':00';
-            /* Passets egna timmar räknas inte som upptagna av det
-               själv — annars gick det inte att bara byta dag. */
-            if (dat.value === o.datum && h === o.tid) continue;
-            if (upptagna.has(dat.value + '|' + h)) return true;
-          }
-          return false;
-        }
-
-        var val = tider.filter(function (t) {
-          if (dat.value === o.datum && t === o.tid) return true;
-          return !krockar(t);
-        });
-
-        if (!val.length) {
-          tid.innerHTML = '<option value="">Inga lediga tider</option>';
-          tid.disabled = true;
-          NX.säg(msg, 'Inga lediga tider den dagen. Prova ett annat datum.', false);
-        } else {
-          tid.disabled = false;
-          tid.innerHTML = val.map(function (t) {
-            return '<option value="' + t + '"' + (t === o.tid ? ' selected' : '') + '>' + t + '</option>';
-          }).join('');
-          NX.rensa(msg);
-        }
+        return NX.tiderFörDatum(datum, o.tillgang || [], o.blockerade || [], o.minuter)
+          .map(function (t) {
+            var h0 = Number(String(t).slice(0, 2));
+            var krock = false;
+            for (var i = 0; i < timmar; i++) {
+              var h = String(h0 + i).padStart(2, '0') + ':00';
+              if (datum === o.datum && h === o.tid) continue;
+              if (upptagna.has(datum + '|' + h)) krock = true;
+            }
+            return { tid: t, upptagen: krock };
+          });
       }
 
-      dat.addEventListener('change', fyllTider);
+      function rita() {
+        var ärNy = valt && !(valt.datum === o.datum && valt.tid === o.tid);
+        ruta.innerHTML =
+          '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="flytt-t">'
+          + '<h3 id="flytt-t">Flytta passet</h3>'
+          + '<p>Passet ligger nu <b>' + esc(datumText(o.datum)) + ' kl. ' + esc(o.tid || '') + '</b>. '
+          + 'Välj en ny tid nedan — motparten får bekräfta den.</p>'
+          + NXArbete.veckovy({
+              vecka: vecka,
+              tider: tider,
+              vald: valt || { datum: o.datum, tid: o.tid },
+              veckorFram: 8,
+              hoppTill: null,
+              tomText: 'Inga lediga timmar den här veckan.',
+              upptagenText: 'Upptagen'
+            })
+          + '<p class="ok-msg" id="fl-msg"></p>'
+          + '<div class="nx-fraga-knappar">'
+          + '<button type="button" class="btn btn-ghost" data-flytt="nej">Avbryt</button>'
+          + '<button type="button" class="btn btn-primary" data-flytt="ja"'
+          + (ärNy ? '' : ' disabled') + '>Flytta passet</button>'
+          + '</div></div>';
+      }
 
       function stäng(svar) {
         ruta.remove();
@@ -290,14 +288,31 @@ window.NXStudie = (function () {
 
       ruta.addEventListener('click', function (e) {
         if (e.target === ruta) return stäng(null);
+
+        var slot = e.target.closest('.bk-slot');
+        if (slot && !slot.disabled) {
+          valt = { datum: slot.dataset.datum, tid: slot.dataset.tid };
+          rita();
+          return;
+        }
+        if (e.target.closest('#bk-forr') || e.target.closest('#bk-nasta')) {
+          var steg = e.target.closest('#bk-forr') ? -7 : 7;
+          var ny = NXArbete.plusDagar(vecka, steg);
+          if (ny < NXArbete.måndagen(isoFor(new Date()))) return;
+          vecka = ny;
+          rita();
+          return;
+        }
+
         var k = e.target.closest('[data-flytt]');
         if (!k) return;
         if (k.dataset.flytt === 'nej') return stäng(null);
-        if (!tid.value) { NX.säg(msg, '⚠️ Välj en tid som går att boka.', false); return; }
-        if (dat.value === o.datum && tid.value === o.tid) {
-          NX.säg(msg, '⚠️ Det är samma tid som passet redan har.', false); return;
+        if (!valt) return;
+        if (valt.datum === o.datum && valt.tid === o.tid) {
+          NX.säg(ruta.querySelector('#fl-msg'), '⚠️ Det är samma tid som passet redan har.', false);
+          return;
         }
-        stäng({ datum: dat.value, tid: tid.value });
+        stäng({ datum: valt.datum, tid: valt.tid });
       });
 
       document.addEventListener('keydown', function esc3(e) {
@@ -307,12 +322,10 @@ window.NXStudie = (function () {
         }
       });
 
-      document.body.appendChild(ruta);
+      rita();
       document.body.style.overflow = 'hidden';
       void ruta.offsetWidth;
       ruta.classList.add('open');
-      fyllTider();
-      dat.focus();
     });
   }
 

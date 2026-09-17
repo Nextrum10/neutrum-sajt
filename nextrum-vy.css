@@ -460,6 +460,13 @@
   transition:transform .26s var(--e);
 }
 .nx-fraga.open .nx-fraga-box{transform:none}
+
+/* Flytta-rutan visar en hel vecka, inte ett datumfält. Sju kolumner
+   får inte plats på 420 px, och en vecka man måste scrolla i sidled
+   är samma letande som rutan skulle bli av med. */
+.nx-fraga-bred{max-width:680px}
+.nx-fraga-bred .bk-vecka{margin-top:18px}
+.nx-fraga-bred .bk-dag-tider{gap:4px}
 .nx-fraga-box h3{
   font-size:1.2rem;font-weight:700;letter-spacing:-.03em;
   margin-bottom:10px;
