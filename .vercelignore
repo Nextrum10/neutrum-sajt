@@ -1,0 +1,17 @@
+# Det här ska aldrig serveras från nextrum.se.
+#
+# Utan filen låg varje schemafil, driftdokument och edge-funktion
+# öppen på sajten — nextrum.se/schema-v18.sql svarade 200 och
+# beskrev hela databasen, policyerna och tjänster som inte är
+# lanserade. Ingen sida länkar hit; det är bara källkod och
+# anteckningar som råkar ligga i samma repo som sajten.
+#
+# En nekande lista, inte en tillåtande: en ny sida eller bildmapp
+# ska komma med utan att någon behöver minnas den här filen.
+
+*.md
+*.sql
+/supabase
+/verktyg
+/.github
+/.claude

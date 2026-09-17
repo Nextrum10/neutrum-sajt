@@ -986,7 +986,7 @@ html[lang="en"] .nx-hero-rubrik{
 }
 .nx-manifest-fot p{color:var(--bl-2);font-size:1.02rem;line-height:1.55;max-width:36ch}
 
-/* Tre spalter under manifestet: Nextrum, läxhjälp, försäljning.
+/* Spalter under manifestet, en per kategori.
    Ingen numrering — det är parallella kategorier, inte en ordning.
    En tunn linje över varje spalt håller dem på samma rad. */
 .nx-ide{
@@ -1018,8 +1018,9 @@ html[lang="en"] .nx-hero-rubrik{
   margin-top:12px;color:var(--bl-2);
   font-size:.985rem;line-height:1.58;max-width:40ch;
 }
-/* Sluttrappan i sektionen: hur unga jobbar hos oss. Två spalter,
-   för det är två vägar in — läxhjälp och försäljning. */
+/* Sluttrappan i sektionen: hur unga jobbar hos oss. Tvåspaltsgriden
+   står kvar även när bara läxhjälpen visas, så kortet behåller sin
+   läsbredd i stället för att dras ut över hela raden. */
 .nx-ide-fot{margin-top:clamp(62px,7.5vw,116px)}
 .nx-ide-fot .nx-ide{margin-top:clamp(30px,3.6vw,46px)}
 .nx-ide.tva{grid-template-columns:repeat(2,1fr);max-width:1000px}

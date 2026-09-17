@@ -8,15 +8,15 @@
 
    `aktiv` avgör vad som SYNS. Ingenting annat.
 
-   Barnvakt och hushållsnära tjänster finns i katalogen men har inget
-   pris, och ligger därför som aktiv = false. En väljare som visar
-   dem hade varit ett löfte vi inte kan hålla, och en prissida som
-   listar dem utan pris hade varit sämre än att inte nämna dem alls.
+   Tjänster som inte är lanserade ligger som aktiv = false, och
+   databasen lämnar inte ens ut dem till webbläsaren. En väljare som
+   visar dem hade varit ett löfte vi inte kan hålla, och en prissida
+   som listar dem utan pris hade varit sämre än att inte nämna dem.
 
    Följden är att väljaren nedan RITAR INGEN VÄLJARE när det bara
    finns ett aktivt val — den skriver en rad som säger vad det gäller
    och lämnar ett dolt fält med värdet. Den dagen någon sätter ett
-   pris på barnvakt och slår på den i adminvyn dyker valen upp av sig
+   pris på en ny tjänst och slår på den i adminvyn dyker valen upp av sig
    själva, i varje formulär, utan att en rad kod ändras.
 
    Det är hela poängen med att katalogen ligger i databasen och inte
