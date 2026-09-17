@@ -14,11 +14,31 @@
 // Den här funktionen använder service_role, för invoices och payouts
 // har med flit ingen INSERT-policy för användare: kan ingen skriva
 // belopp från webbläsaren kan ingen skriva fel belopp. Därför får
-// den heller inte gå att anropa av vem som helst — anroparen måste
-// skicka x-fakturering-nyckel som matchar en secret på servern.
+// den heller inte gå att anropa av vem som helst. Två vägar in:
 //
-// Sätt verify_jwt = false för den här funktionen (den anropas av ett
-// schema, inte av en inloggad användare) och skydda den med nyckeln.
+//   · x-fakturering-nyckel som matchar secreten FAKTURERING_NYCKEL —
+//     för ett schema, som inte är en inloggad användare.
+//   · en inloggad ADMIN. Knapparna under Ekonomi → Månadskörning.
+//     Inloggningen prövas mot Auth och is_admin läses med anroparens
+//     egen token, innan service_role används till något.
+//
+// verify_jwt är AV för funktionen, för schemat har ingen JWT. Därför
+// kontrolleras inloggningen här inne i stället för i porten.
+//
+// VILKA PASS SOM KOMMER MED (Fas 2)
+// Urvalet läses ur vyn passunderlag. Ett pass kommer med om det är
+// genomfört, har en rapport kopplad, inte är undantaget av admin
+// (fakturerbar) och inte redan finns på en faktura respektive ett
+// underlag. Pass utan rapport och undantagna pass räknas upp i
+// svaret, så att någon kan ta ställning till dem.
+//
+// PERIODEN
+// Fakturan gäller en månad, och standard är FÖREGÅENDE månad —
+// körningen den 1:a oktober fakturerar september. Med kommer alla
+// pass TILL OCH MED periodens sista dag som inte redan fakturerats,
+// så ett pass som rapporterades för sent till förra körningen kommer
+// med på nästa i stället för att falla bort. Pass efter perioden
+// väntar till nästa månad.
 //
 // KÖR TORRT FÖRST
 // Med { "torrkorning": true } räknar den ut allt och svarar med vad
@@ -30,6 +50,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 const NYCKEL = Deno.env.get('FAKTURERING_NYCKEL');
 
 // Hur många dagar familjen har på sig att betala.
@@ -69,8 +90,58 @@ function json(body: unknown, status: number) {
 // Periodens första dag som YYYY-MM-DD. Alla belopp hör till en månad,
 // och unique(parent_id, period) gör att en omkörning inte kan skapa
 // dubbletter — den krockar i stället, vilket är precis vad vi vill.
-function periodFor(d: Date): string {
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-01`;
+//
+// Månaden räknas i svensk tid. I UTC är klockan 00.30 den 1:a
+// fortfarande förra månaden, och då hade körningen fakturerat fel
+// månad varannan gång den startades strax efter midnatt.
+function forraManaden(nu: Date): string {
+  const [ar, man] = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit',
+  }).format(nu).split('-').map(Number);
+  const a = man === 1 ? ar - 1 : ar;
+  const m = man === 1 ? 12 : man - 1;
+  return `${a}-${String(m).padStart(2, '0')}-01`;
+}
+
+// "2026-09" eller "2026-09-01" in, "2026-09-01" ut. Allt annat är ett
+// fel hos anroparen och ska sägas, inte gissas.
+function tolkaPeriod(v: unknown): string | null {
+  const m = /^(\d{4})-(\d{2})(?:-01)?$/.exec(String(v ?? '').trim());
+  if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return null;
+  return `${m[1]}-${m[2]}-01`;
+}
+
+// Första dagen i månaden EFTER perioden. Pass före den kommer med.
+function periodSlut(period: string): string {
+  const [ar, man] = period.split('-').map(Number);
+  const a = man === 12 ? ar + 1 : ar;
+  const m = man === 12 ? 1 : man + 1;
+  return `${a}-${String(m).padStart(2, '0')}-01`;
+}
+
+// Jämför nyckeln utan att svarstiden avslöjar hur många tecken som
+// stämde.
+function lika(a: string, b: string): boolean {
+  const x = new TextEncoder().encode(a);
+  const y = new TextEncoder().encode(b);
+  let skillnad = x.length ^ y.length;
+  for (let i = 0; i < Math.max(x.length, y.length); i++) skillnad |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return skillnad === 0;
+}
+
+// PostgREST lämnar ut högst tusen rader per fråga. En lista som tyst
+// kapas är värre än ingen lista, så urvalet hämtas i sidor.
+async function allaRader<T>(
+  fraga: (fran: number, till: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const SIDA = 500;
+  const ut: T[] = [];
+  for (let fran = 0; ; fran += SIDA) {
+    const { data, error } = await fraga(fran, fran + SIDA - 1);
+    if (error) throw new Error(error.message);
+    ut.push(...(data ?? []));
+    if (!data || data.length < SIDA) return ut;
+  }
 }
 
 // Ören, aldrig flyttal. Math.round sist så att 90 minuter à 379 kr
@@ -107,16 +178,40 @@ Deno.serve(async (req) => {
     if (!SUPABASE_URL || !SERVICE_ROLE) {
       return json({ error: 'SUPABASE_URL eller SUPABASE_SERVICE_ROLE_KEY saknas på servern.' }, 500);
     }
-    if (!NYCKEL) {
-      return json({ error: 'FAKTURERING_NYCKEL är inte satt som secret. Funktionen vägrar köra oskyddad.' }, 500);
-    }
-    if (req.headers.get('x-fakturering-nyckel') !== NYCKEL) {
-      return json({ error: 'Fel eller saknad nyckel.' }, 401);
+
+    // ---------- vem anropar ----------
+    let korningAv: 'nyckel' | 'admin';
+    const nyckel = req.headers.get('x-fakturering-nyckel');
+    if (nyckel !== null) {
+      if (!NYCKEL) {
+        return json({ error: 'FAKTURERING_NYCKEL är inte satt som secret. Nyckelvägen är stängd.' }, 500);
+      }
+      if (!lika(nyckel, NYCKEL)) return json({ error: 'Fel nyckel.' }, 401);
+      korningAv = 'nyckel';
+    } else {
+      const auth = req.headers.get('Authorization') ?? '';
+      if (!auth.startsWith('Bearer ') || !ANON_KEY) {
+        return json({ error: 'Ingen nyckel och ingen inloggning.' }, 401);
+      }
+      const somAnvandare = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: auth } },
+        auth: { persistSession: false },
+      });
+      const { data: jag, error: jagFel } = await somAnvandare.auth.getUser();
+      if (jagFel || !jag?.user) return json({ error: 'Inloggningen gick inte att verifiera.' }, 401);
+      const { data: profil } = await somAnvandare
+        .from('profiles').select('is_admin').eq('id', jag.user.id).maybeSingle();
+      if (!profil?.is_admin) return json({ error: 'Bara admin kan köra faktureringen.' }, 403);
+      korningAv = 'admin';
     }
 
     const kropp = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     const torrkorning = kropp.torrkorning === true;
-    const period = typeof kropp.period === 'string' ? kropp.period : periodFor(new Date());
+    const period = kropp.period === undefined || kropp.period === null || kropp.period === ''
+      ? forraManaden(new Date())
+      : tolkaPeriod(kropp.period);
+    if (!period) return json({ error: 'Perioden ska skrivas ÅÅÅÅ-MM, till exempel 2026-09.' }, 400);
+    const slut = periodSlut(period);
 
     const db = createClient(SUPABASE_URL, SERVICE_ROLE, {
       auth: { persistSession: false },
@@ -164,24 +259,44 @@ Deno.serve(async (req) => {
       prisFor.get(kod ?? 'laxhjalp') ?? { timme: timprisOre, extra: 0 };
 
     // ---------- passen som inte tagits med ----------
-    // left join i PostgREST går inte, så vi hämtar id:n som redan är
-    // med och filtrerar bort dem här. Listorna är små: det är en
-    // månads pass, inte hela historiken.
-    const [pass, fakturerade, utbetalda] = await Promise.all([
-      db.from('bookings')
-        .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, rabatt_ore')
-        .eq('status', 'completed'),
-      db.from('invoice_lines').select('booking_id').not('booking_id', 'is', null),
-      db.from('payout_lines').select('booking_id').not('booking_id', 'is', null),
-    ]);
+    // Vyn passunderlag svarar för varje genomfört pass om det har en
+    // rapport, är undantaget, redan fakturerat eller redan med på ett
+    // underlag. Bara pass till och med periodens sista dag.
+    type Pass = {
+      id: string; subject: string | null; tjanst: string | null; wanted_date: string;
+      duration_min: number | null; parent_id: string | null; tutor_id: string | null;
+      antal_barn: number | null; rabatt_ore: number | null;
+      fakturerbar: boolean; har_rapport: boolean; fakturerad: boolean; pa_underlag: boolean;
+    };
+    let allaPass: Pass[];
+    try {
+      allaPass = await allaRader<Pass>((fran, till) => db.from('passunderlag')
+        .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, '
+          + 'rabatt_ore, fakturerbar, har_rapport, fakturerad, pa_underlag')
+        .lt('wanted_date', slut)
+        .or('fakturerad.eq.false,pa_underlag.eq.false')
+        .order('wanted_date').order('id')
+        .range(fran, till));
+    } catch (fel) {
+      return json({ error: 'Kunde inte hämta passen: ' + (fel as Error).message }, 500);
+    }
 
-    if (pass.error) return json({ error: 'Kunde inte hämta passen: ' + pass.error.message }, 500);
-
-    const redanFakturerade = new Set((fakturerade.data ?? []).map((r) => r.booking_id));
-    const redanUtbetalda = new Set((utbetalda.data ?? []).map((r) => r.booking_id));
+    // Två sorters pass som INTE går vidare, och som ska synas i svaret
+    // i stället för att försvinna tyst.
+    const utanRapport: { booking_id: string; datum: string; parent_id: string | null; tutor_id: string | null }[] = [];
+    const undantagna: string[] = [];
+    const pass: Pass[] = [];
+    for (const b of allaPass) {
+      if (!b.fakturerbar) { undantagna.push(b.id); continue; }
+      if (!b.har_rapport) {
+        utanRapport.push({ booking_id: b.id, datum: b.wanted_date, parent_id: b.parent_id, tutor_id: b.tutor_id });
+        continue;
+      }
+      pass.push(b);
+    }
 
     // ---------- timpenningarna ----------
-    const tutorIdn = [...new Set((pass.data ?? []).map((b) => b.tutor_id).filter(Boolean))];
+    const tutorIdn = [...new Set(pass.filter((b) => !b.pa_underlag).map((b) => b.tutor_id).filter(Boolean))];
     const timpenningar = new Map<string, number>();
     if (tutorIdn.length) {
       const tp = await db.from('tutor_profiles').select('id, hourly_rate').in('id', tutorIdn);
@@ -191,16 +306,16 @@ Deno.serve(async (req) => {
     }
 
     // ---------- gruppera ----------
-    type Rad = { booking_id: string; beskrivning: string; minuter: number; belopp_ore: number };
+    type Rad = { booking_id: string; beskrivning: string; minuter: number; belopp_ore: number; timpris_ore: number };
     const perFamilj = new Map<string, Rad[]>();
     const perTutor = new Map<string, Rad[]>();
     const utanTimpenning: string[] = [];
 
-    for (const b of pass.data ?? []) {
+    for (const b of pass) {
       const minuter = Number(b.duration_min || 60);
       const text = radtext(b.subject, b.wanted_date);
 
-      if (b.parent_id && !redanFakturerade.has(b.id)) {
+      if (b.parent_id && !b.fakturerad) {
         const p = tjanstPris(b.tjanst);
         const barn = Math.max(1, Number(b.antal_barn || 1));
         const brutto = familjebelopp(minuter, p.timme || timprisOre, p.extra, barn);
@@ -218,11 +333,15 @@ Deno.serve(async (req) => {
             + (rabatt > 0 ? ' − rabatt' : ''),
           minuter,
           belopp_ore: brutto - rabatt,
+          // Radens eget timpris — tjänstens, med tillägget för flera
+          // barn när det gäller. Förut stod läxhjälpens pris på varje
+          // rad, oavsett vad raden faktiskt kostade.
+          timpris_ore: (p.timme || timprisOre) + (barn > 1 ? p.extra : 0),
         });
         perFamilj.set(b.parent_id, lista);
       }
 
-      if (b.tutor_id && !redanUtbetalda.has(b.id)) {
+      if (b.tutor_id && !b.pa_underlag) {
         const timpenning = timpenningar.get(b.tutor_id);
         // Utan timpenning kan vi inte räkna ut ersättningen, och att
         // gissa vore värre än att låta passet ligga kvar till nästa
@@ -235,7 +354,7 @@ Deno.serve(async (req) => {
         // löneförhöjning.
         if (!timpenning) { utanTimpenning.push(b.tutor_id); continue; }
         const lista = perTutor.get(b.tutor_id) ?? [];
-        lista.push({ booking_id: b.id, beskrivning: text, minuter, belopp_ore: belopp(minuter, timpenning) });
+        lista.push({ booking_id: b.id, beskrivning: text, minuter, belopp_ore: belopp(minuter, timpenning), timpris_ore: timpenning });
         perTutor.set(b.tutor_id, lista);
       }
     }
@@ -244,11 +363,15 @@ Deno.serve(async (req) => {
     const minuterSum = (rader: Rad[]) => rader.reduce((a, r) => a + r.minuter, 0);
 
     const sammanfattning = {
+      korning_av: korningAv,
       period,
+      pass_till_och_med: new Date(Date.parse(slut) - 86_400_000).toISOString().slice(0, 10),
       pris_per_timme_ore: timprisOre,
       fakturor: [...perFamilj].map(([id, r]) => ({ parent_id: id, pass: r.length, belopp_ore: summa(r) })),
       utbetalningar: [...perTutor].map(([id, r]) => ({ tutor_id: id, pass: r.length, belopp_ore: summa(r) })),
       hoppade_over_utan_timpenning: [...new Set(utanTimpenning)],
+      hoppade_over_utan_rapport: utanRapport,
+      undantagna_pass: undantagna.length,
     };
 
     if (torrkorning) return json({ torrkorning: true, ...sammanfattning }, 200);
@@ -284,7 +407,7 @@ Deno.serve(async (req) => {
       const l = await db.from('invoice_lines').insert(
         rader.map((r) => ({
           invoice_id: f.data.id, booking_id: r.booking_id, beskrivning: r.beskrivning,
-          minuter: r.minuter, pris_per_timme_ore: timprisOre, belopp_ore: r.belopp_ore,
+          minuter: r.minuter, pris_per_timme_ore: r.timpris_ore, belopp_ore: r.belopp_ore,
         })));
 
       // Raderna är hela poängen med fakturan. Blir de inte skrivna

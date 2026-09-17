@@ -19,8 +19,8 @@ behövs om ni sätter upp en ny miljö.
 | 1. Schemat | Applicerat |
 | 2. Priset | Satt: 37900 ören, alltså 379 kr — samma som prissidan |
 | 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
-| 4. Deploy `fakturering` | ACTIVE, version 5 — betalningsvillkor 10 dagar |
-| 5. Torrkörning | **Väntar på er**, kräver `FAKTURERING_NYCKEL` |
+| 4. Deploy `fakturering` | ACTIVE — omdriftsatt i Fas 2 med urvalet nedan och 10 dagar (versionen före hade 14) |
+| 5. Torrkörning | **Väntar på er** — knappen under Ekonomi → Månadskörning, ingen nyckel behövs |
 | 6. Schemaläggning | **Väntar på er** |
 | 7. Stripe | Inte påbörjat, och behöver inte vara det |
 | 8. Deploy `faktura-utskick` | ACTIVE, version 2 — betalningsvillkor 10 dagar |
@@ -28,6 +28,28 @@ behövs om ni sätter upp en ny miljö.
 Databasen är tom på fakturor: `invoices`, `invoice_lines` och `payouts` har noll
 rader. Den första skarpa körningen har alltså inte skett, och torrkörningen i
 steg 5 är fortfarande det första som ska göras.
+
+**Obs (17 september 2026):** alla pass i driften hör än så länge till adminkontot
+och till en enda studiehjälpare — det är provpass, inga riktiga kunder. Fyra av de
+fem genomförda passen skapades samtidigt den 2 september. Ta ställning till dem
+under Ekonomi → Avvikelser innan en skarp körning, annars fakturerar ni er själva.
+
+## Vilka pass som kommer med (sedan Fas 2)
+
+Ett pass kommer med om det är **genomfört, har en rapport kopplad och inte är
+undantaget**. Urvalet läses ur vyn `passunderlag`, som adminvyn också läser.
+
+- **Genomfört utan rapport** kommer inte med. Det räknas upp i svaret och syns
+  under Ekonomi → **Avvikelser**, där admin antingen kopplar rätt rapport eller
+  undantar passet.
+- **Undantaget** (`bookings.fakturerbar = false`, med en anledning) kommer varken
+  på familjens faktura eller på studiehjälparens underlag. Samma regel på båda
+  sidor.
+- **Perioden** är en månad, som standard föregående. Med kommer alla ännu inte
+  fakturerade pass *till och med* periodens sista dag — ett pass som rapporterades
+  för sent till förra körningen kommer med på nästa.
+- Rapporten och "genomfört" skrivs sedan Fas 2 i samma transaktion, så ett pass
+  kan inte längre bli genomfört utan att rapporten sparas, eller tvärtom.
 
 ---
 
@@ -109,8 +131,15 @@ supabase functions deploy fakturering
 
 ## 5. Torrkör — gör inte detta senare
 
-Kör den här **innan** den första skarpa körningen. Den räknar ut allt och svarar
-med vad som skulle skapas, utan att skriva en enda rad:
+**Enklast: adminvyn.** Ekonomi → Månadskörning → välj månad → **Torrkör**. Du ser
+varje familj och studiehjälpare med belopp, och vilka pass som hoppades över.
+Stämmer det: **Skapa utkast**. Fakturorna skapas som utkast och skickas sedan en
+och en under Fakturor, efter att du läst dem. Knapparna kräver att du är inloggad
+som admin — ingen nyckel behövs.
+
+Med nyckeln, till exempel från ett schema, ser anropet ut så här. Kör den
+**innan** den första skarpa körningen. Den räknar ut allt och svarar med vad som
+skulle skapas, utan att skriva en enda rad:
 
 ```
 curl -X POST "https://DITT-PROJEKT-ID.supabase.co/functions/v1/fakturering" \
@@ -121,7 +150,10 @@ curl -X POST "https://DITT-PROJEKT-ID.supabase.co/functions/v1/fakturering" \
 
 Läs svaret. Stämmer antalet pass? Stämmer beloppen mot vad ni faktiskt kommit
 överens om med familjerna? Står det något i `hoppade_over_utan_timpenning` — då
-saknar de studiehjälparna en timpenning, gå tillbaka till steg 3.
+saknar de studiehjälparna en timpenning, gå tillbaka till steg 3. Står det något
+i `hoppade_over_utan_rapport` — se Ekonomi → Avvikelser.
+
+Vill du fakturera en annan månad än förra: lägg till `"period": "2026-09"`.
 
 När det ser rätt ut, kör skarpt genom att ta bort `torrkorning`:
 
@@ -142,7 +174,18 @@ per månad.
 
 När ni kört skarpt en gång för hand och det såg rätt ut — Supabase → Database →
 Cron, den första i varje månad. Gör det till ett aktivt beslut, inte något som
-råkar vara påslaget.
+råkar vara påslaget. (Planeras i Fas 7.)
+
+## 6b. Utbetala
+
+Utbetalningen görs utanför plattformen. I adminvyn: granska underlaget, sätt
+**Godkänd**, gör överföringen, sätt **Utbetald**. Utbetald går inte att sätta
+utan att underlaget först är godkänt, och vyn frågar innan.
+
+**Före den första utbetalningen till en studiehjälpare under arton:** stäm av
+skatte- och anställningsfrågan med er redovisningskonsult (`foretagsfakta`,
+`studiehjalpare_form`). Det är inte en kodfråga, men den avgör hur pengarna får
+betalas ut.
 
 ---
 
