@@ -27,6 +27,15 @@
       ]
     },
     {
+      "source": "/(admin|larare|foralder)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://ddkfiuvcppalutfulvbi.supabase.co; media-src 'self' blob: https://ddkfiuvcppalutfulvbi.supabase.co; font-src 'self'; connect-src 'self' https://ddkfiuvcppalutfulvbi.supabase.co wss://ddkfiuvcppalutfulvbi.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        }
+      ]
+    },
+    {
       "source": "/(.*).css",
       "headers": [
         {
