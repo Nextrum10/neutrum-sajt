@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester för Fas 1
+-- NEXTRUM — behörighetstester (Fas 1 och Fas 2)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -17,9 +17,9 @@
 --
 -- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok.
 --
--- Förutsättning: migrationerna för Fas 1.1–1.6 är körda. Körs filen
--- före dem är det väntat att F-1, F-2, F-3, F-6 och F-7 faller —
--- det är så man ser att testerna faktiskt mäter något.
+-- Förutsättning: migrationerna för Fas 1.1–1.6 och Fas 2.1–2.3 är
+-- körda. Körs filen före dem är det väntat att de berörda raderna
+-- faller — det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
 
 begin;
@@ -114,6 +114,36 @@ begin
   end if;
 end $$;
 
+-- Som rakna, men kör först några satser som samma användare —
+-- till exempel en rapport — och räknar sedan.
+create function pg_temp.rakna_efter(p_test text, p_uid uuid, p_forst text[], p_sql text, p_vantat bigint)
+returns void language plpgsql as $$
+declare
+  n   bigint;
+  fel text;
+  s   text;
+begin
+  begin
+    perform pg_temp.bli(p_uid);
+    foreach s in array p_forst loop
+      execute s;
+    end loop;
+    execute p_sql into n;
+    raise exception 'PROVA_KLAR:%', n;
+  exception when others then
+    fel := sqlerrm;
+  end;
+
+  if fel like 'PROVA_KLAR:%' then
+    n := split_part(fel, ':', 2)::bigint;
+    insert into utfall (test, ok, detalj)
+    values (p_test, n = p_vantat, 'fick ' || n || ', väntat ' || p_vantat);
+  else
+    insert into utfall (test, ok, detalj)
+    values (p_test, false, 'fel: ' || fel);
+  end if;
+end $$;
+
 -- ------------------------------------------------------------
 -- fixturer (som postgres: auth.uid() är null, så skydden släpper)
 -- ------------------------------------------------------------
@@ -165,6 +195,10 @@ insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wa
   ('00000000-0000-4000-8000-00000000b0a2', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
    '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
    (now() at time zone 'Europe/Stockholm')::date - 1, '16:00', 60, 'confirmed'),
+  -- avbokat, igår
+  ('00000000-0000-4000-8000-00000000b0b1', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date - 1, '18:00', 60, 'cancelled'),
   -- redan genomfört
   ('00000000-0000-4000-8000-00000000b0e1', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
    '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
@@ -428,6 +462,92 @@ select pg_temp.prova('F-6 admin rättar ett genomfört pass', '00000000-0000-400
   'ok');
 
 -- ------------------------------------------------------------
+-- Fas 2: fakturerbar, passunderlag och rapporten som gör passet
+-- genomfört
+-- ------------------------------------------------------------
+select pg_temp.prova('F2 P bokar ett pass som inte ska faktureras', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, status, fakturerbar)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+                  (now() at time zone 'Europe/Stockholm')::date + 3, '15:00', 'requested', false)$q$],
+  'nekad');
+
+select pg_temp.prova('F2 P undantar sitt eget pass', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set fakturerbar = false, fakturerbar_anledning = 'x'
+          where id = '00000000-0000-4000-8000-00000000b0c1'$q$],
+  'nekad');
+
+select pg_temp.prova('F2 admin undantar ett genomfört pass', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.bookings set fakturerbar = false, fakturerbar_anledning = 'testpass'
+          where id = '00000000-0000-4000-8000-00000000b0e1'$q$],
+  'ok');
+
+select pg_temp.rakna('F2 passunderlaget: genomfört pass utan rapport', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from public.passunderlag
+     where id = '00000000-0000-4000-8000-00000000b0e1' and not har_rapport and fakturerbar$q$, 1);
+
+select pg_temp.prova('F2 anon läser inte passunderlaget', null,
+  array['select * from public.passunderlag'], 'nekad');
+
+select pg_temp.rakna('F2 ofakturerat räknar inte pass utan rapport', '00000000-0000-4000-8000-0000000000f1',
+  $q$select coalesce(sum(pass), 0) from public.ofakturerat
+     where parent_id = '00000000-0000-4000-8000-0000000000f1'$q$, 0);
+
+select pg_temp.rakna_efter('F2 admin kopplar en rapport, passet blir fakturerbart', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.lesson_reports set booking_id = '00000000-0000-4000-8000-00000000b0e1'
+          where id = '00000000-0000-4000-8000-00000000e0a1' and booking_id is null$q$],
+  $q$select count(*) from public.passunderlag
+     where id = '00000000-0000-4000-8000-00000000b0e1' and har_rapport and fakturerbar and not fakturerad$q$, 1);
+
+select pg_temp.rakna_efter('F2 ej_utbetalt räknar passet när rapporten är kopplad', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.lesson_reports set booking_id = '00000000-0000-4000-8000-00000000b0e1'
+          where id = '00000000-0000-4000-8000-00000000e0a1'$q$],
+  $q$select coalesce(sum(pass), 0) from public.ej_utbetalt
+     where tutor_id = '00000000-0000-4000-8000-0000000000a1'$q$, 1);
+
+select pg_temp.rakna_efter('F2 rapport med närvaro gör passet genomfört', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, narvaro)
+          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0c1', 'x', 'sen')$q$],
+  $q$select count(*) from public.bookings
+     where id = '00000000-0000-4000-8000-00000000b0c1' and status = 'completed' and attendance = 'sen'$q$, 1);
+
+select pg_temp.rakna_efter('F2 rapport utan närvaro lämnar passet orört (gamla vyn)', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes)
+          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0c1', 'x')$q$],
+  $q$select count(*) from public.bookings
+     where id = '00000000-0000-4000-8000-00000000b0c1' and status = 'confirmed'$q$, 1);
+
+select pg_temp.prova('F2 rapport med närvaro på obesvarat eget förslag', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, narvaro)
+          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0f1', 'x', 'narvarande')$q$],
+  'nekad');
+
+select pg_temp.prova('F2 rapport med närvaro på avbokat pass', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, narvaro)
+          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0b1', 'x', 'narvarande')$q$],
+  'nekad');
+
+select pg_temp.prova('F2 rapport med närvaro på kommande pass', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, narvaro)
+          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0d1', 'x', 'narvarande')$q$],
+  'nekad');
+
+select pg_temp.rakna_efter('F2 andra rapporten på ett genomfört pass ändrar inget', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, narvaro)
+          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0c1', 'x', 'sen')$q$,
+        $q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, narvaro)
+          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0c1', 'y', 'narvarande')$q$],
+  $q$select count(*) from public.bookings
+     where id = '00000000-0000-4000-8000-00000000b0c1' and attendance = 'sen'$q$, 1);
+
+-- ------------------------------------------------------------
 -- F-7 och triggerfunktionerna
 -- ------------------------------------------------------------
 select pg_temp.rakna('F-7 anon ser bara aktiva tjänster', null,
@@ -453,7 +573,8 @@ select 'Triggerfunktion ej anropbar: ' || f,
        case when to_regprocedure(f) is null then 'funktionen finns inte' else 'anon/authenticated execute' end
 from unnest(array[
   'public.rakna_rabattkod()', 'public.skydda_elevradering()', 'public.skydda_rabatt()',
-  'public.synka_laxhjalpspris()', 'public.skydda_bokningsfalt()'
+  'public.synka_laxhjalpspris()', 'public.skydda_bokningsfalt()',
+  'public.rapport_gor_passet_genomfort()'
 ]) f;
 
 insert into utfall (test, ok, detalj)
