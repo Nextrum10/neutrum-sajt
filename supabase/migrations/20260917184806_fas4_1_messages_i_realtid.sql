@@ -1,0 +1,28 @@
+-- ============================================================
+-- NEXTRUM — Fas 4.1: messages börjar sändas i realtid
+--
+-- Publikationen supabase_realtime fanns men var tom, så ingen tabell
+-- skickade ändringar till någon. Vyerna läste om hela tråden var 20:e
+-- sekund i stället. Det fungerade, men ett svar på "kan vi flytta till
+-- torsdag?" kunde ligga och vänta en halv minut, och varje öppen flik
+-- frågade databasen tre gånger i minuten utan att något hänt.
+--
+-- BARA messages, INTE bookings och leads än. De kommer i egna steg när
+-- den här är testad i drift. En publikation som växer i samma andetag
+-- som koden ändras gör det omöjligt att se vilken av ändringarna som
+-- orsakade något.
+--
+-- RLS GÄLLER FORTFARANDE. Realtime läser ändringarna med anroparens
+-- egen token och kör samma SELECT-policy som REST: "deltagare läser
+-- tråden" (auth.uid() = parent_id or auth.uid() = tutor_id) och
+-- "admin läser alla meddelanden". En tredje användare kan alltså
+-- prenumerera på kanalen men får inga rader. Det testas, det antas
+-- inte.
+--
+-- Replikaidentiteten lämnas som den är (default, alltså primärnyckeln).
+-- Vid INSERT och UPDATE skickas hela den nya raden, vilket är det vyn
+-- behöver. FULL hade också lagt den GAMLA raden i nyttolasten, och
+-- meddelandetexter ska inte skickas ut fler gånger än nödvändigt.
+-- ============================================================
+
+alter publication supabase_realtime add table public.messages;

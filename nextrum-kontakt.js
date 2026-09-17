@@ -11,12 +11,26 @@ window.NXKontakt = (function () {
 
   var $ = NX.$, esc = NX.esc, felText = NX.felText, datumText = NX.datumText, isoFor = NX.isoFor;
 
-  /* Hur ofta tråden hämtas om medan sidan står öppen. Ingen realtid:
-     en pollning var 20:e sekund räcker för en konversation som mest
-     handlar om "kan vi flytta till torsdag?", och den kräver varken
-     Realtime-publikation i Supabase eller en öppen websocket som
-     ändå dör när telefonen låser sig. */
-  var INTERVALL = 20000;
+  /* SEDAN FAS 4 KOMMER MEDDELANDEN I REALTID.
+
+     Tråden prenumererar på ändringar i messages och hämtas om när
+     något faktiskt händer. Förut lästes hela tråden var 20:e sekund,
+     vilket betydde upp till en halv minuts fördröjning på ett svar
+     och tre frågor i minuten från varje öppen flik, oavsett om något
+     hänt eller inte.
+
+     Pollningen finns kvar, men glesare, och bara som reserv. En
+     websocket dör när telefonen låser sig, när nätet byts mellan wifi
+     och 4G, och när en proxy tycker att anslutningen legat still för
+     länge. Realtime återansluter själv, men det finns inget löfte om
+     att ingen ändring hunnit passera under tiden — därför hämtar
+     reserven ändå tråden en gång i minuten, och alltid direkt när
+     fliken kommer fram igen. */
+  var RESERV_INTERVALL = 60000;
+
+  /* Flera ändringar i samma sekund (ett meddelande som skickas och
+     direkt markeras som läst) ska ge EN omhämtning, inte tre. */
+  var SAMLA_MS = 150;
 
   function klocka(iso) {
     var d = new Date(iso);
@@ -48,6 +62,9 @@ window.NXKontakt = (function () {
     var timer = null;
     var hämtar = false;
     var senasteId = null;
+    var senasteLäge = null;   // signatur över det vyn redan fått veta
+    var kanal = null;         // Realtime-prenumerationen på tråden
+    var samlaTimer = null;
 
     function tomText() {
       var namn = läge.motpart ? esc(läge.motpart.split(' ')[0]) : 'varandra';
@@ -110,13 +127,74 @@ window.NXKontakt = (function () {
       var nyaste = rader.length ? rader[rader.length - 1].id : null;
 
       /* Rita bara om något faktiskt ändrats. Annars hoppar tråden
-         till botten var 20:e sekund mitt i att någon läser bakåt. */
-      var olästaFinns = rader.some(function (m) { return !m.read_at && m.sender_id !== jag; });
-      if (!tyst || nyaste !== senasteId || olästaFinns) rita(rader);
+         till botten mitt i att någon läser bakåt. */
+      var olästa = rader.filter(function (m) { return !m.read_at && m.sender_id !== jag; }).length;
+      if (!tyst || nyaste !== senasteId || olästa) rita(rader);
       senasteId = nyaste;
 
       await markeraLästa(rader);
-      if (typeof opts.onNytt === 'function') opts.onNytt(rader);
+
+      /* onNytt säger till vyn att räknare och listor ska ritas om, och
+         den anropas bara när något FAKTISKT är nytt. Förut kördes den
+         vid varje pollning: studiehjälparvyn svarade med upp till fyra
+         nya frågor mot databasen var 20:e sekund, dygnet runt, för en
+         tråd där ingen skrivit något sedan i tisdags. */
+      var signatur = rader.length + '|' + nyaste + '|' + olästa;
+      if (signatur !== senasteLäge) {
+        senasteLäge = signatur;
+        if (typeof opts.onNytt === 'function') opts.onNytt(rader);
+      }
+    }
+
+    /* Realtime kan ge flera händelser för samma sak i tät följd. Den
+       här samlar ihop dem till en omhämtning. */
+    function planeraOmläsning() {
+      if (samlaTimer) clearTimeout(samlaTimer);
+      samlaTimer = setTimeout(function () { samlaTimer = null; ladda(true); }, SAMLA_MS);
+    }
+
+    /* ============================================================
+       PRENUMERATIONEN
+
+       Filtret kan bara gälla EN kolumn, så det sätts på parent_id och
+       tutor_id kontrolleras här. En studiehjälpare har flera familjer,
+       och utan kontrollen hade en öppen tråd ritats om av ett
+       meddelande i en annan familjs tråd.
+
+       Att filtret inte är ett skydd är värt att säga rakt ut: RLS är
+       skyddet. Realtime läser ändringarna med den inloggades egen
+       token och skickar bara rader som policyn "deltagare läser
+       tråden" släpper fram. Filtret här sparar arbete, det bevakar
+       ingenting.
+       ============================================================ */
+    function lyssna() {
+      slutaLyssna();
+      if (!supa || !supa.channel || !läge.parentId || !läge.tutorId) return;
+
+      kanal = supa
+        .channel('trad-' + läge.parentId + '-' + läge.tutorId)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: 'parent_id=eq.' + läge.parentId
+        }, function (p) {
+          var rad = p.new || p.old || {};
+          if (rad.tutor_id && rad.tutor_id !== läge.tutorId) return;
+          planeraOmläsning();
+        })
+        .subscribe(function (status) {
+          /* Vid varje lyckad anslutning hämtas tråden om. Det täcker
+             det som hann hända medan socketen låg nere, till exempel
+             under en tunnelresa. */
+          if (status === 'SUBSCRIBED') ladda(true);
+        });
+    }
+
+    function slutaLyssna() {
+      if (!kanal) return;
+      try { supa.removeChannel(kanal); } catch (e) { /* redan stängd */ }
+      kanal = null;
     }
 
     async function skicka() {
@@ -156,19 +234,29 @@ window.NXKontakt = (function () {
       });
     }
 
+    /* Tillbaka i fliken efter en stund: hämta direkt i stället för att
+       vänta ut reservintervallet. Funktionen har ett namn för att den
+       ska gå att plocka bort igen — förut låg den kvar efter stoppa()
+       och fortsatte hämta tråden i en vy som inte längre visades. */
+    function närFlikenSyns() {
+      if (document.visibilityState === 'visible') ladda(true);
+    }
+
     function start() {
       stoppa();
+      lyssna();
       timer = setInterval(function () {
         if (document.visibilityState === 'visible') ladda(true);
-      }, INTERVALL);
+      }, RESERV_INTERVALL);
+      document.addEventListener('visibilitychange', närFlikenSyns);
     }
-    function stoppa() { if (timer) { clearInterval(timer); timer = null; } }
 
-    /* Tillbaka i fliken efter en stund: hämta direkt i stället för
-       att vänta ut intervallet. */
-    document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'visible') ladda(true);
-    });
+    function stoppa() {
+      if (timer) { clearInterval(timer); timer = null; }
+      if (samlaTimer) { clearTimeout(samlaTimer); samlaTimer = null; }
+      document.removeEventListener('visibilitychange', närFlikenSyns);
+      slutaLyssna();
+    }
 
     start();
 
@@ -184,6 +272,10 @@ window.NXKontakt = (function () {
         läge.tutorId = nytt.tutorId != null ? nytt.tutorId : läge.tutorId;
         if (nytt.motpart != null) läge.motpart = nytt.motpart;
         senasteId = null;
+        senasteLäge = null;
+        /* Ny tråd, nytt filter. Utan det här hade prenumerationen
+           stått kvar på den förra familjen. */
+        lyssna();
         return ladda();
       },
       stoppa: stoppa

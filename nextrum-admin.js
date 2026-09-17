@@ -49,7 +49,7 @@
     elever: {},        // parent_id → [elevrader]
     tutorProfiler: {}, // id → tutor_profiles-rad
     leads: [], ansokningar: [], kontakt: [], bokningar: [],
-    fakturor: [], utbetalningar: [], chattar: [], klientfel: [],
+    fakturor: [], utbetalningar: [], chattar: [], klientfel: [], notisfel: [],
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
     matchunderlag: [], matchunderlagFel: null, valdElev: null, kalender: null,
@@ -185,7 +185,7 @@
     S.tutorProfiler = {};
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
-    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, pris, integ, tj, rk, rapporter] = await Promise.all([
+    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -194,6 +194,9 @@
       supa.from('payouts').select('*').order('period', { ascending: false }),
       supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400),
       supa.from('klientfel').select('*').order('created_at', { ascending: false }).limit(100),
+      /* Notisutskick som inte gick fram. Funktionen är admin-only i
+         databasen; en icke-admin som anropar den får noll rader. */
+      supa.rpc('notisfel', { timmar: 24 }),
       supa.from('prissattning').select('*').limit(1),
       supa.from('integrationer').select('*'),
       supa.from('tjanster').select('*').order('ordning'),
@@ -212,6 +215,7 @@
     S.fakturor = fakt.data || [];
     S.utbetalningar = utb.data || [];
     S.klientfel = fel.data || [];
+    S.notisfel = notis.data || [];
     S.pris = (pris.data || [])[0] || null;
     S.integrationer = integ.data || [];
     S.tjanster = tj.data || [];
@@ -2333,7 +2337,7 @@
 
   function ritaFel() {
     $('#fel-antal').textContent = S.klientfel.length ? S.klientfel.length + ' st' : '';
-    märkFlik('#flik-fel-mark', S.klientfel.length);
+    märkFlik('#flik-fel-mark', S.klientfel.length + S.notisfel.length);
     $('#fel-tabell').innerHTML = tabell([
       { namn: 'När', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.created_at)) + '</span>' },
       { namn: 'Sida', rita: f => esc(f.sida || '—') },
@@ -2344,6 +2348,25 @@
       { namn: '', höger: true, rita: f => '<button class="btn btn-ghost btn-sm" data-felbort="'
         + f.id + '">Rensa</button>' }
     ], S.klientfel, 'Inga fel rapporterade');
+
+    ritaNotisfel();
+  }
+
+  /* Notiser som inte gick fram. Statuskoden är hela beskedet: 401 är
+     fel hemlighet mellan triggern och funktionen, 5xx är funktionen
+     själv, och en tom kod med "tog slut" är ett anrop som aldrig kom
+     fram. Innehållet i svaret visas inte — det kan bära uppgifter ur
+     anmälan som felet gällde. */
+  function ritaNotisfel() {
+    const rader = S.notisfel || [];
+    $('#notis-antal').textContent = rader.length ? rader.length + ' st' : '';
+    $('#notis-tabell').innerHTML = tabell([
+      { namn: 'När', rita: n => '<span class="adm-tal">' + esc(kortDatum(n.tidpunkt)) + '</span>' },
+      { namn: 'Svar', rita: n => n.status_kod
+        ? pill(String(n.status_kod), n.status_kod >= 500 ? '' : 'ar-vantar')
+        : pill(n.tog_slut ? 'Tidsgräns' : 'Inget svar', '') },
+      { namn: 'Felet', rita: n => esc(n.fel || 'Funktionen svarade med en felkod.') }
+    ], rader, 'Inga misslyckade utskick det senaste dygnet');
   }
 
   /* Anteckningarna låg här som en egen panel med en egen
@@ -4451,18 +4474,27 @@
      veta genom att ladda om av en slump. "Vi får ingen notis när
      någon söker in" var bokstavligen sant.
 
-     Polling och inte realtid, med flit: realtidskanalen kräver
-     konfiguration per tabell, håller en öppen socket, och det här är
-     en vy där två minuters fördröjning inte spelar någon roll. Det
-     som spelar roll är att siffran ändrar sig utan att någon laddar
-     om.
+     REALTID SEDAN FAS 4, med pollningen kvar som gles reserv.
+
+     Förut räknades raderna i de tre borden var 60:e sekund, och
+     listorna hämtades om när summan hade vuxit. Tre frågor i minuten,
+     dygnet runt, för att upptäcka något som händer några gånger i
+     veckan — och ändå upp till en minuts fördröjning på det.
+
+     Nu kommer raden i stället. Reserven finns kvar för att en
+     websocket inte är ett löfte: den dör när datorn somnar och när
+     nätet byts, och Realtime återansluter utan att säga vad som hann
+     passera. Var femte minut, och alltid direkt när fliken kommer
+     fram, räknas raderna om på gamla viset.
 
      Bara de tre borden som kommer utifrån. Fakturor och pass ändras
      av oss själva, och de raderna ritas redan om när vi ändrar dem.
      ------------------------------------------------------------ */
   (function startaBevakning() {
-    const INTERVALL = 60000;
+    const RESERV_INTERVALL = 300000;
+    const SAMLA_MS = 300;
     let senastAntal = null;
+    let samlaTimer = null;
 
     async function kolla() {
       /* Ingen hämtning när fliken ligger i bakgrunden. Den som inte
@@ -4490,11 +4522,14 @@
 
       if (nytt <= 0) { senastAntal = nu; return; }
       senastAntal = nu;
+      await hämtaOmListorna(nytt);
+    }
 
-      /* Hämta om de tre listorna och rita om allt som räknar på dem.
-         hämtaAllt() hade hämtat om hela vyn, inklusive fakturor och
-         matchningsunderlag — fyra gånger så mycket arbete för en rad
-         som tillkommit. */
+    /* Hämta om de tre listorna och rita om allt som räknar på dem.
+       hämtaAllt() hade hämtat om hela vyn, inklusive fakturor och
+       matchningsunderlag — fyra gånger så mycket arbete för en rad
+       som tillkommit. */
+    async function hämtaOmListorna(nytt) {
       const [l2, a2, k2] = await Promise.all([
         supa.from('leads').select('*').order('created_at', { ascending: false }),
         supa.from('applications').select('*').order('created_at', { ascending: false }),
@@ -4504,6 +4539,10 @@
       S.ansokningar = a2.data || S.ansokningar;
       S.kontakt = k2.data || S.kontakt;
 
+      /* Reserven jämför antal mot förra körningen. Har realtid redan
+         hämtat raden ska den inte räknas en gång till. */
+      senastAntal = { leads: S.leads.length, ans: S.ansokningar.length, kontakt: S.kontakt.length };
+
       ritaLeads();
       ritaAnsokningar();
       ritaKontakt();
@@ -4511,7 +4550,7 @@
 
       /* Titeln är det enda som syns när fliken ligger bakom en annan.
          Den nollställs av sättTitel(0) när man öppnar notiserna. */
-      sättTitel(nytt);
+      if (nytt > 0) sättTitel(nytt);
     }
 
     /* Titeln bär antalet nya, som i studievyerna. */
@@ -4520,9 +4559,45 @@
       document.title = n ? '(' + n + ') ' + ren : ren;
     }
 
-    setInterval(kolla, INTERVALL);
+    /* ------------------------------------------------------------
+       REALTIDEN
+
+       En kanal, tre bord, bara INSERT. En rad som ÄNDRAS i leads är
+       nästan alltid admin själv som satt status, och den ritas redan
+       om av den som klickade.
+
+       RLS gäller här som överallt annars: de tre borden har en enda
+       SELECT-policy var, "endast admin läser …". Kanalen finns för
+       att slippa fråga, inte för att komma åt något.
+       ------------------------------------------------------------ */
+    let nyaSedanSist = 0;
+
+    function planeraOmläsning() {
+      nyaSedanSist++;
+      if (samlaTimer) clearTimeout(samlaTimer);
+      samlaTimer = setTimeout(async () => {
+        samlaTimer = null;
+        const n = nyaSedanSist;
+        nyaSedanSist = 0;
+        await hämtaOmListorna(n);
+      }, SAMLA_MS);
+    }
+
+    if (supa && supa.channel) {
+      const kanal = supa.channel('admin-inkorg');
+      ['leads', 'applications', 'contact_messages'].forEach(tabell => {
+        kanal.on('postgres_changes', { event: 'INSERT', schema: 'public', table: tabell }, planeraOmläsning);
+      });
+      kanal.subscribe(status => {
+        /* Efter varje lyckad anslutning: räkna om en gång, så att det
+           som kom in medan socketen låg nere inte faller bort. */
+        if (status === 'SUBSCRIBED') kolla();
+      });
+    }
+
+    setInterval(kolla, RESERV_INTERVALL);
     /* Och direkt när man kommer tillbaka till fliken, i stället för
-       att vänta ut resten av minuten. */
+       att vänta ut resten av intervallet. */
     document.addEventListener('visibilitychange', () => { if (!document.hidden) kolla(); });
 
     document.addEventListener('click', e => {
