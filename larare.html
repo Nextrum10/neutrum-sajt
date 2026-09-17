@@ -2759,20 +2759,19 @@
         gick: rap.gick,
         amne: rap.amne || null,
         needs_practice: träna || null,
-        next_focus: $('#r-fokus').value.trim() || null
+        next_focus: $('#r-fokus').value.trim() || null,
+        /* Närvaron följer med rapporten. Databasen markerar passet
+           genomfört i samma transaktion (triggern
+           lesson_reports_gor_passet_genomfort), så en rapport kan inte
+           längre bli sparad medan passet står kvar orört — vägrar
+           databasen passet sparas inte rapporten heller, och felet
+           nedan säger varför. */
+        narvaro: passId ? $('#r-narvaro').value : null
       }).select('id').single();
 
       if (error) { säg(msg, 'Kunde inte spara rapporten: ' + felText(error), false); return; }
 
-      /* passet blir genomfört i samma veva — det är rapporten som
-         gör en bokning till en arbetad timme */
       let varning = '';
-      if (passId) {
-        const { error: bErr } = await supa.from('bookings')
-          .update({ status: 'completed', attendance: $('#r-narvaro').value })
-          .eq('id', passId);
-        if (bErr) varning += ' Passet kunde dock inte markeras som genomfört: ' + felText(bErr);
-      }
 
       /* Samma formulär skriver utvecklingen. Förr låg den i ett eget
          formulär längre ned, och därför fylldes den nästan aldrig i. */
