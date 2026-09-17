@@ -2414,7 +2414,7 @@
          Flytta och Avboka hör till pass som ligger framåt — ett pass
          som redan hållits går inte att flytta. */
       const idag = isoFor(new Date());
-      const harVarit = kan && String(b.wanted_date || '') <= idag;
+      const harVarit = kan && rapporterbart(b) && String(b.wanted_date || '') <= idag;
 
       let knappar = '';
       if (b.status === 'requested' && !mitt && !harVarit) {
@@ -2463,11 +2463,21 @@
      rapporterat (status completed sätts av rapporten), och det har
      faktiskt ägt rum. Nyast först — man rapporterar gårdagens pass,
      inte det från i förrgår. */
+  /* Samma regel som triggern skydda_bokningsfalt i databasen: ett
+     pass kan bli genomfört bara om familjen stått bakom tiden —
+     bekräftat, eller bokat av familjen själv. Ett eget förslag som
+     familjen aldrig svarat på erbjuds därför inte här; databasen
+     hade avvisat det efter att rapporten redan sparats. */
+  function rapporterbart(b) {
+    return b.status === 'confirmed'
+      || (b.status === 'requested' && b.created_by === b.parent_id);
+  }
+
   function passUtanRapport() {
     const idag = isoFor(new Date());
     return S.bokningar
       .filter(b => b.student_id === S.aktivElev
-        && (b.status === 'requested' || b.status === 'confirmed')
+        && rapporterbart(b)
         && String(b.wanted_date || '') <= idag)
       .sort((a, c) => String(c.wanted_date + (c.wanted_time || ''))
         .localeCompare(String(a.wanted_date + (a.wanted_time || ''))));
