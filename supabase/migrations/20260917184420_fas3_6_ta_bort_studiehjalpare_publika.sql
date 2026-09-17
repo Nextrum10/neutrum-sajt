@@ -1,0 +1,21 @@
+-- ============================================================
+-- NEXTRUM — Fas 3.6: vyn studiehjalpare_publika tas bort
+--
+-- Vyn kom i schema-v23 och skulle visa de studiehjälpare som valt
+-- att synas på startsidan. Den fungerade aldrig för en besökare:
+-- security_invoker var på och vyn joinar profiles, som anon inte får
+-- läsa. Som anon gav den därför alltid noll rader, oavsett
+-- visa_publikt. Det syntes inte, eftersom en tom lista ser likadan
+-- ut som "ingen har publicerat sig än".
+--
+-- Fas 1.3 ersatte den med funktionen publika_studiehjalpare(), som
+-- är SECURITY DEFINER och har samma kolumner och samma villkor.
+-- index.html och en/index.html anropar funktionen sedan dess, och
+-- den koden ligger nu i main och i drift.
+--
+-- Vyn väntade på att frontend skulle vara driftsatt. Nu är den det,
+-- och inget i repot läser vyn längre. Ingen annan vy och ingen
+-- funktion är beroende av den (pg_depend: 0).
+-- ============================================================
+
+drop view if exists public.studiehjalpare_publika;
