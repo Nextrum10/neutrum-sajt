@@ -18,8 +18,8 @@ bort, och sist tabellen.
 |---|---|---|---|
 | Faktureringen | `supabase/functions/fakturering/index.ts:162` | Reserv när standardtjänsten saknar pris | 3 |
 | Ekonomiagenten | `supabase/functions/ekonomi/index.ts:143–150` | Frågan `prissattning` i verktyget `las_siffror` | 1 |
-| Adminvyn, månadskörningen | `nextrum-admin.js:200`, `:219`, `ritaPris()` `:2219` | Visar priset i #kor-pris | 2 |
-| Adminvyn, tjänstekorten | `nextrum-admin.js:3375–3382` | Speglar läxhjälpens pris till `S.pris` efter spara | 2 |
+| Adminvyn, månadskörningen | `nextrum-admin.js:200`, `:219`, `ritaPris()` `:2234` | Visar priset i #kor-pris | 2 |
+| Adminvyn, tjänstekorten | `nextrum-admin.js:3394–3401` | Speglar läxhjälpens pris till `S.pris` efter spara | 2 |
 | Triggern | `tjanster_synka_pris` → `synka_laxhjalpspris()` | Skriver läxhjälpens pris till tabellen | 4 |
 
 **Redan gjort i Fas 5:** familjens uppskattning under Betalning

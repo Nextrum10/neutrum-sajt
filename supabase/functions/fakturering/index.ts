@@ -8,8 +8,8 @@
 //   · ett underlag per studiehjälpare (vad de ska få)
 //
 // Samma pass, två sidor. Priset familjen betalar kommer från
-// tjanster, ersättningen från tutor_profiles.hourly_rate (annars
-// tjanster.ersattning_per_timme_ore). Själva räkningen ligger i
+// tjanster, ersättningen från tjanster.ersattning_per_timme_ore när
+// den är satt, annars från tutor_profiles.hourly_rate. Själva räkningen ligger i
 // _delad/pris.ts, där den är testad öre för öre (pris_test.ts).
 //
 // RUT (Fas 5.3): dras bara av för RUT-berättigade tjänster, när kunden
@@ -281,9 +281,13 @@ Deno.serve(async (req) => {
          som står som skickad utan att någon fått den är en faktura
          ingen letar efter — och den upptäcks först när betalningen
          uteblir. */
+      // rut_ar: året avdraget prövades mot taket för. Bara när det
+      // finns ett avdrag — en läxhjälpsfaktura skrivs som förut.
+      const rut = summaRut(rader);
       const f = await db.from('invoices').insert({
         parent_id: parentId, period, status: 'utkast',
-        belopp_ore: summa(rader), rut_ore: summaRut(rader), forfaller: forfallerIso,
+        belopp_ore: summa(rader), rut_ore: rut, forfaller: forfallerIso,
+        ...(rut > 0 ? { rut_ar: rutAr } : {}),
       }).select('id').single();
 
       if (f.error) { problem.push(`faktura ${parentId}: ${f.error.message}`); continue; }
@@ -314,8 +318,8 @@ Deno.serve(async (req) => {
 
       if (p.error) { problem.push(`utbetalning ${tutorId}: ${p.error.message}`); continue; }
 
-      // Radens egen timpenning: studiehjälparens, eller tjänstens
-      // ersättning när hen saknar en egen. För läxhjälp alltid samma.
+      // Radens egen timpenning: tjänstens ersättning när den är satt,
+      // annars studiehjälparens egen. För läxhjälp alltid hens egen.
       const l = await db.from('payout_lines').insert(
         rader.map((r) => ({
           payout_id: p.data.id, booking_id: r.booking_id, beskrivning: r.beskrivning,

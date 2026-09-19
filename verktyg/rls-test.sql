@@ -631,6 +631,13 @@ select pg_temp.rakna_efter('5.2 nytt barn får ett eget uppdrag', '00000000-0000
   array[$q$insert into public.students (parent_id, name) values ('00000000-0000-4000-8000-0000000000f2', 'Nytt barn')$q$],
   'select count(*) from public.uppdrag', 2);
 
+select pg_temp.rakna_efter('5.2 nytt barn får eget uppdrag även med syskonets id', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.students (parent_id, name, uppdrag_id) values ('00000000-0000-4000-8000-0000000000f1', 'Tredje', '$q$
+        || (select uppdrag_id::text from public.students where id = '00000000-0000-4000-8000-0000000005a1')
+        || $q$')$q$],
+  $q$select count(*) from public.students where name = 'Tredje'
+     and uppdrag_id is distinct from '$q$ || (select uppdrag_id::text from public.students where id = '00000000-0000-4000-8000-0000000005a1') || $q$'$q$, 1);
+
 select pg_temp.rakna_efter('5.2 nytt pass hamnar på barnets uppdrag', '00000000-0000-4000-8000-0000000000f1',
   array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
           values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
