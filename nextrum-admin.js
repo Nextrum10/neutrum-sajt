@@ -1964,10 +1964,20 @@
 
     if (koppla) {
       const lista = kandidater(p);
+      /* Sedan Fas 3.7 måste en rapport som hör till ett pass ha närvaro
+         (rapport_med_pass_har_narvaro). En fristående rapport har
+         ingen, så den sätts här — förvald efter passets egen närvaro
+         när den finns. Utan valet nekade databasen varje koppling. */
+      const passNärvaro = ((S.bokningar || []).find(b => b.id === p.id) || {}).attendance || 'narvarande';
+      const NÄRVARO = [['narvarande', 'Närvarade'], ['sen', 'Kom sent'], ['franvarande', 'Uteblev']];
       const valt = await fråga({
         titel: 'Vilken rapport hör till passet?',
         text: vad + '. Rapporten kopplas till passet, och passet kommer med på nästa körning.',
-        innehåll: '<div style="margin:14px 0 4px">' + lista.map((r, i) =>
+        innehåll: '<div class="fgroup" style="margin:14px 0 0"><label for="avv-narvaro">Närvaro på passet</label>'
+          + '<select class="sel" id="avv-narvaro">' + NÄRVARO.map(([v, t]) =>
+            '<option value="' + v + '"' + (v === passNärvaro ? ' selected' : '') + '>' + esc(t) + '</option>').join('')
+          + '</select></div>'
+          + '<div style="margin:14px 0 4px">' + lista.map((r, i) =>
           '<label style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)">'
           + '<input type="radio" name="avv-rapport" value="' + r.id + '"' + (i === 0 ? ' checked' : '') + '>'
           + '<span><b>' + esc(kortDatum(r.lesson_date)) + '</b> · ' + esc(elevNamn(r.student_id))
@@ -1976,7 +1986,8 @@
         knapp: 'Koppla',
         läs: ruta => {
           const v = ruta.querySelector('input[name="avv-rapport"]:checked');
-          return v ? { värde: v.value } : { fel: 'Välj en rapport.' };
+          const n = ruta.querySelector('#avv-narvaro');
+          return v ? { värde: { rapport: v.value, narvaro: n ? n.value : passNärvaro } } : { fel: 'Välj en rapport.' };
         }
       });
       if (!valt) return;
@@ -1984,7 +1995,8 @@
         /* is('booking_id', null): hann någon annan koppla rapporten
            under tiden ska den inte flyttas härifrån. */
         const { data, error } = await supa.from('lesson_reports')
-          .update({ booking_id: p.id }).eq('id', valt).is('booking_id', null).select('id');
+          .update({ booking_id: p.id, narvaro: valt.narvaro })
+          .eq('id', valt.rapport).is('booking_id', null).select('id');
         if (error) { alert('Kunde inte koppla: ' + felText(error)); return; }
         if (!data || !data.length) alert('Rapporten hann kopplas till något annat. Listan laddas om.');
         await laddaOmEkonomi();

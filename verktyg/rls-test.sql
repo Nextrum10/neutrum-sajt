@@ -499,13 +499,13 @@ select pg_temp.rakna('F2 ofakturerat räknar inte pass utan rapport', '00000000-
      where parent_id = '00000000-0000-4000-8000-0000000000f1'$q$, 0);
 
 select pg_temp.rakna_efter('F2 admin kopplar en rapport, passet blir fakturerbart', '00000000-0000-4000-8000-0000000000ad',
-  array[$q$update public.lesson_reports set booking_id = '00000000-0000-4000-8000-00000000b0e1'
+  array[$q$update public.lesson_reports set booking_id = '00000000-0000-4000-8000-00000000b0e1', narvaro = 'narvarande'
           where id = '00000000-0000-4000-8000-00000000e0a1' and booking_id is null$q$],
   $q$select count(*) from public.passunderlag
      where id = '00000000-0000-4000-8000-00000000b0e1' and har_rapport and fakturerbar and not fakturerad$q$, 1);
 
 select pg_temp.rakna_efter('F2 ej_utbetalt räknar passet när rapporten är kopplad', '00000000-0000-4000-8000-0000000000ad',
-  array[$q$update public.lesson_reports set booking_id = '00000000-0000-4000-8000-00000000b0e1'
+  array[$q$update public.lesson_reports set booking_id = '00000000-0000-4000-8000-00000000b0e1', narvaro = 'narvarande'
           where id = '00000000-0000-4000-8000-00000000e0a1'$q$],
   $q$select coalesce(sum(pass), 0) from public.ej_utbetalt
      where tutor_id = '00000000-0000-4000-8000-0000000000a1'$q$, 1);
