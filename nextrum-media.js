@@ -334,7 +334,7 @@ window.NXMedia = (function () {
 
     host.innerHTML = NXStudie.laddar();
     var res = await supa
-      .from('materials').select('id, title, kind, url, body, subject, file_name, file_size')
+      .from('materials').select('id, title, kind, url, body, subject, file_name, file_size, created_at')
       .eq('student_id', o.elev).order('created_at', { ascending: false });
 
     if (res.error) { host.innerHTML = tomt('Kunde inte hämta materialet', NX.felText(res.error)); return; }

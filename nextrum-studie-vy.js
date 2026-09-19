@@ -819,6 +819,17 @@
       });
     }
 
+    const nya = nyttMaterial();
+    if (nya.length) {
+      poster.push({
+        rubrik: nya.length > 1 ? nya.length + ' nya material' : 'Nytt material',
+        text: nya.length > 1
+          ? 'Från er studiehjälpare, bland annat "' + (nya[0].title || 'utan titel') + '".'
+          : '"' + (nya[0].title || 'Utan titel') + '" från er studiehjälpare.',
+        mål: '#mat-lista'
+      });
+    }
+
     const idag = isoFor(new Date());
     const brådskande = (S.laxor || []).filter(h => h.status !== 'klar' && h.due_date && h.due_date <= idag);
     if (brådskande.length) {
@@ -1024,10 +1035,36 @@
      att få veta om det ligger något där. */
   function ritaÖvLaxor() {
     const öppna = (S.laxor || []).filter(h => h.status !== 'klar');
-    if (S.sido) S.sido.märke('uppgifter', öppna.length);
+    if (S.sido) S.sido.märke('uppgifter', öppna.length + nyttMaterial().length);
     const mark = $('#flik-lax-mark');
     if (mark) { mark.hidden = !öppna.length; mark.textContent = öppna.length || ''; }
+    const matMark = $('#flik-mat-mark');
+    const nya = nyttMaterial().length;
+    if (matMark) { matMark.hidden = !nya; matMark.textContent = nya || ''; }
   }
+
+  /* Material som kommit sedan förra besöket. last_seen_at stämplas
+     sist i start(), så värdet i S.profil är förra gången — precis den
+     gräns som avgör vad som är nytt. Utan den gränsen (första besöket)
+     räknas inget som nytt: att allt lyser vid första inloggningen
+     säger ingenting.
+
+     När man öppnar Material-fliken är det sett, även om stämpeln i
+     databasen skrivs först nästa gång sidan laddas. */
+  function nyttMaterial() {
+    if (S.materialSett) return [];
+    const sedan = S.profil && S.profil.last_seen_at;
+    if (!sedan) return [];
+    return (S.material || []).filter(m => m.created_at && m.created_at > sedan);
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#flik-material')) return;
+    if (!nyttMaterial().length) return;
+    S.materialSett = true;
+    ritaÖvLaxor();
+    ritaNotiser();
+  });
 
   /* Olästa meddelanden: siffra i sidomenyn och undertext på
      hälsningens chattkort. Själva tråden ligger i Meddelanden — det
@@ -1413,6 +1450,9 @@
     await laddaTutor();
     startaTråd();
     await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPass(), laddaBokning()]);
+    /* Läxorna och materialet hämtas samtidigt, så märkena ritas om
+       när båda finns — annars räknades nytt material innan det kommit. */
+    ritaÖvLaxor();
     ritaNotiser();
     await Promise.all([ritaÖvSamtal(), laddaBetalning()]);
     supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);

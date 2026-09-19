@@ -650,9 +650,16 @@ window.NXStudie = (function () {
       });
 
       /* Vid första ritningen står man redan högst upp. Att scrolla
-         då skulle rycka undan sidan medan den laddar. */
+         då skulle rycka undan sidan medan den laddar.
+
+         Byter man sektion scrollas SEKTIONEN fram, inte sidans topp.
+         Förut hamnade man ovanför heron och fick scrolla ned till det
+         man just klickat på, varje gång. scroll-padding-top i
+         nextrum.css håller rubriken fri från den fasta toppraden. */
       if (!första) {
-        window.scrollTo({ top: 0, behavior: 'auto' });
+        var sektion = rot.querySelector('section[data-sek="' + vald + '"]');
+        if (sektion) sektion.scrollIntoView({ block: 'start', behavior: 'auto' });
+        else window.scrollTo({ top: 0, behavior: 'auto' });
         var rubrik = rot.querySelector('section[data-sek="' + vald + '"] h2, section[data-sek="' + vald + '"] h5');
         if (rubrik) {
           rubrik.setAttribute('tabindex', '-1');

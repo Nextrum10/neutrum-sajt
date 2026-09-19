@@ -335,6 +335,19 @@
     S.senaste = karta;
   }
 
+  /* Vem tråden gäller, sett från studiehjälparen. Det är ELEVEN man
+     jobbar med och tänker på — familjens namn säger inget den som har
+     tre elever, och två av dem kan ha föräldrar med samma efternamn.
+     Eleven står därför först, föräldern under. Har familjen inte lagt
+     in sitt barn än står föräldern kvar som rubrik. */
+  function trådNamn(f) {
+    const förälder = f.full_name || f.email || 'Familj';
+    const barn = S.elever.filter(e => e.parent_id === f.id).map(e => e.name).filter(Boolean);
+    return barn.length
+      ? { rubrik: barn.join(' & '), under: 'Förälder: ' + förälder, förnamn: String(barn[0]).split(' ')[0] }
+      : { rubrik: förälder, under: f.email && f.email !== förälder ? f.email : 'Inget barn inlagt än', förnamn: '' };
+  }
+
   function ritaChattlista() {
     const host = $('#ch-lista');
     if (!host) return;
@@ -357,7 +370,7 @@
     host.innerHTML = ordnade.map(f => {
       const m = S.senaste[f.id];
       const oläst = S.olästa[f.id + '|' + S.user.id] || 0;
-      const barn = S.elever.filter(e => e.parent_id === f.id).map(e => e.name);
+      const t = trådNamn(f);
       const namn = f.full_name || f.email || 'Familj';
       const rad = m
         ? (m.sender_id === S.user.id ? 'Du: ' : '') + String(m.body || '').replace(/\s+/g, ' ')
@@ -367,10 +380,10 @@
         + ' aria-pressed="' + (f.id === S.aktivFamilj ? 'true' : 'false') + '">'
         + M.avatar(namn, S.avatarer[f.id] || null, { liten: true })
         + '<span class="ch-rad-text">'
-        + '<span class="ch-rad-topp"><b>' + esc(namn) + '</b>'
+        + '<span class="ch-rad-topp"><b>' + esc(t.rubrik) + '</b>'
         + (m ? '<time>' + esc(NXKontakt.dagText(m.created_at)) + '</time>' : '')
         + '</span>'
-        + (barn.length ? '<span class="ch-rad-barn">' + esc(barn.join(', ')) + '</span>' : '')
+        + '<span class="ch-rad-barn">' + esc(t.under) + '</span>'
         + '<span class="ch-rad-sist' + (oläst ? ' ar-oläst' : '') + '">' + esc(rad) + '</span>'
         + '</span>'
         + (oläst ? '<span class="ch-rad-larm">' + oläst + '</span>' : '')
@@ -386,10 +399,14 @@
     const f = S.familjer.find(x => x.id === S.aktivFamilj);
     if (!f) { host.innerHTML = ''; return; }
     const namn = f.full_name || f.email || 'Familj';
-    const barn = S.elever.filter(e => e.parent_id === f.id).map(e => e.name);
+    const t = trådNamn(f);
     host.innerHTML = M.avatar(namn, S.avatarer[f.id] || null, { liten: true })
-      + '<span class="ch-topp-text"><b>' + esc(namn) + '</b>'
-      + '<span>' + esc(barn.length ? barn.join(', ') : (f.email || '')) + '</span></span>';
+      + '<span class="ch-topp-text"><b>' + esc(t.rubrik) + '</b>'
+      + '<span>' + esc(t.under) + '</span></span>';
+
+    /* Rutan säger vem man skriver till innan man skrivit något. */
+    const ruta = $('#tr-text');
+    if (ruta) ruta.placeholder = t.förnamn ? 'Skriv till ' + t.förnamn + 's familj…' : 'Skriv till familjen…';
   }
 
   function ritaFamiljval() {
@@ -2313,7 +2330,7 @@
       const namn = f.full_name || 'Familj';
       return '<a href="#meddelanden" data-oppna-familj="' + esc(f.id) + '">'
         + M.avatar(namn, (S.avatarer || {})[f.id], { liten: true })
-        + '<span class="vy-samtal-text"><b>' + esc(namn) + '</b><span>'
+        + '<span class="vy-samtal-text"><b>' + esc(trådNamn(f).rubrik) + '</b><span>'
         + (m ? esc((m.sender_id === S.user.id ? 'Du: ' : '') + m.body) : 'Inga meddelanden än')
         + '</span></span>'
         + (oläst ? '<span class="oläst-prick" aria-label="' + oläst + ' olästa"></span>' : '')
