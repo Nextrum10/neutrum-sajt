@@ -8,7 +8,11 @@ Den här filen är minnet: vad som gäller, varför det gäller, och vilka
 fel som redan har begåtts en gång. Driftinstruktionerna ligger kvar i
 `START-HÄR.md` och `DEPLOY-*.md` — de upprepas inte här.
 
-`.vercelignore` utesluter `*.md`, så filen serveras aldrig från sajten.
+`MINNESPOSTER.md` är samma kunskap kokad till sju korta poster för
+Claude-projektets minne. Ändras en regel här som också står där: ändra
+båda i samma commit.
+
+`.vercelignore` utesluter `*.md`, så ingen av dem serveras från sajten.
 
 ---
 
@@ -359,3 +363,8 @@ veta att det inte är ett skrivfel:
 Hittar du de dokumenten: lägg in dem här i stället för att hänvisa
 vidare. En hänvisning till något som inte går att öppna är inte ett
 minne.
+
+Övriga poster i Claude-projektets minne (`project-nextrum-oversikt`,
+`-sakerhet`, `-databas`, `-sprak-kod`, `-genererat`, `-agenter`,
+`-arbetssatt`) står i klartext i `MINNESPOSTER.md` och är sammanfattningar
+av den här filen. De är alltså inte en källa: de pekar hit.
