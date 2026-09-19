@@ -1,9 +1,35 @@
 // ============================================================
 // NEXTRUM — Edge Function: lead-notis
 //
-// Mejlar ledningen när någon skickar en intresseanmälan.
-// Anmälan sparas i databasen som förut; det här är en avisering
-// ovanpå, inte i stället för. Går mejlet fel ligger raden kvar.
+// Skickar TVÅ mejl när någon lämnar en intresseanmälan:
+//
+//   1. aviseringen till ledningen, så att någon kan ringa
+//   2. kvittensen till familjen, så att de vet att den kom fram
+//
+// Anmälan sparas i databasen som förut; båda mejlen är ovanpå, inte
+// i stället för. Går de fel ligger raden kvar.
+//
+//
+// VARFÖR KVITTENSEN LIGGER HÄR OCH INTE I EN EGEN FUNKTION
+//
+// Det är samma händelse. En egen funktion hade krävt en andra
+// webhook på samma tabell, med samma hemlighet och samma
+// record-kropp — två saker att driftsätta och två ställen där det
+// kan sluta avfyras, för ett mejl som utlöses av exakt det som
+// redan utlöst det här.
+//
+//
+// ORDNINGEN ÄR INTE GODTYCKLIG
+//
+// Aviseringen skickas FÖRST och kvittensen sedan. Den familjen inte
+// får är en besviken förälder; den VI inte får är en kund som
+// ringde och aldrig blev uppringd. 24-timmarslöftet på sajten
+// hänger på det första mejlet.
+//
+// Därför får ett fel på kvittensen aldrig fälla hela svaret. En
+// 502 här får webhooken att försöka igen, och nästa försök skickar
+// aviseringen EN GÅNG TILL. Kvittensens utfall rapporteras i stället
+// i svaret, och raden ligger kvar att skicka om från.
 //
 // ANROPAS AV EN DATABASWEBHOOK, inte av webbläsaren. Det är med
 // flit. En funktion som tar emot formulärdata från klienten är en
@@ -29,6 +55,7 @@
 import { json as jsonMed, esc, epostOk } from '../_delad/http.ts';
 import { lika } from '../_delad/auth.ts';
 import { skickaViaResend } from '../_delad/mejl.ts';
+import { brev, SAJT, KONTAKT } from '../_delad/mall.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
@@ -105,6 +132,100 @@ function rad(etikett: string, varde: unknown): string {
 /* epostOk (från _delad/http.ts) kollas HÄR också, för databasen kan
    fyllas på från annat håll än sidan och en trasig rad får inte kunna
    stoppa aviseringen om sig själv. */
+
+/* Förnamnet. Formuläret ber om "Namn" i ett fält, så det som kommer
+   in är allt från "Anna" till "Anna Svensson-Lindqvist". Ett mejl som
+   inleds med hela personnumret på namnet låter som ett register. */
+function förnamn(helaNamnet: unknown): string {
+  return String(helaNamnet ?? '').trim().split(/\s+/)[0] ?? '';
+}
+
+/* ============================================================
+   KVITTENSEN TILL FAMILJEN
+
+   Den som just tryckt på knappen har lämnat ifrån sig sitt barns
+   namn och sin egen adress till ett företag de inte känner. Kom det
+   fram? Läser någon det? Sajten svarar med en rad text som försvinner
+   när fliken stängs — mejlet är det enda som ligger kvar.
+
+   Tre saker ska stå i det, och inget mer: att den kom fram, när vi
+   hör av oss, och vart man skriver om man kommer på något under
+   tiden. Ingen kampanj, inga länkar till prissidan, ingen
+   nyhetsbrevsruta. Det här är ett kvitto, inte ett utskick.
+
+   IDEMPOTENSNYCKELN är radens id. En webhook som försöker igen —
+   efter en timeout, en kall start eller ett nätfel — skickar då
+   samma kvittens en gång till, och Resend levererar den ändå bara
+   en gång. En familj som får två tackmejl för samma anmälan tror
+   att de skickade in två.
+   ============================================================ */
+async function skickaKvittens(r: Record<string, unknown>): Promise<Response> {
+  const adress = String(r.email ?? '').trim();
+  const namn = förnamn(r.parent_name);
+  const barn = String(r.child_name ?? '').trim();
+  const amne = String(r.subject ?? '').trim();
+
+  const stycken = [
+    namn ? `Hej ${namn},` : 'Hej,',
+
+    `tack för att ni hörde av er. Er intresseanmälan har kommit fram till oss och ligger `
+      + `hos en människa nu, inte i en kö.`,
+
+    `Vi hör av oss inom 24 timmar, på den här adressen eller på telefon om ni lämnade ett `
+      + `nummer. Skickade ni in sent på kvällen eller under helgen kan det bli morgonen `
+      + `efter — men inom ett dygn hör ni från oss.`,
+
+    `Det första vi gör är att ringa eller skriva och gå igenom vad ${barn || 'eleven'} `
+      + `behöver hjälp med${amne ? `, inte bara "${amne}" utan var det faktiskt går trögt` : ''}. `
+      + `Först därefter väljer vi studiehjälpare. Vi matchar hellre långsamt och rätt än `
+      + `snabbt och ungefär — fel person är sämre än ingen person.`,
+
+    `När matchningen är klar skriver vi en studieplan och låser upp studievyn, där ni bokar `
+      + `pass, läser rapporten efter varje gång och når studiehjälparen direkt.`,
+
+    `Ni har inte bundit er vid någonting genom att skicka in det här, och det kostar `
+      + `ingenting förrän ni har haft ett pass. Kommer ni på något i mellantiden, eller vill `
+      + `ändra något ni skrev — svara bara på det här mejlet, eller skriv till ${KONTAKT}.`,
+  ];
+
+  const { text, html } = brev({
+    rubrik: namn ? `Tack ${namn} — vi hörde er` : 'Tack — vi hörde er',
+    stycken,
+    knapp: { text: 'Läs hur det går till', adress: `${SAJT}/sa-fungerar-nextrum` },
+    efterord: 'Du får det här mejlet för att adressen angavs i en intresseanmälan på '
+            + 'nextrum.se. Var det inte du — svara på mejlet, så tar vi bort uppgifterna.',
+  });
+
+  return await skickaViaResend({
+    fran: FRAN,
+    till: [adress],
+    amne: namn ? `Tack ${namn}, vi hör av oss inom 24 timmar` : 'Tack, vi hör av oss inom 24 timmar',
+    text,
+    html,
+    idempotens: r.id ? `lead-kvittens-${r.id}` : undefined,
+  });
+}
+
+/* Kvittensen, inpackad så att den aldrig kan fälla aviseringen.
+   Returnerar vad som hände i stället för att kasta — utfallet ska
+   synas i webhookloggen bredvid aviseringens, inte ersätta den.
+
+   Adressen kontrolleras med epostOk först. En rad kan ha kommit in
+   från annat håll än formuläret, och Resend svarar 422 på en adress
+   som inte är en adress; det är inget fel att larma om, det är bara
+   ingen att kvittera till. */
+async function försökKvittens(r: Record<string, unknown>): Promise<Record<string, unknown>> {
+  if (!epostOk(r.email)) {
+    return { skickad: false, orsak: 'Adressen i raden ser inte ut som en e-postadress.' };
+  }
+  try {
+    const svar = await skickaKvittens(r);
+    if (svar.ok) return { skickad: true, id: (await svar.json())?.id ?? null };
+    return { skickad: false, status: svar.status, orsak: await svar.text() };
+  } catch (e) {
+    return { skickad: false, orsak: String(e) };
+  }
+}
 
 Deno.serve(async (req) => {
   try {
@@ -186,6 +307,16 @@ Deno.serve(async (req) => {
                  + 'reservavsändaren och nådde bara ' + RESERV_TILL + ', inte hela listan.',
           orsak,
           id: (await reserv.json())?.id ?? null,
+          /* Ingen kvittens härifrån, och inget försök heller.
+             Reservavsändaren får bara leverera till Resend-kontots
+             egen adress — ett försök mot familjen hade avvisats, och
+             det enda det gett är en rad till i loggen om samma sak
+             som varningen ovan redan säger. */
+          kvittens: {
+            skickad: false,
+            orsak: 'Domänen är inte verifierad hos Resend, så inget mejl kan nå familjen. '
+                 + 'Verifiera nextrum.se och skicka om raden.',
+          },
         }, 200);
       }
       return json({
@@ -199,7 +330,15 @@ Deno.serve(async (req) => {
       return json({ error: 'Resend svarade ' + svar.status + ': ' + (await svar.text()) }, 502);
     }
 
-    return json({ ok: true, id: (await svar.json())?.id ?? null }, 200);
+    /* Aviseringen gick fram. Först nu kvittensen — se ORDNINGEN
+       överst. Utfallet följer med i svaret men kan inte ändra
+       statuskoden: en 502 här hade fått webhooken att försöka igen
+       och skickat aviseringen en andra gång. */
+    const aviseringsId = (await svar.json())?.id ?? null;
+    const kvittens = await försökKvittens(r);
+    if (!kvittens.skickad) console.error('Kvittensen gick inte iväg:', kvittens.orsak);
+
+    return json({ ok: true, id: aviseringsId, kvittens }, 200);
   } catch (e) {
     return json({ error: String(e) }, 500);
   }

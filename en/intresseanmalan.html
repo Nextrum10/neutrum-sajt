@@ -183,7 +183,7 @@
             <div class="pay-field"><label for="l-phone">Phone</label>
               <input class="inp" id="l-phone" name="phone" type="tel" autocomplete="tel" placeholder="Optional"></div>
             <div class="pay-field"><label for="l-child">Student’s name</label>
-              <input class="inp" id="l-child" name="child_name"></div>
+              <input class="inp" id="l-child" name="child_name" placeholder="Optional"></div>
             <div class="pay-field"><label for="l-grade">Year group</label>
               <select class="sel" id="l-grade" name="grade">
                 <option value="">Choose year group</option>
@@ -474,6 +474,20 @@
       const epost = $('#l-email').value.trim();
       if (!namn || !epost) { säg(msg, t('fyllNamnEpost'), false); return; }
       if (!epostOk(epost)) { säg(msg, t('felEpost'), false); return; }
+
+      /* "Andra ämnen" utan att skriva vilka. required sitter på
+         fältet men formuläret har novalidate, så ingen har frågat
+         efter värdet förrän nu — och den raden är den enda där
+         ämnesvalet inte säger något alls. */
+      const ämneValt = $('#l-subject').selectedOptions[0];
+      const ämneAnnat = $('#l-subject-annat');
+      if (ämneValt && ämneValt.hasAttribute('data-annat') && ämneAnnat
+          && !ämneAnnat.value.trim()) {
+        säg(msg, t('fyllAmnen'), false);
+        ämneAnnat.focus({ preventScroll: true });
+        ämneAnnat.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return;
+      }
       if (!gdpr.checked) {
         säg(msg, t('samtyckeIntresse'), false);
         märkSamtycke(true);

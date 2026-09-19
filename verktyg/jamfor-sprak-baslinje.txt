@@ -1,30 +1,24 @@
 
 === anvandarvillkor.html  ->  en/anvandarvillkor.html
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
-  TEXTNODER: sv 110 vs en 109 — engelskan har inte följt med
   SVENSKA KVAR i engelskan, 2 stycken:
       Leo Constantinos Thriskos
       Alexandar Jovanovic
 
 === bli-studiehjalpare.html  ->  en/bli-studiehjalpare.html
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
-  TEXTNODER: sv 150 vs en 149 — engelskan har inte följt med
 
 === faq.html  ->  en/faq.html
   STRUKTUR skiljer sig vid tagg 39: sv <b> vs en <a>
-  TEXTNODER: sv 153 vs en 152 — engelskan har inte följt med
 
 === for-elever-och-foraldrar.html  ->  en/for-elever-och-foraldrar.html
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
-  TEXTNODER: sv 132 vs en 131 — engelskan har inte följt med
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 40: sv <b> vs en <a>
-  TEXTNODER: sv 223 vs en 220 — engelskan har inte följt med
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
-  TEXTNODER: sv 142 vs en 141 — engelskan har inte följt med
   SVENSKA KVAR i engelskan, 4 stycken:
       Leo Constantinos Thriskos
       Alexandar Jovanovic
@@ -33,24 +27,19 @@
 
 === intresseanmalan.html  ->  en/intresseanmalan.html
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
-  TEXTNODER: sv 120 vs en 119 — engelskan har inte följt med
 
 === lagring.html  ->  en/lagring.html
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
-  TEXTNODER: sv 92 vs en 91 — engelskan har inte följt med
   SVENSKA KVAR i engelskan, 1 stycken:
       localStorage
 
 === priser.html  ->  en/priser.html
   STRUKTUR skiljer sig vid tagg 39: sv <b> vs en <a>
-  TEXTNODER: sv 136 vs en 135 — engelskan har inte följt med
 
 === sa-fungerar-nextrum.html  ->  en/sa-fungerar-nextrum.html
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
-  TEXTNODER: sv 105 vs en 104 — engelskan har inte följt med
 
 === var-ide.html  ->  en/var-ide.html
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
-  TEXTNODER: sv 96 vs en 95 — engelskan har inte följt med
 
 11 av 11 sidpar har avvikelser.
