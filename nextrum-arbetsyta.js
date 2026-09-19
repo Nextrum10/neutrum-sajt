@@ -9,8 +9,9 @@
 
      · hälsningen   — vem tittar, och vad är klockan
      · flikar       — två gamla sektioner i en, utan ny menypost
-     · bokningen    — lediga tider som knappar i stället för sökning
-     · veckorutnätet — studiehjälparens tider, ritade som en vecka
+     · bokningen    — en kalender med lediga tider, och önska-en-annan-tid
+     · månaden      — kalendern som bokningen, flytta-rutan och
+                      studiehjälparens tider delar
 
    Ingenting här pratar med databasen. Varje vy skickar in sin data
    och får tillbaka ett svar på vad någon tryckte på. Det är med
@@ -244,186 +245,138 @@ window.NXArbete = (function () {
   }
 
   /* ============================================================
-     VECKOVYN
+     MÅNADEN — en vanlig kalender
 
-     Sju kolumner, en per dag, med lediga timmar som knappar. Den
-     används på två ställen som ser lika ut för att de ÄR lika:
-     familjen som bokar en tid, och studiehjälparen som föreslår en.
-     Två kopior av samma rutnät hade glidit isär på en vecka.
+     Leo underkände veckorutnätet och veckovyn 2026-09-18: "ha bara en
+     kalender där man trycker in på dagar och tider på dagen". Det här
+     är den kalendern, och den används på tre ställen:
 
-     Det här är en HTML-byggare, inte en komponent med eget liv.
-     Båda vyerna ritar om hela sin yta när något ändras, och två
-     ritloopar som äger samma element är ett fel som syns först när
-     någon klickar snabbt. Klicken fångas av vyn själv:
-     .bk-slot[data-datum][data-tid], #bk-forr, #bk-nasta, #bk-hoppa.
+       · familjens bokning   — dagar med lediga tider har en prick
+       · flytta-rutan        — samma, med passets egen tid räknad som ledig
+       · studiehjälparens tider — prick på veckodagar där tider finns
+
+     Det är en HTML-byggare, inte en komponent med eget liv. Vyerna
+     ritar om hela sin yta när något ändras, och två ritloopar som äger
+     samma element är ett fel som syns först när någon klickar snabbt.
+     Klicken fångas av vyn:
+
+       .mv-dag[data-datum]              en dag
+       #<prefix>-forr, #<prefix>-nasta   föregående / nästa månad
+       .mv-tid[data-datum][data-tid]    en tid under kalendern
      ============================================================ */
 
-  function måndagen(iso) {
-    var d = new Date(iso + 'T12:00:00');
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-    return NX.isoFor(d);
-  }
+  function idagISO() { return NX.isoFor(new Date()); }
+
   function plusDagar(iso, n) {
     var d = new Date(iso + 'T12:00:00');
     d.setDate(d.getDate() + n);
     return NX.isoFor(d);
   }
-  function idagISO() { return NX.isoFor(new Date()); }
 
-  function veckoRubrik(vecka) {
-    var slut = plusDagar(vecka, 6);
-    var a = Number(vecka.slice(8, 10)), b = Number(slut.slice(8, 10));
-    var mA = NX.MANADER[Number(vecka.slice(5, 7)) - 1] || '';
-    var mB = NX.MANADER[Number(slut.slice(5, 7)) - 1] || '';
-    return mA === mB ? a + '–' + b + ' ' + mA : a + ' ' + mA + ' – ' + b + ' ' + mB;
-  }
+  /* Första dagen i månaden, som ISO. Månader räknas alltid från den
+     första, så att jämförelser mellan månader är strängjämförelser. */
+  function månadFör(iso) { return String(iso).slice(0, 8) + '01'; }
 
-  function veckoEtikett(vecka) {
-    if (vecka === måndagen(idagISO())) return 'Den här veckan';
-    if (vecka === plusDagar(måndagen(idagISO()), 7)) return 'Nästa vecka';
-    return '';
+  function plusMånader(första, n) {
+    var d = new Date(första + 'T12:00:00');
+    d.setDate(1);
+    d.setMonth(d.getMonth() + n);
+    return månadFör(NX.isoFor(d));
   }
 
   /* o:
-       vecka      — måndagens datum, ISO
-       tider      — funktion(datum) => [{ tid, upptagen }]
-       vald       — { datum, tid } eller null
-       veckorFram — hur långt fram pilarna går
-       hoppTill   — datum att erbjuda när veckan är tom, eller null
-       tomText    — vad som står när veckan är tom och inget hopp finns
-       upptagenText — vad en bokad timme heter i skärmläsaren */
-  function veckovy(o) {
+       manad     — första dagen i månaden som visas, ISO
+       valt      — vald dag, ISO, eller null
+       dag       — funktion(iso) => { klickbar, prick }
+       minManad  — tidigaste månad pilarna går till (första dagen)
+       maxManad  — senaste
+       prefix    — id-prefix för pilarna, om två kalendrar kan synas
+                   samtidigt (en dialog över en vy)
+       prickText — vad pricken betyder, för skärmläsare */
+  function manad(o) {
+    var första = o.manad;
+    var d0 = new Date(första + 'T12:00:00');
+    var år = d0.getFullYear(), mån = d0.getMonth();
+    var tomma = (d0.getDay() + 6) % 7;
+    var antal = new Date(år, mån + 1, 0).getDate();
     var idag = idagISO();
-    var vald = o.vald || {};
-    var kolumner = '', lediga = 0;
+    var p = o.prefix || 'mv';
 
-    for (var i = 0; i < 7; i++) {
-      var datum = plusDagar(o.vecka, i);
-      var tider = o.tider(datum) || [];
-      lediga += tider.filter(function (t) { return !t.upptagen; }).length;
-
-      var knappar = tider.length
-        ? tider.map(function (t) {
-            var ärVald = vald.datum === datum && vald.tid === t.tid;
-            return '<button type="button" class="bk-slot' + (t.upptagen ? ' ar-upptagen' : '') + '"'
-              + (t.upptagen ? ' disabled title="' + esc(o.upptagenText || 'Redan bokad') + '"'
-                + ' aria-label="' + esc(t.tid.slice(0, 5) + ', ' + (o.upptagenText || 'redan bokad')) + '"' : '')
-              + ' data-datum="' + datum + '" data-tid="' + t.tid + '"'
-              + ' aria-pressed="' + (ärVald ? 'true' : 'false') + '">'
-              + esc(t.tid.slice(0, 5)) + '</button>';
-          }).join('')
-        : '<span class="bk-dag-tom" aria-hidden="true">–</span>';
-
-      kolumner += '<div class="bk-dag' + (datum === idag ? ' ar-idag' : '')
-        + (datum < idag ? ' ar-forbi' : '') + '">'
-        + '<span class="bk-dag-namn">' + esc(DAGAR_KORTA[i].toLowerCase())
-        + '<b>' + Number(datum.slice(8, 10)) + '</b></span>'
-        + '<div class="bk-dag-tider">' + knappar + '</div>'
-        + '</div>';
+    var rutor = '';
+    for (var i = 0; i < tomma; i++) rutor += '<span class="mv-tom" aria-hidden="true"></span>';
+    for (var dag = 1; dag <= antal; dag++) {
+      var iso = år + '-' + tvasiffrig(mån + 1) + '-' + tvasiffrig(dag);
+      var info = o.dag(iso) || {};
+      rutor += '<button type="button" class="mv-dag'
+        + (iso === idag ? ' ar-idag' : '')
+        + (info.prick ? ' ar-prick' : '')
+        + (iso < idag ? ' ar-forbi' : '') + '"'
+        + ' data-datum="' + iso + '"'
+        + (info.klickbar ? '' : ' disabled')
+        + ' aria-pressed="' + (o.valt === iso ? 'true' : 'false') + '"'
+        + ' aria-label="' + esc(datumText(iso)
+          + (info.prick ? ', ' + (o.prickText || 'har lediga tider') : '')) + '">'
+        + dag + '</button>';
     }
 
-    var tom = '';
-    if (!lediga) {
-      tom = '<p class="bk-tomvecka">Inga lediga timmar den här veckan.'
-        + (o.hoppTill
-          ? ' <button type="button" class="bk-lank" id="bk-hoppa" data-datum="' + o.hoppTill + '">'
-            + 'Hoppa till ' + esc(datumText(o.hoppTill)) + '</button>'
-          : (o.tomText ? ' ' + esc(o.tomText) : ''))
-        + '</p>';
-    }
+    var kanFörra = !o.minManad || första > o.minManad;
+    var kanNästa = !o.maxManad || första < o.maxManad;
 
-    var första = o.vecka <= måndagen(idag);
-    var sista = o.vecka >= plusDagar(måndagen(idag), (o.veckorFram || 8) * 7);
-
-    return '<div class="bk-vecka">'
-      + '<div class="bk-veckhuvud">'
-      + '<button type="button" class="bk-pil" id="bk-forr"' + (första ? ' disabled' : '')
-      + ' aria-label="Föregående vecka">'
+    return '<div class="mv">'
+      + '<div class="mv-huvud">'
+      + '<button type="button" class="bk-pil" id="' + p + '-forr"' + (kanFörra ? '' : ' disabled')
+      + ' aria-label="Föregående månad">'
       + '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.5 2.5 4 6l3.5 3.5"/></svg></button>'
-      + '<span class="bk-veckhuvud-text"><b>' + esc(veckoRubrik(o.vecka)) + '</b>'
-      + (veckoEtikett(o.vecka) ? '<span>' + esc(veckoEtikett(o.vecka)) + '</span>' : '') + '</span>'
-      + '<button type="button" class="bk-pil" id="bk-nasta"' + (sista ? ' disabled' : '')
-      + ' aria-label="Nästa vecka">'
+      + '<b class="mv-titel">' + esc((NX.MANADER[mån] || '') + ' ' + år) + '</b>'
+      + '<button type="button" class="bk-pil" id="' + p + '-nasta"' + (kanNästa ? '' : ' disabled')
+      + ' aria-label="Nästa månad">'
       + '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></button>'
       + '</div>'
-      + '<div class="bk-dagar">' + kolumner + '</div>'
-      + tom
+      + '<div class="mv-vd" aria-hidden="true">'
+      + DAGAR_KORTA.map(function (d) { return '<span>' + esc(d) + '</span>'; }).join('')
+      + '</div>'
+      + '<div class="mv-grid">' + rutor + '</div>'
       + '</div>';
   }
 
-  /* ============================================================
-     VECKOSCHEMAT
-
-     Studiehjälparens egna tider. tutor_availability är VECKOVIS —
-     en rad säger "tisdagar 17–21", inte "tisdagen den 22 september"
-     — och det här rutnätet visar precis det som sparas.
-
-     Förut redigerades samma sak i en månadskalender: man öppnade en
-     dag, tryckte på en timme, och ändrade i tysthet varje tisdag
-     hela terminen. Rutnätet tar bort gissningen.
-
-     Timmarna utanför 07–22 ritas bara om någon lagt in dem. En tid
-     man inte ser går inte att ta bort.
-
-     Klicken fångas av vyn: .vs-ruta[data-dag][data-timme].
-     ============================================================ */
-  function veckoschema(o) {
-    var från = 7, till = 22;
-    (o.tillgang || []).forEach(function (r) {
-      var s = Number(String(r.start_time).slice(0, 2));
-      var e = Number(String(r.end_time).slice(0, 2));
-      if (String(r.end_time).slice(3, 5) !== '00') e += 1;
-      if (s < från) från = s;
-      if (e > till) till = e;
-    });
-
-    var perDag = [];
-    for (var d = 0; d < 7; d++) perDag.push(o.timmar(d));
-
-    var huvud = '<div class="vs-rad vs-huvud"><span class="vs-tid" aria-hidden="true"></span>'
-      + DAGAR_KORTA.map(function (namn) {
-          return '<span class="vs-dag">' + esc(namn.toLowerCase()) + '</span>';
+  /* Tiderna under kalendern, för den dag som är vald. Bara lediga tider
+     ritas — Leo ville inte se timmar som redan är tagna. */
+  function tidsrad(o) {
+    if (!o.datum) {
+      return '<p class="mv-inga">' + esc(o.välj || 'Välj en dag i kalendern.') + '</p>';
+    }
+    if (!o.tider.length) {
+      return '<p class="mv-inga">' + esc(o.tom || 'Inga lediga tider den dagen.') + '</p>';
+    }
+    return '<div class="mv-tider" role="group" aria-label="' + esc('Tider ' + datumText(o.datum)) + '">'
+      + o.tider.map(function (t) {
+          return '<button type="button" class="bk-slot mv-tid" data-datum="' + o.datum + '"'
+            + ' data-tid="' + t + '" aria-pressed="' + (o.vald === t ? 'true' : 'false') + '">'
+            + esc(String(t).slice(0, 5)) + '</button>';
         }).join('')
       + '</div>';
-
-    var rader = '';
-    for (var h = från; h < till; h++) {
-      var rutor = '';
-      for (var i = 0; i < 7; i++) {
-        var på = perDag[i].has(h);
-        rutor += '<button type="button" class="vs-ruta" data-dag="' + i + '" data-timme="' + h + '"'
-          + ' aria-pressed="' + (på ? 'true' : 'false') + '"'
-          + ' aria-label="' + esc(DAGAR_LANGA[i] + ' klockan ' + tvasiffrig(h)) + '"></button>';
-      }
-      rader += '<div class="vs-rad"><span class="vs-tid">' + tvasiffrig(h) + '</span>' + rutor + '</div>';
-    }
-
-    return '<div class="vs">' + huvud + rader + '</div>';
   }
 
   /* ============================================================
      BOKNINGEN
 
-     TREDJE OMGÅNGEN. Först låg här tre rullgardiner och en
-     månadskalender. Sedan blev det fyra steg med ett öppet i taget,
-     vilket gjorde varje val tydligt men bokningen svår att överblicka:
-     man såg sex förslag och en utfällning, aldrig veckan.
+     FJÄRDE OMGÅNGEN, efter Leos genomgång 2026-09-18. Två vägar:
 
-     Nu är allt EN skärm:
+       BOKA EN LEDIG TID — överst. En kalender där dagar med lediga
+       tider har en prick; trycker man på en dag visas dagens lediga
+       tider, och bara de. En bokning som ligger helt inom
+       studiehjälparens tider bekräftas direkt av databasen
+       (bekrafta_inom_schemat, Fas 4.4) — den är redan ett ja.
 
-       · ämne, längd och format som knappar överst
-       · veckan under, en kolumn per dag, lediga timmar som knappar
-       · en rad längst ned med vad du valt, vad det kostar och Boka
+       ÖNSKA EN ANNAN TID — en egen sektion under. Vilken dag och tid
+       som helst. Den blir en förfrågan som studiehjälparen bekräftar
+       eller avböjer.
 
-     Veckan ersätter både förslagslistan och månadskalendern. Man ser
-     studiehjälparens vecka som den faktiskt är — tre kvällar och en
-     lördag — i stället för trettio rutor där de flesta är tomma. Pilar
-     bläddrar en vecka i taget, och är veckan tom finns en knapp rakt
-     till nästa dag med en ledig timme.
+     Ämne, längd och format står överst och gäller båda vägarna.
 
-     Bokade timmar står kvar, gråa och avstängda. "Redan bokad" och
-     "jobbar inte då" är två olika besked, och den som ser skillnaden
-     förstår varför tisdagen ser ut som den gör.
+     Tidigare omgångar, för den som undrar varför det ser ut så här:
+     tre rullgardiner och en månadskalender; fyra numrerade steg;
+     en veckovy. Alla gömde något — tiderna, veckan eller dagen.
 
      opts:
        host     — elementet
@@ -432,9 +385,9 @@ window.NXArbete = (function () {
        pris     — kr per timme
        hos      — studiehjälparens namn, för kvittoraden
        tjanst   — tjänstens kod, styr flerbarnstillägg och rabattkoder
-       ladda    — async () => { tillgang, blockerade, upptagna, tidigare }
-       boka     — async ({datum,tid,minuter,amne,format,plats,barn,kod,rabattOre})
-                  => null | 'felmeddelande'
+       ladda    — async () => { tillgang, upptagna, tidigare } | { spärr }
+       boka     — async ({datum,tid,minuter,amne,format,plats,barn,kod,rabattOre,not,önskemål})
+                  => 'felmeddelande' | { status } | null
      ============================================================ */
   function bokning(opts) {
     var o = opts || {};
@@ -447,61 +400,64 @@ window.NXArbete = (function () {
        online finns kvar för den som behöver det, men ska inte vara
        det man råkar boka för att det låg först. */
     var FORMAT = ['På plats', 'Online'];
-    /* Hur långt fram pilarna går. Längre än så är inte en bokning,
+    /* Hur långt fram kalendern går. Längre än så är inte en bokning,
        det är en gissning om terminen. */
-    var VECKOR_FRAM = 8;
+    var MANADER_FRAM = 3;
+    /* Klockslagen man kan önska. Hela timmar, eftersom allt bokas och
+       faktureras i hela timmar. */
+    var ÖNSKA_FRÅN = 7, ÖNSKA_TILL = 21;
 
     var st = {
       amne: o.amne || (o.amnen || [])[0] || 'Matematik',
       minuter: 60,
       format: 'På plats',
       /* Var ni ses. Frivillig: många vet redan, och den som inte vet
-         ska inte hindras från att boka. Står den tom säger kvittot
-         att platsen bestäms i chatten, i stället för att låtsas att
-         frågan är avklarad. */
+         ska inte hindras från att boka. */
       plats: '',
+      manad: null,
+      dag: null,
       datum: null,
       tid: null,
       /* Hur många barn passet gäller. Tillägget är EN summa oavsett
-         om de är två eller tre — regeln och taket står i tjanster,
-         inte här, så priset går att ändra utan att röra koden. */
+         om de är två eller tre — regeln och taket står i tjanster. */
       barn: 1,
       /* Rabattkoden i tre delar: vad som står i fältet, vad servern
-         svarade, och hur mycket det blev. Fältet ensamt räcker inte —
-         en kod som skrivits men inte kontrollerats får inte se ut som
-         en rabatt i kvittot. */
+         svarade, och hur mycket det blev. En kod som skrivits men inte
+         kontrollerats får inte se ut som en rabatt i kvittot. */
       kod: '',
       kodSvar: null,
       rabatt: 0,
       kodOppen: false,
-      /* Beskedet efter en bokning. Det ligger utanför veckan, så att
-         det överlever omritningen som följer på en lyckad bokning. */
+      /* Önskemålet: vilken dag och tid som helst, utanför kalendern. */
+      önska: { datum: '', tid: '', not: '' },
       besked: null,
-      vecka: null,
-      /* Sant så fort användaren själv bläddrat. Då slutar
-         omladdningen flytta tillbaka veckan under fingrarna. */
-      veckaRörd: false,
-      data: { tillgang: [], blockerade: [], upptagna: new Set(), tidigare: [] },
+      /* Ett fel vid bokningen står i st, inte bara i DOM:en — ladda()
+         ritar om hela ytan direkt efteråt, och då försvann texten
+         innan någon hunnit läsa den. */
+      fel: null,
+      önskaBesked: null,
+      data: { tillgang: [], upptagna: new Set(), tidigare: [] },
       spärr: null
     };
 
-    /* Förra bokningen bestämmer förvalen. En familj som alltid
-       bokar matte på plats ska inte välja matte på plats varje gång.
-       tidigare[] kommer från o.ladda och är sorterad nyast först. */
+    /* Förra bokningen bestämmer förvalen. En familj som alltid bokar
+       matte på plats ska inte välja matte på plats varje gång. */
     function ärvFrånTidigare() {
-      var f = (st.data.tidigare || [])[0];
-      if (!f) return;
+      /* Den senaste, inte den första: listan kommer i datumordning. */
+      var t = (st.data.tidigare || []).slice().sort(function (a, b) {
+        return String(b.wanted_date || '').localeCompare(String(a.wanted_date || ''));
+      });
+      var f = t[0];
+      if (!f) return false;
       if (f.subject && (o.amnen || []).indexOf(f.subject) !== -1) st.amne = f.subject;
       if (f.duration_min) st.minuter = f.duration_min;
       if (f.format && FORMAT.indexOf(f.format) !== -1) st.format = f.format;
       if (f.location) st.plats = f.location;
+      return true;
     }
 
     function timmar() { return Math.max(1, Math.round(st.minuter / 60)); }
 
-    /* Taket för antal barn kommer ur tjänstekatalogen. Saknas den —
-       gammal sida, trasig hämtning — är svaret 1, och då ritas ingen
-       väljare alls. */
     function barnTak() {
       var t = (typeof NXTjanster !== 'undefined' && NXTjanster.hitta)
         ? NXTjanster.hitta(o.tjanst || 'laxhjalp') : null;
@@ -514,21 +470,18 @@ window.NXArbete = (function () {
     }
 
     /* Bruttot i ÖRE, för det är vad servern räknar i. Kronorna i
-       kvittot härleds ur den här siffran, aldrig tvärtom — två
-       uträkningar av samma pris blir förr eller senare två priser. */
+       kvittot härleds ur den här siffran, aldrig tvärtom. */
     function bruttoOre() {
       var tim2 = (o.pris || 379) * 100 + (st.barn > 1 ? extraOre() : 0);
       return Math.round(tim2 * st.minuter / 60);
     }
-    function nettoOre() {
-      return Math.max(0, bruttoOre() - (st.rabatt || 0));
-    }
+    function nettoOre() { return Math.max(0, bruttoOre() - (st.rabatt || 0)); }
     function längdText() {
       var t = timmar();
       return t === 1 ? '1 timme' : t + ' timmar';
     }
 
-    /* ---------- veckan ---------- */
+    /* ---------- lediga tider ---------- */
 
     /* Ett pass på två timmar upptar två timmar. Att bara titta på
        starttimmen hade erbjudit 16:00 fast 17:00 var bokat. */
@@ -540,41 +493,20 @@ window.NXArbete = (function () {
       return false;
     }
 
-    function dagensTider(datum) {
-      return NX.tiderFörDatum(datum, st.data.tillgang, st.data.blockerade, st.minuter)
-        .map(function (t) { return { tid: t, upptagen: upptagen(datum, t) }; });
+    /* Bara de lediga. Leo ville inte se timmar som redan är tagna — de
+       är inte ett val, och en överstruken knapp är brus. */
+    function ledigaTider(datum) {
+      return NX.tiderFörDatum(datum, st.data.tillgang, [], st.minuter)
+        .filter(function (t) { return !upptagen(datum, t); });
     }
 
-    /* Nästa dag med en ledig timme. Används av knappen i en tom vecka,
-       och för att välja vilken vecka man landar på. */
-    function nästaLediga(från) {
-      var f = NX.föreslåTider({
-        tillgang: st.data.tillgang,
-        blockerade: st.data.blockerade,
-        upptagna: st.data.upptagna,
-        tidigare: [],
-        minuter: st.minuter,
-        dagar: VECKOR_FRAM * 7,
-        antal: 40
-      });
-      for (var i = 0; i < f.length; i++) if (!från || f[i].datum >= från) return f[i].datum;
+    function förstaLedigaDag() {
+      var idag = idagISO();
+      for (var i = 0; i < MANADER_FRAM * 31; i++) {
+        var d = plusDagar(idag, i);
+        if (ledigaTider(d).length) return d;
+      }
       return null;
-    }
-
-    function sättStartvecka() {
-      var första = nästaLediga(null);
-      st.vecka = måndagen(första || idagISO());
-    }
-
-    function veckaHtml() {
-      return veckovy({
-        vecka: st.vecka,
-        tider: dagensTider,
-        vald: { datum: st.datum, tid: st.tid },
-        veckorFram: VECKOR_FRAM,
-        hoppTill: nästaLediga(plusDagar(st.vecka, 7)),
-        tomText: 'Fråga i chatten när det passar er, så lägger studiehjälparen in fler tider.'
-      });
     }
 
     /* ---------- knapprader ---------- */
@@ -594,8 +526,7 @@ window.NXArbete = (function () {
     }
 
     /* Koden kontrolleras på SERVERN, aldrig här. Klienten vet inte
-       vilka koder som finns och ska inte veta det — kolla_rabattkod()
-       svarar på en kod i taget och lämnar aldrig ut listan. */
+       vilka koder som finns och ska inte veta det. */
     function rabattHtml() {
       if (!st.kodOppen && !st.rabatt) {
         return '<button type="button" class="bk-lank" id="bk-kod-oppna">Har ni en rabattkod?</button>';
@@ -622,11 +553,34 @@ window.NXArbete = (function () {
         + ' kl. ' + st.tid.slice(0, 5);
     }
 
+    function önskaHtml() {
+      var idag = idagISO();
+      var tider = '<option value="">Välj tid</option>';
+      for (var h = ÖNSKA_FRÅN; h <= ÖNSKA_TILL; h++) {
+        var t = tvasiffrig(h) + ':00';
+        tider += '<option value="' + t + '"' + (st.önska.tid === t ? ' selected' : '') + '>' + t + '</option>';
+      }
+      return '<div class="bk-onska">'
+        + '<h6>Önska en annan tid</h6>'
+        + '<p>Passar ingen av tiderna ovanför? Önska vilken dag och tid som helst — er studiehjälpare '
+        + 'bekräftar eller svarar att det inte går. Ämne, längd och plats tas från valen överst.</p>'
+        + '<div class="bk-onska-rad">'
+        + '<input class="inp" type="date" id="bk-o-datum" min="' + idag + '" value="' + esc(st.önska.datum) + '"'
+        + ' aria-label="Dag">'
+        + '<select class="sel" id="bk-o-tid" aria-label="Klockslag">' + tider + '</select>'
+        + '</div>'
+        + '<input class="inp" id="bk-o-not" maxlength="300" value="' + esc(st.önska.not) + '"'
+        + ' placeholder="Meddelande till studiehjälparen (valfritt)">'
+        + '<div class="bk-onska-fot">'
+        + '<button class="btn btn-ghost" type="button" id="bk-o-skicka">Skicka önskemålet</button>'
+        + '</div>'
+        + '<p class="ok-msg' + (st.önskaBesked ? ' show' : '') + '" id="bk-o-msg">'
+        + (st.önskaBesked ? esc(st.önskaBesked) : '') + '</p>'
+        + '</div>';
+    }
+
     function rita() {
-      /* Första ritningen sker innan tiderna hämtats. Veckan måste ändå
-         ha ett värde — annars ritas ingen vecka alls och sidan står
-         tom tills hämtningen är klar. */
-      if (!st.vecka) st.vecka = måndagen(idagISO());
+      if (!st.manad) st.manad = månadFör(idagISO());
       if (st.spärr) {
         host.innerHTML = '<div class="bk">' + st.spärr + '</div>';
         return;
@@ -634,6 +588,7 @@ window.NXArbete = (function () {
 
       var vald = st.datum && st.tid;
       var påPlats = st.format === 'På plats';
+      var idag = idagISO();
 
       var val = '<div class="bk-val">'
         + '<div class="bk-valrad"><span class="bk-valrad-et">Ämne</span>'
@@ -655,6 +610,27 @@ window.NXArbete = (function () {
           : '')
         + '</div>';
 
+      var kalender = manad({
+        manad: st.manad,
+        valt: st.dag,
+        prefix: 'bk',
+        minManad: månadFör(idag),
+        maxManad: plusMånader(månadFör(idag), MANADER_FRAM - 1),
+        prickText: 'har lediga tider',
+        dag: function (iso) {
+          var fri = iso >= idag && ledigaTider(iso).length > 0;
+          return { klickbar: fri, prick: fri };
+        }
+      });
+
+      var dagens = tidsrad({
+        datum: st.dag,
+        tider: st.dag ? ledigaTider(st.dag) : [],
+        vald: st.datum === st.dag ? st.tid : null,
+        välj: 'Välj en dag med en prick — där har er studiehjälpare lediga tider.',
+        tom: 'Inga lediga tider den dagen för ' + längdText().toLowerCase() + '.'
+      });
+
       var extra = (barnTak() > 1 ? barnChips() : '') + rabattHtml();
 
       var pris = st.rabatt > 0
@@ -668,7 +644,7 @@ window.NXArbete = (function () {
           ? '<b>' + esc(valdText()) + '</b>'
             + '<span>' + esc(st.amne + ' · ' + längdText() + ' · ' + st.format)
             + (o.hos ? ' · hos ' + esc(o.hos) : '') + '</span>'
-          : '<b>Välj en tid</b><span>Tryck på en ledig timme i veckan ovanför.</span>')
+          : '<b>Välj en dag och en tid</b><span>Tider inom er studiehjälpares schema bekräftas direkt.</span>')
         + '</div>'
         + '<div class="bk-sum-pris">' + pris
         + '<span>' + esc(längdText()) + ', betalas i efterskott</span></div>'
@@ -676,37 +652,59 @@ window.NXArbete = (function () {
         + (vald ? '' : ' disabled') + '>Boka passet</button>'
         + '</div>';
 
+      if (st.utanTider && !(st.data.tillgang || []).length) {
+        host.innerHTML = '<div class="bk">'
+          + val
+          + st.utanTider
+          + (extra ? '<div class="bk-extra">' + extra + '</div>' : '')
+          + önskaHtml()
+          + '</div>';
+        return;
+      }
+
       host.innerHTML = '<div class="bk">'
         + val
-        + veckaHtml()
+        + '<div class="bk-kal">'
+        + '<div class="bk-kal-manad">' + kalender + '</div>'
+        + '<div class="bk-kal-dag">'
+        + (st.dag ? '<p class="bk-kal-dagnamn">' + esc(DAGAR_LANGA[(new Date(st.dag + 'T12:00:00').getDay() + 6) % 7]
+            + ' ' + datumText(st.dag)) + '</p>' : '')
+        + dagens + '</div>'
+        + '</div>'
         + (extra ? '<div class="bk-extra">' + extra + '</div>' : '')
         + sum
-        + '<p class="ok-msg" id="bk-msg"></p>'
+        + '<p class="ok-msg' + (st.fel ? ' show is-err' : '') + '" id="bk-msg">'
+        + (st.fel ? esc(st.fel) : '') + '</p>'
         /* .show, inte ett eget attribut: .ok-msg är display:none
            tills klassen sitter där, precis som NX.säg sätter den. */
         + '<p class="ok-msg' + (st.besked ? ' show' : '') + '" id="bk-besked">'
         + (st.besked ? esc(st.besked) : '') + '</p>'
+        + önskaHtml()
         + '</div>';
     }
 
     /* ---------- val ---------- */
 
-    function välj(datum, tid) {
-      /* Ett nytt val betyder att man är på väg att boka igen. Att
-         låta förra kvittot stå kvar under det hade läst som att
-         det här passet redan var bokat. */
-      st.besked = null;
+    function väljDag(iso) {
+      st.besked = null; st.fel = null;
+      st.dag = st.dag === iso ? null : iso;
+      if (st.datum !== st.dag) { st.datum = null; st.tid = null; }
+      rita();
+    }
+
+    function väljTid(datum, tid) {
+      st.besked = null; st.fel = null;
       if (st.datum === datum && st.tid === tid) { st.datum = null; st.tid = null; }
       else { st.datum = datum; st.tid = tid; }
       rita();
     }
 
-    function byteVecka(steg) {
-      var ny = plusDagar(st.vecka, steg * 7);
-      if (ny < måndagen(idagISO())) return;
-      if (ny > plusDagar(måndagen(idagISO()), VECKOR_FRAM * 7)) return;
-      st.vecka = ny;
-      st.veckaRörd = true;
+    function byteMånad(steg) {
+      var idag = idagISO();
+      var ny = plusMånader(st.manad, steg);
+      if (ny < månadFör(idag)) return;
+      if (ny > plusMånader(månadFör(idag), MANADER_FRAM - 1)) return;
+      st.manad = ny;
       rita();
     }
 
@@ -715,47 +713,56 @@ window.NXArbete = (function () {
        varje tangenttryck. Värdet läses ur st när ytan ritas om av
        något annat skäl. */
     host.addEventListener('input', function (e) {
-      if (e.target && e.target.id === 'bk-plats-falt') st.plats = e.target.value;
+      var t = e.target;
+      if (!t) return;
+      if (t.id === 'bk-plats-falt') st.plats = t.value;
+      if (t.id === 'bk-o-not') st.önska.not = t.value;
+      if (t.id === 'bk-o-datum') st.önska.datum = t.value;
       /* Koden lagras i versaler. Servern jämför mot versaler, och att
          låta fältet visa något annat än det som skickas är ett fel som
          bara syns för den som skrev med gemener. */
-      if (e.target && e.target.id === 'bk-kod-falt') {
-        var nytt = e.target.value.toUpperCase();
-        if (e.target.value !== nytt) e.target.value = nytt;
+      if (t.id === 'bk-kod-falt') {
+        var nytt = t.value.toUpperCase();
+        if (t.value !== nytt) t.value = nytt;
         st.kod = nytt;
       }
     });
+    host.addEventListener('change', function (e) {
+      var t = e.target;
+      if (!t) return;
+      if (t.id === 'bk-o-tid') st.önska.tid = t.value;
+      if (t.id === 'bk-o-datum') st.önska.datum = t.value;
+    });
 
     host.addEventListener('click', function (e) {
-      var slot = e.target.closest('.bk-slot');
-      if (slot && !slot.disabled) { välj(slot.dataset.datum, slot.dataset.tid); return; }
+      var tid = e.target.closest('.mv-tid');
+      if (tid && !tid.disabled) { väljTid(tid.dataset.datum, tid.dataset.tid); return; }
 
-      if (e.target.closest('#bk-forr')) { byteVecka(-1); return; }
-      if (e.target.closest('#bk-nasta')) { byteVecka(1); return; }
+      var dag = e.target.closest('.mv-dag');
+      if (dag && !dag.disabled) { väljDag(dag.dataset.datum); return; }
 
-      var hopp = e.target.closest('#bk-hoppa');
-      if (hopp) { st.vecka = måndagen(hopp.dataset.datum); st.veckaRörd = true; rita(); return; }
+      if (e.target.closest('#bk-forr')) { byteMånad(-1); return; }
+      if (e.target.closest('#bk-nasta')) { byteMånad(1); return; }
 
       var val = e.target.closest('.vy-val button[data-v]');
       if (val) {
+        /* Ett eget val går före förra bokningens förval. */
+        st.ärvt = true;
         var grupp = val.closest('.vy-val').id;
         if (grupp === 'bk-amnen') { st.amne = val.dataset.v; rita(); }
         else if (grupp === 'bk-format') { st.format = val.dataset.v; rita(); }
         else if (grupp === 'bk-barn') {
           st.barn = Number(val.dataset.v) || 1;
-          /* Bruttot ändras, alltså är rabatten uträknad på fel
-             underlag. Den måste hämtas om — en procentrabatt på ett
-             annat belopp är ett annat belopp. */
+          /* Bruttot ändras, alltså är rabatten uträknad på fel underlag. */
           if (st.rabatt > 0) { kollaKod(true); return; }
           rita();
         }
         else if (grupp === 'bk-langder') {
           st.minuter = Number(val.dataset.v);
-          /* Längden ändrar vilka timmar som ryms. En vald tid som
-             inte längre får plats måste släppas, annars bokar man
-             två timmar i ett enda ledigt hål. */
+          /* Längden ändrar vilka tider som ryms. En vald tid som inte
+             längre får plats måste släppas, annars bokar man två
+             timmar i ett enda ledigt hål. */
           st.datum = null; st.tid = null;
-          /* Och den ändrar bruttot, alltså rabatten. Se bk-barn. */
           if (st.rabatt > 0) { st.rabatt = 0; st.kodSvar = null; }
           rita();
         }
@@ -771,16 +778,14 @@ window.NXArbete = (function () {
         return;
       }
 
-      if (e.target.closest('#bk-boka')) skicka();
+      if (e.target.closest('#bk-boka')) { skicka(); return; }
+      if (e.target.closest('#bk-o-skicka')) { skickaÖnskemål(); return; }
     });
 
     /* Kontrollen går till funktionen kolla_rabattkod i databasen, som
-       svarar på EN kod och aldrig lämnar ut listan. Rabatten den ger
-       är också den servern räknar om vid inserten — klientens siffra
-       är bara till för att visa något innan man trycker Boka.
-
-       tyst = räkna om efter att bruttot ändrats, utan att blinka till
-       med ett nytt meddelande om en kod användaren redan godkänt. */
+       svarar på EN kod och aldrig lämnar ut listan. tyst = räkna om
+       efter att bruttot ändrats, utan att blinka till med ett nytt
+       meddelande om en kod användaren redan godkänt. */
     function kollaKod(tyst) {
       var kod = (st.kod || '').trim();
       if (!kod) { st.kodSvar = { giltig: false, orsak: 'Skriv en kod.' }; rita(); return; }
@@ -805,56 +810,129 @@ window.NXArbete = (function () {
       });
     }
 
+    function grund() {
+      return {
+        minuter: st.minuter,
+        amne: st.amne,
+        format: st.format,
+        plats: st.format === 'På plats' ? st.plats.trim() : '',
+        barn: st.barn,
+        /* Bara en kod som faktiskt gett rabatt skickas med. */
+        kod: st.rabatt > 0 ? (st.kod || '').trim() : null,
+        rabattOre: st.rabatt > 0 ? st.rabatt : null
+      };
+    }
+
+    /* Svaret från o.boka: en sträng är ett fel, ett objekt med status
+       säger vad databasen gjorde av bokningen. */
+    function tolka(svar) {
+      if (typeof svar === 'string') return { fel: svar };
+      return { status: svar && svar.status ? svar.status : null };
+    }
+
+    function efterBokning() {
+      /* Koden är förbrukad på det här passet. Att låta den stå kvar
+         hade sett ut som att nästa bokning också får den. */
+      st.kod = ''; st.kodSvar = null; st.rabatt = 0; st.kodOppen = false; st.barn = 1;
+    }
+
     function skicka() {
       var knapp = $('#bk-boka', host), msg = $('#bk-msg', host);
       if (msg) NX.rensa(msg);
       if (!st.datum || !st.tid) return;
-      st.besked = null;
+      st.besked = null; st.fel = null;
       NXStudie.medan(knapp, 'Bokar…', async function () {
-        var fel = await o.boka({
-          datum: st.datum, tid: st.tid, minuter: st.minuter,
-          amne: st.amne, format: st.format,
-          plats: st.format === 'På plats' ? st.plats.trim() : '',
-          barn: st.barn,
-          /* Bara en kod som faktiskt gett rabatt skickas med. En kod
-             som skrivits men inte godkänts ska inte följa med och
-             räknas upp som använd. */
-          kod: st.rabatt > 0 ? (st.kod || '').trim() : null,
-          rabattOre: st.rabatt > 0 ? st.rabatt : null
-        });
-        if (fel) {
-          var m = $('#bk-msg', host);
-          if (m) NX.säg(m, fel, false);
+        var v = grund();
+        v.datum = st.datum; v.tid = st.tid;
+        var r = tolka(await o.boka(v));
+        if (r.fel) {
+          /* Laddas om så att en tid som hann tas försvinner ur listan
+             — och ur valet, se ladda(). Felet ritas från st. */
+          st.fel = r.fel;
           await ladda();
           return;
         }
-        st.besked = 'Passet är önskat. Er studiehjälpare ser det direkt och bekräftar.';
+        st.besked = r.status === 'confirmed'
+          ? '✓ Passet är bokat. Tiden låg inom er studiehjälpares schema, så den är redan bekräftad.'
+          : 'Förfrågan är skickad. Er studiehjälpare ser den direkt och bekräftar.';
         st.datum = null; st.tid = null;
-        /* Koden är förbrukad på det här passet. Att låta den stå kvar
-           i fältet hade sett ut som att nästa bokning också får den,
-           och en kod med max antal användningar hade då lovat fel. */
-        st.kod = ''; st.kodSvar = null; st.rabatt = 0; st.kodOppen = false; st.barn = 1;
+        efterBokning();
+        await ladda();
+      });
+    }
+
+    function skickaÖnskemål() {
+      var knapp = $('#bk-o-skicka', host), msg = $('#bk-o-msg', host);
+      if (msg) NX.rensa(msg);
+      st.önskaBesked = null;
+      var datum = st.önska.datum, tid = st.önska.tid;
+      if (!datum || !tid) { if (msg) NX.säg(msg, 'Välj både dag och klockslag.', false); return; }
+      if (datum < idagISO()) { if (msg) NX.säg(msg, 'Dagen har redan varit.', false); return; }
+      /* Samma regel som kalendern (NX.tiderFörDatum): idag går bara
+         tider minst en timme fram. Klockan 15.50 är "idag 09:00" ett
+         misstag, inte ett önskemål. */
+      if (datum === idagISO()) {
+        var nu = new Date();
+        if (Number(tid.slice(0, 2)) * 60 < nu.getHours() * 60 + nu.getMinutes() + 60) {
+          if (msg) NX.säg(msg, 'Den tiden har redan varit, eller börjar om mindre än en timme. Välj en senare tid.', false);
+          return;
+        }
+      }
+
+      NXStudie.medan(knapp, 'Skickar…', async function () {
+        var v = grund();
+        v.datum = datum; v.tid = tid;
+        v.not = (st.önska.not || '').trim() || null;
+        v.önskemål = true;
+        var r = tolka(await o.boka(v));
+        if (r.fel) {
+          var m = $('#bk-o-msg', host);
+          if (m) NX.säg(m, r.fel, false);
+          return;
+        }
+        /* Ett önskemål som råkar ligga helt inom schemat bekräftas av
+           databasen precis som en vanlig bokning. Säg vilket det blev. */
+        st.önskaBesked = r.status === 'confirmed'
+          ? '✓ Tiden låg inom er studiehjälpares schema, så passet är redan bokat och bekräftat.'
+          : '✓ Önskemålet är skickat. Er studiehjälpare bekräftar eller svarar i chatten.';
+        st.önska = { datum: '', tid: '', not: '' };
+        efterBokning();
         await ladda();
       });
     }
 
     async function ladda() {
       var d = await o.ladda();
-      var första = !st.data.tidigare.length;
+      /* Första laddningen, inte "har inga tidigare pass" — en familj
+         som aldrig bokat hade annars fått förvalen och månaden
+         återställda varje gång något laddades om. */
+      var första = !st.laddad;
+      st.laddad = true;
       st.data = {
         tillgang: d.tillgang || [],
-        blockerade: d.blockerade || [],
         upptagna: d.upptagna || new Set(),
         tidigare: d.tidigare || []
       };
       st.spärr = d.spärr || null;
-      /* Bara vid första laddningen. Att ärva om vid varje omladdning
-         hade skrivit över ett val användaren precis gjort. */
-      if (första) ärvFrånTidigare();
-      /* Landa på en vecka som har något att erbjuda. En tom vecka som
-         första intryck ser ut som att ingen tid finns alls. Har
-         användaren själv bläddrat får veckan stå kvar. */
-      if (!st.veckaRörd) sättStartvecka();
+      /* Inga tider alls hos studiehjälparen: ingen kalender att boka i,
+         men önskemålet under fungerar ändå. Texten kommer från vyn. */
+      st.utanTider = d.utanTider || null;
+      /* En gång, första gången det finns något att ärva. Första
+         laddningen räcker inte: på familjesidan kommer den innan
+         passen hämtats. Att ärva om vid varje omladdning hade skrivit
+         över ett val användaren precis gjort. */
+      if (!st.ärvt && ärvFrånTidigare()) st.ärvt = true;
+      /* Landa i en månad som har något att erbjuda. En tom månad som
+         första intryck ser ut som att ingen tid finns alls. */
+      if (första) {
+        var f = förstaLedigaDag();
+        st.manad = månadFör(f || idagISO());
+      }
+      /* En vald dag som inte längre har lediga tider släpps, och en
+         vald tid som hann bokas av någon annan likaså — annars stod
+         den kvar i sammanfattningen med Boka tänd. */
+      if (st.dag && !ledigaTider(st.dag).length) { st.dag = null; st.datum = null; st.tid = null; }
+      if (st.datum && st.tid && ledigaTider(st.datum).indexOf(st.tid) === -1) { st.datum = null; st.tid = null; }
       rita();
     }
 
@@ -966,10 +1044,10 @@ window.NXArbete = (function () {
     flikar: flikar,
     visaFör: visaFör,
     bokning: bokning,
-    veckovy: veckovy,
-    veckoschema: veckoschema,
-    måndagen: måndagen,
-    plusDagar: plusDagar,
+    manad: manad,
+    tidsrad: tidsrad,
+    månadFör: månadFör,
+    plusMånader: plusMånader,
     fallGrupp: fallGrupp,
     fallStall: fallStall,
     DAGAR_LANGA: DAGAR_LANGA,

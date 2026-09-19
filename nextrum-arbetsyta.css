@@ -400,22 +400,53 @@
 .bk-plats{display:flex;flex-direction:column;gap:6px;max-width:420px}
 .bk-plats label{color:var(--muted-2)}
 
-/* ---- veckan ---- */
-.bk-vecka{
-  border:1px solid var(--ln);border-radius:14px;
-  background:var(--pap);overflow:hidden;
+/* ---- kalendern ----
+   En vanlig månadskalender till vänster, dagens tider till höger.
+   Dagar med lediga tider har en prick; dagar utan är avstängda. Leo
+   ville ha en kalender man trycker i, inte en vecka man läser av. */
+.bk-kal{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;
+  border:1px solid var(--ln);border-radius:14px;background:var(--pap);padding:14px;
 }
-.bk-veckhuvud{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;border-bottom:1px solid var(--ln);
-  background:var(--pap-2);
+.bk-kal-dagnamn{
+  margin:2px 0 10px;font-size:.95rem;font-weight:650;color:var(--bl);
 }
-.bk-veckhuvud-text{flex:1;text-align:center;line-height:1.25}
-.bk-veckhuvud-text > b{display:block;font-size:.95rem;font-weight:650;color:var(--bl)}
-.bk-veckhuvud-text > span{
-  font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--muted-2);
+.mv-huvud{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.mv-titel{flex:1;text-align:center;font-size:.95rem;font-weight:650;color:var(--bl);text-transform:capitalize}
+.mv-vd,
+.mv-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.mv-vd span{
+  text-align:center;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted-2);padding:2px 0 6px;
 }
+.mv-tom{display:block}
+.mv-dag{
+  position:relative;aspect-ratio:1;min-height:34px;
+  border:1px solid transparent;border-radius:9px;background:transparent;
+  font:inherit;font-size:.85rem;font-variant-numeric:tabular-nums;color:var(--bl);
+  cursor:pointer;transition:background .12s,border-color .12s;
+}
+/* Hovring gäller inte en vald dag: den ljusa bakgrunden vann över
+   den mörka och tog texten med sig. */
+.mv-dag:hover:not(:disabled):not([aria-pressed="true"]){background:var(--pap-2);border-color:var(--ln-2)}
+.mv-dag:disabled{color:var(--muted-2);opacity:.45;cursor:default}
+.mv-dag.ar-idag{font-weight:700}
+.mv-dag.ar-idag::before{
+  content:'';position:absolute;top:4px;right:5px;width:4px;height:4px;border-radius:50%;
+  background:var(--acc);
+}
+.mv-dag.ar-prick::after{
+  content:'';position:absolute;left:50%;bottom:4px;width:5px;height:5px;border-radius:50%;
+  transform:translateX(-50%);background:var(--mossa);
+}
+.mv-dag[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--pap)}
+.mv-dag[aria-pressed="true"].ar-prick::after{background:var(--pap)}
+.mv-dag:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* Tiderna under den valda dagen. */
+.mv-tider{display:flex;flex-wrap:wrap;gap:7px}
+.mv-inga{margin:6px 0 0;font-size:.86rem;line-height:1.6;color:var(--muted)}
+
 .bk-pil{
   width:32px;height:32px;flex:none;border-radius:9px;
   border:1px solid var(--ln);background:var(--pap);cursor:pointer;
@@ -426,58 +457,38 @@
 .bk-pil:hover:not(:disabled){border-color:var(--bl-3);background:var(--pap-2)}
 .bk-pil:disabled{opacity:.3;cursor:default}
 
-.bk-dagar{display:grid;grid-template-columns:repeat(7,1fr)}
-.bk-dag{
-  display:flex;flex-direction:column;gap:6px;
-  padding:10px 6px 12px;min-width:0;
-  border-right:1px solid var(--ln);
-}
-.bk-dag:last-child{border-right:none}
-.bk-dag.ar-forbi{opacity:.45}
-.bk-dag-namn{
-  text-align:center;font-family:var(--f-mono);font-size:10px;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);
-  line-height:1.3;
-}
-.bk-dag-namn > b{
-  display:block;font-family:var(--f-brod, inherit);font-size:1rem;
-  font-weight:650;letter-spacing:-.02em;color:var(--bl);
-}
-.bk-dag.ar-idag .bk-dag-namn > b{
-  color:var(--acc-text);
-}
-.bk-dag.ar-idag .bk-dag-namn::after{
-  content:'';display:block;width:4px;height:4px;border-radius:50%;
-  background:var(--acc);margin:3px auto 0;
-}
-.bk-dag-tider{display:flex;flex-direction:column;gap:5px}
-.bk-dag-tom{
-  text-align:center;color:var(--ln-2);font-size:.9rem;padding:6px 0;
-}
-
-/* En timme. Liten, för sju kolumner ska rymmas utan att någon
-   scrollar i sidled på en telefon. */
+/* En tid. */
 .bk-slot{
   border:1px solid var(--ln);border-radius:9px;background:var(--pap);
-  padding:7px 2px;cursor:pointer;
-  font-family:var(--f-mono);font-size:11.5px;font-weight:600;
+  padding:8px 12px;cursor:pointer;
+  font-family:var(--f-mono);font-size:12px;font-weight:600;
   color:var(--bl);letter-spacing:-.01em;
   transition:border-color .12s, background .12s, color .12s;
 }
-.bk-slot:hover:not(:disabled){border-color:var(--bl-3);background:var(--pap-2)}
-.bk-slot[aria-pressed="true"]{
-  background:var(--bl);border-color:var(--bl);color:var(--pap);
-}
+.bk-slot:hover:not(:disabled):not([aria-pressed="true"]){border-color:var(--bl-3);background:var(--pap-2)}
+.bk-slot[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--pap)}
 .bk-slot:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.bk-slot.ar-upptagen{
-  cursor:default;color:var(--ln-2);border-style:dashed;
-  text-decoration:line-through;
-}
+.bk-slot:disabled{opacity:.5;cursor:progress}
 
-.bk-tomvecka{
-  padding:12px 14px;margin:0;border-top:1px solid var(--ln);
-  font-size:.86rem;line-height:1.6;color:var(--muted);
+/* Studiehjälparens timmar: en markerad timme är en tid familjen kan
+   boka, och får mossgrönt i stället för den mörka "vald"-färgen. */
+.tk-tim[aria-pressed="true"]{background:var(--mossa);border-color:var(--mossa);color:var(--pap)}
+.tk-hjalp{margin:0 0 12px;font-size:.84rem;line-height:1.6;color:var(--bl-2)}
+
+/* ---- önska en annan tid ----
+   En egen sektion under bokningen, med ett streck ovanför: det är en
+   annan sorts sak — en fråga, inte en bokning. */
+.bk-onska{
+  border-top:1px solid var(--ln);padding-top:20px;margin-top:6px;
+  display:flex;flex-direction:column;gap:10px;
 }
+.bk-onska h6{margin:0;font-size:1rem;font-weight:650;color:var(--bl)}
+.bk-onska > p{margin:0;font-size:.86rem;line-height:1.6;color:var(--bl-2);max-width:560px}
+.bk-onska-rad{display:flex;gap:8px;flex-wrap:wrap}
+.bk-onska-rad .inp{max-width:190px}
+.bk-onska-rad .sel{max-width:140px}
+.bk-onska > .inp{max-width:520px}
+.bk-onska-fot{display:flex;gap:10px}
 
 /* ---- extraraden och kvittot ---- */
 .bk-extra{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
@@ -519,27 +530,8 @@
   #bk-amnen::-webkit-scrollbar{display:none}
   #bk-amnen button{flex:none;scroll-snap-align:start}
 
-  /* Plats för den fastnålade raden, så att den aldrig ligger över
-     den sista dagen i veckan. */
-  .bk{padding-bottom:98px}
-
-  /* Sju smala kolumner blir oläsliga på en telefon. Dagarna läggs
-     om till en lista, en dag per rad, med tiderna som chips. */
-  .bk-dagar{grid-template-columns:1fr}
-  .bk-dag{
-    flex-direction:row;align-items:center;gap:12px;
-    border-right:none;border-bottom:1px solid var(--ln);
-    padding:9px 12px;
-  }
-  .bk-dag:last-child{border-bottom:none}
-  .bk-dag-namn{
-    width:52px;flex:none;text-align:left;display:flex;align-items:baseline;gap:6px;
-  }
-  .bk-dag-namn > b{display:inline;font-size:.95rem}
-  .bk-dag.ar-idag .bk-dag-namn::after{margin:0 0 0 2px;align-self:center}
-  .bk-dag-tider{flex-direction:row;flex-wrap:wrap;gap:6px;flex:1}
-  .bk-slot{padding:7px 10px;font-size:12px}
-  .bk-dag-tom{padding:0;text-align:left}
+  /* Kalendern och dagens tider under varandra i stället för bredvid. */
+  .bk-kal{grid-template-columns:1fr;gap:14px;padding:12px}
 
   /* Kvittoraden följer med ned i stället för att ligga sist i en
      lång sida. Den som scrollat till lördag ska inte behöva leta
@@ -905,6 +897,11 @@ table.adm .adm-tal{
   background:var(--pap);
   border-bottom:1px solid var(--ln);
 }
+/* Sidomenyn rullar till sektionens topp. I adminvyn ligger den här
+   raden fast under sidhuvudet, så sektionen behöver landa så mycket
+   längre ner — annars hamnade rubriken bakom raden. Sidhuvudet
+   självt täcks av scroll-padding-top i nextrum.css. */
+.vy-admin .vy-sek{scroll-margin-top:calc(clamp(64px,7vw,84px) - 8px)}
 .adm-topp-var{
   display:flex;align-items:center;gap:9px;
   min-width:0;flex:1;
@@ -1862,7 +1859,7 @@ table.adm .adm-tal{
 
    Kalenderns egna stilar låg här: streckade timmar, prickar på
    dagar med tider, en fot med två knappar. Kalendern är borta —
-   veckoschemat (.vs) och veckovyn (.bk-vecka) ersatte den — och
+   den nya månadskalendern (.mv, se BOKNINGEN) ersatte den — och
    reglerna togs bort med den. Kvar står listan över dagar man
    sagt att man inte kan.
    ============================================================ */
@@ -2585,62 +2582,40 @@ a:has(> .adm-status){
   resize:vertical;
 }
 
-/* ------------------------------------------------------------
-   VECKOSCHEMAT — studiehjälparens egna tider
-
-   Ett rutnät: en rad per timme, en kolumn per veckodag. Det ersatte
-   en månadskalender som redigerade samma veckovisa tabell genom att
-   låtsas att varje datum var sitt eget val.
-
-   Rutorna är små med flit. Hela veckan ska synas utan att scrolla —
-   det är veckan som är svaret på frågan "när kan du?".
-   ------------------------------------------------------------ */
-.vs{
-  border:1px solid var(--ln);border-radius:14px;
-  background:var(--pap);overflow:hidden;
-}
-.vs-rad{
-  display:grid;grid-template-columns:38px repeat(7,1fr);
-  align-items:stretch;gap:0;
-}
-.vs-rad + .vs-rad{border-top:1px solid var(--ln)}
-.vs-huvud{background:var(--pap-2);border-bottom:1px solid var(--ln)}
-.vs-dag,
-.vs-tid{
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--muted-2);
-  padding:7px 0;
-}
-.vs-tid{border-right:1px solid var(--ln);justify-content:flex-end;padding-right:8px}
-.vs-ruta{
-  border:none;border-left:1px solid var(--ln);
-  background:var(--pap);cursor:pointer;
-  min-height:30px;padding:0;
-  transition:background .12s;
-}
-.vs-ruta:first-of-type{border-left:none}
-.vs-ruta:hover{background:var(--pap-3)}
-.vs-ruta[aria-pressed="true"]{background:var(--mossa)}
-.vs-ruta[aria-pressed="true"]:hover{background:var(--mossa-2, var(--mossa));opacity:.85}
-.vs-ruta:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
-.vs-ruta:disabled{opacity:.5;cursor:progress}
-
+/* Sammanfattningen under studiehjälparens kalender: alla veckotider
+   på en rad, så att veckan går att läsa av utan att trycka runt. */
 .vs-sam{
   margin:14px 0 0;font-size:.84rem;line-height:1.6;color:var(--muted);
 }
 
-/* Undantagen: datum, eventuell timme, knapp. */
-.vs-sparr-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-.vs-sparr-form .inp{max-width:180px}
-.vs-sparr-form .sel{max-width:150px}
+/* ------------------------------------------------------------
+   RAPPORTEN SOM RUTA
 
-/* Meddelandefältet i förslaget. */
-.bk-not{display:flex;flex-direction:column;gap:6px}
-.bk-not label{color:var(--muted-2)}
+   Formuläret öppnas från "Skriv rapport" på ett pass som varit, i
+   stället för att ligga utfällt under passlistan. Det är långt, så
+   rutan scrollar inuti sig själv och sidan bakom står still.
+   ------------------------------------------------------------ */
+.rp-overlay[hidden]{display:none}
+.rp-overlay{align-items:start;overflow:auto}
+.rp-box{
+  max-width:640px;margin:24px auto;
+  max-height:calc(100vh - 48px);overflow:auto;
+  text-align:left;
+}
+.rp-huvud{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  margin-bottom:6px;
+}
+.rp-huvud h3{margin:0}
+.rp-stang{
+  flex:none;width:34px;height:34px;border-radius:10px;
+  border:1px solid var(--ln);background:var(--pap);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.rp-stang svg{width:12px;height:12px;fill:none;stroke:var(--bl);stroke-width:1.8;stroke-linecap:round}
+.rp-stang:hover{background:var(--pap-2);border-color:var(--bl-3)}
 
 @media (max-width:720px){
-  .vs-rad{grid-template-columns:32px repeat(7,1fr)}
-  .vs-ruta{min-height:34px}
-  .vs-dag,.vs-tid{font-size:9px}
+  .rp-overlay{padding:0}
+  .rp-box{margin:0;max-height:100vh;border-radius:0;min-height:100vh}
 }

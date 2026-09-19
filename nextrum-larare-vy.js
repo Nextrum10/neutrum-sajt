@@ -252,7 +252,7 @@
           ? '<b>' + esc(datumText(b.wanted_date)
               + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '')) + '</b>'
             + '<span>' + esc(b.subject || 'Nästa pass') + '</span>'
-          : '<b>Inget pass inbokat</b><span>Föreslå en tid under Kalender</span>')
+          : '<b>Inget pass inbokat</b><span>Familjen bokar på dina tider</span>')
       + '</div></div>'
       + (bitar ? '<div class="tutor-meta ep-taggar">' + bitar + '</div>' : '')
       + (e.goals ? '<p class="small ep-mal"><b>Mål:</b> ' + esc(e.goals) + '</p>' : '')
@@ -428,8 +428,6 @@
 
   async function byggFamilj() {
     const namn = aktivNamn();
-    $('#forslag-till').textContent = namn ? 'till ' + namn.split(' ')[0] : '';
-    $('#tr-text').placeholder = namn ? 'Skriv till ' + namn.split(' ')[0] + '…' : 'Skriv till familjen…';
     ritaFamiljval();
     ritaChattlista();
     ritaChattTopp();
@@ -456,7 +454,6 @@
        läxor, och inget av det är hämtat när de ritas första gången */
     ritaElevkort();
     ritaElevProfil();
-    uppdateraFörslag();
   }
 
   /* ============ kontakt ============ */
@@ -771,40 +768,31 @@
   }
 
   /* ============================================================
-     DINA TIDER OCH FÖRSLAGET
+     DINA TIDER
 
-     Tre ytor som förut var en månadskalender med ett formulär under:
+     En kalender, som Leo bad om 2026-09-18: tryck på en dag, och tryck
+     sedan på timmarna du kan. Tiderna sparas direkt.
 
-       1. veckoschemat — när du kan jobba, en ruta per timme
-       2. undantagen   — enstaka dagar du inte kan
-       3. förslaget    — en tid du skickar till en familj
+     tutor_availability är VECKOVIS — en rad säger "torsdagar 16–19",
+     inte "torsdagen den 24 september". Därför gäller en timme man
+     markerar samma veckodag varje vecka, och det står rakt ut ovanför
+     timmarna. Dagar med tider har en prick i kalendern.
 
-     VARFÖR VECKOSCHEMA OCH INTE KALENDER
+     Det här är de tider familjen kan boka direkt: en bokning som
+     ligger helt inom dem bekräftas av databasen (Fas 4.4). Andra tider
+     kan familjen önska, och då bekräftar eller avböjer du i passlistan.
 
-     tutor_availability är veckovis: en rad säger "tisdagar 17–21",
-     inte "tisdagen den 22 september". Att redigera den i en
-     månadskalender var att redigera en vecka genom att titta på en
-     månad — man öppnade en dag, tryckte på en timme, och ändrade i
-     tysthet varje tisdag hela terminen. Rutnätet visar det som
-     faktiskt sparas.
-
-     Månadskalendern är därför borta. Den enda vy som fortfarande
-     behöver enskilda datum är förslaget, och det använder samma
-     veckovy som familjens bokning (NXArbete.veckovy).
-
-     Tabellerna är oförändrade: en markerad ruta är en rad i
-     tutor_availability, ett undantag en rad i tutor_blocked. Det som
-     lades in i den gamla vyn läses alltså in här utan konvertering.
+     Borttaget samma dag, på Leos begäran:
+       · "Dagar du inte kan" — undantag per datum
+       · "Föreslå en tid till en familj" — tider stäms av i chatten
      ============================================================ */
   const DAGNAMN = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag', 'Söndag'];
   const tvåsiff = n => String(n).padStart(2, '0');
   const veckodagFör = iso => (new Date(iso + 'T12:00:00').getDay() + 6) % 7;
+  /* Timmarna man kan markera. Samma spann som familjen kan önska. */
+  const TID_FRÅN = 7, TID_TILL = 21;
 
-  /* Pass bokas i hela timmar eftersom vi fakturerar per timme. */
-  function längdText(minuter) {
-    const t = Math.round((Number(minuter) || 60) / 60);
-    return t === 1 ? '1 timme' : t + ' timmar';
-  }
+  S.tidKal = { manad: null, dag: null };
 
   /* Raderna för en veckodag tillbaka till lösa timmar. En rad
      16:00–20:00 är fyra timmar; halvtimmar rundas upp, för hela
@@ -822,8 +810,8 @@
   }
 
   /* Och tillbaka igen. En sammanhängande följd timmar är ETT fönster
-     — annars hade "16 till 20" blivit fyra rader i tabellen, och
-     listan familjen ser hade sagt 16–17, 17–18, 18–19, 19–20. */
+     — annars hade "16 till 20" blivit fyra rader i tabellen, och en
+     tvåtimmarsbokning 17–19 hade inte rymts i något av dem. */
   function tillRader(veckodag, timmar) {
     const h = Array.from(timmar).sort((a, b) => a - b);
     const ut = [];
@@ -865,445 +853,132 @@
     return null;
   }
 
-  /* ============================================================
-     VECKOSCHEMAT
-     ============================================================ */
+  /* Timmar som tryckts men inte hunnit skrivas, per veckodag. Två
+     snabba tryck på samma dag får inte räkna från samma gamla rader —
+     då skrev det andra över det första, och 16 + 17 blev två
+     entimmesfönster i stället för ett. Knapparna visar det man
+     tryckt, och skrivningarna går en i taget i tidKö. */
+  const tidÖnskat = new Map();
+  let tidKö = Promise.resolve();
+  let tidVäntar = 0;
+  const önskadeTimmar = vd => new Set(tidÖnskat.get(vd) || timmarFör(vd));
 
-  function ritaVeckoschema() {
-    const host = $('#veckoschema');
-    if (!host) return;
-    host.innerHTML = NXArbete.veckoschema({
-      timmar: timmarFör,
-      /* Rutnätet börjar 07 och slutar 22, men växer om någon lagt in
-         en tid utanför — en tid man inte ser går inte att ta bort. */
-      tillgang: S.tillgang || []
+  function ritaTider() {
+    const kal = $('#tid-kalender'), dagHost = $('#tid-dag');
+    if (!kal || !dagHost) return;
+    const idag = isoFor(new Date());
+    const k = S.tidKal;
+    if (!k.manad) k.manad = NXArbete.månadFör(idag);
+    const medTider = new Set((S.tillgang || []).map(r => r.weekday));
+
+    kal.innerHTML = NXArbete.manad({
+      manad: k.manad,
+      valt: k.dag,
+      prefix: 'tk',
+      minManad: NXArbete.månadFör(idag),
+      prickText: 'du har tider den veckodagen',
+      dag: iso => ({ klickbar: iso >= idag, prick: iso >= idag && medTider.has(veckodagFör(iso)) })
     });
+
+    if (!k.dag) {
+      dagHost.innerHTML = '<p class="mv-inga">Tryck på en dag i kalendern för att markera när du kan. '
+        + 'Dagar med en prick har redan tider.</p>';
+    } else {
+      const vd = veckodagFör(k.dag);
+      const mina = önskadeTimmar(vd);
+      /* En tid utanför 07–21, från en äldre vy eller från admin, ska
+         synas som en knapp. En tid man inte ser går inte att ta bort. */
+      const från = Math.min(TID_FRÅN, ...mina), till = Math.max(TID_TILL, ...mina);
+      let knappar = '';
+      for (let h = från; h <= till; h++) {
+        knappar += '<button type="button" class="bk-slot tk-tim" data-timme="' + h + '"'
+          + ' aria-pressed="' + (mina.has(h) ? 'true' : 'false') + '">' + tvåsiff(h) + ':00</button>';
+      }
+      dagHost.innerHTML = '<p class="bk-kal-dagnamn">' + esc(DAGNAMN[vd] + ' ' + datumText(k.dag)) + '</p>'
+        + '<p class="tk-hjalp">Tryck på timmarna du kan. De gäller <b>varje ' + esc(DAGNAMN[vd].toLowerCase())
+        + '</b> — du behöver inte spara.</p>'
+        + '<div class="mv-tider tk-timmar" role="group" aria-label="' + esc('Timmar ' + DAGNAMN[vd].toLowerCase() + 'ar') + '">'
+        + knappar + '</div>';
+    }
 
     const sam = $('#tid-sammanfattning');
-    if (!sam) return;
-    sam.textContent = (S.tillgang || []).length
-      ? (S.tillgang || []).slice()
-          .sort((a, b) => a.weekday - b.weekday || String(a.start_time).localeCompare(String(b.start_time)))
-          .map(r => DAGNAMN[r.weekday].slice(0, 3) + ' ' + String(r.start_time).slice(0, 5)
-                    + '–' + String(r.end_time).slice(0, 5)).join(' · ')
-      : 'Inga tider inlagda än — ingen kan boka dig förrän du markerat något.';
+    if (sam) {
+      sam.textContent = (S.tillgang || []).length
+        ? 'Dina tider: ' + (S.tillgang || []).slice()
+            .sort((a, b) => a.weekday - b.weekday || String(a.start_time).localeCompare(String(b.start_time)))
+            .map(r => DAGNAMN[r.weekday].slice(0, 3).toLowerCase() + ' ' + String(r.start_time).slice(0, 5)
+                      + '–' + String(r.end_time).slice(0, 5)).join(' · ')
+        : 'Inga tider inlagda än. Familjen kan fortfarande önska tider, men ingen bokning bekräftas direkt.';
+    }
   }
 
-  /* En ruta av eller på. Skrivningen går till tutor_availability
-     direkt: ett schema som sparas först när man trycker på en knapp
-     är ett schema man glömmer att spara. */
-  async function växlaRuta(knapp) {
-    const veckodag = Number(knapp.dataset.dag);
-    const timme = Number(knapp.dataset.timme);
-    const timmar = timmarFör(veckodag);
-    if (timmar.has(timme)) timmar.delete(timme); else timmar.add(timme);
+  /* En timme av eller på för veckodagen. Knappen svarar direkt, och
+     vyn ritas om från databasen när alla tryck är skrivna. Varje steg
+     i kön skriver det SENASTE man tryckt fram för dagen, mot rader
+     som just hämtats — så blir tre snabba tryck ett fönster. */
+  function växlaTimme(knapp) {
+    const k = S.tidKal;
+    if (!k.dag) return;
+    const vd = veckodagFör(k.dag);
+    const h = Number(knapp.dataset.timme);
+    const timmar = önskadeTimmar(vd);
+    if (timmar.has(h)) timmar.delete(h); else timmar.add(h);
+    tidÖnskat.set(vd, timmar);
+    knapp.setAttribute('aria-pressed', timmar.has(h) ? 'true' : 'false');
 
-    knapp.setAttribute('aria-pressed', timmar.has(timme) ? 'true' : 'false');
-    knapp.disabled = true;
-    const fel = await skrivVeckodag(veckodag, timmar);
-    knapp.disabled = false;
-    if (fel) { alert(fel); }
-    await laddaTider();
+    tidVäntar++;
+    tidKö = tidKö
+      .then(async () => {
+        const mål = tidÖnskat.get(vd);
+        if (!mål) return;
+        const fel = await skrivVeckodag(vd, mål);
+        if (fel) { tidÖnskat.delete(vd); alert(fel); }
+        S.tillgang = (await NX.hämtaTillganglighet(S.user.id)).tillgang;
+      })
+      .catch(() => { tidÖnskat.delete(vd); })
+      .then(() => {
+        if (--tidVäntar > 0) return;
+        tidÖnskat.clear();
+        ritaTider();
+      });
   }
 
   document.addEventListener('click', e => {
-    const ruta = e.target.closest('.vs-ruta');
-    if (ruta) växlaRuta(ruta);
-  });
+    const sek = e.target.closest('section[data-sek="tider"]');
+    if (!sek) return;
 
-  /* ============================================================
-     UNDANTAGEN
+    const tim = e.target.closest('.tk-tim');
+    if (tim) { växlaTimme(tim); return; }
 
-     Veckoschemat säger vad som gäller i vanliga fall. Undantaget är
-     provveckan, sportlovet eller kvällen man är bortrest: samma
-     tisdag som annars, men inte den här gången.
-     ============================================================ */
-
-  function ritaSpärrar() {
-    const host = $('#sparr-lista');
-    if (!host) return;
-    const framåt = (S.blockerade || [])
-      .filter(b => b.block_date >= isoFor(new Date()))
-      .sort((a, b) => a.block_date.localeCompare(b.block_date));
-
-    host.innerHTML = !framåt.length
-      ? '<p class="xsmall" style="color:var(--muted-2)">Inga undantag inlagda.</p>'
-      : framåt.map(b =>
-          '<div class="kal-sparr">'
-          + '<span><b>' + esc(datumText(b.block_date)) + '</b> '
-          + (b.block_time ? esc(String(b.block_time).slice(0, 5)) : 'hela dagen') + '</span>'
-          + '<button type="button" class="btn btn-ghost btn-sm" data-sparr-bort="'
-          + b.block_date + '|' + (b.block_time || '') + '">Ta bort</button>'
-          + '</div>').join('');
-  }
-
-  $('#sp-lagg') && $('#sp-lagg').addEventListener('click', async () => {
-    const datum = $('#sp-datum').value;
-    const tid = $('#sp-tid').value;
-    const msg = $('#sp-msg');
-    rensa(msg);
-    if (!datum) { säg(msg, 'Välj ett datum först.', false); return; }
-    if (datum < isoFor(new Date())) { säg(msg, 'Datumet har redan varit.', false); return; }
-
-    await medan($('#sp-lagg'), 'Lägger in…', async () => {
-      const { error } = await supa.from('tutor_blocked').insert({
-        tutor_id: S.user.id, block_date: datum, block_time: tid || null
-      });
-      if (error) {
-        säg(msg, error.code === '23505'
-          ? 'Den dagen är redan inlagd.'
-          : 'Kunde inte lägga in: ' + felText(error), false);
-        return;
-      }
-      $('#sp-datum').value = '';
-      await laddaTider();
-      säg(msg, '✓ Inlagt. Familjerna kan inte boka den tiden.', true);
-    });
-  });
-
-  document.addEventListener('click', async e => {
-    const k = e.target.closest('[data-sparr-bort]');
-    if (!k) return;
-    const [datum, tid] = k.dataset.sparrBort.split('|');
-
-    await medan(k, 'Tar bort…', async () => {
-      let q = supa.from('tutor_blocked').delete().eq('tutor_id', S.user.id).eq('block_date', datum);
-      q = tid ? q.eq('block_time', tid) : q.is('block_time', null);
-      const { error } = await q;
-      if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
-      await laddaTider();
-    });
-  });
-
-  /* ============================================================
-     FÖRSLAGET
-
-     Samma veckovy som familjen ser när de bokar, av samma skäl: att
-     hitta en ledig timme är en sökning med ett exakt svar, och båda
-     parter ska se samma svar. Skillnaden är att här väljer man också
-     vilken familj det gäller och om passet ska upprepas.
-     ============================================================ */
-  const F_AMNEN = ['Matematik', 'Svenska', 'Engelska',
-    'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap', 'Annat'];
-  const F_LANGDER = [[60, '1 timme'], [120, '2 timmar'], [180, '3 timmar']];
-  const F_FORMAT = ['På plats', 'Online'];
-  const F_UPPREPA = [[1, 'En gång'], [4, '4 veckor'], [8, '8 veckor'], [12, '12 veckor']];
-  const F_VECKOR_FRAM = 8;
-
-  S.forslag = {
-    amne: F_AMNEN[0], minuter: 60, format: 'På plats', plats: '',
-    datum: null, tid: null, upprepa: 1, not: '',
-    vecka: null, veckaRörd: false
-  };
-
-  function fChips(id, poster, valt, etikett) {
-    return '<div class="vy-val" id="' + id + '" role="group" aria-label="' + esc(etikett) + '">'
-      + poster.map(p => '<button type="button" data-v="' + esc(String(p[0])) + '" aria-pressed="'
-        + (String(p[0]) === String(valt) ? 'true' : 'false') + '">' + esc(p[1]) + '</button>').join('')
-      + '</div>';
-  }
-
-  /* Timmarna en viss dag, med de bokade markerade. Upptagna tas inte
-     bort: "redan bokad" och "jobbar inte då" är två olika besked. */
-  function fTider(datum) {
-    const längd = Math.max(1, Math.ceil(S.forslag.minuter / 60));
-    return NX.tiderFörDatum(datum, S.tillgang || [], S.blockerade || [], S.forslag.minuter)
-      .map(t => {
-        const h = Number(String(t).slice(0, 2));
-        let upptagen = false;
-        for (let i = 0; i < längd; i++) {
-          if ((S.upptagna || new Set()).has(datum + '|' + tvåsiff(h + i) + ':00')) upptagen = true;
-        }
-        return { tid: t, upptagen };
-      });
-  }
-
-  function fNästaLediga(från) {
-    const f = NX.föreslåTider({
-      tillgang: S.tillgang || [],
-      blockerade: S.blockerade || [],
-      upptagna: S.upptagna || new Set(),
-      tidigare: (S.bokningar || []).filter(b => b.student_id === S.aktivElev && b.status !== 'cancelled'),
-      minuter: S.forslag.minuter,
-      dagar: F_VECKOR_FRAM * 7,
-      antal: 40
-    });
-    for (const p of f) if (!från || p.datum >= från) return p.datum;
-    return null;
-  }
-
-  function ritaFörslag() {
-    const host = $('#forslag-panel');
-    if (!host) return;
-    const f = S.forslag;
-
-    /* Tre lägen där det inte går att föreslå något, och alla tre har
-       ett svar som säger var man gör något åt det. En avstängd knapp
-       utan förklaring är den sämsta av dem. */
-    if (!S.aktivFamilj) {
-      host.innerHTML = tomt('Ingen familj matchad än',
-        'Så fort vi matchat dig med en familj kan du föreslå tider här.');
+    const dag = e.target.closest('.mv-dag');
+    if (dag && !dag.disabled) {
+      S.tidKal.dag = S.tidKal.dag === dag.dataset.datum ? null : dag.dataset.datum;
+      ritaTider();
       return;
     }
-    if (!S.aktivElev) {
-      host.innerHTML = tomt('Familjen har inte lagt in sitt barn än',
-        'Passet hör till ett barn, så det måste finnas ett. Skriv till familjen om det.');
-      return;
+    if (e.target.closest('#tk-forr') || e.target.closest('#tk-nasta')) {
+      const ny = NXArbete.plusMånader(S.tidKal.manad, e.target.closest('#tk-forr') ? -1 : 1);
+      if (ny < NXArbete.månadFör(isoFor(new Date()))) return;
+      S.tidKal.manad = ny;
+      ritaTider();
     }
-    if (!(S.tillgang || []).length) {
-      host.innerHTML = tomt('Du har inga tider inlagda',
-        'Markera timmarna du kan i veckoschemat ovanför, så går de att föreslå och boka.');
-      return;
-    }
-
-    if (!f.vecka) f.vecka = NXArbete.måndagen(fNästaLediga(null) || isoFor(new Date()));
-
-    const vald = f.datum && f.tid;
-    const vecka = NXArbete.veckovy({
-      vecka: f.vecka,
-      tider: fTider,
-      vald: { datum: f.datum, tid: f.tid },
-      veckorFram: F_VECKOR_FRAM,
-      hoppTill: fNästaLediga(NXArbete.plusDagar(f.vecka, 7)),
-      tomText: 'Lägg in fler timmar i veckoschemat ovanför.',
-      upptagenText: 'Du har redan ett pass då'
-    });
-
-    host.innerHTML = '<div class="bk">'
-      + '<div class="bk-val">'
-      + '<div class="bk-valrad"><span class="bk-valrad-et">Ämne</span>'
-      + fChips('f-amnen', F_AMNEN.map(a => [a, a]), f.amne, 'Ämne') + '</div>'
-      + '<div class="bk-valrad bk-valrad-tva">'
-      + '<span class="bk-valrad-et">Längd</span>'
-      + fChips('f-langder', F_LANGDER.map(l => [String(l[0]), l[1]]), String(f.minuter), 'Längd')
-      + '<span class="bk-valrad-et">Var</span>'
-      + fChips('f-format', F_FORMAT.map(x => [x, x]), f.format, 'Format')
-      + '</div>'
-      + (f.format === 'På plats'
-        ? '<div class="bk-plats"><label class="xsmall" for="f-plats">Var ses ni? (valfritt)</label>'
-          + '<input class="inp" id="f-plats" maxlength="120" value="' + esc(f.plats) + '"'
-          + ' placeholder="t.ex. Hemma hos familjen, eller biblioteket i Vasastan"></div>'
-        : '')
-      + '</div>'
-      + vecka
-      + '<div class="bk-valrad"><span class="bk-valrad-et">Upprepa</span>'
-      + fChips('f-upprepa', F_UPPREPA.map(u => [String(u[0]), u[1]]), String(f.upprepa), 'Upprepa') + '</div>'
-      + '<div class="bk-not">'
-      + '<label class="xsmall" for="f-not">Meddelande med förslaget (valfritt)</label>'
-      + '<div class="vy-utkast">'
-      + '<input class="inp" id="f-not" value="' + esc(f.not) + '"'
-      + ' placeholder="t.ex. Då hinner vi gå igenom hela provet">'
-      /* Utkastet är det ENDA här som går via AI. Tiden räknas fram
-         lokalt; en modell ska inte gissa sig till om en timme är ledig. */
-      + '<button type="button" class="btn btn-ghost btn-sm" id="f-utkast">Skriv utkast</button>'
-      + '</div></div>'
-      + '<div class="bk-sum' + (vald ? ' ar-vald' : '') + '">'
-      + '<div class="bk-sum-vad">'
-      + (vald
-        ? '<b>' + esc(datumText(f.datum) + ' kl. ' + f.tid.slice(0, 5)) + '</b>'
-          + '<span>' + esc(f.amne + ' · ' + längdText(f.minuter) + ' · ' + f.format
-            + (f.upprepa > 1 ? ' · varje vecka i ' + f.upprepa + ' veckor' : '')) + '</span>'
-        : '<b>Välj en tid</b><span>Tryck på en ledig timme i veckan ovanför.</span>')
-      + '</div>'
-      + '<button class="btn btn-primary" id="forslag-knapp" type="button"'
-      + (vald ? '' : ' disabled') + '>Skicka förslaget</button>'
-      + '</div>'
-      + '</div>';
-  }
-
-  /* Namnet uppdateras när familjen byts, och panelen ritas om när
-     något i den ändras. Funktionen heter som förut, för den anropas
-     från flera ställen i vyn. */
-  function uppdateraFörslag() { ritaFörslag(); }
-
-  document.addEventListener('input', e => {
-    if (!e.target) return;
-    if (e.target.id === 'f-plats') S.forslag.plats = e.target.value;
-    if (e.target.id === 'f-not') S.forslag.not = e.target.value;
-  });
-
-  document.addEventListener('click', e => {
-    const panel = e.target.closest('#forslag-panel');
-    if (!panel) return;
-
-    const slot = e.target.closest('.bk-slot');
-    if (slot && !slot.disabled) {
-      const f = S.forslag;
-      if (f.datum === slot.dataset.datum && f.tid === slot.dataset.tid) { f.datum = null; f.tid = null; }
-      else { f.datum = slot.dataset.datum; f.tid = slot.dataset.tid; }
-      ritaFörslag();
-      return;
-    }
-
-    if (e.target.closest('#bk-forr') || e.target.closest('#bk-nasta')) {
-      const steg = e.target.closest('#bk-forr') ? -7 : 7;
-      const ny = NXArbete.plusDagar(S.forslag.vecka, steg);
-      if (ny < NXArbete.måndagen(isoFor(new Date()))) return;
-      S.forslag.vecka = ny;
-      S.forslag.veckaRörd = true;
-      ritaFörslag();
-      return;
-    }
-
-    const hopp = e.target.closest('#bk-hoppa');
-    if (hopp) {
-      S.forslag.vecka = NXArbete.måndagen(hopp.dataset.datum);
-      S.forslag.veckaRörd = true;
-      ritaFörslag();
-      return;
-    }
-
-    const val = e.target.closest('.vy-val button[data-v]');
-    if (val) {
-      const grupp = val.closest('.vy-val').id;
-      const v = val.dataset.v;
-      if (grupp === 'f-amnen') S.forslag.amne = v;
-      else if (grupp === 'f-format') S.forslag.format = v;
-      else if (grupp === 'f-upprepa') S.forslag.upprepa = Number(v) || 1;
-      else if (grupp === 'f-langder') {
-        S.forslag.minuter = Number(v) || 60;
-        /* Längden ändrar vilka timmar som ryms. En vald tid som inte
-           längre får plats måste släppas. */
-        S.forslag.datum = null; S.forslag.tid = null;
-      }
-      ritaFörslag();
-    }
-  });
-
-  /* ============================================================
-     UTKAST TILL MEDDELANDET
-     Enda stället i tidsflödet där en språkmodell är inblandad, och
-     bara för formuleringen. Utkastet hamnar i fältet så att det går
-     att ändra innan det skickas — det ska vara ett förslag, inte
-     något som redan gått iväg i hjälparens namn.
-     ============================================================ */
-  document.addEventListener('click', async e => {
-    const knapp = e.target.closest('#f-utkast');
-    if (!knapp) return;
-    const fält = $('#f-not'), msg = $('#forslag-msg'), f = S.forslag;
-    if (!f.datum || !f.tid) {
-      säg(msg, 'Välj en tid först — utkastet utgår från den.', false);
-      return;
-    }
-    const elev = (S.elever || []).find(x => x.id === S.aktivElev);
-    await medan(knapp, 'Skriver…', async () => {
-      const { data, error } = await supa.functions.invoke('generate-message', {
-        body: {
-          elev: elev ? elev.name : '',
-          amne: f.amne,
-          datum: datumText(f.datum),
-          tid: f.tid,
-          minuter: f.minuter,
-          anteckning: fält ? fält.value.trim() : ''
-        }
-      });
-      if (error || !data || !data.text) {
-        säg(msg, 'Kunde inte skriva utkast just nu. Skriv gärna själv — förslaget går att skicka ändå.', false);
-        return;
-      }
-      S.forslag.not = data.text;
-      if (fält) { fält.value = data.text; fält.focus(); }
-    });
-  });
-
-  document.addEventListener('click', async e => {
-    if (!e.target.closest('#forslag-knapp')) return;
-    const msg = $('#forslag-msg');
-    rensa(msg);
-    const f = S.forslag;
-    if (!f.datum || !f.tid || !S.aktivFamilj || !S.aktivElev) return;
-
-    /* En tid bakåt i tiden är alltid ett misstag, oavsett vad veckan
-       råkar erbjuda. */
-    if (f.datum < isoFor(new Date())) {
-      säg(msg, '⚠️ Den tiden har redan varit. Välj ett datum framåt.', false);
-      return;
-    }
-
-    const antal = Number(f.upprepa) || 1;
-    const serie = antal > 1 ? crypto.randomUUID() : null;
-
-    await medan($('#forslag-knapp'), 'Skickar…', async () => {
-      /* Ett återkommande pass är flera vanliga pass som delar
-         series_id. Krockar en vecka hoppas just den över — resten
-         ska inte falla för det. */
-      let skapade = 0, hoppade = 0, sistaFel = null;
-
-      for (let v = 0; v < antal; v++) {
-        const d = new Date(f.datum + 'T12:00:00');
-        d.setDate(d.getDate() + v * 7);
-        const datum = isoFor(d);
-
-        if (v > 0 && !NX.tiderFörDatum(datum, S.tillgang, S.blockerade).includes(f.tid)) {
-          hoppade++;
-          continue;
-        }
-
-        const { error } = await supa.from('bookings').insert({
-          parent_id: S.aktivFamilj,
-          tutor_id: S.user.id,
-          student_id: S.aktivElev,
-          created_by: S.user.id,
-          series_id: serie,
-          subject: f.amne,
-          tjanst: NXTjanster.standard(),
-          format: f.format,
-          location: f.format === 'På plats' ? (f.plats.trim() || null) : null,
-          duration_min: Number(f.minuter) || 60,
-          note: f.not.trim() || null,
-          wanted_date: datum,
-          wanted_time: f.tid,
-          status: 'requested'
-        });
-
-        if (error) {
-          if (error.code === '23505') { hoppade++; continue; }
-          sistaFel = error;
-          break;
-        }
-        skapade++;
-      }
-
-      if (!skapade) {
-        säg(msg, sistaFel
-          ? 'Kunde inte skicka förslaget: ' + felText(sistaFel)
-          : '⚠️ Den tiden är upptagen. Veckan är uppdaterad nu.', false);
-        S.forslag.datum = null; S.forslag.tid = null;
-        await laddaUpptagna();
-        return;
-      }
-
-      säg(msg, skapade === 1
-        ? '✓ Förslaget är skickat. Familjen svarar från sin vy.'
-        : '✓ ' + skapade + ' pass föreslagna.'
-          + (hoppade ? ' ' + hoppade + ' vecka' + (hoppade > 1 ? 'or' : '') + ' hoppades över, tiden var upptagen.' : ''),
-        true);
-      S.forslag.datum = null; S.forslag.tid = null;
-      S.forslag.not = '';
-      S.forslag.upprepa = 1;
-      await laddaPass();
-      await laddaUpptagna();
-    });
   });
 
   /* ============================================================
      HÄMTNINGARNA
 
-     laddaTider  — veckoschemat och undantagen ur databasen
-     laddaUpptagna — vilka timmar som redan är bokade hos dig
+     laddaTider    — veckotiderna ur databasen
+     laddaUpptagna — vilka timmar som redan är bokade hos dig, för
+                     flytta-rutan
      ============================================================ */
   async function laddaTider() {
     const t = await NX.hämtaTillganglighet(S.user.id);
     S.tillgang = t.tillgang;
-    S.blockerade = t.blockerade;
-    ritaVeckoschema();
-    ritaSpärrar();
-    ritaFörslag();
+    ritaTider();
   }
 
   async function laddaUpptagna() {
     S.upptagna = await NX.hämtaUpptagna(S.user.id);
-    ritaFörslag();
   }
 
   /* ============================================================
@@ -1325,7 +1000,7 @@
     }
 
     const väntar = (S.bokningar || []).filter(b =>
-      b.status === 'requested' && b.created_by !== S.user.id).length;
+      b.status === 'requested' && b.created_by !== S.user.id && !harBörjat(b)).length;
     if (väntar) {
       poster.push({
         rubrik: väntar + ' pass att bekräfta',
@@ -1340,7 +1015,7 @@
       poster.push({
         rubrik: orapporterade + ' pass utan rapport',
         text: 'Passet har varit. Rapporten gör det till en arbetad timme.',
-        mål: '#rapport-form'
+        mål: '#pass-lista'
       });
     }
 
@@ -1375,14 +1050,14 @@
     ritaNotiser();
 
     if (!S.bokningar.length) {
-      host.innerHTML = tomt('Inga pass än', 'Föreslå en tid i kalendern, eller vänta på att familjen bokar.');
+      host.innerHTML = tomt('Inga pass än', 'Familjen bokar på tiderna du markerat under Dina tider.');
       return;
     }
 
     NXStudie.passLista({
       host: host,
       bokningar: S.bokningar,
-      tomtKommande: 'Inga kommande pass. Föreslå en tid under Kalender, eller vänta på att familjen bokar.',
+      tomtKommande: 'Inga kommande pass. Familjen bokar på tiderna du markerat under Dina tider.',
       rad: b => {
       const e = S.elever.find(x => x.id === b.student_id);
       const familj = S.familjer.find(f => f.id === b.parent_id);
@@ -1394,7 +1069,7 @@
          Flytta och Avboka hör till pass som ligger framåt — ett pass
          som redan hållits går inte att flytta. */
       const idag = isoFor(new Date());
-      const harVarit = kan && rapporterbart(b) && String(b.wanted_date || '') <= idag;
+      const harVarit = kan && rapporterbart(b) && harBörjat(b);
 
       let knappar = '';
       if (b.status === 'requested' && !mitt && !harVarit) {
@@ -1407,7 +1082,11 @@
         knappar += '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>';
       }
       if (kan) {
-        knappar += '<button class="btn btn-ghost btn-sm" data-status="cancelled" data-id="' + b.id + '">Avboka</button>';
+        /* Ett önskemål från familjen avböjs, ett bokat pass avbokas.
+           Samma sak i databasen, men inte samma sak att säga. */
+        const önskemål = b.status === 'requested' && !mitt;
+        knappar += '<button class="btn btn-ghost btn-sm" data-status="cancelled" data-id="' + b.id + '"'
+          + (önskemål ? ' data-avboj="1">Avböj' : '>Avboka') + '</button>';
       }
 
       /* Platsen står direkt på raden, inte bara i detaljvyn. Ett pass
@@ -1453,12 +1132,23 @@
       || (b.status === 'requested' && b.created_by === b.parent_id);
   }
 
-  function passUtanRapport() {
+  /* Har passet börjat? Datum OCH klockslag. Med bara datumet stod ett
+     önskemål till ikväll som "Passet har varit" med Skriv rapport, och
+     gick inte att bekräfta innan det hänt. */
+  function harBörjat(b) {
     const idag = isoFor(new Date());
+    const d = String(b.wanted_date || '');
+    if (d !== idag) return d < idag;
+    const nu = new Date();
+    const klockan = String(nu.getHours()).padStart(2, '0') + ':' + String(nu.getMinutes()).padStart(2, '0');
+    return String(b.wanted_time || '00:00').slice(0, 5) <= klockan;
+  }
+
+  function passUtanRapport() {
     return S.bokningar
       .filter(b => b.student_id === S.aktivElev
         && rapporterbart(b)
-        && String(b.wanted_date || '') <= idag)
+        && harBörjat(b))
       .sort((a, c) => String(c.wanted_date + (c.wanted_time || ''))
         .localeCompare(String(a.wanted_date + (a.wanted_time || ''))));
   }
@@ -1488,23 +1178,90 @@
   document.addEventListener('click', e => {
     const knapp = e.target.closest('[data-rapportera]');
     if (!knapp) return;
+    medan(knapp, 'Öppnar…', () => öppnaRapport(knapp.dataset.rapportera));
+  });
+
+  /* ============================================================
+     RAPPORTEN SOM RUTA
+
+     Formuläret är oförändrat — samma fält, samma sparlogik, samma
+     trigger som gör passet genomfört. Det som ändrats är var det
+     bor: i en ruta som öppnas från passet, inte som en utfälld ruta
+     under listan som alltid tog halva sidan.
+
+     Rutan flyttas till <body> första gången den öppnas. Inne i en
+     flikpanel kan en förälder med transform eller overflow klippa en
+     position:fixed-ruta, och då hamnar den mitt i listan.
+     ============================================================ */
+  let rapportFokus = null;
+  let rapportStängs = null;
+
+  function sättRapportTitel(b) {
+    const titel = $('#rp-titel');
+    if (!titel) return;
+    const e = b ? (S.elever || []).find(x => x.id === b.student_id) : null;
+    titel.textContent = b
+      ? 'Rapport · ' + (e ? e.name + ', ' : '') + datumText(b.wanted_date)
+        + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '')
+      : 'Fristående rapport';
+  }
+
+  async function öppnaRapport(bokningId) {
+    const ruta = $('#rapport-overlay');
+    if (!ruta) return;
+    if (ruta.parentNode !== document.body) document.body.appendChild(ruta);
+    clearTimeout(rapportStängs);
+
+    /* Rapporten sparas på den aktiva eleven. Hör passet till en
+       annan elev byts eleven först — annars hamnade rapporten om ett
+       barn hos ett annat, och passet blev aldrig genomfört. */
+    const b = (S.bokningar || []).find(x => x.id === bokningId);
+    if (b && b.student_id !== S.aktivElev) await väljElev(b.student_id);
 
     const val = $('#r-pass');
-    val.value = knapp.dataset.rapportera;
-    val.dispatchEvent(new Event('change'));
-
-    const ruta = $('#rapport-ruta') || val.closest('.dbox');
-    if (ruta) {
-      ruta.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      /* Fokus på första fältet man faktiskt ska fylla i. Utan det
-         landar man på rutan men måste klicka en gång till. */
-      const forst = $('#r-gick-val button');
-      if (forst) setTimeout(() => forst.focus(), 380);
+    if (bokningId && val) {
+      val.value = bokningId;
+      if (val.value !== bokningId) {
+        alert('Det här passet kan inte rapporteras än. Familjen behöver ha bekräftat tiden först.');
+        return;
+      }
+      val.dispatchEvent(new Event('change'));
     }
+    sättRapportTitel(b);
+    rensa($('#r-msg'));
+
+    rapportFokus = document.activeElement;
+    ruta.hidden = false;
+    document.body.style.overflow = 'hidden';
+    void ruta.offsetWidth;
+    ruta.classList.add('open');
+    /* Fokus på första fältet man faktiskt ska fylla i. */
+    const forst = $('#r-gick-val button');
+    if (forst) forst.focus();
+  }
+
+  function stängRapport() {
+    clearTimeout(rapportStängs);
+    const ruta = $('#rapport-overlay');
+    if (!ruta || ruta.hidden) return;
+    ruta.classList.remove('open');
+    ruta.hidden = true;
+    document.body.style.overflow = '';
+    if (rapportFokus && rapportFokus.isConnected && rapportFokus.focus) rapportFokus.focus();
+  }
+
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-rapport-stang]')) { stängRapport(); return; }
+    /* Klick på den mörka bakgrunden, inte i rutan. */
+    if (e.target.id === 'rapport-overlay') stängRapport();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') stängRapport();
   });
 
   $('#r-pass').addEventListener('change', e => {
     const b = S.bokningar.find(x => x.id === e.target.value);
+    sättRapportTitel(b);
     if (!b) return;
     $('#r-datum').value = b.wanted_date;
     sättÄmneFrånPass(b);
@@ -1515,7 +1272,11 @@
     if (!btn) return;
 
     if (btn.dataset.status === 'cancelled') {
-      const ja = await bekräfta({
+      const ja = await bekräfta(btn.dataset.avboj ? {
+        titel: 'Avböj önskemålet?',
+        text: 'Familjen ser att tiden inte passade. Skriv gärna i chatten vilka tider som fungerar.',
+        knapp: 'Avböj'
+      } : {
         titel: 'Avboka passet?',
         text: 'Familjen ser att passet är avbokat. Vill du hellre flytta det, skriv till dem först.',
         knapp: 'Avboka'
@@ -1543,7 +1304,6 @@
       datum: b.wanted_date,
       tid: b.wanted_time,
       tillgang: S.tillgang,
-      blockerade: S.blockerade,
       minuter: b.duration_min || 60,
       upptagna: await NX.hämtaUpptagna(S.user.id)
     });
@@ -1558,7 +1318,7 @@
       }).eq('id', b.id);
 
       if (error) {
-        alert(error.code === '23505'
+        alert(error.code === '23505' || error.code === '23P01'
           ? 'Den tiden hann bli upptagen. Välj en annan.'
           : 'Kunde inte flytta passet: ' + felText(error));
         return;
@@ -1797,6 +1557,11 @@
       await laddaPass();
       fyllPassVal();
       await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaLaxor(), laddaProgress(), laddaUpptagna()]);
+
+      /* Rapporten är sparad och passet genomfört. Rutan står kvar en
+         stund så att beskedet hinner läsas — längre om något gick
+         snett på vägen och står i beskedet. */
+      rapportStängs = setTimeout(stängRapport, varning ? 4500 : 1800);
     });
   });
 
@@ -2248,9 +2013,9 @@
                 + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
           under: [vem, b.subject].filter(Boolean).join(' · ')
         } : {
-          href: '#tider',
+          href: '#lektioner',
           text: 'Inga pass inbokade',
-          under: 'Föreslå en tid till en familj'
+          under: 'Familjen bokar i sin vy — du bekräftar här'
         }
       });
     }
@@ -2258,7 +2023,7 @@
     const host = $('#ov-nasta');
     if (!host) return;
     if (!b) {
-      host.innerHTML = tomt('Inga pass inbokade', 'Föreslå en tid i kalendern, så står nästa pass här.');
+      host.innerHTML = tomt('Inga pass inbokade', 'När familjen bokar en tid står nästa pass här.');
       return;
     }
     host.innerHTML = NXKontakt.passRad(b, {
@@ -2540,11 +2305,16 @@
     if (e.target && e.target.id === 'elev-sok') ritaElevLista();
   });
 
-  document.addEventListener('click', async e => {
+  document.addEventListener('click', e => {
     const kort = e.target.closest('[data-elev]');
-    if (!kort) return;
-    const id = kort.dataset.elev;
-    if (id === S.aktivElev) return;
+    if (kort) väljElev(kort.dataset.elev);
+  });
+
+  /* Byt aktiv elev, och familj om eleven hör till en annan. Används
+     också av rapportrutan: ett pass i schemat kan höra till en annan
+     elev än den som är vald, och rapporten sparas på den aktiva. */
+  async function väljElev(id) {
+    if (!id || id === S.aktivElev) return;
     const vald = S.elever.find(x => x.id === id);
     if (!vald) return;
 
@@ -2562,7 +2332,7 @@
       $('#elev-val').value = id;
     }
     await byggElev();
-  });
+  }
 
   /* ============================================================
      STATISTIK
@@ -2694,12 +2464,21 @@
     const kan = b.status === 'requested' || b.status === 'confirmed';
 
     let knappar = '';
-    if (b.status === 'requested' && !mitt) {
+    /* Ett pass som redan varit flyttas inte — det rapporteras. Och det
+       bekräftas inte heller i efterhand; samma regel som passlistan. */
+    const harVarit = harBörjat(b);
+    if (b.status === 'requested' && !mitt && !harVarit) {
       knappar += '<button type="button" class="btn btn-primary" data-status="confirmed" data-id="' + esc(b.id) + '">Bekräfta</button>';
     }
     if (kan) {
-      knappar += '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Flytta</button>'
-               + '<button type="button" class="btn btn-ghost" data-status="cancelled" data-id="' + esc(b.id) + '">Avboka</button>';
+      const önskemål = b.status === 'requested' && !mitt;
+      if (harVarit && rapporterbart(b)) {
+        knappar += '<button type="button" class="btn btn-primary" data-rapportera="' + esc(b.id) + '">Skriv rapport</button>';
+      } else {
+        knappar += '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Flytta</button>';
+      }
+      knappar += '<button type="button" class="btn btn-ghost" data-status="cancelled" data-id="' + esc(b.id) + '"'
+        + (önskemål ? ' data-avboj="1">Avböj' : '>Avboka') + '</button>';
     }
 
     const kommande = (S.laxor || [])
@@ -2814,8 +2593,8 @@
        svalt det anropet. */
     S.flikar = {
       lektioner: NXArbete.flikar($('section[data-sek="lektioner"]')),
-      /* Kalendern står inte här: sektionen har inga flikar sedan
-         "Mina tider" och "Föreslå en tid" blev samma kalender. */
+      /* Dina tider står inte här: sektionen är en enda kalender,
+         utan flikar. */
       laxor: NXArbete.flikar($('section[data-sek="laxor"]')),
       statistik: NXArbete.flikar($('section[data-sek="statistik"]')),
       profil: NXArbete.flikar($('section[data-sek="profil"]'))
@@ -2901,7 +2680,6 @@
     await Promise.all([ritaÖvSamtal(), laddaErsattning()]);
     /* Stämpla besöket sist — notiserna räknas mot den förra. */
     supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
-    uppdateraFörslag();
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');
    }

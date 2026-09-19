@@ -212,47 +212,48 @@ window.NXStudie = (function () {
 
   /* ============================================================
      FLYTTA ETT PASS
-     Samma ruta som bekräftelsen, men med ett datum och en tid i.
-     Tiderna räknas fram ur studiehjälparens tillgänglighet, precis
-     som i kalendern — man ska inte kunna flytta ett pass till en
-     tid som inte gick att boka från början.
-     ============================================================ */
-  /* ============================================================
-     FLYTTA ETT PASS
 
-     Rutan hade ett datumfält och en rullgardin med tider: man valde
-     ett datum i blindo, läste i listan om något var ledigt, och
-     provade nästa datum om den var tom. Samma leta-själv som
-     bokningen hade innan veckan kom.
+     Samma kalender som bokningen: dagar med lediga tider har en
+     prick, man trycker på en dag och sedan på en tid. Passets egen
+     tid räknas som ledig, så att man kan byta dag och behålla
+     klockan. Bara lediga tider ritas.
 
-     Nu är det veckan, precis som när man bokar. Passets nuvarande
-     tid står kvar som markerad, så man ser vad man flyttar FRÅN.
+     Förut var det ett datumfält och en rullgardin, sedan en veckovy.
+     Leo ville ha en vanlig kalender, och det är den här.
      ============================================================ */
   function flyttaRuta(opts) {
     var o = opts || {};
     return new Promise(function (klar) {
-      var vecka = NXArbete.måndagen(o.datum || isoFor(new Date()));
+      var idag = isoFor(new Date());
+      var månad = NXArbete.månadFör(o.datum && o.datum >= idag ? o.datum : idag);
+      var dag = o.datum && o.datum >= idag ? o.datum : null;
       var valt = null;
 
       var ruta = document.createElement('div');
       ruta.className = 'nx-fraga';
       document.body.appendChild(ruta);
 
-      /* Timmarna en dag, med passets egna timmar räknade som lediga:
-         annars gick det inte att bara byta dag och behålla klockan. */
-      function tider(datum) {
-        var timmar = Math.max(1, Math.ceil((Number(o.minuter) || 60) / 60));
+      /* Lediga tider en dag, med passets egna timmar räknade som
+         lediga — annars gick det inte att bara byta dag, eller att
+         skjuta ett tvåtimmarspass en timme. Alla timmar passet täcker
+         är dess egna, inte bara den första. */
+      var timmar = Math.max(1, Math.ceil((Number(o.minuter) || 60) / 60));
+      var egna = new Set();
+      var start = Number(String(o.tid || '').slice(0, 2));
+      if (o.datum && o.tid && !isNaN(start)) {
+        for (var j = 0; j < timmar; j++) egna.add(o.datum + '|' + String(start + j).padStart(2, '0') + ':00');
+      }
+      function lediga(datum) {
         var upptagna = o.upptagna || new Set();
-        return NX.tiderFörDatum(datum, o.tillgang || [], o.blockerade || [], o.minuter)
-          .map(function (t) {
+        return NX.tiderFörDatum(datum, o.tillgang || [], [], o.minuter)
+          .filter(function (t) {
             var h0 = Number(String(t).slice(0, 2));
-            var krock = false;
             for (var i = 0; i < timmar; i++) {
-              var h = String(h0 + i).padStart(2, '0') + ':00';
-              if (datum === o.datum && h === o.tid) continue;
-              if (upptagna.has(datum + '|' + h)) krock = true;
+              var nyckel = datum + '|' + String(h0 + i).padStart(2, '0') + ':00';
+              if (egna.has(nyckel)) continue;
+              if (upptagna.has(nyckel)) return false;
             }
-            return { tid: t, upptagen: krock };
+            return true;
           });
       }
 
@@ -261,17 +262,33 @@ window.NXStudie = (function () {
         ruta.innerHTML =
           '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="flytt-t">'
           + '<h3 id="flytt-t">Flytta passet</h3>'
-          + '<p>Passet ligger nu <b>' + esc(datumText(o.datum)) + ' kl. ' + esc(o.tid || '') + '</b>. '
-          + 'Välj en ny tid nedan — motparten får bekräfta den.</p>'
-          + NXArbete.veckovy({
-              vecka: vecka,
-              tider: tider,
-              vald: valt || { datum: o.datum, tid: o.tid },
-              veckorFram: 8,
-              hoppTill: null,
-              tomText: 'Inga lediga timmar den här veckan.',
-              upptagenText: 'Upptagen'
+          + '<p>Passet ligger nu <b>' + esc(datumText(o.datum)) + ' kl. ' + esc(String(o.tid || '').slice(0, 5)) + '</b>. '
+          + 'Välj en ny dag och tid — motparten får bekräfta den.</p>'
+          + '<div class="bk-kal nx-flytt-kal">'
+          + '<div class="bk-kal-manad">'
+          + NXArbete.manad({
+              manad: månad,
+              valt: dag,
+              prefix: 'fl',
+              minManad: NXArbete.månadFör(idag),
+              maxManad: NXArbete.plusMånader(NXArbete.månadFör(idag), 2),
+              prickText: 'har lediga tider',
+              dag: function (iso) {
+                var fri = iso >= idag && lediga(iso).length > 0;
+                return { klickbar: fri, prick: fri };
+              }
             })
+          + '</div>'
+          + '<div class="bk-kal-dag">'
+          + NXArbete.tidsrad({
+              datum: dag,
+              tider: dag ? lediga(dag) : [],
+              vald: valt && valt.datum === dag ? valt.tid : (dag === o.datum ? o.tid : null),
+              välj: 'Välj en dag med en prick.',
+              tom: 'Inga lediga tider den dagen.'
+            })
+          + '</div>'
+          + '</div>'
           + '<p class="ok-msg" id="fl-msg"></p>'
           + '<div class="nx-fraga-knappar">'
           + '<button type="button" class="btn btn-ghost" data-flytt="nej">Avbryt</button>'
@@ -283,23 +300,31 @@ window.NXStudie = (function () {
       function stäng(svar) {
         ruta.remove();
         document.body.style.overflow = '';
+        document.removeEventListener('keydown', tangent);
         klar(svar);
       }
+      function tangent(e) { if (e.key === 'Escape' && document.body.contains(ruta)) stäng(null); }
 
       ruta.addEventListener('click', function (e) {
         if (e.target === ruta) return stäng(null);
 
-        var slot = e.target.closest('.bk-slot');
-        if (slot && !slot.disabled) {
-          valt = { datum: slot.dataset.datum, tid: slot.dataset.tid };
+        var tid = e.target.closest('.mv-tid');
+        if (tid && !tid.disabled) {
+          valt = { datum: tid.dataset.datum, tid: tid.dataset.tid };
           rita();
           return;
         }
-        if (e.target.closest('#bk-forr') || e.target.closest('#bk-nasta')) {
-          var steg = e.target.closest('#bk-forr') ? -7 : 7;
-          var ny = NXArbete.plusDagar(vecka, steg);
-          if (ny < NXArbete.måndagen(isoFor(new Date()))) return;
-          vecka = ny;
+        var d = e.target.closest('.mv-dag');
+        if (d && !d.disabled) {
+          dag = d.dataset.datum;
+          if (valt && valt.datum !== dag) valt = null;
+          rita();
+          return;
+        }
+        if (e.target.closest('#fl-forr') || e.target.closest('#fl-nasta')) {
+          var ny = NXArbete.plusMånader(månad, e.target.closest('#fl-forr') ? -1 : 1);
+          if (ny < NXArbete.månadFör(idag)) return;
+          månad = ny;
           rita();
           return;
         }
@@ -315,12 +340,7 @@ window.NXStudie = (function () {
         stäng({ datum: valt.datum, tid: valt.tid });
       });
 
-      document.addEventListener('keydown', function esc3(e) {
-        if (e.key === 'Escape' && document.body.contains(ruta)) {
-          document.removeEventListener('keydown', esc3);
-          stäng(null);
-        }
-      });
+      document.addEventListener('keydown', tangent);
 
       rita();
       document.body.style.overflow = 'hidden';
@@ -377,9 +397,16 @@ window.NXStudie = (function () {
     var sistaFokus = document.activeElement;
     function stäng() {
       if (!document.body.contains(ruta)) return;
+      /* En knapp här kan ha öppnat nästa ruta — avboka-frågan, flytta
+         eller rapporten. Då äger den fokus och scrollspärren, och den
+         släpper dem själv när den stängs. */
+      var annan = Array.prototype.some.call(
+        document.querySelectorAll('.nx-fraga.open'),
+        function (x) { return x !== ruta; });
       ruta.remove();
-      document.body.style.overflow = '';
       document.removeEventListener('keydown', tangent);
+      if (annan) return;
+      document.body.style.overflow = '';
       if (sistaFokus && sistaFokus.focus) sistaFokus.focus();
     }
     function tangent(e) { if (e.key === 'Escape') stäng(); }

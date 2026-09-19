@@ -245,6 +245,7 @@
     if (val && !val.disabled) val.value = S.valtBarn || '';
     ritaBarnväxel();
     laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); laddaMaterial(); laddaBokning();
+    laddaSyskonMaterial();
   }
 
   $('#barn-val').addEventListener('change', e => bytBarn(e.target.value));
@@ -502,13 +503,18 @@
      först när någon klickar och slutar gälla av sig själv.
      ============================================================ */
 
-  function laddaMaterial() {
-    return M.laddaMaterial(S, {
+  async function laddaMaterial() {
+    await M.laddaMaterial(S, {
       elev: S.valtBarn,
       tomElev: ['Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.'],
       tomLista: ['Inget material än', 'Här samlas övningar, länkar och anteckningar som er studiehjälpare delar.'],
       filnamn: true
     });
+    /* Märkena räknas ur S.material, som nu hör till det valda barnet.
+       Står man redan och tittar på listan är det nya sett. */
+    if (materialSynligt()) sågMaterial();
+    ritaÖvLaxor();
+    ritaNotiser();
   }
 
   document.addEventListener('click', async e => {
@@ -707,7 +713,7 @@
   async function laddaPass() {
     const host = $('#pass-lista');
     const { data, error } = await supa
-      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, status, student_id, created_by')
+      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, status, student_id, created_by')
       .eq('parent_id', S.user.id).order('wanted_date', { ascending: true });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
@@ -738,8 +744,8 @@
 
       let knappar = '';
       if (derasFörslag && b.status === 'requested') {
-        knappar = '<button class="btn btn-primary btn-sm" data-svar="confirmed" data-id="' + b.id + '">Passar bra</button>'
-                + '<button class="btn btn-ghost btn-sm" data-svar="cancelled" data-id="' + b.id + '">Avböj</button>';
+        knappar = '<button class="btn btn-primary btn-sm" data-passvar="confirmed" data-id="' + b.id + '">Passar bra</button>'
+                + '<button class="btn btn-ghost btn-sm" data-passvar="cancelled" data-id="' + b.id + '">Avböj</button>';
       } else if (kommande) {
         knappar = '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>'
                 + '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
@@ -758,10 +764,23 @@
   }
 
   document.addEventListener('click', async e => {
-    const svar = e.target.closest('[data-svar]');
+    /* data-passvar, inte data-svar: data-svar är bekräfta-rutans egna
+       knappar (NXStudie.bekräfta). Med samma namn tolkades varje klick
+       i en bekräfta-ruta här i studievyn — "Ta bort" på ett barn, till
+       exempel — som ett svar på ett pass, och det slutade med
+       "Kunde inte svara". */
+    const svar = e.target.closest('[data-passvar]');
     if (svar) {
+      if (svar.dataset.passvar === 'cancelled') {
+        const nej = await NXStudie.bekräfta({
+          titel: 'Avböj tiden?',
+          text: 'Er studiehjälpare ser att tiden inte passade. Skriv gärna i chatten vilka tider som fungerar.',
+          knapp: 'Avböj'
+        });
+        if (!nej) return;
+      }
       svar.setAttribute('aria-busy', 'true');
-      const { error } = await supa.from('bookings').update({ status: svar.dataset.svar }).eq('id', svar.dataset.id);
+      const { error } = await supa.from('bookings').update({ status: svar.dataset.passvar }).eq('id', svar.dataset.id);
       svar.removeAttribute('aria-busy');
       if (error) { alert('Kunde inte svara: ' + felText(error)); return; }
       await laddaPass();
@@ -771,7 +790,17 @@
 
     const btn = e.target.closest('[data-avboka]');
     if (!btn) return;
-    if (!confirm('Avboka det här passet?')) return;
+    /* Samma ruta som studiehjälparen och admin får, inte webbläsarens
+       confirm(). confirm() svarar nej utan att visa något i en del
+       miljöer — inbyggda webbläsare i appar, och efter att man en gång
+       bockat i "låt inte sidan visa fler dialoger" — och då hände
+       ingenting alls när man tryckte på Avboka. */
+    const ja = await NXStudie.bekräfta({
+      titel: 'Avboka passet?',
+      text: 'Er studiehjälpare ser att passet är avbokat. Vill ni hellre byta tid, välj Flytta i stället.',
+      knapp: 'Avboka'
+    });
+    if (!ja) return;
     btn.setAttribute('aria-busy', 'true');
     const { error } = await supa.from('bookings').update({ status: 'cancelled' }).eq('id', btn.dataset.avboka);
     btn.removeAttribute('aria-busy');
@@ -829,6 +858,13 @@
         mål: '#mat-lista'
       });
     }
+    (S.syskonMaterial || []).forEach(x => {
+      poster.push({
+        rubrik: (x.antal > 1 ? x.antal + ' nya material' : 'Nytt material') + ' till ' + x.barn.name,
+        text: 'Byt till ' + x.barn.name + ' i barnväljaren för att se det.',
+        mål: 'section[data-sek="uppgifter"] [data-barnvaxel] select'
+      });
+    });
 
     const idag = isoFor(new Date());
     const brådskande = (S.laxor || []).filter(h => h.status !== 'klar' && h.due_date && h.due_date <= idag);
@@ -858,7 +894,7 @@
 
     const ny = await NXStudie.flyttaRuta({
       datum: b.wanted_date, tid: b.wanted_time,
-      tillgang: tider.tillgang, blockerade: tider.blockerade, upptagna,
+      tillgang: tider.tillgang, upptagna,
       minuter: b.duration_min || 60
     });
     if (!ny) return;
@@ -869,7 +905,7 @@
         status: 'requested', created_by: S.user.id
       }).eq('id', b.id);
       if (error) {
-        alert(error.code === '23505'
+        alert(error.code === '23505' || error.code === '23P01'
           ? 'Den tiden hann bli upptagen. Välj en annan.'
           : 'Kunde inte flytta passet: ' + felText(error));
         return;
@@ -913,25 +949,27 @@
         NX.hämtaUpptagna(S.profil.matched_tutor_id),
         NX.hämtaTillganglighet(S.profil.matched_tutor_id)
       ]);
-      if (!(tider.tillgang || []).length) {
-        return { spärr: '<div class="empty"><b>Er studiehjälpare har inga tider inlagda än</b>'
-          + '<br><span>Familjen kan bara boka inom de tider hen lagt in. Fråga när hen kan, '
-          + 'så dyker tiderna upp här.</span>'
-          + '<div class="vy-tomt-atg"><a class="btn btn-ghost btn-sm" href="#meddelanden">'
-          + 'Fråga i chatten</a></div></div>' };
-      }
       return {
         tillgang: tider.tillgang,
-        blockerade: tider.blockerade,
         upptagna,
+        /* Inga tider inlagda: då finns ingen kalender, men en önskad
+           tid går fortfarande att skicka — studiehjälparen svarar. */
+        utanTider: '<div class="empty"><b>Er studiehjälpare har inga tider inlagda än</b>'
+          + '<br><span>Önska en tid här nedanför, så bekräftar hen den eller svarar att den inte går. '
+          + 'Ni kan också fråga i chatten när hen kan.</span>'
+          + '<div class="vy-tomt-atg"><a class="btn btn-ghost btn-sm" href="#meddelanden">'
+          + 'Fråga i chatten</a></div></div>',
         /* Familjens vana: tidigare pass gör att "brukar passa"
            kan markeras på rätt tider. */
         tidigare: (S.bokningar || []).filter(b => b.status !== 'cancelled')
       };
     },
 
+    /* Svarar med databasens status: en tid helt inom studiehjälparens
+       schema bekräftas av bekrafta_inom_schemat (Fas 4.4), allt annat
+       är en förfrågan. Ytan säger vilket det blev. */
     boka: async v => {
-      const { error } = await supa.from('bookings').insert({
+      const { data, error } = await supa.from('bookings').insert({
         parent_id: S.user.id,
         tutor_id: S.profil.matched_tutor_id,
         student_id: S.valtBarn,
@@ -950,8 +988,10 @@
         wanted_date: v.datum,
         wanted_time: v.tid,
         duration_min: v.minuter,
+        /* Meddelandet som följer med ett önskemål om en annan tid. */
+        note: v.not || null,
         status: 'requested'
-      });
+      }).select('status').single();
       if (error) {
         /* 23505 = samma starttid, 23P01 = passet krockar med ett
            annat som redan pågår. Samma sak för den som bokar. */
@@ -961,7 +1001,7 @@
         return 'Kunde inte boka: ' + felText(error);
       }
       await laddaPass();
-      return null;
+      return { status: data ? data.status : null };
     }
   });
 
@@ -1043,28 +1083,72 @@
     if (matMark) { matMark.hidden = !nya; matMark.textContent = nya || ''; }
   }
 
-  /* Material som kommit sedan förra besöket. last_seen_at stämplas
-     sist i start(), så värdet i S.profil är förra gången — precis den
-     gräns som avgör vad som är nytt. Utan den gränsen (första besöket)
-     räknas inget som nytt: att allt lyser vid första inloggningen
-     säger ingenting.
+  /* Nytt material: det som kommit sedan familjen senast TITTADE på
+     barnets material — inte sedan senaste inloggningen. last_seen_at
+     stämplas vid varje sidladdning, så med den som gräns lyste
+     notisen en gång och försvann sedan, oavsett om någon öppnat
+     materialet.
 
-     När man öppnar Material-fliken är det sett, även om stämpeln i
-     databasen skrivs först nästa gång sidan laddas. */
-  function nyttMaterial() {
-    if (S.materialSett) return [];
-    const sedan = S.profil && S.profil.last_seen_at;
-    if (!sedan) return [];
-    return (S.material || []).filter(m => m.created_at && m.created_at > sedan);
+     Gränsen sparas per barn i webbläsaren. Första gången (ingen
+     sparad gräns) blir den förra besöket, last_seen_at, som står kvar
+     i S.profil tills sidan laddas om — och sparas direkt, så att
+     den håller över nästa omladdning. Går det inte att spara (privat
+     läge) faller den tillbaka på last_seen_at och sett-markeringen
+     i minnet. Utan någon gräns alls (första besöket) är inget nytt:
+     att allt lyser vid första inloggningen säger ingenting. */
+  const MAT_NYCKEL = 'nx.material-sett.';
+
+  function materialGräns(barnId) {
+    const förra = (S.profil && S.profil.last_seen_at) || null;
+    try {
+      let v = localStorage.getItem(MAT_NYCKEL + barnId);
+      if (!v && förra) { v = förra; localStorage.setItem(MAT_NYCKEL + barnId, v); }
+      return v || null;
+    } catch (e) {
+      return förra;
+    }
   }
 
-  document.addEventListener('click', e => {
-    if (!e.target.closest('#flik-material')) return;
-    if (!nyttMaterial().length) return;
-    S.materialSett = true;
-    ritaÖvLaxor();
+  function ärNytt(m, gräns) {
+    return !!(m.created_at && gräns && Date.parse(m.created_at) > Date.parse(gräns));
+  }
+
+  function nyttMaterial() {
+    if (!S.valtBarn) return [];
+    if (S.materialSett && S.materialSett.has(S.valtBarn)) return [];
+    const gräns = materialGräns(S.valtBarn);
+    return (S.material || []).filter(m => ärNytt(m, gräns));
+  }
+
+  /* Sett per barn: att ha tittat på det ena barnets material säger
+     inget om det andras. */
+  function materialSynligt() {
+    const p = $('section[data-sek="uppgifter"] .vy-flik-panel[data-flik="material"]');
+    return !!p && !p.hidden && !p.closest('[hidden]');
+  }
+  function sågMaterial() {
+    if (!S.valtBarn || !nyttMaterial().length) return false;
+    (S.materialSett = S.materialSett || new Set()).add(S.valtBarn);
+    try { localStorage.setItem(MAT_NYCKEL + S.valtBarn, new Date().toISOString()); } catch (e) { /* bara i minnet */ }
+    return true;
+  }
+
+  /* Syskonen: materialet hämtas bara för det valda barnet, så nytt
+     till ett annat barn syntes aldrig. En liten fråga — bara id,
+     barn och tid — räcker för att säga "nytt material till Alva". */
+  async function laddaSyskonMaterial() {
+    const andra = (S.barn || []).filter(b => b.id !== S.valtBarn);
+    const gränser = andra.map(b => ({ barn: b, gräns: materialGräns(b.id) })).filter(g => g.gräns);
+    if (!gränser.length) { S.syskonMaterial = []; return; }
+    const tidigast = gränser.map(g => g.gräns).sort()[0];
+    const { data, error } = await supa.from('materials').select('student_id, created_at')
+      .in('student_id', gränser.map(g => g.barn.id)).gt('created_at', tidigast);
+    if (error) return;
+    S.syskonMaterial = gränser
+      .map(g => ({ barn: g.barn, antal: (data || []).filter(m => m.student_id === g.barn.id && ärNytt(m, g.gräns)).length }))
+      .filter(x => x.antal);
     ritaNotiser();
-  });
+  }
 
   /* Olästa meddelanden: siffra i sidomenyn och undertext på
      hälsningens chattkort. Själva tråden ligger i Meddelanden — det
@@ -1293,8 +1377,8 @@
 
     let knappar = '';
     if (derasFörslag && b.status === 'requested') {
-      knappar = '<button type="button" class="btn btn-primary" data-svar="confirmed" data-id="' + esc(b.id) + '">Passar bra</button>'
-              + '<button type="button" class="btn btn-ghost" data-svar="cancelled" data-id="' + esc(b.id) + '">Avböj</button>';
+      knappar = '<button type="button" class="btn btn-primary" data-passvar="confirmed" data-id="' + esc(b.id) + '">Passar bra</button>'
+              + '<button type="button" class="btn btn-ghost" data-passvar="cancelled" data-id="' + esc(b.id) + '">Avböj</button>';
     } else if (kommande) {
       knappar = '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Flytta</button>'
               + '<button type="button" class="btn btn-ghost" data-avboka="' + esc(b.id) + '">Avboka</button>';
@@ -1375,7 +1459,11 @@
        och en flikrad som inte finns än hade svalt det anropet. */
     S.flikar = {
       lektioner: NXArbete.flikar($('section[data-sek="lektioner"]')),
-      uppgifter: NXArbete.flikar($('section[data-sek="uppgifter"]')),
+      /* Fliken räknas som öppnad hur man än kom dit: klick, pil-
+         tangent, notisen i klockan eller en länk med #material. */
+      uppgifter: NXArbete.flikar($('section[data-sek="uppgifter"]'), {
+        onByt: v => { if (v === 'material' && sågMaterial()) { ritaÖvLaxor(); ritaNotiser(); } }
+      }),
       profil: NXArbete.flikar($('section[data-sek="profil"]'))
     };
 
@@ -1454,7 +1542,7 @@
        när båda finns — annars räknades nytt material innan det kommit. */
     ritaÖvLaxor();
     ritaNotiser();
-    await Promise.all([ritaÖvSamtal(), laddaBetalning()]);
+    await Promise.all([ritaÖvSamtal(), laddaBetalning(), laddaSyskonMaterial()]);
     supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');

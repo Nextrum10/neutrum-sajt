@@ -330,6 +330,9 @@ window.NXMedia = (function () {
     var tomt = NXStudie.tomt;
     var host = NX.$('#mat-lista');
     NX.$('#mat-antal').textContent = '';
+    /* Töms först: annars låg förra elevens lista kvar i S.material
+       när den nya var tom eller inte gick att hämta. */
+    S.material = [];
     if (!o.elev) { host.innerHTML = tomt(o.tomElev[0], o.tomElev[1]); return; }
 
     host.innerHTML = NXStudie.laddar();

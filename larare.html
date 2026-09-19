@@ -242,9 +242,14 @@
         <div class="split">
           <div class="stack">
 
+            <!-- ============ SCHEMA ============
+                 Låg under Lektioner → Pass & rapport, och här stod
+                 "Nästa pass" — som redan står i hälsningen ovanför.
+                 Schemat är det man faktiskt vill se när man öppnar
+                 vyn: vad som är bokat den här veckan och nästa. -->
             <div class="dbox">
-              <h5>Nästa pass</h5>
-              <div id="ov-nasta"><div class="loading">Hämtar</div></div>
+              <h5>Schema <em>alla dina pass</em></h5>
+              <div id="schema"><div class="loading">Hämtar</div></div>
               <a class="vy-mer" href="#lektioner">Visa alla pass
                 <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
             </div>
@@ -263,14 +268,6 @@
               <div id="ov-samtal"><div class="loading">Hämtar</div></div>
               <a class="vy-mer" href="#meddelanden">Visa alla meddelanden
                 <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
-            </div>
-
-            <div class="dbox">
-              <h5>Boka</h5>
-              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
-                Föreslå en tid till familjen. De svarar med ett klick.
-              </p>
-              <a class="btn btn-primary btn-sm btn-block" href="#tider">Föreslå en tid</a>
             </div>
 
           </div>
@@ -303,27 +300,27 @@
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="pass"
              id="panel-pass" aria-labelledby="flik-pass">
-                    <!-- ============ SCHEMA ============
-                         Låg under Kalender, som nu heter Dina tider
-                         och handlar om när du kan arbeta. Schemat
-                         handlar om vad som faktiskt är bokat, alltså
-                         hör det hemma bland passen. -->
-                    <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-                      <h5>Schema <em>alla dina pass</em></h5>
-                      <div id="schema"><div class="loading">Hämtar</div></div>
-                    </div>
-
                     <!-- ============ PASS ============ -->
                     <div class="dbox">
                       <h5>Dina pass <em id="pass-antal"></em></h5>
                       <div id="pass-lista"><div class="loading">Hämtar</div></div>
                     </div>
 
-                    <!-- ============ RAPPORT ============
-                         Rutan har ett id nu, så att "Skriv rapport"
-                         på en passrad kan ta en hit. -->
-                    <div class="dbox" id="rapport-ruta">
-                      <h5>Efter passet</h5>
+                    <!-- ============ RAPPORTEN ============
+                         Låg förut som en stor ruta under passen, alltid
+                         utfälld, med en rullgardin för att välja pass.
+                         Nu öppnas den från "Skriv rapport" på ett pass
+                         som varit, med passet redan valt. Utan rapport
+                         blir passet aldrig genomfört — det är rapporten
+                         som gör passet till en arbetad timme. -->
+                    <div class="nx-fraga rp-overlay" id="rapport-overlay" hidden>
+                    <div class="nx-fraga-box nx-fraga-bred rp-box" id="rapport-ruta" role="dialog"
+                         aria-modal="true" aria-labelledby="rp-titel">
+                      <div class="rp-huvud">
+                        <h3 id="rp-titel">Rapport för passet</h3>
+                        <button type="button" class="rp-stang" data-rapport-stang aria-label="Stäng">
+                          <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
+                      </div>
                       <p class="xsmall" style="color:var(--bl-2);margin-bottom:18px;line-height:1.6">
                         Rapporten är det familjen läser. Väljer du ett pass markeras det samtidigt som
                         genomfört — och det är först då timmarna räknas och passet kan faktureras.
@@ -442,6 +439,7 @@
                         <p class="ok-msg" id="r-msg"></p>
                       </form>
                     </div>
+                    </div>
           </div>
           <div class="stack">
 
@@ -556,101 +554,42 @@
       </section>
 
       <!-- ============================================================
-           KALENDER
-
-           Tiderna låg förut i ett <details> INNE i rutan "Föreslå en
-           tid", och lades in en i taget genom tre rullgardiner. Det
-           blev sedan ett veckorutnät i en egen flik, "Mina tider",
-           bredvid fliken där man föreslog en tid.
-
-           Rutnätet var snabbt men det var fortfarande två ytor för
-           en sak. Man fyllde i en vecka i ett abstrakt rutnät utan
-           datum, bytte flik, och valde sedan en dag i en kalender
-           som bara visade det rutnätet råkat släppa igenom. Var
-           kalendern tom fick man gå tillbaka och gissa varför.
-
-           Nu finns en kalender. Du öppnar en dag och ser dygnets
-           timmar. En timme du redan kan väljs till förslaget; en du
-           inte markerat läggs till i dina tider när du trycker på
-           den, och familjen kan boka den från samma stund. Att
-           markera när du kan och att föreslå en tid är samma rörelse
-           mot samma ruta.
-           ============================================================ -->
-      <!-- ============================================================
            DINA TIDER
 
-           Hette Kalender och gjorde tre saker i en sektion: visade
-           alla dina pass, lät dig markera när du kan, och lät dig
-           föreslå en tid till en familj. Tre uppgifter i samma ruta
-           blir ingen av dem.
+           Sektionen handlar om EN sak: när du kan arbeta. Det är den
+           enda uppgiften här som familjerna är beroende av — tiderna
+           är de familjen kan boka direkt, och en bokning helt inom
+           dem bekräftas av databasen (bekrafta_inom_schemat).
 
-           Sektionen handlar nu om EN sak: när du kan arbeta. Det är
-           den enda uppgiften här som familjerna är beroende av —
-           utan dina tider kan ingen boka något alls.
+           Förut: tre rullgardiner, sedan ett veckorutnät, sedan en
+           kalender med undantagsdagar och en ruta för att föreslå en
+           tid till familjen. Undantagen och förslaget togs bort på
+           Leos begäran 2026-09-18 — tider stäms av i chatten, och en
+           familj som vill ha en annan tid önskar den i sin bokning.
 
-           Förslaget till en familj ligger kvar, som en andra ruta
-           under, eftersom det använder samma kalender: man väljer en
-           timme i rutan ovanför och skickar den nedanför.
-
-           Schemat över dina pass har flyttat till Lektioner & elever,
-           där passen hör hemma.
+           Schemat över dina pass ligger på Översikt.
            ============================================================ -->
       <section class="vy-sek" data-sek="tider" hidden>
         <div class="vy-sek-topp">
           <div>
             <h2>Dina tider</h2>
-            <p>Markera när du kan jobba. Familjerna kan bara boka inom de timmarna — har du inga inlagda kan ingen boka dig.</p>
+            <p>Markera när du kan jobba. Familjen kan boka de tiderna direkt. Andra tider kan de önska — då bekräftar eller avböjer du i passlistan.</p>
           </div>
         </div>
 
-        <!-- ============ VECKOSCHEMAT ============
-             tutor_availability är veckovis: en rad säger "tisdagar
-             17–21". Förut redigerades den i en månadskalender, vilket
-             betydde att man ändrade varje tisdag hela terminen genom
-             att trycka på en enda dag. Rutnätet visar det som sparas. -->
+        <!-- ============ KALENDERN ============
+             En vanlig kalender, på Leos begäran 2026-09-18. Tryck på
+             en dag, tryck på timmarna du kan. Tiderna är veckovisa:
+             en timme på en torsdag gäller varje torsdag, och det står
+             ovanför timmarna. Veckorutnätet, undantagsdagarna och
+             förslagsrutan som låg här är borta. -->
         <div class="dbox">
-          <h5>När kan du? <em>tryck på en ruta</em></h5>
-          <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
-            Rutorna gäller <b>varje vecka</b>. En markerad timme blir bokningsbar direkt —
-            du behöver inte spara.
-          </p>
-          <div id="veckoschema"><div class="loading">Hämtar</div></div>
+          <h5>När kan du? <em>tryck på en dag</em></h5>
+          <div class="bk-kal">
+            <div class="bk-kal-manad" id="tid-kalender"><div class="loading">Hämtar</div></div>
+            <div class="bk-kal-dag" id="tid-dag"></div>
+          </div>
           <p class="vs-sam" id="tid-sammanfattning"></p>
-        </div>
-
-        <!-- ============ UNDANTAGEN ============
-             Veckoschemat säger vad som gäller i vanliga fall. Det här
-             är provveckan, sportlovet eller en kväll man är bortrest. -->
-        <div class="dbox">
-          <h5>Dagar du inte kan <em>enstaka undantag</em></h5>
-          <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
-            Veckotiderna ligger kvar. Ett undantag tar bort en enskild dag, eller en timme
-            den dagen, ur det familjerna kan boka.
-          </p>
-          <div class="vs-sparr-form">
-            <input class="inp" type="date" id="sp-datum" aria-label="Datum du inte kan">
-            <select class="sel" id="sp-tid" aria-label="Hela dagen eller en timme">
-              <option value="">Hela dagen</option>
-              <option value="07:00">kl. 07</option><option value="08:00">kl. 08</option><option value="09:00">kl. 09</option><option value="10:00">kl. 10</option><option value="11:00">kl. 11</option><option value="12:00">kl. 12</option><option value="13:00">kl. 13</option><option value="14:00">kl. 14</option><option value="15:00">kl. 15</option><option value="16:00">kl. 16</option><option value="17:00">kl. 17</option><option value="18:00">kl. 18</option><option value="19:00">kl. 19</option><option value="20:00">kl. 20</option><option value="21:00">kl. 21</option>
-            </select>
-            <button class="btn btn-ghost btn-sm" type="button" id="sp-lagg">Lägg till</button>
-          </div>
-          <p class="ok-msg" id="sp-msg"></p>
-          <div id="sparr-lista"></div>
-        </div>
-
-        <!-- ============ FÖRESLÅ TIDEN ============
-             Samma veckovy som familjen ser när de bokar. Att hitta en
-             ledig timme är en sökning med ett exakt svar, och båda
-             parter ska se samma svar. -->
-        <div class="dbox">
-          <h5>Föreslå en tid till en familj <em id="forslag-till"></em></h5>
-          <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:18px">
-            Välj en ledig timme i veckan nedan och skicka. Familjen svarar med ett klick.
-            Timmar du redan har ett pass på går inte att välja.
-          </p>
-          <div id="forslag-panel"><div class="loading">Hämtar</div></div>
-          <p class="ok-msg" id="forslag-msg"></p>
         </div>
       </section>
 

@@ -447,6 +447,9 @@
 .nx-fraga{
   position:fixed;inset:0;z-index:900;
   display:grid;place-items:center;padding:24px;
+  /* En hög ruta (flyttkalendern, ett pass med läxor) får rulla i
+     stället för att knapparna hamnar under skärmkanten. */
+  overflow-y:auto;overscroll-behavior:contain;
   background:color-mix(in srgb,var(--bl) 46%,transparent);
   backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   opacity:0;transition:opacity .22s var(--e);
@@ -456,17 +459,15 @@
   background:var(--pap);border:1px solid var(--ln);
   border-radius:20px;box-shadow:var(--sk-3);
   padding:clamp(24px,3vw,34px);max-width:420px;width:100%;
+  margin:auto;
   transform:translateY(8px) scale(.98);
   transition:transform .26s var(--e);
 }
 .nx-fraga.open .nx-fraga-box{transform:none}
 
-/* Flytta-rutan visar en hel vecka, inte ett datumfält. Sju kolumner
-   får inte plats på 420 px, och en vecka man måste scrolla i sidled
-   är samma letande som rutan skulle bli av med. */
-.nx-fraga-bred{max-width:680px}
-.nx-fraga-bred .bk-vecka{margin-top:18px}
-.nx-fraga-bred .bk-dag-tider{gap:4px}
+/* Flytta-rutan: kalendern med dagens tider bredvid. Bredden för
+   .nx-fraga-bred sätts i nextrum-arbetsyta.css. */
+.nx-flytt-kal{margin-top:16px}
 .nx-fraga-box h3{
   font-size:1.2rem;font-weight:700;letter-spacing:-.03em;
   margin-bottom:10px;
