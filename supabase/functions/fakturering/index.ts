@@ -8,7 +8,13 @@
 //   · ett underlag per studiehjälpare (vad de ska få)
 //
 // Samma pass, två sidor. Priset familjen betalar kommer från
-// tjanster, ersättningen från tutor_profiles.hourly_rate.
+// tjanster, ersättningen från tutor_profiles.hourly_rate (annars
+// tjanster.ersattning_per_timme_ore). Själva räkningen ligger i
+// _delad/pris.ts, där den är testad öre för öre (pris_test.ts).
+//
+// RUT (Fas 5.3): dras bara av för RUT-berättigade tjänster, när kunden
+// har skatteuppgifter och admin fyllt i årets tak i rut_tak. För
+// läxhjälp är avdraget alltid 0 och svaret ser ut precis som förut.
 //
 // SÄKERHET
 // Den här funktionen använder service_role, för invoices och payouts
@@ -48,7 +54,11 @@
 
 import { cors, json as jsonMed, preflight } from '../_delad/http.ts';
 import { kravAdmin, lika, serviceklient } from '../_delad/auth.ts';
-import { BETALNINGSVILLKOR_DAGAR, MANADER } from '../_delad/konstanter.ts';
+import { BETALNINGSVILLKOR_DAGAR } from '../_delad/konstanter.ts';
+import {
+  byggUnderlag, minuterSum, type Pass, type RutLage, sammanfatta, sorteraPass,
+  standardTjanst, summa, summaRut, type Tjanst,
+} from '../_delad/pris.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -112,30 +122,6 @@ async function allaRader<T>(
   }
 }
 
-// Ören, aldrig flyttal. Math.round sist så att 90 minuter à 379 kr
-// blir 56850 och inte 56849.999999.
-function belopp(minuter: number, timprisOre: number): number {
-  return Math.round((minuter / 60) * timprisOre);
-}
-
-// Tillägget för flera barn är EN summa per timme, inte en per barn:
-// två syskon och tre syskon kostar lika mycket extra. Regeln och
-// beloppet står i tjanster (schema-v20), inte här.
-function familjebelopp(
-  minuter: number,
-  timprisOre: number,
-  extraOre: number,
-  antalBarn: number,
-): number {
-  const tim = timprisOre + (antalBarn > 1 ? extraOre : 0);
-  return Math.round((minuter / 60) * tim);
-}
-
-function radtext(subject: string | null, datum: string): string {
-  const [, m, d] = datum.split('-');
-  return `${subject || 'Pass'} ${Number(d)} ${MANADER[Number(m) - 1]}`;
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight(CORS);
 
@@ -174,8 +160,10 @@ Deno.serve(async (req) => {
     // ---------- priserna ----------
     const [pris, tjanster] = await Promise.all([
       db.from('prissattning').select('pris_per_timme_ore').maybeSingle(),
-      db.from('tjanster').select('kod, pris_per_timme_ore, extra_personer_ore'),
+      db.from('tjanster').select('kod, aktiv, for_kund, ordning, pris_per_timme_ore, extra_personer_ore, '
+        + 'ersattning_per_timme_ore, rut_berattigad, rut_procent'),
     ]);
+    const katalog = (tjanster.data ?? []) as unknown as Tjanst[];
 
     // Priset tas i första hand ur `tjanster`, som är källan sedan
     // schema-v18. prissattning är reserv.
@@ -188,40 +176,26 @@ Deno.serve(async (req) => {
     // nyckeln, läser klienten som anon och prissattning blir tom.
     // Funktionen avbröt då med "Priset i prissattning är 0", vilket
     // pekade på fel sak: priset fanns, men nyckeln räckte inte.
-    const laxhjalp = (tjanster.data ?? []).find((t) => t.kod === 'laxhjalp');
-    const timprisOre = Number(laxhjalp?.pris_per_timme_ore ?? 0)
+    //
+    // Standardtjänsten (den första aktiva som kunder kan köpa, i dag
+    // läxhjälp) ger baspriset — inte en inskriven tjänstekod (Fas 5.4).
+    const standard = standardTjanst(katalog);
+    const timprisOre = Number(standard?.pris_per_timme_ore ?? 0)
       || Number(pris.data?.pris_per_timme_ore ?? 0);
 
     if (!timprisOre) {
       return json({
-        error: 'Hittar inget timpris. Varken tjanster.laxhjalp eller prissattning gick att läsa.',
+        error: 'Hittar inget timpris. Varken standardtjänsten i tjanster eller prissattning gick att läsa.',
         trolig_orsak: 'SUPABASE_SERVICE_ROLE_KEY på funktionen är sannolikt inte en '
           + 'service_role-nyckel. Utan den läser funktionen som anon, och kan då '
           + 'varken läsa priset eller skriva fakturor.',
       }, 500);
     }
 
-    type TjanstPris = { timme: number; extra: number };
-    const prisFor = new Map<string, TjanstPris>();
-    for (const t of tjanster.data ?? []) {
-      prisFor.set(t.kod, {
-        timme: Number(t.pris_per_timme_ore ?? 0),
-        extra: Number(t.extra_personer_ore ?? 0),
-      });
-    }
-    const tjanstPris = (kod: string | null): TjanstPris =>
-      prisFor.get(kod ?? 'laxhjalp') ?? { timme: timprisOre, extra: 0 };
-
     // ---------- passen som inte tagits med ----------
     // Vyn passunderlag svarar för varje genomfört pass om det har en
     // rapport, är undantaget, redan fakturerat eller redan med på ett
     // underlag. Bara pass till och med periodens sista dag.
-    type Pass = {
-      id: string; subject: string | null; tjanst: string | null; wanted_date: string;
-      duration_min: number | null; parent_id: string | null; tutor_id: string | null;
-      antal_barn: number | null; rabatt_ore: number | null;
-      fakturerbar: boolean; har_rapport: boolean; fakturerad: boolean; pa_underlag: boolean;
-    };
     let allaPass: Pass[];
     try {
       allaPass = await allaRader<Pass>((fran, till) => db.from('passunderlag')
@@ -237,17 +211,7 @@ Deno.serve(async (req) => {
 
     // Två sorters pass som INTE går vidare, och som ska synas i svaret
     // i stället för att försvinna tyst.
-    const utanRapport: { booking_id: string; datum: string; parent_id: string | null; tutor_id: string | null }[] = [];
-    const undantagna: string[] = [];
-    const pass: Pass[] = [];
-    for (const b of allaPass) {
-      if (!b.fakturerbar) { undantagna.push(b.id); continue; }
-      if (!b.har_rapport) {
-        utanRapport.push({ booking_id: b.id, datum: b.wanted_date, parent_id: b.parent_id, tutor_id: b.tutor_id });
-        continue;
-      }
-      pass.push(b);
-    }
+    const { pass, utanRapport, undantagna } = sorteraPass(allaPass);
 
     // ---------- timpenningarna ----------
     const tutorIdn = [...new Set(pass.filter((b) => !b.pa_underlag).map((b) => b.tutor_id).filter(Boolean))];
@@ -259,74 +223,37 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ---------- gruppera ----------
-    type Rad = { booking_id: string; beskrivning: string; minuter: number; belopp_ore: number; timpris_ore: number };
-    const perFamilj = new Map<string, Rad[]>();
-    const perTutor = new Map<string, Rad[]>();
-    const utanTimpenning: string[] = [];
-
-    for (const b of pass) {
-      const minuter = Number(b.duration_min || 60);
-      const text = radtext(b.subject, b.wanted_date);
-
-      if (b.parent_id && !b.fakturerad) {
-        const p = tjanstPris(b.tjanst);
-        const barn = Math.max(1, Number(b.antal_barn || 1));
-        const brutto = familjebelopp(minuter, p.timme || timprisOre, p.extra, barn);
-
-        // Rabatten är framräknad och fryst vid bokningen. Den räknas
-        // ALDRIG om här — annars ändrar sig ett gammalt pass pris den
-        // dag någon justerar koden.
-        const rabatt = Math.min(Math.max(Number(b.rabatt_ore || 0), 0), brutto);
-
-        const lista = perFamilj.get(b.parent_id) ?? [];
-        lista.push({
-          booking_id: b.id,
-          beskrivning: text
-            + (barn > 1 ? ` (${barn} barn)` : '')
-            + (rabatt > 0 ? ' − rabatt' : ''),
-          minuter,
-          belopp_ore: brutto - rabatt,
-          // Radens eget timpris — tjänstens, med tillägget för flera
-          // barn när det gäller. Förut stod läxhjälpens pris på varje
-          // rad, oavsett vad raden faktiskt kostade.
-          timpris_ore: (p.timme || timprisOre) + (barn > 1 ? p.extra : 0),
-        });
-        perFamilj.set(b.parent_id, lista);
-      }
-
-      if (b.tutor_id && !b.pa_underlag) {
-        const timpenning = timpenningar.get(b.tutor_id);
-        // Utan timpenning kan vi inte räkna ut ersättningen, och att
-        // gissa vore värre än att låta passet ligga kvar till nästa
-        // körning. Det rapporteras i svaret så att någon kan fylla i den.
-        //
-        // Studiehjälparens ersättning påverkas ALDRIG av familjens
-        // rabatt, och räknar inte heller med tillägget för flera barn.
-        // En kampanj är vår kostnad, inte hens; och tillägget är vad
-        // familjen betalar för att två syskon sitter med, inte en
-        // löneförhöjning.
-        if (!timpenning) { utanTimpenning.push(b.tutor_id); continue; }
-        const lista = perTutor.get(b.tutor_id) ?? [];
-        lista.push({ booking_id: b.id, beskrivning: text, minuter, belopp_ore: belopp(minuter, timpenning), timpris_ore: timpenning });
-        perTutor.set(b.tutor_id, lista);
-      }
+    // ---------- RUT ----------
+    // Hämtas bara när något pass gäller en RUT-berättigad tjänst. För
+    // läxhjälp ställs inga av de här frågorna.
+    const rutKoder = new Set(katalog.filter((t) => t.rut_berattigad).map((t) => t.kod));
+    const rutKunder = [...new Set(pass
+      .filter((b) => b.parent_id && !b.fakturerad && rutKoder.has(b.tjanst ?? standard?.kod ?? ''))
+      .map((b) => b.parent_id as string))];
+    let rut: RutLage | undefined;
+    if (rutKunder.length) {
+      const ar = Number(period.slice(0, 4));
+      const [uppg, tak, anvant] = await Promise.all([
+        db.from('kund_skatteuppgifter').select('kund_id').in('kund_id', rutKunder),
+        db.from('rut_tak').select('tak_ore').eq('ar', ar).maybeSingle(),
+        db.from('rut_underlag').select('kund_id, rut_ore').eq('ar', ar).in('kund_id', rutKunder),
+      ]);
+      const fel = uppg.error ?? tak.error ?? anvant.error;
+      if (fel) return json({ error: 'Kunde inte läsa RUT-underlaget: ' + fel.message }, 500);
+      rut = {
+        medSkatteuppgifter: new Set((uppg.data ?? []).map((r): string => r.kund_id as string)),
+        takOre: tak.data ? Number(tak.data.tak_ore) : null,
+        anvantOre: new Map((anvant.data ?? []).map((r): [string, number] => [r.kund_id as string, Number(r.rut_ore)])),
+      };
     }
 
-    const summa = (rader: Rad[]) => rader.reduce((a, r) => a + r.belopp_ore, 0);
-    const minuterSum = (rader: Rad[]) => rader.reduce((a, r) => a + r.minuter, 0);
+    // ---------- räkna ----------
+    const underlag = byggUnderlag({ pass, tjanster: katalog, timprisOre, timpenningar, rut });
+    const { perFamilj, perTutor } = underlag;
 
-    const sammanfattning = {
-      korning_av: korningAv,
-      period,
-      pass_till_och_med: new Date(Date.parse(slut) - 86_400_000).toISOString().slice(0, 10),
-      pris_per_timme_ore: timprisOre,
-      fakturor: [...perFamilj].map(([id, r]) => ({ parent_id: id, pass: r.length, belopp_ore: summa(r) })),
-      utbetalningar: [...perTutor].map(([id, r]) => ({ tutor_id: id, pass: r.length, belopp_ore: summa(r) })),
-      hoppade_over_utan_timpenning: [...new Set(utanTimpenning)],
-      hoppade_over_utan_rapport: utanRapport,
-      undantagna_pass: undantagna.length,
-    };
+    const sammanfattning = sammanfatta({
+      korningAv, period, slut, timprisOre, underlag, utanRapport, undantagna,
+    });
 
     if (torrkorning) return json({ torrkorning: true, ...sammanfattning }, 200);
 
@@ -353,7 +280,7 @@ Deno.serve(async (req) => {
          uteblir. */
       const f = await db.from('invoices').insert({
         parent_id: parentId, period, status: 'utkast',
-        belopp_ore: summa(rader), forfaller: forfallerIso,
+        belopp_ore: summa(rader), rut_ore: summaRut(rader), forfaller: forfallerIso,
       }).select('id').single();
 
       if (f.error) { problem.push(`faktura ${parentId}: ${f.error.message}`); continue; }
@@ -362,6 +289,7 @@ Deno.serve(async (req) => {
         rader.map((r) => ({
           invoice_id: f.data.id, booking_id: r.booking_id, beskrivning: r.beskrivning,
           minuter: r.minuter, pris_per_timme_ore: r.timpris_ore, belopp_ore: r.belopp_ore,
+          rut_ore: r.rut_ore,
         })));
 
       // Raderna är hela poängen med fakturan. Blir de inte skrivna
@@ -383,11 +311,12 @@ Deno.serve(async (req) => {
 
       if (p.error) { problem.push(`utbetalning ${tutorId}: ${p.error.message}`); continue; }
 
-      const timpenning = timpenningar.get(tutorId)!;
+      // Radens egen timpenning: studiehjälparens, eller tjänstens
+      // ersättning när hen saknar en egen. För läxhjälp alltid samma.
       const l = await db.from('payout_lines').insert(
         rader.map((r) => ({
           payout_id: p.data.id, booking_id: r.booking_id, beskrivning: r.beskrivning,
-          minuter: r.minuter, timpenning_ore: timpenning, belopp_ore: r.belopp_ore,
+          minuter: r.minuter, timpenning_ore: r.timpris_ore, belopp_ore: r.belopp_ore,
         })));
 
       if (l.error) {

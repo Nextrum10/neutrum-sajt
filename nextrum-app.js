@@ -562,14 +562,18 @@ const NX = (function () {
 
       /* Vilka uppdrag den sökande vill ta. Läses ur formuläret med
          getAll, så markupen styr och funktionen slipper veta vilka
-         tjänster som finns. Saknas fältet helt — vilket det gör
-         medan bara läxhjälp är aktiv — blir det läxhjälp, samma
-         sak som kolumnens default. */
+         tjänster som finns. Med en enda aktiv jobbtjänst skriver
+         väljaren ett dolt fält med den. */
       const tjanster = f.getAll ? f.getAll('tjanster').filter(Boolean) : [];
 
+      /* Inget val i formuläret (fältet hann inte ritas): katalogens
+         första jobbtjänst. Finns inte katalogen på sidan skickas
+         fältet inte alls, och kolumnens default gäller. */
+      const utanVal = typeof NXTjanster !== 'undefined' && NXTjanster.standardJobb
+        ? [NXTjanster.standardJobb()] : null;
       const { error } = await supa.from('applications').insert({
         name: namn,
-        tjanster: tjanster.length ? tjanster : ['laxhjalp'],
+        ...(tjanster.length ? { tjanster } : (utanVal ? { tjanster: utanVal } : {})),
         age: ålderRaw ? Number(ålderRaw) : null,
         email: epost,
         school: String(f.get('skola') || '').trim() || null,

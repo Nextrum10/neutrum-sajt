@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1 och Fas 2)
+-- NEXTRUM — behörighetstester (Fas 1, 2 och 5)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -17,8 +17,8 @@
 --
 -- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok.
 --
--- Förutsättning: migrationerna för Fas 1.1–1.6 och Fas 2.1–2.3 är
--- körda. Körs filen före dem är det väntat att de berörda raderna
+-- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3 och
+-- Fas 5.1–5.3 är körda. Körs filen före dem är det väntat att de berörda raderna
 -- faller — det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
 
@@ -205,12 +205,17 @@ insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wa
    (now() at time zone 'Europe/Stockholm')::date - 3, '15:00', 60, 'completed');
 
 -- Två rapporter som A skrivit om sin egen elev: en fristående, och
--- en som hör till passet b0a2.
-insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date) values
+-- en som hör till passet b0a2. Sedan Fas 3.7 måste en rapport med
+-- pass ha närvaro, och då gör triggern passet genomfört. Testerna
+-- nedan vill ha b0a2 bekräftat MED en rapport, så det återställs här
+-- (som postgres släpper skydden igenom det).
+insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro) values
   ('00000000-0000-4000-8000-00000000e0a1', '00000000-0000-4000-8000-0000000005a1',
-   '00000000-0000-4000-8000-0000000000a1', null, 'fixtur', current_date),
+   '00000000-0000-4000-8000-0000000000a1', null, 'fixtur', current_date, null),
   ('00000000-0000-4000-8000-00000000e0a2', '00000000-0000-4000-8000-0000000005a1',
-   '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-00000000b0a2', 'fixtur', current_date);
+   '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-00000000b0a2', 'fixtur', current_date, 'narvarande');
+update public.bookings set status = 'confirmed', attendance = null
+ where id = '00000000-0000-4000-8000-00000000b0a2';
 
 -- ------------------------------------------------------------
 -- F-1 och publika listan
@@ -320,9 +325,9 @@ select pg_temp.prova('F-6 A markerar genomfört utan rapport', '00000000-0000-40
   'nekad');
 
 select pg_temp.prova('F-6 A rapporterar bekräftat pass och markerar genomfört', '00000000-0000-4000-8000-0000000000a1',
-  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes)
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, narvaro)
           values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
-                  '00000000-0000-4000-8000-00000000b0c1', 'x')$q$,
+                  '00000000-0000-4000-8000-00000000b0c1', 'x', 'narvarande')$q$,
         $q$update public.bookings set status = 'completed', attendance = 'narvarande'
           where id = '00000000-0000-4000-8000-00000000b0c1'$q$],
   'ok');
@@ -345,9 +350,9 @@ select pg_temp.prova('F-6 P sätter närvaro utan rapport', '00000000-0000-4000-
   'nekad');
 
 select pg_temp.prova('F-6 A rapporterar eget obesvarat förslag som genomfört', '00000000-0000-4000-8000-0000000000a1',
-  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes)
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, narvaro)
           values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
-                  '00000000-0000-4000-8000-00000000b0f1', 'x')$q$,
+                  '00000000-0000-4000-8000-00000000b0f1', 'x', 'narvarande')$q$,
         $q$update public.bookings set status = 'completed' where id = '00000000-0000-4000-8000-00000000b0f1'$q$],
   'nekad');
 
@@ -512,12 +517,25 @@ select pg_temp.rakna_efter('F2 rapport med närvaro gör passet genomfört', '00
   $q$select count(*) from public.bookings
      where id = '00000000-0000-4000-8000-00000000b0c1' and status = 'completed' and attendance = 'sen'$q$, 1);
 
-select pg_temp.rakna_efter('F2 rapport utan närvaro lämnar passet orört (gamla vyn)', '00000000-0000-4000-8000-0000000000a1',
-  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes)
-          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
-                  '00000000-0000-4000-8000-00000000b0c1', 'x')$q$],
-  $q$select count(*) from public.bookings
-     where id = '00000000-0000-4000-8000-00000000b0c1' and status = 'confirmed'$q$, 1);
+-- Fas 3.7: en rapport som hör till ett pass måste ha närvaro. Förut
+-- lämnade en sådan rapport passet orört (den gamla vyn); nu nekas den
+-- av check-villkoret rapport_med_pass_har_narvaro (23514).
+do $$
+declare kod text := null;
+begin
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x');
+    kod := 'gick igenom';
+    raise exception 'KLAR';
+  exception when others then
+    if kod is null then kod := sqlstate; end if;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('3.7 rapport med pass men utan närvaro nekas', kod = '23514', 'fick ' || kod);
+end $$;
 
 select pg_temp.prova('F2 rapport med närvaro på obesvarat eget förslag', '00000000-0000-4000-8000-0000000000a1',
   array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, narvaro)
@@ -564,6 +582,108 @@ select pg_temp.rakna('F-7 admin ser hela katalogen', '00000000-0000-4000-8000-00
   'select count(*) from public.tjanster',
   (select count(*) from public.tjanster));
 
+
+-- ------------------------------------------------------------
+-- Fas 5.2: uppdrag
+-- Fixturbarnen lades in som postgres, och triggern gav dem var sitt
+-- uppdrag. Fixturpassen hamnade på barnets uppdrag.
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select '5.2 varje fixturbarn fick ett eget uppdrag',
+       count(distinct s.uppdrag_id) = 3 and count(*) filter (where u.kund_id = s.parent_id) = 3,
+       'barn med uppdrag: ' || count(s.uppdrag_id)
+  from public.students s left join public.uppdrag u on u.id = s.uppdrag_id
+ where s.parent_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2');
+
+insert into utfall (test, ok, detalj)
+select '5.2 fixturpassen ligger på barnets uppdrag',
+       count(*) = count(*) filter (where b.uppdrag_id = s.uppdrag_id),
+       count(*) filter (where b.uppdrag_id = s.uppdrag_id) || ' av ' || count(*)
+  from public.bookings b join public.students s on s.id = b.student_id
+ where b.parent_id = '00000000-0000-4000-8000-0000000000f1';
+
+select pg_temp.prova('5.2 anon läser uppdrag', null,
+  array[$q$select * from public.uppdrag$q$], 'nekad');
+select pg_temp.rakna('5.2 familj P ser sina två uppdrag', '00000000-0000-4000-8000-0000000000f1',
+  'select count(*) from public.uppdrag', 2);
+select pg_temp.rakna('5.2 familj Q ser bara sitt eget', '00000000-0000-4000-8000-0000000000f2',
+  'select count(*) from public.uppdrag', 1);
+select pg_temp.rakna('5.2 studiehjälpare A ser sin familjs uppdrag, inte Q:s', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 2);
+select pg_temp.rakna('5.2 admin ser alla', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 3);
+
+select pg_temp.prova('5.2 familj skapar uppdrag själv', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.uppdrag (kund_id, tjanst) values ('00000000-0000-4000-8000-0000000000f1', 'laxhjalp')$q$], 'nekad');
+select pg_temp.prova('5.2 familj ändrar sitt uppdrag', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.uppdrag set status = 'avslutat' where kund_id = '00000000-0000-4000-8000-0000000000f1'$q$], 'nekad');
+
+-- Familjen försöker peka sitt barn på Q:s uppdrag. skydda_studentfalt
+-- låser fältet, så raden uppdateras men värdet står kvar.
+select pg_temp.rakna_efter('5.2 familj kan inte flytta barnet till ett annat uppdrag', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.students set uppdrag_id = '$q$
+        || (select uppdrag_id::text from public.students where id = '00000000-0000-4000-8000-0000000005c1')
+        || $q$' where id = '00000000-0000-4000-8000-0000000005a1'$q$],
+  $q$select count(*) from public.students where id = '00000000-0000-4000-8000-0000000005a1'
+     and uppdrag_id = '$q$ || (select uppdrag_id::text from public.students where id = '00000000-0000-4000-8000-0000000005a1') || $q$'$q$, 1);
+
+select pg_temp.rakna_efter('5.2 nytt barn får ett eget uppdrag', '00000000-0000-4000-8000-0000000000f2',
+  array[$q$insert into public.students (parent_id, name) values ('00000000-0000-4000-8000-0000000000f2', 'Nytt barn')$q$],
+  'select count(*) from public.uppdrag', 2);
+
+select pg_temp.rakna_efter('5.2 nytt pass hamnar på barnets uppdrag', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+                  (now() at time zone 'Europe/Stockholm')::date + 14, '10:00', 60, 'requested')$q$],
+  $q$select count(*) from public.bookings b join public.students s on s.id = b.student_id
+     where b.wanted_time = '10:00' and b.uppdrag_id = s.uppdrag_id$q$, 1);
+
+select pg_temp.prova('5.2 pass på en annan familjs uppdrag nekas', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, uppdrag_id)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+                  (now() at time zone 'Europe/Stockholm')::date + 14, '11:00', 60, 'requested', '$q$
+        || (select uppdrag_id::text from public.students where id = '00000000-0000-4000-8000-0000000005c1')
+        || $q$')$q$], 'nekad');
+
+-- ------------------------------------------------------------
+-- Fas 5.3: skatteuppgifter och RUT
+-- ------------------------------------------------------------
+select pg_temp.prova('5.3 anon läser skatteuppgifter', null,
+  array[$q$select * from public.kund_skatteuppgifter$q$], 'nekad');
+select pg_temp.prova('5.3 familj läser skatteuppgifter', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select * from public.kund_skatteuppgifter$q$], 'nekad');
+select pg_temp.prova('5.3 familj läser via funktionen', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select * from public.las_skatteuppgifter('00000000-0000-4000-8000-0000000000f1')$q$], 'nekad');
+select pg_temp.prova('5.3 studiehjälpare sparar personnummer', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select public.spara_skatteuppgifter('00000000-0000-4000-8000-0000000000f1', '198112189876')$q$], 'nekad');
+select pg_temp.prova('5.3 anon anropar spara', null,
+  array[$q$select public.spara_skatteuppgifter('00000000-0000-4000-8000-0000000000f1', '198112189876')$q$], 'nekad');
+
+select pg_temp.rakna_efter('5.3 admin sparar och läser tillbaka personnumret', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select public.spara_skatteuppgifter('00000000-0000-4000-8000-0000000000f1', '19811218-9876', 'Test 1:2')$q$],
+  $q$select count(*) from public.las_skatteuppgifter('00000000-0000-4000-8000-0000000000f1') where personnummer = '19811218-9876'$q$, 1);
+
+select pg_temp.prova('5.3 admin läser tabellen direkt', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select * from public.kund_skatteuppgifter$q$], 'nekad');
+
+select pg_temp.prova('5.3 anon läser rut_tak', null,
+  array[$q$select * from public.rut_tak$q$], 'nekad');
+select pg_temp.rakna('5.3 familj ser inget rut_tak', '00000000-0000-4000-8000-0000000000f1',
+  'select count(*) from public.rut_tak', 0);
+
+-- En faktura att pröva beloppslåset på.
+insert into public.invoices (parent_id, period, belopp_ore, rut_ore)
+values ('00000000-0000-4000-8000-0000000000f1', '2026-01-01', 1000, 0);
+
+select pg_temp.prova('5.3 familj ändrar RUT på sin faktura', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.invoices set rut_ore = 500 where parent_id = '00000000-0000-4000-8000-0000000000f1'$q$], 'nekad');
+select pg_temp.rakna_efter('5.3 inte ens admin ändrar RUT på en skapad faktura', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.invoices set rut_ore = 500 where parent_id = '00000000-0000-4000-8000-0000000000f1'$q$],
+  $q$select count(*) from public.invoices where parent_id = '00000000-0000-4000-8000-0000000000f1' and rut_ore = 0$q$, 1);
+
+select pg_temp.rakna('5.1 läxhjälpen är inte RUT-berättigad', null,
+  $q$select count(*) from public.tjanster where kod = 'laxhjalp' and not rut_berattigad and rut_procent = 0$q$, 1);
+
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).
 insert into utfall (test, ok, detalj)
@@ -574,7 +694,10 @@ select 'Triggerfunktion ej anropbar: ' || f,
 from unnest(array[
   'public.rakna_rabattkod()', 'public.skydda_elevradering()', 'public.skydda_rabatt()',
   'public.synka_laxhjalpspris()', 'public.skydda_bokningsfalt()',
-  'public.rapport_gor_passet_genomfort()'
+  'public.rapport_gor_passet_genomfort()',
+  'public.bekrafta_inom_schemat()', 'public.skydda_studentfalt()', 'public.las_fakturabelopp()',
+  'public.elevens_uppdrag()', 'public.stada_elevens_uppdrag()', 'public.koppla_passets_uppdrag()',
+  'public.standard_tjanst()', 'public.personnummer_ok(text)'
 ]) f;
 
 insert into utfall (test, ok, detalj)
@@ -582,7 +705,18 @@ select 'RPC som gränssnittet använder är kvar: ' || f,
        coalesce(has_function_privilege('authenticated', to_regprocedure(f), 'execute'), false),
        case when to_regprocedure(f) is null then 'funktionen finns inte' else 'authenticated execute' end
 from unnest(array[
-  'public.kolla_rabattkod(text, text, bigint)', 'public.publika_studiehjalpare()'
+  'public.kolla_rabattkod(text, text, bigint)', 'public.publika_studiehjalpare()',
+  'public.spara_skatteuppgifter(uuid, text, text, text, text)',
+  'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)'
+]) f;
+
+insert into utfall (test, ok, detalj)
+select 'Skattefunktion ej anropbar för anon: ' || f,
+       coalesce(not has_function_privilege('anon', to_regprocedure(f), 'execute'), false),
+       case when to_regprocedure(f) is null then 'funktionen finns inte' else 'anon execute' end
+from unnest(array[
+  'public.spara_skatteuppgifter(uuid, text, text, text, text)',
+  'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)'
 ]) f;
 
 select test, ok, detalj from utfall order by nr;

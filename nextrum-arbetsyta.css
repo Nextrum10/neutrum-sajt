@@ -768,6 +768,15 @@ table.adm .adm-tal{
   padding:20px;
   display:flex;flex-direction:column;gap:11px;
 }
+/* Tjänstens villkor (Fas 5.1): utfällbara under priset. */
+.tj-villkor{border-top:1px solid var(--ln);padding-top:10px}
+.tj-villkor summary{cursor:pointer;font-size:.86rem;font-weight:600;color:var(--bl-2)}
+.tj-villkor[open] summary{margin-bottom:10px}
+.tj-villkor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.tj-villkor .fgroup{margin:0}
+.tj-villkor-not{margin:6px 0 10px;color:var(--muted)}
+.tj-json{font-family:var(--f-mono);font-size:12px;resize:vertical}
+@media (max-width:560px){ .tj-villkor-grid{grid-template-columns:1fr} }
 .adm-koppling-kort h6{
   display:flex;align-items:center;gap:10px;
   font-size:1rem;font-weight:700;color:var(--bl);

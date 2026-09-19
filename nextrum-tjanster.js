@@ -1,8 +1,13 @@
 /* ============================================================
    NEXTRUM — tjänstekatalogen i gränssnittet
 
-   Läser tabellen `tjanster` (schema-v18.sql) och gör den tillgänglig
-   för alla vyer. Laddas efter nextrum-app.js, före sidans egen kod.
+   Läser tabellen `tjanster` (schema-v18.sql, utökad i Fas 5.1) och
+   gör den tillgänglig för alla vyer. Laddas efter nextrum-app.js,
+   före sidans egen kod.
+
+   Det här är det ENDA stället i gränssnittet där läxhjälp står
+   utskrivet som tjänst: i reservkatalogen och som sista utväg i
+   standard()/standardJobb(). Allt annat frågar katalogen (Fas 5.4).
 
    DEN REGEL SOM STYR HELA FILEN
 
@@ -71,14 +76,20 @@ const NXTjanster = (function () {
         kort: null, kort_en: null,
         for_kund: true, for_jobb: true, aktiv: true, ordning: 10,
         pris_per_timme_ore: null,
-        extra_personer_ore: null, extra_personer_max: 1
+        extra_personer_ore: null, extra_personer_max: 1,
+        bokningstyp: 'pass', rapportkrav: true,
+        rut_berattigad: false, rut_procent: 0,
+        kundtyp: 'privat', jobbtyp: 'studiehjalpare', min_alder: null
       }];
 
       if (typeof supa === 'undefined' || !supa) { cache = reserv; return cache; }
 
       const { data, error } = await supa
         .from('tjanster')
-        .select('kod, namn, namn_en, kort, kort_en, for_kund, for_jobb, aktiv, ordning, pris_per_timme_ore, extra_personer_ore, extra_personer_max')
+        /* Det gränssnittet behöver för att beskriva och boka en
+           tjänst. Ersättningen, kraven och matchningsreglerna hör till
+           admin och servern och hämtas inte här. */
+        .select('kod, namn, namn_en, kort, kort_en, for_kund, for_jobb, aktiv, ordning, pris_per_timme_ore, extra_personer_ore, extra_personer_max, bokningstyp, rapportkrav, rut_berattigad, rut_procent, kundtyp, jobbtyp, min_alder')
         .order('ordning');
 
       cache = (error || !data || !data.length) ? reserv : data;
@@ -117,6 +128,14 @@ const NXTjanster = (function () {
      är not null. */
   function standard() {
     const f = forKund();
+    return f.length ? f[0].kod : 'laxhjalp';
+  }
+
+  /* Samma sak för den som söker jobb: den första aktiva tjänsten man
+     kan arbeta med. Skiljer sig från standard() den dag en tjänst
+     bara finns på ena sidan (försäljning är for_jobb men inte for_kund). */
+  function standardJobb() {
+    const f = forJobb();
     return f.length ? f[0].kod : 'laxhjalp';
   }
 
@@ -204,5 +223,5 @@ const NXTjanster = (function () {
     return '<span class="nx-tjmarke">' + esc(namn(kod)) + '</span>';
   }
 
-  return { ladda, alla, forKund, forJobb, hitta, namn, kort, standard, kronor, valjare, marke };
+  return { ladda, alla, forKund, forJobb, hitta, namn, kort, standard, standardJobb, kronor, valjare, marke };
 })();

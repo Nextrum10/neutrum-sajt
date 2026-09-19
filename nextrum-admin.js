@@ -2231,6 +2231,117 @@
      går att boka men inte prissätta blir en faktura ingen kan
      skriva.
      ------------------------------------------------------------ */
+  /* Den tjänst en ansökan utan val gäller: katalogens första aktiva
+     jobbtjänst. S.tjanster är hela katalogen (admin läser även de
+     inaktiva), så urvalet görs här i stället för i NXTjanster, som
+     aldrig laddas på adminsidan. */
+  function standardJobbtjanst() {
+    const f = (S.tjanster || []).filter(t => t.aktiv && t.for_jobb)
+      .sort((a, b) => (a.ordning - b.ordning) || String(a.kod).localeCompare(String(b.kod)));
+    return f.length ? f[0].kod : NXTjanster.standardJobb();
+  }
+
+  /* Villkoren från Fas 5.1, utfällbara. Förvalen är hur läxhjälpen
+     fungerar i dag, så en tjänst som ingen rört beter sig som den
+     alltid gjort. Fälten heter tj-<fält>-<kod>, och spara läser dem
+     med tjFält() nedan. */
+  const TJ_BOKNINGSTYP = [['pass', 'Pass i kalendern'], ['forfragan', 'Förfrågan som vi planerar']];
+  const TJ_KUNDTYP = [['privat', 'Privatpersoner'], ['foretag', 'Företag'], ['bada', 'Båda']];
+
+  function tjanstVillkor(t) {
+    const id = f => 'tj-' + f + '-' + esc(t.kod);
+    const val = (lista, valt) => lista.map(([v, text]) =>
+      '<option value="' + v + '"' + (v === valt ? ' selected' : '') + '>' + esc(text) + '</option>').join('');
+    const ers = t.ersattning_per_timme_ore === null || t.ersattning_per_timme_ore === undefined
+      ? '' : Math.round(t.ersattning_per_timme_ore / 100);
+    const json = v => esc(JSON.stringify(v || {}, null, 2));
+    const öppen = !!(t.rut_berattigad || t.ersattning_per_timme_ore !== null && t.ersattning_per_timme_ore !== undefined
+      || (t.bokningstyp && t.bokningstyp !== 'pass') || t.min_alder);
+
+    return '<details class="tj-villkor"' + (öppen ? ' open' : '') + '>'
+      + '<summary>Villkor och RUT</summary>'
+      + '<div class="tj-villkor-grid">'
+      + '<div class="fgroup"><label for="' + id('ers') + '">Ersättning, kr per timme</label>'
+      + '<input class="inp" id="' + id('ers') + '" type="number" min="0" max="5000" step="1" inputmode="numeric"'
+      + ' placeholder="Studiehjälparens egen" value="' + ers + '"></div>'
+      + '<div class="fgroup"><label for="' + id('bokning') + '">Bokas som</label>'
+      + '<select class="sel" id="' + id('bokning') + '">' + val(TJ_BOKNINGSTYP, t.bokningstyp || 'pass') + '</select></div>'
+      + '<div class="fgroup"><label for="' + id('kund') + '">Kunder</label>'
+      + '<select class="sel" id="' + id('kund') + '">' + val(TJ_KUNDTYP, t.kundtyp || 'privat') + '</select></div>'
+      + '<div class="fgroup"><label for="' + id('jobb') + '">Jobbtyp</label>'
+      + '<input class="inp" id="' + id('jobb') + '" maxlength="40" spellcheck="false"'
+      + ' value="' + esc(t.jobbtyp || 'studiehjalpare') + '"></div>'
+      + '<div class="fgroup"><label for="' + id('alder') + '">Lägsta ålder</label>'
+      + '<input class="inp" id="' + id('alder') + '" type="number" min="1" max="99" step="1" inputmode="numeric"'
+      + ' placeholder="Ingen gräns" value="' + (t.min_alder || '') + '"></div>'
+      + '<div class="fgroup"><label for="' + id('rutp') + '">RUT, procent av arbetskostnaden</label>'
+      + '<input class="inp" id="' + id('rutp') + '" type="number" min="0" max="100" step="1" inputmode="numeric"'
+      + ' placeholder="0 = ingen RUT" value="' + (t.rut_procent || '') + '"></div>'
+      + '</div>'
+      + '<label class="ag-kryss" style="margin:0"><input type="checkbox" id="' + id('rapport') + '"'
+      + (t.rapportkrav !== false ? ' checked' : '') + '> Rapport krävs innan passet faktureras</label>'
+      + '<p class="xsmall tj-villkor-not">RUT-andelen och taket hämtas från Skatteverket, inte härifrån. '
+      + 'Utan ett tak för året (tabellen rut_tak) drar faktureringen ingen RUT alls.</p>'
+      + '<div class="fgroup"><label for="' + id('krav') + '">Krav (JSON)</label>'
+      + '<textarea class="inp tj-json" id="' + id('krav') + '" rows="3" spellcheck="false">' + json(t.krav) + '</textarea></div>'
+      + '<div class="fgroup"><label for="' + id('match') + '">Matchningsregler (JSON)</label>'
+      + '<textarea class="inp tj-json" id="' + id('match') + '" rows="3" spellcheck="false">' + json(t.matchningsregler) + '</textarea></div>'
+      + '</details>';
+  }
+
+  /* Läser och kontrollerar villkoren för en tjänst. Samma regler som
+     databasens check-villkor, så att felet syns här och inte som en
+     kod från servern. Returnerar { fel } eller { värden }. */
+  function tjFält(kod) {
+    const f = namn => document.getElementById('tj-' + namn + '-' + kod);
+    const tal = (namn, min, max) => {
+      const rå = String((f(namn) || {}).value || '').trim();
+      if (rå === '') return { v: null };
+      const n = Number(rå);
+      if (!Number.isInteger(n) || n < min || n > max) return { fel: true };
+      return { v: n };
+    };
+    const objekt = namn => {
+      const rå = String((f(namn) || {}).value || '').trim();
+      if (rå === '') return { v: {} };
+      try {
+        const v = JSON.parse(rå);
+        return (v && typeof v === 'object' && !Array.isArray(v)) ? { v } : { fel: true };
+      } catch (e) { return { fel: true }; }
+    };
+
+    if (!f('bokning')) return { värden: {} };   // kortet ritades utan villkor
+
+    const ers = tal('ers', 0, 5000);
+    if (ers.fel) return { fel: 'Ersättningen ska vara hela kronor, eller tom för studiehjälparens egen timpenning.' };
+    const ålder = tal('alder', 1, 99);
+    if (ålder.fel) return { fel: 'Lägsta ålder ska vara ett heltal mellan 1 och 99, eller tomt.' };
+    const rut = tal('rutp', 0, 100);
+    if (rut.fel) return { fel: 'RUT-andelen ska vara ett heltal mellan 0 och 100.' };
+    const jobb = String(f('jobb').value || '').trim();
+    if (!/^[a-z][a-z_]{1,39}$/.test(jobb)) return { fel: 'Jobbtypen skrivs med små bokstäver och understreck, t.ex. studiehjalpare.' };
+    const krav = objekt('krav');
+    if (krav.fel) return { fel: 'Kraven ska vara ett JSON-objekt, t.ex. {}.' };
+    const match = objekt('match');
+    if (match.fel) return { fel: 'Matchningsreglerna ska vara ett JSON-objekt, t.ex. {}.' };
+
+    const procent = rut.v || 0;
+    return {
+      värden: {
+        ersattning_per_timme_ore: ers.v === null ? null : ers.v * 100,
+        bokningstyp: f('bokning').value,
+        kundtyp: f('kund').value,
+        jobbtyp: jobb,
+        min_alder: ålder.v,
+        rut_procent: procent,
+        rut_berattigad: procent > 0,
+        rapportkrav: !!f('rapport').checked,
+        krav: krav.v,
+        matchningsregler: match.v
+      }
+    };
+  }
+
   function ritaTjanster() {
     const host = $('#tj-kort');
     if (!host) return;
@@ -2266,6 +2377,7 @@
         + ' type="number" min="1" max="5000" step="1" inputmode="numeric"'
         + ' placeholder="Inte bestämt" value="' + kr + '">'
         + '</div>'
+        + tjanstVillkor(t)
         + '<label class="ag-kryss" style="margin:0">'
         + '<input type="checkbox" data-tj-aktiv="' + esc(t.kod) + '"' + (t.aktiv ? ' checked' : '') + '> '
         + 'Aktiv — syns för besökare</label>'
@@ -2908,7 +3020,7 @@
           age: ans.age || null,
           availability: ans.availability || null,
           hourly_rate: timpenning,
-          tjanster: (ans.tjanster && ans.tjanster.length) ? ans.tjanster : ['laxhjalp']
+          tjanster: (ans.tjanster && ans.tjanster.length) ? ans.tjanster : [standardJobbtjanst()]
         }).eq('id', konto);
 
         if (error) { säg(msg, 'Kunde inte ta in: ' + felText(error), false); return; }
@@ -3202,6 +3314,9 @@
       return;
     }
 
+    const villkor = tjFält(kod);
+    if (villkor.fel) { säg(msg, villkor.fel, false); return; }
+
     /* Den enda regel som är värd en spärr: en tjänst utan pris får
        inte slås på. Familjen skulle kunna boka den, och ingen skulle
        kunna fakturera den. */
@@ -3214,22 +3329,33 @@
     const öre = kr === null ? null : kr * 100;
     const slårPå = aktiv && !rad.aktiv;
     const prisÄndrat = öre !== rad.pris_per_timme_ore;
+    const v = villkor.värden;
+    /* RUT och ersättning på en tjänst som redan syns ändrar vad någon
+       betalar eller får betalt — det är värt en fråga. */
+    const pengarÄndrade = rad.aktiv && !slårPå && v.rut_procent !== undefined
+      && (v.rut_procent !== (rad.rut_procent || 0)
+          || v.ersattning_per_timme_ore !== (rad.ersattning_per_timme_ore ?? null));
 
     /* Bekräfta bara det som är värt att bekräfta. En dialog vid varje
        spara lär folk att klicka bort dialoger. */
-    if (slårPå || (prisÄndrat && rad.kod === 'laxhjalp')) {
+    if (slårPå || (prisÄndrat && rad.kod === 'laxhjalp') || pengarÄndrade) {
       const ja = await bekräfta({
         titel: slårPå
           ? 'Slå på ' + rad.namn.toLowerCase() + ' för besökare?'
-          : 'Ändra läxhjälpens pris till ' + kr + ' kr i timmen?',
+          : prisÄndrat && rad.kod === 'laxhjalp'
+            ? 'Ändra läxhjälpens pris till ' + kr + ' kr i timmen?'
+            : 'Ändra ersättning eller RUT för ' + rad.namn.toLowerCase() + '?',
         text: slårPå
           ? 'Tjänsten dyker upp i intresseanmälan, i ansökan och i bokningen så fort '
             + 'någon laddar om sidan. Skriv texten om den på de publika sidorna först, '
             + 'annars kan man beställa något sajten inte beskriver.'
-          : 'Gäller nya fakturarader. Redan skapade rader behåller sitt pris — en '
-            + 'prisändring får aldrig ändra vad någon redan fakturerats. Kom ihåg att '
-            + 'ändra priset på prissidan, i FAQ:n och i användarvillkoren också.',
-        knapp: slårPå ? 'Slå på' : 'Ändra priset'
+          : prisÄndrat && rad.kod === 'laxhjalp'
+            ? 'Gäller nya fakturarader. Redan skapade rader behåller sitt pris — en '
+              + 'prisändring får aldrig ändra vad någon redan fakturerats. Kom ihåg att '
+              + 'ändra priset på prissidan, i FAQ:n och i användarvillkoren också.'
+            : 'Gäller pass som faktureras eller betalas ut från nästa körning. Redan '
+              + 'skapade fakturor och utbetalningar ändras inte.',
+        knapp: slårPå ? 'Slå på' : 'Spara ändringen'
       });
       if (!ja) return;
     }
@@ -3237,13 +3363,14 @@
     await medan(knapp, 'Sparar…', async () => {
       const nu = new Date().toISOString();
       const { error } = await supa.from('tjanster')
-        .update({ pris_per_timme_ore: öre, aktiv: aktiv, uppdaterad: nu })
+        .update(Object.assign({ pris_per_timme_ore: öre, aktiv: aktiv, uppdaterad: nu }, v))
         .eq('kod', kod);
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
 
       rad.pris_per_timme_ore = öre;
       rad.aktiv = aktiv;
       rad.uppdaterad = nu;
+      Object.assign(rad, v);
 
       /* Läxhjälpens pris speglas till prissattning av en trigger i
          databasen. Den lokala kopian måste följa med, annars visar

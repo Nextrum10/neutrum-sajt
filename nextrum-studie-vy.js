@@ -934,9 +934,10 @@
     host: $('#boka-inner'),
     amnen: BOKA_AMNEN,
     pris: NX.CFG.PRIS_PER_TIMME || 379,
-    /* Vilken tjänst bokningen gäller. Styr både tillägget för flera
-       barn och vilka rabattkoder som får användas. */
-    tjanst: NXTjanster.standard(),
+    /* Vilken tjänst bokningen gäller. Styr priset, tillägget för
+       flera barn och vilka rabattkoder som får användas. En funktion,
+       inte ett värde: bokningen skapas innan katalogen laddats. */
+    tjanst: () => NXTjanster.standard(),
 
     /* Två spärrar som förr yttrade sig som en avstängd knapp utan
        förklaring. Nu står skälet där tiderna skulle ha stått. */
@@ -1179,14 +1180,18 @@
     const pag = $('#bet-pagaende'), lista = $('#bet-lista');
     if (!pag) return;
 
-    const [pris, ofakt, fakt] = await Promise.all([
-      supa.from('prissattning').select('pris_per_timme_ore').maybeSingle(),
+    const [ofakt, fakt] = await Promise.all([
       supa.from('ofakturerat').select('pass, minuter').eq('parent_id', S.user.id).maybeSingle(),
       supa.from('invoices').select('id, period, status, belopp_ore, forfaller, stripe_url')
         .eq('parent_id', S.user.id).order('period', { ascending: false })
     ]);
 
-    const timpris = (pris.data && pris.data.pris_per_timme_ore) || null;
+    /* Timpriset ur tjänstekatalogen (laddad i start()), inte ur
+       prissattning — samma källa som bokningen och faktureringen.
+       prissattning ska avvecklas, se Fas 5.5. */
+    await NXTjanster.ladda();
+    const tj = NXTjanster.hitta(NXTjanster.standard());
+    const timpris = (tj && Number(tj.pris_per_timme_ore)) || null;
     const o = ofakt.data || { pass: 0, minuter: 0 };
 
     pag.innerHTML = timpris

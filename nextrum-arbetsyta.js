@@ -458,21 +458,41 @@ window.NXArbete = (function () {
 
     function timmar() { return Math.max(1, Math.round(st.minuter / 60)); }
 
+    /* Vilken tjänst bokningen gäller. o.tjanst får vara en funktion:
+       vyn skapar bokningen innan katalogen hunnit laddas, och ett
+       värde som lästes då hade frusit fast på reservkatalogens val.
+       Utan o.tjanst frågas katalogen — aldrig en inskriven tjänst. */
+    function tjanstKod() {
+      var t = typeof o.tjanst === 'function' ? o.tjanst() : o.tjanst;
+      if (t) return t;
+      return (typeof NXTjanster !== 'undefined' && NXTjanster.standard) ? NXTjanster.standard() : null;
+    }
+    function tjanstRad() {
+      var kod = tjanstKod();
+      return (kod && typeof NXTjanster !== 'undefined' && NXTjanster.hitta) ? NXTjanster.hitta(kod) : null;
+    }
+
     function barnTak() {
-      var t = (typeof NXTjanster !== 'undefined' && NXTjanster.hitta)
-        ? NXTjanster.hitta(o.tjanst || 'laxhjalp') : null;
+      var t = tjanstRad();
       return t && t.extra_personer_max > 1 ? t.extra_personer_max : 1;
     }
     function extraOre() {
-      var t = (typeof NXTjanster !== 'undefined' && NXTjanster.hitta)
-        ? NXTjanster.hitta(o.tjanst || 'laxhjalp') : null;
+      var t = tjanstRad();
       return (t && t.extra_personer_ore) || 0;
     }
 
     /* Bruttot i ÖRE, för det är vad servern räknar i. Kronorna i
        kvittot härleds ur den här siffran, aldrig tvärtom. */
+    /* Timpriset ur katalogen — samma källa som databasen räknar
+       rabatten på och som faktureringen tar betalt efter. o.pris
+       (kronor, ur konfigurationen) gäller bara innan katalogen finns. */
+    function timprisOre() {
+      var t = tjanstRad();
+      if (t && t.pris_per_timme_ore) return Number(t.pris_per_timme_ore);
+      return (o.pris || 379) * 100;
+    }
     function bruttoOre() {
-      var tim2 = (o.pris || 379) * 100 + (st.barn > 1 ? extraOre() : 0);
+      var tim2 = timprisOre() + (st.barn > 1 ? extraOre() : 0);
       return Math.round(tim2 * st.minuter / 60);
     }
     function nettoOre() { return Math.max(0, bruttoOre() - (st.rabatt || 0)); }
@@ -795,7 +815,9 @@ window.NXArbete = (function () {
       NXStudie.medan(knapp, tyst ? '' : 'Kollar…', async function () {
         var r = await supa.rpc('kolla_rabattkod', {
           p_kod: kod,
-          p_tjanst: o.tjanst || 'laxhjalp',
+          /* null = koden prövas utan tjänstevillkor, precis som
+             kolla_rabattkod gör när ingen tjänst anges. */
+          p_tjanst: tjanstKod(),
           p_belopp_ore: bruttoOre()
         });
         var rad = (r.data || [])[0];
