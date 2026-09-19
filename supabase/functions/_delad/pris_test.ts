@@ -129,9 +129,11 @@ Deno.test('radtext som förut', () => {
   assertEquals(radtext(null, '2026-01-05'), `Pass 5 ${MANADER[0]}`);
 });
 
-Deno.test('standardtjänsten är den första aktiva för kunder', () => {
+Deno.test('standardtjänsten är den första aktiva för kunder, annars den första i katalogen', () => {
   assertEquals(standardTjanst(KATALOG)?.kod, 'laxhjalp');
-  assertEquals(standardTjanst(KATALOG.filter((t) => t.kod !== 'laxhjalp')), null);
+  // Som standard_tjanst() i databasen: ingen aktiv, då den första.
+  assertEquals(standardTjanst(KATALOG.filter((t) => t.kod !== 'laxhjalp'))?.kod, 'barnvakt');
+  assertEquals(standardTjanst([]), null);
 });
 
 // ---------- driftens augustipass (2026-09-19) ----------
@@ -195,7 +197,7 @@ Deno.test('sammanfattningen har samma nycklar i samma ordning utan RUT', () => {
 });
 
 // ---------- ersättningen ----------
-Deno.test('tjänstens ersättning gäller bara när studiehjälparen saknar egen', () => {
+Deno.test('tjänstens ersättning går före studiehjälparens egen, och tom ersättning ändrar inget', () => {
   const katalog: Tjanst[] = [{ ...KATALOG[0], ersattning_per_timme_ore: 11000 }];
   const pass: Pass[] = [
     { id: 'e1', subject: 'M', tjanst: 'laxhjalp', wanted_date: '2026-09-02', duration_min: 60, parent_id: 'p', tutor_id: 'medEgen',
@@ -204,9 +206,15 @@ Deno.test('tjänstens ersättning gäller bara när studiehjälparen saknar egen
       antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true, fakturerad: false, pa_underlag: false },
   ];
   const u = byggUnderlag({ pass, tjanster: katalog, timprisOre: 37900, timpenningar: new Map([['medEgen', 12000]]) });
-  assertEquals(u.perTutor.get('medEgen')?.[0].belopp_ore, 12000);
+  assertEquals(u.perTutor.get('medEgen')?.[0].belopp_ore, 11000);
+  assertEquals(u.perTutor.get('medEgen')?.[0].timpris_ore, 11000);
   assertEquals(u.perTutor.get('utanEgen')?.[0].belopp_ore, 11000);
   assertEquals(u.utanTimpenning, []);
+
+  // Utan tjänstens ersättning: studiehjälparens egen, som förut.
+  const utan = byggUnderlag({ pass, tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([['medEgen', 12000]]) });
+  assertEquals(utan.perTutor.get('medEgen')?.[0].belopp_ore, 12000);
+  assertEquals(utan.utanTimpenning, ['utanEgen']);
 });
 
 // ---------- RUT ----------
@@ -220,8 +228,11 @@ function rutPass(id: string, parent: string, tjanst = 'hushallsnara', minuter = 
     antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true, fakturerad: false, pa_underlag: false };
 }
 
-Deno.test('rutFor: andelen, taket och noll för det som inte är berättigat', () => {
+Deno.test('rutFor: andelen, taket, hela kronor nedåt och noll för det som inte är berättigat', () => {
   assertEquals(rutFor(50000, RUTKATALOG[3], 1_000_000), 25000);
+  assertEquals(rutFor(50001, RUTKATALOG[3], 1_000_000), 25000);   // aldrig mer än andelen
+  assertEquals(rutFor(37901, RUTKATALOG[3], 1_000_000), 18900);   // hela kronor
+  assertEquals(rutFor(50000, RUTKATALOG[3], 10050), 10000);       // taket, i hela kronor
   assertEquals(rutFor(50000, RUTKATALOG[3], 10000), 10000);
   assertEquals(rutFor(50000, RUTKATALOG[3], 0), 0);
   assertEquals(rutFor(50000, KATALOG[0], 1_000_000), 0);
@@ -260,9 +271,10 @@ Deno.test('ingen RUT utan skatteuppgifter eller utan tak — och det sägs', () 
   assertEquals(utanTak.perFamilj.get('k')![0].rut_ore, 0);
   assertEquals(utanTak.rutUtanTak, true);
 
-  const s = sammanfatta({ korningAv: 'admin', period: '2026-09-01', slut: '2026-10-01', timprisOre: 37900,
+  const s = sammanfatta({ korningAv: 'admin', period: '2026-12-01', rutAr: 2027, slut: '2027-01-01', timprisOre: 37900,
     underlag: utanTak, utanRapport: [], undantagna: [] });
-  assertEquals(s.rut_utan_tak, 2026);
+  // Betalningsåret, inte periodens: december betalas i januari.
+  assertEquals(s.rut_utan_tak, 2027);
 });
 
 Deno.test('sammanfattningen visar RUT per faktura när det finns', () => {

@@ -681,6 +681,16 @@ select pg_temp.rakna_efter('5.3 inte ens admin ändrar RUT på en skapad faktura
   array[$q$update public.invoices set rut_ore = 500 where parent_id = '00000000-0000-4000-8000-0000000000f1'$q$],
   $q$select count(*) from public.invoices where parent_id = '00000000-0000-4000-8000-0000000000f1' and rut_ore = 0$q$, 1);
 
+select pg_temp.prova('5.1 anon läser ersättningen i tjänstekatalogen', null,
+  array[$q$select ersattning_per_timme_ore from public.tjanster$q$], 'nekad');
+select pg_temp.prova('5.1 anon läser krav och matchningsregler', null,
+  array[$q$select krav, matchningsregler from public.tjanster$q$], 'nekad');
+select pg_temp.rakna('5.1 anon läser katalogens publika kolumner', null,
+  $q$select count(*) from (select kod, namn, namn_en, kort, kort_en, for_kund, for_jobb, aktiv, ordning,
+       pris_per_timme_ore, extra_personer_ore, extra_personer_max, bokningstyp, rapportkrav,
+       rut_berattigad, rut_procent, kundtyp, jobbtyp, min_alder from public.tjanster) x$q$,
+  (select count(*) from public.tjanster where aktiv));
+
 select pg_temp.rakna('5.1 läxhjälpen är inte RUT-berättigad', null,
   $q$select count(*) from public.tjanster where kod = 'laxhjalp' and not rut_berattigad and rut_procent = 0$q$, 1);
 

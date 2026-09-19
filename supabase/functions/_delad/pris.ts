@@ -18,8 +18,12 @@
 //   · RUT dras av på rader vars tjänst är RUT-berättigad — bara om
 //     kunden har skatteuppgifter och det finns ett tak för året.
 //     Annars 0, och kunden eller året listas i svaret.
-//   · Ersättningen: studiehjälparens egen timpenning, annars
-//     tjänstens (tjanster.ersattning_per_timme_ore).
+//   · Ersättningen: tjänstens (tjanster.ersattning_per_timme_ore) när
+//     den är satt, annars studiehjälparens egen timpenning — så som
+//     kolumnen och adminvyn beskriver den. Läxhjälp har ingen.
+//   · RUT avrundas NEDÅT till hela kronor. Skatteverket tar emot
+//     begäran i hela kronor, och avdraget får aldrig bli större än
+//     andelen.
 // ============================================================
 
 import { MANADER } from './konstanter.ts';
@@ -86,20 +90,21 @@ export function radtext(subject: string | null, datum: string): string {
 }
 
 // Tjänsten ett pass utan tjänst räknas som: den första aktiva som
-// kunder kan köpa. Samma regel som standard_tjanst() i databasen och
-// NXTjanster.standard() i gränssnittet. I dag läxhjälp.
+// kunder kan köpa, annars den första i katalogen. Samma regel som
+// standard_tjanst() i databasen. I dag läxhjälp.
 export function standardTjanst(tjanster: Tjanst[]): Tjanst | null {
-  const f = tjanster
-    .filter((t) => t.aktiv && t.for_kund)
+  const ordnad = [...tjanster]
     .sort((a, b) => (Number(a.ordning ?? 100) - Number(b.ordning ?? 100)) || a.kod.localeCompare(b.kod));
-  return f[0] ?? null;
+  return ordnad.find((t) => t.aktiv && t.for_kund) ?? ordnad[0] ?? null;
 }
 
 // Skattereduktionen på en rad: tjänstens andel av det kunden annars
-// hade betalat, aldrig mer än vad som är kvar av årets tak.
+// hade betalat, aldrig mer än vad som är kvar av årets tak, och i
+// hela kronor nedåt.
 export function rutFor(nettoOre: number, t: Tjanst | undefined, kvarOre: number): number {
   if (!t || !t.rut_berattigad || !t.rut_procent || kvarOre <= 0 || nettoOre <= 0) return 0;
-  return Math.min(Math.round((nettoOre * Number(t.rut_procent)) / 100), kvarOre);
+  const andel = Math.min((nettoOre * Number(t.rut_procent)) / 100, kvarOre);
+  return Math.floor(andel / 100) * 100;
 }
 
 // Delar upp det vyn passunderlag gav: pass som går vidare, pass utan
@@ -202,14 +207,15 @@ export function byggUnderlag(o: {
     }
 
     if (b.tutor_id && !b.pa_underlag) {
-      // Studiehjälparens egen timpenning, annars tjänstens ersättning.
-      // Utan någon av dem kan ersättningen inte räknas ut, och att
+      // Tjänstens ersättning när den är satt, annars studiehjälparens
+      // egen timpenning. Utan någon av dem kan ersättningen inte räknas
+      // ut, och att
       // gissa vore värre än att låta passet ligga kvar till nästa
       // körning. Det rapporteras i svaret så att någon kan fylla i den.
       //
       // Ersättningen påverkas ALDRIG av familjens rabatt eller RUT, och
       // räknar inte med tillägget för flera barn.
-      const timpenning = o.timpenningar.get(b.tutor_id) || Number(t?.ersattning_per_timme_ore || 0);
+      const timpenning = Number(t?.ersattning_per_timme_ore || 0) || o.timpenningar.get(b.tutor_id) || 0;
       if (!timpenning) { utanTimpenning.push(b.tutor_id); continue; }
       const lista = perTutor.get(b.tutor_id) ?? [];
       lista.push({
@@ -239,6 +245,7 @@ export const minuterSum = (rader: Rad[]) => rader.reduce((a, r) => a + r.minuter
 export function sammanfatta(o: {
   korningAv: 'nyckel' | 'admin';
   period: string;
+  rutAr?: number;
   slut: string;
   timprisOre: number;
   underlag: ReturnType<typeof byggUnderlag>;
@@ -263,6 +270,6 @@ export function sammanfatta(o: {
     undantagna_pass: o.undantagna.length,
   };
   if (u.rutUtanSkatteuppgifter.length) ut.rut_utan_skatteuppgifter = u.rutUtanSkatteuppgifter;
-  if (u.rutUtanTak) ut.rut_utan_tak = Number(o.period.slice(0, 4));
+  if (u.rutUtanTak) ut.rut_utan_tak = o.rutAr ?? Number(o.period.slice(0, 4));
   return ut;
 }

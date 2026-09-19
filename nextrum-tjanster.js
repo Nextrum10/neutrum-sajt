@@ -88,7 +88,8 @@ const NXTjanster = (function () {
         .from('tjanster')
         /* Det gränssnittet behöver för att beskriva och boka en
            tjänst. Ersättningen, kraven och matchningsreglerna hör till
-           admin och servern och hämtas inte här. */
+           admin och servern — anon får inte ens läsa dem (Fas 5,
+           kolumnrättigheter), så en select=* här hade nekats. */
         .select('kod, namn, namn_en, kort, kort_en, for_kund, for_jobb, aktiv, ordning, pris_per_timme_ore, extra_personer_ore, extra_personer_max, bokningstyp, rapportkrav, rut_berattigad, rut_procent, kundtyp, jobbtyp, min_alder')
         .order('ordning');
 

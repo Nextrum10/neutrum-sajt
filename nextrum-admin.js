@@ -1999,6 +1999,9 @@
           .eq('id', valt.rapport).is('booking_id', null).select('id');
         if (error) { alert('Kunde inte koppla: ' + felText(error)); return; }
         if (!data || !data.length) alert('Rapporten hann kopplas till något annat. Listan laddas om.');
+        /* Samma närvaro på passet. Rapportens trigger gör det bara när
+           en rapport skapas, och det här passet är redan genomfört. */
+        else await supa.from('bookings').update({ attendance: valt.narvaro }).eq('id', p.id);
         await laddaOmEkonomi();
       });
       return;
@@ -2290,10 +2293,11 @@
       + '<input class="inp" id="' + id('rutp') + '" type="number" min="0" max="100" step="1" inputmode="numeric"'
       + ' placeholder="0 = ingen RUT" value="' + (t.rut_procent || '') + '"></div>'
       + '</div>'
-      + '<label class="ag-kryss" style="margin:0"><input type="checkbox" id="' + id('rapport') + '"'
-      + (t.rapportkrav !== false ? ' checked' : '') + '> Rapport krävs innan passet faktureras</label>'
-      + '<p class="xsmall tj-villkor-not">RUT-andelen och taket hämtas från Skatteverket, inte härifrån. '
-      + 'Utan ett tak för året (tabellen rut_tak) drar faktureringen ingen RUT alls.</p>'
+      + '<p class="xsmall tj-villkor-not">Ersättningen och RUT gäller från nästa fakturering. '
+      + 'Bokningstyp, kunder, jobbtyp, ålder, krav och matchningsregler sparas nu men styr ingenting '
+      + 'förrän tjänsten aktiveras med sina regler (Fas 10) — och ett pass faktureras alltid först när '
+      + 'det har en rapport. RUT-andelen och taket hämtas från Skatteverket; utan ett tak för året '
+      + '(tabellen rut_tak) drar faktureringen ingen RUT alls.</p>'
       + '<div class="fgroup"><label for="' + id('krav') + '">Krav (JSON)</label>'
       + '<textarea class="inp tj-json" id="' + id('krav') + '" rows="3" spellcheck="false">' + json(t.krav) + '</textarea></div>'
       + '<div class="fgroup"><label for="' + id('match') + '">Matchningsregler (JSON)</label>'
@@ -2307,7 +2311,11 @@
   function tjFält(kod) {
     const f = namn => document.getElementById('tj-' + namn + '-' + kod);
     const tal = (namn, min, max) => {
-      const rå = String((f(namn) || {}).value || '').trim();
+      const fält = f(namn);
+      /* Ett nummerfält som fått text ("30 %", "150 kr") svarar med en
+         tom sträng. Utan den här kontrollen hade det sparats som tomt. */
+      if (fält && fält.validity && fält.validity.badInput) return { fel: true };
+      const rå = String((fält || {}).value || '').trim();
       if (rå === '') return { v: null };
       const n = Number(rå);
       if (!Number.isInteger(n) || n < min || n > max) return { fel: true };
@@ -2347,7 +2355,6 @@
         min_alder: ålder.v,
         rut_procent: procent,
         rut_berattigad: procent > 0,
-        rapportkrav: !!f('rapport').checked,
         krav: krav.v,
         matchningsregler: match.v
       }

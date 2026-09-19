@@ -223,6 +223,14 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Förfallodagen räknas redan här: RUT hör till året kunden BETALAR
+    // (Skatteverket), och det är förfallodagens år — en faktura för
+    // december betalas i januari och ska mot det nya årets tak.
+    const forfaller = new Date();
+    forfaller.setDate(forfaller.getDate() + BETALNINGSVILLKOR_DAGAR);
+    const forfallerIso = forfaller.toISOString().slice(0, 10);
+    const rutAr = Number(forfallerIso.slice(0, 4));
+
     // ---------- RUT ----------
     // Hämtas bara när något pass gäller en RUT-berättigad tjänst. För
     // läxhjälp ställs inga av de här frågorna.
@@ -232,11 +240,10 @@ Deno.serve(async (req) => {
       .map((b) => b.parent_id as string))];
     let rut: RutLage | undefined;
     if (rutKunder.length) {
-      const ar = Number(period.slice(0, 4));
       const [uppg, tak, anvant] = await Promise.all([
         db.from('kund_skatteuppgifter').select('kund_id').in('kund_id', rutKunder),
-        db.from('rut_tak').select('tak_ore').eq('ar', ar).maybeSingle(),
-        db.from('rut_underlag').select('kund_id, rut_ore').eq('ar', ar).in('kund_id', rutKunder),
+        db.from('rut_tak').select('tak_ore').eq('ar', rutAr).maybeSingle(),
+        db.from('rut_underlag').select('kund_id, rut_ore').eq('ar', rutAr).in('kund_id', rutKunder),
       ]);
       const fel = uppg.error ?? tak.error ?? anvant.error;
       if (fel) return json({ error: 'Kunde inte läsa RUT-underlaget: ' + fel.message }, 500);
@@ -252,16 +259,12 @@ Deno.serve(async (req) => {
     const { perFamilj, perTutor } = underlag;
 
     const sammanfattning = sammanfatta({
-      korningAv, period, slut, timprisOre, underlag, utanRapport, undantagna,
+      korningAv, period, rutAr, slut, timprisOre, underlag, utanRapport, undantagna,
     });
 
     if (torrkorning) return json({ torrkorning: true, ...sammanfattning }, 200);
 
     // ---------- skriv ----------
-    const forfaller = new Date();
-    forfaller.setDate(forfaller.getDate() + BETALNINGSVILLKOR_DAGAR);
-    const forfallerIso = forfaller.toISOString().slice(0, 10);
-
     const skapade = { fakturor: 0, utbetalningar: 0 };
     const problem: string[] = [];
 
