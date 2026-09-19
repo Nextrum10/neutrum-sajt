@@ -645,10 +645,22 @@ select pg_temp.rakna_efter('5.2 nytt pass hamnar på barnets uppdrag', '00000000
   $q$select count(*) from public.bookings b join public.students s on s.id = b.student_id
      where b.wanted_time = '10:00' and b.uppdrag_id = s.uppdrag_id$q$, 1);
 
-select pg_temp.prova('5.2 pass på en annan familjs uppdrag nekas', '00000000-0000-4000-8000-0000000000f1',
+-- Sedan 5.4: den som inte är admin väljer inte uppdrag till ett barn.
+-- Ett främmande uppdrag byts mot barnets eget — passet går igenom men
+-- hamnar rätt. Utan barn prövas uppdraget mot familjen och nekas.
+select pg_temp.rakna_efter('5.2 främmande uppdrag på ett barns pass byts mot barnets', '00000000-0000-4000-8000-0000000000f1',
   array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, uppdrag_id)
           values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
                   (now() at time zone 'Europe/Stockholm')::date + 14, '11:00', 60, 'requested', '$q$
+        || (select uppdrag_id::text from public.students where id = '00000000-0000-4000-8000-0000000005c1')
+        || $q$')$q$],
+  $q$select count(*) from public.bookings b join public.students s on s.id = b.student_id
+     where b.wanted_time = '11:00' and b.uppdrag_id = s.uppdrag_id$q$, 1);
+
+select pg_temp.prova('5.2 pass utan barn på en annan familjs uppdrag nekas', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, uppdrag_id)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1', null, '00000000-0000-4000-8000-0000000000f1',
+                  (now() at time zone 'Europe/Stockholm')::date + 14, '12:00', 60, 'requested', '$q$
         || (select uppdrag_id::text from public.students where id = '00000000-0000-4000-8000-0000000005c1')
         || $q$')$q$], 'nekad');
 
