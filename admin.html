@@ -136,6 +136,7 @@
 
       <div class="adm-topp-var">
         <span class="adm-topp-hem">Admin</span>
+        <span class="adm-topp-hem" id="adm-omrade" hidden></span>
         <b id="adm-var">Översikt</b>
       </div>
 
@@ -163,30 +164,39 @@
     <div class="vy-layout" id="adm-layout">
 
       <nav class="vy-sido" id="vy-sido" aria-label="Delar av adminvyn">
+        <!-- Nio områden (Fas 6), i masterplanens ordning. data-sek är
+             desamma som förut, så gamla adresser fungerar; bara
+             grupperingen och rubrikerna är nya. -->
+        <span class="vy-sido-rubrik" aria-hidden="true">Översikt</span>
         <a href="#oversikt" data-sek="oversikt" title="Översikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg><span class="adm-etikett">Översikt</span></a>
+        <a href="#statistik" data-sek="statistik" title="Statistik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="adm-etikett">Statistik</span></a>
 
-        <span class="vy-sido-rubrik" aria-hidden="true">Inkommande</span>
+        <span class="vy-sido-rubrik" aria-hidden="true">Kunder</span>
         <a href="#leads" data-sek="leads" title="Intresseanmälningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h17v11h-17z"/><path d="m3.5 8 8.5 6 8.5-6"/></svg><span class="adm-etikett">Intresseanmälningar</span></a>
-        <a href="#ansokningar" data-sek="ansokningar" title="Ansökningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/></svg><span class="adm-etikett">Ansökningar</span></a>
-        <a href="#meddelanden" data-sek="meddelanden" title="Meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Meddelanden</span></a>
-
-        <span class="vy-sido-rubrik" aria-hidden="true">Personer</span>
         <a href="#familjer" data-sek="familjer" title="Familjer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3"/><path d="M3 19c0-2.8 2.5-4.5 5.5-4.5S14 16.2 14 19"/><path d="M16 5.5a3 3 0 0 1 0 5.8M21 19c0-2.2-1.4-3.7-3.5-4.3"/></svg><span class="adm-etikett">Familjer</span></a>
         <a href="#elever" data-sek="elever" title="Elever"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.2"/><path d="M4.5 20c0-3.4 3.2-5.5 7.5-5.5s7.5 2.1 7.5 5.5"/></svg><span class="adm-etikett">Elever</span></a>
         <a href="#studiehjalpare" data-sek="studiehjalpare" title="Studiehjälpare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg><span class="adm-etikett">Studiehjälpare</span></a>
 
-        <span class="vy-sido-rubrik" aria-hidden="true">Verksamhet</span>
+        <span class="vy-sido-rubrik" aria-hidden="true">Drift</span>
         <a href="#matchning" data-sek="matchning" title="Matchning"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6.5" cy="8" r="2.8"/><circle cx="17.5" cy="16" r="2.8"/><path d="M9.3 8h2.2a3 3 0 0 1 3 3v2"/><path d="m12.5 11.5 2 1.5 2-1.5"/></svg><span class="adm-etikett">Matchning</span></a>
         <a href="#bokningar" data-sek="bokningar" title="Bokningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg><span class="adm-etikett">Bokningar</span></a>
         <a href="#lektioner" data-sek="lektioner" title="Lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h7a2 2 0 0 1 2 2V20a2 2 0 0 0-2-2H4z"/><path d="M20 5.5h-7a2 2 0 0 0-2 2V20a2 2 0 0 1 2-2h7z"/></svg><span class="adm-etikett">Lektioner</span></a>
+        <a href="#uppdrag" data-sek="uppdrag" title="Uppdrag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8h17v11.5h-17z"/><path d="M9 8V5.5h6V8M3.5 13h17"/></svg><span class="adm-etikett">Uppdrag</span></a>
+        <a href="#uppgifter" data-sek="uppgifter" title="Uppgifter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6.5h10.5M10 12h10.5M10 17.5h10.5"/><path d="m3.5 6.5 1.3 1.3 2.2-2.4M3.5 12l1.3 1.3 2.2-2.4M3.5 17.5l1.3 1.3 2.2-2.4"/></svg><span class="adm-etikett">Uppgifter</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Kommunikation</span>
+        <a href="#meddelanden" data-sek="meddelanden" title="Meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Meddelanden</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Ekonomi</span>
         <a href="#ekonomi" data-sek="ekonomi" title="Fakturor &amp; utbetalningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg><span class="adm-etikett">Fakturor &amp; utbetalningar</span></a>
 
-        <span class="vy-sido-rubrik" aria-hidden="true">Analys</span>
-        <a href="#statistik" data-sek="statistik" title="Statistik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="adm-etikett">Statistik</span></a>
+        <span class="vy-sido-rubrik" aria-hidden="true">Rekrytering</span>
+        <a href="#ansokningar" data-sek="ansokningar" title="Ansökningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/></svg><span class="adm-etikett">Ansökningar</span></a>
 
-        <span class="vy-sido-rubrik" aria-hidden="true">Agenter</span>
+        <span class="vy-sido-rubrik" aria-hidden="true">Tjänster</span>
+        <a href="#katalog" data-sek="katalog" title="Tjänster &amp; priser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.3V4.5a1 1 0 0 1 1-1h7.8l8.2 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.6"/></svg><span class="adm-etikett">Tjänster &amp; priser</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">AI</span>
         <a href="#agenter" data-sek="agenter" title="Agenter"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7.5" width="16" height="11" rx="3"/><path d="M12 7.5V4M9 12.5h.01M15 12.5h.01M9.5 15.5h5"/></svg><span class="adm-etikett">Agenter</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">System</span>
@@ -226,6 +236,17 @@
           <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
             <h5>Kräver din uppmärksamhet <em id="adm-att-antal"></em></h5>
             <div id="adm-att-gora"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- ============ PROBLEM ============
+               Det som gått fel eller fastnat, räknat i databasen
+               (admin_lage och ekonomiska_avvikelser): pass utan
+               rapport, förfallna fakturor, försenade uppgifter, fel
+               hos användarna och notiser som inte gick fram. Tom ruta
+               är ett besked, inte en tom låda. -->
+          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+            <h5>Problem <em id="adm-problem-antal"></em></h5>
+            <div id="adm-problem"><div class="loading">Hämtar</div></div>
           </div>
 
           <div class="split">
@@ -580,6 +601,84 @@
         </section>
 
         <!-- ============================================================
+             UPPDRAG (Fas 5.2)
+             Vad Nextrum utför åt en kund. För läxhjälp ett per barn,
+             skapat av databasen när barnet läggs till; här syns de
+             med kund, tjänst, status och hur många pass som hör till.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="uppdrag" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Uppdrag</h2>
+              <p>Det Nextrum utför åt varje kund — i dag ett läxhjälpsuppdrag per barn.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <select class="sel" id="uppdrag-status" aria-label="Filtrera på status">
+                <option value="">Alla</option>
+                <option value="aktivt" selected>Aktiva</option>
+                <option value="pausat">Pausade</option>
+                <option value="avslutat">Avslutade</option>
+              </select>
+              <span class="small" id="uppdrag-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="uppdrag-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             UPPGIFTER (Fas 6)
+             Det någon ska göra, kopplat till det det gäller. Skapas
+             här, från en avvikelse — och senare av schemalagda
+             kontroller (Fas 7) och AI-agenten (Fas 8), som syns i
+             kolumnen "Från".
+             ============================================================ -->
+        <section class="vy-sek" data-sek="uppgifter" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Uppgifter</h2>
+              <p>Det som ska göras, vem som gör det och när det ska vara klart.</p>
+            </div>
+          </div>
+          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+            <h5>Ny uppgift</h5>
+            <form id="uppg-form" class="uppg-form" novalidate>
+              <div class="fgroup"><label for="uppg-titel">Vad ska göras?</label>
+                <input class="inp" id="uppg-titel" maxlength="200" required></div>
+              <div class="fgroup"><label for="uppg-typ">Typ</label>
+                <select class="sel" id="uppg-typ">
+                  <option value="uppfoljning">Uppföljning</option>
+                  <option value="kontroll">Kontroll</option>
+                  <option value="problem">Problem</option>
+                  <option value="ovrigt" selected>Övrigt</option>
+                </select></div>
+              <div class="fgroup"><label for="uppg-ansvarig">Ansvarig</label>
+                <select class="sel" id="uppg-ansvarig"><option value="">Ingen</option></select></div>
+              <div class="fgroup"><label for="uppg-datum">Klar senast</label>
+                <input class="inp" id="uppg-datum" type="date"></div>
+              <div class="fgroup uppg-bred"><label for="uppg-text">Mer om den (valfritt)</label>
+                <textarea class="inp" id="uppg-text" rows="2" maxlength="2000"></textarea></div>
+              <div class="uppg-fot">
+                <button class="btn btn-primary btn-sm" type="submit">Lägg till</button>
+                <p class="ok-msg" id="uppg-msg" style="margin:0"></p>
+              </div>
+            </form>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <select class="sel" id="uppg-filter" aria-label="Visa uppgifter">
+                <option value="oppna" selected>Öppna</option>
+                <option value="klara">Klara och avbrutna</option>
+                <option value="">Alla</option>
+              </select>
+              <span class="small" id="uppg-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="uppg-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
              EKONOMI
              Fakturan till familjen och underlaget till studiehjälparen
              är två sidor av samma pass. Två flikar, inte två sidor.
@@ -695,6 +794,17 @@
                 om det var fel — passet kommer då med på nästa körning.
               </p>
               <div id="avv-undantagna"><div class="loading">Hämtar</div></div>
+            </div>
+            <!-- Allt annat som inte går ihop, räknat av databasen
+                 (ekonomiska_avvikelser): förfallna fakturor, gamla
+                 utkast, utbetalningar som väntar, pass utan ersättning,
+                 summor som inte stämmer, RUT utan underlag. -->
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+              <h5>Övriga ekonomiska avvikelser <em id="avv-ovriga-antal"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Varje rad kan bli en uppgift, så att någon tar hand om den.
+              </p>
+              <div id="avv-ovriga"><div class="loading">Hämtar</div></div>
             </div>
           </div>
 
@@ -1053,67 +1163,26 @@
           </div>
         </section>
 
-        <section class="vy-sek" data-sek="system" hidden>
+        <!-- ============================================================
+             TJÄNSTER (Fas 6)
+             Tjänstekatalogen och rabattkoderna låg under System. De
+             har fått ett eget område: det är affären, inte driften av
+             sajten. #system/tjanster och #system/rabattkoder skickas
+             hit (följHash i nextrum-admin.js).
+             ============================================================ -->
+        <section class="vy-sek" data-sek="katalog" hidden>
           <div class="vy-sek-topp">
             <div>
-              <h2>System</h2>
-              <p>Priset, kopplingarna till Google och Fortnox, och felen som användarna råkat på.</p>
+              <h2>Tjänster</h2>
+              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor — och rabattkoderna.</p>
             </div>
           </div>
 
-          <div class="vy-flikar" role="tablist" aria-label="Delar av systemet">
-            <button class="vy-flik" type="button" role="tab" data-flik="integrationer"
-                    id="flik-integrationer" aria-controls="panel-integrationer">Integrationer</button>
+          <div class="vy-flikar" role="tablist" aria-label="Tjänster och rabattkoder">
             <button class="vy-flik" type="button" role="tab" data-flik="tjanster"
                     id="flik-tjanster" aria-controls="panel-tjanster">Tjänster &amp; priser</button>
             <button class="vy-flik" type="button" role="tab" data-flik="rabattkoder"
                     id="flik-rabattkoder" aria-controls="panel-rabattkoder">Rabattkoder</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="adminanvandare"
-                    id="flik-adminanvandare" aria-controls="panel-adminanvandare">Adminanvändare</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="fel"
-                    id="flik-fel" aria-controls="panel-fel">Fel
-              <span class="vy-flik-mark" id="flik-fel-mark" hidden></span></button>
-          </div>
-
-          <!-- ============ ADMINANVÄNDARE ============
-               is_admin är den enda flaggan i systemet som avgör vem
-               som ser den här sidan. Att sätta den har krävt Table
-               Editor, vilket betyder att den som skulle ge en ny
-               kollega behörighet behövde databasåtkomst — och då har
-               hen redan mer än behörigheten ger.
-
-               Triggern skydda_profilfalt släpper igenom en admin, så
-               det går från appen. Det som INTE går, och inte ska gå,
-               är att ta bort sin egen: en ensam admin som klickar
-               fel låser ut hela bolaget ur sin egen adminvy. -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="adminanvandare"
-               id="panel-adminanvandare" aria-labelledby="flik-adminanvandare" hidden>
-            <div class="dbox">
-              <h5>Har behörighet <em id="adm-anv-antal"></em></h5>
-              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
-                En admin ser alla familjers och studiehjälpares uppgifter, alla meddelanden,
-                alla fakturor och alla utbetalningar. Ge den bara till den som ska ha den.
-              </p>
-              <div id="adm-anv"><div class="loading">Hämtar</div></div>
-            </div>
-
-            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
-              <h5>Ge behörighet</h5>
-              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:14px">
-                Personen behöver ha ett konto på sidan först. Sök på namn eller e-post.
-              </p>
-              <div class="adm-verktyg">
-                <input class="inp adm-sok" id="adm-anv-sok" type="search"
-                       placeholder="Sök namn eller e-post" aria-label="Sök person" autocomplete="off"
-                       style="max-width:none">
-              </div>
-              <div id="adm-anv-traffar"></div>
-            </div>
-          </div>
-
-          <div class="vy-flik-panel" role="tabpanel" data-flik="integrationer"
-               id="panel-integrationer" aria-labelledby="flik-integrationer">
-            <div id="int-kort"><div class="loading">Hämtar</div></div>
           </div>
 
           <!-- ============ TJÄNSTER & PRISER ============
@@ -1213,6 +1282,71 @@
             </div>
           </div>
 
+        </section>
+
+        <section class="vy-sek" data-sek="system" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>System</h2>
+              <p>Kopplingarna till Google och Fortnox, vem som är admin, felen användarna råkat på, inställningarna och auditloggen.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Delar av systemet">
+            <button class="vy-flik" type="button" role="tab" data-flik="integrationer"
+                    id="flik-integrationer" aria-controls="panel-integrationer">Integrationer</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="adminanvandare"
+                    id="flik-adminanvandare" aria-controls="panel-adminanvandare">Adminanvändare</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="fel"
+                    id="flik-fel" aria-controls="panel-fel">Fel
+              <span class="vy-flik-mark" id="flik-fel-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="installningar"
+                    id="flik-installningar" aria-controls="panel-installningar">Inställningar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="audit"
+                    id="flik-audit" aria-controls="panel-audit">Auditlogg</button>
+          </div>
+
+          <!-- ============ ADMINANVÄNDARE ============
+               is_admin är den enda flaggan i systemet som avgör vem
+               som ser den här sidan. Att sätta den har krävt Table
+               Editor, vilket betyder att den som skulle ge en ny
+               kollega behörighet behövde databasåtkomst — och då har
+               hen redan mer än behörigheten ger.
+
+               Triggern skydda_profilfalt släpper igenom en admin, så
+               det går från appen. Det som INTE går, och inte ska gå,
+               är att ta bort sin egen: en ensam admin som klickar
+               fel låser ut hela bolaget ur sin egen adminvy. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="adminanvandare"
+               id="panel-adminanvandare" aria-labelledby="flik-adminanvandare" hidden>
+            <div class="dbox">
+              <h5>Har behörighet <em id="adm-anv-antal"></em></h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
+                En admin ser alla familjers och studiehjälpares uppgifter, alla meddelanden,
+                alla fakturor och alla utbetalningar. Ge den bara till den som ska ha den.
+              </p>
+              <div id="adm-anv"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+              <h5>Ge behörighet</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:14px">
+                Personen behöver ha ett konto på sidan först. Sök på namn eller e-post.
+              </p>
+              <div class="adm-verktyg">
+                <input class="inp adm-sok" id="adm-anv-sok" type="search"
+                       placeholder="Sök namn eller e-post" aria-label="Sök person" autocomplete="off"
+                       style="max-width:none">
+              </div>
+              <div id="adm-anv-traffar"></div>
+            </div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="integrationer"
+               id="panel-integrationer" aria-labelledby="flik-integrationer">
+            <div id="int-kort"><div class="loading">Hämtar</div></div>
+          </div>
+
           <div class="vy-flik-panel" role="tabpanel" data-flik="fel"
                id="panel-fel" aria-labelledby="flik-fel" hidden>
             <div class="dbox">
@@ -1234,6 +1368,68 @@
                 senaste timmarna", inte "aldrig något".
               </p>
               <div id="notis-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- ============ INSTÄLLNINGAR (Fas 6) ============
+               Det som styr verksamheten men inte är kod. RUT-taket per
+               år matas in här med källa — ingen skattesiffra står i
+               koden (Fas 5.3). Utan ett tak för året drar
+               faktureringen ingen RUT. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="installningar"
+               id="panel-installningar" aria-labelledby="flik-installningar" hidden>
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>RUT-tak per år</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Taket per köpare och år, hämtat från Skatteverket. Skriv var siffran kommer ifrån —
+                den ändras av lagstiftaren, inte av oss.
+              </p>
+              <form id="rt-form" class="uppg-form" novalidate>
+                <div class="fgroup"><label for="rt-ar">År</label>
+                  <input class="inp" id="rt-ar" type="number" min="2020" max="2100" step="1" inputmode="numeric"></div>
+                <div class="fgroup"><label for="rt-tak">Tak, kronor</label>
+                  <input class="inp" id="rt-tak" type="number" min="1" step="1" inputmode="numeric"></div>
+                <div class="fgroup uppg-bred"><label for="rt-kalla">Källa</label>
+                  <input class="inp" id="rt-kalla" maxlength="300" placeholder="t.ex. skatteverket.se, sidan om RUT, hämtad 2026-01-02"></div>
+                <div class="uppg-fot">
+                  <button class="btn btn-primary btn-sm" type="submit">Spara taket</button>
+                  <p class="ok-msg" id="rt-msg" style="margin:0"></p>
+                </div>
+              </form>
+              <div id="rt-tabell" style="margin-top:14px"><div class="loading">Hämtar</div></div>
+            </div>
+            <div class="dbox">
+              <h5>Andra inställningar</h5>
+              <div id="inst-pekare"></div>
+            </div>
+          </div>
+
+          <!-- ============ AUDITLOGG (Fas 6) ============
+               Vem som ändrade vad och när: matchningar, fakturor,
+               utbetalningar, tjänster, adminbehörighet, undantag,
+               kopplade rapporter och varje åtkomst till ett
+               personnummer. Loggen innehåller bara id, status, belopp
+               och datum — namnen slås upp här, när den visas. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="audit"
+               id="panel-audit" aria-labelledby="flik-audit" hidden>
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <select class="sel" id="audit-filter" aria-label="Visa händelser av typ">
+                  <option value="">Allt</option>
+                  <option value="matchning">Matchningar</option>
+                  <option value="faktura">Fakturor</option>
+                  <option value="utbetalning">Utbetalningar</option>
+                  <option value="tjanst">Tjänster</option>
+                  <option value="rabattkod">Rabattkoder</option>
+                  <option value="behorighet">Adminbehörighet</option>
+                  <option value="pass">Undantagna pass</option>
+                  <option value="rapport">Rapporter</option>
+                  <option value="studiehjalpare">Studiehjälpare</option>
+                  <option value="skatteuppgifter">Personnummer</option>
+                </select>
+                <span class="small" id="audit-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="audit-tabell"><div class="loading">Hämtar</div></div>
             </div>
           </div>
         </section>

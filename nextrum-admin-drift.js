@@ -452,7 +452,7 @@
     $('#bok-tabell').innerHTML = tabell([
       { namn: 'När', rita: b => '<b>' + esc(kortDatum(b.wanted_date)) + '</b>'
         + '<span class="adm-und">' + esc(b.wanted_time ? String(b.wanted_time).slice(0, 5) : '')
-        + ' · ' + ((b.duration_min || 60) / 60) + ' h</span>' },
+        + ' · ' + NXBetalning.timmar(b.duration_min || 60) + '</span>' },
       { namn: 'Elev', rita: b => b.elev
         ? '<b>' + esc(b.elev) + '</b><span class="adm-und">' + esc(b.familj) + '</span>'
         : esc(b.familj) + '<span class="adm-und">inget barn valt</span>' },
@@ -643,9 +643,215 @@
     });
   }
 
+  /* ============================================================
+     UPPDRAG (Fas 5.2, synliga i Fas 6)
+
+     Vad Nextrum utför åt en kund. För läxhjälp ett per barn — det
+     skapas av databasen när barnet läggs till, så här finns inget
+     att lägga till, bara att se. Barnen och passen hittas genom
+     uppdrag_id på elevraden och på passen.
+     ============================================================ */
+  const UPPDRAG_LAGE = {
+    aktivt: ['Aktivt', 'ar-klar'], pausat: ['Pausat', 'ar-vantar'], avslutat: ['Avslutat', '']
+  };
+
+  function tjanstNamn(kod) {
+    const t = (S.tjanster || []).find(x => x.kod === kod);
+    return t ? t.namn : (kod || '—');
+  }
+
+  function ritaUppdrag() {
+    const host = $('#uppdrag-tabell');
+    if (!host) return;
+    const filter = ($('#uppdrag-status') || {}).value || '';
+    const rader = (S.uppdrag || []).filter(u => !filter || u.status === filter);
+    $('#uppdrag-antal').textContent = rader.length ? rader.length + ' st' : '';
+
+    host.innerHTML = tabell([
+      { namn: 'Kund', rita: u => '<b>' + esc(namnFör(u.kund_id)) + '</b>' },
+      { namn: 'Gäller', rita: u => {
+        const barn = (S.elevlista || []).filter(e => e.uppdrag_id === u.id).map(e => e.name);
+        return barn.length ? esc(barn.join(', ')) : '<span class="adm-und">Inget barn</span>';
+      } },
+      { namn: 'Tjänst', rita: u => esc(tjanstNamn(u.tjanst))
+        + (u.typ === 'engang' ? '<span class="adm-und">Engång</span>' : '') },
+      { namn: 'Pass', rita: u => {
+        const pass = (S.bokningar || []).filter(b => b.uppdrag_id === u.id && b.status !== 'cancelled');
+        const klara = pass.filter(b => b.status === 'completed').length;
+        return '<span class="adm-tal">' + pass.length + '</span>'
+          + (pass.length ? '<span class="adm-und">' + klara + ' genomförda</span>' : '');
+      } },
+      { namn: 'Läge', rita: u => pill((UPPDRAG_LAGE[u.status] || [u.status])[0], (UPPDRAG_LAGE[u.status] || [])[1] || '') },
+      { namn: 'Sedan', rita: u => '<span class="adm-tal">' + esc(kortDatum(u.created_at)) + '</span>' }
+    ], rader, tomtText(filter, 'Inga uppdrag med det läget', 'Inga uppdrag än — de skapas när ett barn läggs till'));
+  }
+
+  const uppdragFilter = $('#uppdrag-status');
+  if (uppdragFilter) uppdragFilter.addEventListener('change', ritaUppdrag);
+
+  /* ============================================================
+     UPPGIFTER (Fas 6)
+
+     Det någon ska göra. En uppgift som skapas här är alltid en
+     människas: databasen (uppgift_stampel) sätter skapad_av och
+     skapad_av_typ från inloggningen. AI och schemalagda kontroller
+     (Fas 7–8) skriver med service_role och syns som sådana.
+     ============================================================ */
+  const UPPG_TYP = { uppfoljning: 'Uppföljning', kontroll: 'Kontroll', problem: 'Problem', ovrigt: 'Övrigt' };
+  const UPPG_LAGE = {
+    oppen: ['Öppen', 'ar-ny'], pagar: ['Pågår', 'ar-vantar'],
+    klar: ['Klar', 'ar-klar'], avbruten: ['Avbruten', '']
+  };
+  const UPPG_FRAN = { manniska: 'Människa', ai: 'AI', system: 'System' };
+
+  /* Vart en uppgift pekar, och vad det heter. Hittas inte raden
+     visas tabellens namn — hellre det än en länk till ingenting. */
+  const UPPG_MAL = {
+    bookings: '#bokningar', invoices: '#ekonomi/fakturor', payouts: '#ekonomi/utbetalningar',
+    leads: '#leads', applications: '#ansokningar', profiles: '#familjer', students: '#elever',
+    uppdrag: '#uppdrag', tjanster: '#katalog/tjanster', lesson_reports: '#lektioner'
+  };
+  function uppgKoppling(u) {
+    if (!u.kopplad_tabell) return '';
+    const id = u.kopplad_id;
+    let text = u.kopplad_tabell;
+    if (u.kopplad_tabell === 'bookings') {
+      const b = (S.bokningar || []).find(x => x.id === id);
+      text = b ? 'Pass ' + kortDatum(b.wanted_date) + ' · ' + namnFör(b.parent_id) : 'Ett pass';
+    } else if (u.kopplad_tabell === 'invoices') {
+      const f = (S.fakturor || []).find(x => x.id === id);
+      text = f ? 'Faktura ' + String(f.period || '').slice(0, 7) + ' · ' + namnFör(f.parent_id) : 'En faktura';
+    } else if (u.kopplad_tabell === 'payouts') {
+      const p = (S.utbetalningar || []).find(x => x.id === id);
+      text = p ? 'Utbetalning ' + String(p.period || '').slice(0, 7) + ' · ' + namnFör(p.tutor_id) : 'En utbetalning';
+    } else if (u.kopplad_tabell === 'profiles' || u.kopplad_tabell === 'students') {
+      const elev = u.kopplad_tabell === 'students' && (S.elevlista || []).find(x => x.id === id);
+      text = u.kopplad_tabell === 'students' ? (elev ? 'Elev · ' + elev.name : 'En elev') : namnFör(id);
+    } else if (u.kopplad_tabell === 'leads') {
+      const l = (S.leads || []).find(x => x.id === id);
+      text = 'Intresseanmälan' + (l && l.parent_name ? ' · ' + l.parent_name : '');
+    } else if (u.kopplad_tabell === 'applications') {
+      const a = (S.ansokningar || []).find(x => x.id === id);
+      text = 'Ansökan' + (a && a.name ? ' · ' + a.name : '');
+    } else if (u.kopplad_tabell === 'uppdrag') {
+      const up = (S.uppdrag || []).find(x => x.id === id);
+      text = 'Uppdrag' + (up ? ' · ' + namnFör(up.kund_id) : '');
+    }
+    const mål = UPPG_MAL[u.kopplad_tabell];
+    return mål ? '<a class="adm-und" href="' + mål + '">Gäller: ' + esc(text) + '</a>'
+               : '<span class="adm-und">Gäller: ' + esc(text) + '</span>';
+  }
+
+  function adminer() {
+    return Object.values(S.personer || {}).filter(p => p.is_admin);
+  }
+
+  function ritaUppgifter() {
+    const host = $('#uppg-tabell');
+    if (!host) return;
+
+    /* Ansvarig-väljaren i formuläret: adminerna. */
+    const välj = $('#uppg-ansvarig');
+    if (välj && välj.options.length <= 1) {
+      välj.innerHTML = '<option value="">Ingen</option>' + adminer().map(p =>
+        '<option value="' + esc(p.id) + '">' + esc(p.full_name || p.email) + '</option>').join('');
+    }
+
+    const filter = ($('#uppg-filter') || {}).value;
+    const idag = isoFor(new Date());
+    const rader = (S.uppgifter || []).filter(u =>
+      filter === 'oppna' ? (u.status === 'oppen' || u.status === 'pagar')
+      : filter === 'klara' ? (u.status === 'klar' || u.status === 'avbruten') : true)
+      .slice().sort((a, b) => String(a.forfallodag || '9999').localeCompare(String(b.forfallodag || '9999'))
+        || String(b.created_at).localeCompare(String(a.created_at)));
+    $('#uppg-antal').textContent = rader.length ? rader.length + ' st' : '';
+
+    const ansvarigVal = u => '<select class="sel" style="min-width:132px;padding:7px 28px 7px 10px;font-size:.84rem"'
+      + ' data-uppg-ansvarig="' + esc(u.id) + '" aria-label="Ansvarig">'
+      + '<option value="">Ingen</option>' + adminer().map(p => '<option value="' + esc(p.id) + '"'
+        + (p.id === u.ansvarig ? ' selected' : '') + '>' + esc(p.full_name || p.email) + '</option>').join('')
+      + '</select>';
+    const lägeVal = u => '<select class="sel" style="min-width:120px;padding:7px 28px 7px 10px;font-size:.84rem"'
+      + ' data-uppg-status="' + esc(u.id) + '" aria-label="Läge">'
+      + Object.keys(UPPG_LAGE).map(k => '<option value="' + k + '"' + (k === u.status ? ' selected' : '') + '>'
+        + esc(UPPG_LAGE[k][0]) + '</option>').join('') + '</select>';
+
+    host.innerHTML = tabell([
+      { namn: 'Uppgift', rita: u => '<b>' + esc(u.titel) + '</b>'
+        + (u.beskrivning ? '<span class="adm-und">' + esc(String(u.beskrivning).slice(0, 180)) + '</span>' : '')
+        + uppgKoppling(u) },
+      { namn: 'Typ', rita: u => esc(UPPG_TYP[u.typ] || u.typ) },
+      { namn: 'Från', rita: u => u.skapad_av_typ === 'manniska'
+        ? esc(u.skapad_av ? namnFör(u.skapad_av) : 'Människa')
+        : pill(UPPG_FRAN[u.skapad_av_typ] || u.skapad_av_typ, 'ar-vantar') },
+      { namn: 'Ansvarig', rita: ansvarigVal },
+      { namn: 'Klar senast', rita: u => {
+        if (!u.forfallodag) return '<span class="adm-und">—</span>';
+        const sen = (u.status === 'oppen' || u.status === 'pagar') && u.forfallodag < idag;
+        return sen ? pill(kortDatum(u.forfallodag) + ' · sen', 'ar-ny')
+                   : '<span class="adm-tal">' + esc(kortDatum(u.forfallodag)) + '</span>';
+      } },
+      { namn: 'Läge', rita: lägeVal }
+    ], rader, filter === 'oppna' ? 'Inga öppna uppgifter' : 'Inga uppgifter');
+  }
+
+  const uppgFilter = $('#uppg-filter');
+  if (uppgFilter) uppgFilter.addEventListener('change', ritaUppgifter);
+
+  /* Skapar en uppgift och ritar om. Anropas också från Ekonomi, när
+     en avvikelse ska bli någons att ta hand om. Returnerar raden,
+     eller null med felet redan visat. */
+  async function skapaUppgift(fält) {
+    const { data, error } = await supa.from('uppgifter').insert(fält).select().single();
+    if (error) { alert('Kunde inte skapa uppgiften: ' + felText(error)); return null; }
+    S.uppgifter = [data].concat(S.uppgifter || []);
+    ritaUppgifter();
+    ritaÖversikt();
+    return data;
+  }
+
+  const uppgForm = $('#uppg-form');
+  if (uppgForm) uppgForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#uppg-msg');
+    rensa(msg);
+    const titel = $('#uppg-titel').value.trim();
+    if (!titel) { säg(msg, 'Skriv vad som ska göras.', false); $('#uppg-titel').focus(); return; }
+    const knapp = uppgForm.querySelector('button[type="submit"]');
+    await medan(knapp, 'Lägger till…', async () => {
+      const rad = await skapaUppgift({
+        titel,
+        typ: $('#uppg-typ').value || 'ovrigt',
+        ansvarig: $('#uppg-ansvarig').value || null,
+        forfallodag: $('#uppg-datum').value || null,
+        beskrivning: $('#uppg-text').value.trim() || null
+      });
+      if (!rad) return;
+      uppgForm.reset();
+      säg(msg, '✓ Uppgiften är tillagd.', true);
+    });
+  });
+
+  document.addEventListener('change', async e => {
+    const läge = e.target.closest('[data-uppg-status]');
+    const ansvarig = e.target.closest('[data-uppg-ansvarig]');
+    if (!läge && !ansvarig) return;
+    const id = (läge || ansvarig).dataset[läge ? 'uppgStatus' : 'uppgAnsvarig'];
+    const fält = läge ? { status: läge.value } : { ansvarig: ansvarig.value || null };
+    const u = (S.uppgifter || []).find(x => x.id === id);
+    if (!u) return;
+    if (await skriv('uppgifter', id, fält)) {
+      Object.assign(u, fält);
+      if (läge) u.klar_at = läge.value === 'klar' ? new Date().toISOString() : null;
+      ritaUppgifter();
+      ritaÖversikt();
+    }
+  });
+
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    ritaBokningar, ritaKalender, ritaLektioner, ritaMatchning
+    ritaBokningar, ritaKalender, ritaLektioner, ritaMatchning,
+    ritaUppdrag, ritaUppgifter, skapaUppgift
   });
 })();

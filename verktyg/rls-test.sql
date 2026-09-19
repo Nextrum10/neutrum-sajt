@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2 och 5)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5 och 6)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -18,7 +18,7 @@
 -- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok.
 --
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3 och
--- Fas 5.1–5.3 är körda. Körs filen före dem är det väntat att de berörda raderna
+-- Fas 5.1–5.6 och Fas 6.1–6.2 är körda. Körs filen före dem är det väntat att de berörda raderna
 -- faller — det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
 
@@ -701,6 +701,43 @@ select pg_temp.rakna('5.1 anon läser katalogens publika kolumner', null,
 select pg_temp.rakna('5.1 läxhjälpen är inte RUT-berättigad', null,
   $q$select count(*) from public.tjanster where kod = 'laxhjalp' and not rut_berattigad and rut_procent = 0$q$, 1);
 
+
+-- ------------------------------------------------------------
+-- Fas 6: auditlogg, uppgifter, avvikelser
+-- ------------------------------------------------------------
+select pg_temp.prova('6.1 anon läser auditloggen', null,
+  array[$q$select * from public.audit_logg$q$], 'nekad');
+select pg_temp.rakna('6.1 familj ser ingen auditlogg', '00000000-0000-4000-8000-0000000000f1',
+  'select count(*) from public.audit_logg', 0);
+select pg_temp.rakna('6.1 studiehjälpare ser ingen auditlogg', '00000000-0000-4000-8000-0000000000a1',
+  'select count(*) from public.audit_logg', 0);
+select pg_temp.prova('6.1 admin skriver i auditloggen', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into public.audit_logg (aktor_typ, handling, tabell, objekt_id) values ('admin', 'x.y', 't', '1')$q$], 'nekad');
+select pg_temp.prova('6.1 admin raderar ur auditloggen', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$delete from public.audit_logg$q$], 'nekad');
+
+-- En matchning av admin blir en rad i loggen, utan barnets namn.
+select pg_temp.rakna_efter('6.1 matchning loggas utan namn', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.students set matched_tutor_id = null, match_status = 'pending'
+          where id = '00000000-0000-4000-8000-0000000005a1'$q$],
+  $q$select count(*) from public.audit_logg where handling = 'matchning.andrad'
+     and objekt_id = '00000000-0000-4000-8000-0000000005a1'
+     and aktor = '00000000-0000-4000-8000-0000000000ad' and aktor_typ = 'admin'
+     and (coalesce(fore::text, '') || coalesce(efter::text, '')) not like '%Äldst%'$q$, 1);
+
+select pg_temp.prova('6.2 anon läser uppgifter', null,
+  array[$q$select * from public.uppgifter$q$], 'nekad');
+select pg_temp.prova('6.2 studiehjälpare skapar en uppgift', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.uppgifter (titel) values ('x')$q$], 'nekad');
+select pg_temp.rakna_efter('6.2 admin skapar en uppgift som människa', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into public.uppgifter (titel, skapad_av_typ) values ('Prov', 'ai')$q$],
+  $q$select count(*) from public.uppgifter where titel = 'Prov'
+     and skapad_av_typ = 'manniska' and skapad_av = '00000000-0000-4000-8000-0000000000ad'$q$, 1);
+select pg_temp.prova('6.2 familj anropar ekonomiska_avvikelser', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select * from public.ekonomiska_avvikelser()$q$], 'nekad');
+select pg_temp.prova('6.2 anon läser admin_lage', null,
+  array[$q$select * from public.admin_lage$q$], 'nekad');
+
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).
 insert into utfall (test, ok, detalj)
@@ -714,7 +751,8 @@ from unnest(array[
   'public.rapport_gor_passet_genomfort()',
   'public.bekrafta_inom_schemat()', 'public.skydda_studentfalt()', 'public.las_fakturabelopp()',
   'public.elevens_uppdrag()', 'public.stada_elevens_uppdrag()', 'public.koppla_passets_uppdrag()',
-  'public.standard_tjanst()', 'public.personnummer_ok(text)'
+  'public.standard_tjanst()', 'public.personnummer_ok(text)',
+  'public.logga_andring()', 'public.uppgift_stampel()'
 ]) f;
 
 insert into utfall (test, ok, detalj)
@@ -724,7 +762,8 @@ select 'RPC som gränssnittet använder är kvar: ' || f,
 from unnest(array[
   'public.kolla_rabattkod(text, text, bigint)', 'public.publika_studiehjalpare()',
   'public.spara_skatteuppgifter(uuid, text, text, text, text)',
-  'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)'
+  'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)',
+  'public.ekonomiska_avvikelser()'
 ]) f;
 
 insert into utfall (test, ok, detalj)
@@ -733,7 +772,8 @@ select 'Skattefunktion ej anropbar för anon: ' || f,
        case when to_regprocedure(f) is null then 'funktionen finns inte' else 'anon execute' end
 from unnest(array[
   'public.spara_skatteuppgifter(uuid, text, text, text, text)',
-  'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)'
+  'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)',
+  'public.ekonomiska_avvikelser()'
 ]) f;
 
 select test, ok, detalj from utfall order by nr;

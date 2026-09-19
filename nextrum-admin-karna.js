@@ -38,7 +38,10 @@ const NXAdmin = (function () {
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
     matchunderlag: [], matchunderlagFel: null, valdElev: null, kalender: null,
-    matForslag: [], detaljCache: {}
+    matForslag: [], detaljCache: {},
+    /* Fas 6: uppdrag, uppgifter, RUT-tak, auditloggens senaste
+       rader och databasens lista över ekonomiska avvikelser. */
+    uppdrag: [], uppgifter: [], rutTak: [], audit: [], avvikelser: [], avvikelserFel: null
   };
 
   function visa(id) {
@@ -149,7 +152,7 @@ const NXAdmin = (function () {
   async function hämtaAllt() {
     const [profiler, elever, tutorer] = await Promise.all([
       supa.from('profiles').select('id, role, full_name, email, is_admin, match_status, matched_tutor_id, phone, created_at, last_seen_at'),
-      supa.from('students').select('id, parent_id, name, grade, school, subjects, goals, created_at, matched_tutor_id, match_status'),
+      supa.from('students').select('id, parent_id, name, grade, school, subjects, goals, created_at, matched_tutor_id, match_status, uppdrag_id'),
       supa.from('tutor_profiles').select('id, age, school, city, subjects, grade_levels, status, hourly_rate, visa_publikt, created_at')
     ]);
     if (profiler.error) throw profiler.error;
@@ -170,11 +173,12 @@ const NXAdmin = (function () {
     S.tutorProfiler = {};
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
-    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter] = await Promise.all([
+    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
+           upd, uppg, rt, audit] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
-      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at').order('wanted_date', { ascending: false }),
+      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id').order('wanted_date', { ascending: false }),
       supa.from('invoices').select('*').order('period', { ascending: false }),
       supa.from('payouts').select('*').order('period', { ascending: false }),
       supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400),
@@ -190,7 +194,13 @@ const NXAdmin = (function () {
          senaste. Ett "lektion genomförd" i flödet är ett pass som
          faktiskt rapporterats, inte ett pass vars datum passerat. */
       supa.from('lesson_reports').select('id, student_id, tutor_id, lesson_date, created_at')
-        .order('created_at', { ascending: false }).limit(40)
+        .order('created_at', { ascending: false }).limit(40),
+      /* Fas 6. Alla fyra är admin-only i databasen. Auditloggen växer
+         för alltid; här de senaste 300 raderna. */
+      supa.from('uppdrag').select('*').order('created_at', { ascending: false }),
+      supa.from('uppgifter').select('*').order('created_at', { ascending: false }),
+      supa.from('rut_tak').select('*').order('ar', { ascending: false }),
+      supa.from('audit_logg').select('*').order('tid', { ascending: false }).limit(300)
     ]);
 
     S.leads = leads.data || [];
@@ -206,6 +216,10 @@ const NXAdmin = (function () {
     S.tjanster = tj.data || [];
     S.rabattkoder = rk.data || [];
     S.rapporter = rapporter.data || [];
+    S.uppdrag = upd.data || [];
+    S.uppgifter = uppg.data || [];
+    S.rutTak = rt.data || [];
+    S.audit = audit.data || [];
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */
@@ -236,14 +250,18 @@ const NXAdmin = (function () {
      som saknar sin. Saknas vyn — migrationen inte körd — säger
      avvikelsefliken det, i stället för att hela vyn dör. */
   async function hämtaEkonomiunderlag() {
-    const [pu, fri] = await Promise.all([
+    const [pu, fri, avv] = await Promise.all([
       supa.from('passunderlag').select('*').order('wanted_date', { ascending: false }),
       supa.from('lesson_reports').select('id, student_id, tutor_id, lesson_date, created_at, raw_notes')
-        .is('booking_id', null).order('lesson_date', { ascending: false })
+        .is('booking_id', null).order('lesson_date', { ascending: false }),
+      /* Fas 6: allt annat som inte går ihop, räknat i databasen. */
+      supa.rpc('ekonomiska_avvikelser')
     ]);
     S.passunderlagFel = pu.error ? felText(pu.error) : null;
     S.passunderlag = pu.data || [];
     S.fristaendeRapporter = fri.data || [];
+    S.avvikelserFel = avv.error ? felText(avv.error) : null;
+    S.avvikelser = avv.data || [];
   }
 
   /* Vyn matchningsunderlag räknar antal_elever och genomforda_pass

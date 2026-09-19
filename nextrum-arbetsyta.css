@@ -655,6 +655,12 @@
    kort — och en tabell som får rulla i sidled hellre än att
    trängas ihop tills siffrorna inte går att jämföra.
    ============================================================ */
+/* Formulären för uppgifter och RUT-tak (Fas 6): fält i ett rutnät,
+   det breda fältet och knappraden över hela bredden. */
+.uppg-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 14px;align-items:end}
+.uppg-form .fgroup{margin:0}
+.uppg-form .uppg-bred,.uppg-form .uppg-fot{grid-column:1/-1}
+.uppg-fot{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .adm-verktyg{
   display:flex;gap:9px;flex-wrap:wrap;align-items:center;
   margin-bottom:16px;

@@ -16,7 +16,8 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { DP, S, kortDatum, märkFlik, namnFör, pill, rad, skriv, tabell } = NXAdmin;
+  const { DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, kortDatum, märkFlik, namnFör, pill, rad, skriv,
+          tabell } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaDetalj = (...a) => NXAdmin.rita.ritaDetalj(...a);
@@ -254,9 +255,171 @@
     if (bort) await sättAdmin(bort.dataset.adminBort, false);
   });
 
+  /* ============================================================
+     INSTÄLLNINGAR (Fas 6)
+
+     RUT-taket per år: siffran kommer från Skatteverket och matas in
+     här med källa. Ingen skattesiffra står i koden (Fas 5.3), och
+     utan ett tak för året drar faktureringen ingen RUT alls. Övriga
+     inställningar har redan en plats — rutan under pekar dit i
+     stället för att bygga en andra väg till samma sak.
+     ============================================================ */
+  function ritaInstallningar() {
+    const host = $('#rt-tabell');
+    if (!host) return;
+    const rader = (S.rutTak || []).slice().sort((a, b) => b.ar - a.ar);
+    host.innerHTML = tabell([
+      { namn: 'År', rita: r => '<b class="adm-tal">' + esc(String(r.ar)) + '</b>' },
+      { namn: 'Tak per köpare', rita: r => '<span class="adm-tal">' + esc(kronor(r.tak_ore)) + '</span>' },
+      { namn: 'Källa', rita: r => esc(r.kalla || '—') },
+      { namn: 'Ändrat', rita: r => '<span class="adm-tal">' + esc(kortDatum(r.uppdaterad)) + '</span>' },
+      { namn: '', höger: true, rita: r => '<button class="btn btn-ghost btn-sm" type="button" data-rt-bort="'
+        + esc(String(r.ar)) + '">Ta bort</button>' }
+    ], rader, 'Inget RUT-tak inlagt — faktureringen drar ingen RUT');
+
+    const pekare = $('#inst-pekare');
+    if (pekare) {
+      const PEKARE = [
+        ['Bolagsfakta', 'Organisationsnummer, moms, F-skatt och hur studiehjälparna anlitas.', '#agenter/bolaget'],
+        ['Tjänster och priser', 'Pris, ersättning, RUT-andel och villkor per tjänst.', '#katalog/tjanster'],
+        ['Rabattkoder', 'Koder, värden och giltighet.', '#katalog/rabattkoder'],
+        ['Integrationer', 'Google och Fortnox.', '#system/integrationer'],
+        ['Adminanvändare', 'Vem som ser den här vyn.', '#system/adminanvandare']
+      ];
+      pekare.innerHTML = PEKARE.map(([namn, text, mål]) =>
+        '<div class="dp-rad"><div><b>' + esc(namn) + '</b><span class="adm-und">' + esc(text) + '</span></div>'
+        + '<a class="btn btn-ghost btn-sm" href="' + mål + '">Öppna</a></div>').join('');
+    }
+  }
+
+  const rtForm = $('#rt-form');
+  if (rtForm) rtForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#rt-msg');
+    rensa(msg);
+    const ar = Number($('#rt-ar').value);
+    const kr = Number($('#rt-tak').value);
+    const kalla = $('#rt-kalla').value.trim();
+    if (!Number.isInteger(ar) || ar < 2020 || ar > 2100) { säg(msg, 'Skriv året med fyra siffror.', false); return; }
+    if (!Number.isInteger(kr) || kr < 1) { säg(msg, 'Skriv taket i hela kronor.', false); return; }
+    if (kalla.length < 3) { säg(msg, 'Skriv var siffran kommer ifrån.', false); $('#rt-kalla').focus(); return; }
+
+    const finns = (S.rutTak || []).find(r => r.ar === ar);
+    if (finns) {
+      const ja = await bekräfta({
+        titel: 'Byt RUT-taket för ' + ar + '?',
+        text: 'I dag: ' + kronor(finns.tak_ore) + '. Nytt: ' + kronor(kr * 100)
+          + '. Gäller fakturor som skapas från nästa körning.',
+        knapp: 'Byt taket'
+      });
+      if (!ja) return;
+    }
+    const knapp = rtForm.querySelector('button[type="submit"]');
+    await medan(knapp, 'Sparar…', async () => {
+      const rad = { ar, tak_ore: kr * 100, kalla, uppdaterad: new Date().toISOString() };
+      const { error } = await supa.from('rut_tak').upsert(rad);
+      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+      S.rutTak = (S.rutTak || []).filter(r => r.ar !== ar).concat([rad]);
+      rtForm.reset();
+      ritaInstallningar();
+      säg($('#rt-msg'), '✓ Taket för ' + ar + ' är sparat.', true);
+    });
+  });
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-rt-bort]');
+    if (!knapp) return;
+    const ar = Number(knapp.dataset.rtBort);
+    const ja = await bekräfta({
+      titel: 'Ta bort RUT-taket för ' + ar + '?',
+      text: 'Utan ett tak för året drar faktureringen ingen RUT alls för det året.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+    const { error } = await supa.from('rut_tak').delete().eq('ar', ar);
+    if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+    S.rutTak = (S.rutTak || []).filter(r => r.ar !== ar);
+    ritaInstallningar();
+  });
+
+  /* ============================================================
+     AUDITLOGGEN (Fas 6)
+
+     Vem som ändrade vad och när. Loggen bär bara id, status, belopp
+     och datum — namnen slås upp här, ur det vyn redan har. En aktör
+     utan id är systemet: faktureringen, en migration.
+     ============================================================ */
+  const AUDIT_OBJEKT = {
+    matchning: 'Matchning', faktura: 'Faktura', utbetalning: 'Utbetalning', tjanst: 'Tjänst',
+    rabattkod: 'Rabattkod', behorighet: 'Adminbehörighet', pass: 'Pass', rapport: 'Rapport',
+    studiehjalpare: 'Studiehjälpare', skatteuppgifter: 'Personnummer'
+  };
+  const AUDIT_HANDLING = {
+    skapad: 'skapad', borttagen: 'borttagen', andrad: 'ändrad', status: 'ny status',
+    aktiverad: 'aktiverad', avaktiverad: 'avaktiverad', sparade: 'sparat', lasta: 'läst', raderade: 'raderat'
+  };
+  const AUDIT_FALT = {
+    status: 'läge', match_status: 'matchning', matched_tutor_id: 'studiehjälpare', parent_id: 'familj',
+    tutor_id: 'studiehjälpare', belopp_ore: 'belopp', rut_ore: 'RUT', rut_ar: 'RUT-år',
+    pris_per_timme_ore: 'pris', extra_personer_ore: 'tillägg', ersattning_per_timme_ore: 'ersättning',
+    aktiv: 'aktiv', is_admin: 'admin', role: 'roll', fakturerbar: 'fakturerbart', booking_id: 'pass',
+    narvaro: 'närvaro', hourly_rate: 'timpenning', visa_publikt: 'publik', betald_at: 'betald',
+    skickad_at: 'skickad', utbetald_at: 'utbetald', forfaller: 'förfaller', period: 'period',
+    rut_procent: 'RUT-andel', rut_berattigad: 'RUT'
+  };
+
+  const MATCH_LAGE = { pending: 'väntar', matched: 'matchad', paused: 'pausad' };
+  const STATUS_KARTA = { invoices: FAKT_LAGE, payouts: UTB_LAGE, tutor_profiles: SH_LAGE };
+
+  function auditVärde(nyckel, v, tabellNamn) {
+    if (v === null || v === undefined) return '—';
+    if (nyckel === 'status' && STATUS_KARTA[tabellNamn] && STATUS_KARTA[tabellNamn][v]) {
+      return String(STATUS_KARTA[tabellNamn][v][0]).toLowerCase();
+    }
+    if (nyckel === 'match_status' && MATCH_LAGE[v]) return MATCH_LAGE[v];
+    if (typeof v === 'boolean') return v ? 'ja' : 'nej';
+    if (/_ore$/.test(nyckel) && typeof v === 'number') return kronor(v);
+    if (typeof v === 'string' && S.personer && S.personer[v]) return namnFör(v);
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) return kortDatum(v);
+    if (typeof v === 'object') return JSON.stringify(v).slice(0, 60);
+    return String(v).slice(0, 60);
+  }
+
+  function auditÄndring(r) {
+    const fore = r.fore || {}, efter = r.efter || {};
+    const nycklar = Object.keys(Object.assign({}, fore, efter)).filter(k => k !== 'id' && k !== 'kod');
+    if (!nycklar.length) return '<span class="adm-und">—</span>';
+    return nycklar.slice(0, 5).map(k => '<span class="adm-und">' + esc(AUDIT_FALT[k] || k) + ': '
+      + (k in fore && r.fore ? esc(auditVärde(k, fore[k], r.tabell)) + ' → ' : '')
+      + esc(auditVärde(k, efter[k], r.tabell)) + '</span>').join('');
+  }
+
+  function ritaAudit() {
+    const host = $('#audit-tabell');
+    if (!host) return;
+    const filter = ($('#audit-filter') || {}).value || '';
+    const rader = (S.audit || []).filter(r => !filter || String(r.handling).split('.')[0] === filter);
+    $('#audit-antal').textContent = rader.length ? rader.length + ' st' : '';
+    host.innerHTML = tabell([
+      { namn: 'När', rita: r => '<span class="adm-tal">' + esc(kortDatum(r.tid)) + '</span>'
+        + '<span class="adm-und">' + esc(new Date(r.tid).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })) + '</span>' },
+      { namn: 'Vem', rita: r => r.aktor ? esc(namnFör(r.aktor)) : pill('System', 'ar-vantar') },
+      { namn: 'Vad', rita: r => {
+        const [obj, gjord] = String(r.handling).split('.');
+        return '<b>' + esc(AUDIT_OBJEKT[obj] || obj) + '</b> ' + esc(AUDIT_HANDLING[gjord] || gjord || '');
+      } },
+      { namn: 'Gäller', rita: r => esc(S.personer && S.personer[r.objekt_id]
+        ? namnFör(r.objekt_id) : String(r.objekt_id).slice(0, 8)) },
+      { namn: 'Ändring', rita: auditÄndring }
+    ], rader, filter ? 'Inga händelser av den sorten' : 'Inget loggat än');
+  }
+
+  const auditFilter = $('#audit-filter');
+  if (auditFilter) auditFilter.addEventListener('change', ritaAudit);
+
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    ritaAdminanvandare, ritaFel, ritaIntegrationer
+    ritaAdminanvandare, ritaAudit, ritaFel, ritaInstallningar, ritaIntegrationer
   });
 })();

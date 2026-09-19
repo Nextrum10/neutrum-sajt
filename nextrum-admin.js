@@ -70,6 +70,10 @@
   const ritaTjanster = (...a) => NXAdmin.rita.ritaTjanster(...a);
   const ritaUtbetalningar = (...a) => NXAdmin.rita.ritaUtbetalningar(...a);
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
+  const ritaInstallningar = (...a) => NXAdmin.rita.ritaInstallningar(...a);
+  const ritaAudit = (...a) => NXAdmin.rita.ritaAudit(...a);
+  const ritaUppdrag = (...a) => NXAdmin.rita.ritaUppdrag(...a);
+  const ritaUppgifter = (...a) => NXAdmin.rita.ritaUppgifter(...a);
 
   document.addEventListener('change', async e => {
     const el = e.target;
@@ -320,14 +324,41 @@
     meddelanden: 'Meddelanden', familjer: 'Familjer', elever: 'Elever',
     studiehjalpare: 'Studiehjälpare', matchning: 'Matchning', bokningar: 'Bokningar',
     lektioner: 'Lektioner', statistik: 'Statistik',
-    ekonomi: 'Fakturor & utbetalningar', system: 'System'
+    ekonomi: 'Fakturor & utbetalningar', system: 'System',
+    agenter: 'Agenter', uppdrag: 'Uppdrag', uppgifter: 'Uppgifter', katalog: 'Tjänster & priser'
+  };
+
+  /* Området varje sektion hör till (Fas 6) — samma nio rubriker som
+     i sidomenyn. Visas i brödsmulan när det inte bara upprepar
+     sektionens namn. */
+  const OMRADE = {
+    oversikt: 'Översikt', statistik: 'Översikt',
+    leads: 'Kunder', familjer: 'Kunder', elever: 'Kunder', studiehjalpare: 'Kunder',
+    matchning: 'Drift', bokningar: 'Drift', lektioner: 'Drift', uppdrag: 'Drift', uppgifter: 'Drift',
+    meddelanden: 'Kommunikation', ekonomi: 'Ekonomi', ansokningar: 'Rekrytering',
+    katalog: 'Tjänster', agenter: 'AI', system: 'System'
   };
 
   function ritaVar() {
     const sek = String(location.hash || '').replace(/^#/, '').split('/')[0] || 'oversikt';
+    const namn = SEKTIONSNAMN[sek] || 'Översikt';
     const el = $('#adm-var');
-    if (el) el.textContent = SEKTIONSNAMN[sek] || 'Översikt';
+    if (el) el.textContent = namn;
+    const område = $('#adm-omrade');
+    if (område) {
+      const o = OMRADE[sek] || '';
+      område.textContent = o;
+      område.hidden = !o || o === namn;
+    }
   }
+
+  /* Adresser som flyttat. Tjänstekatalogen och rabattkoderna låg
+     under System till Fas 6. Paret sektion/flik, inte bara sektionen,
+     för #system är fortfarande en giltig adress. */
+  const FLYTTAT = {
+    'system/tjanster': 'katalog/tjanster',
+    'system/rabattkoder': 'katalog/rabattkoder'
+  };
 
   /* ------------------------------------------------------------
      HOPFÄLLD SIDOMENY
@@ -786,6 +817,7 @@
         bokningar: NXArbete.flikar($('section[data-sek="bokningar"]')),
         ekonomi: NXArbete.flikar($('section[data-sek="ekonomi"]')),
         agenter: NXArbete.flikar($('section[data-sek="agenter"]')),
+        katalog: NXArbete.flikar($('section[data-sek="katalog"]')),
         system: NXArbete.flikar($('section[data-sek="system"]'))
       };
 
@@ -805,7 +837,9 @@
       ritaVar();
 
       function följHash() {
-        const [huvud, flik] = String(location.hash || '').replace(/^#/, '').split('/');
+        const adress = String(location.hash || '').replace(/^#/, '');
+        if (FLYTTAT[adress]) { location.replace('#' + FLYTTAT[adress]); return; }
+        const [huvud, flik] = adress.split('/');
         if (flik && S.flikar[huvud]) S.flikar[huvud].visa(flik);
         ritaVar();
       }
@@ -848,6 +882,10 @@
       ritaTjanster();
       ritaRabattkoder();
       ritaFel();
+      ritaInstallningar();
+      ritaAudit();
+      ritaUppdrag();
+      ritaUppgifter();
       await ritaÖversikt();
 
       /* Samma summa som arbetskön på Översikt visar, inte en egen
@@ -871,7 +909,10 @@
           : { href: '#oversikt', text: 'Inget som väntar', under: 'Allt är avklarat' }
       });
 
-      supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
+      /* await, inte bara ett anrop: supabase-js skickar frågan först
+         när den väntas in, så utan det gick stämpeln aldrig iväg. Ett
+         fel här ska inte stoppa vyn. */
+      await supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
     } catch (fel) {
       visaFel(fel, 'adminvyn skulle hämtas');
     }

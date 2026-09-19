@@ -22,6 +22,7 @@
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
+  const skapaUppgift = (...a) => NXAdmin.rita.skapaUppgift(...a);
 
   /* ============================================================
      EKONOMI
@@ -159,8 +160,87 @@
         '<button class="btn btn-ghost btn-sm" type="button" data-avv-ateruppta="' + p.id + '">Ångra</button>' }
     ], undantagna, 'Inga undantagna pass');
 
-    märkFlik('#flik-avv-mark', saknar.length);
+    const övriga = ritaÖvrigaAvvikelser();
+    märkFlik('#flik-avv-mark', saknar.length + övriga);
   }
+
+  /* ============================================================
+     ÖVRIGA EKONOMISKA AVVIKELSER (Fas 6)
+
+     Räknade i databasen av ekonomiska_avvikelser(), med samma regler
+     som faktureringen. Pass utan rapport och fristående rapporter
+     har egna listor ovanför och visas inte igen här. Varje rad kan
+     bli en uppgift; en rad som redan har en öppen uppgift säger det.
+     ============================================================ */
+  const AVV_TEXT = {
+    ej_fakturerat: ['Inte fakturerat', 'Klart för faktura, men månaden det hölls är slut. Kör månadskörningen.'],
+    ej_utbetalt: ['Inte utbetalt', 'Klart för underlag, men månaden det hölls är slut.'],
+    faktura_forfallen: ['Förfallen faktura', 'Skickad, obetald och efter förfallodagen.'],
+    faktura_gammalt_utkast: ['Utkast som inte skickats', 'Fakturan skapades för mer än en vecka sedan.'],
+    utbetalning_vantar: ['Utbetalning som väntar', 'Utkast eller godkänd, för en månad före förra.'],
+    utbetalning_misslyckad: ['Misslyckad utbetalning', 'Pengarna gick inte iväg.'],
+    timpenning_saknas: ['Ingen ersättning att räkna med', 'Studiehjälparen saknar timpenning och tjänsten saknar ersättning.'],
+    pass_utan_studiehjalpare: ['Pass utan studiehjälpare', 'Genomfört, men ingen att betala ut till.'],
+    rut_utan_skatteuppgifter: ['RUT utan skatteuppgifter', 'Kunden saknar personnummer, så passet faktureras utan avdrag.'],
+    rut_utan_tak: ['RUT-tak saknas', 'Inget tak för året under System → Inställningar, så ingen RUT dras.'],
+    rut_over_tak: ['Över RUT-taket', 'Kunden har fått mer avdrag i år än taket.'],
+    faktura_summa_fel: ['Fakturans summa stämmer inte', 'Beloppet skiljer sig från summan av raderna.'],
+    utbetalning_summa_fel: ['Utbetalningens summa stämmer inte', 'Beloppet skiljer sig från summan av raderna.'],
+    fakturerat_ogiltigt_pass: ['Fakturerat pass som inte gäller', 'Passet är inte längre genomfört eller fakturerbart.']
+  };
+  /* Tabellerna en uppgift får kopplas till (check-villkoret i uppgifter). */
+  const UPPG_TABELLER = ['bookings', 'invoices', 'payouts', 'lesson_reports', 'profiles'];
+
+  function ritaÖvrigaAvvikelser() {
+    const host = $('#avv-ovriga');
+    if (!host) return 0;
+    if (S.avvikelserFel) {
+      host.innerHTML = tomt('Kunde inte räkna avvikelserna', S.avvikelserFel);
+      return 0;
+    }
+    const rader = (S.avvikelser || []).filter(a => a.typ !== 'pass_utan_rapport' && a.typ !== 'fristaende_rapport');
+    $('#avv-ovriga-antal').textContent = rader.length ? rader.length + ' st' : '';
+    const öppna = new Set((S.uppgifter || [])
+      .filter(u => u.kopplad_id && (u.status === 'oppen' || u.status === 'pagar'))
+      .map(u => u.kopplad_tabell + '|' + u.kopplad_id));
+
+    host.innerHTML = tabell([
+      { namn: 'Vad', rita: a => '<b>' + esc((AVV_TEXT[a.typ] || [a.typ])[0]) + '</b>'
+        + '<span class="adm-und">' + esc((AVV_TEXT[a.typ] || ['', ''])[1]) + '</span>' },
+      { namn: 'Gäller', rita: a => esc([a.kund_id ? namnFör(a.kund_id) : null,
+                                         a.studiehjalpare_id ? namnFör(a.studiehjalpare_id) : null]
+        .filter(Boolean).join(' · ') || '—') },
+      { namn: 'Datum', rita: a => '<span class="adm-tal">' + esc(a.datum ? kortDatum(a.datum) : '—') + '</span>' },
+      { namn: 'Belopp', rita: a => a.belopp_ore == null ? '<span class="adm-und">—</span>'
+        : '<span class="adm-tal">' + esc(kronor(a.belopp_ore)) + '</span>' },
+      { namn: '', höger: true, rita: a => öppna.has(a.objekt_tabell + '|' + a.objekt_id)
+        ? pill('Uppgift finns', 'ar-vantar')
+        : '<button class="btn btn-ghost btn-sm" type="button" data-avv-uppgift="'
+          + esc(a.typ + '|' + a.objekt_tabell + '|' + a.objekt_id) + '">Gör till uppgift</button>' }
+    ], rader, 'Inget annat som inte går ihop');
+    return rader.length;
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-avv-uppgift]');
+    if (!knapp) return;
+    const [typ, tabellNamn, id] = knapp.dataset.avvUppgift.split('|');
+    const a = (S.avvikelser || []).find(x => x.typ === typ && x.objekt_tabell === tabellNamn && x.objekt_id === id);
+    if (!a) return;
+    const kopplad = UPPG_TABELLER.indexOf(tabellNamn) !== -1;
+    const vem = [a.kund_id ? namnFör(a.kund_id) : null, a.studiehjalpare_id ? namnFör(a.studiehjalpare_id) : null]
+      .filter(Boolean).join(' · ');
+    await medan(knapp, 'Skapar…', async () => {
+      const rad = await skapaUppgift({
+        titel: ((AVV_TEXT[typ] || [typ])[0] + (vem ? ' — ' + vem : '') + (a.datum ? ', ' + kortDatum(a.datum) : '')).slice(0, 200),
+        typ: 'problem',
+        beskrivning: (AVV_TEXT[typ] || ['', ''])[1] || null,
+        kopplad_tabell: kopplad ? tabellNamn : null,
+        kopplad_id: kopplad ? id : null
+      });
+      if (rad) ritaAvvikelser();
+    });
+  });
 
   async function laddaOmEkonomi() {
     await hämtaEkonomiunderlag();

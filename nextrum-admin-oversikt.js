@@ -195,6 +195,67 @@
       + '</a>').join('') + '</div>';
   }
 
+  /* ============================================================
+     PROBLEM (Fas 6)
+
+     Det som gått fel eller fastnat — det som INTE redan står i
+     "Kräver din uppmärksamhet" ovanför, så att ingenting räknas två
+     gånger. Räknat i databasen (admin_lage, ekonomiska_avvikelser)
+     där det går, annars ur det vyn redan har.
+     ============================================================ */
+  function övrigaAvvikelser() {
+    return (S.avvikelser || []).filter(a => a.typ !== 'pass_utan_rapport' && a.typ !== 'fristaende_rapport');
+  }
+
+  function byggProblem() {
+    const l = S.lage || {};
+    const idag = isoFor(new Date());
+    const öppna = (S.uppgifter || []).filter(u => u.status === 'oppen' || u.status === 'pagar');
+    const sena = öppna.filter(u => u.forfallodag && u.forfallodag < idag);
+    const förfallna = l.forfallna_fakturor != null ? l.forfallna_fakturor
+      : (S.fakturor || []).filter(f => (f.status === 'skickad' || f.status === 'forfallen')
+          && !f.betald_at && f.forfaller && f.forfaller < idag).length;
+    return [
+      { antal: förfallna, rubrik: 'förfallna fakturor', ental: 'förfallen faktura',
+        under: 'Skickade, obetalda och efter förfallodagen.', till: '#ekonomi/fakturor' },
+      { antal: l.forsenade_uppgifter != null ? l.forsenade_uppgifter : sena.length,
+        rubrik: 'försenade uppgifter', ental: 'försenad uppgift',
+        under: 'Öppna efter dagen de skulle vara klara.', till: '#uppgifter' },
+      { antal: övrigaAvvikelser().length, rubrik: 'ekonomiska avvikelser', ental: 'ekonomisk avvikelse',
+        under: 'Något i fakturor eller utbetalningar som inte går ihop.', till: '#ekonomi/avvikelser' },
+      { antal: l.klientfel_24h != null ? l.klientfel_24h : 0, rubrik: 'fel hos användarna', ental: 'fel hos en användare',
+        under: 'Rapporterade från webbläsarna det senaste dygnet.', till: '#system/fel' },
+      { antal: (S.notisfel || []).length, rubrik: 'notiser som inte gick fram', ental: 'notis som inte gick fram',
+        under: 'Mejl som skulle ha skickats det senaste dygnet.', till: '#system/fel' },
+      { antal: öppna.length - (l.forsenade_uppgifter != null ? l.forsenade_uppgifter : sena.length),
+        rubrik: 'öppna uppgifter', ental: 'öppen uppgift',
+        under: 'Inte klara, men inte heller sena.', till: '#uppgifter' }
+    ].filter(p => p.antal > 0);
+  }
+
+  function ritaProblem() {
+    const host = $('#adm-problem');
+    if (!host) return;
+    const problem = byggProblem();
+    const summa = problem.reduce((n, p) => n + p.antal, 0);
+    $('#adm-problem-antal').textContent = summa ? summa + ' st' : '';
+    if (!problem.length) {
+      host.innerHTML = '<div class="adm-lugnt">'
+        + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>'
+        + '<span><b>Inga problem just nu</b>'
+        + '<span>Inga förfallna fakturor, inga sena uppgifter och inga fel det senaste dygnet.</span></span>'
+        + '</div>';
+      return;
+    }
+    host.innerHTML = '<div class="adm-att-gora">' + problem.map(p =>
+      '<a href="' + esc(p.till) + '">'
+      + '<span class="adm-att-antal">' + p.antal + '</span>'
+      + '<span class="adm-att-text"><b>' + esc(p.antal === 1 ? p.ental : p.rubrik) + '</b>'
+      + '<span>' + esc(p.under) + '</span></span>'
+      + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7"/></svg>'
+      + '</a>').join('') + '</div>';
+  }
+
   function byggFlöde() {
     const p = [];
     const lägg = (när, rubrik, under) => { if (när) p.push({ när, rubrik, under }); };
@@ -284,6 +345,7 @@
 
     ritaTal();
     ritaAttGöra();
+    ritaProblem();
     ritaNärmastePass();
     ritaFlöde();
     ritaNotiser();
@@ -293,12 +355,14 @@
       märkFlik('#flik-fakt-mark', l.obetalda_fakturor);
       märkFlik('#flik-inkorg-mark', l.ohanterade_meddelanden);
     }
-    märkFlik('#flik-avv-mark', utanRapport().length);
+    märkFlik('#flik-avv-mark', utanRapport().length + övrigaAvvikelser().length);
     if (S.sido) {
-      const av = nyckel => {
-        const p = S.attGora.find(x => x.till === nyckel || x.till.indexOf(nyckel + '/') === 0);
-        return p ? p.antal : 0;
-      };
+      /* Summan av allt som pekar dit. Förut räknades bara den första
+         posten, så Ekonomi visade pass utan rapport men inte obetalda
+         fakturor eller väntande utbetalningar. */
+      const av = nyckel => S.attGora
+        .filter(x => x.till === nyckel || x.till.indexOf(nyckel + '/') === 0)
+        .reduce((n, p) => n + p.antal, 0);
       S.sido.märke('leads', av('#leads'));
       S.sido.märke('ansokningar', av('#ansokningar'));
       S.sido.märke('meddelanden', av('#meddelanden'));
@@ -307,6 +371,10 @@
       S.sido.märke('bokningar', av('#bokningar'));
       S.sido.märke('lektioner', av('#lektioner'));
       S.sido.märke('ekonomi', av('#ekonomi'));
+      S.sido.märke('uppgifter', S.lage && S.lage.forsenade_uppgifter != null
+        ? S.lage.forsenade_uppgifter
+        : (S.uppgifter || []).filter(u => (u.status === 'oppen' || u.status === 'pagar')
+            && u.forfallodag && u.forfallodag < isoFor(new Date())).length);
     }
   }
 

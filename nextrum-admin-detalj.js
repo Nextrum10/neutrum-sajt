@@ -233,10 +233,13 @@
       läge(BOK_LAGE, b.status))).join('');
   }
 
+  /* Databasens värden (progress_items_level_check) och samma ord som
+     studievyerna använder (NXStudie, NIVA). Nycklarna stämde inte
+     tidigare, så råvärdet visades i stället för texten. */
   const NIVA_TEXT = {
-    behover_traning: ['Behöver träning', 'ar-ny'],
+    behover_trana: ['Behöver träna', 'ar-ny'],
     pa_god_vag: ['På god väg', 'ar-vantar'],
-    sitter: ['Sitter', 'ar-klar']
+    bra: ['Bra', 'ar-klar']
   };
 
   function dpFamilj(p, d) {
@@ -323,8 +326,8 @@
           ? d.laxor.map(h => dpRad(h.title,
               [h.subject, h.due_date ? 'till ' + kortDatum(h.due_date) : null]
                 .filter(Boolean).join(' · '),
-              pill(h.status === 'klar' ? 'Klar' : h.status === 'paborjad' ? 'Påbörjad' : 'Ej påbörjad',
-                h.status === 'klar' ? 'ar-klar' : h.status === 'paborjad' ? 'ar-vantar' : ''))).join('')
+              pill(h.status === 'klar' ? 'Klar' : h.status === 'pagaende' ? 'Pågående' : 'Ej påbörjad',
+                h.status === 'klar' ? 'ar-klar' : h.status === 'pagaende' ? 'ar-vantar' : ''))).join('')
           : tomt('Inga läxor', 'Studiehjälparen lägger upp dem i sin vy.'))
         + dpMaterial(e, d);
     }
