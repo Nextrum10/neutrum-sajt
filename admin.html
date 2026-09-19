@@ -310,6 +310,17 @@
               <p>Unga som vill jobba. Att godkänna ansökan är inte samma sak som att godkänna kontot — kontot ligger under Studiehjälpare, och skapas först när personen registrerat sig.</p>
             </div>
           </div>
+          <div class="vy-flikar" role="tablist" aria-label="Rekryteringens steg">
+            <button class="vy-flik" type="button" role="tab" data-flik="alla"
+                    id="flik-ans-alla" aria-controls="panel-ans-alla">Alla ansökningar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="intervju"
+                    id="flik-ans-intervju" aria-controls="panel-ans-intervju">Intervju</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="utbildning"
+                    id="flik-ans-utbildning" aria-controls="panel-ans-utbildning">Utbildning</button>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="alla"
+               id="panel-ans-alla" aria-labelledby="flik-ans-alla">
           <div class="dbox">
             <div class="adm-verktyg">
               <input class="inp adm-sok" id="ans-sok" type="search" placeholder="Sök namn, e-post, ämne" aria-label="Sök ansökan" autocomplete="off">
@@ -323,6 +334,24 @@
               <span class="small" id="ans-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
             <div id="ans-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+          </div>
+
+          <!-- Rekryteringens två steg som egna flikar (Fas 6): vem som
+               väntar på en intervju, och vem som ska utbildas. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="intervju"
+               id="panel-ans-intervju" aria-labelledby="flik-ans-intervju" hidden>
+            <div class="dbox">
+              <h5>Väntar på intervju <em id="ans-intervju-antal"></em></h5>
+              <div id="ans-intervju"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+          <div class="vy-flik-panel" role="tabpanel" data-flik="utbildning"
+               id="panel-ans-utbildning" aria-labelledby="flik-ans-utbildning" hidden>
+            <div class="dbox">
+              <h5>Intervjuade, ska utbildas <em id="ans-utbildning-antal"></em></h5>
+              <div id="ans-utbildning"><div class="loading">Hämtar</div></div>
+            </div>
           </div>
         </section>
 
@@ -1426,6 +1455,7 @@
                   <option value="rapport">Rapporter</option>
                   <option value="studiehjalpare">Studiehjälpare</option>
                   <option value="skatteuppgifter">Personnummer</option>
+                  <option value="rut_tak">RUT-tak</option>
                 </select>
                 <span class="small" id="audit-antal" style="margin-left:auto;color:var(--bl-3)"></span>
               </div>

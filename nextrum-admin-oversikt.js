@@ -206,6 +206,9 @@
   function övrigaAvvikelser() {
     return (S.avvikelser || []).filter(a => a.typ !== 'pass_utan_rapport' && a.typ !== 'fristaende_rapport');
   }
+  /* Till problemrutan: utan det som redan har en egen rad (förfallna
+     fakturor) eller står i arbetskön (väntande utbetalningar). */
+  const EGEN_RAD = ['faktura_forfallen', 'utbetalning_vantar'];
 
   function byggProblem() {
     const l = S.lage || {};
@@ -221,7 +224,8 @@
       { antal: l.forsenade_uppgifter != null ? l.forsenade_uppgifter : sena.length,
         rubrik: 'försenade uppgifter', ental: 'försenad uppgift',
         under: 'Öppna efter dagen de skulle vara klara.', till: '#uppgifter' },
-      { antal: övrigaAvvikelser().length, rubrik: 'ekonomiska avvikelser', ental: 'ekonomisk avvikelse',
+      { antal: övrigaAvvikelser().filter(a => EGEN_RAD.indexOf(a.typ) === -1).length,
+        rubrik: 'ekonomiska avvikelser', ental: 'ekonomisk avvikelse',
         under: 'Något i fakturor eller utbetalningar som inte går ihop.', till: '#ekonomi/avvikelser' },
       { antal: l.klientfel_24h != null ? l.klientfel_24h : 0, rubrik: 'fel hos användarna', ental: 'fel hos en användare',
         under: 'Rapporterade från webbläsarna det senaste dygnet.', till: '#system/fel' },

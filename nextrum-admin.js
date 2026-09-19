@@ -74,6 +74,7 @@
   const ritaAudit = (...a) => NXAdmin.rita.ritaAudit(...a);
   const ritaUppdrag = (...a) => NXAdmin.rita.ritaUppdrag(...a);
   const ritaUppgifter = (...a) => NXAdmin.rita.ritaUppgifter(...a);
+  const laddaOmEkonomi = (...a) => NXAdmin.rita.laddaOmEkonomi(...a);
 
   document.addEventListener('change', async e => {
     const el = e.target;
@@ -122,7 +123,9 @@
       if (el.value === 'utkast') { fält.betald_at = null; fält.skickad_at = null; }
       Object.assign(f, fält);
       await skriv('invoices', f.id, fält);
-      ritaFakturor(); ritaÖversikt();
+      /* Avvikelserna och översikten följer med: en betald faktura är
+         inte längre förfallen. */
+      ritaFakturor(); await laddaOmEkonomi();
       return;
     }
 
@@ -163,7 +166,7 @@
       if (el.value !== 'utbetald') fält.utbetald_at = null;
       Object.assign(u, fält);
       await skriv('payouts', u.id, fält);
-      ritaUtbetalningar(); ritaÖversikt();
+      ritaUtbetalningar(); await laddaOmEkonomi();
       return;
     }
   });
@@ -256,7 +259,7 @@
             if (i !== -1) S.fakturor[i] = data;
           }
           ritaFakturor();
-          await ritaÖversikt();
+          await laddaOmEkonomi();
         }
         alert('✓ Skickat till ' + res.data.till + '.');
       });
@@ -818,6 +821,7 @@
         ekonomi: NXArbete.flikar($('section[data-sek="ekonomi"]')),
         agenter: NXArbete.flikar($('section[data-sek="agenter"]')),
         katalog: NXArbete.flikar($('section[data-sek="katalog"]')),
+        ansokningar: NXArbete.flikar($('section[data-sek="ansokningar"]')),
         system: NXArbete.flikar($('section[data-sek="system"]'))
       };
 

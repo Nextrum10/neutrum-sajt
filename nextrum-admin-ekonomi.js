@@ -119,6 +119,7 @@
       host.innerHTML = tomt('Passunderlaget gick inte att läsa', S.passunderlagFel);
       $('#avv-fristaende').innerHTML = '';
       $('#avv-undantagna').innerHTML = '';
+      ritaÖvrigaAvvikelser();
       return;
     }
 
@@ -190,6 +191,10 @@
   };
   /* Tabellerna en uppgift får kopplas till (check-villkoret i uppgifter). */
   const UPPG_TABELLER = ['bookings', 'invoices', 'payouts', 'lesson_reports', 'profiles'];
+  /* Uppgiftens nyckel: vilken avvikelse, på vad. Databasen tillåter en
+     öppen uppgift per nyckel, så samma problem blir aldrig två — och
+     två olika problem på samma pass blir två (Fas 6, nyckel). */
+  const avvNyckel = a => 'avvikelse:' + a.typ + ':' + a.objekt_tabell + ':' + a.objekt_id;
 
   function ritaÖvrigaAvvikelser() {
     const host = $('#avv-ovriga');
@@ -201,8 +206,8 @@
     const rader = (S.avvikelser || []).filter(a => a.typ !== 'pass_utan_rapport' && a.typ !== 'fristaende_rapport');
     $('#avv-ovriga-antal').textContent = rader.length ? rader.length + ' st' : '';
     const öppna = new Set((S.uppgifter || [])
-      .filter(u => u.kopplad_id && (u.status === 'oppen' || u.status === 'pagar'))
-      .map(u => u.kopplad_tabell + '|' + u.kopplad_id));
+      .filter(u => u.nyckel && (u.status === 'oppen' || u.status === 'pagar'))
+      .map(u => u.nyckel));
 
     host.innerHTML = tabell([
       { namn: 'Vad', rita: a => '<b>' + esc((AVV_TEXT[a.typ] || [a.typ])[0]) + '</b>'
@@ -213,7 +218,7 @@
       { namn: 'Datum', rita: a => '<span class="adm-tal">' + esc(a.datum ? kortDatum(a.datum) : '—') + '</span>' },
       { namn: 'Belopp', rita: a => a.belopp_ore == null ? '<span class="adm-und">—</span>'
         : '<span class="adm-tal">' + esc(kronor(a.belopp_ore)) + '</span>' },
-      { namn: '', höger: true, rita: a => öppna.has(a.objekt_tabell + '|' + a.objekt_id)
+      { namn: '', höger: true, rita: a => öppna.has(avvNyckel(a))
         ? pill('Uppgift finns', 'ar-vantar')
         : '<button class="btn btn-ghost btn-sm" type="button" data-avv-uppgift="'
           + esc(a.typ + '|' + a.objekt_tabell + '|' + a.objekt_id) + '">Gör till uppgift</button>' }
@@ -236,7 +241,8 @@
         typ: 'problem',
         beskrivning: (AVV_TEXT[typ] || ['', ''])[1] || null,
         kopplad_tabell: kopplad ? tabellNamn : null,
-        kopplad_id: kopplad ? id : null
+        kopplad_id: kopplad ? id : null,
+        nyckel: avvNyckel(a)
       });
       if (rad) ritaAvvikelser();
     });
@@ -468,7 +474,7 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    fyllPerioder, kandidater, ritaAvvikelser, ritaFakturor, ritaPris,
+    fyllPerioder, kandidater, laddaOmEkonomi, ritaAvvikelser, ritaFakturor, ritaPris,
     ritaUtbetalningar, utanRapport
   });
 })();

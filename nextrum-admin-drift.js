@@ -26,6 +26,7 @@
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
   const träffar = (...a) => NXAdmin.rita.träffar(...a);
   const utanRapport = (...a) => NXAdmin.rita.utanRapport(...a);
+  const ritaAvvikelser = (...a) => NXAdmin.rita.ritaAvvikelser(...a);
 
   /* ============================================================
      MATCHNING
@@ -803,7 +804,12 @@
      eller null med felet redan visat. */
   async function skapaUppgift(fält) {
     const { data, error } = await supa.from('uppgifter').insert(fält).select().single();
-    if (error) { alert('Kunde inte skapa uppgiften: ' + felText(error)); return null; }
+    if (error) {
+      alert(error.code === '23505'
+        ? 'Det finns redan en öppen uppgift för det här.'
+        : 'Kunde inte skapa uppgiften: ' + felText(error));
+      return null;
+    }
     S.uppgifter = [data].concat(S.uppgifter || []);
     ritaUppgifter();
     ritaÖversikt();
@@ -844,6 +850,7 @@
       Object.assign(u, fält);
       if (läge) u.klar_at = läge.value === 'klar' ? new Date().toISOString() : null;
       ritaUppgifter();
+      ritaAvvikelser();   // "Uppgift finns" följer uppgiftens läge
       ritaÖversikt();
     }
   });

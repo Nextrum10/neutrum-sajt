@@ -22,6 +22,7 @@
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaDetalj = (...a) => NXAdmin.rita.ritaDetalj(...a);
   const träffar = (...a) => NXAdmin.rita.träffar(...a);
+  const laddaOmEkonomi = (...a) => NXAdmin.rita.laddaOmEkonomi(...a);
 
   /* ============================================================
      SYSTEM
@@ -323,6 +324,7 @@
       rtForm.reset();
       ritaInstallningar();
       säg($('#rt-msg'), '✓ Taket för ' + ar + ' är sparat.', true);
+      await laddaOmEkonomi();   // RUT utan tak försvinner ur avvikelserna
     });
   });
 
@@ -340,6 +342,7 @@
     if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
     S.rutTak = (S.rutTak || []).filter(r => r.ar !== ar);
     ritaInstallningar();
+    await laddaOmEkonomi();
   });
 
   /* ============================================================
@@ -352,7 +355,7 @@
   const AUDIT_OBJEKT = {
     matchning: 'Matchning', faktura: 'Faktura', utbetalning: 'Utbetalning', tjanst: 'Tjänst',
     rabattkod: 'Rabattkod', behorighet: 'Adminbehörighet', pass: 'Pass', rapport: 'Rapport',
-    studiehjalpare: 'Studiehjälpare', skatteuppgifter: 'Personnummer'
+    studiehjalpare: 'Studiehjälpare', skatteuppgifter: 'Personnummer', rut_tak: 'RUT-tak'
   };
   const AUDIT_HANDLING = {
     skapad: 'skapad', borttagen: 'borttagen', andrad: 'ändrad', status: 'ny status',
@@ -416,6 +419,15 @@
 
   const auditFilter = $('#audit-filter');
   if (auditFilter) auditFilter.addEventListener('change', ritaAudit);
+
+  /* Loggen hämtas om när fliken öppnas: det som hänt sedan sidan
+     laddades — av någon annan admin, eller nyss här — ska synas. */
+  const auditFlik = $('#flik-audit');
+  if (auditFlik) auditFlik.addEventListener('click', async () => {
+    const { data, error } = await supa.from('audit_logg').select('*')
+      .order('tid', { ascending: false }).limit(300);
+    if (!error) { S.audit = data || []; ritaAudit(); }
+  });
 
 
   /* Det andra områden anropar. */

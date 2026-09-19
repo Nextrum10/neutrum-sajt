@@ -64,6 +64,59 @@
            bara etikett i en lista. */
         + ' <button class="btn btn-ghost btn-sm" data-ans-pool="' + a.id + '">Ta in i poolen</button>' }
     ], rader, tomtText(sök || st, 'Ingen ansökan matchar filtret', 'Inga ansökningar än'));
+
+    ritaStegflikar();
+  }
+
+  /* ============================================================
+     INTERVJU OCH UTBILDNING (Fas 6)
+
+     Rekryteringens två steg som egna flikar: vem som väntar på en
+     intervju, och vem som intervjuats men inte utbildats. Samma
+     stegknappar som i listan, så att man kan bocka av direkt här.
+     Avböjda och godkända ligger bara under Alla.
+     ============================================================ */
+  function ritaStegflikar() {
+    const aktiva = S.ansokningar.filter(a => a.status !== 'rejected' && a.status !== 'approved');
+    const tillIntervju = aktiva.filter(a => !a.intervju_at)
+      .sort((a, b) => String(a.kontaktad_at || a.created_at).localeCompare(String(b.kontaktad_at || b.created_at)));
+    const tillUtbildning = aktiva.filter(a => a.intervju_at && !a.utbildad_at)
+      .sort((a, b) => String(a.intervju_at).localeCompare(String(b.intervju_at)));
+
+    const namn = a => '<b>' + esc(a.name) + '</b><span class="adm-und">' + esc(a.email)
+      + (a.age ? ' · ' + a.age + ' år' : '') + '</span>';
+    const väntat = (tid, ord) => tid
+      ? '<span class="adm-tal">' + esc(kortDatum(tid)) + '</span><span class="adm-und">' + esc(ord) + '</span>'
+      : '<span class="adm-und">Inte kontaktad än</span>';
+
+    const intervju = $('#ans-intervju');
+    if (intervju) {
+      $('#ans-intervju-antal').textContent = tillIntervju.length ? tillIntervju.length + ' st' : '';
+      intervju.innerHTML = tabell([
+        { namn: 'Namn', rita: namn },
+        { namn: 'Kontaktad', rita: a => väntat(a.kontaktad_at, 'kontaktad') },
+        { namn: 'Kan jobba', rita: a => esc(a.availability || '—') },
+        { namn: 'Steg', rita: a => '<div class="adm-spar">'
+          + steg('Kontakt', a.kontaktad_at, 'data-ans-kontakt="' + esc(a.id) + '"')
+          + steg('Intervju', a.intervju_at, 'data-ans-steg="intervju:' + esc(a.id) + '"')
+          + '</div>' }
+      ], tillIntervju, 'Ingen väntar på en intervju');
+    }
+
+    const utbildning = $('#ans-utbildning');
+    if (utbildning) {
+      $('#ans-utbildning-antal').textContent = tillUtbildning.length ? tillUtbildning.length + ' st' : '';
+      utbildning.innerHTML = tabell([
+        { namn: 'Namn', rita: namn },
+        { namn: 'Intervjuad', rita: a => väntat(a.intervju_at, 'intervjuad') },
+        { namn: 'Ämnen', rita: a => esc(a.subjects || '—') },
+        { namn: 'Steg', rita: a => '<div class="adm-spar">'
+          + steg('Utbildad', a.utbildad_at, 'data-ans-steg="utbildad:' + esc(a.id) + '"')
+          + '</div>' },
+        { namn: '', höger: true, rita: a =>
+          '<button class="btn btn-ghost btn-sm" data-ans-pool="' + a.id + '">Ta in i poolen</button>' }
+      ], tillUtbildning, 'Ingen väntar på utbildning');
+    }
   }
 
   /* Ett steg i rekryteringsspåret. Gjort = datumet; ogjort = en
