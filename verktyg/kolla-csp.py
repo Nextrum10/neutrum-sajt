@@ -26,9 +26,13 @@ VYER = ['admin.html', 'larare.html', 'foralder.html']
 
 # Samma filer som vyerna laddar och som bygger html av strängar.
 SKRIPT = ['nextrum-app.js', 'nextrum-kontakt.js', 'nextrum-studie.js', 'nextrum-arbetsyta.js',
-          'nextrum-media.js', 'nextrum-betalning.js', 'nextrum-agent.js', 'nextrum-admin-agenter.js',
-          'nextrum-admin.js', 'nextrum-larare-vy.js', 'nextrum-studie-vy.js', 'nextrum-tjanster.js',
-          'nextrum-modulvakt.js', 'nextrum-fel.js']
+          'nextrum-media.js', 'nextrum-betalning.js', 'nextrum-agent.js',
+          'nextrum-admin-agenter.js', 'nextrum-admin.js', 'nextrum-admin-karna.js',
+          'nextrum-admin-detalj.js', 'nextrum-admin-oversikt.js', 'nextrum-admin-kunder.js',
+          'nextrum-admin-rekrytering.js', 'nextrum-admin-kommunikation.js',
+          'nextrum-admin-drift.js', 'nextrum-admin-ekonomi.js', 'nextrum-admin-tjanster.js',
+          'nextrum-admin-system.js', 'nextrum-larare-vy.js', 'nextrum-studie-vy.js',
+          'nextrum-tjanster.js', 'nextrum-modulvakt.js', 'nextrum-fel.js']
 
 
 def main():

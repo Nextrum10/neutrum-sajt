@@ -1,0 +1,394 @@
+/* ============================================================
+   NEXTRUM — adminvyn, Ekonomi: fakturor, utbetalningar, avvikelser, månadskörning
+
+   En del av nextrum-admin.js, utflyttad i Fas 6 utan att någon
+   funktion skrivits om. Kärnan (nextrum-admin-karna.js) laddas
+   först och delar tillståndet S och hjälparna; varje område
+   registrerar de funktioner andra områden anropar i
+   NXAdmin.rita. Skalet (nextrum-admin.js) laddas sist och
+   startar vyn. Ordningen står i admin.html.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  const { $, $$, esc, säg, rensa, felText, datumText, isoFor } = NX;
+  const { bekräfta, medan, tomt, laddar } = NXStudie;
+  const kronor = NXBetalning.kronor;
+  const M = NXMedia;
+
+  const { DAG, FAKT_LAGE, S, UTB_LAGE, elevNamn, fråga, funktionsFel,
+          hämtaAllt, hämtaEkonomiunderlag, kortDatum, matchar, märkFlik,
+          namnFör, pill, rad, skriv, tabell, väljare } = NXAdmin;
+  /* Funktioner som bor i andra områden. Anropen går via
+     NXAdmin.rita, som fylls när alla filer laddats. */
+  const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
+
+  /* ============================================================
+     EKONOMI
+     ============================================================ */
+
+  function ritaFakturor() {
+    const sök = $('#fakt-sok').value.trim();
+    const st = $('#fakt-status').value;
+    const rader = S.fakturor
+      .filter(f => !st || f.status === st)
+      .map(f => ({ ...f, familj: namnFör(f.parent_id) }))
+      .filter(f => matchar(f, ['familj'], sök));
+
+    $('#fakt-antal').textContent = rader.length + ' av ' + S.fakturor.length;
+    $('#fakt-tabell').innerHTML = tabell([
+      { namn: 'Period', rita: f => '<b>' + esc(NXBetalning.periodText(f.period)) + '</b>' },
+      { namn: 'Familj', rita: f => esc(f.familj) },
+      { namn: 'Belopp', rita: f => '<span class="adm-tal">' + esc(kronor(f.belopp_ore)) + '</span>' },
+      { namn: 'Förfaller', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.forfaller)) + '</span>' },
+      { namn: 'Skickad', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.skickad_at)) + '</span>' },
+      { namn: 'Betald', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.betald_at)) + '</span>' },
+      /* Knappen skickar ett riktigt mejl. Rullgardinen bredvid ändrar
+         bara vad som står i tabellen — de gör olika saker med flit,
+         och det ska synas att de gör det. */
+      { namn: '', höger: true, rita: f => {
+        if (f.status === 'makulerad' || f.status === 'betald') return '';
+        const påminn = f.status === 'skickad' || f.status === 'forfallen';
+        return '<button class="btn ' + (påminn ? 'btn-ghost' : 'btn-primary') + ' btn-sm"'
+          + ' data-skicka="faktura" data-id="' + f.id + '"'
+          + (påminn ? ' data-paminnelse="1"' : '') + '>'
+          + (påminn ? 'Påminn' : 'Skicka') + '</button>';
+      } },
+      { namn: 'Läge', höger: true, rita: f => väljare('fakt', FAKT_LAGE, f.status, 'data-fakt="' + f.id + '"') }
+    ], rader, 'Inga fakturor än');
+  }
+
+  function ritaUtbetalningar() {
+    const sök = $('#utb-sok').value.trim();
+    const st = $('#utb-status').value;
+    const rader = S.utbetalningar
+      .filter(u => !st || u.status === st)
+      .map(u => ({ ...u, hjalpare: namnFör(u.tutor_id) }))
+      .filter(u => matchar(u, ['hjalpare'], sök));
+
+    $('#utb-antal').textContent = rader.length + ' av ' + S.utbetalningar.length;
+    $('#utb-tabell').innerHTML = tabell([
+      { namn: 'Period', rita: u => '<b>' + esc(NXBetalning.periodText(u.period)) + '</b>' },
+      { namn: 'Studiehjälpare', rita: u => esc(u.hjalpare) },
+      { namn: 'Timmar', rita: u => '<span class="adm-tal">' + esc(NXBetalning.timmar(u.minuter)) + '</span>' },
+      { namn: 'Belopp', rita: u => '<span class="adm-tal">' + esc(kronor(u.belopp_ore)) + '</span>' },
+      { namn: 'Utbetald', rita: u => '<span class="adm-tal">' + esc(kortDatum(u.utbetald_at)) + '</span>'
+        + (u.fel ? '<span class="adm-und" style="color:var(--acc-text)">' + esc(u.fel) + '</span>' : '') },
+      /* Underlaget, inte pengarna. Studiehjälparen får se vad hen
+         kommer att få och hinner säga ifrån innan beloppet betalas
+         ut — det är billigare än att rätta en utbetalning efteråt. */
+      { namn: '', höger: true, rita: u => u.status === 'utbetald' ? ''
+        : '<button class="btn btn-ghost btn-sm" data-skicka="utbetalning" data-id="'
+          + u.id + '">Skicka underlag</button>' },
+      { namn: 'Läge', höger: true, rita: u => väljare('utb', UTB_LAGE, u.status, 'data-utb="' + u.id + '"') }
+    ], rader, 'Inga utbetalningar än');
+  }
+
+  /* ============================================================
+     AVVIKELSER (Fas 2)
+
+     Ett genomfört pass utan rapport kommer aldrig med i
+     månadskörningen. Rapporten är det som visar att passet hölls,
+     och det är den som motiverar raden på familjens faktura och på
+     studiehjälparens underlag. Här tar någon ställning, ett pass i
+     taget: koppla rätt rapport, eller undanta passet.
+     ============================================================ */
+  function utanRapport() {
+    return (S.passunderlag || []).filter(p =>
+      p.fakturerbar && !p.har_rapport && !p.fakturerad && !p.pa_underlag);
+  }
+
+  const dagnummer = iso => Math.round(Date.parse(String(iso || '').slice(0, 10)) / DAG) || 0;
+
+  /* Rapporter som kan höra till passet: samma studiehjälpare, samma
+     elev, inte kopplade till något annat. Närmast i tid först — en
+     rapport skriven dagen efter är troligare än en från förra månaden. */
+  function kandidater(p) {
+    return (S.fristaendeRapporter || [])
+      .filter(r => r.tutor_id === p.tutor_id && (!p.student_id || r.student_id === p.student_id))
+      .sort((a, b) => Math.abs(dagnummer(a.lesson_date) - dagnummer(p.wanted_date))
+        - Math.abs(dagnummer(b.lesson_date) - dagnummer(p.wanted_date)));
+  }
+
+  function ritaAvvikelser() {
+    const host = $('#avv-utan-rapport');
+    if (!host) return;
+
+    if (S.passunderlagFel) {
+      host.innerHTML = tomt('Passunderlaget gick inte att läsa', S.passunderlagFel);
+      $('#avv-fristaende').innerHTML = '';
+      $('#avv-undantagna').innerHTML = '';
+      return;
+    }
+
+    const saknar = utanRapport();
+    host.innerHTML = tabell([
+      { namn: 'Pass', rita: p => '<b>' + esc(kortDatum(p.wanted_date)) + '</b>'
+        + '<span class="adm-und">' + esc(p.subject || 'Pass') + '</span>' },
+      { namn: 'Familj', rita: p => esc(namnFör(p.parent_id)) },
+      { namn: 'Elev', rita: p => esc(elevNamn(p.student_id)) },
+      { namn: 'Studiehjälpare', rita: p => esc(namnFör(p.tutor_id)) },
+      { namn: 'Rapporter att välja', rita: p => {
+        const n = kandidater(p).length;
+        return n ? pill(n + ' fristående', 'ar-vantar')
+          : '<span class="xsmall" style="color:var(--bl-3)">Ingen</span>';
+      } },
+      { namn: '', höger: true, rita: p =>
+        (kandidater(p).length
+          ? '<button class="btn btn-primary btn-sm" type="button" data-avv-koppla="' + p.id + '">Koppla rapport</button> '
+          : '')
+        + '<button class="btn btn-ghost btn-sm" type="button" data-avv-undanta="' + p.id + '">Undanta</button>' }
+    ], saknar, 'Alla genomförda pass har en rapport');
+
+    $('#avv-fristaende').innerHTML = tabell([
+      { namn: 'Datum', rita: r => '<b>' + esc(kortDatum(r.lesson_date)) + '</b>' },
+      { namn: 'Studiehjälpare', rita: r => esc(namnFör(r.tutor_id)) },
+      { namn: 'Elev', rita: r => esc(elevNamn(r.student_id)) },
+      { namn: 'Anteckning', rita: r => '<span class="xsmall">'
+        + esc(String(r.raw_notes || '').slice(0, 90)) + '</span>' }
+    ], S.fristaendeRapporter || [], 'Inga fristående rapporter');
+
+    const undantagna = (S.passunderlag || []).filter(p => !p.fakturerbar);
+    $('#avv-undantagna').innerHTML = tabell([
+      { namn: 'Pass', rita: p => '<b>' + esc(kortDatum(p.wanted_date)) + '</b>'
+        + '<span class="adm-und">' + esc(p.subject || 'Pass') + '</span>' },
+      { namn: 'Familj', rita: p => esc(namnFör(p.parent_id)) },
+      { namn: 'Studiehjälpare', rita: p => esc(namnFör(p.tutor_id)) },
+      { namn: 'Anledning', rita: p => esc(p.fakturerbar_anledning || '—') },
+      { namn: '', höger: true, rita: p =>
+        '<button class="btn btn-ghost btn-sm" type="button" data-avv-ateruppta="' + p.id + '">Ångra</button>' }
+    ], undantagna, 'Inga undantagna pass');
+
+    märkFlik('#flik-avv-mark', saknar.length);
+  }
+
+  async function laddaOmEkonomi() {
+    await hämtaEkonomiunderlag();
+    ritaAvvikelser();
+    await ritaÖversikt();
+  }
+
+  document.addEventListener('click', async e => {
+    const koppla = e.target.closest('[data-avv-koppla]');
+    const undanta = e.target.closest('[data-avv-undanta]');
+    const återta = e.target.closest('[data-avv-ateruppta]');
+    if (!koppla && !undanta && !återta) return;
+
+    const id = (koppla || undanta || återta).dataset.avvKoppla
+      || (koppla || undanta || återta).dataset.avvUndanta
+      || (koppla || undanta || återta).dataset.avvAteruppta;
+    const p = (S.passunderlag || []).find(x => x.id === id);
+    if (!p) return;
+    const vad = kortDatum(p.wanted_date) + ' · ' + namnFör(p.parent_id) + ' · ' + namnFör(p.tutor_id);
+
+    if (koppla) {
+      const lista = kandidater(p);
+      /* Sedan Fas 3.7 måste en rapport som hör till ett pass ha närvaro
+         (rapport_med_pass_har_narvaro). En fristående rapport har
+         ingen, så den sätts här — förvald efter passets egen närvaro
+         när den finns. Utan valet nekade databasen varje koppling. */
+      const passNärvaro = ((S.bokningar || []).find(b => b.id === p.id) || {}).attendance || 'narvarande';
+      const NÄRVARO = [['narvarande', 'Närvarade'], ['sen', 'Kom sent'], ['franvarande', 'Uteblev']];
+      const valt = await fråga({
+        titel: 'Vilken rapport hör till passet?',
+        text: vad + '. Rapporten kopplas till passet, och passet kommer med på nästa körning.',
+        innehåll: '<div class="fgroup" style="margin:14px 0 0"><label for="avv-narvaro">Närvaro på passet</label>'
+          + '<select class="sel" id="avv-narvaro">' + NÄRVARO.map(([v, t]) =>
+            '<option value="' + v + '"' + (v === passNärvaro ? ' selected' : '') + '>' + esc(t) + '</option>').join('')
+          + '</select></div>'
+          + '<div style="margin:14px 0 4px">' + lista.map((r, i) =>
+          '<label style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)">'
+          + '<input type="radio" name="avv-rapport" value="' + r.id + '"' + (i === 0 ? ' checked' : '') + '>'
+          + '<span><b>' + esc(kortDatum(r.lesson_date)) + '</b> · ' + esc(elevNamn(r.student_id))
+          + '<br><span class="xsmall" style="color:var(--bl-3)">'
+          + esc(String(r.raw_notes || '').slice(0, 140)) + '</span></span></label>').join('') + '</div>',
+        knapp: 'Koppla',
+        läs: ruta => {
+          const v = ruta.querySelector('input[name="avv-rapport"]:checked');
+          const n = ruta.querySelector('#avv-narvaro');
+          return v ? { värde: { rapport: v.value, narvaro: n ? n.value : passNärvaro } } : { fel: 'Välj en rapport.' };
+        }
+      });
+      if (!valt) return;
+      await medan(koppla, 'Kopplar…', async () => {
+        /* is('booking_id', null): hann någon annan koppla rapporten
+           under tiden ska den inte flyttas härifrån. */
+        const { data, error } = await supa.from('lesson_reports')
+          .update({ booking_id: p.id, narvaro: valt.narvaro })
+          .eq('id', valt.rapport).is('booking_id', null).select('id');
+        if (error) { alert('Kunde inte koppla: ' + felText(error)); return; }
+        if (!data || !data.length) alert('Rapporten hann kopplas till något annat. Listan laddas om.');
+        /* Samma närvaro på passet. Rapportens trigger gör det bara när
+           en rapport skapas, och det här passet är redan genomfört. */
+        else await supa.from('bookings').update({ attendance: valt.narvaro }).eq('id', p.id);
+        await laddaOmEkonomi();
+      });
+      return;
+    }
+
+    if (undanta) {
+      const anledning = await fråga({
+        titel: 'Undanta passet?',
+        text: vad + '. Passet kommer varken på familjens faktura eller på studiehjälparens underlag.',
+        innehåll: '<div class="fgroup" style="margin-top:14px"><label for="avv-anledning">Varför?</label>'
+          + '<textarea class="inp" id="avv-anledning" rows="3" maxlength="300" '
+          + 'placeholder="Till exempel: testpass, inte ett riktigt pass"></textarea></div>',
+        knapp: 'Undanta',
+        läs: ruta => {
+          const t = $('#avv-anledning', ruta).value.trim();
+          return t ? { värde: t } : { fel: 'Skriv varför — ett undantag utan anledning går inte att följa upp.' };
+        }
+      });
+      if (!anledning) return;
+      await medan(undanta, 'Sparar…', async () => {
+        if (await skriv('bookings', p.id, { fakturerbar: false, fakturerbar_anledning: anledning })) {
+          await laddaOmEkonomi();
+        }
+      });
+      return;
+    }
+
+    const ja = await bekräfta({
+      titel: 'Ta med passet igen?',
+      text: vad + '. Passet kommer med på nästa körning, om det har en rapport.',
+      knapp: 'Ta med'
+    });
+    if (!ja) return;
+    await medan(återta, 'Sparar…', async () => {
+      if (await skriv('bookings', p.id, { fakturerbar: true, fakturerbar_anledning: null })) {
+        await laddaOmEkonomi();
+      }
+    });
+  });
+
+  /* ============================================================
+     MÅNADSKÖRNINGEN (Fas 2)
+
+     Två steg, som vid utskicket: först en torrkörning som visar vad
+     som skulle skapas, sedan det skarpa anropet — och det går bara
+     för samma månad som torrkörningen gällde. Det skarpa steget
+     skapar UTKAST. Ingenting skickas härifrån.
+     ============================================================ */
+  function fyllPerioder() {
+    const val = $('#kor-period');
+    if (!val || val.options.length) return;
+    const nu = new Date();
+    const alt = [];
+    for (let i = 1; i <= 6; i++) {
+      const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
+      const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      alt.push('<option value="' + iso + '">' + esc(NXBetalning.periodText(iso + '-01')) + '</option>');
+    }
+    const iår = nu.getFullYear() + '-' + String(nu.getMonth() + 1).padStart(2, '0');
+    alt.push('<option value="' + iår + '">' + esc(NXBetalning.periodText(iår + '-01'))
+      + ' (pågår)</option>');
+    val.innerHTML = alt.join('');
+    val.addEventListener('change', () => { $('#kor-skapa').disabled = true; S.korning = null; });
+  }
+
+  function ritaKörning(d, torr) {
+    const summa = lista => (lista || []).reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
+    const rad = (vänster, höger, total) => '<div class="sum-line' + (total ? ' total' : '') + '">'
+      + '<span>' + vänster + '</span><span class="adm-tal">' + höger + '</span></div>';
+    const fakturor = d.fakturor || [];
+    const underlag = d.utbetalningar || [];
+
+    let h = '<p class="small" style="margin:14px 0 8px"><b>'
+      + esc((torr ? 'Torrkörning' : 'Skapat') + ' · ' + NXBetalning.periodText(d.period)) + '</b>'
+      + ' <span class="xsmall" style="color:var(--bl-3)">pass till och med '
+      + esc(kortDatum(d.pass_till_och_med)) + '</span></p>';
+
+    h += fakturor.map(f => rad(esc(namnFör(f.parent_id)) + ' · ' + f.pass + ' pass',
+      esc(kronor(f.belopp_ore)))).join('');
+    h += rad('Familjerna, ' + fakturor.length + (fakturor.length === 1 ? ' faktura' : ' fakturor'),
+      esc(kronor(summa(fakturor))), true);
+
+    h += underlag.map(u => rad(esc(namnFör(u.tutor_id)) + ' · ' + u.pass + ' pass',
+      esc(kronor(u.belopp_ore)))).join('');
+    h += rad('Studiehjälparna, ' + underlag.length + ' underlag', esc(kronor(summa(underlag))), true);
+
+    const noter = [];
+    const utan = d.hoppade_over_utan_rapport || [];
+    if (utan.length) {
+      noter.push('⚠️ ' + utan.length + (utan.length === 1 ? ' pass saknar' : ' pass saknar')
+        + ' rapport och kom inte med. <a href="#ekonomi/avvikelser">Se avvikelser</a>.');
+    }
+    (d.hoppade_over_utan_timpenning || []).forEach(id => noter.push('⚠️ ' + esc(namnFör(id))
+      + ' har ingen timpenning, så hens pass väntar till nästa körning.'));
+    if (d.undantagna_pass) noter.push(d.undantagna_pass + ' undantagna pass räknades inte.');
+    if (d.skapade) noter.push('Skapade: ' + d.skapade.fakturor + ' fakturor och '
+      + d.skapade.utbetalningar + ' underlag, alla som utkast.');
+    (d.problem || []).forEach(p => noter.push('⚠️ ' + esc(p)));
+    if (!fakturor.length && !underlag.length && torr) noter.push('Inget att skapa för den här månaden.');
+
+    return h + noter.map(n => '<p class="xsmall" style="margin:8px 0 0;line-height:1.6">' + n + '</p>').join('');
+  }
+
+  document.addEventListener('click', async e => {
+    const torr = e.target.closest('#kor-torr');
+    const skapa = e.target.closest('#kor-skapa');
+    if (!torr && !skapa) return;
+
+    const period = $('#kor-period').value;
+    const host = $('#kor-resultat');
+
+    if (torr) {
+      $('#kor-skapa').disabled = true;
+      S.korning = null;
+      const res = await medan(torr, 'Räknar…', () =>
+        supa.functions.invoke('fakturering', { body: { torrkorning: true, period } }));
+      const fel = res.error || (res.data && res.data.error);
+      if (fel) { host.innerHTML = tomt('Torrkörningen gick inte', await funktionsFel(fel)); return; }
+      S.korning = { period, torr: res.data };
+      host.innerHTML = ritaKörning(res.data, true);
+      $('#kor-skapa').disabled = !((res.data.fakturor || []).length || (res.data.utbetalningar || []).length);
+      return;
+    }
+
+    if (!S.korning || S.korning.period !== period) { skapa.disabled = true; return; }
+    const t = S.korning.torr;
+    const summa = lista => (lista || []).reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
+    const ja = await bekräfta({
+      titel: 'Skapa utkast för ' + NXBetalning.periodText(t.period) + '?',
+      text: t.fakturor.length + ' fakturor på ' + kronor(summa(t.fakturor)) + ' och '
+        + t.utbetalningar.length + ' underlag på ' + kronor(summa(t.utbetalningar))
+        + '. De skapas som utkast — ingenting skickas.',
+      knapp: 'Skapa utkast'
+    });
+    if (!ja) return;
+
+    const res = await medan(skapa, 'Skapar…', () =>
+      supa.functions.invoke('fakturering', { body: { period } }));
+    const fel = res.error || (res.data && res.data.error);
+    skapa.disabled = true;
+    S.korning = null;
+    if (fel) { host.innerHTML = tomt('Körningen gick inte', await funktionsFel(fel)); return; }
+    host.innerHTML = ritaKörning(res.data, false);
+
+    await hämtaAllt();
+    await hämtaEkonomiunderlag();
+    ritaFakturor();
+    ritaUtbetalningar();
+    ritaAvvikelser();
+    await ritaÖversikt();
+  });
+
+  /* Priset redigeras inte längre här — det gör tjänstekatalogen
+     nedan. Kvar är talet i månadskörningens sammanfattning, som
+     visar vad fakturering FAKTISKT kommer att räkna med: värdet i
+     prissattning, dit triggern speglar läxhjälpens pris. Läser man
+     tjanster här i stället skulle rutan visa vad någon nyss skrev
+     medan funktionen räknade på något annat. */
+  function ritaPris() {
+    const öre = S.pris ? S.pris.pris_per_timme_ore : (NX.CFG.PRIS_PER_TIMME || 379) * 100;
+    const ruta = $('#kor-pris');
+    if (ruta) ruta.textContent = kronor(öre);
+  }
+
+
+  /* Det andra områden anropar. */
+  Object.assign(NXAdmin.rita, {
+    fyllPerioder, kandidater, ritaAvvikelser, ritaFakturor, ritaPris,
+    ritaUtbetalningar, utanRapport
+  });
+})();
