@@ -1499,6 +1499,156 @@ select '9.3 ingen vitlista bär namn, adress eller fritext',
 from vitlista
 where kolumn ~ '(name|namn|email|epost|message|meddelande|summary|note|anteckning|adress|location|stack|beskrivning|motivering)';
 
+-- ============================================================
+-- FAS 10 — en tjänst kan aktiveras kontrollerat
+--
+-- Provet skrevs FÖRE migrationen och kördes då: de fyra raderna om
+-- "nekas" gick igenom, alltså var spärren obyggd. Ett prov som
+-- skrivs efter migrationen bevisar bara att koden gör det koden gör.
+--
+-- DE TVÅ VIKTIGASTE RADERNA ÄR INTE DE SOM NEKAR. Det är de två som
+-- ska gå igenom: läxhjälp är aktiv i drift MED ersattning = null och
+-- krav = '{}', och ett ovillkorligt krav på de fälten hade gjort
+-- 379-kronorsraden omöjlig att spara. Den fällan kostar ingenting att
+-- gå i och allt att upptäcka i efterhand.
+-- ============================================================
+
+-- Fixtur: en tjänst att leka med, så att provet aldrig rör de fyra
+-- riktiga raderna. Läggs som postgres, där skydden släpper igenom.
+insert into public.tjanster (kod, namn, kort, ordning, aktiv, for_kund, for_jobb,
+                             pris_per_timme_ore, extra_personer_ore, extra_personer_max)
+values ('provtjanst', 'Provtjänst', 'Finns bara i provet.', 900, false, true, true,
+        null, null, 1);
+
+select pg_temp.prova('10.1 admin aktiverar en kundtjänst utan pris', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster set aktiv = true where kod = 'provtjanst'$q$], 'nekad');
+
+select pg_temp.prova('10.1 admin aktiverar en kundtjänst MED pris', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster set pris_per_timme_ore = 45000, aktiv = true
+           where kod = 'provtjanst'$q$], 'ok');
+
+-- Adminvyn skickar aktiv OCH fälten i EN update. Kan den vägen inte
+-- gå är spärren värdelös: då finns ingen väg alls att aktivera.
+select pg_temp.prova('10.1 pris och kryss i samma spara går igenom', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster
+            set pris_per_timme_ore = 45000, extra_personer_ore = 5000,
+                extra_personer_max = 2, aktiv = true
+          where kod = 'provtjanst'$q$], 'ok');
+
+select pg_temp.prova('10.1 flerbarnstillägg utan belopp nekas', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster
+            set pris_per_timme_ore = 45000, extra_personer_max = 3, aktiv = true
+          where kod = 'provtjanst'$q$], 'nekad');
+
+-- forsaljning har for_kund = false: den säljs inte, den söks till.
+-- Ett ovillkorligt krav på kundpris hade gjort den omöjlig att lansera.
+select pg_temp.prova('10.1 en ren jobbtjänst aktiveras utan kundpris', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster set aktiv = true where kod = 'forsaljning'$q$], 'ok');
+
+select pg_temp.prova('10.1 varken kund eller jobb går inte att aktivera', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster
+            set for_kund = false, for_jobb = false, pris_per_timme_ore = 45000, aktiv = true
+          where kod = 'provtjanst'$q$], 'nekad');
+
+-- ---------- fällan: läxhjälp ----------
+-- Aktiv i drift med ersattning = null och krav = '{}'. Går de här två
+-- sönder är triggern skriven som ett förbud i stället för som en grind.
+select pg_temp.prova('10.1 läxhjälp går att spara oförändrad', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster set uppdaterad = now() where kod = 'laxhjalp'$q$], 'ok');
+
+select pg_temp.prova('10.1 läxhjälp går att prisändra trots ersattning = null', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster set pris_per_timme_ore = 38900 where kod = 'laxhjalp'$q$], 'ok');
+
+-- En aktiv tjänst får inte tömmas på det som gör fakturan rätt.
+select pg_temp.prova('10.1 priset går inte att tömma på en aktiv tjänst', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster set pris_per_timme_ore = null where kod = 'laxhjalp'$q$], 'nekad');
+
+-- Avstängning ska alltid gå. Den är nödbromsen.
+select pg_temp.prova('10.1 en tjänst går alltid att stänga av', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster set aktiv = false where kod = 'laxhjalp'$q$], 'ok');
+
+-- ---------- 10.4 olanserade tjänster syns inte ----------
+-- Kravet är "osynliga också via API:t", inte "osynliga i gränssnittet".
+
+select pg_temp.rakna('10.4 anon ser bara aktiva tjänster', null,
+  $q$select count(*) from public.tjanster where not aktiv$q$, 0);
+
+-- tjanstkoder_finns svarade true för barnvakt åt vem som helst. Det är
+-- ett orakel: man behöver inte läsa tabellen för att få koden bekräftad.
+--
+-- Lagningen är INTE en revoke. Det provades, och det slog sönder hela
+-- ansökningsvägen: ett CHECK-villkor körs som ANROPAREN, inte som
+-- tabellägaren, så anon fick permission denied så fort en rad skrevs.
+-- Funktionen flyttades i stället till schemat `intern`, som PostgREST
+-- inte exponerar. Därför prövas frånvaron ur public, inte en felkod.
+insert into utfall (test, ok, detalj)
+select '10.4 oraklet finns inte i det exponerade schemat', count(*) = 0,
+       count(*) || ' funktioner som heter tjanstkoder_finns i public'
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' and p.proname = 'tjanstkoder_finns';
+
+insert into utfall (test, ok, detalj)
+select '10.4 oraklet finns kvar i intern, där villkoren når det', count(*) = 1,
+       count(*) || ' i intern'
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'intern' and p.proname = 'tjanstkoder_finns';
+
+-- Och villkoret måste fortfarande neka en kod som inte finns alls.
+-- Utan den raden kunde flytten ha tystat villkoret i stället för att
+-- flytta det. `prova` duger inte här: den räknar bara 42501 som nekad,
+-- och ett CHECK-villkor ger 23514.
+do $$
+declare fel text := 'SLÄPPTES IGENOM';
+begin
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+  begin
+    insert into public.applications (name, email, tjanster)
+    values ('Prov', 'rls-fejk@example.invalid', array['finns_inte_alls']);
+  exception when others then fel := sqlstate;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('10.4 en ansökan på en påhittad kod nekas av villkoret', fel = '23514', 'fick ' || fel);
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- Hålet som Fas 7.4 stängde för leads stod öppet för applications:
+-- en anonym POST kunde lägga en ansökan på en olanserad tjänst.
+--
+-- Provet MÅSTE skriva som anon och läsa som admin. Första versionen
+-- gjorde båda som anon och blev grön av fel skäl: anon får inte läsa
+-- applications, så noll rader betydde "ingen läsrätt", inte "ingen
+-- rad". Ett prov som är grönt för att det inte kan se är värre än
+-- inget prov.
+do $$
+declare kvar bigint; fel text := 'ingen';
+begin
+  perform pg_temp.bli(null);
+  begin
+    insert into public.applications (name, email, tjanster)
+    values ('Provsökande', 'rls-ans@example.invalid', array['barnvakt']);
+  exception when others then fel := sqlstate;
+  end;
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+  select count(*) into kvar from public.applications
+   where email = 'rls-ans@example.invalid' and 'barnvakt' = any (tjanster);
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  insert into utfall (test, ok, detalj)
+  values ('10.4 anons ansökan hamnar inte på en olanserad tjänst', kvar = 0,
+          'rader med barnvakt: ' || kvar || ' (insert: ' || fel || ')');
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).
 insert into utfall (test, ok, detalj)

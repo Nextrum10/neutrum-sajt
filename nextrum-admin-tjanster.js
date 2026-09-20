@@ -89,6 +89,120 @@
       + '</details>';
   }
 
+  /* ------------------------------------------------------------
+     LANSERINGSCHECKLISTAN (Fas 10)
+
+     Tre högar, och skillnaden mellan dem är hela poängen.
+
+     SPÄRRAR är det databasen vägrar. Varje rad här motsvarar ett
+     villkor i skydda_tjansteaktivering(), och varje villkor finns
+     för att systemet annars räknar fel TYST: utan pris fakturerar
+     månadskörningen till läxhjälpens timpris och skriver det som om
+     det vore tjänstens eget (_delad/pris.ts:170 och :203).
+
+     ATT BESTÄMMA är sådant databasen inte kan ha en åsikt om. Ett
+     tomt `krav` är både förvalet och ett tänkbart svar, så ett krav
+     på "ifyllt" hade gått att uppfylla med {"x":1}. Det är en
+     människa som ska läsa det, inte en trigger som räknar klamrar.
+
+     UTANFÖR DATABASEN är det ingen kod kan se. Om /barnvakt svarar
+     200, och om texten finns på båda språken, vet bara den som
+     tittat. Därför står de raderna också i bekräftelsedialogen: det
+     är där beslutet faktiskt fattas.
+
+     Checklistan lagrar ingenting. Den läser raden. Ett eget
+     nyckelformat i `uppgifter` hade blivit bärande kod som inget
+     CI-verktyg vaktar, för tre tjänster som lanseras kanske en gång
+     om året. ------------------------------------------------------------ */
+
+  function tjanstPunkter(t) {
+    const kr = v => (v === null || v === undefined) ? null : Math.round(v / 100);
+    const år = new Date().getFullYear();
+    const harTak = (S.rutTak || []).some(r => Number(r.ar) === år);
+
+    const spärrar = [];
+    spärrar.push({
+      ok: !!(t.for_kund || t.for_jobb),
+      text: 'Går att boka eller söka till',
+      hjälp: 'En aktiv tjänst som är varken eller syns ingenstans men vidgar katalogen.'
+    });
+    if (t.for_kund) {
+      spärrar.push({
+        ok: !!(t.pris_per_timme_ore && t.pris_per_timme_ore > 0),
+        text: 'Pris per timme är satt',
+        hjälp: 'Utan pris fakturerar månadskörningen till läxhjälpens timpris — och '
+             + 'skriver det på fakturaraden som om det vore den här tjänstens pris.'
+      });
+    }
+    if (Number(t.extra_personer_max || 1) > 1) {
+      spärrar.push({
+        ok: t.extra_personer_ore !== null && t.extra_personer_ore !== undefined,
+        text: 'Tillägg för flera personer är satt',
+        hjälp: 'Tjänsten tillåter ' + t.extra_personer_max + ' personer. Utan belopp '
+             + 'blir tillägget tyst noll.'
+      });
+    }
+
+    const bestäm = [
+      { ok: true,
+        text: t.ersattning_per_timme_ore === null || t.ersattning_per_timme_ore === undefined
+          ? 'Ersättning: studiehjälparens egen timpenning'
+          : 'Ersättning: ' + kr(t.ersattning_per_timme_ore) + ' kr i timmen',
+        hjälp: 'Tomt fält är ett giltigt svar och betyder den enskildes egen timpenning. '
+             + 'Saknas båda hoppar faktureringen över passet och rapporterar det.' },
+      { ok: t.krav && Object.keys(t.krav).length > 0,
+        text: 'Kraven på den som utför tjänsten är skrivna',
+        hjälp: 'Spärrar inte. Ett tomt krav går inte att skilja från ett oifyllt, så '
+             + 'den här raden är en påminnelse — inte en kontroll.' },
+      { ok: !!t.bokningstyp,
+        text: 'Bokas som: ' + (t.bokningstyp === 'forfragan' ? 'förfrågan vi planerar' : 'pass i kalendern'),
+        hjälp: 'Förvalet är pass. Stämmer det för den här tjänsten?' }
+    ];
+    if (t.rut_berattigad) {
+      bestäm.push({
+        ok: harTak,
+        text: 'RUT-tak för ' + år + ' är inlagt',
+        hjälp: 'Tjänsten är RUT-berättigad. Utan ett tak för året drar faktureringen '
+             + 'ingen RUT alls, och kunden får en faktura utan avdraget hen lovats.'
+      });
+    }
+
+    return { spärrar: spärrar, bestäm: bestäm };
+  }
+
+  /* De raderna ingen kod kan svara på. De står både i kortet och i
+     dialogen när tjänsten slås på — det är där beslutet fattas. */
+  const TJ_MANUELLT = [
+    'Den publika texten om tjänsten är skriven och publicerad',
+    'Den finns på både svenska och engelska',
+    'Någon har läst kraven och tycker att de stämmer'
+  ];
+
+  function tjanstChecklista(t) {
+    const p = tjanstPunkter(t);
+    const kvar = p.spärrar.filter(x => !x.ok).length;
+    const rad = (x, sort) =>
+      '<li class="tj-check-rad' + (x.ok ? ' ar-klar' : sort === 'sparr' ? ' ar-ny' : '') + '">'
+      + '<b>' + (x.ok ? '✓' : sort === 'sparr' ? '✗' : '–') + '</b>'
+      + '<span>' + esc(x.text) + '<span class="adm-und">' + esc(x.hjälp) + '</span></span></li>';
+
+    return '<details class="tj-check"' + (t.aktiv || kvar ? '' : ' open') + '>'
+      + '<summary>Lansering'
+      + (t.aktiv ? ' ' + pill('Live', 'ar-klar')
+                 : kvar ? ' ' + pill(kvar + (kvar === 1 ? ' spärr kvar' : ' spärrar kvar'), 'ar-ny')
+                        : ' ' + pill('Går att slå på', 'ar-vantar'))
+      + '</summary>'
+      + '<p class="xsmall">Databasen vägrar det första stycket. Resten är ditt omdöme.</p>'
+      + '<ul class="tj-check-lista">' + p.spärrar.map(x => rad(x, 'sparr')).join('') + '</ul>'
+      + '<ul class="tj-check-lista">' + p.bestäm.map(x => rad(x, 'bestam')).join('') + '</ul>'
+      + '<ul class="tj-check-lista tj-check-manuellt">'
+      + TJ_MANUELLT.map(x => '<li class="tj-check-rad"><b>?</b><span>' + esc(x) + '</span></li>').join('')
+      + '</ul>'
+      + '<p class="xsmall">De tre sista kan ingen kod svara på. Du får frågan igen när du '
+      + 'slår på tjänsten.</p>'
+      + '</details>';
+  }
+
   /* Läser och kontrollerar villkoren för en tjänst. Samma regler som
      databasens check-villkor, så att felet syns här och inte som en
      kod från servern. Returnerar { fel } eller { värden }. */
@@ -181,6 +295,7 @@
         + ' placeholder="Inte bestämt" value="' + kr + '">'
         + '</div>'
         + tjanstVillkor(t)
+        + tjanstChecklista(t)
         + '<label class="ag-kryss" style="margin:0">'
         + '<input type="checkbox" data-tj-aktiv="' + esc(t.kod) + '"' + (t.aktiv ? ' checked' : '') + '> '
         + 'Aktiv — syns för besökare</label>'
@@ -336,13 +451,35 @@
     const villkor = tjFält(kod);
     if (villkor.fel) { säg(msg, villkor.fel, false); return; }
 
-    /* Den enda regel som är värd en spärr: en tjänst utan pris får
-       inte slås på. Familjen skulle kunna boka den, och ingen skulle
-       kunna fakturera den. */
-    if (aktiv && kr === null) {
-      säg(msg, 'Sätt ett pris först. En tjänst utan pris går att boka men inte att fakturera.', false);
-      aktivRuta.checked = false;
-      return;
+    /* Speglar skydda_tjansteaktivering() i databasen, så att felet
+       syns här och inte som rå servertext genom felText() nedan.
+       Databasen är skyddet; den här spärren är beskedet. Ändras den
+       ena måste den andra följa med — samma regel som filens övriga
+       kontroller följer. */
+    if (aktiv) {
+      const prisSaknas = rad.for_kund && kr === null;
+      const flerUtanTillagg = Number(rad.extra_personer_max || 1) > 1
+        && (rad.extra_personer_ore === null || rad.extra_personer_ore === undefined);
+      const oanvandbar = !rad.for_kund && !rad.for_jobb;
+
+      if (prisSaknas) {
+        säg(msg, 'Sätt ett pris först. Utan pris fakturerar månadskörningen tjänsten '
+          + 'till läxhjälpens timpris och skriver det som om det vore tjänstens eget.', false);
+        aktivRuta.checked = false;
+        return;
+      }
+      if (flerUtanTillagg) {
+        säg(msg, 'Tjänsten tillåter ' + rad.extra_personer_max + ' personer men saknar '
+          + 'tillägg för dem. Tillägget blir då tyst noll.', false);
+        aktivRuta.checked = false;
+        return;
+      }
+      if (oanvandbar) {
+        säg(msg, 'Tjänsten är varken bokbar eller sökbar. Då syns den ingenstans, '
+          + 'men finns ändå i katalogen.', false);
+        aktivRuta.checked = false;
+        return;
+      }
     }
 
     const öre = kr === null ? null : kr * 100;
@@ -366,8 +503,10 @@
             : 'Ändra ersättning eller RUT för ' + rad.namn.toLowerCase() + '?',
         text: slårPå
           ? 'Tjänsten dyker upp i intresseanmälan, i ansökan och i bokningen så fort '
-            + 'någon laddar om sidan. Skriv texten om den på de publika sidorna först, '
-            + 'annars kan man beställa något sajten inte beskriver.'
+            + 'någon laddar om sidan.\n\nDet här kan ingen kod kontrollera åt dig:\n'
+            + TJ_MANUELLT.map(x => '· ' + x).join('\n')
+            + '\n\nSvarar du ja utan att ha gjort dem kan man beställa något sajten '
+            + 'inte beskriver.'
           : prisÄndrat && rad.kod === 'laxhjalp'
             ? 'Gäller nya fakturarader. Redan skapade rader behåller sitt pris — en '
               + 'prisändring får aldrig ändra vad någon redan fakturerats. Kom ihåg att '

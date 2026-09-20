@@ -134,7 +134,12 @@ const NXTjanster = (function () {
 
   /* Samma sak för den som söker jobb: den första aktiva tjänsten man
      kan arbeta med. Skiljer sig från standard() den dag en tjänst
-     bara finns på ena sidan (försäljning är for_jobb men inte for_kund). */
+     bara finns på ena sidan — något man kan söka till utan att en
+     familj kan beställa det, eller tvärtom.
+
+     Exemplet stod här med namn till Fas 10. Filen serveras från
+     nextrum.se, och en olanserad tjänst ska inte gå att läsa sig till
+     ur en kommentar. */
   function standardJobb() {
     const f = forJobb();
     return f.length ? f[0].kod : 'laxhjalp';

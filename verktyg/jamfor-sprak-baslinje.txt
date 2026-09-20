@@ -54,3 +54,15 @@
   TEXTNODER: sv 96 vs en 95 — engelskan har inte följt med
 
 11 av 11 sidpar har avvikelser.
+
+=== svenska sidor utan engelsk tvilling: 10
+  admin.html
+  foralder.html
+  larare.html
+  laxhjalp-bromma.html
+  laxhjalp-farsta.html
+  laxhjalp-hammarby-sjostad.html
+  laxhjalp-nacka.html
+  laxhjalp-sodermalm.html
+  laxhjalp-solna.html
+  laxhjalp-stockholm.html

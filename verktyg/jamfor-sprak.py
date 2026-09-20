@@ -103,6 +103,18 @@ def main():
                for f in sorted(os.listdir('.'))
                if f.endswith('.html') and os.path.exists(os.path.join('en', f))]
 
+    # En svensk sida utan engelsk tvilling hoppades TYST över: villkoret
+    # os.path.exists ovan sållar bort den, och CI-steget "Engelskan har
+    # följt med" blev grönt på en sajt som tappat ett språk. De tio som
+    # saknar tvilling i dag gör det med flit — de tre inloggade vyerna
+    # och de sju områdessidorna, som är svenska av SEO-skäl. De listas
+    # därför i stället för att fällas, och listan ligger i baslinjen:
+    # dyker en ny upp blir diffen röd, och någon måste ta ställning.
+    # Det är precis vad som händer den dag en lanseringssida byggs.
+    utan_tvilling = [f for f in sorted(os.listdir('.'))
+                     if f.endswith('.html') and not f.startswith('_prov')
+                     and not os.path.exists(os.path.join('en', f))]
+
     total = 0
     for sv_fil, en_fil in par:
         fynd = jamfor(sv_fil, en_fil)
@@ -114,6 +126,11 @@ def main():
         else:
             print('ok   %s' % sv_fil)
     print('\n%d av %d sidpar har avvikelser.' % (total, len(par)))
+
+    if len(sys.argv) <= 1:
+        print('\n=== svenska sidor utan engelsk tvilling: %d' % len(utan_tvilling))
+        for f in utan_tvilling:
+            print('  ' + f)
     return 1 if total else 0
 
 

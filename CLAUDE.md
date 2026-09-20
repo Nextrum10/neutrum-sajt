@@ -174,6 +174,10 @@ och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
 `kund_skatteuppgifter`. Fas 8–9 la till `ai_forslag`, `ai_konfig` och
 `handlingar`.
 
+Schemat **`intern`** (Fas 10.3) bär funktioner databasen behöver för
+sin egen skull och som inte är ett API. PostgREST exponerar det inte.
+Lägg inget där som ett gränssnitt ska anropa.
+
 **Auditloggen (Fas 6) går inte att ändra.** `audit_logg` skrivs av
 triggern `logga_andring`, som bara loggar VITLISTADE kolumner — aldrig
 namn, adresser, meddelandetexter eller fritext om barn. Update, delete
@@ -202,6 +206,28 @@ adminen och `aktor_typ` blir `admin` — det är med flit, för det är så
 att den sammanfaller med ett utfört `ai_forslag` på samma objekt:
 `godkann_forslag` sätter `utford = now()`, och auditraden får samma
 `now()` i samma transaktion.
+
+**En tjänst får inte vara aktiv och oklar** (Fas 10).
+`skydda_tjansteaktivering()` prövar tre INVARIANTER vid varje skrivning
+på en aktiv rad — inte bara vid påslaget, annars gick det att aktivera
+rätt och sedan tömma priset:
+
+1. tjänsten måste gå att boka eller söka till
+2. `for_kund` kräver ett pris — annars fakturerar `_delad/pris.ts:170`
+   till läxhjälpens timpris och skriver det på raden som om det vore
+   tjänstens eget
+3. `extra_personer_max > 1` kräver ett tillägg, annars blir det tyst noll
+
+**Avstängning släpps alltid igenom.** Den är nödbromsen.
+
+Planen sa "pris, ersättning, krav och bokningstyp". Tre av dem gick
+inte att koda: `bokningstyp` och `krav` är NOT NULL med förval och kan
+aldrig "saknas", och `ersattning = null` är ett BESLUT som betyder
+studiehjälparens egen timpenning — läxhjälp är aktiv med null, så ett
+ovillkorligt krav hade låst 379-kronorsraden. De tre hör hemma i
+lanseringschecklistan i adminvyn, där en människa läser dem.
+**Ändras triggern måste spegeln i `nextrum-admin-tjanster.js` följa
+med**, annars kommer felet ut som rå servertext.
 
 **Uppgifter som maskiner skapar går genom `skapa_uppgift()`** (Fas 7),
 som kräver en nyckel och vägrar skapa en till när det redan finns en
@@ -249,6 +275,14 @@ att visa **rätt sida**, inte för att skydda data.
   INNAN `service_role` används.** En kontroll som ligger efter
   `service_role` är ingen kontroll. `_delad/auth.ts` har en väg per
   fråga — uppfinn inte en ny.
+- **Ett CHECK-villkor körs som ANROPAREN, inte som tabellägaren.**
+  Dyrköpt i Fas 10: en `revoke execute` på `tjanstkoder_finns`, som
+  backar `applications_tjanster_check`, slog sönder hela
+  ansökningsvägen med `permission denied`. Ska en funktion som backar
+  ett villkor sluta vara nåbar utifrån, FLYTTA den ur `public` i
+  stället — schemat `intern` finns för just det, och PostgREST
+  exponerar det inte. Ett rullat prov fångade det; utan provet hade
+  rekryteringsformuläret tystnat i drift.
 - **Postgres RLS kan inte begränsa enskilda kolumner.** Därför vaktas
   `is_admin`, `matched_tutor_id`, `status` och bokningsfälten av
   **triggers** som vägrar ändringen från en inloggad session. Det går

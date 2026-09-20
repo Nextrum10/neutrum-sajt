@@ -783,6 +783,31 @@ table.adm .adm-tal{
 .tj-villkor-not{margin:6px 0 10px;color:var(--muted)}
 .tj-json{font-family:var(--f-mono);font-size:12px;resize:vertical}
 @media (max-width:560px){ .tj-villkor-grid{grid-template-columns:1fr} }
+
+/* Lanseringschecklistan (Fas 10). Tre listor i samma ruta, och
+   skillnaden mellan dem bärs av ikonen och färgen: ✗ är en spärr
+   databasen vägrar, – är ett omdöme, ? är något bara du kan svara
+   på. Texten säger samma sak som färgen — en punkt som bara är röd
+   funkar inte för alla. */
+.tj-check{border-top:1px solid var(--ln);padding-top:10px}
+.tj-check summary{cursor:pointer;font-size:.86rem;font-weight:600;color:var(--bl-2);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tj-check[open] summary{margin-bottom:8px}
+.tj-check .xsmall{color:var(--muted);margin:0 0 8px}
+.tj-check-lista{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:6px}
+.tj-check-rad{display:flex;gap:9px;align-items:flex-start;font-size:.84rem;line-height:1.45}
+.tj-check-rad>b{
+  flex:none;width:17px;height:17px;margin-top:1px;border-radius:50%;
+  display:grid;place-items:center;font-size:11px;font-weight:700;
+  background:var(--pap-2);border:1px solid var(--ln-2);color:var(--bl-3);
+}
+/* Samma två färger som statusprickarna intill, av samma skäl: en
+   ruta som uppfinner sina egna gröna och röda blir en annan produkt. */
+.tj-check-rad.ar-klar>b{border-color:var(--mossa,#9DAD86);color:var(--mossa,#9DAD86)}
+.tj-check-rad.ar-ny>b{border-color:var(--acc-line);color:var(--acc-text)}
+.tj-check-rad>span{display:flex;flex-direction:column;gap:1px;min-width:0}
+.tj-check-rad .adm-und{font-size:.76rem;line-height:1.4}
+.tj-check-manuellt{border-top:1px dashed var(--ln);padding-top:9px}
 .adm-koppling-kort h6{
   display:flex;align-items:center;gap:10px;
   font-size:1rem;font-weight:700;color:var(--bl);

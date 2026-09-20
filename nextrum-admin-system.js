@@ -519,8 +519,15 @@
         const [obj, gjord] = String(r.handling).split('.');
         return '<b>' + esc(AUDIT_OBJEKT[obj] || obj) + '</b> ' + esc(AUDIT_HANDLING[gjord] || gjord || '');
       } },
-      { namn: 'Gäller', rita: r => esc(S.personer && S.personer[r.objekt_id]
-        ? namnFör(r.objekt_id) : String(r.objekt_id).slice(0, 8)) },
+      /* Ett uuid kapas till åtta tecken, för det är ändå oläsbart. Men
+         objekt_id är en KOD för tjänster och rabattkoder, och då gjorde
+         avkortningen 'hushallsnara' till 'hushalln' — alltså obegripligt
+         av misstag. Bara det som ser ut som ett uuid kapas. */
+      { namn: 'Gäller', rita: r => {
+        if (S.personer && S.personer[r.objekt_id]) return esc(namnFör(r.objekt_id));
+        const id = String(r.objekt_id == null ? '' : r.objekt_id);
+        return esc(/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(id) ? id.slice(0, 8) : id);
+      } },
       { namn: 'Ändring', rita: auditÄndring }
     ], S.audit, filtrerat ? 'Ingen händelse matchar filtret' : 'Inget loggat än');
 
