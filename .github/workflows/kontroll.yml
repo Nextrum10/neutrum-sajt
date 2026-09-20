@@ -105,7 +105,11 @@ jobs:
             # rendera GitHubs gränssnitt; annoteringar går att läsa
             # rakt ur det öppna API:et, och det är skillnaden mellan
             # ett fel man kan åtgärda och ett man får gissa sig till.
-            rader=$(tail -40 "$RUNNER_TEMP/deno.txt" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | awk '{printf "%s%%0A", $0}')
+            # Nedladdningsraderna är brus och tränger undan felet i
+            # annoteringen, som har en längdgräns. Bort med dem först.
+            rader=$(grep -v -E '^(Download|Check|Warning) ' "$RUNNER_TEMP/deno.txt" \
+              | sed 's/\x1b\[[0-9;]*m//g' | tail -45 | sed 's/%/%25/g' | sed 's/\r/%0D/g' \
+              | awk '{printf "%s%%0A", $0}')
             echo "::error title=Deno-testerna föll::$rader"
           fi
           exit $kod
