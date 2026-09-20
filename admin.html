@@ -1534,18 +1534,23 @@
                och datum — namnen slås upp här, när den visas. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="audit"
                id="panel-audit" aria-labelledby="flik-audit" hidden>
+            <!-- Vem, vad och när — filtrerat och RÄKNAT i databasen
+                 sedan Fas 9.8. Förut hämtades 300 rader och filtret
+                 satt i webbläsaren: när rad 301 fanns visade "Fakturor"
+                 bara de fakturahändelser som råkade rymmas bland de 300
+                 senaste, och antalet blev antalet träffar bland dem. -->
             <div class="dbox">
               <div class="adm-verktyg">
                 <select class="sel" id="audit-filter" aria-label="Visa händelser av typ">
-                  <option value="">Allt</option>
+                  <option value="">Allt som hänt</option>
                   <option value="matchning">Matchningar</option>
+                  <option value="pass">Pass</option>
+                  <option value="rapport">Rapporter</option>
                   <option value="faktura">Fakturor</option>
                   <option value="utbetalning">Utbetalningar</option>
                   <option value="tjanst">Tjänster</option>
                   <option value="rabattkod">Rabattkoder</option>
                   <option value="behorighet">Adminbehörighet</option>
-                  <option value="pass">Undantagna pass</option>
-                  <option value="rapport">Rapporter</option>
                   <option value="studiehjalpare">Studiehjälpare</option>
                   <option value="skatteuppgifter">Personnummer</option>
                   <option value="rut_tak">RUT-tak</option>
@@ -1553,10 +1558,28 @@
                   <option value="ansokan">Ansökningar</option>
                   <option value="uppdrag">Uppdrag</option>
                   <option value="uppgift">Uppgifter</option>
+                  <option value="ai_forslag">AI-förslag</option>
+                  <option value="ai_konfig">AI-taket</option>
+                  <option value="kontaktmeddelande">Kontaktmeddelanden</option>
+                  <option value="klientfel">Bortstädade fel</option>
+                  <option value="bolagsfakta">Bolagsfakta</option>
                 </select>
+                <select class="sel" id="audit-vem" aria-label="Visa händelser av en viss person">
+                  <option value="">Vem som helst</option>
+                </select>
+                <label class="small" for="audit-fran">Från</label>
+                <input class="inp" type="date" id="audit-fran" aria-label="Från och med datum">
+                <label class="small" for="audit-till">Till</label>
+                <input class="inp" type="date" id="audit-till" aria-label="Till och med datum">
+                <label class="small" style="display:inline-flex;gap:6px;align-items:center">
+                  <input type="checkbox" id="audit-ai"> Bara AI-initierat
+                </label>
                 <span class="small" id="audit-antal" style="margin-left:auto;color:var(--bl-3)"></span>
               </div>
               <div id="audit-tabell"><div class="loading">Hämtar</div></div>
+              <div class="adm-verktyg" id="audit-mer" hidden>
+                <button class="btn btn-ghost btn-sm" type="button" id="audit-mer-knapp">Visa fler</button>
+              </div>
             </div>
           </div>
 

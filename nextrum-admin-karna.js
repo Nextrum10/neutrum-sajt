@@ -41,7 +41,8 @@ const NXAdmin = (function () {
     matForslag: [], detaljCache: {},
     /* Fas 6: uppdrag, uppgifter, RUT-tak, auditloggens senaste
        rader och databasens lista över ekonomiska avvikelser. */
-    uppdrag: [], uppgifter: [], rutTak: [], audit: [], avvikelser: [], avvikelserFel: null,
+    uppdrag: [], uppgifter: [], rutTak: [], audit: [], auditAktorer: [],
+    avvikelser: [], avvikelserFel: null,
     /* Fas 9: analysvyerna. Tomma tills hämtaAnalys() kört, så att
        statistiken ritar "hämtar" i stället för nollor. */
     analys: { kallor: [], konvertering: [], aktiva: [], ekonomi: [], avbokningar: [] },
@@ -94,6 +95,17 @@ const NXAdmin = (function () {
   const BOK_LAGE = {
     requested: ['Önskat', 'ar-ny'], confirmed: ['Bekräftat', 'ar-vantar'],
     completed: ['Genomfört', 'ar-klar'], cancelled: ['Avbokat', '']
+  };
+  /* Fas 9.4. Koderna är databasens och står i en CHECK; texten är
+     vår. Skälet sätts av Nextrum i efterhand, aldrig av den som
+     avbokar: att släppa in fältet i skydda_bokningsfalts vitlista
+     hade vidgat F-6, och en fritextruta hade gjort avbokningarna
+     till något ingen kan räkna på. Tomt är ett eget läge — ett skäl
+     som saknas är inte "annat". */
+  const AVBOKNINGSSKAL = {
+    '': ['Skäl saknas', ''], sjukdom: ['Sjukdom', ''], forhinder: ['Förhinder', ''],
+    ombokat: ['Ombokat', ''], ingen_hjalpare: ['Ingen studiehjälpare', ''],
+    familjen_avslutar: ['Familjen avslutar', ''], annat: ['Annat', '']
   };
   const FAKT_LAGE = {
     utkast: ['Utkast', ''], skickad: ['Skickad', 'ar-vantar'], betald: ['Betald', 'ar-klar'],
@@ -182,7 +194,7 @@ const NXAdmin = (function () {
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
-      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id').order('wanted_date', { ascending: false }),
+      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal').order('wanted_date', { ascending: false }),
       supa.from('invoices').select('*').order('period', { ascending: false }),
       supa.from('payouts').select('*').order('period', { ascending: false }),
       supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400),
@@ -200,11 +212,16 @@ const NXAdmin = (function () {
       supa.from('lesson_reports').select('id, student_id, tutor_id, lesson_date, created_at')
         .order('created_at', { ascending: false }).limit(40),
       /* Fas 6. Alla fyra är admin-only i databasen. Auditloggen växer
-         för alltid; här de senaste 300 raderna. */
+         för alltid; här de senaste 300 raderna.
+
+         Sedan Fas 9.8 söker auditfliken i databasen (audit_sok), och
+         de här raderna används bara till att fylla listan över VEM
+         man kan filtrera på. Därför en egen plats i S: annars hade
+         sökningens svar och den här listan skrivit över varandra. */
       supa.from('uppdrag').select('*').order('created_at', { ascending: false }),
       supa.from('uppgifter').select('*').order('created_at', { ascending: false }),
       supa.from('rut_tak').select('*').order('ar', { ascending: false }),
-      supa.from('audit_logg').select('*').order('tid', { ascending: false }).limit(300)
+      supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300)
     ]);
 
     S.leads = leads.data || [];
@@ -223,7 +240,7 @@ const NXAdmin = (function () {
     S.uppdrag = upd.data || [];
     S.uppgifter = uppg.data || [];
     S.rutTak = rt.data || [];
-    S.audit = audit.data || [];
+    S.auditAktorer = audit.data || [];
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */
@@ -537,7 +554,7 @@ const NXAdmin = (function () {
   };
 
   return {
-    ANS_LAGE, BOK_LAGE, DAG, DP, FAKT_LAGE, LEAD_LAGE, S, SH_LAGE,
+    ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, LEAD_LAGE, S, SH_LAGE,
     UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, matchar, märkFlik, namnFör, närText, pill, rad, skriv,

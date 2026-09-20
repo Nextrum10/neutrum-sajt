@@ -90,6 +90,22 @@
       return;
     }
 
+    /* Avbokningsskäl (Fas 9.4). Sätts i efterhand och bara av
+       Nextrum: familjen och studiehjälparen kommer inte förbi
+       skydda_bokningsfalt, som med flit inte har fältet i sin
+       vitlista. Tomt sparas som null — ett skäl som saknas är inte
+       "annat", och statistiken ska kunna säga det. */
+    if (el.dataset && el.dataset.avbokskal) {
+      const b = S.bokningar.find(x => x.id === el.dataset.avbokskal);
+      const gammal = b.avbokningsskal;
+      b.avbokningsskal = el.value || null;
+      if (!await skriv('bookings', b.id, { avbokningsskal: el.value || null })) {
+        b.avbokningsskal = gammal;
+      }
+      ritaBokningar();
+      return;
+    }
+
     if (el.dataset && el.dataset.ans) {
       const a = S.ansokningar.find(x => x.id === el.dataset.ans);
       const gammal = a.status;

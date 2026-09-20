@@ -356,7 +356,11 @@
     matchning: 'Matchning', faktura: 'Faktura', utbetalning: 'Utbetalning', tjanst: 'Tjänst',
     rabattkod: 'Rabattkod', behorighet: 'Adminbehörighet', pass: 'Pass', rapport: 'Rapport',
     studiehjalpare: 'Studiehjälpare', skatteuppgifter: 'Personnummer', rut_tak: 'RUT-tak',
-    anmalan: 'Intresseanmälan', ansokan: 'Ansökan', uppdrag: 'Uppdrag', uppgift: 'Uppgift'
+    anmalan: 'Intresseanmälan', ansokan: 'Ansökan', uppdrag: 'Uppdrag', uppgift: 'Uppgift',
+    /* Fas 8 och 9.3. Passet loggas numera hela vägen, inte bara när
+       det undantas från fakturering. */
+    ai_forslag: 'AI-förslag', ai_konfig: 'AI-taket', kontaktmeddelande: 'Kontaktmeddelande',
+    klientfel: 'Klientfel', bolagsfakta: 'Bolagsfakta'
   };
   const AUDIT_HANDLING = {
     skapad: 'skapad', borttagen: 'borttagen', andrad: 'ändrad', status: 'ny status',
@@ -373,8 +377,19 @@
     kund_id: 'kund', uppdrag_id: 'uppdrag', kontaktad_at: 'kontaktad', intervju_at: 'intervju',
     utbildad_at: 'utbildad', tjanst: 'tjänst', typ: 'typ', ansvarig: 'ansvarig',
     forfallodag: 'klar senast', nyckel: 'nyckel', kopplad_tabell: 'gäller', kopplad_id: 'rad',
-    skapad_av: 'skapad av', skapad_av_typ: 'skapad av'
+    skapad_av: 'skapad av', skapad_av_typ: 'skapad av',
+    /* Fas 9.3 och 9.4 */
+    attendance: 'närvaro', wanted_date: 'datum', wanted_time: 'tid', student_id: 'elev',
+    avbokad_at: 'avbokades', avbokad_av: 'avbokad av', avbokningsskal: 'skäl',
+    matchad_at: 'matchades', lesson_date: 'passets datum', dygnstak_tokens: 'dygnstak',
+    hanterad_at: 'hanterad', hanterad_av: 'hanterad av', sida: 'sida',
+    korning_id: 'körning', beslutad_av: 'beslutad av',
+    organisationsnummer: 'orgnr', bolagsform: 'bolagsform', rakenskapsar_slut: 'räkenskapsår',
+    momsregistrerad: 'momsregistrerad', momsperiod: 'momsperiod', f_skatt: 'F-skatt',
+    arbetsgivarregistrerad: 'arbetsgivarregistrerad',
+    studiehjalpare_form: 'studiehjälparnas form', bokforingssystem: 'bokföringssystem'
   };
+
 
   const MATCH_LAGE = { pending: 'väntar', matched: 'matchad', paused: 'pausad' };
   const STATUS_KARTA = { invoices: FAKT_LAGE, payouts: UTB_LAGE, tutor_profiles: SH_LAGE };
@@ -385,6 +400,9 @@
       return String(STATUS_KARTA[tabellNamn][v][0]).toLowerCase();
     }
     if (nyckel === 'match_status' && MATCH_LAGE[v]) return MATCH_LAGE[v];
+    if (nyckel === 'avbokningsskal' && AVBOKNINGSSKAL[v]) {
+      return String(AVBOKNINGSSKAL[v][0]).toLowerCase();
+    }
     if (typeof v === 'boolean') return v ? 'ja' : 'nej';
     if (/_ore$/.test(nyckel) && typeof v === 'number') return kronor(v);
     if (typeof v === 'string' && S.personer && S.personer[v]) return namnFör(v);
@@ -402,16 +420,101 @@
       + esc(auditVärde(k, efter[k], r.tabell)) + '</span>').join('');
   }
 
-  function ritaAudit() {
+  /* ------------------------------------------------------------
+     SÖKNINGEN (Fas 9.8)
+
+     Filtret satt förut här, över de 300 senaste raderna. Det
+     fungerade medan loggen var tom och slutade fungera TYST: när
+     rad 301 fanns visade "Fakturor" bara de fakturahändelser som
+     råkade rymmas bland de 300 senaste, och antalet under rubriken
+     blev antalet träffar bland dem. En logg som svarar fel på "hur
+     många gånger hände det" är sämre än ingen logg.
+
+     Nu filtrerar och räknar audit_sok() i databasen. totalt kommer
+     ur count(*) over () på den filtrerade mängden, alltså före
+     limit — det är hela skillnaden.
+     ------------------------------------------------------------ */
+  const AUDIT_SIDA = 50;
+  let auditTotalt = 0;
+
+  function auditVal() {
+    const v = id => { const el = $('#' + id); return el ? el.value : ''; };
+    return {
+      p_objekt_typ: v('audit-filter') || null,
+      p_aktor: v('audit-vem') || null,
+      p_fran: v('audit-fran') || null,
+      p_till: v('audit-till') || null,
+      p_bara_ai: !!($('#audit-ai') || {}).checked
+    };
+  }
+
+  /* Vem-listan byggs ur de aktörer som FAKTISKT står i loggen, inte
+     ur alla admins: ett filter på en person som aldrig gjort något
+     ger bara en tom tabell att fundera över. Och inte bara ur admins
+     heller — en familj som avbokar ett pass skriver också en rad.
+
+     Listan växer allteftersom sidor hämtas, men töms aldrig: valet i
+     rullgardinen får inte försvinna under den som just valde det. */
+  function fyllAuditVem() {
+    const väljare = $('#audit-vem');
+    if (!väljare) return;
+    const fanns = {};
+    Array.prototype.forEach.call(väljare.options, o => { if (o.value) fanns[o.value] = true; });
+    const nya = {};
+    (S.auditAktorer || []).concat(S.audit || [])
+      .forEach(r => { if (r.aktor && !fanns[r.aktor]) nya[r.aktor] = true; });
+    Object.keys(nya).sort((a, b) => namnFör(a).localeCompare(namnFör(b), 'sv'))
+      .forEach(id => {
+        const o = document.createElement('option');
+        o.value = id;
+        o.textContent = namnFör(id);
+        väljare.appendChild(o);
+      });
+  }
+
+  async function hämtaAudit(offset) {
+    const { data, error } = await supa.rpc('audit_sok',
+      Object.assign(auditVal(), { p_limit: AUDIT_SIDA, p_offset: offset || 0 }));
+    if (error) return { fel: felText(error), rader: [] };
+    const rader = data || [];
+    /* totalt står på varje rad. Tom mängd betyder noll träffar, och
+       det är ett svar — inte ett saknat svar. */
+    auditTotalt = rader.length ? Number(rader[0].totalt) : 0;
+    return { fel: null, rader: rader };
+  }
+
+  function ritaAudit(rader, fel, lägTill) {
     const host = $('#audit-tabell');
     if (!host) return;
-    const filter = ($('#audit-filter') || {}).value || '';
-    const rader = (S.audit || []).filter(r => !filter || String(r.handling).split('.')[0] === filter);
-    $('#audit-antal').textContent = rader.length ? rader.length + ' st' : '';
+
+    if (fel) {
+      host.innerHTML = '<p class="fel">Loggen svarade inte: ' + esc(fel) + '</p>';
+      $('#audit-antal').textContent = '';
+      $('#audit-mer').hidden = true;
+      return;
+    }
+
+    S.audit = lägTill ? (S.audit || []).concat(rader) : (rader || []);
+    fyllAuditVem();
+
+    const v = auditVal();
+    const filtrerat = !!(v.p_objekt_typ || v.p_aktor || v.p_fran || v.p_till || v.p_bara_ai);
+
+    $('#audit-antal').textContent = auditTotalt
+      ? (S.audit.length < auditTotalt
+          ? 'visar ' + S.audit.length + ' av ' + auditTotalt
+          : auditTotalt + ' st')
+      : '';
+
     host.innerHTML = tabell([
       { namn: 'När', rita: r => '<span class="adm-tal">' + esc(kortDatum(r.tid)) + '</span>'
         + '<span class="adm-und">' + esc(new Date(r.tid).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })) + '</span>' },
-      { namn: 'Vem', rita: r => r.aktor ? esc(namnFör(r.aktor)) : pill('System', 'ar-vantar') },
+      /* AI-märket sitter på VEM, inte i en egen kolumn: frågan man
+         ställer är "gjorde en människa det här". Att raden kommer ur
+         ett AI-förslag betyder att en admin godkände det — därför
+         både namnet och märket, aldrig märket i stället för namnet. */
+      { namn: 'Vem', rita: r => (r.aktor ? esc(namnFör(r.aktor)) : pill('System', 'ar-vantar'))
+        + (r.fran_ai ? ' ' + pill('AI-förslag', 'ar-ny') : '') },
       { namn: 'Vad', rita: r => {
         const [obj, gjord] = String(r.handling).split('.');
         return '<b>' + esc(AUDIT_OBJEKT[obj] || obj) + '</b> ' + esc(AUDIT_HANDLING[gjord] || gjord || '');
@@ -419,24 +522,40 @@
       { namn: 'Gäller', rita: r => esc(S.personer && S.personer[r.objekt_id]
         ? namnFör(r.objekt_id) : String(r.objekt_id).slice(0, 8)) },
       { namn: 'Ändring', rita: auditÄndring }
-    ], rader, filter ? 'Inga händelser av den sorten' : 'Inget loggat än');
+    ], S.audit, filtrerat ? 'Ingen händelse matchar filtret' : 'Inget loggat än');
+
+    const mer = $('#audit-mer');
+    if (mer) mer.hidden = S.audit.length >= auditTotalt;
   }
 
-  const auditFilter = $('#audit-filter');
-  if (auditFilter) auditFilter.addEventListener('change', ritaAudit);
+  async function sökAudit() {
+    const host = $('#audit-tabell');
+    if (host) host.innerHTML = '<div class="loading">Hämtar</div>';
+    const svar = await hämtaAudit(0);
+    ritaAudit(svar.rader, svar.fel, false);
+  }
+
+  ['audit-filter', 'audit-vem', 'audit-fran', 'audit-till', 'audit-ai'].forEach(id => {
+    const el = $('#' + id);
+    if (el) el.addEventListener('change', sökAudit);
+  });
+
+  const auditMer = $('#audit-mer-knapp');
+  if (auditMer) auditMer.addEventListener('click', async () => {
+    const svar = await hämtaAudit((S.audit || []).length);
+    ritaAudit(svar.rader, svar.fel, true);
+  });
 
   /* Loggen hämtas om när fliken öppnas: det som hänt sedan sidan
      laddades — av någon annan admin, eller nyss här — ska synas. */
   const auditFlik = $('#flik-audit');
-  if (auditFlik) auditFlik.addEventListener('click', async () => {
-    const { data, error } = await supa.from('audit_logg').select('*')
-      .order('tid', { ascending: false }).limit(300);
-    if (!error) { S.audit = data || []; ritaAudit(); }
-  });
+  if (auditFlik) auditFlik.addEventListener('click', sökAudit);
 
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    ritaAdminanvandare, ritaAudit, ritaFel, ritaInstallningar, ritaIntegrationer
+    /* Utåt heter sökningen ritaAudit: den som ritar vyn vill ha en
+       färsk logg, inte en gammal lista i minnet. */
+    ritaAdminanvandare, ritaAudit: sökAudit, ritaFel, ritaInstallningar, ritaIntegrationer
   });
 })();

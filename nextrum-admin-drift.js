@@ -16,8 +16,9 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { BOK_LAGE, S, dagarSedan, elevNamn, hämtaMatchunderlag, kortDatum,
-          läge, matchar, namnFör, pill, skriv, tabell, tomtText } = NXAdmin;
+  const { AVBOKNINGSSKAL, BOK_LAGE, S, dagarSedan, elevNamn, hämtaMatchunderlag,
+          kortDatum, läge, matchar, namnFör, pill, skriv, tabell, tomtText,
+          väljare } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaElever = (...a) => NXAdmin.rita.ritaElever(...a);
@@ -480,9 +481,22 @@
         + (b.format ? '<span class="adm-und">' + esc(b.format) + '</span>' : '') },
       { namn: 'Läge', rita: b => läge(BOK_LAGE, b.status)
         + (b.attendance === 'franvarande' ? ' ' + pill('Uteblev', 'ar-ny') : '') },
-      { namn: '', höger: true, rita: b => (b.status === 'requested' || b.status === 'confirmed')
-        ? '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>'
-        : '' }
+      /* Skälet sätts av Nextrum, inte av den som avbokar. Fälten
+         avbokad_at och avbokad_av stämplas av databasen, men skälet
+         får bara admin skriva: att släppa in det i skydda_bokningsfalt
+         vitlista hade vidgat F-6, och en fritextruta hade gjort
+         avbokningsstatistiken till något ingen kan räkna på.
+
+         Därför fasta koder, och därför i efterhand: den som avbokar
+         klockan sju på morgonen svarar inte på en enkät. */
+      { namn: '', höger: true, rita: b => {
+        if (b.status === 'requested' || b.status === 'confirmed') {
+          return '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
+        }
+        if (b.status !== 'cancelled') return '';
+        return väljare('avbokskal', AVBOKNINGSSKAL, b.avbokningsskal || '',
+          'data-avbokskal="' + b.id + '"');
+      } }
     ], rader, tomtText(sök || st, 'Ingen bokning matchar filtret', 'Inga bokningar än'));
   }
 

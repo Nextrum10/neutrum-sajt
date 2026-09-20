@@ -1275,6 +1275,62 @@ from (
 ) v
 where x in ('kalla', 'medium', 'kampanj', 'annonsvariant', 'sokord', 'hanvisare', 'landningssida');
 
+-- ---------- 9.8 sökningen i auditloggen ----------
+-- Det viktiga är inte att filtret fungerar, utan att TOTALEN gör
+-- det: förut hämtades 300 rader och räknades i webbläsaren, så
+-- antalet blev antalet träffar BLAND de 300 senaste.
+
+select pg_temp.rakna('9.8 anon söker i auditloggen', null,
+  $q$select count(*) from public.audit_sok()$q$, 0);
+select pg_temp.rakna('9.8 familjen söker i auditloggen', '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from public.audit_sok()$q$, 0);
+
+do $$
+declare
+  b        uuid;
+  i        int;
+  rader    bigint;
+  totalt   bigint;
+  typrader bigint;
+begin
+  -- 12 rader som admin, genom att ändra närvaron fram och tillbaka
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+  b := '00000000-0000-4000-8000-00000000b0c1';
+  for i in 1..12 loop
+    update public.bookings
+       set attendance = case when i % 2 = 0 then 'narvarande' else 'sen' end
+     where id = b;
+  end loop;
+
+  select count(*), max(a.totalt) into rader, totalt
+    from public.audit_sok(null, null, null, null, false, 5) a;
+  select count(*) into typrader
+    from public.audit_sok('faktura', null, null, null, false, 50) a;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  insert into utfall (test, ok, detalj) values
+    ('9.8 limit ger en sida', rader = 5, 'rader: ' || rader),
+    ('9.8 totalt räknar hela träffmängden, inte sidan', totalt >= 12,
+     'totalt: ' || coalesce(totalt::text, 'null')),
+    ('9.8 filtret på sort gäller i databasen', typrader = 0, 'fakturarader: ' || typrader);
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+insert into utfall (test, ok, detalj)
+select '9.8 audit_sok är SECURITY INVOKER', not p.prosecdef,
+       case when p.prosecdef then 'DEFINER — går förbi policyn' else 'INVOKER' end
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' and p.proname = 'audit_sok';
+
+insert into utfall (test, ok, detalj)
+select '9.8 objekt_typ är genererad, inte skriven', a.is_generated = 'ALWAYS',
+       'is_generated = ' || a.is_generated
+from information_schema.columns a
+where a.table_schema = 'public' and a.table_name = 'audit_logg' and a.column_name = 'objekt_typ';
+
 -- Auditloggens vitlistor får bara nämna kolumner som finns. En
 -- felstavad kolumn i tg_argv ger inget fel — den loggar bara
 -- ingenting, för alltid, tyst.
@@ -1359,7 +1415,8 @@ from unnest(array[
   'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)',
   'public.ekonomiska_avvikelser()', 'public.kor_kontrollerna()',
   'public.ai_verktyg(text, jsonb)', 'public.godkann_forslag(uuid)',
-  'public.avvisa_forslag(uuid, text)', 'public.matchningsforslag(uuid)'
+  'public.avvisa_forslag(uuid, text)', 'public.matchningsforslag(uuid)',
+  'public.audit_sok(text, uuid, date, date, boolean, integer, integer)'
 ]) f;
 
 insert into utfall (test, ok, detalj)
