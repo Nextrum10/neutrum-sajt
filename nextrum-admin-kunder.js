@@ -428,6 +428,17 @@
       const fel = res.error || (res.data && res.data.error);
       if (fel) { säg(msg, await funktionsFel(fel), false); return; }
       if (lead.status === 'new') lead.status = 'contacted';
+
+      /* Kontot som just skapades ÄR kunden anmälan blev. Kopplingen
+         skrivs nu, för när familjen väl valt lösenord finns det
+         ingenting som säger vilken anmälan de kom ifrån — och det är
+         den frågan kundtidslinjen ska kunna svara på. bjud-in sätter
+         status och kontaktad_at själv, med service_role. */
+      if (res.data.id) {
+        const k = await supa.from('leads').update({ kund_id: res.data.id }).eq('id', lead.id);
+        if (!k.error) lead.kund_id = res.data.id;
+      }
+
       bjud.disabled = true;
       säg(msg, '✓ Inbjudan skickad till ' + res.data.till + '. När familjen valt lösenord '
         + 'finns kontot i listan — öppna rutan igen då.', true);
@@ -443,18 +454,48 @@
       if (!namn) { säg(msg, 'Eleven behöver ett namn.', false); return; }
 
       await medan($('#le-skapa', ruta), 'Skapar…', async () => {
+        /* Ämnena är en text[] som inte får vara null (förvalet är en
+           tom array). Fritexten ur anmälan delas på komma, tomma bitar
+           bort — samma regel som när en ansökan tas in i poolen. Förut
+           skickades strängen rakt av, och då svarade databasen 22P02
+           på "matte, svenska" och 23502 på ett tomt fält: knappen
+           "Skapa elev" hade aldrig kunnat fungera. */
+        const ämnen = String($('#le-amnen', ruta).value || '')
+          .split(',').map(x => x.trim()).filter(Boolean);
+
         const { data: ny, error } = await supa.from('students').insert({
           parent_id: parent,
           name: namn,
           grade: $('#le-arskurs', ruta).value.trim() || null,
-          subjects: $('#le-amnen', ruta).value.trim() || null
-        }).select('id').single();
+          subjects: ämnen
+        }).select('id, uppdrag_id').single();
         if (error) { säg(msg, 'Kunde inte skapa: ' + felText(error), false); return; }
 
+        /* Uppdraget skapas av triggern elevens_uppdrag, som sätter
+           standardtjänsten — den tittar aldrig på anmälan. Anmälan
+           vet däremot vad familjen faktiskt bad om, så tjänsten
+           skrivs om här. I dag är båda läxhjälp; skillnaden uppstår
+           den dag en andra tjänst öppnas. */
+        if (ny && ny.uppdrag_id && lead.tjanst) {
+          await supa.from('uppdrag').update({ tjanst: lead.tjanst }).eq('id', ny.uppdrag_id);
+        }
+
         /* Anmälan är avklarad när den blivit en elev. Står den kvar
-           som "ny" ligger den i arbetskön för alltid. */
-        await supa.from('leads').update({ status: 'matched' }).eq('id', lead.id);
+           som "ny" ligger den i arbetskön för alltid.
+
+           Samtidigt skrivs kopplingen: vilken familj och vilket
+           uppdrag anmälan blev. Det är den enda tidpunkt någon
+           faktiskt VET det — efteråt går det bara att gissa på
+           e-postadress och tidsordning, och gissningen blir fel
+           precis när den spelar roll. */
+        await supa.from('leads').update({
+          status: 'matched',
+          kund_id: parent,
+          uppdrag_id: (ny && ny.uppdrag_id) || null
+        }).eq('id', lead.id);
         lead.status = 'matched';
+        lead.kund_id = parent;
+        if (ny) lead.uppdrag_id = ny.uppdrag_id || null;
 
         stäng();
         await hämtaAllt();
