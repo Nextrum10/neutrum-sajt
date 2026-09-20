@@ -85,16 +85,20 @@
   async function hämtaMatchpoäng(elevId) {
     if (!elevId) return;
     S.matchpoang = S.matchpoang || {};
+    S.matchpoangFel = S.matchpoangFel || {};
     if (S.matchpoang[elevId]) return;
 
     const { data, error } = await supa.rpc('matchningsforslag', { p_elev: elevId });
     if (error) {
-      S.matchpoangFel = felText(error);
-      /* Ingen tom lista i cachen: annars ser nästa uppritning ett
-         "svar" som säger att ingen passar. */
+      /* Felet är PER ELEV, inte globalt. Ett misslyckat anrop för en
+         elev ska varken hindra nästa elev eller skriva över en elev
+         vars poäng redan ligger i cachen. Ingen tom lista heller —
+         då hade nästa uppritning sett ett "svar" som säger att ingen
+         passar. */
+      S.matchpoangFel[elevId] = felText(error);
       return;
     }
-    S.matchpoangFel = null;
+    delete S.matchpoangFel[elevId];
     S.matchpoang[elevId] = data || [];
   }
 
@@ -226,8 +230,9 @@
     /* Poängen kommer från databasen. Saknas den för den här eleven
        hämtas den, och panelen ritas om när svaret kommit — samma
        mönster som detaljpanelen använder. */
+    const felFörEleven = (S.matchpoangFel || {})[elev.id];
     const poäng = (S.matchpoang || {})[elev.id];
-    if (!poäng && !S.matchpoangFel) {
+    if (!poäng && !felFörEleven) {
       host.innerHTML = laddar('Räknar fram förslag');
       hämtaMatchpoäng(elev.id).then(() => {
         if (S.valdElev === elev.id) ritaMatchPanel();
@@ -290,12 +295,12 @@
        elevens rubrik — och `ut` finns inte förrän nu. Första
        försöket satte den före, vilket gav ReferenceError och en
        evig spinner i stället för ett besked. */
-    if (S.matchpoangFel) {
+    if (felFörEleven) {
       /* Räknaren nollas också. "2 GODKÄNDA" bredvid "gick inte att
          räkna fram" är två besked som inte kan vara sanna samtidigt. */
       $('#mt-forslag-antal').textContent = '';
       host.innerHTML = ut + '<div class="empty"><b>Förslagen kunde inte räknas fram</b><br>'
-        + '<span>' + esc(S.matchpoangFel) + '</span></div>';
+        + '<span>' + esc(felFörEleven) + '</span></div>';
       return;
     }
 
@@ -375,7 +380,7 @@
        talet ändrades just nu. Cachen töms därför helt — inte bara för
        den här eleven. */
     S.matchpoang = {};
-    S.matchpoangFel = null;
+    S.matchpoangFel = {};
 
     await hämtaMatchunderlag();
     ritaMatchKö();
@@ -396,7 +401,7 @@
          ny hämtning så länge flaggan står kvar. Rättningen av den
          eviga spinnern bytte annars "försöker om varje gång" mot
          "försöker aldrig om". */
-      S.matchpoangFel = null;
+      S.matchpoangFel = {};
       ritaMatchKö();
       ritaMatchPanel();
       return;

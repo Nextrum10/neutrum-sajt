@@ -1227,6 +1227,15 @@
               <button class="btn btn-primary" type="button" id="drift-kor">Fråga</button>
               <div id="drift-svar"></div>
             </div>
+
+            <!-- Loggen. Fas 8.1 säger att den ska kunna svara på frågan
+                 "vad gjorde AI:n?", och för drift-agenten är det den
+                 enda vägen dit: varje steg visar vilket verktyg som
+                 anropades, med vilka argument, och vad det svarade. -->
+            <div class="dbox">
+              <h3 style="margin:0 0 10px">Senaste körningarna</h3>
+              <div id="drift-logg"></div>
+            </div>
           </div>
 
           <!-- ---------- FÖRSLAG (Fas 8) ----------

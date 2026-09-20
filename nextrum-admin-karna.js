@@ -279,7 +279,7 @@ const NXAdmin = (function () {
        cachas. Ändras underlaget är den cachen gammal — och ett gammalt
        fel ska inte hindra nästa försök. */
     S.matchpoang = {};
-    S.matchpoangFel = null;
+    S.matchpoangFel = {};
   }
 
   /* ============================================================

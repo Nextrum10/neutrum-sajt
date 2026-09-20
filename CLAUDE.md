@@ -327,9 +327,14 @@ kontroll av att eleven fanns; den fick bli `ai_finns()`.
 - **Domänspärren gäller efter varje omdirigering.** `hamta()` följer
   hoppen för hand och prövar listan vid varje steg; förut kunde en
   tillåten källa svara 302 till vad som helst.
-- **Läsverktygen lämnar inte ut namn**, e-post, telefonnummer eller
+- **Läsverktygen lämnar inte ut namnKOLUMNERNA**, e-postadresser eller
   `bookings.location` (fältet är i praktiken en hemadress). Elever
-  visas med initialer. Sifferföljder maskeras ur anmälningstexten.
+  visas med initialer — det är en minimering, inte en avidentifiering:
+  i Nextrums storlek pekar initialer plus årskurs i praktiken ut ett
+  barn. Fritexten maskas på e-post och sifferföljder och kapas, men
+  **den kan fortfarande innehålla namn**: familjen skriver ofta
+  "Elsa behöver hjälp med matten" i rutan. Det är en avvägning, inte
+  ett skydd som håller tätt.
 - Matchningspoängen ligger i `matchningspoang()`. Adminvyn hämtar
   svaret och skriver meningarna själv — databasen svarar med koder,
   aldrig med svensk text, så att samma svar kan läsas av en agent utan

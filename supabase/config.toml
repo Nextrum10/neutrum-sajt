@@ -43,3 +43,23 @@ verify_jwt = false
 
 [functions.fakturering]
 verify_jwt = false
+
+# ------------------------------------------------------------
+# Två funktioner till kör utan JWT i driften: notis-ko och
+# notis-avanmal. De står här trots att deras KÄLLKOD inte finns i
+# något git-träd — de driftsattes från en session vars gren aldrig
+# pushades, och deras databashalva är inte körd (notis_konfig saknar
+# kolumnerna de läser).
+#
+# Raderna finns här av ett enda skäl: om någon kör `supabase
+# functions deploy` från det här repot ska inte JWT-kravet slås på
+# för dem också. Det löser inte att koden saknas — det ska redas ut
+# separat, och CLAUDE.md beskriver läget — men det hindrar att en
+# deploy gör saken värre.
+# ------------------------------------------------------------
+
+[functions.notis-ko]
+verify_jwt = false
+
+[functions.notis-avanmal]
+verify_jwt = false

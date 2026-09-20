@@ -117,6 +117,8 @@ const VERKTYG = [
   {
     name: 'flagga_problem',
     description: 'Skapar en uppgift åt admin om en rad som behöver en människas ögon. '
+      + 'Uppgiften skapas DIREKT och väntar inte på något godkännande. Den ändrar '
+      + 'ingenting i verksamheten, men den syns i arbetskön med en gång. '
       + 'Titeln sätts av systemet; din text hamnar i beskrivningen.',
     input_schema: {
       type: 'object',
@@ -141,8 +143,14 @@ aldrig något: en människa godkänner varje förslag i adminvyn.
 
 REGEL 1 — DU FÖRESLÅR, MÄNNISKAN GÖR
 Skriv aldrig som om något redan är gjort. "Jag föreslår att", inte "jag har matchat".
-Alla dina verktyg är läsande utom de två som skapar förslag respektive uppgifter, och
-båda de två kräver ett mänskligt ja för att bli verklighet.
+
+Två av dina verktyg lämnar spår, och de är olika:
+· foresla_matchning skapar ett FÖRSLAG. Ingenting händer förrän en människa
+  godkänner det i adminvyn.
+· flagga_problem skapar en UPPGIFT direkt, utan att någon godkänner den. Uppgiften
+  ändrar ingenting i verksamheten — den ber en människa titta — men den syns i
+  arbetskön i samma stund. Använd den sparsamt, och skriv i svaret hur många du
+  skapat.
 
 REGEL 2 — DU ARBETAR MED ID, INTE MED NAMN
 Verktygen ger dig id och initialer, aldrig namn, adresser eller e-post. Det är med
@@ -214,28 +222,56 @@ Deno.serve(async (req) => {
     /* Loggklienten. Skapas HÄR, utanför koer-callbacken nedan, så att
        ingen verktygskörning kan nå service_role ens av misstag. */
     const logg = serviceklient();
-    const korning = await startaKorning(logg, 'drift', fraga, grind.anvandare);
+
+    /* Dygnstaket (fas8_7) ligger som en trigger på agent_korningar, så
+       det är HÄR det märks. Utan den här grenen hade admin fått ett
+       500 som börjar med att loggningen misslyckades — vilket är fel
+       besked: loggningen fungerade, det var taket som sa nej. */
+    let korning: string | null = null;
+    try {
+      korning = await startaKorning(logg, 'drift', fraga, grind.anvandare);
+    } catch (e) {
+      const text = String((e as Error)?.message ?? e);
+      if (text.includes('Dygnstaket')) {
+        return json({ error: text, tak_natt: true }, 429);
+      }
+      throw e;
+    }
 
     const claude = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
-    const resultat = await koerSlinga({
-      claude,
-      system: SYSTEM,
-      fraga,
-      verktyg: VERKTYG,
-      db: logg,
-      korning,
-      maxSteg: MAX_STEG_DRIFT,
-      koer: async (namn, arg) => {
-        /* Körningens id följer med förslagen, så att ett förslag i
-           adminvyn går att spåra tillbaka till frågan som ställdes. */
-        const med = namn === 'foresla_matchning' ? { ...arg, korning_id: korning } : arg;
-        const { data, error } = await som(namn, med);
-        if (error) return { data: { fel: error.message } };
-        // data, inte text: motorn märker det som databasutdata.
-        return { data };
-      },
-    });
+    let resultat;
+    try {
+      resultat = await koerSlinga({
+        claude,
+        system: SYSTEM,
+        fraga,
+        verktyg: VERKTYG,
+        db: logg,
+        korning,
+        maxSteg: MAX_STEG_DRIFT,
+        koer: async (namn, arg) => {
+          /* Körningens id följer med förslagen, så att ett förslag i
+             adminvyn går att spåra tillbaka till frågan som ställdes. */
+          const med = namn === 'foresla_matchning' ? { ...arg, korning_id: korning } : arg;
+          const { data, error } = await som(namn, med);
+          if (error) return { data: { fel: error.message } };
+          // data, inte text: motorn märker det som databasutdata.
+          return { data };
+        },
+      });
+    } catch (e) {
+      /* En körning som kastar mitt i slingan ska inte stå som
+         "pågår" för alltid i agentloggen. Tokens vi hunnit bränna
+         går inte att rädda härifrån — koerSlinga bär dem inte på
+         undantaget — men körningen stängs, och det syns att den
+         föll. */
+      await avslutaKorning(logg, korning, {
+        status: 'fel',
+        anledning: 'Körningen avbröts: ' + String((e as Error)?.message ?? e).slice(0, 300),
+      });
+      throw e;
+    }
 
     if (resultat.vagrade) {
       await avslutaKorning(logg, korning, {
@@ -250,7 +286,14 @@ Deno.serve(async (req) => {
         status: 'fel', anledning: `Nådde taket på ${MAX_STEG_DRIFT} steg utan färdigt svar.`,
         steg_antal: resultat.steg, in_tokens: resultat.in_tokens, ut_tokens: resultat.ut_tokens,
       });
-      return json({ error: `Agenten hann inte fram på ${MAX_STEG_DRIFT} steg. Ställ en smalare fråga.` }, 504);
+      /* korning_id följer med. Agenten kan ha hunnit lämna förslag
+         innan taket slog i, och de ligger kvar i kön — att bara säga
+         "hann inte fram" hade lämnat dem osynliga. */
+      return json({
+        error: `Agenten hann inte fram på ${MAX_STEG_DRIFT} steg. Ställ en smalare fråga.`,
+        korning_id: korning,
+        pafyllnad: 'Hann agenten lämna förslag innan den tog slut ligger de kvar under Förslag.',
+      }, 504);
     }
 
     await avslutaKorning(logg, korning, {

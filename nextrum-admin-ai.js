@@ -126,6 +126,15 @@
       : 'AI:n har inte föreslagit något än');
   }
 
+  /* Körningarna för drift-agenten. Samma lista som juridik och
+     ekonomi har, och den läser resultat_kort per steg — alltså vad
+     AI:n faktiskt LÄSTE, inte bara vad den anropade. */
+  function ritaDriftlogg() {
+    const host = $('#drift-logg');
+    if (!host || typeof NXAgent === 'undefined') return;
+    NXAgent.laddaKorningar('drift', host, 20);
+  }
+
   async function ritaAI() {
     await hämtaFörslag();
     ritaFörslag();
@@ -136,6 +145,11 @@
 
   const forslagFlik = $('#flik-ag-forslag');
   if (forslagFlik) forslagFlik.addEventListener('click', ritaAI);
+
+  /* Loggen hämtas när fliken öppnas, inte vid uppstart: den kostar en
+     fråga, och de flesta sessioner öppnar aldrig fliken. */
+  const driftFlik = $('#flik-ag-drift');
+  if (driftFlik) driftFlik.addEventListener('click', ritaDriftlogg);
 
   /* ------------------------------------------------------------
      JA ELLER NEJ
@@ -185,6 +199,11 @@
          elever, matchning och översikten, och den som just tryckte
          ska se det utan att ladda om sidan. */
       await NXAdmin.hämtaAllt();
+      /* Matchningsunderlaget också: ett godkänt matchningsförslag
+         ändrar hur många elever hjälparen har, och det talet är en
+         av termerna i poängen. Utan den här raden står hjälparen kvar
+         med "Har inga elever än" direkt efter att ha fått en. */
+      if (ja) await NXAdmin.hämtaMatchunderlag();
       await ritaAI();
       if (NXAdmin.rita.ritaMatchning) NXAdmin.rita.ritaMatchning();
       if (NXAdmin.rita.ritaElever) NXAdmin.rita.ritaElever();
@@ -271,10 +290,11 @@
 
       /* Agenten kan ha lämnat förslag under körningen. Kön hämtas om
          så att de syns direkt, utan att någon behöver veta att de
-         hamnade i en annan flik. */
+         hamnade i en annan flik. Loggen med. */
       await ritaAI();
+      ritaDriftlogg();
     });
   });
 
-  Object.assign(NXAdmin.rita, { ritaAI, ritaFörslag });
+  Object.assign(NXAdmin.rita, { ritaAI, ritaFörslag, ritaDriftlogg });
 })();
