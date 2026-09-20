@@ -226,20 +226,8 @@
     /* Poängen kommer från databasen. Saknas den för den här eleven
        hämtas den, och panelen ritas om när svaret kommit — samma
        mönster som detaljpanelen använder. */
-    /* Gick rankningen inte att hämta säger vi det. Reservvärdena
-       nedan ger varje hjälpare noll poäng och "vet ej" på båda
-       kriterierna — ett kort som samtidigt räknar upp hjälparens
-       ämnen och påstår att hon inte har några. Sidan skulle läsa som
-       "ingen passar", vilket är ett annat besked än "vi kunde inte
-       räkna". Samma mönster som S.matchunderlagFel ovan. */
-    if (S.matchpoangFel) {
-      host.innerHTML = ut + '<div class="empty"><b>Förslagen kunde inte räknas fram</b><br>'
-        + '<span>' + esc(S.matchpoangFel) + '</span></div>';
-      return;
-    }
-
     const poäng = (S.matchpoang || {})[elev.id];
-    if (!poäng) {
+    if (!poäng && !S.matchpoangFel) {
       host.innerHTML = laddar('Räknar fram förslag');
       hämtaMatchpoäng(elev.id).then(() => {
         if (S.valdElev === elev.id) ritaMatchPanel();
@@ -248,7 +236,7 @@
     }
 
     const poängFörTutor = {};
-    poäng.forEach(r => { poängFörTutor[r.tutor_id] = r; });
+    (poäng || []).forEach(r => { poängFörTutor[r.tutor_id] = r; });
 
     const förslag = S.matchunderlag
       .map(t => {
@@ -291,6 +279,22 @@
         ? '<button class="btn btn-ghost btn-sm" type="button" data-mt-loss="' + esc(elev.id) + '">Ta bort matchningen</button>'
         : '')
       + '</div>';
+
+    /* Gick rankningen inte att hämta säger vi DET, i stället för att
+       rita kort med noll poäng och "vet ej" på allt — kort som
+       samtidigt räknar upp hjälparens ämnen och påstår att hon inte
+       har några. "Ingen passar" och "vi kunde inte räkna" är två
+       olika besked.
+
+       Rutan ligger här och inte högre upp, för den ska stå under
+       elevens rubrik — och `ut` finns inte förrän nu. Första
+       försöket satte den före, vilket gav ReferenceError och en
+       evig spinner i stället för ett besked. */
+    if (S.matchpoangFel) {
+      host.innerHTML = ut + '<div class="empty"><b>Förslagen kunde inte räknas fram</b><br>'
+        + '<span>' + esc(S.matchpoangFel) + '</span></div>';
+      return;
+    }
 
     if (!förslag.length) {
       host.innerHTML = ut + tomt('Inga godkända studiehjälpare',
