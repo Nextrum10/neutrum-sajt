@@ -85,4 +85,21 @@ jobs:
         run: deno check supabase/functions/*/index.ts
 
       - name: Tester
-        run: deno test --allow-env supabase/functions/_delad/
+        run: |
+          # Utfallet skrivs till körningens sammanfattning när något
+          # faller. Loggen kräver inloggning för att läsas, men
+          # sammanfattningen är öppen — och ett rött bygge man inte
+          # kan läsa är ett rött bygge man börjar ignorera.
+          set +e
+          deno test --allow-env supabase/functions/_delad/ 2>&1 | tee "$RUNNER_TEMP/deno.txt"
+          kod=${PIPESTATUS[0]}
+          if [ "$kod" -ne 0 ]; then
+            {
+              echo '### Deno-testerna föll'
+              echo ''
+              echo '```'
+              tail -80 "$RUNNER_TEMP/deno.txt"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit $kod
