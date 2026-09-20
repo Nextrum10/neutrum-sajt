@@ -276,8 +276,10 @@ const NXAdmin = (function () {
     S.matchunderlagFel = error ? felText(error) : null;
     S.matchunderlag = data || [];
     /* Poängen per elev hämtas var för sig ur databasen (Fas 8) och
-       cachas. Ändras underlaget är den cachen gammal. */
+       cachas. Ändras underlaget är den cachen gammal — och ett gammalt
+       fel ska inte hindra nästa försök. */
     S.matchpoang = {};
+    S.matchpoangFel = null;
   }
 
   /* ============================================================

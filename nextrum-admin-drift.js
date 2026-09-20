@@ -291,6 +291,9 @@
        försöket satte den före, vilket gav ReferenceError och en
        evig spinner i stället för ett besked. */
     if (S.matchpoangFel) {
+      /* Räknaren nollas också. "2 GODKÄNDA" bredvid "gick inte att
+         räkna fram" är två besked som inte kan vara sanna samtidigt. */
+      $('#mt-forslag-antal').textContent = '';
       host.innerHTML = ut + '<div class="empty"><b>Förslagen kunde inte räknas fram</b><br>'
         + '<span>' + esc(S.matchpoangFel) + '</span></div>';
       return;
@@ -372,6 +375,7 @@
        talet ändrades just nu. Cachen töms därför helt — inte bara för
        den här eleven. */
     S.matchpoang = {};
+    S.matchpoangFel = null;
 
     await hämtaMatchunderlag();
     ritaMatchKö();
@@ -386,6 +390,13 @@
     const välj = e.target.closest('[data-mt-elev]');
     if (välj) {
       S.valdElev = välj.dataset.mtElev;
+      /* Ett nytt klick är ett nytt försök. Utan den här raden låser
+         ett tillfälligt fel — en timeout, ett tappat nät — panelen
+         för resten av sessionen, eftersom vakten nedan hindrar varje
+         ny hämtning så länge flaggan står kvar. Rättningen av den
+         eviga spinnern bytte annars "försöker om varje gång" mot
+         "försöker aldrig om". */
+      S.matchpoangFel = null;
       ritaMatchKö();
       ritaMatchPanel();
       return;
