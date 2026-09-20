@@ -1058,6 +1058,69 @@ window.NXArbete = (function () {
     fallSpara(rot.dataset.fall, dolt);
   });
 
+  /* ============================================================
+     STAPELGRAFEN (Fas 9.3)
+
+     Låg i tre kopior: nextrum-admin-oversikt.js, nextrum-larare-vy.js
+     och nextrum-studie-vy.js hade var sin sexMånader och var sin
+     innerHTML med .graf-stapel. De hade redan börjat glida isär —
+     adminvyn hade fått en not under grafen och ett format för
+     kronor, de andra två inte.
+
+     ALLTID SEX STAPLAR, ÄVEN TOMMA. En graf som byter bredd med
+     datan går inte att jämföra med sig själv nästa månad, och det
+     är hela poängen med att titta på den.
+
+     format(v) gör om värdet till texten över stapeln. Utan den
+     ritades ören som ören, och "75800" över en stapel säger
+     ingenting.
+
+     not är antingen en text som alltid står kvar, eller
+     {nagot, inget} när den tomma grafen ska säga något annat än den
+     fyllda. De tre vyerna hade olika texter för tomt läge, och en
+     delad komponent som skriver över dem hade varit en försämring
+     förklädd till städning. false eller utelämnad: ingen not.
+     ============================================================ */
+
+  /* n månader bakåt till och med innevarande, som [{nyckel, namn,
+     antal}]. nyckel är 'ÅÅÅÅ-MM', samma form som wanted_date och
+     period börjar med, så att den går att jämföra med slice(0, 7). */
+  function sexMånader(n) {
+    var ut = [];
+    var antalMånader = typeof n === 'number' && n > 0 ? n : 6;
+    var nu = new Date();
+    for (var i = antalMånader - 1; i >= 0; i--) {
+      var d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
+      ut.push({
+        nyckel: d.getFullYear() + '-' + tvasiffrig(d.getMonth() + 1),
+        namn: NX.MANADER[d.getMonth()].slice(0, 3),
+        antal: 0
+      });
+    }
+    return ut;
+  }
+
+  function graf(host, månader, not, format) {
+    if (!host) return;
+    var högst = 1;
+    var något = false;
+    månader.forEach(function (m) {
+      if (m.antal > högst) högst = m.antal;
+      if (m.antal) något = true;
+    });
+    host.innerHTML = '<div class="graf">' + månader.map(function (m, i) {
+      return '<div class="graf-stapel' + (i === månader.length - 1 ? ' nu' : '') + '">'
+        + '<b>' + esc(format ? format(m.antal) : String(m.antal)) + '</b>'
+        + '<i style="height:' + Math.round((m.antal / högst) * 100) + '%"></i>'
+        + '<span>' + esc(m.namn) + '</span>'
+        + '</div>';
+    }).join('') + '</div>'
+      + (!not ? ''
+         : '<p class="graf-not">'
+           + esc(typeof not === 'string' ? not : (något ? not.nagot : not.inget))
+           + '</p>');
+  }
+
   return {
     hälsning: hälsning,
     hälsningsrad: hälsningsrad,
@@ -1072,6 +1135,8 @@ window.NXArbete = (function () {
     plusMånader: plusMånader,
     fallGrupp: fallGrupp,
     fallStall: fallStall,
+    sexMånader: sexMånader,
+    graf: graf,
     DAGAR_LANGA: DAGAR_LANGA,
     DAGAR_KORTA: DAGAR_KORTA
   };

@@ -1322,36 +1322,18 @@
 
     ritaFordelningar();
 
-    /* Alltid sex staplar, även när några är tomma. En graf som byter
-       bredd med datan går inte att jämföra med sig själv i nästa
-       månad. */
-    const månader = [];
-    const nu = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
-      månader.push({
-        nyckel: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
-        namn: NX.MANADER[d.getMonth()].slice(0, 3),
-        antal: 0
-      });
-    }
+    /* Alltid sex staplar, även när några är tomma. Ritandet ligger i
+       NXArbete sedan Fas 9.3 — samma kod låg i tre vyer. */
+    const månader = NXArbete.sexMånader();
     genomforda.forEach(b => {
       const m = månader.find(x => x.nyckel === String(b.wanted_date || '').slice(0, 7));
       if (m) m.antal++;
     });
 
-    const hogst = Math.max(1, ...månader.map(m => m.antal));
-    graf.innerHTML = '<div class="graf">' + månader.map((m, i) =>
-        '<div class="graf-stapel' + (i === månader.length - 1 ? ' nu' : '') + '">'
-      + '<b>' + m.antal + '</b>'
-      + '<i style="height:' + Math.round((m.antal / hogst) * 100) + '%"></i>'
-      + '<span>' + esc(m.namn) + '</span>'
-      + '</div>').join('') + '</div>'
-      + '<p class="graf-not">'
-      + (genomforda.length
-          ? 'Bara genomförda pass räknas. Ett pass blir genomfört när er studiehjälpare skrivit rapporten.'
-          : 'Inga genomförda pass än — grafen fylls i efter första passet.')
-      + '</p>';
+    NXArbete.graf(graf, månader, {
+      nagot: 'Bara genomförda pass räknas. Ett pass blir genomfört när er studiehjälpare skrivit rapporten.',
+      inget: 'Inga genomförda pass än — grafen fylls i efter första passet.'
+    });
   }
 
   /* ============================================================

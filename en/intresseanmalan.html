@@ -492,12 +492,6 @@
       if (tider) extra.push('Tider som passar: ' + tider);
       extra.push('Samtycke till lagring: ja (' + new Date().toISOString().slice(0, 10) + ')');
 
-      /* Varifrån familjen kom. Ligger sist i "message" av samma skäl
-         som raderna ovan: inga nya kolumner, och det syns i adminvyn
-         direkt. Det är det här som avgör vilken kanal som faktiskt
-         ger kunder. */
-      extra.push.apply(extra, NX.källrader());
-
       const fritext = $('#l-msg').value.trim();
       const message = [fritext, extra.join('\n')].filter(Boolean).join('\n\n');
 
@@ -514,6 +508,13 @@
          "ej angiven" årskurs. */
       const årskurs = $('#l-grade').value || null;
 
+      /* Varifrån familjen kom. Låg fram till Fas 9.5 sist i "message"
+         som fritext — men message kapas vid 4000 tecken med familjens
+         egen text först, så en lång text klippte bort just det vi
+         ville räkna. Nu egna kolumner: databasen kapar och fryser dem,
+         och en vy kan räkna kanaler utan att läsa fritext. */
+      const k = NX.källa();
+
       knapp.setAttribute('aria-busy', 'true');
       const { error } = await supa.from('leads').insert({
         parent_name: namn,
@@ -522,7 +523,14 @@
         grade: årskurs,
         subject: ämnesval,
         tjanst: tjanstVal ? tjanstVal.varde() : NXTjanster.standard(),
-        message: message || null
+        message: message || null,
+        kalla: k.kanal,
+        medium: k.medium,
+        kampanj: k.kampanj,
+        annonsvariant: k.innehåll,
+        sokord: k.term,
+        hanvisare: k.hänvisare,
+        landningssida: k.landning
       });
       knapp.removeAttribute('aria-busy');
 

@@ -41,7 +41,11 @@ const NXAdmin = (function () {
     matForslag: [], detaljCache: {},
     /* Fas 6: uppdrag, uppgifter, RUT-tak, auditloggens senaste
        rader och databasens lista över ekonomiska avvikelser. */
-    uppdrag: [], uppgifter: [], rutTak: [], audit: [], avvikelser: [], avvikelserFel: null
+    uppdrag: [], uppgifter: [], rutTak: [], audit: [], avvikelser: [], avvikelserFel: null,
+    /* Fas 9: analysvyerna. Tomma tills hämtaAnalys() kört, så att
+       statistiken ritar "hämtar" i stället för nollor. */
+    analys: { kallor: [], konvertering: [], aktiva: [], ekonomi: [], avbokningar: [] },
+    analysFel: null
   };
 
   function visa(id) {
@@ -262,6 +266,40 @@ const NXAdmin = (function () {
     S.fristaendeRapporter = fri.data || [];
     S.avvikelserFel = avv.error ? felText(avv.error) : null;
     S.avvikelser = avv.data || [];
+  }
+
+  /* ------------------------------------------------------------
+     ANALYSVYERNA (Fas 9.6)
+
+     Statistiken räknade förut i webbläsaren, ur S.bokningar och
+     S.fakturor. Det gick, men det gav TVÅ definitioner av samma
+     sak: grafen räknade status='completed', medan noten under den
+     lovade "genomfört när rapporten finns". Tre av fem completed-
+     pass i driften saknar rapport, så grafen var för hög och
+     texten falsk.
+
+     Nu kommer talen ur analysvyerna, som alla bygger på
+     passunderlag.har_rapport. En definition, ett ställe.
+     ------------------------------------------------------------ */
+  async function hämtaAnalys() {
+    const [kallor, konv, aktiva, ekonomi, avbok] = await Promise.all([
+      supa.from('analys_leads_per_kalla').select('*').order('manad', { ascending: false }),
+      supa.from('analys_konvertering').select('*').order('manad', { ascending: false }),
+      supa.from('analys_aktiva').select('*').order('manad', { ascending: false }),
+      supa.from('analys_ekonomi').select('*').order('manad', { ascending: false }),
+      supa.from('analys_avbokningar').select('*')
+    ]);
+    /* Ett fel per vy, inte ett för hela statistiken: saknas en vy
+       ska de andra fyra fortfarande gå att läsa. */
+    S.analysFel = [kallor, konv, aktiva, ekonomi, avbok]
+      .filter(r => r.error).map(r => felText(r.error)).join(' · ') || null;
+    S.analys = {
+      kallor: kallor.data || [],
+      konvertering: konv.data || [],
+      aktiva: aktiva.data || [],
+      ekonomi: ekonomi.data || [],
+      avbokningar: avbok.data || []
+    };
   }
 
   /* Vyn matchningsunderlag räknar antal_elever och genomforda_pass
@@ -501,7 +539,7 @@ const NXAdmin = (function () {
   return {
     ANS_LAGE, BOK_LAGE, DAG, DP, FAKT_LAGE, LEAD_LAGE, S, SH_LAGE,
     UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
-    hämtaAllt, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
+    hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, matchar, märkFlik, namnFör, närText, pill, rad, skriv,
     tabell, tomtText, visa, väljare, rita
   };

@@ -404,31 +404,31 @@ select pg_temp.prova('F-6 P avbokar genomfört pass', '00000000-0000-4000-8000-0
   'nekad');
 
 select pg_temp.prova('F-6 A skapar pass direkt som genomfört', '00000000-0000-4000-8000-0000000000a1',
-  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, status)
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
           values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
                   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
-                  (now() at time zone 'Europe/Stockholm')::date + 2, '18:00', 'completed')$q$],
+                  (now() at time zone 'Europe/Stockholm')::date + 2, '18:00', 60, 'completed')$q$],
   'nekad');
 
 select pg_temp.prova('F-6 A skapar pass bakåt i tiden', '00000000-0000-4000-8000-0000000000a1',
-  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, status)
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
           values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
                   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
-                  (now() at time zone 'Europe/Stockholm')::date - 2, '18:00', 'requested')$q$],
+                  (now() at time zone 'Europe/Stockholm')::date - 2, '18:00', 60, 'requested')$q$],
   'nekad');
 
 select pg_temp.prova('F-6 A föreslår pass för B:s elev', '00000000-0000-4000-8000-0000000000a1',
-  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, status)
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
           values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
                   '00000000-0000-4000-8000-0000000005b1', '00000000-0000-4000-8000-0000000000a1',
-                  (now() at time zone 'Europe/Stockholm')::date + 2, '18:00', 'requested')$q$],
+                  (now() at time zone 'Europe/Stockholm')::date + 2, '18:00', 60, 'requested')$q$],
   'nekad');
 
 select pg_temp.prova('F-6 A föreslår pass med flerbarnstillägg', '00000000-0000-4000-8000-0000000000a1',
-  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, status, antal_barn)
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn)
           values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
                   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
-                  (now() at time zone 'Europe/Stockholm')::date + 2, '18:00', 'requested', 2)$q$],
+                  (now() at time zone 'Europe/Stockholm')::date + 2, '18:00', 60, 'requested', 2)$q$],
   'nekad');
 
 select pg_temp.prova('F-6 A föreslår vanligt pass (som larare.html gör)', '00000000-0000-4000-8000-0000000000a1',
@@ -448,17 +448,17 @@ select pg_temp.prova('F-6 P bokar tio timmar', '00000000-0000-4000-8000-00000000
   'nekad');
 
 select pg_temp.prova('F-6 P bokar en inaktiv tjänst', '00000000-0000-4000-8000-0000000000f1',
-  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, tjanst, status)
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, tjanst, status)
           values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
                   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
-                  (now() at time zone 'Europe/Stockholm')::date + 3, '15:00', 'barnvakt', 'requested')$q$],
+                  (now() at time zone 'Europe/Stockholm')::date + 3, '15:00', 60, 'barnvakt', 'requested')$q$],
   'nekad');
 
 select pg_temp.prova('F-6 P bokar för en annan familjs barn', '00000000-0000-4000-8000-0000000000f1',
-  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, status)
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
           values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
                   '00000000-0000-4000-8000-0000000005c1', '00000000-0000-4000-8000-0000000000f1',
-                  (now() at time zone 'Europe/Stockholm')::date + 3, '15:00', 'requested')$q$],
+                  (now() at time zone 'Europe/Stockholm')::date + 3, '15:00', 60, 'requested')$q$],
   'nekad');
 
 select pg_temp.prova('F-6 P bokar vanligt pass (som foralder.html gör)', '00000000-0000-4000-8000-0000000000f1',
@@ -479,10 +479,10 @@ select pg_temp.prova('F-6 admin rättar ett genomfört pass', '00000000-0000-400
 -- genomfört
 -- ------------------------------------------------------------
 select pg_temp.prova('F2 P bokar ett pass som inte ska faktureras', '00000000-0000-4000-8000-0000000000f1',
-  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, status, fakturerbar)
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, fakturerbar)
           values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
                   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
-                  (now() at time zone 'Europe/Stockholm')::date + 3, '15:00', 'requested', false)$q$],
+                  (now() at time zone 'Europe/Stockholm')::date + 3, '15:00', 60, 'requested', false)$q$],
   'nekad');
 
 select pg_temp.prova('F2 P undantar sitt eget pass', '00000000-0000-4000-8000-0000000000f1',
@@ -1183,6 +1183,97 @@ select pg_temp.prova('9.4 familjen kan fortfarande avboka', '00000000-0000-4000-
 
 select pg_temp.rakna('9.3 icke-admin läser fortfarande 0 auditrader', '00000000-0000-4000-8000-0000000000f1',
   $q$select count(*) from public.audit_logg$q$, 0);
+
+-- ---------- 9.7 ett pass utan längd ----------
+-- Hålet var att null < 60 är null, inte sant: villkoret var falskt
+-- och passet gick igenom utan längd. Faktureringen räknade sedan
+-- en timme på det, eftersom pris.ts säger duration_min || 60.
+
+select pg_temp.prova('9.7 P bokar ett pass utan längd', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+                                        wanted_date, wanted_time, status)
+           values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+                   (now() at time zone 'Europe/Stockholm')::date + 4, '15:00', 'requested')$q$],
+  'nekad');
+
+insert into utfall (test, ok, detalj)
+select '9.7 duration_min går inte att lämna tom i schemat heller',
+       is_nullable = 'NO', 'is_nullable = ' || is_nullable
+from information_schema.columns
+where table_schema = 'public' and table_name = 'bookings' and column_name = 'duration_min';
+
+-- ---------- 9.5 anmälans källa ----------
+-- Källan skrivs av en anonym besökare ur adressraden. Provet gör
+-- alltså det den gör: blir anon och postar mot det öppna API:et.
+
+do $$
+declare
+  r   public.leads%rowtype;
+  fel text := 'ingen';
+  nu  text;
+begin
+  perform pg_temp.bli(null);
+  begin
+    insert into public.leads (parent_name, email, message, tjanst,
+                              kalla, medium, kampanj, annonsvariant,
+                              hanvisare, landningssida)
+    values ('Prov Förälder', 'rls-kalla@example.invalid', 'provtext', 'laxhjalp',
+            'google', 'cpc', repeat('x', 400), '',
+            'instagram.com', '/laxhjalp-farsta?utm_source=google');
+  exception when others then fel := sqlstate || ': ' || sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'ingen' then
+    insert into utfall (test, ok, detalj) values ('9.5 anon kan skriva källfälten', false, fel);
+  else
+    select * into r from public.leads where email = 'rls-kalla@example.invalid';
+    insert into utfall (test, ok, detalj) values
+      ('9.5 anon kan skriva källfälten', r.kalla = 'google' and r.medium = 'cpc',
+       coalesce(r.kalla, 'null') || ' / ' || coalesce(r.medium, 'null')),
+      ('9.5 kampanjen kapas vid 120 tecken', length(r.kampanj) = 120,
+       coalesce(length(r.kampanj)::text, 'null')),
+      ('9.5 tom sträng blir null, inte en egen kanal', r.annonsvariant is null,
+       coalesce(r.annonsvariant, 'null')),
+      ('9.5 statusen sätts fortfarande av triggern', r.status = 'new', coalesce(r.status, 'null'));
+
+    -- Källan är en uppgift om besöket. Den kan bara bli annorlunda i
+    -- efterhand, aldrig sannare.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    begin
+      update public.leads set kalla = 'omskriven' where email = 'rls-kalla@example.invalid';
+    exception when others then null;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select kalla into nu from public.leads where email = 'rls-kalla@example.invalid';
+    insert into utfall (test, ok, detalj)
+    values ('9.5 källan går inte att skriva om i efterhand', nu = 'google', coalesce(nu, 'null'));
+  end if;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- Källfälten formuleras av en främling i adressraden. Auditloggen går
+-- inte att rätta, så de får aldrig stå i dess vitlista.
+insert into utfall (test, ok, detalj)
+select '9.5 auditen bär inte källfälten', count(*) = 0,
+       coalesce(string_agg(x, ', '), 'inga')
+from (
+  select btrim(btrim(a), '''') as x
+  from pg_trigger t
+  join pg_class c on c.oid = t.tgrelid
+  join pg_namespace n on n.oid = c.relnamespace
+  join pg_proc p on p.oid = t.tgfoid,
+  lateral unnest(string_to_array(
+            rtrim(split_part(pg_get_triggerdef(t.oid), 'logga_andring(', 2), ')'), ', ')) as u3(a)
+  where n.nspname = 'public' and not t.tgisinternal
+    and c.relname = 'leads' and p.proname = 'logga_andring'
+) v
+where x in ('kalla', 'medium', 'kampanj', 'annonsvariant', 'sokord', 'hanvisare', 'landningssida');
 
 -- Auditloggens vitlistor får bara nämna kolumner som finns. En
 -- felstavad kolumn i tg_argv ger inget fel — den loggar bara

@@ -41,7 +41,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { S, elevNamn, funktionsFel, hämtaAllt, hämtaEkonomiunderlag,
+  const { S, elevNamn, funktionsFel, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag,
           hämtaMatchunderlag, kortDatum, namnFör, närText, skriv, tabell,
           visa } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
@@ -877,6 +877,7 @@
       ritaBokningar();
       ritaKalender();
       ritaLektioner();
+      await hämtaAnalys();
       ritaStatistik();
       ritaFakturor();
       ritaUtbetalningar();

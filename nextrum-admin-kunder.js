@@ -28,12 +28,35 @@
      INTRESSEANMÄLNINGAR
      ============================================================ */
 
+  /* Källan stod fram till Fas 9.5 som fritext sist i "message" och
+     syntes därför i kolumnen "Vad de skrev". Nu är den egna kolumner,
+     och därför en egen kolumn här.
+
+     Tomt betyder OKÄNT, inte "direkt": anmälningar från före 9.5 har
+     aldrig haft fälten, och de bakfylldes med flit inte. En etikett
+     som säger "direkt" på dem hade gjort en lucka till ett svar. */
+  function källText(l) {
+    if (!l.kalla) return null;
+    return l.kalla + (l.medium ? ' / ' + l.medium : '');
+  }
+
+  function källTitel(l) {
+    const d = [];
+    if (l.kampanj)       d.push('Kampanj: ' + l.kampanj);
+    if (l.annonsvariant) d.push('Annonsvariant: ' + l.annonsvariant);
+    if (l.sokord)        d.push('Sökord: ' + l.sokord);
+    if (l.hanvisare)     d.push('Hänvisad från: ' + l.hanvisare);
+    if (l.landningssida) d.push('Landningssida: ' + l.landningssida);
+    return d.join('\n');
+  }
+
   function ritaLeads() {
     const sök = $('#leads-sok').value.trim();
     const st = $('#leads-status').value;
     const rader = S.leads
       .filter(l => !st || l.status === st)
-      .filter(l => matchar(l, ['parent_name', 'email', 'child_name', 'subject', 'grade', 'message'], sök));
+      .filter(l => matchar(l, ['parent_name', 'email', 'child_name', 'subject', 'grade',
+                               'message', 'kalla', 'kampanj'], sök));
 
     $('#leads-antal').textContent = rader.length + ' av ' + S.leads.length;
     $('#leads-tabell').innerHTML = tabell([
@@ -46,6 +69,10 @@
         ? '<span title="' + esc(l.message) + '">' + esc(l.message.slice(0, 90))
           + (l.message.length > 90 ? '…' : '') + '</span>'
         : '<span style="color:var(--bl-3)">—</span>' },
+      { namn: 'Källa', rita: l => källText(l)
+        ? '<span title="' + esc(källTitel(l)) + '">' + esc(källText(l)) + '</span>'
+        : '<span style="color:var(--bl-3)" title="Anmälan kom in innan källan '
+          + 'mättes i egna kolumner. Okänd, inte direkt.">—</span>' },
       { namn: 'Inkom', rita: l => '<span class="adm-tal">' + esc(kortDatum(l.created_at)) + '</span>' },
       { namn: 'Läge', höger: true, rita: l => väljare('lead', LEAD_LAGE, l.status, 'data-lead="' + l.id + '"')
         /* Vägen vidare. En anmälan som inte kan bli en elev fastnar

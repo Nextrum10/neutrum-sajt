@@ -2403,36 +2403,19 @@
       + '</div>';
 
     /* Sex månader bakåt, alltid sex staplar även när några är tomma.
-       En graf som byter bredd med datan går inte att jämföra med sig
-       själv från en månad till nästa. */
-    const månader = [];
-    const nu = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
-      månader.push({
-        nyckel: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
-        namn: NX.MANADER[d.getMonth()].slice(0, 3),
-        antal: 0
-      });
-    }
+       Själva ritandet ligger i NXArbete sedan Fas 9.3 — samma kod
+       låg i tre vyer och hade redan börjat glida isär. */
+    const månader = NXArbete.sexMånader();
     genomforda.forEach(b => {
       const nyckel = String(b.wanted_date || '').slice(0, 7);
       const m = månader.find(x => x.nyckel === nyckel);
       if (m) m.antal++;
     });
 
-    const hogst = Math.max(1, ...månader.map(m => m.antal));
-    graf.innerHTML = '<div class="graf">' + månader.map((m, i) =>
-        '<div class="graf-stapel' + (i === månader.length - 1 ? ' nu' : '') + '">'
-      + '<b>' + m.antal + '</b>'
-      + '<i style="height:' + Math.round((m.antal / hogst) * 100) + '%"></i>'
-      + '<span>' + esc(m.namn) + '</span>'
-      + '</div>').join('') + '</div>'
-      + '<p class="graf-not">'
-      + (genomforda.length
-          ? 'Bara rapporterade pass räknas. Skriver du rapporten senare flyttas passet till den månad det hölls, inte den månad du skrev.'
-          : 'Inga rapporterade pass än — grafen fylls i när du skrivit din första rapport.')
-      + '</p>';
+    NXArbete.graf(graf, månader, {
+      nagot: 'Bara rapporterade pass räknas. Skriver du rapporten senare flyttas passet till den månad det hölls, inte den månad du skrev.',
+      inget: 'Inga rapporterade pass än — grafen fylls i när du skrivit din första rapport.'
+    });
   }
 
   /* ============================================================

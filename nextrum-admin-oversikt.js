@@ -17,7 +17,7 @@
   const M = NXMedia;
 
   const { DAG, S, dagarSedan, elevNamn, kortDatum, märkFlik, namnFör,
-          närText } = NXAdmin;
+          närText, tabell } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaNotiser = (...a) => NXAdmin.rita.ritaNotiser(...a);
@@ -385,107 +385,112 @@
   /* ============================================================
      STATISTIK
 
-     Fyra frågor, fyra bilder. Inte fler: en sida med tolv grafer
-     är en sida ingen läser, och den som vill gräva har rådatan i
-     sektionerna ovanför.
+     Frågorna är få med flit: en sida med tolv grafer är en sida
+     ingen läser, och den som vill gräva har rådatan i sektionerna
+     ovanför.
 
-     Staplarna ritas med .graf, samma komponent som studievyn och
-     studiehjälparvyn använder för sina sex månader. Samma höjd,
-     samma färg för innevarande månad, samma sätt att läsa. En
-     egen graf hade gjort adminvyn till en annan produkt.
+     Staplarna ritas med NXArbete.graf, samma komponent som
+     studievyn och studiehjälparvyn använder för sina sex månader
+     (Fas 9.3 — förut fanns den i tre kopior). Samma höjd, samma
+     färg för innevarande månad, samma sätt att läsa.
 
-     ALLTID SEX STAPLAR
+     TALEN KOMMER UR DATABASEN SEDAN FAS 9.6
 
-     Även när några är tomma. En graf som byter bredd med datan
-     går inte att jämföra med sig själv nästa månad, och det är
-     hela poängen med att titta på den.
+     Förut räknades de här, ur S.bokningar och S.fakturor. Det gav
+     två definitioner av samma sak: grafen räknade
+     status='completed' medan noten under lovade "genomfört när
+     rapporten finns". Tre av fem completed-pass i driften saknar
+     rapport, så grafen var för hög OCH texten falsk. Nu kommer
+     talen ur analysvyerna, som alla räknar på
+     passunderlag.har_rapport.
+
+     LUCKOR SKRIVS UT
+
+     En anmälan utan källa, en avbokning utan tidpunkt och en
+     konvertering utan kund_id har inte ett värde vi kan gissa. De
+     står som "okänd" med en förklaring, aldrig som noll och aldrig
+     hopslagna med något som råkar likna dem.
      ============================================================ */
 
-  function sexManader() {
-    const ut = [];
-    const nu = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
-      ut.push({
-        nyckel: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
-        namn: NX.MANADER[d.getMonth()].slice(0, 3),
-        antal: 0
-      });
-    }
-    return ut;
-  }
+  /* Analysvyernas månad är ett datum ('2026-08-01'), och nyckeln i
+     NXArbete.sexMånader är 'ÅÅÅÅ-MM'. Ett ställe som översätter. */
+  function månadsNyckel(rad) { return String(rad.manad || '').slice(0, 7); }
 
-  /* format(v) gör om ett värde till texten över stapeln. Utan den
-     hade kronor ritats som ören, och en stapel med "75800" över
-     sig säger ingenting. */
-  function ritaGraf(host, månader, not, format) {
-    if (!host) return;
-    const högst = Math.max(1, ...månader.map(m => m.antal));
-    const något = månader.some(m => m.antal);
-    host.innerHTML = '<div class="graf">' + månader.map((m, i) =>
-      '<div class="graf-stapel' + (i === månader.length - 1 ? ' nu' : '') + '">'
-      + '<b>' + esc(format ? format(m.antal) : String(m.antal)) + '</b>'
-      + '<i style="height:' + Math.round((m.antal / högst) * 100) + '%"></i>'
-      + '<span>' + esc(m.namn) + '</span>'
-      + '</div>').join('') + '</div>'
-      + '<p class="graf-not">' + esc(något ? not : 'Inget att visa än — grafen fylls i allteftersom.') + '</p>';
+  /* Lägg raderna ur en analysvy i sex staplar. varde(rad) plockar
+     ut talet; rader utanför de sex månaderna faller bort, och rader
+     utan månad (okänd tidpunkt) räknas aldrig in i en månad de inte
+     hör hemma i. */
+  function staplar(rader, varde) {
+    const m = NXArbete.sexMånader();
+    (rader || []).forEach(r => {
+      if (!r.manad) return;
+      const s = m.find(x => x.nyckel === månadsNyckel(r));
+      if (s) s.antal += Number(varde(r) || 0);
+    });
+    return m;
   }
 
   function ritaStatistik() {
     if (!$('#stat-pass')) return;
 
-    /* ---- Genomförda pass ---- */
-    const pass = sexManader();
-    S.bokningar.filter(b => b.status === 'completed').forEach(b => {
-      const m = pass.find(x => x.nyckel === String(b.wanted_date || '').slice(0, 7));
-      if (m) m.antal++;
-    });
-    ritaGraf($('#stat-pass'), pass,
-      'Bara genomförda pass räknas. Ett pass blir genomfört när studiehjälparen skrivit rapporten.');
+    const A = S.analys;
 
-    /* ---- Nya elever ---- */
-    const elever = sexManader();
-    S.elevlista.forEach(e => {
-      const m = elever.find(x => x.nyckel === String(e.created_at || '').slice(0, 7));
-      if (m) m.antal++;
-    });
-    ritaGraf($('#stat-elever'), elever,
-      'När eleven lades till av familjen, inte när första passet hölls.');
+    if (S.analysFel) {
+      $('#stat-pass').innerHTML = '<p class="fel">Analysvyerna svarade inte: '
+        + esc(S.analysFel) + '</p>';
+    } else {
+      /* ---- Genomförda pass ---- */
+      NXArbete.graf($('#stat-pass'), staplar(A.aktiva, r => r.genomforda_pass), {
+        nagot: 'Bara genomförda pass räknas — alltså pass med rapport. '
+             + 'Ett pass som står som genomfört utan rapport räknas inte här.',
+        inget: 'Inget genomfört pass de senaste sex månaderna.'
+      });
 
-    /* ---- Fakturerat ----
-       Makulerade räknas inte: en makulerad faktura är en som aldrig
-       skulle ha skickats, och att räkna den vore att räkna ett
-       misstag som intäkt. */
-    const intäkt = sexManader();
-    S.fakturor.filter(f => f.status !== 'makulerad').forEach(f => {
-      const m = intäkt.find(x => x.nyckel === String(f.period || '').slice(0, 7));
-      if (m) m.antal += (f.belopp_ore || 0);
-    });
-    ritaGraf($('#stat-intakt'), intäkt,
-      'Fakturerat belopp per period, makulerade borträknade. Inte detsamma som betalt.',
-      v => kronor(v));
+      /* ---- Aktiva elever ----
+         Inte "nya elever" som förut: en elev som lades in i januari
+         och inte haft ett pass sedan dess sa ingenting om februari. */
+      NXArbete.graf($('#stat-elever'), staplar(A.aktiva, r => r.aktiva_elever), {
+        nagot: 'Elever med minst ett genomfört pass under månaden. '
+             + 'Samma elev räknas en gång per månad, hur många pass hen än haft.',
+        inget: 'Ingen elev har haft ett genomfört pass de senaste sex månaderna.'
+      });
+
+      /* ---- Fakturerat ----
+         Vyn räknar på invoices.period, alltså den månad fakturan
+         avser — inte den månad den skickades. */
+      NXArbete.graf($('#stat-intakt'), staplar(A.ekonomi, r => r.fakturerat_ore), {
+        nagot: 'Fakturerat belopp per period. Inte detsamma som betalt.',
+        inget: 'Ingen faktura är skapad än.'
+      }, v => kronor(v));
+    }
 
     ritaStatTal();
     ritaTratt();
+    ritaKallor();
+    ritaAvbokningar();
   }
 
   /* Talen här är TOTALER, till skillnad från Översiktens som är
      "just nu". Samma komponent, annan fråga: Översikt svarar på hur
-     det ser ut idag, Statistik på hur långt vi kommit. */
+     det ser ut idag, Statistik på hur långt vi kommit.
+
+     Summorna tas ur analysvyerna och inte ur S.bokningar, så att de
+     håller samma definition som graferna ovanför. */
   function ritaStatTal() {
     const host = $('#stat-tal');
     if (!host) return;
-    const genomförda = S.bokningar.filter(b => b.status === 'completed');
-    const minuter = genomförda.reduce((n, b) => n + (b.duration_min || 60), 0);
+    const ek = S.analys.ekonomi;
+    const summa = (rader, falt) => (rader || []).reduce((n, r) => n + Number(r[falt] || 0), 0);
+
+    const pass = summa(ek, 'genomforda_pass');
+    const minuter = summa(ek, 'minuter');
     const familjer = Object.values(S.personer).filter(p => p.role === 'parent').length;
-    const fakturerat = S.fakturor.filter(f => f.status !== 'makulerad')
-      .reduce((n, f) => n + (f.belopp_ore || 0), 0);
-    const betalt = S.fakturor.filter(f => f.status === 'betald')
-      .reduce((n, f) => n + (f.belopp_ore || 0), 0);
+    const fakturerat = summa(ek, 'fakturerat_ore');
+    const betalt = summa(ek, 'betalt_ore');
 
     host.innerHTML =
-      '<div class="adm-kpi"><b>' + genomförda.length + '</b><span>Genomförda pass</span>'
-      + '<span class="adm-kpi-diff">sedan starten</span></div>'
+      '<div class="adm-kpi"><b>' + pass + '</b><span>Genomförda pass</span>'
+      + '<span class="adm-kpi-diff">sedan starten, med rapport</span></div>'
       + '<div class="adm-kpi"><b>' + NXBetalning.timmar(minuter) + '</b><span>Undervisad tid</span>'
       + '<span class="adm-kpi-diff">i genomförda pass</span></div>'
       + '<div class="adm-kpi"><b>' + familjer + '</b><span>Familjer</span>'
@@ -494,6 +499,89 @@
       + '<div class="adm-kpi"><b>' + kronor(fakturerat) + '</b><span>Fakturerat</span>'
       + '<span class="adm-kpi-diff">' + (fakturerat
         ? kronor(betalt) + ' betalt' : 'ingen faktura än') + '</span></div>';
+  }
+
+  /* ------------------------------------------------------------
+     VARIFRÅN FAMILJERNA KOM (Fas 9.6)
+
+     Källan mättes redan, men skrevs in i anmälans fritext. Där
+     kunde den kapas bort av längdtaket, och där gick den inte att
+     räkna utan att läsa något familjen själv skrivit. Sedan 9.5
+     har den egna kolumner.
+
+     Anmälningar från före 9.5 har ingen källa. De står som "okänd",
+     och de bakfylldes med flit inte: att läsa tillbaka en kanal ur
+     fritext är precis det vi slutade göra.
+     ------------------------------------------------------------ */
+  function ritaKallor() {
+    const host = $('#stat-kallor');
+    if (!host) return;
+
+    /* Slå ihop månaderna: frågan är vilken kanal som ger kunder,
+       inte vilken månad den gjorde det. */
+    const per = {};
+    (S.analys.kallor || []).forEach(r => {
+      const nyckel = r.kalla || '';
+      const p = per[nyckel] || (per[nyckel] = {
+        kalla: r.kalla, medium: r.medium, anmalningar: 0, matchade: 0, blev_kund: 0
+      });
+      p.anmalningar += Number(r.anmalningar || 0);
+      p.matchade += Number(r.matchade || 0);
+      p.blev_kund += Number(r.blev_kund || 0);
+      if (r.kalla && r.medium && p.medium !== r.medium) p.medium = null; // flera medier
+    });
+
+    const rader = Object.values(per).sort((a, b) => b.anmalningar - a.anmalningar);
+    if (!rader.length) { host.innerHTML = tomt('Ingen intresseanmälan än', ''); return; }
+
+    host.innerHTML = tabell([
+      { namn: 'Kanal', rita: r => r.kalla
+        ? '<b>' + esc(r.kalla) + '</b>'
+          + (r.medium ? '<span class="adm-und">' + esc(r.medium) + '</span>' : '')
+        : '<b>Okänd</b><span class="adm-und">kom in innan källan mättes</span>' },
+      { namn: 'Anmälningar', höger: true, rita: r => '<span class="adm-tal">' + r.anmalningar + '</span>' },
+      { namn: 'Matchade', höger: true, rita: r => '<span class="adm-tal">' + r.matchade + '</span>' },
+      { namn: 'Blev kund', höger: true, rita: r => '<span class="adm-tal">' + r.blev_kund + '</span>' }
+    ], rader)
+      + '<p class="graf-not">"Blev kund" kräver att anmälan kopplats till ett konto. '
+      + 'Anmälningar som konverterades innan kopplingen började skrivas saknar den, '
+      + 'och räknas därför inte — se tratten ovan.</p>';
+  }
+
+  /* ------------------------------------------------------------
+     AVBOKNINGAR (Fas 9.6)
+
+     Tidpunkten finns sedan 9.4. Före den vet vi bara ATT passet
+     avbokades, inte när — och de raderna placeras därför inte i
+     någon månad. Att lägga dem på passets datum hade gjort en
+     avbokning i mars till en avbokning i maj.
+     ------------------------------------------------------------ */
+  function ritaAvbokningar() {
+    const host = $('#stat-avbok');
+    if (!host) return;
+
+    const rader = S.analys.avbokningar || [];
+    if (!rader.length) { host.innerHTML = tomt('Ingen avbokning än', ''); return; }
+
+    const utanTid = rader.filter(r => !r.manad)
+      .reduce((n, r) => n + Number(r.avbokningar || 0), 0);
+
+    NXArbete.graf(host, staplar(rader, r => r.avbokningar), false);
+
+    const summa = falt => rader.reduce((n, r) => n + Number(r[falt] || 0), 0);
+    host.innerHTML += '<div class="adm-tal-rad">'
+      + '<div class="adm-kpi"><b>' + summa('av_familjen') + '</b><span>Av familjen</span></div>'
+      + '<div class="adm-kpi"><b>' + summa('av_studiehjalparen') + '</b><span>Av studiehjälparen</span></div>'
+      + '<div class="adm-kpi"><b>' + summa('utan_avsandare') + '</b><span>Utan avsändare</span>'
+      + '<span class="adm-kpi-diff">schemalagt eller före 9.4</span></div>'
+      + '</div>'
+      + '<p class="graf-not">'
+      + (utanTid
+          ? utanTid + ' ' + (utanTid === 1 ? 'avbokning' : 'avbokningar')
+            + ' saknar tidpunkt och står utanför staplarna: de skedde innan '
+            + 'tidpunkten började sparas. De räknas i talen under.'
+          : 'Staplarna visar när passet avbokades, inte när det skulle ha hållits.')
+      + '</p>';
   }
 
   /* ------------------------------------------------------------
@@ -526,6 +614,14 @@
       p.role === 'parent' && (S.elever[p.id] || []).some(e =>
         e.matched_tutor_id && e.match_status === 'matched')).length;
 
+    /* Fas 9.6: hur många anmälningar som är märkta matchade men
+       saknar kopplingen till ett konto. De går inte att följa
+       vidare, och kopplingen gissas inte fram. Utan den här siffran
+       ser sista steget ut som ett bortfall, när det i själva verket
+       är en lucka i mätningen. */
+    const ejSpårbara = (S.analys.konvertering || [])
+      .reduce((n, r) => n + Number(r.ej_sparbara || 0), 0);
+
     const steg = [
       ['Intresseanmälningar', 'allt som kommit in', kom],
       ['Kontaktade', 'någon har hört av sig tillbaka', kontaktade],
@@ -555,7 +651,13 @@
       /* "+N utanför" behöver en förklaring första gången man ser
          det, annars läser det som ett räknefel. */
       + '<p class="graf-not">Aktiva familjer kan vara fler än matchade anmälningar: '
-      + 'alla familjer kom inte in via formuläret.</p>';
+      + 'alla familjer kom inte in via formuläret.'
+      + (ejSpårbara
+          ? ' ' + ejSpårbara + ' ' + (ejSpårbara === 1 ? 'matchad anmälan' : 'matchade anmälningar')
+            + ' saknar koppling till ett konto och går inte att följa längre än hit — '
+            + 'kopplingen började skrivas först i Fas 7, och den gissas inte fram i efterhand.'
+          : '')
+      + '</p>';
   }
 
 

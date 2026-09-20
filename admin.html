@@ -899,8 +899,10 @@
               </div>
             </div>
             <div class="stack">
+              <!-- Aktiva, inte nya. En elev som lades in i januari och
+                   inte haft ett pass sedan dess sa ingenting om februari. -->
               <div class="dbox">
-                <h5>Nya elever <em>per månad</em></h5>
+                <h5>Aktiva elever <em>per månad</em></h5>
                 <div id="stat-elever"><div class="loading">Hämtar</div></div>
               </div>
             </div>
@@ -922,6 +924,28 @@
           <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
             <h5>Från anmälan till kund</h5>
             <div id="stat-tratt"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- ============ VARIFRÅN FAMILJERNA KOM ============
+               Mätningen har funnits länge, men källan skrevs in i
+               anmälans fritext — där den kunde kapas bort av
+               längdtaket och där den inte gick att räkna utan att
+               läsa något familjen själv skrivit. Egna kolumner sedan
+               Fas 9.5. Anmälningar från före dess står som "okänd";
+               de bakfylldes inte. -->
+          <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+            <h5>Varifrån familjerna kom</h5>
+            <div id="stat-kallor"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- ============ AVBOKNINGAR ============
+               Staplarna visar när passet avbokades, inte när det
+               skulle ha hållits. Avbokningar från före Fas 9.4 har
+               ingen tidpunkt och står därför utanför staplarna, inte
+               i en månad de inte hör hemma i. -->
+          <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+            <h5>Avbokningar <em>per månad</em></h5>
+            <div id="stat-avbok"><div class="loading">Hämtar</div></div>
           </div>
         </section>
 
