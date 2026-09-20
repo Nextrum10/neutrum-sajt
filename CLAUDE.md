@@ -98,7 +98,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, sök, notiser, bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |
-| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, kommunikation, drift, ekonomi, tjanster, system, automationer. Anropar varandra via `NXAdmin.rita` |
+| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
@@ -253,6 +253,7 @@ tillbaka en kopia.**
 | `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
 | `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
+| `drift` | Tredje agenten (Fas 8). Läser verksamheten, föreslår. Inget utgående verktyg | Adminvyn |
 
 **Två funktioner i drift finns inte i repot:** `notis-ko` och
 `notis-avanmal` (båda ACTIVE, `verify_jwt` av). Deras kopia av
@@ -289,6 +290,56 @@ deploy` utan filen slår på JWT-kravet igen — då svarar notistriggrarna
 `verktyg/testa-agent.js` och `_delad/agent_test.ts` vaktar spärrarna.
 Testfallen med värdnamn i sökväg och `https://riksdagen.se@evil.com/`
 står kvar för att det är så en naiv `indexOf` går sönder.
+
+### AI-lagret (Fas 8)
+
+Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
+rättskällor och bolagets siffror. Den tredje läser verksamheten —
+anmälningar, omatchade elever, kommande pass, saknade rapporter — och
+**har med flit inget utgående verktyg**: en agent som både läser
+känsliga rader och kan hämta en adress kan bära ut dem, och det räcker
+med en rad injicerad text i en intresseanmälan för att försöket ska
+göras.
+
+**Regeln "ingen AI-väg skriver i affärstabeller" bor i databasen, inte
+i TypeScript.** Rollen `nextrum_ai` har inga tabellrättigheter alls.
+Den kan köra sju funktioner, och dörren `ai_verktyg` — den enda väg
+drift-agenten talar med databasen genom — **ägs av den rollen**.
+Försöker något i dörren skriva i `students` svarar databasen
+`permission denied`. Det första den garantin stoppade var dörrens egen
+kontroll av att eleven fanns; den fick bli `ai_finns()`.
+
+- **AI:n formulerar aldrig en nyckel eller en titel.** Nycklar byggs av
+  kod ur typ och id. Modellens text får bara hamna i `motivering` och
+  `beskrivning`, fält som INTE står i auditloggens vitlistor —
+  auditloggen går inte att rätta.
+- **Förslag, inte åtgärder.** `ai_forslag` bär det AI:n vill göra. En
+  nyckel är ett förslag, för alltid: avvisas ett par kommer just det
+  paret inte tillbaka. `godkann_forslag()` utför, i SQL, med
+  **adminens egen token**, så att `skydda_*`-triggrarna och
+  `logga_andring` fungerar precis som när en människa klickar. En gren
+  per typ, aldrig `update <tabell> set <payload>`.
+- **Databasutdata märks innan modellen ser det.** `somDatabasData()` i
+  `_delad/agent.ts` lindar svaret i ett block med ett slumptal per
+  anrop, så att texten inte kan stänga sitt eget block. Ett verktyg
+  som svarar med `data` i stället för `text` lindas av motorn — att
+  låta varje agent göra det själv vore att lita på att ingen glömmer.
+- **Domänspärren gäller efter varje omdirigering.** `hamta()` följer
+  hoppen för hand och prövar listan vid varje steg; förut kunde en
+  tillåten källa svara 302 till vad som helst.
+- **Läsverktygen lämnar inte ut namn**, e-post, telefonnummer eller
+  `bookings.location` (fältet är i praktiken en hemadress). Elever
+  visas med initialer. Sifferföljder maskeras ur anmälningstexten.
+- Matchningspoängen ligger i `matchningspoang()`. Adminvyn hämtar
+  svaret och skriver meningarna själv — databasen svarar med koder,
+  aldrig med svensk text, så att samma svar kan läsas av en agent utan
+  att den får namn på köpet.
+
+**Provbänken `_prov-admin-*` får aldrig checkas in.** Den laddar de
+riktiga filerna mot en stubbad databas vars `auth` alltid svarar
+"inloggad admin" — alltså hela adminvyn utan inloggning — och
+`.vercelignore` är en nekande lista som inte täcker den. Den står i
+`.gitignore` sedan den en gång följde med en commit.
 
 ### Maskoten har med flit ingen modell
 
