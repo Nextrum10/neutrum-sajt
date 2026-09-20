@@ -331,13 +331,35 @@ const NXAgent = (function () {
         if (steg && steg.length) {
           bitar.push('<ul class="ag-steg">');
           steg.forEach(function (s) {
-            const arg = s.argument && s.argument.varfor ? s.argument.varfor
-                      : s.argument && s.argument.fraga ? s.argument.fraga
-                      : s.argument && s.argument.vag ? s.argument.vag : '';
+            /* Argumenten skrevs förut ut bara om de hette varfor,
+               fraga eller vag — tre namn ur två agenter. Drift-agenten
+               skickar elev_id och dagar, och de raderna stod tomma.
+               Nu visas vad som helst, kort. */
+            var arg = '';
+            if (s.argument && typeof s.argument === 'object') {
+              arg = Object.keys(s.argument).map(function (k) {
+                var v = s.argument[k];
+                if (v === null || v === undefined || v === '') return '';
+                return k + ': ' + String(typeof v === 'object' ? JSON.stringify(v) : v).slice(0, 80);
+              }).filter(Boolean).join(' · ');
+            }
+
+            /* VAD AGENTEN LÄSTE, inte bara vad den bad om.
+               resultat_kort har sparats sedan första versionen men
+               aldrig ritats — man såg att ett verktyg anropades, inte
+               vad det svarade. Hopfällt, för det kan vara långt, och
+               esc():at, för det kan innehålla text som någon skrivit
+               i ett publikt formulär. */
+            var svarKort = s.resultat_kort
+              ? '<details class="ag-steg-svar"><summary>Vad verktyget svarade</summary><pre>'
+                + esc(String(s.resultat_kort).slice(0, 500)) + '</pre></details>'
+              : '';
+
             bitar.push('<li><code>' + esc(s.verktyg) + '</code> '
               + (arg ? esc(arg) : '')
               + (s.kalla ? '<br><span style="color:var(--bl-3);font-size:11px">' + esc(s.kalla) + '</span>' : '')
               + (s.fel ? '<br><span class="ag-steg-fel">' + esc(s.fel) + '</span>' : '')
+              + svarKort
               + '</li>');
           });
           bitar.push('</ul>');

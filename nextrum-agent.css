@@ -413,3 +413,26 @@
   .ag-korning summary{ flex-wrap:wrap; }
   .ag-korning-fraga{ white-space:normal; flex-basis:100%; order:3; }
 }
+
+/* Vad ett verktyg svarade (Fas 8). Hopfällt, för det kan vara femhundra
+   tecken, och i monospace eftersom det ofta är JSON. Texten kan komma
+   från ett publikt formulär, så den bryts hårt i stället för att dra
+   ut raden — och den escapas i JavaScript innan den hamnar här. */
+.ag-steg-svar{ margin-top:6px; }
+.ag-steg-svar summary{
+  cursor:pointer;
+  font-size:11px;
+  color:var(--bl-3);
+}
+.ag-steg-svar pre{
+  margin:6px 0 0;
+  padding:8px 10px;
+  border-radius:var(--r-xs);
+  background:var(--pap);
+  font-family:var(--f-mono);
+  font-size:11px;
+  line-height:1.5;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  color:var(--bl-2);
+}
