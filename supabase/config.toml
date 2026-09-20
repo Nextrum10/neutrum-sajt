@@ -1,0 +1,45 @@
+# ============================================================
+# NEXTRUM — Supabase-konfiguration
+#
+# Den här filen finns för EN inställning: verify_jwt.
+#
+# Fyra av funktionerna anropas utan inloggning och måste därför ha
+# JWT-kravet avstängt i porten. Den inställningen har hittills bara
+# funnits i Supabases webbgränssnitt, alltså ingenstans som går att
+# läsa, granska eller återskapa ur repot. En `supabase functions
+# deploy` från main hade slagit på kravet igen — och de tre
+# notisfunktionerna anropas av databaswebhookar, som inte har någon
+# som läser svaret. Mejlen hade slutat komma, tyst.
+#
+# verify_jwt = false betyder INTE att funktionen är öppen. Alla fyra
+# gör sin egen kontroll i koden, och den är hårdare än portens:
+#
+#   · lead-notis, pass-notis, meddelande-notis
+#     delad hemlighet i en header, hämtad ur notis_konfig. Den ligger
+#     i en tabell och inte i en secret med flit: en secret och en
+#     webhook-header i två olika fönster glider isär, och då svarar
+#     funktionen 401 på varje anmälan emellan.
+#
+#   · fakturering
+#     x-fakturering-nyckel jämförd i konstant tid, ELLER en inloggad
+#     admin vars behörighet läses med anroparens egen token innan
+#     service_role används till något.
+#
+# Alla andra funktioner kräver JWT, vilket är Supabases förval. De
+# står därför inte här: en lista som upprepar förvalet blir en lista
+# som glöms bort när en ny funktion tillkommer.
+# ============================================================
+
+project_id = "ddkfiuvcppalutfulvbi"
+
+[functions.lead-notis]
+verify_jwt = false
+
+[functions.pass-notis]
+verify_jwt = false
+
+[functions.meddelande-notis]
+verify_jwt = false
+
+[functions.fakturering]
+verify_jwt = false

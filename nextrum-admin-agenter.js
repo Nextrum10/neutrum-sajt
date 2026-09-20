@@ -85,19 +85,39 @@ const NXAdminAgenter = (function () {
         for (const namn of ['juridik', 'ekonomi']) {
           try {
             const { data, error } = await supa.functions.invoke(namn, { body: { sjalvtest: true } });
-            if (error || !data) throw error || new Error('Tomt svar');
+
+            /* Samma räddning som nextrum-agent.js gör: invoke ger
+               error på allt som inte är 2xx, men funktionen lägger
+               sin förklaring i svarskroppen. Utan det här står det
+               "non-2xx status code" i rutan, vilket är det enda
+               självtestet aldrig får säga — det är ju till för att
+               tala om VAD som saknas. */
+            let svar = data;
+            if (error && error.context && typeof error.context.json === 'function') {
+              try { svar = await error.context.json(); } catch (e) { /* behåll felet */ }
+            }
+            if (svar && svar.error) throw new Error(svar.error);
+            if (!svar) throw error || new Error('Tomt svar');
             rader.push('<b style="display:block;margin:14px 0 6px;font-size:12px">' + namn + '</b>');
 
             if (namn === 'juridik') {
-              rader.push(prick(data.hamtning_fungerar, 'Når rättskällorna'));
+              rader.push(prick(svar.hamtning_fungerar, 'Når rättskällorna'));
               /* Den här raden är viktigare än den ovanför. Den visar att
                  agenten INTE kan hämta vad som helst från nätet. */
-              rader.push(prick(data.domanspärr_stoppade_example_com, 'Domänspärren stoppar allt annat'));
+              rader.push(prick(svar.domanspärr_stoppade_example_com, 'Domänspärren stoppar allt annat'));
+              /* Vilken adress texten faktiskt kom ifrån. En källa kan
+                 skicka vidare, och sedan Fas 8 följs hoppen för hand
+                 med spärren prövad vid varje steg — då är det den
+                 sista adressen som är källan. */
+              if (svar.hamtad_adress) {
+                rader.push('<span class="xsmall" style="display:block;margin:2px 0 0 22px;color:var(--bl-3)">'
+                  + 'Hämtad från ' + esc(svar.hamtad_adress) + '</span>');
+              }
             } else {
-              rader.push(prick(data.bolagsfakta_ifylld, 'Bolagsfakta ifylld'));
-              rader.push(prick(data.studiehjalpare_form !== 'oklart',
-                'Studiehjälparnas form angiven (' + esc(data.studiehjalpare_form || '?') + ')'));
-              rader.push(prick(data.fortnox === 'kopplat', 'Fortnox kopplat', true));
+              rader.push(prick(svar.bolagsfakta_ifylld, 'Bolagsfakta ifylld'));
+              rader.push(prick(svar.studiehjalpare_form !== 'oklart',
+                'Studiehjälparnas form angiven (' + esc(svar.studiehjalpare_form || '?') + ')'));
+              rader.push(prick(svar.fortnox === 'kopplat', 'Fortnox kopplat', true));
             }
           } catch (fel) {
             rader.push('<b style="display:block;margin:14px 0 6px;font-size:12px">' + namn + '</b>'
