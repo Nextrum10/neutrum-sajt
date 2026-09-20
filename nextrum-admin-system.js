@@ -552,10 +552,179 @@
   if (auditFlik) auditFlik.addEventListener('click', sökAudit);
 
 
+  /* ============================================================
+     DOKUMENT (Fas 9.10)
+
+     Handlingar OM verksamheten: avtal, intyg, försäkringar,
+     bolagspapper. Hinken är privat och policyerna släpper bara in
+     admin.
+
+     TVÅ SAKER SOM INTE ÄR GODTYCKLIGA:
+
+     1. RADEN SKAPAS FÖRST, FILEN SEDAN. Hinkpolicyn kräver att
+        handlingen finns — sökvägen ÄR radens id. Går uppladdningen
+        fel tas raden bort igen, så att listan aldrig visar en
+        handling utan fil.
+
+     2. VID BORTTAGNING: FILEN FÖRST, RADEN SEDAN, OCH SVARET LÄSES.
+        Sökvägen finns bara i raden. Försvinner raden först blir
+        filen omöjlig att hitta och omöjlig att städa — exakt det
+        fel 9.2 rättade i materiallistan.
+     ============================================================ */
+  const DOK_TYP = {
+    avtal: 'Avtal', intyg: 'Intyg', forsakring: 'Försäkring',
+    bolagshandling: 'Bolagshandling', policy: 'Policy', ovrigt: 'Övrigt'
+  };
+
+  function dokFilnamn(h) {
+    if (!h.fil) return null;
+    /* Sökvägen är "<id>/<tidsstämpel>-<filnamn>". Visa bara det sista. */
+    return String(h.fil).split('/').slice(1).join('/').replace(/^\d+-/, '');
+  }
+
+  function ritaDokument() {
+    const host = $('#dok-tabell');
+    if (!host) return;
+    const filter = ($('#dok-filter') || {}).value || '';
+    const alla = S.handlingar || [];
+    const rader = alla.filter(h => !filter || h.typ === filter);
+    const idag = isoFor(new Date());
+
+    $('#dok-antal').textContent = rader.length + ' av ' + alla.length;
+    host.innerHTML = tabell([
+      { namn: 'Sort', rita: h => '<b>' + esc(DOK_TYP[h.typ] || h.typ) + '</b>' },
+      { namn: 'Vad', rita: h => esc(h.titel)
+        + (dokFilnamn(h) ? '<span class="adm-und">' + esc(dokFilnamn(h)) + '</span>' : '') },
+      { namn: 'Gäller', rita: h => h.kopplad_tabell
+        ? esc(S.personer && S.personer[h.kopplad_id]
+              ? namnFör(h.kopplad_id) : String(h.kopplad_id).slice(0, 8))
+        : '<span style="color:var(--bl-3)">—</span>' },
+      { namn: 'Giltig till', rita: h => h.giltig_till
+        ? '<span class="adm-tal">' + esc(kortDatum(h.giltig_till)) + '</span>'
+          + (h.giltig_till < idag ? ' ' + pill('Gått ut', 'ar-ny') : '')
+        : '<span style="color:var(--bl-3)">—</span>' },
+      { namn: 'Uppladdad', rita: h => '<span class="adm-tal">' + esc(kortDatum(h.uppladdad)) + '</span>'
+        + '<span class="adm-und">' + esc(h.uppladdad_av ? namnFör(h.uppladdad_av) : 'okänt') + '</span>' },
+      { namn: '', höger: true, rita: h =>
+        (h.fil ? '<button class="btn btn-ghost btn-sm" data-dok-oppna="' + h.id + '">Öppna</button> ' : '')
+        + '<button class="btn btn-ghost btn-sm" data-dok-bort="' + h.id + '">Ta bort</button>' }
+    ], rader, filter ? 'Ingen handling av den sorten' : 'Inga handlingar än');
+  }
+
+  async function hämtaHandlingar() {
+    const { data, error } = await supa.from('handlingar').select('*')
+      .order('uppladdad', { ascending: false });
+    S.handlingarFel = error ? felText(error) : null;
+    S.handlingar = data || [];
+    ritaDokument();
+  }
+
+  const dokFilter = $('#dok-filter');
+  if (dokFilter) dokFilter.addEventListener('change', ritaDokument);
+
+  const dokFlik = $('#flik-dokument');
+  if (dokFlik) dokFlik.addEventListener('click', hämtaHandlingar);
+
+  const dokSpara = $('#dok-spara');
+  if (dokSpara) dokSpara.addEventListener('click', async () => {
+    const msg = $('#dok-msg');
+    const titel = $('#dok-titel').value.trim();
+    const fil = ($('#dok-fil').files || [])[0];
+    if (!titel) { säg(msg, 'Skriv vad handlingen är.', false); return; }
+    if (!fil) { säg(msg, 'Välj en fil.', false); return; }
+    const filfel = M.granskaFil(fil);
+    if (filfel) { säg(msg, filfel, false); return; }
+
+    await medan(dokSpara, 'Laddar upp…', async () => {
+      /* Raden först: hinkpolicyn kräver att handlingen finns,
+         eftersom sökvägen är radens id. */
+      const ny = await supa.from('handlingar').insert({
+        typ: $('#dok-typ').value,
+        titel: titel,
+        giltig_till: $('#dok-till').value || null,
+        mimetyp: fil.type || null,
+        storlek: fil.size,
+        uppladdad_av: S.user.id
+      }).select('id').single();
+      if (ny.error) { säg(msg, 'Kunde inte spara: ' + felText(ny.error), false); return; }
+
+      const rent = fil.name.replace(/[^\w.\-]+/g, '_').slice(-80);
+      const sökväg = ny.data.id + '/' + Date.now() + '-' + rent;
+      const upp = await supa.storage.from('dokument').upload(sökväg, fil, {
+        contentType: fil.type, upsert: false
+      });
+      if (upp.error) {
+        /* Raden bort igen. En handling utan fil är en rad som lovar
+           något den inte har. */
+        await supa.from('handlingar').delete().eq('id', ny.data.id);
+        säg(msg, 'Filen gick inte upp: ' + upp.error.message + ' Ingenting sparades.', false);
+        return;
+      }
+
+      const klar = await supa.from('handlingar').update({ fil: sökväg }).eq('id', ny.data.id);
+      if (klar.error) {
+        await supa.storage.from('dokument').remove([sökväg]);
+        await supa.from('handlingar').delete().eq('id', ny.data.id);
+        säg(msg, 'Kunde inte koppla filen: ' + felText(klar.error) + ' Ingenting sparades.', false);
+        return;
+      }
+
+      $('#dok-titel').value = '';
+      $('#dok-till').value = '';
+      $('#dok-fil').value = '';
+      säg(msg, 'Handlingen är sparad.', true);
+      await hämtaHandlingar();
+    });
+  });
+
+  document.addEventListener('click', async e => {
+    const öppna = e.target.closest('[data-dok-oppna]');
+    if (öppna) {
+      const h = (S.handlingar || []).find(x => x.id === öppna.dataset.dokOppna);
+      if (!h || !h.fil) return;
+      await medan(öppna, 'Öppnar…', async () => {
+        const url = await M.signera('dokument', h.fil, 3600);
+        if (!url) { alert('Filen gick inte att öppna. Den kan ha tagits bort ur lagringen.'); return; }
+        window.open(url, '_blank', 'noopener');
+      });
+      return;
+    }
+
+    const bort = e.target.closest('[data-dok-bort]');
+    if (bort) {
+      const h = (S.handlingar || []).find(x => x.id === bort.dataset.dokBort);
+      if (!h) return;
+      const ja = await bekräfta({
+        titel: 'Ta bort handlingen?',
+        text: h.titel + '. Både raden och filen försvinner, och det går inte att ångra.',
+        knapp: 'Ta bort'
+      });
+      if (!ja) return;
+      await medan(bort, 'Tar bort…', async () => {
+        /* Filen först, och svaret LÄSES. Sökvägen finns bara i
+           raden: försvinner raden först blir filen omöjlig att
+           hitta och omöjlig att städa. */
+        if (h.fil) {
+          const { error: filfel } = await supa.storage.from('dokument').remove([h.fil]);
+          if (filfel) {
+            alert('Filen kunde inte tas bort ur lagringen: ' + felText(filfel)
+              + '\n\nRaden står kvar, annars hade filen blivit omöjlig att hitta.');
+            return;
+          }
+          M.glömSignerad('dokument', h.fil);
+        }
+        const { error } = await supa.from('handlingar').delete().eq('id', h.id);
+        if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+        await hämtaHandlingar();
+      });
+    }
+  });
+
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
     /* Utåt heter sökningen ritaAudit: den som ritar vyn vill ha en
        färsk logg, inte en gammal lista i minnet. */
-    ritaAdminanvandare, ritaAudit: sökAudit, ritaFel, ritaInstallningar, ritaIntegrationer
+    ritaAdminanvandare, ritaAudit: sökAudit, ritaDokument: hämtaHandlingar,
+    ritaFel, ritaInstallningar, ritaIntegrationer
   });
 })();

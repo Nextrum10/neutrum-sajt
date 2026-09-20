@@ -1280,8 +1280,12 @@ where x in ('kalla', 'medium', 'kampanj', 'annonsvariant', 'sokord', 'hanvisare'
 -- det: förut hämtades 300 rader och räknades i webbläsaren, så
 -- antalet blev antalet träffar BLAND de 300 senaste.
 
-select pg_temp.rakna('9.8 anon söker i auditloggen', null,
-  $q$select count(*) from public.audit_sok()$q$, 0);
+-- anon får inte ens anropa funktionen: execute är återkallat. Därför
+-- prova och inte rakna — svaret är ett fel, inte en tom lista.
+select pg_temp.prova('9.8 anon söker i auditloggen', null,
+  array[$q$select * from public.audit_sok()$q$], 'nekad');
+-- Familjen FÅR anropa den, och får noll rader. Det är policyn som
+-- svarar, inte en gömd knapp.
 select pg_temp.rakna('9.8 familjen söker i auditloggen', '00000000-0000-4000-8000-0000000000f1',
   $q$select count(*) from public.audit_sok()$q$, 0);
 
@@ -1304,8 +1308,12 @@ begin
 
   select count(*), max(a.totalt) into rader, totalt
     from public.audit_sok(null, null, null, null, false, 5) a;
+  -- Fixturerna skapar fakturor, så det FINNS fakturarader. Provet är
+  -- därför att filtret inte släpper igenom något annat, inte att
+  -- listan är tom.
   select count(*) into typrader
-    from public.audit_sok('faktura', null, null, null, false, 50) a;
+    from public.audit_sok('faktura', null, null, null, false, 50) a
+   where a.objekt_typ <> 'faktura';
   reset role;
   perform set_config('request.jwt.claims', null, true);
 
@@ -1313,7 +1321,8 @@ begin
     ('9.8 limit ger en sida', rader = 5, 'rader: ' || rader),
     ('9.8 totalt räknar hela träffmängden, inte sidan', totalt >= 12,
      'totalt: ' || coalesce(totalt::text, 'null')),
-    ('9.8 filtret på sort gäller i databasen', typrader = 0, 'fakturarader: ' || typrader);
+    ('9.8 filtret på sort gäller i databasen', typrader = 0,
+     'rader av fel sort: ' || typrader);
 end $$;
 
 reset role;
@@ -1330,6 +1339,120 @@ select '9.8 objekt_typ är genererad, inte skriven', a.is_generated = 'ALWAYS',
        'is_generated = ' || a.is_generated
 from information_schema.columns a
 where a.table_schema = 'public' and a.table_name = 'audit_logg' and a.column_name = 'objekt_typ';
+
+-- ---------- 9.9 drift-agentens nya verktyg ----------
+-- Analysvyerna har security_invoker, och rollen nextrum_ai har inga
+-- tabellrättigheter. Utan omslag svarar de permission denied, inte
+-- tom lista — och en agent som får "inga avvikelser" när den egentligen
+-- nekades är värre än en som får ett fel.
+
+select set_config('request.jwt.claims', null, true);
+do $$
+declare
+  fel_a  text := 'ingen';
+  fel_b  text := 'ingen';
+  fel_vy text := 'INGEN SPÄRR';
+begin
+  set local role nextrum_ai;
+  begin
+    perform 1 from public.ai_analys(6);
+  exception when others then fel_a := sqlstate;
+  end;
+  begin
+    perform 1 from public.ai_avvikelser();
+  exception when others then fel_b := sqlstate;
+  end;
+  begin
+    perform 1 from public.analys_leads_per_kalla limit 1;
+  exception when others then fel_vy := sqlstate;
+  end;
+  reset role;
+
+  insert into utfall (test, ok, detalj) values
+    ('9.9 rollen nextrum_ai kan köra ai_analys', fel_a = 'ingen', 'fick ' || fel_a),
+    ('9.9 rollen nextrum_ai kan köra ai_avvikelser', fel_b = 'ingen', 'fick ' || fel_b),
+    ('9.9 rollen når inte analysvyn direkt', fel_vy = '42501', 'fick ' || fel_vy);
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- Omslagen lämnar ut en FAST kolumnlista. Provet läser den ur
+-- katalogen, så ett nytt fält måste passera här.
+insert into utfall (test, ok, detalj)
+select '9.9 ai_analys lämnar inga namn- eller textfält', count(*) = 0,
+       coalesce(string_agg(x, ', '), 'inga')
+from (
+  select btrim(split_part(btrim(k), ' ', 1)) as x
+  from unnest(string_to_array(
+         btrim(replace(pg_get_function_result(
+           to_regprocedure('public.ai_analys(integer)')), 'TABLE(', ''), ')'), ',')) k
+) f
+where x ~ '(name|namn|email|epost|kalla|kampanj|medium|sokord|hanvisare|landning|message|meddelande|titel|anteckning)';
+
+insert into utfall (test, ok, detalj)
+select '9.9 ai_avvikelser lämnar inga namn- eller textfält', count(*) = 0,
+       coalesce(string_agg(x, ', '), 'inga')
+from (
+  select btrim(split_part(btrim(k), ' ', 1)) as x
+  from unnest(string_to_array(
+         btrim(replace(pg_get_function_result(
+           to_regprocedure('public.ai_avvikelser()')), 'TABLE(', ''), ')'), ',')) k
+) f
+where x ~ '(name|namn|email|epost|message|meddelande|titel|anteckning)';
+
+insert into utfall (test, ok, detalj)
+select '9.9 AI-omslagen är inte anropbara för inloggade: ' || f,
+       coalesce(not has_function_privilege('authenticated', to_regprocedure(f), 'execute')
+            and not has_function_privilege('anon', to_regprocedure(f), 'execute'), false),
+       case when to_regprocedure(f) is null then 'funktionen finns inte' else 'anon/authenticated execute' end
+from unnest(array['public.ai_analys(integer)', 'public.ai_avvikelser()']) f;
+
+insert into utfall (test, ok, detalj)
+select '9.9 dörren ai_verktyg ägs fortfarande av nextrum_ai',
+       pg_get_userbyid(p.proowner) = 'nextrum_ai',
+       'ägare: ' || pg_get_userbyid(p.proowner)
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' and p.proname = 'ai_verktyg';
+
+-- ---------- 9.10 handlingar och hinken dokument ----------
+-- Hinken är admin ensam. Undervisningsmaterial hör INTE hit: det har
+-- en egen hink vars policyer släpper in familjen, och en provräkning
+-- som hamnar här blir osynlig för dem den gäller.
+
+insert into public.handlingar (id, typ, titel, kopplad_tabell, kopplad_id, uppladdad_av)
+values ('00000000-0000-4000-8000-00000000d0c1', 'avtal', 'Provavtal',
+        'profiles', '00000000-0000-4000-8000-0000000000a1',
+        '00000000-0000-4000-8000-0000000000ad');
+
+select pg_temp.rakna('9.10 admin ser handlingen', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from public.handlingar
+      where id = '00000000-0000-4000-8000-00000000d0c1'$q$, 1);
+select pg_temp.rakna('9.10 familjen ser 0 handlingar', '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from public.handlingar$q$, 0);
+select pg_temp.rakna('9.10 studiehjälparen ser 0 handlingar', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.handlingar$q$, 0);
+select pg_temp.rakna('9.10 anon ser 0 handlingar', null,
+  $q$select count(*) from public.handlingar$q$, 0);
+
+select pg_temp.prova('9.10 familjen skriver en handling', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.handlingar (typ, titel) values ('avtal', 'Fusk')$q$], 'nekad');
+
+-- Sökvägen ÄR handlingens id. En fil utan rad är en fil ingen hittar
+-- och ingen kan städa — samma fel som 9.2 rättade i materiallistan.
+select pg_temp.prova('9.10 admin lägger en fil utan handling', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into storage.objects (bucket_id, name, owner)
+           values ('dokument', '00000000-0000-4000-8000-00000000dead/los.pdf',
+                   '00000000-0000-4000-8000-0000000000ad')$q$], 'nekad');
+
+select pg_temp.prova('9.10 admin lägger en fil under handlingens id', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into storage.objects (bucket_id, name, owner)
+           values ('dokument', '00000000-0000-4000-8000-00000000d0c1/avtal.pdf',
+                   '00000000-0000-4000-8000-0000000000ad')$q$], 'ok');
+
+insert into utfall (test, ok, detalj)
+select '9.10 hinken dokument är privat', not b.public, 'public = ' || b.public
+from storage.buckets b where b.id = 'dokument';
 
 -- Auditloggens vitlistor får bara nämna kolumner som finns. En
 -- felstavad kolumn i tg_argv ger inget fel — den loggar bara
@@ -1402,7 +1525,8 @@ from unnest(array[
   'public.matchningsforslag_rader(uuid)', 'public.ai_finns(text, uuid)',
   'public.frys_forslaget()', 'public.ai_taket_racker()',
   'public.matchningspoang(text[], text, text[], text[], integer, integer, jsonb)',
-  'public.stampla_matchningen()', 'public.stampla_avbokningen()'
+  'public.stampla_matchningen()', 'public.stampla_avbokningen()',
+  'public.ai_analys(integer)', 'public.ai_avvikelser()'
 ]) f;
 
 insert into utfall (test, ok, detalj)

@@ -1422,6 +1422,8 @@
               <span class="vy-flik-mark" id="flik-fel-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="installningar"
                     id="flik-installningar" aria-controls="panel-installningar">Inställningar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="dokument"
+                    id="flik-dokument" aria-controls="panel-dokument">Dokument</button>
             <button class="vy-flik" type="button" role="tab" data-flik="audit"
                     id="flik-audit" aria-controls="panel-audit">Auditlogg</button>
             <button class="vy-flik" type="button" role="tab" data-flik="automationer"
@@ -1532,6 +1534,60 @@
                kopplade rapporter och varje åtkomst till ett
                personnummer. Loggen innehåller bara id, status, belopp
                och datum — namnen slås upp här, när den visas. -->
+          <!-- ============ DOKUMENT (Fas 9.10) ============
+               Handlingar OM verksamheten: avtal, intyg, försäkringar,
+               bolagspapper. Hinken är privat och policyerna släpper
+               bara in admin — varken familjen eller studiehjälparen.
+
+               Undervisningsmaterial hör INTE hit. Det har en egen hink
+               vars policyer släpper in familjen och studiehjälparen,
+               och en provräkning som hamnar här blir osynlig för dem
+               den gäller.
+
+               Sökvägen är handlingens id, inte ett filnamn: ett filnamn
+               kan heta "Avtal Alva Berg 2026.pdf", och sökvägen är det
+               enda i en hink som syns innan man öppnat filen. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="dokument"
+               id="panel-dokument" aria-labelledby="flik-dokument" hidden>
+            <div class="dbox">
+              <h5>Ny handling</h5>
+              <div class="adm-verktyg">
+                <select class="sel" id="dok-typ" aria-label="Sorts handling">
+                  <option value="avtal">Avtal</option>
+                  <option value="intyg">Intyg</option>
+                  <option value="forsakring">Försäkring</option>
+                  <option value="bolagshandling">Bolagshandling</option>
+                  <option value="policy">Policy</option>
+                  <option value="ovrigt">Övrigt</option>
+                </select>
+                <input class="inp" type="text" id="dok-titel" placeholder="Vad det är"
+                       aria-label="Titel" maxlength="140">
+                <input class="inp" type="date" id="dok-till" aria-label="Giltig till och med">
+                <input class="inp" type="file" id="dok-fil" aria-label="Fil">
+                <button class="btn btn-sm" type="button" id="dok-spara">Lägg till</button>
+              </div>
+              <p class="small" id="dok-msg" hidden></p>
+              <p class="graf-not">Giltig till är valfritt. Fyll i det på sådant som går ut —
+                en försäkring, ett intyg — så syns det i listan när datumet närmar sig.</p>
+            </div>
+
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+              <div class="adm-verktyg">
+                <select class="sel" id="dok-filter" aria-label="Visa sort">
+                  <option value="">Alla sorter</option>
+                  <option value="avtal">Avtal</option>
+                  <option value="intyg">Intyg</option>
+                  <option value="forsakring">Försäkringar</option>
+                  <option value="bolagshandling">Bolagshandlingar</option>
+                  <option value="policy">Policyer</option>
+                  <option value="ovrigt">Övrigt</option>
+                </select>
+                <span class="small" id="dok-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="dok-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
           <div class="vy-flik-panel" role="tabpanel" data-flik="audit"
                id="panel-audit" aria-labelledby="flik-audit" hidden>
             <!-- Vem, vad och när — filtrerat och RÄKNAT i databasen

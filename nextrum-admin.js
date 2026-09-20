@@ -72,6 +72,7 @@
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
   const ritaInstallningar = (...a) => NXAdmin.rita.ritaInstallningar(...a);
   const ritaAudit = (...a) => NXAdmin.rita.ritaAudit(...a);
+  const ritaDokument = (...a) => NXAdmin.rita.ritaDokument(...a);
   const ritaAutomationer = (...a) => NXAdmin.rita.ritaAutomationer(...a);
   const ritaAI = (...a) => NXAdmin.rita.ritaAI(...a);
   const ritaUppdrag = (...a) => NXAdmin.rita.ritaUppdrag(...a);
@@ -906,6 +907,7 @@
       ritaRabattkoder();
       ritaFel();
       ritaInstallningar();
+      ritaDokument();
       ritaAudit();
       ritaUppdrag();
       ritaUppgifter();

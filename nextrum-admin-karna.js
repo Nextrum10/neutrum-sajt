@@ -46,7 +46,10 @@ const NXAdmin = (function () {
     /* Fas 9: analysvyerna. Tomma tills hämtaAnalys() kört, så att
        statistiken ritar "hämtar" i stället för nollor. */
     analys: { kallor: [], konvertering: [], aktiva: [], ekonomi: [], avbokningar: [] },
-    analysFel: null
+    analysFel: null,
+    /* Fas 9.10: handlingar om verksamheten. Hämtas först när fliken
+       öppnas — de läses sällan och är inte en del av arbetskön. */
+    handlingar: [], handlingarFel: null
   };
 
   function visa(id) {

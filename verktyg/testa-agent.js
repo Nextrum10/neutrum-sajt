@@ -114,5 +114,55 @@ ok('äkta länkas, påhittad ritas överstruken',
 
 ok('utan källor ritas ingenting alls', NXAgent.ritaKallor([], []), '');
 
+/* ============================================================
+   DRIFT-AGENTENS VERKTYGSLISTA (Fas 9.9)
+
+   Filen läses som TEXT, inte importeras: supabase/functions/drift
+   startar en server på toppnivå, och ett test ska inte göra det.
+
+   De tre raderna här nere vaktar tre beslut som är lätta att ångra
+   av misstag, ett i taget, med goda skäl varje gång:
+
+     1. Drift-agenten har INGET utgående verktyg. En agent som både
+        läser känsliga rader och kan hämta en adress kan bära ut
+        dem, och det räcker med en rad injicerad text i en
+        intresseanmälan för att försöket ska göras.
+     2. Verktygslistan är en fast mängd. Ett nytt verktyg ska kräva
+        att någon ändrar det här testet — alltså tänker efter en
+        gång till om vad det lämnar ut.
+     3. Steget är takat. En agent som loopar fritt mot betalda
+        API-anrop är en räkning som växer medan ingen tittar.
+   ============================================================ */
+
+const driftKod = fs.readFileSync(
+  path.join(rot, 'supabase', 'functions', 'drift', 'index.ts'), 'utf8');
+
+const driftVerktyg = (driftKod.match(/^\s{4}name: '([a-z_]+)',$/gm) || [])
+  .map(r => r.replace(/.*'([a-z_]+)'.*/, '$1')).sort();
+
+ok('drift har exakt de verktyg den ska ha',
+  driftVerktyg.join(' '),
+  ['analys', 'avvikelser', 'flagga_problem', 'foresla_matchning', 'kommande_pass',
+   'matchningsforslag', 'nya_leads', 'omatchade_elever', 'saknade_rapporter'].sort().join(' '));
+
+ok('drift har inget utgående verktyg',
+  driftVerktyg.filter(n => /hamta|hämta|sok|sök|webb|url|fetch/.test(n)).length, 0);
+
+ok('drift importerar inte hamta ur den delade agenten',
+  /\bhamta\b/.test(driftKod.split('const SYSTEM')[0]), false);
+
+ok('drifts stegtak är satt och rimligt',
+  Number((driftKod.match(/MAX_STEG_DRIFT = (\d+)/) || [])[1]),
+  n => Number.isInteger(n) && n > 0 && n <= 20);
+
+/* Beskrivningarna är det modellen läser. Lovar en av dem namn,
+   adress eller e-post är det antingen en lögn eller ett läckage —
+   och båda är värda att stoppa i CI. */
+ok('ingen verktygsbeskrivning lovar namn eller kontaktuppgifter',
+  (driftKod.match(/description: [^]*?(?=\n\s{4}input_schema)/g) || [])
+    .filter(d => /(namnen på|ger namn|med namn|lämnar ut namn|e-postadress|telefonnummer till)/i.test(d))
+    .length,
+  0);
+
 console.log(fel === 0 ? '\nAlla tester gröna.' : '\n' + fel + ' test misslyckades.');
 process.exit(fel === 0 ? 0 : 1);

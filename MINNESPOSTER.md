@@ -199,6 +199,21 @@ Fyra regler bär agenterna `juridik` och `ekonomi`:
 4. `ekonomi` skriver aldrig. Alla verktyg är läsande. Det är designen,
    inte försiktighet i väntan på bättre modeller.
 
+**Den tredje agenten, `drift`, har med flit inget utgående verktyg.** En
+agent som både läser känsliga rader och kan hämta en adress kan bära ut
+dem, och det räcker med en rad injicerad text i en intresseanmälan för
+att försöket ska göras. `verktyg/testa-agent.js` vaktar det i CI:
+verktygslistan är en fast mängd, inget verktyg hämtar något utifrån,
+och stegtaket måste vara satt.
+
+**Regeln "ingen AI-väg skriver i affärstabeller" bor i databasen.**
+Rollen `nextrum_ai` har inga tabellrättigheter alls, och dörren
+`ai_verktyg` ägs av den rollen. Följden: en invoker-vy går inte att
+läsa därifrån — svaret blir `permission denied`, inte en tom lista — så
+analysvyerna når agenten bara genom omslagen `ai_analys()` och
+`ai_avvikelser()`, som lämnar ut en fast kolumnlista utan namn och utan
+fritext.
+
 `material-forslag` skriver ut uppgifterna i klartext, aldrig som länk. En
 modell som ombeds hitta en länk hittar på en länk.
 

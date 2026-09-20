@@ -48,12 +48,20 @@ import {
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
-// Taket räknar verktygsanrop. Fem läsningar, ett par förslag och ett
-// svar — tio räcker, och en körning som behöver fler har oftast
+// Taket räknar verktygsanrop. Sex läsningar, ett par förslag och ett
+// svar — fjorton räcker, och en körning som behöver fler har oftast
 // fastnat i stället för att arbeta.
-const MAX_STEG_DRIFT = 10;
+//
+// Höjt från tio i Fas 9.9, när analys och avvikelser kom till. Höjt
+// med exakt så mycket som de nya verktygen kostar, inte "med marginal":
+// taket finns för att en agent som loopar mot betalda API-anrop är en
+// räkning som växer medan ingen tittar.
+const MAX_STEG_DRIFT = 14;
 
-const LASVERKTYG = ['nya_leads', 'omatchade_elever', 'kommande_pass', 'saknade_rapporter'];
+const LASVERKTYG = [
+  'nya_leads', 'omatchade_elever', 'kommande_pass', 'saknade_rapporter',
+  'analys', 'avvikelser',
+];
 
 const VERKTYG = [
   {
@@ -88,6 +96,28 @@ const VERKTYG = [
       type: 'object',
       properties: { dagar: { type: 'integer', description: 'Hur många dagar bakåt. Förval 45.' } },
     },
+  },
+  {
+    name: 'analys',
+    description: 'Verksamheten i tal, en rad per månad: genomförda pass, minuter, aktiva '
+      + 'elever och studiehjälpare, anmälningar, hur många som blev kund och fick sitt '
+      + 'första pass, fakturerat, betalt, utbetalt och antal avbokningar. Bara tal och '
+      + 'datum. Ett genomfört pass betyder ett pass MED rapport. ej_sparbara är '
+      + 'anmälningar som är märkta matchade men saknar koppling till ett konto — är den '
+      + 'hög är blev_kund och fick_forsta_passet för låga, och det ska du skriva ut.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        manader: { type: 'integer', description: 'Hur många månader bakåt. Förval 6.' },
+      },
+    },
+  },
+  {
+    name: 'avvikelser',
+    description: 'Det som inte går ihop i fakturor och utbetalningar: typ, vilken tabell '
+      + 'och vilket id det gäller, datum och belopp i ören. Inga namn — slå aldrig ihop '
+      + 'en avvikelse med en person, skriv id:t.',
+    input_schema: { type: 'object', properties: {} },
   },
   {
     name: 'matchningsforslag',
@@ -172,6 +202,13 @@ när du kan skriva varför i en mening som en människa kan pröva.
 REGEL 5 — SÄG NÄR DET INTE GÅR
 Är listan tom, säg det. Saknas uppgifter för att avgöra något, säg vilka. Hitta inte
 på ett läge som inte syns i datan.
+
+REGEL 6 — EN LUCKA ÄR INTE EN NOLLA
+Siffrorna från analys bär sina egna luckor. ej_sparbara räknar anmälningar som inte
+går att följa vidare, och avbokningar räknar bara dem som har en tidpunkt sparad.
+Är en lucka stor är siffran bredvid den för låg — skriv det, i stället för att läsa
+ett tapp där det bara saknas mätning. Samma sak åt andra hållet: en månad med noll
+fakturor betyder inte noll arbete, det kan betyda att månadskörningen inte är gjord.
 
 SVARETS FORM, på svenska:
 · Kort läge först: vad som är viktigast just nu.

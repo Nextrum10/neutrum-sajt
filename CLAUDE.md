@@ -171,13 +171,37 @@ Tabeller: `profiles`, `students`, `tutor_profiles`, `tutor_availability`,
 `integrationer`, `fortnox_token`, `notis_konfig`, `klientfel`,
 `agent_korningar`, `agent_steg`, `admin_noteringar`, `foretagsfakta`,
 och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
-`kund_skatteuppgifter`.
+`kund_skatteuppgifter`. Fas 8–9 la till `ai_forslag`, `ai_konfig` och
+`handlingar`.
 
 **Auditloggen (Fas 6) går inte att ändra.** `audit_logg` skrivs av
 triggern `logga_andring`, som bara loggar VITLISTADE kolumner — aldrig
 namn, adresser, meddelandetexter eller fritext om barn. Update, delete
 och truncate är blockerade, också för admin. Lägger du en trigger på en
 ny tabell: ta med tillstånd och kopplingar, inte innehåll.
+
+Sedan Fas 9.3 täcker den hela passets liv (skapat, status, närvaro,
+avbokning), rapportens födelse, AI-taket, vem som tog hand om ett
+kontaktmeddelande, att ett klientfel städats bort och att bolagsfakta
+ändrats. `materials` och `admin_noteringar` har MED FLIT ingen trigger:
+ett filnamn heter i praktiken "Provräkning Alva v42.pdf".
+`kund_skatteuppgifter` har ingen heller — funktionerna skriver redan
+sina egna rader, och en trigger hade dubbelloggat.
+
+**Sökningen i loggen går genom `audit_sok()`** (Fas 9.8), som filtrerar
+OCH räknar i databasen. Totalen kommer ur `count(*) over ()` på den
+filtrerade mängden, alltså före `limit`. Förut hämtades 300 rader och
+filtrerades i webbläsaren — det fungerar medan loggen är tom och
+slutar fungera tyst vid rad 301. Funktionen är SECURITY INVOKER: den
+är ingen väg runt policyn.
+
+**AI-märkningen i loggen läses inte ur `aktor_typ`.** Drift-agenten
+talar med databasen genom adminens egen token, så `auth.uid()` ÄR
+adminen och `aktor_typ` blir `admin` — det är med flit, för det är så
+`skydda_*`-triggrarna fortsätter gälla. En rad märks i stället genom
+att den sammanfaller med ett utfört `ai_forslag` på samma objekt:
+`godkann_forslag` sätter `utford = now()`, och auditraden får samma
+`now()` i samma transaktion.
 
 **Uppgifter som maskiner skapar går genom `skapa_uppgift()`** (Fas 7),
 som kräver en nyckel och vägrar skapa en till när det redan finns en
@@ -187,6 +211,25 @@ egen policy. Kontrollerna (`kontroll_saknade_rapporter`,
 `uppfoljning_leads_och_ansokningar`) SKAPAR bara uppgifter — ingen av
 dem skickar något, och ingen av dem är schemalagd. `kor_kontrollerna()`
 kör alla fyra från fliken System → Automationer.
+
+**Analysvyerna (Fas 9.6) bär tre regler.** `analys_leads_per_kalla`,
+`analys_konvertering`, `analys_aktiva`, `analys_ekonomi` och
+`analys_avbokningar` är alla `security_invoker=true`.
+
+1. **"Genomfört pass" betyder `passunderlag.har_rapport`**, aldrig
+   `status='completed'`. Ordlistan säger att passet är genomfört först
+   när rapporten finns, och tre av fem completed-pass i driften saknar
+   rapport. Räknas de med blir varje siffra om verksamhet, ersättning
+   och beläggning för hög.
+2. **Varje rad bär `underlag_rader`** — hur många rader ur
+   grundtabellen just den raden räknats fram ur, så att talet går att
+   stämma av mot en rå fråga.
+3. **Luckor redovisas, de fylls inte.** Anmälningar utan `kalla` står
+   som okända (inte "direkt"), avbokningar utan `avbokad_at` hamnar på
+   en rad med `manad = null` (inte på passets månad), och
+   konverteringar utan `leads.kund_id` räknas i `ej_sparbara`. Inget av
+   det bakfylldes: en gissad siffra räknas med i medelvärdet utan att
+   någon ser att den är gissad.
 
 ---
 
@@ -219,6 +262,20 @@ att visa **rätt sida**, inte för att skydda data.
   skriva fel belopp. Beloppen sätts av `fakturering` med `service_role`.
 - **`integrationer` har ingen skrivpolicy alls.** Adminvyn rapporterar
   status, den kopplar inte.
+- **Hinkarna är privata, och sökvägen är ett uuid — aldrig ett namn.**
+  `material` har elevens id som mapp, `dokument` (Fas 9.10) har
+  handlingens. Ett filnamn heter i praktiken "Avtal Alva Berg 2026.pdf",
+  och sökvägen är det enda i en hink som syns innan man öppnat filen.
+  `mapp_uuid()` plockar ut den, och policyerna jämför den mot en rad.
+  Fas 9.1 rättade att familjegrenen i materialpolicyn jämförde elevens
+  NAMN med ett uuid, eftersom `storage.objects.name` skuggades av
+  tabellaliaset — familjen hade alltså aldrig kunnat se sitt barns
+  material, och en policy som nekar för mycket ser ut som en tom lista,
+  inte som ett fel.
+- **Tar du bort en fil: filen först, raden sedan, och LÄS SVARET.**
+  Sökvägen finns bara i raden. Försvinner raden först blir filen omöjlig
+  att hitta och omöjlig att städa. Det stod som en kommentar i
+  adminvyn långt innan koden faktiskt gjorde det (Fas 9.2).
 - **Notishemligheten ligger i `notis_konfig`, inte i en secret.** En
   secret och en webhook-header i två olika fönster glider isär, och då
   svarar funktionen 401 på varje anmälan emellan — de mejlen kommer
@@ -253,7 +310,7 @@ tillbaka en kopia.**
 | `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
 | `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
-| `drift` | Tredje agenten (Fas 8). Läser verksamheten, föreslår. Inget utgående verktyg | Adminvyn |
+| `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 
 **Två funktioner i drift finns inte i repot:** `notis-ko` och
 `notis-avanmal` (båda ACTIVE, `verify_jwt` av). Deras kopia av
@@ -339,6 +396,16 @@ kontroll av att eleven fanns; den fick bli `ai_finns()`.
   svaret och skriver meningarna själv — databasen svarar med koder,
   aldrig med svensk text, så att samma svar kan läsas av en agent utan
   att den får namn på köpet.
+- **Analysvyerna når agenten bara genom omslag.** `ai_analys()` och
+  `ai_avvikelser()` (Fas 9.9) är SECURITY DEFINER och ägs av postgres,
+  eftersom `nextrum_ai` inte kan läsa en invoker-vy: rollen har inga
+  tabellrättigheter, så svaret hade blivit `permission denied`, inte en
+  tom lista. Omslagen lämnar ut en FAST kolumnlista, aldrig `select *`.
+  Källfälten (`kalla`, `kampanj`, `sokord` …) står med flit inte i den:
+  de skrivs av en anonym besökare i adressraden, och en modellprompt är
+  fel ställe för text en främling formulerat.
+- `verktyg/testa-agent.js` vaktar drift-agentens verktygslista i CI:
+  exakt nio verktyg, inget utgående, och ett stegtak som är satt.
 
 **Provbänken `_prov-admin-*` får aldrig checkas in.** Den laddar de
 riktiga filerna mot en stubbad databas vars `auth` alltid svarar
