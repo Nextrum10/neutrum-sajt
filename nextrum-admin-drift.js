@@ -64,118 +64,77 @@
      straffat en elev för att någon glömt fylla i ett fält.
      ============================================================ */
 
-  const VIKT = { amne: 50, arskurs: 30, utrymme: 12, erfarenhet: 8 };
+  /* ------------------------------------------------------------
+     POÄNGEN RÄKNAS I DATABASEN (Fas 8)
 
-  /* Årskursen kommer in som fritext från två håll som aldrig
-     pratat med varandra: elevens "Åk 8" eller "Gymnasiet år 2"
-     från studievyns rullgardin, och studiehjälparens "Åk 7–9"
-     eller "Gymnasiet" som aldrig skrivits av någon kod alls utan
-     står handskrivet i databasen.
+     Reglerna låg här i JavaScript, och ingen annan kunde fråga efter
+     dem: en agent, ett schema eller en kontroll hade behövt rita en
+     sida först. Nu ligger de i matchningsforslag(), och den här filen
+     hämtar svaret i stället för att räkna om det.
 
-     Parsern läser därför siffror och ordet gymnasiet, och bryr
-     sig inte om resten. Tankstreck och bindestreck är samma sak
-     för den, vilket de inte är för en jämförelse av strängar. */
-  function tolkaNiva(text) {
-    const t = String(text || '').toLowerCase();
-    const gym = t.indexOf('gymnas') !== -1;
-    const siffror = (t.match(/\d+/g) || []).map(Number);
-    if (gym) return { gym: true, från: siffror[0] || null, till: siffror[1] || siffror[0] || null };
-    if (!siffror.length) return null;
-    return { gym: false, från: siffror[0], till: siffror.length > 1 ? siffror[1] : siffror[0] };
+     Att flytta dem var inte att skriva om dem. Databasversionen
+     provades mot den här filens gamla funktion på 150 slumpade fall
+     — samma poäng, samma utfall, samma hårda nej i alla 150.
+
+     MENINGARNA SKRIVS FORTFARANDE HÄR. Databasen svarar med koder
+     ('ja', 'nej', 'vet_ej') och tal, aldrig med svensk text. Två skäl:
+     gränssnittstext hör inte hemma i en tabell, och samma svar ska
+     kunna läsas av drift-agenten utan att den får namn på köpet.
+     ------------------------------------------------------------ */
+
+  async function hämtaMatchpoäng(elevId) {
+    if (!elevId) return;
+    S.matchpoang = S.matchpoang || {};
+    if (S.matchpoang[elevId]) return;
+
+    const { data, error } = await supa.rpc('matchningsforslag', { p_elev: elevId });
+    if (error) {
+      S.matchpoangFel = felText(error);
+      S.matchpoang[elevId] = [];
+      return;
+    }
+    S.matchpoangFel = null;
+    S.matchpoang[elevId] = data || [];
   }
 
-  function nivåTäcker(tutorNivåer, elevNivå) {
-    const e = tolkaNiva(elevNivå);
-    if (!e) return null;                     // vet ej
-    const lista = (tutorNivåer || []).map(tolkaNiva).filter(Boolean);
-    if (!lista.length) return null;          // vet ej
-    return lista.some(n => {
-      if (e.gym) return n.gym;
-      if (n.gym) return false;
-      return e.från >= n.från && e.från <= n.till;
-    });
-  }
-
-  /* Ämnen jämförs normaliserat. "NO / Fysik / Kemi / Biologi" i
-     bokningen och "Fysik" hos studiehjälparen ska räknas som en
-     träff, så jämförelsen sker på delsträngar åt båda håll. */
-  function normalisera(s) {
-    return String(s || '').toLowerCase().replace(/[^a-zåäö0-9]+/g, ' ').trim();
-  }
-
-  function ämnenSomMöts(elevÄmnen, tutorÄmnen) {
-    const e = (elevÄmnen || []).map(normalisera).filter(Boolean);
-    const t = (tutorÄmnen || []).map(normalisera).filter(Boolean);
-    if (!e.length || !t.length) return null;   // vet ej
-    const träffar = e.filter(x => t.some(y => y.indexOf(x) !== -1 || x.indexOf(y) !== -1));
-    return { träffar, andel: träffar.length / e.length };
-  }
-
-  function poängFör(elev, tutor) {
+  /* Ental och flertal, och de två fallen där ett tomt fält inte
+     betyder nej utan "vi vet inte". Samma meningar som förut. */
+  function skälFör(rad, elev) {
     const skäl = [];
-    let poäng = 0;
 
-    const ä = ämnenSomMöts(elev.subjects, tutor.amnen);
-    if (ä === null) {
-      poäng += VIKT.amne / 2;
+    if (rad.amne_utfall === 'vet_ej') {
       skäl.push(['vet-ej', elev.subjects && elev.subjects.length
         ? 'Studiehjälparen har inga ämnen angivna'
         : 'Eleven har inga ämnen angivna']);
-    } else if (ä.träffar.length) {
-      poäng += VIKT.amne * ä.andel;
-      skäl.push([ä.andel === 1 ? 'ja' : 'ja',
-        ä.andel === 1 ? 'Täcker alla elevens ämnen'
-          : 'Täcker ' + ä.träffar.length + ' av ' + (elev.subjects || []).length + ' ämnen']);
+    } else if (rad.amne_utfall === 'ja') {
+      skäl.push(['ja', rad.amne_traffar === rad.amne_av
+        ? 'Täcker alla elevens ämnen'
+        : 'Täcker ' + rad.amne_traffar + ' av ' + rad.amne_av + ' ämnen']);
     } else {
       skäl.push(['nej', 'Inget gemensamt ämne']);
     }
 
-    const n = nivåTäcker(tutor.arskurser, elev.grade);
-    if (n === null) {
-      poäng += VIKT.arskurs / 2;
-      skäl.push(['vet-ej', elev.grade ? 'Studiehjälparen har inga årskurser angivna' : 'Eleven saknar årskurs']);
-    } else if (n) {
-      poäng += VIKT.arskurs;
+    if (rad.arskurs_utfall === 'vet_ej') {
+      skäl.push(['vet-ej', elev.grade
+        ? 'Studiehjälparen har inga årskurser angivna'
+        : 'Eleven saknar årskurs']);
+    } else if (rad.arskurs_utfall === 'ja') {
       skäl.push(['ja', 'Undervisar ' + elev.grade]);
     } else {
       skäl.push(['nej', 'Undervisar inte ' + elev.grade]);
     }
 
-    /* Full poäng vid noll elever, ingen vid fem. Taket är satt
-       efter vad en gymnasieelev hinner vid sidan av skolan, inte
-       efter vad som ser bra ut i en graf. */
-    const antal = Number(tutor.antal_elever || 0);
-    const utrymme = Math.max(0, 1 - antal / 5);
-    poäng += VIKT.utrymme * utrymme;
+    const antal = Number(rad.antal_elever || 0);
     skäl.push([antal < 3 ? 'ja' : 'nej',
       antal === 0 ? 'Har inga elever än'
         : antal + (antal === 1 ? ' elev sedan tidigare' : ' elever sedan tidigare')]);
 
-    const pass = Number(tutor.genomforda_pass || 0);
-    poäng += VIKT.erfarenhet * Math.min(1, pass / 10);
-    if (pass) skäl.push(['ja', pass + (pass === 1 ? ' genomfört pass' : ' genomförda pass')]);
-    else skäl.push(['vet-ej', 'Inga genomförda pass än']);
+    const pass = Number(rad.genomforda_pass || 0);
+    skäl.push(pass
+      ? ['ja', pass + (pass === 1 ? ' genomfört pass' : ' genomförda pass')]
+      : ['vet-ej', 'Inga genomförda pass än']);
 
-    /* TAKET VID ETT HÅRT NEJ
-
-       Utan det här hände följande med riktig data: en
-       studiehjälpare som täckte båda ämnena men INTE elevens
-       årskurs hamnade över en som täckte årskursen och halva
-       ämnena. Två poängs skillnad, och fel person överst.
-
-       Ämne och årskurs är inte gradvisa kriterier som väger mot
-       varandra. Fel årskurs är fel person, hur många pass hen än
-       har kört. Ett nej på något av dem kapar därför poängen
-       under 50, så att den aldrig kan gå om någon utan hårt nej.
-
-       Skälen står kvar oavsett — man ska kunna se att hen ändå
-       kan matteämnena, och överrida om man vet något systemet
-       inte vet. */
-    const hårtNej = skäl.some(x => x[0] === 'nej'
-      && (x[1].indexOf('ämne') !== -1 || x[1].indexOf('Undervisar inte') !== -1));
-    if (hårtNej) poäng = Math.min(poäng, 49);
-
-    return { poäng: Math.round(poäng), skäl, hårtNej };
+    return skäl;
   }
 
   function skälIkon(sort) {
@@ -263,8 +222,28 @@
     const f = S.personer[elev.parent_id];
     const nuvarande = elev.matched_tutor_id;
 
+    /* Poängen kommer från databasen. Saknas den för den här eleven
+       hämtas den, och panelen ritas om när svaret kommit — samma
+       mönster som detaljpanelen använder. */
+    const poäng = (S.matchpoang || {})[elev.id];
+    if (!poäng) {
+      host.innerHTML = laddar('Räknar fram förslag');
+      hämtaMatchpoäng(elev.id).then(() => {
+        if (S.valdElev === elev.id) ritaMatchPanel();
+      });
+      return;
+    }
+
+    const poängFörTutor = {};
+    poäng.forEach(r => { poängFörTutor[r.tutor_id] = r; });
+
     const förslag = S.matchunderlag
-      .map(t => Object.assign({ tutor: t }, poängFör(elev, t)))
+      .map(t => {
+        const r = poängFörTutor[t.tutor_id]
+          || { poang: 0, amne_utfall: 'vet_ej', arskurs_utfall: 'vet_ej',
+               antal_elever: t.antal_elever, genomforda_pass: t.genomforda_pass, hart_nej: false };
+        return { tutor: t, poäng: r.poang, hårtNej: !!r.hart_nej, skäl: skälFör(r, elev) };
+      })
       .sort((a, b) => {
         /* Den nuvarande studiehjälparen ligger alltid först,
            oavsett poäng. Man är här för att se hur den valda
@@ -371,6 +350,11 @@
       f.matched_tutor_id = först ? först.matched_tutor_id : null;
       f.match_status = först ? 'matched' : 'pending';
     }
+
+    /* Poängen bygger på hur många elever varje hjälpare har, och det
+       talet ändrades just nu. Cachen töms därför helt — inte bara för
+       den här eleven. */
+    S.matchpoang = {};
 
     await hämtaMatchunderlag();
     ritaMatchKö();

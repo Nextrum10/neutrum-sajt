@@ -275,6 +275,9 @@ const NXAdmin = (function () {
     const { data, error } = await supa.from('matchningsunderlag').select('*');
     S.matchunderlagFel = error ? felText(error) : null;
     S.matchunderlag = data || [];
+    /* Poängen per elev hämtas var för sig ur databasen (Fas 8) och
+       cachas. Ändras underlaget är den cachen gammal. */
+    S.matchpoang = {};
   }
 
   /* ============================================================
