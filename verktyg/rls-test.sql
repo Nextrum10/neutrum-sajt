@@ -979,24 +979,39 @@ begin
     ('8.5 rollen nextrum_ai kan inte skriva förslag direkt', forslag = '42501', 'fick ' || forslag);
 end $$;
 
--- Det AI:n föreslog ska vara det admin godkänner.
-insert into public.ai_forslag (typ, nyckel, payload, motivering)
-values ('matchning', 'prov:frys:8',
-        jsonb_build_object('elev_id', '00000000-0000-4000-8000-0000000005a1',
-                           'studiehjalpare_id', '00000000-0000-4000-8000-0000000000a1'),
-        'Ursprunglig motivering');
-update public.ai_forslag
-   set typ = 'lead_status',
-       payload = '{"lead_id":"00000000-0000-4000-8000-00000000000b","status":"matched"}'::jsonb,
-       motivering = 'Utbytt',
-       nyckel = 'prov:frys:8b'
- where nyckel = 'prov:frys:8';
+-- Det AI:n föreslog ska vara det admin godkänner. Frysningen KASTAR
+-- sedan 8.8 i stället för att rätta tyst: ett skydd som inte syns är
+-- ett skydd nästa läsare inte vet om. Försöket ligger därför i ett
+-- eget block, annars faller hela körningen på just det som ska hända.
+do $$
+declare fel text := 'ingen';
+begin
+  insert into public.ai_forslag (typ, nyckel, payload, motivering)
+  values ('matchning', 'prov:frys:8',
+          jsonb_build_object('elev_id', '00000000-0000-4000-8000-0000000005a1',
+                             'studiehjalpare_id', '00000000-0000-4000-8000-0000000000a1'),
+          'Ursprunglig motivering');
 
-insert into utfall (test, ok, detalj)
-select '8.2 förslaget går inte att skriva om efter att det skapats',
-       count(*) = 1, 'oförändrade rader: ' || count(*)
-from public.ai_forslag
-where nyckel = 'prov:frys:8' and typ = 'matchning' and motivering = 'Ursprunglig motivering';
+  begin
+    update public.ai_forslag
+       set typ = 'lead_status',
+           payload = '{"lead_id":"00000000-0000-4000-8000-00000000000b","status":"matched"}'::jsonb,
+           motivering = 'Utbytt',
+           nyckel = 'prov:frys:8b'
+     where nyckel = 'prov:frys:8';
+    fel := 'SLÄPPTES IGENOM';
+  exception when others then fel := sqlstate;
+  end;
+
+  insert into utfall (test, ok, detalj)
+  values ('8.2 förslaget går inte att skriva om efter att det skapats', fel = '42501', 'fick ' || fel);
+
+  insert into utfall (test, ok, detalj)
+  select '8.2 förslaget står kvar oförändrat efter försöket',
+         count(*) = 1, 'oförändrade rader: ' || count(*)
+    from public.ai_forslag
+   where nyckel = 'prov:frys:8' and typ = 'matchning' and motivering = 'Ursprunglig motivering';
+end $$;
 
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).
