@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5 och 6)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8 och 9)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -23,9 +23,10 @@
 --
 -- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok.
 --
--- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3 och
--- Fas 5.1–5.6 och Fas 6.1–6.2 är körda. Körs filen före dem är det väntat att de berörda raderna
--- faller — det är så man ser att testerna faktiskt mäter något.
+-- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
+-- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8 och Fas 9.1–9.4 är körda.
+-- Körs filen före dem är det väntat att de berörda raderna faller —
+-- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
 
 begin;
@@ -1013,6 +1014,221 @@ begin
    where nyckel = 'prov:frys:8' and typ = 'matchning' and motivering = 'Ursprunglig motivering';
 end $$;
 
+-- ============================================================
+-- FAS 9 — det som var osant, och tidpunkterna som saknades
+--
+-- Fas 9 börjar med att rätta det som ljuger i dag. Två av raderna
+-- nedan föll mot driften innan 9.1 och 9.2 kördes, och det var så
+-- felet hittades: materialpolicyn jämförde elevens NAMN med mappens
+-- uuid, så ingen förälder kunde se sitt barns material.
+-- ============================================================
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+insert into storage.objects (bucket_id, name, owner) values
+  ('material', '00000000-0000-4000-8000-0000000005a1/prov.pdf',
+   '00000000-0000-4000-8000-0000000000a1');
+
+select pg_temp.rakna('9.1 familjen ser sitt eget barns material', '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from storage.objects
+      where bucket_id = 'material' and name like '00000000-0000-4000-8000-0000000005a1/%'$q$, 1);
+
+select pg_temp.rakna('9.1 annan familj ser inte materialet', '00000000-0000-4000-8000-0000000000f2',
+  $q$select count(*) from storage.objects
+      where bucket_id = 'material' and name like '00000000-0000-4000-8000-0000000005a1/%'$q$, 0);
+
+select pg_temp.rakna('9.2 admin ser materialet', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from storage.objects
+      where bucket_id = 'material' and name like '00000000-0000-4000-8000-0000000005a1/%'$q$, 1);
+
+-- Adminvyn raderade raden i materials och lämnade filen kvar i
+-- lagringen, eftersom admin inte fick ta bort den. Då blev filen
+-- omöjlig att hitta men fanns kvar.
+--
+-- Själva DELETE går inte att prova härifrån: storage.objects bär en
+-- SATSTRIGGER (protect_objects_delete) som vägrar all direkt radering
+-- oavsett policy — vägen går genom Storage-API:et. Provet delas
+-- därför i två: att policyn finns på DELETE, och att villkoret i den
+-- är sant för admin och falskt för andra.
+insert into utfall (test, ok, detalj)
+select '9.2 det finns en DELETE-policy för admin på material',
+       count(*) = 1, coalesce(string_agg(policyname, ', '), 'ingen')
+from pg_policies
+where schemaname = 'storage' and tablename = 'objects' and cmd = 'DELETE'
+  and qual like '%is_admin()%' and qual like '%material%';
+
+select pg_temp.rakna('9.2 admin uppfyller villkoret', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from storage.objects
+      where bucket_id = 'material'
+        and name = '00000000-0000-4000-8000-0000000005a1/prov.pdf'
+        and public.is_admin()$q$, 1);
+
+select pg_temp.rakna('9.2 studiehjälparen uppfyller inte adminvillkoret', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from storage.objects
+      where bucket_id = 'material'
+        and name = '00000000-0000-4000-8000-0000000005a1/prov.pdf'
+        and public.is_admin()$q$, 0);
+
+-- ---------- 9.3 auditen täcker det den påstår sig täcka ----------
+-- 9.4 stämplarna: avbokad_at, avbokad_av och matchad_at
+--
+-- Provet går HELA vägen: familjen avbokar som familjen, och först
+-- efter reset role läses auditloggen och stämplarna. En avbokning
+-- som bara syns när postgres gör den bevisar ingenting.
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+do $$
+declare
+  fore_id   bigint;
+  loggat    bigint;
+  n_at      timestamptz;
+  n_av      uuid;
+  matchad   timestamptz;
+  fore_om   timestamptz;
+  efter_om  timestamptz;
+  skal_fel  text := 'ingen';
+begin
+  select coalesce(max(id), 0) into fore_id from public.audit_logg;
+
+  -- familjen avbokar sitt bekräftade pass om en vecka
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+  update public.bookings set status = 'cancelled'
+   where id = '00000000-0000-4000-8000-00000000b0d1';
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  select count(*) into loggat from public.audit_logg
+   where id > fore_id and handling = 'pass.status'
+     and objekt_id = '00000000-0000-4000-8000-00000000b0d1';
+  select avbokad_at, avbokad_av into n_at, n_av from public.bookings
+   where id = '00000000-0000-4000-8000-00000000b0d1';
+
+  insert into utfall (test, ok, detalj) values
+    ('9.3 avbokningen hamnar i auditloggen', loggat = 1, 'rader: ' || loggat),
+    ('9.4 avbokad_at sätts av databasen', n_at is not null, coalesce(n_at::text, 'null')),
+    ('9.4 avbokad_av är den som avbokade',
+     n_av = '00000000-0000-4000-8000-0000000000f1', coalesce(n_av::text, 'null'));
+
+  -- okänd skälkod stoppas av CHECK, inte av en vänlig påminnelse i vyn
+  begin
+    update public.bookings set avbokningsskal = 'för att'
+     where id = '00000000-0000-4000-8000-00000000b0d1';
+  exception when others then skal_fel := sqlstate;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('9.4 avbokningsskäl måste vara en känd kod', skal_fel = '23514', 'fick ' || skal_fel);
+
+  -- matchad_at: en elev som matchas för första gången.
+  -- Tidpunkten kan inte jämföras med en annan rads: now() är
+  -- transaktionens starttid, så allt som sker här får samma klockslag.
+  -- Provet sparar därför värdet före ommatchningen och jämför med sig
+  -- självt.
+  select matchad_at into fore_om from public.students
+   where id = '00000000-0000-4000-8000-0000000005a1';
+
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+  update public.students
+     set matched_tutor_id = '00000000-0000-4000-8000-0000000000a1', match_status = 'matched'
+   where id = '00000000-0000-4000-8000-0000000005c1';
+  -- och en ommatchning, som inte ska flytta tidpunkten
+  update public.students set matched_tutor_id = '00000000-0000-4000-8000-0000000000b1'
+   where id = '00000000-0000-4000-8000-0000000005a1';
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  select matchad_at into matchad from public.students
+   where id = '00000000-0000-4000-8000-0000000005c1';
+  select matchad_at into efter_om from public.students
+   where id = '00000000-0000-4000-8000-0000000005a1';
+
+  insert into utfall (test, ok, detalj) values
+    ('9.4 matchad_at sätts vid första matchningen', matchad is not null, coalesce(matchad::text, 'null')),
+    ('9.4 en ommatchning flyttar inte matchad_at',
+     efter_om is not null and efter_om = fore_om,
+     coalesce(fore_om::text, 'null') || ' → ' || coalesce(efter_om::text, 'null'));
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- F-6 är orört: avbokningsskal står INTE i skyddets vitlista `fria`,
+-- så den som inte är admin kan inte skriva det — varken ensamt eller
+-- i samma svep som avbokningen.
+select pg_temp.prova('9.4 familjen sätter avbokningsskäl på ett bokat pass', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set avbokningsskal = 'sjukdom'
+           where id = '00000000-0000-4000-8000-00000000b0c1'$q$], 'nekad');
+
+-- Samma svep: b0c1 är fortfarande bekräftat här, så provet träffar
+-- vitlistan `fria` och inte frysningen av ett redan avbokat pass.
+select pg_temp.prova('9.4 familjen avbokar och sätter skäl i samma svep', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom'
+           where id = '00000000-0000-4000-8000-00000000b0c1'$q$], 'nekad');
+
+select pg_temp.prova('9.4 studiehjälparen sätter avbokningsskäl', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set avbokningsskal = 'forhinder'
+           where id = '00000000-0000-4000-8000-00000000b0c1'$q$], 'nekad');
+
+select pg_temp.prova('9.4 admin sätter avbokningsskäl på ett avbokat pass', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.bookings set avbokningsskal = 'ingen_hjalpare'
+           where id = '00000000-0000-4000-8000-00000000b0b1'$q$], 'ok');
+
+-- Familjen får fortfarande avboka. Ett skydd som råkar låsa det
+-- legitima flödet är ett fel, inte en extra försiktighet.
+select pg_temp.prova('9.4 familjen kan fortfarande avboka', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled'
+           where id = '00000000-0000-4000-8000-00000000b0d1'$q$], 'ok');
+
+select pg_temp.rakna('9.3 icke-admin läser fortfarande 0 auditrader', '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from public.audit_logg$q$, 0);
+
+-- Auditloggens vitlistor får bara nämna kolumner som finns. En
+-- felstavad kolumn i tg_argv ger inget fel — den loggar bara
+-- ingenting, för alltid, tyst.
+insert into utfall (test, ok, detalj)
+with vitlista as (
+  select c.relname as tabell, btrim(btrim(x), '''') as kolumn
+  from pg_trigger t
+  join pg_class c on c.oid = t.tgrelid
+  join pg_namespace n on n.oid = c.relnamespace
+  join pg_proc p on p.oid = t.tgfoid,
+  lateral unnest(string_to_array(
+            rtrim(split_part(pg_get_triggerdef(t.oid), 'logga_andring(', 2), ')'), ', '))
+          with ordinality as u(x, ord)
+  where n.nspname = 'public' and not t.tgisinternal
+    and p.proname = 'logga_andring' and u.ord > 1
+)
+select '9.3 auditens vitlistor nämner bara kolumner som finns',
+       count(*) filter (where c.column_name is null) = 0,
+       coalesce(string_agg(v.tabell || '.' || v.kolumn, ', ')
+                filter (where c.column_name is null), 'alla ' || count(*) || ' finns')
+from vitlista v
+left join information_schema.columns c
+  on c.table_schema = 'public' and c.table_name = v.tabell and c.column_name = v.kolumn;
+
+-- Auditloggen får aldrig bära namn, adress eller fritext. Den går
+-- inte att rätta i efterhand, så en vitlista med ett sådant fält är
+-- ett läckage utan slut.
+insert into utfall (test, ok, detalj)
+with vitlista as (
+  select c.relname as tabell, btrim(btrim(x), '''') as kolumn
+  from pg_trigger t
+  join pg_class c on c.oid = t.tgrelid
+  join pg_namespace n on n.oid = c.relnamespace
+  join pg_proc p on p.oid = t.tgfoid,
+  lateral unnest(string_to_array(
+            rtrim(split_part(pg_get_triggerdef(t.oid), 'logga_andring(', 2), ')'), ', '))
+          with ordinality as u(x, ord)
+  where n.nspname = 'public' and not t.tgisinternal
+    and p.proname = 'logga_andring' and u.ord > 1
+)
+select '9.3 ingen vitlista bär namn, adress eller fritext',
+       count(*) = 0, coalesce(string_agg(tabell || '.' || kolumn, ', '), 'inga')
+from vitlista
+where kolumn ~ '(name|namn|email|epost|message|meddelande|summary|note|anteckning|adress|location|stack|beskrivning|motivering)';
+
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).
 insert into utfall (test, ok, detalj)
@@ -1038,7 +1254,8 @@ from unnest(array[
   'public.ai_skapa_forslag(text, text, jsonb, text, uuid, text, text)',
   'public.matchningsforslag_rader(uuid)', 'public.ai_finns(text, uuid)',
   'public.frys_forslaget()', 'public.ai_taket_racker()',
-  'public.matchningspoang(text[], text, text[], text[], integer, integer, jsonb)'
+  'public.matchningspoang(text[], text, text[], text[], integer, integer, jsonb)',
+  'public.stampla_matchningen()', 'public.stampla_avbokningen()'
 ]) f;
 
 insert into utfall (test, ok, detalj)

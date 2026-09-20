@@ -824,9 +824,19 @@
     await medan(bort, 'Tar bort…', async () => {
       /* Filen i hinken först. Går raden bort men filen ligger kvar
          blir den omöjlig att nå och omöjlig att städa: sökvägen
-         fanns bara i raden. */
+         fanns bara i raden.
+
+         Svaret LÄSES. Fram till Fas 9.2 hade admin ingen policy på
+         hinken, så borttagningen nekades tyst medan raden försvann —
+         och koden ovan beskrev en ordning som aldrig hölls. Nekas
+         den igen ska raden stå kvar, så att filen går att hitta. */
       if (m && m.kind === 'fil' && m.url) {
-        await supa.storage.from('material').remove([m.url]);
+        const { error: filfel } = await supa.storage.from('material').remove([m.url]);
+        if (filfel) {
+          alert('Filen kunde inte tas bort ur lagringen: ' + felText(filfel)
+            + '\n\nRaden står kvar, annars hade filen blivit omöjlig att hitta.');
+          return;
+        }
       }
       const { error } = await supa.from('materials').delete().eq('id', bort.dataset.dpMatBort);
       if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
