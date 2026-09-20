@@ -107,8 +107,10 @@ jobs:
             # ett fel man kan åtgärda och ett man får gissa sig till.
             # Nedladdningsraderna är brus och tränger undan felet i
             # annoteringen, som har en längdgräns. Bort med dem först.
-            rader=$(grep -v -E '^(Download|Check|Warning) ' "$RUNNER_TEMP/deno.txt" \
-              | sed 's/\x1b\[[0-9;]*m//g' | tail -45 | sed 's/%/%25/g' | sed 's/\r/%0D/g' \
+            # Färgkoderna bort FÖRST: de står före ordet, så ett filter
+            # på radens början träffar annars ingenting.
+            rader=$(sed 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/deno.txt" \
+              | grep -v -E '^(Download|Check|Warning) ' | tail -45 | sed 's/%/%25/g' | sed 's/\r/%0D/g' \
               | awk '{printf "%s%%0A", $0}')
             echo "::error title=Deno-testerna föll::$rader"
           fi

@@ -78,7 +78,7 @@ Deno.test('källkontrollen behåller bara hämtade adresser', () => {
 // fetch stubbas. Testerna ringer alltså ingen, och kan köras i CI.
 // ============================================================
 
-import { hamta, somDatabasData } from './agent.ts';
+import { hamta, somData, somDatabasData } from './agent.ts';
 
 type Svar = { status: number; plats?: string; kropp?: string; typ?: string };
 type Hamtsvar = { text: string; url: string } | { fel: string };
