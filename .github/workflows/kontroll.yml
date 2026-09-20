@@ -101,5 +101,11 @@ jobs:
               tail -80 "$RUNNER_TEMP/deno.txt"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
+            # Och som annotering. Sammanfattningen kräver att man kan
+            # rendera GitHubs gränssnitt; annoteringar går att läsa
+            # rakt ur det öppna API:et, och det är skillnaden mellan
+            # ett fel man kan åtgärda och ett man får gissa sig till.
+            rader=$(tail -40 "$RUNNER_TEMP/deno.txt" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Deno-testerna föll::$rader"
           fi
           exit $kod

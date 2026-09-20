@@ -134,7 +134,11 @@ Deno.test('en relativ omdirigering prövas mot listan den också', async () => {
     'https://riksdagen.se/b': { status: 200, kropp: '<p>B</p>' },
   }, async () => { r = await hamta('https://riksdagen.se/a', KALLOR); });
 
-  assertEquals((r as { url: string }).url, 'https://riksdagen.se/b');
+  /* Omvägen via Hamtsvar är inte pynt: TypeScript smalnar av r till
+     initialvärdets typ, eftersom tilldelningen sker i en callback,
+     och en omvandling därifrån rakt till { url } är ett typfel. */
+  const svar = r as Hamtsvar;
+  assertEquals((svar as { url: string }).url, 'https://riksdagen.se/b');
 });
 
 Deno.test('en omdirigeringsslinga stoppas av hopptaket', async () => {

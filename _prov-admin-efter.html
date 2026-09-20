@@ -1,0 +1,1610 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
+<title>Admin — Nextrum</title>
+<meta name="robots" content="noindex,nofollow">
+
+<link rel="stylesheet" href="nextrum-typsnitt.css">
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css">
+<link rel="stylesheet" href="nextrum-cinema.css">
+<link rel="stylesheet" href="nextrum-vy.css">
+<link rel="stylesheet" href="nextrum-arbetsyta.css">
+<link rel="stylesheet" href="nextrum-agent.css">
+</head>
+<body class="vy vy-admin">
+
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
+<header class="hdr stuck" id="hdr">
+  <div class="wrap nav">
+    <a href="/" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+    <nav class="nav-links" aria-label="Meny">
+      <a href="/foralder">Studievyn</a>
+      <a href="/larare">Studiehjälparvyn</a>
+    </nav>
+    <div class="nav-actions" id="nav-actions"></div>
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="/foralder">Studievyn <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/larare">Studiehjälparvyn <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions" id="m-actions"></div>
+</div>
+
+<main class="wrap" id="innehall">
+
+  <div id="view-loading"><div class="loading">Laddar adminvyn</div></div>
+
+  <!-- ============================================================
+       INLOGGNING
+       Inget "skapa konto" här, med flit. Ett adminkonto är ett
+       vanligt konto med profiles.is_admin = true, och flaggan går
+       bara att sätta i Table Editor — triggern i schema-v3.sql
+       vägrar ändra den från en inloggad session. Ett registrerings-
+       formulär på den här sidan hade antytt något annat.
+       ============================================================ -->
+  <div id="view-auth" hidden>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <span class="nx-et acc">Logga in</span>
+        <h1 style="margin-top:16px">Adminvyn</h1>
+        <p class="nx-lede">För dig som jobbar på Nextrum. Intresseanmälningar, matchning, bokningar, fakturor och utbetalningar.</p>
+
+        <form id="auth-form" novalidate>
+          <div class="fgroup">
+            <label for="a-email">E-post</label>
+            <input class="inp" id="a-email" type="email" autocomplete="email" required>
+          </div>
+          <div class="fgroup">
+            <label for="a-pass">Lösenord</label>
+            <input class="inp" id="a-pass" type="password" autocomplete="current-password" required minlength="6">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="auth-submit">Logga in</button>
+          <p class="ok-msg" id="auth-msg" style="margin-top:16px"></p>
+        </form>
+
+        <p class="auth-alt">
+          Du loggar in med samma konto som i de andra vyerna.<br>
+          Saknar du behörighet? Be någon sätta <code>is_admin</code> på din rad.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ INTE ADMIN ============
+       Ett konto som finns men saknar flaggan. Skillnaden mot fel
+       lösenord är viktig: här är det inte inloggningen som är fel,
+       och att skicka tillbaka någon till inloggningen hade fått
+       dem att prova lösenordet om och om igen. -->
+  <div id="view-nekad" hidden>
+    <div class="locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+      <h2>Du har inte behörighet hit</h2>
+      <p>Kontot fungerar, men det är inte markerat som admin. Adminvyn visar alla familjers och studiehjälpares uppgifter, så den öppnas inte automatiskt för någon.</p>
+      <p style="margin-top:16px">Ska du ha åtkomst: be någon som redan är admin sätta <code>is_admin</code> på din rad i Supabase.</p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
+        <a class="btn btn-primary" href="/foralder">Till studievyn</a>
+        <button class="btn btn-ghost" data-logout>Logga ut</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ NÅGOT GICK FEL ============ -->
+  <div id="view-fel" hidden>
+    <div class="locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <h2>Vyn kunde inte laddas</h2>
+      <p id="fel-text">Något gick fel när adminvyn skulle hämtas.</p>
+      <p class="xsmall" id="fel-detalj" style="margin-top:14px;font-family:var(--f-mono);font-size:10px;color:var(--muted-2);word-break:break-word"></p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
+        <button class="btn btn-primary" id="fel-igen">Försök igen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SJÄLVA VYN ============ -->
+  <div id="view-app" hidden>
+
+    <section class="vy-hero" id="vy-hero" aria-labelledby="hej"></section>
+
+
+
+    <!-- ============================================================
+         TOPPRADEN
+         Tre saker som gäller hela vyn och ingen enskild sektion:
+         var man är, global sök, och vad som hänt sedan sist.
+         ============================================================ -->
+    <div class="adm-topp" id="adm-topp" hidden>
+      <button class="adm-fall" id="adm-fall" type="button"
+              aria-expanded="true" aria-controls="adm-layout"
+              aria-label="Fäll ihop menyn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+
+      <div class="adm-topp-var">
+        <span class="adm-topp-hem">Admin</span>
+        <span class="adm-topp-hem" id="adm-omrade" hidden></span>
+        <b id="adm-var">Översikt</b>
+      </div>
+
+      <div class="adm-verktygsfalt">
+        <div class="adm-sokfalt">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+          <input class="inp" id="adm-sok" type="search" autocomplete="off"
+                 placeholder="Sök familj, elev, studiehjälpare…"
+                 aria-label="Sök i adminvyn" aria-expanded="false"
+                 aria-controls="adm-sokresultat">
+          <div class="adm-panel" id="adm-sokresultat" role="listbox" hidden></div>
+        </div>
+
+        <div style="position:relative">
+          <button class="adm-knapp" id="adm-notis-knapp" type="button"
+                  aria-expanded="false" aria-controls="adm-notiser"
+                  aria-label="Notiser">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16S18 14 18 9z"/><path d="M13.7 19a2 2 0 0 1-3.4 0"/></svg>
+          </button>
+          <div class="adm-panel" id="adm-notiser" hidden></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vy-layout" id="adm-layout">
+
+      <nav class="vy-sido" id="vy-sido" aria-label="Delar av adminvyn">
+        <!-- Nio områden (Fas 6), i masterplanens ordning. data-sek är
+             desamma som förut, så gamla adresser fungerar; bara
+             grupperingen och rubrikerna är nya. -->
+        <span class="vy-sido-rubrik" aria-hidden="true">Översikt</span>
+        <a href="#oversikt" data-sek="oversikt" title="Översikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg><span class="adm-etikett">Översikt</span></a>
+        <a href="#statistik" data-sek="statistik" title="Statistik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="adm-etikett">Statistik</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Kunder</span>
+        <a href="#leads" data-sek="leads" title="Intresseanmälningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h17v11h-17z"/><path d="m3.5 8 8.5 6 8.5-6"/></svg><span class="adm-etikett">Intresseanmälningar</span></a>
+        <a href="#familjer" data-sek="familjer" title="Familjer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3"/><path d="M3 19c0-2.8 2.5-4.5 5.5-4.5S14 16.2 14 19"/><path d="M16 5.5a3 3 0 0 1 0 5.8M21 19c0-2.2-1.4-3.7-3.5-4.3"/></svg><span class="adm-etikett">Familjer</span></a>
+        <a href="#elever" data-sek="elever" title="Elever"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.2"/><path d="M4.5 20c0-3.4 3.2-5.5 7.5-5.5s7.5 2.1 7.5 5.5"/></svg><span class="adm-etikett">Elever</span></a>
+        <a href="#studiehjalpare" data-sek="studiehjalpare" title="Studiehjälpare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg><span class="adm-etikett">Studiehjälpare</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Drift</span>
+        <a href="#matchning" data-sek="matchning" title="Matchning"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6.5" cy="8" r="2.8"/><circle cx="17.5" cy="16" r="2.8"/><path d="M9.3 8h2.2a3 3 0 0 1 3 3v2"/><path d="m12.5 11.5 2 1.5 2-1.5"/></svg><span class="adm-etikett">Matchning</span></a>
+        <a href="#bokningar" data-sek="bokningar" title="Bokningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg><span class="adm-etikett">Bokningar</span></a>
+        <a href="#lektioner" data-sek="lektioner" title="Lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h7a2 2 0 0 1 2 2V20a2 2 0 0 0-2-2H4z"/><path d="M20 5.5h-7a2 2 0 0 0-2 2V20a2 2 0 0 1 2-2h7z"/></svg><span class="adm-etikett">Lektioner</span></a>
+        <a href="#uppdrag" data-sek="uppdrag" title="Uppdrag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8h17v11.5h-17z"/><path d="M9 8V5.5h6V8M3.5 13h17"/></svg><span class="adm-etikett">Uppdrag</span></a>
+        <a href="#uppgifter" data-sek="uppgifter" title="Uppgifter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6.5h10.5M10 12h10.5M10 17.5h10.5"/><path d="m3.5 6.5 1.3 1.3 2.2-2.4M3.5 12l1.3 1.3 2.2-2.4M3.5 17.5l1.3 1.3 2.2-2.4"/></svg><span class="adm-etikett">Uppgifter</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Kommunikation</span>
+        <a href="#meddelanden" data-sek="meddelanden" title="Meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Meddelanden</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Ekonomi</span>
+        <a href="#ekonomi" data-sek="ekonomi" title="Fakturor &amp; utbetalningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg><span class="adm-etikett">Fakturor &amp; utbetalningar</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Rekrytering</span>
+        <a href="#ansokningar" data-sek="ansokningar" title="Ansökningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/></svg><span class="adm-etikett">Ansökningar</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">Tjänster</span>
+        <a href="#katalog" data-sek="katalog" title="Tjänster &amp; priser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.3V4.5a1 1 0 0 1 1-1h7.8l8.2 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.6"/></svg><span class="adm-etikett">Tjänster &amp; priser</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">AI</span>
+        <a href="#agenter" data-sek="agenter" title="Agenter"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7.5" width="16" height="11" rx="3"/><path d="M12 7.5V4M9 12.5h.01M15 12.5h.01M9.5 15.5h5"/></svg><span class="adm-etikett">Agenter</span></a>
+
+        <span class="vy-sido-rubrik" aria-hidden="true">System</span>
+        <a href="#system" data-sek="system" title="System"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h11M18 7.5h2.5M3.5 16.5h5M11.5 16.5h9"/><circle cx="16" cy="7.5" r="2.2"/><circle cx="10" cy="16.5" r="2.2"/></svg><span class="adm-etikett">System</span></a>
+
+        <!-- Vem som är inloggad, och vägen ut. Sitter här och inte i
+             sidhuvudet: i adminvyn är sidomenyn verktyget, sidhuvudet
+             är sajtens. Fylls av ritaSidofot(). -->
+        <div class="adm-sido-fot" id="adm-sido-fot" hidden></div>
+      </nav>
+
+      <div>
+
+        <!-- ============================================================
+             ÖVERSIKT
+             ============================================================ -->
+        <section class="vy-sek" data-sek="oversikt">
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Översikt</h2>
+              <p>Det viktigaste som händer på Nextrum just nu.</p>
+            </div>
+          </div>
+
+          <!-- ============ HUR GÅR DET ============
+               Fyra tal om verksamheten, inte om arbetskön. De
+               besvarar "hur går det", och kön står i blocket under.
+               Jämförelsen mot förra månaden visas bara när det finns
+               en förra månad att jämföra med. -->
+          <div class="adm-tal-rad adm-tal-stor" id="adm-tal"><div class="loading">Hämtar</div></div>
+
+          <!-- ============ KRÄVER DIN UPPMÄRKSAMHET ============
+               Sidans viktigaste block. En rad per sak som ligger och
+               väntar på en människa, och varje rad är vägen dit.
+               Tomt block betyder att allt är avklarat, och det får
+               synas som ett besked. -->
+          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+            <h5>Kräver din uppmärksamhet <em id="adm-att-antal"></em></h5>
+            <div id="adm-att-gora"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- ============ PROBLEM ============
+               Det som gått fel eller fastnat, räknat i databasen
+               (admin_lage och ekonomiska_avvikelser): pass utan
+               rapport, förfallna fakturor, försenade uppgifter, fel
+               hos användarna och notiser som inte gick fram. Tom ruta
+               är ett besked, inte en tom låda. -->
+          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+            <h5>Problem <em id="adm-problem-antal"></em></h5>
+            <div id="adm-problem"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <div class="split">
+            <div class="stack">
+              <div class="dbox">
+                <h5>Närmaste passen <em id="adm-pass-antal"></em></h5>
+                <div id="ov-pass"><div class="loading">Hämtar</div></div>
+                <a class="vy-mer" href="#bokningar">Alla bokningar
+                  <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+              </div>
+            </div>
+
+            <div class="stack">
+              <!-- ============ SENASTE AKTIVITET ============
+                   Sammanställs i klienten ur leads, ansökningar,
+                   bokningar, rapporter, meddelanden och betalningar.
+                   Ingen händelsetabell: den hade krävt att någon
+                   skriver till den vid varje händelse, och blivit
+                   fel den dagen någon glömmer. -->
+              <div class="dbox">
+                <h5>Senaste aktivitet</h5>
+                <div id="adm-flode"><div class="loading">Hämtar</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- DRIFT (Fas 8) ----------
+               Den tredje agenten. Den läser verksamhetens eget läge och
+               föreslår — den har med flit inget utgående verktyg, och
+               talar med databasen genom en enda dörr som ägs av en roll
+               utan tabellrättigheter.
+
+               Självtestet kör alla läsverktygen utan att röra modellen,
+               och visar vilka fält de lämnar ut. Det är den kontroll
+               som säger att inga namn följer med. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="drift"
+               id="panel-ag-drift" aria-labelledby="flik-ag-drift" hidden>
+            <div class="dbox">
+              <div class="vy-sek-topp">
+                <div>
+                  <h3>Fråga drift-agenten</h3>
+                  <p class="small">Den läser anmälningar, omatchade elever, kommande pass och pass
+                    utan rapport. Den matchar ingen och mejlar ingen: allt den vill göra blir ett
+                    förslag som du godkänner under fliken Förslag.</p>
+                </div>
+                <button class="btn btn-ghost btn-sm" type="button" id="drift-sjalvtest">Självtest</button>
+              </div>
+              <div id="drift-sjalvtest-ut"></div>
+              <div class="fgroup">
+                <label for="drift-fraga">Fråga</label>
+                <textarea class="inp" id="drift-fraga" rows="3"
+                  placeholder="Vad behöver göras idag?"></textarea>
+              </div>
+              <p class="ok-msg" id="drift-msg"></p>
+              <button class="btn btn-primary" type="button" id="drift-kor">Fråga</button>
+              <div id="drift-svar"></div>
+            </div>
+          </div>
+
+          <!-- ---------- FÖRSLAG (Fas 8) ----------
+               Kön av det AI:n vill göra. Ett förslag är inte en uppgift:
+               trycker du ja utför databasen åtgärden, med din inloggning,
+               så att triggrar och auditlogg fungerar precis som när du
+               själv klickar i vyn. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="forslag"
+               id="panel-ag-forslag" aria-labelledby="flik-ag-forslag" hidden>
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <select class="sel" id="forslag-filter" aria-label="Visa förslag">
+                  <option value="oppna">Väntar på svar</option>
+                  <option value="alla">Alla</option>
+                </select>
+                <span class="small" id="forslag-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <p class="ok-msg" id="forslag-msg"></p>
+              <div id="forslag-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             INTRESSEANMÄLNINGAR
+             ============================================================ -->
+        <section class="vy-sek" data-sek="leads" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Intresseanmälningar</h2>
+              <p>Familjer som hört av sig. Statusen säger var i samtalet ni är — den ändras här, inte i Table Editor.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="leads-sok" type="search" placeholder="Sök namn, e-post, ämne" aria-label="Sök intresseanmälan" autocomplete="off">
+              <select class="sel" id="leads-status" aria-label="Filtrera på status">
+                <option value="">Alla lägen</option>
+                <option value="new">Nya</option>
+                <option value="contacted">Kontaktade</option>
+                <option value="matched">Matchade</option>
+                <option value="declined">Avböjda</option>
+              </select>
+              <span class="small" id="leads-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="leads-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             ANSÖKNINGAR
+             ============================================================ -->
+        <section class="vy-sek" data-sek="ansokningar" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Ansökningar</h2>
+              <p>Unga som vill jobba. Att godkänna ansökan är inte samma sak som att godkänna kontot — kontot ligger under Studiehjälpare, och skapas först när personen registrerat sig.</p>
+            </div>
+          </div>
+          <div class="vy-flikar" role="tablist" aria-label="Rekryteringens steg">
+            <button class="vy-flik" type="button" role="tab" data-flik="alla"
+                    id="flik-ans-alla" aria-controls="panel-ans-alla">Alla ansökningar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="intervju"
+                    id="flik-ans-intervju" aria-controls="panel-ans-intervju">Intervju</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="utbildning"
+                    id="flik-ans-utbildning" aria-controls="panel-ans-utbildning">Utbildning</button>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="alla"
+               id="panel-ans-alla" aria-labelledby="flik-ans-alla">
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="ans-sok" type="search" placeholder="Sök namn, e-post, ämne" aria-label="Sök ansökan" autocomplete="off">
+              <select class="sel" id="ans-status" aria-label="Filtrera på status">
+                <option value="">Alla lägen</option>
+                <option value="new">Nya</option>
+                <option value="contacted">Kontaktade</option>
+                <option value="approved">Godkända</option>
+                <option value="rejected">Avböjda</option>
+              </select>
+              <span class="small" id="ans-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="ans-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+          </div>
+
+          <!-- Rekryteringens två steg som egna flikar (Fas 6): vem som
+               väntar på en intervju, och vem som ska utbildas. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="intervju"
+               id="panel-ans-intervju" aria-labelledby="flik-ans-intervju" hidden>
+            <div class="dbox">
+              <h5>Väntar på intervju <em id="ans-intervju-antal"></em></h5>
+              <div id="ans-intervju"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+          <div class="vy-flik-panel" role="tabpanel" data-flik="utbildning"
+               id="panel-ans-utbildning" aria-labelledby="flik-ans-utbildning" hidden>
+            <div class="dbox">
+              <h5>Intervjuade, ska utbildas <em id="ans-utbildning-antal"></em></h5>
+              <div id="ans-utbildning"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             MEDDELANDEN
+             Två inkorgar som ser lika ut men inte är det: formuläret
+             på faq.html (contact_messages) är från folk utan konto,
+             chattarna (messages) är mellan matchade parter. Flikar,
+             så att det syns att de är olika saker.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="meddelanden" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Meddelanden</h2>
+              <p>Inkorgen från kontaktformuläret, och en insyn i chattarna mellan familj och studiehjälpare.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Vilken inkorg">
+            <button class="vy-flik" type="button" role="tab" data-flik="inkorg"
+                    id="flik-inkorg" aria-controls="panel-inkorg">Kontaktformuläret
+              <span class="vy-flik-mark" id="flik-inkorg-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="chattar"
+                    id="flik-chattar" aria-controls="panel-chattar">Chattar</button>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="inkorg"
+               id="panel-inkorg" aria-labelledby="flik-inkorg">
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <input class="inp adm-sok" id="msg-sok" type="search" placeholder="Sök namn, e-post, text" aria-label="Sök meddelande" autocomplete="off">
+                <label class="xsmall" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600">
+                  <input type="checkbox" id="msg-ohanterade" checked> Bara ohanterade
+                </label>
+                <span class="small" id="msg-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="msg-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="chattar"
+               id="panel-chattar" aria-labelledby="flik-chattar" hidden>
+            <div class="dbox">
+              <h5>Chattar <em>senaste raden i varje tråd</em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
+                Ni kan läsa trådarna, inte skriva i dem. Insynen finns för att en
+                förälder ska kunna lita på att plattformen inte är en privat kanal
+                till deras barn — inte för att ni ska delta i samtalet.
+              </p>
+              <div id="chatt-lista"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             FAMILJER
+             ============================================================ -->
+        <section class="vy-sek" data-sek="familjer" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Familjer</h2>
+              <p>Matchningen görs här. Sätter du en studiehjälpare låses familjens vy upp direkt — studieplan, bokning och chatt.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="fam-sok" type="search" placeholder="Sök namn eller e-post" aria-label="Sök familj" autocomplete="off">
+              <select class="sel" id="fam-status" aria-label="Filtrera på matchning">
+                <option value="">Alla</option>
+                <option value="pending">Väntar på matchning</option>
+                <option value="matched">Matchade</option>
+              </select>
+              <span class="small" id="fam-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="fam-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             ELEVER
+             Eleven är den centrala enheten i hela systemet: läxor,
+             material, studieplan, rapporter och utveckling hänger
+             alla på ett student_id, och ett pass bokas åt en elev.
+
+             Ändå saknade adminvyn en elevlista helt. Raderna fanns
+             redan i minnet — hämtaAllt laddar students för att kunna
+             räkna dem per familj — de hade bara ingen egen sida.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="elever" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Elever</h2>
+              <p>Alla elever i systemet, vilken familj de hör till och vem som hjälper dem.</p>
+            </div>
+          </div>
+
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="elev-sok" type="search" placeholder="Sök namn, skola, ämne" aria-label="Sök elev" autocomplete="off">
+              <select class="sel" id="elev-ak" aria-label="Filtrera på årskurs">
+                <option value="">Alla årskurser</option>
+              </select>
+              <select class="sel" id="elev-match" aria-label="Filtrera på matchning">
+                <option value="">Matchad eller inte</option>
+                <option value="ja">Har studiehjälpare</option>
+                <option value="nej">Saknar studiehjälpare</option>
+              </select>
+              <span class="small" id="elev-antal" style="margin-left:auto;color:var(--bl-2)"></span>
+            </div>
+            <div id="elev-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             STUDIEHJÄLPARE
+             ============================================================ -->
+        <section class="vy-sek" data-sek="studiehjalpare" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Studiehjälpare</h2>
+              <p>Godkänn eller pausa. En godkänd studiehjälpare syns på startsidan och kan matchas med en familj — det är samma knapp som styr båda.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="sh-sok" type="search" placeholder="Sök namn, ort, ämne" aria-label="Sök studiehjälpare" autocomplete="off">
+              <select class="sel" id="sh-status" aria-label="Filtrera på status">
+                <option value="">Alla lägen</option>
+                <option value="pending">Väntar</option>
+                <option value="approved">Godkända</option>
+                <option value="rejected">Avböjda</option>
+              </select>
+              <span class="small" id="sh-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="sh-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             BOKNINGAR
+             ============================================================ -->
+        <!-- ============================================================
+             MATCHNING
+
+             Vänster: kön. Höger: beslutsunderlaget för den valda.
+
+             Poängen räknas i klienten, inte i SQL. Skälet är att en
+             ranking i databasen blir en siffra utan förklaring, och
+             det man behöver när en förälder frågar "varför hen?" är
+             just förklaringen. Vyn matchningsunderlag lämnar därför
+             ut rådata och rankar ingenting.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="matchning" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Matchning</h2>
+              <p>Välj en elev, se vilka studiehjälpare som passar och varför. Matchningen gäller eleven, inte familjen — syskon kan ha var sin.</p>
+            </div>
+          </div>
+
+          <div class="mt-layout">
+            <div class="dbox">
+              <h5>Elever <em id="mt-ko-antal"></em></h5>
+              <div class="adm-verktyg" style="margin-bottom:11px">
+                <input class="inp adm-sok" id="mt-sok" type="search" placeholder="Sök elev" aria-label="Sök elev" autocomplete="off" style="max-width:none">
+              </div>
+              <div id="mt-ko"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox">
+              <h5>Förslag <em id="mt-forslag-antal"></em></h5>
+              <div id="mt-panel"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="vy-sek" data-sek="bokningar" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Bokningar</h2>
+              <p>Alla pass, alla familjer. Listan för att söka och ändra, kalendern för att se var de ligger.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Lista eller kalender">
+            <button class="vy-flik" type="button" role="tab" data-flik="lista"
+                    id="flik-bok-lista" aria-controls="panel-bok-lista">Lista</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="kalender"
+                    id="flik-bok-kalender" aria-controls="panel-bok-kalender">Kalender</button>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="lista"
+               id="panel-bok-lista" aria-labelledby="flik-bok-lista">
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="bok-sok" type="search" placeholder="Sök familj, studiehjälpare, ämne" aria-label="Sök bokning" autocomplete="off">
+              <select class="sel" id="bok-status" aria-label="Filtrera på status">
+                <option value="">Alla lägen</option>
+                <option value="requested">Önskade</option>
+                <option value="confirmed">Bekräftade</option>
+                <option value="completed">Genomförda</option>
+                <option value="cancelled">Avbokade</option>
+              </select>
+              <select class="sel" id="bok-nar" aria-label="Filtrera på tid">
+                <option value="framat">Framåt</option>
+                <option value="bakat">Bakåt</option>
+                <option value="alla">Alla</option>
+              </select>
+              <span class="small" id="bok-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="bok-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+          </div>
+
+          <!-- ============ KALENDERN ============
+               Ritas av NXStudie.schema, samma modul som studievyn och
+               studiehjälparvyn använder. Månad, vecka och dag, samma
+               färgkodning per läge, samma chip.
+
+               Att bygga en egen hade gett ledningen en kalender som
+               ser ut som en annan produkt än den familjen ser, och
+               två uppsättningar buggar att laga. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="kalender"
+               id="panel-bok-kalender" aria-labelledby="flik-bok-kalender" hidden>
+            <div class="dbox">
+              <div id="bok-kalender"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             LEKTIONER
+
+             En lektion är inte en egen tabell, och ska inte bli det:
+             ett genomfört pass PLUS dess rapport ÄR lektionen. En
+             tredje tabell hade gett två sanningar om samma timme och
+             en synk att underhålla.
+
+             Sektionen finns ändå, för den svarar på en annan fråga än
+             Bokningar. Bokningar tittar framåt — vad ligger, vad ska
+             bekräftas. Lektioner tittar bakåt: hände det, skrevs det
+             en rapport, och kan det faktureras.
+
+             Rapporten är inte en trevlighet. Ett pass blir "completed"
+             när studiehjälparen skrivit den, och bara completed-pass
+             hamnar på fakturan. En saknad rapport är alltså en timme
+             ingen får betalt för.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="lektioner" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Lektioner</h2>
+              <p>Pass som hållits. Utan rapport blir ett pass aldrig genomfört, och då hamnar det inte på någon faktura.</p>
+            </div>
+          </div>
+
+          <div class="adm-tal-rad" id="lekt-tal"><div class="loading">Hämtar</div></div>
+
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <input class="inp adm-sok" id="lekt-sok" type="search" placeholder="Sök elev, studiehjälpare, ämne" aria-label="Sök lektion" autocomplete="off">
+              <select class="sel" id="lekt-rapport" aria-label="Filtrera på rapport">
+                <option value="">Alla lektioner</option>
+                <option value="saknas">Rapport saknas</option>
+                <option value="finns">Rapport skriven</option>
+              </select>
+              <select class="sel" id="lekt-period" aria-label="Filtrera på period">
+                <option value="30">Senaste 30 dagarna</option>
+                <option value="90">Senaste tre månaderna</option>
+                <option value="">Hela tiden</option>
+              </select>
+              <span class="small" id="lekt-antal" style="margin-left:auto;color:var(--bl-2)"></span>
+            </div>
+            <div id="lekt-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             UPPDRAG (Fas 5.2)
+             Vad Nextrum utför åt en kund. För läxhjälp ett per barn,
+             skapat av databasen när barnet läggs till; här syns de
+             med kund, tjänst, status och hur många pass som hör till.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="uppdrag" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Uppdrag</h2>
+              <p>Det Nextrum utför åt varje kund — i dag ett läxhjälpsuppdrag per barn.</p>
+            </div>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <select class="sel" id="uppdrag-status" aria-label="Filtrera på status">
+                <option value="">Alla</option>
+                <option value="aktivt" selected>Aktiva</option>
+                <option value="pausat">Pausade</option>
+                <option value="avslutat">Avslutade</option>
+              </select>
+              <span class="small" id="uppdrag-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="uppdrag-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             UPPGIFTER (Fas 6)
+             Det någon ska göra, kopplat till det det gäller. Skapas
+             här, från en avvikelse — och senare av schemalagda
+             kontroller (Fas 7) och AI-agenten (Fas 8), som syns i
+             kolumnen "Från".
+             ============================================================ -->
+        <section class="vy-sek" data-sek="uppgifter" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Uppgifter</h2>
+              <p>Det som ska göras, vem som gör det och när det ska vara klart.</p>
+            </div>
+          </div>
+          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+            <h5>Ny uppgift</h5>
+            <form id="uppg-form" class="uppg-form" novalidate>
+              <div class="fgroup"><label for="uppg-titel">Vad ska göras?</label>
+                <input class="inp" id="uppg-titel" maxlength="200" required></div>
+              <div class="fgroup"><label for="uppg-typ">Typ</label>
+                <select class="sel" id="uppg-typ">
+                  <option value="uppfoljning">Uppföljning</option>
+                  <option value="kontroll">Kontroll</option>
+                  <option value="problem">Problem</option>
+                  <option value="ovrigt" selected>Övrigt</option>
+                </select></div>
+              <div class="fgroup"><label for="uppg-ansvarig">Ansvarig</label>
+                <select class="sel" id="uppg-ansvarig"><option value="">Ingen</option></select></div>
+              <div class="fgroup"><label for="uppg-datum">Klar senast</label>
+                <input class="inp" id="uppg-datum" type="date"></div>
+              <div class="fgroup uppg-bred"><label for="uppg-text">Mer om den (valfritt)</label>
+                <textarea class="inp" id="uppg-text" rows="2" maxlength="2000"></textarea></div>
+              <div class="uppg-fot">
+                <button class="btn btn-primary btn-sm" type="submit">Lägg till</button>
+                <p class="ok-msg" id="uppg-msg" style="margin:0"></p>
+              </div>
+            </form>
+          </div>
+          <div class="dbox">
+            <div class="adm-verktyg">
+              <select class="sel" id="uppg-filter" aria-label="Visa uppgifter">
+                <option value="oppna" selected>Öppna</option>
+                <option value="klara">Klara och avbrutna</option>
+                <option value="">Alla</option>
+              </select>
+              <span class="small" id="uppg-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <div id="uppg-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             EKONOMI
+             Fakturan till familjen och underlaget till studiehjälparen
+             är två sidor av samma pass. Två flikar, inte två sidor.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="ekonomi" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Ekonomi</h2>
+              <p>Vad familjerna ska betala och vad studiehjälparna ska få. Samma pass, två sidor av samma rad i bookings.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Fakturor eller utbetalningar">
+            <button class="vy-flik" type="button" role="tab" data-flik="fakturor"
+                    id="flik-fakturor" aria-controls="panel-fakturor">Fakturor
+              <span class="vy-flik-mark" id="flik-fakt-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="utbetalningar"
+                    id="flik-utbetalningar" aria-controls="panel-utbetalningar">Utbetalningar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="avvikelser"
+                    id="flik-avvikelser" aria-controls="panel-avvikelser">Avvikelser
+              <span class="vy-flik-mark" id="flik-avv-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="korning"
+                    id="flik-korning" aria-controls="panel-korning">Månadskörning</button>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="fakturor"
+               id="panel-fakturor" aria-labelledby="flik-fakturor">
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <input class="inp adm-sok" id="fakt-sok" type="search" placeholder="Sök familj" aria-label="Sök faktura" autocomplete="off">
+                <select class="sel" id="fakt-status" aria-label="Filtrera på status">
+                  <option value="">Alla lägen</option>
+                  <option value="utkast">Utkast</option>
+                  <option value="skickad">Skickade</option>
+                  <option value="betald">Betalda</option>
+                  <option value="forfallen">Förfallna</option>
+                  <option value="makulerad">Makulerade</option>
+                </select>
+                <span class="small" id="fakt-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="fakt-tabell"><div class="loading">Hämtar</div></div>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
+                <b>Skicka</b> mejlar fakturan till familjen på riktigt. Du får läsa igenom
+                den först, och läget sätts till <em>Skickad</em> bara om mejlet faktiskt
+                gick iväg. Rullgardinen bredvid ändrar bara ordet i tabellen — den skickar
+                ingenting, och det är med flit att de är två olika knappar.
+              </p>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
+                Beloppen går inte att ändra härifrån. De räknas fram av edge-funktionen
+                <code>fakturering</code> ur de pass som faktiskt hållits, och en trigger
+                vägrar skriva om dem från en webbläsare.
+              </p>
+            </div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="utbetalningar"
+               id="panel-utbetalningar" aria-labelledby="flik-utbetalningar" hidden>
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <input class="inp adm-sok" id="utb-sok" type="search" placeholder="Sök studiehjälpare" aria-label="Sök utbetalning" autocomplete="off">
+                <select class="sel" id="utb-status" aria-label="Filtrera på status">
+                  <option value="">Alla lägen</option>
+                  <option value="utkast">Utkast</option>
+                  <option value="godkand">Godkända</option>
+                  <option value="utbetald">Utbetalda</option>
+                  <option value="misslyckad">Misslyckade</option>
+                </select>
+                <span class="small" id="utb-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="utb-tabell"><div class="loading">Hämtar</div></div>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
+                <b>Skicka underlag</b> mejlar studiehjälparen vad hen kommer att få, så att
+                hen hinner säga ifrån innan pengarna går. Det ändrar ingen status — att
+                visa ett underlag är inte att godkänna det.
+              </p>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
+                Godkänd betyder att ni granskat underlaget. Utbetald betyder att pengarna
+                lämnat kontot. <b>Själva överföringen sker utanför plattformen</b> — det
+                finns ingen betaltjänst kopplad än, så ingen knapp här flyttar pengar. Att
+                sätta Utbetald innan ni faktiskt betalat är hur ett bokföringsfel börjar.
+              </p>
+            </div>
+          </div>
+
+          <!-- Avvikelser: det som hindrar ett genomfört pass från att
+               bli en fakturarad. Ett pass utan rapport tas aldrig med
+               av månadskörningen, och det ska synas här i stället för
+               att bara utebli från fakturan. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="avvikelser"
+               id="panel-avvikelser" aria-labelledby="flik-avvikelser" hidden>
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Genomförda pass utan rapport</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                ⚠️ Pass saknar rapport och kan därför inte behandlas automatiskt.
+                Koppla den rapport som hör till passet, eller undanta passet — ett
+                undantaget pass kommer varken på familjens faktura eller på
+                studiehjälparens underlag.
+              </p>
+              <div id="avv-utan-rapport"><div class="loading">Hämtar</div></div>
+            </div>
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Rapporter som inte hör till något pass</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Fristående rapporter faktureras aldrig av sig själva. Hör en av dem
+                till ett pass ovanför, koppla den därifrån.
+              </p>
+              <div id="avv-fristaende"><div class="loading">Hämtar</div></div>
+            </div>
+            <div class="dbox">
+              <h5>Undantagna pass</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Pass som någon tagit bort ur faktureringen, med anledningen. Ångra
+                om det var fel — passet kommer då med på nästa körning.
+              </p>
+              <div id="avv-undantagna"><div class="loading">Hämtar</div></div>
+            </div>
+            <!-- Allt annat som inte går ihop, räknat av databasen
+                 (ekonomiska_avvikelser): förfallna fakturor, gamla
+                 utkast, utbetalningar som väntar, pass utan ersättning,
+                 summor som inte stämmer, RUT utan underlag. -->
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+              <h5>Övriga ekonomiska avvikelser <em id="avv-ovriga-antal"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Varje rad kan bli en uppgift, så att någon tar hand om den.
+              </p>
+              <div id="avv-ovriga"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="korning"
+               id="panel-korning" aria-labelledby="flik-korning" hidden>
+            <div class="dbox">
+              <h5>Månadskörningen</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:18px">
+                En gång i månaden samlas alla genomförda och rapporterade pass till
+                en faktura per familj och ett underlag per studiehjälpare. Här körs
+                den med din inloggning. Kör alltid torrt först: den räknar ut allt
+                och visar vad som <em>skulle</em> skapas, utan att skriva en rad.
+              </p>
+              <div class="adm-verktyg">
+                <select class="sel" id="kor-period" aria-label="Vilken månad som faktureras"></select>
+                <button class="btn btn-ghost btn-sm" type="button" id="kor-torr">Torrkör</button>
+                <button class="btn btn-primary btn-sm" type="button" id="kor-skapa" disabled>Skapa utkast</button>
+              </div>
+              <div id="kor-resultat" aria-live="polite" style="margin:6px 0 18px"></div>
+              <div class="sum-line"><span>Vilka pass</span><span class="adm-tal">genomförda och rapporterade, till och med månadens slut</span></div>
+              <div class="sum-line"><span>Betalningsvillkor</span><span class="adm-tal">10 dagar</span></div>
+              <div class="sum-line total"><span>Pris per timme</span><span class="adm-tal" id="kor-pris">—</span></div>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-top:16px">
+                <b>Skapa utkast</b> skriver fakturor och underlag som utkast. Ingenting
+                skickas — det gör du sedan per faktura under Fakturor, efter att ha
+                läst den. Ett schema som kör det här av sig självt kommer senare, och
+                använder då en nyckel på servern i stället för en inloggning.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             SYSTEM
+             ============================================================ -->
+        <!-- ============================================================
+             STATISTIK
+
+             Fyra frågor, fyra bilder. Inte fler: en sida med tolv
+             grafer är en sida ingen läser, och den som vill gräva
+             djupare har rådatan i sektionerna ovanför.
+
+             Allt räknas ur det som redan är hämtat. Ingen egen
+             statistiktabell som ska hållas i synk — siffrorna ÄR
+             raderna, räknade en gång till.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="statistik" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Statistik</h2>
+              <p>Hur Nextrum rört sig över tid. Sex månader bakåt, räknat på riktiga pass och riktiga fakturor.</p>
+            </div>
+          </div>
+
+          <div class="adm-tal-rad adm-tal-stor" id="stat-tal"><div class="loading">Hämtar</div></div>
+
+          <div class="split">
+            <div class="stack">
+              <div class="dbox">
+                <h5>Genomförda pass <em>per månad</em></h5>
+                <div id="stat-pass"><div class="loading">Hämtar</div></div>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="dbox">
+                <h5>Nya elever <em>per månad</em></h5>
+                <div id="stat-elever"><div class="loading">Hämtar</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+            <h5>Fakturerat <em>per månad</em></h5>
+            <div id="stat-intakt"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- ============ TRATTEN ============
+               Intresseanmälan → kontakt → matchning → kund. Fyra steg
+               som var och en är ett fält i leads.status, plus det
+               sista som är en riktig familj i systemet.
+
+               Bortfallet mellan stegen är det enda som är värt att
+               titta på här, så det står utskrivet i siffror och inte
+               bara som en smalnande stapel. -->
+          <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+            <h5>Från anmälan till kund</h5>
+            <div id="stat-tratt"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             AGENTER
+
+             Två agenter, juridik och ekonomi, plus det de behöver för
+             att fungera. Allt ligger under EN post i menyn och fyra
+             flikar inuti: menyn var redan tretton rader lång, och
+             agenterna är en sak man går till, inte fyra.
+
+             Det viktiga i vyn är inte svaren utan loggen under dem.
+             En agent som läser lagen eller er ekonomi måste gå att
+             granska i efterhand — inte "vad svarade den" utan "vad
+             läste den innan den svarade". Därför en rad per körning i
+             agent_korningar och en rad per verktygsanrop i agent_steg,
+             och därför är "Tidigare frågor" inte en historik utan
+             själva kvittot.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="agenter" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Agenter</h2>
+              <p>Juridik och ekonomi. De svarar aldrig ur minnet — kan de inte peka på en källa de faktiskt läst lämnas svaret inte ut.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Delar av agentvyn">
+            <button class="vy-flik" type="button" role="tab" data-flik="lage"
+                    id="flik-ag-lage" aria-controls="panel-ag-lage">Läget</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="juridik"
+                    id="flik-ag-juridik" aria-controls="panel-ag-juridik">Juridik</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="ekonomi"
+                    id="flik-ag-ekonomi" aria-controls="panel-ag-ekonomi">Ekonomi</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="bolaget"
+                    id="flik-ag-bolaget" aria-controls="panel-ag-bolaget">Bolagsfakta</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="aterkoppling"
+                    id="flik-ag-aterkoppling" aria-controls="panel-ag-aterkoppling">Återkoppling</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="drift"
+                    id="flik-ag-drift" aria-controls="panel-ag-drift">Drift</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="forslag"
+                    id="flik-ag-forslag" aria-controls="panel-ag-forslag">Förslag
+              <span class="vy-flik-mark" id="flik-forslag-mark" hidden></span></button>
+          </div>
+
+          <!-- ---------- LÄGET ---------- -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="lage"
+               id="panel-ag-lage" aria-labelledby="flik-ag-lage">
+
+            <div class="adm-tal-rad">
+              <div class="adm-kpi"><b id="kpi-korningar">0</b><span>Körningar totalt</span></div>
+              <div class="adm-kpi"><b id="kpi-kastade">0</b><span>Kastade utan källa</span></div>
+              <div class="adm-kpi"><b id="kpi-tokens">0</b><span>Tokens förbrukade</span></div>
+            </div>
+
+            <div class="split">
+              <div class="stack">
+
+                <div class="dbox">
+                  <h5>Självtest</h5>
+                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:16px">
+                    Kontrollerar att agenterna når sina rättskällor, och lika viktigt: att de
+                    <b>inte</b> når något annat. Rör inte modellen och kostar ingenting.
+                  </p>
+                  <button class="btn btn-primary btn-sm btn-block" id="sjalvtest-knapp">Kör självtestet</button>
+                  <div id="sjalvtest-ut" style="margin-top:16px"></div>
+                </div>
+
+                <div class="dbox">
+                  <h5>Vad agenterna är</h5>
+                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7">
+                    <b>Juridik</b> slår upp svensk rätt inom sex avgränsade områden och vägrar
+                    resten. Den svarar aldrig ur minnet: den hämtar lagtexten och citerar den.
+                    Kan den inte peka på en källa den läst lämnas svaret inte ut.
+                  </p>
+                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-top:12px">
+                    <b>Ekonomi</b> läser era siffror, läser Fortnox och slår upp Skatteverket.
+                    Alla dess verktyg är läsande. Den bokför ingenting, och det är designen,
+                    inte en tillfällig försiktighet.
+                  </p>
+                  <p class="xsmall" style="color:var(--bl-3);line-height:1.7;margin-top:12px">
+                    Ingen av dem ersätter en jurist eller en redovisningskonsult.
+                  </p>
+                </div>
+
+              </div>
+              <div class="stack">
+
+                <div class="dbox">
+                  <h5>Senaste körningarna</h5>
+                  <div id="ov-korningar"><div class="loading">Hämtar</div></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- JURIDIK ---------- -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="juridik"
+               id="panel-ag-juridik" aria-labelledby="flik-ag-juridik" hidden>
+
+            <div class="dbox">
+              <h5>Juridikagenten</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
+                Distansavtal, konsumenttjänst, dataskydd, arbetsrätt, minderårigas arbete och
+                bokföringsformalia. Frågor utanför de sex områdena avvisas.
+              </p>
+
+              <div class="ag-fraga">
+                <label for="jur-fraga" style="display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--bl-3);margin-bottom:10px">Din fråga</label>
+                <textarea id="jur-fraga" placeholder="Till exempel: gäller ångerrätt när en familj bokar ett pass hos oss, och vad måste vi informera om innan de bokar?"></textarea>
+              </div>
+
+              <div class="ag-exempel" id="jur-exempel">
+                <button type="button">Gäller ångerrätt när en familj bokar ett läxhjälpspass hos oss, och vad måste vi informera om innan de bokar?</button>
+                <button type="button">Vilka krav ställs på oss när vi behandlar personuppgifter om barn under 13 år?</button>
+                <button type="button">Vad gäller för arbetstider när en studiehjälpare är under 18 år?</button>
+                <button type="button">Behöver vi personuppgiftsbiträdesavtal med Supabase och Vercel, och vad ska stå i dem?</button>
+              </div>
+
+              <div class="ag-rad">
+                <button class="btn btn-primary" id="jur-skicka">Ställ frågan</button>
+                <button class="btn btn-ghost btn-sm" id="jur-rensa" type="button">Rensa</button>
+                <span class="ag-tid">Tar normalt 30–90 sekunder</span>
+              </div>
+
+              <div id="jur-ut"></div>
+            </div>
+
+            <div class="dbox" style="margin-top:20px">
+              <h5>Tidigare frågor</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:16px">
+                Fäll ut en rad för att se vilka källor svaret faktiskt vilade på. Det är därför
+                agenten loggar varje steg.
+              </p>
+              <div id="jur-logg"></div>
+            </div>
+          </div>
+
+          <!-- ---------- EKONOMI ---------- -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="ekonomi"
+               id="panel-ag-ekonomi" aria-labelledby="flik-ag-ekonomi" hidden>
+
+            <div class="dbox">
+              <h5>Ekonomiagenten</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
+                Bokföring, moms, deklarationer och avstämningar. Läser era siffror och Fortnox.
+                Skriver aldrig något, någonstans.
+              </p>
+
+              <div class="ag-fraga">
+                <label for="eko-fraga" style="display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--bl-3);margin-bottom:10px">Din fråga</label>
+                <textarea id="eko-fraga" placeholder="Till exempel: vilka genomförda pass har aldrig hamnat på en faktura, och vad borde vi göra åt dem?"></textarea>
+              </div>
+
+              <div class="ag-exempel" id="eko-exempel">
+                <button type="button">Vilka genomförda pass har aldrig hamnat på en faktura, och vad borde vi göra åt dem?</button>
+                <button type="button">Hur mycket ligger obetalt just nu, och vad är äldst?</button>
+                <button type="button">Vad måste stå på våra fakturor för att de ska uppfylla formkraven?</button>
+                <button type="button">Vad ska vi ha gjort innan bokslutet, och i vilken ordning?</button>
+              </div>
+
+              <div class="ag-rad">
+                <button class="btn btn-primary" id="eko-skicka">Ställ frågan</button>
+                <button class="btn btn-ghost btn-sm" id="eko-rensa" type="button">Rensa</button>
+                <span class="ag-tid">Tar normalt 30–90 sekunder</span>
+              </div>
+
+              <div id="eko-ut"></div>
+            </div>
+
+            <div class="dbox" style="margin-top:20px">
+              <h5>Tidigare frågor</h5>
+              <div id="eko-logg"></div>
+            </div>
+          </div>
+
+          <!-- ---------- BOLAGSFAKTA ---------- -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="bolaget"
+               id="panel-ag-bolaget" aria-labelledby="flik-ag-bolaget" hidden>
+
+            <div class="dbox">
+              <h5>Bolagsfakta</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
+                Vad ekonomiagenten vet om bolaget. Inga datum, inga belopp, inga procentsatser
+                — sådant hämtas från Skatteverket vid varje fråga i stället för att ligga och
+                bli inaktuellt här.
+              </p>
+
+              <div class="ag-viktig" id="form-larm">
+                <b style="font-size:14px;color:var(--bl)">Anställda eller uppdragstagare?</b>
+                <p>
+                  Det här är den viktigaste uppgiften på sidan. Om studiehjälparna är anställda
+                  eller uppdragstagare avgör arbetsgivaravgifter, skatteavdrag, AGI, försäkringar
+                  och arbetsmiljöansvar. Står den kvar på <b>oklart</b> vägrar ekonomiagenten
+                  svara på personalfrågor, och den vägran är rätt. Vet ni inte svaret är det den
+                  frågan ni ska ställa till en redovisningskonsult först.
+                </p>
+                <div class="fgroup" style="margin-top:16px;max-width:320px">
+                  <label for="bf-form">Studiehjälparnas form</label>
+                  <select class="inp" id="bf-form">
+                    <option value="oklart">Oklart — inte utrett än</option>
+                    <option value="anstallda">Anställda</option>
+                    <option value="uppdragstagare">Uppdragstagare</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="ag-faltrad">
+                <div class="fgroup">
+                  <label for="bf-orgnr">Organisationsnummer</label>
+                  <input class="inp" id="bf-orgnr" placeholder="000000-0000">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-bolagsform">Bolagsform</label>
+                  <input class="inp" id="bf-bolagsform" placeholder="ab, enskild firma, hb">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-rakenskapsar">Räkenskapsårets slut</label>
+                  <input class="inp" id="bf-rakenskapsar" placeholder="12-31">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-momsperiod">Momsperiod</label>
+                  <select class="inp" id="bf-momsperiod">
+                    <option value="">Inte angivet</option>
+                    <option value="manad">Varje månad</option>
+                    <option value="kvartal">Varje kvartal</option>
+                    <option value="helar">Helår</option>
+                  </select>
+                </div>
+                <div class="fgroup">
+                  <label for="bf-system">Bokföringssystem</label>
+                  <input class="inp" id="bf-system" placeholder="fortnox, inget">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-konsult">Redovisningskonsult</label>
+                  <input class="inp" id="bf-konsult" placeholder="Namn, eller tomt om ni sköter det själva">
+                </div>
+              </div>
+
+              <div style="margin-top:8px">
+                <label class="ag-kryss"><input type="checkbox" id="bf-moms"> Momsregistrerade</label>
+                <label class="ag-kryss"><input type="checkbox" id="bf-fskatt"> Godkända för F-skatt</label>
+                <label class="ag-kryss"><input type="checkbox" id="bf-arbetsgivare"> Registrerade som arbetsgivare</label>
+              </div>
+
+              <div class="fgroup" style="margin-top:16px">
+                <label for="bf-anteckningar">Anteckningar</label>
+                <textarea class="inp" id="bf-anteckningar" rows="3" placeholder="Sådant agenten bör känna till som inte passar i något fält ovan."></textarea>
+              </div>
+
+              <div class="ag-rad">
+                <button class="btn btn-primary" id="bf-spara">Spara</button>
+                <p class="ok-msg" id="bf-msg" style="margin:0"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- ÅTERKOPPLING ---------- -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="aterkoppling"
+               id="panel-ag-aterkoppling" aria-labelledby="flik-ag-aterkoppling" hidden>
+
+            <div class="dbox">
+              <h5>Återkoppling till föräldrar</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:20px">
+                Lektionsrapporter där studiehjälparens råa anteckningar ännu inte polerats till
+                något en förälder kan läsa. Studiehjälparen gör det normalt själv i sin egen vy
+                — listan här är för de rapporter där det inte blivit gjort. Knappen skriver om
+                anteckningarna med det som faktiskt står i dem och hittar inte på framsteg som
+                ingen nämnt.
+              </p>
+              <div id="ak-lista"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             TJÄNSTER (Fas 6)
+             Tjänstekatalogen och rabattkoderna låg under System. De
+             har fått ett eget område: det är affären, inte driften av
+             sajten. #system/tjanster och #system/rabattkoder skickas
+             hit (följHash i nextrum-admin.js).
+             ============================================================ -->
+        <section class="vy-sek" data-sek="katalog" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Tjänster</h2>
+              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor — och rabattkoderna.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Tjänster och rabattkoder">
+            <button class="vy-flik" type="button" role="tab" data-flik="tjanster"
+                    id="flik-tjanster" aria-controls="panel-tjanster">Tjänster &amp; priser</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="rabattkoder"
+                    id="flik-rabattkoder" aria-controls="panel-rabattkoder">Rabattkoder</button>
+          </div>
+
+          <!-- ============ TJÄNSTER & PRISER ============
+               Tabellen tjanster (schema-v18.sql) är källan till vad
+               Nextrum erbjuder. Den ersatte den gamla Pris-fliken,
+               som skrev direkt i prissattning — nu speglar en trigger
+               läxhjälpens pris dit, så att edge-funktionen fakturering
+               fortsätter läsa det den alltid läst. Två redigerare för
+               samma tal hade förr eller senare gett två olika tal.
+
+               `aktiv` är det enda som styr vad besökare ser. En tjänst
+               utan pris ska aldrig kunna slås på, och knappen nedan
+               vägrar det. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="tjanster"
+               id="panel-tjanster" aria-labelledby="flik-tjanster" hidden>
+            <div class="dbox">
+              <h5>Vad vi erbjuder <em id="tj-uppdaterad"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:6px">
+                <b>Aktiv</b> avgör vad familjer och sökande ser. Slår du på en tjänst dyker
+                den upp i intresseanmälan, i ansökan och i bokningen — direkt, utan att
+                någon behöver ändra i koden.
+              </p>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:0">
+                Priset gäller <b>nya fakturarader</b>. Redan skapade rader har sitt pris
+                sparat på sig; en prisändring får aldrig ändra vad någon redan fakturerats.
+                Ändrar du läxhjälpens pris måste det också ändras på prissidan, i FAQ:n och
+                i användarvillkoren — ett pris som står olika på tre ställen är en tvist.
+              </p>
+            </div>
+
+            <div id="tj-kort" style="margin-top:clamp(16px,1.8vw,22px)"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- ============ RABATTKODER ============
+               Tabellen är stängd för alla utom admin, med flit: en
+               inloggad familj som kan LÄSA den kan läsa alla koder
+               och välja den som är mest värd. Bokningen kontrollerar
+               i stället en kod i taget via kolla_rabattkod().
+
+               Rabatten fryser vid bokningen. Ändrar ni en kod i
+               efterhand påverkas inga redan bokade pass — en faktura
+               får inte ändra sig för att en kampanj justerats. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="rabattkoder"
+               id="panel-rabattkoder" aria-labelledby="flik-rabattkoder" hidden>
+            <div class="dbox">
+              <h5>Ny kod</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
+                Koden lagras i versaler och familjen skriver den vid bokningen. Lämna
+                <b>Max antal</b> tomt för obegränsat, och <b>Gäller till</b> tomt för ingen
+                slutdag.
+              </p>
+              <form id="rk-form">
+                <div class="ag-faltrad">
+                  <div class="fgroup">
+                    <label for="rk-kod">Kod</label>
+                    <input class="inp" id="rk-kod" maxlength="24" placeholder="SOMMAR25"
+                           autocomplete="off" spellcheck="false" style="text-transform:uppercase">
+                  </div>
+                  <div class="fgroup">
+                    <label for="rk-typ">Typ</label>
+                    <select class="inp" id="rk-typ">
+                      <option value="procent">Procent av passet</option>
+                      <option value="belopp">Fast belopp i kronor</option>
+                    </select>
+                  </div>
+                  <div class="fgroup">
+                    <label for="rk-varde">Värde</label>
+                    <input class="inp" id="rk-varde" type="number" min="1" step="1" inputmode="numeric" placeholder="10">
+                  </div>
+                  <div class="fgroup">
+                    <label for="rk-tjanst">Gäller tjänst</label>
+                    <select class="inp" id="rk-tjanst"><option value="">Alla tjänster</option></select>
+                  </div>
+                  <div class="fgroup">
+                    <label for="rk-till">Gäller till</label>
+                    <input class="inp" id="rk-till" type="date">
+                  </div>
+                  <div class="fgroup">
+                    <label for="rk-max">Max antal</label>
+                    <input class="inp" id="rk-max" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
+                  </div>
+                </div>
+                <div class="fgroup" style="margin-top:14px">
+                  <label for="rk-text">Beskrivning</label>
+                  <input class="inp" id="rk-text" maxlength="80" placeholder="Syns för familjen när koden godkänns">
+                </div>
+                <div class="ag-rad">
+                  <button class="btn btn-primary btn-sm" type="submit" id="rk-spara">Skapa koden</button>
+                  <p class="ok-msg" id="rk-msg" style="margin:0"></p>
+                </div>
+              </form>
+            </div>
+
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+              <h5>Koder <em id="rk-antal"></em></h5>
+              <div id="rk-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+        </section>
+
+        <section class="vy-sek" data-sek="system" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>System</h2>
+              <p>Kopplingarna till Google och Fortnox, vem som är admin, felen användarna råkat på, inställningarna och auditloggen.</p>
+            </div>
+          </div>
+
+          <div class="vy-flikar" role="tablist" aria-label="Delar av systemet">
+            <button class="vy-flik" type="button" role="tab" data-flik="integrationer"
+                    id="flik-integrationer" aria-controls="panel-integrationer">Integrationer</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="adminanvandare"
+                    id="flik-adminanvandare" aria-controls="panel-adminanvandare">Adminanvändare</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="fel"
+                    id="flik-fel" aria-controls="panel-fel">Fel
+              <span class="vy-flik-mark" id="flik-fel-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="installningar"
+                    id="flik-installningar" aria-controls="panel-installningar">Inställningar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="audit"
+                    id="flik-audit" aria-controls="panel-audit">Auditlogg</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="automationer"
+                    id="flik-automationer" aria-controls="panel-automationer">Automationer</button>
+          </div>
+
+          <!-- ============ ADMINANVÄNDARE ============
+               is_admin är den enda flaggan i systemet som avgör vem
+               som ser den här sidan. Att sätta den har krävt Table
+               Editor, vilket betyder att den som skulle ge en ny
+               kollega behörighet behövde databasåtkomst — och då har
+               hen redan mer än behörigheten ger.
+
+               Triggern skydda_profilfalt släpper igenom en admin, så
+               det går från appen. Det som INTE går, och inte ska gå,
+               är att ta bort sin egen: en ensam admin som klickar
+               fel låser ut hela bolaget ur sin egen adminvy. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="adminanvandare"
+               id="panel-adminanvandare" aria-labelledby="flik-adminanvandare" hidden>
+            <div class="dbox">
+              <h5>Har behörighet <em id="adm-anv-antal"></em></h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
+                En admin ser alla familjers och studiehjälpares uppgifter, alla meddelanden,
+                alla fakturor och alla utbetalningar. Ge den bara till den som ska ha den.
+              </p>
+              <div id="adm-anv"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+              <h5>Ge behörighet</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:14px">
+                Personen behöver ha ett konto på sidan först. Sök på namn eller e-post.
+              </p>
+              <div class="adm-verktyg">
+                <input class="inp adm-sok" id="adm-anv-sok" type="search"
+                       placeholder="Sök namn eller e-post" aria-label="Sök person" autocomplete="off"
+                       style="max-width:none">
+              </div>
+              <div id="adm-anv-traffar"></div>
+            </div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="integrationer"
+               id="panel-integrationer" aria-labelledby="flik-integrationer">
+            <div id="int-kort"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="fel"
+               id="panel-fel" aria-labelledby="flik-fel" hidden>
+            <div class="dbox">
+              <h5>Klientfel <em id="fel-antal"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
+                Fel som inträffade i någons webbläsare. Ett fel här betyder att någon
+                såg en trasig sida — inte att något kan gå sönder i framtiden.
+              </p>
+              <div id="fel-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox">
+              <h5>Notiser som inte gick fram <em id="notis-antal"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
+                Mejlen om nya anmälningar, tidsförslag och meddelanden skickas av databasen.
+                Går ett utskick fel sparas raden ändå — och tidigare fanns felet bara i ett
+                loggbord ingen kunde läsa. Här står de senaste dygnets misslyckade utskick.
+                Databasen städar bort äldre svar själv, så en tom lista betyder "inget de
+                senaste timmarna", inte "aldrig något".
+              </p>
+              <div id="notis-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- ============ INSTÄLLNINGAR (Fas 6) ============
+               Det som styr verksamheten men inte är kod. RUT-taket per
+               år matas in här med källa — ingen skattesiffra står i
+               koden (Fas 5.3). Utan ett tak för året drar
+               faktureringen ingen RUT. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="installningar"
+               id="panel-installningar" aria-labelledby="flik-installningar" hidden>
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>RUT-tak per år</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Taket per köpare och år, hämtat från Skatteverket. Skriv var siffran kommer ifrån —
+                den ändras av lagstiftaren, inte av oss.
+              </p>
+              <form id="rt-form" class="uppg-form" novalidate>
+                <div class="fgroup"><label for="rt-ar">År</label>
+                  <input class="inp" id="rt-ar" type="number" min="2020" max="2100" step="1" inputmode="numeric"></div>
+                <div class="fgroup"><label for="rt-tak">Tak, kronor</label>
+                  <input class="inp" id="rt-tak" type="number" min="1" step="1" inputmode="numeric"></div>
+                <div class="fgroup uppg-bred"><label for="rt-kalla">Källa</label>
+                  <input class="inp" id="rt-kalla" maxlength="300" placeholder="t.ex. skatteverket.se, sidan om RUT, hämtad 2026-01-02"></div>
+                <div class="uppg-fot">
+                  <button class="btn btn-primary btn-sm" type="submit">Spara taket</button>
+                  <p class="ok-msg" id="rt-msg" style="margin:0"></p>
+                </div>
+              </form>
+              <div id="rt-tabell" style="margin-top:14px"><div class="loading">Hämtar</div></div>
+            </div>
+            <div class="dbox">
+              <h5>Andra inställningar</h5>
+              <div id="inst-pekare"></div>
+            </div>
+          </div>
+
+          <!-- ============ AUDITLOGG (Fas 6) ============
+               Vem som ändrade vad och när: matchningar, fakturor,
+               utbetalningar, tjänster, adminbehörighet, undantag,
+               kopplade rapporter och varje åtkomst till ett
+               personnummer. Loggen innehåller bara id, status, belopp
+               och datum — namnen slås upp här, när den visas. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="audit"
+               id="panel-audit" aria-labelledby="flik-audit" hidden>
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <select class="sel" id="audit-filter" aria-label="Visa händelser av typ">
+                  <option value="">Allt</option>
+                  <option value="matchning">Matchningar</option>
+                  <option value="faktura">Fakturor</option>
+                  <option value="utbetalning">Utbetalningar</option>
+                  <option value="tjanst">Tjänster</option>
+                  <option value="rabattkod">Rabattkoder</option>
+                  <option value="behorighet">Adminbehörighet</option>
+                  <option value="pass">Undantagna pass</option>
+                  <option value="rapport">Rapporter</option>
+                  <option value="studiehjalpare">Studiehjälpare</option>
+                  <option value="skatteuppgifter">Personnummer</option>
+                  <option value="rut_tak">RUT-tak</option>
+                  <option value="anmalan">Intresseanmälningar</option>
+                  <option value="ansokan">Ansökningar</option>
+                  <option value="uppdrag">Uppdrag</option>
+                  <option value="uppgift">Uppgifter</option>
+                </select>
+                <span class="small" id="audit-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="audit-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- ============ AUTOMATIONER (Fas 7) ============
+               Fyra namngivna kontroller i databasen. De SKAPAR
+               UPPGIFTER och skickar aldrig något: en påminnelse till
+               en familj går fortfarande via knappen i Ekonomi, med
+               inloggning.
+
+               Knappen finns före schemat med flit. En automation som
+               ingen sett köra ska inte få köra av sig själv klockan
+               fem på morgonen. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="automationer"
+               id="panel-automationer" aria-labelledby="flik-automationer" hidden>
+            <div class="dbox">
+              <div class="vy-sek-topp">
+                <div>
+                  <h3>Kontroller</h3>
+                  <p class="small">Letar efter sådant som annars upptäcks för sent. Varje fynd
+                    blir en uppgift under Drift → Uppgifter. Ingenting skickas till någon.</p>
+                </div>
+                <button class="btn btn-primary" type="button" id="aut-kor">Kör kontrollerna nu</button>
+              </div>
+              <p class="ok-msg" id="aut-msg"></p>
+              <div id="aut-kontroller"></div>
+            </div>
+
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <h3 style="margin:0">Uppgifter kontrollerna skapat</h3>
+                <span class="small" id="aut-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="aut-uppgifter"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox">
+              <h3 style="margin:0 0 10px">Schemalagda körningar</h3>
+              <div id="aut-schema"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-bot" style="border:none;padding-top:0">
+      <span>© <span id="year"></span> Nextrum</span>
+      <a href="mailto:info@nextrum.se">info@nextrum.se</a>
+    </div>
+  </div>
+</footer>
+
+<script src="_prov-admin-data.js"></script>
+<script src="_prov-admin-stub.js"></script>
+<script src="nextrum-config.js"></script>
+<script src="nextrum-fel.js"></script>
+<script src="nextrum-app.js"></script>
+<script src="nextrum-tjanster.js"></script>
+<script src="nextrum-studie.js"></script>
+<script src="nextrum-arbetsyta.js"></script>
+<script src="nextrum-media.js"></script>
+<script src="nextrum-betalning.js"></script>
+<script src="nextrum-agent.js"></script>
+<script src="nextrum-admin-agenter.js"></script>
+<script src="nextrum-admin-karna.js"></script>
+<script src="nextrum-admin-detalj.js"></script>
+<script src="nextrum-admin-oversikt.js"></script>
+<script src="nextrum-admin-kunder.js"></script>
+<script src="nextrum-admin-rekrytering.js"></script>
+<script src="nextrum-admin-kommunikation.js"></script>
+<script src="nextrum-admin-drift.js"></script>
+<script src="nextrum-admin-ekonomi.js"></script>
+<script src="nextrum-admin-tjanster.js"></script>
+<script src="nextrum-admin-system.js"></script>
+<script src="nextrum-admin-automationer.js"></script>
+<script src="nextrum-admin-ai.js"></script>
+<script src="nextrum-admin.js"></script>
+<script src="_prov-admin-driver.js"></script>
+</body>
+</html>
