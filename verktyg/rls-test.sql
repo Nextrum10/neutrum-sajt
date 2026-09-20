@@ -915,6 +915,87 @@ select '7.4 anmälan om inaktiv tjänst skrivs om till standardtjänsten',
 from public.leads
 where email = 'prov-tjanst7@example.invalid' and tjanst = public.standard_tjanst();
 
+-- ============================================================
+-- FAS 8 — AI-lagret
+--
+-- Det viktigaste provet här är inte att en policy nekar, utan att
+-- ROLLEN inte kan något: nextrum_ai har inga tabellrättigheter alls,
+-- och det är den garantin hela AI-lagret vilar på. En policy går att
+-- lägga till av misstag; ett saknat grant gör att koden helt enkelt
+-- inte fungerar.
+-- ============================================================
+
+select pg_temp.prova('8.2 anon läser förslagen', null,
+  array[$q$select * from public.ai_forslag$q$], 'nekad');
+select pg_temp.prova('8.2 familj läser förslagen', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select * from public.ai_forslag$q$], 'nekad');
+select pg_temp.prova('8.2 familj skriver ett förslag', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.ai_forslag (typ, nyckel) values ('matchning', 'prov:fusk:8')$q$], 'nekad');
+select pg_temp.prova('8.5 familj öppnar AI-dörren', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select public.ai_verktyg('nya_leads')$q$], 'nekad');
+select pg_temp.prova('8.6 familj godkänner ett förslag', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select public.godkann_forslag(gen_random_uuid())$q$], 'nekad');
+select pg_temp.prova('8.3 familj läser matchningsförslag', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select * from public.matchningsforslag('00000000-0000-4000-8000-0000000005a1')$q$], 'nekad');
+
+-- Rollen själv. set local role kräver postgres, och det är just det
+-- provet: även med full tillgång till att BLI rollen kan den inget.
+select set_config('request.jwt.claims', null, true);
+set local role nextrum_ai;
+do $$
+declare fel text := 'ingen';
+begin
+  begin
+    update public.students set grade = 'hackad';
+    fel := 'INGEN SPÄRR';
+  exception when others then fel := sqlstate;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('8.5 rollen nextrum_ai kan inte skriva i students', fel = '42501', 'fick ' || fel);
+end $$;
+do $$
+declare fel text := 'ingen';
+begin
+  begin
+    perform 1 from public.students limit 1;
+    fel := 'INGEN SPÄRR';
+  exception when others then fel := sqlstate;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('8.5 rollen nextrum_ai kan inte ens läsa students', fel = '42501', 'fick ' || fel);
+end $$;
+do $$
+declare fel text := 'ingen';
+begin
+  begin
+    insert into public.ai_forslag (typ, nyckel) values ('matchning', 'prov:roll:8');
+    fel := 'INGEN SPÄRR';
+  exception when others then fel := sqlstate;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('8.5 rollen nextrum_ai kan inte skriva förslag direkt', fel = '42501', 'fick ' || fel);
+end $$;
+reset role;
+
+-- Det AI:n föreslog ska vara det admin godkänner.
+insert into public.ai_forslag (typ, nyckel, payload, motivering)
+values ('matchning', 'prov:frys:8',
+        jsonb_build_object('elev_id', '00000000-0000-4000-8000-0000000005a1',
+                           'studiehjalpare_id', '00000000-0000-4000-8000-0000000000a1'),
+        'Ursprunglig motivering');
+update public.ai_forslag
+   set typ = 'lead_status',
+       payload = '{"lead_id":"00000000-0000-4000-8000-00000000000b","status":"matched"}'::jsonb,
+       motivering = 'Utbytt',
+       nyckel = 'prov:frys:8b'
+ where nyckel = 'prov:frys:8';
+
+insert into utfall (test, ok, detalj)
+select '8.2 förslaget går inte att skriva om efter att det skapats',
+       count(*) = 1, 'oförändrade rader: ' || count(*)
+from public.ai_forslag
+where nyckel = 'prov:frys:8' and typ = 'matchning' and motivering = 'Ursprunglig motivering';
+
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).
 insert into utfall (test, ok, detalj)
@@ -934,7 +1015,13 @@ from unnest(array[
   'public.avvikelser_rader()', 'public.dagliga_kontroller()',
   'public.kontroll_saknade_rapporter(integer)', 'public.kontroll_ekonomiska_avvikelser()',
   'public.paminnelse_forfallna_fakturor()',
-  'public.uppfoljning_leads_och_ansokningar(integer, integer)'
+  'public.uppfoljning_leads_och_ansokningar(integer, integer)',
+  'public.ai_nya_leads(integer)', 'public.ai_omatchade_elever()',
+  'public.ai_kommande_pass(integer)', 'public.ai_saknade_rapporter(integer)',
+  'public.ai_skapa_forslag(text, text, jsonb, text, uuid, text, text)',
+  'public.matchningsforslag_rader(uuid)', 'public.ai_finns(text, uuid)',
+  'public.frys_forslaget()', 'public.ai_taket_racker()',
+  'public.matchningspoang(text[], text, text[], text[], integer, integer, jsonb)'
 ]) f;
 
 insert into utfall (test, ok, detalj)
@@ -945,7 +1032,9 @@ from unnest(array[
   'public.kolla_rabattkod(text, text, bigint)', 'public.publika_studiehjalpare()',
   'public.spara_skatteuppgifter(uuid, text, text, text, text)',
   'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)',
-  'public.ekonomiska_avvikelser()', 'public.kor_kontrollerna()'
+  'public.ekonomiska_avvikelser()', 'public.kor_kontrollerna()',
+  'public.ai_verktyg(text, jsonb)', 'public.godkann_forslag(uuid)',
+  'public.avvisa_forslag(uuid, text)', 'public.matchningsforslag(uuid)'
 ]) f;
 
 insert into utfall (test, ok, detalj)
@@ -955,7 +1044,9 @@ select 'Skattefunktion ej anropbar för anon: ' || f,
 from unnest(array[
   'public.spara_skatteuppgifter(uuid, text, text, text, text)',
   'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)',
-  'public.ekonomiska_avvikelser()', 'public.kor_kontrollerna()'
+  'public.ekonomiska_avvikelser()', 'public.kor_kontrollerna()',
+  'public.ai_verktyg(text, jsonb)', 'public.godkann_forslag(uuid)',
+  'public.avvisa_forslag(uuid, text)'
 ]) f;
 
 select test, ok, detalj from utfall order by nr;
