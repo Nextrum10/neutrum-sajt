@@ -17,7 +17,7 @@
   const M = NXMedia;
 
   const { BOK_LAGE, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, elevHjälpare,
-          elevNamn, kortDatum, läge, namnFör, pill, rad } = NXAdmin;
+          elevNamn, kortDatum, läge, namnFör, närText, pill, rad } = NXAdmin;
 
   /* ============================================================
      DETALJPANELEN
@@ -130,6 +130,19 @@
       lägg('noteringar', supa.from('admin_noteringar')
         .select('id, text, skriven_av, created_at').eq('om_profil', id)
         .order('created_at', { ascending: false }));
+
+      /* Tidslinjen. Anmälningarna och meddelandena finns inte i S:
+         S.chattar är en rad per tråd, och S.meddelanden är kapad
+         till de 400 senaste i hela systemet — en familj som varit
+         tyst en månad hade då fått en tom tidslinje trots att
+         tråden finns. Pass, fakturor, noteringar och uppgifter
+         ligger redan i minnet och hämtas inte om. */
+      lägg('anmalningar', supa.from('leads')
+        .select('id, created_at, kontaktad_at, status, subject, tjanst, uppdrag_id')
+        .eq('kund_id', id).order('created_at', { ascending: false }));
+      lägg('meddelanden', supa.from('messages')
+        .select('id, sender_id, body, created_at').eq('parent_id', id)
+        .order('created_at', { ascending: false }).limit(60));
     }
 
     /* Varje fråga fångas var för sig.
@@ -161,7 +174,8 @@
      ------------------------------------------------------------ */
   const DP_FLIKAR = {
     familj:         [['oversikt', 'Översikt'], ['barn', 'Barn'], ['pass', 'Pass'],
-                     ['ekonomi', 'Ekonomi'], ['anteckningar', 'Anteckningar']],
+                     ['ekonomi', 'Ekonomi'], ['tidslinje', 'Tidslinje'],
+                     ['anteckningar', 'Anteckningar']],
     elev:           [['oversikt', 'Översikt'], ['pass', 'Pass'], ['uppgifter', 'Uppgifter'],
                      ['utveckling', 'Utveckling'], ['rapporter', 'Rapporter']],
     studiehjalpare: [['oversikt', 'Översikt'], ['elever', 'Elever'], ['pass', 'Pass'],
@@ -224,6 +238,141 @@
         .localeCompare(String(a.wanted_date + (a.wanted_time || ''))));
   }
 
+  /* ------------------------------------------------------------
+     KUNDTIDSLINJEN (Fas 7.1)
+
+     Allt som hänt familjen i en enda lista, nyast först. Den svarar
+     på frågan "vad har hänt med de här?", som annars kräver fem
+     flikar och ett gott minne.
+
+     INGEN HÄNDELSE HITTAS PÅ. Varje rad har en tidsstämpel ur
+     databasen. Matchningen står därför INTE här: students har
+     ingen kolumn som säger när den gjordes, och att använda
+     radens created_at hade satt matchningen till den dag barnet
+     lades in. Ett ungefärligt datum i en tidslinje är värre än
+     inget datum, för det ser exakt ut.
+     ------------------------------------------------------------ */
+  const TL_MAX = 80;
+
+  function tlKort(text, max) {
+    const t = String(text || '').replace(/\s+/g, ' ').trim();
+    return t.length > (max || 90) ? t.slice(0, (max || 90) - 1) + '…' : t;
+  }
+
+  /* Tidpunkten i klartext. närText säger "för 2 timmar sedan" och
+     byggdes för aktivitetsflödet, som bara innehåller dåtid — för
+     något som ligger framåt svarar den med enbart ett klockslag, och
+     då stod "5 oktober kl. 16" som "16:00" mitt bland gårdagens
+     rader. Tidslinjen innehåller både och, så framtiden får sitt
+     datum utskrivet. */
+  function tlNär(iso, framtid) {
+    if (!framtid) return närText(iso);
+    const d = new Date(iso);
+    const tid = isNaN(d) ? '' : ' kl. '
+      + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    return kortDatum(String(iso).slice(0, 10)) + (tid === ' kl. 00:00' ? '' : tid);
+  }
+
+  function dpTidslinje(p, d) {
+    const h = [];
+    const lägg = (när, rubrik, under) => {
+      if (när) h.push({ när: när, rubrik: rubrik, under: under || '' });
+    };
+
+    lägg(p.created_at, 'Konto skapat', p.email || '');
+
+    (d.anmalningar || []).forEach(l => {
+      lägg(l.created_at, 'Intresseanmälan',
+        [l.subject, l.tjanst].filter(Boolean).join(' · '));
+      lägg(l.kontaktad_at, 'Anmälan kontaktad', '');
+    });
+
+    const barn = S.elever[p.id] || [];
+    barn.forEach(e => lägg(e.created_at, 'Barn inlagt', e.name || ''));
+
+    const pass = passFör(b => b.parent_id === p.id);
+    pass.forEach(b => {
+      const när = b.wanted_date
+        ? b.wanted_date + 'T' + String(b.wanted_time || '00:00').slice(0, 5)
+        : b.created_at;
+      const vad = b.status === 'completed' ? 'Pass genomfört'
+        : b.status === 'cancelled' ? 'Pass avbokat'
+        : 'Pass bokat';
+      /* elevNamn svarar med ett tankstreck när passet inte har något
+         barn valt, och det tecknet ska inte stå som ett namn. */
+      const vem = elevNamn(b.student_id);
+      lägg(när, vad, [vem && vem !== '—' ? vem : null, b.subject,
+        (b.duration_min || 60) + ' min'].filter(Boolean).join(' · '));
+    });
+
+    const fakturor = S.fakturor.filter(f => f.parent_id === p.id);
+    fakturor.forEach(f => {
+      const period = NX.MANADER[Number(String(f.period).slice(5, 7)) - 1]
+        + ' ' + String(f.period).slice(0, 4);
+      lägg(f.created_at, 'Faktura skapad', period + ' · ' + kronor(f.belopp_ore));
+      lägg(f.skickad_at, 'Faktura skickad', period);
+      lägg(f.betald_at, 'Faktura betald', period + ' · ' + kronor(f.belopp_ore));
+    });
+
+    (d.meddelanden || []).forEach(m => {
+      const vem = m.sender_id === p.id ? 'Familjen skrev'
+        : (namnFör(m.sender_id) || 'Någon') + ' skrev';
+      lägg(m.created_at, vem, tlKort(m.body, 110));
+    });
+
+    (d.noteringar || []).forEach(n =>
+      lägg(n.created_at, 'Anteckning', tlKort(n.text, 110)));
+
+    /* Uppgifter som hör till familjen, vilken rad de än pekar på.
+       De ligger redan i S — ingen fråga till. */
+    const mina = new Set([p.id]
+      .concat((d.anmalningar || []).map(l => l.id))
+      .concat(barn.map(e => e.id))
+      .concat(pass.map(b => b.id))
+      .concat(fakturor.map(f => f.id)));
+    (S.uppgifter || []).filter(u => u.kopplad_id && mina.has(u.kopplad_id)).forEach(u => {
+      lägg(u.created_at, 'Uppgift skapad',
+        tlKort(u.titel, 90) + (u.skapad_av_typ === 'manniska' ? '' : ' · automatisk'));
+      lägg(u.klar_at, 'Uppgift klar', tlKort(u.titel, 90));
+    });
+
+    /* Sorteras på tidpunkt, inte på text. Passen har ingen tidszon
+       ('2026-09-24T15:00' är lokal tid) medan allt annat är ISO med
+       +00:00, och en strängjämförelse mellan de två lägger ett
+       meddelande klockan 17 under ett pass klockan 16 samma dag —
+       alltid åt samma håll, och alltid fel. */
+    h.forEach(x => { x.ms = new Date(x.när).getTime(); });
+    h.sort((a, b) => (b.ms || 0) - (a.ms || 0));
+
+    const fel = [d.anmalningarFel, d.meddelandenFel].filter(Boolean);
+    const varning = fel.length
+      ? '<p class="xsmall" style="color:var(--fel)">Delar av tidslinjen kunde inte hämtas: '
+        + esc(fel.join(' · ')) + '</p>'
+      : '';
+
+    if (!h.length) {
+      return varning + tomt('Inget har hänt än',
+        'Anmälan, pass, fakturor och meddelanden dyker upp här allteftersom.');
+    }
+
+    /* "Nytt" betyder det senaste dygnet, inte framtiden. Ett pass om
+       två veckor är inte en nyhet, och utan den övre gränsen blev
+       det den prick som lyste starkast i hela tidslinjen. */
+    const nu = Date.now();
+    const dygnet = nu - 86400000;
+    return varning
+      + '<div class="adm-flode">' + h.slice(0, TL_MAX).map(x =>
+        '<div class="adm-flode-post'
+        + (x.ms > dygnet && x.ms <= nu ? ' ar-ny' : '') + '">'
+        + '<span class="adm-flode-nar">' + esc(tlNär(x.när, x.ms > nu)) + '</span>'
+        + '<span class="adm-flode-text"><b>' + esc(x.rubrik) + '</b>'
+        + '<span>' + esc(x.under) + '</span></span>'
+        + '</div>').join('') + '</div>'
+      + (h.length > TL_MAX
+        ? '<p class="xsmall">Visar de ' + TL_MAX + ' senaste av ' + h.length + ' händelser.</p>'
+        : '');
+  }
+
   function passLista(pass, visaVem) {
     if (!pass.length) return tomt('Inga pass', 'Bokade pass dyker upp här.');
     return pass.slice(0, 30).map(b => dpRad(
@@ -284,6 +433,8 @@
             läge(FAKT_LAGE, f.status))).join('')
         : tomt('Inga fakturor än', 'Den första skapas när en månad med genomförda pass är slut.'));
     }
+
+    if (DP.flik === 'tidslinje') return dpTidslinje(p, d);
 
     if (DP.flik === 'anteckningar') return dpNoteringar(p.id, d);
 

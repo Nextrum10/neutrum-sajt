@@ -96,7 +96,9 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-studie.js`, `-arbetsyta.js`, `-kontakt.js`, `-betalning.js`, `-media.js`, `-tjanster.js` | Delat mellan vyerna |
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
-| `nextrum-admin.js` | Bara `admin.html` (4 700 rader) |
+| `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, sök, notiser, bevakning och `start()` |
+| `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |
+| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, kommunikation, drift, ekonomi, tjanster, system, automationer. Anropar varandra via `NXAdmin.rita` |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
@@ -167,7 +169,24 @@ Tabeller: `profiles`, `students`, `tutor_profiles`, `tutor_availability`,
 `contact_messages`, `invoices`, `invoice_lines`, `payouts`,
 `payout_lines`, `tjanster`, `prissattning`, `rabattkoder`,
 `integrationer`, `fortnox_token`, `notis_konfig`, `klientfel`,
-`agent_korningar`, `agent_steg`, `admin_noteringar`, `foretagsfakta`.
+`agent_korningar`, `agent_steg`, `admin_noteringar`, `foretagsfakta`,
+och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
+`kund_skatteuppgifter`.
+
+**Auditloggen (Fas 6) går inte att ändra.** `audit_logg` skrivs av
+triggern `logga_andring`, som bara loggar VITLISTADE kolumner — aldrig
+namn, adresser, meddelandetexter eller fritext om barn. Update, delete
+och truncate är blockerade, också för admin. Lägger du en trigger på en
+ny tabell: ta med tillstånd och kopplingar, inte innehåll.
+
+**Uppgifter som maskiner skapar går genom `skapa_uppgift()`** (Fas 7),
+som kräver en nyckel och vägrar skapa en till när det redan finns en
+öppen med samma nyckel. Adminvyn skriver direkt i `uppgifter` under sin
+egen policy. Kontrollerna (`kontroll_saknade_rapporter`,
+`kontroll_ekonomiska_avvikelser`, `paminnelse_forfallna_fakturor`,
+`uppfoljning_leads_och_ansokningar`) SKAPAR bara uppgifter — ingen av
+dem skickar något, och ingen av dem är schemalagd. `kor_kontrollerna()`
+kör alla fyra från fliken System → Automationer.
 
 ---
 
@@ -234,6 +253,23 @@ tillbaka en kopia.**
 | `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
 | `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
+
+**Två funktioner i drift finns inte i repot:** `notis-ko` och
+`notis-avanmal` (båda ACTIVE, `verify_jwt` av). Deras kopia av
+`_delad/mejl.ts` är dessutom NYARE än repots, och de bär filer
+(`_delad/notiser/*`, `notis-ko/arbetare.ts`) som inte finns i någon
+gren. Deras databasdel är inte körd: `notis_konfig` har bara `id`,
+`hemlighet` och `uppdaterad`, och `notis_hamta`/`notis_klar` saknas.
+`notis-ko` säger i sitt eget filhuvud att den väcks av ett
+pg_cron-jobb som heter `notis_vack_arbetaren` — en halvbyggd version
+av det Fas 7 bygger. **Reda ut dem (hämta hem koden eller ta bort dem
+ur driften) innan pg_cron installeras**, annars får en halv
+implementation ett schema.
+
+`supabase/config.toml` saknas också. Sex funktioner har
+`verify_jwt = false` bara i dashboarden, och en `supabase functions
+deploy` utan filen slår på JWT-kravet igen — då svarar notistriggrarna
+401.
 
 ### Agentregeln
 

@@ -27,6 +27,7 @@
   const träffar = (...a) => NXAdmin.rita.träffar(...a);
   const utanRapport = (...a) => NXAdmin.rita.utanRapport(...a);
   const ritaAvvikelser = (...a) => NXAdmin.rita.ritaAvvikelser(...a);
+  const ritaMaskinUppgifter = (...a) => NXAdmin.rita.ritaMaskinUppgifter(...a);
 
   /* ============================================================
      MATCHNING
@@ -812,6 +813,7 @@
     }
     S.uppgifter = [data].concat(S.uppgifter || []);
     ritaUppgifter();
+    ritaMaskinUppgifter();   // listan under Automationer visar samma rader
     ritaÖversikt();
     return data;
   }
@@ -850,7 +852,8 @@
       Object.assign(u, fält);
       if (läge) u.klar_at = läge.value === 'klar' ? new Date().toISOString() : null;
       ritaUppgifter();
-      ritaAvvikelser();   // "Uppgift finns" följer uppgiftens läge
+      ritaAvvikelser();          // "Uppgift finns" följer uppgiftens läge
+      ritaMaskinUppgifter();     // och Automationer räknar bara de öppna
       ritaÖversikt();
     }
   });

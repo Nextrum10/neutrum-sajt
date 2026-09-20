@@ -1333,6 +1333,8 @@
                     id="flik-installningar" aria-controls="panel-installningar">Inställningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="audit"
                     id="flik-audit" aria-controls="panel-audit">Auditlogg</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="automationer"
+                    id="flik-automationer" aria-controls="panel-automationer">Automationer</button>
           </div>
 
           <!-- ============ ADMINANVÄNDARE ============
@@ -1456,10 +1458,52 @@
                   <option value="studiehjalpare">Studiehjälpare</option>
                   <option value="skatteuppgifter">Personnummer</option>
                   <option value="rut_tak">RUT-tak</option>
+                  <option value="anmalan">Intresseanmälningar</option>
+                  <option value="ansokan">Ansökningar</option>
+                  <option value="uppdrag">Uppdrag</option>
+                  <option value="uppgift">Uppgifter</option>
                 </select>
                 <span class="small" id="audit-antal" style="margin-left:auto;color:var(--bl-3)"></span>
               </div>
               <div id="audit-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- ============ AUTOMATIONER (Fas 7) ============
+               Fyra namngivna kontroller i databasen. De SKAPAR
+               UPPGIFTER och skickar aldrig något: en påminnelse till
+               en familj går fortfarande via knappen i Ekonomi, med
+               inloggning.
+
+               Knappen finns före schemat med flit. En automation som
+               ingen sett köra ska inte få köra av sig själv klockan
+               fem på morgonen. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="automationer"
+               id="panel-automationer" aria-labelledby="flik-automationer" hidden>
+            <div class="dbox">
+              <div class="vy-sek-topp">
+                <div>
+                  <h3>Kontroller</h3>
+                  <p class="small">Letar efter sådant som annars upptäcks för sent. Varje fynd
+                    blir en uppgift under Drift → Uppgifter. Ingenting skickas till någon.</p>
+                </div>
+                <button class="btn btn-primary" type="button" id="aut-kor">Kör kontrollerna nu</button>
+              </div>
+              <p class="ok-msg" id="aut-msg"></p>
+              <div id="aut-kontroller"></div>
+            </div>
+
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <h3 style="margin:0">Uppgifter kontrollerna skapat</h3>
+                <span class="small" id="aut-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="aut-uppgifter"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox">
+              <h3 style="margin:0 0 10px">Schemalagda körningar</h3>
+              <div id="aut-schema"><div class="loading">Hämtar</div></div>
             </div>
           </div>
         </section>
@@ -1499,6 +1543,7 @@
 <script src="nextrum-admin-ekonomi.js"></script>
 <script src="nextrum-admin-tjanster.js"></script>
 <script src="nextrum-admin-system.js"></script>
+<script src="nextrum-admin-automationer.js"></script>
 <script src="nextrum-admin.js"></script>
 </body>
 </html>

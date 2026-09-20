@@ -72,6 +72,7 @@
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
   const ritaInstallningar = (...a) => NXAdmin.rita.ritaInstallningar(...a);
   const ritaAudit = (...a) => NXAdmin.rita.ritaAudit(...a);
+  const ritaAutomationer = (...a) => NXAdmin.rita.ritaAutomationer(...a);
   const ritaUppdrag = (...a) => NXAdmin.rita.ritaUppdrag(...a);
   const ritaUppgifter = (...a) => NXAdmin.rita.ritaUppgifter(...a);
   const laddaOmEkonomi = (...a) => NXAdmin.rita.laddaOmEkonomi(...a);
@@ -890,6 +891,7 @@
       ritaAudit();
       ritaUppdrag();
       ritaUppgifter();
+      await ritaAutomationer();
       await ritaÖversikt();
 
       /* Samma summa som arbetskön på Översikt visar, inte en egen

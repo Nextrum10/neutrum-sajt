@@ -355,7 +355,8 @@
   const AUDIT_OBJEKT = {
     matchning: 'Matchning', faktura: 'Faktura', utbetalning: 'Utbetalning', tjanst: 'Tjänst',
     rabattkod: 'Rabattkod', behorighet: 'Adminbehörighet', pass: 'Pass', rapport: 'Rapport',
-    studiehjalpare: 'Studiehjälpare', skatteuppgifter: 'Personnummer', rut_tak: 'RUT-tak'
+    studiehjalpare: 'Studiehjälpare', skatteuppgifter: 'Personnummer', rut_tak: 'RUT-tak',
+    anmalan: 'Intresseanmälan', ansokan: 'Ansökan', uppdrag: 'Uppdrag', uppgift: 'Uppgift'
   };
   const AUDIT_HANDLING = {
     skapad: 'skapad', borttagen: 'borttagen', andrad: 'ändrad', status: 'ny status',
@@ -368,7 +369,11 @@
     aktiv: 'aktiv', is_admin: 'admin', role: 'roll', fakturerbar: 'fakturerbart', booking_id: 'pass',
     narvaro: 'närvaro', hourly_rate: 'timpenning', visa_publikt: 'publik', betald_at: 'betald',
     skickad_at: 'skickad', utbetald_at: 'utbetald', forfaller: 'förfaller', period: 'period',
-    rut_procent: 'RUT-andel', rut_berattigad: 'RUT'
+    rut_procent: 'RUT-andel', rut_berattigad: 'RUT',
+    kund_id: 'kund', uppdrag_id: 'uppdrag', kontaktad_at: 'kontaktad', intervju_at: 'intervju',
+    utbildad_at: 'utbildad', tjanst: 'tjänst', typ: 'typ', ansvarig: 'ansvarig',
+    forfallodag: 'klar senast', nyckel: 'nyckel', kopplad_tabell: 'gäller', kopplad_id: 'rad',
+    skapad_av: 'skapad av', skapad_av_typ: 'skapad av'
   };
 
   const MATCH_LAGE = { pending: 'väntar', matched: 'matchad', paused: 'pausad' };

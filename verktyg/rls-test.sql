@@ -25,6 +25,7 @@
 begin;
 
 alter table public.bookings disable trigger "nytt-passforslag";
+alter table public.leads disable trigger "ny-intresseanmalan";
 
 create temp table utfall (
   nr     serial,
@@ -750,6 +751,127 @@ select pg_temp.prova('6.2 familj anropar ekonomiska_avvikelser', '00000000-0000-
 select pg_temp.prova('6.2 anon läser admin_lage', null,
   array[$q$select * from public.admin_lage$q$], 'nekad');
 
+-- ============================================================
+-- FAS 7 — kundresan och automationerna
+--
+-- OBS om formen: pg_temp.prova rullar tillbaka sin egen
+-- deltransaktion (den avslutar med raise). Raden den skapar finns
+-- alltså inte för nästa test. Fixturen nedan läggs därför in med
+-- vanliga satser, med rollen satt via pg_temp.bli, och räknas i en
+-- EGEN sats — en sats ser inte vad den själv skriver.
+-- ============================================================
+
+-- Anmälningsformuläret är öppet för vem som helst, och RLS kan inte
+-- begränsa kolumner. Triggern skydda_leadfalt ska därför nolla det
+-- en besökare inte får bestämma: kopplingen, läget och noteringen.
+select pg_temp.prova('7.1 anon skickar en intresseanmälan', null,
+  array[$q$insert into public.leads (parent_name, email, subject, tjanst, kund_id, status, notering, kontaktad_at)
+        values ('Prov Fas7', 'prov-fas7@example.invalid', 'Matte', 'laxhjalp',
+                '00000000-0000-4000-8000-0000000000f1', 'matched', 'skriven av angripare', now())$q$], 'ok');
+
+-- Samma anmälan igen, men utanför prova, så att raden blir kvar.
+select pg_temp.bli(null);
+insert into public.leads (parent_name, email, subject, tjanst, kund_id, status, notering, kontaktad_at)
+values ('Prov Fas7', 'prov-fas7@example.invalid', 'Matte', 'laxhjalp',
+        '00000000-0000-4000-8000-0000000000f1', 'matched', 'skriven av angripare', now());
+reset role;
+
+insert into utfall (test, ok, detalj)
+select '7.1 anon kan inte skriva kopplingen på en anmälan',
+       count(*) = 1,
+       'rader som klarade kontrollen: ' || count(*)
+from public.leads
+where email = 'prov-fas7@example.invalid'
+  and kund_id is null and uppdrag_id is null and status = 'new'
+  and notering is null and kontaktad_at is null;
+
+-- Det publika formuläret ska fortfarande fungera oförändrat.
+select pg_temp.bli(null);
+insert into public.leads (parent_name, email, child_name, grade, subject, tjanst, message)
+values ('Prov Form', 'prov-form7@example.invalid', 'Barn', 'Åk 8', 'Matte', 'laxhjalp', 'Hej');
+reset role;
+
+insert into utfall (test, ok, detalj)
+select '7.1 anmälan med formulärets fält går igenom oförändrad',
+       count(*) = 1, 'rader: ' || count(*)
+from public.leads
+where email = 'prov-form7@example.invalid' and parent_name = 'Prov Form'
+  and child_name = 'Barn' and grade = 'Åk 8' and subject = 'Matte' and message = 'Hej';
+
+-- Admin får skriva kopplingen, och bara admin.
+select pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+update public.leads set kund_id = '00000000-0000-4000-8000-0000000000f1',
+       status = 'contacted', kontaktad_at = now()
+ where email = 'prov-fas7@example.invalid';
+reset role;
+
+insert into utfall (test, ok, detalj)
+select '7.1 admin sätter kopplingen på anmälan', count(*) = 1, 'rader: ' || count(*)
+from public.leads
+where email = 'prov-fas7@example.invalid'
+  and kund_id = '00000000-0000-4000-8000-0000000000f1' and status = 'contacted';
+
+select pg_temp.prova('7.1 familj ändrar en anmälan', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.leads set kund_id = null where email = 'prov-fas7@example.invalid'$q$], 'nekad');
+
+-- Auditloggen ska följa kundresan, utan persondata i raden.
+insert into utfall (test, ok, detalj)
+select '7.1c auditrad för anmälan, utan persondata', count(*) = 1, 'rader: ' || count(*)
+from public.audit_logg
+where handling = 'anmalan.status'
+  and aktor = '00000000-0000-4000-8000-0000000000ad' and aktor_typ = 'admin'
+  and (coalesce(fore::text, '') || coalesce(efter::text, '')) not like '%example.invalid%'
+  and (coalesce(fore::text, '') || coalesce(efter::text, '')) not like '%Prov Fas7%';
+
+-- Serverkoden som automationerna använder får inte gå att nå från en vy.
+select pg_temp.prova('7.3 familj anropar skapa_uppgift', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select public.skapa_uppgift('Prov', 'prov:fran:vyn')$q$], 'nekad');
+select pg_temp.prova('7.3 studiehjälpare kör kontrollerna', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select public.kor_kontrollerna()$q$], 'nekad');
+select pg_temp.prova('7.3 familj läser avvikelser_rader', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select * from public.avvikelser_rader()$q$], 'nekad');
+
+-- Nyckeln är hela dubblettskyddet. Anropen står i egna satser: en
+-- sats ser inte raderna den själv skapar, och ett test som räknar i
+-- samma sats mäter därför ingenting.
+--
+-- Claims nollas först. reset role byter tillbaka rollen men LÄMNAR
+-- request.jwt.claims kvar — den sattes med set_config(..., true),
+-- alltså för hela transaktionen. Utan den här raden ser
+-- uppgift_stampel en inloggad människa och stämplar uppgiften som
+-- skapad av admin, och testet nedan mäter fel sak.
+select set_config('request.jwt.claims', null, true);
+
+select public.skapa_uppgift('Prov dubblett', 'prov:dubblett:7');
+select public.skapa_uppgift('Prov dubblett', 'prov:dubblett:7');
+
+insert into utfall (test, ok, detalj)
+select '7.3a skapa_uppgift skapar ingen dubblett', count(*) = 1, 'antal rader: ' || count(*)
+from public.uppgifter where nyckel = 'prov:dubblett:7';
+
+insert into utfall (test, ok, detalj)
+select '7.3a maskinens uppgift stämplas som system',
+       coalesce(bool_and(skapad_av_typ = 'system' and skapad_av is null), false),
+       coalesce(string_agg(skapad_av_typ, ','), 'ingen rad')
+from public.uppgifter where nyckel = 'prov:dubblett:7';
+
+-- En klar uppgift ska inte blockera nästa gång samma sak inträffar:
+-- samma faktura kan förfalla igen, och samma pass kan sakna rapport
+-- en gång till efter att någon stängt uppgiften.
+update public.uppgifter set status = 'klar' where nyckel = 'prov:dubblett:7';
+select public.skapa_uppgift('Prov igen', 'prov:dubblett:7');
+
+insert into utfall (test, ok, detalj)
+select '7.3a klar uppgift blockerar inte en ny', count(*) = 2, 'antal rader: ' || count(*)
+from public.uppgifter where nyckel = 'prov:dubblett:7';
+
+-- Kontrollerna ska gå att köra två gånger utan att listan dubbleras.
+select public.dagliga_kontroller();
+insert into utfall (test, ok, detalj)
+select '7.3c andra körningen skapar inget nytt',
+       (k ->> 'nya_uppgifter')::int = 0, 'svar: ' || k::text
+from (select public.dagliga_kontroller() as k) t;
+
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).
 insert into utfall (test, ok, detalj)
@@ -764,7 +886,12 @@ from unnest(array[
   'public.bekrafta_inom_schemat()', 'public.skydda_studentfalt()', 'public.las_fakturabelopp()',
   'public.elevens_uppdrag()', 'public.stada_elevens_uppdrag()', 'public.koppla_passets_uppdrag()',
   'public.standard_tjanst()', 'public.personnummer_ok(text)',
-  'public.logga_andring()', 'public.uppgift_stampel()'
+  'public.logga_andring()', 'public.uppgift_stampel()', 'public.skydda_leadfalt()',
+  'public.skapa_uppgift(text, text, text, text, text, text, date, text)',
+  'public.avvikelser_rader()', 'public.dagliga_kontroller()',
+  'public.kontroll_saknade_rapporter(integer)', 'public.kontroll_ekonomiska_avvikelser()',
+  'public.paminnelse_forfallna_fakturor()',
+  'public.uppfoljning_leads_och_ansokningar(integer, integer)'
 ]) f;
 
 insert into utfall (test, ok, detalj)
@@ -775,7 +902,7 @@ from unnest(array[
   'public.kolla_rabattkod(text, text, bigint)', 'public.publika_studiehjalpare()',
   'public.spara_skatteuppgifter(uuid, text, text, text, text)',
   'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)',
-  'public.ekonomiska_avvikelser()'
+  'public.ekonomiska_avvikelser()', 'public.kor_kontrollerna()'
 ]) f;
 
 insert into utfall (test, ok, detalj)
@@ -785,7 +912,7 @@ select 'Skattefunktion ej anropbar för anon: ' || f,
 from unnest(array[
   'public.spara_skatteuppgifter(uuid, text, text, text, text)',
   'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)',
-  'public.ekonomiska_avvikelser()'
+  'public.ekonomiska_avvikelser()', 'public.kor_kontrollerna()'
 ]) f;
 
 select test, ok, detalj from utfall order by nr;
