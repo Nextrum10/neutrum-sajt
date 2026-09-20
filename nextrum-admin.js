@@ -104,6 +104,8 @@
         b.avbokningsskal = gammal;
       }
       ritaBokningar();
+      /* Skälet är en av staplarna i Avbokningar. Samma skäl som ovan. */
+      await hämtaAnalys(); ritaStatistik();
       return;
     }
 
@@ -223,8 +225,13 @@
         await skriv('bookings', b.id, { status: 'cancelled' });
         /* Samma rad syns på fyra ställen. Ritas bara listan om blir
            kalendern och lektionslistan kvar med det gamla läget, och
-           då står det två olika saker om samma pass på samma skärm. */
-        ritaBokningar(); ritaKalender(); ritaLektioner(); ritaStatistik();
+           då står det två olika saker om samma pass på samma skärm.
+
+           Statistiken räknas i databasen sedan Fas 9.6, så den måste
+           hämtas om — inte bara ritas om. Annars står avbokningen i
+           listan men inte i stapeln, på samma skärm. */
+        ritaBokningar(); ritaKalender(); ritaLektioner();
+        await hämtaAnalys(); ritaStatistik();
         await ritaÖversikt();
       });
       return;
