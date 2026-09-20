@@ -273,58 +273,6 @@
             </div>
           </div>
 
-          <!-- ---------- DRIFT (Fas 8) ----------
-               Den tredje agenten. Den läser verksamhetens eget läge och
-               föreslår — den har med flit inget utgående verktyg, och
-               talar med databasen genom en enda dörr som ägs av en roll
-               utan tabellrättigheter.
-
-               Självtestet kör alla läsverktygen utan att röra modellen,
-               och visar vilka fält de lämnar ut. Det är den kontroll
-               som säger att inga namn följer med. -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="drift"
-               id="panel-ag-drift" aria-labelledby="flik-ag-drift" hidden>
-            <div class="dbox">
-              <div class="vy-sek-topp">
-                <div>
-                  <h3>Fråga drift-agenten</h3>
-                  <p class="small">Den läser anmälningar, omatchade elever, kommande pass och pass
-                    utan rapport. Den matchar ingen och mejlar ingen: allt den vill göra blir ett
-                    förslag som du godkänner under fliken Förslag.</p>
-                </div>
-                <button class="btn btn-ghost btn-sm" type="button" id="drift-sjalvtest">Självtest</button>
-              </div>
-              <div id="drift-sjalvtest-ut"></div>
-              <div class="fgroup">
-                <label for="drift-fraga">Fråga</label>
-                <textarea class="inp" id="drift-fraga" rows="3"
-                  placeholder="Vad behöver göras idag?"></textarea>
-              </div>
-              <p class="ok-msg" id="drift-msg"></p>
-              <button class="btn btn-primary" type="button" id="drift-kor">Fråga</button>
-              <div id="drift-svar"></div>
-            </div>
-          </div>
-
-          <!-- ---------- FÖRSLAG (Fas 8) ----------
-               Kön av det AI:n vill göra. Ett förslag är inte en uppgift:
-               trycker du ja utför databasen åtgärden, med din inloggning,
-               så att triggrar och auditlogg fungerar precis som när du
-               själv klickar i vyn. -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="forslag"
-               id="panel-ag-forslag" aria-labelledby="flik-ag-forslag" hidden>
-            <div class="dbox">
-              <div class="adm-verktyg">
-                <select class="sel" id="forslag-filter" aria-label="Visa förslag">
-                  <option value="oppna">Väntar på svar</option>
-                  <option value="alla">Alla</option>
-                </select>
-                <span class="small" id="forslag-antal" style="margin-left:auto;color:var(--bl-3)"></span>
-              </div>
-              <p class="ok-msg" id="forslag-msg"></p>
-              <div id="forslag-tabell"><div class="loading">Hämtar</div></div>
-            </div>
-          </div>
         </section>
 
         <!-- ============================================================
@@ -1246,6 +1194,58 @@
                 ingen nämnt.
               </p>
               <div id="ak-lista"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+          <!-- ---------- DRIFT (Fas 8) ----------
+               Den tredje agenten. Den läser verksamhetens eget läge och
+               föreslår — den har med flit inget utgående verktyg, och
+               talar med databasen genom en enda dörr som ägs av en roll
+               utan tabellrättigheter.
+
+               Självtestet kör alla läsverktygen utan att röra modellen,
+               och visar vilka fält de lämnar ut. Det är den kontroll
+               som säger att inga namn följer med. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="drift"
+               id="panel-ag-drift" aria-labelledby="flik-ag-drift" hidden>
+            <div class="dbox">
+              <div class="vy-sek-topp">
+                <div>
+                  <h3>Fråga drift-agenten</h3>
+                  <p class="small">Den läser anmälningar, omatchade elever, kommande pass och pass
+                    utan rapport. Den matchar ingen och mejlar ingen: allt den vill göra blir ett
+                    förslag som du godkänner under fliken Förslag.</p>
+                </div>
+                <button class="btn btn-ghost btn-sm" type="button" id="drift-sjalvtest">Självtest</button>
+              </div>
+              <div id="drift-sjalvtest-ut"></div>
+              <div class="fgroup">
+                <label for="drift-fraga">Fråga</label>
+                <textarea class="inp" id="drift-fraga" rows="3"
+                  placeholder="Vad behöver göras idag?"></textarea>
+              </div>
+              <p class="ok-msg" id="drift-msg"></p>
+              <button class="btn btn-primary" type="button" id="drift-kor">Fråga</button>
+              <div id="drift-svar"></div>
+            </div>
+          </div>
+
+          <!-- ---------- FÖRSLAG (Fas 8) ----------
+               Kön av det AI:n vill göra. Ett förslag är inte en uppgift:
+               trycker du ja utför databasen åtgärden, med din inloggning,
+               så att triggrar och auditlogg fungerar precis som när du
+               själv klickar i vyn. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="forslag"
+               id="panel-ag-forslag" aria-labelledby="flik-ag-forslag" hidden>
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <select class="sel" id="forslag-filter" aria-label="Visa förslag">
+                  <option value="oppna">Väntar på svar</option>
+                  <option value="alla">Alla</option>
+                </select>
+                <span class="small" id="forslag-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <p class="ok-msg" id="forslag-msg"></p>
+              <div id="forslag-tabell"><div class="loading">Hämtar</div></div>
             </div>
           </div>
         </section>

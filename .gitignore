@@ -21,3 +21,11 @@ bilder/*.png
 .agents/
 .claude/skills/
 skills-lock.json
+
+# Provbänken för adminvyn (_prov-admin-*). Den laddar de riktiga
+# CSS- och JS-filerna med en stubbad databas vars auth alltid svarar
+# "inloggad admin". Den filen är alltså hela adminvyn utan inloggning,
+# och .vercelignore är en nekande lista som inte täcker den — hamnar
+# den i repot hamnar den på webben. Den hör hemma i scratchpaden, och
+# har en gång checkats in av misstag.
+_prov-*

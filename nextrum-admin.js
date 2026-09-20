@@ -893,7 +893,7 @@
       ritaUppdrag();
       ritaUppgifter();
       ritaAutomationer();
-      ritaAI();
+      await ritaAI();
       await ritaÖversikt();
 
       /* Samma summa som arbetskön på Översikt visar, inte en egen

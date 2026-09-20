@@ -72,7 +72,9 @@
       return 'Pass ' + String(p.pass_id || '').slice(0, 8);
     }
     if (f.typ === 'lead_status') {
-      return 'Anmälan ' + String(p.lead_id || '').slice(0, 8) + ' → ' + esc(p.status || '?');
+      /* Ingen esc() här: svaret escapas av den som ritar det, och
+         av bekräftelserutan. Två escapes gör & till &amp;amp;. */
+      return 'Anmälan ' + String(p.lead_id || '').slice(0, 8) + ' → ' + (p.status || '?');
     }
     return '—';
   }
@@ -82,6 +84,12 @@
     if (!host) return;
 
     if (S.forslagFel) {
+      /* Räknarna nollas FÖRE returen. Annars står "4 st" och badgen
+         "2" kvar bredvid meddelandet om att listan inte gick att
+         hämta, och talen är då äldre än felet. */
+      märkFlik('#flik-forslag-mark', 0);
+      const antalFel = $('#forslag-antal');
+      if (antalFel) antalFel.textContent = '';
       host.innerHTML = '<div class="empty"><b>Förslagen kunde inte hämtas</b><br><span>'
         + esc(S.forslagFel) + '</span></div>';
       return;

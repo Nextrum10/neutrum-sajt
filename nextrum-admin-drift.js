@@ -90,7 +90,8 @@
     const { data, error } = await supa.rpc('matchningsforslag', { p_elev: elevId });
     if (error) {
       S.matchpoangFel = felText(error);
-      S.matchpoang[elevId] = [];
+      /* Ingen tom lista i cachen: annars ser nästa uppritning ett
+         "svar" som säger att ingen passar. */
       return;
     }
     S.matchpoangFel = null;
@@ -225,6 +226,18 @@
     /* Poängen kommer från databasen. Saknas den för den här eleven
        hämtas den, och panelen ritas om när svaret kommit — samma
        mönster som detaljpanelen använder. */
+    /* Gick rankningen inte att hämta säger vi det. Reservvärdena
+       nedan ger varje hjälpare noll poäng och "vet ej" på båda
+       kriterierna — ett kort som samtidigt räknar upp hjälparens
+       ämnen och påstår att hon inte har några. Sidan skulle läsa som
+       "ingen passar", vilket är ett annat besked än "vi kunde inte
+       räkna". Samma mönster som S.matchunderlagFel ovan. */
+    if (S.matchpoangFel) {
+      host.innerHTML = ut + '<div class="empty"><b>Förslagen kunde inte räknas fram</b><br>'
+        + '<span>' + esc(S.matchpoangFel) + '</span></div>';
+      return;
+    }
+
     const poäng = (S.matchpoang || {})[elev.id];
     if (!poäng) {
       host.innerHTML = laddar('Räknar fram förslag');
