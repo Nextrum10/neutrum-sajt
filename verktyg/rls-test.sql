@@ -938,44 +938,46 @@ select pg_temp.prova('8.6 familj godkänner ett förslag', '00000000-0000-4000-8
 select pg_temp.prova('8.3 familj läser matchningsförslag', '00000000-0000-4000-8000-0000000000f1',
   array[$q$select * from public.matchningsforslag('00000000-0000-4000-8000-0000000005a1')$q$], 'nekad');
 
--- Rollen själv. set local role kräver postgres, och det är just det
--- provet: även med full tillgång till att BLI rollen kan den inget.
+-- Rollen själv. Provet BLIR rollen och prövar tre saker den inte ska
+-- kunna. Svaren skrivs först efter reset role — rollen får inte
+-- skriva ens i resultattabellen, vilket första versionen av det här
+-- provet fick lära sig genom att fälla hela körningen på 42501.
+-- Garantin gäller alltså också provet, och det är egentligen det
+-- starkaste beviset som finns.
 select set_config('request.jwt.claims', null, true);
-set local role nextrum_ai;
 do $$
-declare fel text := 'ingen';
+declare
+  skriva text := 'ingen';
+  lasa   text := 'ingen';
+  forslag text := 'ingen';
 begin
+  set local role nextrum_ai;
+
   begin
     update public.students set grade = 'hackad';
-    fel := 'INGEN SPÄRR';
-  exception when others then fel := sqlstate;
+    skriva := 'INGEN SPÄRR';
+  exception when others then skriva := sqlstate;
   end;
-  insert into utfall (test, ok, detalj)
-  values ('8.5 rollen nextrum_ai kan inte skriva i students', fel = '42501', 'fick ' || fel);
-end $$;
-do $$
-declare fel text := 'ingen';
-begin
+
   begin
     perform 1 from public.students limit 1;
-    fel := 'INGEN SPÄRR';
-  exception when others then fel := sqlstate;
+    lasa := 'INGEN SPÄRR';
+  exception when others then lasa := sqlstate;
   end;
-  insert into utfall (test, ok, detalj)
-  values ('8.5 rollen nextrum_ai kan inte ens läsa students', fel = '42501', 'fick ' || fel);
-end $$;
-do $$
-declare fel text := 'ingen';
-begin
+
   begin
     insert into public.ai_forslag (typ, nyckel) values ('matchning', 'prov:roll:8');
-    fel := 'INGEN SPÄRR';
-  exception when others then fel := sqlstate;
+    forslag := 'INGEN SPÄRR';
+  exception when others then forslag := sqlstate;
   end;
-  insert into utfall (test, ok, detalj)
-  values ('8.5 rollen nextrum_ai kan inte skriva förslag direkt', fel = '42501', 'fick ' || fel);
+
+  reset role;
+
+  insert into utfall (test, ok, detalj) values
+    ('8.5 rollen nextrum_ai kan inte skriva i students', skriva = '42501', 'fick ' || skriva),
+    ('8.5 rollen nextrum_ai kan inte ens läsa students', lasa = '42501', 'fick ' || lasa),
+    ('8.5 rollen nextrum_ai kan inte skriva förslag direkt', forslag = '42501', 'fick ' || forslag);
 end $$;
-reset role;
 
 -- Det AI:n föreslog ska vara det admin godkänner.
 insert into public.ai_forslag (typ, nyckel, payload, motivering)
