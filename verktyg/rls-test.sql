@@ -11,9 +11,15 @@
 -- ändringar. Rollen och inloggningen (request.jwt.claims) sätts
 -- per test, precis som PostgREST gör det.
 --
--- Notistriggern på bookings stängs av under körningen, så att
--- fixturpassen aldrig kan bli ett mejl. Även den ändringen rullas
--- tillbaka.
+-- Notistriggrarna på bookings OCH leads stängs av under körningen,
+-- så att fixturpassen och provanmälningarna aldrig kan bli ett mejl.
+-- Även de ändringarna rullas tillbaka.
+--
+-- OBS vid körning mot skarp drift: att stänga av en trigger tar
+-- ACCESS EXCLUSIVE-lås på tabellen, och låset hålls tills
+-- transaktionen rullat tillbaka. Under körningen väntar alltså varje
+-- besökare som skickar intresseanmälan på nextrum.se. Kör sviten när
+-- formuläret är lugnt, eller mot en gren.
 --
 -- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok.
 --
@@ -871,6 +877,43 @@ insert into utfall (test, ok, detalj)
 select '7.3c andra körningen skapar inget nytt',
        (k ->> 'nya_uppgifter')::int = 0, 'svar: ' || k::text
 from (select public.dagliga_kontroller() as k) t;
+
+-- Den väg som faktiskt körs i dag är knappen i adminvyn, alltså med
+-- en inloggad admin. Triggern uppgift_stampel stämplade förut om
+-- maskinens uppgifter till 'manniska' just då, och testet ovan såg
+-- det inte eftersom det nollar claims. Det här provet gör tvärtom.
+select pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+select public.kor_kontrollerna();
+reset role;
+
+insert into utfall (test, ok, detalj)
+select '7.4 adminknappen stämplar maskinens uppgifter som system',
+       count(*) > 0 and bool_and(skapad_av_typ = 'system' and skapad_av is null),
+       'uppgifter: ' || count(*) || ', typer: ' || coalesce(string_agg(distinct skapad_av_typ, ','), 'inga')
+from public.uppgifter where nyckel like 'kontroll:%' or nyckel like 'avvikelse:%' or nyckel like 'uppfoljning:%';
+
+-- En avbruten uppgift är ett svar: "det här tänker vi inte göra".
+-- Kommer den tillbaka nästa körning är knappen Avbryt utan verkan.
+update public.uppgifter set status = 'avbruten' where nyckel = 'prov:dubblett:7';
+select public.skapa_uppgift('Prov efter avbruten', 'prov:dubblett:7');
+
+insert into utfall (test, ok, detalj)
+select '7.4 avbruten uppgift återskapas inte', count(*) = 2, 'antal rader: ' || count(*)
+from public.uppgifter where nyckel = 'prov:dubblett:7';
+
+-- Anmälan om en tjänst som inte är lanserad skrivs om till
+-- standardtjänsten. Fältet är det enda affärsfält en besökare kan
+-- välja, och Fas 7 skriver in det på uppdraget.
+select pg_temp.bli(null);
+insert into public.leads (parent_name, email, subject, tjanst)
+values ('Prov tjänst', 'prov-tjanst7@example.invalid', 'Matte', 'barnvakt');
+reset role;
+
+insert into utfall (test, ok, detalj)
+select '7.4 anmälan om inaktiv tjänst skrivs om till standardtjänsten',
+       count(*) = 1, 'tjänst: ' || coalesce(string_agg(tjanst, ','), 'ingen rad')
+from public.leads
+where email = 'prov-tjanst7@example.invalid' and tjanst = public.standard_tjanst();
 
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).

@@ -315,8 +315,12 @@
     });
 
     (d.meddelanden || []).forEach(m => {
+      /* namnFör svarar med ett tankstreck för en profil som inte
+         finns kvar, aldrig med tomt — reservvärdet måste därför
+         pröva tecknet, inte falsiskhet. */
+      const n = namnFör(m.sender_id);
       const vem = m.sender_id === p.id ? 'Familjen skrev'
-        : (namnFör(m.sender_id) || 'Någon') + ' skrev';
+        : (n && n !== '—' ? n : 'Någon') + ' skrev';
       lägg(m.created_at, vem, tlKort(m.body, 110));
     });
 
@@ -368,8 +372,15 @@
         + '<span class="adm-flode-text"><b>' + esc(x.rubrik) + '</b>'
         + '<span>' + esc(x.under) + '</span></span>'
         + '</div>').join('') + '</div>'
+      /* Meddelandena är hämtade med limit 60. Står det bara "de 80
+         senaste av N" ser N ut som hela sanningen, och den som letar
+         efter ett äldre meddelande letar förgäves utan att förstå
+         varför. */
       + (h.length > TL_MAX
         ? '<p class="xsmall">Visar de ' + TL_MAX + ' senaste av ' + h.length + ' händelser.</p>'
+        : '')
+      + ((d.meddelanden || []).length >= 60
+        ? '<p class="xsmall">Bara de 60 senaste meddelandena är med. Hela tråden finns under Kommunikation.</p>'
         : '');
   }
 

@@ -30,6 +30,7 @@
      NXAdmin.rita, som fylls när alla filer laddats. */
   const hämtaAllt = (...a) => NXAdmin.hämtaAllt(...a);
   const ritaUppgifter = (...a) => NXAdmin.rita.ritaUppgifter(...a);
+  const ritaAvvikelser = (...a) => NXAdmin.rita.ritaAvvikelser(...a);
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
 
   /* Samma fyra som i migrationen fas7_3c. Texten här beskriver vad
@@ -68,8 +69,14 @@
 
     const res = await supa.rpc('driftkorningar', { dagar: 7 });
     if (res.error) {
-      const saknas = /does not exist|42883|Could not find the function/i.test(
-        res.error.message || '');
+      /* PGRST202 = PostgREST hittade ingen funktion med det namnet
+         och den signaturen. Koden är entydig; texten är det inte —
+         "Could not find the function" står också när funktionen
+         FINNS med andra parametrar, och "does not exist" dyker upp i
+         vilket felmeddelande som helst. Texten får därför bara vara
+         reserv, för fel som kommer utan kod. */
+      const saknas = res.error.code === 'PGRST202'
+        || (!res.error.code && /Could not find the function/i.test(res.error.message || ''));
       host.innerHTML = saknas
         ? tomt('Inget schema installerat',
             'Kontrollerna körs med knappen ovan tills pg_cron är på plats. '
@@ -133,11 +140,30 @@
       + '<span class="dp-rad-hoger">' + pill('Skapar uppgift', 'ar-vantar') + '</span></div>').join('');
   }
 
-  async function ritaAutomationer() {
+  /* Kontrollerna och listan ritas vid start — de läser bara det som
+     redan finns i S. Schemat frågas EFTER, när fliken öppnas: så
+     länge pg_cron inte är installerat svarar den frågan alltid 404,
+     och en garanterad 404 vid varje inloggning gör konsolen till ett
+     ställe man slutar titta på. */
+  function ritaAutomationer() {
     ritaKontroller();
     ritaMaskinUppgifter();
-    await ritaSchema();
+    /* Rutan för schemat startar som "Hämtar" i markupen. Eftersom
+       frågan inte ställs förrän fliken öppnas måste texten bytas nu,
+       annars står panelen och laddar i all oändlighet — osynligt för
+       den som aldrig öppnar fliken, men det är precis sådant som gör
+       en laddningsindikator värdelös på alla andra ställen. */
+    const schema = $('#aut-schema');
+    if (schema) {
+      schema.innerHTML = '<p class="xsmall">Körningarna hämtas när du öppnar fliken.</p>';
+    }
   }
+
+  const autFlik = $('#flik-automationer');
+  if (autFlik) autFlik.addEventListener('click', () => {
+    ritaMaskinUppgifter();
+    ritaSchema();
+  });
 
   /* ------------------------------------------------------------
      KÖR NU
@@ -167,15 +193,32 @@
         [d.forfallna_fakturor, 'förfallen faktura', 'förfallna fakturor'],
         [d.uppfoljningar, 'uppföljning', 'uppföljningar']
       ];
-      säg(msg, nya
-        ? '✓ ' + nya + (nya === 1 ? ' ny uppgift' : ' nya uppgifter') + ': '
+      /* En kontroll som fallit rapporteras för sig. De andra tre har
+         ändå gjort sitt, och ett tyst bortfall är värre än ett fult
+         meddelande. */
+      const trasiga = Array.isArray(d.fel) ? d.fel : [];
+      const brödtext = nya
+        ? nya + (nya === 1 ? ' ny uppgift' : ' nya uppgifter') + ': '
           + DEL.filter(x => Number(x[0]) > 0)
                .map(x => x[0] + ' ' + (Number(x[0]) === 1 ? x[1] : x[2])).join(', ') + '.'
-        : '✓ Kontrollerna kördes. Inget nytt — allt de hittade finns redan som uppgifter.', true);
+        : 'Kontrollerna kördes. Inget nytt — allt de hittade finns redan som uppgifter.';
+
+      /* Bocken hör till ett meddelande som gick bra. Ett rött
+         meddelande som börjar med ✓ säger två saker samtidigt. */
+      säg(msg, trasiga.length
+        ? '⚠ ' + brödtext + ' Men ' + trasiga.length
+          + (trasiga.length === 1 ? ' kontroll gick inte att köra: ' : ' kontroller gick inte att köra: ')
+          + trasiga.map(f => f.kontroll + ' (' + f.fel + ')').join(', ')
+        : '✓ ' + brödtext, !trasiga.length);
 
       await hämtaAllt();
       ritaMaskinUppgifter();
       ritaUppgifter();
+      /* Avvikelselistan i Ekonomi erbjuder "Gör till uppgift" för
+         varje rad som inte redan har en. Ritas den inte om står
+         knapparna kvar för det kontrollen just tagit hand om, och
+         nästa klick svarar "det finns redan en öppen uppgift". */
+      ritaAvvikelser();
       await ritaÖversikt();
     });
   });

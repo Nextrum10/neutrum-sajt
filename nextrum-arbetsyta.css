@@ -1301,6 +1301,11 @@ table.adm .adm-tal{
 .adm-flode-text span{
   display:block;margin-top:2px;
   font-size:.82rem;line-height:1.45;color:var(--bl-2);
+  /* Kundtidslinjen citerar meddelanden, och ett meddelande kan
+     innehålla en klistrad länk utan mellanslag. Utan brytning blir
+     raden bredare än detaljpanelen (375 px på en telefon) och texten
+     går bara att läsa genom att dra i sidled. */
+  overflow-wrap:anywhere;
 }
 
 /* ------------------------------------------------------------

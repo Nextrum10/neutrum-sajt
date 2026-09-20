@@ -475,9 +475,19 @@
            standardtjänsten — den tittar aldrig på anmälan. Anmälan
            vet däremot vad familjen faktiskt bad om, så tjänsten
            skrivs om här. I dag är båda läxhjälp; skillnaden uppstår
-           den dag en andra tjänst öppnas. */
-        if (ny && ny.uppdrag_id && lead.tjanst) {
-          await supa.from('uppdrag').update({ tjanst: lead.tjanst }).eq('id', ny.uppdrag_id);
+           den dag en andra tjänst öppnas.
+
+           Bara en aktiv och kundvänd tjänst skrivs. Anmälan kommer
+           från ett öppet formulär, och en tjänst som ännu inte är
+           lanserad ska inte kunna hamna på ett uppdrag den vägen —
+           databasen skriver om sådana anmälningar till
+           standardtjänsten, och det här är samma regel i vyn. */
+        const öppen = (S.tjanster || []).some(t =>
+          t.kod === lead.tjanst && t.aktiv && t.for_kund);
+        if (ny && ny.uppdrag_id && lead.tjanst && öppen) {
+          const u = await supa.from('uppdrag').update({ tjanst: lead.tjanst }).eq('id', ny.uppdrag_id);
+          if (u.error) { säg(msg, 'Eleven skapades, men uppdragets tjänst kunde inte sättas: '
+            + felText(u.error), false); }
         }
 
         /* Anmälan är avklarad när den blivit en elev. Står den kvar
