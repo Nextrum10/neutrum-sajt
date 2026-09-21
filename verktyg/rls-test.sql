@@ -2599,7 +2599,7 @@ from unnest(array[
   'public.bankkonto_kontroll(text, text)', 'public.spara_utbetalningsmetod(text, text, text, text, uuid)',
   'public.las_utbetalningsmetod(uuid)', 'public.radera_utbetalningsmetod(uuid)',
   'public.las_utbetalningsmetod_klartext(uuid)',
-  'public.notis_kor_nu()', 'public.notis_provmejl()', 'public.notis_typer()', 'public.notis_mejlbara()'
+  'public.notis_kor_nu()', 'public.notis_provmejl(text)', 'public.notis_typer()', 'public.notis_mejlbara()'
 ]) f;
 
 insert into utfall (test, ok, detalj)
