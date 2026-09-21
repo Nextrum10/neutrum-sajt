@@ -31,7 +31,15 @@
 
 begin;
 
-alter table public.bookings disable trigger "nytt-passforslag";
+-- nytt-passforslag togs bort i program 2 Fas 2.2 (ersatt av kön, som
+-- aldrig anropar något utanför databasen). Villkoret gör att filen
+-- går att köra både före och efter den migrationen.
+do $$
+begin
+  if exists (select 1 from pg_trigger where tgname = 'nytt-passforslag' and not tgisinternal) then
+    execute 'alter table public.bookings disable trigger "nytt-passforslag"';
+  end if;
+end $$;
 alter table public.leads disable trigger "ny-intresseanmalan";
 
 create temp table utfall (
@@ -2222,6 +2230,316 @@ end $$;
 reset role;
 select set_config('request.jwt.claims', null, true);
 
+-- ============================================================
+-- PROGRAM 2, FAS 2: NOTISER
+--
+-- Familj S (f4) med barnen hos A (06a1, 06d1), hos B (06b1) och ett
+-- som väntar (06c1), från avsnittet ovan. Varje prov handlar som en
+-- användare och läser tillbaka som postgres, eftersom mottagaren av en
+-- notis är en annan än den som handlade. Tabellerna finns inte före
+-- migrationerna; proven fångar felet och blir röda i stället för att
+-- avbryta filen.
+-- ============================================================
+
+-- Räknar notiser av en typ till en mottagare för ett pass, som
+-- postgres. Pass null = alla pass.
+create function pg_temp.notiser_till(p_mottagare uuid, p_typ text, p_pass uuid)
+returns bigint language plpgsql as $$
+declare n bigint;
+begin
+  execute 'select count(*) from public.notiser where mottagare = $1 and typ = $2 and ($3::uuid is null or pass_id = $3)'
+    into n using p_mottagare, p_typ, p_pass;
+  return n;
+end $$;
+
+-- ---------- 2.1 grunden: vem ser vad ----------
+
+select pg_temp.prova('R2 2.1 anon läser notiser', null,
+  array[$q$select * from public.notiser$q$], 'nekad');
+select pg_temp.prova('R2 2.1 en familj skapar en notis åt sig själv', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$insert into public.notiser (mottagare, typ) values ('00000000-0000-4000-8000-0000000000f4', 'rapport')$q$], 'nekad');
+select pg_temp.prova('R2 2.1 en familj ändrar i kön', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$update public.notis_utskick set status = 'skickad'$q$], 'nekad');
+select pg_temp.rakna('R2 2.1 en familj ser inga utskick', '00000000-0000-4000-8000-0000000000f4',
+  $q$select count(*) from public.notis_utskick$q$, 0);
+select pg_temp.rakna('R2 2.1 en familj ser inte driftinställningen', '00000000-0000-4000-8000-0000000000f4',
+  $q$select count(*) from public.notis_drift$q$, 0);
+select pg_temp.rakna('R2 2.1 admin ser driftinställningen', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from public.notis_drift$q$, 1);
+select pg_temp.rakna('R2 2.1 en familj ser påminnelsetiderna', '00000000-0000-4000-8000-0000000000f4',
+  $q$select count(*) from public.notis_installning$q$, 1);
+select pg_temp.prova('R2 2.1 en familj ändrar påminnelsetiderna', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$update public.notis_installning set paminnelser_timmar = '{2}'$q$], 'nekad');
+select pg_temp.prova('R2 2.1 en familj stänger av ett mejl åt sig själv', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$insert into public.notis_val (profil_id, typ, kanal, pa) values ('00000000-0000-4000-8000-0000000000f4', 'meddelande', 'mejl', false)$q$], 'ok');
+select pg_temp.prova('R2 2.1 en familj ändrar en annans notisval', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$insert into public.notis_val (profil_id, typ, kanal, pa) values ('00000000-0000-4000-8000-0000000000f2', 'meddelande', 'mejl', false)$q$], 'nekad');
+select pg_temp.prova('R2 2.1 ett notisval med okänd typ nekas', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$insert into public.notis_val (profil_id, typ, kanal, pa) values ('00000000-0000-4000-8000-0000000000f4', 'reklam', 'mejl', true)$q$], 'nekad');
+select pg_temp.vanta_fel('R2 2.1 ett klockslag som inte är ett klockslag nekas', '00000000-0000-4000-8000-0000000000ad',
+  $q$update public.bookings set wanted_time = 'efter skolan' where id = '00000000-0000-4000-8000-0000000b2001'$q$, '23514');
+
+-- ---------- 2.2 notiser vid händelser ----------
+
+do $$
+declare
+  p uuid;
+  p1 uuid;
+  n bigint;
+  d jsonb;
+  k bigint;
+  f4 uuid := '00000000-0000-4000-8000-0000000000f4';
+  a1 uuid := '00000000-0000-4000-8000-0000000000a1';
+  dag date := (now() at time zone 'Europe/Stockholm')::date + 53;
+begin
+  if to_regclass('public.notiser') is null then
+    insert into utfall (test, ok, detalj) values ('R2 2.2 notiser vid händelser', false, 'tabellen notiser finns inte');
+    return;
+  end if;
+
+  -- Familjen bokar hos A, utanför A:s tider: passet blir önskat.
+  perform pg_temp.bli(f4);
+  insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+  values (f4, a1, '00000000-0000-4000-8000-0000000006a1', f4, dag, '07:00', 60, 'requested') returning id into p;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  p1 := p;
+
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 studiehjälparen får notis om ett nytt pass', pg_temp.notiser_till(a1, 'pass_nytt', p) = 1,
+          'notiser: ' || pg_temp.notiser_till(a1, 'pass_nytt', p)),
+         ('R2 2.2 den som bokade får ingen notis om sitt eget pass', pg_temp.notiser_till(f4, 'pass_nytt', p) = 0,
+          'notiser: ' || pg_temp.notiser_till(f4, 'pass_nytt', p));
+  select count(*) into k from public.notis_utskick where pass_id = p and mottagare = a1 and kanal = 'mejl' and status = 'vantar';
+  insert into utfall (test, ok, detalj) values ('R2 2.2 ett mejl till studiehjälparen köas', k = 1, 'rader: ' || k);
+
+  -- A bekräftar.
+  perform pg_temp.bli(a1);
+  update public.bookings set status = 'confirmed' where id = p;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 familjen får notis när passet bekräftas', pg_temp.notiser_till(f4, 'pass_bekraftat', p) = 1,
+          'notiser: ' || pg_temp.notiser_till(f4, 'pass_bekraftat', p));
+
+  -- A flyttar passet en timme: familjen får notisen, med den gamla tiden.
+  perform pg_temp.bli(a1);
+  update public.bookings set wanted_time = '08:00', status = 'requested', created_by = a1 where id = p;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select data into d from public.notiser where mottagare = f4 and typ = 'pass_flyttat' and pass_id = p;
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 familjen får notis om flytten med den gamla tiden', d ->> 'fran_tid' = '07:00' and d ->> 'tid' = '08:00',
+          coalesce(d::text, 'ingen notis'));
+
+  -- Två ändringar i samma pass till samma mottagare blir ett mejl.
+  select count(*) into k from public.notis_utskick where pass_id = p and mottagare = f4 and status = 'vantar';
+  insert into utfall (test, ok, detalj) values ('R2 2.2 bekräftelse och flytt blir ett mejl till familjen', k = 1, 'rader: ' || k);
+
+  -- Familjen säger nej till A:s förslag: det är avböjt, inte avbokat.
+  perform pg_temp.bli(f4);
+  update public.bookings set status = 'cancelled' where id = p;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 ett förslag som familjen säger nej till är avböjt', pg_temp.notiser_till(a1, 'pass_avbojt', p) = 1,
+          'avböjt: ' || pg_temp.notiser_till(a1, 'pass_avbojt', p) || ', avbokat: ' || pg_temp.notiser_till(a1, 'pass_avbokat', p));
+
+  -- Ett bekräftat pass som familjen ställer in är avbokat.
+  perform pg_temp.bli(f4);
+  update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-0000000b2001';
+  reset role; perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 ett bekräftat pass som ställs in är avbokat',
+          pg_temp.notiser_till(a1, 'pass_avbokat', '00000000-0000-4000-8000-0000000b2001') = 1,
+          'notiser: ' || pg_temp.notiser_till(a1, 'pass_avbokat', '00000000-0000-4000-8000-0000000b2001'));
+
+  -- Syskonet hos B bokas hos A (familjens studiehjälpare): A får notisen
+  -- men inte barnets namn, för barnet är inte A:s elev.
+  perform pg_temp.bli(f4);
+  insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+  values (f4, a1, '00000000-0000-4000-8000-0000000006b1', f4, dag, '11:00', 60, 'requested') returning id into p;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select data into d from public.notiser where mottagare = a1 and typ = 'pass_nytt' and pass_id = p;
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 syskonets namn når inte en studiehjälpare som inte har barnet',
+          d is not null and not (d ? 'elev'), coalesce(d::text, 'ingen notis'));
+  select data into d from public.notiser where mottagare = a1 and typ = 'pass_nytt' and pass_id = p1;
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 den egna elevens namn följer med', d ? 'elev', coalesce(d::text, 'ingen notis'));
+
+  -- Chatt: två meddelanden blir en notis och ett väntande mejl.
+  perform pg_temp.bli(f4);
+  insert into public.messages (parent_id, tutor_id, sender_id, body) values (f4, a1, f4, 'Hej');
+  insert into public.messages (parent_id, tutor_id, sender_id, body) values (f4, a1, f4, 'En sak till');
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select count(*), max(antal) into n, k from public.notiser
+   where mottagare = a1 and typ = 'meddelande' and trad_parent = f4 and trad_tutor = a1 and last_at is null;
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 två meddelanden blir en notis med antal 2', n = 1 and k = 2, 'rader ' || n || ', antal ' || coalesce(k, 0));
+  select count(*), max(antal) into n, k from public.notis_utskick
+   where mottagare = a1 and typ = 'meddelande' and status = 'vantar';
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 och ett väntande mejl med antal 2', n = 1 and k = 2, 'rader ' || n || ', antal ' || coalesce(k, 0));
+  select data into d from public.notiser where mottagare = a1 and typ = 'meddelande' and trad_parent = f4 limit 1;
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 meddelandets text står aldrig i notisen', position('En sak till' in d::text) = 0 and position('Hej' in d::text) = 0,
+          coalesce(d::text, 'ingen notis'));
+
+  -- Rapport: notis till familjen, men inget mejl.
+  perform pg_temp.bli(a1);
+  insert into public.lesson_reports (student_id, tutor_id, booking_id, lesson_date, raw_notes, narvaro)
+  values ('00000000-0000-4000-8000-0000000006a1', a1, '00000000-0000-4000-8000-0000000b2004',
+          (now() at time zone 'Europe/Stockholm')::date - 3, 'anteckning om eleven', 'narvarande');
+  reset role; perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 familjen får notis om en ny rapport',
+          pg_temp.notiser_till(f4, 'rapport', '00000000-0000-4000-8000-0000000b2004') = 1,
+          'notiser: ' || pg_temp.notiser_till(f4, 'rapport', '00000000-0000-4000-8000-0000000b2004'));
+  select count(*) into k from public.notis_utskick where typ = 'rapport';
+  insert into utfall (test, ok, detalj) values ('R2 2.2 en rapport mejlas inte', k = 0, 'rader: ' || k);
+  select count(*) into k from public.notiser where data::text like '%anteckning om eleven%';
+  insert into utfall (test, ok, detalj) values ('R2 2.2 rapportens text står aldrig i notisen', k = 0, 'rader: ' || k);
+
+  -- Den som stängt av mejlet får notisen men inget mejl.
+  insert into public.notis_val (profil_id, typ, kanal, pa) values (f4, 'pass_bekraftat', 'mejl', false);
+  perform pg_temp.bli(f4);
+  insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+  values (f4, a1, '00000000-0000-4000-8000-0000000006a1', f4, dag + 1, '07:00', 60, 'requested') returning id into p;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  perform pg_temp.bli(a1);
+  update public.bookings set status = 'confirmed' where id = p;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select count(*) into k from public.notis_utskick where pass_id = p and mottagare = f4;
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.2 avstängt mejl ger notis men inget mejl', pg_temp.notiser_till(f4, 'pass_bekraftat', p) = 1 and k = 0,
+          'notiser ' || pg_temp.notiser_till(f4, 'pass_bekraftat', p) || ', mejl ' || k);
+exception when others then
+  reset role; perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj) values ('R2 2.2 notiser vid händelser', false, 'fel ' || sqlstate || ': ' || sqlerrm);
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+select pg_temp.prova('R2 2.2 mottagaren markerar sin notis som läst', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.notiser set last_at = now() where mottagare = '00000000-0000-4000-8000-0000000000a1'$q$], 'ok');
+select pg_temp.vanta_fel('R2 2.2 mottagaren kan inte skriva om sin notis', '00000000-0000-4000-8000-0000000000a1',
+  $q$update public.notiser set data = '{"x":1}' where mottagare = '00000000-0000-4000-8000-0000000000a1'$q$, '42501');
+select pg_temp.rakna('R2 2.2 en annan familj ser inga av S:s notiser', '00000000-0000-4000-8000-0000000000f2',
+  $q$select count(*) from public.notiser where mottagare = '00000000-0000-4000-8000-0000000000f4'$q$, 0);
+select pg_temp.rakna('R2 2.2 B ser inga av A:s notiser', '00000000-0000-4000-8000-0000000000b1',
+  $q$select count(*) from public.notiser where mottagare = '00000000-0000-4000-8000-0000000000a1'$q$, 0);
+
+-- ---------- 2.3 påminnelser, kön och avregistrering ----------
+
+do $$
+declare
+  p      uuid;
+  start  timestamp := (now() at time zone 'Europe/Stockholm') + interval '23 hours 50 minutes';
+  n1     bigint;
+  n2     bigint;
+  r      record;
+  f4     uuid := '00000000-0000-4000-8000-0000000000f4';
+  a1     uuid := '00000000-0000-4000-8000-0000000000a1';
+begin
+  if to_regprocedure('public.notis_planera()') is null then
+    insert into utfall (test, ok, detalj) values ('R2 2.3 påminnelser och kön', false, 'notis_planera finns inte');
+    return;
+  end if;
+
+  -- Ett bekräftat pass om knappt ett dygn, bokat för två dagar sedan.
+  insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, created_at)
+  values (f4, a1, '00000000-0000-4000-8000-0000000006a1', f4, start::date, to_char(start, 'HH24:MI'), 60, 'confirmed',
+          now() - interval '2 days') returning id into p;
+
+  perform public.notis_planera();
+  select count(*) into n1 from public.notiser where pass_id = p and typ = 'paminnelse';
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.3 påminnelsen 24 h före går till familjen och studiehjälparen', n1 = 2, 'notiser: ' || n1);
+  perform public.notis_planera();
+  select count(*) into n2 from public.notiser where pass_id = p and typ = 'paminnelse';
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.3 en andra körning ger inga fler påminnelser', n2 = n1, n1 || ' → ' || n2);
+  select count(*) into n2 from public.notis_utskick where pass_id = p and typ = 'paminnelse' and kanal = 'mejl';
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.3 ett påminnelsemejl per mottagare köas', n2 = 2, 'rader: ' || n2);
+  select count(*) into n2 from public.notis_utskick where pass_id = p and kanal = 'sms';
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.3 inget SMS till den som inte slagit på det', n2 = 0, 'rader: ' || n2);
+
+  -- Ett pass på samma tid, men bokat nu, efter påminnelsetiden: ingen
+  -- "i morgon" i efterhand. (Hos B, så att passen inte krockar.)
+  insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+  values (f4, '00000000-0000-4000-8000-0000000000b1', '00000000-0000-4000-8000-0000000006b1', f4, start::date,
+          to_char(start, 'HH24:MI'), 60, 'confirmed') returning id into p;
+  perform public.notis_planera();
+  select count(*) into n2 from public.notiser where pass_id = p and typ = 'paminnelse';
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.3 ett pass bokat efter påminnelsetiden påminns inte', n2 = 0, 'notiser: ' || n2);
+
+  -- Kön med flaggan av och ingen sandlåda: allt blir loggat.
+  update public.flaggor set aktiv = false where kod = 'notiser_mejl';
+  update public.notis_drift set mejl_sandlada = null where id = 1;
+  update public.notis_utskick set skicka_efter = now() - interval '1 minute' where status = 'vantar';
+  select count(*) into n1 from public.notis_utskick_ta(100);
+  select count(*) into n2 from public.notis_utskick
+   where mottagare in (f4, a1) and kanal = 'mejl' and status = 'loggad';
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.3 med flaggan av skickas inget, allt loggas', n1 = 0 and n2 > 0, 'utlämnade ' || n1 || ', loggade ' || n2);
+
+  -- Med sandlådan går allt till den adressen.
+  update public.notis_drift set mejl_sandlada = 'sandlada@example.invalid' where id = 1;
+  update public.notis_utskick set status = 'vantar' where status = 'loggad' and mottagare in (f4, a1) and kanal = 'mejl';
+  select count(*) filter (where epost = 'sandlada@example.invalid' and till_sandlada), count(*) into n1, n2
+    from public.notis_utskick_ta(100);
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.3 sandlådan tar emot allt när flaggan är av', n2 > 0 and n1 = n2, n1 || ' av ' || n2);
+
+  -- Med flaggan på: adressen kommer ur auth.users, inte ur profiles.
+  update public.notis_drift set mejl_sandlada = null where id = 1;
+  update public.flaggor set aktiv = true where kod = 'notiser_mejl';
+  update public.profiles set email = 'annan-adress@example.invalid' where id = f4;
+  update public.notis_utskick set status = 'vantar', lanad_till = null where status = 'skickar' and mottagare = f4;
+  select count(*) filter (where t.epost = 'annan-adress@example.invalid'),
+         count(*) filter (where t.epost = 'rls-s@example.invalid')
+    into n1, n2 from public.notis_utskick_ta(100) t;
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.3 mejladressen tas ur inloggningen, inte ur profilen', n1 = 0 and n2 > 0,
+          'till profilens adress ' || n1 || ', till inloggningens ' || n2);
+  update public.flaggor set aktiv = false where kod = 'notiser_mejl';
+
+  -- Avregistreringen stänger av, och bara det.
+  perform public.notis_avregistrera(f4, 'meddelande', 'mejl');
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.3 avregistreringen stänger av typen', not public.notis_vill(f4, 'meddelande', 'mejl')
+          and public.notis_vill(f4, 'pass_nytt', 'mejl'), 'meddelande: ' || public.notis_vill(f4, 'meddelande', 'mejl'));
+  perform public.notis_avregistrera(f4, 'alla', 'mejl');
+  select count(*) into n1 from public.notis_val where profil_id = f4 and kanal = 'mejl' and not pa;
+  insert into utfall (test, ok, detalj)
+  values ('R2 2.3 avregistrera alla stänger av varje mejltyp', n1 = cardinality(public.notis_mejlbara()), 'avstängda: ' || n1);
+exception when others then
+  reset role; perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj) values ('R2 2.3 påminnelser och kön', false, 'fel ' || sqlstate || ': ' || sqlerrm);
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+select pg_temp.prova('R2 2.3 en familj kör notiserna för hand', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$select public.notis_kor_nu()$q$], 'nekad');
+select pg_temp.prova('R2 2.3 en familj skickar provmejl', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$select public.notis_provmejl()$q$], 'nekad');
+select pg_temp.rakna_efter('R2 2.3 admins provmejl köas till admin själv', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select public.notis_provmejl()$q$],
+  $q$select count(*) from public.notis_utskick where mottagare = '00000000-0000-4000-8000-0000000000ad'
+       and (data ->> 'prov')::boolean$q$, 7);
+select pg_temp.prova('R2 2.3 en inloggad tar ur kön', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$select * from public.notis_utskick_ta(10)$q$], 'nekad');
+select pg_temp.prova('R2 2.3 en inloggad avregistrerar någon annan', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$select public.notis_avregistrera('00000000-0000-4000-8000-0000000000f2', 'alla', 'mejl')$q$], 'nekad');
+select pg_temp.prova('R2 2.3 en inloggad läser avregistreringsnyckeln', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$select public.notis_avregistreringsnyckel()$q$], 'nekad');
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).
 insert into utfall (test, ok, detalj)
@@ -2253,7 +2571,16 @@ from unnest(array[
   'public.stampla_flaggan()', 'public.flagga_pa(text)', 'public.stampla_forberedelsen()',
   'public.skydda_rapportens_pass()', 'public.pass_kraver_elev()', 'public.matchning_kraver_godkand()',
   'intern.prova_bankkonto(text, text)', 'intern.mod10_ok(text)', 'intern.mod11_ok(text)',
-  'intern.swishnummer(text)'
+  'intern.swishnummer(text)',
+  'public.notis_vid_pass()', 'public.notis_vid_meddelande()', 'public.notis_vid_rapport()',
+  'public.stampla_notisraden()', 'public.stampla_notisvalet()', 'public.notis_vill(uuid, text, text)',
+  'public.notis_planera()', 'public.notis_utskick_ta(integer)',
+  'public.notis_utskick_klar(uuid, boolean, text, text, boolean, boolean)',
+  'public.notis_arbetare_klar(integer, integer, integer, text)', 'public.notis_avregistreringsnyckel()',
+  'public.notis_avregistrera(uuid, text, text)', 'public.notis_minut()', 'public.notis_stada()',
+  'intern.notis_koa(uuid, text, text, uuid, uuid, uuid, jsonb, text, text, timestamp with time zone, timestamp with time zone)',
+  'intern.notis_skapa(uuid, text, uuid, uuid, uuid, uuid, jsonb)', 'intern.fornamn(text)',
+  'intern.far_se_eleven(uuid, uuid)', 'intern.sms_nummer(text)'
 ]) f;
 
 insert into utfall (test, ok, detalj)
@@ -2271,7 +2598,8 @@ from unnest(array[
   'public.upptagna_tider(uuid, date, date)', 'public.far_forbereda_passet(uuid)',
   'public.bankkonto_kontroll(text, text)', 'public.spara_utbetalningsmetod(text, text, text, text, uuid)',
   'public.las_utbetalningsmetod(uuid)', 'public.radera_utbetalningsmetod(uuid)',
-  'public.las_utbetalningsmetod_klartext(uuid)'
+  'public.las_utbetalningsmetod_klartext(uuid)',
+  'public.notis_kor_nu()', 'public.notis_provmejl()', 'public.notis_typer()', 'public.notis_mejlbara()'
 ]) f;
 
 insert into utfall (test, ok, detalj)
