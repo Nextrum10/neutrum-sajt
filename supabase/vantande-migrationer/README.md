@@ -25,3 +25,22 @@ integritetspolicyn beskriver uppgifterna, så att köra migrationen
 öppnar ingenting för studiehjälparna. Den gör bara att funktionerna
 finns. Gränssnittet fungerar redan utan dem: det visar att funktionen
 inte är öppnad än.
+
+## `r2_fas2_4_schemat.sql`
+
+Program 2, Fas 2: pg_cron väcker `notis_minut()` varje minut, städar
+notistabellerna en gång per dygn och rensar `cron.job_run_details`
+efter en vecka. Fas 7:s regel gäller: ett jobb schemaläggs först när
+det gått att köra och läsa för hand. Därför väntar filen på två saker,
+i den här ordningen:
+
+1. `notis-ko` och `notis-avanmal` är driftsatta i sina nya versioner
+   (koden i `supabase/functions/`). Innan dess väcker `notis_minut`
+   den gamla `notis-ko`, som inte känner igen de nya tabellerna.
+2. Arbetaren har körts en gång för hand, med "Kör nu" i adminvyn eller
+   ett anrop med hemligheten, och syns i `notis_korningar`.
+
+Med flaggorna `notiser_mejl` och `notiser_sms` av skickar schemat
+ingenting till någon familj. Det som händer är att påminnelserna börjar
+dyka upp i klockan i appen, och att köade mejl märks `loggad` (eller
+går till sandlådeadressen, om en sådan är satt i `notis_drift`).
