@@ -50,6 +50,9 @@
 
   document.addEventListener('click', async e => {
     if (e.target.closest('[data-logout]')) {
+      /* Notiskanalen stängs före utloggningen, inte efter: efteråt
+         har den ingen giltig token att stänga med. */
+      if (window.NXNotiser) NXNotiser.stoppa();
       if (supa) await supa.auth.signOut();
       location.reload();
     }
@@ -339,14 +342,20 @@
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-familj]');
     if (!knapp) return;
-    S.aktivFamilj = knapp.dataset.familj;
+    await bytFamilj(knapp.dataset.familj);
+  });
+
+  /* Chattlistan, samtalen på Översikt och en chattnotis i klockan
+     byter familj på samma sätt. */
+  async function bytFamilj(id) {
+    S.aktivFamilj = id;
     S.aktivElev = null;
     S.olästa = await NXKontakt.olästa(S.user.id);
     await laddaSenaste();
     fyllElevväljare();
     await byggFamilj();
     await byggElev();
-  });
+  }
 
   $('#elev-val').addEventListener('change', async e => {
     S.aktivElev = e.target.value || null;
@@ -515,15 +524,23 @@
       motpart: aktivNamn(),
       onFel: t => säg($('#tr-msg'), 'Meddelandet gick inte iväg: ' + t, false),
       onNytt: async () => {
-        /* Antalet olästa står på raden i listan. I en tråd man
-           redan har uppe är "1 ny" en upplysning om något man
-           just läser. */
-        if (S.familjer.length > 1) { S.olästa = await NXKontakt.olästa(S.user.id); ritaFamiljval(); }
-        await laddaSenaste();
-        ritaChattlista();
-        ritaÖvSamtal();
+        /* Antalet olästa räknas om varje gång, också med en enda
+           familj. Förut gjordes det bara med fler än en, och med en
+           enda familj stod siffran i menyn och på Översikt kvar på
+           det den var när sidan laddades. Klockans Att göra ritas om
+           av samma skäl. */
+        await räknaOmOlästa();
       }
     });
+  }
+
+  async function räknaOmOlästa() {
+    S.olästa = await NXKontakt.olästa(S.user.id);
+    ritaFamiljval();
+    await laddaSenaste();
+    ritaChattlista();
+    ritaÖvSamtal();
+    ritaNotiser();
   }
 
   /* ============================================================
@@ -1119,12 +1136,12 @@
   }
 
   /* ============================================================
-     NOTISER
-     Bara sådant som väntar på ett svar från dig.
+     NOTISER, ATT GÖRA
+     Bara sådant som väntar på ett svar från dig. Klockan har också
+     en lista över det som hänt (NXNotiser, ur tabellen notiser); det
+     här är dess Att göra, räknat ur det vyn redan hämtat.
      ============================================================ */
   function ritaNotiser() {
-    const hus = $('#notis-hus');
-    if (!hus) return;
     const poster = [];
 
     const olästa = Object.values(S.olästa || {}).reduce((a, b) => a + b, 0);
@@ -1132,7 +1149,11 @@
       poster.push({
         rubrik: olästa + ' olä' + (olästa > 1 ? 'sta meddelanden' : 'st meddelande'),
         text: 'En familj väntar på svar.',
-        mål: '#trad'
+        mål: '#trad',
+        /* Trådarna posten gäller, som "förälder|studiehjälpare". Har
+           varje sådan tråd en oläst chattnotis i klockan står beskedet
+           bara där, inte två gånger. */
+        trådar: Object.keys(S.olästa || {}).filter(k => S.olästa[k] > 0)
       });
     }
 
@@ -1162,7 +1183,7 @@
       });
     }
 
-    NXStudie.notiser(hus, poster);
+    if (window.NXNotiser) NXNotiser.attGöra(poster);
   }
 
   /* ============================================================
@@ -2038,6 +2059,9 @@
         .eq('id', S.user.id);
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
       S.profil.full_name = namn;
+      /* SMS-valet under Notiser läser numret härifrån. */
+      S.profil.phone = $('#k-tel').value.trim() || null;
+      if (S.notisval) S.notisval.ritaOm();
       ritaHeader();
       ritaKontoAvatar();
       säg(msg, '✓ Uppgifterna har sparats.', true);
@@ -2415,12 +2439,7 @@
     if (!a) return;
     const id = a.dataset.oppnaFamilj;
     if (id === S.aktivFamilj) return;
-    S.aktivFamilj = id;
-    S.aktivElev = null;
-    S.olästa = await NXKontakt.olästa(S.user.id);
-    fyllElevväljare();
-    await byggFamilj();
-    await byggElev();
+    await bytFamilj(id);
   });
 
   /* ============================================================
@@ -2593,7 +2612,7 @@
             + NXStudie.ikon('varning')
             + '<span>Vi kunde inte kontrollera kontrollsiffran för den här banken. Dubbelkolla numret.</span></p>'
           : '')
-      + (rad.uppdaterad ? '<p class="bet-not" style="margin-top:6px">Lämnat ' + esc(datumText(String(rad.uppdaterad).slice(0, 10))) + '</p>' : '')
+      + (rad.uppdaterad ? '<p class="bet-not" style="margin-top:6px">Lämnat ' + esc(datumText(isoFor(new Date(rad.uppdaterad)))) + '</p>' : '')
       + '<div class="vy-knapprad">'
       + (kanÄndra ? '<button type="button" class="btn btn-ghost" data-ut-andra>Ändra</button>' : '')
       + '<button type="button" class="btn btn-ghost" data-ut-bort>Ta bort</button>'
@@ -3330,6 +3349,72 @@
 
   function visaFel(fel, sammanhang) { NXStudie.felvy(visa, fel, sammanhang); }
 
+  /* ============================================================
+     KLOCKAN OCH NOTISVALEN (program 2, Fas 2)
+     NXNotiser äger klockan. Vyn talar om hur ett pass öppnas och
+     vilken familj en chattnotis gäller, och hämtar om det en ny
+     notis gäller.
+
+     Chatten prenumererar bara på den öppna tråden. Ett meddelande
+     från en annan familj syntes därför först vid nästa sidladdning;
+     nu kommer det med chattens notis och räknarna ritas om.
+     ============================================================ */
+  let omläsning = null;
+  const omLäs = { pass: false, chatt: false };
+
+  function planeraOmläsning(vad) {
+    omLäs[vad] = true;
+    if (omläsning) clearTimeout(omläsning);
+    omläsning = setTimeout(async () => {
+      omläsning = null;
+      const pass = omLäs.pass, chatt = omLäs.chatt;
+      omLäs.pass = omLäs.chatt = false;
+      try {
+        if (pass) await laddaPass();
+        if (chatt) await räknaOmOlästa();
+      } catch (fel) { console.warn('omhämtningen efter en notis:', fel); }
+    }, 400);
+  }
+
+  function startaNotiser() {
+    if (!window.NXNotiser) return;
+    NXNotiser.start({
+      uid: S.user.id,
+      öppnaPass: id => {
+        if (!(S.bokningar || []).some(x => String(x.id) === String(id))) return false;
+        öppnaPass(id);
+        return true;
+      },
+      /* En tråd med en annan familj än den som är öppen: byt familj
+         först, sedan till Meddelanden. En familj som inte längre är
+         din har ingen tråd att visa; då blir det bara Meddelanden. */
+      öppnaTråd: parentId => {
+        if (parentId && parentId !== S.aktivFamilj && familjSyns(parentId)) {
+          bytFamilj(parentId).then(() => { location.hash = '#meddelanden'; });
+          return true;
+        }
+        return false;
+      },
+      onNy: n => {
+        if (/^pass_|^paminnelse$/.test(n.typ)) planeraOmläsning('pass');
+        else if (n.typ === 'meddelande') planeraOmläsning('chatt');
+      }
+    });
+  }
+
+  /* Gick förra hämtningen fel (tabellen fanns inte än, nätet var
+     borta) hämtas valen igen när fliken öppnas nästa gång. Förut
+     hämtades de en gång per sidladdning, och ett fel satt kvar. */
+  function visaNotisval() {
+    if (!window.NXNotiser || !S.user) return;
+    if (S.notisval) { if (S.notisval.försökIgen) S.notisval.försökIgen(); return; }
+    S.notisval = NXNotiser.val($('#notisval'), {
+      uid: S.user.id,
+      roll: 'tutor',
+      telefon: () => (S.profil && S.profil.phone) || ''
+    });
+  }
+
   const felKnapp = $('#fel-igen');
   if (felKnapp) {
     felKnapp.addEventListener('click', () => {
@@ -3418,7 +3503,10 @@
          utan flikar. */
       laxor: NXArbete.flikar($('section[data-sek="laxor"]')),
       statistik: NXArbete.flikar($('section[data-sek="statistik"]')),
-      profil: NXArbete.flikar($('section[data-sek="profil"]'))
+      /* Notisvalen hämtas först när fliken öppnas. */
+      profil: NXArbete.flikar($('section[data-sek="profil"]'), {
+        onByt: v => { if (v === 'notiser') visaNotisval(); }
+      })
     };
 
     /* Pilarna som står i markupen läses av en gång här, så ett sparat
@@ -3435,6 +3523,10 @@
       onByt: sek => { $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1; }
     });
 
+    /* Klockan. Startas före chatten, så att tråden kan tala om för
+       notislistan när den syns. */
+    startaNotiser();
+
     /* De fem sektioner som slogs ihop hade egna adresser. Bokmärken
        och "visa alla"-raderna inne i vyn pekar på dem, så de översätts
        i stället för att gå sönder: #material blir sektionen Läxor &
@@ -3449,6 +3541,9 @@
       material: ['laxor', 'material'],
       ersattning: ['statistik', 'ersattning'],
       installningar: ['profil', 'konto'],
+      /* Mejlen länkar till #profil/notiser. Det här är den korta
+         formen av samma adress. */
+      notiser: ['profil', 'notiser'],
       /* Vänt håll sedan sektionen bytte namn. Den hette Kalender,
          heter Dina tider, och #kalender är bokmärkt hos dem som
          använde den förut — plus att gamla länkar i vyn pekade dit.

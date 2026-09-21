@@ -619,43 +619,160 @@
 .mat-typ button[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--pap)}
 
 /* ============================================================
-   NOTISER
-   En siffra i sidhuvudet med det som väntar på användaren.
+   NOTISCENTRALEN (program 2, Fas 2)
+   Klockan i sidhuvudet och rutan under den. Ritas av NXNotiser
+   (nextrum-notiser.js).
+
+   Klockan ligger utanför #nav-actions, som döljs under 1040 px. Där
+   står den bredvid menyknappen, och rutan fälls ut över hela
+   bredden under sidhuvudet. Förut fanns ingen knapp alls på mobilen,
+   bara siffran i fliktiteln.
    ============================================================ */
-.nx-notis-hus{position:relative;display:inline-flex}
-.nx-notis{
-  display:inline-flex;align-items:center;gap:7px;
+.nx-klocka-hus{position:relative;display:inline-flex;flex:none}
+.nx-klocka{
+  position:relative;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:42px;height:42px;flex:none;
   border:1px solid var(--ln);border-radius:100px;
-  padding:7px 14px 7px 11px;background:var(--pap-2);
-  font-size:.84rem;font-weight:700;color:var(--bl);
-  font-variant-numeric:tabular-nums;
+  background:var(--pap-2);color:var(--bl);
+  cursor:pointer;
   transition:border-color .2s var(--e),background .2s var(--e);
 }
-.nx-notis:hover{border-color:var(--ln-2);background:var(--pap-3)}
-.nx-notis-prick{
-  width:7px;height:7px;border-radius:50%;background:var(--acc);flex:none;
+.nx-klocka:hover,
+.nx-klocka[aria-expanded="true"]{border-color:var(--ln-2);background:var(--pap-3)}
+.nx-klocka-ikon{width:20px;height:20px}
+/* Siffran säger hur många. Den står för sig själv; orden till
+   skärmläsaren ligger i en dold text i knappen. */
+.nx-klocka-antal{
+  position:absolute;top:-5px;right:-6px;
+  min-width:20px;height:20px;padding:0 5px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:100px;background:var(--acc);color:var(--acc-ink);
+  font-size:11px;font-weight:700;line-height:1;
+  font-variant-numeric:tabular-nums;
+  box-shadow:0 0 0 2px var(--pap);
 }
-.nx-notis-lista{
+.nx-klocka-antal[hidden]{display:none}
+
+@media (max-width:1040px){
+  /* Menyknappen har margin-left:auto för att stå längst ut. Med
+     klockan före sig tar klockan den marginalen, och de två står
+     ihop i högerkanten. */
+  .hdr .nx-klocka-hus{margin-left:auto}
+  .hdr .nx-klocka-hus ~ .burger{margin-left:-6px}
+}
+@media (pointer:coarse){
+  .nx-klocka{width:44px;height:44px}
+}
+
+.nx-notispanel{
   position:absolute;top:calc(100% + 10px);right:0;z-index:820;
-  min-width:290px;max-width:min(360px,84vw);
-  background:var(--pap);border:1px solid var(--ln);
+  width:min(400px,calc(100vw - 32px));
+  max-height:min(560px,calc(100vh - 110px));
+  overflow-y:auto;overscroll-behavior:contain;
+  background:var(--pap);border:1px solid var(--ln-2);
   border-radius:16px;box-shadow:var(--sk-2);
-  padding:7px;overflow:hidden;
+  padding:0 8px 8px;
+  text-align:left;
 }
-.nx-notis-rad{
-  display:block;width:100%;text-align:left;
-  padding:11px 13px;border-radius:11px;
-  transition:background .18s var(--e);
+.nx-notispanel[hidden]{display:none}
+/* Fokus flyttas hit när rutan öppnas, så att skärmläsaren läser
+   rubriken. En ring runt hela rutan efter ett musklick vore brus;
+   efter tangentbordet visas den. */
+.nx-notispanel:focus{outline:none}
+.nx-notispanel:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+@media (max-width:1040px){
+  .nx-notispanel{
+    position:fixed;
+    top:var(--nx-panel-topp,76px);left:12px;right:12px;
+    width:auto;
+    max-height:calc(100vh - var(--nx-panel-topp,76px) - 12px);
+    max-height:calc(100dvh - var(--nx-panel-topp,76px) - 12px);
+  }
 }
-.nx-notis-rad:hover{background:var(--pap-2)}
-.nx-notis-rad b{
-  display:block;font-size:.9rem;font-weight:600;
-  letter-spacing:-.018em;color:var(--bl);
+
+.nx-notispanel-topp{
+  position:sticky;top:0;z-index:1;
+  display:flex;align-items:center;gap:6px;
+  padding:8px 8px 8px 14px;margin:0 -8px 4px;
+  background:inherit;
+  border-bottom:1px solid var(--ln);
 }
-.nx-notis-rad span{
-  display:block;font-size:.82rem;line-height:1.5;
-  color:var(--bl-2);margin-top:3px;
+.nx-notispanel-topp h2{
+  flex:1;margin:0;
+  font-size:1rem;font-weight:700;letter-spacing:-.015em;color:var(--bl);
 }
+.nx-notispanel-alla{
+  min-height:36px;padding:0 10px;border-radius:9px;
+  font-size:.8rem;font-weight:600;color:var(--acc-text);
+  background:none;border:0;cursor:pointer;
+}
+.nx-notispanel-alla:hover{text-decoration:underline;text-underline-offset:3px}
+.nx-notispanel-alla[hidden]{display:none}
+.nx-notispanel-stang{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:36px;height:36px;flex:none;
+  border:1px solid var(--ln);border-radius:10px;
+  background:var(--pap);color:var(--bl);cursor:pointer;
+}
+.nx-notispanel-stang:hover{background:var(--pap-2);border-color:var(--bl-3)}
+.nx-notispanel-stang .nx-ikon{width:14px;height:14px}
+@media (pointer:coarse){
+  .nx-notispanel-alla{min-height:44px}
+  .nx-notispanel-stang{width:44px;height:44px}
+}
+.nx-notispanel-status{margin:6px 8px 0;font-size:.82rem;line-height:1.5;color:var(--bl-2)}
+.nx-notispanel-status:empty{display:none}
+
+.nx-notisdel h3{
+  margin:12px 8px 4px;
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
+}
+.nx-notislista{list-style:none;margin:0;padding:0}
+.nx-notis-tom{margin:0;padding:10px 8px 14px;font-size:.86rem;line-height:1.55;color:var(--bl-2)}
+
+/* En rad. Klickbar hela vägen ut i kanterna, minst 44 px hög: en
+   träffyta som bara är texten är en missad träff varannan gång. */
+.nx-notisrad{
+  display:flex;align-items:flex-start;gap:11px;
+  width:100%;min-height:44px;
+  padding:10px 8px;border:0;border-radius:11px;
+  background:none;color:inherit;font:inherit;text-align:left;
+  cursor:pointer;
+  transition:background .16s var(--e);
+}
+.nx-notisrad:hover{background:var(--pap-2)}
+.nx-notisrad:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+.nx-notisrad-ikon{
+  display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;flex:none;margin-top:1px;
+  border-radius:9px;background:var(--pap-2);color:var(--bl-2);
+}
+.nx-notisrad-ikon .nx-ikon{width:15px;height:15px}
+.nx-notisrad.ar-olast .nx-notisrad-ikon{background:var(--acc-soft);color:var(--acc-text)}
+.nx-notisrad-text{flex:1;min-width:0}
+.nx-notisrad-text b{
+  display:block;font-size:.88rem;font-weight:550;line-height:1.35;color:var(--bl);
+}
+.nx-notisrad.ar-olast .nx-notisrad-text b{font-weight:700}
+.nx-notisrad-text > span{
+  display:block;margin-top:2px;
+  font-size:.8rem;line-height:1.45;color:var(--bl-2);
+}
+.nx-notisrad-sida{
+  display:flex;flex-direction:column;align-items:flex-end;gap:4px;
+  flex:none;margin-top:2px;
+}
+.nx-notisrad-sida time{font-family:var(--f-mono);font-size:10px;color:var(--bl-2);white-space:nowrap}
+/* Oläst: prick OCH ord. En prick ensam är en färg, och färg ensam
+   bär ingen information för den som inte ser den. */
+.nx-olast{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:.72rem;font-weight:700;color:var(--acc-text);white-space:nowrap;
+}
+.nx-olast-prick{width:7px;height:7px;border-radius:50%;background:var(--acc);flex:none}
 
 /* panelen man hoppade till blinkar till, annars vet man inte
    vart man hamnade */
@@ -663,10 +780,6 @@
 @keyframes nx-blink{
   0%,100%{box-shadow:var(--sk-1)}
   22%{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 30%,transparent),var(--sk-1)}
-}
-
-@media (max-width:1040px){
-  .nx-notis-lista{right:auto;left:0}
 }
 
 /* ============================================================
@@ -686,8 +799,12 @@
   :root:not([data-theme="light"]) .vy-roll[aria-current="page"]{background:var(--pap-3)}
   :root:not([data-theme="light"]) .tr-rad.deras .tr-bubbla{background:var(--pap-3)}
   :root:not([data-theme="light"]) .nx-fraga-box{background:var(--pap-2)}
-  :root:not([data-theme="light"]) .nx-notis-lista{background:var(--pap-2)}
-  :root:not([data-theme="light"]) .nx-notis{background:var(--pap-3)}
+  :root:not([data-theme="light"]) .nx-notispanel{background:var(--pap-2)}
+  :root:not([data-theme="light"]) .nx-klocka{background:var(--pap-3)}
+  :root:not([data-theme="light"]) .nx-notisrad:hover,
+  :root:not([data-theme="light"]) .nx-notisrad:not(.ar-olast) .nx-notisrad-ikon,
+  :root:not([data-theme="light"]) .nx-notispanel-stang{background:var(--pap-3)}
+  :root:not([data-theme="light"]) .nx-klocka-antal{box-shadow:0 0 0 2px var(--pap-2)}
   /* :not() på det valda läget är nödvändigt: den här selektorn har
      högre specificitet än .tr-val button[aria-pressed="true"], så utan
      den skrev lyftet över den valda knappens botten och lämnade ljus
@@ -706,14 +823,18 @@
 :root[data-theme="dark"] .lax,
 :root[data-theme="dark"] .vy-roll,
 :root[data-theme="dark"] .nx-fraga-box,
-:root[data-theme="dark"] .nx-notis-lista,
+:root[data-theme="dark"] .nx-notispanel,
 :root[data-theme="dark"] .tr-val button:not([aria-pressed="true"]),
 :root[data-theme="dark"] .mat-typ button:not([aria-pressed="true"]){background:var(--pap-2)}
 :root[data-theme="dark"] .lax.avklarad,
 :root[data-theme="dark"] .vy-roll[aria-current="page"],
 :root[data-theme="dark"] .tr-rad.deras .tr-bubbla,
-:root[data-theme="dark"] .nx-notis,
+:root[data-theme="dark"] .nx-klocka,
+:root[data-theme="dark"] .nx-notisrad:hover,
+:root[data-theme="dark"] .nx-notisrad:not(.ar-olast) .nx-notisrad-ikon,
+:root[data-theme="dark"] .nx-notispanel-stang,
 :root[data-theme="dark"] .nx-avatar{background:var(--pap-3)}
+:root[data-theme="dark"] .nx-klocka-antal{box-shadow:0 0 0 2px var(--pap-2)}
 
 /* ============================================================
    SIDOMENYN

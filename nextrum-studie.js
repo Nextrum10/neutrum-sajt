@@ -1383,74 +1383,19 @@ window.NXStudie = (function () {
 
   /* ============================================================
      NOTISER
-     En knapp i sidhuvudet med det som faktiskt kräver något av
-     användaren. Inte en logg över allt som hänt — en lista över
-     det som väntar.
+     Klockan, rutan och räknaren i fliktiteln bor sedan program 2,
+     Fas 2 i NXNotiser (nextrum-notiser.js), som också läser notiserna
+     ur databasen. Det här är den gamla ingången, kvar för den som
+     anropar den: posterna blir klockans Att göra. host används inte
+     längre.
+
+     Förut ritade den knappen på nytt vid varje anrop och gav document
+     två nya lyssnare varje gång, utan att någonsin ta bort dem. Vyn
+     anropar den ett tiotal gånger vid start och vid varje nytt
+     meddelande, så lyssnarna blev fler hela tiden.
      ============================================================ */
   function notiser(host, poster) {
-    if (!host) return;
-    var öppen = false;
-
-    if (!poster.length) { host.innerHTML = ''; sättTitel(0); return; }
-
-    host.innerHTML =
-      '<button type="button" class="nx-notis" aria-expanded="false" aria-label="'
-      + poster.length + ' saker som väntar">'
-      + '<span class="nx-notis-prick"></span>' + poster.length
-      + '</button>'
-      + '<div class="nx-notis-lista" hidden>'
-      + poster.map(function (p) {
-          return '<button type="button" class="nx-notis-rad" data-mal="' + esc(p.mål || '') + '">'
-            + '<b>' + esc(p.rubrik) + '</b><span>' + esc(p.text) + '</span></button>';
-        }).join('')
-      + '</div>';
-
-    var knapp = host.querySelector('.nx-notis');
-    var lista = host.querySelector('.nx-notis-lista');
-
-    function stäng() { öppen = false; lista.hidden = true; knapp.setAttribute('aria-expanded', 'false'); }
-
-    knapp.addEventListener('click', function (e) {
-      e.stopPropagation();
-      öppen = !öppen;
-      lista.hidden = !öppen;
-      knapp.setAttribute('aria-expanded', String(öppen));
-    });
-
-    lista.addEventListener('click', function (e) {
-      var rad = e.target.closest('[data-mal]');
-      if (!rad) return;
-      stäng();
-      var mål = document.querySelector(rad.dataset.mal);
-      if (!mål) return;
-
-      /* Målet kan ligga i en sektion som inte är framme. Byt dit
-         först — annars scrollar vi till något som är hidden och
-         ingenting händer. */
-      var sek = mål.closest('section[data-sek]');
-      if (sek && sek.hidden) {
-        location.hash = '#' + sek.dataset.sek;
-      }
-      /* Och i en flik som inte är framme. Efter sammanslagningen av
-         sektionerna ligger #rapport-form och #lax-lista i flikpaneler,
-         och en gömd panel är lika ogenomtränglig som en gömd sektion. */
-      if (window.NXArbete) NXArbete.visaFör(mål);
-
-      /* Sektionsbytet nollställer scrollen, så markeringen måste
-         vänta tills den bytt. */
-      requestAnimationFrame(function () {
-        mål.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        mål.classList.add('nx-blink');
-        setTimeout(function () { mål.classList.remove('nx-blink'); }, 1600);
-      });
-    });
-
-    document.addEventListener('click', function (e) {
-      if (öppen && !host.contains(e.target)) stäng();
-    });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && öppen) stäng(); });
-
-    sättTitel(poster.length);
+    if (window.NXNotiser) NXNotiser.attGöra(poster || []);
   }
 
   /* ============================================================
@@ -1754,12 +1699,6 @@ window.NXStudie = (function () {
     }
   }
 
-  /* Antalet syns i fliken också — man har sällan vyn framme. */
-  function sättTitel(n) {
-    var ren = document.title.replace(/^\(\d+\)\s*/, '');
-    document.title = n ? '(' + n + ') ' + ren : ren;
-  }
-
   /* ============================================================
      VYSKALET (Fas 3)
      Det studievyn och studiehjälparvyn gjorde likadant, i var sin
@@ -1791,9 +1730,19 @@ window.NXStudie = (function () {
     if (detalj) detalj.textContent = (fel && (fel.message || fel.error_description || fel.msg)) || String(fel || '');
   }
 
-  /* Klockslag om det var idag, "Igår", annars datumet. */
+  /* Klockslag om det var idag, "Igår", annars datumet.
+
+     Dagen räknas i webbläsarens tid, som klockslaget. Datumet i
+     tidsstämpeln är UTC: något som hände 00:30 svensk tid står där
+     som 22:30 dagen före, och blev "Igår" fast det var idag. Det
+     gällde allt mellan midnatt och klockan två på sommaren. Ett rent
+     datum har ingen tid att räkna om och tas som det står, och det
+     som inte går att läsa som en tid blir tom text, inte
+     "undefined undefined NaN". */
   function kortTid(iso) {
-    var d = new Date(iso), dag = String(iso).slice(0, 10);
+    var s = String(iso == null ? '' : iso), d = new Date(s);
+    if (isNaN(d.getTime())) return '';
+    var dag = /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : isoFor(d);
     if (dag === isoFor(new Date())) {
       return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     }
@@ -1802,13 +1751,17 @@ window.NXStudie = (function () {
   }
 
   /* Namnet, rollen och utloggningen uppe i menyn. efter() körs när
-     notishuset finns i DOM:en — vyn ritar sina notiser där. */
+     menyn är ritad; vyerna räknar om sina Att göra-poster där.
+
+     Klockan ligger INTE här längre. #nav-actions döljs under 1040 px,
+     och klockan ska synas på mobilen. NXNotiser lägger den som ett
+     eget element i sidhuvudet, och den ritas inte om när menyn gör
+     det. */
   function vyHuvud(S, roll, efter) {
     var na = NX.$('#nav-actions'), ma = NX.$('#m-actions');
     if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
     var namn = (S.profil && S.profil.full_name) || S.user.email;
-    na.innerHTML = '<span class="nx-notis-hus" id="notis-hus"></span>'
-      + '<span class="who-chip">' + NXMedia.avatar(namn, S.minAvatar, { liten: true })
+    na.innerHTML = '<span class="who-chip">' + NXMedia.avatar(namn, S.minAvatar, { liten: true })
       + '<b>' + esc(namn) + '</b><span class="roll">' + esc(roll) + '</span></span>'
       + (S.profil && S.profil.is_admin
         ? '<a class="btn btn-ghost btn-sm" href="/admin">Admin</a>' : '')

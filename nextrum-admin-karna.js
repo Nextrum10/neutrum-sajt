@@ -52,7 +52,21 @@ const NXAdmin = (function () {
     handlingar: [], handlingarFel: null,
     /* Program 2, Fas 1: id för de studiehjälpare som bjudits in
        härifrån, läst ur anteckningarna. Se INBJUDAN_NOT. */
-    inbjudna: new Set()
+    inbjudna: new Set(),
+    /* Program 2, Fas 2: notisernas inställningar, kö och körningar.
+       Fylls av hämtaNotisläge(). saknas betyder att tabellerna inte
+       finns än (migrationen inte körd), och det är ett läge, inte ett
+       fel. */
+    notis: {
+      hämtad: false, saknas: false, fel: null, delfel: [],
+      installning: null, drift: null,
+      /* filter är det som valts i fliken Utskick, utskickFilter det
+         som listan i minnet faktiskt hämtades med. Skiljer de sig är
+         listan på väg att hämtas om och ritas inte. */
+      utskick: [], utskickTotalt: 0, filter: '', utskickFilter: '',
+      väntar: 0, felDygn: 0, tyst: false,
+      körningar: [], skapfel: [], skapfelDygn: 0
+    }
   };
 
   /* Anteckningen som skrivs när en studiehjälpare bjuds in härifrån.
@@ -365,6 +379,136 @@ const NXAdmin = (function () {
        fel ska inte hindra nästa försök. */
     S.matchpoang = {};
     S.matchpoangFel = {};
+  }
+
+  /* ============================================================
+     NOTISERNA (program 2, Fas 2)
+
+     Läget för mejlen och SMS:en till familjer och studiehjälpare:
+     inställningarna, kön, arbetarens körningar och de notiser som
+     inte gick att skapa. Allt utom notis_installning är admin-only i
+     databasen. En egen hämtning och inte en del av hämtaAllt:
+     hämtaAllt körs om efter nästan varje åtgärd i vyn, och kön
+     behöver inte hämtas om för att någon skapat en familj.
+
+     EN FRÅGA FÖRST. Innan migrationen körts finns ingen av
+     tabellerna, och åtta frågor som alla svarar 404 vid varje
+     inloggning gör konsolen till ett ställe man slutar titta i
+     (samma skäl som i Automationer). Svarar den första att tabellen
+     saknas ställs inga fler.
+
+     ARBETAREN ÄR TYST när något väntar och ingen körning skett den
+     senaste kvarten. pg_net arbetar asynkront, så ett jobb som
+     väcker en arbetare som svarar 401 räknas som lyckat av den som
+     väckte. Det enda som säger sanningen är att körningen aldrig
+     loggades.
+
+     Kastar aldrig. Ett fel här ska synas i fliken, inte fälla vyn.
+     ============================================================ */
+  const UTSKICK_GRÄNS = 100;
+  const KVART = 15 * 60000;
+  let notisHämtning = null;
+
+  function hämtaNotisläge() {
+    /* Två anrop i rad, till exempel flikklicket och knappen Hämta om,
+       delar samma hämtning i stället för att tävla om vems svar som
+       ritas sist.
+
+       MEN FILTRET FÅR INTE DELAS BORT. Den som byter läge i fliken
+       Utskick medan en hämtning pågår fick förut tillbaka den
+       pågående, gjord med det gamla filtret: rutan sa Fel, listan
+       visade alla lägen, och det stod kvar till nästa hämtning. Nu
+       följer filtret med varje varv, och har det hunnit ändras när
+       varvet är klart tas ett varv till innan någon får svar. */
+    if (!notisHämtning) {
+      notisHämtning = (async () => {
+        try {
+          let filter;
+          do {
+            filter = S.notis.filter;
+            await hämtaNotislägeNu(filter);
+          } while (S.notis.filter !== filter);
+        } finally {
+          notisHämtning = null;
+        }
+      })();
+    }
+    return notisHämtning;
+  }
+
+  async function hämtaNotislägeNu(filter) {
+    const N = S.notis;
+    const töm = () => {
+      N.installning = null; N.drift = null; N.utskick = []; N.utskickTotalt = 0;
+      N.väntar = 0; N.felDygn = 0; N.tyst = false; N.körningar = []; N.skapfel = [];
+      N.skapfelDygn = 0; N.delfel = [];
+    };
+    try {
+      const inst = await supa.from('notis_installning')
+        .select('paminnelser_timmar, chatt_samla_minuter, pass_samla_minuter, uppdaterad, uppdaterad_av')
+        .eq('id', 1).maybeSingle();
+      if (inst.error) {
+        töm();
+        N.saknas = saknasTabell(inst.error, inst.status);
+        N.fel = N.saknas ? null : felText(inst.error);
+        return;
+      }
+      N.saknas = false;
+      N.fel = null;
+      N.installning = inst.data || null;
+
+      const nu = Date.now();
+      const nuIso = new Date(nu).toISOString();
+      const dygnet = new Date(nu - DAG).toISOString();
+
+      /* Filtret på läge sätts i databasen, inte här: med filtret i
+         webbläsaren hade "Fel" bara visat de fel som råkade rymmas
+         bland de hundra senaste, och antalet hade ljugit (samma fel
+         som auditloggen hade före Fas 9.8). data hämtas inte, bara
+         om raden är ett provmejl och vilken roll provet visar
+         (Fas 2.3d). */
+      let lista = supa.from('notis_utskick')
+        .select('id, mottagare, kanal, typ, antal, status, forsok, fel, skicka_efter, skicka_senast, '
+          + 'till_sandlada, skapad, uppdaterad, prov:data->>prov, prov_roll:data->>prov_roll',
+          { count: 'exact' })
+        .order('skapad', { ascending: false }).limit(UTSKICK_GRÄNS);
+      if (filter) lista = lista.eq('status', filter);
+
+      const [drift, utskick, väntar, felDygn, körn, skapfel, skapfelDygn] = await Promise.all([
+        supa.from('notis_drift').select('mejl_sandlada, sms_lage, sms_tak_per_dygn, uppdaterad, uppdaterad_av')
+          .eq('id', 1).maybeSingle(),
+        lista,
+        /* Samma definition som notis_kor_nu() svarar med. */
+        supa.from('notis_utskick').select('id', { count: 'exact', head: true })
+          .eq('status', 'vantar').lte('skicka_efter', nuIso),
+        supa.from('notis_utskick').select('id', { count: 'exact', head: true })
+          .eq('status', 'fel').gt('uppdaterad', dygnet),
+        supa.from('notis_korningar').select('id, tid, behandlade, skickade, misslyckade, meddelande')
+          .order('tid', { ascending: false }).limit(20),
+        supa.from('notis_fel').select('id, skapad, kalla, fel').order('skapad', { ascending: false }).limit(50),
+        supa.from('notis_fel').select('id', { count: 'exact', head: true }).gt('skapad', dygnet)
+      ]);
+
+      N.delfel = [drift, utskick, väntar, felDygn, körn, skapfel, skapfelDygn]
+        .filter(r => r.error).map(r => felText(r.error));
+      N.drift = drift.data || null;
+      N.utskick = utskick.data || [];
+      N.utskickTotalt = utskick.count != null ? utskick.count : N.utskick.length;
+      N.väntar = väntar.count || 0;
+      N.felDygn = felDygn.count || 0;
+      N.körningar = körn.data || [];
+      N.skapfel = skapfel.data || [];
+      N.skapfelDygn = skapfelDygn.count || 0;
+
+      const senast = N.körningar[0] ? Date.parse(N.körningar[0].tid) : NaN;
+      N.tyst = N.väntar > 0 && !(nu - senast < KVART);
+    } catch (e) {
+      töm();
+      N.fel = felText(e);
+    } finally {
+      N.hämtad = true;
+      N.utskickFilter = filter || '';
+    }
   }
 
   /* ============================================================
@@ -775,6 +919,16 @@ const NXAdmin = (function () {
     return kod === 'PGRST202' || kod === '42883';
   }
 
+  /* Samma sak för en tabell: PostgREST svarar PGRST205 (och 404)
+     sedan version 12, äldre versioner och Postgres själv 42P01.
+     Vyn kan ligga ute före migrationen, och då är en saknad tabell
+     ett läge att beskriva, inte ett fel att visa. */
+  function saknasTabell(fel, status) {
+    if (status === 404) return true;
+    const kod = fel && fel.code;
+    return kod === 'PGRST205' || kod === '42P01';
+  }
+
   /* Anteckningarna låg här som en egen panel med en egen
      hämtning och ett eget formulär. De är nu en flik i
      detaljpanelen, tillsammans med allt annat om samma person —
@@ -905,9 +1059,10 @@ const NXAdmin = (function () {
   return {
     ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, INBJUDAN_NOT, LEAD_LAGE, S, SH_LAGE,
     UTB_LAGE, ÅRSKURSER, barnFel, dagarSedan, delaÄmnen, elevHjälpare, elevNamn, fråga,
-    funktionsFel, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag,
+    funktionsFel, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, hämtaNotisläge,
     kontaktaRuta, kopplaBarn, kortDatum, läge, läsBarn, matchar, mejlHref, märkFlik,
-    namnFör, närText, numreraBarn, pill, punkt, rad, saknasFunktion, skapaBarn, skriv, tabell, telHref,
+    namnFör, närText, numreraBarn, pill, punkt, rad, saknasFunktion, saknasTabell, skapaBarn, skriv,
+    tabell, telHref,
     tomtText, uppräkning, visa, väljare, öppnaRuta, rita
   };
 })();

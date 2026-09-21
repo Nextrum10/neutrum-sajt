@@ -845,14 +845,16 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Profil &amp; inställningar</h2>
-            <p>Det familjer ser om dig, och ditt eget konto.</p>
+            <p>Det familjer ser om dig, ditt eget konto och dina notiser.</p>
           </div>
         </div>
-        <div class="vy-flikar" role="tablist" aria-label="Profil eller konto">
+        <div class="vy-flikar" role="tablist" aria-label="Profil, konto eller notiser">
           <button class="vy-flik" type="button" role="tab" data-flik="minprofil"
                   id="flik-minprofil" aria-controls="panel-minprofil">Min profil</button>
           <button class="vy-flik" type="button" role="tab" data-flik="konto"
                   id="flik-konto" aria-controls="panel-konto">Mitt konto</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="notiser"
+                  id="flik-notiser" aria-controls="panel-notiser">Notiser</button>
         </div>
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="minprofil"
@@ -931,6 +933,19 @@
                   </form>
                 </div>
         </div>
+
+        <!-- ============ NOTISER ============
+             Vad som också ska komma som mejl eller SMS. Allt syns
+             under klockan i sidhuvudet oavsett. Tabellen ritas av
+             NXNotiser.val() när fliken öppnas; mejlen länkar hit,
+             till /larare#profil/notiser. -->
+        <div class="vy-flik-panel" role="tabpanel" data-flik="notiser"
+             id="panel-notiser" aria-labelledby="flik-notiser" hidden>
+          <div class="dbox">
+            <h5>Notiser</h5>
+            <div id="notisval"><div class="loading">Hämtar</div></div>
+          </div>
+        </div>
       </section>
       </div>
     </div>
@@ -964,6 +979,7 @@
 <script src="nextrum-tjanster.js"></script>
 <script src="nextrum-kontakt.js"></script>
 <script src="nextrum-studie.js"></script>
+<script src="nextrum-notiser.js"></script>
 <script src="nextrum-arbetsyta.js"></script>
 <script src="nextrum-media.js"></script>
 <script src="nextrum-betalning.js"></script>

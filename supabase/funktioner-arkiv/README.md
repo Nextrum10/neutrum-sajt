@@ -1,4 +1,90 @@
-# Arkiv: edge-funktioner som ligger i driften utan att ha funnits i git
+# Arkiv: edge-funktioner som låg i driften utan att ha funnits i git
+
+## Ersatt i program 2, Fas 2
+
+Arkivet beskriver den kod som låg i driften under namnen `notis-ko` och
+`notis-avanmal` **före Fas 2**. Namnen tas över: den nya koden ligger i
+`supabase/functions/notis-ko/` och `supabase/functions/notis-avanmal/`
+och driftsätts under samma namn, så att den gamla versionen ersätts i
+stället för att ligga kvar bredvid. Arkivet står kvar som historik och
+som svar på frågan "vad låg där förut".
+
+**Det här togs med:**
+
+| Från arkivet | Nu i |
+|---|---|
+| Förnamnsregeln i `rendera.ts` (bara bokstäver, aldrig brödtext, rendera tar bara emot det den ska) | `_delad/notiser/typer.ts` (`fornamn`, `renData`), samma regel som `intern.fornamn()` i databasen |
+| HMAC-token med konstant jämförelse | `_delad/notiser/token.ts` |
+| `List-Unsubscribe` och `List-Unsubscribe-Post: List-Unsubscribe=One-Click` | `_delad/notiser/ko.ts` |
+| Idempotensnyckeln `nextrum-notis-<id>` | `_delad/notiser/ko.ts` |
+| Beroendeinjektion i arbetaren, så att flödet går att testa utan Supabase och Resend | `_delad/notiser/ko.ts` och `ko_test.ts` |
+| Fältet `headers` i `Mejl` | `_delad/mejl.ts` (valfritt, befintliga anropare oförändrade) |
+| Bara POST i notis-avanmal avregistrerar, GET gör det inte | `_delad/notiser/avanmal.ts` (GET och HEAD skickas nu vidare med 303 till `nextrum.se/avanmal`, se nedan) |
+
+**Det här ändrades:**
+
+- **Databasen.** Den nya koden talar bara med funktionerna från Fas 2.3:
+  `notis_utskick_ta`, `notis_utskick_klar`, `notis_arbetare_klar`,
+  `notis_avregistreringsnyckel` och `notis_avregistrera`. `notis_hamta`,
+  `notis_klar`, `notis_avanmal`, tabellen `notis_ko` och kolumnerna
+  `notis_konfig.lage` och `notis_konfig.avanmal_nyckel` används inte
+  och skapas inte.
+- **Vem som bestämmer.** Den gamla arbetaren prövade själv om mottagaren
+  ville ha mejl (en global `notismail`). Nu prövar databasen varje rad
+  när den tas ur kön (flaggan, valet per typ och kanal, om passet
+  fortfarande är bokat, om chatten redan är läst, om det är för sent),
+  och arbetaren skickar bara det den får.
+- **Tokenen, version 2.** `<uid>.<kanal>.<typ>.<signatur>` över
+  `avanmal:v2:uid:kanal:typ`, där typ är en notistyp eller `alla`. Den
+  gamla signerade bara `avanmal:uid` och stängde av allt. Nyckeln är
+  32 byte ur `notis_konfig.avregistreringsnyckel`, som bara service_role
+  läser. Gamla tokens gäller inte: det har aldrig gått ut något mejl
+  med en sådan.
+- **Läget.** Varken secreten `NOTIS_LAGE` eller `notis_konfig.lage`
+  finns kvar. Mejl styrs av flaggan `notiser_mejl` och sandlådeadressen
+  i `notis_drift`, SMS av flaggan `notiser_sms` och `notis_drift.sms_lage`
+  (`prov` = 46elks dryrun). Allt läses i databasen.
+- **Inget mejl utan avregistrering.** Den gamla skickade utan länk om
+  nyckeln saknades. Den nya tar inget ur kön om nyckeln inte går att
+  läsa.
+- **Avsändaren** är `Nextrum <no-reply@nextrum.se>` med svar till
+  `info@nextrum.se`, som dagens notiser. Den gamla hade `info@` som
+  förval.
+- **Mallarna** skrevs om: en per typ och roll ur Fas 2 (nytt pass,
+  bekräftat, flyttat, avbokat, avböjt, meddelande, påminnelse), med
+  datum, tid, ämne och förnamn. Jordpaletten ur `nextrum-cinema.css`,
+  systemtypsnitt, ingen Google Fonts och ingen bildlogga (den gamla
+  pekade på `/mejl-mark.png`, som inte finns).
+- **SMS** finns nu, bara för påminnelser, via 46elks (`_delad/sms.ts`).
+- **Resend-felen.** 401 och 403 gäller kontot (nyckeln eller
+  avsändardomänen), inte mejlet: körningen avbryts, raden går tillbaka
+  som tillfälligt fel, omgångens övriga mejl går tillbaka utan försök
+  och skälet skrivs i `notis_korningar`. Funktionen svarar då 500, som
+  när `RESEND_API_KEY` saknas. 408, 409 (krock på idempotensnyckeln),
+  429 och 5xx prövas igen, som i den gamla. Övriga 4xx är permanenta.
+  Den gamla räknade 403 som tillfälligt och fortsatte rad för rad; den
+  första nya versionen räknade 403, 408 och 409 som permanenta och
+  hade bränt hela kön på ett domänfel.
+- **Tidsgränser.** En körning tar inga nya rader efter 15 sekunder och
+  tar aldrig fler än hinner gå, eftersom `notis_minut()` bara väntar 20
+  sekunder på svar. Varje anrop till Resend och 46elks får ta högst 8
+  sekunder. Ett SMS som inte besvarades i tid i läget `skicka` blir ett
+  permanent fel, eftersom 46elks saknar idempotensnyckel och det kan ha
+  gått fram.
+- **Mottagaren** står i svaret från `notis_utskick_ta` sedan 2.3d.
+  Arbetaren läser aldrig `notis_utskick` direkt.
+- **GET till notis-avanmal** skickas vidare med 303 till
+  `https://nextrum.se/avanmal?t=<samma token>`. Adressen står i
+  List-Unsubscribe, och mejlprogram som inte gör One-Click öppnar den i
+  webbläsaren. Den gamla svarade 405; det gjorde också den första nya
+  versionen, med rå JSON och ingen väg vidare. Vidareskickningen rör
+  inte databasen.
+- **Kroppen i notis-avanmal** läses med tak på 4096 byte, också utan
+  `content-length`.
+- **Inga råa fel utåt.** Den gamla notis-avanmal svarade med
+  `String(e.message)` vid 500.
+
+---
 
 **Det här är inte levande kod.** Katalogen ligger med flit utanför
 `supabase/functions/`, så att varken CI (`deno check
@@ -19,7 +105,7 @@ buntens egen kopia. Därav den dubbla `notis-ko/notis-ko/`.
 
 ---
 
-## Läget i driften, 2026-09-21
+## Läget i driften, 2026-09-21 (före Fas 2)
 
 | | notis-ko | notis-avanmal |
 |---|---|---|
@@ -120,9 +206,9 @@ notistyp.
 
 ---
 
-## Den vilande risken
+## Den vilande risken (gäller tills de nya versionerna är driftsatta)
 
-Båda funktionerna läser kolumnerna `avanmal_nyckel` och `lage` ur
+Båda de gamla funktionerna läser kolumnerna `avanmal_nyckel` och `lage` ur
 `notis_konfig`. **En framtida migration som råkar lägga till kolumner
 med de namnen räcker för att de ska vakna halvvägs.** Kommer
 `notis_hamta` också till och `lage` sätts till `'skicka'`, skickar
@@ -132,7 +218,7 @@ git — och med `verify_jwt` avstängt.
 Därför: **använd inte de kolumnnamnen** i notis_konfig utan att först
 ha bestämt vad som ska hända med de här två funktionerna.
 
-## Konkurrerande design
+## Konkurrerande design (före Fas 2)
 
 Det finns en tredje notisdesign på grenen
 `origin/claude/zealous-clarke-9pggx6` (commit `5b42e61`): edge-funktionen
@@ -167,16 +253,17 @@ Ska hemligheten någon gång roteras görs det i **en** transaktion som
 byter både `notis_konfig.hemlighet` och alla tre triggrarnas header.
 Roteringsblocket står i `supabase/migrations/arkiv/schema-v17.sql`.
 
-## Beslut som väntar
+## Vad som gäller efter Fas 2
 
-- Vilken av de tre vägarna ska byggas vidare?
-- Får `notis-ko` och `notis-avanmal` tas bort ur driften? Det bryter
-  ingen befintlig mejlväg, eftersom ingenting anropar dem. Det är en
-  driftändring och kräver ett uttryckligt ja. Supabase-MCP:n saknar ett
-  verktyg för att ta bort funktioner och CLI:t finns inte på datorn, så
-  borttagningen görs i dashboarden. Blocken `[functions.notis-ko]` och
-  `[functions.notis-avanmal]` i `supabase/config.toml` stryks i samma
-  ändring — och koden i det här arkivet måste vara pushad först, annars
-  är den lokala kopian den enda som finns.
-- Ska avregistreringen gälla per notistyp eller globalt, och vilka mejl
-  är transaktionella och får därför inte gå att stänga av?
+- **Vägen:** kön, med nya namn i databasen och de gamla namnen på
+  edge-funktionerna. `notis-mejl` på grenen zealous-clarke byggs inte
+  vidare, och webhookarna `nytt-passforslag` och `nytt-meddelande` tas
+  bort i Fas 2.2. `lead-notis` står kvar.
+- **Borttagning eller övertagande:** övertagande. De nya versionerna
+  driftsätts under samma namn, med `verify_jwt = false` kvar i
+  `supabase/config.toml`. Driftsättningen är en driftändring och kräver
+  ett uttryckligt ja.
+- **Avregistreringen**, så som den är byggd, gäller per notistyp och
+  kanal, eller `alla` för en kanal. Den kan bara stänga av. Den gäller
+  notismejlen i kön; fakturorna i `faktura-utskick` och `lead-notis`
+  till personalen går inte genom kön och berörs inte.

@@ -5,6 +5,14 @@
 // reservavsändare eller inte, status eller inte — bestämmer den som
 // anropar, för det skiljer sig med flit mellan en avisering till oss
 // och en faktura till en familj.
+//
+// headers och tidsgransMs är valfria och kom till för notis-ko:
+// headers för notismejlens List-Unsubscribe, tidsgransMs för att ett
+// hängande anrop inte ska hålla en rad i kön längre än dess lån.
+// faktura-utskick, lead-notis, pass-notis och meddelande-notis sätter
+// ingen av dem och får exakt samma anrop som förut: en tom eller
+// saknad headers blir undefined, som JSON.stringify utelämnar, och
+// utan tidsgransMs får fetch ingen signal och ingen timer startas.
 // ============================================================
 
 export type Mejl = {
@@ -16,6 +24,14 @@ export type Mejl = {
   svaraTill?: string[];
   /** Samma nyckel inom Resends fönster skickar bara en gång. */
   idempotens?: string;
+  /** Extra mejlheaders, till exempel List-Unsubscribe. */
+  headers?: Record<string, string>;
+  /**
+   * Så länge anropet får ta innan det avbryts. Då kastas ett fel med
+   * namnet TimeoutError. Mejlet kan ändå ha gått, så den som sätter
+   * gränsen bör också sätta idempotens.
+   */
+  tidsgransMs?: number;
 };
 
 /** Skickar och lämnar svaret orört. Saknas nyckeln kastas ett fel. */
@@ -29,7 +45,7 @@ export async function skickaViaResend(m: Mejl): Promise<Response> {
   };
   if (m.idempotens) headers['Idempotency-Key'] = m.idempotens;
 
-  return await fetch('https://api.resend.com/emails', {
+  const init: RequestInit = {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -39,6 +55,18 @@ export async function skickaViaResend(m: Mejl): Promise<Response> {
       subject: m.amne,
       text: m.text,
       html: m.html,
+      headers: m.headers && Object.keys(m.headers).length ? m.headers : undefined,
     }),
-  });
+  };
+  if (!m.tidsgransMs) return await fetch('https://api.resend.com/emails', init);
+
+  // En egen timer i stället för AbortSignal.timeout: den här rensas när
+  // svaret kommit, så att ingen timer lever kvar efter anropet.
+  const ctrl = new AbortController();
+  const vakt = setTimeout(() => ctrl.abort(new DOMException('Resend svarade inte i tid.', 'TimeoutError')), m.tidsgransMs);
+  try {
+    return await fetch('https://api.resend.com/emails', { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(vakt);
+  }
 }

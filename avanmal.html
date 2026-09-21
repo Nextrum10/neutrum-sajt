@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
+
+<title>Avregistrering · Nextrum</title>
+<meta name="description" content="Stäng av en sorts mejl eller SMS från Nextrum.">
+<!-- AVREGISTRERINGEN (program 2, Fas 2). Länken i varje notismejl
+     går hit, med en kod i adressen (?t=). Sidan ska inte hittas via
+     en sökmotor (noindex, inte i sitemap.xml), och koden ska inte
+     följa med i Referer till någon annan sida: no-referrer. Den
+     skarpa CSP:n och X-Robots-Tag kommer från vercel.json. -->
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#FBFAF8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<link rel="stylesheet" href="nextrum-typsnitt.css">
+
+<!-- ordningen spelar roll: bas → startsida → cinema -->
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css">
+<link rel="stylesheet" href="nextrum-cinema.css">
+</head>
+<body>
+
+<!-- ==========================================================
+     HEADER — identisk markup på alla fyra publika sidor.
+     Ändrar du här måste du ändra i index.html, priser.html,
+     faq.html och bli-studiehjalpare.html. Länkarna skrivs som
+     "index.html#hur"; på startsidan kortar nextrum-app.js ner dem
+     till rena ankare så att man scrollar istället för att ladda om.
+     ========================================================== -->
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
+<header class="hdr" id="hdr">
+  <div class="wrap nav">
+    <!-- Språkval, övre vänstra hörnet. Det aktiva språket är ett
+         <b>, inte en länk: en länk till sidan man redan står på ser
+         ut som ett val men gör ingenting. -->
+    <div class="sprakval" role="group" aria-label="Språk / Language">
+      <b lang="sv" aria-current="true">SV</b>
+      <i aria-hidden="true"></i>
+      <a lang="en" hreflang="en" href="/en/avanmal">ENG</a>
+    </div>
+
+    <a href="/" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true">
+        <rect width="26" height="26" rx="7"/>
+        <path d="M8 18.5V7.5L18 18.5V7.5"/>
+      </svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Huvudmeny">
+      <a href="/sa-fungerar-nextrum" data-nav>Så fungerar Nextrum</a>
+      <a href="/for-elever-och-foraldrar" data-nav>För elever &amp; föräldrar</a>
+      <a href="/bli-studiehjalpare" data-nav>Bli studiehjälpare</a>
+      <a href="/priser" data-nav>Priser</a>
+    </nav>
+
+    <div class="nav-actions">
+      <!-- href pekar på föräldravyn så att länken fungerar utan JS.
+           Med JS öppnas vyväljaren istället — utom när man redan är
+           inloggad, då skriver NX.märkInloggad() om länken. -->
+      <a class="login" href="/foralder" id="login-link" data-vagval>Logga in</a>
+      <span class="nx-magnet">
+        <a class="btn btn-primary btn-sm" href="/intresseanmalan">Intresseanmälan</a>
+      </span>
+    </div>
+
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="/var-ide">Vår idé <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/sa-fungerar-nextrum">Så fungerar Nextrum <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/for-elever-och-foraldrar">För elever &amp; föräldrar <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/bli-studiehjalpare">Bli studiehjälpare <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/priser">Priser <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/faq">FAQ / Kontakt <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions">
+    <a class="btn btn-primary btn-block btn-lg" href="/intresseanmalan">Skicka intresseanmälan</a>
+    <a class="btn btn-ghost btn-block btn-lg" href="/foralder">Logga in</a>
+  </div>
+  <div class="m-foot">
+    <span class="xsmall">Av unga, för unga.</span>
+    <a class="xsmall" href="mailto:info@nextrum.se">info@nextrum.se</a>
+  </div>
+</div>
+
+<main id="innehall">
+
+<section class="wrap nx-page-hero">
+  <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
+  <span class="nx-et acc" style="margin-top:22px">Mejl och SMS</span>
+  <h1 class="nx-d1">Avregistrering</h1>
+  <p class="nx-lede">Här stänger du av en sorts mejl eller SMS från Nextrum. Ingenting ändras förrän du trycker på knappen.</p>
+</section>
+
+<section class="sec wrap" style="padding-top:clamp(16px,2vw,28px)">
+  <!-- Ingenting händer när sidan öppnas. Länkskannrar i företagsmejl
+       och antivirus öppnar varje länk i ett mejl, och en sida som
+       avregistrerade vid inladdning hade avregistrerat folk som aldrig
+       rört något. Knappen är dold tills nextrum-avanmal.js läst koden. -->
+  <div class="juridisk">
+    <div class="jur-ruta">
+      <h2>Länken från mejlet</h2>
+      <p id="avanmal-vad">Sidan behöver JavaScript för att läsa länken. Du kan också logga in och ändra dina val där, se nedan.</p>
+      <button class="btn btn-primary" type="button" id="avanmal-knapp" hidden>Sluta skicka det här</button>
+      <p class="ok-msg" id="avanmal-svar" role="status" tabindex="-1"></p>
+    </div>
+
+    <h2>Fler val</h2>
+    <p>Logga in och öppna Profil &amp; inställningar, fliken Notiser. Där ser du vad som kommer som mejl och SMS, och där kan du ändra det, också det du stänger av här.</p>
+    <ul>
+      <li><a href="/foralder#profil/notiser">Logga in som familj</a></li>
+      <li><a href="/larare#profil/notiser">Logga in som studiehjälpare</a></li>
+    </ul>
+    <p>Fakturor och mejl om din inloggning påverkas inte av den här sidan.</p>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ==========================================================
+     FOOTER — identisk på alla publika sidor, se kommentaren
+     vid headern.
+     ========================================================== -->
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        <a href="/" class="logo">
+          <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+          <span class="logo-text">Nextrum</span>
+        </a>
+        <p>Av unga, för unga.</p>
+        <div class="socials">
+          <a href="https://www.instagram.com/nextrum.se" aria-label="Nextrum på Instagram" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm8.4-11.2a1.55 1.55 0 11-3.1 0 1.55 1.55 0 013.1 0z"/></svg></a>
+          <a href="https://www.tiktok.com/@nextrum.ab" aria-label="Nextrum på TikTok" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.1v13.2a2.6 2.6 0 11-2.2-2.6v-3.2a5.8 5.8 0 105.3 5.8V9.1a6.9 6.9 0 004 1.3V7.2a3.9 3.9 0 01-4-4z"/></svg></a>
+          <a href="https://www.facebook.com/share/1DuLomKfy8/" aria-label="Nextrum på Facebook" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg></a>
+          <a href="https://www.linkedin.com/company/nextrum-se/" aria-label="Nextrum på LinkedIn" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9.5 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.75-1.95 4 0 4.75 2.5 4.75 5.8V21h-4v-5.6c0-1.35-.03-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.7h-4z"/></svg></a>
+        </div>
+      </div>
+
+      <nav aria-labelledby="ftr-nextrum">
+        <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
+        <ul>
+          <li><a href="/var-ide">Vår idé</a></li>
+          <li><a href="/sa-fungerar-nextrum">Så fungerar Nextrum</a></li>
+          <li><a href="/laxhjalp-stockholm">Läxhjälp i Stockholm</a></li>
+          <li><a href="/#studiehjalpare">Studiehjälpare</a></li>
+          <li><a href="/priser">Priser</a></li>
+          <li><a href="/laxhjalp-stockholm">Läxhjälp i Stockholm</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-fordig">
+        <h2 class="ftr-rubrik" id="ftr-fordig">För dig</h2>
+        <ul>
+          <li><a href="/for-elever-och-foraldrar">För elever &amp; föräldrar</a></li>
+          <li><a href="/bli-studiehjalpare">Bli studiehjälpare</a></li>
+          <li><a href="/intresseanmalan">Intresseanmälan</a></li>
+          <li><a href="/foralder" data-vagval>Logga in</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-hjalp">
+        <h2 class="ftr-rubrik" id="ftr-hjalp">Hjälp</h2>
+        <ul>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/faq#kontakt">Kontakt</a></li>
+          <li><a href="/integritetspolicy">Integritetspolicy</a></li>
+          <li><a href="/anvandarvillkor">Användarvillkor</a></li>
+          <li><a href="/lagring">Cookies och lagring</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="ftr-bot">
+      <span>© <span id="year">2026</span> Nextrum.</span>
+      <span>Byggd i Sverige.</span>
+    </div>
+  </div>
+
+  <!-- sista intrycket: bara ordet, mycket stort, mycket tyst -->
+  <div class="nx-ftr-ord" aria-hidden="true"><span>Nextrum</span></div>
+</footer>
+
+<!-- ==========================================================
+     VYVÄLJARE — dörren in till inloggningen.
+     Själva inloggningen ligger kvar i foralder.html och
+     larare.html och är orörd.
+     ========================================================== -->
+<div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
+  <button class="nx-vagval-stang" data-vagval-stang aria-label="Stäng"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  <div class="nx-vagval-box">
+    <span class="nx-et">Logga in</span>
+    <h2 id="vagval-t" style="margin-top:18px">Välkommen tillbaka.</h2>
+    <p class="nx-lede-s">Vilken vy vill du till?</p>
+
+    <div class="nx-vagval-val">
+      <a href="/foralder">
+        <span>
+          <b>Förälder eller elev</b>
+          <span>Studieplan, bokning, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="/larare">
+        <span>
+          <b>Studiehjälpare</b>
+          <span>Dina elever, ditt schema, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <p class="nx-vagval-fot">
+      Har ni inte skickat intresseanmälan än? <a href="/intresseanmalan">Gör det här</a>.
+    </p>
+  </div>
+</div>
+
+<!-- Samma fasta version av biblioteket som på de andra sidorna. Här
+     behövs det bara för att "Logga in" ska peka rätt för den som redan
+     är inloggad, och för felrapporteringen.
+
+     INGEN BESÖKSMÄTNING PÅ DEN HÄR SIDAN, med flit. Adressen bär
+     avregistreringskoden, och den hör inte hemma i en statistiktjänst.
+
+     INGET INLINE-SKRIPT heller. Sidan har samma skarpa CSP som de
+     inloggade vyerna, så det som andra sidor gör i ett <script> sist
+     gör nextrum-avanmal.js. -->
+<script src="bibliotek/supabase-js-2.116.0.js"></script>
+<script src="nextrum-config.js"></script>
+<script src="nextrum-fel.js"></script>
+<script src="nextrum-app.js"></script>
+<script src="nextrum-avanmal.js"></script>
+</body>
+</html>

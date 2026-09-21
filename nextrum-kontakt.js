@@ -37,10 +37,22 @@ window.NXKontakt = (function () {
     return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   }
 
+  /* Dagen en tidsstämpel hör till, räknad i webbläsarens tid som
+     klockslaget bredvid. Datumet i själva strängen är UTC: ett
+     meddelande 00:30 svensk tid står där som 22:30 dagen före, och
+     hamnade under "Igår" med klockslaget 00:30. Ett rent datum har
+     ingen tid att räkna om och tas som det står. */
+  function lokalDag(iso) {
+    var s = String(iso == null ? '' : iso);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    var d = new Date(s);
+    return isNaN(d.getTime()) ? '' : isoFor(d);
+  }
+
   /* "Idag" och "Igår" i stället för datum — det är så man pratar om
      de två dagar man faktiskt bryr sig om i en tråd. */
   function dagText(iso) {
-    var dag = String(iso).slice(0, 10);
+    var dag = lokalDag(iso);
     var idag = isoFor(new Date());
     var igår = new Date(); igår.setDate(igår.getDate() - 1);
     if (dag === idag) return 'Idag';
@@ -50,8 +62,12 @@ window.NXKontakt = (function () {
 
   /* ============================================================
      TRÅDEN
-     opts: { host, skriv, jag, parentId, tutorId, motpart, tom, onNytt }
+     opts: { host, skriv, jag, parentId, tutorId, motpart, tom, onNytt,
+             synlig }
      Returnerar ett objekt med ladda(), byt() och stoppa().
+
+     synlig() (valfri) säger om tråden syns. Utan den gäller att
+     host inte ligger i något [hidden] och har en yta på skärmen.
      ============================================================ */
   function tråd(opts) {
     var host = opts.host;
@@ -60,11 +76,22 @@ window.NXKontakt = (function () {
     var jag = opts.jag;
     var läge = { parentId: opts.parentId || null, tutorId: opts.tutorId || null, motpart: opts.motpart || '' };
     var timer = null;
-    var hämtar = false;
+    /* EN TRÅD ÅT GÅNGEN, OCH RÄTT TRÅD.
+       Generationen räknas upp när tråden byts. En hämtning minns sin
+       generation och vilken tråd den gällde, och ett svar som kommer
+       efter ett byte kastas. Förut spärrade en enda flagga (hämtar)
+       alla hämtningar medan en var på väg. Byttes familj mitt i en
+       laddning sväljdes byt(): rubriken sa Kim, tråden visade Almas
+       meddelanden, och Almas rader markerade Kims chattnotis som läst.
+       Då hoppade kön över chattmejlet om Kim, fast ingen sett det. */
+    var generation = 0;
+    var hämtarGen = -1;       // generationen som har en hämtning på väg, -1 när ingen har det
+    var hämtaIgen = false;    // samma tråd efterfrågades medan en hämtning var på väg
     var senasteId = null;
     var senasteLäge = null;   // signatur över det vyn redan fått veta
     var kanal = null;         // Realtime-prenumerationen på tråden
     var samlaTimer = null;
+    var senasteRader = null;  // det som senast hämtades, för läst-markeringen
 
     function tomText() {
       var namn = läge.motpart ? esc(läge.motpart.split(' ')[0]) : 'varandra';
@@ -93,29 +120,126 @@ window.NXKontakt = (function () {
       host.scrollTop = host.scrollHeight;
     }
 
-    async function markeraLästa(rader) {
-      var olästa = rader.filter(function (m) { return !m.read_at && m.sender_id !== jag; });
-      if (!olästa.length) return;
-      await supa.from('messages')
-        .update({ read_at: new Date().toISOString() })
-        .in('id', olästa.map(function (m) { return m.id; }));
+    /* ============================================================
+       LÄST FÖRST NÄR TRÅDEN SYNS (program 2, Fas 2)
+
+       Förut markerades meddelandena som lästa varje gång tråden
+       laddades, och tråden laddas när sidan öppnas, också när man
+       står på Översikt och aldrig öppnar Meddelanden. En flik i
+       bakgrunden stämplade alltså read_at, och räknaren på Översikt
+       blinkade till och försvann.
+
+       Det spelar större roll nu. Kön för chattmejl hoppar över ett
+       mejl när chattens notis redan är läst, så att den som läser i
+       appen inte också får ett mejl. Att markera vid sidladdning hade
+       tystat alla chattmejl till alla som har vyn öppen någonstans.
+
+       Nu markeras meddelandena (read_at) och trådens notiser först
+       när tråden faktiskt syns: sektionen Meddelanden är framme och
+       fliken är synlig. Blir den det senare (man öppnar Meddelanden,
+       eller kommer tillbaka till fliken) markeras de då.
+       ============================================================ */
+    function syns() {
+      if (document.visibilityState !== 'visible') return false;
+      if (typeof opts.synlig === 'function') return !!opts.synlig();
+      return !!host && host.isConnected && !host.closest('[hidden]') && host.getClientRects().length > 0;
     }
+
+    function räknaOlästa(rader) {
+      return rader.filter(function (m) { return !m.read_at && m.sender_id !== jag; }).length;
+    }
+
+    /* p och t är tråden raderna hämtades ur, inte läge. Byts tråden
+       medan markeringen är på väg ska notisen som stämplas vara den
+       vars meddelanden faktiskt syntes. */
+    async function markeraLästa(rader, p, t) {
+      if (!rader || !p || !t || !syns()) return 0;
+      var olästa = rader.filter(function (m) { return !m.read_at && m.sender_id !== jag; });
+      if (olästa.length) {
+        var nu = new Date().toISOString();
+        var res = await supa.from('messages')
+          .update({ read_at: nu })
+          .in('id', olästa.map(function (m) { return m.id; }));
+        if (res.error) console.warn('messages, läst:', res.error.message);
+        /* Räknarna ska inte vänta på realtidshändelsen som
+           uppdateringen ger. Den kan dröja, och utan socket kommer
+           den inte alls. */
+        else olästa.forEach(function (m) { m.read_at = nu; });
+      }
+      /* Trådens notiser. Kom det nya meddelanden är de lästa nu, och
+         då markeras notisen i databasen även om notislistan ännu inte
+         fått veta att den finns. */
+      if (window.NXNotiser) await NXNotiser.trådSedd(p, t, olästa.length > 0);
+      return olästa.length;
+    }
+
+    /* onNytt säger till vyn att räknare och listor ska ritas om, och
+       den anropas bara när något FAKTISKT är nytt. Förut kördes den
+       vid varje pollning: studiehjälparvyn svarade med upp till fyra
+       nya frågor mot databasen var 20:e sekund, dygnet runt, för en
+       tråd där ingen skrivit något sedan i tisdags. */
+    function meddela(rader) {
+      var nyaste = rader.length ? rader[rader.length - 1].id : null;
+      var signatur = rader.length + '|' + nyaste + '|' + räknaOlästa(rader);
+      if (signatur === senasteLäge) return;
+      senasteLäge = signatur;
+      if (typeof opts.onNytt === 'function') opts.onNytt(rader);
+    }
+
+    /* Tråden kan bli synlig utan att den laddas om: man byter till
+       Meddelanden. Sidomenyn byter sektion i sin egen hashchange-
+       lyssnare, så kontrollen väntar ett varv tills den är klar.
+       senasteRader hör alltid till tråden som står i läge: byt()
+       tömmer den, och ett svar från en äldre tråd sätter den aldrig. */
+    function närDetSyns() {
+      if (!senasteRader || hämtarGen === generation || !syns()) return;
+      var rader = senasteRader, gen = generation;
+      markeraLästa(rader, läge.parentId, läge.tutorId).then(function () {
+        if (gen === generation && rader === senasteRader) meddela(rader);
+      });
+    }
+    function närAdressenByts() { setTimeout(närDetSyns, 0); }
 
     async function ladda(tyst) {
       if (!supa || !läge.parentId || !läge.tutorId) {
         host.innerHTML = '<div class="empty">Ingen matchning än, så det finns ingen att skriva till.</div>';
         return;
       }
-      if (hämtar) return;
-      hämtar = true;
+      /* En hämtning av samma tråd åt gången. Efterfrågas tråden igen
+         medan den är på väg (ett meddelande i realtid, ett svar som
+         just skickats) hämtas den en gång till när den första är klar.
+         Förut tappades den andra, och svaret som skickats syntes först
+         vid nästa händelse. */
+      if (hämtarGen === generation) { hämtaIgen = true; return; }
+      var gen = generation;
+      hämtarGen = gen;
+      hämtaIgen = false;
+      try {
+        await hämtaTråd(tyst, gen, läge.parentId, läge.tutorId);
+      } finally {
+        if (hämtarGen === gen) hämtarGen = -1;
+      }
+      if (hämtaIgen && gen === generation) return ladda(true);
+    }
+
+    async function hämtaTråd(tyst, gen, p, t) {
       if (!tyst) host.innerHTML = '<div class="loading">Hämtar</div>';
 
-      var res = await supa.from('messages')
-        .select('id, sender_id, body, read_at, created_at')
-        .eq('parent_id', läge.parentId)
-        .eq('tutor_id', läge.tutorId)
-        .order('created_at', { ascending: true });
-      hämtar = false;
+      var res;
+      try {
+        res = await supa.from('messages')
+          .select('id, sender_id, body, read_at, created_at')
+          .eq('parent_id', p)
+          .eq('tutor_id', t)
+          .order('created_at', { ascending: true });
+      } catch (fel) {
+        res = { error: fel };
+      }
+
+      /* Tråden byttes medan svaret var på väg. Raderna hör till en
+         annan familj: de ritas inte och markerar ingenting. byt() har
+         redan startat hämtningen av den nya tråden. */
+      if (gen !== generation) return;
 
       if (res.error) {
         host.innerHTML = '<div class="empty">Kunde inte hämta meddelandena.<br><span class="xsmall">'
@@ -125,25 +249,18 @@ window.NXKontakt = (function () {
 
       var rader = res.data || [];
       var nyaste = rader.length ? rader[rader.length - 1].id : null;
+      senasteRader = rader;
 
       /* Rita bara om något faktiskt ändrats. Annars hoppar tråden
          till botten mitt i att någon läser bakåt. */
-      var olästa = rader.filter(function (m) { return !m.read_at && m.sender_id !== jag; }).length;
-      if (!tyst || nyaste !== senasteId || olästa) rita(rader);
+      if (!tyst || nyaste !== senasteId || räknaOlästa(rader)) rita(rader);
       senasteId = nyaste;
 
-      await markeraLästa(rader);
-
-      /* onNytt säger till vyn att räknare och listor ska ritas om, och
-         den anropas bara när något FAKTISKT är nytt. Förut kördes den
-         vid varje pollning: studiehjälparvyn svarade med upp till fyra
-         nya frågor mot databasen var 20:e sekund, dygnet runt, för en
-         tråd där ingen skrivit något sedan i tisdags. */
-      var signatur = rader.length + '|' + nyaste + '|' + olästa;
-      if (signatur !== senasteLäge) {
-        senasteLäge = signatur;
-        if (typeof opts.onNytt === 'function') opts.onNytt(rader);
-      }
+      await markeraLästa(rader, p, t);
+      /* Byttes tråden under markeringen är det den nya trådens
+         hämtning som talar om för vyn vad som gäller. */
+      if (gen !== generation) return;
+      meddela(rader);
     }
 
     /* Realtime kan ge flera händelser för samma sak i tät följd. Den
@@ -242,6 +359,15 @@ window.NXKontakt = (function () {
       if (document.visibilityState === 'visible') ladda(true);
     }
 
+    /* Notislistan frågar vilken tråd som syns just nu, så att en
+       chattnotis som kommer medan man läser markeras direkt. */
+    function visarTråden(p, t) {
+      /* Medan en ny tråd hämtas står "Hämtar" där tråden ska vara.
+         Ingen har sett något än, så notisen får vänta på hämtningen,
+         som själv markerar den när raderna syns. */
+      return p === läge.parentId && t === läge.tutorId && !!senasteRader && syns();
+    }
+
     function start() {
       stoppa();
       lyssna();
@@ -249,12 +375,20 @@ window.NXKontakt = (function () {
         if (document.visibilityState === 'visible') ladda(true);
       }, RESERV_INTERVALL);
       document.addEventListener('visibilitychange', närFlikenSyns);
+      window.addEventListener('hashchange', närAdressenByts);
+      if (window.NXNotiser) NXNotiser.trådvisare(visarTråden);
     }
 
     function stoppa() {
+      /* Ett svar som är på väg när vyn stängs (utloggning) ska inte
+         ritas eller markera något efteråt. */
+      generation++;
+      hämtaIgen = false;
       if (timer) { clearInterval(timer); timer = null; }
       if (samlaTimer) { clearTimeout(samlaTimer); samlaTimer = null; }
       document.removeEventListener('visibilitychange', närFlikenSyns);
+      window.removeEventListener('hashchange', närAdressenByts);
+      if (window.NXNotiser) NXNotiser.trådvisare(null);
       slutaLyssna();
     }
 
@@ -267,12 +401,20 @@ window.NXKontakt = (function () {
 
     return {
       ladda: ladda,
+      /* Vyn kan säga till när tråden kan ha blivit synlig på ett sätt
+         som inte ändrar adressen. */
+      synsNu: närDetSyns,
       byt: function (nytt) {
         läge.parentId = nytt.parentId != null ? nytt.parentId : läge.parentId;
         läge.tutorId = nytt.tutorId != null ? nytt.tutorId : läge.tutorId;
         if (nytt.motpart != null) läge.motpart = nytt.motpart;
+        /* Ny generation: en hämtning av den förra tråden som fortfarande
+           är på väg kastas när den kommer, och spärrar inte den nya. */
+        generation++;
+        hämtaIgen = false;
         senasteId = null;
         senasteLäge = null;
+        senasteRader = null;
         /* Ny tråd, nytt filter. Utan det här hade prenumerationen
            stått kvar på den förra familjen. */
         lyssna();

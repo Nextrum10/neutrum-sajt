@@ -76,7 +76,8 @@ vendorad fil i `bibliotek/`.
 
 - **Frontend:** vanilla ES5/ES6 i `<script src>`, delade moduler som
   IIFE:er på `window` (`NX`, `NXStudie`, `NXArbete`, `NXMedia`,
-  `NXKontakt`, `NXBetalning`, `NXTjanster`, `NXAgent`, `NXMotion`)
+  `NXKontakt`, `NXNotiser`, `NXBetalning`, `NXTjanster`, `NXAgent`,
+  `NXMotion`)
 - **Backend:** Supabase (Postgres + RLS + Auth + Storage) och Deno
   edge functions i `supabase/functions/`
 - **Hosting:** Vercel, `cleanUrls: true` (alltså `/priser`, inte
@@ -107,6 +108,8 @@ inloggad" om alla. "Skjut och glöm" finns inte här.
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
 | `nextrum-motion.js` | `NXImg` (bildmarkup), `NXMotion` (scrollmotor), `NXStory`. Tre lägen: full / lite / still |
 | `nextrum-studie.js`, `-arbetsyta.js`, `-kontakt.js`, `-betalning.js`, `-media.js`, `-tjanster.js` | Delat mellan vyerna |
+| `nextrum-notiser.js` | `NXNotiser`: klockan, notiscentralen (Att göra + tabellen `notiser` i realtid), fliktitelns "(n)" och notisvalen under `#profil/notiser`. Båda vyerna. Modulvakten kräver den: det är den som markerar chattnotisen läst |
+| `avanmal.html`, `nextrum-avanmal.js` | Avregistreringen från mejlens länk. Läser `?t=`, gör ingenting på GET, POST:ar till `notis-avanmal` först på knapptryck |
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, sök, notiser, bevakning och `start()` |
@@ -375,6 +378,9 @@ inga `onclick="…"`, inga `javascript:`-adresser.**
 
 `verktyg/kolla-csp.py` kontrollerar det i CI. De publika sidorna har
 kvar policyn i Report-Only eftersom de fortfarande har inline-skript.
+Undantaget är `/avanmal` (och `/en/avanmal`), som bär en token i
+adressen: skarp CSP, `noindex` och `Referrer-Policy: no-referrer`, så
+att tokenen inte följer med till någon annan sida.
 
 ---
 
@@ -391,8 +397,8 @@ tillbaka en kopia.**
 | `faktura-utskick` | Skickar fakturan. **Mejlet först, statusen sedan** | Knapp i adminvyn |
 | `bjud-in` | Auth-inbjudan till en familj eller en befintlig studiehjälpare. Rollen vitlistas i funktionen: `tutor` eller `parent`, allt annat blir `parent`. En inbjuden studiehjälpare hamnar i väntläge | Adminvyn |
 | `lead-notis` | Mejl till Nextrum om en ny intresseanmälan | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
-| `notis-ko` | Tömmer `notis_utskick`: mejl via Resend, SMS via 46elks. Program 2 Fas 2 | `notis_minut()` via pg_net (cron eller Kör nu), hemligheten ur `notis_konfig` |
-| `notis-avanmal` | Avregistreringslänken i mejlen. Bara POST | Sidan `/avanmal` och mejlklientens One-Click |
+| `notis-ko` | Tömmer `notis_utskick`: mejl via Resend, SMS via 46elks. Program 2 Fas 2. Nekar Resend nyckeln eller domänen (401/403) avbryts körningen och raderna går tillbaka till kön | `notis_minut()` via pg_net (cron eller Kör nu), hemligheten ur `notis_konfig` |
+| `notis-avanmal` | Avregistreringslänken i mejlen. Bara POST avregistrerar; GET och HEAD får 303 till sidan `/avanmal`, så att en länkskanner aldrig stänger av någons mejl | Sidan `/avanmal` och mejlklientens One-Click |
 | `pass-notis`, `meddelande-notis` | Ingenting sedan Fas 2.2: deras webhookar är borttagna. Ligger kvar i driften tills någon tar bort dem i dashboarden | — |
 | `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |

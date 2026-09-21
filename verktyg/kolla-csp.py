@@ -22,10 +22,14 @@ Stilattribut (style="…") är tillåtna, eftersom style-src har
 import io, os, re, sys
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VYER = ['admin.html', 'larare.html', 'foralder.html']
+# Sedan program 2, Fas 2 också avregistreringen: den är publik, men har
+# samma skarpa CSP som vyerna (vercel.json), eftersom adressen bär en
+# kod och sidan inte ska kunna köra något annat än sina egna filer.
+VYER = ['admin.html', 'larare.html', 'foralder.html', 'avanmal.html', 'en/avanmal.html']
 
 # Samma filer som vyerna laddar och som bygger html av strängar.
-SKRIPT = ['nextrum-app.js', 'nextrum-kontakt.js', 'nextrum-studie.js', 'nextrum-arbetsyta.js',
+SKRIPT = ['nextrum-app.js', 'nextrum-kontakt.js', 'nextrum-studie.js', 'nextrum-notiser.js',
+          'nextrum-arbetsyta.js',
           'nextrum-media.js', 'nextrum-betalning.js', 'nextrum-agent.js',
           'nextrum-admin-agenter.js', 'nextrum-admin.js', 'nextrum-admin-karna.js',
           'nextrum-admin-detalj.js', 'nextrum-admin-oversikt.js', 'nextrum-admin-kunder.js',
@@ -34,7 +38,8 @@ SKRIPT = ['nextrum-app.js', 'nextrum-kontakt.js', 'nextrum-studie.js', 'nextrum-
           'nextrum-admin-system.js', 'nextrum-admin-automationer.js',
           'nextrum-admin-ai.js',
           'nextrum-larare-vy.js', 'nextrum-studie-vy.js',
-          'nextrum-tjanster.js', 'nextrum-modulvakt.js', 'nextrum-fel.js']
+          'nextrum-tjanster.js', 'nextrum-modulvakt.js', 'nextrum-fel.js',
+          'nextrum-avanmal.js']
 
 
 def main():

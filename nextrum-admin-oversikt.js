@@ -212,6 +212,7 @@
 
   function byggProblem() {
     const l = S.lage || {};
+    const n = S.notis || {};
     const idag = isoFor(new Date());
     const öppna = (S.uppgifter || []).filter(u => u.status === 'oppen' || u.status === 'pagar');
     const sena = öppna.filter(u => u.forfallodag && u.forfallodag < idag);
@@ -229,8 +230,19 @@
         under: 'Något i fakturor eller utbetalningar som inte går ihop.', till: '#ekonomi/avvikelser' },
       { antal: l.klientfel_24h != null ? l.klientfel_24h : 0, rubrik: 'fel hos användarna', ental: 'fel hos en användare',
         under: 'Rapporterade från webbläsarna det senaste dygnet.', till: '#system/fel' },
-      { antal: (S.notisfel || []).length, rubrik: 'notiser som inte gick fram', ental: 'notis som inte gick fram',
-        under: 'Mejl som skulle ha skickats det senaste dygnet.', till: '#system/fel' },
+      { antal: (S.notisfel || []).length, rubrik: 'anrop som inte gick fram', ental: 'anrop som inte gick fram',
+        under: 'Databasens anrop till edge-funktionerna det senaste dygnet.', till: '#system/fel' },
+      /* Program 2, Fas 2. Tre sätt för notiserna att tystna utan att
+         någon märker det: ett utskick som fick läget fel, en notis som
+         aldrig skapades (triggern sväljer felet med flit, så att passet
+         sparas ändå), och en arbetare som inte kört fast något väntar.
+         Före migrationen är alla tre noll och syns inte. */
+      { antal: n.felDygn || 0, rubrik: 'utskick som inte gick fram', ental: 'utskick som inte gick fram',
+        under: 'Mejl eller SMS som fick läget fel det senaste dygnet.', till: '#system/utskick' },
+      { antal: n.skapfelDygn || 0, rubrik: 'notiser som inte gick att skapa', ental: 'notis som inte gick att skapa',
+        under: 'Passet, meddelandet eller rapporten sparades, men notisen blev aldrig av.', till: '#system/utskick' },
+      { antal: n.tyst ? n.väntar : 0, rubrik: 'utskick väntar på arbetaren', ental: 'utskick väntar på arbetaren',
+        under: 'Ingen körning den senaste kvarten. Tryck Kör nu under System, Utskick.', till: '#system/utskick' },
       { antal: öppna.length - (l.forsenade_uppgifter != null ? l.forsenade_uppgifter : sena.length),
         rubrik: 'öppna uppgifter', ental: 'öppen uppgift',
         under: 'Inte klara, men inte heller sena.', till: '#uppgifter' }

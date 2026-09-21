@@ -30,6 +30,9 @@
 
   document.addEventListener('click', async e => {
     if (e.target.closest('[data-logout]')) {
+      /* Notiskanalen stängs före utloggningen, inte efter: efteråt
+         har den ingen giltig token att stänga med. */
+      if (window.NXNotiser) NXNotiser.stoppa();
       if (supa) await supa.auth.signOut();
       location.reload();
     }
@@ -218,9 +221,10 @@
       motpart: (S.tutor && S.tutor.full_name) || '',
       onFel: t => säg($('#tr-msg'), 'Meddelandet gick inte iväg: ' + t, false),
       onNytt: rader => {
-        /* Räknaren i panelrubriken visar bara det som kommit in medan
-           man varit borta — den nollas av samma laddning som markerar
-           raderna som lästa, så den blinkar inte till i onödan. */
+        /* Räknaren visar det som inte är läst. Meddelandena markeras
+           som lästa först när tråden faktiskt syns (NXKontakt), så
+           siffran står kvar på Översikt tills man öppnat Meddelanden,
+           i stället för att blinka till och försvinna vid laddningen. */
         const olästa = rader.filter(m => !m.read_at && m.sender_id !== S.user.id).length;
         const märke = $('#tr-larm');
         märke.hidden = !olästa;
@@ -663,6 +667,9 @@
         .eq('id', S.user.id);
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
       S.profil.full_name = namn;
+      /* SMS-valet under Notiser läser numret härifrån. */
+      S.profil.phone = $('#k-tel').value.trim() || null;
+      if (S.notisval) S.notisval.ritaOm();
       ritaHeader();
       ritaKontoAvatar();
       if (S.hero) S.hero.uppdatera({ namn });
@@ -712,7 +719,7 @@
     }
     const p = data[0];
     S.plan = p;
-    $('#plan-uppdaterad').textContent = p.updated_at ? 'uppdaterad ' + datumText(String(p.updated_at).slice(0, 10)) : '';
+    $('#plan-uppdaterad').textContent = p.updated_at ? 'uppdaterad ' + datumText(isoFor(new Date(p.updated_at))) : '';
     host.innerHTML =
       '<div class="plan-meta">'
       + (p.subject ? '<span class="tag">' + esc(p.subject) + '</span>' : '')
@@ -1030,12 +1037,12 @@
   });
 
   /* ============================================================
-     NOTISER
-     Bara det som väntar på er.
+     NOTISER, ATT GÖRA
+     Bara det som väntar på er. Klockan har också en lista över det
+     som hänt (NXNotiser, ur tabellen notiser); det här är dess Att
+     göra, räknat ur det vyn redan hämtat.
      ============================================================ */
   function ritaNotiser() {
-    const hus = $('#notis-hus');
-    if (!hus) return;
     const poster = [];
     const idag = isoFor(new Date());
 
@@ -1068,7 +1075,10 @@
       poster.push({
         rubrik: S.olästaAntal + (S.olästaAntal > 1 ? ' nya meddelanden' : ' nytt meddelande'),
         text: 'Från er studiehjälpare. Svara i kontaktrutan.',
-        mål: '#trad'
+        mål: '#trad',
+        /* Tråden posten gäller. Har chattens notis samma besked olästa
+           i klockan står det bara där, inte två gånger. */
+        trådar: S.profil && S.profil.matched_tutor_id ? [S.user.id + '|' + S.profil.matched_tutor_id] : null
       });
     }
 
@@ -1100,7 +1110,7 @@
       });
     }
 
-    NXStudie.notiser(hus, poster);
+    if (window.NXNotiser) NXNotiser.attGöra(poster);
   }
 
   /* Flytta ett pass: samma tider som bokningen lyder.
@@ -1455,6 +1465,68 @@
       });
       märkNästaKort();
     }
+  }
+
+  /* ============================================================
+     KLOCKAN OCH NOTISVALEN (program 2, Fas 2)
+     NXNotiser äger klockan. Vyn talar om hur ett pass öppnas och vart
+     en rapport leder, och hämtar om det en ny notis gäller.
+     ============================================================ */
+  let omläsning = null;
+  const omLäs = { pass: false, rapporter: false };
+
+  /* Flera notiser i samma ögonblick (en flytt som bekräftas direkt)
+     ska ge en omhämtning, inte flera. */
+  function planeraOmläsning(vad) {
+    omLäs[vad] = true;
+    if (omläsning) clearTimeout(omläsning);
+    omläsning = setTimeout(async () => {
+      omläsning = null;
+      const pass = omLäs.pass, rapporter = omLäs.rapporter;
+      omLäs.pass = omLäs.rapporter = false;
+      try {
+        if (pass) { await laddaPass(); await laddaBokning(); }
+        if (rapporter) await laddaRapporter();
+      } catch (fel) { console.warn('omhämtningen efter en notis:', fel); }
+    }, 400);
+  }
+
+  function startaNotiser() {
+    if (!window.NXNotiser) return;
+    NXNotiser.start({
+      uid: S.user.id,
+      öppnaPass: id => {
+        const b = (S.bokningar || []).find(x => String(x.id) === String(id));
+        if (!b) return false;
+        visaPass(b);
+        return true;
+      },
+      öppnaTråd: () => false,
+      /* Rapporterna visas för det valda barnet. Gäller rapporten ett
+         annat barn byts barnet först, annars landar man i en lista
+         där rapporten inte finns. */
+      öppnaRapport: n => {
+        if (n.elev_id && n.elev_id !== S.valtBarn && (S.barn || []).some(b => b.id === n.elev_id)) bytBarn(n.elev_id);
+        return false;
+      },
+      onNy: n => {
+        if (/^pass_|^paminnelse$/.test(n.typ)) planeraOmläsning('pass');
+        else if (n.typ === 'rapport') planeraOmläsning('rapporter');
+      }
+    });
+  }
+
+  /* Gick förra hämtningen fel (tabellen fanns inte än, nätet var
+     borta) hämtas valen igen när fliken öppnas nästa gång. Förut
+     hämtades de en gång per sidladdning, och ett fel satt kvar. */
+  function visaNotisval() {
+    if (!window.NXNotiser || !S.user) return;
+    if (S.notisval) { if (S.notisval.försökIgen) S.notisval.försökIgen(); return; }
+    S.notisval = NXNotiser.val($('#notisval'), {
+      uid: S.user.id,
+      roll: 'parent',
+      telefon: () => (S.profil && S.profil.phone) || ''
+    });
   }
 
   /* ============================================================
@@ -1872,7 +1944,12 @@
       uppgifter: NXArbete.flikar($('section[data-sek="uppgifter"]'), {
         onByt: v => { if (v === 'material' && sågMaterial()) { ritaÖvLaxor(); ritaNotiser(); } }
       }),
-      profil: NXArbete.flikar($('section[data-sek="profil"]'))
+      /* Notisvalen hämtas först när fliken öppnas. Tre frågor vid
+         varje sidladdning för en flik de flesta aldrig öppnar vore
+         slöseri. */
+      profil: NXArbete.flikar($('section[data-sek="profil"]'), {
+        onByt: v => { if (v === 'notiser') visaNotisval(); }
+      })
     };
 
     /* Pilarna som står i markupen läses av en gång här, så ett sparat
@@ -1883,6 +1960,10 @@
       fall: 'foralder',
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt'
     });
+
+    /* Klockan. Startas före chatten, så att tråden kan tala om för
+       notislistan när den syns. */
+    startaNotiser();
 
     /* De fyra sektioner som slogs ihop hade egna adresser. Bokmärken,
        länkar i gamla mejl och "visa alla"-raderna inne i vyn pekar på
@@ -1897,7 +1978,10 @@
       material: ['uppgifter', 'material'],
       laxor: ['uppgifter', 'laxor'],
       studiehjalpare: ['meddelanden', null],
-      installningar: ['profil', 'pris']
+      installningar: ['profil', 'pris'],
+      /* Mejlen länkar till #profil/notiser. Det här är den korta
+         formen av samma adress. */
+      notiser: ['profil', 'notiser']
     };
     function följHash() {
       const [huvud, flik] = String(location.hash || '').replace(/^#/, '').split('/');

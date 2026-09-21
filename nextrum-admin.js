@@ -42,7 +42,7 @@
   const M = NXMedia;
 
   const { S, elevNamn, funktionsFel, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag,
-          hämtaMatchunderlag, kortDatum, namnFör, närText, skriv, tabell,
+          hämtaMatchunderlag, hämtaNotisläge, kortDatum, namnFör, närText, skriv, tabell,
           visa } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
@@ -74,6 +74,7 @@
   const ritaAudit = (...a) => NXAdmin.rita.ritaAudit(...a);
   const ritaDokument = (...a) => NXAdmin.rita.ritaDokument(...a);
   const ritaFlaggor = (...a) => NXAdmin.rita.ritaFlaggor(...a);
+  const ritaNotisdrift = (...a) => NXAdmin.rita.ritaNotisdrift(...a);
   const ritaAutomationer = (...a) => NXAdmin.rita.ritaAutomationer(...a);
   const ritaAI = (...a) => NXAdmin.rita.ritaAI(...a);
   const ritaUppdrag = (...a) => NXAdmin.rita.ritaUppdrag(...a);
@@ -595,6 +596,14 @@
      Vad som är LÄST sparas däremot lokalt, för det är det enda
      som inte går att härleda ur datan. Nyckeln är tidsstämpeln på
      den senaste händelsen man sett.
+
+     TABELLEN notiser LÄSES MED FLIT INTE HÄR (program 2, Fas 2). Den
+     bär familjernas och studiehjälparnas notiser om pass, meddelanden
+     och rapporter, och den som är admin kan också vara förälder. Hade
+     klockan läst den hade ledningens klocka visat ens egna
+     föräldranotiser. De hör hemma i studievyn; det som gäller
+     notisernas utskick syns under System → Utskick och i
+     problemrutan på Översikt.
      ------------------------------------------------------------ */
   const LAST_NYCKEL = 'nx-admin-notiser-lasta';
 
@@ -905,6 +914,11 @@
         marke: { text: 'Ledningen', ikon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20V8.5l8.5-5 8.5 5V20"/><path d="M9.5 20v-6h5v6"/></svg>' }
       });
 
+      /* Notisläget hämtas bredvid resten och väntas in först när det
+         ska ritas. Det kastar aldrig, så ett fel där fäller inte vyn,
+         och före migrationen ställer det en enda fråga. */
+      const notisläge = hämtaNotisläge();
+
       await hämtaAllt();
       await hämtaEkonomiunderlag();
 
@@ -935,6 +949,8 @@
       ritaInstallningar();
       ritaDokument();
       ritaFlaggor();
+      await notisläge;
+      ritaNotisdrift();
       ritaAudit();
       ritaUppdrag();
       ritaUppgifter();

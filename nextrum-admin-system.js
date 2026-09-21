@@ -16,8 +16,11 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, kortDatum, märkFlik, namnFör, pill, rad, skriv,
-          tabell } = NXAdmin;
+  /* AVBOKNINGSSKAL användes av auditVärde() utan att hämtas härifrån.
+     En auditrad med ett avbokningsskäl kastade då ReferenceError, och
+     hela loggen slutade ritas på just den raden. */
+  const { AVBOKNINGSSKAL, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, fråga, hämtaNotisläge, kortDatum, läge,
+          märkFlik, namnFör, pill, punkt, rad, saknasFunktion, skriv, tabell, uppräkning } = NXAdmin;
   /* Flaggorna (program 2, Fas 1.1). Tomma tills ritaFlaggor() hämtat. */
   S.flaggor = [];
   S.flaggorFel = null;
@@ -26,6 +29,7 @@
   const ritaDetalj = (...a) => NXAdmin.rita.ritaDetalj(...a);
   const träffar = (...a) => NXAdmin.rita.träffar(...a);
   const laddaOmEkonomi = (...a) => NXAdmin.rita.laddaOmEkonomi(...a);
+  const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
 
   /* ============================================================
      SYSTEM
@@ -115,11 +119,15 @@
     ritaNotisfel();
   }
 
-  /* Notiser som inte gick fram. Statuskoden är hela beskedet: 401 är
+  /* Anrop som inte gick fram. Statuskoden är hela beskedet: 401 är
      fel hemlighet mellan triggern och funktionen, 5xx är funktionen
      själv, och en tom kod med "tog slut" är ett anrop som aldrig kom
      fram. Innehållet i svaret visas inte — det kan bära uppgifter ur
-     anmälan som felet gällde. */
+     anmälan som felet gällde.
+
+     Sedan program 2, Fas 2 är det här också det enda stället där en
+     arbetare som svarar 401 syns: notis_minut() väcker notis-ko med
+     pg_net, och pg_net säger aldrig till den som väckte. */
   function ritaNotisfel() {
     const rader = S.notisfel || [];
     $('#notis-antal').textContent = rader.length ? rader.length + ' st' : '';
@@ -129,7 +137,7 @@
         ? pill(String(n.status_kod), n.status_kod >= 500 ? '' : 'ar-vantar')
         : pill(n.tog_slut ? 'Tidsgräns' : 'Inget svar', '') },
       { namn: 'Felet', rita: n => esc(n.fel || 'Funktionen svarade med en felkod.') }
-    ], rader, 'Inga misslyckade utskick det senaste dygnet');
+    ], rader, 'Inga misslyckade anrop det senaste dygnet');
   }
 
   /* ============================================================
@@ -288,7 +296,9 @@
         ['Tjänster och priser', 'Pris, ersättning, RUT-andel och villkor per tjänst.', '#katalog/tjanster'],
         ['Rabattkoder', 'Koder, värden och giltighet.', '#katalog/rabattkoder'],
         ['Integrationer', 'Google och Fortnox.', '#system/integrationer'],
-        ['Adminanvändare', 'Vem som ser den här vyn.', '#system/adminanvandare']
+        ['Adminanvändare', 'Vem som ser den här vyn.', '#system/adminanvandare'],
+        ['Notisernas utskick', 'Vad som skickats, vad som väntar och vad som gick fel.', '#system/utskick'],
+        ['Flaggor', 'Om mejlen och SMS:en går till riktiga mottagare.', '#system/flaggor']
       ];
       pekare.innerHTML = PEKARE.map(([namn, text, mål]) =>
         '<div class="dp-rad"><div><b>' + esc(namn) + '</b><span class="adm-und">' + esc(text) + '</span></div>'
@@ -363,7 +373,13 @@
     /* Fas 8 och 9.3. Passet loggas numera hela vägen, inte bara när
        det undantas från fakturering. */
     ai_forslag: 'AI-förslag', ai_konfig: 'AI-taket', kontaktmeddelande: 'Kontaktmeddelande',
-    klientfel: 'Klientfel', bolagsfakta: 'Bolagsfakta'
+    klientfel: 'Klientfel', bolagsfakta: 'Bolagsfakta',
+    /* Program 2. flagga loggas sedan Fas 1.1 och de två notisraderna
+       sedan Fas 2.1, men ingen av dem hade en etikett här: raden blev
+       "notisdrift ändrad, sms_lage: prov → skicka", och sorten gick
+       inte att välja i filtret. De två raderna är de två formulären i
+       rutan Notiser under Inställningar. */
+    flagga: 'Flagga', notisinstallning: 'Notisinställning', notisdrift: 'Utskicksinställning'
   };
   const AUDIT_HANDLING = {
     skapad: 'skapad', borttagen: 'borttagen', andrad: 'ändrad', status: 'ny status',
@@ -390,7 +406,10 @@
     organisationsnummer: 'orgnr', bolagsform: 'bolagsform', rakenskapsar_slut: 'räkenskapsår',
     momsregistrerad: 'momsregistrerad', momsperiod: 'momsperiod', f_skatt: 'F-skatt',
     arbetsgivarregistrerad: 'arbetsgivarregistrerad',
-    studiehjalpare_form: 'studiehjälparnas form', bokforingssystem: 'bokföringssystem'
+    studiehjalpare_form: 'studiehjälparnas form', bokforingssystem: 'bokföringssystem',
+    /* Program 2, Fas 2.1. Sandlådeadressen loggas med flit inte. */
+    paminnelser_timmar: 'påminnelser', chatt_samla_minuter: 'mejl om meddelanden väntar',
+    pass_samla_minuter: 'mejl om pass väntar', sms_lage: 'SMS-läge', sms_tak_per_dygn: 'SMS per dygn'
   };
 
 
@@ -408,6 +427,13 @@
     }
     if (typeof v === 'boolean') return v ? 'ja' : 'nej';
     if (/_ore$/.test(nyckel) && typeof v === 'number') return kronor(v);
+    /* En lista timmar som JSON, "[24,1]", är en siffra för mycket
+       att tolka. Samma ord som rutan Notiser säger. */
+    if (nyckel === 'paminnelser_timmar' && Array.isArray(v)) {
+      return v.length ? uppräkning(v.map(String)) + (v[v.length - 1] === 1 ? ' timme före' : ' timmar före')
+        : 'inga';
+    }
+    if (/_minuter$/.test(nyckel) && typeof v === 'number') return v + ' min';
     if (typeof v === 'string' && S.personer && S.personer[v]) return namnFör(v);
     if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) return kortDatum(v);
     if (typeof v === 'object') return JSON.stringify(v).slice(0, 60);
@@ -797,6 +823,22 @@
   const flaggFlik = $('#flik-flaggor');
   if (flaggFlik) flaggFlik.addEventListener('click', ritaFlaggor);
 
+  /* Vad som händer i praktiken när notisflaggorna slås på (program 2,
+     Fas 2). vantar_pa säger vad flaggan väntar på; det här säger vart
+     utskicken går efteråt, för det är inte samma sak som förut: med
+     notiser_mejl av går mejlen till sandlådan, och notiser_sms skickar
+     ingenting så länge SMS-läget är prov. */
+  const FLAGG_TILLÄGG = {
+    notiser_mejl: () => 'Med flaggan på går mejlen till familjernas och studiehjälparnas egna '
+      + 'adresser, inte längre till sandlådan.',
+    notiser_sms: () => {
+      const d = S.notis && S.notis.drift;
+      return 'Även med flaggan på går inga riktiga SMS förrän SMS-läget under Inställningar, '
+        + 'rutan Notiser, är skicka.'
+        + (d ? ' Just nu är det ' + (d.sms_lage === 'skicka' ? 'skicka.' : 'prov.') : '');
+    }
+  };
+
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-flagga]');
     if (!knapp) return;
@@ -808,11 +850,12 @@
     rensa(msg);
 
     if (nytt) {
+      const tillägg = FLAGG_TILLÄGG[kod] ? FLAGG_TILLÄGG[kod]() + ' ' : '';
       const ja = await bekräfta({
         titel: 'Slå på ' + kod + '?',
-        text: f.vantar_pa
+        text: tillägg + (f.vantar_pa
           ? 'Flaggan väntar på ett beslut. Så här står det:'
-          : 'Flaggan har ingen text om vad den väntar på.',
+          : 'Flaggan har ingen text om vad den väntar på.'),
         forhandsvisning: f.vantar_pa || undefined,
         knapp: 'Slå på'
       });
@@ -832,11 +875,619 @@
     });
   });
 
+  /* ============================================================
+     NOTISERNA (program 2, Fas 2)
+
+     Två platser. Rutan Notiser under Inställningar, där det som
+     styr utskicken ändras, och fliken Utskick, där det syns vad som
+     faktiskt hände. Datan hämtas av hämtaNotisläge() i kärnan.
+
+     INGA MEJLADRESSER I LISTAN. Mottagaren visas med namn ur
+     S.personer, aldrig med adress, inte ens när namnet saknas:
+     namnFör() faller tillbaka på e-posten och används därför inte
+     här. Felen från leverantörerna maskas innan de ritas, för ett
+     studsande mejl svarar ofta med adressen i texten. Sandlådan står
+     i formuläret, för den är adminens egen.
+
+     BARA DET SOM ÄNDRATS SKRIVS. Auditloggen tar varje kolumn som
+     står i en update, också den som fick samma värde igen, och en
+     logg full av "ändrat från 3 till 3" döljer det som faktiskt
+     ändrades.
+     ============================================================ */
+  const NOTIS_TYP = {
+    pass_nytt: 'Nytt pass', pass_bekraftat: 'Pass bekräftat', pass_flyttat: 'Pass flyttat',
+    pass_avbokat: 'Pass avbokat', pass_avbojt: 'Pass avböjt', meddelande: 'Nytt meddelande',
+    rapport: 'Ny rapport', paminnelse: 'Påminnelse'
+  };
+  /* Färgen är genvägen, ordet är beskedet (se pill() i kärnan). */
+  const UTSKICK_LAGE = {
+    vantar: ['Väntar', 'ar-vantar'], skickar: ['Skickas', 'ar-vantar'], skickad: ['Skickad', 'ar-klar'],
+    hoppad: ['Hoppad', ''], loggad: ['Loggad', ''], fel: ['Fel', 'ar-ny']
+  };
+  /* Rollen ett provmejl skrivs för (notis_provmejl(p_roll), Fas 2.3d).
+     Nycklarna är de två databasen tar emot, i den ordning de provas. */
+  const PROVROLL = { parent: 'familj', tutor: 'studiehjälpare' };
+  const INST_KOLUMNER = 'paminnelser_timmar, chatt_samla_minuter, pass_samla_minuter, uppdaterad, uppdaterad_av';
+  const DRIFT_KOLUMNER = 'mejl_sandlada, sms_lage, sms_tak_per_dygn, uppdaterad, uppdaterad_av';
+
+  const IKON_OK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/>'
+    + '<path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>';
+  const IKON_VARNING = '<svg viewBox="0 0 24 24" aria-hidden="true" style="stroke:var(--acc-text)">'
+    + '<path d="M12 3.8 2.8 19.5h18.4z"/><path d="M12 9.8v4.4M12 16.9h.01"/></svg>';
+
+  function klocka(iso) {
+    return iso ? new Date(iso).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }) : '';
+  }
+
+  function tidCell(iso) {
+    if (!iso) return '<span style="color:var(--bl-3)">—</span>';
+    return '<span class="adm-tal">' + esc(kortDatum(iso)) + '</span>'
+      + '<span class="adm-und">' + esc(klocka(iso)) + '</span>';
+  }
+
+  /* En adress eller ett telefonnummer i en feltext blir ett ord.
+     Grovt med flit: hellre en maskad bit för mycket än en adress i
+     en lista som visas på en delad skärm. */
+  function utanAdresser(text) {
+    return String(text == null ? '' : text)
+      .replace(/[^\s@<>()"',;:]+@[^\s@<>()"',;:]+/g, '[adress]')
+      .replace(/(?:\+|\b0)\d[\d\s-]{6,}\d/g, '[nummer]');
+  }
+
+  /* Rollen står som den står i profiles. Förut blev allt som inte var
+     tutor "Familj", också ett konto med rollen admin. Arbetaren skriver
+     visserligen ett sådant kontos mejl som till en familj, men listan
+     svarar på vem som fick det, inte på hur det såg ut. */
+  const MOTTAGARROLL = { parent: 'Familj', tutor: 'Studiehjälpare', admin: 'Admin' };
+
+  /* Namnet går genom utanAdresser() som felen gör. full_name är
+     fritext som den som registrerar sig skriver själv, och ett namn
+     som är en adress hade annars stått i klartext i listan och i
+     "Senast ändrad av". */
+  function mottagare(id) {
+    const p = S.personer[id];
+    if (!p) return { namn: 'Okänt konto', roll: '' };
+    const roll = MOTTAGARROLL[p.role] || '';
+    return {
+      namn: utanAdresser(p.full_name || (roll || 'Konto') + ' utan namn')
+        + (S.user && id === S.user.id ? ' (du)' : ''),
+      roll: roll
+    };
+  }
+
+  function ändradText(rad) {
+    if (!rad || !rad.uppdaterad) return '';
+    const vem = rad.uppdaterad_av && S.personer[rad.uppdaterad_av]
+      ? mottagare(rad.uppdaterad_av).namn : null;
+    return 'Senast ändrad ' + kortDatum(rad.uppdaterad) + ' kl. ' + klocka(rad.uppdaterad)
+      + (vem ? ' av ' + vem : '') + '.';
+  }
+
+  function timmarText(lista) {
+    if (!lista || !lista.length) return 'Inga påminnelser';
+    const sista = lista[lista.length - 1];
+    return (lista.length === 1 ? 'Påminnelse ' : 'Påminnelser ')
+      + uppräkning(lista.map(String)) + (sista === 1 ? ' timme' : ' timmar') + ' före passet';
+  }
+
+  /* Ett heltal ur ett fält, eller NaN. Number('') är 0, och ett tomt
+     fält ska inte tyst bli noll minuter. */
+  function heltal(sel) {
+    const v = String(($(sel) || {}).value || '').trim();
+    return /^-?\d+$/.test(v) ? Number(v) : NaN;
+  }
+
+  function sammaLista(a, b) {
+    const x = a || [], y = b || [];
+    return x.length === y.length && x.every((v, i) => Number(v) === Number(y[i]));
+  }
+
+  function rpcFel(namn, fel, status) {
+    if (saknasFunktion(fel, status)) {
+      return 'Funktionen ' + namn + ' finns inte i databasen än. Migrationerna för notiserna är inte körda.';
+    }
+    return felText(fel);
+  }
+
+  /* ---------- rutan Notiser under Inställningar ---------- */
+
+  function ritaNotisrutan() {
+    const niForm = $('#ni-form'), ndForm = $('#nd-form');
+    if (!niForm || !ndForm) return;
+    const N = S.notis;
+    const lägeEl = $('#ni-lage');
+
+    let besked = '';
+    if (!N.hämtad) besked = '';
+    else if (N.saknas) besked = 'Notistabellerna finns inte än. Migrationerna för notiserna (program 2, Fas 2) '
+      + 'är inte körda, så här finns inget att ändra.';
+    else if (N.fel) besked = 'Kunde inte hämta notisinställningarna: ' + N.fel;
+    else if (!N.installning) besked = 'Raden med notisinställningarna saknas i databasen.';
+    else if (!N.drift) besked = 'Utskickens inställningar gick inte att läsa. De visas bara för admin.';
+    if (lägeEl) { lägeEl.textContent = besked; lägeEl.hidden = !besked; }
+
+    const instKan = !!N.installning;
+    const driftKan = !!N.drift;
+    niForm.querySelectorAll('input, button').forEach(el => { el.disabled = !instKan; });
+    ndForm.querySelectorAll('input, select, button').forEach(el => { el.disabled = !driftKan; });
+    $$('[data-notis-kor]').forEach(k => { k.disabled = !instKan; });
+    const prov = $('#notis-provmejl');
+    if (prov) prov.disabled = !instKan;
+
+    /* Ett formulär någon håller på att fylla i skrivs inte över av en
+       hämtning som råkar bli klar under tiden. */
+    if (N.installning && niForm.dataset.andrad !== '1') {
+      const t = (N.installning.paminnelser_timmar || []).slice(0, 4);
+      ['#ni-t1', '#ni-t2', '#ni-t3', '#ni-t4'].forEach((sel, i) => {
+        $(sel).value = t[i] != null ? String(t[i]) : '';
+      });
+      $('#ni-chatt').value = String(N.installning.chatt_samla_minuter);
+      $('#ni-pass').value = String(N.installning.pass_samla_minuter);
+    }
+    if (N.drift && ndForm.dataset.andrad !== '1') {
+      $('#nd-sandlada').value = N.drift.mejl_sandlada || '';
+      $('#nd-sms-lage').value = N.drift.sms_lage === 'skicka' ? 'skicka' : 'prov';
+      $('#nd-tak').value = String(N.drift.sms_tak_per_dygn);
+    }
+    $('#ni-andrad').textContent = ändradText(N.installning);
+    $('#nd-andrad').textContent = ändradText(N.drift);
+  }
+
+  const niForm = $('#ni-form');
+  if (niForm) {
+    niForm.addEventListener('input', () => { niForm.dataset.andrad = '1'; });
+    niForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const msg = $('#ni-msg');
+      rensa(msg);
+      const N = S.notis;
+      if (!N.installning) { säg(msg, 'Inställningarna är inte hämtade, så inget kan sparas.', false); return; }
+
+      const timmar = [];
+      for (const sel of ['#ni-t1', '#ni-t2', '#ni-t3', '#ni-t4']) {
+        const fält = $(sel);
+        /* Ett nummerfält med bokstäver i har värdet '' och hade annars
+           räknats som tomt, alltså som en påminnelse mindre. */
+        if (!fält.value.trim() && !(fält.validity && fält.validity.badInput)) continue;
+        const h = heltal(sel);
+        if (!Number.isInteger(h) || h < 1 || h > 168) {
+          säg(msg, 'En påminnelse är ett helt antal timmar mellan 1 och 168.', false);
+          fält.focus();
+          return;
+        }
+        if (timmar.indexOf(h) === -1) timmar.push(h);
+      }
+      /* Längst före passet först, som i databasens förval {24,1}. Samma
+         tid två gånger blir en: den hade ändå bara gett en påminnelse. */
+      timmar.sort((a, b) => b - a);
+
+      const chatt = heltal('#ni-chatt'), pass = heltal('#ni-pass');
+      if (!Number.isInteger(chatt) || chatt < 1 || chatt > 180) {
+        säg(msg, 'Mejl om meddelanden väntar mellan 1 och 180 minuter.', false);
+        $('#ni-chatt').focus();
+        return;
+      }
+      if (!Number.isInteger(pass) || pass < 0 || pass > 60) {
+        säg(msg, 'Mejl om pass väntar mellan 0 och 60 minuter.', false);
+        $('#ni-pass').focus();
+        return;
+      }
+
+      const ändring = {};
+      if (!sammaLista(timmar, N.installning.paminnelser_timmar)) ändring.paminnelser_timmar = timmar;
+      if (chatt !== N.installning.chatt_samla_minuter) ändring.chatt_samla_minuter = chatt;
+      if (pass !== N.installning.pass_samla_minuter) ändring.pass_samla_minuter = pass;
+      if (!Object.keys(ändring).length) {
+        niForm.dataset.andrad = '';
+        ritaNotisrutan();
+        säg(msg, 'Inget är ändrat.', true);
+        return;
+      }
+
+      if ('paminnelser_timmar' in ändring && !timmar.length) {
+        const ja = await bekräfta({
+          titel: 'Inga påminnelser alls?',
+          text: 'Då får ingen familj och ingen studiehjälpare någon påminnelse före ett pass, '
+            + 'varken i appen, som mejl eller som SMS.',
+          knapp: 'Stäng av påminnelserna'
+        });
+        if (!ja) return;
+      }
+
+      const knapp = niForm.querySelector('button[type="submit"]');
+      await medan(knapp, 'Sparar…', async () => {
+        const { data, error } = await supa.from('notis_installning').update(ändring).eq('id', 1)
+          .select(INST_KOLUMNER);
+        if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+        /* RLS svarar inte med ett fel när en rad inte får ändras, bara
+           med noll rader. Ingen rad tillbaka betyder att inget sparades. */
+        if (!(data || []).length) {
+          säg(msg, 'Ingenting sparades. Databasen släppte inte igenom ändringen.', false);
+          return;
+        }
+        N.installning = data[0];
+        niForm.dataset.andrad = '';
+        ritaNotisrutan();
+        säg(msg, 'Sparat. ' + timmarText(N.installning.paminnelser_timmar) + '. Mejl om meddelanden väntar '
+          + N.installning.chatt_samla_minuter + ' min, mejl om pass ' + N.installning.pass_samla_minuter
+          + ' min.', true);
+      });
+    });
+  }
+
+  const ndForm = $('#nd-form');
+  if (ndForm) {
+    ndForm.addEventListener('input', () => { ndForm.dataset.andrad = '1'; });
+    ndForm.addEventListener('change', () => { ndForm.dataset.andrad = '1'; });
+    ndForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const msg = $('#nd-msg');
+      rensa(msg);
+      const N = S.notis;
+      if (!N.drift) { säg(msg, 'Inställningarna är inte hämtade, så inget kan sparas.', false); return; }
+
+      const sandlåda = $('#nd-sandlada').value.trim();
+      /* Samma regel som villkoret i databasen, så att felet kommer här
+         och på svenska i stället för som en rå 23514. */
+      if (sandlåda && !NX.epostOk(sandlåda)) {
+        säg(msg, 'Sandlådan ska vara en e-postadress, eller tom.', false);
+        $('#nd-sandlada').focus();
+        return;
+      }
+      const smsLäge = $('#nd-sms-lage').value === 'skicka' ? 'skicka' : 'prov';
+      const tak = heltal('#nd-tak');
+      if (!Number.isInteger(tak) || tak < 0 || tak > 5000) {
+        säg(msg, 'Dygnstaket är ett helt antal SMS mellan 0 och 5000.', false);
+        $('#nd-tak').focus();
+        return;
+      }
+
+      const ändring = {};
+      if ((sandlåda || null) !== (N.drift.mejl_sandlada || null)) ändring.mejl_sandlada = sandlåda || null;
+      if (smsLäge !== N.drift.sms_lage) ändring.sms_lage = smsLäge;
+      if (tak !== N.drift.sms_tak_per_dygn) ändring.sms_tak_per_dygn = tak;
+      if (!Object.keys(ändring).length) {
+        ndForm.dataset.andrad = '';
+        ritaNotisrutan();
+        säg(msg, 'Inget är ändrat.', true);
+        return;
+      }
+
+      /* Prov till skicka är det enda här som kostar pengar. */
+      if (ändring.sms_lage === 'skicka') {
+        const flagga = (S.flaggor || []).find(f => f.kod === 'notiser_sms');
+        const ja = await bekräfta({
+          titel: 'Skicka riktiga SMS?',
+          text: 'I läget skicka går riktiga SMS till dem som själva slagit på SMS-påminnelser, så länge '
+            + 'flaggan notiser_sms är på. Varje SMS kostar pengar hos SMS-leverantören. '
+            + (tak === 0 ? 'Dygnstaket är 0, så inget går förrän det höjs.'
+              : 'Högst ' + tak + ' SMS per dygn.')
+            + (flagga && !flagga.aktiv ? ' Flaggan notiser_sms är av just nu, så inget skickas förrän den slås på.' : ''),
+          knapp: 'Ja, skicka riktiga SMS'
+        });
+        /* Avbryt lämnade rutan på "Skicka riktiga SMS" fast databasen
+           sa prov, och formuläret var märkt som ändrat, så Hämta om
+           rättade den inte heller. Rutan visar nu det som gäller, och
+           det andra i formuläret står kvar för den som vill spara det. */
+        if (!ja) {
+          $('#nd-sms-lage').value = N.drift.sms_lage === 'skicka' ? 'skicka' : 'prov';
+          if (Object.keys(ändring).length === 1) ndForm.dataset.andrad = '';
+          säg(msg, 'Inget sparades. SMS-läget är fortfarande prov.', true);
+          return;
+        }
+      }
+
+      const knapp = ndForm.querySelector('button[type="submit"]');
+      await medan(knapp, 'Sparar…', async () => {
+        const { data, error } = await supa.from('notis_drift').update(ändring).eq('id', 1)
+          .select(DRIFT_KOLUMNER);
+        if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+        if (!(data || []).length) {
+          säg(msg, 'Ingenting sparades. Databasen släppte inte igenom ändringen.', false);
+          return;
+        }
+        N.drift = data[0];
+        ndForm.dataset.andrad = '';
+        ritaNotisrutan();
+        säg(msg, 'Sparat. ' + (N.drift.mejl_sandlada ? 'Sandlådan tar emot mejlen medan flaggan är av'
+          : 'Ingen sandlåda, så mejlen loggas bara medan flaggan är av')
+          + '. SMS-läget är ' + (N.drift.sms_lage === 'skicka' ? 'skicka' : 'prov')
+          + ', högst ' + N.drift.sms_tak_per_dygn + ' per dygn.', true);
+      });
+    });
+  }
+
+  /* ---------- fliken Utskick ---------- */
+
+  function ritaArbetaren() {
+    const host = $('#utskick-lage');
+    if (!host) return;
+    const N = S.notis;
+    if (!N.hämtad) { host.innerHTML = '<div class="loading">Hämtar</div>'; return; }
+    if (N.saknas) {
+      host.innerHTML = tomt('Notistabellerna finns inte än',
+        'Migrationerna för notiserna (program 2, Fas 2) är inte körda. Fliken fylls när de är det.');
+      return;
+    }
+    if (N.fel) {
+      host.innerHTML = '<p class="fel">Notisläget svarade inte: ' + esc(N.fel) + '</p>';
+      return;
+    }
+
+    const senast = N.körningar[0];
+    const när = senast ? kortDatum(senast.tid) + ' kl. ' + klocka(senast.tid) : '';
+    const väntar = N.väntar === 1 ? '1 utskick väntar' : N.väntar + ' utskick väntar';
+    let ruta;
+    if (N.tyst) {
+      ruta = '<div class="adm-lugnt" role="status" style="background:color-mix(in srgb,var(--acc) 8%,transparent)">'
+        + IKON_VARNING
+        + '<span><b>' + esc(senast ? 'Arbetaren har inte kört den senaste kvarten'
+            : 'Arbetaren har inte kört någon gång') + '</b>'
+        + '<span>' + esc(väntar + ' på att skickas.'
+            + (senast ? ' Senaste körningen var ' + när + '.' : '')
+            + ' Tryck Kör nu. Händer ändå ingenting, se Fel, rutan Anrop som inte gick fram:'
+            + ' där syns det om arbetaren svarar med ett fel.') + '</span></span></div>';
+    } else {
+      ruta = '<div class="adm-lugnt" role="status">' + IKON_OK
+        + '<span><b>' + esc(N.väntar ? väntar + ' på att skickas' : 'Inget väntar på att skickas') + '</b>'
+        + '<span>' + esc(senast ? 'Arbetaren körde senast ' + när + '.'
+            : 'Arbetaren har inte kört någon gång.') + '</span></span></div>';
+    }
+    host.innerHTML = ruta
+      + (N.delfel.length
+        ? '<p class="fel" style="margin-top:12px">Delar av notisläget svarade inte: '
+          + esc(N.delfel.join(' · ')) + '</p>'
+        : '');
+  }
+
+  function ritaUtskickLista() {
+    const host = $('#utskick-tabell');
+    if (!host) return;
+    const N = S.notis;
+    const antal = $('#utskick-antal');
+    /* En lista hämtad med ett annat filter än det som står i rutan
+       ritas inte: den är på väg att hämtas om (se hämtaNotisläge). */
+    if (!N.hämtad || N.utskickFilter !== N.filter) {
+      host.innerHTML = '<div class="loading">Hämtar</div>';
+      if (antal) antal.textContent = '';
+      return;
+    }
+    if (N.saknas || N.fel) {
+      host.innerHTML = tomt('Ingen kö att visa', N.saknas ? 'Tabellen notis_utskick finns inte än.' : N.fel);
+      if (antal) antal.textContent = '';
+      return;
+    }
+    if (antal) {
+      antal.textContent = N.utskickTotalt > N.utskick.length
+        ? 'visar ' + N.utskick.length + ' av ' + N.utskickTotalt
+        : (N.utskickTotalt ? N.utskickTotalt + ' st' : '');
+    }
+
+    host.innerHTML = tabell([
+      { namn: 'Mottagare', rita: u => {
+        const m = mottagare(u.mottagare);
+        return '<b>' + esc(m.namn) + '</b>' + (m.roll ? '<span class="adm-und">' + esc(m.roll) + '</span>' : '');
+      } },
+      { namn: 'Vad', rita: u => {
+        const typ = NOTIS_TYP[u.typ] || u.typ;
+        if (u.typ === 'meddelande' && u.antal > 1) return esc(u.antal + ' nya meddelanden');
+        return esc(typ) + (u.antal > 1 ? '<span class="adm-und">' + esc(u.antal + ' ändringar i samma pass')
+          + '</span>' : '');
+      } },
+      { namn: 'Kanal', rita: u => esc(u.kanal === 'sms' ? 'SMS' : 'Mejl') },
+      { namn: 'Läge', rita: u => läge(UTSKICK_LAGE, u.status)
+        + (u.till_sandlada ? ' ' + pill('Sandlåda', '') : '')
+        + (u.prov === 'true' ? ' ' + pill(PROVROLL[u.prov_roll] ? 'Prov som ' + PROVROLL[u.prov_roll] : 'Prov', '') : '')
+        + (u.forsok > 1 ? '<span class="adm-und">' + esc('försök ' + u.forsok) + '</span>' : '') },
+      { namn: 'Skapad', rita: u => tidCell(u.skapad) },
+      { namn: 'Skicka efter', rita: u => tidCell(u.skicka_efter) },
+      { namn: 'Fel', rita: u => u.fel
+        ? esc(utanAdresser(u.fel).slice(0, 200))
+        : '<span style="color:var(--bl-3)">—</span>' }
+    ], N.utskick, N.filter ? 'Inga utskick i det läget' : 'Inga utskick än')
+      + (N.utskick.length
+        ? '<p class="graf-not">Loggad: skrevs upp men skickades inte, för att flaggan är av och ingen '
+          + 'sandlåda är satt, eller för att SMS-läget är prov. Hoppad: databasen stoppade utskicket när '
+          + 'det skulle gå, och skälet står under Fel. Sandlåda: mejlet gick till sandlådan i stället för '
+          + 'till mottagaren. Prov: ett provmejl till en admin, skrivet som till en familj eller som till '
+          + 'en studiehjälpare.</p>'
+        : '');
+  }
+
+  function ritaKörningar() {
+    const host = $('#korningar-tabell');
+    if (!host) return;
+    const N = S.notis;
+    $('#korningar-antal').textContent = N.körningar.length === 1 ? 'den senaste'
+      : N.körningar.length ? 'de ' + N.körningar.length + ' senaste' : '';
+    if (!N.hämtad) { host.innerHTML = '<div class="loading">Hämtar</div>'; return; }
+    if (N.saknas || N.fel) { host.innerHTML = tomt('Inga körningar att visa', ''); return; }
+    host.innerHTML = tabell([
+      { namn: 'När', rita: k => tidCell(k.tid) },
+      { namn: 'Behandlade', höger: true, rita: k => '<span class="adm-tal">' + esc(String(k.behandlade)) + '</span>' },
+      { namn: 'Skickade', höger: true, rita: k => '<span class="adm-tal">' + esc(String(k.skickade)) + '</span>' },
+      { namn: 'Misslyckade', höger: true, rita: k => k.misslyckade > 0
+        ? pill(String(k.misslyckade), 'ar-ny') : '<span class="adm-tal">0</span>' },
+      { namn: 'Meddelande', rita: k => k.meddelande
+        ? esc(utanAdresser(k.meddelande).slice(0, 200)) : '<span style="color:var(--bl-3)">—</span>' }
+    ], N.körningar, 'Arbetaren har inte kört någon gång');
+  }
+
+  function ritaSkapfel() {
+    const host = $('#nfel-tabell');
+    if (!host) return;
+    const N = S.notis;
+    $('#nfel-antal').textContent = N.skapfelDygn ? N.skapfelDygn + ' senaste dygnet' : '';
+    if (!N.hämtad) { host.innerHTML = '<div class="loading">Hämtar</div>'; return; }
+    if (N.saknas || N.fel) { host.innerHTML = tomt('Inga fel att visa', ''); return; }
+    host.innerHTML = tabell([
+      { namn: 'När', rita: f => tidCell(f.skapad) },
+      /* kalla är "notis_vid_pass <id>". Id:t kapas som i auditloggen. */
+      { namn: 'Var', rita: f => {
+        const [var_, id] = String(f.kalla || '').split(' ');
+        return '<b>' + esc(var_ || '—') + '</b>'
+          + (id ? '<span class="adm-und">' + esc(/^[0-9a-f]{8}-/i.test(id) ? id.slice(0, 8) : id) + '</span>' : '');
+      } },
+      { namn: 'Felet', rita: f => esc(utanAdresser(f.fel).slice(0, 300)) }
+    ], N.skapfel, 'Inga fel sparade');
+  }
+
+  function ritaUtskick() {
+    ritaArbetaren();
+    ritaUtskickLista();
+    ritaKörningar();
+    ritaSkapfel();
+    const N = S.notis;
+    märkFlik('#flik-utskick-mark', N.felDygn + N.skapfelDygn);
+  }
+
+  function ritaNotisdrift() {
+    ritaNotisrutan();
+    ritaUtskick();
+  }
+
+  /* Hämta om och rita allt som räknar på notisläget, också
+     problemrutan på Översikt. */
+  async function uppdateraNotiser() {
+    await hämtaNotisläge();
+    ritaNotisdrift();
+    await ritaÖversikt();
+  }
+
+  /* Arbetaren går för sig själv: notis_kor_nu() lägger bara ett anrop
+     i pg_nets kö. Det som skickas syns alltså först en stund senare,
+     och en hämtning till efter några sekunder visar det utan att
+     någon behöver trycka. En timer åt gången. */
+  let omhämtning = null;
+  function hämtaOmSnart() {
+    if (omhämtning) clearTimeout(omhämtning);
+    omhämtning = setTimeout(() => { omhämtning = null; uppdateraNotiser(); }, 8000);
+  }
+
+  function svarsruta(knapp) {
+    const box = knapp.closest('.dbox');
+    return box ? box.querySelector('[data-notis-svar]') : null;
+  }
+
+  function körSvar(d) {
+    const nya = Number(d && d.nya_paminnelser) || 0;
+    const väntar = Number(d && d.vantar) || 0;
+    return 'Klart. '
+      + (nya === 1 ? '1 ny påminnelse planerades' : nya + ' nya påminnelser planerades')
+      + (väntar
+        ? ' och ' + väntar + ' utskick väntar på att skickas. Arbetaren går för sig själv, så det som '
+          + 'skickas syns under Utskick en stund senare.'
+        : '. Inget väntade på att skickas.');
+  }
+
+  /* Kör nu (program 2, Fas 2.3). Fas 7:s regel: ett jobb körs synligt
+     för hand innan det körs av sig självt. Knappen finns på två
+     ställen, under Inställningar och under Utskick, med samma svar. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-notis-kor]');
+    if (!knapp || knapp.getAttribute('aria-busy') === 'true') return;
+    const msg = svarsruta(knapp);
+    rensa(msg);
+    await medan(knapp, 'Kör…', async () => {
+      const { data, error, status } = await supa.rpc('notis_kor_nu');
+      if (error) { säg(msg, rpcFel('notis_kor_nu', error, status), false); return; }
+      säg(msg, körSvar(data), true);
+    });
+    await uppdateraNotiser();
+    hämtaOmSnart();
+  });
+
+  /* Provmejlet går till den som trycker, ett av varje sort, oavsett
+     flaggan och sandlådan. Det är så avsändaren, DKIM och utseendet
+     provas innan någon familj får något.
+
+     ROLLEN VÄLJS (Fas 2.3d). Adminens konto är ett familjekonto, så
+     utan val visade provet alltid familjens mejl, och studiehjälparens
+     hade ingen sett före det första riktiga. notis_provmejl tar en
+     roll i taget, så Båda är ett anrop per roll. Går det första men
+     inte det andra står båda sakerna i svaret: det som köades går
+     ändå iväg. */
+  const provKnapp = $('#notis-provmejl');
+  if (provKnapp) provKnapp.addEventListener('click', async () => {
+    if (provKnapp.getAttribute('aria-busy') === 'true') return;
+    const msg = svarsruta(provKnapp);
+    rensa(msg);
+    const VAL = [['parent', 'Familj'], ['tutor', 'Studiehjälpare'], ['bada', 'Båda']];
+    const roller = await fråga({
+      titel: 'Skicka provmejl till dig själv?',
+      text: 'Det går riktiga mejl till ' + ((S.user && S.user.email) || 'din egen adress')
+        + ', ett av varje sort som kan bli mejl, skrivna så som en familj eller en studiehjälpare får dem. '
+        + 'Väljer du båda kommer varje sort två gånger. De går bara till dig, oavsett flaggan '
+        + 'notiser_mejl och oavsett sandlådan.',
+      innehåll: '<fieldset style="border:0;padding:0;margin:14px 0 0;min-width:0">'
+        + '<legend style="padding:0;font-size:.8rem;font-weight:600;margin-bottom:2px">Skrivna som till</legend>'
+        + VAL.map(([v, t], i) => '<label class="ag-kryss"><input type="radio" name="prov-roll" value="'
+          + esc(v) + '"' + (i === 0 ? ' checked' : '') + '> ' + esc(t) + '</label>').join('')
+        + '</fieldset>',
+      knapp: 'Skicka provmejl',
+      läs: ruta => {
+        const v = ruta.querySelector('input[name="prov-roll"]:checked');
+        if (!v) return { fel: 'Välj familj, studiehjälpare eller båda.' };
+        return { värde: v.value === 'bada' ? Object.keys(PROVROLL) : [v.value] };
+      }
+    });
+    if (!roller) return;
+
+    await medan(provKnapp, 'Köar…', async () => {
+      const köade = [];
+      let fel = '';
+      for (const roll of roller) {
+        const köat = await supa.rpc('notis_provmejl', { p_roll: roll });
+        if (köat.error) {
+          fel = punkt('Provmejlen som ' + PROVROLL[roll] + ' köades inte: '
+            + rpcFel('notis_provmejl', köat.error, köat.status));
+          break;
+        }
+        köade.push((Number(köat.data) || 0) + (köade.length ? ' som ' : ' provmejl som ') + PROVROLL[roll]);
+      }
+      if (!köade.length) { säg(msg, fel, false); return; }
+
+      const vad = uppräkning(köade);
+      const kört = await supa.rpc('notis_kor_nu');
+      if (kört.error) {
+        säg(msg, vad + ' ligger i kön, men arbetaren gick inte att väcka: '
+          + punkt(rpcFel('notis_kor_nu', kört.error, kört.status)) + ' Tryck Kör nu.' + (fel ? ' ' + fel : ''), false);
+        return;
+      }
+      säg(msg, vad + ' ligger i kön och arbetaren har väckts. Hur det gick syns under '
+        + 'Utskick en stund senare.' + (fel ? ' ' + fel : ''), !fel);
+    });
+    await uppdateraNotiser();
+    hämtaOmSnart();
+  });
+
+  const utskickFilter = $('#utskick-filter');
+  if (utskickFilter) utskickFilter.addEventListener('change', async () => {
+    S.notis.filter = utskickFilter.value;
+    /* Filtret skiljer sig nu från listans, så listan ritas som
+       Hämtar, utan det gamla antalet. */
+    ritaUtskickLista();
+    await hämtaNotisläge();
+    ritaNotisdrift();
+  });
+
+  const utskickHämta = $('#utskick-hamta');
+  if (utskickHämta) utskickHämta.addEventListener('click', () =>
+    medan(utskickHämta, 'Hämtar…', uppdateraNotiser));
+
+  /* Hämtas om när fliken öppnas: kön ändras av arbetaren, inte av
+     den här sidan. Inställningarna likaså, en annan admin kan ha
+     ändrat dem. */
+  ['#flik-utskick', '#flik-installningar'].forEach(sel => {
+    const flik = $(sel);
+    if (flik) flik.addEventListener('click', uppdateraNotiser);
+  });
+
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
     /* Utåt heter sökningen ritaAudit: den som ritar vyn vill ha en
        färsk logg, inte en gammal lista i minnet. */
     ritaAdminanvandare, ritaAudit: sökAudit, ritaDokument: hämtaHandlingar,
-    ritaFel, ritaFlaggor, ritaInstallningar, ritaIntegrationer
+    ritaFel, ritaFlaggor, ritaInstallningar, ritaIntegrationer, ritaNotisdrift
   });
 })();

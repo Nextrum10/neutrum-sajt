@@ -14,6 +14,10 @@
   if (typeof NX === 'undefined') saknas.push('nextrum-app.js');
   if (typeof NXKontakt === 'undefined') saknas.push('nextrum-kontakt.js');
   if (typeof NXStudie === 'undefined' || !NXStudie.bekräfta) saknas.push('nextrum-studie.js');
+  /* Vyerna klarar sig utan klockan, men inte tyst: det är NXNotiser
+     som markerar trådens chattnotis läst, och utan den går mejlet
+     om meddelandet ut fast familjen redan läst det i appen. */
+  if (typeof NXNotiser === 'undefined' || !NXNotiser.trådSedd) saknas.push('nextrum-notiser.js');
   if (typeof NXMedia === 'undefined' || !NXMedia.beskär) saknas.push('nextrum-media.js');
   if (typeof NXBetalning === 'undefined' || !NXBetalning.kronor) saknas.push('nextrum-betalning.js');
   if (!saknas.length) return;

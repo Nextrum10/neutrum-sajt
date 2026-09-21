@@ -48,7 +48,7 @@ jobs:
       - name: Migrationsfilerna har versionsnamn
         run: python3 verktyg/kolla-migrationer.py
 
-      # /admin, /larare och /foralder har skarp CSP (vercel.json).
+      # /admin, /larare, /foralder och /avanmal har skarp CSP (vercel.json).
       # Inline-kod där fungerar inte i produktion.
       - name: Vyerna tål den skarpa CSP:n
         run: python3 verktyg/kolla-csp.py

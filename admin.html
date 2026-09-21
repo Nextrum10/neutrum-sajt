@@ -1420,7 +1420,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>System</h2>
-              <p>Kopplingarna till Google och Fortnox, vem som är admin, felen användarna råkat på, inställningarna och auditloggen.</p>
+              <p>Kopplingarna till Google och Fortnox, vem som är admin, felen användarna råkat på, notisernas utskick, inställningarna och auditloggen.</p>
             </div>
           </div>
 
@@ -1432,6 +1432,9 @@
             <button class="vy-flik" type="button" role="tab" data-flik="fel"
                     id="flik-fel" aria-controls="panel-fel">Fel
               <span class="vy-flik-mark" id="flik-fel-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="utskick"
+                    id="flik-utskick" aria-controls="panel-utskick">Utskick
+              <span class="vy-flik-mark" id="flik-utskick-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="installningar"
                     id="flik-installningar" aria-controls="panel-installningar">Inställningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="dokument"
@@ -1514,16 +1517,82 @@
               <div id="fel-tabell"><div class="loading">Hämtar</div></div>
             </div>
 
+            <!-- Sedan program 2, Fas 2 går mejlen till familjer och
+                 studiehjälpare genom kön (fliken Utskick), inte genom
+                 webhookar. Det här är kvar för de anrop databasen
+                 fortfarande gör själv: mejlet till oss om en ny
+                 intresseanmälan, och väckningen av notisernas arbetare.
+                 Svarar arbetaren 401 eller 500 syns det bara här. -->
             <div class="dbox">
-              <h5>Notiser som inte gick fram <em id="notis-antal"></em></h5>
+              <h5>Anrop som inte gick fram <em id="notis-antal"></em></h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
-                Mejlen om nya anmälningar, tidsförslag och meddelanden skickas av databasen.
-                Går ett utskick fel sparas raden ändå, och tidigare fanns felet bara i ett
-                loggbord ingen kunde läsa. Här står de senaste dygnets misslyckade utskick.
-                Databasen städar bort äldre svar själv, så en tom lista betyder "inget de
-                senaste timmarna", inte "aldrig något".
+                Databasen anropar edge-funktionerna själv: när en intresseanmälan kommer in, och
+                när notisernas arbetare (notis-ko) ska väckas. Går ett anrop fel sparas raden ändå,
+                och tidigare fanns felet bara i ett loggbord ingen kunde läsa. Här står de senaste
+                dygnets misslyckade anrop. Databasen städar bort äldre svar själv, så en tom lista
+                betyder "inget de senaste timmarna", inte "aldrig något".
               </p>
               <div id="notis-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- ============ UTSKICK (program 2, Fas 2) ============
+               Mejl och SMS till familjer och studiehjälpare. Databasen
+               bestämmer vad som ska gå och köar det; edge-funktionen
+               notis-ko skickar. Här syns kön, arbetarens körningar och
+               de notiser som inte gick att skapa.
+
+               INGA MEJLADRESSER. Mottagaren visas med namn, och felen
+               från leverantören maskas innan de ritas: ett studsande
+               mejl svarar ofta med adressen i texten. Listan ritas av
+               nextrum-admin-system.js. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="utskick"
+               id="panel-utskick" aria-labelledby="flik-utskick" hidden>
+            <div class="dbox">
+              <div class="vy-sek-topp">
+                <div>
+                  <h3>Arbetaren</h3>
+                  <p class="small">Databasen köar ett utskick när något händer och prövar det igen
+                    när det ska gå. Arbetaren skickar bara det som fortfarande ska skickas.</p>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn btn-ghost btn-sm" type="button" id="utskick-hamta">Hämta om</button>
+                  <button class="btn btn-primary btn-sm" type="button" data-notis-kor>Kör nu</button>
+                </div>
+              </div>
+              <p class="ok-msg" data-notis-svar role="status"></p>
+              <div id="utskick-lage"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <select class="sel" id="utskick-filter" aria-label="Visa utskick i läge">
+                  <option value="">Alla lägen</option>
+                  <option value="vantar">Väntar</option>
+                  <option value="skickar">Skickas</option>
+                  <option value="skickad">Skickade</option>
+                  <option value="hoppad">Hoppade</option>
+                  <option value="loggad">Loggade</option>
+                  <option value="fel">Fel</option>
+                </select>
+                <span class="small" id="utskick-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="utskick-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox">
+              <h5>Körningar <em id="korningar-antal"></em></h5>
+              <div id="korningar-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox">
+              <h5>Notiser som inte gick att skapa <em id="nfel-antal"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
+                En notis får aldrig stoppa ett pass, ett meddelande eller en rapport. Går den inte
+                att skapa sparas det som hände ändå, och felet hamnar här i stället för att
+                försvinna i en logg.
+              </p>
+              <div id="nfel-tabell"><div class="loading">Hämtar</div></div>
             </div>
           </div>
 
@@ -1554,6 +1623,93 @@
               </form>
               <div id="rt-tabell" style="margin-top:14px"><div class="loading">Hämtar</div></div>
             </div>
+
+            <!-- ============ NOTISER (program 2, Fas 2) ============
+                 Två rader i två tabeller, med flit: notis_installning
+                 läses av alla inloggade (vyerna visar påminnelsetiderna),
+                 notis_drift bara av admin (sandlådeadressen är en
+                 e-post). Varje ändring hamnar i auditloggen, utom
+                 sandlådeadressen själv. -->
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <div class="vy-sek-topp">
+                <div>
+                  <h3>Notiser</h3>
+                  <p class="small">Påminnelser före passen, hur länge ett mejl väntar in fler
+                    ändringar, och vart mejlen och SMS:en går medan flaggorna är av.</p>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn btn-ghost btn-sm" type="button" id="notis-provmejl">Skicka provmejl till mig</button>
+                  <button class="btn btn-primary btn-sm" type="button" data-notis-kor>Kör nu</button>
+                </div>
+              </div>
+              <p class="ok-msg" data-notis-svar role="status"></p>
+              <p class="xsmall" id="ni-lage" style="color:var(--bl-2);line-height:1.6;margin:0 0 14px" hidden></p>
+
+              <h6 style="margin:6px 0 10px;font-size:.9rem;font-weight:650;color:var(--bl)">Gäller alla</h6>
+              <form id="ni-form" class="uppg-form" novalidate>
+                <fieldset class="uppg-bred" style="border:0;padding:0;margin:0;min-width:0">
+                  <legend style="padding:0;font-size:.8rem;font-weight:600;margin-bottom:7px">Påminnelser, timmar före passet</legend>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <input class="inp" id="ni-t1" type="number" min="1" max="168" step="1" inputmode="numeric"
+                           aria-label="Påminnelse 1, timmar före passet" style="max-width:110px">
+                    <input class="inp" id="ni-t2" type="number" min="1" max="168" step="1" inputmode="numeric"
+                           aria-label="Påminnelse 2, timmar före passet" style="max-width:110px">
+                    <input class="inp" id="ni-t3" type="number" min="1" max="168" step="1" inputmode="numeric"
+                           aria-label="Påminnelse 3, timmar före passet" style="max-width:110px">
+                    <input class="inp" id="ni-t4" type="number" min="1" max="168" step="1" inputmode="numeric"
+                           aria-label="Påminnelse 4, timmar före passet" style="max-width:110px">
+                  </div>
+                  <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin:8px 0 0">
+                    Upp till fyra, i hela timmar mellan 1 och 168. Tomma rutor räknas inte, och alla
+                    tomma betyder inga påminnelser alls. Bara bekräftade pass påminns, och ett pass
+                    som bokas efter påminnelsetiden får ingen påminnelse i efterhand.
+                  </p>
+                </fieldset>
+                <div class="fgroup"><label for="ni-chatt">Mejl om meddelanden väntar, minuter</label>
+                  <input class="inp" id="ni-chatt" type="number" min="1" max="180" step="1" inputmode="numeric"></div>
+                <div class="fgroup"><label for="ni-pass">Mejl om pass väntar, minuter</label>
+                  <input class="inp" id="ni-pass" type="number" min="0" max="60" step="1" inputmode="numeric"></div>
+                <p class="xsmall uppg-bred" style="color:var(--bl-2);line-height:1.6;margin:0">
+                  Under väntetiden blir fler meddelanden i samma chatt ett enda mejl, och har
+                  mottagaren hunnit läsa dem i appen går inget mejl alls. Flera ändringar i samma
+                  pass blir ett mejl med det senaste läget. Meddelanden 1 till 180 minuter, pass 0 till 60.
+                </p>
+                <div class="uppg-fot">
+                  <button class="btn btn-primary btn-sm" type="submit">Spara</button>
+                  <p class="ok-msg" id="ni-msg" role="status" style="margin:0"></p>
+                </div>
+              </form>
+              <p class="xsmall" id="ni-andrad" style="color:var(--bl-3);margin:10px 0 0"></p>
+
+              <h6 style="margin:22px 0 10px;font-size:.9rem;font-weight:650;color:var(--bl)">Utskicken</h6>
+              <form id="nd-form" class="uppg-form" novalidate>
+                <div class="fgroup uppg-bred"><label for="nd-sandlada">Sandlåda för mejl</label>
+                  <input class="inp" id="nd-sandlada" type="email" maxlength="200" autocomplete="off" spellcheck="false"></div>
+                <p class="xsmall uppg-bred" style="color:var(--bl-2);line-height:1.6;margin:0">
+                  Medan flaggan notiser_mejl är av går varje mejl hit i stället för till mottagaren,
+                  så att hela vägen kan provas på riktiga händelser. Tom: inget mejl skickas, utskicken
+                  loggas bara.
+                </p>
+                <div class="fgroup"><label for="nd-sms-lage">SMS-läge</label>
+                  <select class="sel" id="nd-sms-lage">
+                    <option value="prov">Prov, inget skickas</option>
+                    <option value="skicka">Skicka riktiga SMS</option>
+                  </select></div>
+                <div class="fgroup"><label for="nd-tak">Högst antal SMS per dygn</label>
+                  <input class="inp" id="nd-tak" type="number" min="0" max="5000" step="1" inputmode="numeric"></div>
+                <p class="xsmall uppg-bred" style="color:var(--bl-2);line-height:1.6;margin:0">
+                  SMS går bara som påminnelser, bara till den som själv slagit på dem, och bara när
+                  flaggan notiser_sms är på. I läget prov skickas inget och inget kostar. SMS utöver
+                  dygnstaket hoppas över och syns under Utskick.
+                </p>
+                <div class="uppg-fot">
+                  <button class="btn btn-primary btn-sm" type="submit">Spara</button>
+                  <p class="ok-msg" id="nd-msg" role="status" style="margin:0"></p>
+                </div>
+              </form>
+              <p class="xsmall" id="nd-andrad" style="color:var(--bl-3);margin:10px 0 0"></p>
+            </div>
+
             <div class="dbox">
               <h5>Andra inställningar</h5>
               <div id="inst-pekare"></div>
@@ -1651,6 +1807,9 @@
                   <option value="kontaktmeddelande">Kontaktmeddelanden</option>
                   <option value="klientfel">Bortstädade fel</option>
                   <option value="bolagsfakta">Bolagsfakta</option>
+                  <option value="flagga">Flaggor</option>
+                  <option value="notisinstallning">Notisinställningar</option>
+                  <option value="notisdrift">Utskicksinställningar</option>
                 </select>
                 <select class="sel" id="audit-vem" aria-label="Visa händelser av en viss person">
                   <option value="">Vem som helst</option>
