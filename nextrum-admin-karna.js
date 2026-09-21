@@ -49,8 +49,20 @@ const NXAdmin = (function () {
     analysFel: null,
     /* Fas 9.10: handlingar om verksamheten. Hämtas först när fliken
        öppnas — de läses sällan och är inte en del av arbetskön. */
-    handlingar: [], handlingarFel: null
+    handlingar: [], handlingarFel: null,
+    /* Program 2, Fas 1: id för de studiehjälpare som bjudits in
+       härifrån, läst ur anteckningarna. Se INBJUDAN_NOT. */
+    inbjudna: new Set()
   };
+
+  /* Anteckningen som skrivs när en studiehjälpare bjuds in härifrån.
+     Den är det enda spåret av inbjudan: bjud-in loggar ingenting, och
+     auth.users går inte att läsa från vyn. Pillen "Inbjuden" byggde
+     förut på att personen aldrig loggat in, men last_seen_at skrivs
+     aldrig för studiehjälpare, så pillen hade suttit på varje väntande
+     som registrerat sig själv. Texten jämförs exakt, så den ändras
+     inte utan att hämtningen nedan ändras med den. */
+  const INBJUDAN_NOT = 'Inbjuden härifrån som studiehjälpare.';
 
   function visa(id) {
     ['view-loading', 'view-auth', 'view-nekad', 'view-app', 'view-fel']
@@ -169,10 +181,19 @@ const NXAdmin = (function () {
      ============================================================ */
 
   async function hämtaAllt() {
+    /* bio, formats och stripe_klar hämtades inte, fast detaljpanelen
+       visar dem. "Om familjen", Format och "Om hen" stod därför alltid
+       tomma, och Stripe sa alltid "inte kopplad". Kolumnnamnen är
+       kontrollerade mot katalogen (program 2, Fas 1).
+
+       avatar_url hämtas med flit INTE. Den är en sökväg i den privata
+       hinken, inte en adress, och M.avatar() lägger den rakt i en
+       <img src>. Med kolumnen hade panelen visat en trasig bild i
+       stället för initialerna. */
     const [profiler, elever, tutorer] = await Promise.all([
-      supa.from('profiles').select('id, role, full_name, email, is_admin, match_status, matched_tutor_id, phone, created_at, last_seen_at'),
+      supa.from('profiles').select('id, role, full_name, email, is_admin, match_status, matched_tutor_id, phone, bio, created_at, last_seen_at'),
       supa.from('students').select('id, parent_id, name, grade, school, subjects, goals, created_at, matched_tutor_id, match_status, uppdrag_id'),
-      supa.from('tutor_profiles').select('id, age, school, city, subjects, grade_levels, status, hourly_rate, visa_publikt, created_at')
+      supa.from('tutor_profiles').select('id, age, school, city, subjects, grade_levels, formats, bio, status, hourly_rate, stripe_klar, visa_publikt, created_at')
     ]);
     if (profiler.error) throw profiler.error;
 
@@ -193,7 +214,7 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit] = await Promise.all([
+           upd, uppg, rt, audit, inbjudna] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -224,7 +245,12 @@ const NXAdmin = (function () {
       supa.from('uppdrag').select('*').order('created_at', { ascending: false }),
       supa.from('uppgifter').select('*').order('created_at', { ascending: false }),
       supa.from('rut_tak').select('*').order('ar', { ascending: false }),
-      supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300)
+      supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300),
+      /* Bara inbjudningarna, inte alla anteckningar: de läses per
+         person i detaljpanelen. Går frågan fel blir mängden tom, och
+         då visas ingen pill alls. Hellre det än en pill som påstår
+         något vi inte vet. */
+      supa.from('admin_noteringar').select('om_profil').eq('text', INBJUDAN_NOT)
     ]);
 
     S.leads = leads.data || [];
@@ -244,6 +270,7 @@ const NXAdmin = (function () {
     S.uppgifter = uppg.data || [];
     S.rutTak = rt.data || [];
     S.auditAktorer = audit.data || [];
+    S.inbjudna = new Set((inbjudna.data || []).map(n => n.om_profil));
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */
@@ -414,9 +441,140 @@ const NXAdmin = (function () {
     return e ? (e.name || '—') : '—';
   }
 
+  /* ============================================================
+     RUTORNA
+
+     .nx-fraga står med opacity 0 tills den får klassen open
+     (nextrum-vy.css). bekräfta() i NXStudie sätter den, men adminvyns
+     egna rutor gjorde det aldrig. I drift blev varje sådan ruta ett
+     osynligt lager över hela skärmen: sidan slutade rulla, och nästa
+     klick stängde lagret eller hamnade i ett fält ingen såg. Kontakta,
+     Skapa elev, Bjud in och Ta in i poolen gick alltså inte att använda.
+
+     Därför EN väg in för varje ruta i adminvyn. Den gör det som alla
+     rutor behöver och som var och en hade glömt något av:
+
+       1. lägger in rutan och tvingar en omritning INNAN open sätts,
+          annars ser webbläsaren aldrig starttillståndet och
+          övergången uteblir
+       2. låser rullningen bakom, och släpper den först när den SISTA
+          rutan stängts: en bekräftelse kan ligga ovanpå
+       3. flyttar fokus in, och tillbaka dit det kom ifrån
+       4. håller Tab inne i rutan
+       5. stänger på Escape och på klick på bakgrunden, men bara när
+          rutan är den översta
+       6. går INTE att stänga medan den arbetar, se nedan
+
+     Svarar med stäng(). o.vidStängning körs en gång, efter att rutan
+     tagits bort. o.först väljer fältet som får fokus, o.återFokus ger
+     elementet fokus ska tillbaka till när det ursprungliga ritats om
+     under tiden (detaljpanelen ritas om i sin helhet).
+
+     MEDAN RUTAN ARBETAR. En ruta arbetar när något i den bär
+     aria-busy="true", och det sätter medan() på knappen som trycktes.
+     Då stänger varken Escape eller bakgrundsklicket, och knappar
+     märkta data-ruta-avbryt stängs av. Förut gick alla tre att använda
+     under "Skickar…": rutan försvann, men arbetet fortsatte. Inbjudan
+     gick iväg, barnen skapades, och det som gick fel skrevs i en ruta
+     som inte längre fanns. Admin fick aldrig veta att familjen fått
+     ett mejl men saknade sitt barn. stäng() själv spärras inte: koden
+     i rutan anropar den när arbetet lyckats, och det är just då.
+     ============================================================ */
+  const FOKUSERBARA = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]),'
+    + ' select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  function öppnaRuta(ruta, o) {
+    const opt = o || {};
+    const tidigare = document.activeElement;
+    let stängd = false;
+    let nedPå = null;
+
+    const överst = () => {
+      const alla = document.querySelectorAll('.nx-fraga');
+      return alla.length > 0 && alla[alla.length - 1] === ruta;
+    };
+    const fokusbara = () => Array.from(ruta.querySelectorAll(FOKUSERBARA))
+      .filter(el => !el.closest('[hidden]')
+        && (el.offsetParent !== null || el === document.activeElement));
+    const arbetar = () => !!ruta.querySelector('[aria-busy="true"]');
+
+    /* Avbryt-knapparna följer aria-busy. En observatör i stället för
+       ett anrop i varje flöde: medan() vet inte vilken ruta knappen
+       sitter i, och ett flöde som glömmer att låsa är precis det fel
+       som ska bort. childList också, för en arbetande knapp som tas
+       bort ur rutan ändrar inget attribut men låser upp den. */
+    const lås = () => {
+      const nu = arbetar();
+      ruta.querySelectorAll('[data-ruta-avbryt]').forEach(k => { k.disabled = nu; });
+    };
+    const vakt = new MutationObserver(lås);
+    vakt.observe(ruta, { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-busy'] });
+
+    /* På document och inte på rutan: klickar man på en yta i rutan
+       som inte tar fokus hamnar fokus på body, och då hade Escape
+       aldrig nått fram. Överst-kontrollen gör att en bekräftelse som
+       öppnats ovanpå stänger sig själv, inte rutan under. */
+    function tangent(ev) {
+      if (stängd || !överst()) return;
+      if (ev.key === 'Escape') {
+        ev.preventDefault();
+        if (!arbetar()) stäng();
+        return;
+      }
+      if (ev.key !== 'Tab') return;
+      const kan = fokusbara();
+      if (!kan.length) { ev.preventDefault(); return; }
+      const först = kan[0], sist = kan[kan.length - 1];
+      if (!ruta.contains(document.activeElement)) {
+        ev.preventDefault(); (ev.shiftKey ? sist : först).focus();
+      } else if (ev.shiftKey && document.activeElement === först) {
+        ev.preventDefault(); sist.focus();
+      } else if (!ev.shiftKey && document.activeElement === sist) {
+        ev.preventDefault(); först.focus();
+      }
+    }
+
+    function stäng() {
+      if (stängd) return;
+      stängd = true;
+      vakt.disconnect();
+      document.removeEventListener('keydown', tangent);
+      ruta.remove();
+      if (!document.querySelector('.nx-fraga.open')) document.body.style.overflow = '';
+      const ny = typeof opt.återFokus === 'function' ? opt.återFokus() : null;
+      const åter = ny && document.contains(ny) ? ny
+        : tidigare && document.contains(tidigare) ? tidigare : null;
+      if (åter && typeof åter.focus === 'function') åter.focus();
+      if (typeof opt.vidStängning === 'function') opt.vidStängning();
+    }
+
+    /* Bakgrundsklicket räknas bara när det också BÖRJADE på
+       bakgrunden. Den som markerar text i ett fält och släpper
+       musen utanför rutan ska inte förlora allt hen skrivit. */
+    ruta.addEventListener('mousedown', ev => { nedPå = ev.target; });
+    ruta.addEventListener('click', ev => {
+      const började = nedPå;
+      nedPå = null;
+      if (ev.target === ruta && började === ruta && överst() && !arbetar()) stäng();
+    });
+    document.addEventListener('keydown', tangent);
+
+    document.body.appendChild(ruta);
+    document.body.style.overflow = 'hidden';
+    void ruta.offsetWidth;
+    ruta.classList.add('open');
+
+    const först = (opt.först && ruta.querySelector(opt.först))
+      || fokusbara().find(el => /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))
+      || fokusbara()[0];
+    if (först) först.focus();
+    return stäng;
+  }
+
   /* En ruta med ett eget fält. bekräfta() räcker när svaret är ja
      eller nej; här behövs ett val eller en text. läs() får rutan och
-     svarar { värde } eller { fel } — ett fel stänger inte rutan. */
+     svarar { värde } eller { fel }. Ett fel stänger inte rutan.
+     Avbruten ruta svarar null. */
   function fråga(o) {
     return new Promise(klar => {
       const ruta = document.createElement('div');
@@ -426,26 +584,195 @@ const NXAdmin = (function () {
         + '<h3 id="fr-t">' + esc(o.titel) + '</h3>'
         + (o.text ? '<p>' + esc(o.text) + '</p>' : '')
         + o.innehåll
-        + '<p class="ok-msg" id="fr-msg"></p>'
+        + '<p class="ok-msg" id="fr-msg" role="status"></p>'
         + '<div class="nx-fraga-knappar">'
-        + '<button type="button" class="btn btn-ghost" data-fr="nej">Avbryt</button>'
+        + '<button type="button" class="btn btn-ghost" data-fr="nej" data-ruta-avbryt>Avbryt</button>'
         + '<button type="button" class="btn btn-primary" data-fr="ja">' + esc(o.knapp) + '</button>'
         + '</div></div>';
-      document.body.appendChild(ruta);
-      document.body.style.overflow = 'hidden';
 
-      const stäng = v => { ruta.remove(); document.body.style.overflow = ''; klar(v); };
-      ruta.addEventListener('click', ev => {
-        if (ev.target === ruta || ev.target.closest('[data-fr="nej"]')) { stäng(null); return; }
-        if (!ev.target.closest('[data-fr="ja"]')) return;
-        const svar = o.läs(ruta) || {};
-        if (svar.fel) { säg($('#fr-msg', ruta), svar.fel, false); return; }
-        stäng(svar.värde);
+      let svar = null;
+      const stäng = öppnaRuta(ruta, {
+        först: 'input, textarea, select, [data-fr="ja"]',
+        vidStängning: () => klar(svar)
       });
-      ruta.addEventListener('keydown', ev => { if (ev.key === 'Escape') stäng(null); });
-      const först = ruta.querySelector('input, textarea, select') || ruta.querySelector('[data-fr="ja"]');
-      if (först) först.focus();
+      ruta.addEventListener('click', ev => {
+        if (ev.target.closest('[data-fr="nej"]')) { stäng(); return; }
+        if (!ev.target.closest('[data-fr="ja"]')) return;
+        const s = o.läs(ruta) || {};
+        if (s.fel) { säg($('#fr-msg', ruta), s.fel, false); return; }
+        svar = s.värde;
+        stäng();
+      });
     });
+  }
+
+  /* ============================================================
+     BARNEN I EN RUTA
+
+     Samma fält i Ny familj och i Lägg till barn, så att ett barn som
+     läggs in den ena vägen ser ut som ett som läggs in den andra.
+
+     Årskursen är samma lista som familjen väljer ur i sin egen vy.
+     Matchningen jämför årskurser som text, och "åk 8" och "Åk 8" är
+     två olika saker för den.
+
+     Ämnena är en text[] som inte får vara null (förvalet är en tom
+     array). Fritexten delas på komma och tomma bitar tas bort: förut
+     gick strängen rakt in, och då svarade databasen 22P02 på
+     "matte, svenska" och 23502 på ett tomt fält.
+     ============================================================ */
+  const ÅRSKURSER = ['Åk 1', 'Åk 2', 'Åk 3', 'Åk 4', 'Åk 5', 'Åk 6', 'Åk 7', 'Åk 8', 'Åk 9',
+    'Gymnasiet år 1', 'Gymnasiet år 2', 'Gymnasiet år 3'];
+
+  function delaÄmnen(text) {
+    return String(text || '').split(',').map(x => x.trim()).filter(Boolean);
+  }
+
+  let barnRäknare = 0;
+
+  function barnFält() {
+    barnRäknare++;
+    const id = 'nb-' + barnRäknare;
+    return '<fieldset data-barn style="border:1px solid var(--ln);border-radius:12px;'
+      + 'padding:10px 14px 2px;margin:12px 0 0;min-width:0">'
+      + '<legend style="padding:0 6px;font-size:.82rem;font-weight:600">Barn</legend>'
+      + '<div class="ag-faltrad">'
+      + '<div class="fgroup"><label for="' + id + '-namn">Namn</label>'
+      + '<input class="inp" id="' + id + '-namn" data-barn-falt="namn" maxlength="120" autocomplete="off"></div>'
+      + '<div class="fgroup"><label for="' + id + '-ak">Årskurs</label>'
+      + '<select class="sel" id="' + id + '-ak" data-barn-falt="arskurs"><option value="">Välj</option>'
+      + ÅRSKURSER.map(a => '<option>' + esc(a) + '</option>').join('') + '</select></div>'
+      + '</div>'
+      + '<div class="fgroup"><label for="' + id + '-amnen">Ämnen, med komma emellan</label>'
+      + '<input class="inp" id="' + id + '-amnen" data-barn-falt="amnen" maxlength="300"'
+      + ' placeholder="t.ex. Matematik, Engelska" autocomplete="off"></div>'
+      + '<button type="button" class="btn btn-ghost btn-sm" data-barn-bort'
+      + ' style="min-height:44px;margin:0 0 12px">Ta bort barnet</button>'
+      + '</fieldset>';
+  }
+
+  /* Rubrikerna numreras om efter varje ändring, och Ta bort döljs när
+     bara ett barn är kvar: en ruta för barn utan fält för barn är en
+     ruta som inte kan göra det den heter. */
+  function numreraBarn(host) {
+    const alla = Array.from(host.querySelectorAll('[data-barn]'));
+    alla.forEach((f, i) => {
+      f.querySelector('legend').textContent = 'Barn ' + (i + 1);
+      const bort = f.querySelector('[data-barn-bort]');
+      bort.hidden = alla.length < 2;
+      bort.setAttribute('aria-label', 'Ta bort barn ' + (i + 1));
+    });
+  }
+
+  /* host är elementet barnfälten ligger i. Knappen "Lägg till ett
+     barn till" ska ha data-barn-ny och ligga i samma ruta. */
+  function kopplaBarn(ruta, host) {
+    host.insertAdjacentHTML('beforeend', barnFält());
+    numreraBarn(host);
+    ruta.addEventListener('click', ev => {
+      if (ev.target.closest('[data-barn-ny]')) {
+        host.insertAdjacentHTML('beforeend', barnFält());
+        numreraBarn(host);
+        const sista = host.querySelectorAll('[data-barn]');
+        sista[sista.length - 1].querySelector('[data-barn-falt="namn"]').focus();
+        return;
+      }
+      const bort = ev.target.closest('[data-barn-bort]');
+      if (bort && host.contains(bort)) {
+        bort.closest('[data-barn]').remove();
+        numreraBarn(host);
+        const ny = ruta.querySelector('[data-barn-ny]');
+        if (ny) ny.focus();
+      }
+    });
+  }
+
+  /* Svarar { barn: [...] } eller { fel }. Ett barn där inget fält är
+     ifyllt räknas inte; ett barn med årskurs men utan namn är ett fel,
+     inte något som tyst försvinner. */
+  function läsBarn(host) {
+    const barn = [];
+    const alla = Array.from(host.querySelectorAll('[data-barn]'));
+    for (let i = 0; i < alla.length; i++) {
+      const f = alla[i];
+      const värde = n => f.querySelector('[data-barn-falt="' + n + '"]').value.trim();
+      const namn = värde('namn'), årskurs = värde('arskurs'), ämnen = delaÄmnen(värde('amnen'));
+      if (!namn && !årskurs && !ämnen.length) continue;
+      if (!namn) {
+        return { fel: 'Barn ' + (i + 1) + ' behöver ett namn.',
+          fält: f.querySelector('[data-barn-falt="namn"]') };
+      }
+      barn.push({ namn: namn, årskurs: årskurs || null, ämnen: ämnen, fält: f });
+    }
+    return { barn: barn };
+  }
+
+  /* Ett barn i taget och i den ordning de står. Två skäl: ett fel ska
+     gå att peka ut ("Nils kunde inte sparas"), och familjens härledda
+     match följer det äldsta barnet, så ordningen är inte likgiltig. */
+  async function skapaBarn(parentId, lista) {
+    const skapade = [], misslyckade = [];
+    for (const b of lista) {
+      const { data, error } = await supa.from('students')
+        .insert({ parent_id: parentId, name: b.namn, grade: b.årskurs, subjects: b.ämnen })
+        .select('id').single();
+      if (error || !data) {
+        misslyckade.push({ namn: b.namn, fält: b.fält,
+          fel: error ? felText(error) : 'Databasen svarade utan rad.' });
+      } else {
+        skapade.push({ namn: b.namn, id: data.id, fält: b.fält });
+      }
+    }
+    return { skapade: skapade, misslyckade: misslyckade };
+  }
+
+  /* "Alva och Nils", "Alva, Nils och Elin". */
+  function uppräkning(lista) {
+    if (lista.length < 2) return lista.join('');
+    return lista.slice(0, -1).join(', ') + ' och ' + lista[lista.length - 1];
+  }
+
+  /* En punkt sist, men bara en. Databasens meddelanden slutar ibland
+     med punkt och ibland inte, och en mening som byggs av två delar
+     fick annars två punkter i rad. */
+  function punkt(text) {
+    const t = String(text == null ? '' : text).trim();
+    return /[.!?]$/.test(t) ? t : t + '.';
+  }
+
+  /* Vad som INTE gick, en mening per barn, med databasens egen
+     förklaring. Tom sträng när allt gick. */
+  function barnFel(res) {
+    return res.misslyckade.map(m => m.namn + ' kunde inte sparas: ' + punkt(m.fel)).join(' ');
+  }
+
+  /* ------------------------------------------------------------
+     LÄNKAR TILL MEJL OCH TELEFON
+
+     Ritas när listan eller panelen ritas, aldrig statiskt i sidan:
+     NX.initHeader() skriver om varje mailto: som finns när sidan
+     laddas till Nextrums egen adress.
+     ------------------------------------------------------------ */
+  function mejlHref(adress) {
+    return 'mailto:' + encodeURIComponent(String(adress || '').trim()).replace(/%40/g, '@');
+  }
+
+  /* Bara siffror och plustecken. Numret är fritext från ett formulär,
+     och "070-111 22 33 (kvällar)" ska bli ett nummer telefonen kan
+     ringa, inte en trasig länk. För kort för att vara ett nummer ger
+     ingen länk alls. */
+  function telHref(nummer) {
+    const rent = String(nummer || '').replace(/[^\d+]/g, '');
+    return rent.replace(/\D/g, '').length >= 5 ? 'tel:' + rent : null;
+  }
+
+  /* En funktion som inte finns i databasen än: PostgREST svarar
+     PGRST202 (och 404), Postgres själv 42883. Det är ett läge, inte
+     ett fel att visa. */
+  function saknasFunktion(fel, status) {
+    if (status === 404) return true;
+    const kod = fel && fel.code;
+    return kod === 'PGRST202' || kod === '42883';
   }
 
   /* Anteckningarna låg här som en egen panel med en egen
@@ -503,9 +830,14 @@ const NXAdmin = (function () {
      avsändare och hela tråden där ni sedan letar efter den.
 
      Systemet stämplar kontaktad_at när utkastet öppnas. Det är inte
-     bevis på att mejlet skickades — men "vi öppnade ett svar till
+     bevis på att mejlet skickades, men "vi öppnade ett svar till
      den här personen" är oändligt mycket mer än vad som fanns förut,
      och stämpeln går att ta bort om man ångrar sig.
+
+     o.efterat({ till, amne }) körs när utkastet öppnats. Svarar den
+     med en text har något inte gått att spara här, och rutan står
+     kvar med den texten: utkastet är redan öppet, så det enda som
+     återstår är att säga vad som INTE blev noterat.
      ============================================================ */
   function kontaktaRuta(o) {
     const ruta = document.createElement('div');
@@ -516,37 +848,51 @@ const NXAdmin = (function () {
       + '<p>Utkastet öppnas i ditt mejlprogram med din adress som avsändare, så att '
       + 'svaret kommer till dig. Ändra fritt innan du skickar.</p>'
       + '<div class="fgroup"><label for="kt-till">Till</label>'
-      + '<input class="inp" id="kt-till" value="' + esc(o.till || '') + '"></div>'
+      + '<input class="inp" id="kt-till" type="email" value="' + esc(o.till || '') + '"></div>'
       + '<div class="fgroup" style="margin-top:12px"><label for="kt-amne">Ämne</label>'
       + '<input class="inp" id="kt-amne" value="' + esc(o.amne || '') + '"></div>'
       + '<div class="fgroup" style="margin-top:12px"><label for="kt-text">Meddelande</label>'
       + '<textarea class="inp" id="kt-text" rows="12">' + esc(o.text || '') + '</textarea></div>'
-      + '<p class="ok-msg" id="kt-msg"></p>'
+      + '<p class="ok-msg" id="kt-msg" role="status"></p>'
       + '<div class="nx-fraga-knappar">'
-      + '<button type="button" class="btn btn-ghost" data-kt-stang>Avbryt</button>'
+      + '<button type="button" class="btn btn-ghost" data-kt-stang data-ruta-avbryt>Avbryt</button>'
       + '<button type="button" class="btn btn-primary" id="kt-oppna">Öppna i mejl</button>'
       + '</div></div>';
 
-    document.body.appendChild(ruta);
-    document.body.style.overflow = 'hidden';
-    const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
+    const stäng = öppnaRuta(ruta, { först: o.först || null, återFokus: o.återFokus });
     ruta.addEventListener('click', ev => {
-      if (ev.target === ruta || ev.target.closest('[data-kt-stang]')) stäng();
+      if (ev.target.closest('[data-kt-stang]')) stäng();
     });
 
-    $('#kt-oppna', ruta).addEventListener('click', async () => {
+    const öppna = $('#kt-oppna', ruta);
+    öppna.addEventListener('click', async () => {
+      const msg = $('#kt-msg', ruta);
+      rensa(msg);
       const till = $('#kt-till', ruta).value.trim();
-      if (!till) { säg($('#kt-msg', ruta), 'Fyll i en adress.', false); return; }
+      if (!till) { säg(msg, 'Fyll i en adress.', false); return; }
+      const amne = $('#kt-amne', ruta).value;
 
       /* encodeURIComponent på både ämne och kropp. Ett svenskt
          tecken eller en radbrytning i klartext kapar annars mejlet
          på vägen till mejlprogrammet. */
       const url = 'mailto:' + encodeURIComponent(till)
-        + '?subject=' + encodeURIComponent($('#kt-amne', ruta).value)
+        + '?subject=' + encodeURIComponent(amne)
         + '&body=' + encodeURIComponent($('#kt-text', ruta).value);
       window.location.href = url;
 
-      if (typeof o.efterat === 'function') await o.efterat();
+      if (typeof o.efterat === 'function') {
+        let fel = null;
+        await medan(öppna, 'Sparar…', async () => {
+          try { fel = await o.efterat({ till: till, amne: amne }); }
+          catch (e) { fel = felText(e); }
+        });
+        if (typeof fel === 'string' && fel) {
+          säg(msg, 'Utkastet öppnades, men det gick inte att notera här: ' + punkt(fel), false);
+          const avbryt = ruta.querySelector('[data-kt-stang]');
+          if (avbryt) avbryt.textContent = 'Stäng';
+          return;
+        }
+      }
       stäng();
     });
   }
@@ -557,10 +903,11 @@ const NXAdmin = (function () {
   };
 
   return {
-    ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, LEAD_LAGE, S, SH_LAGE,
-    UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
-    hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
-    kortDatum, läge, matchar, märkFlik, namnFör, närText, pill, rad, skriv,
-    tabell, tomtText, visa, väljare, rita
+    ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, INBJUDAN_NOT, LEAD_LAGE, S, SH_LAGE,
+    UTB_LAGE, ÅRSKURSER, barnFel, dagarSedan, delaÄmnen, elevHjälpare, elevNamn, fråga,
+    funktionsFel, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag,
+    kontaktaRuta, kopplaBarn, kortDatum, läge, läsBarn, matchar, mejlHref, märkFlik,
+    namnFör, närText, numreraBarn, pill, punkt, rad, saknasFunktion, skapaBarn, skriv, tabell, telHref,
+    tomtText, uppräkning, visa, väljare, öppnaRuta, rita
   };
 })();

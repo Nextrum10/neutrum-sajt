@@ -23,8 +23,23 @@
     bokningar: [], trad: null, kal: null, olästa: {},
     minAvatar: null, matTyp: 'fil', tillgang: [], blockerade: [],
     laxor: [], laxFilter: 'attgora', laxräkning: {}, minaRapporter: [], avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
-    senaste: {}
+    senaste: {},
+    /* Schemat ritar lediga och ej tillgängliga timmar först när
+       veckotiderna faktiskt är hämtade. En tom lista innan dess hade
+       ritat varje timme som "Ej tillgänglig" i en halv sekund. */
+    tillgangHämtad: false, upptagna: new Set(),
+    /* Om elevlistan faktiskt kom. Ett pass vars elev inte finns bland
+       dina kan inte rapporteras (rapportHinder), men en tom lista för
+       att frågan föll är inte samma sak. Då hade varje pass stått som
+       "inte kopplad till dig längre" för ett nätverksfel. */
+    eleverHämtade: false
   };
+
+  /* Hål 3, samma ord som databasen använder (program 2, Fas 1.4). */
+  const UTAN_ELEV = 'Passet saknar elev. Kontakta Nextrum.';
+  /* Passet är ditt men eleven är matchad med någon annan, till
+     exempel efter ett byte (Fas 1.6). Databasen nekar rapporten. */
+  const INTE_DIN_ELEV = 'Eleven är inte kopplad till dig längre. Kontakta Nextrum.';
 
   const elev = () => S.elever.find(e => e.id === S.aktivElev) || null;
 
@@ -93,9 +108,22 @@
 
   /* ============================================================
      FAMILJER OCH ELEVER
-     Familjerna hämtas ur profiles, inte ur students: en familj kan
-     vara matchad innan de lagt in sitt barn, och då måste du kunna
-     skriva till dem och fråga varför.
+
+     Två listor som INTE täcker varandra, och koden får inte anta det.
+
+     Familjerna kommer ur profiles (matched_tutor_id = du). Det är
+     familjens härledda kopia av matchningen, och det är den chatten
+     och profilpolicyn går på: en familj här är en familj du kan
+     skriva till.
+
+     Eleverna kommer ur students, och sedan program 2 Fas 1.6 visar
+     databasen bara de elever DU är matchad med. Syskon syns inte
+     längre. Följden åt båda hållen:
+       · en familj kan ha barn som inte finns i S.elever (syskonen)
+       · en elev kan höra till en familj som inte finns i S.familjer
+         (ett syskon vars familj är kopplad till en annan
+         studiehjälpare). Den eleven visas ändå, men byter inte
+         familj i chatten, eftersom den tråden inte går att skriva i.
      ============================================================ */
   async function laddaFamiljer() {
     const { data, error } = await supa
@@ -107,20 +135,30 @@
     }
   }
 
+  /* Filtret står här fast policyn redan gör samma sak. Ett konto som
+     både är studiehjälpare och admin ser ALLA elever genom
+     adminpolicyn, och då hade vyn räknat hela registret som sina. */
   async function laddaElever() {
     const { data, error } = await supa
       .from('students')
       .select('id, name, grade, school, goals, subjects, parent_id')
+      .eq('matched_tutor_id', S.user.id)
+      .neq('match_status', 'pending')
       .order('created_at');
     if (error) { console.warn(error.message); return; }
     S.elever = data || [];
+    S.eleverHämtade = true;
     $('#kpi-elever').textContent = S.elever.length;
     ritaStatistik();
   }
 
-  /* Elevlistan visar bara den familj man jobbar med just nu. */
+  const familjSyns = id => S.familjer.some(f => f.id === id);
+
+  /* Elevlistan visar den familj man jobbar med just nu, plus de
+     elever vars familj inte finns bland dina (se ovan). De går inte
+     att nå genom ett familjeval, så de får stå med i varje. */
   function minaElever() {
-    return S.elever.filter(e => !S.aktivFamilj || e.parent_id === S.aktivFamilj);
+    return S.elever.filter(e => !S.aktivFamilj || e.parent_id === S.aktivFamilj || !familjSyns(e.parent_id));
   }
 
   function fyllElevväljare() {
@@ -128,7 +166,7 @@
     const val = $('#elev-val');
 
     if (!mina.length) {
-      val.innerHTML = '<option value="">Ingen elev tillagd än</option>';
+      val.innerHTML = '<option value="">Ingen elev kopplad till dig än</option>';
       val.disabled = true;
       S.aktivElev = null;
       $('#elev-antal').textContent = '';
@@ -159,9 +197,8 @@
      alternativ är ingen fråga.
      ------------------------------------------------------------ */
   function nästaPassFör(elevId) {
-    const idag = isoFor(new Date());
     return (S.bokningar || [])
-      .filter(b => b.student_id === elevId && b.wanted_date >= idag && b.status !== 'cancelled')
+      .filter(b => b.student_id === elevId && ärKommande(b))
       .sort((a, b) => (a.wanted_date + (a.wanted_time || ''))
         .localeCompare(b.wanted_date + (b.wanted_time || '')))[0] || null;
   }
@@ -227,8 +264,13 @@
     const host = $('#elev-profil');
     const e = elev();
     if (!e) {
+      /* Familjen lägger inte in barnen längre (sedan v14 gör Nextrum
+         det och matchar per elev), så att be familjen om det var fel
+         råd. Tom är listan för att ingen elev är matchad med dig. */
       host.innerHTML = '<div class="empty" style="margin-top:14px"><b>Ingen elev än</b>'
-        + '<br><span>Familjen lägger in sitt barn i sin vy. Skriv till dem om det dröjer.</span></div>';
+        + '<br><span>' + esc(S.elever.length
+            ? 'Ingen av familjens elever är kopplad till dig. Välj en annan familj, eller hör av dig till Nextrum om något ser fel ut.'
+            : 'Nextrum kopplar ihop dig med en elev. Då syns eleven här.') + '</span></div>';
       return;
     }
     const familj = S.familjer.find(f => f.id === e.parent_id);
@@ -336,16 +378,21 @@
   }
 
   /* Vem tråden gäller, sett från studiehjälparen. Det är ELEVEN man
-     jobbar med och tänker på — familjens namn säger inget den som har
-     tre elever, och två av dem kan ha föräldrar med samma efternamn.
-     Eleven står därför först, föräldern under. Har familjen inte lagt
-     in sitt barn än står föräldern kvar som rubrik. */
+     jobbar med och tänker på, för familjens namn säger inget den som
+     har tre elever, och två av dem kan ha föräldrar med samma
+     efternamn. Eleven står därför först, föräldern under.
+
+     "Barnen" är bara DINA elever i familjen. S.elever har inte
+     syskonen sedan Fas 1.6, och det är rätt: rubriken ska inte
+     heller ha dem. Har du ingen elev i familjen (matchningen ändrad
+     eller pausad på ett sätt profilen inte hunnit följa) står
+     föräldern kvar som rubrik. */
   function trådNamn(f) {
     const förälder = f.full_name || f.email || 'Familj';
     const barn = S.elever.filter(e => e.parent_id === f.id).map(e => e.name).filter(Boolean);
     return barn.length
       ? { rubrik: barn.join(' & '), under: 'Förälder: ' + förälder, förnamn: String(barn[0]).split(' ')[0] }
-      : { rubrik: förälder, under: f.email && f.email !== förälder ? f.email : 'Inget barn inlagt än', förnamn: '' };
+      : { rubrik: förälder, under: f.email && f.email !== förälder ? f.email : 'Ingen elev kopplad till dig', förnamn: '' };
   }
 
   function ritaChattlista() {
@@ -507,7 +554,7 @@
       { fel: titel.length > 200, text: 'Rubriken är för lång. Håll den under 200 tecken.', falt: $('#lx-titel') },
       { fel: !!datum && datum < isoFor(new Date()), text: 'Deadline kan inte ligga bakåt i tiden.', falt: $('#lx-datum') }
     ]);
-    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+    if (fel) { säg(msg, fel, false); return; }
 
     await medan($('#lx-spara'), 'Skapar…', async () => {
       const { error } = await supa.from('homework').insert({
@@ -557,9 +604,12 @@
     }
 
     host.innerHTML = laddar();
+    /* student_id följer med, fast frågan redan gäller en elev. Utan
+       den gick läxorna inte att para ihop med ett pass: filtret i
+       passdetaljen jämförde mot ett fält som aldrig hämtats. */
     const { data, error } = await supa
       .from('homework')
-      .select('id, title, instructions, subject, due_date, status, completed_at')
+      .select('id, title, instructions, subject, due_date, status, completed_at, student_id')
       .eq('student_id', S.aktivElev)
       .order('due_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
@@ -567,7 +617,7 @@
     if (error) { host.innerHTML = tomt('Kunde inte hämta läxorna', felText(error)); return; }
     if (!data.length) {
       S.laxor = [];
-      host.innerHTML = tomt('Inga läxor än', 'Skapa den första med knappen ovanför — den dyker upp hos familjen direkt.');
+      host.innerHTML = tomt('Inga läxor än', 'Skapa den första med knappen ovanför. Den dyker upp hos familjen direkt.');
       laxRakning();
       return;
     }
@@ -642,7 +692,7 @@
       { fel: !ämne, text: 'Fyll i vilket ämne det gäller.', falt: $('#pg-amne') },
       { fel: !område, text: 'Fyll i vilket område inom ämnet.', falt: $('#pg-omrade') }
     ]);
-    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+    if (fel) { säg(msg, fel, false); return; }
 
     await medan($('#pg-spara'), 'Sparar…', async () => {
       /* upsert på (elev, ämne, område): samma område igen flyttar
@@ -691,7 +741,7 @@
 
     if (!data.length) {
       S.progressAntal = 0;
-      host.innerHTML = tomt('Inga områden än', 'Lägg till det första ovanför — det är så familjen ser att det går framåt.');
+      host.innerHTML = tomt('Inga områden än', 'Lägg till det första ovanför. Det är så familjen ser att det går framåt.');
       ritaElevOversikt();
       return;
     }
@@ -755,7 +805,7 @@
       + rad('Den här månaden', t.timmar_manad, pengar(t.timmar_manad))
       + rad('Totalt', t.timmar_totalt, pengar(t.timmar_totalt))
       + '<p class="tim-not">' + (rate
-          ? 'Räknat på ' + kr(rate) + ' i timmen. Bara genomförda pass räknas — ett bokat pass blir en timme först när du skrivit rapporten.'
+          ? 'Räknat på ' + kr(rate) + ' i timmen. Bara genomförda pass räknas. Ett bokat pass blir en timme först när du skrivit rapporten.'
           : 'Din timpenning är inte satt än, så ersättningen kan inte räknas ut. Hör av dig till oss så fyller vi i den.')
       + '</p>';
 
@@ -863,6 +913,41 @@
   let tidVäntar = 0;
   const önskadeTimmar = vd => new Set(tidÖnskat.get(vd) || timmarFör(vd));
 
+  /* Hur många kommande pass som ligger på varje timme en veckodag,
+     alla kommande veckor sammanräknade. Tiderna är veckovisa, så en
+     timme man tar bort gäller varje sådan dag, och då är det ALLA
+     passen på den som berörs, inte bara den valda dagens.
+
+     Ett tvåtimmarspass kl. 16 ligger på både 16 och 17. */
+  function passPerTimme(veckodag) {
+    const ut = {};
+    (S.bokningar || []).filter(ärKommande).forEach(b => {
+      if (veckodagFör(b.wanted_date) !== veckodag) return;
+      const h0 = parseInt(String(b.wanted_time || ''), 10);
+      if (isNaN(h0)) return;
+      const n = Math.max(1, Math.ceil((Number(b.duration_min) || 60) / 60));
+      for (let i = 0; i < n; i++) ut[h0 + i] = (ut[h0 + i] || 0) + 1;
+    });
+    return ut;
+  }
+
+  /* Knappens innehåll. Markerad eller inte syntes förut bara som
+     färg (mossgrön eller vit). Nu har läget en form: ringen är samma
+     "Ledig" som i schemat och bokningen, ringen med snedstreck samma
+     "Ej tillgänglig". Antalet pass står i ord. */
+  function timInnehåll(h, markerad, antal) {
+    return NXStudie.ikon(markerad ? 'ledig' : 'ej')
+      + '<span>' + tvåsiff(h) + ':00</span>'
+      + (antal
+          ? '<span style="font-family:var(--f-sans,inherit);font-size:.74rem;font-weight:600;letter-spacing:0">'
+            + antal + ' pass</span>'
+          : '');
+  }
+
+  function timEtikett(h, antal) {
+    return tvåsiff(h) + ':00' + (antal ? ', ' + antal + ' kommande pass' : '');
+  }
+
   function ritaTider() {
     const kal = $('#tid-kalender'), dagHost = $('#tid-dag');
     if (!kal || !dagHost) return;
@@ -886,19 +971,37 @@
     } else {
       const vd = veckodagFör(k.dag);
       const mina = önskadeTimmar(vd);
-      /* En tid utanför 07–21, från en äldre vy eller från admin, ska
-         synas som en knapp. En tid man inte ser går inte att ta bort. */
-      const från = Math.min(TID_FRÅN, ...mina), till = Math.max(TID_TILL, ...mina);
+      const pass = passPerTimme(vd);
+      const passTimmar = Object.keys(pass).map(Number);
+      /* En tid utanför 07 till 21, från en äldre vy eller från admin,
+         ska synas som en knapp. En tid man inte ser går inte att ta
+         bort. Samma sak för ett pass utanför spannet: antalet ska stå
+         någonstans. */
+      const från = Math.min(TID_FRÅN, ...mina, ...passTimmar);
+      const till = Math.max(TID_TILL, ...mina, ...passTimmar);
       let knappar = '';
       for (let h = från; h <= till; h++) {
+        const n = pass[h] || 0;
         knappar += '<button type="button" class="bk-slot tk-tim" data-timme="' + h + '"'
-          + ' aria-pressed="' + (mina.has(h) ? 'true' : 'false') + '">' + tvåsiff(h) + ':00</button>';
+          + ' style="display:inline-flex;align-items:center;gap:6px"'
+          + ' aria-label="' + esc(timEtikett(h, n)) + '"'
+          + ' aria-pressed="' + (mina.has(h) ? 'true' : 'false') + '">'
+          + timInnehåll(h, mina.has(h), n) + '</button>';
       }
+      const dagar = DAGNAMN[vd].toLowerCase() + 'ar';
       dagHost.innerHTML = '<p class="bk-kal-dagnamn">' + esc(DAGNAMN[vd] + ' ' + datumText(k.dag)) + '</p>'
         + '<p class="tk-hjalp">Tryck på timmarna du kan. De gäller <b>varje ' + esc(DAGNAMN[vd].toLowerCase())
-        + '</b> — du behöver inte spara.</p>'
-        + '<div class="mv-tider tk-timmar" role="group" aria-label="' + esc('Timmar ' + DAGNAMN[vd].toLowerCase() + 'ar') + '">'
-        + knappar + '</div>';
+        + '</b>, och du behöver inte spara.'
+        + (passTimmar.length
+            ? ' Vid en timme med pass står hur många kommande pass som ligger där, alla kommande ' + esc(dagar) + ' räknade.'
+            : '')
+        + '</p>'
+        + '<div class="mv-tider tk-timmar" role="group" aria-label="' + esc('Timmar ' + dagar) + '">'
+        + knappar + '</div>'
+        + '<ul class="nx-forklaring" aria-label="Teckenförklaring">'
+        + '<li>' + NXStudie.ikon('ledig') + 'Familjen kan boka</li>'
+        + '<li>' + NXStudie.ikon('ej') + 'Ej tillgänglig</li>'
+        + '</ul>';
     }
 
     const sam = $('#tid-sammanfattning');
@@ -907,7 +1010,7 @@
         ? 'Dina tider: ' + (S.tillgang || []).slice()
             .sort((a, b) => a.weekday - b.weekday || String(a.start_time).localeCompare(String(b.start_time)))
             .map(r => DAGNAMN[r.weekday].slice(0, 3).toLowerCase() + ' ' + String(r.start_time).slice(0, 5)
-                      + '–' + String(r.end_time).slice(0, 5)).join(' · ')
+                      + ' till ' + String(r.end_time).slice(0, 5)).join(' · ')
         : 'Inga tider inlagda än. Familjen kan fortfarande önska tider, men ingen bokning bekräftas direkt.';
     }
   }
@@ -915,16 +1018,43 @@
   /* En timme av eller på för veckodagen. Knappen svarar direkt, och
      vyn ritas om från databasen när alla tryck är skrivna. Varje steg
      i kön skriver det SENASTE man tryckt fram för dagen, mot rader
-     som just hämtats — så blir tre snabba tryck ett fönster. */
-  function växlaTimme(knapp) {
+     som just hämtats, så blir tre snabba tryck ett fönster.
+
+     Att ta bort en timme där kommande pass ligger frågar först. Passen
+     ligger kvar (tutor_availability styr bara vad familjen kan boka
+     direkt), men utan frågan var det lätt att tro att de avbokades, eller
+     att inte märka att timmen var bokad alls. */
+  async function växlaTimme(knapp) {
     const k = S.tidKal;
     if (!k.dag) return;
     const vd = veckodagFör(k.dag);
     const h = Number(knapp.dataset.timme);
+    const antal = passPerTimme(vd)[h] || 0;
+
+    if (antal && önskadeTimmar(vd).has(h)) {
+      const ja = await bekräfta({
+        titel: 'Ta bort timmen ur dina tider?',
+        text: (antal === 1 ? 'Ett kommande pass ligger' : antal + ' kommande pass ligger')
+          + ' på ' + DAGNAMN[vd].toLowerCase() + 'ar kl. ' + tvåsiff(h) + ':00. '
+          + (antal === 1 ? 'Passet ligger kvar' : 'Passen ligger kvar') + ' och påverkas inte, '
+          + 'men familjen kan inte längre boka den timmen direkt. '
+          + 'Vill du flytta eller avboka ett pass gör du det i passlistan.',
+        knapp: 'Ta bort timmen',
+        avbryt: 'Behåll'
+      });
+      if (!ja) return;
+    }
+
+    /* Räknas om efter frågan: ett tryck till på en annan timme kan ha
+       hunnit skrivas medan rutan stod öppen. */
     const timmar = önskadeTimmar(vd);
     if (timmar.has(h)) timmar.delete(h); else timmar.add(h);
     tidÖnskat.set(vd, timmar);
-    knapp.setAttribute('aria-pressed', timmar.has(h) ? 'true' : 'false');
+    /* Rutan ritas inte om förrän kön är klar, men knappen kan ha
+       bytts ut under frågan. Den som syns är den som ska ändras. */
+    const synlig = (knapp.isConnected ? knapp : $('#tid-dag [data-timme="' + h + '"]')) || knapp;
+    synlig.setAttribute('aria-pressed', timmar.has(h) ? 'true' : 'false');
+    synlig.innerHTML = timInnehåll(h, timmar.has(h), antal);
 
     tidVäntar++;
     tidKö = tidKö
@@ -940,6 +1070,7 @@
         if (--tidVäntar > 0) return;
         tidÖnskat.clear();
         ritaTider();
+        schemaTider();
       });
   }
 
@@ -967,18 +1098,24 @@
   /* ============================================================
      HÄMTNINGARNA
 
-     laddaTider    — veckotiderna ur databasen
-     laddaUpptagna — vilka timmar som redan är bokade hos dig, för
-                     flytta-rutan
+     laddaTider    veckotiderna ur databasen
+     laddaUpptagna vilka timmar som redan är bokade hos dig, för
+                   flytta-rutan och schemats tidslinje
+
+     Båda ritar om schemat på Översikt: dess vecko- och dagvy visar
+     lediga och ej tillgängliga timmar ur just de två.
      ============================================================ */
   async function laddaTider() {
     const t = await NX.hämtaTillganglighet(S.user.id);
     S.tillgang = t.tillgang;
+    S.tillgangHämtad = true;
     ritaTider();
+    schemaTider();
   }
 
   async function laddaUpptagna() {
     S.upptagna = await NX.hämtaUpptagna(S.user.id);
+    schemaTider();
   }
 
   /* ============================================================
@@ -1009,13 +1146,19 @@
       });
     }
 
-    const orapporterade = (S.bokningar || []).filter(b =>
-      b.status === 'confirmed' && b.wanted_date < isoFor(new Date())).length;
+    /* Samma urval som "Väntar på rapport" på Översikt, utom de pass
+       du inte kan rapportera (rapportHinder): de står kvar i listan
+       med skälet och en avstängd knapp, men en notis som ber dig göra
+       något du inte kan göra går aldrig att bli av med. Förut räknade
+       notisen bekräftade pass före idag, och listan pass som börjat
+       och går att rapportera: två siffror som kunde skilja sig åt
+       samma dag utan att något förklarade varför. */
+    const orapporterade = (S.bokningar || []).filter(b => väntarRapport(b) && !rapportHinder(b)).length;
     if (orapporterade) {
       poster.push({
         rubrik: orapporterade + ' pass utan rapport',
         text: 'Passet har varit. Rapporten gör det till en arbetad timme.',
-        mål: '#pass-lista'
+        mål: '#ov-lektioner'
       });
     }
 
@@ -1035,15 +1178,22 @@
     if (error) { host.innerHTML = tomt('Kunde inte hämta passen', felText(error)); return; }
     S.bokningar = data || [];
 
-    const kommande = S.bokningar.filter(b => b.status === 'requested' || b.status === 'confirmed').length;
-    $('#kpi-kommande').textContent = kommande;
-    $('#pass-antal').textContent = S.bokningar.length ? S.bokningar.length + ' st' : '';
+    /* Räkningarna. "Kommande" är pass som ska hållas och inte har
+       börjat, samma regel som Mina lektioner. Förut räknade KPI:n
+       varje önskat och bekräftat pass, också de som hölls förra
+       veckan och bara saknar rapport. Antalet vid "Dina pass" räknade
+       avbokade med, fast de ligger i en egen hopfälld grupp. */
+    $('#kpi-kommande').textContent = S.bokningar.filter(ärKommande).length;
+    const ejAvbokade = S.bokningar.filter(b => b.status !== 'cancelled').length;
+    $('#pass-antal').textContent = ejAvbokade ? ejAvbokade + ' st' : '';
 
     /* Siffran på fliken räknar de pass familjen begärt men du inte
-       svarat på än. Det är den enda posten här som är din tur —
+       svarat på än. Det är den enda posten här som är din tur;
        ett bekräftat pass kräver ingenting förrän det hållits. */
     märkFlik('#flik-pass-mark', S.bokningar.filter(b => b.status === 'requested').length);
     ritaNästaPass();
+    ritaMinaLektioner();
+    ritaElevOversikt();
     ritaStatistik();
     byggSchema();
 
@@ -1057,55 +1207,118 @@
     NXStudie.passLista({
       host: host,
       bokningar: S.bokningar,
+      avbokade: 'egen',
       tomtKommande: 'Inga kommande pass. Familjen bokar på tiderna du markerat under Dina tider.',
-      rad: b => {
-      const e = S.elever.find(x => x.id === b.student_id);
-      const familj = S.familjer.find(f => f.id === b.parent_id);
-      const mitt = b.created_by === S.user.id;
-      const kan = b.status === 'requested' || b.status === 'confirmed';
-
-      /* Har passet varit och saknar rapport är det EN sak man ska
-         göra med raden, och då ska den knappen vara den primära.
-         Flytta och Avboka hör till pass som ligger framåt — ett pass
-         som redan hållits går inte att flytta. */
-      const idag = isoFor(new Date());
-      const harVarit = kan && rapporterbart(b) && harBörjat(b);
-
-      let knappar = '';
-      if (b.status === 'requested' && !mitt && !harVarit) {
-        knappar += '<button class="btn btn-primary btn-sm" data-status="confirmed" data-id="' + b.id + '">Bekräfta</button>';
-      }
-      if (harVarit) {
-        knappar += '<button class="btn btn-primary btn-sm" data-rapportera="' + b.id + '">Skriv rapport</button>';
-      }
-      if (kan && !harVarit) {
-        knappar += '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>';
-      }
-      if (kan) {
-        /* Ett önskemål från familjen avböjs, ett bokat pass avbokas.
-           Samma sak i databasen, men inte samma sak att säga. */
-        const önskemål = b.status === 'requested' && !mitt;
-        knappar += '<button class="btn btn-ghost btn-sm" data-status="cancelled" data-id="' + b.id + '"'
-          + (önskemål ? ' data-avboj="1">Avböj' : '>Avboka') + '</button>';
-      }
-
-      /* Platsen står direkt på raden, inte bara i detaljvyn. Ett pass
-         på plats är en resa — var man ska vara är halva beskedet. */
-      const under = [b.format, b.location, (b.duration_min || 60) + ' min',
-        e ? e.name : (familj ? familj.full_name : null)].filter(Boolean).join(' · ');
-
-      return NXKontakt.passRad(b, {
-        under: under,
-        vem: harVarit
-          ? 'Passet har varit — rapporten saknas'
-          : b.status === 'requested'
-          ? (mitt ? 'Ditt förslag — väntar på svar' : 'Familjen önskade den här tiden')
-          : (b.attendance === 'franvarande' ? 'Eleven uteblev'
-            : b.attendance === 'sen' ? 'Eleven kom sent' : null),
-        atgarder: knappar
-      }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
-      }
+      rad: b => NXKontakt.passRad(b, {
+        under: passUnder(b),
+        vem: passVem(b),
+        atgarder: passKnappar(b, false),
+        klickbar: true
+      }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '')
     });
+  }
+
+  /* ------------------------------------------------------------
+     EN REGEL PER FRÅGA, FÖR ALLA STÄLLEN ETT PASS SYNS
+
+     Passlistan, Mina lektioner, Elevens läge och passrutan ritade
+     förut var sin variant av samma knappar, med var sin kopia av
+     regeln för "har varit". Nu frågar alla samma funktioner.
+
+     Ett eget förslag som familjen aldrig svarade på, och vars tid
+     har passerat, har kvar Flytta och Avboka. Det är med flit: passet
+     hölls aldrig (rapporterbart säger nej), så att flytta det till en
+     ny tid är vägen framåt, och databasen tillåter det.
+     ------------------------------------------------------------ */
+
+  /* Ska hållas och har inte börjat. */
+  function ärKommande(b) {
+    return (b.status === 'requested' || b.status === 'confirmed') && !harBörjat(b);
+  }
+
+  /* Har börjat, går att rapportera, och är inte rapporterat. Då är
+     rapporten det enda som återstår, och den knappen är den primära. */
+  function väntarRapport(b) {
+    const kan = b.status === 'requested' || b.status === 'confirmed';
+    return kan && rapporterbart(b) && harBörjat(b);
+  }
+
+  /* Namnet på passet: eleven, annars familjen. */
+  function passNamn(b) {
+    const e = S.elever.find(x => x.id === b.student_id);
+    if (e) return e.name;
+    const f = S.familjer.find(x => x.id === b.parent_id);
+    return f ? (f.full_name || '') : '';
+  }
+
+  /* Platsen står direkt på raden, inte bara i detaljvyn. Ett pass på
+     plats är en resa, och var man ska vara är halva beskedet. Eleven
+     står först: det är vem man ska träffa. */
+  function passUnder(b) {
+    return [passNamn(b), b.format, b.location, NXStudie.längdText(b.duration_min || 60)]
+      .filter(Boolean).join(' · ');
+  }
+
+  /* Varför passet inte går att rapportera, eller null. Rapporten
+     måste gälla passets elev, och eleven måste vara din (Fas 1.4 och
+     1.6). Ett pass vars elev bytt studiehjälpare ligger kvar på dig,
+     men databasen nekar rapporten; förut hade det ändå en aktiv
+     knapp som bara ledde till en ruta som sa nej. Innan elevlistan
+     är hämtad vet vyn inte, och då får databasen svara. */
+  function rapportHinder(b) {
+    if (!b.student_id) return UTAN_ELEV;
+    if (S.eleverHämtade && !S.elever.some(e => e.id === b.student_id)) return INTE_DIN_ELEV;
+    return null;
+  }
+
+  function passVem(b) {
+    const mitt = b.created_by === S.user.id;
+    const kan = b.status === 'requested' || b.status === 'confirmed';
+    const hinder = kan ? rapportHinder(b) : null;
+    if (hinder) return hinder;
+    if (väntarRapport(b)) return 'Passet har varit, rapporten saknas';
+    if (b.status === 'requested') return mitt ? 'Ditt förslag, väntar på svar' : 'Familjen önskade den här tiden';
+    if (b.attendance === 'franvarande') return 'Eleven uteblev';
+    if (b.attendance === 'sen') return 'Eleven kom sent';
+    return null;
+  }
+
+  /* "Skriv rapport". Ett pass utan elev, eller med en elev som inte
+     längre är din, går inte att rapportera (databasen säger nej sedan
+     Fas 1.4), så knappen står avstängd och raden säger varför
+     (passVem), i stället för en ruta som bara kan misslyckas. */
+  function rapportKnapp(b, iRutan) {
+    const kl = 'btn btn-primary' + (iRutan ? '' : ' btn-sm');
+    return rapportHinder(b)
+      ? '<button type="button" class="' + kl + '" disabled>Skriv rapport</button>'
+      : '<button type="button" class="' + kl + '" data-rapportera="' + esc(b.id) + '">Skriv rapport</button>';
+  }
+
+  /* Knapparna på ett pass. Har passet varit och saknar rapport är det
+     EN sak man ska göra, och den knappen är den primära. Flytta hör
+     till pass som ligger framåt: ett pass som redan hållits går inte
+     att flytta. Ett önskemål från familjen avböjs, ett bokat pass
+     avbokas; samma sak i databasen, men inte samma sak att säga. */
+  function passKnappar(b, iRutan) {
+    const mitt = b.created_by === S.user.id;
+    const kan = b.status === 'requested' || b.status === 'confirmed';
+    const harVarit = väntarRapport(b);
+    const sm = iRutan ? '' : ' btn-sm';
+
+    let k = '';
+    if (b.status === 'requested' && !mitt && !harVarit) {
+      k += '<button type="button" class="btn btn-primary' + sm + '" data-status="confirmed" data-id="' + esc(b.id) + '">Bekräfta</button>';
+    }
+    if (harVarit) k += rapportKnapp(b, iRutan);
+    if (kan && !harVarit) {
+      k += '<button type="button" class="btn btn-ghost' + sm + '" data-flytta="' + esc(b.id) + '">Flytta</button>';
+    }
+    if (kan) {
+      const önskemål = b.status === 'requested' && !mitt;
+      k += '<button type="button" class="btn btn-ghost' + sm + '" data-status="cancelled" data-id="' + esc(b.id) + '"'
+        + (önskemål ? ' data-avboj="1">Avböj' : '>Avboka') + '</button>';
+    }
+    return k;
   }
 
   /* Passväljaren i rapportformuläret: bara den valda elevens pass
@@ -1161,7 +1374,7 @@
           + ' kl. ' + esc(b.wanted_time || '') + ' · ' + esc(b.subject || 'Pass') + '</option>').join('')
       /* Sist, inte först: det vanliga är att rapportera ett pass. En
          fristående rapport är undantaget och ska inte vara förvalet. */
-      + '<option value="">Inget pass — fristående rapport</option>';
+      + '<option value="">Inget pass, fristående rapport</option>';
 
     /* Är inget pass valt ännu, välj det senaste som väntar. Att låta
        rutan stå på "fristående" när det finns tre orapporterade pass
@@ -1195,6 +1408,9 @@
      ============================================================ */
   let rapportFokus = null;
   let rapportStängs = null;
+  /* Passet rutan öppnades från. Rapporten sparas på DESS elev, aldrig
+     på den som råkar vara vald högst upp (hål 3). */
+  let rapportFrån = null;
 
   function sättRapportTitel(b) {
     const titel = $('#rp-titel');
@@ -1209,14 +1425,28 @@
   async function öppnaRapport(bokningId) {
     const ruta = $('#rapport-overlay');
     if (!ruta) return;
+    /* HÅL 3. Rapporten gäller passets elev, alltid. Förut byttes den
+       valda eleven bara när passet HADE en elev, och rapporten sparades
+       på den valda. Ett pass utan elev gav alltså en rapport om det
+       barn som råkade stå överst, och databasen godtog det. Nu säger
+       databasen nej till det (Fas 1.4), och rutan öppnas inte ens:
+       en ruta som bara kan misslyckas är sämre än ett besked. */
+    const b = (S.bokningar || []).find(x => x.id === bokningId) || null;
+    if (bokningId && !b) return;
+    if (b && !b.student_id) { alert(UTAN_ELEV); return; }
+    /* Knappen står redan avstängd för det här (rapportKnapp). Kvar
+       som skydd för en ruta som ritades innan elevlistan kom. */
+    if (b && !S.elever.some(e => e.id === b.student_id)) { alert(INTE_DIN_ELEV); return; }
+
     if (ruta.parentNode !== document.body) document.body.appendChild(ruta);
     clearTimeout(rapportStängs);
 
-    /* Rapporten sparas på den aktiva eleven. Hör passet till en
-       annan elev byts eleven först — annars hamnade rapporten om ett
-       barn hos ett annat, och passet blev aldrig genomfört. */
-    const b = (S.bokningar || []).find(x => x.id === bokningId);
+    /* Eleven byts så att passväljaren, ämnena och kunskapsområdena i
+       rutan gäller passets elev. Det är listorna som följer med
+       bytet; vilken elev rapporten sparas på avgör rapportFrån. */
     if (b && b.student_id !== S.aktivElev) await väljElev(b.student_id);
+    if (b && S.aktivElev !== b.student_id) return;
+    rapportFrån = b;
 
     const val = $('#r-pass');
     if (bokningId && val) {
@@ -1300,12 +1530,17 @@
     const b = S.bokningar.find(x => x.id === k.dataset.flytta);
     if (!b) return;
 
+    /* lagen: kalendern skiljer på dagar med lediga tider, fullbokade
+       dagar och dagar utan tider, och dagens tagna timmar står som
+       låsta "Bokad" (program 2, Fas 1). Passets egna timmar räknas som
+       lediga, så att man kan byta dag och behålla klockslaget. */
     const ny = await NXStudie.flyttaRuta({
       datum: b.wanted_date,
       tid: b.wanted_time,
       tillgang: S.tillgang,
       minuter: b.duration_min || 60,
-      upptagna: await NX.hämtaUpptagna(S.user.id)
+      upptagna: await NX.hämtaUpptagna(S.user.id),
+      lagen: true
     });
     if (!ny) return;
 
@@ -1474,8 +1709,21 @@
     const område = $('#r-omrade').value.trim();
     const träna = $('#r-trana').value.trim();
 
+    /* Vem rapporten gäller (hål 3). Är ett pass valt är det passets
+       elev. Är rutan öppnad från ett pass men ändrad till "fristående"
+       är det fortfarande det passets elev. Bara en rapport som aldrig
+       haft ett pass får den valda eleven. S.aktivElev läses alltså
+       inte alls när det finns ett pass. */
+    const passId = $('#r-pass').value || null;
+    const pass = passId ? (S.bokningar || []).find(x => x.id === passId) || null : null;
+    const elevId = pass ? pass.student_id
+      : rapportFrån ? rapportFrån.student_id
+      : S.aktivElev;
+
     const fel = kolla([
-      { fel: !S.aktivElev, text: 'Välj en elev högst upp först.' },
+      { fel: !!passId && !pass, text: 'Passet finns inte längre. Stäng rutan och försök igen.' },
+      { fel: (!!pass && !pass.student_id) || (!!rapportFrån && !rapportFrån.student_id), text: UTAN_ELEV },
+      { fel: !elevId, text: 'Välj en elev högst upp först.' },
       { fel: !rap.gick, text: 'Välj hur lektionen gick.' },
       { fel: !anteckningar, text: 'Skriv något om vad ni gjorde.', falt: $('#r-notes') },
       { fel: områdePå && !område, text: 'Skriv vilket område ni jobbade med, eller kryssa ur rutan.', falt: $('#r-omrade') },
@@ -1484,14 +1732,13 @@
       { fel: områdePå && !rap.amne, text: 'Välj vilket ämne området hör till.' },
       { fel: $('#r-lax').checked && !laxTitel, text: 'Skriv vad läxan går ut på, eller kryssa ur rutan.', falt: $('#r-lax-titel') }
     ]);
-    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+    if (fel) { säg(msg, fel, false); return; }
 
-    const passId = $('#r-pass').value || null;
     const datum = $('#r-datum').value || isoFor(new Date());
 
     await medan($('#r-spara'), 'Sparar…', async () => {
       const { data, error } = await supa.from('lesson_reports').insert({
-        student_id: S.aktivElev,
+        student_id: elevId,
         tutor_id: S.user.id,
         booking_id: passId,
         lesson_date: datum,
@@ -1503,9 +1750,11 @@
         /* Närvaron följer med rapporten. Databasen markerar passet
            genomfört i samma transaktion (triggern
            lesson_reports_gor_passet_genomfort), så en rapport kan inte
-           längre bli sparad medan passet står kvar orört — vägrar
+           längre bli sparad medan passet står kvar orört. Vägrar
            databasen passet sparas inte rapporten heller, och felet
-           nedan säger varför. */
+           nedan säger varför. Samma sak om rapporten gäller en annan
+           elev än passets (Fas 1.4): databasen nekar, med ett svenskt
+           besked. */
         narvaro: passId ? $('#r-narvaro').value : null
       }).select('id').single();
 
@@ -1517,7 +1766,7 @@
          formulär längre ned, och därför fylldes den nästan aldrig i. */
       if (områdePå && område && rap.amne) {
         const { error: pErr } = await supa.from('progress_items').upsert({
-          student_id: S.aktivElev,
+          student_id: elevId,
           tutor_id: S.user.id,
           subject: rap.amne,
           area: område,
@@ -1530,7 +1779,7 @@
 
       if ($('#r-lax').checked && laxTitel) {
         const { error: lErr } = await supa.from('homework').insert({
-          student_id: S.aktivElev,
+          student_id: elevId,
           tutor_id: S.user.id,
           title: laxTitel,
           subject: rap.amne || null,
@@ -1565,11 +1814,14 @@
     });
   });
 
+  /* booking_id följer med för passrutan: "Från förra passet" ska
+     vara rapporten FÖRE passet, aldrig passets egen, och "Efter
+     passet" är just passets egen. */
   async function laddaMinaRapporter() {
     const host = $('#mina-rapporter');
     const { data, error } = await supa
       .from('lesson_reports')
-      .select('id, lesson_date, raw_notes, ai_feedback, gick, amne, needs_practice, next_focus, student_id')
+      .select('id, lesson_date, raw_notes, ai_feedback, gick, amne, needs_practice, next_focus, student_id, booking_id')
       .eq('tutor_id', S.user.id).order('lesson_date', { ascending: false }).limit(20);
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta rapporterna', felText(error)); return; }
@@ -1652,7 +1904,7 @@
       { fel: S.matTyp === 'anteckning' && !text, text: 'Skriv anteckningen.', falt: $('#mt-text') },
       { fel: S.matTyp === 'fil' && fil && !!M.granskaFil(fil), text: fil ? M.granskaFil(fil) : '', falt: $('#mt-fil') }
     ]);
-    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+    if (fel) { säg(msg, fel, false); return; }
 
     await medan($('#mt-spara'), S.matTyp === 'fil' ? 'Laddar upp…' : 'Sparar…', async () => {
       const rad = {
@@ -1689,7 +1941,7 @@
     return M.laddaMaterial(S, {
       elev: S.aktivElev,
       tomElev: ['Ingen elev vald', 'Välj en elev högst upp.'],
-      tomLista: ['Inget material än', 'Lägg upp ett övningsblad, en länk eller en anteckning — familjen når det från sin vy.'],
+      tomLista: ['Inget material än', 'Lägg upp ett övningsblad, en länk eller en anteckning. Familjen når det från sin vy.'],
       egen: true
     });
   }
@@ -1739,7 +1991,7 @@
     rensa($('#av-msg'));
 
     const fel = M.granska(fil);
-    if (fel) { säg($('#av-msg'), '⚠️ ' + fel, false); return; }
+    if (fel) { säg($('#av-msg'), fel, false); return; }
 
     const blob = await M.beskär(fil);
     if (!blob) return;
@@ -1778,7 +2030,7 @@
     rensa(msg);
     const namn = $('#k-namn').value.trim();
     const fel = kolla([{ fel: !namn, text: 'Vänligen fyll i ditt namn.', falt: $('#k-namn') }]);
-    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+    if (fel) { säg(msg, fel, false); return; }
 
     await medan(e.submitter, 'Sparar…', async () => {
       const { error } = await supa.from('profiles')
@@ -1802,7 +2054,7 @@
       { fel: a.length < 6, text: 'Lösenordet måste vara minst 6 tecken.', falt: $('#k-losen') },
       { fel: a !== b, text: 'Lösenorden är inte lika.', falt: $('#k-losen2') }
     ]);
-    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+    if (fel) { säg(msg, fel, false); return; }
 
     await medan(e.submitter, 'Byter…', async () => {
       const { error } = await supa.auth.updateUser({ password: a });
@@ -1832,7 +2084,7 @@
     e.preventDefault();
     const msg = $('#p-msg');
     rensa(msg);
-    if (!S.aktivElev) { säg(msg, '⚠️ Välj en elev högst upp först.', false); return; }
+    if (!S.aktivElev) { säg(msg, 'Välj en elev högst upp först.', false); return; }
 
     await medan(e.submitter, 'Sparar…', async () => {
       const fält = {
@@ -1988,48 +2240,100 @@
      ============================================================ */
   function kortTid(iso) { return NXStudie.kortTid(iso); }
 
+  const tidsnyckel = b => String(b.wanted_date || '') + String(b.wanted_time || '');
+
+  /* Samma regel som Mina lektioner och KPI:n: ett pass som redan
+     börjat i morse är inte "nästa pass" i eftermiddag. */
   function nästaPass() {
-    const idag = isoFor(new Date());
-    return S.bokningar
-      .filter(b => (b.status === 'requested' || b.status === 'confirmed') && b.wanted_date >= idag)
-      .sort((a, b) => (a.wanted_date + (a.wanted_time || ''))
-                        .localeCompare(b.wanted_date + (b.wanted_time || '')))[0] || null;
+    return S.bokningar.filter(ärKommande)
+      .sort((a, b) => tidsnyckel(a).localeCompare(tidsnyckel(b)))[0] || null;
   }
 
+  /* Kortet i hälsningen. Hälsningen är det första man ser, och nästa
+     pass är ofta det enda man öppnade vyn för, så kortet öppnar
+     passet (se klicket på #vy-hero längre ned). Länken bakom är
+     reserven för den som öppnar den i en ny flik. */
   function ritaNästaPass() {
     const b = nästaPass();
-    const e = b ? S.elever.find(x => x.id === b.student_id) : null;
-    const f = b ? S.familjer.find(x => x.id === b.parent_id) : null;
-    const vem = e ? e.name : (f ? f.full_name : null);
+    if (!S.hero) return;
+    S.hero.uppdatera({
+      nasta: b ? {
+        href: '#lektioner/pass',
+        text: 'Nästa pass · ' + datumText(b.wanted_date)
+              + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
+        under: [passNamn(b), b.subject].filter(Boolean).join(' · ')
+      } : {
+        href: '#lektioner/pass',
+        text: 'Inga pass inbokade',
+        under: 'Familjen bokar i sin vy. Du bekräftar här.'
+      }
+    });
+  }
 
-    /* Samma pass på två ställen: som kort i hälsningen högst upp och
-       som rad på Översikt. Hälsningen är det första man ser, och
-       nästa pass är det oftast enda man öppnade vyn för. */
-    if (S.hero) {
-      S.hero.uppdatera({
-        nasta: b ? {
-          href: '#lektioner',
-          text: 'Nästa pass · ' + datumText(b.wanted_date)
-                + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
-          under: [vem, b.subject].filter(Boolean).join(' · ')
-        } : {
-          href: '#lektioner',
-          text: 'Inga pass inbokade',
-          under: 'Familjen bokar i sin vy — du bekräftar här'
-        }
-      });
-    }
+  /* ============================================================
+     MINA LEKTIONER (program 2, Fas 1, P3)
+     Överst på Översikt: de närmaste passen och de som har varit men
+     saknar rapport. Listan "#ov-nasta" som stod här förut ritades
+     till ett element som inte fanns i sidan, och var död kod.
 
-    const host = $('#ov-nasta');
+     Raderna är samma passrad som i passlistan. Kommande pass har bara
+     "Detaljer": knapparna för att bekräfta, flytta och avboka finns i
+     passrutan och i passlistan, och fem rader med fyra knappar var
+     är inte en översikt. De som väntar på rapport har rapportknappen,
+     för det är det enda som återstår med dem.
+     ============================================================ */
+  const MINA_LEKTIONER = 5;
+
+  function ritaMinaLektioner() {
+    const host = $('#ov-lektioner');
     if (!host) return;
-    if (!b) {
-      host.innerHTML = tomt('Inga pass inbokade', 'När familjen bokar en tid står nästa pass här.');
+    const kommande = S.bokningar.filter(ärKommande)
+      .sort((a, c) => tidsnyckel(a).localeCompare(tidsnyckel(c)));
+    /* De du kan rapportera först, nyast överst. Ett pass som inte går
+       att rapportera (rapportHinder) står sist med skälet: listan visar
+       bara fem, och de platserna ska gå till det du kan göra något åt. */
+    const väntar = S.bokningar.filter(väntarRapport)
+      .sort((a, c) => (!!rapportHinder(a) - !!rapportHinder(c))
+        || tidsnyckel(c).localeCompare(tidsnyckel(a)));
+
+    const antal = $('#ov-lektioner-antal');
+    if (antal) antal.textContent = kommande.length ? kommande.length + ' kommande' : '';
+
+    if (!kommande.length && !väntar.length) {
+      host.innerHTML = '<div class="empty"><b>Inga pass inbokade</b><br><span>'
+        + 'Markera när du kan jobba under Dina tider. Familjen kan boka de tiderna direkt, '
+        + 'och önskar de en annan tid bekräftar du den här.</span><br>'
+        + '<a class="vy-mer" href="#tider">Till Dina tider '
+        + '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a></div>';
       return;
     }
-    host.innerHTML = NXKontakt.passRad(b, {
-      under: [b.format, b.location, (b.duration_min || 60) + ' min'].filter(Boolean).join(' · '),
-      vem: vem
+
+    const rad = (b, atgarder) => NXKontakt.passRad(b, {
+      under: passUnder(b), vem: passVem(b), atgarder: atgarder || '', klickbar: true
     });
+
+    let ut = kommande.length
+      ? '<div class="pl-grupp">' + kommande.slice(0, MINA_LEKTIONER).map(b => rad(b)).join('') + '</div>'
+        + (kommande.length > MINA_LEKTIONER
+            ? '<p class="xsmall" style="margin:4px 0 0;color:var(--bl-2)">'
+              + esc((kommande.length - MINA_LEKTIONER) + ' pass till ligger i passlistan.') + '</p>'
+            : '')
+      : '<div class="pl-inget">Inga kommande pass. Familjen bokar på tiderna du markerat under Dina tider.</div>';
+
+    if (väntar.length) {
+      /* Samma linje ovanför som "Tidigare pass" i passlistan, men utan
+         att tonas ned: det här är något att göra, inte att slå upp. */
+      ut += '<div class="pl-grupp" style="margin-top:clamp(18px,2.2vw,26px);'
+        + 'padding-top:clamp(14px,1.8vw,18px);border-top:1px solid var(--ln)">'
+        + '<div class="pl-rubrik">Väntar på rapport <em>' + väntar.length + ' st</em></div>'
+        + väntar.slice(0, MINA_LEKTIONER).map(b => rad(b, rapportKnapp(b, false))).join('')
+        + (väntar.length > MINA_LEKTIONER
+            ? '<p class="xsmall" style="margin:4px 0 0;color:var(--bl-2)">'
+              + esc((väntar.length - MINA_LEKTIONER) + ' pass till utan rapport ligger i passlistan.') + '</p>'
+            : '')
+        + '</div>';
+    }
+    host.innerHTML = ut;
   }
 
   /* Siffran på fliken. Läxorna ligger numera bakom en flik, och en
@@ -2128,7 +2432,7 @@
      ============================================================ */
   async function laddaErsattning() {
     const B = NXBetalning;
-    const pag = $('#ers-pagaende'), konto = $('#ers-konto'), lista = $('#ers-lista');
+    const pag = $('#ers-pagaende'), lista = $('#ers-lista');
     if (!pag) return;
 
     const rate = S.tutorProfil && S.tutorProfil.hourly_rate;
@@ -2153,22 +2457,6 @@
       : tomt('Din timpenning är inte satt än',
              'Utan den går ersättningen inte att räkna ut. Hör av dig till oss så fyller vi i den.');
 
-    /* Utbetalningskontot ligger hos Stripe, inte hos oss. Vi sparar
-       bara id:t — kontonummer och legitimation stannar där. */
-    const klar = S.tutorProfil && S.tutorProfil.stripe_klar;
-    konto.innerHTML = klar
-      ? '<div class="bet-pagaende"><span style="margin-top:0">Kopplat</span>'
-        + '<p class="bet-not">Utbetalningarna går till kontot du registrerat hos Stripe. '
-        + 'Vill du byta konto gör du det hos Stripe, inte här.</p></div>'
-      /* Knappen "Koppla utbetalningskonto" är borttagen tills
-         edge-funktionen stripe-konto finns. Den anropade något som
-         inte var byggt och kunde bara misslyckas — en knapp som inte
-         går att trycka på är sämre än ingen knapp. Texten säger vad
-         som gäller under tiden i stället för att låtsas. */
-      : '<p class="bet-not" style="margin-top:0">Utbetalningarna sköts för hand så länge. '
-        + 'Ditt underlag nedan är det vi betalar efter — hör av dig om något ser fel ut. '
-        + 'När vi kopplat på automatiska utbetalningar registrerar du ditt konto här.</p>';
-
     if (ut.error) { lista.innerHTML = tomt('Kunde inte hämta utbetalningarna', felText(ut.error)); return; }
     const rader = ut.data || [];
     $('#ers-antal').textContent = rader.length ? rader.length + ' st' : '';
@@ -2192,6 +2480,298 @@
         + '</div>';
     }).join('');
   }
+
+  /* ============================================================
+     UTBETALNINGSKONTOT (program 2, Fas 1.7, P4)
+
+     Förut stod här att kontot låg hos Stripe och att vi bara sparade
+     ett id. Stripe-kopplingen blev aldrig byggd (se nedan), och det
+     stämmer inte längre: bankkonto eller Swishnummer lämnas nu HÄR,
+     och sparas hos Nextrum i tabellen utbetalningsmetod. Numret är
+     krypterat (pgcrypto, nyckeln i Vault) och tabellen går inte att
+     läsa direkt; allt går genom funktionerna:
+       las_utbetalningsmetod      maskerat: bank och fyra sista siffror
+       bankkonto_kontroll         banknamnet och kontrollsiffran, live
+       spara_utbetalningsmetod    stoppas i databasen när flaggan är av
+       radera_utbetalningsmetod   går alltid, också med flaggan av
+     Hela numret ser bara admin, och varje sådan läsning loggas.
+
+     BAKOM FLAGGAN utbetalningsmetod, av som förval. Är den av visas
+     bara att det kommer, och det man redan lämnat (med Ta bort).
+
+     Funktionerna är inte driftsatta när den här koden skrivs; de
+     väntar på ett uttryckligt ja. Ett anrop till en funktion som inte
+     finns (PGRST202, 404) betyder "inte öppnat än", inte ett fel att
+     visa: studiehjälparen kan ändå inte göra något åt det.
+     ============================================================ */
+  const UT = { flagga: false, finns: true, rad: null, redigerar: false, metod: 'bank',
+    kontroll: 0, timer: null, besked: null };
+
+  function saknasFunktion(res) {
+    const e = res && res.error;
+    if (!e) return false;
+    return res.status === 404 || e.code === 'PGRST202' || e.code === '42883'
+      || /could not find the function/i.test(String(e.message || ''));
+  }
+
+  const radUr = data => Array.isArray(data) ? (data[0] || null) : (data || null);
+
+  async function laddaUtbetalningskonto() {
+    if (!$('#ers-konto')) return;
+    const [fl, las] = await Promise.all([
+      supa.from('flaggor').select('aktiv').eq('kod', 'utbetalningsmetod').maybeSingle(),
+      supa.rpc('las_utbetalningsmetod')
+    ]);
+    /* En flagga som saknas, eller inte går att läsa, är av. */
+    if (fl.error) console.warn('flaggor:', fl.error.message);
+    UT.flagga = !fl.error && !!(fl.data && fl.data.aktiv);
+
+    if (las.error) {
+      UT.finns = !saknasFunktion(las);
+      if (UT.finns) console.warn('las_utbetalningsmetod:', las.error.message);
+      UT.rad = null;
+    } else {
+      UT.finns = true;
+      UT.rad = radUr(las.data);
+    }
+    UT.redigerar = false;
+    ritaUtbetalningskonto();
+  }
+
+  /* "SEB, konto som slutar på 4561". Banknamnet och de fyra sista
+     siffrorna är det enda som ligger i klartext, och det räcker för
+     att känna igen sitt eget konto. */
+  function utbetalningText(rad) {
+    return rad.metod === 'swish'
+      ? 'Swish, nummer som slutar på ' + (rad.slutar_pa || '')
+      : (rad.bank || 'Bankkonto') + ', konto som slutar på ' + (rad.slutar_pa || '');
+  }
+
+  function ritaUtbetalningskonto() {
+    const host = $('#ers-konto');
+    if (!host) return;
+    const öppet = UT.flagga && UT.finns;
+    const besked = UT.besked;
+    UT.besked = null;
+
+    const lagring = '<p class="bet-not">Uppgifterna krypteras och syns bara för dig och för Nextrums administratör. '
+      + 'Ingen utbetalning görs härifrån än.</p>';
+    /* Stripe-grenen står kvar för den som ändå har ett kopplat konto
+       (stripe_klar). Funktionen som kopplar ett sådant byggdes aldrig,
+       så i praktiken är det raden under som syns. */
+    const hur = S.tutorProfil && S.tutorProfil.stripe_klar
+      ? '<p class="bet-not">Utbetalningarna går till kontot du registrerat hos Stripe. '
+        + 'Vill du byta konto gör du det hos Stripe.</p>'
+      : '<p class="bet-not">Utbetalningarna sköts för hand så länge. Ditt underlag nedan är det vi betalar efter. '
+        + 'Hör av dig om något ser fel ut.</p>';
+    const beskedHtml = besked
+      ? '<p class="ok-msg show' + (besked.ok ? '' : ' is-err') + '" role="status" tabindex="-1" id="ut-besked">'
+        + esc(besked.text) + '</p>'
+      : '';
+
+    let ut;
+    if (!öppet) {
+      ut = '<p class="bet-not" style="margin-top:0">Här kommer du att kunna lämna bankkonto eller Swishnummer '
+        + 'för utbetalning. Det är inte öppnat än.</p>'
+        + (UT.rad ? sparatHtml(UT.rad, false) + lagring : '');
+    } else if (UT.rad && !UT.redigerar) {
+      ut = sparatHtml(UT.rad, true) + lagring;
+    } else {
+      ut = formulärHtml() + lagring;
+    }
+    host.innerHTML = ut + beskedHtml + hur;
+
+    const b = $('#ut-besked');
+    if (b) b.focus({ preventScroll: true });
+  }
+
+  function sparatHtml(rad, kanÄndra) {
+    return '<div style="margin-top:0">'
+      + '<p style="margin:0;font-weight:600;color:var(--bl)">' + esc(utbetalningText(rad)) + '</p>'
+      + (rad.metod === 'bank' && rad.kontrollerad === false
+          ? '<p class="bet-not" style="display:flex;gap:8px;align-items:flex-start">'
+            + NXStudie.ikon('varning')
+            + '<span>Vi kunde inte kontrollera kontrollsiffran för den här banken. Dubbelkolla numret.</span></p>'
+          : '')
+      + (rad.uppdaterad ? '<p class="bet-not" style="margin-top:6px">Lämnat ' + esc(datumText(String(rad.uppdaterad).slice(0, 10))) + '</p>' : '')
+      + '<div class="vy-knapprad">'
+      + (kanÄndra ? '<button type="button" class="btn btn-ghost" data-ut-andra>Ändra</button>' : '')
+      + '<button type="button" class="btn btn-ghost" data-ut-bort>Ta bort</button>'
+      + '</div></div>';
+  }
+
+  function formulärHtml() {
+    const bank = UT.metod === 'bank';
+    return '<form id="ut-form" novalidate>'
+      + '<p class="bet-not" style="margin-top:0">' + (UT.rad
+          ? 'Lämna nya uppgifter. De ersätter ' + esc(utbetalningText(UT.rad)) + '.'
+          : 'Lämna bankkonto eller Swishnummer för utbetalning.') + '</p>'
+      + '<div class="mat-typ" role="group" aria-label="Hur vill du få betalt?" style="margin-top:12px">'
+      + '<button type="button" data-ut-metod="bank" aria-pressed="' + bank + '" style="min-height:44px">Bankkonto</button>'
+      + '<button type="button" data-ut-metod="swish" aria-pressed="' + !bank + '" style="min-height:44px">Swish</button>'
+      + '</div>'
+      + '<div id="ut-bank-falt"' + (bank ? '' : ' hidden') + '>'
+      + '<div class="vy-form-rad">'
+      + '<div class="pay-field"><label for="ut-clearing">Clearingnummer</label>'
+      + '<input class="inp" id="ut-clearing" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="7"'
+      + ' aria-describedby="ut-bank-hjalp ut-bank-svar"></div>'
+      + '<div class="pay-field"><label for="ut-konto">Kontonummer</label>'
+      + '<input class="inp" id="ut-konto" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="20"'
+      + ' aria-describedby="ut-bank-hjalp ut-bank-svar"></div>'
+      + '</div>'
+      + '<p class="xsmall" id="ut-bank-hjalp" style="margin-top:8px;color:var(--bl-2);line-height:1.6">'
+      + 'Clearingnumret är fyra siffror, fem för vissa Swedbankkonton. Kontonumret skrivs utan clearingnumret.</p>'
+      + '<p class="xsmall" id="ut-bank-svar" role="status" aria-live="polite" style="margin-top:6px;line-height:1.6;color:var(--bl)"></p>'
+      + '</div>'
+      + '<div id="ut-swish-falt"' + (bank ? ' hidden' : '') + '>'
+      + '<div class="fgroup" style="margin-bottom:0"><label for="ut-swish">Mobilnummer för Swish</label>'
+      + '<input class="inp" id="ut-swish" type="tel" inputmode="tel" autocomplete="tel" maxlength="20"></div>'
+      + '</div>'
+      + '<div class="vy-knapprad">'
+      + '<button type="submit" class="btn btn-primary" id="ut-spara">Spara</button>'
+      + (UT.rad ? '<button type="button" class="btn btn-ghost" data-ut-avbryt>Avbryt</button>' : '')
+      + '</div>'
+      + '<p class="ok-msg" id="ut-msg" role="status" aria-live="polite"></p>'
+      + '</form>';
+  }
+
+  /* Banknamnet medan man skriver. Väntar tills man slutat skriva en
+     stund, och ett svar som kommer efter ett nyare kastas: annars kunde
+     "SEB" skrivas över av svaret på clearingnumrets tre första siffror.
+
+     Frågan ställs först när båda fälten har siffror. Med tomt konto
+     svarar databasen "Fyll i kontonumret" innan den slagit upp banken,
+     och det beskedet mitt i clearingfältet är bara brus. */
+  function planeraKontroll() {
+    clearTimeout(UT.timer);
+    const svar = $('#ut-bank-svar');
+    const c = String(($('#ut-clearing') || {}).value || '').replace(/\D/g, '');
+    const k = String(($('#ut-konto') || {}).value || '').replace(/\D/g, '');
+    if (c.length < 4 || !k) { UT.kontroll++; if (svar) svar.innerHTML = ''; return; }
+    UT.timer = setTimeout(kontrolleraKonto, 450);
+  }
+
+  async function kontrolleraKonto() {
+    const nr = ++UT.kontroll;
+    const clearing = ($('#ut-clearing') || {}).value || '';
+    const konto = ($('#ut-konto') || {}).value || '';
+    const res = await supa.rpc('bankkonto_kontroll', { p_clearing: clearing, p_konto: konto });
+    if (nr !== UT.kontroll) return;
+    const svar = $('#ut-bank-svar');
+    if (!svar) return;
+    if (res.error) {
+      if (saknasFunktion(res)) { UT.finns = false; ritaUtbetalningskonto(); return; }
+      console.warn('bankkonto_kontroll:', res.error.message);
+      svar.innerHTML = '';
+      return;
+    }
+    const r = radUr(res.data) || {};
+    /* Banken i fetstil, sedan beskedet. Ett fel har en varningsikon,
+       så att det inte bara är ordvalet som skiljer det från ett ja. */
+    let text = r.bank ? '<b>' + esc(r.bank) + '</b>' : '';
+    const efter = t => { text += (text ? '. ' : '') + t; };
+    if (r.fel) efter(NXStudie.ikon('varning') + ' ' + esc(r.fel));
+    else if (r.giltigt && r.kontrollerad === false) {
+      efter('Vi kan inte kontrollera kontrollsiffran för den här banken. Dubbelkolla numret.');
+    } else if (r.giltigt) efter('Kontrollsiffran stämmer.');
+    svar.innerHTML = text;
+  }
+
+  document.addEventListener('input', e => {
+    if (e.target && (e.target.id === 'ut-clearing' || e.target.id === 'ut-konto')) planeraKontroll();
+  });
+
+  document.addEventListener('click', async e => {
+    if (!e.target.closest('#ers-konto')) return;
+
+    const metod = e.target.closest('[data-ut-metod]');
+    if (metod) {
+      /* Fälten göms, de ritas inte om: det man skrivit i det ena
+         ligger kvar om man ångrar sig och byter tillbaka. */
+      UT.metod = metod.dataset.utMetod;
+      $$('#ers-konto [data-ut-metod]').forEach(k =>
+        k.setAttribute('aria-pressed', String(k.dataset.utMetod === UT.metod)));
+      $('#ut-bank-falt').hidden = UT.metod !== 'bank';
+      $('#ut-swish-falt').hidden = UT.metod !== 'swish';
+      rensa($('#ut-msg'));
+      return;
+    }
+
+    if (e.target.closest('[data-ut-andra]')) {
+      UT.redigerar = true;
+      UT.metod = UT.rad && UT.rad.metod === 'swish' ? 'swish' : 'bank';
+      ritaUtbetalningskonto();
+      const f = $(UT.metod === 'bank' ? '#ut-clearing' : '#ut-swish');
+      if (f) f.focus();
+      return;
+    }
+
+    if (e.target.closest('[data-ut-avbryt]')) {
+      UT.redigerar = false;
+      ritaUtbetalningskonto();
+      const k = $('#ers-konto [data-ut-andra]');
+      if (k) k.focus();
+      return;
+    }
+
+    const bort = e.target.closest('[data-ut-bort]');
+    if (!bort) return;
+    const ja = await bekräfta({
+      titel: 'Ta bort utbetalningsuppgifterna?',
+      text: 'Kontot eller Swishnumret du lämnat tas bort hos Nextrum.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+    await medan(bort, 'Tar bort…', async () => {
+      const res = await supa.rpc('radera_utbetalningsmetod');
+      if (res.error && !saknasFunktion(res)) {
+        UT.besked = { text: 'Kunde inte ta bort: ' + felText(res.error), ok: false };
+        ritaUtbetalningskonto();
+        return;
+      }
+      if (res.error) { UT.finns = false; ritaUtbetalningskonto(); return; }
+      UT.rad = null;
+      UT.redigerar = false;
+      UT.besked = { text: 'Uppgifterna är borttagna.', ok: true };
+      ritaUtbetalningskonto();
+    });
+  });
+
+  document.addEventListener('submit', async e => {
+    if (!e.target || e.target.id !== 'ut-form') return;
+    e.preventDefault();
+    const msg = $('#ut-msg');
+    rensa(msg);
+
+    const bank = UT.metod === 'bank';
+    const clearing = bank ? $('#ut-clearing').value.trim() : '';
+    const konto = bank ? $('#ut-konto').value.trim() : '';
+    const swish = bank ? '' : $('#ut-swish').value.trim();
+    const fel = kolla([
+      { fel: bank && !clearing, text: 'Fyll i clearingnumret.', falt: $('#ut-clearing') },
+      { fel: bank && !konto, text: 'Fyll i kontonumret.', falt: $('#ut-konto') },
+      { fel: !bank && !swish, text: 'Fyll i mobilnumret du har Swish på.', falt: $('#ut-swish') }
+    ]);
+    if (fel) { säg(msg, fel, false); return; }
+
+    await medan($('#ut-spara'), 'Sparar…', async () => {
+      const res = await supa.rpc('spara_utbetalningsmetod', bank
+        ? { p_metod: 'bank', p_clearing: clearing, p_konto: konto }
+        : { p_metod: 'swish', p_swish: swish });
+      if (res.error) {
+        if (saknasFunktion(res)) { UT.finns = false; ritaUtbetalningskonto(); return; }
+        /* Databasens meddelande är skrivet för människor: vilket nummer
+           som är fel och varför, eller att det inte är öppnat än. */
+        säg(msg, felText(res.error), false);
+        return;
+      }
+      const rad = radUr(res.data);
+      UT.rad = rad ? Object.assign({ uppdaterad: new Date().toISOString() }, rad) : UT.rad;
+      UT.redigerar = false;
+      UT.besked = { text: 'Sparat.', ok: true };
+      ritaUtbetalningskonto();
+    });
+  });
 
   /* Här satt hanteraren för "Koppla utbetalningskonto". Den anropade
      edge-funktionen stripe-konto, som aldrig blev byggd, så knappen
@@ -2229,7 +2809,7 @@
 
     if (!S.elever.length) {
       host.innerHTML = tomt('Inga elever än',
-        'Familjen lägger in sitt barn i sin egen vy. Skriv till dem om det dröjer.');
+        'Nextrum kopplar ihop dig med en elev. Då syns eleven här.');
       return;
     }
     const träff = elevTräffar();
@@ -2269,19 +2849,20 @@
       return;
     }
 
-    const idag = isoFor(new Date());
     const hens = S.bokningar.filter(b => b.student_id === e.id);
-    const ordning = b => b.wanted_date + (b.wanted_time || '');
-    const kommande = hens
-      .filter(b => b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed'))
-      .sort((a, b) => ordning(a).localeCompare(ordning(b)));
+    const kommande = hens.filter(ärKommande)
+      .sort((a, b) => tidsnyckel(a).localeCompare(tidsnyckel(b)));
     const tidigare = hens
       .filter(b => b.status === 'completed')
-      .sort((a, b) => ordning(b).localeCompare(ordning(a)));
+      .sort((a, b) => tidsnyckel(b).localeCompare(tidsnyckel(a)));
     const öppna = (S.laxor || []).filter(h => h.status !== 'klar').length;
 
+    /* Raderna öppnar passet, som i passlistan. Här står man och
+       läser på inför ett pass, och det man vill se då är just det
+       passets förberedelse och förra rapporten. */
     const rad = b => NXKontakt.passRad(b, {
-      under: [b.format, b.location, (b.duration_min || 60) + ' min'].filter(Boolean).join(' · ')
+      under: [b.format, b.location, NXStudie.längdText(b.duration_min || 60)].filter(Boolean).join(' · '),
+      klickbar: true
     });
 
     host.innerHTML =
@@ -2311,15 +2892,21 @@
   });
 
   /* Byt aktiv elev, och familj om eleven hör till en annan. Används
-     också av rapportrutan: ett pass i schemat kan höra till en annan
-     elev än den som är vald, och rapporten sparas på den aktiva. */
+     också av rapportrutan, så att listorna i den (passväljaren,
+     ämnena, kunskapsområdena) gäller passets elev. Vilken elev
+     rapporten SPARAS på avgörs inte här, utan av passet (hål 3).
+
+     Familjen byts bara om den finns bland dina. En elev vars familj
+     är kopplad till en annan studiehjälpare har ingen tråd du kan
+     skriva i, och att byta dit hade lämnat chatten på en familj den
+     inte kan visa. */
   async function väljElev(id) {
     if (!id || id === S.aktivElev) return;
     const vald = S.elever.find(x => x.id === id);
     if (!vald) return;
 
-    const bytFamilj = vald.parent_id !== S.aktivFamilj;
-    S.aktivFamilj = vald.parent_id;
+    const bytFamilj = familjSyns(vald.parent_id) && vald.parent_id !== S.aktivFamilj;
+    if (bytFamilj) S.aktivFamilj = vald.parent_id;
     S.aktivElev = id;
 
     if (bytFamilj) {
@@ -2414,7 +3001,7 @@
 
     NXArbete.graf(graf, månader, {
       nagot: 'Bara rapporterade pass räknas. Skriver du rapporten senare flyttas passet till den månad det hölls, inte den månad du skrev.',
-      inget: 'Inga rapporterade pass än — grafen fylls i när du skrivit din första rapport.'
+      inget: 'Inga rapporterade pass än. Grafen fylls i när du skrivit din första rapport.'
     });
   }
 
@@ -2424,71 +3011,322 @@
      "vad ligger redan?". Båda läser S.bokningar, så en flytt syns i
      båda utan att något behöver hållas i synk.
      ============================================================ */
+  /* Teckenförklaringen och tidslinjen (program 2, Fas 1, P2). Vecko-
+     och dagvyn ritar då också timmarna runt passen: lediga inom Dina
+     tider och ej tillgängliga utanför, med ikon och ord.
+
+     Upptagna skickas med fast alla dina pass redan står i schemat.
+     Schemat hoppar över timmar som ett eget pass täcker, så svaret
+     ändrar bara något om de två hämtningarna glidit isär. */
   function byggSchema() {
     NXStudie.schemaI(S, {
-      namn: b => {
-        const e = S.elever.find(x => x.id === b.student_id);
-        if (e) return e.name;
-        const f = S.familjer.find(x => x.id === b.parent_id);
-        return f ? (f.full_name || '') : '';
-      },
-      onOppna: visaPass
+      namn: passNamn,
+      onOppna: b => öppnaPass(b.id),
+      teckenforklaring: true,
+      tillgang: S.tillgangHämtad ? S.tillgang : null,
+      upptagna: S.upptagna
     });
   }
 
-  /* Knapparna får samma data-attribut som raderna i passlistan, så
-     de delegerade hanterarna längre ned tar hand om dem. Rutan
-     stänger sig själv när klicket bubblat vidare. */
-  function visaPass(b) {
-    const e = S.elever.find(x => x.id === b.student_id);
-    const f = S.familjer.find(x => x.id === b.parent_id);
-    const l = NXKontakt.LÄGEN[b.status] || { text: b.status };
-    const mitt = b.created_by === S.user.id;
+  /* Tiderna kommer i egna hämtningar, ofta efter att schemat ritats. */
+  function schemaTider() {
+    if (S.schema) S.schema.sättTider(S.tillgangHämtad ? S.tillgang : null, S.upptagna);
+  }
+
+  /* ============================================================
+     PASSRUTAN (program 2, Fas 1, P1)
+
+     Ett pass öppnas från fem ställen: passlistan, Mina lektioner,
+     Elevens läge, schemat och kortet i hälsningen. Alla går hit, och
+     alla har samma knappar som raden (passKnappar).
+
+     Rutan visar det man behöver inför och efter passet:
+       · tid, längd, ämne, elev, familj och plats
+       · Inför passet: vad som ska göras och länken till mötet, med
+         formuläret när databasen säger att du får ändra
+         (far_forbereda_passet)
+       · Från förra passet: din senaste rapport för samma elev före
+         passets datum
+       · Studieplanen: målet för passets elev
+       · Öppna läxor för passets elev (inte den valda eleven)
+       · Efter passet: passets egen rapport, för ett genomfört pass
+
+     Allt hämtas innan rutan öppnas. En ruta som fylls på medan man
+     läser hoppar under fingret.
+     ============================================================ */
+  let passÖppnas = false;
+  /* Den öppna rutan, för formulärets knappar. Ett id per ruta: en
+     sparning som svarar efter att rutan bytts ska inte skriva i nästa. */
+  let passRutan = null;
+
+  async function öppnaPass(id, händelse) {
+    if (passÖppnas) return;
+    const b = (S.bokningar || []).find(x => String(x.id) === String(id));
+    if (!b) return;
+    passÖppnas = true;
+    const knapp = händelse && händelse.target && händelse.target.closest
+      ? händelse.target.closest('[data-pass-oppna]') : null;
+    try {
+      await medan(knapp, 'Öppnar…', () => visaPass(b));
+    } catch (fel) {
+      console.warn('Passet kunde inte öppnas:', fel);
+    } finally {
+      passÖppnas = false;
+    }
+  }
+
+  /* Raderna i listorna. passKlick sitter på behållaren, som finns i
+     sidan från början; listorna ritas om inuti den. */
+  ['#pass-lista', '#ov-lektioner', '#elev-oversikt'].forEach(sel => {
+    NXKontakt.passKlick($(sel), (id, händelse) => öppnaPass(id, händelse));
+  });
+
+  /* Kortet "Nästa pass" i hälsningen. Kortet ritas av NXArbete.hero
+     som en länk; här blir klicket passrutan i stället. Ett klick med
+     Cmd eller Ctrl får göra det länkar gör. */
+  document.addEventListener('click', e => {
+    const a = e.target.closest('#vy-hero .vy-hero-kort a');
+    if (!a || !a.querySelector('.vy-hero-prick')) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button > 0) return;
+    const b = nästaPass();
+    if (!b) return;
+    e.preventDefault();
+    öppnaPass(b.id);
+  });
+
+  async function fårFörbereda(passId) {
+    const { data, error } = await supa.rpc('far_forbereda_passet', { p_pass: passId });
+    if (error) { console.warn('far_forbereda_passet:', error.message); return false; }
+    return data === true;
+  }
+
+  /* { ok, rad }. ok är false när frågan misslyckades: då visas varken
+     blocket eller formuläret, för ett tomt formulär över en
+     förberedelse som finns hade skrivit över den vid nästa sparning. */
+  async function hämtaFörberedelse(passId) {
+    const { data, error } = await supa.from('pass_forberedelse')
+      .select('att_gora, lank').eq('booking_id', passId).maybeSingle();
+    if (error) { console.warn('pass_forberedelse:', error.message); return { ok: false, rad: null }; }
+    return { ok: true, rad: data || null };
+  }
+
+  async function hämtaPlan(elevId) {
+    const { data, error } = await supa.from('study_plans')
+      .select('subject, goals')
+      .eq('student_id', elevId).eq('tutor_id', S.user.id)
+      .order('updated_at', { ascending: false }).limit(1);
+    if (error) { console.warn('study_plans:', error.message); return null; }
+    return (data && data[0]) || null;
+  }
+
+  /* Hämtas per pass, inte ur S.laxor: den rymmer bara den valda
+     elevens läxor, och passet kan gälla en annan. */
+  async function hämtaÖppnaLäxor(elevId) {
+    const { data, error } = await supa.from('homework')
+      .select('id, title, due_date, status, student_id')
+      .eq('student_id', elevId).neq('status', 'klar')
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(5);
+    if (error) { console.warn('homework:', error.message); return []; }
+    return data || [];
+  }
+
+  /* Passets egen rapport. Oftast bland de tjugo senaste; annars
+     hämtas den, för ett pass från i våras ska också gå att läsa. */
+  async function rapportFör(b) {
+    const r = (S.minaRapporter || []).find(x => x.booking_id === b.id);
+    if (r) return r.ai_feedback || r.raw_notes || null;
+    const { data, error } = await supa.from('lesson_reports')
+      .select('ai_feedback, raw_notes').eq('booking_id', b.id)
+      .order('created_at', { ascending: false }).limit(1);
+    if (error) { console.warn('lesson_reports:', error.message); return null; }
+    const d = data && data[0];
+    return d ? (d.ai_feedback || d.raw_notes || null) : null;
+  }
+
+  /* Din senaste rapport för samma elev FÖRE passets datum, och aldrig
+     passets egen. S.minaRapporter är sorterad med den nyaste först. */
+  function förraRapport(b) {
+    if (!b.student_id) return null;
+    const r = (S.minaRapporter || []).find(x =>
+      x.student_id === b.student_id && x.booking_id !== b.id
+      && String(x.lesson_date || '') < String(b.wanted_date || ''));
+    return r ? { datum: r.lesson_date, next_focus: r.next_focus, needs_practice: r.needs_practice } : null;
+  }
+
+  /* "Torsdag 24 september, kl. 16:00 till 17:00". Veckodagen står med:
+     det är den man planerar sin vecka efter. */
+  function passTid(b) {
+    const dag = b.wanted_date ? DAGNAMN[veckodagFör(b.wanted_date)] + ' ' + datumText(b.wanted_date) : '';
+    const h = parseInt(String(b.wanted_time || ''), 10);
+    if (isNaN(h)) return dag;
+    const n = Math.max(1, Math.ceil((Number(b.duration_min) || 60) / 60));
+    return dag + ', kl. ' + String(b.wanted_time).slice(0, 5) + ' till ' + tvåsiff(h + n) + String(b.wanted_time).slice(2, 5);
+  }
+
+  /* Två block som passRuta inte har: studieplanen och läxorna. De
+     ritas med rutans egna klasser och läggs in före knapparna. */
+  function planBlock(plan) {
+    const mål = plan && plan.goals ? String(plan.goals).trim() : '';
+    return '<div class="pass-block"><h6>Studieplanen</h6>'
+      + (mål
+          ? '<p>' + esc((plan.subject ? plan.subject + ': ' : '') + mål) + '</p>'
+          : '<p class="pass-tom">Inga mål i studieplanen än. Du skriver dem under Plan och utveckling.</p>')
+      + '</div>';
+  }
+
+  function läxBlock(läxor) {
+    const idag = isoFor(new Date());
+    return '<div class="pass-block"><h6>Öppna läxor</h6>'
+      + (läxor.length
+          ? läxor.map(h => '<div class="pass-lank">' + esc(h.title)
+              + (h.due_date
+                  ? '<span>' + esc(h.due_date < idag
+                      ? 'Skulle vara klar ' + NXStudie.deadlineText(h.due_date).toLowerCase()
+                      : 'Till ' + NXStudie.deadlineText(h.due_date).toLowerCase()) + '</span>'
+                  : '')
+              + '</div>').join('')
+          : '<p class="pass-tom">Inga öppna läxor.</p>')
+      + '</div>';
+  }
+
+  async function visaPass(b) {
+    const e = S.elever.find(x => x.id === b.student_id) || null;
+    const f = S.familjer.find(x => x.id === b.parent_id) || null;
+    const l = NXStudie.STATUS[b.status] || { text: b.status };
     const kan = b.status === 'requested' || b.status === 'confirmed';
+    /* Förberedelse, plan och läxor gäller en elev du är matchad med.
+       Ett pass utan elev, eller med en elev som inte längre är din,
+       har inget av det att visa. */
+    const minElev = !!e;
 
-    let knappar = '';
-    /* Ett pass som redan varit flyttas inte — det rapporteras. Och det
-       bekräftas inte heller i efterhand; samma regel som passlistan. */
-    const harVarit = harBörjat(b);
-    if (b.status === 'requested' && !mitt && !harVarit) {
-      knappar += '<button type="button" class="btn btn-primary" data-status="confirmed" data-id="' + esc(b.id) + '">Bekräfta</button>';
-    }
-    if (kan) {
-      const önskemål = b.status === 'requested' && !mitt;
-      if (harVarit && rapporterbart(b)) {
-        knappar += '<button type="button" class="btn btn-primary" data-rapportera="' + esc(b.id) + '">Skriv rapport</button>';
-      } else {
-        knappar += '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Flytta</button>';
-      }
-      knappar += '<button type="button" class="btn btn-ghost" data-status="cancelled" data-id="' + esc(b.id) + '"'
-        + (önskemål ? ' data-avboj="1">Avböj' : '>Avboka') + '</button>';
-    }
+    /* Formuläret "Förbered passet" hör till pass som ligger framåt.
+       Databasen (far_forbereda_passet) frågar bara om status och
+       elev, inte om datum, så ett pass som väntar på rapport fick
+       formuläret med "Familjen ser det du skriver här när den öppnar
+       passet". Inför ett pass som redan hållits finns inget att säga;
+       det som skrevs före står kvar att läsa. */
+    const [får, forb, plan, läxor, efter] = await Promise.all([
+      kan && minElev && ärKommande(b) ? fårFörbereda(b.id) : false,
+      hämtaFörberedelse(b.id),
+      minElev ? hämtaPlan(b.student_id) : null,
+      minElev ? hämtaÖppnaLäxor(b.student_id) : [],
+      b.status === 'completed' ? rapportFör(b) : null
+    ]);
 
-    const kommande = (S.laxor || [])
-      .filter(h => h.student_id === b.student_id || S.aktivElev === b.student_id)
-      .filter(h => h.status !== 'klar' && h.due_date && h.due_date >= b.wanted_date)
-      .slice(0, 3);
+    const bokadAv = !b.created_by ? null
+      : b.created_by === S.user.id ? 'Du'
+      : b.created_by === b.parent_id ? 'Familjen' : 'Nextrum';
 
-    NXStudie.passRuta({
+    const api = NXStudie.passRuta({
+      id: b.id,
       titel: b.subject || 'Pass',
-      under: datumText(b.wanted_date) + (b.wanted_time ? ' kl. ' + b.wanted_time : ''),
+      under: passTid(b),
+      langd: b.duration_min || 60,
       rader: [
         ['Status', l.text],
-        ['Längd', (b.duration_min || 60) + ' min'],
+        ['Elev', e ? e.name : (b.student_id ? 'Inte kopplad till dig längre' : UTAN_ELEV)],
+        ['Familj', f ? (f.full_name || f.email) : null],
         ['Format', b.format],
         ['Plats', b.location],
-        ['Elev', e ? e.name : null],
-        ['Familj', f ? (f.full_name || f.email) : null],
-        ['Bokades av', b.created_by ? (mitt ? 'Du' : 'Familjen') : null],
+        ['Bokades av', bokadAv],
         ['Närvaro', b.attendance === 'franvarande' ? 'Uteblev'
                   : b.attendance === 'sen' ? 'Kom sent'
                   : b.attendance === 'narvarande' ? 'Närvarande' : null]
       ],
+      /* Blocket "Inför passet" syns för ett pass som ska hållas och
+         inte har börjat, även tomt, så att det står att inget är
+         förberett. Ett pass som varit visar det bara om något faktiskt
+         skrevs: "Inget förberett än" om i går är inget besked. */
+      forberedelse: forb.ok ? forb.rad : undefined,
+      forberedelseTom: forb.ok && ärKommande(b) && b.student_id ? 'Inget förberett än.' : undefined,
+      forberedelseForm: får && forb.ok ? (forb.rad || true) : undefined,
       anteckning: b.note,
-      laxor: kommande,
-      atgarder: knappar
+      forraRapport: förraRapport(b),
+      rapport: efter,
+      atgarder: passKnappar(b, true)
     });
+
+    if (minElev) {
+      const knappar = api.ruta.querySelector('.nx-fraga-knappar');
+      if (knappar) knappar.insertAdjacentHTML('beforebegin', planBlock(plan) + läxBlock(läxor));
+    }
+    passRutan = { id: String(b.id), api: api };
   }
+
+  /* ---------- formuläret "Förbered passet" ----------
+     Rutan sparar inte själv; den lämnar knapparna hit. Samma regel
+     för länken som villkoret i databasen prövas först här, så att ett
+     stavfel får ett svar direkt i stället för efter en tur till
+     servern. Databasen är ändå skyddet: dess fel visas som det är. */
+  function förberedelseFel(error) {
+    if (error.code === '23514') {
+      return /att_gora/.test(String(error.message || ''))
+        ? 'Att göra får vara högst 1000 tecken.'
+        : NXStudie.MÖTESLÄNK_FEL;
+    }
+    /* RLS svarar på engelska. Det händer när passet hunnit bli
+       genomfört eller avbokat, eller eleven bytt studiehjälpare. */
+    if (error.code === '42501') return 'Du kan inte ändra förberedelsen för det här passet längre.';
+    return felText(error);
+  }
+
+  document.addEventListener('click', async e => {
+    const spara = e.target.closest('[data-forb-spara]');
+    const bort = e.target.closest('[data-forb-ta-bort]');
+    if (!spara && !bort) return;
+    const id = (spara || bort).getAttribute(spara ? 'data-forb-spara' : 'data-forb-ta-bort');
+    const r = passRutan && passRutan.id === id ? passRutan.api : null;
+    const form = (spara || bort).closest('[data-forb-form]');
+    if (!r || !form) return;
+
+    if (spara) {
+      const göraFält = form.querySelector('[data-forb-gora]');
+      const länkFält = form.querySelector('[data-forb-lank]');
+      const gora = (göraFält.value || '').trim();
+      const lank = (länkFält.value || '').trim();
+      if (!gora && !lank) {
+        r.säg('Skriv vad passet ska handla om, eller klistra in länken till mötet.', false);
+        göraFält.focus();
+        return;
+      }
+      if (gora.length > 1000) { r.säg('Att göra får vara högst 1000 tecken.', false); göraFält.focus(); return; }
+      if (lank && !NXStudie.mötesLänkOk(lank)) { r.säg(NXStudie.MÖTESLÄNK_FEL, false); länkFält.focus(); return; }
+
+      await medan(spara, 'Sparar…', async () => {
+        const { data, error } = await supa.from('pass_forberedelse')
+          .upsert({ booking_id: id, att_gora: gora || null, lank: lank || null }, { onConflict: 'booking_id' })
+          .select('att_gora, lank').maybeSingle();
+        if (!passRutan || passRutan.api !== r) return;
+        if (error) { r.säg('Kunde inte spara: ' + förberedelseFel(error), false); return; }
+        r.sättForberedelse(data || { att_gora: gora || null, lank: lank || null });
+        r.säg('Sparat. Familjen ser det när den öppnar passet.', true);
+      });
+      return;
+    }
+
+    const ja = await bekräfta({
+      titel: 'Ta bort förberedelsen?',
+      text: 'Det du skrivit inför passet och länken till mötet försvinner, också för familjen.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+    await medan(bort, 'Tar bort…', async () => {
+      /* select() efter delete: en rad som RLS inte släpper igenom
+         tas inte bort, och det ger inget fel. Utan svaret hade rutan
+         sagt "borttagen" om något som ligger kvar. */
+      const { data, error } = await supa.from('pass_forberedelse')
+        .delete().eq('booking_id', id).select('booking_id');
+      if (!passRutan || passRutan.api !== r) return;
+      if (error) { r.säg('Kunde inte ta bort: ' + förberedelseFel(error), false); return; }
+      if (!data || !data.length) {
+        r.säg('Förberedelsen gick inte att ta bort. Ladda om sidan och försök igen.', false);
+        return;
+      }
+      r.sättForberedelse(null);
+      r.säg('Förberedelsen är borttagen.', true);
+    });
+  });
 
   function visaFel(fel, sammanhang) { NXStudie.felvy(visa, fel, sammanhang); }
 
@@ -2660,9 +3498,12 @@
     await laddaTider();
     await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaUpptagna()]);
     ritaNotiser();
-    await Promise.all([ritaÖvSamtal(), laddaErsattning()]);
-    /* Stämpla besöket sist — notiserna räknas mot den förra. */
-    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
+    await Promise.all([ritaÖvSamtal(), laddaErsattning(), laddaUtbetalningskonto()]);
+    /* Stämpla besöket sist, eftersom notiserna räknas mot den förra.
+       await är inte kosmetiskt: supabase-js skickar frågan först när
+       någon väntar på svaret. Utan det skrevs stämpeln aldrig, och
+       adminvyn sa "aldrig inloggad" om alla. */
+    await supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');
    }

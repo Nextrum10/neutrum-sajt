@@ -14,7 +14,13 @@
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], laxFilter: 'attgora', rapporter: [], progress: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], laxorBarn: null, laxFilter: 'attgora', rapporter: [], allaRapporter: [], progress: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false,
+    /* Program 2, Fas 1. forberedelser: booking_id → { att_gora, lank }
+       ur pass_forberedelse. tutorNamn: studiehjälparens id → namn, för
+       varje studiehjälpare som haft ett av familjens pass. tider:
+       bokningens studiehjälpares fönster och tagna timmar, delat
+       mellan bokningen och schemat så att de aldrig säger olika saker. */
+    forberedelser: new Map(), forbFel: false, tutorNamn: new Map(), tutorFrågade: new Set(), tider: null, nästaPass: null };
 
   const VYER = ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel'];
   function visa(id) { NXStudie.visaVy(VYER, id); }
@@ -121,7 +127,7 @@
             : '';
         })()
       + '<p class="xsmall" style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted-2);line-height:1.6">'
-      + 'Skriv hellre i rutan Kontakt än via mejl — då hamnar allt på ett ställe och vi kan hjälpa till om något krånglar.</p>';
+      + 'Skriv hellre i rutan Kontakt än via mejl. Då hamnar allt på ett ställe och vi kan hjälpa till om något krånglar.</p>';
 
     $('#boka-hos').textContent = 'hos ' + t.full_name.split(' ')[0];
     /* Namnet står också i bekräftelsesteget. Det är där man läser
@@ -130,6 +136,68 @@
     if (S.boka && S.boka.sättHos) S.boka.sättHos(t.full_name);
     $('#tr-vem').textContent = t.full_name.split(' ')[0];
     $('#tr-text').placeholder = 'Skriv till ' + t.full_name.split(' ')[0] + '…';
+  }
+
+  /* ============ vems studiehjälpare ============
+     Matchningen görs per elev (students.matched_tutor_id), och
+     familjens profiles.matched_tutor_id är en härledd kopia. Två
+     frågor, två svar:
+
+     · Vem bokar familjen hos? Se bokningensStudiehjälpare().
+     · Vem hade ett visst pass? PASSETS tutor_id, alltid. Ett pass hos
+       en tidigare studiehjälpare var fortfarande hos den personen.
+
+     Chatten läser också familjens kopia. */
+
+  /* Studiehjälparen vars tider bokningen och schemat visar, OCH den
+     som ett nytt pass sparas hos. Ett och samma svar, från ett ställe:
+     en tid ur en persons kalender som sparas hos en annan person är
+     precis det felet granskningen hittade. Kalendern visade barnets
+     studiehjälpare medan passet sparades hos familjens, och för ett
+     syskon med en egen studiehjälpare blev det en tid den personen
+     inte jobbar, och rubriken sa ett tredje namn.
+
+     Vilken som ska gälla för syskon med olika studiehjälpare är ett
+     beslut som väntar på Leo (modellrapportens B2), så svaret är
+     familjens kopia, som före program 2. Blir beslutet barnets
+     studiehjälpare byts raden här mot barnets matched_tutor_id (när
+     match_status inte är 'pending', annars släpper databasen inte
+     fram tiderna), och då följer kalendern, passet och rubriken med. */
+  function bokningensStudiehjälpare() {
+    return (S.profil && S.profil.matched_tutor_id) || null;
+  }
+
+  /* Är den här studiehjälparen matchad med familjen just nu? Bara då
+     får familjen läsa hens tider, och bara då går ett pass att flytta:
+     flytta-rutan hade annars öppnats utan en enda dag att välja. */
+  function ärMatchadMed(tutorId) {
+    if (!tutorId) return false;
+    if (S.profil && S.profil.matched_tutor_id === tutorId) return true;
+    return (S.barn || []).some(x => x.matched_tutor_id === tutorId && x.match_status !== 'pending');
+  }
+
+  /* Namnet på passets studiehjälpare. Familjen får bara läsa profilen
+     hos en studiehjälpare den är matchad med, så en tidigare kommer
+     tillbaka som ingenting. Då en reservtext, inte ett tomt fält: att
+     passet HADE en studiehjälpare är sant även när namnet inte går att
+     läsa. */
+  function tutorNamn(id) {
+    if (!id) return null;
+    if (S.tutor && S.tutor.id === id && S.tutor.full_name) return S.tutor.full_name;
+    return S.tutorNamn.get(id) || 'Er tidigare studiehjälpare';
+  }
+
+  /* En fråga för alla studiehjälpare familjens pass har haft. Ett id
+     som inte gav något svar frågas inte igen vid nästa omladdning:
+     svaret blir detsamma, RLS släpper inte fram det. */
+  async function laddaTutorNamn() {
+    const ids = Array.from(new Set((S.bokningar || []).map(b => b.tutor_id).filter(Boolean)))
+      .filter(id => !S.tutorNamn.has(id) && !S.tutorFrågade.has(id));
+    if (!ids.length) return;
+    const { data, error } = await supa.from('profiles').select('id, full_name').in('id', ids);
+    if (error) { console.warn('profiles:', error.message); return; }
+    ids.forEach(id => S.tutorFrågade.add(id));
+    (data || []).forEach(p => { if (p.full_name) S.tutorNamn.set(p.id, p.full_name); });
   }
 
   /* ============ kontakt ============ */
@@ -166,8 +234,10 @@
 
   /* ============ barn ============ */
   async function laddaBarn() {
+    /* matched_tutor_id och match_status per barn: vem som är matchad
+       med vilket barn (ärMatchadMed, enStudiehjälpare). */
     const { data, error } = await supa
-      .from('students').select('id, name, grade, school, subjects, goals')
+      .from('students').select('id, name, grade, school, subjects, goals, matched_tutor_id, match_status')
       .eq('parent_id', S.user.id).order('created_at');
     if (error) { console.warn(error.message); return; }
     S.barn = data || [];
@@ -268,8 +338,8 @@
     const ja = await NXStudie.bekräfta({
       titel: 'Ta bort ' + barn.name + '?',
       text: 'Allt som hör till barnet försvinner: studieplan, läxor och material. '
-        + 'Har barnet haft pass eller fått rapporter går det inte att ta bort — '
-        + 'hör av er till oss i stället.',
+        + 'Har barnet haft pass eller fått rapporter går det inte att ta bort. '
+        + 'Hör av er till oss i stället.',
       knapp: 'Ta bort'
     });
     if (!ja) return;
@@ -310,7 +380,7 @@
   }
 
   $('#andra-barn').addEventListener('click', () => {
-    if (!S.valtBarn) { säg($('#b-andra-msg'), '⚠️ Lägg till ett barn först.', false); return; }
+    if (!S.valtBarn) { säg($('#b-andra-msg'), 'Lägg till ett barn först.', false); return; }
     const f = $('#barn-andra');
     f.hidden = !f.hidden;
     $('#andra-barn').textContent = f.hidden ? 'Ändra uppgifter' : 'Stäng';
@@ -326,7 +396,7 @@
     e.preventDefault();
     const msg = $('#b-andra-msg');
     rensa(msg);
-    if (!S.valtBarn) { säg(msg, '⚠️ Välj ett barn först.', false); return; }
+    if (!S.valtBarn) { säg(msg, 'Välj ett barn först.', false); return; }
 
     await medan(e.submitter, 'Sparar…', async () => {
       const { error } = await supa.from('students').update({
@@ -405,6 +475,9 @@
     }
 
     host.innerHTML = laddar();
+    /* Vems läxorna är står bredvid dem. Passdetaljen visar läxor för
+       PASSETS elev, och kan bara låna S.laxor när det är samma barn. */
+    const barn = S.valtBarn;
     const { data, error } = await supa
       .from('homework')
       .select('id, title, instructions, subject, due_date, status, completed_at')
@@ -415,12 +488,14 @@
     if (error) { host.innerHTML = tomt('Kunde inte hämta läxorna', felText(error)); return; }
     if (!data.length) {
       S.laxor = [];
+      S.laxorBarn = barn;
       host.innerHTML = tomt('Inga läxor än', 'När er studiehjälpare ger en läxa dyker den upp här.');
       ritaÖvLaxor();
       return;
     }
 
     S.laxor = data;
+    S.laxorBarn = barn;
     ritaNotiser();
     ritaÖvLaxor();
     ritaStatistik();
@@ -541,7 +616,7 @@
     rensa($('#av-msg'));
 
     const fel = M.granska(fil);
-    if (fel) { säg($('#av-msg'), '⚠️ ' + fel, false); return; }
+    if (fel) { säg($('#av-msg'), fel, false); return; }
 
     const blob = await M.beskär(fil);
     if (!blob) return;
@@ -580,7 +655,7 @@
     rensa(msg);
     const namn = $('#k-namn').value.trim();
     const fel = kolla([{ fel: !namn, text: 'Vänligen fyll i ditt namn.', falt: $('#k-namn') }]);
-    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+    if (fel) { säg(msg, fel, false); return; }
 
     await medan(e.submitter, 'Sparar…', async () => {
       const { error } = await supa.from('profiles')
@@ -605,7 +680,7 @@
       { fel: a.length < 6, text: 'Lösenordet måste vara minst 6 tecken.', falt: $('#k-losen') },
       { fel: a !== b, text: 'Lösenorden är inte lika.', falt: $('#k-losen2') }
     ]);
-    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+    if (fel) { säg(msg, fel, false); return; }
 
     await medan(e.submitter, 'Byter…', async () => {
       const { error } = await supa.auth.updateUser({ password: a });
@@ -674,93 +749,238 @@
       + '</div>';
   }
 
-  /* ============ rapporter ============ */
+  /* ============ rapporter ============
+     Hämtas för ALLA barn sedan program 2 Fas 1. Listan under Efter
+     passen visar fortfarande bara det valda barnets, men passdetaljen
+     behöver rapporterna för passets elev ("Från förra passet") och
+     rapporten som hör till just det passet ("Efter passet"), vilket
+     barn som än är valt i väljaren.
+
+     "Hur det gick" läste förut r.went_well, som aldrig hämtades, så
+     raden syntes aldrig. Omdömet står i gick; went_well är den äldre
+     fritexten om vad som gick bra (adminvyn visar den som "Gick bra"). */
+  function gickText(r) {
+    const l = r && GICK_LAGEN.find(x => x[0] === r.gick);
+    return l ? l[1] : null;
+  }
+
   async function laddaRapporter() {
     const host = $('#rapporter');
     $('#rapport-antal').textContent = '';
-    if (!S.valtBarn) { host.innerHTML = '<div class="empty">Välj ett barn för att se rapporterna.</div>'; return; }
+    const ids = (S.barn || []).map(b => b.id);
+    if (!S.valtBarn || !ids.length) {
+      S.allaRapporter = [];
+      S.rapporter = [];
+      host.innerHTML = '<div class="empty">Välj ett barn för att se rapporterna.</div>';
+      return;
+    }
 
     host.innerHTML = '<div class="loading">Hämtar</div>';
+    const barn = S.valtBarn;
     const { data, error } = await supa
-      .from('lesson_reports').select('id, lesson_date, raw_notes, ai_feedback, gick, amne, needs_practice, next_focus')
-      .eq('student_id', S.valtBarn).order('lesson_date', { ascending: false });
+      .from('lesson_reports')
+      .select('id, booking_id, student_id, lesson_date, raw_notes, ai_feedback, gick, went_well, amne, needs_practice, next_focus')
+      .in('student_id', ids).order('lesson_date', { ascending: false });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
 
-    S.rapporter = data || [];
+    S.allaRapporter = data || [];
+    const barnets = S.allaRapporter.filter(r => r.student_id === barn);
+    S.rapporter = barnets;
     ritaStatistik();
 
-    if (!data || !data.length) {
+    /* Frågan om recension gäller familjen: "minst två rapporter" är
+       familjens rapporter, inte bara det valda barnets. */
+    if (!barnets.length) {
       host.innerHTML = '<div class="empty">Inga rapporter än. Den första kommer efter första passet.</div>';
-      ritaRecension(0);
+      ritaRecension(S.allaRapporter.length);
       return;
     }
-    $('#rapport-antal').textContent = data.length + ' st';
-    ritaRecension(data.length);
-    host.innerHTML = data.map(r =>
-      '<div class="report">'
+    $('#rapport-antal').textContent = barnets.length + ' st';
+    ritaRecension(S.allaRapporter.length);
+    host.innerHTML = barnets.map(r => {
+      const gick = gickText(r);
+      return '<div class="report">'
       + '<div class="report-head"><b>Pass</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
       + (r.ai_feedback
           ? '<p>' + esc(r.ai_feedback) + '</p>'
           : '<span class="raw-note">Studiehjälparens anteckningar</span><p class="raw">' + esc(r.raw_notes) + '</p>')
-      + (r.went_well ? '<p class="small" style="margin-top:10px"><b>Hur det gick:</b> ' + esc(r.went_well) + '</p>' : '')
+      + (gick ? '<p class="small" style="margin-top:10px"><b>Hur det gick:</b> ' + esc(gick) + '</p>' : '')
+      + (r.went_well ? '<p class="small" style="margin-top:6px"><b>Det som gick bra:</b> ' + esc(r.went_well) + '</p>' : '')
       + (r.needs_practice ? '<p class="small" style="margin-top:6px"><b>Behöver träna på:</b> ' + esc(r.needs_practice) + '</p>' : '')
       + (r.next_focus ? '<p class="small" style="margin-top:6px"><b>Nästa fokus:</b> ' + esc(r.next_focus) + '</p>' : '')
-      + '</div>').join('');
+      + '</div>';
+    }).join('');
   }
 
   /* ============ pass ============ */
+
+  /* Lokalt datum, inte UTC: mellan midnatt och klockan två i
+     Sverige är UTC-datumet fortfarande gårdagen. */
+  function ärKommande(b) {
+    return (b.status === 'requested' || b.status === 'confirmed')
+      && String(b.wanted_date || '') >= isoFor(new Date());
+  }
+
+  /* Ett förslag från studiehjälparen ser likadant ut i databasen
+     som en egen bokning. created_by är det enda som skiljer, och
+     det avgör om raden ska ha "Passar bra" eller "Avboka". */
+  function ärDerasFörslag(b) {
+    return !!b.created_by && b.created_by !== S.user.id;
+  }
+
+  /* ---------- knapparna på ett pass ----------
+     EN regel för raden i listan och för passdetaljen, och regeln är
+     databasens (skydda_bokningsfalt). Ingen knapp ska synas som
+     databasen kommer att neka, eller som leder till en tom ruta:
+
+     · Passar bra / Avböj: bara på motpartens förslag som fortfarande
+       är en förfrågan. Den som föreslog tiden kan inte bekräfta den
+       själv. Ett förslag vars dag redan passerat går inte att svara
+       ja på i någon mening som betyder något, så det får inga knappar.
+     · Avboka: på ett kommande pass som är önskat eller bekräftat.
+       Genomförda och avbokade pass är frysta.
+     · Flytta: som Avboka, och passet måste ha en studiehjälpare som
+       familjen är matchad med. Annars får familjen inte läsa hens
+       tider, och rutan hade öppnats utan en enda dag att välja. */
+  function kanSvara(b) { return ärDerasFörslag(b) && b.status === 'requested' && ärKommande(b); }
+  function kanFlytta(b) { return ärKommande(b) && ärMatchadMed(b.tutor_id); }
+
+  function passKnappar(b, iRuta) {
+    const k = iRuta ? 'btn' : 'btn btn-sm';
+    const id = esc(b.id);
+    if (kanSvara(b)) {
+      return '<button type="button" class="' + k + ' btn-primary" data-passvar="confirmed" data-id="' + id + '">Passar bra</button>'
+           + '<button type="button" class="' + k + ' btn-ghost" data-passvar="cancelled" data-id="' + id + '">Avböj</button>';
+    }
+    if (ärKommande(b)) {
+      return (kanFlytta(b) ? '<button type="button" class="' + k + ' btn-ghost" data-flytta="' + id + '">Flytta</button>' : '')
+           + '<button type="button" class="' + k + ' btn-ghost" data-avboka="' + id + '">Avboka</button>';
+    }
+    return '';
+  }
+
+  /* Förberedelsen inför passen (pass_forberedelse). Familjen läser,
+     studiehjälparen skriver. Bara pass som inte är avbokade: ett
+     inställt pass har inget "inför". Frågan delas i omgångar så att
+     adressen aldrig blir för lång för en familj med många pass.
+
+     En ny Map byggs och byts in först när allt kommit. Annars hade en
+     ruta som öppnas mitt i hämtningen sagt "inget förberett" om ett
+     pass som faktiskt är förberett. */
+  async function laddaForberedelser() {
+    const ids = (S.bokningar || []).filter(b => b.status !== 'cancelled').map(b => b.id);
+    const ny = new Map();
+    for (let i = 0; i < ids.length; i += 100) {
+      const { data, error } = await supa.from('pass_forberedelse')
+        .select('booking_id, att_gora, lank').in('booking_id', ids.slice(i, i + 100));
+      if (error) {
+        console.warn('pass_forberedelse:', error.message);
+        S.forbFel = true;
+        return;
+      }
+      (data || []).forEach(f => ny.set(f.booking_id, f));
+    }
+    S.forberedelser = ny;
+    S.forbFel = false;
+  }
+
   async function laddaPass() {
     const host = $('#pass-lista');
     const { data, error } = await supa
-      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, status, student_id, created_by')
+      .from('bookings')
+      .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, status, student_id, created_by, tutor_id, attendance, avbokad_at')
       .eq('parent_id', S.user.id).order('wanted_date', { ascending: true });
 
-    if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
+    if (error) {
+      host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>';
+      const ov = $('#ov-pass');
+      if (ov) ov.innerHTML = tomt('Kunde inte hämta passen', felText(error));
+      return;
+    }
     S.bokningar = data || [];
+    /* Namnen och förberedelsen före ritningen: raderna och rutan ska
+       inte hinna visa "Er tidigare studiehjälpare" om den nuvarande. */
+    await Promise.all([laddaTutorNamn(), laddaForberedelser()]);
     ritaNotiser();
     ritaNästaPass();
+    ritaÖvLektioner();
     ritaStatistik();
     byggSchema();
+    NXKontakt.passKlick(host, öppnaPass);
+    $('#pass-antal').textContent = '';
     if (!S.bokningar.length) { host.innerHTML = tomt('Inga bokade pass än', 'Boka en tid under Boka pass, så står passet här.'); return; }
 
-    /* Lokalt datum, inte UTC: mellan midnatt och klockan två i
-       Sverige är UTC-datumet fortfarande gårdagen. */
-    const idag = isoFor(new Date());
+    /* Antalet räknar inte avbokade. De ligger i en egen hopfälld grupp
+       längst ned, och ett pass som inte blev av är inget "pass". */
     const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
     $('#pass-antal').textContent = aktiva.length + ' st';
 
     NXStudie.passLista({
       host: host,
       bokningar: S.bokningar,
+      avbokade: 'egen',
       tomtKommande: 'Inga kommande pass. Boka en tid under Boka pass, så står passet här.',
       rad: b => {
-      const barn = S.barn.find(x => x.id === b.student_id);
-      const kommande = b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed');
-      /* Ett förslag från studiehjälparen ser likadant ut i databasen
-         som en egen bokning — created_by är det enda som skiljer, och
-         det avgör om raden ska ha "Bekräfta" eller "Avboka". */
-      const derasFörslag = b.created_by && b.created_by !== S.user.id;
-
-      let knappar = '';
-      if (derasFörslag && b.status === 'requested') {
-        knappar = '<button class="btn btn-primary btn-sm" data-passvar="confirmed" data-id="' + b.id + '">Passar bra</button>'
-                + '<button class="btn btn-ghost btn-sm" data-passvar="cancelled" data-id="' + b.id + '">Avböj</button>';
-      } else if (kommande) {
-        knappar = '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>'
-                + '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
-      }
-
-      /* Platsen står direkt på raden. Ett pass på plats är en resa —
-         var man ska vara är halva beskedet. */
-      const under = [b.format, b.location, barn ? barn.name : null].filter(Boolean).join(' · ');
-      return NXKontakt.passRad(b, {
-        under: under,
-        vem: derasFörslag ? 'Föreslaget av er studiehjälpare' : null,
-        atgarder: knappar
-      }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
+        const barn = S.barn.find(x => x.id === b.student_id);
+        /* Platsen står direkt på raden. Ett pass på plats är en resa,
+           och var man ska vara är halva beskedet. */
+        const under = [b.format, b.location, barn ? barn.name : null].filter(Boolean).join(' · ');
+        return NXKontakt.passRad(b, {
+          under: under,
+          vem: ärDerasFörslag(b) ? 'Föreslaget av er studiehjälpare' : null,
+          atgarder: passKnappar(b, false),
+          klickbar: true
+        }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
       }
     });
+  }
+
+  /* Raderna, blocket på Översikt och schemat öppnar samma ruta. */
+  function öppnaPass(id) {
+    const b = (S.bokningar || []).find(x => String(x.id) === String(id));
+    if (b) visaPass(b);
+  }
+
+  /* ============================================================
+     MINA LEKTIONER PÅ ÖVERSIKT
+     De närmaste passen för ALLA barn, högst tre. Barnets namn står
+     bara när familjen har fler än ett: med ett barn är det brus.
+     Knapparna för att svara, flytta och avboka står i passets
+     detaljer och i listan under Mina lektioner, inte här. Översikten
+     ska gå att läsa på en blick.
+     ============================================================ */
+  const ÖV_PASS = 3;
+
+  function ritaÖvLektioner() {
+    const host = $('#ov-pass');
+    if (!host) return;
+    const kommande = (S.bokningar || []).filter(ärKommande).sort((x, y) =>
+      (x.wanted_date + (x.wanted_time || '')).localeCompare(y.wanted_date + (y.wanted_time || '')));
+    const antal = $('#ov-pass-antal');
+    if (antal) antal.textContent = kommande.length ? kommande.length + ' kommande' : '';
+
+    if (!kommande.length) {
+      /* Säg vad man gör, inte bara att det är tomt. */
+      const någraFörut = (S.bokningar || []).some(b => b.status !== 'cancelled');
+      host.innerHTML = '<div class="empty"><b>' + (någraFörut ? 'Inga kommande pass' : 'Inga bokade pass än') + '</b>'
+        + '<br><span>Boka ett pass under Boka pass.</span>'
+        + '<div class="vy-tomt-atg"><a class="btn btn-ghost btn-sm" href="#boka">Boka pass</a></div></div>';
+      return;
+    }
+
+    const flera = (S.barn || []).length > 1;
+    host.innerHTML = kommande.slice(0, ÖV_PASS).map(b => {
+      const barn = flera ? S.barn.find(x => x.id === b.student_id) : null;
+      const under = [NXStudie.längdText(b.duration_min), b.format, barn ? barn.name : null]
+        .filter(Boolean).join(' · ');
+      return NXKontakt.passRad(b, {
+        under: under,
+        vem: kanSvara(b) ? 'Väntar på ert svar' : null,
+        klickbar: true
+      });
+    }).join('');
+    NXKontakt.passKlick(host, öppnaPass);
   }
 
   document.addEventListener('click', async e => {
@@ -817,13 +1037,17 @@
     const hus = $('#notis-hus');
     if (!hus) return;
     const poster = [];
+    const idag = isoFor(new Date());
 
     /* Föreslagen tid FÖRST. Det är den enda notisen som väntar på
        ett svar från familjen — meddelanden och läxor kan läsas när
        som helst, men en föreslagen tid blockerar studiehjälparens
-       kalender tills någon säger ja eller nej. */
-    const föreslagna = (S.bokningar || []).filter(b =>
-      b.status === 'requested' && b.created_by && b.created_by !== S.user.id);
+       kalender tills någon säger ja eller nej.
+
+       Samma urval som knapparna (kanSvara): ett förslag vars dag har
+       passerat har inga knappar, och då ska notisen inte be om ett
+       svar som inte går att ge. */
+    const föreslagna = (S.bokningar || []).filter(kanSvara);
     if (föreslagna.length) {
       const f = föreslagna[0];
       poster.push({
@@ -835,7 +1059,7 @@
           : (datumText(f.wanted_date)
               + (f.wanted_time ? ' kl. ' + String(f.wanted_time).slice(0, 5) : '')
               + (f.subject ? ' · ' + f.subject : '')
-              + ' — svara ja eller nej.'),
+              + '. Svara ja eller nej.'),
         mål: '#pass-lista'
       });
     }
@@ -866,7 +1090,6 @@
       });
     });
 
-    const idag = isoFor(new Date());
     const brådskande = (S.laxor || []).filter(h => h.status !== 'klar' && h.due_date && h.due_date <= idag);
     if (brådskande.length) {
       const sena = brådskande.filter(h => h.due_date < idag).length;
@@ -880,22 +1103,28 @@
     NXStudie.notiser(hus, poster);
   }
 
-  /* Flytta ett pass — samma tider som bokningen lyder. */
+  /* Flytta ett pass: samma tider som bokningen lyder.
+
+     Tiderna är PASSETS studiehjälpares (b.tutor_id), inte familjens.
+     Ett pass hos en annan studiehjälpare än den familjen matchades
+     med först flyttas inom den personens schema, och det är den
+     personens tagna timmar som ska stå som "Bokad". */
   document.addEventListener('click', async e => {
     const k = e.target.closest('[data-flytta]');
     if (!k) return;
     const b = S.bokningar.find(x => x.id === k.dataset.flytta);
-    if (!b) return;
+    if (!b || !kanFlytta(b)) return;
 
     const [upptagna, tider] = await Promise.all([
-      NX.hämtaUpptagna(S.profil.matched_tutor_id),
-      NX.hämtaTillganglighet(S.profil.matched_tutor_id)
+      NX.hämtaUpptagna(b.tutor_id),
+      NX.hämtaTillganglighet(b.tutor_id)
     ]);
 
     const ny = await NXStudie.flyttaRuta({
       datum: b.wanted_date, tid: b.wanted_time,
       tillgang: tider.tillgang, upptagna,
-      minuter: b.duration_min || 60
+      minuter: b.duration_min || 60,
+      lagen: true
     });
     if (!ny) return;
 
@@ -930,26 +1159,65 @@
   const BOKA_AMNEN = ['Matematik', 'Svenska', 'Engelska',
     'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap', 'Annat'];
 
+  /* Studiehjälparens tider till schemat. Samma hämtning som
+     bokningen gör, så att en timme som bokningen erbjuder aldrig står
+     som "Bokad" i schemat eller tvärtom. Inga fönster alls ritas som
+     ingen tidslinje, inte som sju dagar "Ej tillgänglig hela dagen":
+     det är samma besked som bokningen ger i ord ("inga tider inlagda
+     än"), och i schemat vore det bara brus.
+
+     Bara när familjen har EN studiehjälpare. Schemat visar alla barns
+     pass, och tidslinjen räknar varje pass på dagen som familjens
+     egen timme. Har syskonen olika studiehjälpare hade ett pass hos
+     den ena dolt en tagen timme hos den andra, och schemat hade blandat
+     två personers kalendrar. */
+  function enStudiehjälpare() {
+    const ids = new Set((S.barn || [])
+      .filter(x => x.matched_tutor_id && x.match_status !== 'pending')
+      .map(x => x.matched_tutor_id));
+    if (S.profil && S.profil.matched_tutor_id) ids.add(S.profil.matched_tutor_id);
+    return ids.size <= 1;
+  }
+
+  function sättSchemaTider(tillgang, upptagna) {
+    S.tider = tillgang && tillgang.length && enStudiehjälpare()
+      ? { tillgang: tillgang, upptagna: upptagna || new Set() } : null;
+    if (S.schema) S.schema.sättTider(S.tider ? S.tider.tillgang : null, S.tider ? S.tider.upptagna : null);
+  }
+
   S.boka = NXArbete.bokning({
     host: $('#boka-inner'),
     amnen: BOKA_AMNEN,
     pris: NX.CFG.PRIS_PER_TIMME || 379,
+    /* Lediga, fullbokade och ej tillgängliga dagar, med
+       teckenförklaring, och dagens tagna timmar som låsta "Bokad"
+       (program 2, Fas 1). */
+    lagen: true,
     /* Vilken tjänst bokningen gäller. Styr priset, tillägget för
        flera barn och vilka rabattkoder som får användas. En funktion,
        inte ett värde: bokningen skapas innan katalogen laddats. */
     tjanst: () => NXTjanster.standard(),
 
     /* Två spärrar som förr yttrade sig som en avstängd knapp utan
-       förklaring. Nu står skälet där tiderna skulle ha stått. */
+       förklaring. Nu står skälet där tiderna skulle ha stått.
+
+       Tiderna är samma studiehjälpares som passet sparas hos, se
+       bokningensStudiehjälpare(). */
     ladda: async () => {
       if (!S.valtBarn) {
+        sättSchemaTider(null);
         return { spärr: NXStudie.tomt('Lägg till ditt barn först',
           'Bokningen behöver veta vem passet gäller. Barnen läggs till under Profil & inställningar.') };
       }
+      const barn = S.valtBarn;
+      const tutorId = bokningensStudiehjälpare();
       const [upptagna, tider] = await Promise.all([
-        NX.hämtaUpptagna(S.profil.matched_tutor_id),
-        NX.hämtaTillganglighet(S.profil.matched_tutor_id)
+        NX.hämtaUpptagna(tutorId),
+        NX.hämtaTillganglighet(tutorId)
       ]);
+      /* Byttes barnet medan svaret var på väg är svaret inaktuellt.
+         Nästa laddning, för rätt barn, sätter schemat. */
+      if (barn === S.valtBarn) sättSchemaTider(tider.tillgang, upptagna);
       return {
         tillgang: tider.tillgang,
         upptagna,
@@ -972,7 +1240,8 @@
     boka: async v => {
       const { data, error } = await supa.from('bookings').insert({
         parent_id: S.user.id,
-        tutor_id: S.profil.matched_tutor_id,
+        /* Samma studiehjälpare som kalendern visade tiderna för. */
+        tutor_id: bokningensStudiehjälpare(),
         student_id: S.valtBarn,
         created_by: S.user.id,
         subject: v.amne,
@@ -997,7 +1266,7 @@
         /* 23505 = samma starttid, 23P01 = passet krockar med ett
            annat som redan pågår. Samma sak för den som bokar. */
         if (error.code === '23505' || error.code === '23P01') {
-          return 'Den tiden hann bli bokad, eller krockar med ett annat pass. Tiderna nedan är uppdaterade — välj en annan.';
+          return 'Den tiden hann bli bokad, eller krockar med ett annat pass. Tiderna nedan är uppdaterade. Välj en annan.';
         }
         return 'Kunde inte boka: ' + felText(error);
       }
@@ -1031,11 +1300,29 @@
      ============================================================ */
   function kortTid(iso) { return NXStudie.kortTid(iso); }
 
+  /* Kortet "Nästa pass" öppnar passets detaljer (program 2, Fas 1).
+     Kortet ritas av NXArbete.hero som en länk, och hela raden ritas om
+     vid varje uppdatera(), också när bara chattkortet ändras. Därför
+     känns det igen på sin adress, som bara det kortet har, och märks
+     om efter varje omritning. Adressen är ändå en riktig väg: ett
+     mittenklick öppnar listan i en ny flik. */
+  const NÄSTA_HREF = '#lektioner/pass';
+
+  function märkNästaKort() {
+    const a = $('#vy-hero .vy-hero-kort a[href="' + NÄSTA_HREF + '"]');
+    if (a && S.nästaPass) a.setAttribute('aria-haspopup', 'dialog');
+  }
+
+  document.addEventListener('click', e => {
+    const a = e.target.closest('#vy-hero .vy-hero-kort a');
+    if (!a || a.getAttribute('href') !== NÄSTA_HREF || !S.nästaPass) return;
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    visaPass(S.nästaPass);
+  });
+
   function ritaNästaPass() {
-    const idag = isoFor(new Date());
-    const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
-    const kommande = aktiva.filter(b => b.wanted_date >= idag &&
-      (b.status === 'requested' || b.status === 'confirmed'));
+    const kommande = S.bokningar.filter(ärKommande);
 
     /* Kommande pass räknas här, men visas av ritaStatistik. Den här
        funktionen körs varje gång bokningarna ändras, statistiken
@@ -1046,28 +1333,29 @@
     const b = kommande.sort((x, y) => (x.wanted_date + (x.wanted_time || ''))
       .localeCompare(y.wanted_date + (y.wanted_time || '')))[0];
     const barn = b ? S.barn.find(x => x.id === b.student_id) : null;
+    S.nästaPass = b || null;
 
     /* Kortet i hälsningen högst upp. Det är det första man ser, och
        "nästa pass" är det oftast enda man kom för att kolla.
 
-       Två olika mål: finns ett pass leder kortet till listan, finns
-       inget leder det till bokningen — som numera står på Översikt,
-       inte under Mina lektioner. */
+       Två olika mål: finns ett pass öppnar kortet passets detaljer,
+       finns inget leder det till bokningen. */
     if (S.hero) {
       S.hero.uppdatera({
         nasta: b ? {
-          href: '#lektioner',
+          href: NÄSTA_HREF,
           text: 'Nästa pass · ' + datumText(b.wanted_date)
                 + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
           under: [b.subject, barn ? barn.name : null].filter(Boolean).join(' · ')
         } : {
           /* Kortet ska ta en någonstans. #oversikt är sidan man
-             redan står på — ett klick som inte gör något. */
+             redan står på, och ett klick där gör ingenting. */
           href: '#boka',
           text: 'Inga pass inbokade',
           under: 'Boka en tid hos er studiehjälpare'
         }
       });
+      märkNästaKort();
     }
   }
 
@@ -1165,6 +1453,7 @@
             : 'Skriv till er studiehjälpare'
         }
       });
+      märkNästaKort();
     }
   }
 
@@ -1332,7 +1621,7 @@
 
     NXArbete.graf(graf, månader, {
       nagot: 'Bara genomförda pass räknas. Ett pass blir genomfört när er studiehjälpare skrivit rapporten.',
-      inget: 'Inga genomförda pass än — grafen fylls i efter första passet.'
+      inget: 'Inga genomförda pass än. Grafen fylls i efter första passet.'
     });
   }
 
@@ -1341,55 +1630,187 @@
      Kalendern nedanför svarar på "när kan vi ses?". Schemat svarar på
      "vad ligger redan?". Båda läser S.bokningar, så en avbokning syns
      i båda utan att något behöver hållas i synk.
+
+     Sedan program 2 Fas 1 har schemat en teckenförklaring, och vecko-
+     och dagvyn visar studiehjälparens timmar runt passen: lediga,
+     bokade av någon annan och ej tillgängliga. Tiderna är samma
+     studiehjälpares som bokningen visar (sättSchemaTider). En ledig
+     timme är en knapp som tar familjen till bokningen med dagen och
+     tiden förvalda. Tidslinjen går inte längre fram än bokningen
+     (tidslinjeTill): efter den vet schemat inte vilka timmar som är
+     tagna, och en ledig timme där gick inte att boka.
      ============================================================ */
   function byggSchema() {
-    NXStudie.schemaI(S, {
+    const o = {
       namn: b => {
         const barn = S.barn.find(x => x.id === b.student_id);
-        return barn ? barn.name : ((S.tutor && S.tutor.full_name) || '');
+        return barn ? barn.name : (tutorNamn(b.tutor_id) || '');
       },
-      onOppna: visaPass
-    });
+      onOppna: visaPass,
+      teckenforklaring: true,
+      onLedig: gåTillBokning,
+      /* Bokningens sista dag, läst vid varje ritning: den ligger
+         inom de 180 dagar som NX.hämtaUpptagna hämtar, och varje
+         ledig timme fram dit går att boka. */
+      tidslinjeTill: () => (S.boka && S.boka.sistaDag ? S.boka.sistaDag() : null)
+    };
+    /* Bara när tiderna finns. En nyckel med värdet undefined hade
+       stängt av tidslinjen i ett schema som redan har den. */
+    if (S.tider) { o.tillgang = S.tider.tillgang; o.upptagna = S.tider.upptagna; }
+    NXStudie.schemaI(S, o);
   }
 
-  /* Knapparna bär samma data-attribut som raderna i passlistan, så de
-     delegerade hanterarna tar hand om dem. Ingen andra uppsättning
-     logik som kan hamna ur synk med den första. */
-  function visaPass(b) {
+  /* ---------- från schemat till bokningen ----------
+     Valet görs av bokningen själv (S.boka.välj), med bokningens egna
+     regler. Förut tryckte vyn på kalenderns knappar: en dag utanför
+     kalendern, eller en dag där inget ryms med den längd som är vald,
+     gav då varken val eller besked, och ett tidigare val stod kvar
+     med Boka tänd.
+
+     Fokus hamnar där familjen ska fortsätta:
+       'tid'  den valda tiden.
+       'dag'  dagen, när tiden inte rymdes men andra gör det. Ryms
+              ingenting med den längden är dagen avstängd och kan inte
+              ta fokus; då dagens namn, som raden under förklarar.
+       null   beskedet från bokningen (#bk-msg), när det finns ett. */
+  function förvaltMål(vad) {
+    const host = $('#boka-inner');
+    if (!host) return null;
+    if (vad === 'tid') return host.querySelector('.mv-tid[aria-pressed="true"]');
+    if (vad === 'dag') {
+      const dag = host.querySelector('.mv-dag[aria-pressed="true"]');
+      if (dag && !dag.disabled) return dag;
+      const namn = host.querySelector('.bk-kal-dagnamn');
+      if (namn) namn.tabIndex = -1;
+      return namn;
+    }
+    return host.querySelector('#bk-msg.show');
+  }
+
+  function gåTillBokning(datum, tid) {
+    /* Valet görs direkt: det är tillstånd i bokningen och behöver inte
+       att sektionen syns. Fokus sätts efter sektionsbytet, eftersom
+       sidomenyn ställer fokus på rubriken vid hashchange och annars
+       hade tagit tillbaka det. Sidomenyns lyssnare lades till när
+       vyn startade, den här läggs till nu, och lyssnare körs i den
+       ordning de lades till: fokus kan alltså sättas direkt i
+       lyssnaren. Förut väntade den på requestAnimationFrame, som
+       webbläsaren inte kör i en flik som inte syns. Målet letas upp
+       först då, eftersom bokningen kan ha ritats om emellan. */
+    const vad = S.boka && S.boka.välj ? S.boka.välj(datum, tid) : null;
+    const fokus = () => { const mål = förvaltMål(vad); if (mål) mål.focus(); };
+    const här = String(location.hash || '').replace(/^#/, '').split('/')[0] === 'boka';
+    if (här) { fokus(); return; }
+    window.addEventListener('hashchange', fokus, { once: true });
+    location.hash = '#boka';
+  }
+
+  /* ============================================================
+     ETT PASS I DETALJ
+     Öppnas från raderna i passlistan, blocket på Översikt, schemat
+     och kortet "Nästa pass". Visar tid, längd, ämne, elev, passets
+     egen studiehjälpare och plats, och sedan:
+
+       Inför passet       det studiehjälparen skrivit (pass_forberedelse).
+                          Familjen läser, skriver aldrig.
+       Från förra passet  den senaste rapporten för SAMMA elev före
+                          passets dag: nästa fokus, behöver träna på.
+       Läxor              öppna läxor för PASSETS elev, inte det barn
+                          som råkar vara valt i väljaren.
+       Efter passet       rapporten som hör till just det här passet,
+                          när det är genomfört.
+
+     Knapparna bär samma data-attribut som raderna i passlistan, så de
+     delegerade hanterarna tar hand om dem. Samma regel för vilka
+     knappar som syns (passKnappar), så raden och rutan aldrig säger
+     olika saker.
+     ============================================================ */
+  const NÄRVARO = { narvarande: 'Närvarande', sen: 'Kom sent', franvarande: 'Uteblev' };
+
+  function förraRapporten(b) {
+    if (!b.student_id || !b.wanted_date) return null;
+    return (S.allaRapporter || [])
+      .filter(r => r.student_id === b.student_id && r.booking_id !== b.id
+        && r.lesson_date && String(r.lesson_date).slice(0, 10) < b.wanted_date)
+      .sort((x, y) => String(y.lesson_date).localeCompare(String(x.lesson_date)))[0] || null;
+  }
+
+  /* Läxorna för passets elev. Är det det valda barnet finns de redan i
+     S.laxor; annars en egen fråga, bara de öppna. */
+  async function öppnaLäxorFör(elevId) {
+    if (!elevId) return [];
+    if (elevId === S.laxorBarn) return (S.laxor || []).filter(h => h.status !== 'klar');
+    const { data, error } = await supa.from('homework')
+      .select('id, title, due_date, status')
+      .eq('student_id', elevId).neq('status', 'klar')
+      .order('due_date', { ascending: true, nullsFirst: false });
+    if (error) { console.warn('homework:', error.message); return []; }
+    return data || [];
+  }
+
+  let öppnarPass = false;
+
+  async function visaPass(b) {
+    if (!b || öppnarPass) return;
     const barn = S.barn.find(x => x.id === b.student_id);
     const l = NXKontakt.LÄGEN[b.status] || { text: b.status };
-    const idag = isoFor(new Date());
-    const kommande = b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed');
-    const derasFörslag = b.created_by && b.created_by !== S.user.id;
+    const avbokad = b.status === 'cancelled';
+    const genomförd = b.status === 'completed';
+    const tid = b.wanted_time ? String(b.wanted_time).slice(0, 5) : '';
 
-    let knappar = '';
-    if (derasFörslag && b.status === 'requested') {
-      knappar = '<button type="button" class="btn btn-primary" data-passvar="confirmed" data-id="' + esc(b.id) + '">Passar bra</button>'
-              + '<button type="button" class="btn btn-ghost" data-passvar="cancelled" data-id="' + esc(b.id) + '">Avböj</button>';
-    } else if (kommande) {
-      knappar = '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Flytta</button>'
-              + '<button type="button" class="btn btn-ghost" data-avboka="' + esc(b.id) + '">Avboka</button>';
+    /* Läxorna kan behöva en fråga. Rutan öppnas först när svaret
+       kommit, och ett andra klick under tiden öppnar inte två. */
+    let laxor = [];
+    if (!avbokad) {
+      öppnarPass = true;
+      try {
+        laxor = (await öppnaLäxorFör(b.student_id))
+          .filter(h => h.due_date && h.due_date >= b.wanted_date)
+          .slice(0, 3);
+      } finally {
+        öppnarPass = false;
+      }
     }
 
-    const laxor = (S.laxor || [])
-      .filter(h => h.status !== 'klar' && h.due_date && h.due_date >= b.wanted_date)
-      .slice(0, 3);
+    const rapport = genomförd ? (S.allaRapporter || []).find(r => r.booking_id === b.id) : null;
+    const förra = avbokad ? null : förraRapporten(b);
 
-    NXStudie.passRuta({
+    const opts = {
+      id: b.id,
       titel: b.subject || 'Pass',
-      under: datumText(b.wanted_date) + (b.wanted_time ? ' kl. ' + b.wanted_time : ''),
+      under: datumText(b.wanted_date) + (tid ? ' kl. ' + tid : ''),
+      langd: b.duration_min,
       rader: [
         ['Status', l.text],
+        ['Elev', barn ? barn.name : null],
+        ['Studiehjälpare', tutorNamn(b.tutor_id)],
         ['Format', b.format],
         ['Plats', b.location],
-        ['Elev', barn ? barn.name : null],
-        ['Studiehjälpare', (S.tutor && S.tutor.full_name) || null],
-        ['Bokades av', b.created_by ? (derasFörslag ? 'Er studiehjälpare' : 'Ni') : null]
+        ['Närvaro', genomförd ? (NÄRVARO[b.attendance] || null) : null],
+        ['Hur passet gick', rapport ? gickText(rapport) : null],
+        ['Avbokades', avbokad && b.avbokad_at ? datumText(isoFor(new Date(b.avbokad_at))) : null],
+        ['Bokades av', b.created_by ? (ärDerasFörslag(b) ? 'Er studiehjälpare' : 'Ni') : null]
       ],
       anteckning: b.note,
       laxor: laxor,
-      atgarder: knappar
-    });
+      atgarder: passKnappar(b, true)
+    };
+
+    /* "Inför passet": på ett pass som ska hållas säger rutan också när
+       inget är förberett, så att ingen letar efter en länk som inte
+       finns. På ett genomfört pass syns blocket bara om något skrevs.
+       Gick förberedelserna inte att hämta utelämnas blocket helt:
+       "inget förberett" hade då kunnat vara fel. */
+    if (!avbokad && !S.forbFel) {
+      opts.forberedelse = S.forberedelser.get(b.id) || null;
+      if (ärKommande(b)) opts.forberedelseTom = 'Er studiehjälpare har inte skrivit något inför passet än.';
+    }
+    if (förra) {
+      opts.forraRapport = { datum: förra.lesson_date, next_focus: förra.next_focus, needs_practice: förra.needs_practice };
+    }
+    if (rapport) opts.rapport = rapport.ai_feedback || rapport.raw_notes || '';
+
+    NXStudie.passRuta(opts);
   }
 
   function visaFel(fel, sammanhang) { NXStudie.felvy(visa, fel, sammanhang); }
@@ -1530,7 +1951,9 @@
     ritaÖvLaxor();
     ritaNotiser();
     await Promise.all([ritaÖvSamtal(), laddaBetalning(), laddaSyskonMaterial()]);
-    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
+    /* await är inte kosmetiskt: supabase-js skickar frågan först när
+       någon väntar på svaret. Utan det skrevs stämpeln aldrig. */
+    await supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');
    }

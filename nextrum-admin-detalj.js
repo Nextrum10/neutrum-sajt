@@ -16,8 +16,17 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { BOK_LAGE, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, elevHjälpare,
-          elevNamn, kortDatum, läge, namnFör, närText, pill, rad } = NXAdmin;
+  const { BOK_LAGE, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, barnFel, elevHjälpare,
+          elevNamn, hämtaAllt, hämtaMatchunderlag, punkt, kontaktaRuta, kopplaBarn, kortDatum,
+          läge, läsBarn, namnFör, närText, numreraBarn, pill, rad, saknasFunktion, skapaBarn, telHref,
+          uppräkning, öppnaRuta } = NXAdmin;
+  /* Funktioner som bor i andra områden. Anropen går via
+     NXAdmin.rita, som fylls när alla filer laddats. */
+  const ritaElever = (...a) => NXAdmin.rita.ritaElever(...a);
+  const ritaFamiljer = (...a) => NXAdmin.rita.ritaFamiljer(...a);
+  const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
+  const ritaStudiehjalpare = (...a) => NXAdmin.rita.ritaStudiehjalpare(...a);
+  const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
 
   /* ============================================================
      DETALJPANELEN
@@ -62,8 +71,13 @@
       if (f) { DP.flik = f.dataset.dpFlik; ritaDetalj(); }
     });
 
+    /* Inte när en ruta ligger ovanpå panelen. Då är Escape rutans:
+       förut stängde samma tangenttryck både bekräftelsen och panelen
+       bakom den, och den som ångrade sig tappade bort var hen var. */
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && DP.panel && !DP.panel.hidden) stängDetalj();
+      if (e.key !== 'Escape' || !DP.panel || DP.panel.hidden) return;
+      if (document.querySelector('.nx-fraga')) return;
+      stängDetalj();
     });
   }
 
@@ -126,6 +140,12 @@
       lägg('noteringar', supa.from('admin_noteringar')
         .select('id, text, skriven_av, created_at').eq('om_profil', id)
         .order('created_at', { ascending: false }));
+      /* Utbetalningsmetoden (program 2, Fas 1.7), maskerad: bara de
+         fyra sista siffrorna. Tabellen går inte att läsa direkt, bara
+         genom funktionen. Funktionen väntar på ett ja innan den
+         driftsätts; saknas den är svaret "inga uppgifter", inte ett
+         fel, se nedan. */
+      lägg('utbetalning', supa.rpc('las_utbetalningsmetod', { p_tutor: id }));
     } else {
       lägg('noteringar', supa.from('admin_noteringar')
         .select('id, text, skriven_av, created_at').eq('om_profil', id)
@@ -164,6 +184,15 @@
       d[namn[i]] = (r && r.data) || [];
       if (r && r.error) d[namn[i] + 'Fel'] = felText(r.error);
     });
+
+    /* En funktion som inte finns i databasen än är ett läge, inte ett
+       fel att visa. Panelen säger då samma sak som när ingen lämnat
+       några uppgifter, för för admin är det samma sak. */
+    const ui = namn.indexOf('utbetalning');
+    if (ui !== -1 && svar[ui] && svar[ui].error && saknasFunktion(svar[ui].error, svar[ui].status)) {
+      d.utbetalning = [];
+      delete d.utbetalningFel;
+    }
 
     S.detaljCache[nyckel] = d;
     return d;
@@ -413,8 +442,17 @@
     const nästa = pass.filter(b => b.wanted_date >= idag && b.status !== 'cancelled').pop();
 
     if (DP.flik === 'barn') {
-      if (!barn.length) return tomt('Inga barn inlagda', 'Familjen lägger till dem i studievyn.');
-      return barn.map(e => {
+      /* Förut sa tomläget "Familjen lägger till dem i studievyn", och
+         det var den enda vägen. En familj som ringt in kunde alltså
+         inte få sitt barn inlagt av oss. */
+      const ny = '<div class="vy-knapprad" style="margin:0 0 14px">'
+        + '<button class="btn btn-primary" type="button" data-dp-barn-ny="' + esc(p.id) + '">'
+        + 'Lägg till barn</button></div>';
+      if (!barn.length) {
+        return ny + tomt('Inga barn inlagda',
+          'Lägg till dem här. Familjen kan också göra det själv i sin vy.');
+      }
+      return ny + barn.map(e => {
         const t = elevHjälpare(e);
         return '<div class="dp-rad"><div>'
           + '<b>' + esc(e.name) + '</b>'
@@ -462,6 +500,7 @@
       ['Senast inloggad', p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : null, 'aldrig'],
       ['Om familjen', p.bio ? esc(p.bio) : null]
     ])
+    + kontaktKnappar(p)
     + dpRubrik('Nästa pass')
     + (nästa
       ? dpRad(kortDatum(nästa.wanted_date)
@@ -573,7 +612,7 @@
              (+6)%7 — den hör hemma när man kommer från
              Date.getDay(), som börjar på söndag. */
           ? t.map(x => dpRad(NX.DAGAR[x.weekday] || 'Dag ' + x.weekday,
-              String(x.start_time).slice(0, 5) + '–' + String(x.end_time).slice(0, 5), '')).join('')
+              String(x.start_time).slice(0, 5) + ' till ' + String(x.end_time).slice(0, 5), '')).join('')
           : tomt('Inga tider inlagda',
               'Familjen kan bara boka inom tiderna hen lagt in. Utan dem går inga pass att boka.'))
         + dpRubrik('Spärrade tider framåt')
@@ -592,8 +631,9 @@
       return dpTal([
         [kronor(väntar), 'Väntar'],
         [kronor(utbetalt), 'Utbetalt'],
-        [tp.hourly_rate ? NX.kr(tp.hourly_rate) : '—', 'Per timme']
+        [tp.hourly_rate ? NX.kr(tp.hourly_rate) : 'Ej satt', 'Per timme']
       ])
+      + dpUtbetalning(p, d)
       + dpRubrik('Underlag')
       + (utb.length
         ? utb.map(u => dpRad(
@@ -620,11 +660,112 @@
       ['Ämnen', (tp.subjects || []).length ? esc(tp.subjects.join(', ')) : null],
       ['Årskurser', (tp.grade_levels || []).length ? esc(tp.grade_levels.join(', ')) : null],
       ['Format', (tp.formats || []).length ? esc(tp.formats.join(', ')) : null],
-      ['Timpenning', tp.hourly_rate ? esc(NX.kr(tp.hourly_rate)) : null, 'ej satt'],
-      ['Stripe', tp.stripe_klar ? 'Klar' : null, 'inte kopplad — ingen utbetalning går'],
+      ['Stripe', tp.stripe_klar ? 'Klar' : null, 'inte kopplad'],
       ['Senast inloggad', p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : null, 'aldrig']
     ])
+    + kontaktKnappar(p)
+    + dpTimpenning(p, tp)
     + (tp.bio ? dpRubrik('Om hen') + '<div class="dp-text">' + esc(tp.bio) + '</div>' : '');
+  }
+
+  /* ------------------------------------------------------------
+     KONTAKT FRÅN PANELEN
+
+     E-post och telefon stod som text, och den som ville höra av sig
+     fick kopiera adressen till ett annat program. Därefter syntes
+     kontakten ingenstans. "Skriv mejl" går genom samma ruta som
+     anmälningarna, och varje öppnat utkast blir en rad under
+     Anteckningar: ämnet, aldrig meddelandet, för en anteckning ska
+     säga att kontakt togs, inte bli en kopia av mejlkorgen.
+
+     Ring är en tel:-länk och ritas bara när numret går att ringa.
+     Ingen mailto:-länk står här med flit: NX.initHeader() skriver om
+     sådana till Nextrums egen adress, och Skriv mejl ska dessutom
+     lämna ett spår.
+     ------------------------------------------------------------ */
+  const IKON_MEJL = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"'
+    + ' stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
+    + '<path d="M3.5 6.5h17v11h-17z"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>';
+  const IKON_RING = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"'
+    + ' stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
+    + '<path d="M6 3.5h3l1.5 4.5-2 1.5a11 11 0 0 0 6 6l1.5-2 4.5 1.5v3a1.5 1.5 0 0 1-1.6 1.5'
+    + 'A16.5 16.5 0 0 1 4.5 5.1 1.5 1.5 0 0 1 6 3.5z"/></svg>';
+
+  function kontaktKnappar(p) {
+    const tel = p.phone ? telHref(p.phone) : null;
+    if (!p.email && !tel) return '';
+    return '<div class="vy-knapprad" style="margin:12px 0 4px">'
+      + (p.email
+        ? '<button class="btn btn-ghost" type="button" data-dp-mejl="' + esc(p.id) + '">'
+          + IKON_MEJL + 'Skriv mejl</button>'
+        : '')
+      + (tel
+        ? '<a class="btn btn-ghost" href="' + esc(tel) + '">' + IKON_RING
+          + 'Ring ' + esc(p.phone) + '</a>'
+        : '')
+      + '</div>';
+  }
+
+  /* ------------------------------------------------------------
+     TIMPENNINGEN
+
+     Gick bara att sätta i "Ta in i poolen". Den som registrerat sig
+     själv, eller som bjudits in härifrån, fick alltså ingen
+     timpenning någonstans, och har tjänsten ingen egen ersättning
+     räknas då ingen ersättning ut för hens pass.
+     ------------------------------------------------------------ */
+  function dpTimpenning(p, tp) {
+    return dpRubrik('Timpenning', tp.hourly_rate ? 'nu ' + NX.kr(tp.hourly_rate) : 'inte satt')
+      /* novalidate: annars stoppar webbläsaren "0" och "12.5" med sin
+         egen bubbla på engelska eller svenska beroende på datorn, och
+         vårt eget besked syns bara när fältet är tomt. */
+      + '<form data-dp-timpenning="' + esc(p.id) + '" novalidate>'
+      + '<div class="vy-knapprad" style="align-items:flex-end;margin-top:0">'
+      + '<div class="fgroup" style="margin:0;flex:1 1 160px;max-width:220px">'
+      + '<label for="dp-timpenning">Kronor per timme</label>'
+      + '<input class="inp" id="dp-timpenning" name="timpenning" type="number" min="1" step="1"'
+      + ' inputmode="numeric" value="' + esc(tp.hourly_rate != null ? String(tp.hourly_rate) : '') + '"'
+      + ' placeholder="t.ex. 180"></div>'
+      + '<button class="btn btn-primary" type="submit">Spara timpenning</button>'
+      + '</div>'
+      + '<p class="ok-msg" data-dp-tp-msg role="status"></p>'
+      + '</form>';
+  }
+
+  /* ------------------------------------------------------------
+     UTBETALNINGSMETODEN (program 2, Fas 1.7)
+
+     Maskerad som standard. Hela numret hämtas först när någon
+     trycker, och varje sådan läsning hamnar i auditloggen, i
+     databasen. Därför står det vid knappen, inte i en hjälptext: den
+     som trycker ska veta det innan, inte efteråt.
+     ------------------------------------------------------------ */
+  function metodText(m) {
+    return m === 'swish' ? 'Swish' : m === 'bank' ? 'Bankkonto' : (m || 'okänt');
+  }
+
+  function dpUtbetalning(p, d) {
+    const rubrik = dpRubrik('Utbetalningsmetod');
+    if (d.utbetalningFel) return rubrik + tomt('Kunde inte hämta uppgifterna', d.utbetalningFel);
+    const r = (d.utbetalning || [])[0];
+    if (!r) return rubrik + '<p class="small" style="color:var(--bl-2);margin:0 0 6px">Inga uppgifter lämnade.</p>';
+
+    const rader = [['Sätt', esc(metodText(r.metod))]];
+    if (r.metod !== 'swish') rader.push(['Bank', r.bank ? esc(r.bank) : null, 'okänd']);
+    if (r.clearing) rader.push(['Clearingnummer', esc(r.clearing)]);
+    rader.push([r.metod === 'swish' ? 'Swishnummer' : 'Kontonummer',
+      r.slutar_pa ? 'slutar på ' + esc(r.slutar_pa) : null]);
+    if (typeof r.kontrollerad === 'boolean') {
+      rader.push(['Kontrollsiffra', r.kontrollerad ? 'stämmer' : 'gick inte att kontrollera']);
+    }
+    rader.push(['Uppdaterad', r.uppdaterad ? esc(kortDatum(r.uppdaterad)) : null]);
+
+    return rubrik + dpFakta(rader)
+      + '<div class="vy-knapprad" style="margin:12px 0 4px">'
+      + '<button class="btn btn-ghost" type="button" data-dp-klartext="' + esc(p.id) + '">'
+      + 'Visa hela uppgifterna</button>'
+      + '<span class="xsmall" style="color:var(--bl-2)">Visningen loggas.</span></div>'
+      + '<div data-dp-klartext-ut aria-live="polite"></div>';
   }
 
   function dpNoteringar(profilId, d) {
@@ -636,7 +777,7 @@
       + '<button class="btn btn-primary btn-sm" type="submit" style="margin-top:9px">Spara anteckning</button>'
       + '<p class="ok-msg" data-dp-not-msg></p></form>'
       + (d.noteringarFel
-        ? tomt('Kunde inte hämta anteckningarna', d.noteringarFel + ' — är schema-v13.sql kört?')
+        ? tomt('Kunde inte hämta anteckningarna', String(d.noteringarFel).replace(/[.\s]+$/, '') + '. Är schema-v13.sql kört?')
         : n.length
           ? n.map(x => dpRad(x.text, namnFör(x.skriven_av) + ' · ' + kortDatum(x.created_at), ''))
               .join('')
@@ -712,7 +853,7 @@
       + ' aria-pressed="false">Länk</button>'
       + '</div>'
       + '<textarea class="inp" name="text" data-dp-mat-falt="anteckning"'
-      + ' placeholder="Skriv uppgiften — eller hämta ett förslag längre ned."></textarea>'
+      + ' placeholder="Skriv uppgiften, eller hämta ett förslag längre ned."></textarea>'
       + '<input class="inp" name="url" data-dp-mat-falt="lank" hidden'
       + ' placeholder="https://…" maxlength="500">'
       + '<button class="btn btn-primary btn-sm" type="submit">Spara material</button>'
@@ -892,6 +1033,219 @@
     });
   });
 
+  /* ------------------------------------------------------------
+     HANDLINGARNA I PANELEN
+     Panelen ritas om i sin helhet vid varje flikbyte, så inget får
+     bindas vid uppritning: en lyssnare på document per sak.
+     ------------------------------------------------------------ */
+
+  /* Efter en skrivning som ändrar barnen: allt som räknar på dem
+     hämtas och ritas om, också panelen om den står på familjen. */
+  async function efterBarn(familjId) {
+    await hämtaAllt();
+    ritaFamiljer();
+    ritaElever();
+    await hämtaMatchunderlag();
+    ritaMatchning();
+    await ritaÖversikt();
+    delete S.detaljCache['familj:' + familjId];
+    if (DP.typ === 'familj' && DP.id === familjId) {
+      await hämtaDetalj('familj', familjId);
+      ritaDetalj();
+    }
+  }
+
+  function läggTillBarn(familjId) {
+    const p = S.personer[familjId];
+    if (!p) return;
+    const ruta = document.createElement('div');
+    ruta.className = 'nx-fraga';
+    ruta.innerHTML =
+      '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="lb-t">'
+      + '<h3 id="lb-t">Lägg till barn hos ' + esc(p.full_name || p.email || 'familjen') + '</h3>'
+      + '<p>Barnen hamnar i matchningskön direkt, och familjen ser dem i sin vy.</p>'
+      + '<div id="lb-barn"></div>'
+      + '<button type="button" class="btn btn-ghost" data-barn-ny style="margin-top:12px">'
+      + 'Lägg till ett barn till</button>'
+      + '<p class="ok-msg" id="lb-msg" role="status"></p>'
+      + '<div class="nx-fraga-knappar">'
+      + '<button type="button" class="btn btn-ghost" data-lb-stang data-ruta-avbryt>Avbryt</button>'
+      + '<button type="button" class="btn btn-primary" id="lb-spara">Spara</button>'
+      + '</div></div>';
+
+    /* Fälten först, rutan sedan: öppnaRuta ger fokus åt det första
+       fältet som finns när den öppnas. */
+    const host = $('#lb-barn', ruta);
+    kopplaBarn(ruta, host);
+    const stäng = öppnaRuta(ruta, {
+      återFokus: () => DP.panel && DP.panel.querySelector('[data-dp-barn-ny]')
+    });
+    ruta.addEventListener('click', ev => {
+      if (ev.target.closest('[data-lb-stang]')) stäng();
+    });
+
+    const spara = $('#lb-spara', ruta);
+    spara.addEventListener('click', async () => {
+      if (spara.getAttribute('aria-busy') === 'true') return;
+      const msg = $('#lb-msg', ruta);
+      rensa(msg);
+      const lästa = läsBarn(host);
+      if (lästa.fel) { säg(msg, lästa.fel, false); if (lästa.fält) lästa.fält.focus(); return; }
+      if (!lästa.barn.length) {
+        säg(msg, 'Skriv namnet på minst ett barn.', false);
+        const första = host.querySelector('[data-barn-falt="namn"]');
+        if (första) första.focus();
+        return;
+      }
+
+      await medan(spara, 'Sparar…', async () => {
+        const res = await skapaBarn(familjId, lästa.barn);
+        let hämtfel = null;
+        try { await efterBarn(familjId); } catch (e) { hämtfel = felText(e); }
+
+        if (!res.misslyckade.length && !hämtfel) { stäng(); return; }
+
+        /* De som gick in tas bort ur rutan, så att bara de som inte
+           sparades står kvar och kan skickas igen utan att någon blir
+           inlagd två gånger. */
+        res.skapade.forEach(b => { if (b.fält) b.fält.remove(); });
+        numreraBarn(host);
+        if (!host.querySelector('[data-barn]')) {
+          spara.hidden = true;
+          ruta.querySelector('[data-barn-ny]').hidden = true;
+          ruta.querySelector('[data-lb-stang]').textContent = 'Stäng';
+        }
+        const delar = [];
+        if (res.skapade.length) {
+          const namnen = res.skapade.map(b => b.namn);
+          delar.push(uppräkning(namnen) + (namnen.length === 1 ? ' är inlagd.' : ' är inlagda.'));
+        }
+        if (res.misslyckade.length) delar.push(barnFel(res));
+        if (hämtfel) delar.push('Listorna kunde inte hämtas om: ' + punkt(hämtfel) + ' Ladda om sidan.');
+        säg(msg, delar.join(' '), false);
+      });
+    });
+  }
+
+  function skrivMejl(id) {
+    const p = S.personer[id];
+    if (!p || !p.email) return;
+    const förnamn = String(p.full_name || '').split(' ')[0];
+    kontaktaRuta({
+      titel: 'Skriv till ' + (p.full_name || p.email),
+      namn: p.full_name, till: p.email,
+      amne: '',
+      text: 'Hej' + (förnamn ? ' ' + förnamn : '') + ',\n\n\n\nHälsningar,\nNextrum',
+      först: '#kt-amne',
+      återFokus: () => DP.panel && DP.panel.querySelector('[data-dp-mejl]'),
+      /* Ämnet, aldrig meddelandet: en anteckning ska säga att kontakt
+         togs, inte bli en kopia av mejlkorgen. Anteckningen syns i
+         tidslinjen och under Anteckningar. */
+      efterat: async ({ amne }) => {
+        const ämne = String(amne || '').replace(/\s+/g, ' ').trim().slice(0, 200) || 'utan ämne';
+        const { error } = await supa.from('admin_noteringar')
+          .insert({ om_profil: id, text: 'Mejlutkast öppnat: ' + ämne, skriven_av: S.user.id });
+        if (error) return felText(error);
+        delete S.detaljCache['familj:' + id];
+        delete S.detaljCache['studiehjalpare:' + id];
+        if (DP.id === id && DP.typ) {
+          await hämtaDetalj(DP.typ, id);
+          ritaDetalj();
+        }
+        return null;
+      }
+    });
+  }
+
+  document.addEventListener('click', async ev => {
+    const barnNy = ev.target.closest('[data-dp-barn-ny]');
+    if (barnNy) { läggTillBarn(barnNy.dataset.dpBarnNy); return; }
+
+    const mejl = ev.target.closest('[data-dp-mejl]');
+    if (mejl) { skrivMejl(mejl.dataset.dpMejl); return; }
+
+    const dölj = ev.target.closest('[data-dp-klartext-dolj]');
+    if (dölj) {
+      const ut = DP.panel && DP.panel.querySelector('[data-dp-klartext-ut]');
+      const visa = DP.panel && DP.panel.querySelector('[data-dp-klartext]');
+      if (ut) ut.innerHTML = '';
+      if (visa) { visa.hidden = false; visa.focus(); }
+      return;
+    }
+
+    const klar = ev.target.closest('[data-dp-klartext]');
+    if (!klar) return;
+    const tutorId = klar.dataset.dpKlartext;
+    const ut = DP.panel && DP.panel.querySelector('[data-dp-klartext-ut]');
+    if (!ut) return;
+    await medan(klar, 'Hämtar…', async () => {
+      const { data, error, status } = await supa.rpc('las_utbetalningsmetod_klartext', { p_tutor: tutorId });
+      if (error) {
+        ut.innerHTML = saknasFunktion(error, status)
+          ? '<p class="small" style="color:var(--bl-2)">Inga uppgifter lämnade.</p>'
+          : '<p class="small" style="color:var(--fel)">Kunde inte visa uppgifterna: ' + esc(felText(error)) + '</p>';
+        return;
+      }
+      const r = Array.isArray(data) ? data[0] : data;
+      if (!r) { ut.innerHTML = '<p class="small" style="color:var(--bl-2)">Inga uppgifter lämnade.</p>'; return; }
+      /* Klartexten lagras aldrig i S. Den står i panelen tills någon
+         döljer den eller panelen ritas om, och sedan finns den inte. */
+      const rader = [['Sätt', esc(metodText(r.metod))]];
+      if (r.metod === 'swish') {
+        rader.push(['Swishnummer', r.swish ? esc(r.swish) : null]);
+      } else {
+        rader.push(['Bank', r.bank ? esc(r.bank) : null, 'okänd']);
+        rader.push(['Clearingnummer', r.clearing ? esc(r.clearing) : null]);
+        rader.push(['Kontonummer', r.konto ? esc(r.konto) : null]);
+      }
+      ut.innerHTML = dpRubrik('Hela uppgifterna', 'visningen är loggad')
+        + dpFakta(rader)
+        + '<div class="vy-knapprad" style="margin:12px 0 4px">'
+        + '<button class="btn btn-ghost" type="button" data-dp-klartext-dolj>Dölj uppgifterna</button></div>';
+      klar.hidden = true;
+      const dölj2 = ut.querySelector('[data-dp-klartext-dolj]');
+      if (dölj2) dölj2.focus();
+    });
+  });
+
+  document.addEventListener('submit', async ev => {
+    const form = ev.target.closest('[data-dp-timpenning]');
+    if (!form) return;
+    ev.preventDefault();
+    const id = form.dataset.dpTimpenning;
+    const msg = form.querySelector('[data-dp-tp-msg]');
+    rensa(msg);
+    const rått = String(form.timpenning.value || '').trim();
+    const värde = Number(rått);
+    if (!rått || !Number.isInteger(värde) || värde < 1) {
+      säg(msg, 'Skriv timpenningen i hela kronor, minst 1.', false);
+      form.timpenning.focus();
+      return;
+    }
+    const knapp = form.querySelector('[type="submit"]');
+    if (knapp.getAttribute('aria-busy') === 'true') return;
+    await medan(knapp, 'Sparar…', async () => {
+      /* .select() för att en uppdatering som inte träffar någon rad
+         annars ser ut precis som en som lyckades. */
+      const { data, error } = await supa.from('tutor_profiles')
+        .update({ hourly_rate: värde }).eq('id', id).select('id, hourly_rate');
+      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+      if (!(data || []).length) { säg(msg, 'Ingenting sparades: profilen hittades inte.', false); return; }
+      const tp = S.tutorProfiler[id];
+      if (tp) tp.hourly_rate = data[0].hourly_rate;
+      ritaStudiehjalpare();
+      if (DP.typ === 'studiehjalpare' && DP.id === id) {
+        ritaDetalj();
+        const nyMsg = DP.panel.querySelector('[data-dp-tp-msg]');
+        säg(nyMsg, 'Timpenningen är sparad: ' + NX.kr(data[0].hourly_rate) + ' per timme.', true);
+        const fält = DP.panel.querySelector('#dp-timpenning');
+        if (fält) fält.focus();
+      } else {
+        säg(msg, 'Timpenningen är sparad.', true);
+      }
+    });
+  });
+
   function ritaDetalj(laddarÄn) {
     if (!DP.panel || !DP.typ) return;
     const flikar = DP_FLIKAR[DP.typ] || [];
@@ -979,6 +1333,6 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    ritaDetalj
+    ritaDetalj, öppnaDetalj
   });
 })();

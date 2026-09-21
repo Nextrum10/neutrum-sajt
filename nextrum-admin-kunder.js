@@ -16,13 +16,15 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { LEAD_LAGE, S, SH_LAGE, elevHjälpare, funktionsFel, hämtaAllt,
-          hämtaMatchunderlag, kontaktaRuta, kortDatum, matchar, namnFör,
-          pill, tabell, tomtText, väljare } = NXAdmin;
+  const { LEAD_LAGE, S, SH_LAGE, barnFel, punkt, delaÄmnen, elevHjälpare, funktionsFel, hämtaAllt,
+          hämtaMatchunderlag, kontaktaRuta, kopplaBarn, kortDatum, läsBarn, matchar,
+          mejlHref, namnFör, pill, skapaBarn, tabell, telHref, tomtText, uppräkning,
+          väljare, öppnaRuta } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
+  const öppnaDetalj = (...a) => NXAdmin.rita.öppnaDetalj(...a);
 
   /* ============================================================
      INTRESSEANMÄLNINGAR
@@ -92,19 +94,53 @@
      kolumnen Studiehjälpare nedan.
      ============================================================ */
 
+  /* Hur det står till med familjens barn, räknat ur barnen själva.
+     Filtret frågade förut profiles.match_status, som är en härledd
+     kopia och betyder "minst ett barn matchat": en familj med ett
+     matchat och ett väntande barn hamnade under Matchade, och det
+     väntande barnet syntes inte i filtret alls. Ett pausat barn väntar
+     inte, och räknas därför varken som väntande eller matchat. */
+  function barnläge(p) {
+    const barn = S.elever[p.id] || [];
+    const matchad = e => !!(e.matched_tutor_id && e.match_status === 'matched');
+    return {
+      antal: barn.length,
+      matchade: barn.filter(matchad).length,
+      väntar: barn.filter(e => !matchad(e) && e.match_status !== 'paused').length
+    };
+  }
+
   function ritaFamiljer() {
     const sök = $('#fam-sok').value.trim();
     const st = $('#fam-status').value;
     const alla = Object.values(S.personer).filter(p => p.role === 'parent')
       .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
     const rader = alla
-      .filter(p => !st || (st === 'matched' ? p.match_status === 'matched' : p.match_status !== 'matched'))
+      .filter(p => {
+        if (!st) return true;
+        const l = barnläge(p);
+        if (st === 'vantar') return l.väntar > 0;
+        if (st === 'matchade') return l.antal > 0 && l.matchade === l.antal;
+        if (st === 'inga') return l.antal === 0;
+        return true;
+      })
       .filter(p => matchar(p, ['full_name', 'email', 'phone'], sök));
+
+    /* Adressen och numret är länkar, ritade här och inte i sidan:
+       NX.initHeader() skriver om varje mailto: som finns när sidan
+       laddas till Nextrums egen adress. */
+    const kontakt = p => {
+      const tel = p.phone ? telHref(p.phone) : null;
+      return [
+        p.email ? '<a href="' + esc(mejlHref(p.email)) + '">' + esc(p.email) + '</a>' : '',
+        p.phone ? (tel ? '<a href="' + esc(tel) + '">' + esc(p.phone) + '</a>' : esc(p.phone)) : ''
+      ].filter(Boolean).join(' · ');
+    };
 
     $('#fam-antal').textContent = rader.length + ' av ' + alla.length;
     $('#fam-tabell').innerHTML = tabell([
       { namn: 'Familj', rita: p => '<b>' + esc(p.full_name || '(namn saknas)') + '</b>'
-        + '<span class="adm-und">' + esc(p.email || '') + (p.phone ? ' · ' + esc(p.phone) : '') + '</span>' },
+        + '<span class="adm-und">' + kontakt(p) + '</span>' },
       { namn: 'Barn', rita: p => {
         const b = S.elever[p.id] || [];
         return b.length
@@ -273,6 +309,20 @@
      STUDIEHJÄLPARE
      ============================================================ */
 
+  /* Inbjuden härifrån, och fortfarande i väntläget. Byggs på
+     anteckningen som Lägg till studiehjälpare skriver (INBJUDAN_NOT),
+     inte på en gissning. Förut räknades "väntar, ingen ansökan och
+     aldrig inloggad" som inbjuden, men last_seen_at skrivs aldrig för
+     studiehjälpare, så varje väntande som registrerat sig själv på
+     /larare fick pillen, också den som använt sin vy i veckor.
+     Pillen säger bara att inbjudan kom härifrån, aldrig att hen
+     tackat ja. */
+  function ärInbjuden(t) {
+    return t.status === 'pending' && S.inbjudna.has(t.id);
+  }
+
+  const SAKNAS = text => '<span style="color:var(--bl-3)">' + esc(text) + '</span>';
+
   function ritaStudiehjalpare() {
     const sök = $('#sh-sok').value.trim();
     const st = $('#sh-status').value;
@@ -287,15 +337,26 @@
     $('#sh-antal').textContent = rader.length + ' av ' + alla.length;
     $('#sh-tabell').innerHTML = tabell([
       { namn: 'Namn', rita: t => '<b>' + esc(t.namn) + '</b>'
+        + (ärInbjuden(t) ? ' ' + pill('Inbjuden', 'ar-vantar') : '')
         + '<span class="adm-und">' + esc(t.epost) + (t.age ? ' · ' + t.age + ' år' : '') + '</span>' },
-      { namn: 'Ort & skola', rita: t => esc(t.city || '—')
+      /* Ett tomt fält skrivs ut i ord, inte som ett tankstreck:
+         ordet säger att uppgiften saknas, strecket kan läsas som noll
+         eller som ett tecken som inte laddat. */
+      { namn: 'Ort & skola', rita: t => (t.city ? esc(t.city) : SAKNAS('Ingen ort angiven'))
         + (t.school ? '<span class="adm-und">' + esc(t.school) + '</span>' : '') },
-      { namn: 'Ämnen', rita: t => esc((t.subjects || []).join(', ') || '—') },
+      { namn: 'Ämnen', rita: t => (t.subjects || []).length
+        ? esc(t.subjects.join(', ')) : SAKNAS('Inga ämnen angivna') },
       /* Två tal i en kolumn. Var två, och tabellen sköt då ut sista
-         kolumnen ur rutan på en vanlig skärm — och "elever" och
-         "genomförda pass" läses ändå alltid tillsammans. */
+         kolumnen ur rutan på en vanlig skärm. "Elever" och "genomförda
+         pass" läses ändå alltid tillsammans.
+
+         Eleverna räknas per elev, som detaljpanelen gör. Förut räknades
+         familjer via profiles.matched_tutor_id, som bara pekar på det
+         äldsta matchade barnets studiehjälpare: den som hade ett yngre
+         syskon fick noll, och listan och panelen visade olika tal för
+         samma person. */
       { namn: 'Elever / pass', rita: t => {
-        const elever = Object.values(S.personer).filter(p => p.matched_tutor_id === t.id).length;
+        const elever = S.elevlista.filter(e => e.matched_tutor_id === t.id && e.match_status === 'matched').length;
         const pass = S.bokningar.filter(b => b.tutor_id === t.id && b.status === 'completed').length;
         return '<span class="adm-tal">' + elever + ' / ' + pass + '</span>';
       } },
@@ -306,7 +367,7 @@
          godkänd — se schema-v23. Kolumnen står bredvid läget just
          för att de två inte ska förväxlas. */
       { namn: 'På startsidan', rita: t => t.status !== 'approved'
-        ? '<span style="color:var(--bl-3)">—</span>'
+        ? SAKNAS('Dold, ej godkänd')
         : '<button class="btn btn-ghost btn-sm" data-sh-publik="' + esc(t.id) + '">'
           + (t.visa_publikt ? 'Syns' : 'Dold') + '</button>' },
       { namn: 'Läge', höger: true, rita: t => väljare('sh', SH_LAGE, t.status, 'data-sh="' + t.id + '"')
@@ -324,7 +385,7 @@
       + '  · Vad går trögast just nu?\n'
       + '  · Vilka tider i veckan brukar fungera?\n\n'
       + 'När vi vet det väljer vi ut en person som passar, och återkommer med '
-      + 'ett förslag. Ni bläddrar alltså inte i en katalog — vi gör matchningen '
+      + 'ett förslag. Ni bläddrar alltså inte i en katalog. Vi gör matchningen '
       + 'åt er, för fel match är värre än ingen match.\n\n'
       + 'Hälsningar,\nNextrum';
   }
@@ -341,14 +402,23 @@
       namn: l.parent_name, till: l.email,
       amne: 'Er intresseanmälan till Nextrum',
       text: mallLead(l),
+      /* Listan ritas om när stämpeln satts, och knappen man kom ifrån
+         finns då inte längre. Fokus tillbaka till samma rads knapp. */
+      återFokus: () => document.querySelector('[data-lead-kontakt="' + l.id + '"]'),
+      /* Svaret läses. Förut stämplades raden i minnet oavsett, och en
+         anmälan som aldrig blev stämplad i databasen såg kontaktad ut
+         tills någon laddade om sidan. */
       efterat: async () => {
         const nu = new Date().toISOString();
-        await supa.from('leads')
+        const { data, error } = await supa.from('leads')
           .update({ kontaktad_at: nu, status: l.status === 'new' ? 'contacted' : l.status })
-          .eq('id', l.id);
+          .eq('id', l.id).select('id');
+        if (error) return felText(error);
+        if (!(data || []).length) return 'anmälan hittades inte.';
         l.kontaktad_at = nu;
         if (l.status === 'new') l.status = 'contacted';
         ritaLeads();
+        return null;
       }
     });
   });
@@ -358,29 +428,34 @@
 
      Matchningskön arbetar på rader i `students`. En intresseanmälan
      är en rad i `leads` och blir aldrig en elev av sig själv, så
-     tratten tog slut mellan de två — familjen hörde av sig, hamnade
+     tratten tog slut mellan de två: familjen hörde av sig, hamnade
      i en lista, och kunde sedan inte matchas med någon.
 
      VARFÖR FAMILJEN MÅSTE FINNAS FÖRST
 
      En elev hänger på ett parent_id, och ett parent_id är en rad i
      profiles, som i sin tur skapas av triggern handle_new_user när
-     någon registrerar ett konto. Adminvyn kan alltså inte trolla
-     fram en familj — kontot måste finnas.
+     ett konto skapas. Adminvyn kan alltså inte trolla fram en familj:
+     kontot måste finnas.
 
      Har familjen inget konto kan den bjudas in härifrån (Fas 2.8).
-     Edge-funktionen bjud-in kör auth.admin.inviteUserByEmail med
-     service_role; familjen får ett mejl, väljer lösenord, och då
-     finns kontot. Eleven skapas efter det, i samma ruta.
+     Triggern körs när kontot SKAPAS, alltså när inbjudan skickas,
+     inte när familjen väljer lösenord. bjud-in svarar med kontots id,
+     och eleven kan därför skapas direkt i samma ruta. Förut sa rutan
+     "öppna rutan igen när de valt lösenord", och ingen elev blev
+     skapad förrän familjen råkade göra det.
      ============================================================ */
-  function familjeVal(valt) {
+  function familjeVal(valt, extra) {
     const familjer = Object.values(S.personer)
       .filter(p => p.role === 'parent')
       .sort((a, b) => String(a.full_name || a.email || '')
         .localeCompare(String(b.full_name || b.email || ''), 'sv'));
+    /* Ett konto som just bjudits in men ännu inte hunnit komma med i
+       hämtningen. Utan det här gick det inte att välja. */
+    if (extra && !familjer.some(f => f.id === extra.id)) familjer.unshift(extra);
 
-    return '<select class="inp" id="le-familj">'
-      + '<option value="">Välj familj…</option>'
+    return '<select class="sel" id="le-familj">'
+      + '<option value="">Välj familj</option>'
       + familjer.map(f => '<option value="' + esc(f.id) + '"'
           + (f.id === valt ? ' selected' : '') + '>'
           + esc(f.full_name || f.email || f.id) + (f.email ? ' · ' + esc(f.email) : '')
@@ -388,133 +463,231 @@
       + '</select>';
   }
 
-  document.addEventListener('click', async e => {
+  /* Telefonnumret ur anmälan. leads har ingen egen kolumn för det:
+     formuläret lägger "Telefon: …" som en märkt rad sist i message
+     (intresseanmalan.html). Den SISTA träffen, eftersom de märkta
+     raderna står efter familjens egen text, och den texten kan
+     innehålla samma ord. */
+  function telefonUrAnmälan(l) {
+    const rader = String(l.message || '').match(/^Telefon: *.+$/gm);
+    if (!rader) return '';
+    return rader[rader.length - 1].replace(/^Telefon: */, '').trim().slice(0, 40);
+  }
+
+  /* Sätter telefonnumret på ett konto och läser svaret. .select() för
+     att en uppdatering som inte träffar någon rad annars ser ut som en
+     som lyckades. Svarar null när det gick, annars vad som gick fel. */
+  async function sparaTelefon(id, tel) {
+    const { data, error } = await supa.from('profiles').update({ phone: tel }).eq('id', id).select('id');
+    if (error) return 'telefonnumret kunde inte sparas: ' + felText(error);
+    if (!(data || []).length) return 'telefonnumret kunde inte sparas: kontot hittades inte.';
+    return null;
+  }
+
+  document.addEventListener('click', e => {
     const knapp = e.target.closest('[data-lead-elev]');
     if (!knapp) return;
 
-    const lead = S.leads.find(l => l.id === knapp.dataset.leadElev);
+    const leadId = knapp.dataset.leadElev;
+    let lead = S.leads.find(l => l.id === leadId);
     if (!lead) return;
 
     /* Har familjen redan ett konto med samma adress är det nästan
-       säkert deras. Förvalt, inte automatiskt — två familjer kan
+       säkert deras. Förvalt, inte automatiskt: två familjer kan
        dela en adress, och ett barn på fel förälder är svårt att
        upptäcka i efterhand. */
     const trolig = Object.values(S.personer).find(p =>
       p.role === 'parent' && p.email
       && String(p.email).toLowerCase() === String(lead.email || '').toLowerCase());
+    /* Ett konto med adressen som inte är en familj (en studiehjälpare
+       eller en admin) kan varken väljas här eller bjudas in: bjud-in
+       svarar 409. Då ska rutan säga det, inte erbjuda en knapp som
+       bara kan misslyckas. */
+    const annatKonto = !trolig && Object.values(S.personer).find(p =>
+      p.email && String(p.email).toLowerCase() === String(lead.email || '').toLowerCase());
+    const kanBjuda = !trolig && !annatKonto && NX.epostOk(lead.email || '');
 
     const ruta = document.createElement('div');
     ruta.className = 'nx-fraga';
     ruta.innerHTML =
-      '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="le-t">'
+      '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="le-t">'
       + '<h3 id="le-t">Skapa elev ur anmälan</h3>'
       + '<p>Eleven hamnar i matchningskön så fort den finns. '
-      + 'Familjen måste ha ett konto. Har de inget kan du bjuda in dem härifrån.</p>'
-      + '<div class="fgroup"><label for="le-familj">Familj</label>' + familjeVal(trolig && trolig.id) + '</div>'
-      + (!trolig && NX.epostOk(lead.email || '')
-        ? '<div style="margin:10px 0 4px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px">'
-          + '<p class="xsmall" style="margin:0 0 8px;line-height:1.6">Inget konto har adressen <b>'
+      + 'Familjen behöver ett konto. Har de inget kan du bjuda in dem härifrån.</p>'
+      + '<div class="fgroup" style="margin-top:14px"><label for="le-familj">Familj</label>'
+      + '<span id="le-familj-val">' + familjeVal(trolig && trolig.id) + '</span></div>'
+      + (annatKonto
+        ? '<p class="xsmall" style="margin:0 0 12px;line-height:1.6">Adressen <b>' + esc(lead.email)
+          + '</b> hör till ett konto som inte är en familj, så familjen kan inte bjudas in med den. '
+          + 'Välj en familj i listan, eller kontakta familjen om en annan adress.</p>'
+        : '')
+      + (kanBjuda
+        ? '<div id="le-bjud-ruta" style="margin:0 0 4px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px">'
+          + '<p class="xsmall" style="margin:0 0 10px;line-height:1.6">Inget konto har adressen <b>'
           + esc(lead.email) + '</b>. Bjud in familjen, så får de ett mejl där de väljer lösenord. '
-          + 'När de gjort det finns kontot i listan ovan.</p>'
-          + '<button type="button" class="btn btn-ghost btn-sm" id="le-bjud">Bjud in familjen</button></div>'
+          + 'Kontot finns så fort inbjudan är skickad, så eleven kan skapas här direkt efteråt.</p>'
+          + '<div class="fgroup"><label for="le-tel">Telefon, sparas på familjens konto (valfritt)</label>'
+          + '<input class="inp" id="le-tel" type="tel" maxlength="40" autocomplete="off" value="'
+          + esc(telefonUrAnmälan(lead)) + '"></div>'
+          + '<button type="button" class="btn btn-ghost" id="le-bjud">Bjud in familjen</button></div>'
         : '')
       + '<div class="ag-faltrad" style="margin-top:12px">'
       + '<div class="fgroup"><label for="le-namn">Elevens namn</label>'
       + '<input class="inp" id="le-namn" value="' + esc(lead.child_name || '') + '"></div>'
       + '<div class="fgroup"><label for="le-arskurs">Årskurs</label>'
       + '<input class="inp" id="le-arskurs" value="' + esc(lead.grade || '') + '"></div>'
-      + '<div class="fgroup"><label for="le-amnen">Ämnen</label>'
+      + '<div class="fgroup"><label for="le-amnen">Ämnen, med komma emellan</label>'
       + '<input class="inp" id="le-amnen" value="' + esc(lead.subject || '') + '"></div>'
       + '</div>'
-      + '<p class="ok-msg" id="le-msg"></p>'
+      + '<p class="ok-msg" id="le-msg" role="status"></p>'
       + '<div class="nx-fraga-knappar">'
-      + '<button type="button" class="btn btn-ghost" data-le-stang>Avbryt</button>'
+      + '<button type="button" class="btn btn-ghost" data-le-stang data-ruta-avbryt>Avbryt</button>'
       + '<button type="button" class="btn btn-primary" id="le-skapa">Skapa elev</button>'
+      + '<button type="button" class="btn btn-primary" id="le-vidare" hidden>Till matchningen</button>'
       + '</div></div>';
 
-    document.body.appendChild(ruta);
-    document.body.style.overflow = 'hidden';
-    const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
-    ruta.addEventListener('click', ev => {
-      if (ev.target === ruta || ev.target.closest('[data-le-stang]')) stäng();
+    const stäng = öppnaRuta(ruta, {
+      återFokus: () => document.querySelector('[data-lead-elev="' + leadId + '"]')
     });
+    ruta.addEventListener('click', ev => {
+      if (ev.target.closest('[data-le-stang]')) stäng();
+    });
+    $('#le-vidare', ruta).addEventListener('click', () => {
+      stäng();
+      location.hash = '#matchning';
+    });
+
+    /* Rutan har två handlingar som båda arbetar mot databasen. Den
+       ena får inte startas medan den andra pågår: en elev som skapas
+       under inbjudan hamnar på den familj som råkar vara vald, inte
+       på den som just bjuds in. */
+    const upptagen = () => !!ruta.querySelector('[aria-busy="true"]');
 
     const bjud = $('#le-bjud', ruta);
     if (bjud) bjud.addEventListener('click', async () => {
       const msg = $('#le-msg', ruta);
+      if (bjud.disabled || upptagen()) return;
       rensa(msg);
       const ja = await bekräfta({
         titel: 'Bjud in ' + lead.email + '?',
-        text: 'Ett mejl från Nextrum går till adressen, med en länk där familjen väljer lösenord.',
+        text: 'Ett riktigt mejl med en inbjudan skickas till ' + lead.email + '. '
+          + 'I det väljer familjen sitt lösenord.',
         knapp: 'Skicka inbjudan'
       });
       if (!ja) return;
-      const res = await medan(bjud, 'Skickar…', () => supa.functions.invoke('bjud-in', {
-        body: { epost: lead.email, namn: lead.parent_name || '', lead_id: lead.id }
-      }));
-      const fel = res.error || (res.data && res.data.error);
-      if (fel) { säg(msg, await funktionsFel(fel), false); return; }
-      if (lead.status === 'new') lead.status = 'contacted';
-
-      /* Kontot som just skapades ÄR kunden anmälan blev. Kopplingen
-         skrivs nu, för när familjen väl valt lösenord finns det
-         ingenting som säger vilken anmälan de kom ifrån — och det är
-         den frågan kundtidslinjen ska kunna svara på. bjud-in sätter
-         status och kontaktad_at själv, med service_role. */
-      if (res.data.id) {
-        const k = await supa.from('leads').update({ kund_id: res.data.id }).eq('id', lead.id);
-        if (!k.error) lead.kund_id = res.data.id;
-      }
-
       bjud.disabled = true;
-      säg(msg, '✓ Inbjudan skickad till ' + res.data.till + '. När familjen valt lösenord '
-        + 'finns kontot i listan — öppna rutan igen då.', true);
-      ritaLeads();
+
+      /* Allt efter bekräftelsen sker under medan(), inte bara själva
+         anropet. Så länge knappen är upptagen går rutan inte att
+         stänga (se öppnaRuta), och kopplingen, telefonen och
+         omhämtningen hör till samma arbete som inbjudan: stängdes
+         rutan mitt i skrevs deras fel i en ruta som inte fanns. */
+      await medan(bjud, 'Skickar…', async () => {
+        const res = await supa.functions.invoke('bjud-in', {
+          body: { epost: lead.email, namn: lead.parent_name || '', roll: 'parent', lead_id: lead.id }
+        });
+        const fel = res.error || (res.data && res.data.error);
+        if (fel) {
+          bjud.disabled = false;
+          säg(msg, 'Inbjudan skickades inte: ' + await funktionsFel(fel), false);
+          return;
+        }
+
+        const id = res.data && res.data.id;
+        const till = (res.data && res.data.till) || lead.email;
+        const problem = [];
+        $('#le-bjud-ruta', ruta).hidden = true;
+
+        if (!id) {
+          säg(msg, 'Inbjudan skickades till ' + till + ', men svaret saknade kontots id. '
+            + 'Ladda om sidan, så finns familjen i listan.', false);
+          return;
+        }
+
+        /* Kontot som just skapades ÄR kunden anmälan blev. Kopplingen
+           skrivs nu, för efteråt finns ingenting som säger vilken
+           anmälan kontot kom ifrån, och det är den frågan
+           kundtidslinjen ska kunna svara på. bjud-in sätter status och
+           kontaktad_at själv, med service_role. */
+        const k = await supa.from('leads').update({ kund_id: id }).eq('id', lead.id).select('id');
+        if (k.error) problem.push('anmälan kunde inte kopplas till kontot: ' + punkt(felText(k.error)));
+        else if (!(k.data || []).length) problem.push('anmälan kunde inte kopplas till kontot: anmälan hittades inte.');
+
+        const tel = ($('#le-tel', ruta).value || '').trim();
+        if (tel) {
+          const telfel = await sparaTelefon(id, tel);
+          if (telfel) problem.push(punkt(telfel));
+        }
+
+        /* Hämtas om så att kontot finns i listorna, och i S.leads med
+           den status bjud-in satte. Raden i S.leads är ett nytt objekt
+           efteråt, så lead pekas om. */
+        try {
+          await hämtaAllt();
+        } catch (e2) {
+          problem.push('listorna kunde inte hämtas om: ' + punkt(felText(e2)));
+        }
+        lead = S.leads.find(l => l.id === leadId) || lead;
+        ritaLeads();
+        ritaFamiljer();
+
+        $('#le-familj-val', ruta).innerHTML = familjeVal(id, {
+          id: id, role: 'parent', full_name: lead.parent_name || '', email: till
+        });
+
+        if (problem.length) {
+          säg(msg, 'Inbjudan skickades till ' + till + ', men ' + problem.join(' '), false);
+        } else {
+          säg(msg, 'Inbjudan skickades till ' + till + '. Familjen är vald ovan, '
+            + 'så eleven kan skapas nu.', true);
+        }
+        $('#le-namn', ruta).focus();
+      });
     });
 
-    $('#le-skapa', ruta).addEventListener('click', async () => {
+    const skapa = $('#le-skapa', ruta);
+    skapa.addEventListener('click', async () => {
       const msg = $('#le-msg', ruta);
+      if (upptagen()) return;
       rensa(msg);
       const parent = $('#le-familj', ruta).value;
       const namn = $('#le-namn', ruta).value.trim();
-      if (!parent) { säg(msg, 'Välj vilken familj eleven hör till.', false); return; }
-      if (!namn) { säg(msg, 'Eleven behöver ett namn.', false); return; }
+      if (!parent) { säg(msg, 'Välj vilken familj eleven hör till.', false); $('#le-familj', ruta).focus(); return; }
+      if (!namn) { säg(msg, 'Eleven behöver ett namn.', false); $('#le-namn', ruta).focus(); return; }
 
-      await medan($('#le-skapa', ruta), 'Skapar…', async () => {
-        /* Ämnena är en text[] som inte får vara null (förvalet är en
-           tom array). Fritexten ur anmälan delas på komma, tomma bitar
-           bort — samma regel som när en ansökan tas in i poolen. Förut
-           skickades strängen rakt av, och då svarade databasen 22P02
-           på "matte, svenska" och 23502 på ett tomt fält: knappen
-           "Skapa elev" hade aldrig kunnat fungera. */
-        const ämnen = String($('#le-amnen', ruta).value || '')
-          .split(',').map(x => x.trim()).filter(Boolean);
-
+      await medan(skapa, 'Skapar…', async () => {
         const { data: ny, error } = await supa.from('students').insert({
           parent_id: parent,
           name: namn,
           grade: $('#le-arskurs', ruta).value.trim() || null,
-          subjects: ämnen
+          subjects: delaÄmnen($('#le-amnen', ruta).value)
         }).select('id, uppdrag_id').single();
-        if (error) { säg(msg, 'Kunde inte skapa: ' + felText(error), false); return; }
+        if (error) { säg(msg, 'Kunde inte skapa eleven: ' + felText(error), false); return; }
+
+        /* Från och med nu finns eleven. Allt som går fel efter det här
+           är en varning om något som INTE blev gjort, och rutan får
+           inte stängas förrän någon läst den. Förut stängdes den
+           direkt, och felet om uppdragets tjänst syntes aldrig. */
+        const varningar = [];
 
         /* Uppdraget skapas av triggern elevens_uppdrag, som sätter
-           standardtjänsten — den tittar aldrig på anmälan. Anmälan
-           vet däremot vad familjen faktiskt bad om, så tjänsten
-           skrivs om här. I dag är båda läxhjälp; skillnaden uppstår
-           den dag en andra tjänst öppnas.
+           standardtjänsten: den tittar aldrig på anmälan. Anmälan vet
+           däremot vad familjen faktiskt bad om, så tjänsten skrivs om
+           här. I dag är båda läxhjälp; skillnaden uppstår den dag en
+           andra tjänst öppnas.
 
            Bara en aktiv och kundvänd tjänst skrivs. Anmälan kommer
            från ett öppet formulär, och en tjänst som ännu inte är
-           lanserad ska inte kunna hamna på ett uppdrag den vägen —
-           databasen skriver om sådana anmälningar till
+           lanserad ska inte kunna hamna på ett uppdrag den vägen.
+           Databasen skriver om sådana anmälningar till
            standardtjänsten, och det här är samma regel i vyn. */
         const öppen = (S.tjanster || []).some(t =>
           t.kod === lead.tjanst && t.aktiv && t.for_kund);
         if (ny && ny.uppdrag_id && lead.tjanst && öppen) {
-          const u = await supa.from('uppdrag').update({ tjanst: lead.tjanst }).eq('id', ny.uppdrag_id);
-          if (u.error) { säg(msg, 'Eleven skapades, men uppdragets tjänst kunde inte sättas: '
-            + felText(u.error), false); }
+          const u = await supa.from('uppdrag').update({ tjanst: lead.tjanst })
+            .eq('id', ny.uppdrag_id).select('id');
+          if (u.error) varningar.push('uppdragets tjänst kunde inte sättas: ' + punkt(felText(u.error)));
+          else if (!(u.data || []).length) varningar.push('uppdragets tjänst kunde inte sättas: uppdraget hittades inte.');
         }
 
         /* Anmälan är avklarad när den blivit en elev. Står den kvar
@@ -522,35 +695,213 @@
 
            Samtidigt skrivs kopplingen: vilken familj och vilket
            uppdrag anmälan blev. Det är den enda tidpunkt någon
-           faktiskt VET det — efteråt går det bara att gissa på
+           faktiskt VET det. Efteråt går det bara att gissa på
            e-postadress och tidsordning, och gissningen blir fel
-           precis när den spelar roll. */
-        await supa.from('leads').update({
+           precis när den spelar roll. Svaret läses: förut märktes
+           anmälan som klar i minnet också när databasen sagt nej. */
+        const lu = await supa.from('leads').update({
           status: 'matched',
           kund_id: parent,
           uppdrag_id: (ny && ny.uppdrag_id) || null
-        }).eq('id', lead.id);
-        lead.status = 'matched';
-        lead.kund_id = parent;
-        if (ny) lead.uppdrag_id = ny.uppdrag_id || null;
+        }).eq('id', lead.id).select('id');
+        if (lu.error) {
+          varningar.push('anmälan kunde inte markeras som klar: ' + punkt(felText(lu.error)));
+        } else if (!(lu.data || []).length) {
+          varningar.push('anmälan kunde inte markeras som klar: anmälan hittades inte.');
+        } else {
+          lead.status = 'matched';
+          lead.kund_id = parent;
+          if (ny) lead.uppdrag_id = ny.uppdrag_id || null;
+        }
 
-        stäng();
-        await hämtaAllt();
+        try {
+          await hämtaAllt();
+        } catch (e2) {
+          varningar.push('listorna kunde inte hämtas om: ' + punkt(felText(e2)) + ' Ladda om sidan.');
+        }
         ritaLeads();
+        ritaFamiljer();
         ritaElever();
         await hämtaMatchunderlag();
 
         /* Rakt in i matchningen med den nya eleven vald. Att skapa
            en elev och sedan lämna någon på anmälningslistan är att
-           be dem leta rätt på namnet de nyss skrev in — och
+           be dem leta rätt på namnet de nyss skrev in, och
            matchningen är hela skälet till att eleven skapades. */
         if (ny && ny.id) S.valdElev = ny.id;
         ritaMatchning();
         await ritaÖversikt();
-        location.hash = '#matchning';
+
+        if (!varningar.length) {
+          stäng();
+          location.hash = '#matchning';
+          return;
+        }
+        säg(msg, namn + ' är skapad, men ' + varningar.join(' '), false);
+        skapa.hidden = true;
+        $('#le-vidare', ruta).hidden = false;
+        ruta.querySelector('[data-le-stang]').textContent = 'Stäng';
+        $('#le-vidare', ruta).focus();
       });
     });
   });
+
+  /* ============================================================
+     NY FAMILJ
+
+     En familj som ringt, eller som ni träffat, hade ingen väg in utan
+     en intresseanmälan: "Skapa elev" satt på anmälningsraden och
+     ingen annanstans. Nu går det från Familjer.
+
+     Ordningen är tvungen. Kontot först, eftersom profilen, och därmed
+     parent_id, bara skapas när ett konto skapas. Sedan telefonen på
+     profilen, sedan barnen. Varje steg läser sitt svar, och ett steg
+     som går fel stoppar inte de andra: inbjudan går inte att ta
+     tillbaka, så det rutan måste säga är exakt vad som blev gjort och
+     vad som inte blev det.
+     ============================================================ */
+  function nyFamilj() {
+    const ruta = document.createElement('div');
+    ruta.className = 'nx-fraga';
+    ruta.innerHTML =
+      '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="nf-t">'
+      + '<h3 id="nf-t">Ny familj</h3>'
+      + '<p>Familjen får ett konto och ett mejl med en inbjudan, där de väljer lösenord. '
+      + 'Kontot finns direkt, så barnen läggs in samtidigt och hamnar i matchningskön.</p>'
+      + '<div class="ag-faltrad" style="margin-top:14px">'
+      + '<div class="fgroup"><label for="nf-namn">Förälderns namn</label>'
+      + '<input class="inp" id="nf-namn" maxlength="120" autocomplete="off"></div>'
+      + '<div class="fgroup"><label for="nf-epost">E-post</label>'
+      + '<input class="inp" id="nf-epost" type="email" maxlength="200" autocomplete="off"></div>'
+      + '<div class="fgroup"><label for="nf-tel">Telefon (valfritt)</label>'
+      + '<input class="inp" id="nf-tel" type="tel" maxlength="40" autocomplete="off"></div>'
+      + '</div>'
+      + '<div id="nf-barn"></div>'
+      + '<button type="button" class="btn btn-ghost" data-barn-ny style="margin-top:12px">'
+      + 'Lägg till ett barn till</button>'
+      + '<p class="ok-msg" id="nf-msg" role="status"></p>'
+      + '<div class="nx-fraga-knappar">'
+      + '<button type="button" class="btn btn-ghost" data-nf-stang data-ruta-avbryt>Avbryt</button>'
+      + '<button type="button" class="btn btn-primary" id="nf-skapa">Bjud in och spara</button>'
+      + '<button type="button" class="btn btn-primary" id="nf-oppna" hidden>Öppna familjen</button>'
+      + '</div></div>';
+
+    /* Vad som ska hända när rutan stängs. Sätts först när familjen
+       finns: då öppnas dess detaljpanel, också om något steg gick fel,
+       för det är där det som saknas läggs till. */
+    let efteråt = null;
+    kopplaBarn(ruta, $('#nf-barn', ruta));
+    const stäng = öppnaRuta(ruta, { vidStängning: () => { if (efteråt) efteråt(); } });
+
+    ruta.addEventListener('click', ev => {
+      if (ev.target.closest('[data-nf-stang]')) stäng();
+    });
+    $('#nf-oppna', ruta).addEventListener('click', () => stäng());
+
+    let skickad = false;
+    const skapa = $('#nf-skapa', ruta);
+    skapa.addEventListener('click', async () => {
+      if (skickad || skapa.getAttribute('aria-busy') === 'true') return;
+      const msg = $('#nf-msg', ruta);
+      rensa(msg);
+
+      const namn = $('#nf-namn', ruta).value.replace(/\s+/g, ' ').trim();
+      const epost = $('#nf-epost', ruta).value.trim().toLowerCase();
+      const tel = $('#nf-tel', ruta).value.trim();
+      if (!namn) { säg(msg, 'Skriv förälderns namn.', false); $('#nf-namn', ruta).focus(); return; }
+      if (!NX.epostOk(epost)) {
+        säg(msg, 'Skriv en e-postadress som går att skicka till.', false);
+        $('#nf-epost', ruta).focus();
+        return;
+      }
+      /* Samma kontroll som bjud-in gör, men innan mejlet: ett konto
+         som redan finns ska användas, inte bjudas in igen. */
+      const finns = Object.values(S.personer).find(p => String(p.email || '').toLowerCase() === epost);
+      if (finns) {
+        säg(msg, finns.role === 'parent'
+          ? 'Det finns redan en familj med adressen: ' + (finns.full_name || finns.email)
+            + '. Öppna den under Familjer och lägg till barnen där.'
+          : 'Det finns redan ett konto med adressen, och det är inte en familj.', false);
+        $('#nf-epost', ruta).focus();
+        return;
+      }
+      const lästa = läsBarn($('#nf-barn', ruta));
+      if (lästa.fel) { säg(msg, lästa.fel, false); if (lästa.fält) lästa.fält.focus(); return; }
+      if (!lästa.barn.length) {
+        säg(msg, 'Lägg in minst ett barn. Utan barn finns ingen att matcha.', false);
+        const första = ruta.querySelector('[data-barn-falt="namn"]');
+        if (första) första.focus();
+        return;
+      }
+
+      const ja = await bekräfta({
+        titel: 'Skicka inbjudan?',
+        text: 'Ett riktigt mejl med en inbjudan skickas till ' + epost + '.',
+        knapp: 'Skicka inbjudan'
+      });
+      if (!ja) return;
+
+      await medan(skapa, 'Skickar…', async () => {
+        const res = await supa.functions.invoke('bjud-in', {
+          body: { epost: epost, namn: namn, roll: 'parent' }
+        });
+        const fel = res.error || (res.data && res.data.error);
+        if (fel) { säg(msg, 'Inbjudan skickades inte: ' + await funktionsFel(fel), false); return; }
+
+        /* Mejlet har gått. Rutan får inte kunna skicka det igen. */
+        skickad = true;
+        ruta.querySelectorAll('input, select, [data-barn-ny], [data-barn-bort]')
+          .forEach(el => { el.disabled = true; });
+        const till = (res.data && res.data.till) || epost;
+        const id = res.data && res.data.id;
+
+        if (!id) {
+          säg(msg, 'Inbjudan skickades till ' + till + ', men svaret saknade kontots id, '
+            + 'så varken telefon eller barn kunde sparas. Ladda om sidan och lägg till barnen '
+            + 'från familjens panel.', false);
+          skapa.hidden = true;
+          ruta.querySelector('[data-nf-stang]').textContent = 'Stäng';
+          return;
+        }
+
+        const problem = [];
+        if (tel) {
+          const telfel = await sparaTelefon(id, tel);
+          if (telfel) problem.push(punkt(telfel));
+        }
+        const barn = await skapaBarn(id, lästa.barn);
+        if (barn.misslyckade.length) problem.push(barnFel(barn));
+
+        try {
+          await hämtaAllt();
+        } catch (e2) {
+          problem.push('listorna kunde inte hämtas om: ' + punkt(felText(e2)) + ' Ladda om sidan.');
+        }
+        ritaFamiljer();
+        ritaElever();
+        await hämtaMatchunderlag();
+        ritaMatchning();
+        await ritaÖversikt();
+
+        efteråt = () => öppnaDetalj('familj', id);
+        if (!problem.length) { stäng(); return; }
+
+        const namnen = barn.skapade.map(b => b.namn);
+        säg(msg, 'Inbjudan skickades till ' + till
+          + (namnen.length
+            ? ' och ' + uppräkning(namnen) + (namnen.length === 1 ? ' är inlagd' : ' är inlagda')
+            : '')
+          + ', men ' + problem.join(' '), false);
+        skapa.hidden = true;
+        $('#nf-oppna', ruta).hidden = false;
+        ruta.querySelector('[data-nf-stang]').textContent = 'Stäng';
+        $('#nf-oppna', ruta).focus();
+      });
+    });
+  }
+
+  const nyFamiljKnapp = $('#fam-ny');
+  if (nyFamiljKnapp) nyFamiljKnapp.addEventListener('click', nyFamilj);
 
   /* ============ publicering på startsidan ============
      Frågan bekräftas när den slås PÅ, inte när den slås av. Att
@@ -570,7 +921,7 @@
         titel: 'Visa ' + namnFör(id) + ' på startsidan?',
         text: 'Förnamn, ålder, ort, ämnen och den personliga texten blir synliga för alla '
           + 'besökare på nextrum.se. E-post, telefon och skola visas aldrig. '
-          + 'Fråga personen först — särskilt om hen är under arton.',
+          + 'Fråga personen först, särskilt om hen är under arton.',
         knapp: 'Visa på startsidan'
       });
       if (!ja) return;

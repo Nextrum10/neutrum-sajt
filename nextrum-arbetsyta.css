@@ -443,9 +443,90 @@
 .mv-dag[aria-pressed="true"].ar-prick::after{background:var(--pap)}
 .mv-dag:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
+/* En dag som har varit. Klassen sattes av NXArbete.manad hela tiden,
+   men regeln saknades, så en passerad dag såg ut som vilken avstängd
+   dag som helst. Den är svagare än en dag utan tider: den är inte
+   ett besked om studiehjälparen, den är bara förbi. */
+.mv-dag.ar-forbi{color:var(--muted-2);opacity:.32}
+
+/* ---- dagens läge (program 2, Fas 1, valet lage i dag()) ----
+   Tre lägen, tre former, så att ingen behöver skilja färger åt:
+     ledig      prick under siffran (samma som ar-prick)
+     fullbokad  siffran överstruken och en tom ring i stället för prick
+     ej         snedstreckat mönster över hela rutan
+   Fullbokade och otillgängliga dagar är avstängda, men tonas inte ned
+   till .45: då försvann markeringen som skulle säga varför. */
+.mv-dag.ar-fullbokad,
+.mv-dag.ar-ej{color:var(--bl-3)}
+.mv-dag.ar-fullbokad:disabled,
+.mv-dag.ar-ej:disabled{opacity:1;color:var(--bl-3)}
+.mv-dag.ar-fullbokad,
+.mv-prov.ar-fullbokad{
+  text-decoration:line-through;text-decoration-thickness:1.5px;
+}
+.mv-dag.ar-fullbokad::after,
+.mv-prov.ar-fullbokad::after{
+  content:'';position:absolute;left:50%;bottom:4px;width:6px;height:6px;border-radius:50%;
+  transform:translateX(-50%);box-sizing:border-box;
+  border:1.5px solid var(--ockra);background:transparent;
+}
+.mv-dag.ar-ej,
+.mv-prov.ar-ej{
+  border-color:var(--ln);
+  background:repeating-linear-gradient(135deg,transparent 0 4px,
+    color-mix(in srgb,var(--bl-3) 26%,transparent) 4px 5px);
+}
+/* En vald dag kan bli fullbokad eller ej tillgänglig utan att släppas:
+   byter man till två timmar står dagen kvar vald, och raden under
+   säger att inget ryms för den längden. Reglerna ovan har samma vikt
+   som den valda dagens och står senare, så siffran blev --bl-3 på den
+   mörka bakgrunden (cirka 2,2:1) och mönstret tog bort markeringen
+   helt. Här vinner den valda dagen, och formen följer med i pappers-
+   färgen: strecket, ringen och mönstret syns fortfarande. */
+.mv-dag[aria-pressed="true"].ar-fullbokad,
+.mv-dag[aria-pressed="true"].ar-ej{color:var(--pap);background:var(--bl);border-color:var(--bl)}
+.mv-dag[aria-pressed="true"].ar-fullbokad::after{border-color:var(--pap)}
+.mv-dag[aria-pressed="true"].ar-ej{
+  background:repeating-linear-gradient(135deg,transparent 0 4px,
+    color-mix(in srgb,var(--pap) 34%,transparent) 4px 5px) var(--bl);
+}
+
+/* Förklaringen under kalendern: en liten provruta per läge, ritad
+   med samma regler som dagarna, och ordet bredvid. */
+.mv-forklaring{margin-top:12px;gap:8px 14px}
+.mv-forklaring li{gap:8px}
+.mv-prov{
+  position:relative;flex:none;box-sizing:border-box;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:8px;border:1px solid transparent;
+  font-size:.76rem;font-variant-numeric:tabular-nums;color:var(--bl);
+}
+.mv-prov.ar-prick::after{
+  content:'';position:absolute;left:50%;bottom:3px;width:5px;height:5px;border-radius:50%;
+  transform:translateX(-50%);background:var(--mossa);
+}
+.mv-prov.ar-fullbokad,
+.mv-prov.ar-ej{color:var(--bl-3)}
+.mv-prov.ar-fullbokad::after{bottom:2px}
+
 /* Tiderna under den valda dagen. */
 .mv-tider{display:flex;flex-wrap:wrap;gap:7px}
 .mv-inga{margin:6px 0 0;font-size:.86rem;line-height:1.6;color:var(--muted)}
+
+/* En tagen timme (tidsrad, valet bokade). Avstängd, streckad kant,
+   ett lås och ordet "Bokad". Klockslaget stryks, så att tiden inte
+   läses som ett erbjudande i ögonvrån. */
+.bk-slot.mv-bokad,
+.bk-slot.mv-bokad:disabled{
+  display:inline-flex;align-items:center;gap:6px;
+  opacity:1;cursor:default;
+  background:var(--pap-2);border-style:dashed;border-color:var(--ln-2);color:var(--bl-2);
+}
+.mv-bokad .nx-ikon{width:12px;height:12px}
+.mv-bokad-tid{text-decoration:line-through;text-decoration-thickness:1px}
+.mv-bokad-text{
+  font-family:var(--f-sans,inherit);font-size:.74rem;font-weight:600;letter-spacing:0;
+}
 
 .bk-pil{
   width:32px;height:32px;flex:none;border-radius:9px;
@@ -2114,6 +2195,39 @@ table.adm .adm-tal{
   transition:border-color .16s var(--e),color .16s var(--e);
 }
 .pl-mer:hover{border-color:var(--bl-3);color:var(--bl)}
+
+/* Avbokade i en egen grupp (passLista, avbokade: 'egen'). Hopfälld
+   från början och sist i listan: de är svaret på "vad hände med det
+   passet", inte något man behöver se varje gång. Knappen bär antalet
+   och krysset, så att gruppen inte ser tom eller försvunnen ut. */
+.pl-avbokade{
+  margin-top:clamp(14px,1.8vw,18px);
+  padding-top:clamp(12px,1.6vw,16px);
+  border-top:1px solid var(--ln);
+}
+.pl-avbokade-knapp{
+  display:inline-flex;align-items:center;gap:8px;
+  min-height:44px;padding:0 16px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  background:transparent;cursor:pointer;
+  font:inherit;font-size:.82rem;font-weight:600;color:var(--bl-2);
+  transition:border-color .16s var(--e),color .16s var(--e);
+}
+.pl-avbokade-knapp:hover{border-color:var(--bl-3);color:var(--bl)}
+.pl-avbokade-knapp:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.pl-avbokade-knapp .nx-ikon{width:13px;height:13px;color:var(--acc)}
+.pl-avbokade-pil{
+  width:11px;height:11px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .2s var(--e);
+}
+.pl-avbokade-knapp[aria-expanded="true"] .pl-avbokade-pil{transform:rotate(180deg)}
+.pl-avbokade-lista{margin-top:14px}
+.pl-avbokade .pass{opacity:.72}
+.pl-avbokade .pass:hover{opacity:1}
+@media (prefers-reduced-motion:reduce){
+  .pl-avbokade-knapp,.pl-avbokade-pil{transition:none}
+}
 
 /* ============================================================
    STORA SKÄRMAR

@@ -122,6 +122,114 @@ window.NXStudie = (function () {
     return '<div class="loading">' + esc(text || 'Hämtar') + '</div>';
   }
 
+  /* ---------- ikonerna (program 2, Fas 1) ----------
+     Ett läge får aldrig bara vara en färg. Schemats pass var en
+     färgad streck och inget annat, och den som inte skiljer ockra
+     från mossa såg fyra likadana pass. Varje läge har därför en egen
+     FORM: bock, klocka, kryss, ring.
+
+     En uppsättning, ett ställe. Samma ritstil överallt (16px ruta,
+     linje 1,6, rundade ändar), och färgen ärvs från texten
+     (currentColor) så att en ikon alltid har samma kontrast som
+     ordet bredvid den. aria-hidden: ordet står alltid bredvid, eller
+     i knappens aria-label, så skärmläsaren ska inte läsa en bild av
+     samma sak en gång till. */
+  var IKONER = {
+    bokad:   '<path d="M3.5 8.5l3 3 6-7"/>',
+    klar:    '<circle cx="8" cy="8" r="6"/><path d="M5.4 8.2l1.8 1.8 3.4-3.8"/>',
+    vantar:  '<circle cx="8" cy="8" r="6"/><path d="M8 4.8V8l2.2 1.5"/>',
+    avbokad: '<path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/>',
+    ledig:   '<circle cx="8" cy="8" r="5.5"/>',
+    ej:      '<circle cx="8" cy="8" r="6"/><path d="M3.8 12.2l8.4-8.4"/>',
+    las:     '<rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5.3a2.5 2.5 0 0 1 5 0V7"/>',
+    lank:    '<path d="M6.6 9.4a2.7 2.7 0 0 0 3.8 0l2.2-2.2a2.7 2.7 0 0 0-3.8-3.8l-.8.8"/>'
+           + '<path d="M9.4 6.6a2.7 2.7 0 0 0-3.8 0L3.4 8.8a2.7 2.7 0 0 0 3.8 3.8l.8-.8"/>',
+    varning: '<path d="M8 2.6l6 10.6H2z"/><path d="M8 6.6v3"/><path d="M8 11.5v.1"/>'
+  };
+
+  function ikon(namn, klass) {
+    var p = IKONER[namn];
+    if (!p) return '';
+    return '<svg class="nx-ikon' + (klass ? ' ' + esc(klass) : '') + '" viewBox="0 0 16 16"'
+      + ' aria-hidden="true" focusable="false" fill="none" stroke="currentColor"'
+      + ' stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  }
+
+  /* Passets status och dess ikon och ord. Står här och inte bara i
+     NXKontakt.LÄGEN, eftersom adminvyn ritar schemat utan att ladda
+     nextrum-kontakt.js. */
+  var STATUS = {
+    requested: { text: 'Önskad',    ikon: 'vantar',  klass: 'onskad' },
+    confirmed: { text: 'Bekräftad', ikon: 'bokad',   klass: 'bekraftad' },
+    completed: { text: 'Genomförd', ikon: 'klar',    klass: 'genomford' },
+    cancelled: { text: 'Avbokad',   ikon: 'avbokad', klass: 'avbokad' }
+  };
+
+  function statusIkon(status) {
+    var s = STATUS[status];
+    return s ? ikon(s.ikon) : '';
+  }
+
+  /* Längden i ord. Passen är hela timmar (1 till 3), men ett udda
+     värde från en äldre rad ska stå som minuter hellre än som
+     "1,5 timmar" eller ingenting. */
+  function längdText(minuter) {
+    var m = Number(minuter);
+    if (!m || m < 0) return '';
+    if (m % 60) return m + ' min';
+    return m === 60 ? '1 timme' : (m / 60) + ' timmar';
+  }
+
+  /* ---------- länken till mötet ----------
+     SAMMA regel som villkoret pass_forberedelse_lank_check i
+     databasen (program 2, Fas 1.2). Databasen är skyddet; det här är
+     försvar på djupet. En länk som ritas som <a> i en vy som familjer
+     och barn öppnar är en länk som kan gå till en falsk
+     inloggningssida, så den blir klickbar bara om BÅDA säger ja.
+     Ändras listan i databasen ska den här ändras i samma commit. */
+  var MÖTESLÄNK = /^https:\/\/(meet\.google\.com|teams\.microsoft\.com|teams\.live\.com|([a-z0-9-]+\.)?zoom\.us|([a-z0-9-]+\.)?whereby\.com|meet\.jit\.si|facetime\.apple\.com)(\/[^\s<>"']*)?$/;
+  var MÖTESLÄNK_FEL = 'Länken ska börja med https:// och gå till Google Meet, Teams, Zoom, Whereby, Jitsi eller FaceTime.';
+
+  function mötesLänkOk(lank) {
+    var v = String(lank == null ? '' : lank).trim();
+    return v.length > 0 && v.length <= 500 && MÖTESLÄNK.test(v);
+  }
+
+  /* ---------- Tab stannar i rutan ----------
+     Samma fälla som bekräfta() har haft sedan den byggdes, nu delad.
+     Utan den gick Tab från rutans sista knapp rakt ut i sidan bakom,
+     som skärmläsaren då läste som om rutan inte fanns. Bara den
+     översta rutan fångar: öppnas en bekräftelse ovanpå, är det dess
+     tur. */
+  var FOKUSERBARA = 'a[href], button:not([disabled]), input:not([disabled]),'
+    + ' textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  /* Scrollspärren på sidan bakom släpps först när den SISTA rutan
+     stängs. Förut släppte bekräftelsen den direkt, också när den
+     öppnats ovanpå passrutan, och sidan bakom gick att rulla medan
+     passet fortfarande låg öppet. */
+  function släppSpärren() {
+    if (!document.querySelector('.nx-fraga.open')) document.body.style.overflow = '';
+  }
+
+  function ärÖverst(ruta) {
+    var alla = document.querySelectorAll('.nx-fraga');
+    return alla.length > 0 && alla[alla.length - 1] === ruta;
+  }
+
+  function fångaTab(ruta, e) {
+    var kan = Array.prototype.filter.call(ruta.querySelectorAll(FOKUSERBARA), function (el) {
+      return el.offsetParent !== null || el === document.activeElement;
+    });
+    if (!kan.length) return;
+    var f = kan[0], s = kan[kan.length - 1];
+    if (!ruta.contains(document.activeElement)) {
+      e.preventDefault(); (e.shiftKey ? s : f).focus(); return;
+    }
+    if (e.shiftKey && document.activeElement === f) { e.preventDefault(); s.focus(); }
+    else if (!e.shiftKey && document.activeElement === s) { e.preventDefault(); f.focus(); }
+  }
+
   /* ---------- bekräftelse ----------
      Egen ruta i stället för confirm(): den går att skriva på svenska,
      den ser ut som resten av sajten, och den kan säga vad som faktiskt
@@ -149,7 +257,7 @@ window.NXStudie = (function () {
       var sistaFokus = document.activeElement;
       function stäng(svar) {
         ruta.remove();
-        document.body.style.overflow = '';
+        släppSpärren();
         document.removeEventListener('keydown', tangent);
         if (sistaFokus && sistaFokus.focus) sistaFokus.focus();
         klar(svar);
@@ -220,6 +328,14 @@ window.NXStudie = (function () {
 
      Förut var det ett datumfält och en rullgardin, sedan en veckovy.
      Leo ville ha en vanlig kalender, och det är den här.
+
+     VALET lagen (program 2, Fas 1, av som förval): kalendern skiljer
+     på dagar med lediga tider, fullbokade dagar och dagar utan tider,
+     med en teckenförklaring under, och dagens tagna timmar står som
+     låsta knappar med texten "Bokad". Utan valet ser rutan ut som
+     förut. Passets egna timmar räknas som lediga i båda lägena.
+
+     opts: { datum, tid, minuter, tillgang, upptagna, lagen }
      ============================================================ */
   function flyttaRuta(opts) {
     var o = opts || {};
@@ -228,6 +344,7 @@ window.NXStudie = (function () {
       var månad = NXArbete.månadFör(o.datum && o.datum >= idag ? o.datum : idag);
       var dag = o.datum && o.datum >= idag ? o.datum : null;
       var valt = null;
+      var sistaFokus = document.activeElement;
 
       var ruta = document.createElement('div');
       ruta.className = 'nx-fraga';
@@ -257,13 +374,47 @@ window.NXStudie = (function () {
           });
       }
 
+      /* Timmarna i fönstret som någon annan redan har. En timme i
+         taget, inte passets längd: "Bokad 17:00" ska betyda att just
+         den timmen är tagen, inte att ett tvåtimmarspass inte ryms. */
+      function bokade(datum) {
+        var upptagna = o.upptagna || new Set();
+        return NX.tiderFörDatum(datum, o.tillgang || [], [], 60).filter(function (t) {
+          var nyckel = datum + '|' + t;
+          return upptagna.has(nyckel) && !egna.has(nyckel);
+        });
+      }
+
+      /* Fullbokad = studiehjälparen jobbar den dagen och någon timme
+         är tagen, men ingen tid räcker för passet. Ej tillgänglig =
+         inga tider alls. Passerade dagar har inget läge. */
+      function lägeFör(iso) {
+        if (iso < idag) return null;
+        if (lediga(iso).length) return 'ledig';
+        return bokade(iso).length ? 'fullbokad' : 'ej';
+      }
+
+      /* Rutan ritas om vid varje klick, och innerHTML tar fokus med
+         sig. Knappen man stod på letas upp igen i den nya ritningen,
+         annars hamnade tangentbordet i sidans topp efter varje val. */
+      function fokusNyckel() {
+        var a = document.activeElement;
+        if (!a || !ruta.contains(a)) return null;
+        if (a.id) return '#' + a.id;
+        if (a.dataset && a.dataset.flytt) return '[data-flytt="' + a.dataset.flytt + '"]';
+        if (a.dataset && a.dataset.tid) return '.mv-tid[data-tid="' + a.dataset.tid + '"]';
+        if (a.dataset && a.dataset.datum) return '.mv-dag[data-datum="' + a.dataset.datum + '"]';
+        return null;
+      }
+
       function rita() {
+        var nyckel = fokusNyckel();
         var ärNy = valt && !(valt.datum === o.datum && valt.tid === o.tid);
         ruta.innerHTML =
           '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="flytt-t">'
           + '<h3 id="flytt-t">Flytta passet</h3>'
           + '<p>Passet ligger nu <b>' + esc(datumText(o.datum)) + ' kl. ' + esc(String(o.tid || '').slice(0, 5)) + '</b>. '
-          + 'Välj en ny dag och tid — motparten får bekräfta den.</p>'
+          + 'Välj en ny dag och tid. Motparten får bekräfta den.</p>'
           + '<div class="bk-kal nx-flytt-kal">'
           + '<div class="bk-kal-manad">'
           + NXArbete.manad({
@@ -273,9 +424,12 @@ window.NXStudie = (function () {
               minManad: NXArbete.månadFör(idag),
               maxManad: NXArbete.plusMånader(NXArbete.månadFör(idag), 2),
               prickText: 'har lediga tider',
+              teckenforklaring: !!o.lagen,
               dag: function (iso) {
                 var fri = iso >= idag && lediga(iso).length > 0;
-                return { klickbar: fri, prick: fri };
+                var svar = { klickbar: fri, prick: fri };
+                if (o.lagen) svar.lage = lägeFör(iso);
+                return svar;
               }
             })
           + '</div>'
@@ -283,6 +437,7 @@ window.NXStudie = (function () {
           + NXArbete.tidsrad({
               datum: dag,
               tider: dag ? lediga(dag) : [],
+              bokade: o.lagen && dag ? bokade(dag) : undefined,
               vald: valt && valt.datum === dag ? valt.tid : (dag === o.datum ? o.tid : null),
               välj: 'Välj en dag med en prick.',
               tom: 'Inga lediga tider den dagen.'
@@ -295,15 +450,26 @@ window.NXStudie = (function () {
           + '<button type="button" class="btn btn-primary" data-flytt="ja"'
           + (ärNy ? '' : ' disabled') + '>Flytta passet</button>'
           + '</div></div>';
+        var åter = nyckel ? ruta.querySelector(nyckel) : null;
+        if (åter && !åter.disabled) åter.focus();
+        else if (nyckel) {
+          var nej = ruta.querySelector('[data-flytt="nej"]');
+          if (nej) nej.focus();
+        }
       }
 
       function stäng(svar) {
         ruta.remove();
-        document.body.style.overflow = '';
+        släppSpärren();
         document.removeEventListener('keydown', tangent);
+        if (sistaFokus && sistaFokus.focus && document.body.contains(sistaFokus)) sistaFokus.focus();
         klar(svar);
       }
-      function tangent(e) { if (e.key === 'Escape' && document.body.contains(ruta)) stäng(null); }
+      function tangent(e) {
+        if (!document.body.contains(ruta) || !ärÖverst(ruta)) return;
+        if (e.key === 'Escape') stäng(null);
+        else if (e.key === 'Tab') fångaTab(ruta, e);
+      }
 
       ruta.addEventListener('click', function (e) {
         if (e.target === ruta) return stäng(null);
@@ -334,7 +500,7 @@ window.NXStudie = (function () {
         if (k.dataset.flytt === 'nej') return stäng(null);
         if (!valt) return;
         if (valt.datum === o.datum && valt.tid === o.tid) {
-          NX.säg(ruta.querySelector('#fl-msg'), '⚠️ Det är samma tid som passet redan har.', false);
+          NX.säg(ruta.querySelector('#fl-msg'), 'Det är samma tid som passet redan har.', false);
           return;
         }
         stäng({ datum: valt.datum, tid: valt.tid });
@@ -346,6 +512,11 @@ window.NXStudie = (function () {
       document.body.style.overflow = 'hidden';
       void ruta.offsetWidth;
       ruta.classList.add('open');
+      /* Fokus in i rutan, på den valda dagen om det finns en. Förut
+         stod fokus kvar på knappen i sidan bakom, och Tab ledde dit. */
+      var start = ruta.querySelector('.mv-dag[aria-pressed="true"]:not([disabled])')
+        || ruta.querySelector('[data-flytt="nej"]');
+      if (start) start.focus();
     });
   }
 
@@ -360,25 +531,148 @@ window.NXStudie = (function () {
      Därför stängs rutan efter att klicket hunnit bubbla vidare. Tas
      noden bort direkt når händelsen aldrig document, och knappen gör
      ingenting.
+
+     opts, som förut:
+       titel, under, rader [[etikett, värde]], anteckning, laxor,
+       atgarder (html), rapport (text: rapporten för JUST det här
+       passet, under rubriken "Efter passet")
+
+     opts, nya i program 2 Fas 1 (alla av som förval):
+       id              passets id. Krävs för formuläret.
+       langd           minuter. Blir raden "Längd: 1 timme" direkt
+                       efter första raden i rader.
+       forberedelse    { att_gora, lank } ur pass_forberedelse, eller
+                       null. Blocket "Inför passet". Länken blir
+                       klickbar bara om den klarar mötesLänkOk.
+       forberedelseTom text som står i "Inför passet" när inget är
+                       förberett. Utan den syns inget block alls då.
+       forraRapport    { datum, next_focus, needs_practice }: den
+                       senaste rapporten FÖRE passet. Blocket "Från
+                       förra passet".
+       forberedelseForm true eller { att_gora, lank }: formuläret där
+                       studiehjälparen skriver förberedelsen. Rutan
+                       sparar INTE själv; vyn lyssnar på
+                       [data-forb-spara] och [data-forb-ta-bort].
+                       Formulärets knappar stänger inte rutan.
+
+     Returnerar { stäng, sättForberedelse(f), säg(text, ok), ruta }.
      ============================================================ */
+  function förberedelseHtml(f, tomText) {
+    var gora = f && f.att_gora ? String(f.att_gora).trim() : '';
+    var lank = f && f.lank ? String(f.lank).trim() : '';
+    if (!gora && !lank) {
+      return tomText
+        ? '<div class="pass-block pass-infor"><h6>Inför passet</h6>'
+          + '<p class="pass-tom">' + esc(tomText) + '</p></div>'
+        : '';
+    }
+    var länk = '';
+    if (lank && mötesLänkOk(lank)) {
+      /* Värdnamnet står synligt, så att man ser vart man hamnar innan
+         man trycker. Adressen har redan klarat regeln, så det finns
+         ingen inloggningsdel (användare@) som kan lura ögat. */
+      var värd = lank.replace(/^https:\/\//, '').split('/')[0];
+      länk = '<a class="pass-mote" href="' + esc(lank) + '" target="_blank" rel="noopener noreferrer">'
+        + ikon('lank')
+        + '<span class="pass-mote-text"><b>Öppna mötet</b><span>' + esc(värd) + '</span></span>'
+        + '<span class="nx-dold"> (öppnas i en ny flik)</span></a>';
+    } else if (lank) {
+      /* Kan bara hända om regeln i databasen och den här glidit isär,
+         eller om raden skrevs förbi den. Adressen visas, men går inte
+         att trycka på. */
+      länk = '<div class="pass-mote-fel">' + ikon('varning')
+        + '<div><b>Länken visas bara som text</b>'
+        + '<span>Den går inte till någon av mötestjänsterna Nextrum godkänner.</span>'
+        + '<code>' + esc(lank) + '</code></div></div>';
+    }
+    return '<div class="pass-block pass-infor"><h6>Inför passet</h6>'
+      + (gora ? '<p>' + esc(gora) + '</p>' : '')
+      + länk + '</div>';
+  }
+
+  /* Rubriken säger FÖRRA passet och raden under säger vilket, så att
+     ingen läser det som en rapport om passet som ska hållas. */
+  function förraRapportHtml(r) {
+    if (!r) return '';
+    var fokus = r.next_focus ? String(r.next_focus).trim() : '';
+    var öva = r.needs_practice ? String(r.needs_practice).trim() : '';
+    var datum = r.datum ? String(r.datum).slice(0, 10) : '';
+    return '<div class="pass-block pass-forra"><h6>Från förra passet</h6>'
+      + (datum ? '<p class="pass-forra-kalla">Ur rapporten från ' + esc(datumText(datum)) + '</p>' : '')
+      + (fokus || öva
+          ? '<dl class="pass-forra-lista">'
+            + (fokus ? '<div><dt>Nästa fokus</dt><dd>' + esc(fokus) + '</dd></div>' : '')
+            + (öva ? '<div><dt>Behöver träna på</dt><dd>' + esc(öva) + '</dd></div>' : '')
+            + '</dl>'
+          : '<p class="pass-tom">Rapporten säger inget om vad nästa pass ska handla om.</p>')
+      + '</div>';
+  }
+
+  function förberedelseFinns(f) {
+    return !!(f && ((f.att_gora && String(f.att_gora).trim()) || (f.lank && String(f.lank).trim())));
+  }
+
+  function taBortKnapp(eid) {
+    return '<button type="button" class="btn btn-ghost btn-sm" data-forb-ta-bort="' + eid + '">Ta bort</button>';
+  }
+
+  /* Id:t står i varje attribut som vyn behöver, så att en delegerad
+     lyssnare vet vilket pass det gäller utan att fråga rutan. */
+  function förberedelseFormHtml(id, f) {
+    var eid = esc(id);
+    var finns = förberedelseFinns(f);
+    return '<div class="pass-block pass-forb" data-forb-form="' + eid + '">'
+      + '<h6 data-forb-rubrik>' + (finns ? 'Ändra förberedelsen' : 'Förbered passet') + '</h6>'
+      + '<p class="pass-forb-hjalp">Familjen ser det du skriver här när den öppnar passet.</p>'
+      + '<label class="pass-forb-et" for="forb-gora-' + eid + '">Att göra</label>'
+      + '<textarea class="inp" id="forb-gora-' + eid + '" data-forb-gora rows="3" maxlength="1000"'
+      + ' aria-describedby="forb-gora-not-' + eid + '">' + esc((f && f.att_gora) || '') + '</textarea>'
+      + '<span class="pass-forb-not" id="forb-gora-not-' + eid + '">Högst 1000 tecken.</span>'
+      + '<label class="pass-forb-et" for="forb-lank-' + eid + '">Länk till mötet (valfritt)</label>'
+      + '<input class="inp" type="url" id="forb-lank-' + eid + '" data-forb-lank maxlength="500"'
+      + ' inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://meet.google.com/…"'
+      + ' aria-describedby="forb-lank-not-' + eid + '" value="' + esc((f && f.lank) || '') + '">'
+      + '<span class="pass-forb-not" id="forb-lank-not-' + eid + '">'
+      + 'Google Meet, Teams, Zoom, Whereby, Jitsi eller FaceTime. Adressen börjar med https://.</span>'
+      + '<div class="pass-forb-knappar" data-forb-knappar>'
+      + '<button type="button" class="btn btn-primary btn-sm" data-forb-spara="' + eid + '">Spara</button>'
+      + (finns ? taBortKnapp(eid) : '')
+      + '</div>'
+      + '<p class="ok-msg" data-forb-msg="' + eid + '" role="status" aria-live="polite"></p>'
+      + '</div>';
+  }
+
   function passRuta(opts) {
     var o = opts || {};
     var ruta = document.createElement('div');
     ruta.className = 'nx-fraga';
+    var id = o.id != null ? String(o.id) : '';
 
-    var fakta = (o.rader || [])
+    var rader = (o.rader || []).slice();
+    var längd = o.langd ? längdText(o.langd) : '';
+    if (längd) rader.splice(Math.min(1, rader.length), 0, ['Längd', längd]);
+
+    var fakta = rader
       .filter(function (r) { return r && r[1]; })
       .map(function (r) {
         return '<div class="pass-fakta-rad"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>';
       }).join('');
+
+    var medForm = !!o.forberedelseForm && !!id;
+    if (o.forberedelseForm && !id) console.warn('passRuta: forberedelseForm kräver id');
+    var formData = o.forberedelseForm && typeof o.forberedelseForm === 'object' ? o.forberedelseForm : null;
+    var medVisning = o.forberedelse !== undefined;
 
     ruta.innerHTML =
       '<div class="nx-fraga-box nx-passbox" role="dialog" aria-modal="true" aria-labelledby="pass-t">'
       + '<h3 id="pass-t">' + esc(o.titel || 'Passet') + '</h3>'
       + (o.under ? '<p>' + esc(o.under) + '</p>' : '')
       + (fakta ? '<div class="pass-fakta">' + fakta + '</div>' : '')
+      + (medVisning ? '<div data-forb-visning>' + förberedelseHtml(o.forberedelse, o.forberedelseTom) + '</div>' : '')
+      + (medForm ? förberedelseFormHtml(id, formData) : '')
       + (o.anteckning
           ? '<div class="pass-block"><h6>Anteckning</h6><p>' + esc(o.anteckning) + '</p></div>' : '')
+      + förraRapportHtml(o.forraRapport)
       + (o.rapport
           ? '<div class="pass-block"><h6>Efter passet</h6><p>' + esc(o.rapport) + '</p></div>' : '')
       + (o.laxor && o.laxor.length
@@ -409,24 +703,80 @@ window.NXStudie = (function () {
       document.body.style.overflow = '';
       if (sistaFokus && sistaFokus.focus) sistaFokus.focus();
     }
-    function tangent(e) { if (e.key === 'Escape') stäng(); }
+    /* Escape och Tab gäller bara när rutan ligger överst. Öppnar
+       formuläret en bekräftelse ("Ta bort förberedelsen?") ska Escape
+       stänga den frågan, inte hela passet under. */
+    function tangent(e) {
+      if (!ärÖverst(ruta)) return;
+      if (e.key === 'Escape') stäng();
+      else if (e.key === 'Tab') fångaTab(ruta, e);
+    }
 
+    /* Ett klick som BÖRJADE i textrutan och släpptes på bakgrunden
+       (man markerar text och drar lite för långt) räknas som ett klick
+       på bakgrunden. Det stängde rutan och tog det skrivna med sig. */
+    var nedPå = null;
+    ruta.addEventListener('mousedown', function (e) { nedPå = e.target; });
     ruta.addEventListener('click', function (e) {
-      if (e.target === ruta) return stäng();
-      if (!e.target.closest('button')) return;
+      if (e.target === ruta) { if (nedPå === ruta || nedPå === null) stäng(); return; }
+      var knapp = e.target.closest('button');
+      if (!knapp) return;
+      /* Förberedelsens knappar arbetar i rutan: stängde den sig hade
+         studiehjälparen aldrig sett att det sparades, eller varför
+         det inte gick. data-pass-behall ger samma sak åt en vy. */
+      if (knapp.closest('[data-forb-form]') || knapp.hasAttribute('data-pass-behall')) return;
       /* Låt klicket nå document först — det är där de riktiga
          hanterarna sitter. */
       setTimeout(stäng, 0);
     });
     document.addEventListener('keydown', tangent);
 
+    /* Efter en sparning: rita om "Inför passet" och låt formuläret
+       visa det databasen faktiskt sparade (den trimmar och gör tomt
+       till null). Formuläret ritas inte om, så fokus står kvar. */
+    function sättForberedelse(f) {
+      o.forberedelse = f || null;
+      var visning = ruta.querySelector('[data-forb-visning]');
+      if (visning) visning.innerHTML = förberedelseHtml(o.forberedelse, o.forberedelseTom);
+      var form = ruta.querySelector('[data-forb-form]');
+      if (!form) return;
+      var gora = form.querySelector('[data-forb-gora]');
+      var lank = form.querySelector('[data-forb-lank]');
+      if (gora) gora.value = (f && f.att_gora) || '';
+      if (lank) lank.value = (f && f.lank) || '';
+      var finns = förberedelseFinns(f);
+      var rubrik = form.querySelector('[data-forb-rubrik]');
+      if (rubrik) rubrik.textContent = finns ? 'Ändra förberedelsen' : 'Förbered passet';
+      var knappar = form.querySelector('[data-forb-knappar]');
+      var taBort = form.querySelector('[data-forb-ta-bort]');
+      if (finns && !taBort && knappar) {
+        knappar.insertAdjacentHTML('beforeend', taBortKnapp(esc(id)));
+      } else if (!finns && taBort) {
+        var hadeFokus = document.activeElement === taBort;
+        taBort.remove();
+        if (hadeFokus) {
+          var spara = form.querySelector('[data-forb-spara]');
+          if (spara) spara.focus();
+        }
+      }
+    }
+
+    function säg(text, ok) {
+      var m = ruta.querySelector('[data-forb-msg]');
+      if (m) NX.säg(m, text, ok);
+    }
+
     document.body.appendChild(ruta);
     document.body.style.overflow = 'hidden';
     void ruta.offsetWidth;
     ruta.classList.add('open');
+    /* Fokus på Stäng, som förut, men utan att rulla dit. Med
+       förberedelsen och förra rapporten är rutan ofta högre än
+       skärmen, och då landade man längst ned med rubriken utom synhåll. */
     var f = ruta.querySelector('[data-pass-stang]');
-    if (f) f.focus();
-    return { stäng: stäng };
+    if (f) f.focus({ preventScroll: true });
+    ruta.scrollTop = 0;
+    return { stäng: stäng, sättForberedelse: sättForberedelse, säg: säg, ruta: ruta };
   }
 
   /* ============================================================
@@ -440,12 +790,44 @@ window.NXStudie = (function () {
      inte tre komponenter utan tre sätt att rita samma lista, så en
      bokning kan aldrig visas olika beroende på vilket läge man står i.
 
+     STATUS SYNS SOM FORM, INTE BARA SOM FÄRG (program 2, Fas 1). Ett
+     pass var en färgad streck, och den enda skillnaden mellan önskad
+     och bekräftad var ockra mot mossa. Nu har varje pass en ikon per
+     läge och en aria-label med läge, tid och ämne. Ämnet göms när
+     rutan är smal; ikonen gör det aldrig.
+
      opts: { host, bokningar, lage, namn(b), onOppna(b) }
+
+     Nya val, alla av som förval:
+       teckenforklaring  true: förklaringen till ikonerna under schemat
+       tillgang          [{ weekday (0 = måndag), start_time, end_time }]
+                         Med den ritar vecko- och dagvyn också timmarna
+                         runt passen: Ledig (i fönstret, inte tagen,
+                         inte passerad), Bokad (tagen av någon annan) och
+                         Ej tillgänglig (utanför fönstret, med mönster).
+       upptagna          Set med 'YYYY-MM-DD|HH:MM' (NX.hämtaUpptagna)
+       onLedig(datum, tid)  gör en ledig timme till en knapp
+       tidslinjeTill     ISO-datum, eller en funktion som svarar med ett.
+                         Tidslinjen ritas bara till och med den dagen.
+                         Upptagna hämtas för en begränsad period
+                         (idag + 180 dagar), och bokningen går bara tre
+                         månader fram. Utan gräns ritades timmar efter
+                         det som "Ledig" fast ingen visste om de var
+                         tagna, och ett klick på dem ledde ingenstans.
+                         En funktion, så att gränsen följer bokningen
+                         också när sidan står öppen över ett månadsskifte.
+
+     Avbokade pass visas bara i dagvyn, som förut.
      ============================================================ */
   var SCHEMA_LAGE = {
     requested: 'onskad', confirmed: 'bekraftad',
     completed: 'genomford', cancelled: 'avbokad'
   };
+
+  /* Timmarna tidslinjen spänner över när inget fönster går längre.
+     Samma timmar som studiehjälparens egen tidväljare (07 till 21)
+     och önskemålen i bokningen, räknat till sluttimmen. */
+  var SCHEMA_FRÅN = 7, SCHEMA_TILL = 22;
 
   function schema(opts) {
     var o = opts || {};
@@ -455,8 +837,23 @@ window.NXStudie = (function () {
     var läge = ['manad', 'vecka', 'dag'].indexOf(o.lage) !== -1 ? o.lage : 'manad';
     var visad = new Date(); visad.setHours(12, 0, 0, 0);
     var bokningar = o.bokningar || [];
+    var tillgang = Array.isArray(o.tillgang) ? o.tillgang : null;
+    var upptagna = o.upptagna instanceof Set ? o.upptagna : new Set();
+
+    /* Vilka lägen tidslinjen faktiskt ritade i den period som visas.
+       Förklaringen byggs av dem: hos studiehjälparen ritas "Bokad av
+       någon annan" aldrig (alla hens pass står redan i schemat), och
+       en rad som förklarar något som inte går att se är brus. Nollas
+       i rita() innan perioden ritas. */
+    var ritade = {};
 
     function namnFör(b) { return typeof o.namn === 'function' ? (o.namn(b) || '') : ''; }
+    function två(n) { return String(n).padStart(2, '0'); }
+    function timmeAv(t) { return Number(String(t || '').slice(0, 2)); }
+    function tidslinjeGräns() {
+      var g = typeof o.tidslinjeTill === 'function' ? o.tidslinjeTill() : o.tidslinjeTill;
+      return g ? String(g).slice(0, 10) : null;
+    }
 
     /* En avbokad rad ska synas i historiken men inte skräpa i
        överblicken — den som tittar på månaden vill veta vad som
@@ -477,11 +874,13 @@ window.NXStudie = (function () {
       return m;
     }
 
+    /* "till" i stället för ett tankstreck mellan datumen: Leos regel
+       för all text i gränssnittet. */
     function titel() {
       if (läge === 'manad') return NX.MANADER[visad.getMonth()] + ' ' + visad.getFullYear();
       if (läge === 'dag') return NX.DAGAR[(visad.getDay() + 6) % 7] + ' ' + datumText(isoFor(visad));
       var m = måndagFör(visad), s = new Date(m); s.setDate(s.getDate() + 6);
-      return datumText(isoFor(m)) + ' – ' + datumText(isoFor(s));
+      return datumText(isoFor(m)) + ' till ' + datumText(isoFor(s));
     }
 
     function flytta(steg) {
@@ -489,6 +888,10 @@ window.NXStudie = (function () {
       else if (läge === 'vecka') visad.setDate(visad.getDate() + steg * 7);
       else visad.setDate(visad.getDate() + steg);
       rita();
+    }
+
+    function statusFör(b) {
+      return STATUS[b.status] || { text: String(b.status || ''), ikon: '', klass: '' };
     }
 
     function chip(b) {
@@ -503,12 +906,145 @@ window.NXStudie = (function () {
          på förmiddagen hade sagt att det redan varit. */
       var passerat = b.status === 'completed'
         && String(b.wanted_date || '') < isoFor(new Date());
+      var s = statusFör(b);
+      /* Etiketten börjar med det som syns (tid och ämne), så att den
+         som styr med rösten kan säga det hen ser. Läget kommer sist. */
+      var etikett = [String(b.wanted_time || ''), b.subject || 'Pass'].filter(Boolean).join(' ')
+        + (s.text ? ', ' + s.text : '');
 
       return '<button type="button" class="sch-pass ' + (SCHEMA_LAGE[b.status] || '')
         + (passerat ? ' ar-passerad' : '')
-        + '" data-pass="' + esc(b.id) + '">'
-        + '<i></i><b>' + esc(b.wanted_time || '') + '</b>'
+        + '" data-pass="' + esc(b.id) + '" aria-label="' + esc(etikett) + '">'
+        + (s.ikon ? ikon(s.ikon, 'sch-ikon') : '<i></i>')
+        + '<b>' + esc(b.wanted_time || '') + '</b>'
         + '<span>' + esc(b.subject || 'Pass') + '</span></button>';
+    }
+
+    /* ---------- tidslinjen (valet tillgang) ----------
+       Timmarna en dag som INTE är ett eget pass: lediga, tagna av
+       någon annan, och utanför studiehjälparens fönster. Ledig är det
+       bokningen själv skulle erbjuda för en timme (NX.tiderFörDatum),
+       minus det som är taget, så att schemat och bokningen aldrig
+       säger olika saker om samma timme. Passerade dagar och timmar
+       ritas inte alls: de är varken lediga eller otillgängliga, de har
+       varit.
+
+       Tagna och otillgängliga timmar i följd slås ihop till ett band.
+       Femton rutor "Ej tillgänglig" i rad är brus; en rad som säger
+       "före 16:00" är ett besked.
+
+       Efter tidslinjeTill ritas ingenting: där vet schemat inte vilka
+       timmar som är tagna, och "Ledig" vore en gissning. */
+    function segmentFör(iso, pass) {
+      var idag = isoFor(new Date());
+      if (!tillgang || iso < idag) return [];
+      var gräns = tidslinjeGräns();
+      if (gräns && iso > gräns) return [];
+      var vd = (new Date(iso + 'T12:00:00').getDay() + 6) % 7;
+      var fönster = tillgang.filter(function (f) { return Number(f.weekday) === vd; });
+      var från = SCHEMA_FRÅN, till = SCHEMA_TILL;
+      fönster.forEach(function (f) {
+        från = Math.min(från, timmeAv(f.start_time));
+        till = Math.max(till, timmeAv(f.end_time));
+      });
+      function inom(h) {
+        return fönster.some(function (f) { return h >= timmeAv(f.start_time) && h < timmeAv(f.end_time); });
+      }
+      var lediga = NX.tiderFörDatum(iso, tillgang, [], 60);
+
+      var egna = {};
+      pass.forEach(function (b) {
+        if (b.status === 'cancelled') return;
+        var h0 = timmeAv(b.wanted_time);
+        if (isNaN(h0)) return;
+        var n = Math.max(1, Math.ceil((Number(b.duration_min) || 60) / 60));
+        for (var i = 0; i < n; i++) egna[h0 + i] = true;
+      });
+
+      var nu = new Date(), nuMin = nu.getHours() * 60 + nu.getMinutes();
+      var ut = [];
+      for (var h = från; h < till; h++) {
+        if (egna[h]) continue;
+        if (iso === idag && h * 60 < nuMin) continue;
+        var tid = två(h) + ':00';
+        var typ;
+        if (upptagna.has(iso + '|' + tid)) typ = 'upptagen';
+        else if (inom(h)) {
+          /* I fönstret men inte bokningsbar: börjar om mindre än en
+             timme. Den är varken ledig eller otillgänglig, så den
+             ritas inte. */
+          if (lediga.indexOf(tid) === -1) continue;
+          typ = 'ledig';
+        } else typ = 'ej';
+
+        var sista = ut[ut.length - 1];
+        if (sista && typ !== 'ledig' && sista.typ === typ && sista.till === h) { sista.till = h + 1; continue; }
+        ut.push({ typ: typ, från: h, till: h + 1, spannFrån: från, spannTill: till });
+      }
+      return ut;
+    }
+
+    function segmentText(s) {
+      var a = två(s.från) + ':00', b = två(s.till) + ':00';
+      if (s.typ === 'ej') {
+        if (s.från <= s.spannFrån && s.till >= s.spannTill) return 'hela dagen';
+        if (s.från <= s.spannFrån) return 'före ' + b;
+        if (s.till >= s.spannTill) return 'från ' + a;
+      }
+      return s.till - s.från > 1 ? a + ' till ' + b : a;
+    }
+
+    var SEGMENT = {
+      ledig:    { ord: 'Ledig',          ikon: 'ledig', klass: 'ar-ledig' },
+      upptagen: { ord: 'Bokad',          ikon: 'las',   klass: 'ar-upptagen' },
+      ej:       { ord: 'Ej tillgänglig', ikon: 'ej',    klass: 'ar-ej' }
+    };
+
+    /* Ett segment som chip (veckan) eller som rad (dagen). Bara en
+       ledig timme kan bli en knapp, och bara om vyn bett om det. */
+    function segmentHtml(iso, s, somRad) {
+      var d = SEGMENT[s.typ];
+      var text = segmentText(s);
+      ritade[s.typ] = true;
+      var tid = två(s.från) + ':00';
+      var klickbar = s.typ === 'ledig' && typeof o.onLedig === 'function';
+      var tagg = klickbar ? 'button' : 'div';
+      var attr = klickbar
+        ? ' type="button" data-ledig="' + esc(iso + '|' + tid) + '" aria-label="'
+          + esc('Ledig tid, kl. ' + tid + ', ' + datumText(iso)) + '"'
+        : '';
+      if (somRad) {
+        /* Klockslaget i vänsterspalten är alltid starten, som på ett
+           pass. Spannet står i raden under när det är mer än en timme. */
+        var under = s.typ === 'ej' || s.till - s.från > 1
+          ? text.charAt(0).toUpperCase() + text.slice(1) : '';
+        return '<' + tagg + ' class="sch-full sch-tidrad ' + d.klass + '"' + attr + '>'
+          + '<span class="sch-full-tid">' + esc(tid) + '</span>'
+          + '<span class="sch-full-vad"><b>' + esc(d.ord) + '</b>'
+          + (under ? '<span>' + esc(under) + '</span>' : '')
+          + '</span>'
+          + '<span class="sch-full-lage">' + ikon(d.ikon) + '</span>'
+          + '</' + tagg + '>';
+      }
+      return '<' + tagg + ' class="sch-tid ' + d.klass + '"' + attr + '>'
+        + ikon(d.ikon)
+        + (s.typ === 'ej'
+            ? '<span>' + esc(d.ord + ' ' + text) + '</span>'
+            : '<b>' + esc(text) + '</b><span>' + esc(d.ord) + '</span>')
+        + '</' + tagg + '>';
+    }
+
+    /* Passen och segmenten i tidsordning. Ett pass före ett segment på
+       samma klockslag: passet är det man letar efter. */
+    function tidslinje(iso, pass, somRad) {
+      var poster = pass.map(function (b) {
+        return { nyckel: String(b.wanted_time || '').slice(0, 5), vikt: 0,
+                 html: somRad ? NXKontaktRad(b) : chip(b) };
+      }).concat(segmentFör(iso, pass).map(function (s) {
+        return { nyckel: två(s.från) + ':00', vikt: 1, html: segmentHtml(iso, s, somRad) };
+      }));
+      poster.sort(function (a, c) { return a.nyckel.localeCompare(c.nyckel) || a.vikt - c.vikt; });
+      return poster.map(function (p) { return p.html; }).join('');
     }
 
     function ritaManad() {
@@ -547,10 +1083,11 @@ window.NXStudie = (function () {
         var d = new Date(m); d.setDate(d.getDate() + i);
         var iso = isoFor(d);
         var pass = förDag(iso);
+        var innehåll = tillgang ? tidslinje(iso, pass, false) : pass.map(chip).join('');
         ut += '<div class="sch-rad' + (iso === idag ? ' idag' : '') + '">'
           + '<div class="sch-rad-dag"><b>' + NX.DAGAR[i] + '</b><span>' + d.getDate() + '</span></div>'
-          + '<div class="sch-rad-pass">'
-          + (pass.length ? pass.map(chip).join('') : '<span class="sch-tom">—</span>')
+          + '<div class="sch-rad-pass' + (tillgang ? ' ar-tidslinje' : '') + '">'
+          + (innehåll || '<span class="sch-tom">Inga pass</span>')
           + '</div></div>';
       }
       return '<div class="sch-vecka">' + ut + '</div>';
@@ -559,28 +1096,66 @@ window.NXStudie = (function () {
     function ritaDag() {
       var iso = isoFor(visad);
       var pass = förDag(iso, true);
-      if (!pass.length) {
+      var rader = tillgang ? tidslinje(iso, pass, true) : pass.map(NXKontaktRad).join('');
+      if (!rader) {
         return '<div class="empty"><b>Inga pass den här dagen</b>'
           + '<br><span>Bläddra vidare, eller byt till månad för att se var de ligger.</span></div>';
       }
-      return '<div class="sch-lista">' + pass.map(function (b) {
-        return NXKontaktRad(b);
-      }).join('') + '</div>';
+      return '<div class="sch-lista">' + rader + '</div>';
     }
 
     /* Dagvyn visar hela raden, inte ett chip: det är den vyn man har
-       framme när passet faktiskt ska hållas. */
+       framme när passet faktiskt ska hållas. Läget står i ord längst
+       till höger, med samma ikon som i månaden. */
     function NXKontaktRad(b) {
+      var s = statusFör(b);
       return '<button type="button" class="sch-full ' + (SCHEMA_LAGE[b.status] || '')
         + '" data-pass="' + esc(b.id) + '">'
-        + '<span class="sch-full-tid">' + esc(b.wanted_time || '—') + '</span>'
+        + '<span class="sch-full-tid">' + esc(b.wanted_time || 'Ingen tid') + '</span>'
         + '<span class="sch-full-vad"><b>' + esc(b.subject || 'Pass') + '</b>'
         + '<span>' + esc([b.format, b.location, (b.duration_min || 60) + ' min', namnFör(b)]
             .filter(Boolean).join(' · ')) + '</span></span>'
+        + (s.text ? '<span class="sch-full-lage">' + (s.ikon ? ikon(s.ikon) : '') + esc(s.text) + '</span>' : '')
         + '</button>';
     }
 
+    /* Förklaringen följer det som kan synas i läget man står i:
+       avbokade finns bara i dagvyn. Tidslinjens tre lägen (ledig,
+       bokad av någon annan, ej tillgänglig) står bara med när de
+       faktiskt ritats i perioden som visas, se ritade. */
+    function förklaring() {
+      if (!o.teckenforklaring) return '';
+      var poster = [
+        ['vantar', 'Önskad', 'onskad'],
+        ['bokad', 'Bekräftad', 'bekraftad'],
+        ['klar', 'Genomförd', 'genomford']
+      ];
+      if (läge === 'dag') poster.push(['avbokad', 'Avbokad', 'avbokad']);
+      if (ritade.ledig) poster.push(['ledig', 'Ledig', 'ar-ledig']);
+      if (ritade.upptagen) poster.push(['las', 'Bokad av någon annan', 'ar-upptagen']);
+      if (ritade.ej) poster.push(['ej', 'Ej tillgänglig', 'ar-ej']);
+      return '<ul class="nx-forklaring sch-forklaring" aria-label="Teckenförklaring">'
+        + poster.map(function (p) {
+            return '<li class="' + p[2] + '">' + ikon(p[0]) + esc(p[1]) + '</li>';
+          }).join('')
+        + '</ul>';
+    }
+
+    /* Går perioden som visas förbi tidslinjeTill står det i ord varför
+       timmarna runt passen tar slut. Annars ser en vecka där de
+       lediga tiderna upphör mitt i ut som att studiehjälparen slutat
+       jobba. */
+    function gränsText() {
+      var gräns = tidslinjeGräns();
+      if (!tillgang || läge === 'manad' || !gräns) return '';
+      var sista = läge === 'dag' ? new Date(visad) : måndagFör(visad);
+      if (läge === 'vecka') sista.setDate(sista.getDate() + 6);
+      if (isoFor(sista) <= gräns) return '';
+      return '<p class="sch-grans">Lediga tider visas till och med ' + esc(datumText(gräns)) + '.</p>';
+    }
+
     function rita() {
+      ritade = {};
       var kropp = läge === 'manad' ? ritaManad() : läge === 'vecka' ? ritaVecka() : ritaDag();
       host.innerHTML =
           '<div class="sch-topp">'
@@ -596,7 +1171,7 @@ window.NXStudie = (function () {
             return '<button type="button" data-sch-lage="' + l + '" aria-pressed="' + (l === läge) + '">'
               + { manad: 'Månad', vecka: 'Vecka', dag: 'Dag' }[l] + '</button>';
           }).join('')
-        + '</div></div>' + kropp;
+        + '</div></div>' + kropp + gränsText() + förklaring();
     }
 
     host.addEventListener('click', function (e) {
@@ -616,6 +1191,14 @@ window.NXStudie = (function () {
         visad = new Date(fler.dataset.dagOppna + 'T12:00:00');
         läge = 'dag'; rita(); return;
       }
+      var ledig = e.target.closest('[data-ledig]');
+      if (ledig) {
+        if (typeof o.onLedig === 'function') {
+          var delar = ledig.dataset.ledig.split('|');
+          o.onLedig(delar[0], delar[1]);
+        }
+        return;
+      }
       var pass = e.target.closest('[data-pass]');
       if (pass && typeof o.onOppna === 'function') {
         var b = bokningar.filter(function (x) { return String(x.id) === pass.dataset.pass; })[0];
@@ -628,6 +1211,14 @@ window.NXStudie = (function () {
     return {
       rita: rita,
       sättBokningar: function (nya) { bokningar = nya || []; rita(); },
+      /* Tillgången och de tagna timmarna kommer i en egen hämtning,
+         ofta efter att schemat redan ritats. null stänger av
+         tidslinjen igen. */
+      sättTider: function (nyTillgang, nyaUpptagna) {
+        tillgang = Array.isArray(nyTillgang) ? nyTillgang : null;
+        upptagna = nyaUpptagna instanceof Set ? nyaUpptagna : new Set();
+        rita();
+      },
       gåTill: function (iso, nyttLäge) {
         visad = new Date(iso + 'T12:00:00');
         if (nyttLäge) läge = nyttLäge;
@@ -1056,9 +1647,19 @@ window.NXStudie = (function () {
      försvinner — historiken är kvitto på vad som fakturerats och
      får inte gå att tappa bort, bara att lägga undan.
 
-     opts: { host, bokningar, rad(b), tomtKommande, tomtAllt }
+     opts: { host, bokningar, rad(b), tomtKommande, tomtAllt, avbokade }
+
+     VALET avbokade (program 2, Fas 1):
+       utelämnat  som förut: avbokade ligger i "Tidigare pass"
+       'egen'     avbokade får en egen hopfälld grupp "Avbokade (N)"
+                  efter historiken. Historiken blir då det som faktiskt
+                  hölls eller skulle ha hållits, och ett avbokat pass
+                  nästa vecka hamnar inte längre överst i den (den
+                  sorteras fallande, och ett datum fram i tiden var
+                  "senast").
      ============================================================ */
   var PASS_SYNLIGA = 3;
+  var plRäknare = 0;
 
   function passLista(opts) {
     var o = opts || {};
@@ -1067,6 +1668,7 @@ window.NXStudie = (function () {
 
     var alla = o.bokningar || [];
     var idag = isoFor(new Date());
+    var egenGrupp = o.avbokade === 'egen';
 
     /* Avbokat är aldrig kommande, hur långt fram det än ligger.
        Ett pass som inte blir av är historik i samma stund. */
@@ -1074,13 +1676,16 @@ window.NXStudie = (function () {
       return (b.status === 'requested' || b.status === 'confirmed')
         && String(b.wanted_date || '') >= idag;
     }
+    function ärAvbokad(b) { return egenGrupp && b.status === 'cancelled'; }
 
     function nyckel(b) { return String(b.wanted_date || '') + String(b.wanted_time || ''); }
+    function fallande(a, c) { return nyckel(c).localeCompare(nyckel(a)); }
 
     var kommande = alla.filter(ärKommande)
       .sort(function (a, c) { return nyckel(a).localeCompare(nyckel(c)); });
-    var tidigare = alla.filter(function (b) { return !ärKommande(b); })
-      .sort(function (a, c) { return nyckel(c).localeCompare(nyckel(a)); });
+    var tidigare = alla.filter(function (b) { return !ärKommande(b) && !ärAvbokad(b); })
+      .sort(fallande);
+    var avbokade = alla.filter(ärAvbokad).sort(fallande);
 
     if (!alla.length) {
       host.innerHTML = o.tomtAllt || tomt('Inga pass än', '');
@@ -1108,6 +1713,23 @@ window.NXStudie = (function () {
         + '</div>';
     }
 
+    /* Hopfälld från början: de avbokade är svaret på "vad hände med
+       det passet", inte något man behöver se varje gång. Knappen
+       säger hur många som ligger där, så inget ser försvunnet ut. */
+    if (avbokade.length) {
+      var avbId = 'pl-avbokade-' + (++plRäknare);
+      ut += '<div class="pl-grupp pl-avbokade">'
+        + '<button type="button" class="pl-avbokade-knapp" data-pl-avbokade aria-expanded="false"'
+        + ' aria-controls="' + avbId + '">'
+        + ikon('avbokad') + '<span>Avbokade (' + avbokade.length + ')</span>'
+        + '<svg class="pl-avbokade-pil" viewBox="0 0 12 12" aria-hidden="true" focusable="false">'
+        + '<path d="M2.5 4.5 6 8l3.5-3.5"/></svg>'
+        + '</button>'
+        + '<div class="pl-avbokade-lista" id="' + avbId + '" hidden>'
+        + avbokade.map(o.rad).join('') + '</div>'
+        + '</div>';
+    }
+
     host.innerHTML = ut;
 
     var knapp = host.querySelector('[data-pl-mer]');
@@ -1118,6 +1740,16 @@ window.NXStudie = (function () {
         lådan.hidden = öppet;
         knapp.setAttribute('aria-expanded', öppet ? 'false' : 'true');
         knapp.textContent = öppet ? 'Visa alla ' + tidigare.length : 'Visa färre';
+      });
+    }
+
+    var avbKnapp = host.querySelector('[data-pl-avbokade]');
+    if (avbKnapp) {
+      avbKnapp.addEventListener('click', function () {
+        var lista = host.querySelector('.pl-avbokade-lista');
+        var öppet = !lista.hidden;
+        lista.hidden = öppet;
+        avbKnapp.setAttribute('aria-expanded', öppet ? 'false' : 'true');
       });
     }
   }
@@ -1153,8 +1785,8 @@ window.NXStudie = (function () {
     var text = NX.$('#fel-text'), detalj = NX.$('#fel-detalj');
     if (text) {
       text.textContent = sammanhang
-        ? 'Något gick fel när ' + sammanhang + '. Försök igen — går det inte, hör av dig så tittar vi på det.'
-        : 'Något gick fel. Försök igen — går det inte, hör av dig så tittar vi på det.';
+        ? 'Något gick fel när ' + sammanhang + '. Försök igen. Går det inte, hör av dig så tittar vi på det.'
+        : 'Något gick fel. Försök igen. Går det inte, hör av dig så tittar vi på det.';
     }
     if (detalj) detalj.textContent = (fel && (fel.message || fel.error_description || fel.msg)) || String(fel || '');
   }
@@ -1203,16 +1835,31 @@ window.NXStudie = (function () {
 
   /* Veckoschemat i #schema. Byggs en gång och får sedan nya
      bokningar; namn(b) säger vad som står på ett pass i just den här
-     vyn. */
+     vyn. De nya valen (teckenforklaring, tillgang, upptagna, onLedig,
+     tidslinjeTill) går rakt igenom till schema(). Skickar vyn tillgang
+     eller upptagna vid en senare omritning, sätts de med sättTider.
+     tidslinjeTill läses bara när schemat skapas; skicka en funktion
+     om gränsen kan flytta sig. */
   function schemaI(S, o) {
     var host = NX.$('#schema');
     if (!host) return;
-    if (S.schema) { S.schema.sättBokningar(S.bokningar); return; }
+    o = o || {};
+    var nyaTider = 'tillgang' in o || 'upptagna' in o;
+    if (S.schema) {
+      S.schema.sättBokningar(S.bokningar);
+      if (nyaTider) S.schema.sättTider(o.tillgang, o.upptagna);
+      return;
+    }
     S.schema = schema({
       host: host,
       bokningar: S.bokningar,
       namn: o.namn,
-      onOppna: o.onOppna
+      onOppna: o.onOppna,
+      teckenforklaring: o.teckenforklaring,
+      tillgang: o.tillgang,
+      upptagna: o.upptagna,
+      onLedig: o.onLedig,
+      tidslinjeTill: o.tidslinjeTill
     });
   }
 
@@ -1220,6 +1867,8 @@ window.NXStudie = (function () {
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
     inloggningsruta: inloggningsruta, schemaI: schemaI,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
+    ikon: ikon, statusIkon: statusIkon, STATUS: STATUS, längdText: längdText,
+    mötesLänkOk: mötesLänkOk, MÖTESLÄNK_FEL: MÖTESLÄNK_FEL,
     passLista: passLista, läxFilter: läxFilter, läxUrval: läxUrval,
     fordelning: fordelning, utvecklingPerÄmne: utvecklingPerÄmne,
     LAGE: LAGE, NIVA: NIVA,

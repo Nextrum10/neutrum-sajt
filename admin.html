@@ -282,7 +282,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Intresseanmälningar</h2>
-              <p>Familjer som hört av sig. Statusen säger var i samtalet ni är — den ändras här, inte i Table Editor.</p>
+              <p>Familjer som hört av sig. Statusen säger var i samtalet ni är. Den ändras här, inte i Table Editor.</p>
             </div>
           </div>
           <div class="dbox">
@@ -308,7 +308,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Ansökningar</h2>
-              <p>Unga som vill jobba. Att godkänna ansökan är inte samma sak som att godkänna kontot — kontot ligger under Studiehjälpare, och skapas först när personen registrerat sig.</p>
+              <p>Unga som vill jobba. Att godkänna ansökan är inte samma sak som att godkänna kontot. Kontot ligger under Studiehjälpare, och skapas först när personen registrerat sig.</p>
             </div>
           </div>
           <div class="vy-flikar" role="tablist" aria-label="Rekryteringens steg">
@@ -400,7 +400,7 @@
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
                 Ni kan läsa trådarna, inte skriva i dem. Insynen finns för att en
                 förälder ska kunna lita på att plattformen inte är en privat kanal
-                till deras barn — inte för att ni ska delta i samtalet.
+                till deras barn, inte för att ni ska delta i samtalet.
               </p>
               <div id="chatt-lista"><div class="loading">Hämtar</div></div>
             </div>
@@ -414,16 +414,24 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Familjer</h2>
-              <p>Matchningen görs här. Sätter du en studiehjälpare låses familjens vy upp direkt — studieplan, bokning och chatt.</p>
+              <p>Familjen är kontot som betalar och tar kontakt. Matchningen görs per elev, under Matchning. Familjens vy låses upp när något av barnen fått en studiehjälpare.</p>
             </div>
+            <!-- Ny familj: kontot, telefonen och barnen i en ruta
+                 (nextrum-admin-kunder.js). Knappen står här och inte
+                 bara på anmälningarna: en familj som ringt har ingen
+                 anmälan att utgå från. -->
+            <button class="btn btn-primary" type="button" id="fam-ny">Ny familj</button>
           </div>
           <div class="dbox">
             <div class="adm-verktyg">
               <input class="inp adm-sok" id="fam-sok" type="search" placeholder="Sök namn eller e-post" aria-label="Sök familj" autocomplete="off">
-              <select class="sel" id="fam-status" aria-label="Filtrera på matchning">
+              <!-- Räknas ur barnen, inte ur familjens härledda
+                   match_status, som betyder "minst ett barn matchat". -->
+              <select class="sel" id="fam-status" aria-label="Filtrera på barnens matchning">
                 <option value="">Alla</option>
-                <option value="pending">Väntar på matchning</option>
-                <option value="matched">Matchade</option>
+                <option value="vantar">Något barn väntar</option>
+                <option value="matchade">Alla barn matchade</option>
+                <option value="inga">Inga barn inlagda</option>
               </select>
               <span class="small" id="fam-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
@@ -473,8 +481,12 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Studiehjälpare</h2>
-              <p>Godkänn eller pausa. En godkänd studiehjälpare syns på startsidan och kan matchas med en familj — det är samma knapp som styr båda.</p>
+              <p>Godkänn eller avböj. Bara en godkänd studiehjälpare kan matchas med en elev. Om hen syns på startsidan är ett eget beslut, i kolumnen På startsidan.</p>
             </div>
+            <!-- För den som redan arbetar för Nextrum men aldrig sökt
+                 via sajten (nextrum-admin-rekrytering.js). Hen bjuds in
+                 och hamnar i väntläge; godkännandet görs i listan. -->
+            <button class="btn btn-primary" type="button" id="sh-ny">Lägg till studiehjälpare</button>
           </div>
           <div class="dbox">
             <div class="adm-verktyg">
@@ -509,7 +521,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Matchning</h2>
-              <p>Välj en elev, se vilka studiehjälpare som passar och varför. Matchningen gäller eleven, inte familjen — syskon kan ha var sin.</p>
+              <p>Välj en elev, se vilka studiehjälpare som passar och varför. Matchningen gäller eleven, inte familjen. Syskon kan ha var sin.</p>
             </div>
           </div>
 
@@ -640,7 +652,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Uppdrag</h2>
-              <p>Det Nextrum utför åt varje kund — i dag ett läxhjälpsuppdrag per barn.</p>
+              <p>Det Nextrum utför åt varje kund: i dag ett läxhjälpsuppdrag per barn.</p>
             </div>
           </div>
           <div class="dbox">
@@ -753,7 +765,7 @@
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
                 <b>Skicka</b> mejlar fakturan till familjen på riktigt. Du får läsa igenom
                 den först, och läget sätts till <em>Skickad</em> bara om mejlet faktiskt
-                gick iväg. Rullgardinen bredvid ändrar bara ordet i tabellen — den skickar
+                gick iväg. Rullgardinen bredvid ändrar bara ordet i tabellen. Den skickar
                 ingenting, och det är med flit att de är två olika knappar.
               </p>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
@@ -781,12 +793,12 @@
               <div id="utb-tabell"><div class="loading">Hämtar</div></div>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
                 <b>Skicka underlag</b> mejlar studiehjälparen vad hen kommer att få, så att
-                hen hinner säga ifrån innan pengarna går. Det ändrar ingen status — att
+                hen hinner säga ifrån innan pengarna går. Det ändrar ingen status. Att
                 visa ett underlag är inte att godkänna det.
               </p>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
                 Godkänd betyder att ni granskat underlaget. Utbetald betyder att pengarna
-                lämnat kontot. <b>Själva överföringen sker utanför plattformen</b> — det
+                lämnat kontot. <b>Själva överföringen sker utanför plattformen</b>. Det
                 finns ingen betaltjänst kopplad än, så ingen knapp här flyttar pengar. Att
                 sätta Utbetald innan ni faktiskt betalat är hur ett bokföringsfel börjar.
               </p>
@@ -803,7 +815,7 @@
               <h5>Genomförda pass utan rapport</h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
                 ⚠️ Pass saknar rapport och kan därför inte behandlas automatiskt.
-                Koppla den rapport som hör till passet, eller undanta passet — ett
+                Koppla den rapport som hör till passet, eller undanta passet. Ett
                 undantaget pass kommer varken på familjens faktura eller på
                 studiehjälparens underlag.
               </p>
@@ -821,7 +833,7 @@
               <h5>Undantagna pass</h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
                 Pass som någon tagit bort ur faktureringen, med anledningen. Ångra
-                om det var fel — passet kommer då med på nästa körning.
+                om det var fel. Passet kommer då med på nästa körning.
               </p>
               <div id="avv-undantagna"><div class="loading">Hämtar</div></div>
             </div>
@@ -859,7 +871,7 @@
               <div class="sum-line total"><span>Pris per timme</span><span class="adm-tal" id="kor-pris">—</span></div>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-top:16px">
                 <b>Skapa utkast</b> skriver fakturor och underlag som utkast. Ingenting
-                skickas — det gör du sedan per faktura under Fakturor, efter att ha
+                skickas. Det gör du sedan per faktura under Fakturor, efter att ha
                 läst den. Ett schema som kör det här av sig självt kommer senare, och
                 använder då en nyckel på servern i stället för en inloggning.
               </p>
@@ -969,7 +981,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Agenter</h2>
-              <p>Juridik och ekonomi. De svarar aldrig ur minnet — kan de inte peka på en källa de faktiskt läst lämnas svaret inte ut.</p>
+              <p>Juridik och ekonomi. De svarar aldrig ur minnet. Kan de inte peka på en källa de faktiskt läst lämnas svaret inte ut.</p>
             </div>
           </div>
 
@@ -1130,8 +1142,8 @@
             <div class="dbox">
               <h5>Bolagsfakta</h5>
               <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
-                Vad ekonomiagenten vet om bolaget. Inga datum, inga belopp, inga procentsatser
-                — sådant hämtas från Skatteverket vid varje fråga i stället för att ligga och
+                Vad ekonomiagenten vet om bolaget. Inga datum, inga belopp, inga procentsatser.
+                Sådant hämtas från Skatteverket vid varje fråga i stället för att ligga och
                 bli inaktuellt här.
               </p>
 
@@ -1147,7 +1159,7 @@
                 <div class="fgroup" style="margin-top:16px;max-width:320px">
                   <label for="bf-form">Studiehjälparnas form</label>
                   <select class="inp" id="bf-form">
-                    <option value="oklart">Oklart — inte utrett än</option>
+                    <option value="oklart">Oklart, inte utrett än</option>
                     <option value="anstallda">Anställda</option>
                     <option value="uppdragstagare">Uppdragstagare</option>
                   </select>
@@ -1212,8 +1224,8 @@
               <h5>Återkoppling till föräldrar</h5>
               <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:20px">
                 Lektionsrapporter där studiehjälparens råa anteckningar ännu inte polerats till
-                något en förälder kan läsa. Studiehjälparen gör det normalt själv i sin egen vy
-                — listan här är för de rapporter där det inte blivit gjort. Knappen skriver om
+                något en förälder kan läsa. Studiehjälparen gör det normalt själv i sin egen vy.
+                Listan här är för de rapporter där det inte blivit gjort. Knappen skriver om
                 anteckningarna med det som faktiskt står i dem och hittar inte på framsteg som
                 ingen nämnt.
               </p>
@@ -1294,7 +1306,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Tjänster</h2>
-              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor — och rabattkoderna.</p>
+              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor. Här finns också rabattkoderna.</p>
             </div>
           </div>
 
@@ -1322,14 +1334,14 @@
               <h5>Vad vi erbjuder <em id="tj-uppdaterad"></em></h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:6px">
                 <b>Aktiv</b> avgör vad familjer och sökande ser. Slår du på en tjänst dyker
-                den upp i intresseanmälan, i ansökan och i bokningen — direkt, utan att
+                den upp i intresseanmälan, i ansökan och i bokningen, direkt och utan att
                 någon behöver ändra i koden.
               </p>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:0">
                 Priset gäller <b>nya fakturarader</b>. Redan skapade rader har sitt pris
                 sparat på sig; en prisändring får aldrig ändra vad någon redan fakturerats.
                 Ändrar du läxhjälpens pris måste det också ändras på prissidan, i FAQ:n och
-                i användarvillkoren — ett pris som står olika på tre ställen är en tvist.
+                i användarvillkoren. Ett pris som står olika på tre ställen är en tvist.
               </p>
             </div>
 
@@ -1428,6 +1440,26 @@
                     id="flik-audit" aria-controls="panel-audit">Auditlogg</button>
             <button class="vy-flik" type="button" role="tab" data-flik="automationer"
                     id="flik-automationer" aria-controls="panel-automationer">Automationer</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="flaggor"
+                    id="flik-flaggor" aria-controls="panel-flaggor">Flaggor</button>
+          </div>
+
+          <!-- ============ FLAGGOR (program 2, Fas 1.1) ============
+               Funktioner som väntar på ett beslut om affär, juridik
+               eller pengar. Av är förvalet, och en flagga som slås på
+               släpper fram funktionen i databasen, inte bara i
+               knappen. Listan ritas av nextrum-admin-system.js. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="flaggor"
+               id="panel-flaggor" aria-labelledby="flik-flaggor" hidden>
+            <div class="dbox">
+              <h5>Flaggor <em id="flaggor-antal"></em></h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
+                Varje flagga står för något som är byggt men väntar på ett beslut. Läs vad den
+                väntar på innan du slår på den. Vem som slog om och när hamnar i auditloggen.
+              </p>
+              <div id="flaggor-lista"><div class="loading">Hämtar</div></div>
+              <p class="ok-msg" id="flaggor-msg" role="status"></p>
+            </div>
           </div>
 
           <!-- ============ ADMINANVÄNDARE ============
@@ -1477,7 +1509,7 @@
               <h5>Klientfel <em id="fel-antal"></em></h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
                 Fel som inträffade i någons webbläsare. Ett fel här betyder att någon
-                såg en trasig sida — inte att något kan gå sönder i framtiden.
+                såg en trasig sida, inte att något kan gå sönder i framtiden.
               </p>
               <div id="fel-tabell"><div class="loading">Hämtar</div></div>
             </div>
@@ -1486,7 +1518,7 @@
               <h5>Notiser som inte gick fram <em id="notis-antal"></em></h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
                 Mejlen om nya anmälningar, tidsförslag och meddelanden skickas av databasen.
-                Går ett utskick fel sparas raden ändå — och tidigare fanns felet bara i ett
+                Går ett utskick fel sparas raden ändå, och tidigare fanns felet bara i ett
                 loggbord ingen kunde läsa. Här står de senaste dygnets misslyckade utskick.
                 Databasen städar bort äldre svar själv, så en tom lista betyder "inget de
                 senaste timmarna", inte "aldrig något".
@@ -1505,8 +1537,8 @@
             <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
               <h5>RUT-tak per år</h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
-                Taket per köpare och år, hämtat från Skatteverket. Skriv var siffran kommer ifrån —
-                den ändras av lagstiftaren, inte av oss.
+                Taket per köpare och år, hämtat från Skatteverket. Skriv var siffran kommer ifrån.
+                Den ändras av lagstiftaren, inte av oss.
               </p>
               <form id="rt-form" class="uppg-form" novalidate>
                 <div class="fgroup"><label for="rt-ar">År</label>
@@ -1567,8 +1599,8 @@
                 <button class="btn btn-sm" type="button" id="dok-spara">Lägg till</button>
               </div>
               <p class="small" id="dok-msg" hidden></p>
-              <p class="graf-not">Giltig till är valfritt. Fyll i det på sådant som går ut —
-                en försäkring, ett intyg — så syns det i listan när datumet närmar sig.</p>
+              <p class="graf-not">Giltig till är valfritt. Fyll i det på sådant som går ut,
+                som en försäkring eller ett intyg, så syns det i listan när datumet närmar sig.</p>
             </div>
 
             <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">

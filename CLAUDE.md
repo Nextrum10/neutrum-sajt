@@ -88,6 +88,12 @@ vendorad fil i `bibliotek/`.
 Lokal server: `python3 .claude/serve.py 8951`. Den härmar `cleanUrls`
 med flit; `http.server` rakt av svarar 404 på varenda länk.
 
+**En fråga med supabase-js skickas först när någon väntar på den.**
+`supa.from(…).update(…)` utan `await` eller `.then()` gör ingenting
+alls, och inget fel syns. Så skrevs `profiles.last_seen_at` aldrig
+från 2026-09-17 till program 2 Fas 1, och adminvyn sa "aldrig
+inloggad" om alla. "Skjut och glöm" finns inte här.
+
 ---
 
 ## 3. Filkartan

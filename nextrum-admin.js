@@ -73,6 +73,7 @@
   const ritaInstallningar = (...a) => NXAdmin.rita.ritaInstallningar(...a);
   const ritaAudit = (...a) => NXAdmin.rita.ritaAudit(...a);
   const ritaDokument = (...a) => NXAdmin.rita.ritaDokument(...a);
+  const ritaFlaggor = (...a) => NXAdmin.rita.ritaFlaggor(...a);
   const ritaAutomationer = (...a) => NXAdmin.rita.ritaAutomationer(...a);
   const ritaAI = (...a) => NXAdmin.rita.ritaAI(...a);
   const ritaUppdrag = (...a) => NXAdmin.rita.ritaUppdrag(...a);
@@ -121,6 +122,24 @@
     if (el.dataset && el.dataset.sh) {
       const t = S.tutorProfiler[el.dataset.sh];
       const gammal = t.status;
+
+      /* Godkänd utan timpenning gick förut igenom tyst. Har tjänsten
+         ingen egen ersättning räknar faktureringen då ingen ersättning
+         för hens pass, och det märks först när någon frågar var
+         pengarna blev av. En varning, inte ett stopp: timpenningen
+         kan vara på väg, och godkännandet är ett eget beslut. */
+      if (el.value === 'approved' && gammal !== 'approved' && !t.hourly_rate) {
+        const ja = await bekräfta({
+          titel: 'Godkänna utan timpenning?',
+          text: namnFör(t.id) + ' har ingen timpenning. Har tjänsten ingen egen ersättning '
+            + 'räknas då ingen ersättning ut för passen hen håller. Timpenningen sätts i '
+            + 'studiehjälparens panel, under Översikt.',
+          knapp: 'Godkänn ändå',
+          avbryt: 'Avbryt'
+        });
+        if (!ja) { el.value = gammal; return; }
+      }
+
       t.status = el.value;
       if (!await skriv('tutor_profiles', t.id, { status: el.value })) t.status = gammal;
       ritaStudiehjalpare(); ritaFamiljer(); ritaÖversikt();
@@ -915,6 +934,7 @@
       ritaFel();
       ritaInstallningar();
       ritaDokument();
+      ritaFlaggor();
       ritaAudit();
       ritaUppdrag();
       ritaUppgifter();

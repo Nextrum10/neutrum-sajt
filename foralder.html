@@ -137,7 +137,7 @@
     <div class="locked">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 20h18L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
       <h2>Det här är studievyn</h2>
-      <p>Ditt konto är registrerat som studiehjälpare. Din vy ligger på en annan sida — där ser du dina elever, ditt schema och dina rapporter.</p>
+      <p>Ditt konto är registrerat som studiehjälpare. Din vy ligger på en annan sida. Där ser du dina elever, ditt schema och dina rapporter.</p>
       <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
         <a class="btn btn-primary" href="/larare">Till studiehjälparvyn</a>
         <button class="btn btn-ghost" data-logout>Logga ut</button>
@@ -195,13 +195,18 @@
            dit. De gamla adresserna (#studieplan, #material …) fångas
            upp i JS och leder till rätt flik, så gamla bokmärken och
            länkar inifrån vyn fortsätter fungera.
+
+           Mina lektioner står direkt efter Översikt (program 2, Fas 1).
+           Det familjen oftast kommer för är "när är nästa pass och vad
+           ska vi göra då", och den frågan ska vara ett klick bort, inte
+           ligga under bokningen.
            ============================================================ -->
       <nav class="vy-sido" id="vy-sido" aria-label="Delar av studievyn">
         <a href="#oversikt" data-sek="oversikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Översikt</a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Studier</span>
-        <a href="#boka" data-sek="boka"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M12 13v4M10 15h4"/></svg>Boka pass</a>
         <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Mina lektioner</a>
+        <a href="#boka" data-sek="boka"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M12 13v4M10 15h4"/></svg>Boka pass</a>
         <a href="#uppgifter" data-sek="uppgifter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Uppgifter &amp; material</a>
         <a href="#utveckling" data-sek="utveckling"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15.5 7H20v4.5"/></svg>Min utveckling</a>
 
@@ -220,7 +225,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Översikt</h2>
-            <p>Boka nästa pass och se hur det går. Menyn leder vidare till varje del.</p>
+            <p>Era närmaste pass och hur det går. Menyn leder vidare till varje del.</p>
           </div>
           <!-- Barnväljaren. Tom och osynlig när familjen har ett
                enda barn, vilket de flesta har — då finns inget att
@@ -237,11 +242,24 @@
              och en gång som "Kvar att göra". Numren finns kvar allihop
              i "I siffror" nedanför, en gång var. -->
 
-        <!-- ============ STATISTIK ============
-             Låg under Min utveckling. Men "hur går det" är en
-             översiktsfråga, och Utveckling handlar om kunskapsområden
-             ämne för ämne — en annan sak, på en annan detaljnivå. -->
         <div class="stack">
+          <!-- ============ MINA LEKTIONER ============
+               Först på Översikt (program 2, Fas 1). De närmaste
+               passen för ALLA barn, högst tre, med läget i ord och en
+               knapp till passets detaljer. Hela listan och schemat
+               ligger under Mina lektioner; länken under leder dit.
+               Ritas av ritaÖvLektioner() när passen hämtats. -->
+          <div class="dbox" id="ov-lektioner">
+            <h5>Mina lektioner <em id="ov-pass-antal"></em></h5>
+            <div id="ov-pass"><div class="loading">Hämtar</div></div>
+            <a class="vy-mer" href="#lektioner/pass">Alla lektioner
+              <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+          </div>
+
+          <!-- ============ STATISTIK ============
+               Låg under Min utveckling. Men "hur går det" är en
+               översiktsfråga, och Utveckling handlar om kunskapsområden
+               ämne för ämne — en annan sak, på en annan detaljnivå. -->
           <div class="dbox">
             <h5>I siffror</h5>
             <div id="stat-tal"><div class="loading">Hämtar</div></div>
@@ -275,9 +293,10 @@
            det tålde inte att ligga inklämt mellan nyckeltal och en
            graf.
 
-           Nu en egen sektion, direkt efter Översikt, med bokningen
-           som sidans enda uppgift. Widgeten ritas av
-           NXArbete.bokning; markupen är tom med flit.
+           Nu en egen sektion, med bokningen som sidans enda uppgift.
+           I menyn står den efter Mina lektioner sedan program 2 Fas 1.
+           Widgeten ritas av NXArbete.bokning; markupen är tom med
+           flit.
            ============================================================ -->
       <section class="vy-sek" data-sek="boka" hidden>
         <div class="vy-sek-topp">

@@ -69,7 +69,7 @@ window.NXKontakt = (function () {
     function tomText() {
       var namn = läge.motpart ? esc(läge.motpart.split(' ')[0]) : 'varandra';
       return '<div class="empty">Inga meddelanden än.<br><br>'
-        + 'Skriv första raden till ' + namn + ' här — det som sägs här stannar mellan er och oss.</div>';
+        + 'Skriv första raden till ' + namn + ' här. Det som sägs här stannar mellan er och oss.</div>';
     }
 
     function rita(rader) {
@@ -304,6 +304,16 @@ window.NXKontakt = (function () {
      EN PASSRAD
      Samma markup i båda vyerna, olika knappar. atgarder() får
      bokningen och returnerar knapparnas HTML.
+
+     opts: { under, vem, atgarder, klickbar }
+
+     VALET klickbar (program 2, Fas 1, av som förval): raden leder in
+     till passets detaljer. Förut gick ett pass bara att öppna från
+     schemat, och i listan, där man faktiskt letar efter sitt pass,
+     var raden död. Raden får data-pass="<id>" och en synlig knapp
+     "Detaljer" (data-pass-oppna="<id>"). Knappen är vägen för
+     tangentbord och skärmläsare; ett klick var som helst på raden är
+     genvägen för musen och fingret. Lyssnaren kopplas med passKlick.
      ============================================================ */
   var LÄGEN = {
     requested: { text: 'Önskad', klass: 'onskad' },
@@ -317,8 +327,21 @@ window.NXKontakt = (function () {
     var l = LÄGEN[b.status] || { text: b.status, klass: '' };
     var d = String(b.wanted_date || '').split('-');
     var dag = d[2] || '', mån = d[1] ? (NX.MANADER[Number(d[1]) - 1] || '').slice(0, 3) : '';
+    var klick = !!o.klickbar && b.id != null;
 
-    return '<div class="pass">'
+    /* Namnet på knappen börjar med ordet som syns, "Detaljer", och
+       säger sedan vilket pass. Tio knappar som alla heter "Detaljer"
+       går inte att skilja åt i en lista över knappar. */
+    var detaljer = klick
+      ? '<button type="button" class="btn btn-ghost pass-oppna" data-pass-oppna="' + esc(b.id) + '"'
+        + ' aria-label="' + esc('Detaljer: ' + (b.subject || 'Pass')
+          + (b.wanted_date ? ', ' + datumText(String(b.wanted_date)) : '')
+          + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '')) + '">'
+        + 'Detaljer</button>'
+      : '';
+
+    return '<div class="pass' + (klick ? ' ar-klickbar' : '') + '"'
+      + (klick ? ' data-pass="' + esc(b.id) + '"' : '') + '>'
       + '<span class="pass-nar"><b>' + esc(dag) + '</b>' + esc(mån)
       + (b.wanted_time ? '<br>' + esc(b.wanted_time) : '') + '</span>'
       + '<span class="pass-vad"><b>' + esc(b.subject || 'Pass') + '</b>'
@@ -326,9 +349,47 @@ window.NXKontakt = (function () {
       + (o.vem ? '<span class="pass-vem">' + esc(o.vem) + '</span>' : '')
       + '</span>'
       + '<span class="pass-atg"><span class="lage ' + l.klass + '">' + esc(l.text) + '</span>'
-      + (o.atgarder || '') + '</span>'
+      + (o.atgarder || '') + detaljer + '</span>'
       + '</div>';
   }
 
-  return { tråd: tråd, olästa: olästa, passRad: passRad, dagText: dagText, LÄGEN: LÄGEN };
+  /* ============================================================
+     KLICK PÅ EN PASSRAD
+     passKlick(container, onOppna(id, e))
+
+     En lyssnare på behållaren, inte en per rad: listorna ritas om
+     med innerHTML vid varje laddning. Anropas den igen på samma
+     behållare byts bara mottagaren, så att en omritning inte ger två
+     lyssnare och två öppna rutor.
+
+     Ett klick på en annan knapp, en länk eller ett fält på raden
+     (Flytta, Avboka, Skriv rapport) är den knappens klick och
+     öppnar ingenting. Den som markerar text på raden har inte
+     klickat heller. Knappen "Detaljer" är en vanlig <button>, så
+     Enter och mellanslag fungerar av sig själva.
+     ============================================================ */
+  var ANDRA_KONTROLLER = 'a, button, input, select, textarea, label, summary, [contenteditable="true"]';
+
+  function passKlick(container, onOppna) {
+    if (!container || typeof onOppna !== 'function') return;
+    container.__passOppna = onOppna;
+    if (container.__passKlick) return;
+    container.__passKlick = true;
+
+    container.addEventListener('click', function (e) {
+      var mottagare = container.__passOppna;
+      var knapp = e.target.closest('[data-pass-oppna]');
+      if (knapp && container.contains(knapp)) {
+        mottagare(knapp.dataset.passOppna, e);
+        return;
+      }
+      if (e.target.closest(ANDRA_KONTROLLER)) return;
+      var sel = window.getSelection && window.getSelection();
+      if (sel && String(sel).length && !sel.isCollapsed) return;
+      var rad = e.target.closest('.pass[data-pass]');
+      if (rad && container.contains(rad)) mottagare(rad.dataset.pass, e);
+    });
+  }
+
+  return { tråd: tråd, olästa: olästa, passRad: passRad, passKlick: passKlick, dagText: dagText, LÄGEN: LÄGEN };
 })();

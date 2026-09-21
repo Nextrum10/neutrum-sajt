@@ -61,8 +61,8 @@ const NX = (function () {
     tackKontakt:     ['Mottaget. Vi återkommer på mejlen du angav.',
                       'Received. We will reply to the email address you gave.'],
     ingenFil:        ['Ingen fil vald', 'No file chosen'],
-    filForStor:      ['Filen är större än 5 MB — välj en mindre',
-                      'The file is larger than 5 MB — please choose a smaller one'],
+    filForStor:      ['Filen är större än 5 MB. Välj en mindre.',
+                      'The file is larger than 5 MB. Please choose a smaller one.'],
     felLosen:        ['Fel e-post eller lösenord.', 'Wrong email or password.'],
     felBekrafta:     ['Du måste bekräfta din e-postadress först. Kolla inkorgen (och skräpposten).',
                       'You need to confirm your email address first. Check your inbox (and spam folder).'],
@@ -75,8 +75,8 @@ const NX = (function () {
     felNatverk:      ['Når inte databasen. Kontrollera din internetanslutning, och att URL:en i nextrum-config.js är rätt.',
                       'Cannot reach the database. Check your internet connection, and that the URL in nextrum-config.js is correct.'],
     felOkant:        ['Något gick fel.', 'Something went wrong.'],
-    felEpost:        ['Kontrollera e-postadressen — den ser inte ut som en adress.',
-                      'Please check the email address — it does not look like an address.']
+    felEpost:        ['Kontrollera e-postadressen. Den ser inte ut som en adress.',
+                      'Please check the email address. It does not look like an address.']
   };
   function t(nyckel, vars) {
     const par = ORD[nyckel];
@@ -552,7 +552,7 @@ const NX = (function () {
             cvRad = 'CV: cv/' + väg;
           }
         } catch (e) { /* faller igenom till noteringen nedan */ }
-        if (!cvRad) cvRad = 'CV: bifogad fil "' + cvFil.name + '" kunde inte laddas upp — be om den via mejl';
+        if (!cvRad) cvRad = 'CV: bifogad fil "' + cvFil.name + '" kunde inte laddas upp. Be om den via mejl';
       }
 
       /* extra() får vara async. Sync-varianter fungerar precis som förut. */
@@ -735,8 +735,16 @@ const NX = (function () {
      kan inte börja 18:00 i ett fönster som slutar 19:00 — förr
      erbjöds den tiden ändå, och passet gick över kanten.
 
-     Upptagna tider tas INTE bort här. De visas som gråa, för "redan
-     bokad" och "jobbar inte då" är två olika besked. */
+     Upptagna tider tas INTE bort här. Den som anropar tar bort dem
+     (bokningen, flytta-rutan, föreslåTider), eftersom "redan bokad"
+     och "jobbar inte då" är två olika besked. Sedan program 2 Fas 1
+     visas de också som två olika saker: en tagen timme ritas som en
+     låst knapp med texten "Bokad" (NXArbete.tidsrad, valet bokade),
+     en timme utanför fönstret som "Ej tillgänglig" (NXStudie.schema).
+
+     Spärrarna (blockerade) används inte längre, se
+     hämtaTillganglighet nedan. Parametern står kvar så att äldre
+     anrop inte går sönder, och alla vyer skickar en tom lista. */
   function tiderFörDatum(iso, tillgang, blockerade, minuter) {
     const idag = isoFor(new Date());
     if (iso < idag) return [];
@@ -844,21 +852,63 @@ const NX = (function () {
     return ut.filter(f => !sedda.has(f.datum) && sedda.add(f.datum)).slice(0, antal);
   }
 
-  /* ---------- upptagna tider för en lärare ---------- */
+  /* ============================================================
+     UPPTAGNA TIDER HOS EN STUDIEHJÄLPARE (program 2, Fas 1.3)
+
+     Förut lästes vyn tutor_busy_slots. I driften har den
+     security_invoker och ingen SELECT för inloggade, så frågan föll,
+     felet svaldes och svaret blev en tom mängd för alla, också för
+     studiehjälparen själv. Varje timme såg ledig ut tills krocken
+     stoppades av databasen när passet sparades.
+
+     Funktionen upptagna_tider svarar på exakt en fråga: vilka timmar
+     är tagna hos den här studiehjälparen. EN RAD PER TIMME, så ett
+     tvåtimmarspass kl. 16 ger både 16:00 och 17:00. Den säger aldrig
+     av vem. Den får anropas av studiehjälparen om sig själv, av admin
+     och av en familj om sin matchade studiehjälpare.
+
+     Idag och 180 dagar fram: databasen tar högst 200 dagar per anrop,
+     och bokningen går tre månader fram. Svaret är samma Set med
+     'YYYY-MM-DD|HH:MM' som förut, så inget anropsställe ändras.
+
+     Ett fel ger en tom mängd, som förut. Då ser tiderna lediga ut och
+     bookings_ingen_overlapp stoppar en krock när passet sparas. Det
+     är sämre än att veta i förväg, men bättre än en vy som inte går
+     att boka i alls. Felet skrivs till konsolen, inte till familjen. */
+  const UPPTAGNA_DAGAR = 180;
+
   async function hämtaUpptagna(tutorId) {
     const set = new Set();
     if (!supa || !tutorId) return set;
-    const { data, error } = await supa
-      .from('tutor_busy_slots')
-      .select('wanted_date, wanted_time')
-      .eq('tutor_id', tutorId);
-    if (error) { console.warn('tutor_busy_slots:', error.message); return set; }
-    (data || []).forEach(r => set.add(r.wanted_date + '|' + r.wanted_time));
+    const från = new Date();
+    const till = new Date(från);
+    till.setDate(till.getDate() + UPPTAGNA_DAGAR);
+    const { data, error } = await supa.rpc('upptagna_tider', {
+      p_tutor: tutorId,
+      p_fran: isoFor(från),
+      p_till: isoFor(till)
+    });
+    if (error) { console.warn('upptagna_tider:', error.message || error); return set; }
+    (data || []).forEach(r => {
+      if (!r || !r.datum || !r.tid) return;
+      /* Två siffror och hel timme, så att nyckeln alltid ser ut som
+         den som tiderFörDatum bygger. Databasen skickar redan 'HH:00',
+         men en timme utan nolla ('9:00') ska inte bli 'NaN:00'. */
+      const h = parseInt(String(r.tid).split(':')[0], 10);
+      if (isNaN(h)) return;
+      set.add(String(r.datum).slice(0, 10) + '|' + tvåsiffrig(h) + ':00');
+    });
     return set;
   }
 
-  /* Studiehjälparens veckotider och spärrar. Båda är läsbara för
-     den som ska boka — vyn blockerade_tider lämnar inte ut skälet. */
+  /* Studiehjälparens veckotider, och spärrarna som inte används längre.
+
+     Spärrar (tutor_blocked) togs bort ur gränssnittet 2026-09-18. Vyn
+     blockerade_tider har i driften security_invoker, och tabellen har
+     bara policyn "studiehjälpare hanterar sina spärrar", så en familj
+     eller admin får alltid en tom lista. Frågan står kvar så att
+     svaret har samma form som förut ({ tillgang, blockerade }), men
+     ingen vy läser blockerade. */
   async function hämtaTillganglighet(tutorId) {
     const tomt = { tillgang: [], blockerade: [] };
     if (!supa || !tutorId) return tomt;

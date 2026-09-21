@@ -287,12 +287,39 @@ window.NXArbete = (function () {
   /* o:
        manad     — första dagen i månaden som visas, ISO
        valt      — vald dag, ISO, eller null
-       dag       — funktion(iso) => { klickbar, prick }
+       dag       — funktion(iso) => { klickbar, prick, lage }
        minManad  — tidigaste månad pilarna går till (första dagen)
        maxManad  — senaste
        prefix    — id-prefix för pilarna, om två kalendrar kan synas
                    samtidigt (en dialog över en vy)
-       prickText — vad pricken betyder, för skärmläsare */
+       prickText — vad pricken betyder, för skärmläsare
+       teckenforklaring — true: förklaringen till lägena under
+                   kalendern (program 2, Fas 1, av som förval)
+
+     LÄGEN (program 2, Fas 1). dag() får svara med lage:
+       'ledig'      prick, som förut (och pricken följer med av sig själv)
+       'fullbokad'  siffran överstruken och en ring i stället för prick
+       'ej'         snedstreckat mönster i rutan
+     Varje läge har en egen FORM, inte bara en egen färg, och står i
+     aria-label. Svarar dag() utan lage ritas dagen exakt som förut.
+     En passerad dag ska inte ha något läge: den har varit. */
+  var DAG_LÄGEN = {
+    ledig:     { klass: 'ar-ledig',     text: 'har lediga tider' },
+    fullbokad: { klass: 'ar-fullbokad', text: 'fullbokad' },
+    ej:        { klass: 'ar-ej',        text: 'ej tillgänglig' }
+  };
+
+  /* Förklaringen visar samma markering som dagarna i kalendern, i en
+     liten provruta, med ordet bredvid. En förklaring som ritar något
+     annat än det den förklarar är en andra sak att lära sig. */
+  function lägesförklaring() {
+    return '<ul class="nx-forklaring mv-forklaring" aria-label="Teckenförklaring">'
+      + '<li><span class="mv-prov ar-ledig ar-prick" aria-hidden="true">12</span>Lediga tider</li>'
+      + '<li><span class="mv-prov ar-fullbokad" aria-hidden="true">12</span>Fullbokad</li>'
+      + '<li><span class="mv-prov ar-ej" aria-hidden="true">12</span>Ej tillgänglig</li>'
+      + '</ul>';
+  }
+
   function manad(o) {
     var första = o.manad;
     var d0 = new Date(första + 'T12:00:00');
@@ -307,15 +334,21 @@ window.NXArbete = (function () {
     for (var dag = 1; dag <= antal; dag++) {
       var iso = år + '-' + tvasiffrig(mån + 1) + '-' + tvasiffrig(dag);
       var info = o.dag(iso) || {};
+      var l = DAG_LÄGEN[info.lage] || null;
+      var prick = info.prick || info.lage === 'ledig';
+      var lägesText = l
+        ? (info.lage === 'ledig' ? (o.prickText || l.text) : l.text)
+        : (prick ? (o.prickText || 'har lediga tider') : '');
       rutor += '<button type="button" class="mv-dag'
         + (iso === idag ? ' ar-idag' : '')
-        + (info.prick ? ' ar-prick' : '')
+        + (prick ? ' ar-prick' : '')
+        + (l ? ' ' + l.klass : '')
         + (iso < idag ? ' ar-forbi' : '') + '"'
         + ' data-datum="' + iso + '"'
+        + (l ? ' data-lage="' + info.lage + '"' : '')
         + (info.klickbar ? '' : ' disabled')
         + ' aria-pressed="' + (o.valt === iso ? 'true' : 'false') + '"'
-        + ' aria-label="' + esc(datumText(iso)
-          + (info.prick ? ', ' + (o.prickText || 'har lediga tider') : '')) + '">'
+        + ' aria-label="' + esc(datumText(iso) + (lägesText ? ', ' + lägesText : '')) + '">'
         + dag + '</button>';
     }
 
@@ -336,23 +369,55 @@ window.NXArbete = (function () {
       + DAGAR_KORTA.map(function (d) { return '<span>' + esc(d) + '</span>'; }).join('')
       + '</div>'
       + '<div class="mv-grid">' + rutor + '</div>'
+      + (o.teckenforklaring ? lägesförklaring() : '')
       + '</div>';
   }
 
-  /* Tiderna under kalendern, för den dag som är vald. Bara lediga tider
-     ritas — Leo ville inte se timmar som redan är tagna. */
+  /* Tiderna under kalendern, för den dag som är vald.
+
+     Förut ritades bara lediga tider: Leo ville inte se timmar som
+     redan var tagna, en överstruken knapp var brus. Det beslutet
+     gäller inte längre. Program 2 Fas 1 kräver att lediga, bokade och
+     ej tillgängliga tider går att skilja åt, för en familj som ser
+     en lucka i kalendern kan inte veta om studiehjälparen inte jobbar
+     då eller om någon annan redan har tiden.
+
+     Valet bokade: [tider] ritar de tagna timmarna som avstängda
+     knappar med ett lås och texten "Bokad", i tidsordning bland de
+     lediga. Utan valet ritas bara de lediga, som förut. En bokad
+     knapp har inte klassen mv-tid och inte data-tid, så ingen
+     klicklyssnare kan råka välja den. */
   function tidsrad(o) {
     if (!o.datum) {
       return '<p class="mv-inga">' + esc(o.välj || 'Välj en dag i kalendern.') + '</p>';
     }
-    if (!o.tider.length) {
+    var tider = o.tider || [];
+    var bokade = (o.bokade || []).filter(function (t) { return tider.indexOf(t) === -1; });
+    if (!tider.length && !bokade.length) {
       return '<p class="mv-inga">' + esc(o.tom || 'Inga lediga tider den dagen.') + '</p>';
     }
-    return '<div class="mv-tider" role="group" aria-label="' + esc('Tider ' + datumText(o.datum)) + '">'
-      + o.tider.map(function (t) {
+    /* Sorteras bara när bokade blandas in. Utan valet behåller
+       tiderna den ordning vyn skickade dem i, som förut. */
+    var alla = tider.map(function (t) { return { t: t, bokad: false }; });
+    if (bokade.length) {
+      alla = alla.concat(bokade.map(function (t) { return { t: t, bokad: true }; }))
+        .sort(function (a, b) { return String(a.t).localeCompare(String(b.t)); });
+    }
+    var lås = (window.NXStudie && NXStudie.ikon) ? NXStudie.ikon('las') : '';
+
+    return (tider.length ? '' : '<p class="mv-inga">' + esc(o.tom || 'Inga lediga tider den dagen.') + '</p>')
+      + '<div class="mv-tider" role="group" aria-label="' + esc('Tider ' + datumText(o.datum)) + '">'
+      + alla.map(function (x) {
+          var kl = esc(String(x.t).slice(0, 5));
+          if (x.bokad) {
+            return '<button type="button" class="bk-slot mv-bokad" disabled'
+              + ' aria-label="' + kl + ', bokad">' + lås
+              + '<span class="mv-bokad-tid">' + kl + '</span>'
+              + '<span class="mv-bokad-text">Bokad</span></button>';
+          }
           return '<button type="button" class="bk-slot mv-tid" data-datum="' + o.datum + '"'
-            + ' data-tid="' + t + '" aria-pressed="' + (o.vald === t ? 'true' : 'false') + '">'
-            + esc(String(t).slice(0, 5)) + '</button>';
+            + ' data-tid="' + x.t + '" aria-pressed="' + (o.vald === x.t ? 'true' : 'false') + '">'
+            + kl + '</button>';
         }).join('')
       + '</div>';
   }
@@ -388,6 +453,10 @@ window.NXArbete = (function () {
        ladda    — async () => { tillgang, upptagna, tidigare } | { spärr }
        boka     — async ({datum,tid,minuter,amne,format,plats,barn,kod,rabattOre,not,önskemål})
                   => 'felmeddelande' | { status } | null
+       lagen    — true (program 2 Fas 1, av som förval): kalendern
+                  skiljer på lediga, fullbokade och ej tillgängliga
+                  dagar, med teckenförklaring, och dagens tagna timmar
+                  står som låsta "Bokad" bland de lediga.
      ============================================================ */
   function bokning(opts) {
     var o = opts || {};
@@ -513,11 +582,37 @@ window.NXArbete = (function () {
       return false;
     }
 
-    /* Bara de lediga. Leo ville inte se timmar som redan är tagna — de
-       är inte ett val, och en överstruken knapp är brus. */
+    /* De tider som går att välja. Tagna timmar är inte ett val och tas
+       bort här; med valet lagen ritas de ändå, som låsta, se bokade(). */
     function ledigaTider(datum) {
       return NX.tiderFörDatum(datum, st.data.tillgang, [], st.minuter)
         .filter(function (t) { return !upptagen(datum, t); });
+    }
+
+    /* Timmarna i fönstret som någon redan har, en i taget. Inte
+       passets längd: "Bokad 17:00" ska betyda att just den timmen är
+       tagen, inte att ett tvåtimmarspass inte ryms. */
+    function bokadeTider(datum) {
+      return NX.tiderFörDatum(datum, st.data.tillgang, [], 60)
+        .filter(function (t) { return st.data.upptagna.has(datum + '|' + t); });
+    }
+
+    /* Fullbokad: studiehjälparen jobbar den dagen och någon timme är
+       tagen, men ingen tid räcker för passets längd. Ej tillgänglig:
+       inga tider alls, eller inga som går att boka längre. En
+       passerad dag har inget läge. */
+    function dagLäge(iso) {
+      if (iso < idagISO()) return null;
+      if (ledigaTider(iso).length) return 'ledig';
+      return bokadeTider(iso).length ? 'fullbokad' : 'ej';
+    }
+
+    /* Den sista dag kalendern går att bläddra till: sista dagen i den
+       sista månaden. Schemat ritar lediga timmar hit och inte längre
+       (NXStudie.schema, valet tidslinjeTill), så att en ledig timme
+       där alltid går att boka här. */
+    function sistaDag() {
+      return plusDagar(plusMånader(månadFör(idagISO()), MANADER_FRAM), -1);
     }
 
     function förstaLedigaDag() {
@@ -582,7 +677,7 @@ window.NXArbete = (function () {
       }
       return '<div class="bk-onska">'
         + '<h6>Önska en annan tid</h6>'
-        + '<p>Passar ingen av tiderna ovanför? Önska vilken dag och tid som helst — er studiehjälpare '
+        + '<p>Passar ingen av tiderna ovanför? Önska vilken dag och tid som helst. Er studiehjälpare '
         + 'bekräftar eller svarar att det inte går. Ämne, längd och plats tas från valen överst.</p>'
         + '<div class="bk-onska-rad">'
         + '<input class="inp" type="date" id="bk-o-datum" min="' + idag + '" value="' + esc(st.önska.datum) + '"'
@@ -637,17 +732,21 @@ window.NXArbete = (function () {
         minManad: månadFör(idag),
         maxManad: plusMånader(månadFör(idag), MANADER_FRAM - 1),
         prickText: 'har lediga tider',
+        teckenforklaring: !!o.lagen,
         dag: function (iso) {
           var fri = iso >= idag && ledigaTider(iso).length > 0;
-          return { klickbar: fri, prick: fri };
+          var svar = { klickbar: fri, prick: fri };
+          if (o.lagen) svar.lage = dagLäge(iso);
+          return svar;
         }
       });
 
       var dagens = tidsrad({
         datum: st.dag,
         tider: st.dag ? ledigaTider(st.dag) : [],
+        bokade: o.lagen && st.dag ? bokadeTider(st.dag) : undefined,
         vald: st.datum === st.dag ? st.tid : null,
-        välj: 'Välj en dag med en prick — där har er studiehjälpare lediga tider.',
+        välj: 'Välj en dag med en prick. Där har er studiehjälpare lediga tider.',
         tom: 'Inga lediga tider den dagen för ' + längdText().toLowerCase() + '.'
       });
 
@@ -693,7 +792,9 @@ window.NXArbete = (function () {
         + '</div>'
         + (extra ? '<div class="bk-extra">' + extra + '</div>' : '')
         + sum
-        + '<p class="ok-msg' + (st.fel ? ' show is-err' : '') + '" id="bk-msg">'
+        /* tabindex -1: välj() kan lämna ett besked här, och vyn flyttar
+           då fokus hit så att en skärmläsare läser det. */
+        + '<p class="ok-msg' + (st.fel ? ' show is-err' : '') + '" id="bk-msg" tabindex="-1">'
         + (st.fel ? esc(st.fel) : '') + '</p>'
         /* .show, inte ett eget attribut: .ok-msg är display:none
            tills klassen sitter där, precis som NX.säg sätter den. */
@@ -968,7 +1069,38 @@ window.NXArbete = (function () {
         else if ((o.amnen || []).indexOf(st.amne) === -1) st.amne = (o.amnen || [])[0] || st.amne;
         rita();
       },
-      sättHos: function (namn) { o.hos = namn; rita(); }
+      sättHos: function (namn) { o.hos = namn; rita(); },
+      sistaDag: sistaDag,
+      /* Förval utifrån: schemats lediga timmar tar familjen hit med
+         dagen och tiden valda. Förut tryckte vyn på kalenderns egna
+         knappar, och en dag utanför kalendern gav ingenting alls,
+         varken val eller besked, medan ett tidigare val stod kvar med
+         Boka tänd. Nu:
+           · Ett tidigare val släpps alltid. Det man klickade på är
+             det man vill boka, inte det man valde förut.
+           · Dagen utanför kalendern: ett besked i #bk-msg. Svar null.
+           · Dagen i kalendern: dagen väljs och månaden bläddras dit.
+             Ryms tiden med längden som är vald väljs den också
+             (svar 'tid'). Annars står dagen vald och raden under
+             säger vad som ryms, eller att inget ryms för den längden
+             (svar 'dag'). */
+      välj: function (datum, tid) {
+        st.besked = null; st.fel = null;
+        st.dag = null; st.datum = null; st.tid = null;
+        var idag = idagISO();
+        if (st.spärr) { rita(); return null; }
+        if (!datum || datum < idag || datum > sistaDag()) {
+          st.fel = 'Den dagen går inte att boka här. Kalendern går till och med '
+            + datumText(sistaDag()) + '.';
+          rita();
+          return null;
+        }
+        st.manad = månadFör(datum);
+        st.dag = datum;
+        if (tid && ledigaTider(datum).indexOf(tid) !== -1) { st.datum = datum; st.tid = tid; }
+        rita();
+        return st.tid ? 'tid' : 'dag';
+      }
     };
   }
 

@@ -18,6 +18,9 @@
 
   const { DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, kortDatum, märkFlik, namnFör, pill, rad, skriv,
           tabell } = NXAdmin;
+  /* Flaggorna (program 2, Fas 1.1). Tomma tills ritaFlaggor() hämtat. */
+  S.flaggor = [];
+  S.flaggorFel = null;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaDetalj = (...a) => NXAdmin.rita.ritaDetalj(...a);
@@ -48,7 +51,7 @@
       namn: 'Fortnox',
       ikon: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M7.5 9h9M7.5 12.5h6M7.5 16h4"/>',
       vad: 'Bokföringen. Varje faktura som skapas av månadskörningen speglas som en '
-        + 'kundfaktura i Fortnox, och utbetalningarna som leverantörsfakturor — så att '
+        + 'kundfaktura i Fortnox, och utbetalningarna som leverantörsfakturor, så att '
         + 'ingen behöver knappa in samma siffra två gånger.',
       krav: 'Krävs: en integrationslicens i Fortnox, en godkänd app med scope invoice '
         + 'och supplierinvoice, och FORTNOX_KLIENT_ID + FORTNOX_KLIENT_HEMLIGHET + '
@@ -81,7 +84,7 @@
       + '<p class="xsmall" style="color:var(--muted-2);line-height:1.7">'
       + 'Ingen av dem kopplas härifrån, och det är med flit. Båda kräver en '
       + 'klienthemlighet, och en hemlighet som webbläsaren kan läsa är ingen '
-      + 'hemlighet — den ligger då hos varenda person som öppnar sidan. '
+      + 'hemlighet. Den ligger då hos varenda person som öppnar sidan. '
       + 'Nycklarna sätts som secrets på edge-funktionen, dit ingen webbläsare '
       + 'når, och den här sidan visar bara vad servern rapporterar tillbaka. '
       + 'Står det "inte kopplad" är den inte kopplad, oavsett vad någon skrivit i en tabell.'
@@ -276,7 +279,7 @@
       { namn: 'Ändrat', rita: r => '<span class="adm-tal">' + esc(kortDatum(r.uppdaterad)) + '</span>' },
       { namn: '', höger: true, rita: r => '<button class="btn btn-ghost btn-sm" type="button" data-rt-bort="'
         + esc(String(r.ar)) + '">Ta bort</button>' }
-    ], rader, 'Inget RUT-tak inlagt — faktureringen drar ingen RUT');
+    ], rader, 'Inget RUT-tak inlagt, så faktureringen drar ingen RUT');
 
     const pekare = $('#inst-pekare');
     if (pekare) {
@@ -727,11 +730,113 @@
     }
   });
 
+  /* ============================================================
+     FLAGGOR (program 2, Fas 1.1)
+
+     Det som väntar på ett beslut om affär, juridik eller pengar är
+     byggt bakom en rad i `flaggor`, av som förval. Den som slår på en
+     ska se VARFÖR den var av, inte bara att den var det: vantar_pa
+     visas därför ordagrant i bekräftelsen, med sina radbrytningar.
+
+     Bara kolumnen aktiv skrivs. Nyckeln och texterna ägs av
+     migrationerna, och databasen svarar 42501 på allt annat. Vem som
+     slog om och när stämplas av databasen, och varje omslag hamnar i
+     auditloggen.
+
+     Av behöver ingen bekräftelse. Det är nödbromsen, och en broms
+     som frågar "är du säker?" är en sämre broms.
+     ============================================================ */
+  async function hämtaFlaggor() {
+    const { data, error } = await supa.from('flaggor')
+      .select('kod, aktiv, beskrivning, vantar_pa, uppdaterad, uppdaterad_av').order('kod');
+    S.flaggorFel = error ? felText(error) : null;
+    S.flaggor = data || [];
+  }
+
+  function ritaFlaggorLista() {
+    const host = $('#flaggor-lista');
+    if (!host) return;
+    const lista = S.flaggor || [];
+    const antal = $('#flaggor-antal');
+    if (antal) {
+      const på = lista.filter(f => f.aktiv).length;
+      antal.textContent = lista.length ? på + ' av ' + lista.length + ' på' : '';
+    }
+    if (S.flaggorFel) { host.innerHTML = tomt('Kunde inte hämta flaggorna', S.flaggorFel); return; }
+    if (!lista.length) {
+      host.innerHTML = tomt('Inga flaggor', 'Allt som väntar på ett beslut läggs in här av en migration.');
+      return;
+    }
+    host.innerHTML = lista.map(f => '<div class="dp-rad" style="align-items:start">'
+      + '<div><b>' + esc(f.kod) + '</b>'
+      + '<span>' + esc(f.beskrivning || '') + '</span>'
+      + '<span>Väntar på: ' + esc(f.vantar_pa || 'inget angivet') + '</span>'
+      + '<span>Ändrad ' + esc(kortDatum(f.uppdaterad))
+      + (f.uppdaterad_av ? ' av ' + esc(namnFör(f.uppdaterad_av)) : '') + '</span></div>'
+      + '<span class="dp-rad-hoger" style="display:flex;gap:10px;align-items:center">'
+      + (f.aktiv ? pill('På', 'ar-klar') : pill('Av', ''))
+      + '<button class="btn btn-ghost btn-sm" type="button" style="min-height:44px"'
+      + ' data-flagga="' + esc(f.kod) + '" data-flagga-till="' + (f.aktiv ? 'av' : 'pa') + '">'
+      + (f.aktiv ? 'Slå av' : 'Slå på') + '</button></span>'
+      + '</div>').join('');
+  }
+
+  /* Hämtas när vyn startar och varje gång fliken öppnas: en annan
+     admin kan ha slagit om sedan sidan laddades. Ett fel här ska
+     synas i fliken, inte stoppa resten av vyn. */
+  async function ritaFlaggor() {
+    try {
+      await hämtaFlaggor();
+    } catch (e) {
+      S.flaggorFel = felText(e);
+      S.flaggor = [];
+    }
+    ritaFlaggorLista();
+  }
+
+  const flaggFlik = $('#flik-flaggor');
+  if (flaggFlik) flaggFlik.addEventListener('click', ritaFlaggor);
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-flagga]');
+    if (!knapp) return;
+    const kod = knapp.dataset.flagga;
+    const f = (S.flaggor || []).find(x => x.kod === kod);
+    if (!f) return;
+    const nytt = knapp.dataset.flaggaTill === 'pa';
+    const msg = $('#flaggor-msg');
+    rensa(msg);
+
+    if (nytt) {
+      const ja = await bekräfta({
+        titel: 'Slå på ' + kod + '?',
+        text: f.vantar_pa
+          ? 'Flaggan väntar på ett beslut. Så här står det:'
+          : 'Flaggan har ingen text om vad den väntar på.',
+        forhandsvisning: f.vantar_pa || undefined,
+        knapp: 'Slå på'
+      });
+      if (!ja) return;
+    }
+
+    await medan(knapp, nytt ? 'Slår på…' : 'Slår av…', async () => {
+      const { data, error } = await supa.from('flaggor').update({ aktiv: nytt })
+        .eq('kod', kod).select('kod, aktiv, beskrivning, vantar_pa, uppdaterad, uppdaterad_av');
+      if (error) { säg(msg, 'Kunde inte ändra ' + kod + ': ' + felText(error), false); return; }
+      if (!(data || []).length) { säg(msg, 'Ingenting ändrades: flaggan ' + kod + ' hittades inte.', false); return; }
+      Object.assign(f, data[0]);
+      ritaFlaggorLista();
+      säg(msg, kod + ' är ' + (f.aktiv ? 'på.' : 'av.'), true);
+      const ny = document.querySelector('[data-flagga="' + kod + '"]');
+      if (ny) ny.focus();
+    });
+  });
+
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
     /* Utåt heter sökningen ritaAudit: den som ritar vyn vill ha en
        färsk logg, inte en gammal lista i minnet. */
     ritaAdminanvandare, ritaAudit: sökAudit, ritaDokument: hämtaHandlingar,
-    ritaFel, ritaInstallningar, ritaIntegrationer
+    ritaFel, ritaFlaggor, ritaInstallningar, ritaIntegrationer
   });
 })();

@@ -695,7 +695,10 @@
   :root:not([data-theme="light"]) .tr-val button:not([aria-pressed="true"]){background:var(--pap-2)}
   :root:not([data-theme="light"]) .mat-typ button:not([aria-pressed="true"]){background:var(--pap-2)}
   :root:not([data-theme="light"]) .nx-avatar{background:var(--pap-3)}
+  /* Rutan är redan --pap-2 i mörkt läge; mötesknappen måste lyfta. */
+  :root:not([data-theme="light"]) .pass-mote{background:var(--pap-3)}
 }
+:root[data-theme="dark"] .pass-mote{background:var(--pap-3)}
 :root[data-theme="dark"] .vy .dbox,
 :root[data-theme="dark"] .vy .kpi,
 :root[data-theme="dark"] .vy .auth-card,
@@ -1118,7 +1121,11 @@
 .sch-val button[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--pap)}
 
 /* ---------- månad ---------- */
-.sch-manad{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+/* minmax(0,1fr) och inte 1fr: 1fr har innehållets minsta bredd som
+   golv, så en kolumn med ett pass (ikon och klockslag) blev 65 px och
+   en tom 27 px, och vid 375 px bredd stack rutnätet ut 36 px utanför
+   kortet. Nu är kolumnerna lika breda och passet klipps i sin ruta. */
+.sch-manad{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .sch-manad .dow{
   font-family:var(--f-mono);font-size:9px;font-weight:600;
   letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
@@ -1157,11 +1164,34 @@
 .sch-pass.genomford i{background:var(--bl-3)}
 .sch-pass.avbokad{opacity:.5}
 .sch-pass.avbokad i{background:var(--acc)}
+/* Ikonen har tagit strecket plats (program 2, Fas 1). Samma färger som
+   strecket hade, men nu bär FORMEN läget: klocka, bock, bock i ring,
+   kryss. Ikonen göms aldrig, inte ens när ämnet gör det. */
+.sch-pass .sch-ikon{width:11px;height:11px;color:var(--bl-3)}
+.sch-pass.onskad .sch-ikon{color:var(--ockra)}
+.sch-pass.bekraftad .sch-ikon{color:var(--mossa)}
+.sch-pass.genomford .sch-ikon{color:var(--bl-3)}
+.sch-pass.avbokad .sch-ikon{color:var(--acc)}
 .sch-pass b{font-family:var(--f-mono);font-size:9px;font-weight:600;flex:none}
 .sch-pass span{
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--bl-2);
 }
 @container (max-width:620px){.sch-pass span{display:none}}
+/* I en telefon är en kolumn i månaden runt 38 px (375 px skärm,
+   293 px i kortet). Ikonen och klockslaget i rad behöver en kolumn
+   på 65, så klockslaget klipptes efter första siffran när kolumnerna
+   blev lika breda. Under 480 px står klockslaget under ikonen i
+   stället, och rutan tar mindre luft på sidorna: då räcker 35 px.
+   Blir det ännu smalare (en 320 px skärm) ryms inte ens det, och då
+   står bara ikonen kvar. Läget syns fortfarande som form, och tid,
+   ämne och läge står i knappens aria-label och i passrutan.
+   Gränserna gäller kortets innerbredd (containern är .dbox). */
+@container (max-width:480px){
+  .sch-dag{padding:5px 2px}
+  .sch-manad .sch-pass{flex-direction:column;justify-content:center;gap:1px;padding:3px 1px;text-align:center}
+  .sch-fler{padding-left:2px}
+}
+@container (max-width:270px){.sch-manad .sch-pass b{display:none}}
 
 .sch-fler{
   font-family:var(--f-mono);font-size:8.5px;font-weight:600;
@@ -1206,6 +1236,91 @@
 .sch-full-vad b{display:block;font-size:.96rem;font-weight:600;letter-spacing:-.018em;color:var(--bl)}
 .sch-full-vad span{display:block;margin-top:3px;font-size:.82rem;color:var(--bl-2)}
 
+/* Läget i ord längst till höger i dagvyn, med samma ikon som i
+   månaden. Tredje kolumnen finns bara när läget gör det. */
+.sch-full{grid-template-columns:auto minmax(0,1fr) auto}
+.sch-full-lage{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;
+  color:var(--bl-2);
+}
+.sch-full-lage .nx-ikon{width:13px;height:13px}
+.sch-full.onskad .sch-full-lage{color:var(--ockra)}
+.sch-full.bekraftad .sch-full-lage{color:var(--mossa)}
+.sch-full.genomford .sch-full-lage{color:var(--bl-3)}
+.sch-full.avbokad .sch-full-lage{color:var(--acc-text)}
+
+/* ---------- tidslinjen: lediga, bokade och ej tillgängliga timmar ----------
+   Ritas bara när vyn skickat in tillgången (NXStudie.schema, valet
+   tillgang). Tre lägen, tre former: en tom ring för ledig, ett lås
+   för bokad och en ring med snedstreck plus ett snedstreckat mönster
+   för ej tillgänglig. Ordet står alltid bredvid. */
+.sch-rad-pass.ar-tidslinje{flex-direction:row;flex-wrap:wrap;align-items:center;gap:5px}
+/* Passen är det man letar efter bland timmarna, så de är de enda med
+   fylld botten OCH hel kant i lägets färg. Timmarna runt är konturer. */
+.sch-rad-pass.ar-tidslinje .sch-pass{
+  width:auto;max-width:100%;min-height:24px;padding:3px 8px;
+  border:1px solid var(--bl-3);background:var(--pap-2);
+}
+.sch-rad-pass.ar-tidslinje .sch-pass.onskad{border-color:var(--ockra)}
+.sch-rad-pass.ar-tidslinje .sch-pass.bekraftad{border-color:var(--mossa)}
+.sch-tid{
+  display:inline-flex;align-items:center;gap:5px;
+  min-height:24px;padding:3px 8px;border-radius:6px;
+  border:1px solid var(--ln);background:var(--pap);
+  font:inherit;font-size:.72rem;line-height:1.25;color:var(--bl-2);
+  text-align:left;
+}
+.sch-tid b{font-family:var(--f-mono);font-size:9px;font-weight:600;color:var(--bl);flex:none}
+.sch-tid .nx-ikon{width:11px;height:11px}
+.sch-tid.ar-ledig{
+  border-color:color-mix(in srgb,var(--mossa) 50%,transparent);
+  color:var(--mossa);
+}
+button.sch-tid.ar-ledig{cursor:pointer;transition:background .16s var(--e),border-color .16s var(--e)}
+button.sch-tid.ar-ledig:hover{background:var(--pap-2);border-color:var(--mossa)}
+.sch-tid:focus-visible,
+.sch-tidrad:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.sch-tid.ar-upptagen{background:var(--pap-2);border-style:dashed;border-color:var(--ln-2);color:var(--bl-2)}
+/* Mönstret är det som skiljer "jobbar inte då" från "någon annan har
+   tiden" också för den som inte ser färg. Linjerna är tunna och
+   ljusa, så texten ovanpå behåller sin kontrast. */
+.sch-tid.ar-ej,
+.sch-tidrad.ar-ej,
+.sch-tidrad.ar-ej:hover{
+  background:
+    repeating-linear-gradient(135deg,transparent 0 5px,
+      color-mix(in srgb,var(--bl-3) 22%,transparent) 5px 6px),
+    var(--pap);
+  border-style:dashed;border-color:var(--ln-2);color:var(--bl-2);
+}
+
+/* Samma tre lägen som rader i dagvyn. Bara en ledig timme kan vara en
+   knapp; resten är text och får inte se tryckbara ut. */
+.sch-tidrad{padding:9px 12px;border-style:dashed}
+div.sch-tidrad:hover{border-color:var(--ln-2);background:var(--pap)}
+.sch-tidrad .sch-full-tid{font-size:.84rem;color:var(--bl-2)}
+.sch-tidrad .sch-full-vad b{font-size:.88rem;color:var(--bl-2)}
+.sch-tidrad.ar-ledig{border-color:color-mix(in srgb,var(--mossa) 50%,transparent)}
+.sch-tidrad.ar-ledig .sch-full-vad b,
+.sch-tidrad.ar-ledig .sch-full-lage{color:var(--mossa)}
+button.sch-tidrad.ar-ledig:hover{border-color:var(--mossa);background:var(--pap-2)}
+.sch-tidrad.ar-upptagen,
+div.sch-tidrad.ar-upptagen:hover{background:var(--pap-2)}
+.sch-tidrad.ar-upptagen .sch-full-lage,
+.sch-tidrad.ar-ej .sch-full-lage{color:var(--bl-3)}
+
+/* Knappen för en ledig timme är liten i veckan. På en pekskärm får
+   den minst 44 px, som allt annat man ska kunna träffa med ett finger. */
+@media (pointer:coarse){
+  button.sch-tid,
+  .sch-rad-pass.ar-tidslinje .sch-pass{min-height:44px;padding:0 11px}
+}
+@media (prefers-reduced-motion:reduce){
+  button.sch-tid.ar-ledig{transition:none}
+}
+
 /* ---------- passet i detalj ---------- */
 .nx-passbox{max-width:520px}
 .pass-fakta{
@@ -1237,6 +1352,114 @@
 .pass-lank span{
   font-family:var(--f-mono);font-size:9px;font-weight:600;
   letter-spacing:.08em;text-transform:uppercase;color:var(--bl-2);flex:none;
+}
+
+/* ---------- passet i detalj: det som kom till i program 2, Fas 1 ---------- */
+
+/* Ett block som finns men är tomt säger det i en dämpad ton, så att
+   det inte läses som innehåll. */
+.pass-block .pass-tom{color:var(--bl-3);font-size:.86rem}
+
+/* Länken till mötet är den knapp man letar efter fem minuter innan
+   passet. Därför en hel yta, inte en länk i löptext, och värdnamnet
+   synligt så att man ser vart man hamnar. */
+.pass-mote{
+  display:flex;align-items:center;gap:12px;
+  margin-top:10px;padding:11px 14px;min-height:44px;
+  border:1px solid var(--ln-2);border-radius:12px;
+  background:var(--pap-2);color:var(--bl);text-decoration:none;
+  transition:border-color .16s var(--e),background .16s var(--e);
+}
+.pass-mote:hover{border-color:var(--bl-3);background:var(--pap-3)}
+.pass-mote:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.pass-mote .nx-ikon{width:18px;height:18px;color:var(--acc-text)}
+.pass-mote-text{min-width:0}
+.pass-mote-text b{display:block;font-size:.92rem;font-weight:650;color:var(--bl)}
+.pass-mote-text span{display:block;margin-top:2px;font-size:.8rem;color:var(--bl-2);overflow-wrap:anywhere}
+
+/* En adress som inte klarar regeln: synlig, men inte tryckbar, och
+   med en varning som säger varför. */
+.pass-mote-fel{
+  display:flex;gap:10px;align-items:flex-start;
+  margin-top:10px;padding:12px 14px;
+  border:1px solid var(--acc-line);border-radius:12px;
+  background:var(--acc-soft);color:var(--acc-text);
+}
+.pass-mote-fel .nx-ikon{width:18px;height:18px;margin-top:1px}
+/* Rubriken i bläckfärg: lerfärgen på sin egen ljusa ton når bara
+   4,49:1 i mörkt läge. Ikonen bär lerfärgen, och den behöver 3:1. */
+.pass-mote-fel b{display:block;font-size:.88rem;font-weight:650;color:var(--bl)}
+.pass-mote-fel span{display:block;margin-top:3px;font-size:.84rem;line-height:1.5;color:var(--bl)}
+.pass-mote-fel code{
+  display:block;margin-top:7px;
+  font-family:var(--f-mono);font-size:.76rem;line-height:1.5;
+  color:var(--bl);overflow-wrap:anywhere;
+}
+
+/* "Från förra passet": raden under rubriken säger vilken rapport det
+   är, så att den inte läses som en rapport om passet som ska hållas. */
+.pass-forra .pass-forra-kalla{margin-bottom:8px;font-size:.82rem;color:var(--bl-3)}
+.pass-forra-lista{margin:0;display:grid;gap:10px}
+.pass-forra-lista div{display:grid;gap:3px}
+.pass-forra-lista dt{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
+}
+.pass-forra-lista dd{margin:0;font-size:.9rem;line-height:1.55;color:var(--bl);white-space:pre-wrap}
+
+/* Formuläret för förberedelsen (studiehjälparen). */
+.pass-forb{border-top:1px solid var(--ln);padding-top:18px}
+.pass-forb .pass-forb-hjalp{font-size:.84rem;margin-bottom:4px}
+.pass-forb-et{display:block;margin:12px 0 6px;font-size:.84rem;font-weight:600;color:var(--bl)}
+.pass-forb textarea.inp{
+  display:block;width:100%;min-height:88px;resize:vertical;
+  font:inherit;font-size:.9rem;line-height:1.55;
+}
+.pass-forb input.inp{display:block;width:100%}
+.pass-forb-not{display:block;margin-top:5px;font-size:.78rem;line-height:1.5;color:var(--bl-3)}
+.pass-forb-knappar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pass-forb-knappar .btn{min-height:44px}
+.pass-forb .ok-msg{margin-top:10px}
+
+/* ---------- en passrad man kan öppna (NXKontakt.passRad, klickbar) ----------
+   Hela raden går att trycka på. Ämnet stryks under när musen är över
+   den, så att det syns att raden leder någonstans. "Detaljer" är
+   vägen för tangentbordet och får en hel fingertopp på en pekskärm. */
+.pass.ar-klickbar{cursor:pointer}
+/* Med en knapp på varje rad sträcktes statusmärket till knappens höjd. */
+.pass.ar-klickbar .pass-atg{align-items:center}
+.pass.ar-klickbar:hover .pass-vad > b{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+@media (pointer:coarse){
+  .pass-atg .pass-oppna{min-height:44px;padding-inline:14px}
+}
+
+/* ============================================================
+   IKONERNA OCH TECKENFÖRKLARINGEN (program 2, Fas 1)
+   Ikonerna ritas av NXStudie.ikon() och har sin linje och färg i
+   själva SVG:n. Här står bara storlek och plats, så att en ikon ser
+   likadan ut i schemat, i passrutan och i bokningskalendern.
+   ============================================================ */
+.nx-ikon{
+  width:1em;height:1em;flex:none;display:inline-block;vertical-align:-.14em;
+  fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;
+}
+.nx-forklaring{
+  list-style:none;margin:14px 0 0;padding:0;
+  display:flex;flex-wrap:wrap;gap:6px 16px;
+  font-size:.8rem;line-height:1.4;color:var(--bl-2);
+}
+.nx-forklaring li{display:inline-flex;align-items:center;gap:6px}
+.nx-forklaring .nx-ikon{width:14px;height:14px;color:var(--bl-3)}
+.sch-forklaring .onskad .nx-ikon{color:var(--ockra)}
+.sch-forklaring .bekraftad .nx-ikon{color:var(--mossa)}
+.sch-forklaring .genomford .nx-ikon{color:var(--bl-3)}
+.sch-forklaring .avbokad .nx-ikon{color:var(--acc)}
+.sch-forklaring .ar-ledig .nx-ikon{color:var(--mossa)}
+/* Var tidslinjen slutar (valet tidslinjeTill i NXStudie.schema). */
+.sch-grans{margin:12px 0 0;font-size:.8rem;line-height:1.5;color:var(--bl-2)}
+
+@media (prefers-reduced-motion:reduce){
+  .pass-mote{transition:none}
 }
 
 /* ============================================================
