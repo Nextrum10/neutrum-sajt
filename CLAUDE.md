@@ -283,6 +283,18 @@ att visa **rätt sida**, inte för att skydda data.
   stället — schemat `intern` finns för just det, och PostgREST
   exponerar det inte. Ett rullat prov fångade det; utan provet hade
   rekryteringsformuläret tystnat i drift.
+
+  **Flytten fungerar bara för en funktion som INGEN annan funktion
+  anropar med namn.** Policyer och CHECK-villkor pekar ut funktionen
+  med OID och följer med en flytt; en funktionskropp som skriver
+  `public.is_admin()` gör det inte. Provat i en rullad transaktion
+  2026-09-21: `is_admin` till `intern` gav `42883` på varje
+  uppdatering av profiles, students och bookings, eftersom 25
+  funktioner — bland dem alla `skydda_*` — anropar den med namn. Att i
+  stället dra in anons EXECUTE på `is_admin` fällde den publika
+  tjänstekatalogen, eftersom 39 policyer `TO public` anropar den.
+  Advisorns varning för `is_admin` är därför brus att leva med, inte
+  ett fel att laga i förbifarten.
 - **Postgres RLS kan inte begränsa enskilda kolumner.** Därför vaktas
   `is_admin`, `matched_tutor_id`, `status` och bokningsfälten av
   **triggers** som vägrar ändringen från en inloggad session. Det går
@@ -346,22 +358,26 @@ tillbaka en kopia.**
 | `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 
-**Två funktioner i drift finns inte i repot:** `notis-ko` och
-`notis-avanmal` (båda ACTIVE, `verify_jwt` av). Deras kopia av
-`_delad/mejl.ts` är dessutom NYARE än repots, och de bär filer
-(`_delad/notiser/*`, `notis-ko/arbetare.ts`) som inte finns i någon
-gren. Deras databasdel är inte körd: `notis_konfig` har bara `id`,
-`hemlighet` och `uppdaterad`, och `notis_hamta`/`notis_klar` saknas.
-`notis-ko` säger i sitt eget filhuvud att den väcks av ett
-pg_cron-jobb som heter `notis_vack_arbetaren` — en halvbyggd version
-av det Fas 7 bygger. **Reda ut dem (hämta hem koden eller ta bort dem
-ur driften) innan pg_cron installeras**, annars får en halv
-implementation ett schema.
+**Två funktioner i drift var aldrig i git:** `notis-ko` och
+`notis-avanmal` (båda ACTIVE, `verify_jwt` av). Koden hämtades ur
+driften 2026-09-21 och ligger nu i `supabase/funktioner-arkiv/`, med
+en README som beskriver exakt vad de gör, vad de läser och vilka
+hemligheter de använder. Arkivet ligger med flit utanför
+`supabase/functions/`, så att CI och `supabase functions deploy` inte
+tar det för levande kod.
 
-`supabase/config.toml` saknas också. Sex funktioner har
-`verify_jwt = false` bara i dashboarden, och en `supabase functions
-deploy` utan filen slår på JWT-kravet igen — då svarar notistriggrarna
-401.
+**I dag gör de ingenting:** notis-ko svarar 401, eller 500 vid
+`notis_hamta` som saknas; notis-avanmal svarar 503 eftersom
+`notis_konfig.avanmal_nyckel` saknas. Ingenting anropar dem, och
+`pg_cron` är inte installerat. **Men de vaknar halvvägs om någon lägger
+till kolumnerna `lage` och `avanmal_nyckel` i `notis_konfig`** — använd
+inte de namnen innan det är avgjort vad som händer med funktionerna.
+Inget pg_cron-jobb förrän det är avgjort.
+
+`supabase/config.toml` finns sedan 2026-09-20 och sätter
+`verify_jwt = false` för de funktioner som webhookar och scheman
+anropar. Tas notis-ko eller notis-avanmal bort ur driften ska deras
+block strykas ur filen i samma ändring.
 
 ### Agentregeln
 

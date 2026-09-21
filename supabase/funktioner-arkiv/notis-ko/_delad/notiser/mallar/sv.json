@@ -1,0 +1,129 @@
+{
+  "_om": "All text i notismejlen. Ändra fritt här — ingen kod behöver röras. {fornamn} och {antal} byts ut. Varianter per roll skrivs som \"typ.parent\" / \"typ.tutor\" och vinner över den gemensamma. Kör testerna efter ändring (se README).",
+  "_gemensamt": {
+    "halsning": "Hej {fornamn},",
+    "halsning_utan_namn": "Hej,",
+    "notisrubrik": "Du har en ny notis på Nextrum",
+    "avslutning": "Vi finns här om du undrar något.",
+    "signatur": "Vänliga hälsningar,\nNextrum",
+    "varfor_notis": "Du får det här mejlet för att du har ett konto på Nextrum med notiser via mejl påslagna. Vi skriver aldrig ut vad det gäller här, bara att något väntar på dig.",
+    "varfor_transaktion": "Du får det här mejlet för att din e-postadress angavs i en intresseanmälan på nextrum.se.",
+    "avanmal": "Stäng av notiser via mejl",
+    "installningar": "Notisinställningar",
+    "avsandarrad": "Nextrum AB · info@nextrum.se"
+  },
+  "intresse_bekraftelse": {
+    "amne": "Tack för din intresseanmälan till Nextrum",
+    "etikett": "Intresseanmälan",
+    "forhandstext": "Vi har tagit emot din anmälan och hör av oss inom 24 timmar.",
+    "rubrik": "Tack för ditt intresse",
+    "stycken": [
+      "Tack för att du hört av dig. Vi har tagit emot din intresseanmälan och hör av oss inom 24 timmar.",
+      "Så här går det till:",
+      {
+        "lista": [
+          "Vi läser igenom det du skrivit.",
+          "Vi kontaktar dig för ett första samtal om vad ni behöver.",
+          "Vi matchar er med en studiehjälpare som passar."
+        ]
+      },
+      "Har något blivit fel, eller vill du lägga till något? Svara bara på det här mejlet."
+    ],
+    "transaktion": true
+  },
+  "nytt_meddelande": {
+    "amne": "Du har ett nytt meddelande på Nextrum",
+    "etikett": "Nytt meddelande",
+    "typrad": "Du har fått ett nytt meddelande.",
+    "knapp": "Öppna i Nextrum",
+    "vy": {
+      "parent": "/foralder#meddelanden",
+      "tutor": "/larare#meddelanden"
+    }
+  },
+  "nytt_tidsforslag.parent": {
+    "amne": "Ny tid föreslagen på Nextrum",
+    "etikett": "Nytt tidsförslag",
+    "typrad": "Er studiehjälpare har föreslagit en tid för ett pass. Svara gärna när ni kan, tiden hålls tills ni har svarat.",
+    "knapp": "Öppna i Nextrum",
+    "vy": "/foralder#lektioner/pass"
+  },
+  "nytt_tidsforslag.tutor": {
+    "amne": "Ny tid föreslagen på Nextrum",
+    "etikett": "Nytt tidsförslag",
+    "typrad": "En familj har föreslagit en tid för ett pass.",
+    "knapp": "Öppna i Nextrum",
+    "vy": "/larare#lektioner/pass"
+  },
+  "andrad_tid": {
+    "amne": "En tid har ändrats på Nextrum",
+    "etikett": "Ändrad tid",
+    "typrad": "En tid för ett pass har ändrats och behöver bekräftas.",
+    "knapp": "Öppna i Nextrum",
+    "vy": {
+      "parent": "/foralder#lektioner/pass",
+      "tutor": "/larare#lektioner/pass"
+    }
+  },
+  "bekraftad_tid": {
+    "amne": "Din tid är bekräftad på Nextrum",
+    "etikett": "Bekräftad tid",
+    "typrad": "En tid du föreslog har bekräftats.",
+    "knapp": "Öppna i Nextrum",
+    "vy": {
+      "parent": "/foralder#lektioner/pass",
+      "tutor": "/larare#lektioner/pass"
+    }
+  },
+  "ny_bokning": {
+    "amne": "Nytt pass bokat på Nextrum",
+    "etikett": "Nytt pass",
+    "typrad": "Ett nytt pass har bokats hos dig.",
+    "knapp": "Öppna i Nextrum",
+    "vy": "/larare#lektioner/pass"
+  },
+  "avbokad": {
+    "amne": "Ett pass har avbokats på Nextrum",
+    "etikett": "Avbokat pass",
+    "typrad": "Ett pass har avbokats.",
+    "knapp": "Öppna i Nextrum",
+    "vy": {
+      "parent": "/foralder#lektioner/pass",
+      "tutor": "/larare#lektioner/pass"
+    }
+  },
+  "ny_matchning.parent": {
+    "amne": "Nu är ni matchade på Nextrum",
+    "etikett": "Matchning",
+    "typrad": "Nu är ni matchade med en studiehjälpare. Logga in för att se vem det är och boka första passet.",
+    "knapp": "Öppna i Nextrum",
+    "vy": "/foralder"
+  },
+  "ny_matchning.tutor": {
+    "amne": "Du har fått en ny elev på Nextrum",
+    "etikett": "Ny elev",
+    "typrad": "Du har matchats med en ny elev. Logga in för att se detaljerna och komma igång.",
+    "knapp": "Öppna i Nextrum",
+    "vy": "/larare"
+  },
+  "paminnelse": {
+    "amne": "Påminnelse: pass i morgon",
+    "etikett": "Påminnelse",
+    "typrad": "Ni har ett pass inbokat i morgon. Tid och plats hittar ni i Nextrum.",
+    "knapp": "Öppna i Nextrum",
+    "vy": {
+      "parent": "/foralder#lektioner/pass",
+      "tutor": "/larare#lektioner/pass"
+    }
+  },
+  "flera": {
+    "amne": "Du har nya notiser på Nextrum",
+    "etikett": "Nya notiser",
+    "typrad": "Det har hänt {antal} saker sedan sist, till exempel nya meddelanden eller ändrade tider.",
+    "knapp": "Öppna i Nextrum",
+    "vy": {
+      "parent": "/foralder",
+      "tutor": "/larare"
+    }
+  }
+}

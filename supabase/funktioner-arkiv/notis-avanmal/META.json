@@ -1,0 +1,22 @@
+{
+  "id": "d06fa059-8507-41b8-a1db-0eea452d27f1",
+  "slug": "notis-avanmal",
+  "name": "notis-avanmal",
+  "status": "ACTIVE",
+  "version": 1,
+  "verify_jwt": false,
+  "import_map": false,
+  "entrypoint_path": "/tmp/user_fn_ddkfiuvcppalutfulvbi_d06fa059-8507-41b8-a1db-0eea452d27f1_1/source/notis-avanmal/index.ts",
+  "ezbr_sha256": "c3a394f0ae3957de8841ce8cbe49d426f1b0a75f2a57cbcbb68845854cc4dc92",
+  "created_at": 1789859522311,
+  "updated_at": 1789859522311,
+  "created_at_utc": "2026-09-19T23:12:02.311Z",
+  "updated_at_utc": "2026-09-19T23:12:02.311Z",
+  "hamtad_av": "mcp get_edge_function, projekt ddkfiuvcppalutfulvbi, 2026-09-21",
+  "files": [
+    "notis-avanmal/index.ts",
+    "_delad/http.ts",
+    "_delad/auth.ts",
+    "_delad/notiser/token.ts"
+  ]
+}

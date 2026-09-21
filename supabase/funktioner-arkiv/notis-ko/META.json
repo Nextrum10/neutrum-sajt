@@ -1,0 +1,29 @@
+{
+  "id": "ec8615f6-4025-48fa-92b3-8fbd6ac7e1ba",
+  "slug": "notis-ko",
+  "name": "notis-ko",
+  "status": "ACTIVE",
+  "version": 1,
+  "verify_jwt": false,
+  "import_map": false,
+  "entrypoint_path": "/tmp/user_fn_ddkfiuvcppalutfulvbi_ec8615f6-4025-48fa-92b3-8fbd6ac7e1ba_1/source/notis-ko/index.ts",
+  "ezbr_sha256": "f1c4e072204c110477eccd77655ff53099ce3ade3462ebd32249acfff1d9be4e",
+  "created_at": 1789859487634,
+  "updated_at": 1789859487634,
+  "created_at_utc": "2026-09-19T23:11:27.634Z",
+  "updated_at_utc": "2026-09-19T23:11:27.634Z",
+  "hamtad_av": "mcp get_edge_function, projekt ddkfiuvcppalutfulvbi, 2026-09-21",
+  "files": [
+    "notis-ko/index.ts",
+    "_delad/notis.ts",
+    "_delad/http.ts",
+    "_delad/auth.ts",
+    "_delad/mejl.ts",
+    "_delad/konstanter.ts",
+    "_delad/notiser/konfig.ts",
+    "notis-ko/arbetare.ts",
+    "_delad/notiser/rendera.ts",
+    "_delad/notiser/mallar/sv.json",
+    "_delad/notiser/token.ts"
+  ]
+}

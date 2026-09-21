@@ -22,49 +22,170 @@ ovanpå — går mejlet fel ligger raden kvar i `leads`.
 
 ---
 
-## 1. SPF och DMARC — KLART, men en post för mycket
+## 1. DNS för nextrum.se: läget 21 september 2026
 
-Posterna är inlagda i Cloudflare:
+Avläst med `dig` mot både 1.1.1.1 och 8.8.8.8, samma svar från båda.
+DNS ligger hos Cloudflare.
 
-| Typ | Namn | Innehåll |
-|-----|------|----------|
-| TXT | `@` | `v=spf1 include:_spf.google.com ~all` |
-| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:info@nextrum.se` |
+Två tjänster skickar i nextrum.se:s namn, och de har var sin väg:
 
-`p=none` betyder "rapportera men blockera inte". Börja där. När ni
-sett ett par veckors rapporter och vet att allt legitimt går igenom
-kan ni skärpa till `p=quarantine`.
+| Tjänst | Används till | Envelope-from | DKIM |
+|---|---|---|---|
+| Google Workspace | mejl ni skriver för hand från info@ | `nextrum.se` | `google._domainkey` |
+| Resend (Amazon SES, eu-west-1) | lead-notis, pass-notis, meddelande-notis, faktura-utskick | `send.nextrum.se` | `resend._domainkey` |
 
-### ⚠ Det ligger TVÅ DMARC-poster på `_dmarc`
+### Posterna, en och en
 
-Den ena är `v=DMARC1; p=none;` utan rapportadress, den andra är raden
-i tabellen ovan. **Ta bort den utan `rua=`.**
+| Typ | Namn | Värde | Läge |
+|---|---|---|---|
+| MX | `@` | `1 smtp.google.com` | ✅ rätt |
+| TXT | `@` | `v=spf1 include:_spf.google.com ~all` | ✅ rätt, exakt en SPF-post |
+| MX | `send` | `10 feedback-smtp.eu-west-1.amazonses.com` | ✅ rätt |
+| TXT | `send` | `v=spf1 include:amazonses.com ~all` | ✅ rätt |
+| TXT | `google._domainkey` | `v=DKIM1;k=rsa;p=MIIBIjAN…` (2048 bitar) | ✅ finns, se nedan |
+| TXT | `resend._domainkey` | **TVÅ olika nycklar** | ❌ **FEL, måste rättas** |
+| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:info@nextrum.se` | ✅ exakt en post |
 
-Två poster är inte "dubbelt så mycket DMARC" — det är noll. Hittar en
-mottagare mer än en giltig DMARC-post på namnet ska hela kontrollen
-hoppas över (RFC 7489, avsnitt 6.6.3). Domänen står alltså utan
-DMARC så länge båda ligger kvar, och rapporterna ni satte upp `rua`
-för kommer aldrig.
+Den tidigare varningen om två DMARC-poster gäller inte längre. Det
+svarar exakt en.
 
-Kontrollera efteråt att BARA en rad kommer tillbaka:
+### ❌ Två DKIM-nycklar på `resend._domainkey`
 
-```bash
-dig +short _dmarc.nextrum.se TXT
 ```
+"p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC/zOTYx61IezWFZrxJjDuie2tdc5…"
+"p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDsAOEpkj9Khe4z0utyU1UqW0zJo5…"
+```
+
+Två poster på samma selektor är inte dubbelt skydd. RFC 6376 säger
+att posterna MÅSTE vara unika per selektor, annars är resultatet
+odefinierat: mottagaren väljer EN av dem. Väljer den fel underkänns
+DKIM för allt som går via Resend, alltså fakturor och alla notismejl.
+
+I dag räddas DMARC av att SPF för `send.nextrum.se` räknas som
+linjerat. Men ett vidarebefordrat mejl, till exempel till ett
+skolkonto, faller på SPF — och då står bara DKIM kvar. Därför måste
+det här rättas **innan** DMARC skärps.
+
+**Så rättas det:**
+
+1. Logga in på Resend → **Domains** → `nextrum.se` → **DKIM**. Kopiera
+   värdet som står där.
+2. I Cloudflare → DNS → `nextrum.se`: behåll den `resend._domainkey`-post
+   som är exakt lika med värdet från Resend. **Radera den andra.**
+3. Kontrollera att bara en rad svarar:
+   ```bash
+   dig +short TXT resend._domainkey.nextrum.se @1.1.1.1
+   ```
+4. Se att Resend fortfarande visar domänen som *Verified*.
+
+En trolig men **inte bekräftad** förklaring är att den ena nyckeln
+kommer från försöket med `neutrum.se` (se fällorna i avsnitt 3).
+
+### Google DKIM: finns i DNS, men är signeringen på?
+
+Nyckeln på `google._domainkey` är rätt skriven. Om Google faktiskt
+SIGNERAR med den syns bara i Google Admin → Appar → Google Workspace →
+Gmail → **Autentisera e-post**. Står det inte *Autentiserar e-post*,
+tryck *Starta autentisering*.
+
+### SPF: ingen ändring behövs
+
+Regeln är en enda `v=spf1`-post per namn. Tillkommer en tjänst som
+skickar med envelope-from `@nextrum.se`, läggs dess `include:` in i
+**samma** rotpost. Resend ska INTE in i roten — se avsnitt 3.
+
+`~all` räcker. Det är DMARC som blockerar, inte SPF. Byt inte till
+`-all` under utrullningen.
 
 ---
 
-## 2. Resend: konto och domän — KLART
+## 2. DMARC: från p=none till quarantine
 
-Domänen är verifierad och funktionen skickar skarpt från
-`info@nextrum.se`. Så här ser den ut, region **Irland
-(eu-west-1)**:
+### Steg 1, nu
 
-| Typ | Namn | Innehåll |
-|-----|------|----------|
-| MX | `send` | `feedback-smtp.eu-west-1.amazonses.com`, prioritet 10 |
-| TXT | `send` | `v=spf1 include:amazonses.com ~all` |
-| TXT | `resend._domainkey` | `p=…` från Resend |
+```
+TXT  _dmarc  v=DMARC1; p=none; rua=mailto:<RAPPORTADRESS>; pct=100; adkim=r; aspf=r
+```
+
+TTL 300 under utrullningen, så att ett steg går att backa inom
+minuter. 3600 när slutläget är nått.
+
+Den nuvarande posten gör i praktiken redan detta — `r`, `r` och `100`
+är standardvärden. Den behöver bara bytas om rapportadressen byts.
+
+**`aspf=r` är ett krav, inte ett förval.** Resends envelope-from ligger
+på `send.nextrum.se`, alltså en underdomän. Med `aspf=s` (strikt)
+underkänns SPF för varenda Resend-mejl.
+
+**Rapportadressen är ett beslut för Leo.** Rapporterna går i dag till
+`info@nextrum.se`, samma inkorg som lead-aviseringar och fakturasvar.
+De kommer som dagliga XML-bilagor från varje stor mottagare, och i
+den inkorgen blir de brus som ingen läser. Förslag: en egen adress,
+`dmarc@nextrum.se`, som grupp eller alias i Workspace. Den ligger i
+samma domän och kräver ingen extra behörighetspost.
+
+### Innan steg 2 ska allt detta vara sant
+
+- [ ] Exakt en post på `resend._domainkey`, och Resend visar *Verified*
+- [ ] Google Admin visar *Autentiserar e-post*
+- [ ] Det är avgjort hur Supabase Auth skickar sina mejl (se nedan)
+- [ ] Ett testmejl från varje väg — Gmail från info@, lead-notis,
+      pass-notis, en faktura — till en extern Gmail-adress visar under
+      *Visa original*: `SPF: PASS`, `DKIM: PASS` med
+      `header.d=nextrum.se`, och `DMARC: PASS`
+- [ ] 2–4 veckors rapporter där Google och Amazon SES eu-west-1 klarar
+      DMARC och ingen okänd **legitim** avsändare underkänns
+
+### Steg 2: quarantine, i tre nivåer
+
+```
+v=DMARC1; p=quarantine; pct=25;  rua=mailto:<RAPPORTADRESS>; adkim=r; aspf=r
+v=DMARC1; p=quarantine; pct=50;  rua=mailto:<RAPPORTADRESS>; adkim=r; aspf=r
+v=DMARC1; p=quarantine; pct=100; rua=mailto:<RAPPORTADRESS>; adkim=r; aspf=r
+```
+
+Ungefär en vecka per nivå. Höj bara när rapporterna inte visar några
+legitima underkännanden och ingen hört av sig om mejl som inte kommit
+fram. `pct` är ett önskemål till mottagaren, inte ett löfte — lita
+på rapporterna, inte på procentsatsen.
+
+### Steg 3: reject, valfritt
+
+```
+v=DMARC1; p=reject; pct=100; rua=mailto:<RAPPORTADRESS>; adkim=r; aspf=r
+```
+
+Tidigast efter fyra rena veckor på `quarantine` med `pct=100`, och när
+vidarebefordrade mejl har visats klara sig på DKIM. Om ni stannar på
+quarantine eller går hela vägen är Leos beslut.
+
+Underdomäner ärver `p` eftersom `sp=` saknas. Det räcker: ingen
+tjänst skickar med en underdomän som synlig avsändare.
+
+### Öppna frågor som påverkar DMARC
+
+**Supabase Auth.** Bekräftelsemejl vid registrering och inbjudningar
+från `bjud-in` skickas av Supabase Auth, inte av Resend. Vilken SMTP
+projektet använder går inte att läsa med de verktyg som finns här.
+Står det på Supabases standard-SMTP gäller två saker: mejlen går bara
+fram till adresser som är medlemmar i Supabase-organisationens team,
+och de skickas från Supabases domän. En familj utanför teamet får då
+aldrig sin inbjudan. Rätt lösning är egen SMTP via Resend
+(`smtp.resend.com`, port 465, användare `resend`, lösenord =
+API-nyckeln) under Authentication → Emails → SMTP Settings. nextrum.se
+är redan verifierad hos Resend, så inga nya DNS-poster behövs.
+
+**`no-reply@nextrum.se`.** pass-notis och meddelande-notis skickar
+utan svarsadress, så ett svar går till `no-reply@`. Finns adressen
+inte i Workspace studsar svaret. Antingen ett alias i Workspace, eller
+`svaraTill: info@nextrum.se` i `_delad/notis.ts`.
+
+---
+
+## 3. Resend: konto och domän
+
+Domänen är verifierad och funktionerna skickar skarpt. Region
+**Irland (eu-west-1)**. Posterna står i tabellen i avsnitt 1.
 
 ### ⚠ Två fällor, båda kostade en hel kväll
 
@@ -95,7 +216,8 @@ gäller posten ni skriver för hand från Gmail. Lägger ni till Resend
 där löser det ingenting och tar en av de tio DNS-uppslag en SPF-post
 får kosta innan den underkänns.
 
-Kontrollera hela kedjan så här — alla fyra ska svara:
+Kontrollera hela kedjan så här — alla fyra ska svara, och
+`resend._domainkey` med EXAKT EN rad (se avsnitt 1):
 
 ```bash
 dig +short send.nextrum.se MX
@@ -120,7 +242,7 @@ i svaret, i stället för att aviseringen försvinner tyst.
 
 ---
 
-## 3. En secret i Supabase
+## 4. En secret i Supabase
 
 Project Settings → Edge Functions → Secrets:
 
@@ -166,7 +288,7 @@ och värdet syns aldrig på skärmen.
 
 ---
 
-## 4. Databaswebhook
+## 5. Databaswebhook
 
 Database → Webhooks → Create a new hook:
 
