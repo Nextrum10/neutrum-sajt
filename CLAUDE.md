@@ -408,10 +408,8 @@ tillbaka en kopia.**
 **`notis-ko` och `notis-avanmal` fanns i driften utan att finnas i
 git.** Den gamla koden ligger i `supabase/funktioner-arkiv/` som
 historik. Program 2 Fas 2 tog över namnen med ny kod i
-`supabase/functions/`, mot nya databasfunktioner. Använd fortfarande
-inte kolumnnamnen `lage` och `avanmal_nyckel` i `notis_konfig`: den
-gamla koden väntade på dem, och den är borta först när de nya
-versionerna är driftsatta.
+`supabase/functions/`, mot nya databasfunktioner, driftsatt
+2026-09-21 (version 2 av båda).
 
 ### Notiserna (program 2 Fas 2)
 
@@ -446,8 +444,12 @@ En funktion som returnerar en tabell (`returns table (id …)`) gör
 kolumnnamnen till variabler. Skriv alltid ut tabellens alias i den
 funktionens frågor, annars blir `where id = 1` tvetydigt (42702, 2.3b).
 
-Schemaläggningen (pg_cron) läggs först när arbetaren körts för hand med
-"Kör nu" i adminvyn och syns i `notis_korningar`. Fas 7:s regel.
+Schemat (2.4, pg_cron) kör `notis_minut()` varje minut, `notis_stada()`
+03:17 och rensar `cron.job_run_details` 03:23. Det lades först när
+arbetaren körts för hand och syntes i `notis_korningar` (Fas 7:s regel).
+Stänga av allt utskick utan att röra koden: `select
+cron.unschedule('notis-minut');`. Flaggorna `notiser_mejl` och
+`notiser_sms` styr fortfarande om något når en familj.
 
 `supabase/config.toml` finns sedan 2026-09-20 och sätter
 `verify_jwt = false` för de funktioner som webhookar och scheman
