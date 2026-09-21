@@ -1649,6 +1649,215 @@ select set_config('request.jwt.claims', null, true);
 reset role;
 select set_config('request.jwt.claims', null, true);
 
+-- ============================================================
+-- DE TRE KÄNDA HÅLEN (program 2, Fas 0)
+--
+-- Tre hål har funnits tidigare och får aldrig öppnas igen:
+-- självuppgradering till admin, självmatchning, och studiehjälpare
+-- som skriver rapport om fel elev. Det tredje vaktas redan av F-2
+-- ovan. De två första vaktades INTE av sviten — de bevisades stängda
+-- med prov som skrevs för hand och sedan kastades. Här står de kvar.
+--
+-- Skydden (skydda_profilfalt, skydda_studentfalt, skydda_studentfalt_ny)
+-- NEKAR inte — de återställer fälten tyst och låter satsen gå igenom.
+-- `prova` duger därför inte: den hade sett "gick igenom, rader: 1" och
+-- rapporterat fel av fel skäl. Varje prov skriver som användaren och
+-- LÄSER TILLBAKA som postgres. Ett prov som är grönt för att det inte
+-- kan se något är värre än inget prov.
+-- ============================================================
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+do $$
+declare
+  adm      boolean;
+  rollen   text;
+  tutor    uuid;
+  lage     text;
+  fel      text;
+  n        bigint;
+begin
+  -- ---------- självuppgradering till admin ----------
+
+  -- 1. familjen gör sig själv till admin
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000f2');
+  begin
+    update public.profiles set is_admin = true
+     where id = '00000000-0000-4000-8000-0000000000f2';
+  exception when others then null;
+  end;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select is_admin into adm from public.profiles where id = '00000000-0000-4000-8000-0000000000f2';
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 1 familjen gör sig själv till admin', adm is not true, 'is_admin efteråt: ' || coalesce(adm::text, 'null'));
+
+  -- 2. studiehjälparen byter sin roll till admin
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+  begin
+    update public.profiles set role = 'admin', is_admin = true
+     where id = '00000000-0000-4000-8000-0000000000a1';
+  exception when others then null;
+  end;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select is_admin, role into adm, rollen from public.profiles where id = '00000000-0000-4000-8000-0000000000a1';
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 1 studiehjälparen gör sig till admin via role', adm is not true and rollen = 'tutor',
+          'is_admin: ' || coalesce(adm::text, 'null') || ', role: ' || coalesce(rollen, 'null'));
+
+  -- 3. familjen gör NÅGON ANNAN till admin
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000f2');
+  begin
+    update public.profiles set is_admin = true
+     where id = '00000000-0000-4000-8000-0000000000f1';
+  exception when others then null;
+  end;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select is_admin into adm from public.profiles where id = '00000000-0000-4000-8000-0000000000f1';
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 1 familjen gör en annan familj till admin', adm is not true, 'is_admin efteråt: ' || coalesce(adm::text, 'null'));
+
+  -- 4. en ny profil som redan är admin
+  fel := 'SLÄPPTES IGENOM';
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000f2');
+  begin
+    insert into public.profiles (id, role, full_name, email, is_admin)
+    values (gen_random_uuid(), 'parent', 'Fusk', 'fusk@example.invalid', true);
+  exception when others then fel := sqlstate;
+  end;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 1 familjen skapar en profil som redan är admin', fel = '42501', 'fick ' || fel);
+
+  -- ---------- självmatchning ----------
+  --
+  -- Proven får en EGEN familj (R) med ett eget väntande barn. Fixturens
+  -- familj Q duger inte: provet 9.4 ovan låter admin matcha Q:s barn
+  -- med A, helt legitimt, och synka_familjens_match kopierar det till
+  -- Q:s profil. Första körningen av de här proven läste den matchningen
+  -- och rapporterade den som ett genomsläppt angrepp — rött av fel
+  -- skäl, vilket är lika missvisande som grönt av fel skäl. Varje prov
+  -- kontrollerar därför också sitt utgångsläge.
+
+  insert into auth.users (id, email, raw_user_meta_data) values
+    ('00000000-0000-4000-8000-0000000000f3', 'rls-r@example.invalid',
+     '{"role":"parent","full_name":"Test Familj R"}');
+  insert into public.students (id, parent_id, name, matched_tutor_id, match_status) values
+    ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000f3',
+     'Väntar', null, 'pending'),
+    ('00000000-0000-4000-8000-0000000005e2', '00000000-0000-4000-8000-0000000000f3',
+     'Hos A', '00000000-0000-4000-8000-0000000000a1', 'matched');
+
+  select matched_tutor_id, match_status into tutor, lage
+    from public.students where id = '00000000-0000-4000-8000-0000000005e1';
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 2 utgångsläge: familj R:s barn väntar', tutor is null and lage = 'pending',
+          coalesce(tutor::text, 'null') || ' / ' || coalesce(lage, 'ingen rad'));
+
+  -- 5. familjen matchar sitt eget väntande barn med en studiehjälpare
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000f3');
+  begin
+    update public.students
+       set matched_tutor_id = '00000000-0000-4000-8000-0000000000a1', match_status = 'matched'
+     where id = '00000000-0000-4000-8000-0000000005e1';
+  exception when others then null;
+  end;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select matched_tutor_id, match_status into tutor, lage
+    from public.students where id = '00000000-0000-4000-8000-0000000005e1';
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 2 familjen matchar sitt eget barn', tutor is null and lage = 'pending',
+          'efteråt: ' || coalesce(tutor::text, 'null') || ' / ' || coalesce(lage, 'null'));
+
+  -- 6. familjen lägger in ett nytt barn som redan är matchat
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000f3');
+  begin
+    insert into public.students (id, parent_id, name, matched_tutor_id, match_status)
+    values ('00000000-0000-4000-8000-0000000005d1', '00000000-0000-4000-8000-0000000000f3',
+            'Nytt barn', '00000000-0000-4000-8000-0000000000a1', 'matched');
+  exception when others then null;
+  end;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select matched_tutor_id, match_status into tutor, lage
+    from public.students where id = '00000000-0000-4000-8000-0000000005d1';
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 2 familjen lägger in ett barn som redan är matchat',
+          tutor is null and lage = 'pending',
+          'efteråt: ' || coalesce(tutor::text, 'null') || ' / ' || coalesce(lage, 'ingen rad'));
+
+  -- 7. studiehjälparen matchar SIG SJÄLV med en annan familjs barn
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000b1');
+  begin
+    update public.students
+       set matched_tutor_id = '00000000-0000-4000-8000-0000000000b1', match_status = 'matched'
+     where id = '00000000-0000-4000-8000-0000000005e1';
+  exception when others then null;
+  end;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select matched_tutor_id, match_status into tutor, lage
+    from public.students where id = '00000000-0000-4000-8000-0000000005e1';
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 2 studiehjälparen matchar sig själv med ett barn', tutor is null and lage = 'pending',
+          'efteråt: ' || coalesce(tutor::text, 'null') || ' / ' || coalesce(lage, 'null'));
+
+  -- 8. familjen byter själv studiehjälpare på ett barn som redan är matchat
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000f3');
+  begin
+    update public.students
+       set matched_tutor_id = '00000000-0000-4000-8000-0000000000b1'
+     where id = '00000000-0000-4000-8000-0000000005e2';
+  exception when others then null;
+  end;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select matched_tutor_id, match_status into tutor, lage
+    from public.students where id = '00000000-0000-4000-8000-0000000005e2';
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 2 familjen byter själv studiehjälpare',
+          tutor = '00000000-0000-4000-8000-0000000000a1' and lage = 'matched',
+          'efteråt: ' || coalesce(tutor::text, 'null') || ' / ' || coalesce(lage, 'null'));
+
+  -- 9. familjen matchar sin profil direkt, förbi barnen. Profilens match
+  --    är en spegel av barnens (synka_familjens_match), så rätt svar är
+  --    att den står kvar på det barnet 5e2 redan har: A, aldrig B.
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000f3');
+  begin
+    update public.profiles
+       set matched_tutor_id = '00000000-0000-4000-8000-0000000000b1', match_status = 'matched'
+     where id = '00000000-0000-4000-8000-0000000000f3';
+  exception when others then null;
+  end;
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select matched_tutor_id, match_status into tutor, lage
+    from public.profiles where id = '00000000-0000-4000-8000-0000000000f3';
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 2 familjen matchar sin profil förbi barnen',
+          tutor is distinct from '00000000-0000-4000-8000-0000000000b1',
+          'efteråt: ' || coalesce(tutor::text, 'null') || ' / ' || coalesce(lage, 'null'));
+
+  -- 10. och inget av försöken får göra barnet till "min elev" för
+  --     studiehjälparen, för det är det som öppnar rapporter,
+  --     studieplaner och material. A har ett riktigt barn i familjen
+  --     (5e2) och ska se exakt det; B ska inte se något.
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+  select count(*) into n from public.students
+   where id in ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000005d1')
+     and public.is_my_student(id);
+  reset role; perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 2 självmatchning ger A ingen elev', n = 0, 'is_my_student sant för ' || n);
+
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000b1');
+  select count(*) into n from public.students
+   where parent_id = '00000000-0000-4000-8000-0000000000f3'
+     and public.is_my_student(id);
+  reset role; perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 2 självmatchning ger B ingen elev', n = 0, 'is_my_student sant för ' || n);
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).
 insert into utfall (test, ok, detalj)

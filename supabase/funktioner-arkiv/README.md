@@ -149,13 +149,34 @@ Det finns alltså tre vägar för notiser:
 Väg 2 och 3 överlappar väg 1. Körs två samtidigt får mottagaren dubbla
 mejl. **Vilken som ska gälla avgörs före Fas 2.**
 
+## ⚠ Om de tas bort: rör INTE `notis_konfig`
+
+Att ta bort funktionerna bryter ingenting. Faran ligger i städningen som
+är frestande att göra samtidigt.
+
+`notis_konfig.hemlighet` är **samma hemlighet** som de tre levande
+webhookarna använder. Den står i klartext i triggrarnas argument
+(`pg_trigger.tgargs` för `ny-intresseanmalan`, `nytt-passforslag` och
+`nytt-meddelande`), och `lead-notis` och `_delad/notis.ts` läser den
+från tabellen. Tas `notis_konfig` bort, eller roteras hemligheten
+"eftersom notis-ko kände till den", svarar alla tre med 401 eller 503.
+Då går inga notiser alls: inte om intresseanmälningar, inte om pass,
+inte om meddelanden.
+
+Ska hemligheten någon gång roteras görs det i **en** transaktion som
+byter både `notis_konfig.hemlighet` och alla tre triggrarnas header.
+Roteringsblocket står i `supabase/migrations/arkiv/schema-v17.sql`.
+
 ## Beslut som väntar
 
 - Vilken av de tre vägarna ska byggas vidare?
 - Får `notis-ko` och `notis-avanmal` tas bort ur driften? Det bryter
   ingen befintlig mejlväg, eftersom ingenting anropar dem. Det är en
-  driftändring och kräver ett uttryckligt ja. Om de tas bort ska blocken
-  `[functions.notis-ko]` och `[functions.notis-avanmal]` i
-  `supabase/config.toml` strykas i samma ändring.
+  driftändring och kräver ett uttryckligt ja. Supabase-MCP:n saknar ett
+  verktyg för att ta bort funktioner och CLI:t finns inte på datorn, så
+  borttagningen görs i dashboarden. Blocken `[functions.notis-ko]` och
+  `[functions.notis-avanmal]` i `supabase/config.toml` stryks i samma
+  ändring — och koden i det här arkivet måste vara pushad först, annars
+  är den lokala kopian den enda som finns.
 - Ska avregistreringen gälla per notistyp eller globalt, och vilka mejl
   är transaktionella och får därför inte gå att stänga av?

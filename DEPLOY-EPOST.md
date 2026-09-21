@@ -66,10 +66,41 @@ linjerat. Men ett vidarebefordrat mejl, till exempel till ett
 skolkonto, faller på SPF — och då står bara DKIM kvar. Därför måste
 det här rättas **innan** DMARC skärps.
 
+**Det här är den farligaste DNS-ändringen i hela Fas 0.** Raderas
+fel nyckel kan Resend markera domänen som overifierad och svara 403.
+Då gäller:
+
+- `faktura-utskick` har **ingen reservavsändare** — fakturor stoppas helt
+- `pass-notis` och `meddelande-notis` faller bara tillbaka för Nextrums
+  egna adresser, så **familjerna får ingenting**
+- `lead-notis` går till en enda reservadress
+
+Resend godtar domänen i dag: `net._http_response` visar ett lyckat
+utskick från `info@nextrum.se` 2026-09-19 18:10 UTC.
+
+**Båda nycklarna i sin helhet**, avlästa 2026-09-21 från den
+auktoritativa servern `abdullah.ns.cloudflare.com`, TTL 300. De står här
+så att en felaktig radering går att ta tillbaka inom minuter:
+
+```
+Nyckel 1:
+p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC/zOTYx61IezWFZrxJjDuie2tdc5w8rxFOBueGMD4ugY4hrcTzhLwSCpCVaiBXI0zI/WJo5mdJAN1VfiV6MC+P8yLhiSgOUvJJi9duenHbqiP2zD2IdjLEdGSgjc8YvAFR3eLUbz1earVl+fn2upWFfAKI/eU8G6nonZOYNIeqxQIDAQAB
+
+Nyckel 2:
+p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDsAOEpkj9Khe4z0utyU1UqW0zJo5e1DTc2tHXiFWuf2IcaOOuuLqYDPF+dP8gbVvo3WUYJMoiex95eyA9GSB6DGK7x/JzUHIxzK+PMeQxmpdpwdrSav975wyfyV8mBdCtNVKxV3ixO0jYT7d3XgrJqEMEZcuqGzjT5lBCm8/gHYQIDAQAB
+```
+
+Det är publika nycklar som ändå står i publik DNS; de är inga
+hemligheter.
+
 **Så rättas det:**
 
-1. Logga in på Resend → **Domains** → `nextrum.se` → **DKIM**. Kopiera
-   värdet som står där.
+1. **Ta reda på vilken nyckel som signerar.** Två sätt, välj ett:
+   - Resend → **Domains** → `nextrum.se` → **DKIM**: värdet som står där.
+   - Öppna ett mottaget Resend-mejl (en notis eller en faktura) i Gmail →
+     *Visa original*. Raden `DKIM-Signature: … s=resend …` bekräftar
+     selektorn, och `DKIM: PASS` visar att den nyckel mottagaren valde
+     fungerade.
 2. I Cloudflare → DNS → `nextrum.se`: behåll den `resend._domainkey`-post
    som är exakt lika med värdet från Resend. **Radera den andra.**
 3. Kontrollera att bara en rad svarar:
@@ -77,6 +108,15 @@ det här rättas **innan** DMARC skärps.
    dig +short TXT resend._domainkey.nextrum.se @1.1.1.1
    ```
 4. Se att Resend fortfarande visar domänen som *Verified*.
+5. Skicka en riktig notis till en extern Gmail och kontrollera under
+   *Visa original*: `DKIM: PASS` med `header.d=nextrum.se`.
+
+**Gick det fel** — Resend visar *Not verified* eller mejl studsar med
+403 — lägg tillbaka den raderade nyckeln ur blocket ovan i Cloudflare.
+Med TTL 300 är den tillbaka inom fem minuter.
+
+**Ta aldrig bort och lägg till domänen på nytt i Resend.** Det ger en
+ny nyckel, och då stoppas allt tills den nya är inlagd i DNS.
 
 En trolig men **inte bekräftad** förklaring är att den ena nyckeln
 kommer från försöket med `neutrum.se` (se fällorna i avsnitt 3).

@@ -518,6 +518,15 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 `test, ok, detalj` — **varje rad ska vara ok**. Kör den efter varje
 ändring i en policy eller en trigger.
 
+**Ett prov får inte läsa ett tillstånd som ett tidigare prov har
+lämnat efter sig.** Proven körs i ordning i samma transaktion, och det
+som ett prov lyckas med står kvar för nästa. De tre kända hålen
+(`HÅL 1`, `HÅL 2`) prövades först mot familj Q, men 9.4 har redan
+låtit admin matcha Q:s barn — fyra rader blev röda av fel skäl. Proven
+har nu en egen familj (R) och kontrollerar sitt utgångsläge. Ett nytt
+prov ska dessutom ses gå **rött** med skyddet avstängt innan man litar
+på att det är grönt.
+
 ---
 
 ## 10. Arbetssätt

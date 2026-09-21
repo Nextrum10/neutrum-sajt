@@ -97,7 +97,9 @@ inline-JavaScript i de tre sidorna.** Inga `<script>` utan `src`, inga
 i CI.
 
 `verktyg/rls-test.sql` körs som ett anrop mot databasen efter varje
-ändring i en policy eller trigger. Varje rad i svaret ska vara ok.
+ändring i en policy eller trigger. Varje rad i svaret ska vara ok. Ett
+nytt prov får inte läsa något ett tidigare prov lämnat efter sig, och
+ska ses gå rött med skyddet avstängt innan man litar på grönt.
 
 ---
 
