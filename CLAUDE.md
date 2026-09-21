@@ -390,27 +390,58 @@ tillbaka en kopia.**
 | `fakturering` | Månadskörning: faktura per familj, underlag per hjälpare | Schema (`x-fakturering-nyckel`) eller admin |
 | `faktura-utskick` | Skickar fakturan. **Mejlet först, statusen sedan** | Knapp i adminvyn |
 | `bjud-in` | Auth-inbjudan till en familj eller en befintlig studiehjälpare. Rollen vitlistas i funktionen: `tutor` eller `parent`, allt annat blir `parent`. En inbjuden studiehjälpare hamnar i väntläge | Adminvyn |
-| `lead-notis`, `pass-notis`, `meddelande-notis` | Aviseringar | **Databaswebhook**, `verify_jwt` av, delad hemlighet i header |
+| `lead-notis` | Mejl till Nextrum om en ny intresseanmälan | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
+| `notis-ko` | Tömmer `notis_utskick`: mejl via Resend, SMS via 46elks. Program 2 Fas 2 | `notis_minut()` via pg_net (cron eller Kör nu), hemligheten ur `notis_konfig` |
+| `notis-avanmal` | Avregistreringslänken i mejlen. Bara POST | Sidan `/avanmal` och mejlklientens One-Click |
+| `pass-notis`, `meddelande-notis` | Ingenting sedan Fas 2.2: deras webhookar är borttagna. Ligger kvar i driften tills någon tar bort dem i dashboarden | — |
 | `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
 | `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 
-**Två funktioner i drift var aldrig i git:** `notis-ko` och
-`notis-avanmal` (båda ACTIVE, `verify_jwt` av). Koden hämtades ur
-driften 2026-09-21 och ligger nu i `supabase/funktioner-arkiv/`, med
-en README som beskriver exakt vad de gör, vad de läser och vilka
-hemligheter de använder. Arkivet ligger med flit utanför
-`supabase/functions/`, så att CI och `supabase functions deploy` inte
-tar det för levande kod.
+**`notis-ko` och `notis-avanmal` fanns i driften utan att finnas i
+git.** Den gamla koden ligger i `supabase/funktioner-arkiv/` som
+historik. Program 2 Fas 2 tog över namnen med ny kod i
+`supabase/functions/`, mot nya databasfunktioner. Använd fortfarande
+inte kolumnnamnen `lage` och `avanmal_nyckel` i `notis_konfig`: den
+gamla koden väntade på dem, och den är borta först när de nya
+versionerna är driftsatta.
 
-**I dag gör de ingenting:** notis-ko svarar 401, eller 500 vid
-`notis_hamta` som saknas; notis-avanmal svarar 503 eftersom
-`notis_konfig.avanmal_nyckel` saknas. Ingenting anropar dem, och
-`pg_cron` är inte installerat. **Men de vaknar halvvägs om någon lägger
-till kolumnerna `lage` och `avanmal_nyckel` i `notis_konfig`** — använd
-inte de namnen innan det är avgjort vad som händer med funktionerna.
-Inget pg_cron-jobb förrän det är avgjort.
+### Notiserna (program 2 Fas 2)
+
+Varje pass, meddelande och rapport blir en rad i `notiser` genom
+triggrarna `notis_vid_pass`, `notis_vid_meddelande` och
+`notis_vid_rapport`, och mejl köas i `notis_utskick`. Fyra regler bär
+det:
+
+1. **Databasen bestämmer, arbetaren skickar.** `notis_utskick_ta()`
+   prövar varje rad igen när den ska gå (är passet kvar på den tiden,
+   vill mottagaren, är chatten redan läst, är det för sent, är flaggan
+   på) och lämnar bara ut det som faktiskt ska skickas. Adressen tas
+   ur `auth.users`, aldrig ur `profiles.email`, som användaren själv kan
+   skriva vad som helst i.
+2. **Ingen brödtext.** En notis, ett mejl och ett SMS bär typ, datum,
+   tid, ämne och förnamn. Aldrig meddelandet, rapporten, platsen eller
+   anteckningen. Förnamnet tvättas till bokstäver (`intern.fornamn`).
+3. **Barnets namn bara till den som får se barnet**
+   (`intern.far_se_eleven`). Ett pass för ett syskon kan hamna hos
+   familjens studiehjälpare.
+4. **Mejl och SMS står bakom flaggorna `notiser_mejl` och
+   `notiser_sms`.** Av betyder att allt köas och märks `loggad`. En
+   sandlådeadress i `notis_drift` tar emot allt när flaggan är av.
+   SMS kräver dessutom SMS-läget `skicka` (förval `prov`, 46elks
+   dryrun) och har ett dygnstak.
+
+Idempotensnycklar ska alltid bära mottagaren. Den första versionen av
+påminnelserna gjorde inte det, och familjen och studiehjälparen delade
+nyckel: bara en av dem hade fått mejlet (2.3c).
+
+En funktion som returnerar en tabell (`returns table (id …)`) gör
+kolumnnamnen till variabler. Skriv alltid ut tabellens alias i den
+funktionens frågor, annars blir `where id = 1` tvetydigt (42702, 2.3b).
+
+Schemaläggningen (pg_cron) läggs först när arbetaren körts för hand med
+"Kör nu" i adminvyn och syns i `notis_korningar`. Fas 7:s regel.
 
 `supabase/config.toml` finns sedan 2026-09-20 och sätter
 `verify_jwt = false` för de funktioner som webhookar och scheman
