@@ -616,8 +616,11 @@ select pg_temp.rakna('5.2 familj P ser sina två uppdrag', '00000000-0000-4000-8
   'select count(*) from public.uppdrag', 2);
 select pg_temp.rakna('5.2 familj Q ser bara sitt eget', '00000000-0000-4000-8000-0000000000f2',
   'select count(*) from public.uppdrag', 1);
-select pg_temp.rakna('5.2 studiehjälpare A ser sin familjs uppdrag, inte Q:s', '00000000-0000-4000-8000-0000000000a1',
-  $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 2);
+-- Förr 2: A såg båda syskonens uppdrag i familj P fast bara det äldsta
+-- barnet är hens. Program 2 Fas 1.6 stängde det — integritetspolicyn
+-- lovar att en studiehjälpare bara ser sina egna elever.
+select pg_temp.rakna('5.2 studiehjälpare A ser sin elevs uppdrag, inte syskonets eller Q:s', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 1);
 select pg_temp.rakna('5.2 admin ser alla', '00000000-0000-4000-8000-0000000000ad',
   $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 3);
 
@@ -1858,6 +1861,367 @@ end $$;
 reset role;
 select set_config('request.jwt.claims', null, true);
 
+-- ============================================================
+-- PROGRAM 2, FAS 1
+--
+-- Egen familj (S) med tre barn: ett hos A, ett hos B och ett som
+-- väntar, plus ett fjärde hos A. Och en studiehjälpare C som inte är
+-- godkänd. Allt läggs upp här, så att inget prov i avsnittet läser
+-- något som ett tidigare prov i filen har lämnat efter sig.
+--
+-- Tabellerna och funktionerna från Fas 1 finns inte före
+-- migrationerna. Fixturer som rör dem läggs därför upp dynamiskt och
+-- bara om tabellen finns — annars hade hela transaktionen avbrutits
+-- och ingen rad alls hade blivit röd.
+-- ============================================================
+
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-4000-8000-0000000000f4', 'rls-s@example.invalid', '{"role":"parent","full_name":"Test Familj S"}'),
+  ('00000000-0000-4000-8000-0000000000c1', 'rls-c@example.invalid', '{"role":"tutor","full_name":"Test Cilla"}');
+
+insert into public.students (id, parent_id, name, matched_tutor_id, match_status, created_at) values
+  ('00000000-0000-4000-8000-0000000006a1', '00000000-0000-4000-8000-0000000000f4', 'S hos A',
+   '00000000-0000-4000-8000-0000000000a1', 'matched', now() - interval '3 days'),
+  ('00000000-0000-4000-8000-0000000006b1', '00000000-0000-4000-8000-0000000000f4', 'S hos B',
+   '00000000-0000-4000-8000-0000000000b1', 'matched', now() - interval '2 days'),
+  ('00000000-0000-4000-8000-0000000006c1', '00000000-0000-4000-8000-0000000000f4', 'S väntar',
+   null, 'pending', now() - interval '1 day'),
+  ('00000000-0000-4000-8000-0000000006d1', '00000000-0000-4000-8000-0000000000f4', 'S också hos A',
+   '00000000-0000-4000-8000-0000000000a1', 'matched', now());
+
+-- p1 kommande hos A (två timmar), p2 kommande hos B, p3 avbokat hos A,
+-- p4–p7 passerade hos A. p5 saknar elev — det är det läget hål 3
+-- handlar om. Klockan 07 för att inte krocka med filens andra pass.
+insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status) values
+  ('00000000-0000-4000-8000-0000000b2001', '00000000-0000-4000-8000-0000000000f4', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000006a1', '00000000-0000-4000-8000-0000000000f4',
+   (now() at time zone 'Europe/Stockholm')::date + 45, '10:00', 120, 'confirmed'),
+  ('00000000-0000-4000-8000-0000000b2002', '00000000-0000-4000-8000-0000000000f4', '00000000-0000-4000-8000-0000000000b1',
+   '00000000-0000-4000-8000-0000000006b1', '00000000-0000-4000-8000-0000000000f4',
+   (now() at time zone 'Europe/Stockholm')::date + 45, '13:00', 60, 'confirmed'),
+  ('00000000-0000-4000-8000-0000000b2003', '00000000-0000-4000-8000-0000000000f4', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000006a1', '00000000-0000-4000-8000-0000000000f4',
+   (now() at time zone 'Europe/Stockholm')::date + 46, '10:00', 60, 'cancelled'),
+  ('00000000-0000-4000-8000-0000000b2004', '00000000-0000-4000-8000-0000000000f4', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000006a1', '00000000-0000-4000-8000-0000000000f4',
+   (now() at time zone 'Europe/Stockholm')::date - 3, '07:00', 60, 'confirmed'),
+  ('00000000-0000-4000-8000-0000000b2005', '00000000-0000-4000-8000-0000000000f4', '00000000-0000-4000-8000-0000000000a1',
+   null, '00000000-0000-4000-8000-0000000000f4',
+   (now() at time zone 'Europe/Stockholm')::date - 4, '07:00', 60, 'confirmed'),
+  ('00000000-0000-4000-8000-0000000b2006', '00000000-0000-4000-8000-0000000000f4', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000006a1', '00000000-0000-4000-8000-0000000000f4',
+   (now() at time zone 'Europe/Stockholm')::date - 5, '07:00', 60, 'confirmed'),
+  ('00000000-0000-4000-8000-0000000b2007', '00000000-0000-4000-8000-0000000000f4', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000006a1', '00000000-0000-4000-8000-0000000000f4',
+   (now() at time zone 'Europe/Stockholm')::date - 6, '07:00', 60, 'confirmed');
+
+-- r1: A:s rapport för p6 (gör p6 genomfört).
+insert into public.lesson_reports (id, student_id, tutor_id, booking_id, lesson_date, raw_notes, narvaro) values
+  ('00000000-0000-4000-8000-0000000a2001', '00000000-0000-4000-8000-0000000006a1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000b2006', (now() at time zone 'Europe/Stockholm')::date - 5, 'fixtur', 'narvarande');
+
+do $$
+begin
+  if to_regclass('public.pass_forberedelse') is not null then
+    execute $q$insert into public.pass_forberedelse (booking_id, att_gora)
+                values ('00000000-0000-4000-8000-0000000b2001', 'Bråk inför provet')$q$;
+  end if;
+end $$;
+
+-- Som prova, men kräver ett VISST felkod. Villkor (23514) och
+-- behörighet (42501) är olika besked, och ett prov som godtar vilket
+-- fel som helst kan vara grönt för att det är trasigt.
+create function pg_temp.vanta_fel(p_test text, p_uid uuid, p_sql text, p_kod text)
+returns void language plpgsql as $$
+declare
+  kod text := 'gick igenom';
+  fel text := '';
+begin
+  begin
+    if p_uid is null then
+      perform set_config('request.jwt.claims', null, true);
+    else
+      perform pg_temp.bli(p_uid);
+    end if;
+    execute p_sql;
+    raise exception 'PROVA_KLAR';
+  exception when others then
+    if sqlerrm <> 'PROVA_KLAR' then kod := sqlstate; fel := sqlerrm; end if;
+  end;
+  insert into utfall (test, ok, detalj) values (p_test, kod = p_kod, 'fick ' || kod || ' ' || fel);
+end $$;
+
+-- ---------- 1.1 flaggor ----------
+
+select pg_temp.prova('R2 1.1 anon läser flaggorna', null,
+  array[$q$select * from public.flaggor$q$], 'nekad');
+select pg_temp.rakna('R2 1.1 en familj ser att utbetalningsmetoden är avslagen', '00000000-0000-4000-8000-0000000000f4',
+  $q$select count(*) from public.flaggor where kod = 'utbetalningsmetod' and not aktiv$q$, 1);
+select pg_temp.prova('R2 1.1 en familj slår på en flagga', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$update public.flaggor set aktiv = true where kod = 'utbetalningsmetod'$q$], 'nekad');
+select pg_temp.prova('R2 1.1 en studiehjälpare skriver om flaggans text', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.flaggor set beskrivning = 'x' where kod = 'utbetalningsmetod'$q$], 'nekad');
+select pg_temp.prova('R2 1.1 admin slår på en flagga', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.flaggor set aktiv = true where kod = 'utbetalningsmetod'$q$], 'ok');
+select pg_temp.rakna_efter('R2 1.1 omslaget hamnar i auditloggen', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.flaggor set aktiv = true where kod = 'utbetalningsmetod'$q$],
+  $q$select count(*) from public.audit_logg where tabell = 'flaggor' and handling = 'flagga.aktiverad'
+       and objekt_id = 'utbetalningsmetod' and aktor = '00000000-0000-4000-8000-0000000000ad'$q$, 1);
+-- Texten om vad flaggan väntar på ägs av migrationerna. Kan admin
+-- skriva bort den försvinner skälet till att flaggan var av.
+select pg_temp.vanta_fel('R2 1.1 admin kan inte skriva om vad flaggan väntar på', '00000000-0000-4000-8000-0000000000ad',
+  $q$update public.flaggor set vantar_pa = null where kod = 'utbetalningsmetod'$q$, '42501');
+
+-- ---------- 1.2 förberedelsen inför ett pass ----------
+
+select pg_temp.prova('R2 1.2 A förbereder sitt eget pass', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.pass_forberedelse set att_gora = 'Ekvationer'
+            where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$], 'ok');
+select pg_temp.prova('R2 1.2 B förbereder A:s pass', '00000000-0000-4000-8000-0000000000b1',
+  array[$q$update public.pass_forberedelse set att_gora = 'x'
+            where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$], 'nekad');
+select pg_temp.prova('R2 1.2 A förbereder B:s pass', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.pass_forberedelse (booking_id, att_gora)
+          values ('00000000-0000-4000-8000-0000000b2002', 'x')$q$], 'nekad');
+select pg_temp.prova('R2 1.2 familjen skriver förberedelsen', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$update public.pass_forberedelse set att_gora = 'x'
+            where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$], 'nekad');
+select pg_temp.prova('R2 1.2 A förbereder ett avbokat pass', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.pass_forberedelse (booking_id, att_gora)
+          values ('00000000-0000-4000-8000-0000000b2003', 'x')$q$], 'nekad');
+select pg_temp.vanta_fel('R2 1.2 en länk till en okänd sida stoppas', '00000000-0000-4000-8000-0000000000a1',
+  $q$update public.pass_forberedelse set lank = 'https://meet.google.com.evil.example/abc'
+       where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$, '23514');
+select pg_temp.vanta_fel('R2 1.2 en länk utan https stoppas', '00000000-0000-4000-8000-0000000000a1',
+  $q$update public.pass_forberedelse set lank = 'http://meet.google.com/abc-defg-hij'
+       where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$, '23514');
+select pg_temp.prova('R2 1.2 A lägger in en Meet-länk', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.pass_forberedelse set lank = 'https://meet.google.com/abc-defg-hij'
+            where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$], 'ok');
+select pg_temp.rakna('R2 1.2 familjen läser förberedelsen', '00000000-0000-4000-8000-0000000000f4',
+  $q$select count(*) from public.pass_forberedelse where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$, 1);
+select pg_temp.rakna('R2 1.2 en annan familj läser den inte', '00000000-0000-4000-8000-0000000000f2',
+  $q$select count(*) from public.pass_forberedelse where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$, 0);
+select pg_temp.rakna('R2 1.2 B läser inte A:s förberedelse', '00000000-0000-4000-8000-0000000000b1',
+  $q$select count(*) from public.pass_forberedelse where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$, 0);
+select pg_temp.prova('R2 1.2 anon läser förberedelser', null,
+  array[$q$select * from public.pass_forberedelse$q$], 'nekad');
+select pg_temp.rakna_efter('R2 1.2 förberedelsen går inte att flytta till ett annat pass', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.pass_forberedelse set booking_id = '00000000-0000-4000-8000-0000000b2004'
+            where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$],
+  $q$select count(*) from public.pass_forberedelse where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$, 1);
+select pg_temp.rakna_efter('R2 1.2 stämpeln sätts av databasen, inte av klienten', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.pass_forberedelse set att_gora = 'Ny text', uppdaterad_av = '00000000-0000-4000-8000-0000000000b1'
+            where booking_id = '00000000-0000-4000-8000-0000000b2001'$q$],
+  $q$select count(*) from public.pass_forberedelse where booking_id = '00000000-0000-4000-8000-0000000b2001'
+       and uppdaterad_av = '00000000-0000-4000-8000-0000000000a1'$q$, 1);
+
+-- ---------- 1.3 upptagna tider ----------
+
+select pg_temp.rakna('R2 1.3 familjen ser båda timmarna i A:s tvåtimmarspass', '00000000-0000-4000-8000-0000000000f4',
+  $q$select count(*) from public.upptagna_tider('00000000-0000-4000-8000-0000000000a1',
+       (now() at time zone 'Europe/Stockholm')::date + 45, (now() at time zone 'Europe/Stockholm')::date + 45)
+       where tid in ('10:00', '11:00')$q$, 2);
+select pg_temp.rakna('R2 1.3 ett avbokat pass är inte upptaget', '00000000-0000-4000-8000-0000000000f4',
+  $q$select count(*) from public.upptagna_tider('00000000-0000-4000-8000-0000000000a1',
+       (now() at time zone 'Europe/Stockholm')::date + 46, (now() at time zone 'Europe/Stockholm')::date + 46)$q$, 0);
+select pg_temp.prova('R2 1.3 A ser sina egna tider', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.upptagna_tider('00000000-0000-4000-8000-0000000000a1',
+          (now() at time zone 'Europe/Stockholm')::date + 45, (now() at time zone 'Europe/Stockholm')::date + 45)$q$], 'ok');
+select pg_temp.prova('R2 1.3 B frågar om A:s tider', '00000000-0000-4000-8000-0000000000b1',
+  array[$q$select * from public.upptagna_tider('00000000-0000-4000-8000-0000000000a1',
+          current_date, current_date + 60)$q$], 'nekad');
+select pg_temp.prova('R2 1.3 en familj frågar om en studiehjälpare den inte har', '00000000-0000-4000-8000-0000000000f2',
+  array[$q$select * from public.upptagna_tider('00000000-0000-4000-8000-0000000000b1',
+          current_date, current_date + 60)$q$], 'nekad');
+select pg_temp.prova('R2 1.3 anon frågar om tider', null,
+  array[$q$select * from public.upptagna_tider('00000000-0000-4000-8000-0000000000a1',
+          current_date, current_date + 60)$q$], 'nekad');
+
+-- ---------- 1.4 hål 3: rapporten hör till passets elev ----------
+
+select pg_temp.prova('HÅL 3 A rapporterar ett pass på fel egen elev', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, lesson_date, raw_notes, narvaro)
+          values ('00000000-0000-4000-8000-0000000006d1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000b2004', (now() at time zone 'Europe/Stockholm')::date - 3, 'x', 'narvarande')$q$], 'nekad');
+select pg_temp.prova('HÅL 3 A rapporterar ett pass som saknar elev', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, lesson_date, raw_notes, narvaro)
+          values ('00000000-0000-4000-8000-0000000006a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000b2005', (now() at time zone 'Europe/Stockholm')::date - 4, 'x', 'narvarande')$q$], 'nekad');
+select pg_temp.prova('HÅL 3 A flyttar en rapport till ett annat pass', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.lesson_reports set booking_id = '00000000-0000-4000-8000-0000000b2007'
+            where id = '00000000-0000-4000-8000-0000000a2001'$q$], 'nekad');
+select pg_temp.prova('HÅL 3 A flyttar en rapport till en annan egen elev', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.lesson_reports set student_id = '00000000-0000-4000-8000-0000000006d1'
+            where id = '00000000-0000-4000-8000-0000000a2001'$q$], 'nekad');
+select pg_temp.prova('HÅL 3 A rapporterar sitt eget pass på rätt elev', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, lesson_date, raw_notes, narvaro)
+          values ('00000000-0000-4000-8000-0000000006a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000b2004', (now() at time zone 'Europe/Stockholm')::date - 3, 'x', 'narvarande')$q$], 'ok');
+select pg_temp.prova('HÅL 3 A ändrar texten i sin egen rapport', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.lesson_reports set raw_notes = 'rättad' where id = '00000000-0000-4000-8000-0000000a2001'$q$], 'ok');
+select pg_temp.prova('HÅL 3 A föreslår ett pass utan elev', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, created_by, wanted_date, wanted_time, duration_min, status)
+          values ('00000000-0000-4000-8000-0000000000f4', '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000000a1',
+                  (now() at time zone 'Europe/Stockholm')::date + 50, '07:00', 60, 'requested')$q$], 'nekad');
+select pg_temp.prova('HÅL 3 familjen bokar ett pass utan elev', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$insert into public.bookings (parent_id, tutor_id, created_by, wanted_date, wanted_time, duration_min, status)
+          values ('00000000-0000-4000-8000-0000000000f4', '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000000f4',
+                  (now() at time zone 'Europe/Stockholm')::date + 51, '07:00', 60, 'requested')$q$], 'nekad');
+select pg_temp.prova('HÅL 3 familjen bokar ett pass för sitt barn', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+          values ('00000000-0000-4000-8000-0000000000f4', '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000006a1',
+                  '00000000-0000-4000-8000-0000000000f4', (now() at time zone 'Europe/Stockholm')::date + 52, '07:00', 60, 'requested')$q$], 'ok');
+
+-- ---------- 1.5 hål 2: bara en godkänd studiehjälpare kan matchas ----------
+
+select pg_temp.vanta_fel('HÅL 2 admin matchar med en studiehjälpare som inte är godkänd', '00000000-0000-4000-8000-0000000000ad',
+  $q$update public.students set matched_tutor_id = '00000000-0000-4000-8000-0000000000c1', match_status = 'matched'
+       where id = '00000000-0000-4000-8000-0000000006c1'$q$, '23514');
+select pg_temp.vanta_fel('HÅL 2 admin matchar med ett föräldrakonto', '00000000-0000-4000-8000-0000000000ad',
+  $q$update public.students set matched_tutor_id = '00000000-0000-4000-8000-0000000000f2', match_status = 'matched'
+       where id = '00000000-0000-4000-8000-0000000006c1'$q$, '23514');
+select pg_temp.vanta_fel('HÅL 2 admin skapar en elev som redan är matchad med en ej godkänd', '00000000-0000-4000-8000-0000000000ad',
+  $q$insert into public.students (parent_id, name, matched_tutor_id, match_status)
+     values ('00000000-0000-4000-8000-0000000000f4', 'Fel', '00000000-0000-4000-8000-0000000000c1', 'matched')$q$, '23514');
+select pg_temp.prova('HÅL 2 admin matchar med en godkänd studiehjälpare', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.students set matched_tutor_id = '00000000-0000-4000-8000-0000000000b1', match_status = 'matched'
+            where id = '00000000-0000-4000-8000-0000000006c1'$q$], 'ok');
+select pg_temp.prova('HÅL 2 admin byter namn på en matchad elev utan att röra matchningen', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.students set name = 'Nytt namn' where id = '00000000-0000-4000-8000-0000000006a1'$q$], 'ok');
+
+-- ---------- 1.6 studiehjälparen ser bara sina egna elever ----------
+
+select pg_temp.rakna('R2 1.6 A ser sina två elever i familj S', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.students where parent_id = '00000000-0000-4000-8000-0000000000f4'$q$, 2);
+select pg_temp.rakna('R2 1.6 A ser inte syskonet som har B', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.students where id = '00000000-0000-4000-8000-0000000006b1'$q$, 0);
+select pg_temp.rakna('R2 1.6 A ser inte syskonet som väntar', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.students where id = '00000000-0000-4000-8000-0000000006c1'$q$, 0);
+select pg_temp.rakna('R2 1.6 B ser bara sitt barn i familj S', '00000000-0000-4000-8000-0000000000b1',
+  $q$select count(*) from public.students where parent_id = '00000000-0000-4000-8000-0000000000f4'$q$, 1);
+select pg_temp.rakna('R2 1.6 A ser uppdragen för sina elever, inte syskonens', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.uppdrag where kund_id = '00000000-0000-4000-8000-0000000000f4'$q$, 2);
+select pg_temp.rakna('R2 1.6 familjen ser alla sina barn', '00000000-0000-4000-8000-0000000000f4',
+  $q$select count(*) from public.students where parent_id = '00000000-0000-4000-8000-0000000000f4'$q$, 4);
+
+-- ---------- 1.7 utbetalningsmetod ----------
+--
+-- Kontonumren är räknade för hand ur Bankgirots regler, så att proven
+-- inte litar på funktionen de prövar: SEB 5357 + 123456C ger C = 1
+-- (11-modul på 357123456C), Handelsbanken 12345678C ger C = 9.
+
+select pg_temp.prova('R2 1.7 anon lämnar ett konto', null,
+  array[$q$select * from public.spara_utbetalningsmetod('bank', '5357', '1234561')$q$], 'nekad');
+select pg_temp.prova('R2 1.7 insamlingen är stängd när flaggan är av', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.spara_utbetalningsmetod('bank', '5357', '1234561')$q$], 'nekad');
+
+do $$
+begin
+  if to_regclass('public.flaggor') is not null then
+    execute $q$update public.flaggor set aktiv = true where kod = 'utbetalningsmetod'$q$;
+  end if;
+end $$;
+
+select pg_temp.prova('R2 1.7 A lämnar ett giltigt SEB-konto', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.spara_utbetalningsmetod('bank', '5357', '123 456-1')$q$], 'ok');
+select pg_temp.prova('R2 1.7 A lämnar ett giltigt Handelsbankskonto', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.spara_utbetalningsmetod('bank', '6789', '123456789')$q$], 'ok');
+select pg_temp.vanta_fel('R2 1.7 fel kontrollsiffra nekas', '00000000-0000-4000-8000-0000000000a1',
+  $q$select * from public.spara_utbetalningsmetod('bank', '5357', '1234562')$q$, '22023');
+select pg_temp.vanta_fel('R2 1.7 ett okänt clearingnummer nekas', '00000000-0000-4000-8000-0000000000a1',
+  $q$select * from public.spara_utbetalningsmetod('bank', '0100', '1234561')$q$, '22023');
+select pg_temp.prova('R2 1.7 A lämnar ett Swishnummer', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.spara_utbetalningsmetod('swish', null, null, '+46 70-123 45 67')$q$], 'ok');
+select pg_temp.vanta_fel('R2 1.7 ett Swishnummer som inte är ett mobilnummer nekas', '00000000-0000-4000-8000-0000000000a1',
+  $q$select * from public.spara_utbetalningsmetod('swish', null, null, '123 456 78 90')$q$, '22023');
+select pg_temp.prova('R2 1.7 en familj lämnar ett konto', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$select * from public.spara_utbetalningsmetod('bank', '5357', '1234561')$q$], 'nekad');
+select pg_temp.prova('R2 1.7 B lämnar ett konto åt A', '00000000-0000-4000-8000-0000000000b1',
+  array[$q$select * from public.spara_utbetalningsmetod('bank', '5357', '1234561', null, '00000000-0000-4000-8000-0000000000a1')$q$], 'nekad');
+select pg_temp.rakna_efter('R2 1.7 A ser sitt konto maskerat', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.spara_utbetalningsmetod('bank', '5357', '1234561')$q$],
+  $q$select count(*) from public.las_utbetalningsmetod() where bank = 'SEB' and slutar_pa = '4561' and kontrollerad$q$, 1);
+select pg_temp.prova('R2 1.7 B läser A:s konto', '00000000-0000-4000-8000-0000000000b1',
+  array[$q$select * from public.las_utbetalningsmetod('00000000-0000-4000-8000-0000000000a1')$q$], 'nekad');
+select pg_temp.prova('R2 1.7 en familj läser A:s konto', '00000000-0000-4000-8000-0000000000f4',
+  array[$q$select * from public.las_utbetalningsmetod('00000000-0000-4000-8000-0000000000a1')$q$], 'nekad');
+select pg_temp.prova('R2 1.7 A läser tabellen direkt', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.utbetalningsmetod$q$], 'nekad');
+select pg_temp.prova('R2 1.7 A läser hela numret', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.las_utbetalningsmetod_klartext('00000000-0000-4000-8000-0000000000a1')$q$], 'nekad');
+select pg_temp.rakna_efter('R2 1.7 admin läser hela numret och det loggas', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select * from public.spara_utbetalningsmetod('bank', '5357', '1234561', null, '00000000-0000-4000-8000-0000000000a1')$q$,
+        $q$select * from public.las_utbetalningsmetod_klartext('00000000-0000-4000-8000-0000000000a1')$q$],
+  $q$select count(*) from public.audit_logg where handling = 'utbetalningsmetod.lasta'
+       and objekt_id = '00000000-0000-4000-8000-0000000000a1'$q$, 1);
+select pg_temp.rakna_efter('R2 1.7 A tar bort sitt konto', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.spara_utbetalningsmetod('bank', '5357', '1234561')$q$,
+        $q$select public.radera_utbetalningsmetod()$q$],
+  $q$select count(*) from public.las_utbetalningsmetod()$q$, 0);
+select pg_temp.rakna('R2 1.7 kontrollen känner igen banken', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.bankkonto_kontroll('5357', '1234561') where bank = 'SEB' and giltigt$q$, 1);
+
+-- Kontonumret får inte ligga läsbart i tabellen. Provet sparar som A
+-- och tittar sedan på raden som postgres.
+do $$
+declare
+  rad text;
+begin
+  if to_regprocedure('public.spara_utbetalningsmetod(text, text, text, text, uuid)') is null then
+    insert into utfall (test, ok, detalj) values ('R2 1.7 kontonumret ligger krypterat', false, 'funktionen finns inte');
+    return;
+  end if;
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+  perform public.spara_utbetalningsmetod('bank', '5357', '1234561');
+  reset role; perform set_config('request.jwt.claims', null, true);
+  select encode(uppgift, 'escape') into rad from public.utbetalningsmetod
+   where tutor_id = '00000000-0000-4000-8000-0000000000a1';
+  insert into utfall (test, ok, detalj)
+  values ('R2 1.7 kontonumret ligger krypterat', rad is not null and position('1234561' in rad) = 0,
+          case when rad is null then 'ingen rad' else 'klartext finns: ' || (position('1234561' in rad) > 0)::text end);
+exception when others then
+  reset role; perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj) values ('R2 1.7 kontonumret ligger krypterat', false, 'fel ' || sqlstate || ': ' || sqlerrm);
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+do $$
+begin
+  if to_regclass('public.flaggor') is not null then
+    execute $q$update public.flaggor set aktiv = false where kod = 'utbetalningsmetod'$q$;
+  end if;
+end $$;
+
+select pg_temp.rakna('R2 1.7 det man lämnat går att se när flaggan är av', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.las_utbetalningsmetod()$q$, 1);
+select pg_temp.rakna_efter('R2 1.7 och att ta bort när flaggan är av', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select public.radera_utbetalningsmetod()$q$],
+  $q$select count(*) from public.las_utbetalningsmetod()$q$, 0);
+
+-- ---------- 1.8 hål 1: en registrering blir aldrig admin ----------
+
+do $$
+declare
+  rollen text;
+  tstat  text;
+begin
+  insert into auth.users (id, email, raw_user_meta_data) values
+    ('00000000-0000-4000-8000-0000000000e1', 'rls-admin-forsok@example.invalid', '{"role":"admin","full_name":"Fusk"}'),
+    ('00000000-0000-4000-8000-0000000000e2', 'rls-ny-tutor@example.invalid',     '{"role":"tutor","full_name":"Ny"}');
+  select role into rollen from public.profiles where id = '00000000-0000-4000-8000-0000000000e1';
+  insert into utfall (test, ok, detalj)
+  values ('HÅL 1 en registrering med rollen admin blir en familj', rollen = 'parent', 'role: ' || coalesce(rollen, 'ingen profil'));
+  select t.status into tstat from public.tutor_profiles t where t.id = '00000000-0000-4000-8000-0000000000e2';
+  insert into utfall (test, ok, detalj)
+  values ('R2 1.8 en ny studiehjälpare får en profil i väntläge', tstat = 'pending', 'status: ' || coalesce(tstat, 'ingen profil'));
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
 -- to_regprocedure ger null för en funktion som inte finns, så att
 -- filen går att köra även före migrationerna (raden blir då röd).
 insert into utfall (test, ok, detalj)
@@ -1885,7 +2249,11 @@ from unnest(array[
   'public.frys_forslaget()', 'public.ai_taket_racker()',
   'public.matchningspoang(text[], text, text[], text[], integer, integer, jsonb)',
   'public.stampla_matchningen()', 'public.stampla_avbokningen()',
-  'public.ai_analys(integer)', 'public.ai_avvikelser()'
+  'public.ai_analys(integer)', 'public.ai_avvikelser()',
+  'public.stampla_flaggan()', 'public.flagga_pa(text)', 'public.stampla_forberedelsen()',
+  'public.skydda_rapportens_pass()', 'public.pass_kraver_elev()', 'public.matchning_kraver_godkand()',
+  'intern.prova_bankkonto(text, text)', 'intern.mod10_ok(text)', 'intern.mod11_ok(text)',
+  'intern.swishnummer(text)'
 ]) f;
 
 insert into utfall (test, ok, detalj)
@@ -1899,7 +2267,11 @@ from unnest(array[
   'public.ekonomiska_avvikelser()', 'public.kor_kontrollerna()',
   'public.ai_verktyg(text, jsonb)', 'public.godkann_forslag(uuid)',
   'public.avvisa_forslag(uuid, text)', 'public.matchningsforslag(uuid)',
-  'public.audit_sok(text, uuid, date, date, boolean, integer, integer)'
+  'public.audit_sok(text, uuid, date, date, boolean, integer, integer)',
+  'public.upptagna_tider(uuid, date, date)', 'public.far_forbereda_passet(uuid)',
+  'public.bankkonto_kontroll(text, text)', 'public.spara_utbetalningsmetod(text, text, text, text, uuid)',
+  'public.las_utbetalningsmetod(uuid)', 'public.radera_utbetalningsmetod(uuid)',
+  'public.las_utbetalningsmetod_klartext(uuid)'
 ]) f;
 
 insert into utfall (test, ok, detalj)
@@ -1911,7 +2283,11 @@ from unnest(array[
   'public.las_skatteuppgifter(uuid)', 'public.radera_skatteuppgifter(uuid)',
   'public.ekonomiska_avvikelser()', 'public.kor_kontrollerna()',
   'public.ai_verktyg(text, jsonb)', 'public.godkann_forslag(uuid)',
-  'public.avvisa_forslag(uuid, text)'
+  'public.avvisa_forslag(uuid, text)',
+  'public.upptagna_tider(uuid, date, date)', 'public.far_forbereda_passet(uuid)',
+  'public.bankkonto_kontroll(text, text)', 'public.spara_utbetalningsmetod(text, text, text, text, uuid)',
+  'public.las_utbetalningsmetod(uuid)', 'public.radera_utbetalningsmetod(uuid)',
+  'public.las_utbetalningsmetod_klartext(uuid)'
 ]) f;
 
 select test, ok, detalj from utfall order by nr;

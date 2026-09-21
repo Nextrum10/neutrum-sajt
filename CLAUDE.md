@@ -22,15 +22,20 @@ Det här är inte en katalog man bläddrar i. Nextrum matchar.
 
 1. Familjen skickar **intresseanmälan** → rad i `leads`
 2. Ni ringer och väljer studiehjälpare
-3. Familjen skapar konto på `foralder.html`
-4. `admin.html` → **Familjer** → välj hjälpare i rullgardinen. Sätter
-   `matched_tutor_id` och `match_status` **samtidigt** — förr var det
-   två kolumner i Table Editor och satte man bara den ena såg familjen
-   en låst vy utan att förstå varför
-5. Föräldern lägger in barnet, hjälparen skriver studieplanen
+3. Familjen får ett konto: antingen registrerar den sig på
+   `foralder.html`, eller så skapar admin familjen och barnen direkt
+   (**Familjer → Ny familj**, eller "Skapa elev" på anmälan), och
+   `bjud-in` skickar en inbjudan. Profilen finns så fort inbjudan är
+   skickad, så barnen kan läggas in direkt.
+4. `admin.html` → **Matchning** → välj studiehjälpare **per elev**.
+   Sätter `matched_tutor_id` och `match_status` på barnet samtidigt.
+   Bara en **godkänd** studiehjälpare går att matcha (Fas 1.5, i
+   databasen). Familjens `profiles.matched_tutor_id` är en härledd
+   kopia (se `FAMILJ-OCH-ELEV.md`)
+5. Studiehjälparen skriver studieplanen
 
-Föräldravyn låses upp först efter steg 4. Innan dess: väntläge, inte
-trasig sida.
+Föräldravyn låses upp först när något barn är matchat. Innan dess:
+väntläge, inte trasig sida.
 
 En studiehjälpare syns publikt först när admin satt läget till
 **Godkänd**.
@@ -40,6 +45,8 @@ En studiehjälpare syns publikt först när admin satt läget till
 | Ord | Betyder |
 |---|---|
 | studiehjälpare | den som håller passet. Aldrig "lärare" utåt — `larare.html` heter så av historiska skäl |
+| familj | kontot (`profiles`, rollen parent). Betalar, tar emot fakturor och meddelanden, är kund |
+| elev | barnet (`students`). Loggar aldrig in. Matchningen och allt pedagogiskt hänger på eleven. Varför båda finns: `FAMILJ-OCH-ELEV.md` |
 | pass | ett bokat tillfälle (`bookings`). Hela timmar, 1–3 |
 | rapport | `lesson_reports`. **Passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
@@ -322,6 +329,31 @@ att visa **rätt sida**, inte för att skydda data.
   Sökvägen finns bara i raden. Försvinner raden först blir filen omöjlig
   att hitta och omöjlig att städa. Det stod som en kommentar i
   adminvyn långt innan koden faktiskt gjorde det (Fas 9.2).
+- **Ge aldrig behörighet på `profiles.role`.** Rollen kommer ur
+  registreringens metadata, som den som registrerar sig skriver själv.
+  Grinden är `is_admin()`, matchningen eller `tutor_profiles.status`.
+  Sedan program 2 Fas 1.8 blir en registrering bara `parent` eller
+  `tutor`, men en policy som frågar efter role är ändå fel ställe.
+- **Pass, rapport och elev hänger ihop** (program 2 Fas 1.4). Ett
+  pass måste ha en elev, en rapport med `booking_id` måste gälla
+  passets elev och studiehjälpare, och en rapports pass och elev går
+  inte att byta efteråt. Triggrarna ligger BREDVID `skydda_bokningsfalt`
+  och policyerna, de ändrar dem inte.
+- **Bara en godkänd studiehjälpare kan matchas** (1.5), också av
+  admin. Det är grinden som gör det ofarligt att bjuda in anställda
+  direkt: ett konto på fel adress kan inte matchas förrän någon
+  godkänt det.
+- **Flaggor** (1.1). Det som väntar på ett beslut om affär, juridik
+  eller pengar byggs bakom en rad i `flaggor`, av som förval, med
+  texten `vantar_pa`. En flagga som ska stoppa något stoppar det i
+  databasen (`flagga_pa()` i funktionen), inte bara knappen.
+- **Förberedelsen inför ett pass** ligger i `pass_forberedelse`, inte
+  på `bookings`, så att F-6 aldrig behöver vidgas. Länken är bara
+  https till en känd mötestjänst; listan står i villkoret.
+- **Utbetalningsmetoden** (1.7) följer `kund_skatteuppgifter`: inga
+  policyer, bara funktioner, krypterad med en nyckel i Vault, hela
+  numret bara för admin och varje läsning loggad. Migrationen väntar i
+  `supabase/vantande-migrationer/` på ett uttryckligt ja.
 - **Notishemligheten ligger i `notis_konfig`, inte i en secret.** En
   secret och en webhook-header i två olika fönster glider isär, och då
   svarar funktionen 401 på varje anmälan emellan — de mejlen kommer
@@ -351,7 +383,7 @@ tillbaka en kopia.**
 |---|---|---|
 | `fakturering` | Månadskörning: faktura per familj, underlag per hjälpare | Schema (`x-fakturering-nyckel`) eller admin |
 | `faktura-utskick` | Skickar fakturan. **Mejlet först, statusen sedan** | Knapp i adminvyn |
-| `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
+| `bjud-in` | Auth-inbjudan till en familj eller en befintlig studiehjälpare. Rollen vitlistas i funktionen: `tutor` eller `parent`, allt annat blir `parent`. En inbjuden studiehjälpare hamnar i väntläge | Adminvyn |
 | `lead-notis`, `pass-notis`, `meddelande-notis` | Aviseringar | **Databaswebhook**, `verify_jwt` av, delad hemlighet i header |
 | `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |

@@ -83,6 +83,12 @@ Postgres RLS kan inte begränsa enskilda kolumner. Därför vaktas
 som vägrar ändringen från en inloggad session. Admin sätts med SQL, inte
 från någon vy.
 
+Ge aldrig behörighet på `profiles.role`: den kommer ur registreringens
+metadata. Grinden är `is_admin()`, matchningen eller
+`tutor_profiles.status`. Bara en godkänd studiehjälpare kan matchas,
+också av admin, och en rapport gäller alltid passets elev. Det som väntar
+på ett beslut byggs bakom en rad i `flaggor`, av som förval.
+
 `invoices` och `payouts` har med flit ingen INSERT-policy för användare.
 `integrationer` har ingen skrivpolicy alls: adminvyn rapporterar status,
 den kopplar inte.
