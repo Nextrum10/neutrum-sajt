@@ -1,37 +1,45 @@
 # ============================================================
-# NEXTRUM — Supabase-konfiguration
+# NEXTRUM — Supabase CLI:s konfiguration
 #
-# Den här filen finns för EN inställning: verify_jwt.
+# FILEN FINNS FÖR ATT EN DRIFTSÄTTNING INTE SKA SLÅ PÅ JWT-KRAVET
 #
-# Fyra av funktionerna anropas utan inloggning och måste därför ha
-# JWT-kravet avstängt i porten. Den inställningen har hittills bara
-# funnits i Supabases webbgränssnitt, alltså ingenstans som går att
-# läsa, granska eller återskapa ur repot. En `supabase functions
-# deploy` från main hade slagit på kravet igen — och de tre
-# notisfunktionerna anropas av databaswebhookar, som inte har någon
-# som läser svaret. Mejlen hade slutat komma, tyst.
+# Sex funktioner anropas av något som inte har en inloggad användare:
+# en databaswebhook, en trigger, ett pg_cron-jobb eller en knapp i ett
+# mejlprogram. De har därför verify_jwt av.
 #
-# verify_jwt = false betyder INTE att funktionen är öppen. Alla fyra
-# gör sin egen kontroll i koden, och den är hårdare än portens:
+# Den inställningen satt länge BARA i dashboarden. En `supabase
+# functions deploy` läser den här filen, och saknas raden för en
+# funktion får den CLI:ns förval — verify_jwt = true. Då svarar
+# funktionen 401 på varje anrop, och eftersom anroparen är en trigger
+# eller ett schema finns ingen människa som ser felet: anmälningarna
+# slutar mejlas, kön slutar tömmas, och det enda spåret är
+# statuskoden i net._http_response.
 #
-#   · lead-notis, pass-notis, meddelande-notis
-#     delad hemlighet i en header, hämtad ur notis_konfig. Den ligger
-#     i en tabell och inte i en secret med flit: en secret och en
-#     webhook-header i två olika fönster glider isär, och då svarar
-#     funktionen 401 på varje anmälan emellan.
+# LÄGGER DU TILL EN FUNKTION SOM INTE HAR INLOGGNING: lägg raden här
+# i samma ändring som du driftsätter den. Listan här är sanningen,
+# inte dashboarden.
 #
-#   · fakturering
-#     x-fakturering-nyckel jämförd i konstant tid, ELLER en inloggad
-#     admin vars behörighet läses med anroparens egen token innan
-#     service_role används till något.
 #
-# Alla andra funktioner kräver JWT, vilket är Supabases förval. De
-# står därför inte här: en lista som upprepar förvalet blir en lista
-# som glöms bort när en ny funktion tillkommer.
+# VAD SOM SKYDDAR DEM I STÄLLET
+#
+# Ingen av dem är öppen. Fem kräver en delad hemlighet i en egen
+# header, jämförd i konstant tid mot en rad i databasen. Den sjätte,
+# notis-avanmal, kräver en HMAC-signerad token i länken och kan bara
+# stänga AV en notis, aldrig slå på någon och aldrig läsa något.
+#
+# Att verify_jwt är av betyder alltså inte att funktionen är
+# oskyddad. Det betyder att skyddet inte är Supabases Auth.
 # ============================================================
 
 project_id = "ddkfiuvcppalutfulvbi"
 
+# Månadskörningen. Anropas av ett schema med x-fakturering-nyckel,
+# eller av en inloggad admin (funktionen prövar båda vägarna själv).
+[functions.fakturering]
+verify_jwt = false
+
+# Aviseringarna. Anropas av databaswebhooks och triggrar, som skickar
+# hemligheten ur notis_konfig i x-nextrum-notis.
 [functions.lead-notis]
 verify_jwt = false
 
@@ -41,25 +49,14 @@ verify_jwt = false
 [functions.meddelande-notis]
 verify_jwt = false
 
-[functions.fakturering]
-verify_jwt = false
-
-# ------------------------------------------------------------
-# Två funktioner till kör utan JWT i driften: notis-ko och
-# notis-avanmal. De står här trots att deras KÄLLKOD inte finns i
-# något git-träd — de driftsattes från en session vars gren aldrig
-# pushades, och deras databashalva är inte körd (notis_konfig saknar
-# kolumnerna de läser).
-#
-# Raderna finns här av ett enda skäl: om någon kör `supabase
-# functions deploy` från det här repot ska inte JWT-kravet slås på
-# för dem också. Det löser inte att koden saknas — det ska redas ut
-# separat, och CLAUDE.md beskriver läget — men det hindrar att en
-# deploy gör saken värre.
-# ------------------------------------------------------------
-
+# Kö-arbetaren. Väcks av pg_cron-jobbet notis-minut genom
+# notis_konfig.arbetare_url, med samma hemlighet i headern.
 [functions.notis-ko]
 verify_jwt = false
 
+# Avanmälan ur ett mejl. Måste fungera utan inloggning — mottagaren
+# är ofta inte inloggad, och mejlprogrammets One-Click-knapp
+# (RFC 8058) POSTar utan att någon öppnar sajten. Skyddet är
+# signaturen i tokenen.
 [functions.notis-avanmal]
 verify_jwt = false

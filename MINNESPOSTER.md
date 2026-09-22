@@ -91,6 +91,13 @@ Notishemligheten ligger i tabellen `notis_konfig`, inte i en secret. En
 secret och en webhook-header i två fönster glider isär, och då svarar
 funktionen 401 på varje anmälan emellan.
 
+Ett notismejl säger ATT något hänt, aldrig VAD. `renData()` i
+`_delad/notiser/typer.ts` släpper bara igenom datum, tid, ämne och
+förnamn; allt annat i raden läses aldrig, så ingen meddelandetext kan nå
+ett mejl hur mallen än formuleras. Varje namn kapas dessutom till
+förnamn utan punkter — `full_name` är fritext, och ett "namn" som ser ut
+som en adress blir annars en länk i ett mejl med godkänd DKIM.
+
 CSP: `/admin`, `/larare` och `/foralder` har `script-src 'self'`. **Ingen
 inline-JavaScript i de tre sidorna.** Inga `<script>` utan `src`, inga
 `onclick`, inga `javascript:`-adresser. `verktyg/kolla-csp.py` vaktar det
@@ -122,6 +129,14 @@ En rättelse är en ny migration, inte en omskriven historia.
 
 Fallgropar i arkivet: `schema-v22.sql` kördes aldrig, kör den inte, den
 är ersatt av v25. `schema.sql` rensar tabellerna, bara i tom miljö.
+
+**Samma sak gäller edge functions.** `apply_migration` och `functions
+deploy` ändrar driften direkt; git är ett skilt steg som ingen kontroll
+tvingar fram. Runda 2 låg därför en tid enbart i driften: fjorton körda
+migrationer utan filer, och två ACTIVE funktioner som inte fanns i någon
+gren. Listan över det som faktiskt kör hämtas med `list_migrations` och
+`list_edge_functions`, inte ur mappen. **Driftsätter du något, commit:a
+det i samma arbetspass.**
 
 ---
 

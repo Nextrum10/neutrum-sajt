@@ -172,7 +172,10 @@ Tabeller: `profiles`, `students`, `tutor_profiles`, `tutor_availability`,
 `agent_korningar`, `agent_steg`, `admin_noteringar`, `foretagsfakta`,
 och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
 `kund_skatteuppgifter`. Fas 8–9 la till `ai_forslag`, `ai_konfig` och
-`handlingar`.
+`handlingar`. Runda 2 la till notisernas sju: `notiser` (i vyn),
+`notis_utskick` (kön), `notis_val` (av och på per person, typ och
+kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
+`notis_fel`.
 
 Schemat **`intern`** (Fas 10.3) bär funktioner databasen behöver för
 sin egen skull och som inte är ett API. PostgREST exponerar det inte.
@@ -256,6 +259,58 @@ kör alla fyra från fliken System → Automationer.
    konverteringar utan `leads.kund_id` räknas i `ej_sparbara`. Inget av
    det bakfylldes: en gissad siffra räknas med i medelvärdet utan att
    någon ser att den är gissad.
+
+### Notiserna (Runda 2)
+
+Vägen är alltid densamma, och ingen del av den kan hoppas över:
+
+```
+trigger på bookings/messages/lesson_reports
+  → intern.notis_skapa()   skriver raden i notiser (syns i vyn)
+  → intern.notis_koa()     lägger ett utskick i notis_utskick
+  → pg_cron "notis-minut"  varje minut, notis_minut()
+  → notis-ko               notis_utskick_ta() → Resend → notis_utskick_klar()
+```
+
+Sju regler bär systemet:
+
+1. **Ingen får en notis om sin egen åtgärd.** `intern.notis_skapa()`
+   returnerar tyst när mottagaren är `auth.uid()`. Det är därför
+   mallarna aldrig säger VEM som gjorde något: när admin ändrar ett
+   pass får BÅDA parterna notisen, och "Tove har flyttat passet" hade
+   då varit fel för den ena.
+2. **Mallarna ser bara `RenData`.** `renData()` i
+   `_delad/notiser/typer.ts` plockar ut datum, tid, ämne och förnamn.
+   Kommer det en nyckel till — `body`, `note`, `location`, ett
+   efternamn — följer den inte med, för den läses aldrig. Ingen
+   brödtext kan hamna i ett mejl hur mallen än formuleras.
+3. **Varje namn går genom `fornamn()`**, som speglar
+   `intern.fornamn()`: första ordet, bara bokstäver och bindestreck,
+   högst 30 tecken. `full_name` är fritext utan gräns, och ett "namn"
+   som ser ut som en adress blir annars en klickbar länk i Gmail, i
+   ett mejl från vår egen domän med godkänd DKIM.
+4. **Mejl är på som förval, SMS av.** `notis_vill()` faller tillbaka
+   på `p_kanal = 'mejl'` när personen inte valt något. Avanmälan
+   skriver bara i `notis_val`, aldrig i `profiles`.
+5. **`rapport` mejlas aldrig.** Den står i `notis_typer()` men inte i
+   `notis_mejlbara()` — den syns bara i vyn. Listorna finns också i
+   `typer.ts` för att mallarna ska gå att prova utan databas; **ändras
+   den ena ska den andra ändras i samma ändring.**
+6. **Avanmälningstokenen har ingen utgångstid, med flit.** En länk i
+   ett mejl från i våras ska fortfarande fungera. Byts
+   `notis_konfig.avregistreringsnyckel` slutar alla gamla länkar gälla
+   på en gång, och inget annat händer. Prefixet `avanmal:v2:` gör att
+   en signatur från den gamla varianten aldrig kan läsas som en ny.
+7. **Sandlådan är `notis_drift.mejl_sandlada`.** Är den satt går allt
+   dit i stället för till mottagaren, och ämnesraden märks. SMS har
+   samma sak i `sms_lage`, som står på `prov` och då bara torrkör.
+   **Sätt sandlådan innan du provar något som köar.**
+
+`notis_installning` styr takten: påminnelser 24 och 1 timme före,
+chattmejl samlas i 10 minuter, passändringar i 3. Samlingen sker i
+databasen genom `samlingsnyckel`, inte i arbetaren — fem repliker på
+tre minuter blir ett mejl, och den som får fem mejl slutar läsa det
+sjätte.
 
 ---
 
@@ -345,23 +400,37 @@ tillbaka en kopia.**
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
 | `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
+| `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
+| `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
 
-**Två funktioner i drift finns inte i repot:** `notis-ko` och
-`notis-avanmal` (båda ACTIVE, `verify_jwt` av). Deras kopia av
-`_delad/mejl.ts` är dessutom NYARE än repots, och de bär filer
-(`_delad/notiser/*`, `notis-ko/arbetare.ts`) som inte finns i någon
-gren. Deras databasdel är inte körd: `notis_konfig` har bara `id`,
-`hemlighet` och `uppdaterad`, och `notis_hamta`/`notis_klar` saknas.
-`notis-ko` säger i sitt eget filhuvud att den väcks av ett
-pg_cron-jobb som heter `notis_vack_arbetaren` — en halvbyggd version
-av det Fas 7 bygger. **Reda ut dem (hämta hem koden eller ta bort dem
-ur driften) innan pg_cron installeras**, annars får en halv
-implementation ett schema.
+`supabase/config.toml` bär `verify_jwt = false` för de sex funktioner
+som anropas utan inloggad användare. Inställningen satt länge bara i
+dashboarden, och en `supabase functions deploy` utan filen hade slagit
+på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och
+eftersom anroparen är ett schema finns ingen som ser det. **Filen är
+sanningen, inte dashboarden.** Lägger du till en funktion utan
+inloggning: skriv raden där i samma ändring.
 
-`supabase/config.toml` saknas också. Sex funktioner har
-`verify_jwt = false` bara i dashboarden, och en `supabase functions
-deploy` utan filen slår på JWT-kravet igen — då svarar notistriggrarna
-401.
+### Notissystemet kom hem i efterhand
+
+`notis-ko` och `notis-avanmal` låg ACTIVE i driften utan att finnas i
+någon gren, och fjorton migrationer (`r2_fas1_1` till `r2_fas2_4`)
+hade körts utan att bli filer. Den här filen varnade för precis det
+och sa att det skulle redas ut **innan pg_cron installerades**.
+pg_cron installerades ändå. Varningen hann bli osann innan någon
+läste den, och beskrev sedan en äldre version av funktionerna: en
+`arbetare.ts` som inte längre finns, och en databasdel som sades vara
+okörd när den i själva verket var körd.
+
+Allt är nu hämtat hem ordagrant, varje migration kontrollerad mot
+databasens md5-summa och funktionsfilerna diffade mot driften.
+
+**Lärdomen är inte "kom ihåg att commit:a".** Den är att
+`apply_migration` och `functions deploy` ändrar driften direkt, medan
+git är ett skilt steg som ingen kontroll tvingar fram. Två system kan
+alltså glida isär utan att något blir rött. Kör frågan i avsnitt 5
+innan du tror på filerna — och när du driftsatt något, commit:a det
+i samma arbetspass, inte i nästa.
 
 ### Agentregeln
 
