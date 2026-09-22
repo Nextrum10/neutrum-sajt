@@ -668,6 +668,11 @@ window.NXStudie = (function () {
 
     function visa(önskad) {
       var vald = giltig(önskad);
+      /* Läses FÖRE bytet. Att gömma en sektion ändrar sidhöjden, och
+         då klämmer webbläsaren scrollen på egen hand — den enda
+         förflyttning vi vill veta om nedan. */
+      var föreY = window.scrollY;
+
       sektioner.forEach(function (s) { s.hidden = s.dataset.sek !== vald; });
       länkar.forEach(function (a) {
         var här = a.dataset.sek === vald;
@@ -676,17 +681,29 @@ window.NXStudie = (function () {
         else a.removeAttribute('aria-current');
       });
 
-      /* Vid första ritningen står man redan högst upp. Att scrolla
-         då skulle rycka undan sidan medan den laddar.
+      /* Ett sektionsbyte flyttar INTE sidan.
 
-         Byter man sektion scrollas SEKTIONEN fram, inte sidans topp.
-         Förut hamnade man ovanför heron och fick scrolla ned till det
-         man just klickat på, varje gång. scroll-padding-top i
-         nextrum.css håller rubriken fri från den fasta toppraden. */
+         Förut scrollades den nya sektionen fram vid varje byte. Med
+         scroll-behavior:smooth i nextrum.css blev det en resa uppåt
+         för varje klick i menyn, på varje "Visa alla" och på varje
+         kort i hälsningen — och eftersom sidhöjden ändras i samma
+         ögonblick som sektionen byts hann animeringen dessutom landa
+         fel: i provbänken slutade ett klick på "Dina tider" 1253px
+         ned i en sektion som just öppnats.
+
+         Kvar står bara det som sidan inte kan lösa själv: blev den
+         nya sektionen så mycket kortare att webbläsaren KLÄMDE ned
+         scrollen, hamnar man annars i sektionens slut utan att ha
+         sett dess början. Då — och bara då — läggs sidan vid
+         sektionens början, utan animering. 'instant' och inte 'auto':
+         'auto' läser scroll-behavior ur CSS, och den är smooth. */
       if (!första) {
         var sektion = rot.querySelector('section[data-sek="' + vald + '"]');
-        if (sektion) sektion.scrollIntoView({ block: 'start', behavior: 'auto' });
-        else window.scrollTo({ top: 0, behavior: 'auto' });
+        if (sektion && window.scrollY < föreY) {
+          var topp = sektion.getBoundingClientRect().top + window.scrollY;
+          try { window.scrollTo({ top: topp, behavior: 'instant' }); }
+          catch (e) { window.scrollTo(0, topp); }
+        }
         var rubrik = rot.querySelector('section[data-sek="' + vald + '"] h2, section[data-sek="' + vald + '"] h5');
         if (rubrik) {
           rubrik.setAttribute('tabindex', '-1');
