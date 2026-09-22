@@ -36,7 +36,7 @@
 // ============================================================
 
 import Anthropic from 'npm:@anthropic-ai/sdk@0.124.0';
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.116.0';
 import {
   CORS, json, kravAdmin, serviceklient, hamta, somData,
   granskaKallor, startaKorning, avslutaKorning, koerSlinga, MAX_STEG,

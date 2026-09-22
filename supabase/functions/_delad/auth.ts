@@ -10,7 +10,24 @@
 // förbi RLS, och en kontroll som ligger efter den är ingen kontroll.
 // ============================================================
 
-import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+/* VERSIONEN ÄR PINNAD, och det är hela poängen.
+
+   Raden löd förut @2 — alltså "vad esm.sh råkar mena med tvåan just
+   nu". CI cachar ingenting och hämtar om vid varje körning, så den
+   dagen paketets typer ändrades föll `deno check` med femton
+   TS7006 i ekonomi och fakturering: .select() slutade ge data en typ,
+   och det i filer ingen hade rört på flera veckor.
+
+   Samma fälla som frontend redan gått i. Biblioteket där låg på
+   unpkg som @2 och flyttade sig från 2.115.0 till 2.116.0 av sig
+   själv under en timmes arbete; det ligger nu vendorat i
+   bibliotek/supabase-js-2.116.0.js. Edge-funktionerna pinnas till
+   SAMMA version, så att de två inte kan glida isär.
+
+   Uppgradering är därmed ett beslut: byt versionen här och i
+   bibliotek/, kör proven, driftsätt. Inte något som händer medan
+   ingen tittar. */
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.116.0';
 import { json } from './http.ts';
 
 /** Klient som agerar som den inloggade. RLS gäller. */

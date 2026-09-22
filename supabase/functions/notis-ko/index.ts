@@ -28,7 +28,7 @@
 // 46elks som beroenden, så att det går att testa utan någon av dem.
 // ============================================================
 
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.116.0';
 import { CORS, db, hemlighetOk, json } from '../_delad/notis.ts';
 import { preflight } from '../_delad/http.ts';
 import { skickaViaResend } from '../_delad/mejl.ts';
