@@ -220,13 +220,17 @@ Vad som återstår, i ordning:
    `betald_at`. Den **måste** verifiera Stripes signatur; en webhook utan
    signaturkontroll är en adress där vem som helst kan påstå att en faktura är
    betald.
-4. **Stripe Connect för utbetalningar. Bygg inte det här än.** Står
-   `foretagsfakta.studiehjalpare_form` kvar på `oklart` vet ingen om ersättningen
-   är lön eller ett uppdragsarvode, och en Connect-transfer är inte en
-   löneutbetalning. Knappen under Ersättning är dessutom **borttagen** sedan den
-   anropade `stripe-konto`, en funktion som aldrig byggdes. Kolumnerna
-   `stripe_account_id` och `stripe_klar` finns kvar, men `stripe_klar` är en enda
-   boolean där det behövs fem tillstånd. Skissen har resonemanget.
+4. **Stripe Connect för utbetalningar. Bygg inte tillbaka det här.** Det byggdes
+   en gång (Fas 12.1–12.4) och togs bort igen (Fas 12.5): studiehjälparen får
+   betalt den 25:e som en löning, och en Connect-transfer är inte en
+   löneutbetalning. Så länge `foretagsfakta.studiehjalpare_form` står på `oklart`
+   vet dessutom ingen om ersättningen är lön eller ett uppdragsarvode, och det är
+   den frågan som avgör vad utbetalningen ens ÄR — inte vilken teknik som flyttar
+   pengarna. Knappen under Ersättning och funktionen `stripe-konto` är borta.
+   Kolumnerna `stripe_account_id`, `stripe_klar` och `stripe_*` på
+   `tutor_profiles` står kvar men är märkta OANVÄND i databasen
+   (`20260922205035_fas12_5_connect_ur_betalvagen.sql`). Skissen och dess
+   efterskrift har resonemanget.
 
 Platsen där punkt 1–2 ska in är utmärkt med en kommentar i
 `supabase/functions/fakturering/index.ts`, längst ned.
@@ -316,7 +320,9 @@ hinner säga ifrån innan pengarna går. Den ändrar ingen status — att visa e
 
 **Själva överföringen finns inte.** Det finns ingen betaltjänst kopplad, så ingen
 knapp i adminvyn flyttar pengar. `Utbetald` betyder "vi har betalat från banken", och
-det måste ni ha gjort innan ni sätter det. Se avsnitt 7 för Stripe Connect.
+det måste ni ha gjort innan ni sätter det. Kortbetalningen i avsnitt 9 ändrar inte
+det: den gäller familjens håll, och pengarna stannar hos Nextrum tills ni betalar ut
+dem den 25:e.
 
 ---
 
@@ -334,12 +340,17 @@ kommer med i nästa körning.
 
 ---
 
-## 9. Stripe Connect och betalning per pass (Fas 12)
+## 9. Kortbetalning per pass (Fas 12)
 
-Det här är arkitekturen från `SKISS-BETALNING-STRIPE.md`, byggd: familjen betalar
-med kort när passet är **bekräftat**, betalningen skapas på Nextrums konto, och
-studiehjälparens del går direkt till hens anslutna konto som en destination charge.
-Nextrums del blir en application fee.
+Familjen betalar med kort när passet är **bekräftat**, och HELA beloppet landar
+hos Nextrum. Ingen destination, ingen application fee, inget anslutet konto.
+
+Så var det inte först. Fas 12.1–12.4 byggde säljarens Connect-arkitektur, där
+studiehjälparens del gick direkt till hens eget Stripe-konto som en destination
+charge. **Fas 12.5 tog bort den**, för hjälparen får betalt den 25:e som en
+löning, i en klump, ur `payouts`. En destination charge hade lagt ut hens del vid
+varje pass och månadskörningen hade sedan betalat samma timmar en gång till.
+`SKISS-BETALNING-STRIPE.md` har efterskriften om hur det landade.
 
 **Ingenting av det här är provat mot Stripe.** Koden är typkontrollerad, och
 signaturkontrollen har tretton egna prov, men miljön där den skrevs når inte
@@ -351,10 +362,10 @@ provet. Gör den innan ni rör en skarp nyckel.
 | Del | Läge |
 |---|---|
 | Kolumnerna och skyddet (`20260922155740_fas12_1_*.sql`) | **Applicerad** |
-| `stripe-konto` | **ACTIVE i driften men borttagen ur repot** (Fas 12.5). Ta bort den i dashboarden: Edge Functions → stripe-konto → Delete |
-| `stripe-checkout` | **ACTIVE**, `verify_jwt = true`. Omdriftsätt: Connect är borttaget |
-| `stripe-webhook` | **ACTIVE**, version 1, `verify_jwt = false` |
-| `stripe-aterbetalning` | Fas 12.4. Återbetalning med transfer reversal, bara för admin |
+| `stripe-konto` | **Borttagen**, ur repot och ur driften (Fas 12.5) |
+| `stripe-checkout` | **ACTIVE**, version 3, `verify_jwt = true`. Fas 12.5-koden, utan Connect |
+| `stripe-webhook` | **ACTIVE**, version 3, `verify_jwt = false`. Fas 12.5-koden |
+| `stripe-aterbetalning` | **ACTIVE**, version 2, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
 | `STRIPE_SECRET_KEY` | **Inte satt** — funktionerna svarar "STRIPE_SECRET_KEY saknas i miljön" |
 | `STRIPE_WEBHOOK_SECRET` | **Inte satt** — webhooken svarar 400 på varje leverans |
 | Webhook-endpoint hos Stripe | **Inte skapad** |
@@ -385,8 +396,8 @@ supabase secrets set STRIPE_SECRET_KEY=sk_test_...
 
 ### 9.3 Driftsätt
 
-**Redan gjort.** Kommandona står kvar för en ny miljö, och för när ni
-ändrar något i funktionerna:
+**Redan gjort**, och driften är läst tillbaka och jämförd med repot rad för rad.
+Kommandona står kvar för en ny miljö, och för när ni ändrar något i funktionerna:
 
 ```
 supabase functions deploy stripe-checkout
@@ -394,8 +405,13 @@ supabase functions deploy stripe-webhook
 supabase functions deploy stripe-aterbetalning
 ```
 
-`stripe-aterbetalning` anropas av en inloggad admin och ska ha JWT-kravet kvar.
-Den står därför inte i `config.toml`.
+**Kör dem från repotroten**, så att `supabase/config.toml` läses. Utan filen får
+`stripe-webhook` CLI:ns förval `verify_jwt = true`, och då svarar den 401 på varje
+leverans från Stripe. Ingen människa är anropare, så ingen ser det — se filhuvudet
+i `config.toml`.
+
+`stripe-checkout` och `stripe-aterbetalning` anropas av en inloggad förälder
+respektive admin och ska ha JWT-kravet kvar. De står därför inte i `config.toml`.
 
 `stripe-webhook` har `verify_jwt = false` i `supabase/config.toml`, för att
 anroparen är Stripe och inte kan ha en Supabase-token. **Driftsätt aldrig den utan
@@ -418,9 +434,10 @@ Händelser som ska väljas, och varför just de:
 | `payment_intent.payment_failed` | Familjen kan försöka igen |
 | `charge.refunded` | Skriver återbetalt belopp |
 | `charge.dispute.created`, `charge.dispute.closed` | Markerar tvist |
-| `transfer.created`, `transfer.reversed` | Spårar studiehjälparens del |
-| `account.updated` | Kontots krav ändrades |
-| `payout.paid`, `payout.failed` | Loggas |
+
+**Välj inga fler.** `transfer.*`, `account.updated` och `payout.*` stod här förut
+och hörde till Connect. Funktionen har inga grenar för dem sedan Fas 12.5: de
+kvitteras som `ohanterad typ`, alltså brus i `stripe_handelser` utan verkan.
 
 Kopiera sedan `whsec_...` och sätt den:
 
@@ -431,6 +448,17 @@ supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
 **Utan den svarar funktionen 400 på varje leverans**, och då blir ingen betalning
 registrerad trots att pengarna dragits. Det är det enda felet i hela kedjan som ser
 ut som tystnad i stället för som ett fel.
+
+Kontrollera att den gick in, utan att skriva ut den någonstans:
+
+```
+curl -s -X POST https://ddkfiuvcppalutfulvbi.supabase.co/functions/v1/stripe-webhook \
+  -H 'stripe-signature: t=1,v1=00' -d '{}'
+```
+
+`{"error":"Leveransen är för gammal."}` betyder att hemligheten ÄR satt — funktionen
+kom förbi den kontrollen och föll på tidsstämpeln. `Webhookhemligheten är inte satt.`
+betyder att den inte är det. Ett 401 betyder att `verify_jwt` slog på igen, se 9.3.
 
 ### 9.5 Kontoutdraget
 

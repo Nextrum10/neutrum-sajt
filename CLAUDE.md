@@ -499,18 +499,15 @@ efter `begin` med 42704 — hela sviten gick inte att köra, och en svit
 som inte går att köra provar ingenting. Den slår nu upp triggrarna på
 FUNKTIONEN i stället för på namnet.
 
-**Sedan Fas 12.5 gäller samma sak `stripe-konto`.** Den ligger ACTIVE
-i driften men finns inte längre i repot, och ingen knapp anropar den:
-studiehjälparen får betalt den 25:e genom `payouts`, så ett anslutet
-Stripe-konto fyller ingen funktion. **Ta bort den i Supabases
-dashboard** (Edge Functions → stripe-konto → Delete). Det går inte att
-göra härifrån, och tills det är gjort ligger en funktion i driften som
-kan skapa anslutna konton ingen vill ha.
+`stripe-konto` hörde till samma sort och **är borttagen ur driften**
+(Fas 12.5). Den skapade anslutna Stripe-konton, och ingen knapp
+anropade den längre: studiehjälparen får betalt den 25:e genom
+`payouts`, så ett anslutet konto fyller ingen funktion.
 
-**Bestäm vad som ska hända med de tre.** Antingen tas de ur driften,
-eller så får de en anropare. ACTIVE funktioner som ingen ringer är
-samma sorts halvfärdighet som gjorde att hela det här systemet inte
-fanns i repot.
+**Bestäm vad som ska hända med de två som är kvar.** Antingen tas de ur
+driften, eller så får de en anropare. ACTIVE funktioner som ingen
+ringer är samma sorts halvfärdighet som gjorde att hela det här
+systemet inte fanns i repot.
 
 ### Notissystemet kom hem i efterhand
 

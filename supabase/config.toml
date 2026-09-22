@@ -66,9 +66,10 @@ verify_jwt = false
 # inte kan ha en Supabase-token. Skyddet är signaturen i
 # stripe-signature, prövad i konstant tid mot STRIPE_WEBHOOK_SECRET.
 #
-# stripe-konto och stripe-checkout står MED FLIT INTE här: de anropas
-# av en inloggad studiehjälpare respektive förälder, och ska ha
-# JWT-kravet kvar.
+# stripe-checkout och stripe-aterbetalning står MED FLIT INTE här: de
+# anropas av en inloggad förälder respektive admin, och ska ha
+# JWT-kravet kvar. (stripe-konto fanns här förut. Den är borta sedan
+# Fas 12.5, både ur repot och ur driften.)
 [functions.stripe-webhook]
 verify_jwt = false
 
