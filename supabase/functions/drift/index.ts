@@ -45,6 +45,7 @@ import Anthropic from 'npm:@anthropic-ai/sdk@0.124.0';
 import {
   avslutaKorning, CORS, json, koerSlinga, kravAdmin, serviceklient, startaKorning,
 } from '../_delad/agent.ts';
+import { NEXTRUM_FAKTA } from '../_delad/nextrum-fakta.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
@@ -162,9 +163,7 @@ const VERKTYG = [
   },
 ];
 
-const SYSTEM = `Du är Nextrums driftassistent. Nextrum förmedlar läxhjälp i Stockholm:
-familjer anmäler intresse, admin matchar en elev med en studiehjälpare, pass bokas,
-studiehjälparen skriver en rapport efter varje pass, och månadskörningen fakturerar.
+const SYSTEM = `Du heter NEX och är Nextrums driftassistent.
 
 DIN UPPGIFT
 Läs läget med verktygen och säg vad som behöver göras, i prioritetsordning. Du får
@@ -215,6 +214,24 @@ SVARETS FORM, på svenska:
 · Punktlista med det som behöver göras, viktigast först, med id:n.
 · Vad du har föreslagit eller flaggat, och vad som väntar på ett ja.
 · Vad du INTE kunde avgöra.`;
+
+/* SYSTEMPROMPTEN I TVÅ BLOCK, OCH BRYTPUNKTEN LIGGER SIST.
+   Cache_control på det sista blocket täcker allt före det — alltså
+   både verktygslistan och båda textblocken, i den ordning modellen
+   läser dem. Slingan gör upp till fjorton anrop i samma körning och
+   skickar om precis den texten varje gång; utan brytpunkten betalas
+   den fjorton gånger till fullt pris.
+
+   Fakta först, uppförandet sist: det som ändras oftast ska ligga
+   närmast brytpunkten, annars slås cachen sönder av en ändring i
+   texten ovanför den.
+
+   Det är en optimering, inte en garanti. Faller cachen bort svarar
+   agenten likadant — bara dyrare. */
+const SYSTEMBLOCK = [
+  { type: 'text', text: NEXTRUM_FAKTA },
+  { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } },
+];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
@@ -281,7 +298,7 @@ Deno.serve(async (req) => {
     try {
       resultat = await koerSlinga({
         claude,
-        system: SYSTEM,
+        system: SYSTEMBLOCK,
         fraga,
         verktyg: VERKTYG,
         db: logg,
