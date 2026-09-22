@@ -833,9 +833,9 @@
           <button class="vy-flik" type="button" role="tab" data-flik="minprofil"
                   id="flik-minprofil" aria-controls="panel-minprofil">Min profil</button>
           <button class="vy-flik" type="button" role="tab" data-flik="konto"
+                  id="flik-konto" aria-controls="panel-konto">Mitt konto</button>
           <button class="vy-flik" type="button" role="tab" data-flik="notiser"
                   id="flik-notiser" aria-controls="panel-notiser">Notiser</button>
-                  id="flik-konto" aria-controls="panel-konto">Mitt konto</button>
         </div>
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="minprofil"
@@ -911,6 +911,10 @@
                     <div class="fgroup"><label for="k-losen2">Upprepa lösenordet</label><input class="inp" id="k-losen2" type="password" autocomplete="new-password"></div>
                     <button class="btn btn-ghost btn-sm btn-block" type="submit">Byt lösenord</button>
 
+                    <p class="ok-msg" id="kl-msg"></p>
+                  </form>
+                </div>
+        </div>
         <!-- ============ NOTISER ============
              Vilka mejl man vill ha. Raderna ligger i notis_val, och RLS
              släpper bara igenom ens egna — listan behöver därför ingen
@@ -934,10 +938,6 @@
             <p class="ok-msg" id="notisval-msg"></p>
             <p class="xsmall" style="margin-top:16px;color:var(--muted-2);line-height:1.6">Besked om bokade pass och fakturor skickas alltid. De hör till tjänsten och går inte att välja bort.</p>
           </div>
-        </div>
-                    <p class="ok-msg" id="kl-msg"></p>
-                  </form>
-                </div>
         </div>
       </section>
       </div>

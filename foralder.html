@@ -524,9 +524,9 @@
           <button class="vy-flik" type="button" role="tab" data-flik="barn"
                   id="flik-barn" aria-controls="panel-barn">Barn</button>
           <button class="vy-flik" type="button" role="tab" data-flik="pris"
+                  id="flik-pris" aria-controls="panel-pris">Pris &amp; villkor</button>
           <button class="vy-flik" type="button" role="tab" data-flik="notiser"
                   id="flik-notiser" aria-controls="panel-notiser">Notiser</button>
-                  id="flik-pris" aria-controls="panel-pris">Pris &amp; villkor</button>
         </div>
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="konto"
@@ -650,6 +650,9 @@
             <div class="sum-line"><span>Anmälningsavgift</span><span>0 kr</span></div>
             <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
 
+            <p class="xsmall" style="margin-top:14px;color:var(--muted-2);line-height:1.6">Ni betalar i efterskott, en gång i månaden, för de pass som faktiskt genomförts. Fakturorna ligger under Betalning.</p>
+          </div>
+        </div>
         <!-- ============ NOTISER ============
              Vilka mejl man vill ha. Raderna ligger i notis_val, och RLS
              släpper bara igenom ens egna — listan behöver därför ingen
@@ -672,9 +675,6 @@
             <div id="notisval-lista"></div>
             <p class="ok-msg" id="notisval-msg"></p>
             <p class="xsmall" style="margin-top:16px;color:var(--muted-2);line-height:1.6">Besked om bokade pass och fakturor skickas alltid. De hör till tjänsten och går inte att välja bort.</p>
-          </div>
-        </div>
-            <p class="xsmall" style="margin-top:14px;color:var(--muted-2);line-height:1.6">Ni betalar i efterskott, en gång i månaden, för de pass som faktiskt genomförts. Fakturorna ligger under Betalning.</p>
           </div>
         </div>
       </section>
