@@ -312,6 +312,11 @@ databasen genom `samlingsnyckel`, inte i arbetaren — fem repliker på
 tre minuter blir ett mejl, och den som får fem mejl slutar läsa det
 sjätte.
 
+`DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
+sandlådan slås på innan något provas, och de fem stegen för att lägga
+till en ny notistyp utan att den faller ut som `okänd notistyp` ur en
+trigger.
+
 ---
 
 ## 6. Säkerhetsmodellen
