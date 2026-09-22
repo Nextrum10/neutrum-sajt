@@ -1,9 +1,31 @@
 // ============================================================
-// NEXTRUM — stripe-checkout (Fas 12.2)
+// NEXTRUM — stripe-checkout (Fas 12.2, ombyggd i Fas 12.5)
 //
-// Familjens kortbetalning för ETT pass, som en destination charge:
-// betalningen skapas på Nextrums konto, studiehjälparens del pekas ut
-// som destination, och Nextrums del blir en application fee.
+// Familjens kortbetalning för ETT pass. HELA beloppet landar hos
+// Nextrum. Ingen destination, ingen application fee, inget anslutet
+// konto inblandat.
+//
+//
+// VARFÖR CONNECT ÄR BORTA HÄRIFRÅN (Fas 12.5)
+//
+// Studiehjälparen får betalt den 25:e, som en löning, i en klump för
+// månadens rapporterade pass. Det är `payouts` och månadskörningens
+// jobb, och det är den enda vägen pengar går till en hjälpare.
+//
+// En destination charge hade lagt hjälparens del på hens Stripe-saldo
+// vid VARJE pass, och sedan hade månadskörningen betalat samma timmar
+// en gång till. Två system som räknar samma arbete är inte krångel,
+// det är dubbelbetalning som ingen ser förrän någon stämmer av.
+//
+// Säljarens egen lista sa det: "byt till separate charges and
+// transfers om ersättningen ska frisläppas först efter genomförd
+// lektion". Hos Nextrum sker det inte ens då, utan på en lönedag, så
+// Stripe ska inte vara med i den delen alls.
+//
+// ERSÄTTNINGEN RÄKNAS INTE HÄR. Den räknas av `fakturering` när
+// underlaget byggs, ur passets rapport. Att också räkna den vid
+// betalningen hade gett två källor till samma siffra, och den som
+// skrivs först hade vunnit av en slump.
 //
 //
 // VARFÖR BETALNINGEN LIGGER PÅ "BEKRÄFTAT" OCH INTE PÅ "BOKAT"
@@ -28,22 +50,12 @@
 // Räkningen lånas ur _delad/pris.ts, den som faktureringen redan
 // använder och som pris_test.ts vaktar. En andra kopia av prislogiken
 // hade glidit isär från den första, precis som de sju esc() gjorde.
-//
-//
-// ERSÄTTNINGEN ÄR INTE EN ANDEL AV PRISET
-//
-// 379 kr är Nextrums pris. Studiehjälparens timpenning är ett EGET
-// tal, och pris.ts är byggd så att den aldrig påverkas av familjens
-// rabatt eller av syskontillägget. Avgiften till Nextrum är därför
-// det som blir över, inte en procentsats. Blir det som blir över
-// negativt vägrar funktionen i stället för att skicka en negativ
-// avgift till Stripe.
 // ============================================================
 
 import { kravInloggad, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
 import { StripeError, v1, VALUTA } from '../_delad/stripe.ts';
-import { belopp, familjebelopp, radtext, standardTjanst, type Tjanst } from '../_delad/pris.ts';
+import { familjebelopp, radtext, standardTjanst, type Tjanst } from '../_delad/pris.ts';
 
 const CORS = cors();
 
@@ -125,26 +137,7 @@ Deno.serve(async (req) => {
   const db = serviceklient();
 
   try {
-    // ---------- studiehjälparens konto ----------
-    /* Säljarens punkt 5, och den enda som stoppar pengar från att
-       försvinna: en destination charge mot ett konto som inte kan ta
-       emot överföringar lämnar familjens pengar hos Nextrum medan
-       systemet tror att studiehjälparen fått sin del. */
-    const { data: hjalpare } = await db
-      .from('tutor_profiles')
-      .select('id, hourly_rate, stripe_account_id, stripe_kan_ta_emot, stripe_krav')
-      .eq('id', pass.tutor_id)
-      .maybeSingle();
-
-    if (!hjalpare?.stripe_account_id || !hjalpare.stripe_kan_ta_emot) {
-      return json({
-        error: 'Studiehjälparen har inte kopplat sitt utbetalningskonto än. '
-          + 'Passet går inte att betala förrän det är gjort.',
-        kod: 'mottagare_ej_klar',
-      }, 409, CORS);
-    }
-
-    // ---------- beloppen, ur databasen ----------
+    // ---------- beloppet, ur databasen ----------
     const [{ data: katalog }, { data: pris }] = await Promise.all([
       // En literal, av samma skäl som selecten ovan.
       db.from('tjanster').select('kod, aktiv, for_kund, ordning, pris_per_timme_ore, extra_personer_ore, ersattning_per_timme_ore, rut_berattigad, rut_procent'),
@@ -170,30 +163,7 @@ Deno.serve(async (req) => {
     const rabatt = Math.min(Math.max(Number(pass.rabatt_ore || 0), 0), brutto);
     const netto = brutto - rabatt;
 
-    /* Ersättningen: tjänstens när den är satt, annars studiehjälparens
-       egen timpenning. hourly_rate lagras i KRONOR, till skillnad från
-       allt annat i den här kodbasen — samma omvandling som
-       fakturering/index.ts gör. */
-    const ersattningTimme = Number(tjanst?.ersattning_per_timme_ore || 0)
-      || Math.round(Number(hjalpare.hourly_rate ?? 0) * 100);
-    if (!ersattningTimme) {
-      return json({
-        error: 'Studiehjälparen saknar timpenning, så ersättningen går inte att räkna ut.',
-      }, 409, CORS);
-    }
-
-    // Syskontillägget och rabatten rör aldrig ersättningen.
-    const ersattning = belopp(minuter, ersattningTimme);
-    const avgift = netto - ersattning;
-
     if (netto <= 0) return json({ error: 'Passets belopp blir noll.' }, 409, CORS);
-    if (avgift < 0) {
-      return json({
-        error: 'Studiehjälparens ersättning är högre än passets pris. '
-          + 'Rätta timpenningen eller priset innan passet betalas.',
-        kod: 'negativ_avgift',
-      }, 409, CORS);
-    }
 
     // ---------- sessionen ----------
     const { data: kund } = await vem.klient
@@ -222,13 +192,11 @@ Deno.serve(async (req) => {
         },
       }],
       payment_intent_data: {
-        // Destination charge. on_behalf_of sätts MED FLIT INTE:
-        // Nextrum är den betalningsansvariga verksamheten och
-        // studiehjälparen är mottagare av en överföring. Sätts det
-        // byts avräkningsparten, och då stämmer varken kvittot,
-        // tvistansvaret eller den här kodens antaganden.
-        transfer_data: { destination: hjalpare.stripe_account_id },
-        application_fee_amount: avgift,
+        /* Varken transfer_data eller application_fee_amount, och inte
+           on_behalf_of heller. Hela beloppet stannar hos Nextrum, som
+           är den betalningsansvariga verksamheten. Studiehjälparen är
+           inte part i den här betalningen alls; hen får sitt den 25:e
+           genom payouts. Se filhuvudet. */
         metadata: { booking_id: pass.id, tutor_id: pass.tutor_id },
         statement_descriptor_suffix: descriptor(String(pass.subject ?? 'Laxhjalp')),
       },
@@ -243,12 +211,14 @@ Deno.serve(async (req) => {
     /* Först nu, och bara med service_role. Skrivningen kan inte göras
        från en inloggad session: bookings-triggern är en tillåt-lista
        och kolumnerna står inte i den. */
+    /* Bara betalt_ore skrivs. ersattning_ore och avgift_ore lämnas
+       orörda med flit: studiehjälparens ersättning räknas av
+       fakturering ur rapporten, och två källor till samma siffra är
+       en siffra ingen kan lita på. */
     const { error: sparfel } = await db.from('bookings').update({
       betalning_status: 'vantar',
       stripe_session_id: String((session as { id?: string }).id ?? ''),
       betalt_ore: netto,
-      ersattning_ore: ersattning,
-      avgift_ore: avgift,
     }).eq('id', pass.id);
 
     if (sparfel) {
@@ -267,8 +237,6 @@ Deno.serve(async (req) => {
       url: (session as { url?: string }).url ?? null,
       session: (session as { id?: string }).id,
       belopp_ore: netto,
-      ersattning_ore: ersattning,
-      avgift_ore: avgift,
     }, 200, CORS);
   } catch (e) {
     if (e instanceof StripeError) {

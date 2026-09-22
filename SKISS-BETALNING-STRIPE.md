@@ -284,3 +284,40 @@ Se även [DEPLOY-BETALNING.md](DEPLOY-BETALNING.md) steg 7,
 [SKISS-RUT-EXPORT.md](SKISS-RUT-EXPORT.md) och
 [SKISS-FORETAGSKUND.md](SKISS-FORETAGSKUND.md), som har samma form och
 samma regel: inga påhittade siffror.
+
+---
+
+## Efterskrift, 22 september 2026
+
+Skissen ovan står kvar ordagrant. Så här gick det.
+
+**Beslutet blev först att bygga säljarens arkitektur ändå.** Connect med
+anslutna konton, Checkout och destination charges. Det byggdes, kom i
+drift och står i Fas 12.1 till 12.4.
+
+**Sedan kom svaret på säljarens egen slutfråga**, den han sa var den
+enda som kunde ändra huvudrekommendationen: får studiehjälparen sin del
+direkt, eller först efter genomförd lektion?
+
+Svaret var varken eller. **Studiehjälparen får betalt den 25:e, som en
+löning**, i en klump för månadens rapporterade pass.
+
+Det avgjorde saken. En destination charge hade lagt hjälparens del på
+hens Stripe-saldo vid varje pass, och sedan hade månadskörningen betalat
+samma timmar en gång till. Två system som räknar samma arbete är inte
+krångel, det är dubbelbetalning som ingen ser förrän någon stämmer av.
+
+**Fas 12.5 tog därför bort Connect ur betalvägen.** Kvar blev det den
+här skissen föreslog på hjälparsidan från början: ingenting hos Stripe,
+ersättningen genom `payouts` och en överföring från banken.
+
+På kundsidan blev det Checkout per pass i stället för Invoicing per
+månad, alltså inte det skissen föreslog. Det är ett verkligt val och det
+står kvar: familjen betalar sitt bekräftade pass med kort, och hela
+beloppet går till Nextrum.
+
+**Frågan skissen kallade "den som avgör allt" är fortfarande obesvarad.**
+`foretagsfakta.studiehjalpare_form` står på `oklart` och bolaget är inte
+arbetsgivarregistrerat. Ordet "löning" lutar åt anställning, och i så
+fall är `payouts` ett underlag till en löneköring, inte en betalning.
+Det avgörs av en redovisningskonsult, inte av den här filen.

@@ -250,3 +250,19 @@ export const VALUTA = 'sek';
 export function oreFor(minuter: number, timprisOre: number): number {
   return Math.round((minuter / 60) * timprisOre);
 }
+
+/**
+ * Vad betalningens läge blir efter en återbetalning.
+ *
+ * Regeln bor här och inte i anroparna, för TVÅ vägar leder hit: knappen
+ * i adminvyn och webhooken när någon återbetalat i Stripes dashboard.
+ * Två kopior av "är det här en full eller en del?" hade glidit isär,
+ * och då hade samma betalning stått som olika saker beroende på vilken
+ * väg som råkade skriva sist.
+ *
+ * DELÅTERBETALNING LÄMNAR PASSET SOM BETALT. Det är fortfarande
+ * betalt, bara inte fullt ut, och aterbetald_ore bär hur mycket.
+ */
+export function aterbetalningsLage(aterbetaltOre: number, totaltOre: number): 'aterbetald' | 'betald' {
+  return totaltOre > 0 && aterbetaltOre >= totaltOre ? 'aterbetald' : 'betald';
+}

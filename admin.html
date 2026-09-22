@@ -848,6 +848,8 @@
             <button class="vy-flik" type="button" role="tab" data-flik="avvikelser"
                     id="flik-avvikelser" aria-controls="panel-avvikelser">Avvikelser
               <span class="vy-flik-mark" id="flik-avv-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="kortbetalningar"
+                    id="flik-kortbetalningar" aria-controls="panel-kortbetalningar">Kortbetalningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="korning"
                     id="flik-korning" aria-controls="panel-korning">Månadskörning</button>
           </div>
@@ -953,6 +955,35 @@
                 Varje rad kan bli en uppgift, så att någon tar hand om den.
               </p>
               <div id="avv-ovriga"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="kortbetalningar"
+               id="panel-kortbetalningar" aria-labelledby="flik-kortbetalningar" hidden>
+            <div class="dbox">
+              <div class="adm-verktyg">
+                <input class="inp adm-sok" id="kort-sok" type="search" placeholder="Sök familj eller studiehjälpare" aria-label="Sök kortbetalning" autocomplete="off">
+                <select class="sel" id="kort-status" aria-label="Filtrera på läge">
+                  <option value="">Alla lägen</option>
+                  <option value="vantar">Väntar</option>
+                  <option value="betald">Betalda</option>
+                  <option value="aterbetald">Återbetalda</option>
+                  <option value="tvist">Tvist</option>
+                  <option value="misslyckad">Misslyckade</option>
+                </select>
+                <span class="small" id="kort-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <div id="kort-tabell"><div class="loading">Hämtar</div></div>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
+                <b>Återbetala</b> skickar pengarna tillbaka till familjen. Hela beloppet
+                ligger hos Nextrum, så det finns ingen överföring att backa.
+              </p>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
+                Studiehjälparens ersättning syns inte här. Den betalas den 25:e för
+                månadens rapporterade pass, och står under <b>Utbetalningar</b>. Ett pass
+                som återbetalats ska inte hamna där — det sköts av att ett pass utan
+                rapport aldrig kommer med i månadskörningen.
+              </p>
             </div>
           </div>
 

@@ -1,7 +1,7 @@
 
 === anvandarvillkor.html  ->  en/anvandarvillkor.html
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
-  TEXTNODER: sv 110 vs en 109 — engelskan har inte följt med
+  TEXTNODER: sv 112 vs en 111 — engelskan har inte följt med
   SVENSKA KVAR i engelskan, 2 stycken:
       Leo Constantinos Thriskos
       Alexandar Jovanovic

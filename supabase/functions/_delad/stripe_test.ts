@@ -14,7 +14,7 @@
 // ============================================================
 
 import { assert, assertEquals, assertFalse } from 'https://deno.land/std@0.224.0/assert/mod.ts';
-import { formulardata, oreFor, prövaSignatur } from './stripe.ts';
+import { aterbetalningsLage, formulardata, oreFor, prövaSignatur } from './stripe.ts';
 
 const HEMLIGHET = 'whsec_prov_hemlighet_som_aldrig_anvands_skarpt';
 
@@ -160,4 +160,25 @@ Deno.test('öresberäkningen avrundar sist', () => {
   assertEquals(oreFor(180, 37900), 113700);
   // 50 minuter à 379 kr: 31583,33 → 31583.
   assertEquals(oreFor(50, 37900), 31583);
+});
+
+// ------------------------------------------------------------
+// Återbetalningens läge. Regeln finns på ETT ställe för att två
+// vägar leder hit: knappen i adminvyn och webhooken när någon
+// återbetalat i Stripes dashboard. Skrev de olika hade samma
+// betalning stått som olika saker beroende på vem som hann sist.
+// ------------------------------------------------------------
+
+Deno.test('full återbetalning blir aterbetald, delvis förblir betald', () => {
+  assertEquals(aterbetalningsLage(37900, 37900), 'aterbetald');
+  assertEquals(aterbetalningsLage(10000, 37900), 'betald');
+  assertEquals(aterbetalningsLage(0, 37900), 'betald');
+  // Över hela beloppet ska inte tippa tillbaka till betald.
+  assertEquals(aterbetalningsLage(40000, 37900), 'aterbetald');
+});
+
+Deno.test('ett nollbelopp kan inte bli aterbetald', () => {
+  // 0 >= 0 är sant. Utan kravet på totalt > 0 hade ett pass utan
+  // betalning räknats som fullt återbetalt.
+  assertEquals(aterbetalningsLage(0, 0), 'betald');
 });
