@@ -394,7 +394,14 @@ export interface Slingsvar {
 
 export async function koerSlinga(opts: {
   claude: Anthropic;
-  system: string;
+  /* En sträng, eller en lista systemblock när agenten vill sätta en
+     cache-brytpunkt. Slingan skickar om hela systemprompten OCH hela
+     verktygslistan vid varje steg — med ett stegtak på fjorton är det
+     samma text upp till fjorton gånger i samma körning. Den som lägger
+     cache_control på sista blocket får resten av körningen till en
+     tiondel av priset. Vidgningen ändrar ingenting för den som skickar
+     en sträng. */
+  system: string | unknown[];
   fraga: string;
   verktyg: unknown[];
   koer: Verktygskorare;

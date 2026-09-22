@@ -164,5 +164,65 @@ ok('ingen verktygsbeskrivning lovar namn eller kontaktuppgifter',
     .length,
   0);
 
+/* ============================================================
+   HUSETS KUNSKAP I SYSTEMPROMPTEN (_delad/nextrum-fakta.ts)
+
+   Texten går in i ett betalt modellanrop hos en agent som samtidigt
+   läser personuppgifter om barn. Två saker kan gå sönder tyst:
+
+     1. PRISET GLIDER. Ändras 379 i nextrum-config.js men inte här
+        börjar NEX svara med ett gammalt pris, självsäkert och fel.
+        Ingen kontroll fångar det — texten är ju bara en sträng.
+     2. INFRASTRUKTUR SMYGER IN. "Den ligger i tabellen profiles" är
+        frestande att skriva när man vill att svaret ska bli bättre.
+        En modell som kan upprepa sin systemprompt ritar då en karta
+        över var skyddet sitter, och den kartan behövdes aldrig för
+        att svara på "vad bör jag göra först idag".
+
+   Bara den EXPORTERADE STRÄNGEN prövas, inte filhuvudet: kommentaren
+   ovanför måste få tala om just de orden för att förklara varför de
+   inte får stå nedanför.
+   ============================================================ */
+
+const faktaKod = fs.readFileSync(
+  path.join(rot, 'supabase', 'functions', '_delad', 'nextrum-fakta.ts'), 'utf8');
+
+const faktaText = (faktaKod.match(/export const NEXTRUM_FAKTA = `([^]*?)`;/) || [])[1] || '';
+
+ok('fakta-texten går att läsa ut', faktaText.length > 400, true);
+
+const konfig = fs.readFileSync(path.join(rot, 'nextrum-config.js'), 'utf8');
+const konfigTal = n => Number((konfig.match(new RegExp(n + ': (\\d+)')) || [])[1]);
+
+ok('timpriset i fakta stämmer med nextrum-config.js',
+  faktaText.includes(konfigTal('PRIS_PER_TIMME') + ' kronor i timmen'), true);
+
+ok('barntillägget i fakta stämmer med nextrum-config.js',
+  faktaText.includes(konfigTal('PRIS_EXTRA_BARN') + ' kronor i timmen i tillägg'), true);
+
+/* Tre barn = grundpris + ETT tillägg. Står summan fel i prompten
+   svarar NEX med ett pris ingen familj har fått. */
+ok('tre-barn-exemplet är uträknat rätt',
+  faktaText.includes((konfigTal('PRIS_PER_TIMME') + konfigTal('PRIS_EXTRA_BARN')) + ' kronor i timmen'),
+  true);
+
+const FORBJUDET = [
+  'service_role', 'anon-nyckel', 'RLS', 'policy', 'policyn', 'trigger',
+  'migration', 'supabase', 'postgres', 'edge function', 'ddkfiuvcppalutfulvbi',
+  'profiles', 'bookings', 'lesson_reports', 'invoices', 'payouts', 'tutor_profiles',
+];
+ok('fakta-texten nämner ingen infrastruktur',
+  FORBJUDET.filter(o => new RegExp(o, 'i').test(faktaText)).join(' ') || 'inget',
+  'inget');
+
+/* Kunskapen ska faktiskt nå modellen, och cache-brytpunkten ska ligga
+   SIST i systemlistan — ligger den först cachas bara det första
+   blocket, och slingans fjorton anrop betalar resten varje gång. */
+const systemblock = (driftKod.match(/const SYSTEMBLOCK = \[([^]*?)\];/) || [])[1] || '';
+ok('drift skickar husets fakta till modellen',
+  /NEXTRUM_FAKTA/.test(systemblock) && /system: SYSTEMBLOCK/.test(driftKod), true);
+ok('cache-brytpunkten ligger på sista systemblocket',
+  systemblock.lastIndexOf('cache_control') > systemblock.indexOf('NEXTRUM_FAKTA'), true);
+
 console.log(fel === 0 ? '\nAlla tester gröna.' : '\n' + fel + ' test misslyckades.');
 process.exit(fel === 0 ? 0 : 1);
