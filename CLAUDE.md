@@ -408,7 +408,8 @@ tillbaka en kopia.**
 | `fakturering` | Månadskörning: faktura per familj, underlag per hjälpare | Schema (`x-fakturering-nyckel`) eller admin |
 | `faktura-utskick` | Skickar fakturan. **Mejlet först, statusen sedan** | Knapp i adminvyn |
 | `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
-| `lead-notis`, `pass-notis`, `meddelande-notis` | Aviseringar | **Databaswebhook**, `verify_jwt` av, delad hemlighet i header |
+| `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
+| `pass-notis`, `meddelande-notis` | **Anropas inte längre.** Se nedan | — |
 | `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
 | `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
@@ -423,6 +424,32 @@ på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och
 eftersom anroparen är ett schema finns ingen som ser det. **Filen är
 sanningen, inte dashboarden.** Lägger du till en funktion utan
 inloggning: skriv raden där i samma ändring.
+
+### `pass-notis` och `meddelande-notis` har ingen anropare kvar
+
+Båda ligger ACTIVE i driften, men triggrarna som ringde dem finns
+inte längre. Runda 2 bytte webhookarna mot kötriggrar:
+
+| Tabell | Trigger i dag | Funktion |
+|---|---|---|
+| `bookings` | `bookings_notis` | `notis_vid_pass` — köar |
+| `messages` | `messages_notis` | `notis_vid_meddelande` — köar |
+| `lesson_reports` | `lesson_reports_notis` | `notis_vid_rapport` — köar |
+| `leads` | `ny-intresseanmalan` | `http_request` → `lead-notis` |
+
+`leads` är alltså den enda som fortfarande går via en webhook, och
+`lead-notis` den enda av de tre som lever.
+
+Det kostade en gång: `verktyg/rls-test.sql` stängde av
+`"nytt-passforslag"` på `bookings` och kraschade på den första satsen
+efter `begin` med 42704 — hela sviten gick inte att köra, och en svit
+som inte går att köra provar ingenting. Den slår nu upp triggrarna på
+FUNKTIONEN i stället för på namnet.
+
+**Bestäm vad som ska hända med de två.** Antingen tas de ur driften,
+eller så får de en anropare. Två ACTIVE funktioner som ingen ringer är
+samma sorts halvfärdighet som gjorde att hela det här systemet inte
+fanns i repot.
 
 ### Notissystemet kom hem i efterhand
 
