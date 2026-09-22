@@ -240,7 +240,10 @@
   function ritaProblem() {
     const host = $('#adm-problem');
     if (!host) return;
-    const problem = byggProblem();
+    /* Sparas på S av samma skäl som S.attGora: driftkonsolen visar
+       samma poster och ska räkna dem EN gång, inte bygga en tredje
+       lista som kan säga något annat. */
+    const problem = S.problem = byggProblem();
     const summa = problem.reduce((n, p) => n + p.antal, 0);
     $('#adm-problem-antal').textContent = summa ? summa + ' st' : '';
     if (!problem.length) {
@@ -350,6 +353,9 @@
     ritaTal();
     ritaAttGöra();
     ritaProblem();
+    /* EFTER de två blocken: konsolen läser S.attGora och S.problem,
+       som de sätter. Ritas den före står den med tomma listor. */
+    if (NXAdmin.rita.ritaKonsol) NXAdmin.rita.ritaKonsol();
     ritaNärmastePass();
     ritaFlöde();
     ritaNotiser();

@@ -1,0 +1,185 @@
+/* ============================================================
+   NEXTRUM — driftkonsolen på Översikt
+
+   Bara adminvyn. Allt är scopat `.vy-admin` av samma skäl som
+   nextrum-admin-palett.css: `.dbox`, `.inp` och `.btn` delas med
+   foralder.html och larare.html, och de två vyerna laddar inte ens
+   den här filen.
+
+   Varför en egen fil och inte ett block i palettfilen: palettfilen
+   är värd att läsa när en FÄRG är fel, och den läsbarheten försvinner
+   om hundrafemtio rader ny komponent-CSS blandas in. Konsolen är
+   ny markup, inte en omfärgning av något som redan fanns.
+
+   Färgerna är palettens tokens rakt av. Inga literaler här, så ett
+   framtida palettbyte når konsolen utan att någon behöver minnas
+   att den finns.
+   ============================================================ */
+
+.vy-admin .kon{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
+  gap:clamp(12px,1.4vw,18px);
+  margin-bottom:clamp(16px,1.8vw,22px);
+}
+@media (max-width:1000px){
+  .vy-admin .kon{grid-template-columns:minmax(0,1fr)}
+}
+
+.vy-admin .kon-lage-halva,
+.vy-admin .kon-prat{
+  box-sizing:border-box;
+  background:var(--pap-2);
+  border:1px solid var(--ln-2);
+  border-radius:14px;
+  padding:clamp(16px,1.8vw,22px);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+
+/* Hörnmarkeringarna. Samma grepp som nyckeltalen, och av samma skäl
+   som står där: konsolen ska läsas som ett instrument, och två rutor
+   med hörn är en avläsning medan sextiotre är brus. */
+.vy-admin .kon-lage-halva::before,
+.vy-admin .kon-lage-halva::after,
+.vy-admin .kon-prat::before,
+.vy-admin .kon-prat::after{
+  content:"";position:absolute;width:15px;height:15px;pointer-events:none;
+  border:1.5px solid var(--acc);
+}
+.vy-admin .kon-lage-halva::before,
+.vy-admin .kon-prat::before{top:-1px;left:-1px;border-width:1.5px 0 0 1.5px;border-radius:14px 0 0 0}
+.vy-admin .kon-lage-halva::after,
+.vy-admin .kon-prat::after{bottom:-1px;right:-1px;border-width:0 1.5px 1.5px 0;border-radius:0 0 14px 0}
+
+.vy-admin .kon-topp{
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  padding-bottom:12px;margin-bottom:14px;
+  border-bottom:1px solid var(--ln);
+}
+.vy-admin .kon-et{
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--acc-text);
+  flex-grow:1;
+}
+.vy-admin .kon-pengar{
+  display:flex;gap:16px;flex-wrap:wrap;
+  font-size:.76rem;color:var(--bl-3);
+}
+.vy-admin .kon-pengar b{
+  color:var(--bl-2);font-weight:650;font-variant-numeric:tabular-nums;
+}
+
+/* ------------------------------------------------------------
+   LÄGET
+   ------------------------------------------------------------ */
+.vy-admin .kon-mitt{
+  display:flex;align-items:flex-start;gap:clamp(14px,1.8vw,22px);
+  flex-grow:1;min-width:0;
+}
+@media (max-width:560px){
+  .vy-admin .kon-mitt{flex-direction:column;align-items:stretch}
+}
+
+/* Disken säger ETT tal: hur många saker som väntar på en människa.
+   Den bär ingen procent, för det finns inget ärligt nämnare-tal att
+   räkna den mot — en påhittad andel hade sett exakt lika trovärdig
+   ut som en riktig. Färgen har tre lägen, och formen följer med:
+   ringen är hel när allt är lugnt och bruten när något gått fel. */
+.vy-admin .kon-disk{
+  position:relative;flex:none;
+  width:132px;height:132px;
+  /* Plats under ringen till etiketten. "Kräver åtgärd" är bredare än
+     132 px och skar rakt igenom ringen när den låg inuti. */
+  margin-bottom:26px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--bl-3);
+}
+.vy-admin .kon-disk svg{
+  position:absolute;inset:0;width:100%;height:100%;
+  fill:none;stroke:currentColor;
+}
+.vy-admin .kon-disk svg circle:first-child{stroke-width:1.5;opacity:.45}
+.vy-admin .kon-disk svg circle:last-child{stroke-width:3;opacity:.9}
+.vy-admin .kon-disk b{
+  position:relative;
+  font-size:2.5rem;font-weight:800;letter-spacing:-.04em;line-height:1;
+  color:var(--bl);font-variant-numeric:tabular-nums;
+}
+.vy-admin .kon-disk span{
+  position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  margin-top:9px;white-space:nowrap;
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;
+}
+.vy-admin .kon-disk.ar-lugnt{color:var(--mossa)}
+.vy-admin .kon-disk.ar-atgard{color:var(--ockra)}
+.vy-admin .kon-disk.ar-problem{color:var(--fel)}
+.vy-admin .kon-disk.ar-problem svg circle:last-child{
+  /* Bruten ring. Skiljer problem från väntande även i gråskala, och
+     under deuteranopi ligger --fel och --mossa på nästan samma
+     ljushet — då är det här hela signalen. */
+  stroke-dasharray:38 14;
+}
+.vy-admin .kon-disk.ar-okand svg circle:last-child{stroke-dasharray:4 8;opacity:.5}
+
+.vy-admin .kon-lista{
+  flex-grow:1;min-width:0;
+  display:flex;flex-direction:column;gap:6px;
+}
+.vy-admin .kon-rad{
+  display:flex;align-items:center;gap:11px;
+  padding:9px 12px;
+  background:var(--pap);
+  border:1px solid var(--ln-2);
+  border-radius:10px;
+  color:var(--bl-2);font-size:.86rem;line-height:1.35;
+  text-decoration:none;
+  transition:background .18s var(--e), border-color .18s var(--e);
+}
+.vy-admin .kon-rad:hover{background:var(--acc-soft);border-color:var(--acc-line);color:var(--bl)}
+.vy-admin .kon-rad i{flex:none;display:flex;color:var(--ockra)}
+.vy-admin .kon-rad i svg{width:10px;height:10px;fill:currentColor}
+.vy-admin .kon-rad.ar-problem i{color:var(--fel)}
+.vy-admin .kon-rad span{flex-grow:1;min-width:0}
+.vy-admin .kon-rad b{flex:none;color:var(--bl-3);font-weight:400}
+.vy-admin .kon-tom{
+  margin:0;font-size:.86rem;line-height:1.5;color:var(--bl-2);
+}
+
+/* ------------------------------------------------------------
+   SAMTALET
+   ------------------------------------------------------------ */
+.vy-admin .kon-not{
+  margin:0 0 12px;font-size:.78rem;line-height:1.45;color:var(--bl-3);
+}
+.vy-admin .kon-exempel{
+  display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;
+}
+.vy-admin .kon-exempel .btn{
+  font-size:.76rem;padding:6px 12px;
+  border-color:var(--ln-2);color:var(--bl-2);
+}
+.vy-admin .kon-exempel .btn:hover{
+  border-color:var(--acc-line);color:var(--acc-text);background:var(--acc-soft);
+}
+.vy-admin .kon-falt{
+  display:flex;gap:9px;align-items:flex-end;
+}
+.vy-admin .kon-falt .inp{
+  flex-grow:1;min-width:0;resize:vertical;min-height:58px;
+}
+.vy-admin .kon-falt .btn{flex:none}
+
+/* Svaret ritas av NXAgent.stall() och bär därför .ag-*-klasserna.
+   De styr sig själva genom palettens tokens; det enda som behövs här
+   är luften ovanför och ett tak, så att ett långt svar inte trycker
+   ned resten av Översikt utanför skärmen. */
+.vy-admin .kon-ut:not(:empty){
+  margin-top:16px;padding-top:16px;
+  border-top:1px solid var(--ln);
+  max-height:420px;overflow-y:auto;
+}
+.vy-admin .kon-ut .ag-svar{border-top:none;padding-top:0;margin-top:0}
