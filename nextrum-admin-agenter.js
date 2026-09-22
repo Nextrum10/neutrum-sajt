@@ -267,13 +267,18 @@ const NXAdminAgenter = (function () {
   async function ritaLäget() {
     const { data } = await supa
       .from('agent_korningar')
-      .select('status, in_tokens, ut_tokens');
+      .select('status, in_tokens, ut_tokens, cache_las_tokens, cache_skriv_tokens');
 
     const rader = data || [];
     $('#kpi-korningar').textContent = rader.length;
     $('#kpi-kastade').textContent = rader.filter(r => r.status === 'ingen_kalla').length;
+    /* Alla fyra posterna. in_tokens utesluter det som lästes ur
+       cachen, så utan cachekolumnerna underskattar nyckeltalet
+       förbrukningen — och underskattar den MER ju bättre cachen
+       fungerar, vilket är precis fel håll. */
     $('#kpi-tokens').textContent = rader
-      .reduce((s, r) => s + (r.in_tokens || 0) + (r.ut_tokens || 0), 0)
+      .reduce((s, r) => s + (r.in_tokens || 0) + (r.ut_tokens || 0)
+        + (r.cache_las_tokens || 0) + (r.cache_skriv_tokens || 0), 0)
       .toLocaleString('sv-SE');
 
     const senaste = $('#ov-korningar');

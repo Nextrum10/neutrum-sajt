@@ -347,6 +347,8 @@ export async function avslutaKorning(
     steg_antal?: number;
     in_tokens?: number;
     ut_tokens?: number;
+    cache_las_tokens?: number;
+    cache_skriv_tokens?: number;
   },
 ) {
   if (!korning) return;
@@ -388,8 +390,22 @@ export interface Slingsvar {
   hamtade: Set<string>;
   in_tokens: number;
   ut_tokens: number;
+  /* CACHADE TOKENS RÄKNAS INTE I in_tokens.
+     usage.input_tokens utesluter allt som lästes ur cachen, så från
+     den dag prompt caching slogs på visade agentloggen en LÄGRE
+     insiffra än körningen faktiskt hade. Ett system vars regel är att
+     en körning ska ha ett pris man kan räkna ut i förväg måste räkna
+     alla fyra posterna, för de har olika taxa: vanlig in, cacheskrivning
+     (1,25x), cacheläsning (0,1x, och 0,05x på Opus 5.5) och ut. */
+  cache_las: number;
+  cache_skriv: number;
   vagrade: boolean;   // modellen avböjde (säkerhetsklassning)
   tog_slut: boolean;  // stegtaket nåddes innan modellen var klar
+  /* Modellen slog i max_tokens mitt i meningen. Förr returnerades det
+     som ett färdigt svar: adminvyn fick en halv mening, loggen sa
+     "klar", och ingenting antydde att det fattades text. Ett avhugget
+     besked om vad som bör göras först är värre än ett felmeddelande. */
+  avhugget: boolean;
 }
 
 export async function koerSlinga(opts: {
@@ -412,9 +428,22 @@ export async function koerSlinga(opts: {
      Höj per agent, aldrig globalt: taket är det som gör att en
      körning har ett pris man kan räkna ut i förväg. */
   maxSteg?: number;
+  /* Modell per agent, inte globalt. MODELL är förvalet; drift kör en
+     annan. Att byta den delade konstanten hade flyttat juridik och
+     ekonomi i samma andetag, och de har inte provats på den. */
+  modell?: string;
+  /* Tankedjupet. SÄTTS ALLTID UT, aldrig underförstått: förvalet
+     skiljer sig mellan modeller (high på Opus 5, medium på Opus 5.5),
+     så en modellbyte-rad skulle annars tyst sänka kvaliteten och se ut
+     som att den nya modellen bara var billigare. */
+  anstrangning?: 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+  maxTokens?: number;
 }): Promise<Slingsvar> {
   const { claude, system, fraga, verktyg, koer, db, korning } = opts;
   const taket = Math.max(1, opts.maxSteg ?? MAX_STEG);
+  const modell = opts.modell ?? MODELL;
+  const anstrangning = opts.anstrangning ?? 'high';
+  const takTokens = opts.maxTokens ?? 16000;
 
   // deno-lint-ignore no-explicit-any
   const messages: any[] = [{ role: 'user', content: fraga }];
@@ -423,6 +452,8 @@ export async function koerSlinga(opts: {
   let steg = 0;
   let in_tokens = 0;
   let ut_tokens = 0;
+  let cache_las = 0;
+  let cache_skriv = 0;
 
   while (steg < taket) {
     // fallbacks: 'default' låter Anthropic köra om ett avböjt anrop på
@@ -434,11 +465,25 @@ export async function koerSlinga(opts: {
     // publicerade typen. Den är medvetet snäv: NonStreaming, så att
     // svarstypen blir BetaMessage och inte en ström.
     const params = {
-      model: MODELL,
-      max_tokens: 8000,
+      model: modell,
+      max_tokens: takTokens,
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
       thinking: { type: 'adaptive' },
+      output_config: { effort: anstrangning },
+      /* CACHENS ANDRA HALVA.
+         Agenten sätter själv en brytpunkt sist i systemprompten — det
+         är det dyra, statiska prefixet, och det får en garanterad
+         läspunkt. Den här raden sköter SVANSEN: brytpunkten placeras
+         automatiskt på sista blocket och flyttas framåt när samtalet
+         växer.
+
+         Det är svansen som är den stora posten. Prefixet är samma
+         ~3000 tokens varje varv; meddelandelistan växer med varje
+         verktygssvar och skickas om i sin helhet upp till fjorton
+         gånger. Utan den här raden cachades bara den del som inte
+         växte. */
+      cache_control: { type: 'ephemeral' },
       system,
       tools: verktyg,
       messages,
@@ -448,10 +493,15 @@ export async function koerSlinga(opts: {
 
     in_tokens += svar.usage?.input_tokens ?? 0;
     ut_tokens += svar.usage?.output_tokens ?? 0;
+    cache_las += svar.usage?.cache_read_input_tokens ?? 0;
+    cache_skriv += svar.usage?.cache_creation_input_tokens ?? 0;
 
     // Alltid stop_reason före content. Vid en vägran är content tom.
     if (svar.stop_reason === 'refusal') {
-      return { text: '', steg, hamtade, in_tokens, ut_tokens, vagrade: true, tog_slut: false };
+      return {
+        text: '', steg, hamtade, in_tokens, ut_tokens, cache_las, cache_skriv,
+        vagrade: true, tog_slut: false, avhugget: false,
+      };
     }
 
     // Innehållet läggs tillbaka oförändrat. Tankeblocken måste följa med.
@@ -480,7 +530,11 @@ export async function koerSlinga(opts: {
         .map((b) => b.text ?? '')
         .join('\n')
         .trim();
-      return { text, steg, hamtade, in_tokens, ut_tokens, vagrade: false, tog_slut: false };
+      return {
+        text, steg, hamtade, in_tokens, ut_tokens, cache_las, cache_skriv,
+        vagrade: false, tog_slut: false,
+        avhugget: svar.stop_reason === 'max_tokens',
+      };
     }
 
     const anrop = (svar.content as { type: string; id?: string; name?: string; input?: unknown }[])
@@ -523,5 +577,8 @@ export async function koerSlinga(opts: {
     messages.push({ role: 'user', content: resultat });
   }
 
-  return { text: '', steg, hamtade, in_tokens, ut_tokens, vagrade: false, tog_slut: true };
+  return {
+    text: '', steg, hamtade, in_tokens, ut_tokens, cache_las, cache_skriv,
+    vagrade: false, tog_slut: true, avhugget: false,
+  };
 }

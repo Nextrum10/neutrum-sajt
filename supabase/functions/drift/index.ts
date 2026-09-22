@@ -59,6 +59,31 @@ const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 // räkning som växer medan ingen tittar.
 const MAX_STEG_DRIFT = 14;
 
+/* MODELL OCH TANKEDJUP STÅR IHOP, OCH DE STÅR HÄR I STÄLLET FÖR I DEN
+   DELADE MOTORN AV TVÅ SKÄL.
+
+   1. Opus 5.5 kostar $4/$20 mot Opus 5:s $5/$25, och cacheläsningar
+      $0,20 mot $0,50. Samma körning, tjugo procent billigare, och
+      cachen nästan tre gånger billigare.
+
+   2. OPUS 5.5 HAR medium SOM FÖRVAL FÖR effort. OPUS 5 HAR high.
+      Byter man bara modellsträngen får man alltså två ändringar på en
+      gång: lägre pris OCH grundare tänkande. Räkningen faller mer än
+      tjugo procent och det ser ut som att den nya modellen bara var
+      billigare — medan man i själva verket bytt kvalitet mot pengar
+      utan att veta om det. Därför är high utskrivet. Ska det sänkas
+      ska det vara ett eget beslut, mätt för sig.
+
+   Konstanterna är drift-agentens egna. Den delade MODELL flyttar
+   juridik och ekonomi också, och de har inte provats på 5.5. */
+const MODELL_DRIFT = 'claude-opus-5-5';
+const ANSTRANGNING_DRIFT = 'high' as const;
+
+/* Tankeblocken räknas mot max_tokens fast de inte returneras. Åtta
+   tusen räckte när tänkandet var grundare; på high är det en körning
+   som kan huggas av mitt i meningen. */
+const MAX_TOKENS_DRIFT = 16000;
+
 const LASVERKTYG = [
   'nya_leads', 'omatchade_elever', 'kommande_pass', 'saknade_rapporter',
   'analys', 'avvikelser',
@@ -304,6 +329,9 @@ Deno.serve(async (req) => {
         db: logg,
         korning,
         maxSteg: MAX_STEG_DRIFT,
+        modell: MODELL_DRIFT,
+        anstrangning: ANSTRANGNING_DRIFT,
+        maxTokens: MAX_TOKENS_DRIFT,
         koer: async (namn, arg) => {
           /* Körningens id följer med förslagen, så att ett förslag i
              adminvyn går att spåra tillbaka till frågan som ställdes. */
@@ -331,14 +359,36 @@ Deno.serve(async (req) => {
       await avslutaKorning(logg, korning, {
         status: 'fel', anledning: 'Modellen avböjde frågan.',
         steg_antal: resultat.steg, in_tokens: resultat.in_tokens, ut_tokens: resultat.ut_tokens,
+        cache_las_tokens: resultat.cache_las, cache_skriv_tokens: resultat.cache_skriv,
       });
       return json({ error: 'Modellen avböjde att svara på den här frågan. Formulera om den.' }, 502);
+    }
+
+    /* Ett avhugget svar returneras ALDRIG som ett svar. Förut föll
+       max_tokens ihop med end_turn: adminvyn fick en halv mening,
+       loggen sa "klar", och ingenting antydde att det fattades text.
+       Ett avbrutet besked om vad som bör göras först är värre än ett
+       felmeddelande, för det ser ut att gå att lita på. */
+    if (resultat.avhugget) {
+      await avslutaKorning(logg, korning, {
+        status: 'fel',
+        anledning: `Svaret höggs av vid taket på ${MAX_TOKENS_DRIFT} tokens.`,
+        steg_antal: resultat.steg,
+        in_tokens: resultat.in_tokens, ut_tokens: resultat.ut_tokens,
+        cache_las_tokens: resultat.cache_las, cache_skriv_tokens: resultat.cache_skriv,
+      });
+      return json({
+        error: 'Svaret blev längre än taket och höggs av mitt i. Ställ en smalare fråga.',
+        korning_id: korning,
+        pafyllnad: 'Det halva svaret ligger kvar under Agenter, om det säger något ändå.',
+      }, 502);
     }
 
     if (resultat.tog_slut) {
       await avslutaKorning(logg, korning, {
         status: 'fel', anledning: `Nådde taket på ${MAX_STEG_DRIFT} steg utan färdigt svar.`,
         steg_antal: resultat.steg, in_tokens: resultat.in_tokens, ut_tokens: resultat.ut_tokens,
+        cache_las_tokens: resultat.cache_las, cache_skriv_tokens: resultat.cache_skriv,
       });
       /* korning_id följer med. Agenten kan ha hunnit lämna förslag
          innan taket slog i, och de ligger kvar i kön — att bara säga
@@ -357,6 +407,8 @@ Deno.serve(async (req) => {
       steg_antal: resultat.steg,
       in_tokens: resultat.in_tokens,
       ut_tokens: resultat.ut_tokens,
+      cache_las_tokens: resultat.cache_las,
+      cache_skriv_tokens: resultat.cache_skriv,
     });
 
     /* Ingen källkontroll här, till skillnad från juridik och ekonomi.
