@@ -713,7 +713,7 @@
   async function laddaPass() {
     const host = $('#pass-lista');
     const { data, error } = await supa
-      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, status, student_id, created_by')
+      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, status, student_id, created_by, betalning_status')
       .eq('parent_id', S.user.id).order('wanted_date', { ascending: true });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
@@ -747,7 +747,16 @@
         knappar = '<button class="btn btn-primary btn-sm" data-passvar="confirmed" data-id="' + b.id + '">Passar bra</button>'
                 + '<button class="btn btn-ghost btn-sm" data-passvar="cancelled" data-id="' + b.id + '">Avböj</button>';
       } else if (kommande) {
-        knappar = '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>'
+        /* Betalningen hör till BEKRÄFTADE pass, inte till förfrågningar
+           (Fas 12.2). Ett pass som studiehjälparen ännu inte tackat ja
+           till kan avböjas, och då hade varje förfrågan blivit en
+           återbetalning: en kortavgift vi inte får tillbaka, och en
+           familj som undrar vad som hände. */
+        if (b.status === 'confirmed' && b.betalning_status !== 'betald') {
+          knappar = '<button class="btn btn-primary btn-sm" data-betala="' + b.id + '">'
+                  + (b.betalning_status === 'misslyckad' ? 'Försök betala igen' : 'Betala') + '</button>';
+        }
+        knappar += '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>'
                 + '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
       }
 
@@ -785,6 +794,35 @@
       if (error) { alert('Kunde inte svara: ' + felText(error)); return; }
       await laddaPass();
       await laddaBokning();
+      return;
+    }
+
+    /* Betalningen (Fas 12.2). Knappen skickar BARA passets id. Priset,
+       rabatten och studiehjälparens del räknas ut på servern, ur
+       databasen — samma skäl som att invoices och payouts med flit
+       saknar INSERT-policy för användare: kan ingen skicka in ett
+       belopp kan ingen skicka in fel belopp. */
+    const bet = e.target.closest('[data-betala]');
+    if (bet) {
+      await medan(bet, 'Öppnar…', async () => {
+        const svar = await supa.functions.invoke('stripe-checkout', {
+          body: { pass: bet.dataset.betala, retur: location.origin }
+        });
+        if (svar.error) {
+          /* Funktionens egen text ligger i error.context, inte i data.
+             Utan det här blir varje nekande "FunctionsHttpError", och
+             då får familjen veta att något gick fel men inte vad. */
+          let text = felText(svar.error);
+          try {
+            const kropp = await svar.error.context.json();
+            if (kropp && kropp.error) text = kropp.error;
+          } catch (_) { /* behåll texten ovan */ }
+          alert(text);
+          return;
+        }
+        if (svar.data && svar.data.url) { location.href = svar.data.url; return; }
+        alert('Betalningen kunde inte öppnas. Försök igen, eller hör av dig till oss.');
+      });
       return;
     }
 

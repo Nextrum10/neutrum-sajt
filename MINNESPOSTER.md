@@ -262,8 +262,11 @@ En Claude-artefaktlänk kan aldrig prata med Supabase. Testa mot riktiga
 filer eller lokal server (`python3 .claude/serve.py 8951`, som härmar
 Vercels `cleanUrls`).
 
-Inte byggt än: betaltjänst (fakturor skickas, betalning sker utanför
-plattformen), Google Workspace, Fortnox (fällan: refresh-token roteras
+Inte byggt än: betaltjänst i drift. Två vägar finns i repot och bara
+månadsfaktureringen är provad — Stripe Connect per pass (Fas 12) är kod
+som aldrig körts mot Stripe, och de två vägarna vet inte om varandra, så
+båda skarpt samtidigt fakturerar familjen två gånger. Vidare: Google
+Workspace, Fortnox (fällan: refresh-token roteras
 vid varje användning, sparas inte det nya är ni utlåsta om en månad),
 bakgrundskontroller, skatt och anställning av minderåriga, riktiga foton
 på studiehjälparna.

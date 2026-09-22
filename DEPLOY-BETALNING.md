@@ -331,3 +331,132 @@ fått fakturan.
 Behöver ni ta bort en felaktig faktura: ta bort den i Table Editor. Raderna följer
 med (`on delete cascade`), och passen blir automatiskt ofakturerade igen och
 kommer med i nästa körning.
+
+---
+
+## 9. Stripe Connect och betalning per pass (Fas 12)
+
+Det här är arkitekturen från `SKISS-BETALNING-STRIPE.md`, byggd: familjen betalar
+med kort när passet är **bekräftat**, betalningen skapas på Nextrums konto, och
+studiehjälparens del går direkt till hens anslutna konto som en destination charge.
+Nextrums del blir en application fee.
+
+**Ingenting av det här är provat mot Stripe.** Koden är typkontrollerad, och
+signaturkontrollen har tretton egna prov, men miljön där den skrevs når inte
+`api.stripe.com`. Första körningen i **testläge** är alltså det första riktiga
+provet. Gör den innan ni rör en skarp nyckel.
+
+### 9.1 Vad som finns
+
+| Del | Var |
+|---|---|
+| Kolumnerna och skyddet | `supabase/migrations/20260922155740_fas12_1_*.sql` — **applicerad** |
+| Lagret mot Stripe | `supabase/functions/_delad/stripe.ts` |
+| Kontot per studiehjälpare | `supabase/functions/stripe-konto/` |
+| Familjens betalning | `supabase/functions/stripe-checkout/` |
+| Webhooken | `supabase/functions/stripe-webhook/` |
+| Knappen hos studiehjälparen | Ersättning → Utbetalningskonto |
+| Knappen hos familjen | Passet, när det är bekräftat |
+
+### 9.2 Nycklarna
+
+**Klistra aldrig in dem i en chatt, i `nextrum-config.js` eller i någon fil
+webbläsaren hämtar.** De bor som secrets i Supabase. Den publicerbara nyckeln
+(`pk_...`) behövs inte: vi använder Stripes egen betalsida, så ingen Stripe-kod
+körs i webbläsaren.
+
+Via dashboarden: **Project Settings → Edge Functions → Secrets**. Eller med CLI:
+
+```
+supabase secrets set STRIPE_SECRET_KEY=sk_test_...
+```
+
+`STRIPE_WEBHOOK_SECRET` kan inte sättas än. Den finns först när webhook-endpointen
+är skapad i Stripe, och den behöver funktionens URL. Se 9.4.
+
+### 9.3 Driftsätt
+
+```
+supabase functions deploy stripe-konto
+supabase functions deploy stripe-checkout
+supabase functions deploy stripe-webhook
+```
+
+`stripe-webhook` har `verify_jwt = false` i `supabase/config.toml`, för att
+anroparen är Stripe och inte kan ha en Supabase-token. **Driftsätt aldrig den utan
+att filen finns med** — se filhuvudet i `config.toml` för vad som annars händer.
+De två andra ska ha JWT-kravet kvar: de anropas av en inloggad person.
+
+### 9.4 Webhooken
+
+Stripe → Developers → Webhooks → Add endpoint. Adressen är:
+
+```
+https://ddkfiuvcppalutfulvbi.supabase.co/functions/v1/stripe-webhook
+```
+
+Händelser som ska väljas, och varför just de:
+
+| Händelse | Vad den gör hos oss |
+|---|---|
+| `checkout.session.completed` | Sätter passet som betalt. **Enda vägen dit.** |
+| `payment_intent.payment_failed` | Familjen kan försöka igen |
+| `charge.refunded` | Skriver återbetalt belopp |
+| `charge.dispute.created`, `charge.dispute.closed` | Markerar tvist |
+| `transfer.created`, `transfer.reversed` | Spårar studiehjälparens del |
+| `account.updated` | Kontots krav ändrades |
+| `payout.paid`, `payout.failed` | Loggas |
+
+Kopiera sedan `whsec_...` och sätt den:
+
+```
+supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+**Utan den svarar funktionen 400 på varje leverans**, och då blir ingen betalning
+registrerad trots att pengarna dragits. Det är det enda felet i hela kedjan som ser
+ut som tystnad i stället för som ett fel.
+
+### 9.5 Kontoutdraget
+
+Sätt Nextrums statement descriptor i Stripe → Settings → Business → Public details.
+Koden sätter ett suffix per pass (ämnet), men grunddelen kommer från kontot. Står
+det något annat än Nextrum där ringer familjen banken i stället för oss.
+
+Slå också på kvitton: Stripe → Settings → Emails → Successful payments.
+
+### 9.6 Prova hela kedjan, i testläge
+
+I den här ordningen, för varje steg beror på det förra:
+
+1. **Studiehjälparen kopplar kontot.** Logga in som hen, Ersättning → Koppla
+   utbetalningskonto. Stripes onboarding öppnas. Fyll i med testuppgifter.
+2. **Kontrollera att rutan säger rätt sak.** Backa ur mitt i onboardingen med flit
+   och se att den säger "behöver kompletteras", inte "kopplat". Det är hela
+   poängen med de fem fälten.
+3. **Boka ett pass och bekräfta det.** Betala-knappen ska dyka upp först då.
+4. **Betala med testkortet** `4242 4242 4242 4242`, valfritt framtida datum.
+5. **Kontrollera i databasen** att `betalning_status = 'betald'`, att
+   `stripe_transfer_id` är ifylld och att `betalt_ore = ersattning_ore + avgift_ore`.
+6. **Prova 3D Secure** med `4000 0027 6000 3184`.
+7. **Prova ett nekat kort** med `4000 0000 0000 0002` och se att passet blir
+   `misslyckad` och går att betala igen.
+8. **Prova en återbetalning** från Stripes dashboard, med `reverse_transfer`.
+9. **Prova en tvist** med `4000 0000 0000 0259`.
+10. **Prova att betala mot en studiehjälpare som inte kopplat kontot.** Ska nekas
+    med `mottagare_ej_klar`, inte skapa en betalning.
+
+### 9.7 Det som inte är löst av att koden finns
+
+- **Anställningsfrågan.** `foretagsfakta.studiehjalpare_form` står på `oklart`.
+  Blir svaret "anställda" är ett anslutet konto fel väg för ersättningen, och den
+  här kedjan ska då inte användas för utbetalning. Se `SKISS-BETALNING-STRIPE.md`.
+- **Studiehjälpare under 18.** Stripes svenska avtal kräver en vuxen representant.
+  Att Stripe tillåter det är inte samma sak som att det är rätt.
+- **Moms.** Ni är inte momsregistrerade. Passerar ni omsättningsgränsen ändras vad
+  379 kr betyder, och då ändras beloppet som går till Stripe.
+- **`fakturering` är kvar och rör ingenting av det här.** Ett pass som betalats med
+  kort kommer fortfarande med i månadskörningen, eftersom urvalet i `passunderlag`
+  inte vet om betalningen. **Kör inte båda vägarna skarpt samtidigt** — då
+  faktureras familjen två gånger. Antingen stängs månadskörningen av, eller så
+  byggs urvalet om till att hoppa över pass med `betalning_status = 'betald'`.
