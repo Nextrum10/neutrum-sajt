@@ -292,6 +292,14 @@ Sju regler bär systemet:
 4. **Mejl är på som förval, SMS av.** `notis_vill()` faller tillbaka
    på `p_kanal = 'mejl'` när personen inte valt något. Avanmälan
    skriver bara i `notis_val`, aldrig i `profiles`.
+
+   Valen ändras under **Profil → Notiser** i båda vyerna
+   (`NXStudie.notisval()`, delad mellan dem). Det är huvudvägen, och
+   den enda som kan slå PÅ igen. Länken i mejlets fot är ett
+   komplement för mejlprogrammens One-Click och för den som inte vill
+   logga in: den stänger av EN sort och kan aldrig slå på något.
+   **En saknad rad betyder PÅ** — visar vyn något annat ser en orörd
+   inställning avstängd ut medan mejlen fortsätter komma.
 5. **`rapport` mejlas aldrig.** Den står i `notis_typer()` men inte i
    `notis_mejlbara()` — den syns bara i vyn. Listorna finns också i
    `typer.ts` för att mallarna ska gå att prova utan databas; **ändras

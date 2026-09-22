@@ -1216,7 +1216,148 @@ window.NXStudie = (function () {
     });
   }
 
+  /* ============================================================
+     NOTISVALEN — vilka mejl man vill ha
+
+     Raderna ligger i notis_val, en per person, typ och kanal. RLS
+     släpper bara igenom ens egna ("användaren styr sina notisval"),
+     så vyn behöver ingen egen kontroll: en annans rad går inte att
+     läsa och inte att skriva.
+
+     EN SAKNAD RAD BETYDER PÅ. notis_vill() i databasen faller tillbaka
+     på `kanal = 'mejl'` — mejl på som förval, SMS av. Vyn måste visa
+     samma sak, annars ser en orörd inställning avstängd ut medan
+     mejlen fortsätter komma.
+
+     BARA MEJL VISAS. notis_val har också kanalen 'sms', men SMS står i
+     provläge (notis_drift.sms_lage) och skickar ingenting. En
+     strömbrytare för något som ändå inte går ut vore ett löfte vi inte
+     håller. Dyker SMS upp på riktigt är det här stället att utöka.
+
+     rapport står i notis_typer men INTE i notis_mejlbara: den syns
+     bara i vyn och mejlas aldrig. Den har därför ingen rad här — en
+     avstängbar mejlnotis som aldrig var ett mejl är bara förvirrande.
+
+     Texterna för påminnelser och chatt läses ur notis_installning i
+     stället för att stå skrivna här. Admin kan ändra takten, och en
+     hårdkodad "dagen före" hade blivit osann utan att någon märkte
+     det.
+
+     supa skickas in. Resten av filen rör ingen databas alls, och den
+     regeln är värd att hålla — men två vyer med var sin kopia av
+     samma fråga är precis det som glider isär.
+     ============================================================ */
+  var NOTISVAL = [
+    { typ: 'pass_nytt',      namn: 'Nytt pass',            om: 'När ett pass bokas eller föreslås.' },
+    { typ: 'pass_bekraftat', namn: 'Bekräftat pass',       om: 'När en föreslagen tid blir bekräftad.' },
+    { typ: 'pass_flyttat',   namn: 'Flyttat pass',         om: 'När ett pass byter tid.' },
+    { typ: 'pass_avbokat',   namn: 'Avbokat pass',         om: 'När ett bokat pass ställs in.' },
+    { typ: 'pass_avbojt',    namn: 'Avböjd tid',           om: 'När en föreslagen tid inte passar.' },
+    { typ: 'meddelande',     namn: 'Nya meddelanden',      om: 'När någon skriver till dig.' },
+    { typ: 'paminnelse',     namn: 'Påminnelse före pass', om: 'Innan ett bokat pass.' }
+  ];
+
+  function notisval(o) {
+    var host = o.host;
+    var supa = o.supa;
+    var anvandare = o.anvandare;
+    var msg = o.msg || null;
+
+    var pa = {};         /* typ -> det som visas just nu */
+    var inst = null;     /* notis_installning, för texterna */
+    var upptagen = {};   /* typ -> true medan ett sparande pågår */
+
+    function beskrivning(rad) {
+      if (rad.typ === 'paminnelse' && inst && (inst.paminnelser_timmar || []).length) {
+        return 'Skickas ' + inst.paminnelser_timmar.map(function (h) { return h + ' h'; })
+          .join(' och ') + ' före passet.';
+      }
+      if (rad.typ === 'meddelande' && inst && inst.chatt_samla_minuter) {
+        return 'Flera meddelanden samlas till ett mejl per '
+          + inst.chatt_samla_minuter + ' minuter.';
+      }
+      return rad.om;
+    }
+
+    function rita() {
+      host.innerHTML = NOTISVAL.map(function (rad) {
+        var på = pa[rad.typ] !== false;
+        return '<div class="nx-nval">'
+          + '<div class="nx-nval-text"><b>' + esc(rad.namn) + '</b>'
+          + '<span class="xsmall">' + esc(beskrivning(rad)) + '</span></div>'
+          + '<button class="chip" type="button" data-notistyp="' + esc(rad.typ) + '"'
+          + ' aria-pressed="' + (på ? 'true' : 'false') + '"'
+          + (upptagen[rad.typ] ? ' disabled' : '')
+          + '>' + (på ? 'Mejl på' : 'Mejl av') + '</button>'
+          + '</div>';
+      }).join('');
+    }
+
+    function laddar(text) {
+      host.innerHTML = '<p class="xsmall">' + esc(text) + '</p>';
+    }
+
+    /* Ett klick per typ. Lyssnaren sitter på behållaren, inte på
+       knapparna: rita() byter ut dem vid varje ändring, och en
+       lyssnare per knapp hade försvunnit med dem. Inline-hanterare
+       går inte — vyerna har script-src 'self'. */
+    host.addEventListener('click', function (e) {
+      var knapp = e.target.closest('[data-notistyp]');
+      if (!knapp || knapp.disabled) return;
+      var typ = knapp.dataset.notistyp;
+      if (upptagen[typ]) return;
+
+      var fore = pa[typ] !== false;
+      var efter = !fore;
+
+      /* Växlas direkt och rullas tillbaka om sparandet faller. En
+         strömbrytare som står still tills servern svarat känns
+         trasig; en som ljuger är värre, därför rullas den tillbaka. */
+      pa[typ] = efter;
+      upptagen[typ] = true;
+      rita();
+      if (msg) NX.rensa(msg);
+
+      supa.from('notis_val')
+        .upsert({ profil_id: anvandare, typ: typ, kanal: 'mejl', pa: efter },
+                { onConflict: 'profil_id,typ,kanal' })
+        .then(function (svar) {
+          upptagen[typ] = false;
+          if (svar.error) {
+            pa[typ] = fore;
+            rita();
+            if (msg) NX.säg(msg, 'Kunde inte spara: ' + NX.felText(svar.error), false);
+            return;
+          }
+          rita();
+          if (msg) {
+            NX.säg(msg, efter ? '✓ Du får mejl om det här igen.'
+                              : '✓ Sparat. Du får inga fler mejl om det här.', true);
+          }
+        });
+    });
+
+    laddar('Hämtar dina val …');
+
+    Promise.all([
+      supa.from('notis_val').select('typ, pa').eq('profil_id', anvandare).eq('kanal', 'mejl'),
+      supa.from('notis_installning').select('paminnelser_timmar, chatt_samla_minuter').eq('id', 1).maybeSingle()
+    ]).then(function (svar) {
+      var val = svar[0];
+      if (val.error) {
+        laddar('Dina val gick inte att hämta just nu.');
+        return;
+      }
+      (val.data || []).forEach(function (r) { pa[r.typ] = r.pa !== false; });
+      /* Inställningen är bara text. Faller den ritas raderna ändå,
+         med de allmänna beskrivningarna. */
+      inst = svar[1] && !svar[1].error ? svar[1].data : null;
+      rita();
+    });
+  }
+
   return {
+    notisval: notisval,
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
     inloggningsruta: inloggningsruta, schemaI: schemaI,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,

@@ -190,6 +190,12 @@ SAMMA ändring. `typer_test.ts` faller om de glider isär.
 foten: "… där mejl om {kategori} är påslaget") och en funktion i
 `MALLAR` som ger ämne, rubrik, en mening, en knapp och en faktaruta.
 
+**3b. `nextrum-studie.js`, listan `NOTISVAL`.** En rad med namn och en
+kort förklaring, annars går typen inte att stänga av under
+**Profil → Notiser**. Glöms den syns notisen i mejlet men inte i
+inställningen, och den enda vägen bort blir länken i foten — som bara
+kan stänga av, aldrig slå på igen.
+
 Mallen ser bara `RenData`. Behöver den ett fält som inte finns där
 är det `renData()` i `typer.ts` som ska ändras — och då ska du fråga
 dig om fältet verkligen hör hemma i ett mejl. Den vitlistan är

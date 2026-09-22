@@ -1941,6 +1941,16 @@
     prVal.arskurser = (t.grade_levels || []).map(v => prKanonisk(PR_ARSKURSER, v));
     prVal.format = (t.formats || []).map(v => prKanonisk(PR_FORMAT, v));
     ritaAllaPrVal();
+
+    /* Notisvalen under Profil → Notiser. Samma modul som föräldravyn
+       använder: raderna i notis_val ser likadana ut för båda rollerna,
+       och två kopior av samma lista hade glidit isär. */
+    NXStudie.notisval({
+      host: $('#notisval-lista'),
+      supa: supa,
+      anvandare: S.user.id,
+      msg: $('#notisval-msg')
+    });
   }
 
   $('#profil-form').addEventListener('submit', async e => {
