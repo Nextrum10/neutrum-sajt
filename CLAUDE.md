@@ -693,11 +693,14 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   betaltjänst är kopplad till dem: `Betald` kryssas i för hand, och
   utbetalning görs från banken.
 
-  **Stripe Connect per pass** (Fas 12) är kod, inte drift. Migrationen
-  är applicerad, men de tre funktionerna är inte driftsatta, inga
-  nycklar är satta, och **ingenting har någonsin körts mot Stripe** —
-  miljön där koden skrevs når inte `api.stripe.com`. `DEPLOY-BETALNING.md`
-  avsnitt 9 har ordningen och en provlista i testläge.
+  **Stripe Connect per pass** (Fas 12) är driftsatt men inte i bruk.
+  Migrationen är applicerad och `stripe-konto`, `stripe-checkout` och
+  `stripe-webhook` ligger ACTIVE. Men **ingen nyckel är satt**, ingen
+  webhook-endpoint finns hos Stripe, och **ingenting har någonsin körts
+  mot Stripe** — miljön där koden skrevs når inte `api.stripe.com`.
+  Funktionerna svarar därför "STRIPE_SECRET_KEY saknas i miljön", och
+  webhooken svarar 400 på varje leverans. `DEPLOY-BETALNING.md` avsnitt
+  9 har ordningen och en provlista i testläge.
 
   **De två vägarna vet inte om varandra.** `passunderlag` tittar inte på
   `betalning_status`, så ett kortbetalt pass kommer ändå med i

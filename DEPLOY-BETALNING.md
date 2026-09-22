@@ -22,7 +22,7 @@ behövs om ni sätter upp en ny miljö.
 | 4. Deploy `fakturering` | ACTIVE — omdriftsatt i Fas 2 med urvalet nedan och 10 dagar (versionen före hade 14) |
 | 5. Torrkörning | **Väntar på er** — knappen under Ekonomi → Månadskörning, ingen nyckel behövs |
 | 6. Schemaläggning | **Väntar på er** |
-| 7. Stripe | Inte påbörjat, och behöver inte vara det |
+| 7. Stripe | **Delvis.** Fas 12: migrationen applicerad och de tre stripe-funktionerna driftsatta. Nycklarna är INTE satta och inget har körts mot Stripe. Se avsnitt 9 |
 | 8. Deploy `faktura-utskick` | ACTIVE, version 2 — betalningsvillkor 10 dagar |
 
 Databasen är tom på fakturor: `invoices`, `invoice_lines` och `payouts` har noll
@@ -348,15 +348,23 @@ provet. Gör den innan ni rör en skarp nyckel.
 
 ### 9.1 Vad som finns
 
-| Del | Var |
+| Del | Läge |
 |---|---|
-| Kolumnerna och skyddet | `supabase/migrations/20260922155740_fas12_1_*.sql` — **applicerad** |
-| Lagret mot Stripe | `supabase/functions/_delad/stripe.ts` |
-| Kontot per studiehjälpare | `supabase/functions/stripe-konto/` |
-| Familjens betalning | `supabase/functions/stripe-checkout/` |
-| Webhooken | `supabase/functions/stripe-webhook/` |
-| Knappen hos studiehjälparen | Ersättning → Utbetalningskonto |
-| Knappen hos familjen | Passet, när det är bekräftat |
+| Kolumnerna och skyddet (`20260922155740_fas12_1_*.sql`) | **Applicerad** |
+| `stripe-konto` | **ACTIVE**, version 1, `verify_jwt = true` |
+| `stripe-checkout` | **ACTIVE**, version 1, `verify_jwt = true` |
+| `stripe-webhook` | **ACTIVE**, version 1, `verify_jwt = false` |
+| `STRIPE_SECRET_KEY` | **Inte satt** — funktionerna svarar "STRIPE_SECRET_KEY saknas i miljön" |
+| `STRIPE_WEBHOOK_SECRET` | **Inte satt** — webhooken svarar 400 på varje leverans |
+| Webhook-endpoint hos Stripe | **Inte skapad** |
+| Knappen hos studiehjälparen | Finns: Ersättning → Utbetalningskonto |
+| Knappen hos familjen | Finns: på passet, när det är bekräftat |
+
+De driftsatta filerna är lästa tillbaka och jämförda mot repot, rad för
+rad, inklusive hela `_delad/pris.ts`. De är identiska. Det är inte en
+formalitet: `apply_migration` och `functions deploy` ändrar driften
+direkt medan git är ett skilt steg, och de två har glidit isär i det
+här projektet förut (CLAUDE.md avsnitt 7).
 
 ### 9.2 Nycklarna
 
@@ -375,6 +383,9 @@ supabase secrets set STRIPE_SECRET_KEY=sk_test_...
 är skapad i Stripe, och den behöver funktionens URL. Se 9.4.
 
 ### 9.3 Driftsätt
+
+**Redan gjort.** Kommandona står kvar för en ny miljö, och för när ni
+ändrar något i funktionerna:
 
 ```
 supabase functions deploy stripe-konto
