@@ -649,8 +649,18 @@ select pg_temp.rakna('5.2 familj P ser sina två uppdrag', '00000000-0000-4000-8
   'select count(*) from public.uppdrag', 2);
 select pg_temp.rakna('5.2 familj Q ser bara sitt eget', '00000000-0000-4000-8000-0000000000f2',
   'select count(*) from public.uppdrag', 1);
-select pg_temp.rakna('5.2 studiehjälpare A ser sin familjs uppdrag, inte Q:s', '00000000-0000-4000-8000-0000000000a1',
-  $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 2);
+-- EN, inte två. Testet väntade sig förut familjens BÅDA uppdrag, och
+-- det var den läcka Runda 2 stängde: policyn var matchad mot familjen
+-- (is_matched_tutor_of(parent_id)) och släppte därför igenom alla
+-- syskon så fort ett av dem var matchat. Migrationen
+-- r2_fas1_6_studiehjalparen_ser_bara_sina_elever säger det rakt ut:
+-- "Samma sak gällde uppdragen, ett per barn."
+--
+-- A är matchad med familj P:s äldsta barn. Syskonet har B som
+-- studiehjälpare, och dess uppdrag ska A inte se. Står det 2 här igen
+-- är det löftet i integritetspolicyn som brustit, inte testet.
+select pg_temp.rakna('5.2 studiehjälpare A ser sin elevs uppdrag, inte syskonets eller Q:s', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 1);
 select pg_temp.rakna('5.2 admin ser alla', '00000000-0000-4000-8000-0000000000ad',
   $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 3);
 
