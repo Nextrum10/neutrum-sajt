@@ -792,6 +792,22 @@
 /* ------------------------------------------------------------
    SEKTIONERNA
    ------------------------------------------------------------ */
+
+/* Webbläsarens egen scrollförankring stängs av HÄR, och bara här.
+
+   Den är byggd för att hålla kvar det man läser när något ovanför
+   ändrar storlek. En sektion byts inte — den ersätts: den gamla
+   göms och en helt annan visas på samma plats. Ankaret som
+   webbläsaren valde före bytet finns då inte kvar, och
+   korrigeringen den räknar fram blir godtycklig. Mätt i provbänken
+   flyttade den sidan 632px vid två av sju menyval i
+   studiehjälparvyn — nedåt i det ena fallet, uppåt i det andra,
+   utan att en enda rad JavaScript rörde scrollen.
+
+   Uteslutningen gäller sektionens hela innerträd, vilket är avsikten:
+   inget som ritas om inuti en sektion ska heller få flytta sidan. */
+section[data-sek]{overflow-anchor:none}
+
 .vy-sek-topp{
   display:flex;align-items:flex-end;justify-content:space-between;
   gap:18px;flex-wrap:wrap;
