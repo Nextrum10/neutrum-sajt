@@ -147,8 +147,13 @@ body.vy-admin{
    fel: agent.css:313 (.ag-steg-fel), :336 (.ag-status[data-s="fel"]) och
    de tre style="color:var(--acc-lugn)" i nextrum-admin-agenter.js:134,
    251 och 332. Betydelsen får sitt eget scope i stället för att sänka
-   hovern i hela vyn. */
-body.vy-admin [data-sek="agenter"]{--acc-lugn:var(--fel)}
+   hovern i hela vyn.
+
+   Driftkonsolen på Översikt ritar sitt svar genom samma NXAgent.stall()
+   och får därmed samma .ag-*-markup. Utan .kon-ut här hade ett fel i
+   konsolens svar ritats i hover-cyan i stället för rött. */
+body.vy-admin [data-sek="agenter"],
+body.vy-admin .kon-ut{--acc-lugn:var(--fel)}
 
 /* Sidfoten bär class="ftr on-band", och cinema.css:2278 sätter om hela
    accentgruppen på just de klasserna — med fyra LITERALER som inte går

@@ -876,15 +876,10 @@
       window.addEventListener('hashchange', följHash);
       följHash();
 
-      S.hero = NXArbete.hero({
-        host: $('#vy-hero'),
-        namn: S.profil.full_name,
-        etikett: 'Adminvy',
-        lede: 'Här är läget på Nextrum idag.',
-        video: 'bilder/hero-studievy.mp4',
-        bild: 'bilder/hero-nextrum-1280.jpg',
-        marke: { text: 'Ledningen', ikon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20V8.5l8.5-5 8.5 5V20"/><path d="M9.5 20v-6h5v6"/></svg>' }
-      });
+      /* Fotoheron är borta. Den låg överst på alla arton flikar och
+         sa hej; namnet står i sidomenyns fot och rollen i sidhuvudet.
+         Driftkonsolen på Översikt ersätter den och säger något som
+         ändras. */
 
       await hämtaAllt();
       await hämtaEkonomiunderlag();
@@ -922,26 +917,12 @@
       await ritaAI();
       await ritaÖversikt();
 
-      /* Samma summa som arbetskön på Översikt visar, inte en egen
-         räkning. Två tal som båda heter "saker att göra" och säger
-         olika saker är värre än inget tal alls. */
-      const attGöra = S.attGora.reduce((n, p) => n + p.antal, 0);
-      const främst = S.attGora[0];
-
-      /* "Nästa pass" stod här förut. Det är familjens och
-         studiehjälparens fråga, inte ledningens — och det står redan
-         under Bokningar. Vad ledningen behöver veta av hjältebilden
-         är hur mycket som väntar på någon, och det är det enda kort
-         som är kvar. */
-      S.hero.uppdatera({
-        chatt: attGöra
-          ? { href: främst ? främst.till : '#oversikt',
-              text: attGöra + (attGöra === 1 ? ' sak att göra' : ' saker att göra'),
-              under: främst
-                ? 'Främst: ' + (främst.antal === 1 ? främst.ental : främst.antal + ' ' + främst.rubrik)
-                : 'Se Översikt' }
-          : { href: '#oversikt', text: 'Inget som väntar', under: 'Allt är avklarat' }
-      });
+      /* Hjältebildens enda kort räknade "saker att göra" och länkade
+         till det främsta. Driftkonsolens disk visar samma tal och
+         listan under den är varje post, var för sig, med vägen dit.
+         Två tal som båda heter "saker att göra" och räknas på olika
+         ställen är värre än inget tal alls — därför räknas det nu
+         bara en gång, i nextrum-admin-konsol.js, ur S.lage. */
 
       /* await, inte bara ett anrop: supabase-js skickar frågan först
          när den väntas in, så utan det gick stämpeln aldrig iväg. Ett
