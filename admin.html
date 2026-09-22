@@ -8,6 +8,10 @@
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 <title>Admin — Nextrum</title>
 <meta name="robots" content="noindex,nofollow">
+<!-- Adminvyn är alltid mörk, oavsett systeminställning. Utan den här
+     raden ritar webbläsaren sidans rullist, autofyll och datumväljare
+     i ljust läge ovanpå en nästan svart vy. -->
+<meta name="color-scheme" content="dark">
 
 <link rel="stylesheet" href="nextrum-typsnitt.css">
 <link rel="stylesheet" href="nextrum.css">
@@ -16,6 +20,9 @@
 <link rel="stylesheet" href="nextrum-vy.css">
 <link rel="stylesheet" href="nextrum-arbetsyta.css">
 <link rel="stylesheet" href="nextrum-agent.css">
+<!-- Sist: adminvyns egen palett skriver om tokens på body.vy-admin och
+     måste vinna varje oavgjord specificitet mot lagren ovan. -->
+<link rel="stylesheet" href="nextrum-admin-palett.css">
 </head>
 <body class="vy vy-admin">
 

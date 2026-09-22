@@ -1,0 +1,676 @@
+/* ============================================================
+   NEXTRUM — ADMINVYNS PALETT
+
+   Laddas SIST i admin.html, efter nextrum-agent.css. Rör bara
+   body.vy-admin. foralder.html och larare.html bär class="vy" utan
+   egen klass och når aldrig en enda regel i den här filen — de
+   laddar den inte ens.
+
+   Varför en egen fil och inte ett block sist i nextrum-arbetsyta.css:
+   den filen delas med studiehjälparvyns bokningsvy, och ett palettbyte
+   femton rader från regler som inte får ändras är en olycka som väntar.
+   Här kan ingenting läcka.
+
+   TRE SAKER SOM INTE ÄR KOSMETIK, OCH SOM DÄRFÖR STÅR FÖRST:
+
+   1. ALIASEN MÅSTE UPPREPAS HÄR.
+      nextrum-cinema.css:263 sätter --muted-2:var(--bl-3) på :root.
+      En custom property med var() i värdet substitueras på det element
+      där den DEKLARERAS, inte där den används. --muted-2 räknas alltså
+      ut mot rotens ljusa --bl-3 och ärvs nedåt som en färdig sträng.
+      Ett block som bara byter --bl-3 når den aldrig: arton inline-
+      style i admin.html läser var(--muted-2) och hade blivit ockragrått
+      #665C49 på marinblått, 2,85:1, och --focus hade blivit #0A0A0A,
+      alltså 1,06:1 — osynligt tangentbordsfokus i hela vyn.
+      (De två siffrorna gäller LJUST OS-läge. I mörkt sätter cinema
+      andra värden, men aliasen fryser rotens värden i båda fallen, så
+      omskrivningen behövs oavsett läge.)
+
+   2. SPECIFICITETEN MÅSTE UPP TILL (0,4,0) FÖR .dbox OCH .kpi.
+      nextrum-vy.css:679 och :699 sätter deras botten i mörkt läge med
+      :root:not([data-theme="light"]) .vy .dbox — fyra klassnivåer.
+      .vy-admin .dbox är två och förlorar, men BARA i mörkt OS-läge,
+      alltså precis det läge den som bygger detta själv sitter i.
+      Därav :root .vy.vy-admin: samma vikt, senare källordning.
+
+   3. SKRIV ALDRIG class="nx-panel" ELLER class="nx-form-yta" I EN
+      ADMINVY. nextrum-cinema.css:2304 lägger då hela den LJUSA
+      linpaletten på det elementet i mörkt läge, och panelen blir en
+      kräm-ö mitt i vyn. Ingen av klasserna finns i admin i dag.
+   ============================================================ */
+
+/* ============================================================
+   1. PALETTEN
+   ============================================================ */
+body.vy-admin{
+  --pap:#0B1220;            /* botten */
+  --pap-2:#111B2E;          /* panel */
+  --pap-3:#17253C;          /* djup yta, rubrikrader, hovrader */
+
+  --bl:#DCE9F5;             /* 15,17 / 13,95 / 12,45 mot de tre ytorna */
+  --bl-2:#9FB6CE;           /*  8,97 /  8,24 /  7,36 */
+  /* Ljusare än jordpalettens motsvarighet, och det är avsiktligt:
+     #7189A6 ger 4,27:1 mot --pap-3 och underkänns för brödtext. Det
+     går inte att laga med en scopad regel, för tokenet läses av arton
+     inline-style i admin.html och tjugofyra i nextrum-admin-*.js.
+     #7B93B0 ger 5,92 / 5,44 / 4,86 mot de tre ytorna. */
+  --bl-3:#7B93B0;
+
+  --ln:rgba(90,200,220,.16);
+  --ln-2:rgba(90,200,220,.30);
+  /* Egen ton till KONTROLLKANTER. Ett fält som sjunker in i sin panel
+     identifieras bara av sin kant, och WCAG 1.4.11 kräver 3:1 för just
+     det. --ln-2 ligger på 1,95:1. .50 ger 3,20:1. Den höjs inte
+     globalt: då hade varje panelkant glött. */
+  --ln-kontroll:rgba(90,200,220,.50);
+
+  --acc:#2BD4D9;            /* 10,27:1 mot bottnen */
+  --acc-ink:#04121A;        /* 10,41:1 PÅ accenten */
+  --acc-text:#5FE3E6;       /* 12,14 / 11,16 mot pap / pap-2 */
+  --acc-soft:rgba(43,212,217,.12);
+  --acc-line:rgba(43,212,217,.38);
+
+  --mossa:#4FD69C;          /* klart, genomfört, kopplat */
+  --ockra:#F0B63C;          /* väntar, saknas */
+
+  /* --fel fanns INTE definierad någonstans i kodbasen, men
+     nextrum-admin-automationer.js:84 och nextrum-admin-detalj.js:353
+     skriver redan style="color:var(--fel)". En var() utan reserv mot
+     en odefinierad token blir ogiltig vid beräkningstid, så de
+     raderna ärver brödtextfärgen: felmeddelandena i tidslinjen är
+     inte röda i drift i dag. De börjar fungera här. */
+  --fel:#F4717F;            /* 6,70 / 6,16 mot pap / pap-2 */
+
+  /* --acc-lugn är HOVER-accenten, inte en felfärg: cinema.css:517 har
+     .btn-primary:hover{background:var(--acc-lugn)} och vy.css:346 har
+     .vy .auth-alt a. Pekas den till --fel blir varenda primärknapp i
+     vyn laxröd vid hover, inloggningsknappen inkluderad. Den ska
+     ljusna. Att den ÄVEN betyder "fel" i agentfliken är ett
+     särfall — se regeln strax nedanför. */
+  --acc-lugn:var(--acc-text);
+
+  /* Jordfärgernas ljusa syskon. Blocket .band,.on-band,.nx-mork,.ftr
+     i cinema.css:2278 läser dem genom var(--lera-l) — sätts de här
+     behöver tre av dess åtta rader inte röras alls. */
+  --lera-l:var(--acc);
+  --mossa-l:var(--mossa);
+  --ockra-l:var(--ockra);
+
+  /* Mörka partier. Bark blir midnatt. */
+  --nt:#060C16; --nt-fg:var(--bl); --nt-mut:var(--bl-2);
+  --nt-ln:rgba(90,200,220,.22);
+
+  /* Band och sidfot är en EGEN tokengrupp som inte rörs av --pap.
+     Utan de här fem raderna får sidan en brun fot under en kall vy:
+     --band-bg #2E2A20 ligger på 1,31:1 mot bottnen. */
+  --band-bg:#0E1728; --band-fg:var(--bl); --band-muted:var(--bl-2);
+  --band-line:rgba(90,200,220,.16); --band-surface:rgba(90,200,220,.05);
+
+  /* ARVEGODSET. Se punkt 1 i filhuvudet. */
+  --bg:var(--pap-2);        --fg:var(--bl);
+  --muted:var(--bl-2);      --muted-2:var(--bl-3);
+  --line:var(--ln);         --line-2:var(--ln-2);
+  --surface:var(--pap-2);   --surface-2:var(--pap-3);
+  --btn-bg:var(--acc);      --btn-fg:var(--acc-ink);
+  --focus:var(--acc);
+  --tryck-yta:var(--pap-3); --tryck-tvatt:rgba(90,200,220,.06);
+
+  /* Stapelspår. --pap-3 mot kortet är 1,12:1: man ser bara den fyllda
+     delen sväva, och då går längderna inte att jämföra, vilket är hela
+     poängen med en stapel. #24405F ger 3,37:1 mot den svaga fyllningen
+     (--bl-3) och 5,84:1 mot accenten — båda över 1.4.11:s gräns. */
+  --spar:#24405F;
+
+  /* rgba(46,42,32) har luminansen 0,0234 och bottnen 0,0061. En varm
+     skugga på marinblått är alltså LJUSARE än ytan den ligger på —
+     den fördjupar inte, den lägger en brun slöja. Djupet får komma
+     från svart, lyftet från en ljus kant. */
+  --sk-1:0 1px 0 rgba(90,200,220,.06), 0 6px 18px -10px rgba(0,0,0,.72);
+  --sk-2:0 1px 0 rgba(90,200,220,.08), 0 20px 44px -22px rgba(0,0,0,.80);
+  --sk-3:0 1px 0 rgba(90,200,220,.10), 0 44px 88px -34px rgba(0,0,0,.86);
+  --sk-foto:0 2px 8px rgba(0,0,0,.55), 0 40px 88px -36px rgba(0,0,0,.80);
+  --sh-sm:0 1px 2px rgba(0,0,0,.45);
+  --sh-md:0 2px 6px rgba(0,0,0,.45), 0 16px 40px rgba(0,0,0,.50);
+  --sh-lg:0 4px 12px rgba(0,0,0,.50), 0 34px 80px rgba(0,0,0,.60);
+
+  background:var(--pap);
+  color:var(--bl);
+
+  /* Rullningslister, öppna <select>-listor, datumväljarens kalender
+     och autofyllens gula platta är webbläsarens egna ytor och lyder
+     inga tokens. Utan den här raden öppnar varje rullgardin en vit
+     lista mitt i en nästan svart vy. */
+  color-scheme:dark;
+}
+
+/* Agentfliken är det enda stället i vyn där --acc-lugn faktiskt betyder
+   fel: agent.css:313 (.ag-steg-fel), :336 (.ag-status[data-s="fel"]) och
+   de tre style="color:var(--acc-lugn)" i nextrum-admin-agenter.js:134,
+   251 och 332. Betydelsen får sitt eget scope i stället för att sänka
+   hovern i hela vyn. */
+body.vy-admin [data-sek="agenter"]{--acc-lugn:var(--fel)}
+
+/* Sidfoten bär class="ftr on-band", och cinema.css:2278 sätter om hela
+   accentgruppen på just de klasserna — med fyra LITERALER som inte går
+   genom --lera-l. Tokenärvning bryr sig inte om specificitet: närmaste
+   förfader vinner, så foten hade blivit varm lera. */
+body.vy-admin .ftr,
+body.vy-admin .on-band,
+body.vy-admin .band,
+body.vy-admin .nx-mork{
+  --acc-lugn:var(--acc-text);
+  --acc-text:#5FE3E6;
+  --acc-ink:#04121A;
+  --acc-soft:rgba(43,212,217,.12);
+  --acc-line:rgba(43,212,217,.38);
+}
+.vy-admin .ftr{border-top:1px solid var(--ln-2)}
+
+/* ============================================================
+   2. SIDHUVUD, MOBILMENY, MARKERING
+   .hdr ligger som direkt barn till body och ärver paletten. Det som
+   inte gör det är de här: de går genom nextrum.css gamla tokens eller
+   genom hårdkodad brunt.
+   ============================================================ */
+.vy-admin .hdr.djup{
+  box-shadow:0 1px 0 var(--ln-2), 0 14px 34px -24px rgba(0,0,0,.9);
+}
+/* --bl/--pap är ett par som vänder rätt men blir en vit kloss i en
+   HUD. Cyan på mörkt bläck gör samma jobb på 10,41:1. */
+.vy-admin .hdr .mark rect{fill:var(--acc)}
+.vy-admin .hdr .mark path{stroke:var(--acc-ink)}
+/* Hamburgaren visas på alla bredder (cinema.css:489), så mobilmenyn är
+   en väg även på en stor skärm. Strecken låg på --fg = #0A0A0A. */
+.vy-admin .hdr .burger{border-color:var(--ln-2)}
+.vy-admin .hdr .burger span{background:var(--bl-2)}
+.vy-admin .hdr .burger:hover span{background:var(--acc-text)}
+.vy-admin .mobile-menu{background:var(--pap);border-top:1px solid var(--ln-2)}
+.vy-admin .mobile-menu a.m-link{border-bottom-color:var(--ln)}
+.vy-admin .mobile-menu a.m-link svg{color:var(--bl-2)}
+.vy-admin .nx-hoppa{background:var(--acc);color:var(--acc-ink)}
+/* Ättlingsselektorn når inte body självt, och nextrum.css:95 hade då
+   gett ett ljust markeringsband på text som är direkt barn till body. */
+.vy-admin ::selection,
+.vy-admin::selection{background:var(--acc);color:var(--acc-ink)}
+
+/* ============================================================
+   3. TOPPRADEN OCH SÖKFÄLTET
+   ============================================================ */
+.vy-admin .adm-topp{
+  background:color-mix(in srgb,var(--pap) 92%,transparent);
+  border-bottom-color:var(--ln-2);
+}
+.vy-admin .adm-topp-var .adm-topp-hem{color:var(--acc-text)}
+
+/* Ytan och kanten sätts av fältregeln i avsnitt 8 — samma vikt, senare
+   i filen. Här står bara det som är sökfältets eget. */
+.vy-admin .adm-sokfalt .inp::placeholder{color:var(--bl-2);opacity:1}
+.vy-admin .adm-sokfalt > svg{stroke:var(--bl-2)}
+
+/* ============================================================
+   4. KNAPPARNA I SKALET
+   ============================================================ */
+.vy-admin .adm-fall,
+.vy-admin .adm-knapp,
+.vy-admin .adm-sido-ut{
+  background:var(--pap-2);border-color:var(--ln-2);color:var(--bl-2);
+}
+.vy-admin .adm-fall:hover,
+.vy-admin .adm-knapp:hover,
+.vy-admin .adm-knapp[aria-expanded="true"],
+.vy-admin .adm-sido-ut:hover{
+  background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc-text);
+}
+/* Ringen i bottenfärgen håller isär pricken från ikonen under. */
+.vy-admin .adm-knapp .adm-prick{
+  background:var(--acc);
+  box-shadow:0 0 0 2px var(--pap), 0 0 9px rgba(43,212,217,.65);
+}
+
+/* ============================================================
+   5. SÖK- OCH NOTISPANELEN
+   Panelen låg på var(--pap) — samma ton som bottnen. På lin höll
+   kanten isär dem; på mörkt måste ytan lyfta, och den varma skuggan
+   syns inte alls.
+   ============================================================ */
+.vy-admin .adm-panel{
+  background:var(--pap-2);
+  border-color:var(--acc-line);
+  box-shadow:0 0 0 1px rgba(11,18,32,.9),
+             0 22px 50px -18px rgba(0,0,0,.85),
+             0 0 26px -10px rgba(43,212,217,.32);
+}
+.vy-admin .adm-panel-rubrik{color:var(--acc-text);border-bottom-color:var(--ln-2)}
+.vy-admin .adm-panel-tom{color:var(--bl-2)}
+.vy-admin .adm-rad:hover{background:var(--acc-soft)}
+.vy-admin .adm-rad-ikon{background:var(--pap-3);color:var(--bl-2);border:1px solid var(--ln-2)}
+.vy-admin .adm-rad.ar-larm .adm-rad-ikon{
+  background:var(--acc-soft);color:var(--acc-text);border-color:var(--acc-line);
+}
+.vy-admin .adm-rad-nar{color:var(--bl-2)}
+.vy-admin .adm-rad-typ{color:var(--bl-2);border-color:var(--ln-2)}
+
+/* ============================================================
+   6. SIDOMENYN
+   .ar-har var {background:var(--bl);color:var(--pap)} — ett par som
+   vänder rätt i jordpaletten (bark på lin, kräm på bark) men som här
+   blir en nästan vit kloss mitt i menyn. Markeringen ska glöda.
+
+   Två selektorer och inte en: nextrum-vy.css:773 sätter samma
+   egenskaper på :hover, och utan den andra raden hade markeringen
+   slagit tillbaka till den vita klossen så fort pekaren rörde vid den.
+   ============================================================ */
+.vy-admin .vy-sido a.ar-har,
+.vy-admin .vy-sido a.ar-har:hover{
+  background:var(--acc-soft);
+  color:var(--acc-text);
+  box-shadow:inset 0 0 0 1px var(--acc-line), inset 3px 0 0 var(--acc);
+}
+/* Märket i den valda posten vänds inte: fylld accent är läsbarast i
+   båda lägena. */
+.vy-admin .vy-sido a.ar-har .vy-sido-mark,
+.vy-admin .vy-sido a.ar-har:hover .vy-sido-mark{
+  background:var(--acc);color:var(--acc-ink);
+}
+.vy-admin .vy-sido a:hover{background:var(--pap-2);color:var(--bl)}
+.vy-admin .vy-sido{border-bottom-color:var(--ln-2)}
+.vy-admin .adm-sido-fot{border-top-color:var(--ln-2)}
+/* :root[data-theme="dark"] .nx-avatar i nextrum-vy.css:713 sätter
+   bottnen med samma vikt — filordningen avgör, och den är vår. */
+.vy-admin .adm-sido-fot .nx-avatar{
+  background:var(--pap-3);border-color:var(--acc-line);color:var(--acc-text);
+}
+.vy-admin .adm-sido-fot-text span{color:var(--acc-text)}
+/* På telefon är gruppetiketten ett 1px lodrätt streck. --ln ger
+   1,35:1 mot bottnen och blir borta. */
+@media (max-width:899px){
+  .vy-admin .vy-sido-rubrik{background:var(--ln-2)}
+}
+@media (min-width:900px){
+  .vy-admin .vy-layout.ar-hopfalld .vy-sido-rubrik{border-top-color:var(--ln-2)}
+}
+
+/* ============================================================
+   7. PANELERNA OCH KORTEN
+   Se punkt 2 i filhuvudet för :root-prefixet.
+   ============================================================ */
+/* .auth-card och .locked måste med: nextrum-vy.css:330 och :349 ger dem
+   var(--pap), och lyftet till --pap-2 finns BARA i mörkerblocken. I
+   ljust OS-läge hade inloggningsrutan alltså varit #0B1220 på #0B1220
+   med en kant på 1,36:1 — den allra första skärmen en admin ser. */
+:root .vy.vy-admin .dbox,
+:root .vy.vy-admin .kpi,
+:root .vy.vy-admin .auth-card,
+:root .vy.vy-admin .locked{background:var(--pap-2)}
+.vy-admin .auth-card,
+.vy-admin .locked{border-color:var(--ln-2)}
+.vy-admin .dbox{border-color:var(--ln-2);box-shadow:var(--sk-1)}
+.vy-admin .dbox h5{color:var(--acc-text)}
+.vy-admin .dbox h5::before{background:var(--acc);opacity:1}
+.vy-admin .dbox h5 em{color:var(--bl-2)}
+/* --acc-ink och inte --pap: paret ska vara avsiktligt och överleva
+   nästa palettbyte. Båda ger ~10:1 i dag, men bara det ena av skäl. */
+.vy-admin .dbox h5 .vy-larm{background:var(--acc);color:var(--acc-ink)}
+.vy-admin .vy-sek-topp p{color:var(--bl-2)}
+.vy-admin .vy-mer{color:var(--acc-text)}
+.vy-admin .vy-fot{border-top-color:var(--ln-2)}
+
+/* Korten låg alla på var(--pap), alltså sidans egen färg: 1,00:1 mot
+   bottnen, hållna samman av en kant på 1,35:1. Det är ingen panel,
+   det är en indragning.
+
+   MEN: de tre ytorna ligger inom 1,12:1 av varandra, så en yta får
+   aldrig vara densamma som sin FÖRÄLDER. Nyckeltalen står direkt i
+   sektionen och kan därför ta panelens ton. Allt annat här ritas
+   INUTI en .dbox, som nu är --pap-2, och måste alltså gå vidare.
+   På ett så tätt ytsteg är det kanten som gör jobbet — precis som i
+   en HUD, där paneler skiljs av linjer och inte av fyllningar. */
+.vy-admin .adm-kpi{background:var(--pap-2);border-color:var(--ln-2)}
+.vy-admin .adm-pass,
+.vy-admin .mt-kort,
+.vy-admin .adm-koppling-kort{background:var(--pap-3);border-color:var(--ln-2)}
+/* Tabellskalet är en brunn, inte ett kort: det sjunker under panelen
+   och identifieras därför av kanten, som måste nå 3:1. */
+.vy-admin .adm-skal{background:var(--pap);border-color:var(--ln-kontroll)}
+
+/* Hörnmarkeringarna. Bara på nyckeltalen och inte på alla 63 .dbox:
+   sextiotre rutor med hörn är brus, fyra är en avläsning.
+   Måste ligga PÅ kanten och vara hela accenten — 9px på .55 opacitet
+   försvann i kortkanten och var alltså bara död CSS. */
+.vy-admin .adm-kpi{position:relative}
+.vy-admin .adm-kpi::before,
+.vy-admin .adm-kpi::after{
+  content:"";position:absolute;width:15px;height:15px;pointer-events:none;
+  border:1.5px solid var(--acc);
+}
+.vy-admin .adm-kpi::before{top:-1px;left:-1px;border-width:1.5px 0 0 1.5px;border-radius:14px 0 0 0}
+.vy-admin .adm-kpi::after{bottom:-1px;right:-1px;border-width:0 1.5px 1.5px 0;border-radius:0 0 14px 0}
+
+/* Rubrikraden och hovraden låg på --pap-2 och blir 1,00:1 när skalet
+   flyttas dit. De går ett steg till. */
+.vy-admin table.adm th{background:var(--pap-3);color:var(--bl-2);border-bottom-color:var(--ln-2)}
+.vy-admin table.adm td{border-bottom-color:var(--ln)}
+/* Hovern går till --pap-2 och inte --pap-3: rubrikraden ligger redan
+   där, och två rader i samma ton läser som om tabellen börjar om. */
+.vy-admin table.adm tbody tr:hover td{background:var(--pap-2)}
+
+/* Statuspillret är det man skannar efter i varje lista. Det låg på
+   --pap-2 och blev 1,00:1 mot skalet när skalet flyttades dit. Nu
+   ligger skalet på --pap och pillret lyfter. */
+.vy-admin .adm-status{background:var(--pap-3);border-color:var(--ln-kontroll)}
+
+.vy-admin .adm-pass:hover{border-color:var(--acc-line);box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.vy-admin .mt-kort:hover{border-color:var(--acc-line);box-shadow:0 5px 16px rgba(0,0,0,.42)}
+
+/* Översiktens egna ytor, alla ritade inuti en .dbox. */
+.vy-admin .adm-lugnt{background:var(--pap-3)}
+.vy-admin .adm-att-gora a:hover{background:var(--acc-soft)}
+/* Pricken maskerar tidslinjens lodräta streck och måste därför bära
+   PANELENS färg, inte sidans — annars blir den ett mörkt hål. */
+.vy-admin .adm-flode-post::before{background:var(--pap-2);border-color:var(--ln-kontroll)}
+/* Rekryteringsspårets steg är knappar vars enda avgränsning är kanten. */
+.vy-admin .adm-steg{border-color:var(--ln-kontroll)}
+/* Checkbrickan i lanseringschecklistan — den ruta en människa läser
+   bokningstyp, krav och ersättning i. */
+.vy-admin .tj-check-rad > b{background:var(--pap-3);border-color:var(--ln-kontroll)}
+
+/* ============================================================
+   8. FÄLTEN
+   cinema.css:219 sätter .inp/.sel till var(--pap) i mörkt läge med
+   tre klassnivåer. .vy-admin .inp är två och förlorar i mörkt OS-läge.
+   .vy-admin.vy väger lika, och den här filen laddas efter cinema.
+   ============================================================ */
+.vy-admin.vy .inp,
+.vy-admin.vy .sel,
+.vy-admin.vy textarea.inp{
+  background:var(--pap);
+  border-color:var(--ln-kontroll);
+  color:var(--bl);
+}
+.vy-admin .inp::placeholder,
+.vy-admin textarea.inp::placeholder{color:var(--bl-2);opacity:1}
+.vy-admin .inp:focus,
+.vy-admin .sel:focus,
+.vy-admin textarea.inp:focus{
+  border-color:var(--acc);
+  box-shadow:0 0 0 3px var(--acc-soft);
+}
+.vy-admin input[type="checkbox"],
+.vy-admin .inp[type="checkbox"]{accent-color:var(--acc)}
+
+/* Rullgardinspilen. nextrum.css:311 ritar den som en background-image,
+   men cinema.css:1403 sätter kortformen background: och nollställer
+   därmed bilden — .sel har alltså saknat indikator sedan dess, medan
+   väljare() i nextrum-admin-karna.js:130 reserverar padding för en pil
+   som aldrig ritades. Här återställs den, scopat. */
+.vy-admin.vy .sel{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%239FB6CE' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:12px;
+  padding-right:34px;
+}
+
+/* opacity:.42 tonar både ytan och texten mot en nästan svart sida: på
+   den cyana primärknappen blev text mot yta 2,75:1 och yta mot sida
+   2,73:1. .66 ger 5,15 respektive 4,81 och läses fortfarande som
+   släckt. (Avstängda kontroller är undantagna 1.4.3, så det här är
+   läsbarhet snarare än ett krav — men 2,7 är inte avstängt, det är
+   svårläst.) */
+.vy-admin .btn[disabled],
+.vy-admin .btn:disabled{opacity:.66}
+
+/* ============================================================
+   9. FLIKARNA
+   .vy-flik[aria-selected] är --pap inuti en list på --pap-2. I ljust
+   läge är --pap den ljusare av de två, så den valda fliken lyfter. I
+   den mörka paletten är förhållandet omvänt och fliken sjönk i
+   stället. Skuggan var dessutom rgba(46,42,32,.09), alltså osynlig.
+   ============================================================ */
+/* Ytsteget mot listen är 1,12:1 och --acc-line-ringen 2,41:1 mot sin
+   egen fyllning. Bägge under 3:1, alltså bar den valda fliken bara
+   textvikt. Stapeln i botten är samma grepp som .dp-flik redan
+   använder, och accenten mot fyllningen är långt över gränsen. */
+.vy-admin .vy-flik[aria-selected="true"]{
+  background:var(--pap-3);
+  color:var(--bl);
+  box-shadow:inset 0 -2px 0 var(--acc), inset 0 0 0 1px var(--ln-kontroll);
+}
+.vy-admin .vy-flik-mark{background:var(--acc);color:var(--acc-ink)}
+.vy-admin .vy-flikar{border-color:var(--ln-2)}
+
+/* ============================================================
+   10. SEMANTIKEN
+   Accenten var mörk lera och läste som larm. Cyan läser som
+   information, så det som faktiskt ÄR ett bortfall flyttas till --fel.
+   Ett larm som ser ut som varje annan markering på sidan är inget larm.
+   ============================================================ */
+/* Tonad yta (1,14:1 mot ett vanligt kort) och tonad kant (1,06:1 mot
+   den vanliga kanten) skiljer sig bara i NYANS. Larmet bars alltså av
+   färg ensam, vilket är precis det avsnittet påstår sig undvika.
+   Solid kant ger 5,50:1 mot kortets vägg. */
+.vy-admin .adm-kpi.ar-larm{
+  border-color:var(--fel);
+  background:color-mix(in srgb,var(--fel) 10%,var(--pap-2));
+}
+.vy-admin .adm-kpi.ar-larm b{color:var(--fel)}
+.vy-admin .adm-kpi.ar-larm::before,
+.vy-admin .adm-kpi.ar-larm::after{border-color:var(--fel)}
+.vy-admin .adm-kpi-diff.ar-ner{color:var(--fel)}
+.vy-admin .adm-kpi-diff.ar-upp{color:var(--mossa)}
+/* Kvittensen och felrutan tonades båda med --acc och blev därmed
+   likadana — cyan mot cyan. */
+.vy-admin .ok-msg.is-err{
+  background:color-mix(in srgb,var(--fel) 10%,var(--pap-2));
+  border-color:color-mix(in srgb,var(--fel) 42%,transparent);
+  color:var(--bl);
+}
+.vy-admin .tratt-tal span.ar-tapp{color:var(--fel)}
+/* Saknas är inte fel. */
+.vy-admin .mt-fakta.ar-tom{
+  color:var(--ockra);
+  border-color:color-mix(in srgb,var(--ockra) 38%,transparent);
+  background:color-mix(in srgb,var(--ockra) 10%,var(--pap-2));
+}
+/* Stapelspåret, se --spar. */
+.vy-admin .mt-stapel,
+.vy-admin .tratt-stapel{background:var(--spar)}
+/* Mikrotext i djupa ytor: --bl-3 mot --pap-3 är 4,27:1 och klarar
+   inte AA. Samma skäl som arbetsyta.css:898 redan dokumenterar. */
+.vy-admin .tj-villkor-not,
+.vy-admin .vs-sam,
+.vy-admin .loading,
+.vy-admin .empty{color:var(--bl-2)}
+
+/* Det valda läget var background:var(--bl) — läsbart, men det ser ut
+   som ett renderingsfel: en nästan vit klump i en blå vy. */
+.vy-admin .dp-mat-typ [aria-pressed="true"],
+.vy-admin .mat-typ button[aria-pressed="true"]{
+  background:var(--acc);color:var(--acc-ink);border-color:var(--acc);
+}
+
+/* ============================================================
+   11. DETALJPANELEN
+   .dp-bak var rgba(46,42,32,.34) — brunt, och över #0B1220 ger det
+   1,07:1. Alltså ingen dimning alls. Overlayen är det enda som säger
+   att listan bakom är låst, så den måste faktiskt mörkna.
+   ============================================================ */
+.vy-admin .dp-bak{background:rgba(2,6,14,.62)}
+.vy-admin .dp{
+  background:var(--pap-2);
+  border-left:1px solid var(--acc-line);
+  box-shadow:-24px 0 64px rgba(0,0,0,.62);
+}
+.vy-admin .dp-topp{background:var(--pap-3);border-bottom-color:var(--ln-2)}
+/* .nx-avatar ligger också på --pap-3 och blev 1,00:1 i panelhuvudet —
+   initialerna hängde löst utan sin cirkel. */
+.vy-admin .dp-topp .nx-avatar{background:var(--pap);border-color:var(--ln-2)}
+.vy-admin .dp-flikar{border-bottom-color:var(--ln-2)}
+.vy-admin .dp-flik[aria-selected="true"]{color:var(--acc-text);border-bottom-color:var(--acc)}
+.vy-admin .dp-stang{background:var(--pap);border-color:var(--ln-2)}
+.vy-admin .dp-stang:hover{background:var(--acc-soft);color:var(--acc-text)}
+.vy-admin .dp-rubrik{color:var(--acc-text)}
+/* Rutnätsfogen är en 1px bakgrund som lyser igenom mellan cellerna.
+   På --ln är den 1,39:1 och rutnätet upplöses till en textmassa. */
+.vy-admin .dp-tal,
+.vy-admin .dp-fakta{background:var(--ln-2);border-color:var(--ln-2)}
+.vy-admin .dp-tal > div,
+.vy-admin .dp-fakta > div{background:var(--pap)}
+.vy-admin .dp-tal b{color:var(--acc-text)}
+.vy-admin .dp-rad + .dp-rad{border-top-color:var(--ln-2)}
+/* Plattor inuti panelen låg på --pap-2, samma ton som panelen själv. */
+.vy-admin .dp-text,
+.vy-admin .dp-forslag-kort{background:var(--pap);border:1px solid var(--ln-2)}
+
+/* ============================================================
+   12. MODALER OCH NOTISER
+   .nx-fraga byggde ridån av color-mix(--bl 46%). --bl är BLÄCKET —
+   med mörk palett blir ridån ljus, alltså en vit blixt i stället för
+   en dimning. Rätt token finns inte, så ridån skrivs explicit.
+   ============================================================ */
+.vy-admin .nx-fraga{background:rgba(2,6,14,.68)}
+:root .vy.vy-admin .nx-fraga-box{background:var(--pap-2)}
+.vy-admin .nx-fraga-box{border:1px solid var(--acc-line);box-shadow:var(--sk-3)}
+.vy-admin .nx-fraga-box p{color:var(--bl-2)}
+.vy-admin .nx-fraga-prov{background:var(--pap);border-color:var(--ln-2);color:var(--bl-2)}
+:root .vy.vy-admin .nx-notis-lista{background:var(--pap-2)}
+.vy-admin .nx-notis-lista{border:1px solid var(--acc-line);box-shadow:var(--sk-2)}
+:root .vy.vy-admin .nx-notis{background:var(--pap-3)}
+.vy-admin .nx-notis{border-color:var(--ln-2)}
+.vy-admin .nx-notis:hover{border-color:var(--acc-line)}
+
+/* ============================================================
+   13. AGENTFLIKEN
+   nextrum-agent.css har noll färgliteraler och följer med paletten
+   gratis. Det här är de ställen där en token betydde fel sak.
+
+   .ag-pahittad bär semantik: en adress agenten skrev men aldrig
+   hämtade, överstruken och medvetet inte en länk. Den låg på --bl-3
+   mot --pap-3, 4,27:1 vid 11px. Rutan får --fel som ram och texten
+   lyfts. Överstruket och icke-klickbart är kvar — det är skyddet.
+   ============================================================ */
+.vy-admin .ag-pahittad{background:var(--pap-3);border:1px solid var(--fel);border-left-width:3px}
+.vy-admin .ag-pahittad b{color:var(--fel)}
+.vy-admin .ag-pahittad span{color:var(--bl-2)}
+.vy-admin .ag-fraga textarea{background:var(--pap);border-color:var(--ln-kontroll)}
+.vy-admin .ag-exempel button{background:var(--pap-3);border-color:var(--ln-2)}
+.vy-admin .ag-exempel button:hover{background:var(--acc-soft);border-color:var(--acc-line);color:var(--acc-text)}
+.vy-admin .ag-svar{border-top-color:var(--ln-2)}
+.vy-admin .ag-svar h4{color:var(--acc-text)}
+/* Lagcitatet låg på --pap-2, alltså panelens egen ton, och tappade sin
+   yta helt: kvar blev bara den 3px breda ockrakanten. */
+.vy-admin .ag-svar blockquote{background:var(--pap-3)}
+.vy-admin .ag-kallor{background:var(--pap);border-color:var(--ln-2)}
+.vy-admin .ag-vagran{background:var(--pap-3);border-color:var(--ln-2)}
+.vy-admin .ag-vagran.allvar{border-color:var(--fel);background:color-mix(in srgb,var(--fel) 10%,var(--pap-3))}
+/* --pap-2 hade varit ett nollbyte: "Senaste körningarna" ritas i en
+   .dbox som redan ligger där. */
+.vy-admin .ag-korning{background:var(--pap-3);border-color:var(--ln-2)}
+.vy-admin .ag-korning summary:hover{background:var(--acc-soft)}
+/* Hovern flyttade tiden från pap-2 till pap-3 och texten föll under AA
+   just när man pekade på den. */
+.vy-admin .ag-korning summary:hover .ag-korning-nar{color:var(--bl-2)}
+.vy-admin .ag-korning-kropp{border-top-color:var(--ln-2)}
+.vy-admin .ag-steg li{border-bottom-color:var(--ln-2)}
+.vy-admin .ag-steg li::before{background:var(--acc-soft);color:var(--acc-text)}
+.vy-admin .ag-steg code{background:var(--pap)}
+.vy-admin .ag-status{background:var(--pap);border-color:var(--ln-2);color:var(--bl-2)}
+.vy-admin .ag-status[data-s="klar"]{color:var(--mossa);border-color:var(--mossa)}
+.vy-admin .ag-status[data-s="pagar"]{color:var(--ockra);border-color:var(--ockra)}
+.vy-admin .ag-status[data-s="ingen_kalla"],
+.vy-admin .ag-status[data-s="fel"]{
+  color:var(--fel);border-color:var(--fel);
+  background:color-mix(in srgb,var(--fel) 10%,var(--pap));
+}
+.vy-admin .ag-viktig{border-color:var(--ockra);background:color-mix(in srgb,var(--ockra) 10%,var(--pap-2))}
+.vy-admin .ag-viktig.ifylld{border-color:var(--ln-2);background:var(--pap-3)}
+.vy-admin .ag-arbetar{background:var(--pap-3)}
+/* Spåret låg på --ln-2, 1,95:1, och snurran lästes som en ensam cyan
+   stump som hoppade runt utan cirkel. */
+.vy-admin .ag-snurra{border-color:rgba(90,200,220,.34);border-top-color:var(--acc)}
+
+/* ============================================================
+   14. FOTOHERON
+   Blocket behålls: det är det enda stället i adminvyn som säger vem
+   som är inloggad (hälsningsraden) och i vilken roll (.vy-hero-marke).
+   Ett command center utan operatörsrad är fel genre.
+
+   Men slöjan är bark, rgba(20,17,12) — på #0B1220 läser den som smuts,
+   inte som djup. Fotot filtreras därför också: en slöja är bara ett
+   lager, den gör inte bilden kall.
+   ============================================================ */
+.vy-admin .vy-hero{background:var(--pap-2)}
+.vy-admin .vy-hero-media img,
+.vy-admin .vy-hero-media video,
+.vy-admin .vy-hero-still{filter:saturate(.5) hue-rotate(-14deg) brightness(.72) contrast(1.06)}
+/* --bl mot slöjan @.92 över ett medelgrått fotoparti: 14,7:1.
+   @.30, alltså toppen där märket sitter: 6,9:1.
+   Rutnätet är en repeating-linear-gradient och inte en bild: ingen
+   extra begäran, och inget att komma ihåg i nextrum-images.js. */
+.vy-admin .vy-hero-sloja{
+  background:
+    linear-gradient(to top,
+      rgba(5,10,20,.92) 0%, rgba(5,10,20,.66) 42%, rgba(5,10,20,.30) 100%),
+    linear-gradient(to right,
+      rgba(5,10,20,.62) 0%, rgba(5,10,20,0) 62%),
+    repeating-linear-gradient(to bottom,
+      rgba(90,200,220,.05) 0 1px, transparent 1px 4px);
+}
+.vy-admin .vy-hero h1{color:var(--bl)}
+.vy-admin .vy-hero-lede{color:var(--bl-2)}
+.vy-admin .vy-hero-et{color:var(--acc-text)}
+.vy-admin .vy-hero-marke{
+  border-color:var(--acc-line);background:rgba(11,18,32,.62);color:var(--acc-text);
+}
+.vy-admin .vy-hero-kort > *{
+  border-color:var(--ln-2);background:rgba(11,18,32,.62);color:var(--bl);
+}
+.vy-admin .vy-hero-kort a:hover{background:rgba(23,37,60,.78);border-color:var(--acc-line)}
+.vy-admin .vy-hero-kort span{color:var(--bl-2)}
+/* Ringen var rgba(156,69,32,.24), gammal mörk lera — inte ens en
+   token, och helt osynlig på marinblått. */
+.vy-admin .vy-hero-kort .vy-hero-prick{box-shadow:0 0 0 4px rgba(43,212,217,.22)}
+
+/* ============================================================
+   15. KALENDERN
+   Drift → Bokningar → Kalender ritas av NXStudie.schema, alltså samma
+   kod som familjevyns schema, inuti en .dbox. Ingenting i avsnitten
+   ovan når .sch-*, så hela vyn stod kvar i jordpalettens förhållanden:
+   passchipen på panelens egen ton, dagrutorna på sidans, och det valda
+   läget som en nästan vit kloss.
+   ============================================================ */
+.vy-admin .sch-dag,
+.vy-admin .sch-full,
+.vy-admin .sch-val button{background:var(--pap);border-color:var(--ln-kontroll)}
+.vy-admin .sch-full:hover{background:var(--pap-3)}
+/* Samma vita kloss som .vy-sido a.ar-har och .dp-mat-typ redan fått
+   bort: background:var(--bl) vänder rätt men ser ut som ett fel. */
+.vy-admin .sch-val button[aria-pressed="true"]{
+  background:var(--acc);color:var(--acc-ink);border-color:var(--acc);
+}
+.vy-admin .sch-pass{background:var(--pap-3);border-color:var(--ln-2)}
+/* Avbokat pass markerades med var(--acc), alltså husets cyan — samma
+   färg som "idag", som varje vald flik och som varje notis. Avsnitt 10
+   gäller här: ett bortfall är --fel. */
+.vy-admin .sch-pass.avbokad i{background:var(--fel)}
+.vy-admin .cal-nav button{border-color:var(--ln-kontroll)}
+
+/* ============================================================
+   16. MATCHNINGEN
+   Egen tvåkolumnslayout i en .dbox. Den valda eleven i vänsterkön är
+   det ENDA som säger vilken elev förslagen till höger gäller, och den
+   markeringen låg på --pap-2, alltså panelens egen ton.
+   ============================================================ */
+.vy-admin .mt-elev:hover{background:var(--pap-3)}
+.vy-admin .mt-elev[aria-pressed="true"]{
+  background:var(--acc-soft);
+  border-color:var(--acc-line);
+  box-shadow:inset 3px 0 0 var(--acc);
+}
+.vy-admin .mt-vald{background:var(--pap-3);border-color:var(--ln-2)}
+/* .mt-kort ligger nu på --pap-3, så "nuvarande studiehjälpare" behöver
+   en egen ton för att inte se ut som vilket förslag som helst. */
+.vy-admin .mt-kort.ar-nuvarande{
+  background:color-mix(in srgb,var(--mossa) 12%,var(--pap-3));
+  border-color:var(--mossa);
+}
