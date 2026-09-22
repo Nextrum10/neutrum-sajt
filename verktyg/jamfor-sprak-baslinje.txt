@@ -7,7 +7,7 @@
       Alexandar Jovanovic
 
 === avanmal.html  ->  en/avanmal.html
-  STRUKTUR skiljer sig vid tagg 39: sv <b> vs en <a>
+  STRUKTUR skiljer sig vid tagg 40: sv <b> vs en <a>
   TEXTNODER: sv 64 vs en 63 — engelskan har inte följt med
 
 === bli-studiehjalpare.html  ->  en/bli-studiehjalpare.html

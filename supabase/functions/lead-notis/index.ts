@@ -40,7 +40,7 @@
 // ============================================================
 
 import { json as jsonMed, esc, epostOk } from '../_delad/http.ts';
-import { lika } from '../_delad/auth.ts';
+import { lika, serviceklient } from '../_delad/auth.ts';
 import { skickaViaResend } from '../_delad/mejl.ts';
 import { KVITTO_FRAN, renderaKvitto } from '../_delad/notiser/kvitto.ts';
 import { KONTAKT } from '../_delad/notiser/rendera.ts';
@@ -124,7 +124,75 @@ function rad(etikett: string, varde: unknown): string {
 /** Så länge ett anrop till Resend får ta innan webhooken ger upp. */
 const KVITTO_TIDSGRANS_MS = 8_000;
 
+/* ============================================================
+   BROMSARNA PÅ KVITTOT
+
+   leads tar emot INSERT från vem som helst. Policyn heter "vem som
+   helst kan skicka intresseanmälan" och har `with check (true)`, och
+   det är meningen: formuläret är publikt och anon-nyckeln står i
+   sidans källkod.
+
+   Så länge en anmälan bara mejlade OSS var den öppenheten
+   självreglerande — den som spammar formuläret fyller vår egen
+   inkorg. Kvittot vänder på det. Utan broms kan vem som helst posta
+   rader i en slinga med en adress DE valt, och få oss att skicka
+   DKIM-signerade mejl från info@nextrum.se till en utomstående: en
+   mejlbomb på vår domän, vår Resend-kvot och vårt rykte.
+
+   Två bromsar, båda utan att röra databasen:
+
+     1. EN ADRESS FÅR ETT KVITTO PER DYGN. Tusen anmälningar med samma
+        offers adress blir ett mejl, inte tusen.
+     2. ETT TAK PER MINUT ÖVER LAG. Kommer det fler än så är något
+        fel, och kvittona slutar gå ut tills det lugnat sig.
+
+   ADVISERINGEN TILL OSS GÅR UT I BÅDA FALLEN. Den är inte spärrad,
+   för det är så en människa får veta att något pågår.
+
+   Går kontrollen inte att göra skickas INGET kvitto. En broms som
+   släpper igenom när den är trasig är ingen broms.
+   ============================================================ */
+const KVITTO_TAK_PER_MINUT = 5;
+const KVITTO_DYGN_MS = 24 * 60 * 60 * 1000;
+
 export type KvittoUtfall = { skickat: boolean; id?: string | null; orsak?: string };
+
+/** Ett skäl att hoppa över kvittot, eller null när det får gå. */
+async function kvittoBromsat(r: Record<string, unknown>): Promise<string | null> {
+  if (!SUPABASE_URL || !SERVICE_ROLE) return 'Takten gick inte att kontrollera.';
+
+  try {
+    const klient = serviceklient();
+    const enMinutSedan = new Date(Date.now() - 60_000).toISOString();
+    const ettDygnSedan = new Date(Date.now() - KVITTO_DYGN_MS).toISOString();
+
+    /* % och _ är jokertecken i ilike. En adress som innehåller dem
+       skulle annars matcha bredare än sig själv — eller smalare, om
+       någon sätter dem med flit för att slippa bromsen. */
+    const monster = String(r.email).trim().replace(/[\\%_]/g, (c) => '\\' + c);
+
+    let samma = klient.from('leads').select('id', { count: 'exact', head: true })
+      .ilike('email', monster).gte('created_at', ettDygnSedan);
+    /* Raden som just skapades räknas inte som en tidigare anmälan. */
+    if (typeof r.id === 'string' && r.id) samma = samma.neq('id', r.id);
+
+    const [flod, tidigare] = await Promise.all([
+      klient.from('leads').select('id', { count: 'exact', head: true }).gte('created_at', enMinutSedan),
+      samma,
+    ]);
+
+    if (flod.error || tidigare.error) return 'Takten gick inte att kontrollera.';
+    if ((flod.count ?? 0) > KVITTO_TAK_PER_MINUT) {
+      return `Fler än ${KVITTO_TAK_PER_MINUT} anmälningar den senaste minuten.`;
+    }
+    if ((tidigare.count ?? 0) > 0) {
+      return 'Adressen har redan fått ett kvitto det senaste dygnet.';
+    }
+    return null;
+  } catch {
+    return 'Takten gick inte att kontrollera.';
+  }
+}
 
 /**
  * Kvittot till den som anmälde sig. Kastar aldrig: utfallet blir en
@@ -135,6 +203,9 @@ async function skickaKvitto(r: Record<string, unknown>): Promise<KvittoUtfall> {
   if (!epostOk(r.email)) {
     return { skickat: false, orsak: 'Anmälan har ingen giltig e-postadress.' };
   }
+
+  const bromsat = await kvittoBromsat(r);
+  if (bromsat) return { skickat: false, orsak: bromsat };
 
   /* Idempotensnyckeln byggs ur radens id. SAKNAS DET SÄTTS INGEN
      NYCKEL: en nyckel som blir "…-undefined" hade varit samma nyckel

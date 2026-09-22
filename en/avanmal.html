@@ -10,6 +10,17 @@
 <title>Stop notification emails — Nextrum</title>
 <meta name="description" content="Turn off one kind of notification email from Nextrum. We only turn off what the link points to, and you can turn it back on whenever you like.">
 <meta name="robots" content="noindex,follow">
+<!-- Adressen bär avregistreringskoden som ?t=. Utan den här raden
+     följer hela adressen med som Referer vid varje klick vidare
+     härifrån — till startsidan, till menyn, till språkbytet — och
+     koden har med flit ingen utgångstid.
+
+     Kvar står att Vercels accessloggar ändå ser frågesträngen. Det
+     går inte att stänga härifrån: koden kommer ur en länk i ett mejl
+     och måste stå i adressen. Vad koden kan är också avgränsat — den
+     stänger av EN notistyp för EN person, kan aldrig slå på något,
+     läsa något eller logga in någon. -->
+<meta name="referrer" content="no-referrer">
 <link rel="canonical" href="https://nextrum.se/en/avanmal">
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/avanmal">
 <link rel="alternate" hreflang="en" href="https://nextrum.se/en/avanmal">
