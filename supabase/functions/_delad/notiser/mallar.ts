@@ -23,8 +23,14 @@
 import type { MejlbarTyp, RenData, Roll } from './typer.ts';
 import { narText, paminnelseNar } from './tid.ts';
 
-/** Vart knappen går. Hashen läses som #sektion/flik i vyerna. */
-export type Mal = 'pass' | 'meddelanden';
+/**
+ * Vart knappen går. Hashen läses som #sektion/flik i vyerna.
+ *
+ * 'sajten' är den publika sidan, och används av transaktionsmejlen:
+ * kvittot på en intresseanmälan går till någon som ännu inte har ett
+ * konto, och en knapp till en inloggad vy hade mött en inloggning.
+ */
+export type Mal = 'pass' | 'meddelanden' | 'sajten';
 
 export type Innehall = {
   amne: string;

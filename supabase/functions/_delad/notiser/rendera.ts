@@ -73,6 +73,8 @@ export type MejlIn = {
 export type Renderat = { amne: string; text: string; html: string };
 
 export function vyAdress(roll: Roll, mal: Mal | 'val'): string {
+  // Den publika sidan har ingen roll och ingen flik.
+  if (mal === 'sajten') return SAJT;
   const vy = roll === 'tutor' ? '/larare' : '/foralder';
   const hash = mal === 'pass' ? '#lektioner/pass' : mal === 'meddelanden' ? '#meddelanden' : '#profil/notiser';
   return `${SAJT}${vy}${hash}`;
@@ -83,15 +85,25 @@ export function avregistreringsAdress(token: string | null): string {
   return token ? `${SAJT}/avanmal?t=${encodeURIComponent(token)}` : `${SAJT}/avanmal`;
 }
 
-type Ram = {
+/**
+ * Ramen runt ett mejl.
+ *
+ * avregistrera och val är null i ett TRANSAKTIONSMEJL — ett kvitto på
+ * något mottagaren själv just gjort, som inte går att välja bort och
+ * därför inte ska erbjuda det. En avanmälningslänk i ett sådant mejl
+ * lovar något vi inte tänker hålla.
+ */
+export type Ram = {
   roll: Roll;
   halsning: string;
   innehall: Innehall;
   knappAdress: string;
   varfor: string;
-  avregistrera: string;
-  val: string;
+  avregistrera: string | null;
+  val: string | null;
   provrad: string | null;
+  /** En sista rad efter knappen, före foten. Notismejlen har ingen. */
+  avslutning?: string | null;
 };
 
 function ramen(rad: MejlIn): Ram {
@@ -134,11 +146,12 @@ function text(r: Ram): string {
   t.push(r.halsning, '', i.rubrik, '', i.mening, '');
   if (i.fakta.length) t.push(...i.fakta.map(([k, v]) => `${k}: ${v}`), '');
   t.push(`${i.knapp}:`, r.knappAdress, '');
+  if (r.avslutning) t.push(r.avslutning, '');
   // "-- " är signaturavgränsaren som mejlprogram känner igen.
-  t.push('-- ', 'Nextrum', r.varfor,
-    `Sluta få mejl om det här: ${r.avregistrera}`,
-    `Ändra dina val: ${r.val}`,
-    `Frågor? Svara på mejlet eller skriv till ${KONTAKT}.`);
+  t.push('-- ', 'Nextrum', r.varfor);
+  if (r.avregistrera) t.push(`Sluta få mejl om det här: ${r.avregistrera}`);
+  if (r.val) t.push(`Ändra dina val: ${r.val}`);
+  t.push(`Frågor? Svara på mejlet eller skriv till ${KONTAKT}.`);
   return t.join('\n') + '\n';
 }
 
@@ -213,12 +226,17 @@ function html(r: Ram): string {
     + p(i.mening, `font:400 16px/1.6 ${SANS};color:${FARG.brod};margin-bottom:22px`)
     + faktaHtml(i.fakta)
     + knappHtml(i.knapp, r.knappAdress)
+    + (r.avslutning
+      ? `<p style="margin:18px 0 0;font:400 15px/1.6 ${SANS};color:${FARG.brod}">${esc(r.avslutning)}</p>`
+      : '')
     + `</td></tr>`
     + `<tr><td style="padding:0 32px"><div style="height:1px;line-height:1px;font-size:1px;background:${FARG.linje}">&nbsp;</div></td></tr>`
     + `<tr><td style="padding:20px 32px 28px;font:400 13px/1.6 ${SANS};color:${FARG.dampad}">`
     + `<p style="margin:0 0 8px">${esc(r.varfor)}</p>`
-    + `<p style="margin:0 0 8px">${lank('Sluta få mejl om det här', r.avregistrera)}`
-    + `&nbsp;&nbsp;&middot;&nbsp;&nbsp;${lank('Ändra dina val', r.val)}</p>`
+    + (r.avregistrera && r.val
+      ? `<p style="margin:0 0 8px">${lank('Sluta få mejl om det här', r.avregistrera)}`
+        + `&nbsp;&nbsp;&middot;&nbsp;&nbsp;${lank('Ändra dina val', r.val)}</p>`
+      : '')
     + `<p style="margin:0">Frågor? Svara på mejlet eller skriv till `
     + `<a href="mailto:${KONTAKT}" style="color:${FARG.text}">${KONTAKT}</a>.</p>`
     + `</td></tr></table>`
@@ -228,6 +246,18 @@ function html(r: Ram): string {
 
 /** Ämne, text och HTML för en rad ur kön. Kastar för en typ som inte mejlas. */
 export function renderaMejl(rad: MejlIn): Renderat {
-  const r = ramen(rad);
+  return renderaRam(ramen(rad));
+}
+
+/**
+ * Samma ram, för ett mejl som inte kommer ur kön.
+ *
+ * Finns för transaktionsmejlen — i dag kvittot på en intresseanmälan,
+ * som går till någon som ännu inte har ett konto och därför varken
+ * har en rad i notis_val eller en token att signera. De ska ändå se
+ * likadana ut som allt annat vi skickar: samma logga, samma palett,
+ * samma knapp, samma textversion.
+ */
+export function renderaRam(r: Ram): Renderat {
   return { amne: r.innehall.amne, text: text(r), html: html(r) };
 }

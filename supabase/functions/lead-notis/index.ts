@@ -1,9 +1,22 @@
 // ============================================================
 // NEXTRUM — Edge Function: lead-notis
 //
-// Mejlar ledningen när någon skickar en intresseanmälan.
-// Anmälan sparas i databasen som förut; det här är en avisering
-// ovanpå, inte i stället för. Går mejlet fel ligger raden kvar.
+// Två mejl när någon skickar en intresseanmälan: en avisering till
+// ledningen, och ett kvitto till familjen.
+//
+// Anmälan sparas i databasen som förut; det här är mejl ovanpå, inte
+// i stället för. Går de fel ligger raden kvar.
+//
+//
+// DE TVÅ ÄR OBEROENDE AV VARANDRA
+//
+// Ett kvitto som inte gick fram får inte se ut som att anmälan inte
+// kom in, och en avisering som inte gick fram får inte hindra
+// kvittot. Båda försöken görs, och båda utfallen står i svaret.
+//
+// Aviseringen först, för det är den som får någon att ringa inom de
+// 24 timmar sajten lovar. Kvittot är det familjen ser, men det
+// lovar bara att vi hört av oss — löftet hålls av aviseringen.
 //
 // ANROPAS AV EN DATABASWEBHOOK, inte av webbläsaren. Det är med
 // flit. En funktion som tar emot formulärdata från klienten är en
@@ -29,6 +42,8 @@
 import { json as jsonMed, esc, epostOk } from '../_delad/http.ts';
 import { lika } from '../_delad/auth.ts';
 import { skickaViaResend } from '../_delad/mejl.ts';
+import { KVITTO_FRAN, renderaKvitto } from '../_delad/notiser/kvitto.ts';
+import { KONTAKT } from '../_delad/notiser/rendera.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
@@ -106,6 +121,59 @@ function rad(etikett: string, varde: unknown): string {
    fyllas på från annat håll än sidan och en trasig rad får inte kunna
    stoppa aviseringen om sig själv. */
 
+/** Så länge ett anrop till Resend får ta innan webhooken ger upp. */
+const KVITTO_TIDSGRANS_MS = 8_000;
+
+export type KvittoUtfall = { skickat: boolean; id?: string | null; orsak?: string };
+
+/**
+ * Kvittot till den som anmälde sig. Kastar aldrig: utfallet blir en
+ * rad i svaret, så att en trasig kvittoväg syns i webhookloggen utan
+ * att aviseringen till oss påverkas.
+ */
+async function skickaKvitto(r: Record<string, unknown>): Promise<KvittoUtfall> {
+  if (!epostOk(r.email)) {
+    return { skickat: false, orsak: 'Anmälan har ingen giltig e-postadress.' };
+  }
+
+  const m = renderaKvitto(r.parent_name);
+
+  /* Idempotensnyckeln byggs ur radens id. SAKNAS DET SÄTTS INGEN
+     NYCKEL: en nyckel som blir "…-undefined" hade varit samma nyckel
+     för varje anmälan, och Resend hade då skickat kvittot till den
+     första familjen och tyst hoppat över resten. Hellre risk för två
+     kvitton till en familj än noll kvitton till alla andra. */
+  const id = typeof r.id === 'string' && r.id ? r.id : null;
+
+  try {
+    const svar = await skickaViaResend({
+      fran: KVITTO_FRAN,
+      till: [String(r.email).trim()],
+      /* Mejlet ber om svar, så svaret ska gå till en läst adress. */
+      svaraTill: [KONTAKT],
+      amne: m.amne,
+      text: m.text,
+      html: m.html,
+      idempotens: id ? `nextrum-kvitto-${id}` : undefined,
+      tidsgransMs: KVITTO_TIDSGRANS_MS,
+    });
+    if (svar.ok) {
+      const j = await svar.json().catch(() => null) as { id?: unknown } | null;
+      return { skickat: true, id: typeof j?.id === 'string' ? j.id : null };
+    }
+    /* Statuskoden, aldrig kroppen: den upprepar adressen vi skickade
+       till, och webhookloggen är inte rätt ställe för den. */
+    return { skickat: false, orsak: `Resend svarade ${svar.status} på kvittot.` };
+  } catch (e) {
+    return {
+      skickat: false,
+      orsak: (e as { name?: string })?.name === 'TimeoutError'
+        ? 'Resend svarade inte i tid på kvittot.'
+        : 'Resend gick inte att nå för kvittot.',
+    };
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     /* Hemligheten kollas FÖRST. Den förra ordningen svarade
@@ -166,7 +234,10 @@ Deno.serve(async (req) => {
       html,
     });
 
-    const svar = await skicka(FRAN, TILL);
+    /* De två mejlen är oberoende, så de görs samtidigt: webhooken ska
+       inte vänta på två Resend-anrop i rad. skickaKvitto kastar
+       aldrig, så Promise.all kan inte falla på kvittot. */
+    const [svar, kvitto] = await Promise.all([skicka(FRAN, TILL), skickaKvitto(r)]);
 
     /* 403 = domänen är inte verifierad hos Resend. Allt annat är ett
        riktigt fel och ska synas som det. Kroppen läses ut här, för en
@@ -186,20 +257,22 @@ Deno.serve(async (req) => {
                  + 'reservavsändaren och nådde bara ' + RESERV_TILL + ', inte hela listan.',
           orsak,
           id: (await reserv.json())?.id ?? null,
+          kvitto,
         }, 200);
       }
       return json({
         error: 'Resend svarade 403 på ' + FRAN + ' och '
              + reserv.status + ' på reserven: ' + (await reserv.text()),
         orsak,
+        kvitto,
       }, 502);
     }
 
     if (!svar.ok) {
-      return json({ error: 'Resend svarade ' + svar.status + ': ' + (await svar.text()) }, 502);
+      return json({ error: 'Resend svarade ' + svar.status + ': ' + (await svar.text()), kvitto }, 502);
     }
 
-    return json({ ok: true, id: (await svar.json())?.id ?? null }, 200);
+    return json({ ok: true, id: (await svar.json())?.id ?? null, kvitto }, 200);
   } catch (e) {
     return json({ error: String(e) }, 500);
   }
