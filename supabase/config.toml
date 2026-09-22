@@ -62,6 +62,16 @@ verify_jwt = false
 [functions.notis-ko]
 verify_jwt = false
 
+# Stripes webhook (Fas 12.2). Anroparen är Stripe, som inte har och
+# inte kan ha en Supabase-token. Skyddet är signaturen i
+# stripe-signature, prövad i konstant tid mot STRIPE_WEBHOOK_SECRET.
+#
+# stripe-konto och stripe-checkout står MED FLIT INTE här: de anropas
+# av en inloggad studiehjälpare respektive förälder, och ska ha
+# JWT-kravet kvar.
+[functions.stripe-webhook]
+verify_jwt = false
+
 # Avanmälan ur ett mejl. Måste fungera utan inloggning — mottagaren
 # är ofta inte inloggad, och mejlprogrammets One-Click-knapp
 # (RFC 8058) POSTar utan att någon öppnar sajten. Skyddet är

@@ -466,8 +466,11 @@ tillbaka en kopia.**
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
+| `stripe-konto` | Studiehjälparens anslutna konto: skapar det, ger onboardinglänk, läser tillbaka tillståndet **från Stripe** | Knappen under Ersättning |
+| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. Destination charge plus application fee. **Beloppen räknas här, aldrig i anropet** | Knappen på passet i föräldravyn |
+| `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser` | Stripe |
 
-`supabase/config.toml` bär `verify_jwt = false` för de sex funktioner
+`supabase/config.toml` bär `verify_jwt = false` för de sju funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
 dashboarden, och en `supabase functions deploy` utan filen hade slagit
 på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och
@@ -684,11 +687,28 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 
 ## 11. Vad som inte är byggt
 
-- **Betalning.** Fakturor skapas och skickas, men ingen betaltjänst är
-  kopplad. `Betald` kryssas i för hand. Utbetalning görs från banken.
-  `SKISS-BETALNING-STRIPE.md` är slutläget på papper: varför kundsidan
-  (Stripe Invoicing) går att bygga oberoende av allt annat, varför
-  hjälparsidan (Connect) inte gör det, och vilken fråga som blockerar.
+- **Betalning.** Två vägar finns i repot, och **bara den ena är provad**.
+
+  **Månadsfakturering** (Fas 2) skapar och skickar fakturor. Ingen
+  betaltjänst är kopplad till dem: `Betald` kryssas i för hand, och
+  utbetalning görs från banken.
+
+  **Stripe Connect per pass** (Fas 12) är driftsatt men inte i bruk.
+  Migrationen är applicerad och `stripe-konto`, `stripe-checkout` och
+  `stripe-webhook` ligger ACTIVE. Men **ingen nyckel är satt**, ingen
+  webhook-endpoint finns hos Stripe, och **ingenting har någonsin körts
+  mot Stripe** — miljön där koden skrevs når inte `api.stripe.com`.
+  Funktionerna svarar därför "STRIPE_SECRET_KEY saknas i miljön", och
+  webhooken svarar 400 på varje leverans. `DEPLOY-BETALNING.md` avsnitt
+  9 har ordningen och en provlista i testläge.
+
+  **De två vägarna vet inte om varandra.** `passunderlag` tittar inte på
+  `betalning_status`, så ett kortbetalt pass kommer ändå med i
+  månadskörningen. Körs båda skarpt faktureras familjen två gånger.
+
+  `SKISS-BETALNING-STRIPE.md` står kvar oförändrad och argumenterar mot
+  Connect-vägen. Den är kvar med flit: beslutet togs ändå, och den som
+  läser om ett år ska se att invändningen fanns.
 - **Google Workspace och Fortnox.** Statusflik finns, koppling saknas.
   `INTEGRATIONER.md` har hela receptet, inklusive fällan att Fortnox
   roterar refresh-token vid varje användning — sparas inte det nya

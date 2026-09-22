@@ -958,6 +958,15 @@
   margin-top:14px;font-size:.83rem;line-height:1.6;color:var(--bl-2);
 }
 
+/* Vad Stripe saknar på det anslutna kontot. Listan kommer ordagrant
+   från Stripe, så den kan vara både kort och lång — därför en riktig
+   lista och inte en mening, och därför inget som antar antalet. */
+.bet-krav{
+  margin:10px 0 0;padding-left:18px;
+  font-size:.83rem;line-height:1.7;color:var(--bl-2);
+}
+.bet-krav li{margin:2px 0}
+
 /* En faktura och dess rader hör ihop som ett block. Utan omslaget
    träffar .bet:last-child fel, eftersom raderna ligger emellan. */
 .bet-post{padding:16px 0;border-bottom:1px solid var(--ln)}
