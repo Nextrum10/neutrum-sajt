@@ -81,7 +81,11 @@
     const summa = problem.concat(kö).reduce((n, p) => n + p.antal, 0);
 
     const läge = problem.length ? 'problem' : (kö.length ? 'atgard' : 'lugnt');
-    disk.className = 'kon-disk ar-' + läge;
+    /* classList, inte className: en omritning medan NEX tänker hade
+       annars slagit bort ar-tanker och stannat ringarna mitt i en
+       körning. */
+    ['lugnt', 'atgard', 'problem', 'okand'].forEach(k =>
+      disk.classList.toggle('ar-' + k, k === läge));
     $('#kon-disk-tal').textContent = String(summa);
     $('#kon-disk-text').textContent =
       läge === 'problem' ? 'kräver åtgärd' : (läge === 'atgard' ? 'väntar på dig' : 'allt lugnt');
@@ -143,9 +147,18 @@
       });
     }
 
+    /* NEX rör sig medan den tänker. Klassen sätts runt anropet och tas
+       bort i finally: en kastad körning, ett timeout eller en vägran
+       ska inte lämna ringarna snurrande i all evighet. */
     async function skicka() {
       if (!ruta.value.trim()) { ruta.focus(); return; }
-      await NXAgent.stall({ agent: 'drift', fraga: ruta.value, ut: ut, knapp: knapp });
+      const nex = $('#kon-disk');
+      if (nex) nex.classList.add('ar-tanker');
+      try {
+        await NXAgent.stall({ agent: 'drift', fraga: ruta.value, ut: ut, knapp: knapp });
+      } finally {
+        if (nex) nex.classList.remove('ar-tanker');
+      }
     }
 
     knapp.addEventListener('click', skicka);
