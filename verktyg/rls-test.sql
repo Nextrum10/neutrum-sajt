@@ -11,9 +11,11 @@
 -- ändringar. Rollen och inloggningen (request.jwt.claims) sätts
 -- per test, precis som PostgREST gör det.
 --
--- Notistriggrarna på bookings OCH leads stängs av under körningen,
--- så att fixturpassen och provanmälningarna aldrig kan bli ett mejl.
--- Även de ändringarna rullas tillbaka.
+-- Notistriggrarna på bookings, leads, messages och lesson_reports
+-- stängs av under körningen, så att fixturpassen och provanmälningarna
+-- aldrig kan bli ett mejl. Även de ändringarna rullas tillbaka.
+-- Triggrarna slås upp på sin funktion, inte på sitt namn — se
+-- kommentaren vid do-blocket nedan om varför.
 --
 -- OBS vid körning mot skarp drift: att stänga av en trigger tar
 -- ACCESS EXCLUSIVE-lås på tabellen, och låset hålls tills
@@ -31,8 +33,39 @@
 
 begin;
 
-alter table public.bookings disable trigger "nytt-passforslag";
-alter table public.leads disable trigger "ny-intresseanmalan";
+-- Notistriggrarna stängs av, så att fixturpassen och provanmälningarna
+-- aldrig kan bli ett mejl. Också de ändringarna rullas tillbaka.
+--
+-- NAMNEN SLÅS UPP, DE STÅR INTE SKRIVNA HÄR. Raderna löd förut
+--
+--   alter table public.bookings disable trigger "nytt-passforslag";
+--
+-- och den triggern finns inte längre: Runda 2 bytte webhooken mot
+-- kötriggern bookings_notis, och messages och lesson_reports fick
+-- sina egna. Hela sviten kraschade då på den första satsen efter
+-- begin, med 42704, innan ett enda test hunnit köras — och en svit
+-- som inte går att köra provar ingenting.
+--
+-- Uppslaget går på FUNKTIONEN, inte på triggerns namn. Ett namn är
+-- godtyckligt och byts när något skrivs om; funktionen säger vad
+-- triggern faktiskt gör.
+do $$
+declare t record;
+begin
+  for t in
+    select c.relname as tabell, tg.tgname as namn
+      from pg_trigger tg
+      join pg_class c on c.oid = tg.tgrelid
+      join pg_namespace n on n.oid = c.relnamespace
+      join pg_proc p on p.oid = tg.tgfoid
+     where not tg.tgisinternal
+       and n.nspname = 'public'
+       and c.relname in ('bookings', 'leads', 'messages', 'lesson_reports')
+       and (p.proname = 'http_request' or p.proname like 'notis%')
+  loop
+    execute format('alter table public.%I disable trigger %I', t.tabell, t.namn);
+  end loop;
+end $$;
 
 create temp table utfall (
   nr     serial,
@@ -616,8 +649,18 @@ select pg_temp.rakna('5.2 familj P ser sina två uppdrag', '00000000-0000-4000-8
   'select count(*) from public.uppdrag', 2);
 select pg_temp.rakna('5.2 familj Q ser bara sitt eget', '00000000-0000-4000-8000-0000000000f2',
   'select count(*) from public.uppdrag', 1);
-select pg_temp.rakna('5.2 studiehjälpare A ser sin familjs uppdrag, inte Q:s', '00000000-0000-4000-8000-0000000000a1',
-  $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 2);
+-- EN, inte två. Testet väntade sig förut familjens BÅDA uppdrag, och
+-- det var den läcka Runda 2 stängde: policyn var matchad mot familjen
+-- (is_matched_tutor_of(parent_id)) och släppte därför igenom alla
+-- syskon så fort ett av dem var matchat. Migrationen
+-- r2_fas1_6_studiehjalparen_ser_bara_sina_elever säger det rakt ut:
+-- "Samma sak gällde uppdragen, ett per barn."
+--
+-- A är matchad med familj P:s äldsta barn. Syskonet har B som
+-- studiehjälpare, och dess uppdrag ska A inte se. Står det 2 här igen
+-- är det löftet i integritetspolicyn som brustit, inte testet.
+select pg_temp.rakna('5.2 studiehjälpare A ser sin elevs uppdrag, inte syskonets eller Q:s', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 1);
 select pg_temp.rakna('5.2 admin ser alla', '00000000-0000-4000-8000-0000000000ad',
   $q$select count(*) from public.uppdrag where kund_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')$q$, 3);
 

@@ -525,6 +525,8 @@
                   id="flik-barn" aria-controls="panel-barn">Barn</button>
           <button class="vy-flik" type="button" role="tab" data-flik="pris"
                   id="flik-pris" aria-controls="panel-pris">Pris &amp; villkor</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="notiser"
+                  id="flik-notiser" aria-controls="panel-notiser">Notiser</button>
         </div>
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="konto"
@@ -647,7 +649,32 @@
             <div class="sum-line"><span>Per timme</span><span data-pris>379 kr</span></div>
             <div class="sum-line"><span>Anmälningsavgift</span><span>0 kr</span></div>
             <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
+
             <p class="xsmall" style="margin-top:14px;color:var(--muted-2);line-height:1.6">Ni betalar i efterskott, en gång i månaden, för de pass som faktiskt genomförts. Fakturorna ligger under Betalning.</p>
+          </div>
+        </div>
+        <!-- ============ NOTISER ============
+             Vilka mejl man vill ha. Raderna ligger i notis_val, och RLS
+             släpper bara igenom ens egna — listan behöver därför ingen
+             egen behörighetskontroll.
+
+             DEN HÄR FLIKEN ÄR HUVUDVÄGEN. Varje notismejl har också en
+             avregistreringslänk i foten, som stänger av EN sort utan
+             inloggning. Den finns för mejlprogrammens One-Click och för
+             den som inte orkar logga in, och den kan bara stänga AV.
+             Här ser man allt på en gång och kan slå PÅ igen.
+
+             Markupen ritas av NXStudie.notisval(). Ingen inline-kod:
+             vyn kör med script-src 'self'.
+             ============ -->
+        <div class="vy-flik-panel" role="tabpanel" data-flik="notiser"
+             id="panel-notiser" aria-labelledby="flik-notiser" hidden>
+          <div class="dbox">
+            <h5>Mejl från Nextrum</h5>
+            <p class="xsmall" style="margin:-6px 0 16px;color:var(--muted-2);line-height:1.6">Välj själv vad du vill få mejl om. Ändringen gäller direkt.</p>
+            <div id="notisval-lista"></div>
+            <p class="ok-msg" id="notisval-msg"></p>
+            <p class="xsmall" style="margin-top:16px;color:var(--muted-2);line-height:1.6">Besked om bokade pass och fakturor skickas alltid. De hör till tjänsten och går inte att välja bort.</p>
           </div>
         </div>
       </section>

@@ -47,7 +47,7 @@
 // ============================================================
 
 import Anthropic from 'npm:@anthropic-ai/sdk@0.124.0';
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.116.0';
 
 // Kolla https://docs.claude.com/en/docs/about-claude/models om det här
 // börjar ge fel. Modellnamn ändras över tid.

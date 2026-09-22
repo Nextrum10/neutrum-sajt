@@ -1521,6 +1521,16 @@
     ritaKontoAvatar();
     ritaHeader();
 
+    /* Notisvalen under Profil → Notiser. Ritas här, inte när fliken
+       öppnas: två små frågor mot notis_val och notis_installning, och
+       ingen väntan när någon faktiskt klickar sig dit. */
+    NXStudie.notisval({
+      host: $('#notisval-lista'),
+      supa: supa,
+      anvandare: S.user.id,
+      msg: $('#notisval-msg')
+    });
+
     await laddaBarn();
     await laddaTutor();
     startaTråd();

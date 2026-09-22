@@ -24,7 +24,7 @@
 // alla funktioner delar. Exporterna här är desamma som förut.
 // ============================================================
 
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.116.0';
 import { cors, json as jsonMed, esc as escHtml } from './http.ts';
 import { lika, serviceklient } from './auth.ts';
 import { skickaViaResend } from './mejl.ts';

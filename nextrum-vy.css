@@ -1336,3 +1336,32 @@
   .vy-utkast{flex-direction:column}
   .vy-utkast .btn{width:100%}
 }
+
+/* ------------------------------------------------------------
+   NOTISVALEN — Profil → Notiser
+
+   En rad per notistyp: namn och en kort förklaring till vänster,
+   en chip som säger Mejl på / Mejl av till höger.
+
+   Chipen är en knapp med aria-pressed, inte en <input type=checkbox>.
+   Det är husets mönster för av och på (se .chip i nextrum.css), och
+   det som gör att raderna kan ritas om vid varje ändring utan att en
+   händelselyssnare försvinner med dem.
+   ------------------------------------------------------------ */
+.nx-nval{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  padding:13px 0;border-bottom:1px solid var(--line);
+}
+.nx-nval:first-child{padding-top:0}
+.nx-nval:last-child{border-bottom:0;padding-bottom:0}
+.nx-nval-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+.nx-nval-text b{font-weight:600;font-size:.88rem;letter-spacing:-.01em}
+.nx-nval-text .xsmall{color:var(--muted-2);line-height:1.5}
+/* Fast bredd, så att chiparna står i linje när texten byter mellan
+   "Mejl på" och "Mejl av" — annars hoppar kanten vid varje klick. */
+.nx-nval .chip{flex:none;min-width:92px;text-align:center}
+.nx-nval .chip[disabled]{opacity:.5}
+@media (max-width:460px){
+  .nx-nval{flex-direction:column;align-items:flex-start;gap:10px}
+  .nx-nval .chip{width:100%}
+}
