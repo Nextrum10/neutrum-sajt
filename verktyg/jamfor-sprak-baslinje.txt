@@ -6,6 +6,10 @@
       Leo Constantinos Thriskos
       Alexandar Jovanovic
 
+=== avanmal.html  ->  en/avanmal.html
+  STRUKTUR skiljer sig vid tagg 39: sv <b> vs en <a>
+  TEXTNODER: sv 64 vs en 63 — engelskan har inte följt med
+
 === bli-studiehjalpare.html  ->  en/bli-studiehjalpare.html
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
   TEXTNODER: sv 150 vs en 149 — engelskan har inte följt med
@@ -53,7 +57,7 @@
   STRUKTUR skiljer sig vid tagg 38: sv <b> vs en <a>
   TEXTNODER: sv 96 vs en 95 — engelskan har inte följt med
 
-11 av 11 sidpar har avvikelser.
+12 av 12 sidpar har avvikelser.
 
 === svenska sidor utan engelsk tvilling: 10
   admin.html
