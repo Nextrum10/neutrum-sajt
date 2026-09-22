@@ -83,47 +83,126 @@
   .vy-admin .kon-mitt{flex-direction:column;align-items:stretch}
 }
 
-/* Disken säger ETT tal: hur många saker som väntar på en människa.
-   Den bär ingen procent, för det finns inget ärligt nämnare-tal att
-   räkna den mot — en påhittad andel hade sett exakt lika trovärdig
-   ut som en riktig. Färgen har tre lägen, och formen följer med:
-   ringen är hel när allt är lugnt och bruten när något gått fel. */
+/* ------------------------------------------------------------
+   NEX
+
+   Företagets AI, och konsolens ansikte. Ringarna bär också läget:
+   ett tal för hur många saker som väntar på en människa, och en färg.
+   Talet har ingen procent bakom sig, för det finns inget ärligt
+   nämnare-tal att räkna det mot — en påhittad andel hade sett exakt
+   lika trovärdig ut som en riktig.
+
+   SJÄLVA EMBLEMET ÄR ALLTID CYANT. Det är NEX egen färg, och den ska
+   inte skifta med läget — färgar man hela ringen röd drunknar
+   identiteten i en statussignal, och vyn får en stor röd skiva som
+   drar blicken från siffrorna bredvid.
+
+   LÄGET BÄRS AV BÅGEN, och inte bara av dess färg: ANTALET bågar är
+   signalen. En hel båge när allt är lugnt, två när något väntar, tre
+   korta när något gått fel. --fel och --mossa ligger på nästan samma
+   ljushet och försvinner mot varandra i gråskala och under
+   deuteranopi, så kulören ensam hade inte sagt någonting.
+   ------------------------------------------------------------ */
 .vy-admin .kon-disk{
   position:relative;flex:none;
-  width:132px;height:132px;
-  /* Plats under ringen till etiketten. "Kräver åtgärd" är bredare än
-     132 px och skar rakt igenom ringen när den låg inuti. */
-  margin-bottom:26px;
+  width:clamp(168px,15vw,200px);
+  aspect-ratio:1;
+  /* Plats under ringen till lägesraden. "Kräver åtgärd" är bredare än
+     ringen och skar rakt igenom den när den låg inuti. */
+  margin-bottom:30px;
   display:flex;align-items:center;justify-content:center;
   color:var(--bl-3);
 }
-.vy-admin .kon-disk svg{
+.vy-admin .kon-nex{
   position:absolute;inset:0;width:100%;height:100%;
-  fill:none;stroke:currentColor;
+  fill:none;stroke:currentColor;stroke-linecap:butt;
+  overflow:visible;
 }
-.vy-admin .kon-disk svg circle:first-child{stroke-width:1.5;opacity:.45}
-.vy-admin .kon-disk svg circle:last-child{stroke-width:3;opacity:.9}
-.vy-admin .kon-disk b{
+.vy-admin .kon-nex g{transform-origin:50% 50%}
+.vy-admin .kon-nex .nex-batong{stroke:var(--acc);opacity:.95}
+
+.vy-admin .kon-nex-namn{
   position:relative;
-  font-size:2.5rem;font-weight:800;letter-spacing:-.04em;line-height:1;
-  color:var(--bl);font-variant-numeric:tabular-nums;
+  font-size:clamp(1.5rem,2.4vw,1.9rem);font-weight:800;
+  letter-spacing:.14em;line-height:1;
+  color:var(--bl);
+  /* Optisk centrering: spärren lägger all luft till höger om X:et. */
+  padding-left:.14em;
 }
-.vy-admin .kon-disk span{
+.vy-admin .kon-nex-lage{
   position:absolute;top:100%;left:50%;transform:translateX(-50%);
-  margin-top:9px;white-space:nowrap;
+  margin-top:11px;white-space:nowrap;
+  display:flex;align-items:baseline;gap:7px;
+}
+/* Siffran ärver statusfärgen. Ordet under den är 9 px mono och bär
+   samma besked i klartext, så kulören är aldrig ensam om att säga det. */
+.vy-admin .kon-nex-lage b{
+  font-size:1.15rem;font-weight:800;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+}
+.vy-admin .kon-nex-lage > span{
   font-family:var(--f-mono);font-size:9px;font-weight:600;
-  letter-spacing:.14em;text-transform:uppercase;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-2);
 }
-.vy-admin .kon-disk.ar-lugnt{color:var(--mossa)}
-.vy-admin .kon-disk.ar-atgard{color:var(--ockra)}
-.vy-admin .kon-disk.ar-problem{color:var(--fel)}
-.vy-admin .kon-disk.ar-problem svg circle:last-child{
-  /* Bruten ring. Skiljer problem från väntande även i gråskala, och
-     under deuteranopi ligger --fel och --mossa på nästan samma
-     ljushet — då är det här hela signalen. */
-  stroke-dasharray:38 14;
+
+/* Ringarnas egen färg. Lägesraden under emblemet bär statusfärgen —
+   där står den bredvid ord och en siffra och kan inte missförstås. */
+.vy-admin .kon-disk{color:var(--acc)}
+
+/* Bågarna. Omkretsen på r=64 är 402,12, så mönstret "längd gap" ger
+   exakt så många bågar som 402,12 delat med perioden. */
+.vy-admin .kon-disk.ar-lugnt  .nex-batong{stroke:var(--mossa);stroke-dasharray:56 346.12}   /* en */
+.vy-admin .kon-disk.ar-atgard .nex-batong{stroke:var(--ockra);stroke-dasharray:34 167.06}   /* två */
+.vy-admin .kon-disk.ar-problem .nex-batong{stroke:var(--fel);stroke-dasharray:18 116.04}    /* tre */
+.vy-admin .kon-disk.ar-okand  .nex-batong{opacity:.3}
+
+.vy-admin .kon-disk.ar-lugnt  .kon-nex-lage{color:var(--mossa)}
+.vy-admin .kon-disk.ar-atgard .kon-nex-lage{color:var(--ockra)}
+.vy-admin .kon-disk.ar-problem .kon-nex-lage{color:var(--fel)}
+
+/* ------------------------------------------------------------
+   RÖRELSEN
+
+   I vila driver ringarna så långsamt att man ser det bara om man
+   tittar: ett varv tar två minuter. NEX ska kännas vaken utan att
+   dra blicken från sifforna bredvid.
+
+   När NEX TÄNKER, alltså medan drift-agenten kör, går det fort och
+   bandet lyser. Klassen sätts runt await:et i nextrum-admin-konsol.js
+   och tas bort i finally, så en kastad körning lämnar inte NEX
+   snurrande i all evighet.
+   ------------------------------------------------------------ */
+@keyframes nex-varv{to{transform:rotate(360deg)}}
+@keyframes nex-varv-bak{to{transform:rotate(-360deg)}}
+@keyframes nex-puls{
+  0%,100%{opacity:.95}
+  50%{opacity:.45}
 }
-.vy-admin .kon-disk.ar-okand svg circle:last-child{stroke-dasharray:4 8;opacity:.5}
+
+.vy-admin .kon-nex .nex-yttre  {animation:nex-varv 150s linear infinite}
+.vy-admin .kon-nex .nex-tander {animation:nex-varv-bak 240s linear infinite}
+.vy-admin .kon-nex .nex-band   {animation:nex-varv 190s linear infinite}
+.vy-admin .kon-nex .nex-prickar{animation:nex-varv-bak 120s linear infinite}
+.vy-admin .kon-nex .nex-inre   {animation:nex-varv 90s linear infinite}
+
+.vy-admin .kon-disk.ar-tanker .nex-yttre  {animation-duration:14s}
+.vy-admin .kon-disk.ar-tanker .nex-tander {animation-duration:22s}
+.vy-admin .kon-disk.ar-tanker .nex-band   {animation-duration:6s}
+.vy-admin .kon-disk.ar-tanker .nex-prickar{animation-duration:9s}
+.vy-admin .kon-disk.ar-tanker .nex-inre   {animation-duration:4s}
+.vy-admin .kon-disk.ar-tanker .nex-batong{animation:nex-puls 1.6s ease-in-out infinite}
+.vy-admin .kon-disk.ar-tanker .kon-nex-namn{color:var(--acc-text)}
+
+/* Den som bett systemet om mindre rörelse ska inte få en snurrande
+   skiva för att en knapp trycktes. NEX säger i stället att den tänker
+   genom att ändra färg, och NXAgent.stall() skriver ändå ut sin
+   sekundräknare i svarsrutan. */
+@media (prefers-reduced-motion:reduce){
+  .vy-admin .kon-nex g,
+  .vy-admin .kon-nex .nex-batong{animation:none !important}
+  .vy-admin .kon-disk.ar-tanker{color:var(--acc)}
+  .vy-admin .kon-disk.ar-tanker .nex-batong{stroke:var(--acc);opacity:1}
+}
 
 .vy-admin .kon-lista{
   flex-grow:1;min-width:0;
