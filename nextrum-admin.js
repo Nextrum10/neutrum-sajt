@@ -69,6 +69,7 @@
   const ritaStudiehjalpare = (...a) => NXAdmin.rita.ritaStudiehjalpare(...a);
   const ritaTjanster = (...a) => NXAdmin.rita.ritaTjanster(...a);
   const ritaUtbetalningar = (...a) => NXAdmin.rita.ritaUtbetalningar(...a);
+  const ritaKortbetalningar = (...a) => NXAdmin.rita.ritaKortbetalningar(...a);
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
   const ritaInstallningar = (...a) => NXAdmin.rita.ritaInstallningar(...a);
   const ritaAudit = (...a) => NXAdmin.rita.ritaAudit(...a);
@@ -311,7 +312,8 @@
    ['#sh-sok', ritaStudiehjalpare], ['#sh-status', ritaStudiehjalpare],
    ['#bok-sok', ritaBokningar], ['#bok-status', ritaBokningar], ['#bok-nar', ritaBokningar],
    ['#fakt-sok', ritaFakturor], ['#fakt-status', ritaFakturor],
-   ['#utb-sok', ritaUtbetalningar], ['#utb-status', ritaUtbetalningar]
+   ['#utb-sok', ritaUtbetalningar], ['#utb-status', ritaUtbetalningar],
+   ['#kort-sok', ritaKortbetalningar], ['#kort-status', ritaKortbetalningar]
   ].forEach(([sel, fn]) => {
     const el = $(sel);
     if (el) el.addEventListener('input', fn);
@@ -900,6 +902,7 @@
       ritaStatistik();
       ritaFakturor();
       ritaUtbetalningar();
+      ritaKortbetalningar();
       ritaAvvikelser();
       fyllPerioder();
       ritaIntegrationer();

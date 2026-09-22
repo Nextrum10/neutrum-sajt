@@ -43,7 +43,7 @@
 
 import { serviceklient } from '../_delad/auth.ts';
 import { json } from '../_delad/http.ts';
-import { prövaSignatur, v1 } from '../_delad/stripe.ts';
+import { aterbetalningsLage, prövaSignatur, v1 } from '../_delad/stripe.ts';
 
 type Handelse = {
   id?: string;
@@ -185,17 +185,31 @@ Deno.serve(async (req) => {
 
       // ---------- återbetalning ----------
       case 'charge.refunded': {
-        const passId = String((obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
         const aterbetalt = Number(obj.amount_refunded ?? 0);
         const totalt = Number(obj.amount ?? 0);
-        if (!passId) return await klar('utan pass-id');
-        await db.from('bookings').update({
+        const andring = {
           aterbetald_ore: aterbetalt,
-          // Delåterbetalning lämnar passet som betalt: det är fortfarande
-          // betalt, bara inte fullt ut.
-          betalning_status: aterbetalt >= totalt && totalt > 0 ? 'aterbetald' : 'betald',
-        }).eq('id', passId);
-        return await klar(`återbetalt ${aterbetalt} öre`);
+          betalning_status: aterbetalningsLage(aterbetalt, totalt),
+        };
+
+        /* CHARGE-ID FÖRST, metadata bara som reserv.
+           metadata på en charge ÄRVS från PaymentIntent, och den
+           ärvningen är Stripes beteende, inte något vi styr. Charge-id
+           skrev vi själva när betalningen kom in, så det är det enda
+           här som vi vet finns.
+
+           Händelsen kommer också när någon återbetalat i Stripes
+           dashboard, alltså utan att ha gått genom vår funktion. Då är
+           det HÄR siffran hamnar. */
+        const chargeId = String(obj.id ?? '');
+        if (chargeId) {
+          await db.from('bookings').update(andring).eq('stripe_charge_id', chargeId);
+          return await klar(`återbetalt ${aterbetalt} öre`);
+        }
+        const passId = String((obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
+        if (!passId) return await klar('återbetalning utan charge-id och utan pass-id');
+        await db.from('bookings').update(andring).eq('id', passId);
+        return await klar(`återbetalt ${aterbetalt} öre (via metadata)`);
       }
 
       // ---------- korttvist ----------
@@ -217,12 +231,25 @@ Deno.serve(async (req) => {
       // ---------- överföringen ----------
       case 'transfer.created':
       case 'transfer.reversed': {
+        /* En destination charge skapar överföringen ÅT oss, så den bär
+           inte vår metadata. Men den bär source_transaction: charge-id:t
+           den kom ur, och det är ett id vi själva skrivit. Det är därför
+           den vägen står först.
+
+           reversed nollställer id:t. Ett pass med betalning men utan
+           transfer är precis den avvikelse som ska gå att hitta: det
+           betyder att studiehjälparens del ligger kvar hos Nextrum. */
+        const nyttId = typ.endsWith('reversed') ? null : String(obj.id ?? '');
+        const kalla = String(obj.source_transaction ?? '');
+        if (kalla) {
+          await db.from('bookings').update({ stripe_transfer_id: nyttId })
+            .eq('stripe_charge_id', kalla);
+          return await klar(typ);
+        }
         const passId = String((obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
-        if (!passId) return await klar('transfer utan pass-id');
-        await db.from('bookings').update({
-          stripe_transfer_id: typ.endsWith('reversed') ? null : String(obj.id ?? ''),
-        }).eq('id', passId);
-        return await klar(typ);
+        if (!passId) return await klar('transfer utan source_transaction och utan pass-id');
+        await db.from('bookings').update({ stripe_transfer_id: nyttId }).eq('id', passId);
+        return await klar(typ + ' (via metadata)');
       }
 
       // ---------- kontots krav ändrades ----------

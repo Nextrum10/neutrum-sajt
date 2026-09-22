@@ -354,6 +354,7 @@ provet. Gör den innan ni rör en skarp nyckel.
 | `stripe-konto` | **ACTIVE**, version 1, `verify_jwt = true` |
 | `stripe-checkout` | **ACTIVE**, version 1, `verify_jwt = true` |
 | `stripe-webhook` | **ACTIVE**, version 1, `verify_jwt = false` |
+| `stripe-aterbetalning` | Fas 12.4. Återbetalning med transfer reversal, bara för admin |
 | `STRIPE_SECRET_KEY` | **Inte satt** — funktionerna svarar "STRIPE_SECRET_KEY saknas i miljön" |
 | `STRIPE_WEBHOOK_SECRET` | **Inte satt** — webhooken svarar 400 på varje leverans |
 | Webhook-endpoint hos Stripe | **Inte skapad** |
@@ -391,7 +392,11 @@ supabase secrets set STRIPE_SECRET_KEY=sk_test_...
 supabase functions deploy stripe-konto
 supabase functions deploy stripe-checkout
 supabase functions deploy stripe-webhook
+supabase functions deploy stripe-aterbetalning
 ```
+
+`stripe-aterbetalning` anropas av en inloggad admin och ska ha JWT-kravet kvar.
+Den står därför inte i `config.toml`.
 
 `stripe-webhook` har `verify_jwt = false` i `supabase/config.toml`, för att
 anroparen är Stripe och inte kan ha en Supabase-token. **Driftsätt aldrig den utan

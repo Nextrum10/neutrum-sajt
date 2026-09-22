@@ -86,6 +86,112 @@
   }
 
   /* ============================================================
+     KORTBETALNINGAR (Fas 12)
+
+     Passen som betalats med kort, inte de som fakturerats. De två
+     vägarna lever bredvid varandra och vet ännu inte om varandra;
+     se CLAUDE.md avsnitt 11.
+
+     Beloppen är FRYSTA vid betalningen och läses bara här. Ingen
+     rullgardin ändrar ett läge i den här tabellen, till skillnad från
+     fakturor och utbetalningar: en betalnings läge sätts av Stripe
+     genom webhooken, och att kunna skriva om det för hand hade gjort
+     siffran till en åsikt.
+     ============================================================ */
+  const KORT_LAGE = {
+    vantar: 'Väntar', betald: 'Betald', aterbetald: 'Återbetald',
+    tvist: 'Tvist', misslyckad: 'Misslyckad'
+  };
+
+  function ritaKortbetalningar() {
+    const sök = $('#kort-sok').value.trim();
+    const st = $('#kort-status').value;
+    const alla = (S.bokningar || []).filter(b => b.betalning_status && b.betalning_status !== 'ingen');
+    const rader = alla
+      .filter(b => !st || b.betalning_status === st)
+      .map(b => ({ ...b, familj: namnFör(b.parent_id), hjalpare: namnFör(b.tutor_id) }))
+      .filter(b => matchar(b, ['familj', 'hjalpare'], sök));
+
+    $('#kort-antal').textContent = rader.length + ' av ' + alla.length;
+    $('#kort-tabell').innerHTML = tabell([
+      { namn: 'Pass', rita: b => '<b>' + esc(kortDatum(b.wanted_date)) + '</b>'
+        + '<span class="adm-und">' + esc(b.subject || 'Pass') + '</span>' },
+      { namn: 'Familj', rita: b => esc(b.familj) },
+      { namn: 'Studiehjälpare', rita: b => esc(b.hjalpare) },
+      { namn: 'Betalt', rita: b => '<span class="adm-tal">' + esc(kronor(b.betalt_ore || 0)) + '</span>' },
+      /* Tom cell när Stripe hoppade över överföringen. Det syns bara
+         här, och det betyder att hjälparens del ligger kvar hos
+         Nextrum trots att familjen betalat. */
+      { namn: 'Till hjälparen', rita: b => b.betalning_status === 'betald' && !b.stripe_transfer_id
+        ? '<span class="adm-tal" style="color:var(--acc-text)">ingen överföring</span>'
+        : '<span class="adm-tal">' + esc(kronor(b.ersattning_ore || 0)) + '</span>' },
+      { namn: 'Nextrum', rita: b => '<span class="adm-tal">' + esc(kronor(b.avgift_ore || 0)) + '</span>' },
+      { namn: 'Återbetalt', rita: b => Number(b.aterbetald_ore || 0) > 0
+        ? '<span class="adm-tal">' + esc(kronor(b.aterbetald_ore)) + '</span>' : '' },
+      { namn: '', höger: true, rita: b => {
+        const kvar = Number(b.betalt_ore || 0) - Number(b.aterbetald_ore || 0);
+        const gar = (b.betalning_status === 'betald' || b.betalning_status === 'tvist') && kvar > 0;
+        return gar ? '<button class="btn btn-ghost btn-sm" data-aterbetala="' + b.id + '">Återbetala</button>' : '';
+      } },
+      { namn: 'Läge', höger: true, rita: b =>
+        '<span class="adm-tal">' + esc(KORT_LAGE[b.betalning_status] || b.betalning_status) + '</span>' }
+    ], rader, 'Inga kortbetalningar än');
+  }
+
+  /* Återbetalningen går genom edge-funktionen, aldrig direkt mot
+     tabellen: beloppet ska tillbaka till familjen OCH dras från
+     studiehjälparens Stripe-konto, och bara servern kan göra båda. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-aterbetala]');
+    if (!knapp) return;
+    const b = (S.bokningar || []).find(x => x.id === knapp.dataset.aterbetala);
+    if (!b) return;
+
+    const betalt = Number(b.betalt_ore || 0);
+    const kvar = betalt - Number(b.aterbetald_ore || 0);
+    const valt = await fråga({
+      titel: 'Återbetala passet?',
+      text: kortDatum(b.wanted_date) + ' · ' + namnFör(b.parent_id) + '. '
+        + 'Familjen får pengarna tillbaka och studiehjälparens del dras tillbaka från '
+        + 'hens Stripe-konto. Nextrums avgift följer med.',
+      innehåll: '<div class="fgroup" style="margin:14px 0 0">'
+        + '<label for="ater-belopp">Belopp i kronor</label>'
+        + '<input class="inp" id="ater-belopp" type="number" min="1" step="1" inputmode="numeric" value="'
+        + Math.floor(kvar / 100) + '">'
+        + '<p class="xsmall" style="color:var(--bl-3);margin:8px 0 0">Högst '
+        + esc(kronor(kvar)) + '. Lägre belopp ger en delåterbetalning.</p></div>'
+        + '<div class="fgroup" style="margin:14px 0 0">'
+        + '<label for="ater-anledning">Anledning, för vår egen skull</label>'
+        + '<input class="inp" id="ater-anledning" placeholder="t.ex. studiehjälparen uteblev"></div>',
+      knapp: 'Återbetala',
+      läs: ruta => {
+        const kr = Number((ruta.querySelector('#ater-belopp') || {}).value);
+        if (!kr || kr < 1) return { fel: 'Fyll i ett belopp.' };
+        if (kr * 100 > kvar) return { fel: 'Beloppet är högre än vad som är kvar att återbetala.' };
+        return { värde: {
+          belopp_ore: Math.round(kr * 100),
+          anledning: ((ruta.querySelector('#ater-anledning') || {}).value || '').trim()
+        } };
+      }
+    });
+    if (!valt) return;
+
+    await medan(knapp, 'Återbetalar…', async () => {
+      const svar = await supa.functions.invoke('stripe-aterbetalning', {
+        body: { pass: b.id, belopp_ore: valt.belopp_ore, anledning: valt.anledning }
+      });
+      if (svar.error) { alert(await funktionsFel(svar.error)); return; }
+      /* Varningen betyder att pengarna ÄR tillbaka men att raden inte
+         hann skrivas. Den får inte sväljas: tabellen visar då fel
+         tills webhooken kommer ikapp. */
+      if (svar.data && svar.data.varning) alert(svar.data.varning);
+      await hämtaAllt();
+      ritaKortbetalningar();
+      await ritaÖversikt();
+    });
+  });
+
+  /* ============================================================
      AVVIKELSER (Fas 2)
 
      Ett genomfört pass utan rapport kommer aldrig med i
@@ -455,6 +561,7 @@
     await hämtaEkonomiunderlag();
     ritaFakturor();
     ritaUtbetalningar();
+    ritaKortbetalningar();
     ritaAvvikelser();
     await ritaÖversikt();
   });
@@ -474,7 +581,7 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    fyllPerioder, kandidater, laddaOmEkonomi, ritaAvvikelser, ritaFakturor, ritaPris,
-    ritaUtbetalningar, utanRapport
+    fyllPerioder, kandidater, laddaOmEkonomi, ritaAvvikelser, ritaFakturor,
+    ritaKortbetalningar, ritaPris, ritaUtbetalningar, utanRapport
   });
 })();
