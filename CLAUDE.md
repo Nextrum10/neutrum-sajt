@@ -383,6 +383,34 @@ att visa **rätt sida**, inte för att skydda data.
   svarar funktionen 401 på varje anmälan emellan — de mejlen kommer
   aldrig. I en tabell byts båda i samma transaktion.
 
+### Supabases säkerhetsadvisor larmar om saker som är med flit
+
+`get_advisors(type: 'security')` ger ett trettiotal varningar. De flesta
+är väntade, och listan nedan finns för att ingen ska utreda dem en
+gång till. **Kontrollerat 2026-09-22, med prov mot driften:**
+
+| Varning | Varför den är väntad |
+|---|---|
+| `rls_enabled_no_policy` på `notis_konfig`, `fortnox_token`, `kund_skatteuppgifter` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
+| 23 SECURITY DEFINER-funktioner nåbara för `authenticated` | Alla fjorton adminfunktioner kontrollerar `is_admin()` internt. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
+| `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
+
+Proven, körda som `anon` i en transaktion som rullades tillbaka:
+`is_admin(<en riktig admin>)` → `false`, `is_admin(<vanlig användare>)`
+→ `false`, `is_admin()` → `false`, `kolla_rabattkod(…)` → `"Logga in
+först."`
+
+**Två saker som inte är falsklarm:**
+
+1. **Läckta lösenord kontrolleras inte.** Supabase Auth kan stämma av
+   mot HaveIBeenPwned. Det är en kryssruta under Authentication →
+   Policies, kostar ingenting och gäller nya och ändrade lösenord.
+2. **`kolla_rabattkod` har inget tak per inloggad användare.** I dag
+   spelar det ingen roll: `rabattkoder` är TOM, så det finns ingenting
+   att gissa. **Skapas den första koden återkommer frågan** — en
+   inloggad kan då pröva koder i en slinga. Lägg ett tak då, inte nu.
+
 ### Content-Security-Policy
 
 `/admin`, `/larare` och `/foralder` får en **skarp** CSP från
