@@ -224,5 +224,42 @@ ok('drift skickar husets fakta till modellen',
 ok('cache-brytpunkten ligger på sista systemblocket',
   systemblock.lastIndexOf('cache_control') > systemblock.indexOf('NEXTRUM_FAKTA'), true);
 
+/* ============================================================
+   MODELL, TANKEDJUP OCH AVHUGGNA SVAR (Fas 12.1)
+
+   Tre fel som alla ser ut som förbättringar tills någon räknar efter.
+   ============================================================ */
+
+const motorKod = fs.readFileSync(
+  path.join(rot, 'supabase', 'functions', '_delad', 'agent.ts'), 'utf8');
+
+/* Förvalet för effort SKILJER SIG MELLAN MODELLER: high på Opus 5,
+   medium på Opus 5.5. Byter någon modellsträngen utan att skriva ut
+   tankedjupet sänks kvaliteten tyst, och den lägre räkningen ser ut
+   som att den nya modellen bara var billigare. */
+ok('drift skriver ut tankedjupet i stället för att ärva förvalet',
+  /ANSTRANGNING_DRIFT\s*=\s*'(low|medium|high|xhigh|max)'/.test(driftKod)
+    && /anstrangning: ANSTRANGNING_DRIFT/.test(driftKod), true);
+
+/* Modellen är driftens egen. Den delade MODELL bär juridik och
+   ekonomi, och de har inte provats på samma modell. */
+ok('drift har en egen modell och rör inte den delade',
+  /MODELL_DRIFT\s*=\s*'[a-z0-9-]+'/.test(driftKod)
+    && /modell: MODELL_DRIFT/.test(driftKod), true);
+
+/* Ett avhugget svar såg förut ut som ett färdigt: max_tokens föll ihop
+   med end_turn, adminvyn fick en halv mening och loggen sa "klar". */
+ok('motorn skiljer ett avhugget svar från ett färdigt',
+  /avhugget: svar\.stop_reason === 'max_tokens'/.test(motorKod), true);
+ok('drift vägrar lämna ut ett avhugget svar',
+  /if \(resultat\.avhugget\)/.test(driftKod), true);
+
+/* Cachade tokens har egen taxa och räknas inte i input_tokens. Utan
+   att de loggas går det inte att räkna ut vad en körning kostade, och
+   inte att se om cachen slutat träffa. */
+ok('motorn räknar de cachade tokenen',
+  /cache_read_input_tokens/.test(motorKod)
+    && /cache_creation_input_tokens/.test(motorKod), true);
+
 console.log(fel === 0 ? '\nAlla tester gröna.' : '\n' + fel + ' test misslyckades.');
 process.exit(fel === 0 ? 0 : 1);

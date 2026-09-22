@@ -279,7 +279,7 @@ const NXAgent = (function () {
 
     const { data, error } = await supa
       .from('agent_korningar')
-      .select('id, fraga, svar, status, anledning, kallor, steg_antal, in_tokens, ut_tokens, skapad')
+      .select('id, fraga, svar, status, anledning, kallor, steg_antal, in_tokens, ut_tokens, cache_las_tokens, cache_skriv_tokens, skapad')
       .eq('agent', agent)
       .order('skapad', { ascending: false })
       .limit(antal || 20);
@@ -366,9 +366,19 @@ const NXAgent = (function () {
         }
 
         if (rad) {
+          /* Cachade tokens räknas inte i in_tokens — de har egna
+             kolumner, för de kostar en annan taxa. Summan här ska ändå
+             vara ALLT körningen förbrukade, annars ser en cachad
+             körning billigare ut än den var. Cacheandelen står inom
+             parentes: är den noll på en körning med flera steg har
+             cachen slutat träffa. */
+          const cachat = (rad.cache_las_tokens || 0) + (rad.cache_skriv_tokens || 0);
+          const allt = (rad.in_tokens || 0) + (rad.ut_tokens || 0) + cachat;
           bitar.push('<p class="xsmall" style="margin-top:14px;color:var(--bl-3)">'
             + (rad.steg_antal || 0) + ' steg · '
-            + ((rad.in_tokens || 0) + (rad.ut_tokens || 0)).toLocaleString('sv-SE') + ' tokens</p>');
+            + allt.toLocaleString('sv-SE') + ' tokens'
+            + (cachat ? ' (varav ' + cachat.toLocaleString('sv-SE') + ' ur cachen)' : '')
+            + '</p>');
         }
 
         kropp.innerHTML = bitar.join('') || '<p class="xsmall">Inga steg loggade.</p>';
