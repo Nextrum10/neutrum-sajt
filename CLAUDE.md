@@ -101,11 +101,33 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
+| `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara |
+| `nextrum-admin-palett.css` | Bara `admin.html`, laddas **sist**. Adminvyns mörkblå palett, satt som tokens på `body.vy-admin` |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
 Sju områdessidor (`laxhjalp-*.html`) genereras. `/en/` är elva
 översatta sidor.
+
+### Två fällor när en palett byts
+
+Båda kostade en omgång i Fas 11 och syns inte förrän i drift.
+
+1. **En alias-token fryser rotens värde.** `nextrum-cinema.css:263` sätter
+   `--muted-2:var(--bl-3)` på `:root`. En custom property med `var()` i
+   värdet substitueras där den **deklareras**, inte där den används. Att
+   byta `--bl-3` på `body.vy-admin` når den alltså aldrig — `--muted-2`
+   ärvs färdigberäknad. Hela mängden som måste upprepas: `--bg`, `--fg`,
+   `--muted`, `--muted-2`, `--line`, `--line-2`, `--surface`,
+   `--surface-2`, `--btn-bg`, `--btn-fg`, `--focus`, `--tryck-yta`.
+2. **Mörkerreglerna väger fyra klassnivåer.**
+   `:root:not([data-theme="light"]) .vy .dbox` i `nextrum-vy.css:679` är
+   (0,4,0). En `.vy-admin .dbox` är (0,2,0) och förlorar — men bara i
+   mörkt OS-läge, alltså precis det läge den som bygger sitter i.
+
+Och: **`--acc-lugn` är hover-accenten, inte en felfärg.** `cinema.css:517`
+har `.btn-primary:hover{background:var(--acc-lugn)}`. Den betyder "fel"
+bara i agentfliken.
 
 ---
 
