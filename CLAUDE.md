@@ -686,6 +686,9 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 
 - **Betalning.** Fakturor skapas och skickas, men ingen betaltjänst är
   kopplad. `Betald` kryssas i för hand. Utbetalning görs från banken.
+  `SKISS-BETALNING-STRIPE.md` är slutläget på papper: varför kundsidan
+  (Stripe Invoicing) går att bygga oberoende av allt annat, varför
+  hjälparsidan (Connect) inte gör det, och vilken fråga som blockerar.
 - **Google Workspace och Fortnox.** Statusflik finns, koppling saknas.
   `INTEGRATIONER.md` har hela receptet, inklusive fällan att Fortnox
   roterar refresh-token vid varje användning — sparas inte det nya
