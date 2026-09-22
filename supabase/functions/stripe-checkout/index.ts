@@ -88,12 +88,18 @@ Deno.serve(async (req) => {
   const passId = String(kropp.pass ?? '').trim();
   if (!passId) return json({ error: 'Vilket pass?' }, 400, CORS);
 
-  // Passet läses med den INLOGGADES token. RLS avgör om hen får se
-  // det; vi avgör om hen får betala det.
+  /* Passet läses med den INLOGGADES token. RLS avgör om hen får se
+     det; vi avgör om hen får betala det.
+
+     SELECT-STRÄNGEN ÄR EN ENDA LITERAL, och det är inte en stilfråga.
+     supabase-js tolkar strängen på TYPNIVÅ för att räkna ut radens
+     form. Slås den ihop med + vidgar TypeScript den till `string`,
+     tolkningen misslyckas, och varje fältåtkomst nedan blir
+     "Property 'x' does not exist on type 'GenericStringError'".
+     Kostade en röd CI-körning. fakturering/index.ts:220 gör rätt. */
   const { data: pass, error: passfel } = await vem.klient
     .from('bookings')
-    .select('id, parent_id, tutor_id, subject, wanted_date, duration_min, tjanst, '
-      + 'antal_barn, rabatt_ore, status, betalning_status, stripe_session_id, fakturerbar')
+    .select('id, parent_id, tutor_id, subject, wanted_date, duration_min, tjanst, antal_barn, rabatt_ore, status, betalning_status, stripe_session_id, fakturerbar')
     .eq('id', passId)
     .maybeSingle();
 
@@ -140,10 +146,8 @@ Deno.serve(async (req) => {
 
     // ---------- beloppen, ur databasen ----------
     const [{ data: katalog }, { data: pris }] = await Promise.all([
-      db.from('tjanster').select(
-        'kod, aktiv, for_kund, ordning, pris_per_timme_ore, extra_personer_ore, '
-        + 'ersattning_per_timme_ore, rut_berattigad, rut_procent',
-      ),
+      // En literal, av samma skäl som selecten ovan.
+      db.from('tjanster').select('kod, aktiv, for_kund, ordning, pris_per_timme_ore, extra_personer_ore, ersattning_per_timme_ore, rut_berattigad, rut_procent'),
       db.from('prissattning').select('pris_per_timme_ore').maybeSingle(),
     ]);
 
