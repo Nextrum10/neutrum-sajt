@@ -233,80 +233,109 @@
           </div>
 
           <!-- ============ DRIFTKONSOLEN ============
-               Vänster: läget, läst ur vyn admin_lage. Gratis, alltid
-               färskt, ritas vid varje sidladdning.
-               Höger: drift-agenten. Den körs BARA när någon frågar
-               den något — ett betalt anrop med stegtak, och att köra
-               det automatiskt vid varje laddning vore precis den
-               räkning som växer medan ingen tittar. -->
+               Tre band, uppifrån och ned, och ordningen är hela poängen:
+
+               1. NEX — företagets AI och sidans ansikte. Läget läses ur
+                  vyn admin_lage, som redan är hämtad. Gratis, alltid
+                  färskt, ritas vid varje sidladdning.
+               2. Samtalet. Drift-agenten körs BARA när någon frågar den
+                  något — ett betalt anrop med stegtak, och att köra det
+                  automatiskt vid varje laddning vore precis den räkning
+                  som växer medan ingen tittar.
+               3. Listan. Det som faktiskt väntar på en människa, med
+                  länk rakt in i rätt flik.
+
+               Den som bara vill veta hur det står till läser band ett
+               och slutar där. -->
           <div class="kon" id="adm-konsol">
-            <div class="kon-lage-halva">
-              <div class="kon-topp">
-                <span class="kon-et">Driftläge</span>
-                <span class="kon-pengar" id="kon-pengar"></span>
+
+            <!-- BAND 1: NEX.
+                 Ringarna är streckmönster på vanliga cirklar, inte sextio
+                 enskilda streck: en dasharray på en tjock stroke ger exakt
+                 samma bild och går att snurra med en rad CSS. Ingen bildfil,
+                 ingen extra begäran, och färgen följer palettens tokens. -->
+            <div class="kon-hero">
+              <div class="kon-disk ar-okand" id="kon-disk">
+                <svg class="kon-nex" viewBox="0 0 200 200" aria-hidden="true">
+                  <g class="nex-yttre">
+                    <circle cx="100" cy="100" r="94" stroke-width="2.5"
+                            stroke-dasharray="40 107.65"/>
+                  </g>
+                  <g class="nex-tander">
+                    <circle cx="100" cy="100" r="84" stroke-width="9"
+                            stroke-dasharray="1.6 7.2" opacity=".55"/>
+                  </g>
+                  <circle cx="100" cy="100" r="75" stroke-width="1" opacity=".3"/>
+                  <g class="nex-band">
+                    <circle cx="100" cy="100" r="64" stroke-width="12"
+                            stroke-dasharray="38 12.27" opacity=".22"/>
+                    <circle cx="100" cy="100" r="64" stroke-width="12"
+                            stroke-dasharray="56 346.12" class="nex-batong"/>
+                  </g>
+                  <g class="nex-prickar">
+                    <circle cx="100" cy="100" r="50" stroke-width="3.5"
+                            stroke-dasharray="3 10.09" opacity=".7"/>
+                  </g>
+                  <circle cx="100" cy="100" r="40" stroke-width="1" opacity=".38"/>
+                  <g class="nex-inre">
+                    <circle cx="100" cy="100" r="31" stroke-width="1"
+                            stroke-dasharray="6 6.17" opacity=".3"/>
+                  </g>
+                </svg>
+                <span class="kon-nex-namn">NEX</span>
+                <span class="kon-nex-lage">
+                  <b id="kon-disk-tal">–</b>
+                  <span id="kon-disk-text">läser</span>
+                </span>
               </div>
-              <div class="kon-mitt">
-                <!-- NEX. Ringarna är streckmönster på vanliga cirklar, inte
-                     sextio enskilda streck: en dasharray på en tjock stroke
-                     ger exakt samma bild och går att snurra med en rad CSS.
-                     Ingen bildfil, ingen extra begäran, och färgen följer
-                     palettens tokens. -->
-                <div class="kon-disk ar-okand" id="kon-disk">
-                  <svg class="kon-nex" viewBox="0 0 200 200" aria-hidden="true">
-                    <g class="nex-yttre">
-                      <circle cx="100" cy="100" r="94" stroke-width="2.5"
-                              stroke-dasharray="40 107.65"/>
-                    </g>
-                    <g class="nex-tander">
-                      <circle cx="100" cy="100" r="84" stroke-width="9"
-                              stroke-dasharray="1.6 7.2" opacity=".55"/>
-                    </g>
-                    <circle cx="100" cy="100" r="75" stroke-width="1" opacity=".3"/>
-                    <g class="nex-band">
-                      <circle cx="100" cy="100" r="64" stroke-width="12"
-                              stroke-dasharray="38 12.27" opacity=".22"/>
-                      <circle cx="100" cy="100" r="64" stroke-width="12"
-                              stroke-dasharray="56 346.12" class="nex-batong"/>
-                    </g>
-                    <g class="nex-prickar">
-                      <circle cx="100" cy="100" r="50" stroke-width="3.5"
-                              stroke-dasharray="3 10.09" opacity=".7"/>
-                    </g>
-                    <circle cx="100" cy="100" r="40" stroke-width="1" opacity=".38"/>
-                    <g class="nex-inre">
-                      <circle cx="100" cy="100" r="31" stroke-width="1"
-                              stroke-dasharray="6 6.17" opacity=".3"/>
-                    </g>
-                  </svg>
-                  <span class="kon-nex-namn">NEX</span>
-                  <span class="kon-nex-lage">
-                    <b id="kon-disk-tal">–</b>
-                    <span id="kon-disk-text">läser</span>
-                  </span>
-                </div>
-                <div class="kon-lista" id="kon-lage"><div class="loading">Hämtar</div></div>
-              </div>
+              <p class="kon-hero-not" id="kon-hero-not">Läser verksamheten och siffrorna. Föreslår, utför inget.</p>
+              <div class="kon-pengar" id="kon-pengar"></div>
             </div>
 
+            <!-- BAND 2: SAMTALET.
+                 Agenten har med flit inget utgående verktyg: en agent som
+                 både läser känsliga rader och kan hämta en adress kan bära
+                 ut dem, och det räcker med en rad injicerad text i en
+                 intresseanmälan för att försöket ska göras. -->
             <div class="kon-prat">
               <div class="kon-topp">
-                <span class="kon-et">Fråga drift-agenten</span>
+                <span class="kon-et">Tala med NEX</span>
               </div>
-              <!-- Agenten läser verksamheten och föreslår. Den har med
-                   flit inget utgående verktyg: en agent som både läser
-                   känsliga rader och kan hämta en adress kan bära ut
-                   dem, och det räcker med en rad injicerad text i en
-                   intresseanmälan för att försöket ska göras. -->
-              <p class="kon-not">Läser anmälningar, matchning, pass, rapporter och
-                siffror. Den föreslår, den utför inget.</p>
               <div class="kon-exempel" id="kon-exempel"></div>
               <div class="kon-falt">
-                <label class="nx-dold" for="kon-fraga">Fråga drift-agenten</label>
+                <label class="nx-dold" for="kon-fraga">Fråga NEX</label>
                 <textarea class="inp" id="kon-fraga" rows="2"
                           placeholder="Vad bör jag göra först idag?"></textarea>
+                <!-- Diktering. Knappen är dold tills nextrum-admin-konsol.js
+                     sett att webbläsaren faktiskt har taligenkänning — en knapp
+                     som inte gör något är värre än ingen knapp. Den skriver
+                     bara i textrutan; ingenting skickas förrän man trycker
+                     Fråga, så en feltolkning går att rätta innan den kostar
+                     ett agentanrop. -->
+                <button class="btn btn-ghost kon-mik" type="button" id="kon-mik"
+                        aria-pressed="false" hidden
+                        title="Diktera frågan">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/>
+                    <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"
+                          fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round"/>
+                  </svg>
+                  <span class="nx-dold">Diktera frågan</span>
+                </button>
                 <button class="btn btn-primary" type="button" id="kon-skicka">Fråga</button>
               </div>
+              <p class="kon-mik-not" id="kon-mik-not" hidden>Dikteringen sker hos din
+                webbläsares leverantör, inte hos oss. Läs inte upp namn på barn.</p>
               <div class="kon-ut" id="kon-ut"></div>
+            </div>
+
+            <!-- BAND 3: LÄGET. -->
+            <div class="kon-lage-halva">
+              <div class="kon-topp">
+                <span class="kon-et">Väntar på en människa</span>
+              </div>
+              <div class="kon-lista" id="kon-lage"><div class="loading">Hämtar</div></div>
             </div>
           </div>
 

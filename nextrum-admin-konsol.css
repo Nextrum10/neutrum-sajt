@@ -16,16 +16,17 @@
    att den finns.
    ============================================================ */
 
+/* Tre band under varandra, aldrig i spalter. NEX ska läsas som en
+   hjältebild — bredvid en textruta blir emblemet en ikon i stället för
+   ett ansikte, och då hade lika gärna en liten prick fått duga. */
 .vy-admin .kon{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
+  display:flex;
+  flex-direction:column;
   gap:clamp(12px,1.4vw,18px);
   margin-bottom:clamp(16px,1.8vw,22px);
 }
-@media (max-width:1000px){
-  .vy-admin .kon{grid-template-columns:minmax(0,1fr)}
-}
 
+.vy-admin .kon-hero,
 .vy-admin .kon-lage-halva,
 .vy-admin .kon-prat{
   box-sizing:border-box;
@@ -42,6 +43,8 @@
 /* Hörnmarkeringarna. Samma grepp som nyckeltalen, och av samma skäl
    som står där: konsolen ska läsas som ett instrument, och två rutor
    med hörn är en avläsning medan sextiotre är brus. */
+.vy-admin .kon-hero::before,
+.vy-admin .kon-hero::after,
 .vy-admin .kon-lage-halva::before,
 .vy-admin .kon-lage-halva::after,
 .vy-admin .kon-prat::before,
@@ -49,8 +52,10 @@
   content:"";position:absolute;width:15px;height:15px;pointer-events:none;
   border:1.5px solid var(--acc);
 }
+.vy-admin .kon-hero::before,
 .vy-admin .kon-lage-halva::before,
 .vy-admin .kon-prat::before{top:-1px;left:-1px;border-width:1.5px 0 0 1.5px;border-radius:14px 0 0 0}
+.vy-admin .kon-hero::after,
 .vy-admin .kon-lage-halva::after,
 .vy-admin .kon-prat::after{bottom:-1px;right:-1px;border-width:0 1.5px 1.5px 0;border-radius:0 0 14px 0}
 
@@ -64,23 +69,40 @@
   letter-spacing:.18em;text-transform:uppercase;color:var(--acc-text);
   flex-grow:1;
 }
+/* Belopp och kommande pass, som en avläsningsremsa under NEX. De är
+   fakta om verksamheten, inte arbetsposter, och hör därför inte hemma i
+   listan längst ned. */
 .vy-admin .kon-pengar{
-  display:flex;gap:16px;flex-wrap:wrap;
-  font-size:.76rem;color:var(--bl-3);
+  display:flex;gap:clamp(18px,3vw,44px);flex-wrap:wrap;
+  justify-content:center;
+  margin-top:20px;padding-top:17px;
+  width:100%;box-sizing:border-box;
+  border-top:1px solid var(--ln);
+  font-size:.78rem;color:var(--bl-3);
 }
+.vy-admin .kon-pengar span{display:flex;flex-direction:column;gap:3px}
 .vy-admin .kon-pengar b{
-  color:var(--bl-2);font-weight:650;font-variant-numeric:tabular-nums;
+  color:var(--bl);font-weight:750;font-size:1.15rem;
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em;
 }
 
 /* ------------------------------------------------------------
-   LÄGET
+   HERO-BANDET
    ------------------------------------------------------------ */
-.vy-admin .kon-mitt{
-  display:flex;align-items:flex-start;gap:clamp(14px,1.8vw,22px);
-  flex-grow:1;min-width:0;
+.vy-admin .kon-hero{
+  align-items:center;
+  text-align:center;
+  padding:clamp(22px,2.4vw,32px) clamp(16px,1.8vw,22px) clamp(18px,2vw,24px);
+  /* Ett svagt sken bakom emblemet, inte en ram runt det: bandet ska
+     kännas som ett fönster in i maskinen, och en rektangel till hade
+     bara blivit en rektangel till. */
+  background:
+    radial-gradient(60% 90% at 50% 42%, var(--acc-soft), transparent 70%),
+    var(--pap-2);
 }
-@media (max-width:560px){
-  .vy-admin .kon-mitt{flex-direction:column;align-items:stretch}
+.vy-admin .kon-hero-not{
+  margin:18px auto 0;max-width:46ch;
+  font-size:.82rem;line-height:1.5;color:var(--bl-3);
 }
 
 /* ------------------------------------------------------------
@@ -105,11 +127,11 @@
    ------------------------------------------------------------ */
 .vy-admin .kon-disk{
   position:relative;flex:none;
-  width:clamp(168px,15vw,200px);
+  width:clamp(206px,22vw,286px);
   aspect-ratio:1;
   /* Plats under ringen till lägesraden. "Kräver åtgärd" är bredare än
      ringen och skar rakt igenom den när den låg inuti. */
-  margin-bottom:30px;
+  margin-bottom:32px;
   display:flex;align-items:center;justify-content:center;
   color:var(--bl-3);
 }
@@ -123,26 +145,26 @@
 
 .vy-admin .kon-nex-namn{
   position:relative;
-  font-size:clamp(1.5rem,2.4vw,1.9rem);font-weight:800;
-  letter-spacing:.14em;line-height:1;
+  font-size:clamp(2.1rem,3.6vw,3rem);font-weight:800;
+  letter-spacing:.16em;line-height:1;
   color:var(--bl);
   /* Optisk centrering: spärren lägger all luft till höger om X:et. */
   padding-left:.14em;
 }
 .vy-admin .kon-nex-lage{
   position:absolute;top:100%;left:50%;transform:translateX(-50%);
-  margin-top:11px;white-space:nowrap;
+  margin-top:14px;white-space:nowrap;
   display:flex;align-items:baseline;gap:7px;
 }
 /* Siffran ärver statusfärgen. Ordet under den är 9 px mono och bär
    samma besked i klartext, så kulören är aldrig ensam om att säga det. */
 .vy-admin .kon-nex-lage b{
-  font-size:1.15rem;font-weight:800;letter-spacing:-.02em;
+  font-size:1.4rem;font-weight:800;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;
 }
 .vy-admin .kon-nex-lage > span{
-  font-family:var(--f-mono);font-size:9px;font-weight:600;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-2);
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--bl-2);
 }
 
 /* Ringarnas egen färg. Lägesraden under emblemet bär statusfärgen —
@@ -206,8 +228,12 @@
 
 .vy-admin .kon-lista{
   flex-grow:1;min-width:0;
-  display:flex;flex-direction:column;gap:6px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+  gap:7px;
 }
+.vy-admin .kon-lista .kon-tom,
+.vy-admin .kon-lista .loading{grid-column:1/-1}
 .vy-admin .kon-rad{
   display:flex;align-items:center;gap:11px;
   padding:9px 12px;
@@ -231,15 +257,15 @@
 /* ------------------------------------------------------------
    SAMTALET
    ------------------------------------------------------------ */
-.vy-admin .kon-not{
-  margin:0 0 12px;font-size:.78rem;line-height:1.45;color:var(--bl-3);
-}
 .vy-admin .kon-exempel{
   display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;
 }
 .vy-admin .kon-exempel .btn{
   font-size:.76rem;padding:6px 12px;
   border-color:var(--ln-2);color:var(--bl-2);
+  /* .btn är nowrap. En exempelfråga är en hel mening och sticker då ut
+     ur panelen på en telefon — här ska den brytas i stället. */
+  max-width:100%;white-space:normal;text-align:left;
 }
 .vy-admin .kon-exempel .btn:hover{
   border-color:var(--acc-line);color:var(--acc-text);background:var(--acc-soft);
@@ -251,6 +277,44 @@
   flex-grow:1;min-width:0;resize:vertical;min-height:58px;
 }
 .vy-admin .kon-falt .btn{flex:none}
+.vy-admin .kon-falt .kon-mik{
+  padding:0;width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  border-color:var(--ln-kontroll);color:var(--bl-2);
+}
+.vy-admin .kon-falt .kon-mik svg{width:19px;height:19px;fill:currentColor}
+.vy-admin .kon-falt .kon-mik:hover{
+  border-color:var(--acc-line);color:var(--acc-text);background:var(--acc-soft);
+}
+/* Att mikrofonen LYSSNAR sägs av färg, ram OCH en puls, och dessutom av
+   aria-pressed. En ensam kulör räcker inte när skillnaden är att rummet
+   spelas in. */
+.vy-admin .kon-falt .kon-mik[aria-pressed="true"]{
+  border-color:var(--fel);color:var(--fel);
+  background:color-mix(in srgb, var(--fel) 12%, transparent);
+  animation:kon-mik-puls 1.3s ease-in-out infinite;
+}
+@keyframes kon-mik-puls{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){
+  .vy-admin .kon-falt .kon-mik[aria-pressed="true"]{animation:none}
+}
+
+/* Rutan skickar ljud ut ur huset. Det ska stå där man trycker, inte i en
+   hjälptext någon annanstans — och vi säger rakt ut att barnnamn inte hör
+   hemma i den, eftersom ALLT annat i den här kodbasen är byggt för att
+   just de namnen inte ska lämna oss. */
+.vy-admin .kon-mik-not{
+  margin:10px 0 0;font-size:.74rem;line-height:1.45;color:var(--ockra);
+}
+
+/* På en telefon får textrutan hela bredden och knapparna en egen rad
+   under. Sida vid sida blir rutan så smal att en fråga inte går att
+   läsa medan man skriver den. */
+@media (max-width:560px){
+  .vy-admin .kon-falt{flex-wrap:wrap}
+  .vy-admin .kon-falt .inp{flex:1 0 100%}
+  .vy-admin .kon-falt .btn-primary{margin-left:auto}
+}
 
 /* Svaret ritas av NXAgent.stall() och bär därför .ag-*-klasserna.
    De styr sig själva genom palettens tokens; det enda som behövs här

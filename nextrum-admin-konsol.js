@@ -5,14 +5,15 @@
    roll står redan i sidomenyns fot och i sidhuvudet, så det blocket
    bar ingen information som inte fanns någon annanstans.
 
-   TVÅ HALVOR, OCH DE KOSTAR OLIKA MYCKET:
+   TRE BAND, OCH DE KOSTAR OLIKA MYCKET:
 
    1. LÄGET läses ur S.lage, alltså vyn admin_lage, som redan är
       hämtad av ritaÖversikt(). Det är en databasvy som räknar på
       ALLA rader, inte bara de hämtningen råkade ta med. Den kostar
       ingenting, är alltid färsk, och ritas vid varje sidladdning.
 
-   2. AGENTEN körs BARA när någon frågar den något. Drift-agenten är
+   2. AGENTEN, alltså NEX som man talar med, körs BARA när någon
+      frågar den något. Drift-agenten är
       ett betalt API-anrop med ett stegtak på fjorton steg. Att köra
       den automatiskt vid varje sidladdning hade varit precis den
       räkning som växer medan ingen tittar, vilket är hela skälet
@@ -162,11 +163,81 @@
     }
 
     knapp.addEventListener('click', skicka);
+    kopplaMikrofon(ruta);
 
     /* Ctrl+Enter skickar, precis som i agentfliken. En textarea där
        Enter skickar går inte att skriva en flerradig fråga i. */
     ruta.addEventListener('keydown', e => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') skicka();
+    });
+  }
+
+
+  /* ------------------------------------------------------------
+     DIKTERING
+
+     Webbläsarens egen taligenkänning, inget eget API och ingen egen
+     nyckel. Tre saker är medvetna:
+
+     1. KNAPPEN ÄR DOLD TILLS VI SETT ATT DET GÅR. Firefox har ingen
+        SpeechRecognition alls, och Safari vägrar utan användargest på
+        vissa versioner. En knapp som inte gör något är värre än ingen
+        knapp, för då provar man den igen.
+     2. LJUDET LÄMNAR HUSET. Chrome skickar det till Googles tjänst.
+        Resten av kodbasen är byggd för att barns namn inte ska lämna
+        oss — då måste det stå vid knappen, inte i en hjälptext.
+     3. TALET SKICKAS INTE. Det skrivs i rutan och stannar där tills
+        någon trycker Fråga. En feltolkning ska gå att rätta innan den
+        kostar ett agentanrop.
+     ------------------------------------------------------------ */
+  function kopplaMikrofon(ruta) {
+    const knapp = $('#kon-mik');
+    const not = $('#kon-mik-not');
+    const Igenkanning = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!knapp || !Igenkanning) return;
+
+    knapp.hidden = false;
+    if (not) not.hidden = false;
+
+    let ig = null;
+    let fore = '';
+
+    function av() {
+      knapp.setAttribute('aria-pressed', 'false');
+      ig = null;
+    }
+
+    knapp.addEventListener('click', () => {
+      if (ig) { ig.stop(); return; }
+
+      ig = new Igenkanning();
+      ig.lang = document.documentElement.lang === 'en' ? 'en-GB' : 'sv-SE';
+      ig.interimResults = true;
+      ig.continuous = false;
+
+      /* Texten som redan stod i rutan sparas undan och läggs tillbaka
+         framför varje uppdatering. Utan det raderar andra meningen den
+         första, eftersom resultatlistan börjar om vid varje omgång. */
+      fore = ruta.value ? ruta.value.replace(/\s*$/, '') + ' ' : '';
+
+      ig.onresult = e => {
+        let text = '';
+        for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
+        ruta.value = fore + text;
+      };
+      /* Både onerror och onend nollställer: en nekad mikrofon ger error
+         utan end i vissa webbläsare, och en tyst timeout ger end utan
+         error. Missas den ena sitter knappen kvar som "lyssnar" medan
+         ingenting lyssnar. */
+      ig.onerror = av;
+      ig.onend = () => { av(); ruta.focus(); };
+
+      try {
+        ig.start();
+        knapp.setAttribute('aria-pressed', 'true');
+      } catch (fel) {
+        av();
+      }
     });
   }
 
