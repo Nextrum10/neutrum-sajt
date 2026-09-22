@@ -255,6 +255,7 @@ function kostnadText(tiotusendelar: number): string {
 }
 
 const OFORSOKT = 'Inte försökt: körningen avbröts efter ett nyckel- eller domänfel hos Resend.';
+const FOR_SENT = 'Inte försökt: tidsgränsen för körningen nåddes. Raden tas vid nästa körning.';
 
 /**
  * Tömmer kön i omgångar tills den är tom eller tidsgränsen nåtts.
@@ -277,6 +278,8 @@ export async function korKon(b: Beroenden): Promise<Resultat> {
   // Svaret från Resend som stoppade körningen, till exempel "Resend 403: validation_error".
   let stopp: string | null = null;
   let oforsokta = 0;
+  let tidenUte = false;
+  let forSent = 0;
 
   const markera = async (u: Klar) => {
     try {
@@ -318,6 +321,28 @@ export async function korKon(b: Beroenden): Promise<Resultat> {
           continue;
         }
 
+        // KLOCKAN LÄSES FÖRE VARJE RAD, inte bara mellan omgångarna.
+        //
+        // Uppskattningen ovan bygger på hur lång tid en rad tagit
+        // hittills, och i den FÖRSTA omgången finns ingen sådan tid:
+        // då togs perOmgang rader rakt av. Tio mejl som var och ett
+        // går mot ANROP_TIDSGRANS_MS blev därmed 80 sekunder, medan
+        // notis_minut() väntar i 20. Svaret hamnade då i
+        // net._http_response som en tidsgräns, och adminvyn visade en
+        // körning där varje mejl gick ut som ett anrop som inte gick
+        // fram.
+        //
+        // Raderna som blir över lämnas TILLBAKA, inte kvar: en rad som
+        // tagits ur kön är utlånad i fem minuter, och den som bara
+        // släpps står som 'skickar' tills lånet gått ut.
+        if (!tidenUte && nu().getTime() - start >= grans) tidenUte = true;
+        if (tidenUte) {
+          forSent++;
+          logg(`notis-ko: ${r.id} ${r.kanal} ${r.typ} tillbaka, tidsgränsen nådd`);
+          await markera(klart(r.id, false, FOR_SENT));
+          continue;
+        }
+
         s.behandlade++;
         const u = await behandla(r, b, nu());
         if (!u.ok) s.misslyckade++;
@@ -328,6 +353,8 @@ export async function korKon(b: Beroenden): Promise<Resultat> {
           : u.stopp ? 'kontofel, körningen avbryts' : (u.permanent ? 'permanent fel' : 'tillfälligt fel')}`);
         await markera(u);
       }
+
+      if (tidenUte) break;
     }
   } catch {
     fel = true;
@@ -341,7 +368,11 @@ export async function korKon(b: Beroenden): Promise<Resultat> {
     delar.unshift(`${stopp}. Nyckeln eller avsändardomänen godtogs inte. Körningen avbröts och mejlet gick tillbaka till kön`
       + (oforsokta ? `, liksom ${oforsokta} mejl som inte försöktes` : ''));
   }
-  if (avbrott) delar.push(avbrott);
+  if (forSent) {
+    delar.push(`Tidsgränsen nåddes mitt i en omgång. ${forSent} rader lämnades tillbaka och tas vid nästa körning`);
+  } else if (avbrott) {
+    delar.push(avbrott);
+  }
   if (klarFel) delar.push(`${klarFel} rader gick inte att markera som klara och tas igen när lånet gått ut`);
   if (prov) delar.push(`${prov} SMS i provläge` + (provKostnad ? `, beräknad kostnad ${kostnadText(provKostnad)} i kontots valuta` : ''));
   const meddelande = delar.length ? delar.join('. ') + '.' : null;
