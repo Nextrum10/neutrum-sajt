@@ -16,14 +16,33 @@
    att den finns.
    ============================================================ */
 
-/* Tre band under varandra, aldrig i spalter. NEX ska läsas som en
-   hjältebild — bredvid en textruta blir emblemet en ikon i stället för
-   ett ansikte, och då hade lika gärna en liten prick fått duga. */
+/* NEX överst med samtalet DIREKT under sig, och arbetskön bredvid åt
+   höger. Grid-areas i stället för nästlade div:ar: heron och samtalet
+   hör ihop, men kön ska stå BREDVID NEX och inte under honom — det är
+   där blicken landar efter emblemet. Samtalet tar hela bredden under
+   båda: en textruta man skriver en hel fråga i ska inte vara halv.
+
+   På en smal skärm faller allt till en enda spalt i samma ordning —
+   NEX, samtalet, kön — eftersom ordningen i markupen redan är den. */
 .vy-admin .kon{
-  display:flex;
-  flex-direction:column;
+  display:grid;
+  grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);
+  grid-template-areas:
+    "nex  lage"
+    "prat prat";
+  /* stretch, inte start: kön är kortare än NEX-bandet, och en panel
+     som slutar halvvägs lämnar ett hål i högerkanten i stället för en
+     yta. Innehållet ligger kvar högst upp i panelen. */
+  align-items:stretch;
   gap:clamp(12px,1.4vw,18px);
   margin-bottom:clamp(16px,1.8vw,22px);
+}
+.vy-admin .kon-hero{grid-area:nex}
+.vy-admin .kon-prat{grid-area:prat}
+.vy-admin .kon-lage-halva{grid-area:lage}
+
+@media (max-width:1100px){
+  .vy-admin .kon{grid-template-columns:minmax(0,1fr);grid-template-areas:"nex" "prat" "lage"}
 }
 
 .vy-admin .kon-hero,
@@ -73,7 +92,7 @@
    fakta om verksamheten, inte arbetsposter, och hör därför inte hemma i
    listan längst ned. */
 .vy-admin .kon-pengar{
-  display:flex;gap:clamp(18px,3vw,44px);flex-wrap:wrap;
+  display:flex;gap:clamp(14px,2.2vw,34px);flex-wrap:wrap;
   justify-content:center;
   margin-top:20px;padding-top:17px;
   width:100%;box-sizing:border-box;
@@ -229,7 +248,11 @@
 .vy-admin .kon-lista{
   flex-grow:1;min-width:0;
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  /* Panelen är lika hög som NEX-bandet bredvid. Utan align-content
+     sträcks raderna ut till höga rutor med texten mitt i — de ska
+     behålla sin höjd och lägga sig överst. */
+  align-content:start;
   gap:7px;
 }
 .vy-admin .kon-lista .kon-tom,
