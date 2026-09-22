@@ -193,6 +193,11 @@ betalas ut.
 
 Allt ovanför fungerar utan Stripe. Det som saknas är att ta emot pengarna.
 
+**Läs [SKISS-BETALNING-STRIPE.md](SKISS-BETALNING-STRIPE.md) först.** Den skiljer
+på de två sidorna: kundsidan (punkt 1–3 nedan) går att bygga när som helst,
+hjälparsidan (punkt 4) är blockerad av anställningsfrågan i `foretagsfakta`. Den
+säger också varför det är Stripe Invoicing och inte Checkout som gäller här.
+
 **Den hemliga nyckeln får aldrig ligga i `nextrum-config.js`, i HTML, eller i
 någon fil som webbläsaren hämtar.** Den ska bo som en secret i Supabase:
 
@@ -215,10 +220,13 @@ Vad som återstår, i ordning:
    `betald_at`. Den **måste** verifiera Stripes signatur; en webhook utan
    signaturkontroll är en adress där vem som helst kan påstå att en faktura är
    betald.
-4. **Stripe Connect för utbetalningar.** Varje studiehjälpare gör en egen
-   registrering hos Stripe — knappen finns redan under Ersättning och anropar en
-   funktion vid namn `stripe-konto`, som inte är byggd än. Kolumnerna
-   `stripe_account_id` och `stripe_klar` väntar på den.
+4. **Stripe Connect för utbetalningar. Bygg inte det här än.** Står
+   `foretagsfakta.studiehjalpare_form` kvar på `oklart` vet ingen om ersättningen
+   är lön eller ett uppdragsarvode, och en Connect-transfer är inte en
+   löneutbetalning. Knappen under Ersättning är dessutom **borttagen** sedan den
+   anropade `stripe-konto`, en funktion som aldrig byggdes. Kolumnerna
+   `stripe_account_id` och `stripe_klar` finns kvar, men `stripe_klar` är en enda
+   boolean där det behövs fem tillstånd. Skissen har resonemanget.
 
 Platsen där punkt 1–2 ska in är utmärkt med en kommentar i
 `supabase/functions/fakturering/index.ts`, längst ned.
