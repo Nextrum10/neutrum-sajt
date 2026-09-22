@@ -233,9 +233,15 @@ function html(r: Ram): string {
     + `<tr><td style="padding:0 32px"><div style="height:1px;line-height:1px;font-size:1px;background:${FARG.linje}">&nbsp;</div></td></tr>`
     + `<tr><td style="padding:20px 32px 28px;font:400 13px/1.6 ${SANS};color:${FARG.dampad}">`
     + `<p style="margin:0 0 8px">${esc(r.varfor)}</p>`
-    + (r.avregistrera && r.val
-      ? `<p style="margin:0 0 8px">${lank('Sluta få mejl om det här', r.avregistrera)}`
-        + `&nbsp;&nbsp;&middot;&nbsp;&nbsp;${lank('Ändra dina val', r.val)}</p>`
+    /* Var länk för sig, precis som i textversionen. Ett gemensamt
+       villkor hade tyst tappat BÅDA om bara den ena vore null, och de
+       två versionerna av samma mejl hade då sagt olika saker. */
+    + (r.avregistrera || r.val
+      ? `<p style="margin:0 0 8px">`
+        + (r.avregistrera ? lank('Sluta få mejl om det här', r.avregistrera) : '')
+        + (r.avregistrera && r.val ? `&nbsp;&nbsp;&middot;&nbsp;&nbsp;` : '')
+        + (r.val ? lank('Ändra dina val', r.val) : '')
+        + `</p>`
       : '')
     + `<p style="margin:0">Frågor? Svara på mejlet eller skriv till `
     + `<a href="mailto:${KONTAKT}" style="color:${FARG.text}">${KONTAKT}</a>.</p>`

@@ -177,27 +177,32 @@ Deno.test('en ogiltig adress och en typ som inte mejlas är permanenta fel', asy
 Deno.test('ett 403 från Resend stoppar körningen och lämnar tillbaka resten oförsökt', async () => {
   // 403 är avsändardomänen, inte mejlet. Att fortsätta rad för rad
   // hade bränt hela kön på något som rättas på ett ställe.
+  // Första omgången tar EN rad, eftersom det inte finns någon mätning
+  // att räkna på än. 403:an läggs därför på det andra anropet, så att
+  // den träffar mitt i en full omgång och resten av den omgången
+  // faktiskt måste lämnas tillbaka.
   const rader = [rad(), rad(), rad(), rad(), rad()];
   const k = bank(rader, {
-    svar: (_m, n) => n === 0
+    svar: (_m, n) => n === 1
       ? new Response(JSON.stringify({ name: 'validation_error' }), { status: 403 })
       : new Response(JSON.stringify({ id: 're_x' }), { status: 200 }),
   });
   const r = await korKon(k.b);
 
-  assertEquals(k.skickade.length, 1, 'bara det första försöket gjordes');
+  assertEquals(k.skickade.length, 2, 'en rad gick, nästa fick 403, sedan gjordes inga fler försök');
   assertEquals(r.mejlStoppat, true);
-  assertEquals(k.klara.length, 5, 'alla fem lämnas tillbaka, ingen blir kvar utlånad');
+  assertEquals(k.klara.length, 5, 'alla fem fick besked, ingen blev kvar utlånad');
 
-  assertEquals(k.klara[0].permanent, false, 'raden som fick svaret prövas igen');
-  assertStringIncludes(k.klara[0].fel ?? '', 'Resend 403');
-  for (const kl of k.klara.slice(1)) {
+  assertEquals(k.klara[0].ok, true, 'den första hann gå');
+  assertEquals(k.klara[1].permanent, false, 'raden som fick svaret prövas igen');
+  assertStringIncludes(k.klara[1].fel ?? '', 'Resend 403');
+  for (const kl of k.klara.slice(2)) {
     assertEquals(kl.ok, false);
     assertStringIncludes(kl.fel ?? '', 'Inte försökt');
   }
 
   assertStringIncludes(r.meddelande ?? '', 'Nyckeln eller avsändardomänen godtogs inte');
-  assertStringIncludes(r.meddelande ?? '', '4 mejl som inte försöktes');
+  assertStringIncludes(r.meddelande ?? '', '3 mejl som inte försöktes');
 });
 
 Deno.test('ett 401 stoppar också, men ett 422 gäller bara sin egen rad', async () => {
@@ -287,25 +292,51 @@ Deno.test('kön töms i flera omgångar tills den är slut', async () => {
   assertEquals(k.skickade.length, 25);
 });
 
-Deno.test('klockan stoppar körningen innan databasen slutar vänta', async () => {
+Deno.test('långsamma mejl drar inte körningen förbi det databasen väntar på', async () => {
   // notis_minut() väntar 20 sekunder. Kommer svaret senare sparas det
   // i net._http_response som tidsgräns, och adminvyn visar det under
   // Fel som ett anrop som inte gick fram — fast varje mejl gick ut.
   //
   // Varje mejl här tar 8 sekunder, alltså Resends egen tidsgräns.
-  // Utan en kontroll INNE i omgången hade de tio första raderna
-  // behandlats i följd: 80 sekunder, fyra gånger så länge som
-  // databasen väntar.
+  // Första omgången har ingen mätning att räkna på och tog förut
+  // perOmgang rader rakt av: tio gånger åtta sekunder, fyra gånger så
+  // länge som databasen väntar.
   const k = bank(Array.from({ length: 30 }, () => rad()), { kostarMs: 8_000, perOmgang: 10 });
   const r = await korKon(k.b);
 
-  assertEquals(k.tid() <= TIDSGRANS_MS + 8_000, true,
-    `körningen tog ${k.tid()} ms, gränsen är ${TIDSGRANS_MS} ms plus ett sista anrop`);
-  assertEquals(r.behandlade < 10, true, `behandlade ${r.behandlade} rader innan klockan lästes`);
+  assertEquals(k.tid() <= TIDSGRANS_MS, true,
+    `körningen tog ${k.tid()} ms, gränsen är ${TIDSGRANS_MS} ms`);
   assertEquals(r.behandlade >= 1, true, 'minst en rad ska hinna');
-
-  // Raderna som togs ur kön men inte hanns med lämnas tillbaka, inte
-  // kvar som utlånade: annars står de i 'skickar' i fem minuter.
-  assertEquals(k.klara.length, r.behandlade + (r.behandlade ? k.klara.length - r.behandlade : 0));
+  assertEquals(r.skickade, r.behandlade, 'de som hanns med gick ut');
   assertStringIncludes(r.meddelande ?? '', 'Tidsgränsen');
+});
+
+Deno.test('INGEN rad lånas ut utan att få ett besked', async () => {
+  // Det här är hela skälet till att arbetaren hellre tar för få rader
+  // än lämnar tillbaka. notis_utskick_klar räknar varje besked med
+  // ok=false mot radens fem försök OCH skjuter skicka_efter framåt —
+  // också när beskedet är "hann inte". Fem sådana varv gör en notis
+  // som aldrig prövats till status 'fel'.
+  //
+  // Provet håller fast invarianten: antalet besked är exakt antalet
+  // behandlade rader. Börjar arbetaren lämna tillbaka oförsökta rader
+  // blir de fler, och det här faller.
+  for (const kostnad of [0, 3_000, 8_000]) {
+    const k = bank(Array.from({ length: 30 }, () => rad()), { kostarMs: kostnad, perOmgang: 10 });
+    const r = await korKon(k.b);
+    assertEquals(k.klara.length, r.behandlade,
+      `vid ${kostnad} ms per mejl: ${k.klara.length} besked på ${r.behandlade} behandlade rader`);
+    assertEquals(k.skickade.length, r.behandlade, 'varje lånad rad försöktes också');
+  }
+});
+
+Deno.test('snabba mejl tar fortfarande hela omgångar', async () => {
+  // Den försiktiga första omgången får inte bli ett tak. Går raderna
+  // fort ska nästa omgång ta perOmgang som förut, annars kostar
+  // rättningen ovan genomströmning varje minut.
+  const k = bank(Array.from({ length: 25 }, () => rad()), { kostarMs: 10, perOmgang: 10 });
+  const r = await korKon(k.b);
+
+  assertEquals(r.behandlade, 25, 'hela kön ska hinna');
+  assertEquals(r.skickade, 25);
 });

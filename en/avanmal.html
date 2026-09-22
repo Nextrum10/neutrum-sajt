@@ -267,24 +267,18 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<!-- Vercel Web Analytics.
+<!-- INGEN MÄTNING PÅ DEN HÄR SIDAN, till skillnad från de övriga
+     publika sidorna.
 
-     Sätter INGA cookies: unika besökare räknas via en hash av
-     IP och webbläsare med ett salt som byts dagligen, och den råa
-     IP-adressen sparas inte. Därför krävs inget samtycke — men det
-     står ändå i integritetspolicyn och på lagring.html, eftersom
-     "vi mäter ingenting" inte längre är sant.
+     Adressen hit bär avregistreringstokenen som ?t=. Vercel Web
+     Analytics sparar frågesträngen om man inte filtrerar bort den,
+     och tokenen har med flit ingen utgångstid: den går bara att
+     återkalla genom att byta nyckeln i notis_konfig, vilket bryter
+     VARJE länk som någonsin skickats. En token i en mätlogg vore
+     alltså en avregistrering någon annan kan göra, för alltid.
 
-     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
-     finns inget att optimera för besökarens skull, och det vore ett
-     onödigt anrop från en sida där någon sköter sitt barns skolgång.
-
-     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
-     vilket är ofarligt — inget mäts när man utvecklar. -->
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
-     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
+     Det finns heller inget att optimera här. Sidan har ett syfte,
+     man är på den i tio sekunder, och den nås bara från ett mejl. -->
 <script src="../nextrum-config.js"></script>
 <script src="../nextrum-images.js"></script>
 <script src="../nextrum-fel.js"></script>

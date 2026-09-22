@@ -85,6 +85,13 @@
       return;
     }
 
+    /* Språkväljaren skrivs om så att koden följer med. Länken står som
+       en fast adress i sidan, och den som bytte språk landade annars
+       på "Länken saknar sin kod" med en avstängd knapp och ingen väg
+       tillbaka utom att öppna mejlet igen. */
+    const sprak = document.querySelector('.sprakval a[href]');
+    if (sprak) sprak.href = sprak.getAttribute('href') + '?t=' + encodeURIComponent(token);
+
     knapp.addEventListener('click', async function () {
       knapp.disabled = true;
       status.textContent = ord('skickar');

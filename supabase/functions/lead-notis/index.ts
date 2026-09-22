@@ -136,8 +136,6 @@ async function skickaKvitto(r: Record<string, unknown>): Promise<KvittoUtfall> {
     return { skickat: false, orsak: 'Anmälan har ingen giltig e-postadress.' };
   }
 
-  const m = renderaKvitto(r.parent_name);
-
   /* Idempotensnyckeln byggs ur radens id. SAKNAS DET SÄTTS INGEN
      NYCKEL: en nyckel som blir "…-undefined" hade varit samma nyckel
      för varje anmälan, och Resend hade då skickat kvittot till den
@@ -146,6 +144,14 @@ async function skickaKvitto(r: Record<string, unknown>): Promise<KvittoUtfall> {
   const id = typeof r.id === 'string' && r.id ? r.id : null;
 
   try {
+    /* Renderingen ligger INNANFÖR try:t, inte före. Den kastar inte i
+       dag — fornamn() tål vad som helst och mallen har inga grenar —
+       men funktionen anropas i en Promise.all bredvid aviseringen till
+       oss. Kastade den skulle hela webhooken svara 500 med aviseringen
+       redan skickad, och utfallet för den försvinna ur loggen. Löftet
+       i kommentaren ovan ska hålla av konstruktion, inte av tur. */
+    const m = renderaKvitto(r.parent_name);
+
     const svar = await skickaViaResend({
       fran: KVITTO_FRAN,
       till: [String(r.email).trim()],
@@ -238,6 +244,17 @@ Deno.serve(async (req) => {
        inte vänta på två Resend-anrop i rad. skickaKvitto kastar
        aldrig, så Promise.all kan inte falla på kvittot. */
     const [svar, kvitto] = await Promise.all([skicka(FRAN, TILL), skickaKvitto(r)]);
+
+    /* Ett uteblivet kvitto syns annars bara som ett fält i en kropp
+       ingen läser: svaret är 200 så länge aviseringen till oss gick,
+       och webhookloggen ser grön ut medan varje familj får tystnad.
+       Det mest troliga skälet är dessutom systematiskt — svarar Resend
+       403 på avsändardomänen gäller det ALLA kvitton, inte ett.
+       Raden hamnar i funktionsloggen, som är där man tittar.
+       Anmälans id, aldrig adressen. */
+    if (!kvitto.skickat) {
+      console.error('lead-notis: kvittot gick inte ut för', r.id ?? 'okänd rad', '—', kvitto.orsak);
+    }
 
     /* 403 = domänen är inte verifierad hos Resend. Allt annat är ett
        riktigt fel och ska synas som det. Kroppen läses ut här, för en
