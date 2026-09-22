@@ -92,11 +92,15 @@
      vägarna lever bredvid varandra och vet ännu inte om varandra;
      se CLAUDE.md avsnitt 11.
 
-     Beloppen är FRYSTA vid betalningen och läses bara här. Ingen
+     Beloppet är FRYST vid betalningen och läses bara här. Ingen
      rullgardin ändrar ett läge i den här tabellen, till skillnad från
      fakturor och utbetalningar: en betalnings läge sätts av Stripe
      genom webhooken, och att kunna skriva om det för hand hade gjort
      siffran till en åsikt.
+
+     Ingen kolumn för studiehjälparens del, med flit. Hela beloppet
+     går till Nextrum, och hjälparens ersättning hör hemma under
+     Utbetalningar — den räknas den 25:e ur rapporterna, inte här.
      ============================================================ */
   const KORT_LAGE = {
     vantar: 'Väntar', betald: 'Betald', aterbetald: 'Återbetald',
@@ -119,13 +123,6 @@
       { namn: 'Familj', rita: b => esc(b.familj) },
       { namn: 'Studiehjälpare', rita: b => esc(b.hjalpare) },
       { namn: 'Betalt', rita: b => '<span class="adm-tal">' + esc(kronor(b.betalt_ore || 0)) + '</span>' },
-      /* Tom cell när Stripe hoppade över överföringen. Det syns bara
-         här, och det betyder att hjälparens del ligger kvar hos
-         Nextrum trots att familjen betalat. */
-      { namn: 'Till hjälparen', rita: b => b.betalning_status === 'betald' && !b.stripe_transfer_id
-        ? '<span class="adm-tal" style="color:var(--acc-text)">ingen överföring</span>'
-        : '<span class="adm-tal">' + esc(kronor(b.ersattning_ore || 0)) + '</span>' },
-      { namn: 'Nextrum', rita: b => '<span class="adm-tal">' + esc(kronor(b.avgift_ore || 0)) + '</span>' },
       { namn: 'Återbetalt', rita: b => Number(b.aterbetald_ore || 0) > 0
         ? '<span class="adm-tal">' + esc(kronor(b.aterbetald_ore)) + '</span>' : '' },
       { namn: '', höger: true, rita: b => {

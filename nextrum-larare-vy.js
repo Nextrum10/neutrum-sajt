@@ -2163,46 +2163,20 @@
       : tomt('Din timpenning är inte satt än',
              'Utan den går ersättningen inte att räkna ut. Hör av dig till oss så fyller vi i den.');
 
-    /* Utbetalningskontot ligger hos Stripe, inte hos oss. Vi sparar
-       bara id:t och vad Stripe senast sa om det — personnummer,
-       legitimation och kontonummer stannar där.
+    /* INGET UTBETALNINGSKONTO HÄR, och det är ett beslut (Fas 12.5).
+       Ersättningen betalas den 25:e, som en löning, i en klump för
+       månadens rapporterade pass. Den går genom payouts och en
+       överföring från banken, inte genom Stripe.
 
-       FEM TILLSTÅND, INTE ETT. stripe_klar ensam svarade ja eller nej,
-       och svarade utifrån att någon kommit tillbaka till
-       returadressen. Den som backade ur mitt i onboardingen fick läsa
-       "Kopplat" och undrade sedan var pengarna tog vägen. Sedan Fas
-       12.1 står kontots tillstånd i fem fält, lästa från Stripe. */
-    const tpk = S.tutorProfil || {};
-    const krav = (tpk.stripe_krav || []).filter(Boolean);
-    const kravHtml = krav.length
-      ? '<ul class="bet-krav">' + krav.map(function (k) { return '<li>' + esc(k) + '</li>'; }).join('') + '</ul>'
-      : '';
-
-    if (tpk.stripe_klar) {
-      konto.innerHTML = '<div class="bet-pagaende"><span style="margin-top:0">Kopplat</span>'
-        + '<p class="bet-not">Utbetalningarna går till kontot du registrerat hos Stripe. '
-        + 'Vill du byta konto gör du det hos Stripe, inte här.</p>'
-        + '<button class="btn btn-sm" id="ers-konto-uppdatera">Kontrollera status</button></div>';
-    } else if (tpk.stripe_kan_ta_emot) {
-      /* Kan ta emot men inte betala ut: pengarna kommer in och blir
-         stående. Det är ett eget läge med flit — sagt som "nästan
-         klart" hade det sett ut som att ingenting behövde göras. */
-      konto.innerHTML = '<div class="bet-pagaende"><span style="margin-top:0">Nästan klart</span>'
-        + '<p class="bet-not">Din ersättning kan betalas, men Stripe har inte startat '
-        + 'utbetalningarna till din bank än. Oftast saknas en uppgift.</p>' + kravHtml
-        + '<button class="btn btn-primary btn-sm" id="ers-konto-koppla">Fortsätt hos Stripe</button></div>';
-    } else if (tpk.stripe_account_id) {
-      konto.innerHTML = '<p class="bet-not" style="margin-top:0">Du har börjat, men Stripe '
-        + 'behöver mer innan din ersättning kan betalas ut.</p>' + kravHtml
-        + '<button class="btn btn-primary btn-sm" id="ers-konto-koppla">Fortsätt hos Stripe</button>';
-    } else {
-      konto.innerHTML = '<p class="bet-not" style="margin-top:0">För att få din ersättning '
-        + 'behöver du registrera ett utbetalningskonto. Det gör du hos Stripe, som sköter '
-        + 'legitimation och bankuppgifter. Vi ser aldrig dina kontouppgifter.</p>'
-        + '<button class="btn btn-primary btn-sm" id="ers-konto-koppla">Koppla utbetalningskonto</button>';
-    }
-    konto.insertAdjacentHTML('beforeend',
-      '<p class="ok-msg" id="ers-konto-msg" style="margin:8px 0 0"></p>');
+       Rutan hade tidigare en knapp som kopplade ett anslutet
+       Stripe-konto. Den byggdes för en modell där hjälparen fick sin
+       del vid varje betalning, och den modellen finns inte längre.
+       Att lämna kvar knappen hade bett om uppgifter — personnummer,
+       legitimation, bankkonto — som ingenting sedan använder. */
+    konto.innerHTML = '<p class="bet-not" style="margin-top:0">Din ersättning betalas '
+      + 'den 25:e varje månad, för de pass du rapporterat. Underlaget nedan är det vi '
+      + 'betalar efter, så hör av dig i god tid om något ser fel ut. '
+      + 'Kontouppgifterna har vi av dig sedan tidigare, och de ligger inte här.</p>';
 
     if (ut.error) { lista.innerHTML = tomt('Kunde inte hämta utbetalningarna', felText(ut.error)); return; }
     const rader = ut.data || [];
@@ -2228,53 +2202,10 @@
     }).join('');
   }
 
-  /* Utbetalningskontot (Fas 12.2). Knappen fanns här länge innan
-     edge-funktionen gjorde det och kunde då bara misslyckas; den
-     plockades bort med noteringen att en knapp som inte går att
-     trycka på är sämre än ingen knapp. Nu finns stripe-konto.
-
-     Lyssnaren sitter på dokumentet och inte på knappen, eftersom rutan
-     ritas om varje gång Ersättning öppnas. Ingen inline-kod: /larare
-     har skarp CSP (script-src 'self'), så ett onclick hade fungerat
-     lokalt och tystnat i drift. */
-  document.addEventListener('click', async e => {
-    const knapp = e.target.closest('#ers-konto-koppla, #ers-konto-uppdatera');
-    if (!knapp) return;
-
-    const bara = knapp.id === 'ers-konto-uppdatera';
-    const msg = $('#ers-konto-msg');
-    rensa(msg);
-
-    await medan(knapp, bara ? 'Kontrollerar…' : 'Öppnar…', async () => {
-      const svar = await supa.functions.invoke('stripe-konto', {
-        body: { retur: location.href, uppdatera: bara }
-      });
-
-      /* functions.invoke lägger felkroppen i error.context, inte i
-         data. Utan det här blir varje nekande "FunctionsHttpError",
-         och det säger ingenting om vad Stripe faktiskt saknade. */
-      if (svar.error) {
-        let text = felText(svar.error);
-        try {
-          const kropp = await svar.error.context.json();
-          if (kropp && kropp.error) text = kropp.error;
-        } catch (_) { /* behåll texten ovan */ }
-        säg(msg, text, false);
-        return;
-      }
-
-      /* Finns en länk är onboardingen inte klar, och då är det dit
-         personen ska. Finns ingen är det enda som hänt att vi läst
-         tillbaka tillståndet — rita om rutan så att det syns. */
-      if (svar.data && svar.data.url && !bara) { location.href = svar.data.url; return; }
-
-      Object.assign(S.tutorProfil || {}, svar.data || {});
-      await laddaErsattning();
-      säg($('#ers-konto-msg'), svar.data && svar.data.stripe_klar
-        ? 'Kontot är klart.'
-        : 'Status hämtad från Stripe.', true);
-    });
-  });
+  /* Här satt hanteraren för "Koppla utbetalningskonto". Både knappen
+     och anropet till edge-funktionen stripe-konto är borta sedan Fas
+     12.5: ersättningen går den 25:e genom payouts, och ett anslutet
+     Stripe-konto fyller ingen funktion i den modellen. */
 
   /* ============================================================
      MINA ELEVER
@@ -2620,9 +2551,7 @@
        som är låst för att en betalfunktion inte är driftsatt än. */
     if (S.tutorProfil) {
       const st = await supa.from('tutor_profiles')
-        .select('stripe_account_id, stripe_klar, stripe_onboarding, stripe_kan_ta_emot, '
-          + 'stripe_utbetalning_aktiv, stripe_krav, stripe_kontrollerad_at')
-        .eq('id', S.user.id).maybeSingle();
+        .select('stripe_account_id, stripe_klar').eq('id', S.user.id).maybeSingle();
       if (st.data) Object.assign(S.tutorProfil, st.data);
     }
 

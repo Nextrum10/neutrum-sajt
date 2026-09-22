@@ -263,9 +263,10 @@ filer eller lokal server (`python3 .claude/serve.py 8951`, som härmar
 Vercels `cleanUrls`).
 
 Inte byggt än: betaltjänst i drift. Två vägar finns i repot och bara
-månadsfaktureringen är provad — Stripe Connect per pass (Fas 12) är kod
+månadsfaktureringen är provad — kortbetalning per pass (Fas 12) är kod
 som aldrig körts mot Stripe, och de två vägarna vet inte om varandra, så
-båda skarpt samtidigt fakturerar familjen två gånger. Vidare: Google
+båda skarpt samtidigt fakturerar familjen två gånger. Studiehjälparen
+får betalt den 25:e genom payouts, aldrig genom Stripe. Vidare: Google
 Workspace, Fortnox (fällan: refresh-token roteras
 vid varje användning, sparas inte det nya är ni utlåsta om en månad),
 bakgrundskontroller, skatt och anställning av minderåriga, riktiga foton

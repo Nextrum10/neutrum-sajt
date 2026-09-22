@@ -28,11 +28,15 @@
 //    hanterad_at är null) körs däremot om. Annars hade ett
 //    tillfälligt databasfel gjort en betalning osynlig för alltid.
 //
-// 3. TRANSFERN KONTROLLERAS, DEN ANTAS INTE. Stripe hoppar över
-//    destinationsöverföringen om mottagarkontot inte längre kan ta
-//    emot medel. Betalningen lyckas då ändå, och utan den här
-//    kontrollen står pengarna kvar hos Nextrum medan både familjen
-//    och studiehjälparen tror att passet är avräknat.
+// 3. CHARGE-ID HÄMTAS, FÖR DET BEHÖVS SENARE. En återbetalning görs
+//    mot betalningen, men charge.refunded-händelsen kommer tillbaka
+//    med charge-id:t. Sparas det inte nu finns ingen väg från
+//    händelsen till passet som inte går genom metadata, och den
+//    metadatan ärver Stripe åt oss i stället för att vi skriver den.
+//
+//    Sedan Fas 12.5 finns ingen transfer att hålla reda på: hela
+//    beloppet stannar hos Nextrum, och studiehjälparen får sitt den
+//    25:e genom payouts.
 //
 //
 // verify_jwt = false. Anroparen är Stripe, inte en inloggad
@@ -50,35 +54,6 @@ type Handelse = {
   type?: string;
   data?: { object?: Record<string, unknown> };
 };
-
-/** Kontots förmågor, oavsett om händelsen är v1 eller v2. */
-function kontotillstand(o: Record<string, unknown>) {
-  const v1formagor = (o.capabilities ?? {}) as Record<string, string>;
-  const v2formagor = ((o.configuration as Record<string, unknown> | undefined)
-    ?.recipient as { capabilities?: Record<string, { status?: string }> } | undefined)
-    ?.capabilities ?? {};
-
-  const aktiv = (namn: string) =>
-    v1formagor[namn] === 'active' || v2formagor[namn]?.status === 'active';
-
-  const kanTaEmot = aktiv('transfers') || aktiv('stripe_transfers');
-  const utbetalning = Boolean(o.payouts_enabled) || aktiv('stripe_balance') || aktiv('payouts');
-
-  const krav = [
-    ...(((o.requirements as { currently_due?: string[] } | undefined)?.currently_due) ?? []),
-    ...((((o.requirements as { entries?: Array<{ description?: string }> } | undefined)?.entries) ?? [])
-      .map((e) => String(e?.description ?? '')).filter(Boolean)),
-  ];
-
-  return {
-    stripe_kan_ta_emot: kanTaEmot,
-    stripe_utbetalning_aktiv: utbetalning,
-    stripe_krav: krav,
-    stripe_onboarding: krav.length === 0 && kanTaEmot ? 'klar' : 'pagar',
-    stripe_klar: kanTaEmot && utbetalning,
-    stripe_kontrollerad_at: new Date().toISOString(),
-  };
-}
 
 Deno.serve(async (req) => {
   // Ingen CORS och ingen OPTIONS: ingen webbläsare ska nå hit.
@@ -142,18 +117,14 @@ Deno.serve(async (req) => {
 
         const piId = String(obj.payment_intent ?? '');
         let chargeId: string | null = null;
-        let transferId: string | null = null;
 
         if (piId) {
-          /* Transfern kontrolleras, den antas inte. Hoppade Stripe
-             över den står pengarna kvar hos Nextrum, och det ska synas
-             som en avvikelse i stället för som ett avräknat pass. */
+          /* Charge-id:t är det enda som gör en senare
+             charge.refunded-händelse spårbar till rätt pass utan att
+             lita på metadata vi inte skriver själva. */
           const pi = await v1('GET', `/v1/payment_intents/${piId}?expand[]=latest_charge`);
           const charge = (pi as { latest_charge?: Record<string, unknown> }).latest_charge;
-          if (charge && typeof charge === 'object') {
-            chargeId = String(charge.id ?? '') || null;
-            transferId = charge.transfer ? String(charge.transfer) : null;
-          }
+          if (charge && typeof charge === 'object') chargeId = String(charge.id ?? '') || null;
         }
 
         /* `.eq('betalning_status', 'vantar')` är inte pynt. Två
@@ -164,12 +135,9 @@ Deno.serve(async (req) => {
           betald_at: new Date().toISOString(),
           stripe_payment_intent_id: piId || null,
           stripe_charge_id: chargeId,
-          stripe_transfer_id: transferId,
         }).eq('id', passId).eq('betalning_status', 'vantar');
 
-        return await klar(transferId
-          ? 'betald'
-          : 'betald UTAN transfer — studiehjälparens del ligger kvar hos Nextrum');
+        return await klar('betald');
       }
 
       // ---------- betalningen gick inte igenom ----------
@@ -228,51 +196,13 @@ Deno.serve(async (req) => {
         return await klar(`tvist: ${String(obj.status ?? typ)}`);
       }
 
-      // ---------- överföringen ----------
-      case 'transfer.created':
-      case 'transfer.reversed': {
-        /* En destination charge skapar överföringen ÅT oss, så den bär
-           inte vår metadata. Men den bär source_transaction: charge-id:t
-           den kom ur, och det är ett id vi själva skrivit. Det är därför
-           den vägen står först.
-
-           reversed nollställer id:t. Ett pass med betalning men utan
-           transfer är precis den avvikelse som ska gå att hitta: det
-           betyder att studiehjälparens del ligger kvar hos Nextrum. */
-        const nyttId = typ.endsWith('reversed') ? null : String(obj.id ?? '');
-        const kalla = String(obj.source_transaction ?? '');
-        if (kalla) {
-          await db.from('bookings').update({ stripe_transfer_id: nyttId })
-            .eq('stripe_charge_id', kalla);
-          return await klar(typ);
-        }
-        const passId = String((obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
-        if (!passId) return await klar('transfer utan source_transaction och utan pass-id');
-        await db.from('bookings').update({ stripe_transfer_id: nyttId }).eq('id', passId);
-        return await klar(typ + ' (via metadata)');
-      }
-
-      // ---------- kontots krav ändrades ----------
-      case 'account.updated':
-      case 'v2.core.account.updated':
-      case 'v2.core.account[configuration.recipient].updated': {
-        const kontoId = String(obj.id ?? '');
-        if (!kontoId) return await klar('konto utan id');
-        await db.from('tutor_profiles')
-          .update(kontotillstand(obj))
-          .eq('stripe_account_id', kontoId);
-        return await klar('kontots tillstånd uppdaterat');
-      }
-
-      // ---------- utbetalning till banken ----------
-      case 'payout.paid':
-      case 'payout.failed': {
-        /* Utbetalningen sker på studiehjälparens konto, så händelsen
-           bär inget pass. Den loggas för att en misslyckad utbetalning
-           annars bara syns hos Stripe, och den som väntar på pengar
-           hör av sig till oss, inte dit. */
-        return await klar(`${typ}: ${String(obj.id ?? '')}`);
-      }
+      /* HÄR LÅG transfer.created, transfer.reversed, account.updated
+         och payout.*. Alla fyra hörde till Connect: anslutna konton,
+         överföringar till dem och Stripes utbetalningar från deras
+         saldon. Inget av det finns kvar sedan Fas 12.5, så de faller
+         igenom till default nedan och kvitteras som ohanterade. Skulle
+         de dyka upp ändå är det ett tecken på att någon slagit på
+         Connect igen, inte något den här funktionen ska tolka. */
 
       default:
         // Okända typer kvitteras. Att svara med fel hade fått Stripe

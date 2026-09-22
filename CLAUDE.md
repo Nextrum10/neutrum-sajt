@@ -466,9 +466,9 @@ tillbaka en kopia.**
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
-| `stripe-konto` | Studiehjälparens anslutna konto: skapar det, ger onboardinglänk, läser tillbaka tillståndet **från Stripe** | Knappen under Ersättning |
-| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. Destination charge plus application fee. **Beloppen räknas här, aldrig i anropet** | Knappen på passet i föräldravyn |
+| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet | Knappen på passet i föräldravyn |
 | `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser` | Stripe |
+| `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
 
 `supabase/config.toml` bär `verify_jwt = false` för de sju funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
@@ -499,8 +499,16 @@ efter `begin` med 42704 — hela sviten gick inte att köra, och en svit
 som inte går att köra provar ingenting. Den slår nu upp triggrarna på
 FUNKTIONEN i stället för på namnet.
 
-**Bestäm vad som ska hända med de två.** Antingen tas de ur driften,
-eller så får de en anropare. Två ACTIVE funktioner som ingen ringer är
+**Sedan Fas 12.5 gäller samma sak `stripe-konto`.** Den ligger ACTIVE
+i driften men finns inte längre i repot, och ingen knapp anropar den:
+studiehjälparen får betalt den 25:e genom `payouts`, så ett anslutet
+Stripe-konto fyller ingen funktion. **Ta bort den i Supabases
+dashboard** (Edge Functions → stripe-konto → Delete). Det går inte att
+göra härifrån, och tills det är gjort ligger en funktion i driften som
+kan skapa anslutna konton ingen vill ha.
+
+**Bestäm vad som ska hända med de tre.** Antingen tas de ur driften,
+eller så får de en anropare. ACTIVE funktioner som ingen ringer är
 samma sorts halvfärdighet som gjorde att hela det här systemet inte
 fanns i repot.
 
@@ -693,22 +701,27 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   betaltjänst är kopplad till dem: `Betald` kryssas i för hand, och
   utbetalning görs från banken.
 
-  **Stripe Connect per pass** (Fas 12) är driftsatt men inte i bruk.
-  Migrationen är applicerad och `stripe-konto`, `stripe-checkout` och
-  `stripe-webhook` ligger ACTIVE. Men **ingen nyckel är satt**, ingen
-  webhook-endpoint finns hos Stripe, och **ingenting har någonsin körts
-  mot Stripe** — miljön där koden skrevs når inte `api.stripe.com`.
-  Funktionerna svarar därför "STRIPE_SECRET_KEY saknas i miljön", och
-  webhooken svarar 400 på varje leverans. `DEPLOY-BETALNING.md` avsnitt
-  9 har ordningen och en provlista i testläge.
+  **Kortbetalning per pass** (Fas 12) är driftsatt men inte i bruk.
+  Familjen betalar ett bekräftat pass med kort, och **hela beloppet går
+  till Nextrum**. Men **ingen webhook-endpoint finns hos Stripe**, och
+  **ingenting har någonsin körts mot Stripe** — miljön där koden skrevs
+  når inte `api.stripe.com`. Utan `STRIPE_WEBHOOK_SECRET` svarar
+  webhooken 400 på varje leverans, och då dras pengarna utan att något
+  pass blir betalt. `DEPLOY-BETALNING.md` avsnitt 9 har ordningen.
 
-  **De två vägarna vet inte om varandra.** `passunderlag` tittar inte på
-  `betalning_status`, så ett kortbetalt pass kommer ändå med i
-  månadskörningen. Körs båda skarpt faktureras familjen två gånger.
+  **Connect är borttaget (Fas 12.5.)** Studiehjälparen får betalt den
+  25:e, som en löning, i en klump för månadens rapporterade pass. Det
+  är `payouts` och månadskörningens jobb. En destination charge hade
+  lagt hjälparens del på hens Stripe-saldo vid varje pass, och sedan
+  hade månadskörningen betalat samma timmar en gång till.
 
-  `SKISS-BETALNING-STRIPE.md` står kvar oförändrad och argumenterar mot
-  Connect-vägen. Den är kvar med flit: beslutet togs ändå, och den som
-  läser om ett år ska se att invändningen fanns.
+  **De två vägarna vet ännu inte om varandra.** `passunderlag` tittar
+  inte på `betalning_status`, så ett kortbetalt pass hamnar ändå på
+  familjens faktura i månadskörningen. **Körs båda skarpt faktureras
+  familjen två gånger.** Underlaget till hjälparen ska däremot fortsätta
+  skapas — det är bara familjehalvan som ska hoppas över.
+
+  `SKISS-BETALNING-STRIPE.md` beskriver hur beslutet gick.
 - **Google Workspace och Fortnox.** Statusflik finns, koppling saknas.
   `INTEGRATIONER.md` har hela receptet, inklusive fällan att Fortnox
   roterar refresh-token vid varje användning — sparas inte det nya

@@ -351,8 +351,8 @@ provet. Gör den innan ni rör en skarp nyckel.
 | Del | Läge |
 |---|---|
 | Kolumnerna och skyddet (`20260922155740_fas12_1_*.sql`) | **Applicerad** |
-| `stripe-konto` | **ACTIVE**, version 1, `verify_jwt = true` |
-| `stripe-checkout` | **ACTIVE**, version 1, `verify_jwt = true` |
+| `stripe-konto` | **ACTIVE i driften men borttagen ur repot** (Fas 12.5). Ta bort den i dashboarden: Edge Functions → stripe-konto → Delete |
+| `stripe-checkout` | **ACTIVE**, `verify_jwt = true`. Omdriftsätt: Connect är borttaget |
 | `stripe-webhook` | **ACTIVE**, version 1, `verify_jwt = false` |
 | `stripe-aterbetalning` | Fas 12.4. Återbetalning med transfer reversal, bara för admin |
 | `STRIPE_SECRET_KEY` | **Inte satt** — funktionerna svarar "STRIPE_SECRET_KEY saknas i miljön" |
@@ -389,7 +389,6 @@ supabase secrets set STRIPE_SECRET_KEY=sk_test_...
 ändrar något i funktionerna:
 
 ```
-supabase functions deploy stripe-konto
 supabase functions deploy stripe-checkout
 supabase functions deploy stripe-webhook
 supabase functions deploy stripe-aterbetalning
@@ -445,30 +444,22 @@ Slå också på kvitton: Stripe → Settings → Emails → Successful payments.
 
 I den här ordningen, för varje steg beror på det förra:
 
-1. **Studiehjälparen kopplar kontot.** Logga in som hen, Ersättning → Koppla
-   utbetalningskonto. Stripes onboarding öppnas. Fyll i med testuppgifter.
-2. **Kontrollera att rutan säger rätt sak.** Backa ur mitt i onboardingen med flit
-   och se att den säger "behöver kompletteras", inte "kopplat". Det är hela
-   poängen med de fem fälten.
-3. **Boka ett pass och bekräfta det.** Betala-knappen ska dyka upp först då.
+1. **Boka ett pass och bekräfta det.** Betala-knappen ska dyka upp först då.
 4. **Betala med testkortet** `4242 4242 4242 4242`, valfritt framtida datum.
-5. **Kontrollera i databasen** att `betalning_status = 'betald'`, att
-   `stripe_transfer_id` är ifylld och att `betalt_ore = ersattning_ore + avgift_ore`.
+5. **Kontrollera i databasen** att `betalning_status = 'betald'` och att
+   `betalt_ore` stämmer med vad familjen faktiskt betalade.
 6. **Prova 3D Secure** med `4000 0027 6000 3184`.
 7. **Prova ett nekat kort** med `4000 0000 0000 0002` och se att passet blir
    `misslyckad` och går att betala igen.
-8. **Prova en återbetalning** från Stripes dashboard, med `reverse_transfer`.
+8. **Prova en återbetalning**, både hel och delvis, från Ekonomi → Kortbetalningar.
 9. **Prova en tvist** med `4000 0000 0000 0259`.
-10. **Prova att betala mot en studiehjälpare som inte kopplat kontot.** Ska nekas
-    med `mottagare_ej_klar`, inte skapa en betalning.
 
 ### 9.7 Det som inte är löst av att koden finns
 
-- **Anställningsfrågan.** `foretagsfakta.studiehjalpare_form` står på `oklart`.
-  Blir svaret "anställda" är ett anslutet konto fel väg för ersättningen, och den
-  här kedjan ska då inte användas för utbetalning. Se `SKISS-BETALNING-STRIPE.md`.
-- **Studiehjälpare under 18.** Stripes svenska avtal kräver en vuxen representant.
-  Att Stripe tillåter det är inte samma sak som att det är rätt.
+- **Anställningsfrågan.** `foretagsfakta.studiehjalpare_form` står på `oklart` och
+  bolaget är inte arbetsgivarregistrerat. Ordet "löning" lutar åt anställning, och
+  i så fall är `payouts` ett underlag till en löneköring, inte en betalning. Ingen
+  utbetalning får ske innan det är utrett.
 - **Moms.** Ni är inte momsregistrerade. Passerar ni omsättningsgränsen ändras vad
   379 kr betyder, och då ändras beloppet som går till Stripe.
 - **`fakturering` är kvar och rör ingenting av det här.** Ett pass som betalats med

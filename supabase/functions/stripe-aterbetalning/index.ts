@@ -8,15 +8,19 @@
 // dashboard och kommer ihåg att kryssa i båda rutorna, varje gång.
 //
 //
-// TVÅ KRYSS SOM MÅSTE VARA I, OCH VARFÖR
+// INGEN TRANSFER ATT BACKA (sedan Fas 12.5)
 //
-// reverse_transfer: studiehjälparens del ligger redan på HENS konto
-// (destination charge). Utan reversal betalar Nextrum tillbaka hela
-// beloppet till familjen medan hjälparen behåller sin del. Pengarna
-// kommer då ur Nextrums ficka, tyst.
+// Först var betalningen en destination charge, och då behövdes
+// reverse_transfer och refund_application_fee: hjälparens del låg på
+// hens konto och måste dras tillbaka. Den vägen är borta. Hela
+// beloppet ligger hos Nextrum, så en vanlig återbetalning räcker, och
+// de två flaggorna hade Stripe avvisat som meningslösa på en betalning
+// utan destination.
 //
-// refund_application_fee: annars behåller Nextrum sin avgift på ett
-// pass som aldrig blev av. Det är inte en intäkt, det är en skuld.
+// Att ett pass återbetalas betyder däremot att det inte ska hamna på
+// studiehjälparens underlag den 25:e. Det sköts av att passet aldrig
+// blir genomfört utan rapport — ett avbokat pass får ingen rapport,
+// och utan rapport kommer det inte med i månadskörningen.
 //
 //
 // FUNKTIONEN SÄTTER INGET LÄGE UR EGET HUVUD
@@ -101,9 +105,6 @@ Deno.serve(async (req) => {
     const aterbetalning = await v1('POST', '/v1/refunds', {
       payment_intent: pass.stripe_payment_intent_id,
       amount: belopp,
-      // De två kryssen. Se filhuvudet.
-      reverse_transfer: true,
-      refund_application_fee: true,
       metadata: { booking_id: pass.id, av: vem.anvandare, anledning },
     // Nyckeln bär passet OCH beloppet: två klick på samma knapp ger en
     // återbetalning, men en andra, avsiktlig delåterbetalning på ett
