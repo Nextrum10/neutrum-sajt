@@ -420,7 +420,25 @@ De två andra ska ha JWT-kravet kvar: de anropas av en inloggad person.
 
 ### 9.4 Webhooken
 
-Stripe → Developers → Webhooks → Add endpoint. Adressen är:
+Stripe → Developers → Webhooks → Add endpoint.
+
+**Omfång: "Ditt konto", aldrig "Anslutna konton".** Den andra rutan ÄR Connect.
+Väljer ni den lyssnar endpointen på konton som inte finns, och ni får noll
+leveranser utan att förstå varför.
+
+**API-versionen ska vara `2025-08-27.basil`**, samma som `_delad/stripe.ts` pinnar.
+Endpointens version bestämmer formen på det Stripe SKICKAR oss; kodens pin
+bestämmer formen på det vi HÄMTAR tillbaka. Två versioner i samma integration är
+samma sorts glidning som `@2` på esm.sh var (se filhuvudet i `_delad/auth.ts`).
+Dashboarden föreslår kontots förval, som är nyare. Ändra den.
+
+Går inte basil att välja: fälten funktionen läser (`payment_status`,
+`client_reference_id`, `payment_intent`, `amount_refunded`, `amount`, `charge`,
+`status`) är grundfält som sällan rör sig, men **det är inte kontrollerat mot
+referensen** — miljön som skrev det här når inte `docs.stripe.com`. Flytta i så
+fall kodens pin i stället, medvetet, och kör provlistan i 9.6 om.
+
+Adressen är:
 
 ```
 https://ddkfiuvcppalutfulvbi.supabase.co/functions/v1/stripe-webhook
@@ -473,14 +491,17 @@ Slå också på kvitton: Stripe → Settings → Emails → Successful payments.
 I den här ordningen, för varje steg beror på det förra:
 
 1. **Boka ett pass och bekräfta det.** Betala-knappen ska dyka upp först då.
-4. **Betala med testkortet** `4242 4242 4242 4242`, valfritt framtida datum.
-5. **Kontrollera i databasen** att `betalning_status = 'betald'` och att
+2. **Betala med testkortet** `4242 4242 4242 4242`, valfritt framtida datum.
+3. **Kontrollera i databasen** att `betalning_status = 'betald'` och att
    `betalt_ore` stämmer med vad familjen faktiskt betalade.
-6. **Prova 3D Secure** med `4000 0027 6000 3184`.
-7. **Prova ett nekat kort** med `4000 0000 0000 0002` och se att passet blir
+4. **Prova 3D Secure** med `4000 0027 6000 3184`.
+5. **Prova ett nekat kort** med `4000 0000 0000 0002` och se att passet blir
    `misslyckad` och går att betala igen.
-8. **Prova en återbetalning**, både hel och delvis, från Ekonomi → Kortbetalningar.
-9. **Prova en tvist** med `4000 0000 0000 0259`.
+6. **Prova en återbetalning**, både hel och delvis, från Ekonomi → Kortbetalningar.
+7. **Prova en tvist** med `4000 0000 0000 0259`.
+
+Säljarens lista hade två prov till: **misslyckad transfer** och **misslyckad
+utbetalning**. Båda gällde anslutna konton och finns inte att prova sedan Fas 12.5.
 
 ### 9.7 Det som inte är löst av att koden finns
 
@@ -495,3 +516,55 @@ I den här ordningen, för varje steg beror på det förra:
   inte vet om betalningen. **Kör inte båda vägarna skarpt samtidigt** — då
   faktureras familjen två gånger. Antingen stängs månadskörningen av, eller så
   byggs urvalet om till att hoppa över pass med `betalning_status = 'betald'`.
+
+### 9.8 Säljarens MVP-checklista, punkt för punkt
+
+Rekommendationen kom från en säljare på Stripe. Den står här ordagrant med sitt
+läge, för att den annars bara finns i en chatt — och det är precis så
+notissystemet en gång hamnade utanför repot (CLAUDE.md avsnitt 7).
+
+**Fem av tolv punkter utgår**, alla av samma skäl: de förutsätter att
+studiehjälparen är mottagare hos Stripe. Det är hen inte. Hen får löning den 25:e.
+
+| # | Punkten | Läge |
+|---|---|---|
+| 1 | Skapa svenskt Stripe-konto och aktivera Connect | Kontot finns. **Connect utgår** |
+| 2 | Bestäm SKRIFTLIGT att Nextrum äger kundrelationen för betalningen | **Klar.** `anvandarvillkor.html` och `en/anvandarvillkor.html` |
+| 3 | Accounts v2 recipient-konton med Express Dashboard | **Utgår.** Byggt i 12.1, borttaget i 12.5 |
+| 4 | Stripe-hostad onboarding av studiehjälpare | **Utgår.** Samma |
+| 5 | Blockera betalning tills kontot kan ta emot överföringar | **Utgår.** Var `stripe_kan_ta_emot`, kolumnen står kvar märkt OANVÄND |
+| 6 | Checkout i SEK, kort som första betalningsmetod | **Klar i kod**, aldrig körd mot Stripe |
+| 7 | Destination charges och `application_fee_amount` | **Utgår.** Borttaget i 12.5 |
+| 8 | Byt till separate charges and transfers om ersättningen frisläpps efter lektionen | **Besvarad med ett tredje svar.** Se nedan |
+| 9 | Verifierade webhooks, återbetalning med transfer reversal, process för korttvister | **Delvis.** Se nedan |
+| 10 | Statement descriptor och kvitton | **Delvis.** Koden sätter suffixet, grunddelen och kvittona sätts i Stripe. Se 9.5 |
+| 11 | Prova hela kedjan i testläge | **Inte gjord.** Se 9.6 |
+| 12 | Svensk juridik- och skattegenomgång, särskilt minderåriga | **Inte gjord**, och viktigare nu än förut. Se nedan |
+
+**Punkt 8 var säljarens egen slutfråga**, och han satte den rätt: den avgjorde
+allt annat. Men svaret var varken "direkt" eller "efter genomförd lektion". Det
+var **den 25:e, som en löning**, och då ska Stripe inte vara med i den delen alls.
+Varken destination charges eller separate charges and transfers. `payouts` och
+månadskörningen gör jobbet, och `fakturering` räknar ersättningen ur rapporten.
+
+**Punkt 9 är tre saker, och bara två av dem är kod.**
+Webhooken är klar: signaturen prövas i konstant tid på den råa kroppen, och
+`stripe_handelser` är taket mot dubbletter. Återbetalningen är klar, men UTAN
+`reverse_transfer` och `refund_application_fee` — det finns ingen transfer att
+backa, och Stripe hade avvisat flaggorna som meningslösa. Koden markerar en tvist
+som `tvist` på passet. **Processen runt tvisten finns inte:** att samla
+bokningsbekräftelse och närvaro, svara inom tidsfristen, och ha en reserv. Det är
+människoarbete, inte kod, och ingen har gjort det.
+
+**Punkt 12 blev inte enklare av att Connect försvann, bara annorlunda.**
+Säljaren varnade för minderåriga studiehjälpare: Stripes svenska avtal kräver en
+vuxen representant för den som är 13–17. Den varningen gäller inte längre, för
+ingen studiehjälpare har ett Stripe-konto. **Men det juridiska problemet blev
+större, inte mindre.** Är ersättningen en löning är det arbetsrätt och
+arbetsgivaravgifter för minderåriga, och bolaget är inte arbetsgivarregistrerat.
+Det är svårare än en onboardingblankett var.
+
+Däremot försvann sannolikt DAC7-frågan säljaren tog upp: plattformsrapportering
+gäller plattformar som förmedlar säljares inkomst, och betalar ni lön är det
+arbetsgivardeklaration i stället. **Det är juristens bedömning, inte vår** — den
+står här bara för att frågan inte ska utredas från noll en gång till.
