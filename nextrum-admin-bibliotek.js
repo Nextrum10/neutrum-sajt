@@ -3,9 +3,17 @@
 
    Nextrums egen bank av övningar, sorterad på ämne och årskurs.
    Studiehjälparen HÄMTAR härifrån och ger materialet som läxa; hen
-   laddar aldrig upp hit. Det är hela poängen: ett bibliotek som vem
-   som helst fyller på är inte ett urval, och då är filtret på ämne
-   och årskurs ingenting värt.
+   laddar aldrig upp i BANKEN. Det är hela poängen: ett bibliotek som
+   vem som helst fyller på är inte ett urval, och då är filtret på
+   ämne och årskurs ingenting värt.
+
+   Sedan Fas 13.3 rymmer tabellen två sorter, skilda av `delad`:
+   bankens rader (delad = true, bara admin skriver) och
+   studiehjälparnas egna (delad = false, bara ägaren ser och ändrar).
+   Adminvyn ser båda — den här listan är alltså inte bara banken, och
+   kolumnen Vems säger vilket. En rad går att LYFTA IN i banken
+   härifrån, aldrig därifrån: kunde studiehjälparen dela själv vore
+   kureringen en artighet, inte en regel.
 
    Varför inte `materials`: den tabellen är ELEVENS. student_id är
    NOT NULL, skrivpolicyn kräver is_my_student() och hinken
@@ -24,7 +32,7 @@
   const { bekräfta, medan } = NXStudie;
   const M = NXMedia;
 
-  const { S, kortDatum, matchar, namnFör, tabell, tomtText } = NXAdmin;
+  const { S, kortDatum, matchar, namnFör, pill, tabell, tomtText } = NXAdmin;
 
   /* Fil eller länk. Samma val som studiehjälparens materialruta, och
      med flit utan "anteckning": en anteckning utan fil och utan
@@ -66,8 +74,10 @@
     const sök = ($('#bib-sok') || {}).value || '';
     const fAmne = ($('#bib-filter-amne') || {}).value || '';
     const fAk = ($('#bib-filter-ak') || {}).value || '';
+    const fVems = ($('#bib-filter-vems') || {}).value || '';
     const alla = S.bibliotek || [];
     const rader = alla
+      .filter(b => !fVems || (fVems === 'delad' ? b.delad : !b.delad))
       .filter(b => !fAmne || b.amne === fAmne)
       .filter(b => !fAk || b.arskurs === fAk)
       .filter(b => matchar(b, ['titel', 'beskrivning', 'amne'], sök.trim()));
@@ -84,10 +94,19 @@
       { namn: 'Innehåll', rita: b => b.filvag
         ? 'Fil'
         : '<span title="' + esc(b.lank || '') + '">Länk</span>' },
+      { namn: 'Vems', rita: b => b.delad
+        ? pill('Nextrums', 'ar-klar')
+        : pill('Eget: ' + (namnFör(b.skapad_av) || 'okänd'), 'ar-ny') },
       { namn: 'Tillagd', rita: b => '<span class="adm-tal">' + esc(kortDatum(b.created_at)) + '</span>'
         + (b.skapad_av ? '<span class="adm-und">' + esc(namnFör(b.skapad_av)) + '</span>' : '') },
       { namn: '', höger: true, rita: b =>
         '<button class="btn btn-ghost btn-sm" data-bib-oppna="' + esc(b.id) + '">Öppna</button>'
+        /* Vägen in i banken. Bara hitåt: en delad rad går inte att
+           lämna tillbaka till en enskild ägare, för då hade femtio
+           studiehjälpare som redan gett den som läxa plötsligt tappat
+           den ur sin lista. Ska den bort ur banken är det Stäng av. */
+        + (b.delad ? '' : ' <button class="btn btn-ghost btn-sm" data-bib-dela="'
+            + esc(b.id) + '">Lyft in i banken</button>')
         /* Avstängd i stället för borttagen är förstahandsvalet: en
            läxa kan peka på raden, och ett övningsblad som försvinner
            mitt i veckan är en läxa som inte går att göra. Aktiv=false
@@ -95,7 +114,7 @@
         + ' <button class="btn btn-ghost btn-sm" data-bib-aktiv="' + esc(b.id) + '">'
         + (b.aktiv ? 'Stäng av' : 'Slå på') + '</button>'
         + ' <button class="btn btn-ghost btn-sm" data-bib-bort="' + esc(b.id) + '">Ta bort</button>' }
-    ], rader, tomtText(sök || fAmne || fAk,
+    ], rader, tomtText(sök || fAmne || fAk || fVems,
       'Inget material matchar filtret',
       'Biblioteket är tomt. Lägg till det första ovan.'));
 
@@ -125,7 +144,7 @@
     $('#bib-fil-namn').textContent = f ? f.name : 'Ingen fil vald';
   });
 
-  ['#bib-sok', '#bib-filter-amne', '#bib-filter-ak'].forEach(id => {
+  ['#bib-sok', '#bib-filter-amne', '#bib-filter-ak', '#bib-filter-vems'].forEach(id => {
     const el = $(id);
     if (el) el.addEventListener('input', ritaBibliotek);
   });
@@ -221,6 +240,35 @@
       const url = await M.signera('bibliotek', b.filvag);
       if (!url) { alert('Filen gick inte att öppna. Den kan ha tagits bort ur hinken.'); return; }
       window.open(url, '_blank', 'noopener');
+    });
+  });
+
+  /* ---- lyft in ett eget material i banken ----
+     Admin är enda vägen. Policyn i databasen har `not delad` i både
+     using och with check på studiehjälparens uppdatering, så det här
+     går inte att göra från studiehjälparvyn hur knappen än ritas. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-bib-dela]');
+    if (!knapp) return;
+    const b = (S.bibliotek || []).find(x => x.id === knapp.dataset.bibDela);
+    if (!b) return;
+
+    const ja = await bekräfta({
+      titel: 'Lyft in ' + b.titel + ' i banken?',
+      text: 'Materialet blir synligt för ALLA godkända studiehjälpare, och ' 
+        + (namnFör(b.skapad_av) || 'den som gjorde det')
+        + ' kan inte längre ändra eller ta bort det — banken sköts härifrån. '
+        + 'Fråga personen först om det är deras eget arbete.',
+      knapp: 'Lyft in i banken'
+    });
+    if (!ja) return;
+
+    await medan(knapp, '…', async () => {
+      const { error } = await supa.from('biblioteksmaterial')
+        .update({ delad: true }).eq('id', b.id);
+      if (error) { alert('Kunde inte lyfta in: ' + felText(error)); return; }
+      b.delad = true;
+      ritaBibliotek();
     });
   });
 

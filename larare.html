@@ -621,11 +621,12 @@
                   <h5>Läxor <em id="lax-antal"></em></h5>
                   <div class="vy-knapprad" style="margin-top:0;margin-bottom:16px">
                     <button class="btn btn-primary btn-sm" type="button" id="ny-lax">Ny läxa</button>
-                    <!-- Nextrums delade materialbank (Fas 13.2). Du hämtar
-                         härifrån; du laddar inte upp hit. Vill du lägga
-                         till eget material till just den här eleven är det
-                         fliken Material bredvid. -->
-                    <button class="btn btn-ghost btn-sm" type="button" id="bib-hamta">Ur biblioteket</button>
+                    <!-- Vägen till materialet går genom fliken Material
+                         bredvid (Fas 13.3). Knappen "Ur biblioteket" satt
+                         här i 13.2, när Material var något annat — två
+                         ingångar till samma sak, varav den ena låg på fel
+                         flik. -->
+                    <a class="btn btn-ghost btn-sm" href="#laxor/material">Hämta ur materialet</a>
                   </div>
 
                   <form id="lax-form" class="vy-fall" hidden>
@@ -665,59 +666,99 @@
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="material"
              id="panel-material" aria-labelledby="flik-material" hidden>
-                <!-- ============ MATERIAL ============ -->
+                <!-- ============================================================
+                     MATERIAL (Fas 13.3)
+
+                     Var en uppladdning per elev till `materials`. De raderna
+                     nådde ingen familj sedan föräldravyns materialflik togs
+                     bort i 13.2 — en uppladdning som såg ut att fungera och
+                     inte gjorde det.
+
+                     Nu är fliken biblioteket. Två sorter i samma lista:
+                     Nextrums gemensamma bank, som bara admin fyller på, och
+                     ditt eget, som bara du ser. Båda kopplas till en elev på
+                     samma sätt — genom en läxa. Det är läxan som gör
+                     materialet synligt för familjen, inte uppladdningen.
+                     ============================================================ -->
                 <div class="dbox">
                   <h5>Material <em id="mat-antal"></em></h5>
+                  <p class="xsmall" style="margin:0 0 14px;line-height:1.6;color:var(--muted-2)">
+                    Nextrums material och ditt eget. Välj något och ge det som läxa — det är
+                    så det når familjen.</p>
 
-                  <div class="mat-typ" id="mat-typ" role="group" aria-label="Vad vill du lägga till?">
-                    <button type="button" data-mtyp="fil" aria-pressed="true">Fil</button>
-                    <button type="button" data-mtyp="lank" aria-pressed="false">Länk</button>
-                    <button type="button" data-mtyp="anteckning" aria-pressed="false">Anteckning</button>
+                  <div class="mat-typ" id="bib-agare" role="group" aria-label="Vems material">
+                    <button type="button" data-bagare="" aria-pressed="true">Allt</button>
+                    <button type="button" data-bagare="delad" aria-pressed="false">Nextrums</button>
+                    <button type="button" data-bagare="eget" aria-pressed="false">Mitt eget</button>
                   </div>
 
-                  <form id="mat-form">
+                  <div class="bib-filter">
+                    <input class="inp" id="bl-sok" type="search" placeholder="Sök rubrik" aria-label="Sök i materialet" autocomplete="off">
+                    <select class="sel" id="bl-amne" aria-label="Ämne"></select>
+                    <select class="sel" id="bl-ak" aria-label="Årskurs"></select>
+                    <button class="btn btn-ghost btn-sm" type="button" id="bib-eget-ny">Lägg till eget material</button>
+                  </div>
+
+                  <!-- Formuläret för eget material. Fällt ihop tills man
+                       trycker: den vanliga handlingen här är att LETA, inte
+                       att lägga till. -->
+                  <form id="bib-eget-form" class="vy-fall" hidden>
                     <div class="vy-form-rad">
                       <div class="pay-field">
-                        <label for="mt-titel">Rubrik</label>
-                        <input class="inp" id="mt-titel" maxlength="200" placeholder="t.ex. Övningsblad ekvationer">
+                        <label for="be-titel">Rubrik</label>
+                        <input class="inp" id="be-titel" maxlength="200" placeholder="t.ex. Övningsblad ekvationer">
                       </div>
                       <div class="pay-field">
-                        <label for="mt-amne">Ämne <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
-                        <input class="inp" id="mt-amne" placeholder="t.ex. Matematik">
+                        <label for="be-amne">Ämne</label>
+                        <select class="sel" id="be-amne"></select>
+                      </div>
+                      <div class="pay-field">
+                        <label for="be-arskurs">Årskurs</label>
+                        <select class="sel" id="be-arskurs"></select>
                       </div>
                     </div>
 
-                    <div class="fgroup" id="mt-fil-grupp" style="margin-top:12px">
-                      <label for="mt-fil">Fil</label>
+                    <div class="fgroup" style="margin-top:12px">
+                      <label for="be-beskrivning">Beskrivning <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
+                      <textarea class="inp" id="be-beskrivning" style="min-height:70px" placeholder="Vad det övar på, hur lång tid det tar."></textarea>
+                    </div>
+
+                    <div class="mat-typ" id="be-typ" role="group" aria-label="Fil eller länk">
+                      <button type="button" data-betyp="fil" aria-pressed="true">Fil</button>
+                      <button type="button" data-betyp="lank" aria-pressed="false">Länk</button>
+                    </div>
+
+                    <div class="fgroup" id="be-fil-grupp" style="margin-top:12px">
+                      <label for="be-fil">Fil</label>
                       <div class="nx-fil">
-                        <input type="file" id="mt-fil"
+                        <input type="file" id="be-fil"
                                accept=".pdf,.doc,.docx,.txt,image/jpeg,image/png,image/webp">
-                        <label class="nx-fil-knapp" for="mt-fil">
+                        <label class="nx-fil-knapp" for="be-fil">
                           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14V4M6.5 7.5 10 4l3.5 3.5M4 15.5v1A1.5 1.5 0 0 0 5.5 18h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
                           Välj fil
                         </label>
-                        <span class="nx-fil-namn" id="mt-fil-namn">Ingen fil vald</span>
+                        <span class="nx-fil-namn" id="be-fil-namn">Ingen fil vald</span>
                       </div>
                       <p class="nx-fil-hjalp">PDF, Word, text eller bild. Högst 10 MB.</p>
                     </div>
 
-                    <div class="fgroup" id="mt-lank-grupp" hidden style="margin-top:12px">
-                      <label for="mt-lank">Adress</label>
-                      <input class="inp" id="mt-lank" type="url" placeholder="https://…">
+                    <div class="fgroup" id="be-lank-grupp" hidden style="margin-top:12px">
+                      <label for="be-lank">Adress</label>
+                      <input class="inp" id="be-lank" type="url" placeholder="https://…">
                     </div>
 
-                    <div class="fgroup" id="mt-text-grupp" hidden style="margin-top:12px">
-                      <label for="mt-text">Anteckningen</label>
-                      <textarea class="inp" id="mt-text" style="min-height:100px" placeholder="Det eleven ska ha framme när hen övar."></textarea>
-                    </div>
+                    <p class="xsmall" style="margin:12px 0 0;line-height:1.6;color:var(--muted-2)">
+                      Ditt eget material syns bara för dig. Vill du att det ska ligga i
+                      Nextrums gemensamma bank — säg till oss, så lägger vi in det där.</p>
 
                     <div class="vy-knapprad">
-                      <button class="btn btn-primary btn-sm" type="submit" id="mt-spara">Lägg till</button>
+                      <button class="btn btn-primary btn-sm" type="submit" id="be-spara">Lägg till</button>
+                      <button class="btn btn-ghost btn-sm" type="button" id="be-avbryt">Avbryt</button>
                     </div>
-                    <p class="ok-msg" id="mt-msg"></p>
+                    <p class="ok-msg" id="be-msg"></p>
                   </form>
 
-                  <div id="mat-lista" style="margin-top:20px"><div class="loading">Hämtar</div></div>
+                  <div class="bib-lista" id="bl-lista" style="margin-top:16px"><div class="loading">Hämtar</div></div>
                 </div>
         </div>
       </section>

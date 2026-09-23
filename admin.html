@@ -818,7 +818,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Material</h2>
-              <p>Biblioteket studiehjälparna hämtar ur. Ett ämne och en årskurs per post — det är de två studiehjälparen filtrerar på när hen letar åt sin elev.</p>
+              <p>Nextrums bank, som studiehjälparna hämtar ur. Ett ämne och en årskurs per post — det är de två de filtrerar på när de letar åt sin elev. Här syns också deras egna material, som bara de själva ser tills du lyfter in det.</p>
             </div>
           </div>
 
@@ -880,6 +880,14 @@
               <input class="inp adm-sok" id="bib-sok" type="search" placeholder="Sök rubrik eller beskrivning" aria-label="Sök i biblioteket" autocomplete="off">
               <select class="sel" id="bib-filter-amne" aria-label="Filtrera på ämne"></select>
               <select class="sel" id="bib-filter-ak" aria-label="Filtrera på årskurs"></select>
+              <!-- Listan rymmer två sorter sedan Fas 13.3: bankens rader
+                   och studiehjälparnas egna. Utan filtret blandas de, och
+                   "hur stor är banken?" går inte att svara på. -->
+              <select class="sel" id="bib-filter-vems" aria-label="Filtrera på vems material">
+                <option value="">Allt material</option>
+                <option value="delad">Nextrums bank</option>
+                <option value="eget">Studiehjälparnas egna</option>
+              </select>
               <span class="small" id="bib-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
             <div id="bib-tabell"><div class="loading">Hämtar</div></div>

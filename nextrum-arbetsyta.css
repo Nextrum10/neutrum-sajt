@@ -2698,6 +2698,21 @@ a:has(> .adm-status){
 }
 .bib-kort-knappar{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
 
+/* Vems materialet är (Fas 13.3). Ditt eget får en vänsterkant i
+   stället för en till etikett: listan blandar de två sorterna, och
+   ögat ska kunna skumma den utan att läsa varje märke. */
+.bib-agare{
+  margin-left:auto;
+  font-family:var(--f-mono);font-size:.68rem;
+  color:var(--bl-3);white-space:nowrap;
+}
+.bib-kort.ar-eget{border-left:3px solid var(--acc-line)}
+.bib-kort.ar-eget .bib-agare{color:var(--acc-text)}
+
+/* Knappen "Lägg till eget material" hör till filterraden men är en
+   handling, inte ett filter — därför sist och skild från resten. */
+.bib-filter .btn{margin-left:auto;flex:none}
+
 /* Kontaktrutan behöver mer bredd än en ja/nej-fråga: man skriver ett
    helt mejl i den, och en textarea på 320 px gör varje mening till
    fyra rader. */
