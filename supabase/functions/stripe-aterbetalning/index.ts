@@ -85,6 +85,21 @@ Deno.serve(async (req) => {
       }, 409, CORS);
     }
 
+    /* Sedan Fas 14.1 skrivs betalt_ore av webhooken, inte av
+       stripe-checkout, och den kan alltså vara null om leveransen
+       aldrig kom fram — till exempel innan STRIPE_WEBHOOK_SECRET var
+       satt. Utan den här grenen hade `Number(null ?? 0)` gett 0 och
+       svaret blivit "Hela beloppet är redan återbetalt" om en
+       betalning som tvärtom är orörd. Ett fel som ljuger åt fel håll
+       är värre än ett som säger vad som saknas. */
+    if (pass.betalt_ore === null || pass.betalt_ore === undefined) {
+      return json({
+        error: 'Passet saknar betalt belopp från Stripe, så det finns inget tak att återbetala mot. '
+          + 'Kontrollera att webhooken tar emot leveranser, eller återbetala i Stripes dashboard — '
+          + 'charge.refunded skriver då siffran när den kommer.',
+      }, 409, CORS);
+    }
+
     const betalt = Number(pass.betalt_ore ?? 0);
     const redan = Number(pass.aterbetald_ore ?? 0);
     const kvar = betalt - redan;
