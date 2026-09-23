@@ -2668,6 +2668,36 @@ a:has(> .adm-status){
   .ans-steg{flex-direction:column;gap:8px}
 }
 
+/* ============================================================
+   BIBLIOTEKSVÄLJAREN i studiehjälparvyn (Fas 13.2)
+
+   Kort, inte en tabell. Beskrivningen är det som avgör om man
+   väljer materialet eller inte, och den ryms inte i en cell.
+   ============================================================ */
+.bib-filter{
+  display:flex;gap:9px;flex-wrap:wrap;align-items:center;
+  margin:16px 0 12px;
+}
+.bib-filter .inp{flex:1;min-width:150px}
+.bib-filter .small{margin-left:auto;color:var(--bl-3)}
+
+/* Taket finns för att listan inte ska trycka ned Stäng-knappen ur
+   rutan när biblioteket växer. */
+.bib-lista{
+  display:grid;gap:10px;
+  max-height:min(52vh,460px);overflow-y:auto;overscroll-behavior:contain;
+  padding-right:4px;
+}
+.bib-kort{
+  border:1px solid var(--ln);border-radius:12px;padding:13px 15px;
+}
+.bib-kort-topp{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+.bib-kort-topp b{font-size:.96rem}
+.bib-kort p{
+  margin:7px 0 0;font-size:.83rem;line-height:1.6;color:var(--bl-2);
+}
+.bib-kort-knappar{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+
 /* Kontaktrutan behöver mer bredd än en ja/nej-fråga: man skriver ett
    helt mejl i den, och en textarea på 320 px gör varje mening till
    fyra rader. */

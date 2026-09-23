@@ -125,6 +125,61 @@ const NX = (function () {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v || '').trim());
   }
 
+  /* ============================================================
+     ÄMNEN OCH ÅRSKURSER (Fas 13.2)
+
+     Listorna fanns förut på två ställen i JavaScript — BOKA_AMNEN i
+     studievyn och PR_AMNEN i studiehjälparvyn — och de hade redan
+     glidit isär: den ena hade "Annat", den andra hade "Moderna
+     språk" och "Programmering". Så länge de bara fyllde var sin
+     rullgardin spelade det ingen roll.
+
+     Materialbiblioteket gör det till en bugg. Admin väljer ämne ur
+     en lista och studiehjälparen filtrerar ur en annan; ett
+     övningsblad märkt med ett ämne som inte finns i den andra
+     listan blir osynligt, och ett filter som tyst tappar rader ser
+     ut som ett tomt bibliotek.
+
+     KODEN ÄR INTE ETIKETTEN. arskurs lagras som 'ak7', aldrig som
+     "Åk 7": etiketten ska gå att skriva om utan att raderna i
+     databasen byter betydelse. Check-villkoret på
+     biblioteksmaterial.arskurs listar exakt de här koderna. */
+  const AMNEN = ['Matematik', 'Svenska', 'Engelska',
+    'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap',
+    'Moderna språk', 'Programmering'];
+
+  const ARSKURSER = [
+    { kod: 'ak1', text: 'Åk 1' }, { kod: 'ak2', text: 'Åk 2' },
+    { kod: 'ak3', text: 'Åk 3' }, { kod: 'ak4', text: 'Åk 4' },
+    { kod: 'ak5', text: 'Åk 5' }, { kod: 'ak6', text: 'Åk 6' },
+    { kod: 'ak7', text: 'Åk 7' }, { kod: 'ak8', text: 'Åk 8' },
+    { kod: 'ak9', text: 'Åk 9' },
+    { kod: 'gy1', text: 'Gymnasiet år 1' },
+    { kod: 'gy2', text: 'Gymnasiet år 2' },
+    { kod: 'gy3', text: 'Gymnasiet år 3' }
+  ];
+
+  function årskursText(kod) {
+    const a = ARSKURSER.find(x => x.kod === kod);
+    return a ? a.text : (kod || '—');
+  }
+
+  /* students.grade är FRITEXT — den skrivs av familjen i en
+     intresseanmälan ("åk 7", "7:an", "Åk7", "gymnasiet ettan"). Den
+     här gissar koden ur den texten, och gissar hellre inget än fel:
+     ett bibliotek förvalt på fel årskurs är värre än ett utan
+     förval, för då tror den som letar att det inte finns något. */
+  function årskursKod(fritext) {
+    const v = String(fritext || '').toLowerCase();
+    if (!v) return '';
+    if (/gymnasi|gy\b/.test(v)) {
+      const n = (v.match(/[123]/) || [])[0];
+      return n ? 'gy' + n : '';
+    }
+    const n = (v.match(/[1-9]/) || [])[0];
+    return n ? 'ak' + n : '';
+  }
+
   function rensa(el) {
     if (!el) return;
     el.textContent = '';
@@ -879,6 +934,6 @@ const NX = (function () {
     bildIntoning, initVagval,
     hämtaSession, hämtaProfil, vyFörRoll,
     hämtaUpptagna, hämtaTillganglighet, tiderFörDatum, föreslåTider,
-    MANADER, DAGAR, CFG
+    MANADER, DAGAR, CFG, AMNEN, ARSKURSER, årskursText, årskursKod
   };
 })();

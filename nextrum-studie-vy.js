@@ -14,7 +14,7 @@
 
   NX.initHeader();
 
-  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, material: [], minAvatar: null, laxor: [], laxFilter: 'attgora', rapporter: [], progress: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
+  const S = { user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, minAvatar: null, laxor: [], laxFilter: 'attgora', rapporter: [], progress: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
 
   const VYER = ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel'];
   function visa(id) { NXStudie.visaVy(VYER, id); }
@@ -244,8 +244,7 @@
     const val = $('#barn-val');
     if (val && !val.disabled) val.value = S.valtBarn || '';
     ritaBarnväxel();
-    laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); laddaMaterial(); laddaBokning();
-    laddaSyskonMaterial();
+    laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); laddaBokning();
   }
 
   $('#barn-val').addEventListener('change', e => bytBarn(e.target.value));
@@ -267,7 +266,7 @@
 
     const ja = await NXStudie.bekräfta({
       titel: 'Ta bort ' + barn.name + '?',
-      text: 'Allt som hör till barnet försvinner: studieplan, läxor och material. '
+      text: 'Allt som hör till barnet försvinner: studieplan, läxor och rapporter. '
         + 'Har barnet haft pass eller fått rapporter går det inte att ta bort — '
         + 'hör av er till oss i stället.',
       knapp: 'Ta bort'
@@ -370,7 +369,7 @@
     $('#barn-form').reset();
     $('#barn-form').hidden = true;
     await laddaBarn();
-    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPass()]);
+    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass()]);
   });
 
   /* ============================================================
@@ -407,7 +406,8 @@
     host.innerHTML = laddar();
     const { data, error } = await supa
       .from('homework')
-      .select('id, title, instructions, subject, due_date, status, completed_at')
+      .select('id, title, instructions, subject, due_date, status, completed_at, '
+        + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)')
       .eq('student_id', S.valtBarn)
       .order('due_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
@@ -447,9 +447,36 @@
       } else {
         knappar = '<button class="btn btn-ghost btn-sm" data-lax="pagaende" data-id="' + h.id + '">Ångra</button>';
       }
-      return NXStudie.läxRad(h, { atgarder: knappar });
+      return NXStudie.läxRad(h, {
+        /* Materialet läxan bygger på (Fas 13.2). Fliken Material är
+           borttagen — det som hörde till en läxa står nu på läxan,
+           och det som inte hörde till någon läxa fanns det ingen
+           anledning att leta efter. */
+        material: h.biblioteksmaterial ? h.biblioteksmaterial.titel : null,
+        materialKnapp: h.biblioteksmaterial
+          ? '<button type="button" class="btn btn-ghost btn-sm" data-lax-mat="'
+            + esc(h.bibliotek_id) + '">Öppna</button>' : '',
+        atgarder: knappar
+      });
     }).join('');
   }
+
+  /* Materialet från en läxrad. Sökvägen följde med i hämtningen —
+     hinken är privat, så adressen skapas först vid klicket och
+     slutar gälla av sig själv. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-lax-mat]');
+    if (!knapp) return;
+    const h = (S.laxor || []).find(x => x.bibliotek_id === knapp.dataset.laxMat);
+    const b = h && h.biblioteksmaterial;
+    if (!b) return;
+    if (b.lank) { window.open(b.lank, '_blank', 'noopener'); return; }
+    await medan(knapp, '…', async () => {
+      const url = await M.signera('bibliotek', b.filvag, 300);
+      if (!url) { alert('Materialet gick inte att öppna just nu.'); return; }
+      window.open(url, '_blank', 'noopener');
+    });
+  });
 
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-lax]');
@@ -497,37 +524,6 @@
       + NXStudie.progressPerÄmne(data, {}) + '</div>';
   }
 
-  /* ============================================================
-     MATERIAL
-     Läsvy. Filerna ligger i en privat hink, så adressen skapas
-     först när någon klickar och slutar gälla av sig själv.
-     ============================================================ */
-
-  async function laddaMaterial() {
-    await M.laddaMaterial(S, {
-      elev: S.valtBarn,
-      tomElev: ['Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.'],
-      tomLista: ['Inget material än', 'Här samlas övningar, länkar och anteckningar som er studiehjälpare delar.'],
-      filnamn: true
-    });
-    /* Märkena räknas ur S.material, som nu hör till det valda barnet.
-       Står man redan och tittar på listan är det nya sett. */
-    if (materialSynligt()) sågMaterial();
-    ritaÖvLaxor();
-    ritaNotiser();
-  }
-
-  document.addEventListener('click', async e => {
-    const öppna = e.target.closest('[data-mat-oppna]');
-    if (!öppna) return;
-    const m = S.material.find(x => x.id === öppna.dataset.matOppna);
-    if (!m || !m.url) return;
-    await medan(öppna, 'Öppnar…', async () => {
-      const url = await M.signera('material', m.url, 300);
-      if (!url) { alert('Filen kunde inte öppnas. Ladda om sidan och försök igen.'); return; }
-      window.open(url, '_blank', 'noopener');
-    });
-  });
 
   /* ============================================================
      DITT KONTO
@@ -886,24 +882,6 @@
       });
     }
 
-    const nya = nyttMaterial();
-    if (nya.length) {
-      poster.push({
-        rubrik: nya.length > 1 ? nya.length + ' nya material' : 'Nytt material',
-        text: nya.length > 1
-          ? 'Från er studiehjälpare, bland annat "' + (nya[0].title || 'utan titel') + '".'
-          : '"' + (nya[0].title || 'Utan titel') + '" från er studiehjälpare.',
-        mål: '#mat-lista'
-      });
-    }
-    (S.syskonMaterial || []).forEach(x => {
-      poster.push({
-        rubrik: (x.antal > 1 ? x.antal + ' nya material' : 'Nytt material') + ' till ' + x.barn.name,
-        text: 'Byt till ' + x.barn.name + ' i barnväljaren för att se det.',
-        mål: 'section[data-sek="uppgifter"] [data-barnvaxel] select'
-      });
-    });
-
     const idag = isoFor(new Date());
     const brådskande = (S.laxor || []).filter(h => h.status !== 'klar' && h.due_date && h.due_date <= idag);
     if (brådskande.length) {
@@ -1114,79 +1092,9 @@
      att få veta om det ligger något där. */
   function ritaÖvLaxor() {
     const öppna = (S.laxor || []).filter(h => h.status !== 'klar');
-    if (S.sido) S.sido.märke('uppgifter', öppna.length + nyttMaterial().length);
+    if (S.sido) S.sido.märke('uppgifter', öppna.length);
     const mark = $('#flik-lax-mark');
     if (mark) { mark.hidden = !öppna.length; mark.textContent = öppna.length || ''; }
-    const matMark = $('#flik-mat-mark');
-    const nya = nyttMaterial().length;
-    if (matMark) { matMark.hidden = !nya; matMark.textContent = nya || ''; }
-  }
-
-  /* Nytt material: det som kommit sedan familjen senast TITTADE på
-     barnets material — inte sedan senaste inloggningen. last_seen_at
-     stämplas vid varje sidladdning, så med den som gräns lyste
-     notisen en gång och försvann sedan, oavsett om någon öppnat
-     materialet.
-
-     Gränsen sparas per barn i webbläsaren. Första gången (ingen
-     sparad gräns) blir den förra besöket, last_seen_at, som står kvar
-     i S.profil tills sidan laddas om — och sparas direkt, så att
-     den håller över nästa omladdning. Går det inte att spara (privat
-     läge) faller den tillbaka på last_seen_at och sett-markeringen
-     i minnet. Utan någon gräns alls (första besöket) är inget nytt:
-     att allt lyser vid första inloggningen säger ingenting. */
-  const MAT_NYCKEL = 'nx.material-sett.';
-
-  function materialGräns(barnId) {
-    const förra = (S.profil && S.profil.last_seen_at) || null;
-    try {
-      let v = localStorage.getItem(MAT_NYCKEL + barnId);
-      if (!v && förra) { v = förra; localStorage.setItem(MAT_NYCKEL + barnId, v); }
-      return v || null;
-    } catch (e) {
-      return förra;
-    }
-  }
-
-  function ärNytt(m, gräns) {
-    return !!(m.created_at && gräns && Date.parse(m.created_at) > Date.parse(gräns));
-  }
-
-  function nyttMaterial() {
-    if (!S.valtBarn) return [];
-    if (S.materialSett && S.materialSett.has(S.valtBarn)) return [];
-    const gräns = materialGräns(S.valtBarn);
-    return (S.material || []).filter(m => ärNytt(m, gräns));
-  }
-
-  /* Sett per barn: att ha tittat på det ena barnets material säger
-     inget om det andras. */
-  function materialSynligt() {
-    const p = $('section[data-sek="uppgifter"] .vy-flik-panel[data-flik="material"]');
-    return !!p && !p.hidden && !p.closest('[hidden]');
-  }
-  function sågMaterial() {
-    if (!S.valtBarn || !nyttMaterial().length) return false;
-    (S.materialSett = S.materialSett || new Set()).add(S.valtBarn);
-    try { localStorage.setItem(MAT_NYCKEL + S.valtBarn, new Date().toISOString()); } catch (e) { /* bara i minnet */ }
-    return true;
-  }
-
-  /* Syskonen: materialet hämtas bara för det valda barnet, så nytt
-     till ett annat barn syntes aldrig. En liten fråga — bara id,
-     barn och tid — räcker för att säga "nytt material till Alva". */
-  async function laddaSyskonMaterial() {
-    const andra = (S.barn || []).filter(b => b.id !== S.valtBarn);
-    const gränser = andra.map(b => ({ barn: b, gräns: materialGräns(b.id) })).filter(g => g.gräns);
-    if (!gränser.length) { S.syskonMaterial = []; return; }
-    const tidigast = gränser.map(g => g.gräns).sort()[0];
-    const { data, error } = await supa.from('materials').select('student_id, created_at')
-      .in('student_id', gränser.map(g => g.barn.id)).gt('created_at', tidigast);
-    if (error) return;
-    S.syskonMaterial = gränser
-      .map(g => ({ barn: g.barn, antal: (data || []).filter(m => m.student_id === g.barn.id && ärNytt(m, g.gräns)).length }))
-      .filter(x => x.antal);
-    ritaNotiser();
   }
 
   /* Olästa meddelanden: siffra i sidomenyn och undertext på
@@ -1484,11 +1392,7 @@
        och en flikrad som inte finns än hade svalt det anropet. */
     S.flikar = {
       lektioner: NXArbete.flikar($('section[data-sek="lektioner"]')),
-      /* Fliken räknas som öppnad hur man än kom dit: klick, pil-
-         tangent, notisen i klockan eller en länk med #material. */
-      uppgifter: NXArbete.flikar($('section[data-sek="uppgifter"]'), {
-        onByt: v => { if (v === 'material' && sågMaterial()) { ritaÖvLaxor(); ritaNotiser(); } }
-      }),
+      uppgifter: NXArbete.flikar($('section[data-sek="uppgifter"]')),
       profil: NXArbete.flikar($('section[data-sek="profil"]'))
     };
 
@@ -1511,8 +1415,11 @@
     const ALIAS = {
       studieplan: ['lektioner', 'plan'],
       rapporter: ['lektioner', 'rapporter'],
-      material: ['uppgifter', 'material'],
-      laxor: ['uppgifter', 'laxor'],
+      /* #material fanns som en egen flik till Fas 13.2. Materialet
+         hör nu till läxan det gäller, så den gamla adressen landar
+         på läxorna i stället för på ingenting. */
+      material: ['uppgifter', null],
+      laxor: ['uppgifter', null],
       studiehjalpare: ['meddelanden', null],
       installningar: ['profil', 'pris']
     };
@@ -1572,12 +1479,11 @@
     await laddaBarn();
     await laddaTutor();
     startaTråd();
-    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPass(), laddaBokning()]);
-    /* Läxorna och materialet hämtas samtidigt, så märkena ritas om
-       när båda finns — annars räknades nytt material innan det kommit. */
+    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass(), laddaBokning()]);
+    /* Läxorna hämtas först, så märket ritas om när de finns. */
     ritaÖvLaxor();
     ritaNotiser();
-    await Promise.all([ritaÖvSamtal(), laddaBetalning(), laddaSyskonMaterial()]);
+    await Promise.all([ritaÖvSamtal(), laddaBetalning()]);
     supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');

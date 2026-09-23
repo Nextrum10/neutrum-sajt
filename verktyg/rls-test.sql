@@ -1748,6 +1748,122 @@ from unnest(array[
   'public.avvisa_forslag(uuid, text)'
 ]) f;
 
+-- ------------------------------------------------------------
+-- MATERIALBIBLIOTEKET (Fas 13.2)
+--
+-- Biblioteket är KURERAT. Studiehjälparen läser, admin skriver, och
+-- ingen annan ser något. Går den gränsen sönder är det inte en
+-- läcka av personuppgifter men det är slutet på urvalet: ett
+-- bibliotek vem som helst fyller på är en hög filer.
+--
+-- Familjen ska däremot se det material en läxa bygger på. En läxa
+-- vars material ger tomt svar är en läxa som inte går att göra, och
+-- en policy som nekar för mycket ser ut som en tom lista.
+-- ------------------------------------------------------------
+
+insert into public.biblioteksmaterial (id, titel, amne, arskurs, lank, beskrivning) values
+  ('00000000-0000-4000-8000-0000000000e1', 'RLS aktivt material', 'Matematik', 'ak7',
+   'https://exempel.invalid/a', 'Aktivt'),
+  ('00000000-0000-4000-8000-0000000000e2', 'RLS avstängt material', 'Matematik', 'ak7',
+   'https://exempel.invalid/b', 'Avstängt');
+
+update public.biblioteksmaterial set aktiv = false
+where id = '00000000-0000-4000-8000-0000000000e2';
+
+-- Familj P:s äldsta barn får en läxa som pekar på det AVSTÄNGDA
+-- materialet. Med flit: en läxa som redan är given ska inte tappa
+-- sitt material för att biblioteket städats.
+insert into public.homework (id, student_id, tutor_id, title, bibliotek_id) values
+  ('00000000-0000-4000-8000-0000000000e9',
+   '00000000-0000-4000-8000-0000000005a1',
+   '00000000-0000-4000-8000-0000000000a1',
+   'RLS läxa med material',
+   '00000000-0000-4000-8000-0000000000e2');
+
+select pg_temp.rakna('BIB-1 godkänd studiehjälpare ser aktivt material, inte avstängt',
+  '00000000-0000-4000-8000-0000000000a1',
+  'select count(*) from public.biblioteksmaterial where titel like ''RLS %''', 1);
+
+select pg_temp.rakna('BIB-2 admin ser båda',
+  '00000000-0000-4000-8000-0000000000ad',
+  'select count(*) from public.biblioteksmaterial where titel like ''RLS %''', 2);
+
+select pg_temp.rakna('BIB-3 anon ser ingenting',
+  null,
+  'select count(*) from public.biblioteksmaterial where titel like ''RLS %''', 0);
+
+-- Familj P når det avstängda materialet, för deras barn har läxan.
+select pg_temp.rakna('BIB-4 familj når materialet sin läxa bygger på, även avstängt',
+  '00000000-0000-4000-8000-0000000000f1',
+  'select count(*) from public.biblioteksmaterial where id = ''00000000-0000-4000-8000-0000000000e2''', 1);
+
+-- Familj Q har ingen sådan läxa.
+select pg_temp.rakna('BIB-5 annan familj når det inte',
+  '00000000-0000-4000-8000-0000000000f2',
+  'select count(*) from public.biblioteksmaterial where titel like ''RLS %''', 0);
+
+select pg_temp.prova('BIB-6 studiehjälpare kan inte lägga till i biblioteket',
+  '00000000-0000-4000-8000-0000000000a1',
+  array['insert into public.biblioteksmaterial (titel, amne, arskurs, lank)
+         values (''Smyg'', ''Matematik'', ''ak7'', ''https://exempel.invalid/c'')'],
+  'nekad');
+
+select pg_temp.prova('BIB-7 studiehjälpare kan inte ändra i biblioteket',
+  '00000000-0000-4000-8000-0000000000a1',
+  array['update public.biblioteksmaterial set titel = ''Kapad''
+         where id = ''00000000-0000-4000-8000-0000000000e1'''],
+  'nekad');
+
+select pg_temp.prova('BIB-8 familj kan inte lägga till i biblioteket',
+  '00000000-0000-4000-8000-0000000000f1',
+  array['insert into public.biblioteksmaterial (titel, amne, arskurs, lank)
+         values (''Smyg'', ''Matematik'', ''ak7'', ''https://exempel.invalid/d'')'],
+  'nekad');
+
+select pg_temp.prova('BIB-9 admin lägger till',
+  '00000000-0000-4000-8000-0000000000ad',
+  array['insert into public.biblioteksmaterial (titel, amne, arskurs, lank)
+         values (''Adminmaterial'', ''Svenska'', ''gy2'', ''https://exempel.invalid/e'')'],
+  'ok');
+
+-- Predikatet: en familj är inte en godkänd studiehjälpare, och en
+-- okänd uuid är det inte heller.
+insert into utfall (test, ok, detalj)
+select 'BIB-10 ar_godkand_studiehjalpare skiljer på rollerna',
+       public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000a1')
+   and not public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000f1')
+   and not public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-000000000099'),
+       'hjälpare sant, familj falskt, okänd falskt';
+
+-- Check-villkoren. En rad utan innehåll och en årskurs som är
+-- fritext ska båda falla — det är de två sätt biblioteket annars
+-- tyst hade tappat rader på.
+do $$
+declare klar boolean := false;
+begin
+  begin
+    insert into public.biblioteksmaterial (titel, amne, arskurs)
+    values ('Tom', 'Matematik', 'ak7');
+  exception when check_violation then klar := true;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('BIB-11 rad utan fil och länk nekas', klar,
+          case when klar then 'check_violation' else 'gick igenom' end);
+end $$;
+
+do $$
+declare klar boolean := false;
+begin
+  begin
+    insert into public.biblioteksmaterial (titel, amne, arskurs, lank)
+    values ('Fritext', 'Matematik', 'Åk 7', 'https://exempel.invalid/f');
+  exception when check_violation then klar := true;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('BIB-12 årskurs som fritext nekas', klar,
+          case when klar then 'check_violation' else 'gick igenom' end);
+end $$;
+
 select test, ok, detalj from utfall order by nr;
 
 rollback;

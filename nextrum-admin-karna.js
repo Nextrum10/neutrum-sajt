@@ -33,7 +33,7 @@ const NXAdmin = (function () {
     personer: {},      // id → profilrad
     elever: {},        // parent_id → [elevrader]
     tutorProfiler: {}, // id → tutor_profiles-rad
-    leads: [], ansokningar: [], kontakt: [], bokningar: [],
+    leads: [], ansokningar: [], kontakt: [], bokningar: [], bibliotek: [],
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [], notisfel: [],
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
@@ -193,7 +193,7 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit] = await Promise.all([
+           upd, uppg, rt, audit, bib] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -224,10 +224,12 @@ const NXAdmin = (function () {
       supa.from('uppdrag').select('*').order('created_at', { ascending: false }),
       supa.from('uppgifter').select('*').order('created_at', { ascending: false }),
       supa.from('rut_tak').select('*').order('ar', { ascending: false }),
-      supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300)
+      supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300),
+      supa.from('biblioteksmaterial').select('*').order('created_at', { ascending: false })
     ]);
 
     S.leads = leads.data || [];
+    S.bibliotek = bib.data || [];
     S.ansokningar = ans.data || [];
     S.kontakt = kontakt.data || [];
     S.bokningar = bok.data || [];
