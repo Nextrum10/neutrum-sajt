@@ -55,10 +55,33 @@ ett ställe.
 
 ---
 
-## 2. Tre tabeller styr systemet
+## 2. En flagga och tre tabeller styr systemet
 
-Ingen av dem har en skrivpolicy för vanliga användare. Ändra dem med
-SQL eller genom adminvyn.
+Allt fyra ändras under **System → Notiser** i adminvyn. Ingen av
+tabellerna har en skrivpolicy för vanliga användare; admin har både
+policy och kolumnrättigheter, så vyn räcker och SQL behövs inte.
+
+### `flaggor` — strömbrytaren
+
+| Kod | Vad |
+|---|---|
+| `notiser_mejl` | av ⇒ **inget notismejl lämnar systemet** |
+| `notiser_sms` | av ⇒ inga SMS, och på räcker inte heller: `sms_lage` måste stå på `skicka` |
+
+**Det här är det första stället att titta när ingenting kommer fram.**
+Står `notiser_mejl` av lämnar `notis_utskick_ta()` inte ut en enda
+mejlrad — raden märks `loggad`, notisen syns i vyn, och triggrarna,
+kön, schemat och arbetaren fortsätter se friska ut, för det är de.
+Flaggan stod av i månader efter Runda 2 utan att det gick att se
+någonstans i produkten. Ett avstängt system och ett trasigt system ser
+likadana ut inifrån.
+
+`loggad` är ett slutläge. Mejlen som aldrig gick under en avstängning
+går inte att skicka i efterhand, och ska inte heller — en påminnelse om
+ett pass förra veckan är inte en notis.
+
+Varje flagga bär också `vantar_pa`: vad som ska vara avgjort innan
+någon slår på den. Adminvyn visar den texten i rutan man klickar ja i.
 
 ### `notis_konfig` — en rad, id = 1
 
@@ -102,6 +125,7 @@ slutar läsa det sjätte.
 ## 3. Utveckla utan att skicka något
 
 **Sätt sandlådan först. Gör det innan du rör något som köar.**
+Enklast i adminvyn: **System → Notiser → Sandlådan**. Med SQL:
 
 ```sql
 update public.notis_drift set mejl_sandlada = 'du@example.se' where id = 1;
@@ -227,10 +251,13 @@ Tre regler som inte är förhandlingsbara:
 
 ## 6. När något inte kommer fram
 
-Titta i den här ordningen:
+**System → Notiser i adminvyn svarar på alla fyra frågorna nedan på
+en skärm** — flaggan, sandlådan, schemat, kön och de tio senaste
+körningarna. Börja där. Med SQL, i den här ordningen:
 
 | Vad | Fråga |
 |---|---|
+| Strömbrytaren | `select kod, aktiv from flaggor;` |
 | Kön | `select status, count(*) from notis_utskick group by 1;` |
 | Körningarna | `select * from notis_korningar order by tid desc limit 10;` |
 | Felen | `select * from notis_fel order by skapad desc limit 20;` |
@@ -241,6 +268,11 @@ säger om körningen avbröts på ett kontofel hos Resend, om
 tidsgränsen nåddes, och hur många rader som lämnades tillbaka.
 
 Vanliga svar:
+
+- **Allt i kön står `loggad` och `notis_korningar` visar noll
+  behandlade** — flaggan `notiser_mejl` är av. Arbetaren väcks, får
+  noll rader och rapporterar noll, för databasen märkte raderna innan
+  den lämnade ut dem. Ingenting är trasigt; ingenting är påslaget.
 
 - **`Resend 401` eller `403`** — nyckeln eller avsändardomänen.
   Gäller varje mejl, så körningen avbryts med flit i stället för att

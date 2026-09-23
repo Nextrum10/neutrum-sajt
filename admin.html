@@ -1689,6 +1689,9 @@
             <button class="vy-flik" type="button" role="tab" data-flik="fel"
                     id="flik-fel" aria-controls="panel-fel">Fel
               <span class="vy-flik-mark" id="flik-fel-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="notiser"
+                    id="flik-notiser" aria-controls="panel-notiser">Notiser
+              <span class="vy-flik-mark" id="flik-notiser-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="installningar"
                     id="flik-installningar" aria-controls="panel-installningar">Inställningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="dokument"
@@ -1761,6 +1764,98 @@
                 senaste timmarna", inte "aldrig något".
               </p>
               <div id="notis-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- ============ NOTISER (Fas 13.4) ============
+               Reglaget som saknades. Hela notisvägen byggdes i
+               Runda 2 — triggrar, kö, pg_cron, arbetare, mallar —
+               men strömbrytaren låg bara i tabellen flaggor, och
+               ingen fil i repot nämnde den tabellen. Utskicken stod
+               alltså av i månader utan att det gick att se någonstans
+               i produkten. Ett avstängt system och ett trasigt system
+               ser likadana ut inifrån; den här fliken är skillnaden.
+
+               Ordningen på rutorna är ordningen man ska gå i:
+               sandlådan först, sedan ett prov, sedan strömbrytaren.
+               Att slå på först och prova sedan är hur man mejlar
+               riktiga familjer av misstag. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="notiser"
+               id="panel-notiser" aria-labelledby="flik-notiser" hidden>
+
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Vägen ett notismejl tar</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7">
+                Ett pass bokas eller flyttas, ett meddelande skrivs, en påminnelse blir aktuell.
+                Databasen skriver notisen i vyn och lägger ett utskick i kön. En gång i minuten
+                väcker schemat arbetaren, som skickar det som väntar. Databasen bestämmer,
+                arbetaren skickar — står det stilla är det nästan alltid strömbrytaren nedan,
+                inte arbetaren.
+              </p>
+              <div id="nd-halsa" style="margin-top:14px"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Sandlådan</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Är en adress satt går VARJE notismejl dit i stället för till mottagaren,
+                ämnesraden märks som prov och avregistreringslänken stängs av — en äkta länk
+                i ett prov hade stängt av en familjs mejl på riktigt. Sätt den innan du rör
+                något som köar, och töm den när du är klar.
+              </p>
+              <form id="nd-sandlada-form" class="uppg-form" novalidate>
+                <div class="fgroup uppg-bred">
+                  <label for="nd-sandlada">Adress som tar emot allt</label>
+                  <input class="inp" id="nd-sandlada" type="email" maxlength="200"
+                         autocomplete="off" placeholder="tom ruta = sandlådan är av">
+                </div>
+                <div class="uppg-fot">
+                  <button class="btn btn-primary btn-sm" type="submit">Spara sandlådan</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="nd-sandlada-bort">Stäng av sandlådan</button>
+                  <p class="ok-msg" id="nd-sandlada-msg" style="margin:0"></p>
+                </div>
+              </form>
+            </div>
+
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Prova</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Provmejlen går till DIN inloggade adress, ett per mejlbar notistyp, och struntar
+                i strömbrytaren — det är så man ser att avsändardomänen, nyckeln och mallarna
+                fungerar innan något går till en familj. Kolla att de kom fram och att de inte
+                hamnade i skräpposten.
+              </p>
+              <div class="adm-verktyg">
+                <button class="btn btn-ghost btn-sm" type="button" data-nd-prov="parent">Provmejl som familj</button>
+                <button class="btn btn-ghost btn-sm" type="button" data-nd-prov="tutor">Provmejl som studiehjälpare</button>
+                <button class="btn btn-ghost btn-sm" type="button" id="nd-kor">Kör kön nu</button>
+              </div>
+              <p class="ok-msg" id="nd-prov-msg" style="margin-top:12px"></p>
+            </div>
+
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Strömbrytarna</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
+                En flagga är ett beslut som inte är fattat. Därför står det både vad den slår på
+                och vad som ska vara avgjort först — den som slår på ska se varför den var av.
+                Av är förvalet, och en flagga som saknas räknas som av.
+              </p>
+              <div id="nd-flaggor"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox">
+              <h5>Kön <em id="nd-ko-antal"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
+                Räknat i databasen, inte här i webbläsaren. <b>Loggad</b> betyder att raden
+                skapades men aldrig skickades, för att mejlen var avstängda — de raderna är
+                färdiga och går inte att skicka i efterhand.
+              </p>
+              <div class="adm-verktyg" style="margin-bottom:14px">
+                <button class="btn btn-ghost btn-sm" type="button" id="nd-uppdatera">Uppdatera</button>
+              </div>
+              <div id="nd-ko"><div class="loading">Hämtar</div></div>
+              <h6 style="margin-top:22px">Tio senaste körningarna</h6>
+              <div id="nd-korningar"></div>
             </div>
           </div>
 
