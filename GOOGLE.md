@@ -107,43 +107,72 @@ inte att ändra något.
 
 ## Del 2 — Loggan
 
-Google visar **faviconen** bredvid söketräffen. Den som ligger där nu
-är en förenklad version av märket, inte den riktiga logotypen.
+Google visar loggan på två ställen, och de läses ur två olika saker:
 
-### Steg 1. Spara filen
+| Var | Läses ur | I dag |
+|---|---|---|
+| Den lilla ikonen bredvid träffen | `<link rel="icon">` på startsidan | `favicon.svg` plus `favicon-48.png` och `favicon-96.png` |
+| Kunskapspanelen till höger | `logo` i den strukturerade datan | `bilder/nextrum-logo-512.png` |
 
-Spara den kvadratiska loggan som:
+Alla är samma märke som i sidhuvudet: N:et i den rundade rutan, bark
+och lin. PNG:erna renderades ur `favicon.svg` 2026-09-23.
 
-```
-bilder/nextrum-logo.png
-```
+### Det här var fel före 2026-09-23
 
+- **`logo` pekade på `favicon.svg` och påstod att den var 512×512.**
+  Filen säger själv `width="26" height="26"`. Google kräver minst
+  112×112 pixlar för loggan, och hur Google räknar storleken på en
+  SVG står ingenstans. En PNG i den storlek datan påstår lämnar
+  ingenting åt tolkning.
+- **`satt-logga.py` hade aldrig fungerat hela vägen.** Den skriver
+  `bilder/nextrum-logo-512.png`, men `.gitignore` ignorerar
+  `bilder/*.png`. Hade den körts hade filen legat kvar på Macen,
+  aldrig följt med en commit, och `logo` hade pekat på en 404 i
+  drift. `.gitignore` har nu ett undantag för
+  `bilder/nextrum-logo-*.png`.
+
+SVG-faviconen i sig var giltig — Google tar SVG för ikonen bredvid
+träffen. **Syns ingen logga i sökresultatet är orsaken nästan säkert
+att Google inte hämtat om startsidan, inte filerna.** Se Steg 4 nedan.
+
+### Om den riktiga logotypen är en annan
+
+Tidigare stod här att märket i sidhuvudet är en förenklad version. Är
+det så, och ni har loggan som bild:
+
+**Steg 1.** Spara den kvadratiska loggan som `bilder/nextrum-logo.png`.
 Minst 512×512 pixlar, helst 1024×1024. Den **måste vara kvadratisk** —
 Google beskär till en kvadrat, så en avlång bild får något bortkapat.
 Använd märket, inte den breda varianten med texten NEXTRUM bredvid:
 i 48 pixlar går en wordmark inte att läsa ändå.
 
-### Steg 2. Kör verktyget
+**Steg 2.** Kör verktyget (på Macen — det använder `sips`):
 
 ```bash
 python3 verktyg/satt-logga.py
 ```
 
-Det skalar fram alla storlekar som behövs (512, 192, 180, 96, 48),
-lägger in ikonlänkarna på alla 18 sidor och pekar om den strukturerade
-datan. Varnar om bilden är för liten eller inte kvadratisk.
+Det skriver över PNG:erna ovan med samma namn och pekar om den
+strukturerade datan. Ikonlänkarna står redan rätt på alla sidor.
 
-### Steg 3. Publicera
+**`favicon.svg`, `bilder/nextrum-logo-bimi.svg` och
+`bilder/nextrum-logo-profil.png` rör det inte.** De är ritade för
+hand. Byts märket måste de ritas om, annars visar webbläsarfliken och
+inkorgen det gamla medan Google visar det nya (`DEPLOY-EPOST.md`
+avsnitt 5).
 
-```bash
-git add -A && git commit -m "Riktiga logotypen som favicon" && git push
-```
+**Steg 3.** Commit och push.
 
-### Steg 4. Be Google hämta om den
+### Steg 4. Be Google hämta om startsidan
 
-Tillbaka i Search Console: **Inspektera URL** på `https://nextrum.se/`
-→ **Begär indexering**. Utan det ligger den gamla ikonen kvar tills
-Google råkar titta förbi.
+I Search Console: **Inspektera URL** på `https://nextrum.se/` →
+**Begär indexering**. Ikonen bredvid träffen kommer ofta senare än
+texten, ibland flera veckor efter. Google hämtar om ikoner i sin egen
+takt, och det finns ingen knapp som skyndar på just den.
+
+Loggan i kunskapspanelen är ännu mer Googles eget beslut. Den
+strukturerade datan är ett förslag, inte en beställning — en ny
+sajt utan många omnämnanden får ofta ingen panel alls.
 
 ---
 

@@ -10,6 +10,13 @@
 # tappar du datorn finns de ingen annanstans.
 bilder/*.png
 
+# ...utom loggans storlekar, som sajten SERVERAR. Den strukturerade
+# datan på startsidan pekar på nextrum-logo-512.png; utan undantaget
+# skapade verktyg/satt-logga.py filen lokalt, git såg den aldrig, och
+# Google fick en 404 där loggan skulle stå. Källan nextrum-logo.png
+# är fortfarande ett original och följer inte med.
+!bilder/nextrum-logo-*.png
+
 # Higgsfield-skills, installerade med `npx skills add higgsfield-ai/skills`.
 # Verktyg för den som bygger sajten, inte en del av sajten. De ligger
 # kvar lokalt men versionshanteras inte — annars hamnar åtta
