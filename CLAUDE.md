@@ -197,7 +197,8 @@ och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
 `handlingar`. Fas 13.2 la till `biblioteksmaterial`. Runda 2 la till notisernas sju: `notiser` (i vyn),
 `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
-`notis_fel`.
+`notis_fel` — plus `flaggor`, som är strömbrytarna för det som
+väntar på ett beslut om affär, juridik eller pengar.
 
 Schemat **`intern`** (Fas 10.3) bär funktioner databasen behöver för
 sin egen skull och som inte är ett API. PostgREST exponerar det inte.
@@ -337,8 +338,28 @@ trigger på bookings/messages/lesson_reports
   → notis-ko               notis_utskick_ta() → Resend → notis_utskick_klar()
 ```
 
-Sju regler bär systemet:
+Åtta regler bär systemet:
 
+0. **Strömbrytaren är flaggan `notiser_mejl` i `flaggor`, och den är
+   inte samma sak som regel 4.** Regel 4 är personens eget val;
+   flaggan är hela systemets. Står den av lämnar `notis_utskick_ta()`
+   inte ut en enda mejlrad: raden märks **`loggad`**, notisen syns i
+   vyn, och ingenting går ut. Kön, schemat och arbetaren fortsätter
+   under tiden att se friska ut, för det är de.
+
+   Flaggan stod av från Runda 2 till Fas 13.4 utan att någon fil i
+   repot ens nämnde tabellen `flaggor`. Trettonde notisen i rad blev
+   `loggad` och systemet såg ut att vara trasigt. **Ett avstängt
+   system och ett trasigt system ser likadana ut inifrån** — därför
+   finns reglaget nu i produkten, under **System → Notiser**: flaggan
+   med sitt `vantar_pa`, sandlådan, provmejlen och köns läge.
+   Läsningen är `notis_lage()` (Fas 13.4), som räknar i databasen och
+   aldrig lämnar ut adresser, mottagare eller brödtext.
+
+   `loggad` är ett slutläge. De mejl som aldrig gick under
+   avstängningen går inte att skicka i efterhand, och ska inte
+   heller: en påminnelse om ett pass förra veckan är inte en notis,
+   den är förvirring.
 1. **Ingen får en notis om sin egen åtgärd.** `intern.notis_skapa()`
    returnerar tyst när mottagaren är `auth.uid()`. Det är därför
    mallarna aldrig säger VEM som gjorde något: när admin ändrar ett
