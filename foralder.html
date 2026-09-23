@@ -237,11 +237,30 @@
              och en gång som "Kvar att göra". Numren finns kvar allihop
              i "I siffror" nedanför, en gång var. -->
 
-        <!-- ============ STATISTIK ============
-             Låg under Min utveckling. Men "hur går det" är en
-             översiktsfråga, och Utveckling handlar om kunskapsområden
-             ämne för ämne — en annan sak, på en annan detaljnivå. -->
         <div class="stack">
+
+          <!-- ============ TIDER ATT SVARA PÅ ============
+               Det enda på hela Översikt som VÄNTAR på familjen.
+               Föreslagna tider stod förut bara under Mina lektioner,
+               en sektion bort, och en föreslagen tid håller
+               studiehjälparens kalender ockuperad tills någon svarat
+               ja eller nej. Då duger det inte att svaret ligger
+               bakom ett klick till.
+
+               Rutan är dold när det inte finns något att svara på.
+               En tom ruta överst på första skärmen är brus, och brus
+               överst lär en att sluta titta där. Fylls av
+               ritaÖvBekrafta(); knapparna är samma data-passvar som
+               i passlistan, så samma hanterare tar dem. -->
+          <div class="dbox" id="ov-bekrafta-box" hidden>
+            <h5>Tider att svara på <em id="ov-bekrafta-antal"></em></h5>
+            <div id="ov-bekrafta"></div>
+          </div>
+
+          <!-- ============ STATISTIK ============
+               Låg under Min utveckling. Men "hur går det" är en
+               översiktsfråga, och Utveckling handlar om kunskapsområden
+               ämne för ämne — en annan sak, på en annan detaljnivå. -->
           <div class="dbox">
             <h5>I siffror</h5>
             <div id="stat-tal"><div class="loading">Hämtar</div></div>

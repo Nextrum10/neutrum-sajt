@@ -705,6 +705,56 @@
       + '</div>').join('');
   }
 
+  /* Svarsknapparna på en föreslagen tid. Tre ställen visar dem —
+     passlistan, passrutan och Översikt — och de tre måste säga samma
+     sak. Två kopior fanns redan och hade hunnit skilja sig åt i
+     märkningen; en tredje hade varit en tredje som kan glida isär. */
+  function svarsKnappar(b, små) {
+    const s = små ? ' btn-sm' : '';
+    return '<button type="button" class="btn btn-primary' + s + '" data-passvar="confirmed" data-id="' + esc(b.id) + '">Passar bra</button>'
+         + '<button type="button" class="btn btn-ghost' + s + '" data-passvar="cancelled" data-id="' + esc(b.id) + '">Avböj</button>';
+  }
+
+  /* En föreslagen tid är den enda raden i vyn som VÄNTAR på familjen:
+     den står kvar i studiehjälparens kalender tills någon svarat.
+     Därför ligger den överst på Översikt och inte bara i passlistan
+     en sektion bort.
+
+     Raderna byggs av samma NXKontakt.passRad med samma
+     data-passvar-knappar som passlistan, så den delegerade hanteraren
+     tar båda uppsättningarna och svarar man här ritas listan om på
+     köpet — ingen andra logik som kan hamna ur synk med den första. */
+  function ritaÖvBekrafta() {
+    const box = $('#ov-bekrafta-box');
+    const host = $('#ov-bekrafta');
+    if (!box || !host) return;
+
+    const nyckel = b => String(b.wanted_date || '') + String(b.wanted_time || '');
+    const föreslagna = (S.bokningar || [])
+      .filter(b => b.status === 'requested' && b.created_by && b.created_by !== S.user.id)
+      .sort((a, c) => nyckel(a).localeCompare(nyckel(c)));
+
+    /* Dold, inte tom: en ruta som står kvar och säger "inget att
+       svara på" tar plats överst varje gång man öppnar vyn. */
+    box.hidden = !föreslagna.length;
+    if (!föreslagna.length) {
+      host.innerHTML = '';
+      $('#ov-bekrafta-antal').textContent = '';
+      return;
+    }
+
+    $('#ov-bekrafta-antal').textContent = föreslagna.length + ' st';
+    host.innerHTML = föreslagna.map(b => {
+      const barn = S.barn.find(x => x.id === b.student_id);
+      const under = [b.format, b.location, barn ? barn.name : null].filter(Boolean).join(' · ');
+      return NXKontakt.passRad(b, {
+        under: under,
+        vem: 'Föreslaget av er studiehjälpare',
+        atgarder: svarsKnappar(b, true)
+      }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
+    }).join('');
+  }
+
   /* ============ pass ============ */
   async function laddaPass() {
     const host = $('#pass-lista');
@@ -715,6 +765,7 @@
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
     S.bokningar = data || [];
     ritaNotiser();
+    ritaÖvBekrafta();
     ritaNästaPass();
     ritaStatistik();
     byggSchema();
@@ -740,8 +791,7 @@
 
       let knappar = '';
       if (derasFörslag && b.status === 'requested') {
-        knappar = '<button class="btn btn-primary btn-sm" data-passvar="confirmed" data-id="' + b.id + '">Passar bra</button>'
-                + '<button class="btn btn-ghost btn-sm" data-passvar="cancelled" data-id="' + b.id + '">Avböj</button>';
+        knappar = svarsKnappar(b, true);
       } else if (kommande) {
         /* Betalningen hör till BEKRÄFTADE pass, inte till förfrågningar
            (Fas 12.2). Ett pass som studiehjälparen ännu inte tackat ja
@@ -870,7 +920,10 @@
               + (f.wanted_time ? ' kl. ' + String(f.wanted_time).slice(0, 5) : '')
               + (f.subject ? ' · ' + f.subject : '')
               + ' — svara ja eller nej.'),
-        mål: '#pass-lista'
+        /* Pekar på Översikt, inte på passlistan: svaret ligger numera
+           överst på sidan man redan står på. Rutan finns alltid när
+           den här notisen finns — båda räknas ur samma filter. */
+        mål: '#ov-bekrafta'
       });
     }
 
@@ -1310,8 +1363,7 @@
 
     let knappar = '';
     if (derasFörslag && b.status === 'requested') {
-      knappar = '<button type="button" class="btn btn-primary" data-passvar="confirmed" data-id="' + esc(b.id) + '">Passar bra</button>'
-              + '<button type="button" class="btn btn-ghost" data-passvar="cancelled" data-id="' + esc(b.id) + '">Avböj</button>';
+      knappar = svarsKnappar(b, false);
     } else if (kommande) {
       knappar = '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Flytta</button>'
               + '<button type="button" class="btn btn-ghost" data-avboka="' + esc(b.id) + '">Avboka</button>';
