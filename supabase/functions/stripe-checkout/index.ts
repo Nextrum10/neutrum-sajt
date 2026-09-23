@@ -1,9 +1,18 @@
 // ============================================================
-// NEXTRUM — stripe-checkout (Fas 12.2, ombyggd i Fas 12.5)
+// NEXTRUM — stripe-checkout (Fas 12.2, ombyggd i Fas 12.5 och 14.1)
 //
 // Familjens kortbetalning för ETT pass. HELA beloppet landar hos
 // Nextrum. Ingen destination, ingen application fee, inget anslutet
 // konto inblandat.
+//
+//
+// FUNKTIONEN PÅSTÅR INGENTING OM ATT NÅGOT ÄR BETALT (Fas 14.1)
+//
+// Den skapar en session och skriver ner vad vi BAD om (begart_ore).
+// Vad som faktiskt drogs vet bara Stripe, och det skrivs av
+// stripe-webhook. Förut skrev den här funktionen betalt_ore direkt,
+// alltså ett belopp ingen ännu betalat, och resten av systemet läste
+// det som ett kvitto.
 //
 //
 // VARFÖR CONNECT ÄR BORTA HÄRIFRÅN (Fas 12.5)
@@ -121,7 +130,16 @@ Deno.serve(async (req) => {
   if (pass.parent_id !== vem.anvandare) {
     return json({ error: 'Det är familjen som betalar passet.' }, 403, CORS);
   }
-  if (pass.status !== 'confirmed') {
+  /* 'completed' släpps in sedan Fas 14.1, och det är inte en uppmjukning.
+     Förut kunde ett genomfört obetalt pass ALDRIG betalas: funktionen
+     svarade 409 och det fanns ingen annan väg in. Med månadsfakturan
+     borta hade det blivit en skuld utan betalningssätt.
+
+     'requested' släpps fortfarande INTE in. Att ta betalt innan
+     motparten tackat ja betyder en återbetalning för varje pass som
+     studiehjälparen nekar, och varje återbetalning är en kortavgift vi
+     inte får tillbaka. Se filhuvudet. */
+  if (pass.status !== 'confirmed' && pass.status !== 'completed') {
     return json({ error: 'Passet betalas när det är bekräftat.' }, 409, CORS);
   }
   if (!pass.tutor_id) {
@@ -207,18 +225,34 @@ Deno.serve(async (req) => {
     // blir det en ny, för det är en annan betalning.
     }, `nextrum-pass-${pass.id}-${netto}`);
 
-    // ---------- beloppen fryses ----------
+    // ---------- vad vi BAD om skrivs ner ----------
     /* Först nu, och bara med service_role. Skrivningen kan inte göras
        från en inloggad session: bookings-triggern är en tillåt-lista
        och kolumnerna står inte i den. */
-    /* Bara betalt_ore skrivs. ersattning_ore och avgift_ore lämnas
-       orörda med flit: studiehjälparens ersättning räknas av
-       fakturering ur rapporten, och två källor till samma siffra är
-       en siffra ingen kan lita på. */
+
+    /* HÄR SKREVS FÖRUT betalt_ore, OCH DET VAR FEL (rättat i Fas 14.1).
+       Ingen har betalat något när en session skapas. Siffran var vårt
+       påstående, och den lästes som ett kvitto: adminvyn visade den,
+       stripe-aterbetalning använde den som tak, och Fortnox hade
+       bokfört den.
+
+       Skillnaden blir verklig så fort beloppet ändras mellan att
+       sessionen skapas och att familjen betalar. Ändras rabatten eller
+       längden får passet en NY session med ett nytt belopp, men den
+       gamla sessionen ligger kvar öppen hos Stripe tills den går ut.
+       Betalar familjen den gamla har de betalat ett annat belopp än
+       det vi hade skrivit.
+
+       betalt_ore skrivs nu av webhooken, ur sessionens amount_total,
+       alltså vad Stripe faktiskt drog. Här står bara vad vi begärde.
+
+       ersattning_ore och avgift_ore lämnas orörda med flit:
+       studiehjälparens ersättning räknas av fakturering ur rapporten,
+       och två källor till samma siffra är en siffra ingen kan lita på. */
     const { error: sparfel } = await db.from('bookings').update({
       betalning_status: 'vantar',
       stripe_session_id: String((session as { id?: string }).id ?? ''),
-      betalt_ore: netto,
+      begart_ore: netto,
     }).eq('id', pass.id);
 
     if (sparfel) {

@@ -38,6 +38,18 @@
 //    beloppet stannar hos Nextrum, och studiehjälparen får sitt den
 //    25:e genom payouts.
 //
+// 4. FUNKTIONEN ÄR DEN ENDA SOM FÅR SKRIVA betalt_ore (Fas 14.1).
+//    Siffran läses ur sessionens amount_total, alltså vad kortet
+//    faktiskt drogs på. stripe-checkout skriver begart_ore — vad vi
+//    bad om — och de två är olika saker så fort en gammal session
+//    ligger kvar öppen med ett annat belopp.
+//
+//    Samtidigt hämtas BALANSTRANSAKTIONEN med sin avgift och sitt
+//    netto. Den finns bara att hämta här: senare vet ingen vilken
+//    charge den hörde till. Utan den går Stripes klumputbetalning
+//    aldrig att stämma av mot banken, och avgiften finns inte
+//    någonstans i systemet.
+//
 //
 // verify_jwt = false. Anroparen är Stripe, inte en inloggad
 // användare. Skyddet är signaturen, och raden står i config.toml i
@@ -117,15 +129,54 @@ Deno.serve(async (req) => {
 
         const piId = String(obj.payment_intent ?? '');
         let chargeId: string | null = null;
+        let btId: string | null = null;
+        let avgiftOre: number | null = null;
+        let nettoOre: number | null = null;
 
         if (piId) {
           /* Charge-id:t är det enda som gör en senare
              charge.refunded-händelse spårbar till rätt pass utan att
-             lita på metadata vi inte skriver själva. */
-          const pi = await v1('GET', `/v1/payment_intents/${piId}?expand[]=latest_charge`);
+             lita på metadata vi inte skriver själva.
+
+             BALANSTRANSAKTIONEN ÄR DEN ANDRA HALVAN, och den hämtas
+             här för att den inte går att hämta senare utan att veta
+             vilken charge den hörde till. Stripe betalar ut i KLUMPAR,
+             netto efter avgift, med fördröjning: ingen rad på
+             bankkontot motsvarar ett enskilt pass. txn_-id:t är enda
+             vägen från passet till den bankraden, och avgiften finns
+             ingen annanstans alls — den syns varken i vad familjen
+             betalade eller i vad vi begärde. */
+          const pi = await v1(
+            'GET',
+            `/v1/payment_intents/${piId}?expand[]=latest_charge.balance_transaction`,
+          );
           const charge = (pi as { latest_charge?: Record<string, unknown> }).latest_charge;
-          if (charge && typeof charge === 'object') chargeId = String(charge.id ?? '') || null;
+          if (charge && typeof charge === 'object') {
+            chargeId = String(charge.id ?? '') || null;
+            const bt = (charge as { balance_transaction?: unknown }).balance_transaction;
+            /* Expanderat blir den ett objekt, oexpanderat en sträng.
+               Båda kan förekomma: för vissa betalsätt finns
+               balanstransaktionen ännu inte när sessionen fullbordas,
+               och då svarar Stripe med null. Vi gissar aldrig fram
+               siffrorna — saknas de står kolumnerna kvar som null och
+               syns som ett hål i avstämningen, vilket är sanningen. */
+            if (bt && typeof bt === 'object') {
+              const b = bt as Record<string, unknown>;
+              btId = String(b.id ?? '') || null;
+              avgiftOre = typeof b.fee === 'number' ? b.fee : null;
+              nettoOre = typeof b.net === 'number' ? b.net : null;
+            } else if (typeof bt === 'string') {
+              btId = bt || null;
+            }
+          }
         }
+
+        /* BELOPPET KOMMER FRÅN STRIPE, INTE FRÅN OSS (Fas 14.1).
+           amount_total är vad kortet faktiskt drogs på. Förut skrev
+           stripe-checkout betalt_ore redan när sessionen skapades, och
+           betalade familjen en äldre session som låg kvar öppen med
+           ett annat belopp stod fel siffra i raden för alltid. */
+        const draget = typeof obj.amount_total === 'number' ? obj.amount_total : null;
 
         /* `.eq('betalning_status', 'vantar')` är inte pynt. Två
            samtidiga leveranser som båda ser hanterad_at = null hinner
@@ -135,6 +186,18 @@ Deno.serve(async (req) => {
           betald_at: new Date().toISOString(),
           stripe_payment_intent_id: piId || null,
           stripe_charge_id: chargeId,
+          stripe_balanstransaktion_id: btId,
+          stripe_avgift_ore: avgiftOre,
+          stripe_netto_ore: nettoOre,
+          betalt_ore: draget,
+          /* NOLLAS, och det är avsiktligt. Kolumnerna beskriver den
+             betalning som gäller NU. Ett pass som återbetalades och
+             sedan betalades igen har en ny charge, och den gamla
+             återbetalningen hör till den gamla. Läts siffran stå kvar
+             räknade stripe-aterbetalning taket mot fel belopp och
+             svarade "Hela beloppet är redan återbetalt" på en
+             betalning som just kommit in. */
+          aterbetald_ore: 0,
         }).eq('id', passId).eq('betalning_status', 'vantar');
 
         return await klar('betald');

@@ -718,6 +718,41 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   familjen två gånger.** Underlaget till hjälparen ska däremot fortsätta
   skapas — det är bara familjehalvan som ska hoppas över.
 
+  **Fas 14 river månadsfakturan till familjen.** Beslutet är taget:
+  kort per pass är enda vägen, betalningen ska ske FÖRE passet, och
+  allt ska nå Fortnox. Hjälparens underlag den 25:e står orört.
+
+  **Fas 14.1 lagade sex fel i kortvägen innan omställningen**, och tre
+  av dem ändrar hur man ska läsa raden:
+
+  - **`betalt_ore` är ett kvitto, `begart_ore` är ett påstående.**
+    Förut skrev `stripe-checkout` `betalt_ore` redan när sessionen
+    skapades, alltså innan någon betalat, och resten av systemet läste
+    namnet i stället för kommentaren. Nu skriver checkout `begart_ore`
+    och **bara webhooken** skriver `betalt_ore`, ur sessionens
+    `amount_total`. Skiljer de sig betalade familjen en äldre session
+    som låg kvar öppen med ett annat belopp.
+  - **`stripe_balanstransaktion_id` finns bara att hämta i stunden.**
+    Stripe betalar ut i klumpar, netto efter avgift: ingen bankrad
+    motsvarar ett pass. txn_-id:t är enda vägen dit, och avgiften
+    (`stripe_avgift_ore`) finns ingen annanstans i systemet. Hämtas den
+    inte när betalningen kommer in går den inte att få tag på sedan.
+  - **Ett betalt pass går inte att avboka från en vy.**
+    `skydda_bokningsfalt` hade `if new.status = 'cancelled' then null` —
+    avbokning var det enda statusbytet som inte prövades alls. En familj
+    kunde avboka ett pass de betalat och vi behöll pengarna tyst. Nu
+    nekas det, med ett meddelande som säger varför. Ingen automatisk
+    återbetalning: hur mycket som ska tillbaka är ett beslut, och
+    avbokningspolicyn är inte skriven.
+
+  `aterbetald_ore` nollas när en ny betalning kommer in — kolumnerna
+  beskriver den betalning som gäller NU, och en gammal återbetalning
+  hör till den gamla chargen.
+
+  **Spärren "ingen betalning, inget pass" finns ännu inte.** Den kan
+  inte slås på förrän kortvägen bevisligen fungerar: i dag hade den
+  låst varenda studiehjälpare från att rapportera ett enda pass.
+
   `SKISS-BETALNING-STRIPE.md` beskriver hur beslutet gick.
 - **Google Workspace och Fortnox.** Statusflik finns, koppling saknas.
   `INTEGRATIONER.md` har hela receptet, inklusive fällan att Fortnox
