@@ -152,7 +152,7 @@
         under: 'Bokade men inte bekräftade av studiehjälparen.', till: '#bokningar' },
       { antal: l.ohanterade_meddelanden != null ? l.ohanterade_meddelanden
           : S.kontakt.filter(k => !k.hanterad_at).length,
-        rubrik: 'meddelanden i inkorgen', ental: 'meddelande i inkorgen',
+        rubrik: 'frågor i inkorgen', ental: 'fråga i inkorgen',
         under: 'Från kontaktformuläret, ingen har svarat än.', till: '#meddelanden' },
       { antal: S.bokningar.filter(b =>
           b.status !== 'cancelled' && b.status !== 'completed'
@@ -263,6 +263,18 @@
       + '</a>').join('') + '</div>';
   }
 
+  /* Hur många händelser som ritas i Senaste aktivitet.
+
+     Blocket står bredvid Närmaste passen i samma rad, och en lista som
+     växer förbi grannen trycker ned allt under sig på Översikt. Fem är
+     valt för att blocket ska sluta där grannen slutar, inte för att
+     fem vore ett naturligt antal händelser.
+
+     Notisklockan i nextrum-admin.js har SIN EGEN gräns på samma flöde.
+     Den är en annan sak — en klocka som visar det senaste, inte en yta
+     som ska hålla en höjd — så de två ska inte slås ihop. */
+  const FLODE_MAX = 5;
+
   function byggFlöde() {
     const p = [];
     const lägg = (när, rubrik, under) => { if (när) p.push({ när, rubrik, under }); };
@@ -296,12 +308,21 @@
       return;
     }
     const dygnet = Date.now() - DAG;
-    host.innerHTML = '<div class="adm-flode">' + alla.slice(0, 6).map(h =>
+    host.innerHTML = '<div class="adm-flode">' + alla.slice(0, FLODE_MAX).map(h =>
       '<div class="adm-flode-post' + (new Date(h.när).getTime() > dygnet ? ' ar-ny' : '') + '">'
       + '<span class="adm-flode-nar">' + esc(närText(h.när)) + '</span>'
       + '<span class="adm-flode-text"><b>' + esc(h.rubrik) + '</b>'
       + '<span>' + esc(h.under) + '</span></span>'
-      + '</div>').join('') + '</div>';
+      + '</div>').join('') + '</div>'
+      /* Foten säger hur många som inte syns. Utan den vet den som ser
+         fem rader inte om det är fem händelser totalt eller fem av
+         trehundra — och en avkortad lista som ser komplett ut är värre
+         än en lång. Samma resonemang som tidslinjen i detaljpanelen,
+         som skriver ut "Visar de N senaste av M". */
+      + (alla.length > FLODE_MAX
+          ? '<p class="xsmall" style="margin-top:10px;color:var(--bl-3)">Visar de '
+            + FLODE_MAX + ' senaste av ' + alla.length + ' händelser.</p>'
+          : '');
   }
 
   /* ------------------------------------------------------------
@@ -381,7 +402,13 @@
       S.sido.märke('bokningar', av('#bokningar'));
       S.sido.märke('lektioner', av('#lektioner'));
       S.sido.märke('ekonomi', av('#ekonomi'));
-      S.sido.märke('uppgifter', S.lage && S.lage.forsenade_uppgifter != null
+      /* Försenade uppgifter märks på SYSTEM, inte på uppgifter.
+
+         Uppgifter har ingen menypost längre — listan nås från System →
+         Automationer. märke() hoppar tyst över en sektion utan länk, så
+         siffran hade försvunnit helt och en försenad uppgift slutat
+         synas i menyn. Den flyttar dit vägen in numera går. */
+      S.sido.märke('system', S.lage && S.lage.forsenade_uppgifter != null
         ? S.lage.forsenade_uppgifter
         : (S.uppgifter || []).filter(u => (u.status === 'oppen' || u.status === 'pagar')
             && u.forfallodag && u.forfallodag < isoFor(new Date())).length);

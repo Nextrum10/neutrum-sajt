@@ -184,6 +184,12 @@
 
         <span class="vy-sido-rubrik" aria-hidden="true">Kunder</span>
         <a href="#leads" data-sek="leads" title="Intresseanmälningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h17v11h-17z"/><path d="m3.5 8 8.5 6 8.5-6"/></svg><span class="adm-etikett">Intresseanmälningar</span></a>
+        <!-- Ansökningar står här, inte i en egen grupp längst ned. Två
+             saker kommer in utifrån utan att någon bett om dem: familjer
+             som vill ha hjälp och ungdomar som vill jobba. Båda ska
+             läsas av samma person samma morgon, och en av dem låg förr
+             under Drift och Kommunikation där ingen tittade. -->
+        <a href="#ansokningar" data-sek="ansokningar" title="Ansökningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/></svg><span class="adm-etikett">Ansökningar</span></a>
         <a href="#familjer" data-sek="familjer" title="Familjer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3"/><path d="M3 19c0-2.8 2.5-4.5 5.5-4.5S14 16.2 14 19"/><path d="M16 5.5a3 3 0 0 1 0 5.8M21 19c0-2.2-1.4-3.7-3.5-4.3"/></svg><span class="adm-etikett">Familjer</span></a>
         <a href="#elever" data-sek="elever" title="Elever"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.2"/><path d="M4.5 20c0-3.4 3.2-5.5 7.5-5.5s7.5 2.1 7.5 5.5"/></svg><span class="adm-etikett">Elever</span></a>
         <a href="#studiehjalpare" data-sek="studiehjalpare" title="Studiehjälpare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg><span class="adm-etikett">Studiehjälpare</span></a>
@@ -193,16 +199,27 @@
         <a href="#bokningar" data-sek="bokningar" title="Bokningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg><span class="adm-etikett">Bokningar</span></a>
         <a href="#lektioner" data-sek="lektioner" title="Lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h7a2 2 0 0 1 2 2V20a2 2 0 0 0-2-2H4z"/><path d="M20 5.5h-7a2 2 0 0 0-2 2V20a2 2 0 0 1 2-2h7z"/></svg><span class="adm-etikett">Lektioner</span></a>
         <a href="#uppdrag" data-sek="uppdrag" title="Uppdrag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8h17v11.5h-17z"/><path d="M9 8V5.5h6V8M3.5 13h17"/></svg><span class="adm-etikett">Uppdrag</span></a>
-        <a href="#uppgifter" data-sek="uppgifter" title="Uppgifter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6.5h10.5M10 12h10.5M10 17.5h10.5"/><path d="m3.5 6.5 1.3 1.3 2.2-2.4M3.5 12l1.3 1.3 2.2-2.4M3.5 17.5l1.3 1.3 2.2-2.4"/></svg><span class="adm-etikett">Uppgifter</span></a>
+        <!-- Uppgifter står inte längre i menyn. Sektionen finns kvar
+             med samma id, och nås från System → Automationer, där
+             rutan "Uppgifter kontrollerna skapat" redan visar samma
+             rader och nu länkar hit.
+
+             VARFÖR SEKTIONEN INTE FICK TAS BORT: skapa_uppgift()
+             vägrar skapa en ny rad när samma nyckel redan står som
+             öppen, och lägesrullgardinen som kan stänga en uppgift
+             finns bara i den här sektionen. Försvinner den fastnar
+             varje nyckel i öppet läge för alltid, och kontrollerna
+             och NEX flagga_problem tystnar för just de raderna utan
+             att något blir rött.
+
+             Rutt: giltig() i nextrum-studie.js läser section[data-sek],
+             inte menylänkarna, så #uppgifter fungerar utan menypost. -->
 
         <span class="vy-sido-rubrik" aria-hidden="true">Kommunikation</span>
-        <a href="#meddelanden" data-sek="meddelanden" title="Meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Meddelanden</span></a>
+        <a href="#meddelanden" data-sek="meddelanden" title="Frågor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Frågor</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Ekonomi</span>
         <a href="#ekonomi" data-sek="ekonomi" title="Fakturor &amp; utbetalningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg><span class="adm-etikett">Fakturor &amp; utbetalningar</span></a>
-
-        <span class="vy-sido-rubrik" aria-hidden="true">Rekrytering</span>
-        <a href="#ansokningar" data-sek="ansokningar" title="Ansökningar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/></svg><span class="adm-etikett">Ansökningar</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Tjänster</span>
         <a href="#katalog" data-sek="katalog" title="Tjänster &amp; priser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.3V4.5a1 1 0 0 1 1-1h7.8l8.2 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.6"/></svg><span class="adm-etikett">Tjänster &amp; priser</span></a>
@@ -475,16 +492,19 @@
         </section>
 
         <!-- ============================================================
-             MEDDELANDEN
+             FRÅGOR
              Två inkorgar som ser lika ut men inte är det: formuläret
              på faq.html (contact_messages) är från folk utan konto,
              chattarna (messages) är mellan matchade parter. Flikar,
              så att det syns att de är olika saker.
-             ============================================================ -->
+
+             Sektionens id är kvar som "meddelanden" med flit. Det bär
+             bokmärken och länkarna från Översikt, notisklockan och
+             driftkonsolen — bara etiketten är ny. -->
         <section class="vy-sek" data-sek="meddelanden" hidden>
           <div class="vy-sek-topp">
             <div>
-              <h2>Meddelanden</h2>
+              <h2>Frågor</h2>
               <p>Inkorgen från kontaktformuläret, och en insyn i chattarna mellan familj och studiehjälpare.</p>
             </div>
           </div>
@@ -501,7 +521,7 @@
                id="panel-inkorg" aria-labelledby="flik-inkorg">
             <div class="dbox">
               <div class="adm-verktyg">
-                <input class="inp adm-sok" id="msg-sok" type="search" placeholder="Sök namn, e-post, text" aria-label="Sök meddelande" autocomplete="off">
+                <input class="inp adm-sok" id="msg-sok" type="search" placeholder="Sök namn, e-post, text" aria-label="Sök bland frågorna" autocomplete="off">
                 <label class="xsmall" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600">
                   <input type="checkbox" id="msg-ohanterade" checked> Bara ohanterade
                 </label>
@@ -786,7 +806,8 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Uppgifter</h2>
-              <p>Det som ska göras, vem som gör det och när det ska vara klart.</p>
+              <p>Det som ska göras, vem som gör det och när det ska vara klart.
+                 Nås från System → Automationer.</p>
             </div>
           </div>
           <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
@@ -1812,12 +1833,23 @@
               <div id="aut-kontroller"></div>
             </div>
 
+            <!-- Vägen in till uppgiftslistan sedan den lämnade menyn.
+                 Listan måste finnas kvar någonstans: skapa_uppgift()
+                 skapar ingen ny rad så länge samma nyckel står som
+                 öppen, och lägesrullgardinen som stänger en uppgift
+                 finns bara där. Utan en väg hit fastnar varje nyckel
+                 öppen för alltid och kontrollerna slutar hitta något
+                 nytt, utan att något blir rött. -->
             <div class="dbox">
               <div class="adm-verktyg">
                 <h3 style="margin:0">Uppgifter kontrollerna skapat</h3>
                 <span class="small" id="aut-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+                <a class="btn btn-ghost btn-sm" href="#uppgifter">Hela listan</a>
               </div>
               <div id="aut-uppgifter"><div class="loading">Hämtar</div></div>
+              <p class="xsmall" style="margin:12px 0 0;color:var(--bl-3)">
+                Uppgifter står inte längre i sidomenyn. Hela listan, med
+                formuläret och lägena, når du härifrån.</p>
             </div>
 
             <div class="dbox">

@@ -352,7 +352,7 @@
 
   const SEKTIONSNAMN = {
     oversikt: 'Översikt', leads: 'Intresseanmälningar', ansokningar: 'Ansökningar',
-    meddelanden: 'Meddelanden', familjer: 'Familjer', elever: 'Elever',
+    meddelanden: 'Frågor', familjer: 'Familjer', elever: 'Elever',
     studiehjalpare: 'Studiehjälpare', matchning: 'Matchning', bokningar: 'Bokningar',
     lektioner: 'Lektioner', statistik: 'Statistik',
     ekonomi: 'Fakturor & utbetalningar', system: 'System',
@@ -365,8 +365,13 @@
   const OMRADE = {
     oversikt: 'Översikt', statistik: 'Översikt',
     leads: 'Kunder', familjer: 'Kunder', elever: 'Kunder', studiehjalpare: 'Kunder',
-    matchning: 'Drift', bokningar: 'Drift', lektioner: 'Drift', uppdrag: 'Drift', uppgifter: 'Drift',
-    meddelanden: 'Kommunikation', ekonomi: 'Ekonomi', ansokningar: 'Rekrytering',
+    matchning: 'Drift', bokningar: 'Drift', lektioner: 'Drift', uppdrag: 'Drift',
+    /* Uppgifter ligger under System sedan menyposten togs bort —
+       listan nås från System → Automationer. Ansökningar flyttade till
+       Kunder: det som kommer in utifrån läses av samma person samma
+       morgon, och en egen grupp längst ned gjorde att ingen tittade. */
+    uppgifter: 'System',
+    meddelanden: 'Kommunikation', ekonomi: 'Ekonomi', ansokningar: 'Kunder',
     katalog: 'Tjänster', agenter: 'AI', system: 'System'
   };
 
