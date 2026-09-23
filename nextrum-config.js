@@ -40,4 +40,16 @@ window.NEXTRUM_CONFIG = {
 
   // Kontaktuppgifter som visas i sidfoten och i formulärsvar.
   EPOST: 'info@nextrum.se',
+
+  /* Länken den sökande får i steget Utbildning: introduktionen och
+     provet som ska vara gjort innan hen tas in i poolen.
+
+     Tom sträng = knappen skickar ingen länk, utan säger att den inte
+     är satt. Samma regel som GOOGLE_RECENSION_URL: hellre en knapp
+     som säger att något saknas än en som mejlar en tom rad.
+
+     Kravet bakom den står i nextrum-admin-rekrytering.js: en
+     studiehjälpare som inte vet hur rapporten fungerar lämnar inga
+     rapporter, och utan rapport blir passet aldrig genomfört. */
+  UTBILDNING_URL: '',
 };

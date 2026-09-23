@@ -18,7 +18,7 @@
 
   const { LEAD_LAGE, S, SH_LAGE, elevHjälpare, funktionsFel, hämtaAllt,
           hämtaMatchunderlag, kontaktaRuta, kortDatum, matchar, namnFör,
-          pill, tabell, tomtText, väljare } = NXAdmin;
+          pill, tabell, tomtText, visaRuta, väljare } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
@@ -273,6 +273,41 @@
      STUDIEHJÄLPARE
      ============================================================ */
 
+  /* ============ poolen i fyra tal ============
+
+     "Hur många studiehjälpare har vi?" hade förut inget svar i vyn —
+     bara en tabell man fick räkna rader i, och raderna är blandade
+     lägen. De fyra talen svarar på de fyra frågor som faktiskt
+     ställs, och det tredje och fjärde är de som kostar pengar:
+
+     · utan timpenning hoppar faktureringen över personen helt när
+       ersättningar räknas ut. Hen håller pass och får inget betalt.
+     · godkänd utan elev är kapacitet som står still.
+
+     Talen räknas på HELA poolen, aldrig på filtret ovanför. */
+  function ritaPoolsammanfattning(alla) {
+    const host = $('#sh-sammanfattning');
+    if (!host) return;
+
+    const godkända = alla.filter(t => t.status === 'approved');
+    const väntar = alla.filter(t => t.status === 'pending').length;
+    const utanTimpenning = godkända.filter(t => !t.hourly_rate).length;
+    const elevAntal = id => Object.values(S.personer).filter(p => p.matched_tutor_id === id).length;
+    const utanElev = godkända.filter(t => !elevAntal(t.id)).length;
+
+    const kort = (tal, etikett, under, larm) =>
+      '<div class="adm-kpi' + (larm ? ' ar-larm' : '') + '"><b>' + esc(String(tal)) + '</b>'
+      + '<span>' + esc(etikett) + '</span>'
+      + '<span class="adm-kpi-diff">' + esc(under) + '</span></div>';
+
+    host.innerHTML =
+      kort(godkända.length, 'I poolen', 'godkända och matchningsbara')
+      + kort(väntar, 'Väntar på beslut', väntar ? 'ansökt, inte avgjort' : 'inget i kö', väntar > 0)
+      + kort(utanTimpenning, 'Utan timpenning',
+          utanTimpenning ? 'får ingen utbetalning' : 'alla har ett tal', utanTimpenning > 0)
+      + kort(utanElev, 'Utan elev', utanElev ? 'ledig kapacitet' : 'alla har minst en');
+  }
+
   function ritaStudiehjalpare() {
     const sök = $('#sh-sok').value.trim();
     const st = $('#sh-status').value;
@@ -284,6 +319,7 @@
       .filter(t => matchar({ ...t, amnen: (t.subjects || []).join(' ') },
         ['namn', 'epost', 'city', 'school', 'amnen'], sök));
 
+    ritaPoolsammanfattning(alla);
     $('#sh-antal').textContent = rader.length + ' av ' + alla.length;
     $('#sh-tabell').innerHTML = tabell([
       { namn: 'Namn', rita: t => '<b>' + esc(t.namn) + '</b>'
@@ -478,11 +514,11 @@
       + '<button type="button" class="btn btn-primary" id="le-skapa">Skapa elev</button>'
       + '</div></div>';
 
-    document.body.appendChild(ruta);
-    document.body.style.overflow = 'hidden';
+    visaRuta(ruta);
     const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
     ruta.addEventListener('click', ev => {
-      if (ev.target === ruta || ev.target.closest('[data-le-stang]')) stäng();
+      if (ev.target === ruta || ev.target.closest('[data-le-stang]')) { stäng(); return; }
+      if (ev.target.closest('[data-le-match]')) { stäng(); location.hash = '#matchning'; }
     });
 
     const bjud = $('#le-bjud', ruta);
@@ -597,20 +633,34 @@
         lead.kund_id = parent;
         if (ny) lead.uppdrag_id = ny.uppdrag_id || null;
 
-        stäng();
         await hämtaAllt();
         ritaLeads();
         ritaElever();
         await hämtaMatchunderlag();
-
-        /* Rakt in i matchningen med den nya eleven vald. Att skapa
-           en elev och sedan lämna någon på anmälningslistan är att
-           be dem leta rätt på namnet de nyss skrev in — och
-           matchningen är hela skälet till att eleven skapades. */
         if (ny && ny.id) S.valdElev = ny.id;
         ritaMatchning();
         await ritaÖversikt();
-        location.hash = '#matchning';
+
+        /* KVITTOT, INTE ETT HOPP
+
+           Förut stängdes rutan och vyn bytte till matchningen i samma
+           ögonblick. Två saker hände samtidigt och ingen av dem
+           förklarades: rutan försvann och sidan såg annorlunda ut.
+           Den som klickat "Skapa elev" fick aldrig veta OM eleven
+           skapades — bara att något hände — och gick tillbaka till
+           anmälningslistan för att kontrollera.
+
+           Nu står det i rutan vad som gjordes och var eleven finns.
+           Vidare till matchningen är ett val, inte en följd. */
+        ruta.querySelector('.nx-fraga-box').innerHTML =
+          '<h3>' + esc(namn) + ' är skapad</h3>'
+          + '<p><b>' + esc(namn) + '</b> ligger nu under <b>Elever</b> och i matchningskön. '
+          + 'Anmälan från ' + esc(lead.parent_name || lead.email || 'familjen')
+          + ' är markerad som klar.</p>'
+          + '<div class="nx-fraga-knappar">'
+          + '<button type="button" class="btn btn-ghost" data-le-stang>Stäng</button>'
+          + '<button type="button" class="btn btn-primary" data-le-match>Välj studiehjälpare</button>'
+          + '</div>';
       });
     });
   });

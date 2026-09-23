@@ -2617,6 +2617,57 @@ a:has(> .adm-status){
   color:var(--bl-3);margin-left:2px;
 }
 
+/* ============================================================
+   REKRYTERINGSRUTAN (Fas 13.1)
+
+   Spåret i tabellen ovan är fyra prickar: det säger vad som är
+   gjort. Den här listan säger vad man GÖR, i ordning, med skälet
+   bredvid knappen. Numret till vänster är hela hierarkin — steg 3
+   kommer efter steg 2 därför att utbildningen ska vara gjord innan
+   någon släpps in i poolen, inte därför att den råkade hamna där.
+   ============================================================ */
+.ans-spar-lista{display:grid;gap:14px;margin:18px 0 4px}
+
+.ans-steg{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:14px 16px;
+  border:1px solid var(--ln);border-radius:14px;
+}
+.ans-steg-nr{
+  flex:none;width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;
+  border:1px solid var(--ln-2);
+  font-family:var(--f-mono);font-size:.76rem;color:var(--bl-3);
+}
+/* Gjort steg: samma gröna som pricken i spåret, så att de två
+   vyerna av samma sak ser ut som samma sak. */
+.ans-steg.ar-gjord{border-color:var(--mossa)}
+.ans-steg.ar-gjord .ans-steg-nr{
+  background:var(--mossa);border-color:var(--mossa);color:var(--pap);
+}
+.ans-steg-kropp{flex:1;min-width:0}
+.ans-steg-kropp h4{
+  margin:0 0 4px;font-size:.98rem;
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+}
+.ans-steg-tid{
+  font-family:var(--f-mono);font-size:.7rem;color:var(--mossa);
+  font-weight:400;
+}
+.ans-steg-kropp p{margin:0;font-size:.84rem;line-height:1.6;color:var(--bl-2)}
+.ans-steg-fakta{
+  margin-top:8px;padding:8px 10px;border-radius:9px;
+  background:var(--pap-2);border:1px solid var(--ln);
+  font-size:.79rem;line-height:1.6;color:var(--bl-2);
+  overflow-wrap:anywhere;
+}
+.ans-steg-fakta code{font-family:var(--f-mono);font-size:.74rem}
+.ans-steg-knappar{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+
+@media (max-width:560px){
+  .ans-steg{flex-direction:column;gap:8px}
+}
+
 /* Kontaktrutan behöver mer bredd än en ja/nej-fråga: man skriver ett
    helt mejl i den, och en textarea på 320 px gör varje mening till
    fyra rader. */
