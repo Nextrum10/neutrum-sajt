@@ -18,7 +18,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
 <link rel="stylesheet" href="nextrum-cinema.css?v=b56b6211">
 <link rel="stylesheet" href="nextrum-vy.css?v=eb2b6d58">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=990ced5b">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=3189c4c4">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: adminvyns egen palett skriver om tokens på body.vy-admin och
      måste vinna varje oavgjord specificitet mot lagren ovan. -->
@@ -818,7 +818,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Material</h2>
-              <p>Biblioteket studiehjälparna hämtar ur. Ett ämne och en årskurs per post — det är de två studiehjälparen filtrerar på när hen letar åt sin elev.</p>
+              <p>Nextrums bank, som studiehjälparna hämtar ur. Ett ämne och en årskurs per post — det är de två de filtrerar på när de letar åt sin elev. Här syns också deras egna material, som bara de själva ser tills du lyfter in det.</p>
             </div>
           </div>
 
@@ -880,6 +880,14 @@
               <input class="inp adm-sok" id="bib-sok" type="search" placeholder="Sök rubrik eller beskrivning" aria-label="Sök i biblioteket" autocomplete="off">
               <select class="sel" id="bib-filter-amne" aria-label="Filtrera på ämne"></select>
               <select class="sel" id="bib-filter-ak" aria-label="Filtrera på årskurs"></select>
+              <!-- Listan rymmer två sorter sedan Fas 13.3: bankens rader
+                   och studiehjälparnas egna. Utan filtret blandas de, och
+                   "hur stor är banken?" går inte att svara på. -->
+              <select class="sel" id="bib-filter-vems" aria-label="Filtrera på vems material">
+                <option value="">Allt material</option>
+                <option value="delad">Nextrums bank</option>
+                <option value="eget">Studiehjälparnas egna</option>
+              </select>
               <span class="small" id="bib-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
             <div id="bib-tabell"><div class="loading">Hämtar</div></div>
@@ -1681,6 +1689,9 @@
             <button class="vy-flik" type="button" role="tab" data-flik="fel"
                     id="flik-fel" aria-controls="panel-fel">Fel
               <span class="vy-flik-mark" id="flik-fel-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="notiser"
+                    id="flik-notiser" aria-controls="panel-notiser">Notiser
+              <span class="vy-flik-mark" id="flik-notiser-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="installningar"
                     id="flik-installningar" aria-controls="panel-installningar">Inställningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="dokument"
@@ -1753,6 +1764,98 @@
                 senaste timmarna", inte "aldrig något".
               </p>
               <div id="notis-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- ============ NOTISER (Fas 13.4) ============
+               Reglaget som saknades. Hela notisvägen byggdes i
+               Runda 2 — triggrar, kö, pg_cron, arbetare, mallar —
+               men strömbrytaren låg bara i tabellen flaggor, och
+               ingen fil i repot nämnde den tabellen. Utskicken stod
+               alltså av i månader utan att det gick att se någonstans
+               i produkten. Ett avstängt system och ett trasigt system
+               ser likadana ut inifrån; den här fliken är skillnaden.
+
+               Ordningen på rutorna är ordningen man ska gå i:
+               sandlådan först, sedan ett prov, sedan strömbrytaren.
+               Att slå på först och prova sedan är hur man mejlar
+               riktiga familjer av misstag. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="notiser"
+               id="panel-notiser" aria-labelledby="flik-notiser" hidden>
+
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Vägen ett notismejl tar</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7">
+                Ett pass bokas eller flyttas, ett meddelande skrivs, en påminnelse blir aktuell.
+                Databasen skriver notisen i vyn och lägger ett utskick i kön. En gång i minuten
+                väcker schemat arbetaren, som skickar det som väntar. Databasen bestämmer,
+                arbetaren skickar — står det stilla är det nästan alltid strömbrytaren nedan,
+                inte arbetaren.
+              </p>
+              <div id="nd-halsa" style="margin-top:14px"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Sandlådan</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Är en adress satt går VARJE notismejl dit i stället för till mottagaren,
+                ämnesraden märks som prov och avregistreringslänken stängs av — en äkta länk
+                i ett prov hade stängt av en familjs mejl på riktigt. Sätt den innan du rör
+                något som köar, och töm den när du är klar.
+              </p>
+              <form id="nd-sandlada-form" class="uppg-form" novalidate>
+                <div class="fgroup uppg-bred">
+                  <label for="nd-sandlada">Adress som tar emot allt</label>
+                  <input class="inp" id="nd-sandlada" type="email" maxlength="200"
+                         autocomplete="off" placeholder="tom ruta = sandlådan är av">
+                </div>
+                <div class="uppg-fot">
+                  <button class="btn btn-primary btn-sm" type="submit">Spara sandlådan</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="nd-sandlada-bort">Stäng av sandlådan</button>
+                  <p class="ok-msg" id="nd-sandlada-msg" style="margin:0"></p>
+                </div>
+              </form>
+            </div>
+
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Prova</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                Provmejlen går till DIN inloggade adress, ett per mejlbar notistyp, och struntar
+                i strömbrytaren — det är så man ser att avsändardomänen, nyckeln och mallarna
+                fungerar innan något går till en familj. Kolla att de kom fram och att de inte
+                hamnade i skräpposten.
+              </p>
+              <div class="adm-verktyg">
+                <button class="btn btn-ghost btn-sm" type="button" data-nd-prov="parent">Provmejl som familj</button>
+                <button class="btn btn-ghost btn-sm" type="button" data-nd-prov="tutor">Provmejl som studiehjälpare</button>
+                <button class="btn btn-ghost btn-sm" type="button" id="nd-kor">Kör kön nu</button>
+              </div>
+              <p class="ok-msg" id="nd-prov-msg" style="margin-top:12px"></p>
+            </div>
+
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Strömbrytarna</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
+                En flagga är ett beslut som inte är fattat. Därför står det både vad den slår på
+                och vad som ska vara avgjort först — den som slår på ska se varför den var av.
+                Av är förvalet, och en flagga som saknas räknas som av.
+              </p>
+              <div id="nd-flaggor"><div class="loading">Hämtar</div></div>
+            </div>
+
+            <div class="dbox">
+              <h5>Kön <em id="nd-ko-antal"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
+                Räknat i databasen, inte här i webbläsaren. <b>Loggad</b> betyder att raden
+                skapades men aldrig skickades, för att mejlen var avstängda — de raderna är
+                färdiga och går inte att skicka i efterhand.
+              </p>
+              <div class="adm-verktyg" style="margin-bottom:14px">
+                <button class="btn btn-ghost btn-sm" type="button" id="nd-uppdatera">Uppdatera</button>
+              </div>
+              <div id="nd-ko"><div class="loading">Hämtar</div></div>
+              <h6 style="margin-top:22px">Tio senaste körningarna</h6>
+              <div id="nd-korningar"></div>
             </div>
           </div>
 
@@ -1976,22 +2079,22 @@
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=c0251376"></script>
 <script src="nextrum-admin-karna.js?v=c01d777d"></script>
-<script src="nextrum-admin-detalj.js?v=97d3603d"></script>
+<script src="nextrum-admin-detalj.js?v=d35c3c2b"></script>
 <script src="nextrum-admin-oversikt.js?v=e8258659"></script>
 <script src="nextrum-admin-kunder.js?v=5da314f6"></script>
 <script src="nextrum-admin-rekrytering.js?v=9b6ce49f"></script>
-<script src="nextrum-admin-bibliotek.js?v=d13ba479"></script>
+<script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
 <script src="nextrum-admin-kommunikation.js?v=24a9a868"></script>
 <script src="nextrum-admin-drift.js?v=5515c778"></script>
 <script src="nextrum-admin-ekonomi.js?v=abca6c1d"></script>
 <script src="nextrum-admin-tjanster.js?v=70799e84"></script>
-<script src="nextrum-admin-system.js?v=bf258030"></script>
+<script src="nextrum-admin-system.js?v=5e62b643"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=55760f40"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-admin.js?v=19c3f831"></script>
+<script src="nextrum-admin.js?v=039ecff8"></script>
 </body>
 </html>

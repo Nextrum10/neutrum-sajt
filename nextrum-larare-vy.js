@@ -21,7 +21,7 @@
     familjer: [], aktivFamilj: null,
     elever: [], aktivElev: null,
     bokningar: [], trad: null, kal: null, olästa: {},
-    minAvatar: null, matTyp: 'fil', tillgang: [], blockerade: [],
+    minAvatar: null, tillgang: [], blockerade: [],
     laxor: [], laxFilter: 'attgora', laxräkning: {}, minaRapporter: [], avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
     senaste: {}
   };
@@ -449,7 +449,10 @@
     fyllElevFormulär();
     fyllPassVal();
     fyllÄmnesval();
-    await Promise.all([laddaLaxor(), laddaProgress(), laddaPlanIFormulär()]);
+    /* Biblioteket hör inte till eleven — det är samma bank oavsett
+       vem man valt. Det hämtas ändå här, för årskursfiltret förväljs
+       ur elevens grade och ska följa med när man byter elev. */
+    await Promise.all([laddaLaxor(), laddaProgress(), laddaBibliotek(), laddaPlanIFormulär()]);
     /* korten och profilrubriken visar nästa pass och antal öppna
        läxor, och inget av det är hämtat när de ritas första gången */
     ritaElevkort();
@@ -533,167 +536,6 @@
     });
   });
 
-
-  /* ============================================================
-     BIBLIOTEKET (Fas 13.2)
-
-     Nextrums delade materialbank. Du hämtar härifrån och ger det
-     som läxa; du laddar inte upp hit. Ett bibliotek som vem som
-     helst fyller på är inte ett urval, och då är filtret på ämne
-     och årskurs ingenting värt.
-
-     Förvalet är den valda elevens årskurs. students.grade är
-     fritext ("åk 7", "7:an"), så koden gissas — och gissar hellre
-     inget än fel: ett filter förvalt på fel årskurs ser ut som ett
-     tomt bibliotek, och då slutar man leta.
-
-     VAL, INTE SKAPANDE. "Ge som läxa" fyller formuläret ovan i
-     stället för att skapa läxan direkt. Deadlinen är det enda som
-     inte står i biblioteket, och en läxa utan deadline är en läxa
-     eleven inte vet när hen ska ha gjort.
-     ============================================================ */
-
-  /* Materialet nästa läxa ska peka på. Nollställs när formuläret
-     stängs eller skickas — annars ärver nästa läxa ett material man
-     valde för tio minuter sedan. */
-  let valtBibliotek = null;
-  let bibRader = [];
-
-  function bibKort(b) {
-    return '<div class="bib-kort">'
-      + '<div class="bib-kort-topp">'
-      + '<b>' + esc(b.titel) + '</b>'
-      + '<span class="tag">' + esc(b.amne) + '</span>'
-      + '<span class="tag">' + esc(NX.årskursText(b.arskurs)) + '</span>'
-      /* Utan den här taggen går Nextrums kurerade bank inte att
-         skilja från ditt eget, och de två har olika tyngd: det ena
-         är granskat, det andra är ditt utkast. */
-      + (b.delad ? '' : '<span class="tag">Ditt eget</span>')
-      + '</div>'
-      + (b.beskrivning ? '<p>' + esc(b.beskrivning) + '</p>' : '')
-      + '<div class="bib-kort-knappar">'
-      + '<button type="button" class="btn btn-ghost btn-sm" data-bib-titt="' + esc(b.id) + '">Titta på det</button>'
-      + '<button type="button" class="btn btn-primary btn-sm" data-bib-lax="' + esc(b.id) + '">Ge som läxa</button>'
-      + '</div></div>';
-  }
-
-  function ritaBibliotekslista(ruta) {
-    const host = $('#bl-lista', ruta);
-    const amne = $('#bl-amne', ruta).value;
-    const ak = $('#bl-ak', ruta).value;
-    const sök = $('#bl-sok', ruta).value.trim().toLowerCase();
-
-    const urval = bibRader
-      .filter(b => !amne || b.amne === amne)
-      .filter(b => !ak || b.arskurs === ak)
-      .filter(b => !sök || (b.titel + ' ' + (b.beskrivning || '')).toLowerCase().indexOf(sök) > -1);
-
-    $('#bl-antal', ruta).textContent = urval.length + ' av ' + bibRader.length;
-    host.innerHTML = urval.length
-      ? urval.map(bibKort).join('')
-      : tomt('Inget material matchar',
-          'Prova ett bredare filter. Saknas något helt kan du lägga upp ditt eget under '
-          + 'Mitt material, eller säga till — Nextrums bank fylls på av oss.');
-  }
-
-  $('#bib-hamta').addEventListener('click', async () => {
-    if (!S.aktivElev) { alert('Välj en elev högst upp först.'); return; }
-    const eleven = elev();
-
-    const { data, error } = await medan($('#bib-hamta'), 'Hämtar…', () =>
-      supa.from('biblioteksmaterial')
-        .select('id, titel, beskrivning, amne, arskurs, filvag, lank, delad')
-        .eq('aktiv', true)
-        .order('amne').order('titel'));
-
-    if (error) { alert('Biblioteket gick inte att hämta: ' + felText(error)); return; }
-    bibRader = data || [];
-
-    const ruta = document.createElement('div');
-    ruta.className = 'nx-fraga';
-    ruta.innerHTML =
-      '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="bl-t">'
-      + '<h3 id="bl-t">Biblioteket</h3>'
-      + '<p>Nextrums material och ditt eget, sorterat på ämne och årskurs. Välj något '
-      + 'och fyll på med deadline och instruktion i formuläret bakom.</p>'
-      + '<div class="bib-filter">'
-      + '<input class="inp" id="bl-sok" type="search" placeholder="Sök rubrik" aria-label="Sök i biblioteket">'
-      + '<select class="sel" id="bl-amne" aria-label="Ämne"><option value="">Alla ämnen</option>'
-      + NX.AMNEN.map(a => '<option value="' + esc(a) + '">' + esc(a) + '</option>').join('')
-      + '</select>'
-      + '<select class="sel" id="bl-ak" aria-label="Årskurs"><option value="">Alla årskurser</option>'
-      + NX.ARSKURSER.map(a => '<option value="' + esc(a.kod) + '">' + esc(a.text) + '</option>').join('')
-      + '</select>'
-      + '<span class="small" id="bl-antal"></span>'
-      + '</div>'
-      + '<div class="bib-lista" id="bl-lista"></div>'
-      + '<div class="nx-fraga-knappar">'
-      + '<button type="button" class="btn btn-ghost" data-bl-stang>Stäng</button>'
-      + '</div></div>';
-
-    document.body.appendChild(ruta);
-    document.body.style.overflow = 'hidden';
-    void ruta.offsetWidth;
-    ruta.classList.add('open');
-
-    const förvald = NX.årskursKod(eleven && eleven.grade);
-    if (förvald) $('#bl-ak', ruta).value = förvald;
-    ritaBibliotekslista(ruta);
-
-    const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
-    ['#bl-sok', '#bl-amne', '#bl-ak'].forEach(id =>
-      $(id, ruta).addEventListener('input', () => ritaBibliotekslista(ruta)));
-
-    ruta.addEventListener('click', async ev => {
-      if (ev.target === ruta || ev.target.closest('[data-bl-stang]')) { stäng(); return; }
-
-      const titt = ev.target.closest('[data-bib-titt]');
-      if (titt) {
-        const b = bibRader.find(x => x.id === titt.dataset.bibTitt);
-        if (!b) return;
-        if (b.lank) { window.open(b.lank, '_blank', 'noopener'); return; }
-        await medan(titt, '…', async () => {
-          const url = await M.signera('bibliotek', b.filvag);
-          if (!url) { alert('Filen gick inte att öppna just nu.'); return; }
-          window.open(url, '_blank', 'noopener');
-        });
-        return;
-      }
-
-      const ge = ev.target.closest('[data-bib-lax]');
-      if (!ge) return;
-      const b = bibRader.find(x => x.id === ge.dataset.bibLax);
-      if (!b) return;
-
-      valtBibliotek = b;
-      $('#lax-form').hidden = false;
-      $('#ny-lax').textContent = 'Stäng';
-      $('#lx-titel').value = b.titel;
-      $('#lx-amne').value = b.amne;
-      if (!$('#lx-text').value.trim() && b.beskrivning) $('#lx-text').value = b.beskrivning;
-      visaValtMaterial();
-      stäng();
-      $('#lx-datum').focus();
-    });
-  });
-
-  /* Kvittot i formuläret. Utan det syns valet bara som att rubriken
-     fylldes i av sig själv, och den som ångrar sig har ingen väg
-     tillbaka — bibliotek_id hade följt med läxan ändå. */
-  function visaValtMaterial() {
-    const host = $('#lx-material');
-    if (!host) return;
-    if (!valtBibliotek) { host.hidden = true; host.innerHTML = ''; return; }
-    host.hidden = false;
-    host.innerHTML = '<span>Ur biblioteket: <b>' + esc(valtBibliotek.titel) + '</b></span>'
-      + '<button type="button" class="btn btn-ghost btn-sm" id="lx-material-bort">Ta bort kopplingen</button>';
-  }
-
-  document.addEventListener('click', e => {
-    if (!e.target.closest('#lx-material-bort')) return;
-    valtBibliotek = null;
-    visaValtMaterial();
-  });
 
   /* Materialet från en läxrad. Raden bär bara ett id; sökvägen och
      länken följde med i hämtningen ovan, så uppslaget görs där
@@ -1797,94 +1639,260 @@
   });
 
   /* ============================================================
-     MITT MATERIAL (Fas 13.3)
+     MATERIAL (Fas 13.3)
 
-     Skrev fram till Fas 13.3 i tabellen materials, en rad per ELEV.
-     Sedan föräldravyns materialflik togs bort i 13.2 nådde de raderna
-     ingen familj: uppladdningen såg ut att fungera och gjorde det
-     inte. Halvvägs, alltså — sämre än både att ta bort fliken och
-     att låta den nå fram.
+     Var en uppladdning per elev till `materials`: tre sorter (fil,
+     länk, anteckning) i elevens egen mapp. De raderna nådde ingen
+     familj sedan föräldravyns materialflik togs bort i Fas 13.2 —
+     en uppladdning som såg ut att fungera och inte gjorde det.
 
-     Nu skrivs det i biblioteksmaterial med delad = false. Samma bank
-     som Nextrums eget material, samma väg ut till familjen: läxan
-     pekar på raden, och familjens policy följer läxan. Skillnaden
-     mot det delade är vem som ser det, och det avgör databasen:
+     Fliken är nu biblioteket, med två sorter i samma lista:
 
-       · delad = false  — bara du ser det, bara du ändrar det
-       · delad = true   — Nextrums bank, bara admin skriver
+     · Nextrums   — delad = true. Bara admin fyller på. Det är
+                    urvalet, och det är kurerat med flit.
+     · Mitt eget  — delad = false. Bara du ser det, bara du ändrar
+                    det. Databasen har `not delad` i både using och
+                    with check på uppdateringen, så det går inte att
+                    lyfta in i den gemensamma banken härifrån.
 
-     DU KAN INTE SÄTTA delad = true HÄRIFRÅN. Insert-policyn kräver
-     `not delad`, och uppdateringspolicyn har `not delad` i både
-     using och with check. Kureringen av den gemensamma banken är
-     alltså en regel i databasen, inte en artighet i det här
-     formuläret.
-
-     Ämne och årskurs är obligatoriska eftersom biblioteket filtreras
-     på dem, och koderna kommer ur NX.ARSKURSER — årskursen är låst
-     till ak1–ak9 och gy1–gy3 av ett check-villkor.
-
-     Anteckning finns inte längre som typ: biblioteksmaterial kräver
-     fil eller länk, och en läxa ska peka på något eleven kan öppna.
+     Båda når eleven på samma sätt: genom en läxa. Det är LÄXAN som
+     gör materialet synligt för familjen, inte uppladdningen — och
+     därför leder "Ge som läxa" till läxformuläret i stället för att
+     skapa något direkt. Deadlinen är det enda som inte står i
+     materialet, och en läxa utan deadline är en läxa eleven inte vet
+     när hen ska ha gjort.
      ============================================================ */
 
-  /* Ämnes- och årskurslistorna ritas här och inte i html:en — CSP:n
-     på /larare är script-src 'self', så sidan kan inte fylla dem
-     själv, och listorna ska bara stå på ett ställe (NX). */
-  (function fyllMaterialval() {
-    const a = $('#mt-amne'), k = $('#mt-arskurs');
-    if (a) a.innerHTML = NX.AMNEN.map(x =>
-      '<option value="' + esc(x) + '">' + esc(x) + '</option>').join('');
-    if (k) k.innerHTML = NX.ARSKURSER.map(x =>
-      '<option value="' + esc(x.kod) + '">' + esc(x.text) + '</option>').join('');
-  })();
+  /* Materialet nästa läxa ska peka på. Nollställs när formuläret
+     stängs eller skickas — annars ärver nästa läxa ett material man
+     valde för tio minuter sedan. */
+  let valtBibliotek = null;
+  let bibRader = [];
+  let bibÄgare = '';     // '', 'delad' eller 'eget'
+  let bibEgetTyp = 'fil';
 
-  $('#mat-typ').addEventListener('click', e => {
-    const k = e.target.closest('[data-mtyp]');
+  function fyllBibliotekVäljare() {
+    const ämnen = NX.AMNEN.map(a =>
+      '<option value="' + esc(a) + '">' + esc(a) + '</option>').join('');
+    const årskurser = NX.ARSKURSER.map(a =>
+      '<option value="' + esc(a.kod) + '">' + esc(a.text) + '</option>').join('');
+    $('#bl-amne').innerHTML = '<option value="">Alla ämnen</option>' + ämnen;
+    $('#bl-ak').innerHTML = '<option value="">Alla årskurser</option>' + årskurser;
+    $('#be-amne').innerHTML = ämnen;
+    $('#be-arskurs').innerHTML = årskurser;
+  }
+
+  function bibKort(b) {
+    const eget = !b.delad;
+    return '<div class="bib-kort' + (eget ? ' ar-eget' : '') + '">'
+      + '<div class="bib-kort-topp">'
+      + '<b>' + esc(b.titel) + '</b>'
+      + '<span class="tag">' + esc(b.amne) + '</span>'
+      + '<span class="tag">' + esc(NX.årskursText(b.arskurs)) + '</span>'
+      + '<span class="bib-agare">' + (eget ? 'Ditt eget' : 'Nextrums') + '</span>'
+      + '</div>'
+      + (b.beskrivning ? '<p>' + esc(b.beskrivning) + '</p>' : '')
+      + '<div class="bib-kort-knappar">'
+      + '<button type="button" class="btn btn-ghost btn-sm" data-bib-titt="' + esc(b.id) + '">Titta på det</button>'
+      + '<button type="button" class="btn btn-primary btn-sm" data-bib-lax="' + esc(b.id) + '">Ge som läxa</button>'
+      /* Bara ditt eget går att ta bort. Nextrums bank sköts av admin,
+         och en knapp som alltid svarar "det gick inte" är sämre än
+         ingen knapp. */
+      + (eget
+          ? ' <button type="button" class="btn btn-ghost btn-sm" data-bib-egetbort="' + esc(b.id) + '">Ta bort</button>'
+          : '')
+      + '</div></div>';
+  }
+
+  function ritaBibliotekslista() {
+    const host = $('#bl-lista');
+    if (!host) return;
+    const amne = $('#bl-amne').value;
+    const ak = $('#bl-ak').value;
+    const sök = $('#bl-sok').value.trim().toLowerCase();
+
+    const urval = bibRader
+      .filter(b => !bibÄgare || (bibÄgare === 'eget' ? !b.delad : b.delad))
+      .filter(b => !amne || b.amne === amne)
+      .filter(b => !ak || b.arskurs === ak)
+      .filter(b => !sök || (b.titel + ' ' + (b.beskrivning || '')).toLowerCase().indexOf(sök) > -1);
+
+    $('#mat-antal').textContent = bibRader.length
+      ? urval.length + ' av ' + bibRader.length : '';
+
+    host.innerHTML = urval.length
+      ? urval.map(bibKort).join('')
+      : tomt(bibRader.length ? 'Inget material matchar' : 'Inget material än',
+          bibRader.length
+            ? 'Prova ett bredare filter, eller lägg till ett eget.'
+            : 'Nextrums bank fylls på av oss. Ditt eget lägger du till med knappen ovan.');
+  }
+
+  async function laddaBibliotek() {
+    const { data, error } = await supa.from('biblioteksmaterial')
+      .select('id, titel, beskrivning, amne, arskurs, filvag, lank, delad')
+      .eq('aktiv', true)
+      .order('delad', { ascending: true })
+      .order('amne').order('titel');
+    if (error) {
+      $('#bl-lista').innerHTML = tomt('Materialet gick inte att hämta', felText(error));
+      return;
+    }
+    bibRader = data || [];
+
+    /* Förvalet är den valda elevens årskurs. students.grade är
+       fritext ("åk 7", "7:an"), så koden gissas — och gissar hellre
+       inget än fel: ett filter förvalt på fel årskurs ser ut som ett
+       tomt bibliotek, och då slutar man leta. */
+    const eleven = elev();
+    const ak = $('#bl-ak');
+    if (ak && !ak.dataset.rörd) {
+      const förvald = NX.årskursKod(eleven && eleven.grade);
+      if (förvald) ak.value = förvald;
+    }
+    ritaBibliotekslista();
+  }
+
+  /* ---- filter ---- */
+  $('#bib-agare').addEventListener('click', e => {
+    const k = e.target.closest('[data-bagare]');
     if (!k) return;
-    S.matTyp = k.dataset.mtyp;
-    $$('#mat-typ button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mtyp === S.matTyp)));
-    $('#mt-fil-grupp').hidden = S.matTyp !== 'fil';
-    $('#mt-lank-grupp').hidden = S.matTyp !== 'lank';
-    rensa($('#mt-msg'));
+    bibÄgare = k.dataset.bagare;
+    $$('#bib-agare button').forEach(b =>
+      b.setAttribute('aria-pressed', String(b.dataset.bagare === bibÄgare)));
+    ritaBibliotekslista();
   });
 
-  $('#mt-fil').addEventListener('change', e => {
-    const f = e.target.files && e.target.files[0];
-    $('#mt-fil-namn').textContent = f ? f.name + ' · ' + M.filstorlek(f.size) : 'Ingen fil vald';
-    if (f && !$('#mt-titel').value.trim()) {
-      $('#mt-titel').value = f.name.replace(/\.[^.]+$/, '').slice(0, 200);
+  ['#bl-sok', '#bl-amne', '#bl-ak'].forEach(id => {
+    $(id).addEventListener('input', () => {
+      /* En rörd årskurs skrivs inte över av elevens vid nästa
+         hämtning. Att tvingas ställa om filtret varje gång man byter
+         elev är detsamma som att inte ha ett filter. */
+      if (id === '#bl-ak') $('#bl-ak').dataset.rörd = '1';
+      ritaBibliotekslista();
+    });
+  });
+
+  /* ---- titta på materialet ---- */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-bib-titt]');
+    if (!knapp) return;
+    const b = bibRader.find(x => x.id === knapp.dataset.bibTitt);
+    if (!b) return;
+    if (b.lank) { window.open(b.lank, '_blank', 'noopener'); return; }
+    await medan(knapp, '…', async () => {
+      const url = await M.signera('bibliotek', b.filvag);
+      if (!url) { alert('Filen gick inte att öppna just nu.'); return; }
+      window.open(url, '_blank', 'noopener');
+    });
+  });
+
+  /* ---- ge som läxa ---- */
+  document.addEventListener('click', e => {
+    const knapp = e.target.closest('[data-bib-lax]');
+    if (!knapp) return;
+    const b = bibRader.find(x => x.id === knapp.dataset.bibLax);
+    if (!b) return;
+    if (!S.aktivElev) { alert('Välj en elev högst upp först.'); return; }
+
+    valtBibliotek = b;
+    if (S.flikar && S.flikar.laxor) S.flikar.laxor.visa('laxor');
+    $('#lax-form').hidden = false;
+    $('#ny-lax').textContent = 'Stäng';
+    $('#lx-titel').value = b.titel;
+    $('#lx-amne').value = b.amne;
+    if (!$('#lx-text').value.trim() && b.beskrivning) $('#lx-text').value = b.beskrivning;
+    visaValtMaterial();
+    $('#lx-datum').focus();
+  });
+
+  /* Kvittot i läxformuläret. Utan det syns valet bara som att
+     rubriken fylldes i av sig själv, och den som ångrar sig har
+     ingen väg tillbaka — bibliotek_id hade följt med läxan ändå. */
+  function visaValtMaterial() {
+    const host = $('#lx-material');
+    if (!host) return;
+    if (!valtBibliotek) { host.hidden = true; host.innerHTML = ''; return; }
+    host.hidden = false;
+    host.innerHTML = '<span>Material: <b>' + esc(valtBibliotek.titel) + '</b></span>'
+      + '<button type="button" class="btn btn-ghost btn-sm" id="lx-material-bort">Ta bort kopplingen</button>';
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#lx-material-bort')) return;
+    valtBibliotek = null;
+    visaValtMaterial();
+  });
+
+  /* ============================================================
+     EGET MATERIAL
+
+     RADEN FÖRST, FILEN SEDAN. Hinkens insert-policy slår upp
+     sökvägens uuid i biblioteksmaterial — laddar man upp först får
+     man "new row violates row-level security policy" utan att förstå
+     varför. Går uppladdningen fel städas raden bort igen, annars
+     pekar listan på en fil som aldrig kom fram.
+
+     delad: false är inte en inställning, det är villkoret i policyn.
+     Skulle det stå true svarar databasen 42501.
+     ============================================================ */
+  $('#bib-eget-ny').addEventListener('click', () => {
+    const f = $('#bib-eget-form');
+    f.hidden = !f.hidden;
+    $('#bib-eget-ny').textContent = f.hidden ? 'Lägg till eget material' : 'Stäng';
+    if (!f.hidden) $('#be-titel').focus();
+  });
+
+  $('#be-avbryt').addEventListener('click', () => {
+    $('#bib-eget-form').hidden = true;
+    $('#bib-eget-ny').textContent = 'Lägg till eget material';
+    rensa($('#be-msg'));
+  });
+
+  $('#be-typ').addEventListener('click', e => {
+    const k = e.target.closest('[data-betyp]');
+    if (!k) return;
+    bibEgetTyp = k.dataset.betyp;
+    $$('#be-typ button').forEach(b =>
+      b.setAttribute('aria-pressed', String(b.dataset.betyp === bibEgetTyp)));
+    $('#be-fil-grupp').hidden = bibEgetTyp !== 'fil';
+    $('#be-lank-grupp').hidden = bibEgetTyp !== 'lank';
+    rensa($('#be-msg'));
+  });
+
+  $('#be-fil').addEventListener('change', e => {
+    const f = (e.target.files || [])[0];
+    $('#be-fil-namn').textContent = f ? f.name + ' · ' + M.filstorlek(f.size) : 'Ingen fil vald';
+    if (f && !$('#be-titel').value.trim()) {
+      $('#be-titel').value = f.name.replace(/\.[^.]+$/, '').slice(0, 200);
     }
   });
 
-  $('#mat-form').addEventListener('submit', async e => {
+  $('#bib-eget-form').addEventListener('submit', async e => {
     e.preventDefault();
-    const msg = $('#mt-msg');
+    const msg = $('#be-msg');
     rensa(msg);
 
-    const titel = $('#mt-titel').value.trim();
-    const fil = S.matTyp === 'lank' ? null : ($('#mt-fil').files || [])[0];
-    const länk = S.matTyp === 'lank' ? $('#mt-lank').value.trim() : '';
+    const titel = $('#be-titel').value.trim();
+    const fil = bibEgetTyp === 'fil' ? ($('#be-fil').files || [])[0] : null;
+    const länk = bibEgetTyp === 'lank' ? $('#be-lank').value.trim() : '';
 
     const fel = kolla([
-      { fel: !titel, text: 'Ge materialet en rubrik.', falt: $('#mt-titel') },
-      { fel: S.matTyp === 'fil' && !fil, text: 'Välj en fil att ladda upp.', falt: $('#mt-fil') },
-      { fel: S.matTyp === 'lank' && !länk, text: 'Klistra in adressen.', falt: $('#mt-lank') },
-      { fel: S.matTyp === 'lank' && länk && !/^https?:\/\//i.test(länk),
-        text: 'Adressen måste börja med http:// eller https://.', falt: $('#mt-lank') },
-      { fel: S.matTyp === 'fil' && fil && !!M.granskaFil(fil), text: fil ? M.granskaFil(fil) : '', falt: $('#mt-fil') }
+      { fel: !titel, text: 'Ge materialet en rubrik.', falt: $('#be-titel') },
+      { fel: bibEgetTyp === 'fil' && !fil, text: 'Välj en fil att ladda upp.', falt: $('#be-fil') },
+      { fel: bibEgetTyp === 'lank' && !länk, text: 'Klistra in adressen.', falt: $('#be-lank') },
+      { fel: bibEgetTyp === 'lank' && länk && !/^https?:\/\//i.test(länk),
+        text: 'Adressen måste börja med http:// eller https://.', falt: $('#be-lank') },
+      { fel: bibEgetTyp === 'fil' && fil && !!M.granskaFil(fil),
+        text: fil ? M.granskaFil(fil) : '', falt: $('#be-fil') }
     ]);
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
 
-    await medan($('#mt-spara'), S.matTyp === 'fil' ? 'Laddar upp…' : 'Sparar…', async () => {
-      /* RADEN FÖRST, FILEN SEDAN — samma ordning som adminvyns
-         bibliotek, och av samma skäl: hinkens insert-policy slår upp
-         sökvägens uuid i biblioteksmaterial, så raden måste finnas
-         innan filen får laddas upp.
-
-         Sökvägen byggs ur radens uuid och inte ur filnamnet. Ett
+    await medan($('#be-spara'), fil ? 'Laddar upp…' : 'Sparar…', async () => {
+      /* Sökvägen byggs ur radens uuid, aldrig ur filnamnet. Ett
          filnamn heter i praktiken "Provräkning Alva v42.pdf", och
          sökvägen är det enda i en hink som syns innan man öppnat
-         filen. */
+         filen. Därför måste id:t vara känt före uppladdningen. */
       const id = crypto.randomUUID();
       const rent = fil ? fil.name.replace(/[^\w.\-]+/g, '_').slice(-80) : '';
       const sökväg = fil ? id + '/' + rent : null;
@@ -1892,9 +1900,9 @@
       const { error } = await supa.from('biblioteksmaterial').insert({
         id: id,
         titel: titel,
-        beskrivning: $('#mt-beskrivning').value.trim() || null,
-        amne: $('#mt-amne').value,
-        arskurs: $('#mt-arskurs').value,
+        beskrivning: $('#be-beskrivning').value.trim() || null,
+        amne: $('#be-amne').value,
+        arskurs: $('#be-arskurs').value,
         filvag: sökväg,
         lank: länk || null,
         skapad_av: S.user.id,
@@ -1906,100 +1914,52 @@
         const upp = await supa.storage.from('bibliotek')
           .upload(sökväg, fil, { contentType: fil.type, upsert: false });
         if (upp.error) {
-          /* Raden städas bort igen. Blir den kvar pekar den på en fil
-             som aldrig laddades upp, och den som klickar Öppna får ett
-             fel utan förklaring. */
           await supa.from('biblioteksmaterial').delete().eq('id', id);
-          säg(msg, 'Filen kunde inte laddas upp: ' + upp.error.message + ' Ingenting sparades.', false);
+          säg(msg, 'Filen kunde inte laddas upp: ' + upp.error.message
+            + ' Ingenting sparades.', false);
           return;
         }
       }
 
-      säg(msg, '✓ Tillagt. Ge det som läxa under Läxor, så når familjen det.', true);
-      $('#mat-form').reset();
-      $('#mt-fil-namn').textContent = 'Ingen fil vald';
-      await laddaMaterial();
+      $('#bib-eget-form').reset();
+      $('#be-fil-namn').textContent = 'Ingen fil vald';
+      $('#bib-eget-form').hidden = true;
+      $('#bib-eget-ny').textContent = 'Lägg till eget material';
+      await laddaBibliotek();
+      säg($('#be-msg'), '', true);
     });
   });
 
-  /* Listan är INTE per elev längre. Det egna materialet är ditt, inte
-     en viss elevs — samma övningsblad ges till flera, och en kopia per
-     elev är en kopia att rätta flera gånger. */
-  async function laddaMaterial() {
-    const host = $('#mat-lista');
-    if (!host) return;
-    $('#mat-antal').textContent = '';
-    S.material = [];
-    host.innerHTML = laddar();
-
-    const { data, error } = await supa.from('biblioteksmaterial')
-      .select('id, titel, beskrivning, amne, arskurs, filvag, lank, aktiv, created_at')
-      .eq('skapad_av', S.user.id).eq('delad', false)
-      .order('created_at', { ascending: false });
-
-    if (error) { host.innerHTML = tomt('Kunde inte hämta materialet', felText(error)); return; }
-    if (!data.length) {
-      host.innerHTML = tomt('Inget eget material än',
-        'Lägg upp ett övningsblad eller en länk. Du ger det sedan som läxa, och familjen når det därifrån.');
-      return;
-    }
-
-    S.material = data;
-    $('#mat-antal').textContent = data.length + ' st';
-    host.innerHTML = data.map(m =>
-      '<div class="bib-kort">'
-      + '<div class="bib-kort-topp">'
-      + '<b>' + esc(m.titel) + '</b>'
-      + '<span class="tag">' + esc(m.amne) + '</span>'
-      + '<span class="tag">' + esc(NX.årskursText(m.arskurs)) + '</span>'
-      + (m.aktiv ? '' : '<span class="tag">Avstängt</span>')
-      + '</div>'
-      + (m.beskrivning ? '<p>' + esc(m.beskrivning) + '</p>' : '')
-      + '<div class="bib-kort-knappar">'
-      + '<button type="button" class="btn btn-ghost btn-sm" data-mat-oppna="' + esc(m.id) + '">Öppna</button>'
-      + '<button type="button" class="btn btn-ghost btn-sm" data-mat-bort="' + esc(m.id) + '">Ta bort</button>'
-      + '</div></div>').join('');
-  }
-
-  /* Filen ligger i en privat hink, så adressen skapas i klicket och
-     slutar gälla av sig själv. */
   document.addEventListener('click', async e => {
-    const öppna = e.target.closest('[data-mat-oppna]');
-    if (öppna) {
-      const m = (S.material || []).find(x => x.id === öppna.dataset.matOppna);
-      if (!m) return;
-      if (m.lank) { window.open(m.lank, '_blank', 'noopener'); return; }
-      await medan(öppna, 'Öppnar…', async () => {
-        const url = await M.signera('bibliotek', m.filvag, 300);
-        if (!url) { alert('Filen kunde inte öppnas. Ladda om sidan och försök igen.'); return; }
-        window.open(url, '_blank', 'noopener');
-      });
-      return;
-    }
+    const knapp = e.target.closest('[data-bib-egetbort]');
+    if (!knapp) return;
+    const b = bibRader.find(x => x.id === knapp.dataset.bibEgetbort);
+    if (!b) return;
 
-    const bort = e.target.closest('[data-mat-bort]');
-    if (!bort) return;
-    const m = (S.material || []).find(x => x.id === bort.dataset.matBort);
     const ja = await bekräfta({
-      titel: 'Ta bort materialet?',
-      text: '"' + ((m && m.titel) || 'Materialet') + '" försvinner. Läxor som redan pekar på det '
-        + 'blir kvar, men utan material.',
+      titel: 'Ta bort ' + b.titel + '?',
+      text: 'Materialet försvinner ur din lista. Läxor som redan pekar på det blir '
+        + 'kvar men tappar materialet.',
       knapp: 'Ta bort'
     });
     if (!ja) return;
 
-    await medan(bort, 'Tar bort…', async () => {
-      /* FILEN FÖRST, RADEN SEDAN, OCH LÄS SVARET. Sökvägen finns bara
-         i raden: försvinner raden först går filen inte att hitta och
-         inte att städa. */
-      if (m && m.filvag) {
-        const filfel = await supa.storage.from('bibliotek').remove([m.filvag]);
-        if (filfel.error) { alert('Filen kunde inte tas bort: ' + filfel.error.message
-          + ' Raden är kvar, så ingenting pekar på en fil som saknas.'); return; }
+    await medan(knapp, 'Tar bort…', async () => {
+      /* Filen först, raden sedan, och LÄS SVARET. Sökvägen finns bara
+         i raden — försvinner raden först blir filen omöjlig att hitta
+         och omöjlig att städa. Samma fel som Fas 9.2 rättade. */
+      if (b.filvag) {
+        const res = await supa.storage.from('bibliotek').remove([b.filvag]);
+        if (res.error) {
+          alert('Filen kunde inte tas bort: ' + res.error.message
+            + '\nRaden är kvar, så sökvägen finns kvar att städa med.');
+          return;
+        }
+        M.glömSignerad('bibliotek', b.filvag);
       }
-      const { error } = await supa.from('biblioteksmaterial').delete().eq('id', bort.dataset.matBort);
-      if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
-      await laddaMaterial();
+      const { error } = await supa.from('biblioteksmaterial').delete().eq('id', b.id);
+      if (error) { alert('Filen togs bort men raden blev kvar: ' + felText(error)); return; }
+      await laddaBibliotek();
     });
   });
 
@@ -2852,11 +2812,6 @@
        aktiv — båda behöver katalogen innan de ritar något. */
     await NXTjanster.ladda();
 
-    /* Mitt material laddas EN gång, inte per elev. Det är ditt eget,
-       inte en viss elevs: samma övningsblad ges till flera, och låg
-       det i byggElev hämtades samma lista om vid varje elevbyte. */
-    laddaMaterial();
-
     /* Flikarna först. Sidomenyn och hash-översättningen ropar på dem
        när de byter sektion, och en flikrad som inte finns än hade
        svalt det anropet. */
@@ -2872,6 +2827,15 @@
     /* Pilarna som står i markupen läses av en gång här, så ett sparat
        läge syns direkt och inte först vid första klicket. */
     NXArbete.fallStall($('#view-app'));
+
+    /* Ämnena och årskurserna ritas en gång. De kommer ur NX.AMNEN och
+       NX.ARSKURSER — samma listor som adminvyn märker materialet med.
+       Två listor som glider isär gör ett övningsblad osynligt. */
+    fyllBibliotekVäljare();
+    /* Och hämtas en gång direkt. byggElev hämtar om det när en elev
+       väljs, men utan det här står fliken kvar på "Hämtar" för den
+       som öppnar den innan hen valt någon. */
+    laddaBibliotek();
 
     /* Elevraden hör bara hemma där innehållet faktiskt gäller en
        vald elev eller familj. På Översikt och kontosidorna är den

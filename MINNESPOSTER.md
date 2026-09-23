@@ -152,6 +152,14 @@ gren. Listan över det som faktiskt kör hämtas med `list_migrations` och
 `list_edge_functions`, inte ur mappen. **Driftsätter du något, commit:a
 det i samma arbetspass.**
 
+**Och tvärtom: en inställning som bara finns i databasen finns inte i
+produkten.** Flaggan `notiser_mejl` stod av från Runda 2 till Fas 13.4
+och ingen fil i repot nämnde ens tabellen `flaggor`. Notiserna syntes i
+vyn, kön fylldes, schemat gick — och varje mejlrad märktes tyst
+`loggad`. **Ett avstängt system och ett trasigt system ser likadana ut
+inifrån.** Bygger du en strömbrytare i en tabell: bygg reglaget i
+adminvyn i samma ändring.
+
 ---
 
 ## `project-nextrum-sprak-kod`

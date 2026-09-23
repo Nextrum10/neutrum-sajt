@@ -197,7 +197,8 @@ och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
 `handlingar`. Fas 13.2 la till `biblioteksmaterial`. Runda 2 la till notisernas sju: `notiser` (i vyn),
 `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
-`notis_fel`.
+`notis_fel` — plus `flaggor`, som är strömbrytarna för det som
+väntar på ett beslut om affär, juridik eller pengar.
 
 Schemat **`intern`** (Fas 10.3) bär funktioner databasen behöver för
 sin egen skull och som inte är ett API. PostgREST exponerar det inte.
@@ -260,16 +261,18 @@ eftersom `student_id` är NOT NULL, skrivpolicyn kräver
 `is_my_student()` och hinken `material` kräver ett elev-uuid först i
 sökvägen.
 
-- **`delad` skiljer Nextrums bank från studiehjälparens eget**
-  (Fas 13.3). `delad = true` är banken: bara admin skriver, alla
-  godkända hjälpare läser. `delad = false` är hjälparens eget: bara
-  hen ser det, bara hen ändrar det. **Den går inte att slå på själv** —
-  `not delad` står i BÅDE using och with check på uppdateringspolicyn.
-  Kunde en hjälpare lyfta in sitt utkast i banken vore kureringen en
-  artighet, inte en regel.
-- **I den delade banken LÄSER studiehjälparen, admin SKRIVER.** Blir
-  den ett fritt uppladdningsutrymme är den inte längre ett urval, och
-  då är filtret på ämne och årskurs ingenting värt.
+- **`delad` skiljer två sorter i samma tabell** (Fas 13.3).
+  `delad = true` är Nextrums BANK: bara admin skriver, alla godkända
+  studiehjälpare läser. `delad = false` är studiehjälparens EGET: bara
+  ägaren ser och ändrar det. Banken är kurerad med flit — blir den ett
+  fritt uppladdningsutrymme är den inte längre ett urval, och då är
+  filtret på ämne och årskurs ingenting värt.
+- **`delad` går inte att slå på nerifrån.** Uppdateringspolicyn har
+  `not delad` i BÅDE using och with check, så en studiehjälpare kan
+  ändra sitt eget men aldrig lyfta in det i banken. Admin gör det med
+  knappen "Lyft in i banken", och bara åt det hållet: en delad rad som
+  lämnades tillbaka hade försvunnit ur listan hos alla som redan gett
+  den som läxa.
 - **`ar_godkand_studiehjalpare()`** är den första policyn som ställer
   frågan "är den här personen godkänd" i databasen. Före Fas 13.2
   nämnde noll policyer `tutor_profiles` — det var något adminvyn visste
@@ -278,23 +281,22 @@ sökvägen.
   som rättas ska rättas en gång. `on delete set null`: en läxa som
   getts ska inte försvinna för att banken städas.
 - **Familjen når materialet sin läxa bygger på, även om raden stängts
-  av.** En läxa vars material ger tomt svar är en läxa som inte går att
-  göra.
+  av och även om den är någons egen.** Den policyn frågar inte efter
+  `delad`: läxan ÄR kopplingen. En läxa vars material ger tomt svar är
+  en läxa som inte går att göra.
+- **`materials` når inte familjen längre.** Både studiehjälparvyns
+  materialflik (Fas 13.3) och adminvyns detaljpanel skrev dit; fliken
+  är ombyggd till biblioteket, panelen står kvar som VÅRT underlag om
+  eleven och säger det i klartext. Vägen till familjen går genom
+  biblioteket och en läxa, ingen annanstans.
 - **Årskursen är enskild och låst** (`ak1`–`ak9`, `gy1`–`gy3`), och
   koden är inte etiketten. `NX.ARSKURSER` i `nextrum-app.js` speglar
   check-villkoret; `NX.AMNEN` är samma lista i alla tre vyerna.
   Fritext hade betytt att "åk7", "Åk 7" och "7" blir tre årskurser, och
   ett filter som tappar två tredjedelar av banken ser ut som ett tomt
   bibliotek.
-- **Studiehjälparvyns flik Material skriver i `biblioteksmaterial`
-  med `delad = false`** (Fas 13.3). Den skrev fram till dess i
-  `materials`, och de raderna nådde ingen familj sedan föräldravyns
-  materialflik togs bort i 13.2 — en uppladdning som såg ut att
-  fungera och inte gjorde det. Fliken är inte längre per elev:
-  materialet är hjälparens eget, och samma övningsblad ges till
-  flera. Familjen når det genom läxan, precis som Nextrums eget.
-- `verktyg/rls-test.sql` har nitton BIB-rader. Kör dem efter varje
-  ändring i policyn.
+- `verktyg/rls-test.sql` har nitton BIB-rader, sju av dem om
+  delningen. Kör dem efter varje ändring i policyn.
 
 **Uppgifter som maskiner skapar går genom `skapa_uppgift()`** (Fas 7),
 som kräver en nyckel och vägrar skapa en till när det redan finns en
@@ -336,8 +338,28 @@ trigger på bookings/messages/lesson_reports
   → notis-ko               notis_utskick_ta() → Resend → notis_utskick_klar()
 ```
 
-Sju regler bär systemet:
+Åtta regler bär systemet:
 
+0. **Strömbrytaren är flaggan `notiser_mejl` i `flaggor`, och den är
+   inte samma sak som regel 4.** Regel 4 är personens eget val;
+   flaggan är hela systemets. Står den av lämnar `notis_utskick_ta()`
+   inte ut en enda mejlrad: raden märks **`loggad`**, notisen syns i
+   vyn, och ingenting går ut. Kön, schemat och arbetaren fortsätter
+   under tiden att se friska ut, för det är de.
+
+   Flaggan stod av från Runda 2 till Fas 13.4 utan att någon fil i
+   repot ens nämnde tabellen `flaggor`. Trettonde notisen i rad blev
+   `loggad` och systemet såg ut att vara trasigt. **Ett avstängt
+   system och ett trasigt system ser likadana ut inifrån** — därför
+   finns reglaget nu i produkten, under **System → Notiser**: flaggan
+   med sitt `vantar_pa`, sandlådan, provmejlen och köns läge.
+   Läsningen är `notis_lage()` (Fas 13.4), som räknar i databasen och
+   aldrig lämnar ut adresser, mottagare eller brödtext.
+
+   `loggad` är ett slutläge. De mejl som aldrig gick under
+   avstängningen går inte att skicka i efterhand, och ska inte
+   heller: en påminnelse om ett pass förra veckan är inte en notis,
+   den är förvirring.
 1. **Ingen får en notis om sin egen åtgärd.** `intern.notis_skapa()`
    returnerar tyst när mottagaren är `auth.uid()`. Det är därför
    mallarna aldrig säger VEM som gjorde något: när admin ändrar ett
@@ -867,12 +889,17 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   inget av stegen kontrollerar något utifrån: mötet bokas inte i en
   kalender — Google Workspace är inte kopplat — och utbildningen är en
   länk i `UTBILDNING_URL`, inte ett prov systemet läser resultatet av.
-- ~~**Studiehjälparens egen materialflik hänger löst sedan Fas 13.2.**~~
-  **Löst i Fas 13.3.** Fliken skriver nu i `biblioteksmaterial` med
-  `delad = false`, och familjen når materialet genom läxan precis som
-  Nextrums eget. `materials` och hinken `material` ligger kvar så att
-  gamla rader går att läsa och städa från adminvyn — men ingen vy
-  skriver dit längre.
+- **`materials` har inga läsare kvar utom oss själva** (efter Fas
+  13.3). Studiehjälparvyns materialflik är ombyggd till biblioteket,
+  och adminvyns detaljpanel skriver fortfarande dit men säger nu i
+  klartext att familjen inte ser det. Tabellen och hinken `material`
+  lever kvar. `NXMedia.laddaMaterial`, `materialRad` och
+  `sparaMaterialfil` gör det INTE längre — de hade noll anropare kvar
+  efter ombyggnaden, och en delad hjälpare som ingen ringer är en
+  hjälpare nästa person bygger vidare på. Kvar att bestämma: ska
+  panelen vara kvar som internt underlag (då är det färdigt) eller ska
+  `materials` bort helt (då är det en städning med en hink att tömma
+  först)?
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
   utbetalningen, inte efter.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
