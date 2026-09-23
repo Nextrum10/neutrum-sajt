@@ -623,10 +623,10 @@ def sida(o):
   <h1 class="nx-d1" data-avslöj>{o['h1']}</h1>
   <p class="nx-lede" data-stig data-fördröj="1">{esc(o['lede'])}</p>
   <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:{o['tint']}">
-    <img class="nx-img" src="bilder/{o['bild']}-1280.jpg"
+    <picture><source type="image/webp" srcset="bilder/{o['bild']}-640.webp 640w, bilder/{o['bild']}-960.webp 960w, bilder/{o['bild']}-1280.webp 1280w, bilder/{o['bild']}-1600.webp 1600w, bilder/{o['bild']}-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="bilder/{o['bild']}-1280.jpg"
          srcset="bilder/{o['bild']}-640.jpg 640w, bilder/{o['bild']}-960.jpg 960w, bilder/{o['bild']}-1280.jpg 1280w, bilder/{o['bild']}-1600.jpg 1600w, bilder/{o['bild']}-1920.jpg 1920w"
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
-         style="object-position:{o['focal']}" alt="{esc(o['alt'])}">
+         style="object-position:{o['focal']}" alt="{esc(o['alt'])}"></picture>
   </figure>
 </section>
 

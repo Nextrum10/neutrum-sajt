@@ -200,7 +200,7 @@ Deno.serve(async (req) => {
     try {
       allaPass = await allaRader<Pass>((fran, till) => db.from('passunderlag')
         .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, '
-          + 'rabatt_ore, fakturerbar, har_rapport, fakturerad, pa_underlag')
+          + 'rabatt_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status')
         .lt('wanted_date', slut)
         .or('fakturerad.eq.false,pa_underlag.eq.false')
         .order('wanted_date').order('id')

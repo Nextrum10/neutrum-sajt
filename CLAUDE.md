@@ -90,7 +90,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-config.js` | **Enda filen som ska ändras vid uppsättning.** URL, anon-nyckel, pris, e-post, utbildningslänk |
 | `nextrum-app.js` | `NX` — delad grund: supa-klient, i18n, datum, fel, header, inloggning |
 | `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen |
-| `nextrum-modulvakt.js` | Fångar "en modul laddade inte" innan vyn dör tyst på "Laddar din vy" |
+| `nextrum-modulvakt.js` | Fångar "en modul laddade inte" innan vyn dör tyst på "Laddar din vy". Laddas i **alla tre** vyerna sedan Fas 14.0 — adminvyn saknade den, fast den har 26 skript mot de andras 17. Prövar en FUNKTION per fil, inte bara att globalen finns: en gammal fil i cachen definierar sin global och ser frisk ut. Modulerna nås som IDENTIFIERARE, aldrig som `window[...]` — hälften deklareras `const NX… = …` på toppnivå och hamnar då inte på window |
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
 | `nextrum-motion.js` | `NXImg` (bildmarkup), `NXMotion` (scrollmotor), `NXStory`. Tre lägen: full / lite / still |
 | `nextrum-studie.js`, `-arbetsyta.js`, `-kontakt.js`, `-betalning.js`, `-media.js`, `-tjanster.js` | Delat mellan vyerna |
@@ -260,9 +260,16 @@ eftersom `student_id` är NOT NULL, skrivpolicyn kräver
 `is_my_student()` och hinken `material` kräver ett elev-uuid först i
 sökvägen.
 
-- **Studiehjälparen LÄSER, admin SKRIVER.** Blir det ett fritt
-  uppladdningsutrymme är det inte längre ett urval, och då är filtret
-  på ämne och årskurs ingenting värt.
+- **`delad` skiljer Nextrums bank från studiehjälparens eget**
+  (Fas 13.3). `delad = true` är banken: bara admin skriver, alla
+  godkända hjälpare läser. `delad = false` är hjälparens eget: bara
+  hen ser det, bara hen ändrar det. **Den går inte att slå på själv** —
+  `not delad` står i BÅDE using och with check på uppdateringspolicyn.
+  Kunde en hjälpare lyfta in sitt utkast i banken vore kureringen en
+  artighet, inte en regel.
+- **I den delade banken LÄSER studiehjälparen, admin SKRIVER.** Blir
+  den ett fritt uppladdningsutrymme är den inte längre ett urval, och
+  då är filtret på ämne och årskurs ingenting värt.
 - **`ar_godkand_studiehjalpare()`** är den första policyn som ställer
   frågan "är den här personen godkänd" i databasen. Före Fas 13.2
   nämnde noll policyer `tutor_profiles` — det var något adminvyn visste
@@ -279,8 +286,15 @@ sökvägen.
   Fritext hade betytt att "åk7", "Åk 7" och "7" blir tre årskurser, och
   ett filter som tappar två tredjedelar av banken ser ut som ett tomt
   bibliotek.
-- `verktyg/rls-test.sql` har tolv BIB-rader. Kör dem efter varje ändring
-  i policyn.
+- **Studiehjälparvyns flik Material skriver i `biblioteksmaterial`
+  med `delad = false`** (Fas 13.3). Den skrev fram till dess i
+  `materials`, och de raderna nådde ingen familj sedan föräldravyns
+  materialflik togs bort i 13.2 — en uppladdning som såg ut att
+  fungera och inte gjorde det. Fliken är inte längre per elev:
+  materialet är hjälparens eget, och samma övningsblad ges till
+  flera. Familjen når det genom läxan, precis som Nextrums eget.
+- `verktyg/rls-test.sql` har nitton BIB-rader. Kör dem efter varje
+  ändring i policyn.
 
 **Uppgifter som maskiner skapar går genom `skapa_uppgift()`** (Fas 7),
 som kräver en nyckel och vägrar skapa en till när det redan finns en
@@ -387,6 +401,19 @@ knapp är inte säkerhet — den som inte är admin får tomma svar oavsett
 vad filen ritar. `is_admin`-kontrollen i `nextrum-admin.js` finns för
 att visa **rätt sida**, inte för att skydda data.
 
+- **Rå servertext visas bara i de inloggade vyerna.** `NX.felText`
+  kände igen sex fel och skrev annars ut serverns egen text. På
+  `body.vy` (admin, larare, foralder) är det rätt — den som läser är
+  vi själva, och "new row violates row-level security policy for table
+  bookings" är svaret på frågan. På en publik sida är det fel två
+  gånger om: föräldern förstår den inte, och den beskriver en tabell
+  och en policy för vem som helst. Sedan Fas 14.0 går den texten till
+  konsolen och `klientfel` i stället, och besökaren får ett begripligt
+  besked med en adress att mejla. **Varje meddelande som slutar i en
+  återvändsgränd ska bära `{oss}`** — `t()` fyller den med `CFG.EPOST`
+  utan att anroparen behöver veta om det. Förut stod "Fyll i
+  nextrum-config.js" ordagrant på den publika intresseanmälan, och en
+  familj som fick det hade ingen väg vidare alls.
 - **anon-nyckeln är inte hemlig.** Den hör hemma i webbläsaren.
 - **`service_role` får aldrig in i en klientfil.** Den går förbi RLS.
 - **I edge functions: anroparens egen token prövas mot Auth och RLS
@@ -437,11 +464,11 @@ att visa **rätt sida**, inte för att skydda data.
 
 `get_advisors(type: 'security')` ger ett trettiotal varningar. De flesta
 är väntade, och listan nedan finns för att ingen ska utreda dem en
-gång till. **Kontrollerat 2026-09-22, med prov mot driften:**
+gång till. **Kontrollerat 2026-09-23, med prov mot driften:**
 
 | Varning | Varför den är väntad |
 |---|---|
-| `rls_enabled_no_policy` på `notis_konfig`, `fortnox_token`, `kund_skatteuppgifter` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
+| `rls_enabled_no_policy` på `notis_konfig`, `fortnox_token`, `kund_skatteuppgifter`, `stripe_handelser` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
 | 23 SECURITY DEFINER-funktioner nåbara för `authenticated` | Alla fjorton adminfunktioner kontrollerar `is_admin()` internt. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
@@ -450,6 +477,17 @@ Proven, körda som `anon` i en transaktion som rullades tillbaka:
 `is_admin(<en riktig admin>)` → `false`, `is_admin(<vanlig användare>)`
 → `false`, `is_admin()` → `false`, `kolla_rabattkod(…)` → `"Logga in
 först."`
+
+**Ett larm som VAR äkta, och är rättat:** `ar_godkand_studiehjalpare(uid)`
+var nåbar för `anon` och svarade om vilket uuid som helst — prövat mot
+driften gav den `true` för en godkänd hjälpare där `is_admin` samma väg
+gav `false`. Den saknade alltså precis den vakt som gör `is_admin`
+ofarlig. Fas 14.0b gav den samma vakt och återkallade EXECUTE från
+anon. Att revoke var säkert PRÖVADES FÖRST: alla fem policyer som
+backar funktionen är `to authenticated`, och inget check-villkor, ingen
+vy och ingen annan funktion nämner den. Hade någon varit `to anon` hade
+Fas 10-fällan slagit till igen. **Lärdomen: en ny funktion som svarar
+på en fråga om en PERSON ska ha is_admins vakt från första raden.**
 
 **Två saker som inte är falsklarm:**
 
@@ -506,10 +544,19 @@ eftersom anroparen är ett schema finns ingen som ser det. **Filen är
 sanningen, inte dashboarden.** Lägger du till en funktion utan
 inloggning: skriv raden där i samma ändring.
 
-### `pass-notis` och `meddelande-notis` har ingen anropare kvar
+### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
-Båda ligger ACTIVE i driften, men triggrarna som ringde dem finns
-inte längre. Runda 2 bytte webhookarna mot kötriggrar:
+Båda hade ingen anropare kvar: Runda 2 bytte webhookarna som ringde
+dem mot kötriggrar. Beslutet är taget — källan är borttagen ur repot
+och raderna ur `supabase/config.toml`.
+
+**KVAR ATT GÖRA FÖR HAND: de ligger fortfarande ACTIVE i driften.**
+Supabase CLI och MCP kan driftsätta en funktion men inte ta bort den;
+det görs i dashboarden under Edge Functions. Tills dess svarar de på
+sin adress, skyddade av den delade hemligheten i headern, men de gör
+ingenting någon ber om.
+
+Så här ser vägarna ut i dag:
 
 | Tabell | Trigger i dag | Funktion |
 |---|---|---|
@@ -532,10 +579,9 @@ FUNKTIONEN i stället för på namnet.
 anropade den längre: studiehjälparen får betalt den 25:e genom
 `payouts`, så ett anslutet konto fyller ingen funktion.
 
-**Bestäm vad som ska hända med de två som är kvar.** Antingen tas de ur
-driften, eller så får de en anropare. ACTIVE funktioner som ingen
-ringer är samma sorts halvfärdighet som gjorde att hela det här
-systemet inte fanns i repot.
+ACTIVE funktioner som ingen ringer är samma sorts halvfärdighet som
+gjorde att hela det här systemet inte fanns i repot. Det är därför de
+två ovan är avgjorda och inte utredda en gång till.
 
 ### Notissystemet kom hem i efterhand
 
@@ -660,9 +706,22 @@ hitta på ett pris, ett villkor eller ett löfte.
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
 | `laxhjalp-*.html` (7 st) | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html` |
 | Ikonlänkar och storlekar | `verktyg/satt-logga.py` | `bilder/nextrum-logo.png` |
+| `?v=`-stämplarna på alla script- och link-taggar | `verktyg/satt-version.py` | filernas egen md5 |
+| `bilder/*.webp` | `verktyg/bygg-webp.py` | `bilder/*.jpg` |
 
 CI kör om maskotsvaren och FAQ-schemat och gör `git diff --exit-code`.
 Ändrar du FAQ:n utan att bygga om blir bygget rött.
+
+**`satt-version.py` körs SIST.** Områdesgeneratorn skriver sina egna
+script-taggar och tappar stämpeln, så ordningen är: bygg om, stämpla
+sedan. CI kontrollerar med `--kolla` i stället för att skriva.
+
+**`bygg-webp.py` körs INTE i CI**, och det är med flit: en bildkodare
+ger inte samma bytes mellan versioner, så `git diff --exit-code` hade
+blivit rött av sig självt vid varje uppgradering av cwebp. I stället
+vaktar `verktyg/kolla-webp.py` att varje jpg HAR en webp och att den
+inte är äldre. En saknad webp går inte sönder — `<picture>` faller
+tillbaka på jpg:en — den gör bara den bilden tre gånger tyngre, tyst.
 
 Områdessidorna får **inte** innehålla något som inte är sant: inga
 antal, inga betyg, inga "vi har hjälpt N elever i Farsta", inga
@@ -681,9 +740,15 @@ Körs på varje push och PR. Ska vara grön före merge.
 3. `verktyg/kolla-betalningsvillkor.py`
 4. `verktyg/kolla-migrationer.py`
 5. `verktyg/kolla-csp.py`
-6. Genererade filer är aktuella (bygg om + `git diff --exit-code`)
-7. Språkdiff mot baslinjen
-8. `deno check supabase/functions/*/index.ts`, `deno test _delad/`
+6. `verktyg/kolla-webp.py`
+7. `verktyg/satt-version.py --kolla`
+8. Genererade filer är aktuella (bygg om + `git diff --exit-code`)
+9. Språkdiff mot baslinjen — **inklusive attributNAMNEN**, sedan
+   `<div role="img" alt="…">` stod på den engelska startsidan där
+   svenskan hade `aria-label`. `alt` betyder ingenting på en div, så
+   illustrationen var namnlös för skärmläsare på ett av två språk.
+   Taggsekvensen var identisk och texten översatt, så verktyget sa ok
+10. `deno check supabase/functions/*/index.ts`, `deno test _delad/`
 
 Kör dem lokalt innan du pushar. De är snabba och de fångar exakt det
 som annars upptäcks i drift.
@@ -740,11 +805,21 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   lagt hjälparens del på hens Stripe-saldo vid varje pass, och sedan
   hade månadskörningen betalat samma timmar en gång till.
 
-  **De två vägarna vet ännu inte om varandra.** `passunderlag` tittar
-  inte på `betalning_status`, så ett kortbetalt pass hamnar ändå på
-  familjens faktura i månadskörningen. **Körs båda skarpt faktureras
-  familjen två gånger.** Underlaget till hjälparen ska däremot fortsätta
-  skapas — det är bara familjehalvan som ska hoppas över.
+  **De två vägarna vet om varandra sedan Fas 14.0.** `passunderlag`
+  bär `betalning_status`, och `byggUnderlag` hoppar över FAMILJENS rad
+  när kortvägen rört passet — `vantar`, `betald`, `aterbetald` eller
+  `tvist`. `ingen` och `misslyckad` faktureras som förut: då finns
+  ingen betalning. Passen försvinner inte tyst, de redovisas under
+  `hoppade_over_kortvagen` i körningens svar.
+
+  **Studiehjälparens underlag rörs inte.** Hen har hållit passet
+  oavsett hur familjen betalade, och ersättningen den 25:e räknas fram
+  precis som förut. Det är hela skillnaden mot att bara hoppa över
+  passet, och den står som ett eget testfall i `pris_test.ts`.
+
+  `vantar` är med i listan av en anledning: en öppen checkout-session
+  kan landa en minut efter körningen, och då hade familjen betalat två
+  gånger utan att någon av vägarna vetat om den andra.
 
   **Fas 14 river månadsfakturan till familjen.** Beslutet är taget:
   kort per pass är enda vägen, betalningen ska ske FÖRE passet, och
@@ -792,13 +867,12 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   inget av stegen kontrollerar något utifrån: mötet bokas inte i en
   kalender — Google Workspace är inte kopplat — och utbildningen är en
   länk i `UTBILDNING_URL`, inte ett prov systemet läser resultatet av.
-- **Studiehjälparens egen materialflik hänger löst sedan Fas 13.2.**
-  Föräldravyns materialflik är borttagen, och materialet familjen ser
-  kommer nu via läxan ur `biblioteksmaterial`. Men studiehjälparvyns
-  flik Material skriver fortfarande i `materials`, och de raderna når
-  ingen familj längre. Antingen ska fliken bort, eller så ska
-  `materials` visas för familjen igen. **Halvvägs är sämre än båda:
-  en uppladdning som ser ut att fungera och inte når fram.**
+- ~~**Studiehjälparens egen materialflik hänger löst sedan Fas 13.2.**~~
+  **Löst i Fas 13.3.** Fliken skriver nu i `biblioteksmaterial` med
+  `delad = false`, och familjen når materialet genom läxan precis som
+  Nextrums eget. `materials` och hinken `material` ligger kvar så att
+  gamla rader går att läsa och städa från adminvyn — men ingen vy
+  skriver dit längre.
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
   utbetalningen, inte efter.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.

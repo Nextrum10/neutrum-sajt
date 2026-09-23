@@ -449,7 +449,7 @@
     fyllElevFormulär();
     fyllPassVal();
     fyllÄmnesval();
-    await Promise.all([laddaLaxor(), laddaProgress(), laddaMaterial(), laddaPlanIFormulär()]);
+    await Promise.all([laddaLaxor(), laddaProgress(), laddaPlanIFormulär()]);
     /* korten och profilrubriken visar nästa pass och antal öppna
        läxor, och inget av det är hämtat när de ritas första gången */
     ritaElevkort();
@@ -565,6 +565,10 @@
       + '<b>' + esc(b.titel) + '</b>'
       + '<span class="tag">' + esc(b.amne) + '</span>'
       + '<span class="tag">' + esc(NX.årskursText(b.arskurs)) + '</span>'
+      /* Utan den här taggen går Nextrums kurerade bank inte att
+         skilja från ditt eget, och de två har olika tyngd: det ena
+         är granskat, det andra är ditt utkast. */
+      + (b.delad ? '' : '<span class="tag">Ditt eget</span>')
       + '</div>'
       + (b.beskrivning ? '<p>' + esc(b.beskrivning) + '</p>' : '')
       + '<div class="bib-kort-knappar">'
@@ -588,7 +592,8 @@
     host.innerHTML = urval.length
       ? urval.map(bibKort).join('')
       : tomt('Inget material matchar',
-          'Prova ett bredare filter. Saknas något helt — säg till, biblioteket fylls på av oss.');
+          'Prova ett bredare filter. Saknas något helt kan du lägga upp ditt eget under '
+          + 'Mitt material, eller säga till — Nextrums bank fylls på av oss.');
   }
 
   $('#bib-hamta').addEventListener('click', async () => {
@@ -597,7 +602,7 @@
 
     const { data, error } = await medan($('#bib-hamta'), 'Hämtar…', () =>
       supa.from('biblioteksmaterial')
-        .select('id, titel, beskrivning, amne, arskurs, filvag, lank')
+        .select('id, titel, beskrivning, amne, arskurs, filvag, lank, delad')
         .eq('aktiv', true)
         .order('amne').order('titel'));
 
@@ -609,8 +614,8 @@
     ruta.innerHTML =
       '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="bl-t">'
       + '<h3 id="bl-t">Biblioteket</h3>'
-      + '<p>Nextrums material, sorterat på ämne och årskurs. Välj något och fyll på med '
-      + 'deadline och instruktion i formuläret bakom.</p>'
+      + '<p>Nextrums material och ditt eget, sorterat på ämne och årskurs. Välj något '
+      + 'och fyll på med deadline och instruktion i formuläret bakom.</p>'
       + '<div class="bib-filter">'
       + '<input class="inp" id="bl-sok" type="search" placeholder="Sök rubrik" aria-label="Sök i biblioteket">'
       + '<select class="sel" id="bl-amne" aria-label="Ämne"><option value="">Alla ämnen</option>'
@@ -1792,11 +1797,47 @@
   });
 
   /* ============================================================
-     MATERIAL
-     Tre sorter i samma tabell: en fil i hinken, en länk utåt, eller
-     en ren anteckning. kind avgör vilket, och därmed vad raden ska
-     göra när man klickar på den.
+     MITT MATERIAL (Fas 13.3)
+
+     Skrev fram till Fas 13.3 i tabellen materials, en rad per ELEV.
+     Sedan föräldravyns materialflik togs bort i 13.2 nådde de raderna
+     ingen familj: uppladdningen såg ut att fungera och gjorde det
+     inte. Halvvägs, alltså — sämre än både att ta bort fliken och
+     att låta den nå fram.
+
+     Nu skrivs det i biblioteksmaterial med delad = false. Samma bank
+     som Nextrums eget material, samma väg ut till familjen: läxan
+     pekar på raden, och familjens policy följer läxan. Skillnaden
+     mot det delade är vem som ser det, och det avgör databasen:
+
+       · delad = false  — bara du ser det, bara du ändrar det
+       · delad = true   — Nextrums bank, bara admin skriver
+
+     DU KAN INTE SÄTTA delad = true HÄRIFRÅN. Insert-policyn kräver
+     `not delad`, och uppdateringspolicyn har `not delad` i både
+     using och with check. Kureringen av den gemensamma banken är
+     alltså en regel i databasen, inte en artighet i det här
+     formuläret.
+
+     Ämne och årskurs är obligatoriska eftersom biblioteket filtreras
+     på dem, och koderna kommer ur NX.ARSKURSER — årskursen är låst
+     till ak1–ak9 och gy1–gy3 av ett check-villkor.
+
+     Anteckning finns inte längre som typ: biblioteksmaterial kräver
+     fil eller länk, och en läxa ska peka på något eleven kan öppna.
      ============================================================ */
+
+  /* Ämnes- och årskurslistorna ritas här och inte i html:en — CSP:n
+     på /larare är script-src 'self', så sidan kan inte fylla dem
+     själv, och listorna ska bara stå på ett ställe (NX). */
+  (function fyllMaterialval() {
+    const a = $('#mt-amne'), k = $('#mt-arskurs');
+    if (a) a.innerHTML = NX.AMNEN.map(x =>
+      '<option value="' + esc(x) + '">' + esc(x) + '</option>').join('');
+    if (k) k.innerHTML = NX.ARSKURSER.map(x =>
+      '<option value="' + esc(x.kod) + '">' + esc(x.text) + '</option>').join('');
+  })();
+
   $('#mat-typ').addEventListener('click', e => {
     const k = e.target.closest('[data-mtyp]');
     if (!k) return;
@@ -1804,7 +1845,6 @@
     $$('#mat-typ button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mtyp === S.matTyp)));
     $('#mt-fil-grupp').hidden = S.matTyp !== 'fil';
     $('#mt-lank-grupp').hidden = S.matTyp !== 'lank';
-    $('#mt-text-grupp').hidden = S.matTyp !== 'anteckning';
     rensa($('#mt-msg'));
   });
 
@@ -1822,60 +1862,103 @@
     rensa(msg);
 
     const titel = $('#mt-titel').value.trim();
-    const fil = ($('#mt-fil').files || [])[0];
-    const länk = $('#mt-lank').value.trim();
-    const text = $('#mt-text').value.trim();
+    const fil = S.matTyp === 'lank' ? null : ($('#mt-fil').files || [])[0];
+    const länk = S.matTyp === 'lank' ? $('#mt-lank').value.trim() : '';
 
     const fel = kolla([
-      { fel: !S.aktivElev, text: 'Välj en elev högst upp först.' },
       { fel: !titel, text: 'Ge materialet en rubrik.', falt: $('#mt-titel') },
       { fel: S.matTyp === 'fil' && !fil, text: 'Välj en fil att ladda upp.', falt: $('#mt-fil') },
       { fel: S.matTyp === 'lank' && !länk, text: 'Klistra in adressen.', falt: $('#mt-lank') },
       { fel: S.matTyp === 'lank' && länk && !/^https?:\/\//i.test(länk),
         text: 'Adressen måste börja med http:// eller https://.', falt: $('#mt-lank') },
-      { fel: S.matTyp === 'anteckning' && !text, text: 'Skriv anteckningen.', falt: $('#mt-text') },
       { fel: S.matTyp === 'fil' && fil && !!M.granskaFil(fil), text: fil ? M.granskaFil(fil) : '', falt: $('#mt-fil') }
     ]);
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
 
     await medan($('#mt-spara'), S.matTyp === 'fil' ? 'Laddar upp…' : 'Sparar…', async () => {
-      const rad = {
-        student_id: S.aktivElev,
-        tutor_id: S.user.id,
-        title: titel,
-        kind: S.matTyp,
-        subject: $('#mt-amne').value.trim() || null
-      };
+      /* RADEN FÖRST, FILEN SEDAN — samma ordning som adminvyns
+         bibliotek, och av samma skäl: hinkens insert-policy slår upp
+         sökvägens uuid i biblioteksmaterial, så raden måste finnas
+         innan filen får laddas upp.
 
-      if (S.matTyp === 'fil') {
-        const upp = await M.sparaMaterialfil(S.aktivElev, fil);
-        if (upp.fel) { säg(msg, 'Filen kunde inte laddas upp: ' + upp.fel, false); return; }
-        rad.url = upp.sökväg;
-        rad.file_name = fil.name;
-        rad.file_size = fil.size;
-      } else if (S.matTyp === 'lank') {
-        rad.url = länk;
-      } else {
-        rad.body = text;
-      }
+         Sökvägen byggs ur radens uuid och inte ur filnamnet. Ett
+         filnamn heter i praktiken "Provräkning Alva v42.pdf", och
+         sökvägen är det enda i en hink som syns innan man öppnat
+         filen. */
+      const id = crypto.randomUUID();
+      const rent = fil ? fil.name.replace(/[^\w.\-]+/g, '_').slice(-80) : '';
+      const sökväg = fil ? id + '/' + rent : null;
 
-      const { error } = await supa.from('materials').insert(rad);
+      const { error } = await supa.from('biblioteksmaterial').insert({
+        id: id,
+        titel: titel,
+        beskrivning: $('#mt-beskrivning').value.trim() || null,
+        amne: $('#mt-amne').value,
+        arskurs: $('#mt-arskurs').value,
+        filvag: sökväg,
+        lank: länk || null,
+        skapad_av: S.user.id,
+        delad: false
+      });
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
 
-      säg(msg, '✓ Materialet har lagts till. Familjen ser det direkt.', true);
+      if (fil) {
+        const upp = await supa.storage.from('bibliotek')
+          .upload(sökväg, fil, { contentType: fil.type, upsert: false });
+        if (upp.error) {
+          /* Raden städas bort igen. Blir den kvar pekar den på en fil
+             som aldrig laddades upp, och den som klickar Öppna får ett
+             fel utan förklaring. */
+          await supa.from('biblioteksmaterial').delete().eq('id', id);
+          säg(msg, 'Filen kunde inte laddas upp: ' + upp.error.message + ' Ingenting sparades.', false);
+          return;
+        }
+      }
+
+      säg(msg, '✓ Tillagt. Ge det som läxa under Läxor, så når familjen det.', true);
       $('#mat-form').reset();
       $('#mt-fil-namn').textContent = 'Ingen fil vald';
       await laddaMaterial();
     });
   });
 
-  function laddaMaterial() {
-    return M.laddaMaterial(S, {
-      elev: S.aktivElev,
-      tomElev: ['Ingen elev vald', 'Välj en elev högst upp.'],
-      tomLista: ['Inget material än', 'Lägg upp ett övningsblad, en länk eller en anteckning — familjen når det från sin vy.'],
-      egen: true
-    });
+  /* Listan är INTE per elev längre. Det egna materialet är ditt, inte
+     en viss elevs — samma övningsblad ges till flera, och en kopia per
+     elev är en kopia att rätta flera gånger. */
+  async function laddaMaterial() {
+    const host = $('#mat-lista');
+    if (!host) return;
+    $('#mat-antal').textContent = '';
+    S.material = [];
+    host.innerHTML = laddar();
+
+    const { data, error } = await supa.from('biblioteksmaterial')
+      .select('id, titel, beskrivning, amne, arskurs, filvag, lank, aktiv, created_at')
+      .eq('skapad_av', S.user.id).eq('delad', false)
+      .order('created_at', { ascending: false });
+
+    if (error) { host.innerHTML = tomt('Kunde inte hämta materialet', felText(error)); return; }
+    if (!data.length) {
+      host.innerHTML = tomt('Inget eget material än',
+        'Lägg upp ett övningsblad eller en länk. Du ger det sedan som läxa, och familjen når det därifrån.');
+      return;
+    }
+
+    S.material = data;
+    $('#mat-antal').textContent = data.length + ' st';
+    host.innerHTML = data.map(m =>
+      '<div class="bib-kort">'
+      + '<div class="bib-kort-topp">'
+      + '<b>' + esc(m.titel) + '</b>'
+      + '<span class="tag">' + esc(m.amne) + '</span>'
+      + '<span class="tag">' + esc(NX.årskursText(m.arskurs)) + '</span>'
+      + (m.aktiv ? '' : '<span class="tag">Avstängt</span>')
+      + '</div>'
+      + (m.beskrivning ? '<p>' + esc(m.beskrivning) + '</p>' : '')
+      + '<div class="bib-kort-knappar">'
+      + '<button type="button" class="btn btn-ghost btn-sm" data-mat-oppna="' + esc(m.id) + '">Öppna</button>'
+      + '<button type="button" class="btn btn-ghost btn-sm" data-mat-bort="' + esc(m.id) + '">Ta bort</button>'
+      + '</div></div>').join('');
   }
 
   /* Filen ligger i en privat hink, så adressen skapas i klicket och
@@ -1884,9 +1967,10 @@
     const öppna = e.target.closest('[data-mat-oppna]');
     if (öppna) {
       const m = (S.material || []).find(x => x.id === öppna.dataset.matOppna);
-      if (!m || !m.url) return;
+      if (!m) return;
+      if (m.lank) { window.open(m.lank, '_blank', 'noopener'); return; }
       await medan(öppna, 'Öppnar…', async () => {
-        const url = await M.signera('material', m.url, 300);
+        const url = await M.signera('bibliotek', m.filvag, 300);
         if (!url) { alert('Filen kunde inte öppnas. Ladda om sidan och försök igen.'); return; }
         window.open(url, '_blank', 'noopener');
       });
@@ -1898,14 +1982,22 @@
     const m = (S.material || []).find(x => x.id === bort.dataset.matBort);
     const ja = await bekräfta({
       titel: 'Ta bort materialet?',
-      text: '"' + ((m && m.title) || 'Materialet') + '" försvinner för både dig och familjen.',
+      text: '"' + ((m && m.titel) || 'Materialet') + '" försvinner. Läxor som redan pekar på det '
+        + 'blir kvar, men utan material.',
       knapp: 'Ta bort'
     });
     if (!ja) return;
 
     await medan(bort, 'Tar bort…', async () => {
-      if (m && m.kind === 'fil' && m.url) await supa.storage.from('material').remove([m.url]);
-      const { error } = await supa.from('materials').delete().eq('id', bort.dataset.matBort);
+      /* FILEN FÖRST, RADEN SEDAN, OCH LÄS SVARET. Sökvägen finns bara
+         i raden: försvinner raden först går filen inte att hitta och
+         inte att städa. */
+      if (m && m.filvag) {
+        const filfel = await supa.storage.from('bibliotek').remove([m.filvag]);
+        if (filfel.error) { alert('Filen kunde inte tas bort: ' + filfel.error.message
+          + ' Raden är kvar, så ingenting pekar på en fil som saknas.'); return; }
+      }
+      const { error } = await supa.from('biblioteksmaterial').delete().eq('id', bort.dataset.matBort);
       if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
       await laddaMaterial();
     });
@@ -2760,6 +2852,11 @@
        aktiv — båda behöver katalogen innan de ritar något. */
     await NXTjanster.ladda();
 
+    /* Mitt material laddas EN gång, inte per elev. Det är ditt eget,
+       inte en viss elevs: samma övningsblad ges till flera, och låg
+       det i byggElev hämtades samma lista om vid varje elevbyte. */
+    laddaMaterial();
+
     /* Flikarna först. Sidomenyn och hash-översättningen ropar på dem
        när de byter sektion, och en flikrad som inte finns än hade
        svalt det anropet. */
@@ -2824,7 +2921,7 @@
       etikett: 'Studiehjälparvy',
       lede: 'Dina pass, dina elever och vad du tjänat.',
       video: 'bilder/hero-studievy.mp4',
-      bild: 'bilder/hero-nextrum-1280.jpg',
+      bild: 'bilder/hero-nextrum-1280.webp',
       marke: { text: 'Studiehjälpare', ikon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg>' },
       chatt: { href: '#meddelanden', text: 'Meddelanden', under: 'Skriv till familjerna' }
     });

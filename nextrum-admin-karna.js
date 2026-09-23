@@ -52,7 +52,13 @@ const NXAdmin = (function () {
     handlingar: [], handlingarFel: null
   };
 
+  /* Har modulvakten (nextrum-modulvakt.js) redan konstaterat att en
+     fil inte kom fram står felrutan kvar. Utan den raden ritade
+     skalet över den med inloggningsrutan, och en adminvy som saknar
+     halva sin kod bad i stället om lösenord och gjorde sedan
+     ingenting när det matades in. */
   function visa(id) {
+    if (document.documentElement.dataset.modulfel && id !== 'view-fel') return;
     ['view-loading', 'view-auth', 'view-nekad', 'view-app', 'view-fel']
       .forEach(v => { const el = $('#' + v); if (el) el.hidden = (v !== id); });
   }

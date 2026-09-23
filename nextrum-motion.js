@@ -254,31 +254,54 @@ const NXImg = (function () {
     return b || null;
   }
 
-  function srcset(b) {
-    return BREDDER.map(w => MAPP + b.file + '-' + w + '.jpg ' + w + 'w').join(', ');
+  function srcset(b, andelse) {
+    const ä = andelse || 'jpg';
+    return BREDDER.map(w => MAPP + b.file + '-' + w + '.' + ä + ' ' + w + 'w').join(', ');
   }
 
-  /* Bygger <img>. opts:
+  /* Bygger <picture>. opts:
        sizes     CSS-uttryck för hur bred bilden blir. Sätt alltid —
                  utan det laddar webbläsaren onödigt stort.
        eager     true för bilder ovanför vikningen (hero). Allt annat
                  lazy, så att sidan inte drar hem sex foton direkt.
        klass     extra klasser
-       ratio     'auto' använder originalets proportioner  */
+       ratio     'auto' använder originalets proportioner
+
+     VARFÖR <picture> OCH INTE BARA <img>
+
+     Mätt i webbläsaren: startsidan på en telefon 390px bred med DPR 3
+     hämtade 1,06 MB bilder, alltså mer än samma sida på en
+     1440px-skärm. srcset och sizes var rätt satta — det var formatet.
+     Samma foton som WebP väger 69 % mindre.
+
+     <source> först, <img> kvar som den var. Webbläsaren tar den
+     första källa den förstår, så en gammal Safari får jpg:en precis
+     som förut. Att bara byta srcset till .webp hade varit enklare och
+     hade lämnat de webbläsarna med en trasig bild i stället för en
+     tung.
+
+     ALLA ATTRIBUT UTOM type OCH srcset SITTER KVAR PÅ <img>. alt,
+     width, height, loading och sizes läses därifrån oavsett vilken
+     källa som vinner; flyttas de till <source> tappar bilden sitt
+     alternativ­text och sidan hoppar när den laddar. */
   function img(key, opts) {
     const b = hämta(key);
     if (!b) return '';
     const o = opts || {};
     const eager = !!o.eager;
-    return '<img class="nx-img' + (o.klass ? ' ' + o.klass : '') + '"'
+    const sizes = o.sizes || '100vw';
+    return '<picture>'
+      + '<source type="image/webp" srcset="' + srcset(b, 'webp') + '" sizes="' + sizes + '">'
+      + '<img class="nx-img' + (o.klass ? ' ' + o.klass : '') + '"'
       + ' src="' + MAPP + b.file + '-1280.jpg"'
       + ' srcset="' + srcset(b) + '"'
-      + ' sizes="' + (o.sizes || '100vw') + '"'
+      + ' sizes="' + sizes + '"'
       + ' width="' + b.w + '" height="' + b.h + '"'
       + ' alt="' + String(b.alt).replace(/"/g, '&quot;') + '"'
       + ' style="object-position:' + (o.focal || b.focal) + '"'
       + (eager ? ' fetchpriority="high" decoding="sync"' : ' loading="lazy" decoding="async"')
-      + '>';
+      + '>'
+      + '</picture>';
   }
 
   /* Bild + ram (.nx-fig). Ramen bär tint-färgen som platshållare och är det

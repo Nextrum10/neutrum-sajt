@@ -1826,14 +1826,87 @@ select pg_temp.prova('BIB-9 admin lägger till',
          values (''Adminmaterial'', ''Svenska'', ''gy2'', ''https://exempel.invalid/e'')'],
   'ok');
 
--- Predikatet: en familj är inte en godkänd studiehjälpare, och en
--- okänd uuid är det inte heller.
-insert into utfall (test, ok, detalj)
-select 'BIB-10 ar_godkand_studiehjalpare skiljer på rollerna',
-       public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000a1')
-   and not public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000f1')
-   and not public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-000000000099'),
-       'hjälpare sant, familj falskt, okänd falskt';
+-- Predikatet. Raden löd fram till Fas 14.0b
+--
+--   select public.ar_godkand_studiehjalpare('…a1')
+--      and not public.ar_godkand_studiehjalpare('…f1')
+--
+-- körd som den yttre rollen, alltså utan inloggad användare — och den
+-- gick igenom, för funktionen svarade om vem som helst för vem som
+-- helst. Det var precis felet: den saknade is_admins vakt. Nu prövas
+-- den som varje roll för sig, vilket också är så den faktiskt
+-- används (policyerna anropar den utan argument).
+select pg_temp.rakna('BIB-10 hjälparen får svar om SIG SJÄLV',
+  '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from (select 1 where public.ar_godkand_studiehjalpare()) x$q$, 1);
+
+select pg_temp.rakna('BIB-10b hjälparen får INTE svar om en annan hjälpare',
+  '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from (select 1 where
+      public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000b1')) x$q$, 0);
+
+select pg_temp.rakna('BIB-10c admin får svar om vem som helst',
+  '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from (select 1 where
+      public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000a1')) x$q$, 1);
+
+select pg_temp.rakna('BIB-10d familjen är inte en godkänd studiehjälpare',
+  '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from (select 1 where public.ar_godkand_studiehjalpare()) x$q$, 0);
+
+-- Fram till Fas 14.0b svarade den här som anon true om en godkänd
+-- hjälpare. Nu är EXECUTE återkallad, så anropet självt nekas.
+select pg_temp.prova('BIB-10e anon får inte ens anropa predikatet',
+  null,
+  array[$q$select public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000a1')$q$],
+  'nekad');
+
+
+-- ---------- Fas 13.3: studiehjälparens eget material ----------
+--
+-- `delad` skiljer Nextrums kurerade bank från hjälparens eget. Hela
+-- poängen är att den INTE går att slå på själv: kunde en hjälpare
+-- lyfta in sitt utkast i den gemensamma banken vore kureringen en
+-- artighet, inte en regel.
+
+select pg_temp.prova('BIB-13 hjälparen lägger till EGET material',
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.biblioteksmaterial (id, titel, amne, arskurs, lank, skapad_av, delad)
+         values ('00000000-0000-4000-8000-0000000000e5', 'RLS eget', 'Matematik', 'ak7',
+                 'https://exempel.invalid/eget', '00000000-0000-4000-8000-0000000000a1', false)$q$],
+  'ok');
+
+select pg_temp.prova('BIB-14 hjälparen kan inte lägga till DELAT material',
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.biblioteksmaterial (titel, amne, arskurs, lank, skapad_av, delad)
+         values ('RLS smygdelat', 'Matematik', 'ak7', 'https://exempel.invalid/f',
+                 '00000000-0000-4000-8000-0000000000a1', true)$q$],
+  'nekad');
+
+select pg_temp.prova('BIB-15 hjälparen kan inte skriva i någon annans namn',
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.biblioteksmaterial (titel, amne, arskurs, lank, skapad_av, delad)
+         values ('RLS kapat', 'Matematik', 'ak7', 'https://exempel.invalid/g',
+                 '00000000-0000-4000-8000-0000000000b1', false)$q$],
+  'nekad');
+
+-- prova och inte rakna_efter: with check i uppdateringspolicyn gör att
+-- satsen KASTAR 42501, den träffar inte noll rader. rakna_efter räknar
+-- varje kast som ett trasigt test, och hade därmed rapporterat rött på
+-- precis det utfall som är rätt.
+select pg_temp.prova('BIB-16 hjälparen kan inte lyfta sitt egna in i banken',
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.biblioteksmaterial (id, titel, amne, arskurs, lank, skapad_av, delad)
+         values ('00000000-0000-4000-8000-0000000000e6', 'RLS eget 2', 'Matematik', 'ak7',
+                 'https://exempel.invalid/eget2', '00000000-0000-4000-8000-0000000000a1', false)$q$,
+        $q$update public.biblioteksmaterial set delad = true
+            where id = '00000000-0000-4000-8000-0000000000e6'$q$],
+  'nekad');
+
+select pg_temp.rakna_efter('BIB-17 en annan hjälpare ser inte det egna materialet',
+  '00000000-0000-4000-8000-0000000000b1',
+  array[$q$select 1$q$],
+  $q$select count(*) from public.biblioteksmaterial where titel like 'RLS eget%'$q$, 0);
 
 -- Check-villkoren. En rad utan innehåll och en årskurs som är
 -- fritext ska båda falla — det är de två sätt biblioteket annars

@@ -18,14 +18,14 @@
      direktiv på svaret återanvänder webbläsaren inte den förladdade
      kroppen. Cachningen ligger i vercel.json i stället, och där gör
      den nytta vid varje återbesök i ett år. -->
-<link rel="stylesheet" href="nextrum-typsnitt.css">
+<link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
-<link rel="stylesheet" href="nextrum-home.css">
-<link rel="stylesheet" href="nextrum-cinema.css">
-<link rel="stylesheet" href="nextrum-vy.css">
+<link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
+<link rel="stylesheet" href="nextrum-cinema.css?v=b56b6211">
+<link rel="stylesheet" href="nextrum-vy.css?v=eb2b6d58">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      veckorutnätet för tider. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=990ced5b">
 </head>
 <body class="vy">
 
@@ -665,14 +665,39 @@
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="material"
              id="panel-material" aria-labelledby="flik-material" hidden>
-                <!-- ============ MATERIAL ============ -->
+                <!-- ============ MITT MATERIAL (Fas 13.3) ============
+
+                     Skrev fram till nu i tabellen materials, som var
+                     kopplad till EN elev. Sedan föräldravyns egen
+                     materialflik togs bort i Fas 13.2 nådde de raderna
+                     ingen familj alls: en uppladdning som såg ut att
+                     fungera och inte gjorde det.
+
+                     Nu hamnar det i biblioteksmaterial med delad =
+                     false. Då går det att ge som läxa precis som
+                     Nextrums eget material, och familjen når det
+                     genom läxan. Databasen ser till att bara du ser
+                     ditt, och att du inte kan lyfta in det i den
+                     gemensamma banken.
+
+                     Ämne och årskurs är därför obligatoriska och
+                     fyllda ur NX.AMNEN och NX.ARSKURSER: biblioteket
+                     filtreras på dem, och fritext hade gjort "åk7",
+                     "Åk 7" och "7" till tre årskurser.
+
+                     Anteckning är borta som typ. biblioteksmaterial
+                     kräver fil eller länk (biblioteksmaterial_har_
+                     innehall) — en läxa ska peka på något eleven kan
+                     öppna. -->
                 <div class="dbox">
-                  <h5>Material <em id="mat-antal"></em></h5>
+                  <h5>Mitt material <em id="mat-antal"></em></h5>
+                  <p class="xsmall" style="color:var(--muted-2);margin:-4px 0 14px">
+                    Ditt eget, bara du ser det. Ge det som läxa från fliken Läxor, så når familjen det.
+                  </p>
 
                   <div class="mat-typ" id="mat-typ" role="group" aria-label="Vad vill du lägga till?">
                     <button type="button" data-mtyp="fil" aria-pressed="true">Fil</button>
                     <button type="button" data-mtyp="lank" aria-pressed="false">Länk</button>
-                    <button type="button" data-mtyp="anteckning" aria-pressed="false">Anteckning</button>
                   </div>
 
                   <form id="mat-form">
@@ -682,8 +707,19 @@
                         <input class="inp" id="mt-titel" maxlength="200" placeholder="t.ex. Övningsblad ekvationer">
                       </div>
                       <div class="pay-field">
-                        <label for="mt-amne">Ämne <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
-                        <input class="inp" id="mt-amne" placeholder="t.ex. Matematik">
+                        <label for="mt-amne">Ämne</label>
+                        <select class="inp" id="mt-amne"></select>
+                      </div>
+                    </div>
+
+                    <div class="vy-form-rad" style="margin-top:12px">
+                      <div class="pay-field">
+                        <label for="mt-arskurs">Årskurs</label>
+                        <select class="inp" id="mt-arskurs"></select>
+                      </div>
+                      <div class="pay-field">
+                        <label for="mt-beskrivning">Beskrivning <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
+                        <input class="inp" id="mt-beskrivning" maxlength="400" placeholder="Vad det tränar">
                       </div>
                     </div>
 
@@ -704,11 +740,6 @@
                     <div class="fgroup" id="mt-lank-grupp" hidden style="margin-top:12px">
                       <label for="mt-lank">Adress</label>
                       <input class="inp" id="mt-lank" type="url" placeholder="https://…">
-                    </div>
-
-                    <div class="fgroup" id="mt-text-grupp" hidden style="margin-top:12px">
-                      <label for="mt-text">Anteckningen</label>
-                      <textarea class="inp" id="mt-text" style="min-height:100px" placeholder="Det eleven ska ha framme när hen övar."></textarea>
                     </div>
 
                     <div class="vy-knapprad">
@@ -975,16 +1006,16 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js"></script>
-<script src="nextrum-fel.js"></script>
-<script src="nextrum-app.js"></script>
-<script src="nextrum-tjanster.js"></script>
-<script src="nextrum-kontakt.js"></script>
-<script src="nextrum-studie.js"></script>
-<script src="nextrum-arbetsyta.js"></script>
-<script src="nextrum-media.js"></script>
-<script src="nextrum-betalning.js"></script>
-<script src="nextrum-modulvakt.js"></script>
-<script src="nextrum-larare-vy.js"></script>
+<script src="nextrum-config.js?v=f8a876f6"></script>
+<script src="nextrum-fel.js?v=eae02b10"></script>
+<script src="nextrum-app.js?v=5f9c6902"></script>
+<script src="nextrum-tjanster.js?v=5f148a0c"></script>
+<script src="nextrum-kontakt.js?v=b41dc962"></script>
+<script src="nextrum-studie.js?v=02a4c451"></script>
+<script src="nextrum-arbetsyta.js?v=01bc96ec"></script>
+<script src="nextrum-media.js?v=370e4cac"></script>
+<script src="nextrum-betalning.js?v=67f384a3"></script>
+<script src="nextrum-modulvakt.js?v=1d7a203b"></script>
+<script src="nextrum-larare-vy.js?v=4bdd9d8b"></script>
 </body>
 </html>
