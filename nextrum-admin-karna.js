@@ -33,7 +33,7 @@ const NXAdmin = (function () {
     personer: {},      // id → profilrad
     elever: {},        // parent_id → [elevrader]
     tutorProfiler: {}, // id → tutor_profiles-rad
-    leads: [], ansokningar: [], kontakt: [], bokningar: [],
+    leads: [], ansokningar: [], kontakt: [], bokningar: [], bibliotek: [],
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [], notisfel: [],
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
@@ -193,7 +193,7 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit] = await Promise.all([
+           upd, uppg, rt, audit, bib] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -224,10 +224,12 @@ const NXAdmin = (function () {
       supa.from('uppdrag').select('*').order('created_at', { ascending: false }),
       supa.from('uppgifter').select('*').order('created_at', { ascending: false }),
       supa.from('rut_tak').select('*').order('ar', { ascending: false }),
-      supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300)
+      supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300),
+      supa.from('biblioteksmaterial').select('*').order('created_at', { ascending: false })
     ]);
 
     S.leads = leads.data || [];
+    S.bibliotek = bib.data || [];
     S.ansokningar = ans.data || [];
     S.kontakt = kontakt.data || [];
     S.bokningar = bok.data || [];
@@ -414,6 +416,31 @@ const NXAdmin = (function () {
     return e ? (e.name || '—') : '—';
   }
 
+  /* ============================================================
+     VISA EN RUTA
+
+     .nx-fraga har opacity:0 i grunden och blir synlig först med
+     klassen .open (nextrum-vy.css:447). Adminvyns fyra egenbyggda
+     rutor la aldrig på den. De fanns alltså på skärmen — position
+     fixed, inset 0, z-index 900 — fullt klickbara och helt
+     osynliga, med sidans rullning låst. Utifrån såg det ut som att
+     Kontakta och Skapa elev hängde sig: inget syntes, inget gick
+     att rulla, och ett klick var som helst stängde det som inte
+     syntes.
+
+     Felet gick att göra fyra gånger för att varje ruta monterade
+     sig själv. Nu finns en väg in, och den lägger på klassen.
+     Reflowen mellan är inte prydnad: utan den ser webbläsaren bara
+     ett element som föddes med .open och animerar ingenting — men
+     framför allt är det den som gör att regeln hinner gälla. */
+  function visaRuta(ruta) {
+    document.body.appendChild(ruta);
+    document.body.style.overflow = 'hidden';
+    void ruta.offsetWidth;
+    ruta.classList.add('open');
+    return ruta;
+  }
+
   /* En ruta med ett eget fält. bekräfta() räcker när svaret är ja
      eller nej; här behövs ett val eller en text. läs() får rutan och
      svarar { värde } eller { fel } — ett fel stänger inte rutan. */
@@ -431,8 +458,7 @@ const NXAdmin = (function () {
         + '<button type="button" class="btn btn-ghost" data-fr="nej">Avbryt</button>'
         + '<button type="button" class="btn btn-primary" data-fr="ja">' + esc(o.knapp) + '</button>'
         + '</div></div>';
-      document.body.appendChild(ruta);
-      document.body.style.overflow = 'hidden';
+      visaRuta(ruta);
 
       const stäng = v => { ruta.remove(); document.body.style.overflow = ''; klar(v); };
       ruta.addEventListener('click', ev => {
@@ -527,8 +553,7 @@ const NXAdmin = (function () {
       + '<button type="button" class="btn btn-primary" id="kt-oppna">Öppna i mejl</button>'
       + '</div></div>';
 
-    document.body.appendChild(ruta);
-    document.body.style.overflow = 'hidden';
+    visaRuta(ruta);
     const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
     ruta.addEventListener('click', ev => {
       if (ev.target === ruta || ev.target.closest('[data-kt-stang]')) stäng();
@@ -561,6 +586,6 @@ const NXAdmin = (function () {
     UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, matchar, märkFlik, namnFör, närText, pill, rad, skriv,
-    tabell, tomtText, visa, väljare, rita
+    tabell, tomtText, visa, visaRuta, väljare, rita
   };
 })();

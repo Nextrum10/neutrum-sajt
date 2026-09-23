@@ -16,8 +16,8 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { ANS_LAGE, S, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
-          kortDatum, matchar, tabell, tomtText, väljare } = NXAdmin;
+  const { ANS_LAGE, S, fråga, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
+          kortDatum, matchar, tabell, tomtText, visaRuta, väljare } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const kandidater = (...a) => NXAdmin.rita.kandidater(...a);
@@ -59,9 +59,12 @@
         + steg('Utbildad', a.utbildad_at, 'data-ans-steg="utbildad:' + esc(a.id) + '"')
         + '</div>' },
       { namn: 'Läge', höger: true, rita: a => väljare('ans', ANS_LAGE, a.status, 'data-ans="' + a.id + '"')
-        /* Vägen in i poolen. Utan den här knappen blir en ansökan
-           aldrig en studiehjälpare som går att matcha — den byter
-           bara etikett i en lista. */
+        /* EN knapp, inte fyra. Spåret ovan visar var en ansökan
+           står; rutan bakom den här knappen säger vad man gör
+           härnäst och varför, och har varje steg som en knapp på
+           samma ställe. Fyra knappar på en rad i en tabell är fyra
+           saker att välja mellan utan att veta vilken som är rätt. */
+        + ' <button class="btn btn-ghost btn-sm" data-ans-spar="' + a.id + '">Rekryteringen</button>'
         + ' <button class="btn btn-ghost btn-sm" data-ans-pool="' + a.id + '">Ta in i poolen</button>' }
     ], rader, tomtText(sök || st, 'Ingen ansökan matchar filtret', 'Inga ansökningar än'));
 
@@ -144,6 +147,29 @@
       + 'Hälsningar,\nNextrum';
   }
 
+  function mallMöte(a) {
+    const tid = mötesText(a);
+    return 'Hej ' + (String(a.name || '').split(' ')[0] || '') + ',\n\n'
+      + 'Vad kul att du vill jobba hos oss. Vi ses '
+      + (tid ? tid.toLowerCase() : '(fyll i tiden)') + '.\n\n'
+      + (a.mote_lank ? 'Länk: ' + a.mote_lank + '\n\n' : '')
+      + 'Det tar ungefär en kvart och är ett samtal, inget prov. Vi vill höra hur du '
+      + 'förklarar saker och vilka ämnen du känner dig trygg i.\n\n'
+      + 'Passar inte tiden är det bara att svara på det här mejlet.\n\n'
+      + 'Hälsningar,\nNextrum';
+  }
+
+  function mallUtbildning(a) {
+    return 'Hej ' + (String(a.name || '').split(' ')[0] || '') + ',\n\n'
+      + 'Innan ditt första pass vill vi att du går igenom vår introduktion. Den tar en '
+      + 'stund och går igenom hur ett pass läggs upp och hur rapporten efteråt fungerar.\n\n'
+      + 'Här är den:\n' + String(CFG.UTBILDNING_URL || '').trim() + '\n\n'
+      + 'Rapporten är viktigare än den låter: ett pass räknas som genomfört först när '
+      + 'rapporten finns, och det är den som gör att familjen faktureras och att du får '
+      + 'betalt. Hör av dig om något är oklart.\n\n'
+      + 'Hälsningar,\nNextrum';
+  }
+
   /* ---- kontakta en sökande för intervju ---- */
   document.addEventListener('click', e => {
     const knapp = e.target.closest('[data-ans-kontakt]');
@@ -163,7 +189,7 @@
           .eq('id', a.id);
         a.kontaktad_at = nu;
         if (a.status === 'new') a.status = 'contacted';
-        ritaAnsokningar();
+        ritaOm();
       }
     });
   });
@@ -184,7 +210,240 @@
         .update({ [kolumn]: nu }).eq('id', id);
       if (error) { alert('Kunde inte spara: ' + felText(error)); return; }
       a[kolumn] = nu;
-      ritaAnsokningar();
+      ritaOm();
+    });
+  });
+
+  /* ============================================================
+     REKRYTERINGSRUTAN (Fas 13.1)
+
+     Stegen fanns redan som stämplar i listan, men bara som fyra
+     prickar: de sa VAD som var gjort, aldrig vad som görs härnäst
+     eller varför steget finns. Den som inte rekryterat förut fick
+     gissa, och den som gissade hoppade över utbildningen — vilket
+     är precis det steg som kostar mest längre fram, eftersom en
+     studiehjälpare utan introduktion inte skriver rapporter och ett
+     pass utan rapport aldrig blir genomfört.
+
+     Rutan är därför inte en meny. Den är ordningen, med skälet till
+     varje steg skrivet bredvid knappen som utför det.
+
+     Den bokar inte i någon kalender. Google Workspace är inte
+     kopplat (se INTEGRATIONER.md), och en knapp som ser ut att boka
+     men bara skriver i vår egen databas är värre än en som säger vad
+     den gör: den sparar tiden och länken här, och öppnar mejlet där
+     den sökande faktiskt får dem.
+     ============================================================ */
+
+  /* Den öppna rutan, om någon är öppen. Stegknapparna nedan ritar om
+     listan — utan den här ritas rutan inte om, och en stämpel man
+     precis satt syns först när man stängt och öppnat igen. */
+  let öppenSpår = null;
+
+  function ritaOm() {
+    ritaAnsokningar();
+    if (öppenSpår) {
+      const a = S.ansokningar.find(x => x.id === öppenSpår.id);
+      if (a) öppenSpår.rita(a); else stängSpår();
+    }
+  }
+
+  function stängSpår() {
+    if (!öppenSpår) return;
+    öppenSpår.ruta.remove();
+    öppenSpår = null;
+    document.body.style.overflow = '';
+  }
+
+  function mötesText(a) {
+    if (!a.mote_tid) return null;
+    const d = new Date(a.mote_tid);
+    return d.toLocaleString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long',
+      hour: '2-digit', minute: '2-digit' });
+  }
+
+  /* Ett steg i rutan: nummer, namn, skälet, stämpeln och knapparna.
+     Skälet står kvar när steget är gjort — den som kommer tillbaka
+     om ett halvår ska slippa lista ut varför det gjordes. */
+  function spårSteg(nr, namn, varför, tid, knappar, extra) {
+    return '<div class="ans-steg' + (tid ? ' ar-gjord' : '') + '">'
+      + '<div class="ans-steg-nr">' + nr + '</div>'
+      + '<div class="ans-steg-kropp">'
+      + '<h4>' + esc(namn)
+      + (tid ? '<span class="ans-steg-tid">✓ ' + esc(kortDatum(tid)) + '</span>' : '')
+      + '</h4>'
+      + '<p>' + esc(varför) + '</p>'
+      + (extra || '')
+      + '<div class="ans-steg-knappar">' + knappar + '</div>'
+      + '</div></div>';
+  }
+
+  function spårInnehåll(a) {
+    const id = esc(a.id);
+    const möte = mötesText(a);
+    const utbLänk = String(CFG.UTBILDNING_URL || '').trim();
+
+    return '<h3 id="as-t">Rekryteringen — ' + esc(a.name || 'ansökan') + '</h3>'
+      + '<p>' + esc(a.email)
+      + (a.school ? ' · ' + esc(a.school) : '')
+      + (a.age ? ' · ' + a.age + ' år' : '')
+      + (a.subjects ? ' · ' + esc(a.subjects) : '') + '</p>'
+
+      + '<div class="ans-spar-lista">'
+
+      + spårSteg(1, 'Kontakt',
+          'Tacka för ansökan och föreslå tider. Utkastet öppnas i ditt mejlprogram '
+          + 'med din adress som avsändare, så att svaret kommer till dig.',
+          a.kontaktad_at,
+          '<button type="button" class="btn btn-ghost btn-sm" data-ans-kontakt="' + id + '">'
+          + (a.kontaktad_at ? 'Skriv igen' : 'Skriv till hen') + '</button>')
+
+      + spårSteg(2, 'Digitalt möte',
+          'En kvart över video. Det är ett samtal, inget prov — vi vill höra hur hen '
+          + 'förklarar saker och vilka ämnen hen är trygg i. Tiden och länken sparas här '
+          + 'så att de inte bara finns i en inkorg.',
+          a.intervju_at,
+          '<button type="button" class="btn btn-ghost btn-sm" data-ans-mote="' + id + '">'
+          + (a.mote_tid ? 'Ändra mötet' : 'Boka möte') + '</button>'
+          + ' <button type="button" class="btn btn-ghost btn-sm" data-ans-steg="intervju:' + id + '">'
+          + (a.intervju_at ? 'Ångra "mötet är hållet"' : 'Mötet är hållet') + '</button>',
+          möte
+            ? '<div class="ans-steg-fakta"><b>Bokat:</b> ' + esc(möte)
+              + (a.mote_lank ? '<br><b>Länk:</b> ' + esc(a.mote_lank) : '') + '</div>'
+            : '')
+
+      + spårSteg(3, 'Utbildning',
+          'Introduktionen och provet. Det här steget är inte en artighet: en studiehjälpare '
+          + 'som inte vet hur rapporten fungerar lämnar inga rapporter, och utan rapport blir '
+          + 'passet aldrig genomfört — varken fakturerat eller utbetalt.',
+          a.utbildad_at,
+          (utbLänk
+            ? '<button type="button" class="btn btn-ghost btn-sm" data-ans-utb="' + id + '">'
+              + 'Skicka utbildningen</button> '
+            : '')
+          + '<button type="button" class="btn btn-ghost btn-sm" data-ans-steg="utbildad:' + id + '">'
+          + (a.utbildad_at ? 'Ångra "utbildad"' : 'Markera utbildad') + '</button>',
+          utbLänk
+            ? '<div class="ans-steg-fakta"><b>Länk:</b> ' + esc(utbLänk) + '</div>'
+            /* Ingen länk satt. Knappen ritas inte alls — en knapp som
+               mejlar en tom rad ser ut att fungera och gör det inte.
+               Var den sätts står här, för den som läser det här är
+               den som ska sätta den. */
+            : '<div class="ans-steg-fakta">Ingen utbildningslänk är satt. '
+              + 'Lägg den i <code>UTBILDNING_URL</code> i nextrum-config.js, '
+              + 'så går den att skicka härifrån.</div>')
+
+      + spårSteg(4, 'In i poolen',
+          'Profilen blir godkänd och dyker upp i matchningen. Den sökande måste ha ett '
+          + 'konto på nextrum.se först — annars finns ingen profil att godkänna.',
+          a.status === 'approved' ? (a.utbildad_at || a.created_at) : null,
+          '<button type="button" class="btn btn-primary btn-sm" data-ans-pool="' + id + '">'
+          + 'Ta in i poolen</button>')
+
+      + '</div>'
+      + '<div class="nx-fraga-knappar">'
+      + '<button type="button" class="btn btn-ghost" data-as-stang>Stäng</button>'
+      + '</div>';
+  }
+
+  document.addEventListener('click', e => {
+    const knapp = e.target.closest('[data-ans-spar]');
+    if (!knapp) return;
+    const a = S.ansokningar.find(x => x.id === knapp.dataset.ansSpar);
+    if (!a) return;
+
+    stängSpår();
+    const ruta = document.createElement('div');
+    ruta.className = 'nx-fraga';
+    const rita = rad => {
+      ruta.innerHTML = '<div class="nx-fraga-box nx-fraga-bred" role="dialog" '
+        + 'aria-modal="true" aria-labelledby="as-t">' + spårInnehåll(rad) + '</div>';
+    };
+    rita(a);
+    visaRuta(ruta);
+    öppenSpår = { id: a.id, ruta: ruta, rita: rita };
+
+    /* Bara ridån och Stäng stänger rutan. Stegknapparna sitter inne i
+       den och hanteras av sina egna lyssnare på document — stängde
+       rutan på varje klick försvann den under fingret varje gång man
+       bockade av ett steg. */
+    ruta.addEventListener('click', ev => {
+      if (ev.target === ruta || ev.target.closest('[data-as-stang]')) stängSpår();
+    });
+  });
+
+  /* ---- boka det digitala mötet ---- */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-ans-mote]');
+    if (!knapp) return;
+    const a = S.ansokningar.find(x => x.id === knapp.dataset.ansMote);
+    if (!a) return;
+
+    /* Förvalen: datum och tid delade, för en datetime-local som är
+       tom kräver att man klickar sig genom båda ändå, och en
+       förvald tid som är "nu" ser ut som en riktig bokning. */
+    const d = a.mote_tid ? new Date(a.mote_tid) : null;
+    const hhmm = x => String(x.getHours()).padStart(2, '0') + ':'
+      + String(x.getMinutes()).padStart(2, '0');
+
+    const svar = await fråga({
+      titel: 'Boka digitalt möte med ' + (a.name || 'den sökande'),
+      text: 'Tiden och länken sparas på ansökan, och utkastet till den sökande öppnas '
+        + 'sedan i ditt mejlprogram. Ingen kalender bokas — Google Workspace är inte kopplat.',
+      innehåll: '<div class="ag-faltrad">'
+        + '<div class="fgroup"><label for="mo-datum">Datum</label>'
+        + '<input class="inp" id="mo-datum" type="date" value="'
+        + (d ? esc(isoFor(d)) : '') + '"></div>'
+        + '<div class="fgroup"><label for="mo-tid">Tid</label>'
+        + '<input class="inp" id="mo-tid" type="time" value="'
+        + (d ? esc(hhmm(d)) : '17:00') + '"></div>'
+        + '</div>'
+        + '<div class="fgroup" style="margin-top:12px"><label for="mo-lank">Möteslänk</label>'
+        + '<input class="inp" id="mo-lank" placeholder="https://meet.google.com/…" value="'
+        + esc(a.mote_lank || '') + '"></div>',
+      knapp: 'Spara och skriv',
+      läs: r => {
+        const datum = $('#mo-datum', r).value;
+        const tid = $('#mo-tid', r).value;
+        if (!datum) return { fel: 'Välj ett datum.' };
+        if (!tid) return { fel: 'Välj en tid.' };
+        return { värde: { datum: datum, tid: tid, länk: $('#mo-lank', r).value.trim() } };
+      }
+    });
+    if (!svar) return;
+
+    /* new Date('2026-09-24T17:00') utan Z tolkas i webbläsarens egen
+       tidszon, alltså i den tid admin faktiskt skrev. Med Z hade
+       ett möte klockan 17 blivit 19 på sommaren. */
+    const när = new Date(svar.datum + 'T' + svar.tid);
+    const { error } = await supa.from('applications')
+      .update({ mote_tid: när.toISOString(), mote_lank: svar.länk || null })
+      .eq('id', a.id);
+    if (error) { alert('Kunde inte spara mötet: ' + felText(error)); return; }
+    a.mote_tid = när.toISOString();
+    a.mote_lank = svar.länk || null;
+    ritaOm();
+
+    kontaktaRuta({
+      titel: 'Skicka mötestiden till ' + (a.name || a.email || ''),
+      namn: a.name, till: a.email,
+      amne: 'Vårt möte om din ansökan till Nextrum',
+      text: mallMöte(a)
+    });
+  });
+
+  /* ---- skicka utbildningen ---- */
+  document.addEventListener('click', e => {
+    const knapp = e.target.closest('[data-ans-utb]');
+    if (!knapp) return;
+    const a = S.ansokningar.find(x => x.id === knapp.dataset.ansUtb);
+    if (!a) return;
+
+    kontaktaRuta({
+      titel: 'Skicka utbildningen till ' + (a.name || a.email || ''),
+      namn: a.name, till: a.email,
+      amne: 'Introduktionen inför ditt första pass',
+      text: mallUtbildning(a)
     });
   });
 
@@ -285,8 +544,7 @@
       + '<button type="button" class="btn btn-primary" id="ap-godkann">Ta in i poolen</button>'
       + '</div></div>';
 
-    document.body.appendChild(ruta);
-    document.body.style.overflow = 'hidden';
+    visaRuta(ruta);
     const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
     ruta.addEventListener('click', ev => {
       if (ev.target === ruta || ev.target.closest('[data-ap-stang]')) stäng();
@@ -324,6 +582,7 @@
         ans.status = 'approved';
 
         stäng();
+        stängSpår();
         await hämtaAllt();
         ritaAnsokningar();
         ritaStudiehjalpare();

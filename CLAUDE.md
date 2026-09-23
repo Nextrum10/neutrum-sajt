@@ -87,7 +87,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 
 | Fil | Roll |
 |---|---|
-| `nextrum-config.js` | **Enda filen som ska ändras vid uppsättning.** URL, anon-nyckel, pris, e-post |
+| `nextrum-config.js` | **Enda filen som ska ändras vid uppsättning.** URL, anon-nyckel, pris, e-post, utbildningslänk |
 | `nextrum-app.js` | `NX` — delad grund: supa-klient, i18n, datum, fel, header, inloggning |
 | `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen |
 | `nextrum-modulvakt.js` | Fångar "en modul laddade inte" innan vyn dör tyst på "Laddar din vy" |
@@ -98,7 +98,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, sök, notiser, bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |
-| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
+| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara |
@@ -194,7 +194,7 @@ Tabeller: `profiles`, `students`, `tutor_profiles`, `tutor_availability`,
 `agent_korningar`, `agent_steg`, `admin_noteringar`, `foretagsfakta`,
 och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
 `kund_skatteuppgifter`. Fas 8–9 la till `ai_forslag`, `ai_konfig` och
-`handlingar`. Runda 2 la till notisernas sju: `notiser` (i vyn),
+`handlingar`. Fas 13.2 la till `biblioteksmaterial`. Runda 2 la till notisernas sju: `notiser` (i vyn),
 `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
 `notis_fel`.
@@ -253,6 +253,34 @@ ovillkorligt krav hade låst 379-kronorsraden. De tre hör hemma i
 lanseringschecklistan i adminvyn, där en människa läser dem.
 **Ändras triggern måste spegeln i `nextrum-admin-tjanster.js` följa
 med**, annars kommer felet ut som rå servertext.
+
+**Materialbiblioteket är kurerat** (Fas 13.2). `biblioteksmaterial` är
+Nextrums delade bank, inte elevens: `materials` gick inte att använda
+eftersom `student_id` är NOT NULL, skrivpolicyn kräver
+`is_my_student()` och hinken `material` kräver ett elev-uuid först i
+sökvägen.
+
+- **Studiehjälparen LÄSER, admin SKRIVER.** Blir det ett fritt
+  uppladdningsutrymme är det inte längre ett urval, och då är filtret
+  på ämne och årskurs ingenting värt.
+- **`ar_godkand_studiehjalpare()`** är den första policyn som ställer
+  frågan "är den här personen godkänd" i databasen. Före Fas 13.2
+  nämnde noll policyer `tutor_profiles` — det var något adminvyn visste
+  och databasen inte.
+- **`homework.bibliotek_id` PEKAR, den kopierar inte.** Ett övningsblad
+  som rättas ska rättas en gång. `on delete set null`: en läxa som
+  getts ska inte försvinna för att banken städas.
+- **Familjen når materialet sin läxa bygger på, även om raden stängts
+  av.** En läxa vars material ger tomt svar är en läxa som inte går att
+  göra.
+- **Årskursen är enskild och låst** (`ak1`–`ak9`, `gy1`–`gy3`), och
+  koden är inte etiketten. `NX.ARSKURSER` i `nextrum-app.js` speglar
+  check-villkoret; `NX.AMNEN` är samma lista i alla tre vyerna.
+  Fritext hade betytt att "åk7", "Åk 7" och "7" blir tre årskurser, och
+  ett filter som tappar två tredjedelar av banken ser ut som ett tomt
+  bibliotek.
+- `verktyg/rls-test.sql` har tolv BIB-rader. Kör dem efter varje ändring
+  i policyn.
 
 **Uppgifter som maskiner skapar går genom `skapa_uppgift()`** (Fas 7),
 som kräver en nyckel och vägrar skapa en till när det redan finns en
@@ -388,7 +416,7 @@ att visa **rätt sida**, inte för att skydda data.
   status, den kopplar inte.
 - **Hinkarna är privata, och sökvägen är ett uuid — aldrig ett namn.**
   `material` har elevens id som mapp, `dokument` (Fas 9.10) har
-  handlingens. Ett filnamn heter i praktiken "Avtal Alva Berg 2026.pdf",
+  handlingens, `bibliotek` (Fas 13.2) har materialradens. Ett filnamn heter i praktiken "Avtal Alva Berg 2026.pdf",
   och sökvägen är det enda i en hink som syns innan man öppnat filen.
   `mapp_uuid()` plockar ut den, och policyerna jämför den mot en rad.
   Fas 9.1 rättade att familjegrenen i materialpolicyn jämförde elevens
@@ -724,6 +752,18 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   roterar refresh-token vid varje användning — sparas inte det nya
   blir ni utlåsta om en månad.
 - **Bakgrundskontroller.** Godkännandet är en knapp, inte en process.
+  Fas 13.1 gav rekryteringen en ORDNING (kontakt, digitalt möte,
+  utbildning, poolen) med skälet till varje steg skrivet i vyn, men
+  inget av stegen kontrollerar något utifrån: mötet bokas inte i en
+  kalender — Google Workspace är inte kopplat — och utbildningen är en
+  länk i `UTBILDNING_URL`, inte ett prov systemet läser resultatet av.
+- **Studiehjälparens egen materialflik hänger löst sedan Fas 13.2.**
+  Föräldravyns materialflik är borttagen, och materialet familjen ser
+  kommer nu via läxan ur `biblioteksmaterial`. Men studiehjälparvyns
+  flik Material skriver fortfarande i `materials`, och de raderna når
+  ingen familj längre. Antingen ska fliken bort, eller så ska
+  `materials` visas för familjen igen. **Halvvägs är sämre än båda:
+  en uppladdning som ser ut att fungera och inte når fram.**
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
   utbetalningen, inte efter.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.

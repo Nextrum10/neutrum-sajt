@@ -50,6 +50,7 @@
   const fyllPerioder = (...a) => NXAdmin.rita.fyllPerioder(...a);
   const ritaAdminanvandare = (...a) => NXAdmin.rita.ritaAdminanvandare(...a);
   const ritaAnsokningar = (...a) => NXAdmin.rita.ritaAnsokningar(...a);
+  const ritaBibliotek = (...a) => NXAdmin.rita.ritaBibliotek(...a);
   const ritaAvvikelser = (...a) => NXAdmin.rita.ritaAvvikelser(...a);
   const ritaBokningar = (...a) => NXAdmin.rita.ritaBokningar(...a);
   const ritaChattar = (...a) => NXAdmin.rita.ritaChattar(...a);
@@ -356,7 +357,8 @@
     studiehjalpare: 'Studiehjälpare', matchning: 'Matchning', bokningar: 'Bokningar',
     lektioner: 'Lektioner', statistik: 'Statistik',
     ekonomi: 'Fakturor & utbetalningar', system: 'System',
-    agenter: 'Agenter', uppdrag: 'Uppdrag', uppgifter: 'Uppgifter', katalog: 'Tjänster & priser'
+    agenter: 'Agenter', uppdrag: 'Uppdrag', uppgifter: 'Uppgifter',
+    bibliotek: 'Material', katalog: 'Tjänster & priser'
   };
 
   /* Området varje sektion hör till (Fas 6) — samma nio rubriker som
@@ -366,6 +368,7 @@
     oversikt: 'Översikt', statistik: 'Översikt',
     leads: 'Kunder', familjer: 'Kunder', elever: 'Kunder', studiehjalpare: 'Kunder',
     matchning: 'Drift', bokningar: 'Drift', lektioner: 'Drift', uppdrag: 'Drift',
+    bibliotek: 'Drift',
     /* Uppgifter ligger under System sedan menyposten togs bort —
        listan nås från System → Automationer. Ansökningar flyttade till
        Kunder: det som kommer in utifrån läses av samma person samma
@@ -921,6 +924,7 @@
       ritaAudit();
       ritaUppdrag();
       ritaUppgifter();
+      ritaBibliotek();
       ritaAutomationer();
       await ritaAI();
       await ritaÖversikt();

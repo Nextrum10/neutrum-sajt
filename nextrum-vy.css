@@ -398,6 +398,28 @@
   font-size:.92rem;line-height:1.6;color:var(--bl-2);
   margin-top:11px;white-space:pre-wrap;
 }
+/* Materialet läxan bygger på (Fas 13.2). Står MELLAN instruktionen
+   och knapparna: det är en del av uppgiften, inte en åtgärd. */
+.lax-material{
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  margin-top:12px;padding:9px 12px;
+  border:1px solid var(--ln);border-radius:10px;
+  background:var(--pap-2);
+  font-size:.84rem;color:var(--bl-2);
+}
+.lax-material svg{width:17px;height:17px;flex:none;color:var(--bl-3)}
+.lax-material span{flex:1;min-width:0}
+.lax-material .btn{padding:4px 11px;font-size:.78rem}
+
+/* Kvittot i läxformuläret när materialet hämtats ur biblioteket. */
+.lx-material{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-top:12px;padding:9px 12px;
+  border:1px dashed var(--ln-2);border-radius:10px;
+  font-size:.84rem;color:var(--bl-2);
+}
+.lx-material span{flex:1;min-width:0}
+
 .lax-atg{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .lax-atg .btn{padding:6px 12px;font-size:.8rem}
 

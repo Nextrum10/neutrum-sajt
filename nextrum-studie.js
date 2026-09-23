@@ -81,6 +81,20 @@ window.NXStudie = (function () {
           : '')
       + '</div>'
       + (h.instructions ? '<p class="lax-text">' + esc(h.instructions) + '</p>' : '')
+      /* Materialet läxan bygger på (Fas 13.2). Raden ritas bara när
+         anroparen skickat med titeln: läxan bär ett bibliotek_id, och
+         vad det id:t heter vet bara den som hämtat raden. Står det
+         bara ett uuid här är raden sämre än ingen rad. */
+      + (o.material
+          ? '<div class="lax-material">'
+            + '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" '
+            + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<path d="M3.5 4.5h5a1.7 1.7 0 0 1 1.7 1.7V16a1.7 1.7 0 0 0-1.7-1.7h-5z"/>'
+            + '<path d="M16.5 4.5h-5A1.7 1.7 0 0 0 9.8 6.2V16a1.7 1.7 0 0 1 1.7-1.7h5z"/></svg>'
+            + '<span>' + esc(o.material) + '</span>'
+            + (o.materialKnapp || '')
+            + '</div>'
+          : '')
       + (o.atgarder ? '<div class="lax-atg">' + o.atgarder + '</div>' : '')
       + '</div>';
   }

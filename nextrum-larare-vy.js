@@ -492,6 +492,8 @@
     $('#lax-form').hidden = true;
     $('#ny-lax').textContent = 'Ny läxa';
     rensa($('#lx-msg'));
+    valtBibliotek = null;
+    visaValtMaterial();
   });
 
   $('#lax-form').addEventListener('submit', async e => {
@@ -516,7 +518,8 @@
         title: titel,
         subject: $('#lx-amne').value.trim() || null,
         instructions: $('#lx-text').value.trim() || null,
-        due_date: datum || null
+        due_date: datum || null,
+        bibliotek_id: valtBibliotek ? valtBibliotek.id : null
       });
       if (error) { säg(msg, 'Kunde inte skapa läxan: ' + felText(error), false); return; }
 
@@ -524,7 +527,183 @@
       $('#lax-form').reset();
       $('#lax-form').hidden = true;
       $('#ny-lax').textContent = 'Ny läxa';
+      valtBibliotek = null;
+      visaValtMaterial();
       await laddaLaxor();
+    });
+  });
+
+
+  /* ============================================================
+     BIBLIOTEKET (Fas 13.2)
+
+     Nextrums delade materialbank. Du hämtar härifrån och ger det
+     som läxa; du laddar inte upp hit. Ett bibliotek som vem som
+     helst fyller på är inte ett urval, och då är filtret på ämne
+     och årskurs ingenting värt.
+
+     Förvalet är den valda elevens årskurs. students.grade är
+     fritext ("åk 7", "7:an"), så koden gissas — och gissar hellre
+     inget än fel: ett filter förvalt på fel årskurs ser ut som ett
+     tomt bibliotek, och då slutar man leta.
+
+     VAL, INTE SKAPANDE. "Ge som läxa" fyller formuläret ovan i
+     stället för att skapa läxan direkt. Deadlinen är det enda som
+     inte står i biblioteket, och en läxa utan deadline är en läxa
+     eleven inte vet när hen ska ha gjort.
+     ============================================================ */
+
+  /* Materialet nästa läxa ska peka på. Nollställs när formuläret
+     stängs eller skickas — annars ärver nästa läxa ett material man
+     valde för tio minuter sedan. */
+  let valtBibliotek = null;
+  let bibRader = [];
+
+  function bibKort(b) {
+    return '<div class="bib-kort">'
+      + '<div class="bib-kort-topp">'
+      + '<b>' + esc(b.titel) + '</b>'
+      + '<span class="tag">' + esc(b.amne) + '</span>'
+      + '<span class="tag">' + esc(NX.årskursText(b.arskurs)) + '</span>'
+      + '</div>'
+      + (b.beskrivning ? '<p>' + esc(b.beskrivning) + '</p>' : '')
+      + '<div class="bib-kort-knappar">'
+      + '<button type="button" class="btn btn-ghost btn-sm" data-bib-titt="' + esc(b.id) + '">Titta på det</button>'
+      + '<button type="button" class="btn btn-primary btn-sm" data-bib-lax="' + esc(b.id) + '">Ge som läxa</button>'
+      + '</div></div>';
+  }
+
+  function ritaBibliotekslista(ruta) {
+    const host = $('#bl-lista', ruta);
+    const amne = $('#bl-amne', ruta).value;
+    const ak = $('#bl-ak', ruta).value;
+    const sök = $('#bl-sok', ruta).value.trim().toLowerCase();
+
+    const urval = bibRader
+      .filter(b => !amne || b.amne === amne)
+      .filter(b => !ak || b.arskurs === ak)
+      .filter(b => !sök || (b.titel + ' ' + (b.beskrivning || '')).toLowerCase().indexOf(sök) > -1);
+
+    $('#bl-antal', ruta).textContent = urval.length + ' av ' + bibRader.length;
+    host.innerHTML = urval.length
+      ? urval.map(bibKort).join('')
+      : tomt('Inget material matchar',
+          'Prova ett bredare filter. Saknas något helt — säg till, biblioteket fylls på av oss.');
+  }
+
+  $('#bib-hamta').addEventListener('click', async () => {
+    if (!S.aktivElev) { alert('Välj en elev högst upp först.'); return; }
+    const eleven = elev();
+
+    const { data, error } = await medan($('#bib-hamta'), 'Hämtar…', () =>
+      supa.from('biblioteksmaterial')
+        .select('id, titel, beskrivning, amne, arskurs, filvag, lank')
+        .eq('aktiv', true)
+        .order('amne').order('titel'));
+
+    if (error) { alert('Biblioteket gick inte att hämta: ' + felText(error)); return; }
+    bibRader = data || [];
+
+    const ruta = document.createElement('div');
+    ruta.className = 'nx-fraga';
+    ruta.innerHTML =
+      '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="bl-t">'
+      + '<h3 id="bl-t">Biblioteket</h3>'
+      + '<p>Nextrums material, sorterat på ämne och årskurs. Välj något och fyll på med '
+      + 'deadline och instruktion i formuläret bakom.</p>'
+      + '<div class="bib-filter">'
+      + '<input class="inp" id="bl-sok" type="search" placeholder="Sök rubrik" aria-label="Sök i biblioteket">'
+      + '<select class="sel" id="bl-amne" aria-label="Ämne"><option value="">Alla ämnen</option>'
+      + NX.AMNEN.map(a => '<option value="' + esc(a) + '">' + esc(a) + '</option>').join('')
+      + '</select>'
+      + '<select class="sel" id="bl-ak" aria-label="Årskurs"><option value="">Alla årskurser</option>'
+      + NX.ARSKURSER.map(a => '<option value="' + esc(a.kod) + '">' + esc(a.text) + '</option>').join('')
+      + '</select>'
+      + '<span class="small" id="bl-antal"></span>'
+      + '</div>'
+      + '<div class="bib-lista" id="bl-lista"></div>'
+      + '<div class="nx-fraga-knappar">'
+      + '<button type="button" class="btn btn-ghost" data-bl-stang>Stäng</button>'
+      + '</div></div>';
+
+    document.body.appendChild(ruta);
+    document.body.style.overflow = 'hidden';
+    void ruta.offsetWidth;
+    ruta.classList.add('open');
+
+    const förvald = NX.årskursKod(eleven && eleven.grade);
+    if (förvald) $('#bl-ak', ruta).value = förvald;
+    ritaBibliotekslista(ruta);
+
+    const stäng = () => { ruta.remove(); document.body.style.overflow = ''; };
+    ['#bl-sok', '#bl-amne', '#bl-ak'].forEach(id =>
+      $(id, ruta).addEventListener('input', () => ritaBibliotekslista(ruta)));
+
+    ruta.addEventListener('click', async ev => {
+      if (ev.target === ruta || ev.target.closest('[data-bl-stang]')) { stäng(); return; }
+
+      const titt = ev.target.closest('[data-bib-titt]');
+      if (titt) {
+        const b = bibRader.find(x => x.id === titt.dataset.bibTitt);
+        if (!b) return;
+        if (b.lank) { window.open(b.lank, '_blank', 'noopener'); return; }
+        await medan(titt, '…', async () => {
+          const url = await M.signera('bibliotek', b.filvag);
+          if (!url) { alert('Filen gick inte att öppna just nu.'); return; }
+          window.open(url, '_blank', 'noopener');
+        });
+        return;
+      }
+
+      const ge = ev.target.closest('[data-bib-lax]');
+      if (!ge) return;
+      const b = bibRader.find(x => x.id === ge.dataset.bibLax);
+      if (!b) return;
+
+      valtBibliotek = b;
+      $('#lax-form').hidden = false;
+      $('#ny-lax').textContent = 'Stäng';
+      $('#lx-titel').value = b.titel;
+      $('#lx-amne').value = b.amne;
+      if (!$('#lx-text').value.trim() && b.beskrivning) $('#lx-text').value = b.beskrivning;
+      visaValtMaterial();
+      stäng();
+      $('#lx-datum').focus();
+    });
+  });
+
+  /* Kvittot i formuläret. Utan det syns valet bara som att rubriken
+     fylldes i av sig själv, och den som ångrar sig har ingen väg
+     tillbaka — bibliotek_id hade följt med läxan ändå. */
+  function visaValtMaterial() {
+    const host = $('#lx-material');
+    if (!host) return;
+    if (!valtBibliotek) { host.hidden = true; host.innerHTML = ''; return; }
+    host.hidden = false;
+    host.innerHTML = '<span>Ur biblioteket: <b>' + esc(valtBibliotek.titel) + '</b></span>'
+      + '<button type="button" class="btn btn-ghost btn-sm" id="lx-material-bort">Ta bort kopplingen</button>';
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#lx-material-bort')) return;
+    valtBibliotek = null;
+    visaValtMaterial();
+  });
+
+  /* Materialet från en läxrad. Raden bär bara ett id; sökvägen och
+     länken följde med i hämtningen ovan, så uppslaget görs där
+     läxorna finns — inte i en ny fråga per klick. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-lax-mat]');
+    if (!knapp) return;
+    const h = (S.laxor || []).find(x => x.bibliotek_id === knapp.dataset.laxMat);
+    const b = h && h.biblioteksmaterial;
+    if (!b) return;
+    if (b.lank) { window.open(b.lank, '_blank', 'noopener'); return; }
+    await medan(knapp, '…', async () => {
+      const url = await M.signera('bibliotek', b.filvag);
+      if (!url) { alert('Materialet gick inte att öppna just nu.'); return; }
+      window.open(url, '_blank', 'noopener');
     });
   });
 
@@ -559,7 +738,8 @@
     host.innerHTML = laddar();
     const { data, error } = await supa
       .from('homework')
-      .select('id, title, instructions, subject, due_date, status, completed_at')
+      .select('id, title, instructions, subject, due_date, status, completed_at, '
+        + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)')
       .eq('student_id', S.aktivElev)
       .order('due_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
@@ -588,6 +768,10 @@
     }
 
     host.innerHTML = urval.map(h => NXStudie.läxRad(h, {
+      material: h.biblioteksmaterial ? h.biblioteksmaterial.titel : null,
+      materialKnapp: h.biblioteksmaterial
+        ? '<button type="button" class="btn btn-ghost btn-sm" data-lax-mat="'
+          + esc(h.bibliotek_id) + '">Öppna</button>' : '',
       atgarder: '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
     })).join('');
   }

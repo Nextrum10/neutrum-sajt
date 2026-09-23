@@ -621,6 +621,11 @@
                   <h5>Läxor <em id="lax-antal"></em></h5>
                   <div class="vy-knapprad" style="margin-top:0;margin-bottom:16px">
                     <button class="btn btn-primary btn-sm" type="button" id="ny-lax">Ny läxa</button>
+                    <!-- Nextrums delade materialbank (Fas 13.2). Du hämtar
+                         härifrån; du laddar inte upp hit. Vill du lägga
+                         till eget material till just den här eleven är det
+                         fliken Material bredvid. -->
+                    <button class="btn btn-ghost btn-sm" type="button" id="bib-hamta">Ur biblioteket</button>
                   </div>
 
                   <form id="lax-form" class="vy-fall" hidden>
@@ -642,6 +647,10 @@
                       <label for="lx-text">Instruktion <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
                       <textarea class="inp" id="lx-text" style="min-height:80px" placeholder="Hur eleven ska tänka, vad som är viktigast, vad hen kan hoppa över."></textarea>
                     </div>
+                    <!-- Kvittot när läxan hämtats ur biblioteket. Utan det
+                         syns valet bara som att rubriken fylldes i av sig
+                         själv, och kopplingen följer med läxan ändå. -->
+                    <div class="lx-material" id="lx-material" hidden></div>
                     <div class="vy-knapprad">
                       <button class="btn btn-primary btn-sm" type="submit" id="lx-spara">Skapa läxa</button>
                       <button class="btn btn-ghost btn-sm" type="button" id="lx-avbryt">Avbryt</button>
