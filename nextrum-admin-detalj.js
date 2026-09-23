@@ -721,9 +721,22 @@
               '<button class="btn btn-ghost btn-sm" type="button" data-dp-mat-bort="'
                 + esc(m.id) + '">Ta bort</button>')).join('')
           : tomt('Inget material än',
-              'Lägg in en uppgift här nedanför. Filer laddar studiehjälparen upp i sin egen vy.'))
+              'Det här är elevens egen mapp, inte biblioteket. Biblioteket ligger under Material i menyn.'))
 
-      + dpRubrik('Lägg till', 'syns hos familjen direkt')
+      /* SANNINGEN OM VEM SOM SER DET HÄR (Fas 13.3)
+
+         Stod "syns hos familjen direkt" till Fas 13.2, och det var
+         sant då. Sedan föräldravyns materialflik togs bort ser
+         familjen bara det material som hänger på en LÄXA, och en
+         läxa pekar på biblioteket — inte hit.
+
+         Raden är alltså inte kosmetik: en admin som tror att en fil
+         här når familjen laddar upp den och slutar tänka på saken.
+         Vägen till familjen går genom Material i menyn och en läxa. */
+      + dpRubrik('Lägg till', 'elevens egen mapp — familjen ser det inte')
+      + '<p class="xsmall" style="margin:0 0 10px;line-height:1.6;color:var(--bl-3)">'
+      + 'Det här är vårt eget underlag om eleven. Ska familjen se något: lägg det i '
+      + '<a href="#bibliotek">Material</a>, så kan studiehjälparen ge det som läxa.</p>'
       + '<form data-dp-mat="' + esc(e.id) + '" class="dp-mat">'
       + '<div class="dp-mat-par">'
       + '<input class="inp" name="titel" placeholder="Rubrik" maxlength="200" required>'

@@ -260,9 +260,18 @@ eftersom `student_id` är NOT NULL, skrivpolicyn kräver
 `is_my_student()` och hinken `material` kräver ett elev-uuid först i
 sökvägen.
 
-- **Studiehjälparen LÄSER, admin SKRIVER.** Blir det ett fritt
-  uppladdningsutrymme är det inte längre ett urval, och då är filtret
-  på ämne och årskurs ingenting värt.
+- **`delad` skiljer två sorter i samma tabell** (Fas 13.3).
+  `delad = true` är Nextrums BANK: bara admin skriver, alla godkända
+  studiehjälpare läser. `delad = false` är studiehjälparens EGET: bara
+  ägaren ser och ändrar det. Banken är kurerad med flit — blir den ett
+  fritt uppladdningsutrymme är den inte längre ett urval, och då är
+  filtret på ämne och årskurs ingenting värt.
+- **`delad` går inte att slå på nerifrån.** Uppdateringspolicyn har
+  `not delad` i BÅDE using och with check, så en studiehjälpare kan
+  ändra sitt eget men aldrig lyfta in det i banken. Admin gör det med
+  knappen "Lyft in i banken", och bara åt det hållet: en delad rad som
+  lämnades tillbaka hade försvunnit ur listan hos alla som redan gett
+  den som läxa.
 - **`ar_godkand_studiehjalpare()`** är den första policyn som ställer
   frågan "är den här personen godkänd" i databasen. Före Fas 13.2
   nämnde noll policyer `tutor_profiles` — det var något adminvyn visste
@@ -271,16 +280,22 @@ sökvägen.
   som rättas ska rättas en gång. `on delete set null`: en läxa som
   getts ska inte försvinna för att banken städas.
 - **Familjen når materialet sin läxa bygger på, även om raden stängts
-  av.** En läxa vars material ger tomt svar är en läxa som inte går att
-  göra.
+  av och även om den är någons egen.** Den policyn frågar inte efter
+  `delad`: läxan ÄR kopplingen. En läxa vars material ger tomt svar är
+  en läxa som inte går att göra.
+- **`materials` når inte familjen längre.** Både studiehjälparvyns
+  materialflik (Fas 13.3) och adminvyns detaljpanel skrev dit; fliken
+  är ombyggd till biblioteket, panelen står kvar som VÅRT underlag om
+  eleven och säger det i klartext. Vägen till familjen går genom
+  biblioteket och en läxa, ingen annanstans.
 - **Årskursen är enskild och låst** (`ak1`–`ak9`, `gy1`–`gy3`), och
   koden är inte etiketten. `NX.ARSKURSER` i `nextrum-app.js` speglar
   check-villkoret; `NX.AMNEN` är samma lista i alla tre vyerna.
   Fritext hade betytt att "åk7", "Åk 7" och "7" blir tre årskurser, och
   ett filter som tappar två tredjedelar av banken ser ut som ett tomt
   bibliotek.
-- `verktyg/rls-test.sql` har tolv BIB-rader. Kör dem efter varje ändring
-  i policyn.
+- `verktyg/rls-test.sql` har nitton BIB-rader, sju av dem om
+  delningen. Kör dem efter varje ändring i policyn.
 
 **Uppgifter som maskiner skapar går genom `skapa_uppgift()`** (Fas 7),
 som kräver en nyckel och vägrar skapa en till när det redan finns en
@@ -792,13 +807,14 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   inget av stegen kontrollerar något utifrån: mötet bokas inte i en
   kalender — Google Workspace är inte kopplat — och utbildningen är en
   länk i `UTBILDNING_URL`, inte ett prov systemet läser resultatet av.
-- **Studiehjälparens egen materialflik hänger löst sedan Fas 13.2.**
-  Föräldravyns materialflik är borttagen, och materialet familjen ser
-  kommer nu via läxan ur `biblioteksmaterial`. Men studiehjälparvyns
-  flik Material skriver fortfarande i `materials`, och de raderna når
-  ingen familj längre. Antingen ska fliken bort, eller så ska
-  `materials` visas för familjen igen. **Halvvägs är sämre än båda:
-  en uppladdning som ser ut att fungera och inte når fram.**
+- **`materials` har inga läsare kvar utom oss själva** (efter Fas
+  13.3). Studiehjälparvyns materialflik är ombyggd till biblioteket,
+  och adminvyns detaljpanel skriver fortfarande dit men säger nu i
+  klartext att familjen inte ser det. Tabellen, hinken `material` och
+  `NXMedia.laddaMaterial`/`materialRad`/`sparaMaterialfil` lever kvar
+  utan att någon familjevy anropar dem. Bestäm: ska panelen vara kvar
+  som internt underlag (då är det färdigt) eller ska `materials` bort
+  helt (då är det en städning med en hink att tömma först)?
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
   utbetalningen, inte efter.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.

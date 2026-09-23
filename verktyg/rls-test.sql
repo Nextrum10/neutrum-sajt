@@ -1761,11 +1761,14 @@ from unnest(array[
 -- en policy som nekar för mycket ser ut som en tom lista.
 -- ------------------------------------------------------------
 
-insert into public.biblioteksmaterial (id, titel, amne, arskurs, lank, beskrivning) values
+insert into public.biblioteksmaterial (id, titel, amne, arskurs, lank, beskrivning, delad, skapad_av) values
   ('00000000-0000-4000-8000-0000000000e1', 'RLS aktivt material', 'Matematik', 'ak7',
-   'https://exempel.invalid/a', 'Aktivt'),
+   'https://exempel.invalid/a', 'Aktivt', true, '00000000-0000-4000-8000-0000000000ad'),
   ('00000000-0000-4000-8000-0000000000e2', 'RLS avstängt material', 'Matematik', 'ak7',
-   'https://exempel.invalid/b', 'Avstängt');
+   'https://exempel.invalid/b', 'Avstängt', true, '00000000-0000-4000-8000-0000000000ad'),
+  -- Fas 13.3: studiehjälparens eget. Bara A ser det, bara A ändrar det.
+  ('00000000-0000-4000-8000-0000000000e3', 'RLS A:s eget material', 'Svenska', 'ak5',
+   'https://exempel.invalid/c', 'Eget', false, '00000000-0000-4000-8000-0000000000a1');
 
 update public.biblioteksmaterial set aktiv = false
 where id = '00000000-0000-4000-8000-0000000000e2';
@@ -1782,11 +1785,11 @@ insert into public.homework (id, student_id, tutor_id, title, bibliotek_id) valu
 
 select pg_temp.rakna('BIB-1 godkänd studiehjälpare ser aktivt material, inte avstängt',
   '00000000-0000-4000-8000-0000000000a1',
-  'select count(*) from public.biblioteksmaterial where titel like ''RLS %''', 1);
-
-select pg_temp.rakna('BIB-2 admin ser båda',
-  '00000000-0000-4000-8000-0000000000ad',
   'select count(*) from public.biblioteksmaterial where titel like ''RLS %''', 2);
+
+select pg_temp.rakna('BIB-2 admin ser allt',
+  '00000000-0000-4000-8000-0000000000ad',
+  'select count(*) from public.biblioteksmaterial where titel like ''RLS %''', 3);
 
 select pg_temp.rakna('BIB-3 anon ser ingenting',
   null,
@@ -1802,13 +1805,14 @@ select pg_temp.rakna('BIB-5 annan familj når det inte',
   '00000000-0000-4000-8000-0000000000f2',
   'select count(*) from public.biblioteksmaterial where titel like ''RLS %''', 0);
 
-select pg_temp.prova('BIB-6 studiehjälpare kan inte lägga till i biblioteket',
+select pg_temp.prova('BIB-6 studiehjälpare kan inte lägga till i BANKEN',
   '00000000-0000-4000-8000-0000000000a1',
-  array['insert into public.biblioteksmaterial (titel, amne, arskurs, lank)
-         values (''Smyg'', ''Matematik'', ''ak7'', ''https://exempel.invalid/c'')'],
+  array['insert into public.biblioteksmaterial (titel, amne, arskurs, lank, delad, skapad_av)
+         values (''Smyg'', ''Matematik'', ''ak7'', ''https://exempel.invalid/d'', true,
+                 ''00000000-0000-4000-8000-0000000000a1'')'],
   'nekad');
 
-select pg_temp.prova('BIB-7 studiehjälpare kan inte ändra i biblioteket',
+select pg_temp.prova('BIB-7 studiehjälpare kan inte ändra i banken',
   '00000000-0000-4000-8000-0000000000a1',
   array['update public.biblioteksmaterial set titel = ''Kapad''
          where id = ''00000000-0000-4000-8000-0000000000e1'''],
@@ -1817,8 +1821,53 @@ select pg_temp.prova('BIB-7 studiehjälpare kan inte ändra i biblioteket',
 select pg_temp.prova('BIB-8 familj kan inte lägga till i biblioteket',
   '00000000-0000-4000-8000-0000000000f1',
   array['insert into public.biblioteksmaterial (titel, amne, arskurs, lank)
-         values (''Smyg'', ''Matematik'', ''ak7'', ''https://exempel.invalid/d'')'],
+         values (''Smyg'', ''Matematik'', ''ak7'', ''https://exempel.invalid/e'')'],
   'nekad');
+
+-- ---- Fas 13.3: delningen ----
+-- `delad` skiljer Nextrums bank från studiehjälparens eget. Går den
+-- att slå på nerifrån är kureringen en artighet, inte en regel.
+
+select pg_temp.rakna('BIB-13 en annan studiehjälpare ser inte A:s eget',
+  '00000000-0000-4000-8000-0000000000b1',
+  'select count(*) from public.biblioteksmaterial where titel like ''RLS %''', 1);
+
+select pg_temp.prova('BIB-14 studiehjälpare lägger till EGET material',
+  '00000000-0000-4000-8000-0000000000a1',
+  array['insert into public.biblioteksmaterial (titel, amne, arskurs, lank, delad, skapad_av)
+         values (''Nytt eget'', ''Svenska'', ''ak5'', ''https://exempel.invalid/f'', false,
+                 ''00000000-0000-4000-8000-0000000000a1'')'],
+  'ok');
+
+select pg_temp.prova('BIB-15 studiehjälpare kan inte skriva i någon annans namn',
+  '00000000-0000-4000-8000-0000000000a1',
+  array['insert into public.biblioteksmaterial (titel, amne, arskurs, lank, delad, skapad_av)
+         values (''I B:s namn'', ''Svenska'', ''ak5'', ''https://exempel.invalid/g'', false,
+                 ''00000000-0000-4000-8000-0000000000b1'')'],
+  'nekad');
+
+select pg_temp.prova('BIB-16 studiehjälpare kan INTE lyfta sitt eget in i banken',
+  '00000000-0000-4000-8000-0000000000a1',
+  array['update public.biblioteksmaterial set delad = true
+         where id = ''00000000-0000-4000-8000-0000000000e3'''],
+  'nekad');
+
+select pg_temp.prova('BIB-17 studiehjälpare ändrar sitt egets rubrik',
+  '00000000-0000-4000-8000-0000000000a1',
+  array['update public.biblioteksmaterial set titel = ''RLS A:s eget, ändrad''
+         where id = ''00000000-0000-4000-8000-0000000000e3'''],
+  'ok');
+
+select pg_temp.prova('BIB-18 en annan studiehjälpare kan inte ta bort A:s eget',
+  '00000000-0000-4000-8000-0000000000b1',
+  array['delete from public.biblioteksmaterial where id = ''00000000-0000-4000-8000-0000000000e3'''],
+  'nekad');
+
+select pg_temp.prova('BIB-19 admin lyfter in ett eget i banken',
+  '00000000-0000-4000-8000-0000000000ad',
+  array['update public.biblioteksmaterial set delad = true
+         where id = ''00000000-0000-4000-8000-0000000000e3'''],
+  'ok');
 
 select pg_temp.prova('BIB-9 admin lägger till',
   '00000000-0000-4000-8000-0000000000ad',
