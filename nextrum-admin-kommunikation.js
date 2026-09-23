@@ -19,7 +19,10 @@
   const { S, kortDatum, matchar, namnFör, pill, rad, tabell, tomtText } = NXAdmin;
 
   /* ============================================================
-     MEDDELANDEN
+     FRÅGOR
+     Heter så i vyn sedan omdöpningen. Tabellen är fortfarande
+     contact_messages och sektionens id fortfarande "meddelanden" —
+     bara det användaren läser bytte namn.
      ============================================================ */
 
   function ritaKontakt() {
@@ -33,14 +36,14 @@
     $('#msg-tabell').innerHTML = tabell([
       { namn: 'Från', rita: m => '<b>' + esc(m.name) + '</b>'
         + '<span class="adm-und">' + esc(m.email) + (m.role ? ' · ' + esc(m.role) : '') + '</span>' },
-      { namn: 'Meddelandet', rita: m => esc(m.message) },
+      { namn: 'Frågan', rita: m => esc(m.message) },
       { namn: 'Inkom', rita: m => '<span class="adm-tal">' + esc(kortDatum(m.created_at)) + '</span>' },
       { namn: '', höger: true, rita: m => m.hanterad_at
         ? pill('Hanterad ' + kortDatum(m.hanterad_at), 'ar-klar')
         : '<a class="btn btn-ghost btn-sm" href="mailto:' + esc(m.email)
           + '" data-mailtext="keep" style="margin-right:7px">Svara</a>'
           + '<button class="btn btn-primary btn-sm" data-hanterad="' + m.id + '">Klart</button>' }
-    ], rader, bara ? 'Inget ohanterat kvar' : tomtText(sök, 'Inget meddelande matchar filtret', 'Inga meddelanden än'));
+    ], rader, bara ? 'Inget ohanterat kvar' : tomtText(sök, 'Ingen fråga matchar filtret', 'Inga frågor än'));
   }
 
   function ritaChattar() {

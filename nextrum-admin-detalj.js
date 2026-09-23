@@ -216,6 +216,30 @@
       + '</div>').join('') + '</div>';
   }
 
+  /* E-post och telefon som går att klicka på.
+
+     Stod förut som ren text i faktarutan, och den som ville höra av
+     sig fick markera adressen och klistra in den i sitt mejlprogram.
+     På en telefon gick det inte alls.
+
+     data-mailtext="keep" är inte valfritt: nextrum-app.js:189 byter
+     ut texten i VARJE mailto-länk mot husets egen adress, så att de
+     publika sidorna aldrig kan råka visa fel. Utan markeringen skulle
+     familjens adress skrivas över med info@nextrum.se och raden ljuga
+     om vems adress det är. */
+  function dpMejl(adress) {
+    if (!adress) return null;
+    return '<a href="mailto:' + esc(adress) + '" data-mailtext="keep">' + esc(adress) + '</a>';
+  }
+
+  function dpTelefon(nummer) {
+    if (!nummer) return null;
+    /* tel: tål inte mellanslag eller bindestreck. Numret visas som det
+       skrevs in och städas bara i länkens adress. */
+    return '<a href="tel:' + esc(String(nummer).replace(/[^\d+]/g, '')) + '">'
+      + esc(nummer) + '</a>';
+  }
+
   function dpRubrik(text, extra) {
     return '<div class="dp-rubrik"><span>' + esc(text) + '</span>'
       + (extra ? '<em>' + esc(extra) + '</em>' : '') + '</div>';
@@ -456,8 +480,8 @@
     ])
     + dpRubrik('Kontakt')
     + dpFakta([
-      ['E-post', p.email ? esc(p.email) : null],
-      ['Telefon', p.phone ? esc(p.phone) : null],
+      ['E-post', dpMejl(p.email)],
+      ['Telefon', dpTelefon(p.phone)],
       ['Konto skapat', p.created_at ? esc(kortDatum(p.created_at)) : null],
       ['Senast inloggad', p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : null, 'aldrig'],
       ['Om familjen', p.bio ? esc(p.bio) : null]
@@ -612,8 +636,8 @@
     ])
     + dpRubrik('Profilen')
     + dpFakta([
-      ['E-post', p.email ? esc(p.email) : null],
-      ['Telefon', p.phone ? esc(p.phone) : null],
+      ['E-post', dpMejl(p.email)],
+      ['Telefon', dpTelefon(p.phone)],
       ['Ålder', tp.age ? esc(String(tp.age) + ' år') : null],
       ['Skola', tp.school ? esc(tp.school) : null],
       ['Ort', tp.city ? esc(tp.city) : null],

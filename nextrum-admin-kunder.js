@@ -310,6 +310,13 @@
         : '<button class="btn btn-ghost btn-sm" data-sh-publik="' + esc(t.id) + '">'
           + (t.visa_publikt ? 'Syns' : 'Dold') + '</button>' },
       { namn: 'Läge', höger: true, rita: t => väljare('sh', SH_LAGE, t.status, 'data-sh="' + t.id + '"')
+        /* Kontakt bara när adressen finns. En knapp som öppnar ett
+           mejlutkast utan mottagare ser ut att fungera och gör det
+           inte — värre än ingen knapp. */
+        + (t.epost
+            ? '<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-sh-kontakt="'
+              + esc(t.id) + '">Kontakta</button>'
+            : '')
         + '<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-dp="studiehjalpare:'
         + esc(t.id) + '">Öppna</button>' }
     ], rader, tomtText(sök || st, 'Ingen studiehjälpare matchar filtret', 'Inga studiehjälpare registrerade än'));
@@ -328,6 +335,45 @@
       + 'åt er, för fel match är värre än ingen match.\n\n'
       + 'Hälsningar,\nNextrum';
   }
+
+  /* Mall till en godkänd studiehjälpare.
+
+     Medvetet tunn. En familj som skickat en intresseanmälan har alltid
+     samma ärende, så mallLead kan säga något konkret. En studiehjälpare
+     kontaktas av vilket skäl som helst — en ny elev, en tid som inte
+     går ihop, en rapport som saknas — och en mall som gissar ärendet
+     blir något admin måste radera först. Hälsningen och avslutet är
+     det som sparar tid; mitten skriver människan. */
+  function mallStudiehjalpare(t) {
+    return 'Hej ' + (String(t.namn || '').split(' ')[0] || '') + ',\n\n'
+      + '\n\n'
+      + 'Hälsningar,\nNextrum';
+  }
+
+  /* ---- kontakta en godkänd studiehjälpare ----
+
+     Ingen stämpel efteråt, till skillnad från leads och ansökningar.
+     De två har kontaktad_at i databasen; tutor_profiles har det inte,
+     och en kolumn ska inte läggas till för att en knapp ska kännas
+     färdig. Kontakten syns i mejlprogrammets skickat-mapp, där den
+     hör hemma. */
+  document.addEventListener('click', e => {
+    const knapp = e.target.closest('[data-sh-kontakt]');
+    if (!knapp) return;
+    const id = knapp.dataset.shKontakt;
+    const t = S.tutorProfiler[id];
+    if (!t) return;
+    const namn = namnFör(id);
+    const till = (S.personer[id] || {}).email || '';
+    if (!till) return;
+
+    kontaktaRuta({
+      titel: 'Skriv till ' + (namn || till),
+      namn: namn, till: till,
+      amne: 'Från Nextrum',
+      text: mallStudiehjalpare({ namn: namn })
+    });
+  });
 
   /* ---- kontakta en familj som skickat intresseanmälan ---- */
   document.addEventListener('click', e => {
@@ -466,9 +512,26 @@
         if (!k.error) lead.kund_id = res.data.id;
       }
 
+      /* HÄMTA OM, OCH BYGG OM RULLGARDINEN.
+
+         Familjens profilrad finns REDAN när inbjudan gått iväg:
+         triggern handle_new_user är AFTER INSERT on auth.users, inte
+         "efter att lösenordet valts". Förut sa rutan åt admin att
+         vänta på något som redan hänt, och eftersom S.personer inte
+         hämtades om stod familjen ändå inte i rullgardinen — så den
+         som följde instruktionen och öppnade rutan igen såg samma
+         tomma lista. Det var därför Skapa elev såg trasig ut.
+
+         hämtaAllt() fyller bara S, den ritar ingenting, så rutan
+         överlever anropet. */
+      await hämtaAllt();
+      const val = $('#le-familj', ruta);
+      if (val && res.data.id) val.outerHTML = familjeVal(res.data.id);
+
       bjud.disabled = true;
-      säg(msg, '✓ Inbjudan skickad till ' + res.data.till + '. När familjen valt lösenord '
-        + 'finns kontot i listan — öppna rutan igen då.', true);
+      säg(msg, '✓ Inbjudan skickad till ' + res.data.till
+        + '. Familjen är vald nedan — du kan skapa eleven nu. '
+        + 'Lösenordet väljer de själva via mejlet.', true);
       ritaLeads();
     });
 
