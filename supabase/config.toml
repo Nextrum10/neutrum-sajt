@@ -79,5 +79,3 @@ verify_jwt = false
 # signaturen i tokenen.
 [functions.notis-avanmal]
 verify_jwt = false
-git pull
-supabase functions deploy stripe-checkout stripe-webhook stripe-aterbetalning
