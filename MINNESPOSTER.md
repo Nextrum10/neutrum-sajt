@@ -294,6 +294,12 @@ En Claude-artefaktlänk kan aldrig prata med Supabase. Testa mot riktiga
 filer eller lokal server (`python3 .claude/serve.py 8951`, som härmar
 Vercels `cleanUrls`).
 
+Vyerna ska provas som en telefon, inte som en dator: Safari har ingen
+scroll anchoring. En lista som byts mot "Hämtar" kastar sidan uppåt —
+använd `NXStudie.laddarFörsta`. `1fr` i ett grid ska vara
+`minmax(0,1fr)`. Inget som rör sig i onödan (video, zoom, oskärpa).
+Detaljen: `CLAUDE.md` avsnitt 3, "Tre fällor som gör vyerna hackiga".
+
 Inte byggt än: en betalning som gått hela vägen. Sedan Fas 14.2 betalar
 familjen varje pass med kort, före passet, och får ingen faktura.
 Månadskörningen skapar bara studiehjälparens underlag, som betalas den

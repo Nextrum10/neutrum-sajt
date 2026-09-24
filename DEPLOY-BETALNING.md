@@ -615,7 +615,10 @@ utbetalningar → Kortbetalningar. Knappen visar vad som händer innan den gör 
 - **På:** en rapport på ett pass som inte är betalt nekas, med ett meddelande som
   säger varför. Studiehjälparen ser betalläget på passet och rapportknappen är
   stängd. `betald` och `tvist` räknas som betalt; ett undantaget pass stoppas
-  aldrig; admin går alltid förbi.
+  aldrig; admin går alltid förbi. Familjen kan då också betala ett bekräftat pass
+  vars tid har gått: hölls det ändå är betalningen det enda som låser upp
+  rapporten, och utan knappen hade passet fastnat mellan två vyer som väntar på
+  varandra. Hölls det inte avbokar studiehjälparen det.
 - **Av:** passen rapporteras som förut, och ett pass som hölls utan betalning syns
   under Avvikelser som **Inte betalt**.
 

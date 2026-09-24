@@ -17,6 +17,7 @@
   NX.initHeader();
 
   const S = {
+    aktivSek: null, passFrån: null, yFör: {}, laddatPass: false,
     user: null, profil: null, tutorProfil: null,
     familjer: [], aktivFamilj: null,
     elever: [], aktivElev: null,
@@ -459,12 +460,25 @@
     $('#ny-lax').textContent = f.hidden ? 'Ny läxa' : 'Stäng';
     if (!f.hidden) $('#lx-titel').focus();
   });
+  /* Formuläret ligger ovanför listan. När det stängs försvinner dess
+     höjd ovanför det man tittar på, och listan hoppade upp 550 px —
+     ingen i Safari kompenserar för det. Listan hålls där den stod. */
+  function stängLaxForm(efter) {
+    NXStudie.håll($('#lax-lista'), () => {
+      $('#lax-form').hidden = true;
+      $('#ny-lax').textContent = 'Ny läxa';
+      /* Allt som ändrar höjd ovanför listan i samma svep — meddelandet
+         och det valda materialet — annars flyttade listan sig ändå de
+         sista 75–90 px. */
+      if (efter) efter();
+    });
+  }
   $('#lx-avbryt').addEventListener('click', () => {
-    $('#lax-form').hidden = true;
-    $('#ny-lax').textContent = 'Ny läxa';
-    rensa($('#lx-msg'));
-    valtBibliotek = null;
-    visaValtMaterial();
+    stängLaxForm(() => {
+      rensa($('#lx-msg'));
+      valtBibliotek = null;
+      visaValtMaterial();
+    });
   });
 
   $('#lax-form').addEventListener('submit', async e => {
@@ -494,12 +508,12 @@
       });
       if (error) { säg(msg, 'Kunde inte skapa läxan: ' + felText(error), false); return; }
 
-      säg(msg, '✓ Läxan har skapats. Familjen ser den direkt.', true);
       $('#lax-form').reset();
-      $('#lax-form').hidden = true;
-      $('#ny-lax').textContent = 'Ny läxa';
-      valtBibliotek = null;
-      visaValtMaterial();
+      stängLaxForm(() => {
+        säg(msg, '✓ Läxan har skapats. Familjen ser den direkt.', true);
+        valtBibliotek = null;
+        visaValtMaterial();
+      });
       await laddaLaxor();
     });
   });
@@ -550,7 +564,7 @@
       return;
     }
 
-    host.innerHTML = laddar();
+    NXStudie.laddarFörsta(host);
     const { data, error } = await supa
       .from('homework')
       .select('id, title, instructions, subject, due_date, status, completed_at, '
@@ -721,7 +735,7 @@
       return;
     }
 
-    host.innerHTML = laddar();
+    NXStudie.laddarFörsta(host);
     const [svar, hist] = await Promise.all([
       supa.from('progress_items').select('id, subject, area, level, steg, mal_steg, comment, updated_at')
         .eq('student_id', S.aktivElev).order('subject').order('area'),
@@ -866,8 +880,15 @@
     const under = [timmar === 1 ? '1 timme' : timmar + ' timmar',
       b.antal_barn > 1 ? b.antal_barn + ' barn' : null,
       e ? e.name : (familj ? familj.full_name : null)].filter(Boolean).join(' · ');
-    return NXKontakt.passRad(b, { under, vem, atgarder: knappar })
-      + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
+    /* Platsen och familjens anteckning står på raden: det är vad man
+       behöver för att säga ja. Resten — eleven, målet, familjen —
+       finns på passets sida, dit hela raden leder. */
+    const plats = [b.format, b.location].filter(Boolean).join(' · ');
+    return NXKontakt.passRad(b, {
+      href: '#pass/' + b.id,
+      under: [under, plats].filter(Boolean).join(' · ') + (b.note ? ' · ”' + String(b.note).slice(0, 60) + (String(b.note).length > 60 ? '…' : '') + '”' : ''),
+      vem, atgarder: knappar
+    });
   }
 
   function ritaFörslag() {
@@ -1019,11 +1040,12 @@
     const host = $('#pass-lista');
     const { data, error } = await supa
       .from('bookings')
-      .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, betalning_status, fakturerbar')
+      .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, avbokningsskal, betalning_status, fakturerbar')
       .eq('tutor_id', S.user.id).order('wanted_date', { ascending: true });
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta passen', felText(error)); return; }
     S.bokningar = data || [];
+    S.laddatPass = true;
 
     /* Ett förslag är inget pass än. Här står det som faktiskt blir av
        — och det som redan hänt. Förslagen står i Föreslagna tider. */
@@ -1041,6 +1063,9 @@
     ritaNästaPass();
     ritaStatistik();
     byggSchema();
+    /* Står man på ett pass när listan laddas om — efter ett svar, en
+       flytt, en rapport — ritas sidan om med det som nu gäller. */
+    if (passIdIAdressen()) ritaPassSida();
 
     ritaNotiser();
 
@@ -1065,29 +1090,19 @@
          som redan hållits går inte att flytta. */
       const idag = isoFor(new Date());
       const harVarit = kan && rapporterbart(b) && harBörjat(b);
-      /* Bara ett bekräftat pass kan betalas (stripe-checkout), så det
-         är bara där "inte betalt" är ett besked. Med spärren av är
+      /* Ett pass går att betala först när det är bekräftat
+         (stripe-checkout), och ett genomfört pass har redan sin
+         rapport. Det är alltså bara på ett bekräftat pass som "inte
+         betalt" är ett besked till studiehjälparen. Med spärren av är
          betaltNog alltid sant och inget av det här syns. */
       const obetalt = b.status === 'confirmed' && !betaltNog(b);
-      /* Betalt eller bestritt: databasen nekar en avbokning från en vy
-         (Fas 14.1), med spärren på eller av. Knappen visas därför inte
-         — ett nej efter ett klick är sämre än en mening som säger vart
-         man vänder sig. Samma regel som i föräldravyn. */
-      const betalt = b.betalning_status === 'betald' || b.betalning_status === 'tvist';
 
+      /* Raden bär bara det som är ditt drag: rapporten för ett pass
+         som har varit. Föreslå ny tid och avboka ligger på passets
+         egen sida, dit hela raden leder (Leo 2026-09-24). */
       let knappar = '';
       if (harVarit) {
         knappar += '<button class="btn btn-primary btn-sm" data-rapportera="' + b.id + '">Skriv rapport</button>';
-      }
-      if (kan && !harVarit) {
-        knappar += '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>';
-      }
-      if (kan && !betalt) {
-        /* Ett önskemål från familjen avböjs, ett bokat pass avbokas.
-           Samma sak i databasen, men inte samma sak att säga. */
-        const önskemål = b.status === 'requested' && !mitt;
-        knappar += '<button class="btn btn-ghost btn-sm" data-status="cancelled" data-id="' + b.id + '"'
-          + (önskemål ? ' data-avboj="1">Avböj' : '>Avboka') + '</button>';
       }
 
       /* Platsen står direkt på raden, inte bara i detaljvyn. Ett pass
@@ -1096,6 +1111,7 @@
         e ? e.name : (familj ? familj.full_name : null)].filter(Boolean).join(' · ');
 
       return NXKontakt.passRad(b, {
+        href: '#pass/' + b.id,
         under: under,
         vem: harVarit
           ? 'Passet har varit — rapporten saknas'
@@ -1103,8 +1119,6 @@
           ? 'Inte betalt — rapporten kan sparas när familjen har betalat. Hölls passet inte, avboka det.'
           : obetalt
           ? 'Inte betalt än. Håll inte passet förrän familjen har betalat.'
-          : kan && betalt
-          ? 'Betalt. Ska passet avbokas, hör av dig till Nextrum.'
           : b.status === 'requested'
           ? (mitt ? 'Ditt förslag — väntar på svar' : 'Familjen önskade den här tiden')
           : (b.attendance === 'franvarande' ? 'Eleven uteblev'
@@ -1113,7 +1127,7 @@
            som förut, och då hade "Ej betalt" varit en order ingen gett. */
         märke: S.kortsparr ? NXKontakt.betalMärke(b) : null,
         atgarder: knappar
-      }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
+      });
       }
     });
   }
@@ -1303,7 +1317,7 @@
     } else if (btn.dataset.status === 'cancelled') {
       const skäl = await NXStudie.avbokaRuta({
         titel: 'Avboka passet?',
-        text: 'Vill du hellre byta tid, välj Flytta i stället — då ligger passet kvar tills familjen svarat.',
+        text: 'Vill du hellre byta tid, välj Föreslå ny tid i stället — då ligger passet kvar tills familjen svarat.',
         not: 'Familjen får ett mejl om att passet är avbokat och varför, med en länk för att föreslå en ny tid.'
       });
       if (!skäl) return;
@@ -2258,7 +2272,8 @@
     if (S.hero) {
       S.hero.uppdatera({
         nasta: b ? {
-          href: '#lektioner',
+          /* Rakt till passets sida: var ni ses och vem eleven är. */
+          href: '#pass/' + b.id,
           text: 'Nästa pass · ' + datumText(b.wanted_date)
                 + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
           under: [vem, b.subject].filter(Boolean).join(' · ')
@@ -2277,6 +2292,7 @@
       return;
     }
     host.innerHTML = NXKontakt.passRad(b, {
+      href: '#pass/' + b.id,
       under: [b.format, b.location, (b.duration_min || 60) + ' min'].filter(Boolean).join(' · '),
       vem: vem
     });
@@ -2697,62 +2713,231 @@
         const f = S.familjer.find(x => x.id === b.parent_id);
         return f ? (f.full_name || '') : '';
       },
-      onOppna: visaPass
+      /* Samma sida som raden i listan, inte en ruta ovanpå. */
+      onOppna: b => { location.hash = '#pass/' + b.id; }
     });
   }
 
-  /* Knapparna får samma data-attribut som raderna i passlistan, så
-     de delegerade hanterarna längre ned tar hand om dem. Rutan
-     stänger sig själv när klicket bubblat vidare. */
-  function visaPass(b) {
+  /* ============================================================
+     PASSETS SIDA (#pass/<id>)
+
+     Leo 2026-09-24: "på föreslagna tider ska läraren också kunna
+     trycka in på lektionen för att se mer information om tid, ämne,
+     var man ska ses, dag, eleven man har". Samma sida för ett förslag
+     och ett bokat pass — det är samma rad i databasen, och den ska
+     inte se olika ut beroende på vilken lista man kom ifrån.
+
+     Ritningen delas med studievyn (NXStudie.passSida). Här bestäms
+     vad studiehjälparen ser: eleven och familjen, inte priset.
+     Knapparna bär samma data-attribut som i listorna.
+     ============================================================ */
+  const SEKTIONSNAMN = { oversikt: 'Översikt', tider: 'Föreslagna tider', lektioner: 'Lektioner & elever' };
+
+  function passIdIAdressen() {
+    const [huvud, id] = String(location.hash || '').replace(/^#/, '').split('/');
+    return huvud === 'pass' && id ? decodeURIComponent(id) : null;
+  }
+
+  const rapportFör = {};
+  async function hämtaRapport(id) {
+    if (id in rapportFör) return rapportFör[id];
+    const { data } = await supa.from('lesson_reports')
+      .select('gick, raw_notes, needs_practice, next_focus')
+      .eq('booking_id', id).maybeSingle();
+    rapportFör[id] = data || null;
+    return rapportFör[id];
+  }
+
+  function behovText(koder) {
+    return (koder || []).map(k => (NX.BEHOV.find(x => x.kod === k) || {}).text).filter(Boolean).join(', ');
+  }
+
+  async function ritaPassSida() {
+    const host = $('#pass-sida');
+    const id = passIdIAdressen();
+    if (!host || !id) return;
+    const från = SEKTIONSNAMN[S.passFrån] ? S.passFrån : 'lektioner';
+    const tillbaka = { href: från === 'lektioner' ? '#lektioner/pass' : '#' + från, text: SEKTIONSNAMN[från] };
+
+    const b = (S.bokningar || []).find(x => x.id === id);
+    if (!b) {
+      host.innerHTML = '<a class="ps-tillbaka" href="' + tillbaka.href + '">‹ ' + esc(tillbaka.text) + '</a>'
+        + (S.laddatPass ? tomt('Passet finns inte här', 'Det kan höra till en annan studiehjälpare, eller ha tagits bort.') : laddar());
+      return;
+    }
+
     const e = S.elever.find(x => x.id === b.student_id);
     const f = S.familjer.find(x => x.id === b.parent_id);
-    const l = NXKontakt.LÄGEN[b.status] || { text: b.status };
+    const elevNamn = e ? e.name : null;
+    const förnamn = elevNamn ? elevNamn.split(' ')[0] : 'eleven';
     const mitt = b.created_by === S.user.id;
-    const kan = b.status === 'requested' || b.status === 'confirmed';
+    const varit = harBörjat(b);
+    const l = NXKontakt.LÄGEN[b.status] || { text: b.status, klass: '' };
+    const timmar = Math.max(1, Math.round((b.duration_min || 60) / 60));
+    const skriv = '<button type="button" class="btn btn-ghost" data-skriv-familj="' + esc(b.parent_id) + '"'
+      + (e ? ' data-elev="' + esc(e.id) + '"' : '') + '>Skriv till familjen</button>';
 
-    let knappar = '';
-    /* Ett pass som redan varit flyttas inte — det rapporteras. Och det
-       bekräftas inte heller i efterhand; samma regel som passlistan. */
-    const harVarit = harBörjat(b);
-    if (b.status === 'requested' && !mitt && !harVarit) {
-      knappar += '<button type="button" class="btn btn-primary" data-status="confirmed" data-id="' + esc(b.id) + '">Bekräfta</button>';
-    }
-    if (kan) {
-      const önskemål = b.status === 'requested' && !mitt;
-      if (harVarit && rapporterbart(b)) {
-        knappar += '<button type="button" class="btn btn-primary" data-rapportera="' + esc(b.id) + '">Skriv rapport</button>';
-      } else {
-        knappar += '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Flytta</button>';
-      }
-      knappar += '<button type="button" class="btn btn-ghost" data-status="cancelled" data-id="' + esc(b.id) + '"'
-        + (önskemål ? ' data-avboj="1">Avböj' : '>Avboka') + '</button>';
+    const steg = b.status === 'cancelled' ? [] : [
+      { namn: mitt ? 'Föreslaget av dig' : 'Föreslaget av familjen', klar: true },
+      { namn: 'Bekräftat', klar: b.status === 'confirmed' || b.status === 'completed', nu: b.status === 'requested' },
+      { namn: 'Genomfört', klar: b.status === 'completed' || (varit && b.status === 'confirmed'), nu: b.status === 'confirmed' && !varit },
+      { namn: 'Rapport', klar: b.status === 'completed', nu: b.status === 'confirmed' && varit }
+    ];
+
+    /* Betalt eller bestritt: databasen nekar en avbokning från en vy
+       (Fas 14.1), med spärren på eller av — och att avböja eller dra
+       tillbaka en flyttad tid är också en avbokning. Knapparna visas
+       därför inte på ett betalt pass; ett nej efter ett klick är sämre
+       än en mening som säger vart man vänder sig. Samma regel som i
+       föräldravyn. */
+    const betalt = b.betalning_status === 'betald' || b.betalning_status === 'tvist';
+    const viaNextrum = ' Passet är betalt, så ska det avbokas går det genom Nextrum.';
+    /* Bokat men inte betalt, med spärren på. Med den av är betaltNog
+       alltid sant och inget av det här syns. */
+    const obetalt = b.status === 'confirmed' && !betaltNog(b);
+    const avboka = '<button type="button" class="btn btn-ghost" data-status="cancelled" data-id="' + esc(b.id) + '">Avboka</button>';
+
+    let besked = null, atgarder = '';
+    if (b.status === 'cancelled') {
+      const skäl = NXStudie.skälText(b.avbokningsskal);
+      besked = { text: 'Passet är avbokat' + (skäl ? ' — ' + skäl.toLowerCase() + '.' : '.'), ton: 'lugn' };
+      atgarder = skriv;
+    } else if (b.status === 'requested' && !mitt && !varit) {
+      besked = { text: 'Familjen föreslår den här tiden. Acceptera den, eller föreslå en annan — då får familjen bekräfta.'
+        + (betalt ? viaNextrum : ''), ton: 'fraga' };
+      atgarder = '<button type="button" class="btn btn-primary" data-acceptera="' + esc(b.id) + '">Acceptera</button>'
+        + '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '" data-motforslag="1">Föreslå annan tid</button>'
+        + (betalt ? '' : '<button type="button" class="btn btn-ghost" data-status="cancelled" data-id="' + esc(b.id) + '" data-avboj="1">Avböj</button>');
+    } else if (b.status === 'requested' && mitt && !varit) {
+      besked = { text: 'Ditt förslag. Familjen bekräftar tiden eller föreslår en annan, och du får ett mejl när de svarat.'
+        + (betalt ? viaNextrum : ''), ton: 'vantar' };
+      atgarder = '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '" data-motforslag="1">Ändra tiden</button>'
+        + (betalt ? '' : '<button type="button" class="btn btn-ghost" data-status="cancelled" data-id="' + esc(b.id) + '">Dra tillbaka</button>')
+        + skriv;
+    } else if (varit && rapporterbart(b)) {
+      besked = { text: 'Passet har varit. Skriv rapporten, så blir det en arbetad timme och familjen ser vad ni gjorde.', ton: 'fraga' };
+      atgarder = '<button type="button" class="btn btn-primary" data-rapportera="' + esc(b.id) + '">Skriv rapport</button>' + skriv;
+    } else if (varit && obetalt) {
+      /* Spärren på, passet har varit och familjen har inte betalt.
+         Rapporten nekas av databasen tills betalningen kommit in —
+         familjen kan fortfarande betala ett passerat pass (Fas 14.2),
+         och gör de det blir raden rapporterbar. */
+      besked = { text: 'Passet är inte betalt, så rapporten kan inte sparas än. Den går att skriva när familjen har betalat. Hölls passet inte, avboka det.', ton: 'fraga' };
+      atgarder = avboka + skriv;
+    } else if (b.status === 'confirmed') {
+      const ses = 'Du ses med ' + förnamn + ' ' + NXStudie.relativDag(b.wanted_date) + '.';
+      besked = obetalt
+        ? { text: 'Passet är bokat, men familjen har inte betalt än. Håll det inte förrän de har gjort det — det syns här när betalningen kommit in.', ton: 'fraga' }
+        : betalt
+        ? { text: 'Passet är bokat och betalt. ' + ses + ' Ska det avbokas går det genom Nextrum.', ton: 'klart' }
+        : { text: 'Passet är bokat. ' + ses, ton: 'klart' };
+      atgarder = '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Föreslå ny tid</button>'
+        + (betalt ? '' : avboka)
+        + skriv;
+    } else if (b.status === 'completed') {
+      besked = { text: 'Passet är genomfört och rapporterat.', ton: 'klart' };
+      atgarder = skriv;
+    } else {
+      besked = { text: 'Tiden har passerat utan att förslaget besvarades.', ton: 'lugn' };
+      atgarder = skriv;
     }
 
-    const kommande = (S.laxor || [])
-      .filter(h => h.student_id === b.student_id || S.aktivElev === b.student_id)
-      .filter(h => h.status !== 'klar' && h.due_date && h.due_date >= b.wanted_date)
+    const önskar = e && e.format_onskemal ? (NX.FORMAT_ONSKEMAL.find(x => x.kod === e.format_onskemal) || {}).text : null;
+    const kort = [
+      { rubrik: 'När', rader: [
+        ['Dag', NXStudie.dagMedVeckodag(b.wanted_date)],
+        ['Tid', NXStudie.tidsspann(b.wanted_time, b.duration_min)],
+        ['Längd', timmar === 1 ? '1 timme' : timmar + ' timmar']
+      ] },
+      { rubrik: 'Var ni ses', rader: [
+        ['Hur', b.format || önskar || 'Inte angivet'],
+        ['Plats', b.location || (b.format === 'Online' ? 'Skicka länken i meddelanden' : 'Inte angiven — fråga familjen')]
+      ] },
+      { rubrik: 'Eleven', rader: [
+        ['Namn', elevNamn],
+        ['Årskurs', e ? e.grade : null],
+        ['Skola', e ? e.school : null],
+        ['Ämnen', e && e.subjects && e.subjects.length ? e.subjects.join(', ') : null],
+        ['Behöver', e ? behovText(e.behov) : null],
+        ['Önskar', önskar]
+      ] },
+      { rubrik: 'Familjen', rader: [
+        ['Förälder', f ? (f.full_name || f.email) : null],
+        ['Antal barn', (b.antal_barn || 1) > 1 ? String(b.antal_barn) : '1'],
+        ['Närvaro', b.attendance === 'franvarande' ? 'Uteblev' : b.attendance === 'sen' ? 'Kom sent'
+          : b.attendance === 'narvarande' ? 'Närvarande' : null]
+      ] }
+    ];
+
+    const läxor = (S.laxor || [])
+      .filter(h => h.student_id === b.student_id && h.status !== 'klar' && h.due_date && h.due_date >= b.wanted_date)
       .slice(0, 3);
 
-    NXStudie.passRuta({
-      titel: b.subject || 'Pass',
-      under: datumText(b.wanted_date) + (b.wanted_time ? ' kl. ' + b.wanted_time : ''),
-      rader: [
-        ['Status', l.text],
-        ['Längd', (b.duration_min || 60) + ' min'],
-        ['Format', b.format],
-        ['Plats', b.location],
-        ['Elev', e ? e.name : null],
-        ['Familj', f ? (f.full_name || f.email) : null],
-        ['Bokades av', b.created_by ? (mitt ? 'Du' : 'Familjen') : null],
-        ['Närvaro', b.attendance === 'franvarande' ? 'Uteblev'
-                  : b.attendance === 'sen' ? 'Kom sent'
-                  : b.attendance === 'narvarande' ? 'Närvarande' : null]
-      ],
-      anteckning: b.note,
-      laxor: kommande,
-      atgarder: knappar
+    const block = [
+      { rubrik: 'Familjens anteckning', html: b.note ? '<p>' + esc(b.note) + '</p>' : '' },
+      { rubrik: 'Målet', html: e && e.goals ? '<p>' + esc(e.goals) + '</p>' : '' },
+      { rubrik: 'Om ' + förnamn, html: e && e.about ? '<p>' + esc(e.about) + '</p>' : '' },
+      { rubrik: 'Läxor fram till passet', html: läxor.length
+        ? läxor.map(h => '<div class="pass-lank">' + esc(h.title)
+            + '<span>Till ' + esc(NXStudie.deadlineText(h.due_date)) + '</span></div>').join('') : '' }
+    ];
+
+    const rita = (rapport) => NXStudie.passSida({
+      host,
+      tillbaka,
+      titel: (b.subject || 'Pass') + (elevNamn ? ' med ' + förnamn : ''),
+      nar: NXStudie.dagMedVeckodag(b.wanted_date) + (b.wanted_time ? ', ' + NXStudie.tidsspann(b.wanted_time, b.duration_min) : ''),
+      relativ: b.status === 'cancelled' ? null : NXStudie.relativDag(b.wanted_date),
+      lage: l,
+      steg,
+      besked,
+      atgarder,
+      kort,
+      block: block.concat(rapport ? [{ rubrik: 'Din rapport', html:
+        (rapport.gick ? '<p><b>' + esc(NXStudie.GICK[rapport.gick] || rapport.gick) + '</b></p>' : '')
+        + (rapport.raw_notes ? '<p>' + esc(rapport.raw_notes) + '</p>' : '')
+        + (rapport.needs_practice ? '<p><b>Öva mer på:</b> ' + esc(rapport.needs_practice) + '</p>' : '')
+        + (rapport.next_focus ? '<p><b>Nästa gång:</b> ' + esc(rapport.next_focus) + '</p>' : '')
+      }] : [])
     });
+
+    rita(rapportFör[b.id] || null);
+    if (b.status === 'completed' && !(b.id in rapportFör)) {
+      const r = await hämtaRapport(b.id);
+      if (r && passIdIAdressen() === b.id) rita(r);
+    }
+  }
+
+  /* "Skriv till familjen" på passets sida: välj familjen (och
+     eleven), sedan chatten. Utan valet öppnades tråden med den familj
+     som råkade vara vald sist. */
+  document.addEventListener('click', async ev => {
+    const k = ev.target.closest('[data-skriv-familj]');
+    if (!k) return;
+    if (k.dataset.elev) await väljElev(k.dataset.elev);
+    location.hash = '#meddelanden';
+  });
+
+  /* Sektionsbytet. Passets sida hör till där man kom ifrån. */
+  function bytteSektion(vald) {
+    const förra = S.aktivSek;
+    S.aktivSek = vald;
+    if (vald === 'pass') {
+      if (förra && förra !== 'pass') S.passFrån = förra;
+      ritaPassSida();
+      const hem = $('#vy-sido a[data-sek="' + (SEKTIONSNAMN[S.passFrån] ? S.passFrån : 'lektioner') + '"]');
+      if (hem) hem.classList.add('ar-har');
+      const sek = $('section[data-sek="pass"]');
+      if (sek) {
+        const topp = sek.getBoundingClientRect().top;
+        if (topp < 90 || topp > window.innerHeight * 0.6) NXStudie.visaÖverst(sek);
+      }
+      return;
+    }
+    if (förra === 'pass' && S.yFör[vald] != null) {
+      const y = S.yFör[vald];
+      requestAnimationFrame(() => NXStudie.scrollaTill(y));
+    }
   }
 
   function visaFel(fel, sammanhang) { NXStudie.felvy(visa, fel, sammanhang); }
@@ -2787,6 +2972,9 @@
     S.user = await NX.hämtaSession();
     if (!S.user) { visa('view-auth'); ritaAuth(); return; }
 
+    /* Katalogen hämtas medan profilen hämtas, inte efter. Den behövs
+       först när vyn ritas, och en fråga i kö är en fråga för mycket. */
+    const katalogen = NXTjanster.ladda();
     S.profil = await NX.hämtaProfil(S.user.id);
     ritaHeader();
 
@@ -2834,7 +3022,7 @@
     /* Tjänstekatalogen först. Bokningen skriver `tjanst` på varje
        rad, och passlistan märker ut den när fler än en tjänst är
        aktiv — båda behöver katalogen innan de ritar något. */
-    await NXTjanster.ladda();
+    await katalogen;
 
     /* Flikarna först. Sidomenyn och hash-översättningen ropar på dem
        när de byter sektion, och en flikrad som inte finns än hade
@@ -2866,10 +3054,18 @@
     /* Föreslagna tider är inte med: förslagen gäller alla familjer,
        inte den valda eleven. */
     const MED_KONTEXT = ['laxor', 'lektioner', 'meddelanden'];
+    /* Var i varje sektion man stod, så att tillbaka från ett pass
+       landar där man tryckte. */
+    window.addEventListener('scroll', () => {
+      if (S.aktivSek) S.yFör[S.aktivSek] = window.scrollY;
+    }, { passive: true });
     S.sido = NXStudie.sidomeny({
       fall: 'larare',
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
-      onByt: sek => { $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1; }
+      onByt: sek => {
+        $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1;
+        bytteSektion(sek);
+      }
     });
 
     /* De fem sektioner som slogs ihop hade egna adresser. Bokmärken
@@ -2918,21 +3114,36 @@
 
     fyllProfil();
 
-    if (S.profil.avatar_url) S.minAvatar = await M.signera('avatarer', S.profil.avatar_url);
     $('#k-namn').value = S.profil.full_name || '';
     $('#k-tel').value = S.profil.phone || '';
     $('#k-epost').textContent = S.profil.email || S.user.email || '';
+    /* Den egna bilden ritas när den kommit, inte före allt annat. */
+    if (S.profil.avatar_url) {
+      M.signera('avatarer', S.profil.avatar_url).then(u => {
+        /* Har en ny bild hunnit laddas upp står den kvar. */
+        if (S.minAvatar == null) { S.minAvatar = u; ritaKontoAvatar(); ritaHeader(); }
+      });
+    }
     ritaKontoAvatar();
     ritaHeader();
 
-    await laddaFamiljer();
-    S.avatarer = await M.avatarKarta(S.familjer.map(f => f.id));
-    S.olästa = await NXKontakt.olästa(S.user.id);
-    await laddaElever();
-    await laddaSenaste();
+    /* Samtidigt, inte i kö. Kedjan var nio frågor i rad, och med en
+       kvarts sekund per fråga på en telefon stod vyn på "Hämtar" i tre
+       sekunder innan passen syntes. Det som hänger ihop väntar på
+       varandra; resten går parallellt. */
+    /* Spärren läses före passen: raden, notisen och passets sida
+       frågar alla betaltNog(), och ett pass ritat innan flaggan kommit
+       hade stått utan besked om betalningen. */
+    await Promise.all([laddaFamiljer(), laddaElever(), laddaSparr()]);
+    const [avatarer, olästa] = await Promise.all([
+      M.avatarKarta(S.familjer.map(f => f.id)),
+      NXKontakt.olästa(S.user.id),
+      laddaSenaste(),
+      laddaPass()
+    ]);
+    S.avatarer = avatarer;
+    S.olästa = olästa;
     fyllElevväljare();
-    await laddaSparr();
-    await laddaPass();
     await byggFamilj();
     await byggElev();
     await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaUpptagna()]);

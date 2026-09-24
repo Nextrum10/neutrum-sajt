@@ -108,7 +108,13 @@ window.NXKontakt = (function () {
       }
       if (hämtar) return;
       hämtar = true;
-      if (!tyst) host.innerHTML = '<div class="loading">Hämtar</div>';
+      /* Vid byte av tråd: "Hämtar" i samma höjd som tråden hade. Den
+         krympte annars till en rad medan den nya hämtades, och sidan
+         under tråden — skrivrutan — hoppade upp och sedan ned igen. */
+      if (!tyst) {
+        host.style.minHeight = host.offsetHeight ? host.offsetHeight + 'px' : '';
+        host.innerHTML = '<div class="loading">Hämtar</div>';
+      }
 
       var res = await supa.from('messages')
         .select('id, sender_id, body, read_at, created_at')
@@ -116,6 +122,7 @@ window.NXKontakt = (function () {
         .eq('tutor_id', läge.tutorId)
         .order('created_at', { ascending: true });
       hämtar = false;
+      host.style.minHeight = '';
 
       if (res.error) {
         host.innerHTML = '<div class="empty">Kunde inte hämta meddelandena.<br><span class="xsmall">'
@@ -347,16 +354,27 @@ window.NXKontakt = (function () {
     var d = String(b.wanted_date || '').split('-');
     var dag = d[2] || '', mån = d[1] ? (NX.MANADER[Number(d[1]) - 1] || '').slice(0, 3) : '';
 
-    return '<div class="pass">'
+    /* o.href: raden leder till passets egen sida. Rubriken blir en
+       länk (tangentbord och skärmläsare), och hela raden går att
+       trycka på — det sköter NXStudie. Pilen säger att det finns mer
+       bakom raden än det som står på den. */
+    var titel = o.href
+      ? '<a class="pass-titel" href="' + esc(o.href) + '">' + esc(b.subject || 'Pass') + '</a>'
+      : '<b>' + esc(b.subject || 'Pass') + '</b>';
+
+    return '<div class="pass' + (o.href ? ' pass-klickbar' : '') + '"'
+      + (o.href ? ' data-href="' + esc(o.href) + '"' : '') + '>'
       + '<span class="pass-nar"><b>' + esc(dag) + '</b>' + esc(mån)
       + (b.wanted_time ? '<br>' + esc(b.wanted_time) : '') + '</span>'
-      + '<span class="pass-vad"><b>' + esc(b.subject || 'Pass') + '</b>'
+      + '<span class="pass-vad">' + titel
       + (o.under ? '<span>' + esc(o.under) + '</span>' : '')
       + (o.vem ? '<span class="pass-vem">' + esc(o.vem) + '</span>' : '')
       + '</span>'
       + '<span class="pass-atg"><span class="lage ' + l.klass + '">' + esc(l.text) + '</span>'
       + (o.märke ? '<span class="lage ' + o.märke.klass + '">' + esc(o.märke.text) + '</span>' : '')
-      + (o.atgarder || '') + '</span>'
+      + (o.atgarder || '')
+      + '</span>'
+      + (o.href ? '<span class="pass-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></span>' : '')
       + '</div>';
   }
 
