@@ -51,7 +51,8 @@ En studiehjälpare syns publikt först när admin satt läget till
 | pass | ett bokat tillfälle (`bookings`). Hela timmar, 1–3 |
 | rapport | `lesson_reports`. **Passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
-| faktura | vad familjen ska betala (`invoices`) |
+| betalning | vad familjen betalat för ett pass: med kort, per pass, före passet (`bookings.betalning_status`, `betalt_ore`) |
+| faktura | historik sedan Fas 14.2 (`invoices`). Familjen får ingen ny |
 | tjänst | rad i `tjanster`. `aktiv` avgör vad som syns, inget annat |
 
 ### Siffror som måste stämma överallt
@@ -59,10 +60,18 @@ En studiehjälpare syns publikt först när admin satt läget till
 - **379 kr/tim** (`nextrum-config.js: PRIS_PER_TIMME`)
 - **69 kr/tim** tillägg för fler än ett barn — **fast, inte per barn**,
   tak tre barn (`tjanster.extra_personer_max`). Tre barn kostar 448, inte 517
-- **10 dagars betalningsvillkor** (`_delad/konstanter.ts`). Står på
-  fjorton ställen i fyra filtyper. `verktyg/kolla-betalningsvillkor.py`
-  vaktar det, och den körs i CI. **En faktura som förfaller på en annan
-  dag än villkoret lovar är en tvist, inte ett skrivfel.**
+- **Kort per pass, före passet** (Fas 14.2). Familjen betalar varje
+  pass med kort när studiehjälparen bekräftat tiden, senast innan
+  passet börjar, och **ett pass som inte är betalt hålls inte**. Ingen
+  månadsfaktura och inget betalningsvillkor i dagar. Meningen står på
+  femton ställen i nio filer, på båda språken.
+  `verktyg/kolla-betalningsvillkor.py` räknar dem, letar efter det gamla
+  löftet ("efterskott", "10 dagars …") i allt som serveras, och körs i
+  CI. **En betalning som tas på ett annat sätt än villkoren lovar är en
+  tvist, inte ett skrivfel.**
+- **Den 25:e** får studiehjälparen betalt, i en klump för månadens
+  rapporterade pass (`payouts`). Det är en lön, inte en andel av varje
+  kortbetalning.
 - Belopp lagras i **ören** överallt. Kronor blir det först vid visning
   (`NXBetalning.kronor`). Enda stället ett avrundningsfel kan smyga in
   är omvandlingen — gör den en gång, på ett ställe.
@@ -247,16 +256,21 @@ att den sammanfaller med ett utfört `ai_forslag` på samma objekt:
 `godkann_forslag` sätter `utford = now()`, och auditraden får samma
 `now()` i samma transaktion.
 
-**En tjänst får inte vara aktiv och oklar** (Fas 10).
-`skydda_tjansteaktivering()` prövar tre INVARIANTER vid varje skrivning
+**En tjänst får inte vara aktiv och oklar** (Fas 10, Fas 14.2).
+`skydda_tjansteaktivering()` prövar fyra INVARIANTER vid varje skrivning
 på en aktiv rad — inte bara vid påslaget, annars gick det att aktivera
 rätt och sedan tömma priset:
 
 1. tjänsten måste gå att boka eller söka till
-2. `for_kund` kräver ett pris — annars fakturerar `_delad/pris.ts:170`
-   till läxhjälpens timpris och skriver det på raden som om det vore
-   tjänstens eget
+2. `for_kund` kräver ett pris. Annars tar `stripe-checkout` läxhjälpens
+   timpris ur `prissattning` för den och drar det av familjen som om det
+   vore tjänstens eget
 3. `extra_personer_max > 1` kräver ett tillägg, annars blir det tyst noll
+4. `for_kund` och `rut_berattigad` går inte ihop (Fas 14.2). RUT drogs
+   bara i månadsfakturan. Kortbetalningen tar hela beloppet, så en
+   RUT-tjänst hade tagit fullt pris av en familj som lovats halva, och
+   ingen hade begärt resten från Skatteverket. Att PLANERA en RUT-tjänst
+   går: invarianten gäller en aktiv rad
 
 **Avstängning släpps alltid igenom.** Den är nödbromsen.
 
@@ -268,6 +282,17 @@ ovillkorligt krav hade låst 379-kronorsraden. De tre hör hemma i
 lanseringschecklistan i adminvyn, där en människa läser dem.
 **Ändras triggern måste spegeln i `nextrum-admin-tjanster.js` följa
 med**, annars kommer felet ut som rå servertext.
+
+**Spärren "ingen betalning, inget pass" är en flagga** (Fas 14.2):
+`kortsparr` i `flaggor`, samma mekanism som `notiser_mejl`. Är den på
+nekar `skydda_bokningsfalt` `completed` på ett fakturerbart pass vars
+`betalning_status` inte är `betald` eller `tvist`. Rapporten gör passet
+genomfört i samma skrivning (`rapport_gor_passet_genomfort`), så det
+är rapporten som nekas, med ett meddelande som säger varför. Admin går
+förbi, som i resten av triggern. Står den av syns ett hållet obetalt
+pass i stället som avvikelsen `ej_betalt`, som ersatte `ej_fakturerat`.
+`betald_men_avbokad` (Fas 14.2c) är samma sak åt andra hållet: ett
+avbokat pass som familjen betalat, med beloppet som inte gått tillbaka.
 
 **Materialbiblioteket är kurerat** (Fas 13.2). `biblioteksmaterial` är
 Nextrums delade bank, inte elevens: `materials` gick inte att använda
@@ -560,8 +585,8 @@ tillbaka en kopia.**
 
 | Funktion | Gör | Anropas av |
 |---|---|---|
-| `fakturering` | Månadskörning: faktura per familj, underlag per hjälpare | Schema (`x-fakturering-nyckel`) eller admin |
-| `faktura-utskick` | Skickar fakturan. **Mejlet först, statusen sedan** | Knapp i adminvyn |
+| `fakturering` | Månadskörningen: underlag per studiehjälpare, och en lista över pass som hölls utan att betalas. **Skapar ingen faktura sedan Fas 14.2** | Schema (`x-fakturering-nyckel`) eller admin |
+| `faktura-utskick` | Skickar en äldre faktura. **Mejlet först, statusen sedan.** Inga nya skapas sedan Fas 14.2, så den har bara historiken kvar | Knapp under Äldre fakturor |
 | `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
 | `pass-notis`, `meddelande-notis` | **Anropas inte längre.** Se nedan | — |
@@ -777,7 +802,7 @@ Körs på varje push och PR. Ska vara grön före merge.
 
 1. `node --check` på all JavaScript
 2. `node verktyg/testa-agent.js`
-3. `verktyg/kolla-betalningsvillkor.py`
+3. `verktyg/kolla-betalningsvillkor.py` (betalningslöftet, och att det gamla är borta)
 4. `verktyg/kolla-migrationer.py`
 5. `verktyg/kolla-csp.py`
 6. `verktyg/kolla-webp.py`
@@ -825,19 +850,24 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 
 ## 11. Vad som inte är byggt
 
-- **Betalning.** Två vägar finns i repot, och **bara den ena är provad**.
+- **Betalning.** Familjen betalar varje pass med kort, **före passet**
+  (Fas 14.2). Månadsfakturan till familjen är riven: `fakturering`
+  skapar bara studiehjälparens underlag och räknar i sitt svar upp pass
+  som hölls utan att betalas (`obetalda`). Fakturor som redan fanns står
+  kvar som historik (det fanns noll), och `faktura-utskick` har bara dem
+  kvar att skicka.
 
-  **Månadsfakturering** (Fas 2) skapar och skickar fakturor. Ingen
-  betaltjänst är kopplad till dem: `Betald` kryssas i för hand, och
-  utbetalning görs från banken.
-
-  **Kortbetalning per pass** (Fas 12) är driftsatt men inte i bruk.
-  Familjen betalar ett bekräftat pass med kort, och **hela beloppet går
-  till Nextrum**. Men **ingen webhook-endpoint finns hos Stripe**, och
-  **ingenting har någonsin körts mot Stripe** — miljön där koden skrevs
-  når inte `api.stripe.com`. Utan `STRIPE_WEBHOOK_SECRET` svarar
-  webhooken 400 på varje leverans, och då dras pengarna utan att något
-  pass blir betalt. `DEPLOY-BETALNING.md` avsnitt 9 har ordningen.
+  **Kortvägen är driftsatt men har aldrig gått hela vägen.** Endpointen
+  finns hos Stripe (sandlådan), och `STRIPE_WEBHOOK_SECRET` är satt och
+  provad: en påhittad signatur faller på tidsstämpeln, inte på
+  hemligheten. Men `stripe_handelser` är tom och inget pass har
+  `betald_at` (kontrollerat 2026-09-24). Ingen leverans från Stripe har
+  kommit fram, inte ens en testhändelse. `basil`, som `_delad/stripe.ts`
+  pinnar, gick inte att välja när endpointen skapades, så den står
+  troligen på förvalet `dahlia` (DEPLOY-BETALNING.md förklarar varför
+  det sannolikt håller, och vad som ska kontrolleras). Provbetalningen i
+  `DEPLOY-BETALNING.md` avsnitt 9 är det första som ska göras, före
+  allt annat i den här listan.
 
   **Connect är borttaget (Fas 12.5.)** Studiehjälparen får betalt den
   25:e, som en löning, i en klump för månadens rapporterade pass. Det
@@ -845,27 +875,49 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   lagt hjälparens del på hens Stripe-saldo vid varje pass, och sedan
   hade månadskörningen betalat samma timmar en gång till.
 
-  **De två vägarna vet om varandra sedan Fas 14.0.** `passunderlag`
-  bär `betalning_status`, och `byggUnderlag` hoppar över FAMILJENS rad
-  när kortvägen rört passet — `vantar`, `betald`, `aterbetald` eller
-  `tvist`. `ingen` och `misslyckad` faktureras som förut: då finns
-  ingen betalning. Passen försvinner inte tyst, de redovisas under
-  `hoppade_over_kortvagen` i körningens svar.
+  **Spärren "ingen betalning, inget pass" finns, och den är AV.** Den
+  slås om under Betalningar & utbetalningar → Kortbetalningar (se
+  avsnitt 5). **Slå inte på den förrän provbetalningen gått igenom.**
+  Påslagen i dag hade den låst varenda studiehjälpare från att
+  rapportera ett enda pass. Flaggans `vantar_pa` säger vad den väntar
+  på, och `stampla_flaggan()` hindrar att texten skrivs om från en vy.
 
-  **Studiehjälparens underlag rörs inte.** Hen har hållit passet
-  oavsett hur familjen betalade, och ersättningen den 25:e räknas fram
-  precis som förut. Det är hela skillnaden mot att bara hoppa över
-  passet, och den står som ett eget testfall i `pris_test.ts`.
+  **Kvar, och inget av det sköter koden åt er:**
 
-  `vantar` är med i listan av en anledning: en öppen checkout-session
-  kan landa en minut efter körningen, och då hade familjen betalat två
-  gånger utan att någon av vägarna vetat om den andra.
+  - **Startererbjudandet finns inte i koden.** Prissidan lovar "Första
+    timmen på köpet … dras av när ni betalar", och kortbetalningen drar
+    inte av något. Före en ny familjs första betalning: bestäm regeln
+    och bygg den i `stripe-checkout`, sätt `rabatt_ore` på passet för
+    hand innan familjen betalar (admin går förbi skyddet), eller ta bort
+    erbjudandet.
+  - **Villkoren lovar priset vid bokningen, kortbetalningen räknar
+    priset när familjen betalar.** Glappet fanns redan med
+    månadsfakturan, som också räknade på dagens pris. Rätt lösning är
+    att frysa timpriset på bokningen, som rabatten redan gör, och skydda
+    kolumnen i `skydda_bokningsfalt`. Tills dess säger prisdialogen i
+    adminvyn hur många bokade pass som väntar på betalning när priset
+    höjs.
+  - **Ett avbokat pass kan bli betalt.** Betalsidan kan ligga öppen när
+    passet avbokas, och Stripe drar pengarna om familjen betalar
+    efteråt. Webhooken skriver ner betalningen, för pengarna är dragna,
+    och `betald_men_avbokad` larmar tills beloppet är tillbaka.
+    Återbetalningen är en knapp, inte automatisk.
+  - **Villkoren ändrades.** Den som redan har konto godkände
+    månadsfaktura i efterskott med tio dagars betalningsvillkor, och
+    villkoren har ett avsnitt om ändringar. Meddela dem innan det nya
+    gäller dem.
+  - **Mejlen säger ingenting om betalning.** Bokningsbekräftelsen och
+    påminnelsen före passet borde säga att passet ska betalas. Det är
+    ett av villkoren i spärrens `vantar_pa`.
+  - **Ingen avbokningsavgift.** Villkoren lovar hela beloppet tillbaka
+    för ett pass som aldrig hölls. En avgift för sena avbokningar är ett
+    nytt villkor, inte en inställning.
+  - **Fortnox.** Ingenting når bokföringen än. När det byggs: en
+    verifikation per betalt pass, spårad med
+    `stripe_balanstransaktion_id`, och Stripes utbetalning till banken
+    som en egen händelse, netto efter avgiften.
 
-  **Fas 14 river månadsfakturan till familjen.** Beslutet är taget:
-  kort per pass är enda vägen, betalningen ska ske FÖRE passet, och
-  allt ska nå Fortnox. Hjälparens underlag den 25:e står orört.
-
-  **Fas 14.1 lagade sex fel i kortvägen innan omställningen**, och tre
+  **Fas 14.1 lagade sex fel i kortvägen före omställningen**, och tre
   av dem ändrar hur man ska läsa raden:
 
   - **`betalt_ore` är ett kvitto, `begart_ore` är ett påstående.**
@@ -885,16 +937,14 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
     avbokning var det enda statusbytet som inte prövades alls. En familj
     kunde avboka ett pass de betalat och vi behöll pengarna tyst. Nu
     nekas det, med ett meddelande som säger varför. Ingen automatisk
-    återbetalning: hur mycket som ska tillbaka är ett beslut, och
-    avbokningspolicyn är inte skriven.
+    återbetalning: villkoren lovar sedan Fas 14.2 hela beloppet tillbaka
+    för ett pass som aldrig hölls, men återbetalningen görs med en knapp
+    under Kortbetalningar, och `betald_men_avbokad` larmar tills den är
+    gjord.
 
   `aterbetald_ore` nollas när en ny betalning kommer in — kolumnerna
   beskriver den betalning som gäller NU, och en gammal återbetalning
   hör till den gamla chargen.
-
-  **Spärren "ingen betalning, inget pass" finns ännu inte.** Den kan
-  inte slås på förrän kortvägen bevisligen fungerar: i dag hade den
-  låst varenda studiehjälpare från att rapportera ett enda pass.
 
   `SKISS-BETALNING-STRIPE.md` beskriver hur beslutet gick.
 - **Google Workspace och Fortnox.** Statusflik finns, koppling saknas.

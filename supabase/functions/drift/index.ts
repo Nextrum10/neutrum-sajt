@@ -128,7 +128,10 @@ const VERKTYG = [
     description: 'Verksamheten i tal, en rad per månad: genomförda pass, minuter, aktiva '
       + 'elever och studiehjälpare, anmälningar, hur många som blev kund och fick sitt '
       + 'första pass, fakturerat, betalt, utbetalt och antal avbokningar. Bara tal och '
-      + 'datum. Ett genomfört pass betyder ett pass MED rapport. ej_sparbara är '
+      + 'datum. Ett genomfört pass betyder ett pass MED rapport. betalt är kortbetalningar '
+      + 'efter återbetalning plus det som kommit in på äldre fakturor, räknat på dagen '
+      + 'pengarna kom in. fakturerat gäller bara de äldre fakturorna och är noll för '
+      + 'månaderna efter dem. ej_sparbara är '
       + 'anmälningar som är märkta matchade men saknar koppling till ett konto — är den '
       + 'hög är blev_kund och fick_forsta_passet för låga, och det ska du skriva ut.',
     input_schema: {
@@ -140,8 +143,9 @@ const VERKTYG = [
   },
   {
     name: 'avvikelser',
-    description: 'Det som inte går ihop i fakturor och utbetalningar: typ, vilken tabell '
-      + 'och vilket id det gäller, datum och belopp i ören. Inga namn — slå aldrig ihop '
+    description: 'Det som inte går ihop i betalningar och utbetalningar: typ, vilken tabell '
+      + 'och vilket id det gäller, datum och belopp i ören. ej_betalt är ett pass som '
+      + 'hållits och rapporterats utan att familjen betalat det. Inga namn — slå aldrig ihop '
       + 'en avvikelse med en person, skriv id:t.',
     input_schema: { type: 'object', properties: {} },
   },
@@ -232,7 +236,9 @@ Siffrorna från analys bär sina egna luckor. ej_sparbara räknar anmälningar s
 går att följa vidare, och avbokningar räknar bara dem som har en tidpunkt sparad.
 Är en lucka stor är siffran bredvid den för låg — skriv det, i stället för att läsa
 ett tapp där det bara saknas mätning. Samma sak åt andra hållet: en månad med noll
-fakturor betyder inte noll arbete, det kan betyda att månadskörningen inte är gjord.
+utbetalt betyder inte noll arbete, det kan betyda att månadskörningen inte är gjord.
+Och familjen betalar före passet, så betalt och genomfört samma månad hör inte ihop
+rad för rad.
 
 SVARETS FORM, på svenska:
 · Kort läge först: vad som är viktigast just nu.

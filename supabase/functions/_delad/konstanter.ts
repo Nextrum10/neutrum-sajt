@@ -5,10 +5,14 @@
 // faktura-utskick, och den driftsatta faktureringen hade 14 medan
 // allt annat sa 10. Nu finns siffran här, en gång.
 //
-// Den måste stämma med prissidan, FAQ:n, användarvillkoren, adminvyn
-// och maskoten. verktyg/kolla-betalningsvillkor.py kontrollerar det.
-// En faktura som förfaller på en annan dag än villkoret lovar är en
-// tvist, inte ett skrivfel.
+// SEDAN FAS 14.2 ÄR DEN INGET LÖFTE LÄNGRE. Familjen betalar varje
+// pass med kort före passet och får ingen månadsfaktura, så varken
+// prissidan, FAQ:n eller användarvillkoren nämner ett antal dagar.
+// Konstanten används bara av faktura-utskick, när en faktura som
+// skapades före Fas 14.2 skickas — och sådana fanns det noll av när
+// månadsfakturan revs. Ändra den inte utan att läsa CLAUDE.md
+// avsnitt 1: ett villkor på en faktura som inte stämmer med det
+// familjen läst är en tvist, inte ett skrivfel.
 // ============================================================
 
 export const BETALNINGSVILLKOR_DAGAR = 10;

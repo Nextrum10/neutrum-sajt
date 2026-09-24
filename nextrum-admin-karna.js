@@ -199,11 +199,11 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib] = await Promise.all([
+           upd, uppg, rt, audit, bib, sparr] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
-      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id').order('wanted_date', { ascending: false }),
+      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id').order('wanted_date', { ascending: false }),
       supa.from('invoices').select('*').order('period', { ascending: false }),
       supa.from('payouts').select('*').order('period', { ascending: false }),
       supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400),
@@ -231,7 +231,11 @@ const NXAdmin = (function () {
       supa.from('uppgifter').select('*').order('created_at', { ascending: false }),
       supa.from('rut_tak').select('*').order('ar', { ascending: false }),
       supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300),
-      supa.from('biblioteksmaterial').select('*').order('created_at', { ascending: false })
+      supa.from('biblioteksmaterial').select('*').order('created_at', { ascending: false }),
+      /* Fas 14.2: spärren "ingen betalning, inget pass". En rad i
+         flaggor, som notismejlen. Slås om under Ekonomi →
+         Kortbetalningar, där det den styr också syns. */
+      supa.from('flaggor').select('*').eq('kod', 'kortsparr').maybeSingle()
     ]);
 
     S.leads = leads.data || [];
@@ -252,6 +256,10 @@ const NXAdmin = (function () {
     S.uppgifter = uppg.data || [];
     S.rutTak = rt.data || [];
     S.auditAktorer = audit.data || [];
+    /* null betyder att raden inte gick att läsa, inte att spärren är
+       av. Kortet säger det i stället för att visa ett läge det inte vet. */
+    S.kortsparr = sparr.data || null;
+    S.kortsparrFel = sparr.error ? felText(sparr.error) : null;
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */

@@ -86,33 +86,46 @@
   }
 
   /* ============================================================
-     KORTBETALNINGAR (Fas 12)
+     KORTBETALNINGAR (Fas 12, familjens enda betalväg sedan Fas 14.2)
 
-     Passen som betalats med kort, inte de som fakturerats. De två
-     vägarna lever bredvid varandra och vet ännu inte om varandra;
-     se CLAUDE.md avsnitt 11.
+     Familjen betalar varje pass med kort, före passet. Månadsfakturan
+     till familjen finns inte längre; fakturorna under sin egen flik är
+     de som skapades innan dess.
 
      Beloppet är FRYST vid betalningen och läses bara här. Ingen
      rullgardin ändrar ett läge i den här tabellen, till skillnad från
-     fakturor och utbetalningar: en betalnings läge sätts av Stripe
-     genom webhooken, och att kunna skriva om det för hand hade gjort
-     siffran till en åsikt.
+     utbetalningar: en betalnings läge sätts av Stripe genom webhooken,
+     och att kunna skriva om det för hand hade gjort siffran till en
+     åsikt.
 
      Ingen kolumn för studiehjälparens del, med flit. Hela beloppet
      går till Nextrum, och hjälparens ersättning hör hemma under
      Utbetalningar — den räknas den 25:e ur rapporterna, inte här.
      ============================================================ */
   const KORT_LAGE = {
-    vantar: 'Väntar', betald: 'Betald', aterbetald: 'Återbetald',
+    ingen: 'Ej betald', vantar: 'Väntar', betald: 'Betald', aterbetald: 'Återbetald',
     tvist: 'Tvist', misslyckad: 'Misslyckad'
   };
 
+  /* "Ej betalda" är en annan fråga än de andra lägena: inte vilka
+     betalningar som påbörjats, utan vilka bekräftade och genomförda
+     pass ingen har betalat. Samma tre lägen som avvikelsen ej_betalt
+     och OBETALDA_LAGEN i _delad/pris.ts. Ett undantaget pass ska inte
+     betalas och står därför inte här. */
+  const OBETALDA_LAGEN = ['ingen', 'vantar', 'misslyckad'];
+  const obetaltPass = b => (b.status === 'confirmed' || b.status === 'completed')
+    && b.fakturerbar !== false
+    && OBETALDA_LAGEN.indexOf(b.betalning_status || 'ingen') !== -1;
+
   function ritaKortbetalningar() {
+    ritaKortsparr();
     const sök = $('#kort-sok').value.trim();
     const st = $('#kort-status').value;
-    const alla = (S.bokningar || []).filter(b => b.betalning_status && b.betalning_status !== 'ingen');
+    const alla = st === 'obetald'
+      ? (S.bokningar || []).filter(obetaltPass)
+      : (S.bokningar || []).filter(b => b.betalning_status && b.betalning_status !== 'ingen');
     const rader = alla
-      .filter(b => !st || b.betalning_status === st)
+      .filter(b => !st || st === 'obetald' || b.betalning_status === st)
       .map(b => ({ ...b, familj: namnFör(b.parent_id), hjalpare: namnFör(b.tutor_id) }))
       .filter(b => matchar(b, ['familj', 'hjalpare'], sök));
 
@@ -122,7 +135,14 @@
         + '<span class="adm-und">' + esc(b.subject || 'Pass') + '</span>' },
       { namn: 'Familj', rita: b => esc(b.familj) },
       { namn: 'Studiehjälpare', rita: b => esc(b.hjalpare) },
-      { namn: 'Betalt', rita: b => '<span class="adm-tal">' + esc(kronor(b.betalt_ore || 0)) + '</span>' },
+      /* betalt_ore är ett kvitto och skrivs bara av webhooken. Innan
+         den kommit står det begärda beloppet, märkt som det det är —
+         annars hade en öppnad betalning sett ut som 0 kr betalt. */
+      { namn: 'Betalt', rita: b => b.betalt_ore != null
+        ? '<span class="adm-tal">' + esc(kronor(b.betalt_ore)) + '</span>'
+        : b.begart_ore
+          ? '<span class="adm-und">begärt ' + esc(kronor(b.begart_ore)) + '</span>'
+          : '<span class="adm-und">—</span>' },
       { namn: 'Återbetalt', rita: b => Number(b.aterbetald_ore || 0) > 0
         ? '<span class="adm-tal">' + esc(kronor(b.aterbetald_ore)) + '</span>' : '' },
       { namn: '', höger: true, rita: b => {
@@ -132,12 +152,86 @@
       } },
       { namn: 'Läge', höger: true, rita: b =>
         '<span class="adm-tal">' + esc(KORT_LAGE[b.betalning_status] || b.betalning_status) + '</span>' }
-    ], rader, 'Inga kortbetalningar än');
+    ], rader, st === 'obetald' ? 'Inga obetalda pass' : 'Inga kortbetalningar än');
   }
 
+  /* ============================================================
+     SPÄRREN (Fas 14.2)
+
+     "Ingen betalning, inget pass." En rad i flaggor, samma sort som
+     notismejlen. Databasen gör jobbet: skydda_bokningsfalt nekar
+     rapporten på ett obetalt pass när flaggan är på. Kortet här visar
+     läget och är stället den slås om, bredvid betalningarna den
+     hänger på.
+
+     Den står AV tills en provbetalning gått hela vägen. Påslagen utan
+     en kortväg som fungerar hade den låst varje studiehjälpare ute
+     från att rapportera. Att stänga av den är nödbromsen, och den
+     frågar därför inte efter något.
+     ============================================================ */
+  const kortbetalda = () => (S.bokningar || [])
+    .filter(b => b.betalning_status === 'betald' || b.betalning_status === 'tvist').length;
+
+  function ritaKortsparr() {
+    const host = $('#kort-sparr');
+    if (!host) return;
+    const f = S.kortsparr;
+    if (!f) {
+      host.innerHTML = tomt('Spärrens läge gick inte att läsa',
+        S.kortsparrFel || 'Raden kortsparr saknas i flaggor. Kör migrationen för Fas 14.2.');
+      return;
+    }
+    const n = kortbetalda();
+    host.innerHTML = '<div class="adm-koppling-kort">'
+      + '<h6>Ingen betalning, inget pass ' + (f.aktiv ? pill('På', 'ar-klar') : pill('Av', '')) + '</h6>'
+      + '<p>' + esc(f.beskrivning || '') + '</p>'
+      + (!f.aktiv && f.vantar_pa ? '<div class="adm-krav">Ska vara avgjort först: ' + esc(f.vantar_pa) + '</div>' : '')
+      + '<p class="xsmall" style="color:var(--bl-3);margin-top:10px">'
+      + (n ? n + (n === 1 ? ' pass är betalt' : ' pass är betalda') + ' med kort. '
+           : 'Ingen kortbetalning har gått igenom än. ')
+      + 'Ändrad ' + esc(kortDatum(f.uppdaterad)) + '</p>'
+      + '<div style="margin-top:12px"><button class="btn ' + (f.aktiv ? 'btn-ghost' : 'btn-primary')
+      + ' btn-sm" type="button" data-kortsparr="' + (f.aktiv ? '0' : '1') + '">'
+      + (f.aktiv ? 'Stäng av' : 'Slå på') + '</button></div>'
+      + '</div>';
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-kortsparr]');
+    if (!knapp) return;
+    const på = knapp.dataset.kortsparr === '1';
+    const f = S.kortsparr || {};
+    if (på) {
+      const ja = await bekräfta({
+        titel: 'Slå på spärren?',
+        text: 'Från och med nu går ett pass som familjen inte betalat inte att rapportera, '
+          + 'och studiehjälparen ser i sin vy att passet inte ska hållas.'
+          + (kortbetalda() ? ''
+            : '\n\nIngen kortbetalning har gått igenom än. Slår du på nu kan ingen '
+              + 'studiehjälpare rapportera ett enda pass förrän en familj har betalat.'),
+        /* Som notisflaggorna: förutsättningarna som förhandsvisning,
+           inte i brödtexten, så att de går att läsa en i taget. */
+        forhandsvisning: f.vantar_pa ? 'Det här skulle vara avgjort först:\n\n' + f.vantar_pa : null,
+        knapp: 'Slå på'
+      });
+      if (!ja) return;
+    }
+    await medan(knapp, på ? 'Slår på…' : 'Stänger av…', async () => {
+      const { error } = await supa.from('flaggor').update({ aktiv: på }).eq('kod', 'kortsparr');
+      if (error) { alert('Kunde inte ändra spärren: ' + felText(error)); return; }
+      /* Läget läses tillbaka i stället för att antas. En uppdatering
+         som RLS nekar ger inget fel, bara noll rader — och då ska
+         kortet visa att ingenting hände. */
+      const { data } = await supa.from('flaggor').select('*').eq('kod', 'kortsparr').maybeSingle();
+      if (data) S.kortsparr = data;
+      ritaKortsparr();
+    });
+  });
+
   /* Återbetalningen går genom edge-funktionen, aldrig direkt mot
-     tabellen: beloppet ska tillbaka till familjen OCH dras från
-     studiehjälparens Stripe-konto, och bara servern kan göra båda. */
+     tabellen: bara servern har Stripe-nyckeln, och taket för hur
+     mycket som får gå tillbaka räknas ur raden, inte ur det som
+     skrivs i rutan. */
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-aterbetala]');
     if (!knapp) return;
@@ -148,9 +242,15 @@
     const kvar = betalt - Number(b.aterbetald_ore || 0);
     const valt = await fråga({
       titel: 'Återbetala passet?',
+      /* Texten sa förut att studiehjälparens del dras tillbaka från
+         hens Stripe-konto. Det var sant när betalningen var en
+         destination charge och slutade vara det när Connect togs bort
+         (Fas 12.5). En dialog som beskriver en pengaväg som inte finns
+         är värre än ingen dialog. */
       text: kortDatum(b.wanted_date) + ' · ' + namnFör(b.parent_id) + '. '
-        + 'Familjen får pengarna tillbaka och studiehjälparens del dras tillbaka från '
-        + 'hens Stripe-konto. Nextrums avgift följer med.',
+        + 'Familjen får pengarna tillbaka på kortet. Stripes avgift för betalningen kommer '
+        + 'inte tillbaka. Studiehjälparens ersättning påverkas inte: den räknas ur rapporten, '
+        + 'inte ur betalningen.',
       innehåll: '<div class="fgroup" style="margin:14px 0 0">'
         + '<label for="ater-belopp">Belopp i kronor</label>'
         + '<input class="inp" id="ater-belopp" type="number" min="1" step="1" inputmode="numeric" value="'
@@ -193,9 +293,9 @@
 
      Ett genomfört pass utan rapport kommer aldrig med i
      månadskörningen. Rapporten är det som visar att passet hölls,
-     och det är den som motiverar raden på familjens faktura och på
-     studiehjälparens underlag. Här tar någon ställning, ett pass i
-     taget: koppla rätt rapport, eller undanta passet.
+     och det är den som motiverar raden på studiehjälparens underlag.
+     Här tar någon ställning, ett pass i taget: koppla rätt rapport,
+     eller undanta passet.
      ============================================================ */
   function utanRapport() {
     return (S.passunderlag || []).filter(p =>
@@ -272,12 +372,16 @@
      ÖVRIGA EKONOMISKA AVVIKELSER (Fas 6)
 
      Räknade i databasen av ekonomiska_avvikelser(), med samma regler
-     som faktureringen. Pass utan rapport och fristående rapporter
+     som månadskörningen. Pass utan rapport och fristående rapporter
      har egna listor ovanför och visas inte igen här. Varje rad kan
      bli en uppgift; en rad som redan har en öppen uppgift säger det.
      ============================================================ */
   const AVV_TEXT = {
-    ej_fakturerat: ['Inte fakturerat', 'Klart för faktura, men månaden det hölls är slut. Kör månadskörningen.'],
+    ej_betalt: ['Inte betalt', 'Hölls och rapporterades, men familjen har inte betalat. Betala-knappen ligger kvar på passet i familjens vy.'],
+    /* Fas 14.2c. Betalsidan kan ligga öppen medan passet avbokas, och
+       betalas den efteråt drar Stripe pengarna ändå. Beloppet är det
+       som inte gått tillbaka än. */
+    betald_men_avbokad: ['Betalt men avbokat', 'Familjen har betalat ett pass som är avbokat. Villkoren lovar hela beloppet tillbaka: återbetala under Kortbetalningar.'],
     ej_utbetalt: ['Inte utbetalt', 'Klart för underlag, men månaden det hölls är slut.'],
     faktura_forfallen: ['Förfallen faktura', 'Skickad, obetald och efter förfallodagen.'],
     faktura_gammalt_utkast: ['Utkast som inte skickats', 'Fakturan skapades för mer än en vecka sedan.'],
@@ -418,7 +522,8 @@
     if (undanta) {
       const anledning = await fråga({
         titel: 'Undanta passet?',
-        text: vad + '. Passet kommer varken på familjens faktura eller på studiehjälparens underlag.',
+        text: vad + '. Passet räknas inte: familjen ska inte betala det, och det kommer inte med '
+          + 'på studiehjälparens underlag. Är det redan betalt återbetalar du det under Kortbetalningar.',
         innehåll: '<div class="fgroup" style="margin-top:14px"><label for="avv-anledning">Varför?</label>'
           + '<textarea class="inp" id="avv-anledning" rows="3" maxlength="300" '
           + 'placeholder="Till exempel: testpass, inte ett riktigt pass"></textarea></div>',
@@ -451,12 +556,16 @@
   });
 
   /* ============================================================
-     MÅNADSKÖRNINGEN (Fas 2)
+     MÅNADSKÖRNINGEN (Fas 2, bara underlag sedan Fas 14.2)
 
      Två steg, som vid utskicket: först en torrkörning som visar vad
      som skulle skapas, sedan det skarpa anropet — och det går bara
      för samma månad som torrkörningen gällde. Det skarpa steget
-     skapar UTKAST. Ingenting skickas härifrån.
+     skapar UTKAST. Ingenting skickas och ingenting betalas härifrån.
+
+     Familjen får ingen faktura. Pass som hölls utan att familjen
+     betalat kommer tillbaka i svaret som `obetalda`, och står här
+     per familj, så att någon kan höra av sig.
      ============================================================ */
   function fyllPerioder() {
     const val = $('#kor-period');
@@ -479,24 +588,34 @@
     const summa = lista => (lista || []).reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
     const rad = (vänster, höger, total) => '<div class="sum-line' + (total ? ' total' : '') + '">'
       + '<span>' + vänster + '</span><span class="adm-tal">' + höger + '</span></div>';
-    const fakturor = d.fakturor || [];
     const underlag = d.utbetalningar || [];
+    const obetalda = d.obetalda || [];
 
     let h = '<p class="small" style="margin:14px 0 8px"><b>'
       + esc((torr ? 'Torrkörning' : 'Skapat') + ' · ' + NXBetalning.periodText(d.period)) + '</b>'
       + ' <span class="xsmall" style="color:var(--bl-3)">pass till och med '
       + esc(kortDatum(d.pass_till_och_med)) + '</span></p>';
 
-    h += fakturor.map(f => rad(esc(namnFör(f.parent_id)) + ' · ' + f.pass + ' pass',
-      esc(kronor(f.belopp_ore)))).join('');
-    h += rad('Familjerna, ' + fakturor.length + (fakturor.length === 1 ? ' faktura' : ' fakturor'),
-      esc(kronor(summa(fakturor))), true);
-
     h += underlag.map(u => rad(esc(namnFör(u.tutor_id)) + ' · ' + u.pass + ' pass',
       esc(kronor(u.belopp_ore)))).join('');
     h += rad('Studiehjälparna, ' + underlag.length + ' underlag', esc(kronor(summa(underlag))), true);
 
+    /* Per familj, för det är familjen man hör av sig till. Ingen
+       faktura skapas av det här: det är en lista, inte ett krav. */
+    if (obetalda.length) {
+      const per = {};
+      obetalda.forEach(o => { (per[o.parent_id] = per[o.parent_id] || []).push(o); });
+      h += Object.keys(per).map(id => rad(esc(namnFör(id)) + ' · ' + per[id].length + ' pass',
+        esc(kronor(summa(per[id]))))).join('');
+      h += rad('Hölls utan betalning, ' + obetalda.length + ' pass', esc(kronor(summa(obetalda))), true);
+    }
+
     const noter = [];
+    if (obetalda.length) {
+      noter.push('⚠️ ' + obetalda.length + (obetalda.length === 1 ? ' pass hölls' : ' pass hölls')
+        + ' utan att familjen betalat. Familjen får ingen faktura för dem — Betala-knappen ligger '
+        + 'kvar på passet i familjens vy. <a href="#ekonomi/avvikelser">Se avvikelser</a>.');
+    }
     const utan = d.hoppade_over_utan_rapport || [];
     if (utan.length) {
       noter.push('⚠️ ' + utan.length + (utan.length === 1 ? ' pass saknar' : ' pass saknar')
@@ -505,10 +624,9 @@
     (d.hoppade_over_utan_timpenning || []).forEach(id => noter.push('⚠️ ' + esc(namnFör(id))
       + ' har ingen timpenning, så hens pass väntar till nästa körning.'));
     if (d.undantagna_pass) noter.push(d.undantagna_pass + ' undantagna pass räknades inte.');
-    if (d.skapade) noter.push('Skapade: ' + d.skapade.fakturor + ' fakturor och '
-      + d.skapade.utbetalningar + ' underlag, alla som utkast.');
+    if (d.skapade) noter.push('Skapade: ' + d.skapade.utbetalningar + ' underlag, alla som utkast.');
     (d.problem || []).forEach(p => noter.push('⚠️ ' + esc(p)));
-    if (!fakturor.length && !underlag.length && torr) noter.push('Inget att skapa för den här månaden.');
+    if (!underlag.length && torr) noter.push('Inget underlag att skapa för den här månaden.');
 
     return h + noter.map(n => '<p class="xsmall" style="margin:8px 0 0;line-height:1.6">' + n + '</p>').join('');
   }
@@ -530,7 +648,7 @@
       if (fel) { host.innerHTML = tomt('Torrkörningen gick inte', await funktionsFel(fel)); return; }
       S.korning = { period, torr: res.data };
       host.innerHTML = ritaKörning(res.data, true);
-      $('#kor-skapa').disabled = !((res.data.fakturor || []).length || (res.data.utbetalningar || []).length);
+      $('#kor-skapa').disabled = !(res.data.utbetalningar || []).length;
       return;
     }
 
@@ -539,9 +657,8 @@
     const summa = lista => (lista || []).reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
     const ja = await bekräfta({
       titel: 'Skapa utkast för ' + NXBetalning.periodText(t.period) + '?',
-      text: t.fakturor.length + ' fakturor på ' + kronor(summa(t.fakturor)) + ' och '
-        + t.utbetalningar.length + ' underlag på ' + kronor(summa(t.utbetalningar))
-        + '. De skapas som utkast — ingenting skickas.',
+      text: t.utbetalningar.length + ' underlag på ' + kronor(summa(t.utbetalningar))
+        + '. De skapas som utkast — ingenting skickas och ingenting betalas ut härifrån.',
       knapp: 'Skapa utkast'
     });
     if (!ja) return;

@@ -6,8 +6,15 @@
 // genomfört, och inte att tre barn kostar 448 kronor i timmen och
 // inte 517. Utan det blir svaren formellt riktiga och praktiskt
 // värdelösa: "fem pass saknar rapport" är en observation, "fem pass
-// är alltså inte genomförda och ingen av dem går att fakturera eller
-// betala ut för" är ett besked.
+// är alltså inte genomförda och ingen av dem går att betala ut
+// ersättning för" är ett besked.
+//
+// SEDAN FAS 14.2 FÅR FAMILJEN INGEN FAKTURA. Texten sa förut "10
+// dagars betalningsvillkor" och "Betald kryssas i för hand", och en
+// agent som läser det letar efter förfallna fakturor som aldrig kommer
+// att finnas, och läser en månad utan fakturor som en månad utan
+// intäkt. Priset står kvar här. Betalningssättet står här. Villkoret i
+// dagar gör det inte, för det finns inget sådant längre.
 //
 // VAD SOM FÅR STÅ HÄR, OCH VAD SOM ALDRIG FÅR DET
 //
@@ -33,8 +40,6 @@
 // med nextrum-config.js och att inget infrastrukturord smugit sig in.
 // ============================================================
 
-import { BETALNINGSVILLKOR_DAGAR } from './konstanter.ts';
-
 export const NEXTRUM_FAKTA = `OM NEXTRUM
 
 Nextrum förmedlar läxhjälp i Stockholm. Det är ingen katalog familjer
@@ -45,11 +50,13 @@ ORDEN. Använd dem, och inga andra:
 · pass — ett bokat tillfälle. Hela timmar, en till tre.
 · rapport — skrivs efter passet. PASSET ÄR GENOMFÖRT FÖRST NÄR
   RAPPORTEN FINNS. Ett pass som står som avklarat men saknar rapport
-  är inte genomfört, går inte att fakturera och går inte att betala ut
-  för. Räknar du med det blir varje siffra om verksamhet, ersättning
-  och beläggning för hög.
+  är inte genomfört och går inte att betala ut ersättning för. Räknar
+  du med det blir varje siffra om verksamhet, ersättning och
+  beläggning för hög.
 · underlag — vad studiehjälparen ska få.
-· faktura — vad familjen ska betala.
+· betalning — vad familjen betalat för ett pass. Den görs med kort,
+  per pass, före passet. Familjen får ingen faktura. Äldre fakturor
+  kan finnas kvar från tiden innan, men inga nya skapas.
 · tjänst — det som går att boka eller söka till.
 
 ORDNINGEN, och den hoppar aldrig ett steg:
@@ -67,15 +74,22 @@ SIFFRORNA:
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
   FAST, inte per barn, och taket är tre barn. Tre barn kostar alltså
   448 kronor i timmen, inte 517.
-· ${BETALNINGSVILLKOR_DAGAR} dagars betalningsvillkor. En faktura som
-  förfaller på en annan dag än villkoret lovar är en tvist, inte ett
-  skrivfel.
+· Familjen betalar varje pass med kort när studiehjälparen bekräftat
+  tiden, senast innan passet börjar. Ett pass som inte är betalt
+  hålls inte. En betalning som tas på ett annat sätt än villkoren
+  lovar är en tvist, inte ett skrivfel.
+· Studiehjälparen får betalt den 25:e, i en klump för månadens
+  rapporterade pass.
 · Belopp räknas i ören. Kronor blir det först när något visas.
 
 VAD SOM INTE ÄR BYGGT ÄN. Föreslå inte något som förutsätter det:
-· Ingen betaltjänst är kopplad. Fakturor skapas och skickas, men
-  "Betald" kryssas i för hand och utbetalningar görs från banken. En
-  obetald faktura kan alltså vara betald utan att någon hunnit kryssa.
+· Kortbetalningen är ny. Tills den bevisligen fungerar kan spärren
+  som stoppar en rapport på ett obetalt pass vara avslagen, och då
+  kan ett pass hållas och rapporteras utan att vara betalt. Det är
+  något att påpeka, inte ett normalläge.
+· Utbetalningen till studiehjälparna görs för hand från banken. Ett
+  underlag som inte står som utbetalt kan alltså vara betalt utan att
+  någon hunnit markera det.
 · Ingen bokföringskoppling.
 · Bakgrundskontroll av studiehjälpare är en knapp, inte en process.
 
@@ -85,4 +99,10 @@ okända, inte som direkta. Avbokningar utan sparad tidpunkt hamnar
 utanför månaderna. Anmälningar som inte går att följa till ett konto
 räknas för sig. Ingen av dem har bakfyllts, med flit — en gissad
 siffra syns inte som gissad när den väl ligger i ett medelvärde. Är
-en lucka stor är talet bredvid den för lågt, och det ska du skriva.`;
+en lucka stor är talet bredvid den för lågt, och det ska du skriva.
+
+Betalt räknas på den dag betalningen kom in, inte på passets dag.
+Familjen betalar före passet, så en månads betalningar och samma
+månads genomförda pass hör inte ihop rad för rad. Fakturerat gäller
+bara de äldre fakturorna och är noll för varje månad efter dem; en
+nolla där betyder inte att ingenting betalats.`;

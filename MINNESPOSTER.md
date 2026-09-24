@@ -50,11 +50,13 @@ studiehjälpare, admin sätter matchningen, då först låses föräldravyn upp.
 Ingen katalog att bläddra i.
 
 Ordlista: studiehjälpare (aldrig "lärare" utåt), pass, rapport, underlag,
-faktura, tjänst.
+betalning, tjänst. Faktura är historik sedan Fas 14.2.
 
-Tre siffror som står på många ställen samtidigt: 379 kr/tim, 69 kr/tim
-fast tillägg för flera barn (tak tre, alltså 448 för tre barn, inte 517),
-10 dagars betalningsvillkor. Belopp lagras i ören överallt.
+Två siffror och ett löfte står på många ställen samtidigt: 379 kr/tim,
+69 kr/tim fast tillägg för flera barn (tak tre, alltså 448 för tre barn,
+inte 517), och att familjen betalar varje pass med kort, före passet:
+ett pass som inte är betalt hålls inte. Studiehjälparen får betalt den
+25:e. Belopp lagras i ören överallt.
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
@@ -213,7 +215,7 @@ Genererat:
 CI (`.github/workflows/kontroll.yml`) kör om maskotsvaren och FAQ-schemat
 och gör `git diff --exit-code`. Ändrar du FAQ:n utan att bygga om blir
 bygget rött. Övriga steg: `node --check` på all JS, `testa-agent.js`,
-betalningsvillkoret, migrationsnamnen, CSP, webp-filerna,
+betalningslöftet, migrationsnamnen, CSP, webp-filerna,
 versionsstämplarna, språkdiffen (som jämför attributNAMN också),
 `deno check` och `deno test`.
 
@@ -292,15 +294,15 @@ En Claude-artefaktlänk kan aldrig prata med Supabase. Testa mot riktiga
 filer eller lokal server (`python3 .claude/serve.py 8951`, som härmar
 Vercels `cleanUrls`).
 
-Inte byggt än: betaltjänst i drift. Två vägar finns i repot och bara
-månadsfaktureringen är provad — kortbetalning per pass (Fas 12) är kod
-som aldrig körts mot Stripe. Sedan Fas 14.0 vet vägarna om varandra:
-`passunderlag` bär `betalning_status`, och månadskörningen hoppar över
-FAMILJENS rad när kortvägen rört passet (vantar, betald, aterbetald,
-tvist) och redovisar den under `hoppade_over_kortvagen`.
-Studiehjälparens underlag skapas ändå — hen höll passet oavsett hur
-familjen betalade — och betalas den 25:e genom payouts, aldrig genom
-Stripe. Vidare: Google
+Inte byggt än: en betalning som gått hela vägen. Sedan Fas 14.2 betalar
+familjen varje pass med kort, före passet, och får ingen faktura.
+Månadskörningen skapar bara studiehjälparens underlag, som betalas den
+25:e från banken, aldrig genom Stripe. Kortvägen är driftsatt och
+webhookens hemlighet provad, men ingen leverans från Stripe har kommit
+fram. Spärren "ingen betalning, inget pass" (flaggan `kortsparr`) står
+av tills en provbetalning gått igenom. Startererbjudandet på prissidan
+finns inte i koden, och priset räknas när familjen betalar fast
+villkoren lovar priset vid bokningen. Vidare: Google
 Workspace, Fortnox (fällan: refresh-token roteras
 vid varje användning, sparas inte det nya är ni utlåsta om en månad),
 bakgrundskontroller, skatt och anställning av minderåriga, riktiga foton

@@ -521,23 +521,32 @@
           <p class="ok-msg" id="tr-msg"></p>
         </div>
       </section>
+      <!-- ============================================================
+           BETALNING (Fas 14.2)
+           Varje pass betalas med kort, före passet. Ingen månadsfaktura:
+           det som står här är det som ska betalas och det som är betalt,
+           båda ritade ur passen av ritaBetalning().
+           ============================================================ -->
       <section class="vy-sek vy-sek-smal" data-sek="betalning" hidden>
         <div class="vy-sek-topp">
           <div>
             <h2>Betalning</h2>
-            <p>Ni betalar i efterskott, en gång i månaden, för de pass som faktiskt genomförts. Ett pass som ställts in eller flyttats faktureras aldrig.</p>
+            <p>Ni betalar varje pass med kort när er studiehjälpare har bekräftat tiden, senast innan passet börjar. Ett pass som inte är betalt hålls inte. Kortuppgifterna tas emot av Stripe, aldrig av oss.</p>
           </div>
         </div>
         <div class="stack">
 
+          <p class="ok-msg" id="bet-msg"></p>
+
           <div class="dbox">
-            <h5>Den här månaden</h5>
-            <div id="bet-pagaende"><div class="loading">Hämtar</div></div>
+            <h5>Att betala <em id="bet-att-antal"></em></h5>
+            <div id="bet-att"><div class="loading">Hämtar</div></div>
           </div>
 
           <div class="dbox">
-            <h5>Fakturor <em id="bet-antal"></em></h5>
+            <h5>Betalda pass <em id="bet-antal"></em></h5>
             <div id="bet-lista"><div class="loading">Hämtar</div></div>
+            <p class="xsmall" style="margin-top:14px;color:var(--muted-2);line-height:1.6">Ett pass som aldrig hölls kostar ingenting. Är det redan betalt och behöver avbokas, hör av er till oss så betalar vi tillbaka.</p>
           </div>
 
         </div>
@@ -554,8 +563,8 @@
           <div>
             <h2>Profil &amp; inställningar</h2>
             <p>Ditt konto, barnen och vad passen kostar. Kontot här är
-               ditt som förälder: det är du som står för betalningen och
-               får fakturorna, oavsett hur många barn som pluggar.</p>
+               ditt som förälder: det är du som står för betalningen,
+               oavsett hur många barn som pluggar.</p>
           </div>
         </div>
 
@@ -729,7 +738,7 @@
           <!-- Siffrorna läses ur tjänsteraden (NXTjanster) av
                ritaPris(), inte ur den här markupen: priset, tillägget
                för fler barn och taket står i tjanster, och det är
-               samma rad faktureringen tar betalt efter. Talen här är
+               samma rad kortbetalningen tar betalt efter. Talen här är
                bara det som syns innan katalogen laddats. -->
           <div class="dbox">
             <h5>Pris</h5>
@@ -738,7 +747,7 @@
             <div class="sum-line"><span>Anmälningsavgift</span><span>0 kr</span></div>
             <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
             <p class="xsmall" data-pris-extra-not style="margin-top:14px;color:var(--muted-2);line-height:1.6">Tillägget för syskon är en fast summa per timme, oavsett om de är två eller tre — inte ett pris per barn.</p>
-            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar i efterskott, en gång i månaden, för de pass som faktiskt genomförts. Fakturorna ligger under Betalning.</p>
+            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar varje pass med kort när er studiehjälpare har bekräftat tiden, senast innan passet börjar. Ett pass som inte är betalt hålls inte. Betalningarna står under Betalning.</p>
           </div>
         </div>
         <!-- ============ NOTISER ============
@@ -762,7 +771,7 @@
             <p class="xsmall" style="margin:-6px 0 16px;color:var(--muted-2);line-height:1.6">Välj själv vad du vill få mejl om. Ändringen gäller direkt.</p>
             <div id="notisval-lista"></div>
             <p class="ok-msg" id="notisval-msg"></p>
-            <p class="xsmall" style="margin-top:16px;color:var(--muted-2);line-height:1.6">Besked om bokade pass och fakturor skickas alltid. De hör till tjänsten och går inte att välja bort.</p>
+            <p class="xsmall" style="margin-top:16px;color:var(--muted-2);line-height:1.6">Besked om bokade pass skickas alltid. De hör till tjänsten och går inte att välja bort.</p>
           </div>
         </div>
       </section>
@@ -796,12 +805,12 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=8990dc3d"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-kontakt.js?v=b41dc962"></script>
+<script src="nextrum-kontakt.js?v=a979adb0"></script>
 <script src="nextrum-studie.js?v=d7b662a8"></script>
 <script src="nextrum-arbetsyta.js?v=bdbbfd3f"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=822d7366"></script>
+<script src="nextrum-studie-vy.js?v=dcab9493"></script>
 </body>
 </html>

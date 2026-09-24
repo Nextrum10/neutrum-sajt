@@ -77,21 +77,28 @@
     const kommande = S.bokningar.filter(b =>
       b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed')).length;
 
-    /* Intäkten är summan av fakturorna för innevarande period.
-       Finns inga fakturor alls står 0 kr, och ingen jämförelse —
-       det är sant, och det ändras den dagen faktureringen körts
-       första gången. */
+    /* Intäkten är det som kommit in på kort under månaden, efter
+       återbetalningar, räknat på betalningsdagen (Fas 14.2). Förut var
+       den summan av månadens fakturor — och familjen får ingen faktura
+       längre, så talet hade stått på noll medan pengarna kom in. Äldre
+       fakturor räknas med på sin period, så att en månad från före
+       omställningen inte tappar sin intäkt.
+
+       Betalningsdagen och inte passets dag: ett pass betalas innan det
+       hålls, och det som kom in i september kom in i september. */
     const period = idag.slice(0, 7);
-    const iMånaden = S.fakturor.filter(f => String(f.period || '').slice(0, 7) === period
-      && f.status !== 'makulerad');
-    const belopp = iMånaden.reduce((n, f) => n + (f.belopp_ore || 0), 0);
     const förraPeriod = (() => {
       const d = new Date(); d.setMonth(d.getMonth() - 1);
       return isoFor(d).slice(0, 7);
     })();
-    const förraRader = S.fakturor.filter(f => String(f.period || '').slice(0, 7) === förraPeriod
-      && f.status !== 'makulerad');
-    const förraBelopp = förraRader.reduce((n, f) => n + (f.belopp_ore || 0), 0);
+    const kortIn = mån => S.bokningar
+      .filter(b => b.betald_at && isoFor(new Date(b.betald_at)).slice(0, 7) === mån)
+      .reduce((n, b) => n + Number(b.betalt_ore || 0) - Number(b.aterbetald_ore || 0), 0);
+    const fakturerat = mån => S.fakturor
+      .filter(f => String(f.period || '').slice(0, 7) === mån && f.status !== 'makulerad')
+      .reduce((n, f) => n + (f.belopp_ore || 0), 0);
+    const belopp = kortIn(period) + fakturerat(period);
+    const förraBelopp = kortIn(förraPeriod) + fakturerat(förraPeriod);
 
     /* Intäkten får INGEN procentjämförelse. Månaden är inte slut,
        och en halv månad mot en hel månad är alltid en nedgång —
@@ -105,8 +112,8 @@
         nyaShDennaMånad ? '+' + nyaShDennaMånad + ' denna månad' : 'godkända konton')
       + kpi(kommande, 'Kommande lektioner', null, 'bekräftade och önskade')
       + kpi(kronor(belopp), 'Intäkt denna månad', null,
-        förraRader.length ? 'förra månaden ' + kronor(förraBelopp)
-          : (iMånaden.length ? 'fakturerat hittills' : 'inget fakturerat än'));
+        förraBelopp ? 'förra månaden ' + kronor(förraBelopp)
+          : (belopp ? 'betalt hittills' : 'inget betalt än'));
   }
 
   /* ------------------------------------------------------------
@@ -158,7 +165,7 @@
           b.status !== 'cancelled' && b.status !== 'completed'
           && String(b.wanted_date) < idag).length,
         rubrik: 'pass saknar rapport', ental: 'pass saknar rapport',
-        under: 'Hållna men orapporterade. De faktureras inte.', till: '#lektioner' },
+        under: 'Hållna men orapporterade. De kommer inte med på underlaget.', till: '#lektioner' },
       { antal: utanRapport().length,
         rubrik: 'genomförda pass saknar rapport', ental: 'genomfört pass saknar rapport',
         under: 'Pass saknar rapport och kan därför inte behandlas automatiskt.', till: '#ekonomi/avvikelser' },
@@ -226,7 +233,7 @@
         under: 'Öppna efter dagen de skulle vara klara.', till: '#uppgifter' },
       { antal: övrigaAvvikelser().filter(a => EGEN_RAD.indexOf(a.typ) === -1).length,
         rubrik: 'ekonomiska avvikelser', ental: 'ekonomisk avvikelse',
-        under: 'Något i fakturor eller utbetalningar som inte går ihop.', till: '#ekonomi/avvikelser' },
+        under: 'Pass som hölls utan betalning, eller något i utbetalningarna som inte går ihop.', till: '#ekonomi/avvikelser' },
       { antal: l.klientfel_24h != null ? l.klientfel_24h : 0, rubrik: 'fel hos användarna', ental: 'fel hos en användare',
         under: 'Rapporterade från webbläsarna det senaste dygnet.', till: '#system/fel' },
       { antal: (S.notisfel || []).length, rubrik: 'notiser som inte gick fram', ental: 'notis som inte gick fram',
@@ -250,7 +257,7 @@
       host.innerHTML = '<div class="adm-lugnt">'
         + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>'
         + '<span><b>Inga problem just nu</b>'
-        + '<span>Inga förfallna fakturor, inga sena uppgifter och inga fel det senaste dygnet.</span></span>'
+        + '<span>Inga obetalda pass, inga sena uppgifter och inga fel det senaste dygnet.</span></span>'
         + '</div>';
       return;
     }
@@ -488,12 +495,17 @@
         inget: 'Ingen elev har haft ett genomfört pass de senaste sex månaderna.'
       });
 
-      /* ---- Fakturerat ----
-         Vyn räknar på invoices.period, alltså den månad fakturan
-         avser — inte den månad den skickades. */
-      NXArbete.graf($('#stat-intakt'), staplar(A.ekonomi, r => r.fakturerat_ore), {
-        nagot: 'Fakturerat belopp per period. Inte detsamma som betalt.',
-        inget: 'Ingen faktura är skapad än.'
+      /* ---- Betalt ----
+         Förut fakturerat belopp per period. Familjen får ingen faktura
+         sedan Fas 14.2, så grafen hade stått tom medan pengarna kom
+         in. Nu: kortbetalningar på betalningsmånaden, efter
+         återbetalningar, plus betalda äldre fakturor på sin period.
+         Allt räknat i analys_ekonomi, inte här. */
+      NXArbete.graf($('#stat-intakt'), staplar(A.ekonomi, r =>
+        Number(r.kortbetalt_ore || 0) - Number(r.aterbetalt_ore || 0) + Number(r.betalt_ore || 0)), {
+        nagot: 'Det familjerna betalat, efter återbetalningar. Ett pass betalas innan det '
+             + 'hålls, så pengarna kan stå på månaden före passet.',
+        inget: 'Ingen betalning har kommit in de senaste sex månaderna.'
       }, v => kronor(v));
     }
 
@@ -518,8 +530,11 @@
     const pass = summa(ek, 'genomforda_pass');
     const minuter = summa(ek, 'minuter');
     const familjer = Object.values(S.personer).filter(p => p.role === 'parent').length;
-    const fakturerat = summa(ek, 'fakturerat_ore');
-    const betalt = summa(ek, 'betalt_ore');
+    /* Betalt = kort efter återbetalningar plus betalda äldre fakturor,
+       samma definition som grafen ovanför. ej_betalda är pass som
+       hölls och rapporterades utan att familjen betalat. */
+    const betalt = summa(ek, 'kortbetalt_ore') - summa(ek, 'aterbetalt_ore') + summa(ek, 'betalt_ore');
+    const ejBetalda = summa(ek, 'ej_betalda');
 
     host.innerHTML =
       '<div class="adm-kpi"><b>' + pass + '</b><span>Genomförda pass</span>'
@@ -529,9 +544,10 @@
       + '<div class="adm-kpi"><b>' + familjer + '</b><span>Familjer</span>'
       + '<span class="adm-kpi-diff">' + S.elevlista.length
       + (S.elevlista.length === 1 ? ' elev' : ' elever') + '</span></div>'
-      + '<div class="adm-kpi"><b>' + kronor(fakturerat) + '</b><span>Fakturerat</span>'
-      + '<span class="adm-kpi-diff">' + (fakturerat
-        ? kronor(betalt) + ' betalt' : 'ingen faktura än') + '</span></div>';
+      + '<div class="adm-kpi"><b>' + kronor(betalt) + '</b><span>Betalt</span>'
+      + '<span class="adm-kpi-diff">' + (ejBetalda
+        ? ejBetalda + (ejBetalda === 1 ? ' pass hölls' : ' pass hölls') + ' utan betalning'
+        : 'sedan starten, efter återbetalningar') + '</span></div>';
   }
 
   /* ------------------------------------------------------------

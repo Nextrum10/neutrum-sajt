@@ -26,8 +26,8 @@
 -- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok.
 --
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
--- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4 och
--- Fas 15.1–15.4 är körda.
+-- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
+-- Fas 14.2–14.2c och Fas 15.1–15.4 är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -183,6 +183,45 @@ begin
   else
     insert into utfall (test, ok, detalj)
     values (p_test, false, 'fel: ' || fel);
+  end if;
+end $$;
+
+-- Som prova, men p_forst körs som postgres INNAN rollen byts, i
+-- samma deltransaktion. Det är så ett prov ställer upp just sitt eget
+-- läge (en flagga på, ett pass betalt) utan att nästa prov ser det:
+-- allt rullas tillbaka med provet.
+create function pg_temp.prova_med(p_test text, p_forst text[], p_uid uuid, p_sql text[], p_ska text)
+returns void language plpgsql as $$
+declare
+  n    bigint := 0;
+  fel  text;
+  kod  text;
+  s    text;
+begin
+  begin
+    foreach s in array coalesce(p_forst, '{}') loop
+      execute s;
+    end loop;
+    perform pg_temp.bli(p_uid);
+    foreach s in array p_sql loop
+      execute s;
+      get diagnostics n = row_count;
+    end loop;
+    raise exception 'PROVA_KLAR:%', n;
+  exception when others then
+    fel := sqlerrm;
+    kod := sqlstate;
+  end;
+
+  if fel like 'PROVA_KLAR:%' then
+    n := split_part(fel, ':', 2)::bigint;
+    insert into utfall (test, ok, detalj)
+    values (p_test,
+            (p_ska = 'ok' and n > 0) or (p_ska = 'nekad' and n = 0),
+            'gick igenom, rader: ' || n);
+  else
+    insert into utfall (test, ok, detalj)
+    values (p_test, p_ska = 'nekad' and kod = '42501', 'fel ' || kod || ': ' || fel);
   end if;
 end $$;
 
@@ -2141,6 +2180,275 @@ begin
   insert into utfall (test, ok, detalj)
   values ('15.4 okänt format nekas', klar, case when klar then 'check_violation' else 'gick igenom' end);
 end $$;
+
+-- ============================================================
+-- FAS 14.2 — ingen månadsfaktura, och spärren "ingen betalning,
+-- inget pass"
+--
+-- EGNA FIXTURER, MED FLIT. Äldst och b0c1 har passerat 9.4 och 9.8
+-- innan sviten kommer hit, och de blocken rullas inte tillbaka: b0c1
+-- har fått närvaro som admin, och Äldst matchades om till B och
+-- tillbaka. Ett prov som står på ett annat provs rester mäter
+-- testordningen, inte spärren.
+--
+-- SPÄRREN PROVAS I BÅDA LÄGENA, oavsett vad driften står på. Flaggan
+-- kortsparr är av i drift tills en provbetalning gått hela vägen, och
+-- de prov som vill ha den på slår på den i sin egen deltransaktion
+-- (prova_med). Provet med spärren av slår av den uttryckligen, så att
+-- det inte börjar falla den dag flaggan slås på.
+-- ============================================================
+
+insert into public.students (id, parent_id, name, matched_tutor_id, match_status, created_at) values
+  ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000f1', 'Betalprov',
+   '00000000-0000-4000-8000-0000000000a1', 'matched', now());
+
+insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status) values
+  -- bekräftat, igår, obetalt, ingen rapport
+  ('00000000-0000-4000-8000-00000000b4c1', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date - 1, '10:00', 60, 'confirmed'),
+  -- bekräftat, igår, rapport finns (för den direkta statusvägen)
+  ('00000000-0000-4000-8000-00000000b4a2', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date - 1, '11:00', 60, 'confirmed');
+
+insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro) values
+  ('00000000-0000-4000-8000-00000000e4a2', '00000000-0000-4000-8000-0000000005e1',
+   '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-00000000b4a2', 'fixtur', current_date, 'narvarande');
+update public.bookings set status = 'confirmed', attendance = null
+ where id = '00000000-0000-4000-8000-00000000b4a2';
+
+-- ---------- spärren ----------
+-- Rapporten gör passet genomfört i samma skrivning
+-- (rapport_gor_passet_genomfort), så det är rapporten spärren stoppar.
+
+select pg_temp.prova_med('14.2 spärren av: rapport på obetalt pass gör det genomfört',
+  array[$q$update public.flaggor set aktiv = false where kod = 'kortsparr'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+          values ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b4c1', 'x', current_date, 'narvarande')$q$,
+        $q$select 1 from public.bookings where id = '00000000-0000-4000-8000-00000000b4c1' and status = 'completed'$q$],
+  'ok');
+
+select pg_temp.prova_med('14.2 spärren på: rapport på obetalt pass nekas',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+          values ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b4c1', 'x', current_date, 'narvarande')$q$],
+  'nekad');
+
+select pg_temp.prova_med('14.2 spärren på: rapport på betalt pass gör det genomfört',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+        $q$update public.bookings set betalning_status = 'betald' where id = '00000000-0000-4000-8000-00000000b4c1'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+          values ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b4c1', 'x', current_date, 'narvarande')$q$,
+        $q$select 1 from public.bookings where id = '00000000-0000-4000-8000-00000000b4c1' and status = 'completed'$q$],
+  'ok');
+
+-- En tvist är pengar som kommit in och som banken ännu inte tagit
+-- tillbaka. Passet har hållits på den betalningen.
+select pg_temp.prova_med('14.2 spärren på: tvist räknas som betalt',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+        $q$update public.bookings set betalning_status = 'tvist' where id = '00000000-0000-4000-8000-00000000b4c1'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+          values ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b4c1', 'x', current_date, 'narvarande')$q$],
+  'ok');
+
+-- Ett pass Nextrum undantagit ska aldrig betalas, och får därför
+-- aldrig fastna på att det inte är betalt.
+select pg_temp.prova_med('14.2 spärren på: undantaget pass stoppas inte',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+        $q$update public.bookings set fakturerbar = false, fakturerbar_anledning = 'prov'
+           where id = '00000000-0000-4000-8000-00000000b4c1'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+          values ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b4c1', 'x', current_date, 'narvarande')$q$],
+  'ok');
+
+select pg_temp.prova_med('14.2 spärren på: en öppnad betalsida är ingen betalning',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+        $q$update public.bookings set betalning_status = 'vantar' where id = '00000000-0000-4000-8000-00000000b4c1'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+          values ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b4c1', 'x', current_date, 'narvarande')$q$],
+  'nekad');
+
+select pg_temp.prova_med('14.2 spärren på: ett återbetalt pass är inte betalt',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+        $q$update public.bookings set betalning_status = 'aterbetald' where id = '00000000-0000-4000-8000-00000000b4c1'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+          values ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b4c1', 'x', current_date, 'narvarande')$q$],
+  'nekad');
+
+-- Vägen runt rapporten: passet har redan en rapport, och
+-- studiehjälparen försöker sätta genomfört direkt.
+select pg_temp.prova_med('14.2 spärren på: direkt statusbyte på obetalt pass nekas',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'completed', attendance = 'narvarande'
+          where id = '00000000-0000-4000-8000-00000000b4a2'$q$],
+  'nekad');
+
+-- Admin går förbi, som i resten av skydda_bokningsfalt. Det är vägen
+-- för ett pass som ändå ska räknas, till exempel en betalning som
+-- kommit in utanför Stripe.
+select pg_temp.prova_med('14.2 spärren på: admin sätter genomfört ändå',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$],
+  '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.bookings set status = 'completed', attendance = 'narvarande'
+          where id = '00000000-0000-4000-8000-00000000b4a2'$q$],
+  'ok');
+
+-- ---------- flaggan ----------
+select pg_temp.prova('14.2 studiehjälparen slår på spärren', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$], 'nekad');
+
+select pg_temp.prova('14.2 familjen slår på spärren', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$], 'nekad');
+
+select pg_temp.prova('14.2 admin slår på spärren', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$], 'ok');
+
+-- Beskrivningen och vantar_pa är det som säger vad flaggan gör och
+-- vad den väntar på. De skrivs i en migration, inte i en vy.
+select pg_temp.prova('14.2 admin skriver om spärrens beskrivning', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.flaggor set beskrivning = 'x' where kod = 'kortsparr'$q$], 'nekad');
+
+-- Studiehjälparvyn läser flaggan för att veta om den ska visa
+-- betalläget. Kan den inte läsa den ser spärren ut att vara av.
+select pg_temp.rakna('14.2 studiehjälparen läser spärren', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.flaggor where kod = 'kortsparr'$q$, 1);
+
+select pg_temp.prova('14.2 anon läser inte spärren', null,
+  array[$q$select 1 from public.flaggor where kod = 'kortsparr'$q$], 'nekad');
+
+-- ---------- avvikelserna ----------
+insert into utfall (test, ok, detalj)
+select '14.2 ej_fakturerat finns inte längre', count(*) = 0, 'rader: ' || count(*)
+  from public.avvikelser_rader() where typ = 'ej_fakturerat';
+
+do $$
+declare n_hallet int; n_betalt int; n_uppg int; fel text;
+begin
+  begin
+    -- som postgres: rapporten gör passet genomfört utan spärr
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b4c1', 'x', current_date, 'narvarande');
+    select count(*) into n_hallet from public.avvikelser_rader()
+     where typ = 'ej_betalt' and objekt_id = '00000000-0000-4000-8000-00000000b4c1';
+
+    perform public.kontroll_ekonomiska_avvikelser();
+    select count(*) into n_uppg from public.uppgifter
+     where nyckel = 'avvikelse:ej_betalt:bookings:00000000-0000-4000-8000-00000000b4c1'
+       and titel like 'Inte betalt %' and status = 'oppen';
+
+    update public.bookings set betalning_status = 'betald'
+     where id = '00000000-0000-4000-8000-00000000b4c1';
+    select count(*) into n_betalt from public.avvikelser_rader()
+     where typ = 'ej_betalt' and objekt_id = '00000000-0000-4000-8000-00000000b4c1';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('14.2 ej_betalt', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('14.2 ett hållet obetalt pass är ej_betalt', n_hallet = 1, 'rader: ' || n_hallet),
+      ('14.2 kontrollen gör det till en uppgift', n_uppg = 1, 'uppgifter: ' || n_uppg),
+      ('14.2 ett betalt pass är inte ej_betalt', n_betalt = 0, 'efter betalning: ' || n_betalt);
+  end if;
+end $$;
+
+-- 14.2c: betalsidan kan ligga öppen medan passet avbokas, och Stripe
+-- drar pengarna om familjen betalar efteråt. Villkoren lovar hela
+-- beloppet tillbaka, så avvikelsen står kvar tills det är gjort.
+do $$
+declare delvis bigint; n_klar int; n_galler int; fel text;
+begin
+  begin
+    update public.bookings
+       set status = 'cancelled', avbokningsskal = 'sjukdom',
+           betalning_status = 'betald', betalt_ore = 37900, aterbetald_ore = 10000
+     where id = '00000000-0000-4000-8000-00000000b4c1';
+    select belopp_ore into delvis from public.avvikelser_rader()
+     where typ = 'betald_men_avbokad' and objekt_id = '00000000-0000-4000-8000-00000000b4c1';
+
+    update public.bookings set betalning_status = 'aterbetald', aterbetald_ore = 37900
+     where id = '00000000-0000-4000-8000-00000000b4c1';
+    select count(*) into n_klar from public.avvikelser_rader()
+     where typ = 'betald_men_avbokad' and objekt_id = '00000000-0000-4000-8000-00000000b4c1';
+
+    -- ett betalt pass som gäller är ingen avvikelse
+    update public.bookings set betalning_status = 'betald', betalt_ore = 37900, aterbetald_ore = 0
+     where id = '00000000-0000-4000-8000-00000000b4a2';
+    select count(*) into n_galler from public.avvikelser_rader()
+     where typ = 'betald_men_avbokad' and objekt_id = '00000000-0000-4000-8000-00000000b4a2';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('14.2c betald_men_avbokad', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('14.2c avbokat och delvis återbetalt larmar med resten', delvis = 27900,
+       'belopp: ' || coalesce(delvis::text, 'ingen rad')),
+      ('14.2c helt återbetalt larmar inte', n_klar = 0, 'rader: ' || n_klar),
+      ('14.2c ett betalt pass som gäller larmar inte', n_galler = 0, 'rader: ' || n_galler);
+  end if;
+end $$;
+
+-- 14.2b: kortbetalningarna syns i siffrorna, på dagen pengarna kom in.
+do $$
+declare
+  denna date := date_trunc('month', now() at time zone 'Europe/Stockholm')::date;
+  fore_kort bigint; efter_kort bigint; fore_ai bigint; efter_ai bigint; fel text;
+begin
+  begin
+    select coalesce(sum(kortbetalt_ore), 0) into fore_kort from public.analys_ekonomi where manad = denna;
+    select coalesce(sum(betalt_ore), 0) into fore_ai from public.ai_analys(1) where manad = denna;
+    update public.bookings set betalning_status = 'betald', betalt_ore = 37900, betald_at = now()
+     where id = '00000000-0000-4000-8000-00000000b4c1';
+    select coalesce(sum(kortbetalt_ore), 0) into efter_kort from public.analys_ekonomi where manad = denna;
+    select coalesce(sum(betalt_ore), 0) into efter_ai from public.ai_analys(1) where manad = denna;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('14.2b analysen', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('14.2b en kortbetalning syns i analys_ekonomi samma månad', efter_kort - fore_kort = 37900,
+       fore_kort || ' → ' || efter_kort),
+      ('14.2b och i agentens betalt', efter_ai - fore_ai = 37900, fore_ai || ' → ' || efter_ai);
+  end if;
+end $$;
+
+-- ---------- RUT och kortbetalningen ----------
+-- Kortbetalningen drar inte RUT-avdraget. En RUT-tjänst för kunder
+-- hade tagit fullt pris av en familj som lovats halva.
+select pg_temp.prova('14.2 en RUT-berättigad kundtjänst går inte att slå på', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster
+            set pris_per_timme_ore = 45000, rut_berattigad = true, rut_procent = 50, aktiv = true
+          where kod = 'provtjanst'$q$], 'nekad');
+
+select pg_temp.prova('14.2 läxhjälpen kan inte bli RUT-berättigad medan den är aktiv', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster set rut_berattigad = true, rut_procent = 50 where kod = 'laxhjalp'$q$], 'nekad');
+
+-- Att PLANERA en RUT-tjänst ska gå. Spärren gäller en aktiv rad.
+select pg_temp.prova('14.2 en avstängd tjänst får planeras med RUT', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.tjanster set rut_berattigad = true, rut_procent = 50
+          where kod = 'provtjanst' and not aktiv$q$], 'ok');
 
 select test, ok, detalj from utfall order by nr;
 

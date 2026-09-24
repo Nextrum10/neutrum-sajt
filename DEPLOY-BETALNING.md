@@ -1,8 +1,18 @@
 # Sätta upp betalning
 
-Betalningen är byggd i två delar: **det som fungerar utan Stripe**, och **det som
-kräver Stripe**. Gör den första delen nu — då kan ni se fakturor och underlag i
-vyerna direkt. Ta Stripe när ni faktiskt vill att pengar ska röra sig.
+**Sedan Fas 14.2 betalar familjen varje pass med kort, före passet, och får ingen
+faktura.** Pengarna tas emot genom Stripe (avsnitt 9). Studiehjälparen får betalt
+den 25:e ur `payouts`, och det är vad månadskörningen gör nu: den skapar underlag,
+inga fakturor.
+
+Filen står därför i tre delar:
+
+- **Avsnitt 1–6** är månadskörningen och underlagen till studiehjälparna. De
+  fungerar utan Stripe.
+- **Avsnitt 7 och 8** är historik: planen att skicka månadsfakturan genom Stripe,
+  och utskicket av de fakturor som skapades före Fas 14.2. Det fanns inga.
+- **Avsnitt 9** är kortbetalningen, familjens enda väg att betala, och spärren
+  "ingen betalning, inget pass".
 
 Läs igenom hela filen innan du börjar. Det finns en torrkörning som du ska göra
 före den första skarpa körningen, och den är hela poängen med den här ordningen.
@@ -19,35 +29,42 @@ behövs om ni sätter upp en ny miljö.
 | 1. Schemat | Applicerat |
 | 2. Priset | Satt: 37900 ören, alltså 379 kr — samma som prissidan |
 | 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
-| 4. Deploy `fakturering` | ACTIVE — omdriftsatt i Fas 2 med urvalet nedan och 10 dagar (versionen före hade 14) |
+| 4. Deploy `fakturering` | ACTIVE, version 26. Sedan Fas 14.2 skapar den bara underlag, och räknar upp pass som hölls utan att betalas |
 | 5. Torrkörning | **Väntar på er** — knappen under Ekonomi → Månadskörning, ingen nyckel behövs |
 | 6. Schemaläggning | **Väntar på er** |
-| 7. Stripe | **Delvis.** Fas 12: migrationen applicerad och de tre stripe-funktionerna driftsatta. Nycklarna är INTE satta och inget har körts mot Stripe. Se avsnitt 9 |
-| 8. Deploy `faktura-utskick` | ACTIVE, version 2 — betalningsvillkor 10 dagar |
+| 7. Stripe | **Delvis.** Funktionerna driftsatta, webhooken skapad och dess hemlighet provad. Ingen betalning har gått igenom. Se avsnitt 9 |
+| 8. Deploy `faktura-utskick` | ACTIVE. Bara för fakturor som skapades före Fas 14.2, och sådana finns inte |
 
-Databasen är tom på fakturor: `invoices`, `invoice_lines` och `payouts` har noll
-rader. Den första skarpa körningen har alltså inte skett, och torrkörningen i
-steg 5 är fortfarande det första som ska göras.
+Databasen är tom på fakturor och underlag: `invoices`, `invoice_lines`, `payouts`
+och `payout_lines` har noll rader (24 september 2026). Den första skarpa körningen
+har alltså inte skett, och torrkörningen i steg 5 är fortfarande det första som ska
+göras.
 
 **Obs (17 september 2026):** alla pass i driften hör än så länge till adminkontot
 och till en enda studiehjälpare — det är provpass, inga riktiga kunder. Fyra av de
-fem genomförda passen skapades samtidigt den 2 september. Ta ställning till dem
-under Ekonomi → Avvikelser innan en skarp körning, annars fakturerar ni er själva.
+fem genomförda passen skapades samtidigt den 2 september, och sedan Fas 14.2 står
+de under Betalningar & utbetalningar → Avvikelser som **Inte betalt**. Ta ställning
+till dem innan en skarp körning: undanta dem, annars betalar ni ut ersättning för
+provpass.
 
-## Vilka pass som kommer med (sedan Fas 2)
+## Vilka pass som kommer med på underlaget
 
 Ett pass kommer med om det är **genomfört, har en rapport kopplad och inte är
 undantaget**. Urvalet läses ur vyn `passunderlag`, som adminvyn också läser.
 
 - **Genomfört utan rapport** kommer inte med. Det räknas upp i svaret och syns
-  under Ekonomi → **Avvikelser**, där admin antingen kopplar rätt rapport eller
-  undantar passet.
-- **Undantaget** (`bookings.fakturerbar = false`, med en anledning) kommer varken
-  på familjens faktura eller på studiehjälparens underlag. Samma regel på båda
-  sidor.
-- **Perioden** är en månad, som standard föregående. Med kommer alla ännu inte
-  fakturerade pass *till och med* periodens sista dag — ett pass som rapporterades
-  för sent till förra körningen kommer med på nästa.
+  under Betalningar & utbetalningar → **Avvikelser**, där admin antingen kopplar
+  rätt rapport eller undantar passet.
+- **Undantaget** (`bookings.fakturerbar = false`, med en anledning) ska varken
+  betalas av familjen (Betala-knappen syns inte) eller komma med på
+  studiehjälparens underlag. Samma regel på båda sidor.
+- **Familjens betalning avgör inte om passet kommer med.** Studiehjälparen har
+  hållit passet oavsett. Ett pass som hölls utan att betalas kommer med på
+  underlaget, räknas upp i körningens svar under `obetalda`, och syns som
+  avvikelsen `ej_betalt` tills familjen betalat.
+- **Perioden** är en månad, som standard föregående. Med kommer alla pass som ännu
+  inte ligger på ett underlag, *till och med* periodens sista dag — ett pass som
+  rapporterades för sent till förra körningen kommer med på nästa.
 - Rapporten och "genomfört" skrivs sedan Fas 2 i samma transaktion, så ett pass
   kan inte längre bli genomfört utan att rapporten sparas, eller tvärtom.
 
@@ -55,15 +72,17 @@ undantaget**. Urvalet läses ur vyn `passunderlag`, som adminvyn också läser.
 
 ## Så fungerar modellen
 
-Familjen betalar **i efterskott**, en gång i månaden, för de pass som faktiskt
-genomförts. Studiehjälparen får ett underlag för samma pass.
+Familjen betalar **varje pass med kort, före passet** (avsnitt 9). Studiehjälparen
+får ett underlag en gång i månaden för de pass som faktiskt genomförts, och betalt
+den 25:e.
 
 Ett pass blir "genomfört" när studiehjälparen skrivit rapporten. Den regeln fanns
 redan i systemet, och det är därför det här går att lita på: ett pass som ställdes
-in eller flyttades blir aldrig genomfört, och kan alltså aldrig faktureras.
+in eller flyttades blir aldrig genomfört, och kommer alltså aldrig med på ett
+underlag.
 
 Alla belopp lagras i **ören som heltal**. Aldrig kronor som decimaltal — i flyttal
-är `0.1 + 0.2` inte `0.3`, och en faktura som är en krona fel är en faktura någon
+är `0.1 + 0.2` inte `0.3`, och ett belopp som är en krona fel är ett belopp någon
 måste reda ut för hand.
 
 ---
@@ -82,19 +101,21 @@ visades i en ruta var det en skönhetsfläck. Med utbetalningar är det pengar.
 
 ## 2. Sätt priset
 
-Priset ligger i `nextrum-config.js` för sidorna som *visar* det, men en faktura får
+Priset ligger i `nextrum-config.js` för sidorna som *visar* det, men ett belopp får
 inte räknas ut från något som ligger i webbläsaren — vem som helst kan ändra det
-där. Fakturan läser från tabellen i stället:
+där. Kortbetalningen läser tjänstens pris ur databasen i stället. Sätt det i
+adminvyn under Tjänster & priser, eller för en ny miljö:
 
 ```sql
-update public.prissattning set pris_per_timme_ore = 37900;
+update public.tjanster set pris_per_timme_ore = 37900 where kod = 'laxhjalp';
 ```
 
-`37900` är 379 kr. Ören, alltid.
+En trigger speglar läxhjälpens pris till `prissattning`, som kortbetalningen läser
+som reserv. `37900` är 379 kr. Ören, alltid.
 
 ## 3. Sätt timpenningarna
 
-Ersättningen kan inte räknas ut utan den, och faktureringen hoppar med flit över
+Ersättningen kan inte räknas ut utan den, och månadskörningen hoppar med flit över
 studiehjälpare som saknar timpenning i stället för att gissa:
 
 ```sql
@@ -103,7 +124,7 @@ update public.tutor_profiles set hourly_rate = 250 where id = 'STUDIEHJÄLPARENS
 
 ---
 
-## 4. Driftsätt faktureringen
+## 4. Driftsätt månadskörningen (`fakturering`)
 
 Samma verktyg som `generate-feedback` — se `DEPLOY-AI-FUNKTION.md` om du inte har
 Supabase CLI installerat och länkat än.
@@ -131,11 +152,11 @@ supabase functions deploy fakturering
 
 ## 5. Torrkör — gör inte detta senare
 
-**Enklast: adminvyn.** Ekonomi → Månadskörning → välj månad → **Torrkör**. Du ser
-varje familj och studiehjälpare med belopp, och vilka pass som hoppades över.
-Stämmer det: **Skapa utkast**. Fakturorna skapas som utkast och skickas sedan en
-och en under Fakturor, efter att du läst dem. Knapparna kräver att du är inloggad
-som admin — ingen nyckel behövs.
+**Enklast: adminvyn.** Betalningar & utbetalningar → Månadskörning → välj månad →
+**Torrkör**. Du ser varje studiehjälpares underlag med belopp, vilka pass som
+hoppades över, och vilka pass som hölls utan att familjen betalat. Stämmer det:
+**Skapa utkast**. Underlagen skapas som utkast; ingenting skickas och inga pengar
+rör sig. Knapparna kräver att du är inloggad som admin — ingen nyckel behövs.
 
 Med nyckeln, till exempel från ett schema, ser anropet ut så här. Kör den
 **innan** den första skarpa körningen. Den räknar ut allt och svarar med vad som
@@ -149,11 +170,13 @@ curl -X POST "https://DITT-PROJEKT-ID.supabase.co/functions/v1/fakturering" \
 ```
 
 Läs svaret. Stämmer antalet pass? Stämmer beloppen mot vad ni faktiskt kommit
-överens om med familjerna? Står det något i `hoppade_over_utan_timpenning` — då
-saknar de studiehjälparna en timpenning, gå tillbaka till steg 3. Står det något
-i `hoppade_over_utan_rapport` — se Ekonomi → Avvikelser.
+överens om med studiehjälparna? Står det något i `hoppade_over_utan_timpenning` —
+då saknar de studiehjälparna en timpenning, gå tillbaka till steg 3. Står det något
+i `hoppade_over_utan_rapport` — se Avvikelser. Står det något i `obetalda` hölls de
+passen utan att familjen betalat: Betala-knappen ligger kvar på passet i familjens
+vy, och det är familjen ni ska prata med, inte körningen.
 
-Vill du fakturera en annan månad än förra: lägg till `"period": "2026-09"`.
+Vill du köra en annan månad än förra: lägg till `"period": "2026-09"`.
 
 När det ser rätt ut, kör skarpt genom att ta bort `torrkorning`:
 
@@ -163,12 +186,12 @@ curl -X POST "https://DITT-PROJEKT-ID.supabase.co/functions/v1/fakturering" \
   -H "content-type: application/json" -d '{}'
 ```
 
-Fakturorna dyker upp i familjens vy under **Betalning**, och underlagen hos
-studiehjälparen under **Ersättning**.
+Underlagen dyker upp hos studiehjälparen under **Ersättning**. Familjen ser
+ingenting nytt: deras betalningar är kortbetalningarna i avsnitt 9.
 
-En omkörning skapar inte dubbletter: ett pass kan bara ligga på en fakturarad,
-garanterat av ett unikt index i databasen, och en familj kan bara ha en faktura
-per månad.
+En omkörning skapar inte dubbletter: ett pass kan bara ligga på en underlagsrad
+(`payout_lines_ett_pass_en_gang`), och en studiehjälpare kan bara ha ett underlag
+per månad (`unique (tutor_id, period)`).
 
 ## 6. Schemalägg
 
@@ -189,58 +212,43 @@ betalas ut.
 
 ---
 
-## 7. Stripe — när ni är redo
+## 7. Stripe och månadsfakturan (historik)
 
-Allt ovanför fungerar utan Stripe. Det som saknas är att ta emot pengarna.
+Här stod planen att skicka månadsfakturan genom Stripe Invoicing: en Stripe-kund
+per familj, en Stripe Invoice per faktura och en webhook på `invoice.paid`. **Den
+planen är övergiven.** Sedan Fas 14.2 finns ingen månadsfaktura att skicka, och
+familjen betalar varje pass genom Stripe Checkout i stället. Allt om Stripe står i
+avsnitt 9.
 
-**Läs [SKISS-BETALNING-STRIPE.md](SKISS-BETALNING-STRIPE.md) först.** Den skiljer
-på de två sidorna: kundsidan (punkt 1–3 nedan) går att bygga när som helst,
-hjälparsidan (punkt 4) är blockerad av anställningsfrågan i `foretagsfakta`. Den
-säger också varför det är Stripe Invoicing och inte Checkout som gäller här.
+Två saker från planen gäller fortfarande:
 
 **Den hemliga nyckeln får aldrig ligga i `nextrum-config.js`, i HTML, eller i
-någon fil som webbläsaren hämtar.** Den ska bo som en secret i Supabase:
+någon fil som webbläsaren hämtar.** Den bor som en secret i Supabase (9.2), och
+Nextrum lagrar aldrig ett kortnummer: Stripe är värd för betalsidan.
 
-```
-supabase secrets set STRIPE_SECRET_KEY=sk_live_...
-```
-
-Nextrum kommer aldrig att lagra ett kortnummer. Stripe är värd för betalsidan, och
-vi sparar bara id:t och adressen dit — kolumnerna `stripe_invoice_id` och
-`stripe_url` finns redan. Det är skillnaden mellan att hantera kortdata och att
-slippa hantera kortdata, och den skillnaden är värd att hålla fast vid.
-
-Vad som återstår, i ordning:
-
-1. **En Stripe-kund per familj.** Skapas första gången en faktura skickas.
-2. **En Stripe Invoice per faktura**, med samma rader som `invoice_lines`. Spara
-   `stripe_invoice_id` och `hosted_invoice_url` i `stripe_url`. Knappen "Betala" i
-   familjens vy pekar redan dit — den behöver ingen ändring.
-3. **En webhook** som lyssnar på `invoice.paid` och sätter `status = 'betald'` och
-   `betald_at`. Den **måste** verifiera Stripes signatur; en webhook utan
-   signaturkontroll är en adress där vem som helst kan påstå att en faktura är
-   betald.
-4. **Stripe Connect för utbetalningar. Bygg inte tillbaka det här.** Det byggdes
-   en gång (Fas 12.1–12.4) och togs bort igen (Fas 12.5): studiehjälparen får
-   betalt den 25:e som en löning, och en Connect-transfer är inte en
-   löneutbetalning. Så länge `foretagsfakta.studiehjalpare_form` står på `oklart`
-   vet dessutom ingen om ersättningen är lön eller ett uppdragsarvode, och det är
-   den frågan som avgör vad utbetalningen ens ÄR — inte vilken teknik som flyttar
-   pengarna. Knappen under Ersättning och funktionen `stripe-konto` är borta.
-   Kolumnerna `stripe_account_id`, `stripe_klar` och `stripe_*` på
-   `tutor_profiles` står kvar men är märkta OANVÄND i databasen
-   (`20260922205035_fas12_5_connect_ur_betalvagen.sql`). Skissen och dess
-   efterskrift har resonemanget.
-
-Platsen där punkt 1–2 ska in är utmärkt med en kommentar i
-`supabase/functions/fakturering/index.ts`, längst ned.
+**Stripe Connect för utbetalningar. Bygg inte tillbaka det här.** Det byggdes
+en gång (Fas 12.1–12.4) och togs bort igen (Fas 12.5): studiehjälparen får
+betalt den 25:e som en löning, och en Connect-transfer är inte en
+löneutbetalning. Så länge `foretagsfakta.studiehjalpare_form` står på `oklart`
+vet dessutom ingen om ersättningen är lön eller ett uppdragsarvode, och det är
+den frågan som avgör vad utbetalningen ens ÄR — inte vilken teknik som flyttar
+pengarna. Knappen under Ersättning och funktionen `stripe-konto` är borta.
+Kolumnerna `stripe_account_id`, `stripe_klar` och `stripe_*` på
+`tutor_profiles` står kvar men är märkta OANVÄND i databasen
+(`20260922205035_fas12_5_connect_ur_betalvagen.sql`). Skissen och dess
+efterskrift har resonemanget.
 
 ---
 
-## 8. Driftsätt fakturautskicket
+## 8. Fakturautskicket (bara äldre fakturor)
 
-Månadskörningen SKAPAR fakturor. Den skickar dem inte. Utskicket ligger i en egen
-funktion, `faktura-utskick`, som knappen **Skicka** i adminvyn anropar.
+**Sedan Fas 14.2 skapar månadskörningen inga fakturor**, och det fanns noll när
+omställningen gjordes. `faktura-utskick` står kvar för en faktura som ändå skulle
+finnas, och avsnittet står kvar för att förklara den. Om den ska tas bort är ert
+beslut (CLAUDE.md avsnitt 7).
+
+Utskicket ligger i en egen funktion, `faktura-utskick`, som knappen **Skicka**
+under Äldre fakturor anropar.
 
 ```
 supabase functions deploy faktura-utskick
@@ -280,37 +288,36 @@ Räknas från när fakturan **skickas**, inte från när körningen skapade den.
 lovar familjen tio dagar; skapas fakturan den 1:a och skickas den 5:e vore det sex.
 En påminnelse flyttar aldrig fram datumet.
 
-### Ändra betalningsvillkoret
+### Ändra betalningslöftet
 
-Antalet dagar står på **fjorton ställen**: konstanten `BETALNINGSVILLKOR_DAGAR` i
-`supabase/functions/_delad/konstanter.ts` (som både `fakturering` och
-`faktura-utskick` importerar — driftsätt båda efter en ändring), den synliga texten i FAQ:n, på prissidan och i
-användarvillkoren på båda språken, FAQ-schemat, raden i adminvyn och maskotens
-svarsfil. Alla måste säga samma sak. En faktura som förfaller på en annan dag än
-prissidan lovar är en tvist, inte ett skrivfel — och den diskussionen tas mitt i en
-betalningspåminnelse, vilket är sämsta tänkbara läge.
+Sedan Fas 14.2 är löftet inte ett antal dagar. Det är en mening: familjen betalar
+varje pass med kort, före passet, och **ett pass som inte är betalt hålls inte**.
+Meningen står på femton ställen i nio filer: användarvillkoren, prissidan och FAQ:n
+på båda språken, FAQ-schemat, studievyns Betalning och Pris & villkor, notisen om
+pass att betala i `nextrum-studie-vy.js`, och maskotens svarsfil. Alla måste säga
+samma sak. En betalning som tas på ett annat sätt än villkoren lovar är en tvist,
+inte ett skrivfel.
 
 Efter en ändring:
 
 ```bash
 python3 verktyg/bygg-faq-schema.py        # FAQ-schemat ur den synliga texten
-python3 verktyg/bygg-maskotsvar.py        # maskotens svar ur FAQ:n
+python3 verktyg/bygg-maskotsvar.py        # maskotens svar ur FAQ:n och prissidan
 python3 verktyg/kolla-betalningsvillkor.py
 ```
 
-Den sista läser siffran på alla fjorton ställen och säger ifrån om de spretar. Den
-säger också ifrån om en mening har formulerats om så att den slutat bevaka ett
-ställe — ett sökuttryck som inte hittar något ser annars ut som ett godkännande.
+Den sista räknar meningen på alla femton ställen, och letar efter det gamla löftet
+("efterskott", "10 dagars betalningsvillkor", "första faktura" och de engelska
+motsvarigheterna) i allt som serveras. Den säger ifrån om en mening formulerats om
+så att den slutat bevaka ett ställe — ett sökuttryck som inte hittar något ser
+annars ut som ett godkännande.
 
-Två saker klarar den inte, och de får ni göra för hand:
+Två saker klarar den inte:
 
-- **Texten som skriver ut antalet med bokstäver.** Avsnittet ovan och kommentaren om
-  förfallodagen i `faktura-utskick` säger "tio dagar" och räknar dessutom ett exempel
-  på siffran. Läs igenom dem.
-- **Det som faktiskt körs.** Konstanten i repot är inte konstanten i Supabase förrän
-  båda funktionerna har driftsatts om (avsnitt 4 och 8). Fram till dess säger sajten
-  en sak och fakturan en annan. Tio dagar är utrullat; nästa ändring måste rullas ut
-  på samma sätt.
+- **Det som faktiskt körs.** Att spärren är på är en flagga i databasen, inte en
+  mening på en sida (9.9).
+- **`BETALNINGSVILLKOR_DAGAR`** i `_delad/konstanter.ts` finns kvar bara för
+  `faktura-utskick` och äldre fakturor. Den lovar ingenting om ett nytt pass.
 
 ### Utbetalningarna
 
@@ -326,24 +333,20 @@ dem den 25:e.
 
 ---
 
-## Om något ser fel ut
-
-Fakturan skapas som `utkast` och blir `skickad` först när någon tryckt Skicka i
-adminvyn och mejlet gått iväg. Vill ni att körningen ska skapa dem färdigskickade
-i stället — utan mejl — ändra `status: 'utkast'` tillbaka i funktionen. Tänk efter
-en gång till innan ni gör det: då betyder ordet "skickad" inte längre att någon
-fått fakturan.
+## Om en äldre faktura ser fel ut
 
 Behöver ni ta bort en felaktig faktura: ta bort den i Table Editor. Raderna följer
-med (`on delete cascade`), och passen blir automatiskt ofakturerade igen och
-kommer med i nästa körning.
+med (`on delete cascade`). Passen på den räknas då som obetalda igen och syns som
+`ej_betalt`; de hamnar inte på en ny faktura, för det skapas inga.
 
 ---
 
-## 9. Kortbetalning per pass (Fas 12)
+## 9. Kortbetalning per pass (Fas 12, enda vägen sedan Fas 14.2)
 
-Familjen betalar med kort när passet är **bekräftat**, och HELA beloppet landar
-hos Nextrum. Ingen destination, ingen application fee, inget anslutet konto.
+Familjen betalar med kort när passet är **bekräftat**, och senast innan det
+börjar. HELA beloppet landar hos Nextrum. Ingen destination, ingen application
+fee, inget anslutet konto. Ett genomfört pass som inte är betalt går också att
+betala, från samma knapp.
 
 Så var det inte först. Fas 12.1–12.4 byggde säljarens Connect-arkitektur, där
 studiehjälparens del gick direkt till hens eget Stripe-konto som en destination
@@ -352,10 +355,12 @@ löning, i en klump, ur `payouts`. En destination charge hade lagt ut hens del v
 varje pass och månadskörningen hade sedan betalat samma timmar en gång till.
 `SKISS-BETALNING-STRIPE.md` har efterskriften om hur det landade.
 
-**Ingenting av det här är provat mot Stripe.** Koden är typkontrollerad, och
-signaturkontrollen har tretton egna prov, men miljön där den skrevs når inte
-`api.stripe.com`. Första körningen i **testläge** är alltså det första riktiga
-provet. Gör den innan ni rör en skarp nyckel.
+**Ingen betalning har gått igenom.** Webhooken är skapad och dess hemlighet
+provad, men `stripe_handelser` är tom och inget pass har `betald_at` (24 september
+2026): Stripe har inte levererat en enda händelse, inte ens en testhändelse. Koden
+är typkontrollerad och signaturkontrollen har egna prov, men miljön där den skrevs
+når inte `api.stripe.com`. Provbetalningen i 9.6 är alltså det första riktiga
+provet. Gör den innan ni rör en skarp nyckel, och innan spärren slås på (9.9).
 
 ### 9.1 Vad som finns
 
@@ -363,20 +368,24 @@ provet. Gör den innan ni rör en skarp nyckel.
 |---|---|
 | Kolumnerna och skyddet (`20260922155740_fas12_1_*.sql`) | **Applicerad** |
 | `stripe-konto` | **Borttagen**, ur repot och ur driften (Fas 12.5) |
-| `stripe-checkout` | **ACTIVE**, version 3, `verify_jwt = true`. Fas 12.5-koden, utan Connect |
-| `stripe-webhook` | **ACTIVE**, version 3, `verify_jwt = false`. Fas 12.5-koden |
-| `stripe-aterbetalning` | **ACTIVE**, version 2, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
-| `STRIPE_SECRET_KEY` | **Inte satt** — funktionerna svarar "STRIPE_SECRET_KEY saknas i miljön" |
-| `STRIPE_WEBHOOK_SECRET` | **Inte satt** — webhooken svarar 400 på varje leverans |
-| Webhook-endpoint hos Stripe | **Inte skapad** |
-| Knappen hos studiehjälparen | Finns: Ersättning → Utbetalningskonto |
-| Knappen hos familjen | Finns: på passet, när det är bekräftat |
+| `stripe-checkout` | **ACTIVE**, version 5, `verify_jwt = true`. Fas 14.1-koden |
+| `stripe-webhook` | **ACTIVE**, version 5, `verify_jwt = false`. Fas 14.1-koden |
+| `stripe-aterbetalning` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
+| `STRIPE_SECRET_KEY` | **Okänt härifrån.** Den läses först efter inloggningskontrollen och syns inte utan en riktig inloggning. Saknas den svarar Betala-knappen "STRIPE_SECRET_KEY saknas i miljön" |
+| `STRIPE_WEBHOOK_SECRET` | **Satt och provad**: en påhittad signatur faller på tidsstämpeln, inte på hemligheten (slutet av 9.4) |
+| Webhook-endpoint hos Stripe | **Skapad** i sandlådan. Ingen leverans har kommit fram |
+| Knappen hos familjen | Finns: på passet när det är bekräftat, och på ett genomfört pass som inte är betalt |
+| Spärren `kortsparr` | **Av.** Se 9.9 |
 
-De driftsatta filerna är lästa tillbaka och jämförda mot repot, rad för
-rad, inklusive hela `_delad/pris.ts`. De är identiska. Det är inte en
-formalitet: `apply_migration` och `functions deploy` ändrar driften
-direkt medan git är ett skilt steg, och de två har glidit isär i det
-här projektet förut (CLAUDE.md avsnitt 7).
+De driftsatta filerna är lästa tillbaka och jämförda mot repot. Det är inte en
+formalitet: `apply_migration` och `functions deploy` ändrar driften direkt medan
+git är ett skilt steg, och de två har glidit isär i det här projektet förut
+(CLAUDE.md avsnitt 7).
+
+**En skillnad finns, och den är känd.** `stripe-checkout` bär en äldre kopia av
+`_delad/pris.ts` i sitt paket, från före Fas 14.2. De tre funktioner den använder
+därifrån (`familjebelopp`, `radtext`, `standardTjanst`) är oförändrade, så
+beloppet blir detsamma. Nästa gång checkout driftsätts följer den nya kopian med.
 
 ### 9.2 Nycklarna
 
@@ -391,8 +400,8 @@ Via dashboarden: **Project Settings → Edge Functions → Secrets**. Eller med 
 supabase secrets set STRIPE_SECRET_KEY=sk_test_...
 ```
 
-`STRIPE_WEBHOOK_SECRET` kan inte sättas än. Den finns först när webhook-endpointen
-är skapad i Stripe, och den behöver funktionens URL. Se 9.4.
+`STRIPE_WEBHOOK_SECRET` är satt. Den skapas av webhook-endpointen i Stripe, och
+byts där; se 9.4.
 
 ### 9.3 Driftsätt
 
@@ -433,10 +442,17 @@ samma sorts glidning som `@2` på esm.sh var (se filhuvudet i `_delad/auth.ts`).
 Dashboarden föreslår kontots förval, som är nyare. Ändra den.
 
 Går inte basil att välja: fälten funktionen läser (`payment_status`,
-`client_reference_id`, `payment_intent`, `amount_refunded`, `amount`, `charge`,
-`status`) är grundfält som sällan rör sig, men **det är inte kontrollerat mot
-referensen** — miljön som skrev det här når inte `docs.stripe.com`. Flytta i så
-fall kodens pin i stället, medvetet, och kör provlistan i 9.6 om.
+`client_reference_id`, `payment_intent`, `amount_total`, `amount_refunded`,
+`amount`, `charge`, `status`) är grundfält som sällan rör sig, men **det är inte
+kontrollerat mot referensen** — miljön som skrev det här når inte
+`docs.stripe.com`. Flytta i så fall kodens pin i stället, medvetet, och kör
+provlistan i 9.6 om.
+
+**Så blev det.** Basil fanns inte att välja när endpointen skapades i september
+2026, så den står troligen på kontots förval. Kontrollera versionen på endpointens
+sida, och läs raden i `stripe_handelser` efter provbetalningen: `resultat = 'betald'`
+och ifyllda `betalt_ore` och `stripe_avgift_ore` på passet betyder att fälten kom
+fram som koden väntar sig.
 
 Adressen är:
 
@@ -490,15 +506,25 @@ Slå också på kvitton: Stripe → Settings → Emails → Successful payments.
 
 I den här ordningen, för varje steg beror på det förra:
 
+0. **Skicka en testhändelse** från endpointens sida i Stripe
+   (`checkout.session.completed`). Den ska landa i `stripe_handelser` med
+   `resultat = 'session utan pass-id'`, och det är rätt: Stripes exempel har inget
+   av våra pass. Det bevisar signaturen och dubblettspärren utan att en krona rör sig.
 1. **Boka ett pass och bekräfta det.** Betala-knappen ska dyka upp först då.
 2. **Betala med testkortet** `4242 4242 4242 4242`, valfritt framtida datum.
-3. **Kontrollera i databasen** att `betalning_status = 'betald'` och att
-   `betalt_ore` stämmer med vad familjen faktiskt betalade.
+3. **Kontrollera i databasen** att `betalning_status = 'betald'`, att
+   `betalt_ore` stämmer med vad familjen faktiskt betalade, och att
+   `stripe_avgift_ore`, `stripe_netto_ore` och `stripe_balanstransaktion_id` är
+   ifyllda. De tre sista går inte att hämta i efterhand.
 4. **Prova 3D Secure** med `4000 0027 6000 3184`.
 5. **Prova ett nekat kort** med `4000 0000 0000 0002` och se att passet blir
    `misslyckad` och går att betala igen.
-6. **Prova en återbetalning**, både hel och delvis, från Ekonomi → Kortbetalningar.
+6. **Prova en återbetalning**, både hel och delvis, från Betalningar &
+   utbetalningar → Kortbetalningar.
 7. **Prova en tvist** med `4000 0000 0000 0259`.
+8. **Prova ett avbokat pass.** Öppna betalsidan, avboka passet i en annan flik och
+   betala sedan. Passet ska bli `betald` och dyka upp under Avvikelser som
+   **Betalt men avbokat** tills det återbetalats.
 
 Säljarens lista hade två prov till: **misslyckad transfer** och **misslyckad
 utbetalning**. Båda gällde anslutna konton och finns inte att prova sedan Fas 12.5.
@@ -511,11 +537,18 @@ utbetalning**. Båda gällde anslutna konton och finns inte att prova sedan Fas 
   utbetalning får ske innan det är utrett.
 - **Moms.** Ni är inte momsregistrerade. Passerar ni omsättningsgränsen ändras vad
   379 kr betyder, och då ändras beloppet som går till Stripe.
-- **`fakturering` är kvar och rör ingenting av det här.** Ett pass som betalats med
-  kort kommer fortfarande med i månadskörningen, eftersom urvalet i `passunderlag`
-  inte vet om betalningen. **Kör inte båda vägarna skarpt samtidigt** — då
-  faktureras familjen två gånger. Antingen stängs månadskörningen av, eller så
-  byggs urvalet om till att hoppa över pass med `betalning_status = 'betald'`.
+- **Dubbelfaktureringen är borta (Fas 14.2).** Månadskörningen skapar ingen faktura
+  till familjen, så ett kortbetalt pass kan inte faktureras en gång till.
+- **Startererbjudandet finns inte i koden.** Prissidan lovar "Första timmen på köpet
+  … dras av när ni betalar", och `stripe-checkout` drar inte av något. Bestäm
+  regeln innan en ny familj betalar sitt första pass. Tills den är byggd går det att
+  sätta `rabatt_ore` på passet för hand innan familjen betalar: admin går förbi
+  skyddet, och checkout räknar med rabatten.
+- **Priset räknas när familjen betalar**, men villkoren lovar priset vid
+  bokningen. Höj inte priset medan bokade pass väntar på betalning; prisdialogen i
+  adminvyn räknar dem.
+- **Mejlen säger ingenting om betalning.** Bokningsbekräftelsen och påminnelsen före
+  passet borde säga att passet ska betalas. Det är ett villkor för spärren (9.9).
 
 ### 9.8 Säljarens MVP-checklista, punkt för punkt
 
@@ -568,3 +601,32 @@ Däremot försvann sannolikt DAC7-frågan säljaren tog upp: plattformsrapporter
 gäller plattformar som förmedlar säljares inkomst, och betalar ni lön är det
 arbetsgivardeklaration i stället. **Det är juristens bedömning, inte vår** — den
 står här bara för att frågan inte ska utredas från noll en gång till.
+
+### 9.9 Spärren: "ingen betalning, inget pass"
+
+Villkoren säger att ett pass som inte är betalt inte hålls. Spärren är det som gör
+det sant i systemet, och **den är av** tills kortvägen bevisligen fungerar.
+Påslagen utan en fungerande betalning hade den låst varje studiehjälpare från att
+rapportera ett enda pass.
+
+Den är flaggan `kortsparr` i `flaggor`, och slås om under Betalningar &
+utbetalningar → Kortbetalningar. Knappen visar vad som händer innan den gör något.
+
+- **På:** en rapport på ett pass som inte är betalt nekas, med ett meddelande som
+  säger varför. Studiehjälparen ser betalläget på passet och rapportknappen är
+  stängd. `betald` och `tvist` räknas som betalt; ett undantaget pass stoppas
+  aldrig; admin går alltid förbi.
+- **Av:** passen rapporteras som förut, och ett pass som hölls utan betalning syns
+  under Avvikelser som **Inte betalt**.
+
+Slå på den när alla fyra stämmer. Flaggans egen rad säger samma sak (`vantar_pa`),
+och texten går inte att skriva om från en vy:
+
+1. En provbetalning har gått hela vägen (9.6, steg 0–3).
+2. Villkoren, prissidan och FAQ:n säger att passet betalas i förväg. **Gjort** i
+   Fas 14.2, och `verktyg/kolla-betalningsvillkor.py` vaktar det.
+3. Bokningsbekräftelsen säger det. **Inte gjort.**
+4. Påminnelsen före passet säger det. **Inte gjort.**
+
+`verktyg/rls-test.sql` provar spärren i båda lägena oavsett vad driften står på:
+nio prov om spärren, sex om flaggan, och avvikelserna runt den.

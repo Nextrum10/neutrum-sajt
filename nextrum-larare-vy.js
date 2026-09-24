@@ -954,7 +954,7 @@
     }
 
     const orapporterade = (S.bokningar || []).filter(b =>
-      b.status === 'confirmed' && b.wanted_date < isoFor(new Date())).length;
+      b.status === 'confirmed' && b.wanted_date < isoFor(new Date()) && betaltNog(b)).length;
     if (orapporterade) {
       poster.push({
         rubrik: orapporterade + ' pass utan rapport',
@@ -963,7 +963,53 @@
       });
     }
 
+    /* Fas 14.2, bara med spärren på: bekräftade pass framåt som
+       familjen inte betalat. Det är studiehjälparen som står där när
+       passet ska börja, och det är hen som behöver veta att det inte
+       ska hållas. */
+    const idag = isoFor(new Date());
+    const obetalda = (S.bokningar || []).filter(b =>
+      b.status === 'confirmed' && b.wanted_date >= idag && !betaltNog(b)).length;
+    if (obetalda) {
+      poster.push({
+        rubrik: obetalda === 1 ? 'Ett pass är inte betalt' : obetalda + ' pass är inte betalda',
+        text: 'Håll inte passet förrän familjen har betalat. Familjen ser det under Att betala i sin vy.',
+        mål: '#pass-lista'
+      });
+    }
+
     NXStudie.notiser(hus, poster);
+  }
+
+  /* ============================================================
+     SPÄRREN (Fas 14.2)
+
+     "Ingen betalning, inget pass." Familjen betalar varje pass med
+     kort före passet. När flaggan kortsparr är på nekar databasen
+     rapporten på ett pass som inte är betalt (skydda_bokningsfalt,
+     genom triggern som gör passet genomfört), och då ska vyn säga det
+     INNAN någon skrivit en hel rapport i onödan.
+
+     Av är den förvalda: tills en betalning gått hela vägen hade
+     spärren låst ute varje studiehjälpare. Då visar vyn ingenting om
+     betalningen alls — ett "Ej betalt" på varje pass hade betytt
+     "håll inte passet" i en tid då ingen familj kan betala än.
+
+     Kan flaggan inte läsas räknas den som av. Databasen är skyddet;
+     det här är bara beskedet, och ett felaktigt "håll inte passet"
+     kostar mer än ett besked som kommer från databasen i stället.
+     ============================================================ */
+  async function laddaSparr() {
+    const { data } = await supa.from('flaggor').select('aktiv').eq('kod', 'kortsparr').maybeSingle();
+    S.kortsparr = !!(data && data.aktiv);
+  }
+
+  /* Betalt nog för att rapporteras. Tvist räknas som betalt: familjen
+     HAR betalat, och passet hölls på den betalningen. Ett pass Nextrum
+     undantagit ska inte betalas och stoppas därför inte. */
+  function betaltNog(b) {
+    return !S.kortsparr || b.fakturerbar === false
+      || b.betalning_status === 'betald' || b.betalning_status === 'tvist';
   }
 
   /* ============================================================
@@ -973,7 +1019,7 @@
     const host = $('#pass-lista');
     const { data, error } = await supa
       .from('bookings')
-      .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by')
+      .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, betalning_status, fakturerbar')
       .eq('tutor_id', S.user.id).order('wanted_date', { ascending: true });
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta passen', felText(error)); return; }
@@ -1019,6 +1065,15 @@
          som redan hållits går inte att flytta. */
       const idag = isoFor(new Date());
       const harVarit = kan && rapporterbart(b) && harBörjat(b);
+      /* Bara ett bekräftat pass kan betalas (stripe-checkout), så det
+         är bara där "inte betalt" är ett besked. Med spärren av är
+         betaltNog alltid sant och inget av det här syns. */
+      const obetalt = b.status === 'confirmed' && !betaltNog(b);
+      /* Betalt eller bestritt: databasen nekar en avbokning från en vy
+         (Fas 14.1), med spärren på eller av. Knappen visas därför inte
+         — ett nej efter ett klick är sämre än en mening som säger vart
+         man vänder sig. Samma regel som i föräldravyn. */
+      const betalt = b.betalning_status === 'betald' || b.betalning_status === 'tvist';
 
       let knappar = '';
       if (harVarit) {
@@ -1027,7 +1082,7 @@
       if (kan && !harVarit) {
         knappar += '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>';
       }
-      if (kan) {
+      if (kan && !betalt) {
         /* Ett önskemål från familjen avböjs, ett bokat pass avbokas.
            Samma sak i databasen, men inte samma sak att säga. */
         const önskemål = b.status === 'requested' && !mitt;
@@ -1044,10 +1099,19 @@
         under: under,
         vem: harVarit
           ? 'Passet har varit — rapporten saknas'
+          : obetalt && harBörjat(b)
+          ? 'Inte betalt — rapporten kan sparas när familjen har betalat. Hölls passet inte, avboka det.'
+          : obetalt
+          ? 'Inte betalt än. Håll inte passet förrän familjen har betalat.'
+          : kan && betalt
+          ? 'Betalt. Ska passet avbokas, hör av dig till Nextrum.'
           : b.status === 'requested'
           ? (mitt ? 'Ditt förslag — väntar på svar' : 'Familjen önskade den här tiden')
           : (b.attendance === 'franvarande' ? 'Eleven uteblev'
             : b.attendance === 'sen' ? 'Eleven kom sent' : null),
+        /* Betalmärket bara med spärren på. Av betyder att passen hålls
+           som förut, och då hade "Ej betalt" varit en order ingen gett. */
+        märke: S.kortsparr ? NXKontakt.betalMärke(b) : null,
         atgarder: knappar
       }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
       }
@@ -1072,10 +1136,15 @@
      pass kan bli genomfört bara om familjen stått bakom tiden —
      bekräftat, eller bokat av familjen själv. Ett eget förslag som
      familjen aldrig svarat på erbjuds därför inte här; databasen
-     hade avvisat det efter att rapporten redan sparats. */
+     hade avvisat det efter att rapporten redan sparats.
+
+     Sedan Fas 14.2 också: med spärren på, bara ett pass som är betalt.
+     Samma skäl — databasen hade nekat rapporten, och den som skrivit
+     en halvtimmes rapport ska inte få veta det först när den sparas. */
   function rapporterbart(b) {
-    return b.status === 'confirmed'
-      || (b.status === 'requested' && b.created_by === b.parent_id);
+    return (b.status === 'confirmed'
+      || (b.status === 'requested' && b.created_by === b.parent_id))
+      && betaltNog(b);
   }
 
   /* Har passet börjat? Datum OCH klockslag. Med bara datumet stod ett
@@ -1168,7 +1237,9 @@
     if (bokningId && val) {
       val.value = bokningId;
       if (val.value !== bokningId) {
-        alert('Det här passet kan inte rapporteras än. Familjen behöver ha bekräftat tiden först.');
+        alert(b && !betaltNog(b)
+          ? 'Passet är inte betalt, så rapporten kan inte sparas än. Den går att skriva när familjen har betalat.'
+          : 'Det här passet kan inte rapporteras än. Familjen behöver ha bekräftat tiden först.');
         return;
       }
       val.dispatchEvent(new Event('change'));
@@ -2300,7 +2371,7 @@
 
   /* ============================================================
      ERSÄTTNING
-     Samma pass som familjen faktureras för, sett från andra hållet.
+     Samma pass som familjen betalar för, sett från andra hållet.
      Timpenningen sätts av oss, inte av studiehjälparen själv — den
      är skyddad i skydda_tutorfalt() sedan schema-v8, av samma skäl
      som beloppen inte går att skriva härifrån.
@@ -2860,6 +2931,7 @@
     await laddaElever();
     await laddaSenaste();
     fyllElevväljare();
+    await laddaSparr();
     await laddaPass();
     await byggFamilj();
     await byggElev();

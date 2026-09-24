@@ -44,9 +44,9 @@ EXTRA_BARN = f'{EXTRA_KR} kr'
 
 # Tillägget är FAST när fler än ett barn sitter med, inte per barn:
 # två barn och tre barn kostar samma sak, och tre är taket. Så räknar
-# servern (familjebelopp() i fakturering lägger på extraOre en gång
-# när antalBarn > 1), och sidorna ska säga vad som faktiskt
-# faktureras. Summan räknas fram här i stället för att skrivas ut, så
+# servern (familjebelopp() i _delad/pris.ts, som stripe-checkout
+# använder, lägger på extraOre en gång när antalBarn > 1), och sidorna
+# ska säga vad som faktiskt dras. Summan räknas fram här i stället för att skrivas ut, så
 # att ett ändrat pris inte lämnar kvar ett belopp som inte går ihop —
 # det var precis så '517 kr' blev kvar när tillägget slutade vara per
 # barn.
@@ -387,8 +387,8 @@ OMRADEN = [
              'nyligen — det är särskilt märkbart på gymnasienivå, där den som läste kursen i '
              'fjol minns vilket steg som är det svåra.'),
             ('Måste vi binda upp oss?',
-             'Nej. Ingen bindningstid, ingen månadsavgift. Ni betalar för de pass som hålls, '
-             f'{PRIS} i timmen, och fakturan kommer från Nextrum.'),
+             'Nej. Ingen bindningstid, ingen månadsavgift. Ni betalar varje pass med kort innan '
+             f'det hålls, {PRIS} i timmen, och betalningen går till Nextrum.'),
         ],
     },
 ]
@@ -683,7 +683,7 @@ def sida(o):
     <div class="nx-text rv">
       <p>Samma timpris oavsett ämne och oavsett var i Stockholm passet hålls. Sitter syskon med i samma pass kostar det {EXTRA_BARN} extra i timmen totalt — lika mycket för tre barn som för två. Två eller tre barn en timme blir alltså {FLERA_BARN}.</p>
       <p>Ingen bindningstid och ingen månadsavgift. Studieplanen, matchningen och rapporten efter varje pass ingår i timpriset — det är inga tillval. All betalning går genom Nextrum, samlat på ett ställe.</p>
-      <p><a href="/priser">Se hela prissidan</a> för vad som ingår och hur faktureringen fungerar.</p>
+      <p><a href="/priser">Se hela prissidan</a> för vad som ingår och hur betalningen fungerar.</p>
     </div>
   </div>
 </section>

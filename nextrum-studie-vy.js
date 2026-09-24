@@ -967,11 +967,14 @@
   async function laddaPass() {
     const host = $('#pass-lista');
     const { data, error } = await supa
-      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, status, student_id, created_by, betalning_status')
+      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, status, student_id, created_by, betalning_status, fakturerbar, betalt_ore, aterbetald_ore, betald_at')
       .eq('parent_id', S.user.id).order('wanted_date', { ascending: true });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
     S.bokningar = data || [];
+    /* Betalningen ritas ur samma rader, så att en avbokning eller en
+       ny bekräftelse syns under Betalning utan en egen hämtning. */
+    ritaBetalning();
     ritaNotiser();
     ritaÖvBekrafta();
     ritaNästaPass();
@@ -997,6 +1000,12 @@
          det avgör om raden ska ha "Bekräfta" eller "Avboka". */
       const derasFörslag = b.created_by && b.created_by !== S.user.id;
 
+      /* Betalt eller bestritt: pengarna ligger hos Nextrum, och
+         databasen nekar en avbokning härifrån (Fas 13.1). Knappen
+         visas därför inte — ett nej efter ett klick är sämre än en
+         mening som säger vart man vänder sig. */
+      const betalt = b.betalning_status === 'betald' || b.betalning_status === 'tvist';
+
       let knappar = '';
       if (derasFörslag && b.status === 'requested') {
         knappar = svarsKnappar(b, true);
@@ -1006,12 +1015,14 @@
            till kan avböjas, och då hade varje förfrågan blivit en
            återbetalning: en kortavgift vi inte får tillbaka, och en
            familj som undrar vad som hände. */
-        if (b.status === 'confirmed' && b.betalning_status !== 'betald') {
-          knappar = '<button class="btn btn-primary btn-sm" data-betala="' + b.id + '">'
-                  + (b.betalning_status === 'misslyckad' ? 'Försök betala igen' : 'Betala') + '</button>';
-        }
-        knappar += '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>'
-                + '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
+        if (attBetala(b)) knappar = betalaKnapp(b);
+        knappar += '<button class="btn btn-ghost btn-sm" data-flytta="' + b.id + '">Flytta</button>';
+        if (!betalt) knappar += '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
+      } else if (attBetala(b)) {
+        /* Ett genomfört pass som ingen betalat. Det kan bara hända
+           medan spärren är av, och då ska det gå att betala i
+           efterhand — utan månadsfakturan finns ingen annan väg. */
+        knappar = betalaKnapp(b);
       }
 
       /* Platsen står direkt på raden. Ett pass på plats är en resa —
@@ -1019,7 +1030,9 @@
       const under = [b.format, b.location, barn ? barn.name : null].filter(Boolean).join(' · ');
       return NXKontakt.passRad(b, {
         under: under,
-        vem: derasFörslag ? 'Föreslaget av er studiehjälpare' : null,
+        vem: kommande && betalt ? 'Betalt. Ska passet avbokas, hör av er till Nextrum.'
+          : derasFörslag ? 'Föreslaget av er studiehjälpare' : null,
+        märke: NXKontakt.betalMärke(b),
         atgarder: knappar
       }) + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
       }
@@ -1136,6 +1149,18 @@
            överst på sidan man redan står på. Rutan finns alltid när
            den här notisen finns — båda räknas ur samma filter. */
         mål: '#ov-bekrafta'
+      });
+    }
+
+    /* Pass att betala (Fas 14.2). Familjen betalar före passet, så det
+       här är lika mycket deras tur som en föreslagen tid — och ett pass
+       som ingen påmint om är ett pass som ingen betalar. */
+    const attBetalaNu = (S.bokningar || []).filter(attBetala);
+    if (attBetalaNu.length) {
+      poster.push({
+        rubrik: attBetalaNu.length === 1 ? 'Ett pass att betala' : attBetalaNu.length + ' pass att betala',
+        text: 'Betala senast innan passet börjar. Ett pass som inte är betalt hålls inte.',
+        mål: '#bet-att'
       });
     }
 
@@ -1353,81 +1378,114 @@
   }
 
   /* ============================================================
-     BETALNING
-     Familjen betalar i efterskott för genomförda pass. Ingenting
-     här skriver till databasen: belopp sätts av edge-funktionen,
-     och kortuppgifterna tas emot av Stripe på deras egen sida. Vi
-     lagrar aldrig ett kortnummer, och kan därför inte tappa bort ett.
+     BETALNING (Fas 14.2)
+     Familjen betalar varje pass med kort, när studiehjälparen
+     bekräftat tiden och senast innan passet börjar. Månadsfakturan
+     finns inte längre, och därför inget att vänta på här: en lista
+     över det som ska betalas och en över det som är betalt.
+
+     Ingenting här skriver till databasen. Beloppet räknas av
+     stripe-checkout ur databasen, och kortuppgifterna tas emot av
+     Stripe på deras egen sida. Vi lagrar aldrig ett kortnummer, och
+     kan därför inte tappa bort ett.
      ============================================================ */
-  async function laddaBetalning() {
-    const B = NXBetalning;
-    const pag = $('#bet-pagaende'), lista = $('#bet-lista');
-    if (!pag) return;
 
-    const [ofakt, fakt] = await Promise.all([
-      supa.from('ofakturerat').select('pass, minuter').eq('parent_id', S.user.id).maybeSingle(),
-      supa.from('invoices').select('id, period, status, belopp_ore, forfaller, stripe_url')
-        .eq('parent_id', S.user.id).order('period', { ascending: false })
-    ]);
+  /* Samma tre lägen som avvikelsen ej_betalt och OBETALDA_LAGEN i
+     _delad/pris.ts. 'vantar' är med: en påbörjad betalning är ingen
+     betalning, och knappen ska gå att trycka på igen. */
+  const OBETALDA = ['ingen', 'vantar', 'misslyckad'];
+  const BETALDA = ['betald', 'tvist', 'aterbetald'];
 
-    /* Timpriset ur tjänstekatalogen (laddad i start()), inte ur
-       prissattning — samma källa som bokningen och faktureringen.
-       prissattning ska avvecklas, se Fas 5.5. */
-    await NXTjanster.ladda();
-    const tj = NXTjanster.hitta(NXTjanster.standard());
-    const timpris = (tj && Number(tj.pris_per_timme_ore)) || null;
-    const o = ofakt.data || { pass: 0, minuter: 0 };
+  /* Ska betalas: bekräftat och inte passerat, eller genomfört utan
+     att vara betalt. Ett bekräftat pass vars dag gått utan rapport är
+     inget av dem — antingen hölls det inte, och då ska det inte
+     betalas, eller så blir det snart genomfört och kommer tillbaka
+     hit. Ett pass Nextrum undantagit betalas aldrig; stripe-checkout
+     nekar det också. */
+  function attBetala(b) {
+    if (b.fakturerbar === false) return false;
+    if (OBETALDA.indexOf(b.betalning_status || 'ingen') === -1) return false;
+    if (b.status === 'completed') return true;
+    return b.status === 'confirmed' && b.wanted_date >= isoFor(new Date());
+  }
 
-    pag.innerHTML = timpris
-      ? B.pagaende({
-          pass: o.pass, minuter: o.minuter,
-          belopp_ore: Math.round((Number(o.minuter || 0) / 60) * timpris),
-          not: 'Uppskattat på ' + B.kronor(timpris) + ' i timmen. Fakturan skapas när månaden är slut, '
-             + 'och bara genomförda pass kommer med.',
-          tomRubrik: 'Inget att betala än',
-          tomText: 'Passen räknas ihop här allt eftersom de genomförs.'
-        })
-      : tomt('Priset går inte att läsa', 'Vi kan inte visa en uppskattning just nu. Fakturan påverkas inte.');
+  function betalaKnapp(b) {
+    return '<button class="btn btn-primary btn-sm" data-betala="' + b.id + '">'
+      + (b.betalning_status === 'misslyckad' ? 'Försök betala igen' : 'Betala') + '</button>';
+  }
 
-    if (fakt.error) { lista.innerHTML = tomt('Kunde inte hämta fakturorna', felText(fakt.error)); return; }
+  function ritaBetalning() {
+    const att = $('#bet-att'), lista = $('#bet-lista');
+    if (!att || !lista) return;
+    const kronor = NXBetalning.kronor;
+    const alla = S.bokningar || [];
+    const barnNamn = b => { const x = (S.barn || []).find(y => y.id === b.student_id); return x ? x.name : null; };
 
-    const rader = fakt.data || [];
-    $('#bet-antal').textContent = rader.length ? rader.length + ' st' : '';
+    const obetalda = alla.filter(attBetala).sort((a, c) =>
+      String(a.wanted_date + (a.wanted_time || '')).localeCompare(String(c.wanted_date + (c.wanted_time || ''))));
+    $('#bet-att-antal').textContent = obetalda.length ? obetalda.length + ' st' : '';
+    /* Siffran i menyn ska betyda "något väntar på er", inte "här
+       finns saker". Bara det som ska betalas räknas. */
+    if (S.sido) S.sido.märke('betalning', obetalda.length);
 
-    /* Siffran i menyn ska betyda "något väntar på dig", inte "här
-       finns saker". Bara obetalda räknas. */
-    const obetalda = rader.filter(f => {
-      const l = B.fakturaLage(f);
-      return l === 'skickad' || l === 'forfallen';
-    }).length;
-    if (S.sido) S.sido.märke('betalning', obetalda);
+    att.innerHTML = obetalda.length
+      ? obetalda.map(b => NXKontakt.passRad(b, {
+          under: [(b.duration_min || 60) + ' min', b.format, barnNamn(b)].filter(Boolean).join(' · '),
+          vem: b.status === 'completed' ? 'Passet har hållits men är inte betalt.'
+            : b.betalning_status === 'vantar' ? 'Betalningen är påbörjad men inte klar.'
+            : 'Betala senast innan passet börjar.',
+          märke: NXKontakt.betalMärke(b),
+          atgarder: betalaKnapp(b)
+        })).join('')
+      : tomt('Inget att betala just nu', 'När er studiehjälpare har bekräftat ett pass kan ni betala det här.');
 
-    if (!rader.length) {
-      lista.innerHTML = tomt('Inga fakturor än', 'Den första skapas när en månad med genomförda pass är slut.');
-      return;
+    /* Det betalda, senaste betalningen först. Beloppet är det Stripe
+       faktiskt drog (betalt_ore skrivs bara av webhooken), och en
+       återbetalning står under, så att raden aldrig ser ut att lova
+       mer än som betalats. */
+    const betalda = alla.filter(b => BETALDA.indexOf(b.betalning_status) !== -1 && b.betald_at)
+      .sort((a, c) => String(c.betald_at).localeCompare(String(a.betald_at)));
+    $('#bet-antal').textContent = betalda.length ? betalda.length + ' st' : '';
+    lista.innerHTML = betalda.length
+      ? betalda.map(b => {
+          const betalt = Number(b.betalt_ore || 0), tillbaka = Number(b.aterbetald_ore || 0);
+          return NXKontakt.passRad(b, {
+            under: [betalt ? kronor(betalt) : null, 'betalt ' + datumText(isoFor(new Date(b.betald_at))),
+              barnNamn(b)].filter(Boolean).join(' · '),
+            vem: !tillbaka ? null
+              : tillbaka >= betalt ? 'Hela beloppet är återbetalt.'
+              : kronor(tillbaka) + ' är återbetalt.',
+            märke: NXKontakt.betalMärke(b)
+          });
+        }).join('')
+      : tomt('Inga betalningar än', 'Betalda pass står här, med belopp och dag.');
+  }
+
+  /* Tillbaka från Stripe. stripe-checkout skickar familjen till
+     /foralder?betalt=<session> eller ?betalning=avbruten. Adressen
+     städas direkt — innan sidomenyn läser den — så att en omladdning
+     inte visar beskedet igen, och så att sidan öppnar på Betalning. */
+  function läsBetalsvar() {
+    const q = new URLSearchParams(location.search);
+    const svar = q.has('betalt') ? 'betalt' : q.get('betalning') === 'avbruten' ? 'avbruten' : null;
+    if (svar && window.history && history.replaceState) {
+      history.replaceState(null, '', location.pathname + '#betalning');
     }
+    return svar;
+  }
 
-    const linjer = await supa.from('invoice_lines')
-      .select('invoice_id, beskrivning, minuter, belopp_ore')
-      .in('invoice_id', rader.map(f => f.id));
-    const per = {};
-    (linjer.data || []).forEach(l => { (per[l.invoice_id] = per[l.invoice_id] || []).push(l); });
-
-    lista.innerHTML = rader.map(f => {
-      const läge = B.fakturaLage(f);
-      const kanBetala = (läge === 'skickad' || läge === 'forfallen') && f.stripe_url;
-      const antal = (per[f.id] || []).length;
-      return '<div class="bet-post">'
-        + B.fakturaRad(f, {
-            under: antal ? antal + (antal === 1 ? ' pass' : ' pass') : '',
-            atgarder: kanBetala
-              ? '<a class="btn btn-primary btn-sm" href="' + esc(f.stripe_url)
-                + '" target="_blank" rel="noopener noreferrer">Betala</a>'
-              : ''
-          })
-        + B.radLista(per[f.id])
-        + '</div>';
-    }).join('');
+  function visaBetalsvar(svar) {
+    const msg = $('#bet-msg');
+    if (!svar || !msg) return;
+    if (svar === 'betalt') {
+      säg(msg, '✓ Tack! Betalningen är mottagen. Det kan ta en liten stund innan passet står som betalt här.', true);
+      /* Webhooken brukar hinna före familjen tillbaka hit, men inte
+         alltid. En omläsning efter några sekunder tar det fallet, i
+         stället för att låta passet stå som obetalt tills någon laddar om. */
+      setTimeout(() => { laddaPass().catch(() => {}); }, 5000);
+    } else {
+      säg(msg, 'Betalningen avbröts, och inget drogs från kortet. Passet står kvar under Att betala.', false);
+    }
   }
 
   /* ============================================================
@@ -1599,15 +1657,15 @@
   });
 
   /* Pris & villkor läser tjänsteraden — samma rad bokningen räknar
-     på och faktureringen tar betalt efter. Talen i markupen syns bara
-     innan katalogen laddats. Ören blir kronor i NXBetalning.kronor,
-     och bara där.
+     på och kortbetalningen tar betalt efter. Talen i markupen syns
+     bara innan katalogen laddats. Ören blir kronor i
+     NXBetalning.kronor, och bara där.
 
      "Första timmen gratis" står INTE här, med flit. Kampanjen finns
-     inte i prislogiken: varken månadsfakturan eller kortbetalningen
-     drar av någon timme. Att lova den på sidan som visar priset hade
-     gjort den till ett villkor vi sedan fakturerar i strid mot. Den
-     läggs till här i samma ändring som den byggs in i prisräkningen. */
+     inte i prislogiken: kortbetalningen drar inte av någon timme. Att
+     lova den på sidan som visar priset hade gjort den till ett villkor
+     vi sedan tar betalt i strid mot. Den läggs till här i samma
+     ändring som den byggs in i prisräkningen. */
   function ritaPris() {
     const t = NXTjanster.hitta(NXTjanster.standard());
     if (!t) return;
@@ -1671,6 +1729,10 @@
     /* Pilarna som står i markupen läses av en gång här, så ett sparat
        läge syns direkt och inte först vid första klicket. */
     NXArbete.fallStall($('#view-app'));
+
+    /* Före sidomenyn: den läser adressen när den skapas, och ett svar
+       från Stripe ska öppna sidan på Betalning. */
+    const betalsvar = läsBetalsvar();
 
     S.sido = NXStudie.sidomeny({
       fall: 'foralder',
@@ -1756,7 +1818,8 @@
     /* Läxorna hämtas först, så märket ritas om när de finns. */
     ritaÖvLaxor();
     ritaNotiser();
-    await Promise.all([ritaÖvSamtal(), laddaBetalning()]);
+    await ritaÖvSamtal();
+    visaBetalsvar(betalsvar);
     supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');

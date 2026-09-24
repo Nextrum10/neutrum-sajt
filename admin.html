@@ -73,7 +73,7 @@
       <div class="auth-card">
         <span class="nx-et acc">Logga in</span>
         <h1 style="margin-top:16px">Adminvyn</h1>
-        <p class="nx-lede">För dig som jobbar på Nextrum. Intresseanmälningar, matchning, bokningar, fakturor och utbetalningar.</p>
+        <p class="nx-lede">För dig som jobbar på Nextrum. Intresseanmälningar, matchning, bokningar, betalningar och utbetalningar.</p>
 
         <form id="auth-form" novalidate>
           <div class="fgroup">
@@ -224,7 +224,7 @@
         <a href="#meddelanden" data-sek="meddelanden" title="Frågor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Frågor</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Ekonomi</span>
-        <a href="#ekonomi" data-sek="ekonomi" title="Fakturor &amp; utbetalningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg><span class="adm-etikett">Fakturor &amp; utbetalningar</span></a>
+        <a href="#ekonomi" data-sek="ekonomi" title="Betalningar &amp; utbetalningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg><span class="adm-etikett">Betalningar &amp; utbetalningar</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Tjänster</span>
         <a href="#katalog" data-sek="katalog" title="Tjänster &amp; priser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.3V4.5a1 1 0 0 1 1-1h7.8l8.2 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.6"/></svg><span class="adm-etikett">Tjänster &amp; priser</span></a>
@@ -381,7 +381,7 @@
           <!-- ============ PROBLEM ============
                Det som gått fel eller fastnat, räknat i databasen
                (admin_lage och ekonomiska_avvikelser): pass utan
-               rapport, förfallna fakturor, försenade uppgifter, fel
+               rapport, obetalda pass, försenade uppgifter, fel
                hos användarna och notiser som inte gick fram. Tom ruta
                är ett besked, inte en tom låda. -->
           <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
@@ -742,18 +742,18 @@
              Sektionen finns ändå, för den svarar på en annan fråga än
              Bokningar. Bokningar tittar framåt — vad ligger, vad ska
              bekräftas. Lektioner tittar bakåt: hände det, skrevs det
-             en rapport, och kan det faktureras.
+             en rapport, och räknas det.
 
              Rapporten är inte en trevlighet. Ett pass blir "completed"
              när studiehjälparen skrivit den, och bara completed-pass
-             hamnar på fakturan. En saknad rapport är alltså en timme
-             ingen får betalt för.
+             kommer med på underlaget den 25:e. En saknad rapport är
+             alltså en timme ingen får betalt för.
              ============================================================ -->
         <section class="vy-sek" data-sek="lektioner" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Lektioner</h2>
-              <p>Pass som hållits. Utan rapport blir ett pass aldrig genomfört, och då hamnar det inte på någon faktura.</p>
+              <p>Pass som hållits. Utan rapport blir ett pass aldrig genomfört, och då kommer det inte med på studiehjälparens underlag.</p>
             </div>
           </div>
 
@@ -952,35 +952,45 @@
 
         <!-- ============================================================
              EKONOMI
-             Fakturan till familjen och underlaget till studiehjälparen
-             är två sidor av samma pass. Två flikar, inte två sidor.
+             Kortbetalningen från familjen och underlaget till
+             studiehjälparen är två sidor av samma pass. Två flikar, inte
+             två sidor. Familjens månadsfaktura revs i Fas 14.2; de
+             fakturor som finns står sist, som historik.
              ============================================================ -->
         <section class="vy-sek" data-sek="ekonomi" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Ekonomi</h2>
-              <p>Vad familjerna ska betala och vad studiehjälparna ska få. Samma pass, två sidor av samma rad i bookings.</p>
+              <p>Vad familjerna har betalat och vad studiehjälparna ska få. Samma pass, två sidor av samma rad i bookings. Familjen betalar varje pass med kort före passet; studiehjälparen får betalt den 25:e.</p>
             </div>
           </div>
 
-          <div class="vy-flikar" role="tablist" aria-label="Fakturor eller utbetalningar">
-            <button class="vy-flik" type="button" role="tab" data-flik="fakturor"
-                    id="flik-fakturor" aria-controls="panel-fakturor">Fakturor
-              <span class="vy-flik-mark" id="flik-fakt-mark" hidden></span></button>
+          <!-- Kortbetalningarna först sedan Fas 14.2: det är familjens enda
+               betalväg, och den första fliken är den som syns när man
+               kommer hit. Fakturorna står sist, som historik. -->
+          <div class="vy-flikar" role="tablist" aria-label="Betalningar eller utbetalningar">
+            <button class="vy-flik" type="button" role="tab" data-flik="kortbetalningar"
+                    id="flik-kortbetalningar" aria-controls="panel-kortbetalningar">Kortbetalningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="utbetalningar"
                     id="flik-utbetalningar" aria-controls="panel-utbetalningar">Utbetalningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="avvikelser"
                     id="flik-avvikelser" aria-controls="panel-avvikelser">Avvikelser
               <span class="vy-flik-mark" id="flik-avv-mark" hidden></span></button>
-            <button class="vy-flik" type="button" role="tab" data-flik="kortbetalningar"
-                    id="flik-kortbetalningar" aria-controls="panel-kortbetalningar">Kortbetalningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="korning"
                     id="flik-korning" aria-controls="panel-korning">Månadskörning</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="fakturor"
+                    id="flik-fakturor" aria-controls="panel-fakturor">Äldre fakturor
+              <span class="vy-flik-mark" id="flik-fakt-mark" hidden></span></button>
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="fakturor"
-               id="panel-fakturor" aria-labelledby="flik-fakturor">
+               id="panel-fakturor" aria-labelledby="flik-fakturor" hidden>
             <div class="dbox">
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
+                Familjen får ingen månadsfaktura sedan Fas 14.2 — varje pass betalas med kort
+                före passet, under <b>Kortbetalningar</b>. Här står fakturor som skapades
+                innan dess, så att de fortfarande går att skicka, följa upp och bokföra.
+              </p>
               <div class="adm-verktyg">
                 <input class="inp adm-sok" id="fakt-sok" type="search" placeholder="Sök familj" aria-label="Sök faktura" autocomplete="off">
                 <select class="sel" id="fakt-status" aria-label="Filtrera på status">
@@ -1001,7 +1011,7 @@
                 ingenting, och det är med flit att de är två olika knappar.
               </p>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
-                Beloppen går inte att ändra härifrån. De räknas fram av edge-funktionen
+                Beloppen går inte att ändra härifrån. De räknades fram av edge-funktionen
                 <code>fakturering</code> ur de pass som faktiskt hållits, och en trigger
                 vägrar skriva om dem från en webbläsare.
               </p>
@@ -1038,9 +1048,10 @@
           </div>
 
           <!-- Avvikelser: det som hindrar ett genomfört pass från att
-               bli en fakturarad. Ett pass utan rapport tas aldrig med
-               av månadskörningen, och det ska synas här i stället för
-               att bara utebli från fakturan. -->
+               komma med på studiehjälparens underlag, och pass som hölls
+               utan att familjen betalat. Ett pass utan rapport tas aldrig
+               med av månadskörningen, och det ska synas här i stället för
+               att bara utebli från underlaget. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="avvikelser"
                id="panel-avvikelser" aria-labelledby="flik-avvikelser" hidden>
             <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
@@ -1048,7 +1059,7 @@
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
                 ⚠️ Pass saknar rapport och kan därför inte behandlas automatiskt.
                 Koppla den rapport som hör till passet, eller undanta passet — ett
-                undantaget pass kommer varken på familjens faktura eller på
+                undantaget pass betalas inte av familjen och kommer inte med på
                 studiehjälparens underlag.
               </p>
               <div id="avv-utan-rapport"><div class="loading">Hämtar</div></div>
@@ -1056,23 +1067,23 @@
             <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
               <h5>Rapporter som inte hör till något pass</h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
-                Fristående rapporter faktureras aldrig av sig själva. Hör en av dem
-                till ett pass ovanför, koppla den därifrån.
+                Fristående rapporter kommer aldrig med på ett underlag av sig själva.
+                Hör en av dem till ett pass ovanför, koppla den därifrån.
               </p>
               <div id="avv-fristaende"><div class="loading">Hämtar</div></div>
             </div>
             <div class="dbox">
               <h5>Undantagna pass</h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
-                Pass som någon tagit bort ur faktureringen, med anledningen. Ångra
-                om det var fel — passet kommer då med på nästa körning.
+                Pass som någon undantagit, med anledningen. Ångra om det var fel —
+                passet kommer då med på nästa körning.
               </p>
               <div id="avv-undantagna"><div class="loading">Hämtar</div></div>
             </div>
             <!-- Allt annat som inte går ihop, räknat av databasen
-                 (ekonomiska_avvikelser): förfallna fakturor, gamla
-                 utkast, utbetalningar som väntar, pass utan ersättning,
-                 summor som inte stämmer, RUT utan underlag. -->
+                 (ekonomiska_avvikelser): pass som hölls utan betalning,
+                 utbetalningar som väntar, pass utan ersättning, summor
+                 som inte stämmer, och det som gäller äldre fakturor. -->
             <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
               <h5>Övriga ekonomiska avvikelser <em id="avv-ovriga-antal"></em></h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
@@ -1083,12 +1094,17 @@
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="kortbetalningar"
-               id="panel-kortbetalningar" aria-labelledby="flik-kortbetalningar" hidden>
+               id="panel-kortbetalningar" aria-labelledby="flik-kortbetalningar">
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Spärren</h5>
+              <div id="kort-sparr"><div class="loading">Hämtar</div></div>
+            </div>
             <div class="dbox">
               <div class="adm-verktyg">
                 <input class="inp adm-sok" id="kort-sok" type="search" placeholder="Sök familj eller studiehjälpare" aria-label="Sök kortbetalning" autocomplete="off">
                 <select class="sel" id="kort-status" aria-label="Filtrera på läge">
-                  <option value="">Alla lägen</option>
+                  <option value="">Alla betalningar</option>
+                  <option value="obetald">Ej betalda pass</option>
                   <option value="vantar">Väntar</option>
                   <option value="betald">Betalda</option>
                   <option value="aterbetald">Återbetalda</option>
@@ -1104,9 +1120,9 @@
               </p>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
                 Studiehjälparens ersättning syns inte här. Den betalas den 25:e för
-                månadens rapporterade pass, och står under <b>Utbetalningar</b>. Ett pass
-                som återbetalats ska inte hamna där — det sköts av att ett pass utan
-                rapport aldrig kommer med i månadskörningen.
+                månadens rapporterade pass, och står under <b>Utbetalningar</b>. Den räknas
+                ur rapporten, inte ur betalningen: ett avbokat pass får ingen rapport och
+                kommer aldrig med, men ett hållet pass som återbetalats gör det.
               </p>
             </div>
           </div>
@@ -1117,24 +1133,28 @@
               <h5>Månadskörningen</h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:18px">
                 En gång i månaden samlas alla genomförda och rapporterade pass till
-                en faktura per familj och ett underlag per studiehjälpare. Här körs
-                den med din inloggning. Kör alltid torrt först: den räknar ut allt
-                och visar vad som <em>skulle</em> skapas, utan att skriva en rad.
+                ett underlag per studiehjälpare — det som betalas ut den 25:e. Familjen
+                får ingen faktura: passen betalas med kort före passet, och pass som
+                hölls utan betalning räknas upp i körningen i stället för att faktureras.
+                Här körs den med din inloggning. Kör alltid torrt först: den räknar ut
+                allt och visar vad som <em>skulle</em> skapas, utan att skriva en rad.
               </p>
               <div class="adm-verktyg">
-                <select class="sel" id="kor-period" aria-label="Vilken månad som faktureras"></select>
+                <select class="sel" id="kor-period" aria-label="Vilken månad underlaget gäller"></select>
                 <button class="btn btn-ghost btn-sm" type="button" id="kor-torr">Torrkör</button>
                 <button class="btn btn-primary btn-sm" type="button" id="kor-skapa" disabled>Skapa utkast</button>
               </div>
               <div id="kor-resultat" aria-live="polite" style="margin:6px 0 18px"></div>
               <div class="sum-line"><span>Vilka pass</span><span class="adm-tal">genomförda och rapporterade, till och med månadens slut</span></div>
-              <div class="sum-line"><span>Betalningsvillkor</span><span class="adm-tal">10 dagar</span></div>
+              <div class="sum-line"><span>Utbetalning</span><span class="adm-tal">den 25:e, från banken</span></div>
               <div class="sum-line total"><span>Pris per timme</span><span class="adm-tal" id="kor-pris">—</span></div>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-top:16px">
-                <b>Skapa utkast</b> skriver fakturor och underlag som utkast. Ingenting
-                skickas — det gör du sedan per faktura under Fakturor, efter att ha
-                läst den. Ett schema som kör det här av sig självt kommer senare, och
-                använder då en nyckel på servern i stället för en inloggning.
+                <b>Skapa utkast</b> skriver underlagen som utkast. Ingenting skickas och
+                ingenting betalas ut härifrån — underlaget skickar du per studiehjälpare
+                under Utbetalningar. Priset står med för att beloppen på pass som hölls
+                utan betalning räknas på det. Ett schema som kör det här av sig självt
+                kommer senare, och använder då en nyckel på servern i stället för en
+                inloggning.
               </p>
             </div>
           </div>
@@ -1158,7 +1178,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Statistik</h2>
-              <p>Hur Nextrum rört sig över tid. Sex månader bakåt, räknat på riktiga pass och riktiga fakturor.</p>
+              <p>Hur Nextrum rört sig över tid. Sex månader bakåt, räknat på riktiga pass och riktiga betalningar.</p>
             </div>
           </div>
 
@@ -1182,7 +1202,7 @@
           </div>
 
           <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
-            <h5>Fakturerat <em>per månad</em></h5>
+            <h5>Betalt <em>per månad</em></h5>
             <div id="stat-intakt"><div class="loading">Hämtar</div></div>
           </div>
 
@@ -1371,13 +1391,13 @@
 
               <div class="ag-fraga">
                 <label for="eko-fraga" style="display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--bl-3);margin-bottom:10px">Din fråga</label>
-                <textarea id="eko-fraga" placeholder="Till exempel: vilka genomförda pass har aldrig hamnat på en faktura, och vad borde vi göra åt dem?"></textarea>
+                <textarea id="eko-fraga" placeholder="Till exempel: vilka pass har hållits men aldrig betalats, och vad borde vi göra åt dem?"></textarea>
               </div>
 
               <div class="ag-exempel" id="eko-exempel">
-                <button type="button">Vilka genomförda pass har aldrig hamnat på en faktura, och vad borde vi göra åt dem?</button>
+                <button type="button">Vilka pass har hållits men aldrig betalats, och vad borde vi göra åt dem?</button>
                 <button type="button">Hur mycket ligger obetalt just nu, och vad är äldst?</button>
-                <button type="button">Vad måste stå på våra fakturor för att de ska uppfylla formkraven?</button>
+                <button type="button">Hur bokför vi kortbetalningarna, när Stripe betalar ut i klumpar efter sin avgift?</button>
                 <button type="button">Vad ska vi ha gjort innan bokslutet, och i vilken ordning?</button>
               </div>
 
@@ -1599,8 +1619,10 @@
                 någon behöver ändra i koden.
               </p>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:0">
-                Priset gäller <b>nya fakturarader</b>. Redan skapade rader har sitt pris
-                sparat på sig; en prisändring får aldrig ändra vad någon redan fakturerats.
+                Priset räknas <b>när familjen betalar</b>. Ett pass som redan är betalt
+                behåller sitt belopp, men ett bokat pass som inte är betalt får det nya
+                priset — och villkoren lovar priset som gällde vid bokningen. Höj alltså
+                inte priset medan det finns bokade pass som väntar på betalning.
                 Ändrar du läxhjälpens pris måste det också ändras på prissidan, i FAQ:n och
                 i användarvillkoren — ett pris som står olika på tre ställen är en tvist.
               </p>
@@ -1616,7 +1638,7 @@
                i stället en kod i taget via kolla_rabattkod().
 
                Rabatten fryser vid bokningen. Ändrar ni en kod i
-               efterhand påverkas inga redan bokade pass — en faktura
+               efterhand påverkas inga redan bokade pass — ett belopp
                får inte ändra sig för att en kampanj justerats. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="rabattkoder"
                id="panel-rabattkoder" aria-labelledby="flik-rabattkoder" hidden>
@@ -1723,7 +1745,7 @@
               <h5>Har behörighet <em id="adm-anv-antal"></em></h5>
               <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
                 En admin ser alla familjers och studiehjälpares uppgifter, alla meddelanden,
-                alla fakturor och alla utbetalningar. Ge den bara till den som ska ha den.
+                alla betalningar och alla utbetalningar. Ge den bara till den som ska ha den.
               </p>
               <div id="adm-anv"><div class="loading">Hämtar</div></div>
             </div>
@@ -2083,17 +2105,17 @@
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
-<script src="nextrum-admin-agenter.js?v=c0251376"></script>
-<script src="nextrum-admin-karna.js?v=26c85fb8"></script>
+<script src="nextrum-admin-agenter.js?v=0dc7226d"></script>
+<script src="nextrum-admin-karna.js?v=a02bc836"></script>
 <script src="nextrum-admin-detalj.js?v=423d69a9"></script>
-<script src="nextrum-admin-oversikt.js?v=e8258659"></script>
+<script src="nextrum-admin-oversikt.js?v=bba9e74f"></script>
 <script src="nextrum-admin-kunder.js?v=01b666e6"></script>
 <script src="nextrum-admin-rekrytering.js?v=9b6ce49f"></script>
 <script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
 <script src="nextrum-admin-kommunikation.js?v=24a9a868"></script>
 <script src="nextrum-admin-drift.js?v=2437242e"></script>
-<script src="nextrum-admin-ekonomi.js?v=abca6c1d"></script>
-<script src="nextrum-admin-tjanster.js?v=70799e84"></script>
+<script src="nextrum-admin-ekonomi.js?v=e7124fa9"></script>
+<script src="nextrum-admin-tjanster.js?v=b5673580"></script>
 <script src="nextrum-admin-system.js?v=d0d24a80"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
@@ -2101,6 +2123,6 @@
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=55760f40"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-admin.js?v=5f0dba6b"></script>
+<script src="nextrum-admin.js?v=2caef37f"></script>
 </body>
 </html>

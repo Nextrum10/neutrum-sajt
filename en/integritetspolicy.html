@@ -150,8 +150,8 @@
 
     <h2>In short</h2>
     <p>We store what is needed to match a student with the right tutor, to book and run the
-      sessions, to keep you informed about what is happening, and to invoice for what took
-      place. Nothing beyond that.</p>
+      sessions, to keep you informed about what is happening, and to take payment for the
+      sessions. Nothing beyond that.</p>
     <p>We do not sell data. We do not pass it on for marketing. We set no cookies.</p>
     <p>We do count how many people visit the public pages, but without cookies and without anything
       that follows you over time. How that works is explained under
@@ -192,7 +192,7 @@
       <li>Date, time, subject, length and format for each booked session</li>
       <li>If a session is cancelled: when it was cancelled and by whom</li>
       <li>Messages between family and tutor in the platform’s chat</li>
-      <li>Invoices and payment statements: periods, hours and amounts</li>
+      <li>Payments and pay statements: which session was paid, amounts and when. We never have the card details</li>
     </ul>
 
     <h3>About how you found us</h3>
@@ -215,7 +215,7 @@
     <ul>
       <li><b>A tutor</b> sees only the students they are matched with, and only their own sessions, homework,
         material and messages.</li>
-      <li><b>A family</b> sees only their own children, sessions, invoices and messages.</li>
+      <li><b>A family</b> sees only their own children, sessions, payments and messages.</li>
       <li><b>We</b> can reach what is needed to run the service and solve problems — with the exception of
         your private notes, described above.</li>
       <li><b>Files</b> — material and profile pictures — sit in closed storage. Each file opens through a
@@ -234,6 +234,11 @@
         happens without cookies: unique visitors are derived from a hash of IP and browser type
         with a salt that changes daily, and the raw IP address is not stored. The student view
         and the tutor view are not measured.</li>
+      <li><b>Stripe</b> — receives the card payments. You give your card details directly to Stripe,
+        never to us, and we do not store them. Stripe receives your email address, the amount and which
+        session the payment is for (subject and date), and we get back that the session has been paid.
+        How Stripe handles the data is set out in
+        <a href="https://stripe.com/en-se/privacy" target="_blank" rel="noopener noreferrer">Stripe’s privacy policy</a>.</li>
     </ul>
     <p>Beyond those, nothing is fetched from anyone else. The fonts used to sit with Google and the
       library the login needs used to sit with unpkg.com — both sent your IP address there on
@@ -242,7 +247,7 @@
     <h2>How long we keep things</h2>
     <ul>
       <li><b>Account and study history</b> — for as long as you are customers, and after that until you ask us to delete them.</li>
-      <li><b>Invoice records</b> — seven years. That is required by Swedish accounting law and is not something we can
+      <li><b>Accounting records</b> — payments and pay statements, seven years. That is required by Swedish accounting law and is not something we can
         shorten, not even on request.</li>
       <li><b>Applications that do not lead to work</b> — at most one year, so that we can get in touch if something comes up. If you want it
         deleted sooner, write to us.</li>
@@ -280,7 +285,7 @@
     <p>If we change anything material we update the date below, and contact those of you with an
       account if the change affects you.</p>
 
-    <p class="jur-datum">Last updated 7 September 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 24 September 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 
@@ -422,7 +427,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=b9b1a4f7"></script>
+<script src="../nextrum-maskot-svar.js?v=5064edce"></script>
 <script src="../nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {
