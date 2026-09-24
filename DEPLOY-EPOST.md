@@ -22,7 +22,7 @@ ovanpå — går mejlet fel ligger raden kvar i `leads`.
 
 ---
 
-## 1. SPF och DMARC — KLART, men en post för mycket
+## 1. SPF och DMARC — KLART
 
 Posterna är inlagda i Cloudflare:
 
@@ -35,18 +35,19 @@ Posterna är inlagda i Cloudflare:
 sett ett par veckors rapporter och vet att allt legitimt går igenom
 kan ni skärpa till `p=quarantine`.
 
-### ⚠ Det ligger TVÅ DMARC-poster på `_dmarc`
+### En post på `_dmarc`, och det ska det förbli
 
-Den ena är `v=DMARC1; p=none;` utan rapportadress, den andra är raden
-i tabellen ovan. **Ta bort den utan `rua=`.**
+Det låg länge två: den i tabellen ovan och en `v=DMARC1; p=none;`
+utan rapportadress. Den utan `rua=` är borttagen, bekräftat i
+Cloudflare 2026-09-24.
 
-Två poster är inte "dubbelt så mycket DMARC" — det är noll. Hittar en
-mottagare mer än en giltig DMARC-post på namnet ska hela kontrollen
-hoppas över (RFC 7489, avsnitt 6.6.3). Domänen står alltså utan
-DMARC så länge båda ligger kvar, och rapporterna ni satte upp `rua`
-för kommer aldrig.
+Lägg aldrig till en till. Två poster är inte "dubbelt så mycket
+DMARC" — det är noll. Hittar en mottagare mer än en giltig DMARC-post
+på namnet ska hela kontrollen hoppas över (RFC 7489, avsnitt 6.6.3),
+och rapporterna `rua` finns till för kommer aldrig. Ska policyn
+ändras: redigera den som finns.
 
-Kontrollera efteråt att BARA en rad kommer tillbaka:
+Kontrollera att BARA en rad kommer tillbaka:
 
 ```bash
 dig +short _dmarc.nextrum.se TXT
@@ -248,10 +249,10 @@ att komma från `no-reply@nextrum.se` — och därifrån skickar vi
 fakturor. En falsk faktura med ett annat kontonummer, från en äkta
 avsändare, är precis det bedrägeri DMARC finns till för.
 
-1. **En post, inte två** (avsnitt 1). Två DMARC-poster är noll, och
-   då spelar det ingen roll vad någon av dem säger.
+1. **En post, inte två** (avsnitt 1). Klart 2026-09-24.
 2. **Läs rapporterna först.** De kommer till `info@nextrum.se` via
-   `rua`. Allt legitimt ska passera: Resend (DKIM på
+   `rua` — de första tidigast i veckan efter 2026-09-24, eftersom
+   ingen mottagare skickade några medan det låg två poster. Allt legitimt ska passera: Resend (DKIM på
    `resend._domainkey`) och det ni skickar från Gmail. Slå på DKIM i
    Workspace om det inte är gjort (admin.google.com → Appar →
    Google Workspace → Gmail → Autentisera e-post) — annars vilar
