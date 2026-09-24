@@ -209,7 +209,7 @@ window.NXStudie = (function () {
         + '<span class="xsmall" style="color:var(--bl-2)"> av 5</span>'
         + nivåMätare(Math.round(snitt))
         + '<p>' + r.length + (r.length === 1 ? ' område' : ' områden') + '</p>'
-        + (upp ? '<p class="upp">↑ ' + upp + ' har gått upp senaste månaden</p>' : '')
+        + (upp ? '<p class="upp">↑ ' + upp + ' har gått upp på 30 dagar</p>' : '')
         + '</div>';
     }).join('') + '</div>';
   }
@@ -880,10 +880,19 @@ window.NXStudie = (function () {
      välj en tid. Det här är det andra man vill av en kalender —
      att se vad som redan ligger där.
 
-     Tre lägen, samma data. Månad för att få överblick, vecka för att
-     planera, dag för att se vad som faktiskt händer idag. Lägena är
-     inte tre komponenter utan tre sätt att rita samma lista, så en
-     bokning kan aldrig visas olika beroende på vilket läge man står i.
+     Fyra lägen, samma data. Kommande för att se vad som ligger
+     närmast, månad för att få överblick, vecka för att planera, dag
+     för att se vad som faktiskt händer idag. Lägena är inte fyra
+     komponenter utan fyra sätt att rita samma lista, så en bokning
+     kan aldrig visas olika beroende på vilket läge man står i.
+
+     KOMMANDE är förval sedan 2026-09-24. Leo: "på schema ska
+     kommande pass stå, och namn på eleven under, t.ex. 15:00 Svenska,
+     under Alma och under det plats". Månaden var förvalet, och på en
+     telefon är en månadsruta 45 px bred: där fick bara klockslaget
+     plats, aldrig vem eller var. Adminvyn och studievyn väljer
+     fortfarande månad: hos familjen står schemat direkt under
+     passlistan, och där hade Kommande bara upprepat raderna ovanför.
 
      opts: { host, bokningar, lage, namn(b), onOppna(b) }
      ============================================================ */
@@ -897,11 +906,28 @@ window.NXStudie = (function () {
     var host = o.host;
     if (!host) return null;
 
-    var läge = ['manad', 'vecka', 'dag'].indexOf(o.lage) !== -1 ? o.lage : 'manad';
+    var LÄGEN = ['kommande', 'manad', 'vecka', 'dag'];
+    var läge = LÄGEN.indexOf(o.lage) !== -1 ? o.lage : 'kommande';
+    /* Hur många kommande pass som syns innan "Visa fler". */
+    var KOMMANDE_FÖRST = 6;
+    var kommandeAntal = KOMMANDE_FÖRST;
     var visad = new Date(); visad.setHours(12, 0, 0, 0);
     var bokningar = o.bokningar || [];
 
     function namnFör(b) { return typeof o.namn === 'function' ? (o.namn(b) || '') : ''; }
+
+    /* Klockslaget utan sekunder. Postgres lämnar time som "16:00:00",
+       och månadsrutan skrev ut det rakt av. */
+    function klocka(b) { return String(b.wanted_time || '').slice(0, 5); }
+
+    /* Var man ses, i ord. På plats utan adress säger det rakt ut — en
+       tom rad hade sett ut som att platsen inte spelade någon roll. */
+    function plats(b) {
+      if (b.location) return b.location;
+      if (b.format === 'Online') return 'Online';
+      if (b.format === 'På plats') return 'På plats, adressen saknas';
+      return 'Plats inte angiven';
+    }
 
     /* En avbokad rad ska synas i historiken men inte skräpa i
        överblicken — den som tittar på månaden vill veta vad som
@@ -923,6 +949,7 @@ window.NXStudie = (function () {
     }
 
     function titel() {
+      if (läge === 'kommande') return 'Kommande pass';
       if (läge === 'manad') return NX.MANADER[visad.getMonth()] + ' ' + visad.getFullYear();
       if (läge === 'dag') return NX.DAGAR[(visad.getDay() + 6) % 7] + ' ' + datumText(isoFor(visad));
       var m = måndagFör(visad), s = new Date(m); s.setDate(s.getDate() + 6);
@@ -949,11 +976,71 @@ window.NXStudie = (function () {
       var passerat = b.status === 'completed'
         && String(b.wanted_date || '') < isoFor(new Date());
 
+      /* Namnet står med men syns bara i veckan (CSS). I en månadsruta
+         får det inte plats, i en veckorad gör det det. */
+      var namn = namnFör(b);
       return '<button type="button" class="sch-pass ' + (SCHEMA_LAGE[b.status] || '')
         + (passerat ? ' ar-passerad' : '')
         + '" data-pass="' + esc(b.id) + '">'
-        + '<i></i><b>' + esc(b.wanted_time || '') + '</b>'
-        + '<span>' + esc(b.subject || 'Pass') + '</span></button>';
+        + '<i></i><b>' + esc(klocka(b)) + '</b>'
+        + '<span>' + esc(b.subject || 'Pass') + '</span>'
+        + (namn ? '<em>' + esc(namn) + '</em>' : '') + '</button>';
+    }
+
+    /* Ett kommande pass: klockslag och ämne, sedan vem, sedan var —
+       i den ordningen, på var sin rad. Så läser man ett schema: när
+       och vad, med vem, och vart man ska. */
+    function kommandeRad(b) {
+      var namn = namnFör(b);
+      var förslag = b.status === 'requested';
+      return '<button type="button" class="sch-kom ' + (SCHEMA_LAGE[b.status] || '') + '" data-pass="' + esc(b.id) + '">'
+        + '<i aria-hidden="true"></i>'
+        + '<span class="sch-kom-vad"><b>' + esc(tidsspann(b.wanted_time, b.duration_min)) + '</b> '
+        + esc(b.subject || 'Pass') + '</span>'
+        + (namn ? '<span class="sch-kom-namn">' + esc(namn) + '</span>' : '')
+        + '<span class="sch-kom-plats">' + esc(plats(b)) + '</span>'
+        + (förslag ? '<span class="sch-kom-lage">Förslag, inte bekräftat än</span>' : '')
+        + '<svg class="sch-kom-pil" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 3l4 4-4 4"/></svg>'
+        + '</button>';
+    }
+
+    function ritaKommande() {
+      var idag = isoFor(new Date());
+      var imorgon = new Date(); imorgon.setDate(imorgon.getDate() + 1);
+      var imorgonIso = isoFor(imorgon);
+      var alla = bokningar
+        .filter(function (b) {
+          return String(b.wanted_date || '') >= idag && b.status !== 'cancelled' && b.status !== 'completed';
+        })
+        .sort(function (a, c) {
+          return (String(a.wanted_date) + klocka(a)).localeCompare(String(c.wanted_date) + klocka(c));
+        });
+      if (!alla.length) {
+        return '<div class="empty"><b>Inga kommande pass</b>'
+          + '<br><span>Bokade pass och förslag som väntar på svar hamnar här.</span></div>';
+      }
+      var visade = alla.slice(0, kommandeAntal);
+      var ut = '', förraDag = null;
+      visade.forEach(function (b) {
+        var dag = String(b.wanted_date);
+        if (dag !== förraDag) {
+          if (förraDag !== null) ut += '</div>';
+          var namn = dagMedVeckodag(dag);
+          var rubrik = dag === idag ? 'Idag · ' + namn : dag === imorgonIso ? 'Imorgon · ' + namn
+            : namn.charAt(0).toUpperCase() + namn.slice(1);
+          ut += '<h6 class="sch-kom-dag' + (dag === idag ? ' idag' : '') + '">' + esc(rubrik) + '</h6>'
+            + '<div class="sch-kom-lista">';
+          förraDag = dag;
+        }
+        ut += kommandeRad(b);
+      });
+      ut += '</div>';
+      var kvar = alla.length - visade.length;
+      if (kvar > 0) {
+        ut += '<button type="button" class="btn btn-ghost btn-sm sch-kom-fler" data-sch-fler>'
+          + 'Visa ' + Math.min(kvar, 10) + ' till' + (kvar > 10 ? ' av ' + kvar : '') + '</button>';
+      }
+      return '<div class="sch-kommande">' + ut + '</div>';
     }
 
     function ritaManad() {
@@ -1016,30 +1103,35 @@ window.NXStudie = (function () {
     /* Dagvyn visar hela raden, inte ett chip: det är den vyn man har
        framme när passet faktiskt ska hållas. */
     function NXKontaktRad(b) {
+      var namn = namnFör(b);
       return '<button type="button" class="sch-full ' + (SCHEMA_LAGE[b.status] || '')
         + '" data-pass="' + esc(b.id) + '">'
-        + '<span class="sch-full-tid">' + esc(b.wanted_time || '—') + '</span>'
+        + '<span class="sch-full-tid">' + esc(klocka(b) || '—') + '</span>'
         + '<span class="sch-full-vad"><b>' + esc(b.subject || 'Pass') + '</b>'
-        + '<span>' + esc([b.format, b.location, (b.duration_min || 60) + ' min', namnFör(b)]
-            .filter(Boolean).join(' · ')) + '</span></span>'
+        + (namn ? '<span>' + esc(namn) + '</span>' : '')
+        + '<span>' + esc(plats(b) + ' · ' + (b.duration_min || 60) + ' min') + '</span></span>'
         + '</button>';
     }
 
     function rita() {
-      var kropp = läge === 'manad' ? ritaManad() : läge === 'vecka' ? ritaVecka() : ritaDag();
+      var kropp = läge === 'kommande' ? ritaKommande() : läge === 'manad' ? ritaManad()
+        : läge === 'vecka' ? ritaVecka() : ritaDag();
+      /* Pilarna bläddrar i en period. Kommande är ingen period, det är
+         det som ligger närmast — där finns inget att bläddra i. */
+      var nav = läge === 'kommande' ? '' : '<div class="cal-nav">'
+        + '<button type="button" data-sch="bak" aria-label="Bakåt"><svg viewBox="0 0 12 12"><path d="M7.5 2.5 4 6l3.5 3.5"/></svg></button>'
+        + '<button type="button" data-sch="idag" class="sch-idag">Idag</button>'
+        + '<button type="button" data-sch="fram" aria-label="Framåt"><svg viewBox="0 0 12 12"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></button>'
+        + '</div>';
       host.innerHTML =
           '<div class="sch-topp">'
         + '<div class="cal-head" style="margin-bottom:0">'
         + '<b class="sch-titel">' + esc(titel()) + '</b>'
-        + '<div class="cal-nav">'
-        + '<button type="button" data-sch="bak" aria-label="Bakåt"><svg viewBox="0 0 12 12"><path d="M7.5 2.5 4 6l3.5 3.5"/></svg></button>'
-        + '<button type="button" data-sch="idag" class="sch-idag">Idag</button>'
-        + '<button type="button" data-sch="fram" aria-label="Framåt"><svg viewBox="0 0 12 12"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></button>'
-        + '</div></div>'
+        + nav + '</div>'
         + '<div class="sch-val" role="group" aria-label="Visa som">'
-        + ['manad', 'vecka', 'dag'].map(function (l) {
+        + LÄGEN.map(function (l) {
             return '<button type="button" data-sch-lage="' + l + '" aria-pressed="' + (l === läge) + '">'
-              + { manad: 'Månad', vecka: 'Vecka', dag: 'Dag' }[l] + '</button>';
+              + { kommande: 'Kommande', manad: 'Månad', vecka: 'Vecka', dag: 'Dag' }[l] + '</button>';
           }).join('')
         + '</div></div>' + kropp;
     }
@@ -1053,6 +1145,14 @@ window.NXStudie = (function () {
       }
       var byt = e.target.closest('[data-sch-lage]');
       if (byt) { läge = byt.dataset.schLage; rita(); return; }
+
+      /* Fler rader läggs till under de som redan står, så att sidan
+         bara växer nedåt och det man tittade på står kvar. */
+      if (e.target.closest('[data-sch-fler]')) {
+        kommandeAntal += 10;
+        rita();
+        return;
+      }
 
       /* "+2 till" hoppar till dagvyn i stället för att fälla ut en
          ruta i rutan — dagvyn finns redan och visar allt. */
@@ -1614,6 +1714,7 @@ window.NXStudie = (function () {
     S.schema = schema({
       host: host,
       bokningar: S.bokningar,
+      lage: o.lage,
       namn: o.namn,
       onOppna: o.onOppna
     });

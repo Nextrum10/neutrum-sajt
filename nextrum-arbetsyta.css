@@ -582,11 +582,21 @@
     box-shadow:0 8px 24px color-mix(in srgb,var(--bl) 14%,transparent);
     background:var(--pap);
   }
-  .bk-stegrad{grid-template-columns:1fr;gap:6px}
-  .bk-steg{padding:7px 10px}
-  /* Bara det pågående steget och de gjorda syns på en telefon —
-     tre rader om samma sak tar kalendern ur bild. */
-  .bk-steg:not(.ar-nu):not(.ar-klar){display:none}
+  /* Alla tre stegen syns, bredvid varandra, och raden har samma höjd
+     vid varje steg. Förut syntes bara det pågående och de gjorda, i
+     en kolumn: stegraden växte 40 px för varje val, och på en telefon
+     utan scroll anchoring (Safari) gled kalendern och tiderna nedåt
+     under fingret. Leo: "det hoppar när man väljer längd och tid". */
+  .bk-stegrad{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .bk-steg{
+    flex-direction:column;justify-content:flex-start;text-align:center;
+    gap:5px;padding:8px 6px;font-size:.74rem;line-height:1.2;
+  }
+  .bk-steg b{width:22px;height:22px;font-size:10.5px}
+  /* Hjälpraden är en eller två rader beroende på steget, och två
+     reserveras. Blir den tre (ett långt namn, en smal telefon) håller
+     bokningens ankare det man tryckte på kvar ändå. */
+  .bk-hjalp{min-height:calc(2 * 1.5em);font-size:.86rem;line-height:1.5}
   .bk-sum-vad{min-width:0;flex:1 1 55%}
   .bk-sum-pris{flex:0 0 auto;align-self:center}
   /* "betalas i efterskott" står redan i sektionens ingress. I en
@@ -2650,6 +2660,49 @@ a:has(> .adm-status){
 .ut-framsteg-text span{display:block;margin-top:2px;font-size:.8rem;color:var(--bl-2)}
 .ut-framsteg-rad time{flex:none;font-family:var(--f-mono);font-size:.74rem;color:var(--bl-3)}
 
+/* ---- så räknas det (Leo 2026-09-24: "oklart hur statistiken
+   beräknas") ----
+   En mening under varje rubrik om vad talen räknas ur, skalan före
+   det första talet som bygger på den, och en förklaring under varje
+   tal. Brödtext, inte mono i versaler: det här ska läsas, inte
+   skummas som en etikett. */
+.ut-forklaring{
+  margin:-4px 0 14px;font-size:.84rem;line-height:1.55;color:var(--bl-2);max-width:68ch;
+}
+.ut-forklaring b{font-weight:650;color:var(--bl)}
+
+.ut-skala{padding:clamp(16px,2vw,20px) 0;border-bottom:1px solid var(--ln);margin-bottom:16px}
+.ut-skala h6{
+  margin:0 0 10px;font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
+}
+.ut-skala ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ut-skala li{display:flex;gap:10px;align-items:baseline;font-size:.83rem;line-height:1.45;color:var(--bl-2)}
+.ut-skala li b{
+  flex:none;width:22px;height:22px;border-radius:50%;
+  display:inline-grid;place-items:center;align-self:flex-start;
+  font-family:var(--f-mono);font-size:.72rem;font-weight:700;
+  border:1px solid var(--ln-2);color:var(--bl-2);background:var(--pap-2);
+}
+.ut-skala li strong{font-weight:650;color:var(--bl)}
+/* Steg 4 och 5 är de som räknas som "sitter säkert" i ringen ovan —
+   samma gröna som ringens fyllning, så att kopplingen syns. */
+.ut-skala li.ar-saker b{background:var(--mossa);border-color:var(--mossa);color:var(--pap)}
+@container (min-width:720px){
+  .ut-skala ol{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+  .ut-skala li{flex-direction:column;gap:6px}
+}
+
+.stat-tal-forklarad small{
+  display:block;margin-top:8px;font-size:.78rem;line-height:1.45;color:var(--bl-2);
+}
+.stat-tal .ut-tal-av{font-style:normal;font-size:.6em;font-weight:600;color:var(--bl-2);letter-spacing:0}
+
+.graf-med-antal .graf-stapel small{
+  display:block;margin-top:-4px;text-align:center;
+  font-family:var(--f-mono);font-size:8.5px;color:var(--bl-3);white-space:nowrap;
+}
+
 /* ============================================================
   16. REKRYTERINGSSPÅRET OCH KONTAKTRUTAN
 
@@ -2776,9 +2829,17 @@ a:has(> .adm-status){
 .bib-kort.ar-eget{border-left:3px solid var(--acc-line)}
 .bib-kort.ar-eget .bib-agare{color:var(--acc-text)}
 
-/* Knappen "Lägg till eget material" hör till filterraden men är en
-   handling, inte ett filter — därför sist och skild från resten. */
-.bib-filter .btn{margin-left:auto;flex:none}
+/* Raden med "Lägg till eget material". Syns bara under Mitt eget:
+   det man lägger till hamnar bara hos en själv, och under Allt eller
+   Nextrums lovade knappen något annat. */
+.bib-eget-rad{
+  display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;
+  margin:0 0 12px;padding:12px 14px;border-radius:12px;
+  border:1px dashed var(--acc-line);
+}
+.bib-eget-rad[hidden]{display:none}
+.bib-eget-rad p{flex:1 1 220px;margin:0;font-size:.84rem;line-height:1.55;color:var(--bl-2)}
+.bib-eget-rad .btn{flex:none}
 
 /* Kontaktrutan behöver mer bredd än en ja/nej-fråga: man skriver ett
    helt mejl i den, och en textarea på 320 px gör varje mening till

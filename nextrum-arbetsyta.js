@@ -643,7 +643,7 @@ window.NXArbete = (function () {
         : nu === 2
           ? (!st.tid ? 'Välj ämne, hur länge och en tid. Timmar som redan är bokade hos ' + vem + ' syns inte.'
             : 'Skriv var ni ses — eller välj Online.')
-          : 'Allt är valt. Tryck på Föreslå tiden: ' + vem + ' accepterar eller föreslår en annan tid, och ni får ett mejl.';
+          : 'Allt är valt. Tryck på Föreslå tiden, så svarar ' + vem + ' med ett ja eller en annan tid.';
       return '<ol class="bk-stegrad" aria-label="Så föreslår ni en tid">'
         + steg(1, 'Välj dag', ett) + steg(2, 'Ämne, tid och plats', två) + steg(3, 'Föreslå tiden', false)
         + '</ol><p class="bk-hjalp" aria-live="polite">' + esc(hjälp) + '</p>';
@@ -737,14 +737,45 @@ window.NXArbete = (function () {
       var panel = host.querySelector('.bk-kal-dag');
       var sum = host.querySelector('.bk-sumhus');
       if (st.spärr || !guide || !panel || !sum) { rita(); return; }
+      /* Ämnesraden är en rad man drar i sidled på en telefon. Ritas
+         den om hamnar den på första ämnet igen, och den som dragit
+         fram Engelska och tryckt på en tid såg raden rycka tillbaka. */
+      var ämnen = host.querySelector('#bk-amnen');
+      var sidled = ämnen ? ämnen.scrollLeft : 0;
       guide.innerHTML = stegRad();
       panel.innerHTML = st.besked ? kvitto() : dagPanel();
       sum.innerHTML = st.besked ? '' : sammanfattning();
+      ämnen = host.querySelector('#bk-amnen');
+      if (ämnen && sidled) ämnen.scrollLeft = sidled;
       var msg = host.querySelector('#bk-msg');
       if (msg) { msg.className = 'ok-msg' + (st.fel ? ' show is-err' : ''); msg.textContent = st.fel || ''; }
       Array.prototype.forEach.call(host.querySelectorAll('.mv-dag'), function (d) {
         d.setAttribute('aria-pressed', d.dataset.datum === st.dag ? 'true' : 'false');
       });
+    }
+
+    /* Vilka dagar som går att trycka på, på knapparna som redan finns.
+       En annan längd ändrar det (en kväll med en timme kvar rymmer
+       inte två), men att rita om hela månaden för det byter ut
+       fyrtiotvå knappar under fingret. */
+    function uppdateraDagar() {
+      var idag = idagISO();
+      Array.prototype.forEach.call(host.querySelectorAll('.mv-dag[data-datum]'), function (d) {
+        var iso = d.dataset.datum;
+        d.disabled = !(iso >= idag && tider(iso).length > 0);
+      });
+    }
+
+    /* Allt som ritas om efter ett tryck ritas om med det man tryckte
+       i kvar på samma ställe på skärmen. Leo 2026-09-24: "det hoppar
+       på mobilen när man väljer längd och tid". Stegen ovanför växte
+       med ett steg och en längre hjälprad när en tid valdes, och
+       Safari — som saknar scroll anchoring — lät allt under glida
+       nedåt 69 px. Stegen har nu samma höjd hela vägen, men ankaret
+       står kvar: nästa sak som ändrar höjd ovanför ska inte kunna
+       göra om samma fel. */
+    function stilla(ankare, jobb) {
+      NXStudie.håll(ankare || host.querySelector('.bk-kal-dag'), jobb);
     }
 
     /* Bara det som hänger på texten i ett fält: stegen, hjälpraden och
@@ -774,7 +805,7 @@ window.NXArbete = (function () {
       st.besked = null; st.nyttId = null; st.fel = null;
       st.dag = iso;
       if (st.tid && tider(iso).indexOf(st.tid) === -1) st.tid = null;
-      ritaDel();
+      stilla(host.querySelector('.bk-kal'), ritaDel);
       /* På en telefon ligger dagens val under kalendern. Syns de inte
          alls efter trycket har ingenting hänt, till synes. */
       visaOmDoldt(host.querySelector('.bk-kal-dagnamn'));
@@ -794,7 +825,7 @@ window.NXArbete = (function () {
       if (tid && !tid.disabled) {
         st.besked = null; st.fel = null;
         st.tid = st.tid === tid.dataset.tid ? null : tid.dataset.tid;
-        ritaDel();
+        stilla(null, ritaDel);
         return;
       }
 
@@ -825,9 +856,13 @@ window.NXArbete = (function () {
              ett hål som bara rymmer en. */
           if (st.dag && st.tid && tider(st.dag).indexOf(st.tid) === -1) st.tid = null;
         }
-        /* En annan längd ändrar vilka dagar som har tider kvar, så
-           månaden ritas om. Övriga val rör bara panelen. */
-        if (grupp === 'bk-langder') rita(); else ritaDel();
+        /* En annan längd ändrar vilka dagar som har tider kvar. Förut
+           ritades hela ytan om för det; nu slås dagarna av och på där
+           de står. */
+        stilla(null, function () {
+          ritaDel();
+          if (grupp === 'bk-langder') uppdateraDagar();
+        });
         return;
       }
 
