@@ -46,12 +46,12 @@
      direktiv på svaret återanvänder webbläsaren inte den förladdade
      kroppen. Cachningen ligger i vercel.json i stället, och där gör
      den nytta vid varje återbesök i ett år. -->
-<link rel="stylesheet" href="../nextrum-typsnitt.css">
+<link rel="stylesheet" href="../nextrum-typsnitt.css?v=c20ceeba">
 
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
-<link rel="stylesheet" href="../nextrum-home.css">
-<link rel="stylesheet" href="../nextrum-cinema.css">
+<link rel="stylesheet" href="../nextrum-home.css?v=12b72e9c">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=b56b6211">
 </head>
 <body>
 
@@ -137,11 +137,11 @@
     </div>
   </div>
   <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#8E8C84">
-    <img class="nx-img" src="../bilder/05-av-unga-for-unga-1280.jpg"
+    <picture><source type="image/webp" srcset="../bilder/05-av-unga-for-unga-640.webp 640w, ../bilder/05-av-unga-for-unga-960.webp 960w, ../bilder/05-av-unga-for-unga-1280.webp 1280w, ../bilder/05-av-unga-for-unga-1600.webp 1600w, ../bilder/05-av-unga-for-unga-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="../bilder/05-av-unga-for-unga-1280.jpg"
          srcset="../bilder/05-av-unga-for-unga-640.jpg 640w, ../bilder/05-av-unga-for-unga-960.jpg 960w, ../bilder/05-av-unga-for-unga-1280.jpg 1280w, ../bilder/05-av-unga-for-unga-1600.jpg 1600w, ../bilder/05-av-unga-for-unga-1920.jpg 1920w"
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
          style="object-position:60% 42%"
-         alt="Five young tutors standing and talking with each other in front of a bookshelf in a library.">
+         alt="Five young tutors standing and talking with each other in front of a bookshelf in a library."></picture>
   </figure>
 
 </section>
@@ -446,17 +446,17 @@
 <!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
      för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
 <script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="../nextrum-config.js"></script>
-<script src="../nextrum-images.js"></script>
-<script src="../nextrum-fel.js"></script>
-<script src="../nextrum-app.js"></script>
-<script src="../nextrum-tjanster.js"></script>
-<script src="../nextrum-motion.js"></script>
+<script src="../nextrum-config.js?v=f8a876f6"></script>
+<script src="../nextrum-images.js?v=50260f9d"></script>
+<script src="../nextrum-fel.js?v=eae02b10"></script>
+<script src="../nextrum-app.js?v=8990dc3d"></script>
+<script src="../nextrum-tjanster.js?v=5f148a0c"></script>
+<script src="../nextrum-motion.js?v=fdf0d356"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js"></script>
-<script src="../nextrum-maskot.js" defer></script>
+<script src="../nextrum-maskot-svar.js?v=b9b1a4f7"></script>
+<script src="../nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {
   'use strict';

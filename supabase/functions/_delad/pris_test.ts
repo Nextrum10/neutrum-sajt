@@ -286,3 +286,84 @@ Deno.test('sammanfattningen visar RUT per faktura när det finns', () => {
     underlag: u, utanRapport: [], undantagna: [] });
   assertEquals(s.fakturor, [{ parent_id: 'k', pass: 1, belopp_ore: 25000, rut_ore: 25000 }]);
 });
+
+// ---------- Fas 14.0: kortvägen och månadsfakturan vet om varandra ----------
+//
+// Fram till nu läste passunderlag inte betalning_status, och
+// byggUnderlag frågade inte efter den. Ett pass familjen betalat med
+// kort hamnade därför på månadsfakturan också, och familjen betalade
+// två gånger för samma timme. Det är den dyraste buggen i systemet
+// mätt i förtroende: den drabbar kunden, inte oss, och kunden märker
+// den före vi gör det.
+Deno.test('ett pass kortvägen rört faktureras inte familjen igen', () => {
+  const P = 'p1', T = 't1';
+  const grund = {
+    subject: 'Matematik', tjanst: 'laxhjalp', duration_min: 60, parent_id: P, tutor_id: T,
+    antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true,
+    fakturerad: false, pa_underlag: false,
+  };
+  const pass: Pass[] = [
+    { ...grund, id: 'b-betald', wanted_date: '2026-08-03', betalning_status: 'betald' },
+    { ...grund, id: 'b-vantar', wanted_date: '2026-08-04', betalning_status: 'vantar' },
+    { ...grund, id: 'b-ater', wanted_date: '2026-08-05', betalning_status: 'aterbetald' },
+    { ...grund, id: 'b-tvist', wanted_date: '2026-08-06', betalning_status: 'tvist' },
+    { ...grund, id: 'b-ingen', wanted_date: '2026-08-07', betalning_status: 'ingen' },
+    { ...grund, id: 'b-misslyckad', wanted_date: '2026-08-10', betalning_status: 'misslyckad' },
+    // Utan kolumnen alls — en anropare som inte hämtar den ska bete
+    // sig precis som före Fas 14.0.
+    { ...grund, id: 'b-utan', wanted_date: '2026-08-11' },
+  ];
+
+  const u = byggUnderlag({
+    pass, tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]),
+  });
+
+  // Familjen faktureras bara för de tre där ingen betalning finns.
+  assertEquals((u.perFamilj.get(P) ?? []).map((r) => r.booking_id),
+    ['b-ingen', 'b-misslyckad', 'b-utan']);
+
+  // De fyra andra försvinner inte, de redovisas.
+  assertEquals(u.kortbetalda.map((k) => k.booking_id),
+    ['b-betald', 'b-vantar', 'b-ater', 'b-tvist']);
+  assertEquals(u.kortbetalda.map((k) => k.lage),
+    ['betald', 'vantar', 'aterbetald', 'tvist']);
+
+  // STUDIEHJÄLPARENS UNDERLAG RÖRS INTE. Hen har hållit alla sju
+  // passen, och får betalt för alla sju den 25:e oavsett hur familjen
+  // betalade. Det är hela skillnaden mot att bara hoppa över passet.
+  assertEquals((u.perTutor.get(T) ?? []).length, 7);
+});
+
+Deno.test('kortbetalda pass syns i sammanfattningen, och bara när de finns', () => {
+  const P = 'p1', T = 't1';
+  const grund = {
+    subject: 'Matematik', tjanst: 'laxhjalp', duration_min: 60, parent_id: P, tutor_id: T,
+    antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true,
+    fakturerad: false, pa_underlag: false,
+  };
+  const args = {
+    korningAv: 'admin' as const, period: '2026-08', slut: '2026-09-01',
+    timprisOre: 37900, utanRapport: [], undantagna: [],
+  };
+
+  const utan = sammanfatta({
+    ...args,
+    underlag: byggUnderlag({
+      pass: [{ ...grund, id: 'b1', wanted_date: '2026-08-03' }],
+      tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]),
+    }),
+  });
+  assertEquals('hoppade_over_kortvagen' in utan, false);
+
+  const med = sammanfatta({
+    ...args,
+    underlag: byggUnderlag({
+      pass: [{ ...grund, id: 'b1', wanted_date: '2026-08-03', betalning_status: 'betald' }],
+      tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]),
+    }),
+  });
+  assertEquals(med.hoppade_over_kortvagen, [{ booking_id: 'b1', parent_id: P, lage: 'betald' }]);
+  // Familjen får ingen faktura alls för perioden, men hjälparen får sitt.
+  assertEquals(med.fakturor, []);
+  assertEquals((med.utbetalningar as unknown[]).length, 1);
+});

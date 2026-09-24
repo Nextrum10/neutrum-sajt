@@ -178,15 +178,12 @@ Står i **`DEPLOY-EPOST.md`**, avsnitt 1 och 2: SPF på
 `send.nextrum.se`, DKIM på `resend._domainkey`, DMARC på `_dmarc`,
 plus två fällor som kostade en kväll var.
 
-> ### ⚠ Två DMARC-poster ligger kvar på `_dmarc`
+> ### DMARC: en post på `_dmarc` sedan 2026-09-24
 >
-> Det står i `DEPLOY-EPOST.md` och är inte åtgärdat. Två poster är
-> inte dubbel DMARC — det är **noll**: en mottagare som hittar mer än
-> en giltig post på namnet hoppar över hela kontrollen. Det påverkar
-> leveransen för allt som skickas härifrån, notismejlen inkluderade.
->
-> Det är en DNS-ändring, inte en kodändring, och ingen mängd arbete i
-> det här repot rättar den.
+> Det låg länge två, och två poster är inte dubbel DMARC — det är
+> **noll**: en mottagare som hittar mer än en giltig post hoppar över
+> hela kontrollen. Den utan `rua=` är borttagen. Policyn är fortfarande
+> `p=none`; vägen till `quarantine` står i `DEPLOY-EPOST.md` avsnitt 5.
 
 Notismejlen skickas från `no-reply@nextrum.se` med svara-till
 `info@nextrum.se`. Kvittot på en intresseanmälan skickas från

@@ -103,6 +103,20 @@ inline-JavaScript i de tre sidorna.** Inga `<script>` utan `src`, inga
 `onclick`, inga `javascript:`-adresser. `verktyg/kolla-csp.py` vaktar det
 i CI.
 
+En funktion som svarar på en fråga om en PERSON ska ha `is_admin`s vakt
+från första raden: svara bara när uid är anroparens eget eller
+anroparen är admin. `ar_godkand_studiehjalpare` saknade den i Fas 13.2
+och var ett orakel för vem som helst med ett uuid. Rättat i Fas 14.0b,
+med revoke från anon — och att revoken var säker prövades FÖRST, för
+ett CHECK-villkor eller en policy `to anon` som backas av funktionen
+hade gått sönder (Fas 10 kostade den lärdomen en gång).
+
+Rå servertext visas bara i de inloggade vyerna (`body.vy`). På en publik
+sida beskriver den en tabell och en policy för vem som helst, och
+föräldern förstår den inte. `NX.felText` skickar den till konsolen och
+`klientfel` i stället. Varje meddelande som slutar i en återvändsgränd
+bär `{oss}`, som `t()` fyller med `CFG.EPOST`.
+
 `verktyg/rls-test.sql` körs som ett anrop mot databasen efter varje
 ändring i en policy eller trigger. Varje rad i svaret ska vara ok.
 
@@ -189,12 +203,19 @@ Genererat:
 - De sju `laxhjalp-*.html` byggs av `verktyg/bygg-omradessidor.py`, och
   skalet läses ur `var-ide.html` vid varje körning
 - Ikonlänkar och bildstorlekar sätts av `verktyg/satt-logga.py`
+- `?v=`-stämplarna på varje script- och link-tagg sätts av
+  `verktyg/satt-version.py`, som körs SIST — områdesgeneratorn skriver
+  egna script-taggar och tappar stämpeln
+- `bilder/*.webp` byggs av `verktyg/bygg-webp.py`, som INTE körs i CI:
+  en bildkodare ger inte samma bytes mellan versioner. `kolla-webp.py`
+  vaktar i stället att filen finns och inte är äldre än sin jpg
 
 CI (`.github/workflows/kontroll.yml`) kör om maskotsvaren och FAQ-schemat
 och gör `git diff --exit-code`. Ändrar du FAQ:n utan att bygga om blir
 bygget rött. Övriga steg: `node --check` på all JS, `testa-agent.js`,
-betalningsvillkoret, migrationsnamnen, CSP, språkdiffen, `deno check` och
-`deno test`.
+betalningsvillkoret, migrationsnamnen, CSP, webp-filerna,
+versionsstämplarna, språkdiffen (som jämför attributNAMN också),
+`deno check` och `deno test`.
 
 Kör kontrollerna lokalt före push. De är snabba.
 
@@ -264,7 +285,8 @@ konstruktionen finns för att hindra. Håll den stilen, den är halva
 minnet.
 
 `bilder/*.png` är gitignorerade originalen, cirka 50 MB. Sajten laddar
-bara JPG-varianterna. Tappas datorn finns originalen ingenstans.
+WebP genom `<picture>` med JPG som reserv — 69 % lättare, och en
+webbläsare utan WebP får jpg:en som förut. Tappas datorn finns originalen ingenstans.
 
 En Claude-artefaktlänk kan aldrig prata med Supabase. Testa mot riktiga
 filer eller lokal server (`python3 .claude/serve.py 8951`, som härmar
@@ -278,9 +300,13 @@ Detaljen: `CLAUDE.md` avsnitt 3, "Tre fällor som gör vyerna hackiga".
 
 Inte byggt än: betaltjänst i drift. Två vägar finns i repot och bara
 månadsfaktureringen är provad — kortbetalning per pass (Fas 12) är kod
-som aldrig körts mot Stripe, och de två vägarna vet inte om varandra, så
-båda skarpt samtidigt fakturerar familjen två gånger. Studiehjälparen
-får betalt den 25:e genom payouts, aldrig genom Stripe. Vidare: Google
+som aldrig körts mot Stripe. Sedan Fas 14.0 vet vägarna om varandra:
+`passunderlag` bär `betalning_status`, och månadskörningen hoppar över
+FAMILJENS rad när kortvägen rört passet (vantar, betald, aterbetald,
+tvist) och redovisar den under `hoppade_over_kortvagen`.
+Studiehjälparens underlag skapas ändå — hen höll passet oavsett hur
+familjen betalade — och betalas den 25:e genom payouts, aldrig genom
+Stripe. Vidare: Google
 Workspace, Fortnox (fällan: refresh-token roteras
 vid varje användning, sparas inte det nya är ni utlåsta om en månad),
 bakgrundskontroller, skatt och anställning av minderåriga, riktiga foton

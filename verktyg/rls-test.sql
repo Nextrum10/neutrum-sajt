@@ -1902,14 +1902,41 @@ select pg_temp.prova('BIB-9 admin lägger till',
          values (''Adminmaterial'', ''Svenska'', ''gy2'', ''https://exempel.invalid/e'')'],
   'ok');
 
--- Predikatet: en familj är inte en godkänd studiehjälpare, och en
--- okänd uuid är det inte heller.
-insert into utfall (test, ok, detalj)
-select 'BIB-10 ar_godkand_studiehjalpare skiljer på rollerna',
-       public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000a1')
-   and not public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000f1')
-   and not public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-000000000099'),
-       'hjälpare sant, familj falskt, okänd falskt';
+-- Predikatet. Raden löd fram till Fas 14.0b
+--
+--   select public.ar_godkand_studiehjalpare('…a1')
+--      and not public.ar_godkand_studiehjalpare('…f1')
+--
+-- körd som den yttre rollen, alltså utan inloggad användare — och den
+-- gick igenom, för funktionen svarade om vem som helst för vem som
+-- helst. Det var precis felet: den saknade is_admins vakt. Nu prövas
+-- den som varje roll för sig, vilket också är så den faktiskt
+-- används (policyerna anropar den utan argument).
+select pg_temp.rakna('BIB-10 hjälparen får svar om SIG SJÄLV',
+  '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from (select 1 where public.ar_godkand_studiehjalpare()) x$q$, 1);
+
+select pg_temp.rakna('BIB-10b hjälparen får INTE svar om en annan hjälpare',
+  '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from (select 1 where
+      public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000b1')) x$q$, 0);
+
+select pg_temp.rakna('BIB-10c admin får svar om vem som helst',
+  '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from (select 1 where
+      public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000a1')) x$q$, 1);
+
+select pg_temp.rakna('BIB-10d familjen är inte en godkänd studiehjälpare',
+  '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from (select 1 where public.ar_godkand_studiehjalpare()) x$q$, 0);
+
+-- Fram till Fas 14.0b svarade den här som anon true om en godkänd
+-- hjälpare. Nu är EXECUTE återkallad, så anropet självt nekas.
+select pg_temp.prova('BIB-10e anon får inte ens anropa predikatet',
+  null,
+  array[$q$select public.ar_godkand_studiehjalpare('00000000-0000-4000-8000-0000000000a1')$q$],
+  'nekad');
+
 
 -- Check-villkoren. En rad utan innehåll och en årskurs som är
 -- fritext ska båda falla — det är de två sätt biblioteket annars

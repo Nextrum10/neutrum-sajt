@@ -1981,7 +1981,7 @@
       etikett: 'Studievy',
       lede: 'Planen, tiderna, kontakten och vad som hände på varje pass.',
       video: 'bilder/hero-studievy.mp4',
-      bild: 'bilder/hero-nextrum-1280.jpg',
+      bild: 'bilder/hero-nextrum-1280.webp',
       marke: { text: 'Förälder eller elev', ikon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>' },
       chatt: { href: '#meddelanden', text: 'Meddelanden', under: 'Skriv till er studiehjälpare' }
     });

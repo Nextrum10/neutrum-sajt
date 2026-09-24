@@ -1537,7 +1537,11 @@ window.NXStudie = (function () {
      ============================================================ */
 
   /* Visa en av sidans huvudvyer och dölj resten. */
+  /* Samma spärr som i NXAdmin.visa: har modulvakten sagt att en fil
+     inte kom fram ska felrutan stå kvar, inte ersättas av
+     inloggningsrutan. */
   function visaVy(vyer, id) {
+    if (document.documentElement.dataset.modulfel && id !== 'view-fel') return;
     vyer.forEach(function (v) {
       var el = document.getElementById(v);
       if (el) el.hidden = (v !== id);

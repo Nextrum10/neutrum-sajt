@@ -11,7 +11,7 @@
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
 <title>Läxhjälp i Stockholm av unga, för unga — Nextrum</title>
-<meta name="description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er, på biblioteket eller online. Individuell studieplan och rapport efter varje pass.">
+<meta name="description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er, på biblioteket eller online. Studieplan och rapport efter varje pass.">
 <link rel="canonical" href="https://nextrum.se/">
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/">
 <link rel="alternate" hreflang="en" href="https://nextrum.se/en/">
@@ -25,7 +25,7 @@
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="sv_SE">
 <meta property="og:title" content="Läxhjälp i Stockholm av unga, för unga — Nextrum">
-<meta property="og:description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er, på biblioteket eller online. Individuell studieplan och rapport efter varje pass.">
+<meta property="og:description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er, på biblioteket eller online. Studieplan och rapport efter varje pass.">
 <meta property="og:url" content="https://nextrum.se/">
 <meta property="og:image" content="https://nextrum.se/bilder/hero-nextrum-1280.jpg">
 <meta property="og:image:width" content="1280">
@@ -33,7 +33,7 @@
 <meta property="og:image:alt" content="En ung studiehjälpare och en elev pluggar tillsammans vid ett ljust träbord.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Läxhjälp i Stockholm av unga, för unga — Nextrum">
-<meta name="twitter:description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er, på biblioteket eller online. Individuell studieplan och rapport efter varje pass.">
+<meta name="twitter:description" content="Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er, på biblioteket eller online. Studieplan och rapport efter varje pass.">
 <meta name="twitter:image" content="https://nextrum.se/bilder/hero-nextrum-1280.jpg">
 
 <!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
@@ -46,16 +46,23 @@
      direktiv på svaret återanvänder webbläsaren inte den förladdade
      kroppen. Cachningen ligger i vercel.json i stället, och där gör
      den nytta vid varje återbesök i ett år. -->
-<link rel="stylesheet" href="nextrum-typsnitt.css">
+<link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
-<link rel="stylesheet" href="nextrum-home.css">
-<link rel="stylesheet" href="nextrum-cinema.css">
+<link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
+<link rel="stylesheet" href="nextrum-cinema.css?v=b56b6211">
 
-<!-- hero-fotot ska vara på plats direkt, resten laddas lazy -->
-<link rel="preload" as="image" href="bilder/hero-nextrum-1280.jpg"
-      imagesrcset="bilder/hero-nextrum-640.jpg 640w, bilder/hero-nextrum-960.jpg 960w, bilder/hero-nextrum-1280.jpg 1280w, bilder/hero-nextrum-1600.jpg 1600w, bilder/hero-nextrum-1920.jpg 1920w"
+<!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
+
+     type="image/webp" OCH webp-adresser: sedan bilderna blev
+     <picture> väljer sidan webp, och en preload utan type drog
+     jpg:en PARALLELLT. Två hämtningar av samma foto, varav en
+     kastades bort — en preload som laddar fel fil är värre än ingen
+     preload alls. En webbläsare som inte kan webp hoppar över raden
+     och laddar jpg:en i sin vanliga ordning, som förut. -->
+<link rel="preload" as="image" type="image/webp" href="bilder/hero-nextrum-1280.webp"
+      imagesrcset="bilder/hero-nextrum-640.webp 640w, bilder/hero-nextrum-960.webp 960w, bilder/hero-nextrum-1280.webp 1280w, bilder/hero-nextrum-1600.webp 1600w, bilder/hero-nextrum-1920.webp 1920w"
       imagesizes="(max-width: 900px) 92vw, 52vw" fetchpriority="high">
 
 <!-- Strukturerad data. Ger Google namn, logotyp, beskrivning och
@@ -216,7 +223,10 @@
      ========================================================== -->
 <section class="nx-hero-film" id="hem">
   <div class="nx-hero-media">
-    <video class="nx-hero-video" poster="/bilder/08-teamet-1280.jpg"
+    <!-- poster i webp: attributet tar ingen <source>, så det här är
+         enda sättet. Bilden hämtas på telefon också, där filmen med
+         flit aldrig spelas, och vägde 172 kB som jpg mot 34 kB nu. -->
+    <video class="nx-hero-video" poster="/bilder/08-teamet-1280.webp"
            muted playsinline preload="none" autoplay loop
            data-video="/bilder/08-teamet-orbit.mp4"
            aria-hidden="true" tabindex="-1"></video>
@@ -621,19 +631,19 @@
 
     <div class="nx-vagg-grid">
       <figure class="nx-fig v1" data-parallax="-6" style="--tint:#ACA193">
-        <img class="nx-img" src="bilder/01-en-till-en-960.jpg"
+        <picture><source type="image/webp" srcset="bilder/01-en-till-en-640.webp 640w, bilder/01-en-till-en-960.webp 960w, bilder/01-en-till-en-1280.webp 1280w" sizes="(max-width:860px) 82vw, 46vw"><img class="nx-img" src="bilder/01-en-till-en-960.jpg"
              srcset="bilder/01-en-till-en-640.jpg 640w, bilder/01-en-till-en-960.jpg 960w, bilder/01-en-till-en-1280.jpg 1280w"
              sizes="(max-width:860px) 82vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
              style="object-position:68% 44%"
-             alt="En studiehjälpare pekar på en uppgift i elevens räknebok och förklarar.">
+             alt="En studiehjälpare pekar på en uppgift i elevens räknebok och förklarar."></picture>
       </figure>
 
       <figure class="nx-fig v2" data-parallax="-13" style="--tint:#948A78">
-        <img class="nx-img" src="bilder/03-digital-laxhjalp-960.jpg"
+        <picture><source type="image/webp" srcset="bilder/03-digital-laxhjalp-640.webp 640w, bilder/03-digital-laxhjalp-960.webp 960w, bilder/03-digital-laxhjalp-1280.webp 1280w" sizes="(max-width:860px) 62vw, 36vw"><img class="nx-img" src="bilder/03-digital-laxhjalp-960.jpg"
              srcset="bilder/03-digital-laxhjalp-640.jpg 640w, bilder/03-digital-laxhjalp-960.jpg 960w, bilder/03-digital-laxhjalp-1280.jpg 1280w"
              sizes="(max-width:860px) 62vw, 36vw" width="2048" height="1152" loading="lazy" decoding="async"
              style="object-position:66% 40%"
-             alt="En elev följer ett studiepass på laptopen hemma vid skrivbordet.">
+             alt="En elev följer ett studiepass på laptopen hemma vid skrivbordet."></picture>
       </figure>
 
       <blockquote class="nx-vagg-ord" data-stig>
@@ -642,19 +652,19 @@
       </blockquote>
 
       <figure class="nx-fig v3" data-parallax="-4" style="--tint:#897D6A">
-        <img class="nx-img" src="bilder/04-sjalvfortroende-960.jpg"
+        <picture><source type="image/webp" srcset="bilder/04-sjalvfortroende-640.webp 640w, bilder/04-sjalvfortroende-960.webp 960w, bilder/04-sjalvfortroende-1280.webp 1280w" sizes="(max-width:860px) 48vw, 30vw"><img class="nx-img" src="bilder/04-sjalvfortroende-960.jpg"
              srcset="bilder/04-sjalvfortroende-640.jpg 640w, bilder/04-sjalvfortroende-960.jpg 960w, bilder/04-sjalvfortroende-1280.jpg 1280w"
              sizes="(max-width:860px) 48vw, 30vw" width="2048" height="1152" loading="lazy" decoding="async"
              style="object-position:48% 34%"
-             alt="En elev ler över sitt skrivblock efter att ha löst en uppgift.">
+             alt="En elev ler över sitt skrivblock efter att ha löst en uppgift."></picture>
       </figure>
 
       <figure class="nx-fig v4" data-parallax="-9" style="--tint:#9E8F79">
-        <img class="nx-img" src="bilder/02-personlig-anpassning-1280.jpg"
+        <picture><source type="image/webp" srcset="bilder/02-personlig-anpassning-640.webp 640w, bilder/02-personlig-anpassning-960.webp 960w, bilder/02-personlig-anpassning-1280.webp 1280w, bilder/02-personlig-anpassning-1600.webp 1600w" sizes="(max-width:860px) 82vw, 48vw"><img class="nx-img" src="bilder/02-personlig-anpassning-1280.jpg"
              srcset="bilder/02-personlig-anpassning-640.jpg 640w, bilder/02-personlig-anpassning-960.jpg 960w, bilder/02-personlig-anpassning-1280.jpg 1280w, bilder/02-personlig-anpassning-1600.jpg 1600w"
              sizes="(max-width:860px) 82vw, 48vw" width="2048" height="1152" loading="lazy" decoding="async"
              style="object-position:50% 40%"
-             alt="En studiehjälpare står lutad över ett bord där två elever arbetar med varsin uppgift.">
+             alt="En studiehjälpare står lutad över ett bord där två elever arbetar med varsin uppgift."></picture>
       </figure>
     </div>
   </div>
@@ -685,11 +695,11 @@
   <div class="nx-split omvand">
     <div class="nx-split-bild" data-stig>
       <figure class="nx-fig" style="--tint:#8E8C84">
-        <img class="nx-img" src="bilder/05-av-unga-for-unga-1280.jpg"
+        <picture><source type="image/webp" srcset="bilder/05-av-unga-for-unga-640.webp 640w, bilder/05-av-unga-for-unga-960.webp 960w, bilder/05-av-unga-for-unga-1280.webp 1280w, bilder/05-av-unga-for-unga-1600.webp 1600w" sizes="(max-width:900px) 92vw, 44vw"><img class="nx-img" src="bilder/05-av-unga-for-unga-1280.jpg"
              srcset="bilder/05-av-unga-for-unga-640.jpg 640w, bilder/05-av-unga-for-unga-960.jpg 960w, bilder/05-av-unga-for-unga-1280.jpg 1280w, bilder/05-av-unga-for-unga-1600.jpg 1600w"
              sizes="(max-width:900px) 92vw, 44vw" width="2048" height="1152" loading="lazy" decoding="async"
              style="object-position:52% 40%"
-             alt="Fem unga studiehjälpare står och pratar med varandra framför en bokhylla i ett bibliotek.">
+             alt="Fem unga studiehjälpare står och pratar med varandra framför en bokhylla i ett bibliotek."></picture>
       </figure>
     </div>
 
@@ -964,16 +974,16 @@
 <!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
      för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
 <script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="nextrum-config.js"></script>
-<script src="nextrum-images.js"></script>
-<script src="nextrum-fel.js"></script>
-<script src="nextrum-app.js"></script>
-<script src="nextrum-motion.js"></script>
+<script src="nextrum-config.js?v=f8a876f6"></script>
+<script src="nextrum-images.js?v=50260f9d"></script>
+<script src="nextrum-fel.js?v=eae02b10"></script>
+<script src="nextrum-app.js?v=8990dc3d"></script>
+<script src="nextrum-motion.js?v=fdf0d356"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js"></script>
-<script src="nextrum-maskot.js" defer></script>
+<script src="nextrum-maskot-svar.js?v=b9b1a4f7"></script>
+<script src="nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {
   'use strict';
@@ -1121,10 +1131,10 @@
       '<article class="sc-card">'
       + '<div class="sc-top">'
       + '<span class="sc-face sc-foto">'
-      + '<img src="/bilder/' + t.bild + '-200.jpg" '
+      + '<picture><source type="image/webp" srcset="/bilder/' + t.bild + '-200.webp 200w, /bilder/' + t.bild + '-400.webp 400w" sizes="56px"><img src="/bilder/' + t.bild + '-200.jpg" '
       + 'srcset="/bilder/' + t.bild + '-200.jpg 200w, /bilder/' + t.bild + '-400.jpg 400w" '
       + 'sizes="56px" width="56" height="56" loading="lazy" decoding="async" '
-      + 'alt="' + esc(t.alt) + '">'
+      + 'alt="' + esc(t.alt) + '"></picture>'
       + '</span>'
       + '<div><div class="sc-name">' + esc(t.namn) + ', ' + t.ålder
       + ' <span class="sc-exempel">Exempel</span></div>'
