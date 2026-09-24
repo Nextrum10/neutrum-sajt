@@ -194,6 +194,109 @@ funktionen är aldrig åtkomlig utifrån utan hemligheten.
 
 ---
 
+## 5. Loggan i inkorgen
+
+Två olika saker kallas "loggan i mejlet":
+
+- **Loggan i själva brevet** finns redan. Märket ritas som en
+  tabellcell i `_delad/notiser/rendera.ts`, med flit text och inte
+  bild — kommentaren där säger varför.
+- **Den runda bilden bredvid avsändaren i inkorgen** är i dag en
+  bokstav i en färgad cirkel. Den styrs inte av mejlet alls. Varje
+  mejlprogram har sin egen regel för den, och ingen av dem går att
+  uppfylla med kod i det här repot:
+
+| Program | Kräver | Kostar | Går det i dag? |
+|---|---|---|---|
+| Gmail | BIMI + DMARC `quarantine` + certifikat (VMC eller CMC) | certifikatet, varje år | **Nej**, se nedan |
+| Apple Mail (iPhone, Mac) | Branded Mail i Apple Business Connect + DKIM + DMARC `quarantine` | ingenting | Om Branded Mail finns för svenska företag |
+| Yahoo, AOL | BIMI + DMARC `quarantine` | ingenting | Knappt. Utan certifikat visas loggan bara för avsändare med stor volym |
+| Outlook, Hotmail | Går inte. Microsoft stöder inte BIMI | — | Nej |
+
+### Gmail kräver ett certifikat, och inget av dem går att få nu
+
+- **VMC** (Verified Mark Certificate) kräver att märket är ett
+  **registrerat varumärke** hos PRV eller EUIPO. Ger också Gmails
+  blå bock.
+- **CMC** (Common Mark Certificate) kräver inget varumärke, men att
+  märket **synts på domänen i minst tolv månader**, kontrollerat mot
+  Internet Archive. nextrum.se har visat det sedan september 2026, så
+  **tidigast hösten 2027**.
+
+Båda gäller i högst 397 dagar och förnyas varje år. De säljs av
+bland andra DigiCert och Sectigo; kontrollera priset där. Det är
+ingen småsumma för en läxhjälpsförmedling, och vinsten är en ikon.
+
+### Det gratis försöket i Gmail
+
+Gmail kan visa profilbilden på ett Google-konto bredvid mejl från
+den adressen. `info@nextrum.se` ligger i Google Workspace. Ladda upp
+`bilder/nextrum-logo-profil.png` som profilbild på det kontot
+(myaccount.google.com → Personlig information → Profilbild) och se om
+den syns på kvittot efter nästa intresseanmälan.
+
+**Ingen garanti.** Google skriver inte ut när en profilbild visas för
+mottagare utanför organisationen. Och det gäller bara adresser som är
+ett riktigt konto: är `no-reply@nextrum.se` bara en avsändare hos
+Resend finns det ingen profil att sätta en bild på.
+
+### Första steget, oavsett väg: DMARC på `quarantine`
+
+Allt ovan utom Outlook kräver det. **Och det är värt att göra även
+utan logga.** Med `p=none` kan vem som helst skicka mejl som ser ut
+att komma från `no-reply@nextrum.se` — och därifrån skickar vi
+fakturor. En falsk faktura med ett annat kontonummer, från en äkta
+avsändare, är precis det bedrägeri DMARC finns till för.
+
+1. **En post, inte två** (avsnitt 1). Två DMARC-poster är noll, och
+   då spelar det ingen roll vad någon av dem säger.
+2. **Läs rapporterna först.** De kommer till `info@nextrum.se` via
+   `rua`. Allt legitimt ska passera: Resend (DKIM på
+   `resend._domainkey`) och det ni skickar från Gmail. Slå på DKIM i
+   Workspace om det inte är gjort (admin.google.com → Appar →
+   Google Workspace → Gmail → Autentisera e-post) — annars vilar
+   mejlen från info@ på SPF ensam, och SPF går sönder när ett mejl
+   vidarebefordras.
+3. **Byt posten** till:
+   ```
+   v=DMARC1; p=quarantine; pct=100; rua=mailto:info@nextrum.se
+   ```
+
+### BIMI-posten
+
+Filen finns: `bilder/nextrum-logo-bimi.svg`. BIMI kräver formatet
+SVG Tiny PS (`baseProfile="tiny-ps"`, en `<title>`, inga skript,
+inga externa referenser, kvadratisk), och en vanlig SVG underkänns.
+Den har en hel fyrkantig bakgrund i stället för `favicon.svg`s
+rundade: mejlprogrammen beskär själva, till cirkel eller rundad ruta,
+och ett genomskinligt hörn visas annars mot vad programmet råkar ha
+bakom.
+
+Lägg in den i Cloudflare **efter** DMARC-steget. Före det gör den
+ingenting:
+
+| Typ | Namn | Innehåll |
+|---|---|---|
+| TXT | `default._bimi` | `v=BIMI1; l=https://nextrum.se/bilder/nextrum-logo-bimi.svg;` |
+
+Utan certifikat ger posten nästan ingenting för de mottagare vi har.
+Kommer ett certifikat läggs `a=` med adressen till dess `.pem` till i
+samma post.
+
+### Apple Branded Mail
+
+Gratis, och Apple Mail är det många föräldrar läser i. Kräver DKIM
+(finns via Resend) och DMARC `quarantine`. Loggan laddas upp i Apple
+Business Connect som en kvadratisk bild på 1024–4864 pixlar:
+`bilder/nextrum-logo-profil.png` är 1024. Apple listar inte vilka
+länder Branded Mail finns i — logga in och se om valet dyker upp.
+
+**Byts märket** måste `nextrum-logo-bimi.svg` och
+`nextrum-logo-profil.png` ritas om för hand. `verktyg/satt-logga.py`
+rör bara sajtens ikoner.
+
+---
+
 ## Testa
 
 Skicka en riktig intresseanmälan på nextrum.se. Kom det inget mejl:
