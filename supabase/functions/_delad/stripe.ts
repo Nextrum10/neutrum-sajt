@@ -37,7 +37,7 @@ const BAS = 'https://api.stripe.com';
    API-version som följer med kontots förval ändrar sig den dag Stripe
    flyttar förvalet, och då ändras svarens form i funktioner ingen har
    rört. v2 kräver dessutom headern. */
-const API_VERSION = '2025-08-27.basil';
+export const API_VERSION = '2025-08-27.basil';
 
 export function nyckel(): string {
   const k = Deno.env.get('STRIPE_SECRET_KEY');
@@ -265,4 +265,288 @@ export function oreFor(minuter: number, timprisOre: number): number {
  */
 export function aterbetalningsLage(aterbetaltOre: number, totaltOre: number): 'aterbetald' | 'betald' {
   return totaltOre > 0 && aterbetaltOre >= totaltOre ? 'aterbetald' : 'betald';
+}
+
+// ============================================================
+// KORTTVISTERNA (Fas 14.3)
+//
+// Punkt 9 på säljarens MVP-lista. Webhooken och adminvyn läser samma
+// regler härifrån, så att en tvist inte kan stå som vunnen på ett
+// ställe och öppen på ett annat.
+// ============================================================
+
+export type TvistUtfall = 'oppen' | 'vunnen' | 'forlorad';
+
+/**
+ * Stripes status till vårt utfall.
+ *
+ * warning_closed är VUNNEN i den här meningen: det var en förfrågan
+ * från banken som stängdes utan återkrav, och pengarna stannade. Förut
+ * räknades bara 'won', och en stängd förfrågan stod som tvist för
+ * alltid.
+ */
+export function tvistUtfall(lage: string): TvistUtfall {
+  if (lage === 'won' || lage === 'warning_closed' || lage === 'prevented') return 'vunnen';
+  if (lage === 'lost') return 'forlorad';
+  return 'oppen';
+}
+
+/** Väntar Stripe på underlag från oss? Då finns en sista dag att missa. */
+export function tvistVantarPaOss(lage: string): boolean {
+  return lage === 'needs_response' || lage === 'warning_needs_response';
+}
+
+/**
+ * Passets betalläge efter tvisten. En vunnen tvist är en betalning
+ * igen. En förlorad förblir 'tvist': pengarna är borta, men passet
+ * hölls på dem, och vad som hände står i stripe_tvister. Att kalla den
+ * återbetald hade blandat ihop ett återkrav vi förlorat med en
+ * återbetalning vi valt.
+ */
+export function betallageEfterTvist(utfall: TvistUtfall): 'betald' | 'tvist' {
+  return utfall === 'vunnen' ? 'betald' : 'tvist';
+}
+
+/**
+ * Orsakskoden med våra ord. Stripe skickar bara koden. En kod som inte
+ * står här visas som koden själv, hellre än som ingenting.
+ */
+export const TVIST_ORSAK: Record<string, string> = {
+  fraudulent: 'Kortinnehavaren säger att betalningen inte är hens',
+  unrecognized: 'Kortinnehavaren känner inte igen betalningen',
+  product_not_received: 'Kortinnehavaren säger att passet inte blev av',
+  product_unacceptable: 'Kortinnehavaren är missnöjd med passet',
+  duplicate: 'Kortinnehavaren säger att samma pass betalats två gånger',
+  credit_not_processed: 'Kortinnehavaren säger att pengarna skulle ha kommit tillbaka',
+  subscription_canceled: 'Kortinnehavaren säger att tjänsten var uppsagd',
+  customer_initiated: 'Kortinnehavaren har bestridit betalningen',
+  debit_not_authorized: 'Kortinnehavaren säger att dragningen inte var godkänd',
+  general: 'Ingen särskild orsak angiven',
+};
+
+export function tvistOrsakText(kod: string | null | undefined): string {
+  if (!kod) return 'Ingen orsak angiven';
+  return TVIST_ORSAK[kod] ?? `Annan orsak (${kod})`;
+}
+
+/**
+ * Vad som ska samlas, per orsak. Underlaget skickas in i Stripes
+ * dashboard och sparas aldrig hos oss; det här är listan över vad som
+ * ska letas fram.
+ */
+export function tvistUnderlag(kod: string | null | undefined): string {
+  switch (kod) {
+    case 'product_not_received':
+      return 'Visa att passet hölls: rapporten, närvaron och att familjen bekräftade tiden.';
+    case 'fraudulent':
+    case 'unrecognized':
+    case 'debit_not_authorized':
+      return 'Visa att familjen själv bokade och betalade: bokningen i deras konto, '
+        + 'tidigare betalda pass och att kortet användes på vår sida.';
+    case 'product_unacceptable':
+      return 'Villkoren, rapporten från passet och det familjen skrev till oss före tvisten.';
+    case 'duplicate':
+      return 'Visa att betalningarna gäller olika pass, med datum och tid för vart och ett.';
+    case 'credit_not_processed':
+      return 'Återbetalningen om den är gjord, annars villkoren som säger varför den inte ska göras.';
+    default:
+      return 'Bokningen, rapporten från passet, närvaron och villkoren.';
+  }
+}
+
+/** Stripes tider är sekunder sedan 1970. Allt annat blir null, inte ett påhittat datum. */
+export function tidFranUnix(s: unknown): string | null {
+  return typeof s === 'number' && Number.isFinite(s) && s > 0 ? new Date(s * 1000).toISOString() : null;
+}
+
+// ============================================================
+// STRIPE-LÄGET (Fas 14.3)
+//
+// Punkt 10 och 11 på MVP-listan gick inte att prova härifrån: miljön
+// som skrev koden når inte api.stripe.com, och DEPLOY-BETALNING.md
+// fick skriva "okänt härifrån" om nyckeln och "troligen dahlia" om
+// webhookens version. Funktionen stripe-lage läser svaren från Stripe
+// med servernyckeln, och granskaStripe() säger vad de betyder.
+//
+// Granskningen är en ren funktion, så att den går att prova utan
+// Stripe: det är reglerna här som avgör om en rad blir grön.
+// ============================================================
+
+/**
+ * Händelserna webhooken hanterar. En som saknas på endpointen kommer
+ * aldrig fram, och det syns inte som ett fel någonstans.
+ */
+export const WEBHOOK_HANDELSER = [
+  'checkout.session.completed',
+  'payment_intent.payment_failed',
+  'charge.refunded',
+  'charge.dispute.created',
+  'charge.dispute.updated',
+  'charge.dispute.closed',
+];
+
+export type NyckelLage = 'saknas' | 'test' | 'skarp' | 'begransad' | 'publicerbar' | 'okand';
+
+/** Bara nyckelns början läses. Nyckeln själv lämnar aldrig funktionen. */
+export function nyckelLage(k: string | undefined | null): NyckelLage {
+  if (!k) return 'saknas';
+  if (k.startsWith('sk_test_')) return 'test';
+  if (k.startsWith('sk_live_')) return 'skarp';
+  if (k.startsWith('rk_')) return 'begransad';
+  if (k.startsWith('pk_')) return 'publicerbar';
+  return 'okand';
+}
+
+export type StripeKonto = {
+  country?: string | null;
+  default_currency?: string | null;
+  charges_enabled?: boolean;
+  payouts_enabled?: boolean;
+  business_profile?: { name?: string | null } | null;
+  settings?: {
+    payments?: { statement_descriptor?: string | null } | null;
+    card_payments?: { statement_descriptor_prefix?: string | null } | null;
+  } | null;
+  requirements?: { currently_due?: string[] | null; past_due?: string[] | null; disabled_reason?: string | null } | null;
+};
+
+export type StripeEndpoint = {
+  url?: string | null;
+  status?: string | null;
+  api_version?: string | null;
+  enabled_events?: string[] | null;
+};
+
+/** ok: true klart, false måste åtgärdas, null bra att veta. */
+export type Punkt = { ok: boolean | null; rubrik: string; text: string };
+
+export type Granskning = {
+  nyckel: NyckelLage;
+  webhookhemlighet: boolean;
+  vantadUrl: string;
+  konto: StripeKonto | null;
+  kontoFel?: string | null;
+  endpoints: StripeEndpoint[] | null;
+  endpointFel?: string | null;
+  leveranser: { antal: number; senast: string | null; typ: string | null; resultat: string | null } | null;
+};
+
+const utanSnedstreck = (u: string) => u.replace(/\/+$/, '');
+
+export function granskaStripe(g: Granskning): Punkt[] {
+  const p: Punkt[] = [];
+  const test = g.nyckel === 'test';
+
+  // ---------- nyckeln ----------
+  p.push({
+    saknas: { ok: false, rubrik: 'Nyckeln', text: 'STRIPE_SECRET_KEY är inte satt. Betala-knappen svarar med ett fel tills den är det.' },
+    test: { ok: true, rubrik: 'Nyckeln', text: 'Testnyckel. Inga riktiga pengar dras; betala med testkortet 4242 4242 4242 4242.' },
+    skarp: { ok: true, rubrik: 'Nyckeln', text: 'Skarp nyckel. Riktiga kort dras.' },
+    begransad: { ok: null, rubrik: 'Nyckeln', text: 'En begränsad nyckel (rk_). Den kan sakna rätt att skapa betalningar eller återbetala; en vanlig hemlig nyckel (sk_) är säkrare här.' },
+    publicerbar: { ok: false, rubrik: 'Nyckeln', text: 'Det är den publicerbara nyckeln (pk_). Den kan inte skapa en betalning. STRIPE_SECRET_KEY ska vara den hemliga, som börjar med sk_.' },
+    okand: { ok: false, rubrik: 'Nyckeln', text: 'Nyckeln har ett format Stripe inte använder. Kontrollera att hela nyckeln kom med.' },
+  }[g.nyckel]);
+
+  p.push(g.webhookhemlighet
+    ? { ok: true, rubrik: 'Webhookens hemlighet', text: 'STRIPE_WEBHOOK_SECRET är satt.' }
+    : { ok: false, rubrik: 'Webhookens hemlighet', text: 'STRIPE_WEBHOOK_SECRET är inte satt. Då svarar webhooken 400 på varje leverans, och ingen betalning blir registrerad fast pengarna dragits.' });
+
+  if (g.nyckel === 'saknas' || g.nyckel === 'publicerbar' || g.nyckel === 'okand') return p;
+
+  // ---------- kontot ----------
+  const k = g.konto;
+  if (!k) {
+    p.push({ ok: false, rubrik: 'Kontot', text: 'Stripe svarade inte på frågan om kontot: ' + (g.kontoFel || 'okänt fel') + '.' });
+  } else {
+    const saknas = [...(k.requirements?.past_due ?? []), ...(k.requirements?.currently_due ?? [])];
+    if (!k.charges_enabled) {
+      p.push({
+        ok: test ? null : false,
+        rubrik: 'Kontot tar emot betalningar',
+        text: 'Nej' + (k.requirements?.disabled_reason ? ` (${k.requirements.disabled_reason})` : '') + '. '
+          + (test ? 'I testläge går det ändå, men kontot måste aktiveras innan en riktig familj kan betala.'
+            : 'Ingen familj kan betala förrän Stripe fått det de väntar på under Settings → Business.'),
+      });
+    } else {
+      p.push({ ok: true, rubrik: 'Kontot tar emot betalningar', text: 'Ja.' });
+    }
+    if (saknas.length) {
+      p.push({ ok: test ? null : false, rubrik: 'Stripe väntar på uppgifter', text: `${saknas.length} st, till exempel ${saknas.slice(0, 3).join(', ')}. De fylls i under Settings → Business.` });
+    }
+    if (k.payouts_enabled === false) {
+      p.push({ ok: null, rubrik: 'Utbetalning till banken', text: 'Inte påslagen. Betalningarna samlas då hos Stripe och når inte bankkontot.' });
+    }
+    if (k.country && k.country !== 'SE') {
+      p.push({ ok: null, rubrik: 'Land', text: `Kontot står på ${k.country}, inte SE.` });
+    }
+    if (k.default_currency && k.default_currency !== 'sek') {
+      p.push({ ok: null, rubrik: 'Valuta', text: `Kontots valuta är ${k.default_currency.toUpperCase()}. Betalningarna tas i SEK ändå, men utbetalningen växlas.` });
+    }
+
+    // ---------- kontoutdraget (punkt 10) ----------
+    const text = k.settings?.payments?.statement_descriptor ?? '';
+    const prefix = k.settings?.card_payments?.statement_descriptor_prefix ?? '';
+    const bas = prefix || text.slice(0, 10);
+    if (!text && !prefix) {
+      p.push({ ok: false, rubrik: 'Kontoutdraget', text: 'Ingen text är satt. Sätt NEXTRUM under Settings → Business → Public details, annars vet familjen inte vad dragningen är.' });
+    } else if (!/nextrum/i.test(text + ' ' + prefix)) {
+      p.push({ ok: null, rubrik: 'Kontoutdraget', text: `Familjen ser ungefär "${bas}* MATEMATIK". Står det inte Nextrum ringer de banken i stället för oss.` });
+    } else {
+      p.push({ ok: true, rubrik: 'Kontoutdraget', text: `Familjen ser ungefär "${bas}* MATEMATIK".` });
+    }
+  }
+
+  // ---------- webhooken ----------
+  if (!g.endpoints) {
+    p.push({ ok: false, rubrik: 'Webhook-endpointen', text: 'Stripe svarade inte på frågan om endpoints: ' + (g.endpointFel || 'okänt fel') + '.' });
+  } else {
+    const hit = g.endpoints.filter((e) => utanSnedstreck(String(e.url ?? '')) === utanSnedstreck(g.vantadUrl));
+    if (!hit.length) {
+      p.push({
+        ok: false,
+        rubrik: 'Webhook-endpointen',
+        text: `Ingen endpoint i ${test ? 'testläget' : 'det skarpa läget'} pekar på ${g.vantadUrl}. `
+          + 'Då kommer ingen leverans fram, och ingen betalning blir registrerad. '
+          + (g.endpoints.length ? `Det finns ${g.endpoints.length} som pekar någon annanstans.` : 'Det finns inga alls.'),
+      });
+    } else {
+      const e = hit[0];
+      p.push(e.status === 'enabled'
+        ? { ok: true, rubrik: 'Webhook-endpointen', text: 'Finns och är påslagen.' }
+        : { ok: false, rubrik: 'Webhook-endpointen', text: `Finns men står som "${e.status}". Stripe skickar ingenting till en avstängd endpoint.` });
+      if (hit.length > 1) {
+        p.push({ ok: null, rubrik: 'Flera endpoints', text: `${hit.length} endpoints pekar hit. Bara den vars hemlighet är satt går igenom; de andra svarar 400 på varje leverans tills Stripe stänger av dem. Ta bort de överflödiga.` });
+      }
+      const valda = e.enabled_events ?? [];
+      if (valda.includes('*')) {
+        p.push({ ok: null, rubrik: 'Händelserna', text: 'Alla händelser är valda. Det fungerar, men varje sort webhooken inte hanterar sparas som ohanterad.' });
+      } else {
+        const saknade = WEBHOOK_HANDELSER.filter((h) => !valda.includes(h));
+        p.push(saknade.length
+          ? { ok: false, rubrik: 'Händelserna', text: 'Saknas på endpointen: ' + saknade.join(', ') + '. De kommer aldrig fram.' }
+          : { ok: true, rubrik: 'Händelserna', text: 'Alla sex som webhooken hanterar är valda.' });
+      }
+      if (!e.api_version) {
+        p.push({ ok: null, rubrik: 'API-versionen', text: 'Stripe säger inte vilken version endpointen står på.' });
+      } else if (e.api_version !== API_VERSION) {
+        p.push({ ok: null, rubrik: 'API-versionen', text: `Endpointen står på ${e.api_version}, koden pinnar ${API_VERSION}. Fälten webhooken läser är grundfält, men en provbetalning är det som visar att de kommer fram.` });
+      } else {
+        p.push({ ok: true, rubrik: 'API-versionen', text: `${API_VERSION}, samma som koden.` });
+      }
+    }
+  }
+
+  // ---------- leveranserna (punkt 11) ----------
+  const l = g.leveranser;
+  if (!l) {
+    p.push({ ok: null, rubrik: 'Leveranser', text: 'Kunde inte läsas.' });
+  } else if (!l.antal) {
+    p.push({ ok: false, rubrik: 'Leveranser', text: 'Ingen leverans från Stripe har kommit fram än. Skicka en testhändelse från endpointens sida i Stripe (DEPLOY-BETALNING.md 9.6, steg 0).' });
+  } else {
+    p.push({ ok: true, rubrik: 'Leveranser', text: `${l.antal} st. Senast ${l.typ ?? 'okänd typ'}${l.resultat ? ` (${l.resultat})` : ''}.` });
+  }
+
+  p.push({ ok: null, rubrik: 'Kvitton', text: 'Går inte att läsa via Stripes API. Betalningen skickar kvittot till familjens adress, och i skarpt läge går det ut oavsett inställningen. I testläge skickar Stripe inga kvitton.' });
+
+  return p;
 }

@@ -27,7 +27,7 @@
 --
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
--- Fas 14.2–14.2c och Fas 15.1–15.4 är körda.
+-- Fas 14.2–14.3 och Fas 15.1–15.4 är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -2449,6 +2449,46 @@ select pg_temp.prova('14.2 läxhjälpen kan inte bli RUT-berättigad medan den �
 select pg_temp.prova('14.2 en avstängd tjänst får planeras med RUT', '00000000-0000-4000-8000-0000000000ad',
   array[$q$update public.tjanster set rut_berattigad = true, rut_procent = 50
           where kod = 'provtjanst' and not aktiv$q$], 'ok');
+
+-- ============================================================
+-- FAS 14.3 — korttvisterna
+--
+-- stripe_tvister skrivs bara av stripe-webhook med service_role, och
+-- bara admin läser. Tvisten gäller familjens eget pass, men familjen
+-- ska inte se den här: det är vårt underlag för att svara Stripe, och
+-- den som bestridit ett köp har sin egen bank att fråga. Ingen, inte
+-- ens admin, skriver en rad från en vy. En tvist som gick att skapa
+-- eller stänga härifrån hade kunnat dölja en svarsdag.
+-- ============================================================
+insert into public.stripe_tvister (id, booking_id, charge_id, orsak, lage, belopp_ore, svara_senast)
+values ('dp_rlsTest1', '00000000-0000-4000-8000-00000000b4c1', 'ch_rlsTest1', 'fraudulent', 'needs_response',
+        37900, now() + interval '7 days');
+
+select pg_temp.rakna('14.3 admin läser korttvisterna', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from public.stripe_tvister where id = 'dp_rlsTest1'$q$, 1);
+
+select pg_temp.rakna('14.3 familjen ser inte tvisten på sitt eget pass', '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from public.stripe_tvister$q$, 0);
+
+select pg_temp.rakna('14.3 studiehjälparen ser inte tvisten på sitt pass', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.stripe_tvister$q$, 0);
+
+select pg_temp.prova('14.3 anon läser inte korttvisterna', null,
+  array[$q$select * from public.stripe_tvister$q$], 'nekad');
+
+select pg_temp.prova('14.3 admin skapar ingen korttvist från en vy', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into public.stripe_tvister (id, charge_id, lage) values ('dp_rlsTest2', 'ch_rlsTest2', 'needs_response')$q$],
+  'nekad');
+
+select pg_temp.prova('14.3 admin stänger ingen korttvist från en vy', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.stripe_tvister set lage = 'won', stangd = now() where id = 'dp_rlsTest1'$q$], 'nekad');
+
+select pg_temp.prova('14.3 admin raderar ingen korttvist', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$delete from public.stripe_tvister where id = 'dp_rlsTest1'$q$], 'nekad');
+
+select pg_temp.prova('14.3 familjen skapar ingen korttvist', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.stripe_tvister (id, booking_id, charge_id, lage)
+          values ('dp_rlsTest3', '00000000-0000-4000-8000-00000000b4c1', 'ch_rlsTest3', 'won')$q$], 'nekad');
 
 select test, ok, detalj from utfall order by nr;
 

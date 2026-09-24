@@ -122,6 +122,29 @@ Deno.test('varje mejl har en knapp till rätt vy, och bara en', () => {
   assertEquals(vyAdress('tutor', 'boka'), `${SAJT}/larare#lektioner/pass`);
 });
 
+Deno.test('familjens bekräftelse och påminnelse säger att passet betalas före, studiehjälparens inte', () => {
+  // Villkor 3 och 4 för spärren "ingen betalning, inget pass"
+  // (DEPLOY-BETALNING.md 9.9). Meningen är samma som på sidorna.
+  const bekraftat = rendera('pass_bekraftat', 'parent');
+  assertStringIncludes(bekraftat.text, 'Ett pass som inte är betalt hålls inte.');
+  assertStringIncludes(bekraftat.text, `${SAJT}/foralder#betalning`);
+  assertStringIncludes(bekraftat.html, 'Gå till betalningen');
+  // Villkorat: ett betalt pass som flyttats och bekräftats igen får
+  // samma mejl, och ska inte läsa det som en ny räkning.
+  assertStringIncludes(bekraftat.text, 'om ni inte redan har gjort det');
+
+  const paminnelse = rendera('paminnelse', 'parent');
+  assertStringIncludes(paminnelse.text, 'om ni inte redan har gjort det');
+  assertStringIncludes(paminnelse.text, 'Ett pass som inte är betalt hålls inte.');
+
+  for (const typ of ['pass_bekraftat', 'paminnelse', 'pass_nytt'] as const) {
+    const hjalpare = rendera(typ, 'tutor');
+    assertEquals(hjalpare.text.includes('betal'), false, `${typ} till studiehjälparen nämner betalning`);
+  }
+  assertEquals(vyAdress('parent', 'betalning'), `${SAJT}/foralder#betalning`);
+  assertEquals(vyAdress('tutor', 'betalning'), `${SAJT}/larare#lektioner/pass`);
+});
+
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {
   const m = rendera('meddelande', 'parent');
   assertStringIncludes(m.text, 'Du får det här för att du har ett konto på Nextrum');

@@ -83,7 +83,8 @@ En studiehjälpare syns publikt först när admin satt läget till
   pass med kort när studiehjälparen bekräftat tiden, senast innan
   passet börjar, och **ett pass som inte är betalt hålls inte**. Ingen
   månadsfaktura och inget betalningsvillkor i dagar. Meningen står på
-  femton ställen i nio filer, på båda språken.
+  sexton ställen i tio filer, på båda språken, och sedan Fas 14.3 i
+  familjens mejl.
   `verktyg/kolla-betalningsvillkor.py` räknar dem, letar efter det gamla
   löftet ("efterskott", "10 dagars …") i allt som serveras, och körs i
   CI. **En betalning som tas på ett annat sätt än villkoren lovar är en
@@ -280,7 +281,9 @@ Tabeller: `profiles`, `students`, `tutor_profiles`, `tutor_availability`,
 och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
 `kund_skatteuppgifter`. Fas 8–9 la till `ai_forslag`, `ai_konfig` och
 `handlingar`. Fas 13.2 la till `biblioteksmaterial`. Fas 15.3 la till
-`progress_historik` (skrivs bara av en trigger; ingen skrivpolicy). Runda 2 la till notisernas sju: `notiser` (i vyn),
+`progress_historik` (skrivs bara av en trigger; ingen skrivpolicy).
+Fas 14.3 la till `stripe_tvister` (skrivs bara av `stripe-webhook`,
+läses bara av admin). Runda 2 la till notisernas sju: `notiser` (i vyn),
 `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
 `notis_fel` — plus `flaggor`, som är strömbrytarna för det som
@@ -662,6 +665,7 @@ tillbaka en kopia.**
 | `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet | Knappen på passet i föräldravyn |
 | `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser` | Stripe |
 | `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
+| `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Ekonomi → Kortbetalningar |
 
 `supabase/config.toml` bär `verify_jwt = false` för de sju funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
@@ -932,6 +936,16 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   `DEPLOY-BETALNING.md` avsnitt 9 är det första som ska göras, före
   allt annat i den här listan.
 
+  **Det behöver inte gissas längre (Fas 14.3).** Miljön som skrev
+  betalkoden når inte `api.stripe.com`, så nyckeln stod som "okänd
+  härifrån" och versionen som "troligen". Knappen **Kontrollera
+  Stripe** under Kortbetalningar kör `stripe-lage`, som frågar Stripe
+  med servernyckeln och säger vad som är rött: nyckelns sort,
+  kontot, kontoutdragets grunddel, endpointens adress, version och
+  händelser, och leveranserna i `stripe_handelser`. Reglerna står i
+  `granskaStripe()` i `_delad/stripe.ts` och har egna prov. **Tryck på
+  den före provbetalningen.**
+
   **Connect är borttaget (Fas 12.5.)** Studiehjälparen får betalt den
   25:e, som en löning, i en klump för månadens rapporterade pass. Det
   är `payouts` och månadskörningens jobb. En destination charge hade
@@ -969,9 +983,15 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
     månadsfaktura i efterskott med tio dagars betalningsvillkor, och
     villkoren har ett avsnitt om ändringar. Meddela dem innan det nya
     gäller dem.
-  - **Mejlen säger ingenting om betalning.** Bokningsbekräftelsen och
-    påminnelsen före passet borde säga att passet ska betalas. Det är
-    ett av villkoren i spärrens `vantar_pa`.
+  - **Korttvister har en sista dag, och den är människans (Fas 14.3).**
+    Förut satte webhooken bara `betalning_status = 'tvist'`: sista dagen
+    att svara, orsaken och utfallet stod ingenstans, och en förlorad
+    tvist såg ut som en öppen. Nu sparas de i `stripe_tvister`, en
+    uppgift med dagen som förfallodag skapas, och adminvyn visar dagar
+    kvar. Underlaget skickas in i Stripes dashboard, av en människa.
+    DEPLOY-BETALNING.md 9.10 har processen. En förlorad tvist står kvar
+    som `tvist`, inte `aterbetald`: passet hölls, och ett återkrav vi
+    förlorat är inte en återbetalning vi valt.
   - **Ingen avbokningsavgift.** Villkoren lovar hela beloppet tillbaka
     för ett pass som aldrig hölls. En avgift för sena avbokningar är ett
     nytt villkor, inte en inställning.
@@ -979,6 +999,18 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
     verifikation per betalt pass, spårad med
     `stripe_balanstransaktion_id`, och Stripes utbetalning till banken
     som en egen händelse, netto efter avgiften.
+
+  **Fas 14.3 tog säljarens MVP-lista som utgångspunkt** (punkterna står
+  i DEPLOY-BETALNING.md 9.8). Utöver tvisterna och kontrollen ovan:
+  checkout tar **bara kort**, för Klarna och Swish blir klara först i
+  efterhand genom en händelse webhooken inte hanterar, och familjen
+  hade betalat ett pass som stod obetalt för alltid. Kvittot skickas
+  genom `receipt_email`, inte genom en kryssruta i dashboarden.
+  Kontoutdragets tillägg kapas vid tio tecken, för hela raden får vara
+  22 och ett långt ämne hade fått Stripe att neka betalningen. Och
+  bokningsbekräftelsen och påminnelsen till familjen säger att passet
+  betalas före, vilket var villkor 3 och 4 för spärren. Kvar av
+  villkoren är bara provbetalningen.
 
   **Fas 14.1 lagade sex fel i kortvägen före omställningen**, och tre
   av dem ändrar hur man ska läsa raden:

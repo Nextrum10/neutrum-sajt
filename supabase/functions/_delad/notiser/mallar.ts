@@ -18,6 +18,19 @@
 // den som inte gjorde ändringen, men ibland var det admin, och då
 // får båda den. "Tove har flyttat passet" hade då varit fel. Texterna
 // säger vad som hänt, inte vem som gjorde det.
+//
+// BETALNINGEN STÅR I FAMILJENS MEJL (Fas 14.3). Familjen betalar varje
+// pass med kort före passet, och ett pass som inte är betalt hålls
+// inte. Bekräftelsen och påminnelsen sa ingenting om det, och det var
+// två av de fyra villkoren för spärren "ingen betalning, inget pass"
+// (DEPLOY-BETALNING.md 9.9). Mallen vet inte om passet är betalt —
+// RenData bär bara datum, tid, ämne och förnamn, och läget hade ändå
+// hunnit ändras mellan kön och utskicket — så alla tre säger det
+// villkorat. Också en bekräftelse kan gälla ett betalt pass: flyttas
+// det och bekräftas igen går samma mejl ut, och "betala det" hade då
+// låtit som en ny räkning. Studiehjälparen får ingenting om
+// betalningen: det är familjens sak, och studiehjälparvyn visar läget
+// när spärren är på.
 // ============================================================
 
 import type { Avbokningsskal, MejlbarTyp, RenData, Roll } from './typer.ts';
@@ -30,7 +43,7 @@ import { narText, paminnelseNar } from './tid.ts';
  * kvittot på en intresseanmälan går till någon som ännu inte har ett
  * konto, och en knapp till en inloggad vy hade mött en inloggning.
  */
-export type Mal = 'pass' | 'meddelanden' | 'boka' | 'sajten';
+export type Mal = 'pass' | 'meddelanden' | 'boka' | 'betalning' | 'sajten';
 
 export type Innehall = {
   amne: string;
@@ -55,6 +68,12 @@ export const KATEGORI: Record<MejlbarTyp, string> = {
 };
 
 const SVARA = 'Svara ja eller nej i Nextrum.';
+
+/* Samma mening som villkoren, prissidan och FAQ:n. Den räknas av
+   verktyg/kolla-betalningsvillkor.py, så att mejlet inte kan börja säga
+   något annat än sidorna. */
+const HALLS_INTE = 'Ett pass som inte är betalt hålls inte.';
+const BETALA = `Betala det med kort i Nextrum senast innan det börjar, om ni inte redan har gjort det. ${HALLS_INTE}`;
 
 /**
  * Skälet med våra egna ord. Databasen skickar bara koden, och ett
@@ -98,9 +117,9 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
       rubrik: svara ? 'Ett nytt pass väntar på ditt svar' : 'Ett nytt pass är bokat',
       mening: svara
         ? `Passet${med(m)} är inte bekräftat än. ${SVARA}`
-        : m.roll === 'tutor' ? `Passet${med(m)} är bokat hos dig.` : `Passet${med(m)} är bokat.`,
-      knapp: svara ? 'Svara i Nextrum' : 'Visa passet',
-      mal: 'pass',
+        : m.roll === 'tutor' ? `Passet${med(m)} är bokat hos dig.` : `Passet${med(m)} är bokat. ${BETALA}`,
+      knapp: svara ? 'Svara i Nextrum' : m.roll === 'parent' ? 'Gå till betalningen' : 'Visa passet',
+      mal: !svara && m.roll === 'parent' ? 'betalning' : 'pass',
       fakta: passFakta(m, nar),
     };
   },
@@ -110,9 +129,9 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
     return {
       amne: medNar('Passet är bekräftat', nar),
       rubrik: 'Passet är bekräftat',
-      mening: `Tiden gäller och passet${med(m)} är bokat.`,
-      knapp: 'Visa passet',
-      mal: 'pass',
+      mening: `Tiden gäller och passet${med(m)} är bokat.` + (m.roll === 'parent' ? ` ${BETALA}` : ''),
+      knapp: m.roll === 'parent' ? 'Gå till betalningen' : 'Visa passet',
+      mal: m.roll === 'parent' ? 'betalning' : 'pass',
       fakta: passFakta(m, nar),
     };
   },
@@ -195,7 +214,7 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
     return {
       amne: nar ? `Påminnelse: pass ${nar}` : 'Påminnelse om pass',
       rubrik: nar ? `Pass ${nar}` : 'Påminnelse om pass',
-      mening: `En påminnelse om passet${med(m)}.`,
+      mening: `En påminnelse om passet${med(m)}.` + (m.roll === 'parent' ? ` ${BETALA}` : ''),
       knapp: 'Visa passet',
       mal: 'pass',
       fakta: passFakta(m, narText(m.d.datum, m.d.tid)),

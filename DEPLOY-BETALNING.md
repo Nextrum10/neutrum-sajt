@@ -368,12 +368,14 @@ provet. Gör den innan ni rör en skarp nyckel, och innan spärren slås på (9.
 |---|---|
 | Kolumnerna och skyddet (`20260922155740_fas12_1_*.sql`) | **Applicerad** |
 | `stripe-konto` | **Borttagen**, ur repot och ur driften (Fas 12.5) |
-| `stripe-checkout` | **ACTIVE**, version 5, `verify_jwt = true`. Fas 14.1-koden |
-| `stripe-webhook` | **ACTIVE**, version 5, `verify_jwt = false`. Fas 14.1-koden |
+| Korttvisterna (`20260924125618_fas14_3_*.sql`) | **Applicerad.** Tabellen `stripe_tvister`, se 9.10 |
+| `stripe-checkout` | **ACTIVE**, version 6, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken |
+| `stripe-webhook` | **ACTIVE**, version 6, `verify_jwt = false`. Fas 14.3: tvisterna sparas med sista svarsdag, orsak och utfall |
 | `stripe-aterbetalning` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
-| `STRIPE_SECRET_KEY` | **Okänt härifrån.** Den läses först efter inloggningskontrollen och syns inte utan en riktig inloggning. Saknas den svarar Betala-knappen "STRIPE_SECRET_KEY saknas i miljön" |
+| `stripe-lage` | **ACTIVE**, version 1, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting |
+| `STRIPE_SECRET_KEY` | **Visas i adminvyn** sedan Fas 14.3: Betalningar & utbetalningar → Kortbetalningar → **Kontrollera Stripe** säger om den saknas, är en test- eller skarp nyckel, eller har fel format. Inte ett tecken mer än så |
 | `STRIPE_WEBHOOK_SECRET` | **Satt och provad**: en påhittad signatur faller på tidsstämpeln, inte på hemligheten (slutet av 9.4) |
-| Webhook-endpoint hos Stripe | **Skapad** i sandlådan. Ingen leverans har kommit fram |
+| Webhook-endpoint hos Stripe | **Skapad** i sandlådan. Ingen leverans har kommit fram. **Saknar troligen `charge.dispute.updated`**, som kom till i Fas 14.3 (9.4) |
 | Knappen hos familjen | Finns: på passet när det är bekräftat, och på ett genomfört pass som inte är betalt |
 | Spärren `kortsparr` | **Av.** Se 9.9 |
 
@@ -382,10 +384,10 @@ formalitet: `apply_migration` och `functions deploy` ändrar driften direkt meda
 git är ett skilt steg, och de två har glidit isär i det här projektet förut
 (CLAUDE.md avsnitt 7).
 
-**En skillnad finns, och den är känd.** `stripe-checkout` bär en äldre kopia av
-`_delad/pris.ts` i sitt paket, från före Fas 14.2. De tre funktioner den använder
-därifrån (`familjebelopp`, `radtext`, `standardTjanst`) är oförändrade, så
-beloppet blir detsamma. Nästa gång checkout driftsätts följer den nya kopian med.
+Skillnaden som stod här förut är borta: `stripe-checkout` bar en kopia av
+`_delad/pris.ts` från före Fas 14.2, och version 6 (Fas 14.3) har dagens. Alla
+fyra funktionerna, och `notis-ko` version 10 med de nya mejltexterna, är lästa
+tillbaka fil för fil och lika med repot.
 
 ### 9.2 Nycklarna
 
@@ -412,6 +414,7 @@ Kommandona står kvar för en ny miljö, och för när ni ändrar något i funkt
 supabase functions deploy stripe-checkout
 supabase functions deploy stripe-webhook
 supabase functions deploy stripe-aterbetalning
+supabase functions deploy stripe-lage
 ```
 
 **Kör dem från repotroten**, så att `supabase/config.toml` läses. Utan filen får
@@ -419,8 +422,9 @@ supabase functions deploy stripe-aterbetalning
 leverans från Stripe. Ingen människa är anropare, så ingen ser det — se filhuvudet
 i `config.toml`.
 
-`stripe-checkout` och `stripe-aterbetalning` anropas av en inloggad förälder
-respektive admin och ska ha JWT-kravet kvar. De står därför inte i `config.toml`.
+`stripe-checkout`, `stripe-aterbetalning` och `stripe-lage` anropas av en inloggad
+förälder respektive admin och ska ha JWT-kravet kvar. De står därför inte i
+`config.toml`.
 
 `stripe-webhook` har `verify_jwt = false` i `supabase/config.toml`, för att
 anroparen är Stripe och inte kan ha en Supabase-token. **Driftsätt aldrig den utan
@@ -467,7 +471,14 @@ Händelser som ska väljas, och varför just de:
 | `checkout.session.completed` | Sätter passet som betalt. **Enda vägen dit.** |
 | `payment_intent.payment_failed` | Familjen kan försöka igen |
 | `charge.refunded` | Skriver återbetalt belopp |
-| `charge.dispute.created`, `charge.dispute.closed` | Markerar tvist |
+| `charge.dispute.created` | Sparar tvisten med sista svarsdag och orsak, och lägger en uppgift (9.10) |
+| `charge.dispute.updated` | Stripe flyttar tvisten till `under_review` när underlaget skickats in, och kan ändra dagen. **Ny i Fas 14.3** |
+| `charge.dispute.closed` | Utfallet: vunnen blir en betalning igen, förlorad står kvar som tvist |
+
+**`charge.dispute.updated` saknas troligen på endpointen**, för den stod inte
+här när endpointen skapades. Lägg till den: endpointens sida → **Update details**
+→ Select events. Knappen **Kontrollera Stripe** i adminvyn säger vilka som
+saknas, så ni behöver inte gissa.
 
 **Välj inga fler.** `transfer.*`, `account.updated` och `payout.*` stod här förut
 och hörde till Connect. Funktionen har inga grenar för dem sedan Fas 12.5: de
@@ -494,17 +505,32 @@ curl -s -X POST https://ddkfiuvcppalutfulvbi.supabase.co/functions/v1/stripe-web
 kom förbi den kontrollen och föll på tidsstämpeln. `Webhookhemligheten är inte satt.`
 betyder att den inte är det. Ett 401 betyder att `verify_jwt` slog på igen, se 9.3.
 
-### 9.5 Kontoutdraget
+### 9.5 Kontoutdraget och kvittot
 
-Sätt Nextrums statement descriptor i Stripe → Settings → Business → Public details.
-Koden sätter ett suffix per pass (ämnet), men grunddelen kommer från kontot. Står
-det något annat än Nextrum där ringer familjen banken i stället för oss.
+Kontoutdragets rad är två delar. **Grunddelen** kommer från kontot: Stripe →
+Settings → Business → Public details, "Shortened descriptor". Sätt `NEXTRUM`.
+**Tillägget** sätter koden per pass, och det är ämnet: familjen ser ungefär
+`NEXTRUM* MATEMATIK`. Hela raden får vara högst 22 tecken, och därför kapar
+koden ämnet vid tio (Fas 14.3). Förut kapades det vid 22, och ett långt ämne hade
+gjort raden för lång, och då nekar Stripe betalningen.
 
-Slå också på kvitton: Stripe → Settings → Emails → Successful payments.
+**Kontrollera Stripe** i adminvyn läser grunddelen och säger om det står Nextrum.
+Står det något annat ringer familjen banken i stället för oss.
+
+**Kvittot skickas av koden** sedan Fas 14.3: `receipt_email` sätts till familjens
+adress, och med den satt skickar Stripe kvittot i skarpt läge oavsett
+inställningen under Settings → Emails. I testläge skickar Stripe inga kvitton
+alls, så det går inte att se förrän första riktiga betalningen. Kvittots utseende
+(logga, färg, kontaktadress) sätts under Settings → Branding.
 
 ### 9.6 Prova hela kedjan, i testläge
 
 I den här ordningen, för varje steg beror på det förra:
+
+Tryck först på **Kontrollera Stripe** under Betalningar & utbetalningar →
+Kortbetalningar. Varje röd rad där är ett skäl till att stegen nedan inte kommer
+att fungera, och det är billigare att se det där än att leta efter det i
+`stripe_handelser`.
 
 0. **Skicka en testhändelse** från endpointens sida i Stripe
    (`checkout.session.completed`). Den ska landa i `stripe_handelser` med
@@ -521,7 +547,11 @@ I den här ordningen, för varje steg beror på det förra:
    `misslyckad` och går att betala igen.
 6. **Prova en återbetalning**, både hel och delvis, från Betalningar &
    utbetalningar → Kortbetalningar.
-7. **Prova en tvist** med `4000 0000 0000 0259`.
+7. **Prova en tvist** med `4000 0000 0000 0259`. Den ska landa i
+   `stripe_tvister` med `lage = 'needs_response'` och en `svara_senast`, och en
+   uppgift "Svara på korttvisten senast …" ska dyka upp under Uppgifter. Svara
+   sedan med underlaget `winning_evidence` i Stripes dashboard: tvisten ska stängas
+   som vunnen och passet bli `betald` igen.
 8. **Prova ett avbokat pass.** Öppna betalsidan, avboka passet i en annan flik och
    betala sedan. Passet ska bli `betald` och dyka upp under Avvikelser som
    **Betalt men avbokat** tills det återbetalats.
@@ -547,8 +577,10 @@ utbetalning**. Båda gällde anslutna konton och finns inte att prova sedan Fas 
 - **Priset räknas när familjen betalar**, men villkoren lovar priset vid
   bokningen. Höj inte priset medan bokade pass väntar på betalning; prisdialogen i
   adminvyn räknar dem.
-- **Mejlen säger ingenting om betalning.** Bokningsbekräftelsen och påminnelsen före
-  passet borde säga att passet ska betalas. Det är ett villkor för spärren (9.9).
+- **Mejlen säger det nu (Fas 14.3).** Bokningsbekräftelsen och påminnelsen till
+  familjen säger att passet betalas med kort senast innan det börjar, och att ett
+  pass som inte är betalt inte hålls. Mallen vet inte om just det passet redan är
+  betalt, så meningen är villkorad: "om ni inte redan har gjort det".
 
 ### 9.8 Säljarens MVP-checklista, punkt för punkt
 
@@ -566,12 +598,12 @@ studiehjälparen är mottagare hos Stripe. Det är hen inte. Hen får löning de
 | 3 | Accounts v2 recipient-konton med Express Dashboard | **Utgår.** Byggt i 12.1, borttaget i 12.5 |
 | 4 | Stripe-hostad onboarding av studiehjälpare | **Utgår.** Samma |
 | 5 | Blockera betalning tills kontot kan ta emot överföringar | **Utgår.** Var `stripe_kan_ta_emot`, kolumnen står kvar märkt OANVÄND |
-| 6 | Checkout i SEK, kort som första betalningsmetod | **Klar i kod**, aldrig körd mot Stripe |
+| 6 | Checkout i SEK, kort som första betalningsmetod | **Klar i kod** (Fas 14.3): bara kort, inte "först". Aldrig körd mot Stripe. Se nedan |
 | 7 | Destination charges och `application_fee_amount` | **Utgår.** Borttaget i 12.5 |
 | 8 | Byt till separate charges and transfers om ersättningen frisläpps efter lektionen | **Besvarad med ett tredje svar.** Se nedan |
-| 9 | Verifierade webhooks, återbetalning med transfer reversal, process för korttvister | **Delvis.** Se nedan |
-| 10 | Statement descriptor och kvitton | **Delvis.** Koden sätter suffixet, grunddelen och kvittona sätts i Stripe. Se 9.5 |
-| 11 | Prova hela kedjan i testläge | **Inte gjord.** Se 9.6 |
+| 9 | Verifierade webhooks, återbetalning med transfer reversal, process för korttvister | **Klar i kod** (Fas 14.3). Tvisten har en sista dag, en uppgift och en process (9.10). Att svara är människoarbete |
+| 10 | Statement descriptor och kvitton | **Klar i kod** (Fas 14.3). Tillägget och kvittot sätts per betalning; grunddelen `NEXTRUM` sätts i Stripe, och adminvyn kontrollerar den. Se 9.5 |
+| 11 | Prova hela kedjan i testläge | **Inte gjord**, men förberedd: **Kontrollera Stripe** säger vad som saknas innan ni börjar. Se 9.6 |
 | 12 | Svensk juridik- och skattegenomgång, särskilt minderåriga | **Inte gjord**, och viktigare nu än förut. Se nedan |
 
 **Punkt 8 var säljarens egen slutfråga**, och han satte den rätt: den avgjorde
@@ -580,14 +612,24 @@ var **den 25:e, som en löning**, och då ska Stripe inte vara med i den delen a
 Varken destination charges eller separate charges and transfers. `payouts` och
 månadskörningen gör jobbet, och `fakturering` räknar ersättningen ur rapporten.
 
-**Punkt 9 är tre saker, och bara två av dem är kod.**
-Webhooken är klar: signaturen prövas i konstant tid på den råa kroppen, och
-`stripe_handelser` är taket mot dubbletter. Återbetalningen är klar, men UTAN
-`reverse_transfer` och `refund_application_fee` — det finns ingen transfer att
-backa, och Stripe hade avvisat flaggorna som meningslösa. Koden markerar en tvist
-som `tvist` på passet. **Processen runt tvisten finns inte:** att samla
-bokningsbekräftelse och närvaro, svara inom tidsfristen, och ha en reserv. Det är
-människoarbete, inte kod, och ingen har gjort det.
+**Punkt 6 säger "kort som första betalningsmetod". Koden tar bara kort**, och
+det är med flit. Utan `payment_method_types` väljer Stripe betalsätt ur
+dashboardens inställningar, och slår någon på Klarna eller Swish där erbjuds de
+familjen. Båda kan bli klara först i efterhand: sessionen fullbordas som obetald
+och pengarna kommer med `checkout.session.async_payment_succeeded`, en händelse
+webhooken inte hanterar. Familjen hade betalat och passet stått som obetalt för
+alltid. Apple Pay och Google Pay är kort i en plånbok och följer med. Vill ni
+lägga till Swish senare är det en ny gren i webhooken och en ny händelse på
+endpointen, inte en kryssruta.
+
+**Punkt 9 är tre saker.** Webhooken är klar: signaturen prövas i konstant tid på
+den råa kroppen, och `stripe_handelser` är taket mot dubbletter. Återbetalningen
+är klar, men UTAN `reverse_transfer` och `refund_application_fee` — det finns
+ingen transfer att backa, och Stripe hade avvisat flaggorna som meningslösa.
+**Tvisterna har en process sedan Fas 14.3**, beskriven i 9.10: sista dagen att
+svara sparas, en uppgift med dagen som förfallodag skapas, och adminvyn visar
+varje öppen tvist med dagar kvar och vad som ska samlas. Att faktiskt skicka in
+underlaget är fortfarande en människas jobb, i Stripes dashboard.
 
 **Punkt 12 blev inte enklare av att Connect försvann, bara annorlunda.**
 Säljaren varnade för minderåriga studiehjälpare: Stripes svenska avtal kräver en
@@ -628,8 +670,63 @@ och texten går inte att skriva om från en vy:
 1. En provbetalning har gått hela vägen (9.6, steg 0–3).
 2. Villkoren, prissidan och FAQ:n säger att passet betalas i förväg. **Gjort** i
    Fas 14.2, och `verktyg/kolla-betalningsvillkor.py` vaktar det.
-3. Bokningsbekräftelsen säger det. **Inte gjort.**
-4. Påminnelsen före passet säger det. **Inte gjort.**
+3. Bokningsbekräftelsen säger det. **Gjort** i Fas 14.3.
+4. Påminnelsen före passet säger det. **Gjort** i Fas 14.3.
+
+Tre och fyra står fortfarande i flaggans `vantar_pa`, för `stampla_flaggan()`
+skriver om texten vid varje ändring och den går inte att ändra från en vy. Det
+som återstår är alltså steg 1: provbetalningen.
 
 `verktyg/rls-test.sql` provar spärren i båda lägena oavsett vad driften står på:
 nio prov om spärren, sex om flaggan, och avvikelserna runt den.
+
+### 9.10 Korttvister (Fas 14.3)
+
+En korttvist är när familjens bank drar tillbaka en betalning, för att
+kortinnehavaren bestridit den. Pengarna och Stripes tvistavgift dras från
+Nextrums saldo direkt. De kommer tillbaka bara om Nextrum skickar in underlag
+före en viss dag, och banken ger Nextrum rätt. **Missas dagen är tvisten
+förlorad**, utan att någon behöver ha sett den.
+
+**Vad koden gör.** Webhooken sparar varje tvist i `stripe_tvister`: Stripes id,
+passet, orsakens kod, läget, beloppet och sista dagen att svara. Inget underlag
+och ingen text från kortinnehavaren, bara koder, belopp och datum. När Stripe
+väntar på oss skapas en uppgift, "Svara på korttvisten senast 12 oktober", med
+dagen som förfallodag, orsaken med våra ord och vad som ska samlas. Tabellen
+läses bara av admin; ingen, inte ens admin, skriver i den från en vy
+(`verktyg/rls-test.sql`, avsnittet 14.3).
+
+Adminvyn visar varje öppen tvist under Betalningar & utbetalningar →
+Kortbetalningar → **Korttvister**, med dagar kvar, och en länk rakt till tvisten
+i Stripes dashboard.
+
+**Vad en människa gör:**
+
+1. **Samma dag som uppgiften kommer.** Öppna tvisten i Stripe. Orsaken avgör vad
+   som behövs; uppgiften säger det, och listan står i `tvistUnderlag()` i
+   `_delad/stripe.ts`.
+2. **Samla underlaget ur adminvyn.** Raden under Korttvister säger vad vi har:
+   när passet bokades, om det bekräftades, närvaron, rapporten och när det
+   betalades. System → Auditlogg visar när varje steg hände (loggen täcker passets
+   hela liv sedan Fas 9.3). Villkoren ligger på
+   `/anvandarvillkor`. Skriv av det som behövs; ladda aldrig upp hela rapporten om
+   barnet om orsaken inte kräver den.
+3. **Skicka in i Stripes dashboard**, under Tvister, före dagen. Stripe flyttar
+   tvisten till `under_review`, och uppgiften kan stängas.
+4. **Vänta på utfallet.** Det kan ta veckor. Vunnen: passet blir `betald` igen av
+   sig självt. Förlorad: passet står kvar som `tvist`, och beloppet är borta.
+
+**Ett förlorat pass är inte ett återbetalt pass.** Passet hölls, familjen fick det,
+och pengarna togs tillbaka av banken. `betalning_status` står därför kvar på
+`tvist`, inte `aterbetald`, och vad som hände står i `stripe_tvister`.
+Studiehjälparens ersättning räknas ur rapporten och påverkas inte av en tvist.
+Ska den det är det ett beslut för en människa, inte för en webhook.
+
+**Händelserna kan komma i fel ordning.** Stripe lovar ingen ordning, och en sen
+`updated` efter `closed` får inte öppna en avgjord tvist igen. En stängd rad
+skrivs därför bara över av en annan stängning.
+
+**`warning_needs_response` är en förfrågan, inte en tvist än.** Banken frågar
+innan den drar tillbaka något. Den får en uppgift på samma sätt: ett svar då kan
+hindra att det blir en tvist alls. Stängs den utan återkrav (`warning_closed`)
+räknas den som vunnen.

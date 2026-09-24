@@ -1099,6 +1099,29 @@
               <h5>Spärren</h5>
               <div id="kort-sparr"><div class="loading">Hämtar</div></div>
             </div>
+            <!-- Fas 14.3, punkt 10 och 11 på MVP-listan. Frågar Stripe med
+                 servernyckeln genom stripe-lage. Läser bara: endpoints,
+                 kontouppgifter och kvitton ändras i Stripes dashboard. -->
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Stripe-läget</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 12px">
+                Frågar Stripe om nyckeln, kontot, kontoutdraget och webhooken, och säger vad
+                som saknas. Ingenting ändras hos Stripe härifrån.
+              </p>
+              <div id="stripe-lage"></div>
+              <div style="margin-top:12px"><button class="btn btn-ghost btn-sm" type="button" data-stripe-lage>Kontrollera Stripe</button></div>
+            </div>
+            <!-- Fas 14.3, punkt 9. Skrivs av stripe-webhook. Sista dagen att
+                 svara är det enda som inte går att reparera i efterhand. -->
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Korttvister <em id="tvist-antal"></em></h5>
+              <div id="tvist-lista"><div class="loading">Hämtar</div></div>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:14px">
+                Underlaget skickas in i Stripes dashboard, under Tvister, och sparas aldrig här.
+                Missas sista dagen är tvisten förlorad, och då är både beloppet och Stripes
+                avgift för tvisten borta.
+              </p>
+            </div>
             <div class="dbox">
               <div class="adm-verktyg">
                 <input class="inp adm-sok" id="kort-sok" type="search" placeholder="Sök familj eller studiehjälpare" aria-label="Sök kortbetalning" autocomplete="off">
@@ -2106,7 +2129,7 @@
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=0dc7226d"></script>
-<script src="nextrum-admin-karna.js?v=a02bc836"></script>
+<script src="nextrum-admin-karna.js?v=afd7575a"></script>
 <script src="nextrum-admin-detalj.js?v=423d69a9"></script>
 <script src="nextrum-admin-oversikt.js?v=bba9e74f"></script>
 <script src="nextrum-admin-kunder.js?v=01b666e6"></script>
@@ -2114,7 +2137,7 @@
 <script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
 <script src="nextrum-admin-kommunikation.js?v=24a9a868"></script>
 <script src="nextrum-admin-drift.js?v=2437242e"></script>
-<script src="nextrum-admin-ekonomi.js?v=e7124fa9"></script>
+<script src="nextrum-admin-ekonomi.js?v=83de4190"></script>
 <script src="nextrum-admin-tjanster.js?v=b5673580"></script>
 <script src="nextrum-admin-system.js?v=d0d24a80"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>

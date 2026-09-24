@@ -199,7 +199,7 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib, sparr] = await Promise.all([
+           upd, uppg, rt, audit, bib, sparr, tvister] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -235,7 +235,10 @@ const NXAdmin = (function () {
       /* Fas 14.2: spärren "ingen betalning, inget pass". En rad i
          flaggor, som notismejlen. Slås om under Ekonomi →
          Kortbetalningar, där det den styr också syns. */
-      supa.from('flaggor').select('*').eq('kod', 'kortsparr').maybeSingle()
+      supa.from('flaggor').select('*').eq('kod', 'kortsparr').maybeSingle(),
+      /* Fas 14.3: korttvisterna, med sista dagen att svara. Bara admin
+         ser tabellen; för alla andra är svaret tomt. */
+      supa.from('stripe_tvister').select('*').order('skapad', { ascending: false })
     ]);
 
     S.leads = leads.data || [];
@@ -260,6 +263,10 @@ const NXAdmin = (function () {
        av. Kortet säger det i stället för att visa ett läge det inte vet. */
     S.kortsparr = sparr.data || null;
     S.kortsparrFel = sparr.error ? felText(sparr.error) : null;
+    /* Ett läsfel är inte "inga tvister": rutan säger att den inte
+       kunde läsa, i stället för att se lugn ut. */
+    S.tvister = tvister.data || [];
+    S.tvisterFel = tvister.error ? felText(tvister.error) : null;
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */

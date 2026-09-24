@@ -20,8 +20,9 @@ Två listor:
 
   · LÖFTET — meningen som ska stå, med antal, där betalningen
     beskrivs: villkoren, prissidan, FAQ:n, maskoten och studievyn, på
-    båda språken. Antalet står med för att ett sökuttryck som inte
-    hittar något annars ser ut som ett godkännande: formuleras
+    båda språken, och sedan Fas 14.3 familjens mejl. Antalet står med
+    för att ett sökuttryck som inte hittar något annars ser ut som ett
+    godkännande: formuleras
     meningen om slutar mönstret matcha, och då ska verktyget säga det
     i stället för att tiga om ett ställe det slutat bevaka.
 
@@ -33,9 +34,12 @@ inte något ett skript ska gissa.
 
 TÄCKS INTE: konstanten BETALNINGSVILLKOR_DAGAR i _delad/konstanter.ts.
 Den finns kvar för fakturor som skapades före Fas 14.2 — och sådana
-fanns det noll av — och lovar ingenting om ett nytt pass. Mejlmallarna
-i _delad/notiser/ täcks inte heller; de säger i dag ingenting om
-betalning.
+fanns det noll av — och lovar ingenting om ett nytt pass.
+
+Mejlmallarna i _delad/notiser/mallar.ts TÄCKS sedan Fas 14.3. Då
+började bekräftelsen och påminnelsen till familjen säga att passet
+betalas före, och mejlet är det familjen läser sist innan passet.
+Meningen står en gång i källan, som en konstant mallarna delar.
 
 TÄCKER INTE HELLER det som faktiskt körs: att spärren kortsparr är på
 är en flagga i databasen, inte en mening på en sida. Se CLAUDE.md
@@ -55,6 +59,8 @@ LOFTET = [
     ('faq.html', LOFTE_SV, 2, 'FAQ: hur betalningen fungerar (text + schema)'),
     ('foralder.html', LOFTE_SV, 2, 'studievyn: Betalning och Pris & villkor'),
     ('nextrum-studie-vy.js', LOFTE_SV, 1, 'studievyn: notisen om pass att betala'),
+    ('supabase/functions/_delad/notiser/mallar.ts', LOFTE_SV, 1,
+     'mejlen: bekräftelsen, påminnelsen och ett bokat pass till familjen'),
 
     ('en/anvandarvillkor.html', LOFTE_EN, 1, 'terms of use in English'),
     ('en/priser.html', LOFTE_EN, 1, 'pricing page in English'),

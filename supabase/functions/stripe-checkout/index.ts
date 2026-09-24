@@ -68,6 +68,10 @@ import { familjebelopp, radtext, standardTjanst, type Tjanst } from '../_delad/p
 
 const CORS = cors();
 
+/* Räknas upp när sessionens parametrar ändras. Se idempotensnyckeln.
+   2: bara kort och kvitto till familjens adress (Fas 14.3). */
+const SESSIONSFORM = 2;
+
 /* Bara vår egen sajt får vara returadress. En öppen omdirigering i ett
    betalflöde är en inloggningssida som ser äkta ut. */
 function egenAdress(u: unknown, reserv: string): string {
@@ -81,7 +85,14 @@ function egenAdress(u: unknown, reserv: string): string {
 }
 
 /* Kontoutdragets text. Stripe tillåter varken <>'"* eller tecken
-   utanför latin-1, och svarar med ett fel i stället för att kapa. */
+   utanför latin-1, och svarar med ett fel i stället för att kapa.
+
+   HÖGST TIO TECKEN (Fas 14.3). Det här är bara tillägget: Stripe
+   sätter kontots förkortade namn framför, plus "* ", och hela raden får
+   vara högst 22 tecken. Förkortningen får vara upp till tio, så tio
+   kvar till ämnet är det enda som alltid ryms. Förut kapades vid 22,
+   och "SAMHALLSKUNSKAP" efter "NEXTRUM* " blev 24 — en betalning som
+   Stripe hade nekat för ett ämne. */
 function descriptor(s: string): string {
   const rent = s
     .replace(/[åäÅÄ]/g, 'A').replace(/[öÖ]/g, 'O').replace(/[éèÉÈ]/g, 'E')
@@ -89,7 +100,7 @@ function descriptor(s: string): string {
     .replace(/\s+/g, ' ')
     .trim()
     .toUpperCase();
-  return rent.slice(0, 22) || 'LAXHJALP';
+  return rent.slice(0, 10).trim() || 'LAXHJALP';
 }
 
 Deno.serve(async (req) => {
@@ -193,6 +204,16 @@ Deno.serve(async (req) => {
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
+      /* BARA KORT (punkt 6 på MVP-listan, Fas 14.3). Utan raden väljer
+         Stripe betalsätt ur dashboardens inställningar, och slås Klarna
+         eller Swish på där erbjuds de här. Båda kan bli klara först i
+         efterhand: sessionen fullbordas som obetald och pengarna kommer
+         med checkout.session.async_payment_succeeded, en händelse
+         webhooken inte lyssnar på. Familjen hade betalat och passet
+         stått som obetalt för alltid. Villkoren säger kort, och det är
+         det som tas emot. Apple Pay och Google Pay är kort i plånbok och
+         följer med. */
+      payment_method_types: ['card'],
       customer_email: kund?.email ?? undefined,
       // Passets id följer med hela vägen, så att webhooken vet vilken
       // rad som ska ändras utan att gissa.
@@ -217,13 +238,24 @@ Deno.serve(async (req) => {
            genom payouts. Se filhuvudet. */
         metadata: { booking_id: pass.id, tutor_id: pass.tutor_id },
         statement_descriptor_suffix: descriptor(String(pass.subject ?? 'Laxhjalp')),
+        /* Kvittot (punkt 10). Med adressen satt skickar Stripe kvittot i
+           skarpt läge oavsett inställningen under Settings → Emails, så
+           det hänger inte på att någon kommit ihåg en kryssruta. I
+           testläge skickas inga kvitton alls. */
+        receipt_email: kund?.email ?? undefined,
       },
       success_url: `${bas}/foralder?betalt={CHECKOUT_SESSION_ID}`,
       cancel_url: `${bas}/foralder?betalning=avbruten`,
     // En idempotensnyckel per pass OCH belopp. Klickar familjen två
     // gånger får de samma session. Ändras beloppet (rabatt, ny tjänst)
     // blir det en ny, för det är en annan betalning.
-    }, `nextrum-pass-${pass.id}-${netto}`);
+    //
+    // SESSIONSFORM står i nyckeln för att Stripe vägrar en nyckel som
+    // återanvänds med ANDRA parametrar inom ett dygn: den som klickat
+    // Betala före en driftsättning som ändrar sessionen hade annars fått
+    // ett idempotensfel i stället för en kassa. Räkna upp den när
+    // parametrarna ovan ändras.
+    }, `nextrum-pass-${pass.id}-${netto}-f${SESSIONSFORM}`);
 
     // ---------- vad vi BAD om skrivs ner ----------
     /* Först nu, och bara med service_role. Skrivningen kan inte göras

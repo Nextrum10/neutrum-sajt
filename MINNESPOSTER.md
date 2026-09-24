@@ -307,8 +307,13 @@ familjen varje pass med kort, före passet, och får ingen faktura.
 Månadskörningen skapar bara studiehjälparens underlag, som betalas den
 25:e från banken, aldrig genom Stripe. Kortvägen är driftsatt och
 webhookens hemlighet provad, men ingen leverans från Stripe har kommit
-fram. Spärren "ingen betalning, inget pass" (flaggan `kortsparr`) står
-av tills en provbetalning gått igenom. Startererbjudandet på prissidan
+fram. Knappen Kontrollera Stripe under Kortbetalningar (Fas 14.3)
+frågar Stripe och säger vad som saknas; tryck på den före
+provbetalningen. Spärren "ingen betalning, inget pass" (flaggan
+`kortsparr`) står av tills en provbetalning gått igenom. En korttvist
+har en sista dag att svara, sparas i `stripe_tvister` och blir en
+uppgift; att svara är en människas jobb (DEPLOY-BETALNING.md 9.10).
+Startererbjudandet på prissidan
 finns inte i koden, och priset räknas när familjen betalar fast
 villkoren lovar priset vid bokningen. Vidare: Google
 Workspace, Fortnox (fällan: refresh-token roteras

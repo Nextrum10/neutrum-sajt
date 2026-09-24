@@ -59,7 +59,10 @@
 
 import { serviceklient } from '../_delad/auth.ts';
 import { json } from '../_delad/http.ts';
-import { aterbetalningsLage, prövaSignatur, v1 } from '../_delad/stripe.ts';
+import {
+  aterbetalningsLage, betallageEfterTvist, prövaSignatur, tidFranUnix, tvistOrsakText, tvistUnderlag,
+  tvistUtfall, tvistVantarPaOss, v1,
+} from '../_delad/stripe.ts';
 
 type Handelse = {
   id?: string;
@@ -243,20 +246,106 @@ Deno.serve(async (req) => {
         return await klar(`återbetalt ${aterbetalt} öre (via metadata)`);
       }
 
-      // ---------- korttvist ----------
+      // ---------- korttvist (Fas 14.3) ----------
+      /* Förut sattes bara betalning_status = 'tvist'. Sista dagen att
+         svara, orsaken och utfallet stod ingenstans, och en förlorad
+         tvist såg ut precis som en öppen. Nu sparas allt det i
+         stripe_tvister, och den som ska svara får en uppgift med dagen
+         som förfallodag.
+
+         HÄNDELSERNA KAN KOMMA I FEL ORDNING. Stripe lovar inte ordning,
+         och ett sent 'updated' efter 'closed' får inte öppna en avgjord
+         tvist igen. En stängd rad skrivs därför bara över av en annan
+         stängning. Passets läge räknas sedan ur raden som den blev, inte
+         ur händelsen som råkade komma sist. */
       case 'charge.dispute.created':
+      case 'charge.dispute.updated':
       case 'charge.dispute.closed': {
+        const tvistId = String(obj.id ?? '');
         const chargeId = String(obj.charge ?? '');
-        if (!chargeId) return await klar('tvist utan charge');
-        const vunnen = typ.endsWith('closed') && obj.status === 'won';
-        await db.from('bookings')
-          .update({ betalning_status: vunnen ? 'betald' : 'tvist' })
-          .eq('stripe_charge_id', chargeId);
-        /* Tvisten belastar NEXTRUMS saldo, inte studiehjälparens.
-           Att föra tillbaka hens del är ett beslut för en människa och
-           beror på vad avtalet säger — därför ingen automatisk
-           transfer reversal här. */
-        return await klar(`tvist: ${String(obj.status ?? typ)}`);
+        if (!tvistId || !chargeId) return await klar('tvist utan id eller charge');
+
+        const lage = String(obj.status ?? '') || 'needs_response';
+        const stangs = typ === 'charge.dispute.closed' || tvistUtfall(lage) !== 'oppen';
+        const nu = new Date().toISOString();
+
+        const { data: passen } = await db.from('bookings')
+          .select('id, betalning_status').eq('stripe_charge_id', chargeId).limit(1);
+        const pass = passen?.[0] ?? null;
+
+        const { data: forut } = await db.from('stripe_tvister')
+          .select('stangd, lage').eq('id', tvistId).maybeSingle();
+        if (forut?.stangd && !stangs) {
+          return await klar(`tvist ${tvistId}: sen händelse efter stängning, ignorerad`);
+        }
+
+        const evidens = obj.evidence_details as Record<string, unknown> | undefined;
+        const { error: tvfel } = await db.from('stripe_tvister').upsert({
+          id: tvistId,
+          booking_id: pass?.id ?? null,
+          charge_id: chargeId,
+          orsak: String(obj.reason ?? '') || null,
+          lage,
+          belopp_ore: typeof obj.amount === 'number' ? obj.amount : null,
+          svara_senast: tidFranUnix(evidens?.due_by),
+          skarp: obj.livemode === true,
+          skapad: tidFranUnix(obj.created) ?? nu,
+          stangd: stangs ? nu : null,
+          uppdaterad: nu,
+        }, { onConflict: 'id' });
+        // Ett fel här ska synas: raden i stripe_handelser lämnas då
+        // ohanterad och Stripe skickar händelsen igen.
+        if (tvfel) throw new Error('stripe_tvister: ' + tvfel.message);
+
+        /* Passet ändras bara om det står som betalt eller i tvist. Ett
+           pass som redan återbetalats har fått pengarna tillbaka en gång;
+           tvisten syns i stripe_tvister, och läget ska inte ljuga om att
+           de dragits igen. */
+        if (pass && (pass.betalning_status === 'betald' || pass.betalning_status === 'tvist')) {
+          await db.from('bookings')
+            .update({ betalning_status: betallageEfterTvist(tvistUtfall(lage)) })
+            .eq('id', pass.id);
+        }
+
+        /* En uppgift när Stripe väntar på oss, med dagen som förfallodag.
+           Nyckeln är tvistens id, och skapa_uppgift vägrar en andra
+           medan den första är öppen — så en ny 'updated' blir ingen
+           dubblett. Titeln byggs av kod: ingen text från Stripe eller
+           kortinnehavaren hamnar i den. */
+        let uppgiftsfel = '';
+        if (tvistVantarPaOss(lage)) {
+          const senast = tidFranUnix(evidens?.due_by);
+          /* DAGEN RÄKNAS I UTC, med flit. Stripe sätter ofta fristen
+             strax före midnatt UTC, och då är det redan nästa dag i
+             Stockholm. UTC-datumet är aldrig senare än den verkliga
+             fristen, bara ibland en dag tidigare, och en dag för tidigt
+             kostar ingenting. */
+          const dag = senast
+            ? new Date(senast).toLocaleDateString('sv-SE', { timeZone: 'UTC', day: 'numeric', month: 'long' })
+            : null;
+          const kr = typeof obj.amount === 'number' ? `${Math.round(obj.amount / 100)} kr` : 'okänt belopp';
+          const { error: ufel } = await db.rpc('skapa_uppgift', {
+            p_titel: dag ? `Svara på korttvisten senast ${dag}` : 'Svara på korttvisten',
+            p_nyckel: `tvist:${tvistId}`,
+            p_typ: 'problem',
+            p_beskrivning: `${tvistOrsakText(String(obj.reason ?? ''))}. Belopp: ${kr}. `
+              + `${tvistUnderlag(String(obj.reason ?? ''))} Underlaget skickas in i Stripes dashboard, `
+              + 'under Tvister. Missas dagen är tvisten förlorad. Se DEPLOY-BETALNING.md 9.10.',
+            p_kopplad_tabell: pass ? 'bookings' : null,
+            p_kopplad_id: pass?.id ?? null,
+            p_forfallodag: senast ? senast.slice(0, 10) : null,
+            p_skapad_av_typ: 'system',
+          });
+          // Tvisten ÄR sparad. Att uppgiften inte blev av syns i
+          // stripe_handelser, i stället för att få hela leveransen att
+          // köras om och skriva raden en gång till.
+          if (ufel) uppgiftsfel = ', uppgiften gick inte att skapa: ' + ufel.message;
+        }
+
+        /* Tvisten belastar Nextrums saldo. Studiehjälparens ersättning
+           räknas ur rapporten och påverkas inte av en tvist: om den ska
+           det är ett beslut för en människa, inte för en webhook. */
+        return await klar(`tvist ${tvistId}: ${lage}${uppgiftsfel}`);
       }
 
       /* HÄR LÅG transfer.created, transfer.reversed, account.updated

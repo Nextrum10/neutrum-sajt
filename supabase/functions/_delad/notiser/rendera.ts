@@ -82,8 +82,11 @@ export function vyAdress(roll: Roll, mal: Mal | 'val'): string {
   // #boka finns bara i föräldravyn. Mallen ger den bara till familjen,
   // men skulle den ändå hamna hos en studiehjälpare blir det passlistan
   // i stället för en sektion som inte finns.
-  const hash = mal === 'pass' || (mal === 'boka' && roll === 'tutor') ? '#lektioner/pass'
+  // Betalning likaså: studiehjälparen betalar ingenting, och får
+  // passlistan om en sådan knapp någonsin hamnar hos hen.
+  const hash = mal === 'pass' || ((mal === 'boka' || mal === 'betalning') && roll === 'tutor') ? '#lektioner/pass'
     : mal === 'boka' ? '#boka'
+    : mal === 'betalning' ? '#betalning'
     : mal === 'meddelanden' ? '#meddelanden' : '#profil/notiser';
   return `${SAJT}${vy}${hash}`;
 }

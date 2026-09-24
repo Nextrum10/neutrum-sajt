@@ -119,6 +119,12 @@
 
   function ritaKortbetalningar() {
     ritaKortsparr();
+    /* Asynkron för rapporternas skull. Ett fel får inte lämna rutan på
+       "Hämtar" — då ser det ut som att den fortfarande arbetar. */
+    ritaTvister().catch(fel => {
+      const host = $('#tvist-lista');
+      if (host) host.innerHTML = tomt('Tvisterna gick inte att visa', felText(fel));
+    });
     const sök = $('#kort-sok').value.trim();
     const st = $('#kort-status').value;
     const alla = st === 'obetald'
@@ -227,6 +233,155 @@
       ritaKortsparr();
     });
   });
+
+  /* ============================================================
+     STRIPE-LÄGET (Fas 14.3)
+
+     Punkt 10 och 11 på säljarens MVP-lista. Om nyckeln var satt, om
+     webhooken lyssnade på rätt händelser och vilken version den stod
+     på gick förut inte att veta utan att logga in hos Stripe och leta.
+     stripe-lage frågar med servernyckeln och svarar med en lista;
+     reglerna för vad som är grönt bor i granskaStripe() i
+     _delad/stripe.ts, med egna prov.
+
+     Körs bara på knapptryck. Två anrop mot Stripe vid varje omritning
+     av Ekonomi hade varit två anrop för en fråga ingen ställt.
+     ============================================================ */
+  const PUNKT_MÄRKE = {
+    true: ['Klart', 'ar-klar'], false: ['Åtgärda', 'ar-ny'], null: ['Bra att veta', 'ar-vantar']
+  };
+
+  function ritaStripeLage(d) {
+    const host = $('#stripe-lage');
+    if (!host) return;
+    const punkter = d.punkter || [];
+    const röda = punkter.filter(p => p.ok === false).length;
+    const klockan = new Date().toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+    host.innerHTML = '<p class="small" style="margin:0 0 10px">'
+      + (röda ? '<b>' + röda + (röda === 1 ? ' sak' : ' saker') + ' att åtgärda.</b>' : 'Inget att åtgärda.')
+      + ' Kontrollerat ' + esc(klockan) + '.</p>'
+      + tabell([
+        { namn: 'Vad', rita: p => '<b>' + esc(p.rubrik) + '</b>' },
+        { namn: 'Läge', rita: p => { const m = PUNKT_MÄRKE[String(p.ok)] || PUNKT_MÄRKE.null; return pill(m[0], m[1]); } },
+        { namn: 'Vad det betyder', rita: p => '<span class="adm-und" style="white-space:normal">' + esc(p.text) + '</span>' }
+      ], punkter, 'Stripe svarade inte');
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-stripe-lage]');
+    if (!knapp) return;
+    await medan(knapp, 'Frågar Stripe…', async () => {
+      const svar = await supa.functions.invoke('stripe-lage', { body: {} });
+      if (svar.error) {
+        $('#stripe-lage').innerHTML = tomt('Kontrollen gick inte att köra', await funktionsFel(svar.error));
+        return;
+      }
+      ritaStripeLage(svar.data || {});
+    });
+  });
+
+  /* ============================================================
+     KORTTVISTER (Fas 14.3)
+
+     Punkt 9. En familj som bestrider en betalning hos sin bank får
+     pengarna tillbaka om vi inte svarar i tid. Webhooken sparar sista
+     dagen, orsaken och utfallet i stripe_tvister och lägger en uppgift
+     med dagen som förfallodag. Här står de, öppna först, med det vi
+     själva vet om passet — det är det underlaget banken vill ha.
+
+     Samma orsakstexter som TVIST_ORSAK i _delad/stripe.ts: uppgiftens
+     beskrivning och den här tabellen ska säga samma sak.
+     ============================================================ */
+  const TVIST_ORSAK = {
+    fraudulent: 'Kortinnehavaren säger att betalningen inte är hens',
+    unrecognized: 'Kortinnehavaren känner inte igen betalningen',
+    product_not_received: 'Kortinnehavaren säger att passet inte blev av',
+    product_unacceptable: 'Kortinnehavaren är missnöjd med passet',
+    duplicate: 'Kortinnehavaren säger att samma pass betalats två gånger',
+    credit_not_processed: 'Kortinnehavaren säger att pengarna skulle ha kommit tillbaka',
+    subscription_canceled: 'Kortinnehavaren säger att tjänsten var uppsagd',
+    customer_initiated: 'Kortinnehavaren har bestridit betalningen',
+    debit_not_authorized: 'Kortinnehavaren säger att dragningen inte var godkänd',
+    general: 'Ingen särskild orsak angiven'
+  };
+  const TVIST_LAGE = {
+    needs_response: ['Väntar på vårt svar', 'ar-ny'],
+    warning_needs_response: ['Förfrågan, väntar på vårt svar', 'ar-ny'],
+    under_review: ['Hos banken', 'ar-vantar'],
+    warning_under_review: ['Förfrågan hos banken', 'ar-vantar'],
+    won: ['Vunnen', 'ar-klar'],
+    warning_closed: ['Stängd utan återkrav', 'ar-klar'],
+    lost: ['Förlorad', '']
+  };
+  const väntarPåOss = x => !x.stangd && (x.lage === 'needs_response' || x.lage === 'warning_needs_response');
+  const NÄRVARO = { narvarande: 'närvarande', sen: 'kom sent', franvarande: 'uteblev' };
+
+  async function ritaTvister() {
+    const host = $('#tvist-lista');
+    if (!host) return;
+    if (S.tvisterFel) { host.innerHTML = tomt('Tvisterna gick inte att läsa', S.tvisterFel); return; }
+    const alla = S.tvister || [];
+    const öppna = alla.filter(x => !x.stangd).length;
+    $('#tvist-antal').textContent = öppna ? öppna + (öppna === 1 ? ' öppen' : ' öppna') : '';
+    if (!alla.length) {
+      host.innerHTML = tomt('Inga korttvister',
+        'Bestrider en familj en betalning hos sin bank står det här, med sista dagen att svara.');
+      return;
+    }
+
+    /* Rapporten är det starkaste underlaget för att passet hölls, och
+       den står inte i S. Hämtas bara när det finns tvister. */
+    const ids = alla.map(x => x.booking_id).filter(Boolean);
+    const rapport = {};
+    if (ids.length) {
+      const { data } = await supa.from('lesson_reports').select('booking_id, created_at').in('booking_id', ids);
+      (data || []).forEach(r => { rapport[r.booking_id] = r; });
+    }
+
+    const nyckel = x => (x.stangd ? '1' : '0') + (väntarPåOss(x) ? String(x.svara_senast || '9') : '9') + String(x.skapad || '');
+    const rader = alla.slice().sort((a, b) => nyckel(a).localeCompare(nyckel(b)));
+    const bok = id => (S.bokningar || []).find(b => b.id === id);
+
+    host.innerHTML = tabell([
+      { namn: 'Pass', rita: x => {
+        const b = bok(x.booking_id);
+        return b ? '<b>' + esc(kortDatum(b.wanted_date)) + '</b><span class="adm-und">'
+            + esc(b.subject || 'Pass') + ' · ' + esc(namnFör(b.parent_id)) + '</span>'
+          : '<span class="adm-und">Passet hittades inte</span>';
+      } },
+      { namn: 'Belopp', rita: x => '<span class="adm-tal">' + (x.belopp_ore != null ? esc(kronor(x.belopp_ore)) : '—') + '</span>' },
+      { namn: 'Orsak', rita: x => '<span class="adm-und" style="white-space:normal">'
+        + esc(x.orsak ? (TVIST_ORSAK[x.orsak] || 'Annan orsak (' + x.orsak + ')') : 'Ingen orsak angiven') + '</span>' },
+      { namn: 'Svara senast', rita: x => {
+        if (!väntarPåOss(x) || !x.svara_senast) return '<span class="adm-und">—</span>';
+        /* Hela dagar mellan datumen, inte timmar genom 24: "sex dagar
+           kvar" ska betyda sex kalenderdagar, också på eftermiddagen.
+           Fristens datum är UTC-datumet, samma som i uppgiften, och
+           aldrig senare än den verkliga fristen. */
+        const kvar = Math.round((Date.parse(String(x.svara_senast).slice(0, 10))
+          - Date.parse(isoFor(new Date()))) / 86400000);
+        return '<b>' + esc(kortDatum(x.svara_senast)) + '</b><span class="adm-und">'
+          + (kvar < 0 ? 'Fristen har gått ut' : kvar === 0 ? 'I dag' : kvar === 1 ? '1 dag kvar' : kvar + ' dagar kvar')
+          + '</span>';
+      } },
+      { namn: 'Underlaget vi har', rita: x => {
+        const b = bok(x.booking_id);
+        if (!b) return '<span class="adm-und">—</span>';
+        const r = rapport[b.id];
+        const delar = [
+          'Bokat ' + kortDatum(b.created_at),
+          b.status === 'confirmed' || b.status === 'completed' ? 'bekräftat' : 'inte bekräftat',
+          b.attendance ? 'eleven ' + (NÄRVARO[b.attendance] || b.attendance) : 'ingen närvaro',
+          r ? 'rapport skriven ' + kortDatum(r.created_at) : 'ingen rapport',
+          b.betald_at ? 'betalt ' + kortDatum(b.betald_at) : null
+        ].filter(Boolean);
+        return '<span class="adm-und" style="white-space:normal">' + esc(delar.join(', ')) + '</span>';
+      } },
+      { namn: '', höger: true, rita: x => '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener noreferrer" href="https://dashboard.stripe.com/'
+        + (x.skarp ? '' : 'test/') + 'disputes/' + encodeURIComponent(x.id) + '">Öppna i Stripe</a>' },
+      { namn: 'Läge', höger: true, rita: x => { const l = TVIST_LAGE[x.lage] || [x.lage, '']; return pill(l[0], l[1]); } }
+    ], rader, 'Inga korttvister');
+  }
 
   /* Återbetalningen går genom edge-funktionen, aldrig direkt mot
      tabellen: bara servern har Stripe-nyckeln, och taket för hur
