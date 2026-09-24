@@ -111,6 +111,24 @@ window.NXArbete = (function () {
           rörelsen tas över av videon i samma sekund den spelar,
           i stället för att ligga kvar ovanpå den. */
     var bild = o.bild || 'bilder/hero-nextrum-1280.jpg';
+
+    /* INGEN FILM PÅ TELEFONEN, och ingen för den som bett om mindre
+       rörelse eller mindre data. Leo 2026-09-24: "det är fortfarande
+       laggigt". En video som spelar i en loop överst på sidan, en
+       bild som zoomar under den och två kort med suddig bakgrund
+       ovanpå är tre saker grafikkretsen ritar om varje bildruta — hela
+       tiden sidan är öppen, också när man bokar ett pass längre ned.
+       På en dator märks det inte; på en mellanklasstelefon är det
+       varje tryck som känns segt. Filen är dessutom en halv megabyte
+       som ingen på mobildata bett om. */
+    var sparsam = false;
+    try {
+      sparsam = window.matchMedia('(max-width: 700px)').matches
+        || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        || !!(navigator.connection && navigator.connection.saveData);
+    } catch (e) { sparsam = true; }
+    if (sparsam) o.video = null;
+
     var media = '<img class="vy-hero-still" src="' + esc(bild) + '" alt="" aria-hidden="true">'
       + (o.video
         ? '<video autoplay muted loop playsinline preload="auto"'
@@ -142,8 +160,34 @@ window.NXArbete = (function () {
        Tonar vi in där och filen sedan stannar står vi med en svart
        ruta över bilden. */
     var film = host.querySelector('video');
+
+    /* Allt som rör sig står still när blocket inte syns: filmen
+       pausas och bildens drift fryses. Ingen ser den när man
+       scrollat ned till bokningen, och då ska den inte heller kosta
+       något. Samma sak när fliken ligger i bakgrunden. */
+    var synlig = true;
+    function uppdateraRörelse() {
+      var aktiv = synlig && !document.hidden;
+      host.classList.toggle('vy-hero-vilar', !aktiv);
+      if (!film) return;
+      if (aktiv) { var p = film.play(); if (p && p.catch) p.catch(function () {}); }
+      else film.pause();
+    }
+    if (window.IntersectionObserver) {
+      new IntersectionObserver(function (poster) {
+        synlig = poster[0].isIntersecting;
+        uppdateraRörelse();
+      }).observe(host);
+    }
+    document.addEventListener('visibilitychange', uppdateraRörelse);
+
     if (film) {
-      film.addEventListener('playing', function () { film.classList.add('spelar'); });
+      film.addEventListener('playing', function () {
+        film.classList.add('spelar');
+        /* Filmen ligger ovanpå bilden. Att låta bilden zooma bakom den
+           är att rita något ingen ser, varje bildruta. */
+        host.classList.add('vy-hero-film');
+      });
       /* autoplay-attributet räcker inte alltid. Ett element som
          skapats med innerHTML efter sidladdningen får inte alltid
          samma behandling som ett som stod i dokumentet, och vissa
@@ -435,6 +479,16 @@ window.NXArbete = (function () {
       dag: null,
       tid: null,
       besked: null,
+      /* Id:t på förslaget som just skickades, för länken "Visa
+         förslaget" i kvittot. */
+      nyttId: null,
+      /* Var man ses (Leo 2026-09-24: studiehjälparen ska se "var man
+         ska ses"). Fas 15.1 tog bort frågan, och ett förslag hade då
+         ingen plats alls — studiehjälparen fick fråga i chatten varje
+         gång. Förval ur barnets format och förra passets adress. */
+      format: null,
+      plats: '',
+      not: '',
       /* Ett fel står i st, inte bara i DOM:en — ladda() ritar om hela
          ytan direkt efteråt, och då försvann texten innan någon
          hunnit läsa den. */
@@ -454,6 +508,14 @@ window.NXArbete = (function () {
       if (f.subject && (o.amnen || []).indexOf(f.subject) !== -1) st.amne = f.subject;
       if (f.duration_min) st.minuter = f.duration_min;
       return true;
+    }
+
+    var FORMAT = [['Online', 'Online'], ['På plats', 'På plats']];
+    /* På plats kräver en adress. Utan den vet studiehjälparen inte
+       vart hen ska, och det är precis den fråga förslaget ska svara
+       på. Online behöver ingen: länken skickas i chatten. */
+    function platsOk() {
+      return st.format === 'Online' || (st.format === 'På plats' && st.plats.trim().length >= 3);
     }
 
     function timmar() { return Math.max(1, Math.round(st.minuter / 60)); }
@@ -532,9 +594,9 @@ window.NXArbete = (function () {
        dagen, sen står det vilket ämne, tiden, antal barn." En tom
        kalender med fyra rader val under är inte en tom kalender. */
     function dagPanel() {
-      if (!st.dag) {
-        return '<p class="mv-inga">Tryck på en dag i kalendern för att föreslå en tid.</p>';
-      }
+      /* Tom tills en dag är vald. Vad man ska göra står i stegen
+         överst; samma mening två gånger är en mening för mycket. */
+      if (!st.dag) return '';
       var dagens = tider(st.dag);
       var barnPoster = [];
       for (var i = 1; i <= barnTak(); i++) barnPoster.push([i, i === 1 ? '1 barn' : i + ' barn']);
@@ -551,12 +613,61 @@ window.NXArbete = (function () {
             tom: 'Inga tider kvar den dagen för ' + längdText() + '. Välj en annan dag eller en kortare längd.'
           }))
         + (barnTak() > 1 ? rad('Antal barn', chips('bk-barn', barnPoster, st.barn, 'Antal barn')) : '')
+        + rad('Var ses ni?', chips('bk-format', FORMAT, st.format, 'Var ses ni?'))
+        + (st.format === 'På plats'
+          ? '<div class="bk-valrad bk-faltrad"><label class="bk-valrad-et" for="bk-plats">Adress</label>'
+            + '<input class="inp" id="bk-plats" maxlength="160" autocomplete="street-address"'
+            + ' placeholder="Gatuadress, eller t.ex. Stadsbiblioteket" value="' + esc(st.plats) + '"></div>'
+          : '')
+        + '<div class="bk-valrad bk-faltrad"><label class="bk-valrad-et" for="bk-not">Till studiehjälparen</label>'
+        + '<input class="inp" id="bk-not" maxlength="300"'
+        + ' placeholder="Valfritt — t.ex. provet på fredag, kapitel 4" value="' + esc(st.not) + '"></div>'
         + '</div>';
+    }
+
+    /* Tre steg överst, och en mening om vad som händer nu. Leo
+       2026-09-24: "lägg till så man förstår vad man ska göra
+       tydligare". Stegen följer valen: det man gjort är ibockat, det
+       man står på är markerat. */
+    function stegRad() {
+      var ett = !!st.dag, två = ett && !!st.tid && platsOk();
+      var nu = !ett ? 1 : !två ? 2 : 3;
+      var vem = o.hos || 'er studiehjälpare';
+      function steg(n, text, klar) {
+        return '<li class="bk-steg' + (klar ? ' ar-klar' : '') + (nu === n ? ' ar-nu' : '') + '"'
+          + (nu === n ? ' aria-current="step"' : '') + '><b aria-hidden="true">' + (klar ? '✓' : n) + '</b>'
+          + esc(text) + '</li>';
+      }
+      var hjälp = nu === 1
+        ? 'Tryck på en dag i kalendern. Varje dag framåt går att välja.'
+        : nu === 2
+          ? (!st.tid ? 'Välj ämne, hur länge och en tid. Timmar som redan är bokade hos ' + vem + ' syns inte.'
+            : 'Skriv var ni ses — eller välj Online.')
+          : 'Allt är valt. Tryck på Föreslå tiden: ' + vem + ' accepterar eller föreslår en annan tid, och ni får ett mejl.';
+      return '<ol class="bk-stegrad" aria-label="Så föreslår ni en tid">'
+        + steg(1, 'Välj dag', ett) + steg(2, 'Ämne, tid och plats', två) + steg(3, 'Föreslå tiden', false)
+        + '</ol><p class="bk-hjalp" aria-live="polite">' + esc(hjälp) + '</p>';
+    }
+
+    /* Kvittot efter att förslaget skickats. Står där dagens val stod,
+       så att sidan inte krymper under fingret, och säger vad som
+       händer härnäst. */
+    function kvitto() {
+      var vem = o.hos || 'er studiehjälpare';
+      return '<div class="bk-kvitto" role="status">'
+        + '<b>✓ Förslaget är skickat</b>'
+        + '<p>' + esc(vem.charAt(0).toUpperCase() + vem.slice(1)) + ' accepterar tiden eller föreslår en annan. '
+        + 'Ni får ett mejl när hen svarat, och passet står under Mina lektioner så länge.</p>'
+        + '<div class="bk-kvitto-knappar">'
+        + (st.nyttId ? '<a class="btn btn-primary btn-sm" href="#pass/' + esc(st.nyttId) + '">Visa förslaget</a>' : '')
+        + '<button type="button" class="btn btn-ghost btn-sm" data-bk-igen>Föreslå en tid till</button>'
+        + '</div></div>';
     }
 
     function sammanfattning() {
       if (!st.dag) return '';
       var vald = !!st.tid;
+      var klar = vald && platsOk();
       var vem = o.hos || 'Er studiehjälpare';
       var d = new Date(st.dag + 'T12:00:00');
       var när = vald
@@ -566,7 +677,8 @@ window.NXArbete = (function () {
         + '<div class="bk-sum-vad">'
         + (vald
           ? '<b>' + esc(när) + '</b>'
-            + '<span>' + esc([st.amne, längdText(), st.barn > 1 ? st.barn + ' barn' : null]
+            + '<span>' + esc([st.amne, längdText(), st.barn > 1 ? st.barn + ' barn' : null,
+                st.format === 'På plats' ? (st.plats.trim() || 'Adress saknas') : st.format]
                 .filter(Boolean).join(' · ')) + '</span>'
           : '<b>Välj en tid</b>'
             + '<span>' + esc(vem + ' accepterar tiden eller föreslår en annan.') + '</span>')
@@ -574,7 +686,7 @@ window.NXArbete = (function () {
         + '<div class="bk-sum-pris"><b>' + esc(kr(bruttoOre() / 100)) + '</b>'
         + '<span>' + esc(längdText()) + '</span></div>'
         + '<button class="btn btn-primary" id="bk-boka" type="button"'
-        + (vald ? '' : ' disabled') + '>Föreslå tiden</button>'
+        + (klar ? '' : ' disabled') + '>Föreslå tiden</button>'
         + '</div>';
     }
 
@@ -602,27 +714,70 @@ window.NXArbete = (function () {
       });
 
       host.innerHTML = '<div class="bk">'
+        + '<div class="bk-guide">' + stegRad() + '</div>'
         + '<div class="bk-kal">'
         + '<div class="bk-kal-manad">' + kalender + '</div>'
-        + '<div class="bk-kal-dag">' + dagPanel() + '</div>'
+        + '<div class="bk-kal-dag">' + (st.besked ? kvitto() : dagPanel()) + '</div>'
         + '</div>'
-        + sammanfattning()
+        + '<div class="bk-sumhus">' + (st.besked ? '' : sammanfattning()) + '</div>'
         /* .show, inte ett eget attribut: .ok-msg är display:none tills
            klassen sitter där, precis som NX.säg sätter den. */
         + '<p class="ok-msg' + (st.fel ? ' show is-err' : '') + '" id="bk-msg">'
         + (st.fel ? esc(st.fel) : '') + '</p>'
-        + '<p class="ok-msg' + (st.besked ? ' show' : '') + '" id="bk-besked">'
-        + (st.besked ? esc(st.besked) : '') + '</p>'
         + '</div>';
+    }
+
+    /* Allt utom månaden. Ett tryck på en tid, ett ämne eller en längd
+       ritade förut om hela ytan — fyrtiotvå dagknappar, pilarna och
+       rubriken — för att en knapp skulle bli mörk. Månaden ritas nu
+       bara när månaden eller de upptagna timmarna ändras; den valda
+       dagen markeras på knappen som redan finns. */
+    function ritaDel() {
+      var guide = host.querySelector('.bk-guide');
+      var panel = host.querySelector('.bk-kal-dag');
+      var sum = host.querySelector('.bk-sumhus');
+      if (st.spärr || !guide || !panel || !sum) { rita(); return; }
+      guide.innerHTML = stegRad();
+      panel.innerHTML = st.besked ? kvitto() : dagPanel();
+      sum.innerHTML = st.besked ? '' : sammanfattning();
+      var msg = host.querySelector('#bk-msg');
+      if (msg) { msg.className = 'ok-msg' + (st.fel ? ' show is-err' : ''); msg.textContent = st.fel || ''; }
+      Array.prototype.forEach.call(host.querySelectorAll('.mv-dag'), function (d) {
+        d.setAttribute('aria-pressed', d.dataset.datum === st.dag ? 'true' : 'false');
+      });
+    }
+
+    /* Bara det som hänger på texten i ett fält: stegen, hjälpraden och
+       kvittoraden. Panelen med fältet ritas INTE om — då hade fokus
+       och tangentbordet försvunnit mitt i ett ord. */
+    function ritaText() {
+      var guide = host.querySelector('.bk-guide');
+      var sum = host.querySelector('.bk-sumhus');
+      if (guide) guide.innerHTML = stegRad();
+      if (sum && !st.besked) sum.innerHTML = sammanfattning();
+    }
+
+    /* Ett element som hamnat under skärmkanten dras upp så att det
+       syns — aldrig nedåt i sidan, aldrig uppåt förbi det man tittar
+       på. Leo: "när man trycker på knappar skickas man uppåt". */
+    function visaOmDoldt(el) {
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      if (r.top > window.innerHeight - 140) {
+        NXStudie.scrollaTill(window.scrollY + r.top - window.innerHeight * 0.62);
+      }
     }
 
     /* ---------- val ---------- */
 
     function väljDag(iso) {
-      st.besked = null; st.fel = null;
+      st.besked = null; st.nyttId = null; st.fel = null;
       st.dag = iso;
       if (st.tid && tider(iso).indexOf(st.tid) === -1) st.tid = null;
-      rita();
+      ritaDel();
+      /* På en telefon ligger dagens val under kalendern. Syns de inte
+         alls efter trycket har ingenting hänt, till synes. */
+      visaOmDoldt(host.querySelector('.bk-kal-dagnamn'));
     }
 
     function byteMånad(steg) {
@@ -639,7 +794,13 @@ window.NXArbete = (function () {
       if (tid && !tid.disabled) {
         st.besked = null; st.fel = null;
         st.tid = st.tid === tid.dataset.tid ? null : tid.dataset.tid;
-        rita();
+        ritaDel();
+        return;
+      }
+
+      if (e.target.closest('[data-bk-igen]')) {
+        st.besked = null; st.nyttId = null;
+        ritaDel();
         return;
       }
 
@@ -656,6 +817,7 @@ window.NXArbete = (function () {
         var grupp = val.closest('.vy-val').id;
         if (grupp === 'bk-amnen') st.amne = val.dataset.v;
         else if (grupp === 'bk-barn') st.barn = Number(val.dataset.v) || 1;
+        else if (grupp === 'bk-format') { st.format = val.dataset.v; st.formatValt = true; }
         else if (grupp === 'bk-langder') {
           st.minuter = Number(val.dataset.v);
           /* Längden ändrar vilka tider som ryms. En vald tid som inte
@@ -663,27 +825,37 @@ window.NXArbete = (function () {
              ett hål som bara rymmer en. */
           if (st.dag && st.tid && tider(st.dag).indexOf(st.tid) === -1) st.tid = null;
         }
-        rita();
+        /* En annan längd ändrar vilka dagar som har tider kvar, så
+           månaden ritas om. Övriga val rör bara panelen. */
+        if (grupp === 'bk-langder') rita(); else ritaDel();
         return;
       }
 
       if (e.target.closest('#bk-boka')) skicka();
     });
 
+    host.addEventListener('input', function (e) {
+      if (e.target.id === 'bk-plats') { st.plats = e.target.value; ritaText(); }
+      else if (e.target.id === 'bk-not') { st.not = e.target.value; }
+    });
+
     /* Svaret från o.boka: en sträng är ett fel, ett objekt med status
        säger vad databasen gjorde av förslaget. */
     function tolka(svar) {
       if (typeof svar === 'string') return { fel: svar };
-      return { status: svar && svar.status ? svar.status : null };
+      return { status: svar && svar.status ? svar.status : null, id: svar && svar.id ? svar.id : null };
     }
 
     function skicka() {
       var knapp = $('#bk-boka', host);
-      if (!st.dag || !st.tid) return;
+      if (!st.dag || !st.tid || !platsOk()) return;
       st.besked = null; st.fel = null;
       NXStudie.medan(knapp, 'Skickar…', async function () {
         var r = tolka(await o.boka({
-          datum: st.dag, tid: st.tid, minuter: st.minuter, amne: st.amne, barn: st.barn
+          datum: st.dag, tid: st.tid, minuter: st.minuter, amne: st.amne, barn: st.barn,
+          format: st.format,
+          plats: st.format === 'På plats' ? st.plats.trim() : null,
+          not: st.not.trim() || null
         }));
         if (r.fel) {
           /* Laddas om så att en timme som hann tas försvinner ur valet.
@@ -692,16 +864,20 @@ window.NXArbete = (function () {
           await ladda();
           return;
         }
-        var vem = o.hos || 'er studiehjälpare';
-        /* 'confirmed' kan bara komma tillbaka så länge triggern
-           bekrafta_inom_schemat finns kvar i databasen. Ytan säger det
-           databasen faktiskt gjorde, inte det den borde ha gjort. */
-        st.besked = r.status === 'confirmed'
-          ? '✓ Passet är bokat och redan bekräftat.'
-          : '✓ Förslaget är skickat till ' + vem + ', som accepterar tiden eller föreslår en annan. '
-            + 'Passet står under Mina lektioner så länge.';
-        st.dag = null; st.tid = null; st.barn = 1;
-        await ladda();
+        /* Kvittot direkt, när databasen sagt ja — inte efter att listan
+           och de upptagna timmarna hämtats om. Förut väntade knappen på
+           tre frågor i rad och stod på "Skickar…" i en sekund efter att
+           förslaget redan låg i databasen. Omladdningen sker bakom. */
+        st.besked = true;
+        st.nyttId = r.id;
+        st.dag = null; st.tid = null; st.barn = 1; st.not = '';
+        ritaDel();
+        var kv = host.querySelector('.bk-kvitto');
+        if (kv) {
+          var ruta = kv.getBoundingClientRect();
+          if (ruta.top < 70 || ruta.bottom > window.innerHeight) NXStudie.visaÖverst(kv);
+        }
+        ladda();
       });
     }
 
@@ -712,6 +888,12 @@ window.NXArbete = (function () {
         tidigare: d.tidigare || []
       };
       st.spärr = d.spärr || null;
+      /* Platsen ärvs tills man själv valt. Ett barn som byts ger ett
+         nytt förval — men inte över ett val som redan gjorts. */
+      if (d.forval && !st.formatValt) {
+        st.format = d.forval.format || null;
+        if (!st.plats) st.plats = d.forval.plats || '';
+      }
       /* En gång, första gången det finns något att ärva. Att ärva om
          vid varje omladdning hade skrivit över ett val användaren
          precis gjort. */

@@ -10,13 +10,25 @@
    till det som bara finns här — tråden och passraderna.
    ============================================================ */
 
+/* Ingen mjuk scrollning i vyerna. nextrum.css sätter den på html för
+   de publika sidornas ankarlänkar; i vyerna finns inga sådana, och
+   det enda den gjorde var att låta varje fokus och varje omritning
+   GLIDA iväg med sidan — det Leo beskrev som att skickas uppåt. Den
+   som uttryckligen ber om smooth i ett anrop får det fortfarande. */
+html:has(> body.vy){scroll-behavior:auto}
+
 /* Sidhuvudet är alltid ogenomskinligt här. På startsidan är det
    genomskinligt tills man scrollat (det ligger över en video), men
    i en vy finns ingen bild bakom — bara text som annars syns igenom. */
 .vy .hdr{
-  background:color-mix(in srgb,var(--pap) 90%,transparent);
-  backdrop-filter:saturate(180%) blur(16px);
-  -webkit-backdrop-filter:saturate(180%) blur(16px);
+  /* Utan suddig bakgrund sedan 2026-09-24. Den var 90 % täckande
+     ändå, så nästan ingenting syntes igenom — men oskärpan räknades
+     om för hela remsan vid varje scrollsteg, på varje sida i vyerna.
+     På en telefon var det skillnaden mellan en scroll som följer
+     fingret och en som hackar. */
+  background:color-mix(in srgb,var(--pap) 97%,transparent);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
   border-bottom-color:var(--ln);
 }
 
@@ -1301,6 +1313,110 @@ section[data-sek]{overflow-anchor:none}
 }
 .sch-full-vad b{display:block;font-size:.96rem;font-weight:600;letter-spacing:-.018em;color:var(--bl)}
 .sch-full-vad span{display:block;margin-top:3px;font-size:.82rem;color:var(--bl-2)}
+
+/* ============================================================
+   PASSETS SIDA (#pass/<id>)
+   En sida per pass, i båda vyerna. Ritas av NXStudie.passSida.
+   Rubriken och beskedet överst — "vad gäller, och vad ska jag göra"
+   — sedan fyra små kort med fakta, sist det som hör till passet.
+   ============================================================ */
+.ps{max-width:760px}
+.ps-tillbaka{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.86rem;font-weight:600;color:var(--bl-2);text-decoration:none;
+  padding:6px 10px 6px 4px;margin:0 0 14px -4px;border-radius:8px;
+}
+.ps-tillbaka:hover{color:var(--bl);background:var(--pap-2)}
+.ps-tillbaka svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ps-huvud{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.ps-titel{font-size:clamp(1.5rem,3.4vw,2.1rem);letter-spacing:-.035em;line-height:1.1;margin:0;outline:none}
+.ps-nar{margin-top:8px;font-size:1rem;color:var(--bl-2)}
+.ps-nar em{font-style:normal;font-weight:600;color:var(--bl)}
+.ps-huvud .lage{margin-top:6px}
+
+/* Vägen: föreslaget → bekräftat → genomfört → rapport. */
+.ps-vag{
+  list-style:none;margin:20px 0 0;padding:0;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+}
+.ps-steg{
+  position:relative;padding-top:14px;
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
+}
+.ps-steg::before{
+  content:"";position:absolute;left:0;right:0;top:4px;height:2px;border-radius:2px;background:var(--ln);
+}
+.ps-steg.ar-klar::before{background:var(--mossa)}
+.ps-steg.ar-nu::before{background:var(--ockra)}
+.ps-steg.ar-klar,.ps-steg.ar-nu{color:var(--bl)}
+.ps-steg-prick{display:none}
+
+/* Vad som väntar, och knapparna. Tonen säger vems drag det är. */
+.ps-gor{
+  margin-top:20px;padding:16px 18px;border-radius:14px;
+  border:1px solid var(--ln);background:var(--pap-2);
+}
+.ps-gor.ar-fraga{border-color:color-mix(in srgb,var(--ockra) 45%,transparent)}
+.ps-gor.ar-klart{border-color:color-mix(in srgb,var(--mossa) 45%,transparent)}
+.ps-gor p{font-size:.95rem;line-height:1.55;color:var(--bl);margin:0}
+.ps-knappar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ps-knappar .btn{text-decoration:none}
+
+.ps-kortrad{
+  margin-top:18px;display:grid;gap:12px;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));
+}
+.ps-kort{border:1px solid var(--ln);border-radius:12px;padding:12px 14px}
+.ps-kort h6,.ps-block h6{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-2);margin:0 0 6px;
+}
+.ps-rad{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:6px 0;border-bottom:1px solid var(--ln)}
+.ps-rad:last-child{border-bottom:none}
+.ps-rad span{font-size:.82rem;color:var(--bl-2)}
+.ps-rad b{font-size:.9rem;font-weight:600;color:var(--bl);text-align:right}
+.ps-block{margin-top:22px}
+.ps-block p{font-size:.92rem;line-height:1.6;color:var(--bl-2);white-space:pre-wrap;margin:0 0 8px}
+.ps-block p b{color:var(--bl)}
+a.pass-lank{text-decoration:none}
+a.pass-lank:hover{color:var(--acc)}
+@media (max-width:560px){
+  .ps-vag{grid-template-columns:repeat(2,1fr);row-gap:12px}
+  .ps-knappar .btn{flex:1 1 auto;justify-content:center}
+}
+
+/* En passrad som leder till passets sida. Hela raden är träffytan
+   på en telefon; pilen säger att det finns mer bakom den. */
+.pass-klickbar{cursor:pointer;border-radius:10px;transition:background .15s var(--e)}
+.pass-klickbar:hover{background:color-mix(in srgb,var(--pap-2) 70%,transparent)}
+.pass-titel{
+  display:block;font-size:.96rem;font-weight:600;letter-spacing:-.018em;
+  color:var(--bl);text-decoration:none;
+}
+.pass-titel:hover{color:var(--acc)}
+.pass-pil{display:inline-flex;align-items:center;justify-content:flex-end;color:var(--bl-3)}
+.pass-pil svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* Pilen i en egen smal kolumn längst till höger, även när knapparna
+   hamnar på egen rad under texten. I knappraden bröt den annars ned
+   på en rad för sig själv. */
+.pass-klickbar{grid-template-columns:auto 1fr auto 14px}
+.pass-klickbar .pass-pil{grid-column:4;grid-row:1}
+@media (max-width:560px){
+  .pass-klickbar{grid-template-columns:auto 1fr 14px}
+  .pass-klickbar .pass-pil{grid-column:3}
+  .pass-klickbar .pass-atg{grid-column:1/-1}
+}
+@container (max-width:430px){
+  .pass-klickbar{grid-template-columns:auto 1fr 14px}
+  .pass-klickbar .pass-pil{grid-column:3}
+  .pass-klickbar .pass-atg{grid-column:1/-1}
+}
+
+/* En lista som hämtas om står kvar, nedtonad, tills den nya är
+   ritad (NXStudie.laddarFörsta). Tidigare byttes den mot "Hämtar",
+   sidan krympte och man hamnade någon annanstans. */
+.vy [aria-busy="true"]:not(button){opacity:.55;transition:opacity .15s var(--e)}
 
 /* ---------- passet i detalj ---------- */
 .nx-passbox{max-width:520px}

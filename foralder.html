@@ -403,6 +403,18 @@
       </section>
 
       <!-- ============================================================
+           PASSETS SIDA (#pass/<id>)
+           Ett pass i taget: när, var, vem, pris, betalning, läxor och
+           rapporten — och knapparna för att svara, betala, föreslå ny
+           tid eller avboka. Ingen egen post i menyn: sidan hör till
+           där man kom ifrån, och tillbaka-länken leder dit. Ritas av
+           ritaPassSida() i nextrum-studie-vy.js.
+           ============================================================ -->
+      <section class="vy-sek" data-sek="pass" hidden aria-label="Passet">
+        <div class="ps" id="pass-sida"><div class="loading">Hämtar</div></div>
+      </section>
+
+      <!-- ============================================================
            LÄXOR
 
            Var tre saker: "Mina uppgifter", "Material" och en flikrad
@@ -525,14 +537,17 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Betalning</h2>
-            <p>Ni betalar i efterskott, en gång i månaden, för de pass som faktiskt genomförts. Ett pass som ställts in eller flyttats faktureras aldrig.</p>
+            <p>Varje pass betalas med kort när er studiehjälpare har bekräftat tiden, före passet. Kortuppgifterna skriver ni in hos Stripe, och vi sparar dem aldrig. Ett förslag som inte blivit ett pass kostar ingenting.</p>
           </div>
         </div>
         <div class="stack">
 
+          <!-- Pass som väntar på betalning. Ritas av ritaAttBetala() ur
+               samma lista som Mina lektioner, så att ett pass som
+               betalats där försvinner här i samma stund. -->
           <div class="dbox">
-            <h5>Den här månaden</h5>
-            <div id="bet-pagaende"><div class="loading">Hämtar</div></div>
+            <h5>Att betala <em id="bet-att-antal"></em></h5>
+            <div id="bet-att-betala"><div class="loading">Hämtar</div></div>
           </div>
 
           <div class="dbox">

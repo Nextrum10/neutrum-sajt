@@ -240,6 +240,84 @@ window.NXStudie = (function () {
     return '<div class="loading">' + esc(text || 'Hämtar') + '</div>';
   }
 
+  /* ---------- omladdning utan hopp ----------
+     Leo 2026-09-24: "när man trycker på knappar skickas man uppåt".
+
+     Mätt i provbänken med 250 ms fördröjning per fråga och utan
+     scroll anchoring (som Safari, som saknar den): "Klar" på en läxa
+     kastade sidan 1 060–1 818 px uppåt. Listan byttes mot "Hämtar"
+     medan den hämtades om, sidan krympte med listans höjd, och
+     webbläsaren klämde scrollen. När listan kom tillbaka stod man
+     någon helt annanstans. Chrome döljer det mesta med sin scroll
+     anchoring; iPhone gör det inte.
+
+     laddarFörsta() skriver "Hämtar" bara när det INTE finns något
+     att visa. Finns en lista redan står den kvar, nedtonad, tills
+     den nya är ritad — då byter den på en gång och höjden rör sig
+     bara med det som faktiskt ändrats. */
+  function laddarFörsta(host, text) {
+    if (!host) return;
+    var barn = host.children;
+    var tom = !barn.length
+      || (barn.length === 1 && barn[0].classList.contains('loading'));
+    if (tom) { host.innerHTML = laddar(text); return; }
+    host.setAttribute('aria-busy', 'true');
+    /* Släpps av sig självt när listan skrivs om, oavsett vilken väg
+       hämtningen tog — ett fel, en tom lista eller en ny. Att kräva
+       att varje väg tog bort den hade glömts i den första nya. */
+    if (window.MutationObserver) {
+      var vakt = new MutationObserver(function () {
+        host.removeAttribute('aria-busy');
+        vakt.disconnect();
+      });
+      vakt.observe(host, { childList: true });
+    }
+  }
+
+  /* Scrollar utan animering. nextrum.css sätter scroll-behavior:
+     smooth på html, och 'instant' i scrollTo förstås inte av alla
+     Safari-versioner — de läser då CSS:en och glider. Att stänga av
+     egenskapen under anropet fungerar överallt. */
+  function scrollaTill(y) {
+    var html = document.documentElement;
+    var förr = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+    window.scrollTo(0, Math.max(0, y));
+    html.style.scrollBehavior = förr;
+  }
+
+  /* Lägger ett element strax under sidhuvudet. Huvudet ligger fixed
+     och är olika högt på telefon och dator, så höjden mäts i stället
+     för att gissas — en gissning lade tillbaka-länken under det. */
+  function visaÖverst(el) {
+    if (!el) return;
+    var hdr = document.querySelector('.hdr');
+    var under = (hdr ? hdr.getBoundingClientRect().bottom : 72) + 12;
+    scrollaTill(el.getBoundingClientRect().top + window.scrollY - under);
+  }
+
+  /* Håller ett element kvar på samma plats på skärmen medan något
+     ovanför eller runt det ändrar höjd. Det är vad Chrome gör av sig
+     själv (scroll anchoring) och vad Safari inte gör alls — därför
+     för hand, på de ställen där en knapp gör sidan kortare: ett
+     formulär som stängs, "Visa färre", en lista som ritas om.
+
+     jobb får vara synkront eller returnera ett löfte. */
+  function håll(ankare, jobb) {
+    var före = ankare && ankare.isConnected ? ankare.getBoundingClientRect().top : null;
+    function rätta() {
+      if (före === null || !ankare.isConnected) return;
+      var skillnad = ankare.getBoundingClientRect().top - före;
+      if (Math.abs(skillnad) > 1) scrollaTill(window.scrollY + skillnad);
+    }
+    var svar = jobb ? jobb() : null;
+    if (svar && typeof svar.then === 'function') {
+      return svar.then(function (v) { rätta(); return v; });
+    }
+    rätta();
+    return svar;
+  }
+
   /* ---------- bekräftelse ----------
      Egen ruta i stället för confirm(): den går att skriva på svenska,
      den ser ut som resten av sajten, och den kan säga vad som faktiskt
@@ -322,6 +400,13 @@ window.NXStudie = (function () {
     ['ingen_hjalpare', 'Ingen studiehjälpare'],
     ['familjen_avslutar', 'Familjen avslutar']
   ];
+
+  /* Koden i ord, för passets sida. Samma ord som i rutan där skälet
+     valdes, så att den som avbokade känner igen sitt eget val. */
+  function skälText(kod) {
+    var hit = AVBOKNINGSSKÄL.concat(AVBOKNINGSSKÄL_ADMIN).filter(function (v) { return v[0] === kod; })[0];
+    return hit ? hit[1] : null;
+  }
 
   /* Returnerar ett löfte som blir skälets kod, eller null om man
      ångrade sig. */
@@ -656,6 +741,138 @@ window.NXStudie = (function () {
     if (f) f.focus();
     return { stäng: stäng };
   }
+
+  /* ============================================================
+     PASSETS EGEN SIDA
+
+     Leo 2026-09-24: "på mina lektioner tycker jag det ska byggas en
+     individuell sida, lite mer avancerad, där man kan hantera
+     inbokade lektioner, trycka på dem och se information om dem.
+     Samt avboka och föreslå en ny tid där." Och för studiehjälparen:
+     "trycka in på lektionen för att se mer information om tid, ämne,
+     var man ska ses, dag, eleven man har."
+
+     Rutan ovan (passRuta) var en sammanfattning ovanpå listan. Det
+     här är en SIDA: en egen sektion med egen adress (#pass/<id>), så
+     att bakåtknappen tar en tillbaka till listan och en länk i ett
+     mejl kan peka rakt på passet.
+
+     Ren ritning. Vyerna äger datan och vet vad som får göras; här
+     bestäms bara hur det ser ut, så att en familj och en
+     studiehjälpare som tittar på samma pass ser samma sida med olika
+     knappar — inte två sidor som glidit isär.
+
+     Knapparna bär samma data-attribut som i listorna (data-flytta,
+     data-avboka, data-betala …). De delegerade hanterarna som redan
+     finns tar hand om dem. En andra uppsättning logik för samma
+     skrivning hade varit en andra uppsättning som kan bli fel.
+
+     o: {
+       host, tillbaka: { href, text },
+       titel, nar, relativ, lage: { text, klass },
+       steg:    [{ namn, klar, nu }],      vägen passet går
+       besked:  { text, ton },             vad som väntar, på vem
+       atgarder: html,                     knapparna
+       kort:    [{ rubrik, rader: [[etikett, värde]] }],
+       block:   [{ rubrik, html }]         anteckning, rapport, läxor
+     }
+     ============================================================ */
+  function passSida(o) {
+    var host = o && o.host;
+    if (!host) return;
+
+    var steg = (o.steg || []).map(function (s) {
+      return '<li class="ps-steg' + (s.klar ? ' ar-klar' : '') + (s.nu ? ' ar-nu' : '') + '"'
+        + (s.nu ? ' aria-current="step"' : '') + '>'
+        + '<span class="ps-steg-prick" aria-hidden="true"></span>' + esc(s.namn) + '</li>';
+    }).join('');
+
+    var kort = (o.kort || []).map(function (k) {
+      var rader = (k.rader || []).filter(function (r) { return r && r[1]; });
+      if (!rader.length) return '';
+      return '<div class="ps-kort"><h6>' + esc(k.rubrik) + '</h6>'
+        + rader.map(function (r) {
+            return '<div class="ps-rad"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>';
+          }).join('')
+        + '</div>';
+    }).join('');
+
+    var block = (o.block || []).filter(function (b) { return b && b.html; }).map(function (b) {
+      return '<div class="ps-block"><h6>' + esc(b.rubrik) + '</h6>' + b.html + '</div>';
+    }).join('');
+
+    host.innerHTML =
+      '<a class="ps-tillbaka" href="' + esc(o.tillbaka ? o.tillbaka.href : '#') + '">'
+      + '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.5 2.5 4 6l3.5 3.5"/></svg>'
+      + esc(o.tillbaka ? o.tillbaka.text : 'Tillbaka') + '</a>'
+      + '<div class="ps-huvud">'
+      + '<div>'
+      + '<h2 class="ps-titel" tabindex="-1">' + esc(o.titel || 'Passet') + '</h2>'
+      + '<p class="ps-nar">' + esc(o.nar || '')
+      + (o.relativ ? ' <em>· ' + esc(o.relativ) + '</em>' : '') + '</p>'
+      + '</div>'
+      + (o.lage ? '<span class="lage ' + esc(o.lage.klass || '') + '">' + esc(o.lage.text) + '</span>' : '')
+      + '</div>'
+      + (steg ? '<ol class="ps-vag" aria-label="Var passet står">' + steg + '</ol>' : '')
+      + (o.besked || o.atgarder
+          ? '<div class="ps-gor' + (o.besked && o.besked.ton ? ' ar-' + esc(o.besked.ton) : '') + '">'
+            + (o.besked ? '<p>' + esc(o.besked.text) + '</p>' : '')
+            + (o.atgarder ? '<div class="ps-knappar">' + o.atgarder + '</div>' : '')
+            + '</div>'
+          : '')
+      + (kort ? '<div class="ps-kortrad">' + kort + '</div>' : '')
+      + block;
+  }
+
+  /* "idag", "imorgon", "om 3 dagar", "för 2 veckor sedan". Räknat i
+     kalenderdagar, inte timmar: ett pass imorgon klockan åtta är
+     imorgon även klockan 23 kvällen före. */
+  function relativDag(iso) {
+    if (!iso) return '';
+    var idag = new Date(isoFor(new Date()) + 'T12:00:00');
+    var dag = new Date(String(iso) + 'T12:00:00');
+    var n = Math.round((dag - idag) / 86400000);
+    if (n === 0) return 'idag';
+    if (n === 1) return 'imorgon';
+    if (n === -1) return 'igår';
+    if (n > 1 && n < 14) return 'om ' + n + ' dagar';
+    if (n >= 14) return 'om ' + Math.round(n / 7) + ' veckor';
+    if (n > -14) return 'för ' + (-n) + ' dagar sedan';
+    return 'för ' + Math.round(-n / 7) + ' veckor sedan';
+  }
+
+  /* "onsdag 1 oktober". Veckodagen först: en förälder planerar i
+     veckor, och "1 oktober" säger inte om det krockar med fotbollen. */
+  var VECKODAGAR = ['söndag', 'måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag'];
+  function dagMedVeckodag(iso) {
+    if (!iso) return '';
+    return VECKODAGAR[new Date(String(iso) + 'T12:00:00').getDay()] + ' ' + datumText(iso);
+  }
+
+  /* Rapportens omdöme, samma ord som i formuläret studiehjälparen
+     fyller i (GICK i nextrum-larare-vy.js). */
+  var GICK = { mycket_bra: 'Mycket bra', bra: 'Bra', folja_upp: 'Behöver följas upp' };
+
+  /* "16:00–17:00". Längden står i minuter i databasen; ett pass utan
+     längd finns inte sedan Fas 9.7, men en gammal rad ska inte bli
+     "16:00–NaN". */
+  function tidsspann(tid, minuter) {
+    if (!tid) return '';
+    var d = String(tid).slice(0, 5).split(':');
+    var start = Number(d[0]) * 60 + Number(d[1] || 0);
+    var slut = start + (Number(minuter) || 60);
+    function hhmm(m) { return (m / 60 < 10 ? '0' : '') + Math.floor(m / 60) + ':' + (m % 60 < 10 ? '0' : '') + (m % 60); }
+    return hhmm(start) + '–' + hhmm(slut);
+  }
+
+  /* En passrad som går att trycka på öppnar passets sida. Hela raden,
+     inte bara rubriken — på en telefon är raden det man träffar.
+     Knappar och länkar i raden gör sitt eget och öppnar inget. */
+  document.addEventListener('click', function (e) {
+    var rad = e.target.closest('.pass-klickbar[data-href]');
+    if (!rad || e.target.closest('button, a, input, select, textarea, label')) return;
+    location.hash = rad.dataset.href;
+  });
 
   /* ============================================================
      SCHEMAT
@@ -1260,6 +1477,11 @@ window.NXStudie = (function () {
       ? '<div class="pl-grupp">' + kommande.map(o.rad).join('') + '</div>'
       : '<div class="pl-inget">' + esc(o.tomtKommande || 'Inga kommande pass just nu.') + '</div>';
 
+    /* Utfällt förblir utfällt när listan ritas om. Förut föll den
+       ihop efter varje avbokning och varje svar — listan krympte med
+       tjugo rader under fingret, och man stod någon annanstans. */
+    var utfällt = !!PL_UTFÄLLD[host.id];
+
     if (tidigare.length) {
       var visade = tidigare.slice(0, PASS_SYNLIGA);
       var resten = tidigare.slice(PASS_SYNLIGA);
@@ -1268,9 +1490,9 @@ window.NXStudie = (function () {
         + '<div class="pl-rubrik">Tidigare pass <em>' + tidigare.length + ' st</em></div>'
         + visade.map(o.rad).join('')
         + (resten.length
-            ? '<div class="pl-resten" id="pl-resten" hidden>' + resten.map(o.rad).join('') + '</div>'
-              + '<button type="button" class="pl-mer" data-pl-mer aria-expanded="false">'
-              + 'Visa alla ' + tidigare.length + '</button>'
+            ? '<div class="pl-resten"' + (utfällt ? '' : ' hidden') + '>' + resten.map(o.rad).join('') + '</div>'
+              + '<button type="button" class="pl-mer" data-pl-mer aria-expanded="' + (utfällt ? 'true' : 'false') + '">'
+              + (utfällt ? 'Visa färre' : 'Visa alla ' + tidigare.length) + '</button>'
             : '')
         + '</div>';
     }
@@ -1280,14 +1502,24 @@ window.NXStudie = (function () {
     var knapp = host.querySelector('[data-pl-mer]');
     if (knapp) {
       knapp.addEventListener('click', function () {
-        var lådan = host.querySelector('#pl-resten');
+        var lådan = host.querySelector('.pl-resten');
         var öppet = !lådan.hidden;
-        lådan.hidden = öppet;
-        knapp.setAttribute('aria-expanded', öppet ? 'false' : 'true');
-        knapp.textContent = öppet ? 'Visa alla ' + tidigare.length : 'Visa färre';
+        function växla() {
+          lådan.hidden = öppet;
+          knapp.setAttribute('aria-expanded', öppet ? 'false' : 'true');
+          knapp.textContent = öppet ? 'Visa alla ' + tidigare.length : 'Visa färre';
+        }
+        /* "Visa färre" längst ned i en lång lista tog bort allt
+           ovanför knappen, och man hamnade 600 px högre upp än man
+           tryckt. Knappen står kvar under fingret i stället. "Visa
+           alla" får flytta den nedåt: de nya raderna ska synas där de
+           gamla slutade, inte ovanför skärmen. */
+        if (öppet) håll(knapp, växla); else växla();
+        PL_UTFÄLLD[host.id] = !öppet;
       });
     }
   }
+  var PL_UTFÄLLD = {};
 
   /* Antalet syns i fliken också — man har sällan vyn framme. */
   function sättTitel(n) {
@@ -1534,7 +1766,9 @@ window.NXStudie = (function () {
     läxläge: läxläge, deadlineText: deadlineText,
     läxRad: läxRad, nivåMätare: nivåMätare, historikRad: historikRad, ämnesSammanfattning: ämnesSammanfattning,
     progressRad: progressRad, progressPerÄmne: progressPerÄmne,
-    tomt: tomt, laddar: laddar,
+    tomt: tomt, laddar: laddar, laddarFörsta: laddarFörsta, håll: håll, scrollaTill: scrollaTill, visaÖverst: visaÖverst,
+    passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,
+    dagMedVeckodag: dagMedVeckodag, GICK: GICK,
     bekräfta: bekräfta, avbokaRuta: avbokaRuta, medan: medan, kolla: kolla
   };
 })();

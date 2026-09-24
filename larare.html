@@ -614,6 +614,18 @@
       </section>
 
       <!-- ============================================================
+           PASSETS SIDA (#pass/<id>)
+           Ett pass i taget: dag och tid, var ni ses, eleven, familjen,
+           familjens anteckning, läxorna och rapporten — och knapparna
+           för att acceptera, föreslå annan tid, avboka eller skriva
+           rapporten. Ingen egen post i menyn: sidan hör till där man
+           kom ifrån. Ritas av ritaPassSida() i nextrum-larare-vy.js.
+           ============================================================ -->
+      <section class="vy-sek" data-sek="pass" hidden aria-label="Passet">
+        <div class="ps" id="pass-sida"><div class="loading">Hämtar</div></div>
+      </section>
+
+      <!-- ============================================================
            LÄXOR & MATERIAL
            Två menyposter för samma sak: det du lämnar över till
            eleven. Läxan är vad hen ska göra, materialet vad hen gör
@@ -676,8 +688,11 @@
                       <button class="btn btn-primary btn-sm" type="submit" id="lx-spara">Skapa läxa</button>
                       <button class="btn btn-ghost btn-sm" type="button" id="lx-avbryt">Avbryt</button>
                     </div>
-                    <p class="ok-msg" id="lx-msg"></p>
                   </form>
+                  <!-- Utanför formuläret: det göms när läxan skapats, och
+                       "✓ Läxan har skapats" stod förut inuti det och
+                       syntes därför aldrig. -->
+                  <p class="ok-msg" id="lx-msg"></p>
 
                   <div class="lx-filter" id="lax-filter" role="group" aria-label="Visa läxor" hidden></div>
                   <div id="lax-lista"><div class="loading">Hämtar</div></div>
