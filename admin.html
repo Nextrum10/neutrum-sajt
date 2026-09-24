@@ -23,8 +23,9 @@
 <link rel="stylesheet" href="nextrum-vy.css">
 <link rel="stylesheet" href="nextrum-arbetsyta.css">
 <link rel="stylesheet" href="nextrum-agent.css">
-<!-- Sist: adminvyns egen palett skriver om tokens på body.vy-admin och
-     måste vinna varje oavgjord specificitet mot lagren ovan. -->
+<!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
+     kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
+     densamma som i studievyn och studiehjälparvyn. -->
 <link rel="stylesheet" href="nextrum-admin-palett.css">
 <link rel="stylesheet" href="nextrum-admin-konsol.css">
 </head>
@@ -1751,8 +1752,10 @@
             <div class="dbox">
               <h5>Klientfel <em id="fel-antal"></em></h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
-                Fel som inträffade i någons webbläsare. Ett fel här betyder att någon
-                såg en trasig sida — inte att något kan gå sönder i framtiden.
+                Fel som inträffade i någons webbläsare, samlade per sort. Ett fel här betyder
+                att någon såg en trasig sida — inte att något kan gå sönder i framtiden.
+                Varje sort har en gissning om orsaken och vad du gör åt den. Markera ett fel
+                åtgärdat först när det är det, annars kommer det tillbaka och ser nytt ut.
               </p>
               <div id="fel-tabell"><div class="loading">Hämtar</div></div>
             </div>

@@ -397,8 +397,6 @@
   font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;
   text-transform:uppercase;color:var(--muted-2);flex:none;
 }
-.bk-plats{display:flex;flex-direction:column;gap:6px;max-width:420px}
-.bk-plats label{color:var(--muted-2)}
 
 /* ---- kalendern ----
    En vanlig månadskalender till vänster, dagens tider till höger.
@@ -470,34 +468,8 @@
 .bk-slot:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .bk-slot:disabled{opacity:.5;cursor:progress}
 
-/* Studiehjälparens timmar: en markerad timme är en tid familjen kan
-   boka, och får mossgrönt i stället för den mörka "vald"-färgen. */
-.tk-tim[aria-pressed="true"]{background:var(--mossa);border-color:var(--mossa);color:var(--pap)}
-.tk-hjalp{margin:0 0 12px;font-size:.84rem;line-height:1.6;color:var(--bl-2)}
 
-/* ---- önska en annan tid ----
-   En egen sektion under bokningen, med ett streck ovanför: det är en
-   annan sorts sak — en fråga, inte en bokning. */
-.bk-onska{
-  border-top:1px solid var(--ln);padding-top:20px;margin-top:6px;
-  display:flex;flex-direction:column;gap:10px;
-}
-.bk-onska h6{margin:0;font-size:1rem;font-weight:650;color:var(--bl)}
-.bk-onska > p{margin:0;font-size:.86rem;line-height:1.6;color:var(--bl-2);max-width:560px}
-.bk-onska-rad{display:flex;gap:8px;flex-wrap:wrap}
-.bk-onska-rad .inp{max-width:190px}
-.bk-onska-rad .sel{max-width:140px}
-.bk-onska > .inp{max-width:520px}
-.bk-onska-fot{display:flex;gap:10px}
-
-/* ---- extraraden och kvittot ---- */
-.bk-extra{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.bk-lank{
-  background:none;border:none;padding:0;cursor:pointer;
-  font-size:.84rem;color:var(--acc-text);text-decoration:underline;
-  text-underline-offset:3px;font-family:inherit;
-}
-.bk-lank:hover{color:var(--bl)}
+/* ---- kvittot ---- */
 
 .bk-sum{
   display:flex;align-items:center;gap:16px;flex-wrap:wrap;
@@ -514,10 +486,6 @@
   font-variant-numeric:tabular-nums;color:var(--bl);
 }
 .bk-sum-pris > span{display:block;font-size:.76rem;color:var(--muted-2)}
-.bk-pris-fore{
-  margin-left:7px;font-size:.9rem;color:var(--muted-2);
-  text-decoration:line-through;font-weight:500;
-}
 
 @media (max-width:720px){
   /* Sex ämnen som staplar sig på fem rader trycker ned veckan under
@@ -774,6 +742,51 @@ table.adm .adm-tal{
   padding:20px;
   display:flex;flex-direction:column;gap:11px;
 }
+/* Klientfelen, en ruta per sort (2026-09-24). Antalet står först
+   och störst: tjugo av samma är en annan sak än ett. Förklaringen
+   och rådet står öppet, stacken en utfällning bort — den som
+   åtgärdar behöver den, den som bara tittar till behöver den inte. */
+.fel-grupp{
+  border:1px solid var(--ln);border-radius:14px;background:var(--pap);
+  padding:16px 18px;display:flex;flex-direction:column;gap:9px;
+}
+.fel-grupp+.fel-grupp{margin-top:12px}
+.fel-huvud{display:flex;align-items:flex-start;gap:12px}
+.fel-antal{
+  flex:none;min-width:44px;padding:4px 8px;border-radius:9px;text-align:center;
+  font-family:var(--f-mono);font-size:.9rem;font-weight:700;
+  background:var(--pap-2);border:1px solid var(--ln-2);color:var(--bl-2);
+}
+.fel-titel{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fel-titel b{font-size:.92rem;line-height:1.4;overflow-wrap:anywhere}
+.fel-meta{font-size:.76rem;color:var(--muted-2)}
+.fel-huvud .adm-status{flex:none}
+.fel-forklaring,.fel-rad{margin:0;font-size:.84rem;line-height:1.55;color:var(--muted)}
+.fel-rad b{color:var(--bl-2)}
+.fel-detaljer summary{cursor:pointer;font-size:.8rem;font-weight:600;color:var(--bl-2)}
+.fel-detaljer[open] summary{margin-bottom:8px}
+.fel-detaljer dl{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;margin:0 0 10px;font-size:.8rem}
+.fel-detaljer dt{color:var(--muted-2)}
+.fel-detaljer dd{margin:0;overflow-wrap:anywhere}
+.fel-personer{display:flex;flex-wrap:wrap;gap:6px}
+.fel-person{
+  font:inherit;font-size:.78rem;padding:2px 9px;border-radius:99px;
+  border:1px solid var(--ln-2);background:var(--pap-2);color:var(--bl-2);
+}
+button.fel-person{cursor:pointer}
+button.fel-person:hover{border-color:var(--bl-3)}
+.fel-person.ar-anonym{color:var(--muted-2)}
+.fel-stack{
+  margin:0;padding:10px 12px;border-radius:10px;max-height:220px;overflow:auto;
+  font-family:var(--f-mono);font-size:11px;line-height:1.5;white-space:pre-wrap;
+  background:var(--pap-2);border:1px solid var(--ln);color:var(--bl-2);
+}
+.fel-knappar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:2px}
+@media (max-width:560px){
+  .fel-huvud{flex-wrap:wrap}
+  .fel-titel{flex-basis:calc(100% - 60px)}
+}
+
 /* Tjänstens villkor (Fas 5.1): utfällbara under priset. */
 .tj-villkor{border-top:1px solid var(--ln);padding-top:10px}
 .tj-villkor summary{cursor:pointer;font-size:.86rem;font-weight:600;color:var(--bl-2)}
@@ -1484,6 +1497,25 @@ table.adm .adm-tal{
   border:1px solid var(--ln-2);border-radius:100px;
   padding:3px 10px;background:var(--pap);
 }
+/* Skapa elev ur anmälan: familjen står som fakta, inte som ett val.
+   Saknas kontot står inbjudan på samma ställe, i streckad ram. */
+.le-familj{
+  display:flex;flex-direction:column;gap:3px;margin:12px 0 6px;
+  padding:12px 14px;border:1px solid var(--ln);border-radius:10px;background:var(--pap);
+}
+.le-familj b{font-size:.95rem;font-weight:650;color:var(--bl)}
+.le-familj span{font-size:.82rem;line-height:1.55;color:var(--bl-2)}
+.le-familj .le-familj-et{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3);
+}
+.le-familj-saknas{border-style:dashed}
+.le-familj .btn{align-self:flex-start;margin-top:8px}
+
+/* Behoven familjen angav. Egen ton, så att de inte läses som ännu ett
+   ämne i raden. */
+.mt-fakta.ar-behov{border-style:dashed}
+.mt-vald-om{display:block;margin-top:8px;color:var(--bl-2);line-height:1.55;max-width:60ch}
 .mt-fakta.ar-tom{color:var(--acc-text);border-color:var(--acc-line);background:var(--acc-soft)}
 
 /* ------------------------------------------------------------
@@ -1924,18 +1956,6 @@ table.adm .adm-tal{
 .kal-sparr span{margin-right:auto}
 .kal-sparr b{color:var(--bl);font-weight:650}
 
-/* Platsen i bokningens steg 3. Fältet fälls ut under knapparna när
-   passet är på plats, och steget står kvar öppet så att frågan hinner
-   ställas innan den göms. */
-.bk-plats{margin-top:16px}
-.bk-plats label{
-  display:block;margin-bottom:7px;
-  font-size:.82rem;font-weight:650;color:var(--bl);
-}
-.bk-plats .xsmall{
-  display:block;margin-top:7px;
-  font-size:.76rem;line-height:1.5;color:var(--bl-3);
-}
 
 /* ============================================================
    12. STUDIEHJÄLPARVYN: ELEVER OCH RAPPORT
@@ -2368,42 +2388,6 @@ a:has(> .adm-status){
   min-height:24px;
 }
 
-/* ============================================================
-  13. RABATTKODEN I BOKNINGEN
-
-   Fältet ligger i kvittot, sist före summan, för att det är där
-   man tittar när man undrar vad det kostar. Ovanför tiderna hade
-   det varit en fråga ingen ställt sig än.
-
-   Koden kontrolleras på servern, en i taget. Klienten vet aldrig
-   vilka koder som finns — se kolla_rabattkod() i schema-v20.
-   ============================================================ */
-.bk-kod{margin:0}
-.bk-kod label{
-  display:block;margin-bottom:8px;
-  font-family:var(--f-mono);font-size:10px;font-weight:600;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
-}
-.bk-kod-rad{display:flex;gap:8px;align-items:stretch}
-
-/* Fältet krymper inte bort när knappen är bred, och versalerna är
-   inte kosmetik: koden LAGRAS i versaler, så fältet ska visa exakt
-   det som skickas. */
-.bk-kod-rad .inp{
-  flex:1;min-width:0;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-  font-family:var(--f-mono);font-size:.85rem;
-}
-.bk-kod-rad .btn{flex:none;white-space:nowrap}
-
-.bk-kod-ok,
-.bk-kod-fel{
-  display:block;margin-top:9px;
-  font-size:.8rem;line-height:1.5;
-}
-.bk-kod-ok{color:var(--mossa)}
-.bk-kod-fel{color:var(--acc-lugn)}
 
 /* Frågan om en Google-recension, under rapporterna i studievyn.
    Låg ton med flit: den ska gå att gå förbi. En ruta som ropar
@@ -2467,6 +2451,25 @@ a:has(> .adm-status){
   .barn-rad .btn{align-self:flex-start}
 }
 
+/* Barnets uppgifter: ett formulär för både nytt barn och ändring. */
+.barn-form{margin-top:18px;border-top:1px solid var(--ln);padding-top:18px}
+.barn-form-rubrik{margin:0 0 14px;font-size:1rem;font-weight:650;color:var(--bl)}
+.barn-form .vy-val{margin-top:2px}
+
+/* Inloggningen: adressen man kommer in med står ensam och tydligt,
+   så att den inte läses som en del av kontaktuppgifterna. */
+.konto-inlogg{
+  display:flex;flex-direction:column;gap:4px;
+  padding:14px 16px;border:1px solid var(--ln);border-radius:12px;background:var(--pap);
+}
+.konto-inlogg b{font-size:1.02rem;font-weight:650;color:var(--bl);word-break:break-all}
+.konto-inlogg .xsmall{color:var(--bl-2);line-height:1.55;margin-top:4px}
+.konto-inlogg-et{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);margin:0 0 8px;
+}
+.konto-inlogg .konto-inlogg-et{margin:0}
+
 /* ============================================================
    FÖRDELNINGEN
    En liggande stapel och en förklaring. Färgerna är samma som i
@@ -2520,11 +2523,10 @@ a:has(> .adm-status){
    ligger vi till", vilket är frågan man ställer först.
 
    Ringen är en andel av verkliga rader, inte ett betyg: står det
-   29 % är det för att sju områden finns och två är satta till bra
-   av studiehjälparen. Talet under säger samma sak i klartext, så
-   att ringen aldrig är den enda källan.
+   40 % är det för att fem områden finns och två av dem är bedömda
+   som Säker eller Behärskar av studiehjälparen. Talet bredvid säger
+   samma sak i klartext, så att ringen aldrig är den enda källan.
    ============================================================ */
-.ut-oversikt{margin-bottom:clamp(22px,2.6vw,30px)}
 
 .ut-sammanfattning{
   display:flex;align-items:center;gap:clamp(16px,2vw,22px);
@@ -2558,30 +2560,18 @@ a:has(> .adm-status){
 /* Procenttecknet mindre och tystare: siffran är budskapet. */
 .ut-ring-tal i{font-style:normal;font-size:.62em;color:var(--bl-3);margin-left:1px}
 
-.ut-amnen{
-  display:grid;gap:clamp(14px,1.8vw,18px);
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  margin-top:clamp(18px,2.2vw,24px);
+/* Senaste framstegen: en rad per steg uppåt, senaste först. */
+.ut-framsteg{display:flex;flex-direction:column}
+.ut-framsteg-rad{display:flex;align-items:center;gap:12px;padding:11px 0}
+.ut-framsteg-rad + .ut-framsteg-rad{border-top:1px solid var(--ln)}
+.ut-framsteg-pil{
+  flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--mossa) 16%,transparent);color:var(--mossa);font-weight:700;
 }
-.ut-amne-topp{
-  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
-  margin-bottom:9px;
-}
-.ut-amne-topp b{font-size:.9rem;font-weight:650;color:var(--bl)}
-.ut-amne-topp span{
-  font-family:var(--f-mono);font-size:.8rem;color:var(--bl-3);
-  font-variant-numeric:tabular-nums;
-}
-.ut-amne-topp span i{font-style:normal;opacity:.5;margin:0 1px}
-.ut-amne .fd-stapel{height:8px;margin-bottom:0}
-
-/* Rubriken över detaljlistan. Den behövs först nu när något står
-   ovanför den. */
-.ut-detalj-et{
-  display:block;margin-bottom:14px;
-  font-family:var(--f-mono);font-size:10px;font-weight:600;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
-}
+.ut-framsteg-text{flex:1;min-width:0}
+.ut-framsteg-text b{display:block;font-size:.92rem;font-weight:650;color:var(--bl)}
+.ut-framsteg-text span{display:block;margin-top:2px;font-size:.8rem;color:var(--bl-2)}
+.ut-framsteg-rad time{flex:none;font-family:var(--f-mono);font-size:.74rem;color:var(--bl-3)}
 
 /* ============================================================
   16. REKRYTERINGSSPÅRET OCH KONTAKTRUTAN
@@ -2723,11 +2713,6 @@ a:has(> .adm-status){
   resize:vertical;
 }
 
-/* Sammanfattningen under studiehjälparens kalender: alla veckotider
-   på en rad, så att veckan går att läsa av utan att trycka runt. */
-.vs-sam{
-  margin:14px 0 0;font-size:.84rem;line-height:1.6;color:var(--muted);
-}
 
 /* ------------------------------------------------------------
    RAPPORTEN SOM RUTA

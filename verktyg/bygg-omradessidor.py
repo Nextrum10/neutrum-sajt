@@ -293,9 +293,10 @@ OMRADEN = [
              'Hammarbyhöjden strax intill. Om passet sker hemma hos er eller online avgörs av '
              'matchningen.'),
             ('Hur sent på kvällen går det att boka?',
-             'Ni bokar inom studiehjälparens egna tider, och de tiderna sätter hen själv. '
-             'Eftersom studiehjälparna är gymnasie- och högskolestudenter ligger de flesta '
-             'tiderna på eftermiddagar och kvällar.'),
+             'Ni föreslår en tid mellan sju på morgonen och tio på kvällen, och '
+             'studiehjälparen accepterar den eller föreslår en annan. Eftersom '
+             'studiehjälparna är gymnasie- och högskolestudenter blir det oftast '
+             'eftermiddagar och kvällar.'),
             ('Hur vet vi vad som hände på passet?',
              'Studiehjälparen skriver en rapport efteråt: vad ni gick igenom, hur det gick och '
              'vad som är nästa steg. Ett pass räknas som genomfört först när rapporten är '
