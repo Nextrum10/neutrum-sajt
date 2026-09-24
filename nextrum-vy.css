@@ -1225,6 +1225,41 @@ section[data-sek]{overflow-anchor:none}
 .sch-val button:hover{border-color:var(--ln-2);color:var(--bl)}
 .sch-val button[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--pap)}
 
+/* ---------- kommande ----------
+   Förvalet. En rad per pass: klockslag och ämne, vem, var — på var
+   sin rad, så att den som tittar på telefonen mellan två lektioner
+   ser allt utan att öppna något. Dagen står som rubrik ovanför. */
+.sch-kommande{display:flex;flex-direction:column}
+.sch-kom-dag{
+  margin:14px 0 8px;font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
+}
+.sch-kom-dag:first-child{margin-top:0}
+.sch-kom-dag.idag{color:var(--acc-text)}
+.sch-kom-lista{display:flex;flex-direction:column;gap:6px}
+.sch-kom{
+  position:relative;display:grid;grid-template-columns:4px minmax(0,1fr) auto;
+  column-gap:12px;row-gap:2px;align-items:center;
+  width:100%;text-align:left;padding:11px 12px;border-radius:12px;
+  border:1px solid var(--ln);background:var(--pap);color:var(--bl);
+  transition:border-color .18s var(--e),background .18s var(--e);
+}
+.sch-kom:hover{border-color:var(--ln-2);background:var(--pap-2)}
+.sch-kom > i{grid-column:1;grid-row:1 / span 4;align-self:stretch;border-radius:100px;background:var(--bl-3)}
+.sch-kom.onskad > i{background:var(--ockra)}
+.sch-kom.bekraftad > i{background:var(--mossa)}
+.sch-kom > span{grid-column:2;min-width:0;overflow-wrap:anywhere}
+.sch-kom-vad{font-size:.96rem;font-weight:600;letter-spacing:-.015em}
+.sch-kom-vad b{font-family:var(--f-mono);font-size:.86rem;font-weight:700;letter-spacing:0;margin-right:4px}
+.sch-kom-namn{font-size:.88rem;color:var(--bl)}
+.sch-kom-plats{font-size:.82rem;color:var(--bl-2)}
+.sch-kom-lage{font-size:.76rem;font-weight:600;color:var(--ockra)}
+.sch-kom-pil{
+  grid-column:3;grid-row:1 / span 4;width:12px;height:12px;
+  fill:none;stroke:var(--bl-3);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+}
+.sch-kom-fler{align-self:flex-start;margin-top:12px}
+
 /* ---------- månad ---------- */
 .sch-manad{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .sch-manad .dow{
@@ -1270,6 +1305,14 @@ section[data-sek]{overflow-anchor:none}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--bl-2);
 }
 @container (max-width:620px){.sch-pass span{display:none}}
+/* Namnet står i knappen men syns bara i veckan, där raden är bred
+   nog. I månaden hade det brutit ett ord mitt itu. */
+.sch-pass em{display:none}
+.sch-vecka .sch-pass em{
+  display:block;margin-left:auto;padding-left:8px;font-style:normal;font-size:.72rem;
+  color:var(--bl-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+.sch-vecka .sch-pass span{display:block}
 
 .sch-fler{
   font-family:var(--f-mono);font-size:8.5px;font-weight:600;

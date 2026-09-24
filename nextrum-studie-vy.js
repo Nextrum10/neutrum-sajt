@@ -645,6 +645,15 @@
     /* Genomfört pass = rapporterat (ordlistan). Räknat på rapporterna
        för det valda barnet, inte på passens status. */
     const rapporterade = (S.rapporter || []).length;
+    /* Snittet i dag. Samma tal som sista stapeln i Nivån över tid:
+       historiken bakfylldes ur progress_items i Fas 15.3 och skrivs av
+       triggern progress_items_historik vid varje nytt steg. Triggern
+       lyssnar på "update of steg", så en klient som bara skrev level
+       hade ändrat steget utan en historikrad och fått de två att
+       glida isär. Ingen klient gör det i dag — alla skriver steg. */
+    const snitt = p.reduce((a, x) => a + steg(x), 0) / p.length;
+    const ämnen = new Set(p.map(x => x.subject)).size;
+    const vem = namnPåBarnet();
 
     const andel = Math.round(säkra / p.length * 100);
     const omkrets = 2 * Math.PI * 26;
@@ -656,19 +665,47 @@
       + (omkrets * säkra / p.length).toFixed(1) + ' ' + omkrets.toFixed(1) + '"></circle>'
       + '</svg><span class="ut-ring-tal"><b>' + andel + '<i>%</i></b></span></div>';
 
+    /* Skalan står FÖRE det första talet som bygger på den. Leo
+       2026-09-24: "det är oklart hur statistiken beräknas" — "2,0 av 5"
+       säger ingenting till den som inte vet vad 2 är, och förut stod
+       skalan först under grafen, fyra rutor längre ned. Steg 4 och 5
+       är märkta: det är de som räknas som "sitter säkert". */
+    const skala = '<div class="ut-skala">'
+      + '<h6>Skalan studiehjälparen bedömer på</h6>'
+      + '<ol>' + [1, 2, 3, 4, 5].map(n => '<li' + (n >= 4 ? ' class="ar-saker"' : '') + '>'
+        + '<b aria-hidden="true">' + n + '</b>'
+        + '<span><strong>' + esc(NXStudie.STEG[n].text) + '</strong> ' + esc(NXStudie.STEG[n].vad) + '</span>'
+        + '</li>').join('') + '</ol></div>';
+
+    /* Varje tal säger vad det räknas ur, under sin etikett. En siffra
+       som föräldern inte kan förklara för sitt barn är ingen
+       upplysning. "Säker eller bättre" stod förut både i ringen och
+       som eget tal; snittnivån tar dess plats och knyter ihop talen
+       med ämneskorten och grafen, som båda räknar i snitt. */
+    const tal = [
+      [String(rapporterade), 'Pass med rapport',
+        'Pass där studiehjälparen skrivit en rapport. Bokade pass utan rapport räknas inte.'],
+      [String(p.length), 'Bedömda områden',
+        'Delar av ett ämne, som Bråk i matematik. Just nu i ' + (ämnen === 1 ? 'ett ämne.' : ämnen + ' ämnen.')],
+      [esc(snitt.toFixed(1).replace('.', ',')) + '<i class="ut-tal-av"> av 5</i>', 'Snittnivå i dag',
+        'Snittet av alla områdens nivå just nu, på skalan ovan.'],
+      [String(gickUpp), 'Gått upp på 30 dagar',
+        'Områden som står högre i dag än för 30 dagar sedan. Ett nyare område jämförs med sin första bedömning.'],
+      [medMål.length ? nådda + '<i class="ut-tal-av"> / ' + medMål.length + '</i>' : '–', 'Mål nådda',
+        medMål.length
+          ? 'Av de ' + medMål.length + (medMål.length === 1 ? ' område' : ' områden') + ' där studiehjälparen satt ett mål.'
+          : 'Inget område har ett mål än. Målet sätts av studiehjälparen.']
+    ];
+
     $('#ut-tal').innerHTML = '<div class="ut-sammanfattning">' + ring
       + '<div class="ut-sammanfattning-text">'
-      + '<b>' + säkra + ' av ' + p.length + ' områden sitter säkert</b>'
-      + '<span>Säker betyder att ' + esc(namnPåBarnet()) + ' klarar det på egen hand. '
-      + 'Nivåerna sätts av er studiehjälpare efter passen.</span>'
+      + '<b>' + säkra + ' av ' + p.length + (p.length === 1 ? ' område sitter' : ' områden sitter') + ' säkert</b>'
+      + '<span>Säkert betyder steg 4 eller 5 på skalan nedan: ' + esc(vem) + ' klarar det på egen hand. '
+      + 'Alla tal på sidan räknas ur studiehjälparens bedömningar efter passen.</span>'
       + '</div></div>'
-      + '<div class="stat-tal stat-tal-5" style="margin-top:16px">'
-      + '<div><b>' + rapporterade + '</b><span>Rapporterade pass</span></div>'
-      + '<div><b>' + p.length + '</b><span>Kunskapsområden</span></div>'
-      + '<div><b>' + gickUpp + '</b><span>Gått upp senaste månaden</span></div>'
-      + '<div><b>' + säkra + '</b><span>Säker eller bättre</span></div>'
-      + '<div><b>' + (medMål.length ? nådda + '<i style="font-style:normal;font-size:.6em;color:var(--bl-2)"> / '
-          + medMål.length + '</i>' : '—') + '</b><span>Mål nådda</span></div>'
+      + skala
+      + '<div class="stat-tal stat-tal-5 stat-tal-forklarad">'
+      + tal.map(t => '<div><b>' + t[0] + '</b><span>' + esc(t[1]) + '</span><small>' + esc(t[2]) + '</small></div>').join('')
       + '</div>';
 
     $('#ut-amnen').innerHTML = NXStudie.ämnesSammanfattning(p, H);
@@ -707,13 +744,19 @@
       host.innerHTML = tomt('Ingen historik än', 'Grafen fylls i när er studiehjälpare bedömt områdena några gånger.');
       return;
     }
-    host.innerHTML = '<div class="graf">' + punkter.map((x, i) =>
+    /* Hur många områden varje stapel bygger på står UNDER den, synligt.
+       Förut låg det i ett title-attribut, som ingen telefon visar: ett
+       snitt av ett område och ett snitt av tolv såg likadana ut. */
+    host.innerHTML = '<div class="graf graf-med-antal">' + punkter.map((x, i) =>
       '<div class="graf-stapel' + (i === punkter.length - 1 ? ' nu' : '') + '"'
-      + (x.snitt ? ' title="' + esc(x.antal + (x.antal === 1 ? ' område' : ' områden')) + '"' : '') + '>'
+      + ' aria-label="' + esc(x.namn + ': ' + (x.snitt
+          ? x.snitt.toFixed(1).replace('.', ',') + ' av 5, ' + x.antal + (x.antal === 1 ? ' område' : ' områden')
+          : 'inget bedömt')) + '">'
       + '<b>' + (x.snitt ? esc(x.snitt.toFixed(1).replace('.', ',')) : '–') + '</b>'
       + '<i style="height:' + (x.snitt ? Math.round(x.snitt / 5 * 100) : 0) + '%"></i>'
-      + '<span>' + esc(x.namn) + '</span></div>').join('') + '</div>'
-      + '<p class="graf-not">1 är Nytt och 5 är Behärskar. En tom månad betyder att inget var bedömt då, inte att det gick bakåt.</p>';
+      + '<span>' + esc(i === punkter.length - 1 ? 'I dag' : x.namn) + '</span>'
+      + '<small>' + (x.snitt ? esc(x.antal + ' omr.') : '&nbsp;') + '</small></div>').join('') + '</div>'
+      + '<p class="graf-not">Under månaden står hur många områden snittet bygger på. En tom månad betyder att inget var bedömt då, inte att det gick bakåt.</p>';
   }
 
   /* Varje steg uppåt i historiken, senaste först. Bara uppåt: en
@@ -1676,6 +1719,9 @@
      ============================================================ */
   function byggSchema() {
     NXStudie.schemaI(S, {
+      /* Månaden, inte Kommande: passlistan precis ovanför är redan
+         de kommande passen. Här är schemat överblicken. */
+      lage: 'manad',
       namn: b => {
         const barn = S.barn.find(x => x.id === b.student_id);
         return barn ? barn.name : ((S.tutor && S.tutor.full_name) || '');

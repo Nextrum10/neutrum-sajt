@@ -296,9 +296,11 @@ Vercels `cleanUrls`).
 
 Vyerna ska provas som en telefon, inte som en dator: Safari har ingen
 scroll anchoring. En lista som byts mot "Hämtar" kastar sidan uppåt —
-använd `NXStudie.laddarFörsta`. `1fr` i ett grid ska vara
+använd `NXStudie.laddarFörsta`. Det som står ovanför det man trycker
+på får inte byta höjd av trycket; gör det det ändå, håll det man
+tryckte på med `NXStudie.håll`. `1fr` i ett grid ska vara
 `minmax(0,1fr)`. Inget som rör sig i onödan (video, zoom, oskärpa).
-Detaljen: `CLAUDE.md` avsnitt 3, "Tre fällor som gör vyerna hackiga".
+Detaljen: `CLAUDE.md` avsnitt 3, "Fyra fällor som gör vyerna hackiga".
 
 Inte byggt än: en betalning som gått hela vägen. Sedan Fas 14.2 betalar
 familjen varje pass med kort, före passet, och får ingen faktura.
