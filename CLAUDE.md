@@ -40,6 +40,19 @@ veckotider längre: `tutor_availability` läses inte av något, och
 triggern som bekräftade bokningar inom dem är borttagen. En avbokning
 kräver ett skäl (fast kod), och motparten får det i mejlet (Fas 15.2).
 
+**Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
+adress i `bookings.location`, och en valfri rad till studiehjälparen i
+`note`. Fas 15.1 hade tagit bort frågan, och ett förslag hade då ingen
+plats alls. Förval ur förra passet och barnets `format_onskemal`.
+Platsen ändras inte när tiden flyttas — `skydda_bokningsfalt` släpper
+bara igenom tid och status på ett befintligt pass.
+
+**Varje pass har en egen sida, `#pass/<id>`, i båda vyerna.** Ritas av
+`NXStudie.passSida`; vyn bestämmer innehållet (familjen ser pris och
+betalning, studiehjälparen eleven och familjen). Raderna i listorna
+leder dit och bär bara det som är ens eget drag just nu — svara,
+betala, skriva rapporten. Föreslå ny tid och avboka ligger på sidan.
+
 En studiehjälpare syns publikt först när admin satt läget till
 **Godkänd**.
 
@@ -141,6 +154,36 @@ vy.
 Och: **`--acc-lugn` är hover-accenten, inte en felfärg.** `cinema.css:517`
 har `.btn-primary:hover{background:var(--acc-lugn)}`. Den betyder "fel"
 bara i agentfliken.
+
+### Tre fällor som gör vyerna hackiga
+
+Leo 2026-09-24: "när man trycker på knappar skickas man uppåt" och
+"det är laggigt". Inget av det syns i Chrome på en dator, och därför
+hade inget av det upptäckts. Mätt i provbänken med 250 ms per fråga,
+strypt processor och scroll anchoring avstängd (som Safari):
+
+1. **Byt aldrig en lista som har innehåll mot "Hämtar".** Sidan krymper
+   med listans höjd, webbläsaren klämmer scrollen, och man hamnar
+   1 000–1 800 px högre upp (läxornas "Klar"). Chrome kompenserar med
+   scroll anchoring; **Safari har ingen**. Använd
+   `NXStudie.laddarFörsta(host)`: "Hämtar" bara första gången, annars
+   står listan kvar nedtonad tills den nya är ritad. Ett formulär som
+   stängs ovanför det man tittar på hålls med `NXStudie.håll(ankare, fn)`.
+2. **`1fr` i ett grid är `minmax(auto,1fr)`.** Bokningens kolumn växte
+   till 614 px på en 390 px bred telefon så fort en dag valdes, för att
+   ämnesraden (en rad man drar i sidled) räknades som kolumnens minsta
+   bredd. Tiderna låg utanför skärmen och sidan gick att dra i sidled.
+   Skriv `minmax(0,1fr)`.
+3. **Det som rör sig kostar hela tiden.** Toppen i vyerna spelade en
+   video i loop, med en zoomande bild under och suddiga kort ovanpå —
+   och sidhuvudet räknade om en oskärpa vid varje scrollsteg. Nu: ingen
+   video under 700 px, allt pausas när toppen inte syns, ingen
+   `backdrop-filter` på sidhuvudet i vyerna. Mjuk scrollning är
+   avstängd i vyerna (`html:has(> body.vy)`): den fick varje fokus och
+   varje omritning att glida iväg med sidan.
+
+Provbänken (`skanna.js` i en scratchpad, inte i repot) trycker på varje
+knapp i varje sektion och rapporterar hopp över 40 px. Admin var ren.
 
 ---
 
@@ -891,6 +934,15 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   `aterbetald_ore` nollas när en ny betalning kommer in — kolumnerna
   beskriver den betalning som gäller NU, och en gammal återbetalning
   hör till den gamla chargen.
+
+  **Studievyn visar bara kortet sedan 2026-09-24** (Leos val: "bara kort,
+  som Fas 14 sa"). Betalning listar pass att betala med en knapp som går
+  rakt till Stripe; rutan som uppskattade månadens faktura är borttagen,
+  och fakturalistan står kvar som historik. Den driftsatta
+  `fakturering` (v26, 2026-09-24) skapar redan inga familjefakturor —
+  Fas 14.2 i Stripe-chatten, driftsatt innan den fanns på main. **Kör
+  frågan i avsnitt 5 och jämför funktionen med repot** innan du tror på
+  någon av dem.
 
   **Spärren "ingen betalning, inget pass" finns ännu inte.** Den kan
   inte slås på förrän kortvägen bevisligen fungerar: i dag hade den

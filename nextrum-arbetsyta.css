@@ -109,6 +109,15 @@
 @media (prefers-reduced-motion:reduce){
   .vy-hero-still{animation:none}
 }
+/* Bilden står still när filmen spelar ovanpå den, och när blocket
+   inte syns (NXArbete.hero sätter klasserna). */
+.vy-hero-film .vy-hero-still{animation:none}
+.vy-hero-vilar .vy-hero-still{animation-play-state:paused}
+/* På en telefon spelas ingen film, och bilden driver inte heller:
+   rörelsen var det enda som krävde att den ritades om hela tiden. */
+@media (max-width:700px){
+  .vy-hero-still{animation:none;will-change:auto}
+}
 /* Slöjan gör texten läsbar oavsett vad som råkar ligga under den.
    Mörkast nedtill, där rubriken står; nästan genomskinlig upptill
    så att bilden fortfarande får vara en bild. */
@@ -146,6 +155,15 @@
 /* På telefon konkurrerar märket med rubriken om samma hörn, och
    rubriken vinner den — den säger vem du är, märket bara var du är. */
 @media (max-width:640px){.vy-hero-marke{display:none}}
+/* Suddig bakgrund kostar en omritning av allt bakom kortet vid varje
+   scrollsteg. På en telefon byts den mot en tätare färg — slöjan
+   under gör redan texten läsbar. */
+@media (max-width:700px){
+  .vy-hero-kort > *{
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+    background:rgba(20,17,12,.62);
+  }
+}
 
 .vy-hero-inne{position:relative;max-width:46ch}
 .vy-hero-et{
@@ -469,7 +487,51 @@
 .bk-slot:disabled{opacity:.5;cursor:progress}
 
 
-/* ---- kvittot ---- */
+/* ---- vägledningen (Leo 2026-09-24: "lägg till så man förstår vad
+   man ska göra tydligare") ----
+   Tre steg som följer valen: gjort är ibockat, pågående är markerat.
+   En mening under säger vad nästa tryck är. */
+.bk-stegrad{
+  list-style:none;margin:0;padding:0;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+}
+.bk-steg{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 11px;border-radius:12px;border:1px solid var(--ln);
+  font-size:.84rem;font-weight:600;line-height:1.25;color:var(--muted);
+  background:var(--pap);
+}
+.bk-steg b{
+  flex:none;width:24px;height:24px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--f-mono);font-size:11px;
+  border:1px solid var(--ln-2);color:var(--muted);background:var(--pap-2);
+}
+.bk-steg.ar-nu{border-color:var(--bl);color:var(--bl)}
+.bk-steg.ar-nu b{background:var(--bl);border-color:var(--bl);color:var(--pap)}
+.bk-steg.ar-klar{color:var(--bl-2)}
+.bk-steg.ar-klar b{background:var(--mossa);border-color:var(--mossa);color:var(--pap)}
+.bk-hjalp{margin:10px 2px 0;font-size:.9rem;line-height:1.55;color:var(--bl-2)}
+
+/* Fälten för adress och anteckning: etiketten ovanför på en smal
+   skärm, bredvid på en bred. */
+.bk-faltrad .inp{flex:1 1 260px;min-width:0}
+/* På en telefon ligger kvittoraden klistrad längst ned. Ett fält som
+   får fokus ska hamna ovanför den, inte bakom den. */
+.bk .inp{scroll-margin-bottom:190px}
+.bk-kal-dag:empty{display:none}
+
+/* Kvittot efter att förslaget skickats. Står där dagens val stod. */
+.bk-kvitto{
+  padding:16px 18px;border-radius:14px;
+  border:1px solid color-mix(in srgb,var(--mossa) 45%,transparent);background:var(--pap);
+}
+.bk-kvitto > b{display:block;font-size:1.02rem;color:var(--bl)}
+.bk-kvitto p{margin:6px 0 0;font-size:.9rem;line-height:1.55;color:var(--bl-2)}
+.bk-kvitto-knappar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.bk-kvitto-knappar .btn{text-decoration:none}
+
+/* ---- kvittoraden ---- */
 
 .bk-sum{
   display:flex;align-items:center;gap:16px;flex-wrap:wrap;
@@ -498,18 +560,33 @@
   #bk-amnen::-webkit-scrollbar{display:none}
   #bk-amnen button{flex:none;scroll-snap-align:start}
 
-  /* Kalendern och dagens tider under varandra i stället för bredvid. */
-  .bk-kal{grid-template-columns:1fr;gap:14px;padding:12px}
+  /* Kalendern och dagens tider under varandra i stället för bredvid.
+
+     minmax(0,1fr), inte 1fr. 1fr är minmax(auto,1fr), och "auto" är
+     det bredaste innehållet — ämnesraden ovan, som ligger på en rad
+     man drar i sidled. Kolumnen växte till 614 px på en 390 px bred
+     telefon så fort en dag valdes: tiderna hamnade utanför skärmen
+     till höger, och hela sidan gick att dra i sidled. */
+  .bk-kal{grid-template-columns:minmax(0,1fr);gap:14px;padding:12px}
 
   /* Kvittoraden följer med ned i stället för att ligga sist i en
      lång sida. Den som scrollat till lördag ska inte behöva leta
      rätt på knappen igen. */
+  /* Det klistrade elementet är huset runt raden, inte raden: huset
+     är barn till .bk och får röra sig i hela bokningens höjd. Raden
+     själv ligger i ett hus som är exakt lika högt som den, och där
+     finns ingenstans att klistra sig. */
+  .bk-sumhus{position:sticky;bottom:10px;z-index:2}
   .bk-sum{
-    position:sticky;bottom:10px;z-index:2;
     gap:10px 14px;
-    box-shadow:0 8px 24px rgba(46,42,32,.13);
+    box-shadow:0 8px 24px color-mix(in srgb,var(--bl) 14%,transparent);
     background:var(--pap);
   }
+  .bk-stegrad{grid-template-columns:1fr;gap:6px}
+  .bk-steg{padding:7px 10px}
+  /* Bara det pågående steget och de gjorda syns på en telefon —
+     tre rader om samma sak tar kalendern ur bild. */
+  .bk-steg:not(.ar-nu):not(.ar-klar){display:none}
   .bk-sum-vad{min-width:0;flex:1 1 55%}
   .bk-sum-pris{flex:0 0 auto;align-self:center}
   /* "betalas i efterskott" står redan i sektionens ingress. I en
