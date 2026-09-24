@@ -1673,12 +1673,17 @@
     $('#mat-antal').textContent = bibRader.length
       ? urval.length + ' av ' + bibRader.length : '';
 
+    /* Knappen finns bara under Mitt eget, så de tomma lägena pekar dit
+       i stället för på en knapp som inte syns. */
+    const egetTomt = bibÄgare === 'eget' && !bibRader.some(b => !b.delad);
     host.innerHTML = urval.length
       ? urval.map(bibKort).join('')
-      : tomt(bibRader.length ? 'Inget material matchar' : 'Inget material än',
-          bibRader.length
-            ? 'Prova ett bredare filter, eller lägg till ett eget.'
-            : 'Nextrums bank fylls på av oss. Ditt eget lägger du till med knappen ovan.');
+      : egetTomt
+        ? tomt('Inget eget material än', 'Tryck på Lägg till eget material ovan. Det du lägger till ser bara du.')
+        : tomt(bibRader.length ? 'Inget material matchar' : 'Inget material än',
+            bibRader.length
+              ? (bibÄgare === 'eget' ? 'Prova ett bredare filter.' : 'Prova ett bredare filter, eller lägg till ett eget under Mitt eget.')
+              : 'Nextrums bank fylls på av oss. Ditt eget lägger du till under Mitt eget.');
   }
 
   async function laddaBibliotek() {
@@ -1713,6 +1718,11 @@
     bibÄgare = k.dataset.bagare;
     $$('#bib-agare button').forEach(b =>
       b.setAttribute('aria-pressed', String(b.dataset.bagare === bibÄgare)));
+    /* Lägg till hör till Mitt eget. Lämnar man det stängs ett öppet
+       formulär också — annars stod det kvar under Nextrums, utan
+       knappen som öppnade det. */
+    $('#bib-eget-rad').hidden = bibÄgare !== 'eget';
+    if (bibÄgare !== 'eget') stängEgetForm();
     ritaBibliotekslista();
   });
 
@@ -1796,11 +1806,12 @@
     if (!f.hidden) $('#be-titel').focus();
   });
 
-  $('#be-avbryt').addEventListener('click', () => {
+  function stängEgetForm() {
     $('#bib-eget-form').hidden = true;
     $('#bib-eget-ny').textContent = 'Lägg till eget material';
     rensa($('#be-msg'));
-  });
+  }
+  $('#be-avbryt').addEventListener('click', stängEgetForm);
 
   $('#be-typ').addEventListener('click', e => {
     const k = e.target.closest('[data-betyp]');

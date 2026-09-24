@@ -47,6 +47,12 @@ plats alls. Förval ur förra passet och barnets `format_onskemal`.
 Platsen ändras inte när tiden flyttas — `skydda_bokningsfalt` släpper
 bara igenom tid och status på ett befintligt pass.
 
+**Studiehjälparens schema öppnar i Kommande** (2026-09-24): de närmaste
+passen per dag, med klockslag och ämne, elevens namn och platsen på var
+sin rad. Studievyn och adminvyn öppnar fortfarande i månaden — hos
+familjen står schemat direkt under passlistan, och Kommande hade bara
+upprepat den.
+
 **Varje pass har en egen sida, `#pass/<id>`, i båda vyerna.** Ritas av
 `NXStudie.passSida`; vyn bestämmer innehållet (familjen ser pris och
 betalning, studiehjälparen eleven och familjen). Raderna i listorna
@@ -155,7 +161,7 @@ Och: **`--acc-lugn` är hover-accenten, inte en felfärg.** `cinema.css:517`
 har `.btn-primary:hover{background:var(--acc-lugn)}`. Den betyder "fel"
 bara i agentfliken.
 
-### Tre fällor som gör vyerna hackiga
+### Fyra fällor som gör vyerna hackiga
 
 Leo 2026-09-24: "när man trycker på knappar skickas man uppåt" och
 "det är laggigt". Inget av det syns i Chrome på en dator, och därför
@@ -181,9 +187,23 @@ strypt processor och scroll anchoring avstängd (som Safari):
    `backdrop-filter` på sidhuvudet i vyerna. Mjuk scrollning är
    avstängd i vyerna (`html:has(> body.vy)`): den fick varje fokus och
    varje omritning att glida iväg med sidan.
+4. **Det som står ovanför det man trycker på får inte byta höjd av
+   trycket.** Leo, samma dag efter merge: "det hoppar när man väljer
+   längd och tid". Bokningens stegrad visade på en telefon bara det
+   pågående steget och de gjorda — den växte 40 px vid varje val, och
+   hjälpraden under bytte mellan två och tre rader. En vald tid sköt
+   tiderna 69 px nedåt under fingret. Nu syns alla tre stegen hela
+   tiden, hjälpraden har reserverad höjd, och bokningen ritar om
+   genom `stilla()`, som håller det man tryckte på kvar med
+   `NXStudie.håll`. Samma omritning nollställde dessutom ämnesraden i
+   sidled — en rad man dragit fram Engelska i hoppade tillbaka till
+   Matematik.
 
 Provbänken (`skanna.js` i en scratchpad, inte i repot) trycker på varje
 knapp i varje sektion och rapporterar hopp över 40 px. Admin var ren.
+Den mäter `scrollY`, inte vad som står stilla på skärmen, så fällan i
+punkt 4 syntes inte i den: sidan scrollade inte, innehållet flyttade
+sig. Mät ett element före och efter trycket (`getBoundingClientRect`).
 
 ---
 

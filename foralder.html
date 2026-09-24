@@ -28,10 +28,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
 <link rel="stylesheet" href="nextrum-cinema.css?v=b56b6211">
-<link rel="stylesheet" href="nextrum-vy.css?v=cc9f5084">
+<link rel="stylesheet" href="nextrum-vy.css?v=dc36fba3">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=9a21f1ee">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=d83379c9">
 </head>
 <body class="vy">
 
@@ -479,24 +479,33 @@
                och sedan detaljerna. Luckor fylls inte: ett område
                räknas först från sin första bedömning, och en månad
                utan bedömningar står tom i stället för att ärva ett tal. -->
+          <!-- Leo 2026-09-24: "det är oklart hur statistiken
+               beräknas". Varje ruta säger därför under rubriken vad
+               talen räknas ur, och skalan står före det första talet
+               som bygger på den. En siffra som föräldern inte kan
+               förklara för sitt barn är ingen upplysning. -->
           <div class="dbox">
             <h5>Lärandet i siffror</h5>
             <div id="ut-tal"><div class="loading">Hämtar</div></div>
           </div>
           <div class="dbox">
             <h5>Ämne för ämne <em id="prg-antal"></em></h5>
+            <p class="ut-forklaring">Talet är snittet av ämnets områden i dag, på skalan 1–5 ovan. <b>Gått upp</b> betyder att området står högre i dag än för 30 dagar sedan.</p>
             <div id="ut-amnen"></div>
           </div>
           <div class="dbox">
-            <h5>Nivån över tid <em>genomsnitt av alla områden, senaste sex månaderna</em></h5>
+            <h5>Nivån över tid</h5>
+            <p class="ut-forklaring">Varje stapel är snittet av alla områdens senaste bedömning vid månadens slut. Den sista är i dag, och är samma tal som <b>Snittnivå</b> ovan. Ett område räknas från den månad det bedömdes första gången.</p>
             <div id="ut-graf"></div>
           </div>
           <div class="dbox">
             <h5>Senaste framstegen</h5>
+            <p class="ut-forklaring">Varje gång studiehjälparen bedömt ett område högre än gången innan. De sex senaste.</p>
             <div id="ut-framsteg"></div>
           </div>
           <div class="dbox">
             <h5>Område för område</h5>
+            <p class="ut-forklaring">Nivån i dag, målet om studiehjälparen satt ett, och hur nivån rört sig sedan området bedömdes första gången. Staplarna är de åtta senaste bedömningarna.</p>
             <div id="prg-lista"><div class="loading">Hämtar</div></div>
           </div>
 
@@ -812,11 +821,11 @@
 <script src="nextrum-app.js?v=8990dc3d"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=063facb4"></script>
-<script src="nextrum-studie.js?v=658837bc"></script>
-<script src="nextrum-arbetsyta.js?v=17e70b14"></script>
+<script src="nextrum-studie.js?v=4a41bfce"></script>
+<script src="nextrum-arbetsyta.js?v=c06b8a6d"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=bd1c3fc3"></script>
+<script src="nextrum-studie-vy.js?v=0c2edd6a"></script>
 </body>
 </html>
