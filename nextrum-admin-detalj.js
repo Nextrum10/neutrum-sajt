@@ -109,17 +109,12 @@
         .select('id, title, kind, subject, url, created_at').eq('student_id', id)
         .order('created_at', { ascending: false }).limit(50));
       lägg('utveckling', supa.from('progress_items')
-        .select('id, subject, area, level, comment, updated_at').eq('student_id', id)
+        .select('id, subject, area, level, steg, mal_steg, comment, updated_at').eq('student_id', id)
         .order('subject').order('area'));
       lägg('rapporter', supa.from('lesson_reports')
         .select('id, lesson_date, went_well, needs_practice, next_focus, ai_feedback, created_at')
         .eq('student_id', id).order('lesson_date', { ascending: false }).limit(30));
     } else if (typ === 'studiehjalpare') {
-      lägg('tillgang', supa.from('tutor_availability')
-        .select('weekday, start_time, end_time').eq('tutor_id', id).order('weekday'));
-      lägg('blockerat', supa.from('tutor_blocked')
-        .select('block_date, block_time, reason').eq('tutor_id', id)
-        .gte('block_date', isoFor(new Date())).order('block_date').limit(30));
       lägg('rapporter', supa.from('lesson_reports')
         .select('id, student_id, lesson_date, created_at').eq('tutor_id', id)
         .order('lesson_date', { ascending: false }).limit(30));
@@ -178,8 +173,10 @@
                      ['anteckningar', 'Anteckningar']],
     elev:           [['oversikt', 'Översikt'], ['pass', 'Pass'], ['uppgifter', 'Uppgifter'],
                      ['utveckling', 'Utveckling'], ['rapporter', 'Rapporter']],
+    /* Fliken Tider är borta sedan 2026-09-24: studiehjälparen har inget
+       veckoschema längre. Familjen föreslår en tid och hjälparen svarar. */
     studiehjalpare: [['oversikt', 'Översikt'], ['elever', 'Elever'], ['pass', 'Pass'],
-                     ['tider', 'Tider'], ['ersattning', 'Ersättning'],
+                     ['ersattning', 'Ersättning'],
                      ['anteckningar', 'Anteckningar']]
   };
 
@@ -417,14 +414,15 @@
       läge(BOK_LAGE, b.status))).join('');
   }
 
-  /* Databasens värden (progress_items_level_check) och samma ord som
-     studievyerna använder (NXStudie, NIVA). Nycklarna stämde inte
-     tidigare, så råvärdet visades i stället för texten. */
-  const NIVA_TEXT = {
-    behover_trana: ['Behöver träna', 'ar-ny'],
-    pa_god_vag: ['På god väg', 'ar-vantar'],
-    bra: ['Bra', 'ar-klar']
-  };
+  /* Samma fem steg och samma ord som studievyerna (NXStudie.STEG).
+     Här stod förr en egen tabell över de tre gamla nivåerna, och den
+     hade redan en gång visat råvärdet i stället för texten för att
+     nycklarna inte stämde. Färgen följer steget: rött är långt kvar,
+     grönt är säkert. */
+  function stegPill(x) {
+    const st = NXStudie.stegFör(x);
+    return pill(NXStudie.stegText(st), st >= 4 ? 'ar-klar' : st === 3 ? 'ar-vantar' : 'ar-ny');
+  }
 
   function dpFamilj(p, d) {
     const barn = S.elever[p.id] || [];
@@ -523,7 +521,7 @@
       if (!u.length) return tomt('Inga områden satta',
         'Studiehjälparen sätter dem efter hand som de arbetar.');
       return u.map(x => dpRad(x.area, [x.subject, x.comment].filter(Boolean).join(' · '),
-        pill((NIVA_TEXT[x.level] || [x.level])[0], (NIVA_TEXT[x.level] || [, ''])[1]))).join('');
+        stegPill(x))).join('');
     }
 
     if (DP.flik === 'rapporter') {
@@ -549,7 +547,15 @@
       ['Årskurs', e.grade ? esc(e.grade) : null],
       ['Skola', e.school ? esc(e.school) : null],
       ['Ämnen', (e.subjects || []).length ? esc(e.subjects.join(', ')) : null],
+      /* Det familjen skrivit för matchningen (2026-09-24). Koderna blir
+         text ur NX.BEHOV och NX.FORMAT_ONSKEMAL — samma listor som
+         familjen valde ur. */
+      ['Behöver', (e.behov || []).length
+        ? esc(e.behov.map(k => (NX.BEHOV.find(x => x.kod === k) || {}).text).filter(Boolean).join(', ')) : null],
+      ['Format', e.format_onskemal
+        ? esc((NX.FORMAT_ONSKEMAL.find(x => x.kod === e.format_onskemal) || {}).text || '') : null],
       ['Mål', e.goals ? esc(e.goals) : null],
+      ['Lär sig bäst', e.about ? esc(e.about) : null],
       ['Familj', f ? '<button class="btn btn-ghost btn-sm" data-dp="familj:' + esc(f.id) + '">'
         + esc(f.full_name || f.email || '—') + '</button>' : null],
       ['Studiehjälpare', t
@@ -586,27 +592,6 @@
     }
 
     if (DP.flik === 'pass') return passLista(pass, b => elevNamn(b.student_id) || namnFör(b.parent_id));
-
-    if (DP.flik === 'tider') {
-      const t = d.tillgang || [];
-      const bl = d.blockerat || [];
-      return dpRubrik('Kan jobba', t.length ? t.length + ' block' : 'inga tider inlagda')
-        + (t.length
-          /* weekday är 0 = måndag i tutor_availability, precis som
-             NX.DAGAR. Ingen omräkning, och framför allt ingen
-             (+6)%7 — den hör hemma när man kommer från
-             Date.getDay(), som börjar på söndag. */
-          ? t.map(x => dpRad(NX.DAGAR[x.weekday] || 'Dag ' + x.weekday,
-              String(x.start_time).slice(0, 5) + '–' + String(x.end_time).slice(0, 5), '')).join('')
-          : tomt('Inga tider inlagda',
-              'Familjen kan bara boka inom tiderna hen lagt in. Utan dem går inga pass att boka.'))
-        + dpRubrik('Spärrade tider framåt')
-        + (bl.length
-          ? bl.map(x => dpRad(kortDatum(x.block_date),
-              [x.block_time ? String(x.block_time).slice(0, 5) : 'hela dagen', x.reason]
-                .filter(Boolean).join(' · '), '')).join('')
-          : tomt('Inget spärrat', 'Inga undantag framåt.'));
-    }
 
     if (DP.flik === 'ersattning') {
       const väntar = utb.filter(u => u.status === 'utkast' || u.status === 'godkand')
@@ -645,7 +630,6 @@
       ['Årskurser', (tp.grade_levels || []).length ? esc(tp.grade_levels.join(', ')) : null],
       ['Format', (tp.formats || []).length ? esc(tp.formats.join(', ')) : null],
       ['Timpenning', tp.hourly_rate ? esc(NX.kr(tp.hourly_rate)) : null, 'ej satt'],
-      ['Stripe', tp.stripe_klar ? 'Klar' : null, 'inte kopplad — ingen utbetalning går'],
       ['Senast inloggad', p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : null, 'aldrig']
     ])
     + (tp.bio ? dpRubrik('Om hen') + '<div class="dp-text">' + esc(tp.bio) + '</div>' : '');

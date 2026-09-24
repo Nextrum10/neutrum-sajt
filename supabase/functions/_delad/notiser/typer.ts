@@ -71,6 +71,18 @@ export function fornamn(v: unknown): string | null {
   return /\p{L}/u.test(ren) ? ren : null;
 }
 
+/**
+ * Avbokningens skäl, samma koder som bookings_avbokningsskal_check.
+ * En KOD, aldrig text: mallen slår upp orden själv, så att det som
+ * står i mejlet alltid är något vi skrivit. Allt som inte är en av
+ * koderna blir null.
+ */
+export const AVBOKNINGSSKAL = [
+  'sjukdom', 'forhinder', 'ombokat', 'ingen_hjalpare', 'familjen_avslutar', 'annat',
+] as const;
+
+export type Avbokningsskal = typeof AVBOKNINGSSKAL[number];
+
 /** Det enda ur data som mallarna och SMS:et får se. */
 export type RenData = {
   datum: string | null;
@@ -83,6 +95,7 @@ export type RenData = {
   fran: string | null;
   timmar: number | null;
   status: 'requested' | 'confirmed' | 'cancelled' | 'completed' | null;
+  skal: Avbokningsskal | null;
   prov: boolean;
 };
 
@@ -120,6 +133,7 @@ export function renData(v: unknown): RenData {
     fran: fornamn(d.fran),
     timmar: timmarOk(d.timmar),
     status,
+    skal: AVBOKNINGSSKAL.find((k) => k === d.skal) ?? null,
     prov: d.prov === true,
   };
 }

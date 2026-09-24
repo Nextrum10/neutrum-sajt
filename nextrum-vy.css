@@ -431,8 +431,8 @@
 
 /* ============================================================
    KUNSKAPSOMRÅDEN
-   Tre segment som fylls. En siffra hade blivit ett betyg; det här
-   är en riktning.
+   Fem segment som fylls, och målet som en ring. En siffra hade blivit
+   ett betyg; det här är en riktning.
    ============================================================ */
 .prg-grupp + .prg-grupp{margin-top:clamp(20px,2.4vw,28px)}
 .prg-grupp h6{
@@ -455,11 +455,38 @@
 
 .niva{display:inline-flex;gap:4px;flex:none}
 .niva i{
-  width:22px;height:5px;border-radius:100px;
+  width:16px;height:6px;border-radius:100px;
   background:var(--ln-2);display:block;
   transition:background .3s var(--e);
 }
 .niva i.fylld{background:var(--mossa)}
+/* Målet: ett segment man siktar på, inte ett man nått. En ring i
+   stället för en fyllning, så att de två aldrig kan förväxlas. */
+.niva i.mal{background:transparent;box-shadow:inset 0 0 0 1.5px var(--mossa)}
+
+/* Utvecklingen över tid: en stapel per bedömning, den senaste mörkast.
+   Höjden är steget (20 % per steg), så en rad som stiger ÄR framsteg. */
+.prg-hist{display:flex;align-items:center;gap:10px;margin-top:8px}
+.prg-hist-staplar{
+  display:inline-flex;align-items:flex-end;gap:3px;height:22px;flex:none;
+  padding:0 2px;border-bottom:1px solid var(--ln);
+}
+.prg-hist-staplar i{display:block;width:6px;border-radius:2px 2px 0 0;background:color-mix(in srgb,var(--mossa) 45%,transparent)}
+.prg-hist-staplar i.sist{background:var(--mossa)}
+.prg-hist-text{font-size:.78rem;line-height:1.4;color:var(--bl-2)}
+
+/* Sammanfattningen per ämne överst i Plan & utveckling och Min
+   utveckling: snittet, antalet områden och hur många som gått upp. */
+.prg-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:18px}
+.prg-sum-kort{border:1px solid var(--ln);border-radius:12px;background:var(--pap);padding:12px 14px}
+.prg-sum-kort h6{
+  margin:0 0 8px;font-family:var(--f-mono);font-size:9px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
+}
+.prg-sum-kort b{font-size:1.3rem;font-weight:700;letter-spacing:-.03em;color:var(--bl)}
+.prg-sum-kort .niva{margin-left:8px;vertical-align:middle}
+.prg-sum-kort p{margin:6px 0 0;font-size:.8rem;line-height:1.45;color:var(--bl-2)}
+.prg-sum-kort p.upp{color:var(--mossa);font-weight:600}
 
 /* ============================================================
    BEKRÄFTELSERUTAN
@@ -499,6 +526,15 @@
   display:flex;gap:10px;justify-content:flex-end;
   margin-top:clamp(20px,2.4vw,28px);flex-wrap:wrap;
 }
+/* Avbokningens skäl (NXStudie.avbokaRuta). Husets chip-mönster för
+   ett val bland få, och en legend som faktiskt är en fråga — den läses
+   upp av skärmläsaren när fokus hamnar på första chipet. */
+.nx-skal{border:0;padding:0;margin:16px 0 0;min-width:0}
+.nx-skal legend{
+  padding:0;margin-bottom:10px;
+  font-size:.86rem;font-weight:600;color:var(--bl);
+}
+.nx-fraga-box .nx-skal-not{margin-top:12px;font-size:.84rem;color:var(--bl-3)}
 
 /* ============================================================
    TOMMA LÄGEN
@@ -519,6 +555,11 @@
   align-items:end;
 }
 .vy-form-rad .pay-field{margin-bottom:0}
+.vy-form-rad .fgroup{margin-bottom:0}
+/* Två rader i följd behöver luft mellan sig, annars klibbar nästa
+   rads etiketter mot fälten ovanför. */
+.vy-form-rad + .vy-form-rad{margin-top:14px}
+.vy-form-rad + .fgroup{margin-top:14px}
 .vy-knapprad{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
 
 /* fällbart formulär i en panel */
@@ -733,6 +774,16 @@
 :root[data-theme="dark"] .tr-rad.deras .tr-bubbla,
 :root[data-theme="dark"] .nx-notis,
 :root[data-theme="dark"] .nx-avatar{background:var(--pap-3)}
+
+/* Ridån bakom bekräftelserutan blandas av --bl, bläcket. I ljust är
+   bläcket bark och ridån mörknar; i mörkt är bläcket kräm, och då
+   blev ridån en ljusgrå slöja — en blixt i stället för en dimning,
+   precis när rutan ska dra blicken till sig. I mörkt blandas den av
+   bottnen i stället. */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .nx-fraga{background:color-mix(in srgb,var(--pap) 78%,transparent)}
+}
+:root[data-theme="dark"] .nx-fraga{background:color-mix(in srgb,var(--pap) 78%,transparent)}
 
 /* ============================================================
    SIDOMENYN
@@ -1047,31 +1098,37 @@ section[data-sek]{overflow-anchor:none}
 }
 
 /* ------------------------------------------------------------
-   ELEVENS LÄGE
-   Siffrorna man vill ha före ett pass, på ett ställe.
+   ELEVKORTET MED SITT LÄGE
+   Rutan Elevens läge låg förr bredvid listan och gällde bara den
+   valda eleven. Nu står siffrorna i varje kort — där eleven står —
+   och det familjen skrivit om barnet under, som läsbar text.
    ------------------------------------------------------------ */
-.elev-tal{
-  display:grid;grid-template-columns:repeat(2,1fr);
-  gap:1px;background:var(--ln);
-  border:1px solid var(--ln);border-radius:14px;overflow:hidden;
-  margin-bottom:18px;
+.elev-kort.ek-rik{flex-direction:column;align-items:stretch;gap:12px;padding:14px 14px 15px;
+  border-color:var(--ln)}
+.elev-lista:has(.ek-rik){gap:10px}
+.ek-topp{display:flex;align-items:center;gap:13px;min-width:0}
+.ek-siffror{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:1px;background:var(--ln);border:1px solid var(--ln);border-radius:12px;overflow:hidden;
 }
-.elev-tal div{background:var(--pap);padding:14px 16px}
-.elev-tal b{
-  display:block;font-size:1.4rem;font-weight:700;
-  letter-spacing:-.035em;color:var(--bl);line-height:1;
+.ek-tal{display:flex;flex-direction:column;gap:5px;background:var(--pap);padding:10px 12px;min-width:0}
+.ek-tal b{font-size:1.2rem;font-weight:700;letter-spacing:-.03em;color:var(--bl);line-height:1}
+.ek-tal > i{
+  font-style:normal;font-family:var(--f-mono);font-size:8.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
 }
-.elev-tal span{
-  display:block;margin-top:7px;
-  font-family:var(--f-mono);font-size:9px;font-weight:600;
-  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
+.ek-tal .niva{margin-top:2px}
+.ek-tal .niva i{width:11px;height:5px}
+.ek-amnen{display:flex;flex-wrap:wrap;gap:6px}
+.ek-om{display:block;font-size:.84rem;line-height:1.55;color:var(--bl-2)}
+.ek-om i{
+  font-style:normal;display:block;margin-bottom:2px;
+  font-family:var(--f-mono);font-size:8.5px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3);
 }
-.elev-rubrik{
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-2);
-  margin:20px 0 10px;
+@media (max-width:560px){
+  .ek-siffror{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-.elev-rubrik:first-child{margin-top:0}
 
 /* ============================================================
    STATISTIK

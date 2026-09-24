@@ -32,6 +32,14 @@ Det här är inte en katalog man bläddrar i. Nextrum matchar.
 Föräldravyn låses upp först efter steg 4. Innan dess: väntläge, inte
 trasig sida.
 
+**Ett pass bokas i två steg (Fas 15.1).** Familjen trycker på en dag i
+en tom kalender, väljer ämne, tid och antal barn och FÖRESLÅR tiden.
+Studiehjälparen accepterar eller föreslår en annan under Föreslagna
+tider, och först då står passet under Mina lektioner. Det finns inga
+veckotider längre: `tutor_availability` läses inte av något, och
+triggern som bekräftade bokningar inom dem är borttagen. En avbokning
+kräver ett skäl (fast kod), och motparten får det i mejlet (Fas 15.2).
+
 En studiehjälpare syns publikt först när admin satt läget till
 **Godkänd**.
 
@@ -102,7 +110,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara |
-| `nextrum-admin-palett.css` | Bara `admin.html`, laddas **sist**. Adminvyns mörkblå palett, satt som tokens på `body.vy-admin` |
+| `nextrum-admin-palett.css` | Bara `admin.html`, laddas **sist**. Sedan 2026-09-24 **ingen egen palett**: adminvyn ärver jordpaletten som de två andra vyerna. Filen bär bara `--fel`, `--ln-kontroll`, agentflikens `--acc-lugn` och felsemantiken |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
@@ -111,7 +119,12 @@ Sju områdessidor (`laxhjalp-*.html`) genereras. `/en/` är elva
 
 ### Två fällor när en palett byts
 
-Båda kostade en omgång i Fas 11 och syns inte förrän i drift.
+Båda kostade en omgång i Fas 11 och syns inte förrän i drift. Fas 11
+gav adminvyn en egen mörkblå palett; den togs bort 2026-09-24 för att
+adminvyn skulle se ut som samma hus som studievyn och
+studiehjälparvyn. Ingen av fällorna gäller alltså i dag — men de
+gäller igen den dag någon sätter `--pap`, `--bl` eller `--acc` på en
+vy.
 
 1. **En alias-token fryser rotens värde.** `nextrum-cinema.css:263` sätter
    `--muted-2:var(--bl-3)` på `:root`. En custom property med `var()` i
@@ -194,7 +207,8 @@ Tabeller: `profiles`, `students`, `tutor_profiles`, `tutor_availability`,
 `agent_korningar`, `agent_steg`, `admin_noteringar`, `foretagsfakta`,
 och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
 `kund_skatteuppgifter`. Fas 8–9 la till `ai_forslag`, `ai_konfig` och
-`handlingar`. Fas 13.2 la till `biblioteksmaterial`. Runda 2 la till notisernas sju: `notiser` (i vyn),
+`handlingar`. Fas 13.2 la till `biblioteksmaterial`. Fas 15.3 la till
+`progress_historik` (skrivs bara av en trigger; ingen skrivpolicy). Runda 2 la till notisernas sju: `notiser` (i vyn),
 `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
 `notis_fel` — plus `flaggor`, som är strömbrytarna för det som
@@ -366,10 +380,13 @@ trigger på bookings/messages/lesson_reports
    pass får BÅDA parterna notisen, och "Tove har flyttat passet" hade
    då varit fel för den ena.
 2. **Mallarna ser bara `RenData`.** `renData()` i
-   `_delad/notiser/typer.ts` plockar ut datum, tid, ämne och förnamn.
+   `_delad/notiser/typer.ts` plockar ut datum, tid, ämne, förnamn och
+   (sedan Fas 15.2) avbokningens skäl som en av sex FASTA KODER.
    Kommer det en nyckel till — `body`, `note`, `location`, ett
    efternamn — följer den inte med, för den läses aldrig. Ingen
-   brödtext kan hamna i ett mejl hur mallen än formuleras.
+   brödtext kan hamna i ett mejl hur mallen än formuleras, och skälet
+   skrivs med mallens egna ord (`SKAL_TEXT` i `mallar.ts`), aldrig
+   med databasens.
 3. **Varje namn går genom `fornamn()`**, som speglar
    `intern.fornamn()`: första ordet, bara bokstäver och bindestreck,
    högst 30 tecken. `full_name` är fritext utan gräns, och ett "namn"
@@ -727,7 +744,8 @@ hitta på ett pris, ett villkor eller ett löfte.
 | `nextrum-maskot-svar.js` | `verktyg/bygg-maskotsvar.py` | `faq.html`, `en/faq.html` |
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
 | `laxhjalp-*.html` (7 st) | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html` |
-| Ikonlänkar och storlekar | `verktyg/satt-logga.py` | `bilder/nextrum-logo.png` |
+| Ikonlänkar och storlekar | `verktyg/satt-logga.py` | `bilder/nextrum-logo.png` — finns inte i dag; PNG:erna är renderade ur `favicon.svg`, se `GOOGLE.md` |
+| `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i verktyget. Körs för hand (kräver Chromium), inte i CI. `--sql` ger raderna till `biblioteksmaterial` |
 | `?v=`-stämplarna på alla script- och link-taggar | `verktyg/satt-version.py` | filernas egen md5 |
 | `bilder/*.webp` | `verktyg/bygg-webp.py` | `bilder/*.jpg` |
 

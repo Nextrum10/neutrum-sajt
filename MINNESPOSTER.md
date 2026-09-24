@@ -92,8 +92,8 @@ secret och en webhook-header i två fönster glider isär, och då svarar
 funktionen 401 på varje anmälan emellan.
 
 Ett notismejl säger ATT något hänt, aldrig VAD. `renData()` i
-`_delad/notiser/typer.ts` släpper bara igenom datum, tid, ämne och
-förnamn; allt annat i raden läses aldrig, så ingen meddelandetext kan nå
+`_delad/notiser/typer.ts` släpper bara igenom datum, tid, ämne,
+förnamn och avbokningens skäl som fast kod; allt annat i raden läses aldrig, så ingen meddelandetext kan nå
 ett mejl hur mallen än formuleras. Varje namn kapas dessutom till
 förnamn utan punkter — `full_name` är fritext, och ett "namn" som ser ut
 som en adress blir annars en länk i ett mejl med godkänd DKIM.

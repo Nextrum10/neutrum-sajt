@@ -455,19 +455,51 @@
      service_role; familjen får ett mejl, väljer lösenord, och då
      finns kontot. Eleven skapas efter det, i samma ruta.
      ============================================================ */
-  function familjeVal(valt) {
-    const familjer = Object.values(S.personer)
-      .filter(p => p.role === 'parent')
-      .sort((a, b) => String(a.full_name || a.email || '')
-        .localeCompare(String(b.full_name || b.email || ''), 'sv'));
+  /* FAMILJEN ÄR DEN SOM SKICKADE ANMÄLAN
 
-    return '<select class="inp" id="le-familj">'
-      + '<option value="">Välj familj…</option>'
-      + familjer.map(f => '<option value="' + esc(f.id) + '"'
-          + (f.id === valt ? ' selected' : '') + '>'
-          + esc(f.full_name || f.email || f.id) + (f.email ? ' · ' + esc(f.email) : '')
-          + '</option>').join('')
-      + '</select>';
+     Leo 2026-09-24: eleven står redan i anmälan, och familjen är
+     uppenbarligen den som skickade den — att välja familj i en
+     rullgardin var ett val som bara kunde bli fel.
+
+     Förut förvaldes en familj med samma e-postadress, men gick att
+     byta, med motiveringen att två familjer kan dela en adress. Det
+     kan de inte: Supabase Auth tillåter ett konto per adress, så det
+     finns som mest EN träff. Ordningen är:
+
+       1. leads.kund_id — kopplingen som skrivs när familjen bjuds in
+          härifrån, eller när en elev redan skapats ur anmälan
+       2. kontot med anmälans adress
+       3. inget konto än — då bjuds familjen in först, och kontot
+          som skapas ÄR familjen
+
+     Skrev familjen en annan adress i anmälan än den de sedan
+     registrerade sig med hittas ingen träff, och då blir det en
+     inbjudan till anmälans adress. Det är ett fall för SQL, inte
+     för en rullgardin som gör fel enkelt. */
+  function anmälansFamilj(lead) {
+    if (lead.kund_id && S.personer[lead.kund_id]) return S.personer[lead.kund_id];
+    const epost = String(lead.email || '').toLowerCase();
+    if (!epost) return null;
+    return Object.values(S.personer).find(p =>
+      p.role === 'parent' && p.email && String(p.email).toLowerCase() === epost) || null;
+  }
+
+  function familjRad(f, lead) {
+    if (f) {
+      return '<div class="le-familj">'
+        + '<span class="le-familj-et">Familj, ur anmälan</span>'
+        + '<b>' + esc(f.full_name || lead.parent_name || f.email) + '</b>'
+        + '<span>' + esc(f.email || '') + '</span></div>';
+    }
+    return '<div class="le-familj le-familj-saknas">'
+      + '<span class="le-familj-et">Familj, ur anmälan</span>'
+      + '<b>' + esc(lead.parent_name || lead.email || 'Okänd') + '</b>'
+      + '<span>Inget konto har adressen ' + esc(lead.email || '—') + ' än. '
+      + 'Bjud in familjen, så skapas kontot och eleven kan läggas till direkt.</span>'
+      + (NX.epostOk(lead.email || '')
+        ? '<button type="button" class="btn btn-ghost btn-sm" id="le-bjud">Bjud in familjen</button>'
+        : '<span class="xsmall" style="color:var(--acc-text)">Adressen i anmälan går inte att skicka till. Rätta den först.</span>')
+      + '</div>';
   }
 
   document.addEventListener('click', async e => {
@@ -477,29 +509,15 @@
     const lead = S.leads.find(l => l.id === knapp.dataset.leadElev);
     if (!lead) return;
 
-    /* Har familjen redan ett konto med samma adress är det nästan
-       säkert deras. Förvalt, inte automatiskt — två familjer kan
-       dela en adress, och ett barn på fel förälder är svårt att
-       upptäcka i efterhand. */
-    const trolig = Object.values(S.personer).find(p =>
-      p.role === 'parent' && p.email
-      && String(p.email).toLowerCase() === String(lead.email || '').toLowerCase());
+    let familj = anmälansFamilj(lead);
 
     const ruta = document.createElement('div');
     ruta.className = 'nx-fraga';
     ruta.innerHTML =
       '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="le-t">'
       + '<h3 id="le-t">Skapa elev ur anmälan</h3>'
-      + '<p>Eleven hamnar i matchningskön så fort den finns. '
-      + 'Familjen måste ha ett konto. Har de inget kan du bjuda in dem härifrån.</p>'
-      + '<div class="fgroup"><label for="le-familj">Familj</label>' + familjeVal(trolig && trolig.id) + '</div>'
-      + (!trolig && NX.epostOk(lead.email || '')
-        ? '<div style="margin:10px 0 4px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px">'
-          + '<p class="xsmall" style="margin:0 0 8px;line-height:1.6">Inget konto har adressen <b>'
-          + esc(lead.email) + '</b>. Bjud in familjen, så får de ett mejl där de väljer lösenord. '
-          + 'När de gjort det finns kontot i listan ovan.</p>'
-          + '<button type="button" class="btn btn-ghost btn-sm" id="le-bjud">Bjud in familjen</button></div>'
-        : '')
+      + '<p>Eleven hamnar under Elever och i matchningskön så fort den finns.</p>'
+      + '<div id="le-familj-rad">' + familjRad(familj, lead) + '</div>'
       + '<div class="ag-faltrad" style="margin-top:12px">'
       + '<div class="fgroup"><label for="le-namn">Elevens namn</label>'
       + '<input class="inp" id="le-namn" value="' + esc(lead.child_name || '') + '"></div>'
@@ -511,7 +529,7 @@
       + '<p class="ok-msg" id="le-msg"></p>'
       + '<div class="nx-fraga-knappar">'
       + '<button type="button" class="btn btn-ghost" data-le-stang>Avbryt</button>'
-      + '<button type="button" class="btn btn-primary" id="le-skapa">Skapa elev</button>'
+      + '<button type="button" class="btn btn-primary" id="le-skapa"' + (familj ? '' : ' disabled') + '>Skapa elev</button>'
       + '</div></div>';
 
     visaRuta(ruta);
@@ -521,8 +539,10 @@
       if (ev.target.closest('[data-le-match]')) { stäng(); location.hash = '#matchning'; }
     });
 
-    const bjud = $('#le-bjud', ruta);
-    if (bjud) bjud.addEventListener('click', async () => {
+    /* Delegerat: knappen ritas om när familjen hittats. */
+    ruta.addEventListener('click', async ev => {
+      const bjud = ev.target.closest('#le-bjud');
+      if (!bjud) return;
       const msg = $('#le-msg', ruta);
       rensa(msg);
       const ja = await bekräfta({
@@ -561,22 +581,21 @@
          hämtaAllt() fyller bara S, den ritar ingenting, så rutan
          överlever anropet. */
       await hämtaAllt();
-      const val = $('#le-familj', ruta);
-      if (val && res.data.id) val.outerHTML = familjeVal(res.data.id);
+      familj = (res.data.id && S.personer[res.data.id]) || anmälansFamilj(lead);
+      $('#le-familj-rad', ruta).innerHTML = familjRad(familj, lead);
+      $('#le-skapa', ruta).disabled = !familj;
 
-      bjud.disabled = true;
       säg(msg, '✓ Inbjudan skickad till ' + res.data.till
-        + '. Familjen är vald nedan — du kan skapa eleven nu. '
-        + 'Lösenordet väljer de själva via mejlet.', true);
+        + '. Du kan skapa eleven nu — lösenordet väljer familjen själv via mejlet.', true);
       ritaLeads();
     });
 
     $('#le-skapa', ruta).addEventListener('click', async () => {
       const msg = $('#le-msg', ruta);
       rensa(msg);
-      const parent = $('#le-familj', ruta).value;
+      const parent = familj && familj.id;
       const namn = $('#le-namn', ruta).value.trim();
-      if (!parent) { säg(msg, 'Välj vilken familj eleven hör till.', false); return; }
+      if (!parent) { säg(msg, 'Familjen har inget konto än. Bjud in dem först.', false); return; }
       if (!namn) { säg(msg, 'Eleven behöver ett namn.', false); return; }
 
       await medan($('#le-skapa', ruta), 'Skapar…', async () => {

@@ -216,16 +216,24 @@
     const avboka = e.target.closest('[data-avboka]');
     if (avboka) {
       const b = S.bokningar.find(x => x.id === avboka.dataset.avboka);
-      const ja = await bekräfta({
+      /* Skälet frågas nu i stunden, inte bara i efterhand: när admin
+         avbokar får BÅDA parterna mejlet, och skälet står i det. Det
+         skrivs i samma uppdatering som statusen — annars hade mejlet
+         redan gått utan skäl. Väljaren i listan finns kvar för att
+         rätta ett skäl i efterhand. */
+      const skäl = await NXStudie.avbokaRuta({
+        admin: true,
         titel: 'Avboka passet?',
-        text: kortDatum(b.wanted_date) + ' hos ' + namnFör(b.tutor_id) + '. Både familjen och '
-          + 'studiehjälparen ser ändringen direkt, och passet faktureras inte.',
-        knapp: 'Avboka'
+        text: kortDatum(b.wanted_date) + ' hos ' + namnFör(b.tutor_id) + '. Passet faktureras inte.',
+        not: 'Både familjen och studiehjälparen får ett mejl om att passet är avbokat och varför.'
       });
-      if (!ja) return;
+      if (!skäl) return;
       await medan(avboka, 'Avbokar…', async () => {
-        b.status = 'cancelled';
-        await skriv('bookings', b.id, { status: 'cancelled' });
+        const gammal = { status: b.status, avbokningsskal: b.avbokningsskal };
+        Object.assign(b, { status: 'cancelled', avbokningsskal: skäl });
+        if (!await skriv('bookings', b.id, { status: 'cancelled', avbokningsskal: skäl })) {
+          Object.assign(b, gammal);
+        }
         /* Samma rad syns på fyra ställen. Ritas bara listan om blir
            kalendern och lektionslistan kvar med det gamla läget, och
            då står det två olika saker om samma pass på samma skärm.
@@ -292,15 +300,6 @@
         }
         alert('✓ Skickat till ' + res.data.till + '.');
       });
-      return;
-    }
-
-    const felbort = e.target.closest('[data-felbort]');
-    if (felbort) {
-      const { error } = await supa.from('klientfel').delete().eq('id', felbort.dataset.felbort);
-      if (error) { alert('Kunde inte rensa: ' + felText(error)); return; }
-      S.klientfel = S.klientfel.filter(f => f.id !== felbort.dataset.felbort);
-      ritaFel();
       return;
     }
   });

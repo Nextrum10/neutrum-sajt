@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
+<link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 <title>Studievy — Nextrum</title>
 <meta name="robots" content="noindex">
@@ -25,10 +28,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
 <link rel="stylesheet" href="nextrum-cinema.css?v=b56b6211">
-<link rel="stylesheet" href="nextrum-vy.css?v=eb2b6d58">
+<link rel="stylesheet" href="nextrum-vy.css?v=6c0b091d">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=3189c4c4">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=ae5d8372">
 </head>
 <body class="vy">
 
@@ -297,12 +300,16 @@
            Nu en egen sektion, direkt efter Översikt, med bokningen
            som sidans enda uppgift. Widgeten ritas av
            NXArbete.bokning; markupen är tom med flit.
+
+           Sedan 2026-09-24 är det ett FÖRSLAG, inte en bokning: en tom
+           kalender, och först när en dag är vald ämne, tid och antal
+           barn. Studiehjälparen accepterar eller föreslår en annan tid.
            ============================================================ -->
       <section class="vy-sek" data-sek="boka" hidden>
         <div class="vy-sek-topp">
           <div>
             <h2>Boka pass <em id="boka-hos"></em></h2>
-            <p>Välj ämne, tid och upplägg. Ni betalar i efterskott, först när passet är genomfört.</p>
+            <p>Tryck på en dag och föreslå en tid. Er studiehjälpare accepterar den eller föreslår en annan.</p>
           </div>
           <label class="vy-barnvaxel" data-barnvaxel hidden>
             <span>Bokar åt</span>
@@ -412,7 +419,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Läxor</h2>
-            <p>Läxorna att bocka av. Bygger en läxa på ett material ligger det på läxan.</p>
+            <p>Läxorna er studiehjälpare gett. Bocka av dem när de är gjorda. Hör det ett övningsblad till en läxa ligger det direkt på läxan.</p>
           </div>
           <!-- Barnväljaren. Tom och osynlig när familjen har ett
                enda barn, vilket de flesta har — då finns inget att
@@ -435,7 +442,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Min utveckling</h2>
-            <p>Kunskapsområden ämne för ämne, satta av er studiehjälpare. Siffrorna för helheten står på Översikt.</p>
+            <p>Vad som sitter, vad som går framåt och vad som är nästa steg — ämne för ämne, bedömt av er studiehjälpare efter passen.</p>
           </div>
           <!-- Barnväljaren. Tom och osynlig när familjen har ett
                enda barn, vilket de flesta har — då finns inget att
@@ -448,9 +455,36 @@
         </div>
         <div class="stack">
 
-          <!-- ============ UTVECKLING ============ -->
+          <!-- ============ MIN UTVECKLING ============
+               Leo 2026-09-24: mer avancerad, och med mer statistik om
+               lärandet. Förut var det en ring med andelen "Bra" och en
+               lista. Nu bygger allt på femstegsskalan och på
+               progress_historik, där varje bedömning sparas — så att
+               sidan kan visa utveckling och inte bara läge.
+
+               Fem rutor, i den ordning man frågar: hur går det, i
+               vilket ämne, åt vilket håll över tid, vad har hänt sist,
+               och sedan detaljerna. Luckor fylls inte: ett område
+               räknas först från sin första bedömning, och en månad
+               utan bedömningar står tom i stället för att ärva ett tal. -->
           <div class="dbox">
-            <h5>Utveckling <em id="prg-antal"></em></h5>
+            <h5>Lärandet i siffror</h5>
+            <div id="ut-tal"><div class="loading">Hämtar</div></div>
+          </div>
+          <div class="dbox">
+            <h5>Ämne för ämne <em id="prg-antal"></em></h5>
+            <div id="ut-amnen"></div>
+          </div>
+          <div class="dbox">
+            <h5>Nivån över tid <em>genomsnitt av alla områden, senaste sex månaderna</em></h5>
+            <div id="ut-graf"></div>
+          </div>
+          <div class="dbox">
+            <h5>Senaste framstegen</h5>
+            <div id="ut-framsteg"></div>
+          </div>
+          <div class="dbox">
+            <h5>Område för område</h5>
             <div id="prg-lista"><div class="loading">Hämtar</div></div>
           </div>
 
@@ -527,7 +561,7 @@
 
         <div class="vy-flikar" role="tablist" aria-label="Profil eller inställningar">
           <button class="vy-flik" type="button" role="tab" data-flik="konto"
-                  id="flik-konto" aria-controls="panel-konto">Mitt konto</button>
+                  id="flik-konto" aria-controls="panel-konto">Konto &amp; inloggning</button>
           <button class="vy-flik" type="button" role="tab" data-flik="barn"
                   id="flik-barn" aria-controls="panel-barn">Barn</button>
           <button class="vy-flik" type="button" role="tab" data-flik="pris"
@@ -538,9 +572,36 @@
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="konto"
              id="panel-konto" aria-labelledby="flik-konto">
-                <!-- ============ DITT KONTO ============ -->
+                <!-- ============ INLOGGNINGEN ============
+                     Leo 2026-09-24: det ska stå tydligt att det här är
+                     inloggningen — adressen och lösenordet man kommer in
+                     med. Förut låg lösenordet sist i en ruta som hette
+                     "Ditt konto", under namn och telefon, och gick att
+                     läsa som en del av profilen. -->
                 <div class="dbox">
-                  <h5>Ditt konto</h5>
+                  <h5>Inloggning <em>så kommer ni in i studievyn</em></h5>
+                  <div class="konto-inlogg">
+                    <span class="konto-inlogg-et">E-postadress</span>
+                    <b id="k-epost"></b>
+                    <span class="xsmall">Det här är adressen ni loggar in med, och dit mejlen från Nextrum går.
+                      Vill ni byta adress, skriv till oss så gör vi det.</span>
+                  </div>
+                  <form id="losen-form">
+                    <p class="konto-inlogg-et" style="margin-top:16px">Byt lösenord</p>
+                    <div class="vy-form-rad">
+                      <div class="fgroup"><label for="k-losen">Nytt lösenord</label><input class="inp" id="k-losen" type="password" autocomplete="new-password" minlength="6"></div>
+                      <div class="fgroup"><label for="k-losen2">Upprepa lösenordet</label><input class="inp" id="k-losen2" type="password" autocomplete="new-password"></div>
+                    </div>
+                    <div class="vy-knapprad">
+                      <button class="btn btn-ghost btn-sm" type="submit">Byt lösenord</button>
+                    </div>
+                    <p class="ok-msg" id="kl-msg"></p>
+                  </form>
+                </div>
+
+                <!-- ============ KONTAKTUPPGIFTERNA ============ -->
+                <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+                  <h5>Kontaktuppgifter <em>syns för er studiehjälpare</em></h5>
 
                   <div class="nx-bildrad">
                     <span id="konto-avatar"></span>
@@ -554,18 +615,13 @@
                   <p class="ok-msg" id="av-msg"></p>
 
                   <form id="konto-form">
-                    <div class="fgroup"><label for="k-namn">Namn</label><input class="inp" id="k-namn" autocomplete="name"></div>
-                    <div class="fgroup"><label for="k-tel">Telefon <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><input class="inp" id="k-tel" type="tel" autocomplete="tel"></div>
-                    <div class="fgroup"><label for="k-bio">Kort om er <span style="font-weight:400;color:var(--muted-2)">(syns för er studiehjälpare)</span></label><textarea class="inp" id="k-bio" style="min-height:80px" placeholder="t.ex. Vi bor i Uppsala och Alma pluggar helst på eftermiddagar."></textarea></div>
-                    <button class="btn btn-primary btn-sm btn-block" type="submit">Spara uppgifter</button>
+                    <div class="vy-form-rad">
+                      <div class="fgroup"><label for="k-namn">Namn</label><input class="inp" id="k-namn" autocomplete="name"></div>
+                      <div class="fgroup"><label for="k-tel">Telefon <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><input class="inp" id="k-tel" type="tel" autocomplete="tel"></div>
+                    </div>
+                    <div class="fgroup"><label for="k-bio">Kort om er <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><textarea class="inp" id="k-bio" style="min-height:80px" placeholder="t.ex. Vi bor i Hammarby Sjöstad och passen funkar bäst på eftermiddagar."></textarea></div>
+                    <button class="btn btn-primary btn-sm btn-block" type="submit">Spara uppgifterna</button>
                     <p class="ok-msg" id="k-msg"></p>
-                  </form>
-
-                  <form id="losen-form" class="vy-fall">
-                    <div class="fgroup"><label for="k-losen">Nytt lösenord</label><input class="inp" id="k-losen" type="password" autocomplete="new-password" minlength="6"></div>
-                    <div class="fgroup"><label for="k-losen2">Upprepa lösenordet</label><input class="inp" id="k-losen2" type="password" autocomplete="new-password"></div>
-                    <button class="btn btn-ghost btn-sm btn-block" type="submit">Byt lösenord</button>
-                    <p class="ok-msg" id="kl-msg"></p>
                   </form>
                 </div>
         </div>
@@ -609,55 +665,80 @@
               </div>
             </div>
 
-            <form id="barn-andra" hidden class="vy-fall">
+            <!-- ============ BARNETS UPPGIFTER ============
+                 Ett formulär, för både nytt barn och ändring. Förut var
+                 det två med olika fält: det nya barnet fick bara namn
+                 och årskurs, och allt annat fick man hitta under "Ändra
+                 uppgifter" efteråt — vilket nästan ingen gjorde, så
+                 matchningen hade inget att gå på.
+
+                 Leo 2026-09-24: skriv lite mer om barnet, så att behoven
+                 kan matchas med en studiehjälpare. Ämnen, behov och
+                 format är knappar, inte fritext: "matte" och
+                 "Matematik" ska inte bli två ämnen i matchningen.
+
+                 Med flit inga frågor om diagnoser. Sådant om barn är en
+                 särskild kategori enligt GDPR, och det matchningen
+                 behöver veta är vad som hjälper, inte vad barnet har.
+
+                 Knapparna ritas av ritaBarnVal(); rubriken och de egna
+                 anteckningarna byts efter läget (nytt eller ändra). -->
+            <form id="barn-form" hidden class="barn-form">
+              <h6 class="barn-form-rubrik" id="barn-form-rubrik">Lägg till ett barn</h6>
               <div class="vy-form-rad">
-                <div class="pay-field"><label for="b-skola">Skola</label><input class="inp" id="b-skola"></div>
-                <div class="pay-field"><label for="b-amnen">Ämnen (kommaseparerat)</label><input class="inp" id="b-amnen" placeholder="Matematik, Svenska"></div>
+                <div class="fgroup"><label for="b-namn">Barnets namn</label><input class="inp" id="b-namn" maxlength="80" autocomplete="off"></div>
+                <div class="fgroup"><label for="b-ak">Årskurs</label><select class="sel" id="b-ak"></select></div>
+                <div class="fgroup"><label for="b-skola">Skola <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><input class="inp" id="b-skola" maxlength="120"></div>
               </div>
-              <div class="fgroup" style="margin-top:12px">
-                <label for="b-mal">Studiemål <span style="font-weight:400;color:var(--muted-2)">(er studiehjälpare ser det här)</span></label>
-                <textarea class="inp" id="b-mal" style="min-height:70px" placeholder="t.ex. Höja betyget i matte till våren"></textarea>
+              <div class="fgroup" style="margin-top:14px">
+                <label>Vilka ämnen gäller det?</label>
+                <div class="vy-val" id="b-amne-val" role="group" aria-label="Ämnen"></div>
               </div>
               <div class="fgroup">
+                <label>Vad behöver hen mest hjälp med?</label>
+                <div class="vy-val" id="b-behov-val" role="group" aria-label="Behov"></div>
+              </div>
+              <div class="fgroup">
+                <label>Hur vill ni helst ha passen?</label>
+                <div class="vy-val" id="b-format-val" role="group" aria-label="Format"></div>
+              </div>
+              <div class="fgroup">
+                <label for="b-mal">Vad vill ni att hjälpen ska leda till? <span style="font-weight:400;color:var(--muted-2)">(er studiehjälpare ser det här)</span></label>
+                <textarea class="inp" id="b-mal" style="min-height:64px" maxlength="600" placeholder="t.ex. Klara E i matte till våren, och sluta grue sig för proven."></textarea>
+              </div>
+              <div class="fgroup">
+                <label for="b-om">Hur lär sig hen bäst? <span style="font-weight:400;color:var(--muted-2)">(er studiehjälpare ser det här)</span></label>
+                <textarea class="inp" id="b-om" style="min-height:64px" maxlength="800" placeholder="t.ex. Behöver konkreta exempel, tappar fokus efter en halvtimme, gillar när det blir lite tävling."></textarea>
+                <p class="xsmall" style="margin-top:7px;color:var(--bl-3);line-height:1.5">Skriv hellre vad som hjälper än vad barnet har. Diagnoser och hälsouppgifter behöver vi inte för att matcha.</p>
+              </div>
+              <div class="fgroup" id="b-egna-grupp" hidden>
                 <label for="b-egna">Era egna anteckningar <span style="font-weight:400;color:var(--muted-2)">(bara ni ser dem)</span></label>
-                <textarea class="inp" id="b-egna" style="min-height:70px" placeholder="Sådant ni vill komma ihåg själva."></textarea>
+                <textarea class="inp" id="b-egna" style="min-height:64px" placeholder="Sådant ni vill komma ihåg själva."></textarea>
               </div>
               <div class="vy-knapprad">
-                <button class="btn btn-primary btn-sm" type="submit">Spara</button>
-                <button class="btn btn-ghost btn-sm" type="button" id="andra-avbryt">Avbryt</button>
+                <button class="btn btn-primary btn-sm" type="submit" id="barn-spara">Lägg till barnet</button>
+                <button class="btn btn-ghost btn-sm" type="button" id="avbryt-barn">Avbryt</button>
               </div>
-              <p class="ok-msg" id="b-andra-msg"></p>
-            </form>
-            <form id="barn-form" hidden style="margin-top:18px;border-top:1px solid var(--line);padding-top:18px">
-              <div class="form-grid">
-                <div class="pay-field"><label for="b-namn">Barnets namn</label><input class="inp" id="b-namn" required></div>
-                <div class="pay-field"><label for="b-ak">Årskurs</label>
-                  <select class="sel" id="b-ak">
-                    <option value="">Välj</option>
-                    <option>Åk 1</option><option>Åk 2</option><option>Åk 3</option><option>Åk 4</option><option>Åk 5</option>
-                    <option>Åk 6</option><option>Åk 7</option><option>Åk 8</option><option>Åk 9</option>
-                    <option>Gymnasiet år 1</option><option>Gymnasiet år 2</option><option>Gymnasiet år 3</option>
-                  </select>
-                </div>
-                <div class="full" style="display:flex;gap:10px;flex-wrap:wrap">
-                  <button class="btn btn-primary btn-sm" type="submit">Spara</button>
-                  <button class="btn btn-ghost btn-sm" type="button" id="avbryt-barn">Avbryt</button>
-                </div>
-                <p class="ok-msg" id="barn-msg"></p>
-              </div>
+              <p class="ok-msg" id="barn-msg"></p>
             </form>
           </div>
         </div>
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="pris"
              id="panel-pris" aria-labelledby="flik-pris" hidden>
+          <!-- Siffrorna läses ur tjänsteraden (NXTjanster) av
+               ritaPris(), inte ur den här markupen: priset, tillägget
+               för fler barn och taket står i tjanster, och det är
+               samma rad faktureringen tar betalt efter. Talen här är
+               bara det som syns innan katalogen laddats. -->
           <div class="dbox">
             <h5>Pris</h5>
-            <div class="sum-line"><span>Per timme</span><span data-pris>379 kr</span></div>
+            <div class="sum-line"><span>Per timme, ett barn</span><span data-pris>379 kr</span></div>
+            <div class="sum-line"><span data-pris-extra-et>Fler barn på samma pass</span><span data-pris-extra>+69 kr per timme</span></div>
             <div class="sum-line"><span>Anmälningsavgift</span><span>0 kr</span></div>
             <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
-
-            <p class="xsmall" style="margin-top:14px;color:var(--muted-2);line-height:1.6">Ni betalar i efterskott, en gång i månaden, för de pass som faktiskt genomförts. Fakturorna ligger under Betalning.</p>
+            <p class="xsmall" data-pris-extra-not style="margin-top:14px;color:var(--muted-2);line-height:1.6">Tillägget för syskon är en fast summa per timme, oavsett om de är två eller tre — inte ett pris per barn.</p>
+            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar i efterskott, en gång i månaden, för de pass som faktiskt genomförts. Fakturorna ligger under Betalning.</p>
           </div>
         </div>
         <!-- ============ NOTISER ============
@@ -713,14 +794,14 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=f8a876f6"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=5f9c6902"></script>
+<script src="nextrum-app.js?v=8990dc3d"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=b41dc962"></script>
-<script src="nextrum-studie.js?v=02a4c451"></script>
-<script src="nextrum-arbetsyta.js?v=01bc96ec"></script>
+<script src="nextrum-studie.js?v=d7b662a8"></script>
+<script src="nextrum-arbetsyta.js?v=bdbbfd3f"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=86da2b50"></script>
+<script src="nextrum-studie-vy.js?v=822d7366"></script>
 </body>
 </html>

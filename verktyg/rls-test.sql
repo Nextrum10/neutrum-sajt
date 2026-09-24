@@ -26,7 +26,8 @@
 -- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok.
 --
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
--- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8 och Fas 9.1–9.4 är körda.
+-- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4 och
+-- Fas 15.1–15.4 är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -405,9 +406,32 @@ select pg_temp.prova('F-6 P bekräftar A:s förslag', '00000000-0000-4000-8000-0
   array[$q$update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-00000000b0f1'$q$],
   'ok');
 
-select pg_temp.prova('F-6 A avbokar kommande pass', '00000000-0000-4000-8000-0000000000a1',
-  array[$q$update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+-- Sedan Fas 15.2 kräver en avbokning ett skäl, i samma skrivning.
+select pg_temp.prova('F-6 A avbokar kommande pass (med skäl)', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'forhinder'
+          where id = '00000000-0000-4000-8000-00000000b0d1'$q$],
   'ok');
+
+select pg_temp.prova('15.2 A avbokar kommande pass utan skäl', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+  'nekad');
+
+-- Att avböja en tid motparten föreslagit är inte att avboka ett pass,
+-- och frågar inte efter skäl. b0f1 är A:s eget förslag till P.
+select pg_temp.prova('15.2 P avböjer A:s förslag utan skäl', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-00000000b0f1'$q$],
+  'ok');
+
+-- Men den som drar tillbaka sitt EGET förslag avbokar, och ska säga varför.
+select pg_temp.prova('15.2 A drar tillbaka sitt eget förslag utan skäl', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-00000000b0f1'$q$],
+  'nekad');
+
+-- Nextrums egna koder väljs inte av en familj eller en studiehjälpare.
+select pg_temp.prova('15.2 P avbokar med Nextrums kod familjen_avslutar', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'familjen_avslutar'
+          where id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+  'nekad');
 
 select pg_temp.prova('F-6 P flyttar kommande pass (som foralder.html gör)', '00000000-0000-4000-8000-0000000000f1',
   array[$q$update public.bookings
@@ -1136,9 +1160,10 @@ declare
 begin
   select coalesce(max(id), 0) into fore_id from public.audit_logg;
 
-  -- familjen avbokar sitt bekräftade pass om en vecka
+  -- familjen avbokar sitt bekräftade pass om en vecka (med skäl,
+  -- som Fas 15.2 kräver)
   perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
-  update public.bookings set status = 'cancelled'
+  update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom'
    where id = '00000000-0000-4000-8000-00000000b0d1';
   reset role;
   perform set_config('request.jwt.claims', null, true);
@@ -1197,18 +1222,17 @@ end $$;
 reset role;
 select set_config('request.jwt.claims', null, true);
 
--- F-6 är orört: avbokningsskal står INTE i skyddets vitlista `fria`,
--- så den som inte är admin kan inte skriva det — varken ensamt eller
--- i samma svep som avbokningen.
+-- Sedan Fas 15.2 står avbokningsskal i vitlistan `fria`, men bara i
+-- samma skrivning som avbokningen. Ett skäl på ett pass som gäller
+-- nekas fortfarande.
 select pg_temp.prova('9.4 familjen sätter avbokningsskäl på ett bokat pass', '00000000-0000-4000-8000-0000000000f1',
   array[$q$update public.bookings set avbokningsskal = 'sjukdom'
            where id = '00000000-0000-4000-8000-00000000b0c1'$q$], 'nekad');
 
--- Samma svep: b0c1 är fortfarande bekräftat här, så provet träffar
--- vitlistan `fria` och inte frysningen av ett redan avbokat pass.
-select pg_temp.prova('9.4 familjen avbokar och sätter skäl i samma svep', '00000000-0000-4000-8000-0000000000f1',
+-- Samma svep: det är precis så vyerna avbokar sedan Fas 15.2.
+select pg_temp.prova('15.2 familjen avbokar och sätter skäl i samma svep', '00000000-0000-4000-8000-0000000000f1',
   array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom'
-           where id = '00000000-0000-4000-8000-00000000b0c1'$q$], 'nekad');
+           where id = '00000000-0000-4000-8000-00000000b0c1'$q$], 'ok');
 
 select pg_temp.prova('9.4 studiehjälparen sätter avbokningsskäl', '00000000-0000-4000-8000-0000000000a1',
   array[$q$update public.bookings set avbokningsskal = 'forhinder'
@@ -1220,9 +1244,11 @@ select pg_temp.prova('9.4 admin sätter avbokningsskäl på ett avbokat pass', '
 
 -- Familjen får fortfarande avboka. Ett skydd som råkar låsa det
 -- legitima flödet är ett fel, inte en extra försiktighet.
+-- b0c1, inte b0d1: do-blocket ovan avbokade b0d1 på riktigt (det
+-- rullas inte tillbaka), och ett avbokat pass går inte att ändra.
 select pg_temp.prova('9.4 familjen kan fortfarande avboka', '00000000-0000-4000-8000-0000000000f1',
-  array[$q$update public.bookings set status = 'cancelled'
-           where id = '00000000-0000-4000-8000-00000000b0d1'$q$], 'ok');
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'annat'
+           where id = '00000000-0000-4000-8000-00000000b0c1'$q$], 'ok');
 
 select pg_temp.rakna('9.3 icke-admin läser fortfarande 0 auditrader', '00000000-0000-4000-8000-0000000000f1',
   $q$select count(*) from public.audit_logg$q$, 0);
@@ -1703,7 +1729,8 @@ from unnest(array[
   'public.rakna_rabattkod()', 'public.skydda_elevradering()', 'public.skydda_rabatt()',
   'public.synka_laxhjalpspris()', 'public.skydda_bokningsfalt()',
   'public.rapport_gor_passet_genomfort()',
-  'public.bekrafta_inom_schemat()', 'public.skydda_studentfalt()', 'public.las_fakturabelopp()',
+  'public.skydda_studentfalt()', 'public.las_fakturabelopp()',
+  'intern.progress_steg_och_niva()', 'intern.progress_historik_skriv()',
   'public.elevens_uppdrag()', 'public.stada_elevens_uppdrag()', 'public.koppla_passets_uppdrag()',
   'public.standard_tjanst()', 'public.personnummer_ok(text)',
   'public.logga_andring()', 'public.uppgift_stampel()', 'public.skydda_leadfalt()',
@@ -1938,6 +1965,181 @@ begin
   insert into utfall (test, ok, detalj)
   values ('BIB-12 årskurs som fritext nekas', klar,
           case when klar then 'check_violation' else 'gick igenom' end);
+end $$;
+
+-- ------------------------------------------------------------
+-- Fas 15.1: ingen bokning bekräftas av sig själv
+-- ------------------------------------------------------------
+-- Tisdag 15–19 finns som veckotid för B i fixturerna. Förut blev en
+-- bokning inom den 'confirmed' direkt; nu är den ett förslag som
+-- studiehjälparen svarar på.
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+do $$
+declare
+  dag   date := (now() at time zone 'Europe/Stockholm')::date + 8;
+  nytt  uuid;
+  lage  text;
+begin
+  while extract(isodow from dag) <> 3 loop dag := dag + 1; end loop;   -- en onsdag (weekday 2)
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+  insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+  values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000b1',
+          '00000000-0000-4000-8000-0000000005b1', '00000000-0000-4000-8000-0000000000f1',
+          dag, '16:00', 60, 'requested')
+  returning id, status into nytt, lage;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('15.1 en bokning inom gamla veckotider blir ett förslag', lage = 'requested', 'fick ' || lage);
+  delete from public.bookings where id = nytt;
+exception when others then
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj) values ('15.1 en bokning inom gamla veckotider blir ett förslag', false, sqlstate || ': ' || sqlerrm);
+end $$;
+
+insert into utfall (test, ok, detalj)
+select '15.1 triggern bookings_tid_inom_schemat är borta', count(*) = 0, 'triggrar: ' || count(*)
+  from pg_trigger where tgrelid = 'public.bookings'::regclass and tgname = 'bookings_tid_inom_schemat';
+
+-- ------------------------------------------------------------
+-- Fas 15.3: fem steg, mål och historik
+-- ------------------------------------------------------------
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- 9.4 ommatchade Äldst till B för att prova matchad_at, och det
+-- rullas inte tillbaka. Utan återställningen är A inte längre elevens
+-- studiehjälpare: A:s uppdateringar nedan träffar tyst noll rader
+-- under RLS, och B ser historiken som B inte ska se. Det såg ut som
+-- fyra fel i triggern och var ett i testordningen.
+update public.students
+   set matched_tutor_id = '00000000-0000-4000-8000-0000000000a1', match_status = 'matched'
+ where id = '00000000-0000-4000-8000-0000000005a1';
+
+insert into public.progress_items (id, student_id, tutor_id, subject, area, steg) values
+  ('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-0000000005a1',
+   '00000000-0000-4000-8000-0000000000a1', 'Matematik', 'Bråk', 2);
+
+insert into utfall (test, ok, detalj)
+select '15.3 level sätts ur steg vid insert', level = 'behover_trana', 'level ' || level
+  from public.progress_items where id = '00000000-0000-4000-8000-0000000009a1';
+
+insert into utfall (test, ok, detalj)
+select '15.3 en rad historik vid insert', count(*) = 1, 'rader: ' || count(*)
+  from public.progress_historik where progress_id = '00000000-0000-4000-8000-0000000009a1';
+
+-- A flyttar steget som sig själv: level följer med och en rad till
+-- läggs i historiken, med A som bedömare.
+do $$
+declare n bigint; niva text; av uuid;
+begin
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+  update public.progress_items set steg = 5, mal_steg = 5
+   where id = '00000000-0000-4000-8000-0000000009a1';
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  select level into niva from public.progress_items where id = '00000000-0000-4000-8000-0000000009a1';
+  select count(*) into n from public.progress_historik where progress_id = '00000000-0000-4000-8000-0000000009a1';
+  select bedomd_av into av from public.progress_historik
+   where progress_id = '00000000-0000-4000-8000-0000000009a1' and steg = 5;
+  insert into utfall (test, ok, detalj) values
+    ('15.3 level följer steg (5 → bra)', niva = 'bra', 'level ' || coalesce(niva, 'null')),
+    ('15.3 ändrat steg ger en rad historik till', n = 2, 'rader: ' || n),
+    ('15.3 historiken säger vem som bedömde', av = '00000000-0000-4000-8000-0000000000a1', coalesce(av::text, 'null'));
+
+  -- En äldre klient som bara skriver level: steg följer med.
+  perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+  update public.progress_items set level = 'pa_god_vag'
+   where id = '00000000-0000-4000-8000-0000000009a1';
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  select count(*) into n from public.progress_items
+   where id = '00000000-0000-4000-8000-0000000009a1' and steg = 3 and level = 'pa_god_vag';
+  insert into utfall (test, ok, detalj)
+  values ('15.3 en äldre klient som skriver level flyttar steg', n = 1, 'träffar: ' || n);
+exception when others then
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj) values ('15.3 A flyttar steget', false, sqlstate || ': ' || sqlerrm);
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+select pg_temp.rakna('15.3 familj P läser sitt barns historik', '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from public.progress_historik where progress_id = '00000000-0000-4000-8000-0000000009a1'$q$,
+  (select count(*) from public.progress_historik where progress_id = '00000000-0000-4000-8000-0000000009a1'));
+
+select pg_temp.rakna('15.3 familj Q läser inte P:s historik', '00000000-0000-4000-8000-0000000000f2',
+  $q$select count(*) from public.progress_historik where progress_id = '00000000-0000-4000-8000-0000000009a1'$q$, 0);
+
+select pg_temp.rakna('15.3 studiehjälpare B läser inte A:s elevs historik', '00000000-0000-4000-8000-0000000000b1',
+  $q$select count(*) from public.progress_historik where progress_id = '00000000-0000-4000-8000-0000000009a1'$q$, 0);
+
+-- anon har inte ens select på tabellen, så svaret är 42501 och inte
+-- noll rader. prova räknar båda som nekad; rakna hade kallat det fel.
+select pg_temp.prova('15.3 anon läser ingen historik', null,
+  array[$q$select * from public.progress_historik$q$], 'nekad');
+
+select pg_temp.prova('15.3 A skriver själv i historiken', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.progress_historik (progress_id, student_id, subject, area, steg)
+          values ('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-0000000005a1', 'Matematik', 'Bråk', 5)$q$],
+  'nekad');
+
+select pg_temp.prova('15.3 A rättar en rad i historiken', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.progress_historik set steg = 1
+          where progress_id = '00000000-0000-4000-8000-0000000009a1'$q$],
+  'nekad');
+
+do $$
+declare klar boolean := false;
+begin
+  begin
+    update public.progress_items set steg = 6 where id = '00000000-0000-4000-8000-0000000009a1';
+  exception when check_violation then klar := true;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('15.3 steg utanför 1–5 nekas', klar, case when klar then 'check_violation' else 'gick igenom' end);
+end $$;
+
+-- ------------------------------------------------------------
+-- Fas 15.4: barnets behov är fasta koder
+-- ------------------------------------------------------------
+select pg_temp.prova('15.4 familjen anger behov och format för sitt barn', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.students set behov = array['prov', 'struktur'], format_onskemal = 'online'
+          where id = '00000000-0000-4000-8000-0000000005a1'$q$],
+  'ok');
+
+select pg_temp.prova('15.4 familj Q ändrar P:s barns behov', '00000000-0000-4000-8000-0000000000f2',
+  array[$q$update public.students set behov = array['prov']
+          where id = '00000000-0000-4000-8000-0000000005a1'$q$],
+  'nekad');
+
+do $$
+declare klar boolean := false;
+begin
+  begin
+    update public.students set behov = array['prov', 'diagnos: adhd']
+     where id = '00000000-0000-4000-8000-0000000005a1';
+  exception when check_violation then klar := true;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('15.4 behov som fritext nekas', klar, case when klar then 'check_violation' else 'gick igenom' end);
+end $$;
+
+do $$
+declare klar boolean := false;
+begin
+  begin
+    update public.students set format_onskemal = 'hemma'
+     where id = '00000000-0000-4000-8000-0000000005a1';
+  exception when check_violation then klar := true;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('15.4 okänt format nekas', klar, case when klar then 'check_violation' else 'gick igenom' end);
 end $$;
 
 select test, ok, detalj from utfall order by nr;

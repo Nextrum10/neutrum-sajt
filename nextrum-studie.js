@@ -43,20 +43,49 @@ window.NXStudie = (function () {
     return datumText(iso);
   }
 
-  /* ---------- kunskapsnivåerna ---------- */
-  var NIVA = {
-    behover_trana: { text: 'Behöver träna', steg: 1 },
-    pa_god_vag:    { text: 'På god väg',    steg: 2 },
-    bra:           { text: 'Bra',           steg: 3 }
-  };
+  /* ---------- kunskapsnivåerna ----------
+     FEM STEG sedan 2026-09-24. Tre sa för lite: "Bra" rymde allt från
+     "klarar det med stöd" till "kan förklara det för någon annan", och
+     en elev som rörde sig inom det steget såg ut att stå still.
 
-  /* Tre segment i stället för en siffra: utvecklingen ska gå att
-     läsa på en halv sekund, och kännas som rörelse framåt. */
-  function nivåMätare(niva) {
-    var n = NIVA[niva] || NIVA.behover_trana;
-    var ut = '<span class="niva" role="img" aria-label="' + esc(n.text) + '">';
-    for (var i = 1; i <= 3; i++) {
-      ut += '<i class="' + (i <= n.steg ? 'fylld' : '') + '"></i>';
+     Stegen beskriver vad eleven KAN, inte hur hen ligger till mot ett
+     betyg. Studiehjälparen sätter inga betyg, och en skala som liknar
+     F–A hade lästs som att hen gjorde det.
+
+     Kolumnen level (tre värden) står kvar och hålls i synk av en
+     trigger i databasen, så att rader från före bytet och kod som inte
+     hunnit uppdateras fortsätter fungera. stegFör() läser steg när det
+     finns och översätter level när det inte gör det. */
+  var STEG = [
+    null,
+    { text: 'Nytt',          vad: 'Har inte arbetat med det än, eller grunderna saknas' },
+    { text: 'Behöver träna', vad: 'Klarar det med mycket stöd' },
+    { text: 'På god väg',    vad: 'Klarar det med visst stöd' },
+    { text: 'Säker',         vad: 'Klarar det på egen hand' },
+    { text: 'Behärskar',     vad: 'Kan förklara det och använda det i nya sammanhang' }
+  ];
+  var FRAN_LEVEL = { behover_trana: 2, pa_god_vag: 3, bra: 4 };
+
+  function stegFör(p) {
+    var s = p ? Number(p.steg) : NaN;
+    if (s >= 1 && s <= 5) return s;
+    return (p && FRAN_LEVEL[p.level]) || 1;
+  }
+  function stegText(s) { return (STEG[s] || STEG[1]).text; }
+  function målFör(p) {
+    var m = p ? Number(p.mal_steg) : NaN;
+    return m >= 1 && m <= 5 ? m : null;
+  }
+
+  /* Fem segment som fylls, och målet som en ring på sitt segment. En
+     siffra hade blivit ett betyg; det här är en riktning. */
+  function nivåMätare(steg, mal) {
+    var s = Math.max(1, Math.min(5, Number(steg) || 1));
+    var m = Number(mal) >= 1 && Number(mal) <= 5 ? Number(mal) : null;
+    var etikett = stegText(s) + (m && m > s ? ', mål: ' + stegText(m) : '');
+    var ut = '<span class="niva" role="img" aria-label="' + esc(etikett) + '">';
+    for (var i = 1; i <= 5; i++) {
+      ut += '<i class="' + (i <= s ? 'fylld' : '') + (m && m > s && i === m ? ' mal' : '') + '"></i>';
     }
     return ut + '</span>';
   }
@@ -99,15 +128,90 @@ window.NXStudie = (function () {
       + '</div>';
   }
 
-  /* ---------- ett kunskapsområde ---------- */
+  /* ---------- ett kunskapsområde ----------
+     o.historik(p) får lägga till en rad under nivån — utvecklingen
+     över tid — utan att raden behöver veta var historiken kommer ifrån. */
   function progressRad(p, opts) {
     var o = opts || {};
+    var s = stegFör(p), m = målFör(p);
+    var mål = !m ? '' : m > s ? ' · mål: ' + stegText(m).toLowerCase() : ' · målet nått';
+    /* Knapparna får vara en funktion av raden. Förr lades de på i
+       efterhand efter position, och då räckte det att databasen och
+       sidan sorterade ämnena olika för att Ta bort skulle träffa fel
+       område. */
+    var atg = typeof o.atgarder === 'function' ? o.atgarder(p) : o.atgarder;
     return '<div class="prg">'
-      + '<div class="prg-topp"><b>' + esc(p.area) + '</b>' + nivåMätare(p.level) + '</div>'
-      + '<span class="prg-niva">' + esc((NIVA[p.level] || {}).text || p.level) + '</span>'
+      + '<div class="prg-topp"><b>' + esc(p.area) + '</b>' + nivåMätare(s, m) + '</div>'
+      + '<span class="prg-niva">' + esc(stegText(s) + mål) + '</span>'
+      + (typeof o.historik === 'function' ? o.historik(p) : '')
       + (p.comment ? '<p class="prg-kommentar">' + esc(p.comment) + '</p>' : '')
-      + (o.atgarder ? '<div class="prg-atg">' + o.atgarder + '</div>' : '')
+      + (atg ? '<div class="prg-atg">' + atg + '</div>' : '')
       + '</div>';
+  }
+
+  /* ---------- utvecklingen över tid ----------
+     punkter: [{ steg, bedomd_at }] i tidsordning, ur progress_historik.
+     En stapel per bedömning, högst de åtta senaste — fler ryms inte
+     på en rad, och det är riktningen som ska synas, inte varje steg.
+     Texten under säger hur långt det gått och när det senast bedömdes,
+     så att en stapelrad utan förklaring aldrig står ensam. */
+  function historikRad(punkter) {
+    var pk = (punkter || []).filter(function (x) { return Number(x.steg) >= 1; });
+    if (!pk.length) return '';
+    var visade = pk.slice(-8);
+    var först = pk[0], sist = pk[pk.length - 1];
+    var skillnad = Number(sist.steg) - Number(först.steg);
+    var etikett = 'Utveckling: ' + visade.map(function (x) { return stegText(Number(x.steg)); }).join(' → ');
+    var staplar = visade.map(function (x, i) {
+      return '<i style="height:' + (Number(x.steg) * 20) + '%"'
+        + (i === visade.length - 1 ? ' class="sist"' : '') + '></i>';
+    }).join('');
+    var dagar = Math.max(0, Math.round((Date.now() - Date.parse(sist.bedomd_at)) / 86400000));
+    var senast = dagar === 0 ? 'idag' : dagar === 1 ? 'igår' : 'för ' + dagar + ' dagar sedan';
+    var rörelse = pk.length < 2 ? 'Första bedömningen'
+      : skillnad > 0 ? '↑ ' + skillnad + ' steg sedan ' + datumText(String(först.bedomd_at).slice(0, 10))
+      : skillnad < 0 ? '↓ ' + (-skillnad) + ' steg sedan ' + datumText(String(först.bedomd_at).slice(0, 10))
+      : 'Samma nivå sedan ' + datumText(String(först.bedomd_at).slice(0, 10));
+    return '<div class="prg-hist">'
+      + '<span class="prg-hist-staplar" role="img" aria-label="' + esc(etikett) + '">' + staplar + '</span>'
+      + '<span class="prg-hist-text">' + esc(rörelse + ' · bedömd ' + senast) + '</span>'
+      + '</div>';
+  }
+
+  /* Svensk ordning: Å, Ä och Ö sist, som i ett register. Standard-
+     sorteringen lägger dem efter Z men i fel inbördes ordning. */
+  function svOrdning(a, b) { return String(a).localeCompare(String(b), 'sv'); }
+
+  /* Ett kort per ämne: snittsteget, antalet områden, och hur många som
+     gått upp de senaste trettio dagarna. historik = { progress_id:
+     [punkter i tidsordning] }. "Gått upp" jämför nivån nu med den
+     senaste bedömningen FÖRE gränsen — eller, för ett område som är
+     nyare än så, med den första. Ett område utan historik räknas inte:
+     att det finns är inte samma sak som att det gått framåt. */
+  function ämnesSammanfattning(rader, historik) {
+    if (!rader || !rader.length) return '';
+    var ämnen = {};
+    rader.forEach(function (p) { (ämnen[p.subject] = ämnen[p.subject] || []).push(p); });
+    var gräns = Date.now() - 30 * 86400000;
+    return '<div class="prg-sum">' + Object.keys(ämnen).sort(svOrdning).map(function (ämne) {
+      var r = ämnen[ämne];
+      var snitt = r.reduce(function (a, p) { return a + stegFör(p); }, 0) / r.length;
+      var upp = r.filter(function (p) {
+        var h = (historik && historik[p.id]) || [];
+        if (!h.length) return false;
+        var före = h.filter(function (x) { return Date.parse(x.bedomd_at) < gräns; });
+        var bas = före.length ? före[före.length - 1] : (h.length > 1 ? h[0] : null);
+        return !!bas && stegFör(p) > Number(bas.steg);
+      }).length;
+      return '<div class="prg-sum-kort">'
+        + '<h6>' + esc(ämne) + '</h6>'
+        + '<b>' + esc(snitt.toFixed(1).replace('.', ',')) + '</b>'
+        + '<span class="xsmall" style="color:var(--bl-2)"> av 5</span>'
+        + nivåMätare(Math.round(snitt))
+        + '<p>' + r.length + (r.length === 1 ? ' område' : ' områden') + '</p>'
+        + (upp ? '<p class="upp">↑ ' + upp + ' har gått upp senaste månaden</p>' : '')
+        + '</div>';
+    }).join('') + '</div>';
   }
 
   /* Kunskapsområdena grupperade per ämne — annars blir det en lista
@@ -116,7 +220,7 @@ window.NXStudie = (function () {
     if (!rader.length) return '';
     var ämnen = {};
     rader.forEach(function (p) { (ämnen[p.subject] = ämnen[p.subject] || []).push(p); });
-    return Object.keys(ämnen).sort().map(function (ämne) {
+    return Object.keys(ämnen).sort(svOrdning).map(function (ämne) {
       return '<div class="prg-grupp">'
         + '<h6>' + esc(ämne) + '</h6>'
         + ämnen[ämne].map(function (p) { return progressRad(p, opts); }).join('')
@@ -193,6 +297,110 @@ window.NXStudie = (function () {
     });
   }
 
+  /* ---------- avbokning med skäl (2026-09-24) ----------
+     Ett avbokat pass säger varför, och skälet följer med i mejlet
+     till den som inte avbokade. Skälet är en FAST KOD, aldrig
+     fritext: det står i auditloggen, som inte går att rätta, och i
+     ett mejl där bara det renData() släpper igenom får stå. En ruta
+     att skriva i hade blivit en väg att skriva ett barns hälsa i en
+     inkorg.
+
+     Att avböja en tid motparten föreslagit är något annat och frågar
+     inte efter skäl: det passet fanns aldrig. Databasen gör samma
+     skillnad (skydda_bokningsfalt).
+
+     Koderna speglar bookings_avbokningsskal_check. De två sista är
+     Nextrums egna och visas bara i adminvyn; databasen nekar dem från
+     en familj eller en studiehjälpare. */
+  var AVBOKNINGSSKÄL = [
+    ['sjukdom', 'Sjukdom'],
+    ['forhinder', 'Förhinder'],
+    ['ombokat', 'Behöver en annan tid'],
+    ['annat', 'Annat']
+  ];
+  var AVBOKNINGSSKÄL_ADMIN = [
+    ['ingen_hjalpare', 'Ingen studiehjälpare'],
+    ['familjen_avslutar', 'Familjen avslutar']
+  ];
+
+  /* Returnerar ett löfte som blir skälets kod, eller null om man
+     ångrade sig. */
+  function avbokaRuta(opts) {
+    var o = opts || {};
+    var val = o.admin ? AVBOKNINGSSKÄL.concat(AVBOKNINGSSKÄL_ADMIN) : AVBOKNINGSSKÄL;
+    return new Promise(function (klar) {
+      var valt = null;
+      var ruta = document.createElement('div');
+      ruta.className = 'nx-fraga';
+      ruta.innerHTML =
+        '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="avb-t">'
+        + '<h3 id="avb-t">' + esc(o.titel || 'Avboka passet?') + '</h3>'
+        + (o.text ? '<p>' + esc(o.text) + '</p>' : '')
+        + '<fieldset class="nx-skal"><legend>Varför avbokas passet?</legend>'
+        + '<div class="chips">'
+        + val.map(function (v) {
+            return '<button type="button" class="chip" aria-pressed="false" data-skal="' + v[0] + '">'
+              + esc(v[1]) + '</button>';
+          }).join('')
+        + '</div></fieldset>'
+        + (o.not ? '<p class="nx-skal-not">' + esc(o.not) + '</p>' : '')
+        + '<p class="ok-msg" id="avb-msg" role="alert"></p>'
+        + '<div class="nx-fraga-knappar">'
+        + '<button type="button" class="btn btn-ghost" data-avb="nej">' + esc(o.avbryt || 'Behåll passet') + '</button>'
+        + '<button type="button" class="btn btn-primary" data-avb="ja">' + esc(o.knapp || 'Avboka') + '</button>'
+        + '</div></div>';
+
+      var sistaFokus = document.activeElement;
+      function stäng(svar) {
+        ruta.remove();
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', tangent);
+        if (sistaFokus && sistaFokus.focus) sistaFokus.focus();
+        klar(svar);
+      }
+      function tangent(e) {
+        if (e.key === 'Escape') stäng(null);
+        if (e.key === 'Tab') {
+          var kan = ruta.querySelectorAll('button');
+          var f = kan[0], s = kan[kan.length - 1];
+          if (e.shiftKey && document.activeElement === f) { e.preventDefault(); s.focus(); }
+          else if (!e.shiftKey && document.activeElement === s) { e.preventDefault(); f.focus(); }
+        }
+      }
+
+      ruta.addEventListener('click', function (e) {
+        if (e.target === ruta) return stäng(null);
+        var skäl = e.target.closest('[data-skal]');
+        if (skäl) {
+          valt = skäl.dataset.skal;
+          ruta.querySelectorAll('[data-skal]').forEach(function (k) {
+            k.setAttribute('aria-pressed', String(k === skäl));
+          });
+          NX.rensa(ruta.querySelector('#avb-msg'));
+          return;
+        }
+        var k = e.target.closest('[data-avb]');
+        if (!k) return;
+        if (k.dataset.avb === 'nej') return stäng(null);
+        /* Knappen är inte avstängd innan ett skäl valts. En avstängd
+           knapp säger inte varför den inte går att trycka på. */
+        if (!valt) {
+          NX.säg(ruta.querySelector('#avb-msg'), 'Välj ett skäl först.', false);
+          ruta.querySelector('[data-skal]').focus();
+          return;
+        }
+        stäng(valt);
+      });
+      document.addEventListener('keydown', tangent);
+
+      document.body.appendChild(ruta);
+      document.body.style.overflow = 'hidden';
+      void ruta.offsetWidth;
+      ruta.classList.add('open');
+      ruta.querySelector('[data-skal]').focus();
+    });
+  }
+
   /* ---------- knapp som håller på ----------
      Låser knappen, byter texten, och släpper igen när det är klart —
      även om det gick fel. Utan det andra argumentet står den kvar
@@ -257,9 +465,14 @@ window.NXStudie = (function () {
       if (o.datum && o.tid && !isNaN(start)) {
         for (var j = 0; j < timmar; j++) egna.add(o.datum + '|' + String(start + j).padStart(2, '0') + ':00');
       }
+      /* Varje timme 07–22, samma lista som förslaget i bokningen
+         (NXArbete.HELA_DAGEN). Studiehjälparens veckoschema finns inte
+         kvar, och ett motförslag som bara fick ligga inom ett schema
+         som inte längre går att ändra hade varit ett motförslag som
+         inte går att ge. */
       function lediga(datum) {
         var upptagna = o.upptagna || new Set();
-        return NX.tiderFörDatum(datum, o.tillgang || [], [], o.minuter)
+        return NX.tiderFörDatum(datum, NXArbete.HELA_DAGEN, [], o.minuter)
           .filter(function (t) {
             var h0 = Number(String(t).slice(0, 2));
             for (var i = 0; i < timmar; i++) {
@@ -275,8 +488,9 @@ window.NXStudie = (function () {
         var ärNy = valt && !(valt.datum === o.datum && valt.tid === o.tid);
         ruta.innerHTML =
           '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="flytt-t">'
-          + '<h3 id="flytt-t">Flytta passet</h3>'
-          + '<p>Passet ligger nu <b>' + esc(datumText(o.datum)) + ' kl. ' + esc(String(o.tid || '').slice(0, 5)) + '</b>. '
+          + '<h3 id="flytt-t">' + esc(o.titel || 'Flytta passet') + '</h3>'
+          + '<p>' + (o.fraga ? esc(o.fraga) + ' ' : 'Passet ligger nu ')
+          + '<b>' + esc(datumText(o.datum)) + ' kl. ' + esc(String(o.tid || '').slice(0, 5)) + '</b>. '
           + 'Välj en ny dag och tid — motparten får bekräfta den.</p>'
           + '<div class="bk-kal nx-flytt-kal">'
           + '<div class="bk-kal-manad">'
@@ -286,10 +500,10 @@ window.NXStudie = (function () {
               prefix: 'fl',
               minManad: NXArbete.månadFör(idag),
               maxManad: NXArbete.plusMånader(NXArbete.månadFör(idag), 2),
-              prickText: 'har lediga tider',
+              /* Ingen prick: utan schema är ingen dag mer ledig än
+                 en annan. */
               dag: function (iso) {
-                var fri = iso >= idag && lediga(iso).length > 0;
-                return { klickbar: fri, prick: fri };
+                return { klickbar: iso >= idag && lediga(iso).length > 0, prick: false };
               }
             })
           + '</div>'
@@ -298,8 +512,8 @@ window.NXStudie = (function () {
               datum: dag,
               tider: dag ? lediga(dag) : [],
               vald: valt && valt.datum === dag ? valt.tid : (dag === o.datum ? o.tid : null),
-              välj: 'Välj en dag med en prick.',
-              tom: 'Inga lediga tider den dagen.'
+              välj: 'Välj en dag i kalendern.',
+              tom: 'Inga tider kvar den dagen.'
             })
           + '</div>'
           + '</div>'
@@ -307,7 +521,7 @@ window.NXStudie = (function () {
           + '<div class="nx-fraga-knappar">'
           + '<button type="button" class="btn btn-ghost" data-flytt="nej">Avbryt</button>'
           + '<button type="button" class="btn btn-primary" data-flytt="ja"'
-          + (ärNy ? '' : ' disabled') + '>Flytta passet</button>'
+          + (ärNy ? '' : ' disabled') + '>' + esc(o.knapp || 'Flytta passet') + '</button>'
           + '</div></div>';
       }
 
@@ -953,84 +1167,6 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
-     UTVECKLINGEN PER ÄMNE
-
-     Listan under visar varje kunskapsområde för sig. Den är rätt
-     när man vill veta VAD som är svårt — men den svarar inte på
-     "hur ligger vi till i matte", och det är den frågan en förälder
-     ställer först.
-
-     En rad per ämne: namnet, en stapel med områdenas lägen, och
-     antalet som nått Bra. Samma tre färger som nivåmätaren och
-     rapportformuläret, för samma sak ska ha samma färg i hela
-     produkten.
-
-     Ringen visar andelen områden på Bra. Den är en ANDEL av
-     verkliga rader, inte ett påhittat betyg — står det 2 av 7 är
-     det för att sju områden finns och två av dem är satta till bra
-     av studiehjälparen.
-     ============================================================ */
-  function utvecklingPerÄmne(rader) {
-    if (!rader || !rader.length) return '';
-
-    var ämnen = {};
-    rader.forEach(function (p) { (ämnen[p.subject] = ämnen[p.subject] || []).push(p); });
-
-    var klassFör = { bra: 'ar-bra', pa_god_vag: 'ar-mitten', behover_trana: 'ar-folj' };
-
-    var totalt = rader.length;
-    var bra = rader.filter(function (p) { return p.level === 'bra'; }).length;
-    var andel = Math.round(bra / totalt * 100);
-
-    /* Ringen ritas med stroke-dasharray på en cirkel. r=26 ger en
-       omkrets på ~163,4 — det talet är hårdkodat nedan eftersom SVG
-       inte kan räkna, och det måste följa med om radien ändras. */
-    var omkrets = 2 * Math.PI * 26;
-    var fylld = omkrets * bra / totalt;
-
-    var ring = '<div class="ut-ring" role="img" aria-label="'
-      + bra + ' av ' + totalt + ' kunskapsområden på nivån bra">'
-      + '<svg viewBox="0 0 60 60" aria-hidden="true">'
-      + '<circle class="ut-ring-bas" cx="30" cy="30" r="26"></circle>'
-      + '<circle class="ut-ring-fyll" cx="30" cy="30" r="26"'
-      + ' stroke-dasharray="' + fylld.toFixed(1) + ' ' + omkrets.toFixed(1) + '"></circle>'
-      + '</svg>'
-      + '<span class="ut-ring-tal"><b>' + andel + '<i>%</i></b></span>'
-      + '</div>';
-
-    var rutor = Object.keys(ämnen).sort().map(function (ämne) {
-      var lista = ämnen[ämne];
-      var n = { bra: 0, pa_god_vag: 0, behover_trana: 0 };
-      lista.forEach(function (p) { if (n[p.level] !== undefined) n[p.level]++; });
-
-      var segment = ['bra', 'pa_god_vag', 'behover_trana']
-        .filter(function (k) { return n[k]; })
-        .map(function (k) {
-          return '<i class="' + klassFör[k] + '" style="flex:'
-            + Math.max(n[k] / lista.length, 0.04) + '"></i>';
-        }).join('');
-
-      return '<div class="ut-amne">'
-        + '<div class="ut-amne-topp"><b>' + esc(ämne) + '</b>'
-        + '<span>' + n.bra + '<i>/</i>' + lista.length + '</span></div>'
-        + '<div class="fd-stapel">' + segment + '</div>'
-        + '</div>';
-    }).join('');
-
-    return '<div class="ut-oversikt">'
-      + '<div class="ut-sammanfattning">'
-      + ring
-      + '<div class="ut-sammanfattning-text">'
-      + '<b>' + bra + ' av ' + totalt + ' områden är på Bra</b>'
-      + '<span>' + Object.keys(ämnen).length
-      + (Object.keys(ämnen).length === 1 ? ' ämne' : ' ämnen') + ' följs just nu. '
-      + 'Nivåerna sätts av er studiehjälpare efter passen.</span>'
-      + '</div></div>'
-      + '<div class="ut-amnen">' + rutor + '</div>'
-      + '</div>';
-  }
-
-  /* ============================================================
      LÄXFILTRET
 
      Läxlistan var allt eleven någonsin fått, med de klara kvar i
@@ -1397,12 +1533,12 @@ window.NXStudie = (function () {
     inloggningsruta: inloggningsruta, schemaI: schemaI,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxFilter: läxFilter, läxUrval: läxUrval,
-    fordelning: fordelning, utvecklingPerÄmne: utvecklingPerÄmne,
-    LAGE: LAGE, NIVA: NIVA,
+    fordelning: fordelning,
+    LAGE: LAGE, STEG: STEG, stegFör: stegFör, stegText: stegText, målFör: målFör,
     läxläge: läxläge, deadlineText: deadlineText,
-    läxRad: läxRad, nivåMätare: nivåMätare,
+    läxRad: läxRad, nivåMätare: nivåMätare, historikRad: historikRad, ämnesSammanfattning: ämnesSammanfattning,
     progressRad: progressRad, progressPerÄmne: progressPerÄmne,
     tomt: tomt, laddar: laddar,
-    bekräfta: bekräfta, medan: medan, kolla: kolla
+    bekräfta: bekräfta, avbokaRuta: avbokaRuta, medan: medan, kolla: kolla
   };
 })();

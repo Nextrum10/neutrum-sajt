@@ -174,6 +174,29 @@ const NX = (function () {
     { kod: 'gy3', text: 'Gymnasiet år 3' }
   ];
 
+  /* Vad barnet behöver hjälp med, och hur passen helst ska hållas.
+     Familjen väljer dem när barnet läggs till, studiehjälparen ser dem
+     i elevkortet och admin i matchningen. Koderna speglar
+     check-villkoren students_behov_check och
+     students_format_onskemal_check — texten är det människor läser.
+
+     Med flit INGA diagnoser eller hälsouppgifter. Sådant om barn är
+     en särskild kategori enligt GDPR, och matchningen behöver veta
+     vad som hjälper, inte vad barnet har. */
+  const BEHOV = [
+    { kod: 'laxor', text: 'Läxorna i vardagen' },
+    { kod: 'prov', text: 'Inför prov' },
+    { kod: 'ikapp', text: 'Komma ikapp' },
+    { kod: 'utmaning', text: 'Mer utmaning' },
+    { kod: 'struktur', text: 'Planering och studieteknik' },
+    { kod: 'motivation', text: 'Motivation och självförtroende' }
+  ];
+  const FORMAT_ONSKEMAL = [
+    { kod: 'pa_plats', text: 'På plats' },
+    { kod: 'online', text: 'Online' },
+    { kod: 'bada', text: 'Båda går bra' }
+  ];
+
   function årskursText(kod) {
     const a = ARSKURSER.find(x => x.kod === kod);
     return a ? a.text : (kod || '—');
@@ -950,28 +973,19 @@ const NX = (function () {
     return set;
   }
 
-  /* Studiehjälparens veckotider och spärrar. Båda är läsbara för
-     den som ska boka — vyn blockerade_tider lämnar inte ut skälet. */
-  async function hämtaTillganglighet(tutorId) {
-    const tomt = { tillgang: [], blockerade: [] };
-    if (!supa || !tutorId) return tomt;
-    const [a, b] = await Promise.all([
-      supa.from('tutor_availability').select('weekday, start_time, end_time').eq('tutor_id', tutorId),
-      supa.from('blockerade_tider').select('block_date, block_time').eq('tutor_id', tutorId)
-    ]);
-    if (a.error) console.warn('tutor_availability:', a.error.message);
-    if (b.error) console.warn('blockerade_tider:', b.error.message);
-    return { tillgang: a.data || [], blockerade: b.data || [] };
-  }
-
   return {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling, spamskydd,
     initFaq, initDrag, initPris, kopplaAnsökan, märkInloggad,
     källa, händelse,
     bildIntoning, initVagval,
-    hämtaSession, hämtaProfil,
-    hämtaUpptagna, hämtaTillganglighet, tiderFörDatum,
-    MANADER, DAGAR, CFG, AMNEN, ARSKURSER, årskursText, årskursKod
+    /* hämtaTillganglighet stod här i Fas 14.0-grenen. Main tog bort
+       funktionen medan grenen låg öppen, så namnet exporterades utan
+       att peka på något: `return { …, hämtaTillganglighet }` med ett
+       odefinierat namn kastar ReferenceError, och hela NX dör vid
+       inladdning på varje sida. Mains lista gäller. */
+    hämtaSession, hämtaProfil, vyFörRoll,
+    hämtaUpptagna, tiderFörDatum,
+    MANADER, DAGAR, CFG, AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod
   };
 })();

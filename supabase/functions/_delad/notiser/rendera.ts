@@ -28,10 +28,13 @@
 // mejlprogram, och en länk till Google Fonts i ett mejl är en
 // spårningspixel vi inte vill skicka med.
 //
-// LOGGAN är text, inte en bild. Sajtens märke finns bara som SVG,
-// och SVG visas inte i Gmail eller Outlook. En bild som inte laddar
-// är sämre än ingen bild: märket ritas därför som en tabellcell med
-// ett N, och ordet Nextrum bredvid.
+// LOGGAN är text, inte en bild. SVG visas inte i Gmail eller Outlook,
+// och PNG:en som finns sedan loggan kopplades in för Google
+// (bilder/nextrum-logo-512.png) laddas inte i Outlook förrän
+// mottagaren tillåter bilder. En bild som inte laddar är sämre än
+// ingen bild: märket ritas därför som en tabellcell med ett N, och
+// ordet Nextrum bredvid. Loggan BREDVID avsändaren i inkorgen är en
+// annan sak och styrs inte härifrån — se DEPLOY-EPOST.md.
 // ============================================================
 
 import { esc } from '../http.ts';
@@ -76,7 +79,12 @@ export function vyAdress(roll: Roll, mal: Mal | 'val'): string {
   // Den publika sidan har ingen roll och ingen flik.
   if (mal === 'sajten') return SAJT;
   const vy = roll === 'tutor' ? '/larare' : '/foralder';
-  const hash = mal === 'pass' ? '#lektioner/pass' : mal === 'meddelanden' ? '#meddelanden' : '#profil/notiser';
+  // #boka finns bara i föräldravyn. Mallen ger den bara till familjen,
+  // men skulle den ändå hamna hos en studiehjälpare blir det passlistan
+  // i stället för en sektion som inte finns.
+  const hash = mal === 'pass' || (mal === 'boka' && roll === 'tutor') ? '#lektioner/pass'
+    : mal === 'boka' ? '#boka'
+    : mal === 'meddelanden' ? '#meddelanden' : '#profil/notiser';
   return `${SAJT}${vy}${hash}`;
 }
 

@@ -167,7 +167,7 @@
   /* ============ barn ============ */
   async function laddaBarn() {
     const { data, error } = await supa
-      .from('students').select('id, name, grade, school, subjects, goals')
+      .from('students').select('id, name, grade, school, subjects, goals, about, behov, format_onskemal')
       .eq('parent_id', S.user.id).order('created_at');
     if (error) { console.warn(error.message); return; }
     S.barn = data || [];
@@ -203,11 +203,15 @@
       return;
     }
 
+    const text = (lista, kod) => (lista.find(x => x.kod === kod) || {}).text || null;
     host.innerHTML = S.barn.map(b => {
-      const under = [b.grade, b.school, b.subjects].filter(Boolean).join(' · ');
+      const under = [b.grade, b.school, (b.subjects || []).join(', ')].filter(Boolean).join(' · ');
+      const behov = (b.behov || []).map(k => text(NX.BEHOV, k)).filter(Boolean).join(', ');
       return '<div class="barn-rad" data-barn="' + esc(b.id) + '">'
         + '<div class="barn-namn"><b>' + esc(b.name) + '</b>'
         + (under ? '<span>' + esc(under) + '</span>' : '')
+        + (behov ? '<span>Behöver: ' + esc(behov) + '</span>' : '')
+        + (b.format_onskemal ? '<span>' + esc(text(NX.FORMAT_ONSKEMAL, b.format_onskemal)) + '</span>' : '')
         + (b.goals ? '<span class="barn-mal">' + esc(b.goals) + '</span>' : '')
         + '</div>'
         + '<button class="btn btn-ghost btn-sm" data-barn-bort="' + esc(b.id) + '">Ta bort</button>'
@@ -290,50 +294,141 @@
     sel.addEventListener('change', e => bytBarn(e.target.value));
   });
 
-  /* Familjen äger barnets uppgifter. Studiemålet ser studiehjälparen,
-     de egna anteckningarna gör hen inte — family_notes har ingen
-     policy som släpper fram den åt andra hållet. */
-  async function fyllBarnFormulär() {
-    const b = S.barn.find(x => x.id === S.valtBarn);
-    $('#b-skola').value = (b && b.school) || '';
-    $('#b-amnen').value = ((b && b.subjects) || []).join(', ');
-    $('#b-mal').value = (b && b.goals) || '';
+  /* ============================================================
+     BARNETS UPPGIFTER — ett formulär i två lägen
 
-    /* Anteckningen ligger i en egen tabell som bara familjen når.
-       I students hade studiehjälparen kunnat läsa den via API:t —
-       RLS gäller rader, inte kolumner. */
+     Nytt barn och Ändra uppgifter var två formulär med olika fält:
+     det nya barnet fick bara namn och årskurs. Nu är det ett, så att
+     det man fyller i från början är samma sak som man ändrar sedan.
+
+     Familjen äger uppgifterna. Målet och "hur lär sig hen bäst" ser
+     studiehjälparen; de egna anteckningarna gör hen inte — de ligger
+     i student_notes, eftersom RLS gäller rader och inte kolumner, och
+     en kolumn i students hade studiehjälparen kunnat läsa via API:t.
+     ============================================================ */
+  const bf = { läge: null, amnen: [], behov: [], format: null };
+
+  function knappar(lista, valda, ettVal) {
+    return lista.map(x => '<button type="button" data-v="' + esc(x.kod) + '" aria-pressed="'
+      + ((ettVal ? valda === x.kod : valda.indexOf(x.kod) !== -1) ? 'true' : 'false') + '">'
+      + esc(x.text) + '</button>').join('');
+  }
+
+  function ritaBarnVal() {
+    /* Ämnen utanför den fasta listan (skrivna förr, eller av admin ur
+       en anmälan) ska inte försvinna bara för att de inte är förtryckta. */
+    const ämnen = NX.AMNEN.concat(bf.amnen.filter(a => NX.AMNEN.indexOf(a) === -1));
+    $('#b-amne-val').innerHTML = knappar(ämnen.map(a => ({ kod: a, text: a })), bf.amnen);
+    $('#b-behov-val').innerHTML = knappar(NX.BEHOV, bf.behov);
+    $('#b-format-val').innerHTML = knappar(NX.FORMAT_ONSKEMAL, bf.format, true);
+  }
+
+  (function () {
+    const ak = $('#b-ak');
+    ak.innerHTML = '<option value="">Välj</option>'
+      + NX.ARSKURSER.map(a => '<option>' + esc(a.text) + '</option>').join('');
+  })();
+
+  function växla(lista, v) {
+    const i = lista.indexOf(v);
+    if (i === -1) lista.push(v); else lista.splice(i, 1);
+  }
+  $('#b-amne-val').addEventListener('click', e => {
+    const b = e.target.closest('[data-v]'); if (!b) return;
+    växla(bf.amnen, b.dataset.v); ritaBarnVal();
+  });
+  $('#b-behov-val').addEventListener('click', e => {
+    const b = e.target.closest('[data-v]'); if (!b) return;
+    växla(bf.behov, b.dataset.v); ritaBarnVal();
+  });
+  $('#b-format-val').addEventListener('click', e => {
+    const b = e.target.closest('[data-v]'); if (!b) return;
+    bf.format = bf.format === b.dataset.v ? null : b.dataset.v; ritaBarnVal();
+  });
+
+  async function öppnaBarnForm(läge) {
+    const f = $('#barn-form');
+    const b = läge === 'ändra' ? S.barn.find(x => x.id === S.valtBarn) : null;
+    if (läge === 'ändra' && !b) { säg($('#barn-msg'), '⚠️ Lägg till ett barn först.', false); return; }
+    bf.läge = läge;
+    f.reset();
+    rensa($('#barn-msg'));
+    $('#b-namn').value = (b && b.name) || '';
+    $('#b-ak').value = (b && b.grade) || '';
+    $('#b-skola').value = (b && b.school) || '';
+    $('#b-mal').value = (b && b.goals) || '';
+    $('#b-om').value = (b && b.about) || '';
+    bf.amnen = ((b && b.subjects) || []).slice();
+    bf.behov = ((b && b.behov) || []).slice();
+    bf.format = (b && b.format_onskemal) || null;
+    ritaBarnVal();
+
+    $('#barn-form-rubrik').textContent = b ? 'Uppgifter om ' + b.name : 'Lägg till ett barn';
+    $('#barn-spara').textContent = b ? 'Spara' : 'Lägg till barnet';
+    $('#b-egna-grupp').hidden = !b;
     $('#b-egna').value = '';
-    const { data } = await supa.from('student_notes')
-      .select('notes').eq('student_id', S.valtBarn).maybeSingle();
-    if (data) $('#b-egna').value = data.notes || '';
+    f.hidden = false;
+    $('#andra-barn').textContent = 'Ändra uppgifter';
+    $('#b-namn').focus({ preventScroll: true });
+    f.scrollIntoView({ block: 'nearest' });
+
+    /* Anteckningen ligger i en egen tabell som bara familjen når. */
+    if (b) {
+      const { data } = await supa.from('student_notes')
+        .select('notes').eq('student_id', b.id).maybeSingle();
+      if (data && bf.läge === 'ändra') $('#b-egna').value = data.notes || '';
+    }
+  }
+
+  function stängBarnForm() {
+    $('#barn-form').hidden = true;
+    bf.läge = null;
+    rensa($('#barn-msg'));
   }
 
   $('#andra-barn').addEventListener('click', () => {
-    if (!S.valtBarn) { säg($('#b-andra-msg'), '⚠️ Lägg till ett barn först.', false); return; }
-    const f = $('#barn-andra');
-    f.hidden = !f.hidden;
-    $('#andra-barn').textContent = f.hidden ? 'Ändra uppgifter' : 'Stäng';
-    if (!f.hidden) { fyllBarnFormulär(); $('#b-skola').focus(); }
+    if (!$('#barn-form').hidden && bf.läge === 'ändra') { stängBarnForm(); return; }
+    öppnaBarnForm('ändra');
   });
-  $('#andra-avbryt').addEventListener('click', () => {
-    $('#barn-andra').hidden = true;
-    $('#andra-barn').textContent = 'Ändra uppgifter';
-    rensa($('#b-andra-msg'));
+  $('#lagg-till-barn').addEventListener('click', () => {
+    if (!$('#barn-form').hidden && bf.läge === 'ny') { stängBarnForm(); return; }
+    öppnaBarnForm('ny');
   });
+  $('#avbryt-barn').addEventListener('click', stängBarnForm);
 
-  $('#barn-andra').addEventListener('submit', async e => {
+  $('#barn-form').addEventListener('submit', async e => {
     e.preventDefault();
-    const msg = $('#b-andra-msg');
+    const msg = $('#barn-msg');
     rensa(msg);
-    if (!S.valtBarn) { säg(msg, '⚠️ Välj ett barn först.', false); return; }
+    const namn = $('#b-namn').value.trim();
+    const fel = kolla([
+      { fel: !namn, text: 'Fyll i barnets namn.', falt: $('#b-namn') },
+      { fel: bf.läge === 'ändra' && !S.valtBarn, text: 'Välj ett barn först.' }
+    ]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
 
-    await medan(e.submitter, 'Sparar…', async () => {
-      const { error } = await supa.from('students').update({
-        school: $('#b-skola').value.trim() || null,
-        subjects: $('#b-amnen').value.split(',').map(x => x.trim()).filter(Boolean),
-        goals: $('#b-mal').value.trim() || null
-      }).eq('id', S.valtBarn);
+    const uppgifter = {
+      name: namn,
+      grade: $('#b-ak').value || null,
+      school: $('#b-skola').value.trim() || null,
+      subjects: bf.amnen.slice(),
+      behov: bf.behov.slice(),
+      format_onskemal: bf.format,
+      goals: $('#b-mal').value.trim() || null,
+      about: $('#b-om').value.trim() || null
+    };
 
+    await medan($('#barn-spara'), 'Sparar…', async () => {
+      if (bf.läge === 'ny') {
+        const { error } = await supa.from('students').insert(Object.assign({ parent_id: S.user.id }, uppgifter));
+        if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+        stängBarnForm();
+        await laddaBarn();
+        await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass()]);
+        return;
+      }
+
+      const { error } = await supa.from('students').update(uppgifter).eq('id', S.valtBarn);
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
 
       const { error: aErr } = await supa.from('student_notes').upsert({
@@ -346,30 +441,6 @@
       säg(msg, '✓ Sparat.', true);
       await laddaBarn();
     });
-  });
-
-  $('#lagg-till-barn').addEventListener('click', () => {
-    const f = $('#barn-form');
-    f.hidden = !f.hidden;
-    if (!f.hidden) $('#b-namn').focus();
-  });
-  $('#avbryt-barn').addEventListener('click', () => { $('#barn-form').hidden = true; rensa($('#barn-msg')); });
-
-  $('#barn-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const msg = $('#barn-msg');
-    rensa(msg);
-    const namn = $('#b-namn').value.trim();
-    if (!namn) { säg(msg, 'Fyll i barnets namn.', false); return; }
-
-    const { error } = await supa.from('students').insert({
-      parent_id: S.user.id, name: namn, grade: $('#b-ak').value || null
-    });
-    if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
-    $('#barn-form').reset();
-    $('#barn-form').hidden = true;
-    await laddaBarn();
-    await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass()]);
   });
 
   /* ============================================================
@@ -496,32 +567,169 @@
   async function laddaProgress() {
     const host = $('#prg-lista');
     $('#prg-antal').textContent = '';
+    ['#ut-tal', '#ut-amnen', '#ut-graf', '#ut-framsteg'].forEach(id => { const e = $(id); if (e) e.innerHTML = ''; });
     if (!S.valtBarn) { host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.'); return; }
 
     host.innerHTML = laddar();
-    const { data, error } = await supa
-      .from('progress_items').select('id, subject, area, level, comment')
-      .eq('student_id', S.valtBarn).order('subject').order('area');
-
+    const [svar, hist] = await Promise.all([
+      supa.from('progress_items').select('id, subject, area, level, steg, mal_steg, comment, updated_at')
+        .eq('student_id', S.valtBarn).order('subject').order('area'),
+      supa.from('progress_historik').select('progress_id, subject, area, steg, bedomd_at')
+        .eq('student_id', S.valtBarn).order('bedomd_at')
+    ]);
+    const { data, error } = svar;
     if (error) { host.innerHTML = tomt('Kunde inte hämta utvecklingen', felText(error)); return; }
 
+    /* Historiken är ett tillägg: faller den frågan visas läget ändå,
+       bara utan det som handlar om tid. */
+    S.historik = {};
+    if (!hist.error) (hist.data || []).forEach(h => {
+      (S.historik[h.progress_id] = S.historik[h.progress_id] || []).push(h);
+    });
+
     S.progress = data;
-    if (!data.length) {
-      S.progressAntal = 0;
-      ritaStatistik();
-      host.innerHTML = tomt('Inget att visa än',
-        'Efter några pass fyller er studiehjälpare i vilka områden som sitter och vilka som behöver mer träning.');
-      return;
-    }
     S.progressAntal = data.length;
     ritaStatistik();
+    if (!data.length) {
+      host.innerHTML = tomt('Inget att visa än',
+        'Efter några pass bedömer er studiehjälpare vilka områden som sitter och vilka som behöver mer träning.');
+      $('#ut-tal').innerHTML = tomt('Inga bedömningar än', 'Siffrorna fylls i efter de första passen.');
+      return;
+    }
     $('#prg-antal').textContent = data.length + ' områden';
-    /* Överblicken först, detaljerna sedan. Listan svarar på VAD som
-       är svårt; översikten svarar på "hur ligger vi till i matte",
-       och det är den frågan man ställer först. */
-    host.innerHTML = NXStudie.utvecklingPerÄmne(data)
-      + '<div class="ut-detalj"><span class="ut-detalj-et">Område för område</span>'
-      + NXStudie.progressPerÄmne(data, {}) + '</div>';
+    ritaUtveckling();
+    host.innerHTML = NXStudie.progressPerÄmne(data, {
+      historik: p => NXStudie.historikRad(S.historik[p.id])
+    });
+  }
+
+  /* ============================================================
+     MIN UTVECKLING
+     Allt nedan räknas ur S.progress (läget nu) och S.historik (varje
+     bedömning som gjorts). Stegen är NXStudie.STEG, samma fem som
+     studiehjälparen sätter.
+     ============================================================ */
+  function ritaUtveckling() {
+    const p = S.progress || [];
+    const H = S.historik || {};
+    const steg = x => NXStudie.stegFör(x);
+    const gräns = Date.now() - 30 * 86400000;
+
+    /* "Gått upp" jämför läget nu med den senaste bedömningen före
+       gränsen, eller med den första för ett område som är nyare än
+       så. Samma regel som ämneskorten (NXStudie.ämnesSammanfattning). */
+    const gickUpp = p.filter(x => {
+      const h = H[x.id] || [];
+      if (!h.length) return false;
+      const före = h.filter(y => Date.parse(y.bedomd_at) < gräns);
+      const bas = före.length ? före[före.length - 1] : (h.length > 1 ? h[0] : null);
+      return !!bas && steg(x) > Number(bas.steg);
+    }).length;
+    const säkra = p.filter(x => steg(x) >= 4).length;
+    const medMål = p.filter(x => NXStudie.målFör(x));
+    const nådda = medMål.filter(x => steg(x) >= NXStudie.målFör(x)).length;
+    /* Genomfört pass = rapporterat (ordlistan). Räknat på rapporterna
+       för det valda barnet, inte på passens status. */
+    const rapporterade = (S.rapporter || []).length;
+
+    const andel = Math.round(säkra / p.length * 100);
+    const omkrets = 2 * Math.PI * 26;
+    const ring = '<div class="ut-ring" role="img" aria-label="' + säkra + ' av ' + p.length
+      + ' områden är på Säker eller bättre">'
+      + '<svg viewBox="0 0 60 60" aria-hidden="true">'
+      + '<circle class="ut-ring-bas" cx="30" cy="30" r="26"></circle>'
+      + '<circle class="ut-ring-fyll" cx="30" cy="30" r="26" stroke-dasharray="'
+      + (omkrets * säkra / p.length).toFixed(1) + ' ' + omkrets.toFixed(1) + '"></circle>'
+      + '</svg><span class="ut-ring-tal"><b>' + andel + '<i>%</i></b></span></div>';
+
+    $('#ut-tal').innerHTML = '<div class="ut-sammanfattning">' + ring
+      + '<div class="ut-sammanfattning-text">'
+      + '<b>' + säkra + ' av ' + p.length + ' områden sitter säkert</b>'
+      + '<span>Säker betyder att ' + esc(namnPåBarnet()) + ' klarar det på egen hand. '
+      + 'Nivåerna sätts av er studiehjälpare efter passen.</span>'
+      + '</div></div>'
+      + '<div class="stat-tal stat-tal-5" style="margin-top:16px">'
+      + '<div><b>' + rapporterade + '</b><span>Rapporterade pass</span></div>'
+      + '<div><b>' + p.length + '</b><span>Kunskapsområden</span></div>'
+      + '<div><b>' + gickUpp + '</b><span>Gått upp senaste månaden</span></div>'
+      + '<div><b>' + säkra + '</b><span>Säker eller bättre</span></div>'
+      + '<div><b>' + (medMål.length ? nådda + '<i style="font-style:normal;font-size:.6em;color:var(--bl-2)"> / '
+          + medMål.length + '</i>' : '—') + '</b><span>Mål nådda</span></div>'
+      + '</div>';
+
+    $('#ut-amnen').innerHTML = NXStudie.ämnesSammanfattning(p, H);
+    ritaNivåÖverTid(p, H);
+    ritaFramsteg(p, H);
+  }
+
+  function namnPåBarnet() {
+    const b = S.barn.find(x => x.id === S.valtBarn);
+    return b ? (b.name || '').split(' ')[0] : 'eleven';
+  }
+
+  /* Genomsnittlig nivå vid varje månads slut: för varje område den
+     senaste bedömningen fram till dess, och snittet av dem. Ett område
+     räknas först från sin första bedömning, och en månad utan några
+     bedömningar alls står tom — ett tal som ärvts från ingenstans
+     räknas med i intrycket utan att någon ser att det är gissat.
+
+     Skalan är fast, 0–5, inte relativ till månaden med högst värde:
+     2,8 och 3,0 är nästan samma sak och ska se ut så. */
+  function ritaNivåÖverTid(p, H) {
+    const host = $('#ut-graf');
+    if (!host) return;
+    const månader = NXArbete.sexMånader();
+    const nu = new Date();
+    const punkter = månader.map((m, i) => {
+      const [år, mån] = m.nyckel.split('-').map(Number);
+      const slut = i === månader.length - 1 ? nu.getTime() : new Date(år, mån, 1).getTime() - 1;
+      const nivåer = p.map(x => {
+        const före = (H[x.id] || []).filter(h => Date.parse(h.bedomd_at) <= slut);
+        return före.length ? Number(före[före.length - 1].steg) : null;
+      }).filter(v => v);
+      return { namn: m.namn, snitt: nivåer.length ? nivåer.reduce((a, b) => a + b, 0) / nivåer.length : null, antal: nivåer.length };
+    });
+    if (!punkter.some(x => x.snitt)) {
+      host.innerHTML = tomt('Ingen historik än', 'Grafen fylls i när er studiehjälpare bedömt områdena några gånger.');
+      return;
+    }
+    host.innerHTML = '<div class="graf">' + punkter.map((x, i) =>
+      '<div class="graf-stapel' + (i === punkter.length - 1 ? ' nu' : '') + '"'
+      + (x.snitt ? ' title="' + esc(x.antal + (x.antal === 1 ? ' område' : ' områden')) + '"' : '') + '>'
+      + '<b>' + (x.snitt ? esc(x.snitt.toFixed(1).replace('.', ',')) : '–') + '</b>'
+      + '<i style="height:' + (x.snitt ? Math.round(x.snitt / 5 * 100) : 0) + '%"></i>'
+      + '<span>' + esc(x.namn) + '</span></div>').join('') + '</div>'
+      + '<p class="graf-not">1 är Nytt och 5 är Behärskar. En tom månad betyder att inget var bedömt då, inte att det gick bakåt.</p>';
+  }
+
+  /* Varje steg uppåt i historiken, senaste först. Bara uppåt: en
+     bedömning som sänks är viktig att se i Område för område, men en
+     lista som heter Framsteg ska inte ha den. */
+  function ritaFramsteg(p, H) {
+    const host = $('#ut-framsteg');
+    if (!host) return;
+    const händelser = [];
+    p.forEach(x => {
+      const h = H[x.id] || [];
+      for (let i = 1; i < h.length; i++) {
+        if (Number(h[i].steg) > Number(h[i - 1].steg)) {
+          händelser.push({ område: x.area, ämne: x.subject, från: Number(h[i - 1].steg), till: Number(h[i].steg), när: h[i].bedomd_at });
+        }
+      }
+    });
+    händelser.sort((a, b) => Date.parse(b.när) - Date.parse(a.när));
+    if (!händelser.length) {
+      host.innerHTML = tomt('Inga steg uppåt än',
+        'De syns här när er studiehjälpare bedömt samma område igen och det har gått framåt.');
+      return;
+    }
+    host.innerHTML = '<div class="ut-framsteg">' + händelser.slice(0, 6).map(e =>
+      '<div class="ut-framsteg-rad">'
+      + '<span class="ut-framsteg-pil" aria-hidden="true">↑</span>'
+      + '<span class="ut-framsteg-text"><b>' + esc(e.område) + '</b>'
+      + '<span>' + esc(e.ämne + ' · ' + NXStudie.stegText(e.från) + ' → ' + NXStudie.stegText(e.till)) + '</span></span>'
+      + '<time>' + esc(datumText(String(e.när).slice(0, 10))) + '</time>'
+      + '</div>').join('') + '</div>';
   }
 
 
@@ -879,14 +1087,18 @@
        miljöer — inbyggda webbläsare i appar, och efter att man en gång
        bockat i "låt inte sidan visa fler dialoger" — och då hände
        ingenting alls när man tryckte på Avboka. */
-    const ja = await NXStudie.bekräfta({
+    /* Skälet skrivs i samma uppdatering som statusen. Två skrivningar
+       hade gett två notiser, och den första — utan skäl — hade redan
+       hunnit bli ett mejl. */
+    const skäl = await NXStudie.avbokaRuta({
       titel: 'Avboka passet?',
-      text: 'Er studiehjälpare ser att passet är avbokat. Vill ni hellre byta tid, välj Flytta i stället.',
-      knapp: 'Avboka'
+      text: 'Vill ni hellre byta tid, välj Flytta i stället — då ligger passet kvar tills er studiehjälpare svarat.',
+      not: 'Er studiehjälpare får ett mejl om att passet är avbokat och varför.'
     });
-    if (!ja) return;
+    if (!skäl) return;
     btn.setAttribute('aria-busy', 'true');
-    const { error } = await supa.from('bookings').update({ status: 'cancelled' }).eq('id', btn.dataset.avboka);
+    const { error } = await supa.from('bookings').update({ status: 'cancelled', avbokningsskal: skäl })
+      .eq('id', btn.dataset.avboka);
     btn.removeAttribute('aria-busy');
     if (error) { alert('Kunde inte avboka: ' + felText(error)); return; }
     await laddaPass();
@@ -956,14 +1168,11 @@
     const b = S.bokningar.find(x => x.id === k.dataset.flytta);
     if (!b) return;
 
-    const [upptagna, tider] = await Promise.all([
-      NX.hämtaUpptagna(S.profil.matched_tutor_id),
-      NX.hämtaTillganglighet(S.profil.matched_tutor_id)
-    ]);
+    const upptagna = await NX.hämtaUpptagna(S.profil.matched_tutor_id);
 
     const ny = await NXStudie.flyttaRuta({
       datum: b.wanted_date, tid: b.wanted_time,
-      tillgang: tider.tillgang, upptagna,
+      upptagna,
       minuter: b.duration_min || 60
     });
     if (!ny) return;
@@ -987,14 +1196,11 @@
   /* ============================================================
      BOKNINGEN
 
-     Ytan är en skärm: ämne, längd och format som knappar överst,
-     studiehjälparens vecka under, och en rad längst ned med pris och
-     knapp. Det som togs bort på vägen hit var först tre rullgardiner
-     och en månadskalender, sedan fyra numrerade steg — båda gjorde
-     samma sak fel, de gömde veckan bakom något annat.
-
-     Själva ritandet ligger i NXArbete.bokning. Det här är kopplingen
-     till databasen: vad som hämtas, och vad som skrivs.
+     Ett FÖRSLAG, inte en bokning. Familjen väljer dag, ämne, tid och
+     antal barn; studiehjälparen accepterar eller föreslår en annan
+     tid. Ytan ritas av NXArbete.bokning (femte omgången, se där).
+     Det här är kopplingen till databasen: vad som hämtas, och vad
+     som skrivs.
      ============================================================ */
   const BOKA_AMNEN = ['Matematik', 'Svenska', 'Engelska',
     'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap', 'Annat'];
@@ -1003,41 +1209,29 @@
     host: $('#boka-inner'),
     amnen: BOKA_AMNEN,
     pris: NX.CFG.PRIS_PER_TIMME || 379,
-    /* Vilken tjänst bokningen gäller. Styr priset, tillägget för
-       flera barn och vilka rabattkoder som får användas. En funktion,
-       inte ett värde: bokningen skapas innan katalogen laddats. */
+    /* Vilken tjänst förslaget gäller. Styr priset och tillägget för
+       flera barn. En funktion, inte ett värde: ytan skapas innan
+       katalogen laddats. */
     tjanst: () => NXTjanster.standard(),
 
-    /* Två spärrar som förr yttrade sig som en avstängd knapp utan
-       förklaring. Nu står skälet där tiderna skulle ha stått. */
+    /* Spärren förr yttrade sig som en avstängd knapp utan
+       förklaring. Nu står skälet där kalendern skulle ha stått. */
     ladda: async () => {
       if (!S.valtBarn) {
         return { spärr: NXStudie.tomt('Lägg till ditt barn först',
-          'Bokningen behöver veta vem passet gäller. Barnen läggs till under Profil & inställningar.') };
+          'Förslaget behöver veta vem passet gäller. Barnen läggs till under Profil & inställningar.') };
       }
-      const [upptagna, tider] = await Promise.all([
-        NX.hämtaUpptagna(S.profil.matched_tutor_id),
-        NX.hämtaTillganglighet(S.profil.matched_tutor_id)
-      ]);
+      /* Bara de upptagna timmarna. Studiehjälparens veckoschema läses
+         inte längre: varje timme går att föreslå, och hjälparen
+         svarar. */
+      const upptagna = await NX.hämtaUpptagna(S.profil.matched_tutor_id);
       return {
-        tillgang: tider.tillgang,
         upptagna,
-        /* Inga tider inlagda: då finns ingen kalender, men en önskad
-           tid går fortfarande att skicka — studiehjälparen svarar. */
-        utanTider: '<div class="empty"><b>Er studiehjälpare har inga tider inlagda än</b>'
-          + '<br><span>Önska en tid här nedanför, så bekräftar hen den eller svarar att den inte går. '
-          + 'Ni kan också fråga i chatten när hen kan.</span>'
-          + '<div class="vy-tomt-atg"><a class="btn btn-ghost btn-sm" href="#meddelanden">'
-          + 'Fråga i chatten</a></div></div>',
-        /* Familjens vana: tidigare pass gör att "brukar passa"
-           kan markeras på rätt tider. */
+        /* Familjens vana: förra passets ämne och längd blir förval. */
         tidigare: (S.bokningar || []).filter(b => b.status !== 'cancelled')
       };
     },
 
-    /* Svarar med databasens status: en tid helt inom studiehjälparens
-       schema bekräftas av bekrafta_inom_schemat (Fas 4.4), allt annat
-       är en förfrågan. Ytan säger vilket det blev. */
     boka: async v => {
       const { data, error } = await supa.from('bookings').insert({
         parent_id: S.user.id,
@@ -1047,28 +1241,18 @@
         subject: v.amne,
         tjanst: NXTjanster.standard(),
         antal_barn: v.barn || 1,
-        /* Rabatten räknas OM av triggern skydda_rabatt i databasen.
-           Talet härifrån är ett förslag, inte ett facit — en
-           manipulerad webbläsare kan skicka vad som helst, och
-           servern sätter ner det till vad koden faktiskt ger. */
-        rabattkod: v.kod || null,
-        rabatt_ore: v.rabattOre || null,
-        format: v.format,
-        location: v.plats || null,
         wanted_date: v.datum,
         wanted_time: v.tid,
         duration_min: v.minuter,
-        /* Meddelandet som följer med ett önskemål om en annan tid. */
-        note: v.not || null,
         status: 'requested'
       }).select('status').single();
       if (error) {
-        /* 23505 = samma starttid, 23P01 = passet krockar med ett
-           annat som redan pågår. Samma sak för den som bokar. */
+        /* 23505 = samma starttid, 23P01 = passet krockar med ett annat
+           som redan ligger där. Samma sak för den som föreslår. */
         if (error.code === '23505' || error.code === '23P01') {
-          return 'Den tiden hann bli bokad, eller krockar med ett annat pass. Tiderna nedan är uppdaterade — välj en annan.';
+          return 'Den tiden hann bli bokad, eller krockar med ett annat pass. Kalendern är uppdaterad — välj en annan tid.';
         }
-        return 'Kunde inte boka: ' + felText(error);
+        return 'Kunde inte skicka förslaget: ' + felText(error);
       }
       await laddaPass();
       return { status: data ? data.status : null };
@@ -1102,9 +1286,10 @@
 
   function ritaNästaPass() {
     const idag = isoFor(new Date());
-    const aktiva = S.bokningar.filter(b => b.status !== 'cancelled');
-    const kommande = aktiva.filter(b => b.wanted_date >= idag &&
-      (b.status === 'requested' || b.status === 'confirmed'));
+    /* Bara bekräftade. Ett förslag som väntar på svar står på
+       Översikt och under Mina lektioner, men är inget "nästa pass"
+       förrän studiehjälparen accepterat det. */
+    const kommande = S.bokningar.filter(b => b.wanted_date >= idag && b.status === 'confirmed');
 
     /* Kommande pass räknas här, men visas av ritaStatistik. Den här
        funktionen körs varje gång bokningarna ändras, statistiken
@@ -1259,11 +1444,19 @@
     ['bra', 'Bra', 'ar-mitten'],
     ['folja_upp', 'Behöver följas upp', 'ar-folj']
   ];
+  /* Tre grupper av de fem stegen. Fem färger i en stapel går inte att
+     läsa av på en halv sekund, och frågan på Översikt är "hur mycket
+     sitter", inte exakt var varje område ligger — det står under Min
+     utveckling. */
   const NIVA_LAGEN = [
-    ['bra', 'Sitter', 'ar-bra'],
-    ['pa_god_vag', 'På god väg', 'ar-mitten'],
-    ['behover_trana', 'Behöver träna', 'ar-folj']
+    ['saker', 'Säker eller bättre', 'ar-bra'],
+    ['god', 'På god väg', 'ar-mitten'],
+    ['trana', 'Behöver träna', 'ar-folj']
   ];
+  const nivåGrupp = p => {
+    const st = NXStudie.stegFör(p);
+    return st >= 4 ? 'saker' : st === 3 ? 'god' : 'trana';
+  };
 
   function ritaFordelningar() {
     const rapporter = S.rapporter || [];
@@ -1291,7 +1484,7 @@
       host: $('#stat-niva'),
       lagen: NIVA_LAGEN,
       rader: progress,
-      av: p => p.level,
+      av: nivåGrupp,
       tom: 'Inga områden än. Er studiehjälpare fyller i dem efter några pass.'
     });
   }
@@ -1405,6 +1598,32 @@
     if ($('#view-loading') && !$('#view-loading').hidden) visaFel(e.reason, 'vyn skulle hämtas');
   });
 
+  /* Pris & villkor läser tjänsteraden — samma rad bokningen räknar
+     på och faktureringen tar betalt efter. Talen i markupen syns bara
+     innan katalogen laddats. Ören blir kronor i NXBetalning.kronor,
+     och bara där.
+
+     "Första timmen gratis" står INTE här, med flit. Kampanjen finns
+     inte i prislogiken: varken månadsfakturan eller kortbetalningen
+     drar av någon timme. Att lova den på sidan som visar priset hade
+     gjort den till ett villkor vi sedan fakturerar i strid mot. Den
+     läggs till här i samma ändring som den byggs in i prisräkningen. */
+  function ritaPris() {
+    const t = NXTjanster.hitta(NXTjanster.standard());
+    if (!t) return;
+    const kronor = NXBetalning.kronor;
+    if (t.pris_per_timme_ore) $$('[data-pris]').forEach(el => { el.textContent = kronor(t.pris_per_timme_ore); });
+    const extra = t.extra_personer_max > 1 && Number(t.extra_personer_ore) > 0;
+    $$('[data-pris-extra]').forEach(el => {
+      el.closest('.sum-line').hidden = !extra;
+      if (extra) el.textContent = '+' + kronor(t.extra_personer_ore) + ' per timme';
+    });
+    if (extra) $$('[data-pris-extra-et]').forEach(el => {
+      el.textContent = 'Syskon på samma pass, upp till ' + t.extra_personer_max + ' barn';
+    });
+    $$('[data-pris-extra-not]').forEach(el => { el.hidden = !extra; });
+  }
+
   /* ============ start ============ */
   async function start() {
    try {
@@ -1439,6 +1658,7 @@
        rad, och passlistan märker ut den när fler än en tjänst är
        aktiv — båda behöver katalogen innan de ritar något. */
     await NXTjanster.ladda();
+    ritaPris();
 
     /* Flikarna först. Sidomenyn ropar på dem när den byter sektion,
        och en flikrad som inte finns än hade svalt det anropet. */
@@ -1515,6 +1735,7 @@
     $('#k-namn').value = S.profil.full_name || '';
     $('#k-tel').value = S.profil.phone || '';
     $('#k-bio').value = S.profil.bio || '';
+    $('#k-epost').textContent = S.profil.email || S.user.email || '';
     ritaKontoAvatar();
     ritaHeader();
 

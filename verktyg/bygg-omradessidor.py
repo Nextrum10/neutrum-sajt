@@ -293,9 +293,10 @@ OMRADEN = [
              'Hammarbyhöjden strax intill. Om passet sker hemma hos er eller online avgörs av '
              'matchningen.'),
             ('Hur sent på kvällen går det att boka?',
-             'Ni bokar inom studiehjälparens egna tider, och de tiderna sätter hen själv. '
-             'Eftersom studiehjälparna är gymnasie- och högskolestudenter ligger de flesta '
-             'tiderna på eftermiddagar och kvällar.'),
+             'Ni föreslår en tid mellan sju på morgonen och tio på kvällen, och '
+             'studiehjälparen accepterar den eller föreslår en annan. Eftersom '
+             'studiehjälparna är gymnasie- och högskolestudenter blir det oftast '
+             'eftermiddagar och kvällar.'),
             ('Hur vet vi vad som hände på passet?',
              'Studiehjälparen skriver en rapport efteråt: vad ni gick igenom, hur det gick och '
              'vad som är nästa steg. Ett pass räknas som genomfört först när rapporten är '
@@ -400,6 +401,12 @@ OMRADEN = [
 # </body> är footern, inloggningsrutan och skriptraderna. Båda läses
 # ur var-ide.html så att de sju sidorna aldrig kan hamna ur fas med
 # resten av sajten utan att någon märker det.
+#
+# Ikonlänkarna i <head> läses därifrån av samma skäl. De stod förut
+# inskrivna i head() nedan, så när verktyg/satt-logga.py lade till
+# PNG-ikonerna på alla sidor tog nästa körning av det här skriptet
+# bort dem från områdessidorna igen — tyst, för ingen kontroll tittar
+# på vilka ikoner en sida har.
 # ============================================================
 
 def skal():
@@ -407,6 +414,18 @@ def skal():
     huvud = s[s.index('<body>') + len('<body>'):s.index('<main id="innehall">')]
     fot = s[s.index('</main>') + len('</main>'):s.index('</body>')]
     return huvud, fot
+
+
+def ikoner():
+    """Blocket från favicon.svg till mask-icon, precis som det står i skalet."""
+    s = open(SKAL, encoding='utf-8').read()
+    m = re.search(r'<link rel="icon" href="/favicon\.svg"[^\n]*\n'
+                  r'(?:<link rel="(?:icon|apple-touch-icon)"[^\n]*\n)*'
+                  r'<link rel="mask-icon"[^\n]*\n', s)
+    if not m:
+        # Hellre inget bygge än sju sidor utan ikon.
+        sys.exit(f'hittar inte ikonlänkarna i {SKAL}')
+    return m.group(0)
 
 
 def sprakvaxlare(huvud, slug):
@@ -509,9 +528,7 @@ def head(o):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
-
+{ikoner()}
 <title>{esc(o['titel'])}</title>
 <meta name="description" content="{esc(o['beskrivning'])}">
 <link rel="canonical" href="https://nextrum.se/{o['slug']}">

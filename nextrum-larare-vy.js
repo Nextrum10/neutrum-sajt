@@ -21,7 +21,7 @@
     familjer: [], aktivFamilj: null,
     elever: [], aktivElev: null,
     bokningar: [], trad: null, kal: null, olästa: {},
-    minAvatar: null, tillgang: [], blockerade: [],
+    minAvatar: null,
     laxor: [], laxFilter: 'attgora', laxräkning: {}, minaRapporter: [], avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
     senaste: {}
   };
@@ -110,7 +110,7 @@
   async function laddaElever() {
     const { data, error } = await supa
       .from('students')
-      .select('id, name, grade, school, goals, subjects, parent_id')
+      .select('id, name, grade, school, goals, subjects, about, behov, format_onskemal, parent_id')
       .order('created_at');
     if (error) { console.warn(error.message); return; }
     S.elever = data || [];
@@ -161,7 +161,7 @@
   function nästaPassFör(elevId) {
     const idag = isoFor(new Date());
     return (S.bokningar || [])
-      .filter(b => b.student_id === elevId && b.wanted_date >= idag && b.status !== 'cancelled')
+      .filter(b => b.student_id === elevId && b.wanted_date >= idag && b.status === 'confirmed')
       .sort((a, b) => (a.wanted_date + (a.wanted_time || ''))
         .localeCompare(b.wanted_date + (b.wanted_time || '')))[0] || null;
   }
@@ -252,7 +252,7 @@
           ? '<b>' + esc(datumText(b.wanted_date)
               + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '')) + '</b>'
             + '<span>' + esc(b.subject || 'Nästa pass') + '</span>'
-          : '<b>Inget pass inbokat</b><span>Familjen bokar på dina tider</span>')
+          : '<b>Inget pass inbokat</b><span>Familjen föreslår en tid, du accepterar</span>')
       + '</div></div>'
       + (bitar ? '<div class="tutor-meta ep-taggar">' + bitar + '</div>' : '')
       + (e.goals ? '<p class="small ep-mal"><b>Mål:</b> ' + esc(e.goals) + '</p>' : '')
@@ -262,36 +262,6 @@
       + '</div>'
       + '</div>';
   }
-
-  function fyllElevFormulär() {
-    const e = elev();
-    $('#e-arskurs').value = (e && e.grade) || '';
-    $('#e-skola').value = (e && e.school) || '';
-    $('#e-amnen').value = ((e && e.subjects) || []).join(', ');
-    $('#e-mal').value = (e && e.goals) || '';
-    ['#e-arskurs', '#e-skola', '#e-amnen', '#e-mal'].forEach(id => { $(id).disabled = !e; });
-  }
-
-  $('#elev-form').addEventListener('submit', async ev => {
-    ev.preventDefault();
-    const msg = $('#e-msg');
-    rensa(msg);
-    if (!S.aktivElev) { säg(msg, 'Välj en elev först.', false); return; }
-
-    await medan(ev.submitter, 'Sparar…', async () => {
-      const { error } = await supa.from('students').update({
-        grade: $('#e-arskurs').value.trim() || null,
-        school: $('#e-skola').value.trim() || null,
-        subjects: $('#e-amnen').value.split(',').map(s => s.trim()).filter(Boolean),
-        goals: $('#e-mal').value.trim() || null
-      }).eq('id', S.aktivElev);
-
-      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
-      säg(msg, '✓ Sparat. Familjen ser uppgifterna i sin vy.', true);
-      await laddaElever();
-      ritaElevProfil();
-    });
-  });
 
   /* ============ byte av familj eller elev ============ */
   document.addEventListener('click', async e => {
@@ -445,8 +415,6 @@
   async function byggElev() {
     ritaElevProfil();
     ritaElevLista();
-    ritaElevOversikt();
-    fyllElevFormulär();
     fyllPassVal();
     fyllÄmnesval();
     /* Biblioteket hör inte till eleven — det är samma bank oavsett
@@ -604,7 +572,6 @@
     $('#lax-antal').textContent = öppna ? öppna + ' öppna' : 'alla klara';
     laxRakning();
     ritaElevLista();
-    ritaElevOversikt();
     ritaLaxFilter();
 
     const urval = NXStudie.läxUrval(data, S.laxFilter);
@@ -661,6 +628,33 @@
   /* ============================================================
      KUNSKAPSOMRÅDEN
      ============================================================ */
+  /* ---------- kunskapsområdena ----------
+     Nivån väljs som fem knappar, inte i en rullgardin: förklaringen
+     till varje steg står under, och ett val man ser alla alternativ
+     till blir ett mer genomtänkt val. Målet är valfritt. */
+  const pg = { steg: 3, mal: null };
+
+  function ritaPgVal() {
+    väljChip($('#pg-steg'), String(pg.steg));
+    väljChip($('#pg-mal'), pg.mal ? String(pg.mal) : '');
+    const vad = (NXStudie.STEG[pg.steg] || {}).vad;
+    $('#pg-steg-vad').textContent = vad ? NXStudie.stegText(pg.steg) + ' — ' + vad.toLowerCase() + '.' : '';
+  }
+
+  $('#pg-steg').addEventListener('click', e => {
+    const b = e.target.closest('[data-v]');
+    if (!b) return;
+    pg.steg = Number(b.dataset.v) || 3;
+    ritaPgVal();
+  });
+  $('#pg-mal').addEventListener('click', e => {
+    const b = e.target.closest('[data-v]');
+    if (!b) return;
+    pg.mal = b.dataset.v ? Number(b.dataset.v) : null;
+    ritaPgVal();
+  });
+  ritaPgVal();
+
   $('#prg-form').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#pg-msg');
@@ -677,13 +671,17 @@
 
     await medan($('#pg-spara'), 'Sparar…', async () => {
       /* upsert på (elev, ämne, område): samma område igen flyttar
-         nivån i stället för att lägga till en dubblett. */
+         nivån i stället för att lägga till en dubblett — och
+         databasen sparar den gamla nivån i progress_historik, så att
+         flytten syns som utveckling och inte bara som ett nytt läge.
+         level sätts av databasen ur steg. */
       const { error } = await supa.from('progress_items').upsert({
         student_id: S.aktivElev,
         tutor_id: S.user.id,
         subject: ämne,
         area: område,
-        level: $('#pg-niva').value,
+        steg: pg.steg,
+        mal_steg: pg.mal,
         comment: $('#pg-kommentar').value.trim() || null,
         updated_at: new Date().toISOString()
       }, { onConflict: 'student_id,subject,area' });
@@ -692,58 +690,99 @@
       säg(msg, '✓ Sparat. Familjen ser utvecklingen direkt.', true);
       $('#pg-omrade').value = '';
       $('#pg-kommentar').value = '';
+      pg.mal = null;
+      ritaPgVal();
       await laddaProgress();
     });
   });
 
+  /* Förslagen i fälten: elevens egna ämnen och de områden som redan
+     finns. Ett område som stavas på två sätt blir två områden, och då
+     ser eleven ut att börja om på noll. */
+  function fyllPgFörslag(rader) {
+    const e = elev();
+    const ämnen = Array.from(new Set([...((e && e.subjects) || []), ...rader.map(p => p.subject)]));
+    const områden = Array.from(new Set(rader.map(p => p.area)));
+    $('#pg-amnen').innerHTML = ämnen.map(a => '<option value="' + esc(a) + '">').join('');
+    $('#pg-omraden').innerHTML = områden.map(a => '<option value="' + esc(a) + '">').join('');
+  }
+
   async function laddaProgress() {
     const host = $('#prg-lista');
     $('#prg-antal').textContent = '';
+    $('#prg-sammanfattning').innerHTML = '';
     if (!S.aktivElev) {
       S.progress = [];
+      S.historik = {};
       S.progressAntal = 0;
       ritaTidigareOmraden();
+      fyllPgFörslag([]);
       host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp.');
       return;
     }
 
     host.innerHTML = laddar();
-    const { data, error } = await supa
-      .from('progress_items').select('id, subject, area, level, comment')
-      .eq('student_id', S.aktivElev)
-      .order('subject').order('area');
+    const [svar, hist] = await Promise.all([
+      supa.from('progress_items').select('id, subject, area, level, steg, mal_steg, comment, updated_at')
+        .eq('student_id', S.aktivElev).order('subject').order('area'),
+      supa.from('progress_historik').select('progress_id, steg, bedomd_at')
+        .eq('student_id', S.aktivElev).order('bedomd_at')
+    ]);
+    const { data, error } = svar;
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta områdena', felText(error)); return; }
+
+    /* Historiken är ett tillägg, inte en förutsättning: faller den
+       frågan visas läget ändå, bara utan staplarna. */
+    S.historik = {};
+    if (!hist.error) (hist.data || []).forEach(h => {
+      (S.historik[h.progress_id] = S.historik[h.progress_id] || []).push(h);
+    });
 
     /* samma rader används av chipsen i rapporten, så de sparas undan
        i stället för att hämtas en gång till */
     S.progress = data;
     ritaTidigareOmraden();
+    fyllPgFörslag(data);
 
+    S.progressAntal = data.length;
+    await laddaOmrådesräkning();
     if (!data.length) {
-      S.progressAntal = 0;
       host.innerHTML = tomt('Inga områden än', 'Lägg till det första ovanför — det är så familjen ser att det går framåt.');
-      ritaElevOversikt();
       return;
     }
-    S.progressAntal = data.length;
-    ritaElevOversikt();
     $('#prg-antal').textContent = data.length + ' st';
+    $('#prg-sammanfattning').innerHTML = NXStudie.ämnesSammanfattning(data, S.historik);
     host.innerHTML = NXStudie.progressPerÄmne(data, {
-      atgarder: null
-    }).replace(/<div class="prg">/g, '<div class="prg">');
-
-    /* borttagningsknappar läggs på efteråt så att progressPerÄmne
-       kan hållas fri från vy-specifika knappar */
-    $$('#prg-lista .prg').forEach((rad, i) => {
-      const p = data[i];
-      if (!p) return;
-      const atg = document.createElement('div');
-      atg.className = 'prg-atg';
-      atg.innerHTML = '<button class="btn btn-ghost btn-sm" data-prg-bort="' + p.id + '">Ta bort</button>';
-      rad.appendChild(atg);
+      historik: p => NXStudie.historikRad(S.historik[p.id]),
+      /* Knapparna bär radens id. Förr fästes de efter position, och
+         sorterade databasen och sidan ämnena olika tog Ta bort fel
+         område. */
+      atgarder: p => '<button class="btn btn-ghost btn-sm" type="button" data-prg-bedom="' + esc(p.id) + '">Bedöm igen</button>'
+        + '<button class="btn btn-ghost btn-sm" type="button" data-prg-bort="' + esc(p.id) + '">Ta bort</button>'
     });
   }
+
+  /* Bedöm igen: formuläret fylls med områdets läge, och sparas det
+     blir det en ny punkt i historiken. Formuläret tas fram bara så
+     mycket som behövs — "nearest" flyttar sidan inte alls om det
+     redan syns. */
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-prg-bedom]');
+    if (!k) return;
+    const p = (S.progress || []).find(x => x.id === k.dataset.prgBedom);
+    if (!p) return;
+    $('#pg-amne').value = p.subject || '';
+    $('#pg-omrade').value = p.area || '';
+    $('#pg-kommentar').value = p.comment || '';
+    pg.steg = NXStudie.stegFör(p);
+    pg.mal = NXStudie.målFör(p);
+    ritaPgVal();
+    rensa($('#pg-msg'));
+    $('#prg-form').scrollIntoView({ block: 'nearest' });
+    const vald = $('#pg-steg [aria-pressed="true"]');
+    if (vald) vald.focus({ preventScroll: true });
+  });
 
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-prg-bort]');
@@ -799,215 +838,87 @@
   }
 
   /* ============================================================
-     DINA TIDER
+     FÖRESLAGNA TIDER
 
-     En kalender, som Leo bad om 2026-09-18: tryck på en dag, och tryck
-     sedan på timmarna du kan. Tiderna sparas direkt.
+     Dina tider — veckoschemat — togs bort 2026-09-24. Familjen
+     föreslår vilken tid som helst; du accepterar, eller föreslår en
+     annan som familjen i sin tur får bekräfta. Båda stegen fanns
+     redan i databasen: skydda_bokningsfalt släpper igenom requested →
+     confirmed från motparten, och en flytt från dig som blir
+     requested med dig som created_by. Det som saknades var en plats
+     där förslagen stod för sig, i stället för blandade med passen.
 
-     tutor_availability är VECKOVIS — en rad säger "torsdagar 16–19",
-     inte "torsdagen den 24 september". Därför gäller en timme man
-     markerar samma veckodag varje vecka, och det står rakt ut ovanför
-     timmarna. Dagar med tider har en prick i kalendern.
+     Ett förslag är inget pass än, och står därför INTE i Pass &
+     rapport förrän det accepterats. Undantaget är ett förslag vars
+     tid redan passerat: har passet hållits är det verkligheten som
+     gäller, inte klicket, och där skrivs rapporten. Se ärFörslag().
 
-     Det här är de tider familjen kan boka direkt: en bokning som
-     ligger helt inom dem bekräftas av databasen (Fas 4.4). Andra tider
-     kan familjen önska, och då bekräftar eller avböjer du i passlistan.
-
-     Borttaget samma dag, på Leos begäran:
-       · "Dagar du inte kan" — undantag per datum
-       · "Föreslå en tid till en familj" — tider stäms av i chatten
+     Motförslaget går genom samma [data-flytta]-hanterare som en
+     vanlig flytt — samma skrivning, bara andra ord i rutan. Två vägar
+     till samma rad hade varit två vägar som kan glida isär.
      ============================================================ */
-  const DAGNAMN = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag', 'Söndag'];
-  const tvåsiff = n => String(n).padStart(2, '0');
-  const veckodagFör = iso => (new Date(iso + 'T12:00:00').getDay() + 6) % 7;
-  /* Timmarna man kan markera. Samma spann som familjen kan önska. */
-  const TID_FRÅN = 7, TID_TILL = 21;
+  function ärFörslag(b) { return b.status === 'requested' && !harBörjat(b); }
 
-  S.tidKal = { manad: null, dag: null };
+  function förslagRad(b, vem, knappar) {
+    const e = S.elever.find(x => x.id === b.student_id);
+    const familj = S.familjer.find(f => f.id === b.parent_id);
+    const timmar = Math.max(1, Math.round((b.duration_min || 60) / 60));
+    const under = [timmar === 1 ? '1 timme' : timmar + ' timmar',
+      b.antal_barn > 1 ? b.antal_barn + ' barn' : null,
+      e ? e.name : (familj ? familj.full_name : null)].filter(Boolean).join(' · ');
+    return NXKontakt.passRad(b, { under, vem, atgarder: knappar })
+      + (b.note ? '<p class="xsmall" style="margin:-6px 0 12px 82px;color:var(--muted)">' + esc(b.note) + '</p>' : '');
+  }
 
-  /* Raderna för en veckodag tillbaka till lösa timmar. En rad
-     16:00–20:00 är fyra timmar; halvtimmar rundas upp, för hela
-     systemet bokar i hela timmar och en 16:30-ruta vore ett löfte
-     bokningen inte kan hålla. */
-  function timmarFör(veckodag) {
-    const ut = new Set();
-    (S.tillgang || []).filter(r => r.weekday === veckodag).forEach(r => {
-      const start = Number(String(r.start_time).slice(0, 2));
-      let slut = Number(String(r.end_time).slice(0, 2));
-      if (String(r.end_time).slice(3, 5) !== '00') slut += 1;
-      for (let h = start; h < slut; h++) ut.add(h);
+  function ritaFörslag() {
+    const host = $('#forslag-lista');
+    if (!host) return;
+    const nyckel = b => String(b.wanted_date || '') + String(b.wanted_time || '');
+    const förslag = (S.bokningar || []).filter(ärFörslag).sort((a, c) => nyckel(a).localeCompare(nyckel(c)));
+    const tillDig = förslag.filter(b => b.created_by !== S.user.id);
+    const dina = förslag.filter(b => b.created_by === S.user.id);
+
+    $('#forslag-antal').textContent = tillDig.length ? tillDig.length + ' st' : '';
+    host.innerHTML = tillDig.length
+      ? tillDig.map(b => förslagRad(b, 'Familjen föreslog den här tiden',
+          '<button type="button" class="btn btn-primary btn-sm" data-acceptera="' + esc(b.id) + '">Acceptera</button>'
+          + '<button type="button" class="btn btn-ghost btn-sm" data-flytta="' + esc(b.id) + '" data-motforslag="1">Föreslå annan tid</button>'
+        )).join('')
+      : tomt('Inga förslag som väntar', 'När en familj föreslår en tid står den här, och du får en notis.');
+
+    const box = $('#forslag-vantar-box');
+    if (box) {
+      box.hidden = !dina.length;
+      $('#forslag-vantar-antal').textContent = dina.length ? dina.length + ' st' : '';
+      $('#forslag-vantar').innerHTML = dina.map(b => förslagRad(b, 'Ditt förslag — familjen svarar',
+        '<button type="button" class="btn btn-ghost btn-sm" data-flytta="' + esc(b.id) + '" data-motforslag="1">Ändra tiden</button>'
+      )).join('');
+    }
+
+    /* Siffran i menyn är det enda som syns från andra sektioner. Den
+       räknar bara det som är din tur — dina egna motförslag väntar på
+       någon annan. */
+    if (S.sido) S.sido.märke('tider', tillDig.length);
+  }
+
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-acceptera]');
+    if (!k) return;
+    await medan(k, 'Accepterar…', async () => {
+      const { error } = await supa.from('bookings').update({ status: 'confirmed' }).eq('id', k.dataset.acceptera);
+      if (error) { alert('Kunde inte acceptera: ' + felText(error)); return; }
+      await laddaPass();
+      fyllPassVal();
+      await laddaUpptagna();
     });
-    return ut;
-  }
-
-  /* Och tillbaka igen. En sammanhängande följd timmar är ETT fönster
-     — annars hade "16 till 20" blivit fyra rader i tabellen, och en
-     tvåtimmarsbokning 17–19 hade inte rymts i något av dem. */
-  function tillRader(veckodag, timmar) {
-    const h = Array.from(timmar).sort((a, b) => a - b);
-    const ut = [];
-    let i = 0;
-    while (i < h.length) {
-      const start = h[i];
-      let slut = start + 1;
-      while (i + 1 < h.length && h[i + 1] === slut) { slut++; i++; }
-      ut.push({ weekday: veckodag, start_time: tvåsiff(start) + ':00:00', end_time: tvåsiff(slut) + ':00:00' });
-      i++;
-    }
-    return ut;
-  }
-
-  /* Skrivningen är en diff, inte en radera-allt-och-lägg-in-igen.
-     Skulle en insert misslyckas efter en delete hade studiehjälparen
-     stått utan tider på en hel veckodag utan att ha bett om det.
-     Borttag först ändå: annars kan en ändrad rad krocka med sig själv
-     i unique-indexet medan båda versionerna ligger inne. */
-  async function skrivVeckodag(veckodag, timmar) {
-    const nyckel = r => r.weekday + '|' + String(r.start_time).slice(0, 8) + '|' + String(r.end_time).slice(0, 8);
-    const gamla = (S.tillgang || []).filter(r => r.weekday === veckodag);
-    const nya = tillRader(veckodag, timmar);
-    const gamlaN = new Set(gamla.map(nyckel));
-    const nyaN = new Set(nya.map(nyckel));
-
-    for (const r of gamla.filter(r => !nyaN.has(nyckel(r)))) {
-      const { error } = await supa.from('tutor_availability').delete()
-        .eq('tutor_id', S.user.id).eq('weekday', r.weekday)
-        .eq('start_time', r.start_time).eq('end_time', r.end_time);
-      if (error) return 'Kunde inte ändra tiden: ' + felText(error);
-    }
-    const lägga = nya.filter(r => !gamlaN.has(nyckel(r)));
-    if (lägga.length) {
-      const { error } = await supa.from('tutor_availability')
-        .insert(lägga.map(r => ({ tutor_id: S.user.id, ...r })));
-      if (error) return 'Kunde inte spara tiden: ' + felText(error);
-    }
-    return null;
-  }
-
-  /* Timmar som tryckts men inte hunnit skrivas, per veckodag. Två
-     snabba tryck på samma dag får inte räkna från samma gamla rader —
-     då skrev det andra över det första, och 16 + 17 blev två
-     entimmesfönster i stället för ett. Knapparna visar det man
-     tryckt, och skrivningarna går en i taget i tidKö. */
-  const tidÖnskat = new Map();
-  let tidKö = Promise.resolve();
-  let tidVäntar = 0;
-  const önskadeTimmar = vd => new Set(tidÖnskat.get(vd) || timmarFör(vd));
-
-  function ritaTider() {
-    const kal = $('#tid-kalender'), dagHost = $('#tid-dag');
-    if (!kal || !dagHost) return;
-    const idag = isoFor(new Date());
-    const k = S.tidKal;
-    if (!k.manad) k.manad = NXArbete.månadFör(idag);
-    const medTider = new Set((S.tillgang || []).map(r => r.weekday));
-
-    kal.innerHTML = NXArbete.manad({
-      manad: k.manad,
-      valt: k.dag,
-      prefix: 'tk',
-      minManad: NXArbete.månadFör(idag),
-      prickText: 'du har tider den veckodagen',
-      dag: iso => ({ klickbar: iso >= idag, prick: iso >= idag && medTider.has(veckodagFör(iso)) })
-    });
-
-    if (!k.dag) {
-      dagHost.innerHTML = '<p class="mv-inga">Tryck på en dag i kalendern för att markera när du kan. '
-        + 'Dagar med en prick har redan tider.</p>';
-    } else {
-      const vd = veckodagFör(k.dag);
-      const mina = önskadeTimmar(vd);
-      /* En tid utanför 07–21, från en äldre vy eller från admin, ska
-         synas som en knapp. En tid man inte ser går inte att ta bort. */
-      const från = Math.min(TID_FRÅN, ...mina), till = Math.max(TID_TILL, ...mina);
-      let knappar = '';
-      for (let h = från; h <= till; h++) {
-        knappar += '<button type="button" class="bk-slot tk-tim" data-timme="' + h + '"'
-          + ' aria-pressed="' + (mina.has(h) ? 'true' : 'false') + '">' + tvåsiff(h) + ':00</button>';
-      }
-      dagHost.innerHTML = '<p class="bk-kal-dagnamn">' + esc(DAGNAMN[vd] + ' ' + datumText(k.dag)) + '</p>'
-        + '<p class="tk-hjalp">Tryck på timmarna du kan. De gäller <b>varje ' + esc(DAGNAMN[vd].toLowerCase())
-        + '</b> — du behöver inte spara.</p>'
-        + '<div class="mv-tider tk-timmar" role="group" aria-label="' + esc('Timmar ' + DAGNAMN[vd].toLowerCase() + 'ar') + '">'
-        + knappar + '</div>';
-    }
-
-    const sam = $('#tid-sammanfattning');
-    if (sam) {
-      sam.textContent = (S.tillgang || []).length
-        ? 'Dina tider: ' + (S.tillgang || []).slice()
-            .sort((a, b) => a.weekday - b.weekday || String(a.start_time).localeCompare(String(b.start_time)))
-            .map(r => DAGNAMN[r.weekday].slice(0, 3).toLowerCase() + ' ' + String(r.start_time).slice(0, 5)
-                      + '–' + String(r.end_time).slice(0, 5)).join(' · ')
-        : 'Inga tider inlagda än. Familjen kan fortfarande önska tider, men ingen bokning bekräftas direkt.';
-    }
-  }
-
-  /* En timme av eller på för veckodagen. Knappen svarar direkt, och
-     vyn ritas om från databasen när alla tryck är skrivna. Varje steg
-     i kön skriver det SENASTE man tryckt fram för dagen, mot rader
-     som just hämtats — så blir tre snabba tryck ett fönster. */
-  function växlaTimme(knapp) {
-    const k = S.tidKal;
-    if (!k.dag) return;
-    const vd = veckodagFör(k.dag);
-    const h = Number(knapp.dataset.timme);
-    const timmar = önskadeTimmar(vd);
-    if (timmar.has(h)) timmar.delete(h); else timmar.add(h);
-    tidÖnskat.set(vd, timmar);
-    knapp.setAttribute('aria-pressed', timmar.has(h) ? 'true' : 'false');
-
-    tidVäntar++;
-    tidKö = tidKö
-      .then(async () => {
-        const mål = tidÖnskat.get(vd);
-        if (!mål) return;
-        const fel = await skrivVeckodag(vd, mål);
-        if (fel) { tidÖnskat.delete(vd); alert(fel); }
-        S.tillgang = (await NX.hämtaTillganglighet(S.user.id)).tillgang;
-      })
-      .catch(() => { tidÖnskat.delete(vd); })
-      .then(() => {
-        if (--tidVäntar > 0) return;
-        tidÖnskat.clear();
-        ritaTider();
-      });
-  }
-
-  document.addEventListener('click', e => {
-    const sek = e.target.closest('section[data-sek="tider"]');
-    if (!sek) return;
-
-    const tim = e.target.closest('.tk-tim');
-    if (tim) { växlaTimme(tim); return; }
-
-    const dag = e.target.closest('.mv-dag');
-    if (dag && !dag.disabled) {
-      S.tidKal.dag = S.tidKal.dag === dag.dataset.datum ? null : dag.dataset.datum;
-      ritaTider();
-      return;
-    }
-    if (e.target.closest('#tk-forr') || e.target.closest('#tk-nasta')) {
-      const ny = NXArbete.plusMånader(S.tidKal.manad, e.target.closest('#tk-forr') ? -1 : 1);
-      if (ny < NXArbete.månadFör(isoFor(new Date()))) return;
-      S.tidKal.manad = ny;
-      ritaTider();
-    }
   });
 
   /* ============================================================
      HÄMTNINGARNA
 
-     laddaTider    — veckotiderna ur databasen
      laddaUpptagna — vilka timmar som redan är bokade hos dig, för
                      flytta-rutan
      ============================================================ */
-  async function laddaTider() {
-    const t = await NX.hämtaTillganglighet(S.user.id);
-    S.tillgang = t.tillgang;
-    ritaTider();
-  }
-
   async function laddaUpptagna() {
     S.upptagna = await NX.hämtaUpptagna(S.user.id);
   }
@@ -1030,13 +941,15 @@
       });
     }
 
-    const väntar = (S.bokningar || []).filter(b =>
-      b.status === 'requested' && b.created_by !== S.user.id && !harBörjat(b)).length;
+    /* Samma urval som rutan Väntar på dig i Föreslagna tider — en
+       notis som räknar annorlunda än listan den pekar på är en notis
+       man slutar lita på. */
+    const väntar = (S.bokningar || []).filter(b => ärFörslag(b) && b.created_by !== S.user.id).length;
     if (väntar) {
       poster.push({
-        rubrik: väntar + ' pass att bekräfta',
-        text: 'En familj har önskat en tid som du inte svarat på.',
-        mål: '#pass-lista'
+        rubrik: väntar === 1 ? 'En föreslagen tid' : väntar + ' föreslagna tider',
+        text: 'En familj har föreslagit en tid. Acceptera eller föreslå en annan.',
+        mål: '#forslag-lista'
       });
     }
 
@@ -1060,35 +973,40 @@
     const host = $('#pass-lista');
     const { data, error } = await supa
       .from('bookings')
-      .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, status, attendance, student_id, parent_id, created_by')
+      .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by')
       .eq('tutor_id', S.user.id).order('wanted_date', { ascending: true });
 
     if (error) { host.innerHTML = tomt('Kunde inte hämta passen', felText(error)); return; }
     S.bokningar = data || [];
 
-    const kommande = S.bokningar.filter(b => b.status === 'requested' || b.status === 'confirmed').length;
-    $('#kpi-kommande').textContent = kommande;
-    $('#pass-antal').textContent = S.bokningar.length ? S.bokningar.length + ' st' : '';
+    /* Ett förslag är inget pass än. Här står det som faktiskt blir av
+       — och det som redan hänt. Förslagen står i Föreslagna tider. */
+    const lektioner = S.bokningar.filter(b => !ärFörslag(b));
 
-    /* Siffran på fliken räknar de pass familjen begärt men du inte
-       svarat på än. Det är den enda posten här som är din tur —
-       ett bekräftat pass kräver ingenting förrän det hållits. */
-    märkFlik('#flik-pass-mark', S.bokningar.filter(b => b.status === 'requested').length);
+    const kommande = lektioner.filter(b => b.status === 'confirmed' && !harBörjat(b)).length;
+    $('#kpi-kommande').textContent = kommande;
+    $('#pass-antal').textContent = lektioner.length ? lektioner.length + ' st' : '';
+
+    /* Siffran på fliken räknar pass som har varit men saknar rapport.
+       Förut räknade den förfrågningar, men de står numera i Föreslagna
+       tider — här är rapporten det enda som är din tur. */
+    märkFlik('#flik-pass-mark', lektioner.filter(b => rapporterbart(b) && harBörjat(b)).length);
+    ritaFörslag();
     ritaNästaPass();
     ritaStatistik();
     byggSchema();
 
     ritaNotiser();
 
-    if (!S.bokningar.length) {
-      host.innerHTML = tomt('Inga pass än', 'Familjen bokar på tiderna du markerat under Dina tider.');
+    if (!lektioner.length) {
+      host.innerHTML = tomt('Inga pass än', 'När du accepterat en föreslagen tid står passet här.');
       return;
     }
 
     NXStudie.passLista({
       host: host,
-      bokningar: S.bokningar,
-      tomtKommande: 'Inga kommande pass. Familjen bokar på tiderna du markerat under Dina tider.',
+      bokningar: lektioner,
+      tomtKommande: 'Inga kommande pass. När du accepterat en föreslagen tid står passet här.',
       rad: b => {
       const e = S.elever.find(x => x.id === b.student_id);
       const familj = S.familjer.find(f => f.id === b.parent_id);
@@ -1103,9 +1021,6 @@
       const harVarit = kan && rapporterbart(b) && harBörjat(b);
 
       let knappar = '';
-      if (b.status === 'requested' && !mitt && !harVarit) {
-        knappar += '<button class="btn btn-primary btn-sm" data-status="confirmed" data-id="' + b.id + '">Bekräfta</button>';
-      }
       if (harVarit) {
         knappar += '<button class="btn btn-primary btn-sm" data-rapportera="' + b.id + '">Skriv rapport</button>';
       }
@@ -1302,21 +1217,30 @@
     const btn = e.target.closest('[data-status]');
     if (!btn) return;
 
-    if (btn.dataset.status === 'cancelled') {
-      const ja = await bekräfta(btn.dataset.avboj ? {
+    /* Avböja ett önskemål frågar inte efter skäl — det passet fanns
+       aldrig. Att avboka ett pass gör det, och skälet skrivs i samma
+       uppdatering som statusen: två skrivningar hade blivit två mejl,
+       och det första hade saknat skälet. */
+    const fält = { status: btn.dataset.status };
+    if (btn.dataset.status === 'cancelled' && btn.dataset.avboj) {
+      const ja = await bekräfta({
         titel: 'Avböj önskemålet?',
-        text: 'Familjen ser att tiden inte passade. Skriv gärna i chatten vilka tider som fungerar.',
+        text: 'Familjen ser att tiden inte passade. Passar en annan tid bättre kan du föreslå den i stället för att avböja.',
         knapp: 'Avböj'
-      } : {
-        titel: 'Avboka passet?',
-        text: 'Familjen ser att passet är avbokat. Vill du hellre flytta det, skriv till dem först.',
-        knapp: 'Avboka'
       });
       if (!ja) return;
+    } else if (btn.dataset.status === 'cancelled') {
+      const skäl = await NXStudie.avbokaRuta({
+        titel: 'Avboka passet?',
+        text: 'Vill du hellre byta tid, välj Flytta i stället — då ligger passet kvar tills familjen svarat.',
+        not: 'Familjen får ett mejl om att passet är avbokat och varför, med en länk för att föreslå en ny tid.'
+      });
+      if (!skäl) return;
+      fält.avbokningsskal = skäl;
     }
 
     await medan(btn, '…', async () => {
-      const { error } = await supa.from('bookings').update({ status: btn.dataset.status }).eq('id', btn.dataset.id);
+      const { error } = await supa.from('bookings').update(fält).eq('id', btn.dataset.id);
       if (error) { alert('Kunde inte uppdatera: ' + felText(error)); return; }
       await laddaPass();
       fyllPassVal();
@@ -1331,13 +1255,20 @@
     const b = S.bokningar.find(x => x.id === k.dataset.flytta);
     if (!b) return;
 
-    const ny = await NXStudie.flyttaRuta({
+    /* data-motforslag = knappen i Föreslagna tider. Samma skrivning
+       som en flytt, men det är ett svar på familjens förslag och ska
+       heta så. */
+    const mot = !!k.dataset.motforslag;
+    const ny = await NXStudie.flyttaRuta(Object.assign({
       datum: b.wanted_date,
       tid: b.wanted_time,
-      tillgang: S.tillgang,
       minuter: b.duration_min || 60,
       upptagna: await NX.hämtaUpptagna(S.user.id)
-    });
+    }, mot ? {
+      titel: 'Föreslå en annan tid',
+      fraga: b.created_by === S.user.id ? 'Ditt förslag ligger nu' : 'Familjen föreslog',
+      knapp: 'Föreslå tiden'
+    } : {}));
     if (!ny) return;
 
     await medan(k, 'Flyttar…', async () => {
@@ -1369,7 +1300,8 @@
   /* Valen ligger här i stället för i fyra fritextfält. Ett svar på
      "hur gick det" går att räkna på; fyra stycken löptext gick bara
      att läsa, en rapport i taget. */
-  const rap = { gick: null, amne: null, niva: 'pa_god_vag' };
+  /* steg: kunskapsområdets nivå, 1–5 (NXStudie.STEG). */
+  const rap = { gick: null, amne: null, steg: 3 };
 
   const GICK = { mycket_bra: 'Mycket bra', bra: 'Bra', folja_upp: 'Behöver följas upp' };
 
@@ -1400,8 +1332,8 @@
   $('#r-niva-val').addEventListener('click', e => {
     const b = e.target.closest('[data-v]');
     if (!b) return;
-    rap.niva = b.dataset.v;
-    väljChip($('#r-niva-val'), rap.niva);
+    rap.steg = Number(b.dataset.v) || 3;
+    väljChip($('#r-niva-val'), String(rap.steg));
   });
 
   /* Ämnena kommer från tre håll: dina egna, elevens, och det som
@@ -1460,8 +1392,8 @@
     if (!p) return;
     $('#r-omrade').value = p.area || '';
     if (p.subject) { rap.amne = p.subject; fyllÄmnesval(); }
-    if (p.level) { rap.niva = p.level; }
-    väljChip($('#r-niva-val'), rap.niva);
+    rap.steg = NXStudie.stegFör(p);
+    väljChip($('#r-niva-val'), String(rap.steg));
   });
 
   /* Passet vet oftast vilket ämne det gällde. Det som står i
@@ -1475,9 +1407,9 @@
   function nollställRapport() {
     rap.gick = null;
     rap.amne = null;
-    rap.niva = 'pa_god_vag';
+    rap.steg = 3;
     väljChip($('#r-gick-val'), null);
-    väljChip($('#r-niva-val'), rap.niva);
+    väljChip($('#r-niva-val'), '3');
     fyllÄmnesval();
     $('#r-notes').value = '';
     $('#r-fokus').value = '';
@@ -1552,7 +1484,9 @@
           tutor_id: S.user.id,
           subject: rap.amne,
           area: område,
-          level: rap.niva,
+          /* level sätts av databasen ur steg, så att de två aldrig
+             kan säga olika saker. */
+          steg: rap.steg,
           comment: träna ? 'Behöver träna på: ' + träna : null,
           updated_at: new Date().toISOString()
         }, { onConflict: 'student_id,subject,area' });
@@ -2008,26 +1942,6 @@
     });
   });
 
-  $('#konto-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const msg = $('#k-msg');
-    rensa(msg);
-    const namn = $('#k-namn').value.trim();
-    const fel = kolla([{ fel: !namn, text: 'Vänligen fyll i ditt namn.', falt: $('#k-namn') }]);
-    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
-
-    await medan(e.submitter, 'Sparar…', async () => {
-      const { error } = await supa.from('profiles')
-        .update({ full_name: namn, phone: $('#k-tel').value.trim() || null })
-        .eq('id', S.user.id);
-      if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
-      S.profil.full_name = namn;
-      ritaHeader();
-      ritaKontoAvatar();
-      säg(msg, '✓ Uppgifterna har sparats.', true);
-    });
-  });
-
   $('#losen-form').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#kl-msg');
@@ -2189,11 +2103,27 @@
     });
   }
 
+  /* Min profil och Mitt konto är en ruta sedan 2026-09-24, och en
+     knapp sparar båda halvorna: namn och telefon i profiles, resten i
+     tutor_profiles. Namnet först — utan det är profilen ingenting att
+     visa för en familj. */
   $('#profil-form').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#pr-msg');
     rensa(msg);
+    const namn = $('#k-namn').value.trim();
+    const fel = kolla([{ fel: !namn, text: 'Fyll i ditt namn.', falt: $('#k-namn') }]);
+    if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
+
     await medan(e.submitter, 'Sparar…', async () => {
+      const person = await supa.from('profiles')
+        .update({ full_name: namn, phone: $('#k-tel').value.trim() || null })
+        .eq('id', S.user.id);
+      if (person.error) { säg(msg, 'Kunde inte spara namnet: ' + felText(person.error), false); return; }
+      S.profil.full_name = namn;
+      ritaHeader();
+      ritaKontoAvatar();
+
       const ändring = {
         school: $('#pr-skola').value.trim() || null,
         city: $('#pr-ort').value.trim() || null,
@@ -2234,10 +2164,13 @@
      ============================================================ */
   function kortTid(iso) { return NXStudie.kortTid(iso); }
 
+  /* Bara bekräftade pass. Ett förslag är inget pass förrän det
+     accepterats, och ett "Nästa pass" som sedan inte blir av är värre
+     än inget kort alls. Förslagen har egen sektion. */
   function nästaPass() {
     const idag = isoFor(new Date());
     return S.bokningar
-      .filter(b => (b.status === 'requested' || b.status === 'confirmed') && b.wanted_date >= idag)
+      .filter(b => b.status === 'confirmed' && b.wanted_date >= idag)
       .sort((a, b) => (a.wanted_date + (a.wanted_time || ''))
                         .localeCompare(b.wanted_date + (b.wanted_time || '')))[0] || null;
   }
@@ -2463,6 +2396,54 @@
     });
   }
 
+  /* Kunskapsområdena per elev, för korten. Bara elev och nivå — ett
+     kort behöver antalet och snittet, inte områdenas namn. En fråga
+     för alla elever, inte en per kort. */
+  async function laddaOmrådesräkning() {
+    const { data, error } = await supa.from('progress_items')
+      .select('student_id, level, steg')
+      .eq('tutor_id', S.user.id);
+    if (error) return;
+    const per = {};
+    (data || []).forEach(p => { (per[p.student_id] = per[p.student_id] || []).push(p); });
+    S.områden = per;
+    ritaElevLista();
+  }
+
+  /* ------------------------------------------------------------
+     ELEVKORTEN
+
+     Leo 2026-09-24: på Mina elever ska man bara se sina elever, inte
+     kunna skriva något om dem, och elevens läge ska stå där eleven
+     står. Formuläret "Om eleven" och rutan "Elevens läge" med sina
+     listor över kommande och tidigare pass är därför borta — passen
+     står under Pass & rapport, en flik bort, och två listor över
+     samma pass hinner alltid bli oense.
+
+     Det familjen skrivit om barnet visas, men går inte att ändra
+     härifrån. Det är familjens beskrivning av sitt barn, och den
+     matchningen bygger på.
+
+     Korten är fortfarande knappar: ett tryck väljer eleven, och
+     läxor, rapport och plan gäller sedan den eleven.
+     ------------------------------------------------------------ */
+  function elevSiffror(e) {
+    const idag = isoFor(new Date());
+    const hens = (S.bokningar || []).filter(b => b.student_id === e.id);
+    const områden = (S.områden || {})[e.id] || [];
+    const snitt = områden.length
+      ? områden.reduce((a, p) => a + NXStudie.stegFör(p), 0) / områden.length : null;
+    return {
+      /* Genomfört = rapporterat. completed sätts av rapporten, så det
+         är samma sak här — men ordet är ordlistans. */
+      genomforda: hens.filter(b => b.status === 'completed').length,
+      kommande: hens.filter(b => b.status === 'confirmed' && b.wanted_date >= idag).length,
+      laxor: S.laxräkning[e.id] || 0,
+      områden: områden.length,
+      snitt
+    };
+  }
+
   function ritaElevLista() {
     const host = $('#elev-lista');
     if (!host) return;
@@ -2483,63 +2464,35 @@
       const familj = S.familjer.find(f => f.id === e.parent_id);
       const under = [e.grade, e.school, familj && (familj.full_name || '').split(' ')[0]]
         .filter(Boolean).join(' · ');
-      /* Läxsiffran finns bara för den valda eleven — S.laxor rymmer
-         en elev i taget, och att hämta alla vore en fråga per rad. */
-      const öppna = e.id === S.aktivElev
-        ? (S.laxor || []).filter(h => h.status !== 'klar').length : 0;
-      return '<button type="button" class="elev-kort" data-elev="' + esc(e.id) + '"'
+      const t = elevSiffror(e);
+      const tal = (v, etikett) => '<span class="ek-tal"><b>' + v + '</b><i>' + esc(etikett) + '</i></span>';
+      return '<button type="button" class="elev-kort ek-rik" data-elev="' + esc(e.id) + '"'
         + ' aria-pressed="' + (e.id === S.aktivElev) + '">'
+        + '<span class="ek-topp">'
         + M.avatar(e.name, null, { liten: true })
         + '<span class="elev-kort-text"><b>' + esc(e.name) + '</b>'
         + (under ? '<span>' + esc(under) + '</span>' : '') + '</span>'
-        + (öppna ? '<span class="elev-kort-tal">' + öppna + ' läx'
-                 + (öppna > 1 ? 'or' : 'a') + '</span>' : '')
+        + '</span>'
+        + '<span class="ek-siffror">'
+        + tal(t.genomforda, 'Genomförda')
+        + tal(t.kommande, 'Kommande')
+        + tal(t.laxor, t.laxor === 1 ? 'Öppen läxa' : 'Öppna läxor')
+        + '<span class="ek-tal"><b>' + t.områden + '</b><i>'
+        + esc(t.områden === 1 ? 'Område' : 'Områden') + '</i>'
+        + (t.snitt ? NXStudie.nivåMätare(Math.round(t.snitt)) : '') + '</span>'
+        + '</span>'
+        + ((e.subjects || []).length
+          ? '<span class="ek-amnen">' + e.subjects.map(a => '<span class="tag">' + esc(a) + '</span>').join('') + '</span>'
+          : '')
+        + ((e.behov || []).length
+          ? '<span class="ek-om"><i>Behöver</i>' + esc(e.behov.map(k => (NX.BEHOV.find(x => x.kod === k) || {}).text)
+              .filter(Boolean).join(', ')) + '</span>' : '')
+        + (e.format_onskemal
+          ? '<span class="ek-om"><i>Format</i>' + esc((NX.FORMAT_ONSKEMAL.find(x => x.kod === e.format_onskemal) || {}).text || '') + '</span>' : '')
+        + (e.goals ? '<span class="ek-om"><i>Mål</i>' + esc(e.goals) + '</span>' : '')
+        + (e.about ? '<span class="ek-om"><i>Om ' + esc((e.name || '').split(' ')[0]) + '</i>' + esc(e.about) + '</span>' : '')
         + '</button>';
     }).join('') + '</div>';
-  }
-
-  /* Det man vill veta innan ett pass, samlat: hur många pass som
-     ligger framför, hur många som är gjorda, vad som är olöst. */
-  function ritaElevOversikt() {
-    const host = $('#elev-oversikt');
-    if (!host) return;
-    const e = elev();
-    $('#elev-lage-vem').textContent = e ? (e.name || '').split(' ')[0] : '';
-    if (!e) {
-      host.innerHTML = tomt('Ingen elev vald', 'Välj en elev i listan bredvid.');
-      return;
-    }
-
-    const idag = isoFor(new Date());
-    const hens = S.bokningar.filter(b => b.student_id === e.id);
-    const ordning = b => b.wanted_date + (b.wanted_time || '');
-    const kommande = hens
-      .filter(b => b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed'))
-      .sort((a, b) => ordning(a).localeCompare(ordning(b)));
-    const tidigare = hens
-      .filter(b => b.status === 'completed')
-      .sort((a, b) => ordning(b).localeCompare(ordning(a)));
-    const öppna = (S.laxor || []).filter(h => h.status !== 'klar').length;
-
-    const rad = b => NXKontakt.passRad(b, {
-      under: [b.format, b.location, (b.duration_min || 60) + ' min'].filter(Boolean).join(' · ')
-    });
-
-    host.innerHTML =
-        '<div class="elev-tal">'
-      + '<div><b>' + kommande.length + '</b><span>Kommande pass</span></div>'
-      + '<div><b>' + tidigare.length + '</b><span>Genomförda pass</span></div>'
-      + '<div><b>' + öppna + '</b><span>Öppna läxor</span></div>'
-      + '<div><b>' + (S.progressAntal || 0) + '</b><span>Kunskapsområden</span></div>'
-      + '</div>'
-      + '<p class="elev-rubrik">Kommande</p>'
-      + (kommande.length
-          ? kommande.slice(0, 3).map(rad).join('')
-          : '<div class="empty" style="padding:16px 0">Inga inbokade pass.</div>')
-      + '<p class="elev-rubrik">Tidigare</p>'
-      + (tidigare.length
-          ? tidigare.slice(0, 3).map(rad).join('')
-          : '<div class="empty" style="padding:16px 0">Inga genomförda pass än.</div>');
   }
 
   document.addEventListener('input', e => {
@@ -2817,8 +2770,7 @@
        svalt det anropet. */
     S.flikar = {
       lektioner: NXArbete.flikar($('section[data-sek="lektioner"]')),
-      /* Dina tider står inte här: sektionen är en enda kalender,
-         utan flikar. */
+      /* Föreslagna tider står inte här: sektionen har inga flikar. */
       laxor: NXArbete.flikar($('section[data-sek="laxor"]')),
       statistik: NXArbete.flikar($('section[data-sek="statistik"]')),
       profil: NXArbete.flikar($('section[data-sek="profil"]'))
@@ -2840,7 +2792,9 @@
     /* Elevraden hör bara hemma där innehållet faktiskt gäller en
        vald elev eller familj. På Översikt och kontosidorna är den
        250px brus överst — precis den scrollning menyn ska bort med. */
-    const MED_KONTEXT = ['laxor', 'lektioner', 'tider', 'meddelanden'];
+    /* Föreslagna tider är inte med: förslagen gäller alla familjer,
+       inte den valda eleven. */
+    const MED_KONTEXT = ['laxor', 'lektioner', 'meddelanden'];
     S.sido = NXStudie.sidomeny({
       fall: 'larare',
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
@@ -2860,9 +2814,10 @@
       rapport: ['lektioner', 'pass'],
       material: ['laxor', 'material'],
       ersattning: ['statistik', 'ersattning'],
-      installningar: ['profil', 'konto'],
+      /* Mitt konto är en del av Min profil sedan 2026-09-24. */
+      installningar: ['profil', 'minprofil'],
       /* Vänt håll sedan sektionen bytte namn. Den hette Kalender,
-         heter Dina tider, och #kalender är bokmärkt hos dem som
+         sedan Dina tider, heter Föreslagna tider, och #kalender är bokmärkt hos dem som
          använde den förut — plus att gamla länkar i vyn pekade dit.
          Aliaset får dem att landa rätt i stället för på en tom sida.
          Det som INTE går är att låta båda finnas: ett alias som
@@ -2895,6 +2850,7 @@
     if (S.profil.avatar_url) S.minAvatar = await M.signera('avatarer', S.profil.avatar_url);
     $('#k-namn').value = S.profil.full_name || '';
     $('#k-tel').value = S.profil.phone || '';
+    $('#k-epost').textContent = S.profil.email || S.user.email || '';
     ritaKontoAvatar();
     ritaHeader();
 
@@ -2907,7 +2863,6 @@
     await laddaPass();
     await byggFamilj();
     await byggElev();
-    await laddaTider();
     await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaUpptagna()]);
     ritaNotiser();
     await Promise.all([ritaÖvSamtal(), laddaErsattning()]);

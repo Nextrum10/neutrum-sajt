@@ -272,6 +272,19 @@
       fakta.push(['ar-tom', 'Inga ämnen angivna']);
     }
     if (elev.school) fakta.push(['', elev.school]);
+    /* Det familjen skrev om behov och format när barnet lades till.
+       Poängen räknas inte på dem (matchningspoang() vet inget om
+       dem), men det är precis vad en människa ska läsa innan hon
+       väljer: en elev som behöver motivation och en som vill ha mer
+       utmaning ska inte få samma studiehjälpare för att ämnet stämmer. */
+    (elev.behov || []).forEach(k => {
+      const b = NX.BEHOV.find(x => x.kod === k);
+      if (b) fakta.push(['ar-behov', b.text]);
+    });
+    if (elev.format_onskemal) {
+      const fo = NX.FORMAT_ONSKEMAL.find(x => x.kod === elev.format_onskemal);
+      if (fo) fakta.push(['', fo.text]);
+    }
 
     let ut = '<div class="mt-vald">'
       + M.avatar(elev.name || '?', null, {})
@@ -280,7 +293,9 @@
       + esc(f ? (f.full_name || f.email || '—') : 'okänd') + '</span>'
       + '<span class="mt-vald-fakta">'
       + fakta.map(x => '<span class="mt-fakta ' + x[0] + '">' + esc(x[1]) + '</span>').join('')
-      + '</span></span>'
+      + '</span>'
+      + (elev.about ? '<span class="xsmall mt-vald-om">' + esc(elev.about) + '</span>' : '')
+      + '</span>'
       + (nuvarande
         ? '<button class="btn btn-ghost btn-sm" type="button" data-mt-loss="' + esc(elev.id) + '">Ta bort matchningen</button>'
         : '')
