@@ -53,6 +53,22 @@ jobs:
       - name: Vyerna tål den skarpa CSP:n
         run: python3 verktyg/kolla-csp.py
 
+      # Varje bilder/*.jpg ska ha en .webp bredvid sig. Sidorna
+      # serverar dem genom <picture>, så en saknad webp går inte
+      # sönder — den gör bara den bilden tre gånger tyngre, tyst.
+      - name: Bilderna har sin webp
+        run: python3 verktyg/kolla-webp.py
+
+      # Script- och länktaggarna bär ?v=<innehållssumma>. Utan den
+      # kan en besökare få ny html och gammal javascript i fem
+      # minuter efter varje driftsättning, och då dör sidans skript
+      # på första raden som rör något som tillkommit.
+      #
+      # KÖRS EFTER områdessidorna nedan när båda ändras: generatorn
+      # skriver sina egna script-taggar och tappar stämpeln.
+      - name: Versionsstämplarna är aktuella
+        run: python3 verktyg/satt-version.py --kolla
+
       # Maskotens svar och FAQ-schemat byggs ur sidorna. Står något
       # annat i repot har någon ändrat sidan utan att bygga om.
       - name: Genererade filer är aktuella

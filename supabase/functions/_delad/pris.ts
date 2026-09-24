@@ -54,7 +54,32 @@ export type Pass = {
   har_rapport: boolean;
   fakturerad: boolean;
   pa_underlag: boolean;
+  // Fas 14.0. Valfri i typen med flit: en anropare som inte hämtar
+  // kolumnen ska få samma beteende som förut, inte ett undantag.
+  betalning_status?: string | null;
 };
+
+// Lägen där kortvägen RÖRT passet. Ett sådant pass får inte hamna på
+// familjens månadsfaktura automatiskt:
+//
+//   betald      — pengarna är dragna. En fakturarad är en andra debitering.
+//   vantar      — en checkout-session är öppen. Fakturerar vi nu och
+//                 betalningen landar om en minut har familjen betalat två
+//                 gånger, och ingen av vägarna vet om den andra.
+//   aterbetald  — pengar har gått tillbaka. VARFÖR de gjorde det är ett
+//                 beslut någon tagit, och avbokningspolicyn är inte
+//                 skriven. Att automatiskt fakturera beloppet igen vore
+//                 att riva det beslutet.
+//   tvist       — familjen bestrider. Att skicka en faktura mitt i en
+//                 tvist är det sämsta svaret på den.
+//
+// 'ingen' och 'misslyckad' är inte med: då finns ingen betalning, och
+// passet ska faktureras precis som förut.
+export const KORTVAGEN_HAR_RORT = new Set(['vantar', 'betald', 'aterbetald', 'tvist']);
+
+export function kortvagenRorde(b: Pass): boolean {
+  return KORTVAGEN_HAR_RORT.has(String(b.betalning_status ?? 'ingen'));
+}
 
 export type Rad = {
   booking_id: string;
@@ -155,6 +180,10 @@ export function byggUnderlag(o: {
   const perFamilj = new Map<string, Rad[]>();
   const perTutor = new Map<string, Rad[]>();
   const utanTimpenning: string[] = [];
+  // Pass där kortvägen redan varit inne. De RAPPORTERAS, de försvinner
+  // inte: ett pass som tyst hoppas över är ett pass ingen fakturerar,
+  // och det felet ser likadant ut som att allt gick bra.
+  const kortbetalda: { booking_id: string; parent_id: string; lage: string }[] = [];
   const rutUtanSkatteuppgifter = new Set<string>();
   let rutUtanTak = false;
   const rutKvar = new Map<string, number>();
@@ -164,7 +193,17 @@ export function byggUnderlag(o: {
     const text = radtext(b.subject, b.wanted_date);
     const t = tjanstFor(b.tjanst);
 
-    if (b.parent_id && !b.fakturerad) {
+    // FAMILJENS HALVA. Studiehjälparens ligger nedanför och har med
+    // flit inte samma villkor: hen har hållit passet oavsett hur
+    // familjen betalade, och ersättningen den 25:e ska räknas fram
+    // som vanligt.
+    if (b.parent_id && !b.fakturerad && kortvagenRorde(b)) {
+      kortbetalda.push({
+        booking_id: b.id,
+        parent_id: b.parent_id,
+        lage: String(b.betalning_status ?? 'ingen'),
+      });
+    } else if (b.parent_id && !b.fakturerad) {
       const p = prisFor(t);
       const barn = Math.max(1, Number(b.antal_barn || 1));
       const brutto = familjebelopp(minuter, p.timme || o.timprisOre, p.extra, barn);
@@ -230,6 +269,7 @@ export function byggUnderlag(o: {
     perFamilj,
     perTutor,
     utanTimpenning,
+    kortbetalda,
     rutUtanSkatteuppgifter: [...rutUtanSkatteuppgifter],
     rutUtanTak,
   };
@@ -269,6 +309,7 @@ export function sammanfatta(o: {
     hoppade_over_utan_rapport: o.utanRapport,
     undantagna_pass: o.undantagna.length,
   };
+  if (u.kortbetalda.length) ut.hoppade_over_kortvagen = u.kortbetalda;
   if (u.rutUtanSkatteuppgifter.length) ut.rut_utan_skatteuppgifter = u.rutUtanSkatteuppgifter;
   if (u.rutUtanTak) ut.rut_utan_tak = o.rutAr ?? Number(o.period.slice(0, 4));
   return ut;

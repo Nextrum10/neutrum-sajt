@@ -51,8 +51,18 @@ const NX = (function () {
                       'You need to agree to us storing your details so we can get back to you.'],
     ingenDatabas:    ['Databasen är inte kopplad än.',
                       'The database is not connected yet.'],
-    ingenDatabasForm:['Databasen är inte kopplad än, så anmälan kan inte skickas. Fyll i nextrum-config.js.',
-                      'The database is not connected yet, so the form cannot be sent. Fill in nextrum-config.js.'],
+    /* De två nedan läses av en förälder, inte av den som byggt sajten.
+       Förut stod "Fyll i nextrum-config.js" och "kontrollera att
+       URL:en i nextrum-config.js är rätt" ordagrant på den publika
+       intresseanmälan. En familj som fick det meddelandet hade ingen
+       väg vidare: ingen adress, ingen telefon, ingenting att göra.
+       Anmälan var förlorad, och vi fick aldrig veta att den funnits.
+
+       {oss} och inte {e}: {e} är redan taget av tackIntresse, där det
+       betyder familjens EGEN adress. Två betydelser i samma symbol är
+       ett fel som väntar på att någon läser fel mall. */
+    ingenDatabasForm:['Vi kan inte ta emot formuläret just nu. Mejla oss på {oss} så hör vi av oss.',
+                      'We cannot receive the form right now. Email us at {oss} and we will get back to you.'],
     kundeInteSkicka: ['Kunde inte skicka: ', 'Could not send: '],
     tackAnsokan:     ['Tack för din ansökan. Vi läser alla och hör av oss inom 24 timmar.',
                       'Thank you for your application. We read every one and will be in touch within 24 hours.'],
@@ -72,17 +82,22 @@ const NX = (function () {
                       'The password must be at least 6 characters.'],
     felForManga:     ['För många försök. Vänta en stund och prova igen.',
                       'Too many attempts. Wait a moment and try again.'],
-    felNatverk:      ['Når inte databasen. Kontrollera din internetanslutning, och att URL:en i nextrum-config.js är rätt.',
-                      'Cannot reach the database. Check your internet connection, and that the URL in nextrum-config.js is correct.'],
-    felOkant:        ['Något gick fel.', 'Something went wrong.'],
+    felNatverk:      ['Vi nådde inte servern. Kontrollera uppkopplingen och försök igen, eller mejla oss på {oss}.',
+                      'We could not reach the server. Check your connection and try again, or email us at {oss}.'],
+    felOkant:        ['Något gick fel. Prova igen, eller mejla oss på {oss}.',
+                      'Something went wrong. Please try again, or email us at {oss}.'],
     felEpost:        ['Kontrollera e-postadressen — den ser inte ut som en adress.',
                       'Please check the email address — it does not look like an address.']
   };
+  /* {oss} fylls alltid, utan att anroparen behöver veta om det. Varje
+     mall som slutar i en återvändsgränd ska kunna peka på en adress,
+     och en mall vars enda utväg beror på att alla trettio anropsställen
+     kommer ihåg att skicka med den är ingen utväg. */
   function t(nyckel, vars) {
     const par = ORD[nyckel];
     let ut = par ? par[SPRÅK] : nyckel;
     if (vars) for (const k in vars) ut = ut.replace('{' + k + '}', vars[k]);
-    return ut;
+    return ut.replace('{oss}', CFG.EPOST || 'info@nextrum.se');
   }
 
   const DAGAR = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'];
@@ -209,7 +224,28 @@ const NX = (function () {
     el.classList.remove('show', 'is-err');
   }
 
-  /* ---------- felmeddelanden på svenska ---------- */
+  /* ============================================================
+     FELMEDDELANDEN
+
+     Sista raden var förut `return m`: kände vi inte igen felet skrevs
+     serverns egen text rakt ut. På en inloggad vy är det rätt — den
+     som ser den texten är vi själva, och "new row violates row-level
+     security policy for table bookings" är svaret på frågan.
+
+     På en publik sida är det fel två gånger om. Föräldern förstår den
+     inte, och den beskriver en tabell och en policy för vem som helst
+     som råkar få fram felet. Därför: rå text bara i vyerna
+     (body.vy — admin, larare, foralder), ett begripligt besked på
+     resten. Texten försvinner inte, den flyttar till konsolen och
+     till klientfel.
+
+     Kontrollen görs vid varje anrop och inte en gång vid uppstart:
+     filen laddas i <head> på flera sidor, och då finns ingen body än.
+     ============================================================ */
+  function iVy() {
+    return !!(document.body && document.body.classList.contains('vy'));
+  }
+
   function felText(error) {
     const m = String(error && (error.message || error) || '');
     if (/Invalid login credentials/i.test(m)) return t('felLosen');
@@ -217,8 +253,11 @@ const NX = (function () {
     if (/User already registered/i.test(m)) return t('felFinns');
     if (/Password should be at least/i.test(m)) return t('felKortLosen');
     if (/rate limit|too many/i.test(m)) return t('felForManga');
-    if (/Failed to fetch|NetworkError/i.test(m)) return t('felNatverk');
-    return m || t('felOkant');
+    if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return t('felNatverk');
+    if (!m) return t('felOkant');
+    if (iVy()) return m;
+    console.warn('Fel från servern (dolt för besökaren):', m);
+    return t('felOkant');
   }
 
   /* ---------- header: sticky + burgare ---------- */
@@ -229,15 +268,66 @@ const NX = (function () {
       onScroll();
       window.addEventListener('scroll', onScroll, { passive: true });
     }
+    /* ============================================================
+       BURGAREN OCH ÖVERLÄGGET
+
+       Burgaren finns i ALLA bredder, inte bara på telefon: cinema-
+       lagret sätter body .mobile-menu{display:block} och vinner över
+       @media-regeln i nextrum.css. Menyn är alltså ett överlägg på
+       desktop också, och de två sakerna nedan saknades där lika mycket.
+
+       1. Escape stänger. Maskoten gjorde det redan, menyn inte, och
+          en besökare som lärt sig det ena förväntar sig det andra.
+
+       2. Fokus stannar i menyn. Förut tabbade man efter sista länken
+          rakt in i sidan BAKOM överlägget — länkar som ligger under en
+          täckande yta, alltså fokus på något ingen ser. Den som styr
+          med tangentbord tappade bort sig helt, och WCAG 2.4.3 säger
+          att fokusordningen ska följa det som visas.
+
+       Fokus flyttas till första länken när menyn öppnas och TILLBAKA
+       till burgaren när den stängs. Utan återflytten hamnar fokus på
+       <body> och nästa Tab börjar om från sidans topp.
+       ============================================================ */
     const burger = $('#burger'), mmenu = $('#mobile-menu');
     if (burger && mmenu) {
-      const setMenu = open => {
+      const öppen = () => burger.getAttribute('aria-expanded') === 'true';
+
+      const setMenu = (open, återför) => {
         burger.setAttribute('aria-expanded', String(open));
         mmenu.classList.toggle('open', open);
         document.body.style.overflow = open ? 'hidden' : '';
+        if (open) {
+          const först = mmenu.querySelector('a[href], button:not([disabled])');
+          if (först) först.focus();
+        } else if (återför !== false) {
+          burger.focus();
+        }
       };
-      burger.addEventListener('click', () => setMenu(burger.getAttribute('aria-expanded') !== 'true'));
-      $$('#mobile-menu a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+
+      burger.addEventListener('click', () => setMenu(!öppen()));
+      /* En länk som stänger menyn ska INTE ta tillbaka fokus till
+         burgaren: webbläsaren är redan på väg till målet, och en
+         fokusflytt mitt i hoppet skickar skärmläsaren till fel ställe. */
+      $$('#mobile-menu a').forEach(a => a.addEventListener('click', () => setMenu(false, false)));
+
+      document.addEventListener('keydown', e => {
+        if (!öppen()) return;
+        if (e.key === 'Escape') { e.preventDefault(); setMenu(false); return; }
+        if (e.key !== 'Tab') return;
+
+        /* Fokusfällan. Listan läses om vid varje Tab i stället för att
+           sparas: menyn får en extra länk när någon är inloggad
+           (märkInloggad skriver om "Logga in"), och en fryst lista
+           hade hoppat över den. */
+        const kan = $$('a[href], button:not([disabled])', mmenu)
+          .filter(el => el.offsetParent !== null);
+        if (!kan.length) return;
+        const först = kan[0], sist = kan[kan.length - 1];
+        if (e.shiftKey && document.activeElement === först) { e.preventDefault(); sist.focus(); }
+        else if (!e.shiftKey && document.activeElement === sist) { e.preventDefault(); först.focus(); }
+        else if (!mmenu.contains(document.activeElement)) { e.preventDefault(); först.focus(); }
+      });
     }
     /* Menyn skrivs likadant på alla publika sidor, med länkar som
        "index.html#om". På startsidan vore det en onödig omladdning,
@@ -858,6 +948,18 @@ const NX = (function () {
     return tider;
   }
 
+  /* FÖRESLÅ TIDER stod här fram till Fas 14.0: sextio rader som räknade
+     fram lediga tider ur tillgängligheten, lyfte familjens vanliga
+     veckodag först och gav högst ett förslag per dag. Den var aldrig
+     kopplad till någon knapp i någon vy, och exporterades utan att
+     någon anropade den — en färdig funktion som ingen kan hitta är
+     inte en funktion, den är vikt på varje sidladdning.
+
+     Den ligger kvar i git (sök på föreslåTider). Ska bokningen få
+     tidsförslag är den värd att hämta tillbaka; att låta den ligga
+     kvar oanropad var det enda alternativet som inte var något av
+     de två. */
+
   /* ---------- upptagna tider för en lärare ---------- */
   async function hämtaUpptagna(tutorId) {
     const set = new Set();
@@ -875,8 +977,13 @@ const NX = (function () {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling, spamskydd,
     initFaq, initDrag, initPris, kopplaAnsökan, märkInloggad,
-    källa, källrader, händelse,
+    källa, händelse,
     bildIntoning, initVagval,
+    /* hämtaTillganglighet stod här i Fas 14.0-grenen. Main tog bort
+       funktionen medan grenen låg öppen, så namnet exporterades utan
+       att peka på något: `return { …, hämtaTillganglighet }` med ett
+       odefinierat namn kastar ReferenceError, och hela NX dör vid
+       inladdning på varje sida. Mains lista gäller. */
     hämtaSession, hämtaProfil, vyFörRoll,
     hämtaUpptagna, tiderFörDatum,
     MANADER, DAGAR, CFG, AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod

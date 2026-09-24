@@ -2840,7 +2840,7 @@
       etikett: 'Studiehjälparvy',
       lede: 'Dina pass, dina elever och vad du tjänat.',
       video: 'bilder/hero-studievy.mp4',
-      bild: 'bilder/hero-nextrum-1280.jpg',
+      bild: 'bilder/hero-nextrum-1280.webp',
       marke: { text: 'Studiehjälpare', ikon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg>' },
       chatt: { href: '#meddelanden', text: 'Meddelanden', under: 'Skriv till familjerna' }
     });

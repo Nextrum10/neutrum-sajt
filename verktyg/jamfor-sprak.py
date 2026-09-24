@@ -15,8 +15,17 @@ finns.
 
     python3 verktyg/jamfor-sprak.py            # alla sidpar
     python3 verktyg/jamfor-sprak.py index.html # ett par
+
+ATTRIBUTNAMNEN JÄMFÖRS OCKSÅ, och det är en dyrköpt rad. Generatorn
+byter textnoder, inte attribut — men den som översätter för hand gör
+det, och skriver då ibland fel attribut. Den engelska startsidan hade
+<div role="img" alt="..."> där svenskan hade aria-label: alt betyder
+ingenting på en div, så illustrationen var en namnlös bild för
+skärmläsare på ett av två språk. Taggsekvensen var identisk, texten
+var översatt, och verktyget sa ok. Det enda som såg det var axe, och
+axe körs inte i CI.
 """
-import io, os, re, sys
+import difflib, io, os, re, sys
 from html.parser import HTMLParser
 
 # Script och style innehåller kod, inte innehåll. Generatorn maskerar
@@ -29,11 +38,13 @@ class Noder(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.taggar = []      # sekvensen av starttaggar
+        self.attribut = []    # samma index: mängden attributNAMN på taggen
         self.texter = []      # (index i taggsekvensen, text)
         self._djup_hoppa = 0
 
     def handle_starttag(self, tag, attrs):
         self.taggar.append(tag)
+        self.attribut.append(frozenset(a for a, _ in attrs))
         if tag in HOPPA:
             self._djup_hoppa += 1
 
@@ -72,6 +83,21 @@ def jamfor(sv_fil, en_fil):
     if len(sv.texter) != len(en.texter):
         fynd.append('TEXTNODER: sv %d vs en %d — engelskan har inte följt med'
                     % (len(sv.texter), len(en.texter)))
+
+    # Attributnamnen, tagg för tagg. Sekvenserna radas upp med difflib
+    # först: språkväljaren skiljer sig med flit (<b>SV</b> mot <a>), och
+    # utan uppradning hade allt efter den punkten förskjutits ett steg
+    # och gett en sida full av falska fynd.
+    lika = difflib.SequenceMatcher(None, sv.taggar, en.taggar, autojunk=False)
+    for op, i1, i2, j1, _ in lika.get_opcodes():
+        if op != 'equal':
+            continue
+        for k in range(i2 - i1):
+            a, b = sv.attribut[i1 + k], en.attribut[j1 + k]
+            if a == b:
+                continue
+            fynd.append('ATTRIBUT <%s>: bara sv %s, bara en %s'
+                        % (sv.taggar[i1 + k], sorted(a - b) or '—', sorted(b - a) or '—'))
 
     # Identisk text på båda språken är ofta en oöversatt mening.
     # Egennamn, siffror och adresser är undantagen och sållas bort.

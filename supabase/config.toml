@@ -43,19 +43,23 @@ verify_jwt = false
 [functions.lead-notis]
 verify_jwt = false
 
-# pass-notis och meddelande-notis ANROPAS INTE LÄNGRE: Runda 2 bytte
-# deras webhookar mot kötriggrarna bookings_notis och messages_notis,
-# som köar i stället för att skicka. Raderna står kvar för att
-# funktionerna fortfarande ligger ACTIVE i driften — försvinner de
-# härifrån och någon driftsätter dem, får de JWT-kravet påslaget.
+# pass-notis och meddelande-notis STOD HÄR fram till Fas 14.0.
 #
-# Se CLAUDE.md, avsnitt 7: de ska antingen tas ur driften eller få en
-# anropare. Tas de bort ska raderna nedan bort i samma ändring.
-[functions.pass-notis]
-verify_jwt = false
-
-[functions.meddelande-notis]
-verify_jwt = false
+# Runda 2 bytte deras webhookar mot kötriggrarna bookings_notis och
+# messages_notis, som köar i stället för att skicka, och sedan dess
+# fanns ingen anropare kvar. Två ACTIVE funktioner utan anropare är
+# samma sorts halvfärdighet som gjorde att hela notissystemet en gång
+# inte fanns i repot: de ser ut att vara en väg in i systemet, och
+# ingen vågar ta bort dem eftersom ingen vet om något ringer dem.
+#
+# BESLUTET ÄR TAGET: de är pensionerade. Källan är borttagen ur repot
+# i samma ändring som de här raderna.
+#
+# KVAR ATT GÖRA FÖR HAND: de ligger fortfarande ACTIVE i driften.
+# Supabase CLI och MCP kan driftsätta en funktion men inte ta bort
+# den — det görs i dashboarden under Edge Functions. Tills det är
+# gjort svarar de på sin adress, skyddade av den delade hemligheten
+# i headern, men de gör ingenting någon ber om.
 
 # Kö-arbetaren. Väcks av pg_cron-jobbet notis-minut genom
 # notis_konfig.arbetare_url, med samma hemlighet i headern.
