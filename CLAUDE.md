@@ -938,12 +938,11 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   **Studievyn visar bara kortet sedan 2026-09-24** (Leos val: "bara kort,
   som Fas 14 sa"). Betalning listar pass att betala med en knapp som går
   rakt till Stripe; rutan som uppskattade månadens faktura är borttagen,
-  och fakturalistan står kvar som historik. **Själva månadskörningen
-  finns kvar**, och spärren mot dubbelfakturering (`byggUnderlag` hoppar
-  över kortbetalda pass) ligger i Stripe-chattens PR #34 och är inte
-  driftsatt — `passunderlag` bär kolumnen, `fakturering` läser den inte
-  än. Tills den är det: kör inte månadskörningen på en månad där någon
-  betalat med kort.
+  och fakturalistan står kvar som historik. Den driftsatta
+  `fakturering` (v26, 2026-09-24) skapar redan inga familjefakturor —
+  Fas 14.2 i Stripe-chatten, driftsatt innan den fanns på main. **Kör
+  frågan i avsnitt 5 och jämför funktionen med repot** innan du tror på
+  någon av dem.
 
   **Spärren "ingen betalning, inget pass" finns ännu inte.** Den kan
   inte slås på förrän kortvägen bevisligen fungerar: i dag hade den
