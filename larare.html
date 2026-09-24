@@ -180,7 +180,7 @@
 
         <span class="vy-sido-rubrik" aria-hidden="true">Arbete</span>
         <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.2 2"/></svg>Lektioner &amp; elever</a>
-        <a href="#tider" data-sek="tider"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/><path d="m9.5 15 1.8 1.8L15 13"/></svg>Dina tider</a>
+        <a href="#tider" data-sek="tider"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13.5 6.5 5h11L20 13.5V19H4z"/><path d="M4 13.5h4.5l1.2 2.2h4.6l1.2-2.2H20"/></svg>Föreslagna tider</a>
         <a href="#laxor" data-sek="laxor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Läxor &amp; material</a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Kontakt</span>
@@ -403,9 +403,11 @@
                             </div>
                             <p class="rp-fraga" style="margin-top:14px;font-size:.82rem">Var ligger eleven nu?</p>
                             <div class="rp-nivaer" id="r-niva-val" role="group" aria-label="Nivå">
-                              <button type="button" class="chip" data-v="behover_trana" aria-pressed="false">Behöver träna</button>
-                              <button type="button" class="chip" data-v="pa_god_vag" aria-pressed="true">På god väg</button>
-                              <button type="button" class="chip" data-v="bra" aria-pressed="false">Bra</button>
+                              <button type="button" class="chip" data-v="1" aria-pressed="false">Nytt</button>
+                              <button type="button" class="chip" data-v="2" aria-pressed="false">Behöver träna</button>
+                              <button type="button" class="chip" data-v="3" aria-pressed="true">På god väg</button>
+                              <button type="button" class="chip" data-v="4" aria-pressed="false">Säker</button>
+                              <button type="button" class="chip" data-v="5" aria-pressed="false">Behärskar</button>
                             </div>
                             <div class="rp-tidigare" id="r-omrade-tidigare"></div>
                           </div>
@@ -440,7 +442,13 @@
                       </form>
                     </div>
                     </div>
-          </div>
+
+          <!-- Tidigare rapporter hör till Pass & rapport och står INNE i
+               flikpanelen. Här stod förr en </div> kvar från en
+               tvåkolumnslayout som tagits bort i panelens början, och den
+               stängde panelen i förtid: rapporterna hamnade direkt i
+               sektionen och syntes under varje flik — också Mina elever
+               och Plan & utveckling, där Leo inte ville se dem. -->
           <div class="stack">
 
                     <!-- ============ TIDIGARE RAPPORTER ============
@@ -457,6 +465,7 @@
                         <div id="mina-rapporter"><div class="loading">Hämtar</div></div>
                       </div>
                     </div>
+          </div>
         </div>
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="elever"
@@ -470,23 +479,12 @@
               <div id="elev-lista"><div class="loading">Hämtar</div></div>
             </div>
 
-                    <!-- ============ ELEVENS UPPGIFTER ============ -->
-                    <div class="dbox">
-                      <h5>Om eleven</h5>
-                      <form id="elev-form">
-                        <div class="fgroup"><label for="e-arskurs">Årskurs</label><input class="inp" id="e-arskurs" placeholder="t.ex. Åk 8"></div>
-                        <div class="fgroup"><label for="e-skola">Skola</label><input class="inp" id="e-skola"></div>
-                        <div class="fgroup"><label for="e-amnen">Ämnen (kommaseparerat)</label><input class="inp" id="e-amnen" placeholder="Matematik, Fysik"></div>
-                        <div class="fgroup"><label for="e-mal">Studiemål</label><textarea class="inp" id="e-mal" style="min-height:80px" placeholder="t.ex. Höja betyget i matte till våren"></textarea></div>
-                        <button class="btn btn-ghost btn-sm btn-block" type="submit">Spara om eleven</button>
-                        <p class="ok-msg" id="e-msg"></p>
-                      </form>
-                    </div>
-
-            <div class="dbox">
-              <h5>Elevens läge <em id="elev-lage-vem"></em></h5>
-              <div id="elev-oversikt"><div class="loading">Hämtar</div></div>
-            </div>
+            <!-- Formuläret "Om eleven" och rutan "Elevens läge" som låg här
+                 är borta (2026-09-24). Studiehjälparen skriver inget om
+                 eleven — det gör familjen när barnet läggs till — och
+                 kommande och tidigare pass stod redan under Pass &amp;
+                 rapport. Siffrorna som stod i Elevens läge står nu i
+                 varje elevs kort, där eleven står. -->
         </div>
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="plan"
@@ -512,38 +510,60 @@
                       </form>
                     </div>
 
-                    <!-- ============ KUNSKAPSOMRÅDEN ============ -->
+                    <!-- ============ KUNSKAPSOMRÅDEN ============
+                         Fem steg sedan 2026-09-24, ett valfritt mål, och
+                         varje bedömning sparas i progress_historik — så
+                         att familjen ser utvecklingen, inte bara läget.
+                         Tre steg sa för lite: "Bra" rymde allt från
+                         "klarar det med stöd" till "kan förklara det".
+
+                         Tidigare rapporter som syntes här hörde till
+                         Pass & rapport, och står nu bara där. -->
                     <div class="dbox">
                       <h5>Kunskapsområden <em id="prg-antal"></em></h5>
                       <p class="xsmall" style="color:var(--muted-2);margin-bottom:16px;line-height:1.6">
-                        Det här är vad familjen ser som utveckling. Ett område i taget — lägg till samma område igen för att flytta nivån.
+                        Det här är vad familjen ser som utveckling. Varje bedömning sparas, så att
+                        utvecklingen syns över tid. Bedöm samma område igen för att flytta nivån.
                       </p>
+
+                      <div id="prg-sammanfattning"></div>
 
                       <form id="prg-form">
                         <div class="vy-form-rad">
                           <div class="pay-field">
                             <label for="pg-amne">Ämne</label>
-                            <input class="inp" id="pg-amne" placeholder="t.ex. Matematik">
+                            <input class="inp" id="pg-amne" list="pg-amnen" maxlength="80" placeholder="t.ex. Matematik">
+                            <datalist id="pg-amnen"></datalist>
                           </div>
                           <div class="pay-field">
                             <label for="pg-omrade">Område</label>
-                            <input class="inp" id="pg-omrade" placeholder="t.ex. Ekvationer">
+                            <input class="inp" id="pg-omrade" list="pg-omraden" maxlength="80" placeholder="t.ex. Ekvationer">
+                            <datalist id="pg-omraden"></datalist>
                           </div>
-                          <div class="pay-field">
-                            <label for="pg-niva">Nivå</label>
-                            <select class="sel" id="pg-niva">
-                              <option value="behover_trana">Behöver träna</option>
-                              <option value="pa_god_vag">På god väg</option>
-                              <option value="bra">Bra</option>
-                            </select>
-                          </div>
+                        </div>
+                        <p class="rp-fraga" style="margin-top:14px;font-size:.82rem">Var ligger eleven nu?</p>
+                        <div class="rp-nivaer" id="pg-steg" role="group" aria-label="Nivå">
+                          <button type="button" class="chip" data-v="1" aria-pressed="false">Nytt</button>
+                          <button type="button" class="chip" data-v="2" aria-pressed="false">Behöver träna</button>
+                          <button type="button" class="chip" data-v="3" aria-pressed="true">På god väg</button>
+                          <button type="button" class="chip" data-v="4" aria-pressed="false">Säker</button>
+                          <button type="button" class="chip" data-v="5" aria-pressed="false">Behärskar</button>
+                        </div>
+                        <p class="xsmall" id="pg-steg-vad" style="margin-top:8px;color:var(--bl-2);line-height:1.5"></p>
+                        <p class="rp-fraga" style="margin-top:14px;font-size:.82rem">Mål <span style="font-weight:400;color:var(--bl-2)">(valfritt)</span></p>
+                        <div class="rp-nivaer" id="pg-mal" role="group" aria-label="Mål">
+                          <button type="button" class="chip" data-v="" aria-pressed="true">Inget mål</button>
+                          <button type="button" class="chip" data-v="2" aria-pressed="false">Behöver träna</button>
+                          <button type="button" class="chip" data-v="3" aria-pressed="false">På god väg</button>
+                          <button type="button" class="chip" data-v="4" aria-pressed="false">Säker</button>
+                          <button type="button" class="chip" data-v="5" aria-pressed="false">Behärskar</button>
                         </div>
                         <div class="fgroup" style="margin-top:12px">
                           <label for="pg-kommentar">Kommentar <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
-                          <input class="inp" id="pg-kommentar" placeholder="t.ex. Klarar enkla ekvationer själv, fastnar på parenteser">
+                          <input class="inp" id="pg-kommentar" maxlength="300" placeholder="t.ex. Klarar enkla ekvationer själv, fastnar på parenteser">
                         </div>
                         <div class="vy-knapprad">
-                          <button class="btn btn-primary btn-sm" type="submit" id="pg-spara">Spara område</button>
+                          <button class="btn btn-primary btn-sm" type="submit" id="pg-spara">Spara bedömningen</button>
                         </div>
                         <p class="ok-msg" id="pg-msg"></p>
                       </form>
@@ -554,42 +574,39 @@
       </section>
 
       <!-- ============================================================
-           DINA TIDER
+           FÖRESLAGNA TIDER
 
-           Sektionen handlar om EN sak: när du kan arbeta. Det är den
-           enda uppgiften här som familjerna är beroende av — tiderna
-           är de familjen kan boka direkt, och en bokning helt inom
-           dem bekräftas av databasen (bekrafta_inom_schemat).
+           Hette Dina tider och var ett veckoschema. Leo tog bort det
+           2026-09-24: familjen föreslår vilken tid som helst, och
+           studiehjälparen accepterar eller föreslår en annan. Adressen
+           #tider står kvar, så gamla bokmärken och #kalender landar här.
 
-           Förut: tre rullgardiner, sedan ett veckorutnät, sedan en
-           kalender med undantagsdagar och en ruta för att föreslå en
-           tid till familjen. Undantagen och förslaget togs bort på
-           Leos begäran 2026-09-18 — tider stäms av i chatten, och en
-           familj som vill ha en annan tid önskar den i sin bokning.
+           Ett förslag är inget pass än. Det flyttar till Lektioner &
+           elever först när det accepterats — där ska bara stå det som
+           faktiskt blir av.
 
-           Schemat över dina pass ligger på Översikt.
-           ============================================================ -->
+           Rutorna fylls av ritaFörslag(). Knapparna bär
+           data-acceptera och data-motforslag, som delegerade
+           hanterare tar hand om. -->
       <section class="vy-sek" data-sek="tider" hidden>
         <div class="vy-sek-topp">
           <div>
-            <h2>Dina tider</h2>
-            <p>Markera när du kan jobba. Familjen kan boka de tiderna direkt. Andra tider kan de önska — då bekräftar eller avböjer du i passlistan.</p>
+            <h2>Föreslagna tider</h2>
+            <p>Tider som familjerna föreslagit. Acceptera, eller föreslå en annan tid — då får familjen bekräfta den. Ett accepterat pass flyttar till Lektioner &amp; elever.</p>
           </div>
         </div>
-
-        <!-- ============ KALENDERN ============
-             En vanlig kalender, på Leos begäran 2026-09-18. Tryck på
-             en dag, tryck på timmarna du kan. Tiderna är veckovisa:
-             en timme på en torsdag gäller varje torsdag, och det står
-             ovanför timmarna. Veckorutnätet, undantagsdagarna och
-             förslagsrutan som låg här är borta. -->
-        <div class="dbox">
-          <h5>När kan du? <em>tryck på en dag</em></h5>
-          <div class="bk-kal">
-            <div class="bk-kal-manad" id="tid-kalender"><div class="loading">Hämtar</div></div>
-            <div class="bk-kal-dag" id="tid-dag"></div>
+        <div class="stack">
+          <div class="dbox">
+            <h5>Väntar på dig <em id="forslag-antal"></em></h5>
+            <div id="forslag-lista"><div class="loading">Hämtar</div></div>
           </div>
-          <p class="vs-sam" id="tid-sammanfattning"></p>
+          <!-- Dina egna motförslag. Dold när det inte finns några: en
+               tom ruta om något som inte väntar är bara en rad till att
+               läsa förbi. -->
+          <div class="dbox" id="forslag-vantar-box" hidden>
+            <h5>Väntar på familjen <em id="forslag-vantar-antal"></em></h5>
+            <div id="forslag-vantar"></div>
+          </div>
         </div>
       </section>
 
@@ -876,26 +893,50 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Profil &amp; inställningar</h2>
-            <p>Det familjer ser om dig — och ditt eget konto.</p>
+            <p>Det familjer ser om dig, din inloggning och vilka mejl du vill ha.</p>
           </div>
         </div>
-        <div class="vy-flikar" role="tablist" aria-label="Profil eller konto">
+        <div class="vy-flikar" role="tablist" aria-label="Profil eller notiser">
           <button class="vy-flik" type="button" role="tab" data-flik="minprofil"
                   id="flik-minprofil" aria-controls="panel-minprofil">Min profil</button>
-          <button class="vy-flik" type="button" role="tab" data-flik="konto"
-                  id="flik-konto" aria-controls="panel-konto">Mitt konto</button>
           <button class="vy-flik" type="button" role="tab" data-flik="notiser"
                   id="flik-notiser" aria-controls="panel-notiser">Notiser</button>
         </div>
 
+        <!-- ============ MIN PROFIL ============
+             Min profil och Mitt konto var två flikar med halva personen
+             var: namn och bild i den ena, skola, ämnen och text i den
+             andra. Leo slog ihop dem 2026-09-24. Nu är det en ruta om dig
+             med en sparaknapp, och en om inloggningen.
+
+             Samma uppgifter står i adminvyns panel för studiehjälparen
+             (nextrum-admin-detalj.js, dpStudiehjalpare) — det är där
+             matchningen läser dem. -->
         <div class="vy-flik-panel" role="tabpanel" data-flik="minprofil"
              id="panel-minprofil" aria-labelledby="flik-minprofil">
-                <!-- ============ DIN PROFIL ============ -->
                 <div class="dbox">
-                  <h5>Din profil <em>syns på startsidan</em></h5>
+                  <h5>Din profil <em>det familjerna och Nextrum ser</em></h5>
+
+                  <div class="nx-bildrad">
+                    <span id="konto-avatar"></span>
+                    <div class="nx-bildrad-knappar">
+                      <input type="file" id="av-fil" accept="image/jpeg,image/png,image/webp">
+                      <label class="btn btn-ghost btn-sm" for="av-fil">Byt bild</label>
+                      <button class="btn btn-ghost btn-sm" type="button" id="av-bort" hidden>Ta bort</button>
+                    </div>
+                    <p class="nx-bild-hjalp">JPG, PNG eller WEBP, högst 5 MB. Du får beskära den innan den sparas.</p>
+                  </div>
+                  <p class="ok-msg" id="av-msg"></p>
+
                   <form id="profil-form">
-                    <div class="fgroup"><label for="pr-skola">Skola</label><input class="inp" id="pr-skola"></div>
-                    <div class="fgroup"><label for="pr-ort">Ort</label><input class="inp" id="pr-ort"></div>
+                    <div class="vy-form-rad">
+                      <div class="fgroup"><label for="k-namn">Namn</label><input class="inp" id="k-namn" autocomplete="name"></div>
+                      <div class="fgroup"><label for="k-tel">Telefon <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><input class="inp" id="k-tel" type="tel" autocomplete="tel"></div>
+                    </div>
+                    <div class="vy-form-rad">
+                      <div class="fgroup"><label for="pr-skola">Skola</label><input class="inp" id="pr-skola"></div>
+                      <div class="fgroup"><label for="pr-ort">Ort</label><input class="inp" id="pr-ort"></div>
+                    </div>
                     <!-- ============ ÄMNEN, ÅRSKURSER, FORMAT ============
                          Det här är inte pynt på profilen. Matchningen i
                          adminvyn poängsätter på exakt de tre fälten, och
@@ -905,7 +946,7 @@
 
                          Ämnena låg i ett kommaseparerat fält, där "matte"
                          och "Matematik" blev två olika ämnen. -->
-                    <div class="fgroup">
+                    <div class="fgroup" style="margin-top:6px">
                       <label>Ämnen du hjälper till med</label>
                       <div class="vy-val" id="pr-amne-val" role="group" aria-label="Ämnen"></div>
                       <div class="pr-lagg">
@@ -925,42 +966,24 @@
                         Lämnar du dem tomma syns du som "vet ej" i matchningen.
                       </p>
                     </div>
-                    <div class="fgroup"><label for="pr-bio">Kort text om dig</label><textarea class="inp" id="pr-bio" style="min-height:90px"></textarea></div>
-                    <button class="btn btn-ghost btn-sm btn-block" type="submit">Spara profil</button>
+                    <div class="fgroup"><label for="pr-bio">Kort text om dig</label><textarea class="inp" id="pr-bio" style="min-height:90px" maxlength="1200" placeholder="Vad du pluggar, vad du är bra på att förklara, och hur du brukar lägga upp ett pass."></textarea></div>
+                    <button class="btn btn-primary btn-sm btn-block" type="submit">Spara profilen</button>
                     <p class="ok-msg" id="pr-msg"></p>
                   </form>
                 </div>
-        </div>
 
-        <div class="vy-flik-panel" role="tabpanel" data-flik="konto"
-             id="panel-konto" aria-labelledby="flik-konto" hidden>
-                <!-- ============ DITT KONTO ============ -->
-                <div class="dbox">
-                  <h5>Ditt konto</h5>
-
-                  <div class="nx-bildrad">
-                    <span id="konto-avatar"></span>
-                    <div class="nx-bildrad-knappar">
-                      <input type="file" id="av-fil" accept="image/jpeg,image/png,image/webp">
-                      <label class="btn btn-ghost btn-sm" for="av-fil">Byt bild</label>
-                      <button class="btn btn-ghost btn-sm" type="button" id="av-bort" hidden>Ta bort</button>
-                    </div>
-                    <p class="nx-bild-hjalp">JPG, PNG eller WEBP, högst 5 MB. Du får beskära den innan den sparas.</p>
-                  </div>
-                  <p class="ok-msg" id="av-msg"></p>
-
-                  <form id="konto-form">
-                    <div class="fgroup"><label for="k-namn">Namn</label><input class="inp" id="k-namn" autocomplete="name"></div>
-                    <div class="fgroup"><label for="k-tel">Telefon <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label><input class="inp" id="k-tel" type="tel" autocomplete="tel"></div>
-                    <button class="btn btn-primary btn-sm btn-block" type="submit">Spara uppgifter</button>
-                    <p class="ok-msg" id="k-msg"></p>
-                  </form>
-
+                <!-- Inloggningen för sig: den gäller kontot, inte det
+                     familjerna ser, och ska inte råka sparas om när man
+                     ändrar sin text. -->
+                <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+                  <h5>Inloggning</h5>
+                  <p class="xsmall" style="margin:-6px 0 14px;color:var(--bl-2);line-height:1.6">
+                    Du loggar in med <b id="k-epost"></b>. Vill du byta adress, skriv till oss så gör vi det.
+                  </p>
                   <form id="losen-form" class="vy-fall">
                     <div class="fgroup"><label for="k-losen">Nytt lösenord</label><input class="inp" id="k-losen" type="password" autocomplete="new-password" minlength="6"></div>
                     <div class="fgroup"><label for="k-losen2">Upprepa lösenordet</label><input class="inp" id="k-losen2" type="password" autocomplete="new-password"></div>
                     <button class="btn btn-ghost btn-sm btn-block" type="submit">Byt lösenord</button>
-
                     <p class="ok-msg" id="kl-msg"></p>
                   </form>
                 </div>

@@ -171,7 +171,7 @@ const NXAdmin = (function () {
   async function hämtaAllt() {
     const [profiler, elever, tutorer] = await Promise.all([
       supa.from('profiles').select('id, role, full_name, email, is_admin, match_status, matched_tutor_id, phone, created_at, last_seen_at'),
-      supa.from('students').select('id, parent_id, name, grade, school, subjects, goals, created_at, matched_tutor_id, match_status, uppdrag_id'),
+      supa.from('students').select('id, parent_id, name, grade, school, subjects, goals, about, behov, format_onskemal, created_at, matched_tutor_id, match_status, uppdrag_id'),
       supa.from('tutor_profiles').select('id, age, school, city, subjects, grade_levels, status, hourly_rate, visa_publikt, created_at')
     ]);
     if (profiler.error) throw profiler.error;

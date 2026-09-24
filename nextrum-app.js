@@ -159,6 +159,29 @@ const NX = (function () {
     { kod: 'gy3', text: 'Gymnasiet år 3' }
   ];
 
+  /* Vad barnet behöver hjälp med, och hur passen helst ska hållas.
+     Familjen väljer dem när barnet läggs till, studiehjälparen ser dem
+     i elevkortet och admin i matchningen. Koderna speglar
+     check-villkoren students_behov_check och
+     students_format_onskemal_check — texten är det människor läser.
+
+     Med flit INGA diagnoser eller hälsouppgifter. Sådant om barn är
+     en särskild kategori enligt GDPR, och matchningen behöver veta
+     vad som hjälper, inte vad barnet har. */
+  const BEHOV = [
+    { kod: 'laxor', text: 'Läxorna i vardagen' },
+    { kod: 'prov', text: 'Inför prov' },
+    { kod: 'ikapp', text: 'Komma ikapp' },
+    { kod: 'utmaning', text: 'Mer utmaning' },
+    { kod: 'struktur', text: 'Planering och studieteknik' },
+    { kod: 'motivation', text: 'Motivation och självförtroende' }
+  ];
+  const FORMAT_ONSKEMAL = [
+    { kod: 'pa_plats', text: 'På plats' },
+    { kod: 'online', text: 'Online' },
+    { kod: 'bada', text: 'Båda går bra' }
+  ];
+
   function årskursText(kod) {
     const a = ARSKURSER.find(x => x.kod === kod);
     return a ? a.text : (kod || '—');
@@ -835,70 +858,6 @@ const NX = (function () {
     return tider;
   }
 
-  /* ============================================================
-     FÖRESLÅ TIDER
-
-     Att leta en ledig tid är en sökning, inte en formulering. Den
-     som vet vilka fönster som finns, vilka timmar som är bokade och
-     hur långt passet är kan räkna fram svaret exakt — och blir aldrig
-     osäker på om 17:00 krockar med ett tvåtimmarspass som började
-     16:00. Därför ingen språkmodell här.
-
-     Ordningen är närmast först, men ett pass som ligger på samma
-     veckodag och tid som familjen redan brukar ha lyfts före. Fasta
-     tider är lättare att komma ihåg än bra tider.
-     ============================================================ */
-  function föreslåTider(o) {
-    const minuter = Number(o.minuter) || 60;
-    const timmar = Math.max(1, Math.ceil(minuter / 60));
-    const upptagna = o.upptagna || new Set();
-    const dagar = Number(o.dagar) || 21;
-    const antal = Number(o.antal) || 5;
-
-    /* Familjens vana: veckodag + klockslag som återkommer i tidigare
-       pass. Ett enda tidigare pass räcker som mönster — det är ändå
-       den tid de tackat ja till förut. */
-    const vana = new Set();
-    (o.tidigare || []).forEach(b => {
-      if (!b.wanted_date || !b.wanted_time) return;
-      const d = new Date(b.wanted_date + 'T12:00:00');
-      vana.add(((d.getDay() + 6) % 7) + '|' + String(b.wanted_time).slice(0, 5));
-    });
-
-    const krockar = (iso, t) => {
-      const h0 = tim(t);
-      for (let i = 0; i < timmar; i++) {
-        if (upptagna.has(iso + '|' + tvåsiffrig(h0 + i) + ':00')) return true;
-      }
-      return false;
-    };
-
-    const ut = [];
-    const start = new Date();
-    for (let i = 0; i < dagar && ut.length < antal * 4; i++) {
-      const d = new Date(start);
-      d.setDate(d.getDate() + i);
-      const iso = isoFor(d);
-      const veckodag = (d.getDay() + 6) % 7;
-      tiderFörDatum(iso, o.tillgang, o.blockerade, minuter).forEach(t => {
-        if (krockar(iso, t)) return;
-        ut.push({ datum: iso, tid: t, minuter,
-                  vanlig: vana.has(veckodag + '|' + t) });
-      });
-    }
-
-    /* Vanliga tider först, därefter kronologiskt. Sorteringen är
-       stabil i alla motorer vi bryr oss om, så lika poster behåller
-       sin ordning i tiden. */
-    ut.sort((a, b) => (b.vanlig - a.vanlig)
-      || (a.datum + a.tid).localeCompare(b.datum + b.tid));
-
-    /* Högst ett förslag per dag. Fem tider samma eftermiddag är fem
-       varianter av samma erbjudande, inte fem alternativ. */
-    const sedda = new Set();
-    return ut.filter(f => !sedda.has(f.datum) && sedda.add(f.datum)).slice(0, antal);
-  }
-
   /* ---------- upptagna tider för en lärare ---------- */
   async function hämtaUpptagna(tutorId) {
     const set = new Set();
@@ -912,20 +871,6 @@ const NX = (function () {
     return set;
   }
 
-  /* Studiehjälparens veckotider och spärrar. Båda är läsbara för
-     den som ska boka — vyn blockerade_tider lämnar inte ut skälet. */
-  async function hämtaTillganglighet(tutorId) {
-    const tomt = { tillgang: [], blockerade: [] };
-    if (!supa || !tutorId) return tomt;
-    const [a, b] = await Promise.all([
-      supa.from('tutor_availability').select('weekday, start_time, end_time').eq('tutor_id', tutorId),
-      supa.from('blockerade_tider').select('block_date, block_time').eq('tutor_id', tutorId)
-    ]);
-    if (a.error) console.warn('tutor_availability:', a.error.message);
-    if (b.error) console.warn('blockerade_tider:', b.error.message);
-    return { tillgang: a.data || [], blockerade: b.data || [] };
-  }
-
   return {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling, spamskydd,
@@ -933,7 +878,7 @@ const NX = (function () {
     källa, källrader, händelse,
     bildIntoning, initVagval,
     hämtaSession, hämtaProfil, vyFörRoll,
-    hämtaUpptagna, hämtaTillganglighet, tiderFörDatum, föreslåTider,
-    MANADER, DAGAR, CFG, AMNEN, ARSKURSER, årskursText, årskursKod
+    hämtaUpptagna, tiderFörDatum,
+    MANADER, DAGAR, CFG, AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod
   };
 })();

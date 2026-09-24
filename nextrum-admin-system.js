@@ -16,13 +16,14 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, kortDatum, märkFlik, namnFör, närText, pill, rad,
-          skriv, tabell } = NXAdmin;
+  const { DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, kontaktaRuta, kortDatum, märkFlik, namnFör, närText,
+          pill, rad, skriv, tabell } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaDetalj = (...a) => NXAdmin.rita.ritaDetalj(...a);
   const träffar = (...a) => NXAdmin.rita.träffar(...a);
   const laddaOmEkonomi = (...a) => NXAdmin.rita.laddaOmEkonomi(...a);
+  const skapaUppgift = (...a) => NXAdmin.rita.skapaUppgift(...a);
 
   /* ============================================================
      SYSTEM
@@ -95,22 +96,261 @@
         : '');
   }
 
+  /* ------------------------------------------------------------
+     KLIENTFEL
+
+     Förut en rad per fel och en knapp som hette Rensa. Det enda
+     man kunde göra med ett fel var alltså att få det att försvinna,
+     och samma TypeError från tjugo besök blev tjugo rader att
+     klicka bort utan att någon fick veta vad den betydde.
+
+     Nu grupperas felen på meddelande och sida, och varje grupp får
+     en förklaring, ett råd och tre sätt att åtgärda den: skriva
+     till den som drabbades, göra det till en uppgift, eller
+     markera det åtgärdat.
+
+     Förklaringen är en gissning ur meddelandet, inte en diagnos.
+     Den står därför som "troligen", och stacken finns alltid ett
+     klick bort. Ordningen i listan spelar roll: första träffen
+     vinner, och "NXStudie is not defined" är en fil som inte
+     laddade, inte ett stavfel i koden.
+     ------------------------------------------------------------ */
+  const FELSORTER = [
+    { sort: 'cache', klass: 'ar-vantar', test: /\bNX\w* is not defined|en modul laddade inte|unexpected token '<'/i,
+      rubrik: 'Gammal fil i cachen', åtgärd: 'kontakta',
+      text: 'En del av sidan laddades inte, oftast för att webbläsaren höll kvar en äldre fil efter en driftsättning.',
+      råd: 'Be personen ladda om med Cmd+Shift+R (Ctrl+Shift+R på Windows). Kommer felet tillbaka efter det är det ett riktigt fel.' },
+    { sort: 'nat', klass: '', test: /failed to fetch|networkerror|load failed|network request failed|the network connection was lost/i,
+      rubrik: 'Nätverket', åtgärd: 'avfärda',
+      text: 'Webbläsaren nådde inte servern. Nästan alltid ett glappande nät, en mobil i tunnelbanan eller en blockerare – inte ett fel i koden.',
+      råd: 'Enstaka: markera åtgärdat. Många från olika personer på kort tid: kontrollera att Supabase är uppe.' },
+    { sort: 'inlogg', klass: 'ar-vantar', test: /jwt expired|auth session missing|refresh token|not authenticated|invalid claim/i,
+      rubrik: 'Inloggningen gick ut', åtgärd: 'kontakta',
+      text: 'Sessionen hade löpt ut när sidan försökte hämta något, och personen behöver logga in igen.',
+      råd: 'Får samma person det gång på gång loggas hen ut i onödan. Hör av dig och fråga vilken webbläsare det gäller.' },
+    { sort: 'nekad', klass: 'ar-ny', test: /permission denied|42501|row-level security/i,
+      rubrik: 'Nekad av databasen', åtgärd: 'uppgift',
+      text: 'En policy eller en trigger sa nej. Antingen försökte personen något hen inte får, eller så nekar en policy för mycket.',
+      råd: 'Gör det till en uppgift. En policy som nekar för mycket ser ut som en tom lista för användaren, så det här är ofta det enda spåret.' },
+    { sort: 'extern', klass: '', test: /^script error\.?$|resizeobserver loop/i,
+      rubrik: 'Utifrån', åtgärd: 'avfärda',
+      text: 'Felet kom från ett skript på en annan domän eller ett tillägg i webbläsaren, och webbläsaren döljer detaljerna.',
+      råd: 'Går inte att rätta härifrån. Markera åtgärdat.' },
+    { sort: 'kod', klass: 'ar-ny', test: /typeerror|referenceerror|rangeerror|syntaxerror|cannot read propert|is not a function|is not defined|is null|is undefined/i,
+      rubrik: 'Fel i koden', åtgärd: 'uppgift',
+      text: 'Sidan försökte använda något som inte fanns. Det här går inte över av sig självt – koden behöver rättas.',
+      råd: 'Gör det till en uppgift med stacken, och markera det åtgärdat först när rättelsen är driftsatt. Annars kommer det tillbaka och ser nytt ut.' }
+  ];
+  const OKÄND_SORT = {
+    sort: 'okand', klass: 'ar-ny', rubrik: 'Okänt', åtgärd: 'uppgift',
+    text: 'Meddelandet känns inte igen.',
+    råd: 'Läs stacken. Är du osäker: gör en uppgift hellre än att markera det åtgärdat.'
+  };
+
+  function felSort(f) {
+    /* e.message saknar felets namn ("Cannot read properties …"),
+       men stackens första rad har det ("TypeError: Cannot …"). */
+    const text = String(f.meddelande || '') + ' ' + String(f.stack || '').split('\n')[0];
+    return FELSORTER.find(s => s.test.test(text)) || OKÄND_SORT;
+  }
+
+  /* Sidan utan hash: samma fel på /larare#pass och /larare#elever
+     är samma fel. Hashen står kvar i detaljerna. */
+  const felVäg = f => String(f.sida || '—').split('#')[0] || '—';
+
+  /* Gruppens nyckel står i knappens data-attribut. Den hashas i
+     stället för att bära meddelandet: HTML-parsern byter ut
+     NUL-tecken och normaliserar radbrytningar i attribut, så en
+     nyckel med meddelandet i klartext kom inte alltid tillbaka lik
+     sig själv, och knappen hittade då ingen grupp. */
+  function felNyckel(f) {
+    const text = String(f.meddelande) + '\n' + felVäg(f);
+    let h = 5381;
+    for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+    return 'f' + (h >>> 0).toString(36) + text.length.toString(36);
+  }
+
+  function felGrupper() {
+    const grupper = {};
+    S.klientfel.forEach(f => {
+      const nyckel = felNyckel(f);
+      const g = grupper[nyckel] || (grupper[nyckel] = {
+        nyckel, meddelande: f.meddelande, väg: felVäg(f), sort: felSort(f),
+        rader: [], personer: [], sidor: [], webbläsare: [], stack: null
+      });
+      g.rader.push(f);
+      if (f.anvandare && g.personer.indexOf(f.anvandare) === -1) g.personer.push(f.anvandare);
+      if (f.sida && g.sidor.indexOf(f.sida) === -1) g.sidor.push(f.sida);
+      if (f.webblasare && g.webbläsare.indexOf(f.webblasare) === -1) g.webbläsare.push(f.webblasare);
+      if (!g.stack && f.stack) g.stack = f.stack;   // listan är nyast först
+    });
+    return Object.keys(grupper).map(k => grupper[k]).map(g => Object.assign(g, {
+      senast: g.rader[0].created_at,
+      först: g.rader[g.rader.length - 1].created_at,
+      utloggade: g.rader.filter(f => !f.anvandare).length
+    }));
+  }
+
+  /* Uppgiftens titel byggs ur felet, så att samma fel alltid ger
+     samma titel. Det är så knappen vet att en uppgift redan finns. */
+  const felTitel = g => ('Fel på ' + g.väg + ': ' + String(g.meddelande)).slice(0, 200);
+  const öppenUppgift = g => (S.uppgifter || []).find(u => u.titel === felTitel(g)
+    && (u.status === 'oppen' || u.status === 'pagar'));
+
+  function personTyp(id) {
+    const p = S.personer[id];
+    if (!p) return null;
+    return p.role === 'tutor' ? 'studiehjalpare' : p.role === 'parent' ? 'familj' : null;
+  }
+
+  /* Alla utloggade räknas som en: det går inte att veta om fem
+     utloggade rader är fem personer eller en som laddat om. */
+  const antalPersoner = g => g.personer.length + (g.utloggade ? 1 : 0);
+
+  function ritaFelGrupp(g) {
+    const s = g.sort;
+    const antalPers = antalPersoner(g);
+    const uppgift = öppenUppgift(g);
+    const knapp = (primär, attr, text) => '<button type="button" class="btn '
+      + (primär ? 'btn-primary' : 'btn-ghost') + ' btn-sm" ' + attr + '>' + esc(text) + '</button>';
+
+    const personer = g.personer.map(id => {
+      const typ = personTyp(id);
+      return typ
+        ? '<button type="button" class="fel-person" data-dp="' + typ + ':' + esc(id) + '">'
+          + esc(namnFör(id)) + '</button>'
+        : '<span class="fel-person">' + esc(namnFör(id)) + '</span>';
+    }).join('') + (g.utloggade ? '<span class="fel-person ar-anonym">Utloggad'
+      + (g.utloggade > 1 ? ' ×' + g.utloggade : '') + '</span>' : '');
+
+    const kontaktbar = g.personer.filter(id => S.personer[id] && S.personer[id].email);
+
+    return '<article class="fel-grupp" data-sort="' + s.sort + '">'
+      + '<div class="fel-huvud">'
+      + '<span class="fel-antal" title="Antal gånger">×' + g.rader.length + '</span>'
+      + '<div class="fel-titel"><b>' + esc(g.meddelande) + '</b>'
+      + '<span class="fel-meta">' + esc(g.väg)
+      + ' · senast ' + esc(kortDatum(g.senast))
+      + (g.rader.length > 1 ? ' · första ' + esc(kortDatum(g.först)) : '')
+      + ' · ' + antalPers + (antalPers === 1 ? ' person' : ' personer') + '</span></div>'
+      + pill(s.rubrik, s.klass) + '</div>'
+      + '<p class="fel-forklaring">Troligen: ' + esc(s.text) + '</p>'
+      + '<p class="fel-rad"><b>Gör så här:</b> ' + esc(s.råd) + '</p>'
+      + '<details class="fel-detaljer"><summary>Detaljer</summary>'
+      + '<dl>'
+      + '<dt>Vem</dt><dd class="fel-personer">' + (personer || '—') + '</dd>'
+      + '<dt>Sidor</dt><dd>' + esc(g.sidor.join(', ') || '—') + '</dd>'
+      + '<dt>Webbläsare</dt><dd>' + esc(g.webbläsare.join(' · ') || '—') + '</dd>'
+      + '</dl>'
+      + (g.stack ? '<pre class="fel-stack">' + esc(g.stack) + '</pre>'
+        : '<p class="xsmall" style="color:var(--muted-2)">Ingen stack sparades för det här felet.</p>')
+      + '</details>'
+      + '<div class="fel-knappar">'
+      + (s.åtgärd === 'kontakta' && kontaktbar.length
+        ? knapp(true, 'data-fel-kontakta="' + esc(g.nyckel) + '"',
+          kontaktbar.length === 1 ? 'Skriv till ' + namnFör(kontaktbar[0]).split(' ')[0] : 'Skriv till de drabbade')
+        : '')
+      + (uppgift
+        ? '<span class="fel-finns">' + pill('Uppgift finns', 'ar-vantar') + '</span>'
+        : knapp(s.åtgärd === 'uppgift', 'data-fel-uppgift="' + esc(g.nyckel) + '"', 'Gör till uppgift'))
+      /* Går den drabbade inte att nå (utloggad) finns inget att skriva,
+         och då är det att markera åtgärdat som återstår. */
+      + knapp(s.åtgärd === 'avfärda' || (s.åtgärd === 'kontakta' && !kontaktbar.length), 'data-fel-atgardat="' + esc(g.nyckel) + '"',
+        g.rader.length > 1 ? 'Markera alla ' + g.rader.length + ' åtgärdade' : 'Markera åtgärdat')
+      + '</div></article>';
+  }
+
   function ritaFel() {
-    $('#fel-antal').textContent = S.klientfel.length ? S.klientfel.length + ' st' : '';
+    const grupper = felGrupper().sort((a, b) => String(b.senast).localeCompare(String(a.senast)));
+    $('#fel-antal').textContent = S.klientfel.length
+      ? S.klientfel.length + ' st' + (grupper.length !== S.klientfel.length ? ', ' + grupper.length + ' olika' : '')
+      : '';
     märkFlik('#flik-fel-mark', S.klientfel.length + S.notisfel.length);
-    $('#fel-tabell').innerHTML = tabell([
-      { namn: 'När', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.created_at)) + '</span>' },
-      { namn: 'Sida', rita: f => esc(f.sida || '—') },
-      { namn: 'Felet', rita: f => '<b>' + esc(f.meddelande) + '</b>'
-        + (f.stack ? '<span class="adm-und" style="font-family:var(--f-mono);font-size:10px">'
-          + esc(String(f.stack).slice(0, 160)) + '</span>' : '') },
-      { namn: 'Vem', rita: f => esc(f.anvandare ? namnFör(f.anvandare) : 'Utloggad') },
-      { namn: '', höger: true, rita: f => '<button class="btn btn-ghost btn-sm" data-felbort="'
-        + f.id + '">Rensa</button>' }
-    ], S.klientfel, 'Inga fel rapporterade');
+    $('#fel-tabell').innerHTML = grupper.length
+      ? grupper.map(ritaFelGrupp).join('')
+        + (S.klientfel.length >= 100
+          ? '<p class="xsmall" style="color:var(--muted-2);margin-top:12px">Visar de 100 senaste. '
+            + 'Äldre rader kommer fram när de här är åtgärdade.</p>' : '')
+      : tomt('Inga fel rapporterade', 'Ingen har sett en trasig sida sedan listan senast tömdes.');
 
     ritaNotisfel();
   }
+
+  const felGrupp = nyckel => felGrupper().find(g => g.nyckel === nyckel);
+
+  /* Hämtar om i stället för att bara filtrera bort raderna. Bara de
+     100 senaste finns i minnet, så ett fel som hänt oftare än så har
+     äldre rader kvar i databasen — och de ska synas, inte gömmas. */
+  async function hämtaFelIgen() {
+    const { data, error } = await supa.from('klientfel').select('*')
+      .order('created_at', { ascending: false }).limit(100);
+    if (!error) S.klientfel = data || [];
+    ritaFel();
+  }
+
+  document.addEventListener('click', async e => {
+    const åtgärdat = e.target.closest('[data-fel-atgardat]');
+    const uppgift = e.target.closest('[data-fel-uppgift]');
+    const kontakta = e.target.closest('[data-fel-kontakta]');
+    if (!åtgärdat && !uppgift && !kontakta) return;
+    const knappen = åtgärdat || uppgift || kontakta;
+    const g = felGrupp(knappen.dataset.felAtgardat || knappen.dataset.felUppgift || knappen.dataset.felKontakta);
+    if (!g) { ritaFel(); return; }
+
+    if (kontakta) {
+      const till = g.personer.map(id => S.personer[id]).filter(p => p && p.email);
+      kontaktaRuta({
+        namn: till.length === 1 ? till[0].full_name || till[0].email : 'de drabbade',
+        till: till.map(p => p.email).join(', '),
+        amne: 'Sidan hos Nextrum',
+        text: 'Hej' + (till.length === 1 && till[0].full_name ? ' ' + till[0].full_name.split(' ')[0] : '') + '!\n\n'
+          + 'Vi såg att ' + (g.väg === '/larare' ? 'studiehjälparvyn' : g.väg === '/foralder' ? 'föräldravyn' : 'sidan')
+          + ' inte laddade som den skulle för dig '
+          + datumText(String(g.senast).slice(0, 10)) + '. '
+          + (g.sort.sort === 'inlogg'
+            ? 'Det verkar som att inloggningen hade gått ut. Logga in igen så ska det fungera. '
+              + 'Händer det ofta får du gärna svara på det här mejlet och berätta vilken webbläsare du använder.'
+            : 'Ladda om sidan med Cmd+Shift+R (Ctrl+Shift+R på Windows) så hämtas den på nytt. '
+              + 'Fungerar det fortfarande inte får du gärna svara på det här mejlet.')
+          + '\n\nVänliga hälsningar\nNextrum'
+      });
+      return;
+    }
+
+    if (uppgift) {
+      const stack = g.stack ? '\n\nStack:\n' + g.stack : '';
+      const text = (g.sort.rubrik + ' (gissning ur meddelandet).\n'
+        + g.rader.length + (g.rader.length === 1 ? ' gång, ' : ' gånger, ')
+        + antalPersoner(g) + (antalPersoner(g) === 1 ? ' person. ' : ' personer. ')
+        + 'Första ' + kortDatum(g.först) + ', senast ' + kortDatum(g.senast) + '.\n'
+        + 'Sidor: ' + (g.sidor.join(', ') || '—') + '\n'
+        + 'Webbläsare: ' + (g.webbläsare.join(' · ') || '—') + stack).slice(0, 2000);
+      await medan(uppgift, 'Skapar…', async () => {
+        const rad = await skapaUppgift({
+          titel: felTitel(g), typ: 'problem', beskrivning: text
+        });
+        if (rad) ritaFel();
+      });
+      return;
+    }
+
+    const ja = await bekräfta({
+      titel: g.rader.length > 1 ? 'Markera alla ' + g.rader.length + ' som åtgärdade?' : 'Markera som åtgärdat?',
+      text: 'Raderna tas bort ur listan. Att de togs bort, och av vem, står kvar i auditloggen. '
+        + 'Kommer felet tillbaka dyker det upp här igen som nytt.',
+      knapp: 'Markera åtgärdat'
+    });
+    if (!ja) return;
+    await medan(åtgärdat, 'Tar bort…', async () => {
+      /* Läs svaret. Nekar policyn blir det inget fel, bara noll
+         rader — och då ska listan inte låtsas att felet är borta. */
+      const { data, error } = await supa.from('klientfel').delete()
+        .in('id', g.rader.map(f => f.id)).select('id');
+      if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+      if (!data || !data.length) { alert('Databasen tog inte bort något. Är du inloggad som admin?'); return; }
+      await hämtaFelIgen();
+    });
+  });
 
   /* Notiser som inte gick fram. Statuskoden är hela beskedet: 401 är
      fel hemlighet mellan triggern och funktionen, 5xx är funktionen

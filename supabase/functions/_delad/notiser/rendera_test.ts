@@ -117,6 +117,9 @@ Deno.test('varje mejl har en knapp till rätt vy, och bara en', () => {
   assertStringIncludes(pass.text, `${SAJT}/foralder#lektioner/pass`);
 
   assertEquals(vyAdress('tutor', 'val'), `${SAJT}/larare#profil/notiser`);
+  // Boka pass finns bara i föräldravyn.
+  assertEquals(vyAdress('parent', 'boka'), `${SAJT}/foralder#boka`);
+  assertEquals(vyAdress('tutor', 'boka'), `${SAJT}/larare#lektioner/pass`);
 });
 
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {
@@ -187,6 +190,30 @@ Deno.test('meddelandemallen är den enda som säger vem, för där är det avsä
   const m = rendera('meddelande', 'parent');
   assertStringIncludes(m.text, 'Tove har skrivit till dig');
   assertStringIncludes(m.text, 'Själva texten läser du där, inte i mejlet');
+});
+
+Deno.test('ett avbokat pass säger skälet med våra ord och leder till en ny tid', () => {
+  const familj = rendera('pass_avbokat', 'parent', { data: { ...SMUTSIG, status: 'cancelled', skal: 'sjukdom' } });
+  assertStringIncludes(familj.text, 'Skäl');
+  assertStringIncludes(familj.text, 'Sjukdom');
+  assertStringIncludes(familj.text, 'Föreslå en ny tid');
+  assertStringIncludes(familj.text, `${SAJT}/foralder#boka`);
+
+  // Studiehjälparen föreslår inte pass själv — familjen gör det. Knappen
+  // leder därför till chatten.
+  const hjalpare = rendera('pass_avbokat', 'tutor', { data: { ...SMUTSIG, status: 'cancelled', skal: 'forhinder' } });
+  assertStringIncludes(hjalpare.text, 'Förhinder');
+  assertStringIncludes(hjalpare.text, `${SAJT}/larare#meddelanden`);
+
+  // Avslutar familjen finns ingen ny tid att föreslå.
+  const slut = rendera('pass_avbokat', 'parent', { data: { ...SMUTSIG, status: 'cancelled', skal: 'familjen_avslutar' } });
+  assertEquals(slut.text.includes('Föreslå en ny tid'), false);
+  assertStringIncludes(slut.text, `${SAJT}/foralder#lektioner/pass`);
+
+  // En text i stället för en kod når aldrig mejlet.
+  const fritext = rendera('pass_avbokat', 'parent', { data: { ...SMUTSIG, skal: 'Alva har ont i magen' } });
+  assertEquals(fritext.text.includes('ont i magen'), false);
+  assertEquals(fritext.text.includes('Skäl'), false);
 });
 
 Deno.test('avböjt och avbokat är olika besked', () => {

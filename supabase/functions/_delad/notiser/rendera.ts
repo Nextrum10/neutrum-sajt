@@ -76,7 +76,12 @@ export function vyAdress(roll: Roll, mal: Mal | 'val'): string {
   // Den publika sidan har ingen roll och ingen flik.
   if (mal === 'sajten') return SAJT;
   const vy = roll === 'tutor' ? '/larare' : '/foralder';
-  const hash = mal === 'pass' ? '#lektioner/pass' : mal === 'meddelanden' ? '#meddelanden' : '#profil/notiser';
+  // #boka finns bara i föräldravyn. Mallen ger den bara till familjen,
+  // men skulle den ändå hamna hos en studiehjälpare blir det passlistan
+  // i stället för en sektion som inte finns.
+  const hash = mal === 'pass' || (mal === 'boka' && roll === 'tutor') ? '#lektioner/pass'
+    : mal === 'boka' ? '#boka'
+    : mal === 'meddelanden' ? '#meddelanden' : '#profil/notiser';
   return `${SAJT}${vy}${hash}`;
 }
 

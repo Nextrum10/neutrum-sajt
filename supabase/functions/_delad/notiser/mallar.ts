@@ -20,7 +20,7 @@
 // säger vad som hänt, inte vem som gjorde det.
 // ============================================================
 
-import type { MejlbarTyp, RenData, Roll } from './typer.ts';
+import type { Avbokningsskal, MejlbarTyp, RenData, Roll } from './typer.ts';
 import { narText, paminnelseNar } from './tid.ts';
 
 /**
@@ -30,7 +30,7 @@ import { narText, paminnelseNar } from './tid.ts';
  * kvittot på en intresseanmälan går till någon som ännu inte har ett
  * konto, och en knapp till en inloggad vy hade mött en inloggning.
  */
-export type Mal = 'pass' | 'meddelanden' | 'sajten';
+export type Mal = 'pass' | 'meddelanden' | 'boka' | 'sajten';
 
 export type Innehall = {
   amne: string;
@@ -55,6 +55,19 @@ export const KATEGORI: Record<MejlbarTyp, string> = {
 };
 
 const SVARA = 'Svara ja eller nej i Nextrum.';
+
+/**
+ * Skälet med våra egna ord. Databasen skickar bara koden, och ett
+ * okänt värde har redan blivit null i renData().
+ */
+export const SKAL_TEXT: Record<Avbokningsskal, string> = {
+  sjukdom: 'Sjukdom',
+  forhinder: 'Förhinder',
+  ombokat: 'Behöver en annan tid',
+  ingen_hjalpare: 'Ingen studiehjälpare kunde ta passet',
+  familjen_avslutar: 'Familjen avslutar',
+  annat: 'Annat',
+};
 
 function medNar(bas: string, nar: string | null): string {
   return nar ? `${bas}: ${nar}` : bas;
@@ -120,17 +133,28 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
     };
   },
 
+  // Skälet står i faktarutan, och meningen säger vad man gör nu. En
+  // TID att föreslå kan mejlet inte ge: studiehjälparen har inget
+  // schema längre, så det finns inget att räkna fram en ledig tid ur.
+  // I stället leder knappen dit där tiden väljs — för familjen Boka
+  // pass, för studiehjälparen chatten, eftersom det är familjen som
+  // föreslår. Avslutar familjen finns ingen ny tid att föreslå.
   pass_avbokat(m) {
     const nar = narText(m.d.datum, m.d.tid);
+    const fakta = passFakta(m, nar);
+    if (m.d.skal) fakta.push(['Skäl', SKAL_TEXT[m.d.skal]]);
+    const nyTid = m.d.skal !== 'familjen_avslutar';
+    const familj = m.roll === 'parent';
     return {
       amne: medNar('Passet är avbokat', nar),
       rubrik: 'Passet är avbokat',
-      mening: m.roll === 'parent'
-        ? `Passet${med(m)} blir inte av. Du kan boka en ny tid i Nextrum.`
-        : `Passet${med(m)} blir inte av.`,
-      knapp: 'Visa dina pass',
-      mal: 'pass',
-      fakta: passFakta(m, nar),
+      mening: `Passet${med(m)} blir inte av.` + (!nyTid ? ''
+        : familj
+          ? ' Föreslå gärna en ny tid som passar er: tryck på en dag under Boka pass, så får studiehjälparen svara.'
+          : ' Skriv gärna till familjen vilka tider som passar dig, så kan de föreslå en ny.'),
+      knapp: !nyTid ? 'Visa dina pass' : familj ? 'Föreslå en ny tid' : 'Skriv till familjen',
+      mal: !nyTid ? 'pass' : familj ? 'boka' : 'meddelanden',
+      fakta,
     };
   },
 

@@ -45,7 +45,7 @@ Deno.test('renData släpper bara igenom de vitlistade fälten', () => {
   // överst innan det går igenom.
   assertEquals(Object.keys(rad).sort(), [
     'amne', 'datum', 'elev', 'fran', 'franDatum', 'franTid',
-    'prov', 'status', 'studiehjalpare', 'tid', 'timmar',
+    'prov', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
   ]);
 
   // Ingen av texterna finns kvar någonstans i svaret.
@@ -159,4 +159,15 @@ Deno.test('de två listorna är inte samma lista', () => {
   // Ett prov som faller om någon "städar" genom att låta MEJLBARA
   // peka på NOTIS_TYPER. Då börjar rapporten mejlas.
   assertNotEquals(NOTIS_TYPER.length, MEJLBARA.length);
+});
+
+Deno.test('avbokningens skäl är en av de fasta koderna, aldrig text', () => {
+  // Skälet följer med i mejlet. En fritext här hade varit precis den
+  // väg in i en inkorg som resten av renData stänger.
+  assertEquals(renData({ skal: 'sjukdom' }).skal, 'sjukdom');
+  assertEquals(renData({ skal: 'familjen_avslutar' }).skal, 'familjen_avslutar');
+  assertEquals(renData({ skal: 'Alva är sjuk i magen' }).skal, null);
+  assertEquals(renData({ skal: 'SJUKDOM' }).skal, null, 'skiftläget ska stämma exakt');
+  assertEquals(renData({ skal: ['sjukdom'] }).skal, null);
+  assertEquals(renData({}).skal, null);
 });
