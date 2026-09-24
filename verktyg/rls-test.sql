@@ -1983,6 +1983,15 @@ select '15.1 triggern bookings_tid_inom_schemat är borta', count(*) = 0, 'trigg
 reset role;
 select set_config('request.jwt.claims', null, true);
 
+-- 9.4 ommatchade Äldst till B för att prova matchad_at, och det
+-- rullas inte tillbaka. Utan återställningen är A inte längre elevens
+-- studiehjälpare: A:s uppdateringar nedan träffar tyst noll rader
+-- under RLS, och B ser historiken som B inte ska se. Det såg ut som
+-- fyra fel i triggern och var ett i testordningen.
+update public.students
+   set matched_tutor_id = '00000000-0000-4000-8000-0000000000a1', match_status = 'matched'
+ where id = '00000000-0000-4000-8000-0000000005a1';
+
 insert into public.progress_items (id, student_id, tutor_id, subject, area, steg) values
   ('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-0000000005a1',
    '00000000-0000-4000-8000-0000000000a1', 'Matematik', 'Bråk', 2);
@@ -2043,8 +2052,10 @@ select pg_temp.rakna('15.3 familj Q läser inte P:s historik', '00000000-0000-40
 select pg_temp.rakna('15.3 studiehjälpare B läser inte A:s elevs historik', '00000000-0000-4000-8000-0000000000b1',
   $q$select count(*) from public.progress_historik where progress_id = '00000000-0000-4000-8000-0000000009a1'$q$, 0);
 
-select pg_temp.rakna('15.3 anon läser ingen historik', null,
-  $q$select count(*) from public.progress_historik$q$, 0);
+-- anon har inte ens select på tabellen, så svaret är 42501 och inte
+-- noll rader. prova räknar båda som nekad; rakna hade kallat det fel.
+select pg_temp.prova('15.3 anon läser ingen historik', null,
+  array[$q$select * from public.progress_historik$q$], 'nekad');
 
 select pg_temp.prova('15.3 A skriver själv i historiken', '00000000-0000-4000-8000-0000000000a1',
   array[$q$insert into public.progress_historik (progress_id, student_id, subject, area, steg)
