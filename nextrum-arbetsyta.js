@@ -392,13 +392,23 @@ window.NXArbete = (function () {
     if (!o.tider.length) {
       return '<p class="mv-inga">' + esc(o.tom || 'Inga lediga tider den dagen.') + '</p>';
     }
+    /* I dag börjar tiderna först en timme fram (NX.tiderFörDatum). Utan
+       en mening om det ser det ut som att morgonen inte går att
+       föreslå alls — Leo 2026-09-25: "man kan inte föreslå tider före
+       11:00". Det gick, bara inte samma dag. */
+    var förstaTimme = HELA_DAGEN[0].start_time;
+    var idagKapad = o.datum === idagISO() && String(o.tider[0]).slice(0, 5) > förstaTimme;
     return '<div class="mv-tider" role="group" aria-label="' + esc('Tider ' + datumText(o.datum)) + '">'
       + o.tider.map(function (t) {
           return '<button type="button" class="bk-slot mv-tid" data-datum="' + o.datum + '"'
             + ' data-tid="' + t + '" aria-pressed="' + (o.vald === t ? 'true' : 'false') + '">'
             + esc(String(t).slice(0, 5)) + '</button>';
         }).join('')
-      + '</div>';
+      + '</div>'
+      + (idagKapad
+        ? '<p class="mv-inga">I dag går det bara att föreslå tider minst en timme fram. '
+          + 'Andra dagar går det från kl. ' + esc(förstaTimme) + '.</p>'
+        : '');
   }
 
   /* ============================================================
@@ -471,6 +481,8 @@ window.NXArbete = (function () {
 
     var st = {
       amne: o.amne || (o.amnen || [])[0] || 'Matematik',
+      /* Det familjen skrivit när ämnet är Annat. */
+      annat: '',
       minuter: 60,
       /* Hur många barn passet gäller. Tillägget är EN summa oavsett
          om de är två eller tre — regeln och taket står i tjanster. */
@@ -506,8 +518,25 @@ window.NXArbete = (function () {
       var f = t[0];
       if (!f) return false;
       if (f.subject && (o.amnen || []).indexOf(f.subject) !== -1) st.amne = f.subject;
+      /* Ett ämne som inte står i listan skrevs under Annat. Då blir
+         det Annat igen, med samma ord i fältet. */
+      else if (f.subject && (o.amnen || []).indexOf(ANNAT) !== -1) { st.amne = ANNAT; st.annat = f.subject; }
       if (f.duration_min) st.minuter = f.duration_min;
       return true;
+    }
+
+    /* "Annat" säger ingenting till studiehjälparen om vad hen ska
+       förbereda. Leo 2026-09-25: "när man lägger till annat ska man
+       kunna skriva ämnet". Det skrivna ordet är det som sparas i
+       bookings.subject, inte "Annat". Mejlen läser ämnet genom
+       fornamn() (första ordet, bara bokstäver), så fritexten når
+       aldrig ett mejl som mer än ett ord. */
+    var ANNAT = 'Annat';
+    function ämnet() {
+      return st.amne === ANNAT ? st.annat.replace(/\s+/g, ' ').trim() : st.amne;
+    }
+    function ämneOk() {
+      return st.amne !== ANNAT || /\p{L}.*\p{L}/u.test(ämnet());
     }
 
     var FORMAT = [['Online', 'Online'], ['På plats', 'På plats']];
@@ -604,6 +633,11 @@ window.NXArbete = (function () {
       return '<p class="bk-kal-dagnamn">' + esc(dagNamn(st.dag)) + '</p>'
         + '<div class="bk-val">'
         + rad('Ämne', chips('bk-amnen', (o.amnen || []).map(function (a) { return [a, a]; }), st.amne, 'Ämne'))
+        + (st.amne === ANNAT
+          ? '<div class="bk-valrad bk-faltrad"><label class="bk-valrad-et" for="bk-annat">Vilket ämne?</label>'
+            + '<input class="inp" id="bk-annat" maxlength="40" autocomplete="off"'
+            + ' placeholder="T.ex. spanska, programmering, ekonomi" value="' + esc(st.annat) + '"></div>'
+          : '')
         + rad('Längd', chips('bk-langder', LANGDER.map(function (l) { return [String(l[0]), l[1]]; }),
             String(st.minuter), 'Längd'))
         + rad('Tid', tidsrad({
@@ -630,7 +664,7 @@ window.NXArbete = (function () {
        tydligare". Stegen följer valen: det man gjort är ibockat, det
        man står på är markerat. */
     function stegRad() {
-      var ett = !!st.dag, två = ett && !!st.tid && platsOk();
+      var ett = !!st.dag, två = ett && !!st.tid && platsOk() && ämneOk();
       var nu = !ett ? 1 : !två ? 2 : 3;
       var vem = o.hos || 'er studiehjälpare';
       function steg(n, text, klar) {
@@ -642,6 +676,7 @@ window.NXArbete = (function () {
         ? 'Tryck på en dag i kalendern. Varje dag framåt går att välja.'
         : nu === 2
           ? (!st.tid ? 'Välj ämne, hur länge och en tid. Timmar som redan är bokade hos ' + vem + ' syns inte.'
+            : !ämneOk() ? 'Skriv vilket ämne det gäller, under Ämne.'
             : 'Skriv var ni ses — eller välj Online.')
           : 'Allt är valt. Tryck på Föreslå tiden, så svarar ' + vem + ' med ett ja eller en annan tid.';
       return '<ol class="bk-stegrad" aria-label="Så föreslår ni en tid">'
@@ -667,7 +702,7 @@ window.NXArbete = (function () {
     function sammanfattning() {
       if (!st.dag) return '';
       var vald = !!st.tid;
-      var klar = vald && platsOk();
+      var klar = vald && platsOk() && ämneOk();
       var vem = o.hos || 'Er studiehjälpare';
       var d = new Date(st.dag + 'T12:00:00');
       var när = vald
@@ -677,7 +712,7 @@ window.NXArbete = (function () {
         + '<div class="bk-sum-vad">'
         + (vald
           ? '<b>' + esc(när) + '</b>'
-            + '<span>' + esc([st.amne, längdText(), st.barn > 1 ? st.barn + ' barn' : null,
+            + '<span>' + esc([ämnet() || 'Ämne saknas', längdText(), st.barn > 1 ? st.barn + ' barn' : null,
                 st.format === 'På plats' ? (st.plats.trim() || 'Adress saknas') : st.format]
                 .filter(Boolean).join(' · ')) + '</span>'
           : '<b>Välj en tid</b>'
@@ -725,6 +760,19 @@ window.NXArbete = (function () {
         + '<p class="ok-msg' + (st.fel ? ' show is-err' : '') + '" id="bk-msg">'
         + (st.fel ? esc(st.fel) : '') + '</p>'
         + '</div>';
+      visaValtÄmne();
+    }
+
+    /* Ett ämne som ärvts från förra passet kan stå utanför kanten på
+       ämnesraden, och då syns fältet under Annat utan att man ser att
+       Annat är valt. Raden förs i sidled så att valet syns — med
+       scrollLeft, inte scrollIntoView, som rullar hela sidan. */
+    function visaValtÄmne() {
+      var rad = host.querySelector('#bk-amnen');
+      var valt = rad && rad.querySelector('[aria-pressed="true"]');
+      if (!valt || rad.scrollWidth <= rad.clientWidth) return;
+      var över = valt.getBoundingClientRect().right - rad.getBoundingClientRect().right;
+      if (över > 0) rad.scrollLeft += över + 16;
     }
 
     /* Allt utom månaden. Ett tryck på en tid, ett ämne eller en längd
@@ -747,6 +795,7 @@ window.NXArbete = (function () {
       sum.innerHTML = st.besked ? '' : sammanfattning();
       ämnen = host.querySelector('#bk-amnen');
       if (ämnen && sidled) ämnen.scrollLeft = sidled;
+      else visaValtÄmne();
       var msg = host.querySelector('#bk-msg');
       if (msg) { msg.className = 'ok-msg' + (st.fel ? ' show is-err' : ''); msg.textContent = st.fel || ''; }
       Array.prototype.forEach.call(host.querySelectorAll('.mv-dag'), function (d) {
@@ -863,6 +912,11 @@ window.NXArbete = (function () {
           ritaDel();
           if (grupp === 'bk-langder') uppdateraDagar();
         });
+        /* Annat är ett val som kräver ett ord till. Fältet får fokus
+           direkt, utan att sidan rullar dit. */
+        var fält = grupp === 'bk-amnen' && st.amne === ANNAT && !st.annat
+          ? host.querySelector('#bk-annat') : null;
+        if (fält) fält.focus({ preventScroll: true });
         return;
       }
 
@@ -871,6 +925,7 @@ window.NXArbete = (function () {
 
     host.addEventListener('input', function (e) {
       if (e.target.id === 'bk-plats') { st.plats = e.target.value; ritaText(); }
+      else if (e.target.id === 'bk-annat') { st.annat = e.target.value; ritaText(); }
       else if (e.target.id === 'bk-not') { st.not = e.target.value; }
     });
 
@@ -883,11 +938,11 @@ window.NXArbete = (function () {
 
     function skicka() {
       var knapp = $('#bk-boka', host);
-      if (!st.dag || !st.tid || !platsOk()) return;
+      if (!st.dag || !st.tid || !platsOk() || !ämneOk()) return;
       st.besked = null; st.fel = null;
       NXStudie.medan(knapp, 'Skickar…', async function () {
         var r = tolka(await o.boka({
-          datum: st.dag, tid: st.tid, minuter: st.minuter, amne: st.amne, barn: st.barn,
+          datum: st.dag, tid: st.tid, minuter: st.minuter, amne: ämnet(), barn: st.barn,
           format: st.format,
           plats: st.format === 'På plats' ? st.plats.trim() : null,
           not: st.not.trim() || null

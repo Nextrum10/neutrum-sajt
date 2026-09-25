@@ -39,6 +39,11 @@ tider, och först då står passet under Mina lektioner. Det finns inga
 veckotider längre: `tutor_availability` läses inte av något, och
 triggern som bekräftade bokningar inom dem är borttagen. En avbokning
 kräver ett skäl (fast kod), och motparten får det i mejlet (Fas 15.2).
+Väljer familjen ämnet Annat måste de skriva vilket, och det skrivna
+ordet är det som sparas i `bookings.subject` (2026-09-25). Mejlen
+läser ämnet genom `fornamn()`, så fritexten når dem som ett ord.
+Samma dag går det bara att föreslå tider minst en timme fram, och
+tidsraden säger det — annars ser det ut som att morgonen saknas.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
