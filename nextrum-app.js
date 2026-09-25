@@ -414,8 +414,17 @@ const NX = (function () {
           const m = k.parentElement.querySelector('.dr-mer');
           if (m) m.hidden = false;
           /* Kortet kan ligga halvt utanför raden när man trycker på
-             det. Utan det här fälls texten ut på något man inte ser. */
-          k.closest('li').scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+             det. Utan det här fälls texten ut på något man inte ser.
+
+             Inte i startsidans rullande band (.nx-band.pa). Där går
+             raden inte att scrolla — den flyttas med transform och
+             klipps — och Chrome räknade då fram ett mål flera hundra
+             pixlar bort och rullade SIDAN dit: kortet man tryckte på
+             for iväg 400 px. Kortet man trycker på i bandet syns
+             redan, och bandet stannar medan det är utfällt. */
+          if (!k.closest('.nx-band.pa')) {
+            k.closest('li').scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+          }
         }
       });
     });

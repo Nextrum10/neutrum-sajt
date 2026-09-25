@@ -39,6 +39,21 @@ tider, och först då står passet under Mina lektioner. Det finns inga
 veckotider längre: `tutor_availability` läses inte av något, och
 triggern som bekräftade bokningar inom dem är borttagen. En avbokning
 kräver ett skäl (fast kod), och motparten får det i mejlet (Fas 15.2).
+Väljer familjen ämnet Annat måste de skriva vilket, och det skrivna
+ordet är det som sparas i `bookings.subject` (2026-09-25). Mejlen
+läser ämnet genom `fornamn()`, så fritexten når dem som ett ord.
+Samma dag går det bara att föreslå tider minst en timme fram, och
+tidsraden säger det — annars ser det ut som att morgonen saknas.
+
+**Ångerrätten står i villkoren** (`#angerratt`, 2026-09-25): 14 dagar
+från att passet är bokat. Villkoren nämnde den inte alls förut, och
+utan informationen förlängs fristen med upp till tolv månader (lagen
+om distansavtal 2 kap. 13 §). Att ett genomfört pass inte går att
+ångra, och att en påbörjad del betalas, gäller bara för att familjen
+UTTRYCKLIGEN bett att passet hålls inom fristen — den begäran är att
+föreslå tiden, och meningen om det står sist i bokningens dagpanel.
+Tas meningen bort faller undantaget. Klippkort, när de byggs, har
+samma ångerrätt: den går inte att avtala bort.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
@@ -143,13 +158,72 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
-| `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara |
+| `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med |
+| `nextrum-start.css` + `nextrum-start.js` | **Startsidan** (sv och en), efter cinema respektive före sidans eget skript, **och För elever & föräldrar**, som bara använder studievyns illustration ur dem. Rörelsen efter hero: ordfyllnaden, hållpunkterna 1–4, korten som stiger upp, det rullande bandet, bildväggen och studievyn som visar sig själv (en rundtur, men den går inte att klicka i). Skriptet startar av sig självt och skriver ingen text — allt man läser står i markupen, på båda språken |
 | `nextrum-admin-palett.css` | Bara `admin.html`, laddas **sist**. Sedan 2026-09-24 **ingen egen palett**: adminvyn ärver jordpaletten som de två andra vyerna. Filen bär bara `--fel`, `--ln-kontroll`, agentflikens `--acc-lugn` och felsemantiken |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
 Sju områdessidor (`laxhjalp-*.html`) genereras. `/en/` är elva
 översatta sidor.
+
+### Startsidan efter hero (2026-09-25)
+
+Hero är orörd med flit. Allt annat på startsidan bor i
+`nextrum-start.css` och `nextrum-start.js`, och startlägena gömmer
+ingenting utan `html.nx-sr` — klassen sätts av skriptet, så en fil som
+inte laddar lämnar sidan i slutläget.
+
+**Skriptet sätter klasser, CSS rör sig.** Första versionen räknade om
+kort, ord och ett blad över filmen för varje bildruta medan man
+scrollade, och studievyns lutning skrev CSS-variabler på fönstret.
+Leo: "alla animationer måste se mer smooth ut och inte laggiga". En
+scrollkopplad effekt i JavaScript hamnar ur takt med en scroll som
+webbläsaren kör på grafikkortet, och **en custom property ärvs** — en
+variabel på ett element med hundratals barn räknar om stilen för alla
+vid varje skrivning. Nu säger en IntersectionObserver när något syns,
+en klass sätts, och resten är transitions på opacity, transform,
+translate och scale. Bandet är en Web Animation. Mätt med samma scroll
+och musrörelse: stilomräkningen gick från cirka 700 till 165 ms.
+Skriv inte tillbaka stil per bildruta, och animera inte box-shadow —
+lägg skuggan i ett eget lager och tona dess opacitet.
+
+Fyra saker som kostade en omgång:
+
+1. **`once`-scenerna i `NXMotion` avslöjade aldrig något.** Scenen
+   markerades klar efter första anropet, och det kommer när elementet
+   når observatörens marginal — innan det syns, med p = 0. Nödbromsen
+   visade sedan ALLT efter två sekunder, så sidan såg frisk ut:
+   33 av 33 block under vikningen på startsidan var synliga innan
+   någon scrollat. Nu är en once-scen klar först när `run()` svarar
+   något annat än `false`, och bromsen visar bara det som står i eller
+   ovanför vyn. Gäller alla publika sidor.
+2. **`preserve-3d` och en rullbar behållare går inte ihop i Chrome.**
+   Studievyns fönster lutade mot pekaren. Med `transform-style:
+   preserve-3d` gav `elementFromPoint` föräldern i stället för knappen
+   i sidomenyn, och klicket gjorde ingenting. Sedan dess har Leo valt
+   bort att illustrationen går att röra (fönstret är `inert`), men
+   fällan gäller varje lutat lager med något klickbart i.
+3. **`scrollIntoView` i en rad som flyttas med transform rullar
+   sidan.** `NX.initDrag()` visar kortet man tryckt på. I bandet, som
+   klipps och förskjuts med transform, räknade Chrome fram ett mål
+   400 px bort och rullade hela sidan dit. Anropet hoppas över i
+   `.nx-band.pa`. Bandet är `overflow:clip`, inte `hidden`, av samma
+   skäl: `hidden` gör det till något som går att scrolla. Kanterna tonas
+   med två stilla gradienter, inte `mask-image`: en mask över något som
+   rör sig ritas om varje bildruta i Safari.
+4. **Bandets kopior måste finnas när `NX.initDrag()` körs.** Därför
+   laddas `nextrum-start.js` före sidans eget skript. Kopiorna är
+   `aria-hidden`, utanför tabbordningen och har egna id:n; en
+   skärmläsare hör sex kort, inte arton.
+
+Studievyns markup byggs för båda språken ur samma mall, så att
+taggsekvensen är identisk. Samma markup står på `for-elever-och-foraldrar.html`
+(sv och en, 2026-09-25: den gamla `.nx-mock` stod kvar där). Ändras
+den på startsidan ska den kopieras dit. `jamfor-sprak.py` rapporterar bara den
+FÖRSTA strukturskillnaden, och på startsidan är den språkväljaren —
+en skillnad längre ner syns alltså inte i verktyget. Jämför
+taggsekvenserna med `difflib` när du ändrar i sektionen.
 
 ### Två fällor när en palett byts
 
