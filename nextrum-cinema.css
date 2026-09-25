@@ -18,15 +18,21 @@
      Terrakottan är inte längre bara en accent i marginalen — den
      är knapparnas färg, det första man ser. --acc/--acc-lugn är
      mörkare än gamla orangea versionen med flit, annars klarar
-     inte knapptexten AA (4.5:1) mot kräm-botten. */
-  --pap:#EFE6D6;          /* lin — botten. Varm havre, INTE off-white */
-  --pap-2:#E5D8C2;        /* lugn yta */
-  --pap-3:#D8C7AB;        /* djupare yta, kant mot foto */
+     inte knapptexten AA (4.5:1) mot kräm-botten.
+
+     Papperet ljusnade 2026-09-25, på hela sajten: #EFE6D6 → #F2EDE3.
+     Leo ville ha det ljusare men beige, provade det först på
+     startsidan och ville sedan ha samma färg överallt. Bläcket och
+     leran är orörda; mot det ljusare papperet har all text fått MER
+     kontrast, inte mindre. Mörkt läge är orört. */
+  --pap:#F2EDE3;          /* papper — botten. Ljust, men beige, INTE off-white */
+  --pap-2:#E9E2D4;        /* lugn yta */
+  --pap-3:#DBD2BF;        /* djupare yta, kant mot foto */
   --bl:#2E2A20;           /* bark — mörk gröngrå-brun, INTE svart */
-  --bl-2:#4F4738;         /* brödtext på lin (7.4:1) */
-  --bl-3:#665C49;         /* dämpat, klarar AA även mot --pap-2 */
-  --ln:#DDCDB2;           /* linjer */
-  --ln-2:#C9B492;
+  --bl-2:#4F4738;         /* brödtext på papperet (7,9:1) */
+  --bl-3:#665C49;         /* dämpat, klarar AA även mot --pap-2 (5,1:1) */
+  --ln:#E2DACB;           /* linjer */
+  --ln-2:#CDC2AC;
 
   /* --- nedtryckt yta ---
      I LJUST sjunker den nedtryckta ytan, i MÖRKT stiger den. Det är
@@ -95,7 +101,7 @@
        lin #EFE6D6 på lera #9C4520 → 5,2:1 */
   --acc-ink:#EFE6D6;
   --acc-text:#7A3417;
-  --acc-soft:#E3CFBD;
+  --acc-soft:#EFDFD1;
   --acc-line:rgba(156,69,32,.28);
 
   /* --- rytm --- */
@@ -2304,14 +2310,14 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]) .nx-panel,
   :root:not([data-theme="light"]) .nx-form-yta{
-    --pap:#EFE6D6; --pap-2:#E5D8C2; --pap-3:#D8C7AB;
+    --pap:#F2EDE3; --pap-2:#E9E2D4; --pap-3:#DBD2BF;
     --bl:#2E2A20; --bl-2:#4F4738; --bl-3:#665C49;
-    --ln:#DDCDB2; --ln-2:#C9B492;
+    --ln:#E2DACB; --ln-2:#CDC2AC;
     --nt:#2E2A20; --nt-fg:#EFE6D6; --nt-mut:#B3A88F;
     --acc:#9C4520; --acc-lugn:#7A3417;
     --mossa:#546343; --ockra:#7E5714;
     --acc-ink:#EFE6D6; --acc-text:#7A3417;
-    --acc-soft:#E3CFBD; --acc-line:rgba(156,69,32,.28);
+    --acc-soft:#EFDFD1; --acc-line:rgba(156,69,32,.28);
     --bg:var(--pap-2); --fg:var(--bl);
     --muted:var(--bl-2); --muted-2:var(--bl-3);
     --line:var(--ln); --line-2:var(--ln-2);
@@ -2327,14 +2333,14 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 }
 :root[data-theme="dark"] .nx-panel,
 :root[data-theme="dark"] .nx-form-yta{
-  --pap:#EFE6D6; --pap-2:#E5D8C2; --pap-3:#D8C7AB;
+  --pap:#F2EDE3; --pap-2:#E9E2D4; --pap-3:#DBD2BF;
   --bl:#2E2A20; --bl-2:#4F4738; --bl-3:#665C49;
-  --ln:#DDCDB2; --ln-2:#C9B492;
+  --ln:#E2DACB; --ln-2:#CDC2AC;
   --nt:#2E2A20; --nt-fg:#EFE6D6; --nt-mut:#B3A88F;
   --acc:#9C4520; --acc-lugn:#7A3417;
   --mossa:#546343; --ockra:#7E5714;
   --acc-ink:#EFE6D6; --acc-text:#7A3417;
-  --acc-soft:#E3CFBD; --acc-line:rgba(156,69,32,.28);
+  --acc-soft:#EFDFD1; --acc-line:rgba(156,69,32,.28);
   --bg:var(--pap-2); --fg:var(--bl);
   --muted:var(--bl-2); --muted-2:var(--bl-3);
   --line:var(--ln); --line-2:var(--ln-2);

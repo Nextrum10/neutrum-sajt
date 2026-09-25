@@ -16,7 +16,7 @@
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/">
 <link rel="alternate" hreflang="en" href="https://nextrum.se/en/">
 <link rel="alternate" hreflang="x-default" href="https://nextrum.se/">
-<meta name="theme-color" content="#F3F2EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#F2EDE3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 
@@ -49,13 +49,13 @@
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 
 <!-- ordningen spelar roll: bas → startsida → cinema → start.
-     nextrum-start.css laddas bara här och på /en/: det ljusare
-     papperet och rörelsen efter hero gäller den här sidan, inte
-     undersidorna och inte de inloggade vyerna. -->
+     nextrum-start.css laddas bara här och på /en/: rörelsen efter
+     hero gäller den här sidan. Papperet står i cinema och är hela
+     sajtens. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
-<link rel="stylesheet" href="nextrum-cinema.css?v=b56b6211">
-<link rel="stylesheet" href="nextrum-start.css?v=fb841922">
+<link rel="stylesheet" href="nextrum-cinema.css?v=b9b953fc">
+<link rel="stylesheet" href="nextrum-start.css?v=aff1a601">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -587,10 +587,14 @@
 
 <!-- ==========================================================
      6 — STUDIEVYN
-     En illustration av föräldravyn som den ser ut i dag, och som
-     går att klicka i: menyn, bokningen som ett förslag, passlistan,
-     betalningen, läxorna, femstegsskalan och chatten. Ingenting
-     här pratar med Supabase — allt är exempel och märks upp så.
+     En illustration av föräldravyn som den ser ut i dag: menyn,
+     bokningen som ett förslag, passlistan, betalningen, läxorna,
+     femstegsskalan och chatten. Den visar sig själv — en rundtur
+     klickar sig igenom den när den syns — men besökaren kan inte
+     klicka i den (Leo 2026-09-25: "du ska inte kunna interagera med
+     den"). Fönstret är inert, och för skärmläsare är det en bild
+     med en beskrivning. Ingenting här pratar med Supabase — allt är
+     exempel och märks upp så.
      Beteendet står i nextrum-start.js (studievy), formen i
      nextrum-start.css avsnitt 8.
 
@@ -611,9 +615,9 @@
     </div>
   </div>
 
-  <div class="nx-sd" data-studievy>
+  <div class="nx-sd" data-studievy role="img" aria-label="Illustration av Nextrums studievy: en familj godkänner en tid, föreslår ett pass, svarar studiehjälparen, betalar och bockar av en läxa. Innehållet är ett exempel.">
     <div class="sd-rum">
-      <div class="sd-fonster" role="group" aria-label="Illustration av Nextrums studievy. Innehållet är ett exempel, och allt går att klicka på.">
+      <div class="sd-fonster" inert>
         <div class="sd-bar" aria-hidden="true"><i></i><i></i><i></i><span>nextrum.se/foralder</span></div>
         <div class="sd-app">
         <nav class="sd-sido" aria-label="Studievyns meny, exempel">
@@ -817,11 +821,7 @@
   </div>
 
   <div class="sd-under">
-    <p class="nx-bildtext">Illustration av studievyn — innehållet är ett exempel. Klicka runt i den.</p>
-    <button type="button" class="sd-tur" data-sd-tur hidden>
-      <span class="paus"><svg viewBox="0 0 14 14" aria-hidden="true"><rect x="3" y="2" width="3" height="10" rx="1"/><rect x="8" y="2" width="3" height="10" rx="1"/></svg>Pausa rundturen</span>
-      <span class="spela"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2.5v9l7.5-4.5z"/></svg>Visa rundturen</span>
-    </button>
+    <p class="nx-bildtext">Illustration av studievyn — innehållet är ett exempel</p>
   </div>
 </section>
 
@@ -1190,7 +1190,7 @@
 <!-- Startsidans rörelse. FÖRE sidans eget skript: bandets kopior
      måste finnas när NX.initDrag() letar upp korten. Startar av sig
      självt, så att inget anrop här nere kan kasta om filen saknas. -->
-<script src="nextrum-start.js?v=fee46b83"></script>
+<script src="nextrum-start.js?v=76a43c0a"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

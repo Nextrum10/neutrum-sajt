@@ -138,8 +138,8 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
-| `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara |
-| `nextrum-start.css` + `nextrum-start.js` | **Bara startsidan** (sv och en), efter cinema respektive före sidans eget skript. Det ljusare papperet (`--pap:#F2EDE3`, Leo 2026-09-25) och rörelsen efter hero: ordfyllnaden, hållpunkterna 1–4, korten som stiger upp, det rullande bandet, bildväggen och studievyn man kan klicka i. Skriptet startar av sig självt och skriver ingen text — allt man läser står i markupen, på båda språken |
+| `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med |
+| `nextrum-start.css` + `nextrum-start.js` | **Bara startsidan** (sv och en), efter cinema respektive före sidans eget skript. Rörelsen efter hero: ordfyllnaden, hållpunkterna 1–4, korten som stiger upp, det rullande bandet, bildväggen och studievyn som visar sig själv (en rundtur, men den går inte att klicka i). Skriptet startar av sig självt och skriver ingen text — allt man läser står i markupen, på båda språken |
 | `nextrum-admin-palett.css` | Bara `admin.html`, laddas **sist**. Sedan 2026-09-24 **ingen egen palett**: adminvyn ärver jordpaletten som de två andra vyerna. Filen bär bara `--fel`, `--ln-kontroll`, agentflikens `--acc-lugn` och felsemantiken |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
@@ -179,10 +179,11 @@ Fyra saker som kostade en omgång:
    något annat än `false`, och bromsen visar bara det som står i eller
    ovanför vyn. Gäller alla publika sidor.
 2. **`preserve-3d` och en rullbar behållare går inte ihop i Chrome.**
-   Studievyns fönster lutar mot pekaren. Med `transform-style:
+   Studievyns fönster lutade mot pekaren. Med `transform-style:
    preserve-3d` gav `elementFromPoint` föräldern i stället för knappen
-   i sidomenyn, och klicket gjorde ingenting. Lutningen står kvar;
-   3D-kontexten är borta.
+   i sidomenyn, och klicket gjorde ingenting. Sedan dess har Leo valt
+   bort att illustrationen går att röra (fönstret är `inert`), men
+   fällan gäller varje lutat lager med något klickbart i.
 3. **`scrollIntoView` i en rad som flyttas med transform rullar
    sidan.** `NX.initDrag()` visar kortet man tryckt på. I bandet, som
    klipps och förskjuts med transform, räknade Chrome fram ett mål

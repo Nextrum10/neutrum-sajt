@@ -27,31 +27,13 @@
    ============================================================ */
 
 /* ============================================================
-   1. PAPPERET
+   1. KORTEN
 
-   Ljusare än linet i cinema (#EFE6D6), men beige. Leo valde först
-   #F3F2EC och ville sedan ha det "lite beigare": #F2EDE3. Leran
-   #9C4520 står kvar som accent.
-
-   Bara startsidan. Tokens sätts på :root i en fil bara den här
-   sidan laddar, och det är därför alias-fällan i CLAUDE.md (--bg,
-   --surface … fryser rotens värde) inte slår till: aliasen deklareras
-   på SAMMA element och räknas med det här värdet. Mörkt läge rörs
-   inte — dess block väger (0,2,0) och vinner över det här (0,1,0),
-   så varje token som skrivs om här måste också finnas där. Det gör
-   alla sex.
-
-   Kontrollerat mot AA: dämpad text #665C49 på papperet 5,6:1, på den
-   lugna ytan #E9E2D4 5,1:1, på korten 6,2:1. Leran på papperet 5,5:1.
+   Papperet (#F2EDE3) bodde här medan det bara gällde startsidan.
+   Sedan 2026-09-25 är det hela sajtens och står i nextrum-cinema.css.
+   Kvar här är det som bara startsidan använder.
    ============================================================ */
 :root{
-  --pap:#F2EDE3;
-  --pap-2:#E9E2D4;
-  --pap-3:#DBD2BF;
-  --ln:#E2DACB;
-  --ln-2:#CDC2AC;
-  --acc-soft:#EFDFD1;
-
   /* Korten: en nyans LJUSARE än papperet, inte mörkare. En mörkare
      yta på ljus botten läser som ett hål; en ljusare läser som ett
      blad som ligger ovanpå. */
@@ -968,19 +950,6 @@ html.nx-sr .nx-sd.nx-in .sd-rum{opacity:1;transform:none}
   margin-top:clamp(18px,2vw,26px);
 }
 .sd-under .nx-bildtext{margin-top:0}
-.sd-tur{
-  display:inline-flex;align-items:center;gap:9px;
-  padding:9px 16px;border-radius:100px;border:1px solid var(--ln-2);background:var(--kort);
-  font-size:.84rem;font-weight:600;letter-spacing:-.01em;color:var(--bl);cursor:pointer;
-  transition:border-color .2s var(--e);
-}
-.sd-tur:hover{border-color:var(--bl)}
-.sd-tur[hidden]{display:none}
-.sd-tur svg{width:12px;height:12px;fill:currentColor}
-.sd-tur .paus{display:none}
-.sd-tur.spelar .paus{display:inline-flex}
-.sd-tur.spelar .spela{display:none}
-.sd-tur span{display:inline-flex;align-items:center;gap:9px}
 
 /* --- smalare skärmar --- */
 @media (max-width:1100px){

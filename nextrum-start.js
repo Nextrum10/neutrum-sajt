@@ -392,23 +392,27 @@ const NXStart = (function () {
   /* ============================================================
      STUDIEVYN
 
-     En illustration man kan klicka i. Allt tillstånd bor i DOM:en
-     som klasser, och allt klick går genom EN lyssnare på fönstret.
-     Därför är "börja om" bara att byta .sd-app mot en ren kopia av
-     markupen — inga lyssnare att koppla om, inget tillstånd att
-     nollställa för hand.
+     En illustration som visar sig själv. Besökaren kan inte klicka i
+     den (Leo 2026-09-25: "du ska inte kunna interagera med den"):
+     fönstret är inert i markupen, och för skärmläsare är hela
+     illustrationen en bild med en beskrivning.
 
-     Rundturen är en pekare som klickar sig igenom vyn av sig själv.
-     Den går bara när vyn syns, stannar för gott första gången någon
-     själv klickar eller trycker på en tangent i den, och går att
-     pausa med knappen under (WCAG 2.2.2).
+     Rundturen är en pekare som klickar sig igenom vyn: godkänner en
+     tid, föreslår ett pass, svarar i chatten, betalar, bockar av en
+     läxa. Den går bara när vyn syns, och börjar om efter en paus.
+     Klicken är programmatiska — el.click() — och inert stoppar bara
+     det en människa gör, så de når fram.
+
+     Allt tillstånd bor i DOM:en som klasser, och allt klick går
+     genom EN lyssnare på fönstret. Därför är "börja om" bara att
+     byta .sd-app mot en ren kopia av markupen — inga lyssnare att
+     koppla om, inget tillstånd att nollställa för hand.
      ============================================================ */
   function studievy() {
     const rot = $('[data-studievy]');
     if (!rot) return;
     const fönster = $('.sd-fonster', rot);
     const pekare = $('.sd-pekare', rot);
-    const turKnapp = $('[data-sd-tur]');
     const mall = $('.sd-app', rot).cloneNode(true);
     let app = $('.sd-app', rot);
 
@@ -552,39 +556,6 @@ const NXStart = (function () {
     förbered();
     visa('oversikt');
 
-    /* ---------- lutningen ----------
-       Bara med mus på stor skärm. Fönstret vrider sig några grader
-       mot pekaren.
-
-       Transformen skrivs direkt på fönstret, med sitt eget
-       perspektiv. Den skrevs förut som CSS-variabler på .sd-rum, och
-       en variabel ärvs: varje musrörelse räknade om stilen för vart
-       och ett av fönstrets hundratals element. En transform ärvs inte
-       — den räknas om för ett element och flyttas på grafikkortet. */
-    if (full && mus) {
-      let mx = 0, my = 0, tx = 0, ty = 0, raf = 0;
-      const steg = () => {
-        mx += (tx - mx) * 0.1; my += (ty - my) * 0.1;
-        const vila = Math.abs(tx - mx) + Math.abs(ty - my) < 0.001;
-        if (vila) { mx = tx; my = ty; }
-        fönster.style.transform = (mx || my)
-          ? 'perspective(1800px) rotateX(' + (-my * 5).toFixed(3) + 'deg) rotateY(' + (mx * 7).toFixed(3) + 'deg)'
-          : '';
-        raf = vila ? 0 : requestAnimationFrame(steg);
-      };
-      rot.addEventListener('pointermove', e => {
-        if (e.pointerType !== 'mouse') return;
-        const r = rot.getBoundingClientRect();
-        tx = M.clamp((e.clientX - r.left) / r.width - 0.5, -0.5, 0.5);
-        ty = M.clamp((e.clientY - r.top) / r.height - 0.5, -0.5, 0.5);
-        if (!raf) raf = requestAnimationFrame(steg);
-      });
-      rot.addEventListener('pointerleave', () => {
-        tx = 0; ty = 0;
-        if (!raf) raf = requestAnimationFrame(steg);
-      });
-    }
-
     /* ---------- resningen ----------
        Fönstret ligger bakåtlutat och reser sig när det kommer in i
        bild — en transition på .sd-rum, utlöst av en klass. */
@@ -614,7 +585,7 @@ const NXStart = (function () {
       '.sd-lax input:not(:checked)', 1600,
       '.sd-sido [data-sd-visa="oversikt"]'
     ];
-    let tur = null, turSynlig = false, rörd = false;
+    let tur = null, turSynlig = false;
 
     function vänta(ms, tok) {
       return new Promise(klar => {
@@ -673,7 +644,6 @@ const NXStart = (function () {
     async function körTur() {
       if (tur) return;
       const tok = tur = { stopp: false };
-      if (turKnapp) turKnapp.classList.add('spelar');
       /* Pekaren börjar mitt i fönstret, inte i hörnet där den annars
          står innan första målet är satt. */
       pekare.style.setProperty('--px', (fönster.clientWidth * 0.55).toFixed(0) + 'px');
@@ -702,36 +672,10 @@ const NXStart = (function () {
       }
     }
 
-    function stoppaTur() {
-      if (tur) { tur.stopp = true; clearTimeout(tur.t); tur = null; }
-      pekare.classList.remove('syns');
-      if (turKnapp) turKnapp.classList.remove('spelar');
-    }
-
-    /* Den som själv tar i vyn har tagit över — också när rundturen
-       inte går just då. Annars startar den när vyn kommer tillbaka i
-       bild, och första steget är att nollställa det man själv gjort. */
-    const tarÖver = e => {
-      if (!e.isTrusted) return;
-      rörd = true;
-      if (tur) stoppaTur();
-    };
-    fönster.addEventListener('pointerdown', tarÖver);
-    fönster.addEventListener('keydown', tarÖver);
-
-    if (turKnapp) {
-      turKnapp.hidden = false;
-      turKnapp.addEventListener('click', () => {
-        if (tur) { rörd = true; stoppaTur(); return; }
-        nollställ();
-        körTur();
-      });
-    }
-
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(e => {
         turSynlig = e[0].isIntersecting;
-        if (turSynlig && !tur && !rörd && rörelse) körTur();
+        if (turSynlig && !tur && rörelse) körTur();
       }, { threshold: 0.4 }).observe(fönster);
     }
   }
