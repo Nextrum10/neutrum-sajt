@@ -290,6 +290,16 @@ strypt processor och scroll anchoring avstängd (som Safari):
    sidled — en rad man dragit fram Engelska i hoppade tillbaka till
    Matematik.
 
+**Känslan i studievyn och studiehjälparvyn** (2026-09-25, sist i
+`nextrum-arbetsyta.css`, `.vy:not(.vy-admin)`): rundare ytor, runda
+dagar och tider som piller, och ett tryck som sjunker med `scale` och
+fjädrar tillbaka. Aldrig `transform` (cinemas `.btn:active` äger den)
+och aldrig en storlek som ändras av trycket (punkt 4). Ingen
+animation på `[aria-pressed]`: bokningen ritar om sin panel vid varje
+tryck, och allt som redan var valt hade studsat varje gång. iPhone
+tänder `:active` först med en touch-lyssnare på sidan; den står i
+`nextrum-studie.js`.
+
 Provbänken (`skanna.js` i en scratchpad, inte i repot) trycker på varje
 knapp i varje sektion och rapporterar hopp över 40 px. Admin var ren.
 Den mäter `scrollY`, inte vad som står stilla på skärmen, så fällan i

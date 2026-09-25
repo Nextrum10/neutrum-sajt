@@ -2887,3 +2887,91 @@ a:has(> .adm-status){
   .rp-overlay{padding:0}
   .rp-box{margin:0;max-height:100vh;border-radius:0;min-height:100vh}
 }
+
+/* ============================================================
+   KÄNSLAN — rundare, mjukare och skönt att trycka på
+
+   Leo 2026-09-25: "allt på vyn är lite mer rundat och bubbly, de ska
+   vara sköna att trycka på de olika knapparna. Nu känns allt så
+   gammalt." Studievyn och studiehjälparvyn, inte adminvyn: de två är
+   samma hus (Leo 2026-09-24), och adminvyn är ett arbetsbord där
+   tätheten är poängen.
+
+   Tre regler håller det här ifrån fällorna i CLAUDE.md avsnitt 3:
+     · trycket är scale, aldrig en ändrad storlek eller marginal: inget
+       ovanför det man trycker på får byta höjd (fälla 4)
+     · scale, inte transform: .btn:active äger transform i cinema, och
+       två system på samma egenskap slår ut varandra
+     · sektionerna tonar in med opacity och translate, inte med höjd,
+       och en lista byts aldrig mot något annat under tiden (fälla 1)
+   ============================================================ */
+.vy:not(.vy-admin){
+  /* Fjädern: släppet studsar en aning förbi och landar. */
+  --vy-fjader:cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ---------- ytorna ---------- */
+.vy:not(.vy-admin) .dbox{border-radius:clamp(22px,2.4vw,28px)}
+.vy:not(.vy-admin) .lax{border-radius:20px}
+.vy:not(.vy-admin) .pass-nar{border-radius:16px}
+.vy:not(.vy-admin) :is(.inp,.sel){border-radius:16px}
+.vy:not(.vy-admin) .vy-sido a{border-radius:100px}
+.vy:not(.vy-admin) .vy-flikar{border-radius:100px}
+.vy:not(.vy-admin) .vy-flik{border-radius:100px}
+.vy:not(.vy-admin) .mv-dag{border-radius:50%}
+.vy:not(.vy-admin) .bk-slot{border-radius:100px;padding-inline:15px}
+.vy:not(.vy-admin) .bk-pil{border-radius:50%}
+.vy:not(.vy-admin) :is(.bk-kal, .bk-sum, .bk-kvitto){border-radius:22px}
+.vy:not(.vy-admin) .bk-steg{border-radius:18px}
+.vy:not(.vy-admin) .vy-hero-kort > *{border-radius:20px}
+.vy:not(.vy-admin) .nx-fraga-box{
+  border-radius:clamp(24px,3vw,30px);
+  transition:transform .5s var(--vy-fjader);
+}
+
+/* ---------- trycket ----------
+   Allt man kan trycka på sjunker när fingret ligger på och fjädrar
+   tillbaka när det släpper. Nedtrycket är snabbt (90 ms), släppet
+   långsamt och studsande — det är skillnaden mellan en knapp som
+   känns och en som bara byter färg. */
+.vy:not(.vy-admin) :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .mv-dag, .bk-slot,
+                       .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang], .vy-hero-kort > a){
+  transition:
+    background-color .22s var(--e), color .22s var(--e),
+    border-color .22s var(--e), box-shadow .25s var(--e),
+    opacity .22s var(--e), scale .5s var(--vy-fjader);
+  -webkit-tap-highlight-color:transparent;
+}
+.vy:not(.vy-admin) .btn:active{transform:none}
+.vy:not(.vy-admin) :is(.btn, .vy-sido a, .vy-flik, .pl-mer, .nx-notis-rad, [data-pass-stang], .vy-hero-kort > a):active:not(:disabled){
+  scale:.96;
+  transition-duration:.09s;
+}
+/* Små runda saker trycks djupare: 96 % av en dag i kalendern syns
+   knappt, och en knapp över halva skärmen hade rört sig en centimeter
+   på 92 %. */
+.vy:not(.vy-admin) :is(.mv-dag, .bk-slot, .bk-pil, .chip, .vy-val button):active:not(:disabled){
+  scale:.9;
+  transition-duration:.09s;
+}
+
+/* Ingen studs på det som BLIR valt, med flit. Bokningen ritar om sin
+   panel vid varje tryck, så en animation på [aria-pressed] hade fått
+   varje redan valt ämne, längd och format att hoppa varje gång man
+   trycker på något annat. */
+
+/* ---------- övergångarna ----------
+   En sektion som visas glider upp och tonar in. Animationen startar
+   varje gång [hidden] släpps, så varje menyval får den. */
+.vy:not(.vy-admin) .vy-sek:not([hidden]){animation:vy-in .46s var(--e-ut) both}
+.vy:not(.vy-admin) .vy-flik-panel:not([hidden]){animation:vy-in .36s var(--e-ut) both}
+@keyframes vy-in{
+  from{opacity:0;translate:0 12px}
+  to{opacity:1;translate:0 0}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .vy:not(.vy-admin) :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .mv-dag, .bk-slot,
+                         .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang]):active{scale:none}
+  .vy:not(.vy-admin) :is(.vy-sek, .vy-flik-panel){animation:none !important}
+}

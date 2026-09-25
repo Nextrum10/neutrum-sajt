@@ -12,6 +12,13 @@ window.NXStudie = (function () {
 
   var esc = NX.esc, datumText = NX.datumText, isoFor = NX.isoFor;
 
+  /* Trycket i vyerna (KÄNSLAN i nextrum-arbetsyta.css) är :active, och
+     iPhones Safari tänder :active pålitligt först när sidan har en
+     touch-lyssnare. De publika sidorna får den av NXMotion.tryckbart(),
+     vyerna laddar inte NXMotion. Tom med flit, och passiv så att den
+     aldrig kan bromsa scrollen. */
+  document.addEventListener('touchstart', function () {}, { passive: true });
+
   /* ---------- läxans lägen ----------
      'forsenad' finns inte i databasen, den räknas fram ur deadline.
      Se kommentaren i schema-v5.sql om varför. */
