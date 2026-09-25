@@ -9,7 +9,10 @@
      studiehjälpare korten stiger upp när raden syns
      band           Trygg hjälp: det rullande bandet
      vägg           Så kan ett pass se ut: fotona stiger fram
-     studievy       illustrationen av föräldravyn, som går att röra
+     studievy       illustrationen av föräldravyn, som klickar sig igenom
+                    sig själv. Samma illustration står på För elever &
+                    föräldrar, och den sidan laddar filen för den delens
+                    skull: de andra delarna hittar inget att röra där.
 
    SKRIPTET SÄTTER KLASSER, CSS RÖR SIG. Första versionen räknade om
    korten, orden och ett blad för varje bildruta medan man scrollade.

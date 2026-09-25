@@ -144,7 +144,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med |
-| `nextrum-start.css` + `nextrum-start.js` | **Bara startsidan** (sv och en), efter cinema respektive före sidans eget skript. Rörelsen efter hero: ordfyllnaden, hållpunkterna 1–4, korten som stiger upp, det rullande bandet, bildväggen och studievyn som visar sig själv (en rundtur, men den går inte att klicka i). Skriptet startar av sig självt och skriver ingen text — allt man läser står i markupen, på båda språken |
+| `nextrum-start.css` + `nextrum-start.js` | **Startsidan** (sv och en), efter cinema respektive före sidans eget skript, **och För elever & föräldrar**, som bara använder studievyns illustration ur dem. Rörelsen efter hero: ordfyllnaden, hållpunkterna 1–4, korten som stiger upp, det rullande bandet, bildväggen och studievyn som visar sig själv (en rundtur, men den går inte att klicka i). Skriptet startar av sig självt och skriver ingen text — allt man läser står i markupen, på båda språken |
 | `nextrum-admin-palett.css` | Bara `admin.html`, laddas **sist**. Sedan 2026-09-24 **ingen egen palett**: adminvyn ärver jordpaletten som de två andra vyerna. Filen bär bara `--fel`, `--ln-kontroll`, agentflikens `--acc-lugn` och felsemantiken |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
@@ -203,7 +203,9 @@ Fyra saker som kostade en omgång:
    skärmläsare hör sex kort, inte arton.
 
 Studievyns markup byggs för båda språken ur samma mall, så att
-taggsekvensen är identisk. `jamfor-sprak.py` rapporterar bara den
+taggsekvensen är identisk. Samma markup står på `for-elever-och-foraldrar.html`
+(sv och en, 2026-09-25: den gamla `.nx-mock` stod kvar där). Ändras
+den på startsidan ska den kopieras dit. `jamfor-sprak.py` rapporterar bara den
 FÖRSTA strukturskillnaden, och på startsidan är den språkväljaren —
 en skillnad längre ner syns alltså inte i verktyget. Jämför
 taggsekvenserna med `difflib` när du ändrar i sektionen.
