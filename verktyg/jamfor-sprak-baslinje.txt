@@ -23,8 +23,8 @@
   TEXTNODER: sv 132 vs en 131 — engelskan har inte följt med
 
 === index.html  ->  en/index.html
-  STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
-  TEXTNODER: sv 223 vs en 220 — engelskan har inte följt med
+  STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
+  TEXTNODER: sv 442 vs en 439 — engelskan har inte följt med
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>

@@ -536,7 +536,7 @@ def head(o):
      en engelsk version som inte finns är sämre än att inte peka alls. -->
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/{o['slug']}">
 <link rel="alternate" hreflang="x-default" href="https://nextrum.se/{o['slug']}">
-<meta name="theme-color" content="#FBFAF8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#F2EDE3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <meta name="geo.region" content="SE-AB">
