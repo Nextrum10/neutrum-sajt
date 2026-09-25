@@ -155,9 +155,15 @@ Deno.serve(async (req) => {
       case 'checkout.session.completed': {
         if (obj.payment_status !== 'paid') return await klar('session utan betalning');
 
+        /* ETT KÖPT KLIPPKORT (Fas 16.1) bär sitt id i metadata och
+           inget client_reference_id. Det prövas FÖRST: en session för
+           ett klippkort har inget pass, och grenen nedanför hade
+           kvitterat den som "utan pass-id" med pengarna dragna. */
+        const kkId = String((obj.metadata as Record<string, string> | undefined)?.klippkort_id ?? '');
+
         const passId = String(obj.client_reference_id
           ?? (obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
-        if (!passId) return await klar('session utan pass-id');
+        if (!passId && !kkId) return await klar('session utan pass-id');
 
         const piId = String(obj.payment_intent ?? '');
         let chargeId: string | null = null;
@@ -194,11 +200,21 @@ Deno.serve(async (req) => {
            ett annat belopp stod fel siffra i raden för alltid. */
         const draget = typeof obj.amount_total === 'number' ? obj.amount_total : null;
 
-        /* Villkoret på läget är inte pynt. Två samtidiga leveranser som
-           båda ser hanterad_at = null hinner annars båda hit; när den
-           första satt 'betald' träffar den andra noll rader. Listan
-           står i TAR_EMOT_BETALNING, se punkt 6 i filhuvudet. */
-        await db.from('bookings').update({
+        /* Klippkortet blir betalt, och giltigt från i dag, i databasen:
+           klippkort_betald räknar sista dagen i Stockholmstid och träffar
+           bara ett köp som väntar, så en andra leverans ändrar ingenting.
+           Ett fel kastas, så att Stripe försöker igen — ett köp som inte
+           blev skrivet är pengar familjen inte kan använda. */
+        if (kkId) {
+          const { data: blev, error: kkfel } = await db.rpc('klippkort_betald', {
+            p_id: kkId, p_betalt: draget, p_pi: piId || null, p_charge: chargeId,
+            p_bt: b.id, p_avgift: b.avgiftOre, p_netto: b.nettoOre, p_skarp: skarp,
+          });
+          if (kkfel) throw new Error('klippkort_betald: ' + kkfel.message);
+          return await klar(blev ? 'klippkort betalt' : 'klippkortet var redan betalt');
+        }
+
+        const kortbetalning = {
           betalning_status: 'betald',
           betald_at: new Date().toISOString(),
           stripe_payment_intent_id: piId || null,
@@ -216,7 +232,30 @@ Deno.serve(async (req) => {
              svarade "Hela beloppet är redan återbetalt" på en
              betalning som just kommit in. */
           aterbetald_ore: 0,
-        }).eq('id', passId).in('betalning_status', TAR_EMOT_BETALNING);
+        };
+
+        /* Villkoret på läget är inte pynt. Två samtidiga leveranser som
+           båda ser hanterad_at = null hinner annars båda hit; när den
+           första satt 'betald' träffar den andra noll rader. Listan
+           står i TAR_EMOT_BETALNING, se punkt 6 i filhuvudet. */
+        const { data: traffade } = await db.from('bookings').update(kortbetalning)
+          .eq('id', passId).in('betalning_status', TAR_EMOT_BETALNING).select('id');
+
+        /* PASSET VAR REDAN BETALT MED TIMMAR (Fas 16.1). Kassan kan ha
+           stått öppen när familjen drog timmarna — klippkort-betala
+           stänger den, men en betalning som redan var på väg hinner
+           igenom. Pengarna är dragna, så kortet vinner, som i punkt 6:
+           passet står som betalt med kort, och klippkort_id nollas så
+           att timmarna kommer tillbaka på kortet. En andra leverans
+           träffar noll rader, för då finns stripe_payment_intent_id. */
+        if (!traffade?.length) {
+          const { data: tillbaka } = await db.from('bookings')
+            .update({ ...kortbetalning, klippkort_id: null })
+            .eq('id', passId).eq('betalning_status', 'betald')
+            .not('klippkort_id', 'is', null).is('stripe_payment_intent_id', null)
+            .select('id');
+          if (tillbaka?.length) return await klar('betald med kort, klippkortets timmar tillbaka');
+        }
 
         return await klar('betald');
       }
@@ -232,26 +271,37 @@ Deno.serve(async (req) => {
         let bt = balans(obj.balance_transaction);
         if (!bt.id) return await klar('ingen balanstransaktion än');
 
+        /* Ett pass eller ett köpt klippkort (Fas 16.1): avgiften hör till
+           den rad som bär chargen, och det är aldrig båda. */
         const { data: pass } = await db.from('bookings')
           .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
-        if (!pass) return await klar('charge utan pass');
-        if (pass.stripe_avgift_ore !== null && pass.stripe_avgift_ore !== undefined) {
+        const { data: kort } = pass ? { data: null } : await db.from('klippkort')
+          .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
+        const rad = pass ?? kort;
+        if (!rad) return await klar('charge utan pass');
+        if (rad.stripe_avgift_ore !== null && rad.stripe_avgift_ore !== undefined) {
           return await klar('avgiften fanns redan');
         }
 
         if (bt.avgiftOre === null && arStripeId(bt.id, 'txn')) {
           bt = balans(await v1('GET', `/v1/balance_transactions/${bt.id}`));
         }
-        await db.from('bookings').update({
+        await db.from(pass ? 'bookings' : 'klippkort').update({
           stripe_balanstransaktion_id: bt.id,
           stripe_avgift_ore: bt.avgiftOre,
           stripe_netto_ore: bt.nettoOre,
-        }).eq('id', pass.id).is('stripe_avgift_ore', null);
+        }).eq('id', rad.id).is('stripe_avgift_ore', null);
         return await klar(bt.avgiftOre === null ? 'balanstransaktion utan avgift' : `avgift ${bt.avgiftOre} öre`);
       }
 
       // ---------- betalningen gick inte igenom ----------
       case 'payment_intent.payment_failed': {
+        const kkId = String((obj.metadata as Record<string, string> | undefined)?.klippkort_id ?? '');
+        if (kkId) {
+          await db.from('klippkort').update({ status: 'misslyckad' })
+            .eq('id', kkId).eq('status', 'vantar');
+          return await klar('klippkort misslyckat');
+        }
         const passId = String((obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
         if (!passId) return await klar('utan pass-id');
         // Tillbaka till "misslyckad", inte till "ingen": familjen ska
@@ -282,6 +332,15 @@ Deno.serve(async (req) => {
         const chargeId = String(obj.id ?? '');
         if (chargeId) {
           await db.from('bookings').update(andring).eq('stripe_charge_id', chargeId);
+          /* Ett klippkort (Fas 16.1) STÄNGS av varje återbetalning, också
+             en delvis. Det finns bara två skäl att betala tillbaka ett
+             köp: ångerrätten och att familjen slutar, och i båda är
+             kortet slut. En delåterbetalning som lämnade det öppet hade
+             låtit familjen fortsätta dra timmar som redan gått tillbaka. */
+          const { data: kort } = await db.from('klippkort')
+            .update({ aterbetald_ore: aterbetalt, status: 'aterbetald' })
+            .eq('stripe_charge_id', chargeId).select('id');
+          if (kort?.length) return await klar(`klippkort återbetalt ${aterbetalt} öre, stängt`);
           return await klar(`återbetalt ${aterbetalt} öre`);
         }
         const passId = String((obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
@@ -316,6 +375,9 @@ Deno.serve(async (req) => {
         const { data: passen } = await db.from('bookings')
           .select('id, betalning_status').eq('stripe_charge_id', chargeId).limit(1);
         const pass = passen?.[0] ?? null;
+        // Ett köpt klippkort kan också bestridas (Fas 16.1).
+        const { data: kort } = pass ? { data: null } : await db.from('klippkort')
+          .select('id, status').eq('stripe_charge_id', chargeId).maybeSingle();
 
         const { data: forut } = await db.from('stripe_tvister')
           .select('stangd, lage').eq('id', tvistId).maybeSingle();
@@ -350,6 +412,15 @@ Deno.serve(async (req) => {
             .update({ betalning_status: betallageEfterTvist(tvistUtfall(lage)) })
             .eq('id', pass.id);
         }
+        /* Ett klippkort i tvist går inte att dra timmar från
+           (klippkort_dra kräver 'betald'): pengarna kan vara på väg
+           tillbaka. Vinner vi öppnas det igen; förlorar vi står det kvar
+           som tvist, som passen. */
+        if (kort && (kort.status === 'betald' || kort.status === 'tvist')) {
+          await db.from('klippkort')
+            .update({ status: betallageEfterTvist(tvistUtfall(lage)) })
+            .eq('id', kort.id);
+        }
 
         /* En uppgift när Stripe väntar på oss, med dagen som förfallodag.
            Nyckeln är tvistens id, och skapa_uppgift vägrar en andra
@@ -375,8 +446,8 @@ Deno.serve(async (req) => {
             p_beskrivning: `${tvistOrsakText(String(obj.reason ?? ''))}. Belopp: ${kr}. `
               + `${tvistUnderlag(String(obj.reason ?? ''))} Underlaget skickas in i Stripes dashboard, `
               + 'under Tvister. Missas dagen är tvisten förlorad. Se DEPLOY-BETALNING.md 9.10.',
-            p_kopplad_tabell: pass ? 'bookings' : null,
-            p_kopplad_id: pass?.id ?? null,
+            p_kopplad_tabell: pass ? 'bookings' : kort ? 'klippkort' : null,
+            p_kopplad_id: pass?.id ?? kort?.id ?? null,
             p_forfallodag: senast ? senast.slice(0, 10) : null,
             p_skapad_av_typ: 'system',
           });
