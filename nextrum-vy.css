@@ -526,6 +526,90 @@ html:has(> body.vy){scroll-behavior:auto}
 }
 .nx-fraga.open .nx-fraga-box{transform:none}
 
+/* ============================================================
+   BETALPANELEN (Fas 14.5)
+   Stripes kassa i en ram på vår sida, i stället för på Stripes.
+
+   PÅ EN DATOR ÄR DET EN DELAD SKÄRM, och sidan flyttar åt vänster.
+   Detaljpanelen i adminvyn (.dp, nextrum-arbetsyta.css) lägger sig
+   med flit ÖVER sidan, för där klickar man rad efter rad och en
+   tabell som byter bredd flyttar nästa rad. Här är det tvärtom: man
+   betalar ett pass och vill se passet, sin lista och sitt schema
+   bredvid. Knappen man tryckte på hålls kvar på samma höjd
+   (NXStudie.håll i nextrum-studie-vy.js), så att det enda som rör sig
+   är sidans bredd.
+
+   PÅ EN TELEFON är två kolumner på 390 px ingen delad skärm, bara två
+   oanvändbara. Där är panelen ett ark underifrån, och sidans topp syns
+   ovanför.
+
+   SIDHUVUDET KRYMPER INTE. Det provades först, och "Logga ut" hamnade
+   halvvägs under panelen: huvudets media queries mäter fönstret, inte
+   sin egen bredd, så det ritade datorversionen på 940 px. Panelen
+   ligger i stället UNDER huvudet (z-index 790, huvudet är 800) och
+   börjar där huvudet slutar (--betalpanel-topp, mätt i
+   nextrum-studie-vy.js). Huvudet göms inte vid scroll så länge
+   panelen är öppen, annars hade det blivit ett hål ovanför den.
+   Bekräftelserutan (900) ligger fortfarande över allt.
+   ============================================================ */
+:root{--betalpanel-b:clamp(400px,36vw,500px);--betalpanel-topp:72px}
+.betalpanel{
+  position:fixed;left:0;right:0;bottom:0;z-index:790;
+  height:min(calc(100dvh - var(--betalpanel-topp) - 12px),860px);
+  display:flex;flex-direction:column;
+  background:var(--pap);
+  border:1px solid var(--ln);border-bottom:0;
+  border-radius:20px 20px 0 0;
+  box-shadow:var(--sk-3);
+  visibility:hidden;opacity:0;transform:translateY(28px);
+  transition:transform .28s var(--e),opacity .2s var(--e),visibility 0s linear .28s;
+}
+.betalpanel.open{
+  visibility:visible;opacity:1;transform:none;
+  transition:transform .28s var(--e),opacity .2s var(--e);
+}
+@media (min-width:1000px){
+  .betalpanel{
+    top:var(--betalpanel-topp);left:auto;height:auto;width:var(--betalpanel-b);
+    border:0;border-left:1px solid var(--ln);border-radius:0;
+    transform:translateX(28px);
+  }
+  body.betalar{padding-right:var(--betalpanel-b)}
+}
+body.betalar .hdr.bort{transform:none}
+@media (prefers-reduced-motion:reduce){
+  .betalpanel,.betalpanel.open{transition:none}
+}
+.betalpanel-huvud{
+  flex:none;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--ln);
+  background:var(--pap-2);
+}
+.betalpanel-titel{margin:0;font-size:1.05rem;font-weight:700;letter-spacing:-.02em}
+.betalpanel-vad{margin:4px 0 0;font-size:.88rem;line-height:1.45;color:var(--bl-2)}
+.betalpanel-stang{
+  flex:none;display:grid;place-items:center;
+  width:40px;height:40px;border-radius:12px;
+  background:transparent;border:1px solid var(--ln);color:var(--bl);cursor:pointer;
+}
+.betalpanel-stang:hover{background:var(--pap-3)}
+.betalpanel-stang svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round}
+.betalpanel-besked{
+  flex:none;margin:0;padding:12px 20px;
+  font-size:.9rem;line-height:1.5;font-weight:600;color:var(--mossa);
+  border-bottom:1px solid var(--ln);
+}
+.betalpanel-besked[hidden]{display:none}
+/* Stripes ram bestämmer sin egen höjd; här rullar den när den är högre
+   än panelen, utan att sidan bakom rullar med. */
+.betalpanel-kassa{
+  flex:1;min-height:0;
+  overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding:8px 0 calc(16px + env(safe-area-inset-bottom));
+}
+
 /* Flytta-rutan: kalendern med dagens tider bredvid. Bredden för
    .nx-fraga-bred sätts i nextrum-arbetsyta.css. */
 .nx-flytt-kal{margin-top:16px}
