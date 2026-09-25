@@ -204,6 +204,11 @@ genom kontomönster, och påföljden är att hela profilen försvinner ur
 sökresultaten. Det är också olagligt att vilseleda konsumenter på det
 sättet.
 
+**Sålla inte heller.** Att först fråga hur nöjd någon är och bara
+skicka de nöjda vidare till Google är förbjudet i Googles regler. Alla
+familjer får samma fråga, och därför styrs knappen i studievyn av
+antalet rapporter, aldrig av något betyg.
+
 **Så här får ni äkta recensioner i stället:**
 
 1. Hämta er recensionslänk: Google Business Profile → *Be om
@@ -221,8 +226,10 @@ sättet.
 kartrutan för *läxhjälp Stockholm*. Tio med svar från er gör större
 skillnad än trettio utan.
 
-När ni har länken: säg till, så bygger jag in knappen i studievyn så
-att föräldern får frågan i samma stund som rapporten dyker upp.
+Knappen i studievyn finns redan (`ritaRecension` i
+`nextrum-studie-vy.js`) och ritas under rapporterna när barnet har
+minst två. Den väntar bara på länken: klistra in den i
+`GOOGLE_RECENSION_URL` i `nextrum-config.js`.
 
 ---
 
