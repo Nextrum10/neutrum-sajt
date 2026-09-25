@@ -1,0 +1,1054 @@
+/* ============================================================
+   NEXTRUM — STARTSIDAN
+
+   Laddas bara av index.html och en/index.html, och SIST:
+     nextrum.css → home → cinema → start
+
+   Allt här gäller startsidans scroll, från manifestet och nedåt.
+   Hero är orörd med flit — Leo 2026-09-25: "jag vill bevara heron
+   för den gillar jag".
+
+   Rörelsen hänger på html.nx-sr, som nextrum-start.js sätter när
+   det finns rörelse att visa (NXMotion.tier är full eller lite).
+   Inget startläge här gömmer något utan den klassen. Laddar inte
+   skriptet står sidan i sitt slutläge, fullt läsbar — samma regel
+   som html[data-motion] i cinema, av samma skäl.
+   ============================================================ */
+
+/* ============================================================
+   1. PAPPERET
+
+   Ljusare och mindre gult än linet i cinema (#EFE6D6). Leo valde
+   #F3F2EC. Leran #9C4520 står kvar som accent; mot det ljusare
+   papperet går den från 5,2:1 till 5,9:1.
+
+   Bara startsidan. Tokens sätts på :root i en fil bara den här
+   sidan laddar, och det är därför alias-fällan i CLAUDE.md (--bg,
+   --surface … fryser rotens värde) inte slår till: aliasen deklareras
+   på SAMMA element och räknas med det här värdet. Mörkt läge rörs
+   inte — dess block väger (0,2,0) och vinner över det här (0,1,0),
+   så varje token som skrivs om här måste också finnas där. Det gör
+   alla sex.
+
+   Kontrollerat mot AA: dämpad text #665C49 på #EAE7DE 5,6:1, på
+   korten #FBFAF7 6,4:1. Brödtext #4F4738 på korten 8,9:1.
+   ============================================================ */
+:root{
+  --pap:#F3F2EC;
+  --pap-2:#EAE7DE;
+  --pap-3:#DCD7C9;
+  --ln:#E2DED3;
+  --ln-2:#CEC7B6;
+  --acc-soft:#EFE1D6;
+
+  /* Korten: en nyans LJUSARE än papperet, inte mörkare. En mörkare
+     yta på ljus botten läser som ett hål; en ljusare läser som ett
+     blad som ligger ovanpå. */
+  --kort:#FBFAF7;
+  --kort-kant:rgba(46,42,32,.08);
+  --kort-sk:0 1px 0 rgba(255,255,255,.8) inset, 0 1px 2px rgba(46,42,32,.04),
+            0 22px 44px -30px rgba(46,42,32,.30);
+
+  /* Fjädern: går en hårsmån förbi målet och tillbaka. Det är det som
+     gör en kolumn "bubblig" i stället för mekanisk. */
+  --fjader:cubic-bezier(.34,1.46,.64,1);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --kort:var(--pap-2);
+    --kort-kant:rgba(239,230,214,.09);
+    --kort-sk:0 1px 0 rgba(239,230,214,.04) inset, 0 22px 44px -30px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --kort:var(--pap-2);
+  --kort-kant:rgba(239,230,214,.09);
+  --kort-sk:0 1px 0 rgba(239,230,214,.04) inset, 0 22px 44px -30px rgba(0,0,0,.7);
+}
+
+/* ============================================================
+   2. BUBBLAN — kolumnen runt en text
+
+   Mjuk kant, stor radie, ett blad som ligger en millimeter ovanför
+   papperet. Kanten är en gradient: lera i det övre vänstra hörnet
+   som tonar ut till nästan ingenting. En hel kant i en färg hade
+   ritat en ruta; den här ritar ett ljus som faller på bladet.
+
+   Två bakgrunder på samma element — ytan klippt till padding-box och
+   gradienten till border-box — så att kanten är en riktig kant och
+   inte ett pseudoelement som måste hållas i takt med radien.
+   ============================================================ */
+.nx-bubbla{
+  position:relative;
+  padding:clamp(24px,2.6vw,34px);
+  border-radius:clamp(24px,2.4vw,32px);
+  border:1px solid transparent;
+  background:
+    linear-gradient(var(--kort),var(--kort)) padding-box,
+    linear-gradient(145deg,
+      color-mix(in srgb,var(--acc) 38%,transparent),
+      color-mix(in srgb,var(--bl) 9%,transparent) 38%,
+      color-mix(in srgb,var(--bl) 6%,transparent)) border-box;
+  box-shadow:var(--kort-sk);
+}
+.bu-fig{
+  display:grid;place-items:center;
+  width:42px;height:42px;border-radius:14px;
+  background:color-mix(in srgb,var(--acc) 10%,transparent);
+  margin-bottom:clamp(16px,1.8vw,22px);
+}
+.bu-fig svg{
+  width:20px;height:20px;
+  fill:none;stroke:var(--acc-lugn);stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+
+/* ============================================================
+   3. MANIFESTET — bladet som glider upp över filmen
+
+   Sektionens papper är ett ::before som ligger en bit upp över
+   hero. Vid sidladdning syns bara dess rundade överkant, indragen
+   från sidorna; medan man scrollar växer det ut till full bredd och
+   hörnen rätas ut. Det är övergången Leo bad om, och den rör bara
+   clip-path på ett pseudoelement — ingen layout, ingen text som
+   skalas.
+
+   --ark-sida och --ark-r skrivs av nextrum-start.js. Startvärdena
+   står här så att första bildrutan redan är rätt.
+   ============================================================ */
+html.nx-sr .nx-manifest{
+  --ark-sida:clamp(12px,4vw,64px);
+  --ark-r:clamp(28px,4vw,56px);
+  background:transparent;
+  z-index:1;
+  margin-top:calc(clamp(28px,4vw,56px) * -1);
+}
+html.nx-sr .nx-manifest::before{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:var(--pap);
+  clip-path:inset(0 var(--ark-sida) 0 var(--ark-sida) round var(--ark-r) var(--ark-r) 0 0);
+}
+/* Den lilla linjen i bladets överkant: ett grepp, som på ett ark man
+   drar upp. Tonar bort när bladet ligger platt. */
+html.nx-sr .nx-manifest::after{
+  content:"";position:absolute;left:50%;top:14px;
+  width:44px;height:4px;border-radius:4px;margin-left:-22px;
+  background:var(--ln-2);
+  opacity:var(--ark-grepp,1);
+}
+
+/* Orden i rubriken fylls i ett i taget medan man scrollar.
+   Opaciteten skrivs av skriptet; startläget står här. */
+html.nx-sr [data-ordfyll] .nx-ord{opacity:.14}
+[data-ordfyll] .nx-ord{transition:opacity .18s linear}
+
+/* De två kolumnerna runt texten. Samma bredd och samma mellanrum som
+   läxhjälpskortet under, så att de tre bladen står i en och samma
+   rutnätslinje. */
+.nx-manifest-fot,
+.nx-ide.tva{
+  max-width:1000px;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(14px,1.6vw,22px);
+}
+.nx-manifest-fot{margin-top:clamp(44px,6vw,84px)}
+.nx-manifest-fot .nx-bubbla p{max-width:none;font-size:1.02rem;line-height:1.6}
+@media (max-width:760px){
+  .nx-manifest-fot,
+  .nx-ide,.nx-ide.tva{grid-template-columns:minmax(0,1fr)}
+}
+
+/* Läxhjälpskortet. cinemas regler väger (0,2,0) i sina media-
+   frågor — :last-child och paddingen — så båda klasserna står med. */
+.nx-ide-sp.nx-bubbla{
+  border:1px solid transparent;
+  padding:clamp(24px,2.6vw,34px);
+}
+.nx-ide-sp.nx-bubbla .id-fig{
+  width:42px;height:42px;border-radius:14px;border:0;
+  background:color-mix(in srgb,var(--acc) 10%,transparent);
+}
+.nx-ide-sp.nx-bubbla .id-fig svg{stroke:var(--acc-lugn)}
+
+/* Bladen lyfter med en fjäder när man för musen över dem. translate,
+   inte transform: data-stig äger transform på dem. */
+.nx-manifest .nx-bubbla{
+  transition:translate .5s var(--fjader),box-shadow .5s var(--e-ut);
+}
+@media (hover:hover) and (pointer:fine){
+  .nx-manifest .nx-bubbla:hover{
+    translate:0 -5px;
+    box-shadow:var(--kort-sk),0 30px 60px -36px rgba(46,42,32,.34);
+  }
+}
+
+/* ============================================================
+   4. HÅLLPUNKTERNA — fyra kolumner, 1 till 4
+
+   Den man för musen över kommer fram, de andra drar sig tillbaka,
+   krymper och blir grå. :has() gör det utan en rad skript: listan
+   vet att något i den är under pekaren.
+
+   Nedtoningen är filter:opacity(), inte egenskapen opacity. Listan
+   bar förut data-stig på varje punkt, och den regeln väger (0,3,1)
+   på opacity och transform — en nedtoning där hade aldrig syntes.
+   data-stig sitter nu på listan i stället, och punkterna har inget
+   annat system som slåss om samma egenskaper.
+   ============================================================ */
+.nx-holdpunkter{
+  border-top:0;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:clamp(14px,1.6vw,22px);
+}
+@media (max-width:1100px){.nx-holdpunkter{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.nx-holdpunkter{grid-template-columns:minmax(0,1fr)}}
+
+.nx-holdpunkter > li{
+  border-bottom:1px solid transparent;
+  padding:clamp(24px,2.4vw,32px);
+  transform-origin:50% 60%;
+  transition:
+    scale .55s var(--fjader),
+    filter .4s var(--e),
+    box-shadow .45s var(--e-ut),
+    translate var(--tryck-tid) var(--e-ut);
+}
+/* Tvätten i cinema är till kolumner UTAN egen yta. De här är blad,
+   och en tvätt som bleder ut runt ett blad blir en gloria. */
+.nx-holdpunkter > li::before{content:none}
+
+.hp-topp{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  margin-bottom:clamp(18px,2vw,26px);
+}
+.hp-topp .hp-mark{margin-bottom:0}
+.hp-nr{
+  font-size:clamp(2.8rem,4.2vw,4rem);
+  font-weight:800;letter-spacing:-.06em;line-height:.8;
+  color:var(--ln-2);
+  font-variant-numeric:tabular-nums;
+  transition:color .35s var(--e);
+}
+
+@media (hover:hover) and (pointer:fine){
+  .nx-holdpunkter:has(> li:hover) > li{
+    scale:.955;
+    filter:grayscale(1) opacity(.5);
+  }
+  .nx-holdpunkter:has(> li:hover) > li:hover{
+    scale:1.055;
+    filter:none;
+    z-index:2;
+    box-shadow:var(--kort-sk),0 40px 70px -40px rgba(46,42,32,.38);
+  }
+  .nx-holdpunkter > li:hover .hp-nr{color:var(--acc)}
+}
+/* På pekskärm finns ingen pekare. Där tänds den punkt man har mitt
+   i skärmen (en spalt) eller den man tryckt på (två spalter), och
+   skriptet sätter .har-pa på listan när det gäller. */
+.nx-holdpunkter.har-pa > li:not(.pa){
+  scale:.965;
+  filter:grayscale(1) opacity(.55);
+}
+.nx-holdpunkter.har-pa > li.pa{
+  scale:1.02;
+  box-shadow:var(--kort-sk),0 34px 60px -38px rgba(46,42,32,.34);
+}
+.nx-holdpunkter.har-pa > li.pa .hp-nr{color:var(--acc)}
+
+/* ============================================================
+   5. STUDIEHJÄLPARNA — kommer in i bild
+
+   Korten delas ut som från en kortlek när man scrollar fram: de
+   stiger, vrider sig rätt och landar. Transform skrivs av skriptet
+   per bildruta; här står bara landningen, där porträttet poppar.
+   ============================================================ */
+.sc-card{
+  border-radius:clamp(24px,2.2vw,30px);
+  background:var(--kort);
+  border-color:var(--kort-kant);
+  box-shadow:var(--kort-sk);
+}
+/* position:relative så att kortens offsetTop räknas från raden —
+   skriptet läser dem för att veta när varje kort ska landa. */
+html.nx-sr .showcase{position:relative;perspective:1400px}
+html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidden}
+.sc-card.nx-landad .sc-face{animation:sc-pop .75s var(--fjader) both}
+.sc-card.nx-landad .tutor-meta .tag{animation:sc-tag .5s var(--e-ut) both}
+.sc-card.nx-landad .tutor-meta .tag:nth-child(2){animation-delay:.07s}
+.sc-card.nx-landad .tutor-meta .tag:nth-child(3){animation-delay:.14s}
+@keyframes sc-pop{0%{scale:.55}55%{scale:1.12}100%{scale:1}}
+@keyframes sc-tag{from{opacity:0;translate:0 6px}}
+
+/* ============================================================
+   6. TRYGG HJÄLP — det rullande bandet
+
+   Utan skript är det samma dragbara rad som förut. Med skript får
+   bandet klassen .pa, raden kopieras på båda sidor och glider
+   långsamt åt höger. Förflyttningen skrivs som transform av
+   nextrum-start.js; här står bara formen.
+
+   overflow:clip och inte hidden. hidden gör bandet till en
+   scrollbehållare, och NX.initDrag() kallar scrollIntoView på
+   kortet man trycker på — då hade webbläsaren scrollat bandet i
+   sidled OVANPÅ vår transform, och kortet hade hoppat. clip klipper
+   utan att gå att scrolla.
+   ============================================================ */
+.nx-band{position:relative;margin-top:clamp(8px,1vw,14px)}
+.nx-band:not(.pa) .nx-drag{
+  max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m);
+  /* Utan den snäpper första kortet till kanten och paddingen
+     scrollas bort direkt. */
+  scroll-padding-inline:var(--m);
+}
+.nx-band.pa{
+  overflow:hidden;overflow:clip;
+  padding-block:16px 22px;
+  touch-action:pan-y;
+  cursor:grab;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
+          mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
+}
+.nx-band.pa.drar{cursor:grabbing}
+.nx-band.pa .nx-drag{
+  position:relative;
+  overflow:visible;scroll-snap-type:none;
+  width:max-content;margin:0;padding:0;
+  will-change:transform;
+}
+.nx-band .nx-drag > li{
+  flex:0 0 clamp(262px,24vw,340px);
+  border-top:0;padding-top:0;
+}
+.nx-band .nx-drag > li::before{content:none}
+.nx-band .dr-kort{
+  border-radius:clamp(22px,2vw,28px);
+  border-color:var(--kort-kant);
+  background:var(--kort);
+  box-shadow:var(--kort-sk);
+  transition:border-color .25s var(--e),background .25s var(--e),translate .45s var(--fjader),box-shadow .45s var(--e-ut);
+}
+@media (hover:hover) and (pointer:fine){
+  .nx-band .dr-kort:hover{translate:0 -4px;box-shadow:var(--kort-sk),0 26px 50px -34px rgba(46,42,32,.34)}
+}
+.nx-band .dr-kort[aria-expanded="true"]{background:var(--acc-soft);border-color:var(--acc)}
+
+/* Pausknappen. Rörelse som pågår längre än fem sekunder ska gå att
+   stoppa (WCAG 2.2.2). Bandet stannar också av sig självt under
+   pekaren, vid tangentbordsfokus och när ett kort är utfällt — men
+   den som läser långsamt ska inte behöva hålla musen still. */
+.nx-band-paus{
+  display:grid;place-items:center;
+  width:40px;height:40px;border-radius:50%;
+  /* Mitt under bandet. Till höger hamnade den under Hjälp-knappen,
+     som ligger fast i hörnet. */
+  margin:6px auto 0;
+  border:1px solid var(--ln-2);background:var(--kort);color:var(--bl);
+  cursor:pointer;
+  transition:border-color .2s var(--e),background .2s var(--e);
+}
+.nx-band-paus:hover{border-color:var(--bl)}
+.nx-band-paus[hidden]{display:none}
+.nx-band-paus svg{width:14px;height:14px;fill:currentColor}
+.nx-band-paus .spela{display:none}
+.nx-band-paus[aria-pressed="true"] .spela{display:block}
+.nx-band-paus[aria-pressed="true"] .pausa{display:none}
+.nx-band-rad{max-width:calc(var(--w-bred) + 2 * var(--m));margin-inline:auto;display:flex}
+
+/* ============================================================
+   7. "VI BYGGER NÄSTA GENERATION TILLSAMMANS" — större
+
+   Sidans största mening efter manifestets. Samma ordfyllnad som där,
+   så att de två bär samma röst.
+   ============================================================ */
+.nx-statement{
+  border-top:0;
+  margin-top:clamp(72px,9vw,140px);
+  padding-top:0;
+  text-align:center;
+}
+.nx-statement p{
+  font-size:clamp(2.7rem,8.2vw,7.4rem);
+  line-height:.93;letter-spacing:-.055em;font-weight:800;
+  max-width:13ch;margin-inline:auto;
+  text-wrap:balance;
+}
+.nx-statement p em{font-style:normal;color:var(--acc)}
+
+/* ============================================================
+   8. STUDIEVYN — en illustration man kan röra vid
+
+   Byggd efter föräldravyn som den ser ut i dag: sidomenyn med
+   samma sju poster, hälsningen, Tider att svara på, I siffror,
+   bokningen som ett FÖRSLAG, passlistan med betalningen, läxorna,
+   femstegsskalan och chatten. Allt är exempel och står så under.
+
+   Sektionerna ligger ovanpå varandra i samma rutnätscell. Höjden är
+   alltså den högsta sektionens, och ett byte ändrar ingenting i
+   sidan runt omkring — det som står ovanför det man trycker på får
+   inte byta höjd av trycket (CLAUDE.md, fälla 4).
+
+   Skriptet skriver --mx/--my (pekaren, -0,5 till 0,5) och
+   --lyft-* (scrollen). Utan skript ligger fönstret platt.
+   ============================================================ */
+.nx-sd{
+  position:relative;
+  margin-top:clamp(38px,4.6vw,64px);
+  perspective:1900px;
+  perspective-origin:50% 30%;
+}
+/* INTE transform-style:preserve-3d. Med det träffade Chrome inte
+   knapparna i sidomenyn så fort fönstret lutade: elementFromPoint gav
+   .sd-app, alltså föräldern, och ett klick på Mina lektioner gjorde
+   ingenting. Menyn är en rullbar behållare, och det är den
+   kombinationen som går sönder. Utan 3D-kontexten ritas fönstret som
+   ett platt lager med en perspektivlutning, och träffytan är den man
+   ser. Notisernas djup (translateZ) försvinner; deras parallax står
+   kvar. */
+.sd-rum{
+  position:relative;
+  transform:
+    translateY(var(--lyft-y,0px))
+    rotateX(calc(var(--lyft-rx,0deg) + var(--my,0) * -6deg))
+    rotateY(calc(var(--mx,0) * 8deg))
+    scale(var(--lyft-sk,1));
+  will-change:transform;
+}
+.sd-fonster{
+  position:relative;
+  border-radius:clamp(18px,2vw,26px);
+  background:var(--kort);
+  border:1px solid var(--kort-kant);
+  box-shadow:0 2px 6px rgba(28,24,18,.05),0 60px 120px -50px rgba(28,24,18,.42);
+  overflow:hidden;
+  color:var(--bl);
+  font-size:.9rem;
+}
+/* Glansen: ett svagt ljus som följer pekaren över glaset. */
+.sd-fonster::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+  background:radial-gradient(600px circle at calc(50% + var(--mx,0) * 100%) calc(40% + var(--my,0) * 100%),
+             rgba(255,255,255,.22),transparent 60%);
+  opacity:var(--glans,0);
+  transition:opacity .4s var(--e);
+  mix-blend-mode:soft-light;
+}
+
+.sd-bar{
+  display:flex;align-items:center;gap:7px;
+  padding:12px 16px;
+  border-bottom:1px solid var(--ln);
+  background:var(--pap-2);
+}
+.sd-bar i{width:10px;height:10px;border-radius:50%;background:var(--ln-2);flex:none}
+.sd-bar span{
+  margin-left:10px;
+  font-family:var(--f-mono);font-size:10.5px;letter-spacing:.02em;color:var(--bl-3);
+  background:var(--kort);border:1px solid var(--ln);border-radius:100px;
+  padding:5px 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+.sd-app{
+  display:grid;
+  grid-template-columns:clamp(176px,15vw,212px) minmax(0,1fr);
+  height:clamp(540px,46vw,620px);
+}
+
+/* --- sidomenyn --- */
+.sd-sido{
+  position:relative;
+  display:flex;flex-direction:column;gap:2px;
+  padding:16px 10px;
+  border-right:1px solid var(--ln);
+  background:var(--pap);
+  overflow:auto;scrollbar-width:none;
+}
+.sd-sido::-webkit-scrollbar{display:none}
+.sd-sido button{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 11px;border-radius:12px;
+  font-size:.84rem;font-weight:500;letter-spacing:-.01em;
+  color:var(--bl-2);text-align:left;white-space:nowrap;
+  cursor:pointer;
+  transition:background .25s var(--e),color .25s var(--e),box-shadow .25s var(--e);
+}
+.sd-sido button svg{
+  width:17px;height:17px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;
+}
+.sd-sido button:hover{background:color-mix(in srgb,var(--bl) 5%,transparent);color:var(--bl)}
+.sd-sido button[aria-current="true"]{
+  background:var(--kort);color:var(--bl);font-weight:600;
+  box-shadow:0 1px 2px rgba(28,24,18,.06),0 6px 16px -10px rgba(28,24,18,.25);
+}
+.sd-sido button[aria-current="true"] svg{stroke:var(--acc)}
+.sd-sido-rubrik{
+  font-family:var(--f-mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--bl-3);padding:14px 11px 5px;
+}
+.sd-bricka{
+  margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  display:grid;place-items:center;
+  background:var(--acc);color:var(--acc-ink);
+  font-size:10px;font-weight:700;font-style:normal;
+  transition:scale .4s var(--fjader),opacity .3s var(--e);
+}
+.sd-bricka.bytt{scale:0;opacity:0}
+
+/* --- ytan och sektionerna --- */
+.sd-yta{position:relative;display:grid;min-width:0;min-height:0;overflow:hidden}
+.sd-sek{
+  position:relative;
+  grid-area:1/1;min-height:0;min-width:0;
+  overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+  padding:clamp(18px,2.2vw,28px);
+  opacity:0;visibility:hidden;translate:0 12px;
+  transition:opacity .25s var(--e),translate .35s var(--e),visibility 0s linear .25s;
+}
+.sd-sek.pa{
+  opacity:1;visibility:visible;translate:0 0;
+  transition:opacity .45s var(--e) .06s,translate .6s var(--e-ut) .06s,visibility 0s;
+}
+.sd-sek.pa .sd-in{
+  animation:sd-in .6s var(--e-ut) both;
+  animation-delay:calc(var(--i,0) * 70ms + 110ms);
+}
+@keyframes sd-in{from{opacity:0;translate:0 14px;scale:.985}}
+
+.sd-topp{margin-bottom:16px}
+.sd-topp h4{font-size:1.28rem;font-weight:700;letter-spacing:-.03em}
+.sd-topp p{margin-top:4px;color:var(--bl-2);font-size:.84rem;line-height:1.5;max-width:56ch}
+
+.sd-stack{display:grid;gap:12px}
+.sd-tva{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.sd-box{
+  background:var(--pap);
+  border:1px solid var(--ln);
+  border-radius:18px;
+  padding:14px 16px;
+  min-width:0;
+}
+.sd-box h5{
+  display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  margin:0 0 12px;
+  font-family:var(--f-mono);font-size:9.5px;font-weight:500;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--bl-3);
+}
+.sd-box h5 em{font-style:normal;color:var(--acc-lugn)}
+
+.sd-knapp{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:9px 16px;border-radius:100px;
+  background:var(--acc);color:var(--acc-ink);
+  font-size:.82rem;font-weight:600;letter-spacing:-.01em;
+  cursor:pointer;position:relative;
+  transition:background .2s var(--e),scale .2s var(--e),opacity .2s var(--e);
+}
+.sd-knapp:hover{background:var(--acc-lugn)}
+.sd-knapp:active{scale:.96}
+.sd-knapp.spok{background:transparent;color:var(--bl);border:1px solid var(--ln-2)}
+.sd-knapp.spok:hover{border-color:var(--bl);background:transparent}
+.sd-knapp[disabled]{opacity:.45;cursor:default}
+/* Knappen tänker: texten tonar, tre prickar pulserar. */
+.sd-knapp.tanker{color:transparent}
+.sd-knapp.tanker::after{
+  content:"";position:absolute;inset:0;margin:auto;width:28px;height:6px;
+  background:
+    radial-gradient(circle,var(--acc-ink) 2.6px,transparent 3px) 0 50%/10px 6px repeat-x;
+  animation:sd-tanker .9s linear infinite;
+}
+@keyframes sd-tanker{50%{opacity:.35}}
+
+/* Något som byter läge: .fore står tills händelsen kommit, .efter
+   efter. Båda texterna ligger i markupen, så att engelskan är
+   engelsk — generatorn översätter aldrig ett skript. */
+[data-sd-byt] .efter{display:none}
+[data-sd-byt].bytt .fore{display:none}
+[data-sd-byt].bytt .efter{display:inline;animation:sd-pop .5s var(--fjader) both}
+@keyframes sd-pop{0%{opacity:0;scale:.7}100%{opacity:1;scale:1}}
+
+/* --- hälsningen --- */
+.sd-hej{
+  position:relative;overflow:hidden;
+  border-radius:20px;
+  padding:18px 20px;
+  background:
+    radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--lera-l) 45%,transparent),transparent 55%),
+    radial-gradient(90% 120% at 0% 100%,color-mix(in srgb,var(--mossa-l) 30%,transparent),transparent 60%),
+    #2E2A20;
+  color:#EFE6D6;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;
+}
+.sd-hej small{
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:#B3A88F;
+}
+.sd-hej b{display:block;margin-top:6px;font-size:1.5rem;font-weight:700;letter-spacing:-.035em;line-height:1.05}
+.sd-hej p{margin-top:5px;font-size:.8rem;color:#CFC5B1}
+.sd-hej-kort{display:flex;gap:8px;flex-wrap:wrap}
+.sd-hej-kort span{
+  display:flex;flex-direction:column;gap:2px;
+  padding:9px 12px;border-radius:14px;
+  background:rgba(239,230,214,.08);border:1px solid rgba(239,230,214,.14);
+  font-size:.74rem;color:#CFC5B1;
+}
+.sd-hej-kort span b{margin:0;font-size:.8rem;color:#EFE6D6;letter-spacing:-.01em}
+
+/* --- tider att svara på --- */
+.sd-svara{
+  display:grid;grid-template-rows:1fr;
+  transition:grid-template-rows .5s var(--e-ut),opacity .35s var(--e);
+}
+.sd-svara > div{min-height:0;overflow:hidden}
+.sd-svara.bytt{grid-template-rows:0fr;opacity:0}
+.sd-svar-rad{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.sd-svar-rad p{flex:1 1 200px;font-size:.84rem;line-height:1.45;color:var(--bl-2)}
+.sd-svar-rad p b{color:var(--bl)}
+.sd-svar-knappar{display:flex;gap:6px}
+.sd-klart-rad{
+  display:none;align-items:center;gap:10px;
+  font-size:.84rem;color:var(--bl-2);
+}
+.sd-klart-rad.bytt{display:flex;animation:sd-pop .5s var(--fjader) both}
+
+/* --- I siffror --- */
+.sd-tal{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.sd-tal div{
+  padding:10px 10px 11px;border-radius:14px;
+  background:var(--kort);border:1px solid var(--ln);
+}
+.sd-tal b{display:block;font-size:1.45rem;font-weight:800;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.sd-tal b small{font-size:.8rem;font-weight:700;margin-left:2px;letter-spacing:0}
+.sd-tal span{display:block;margin-top:6px;font-size:.7rem;color:var(--bl-3);line-height:1.25}
+
+/* --- staplarna --- */
+.sd-staplar{
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;
+  align-items:end;height:112px;
+}
+.sd-staplar div{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.sd-staplar i{
+  display:block;width:100%;max-width:26px;
+  height:calc(var(--h) * .8%);min-height:3px;
+  border-radius:7px 7px 3px 3px;
+  background:color-mix(in srgb,var(--bl) 16%,transparent);
+  transform-origin:bottom;
+}
+.sd-staplar div:last-child i{background:var(--acc)}
+.sd-sek.pa .sd-staplar i{animation:sd-stapel .9s var(--fjader) both;animation-delay:calc(var(--n) * 80ms + 350ms)}
+@keyframes sd-stapel{from{scale:1 0}}
+.sd-staplar span{font-family:var(--f-mono);font-size:9px;color:var(--bl-3);letter-spacing:.06em;text-transform:uppercase}
+
+/* --- fördelningen --- */
+.sd-fordelning{display:flex;height:12px;border-radius:100px;overflow:hidden;gap:2px}
+.sd-fordelning i{flex:var(--v);transform-origin:left}
+.sd-sek.pa .sd-fordelning i{animation:sd-dela .9s var(--e-ut) both;animation-delay:calc(var(--n) * 120ms + 400ms)}
+@keyframes sd-dela{from{scale:0 1}}
+.sd-f-bra{background:var(--mossa)}
+.sd-f-mitt{background:var(--ockra)}
+.sd-f-folj{background:var(--acc)}
+.sd-legend{margin-top:12px;display:grid;gap:6px}
+.sd-legend span{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--bl-2)}
+.sd-legend span i{width:9px;height:9px;border-radius:3px;flex:none}
+.sd-legend span b{margin-left:auto;font-variant-numeric:tabular-nums}
+
+/* --- bokningen --- */
+.sd-boka{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:12px;align-items:start}
+.sd-kal-topp{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sd-kal-topp b{font-size:.95rem;letter-spacing:-.02em}
+.sd-kal-topp span{font-size:.9rem;color:var(--bl-3);letter-spacing:.3em}
+.sd-kal-v,.sd-kal-dagar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.sd-kal-v span{text-align:center;font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;color:var(--bl-3);text-transform:uppercase;padding-bottom:4px}
+.sd-kal-dagar button{
+  position:relative;
+  aspect-ratio:1;border-radius:11px;
+  font-size:.78rem;font-weight:600;font-variant-numeric:tabular-nums;
+  color:var(--bl);cursor:pointer;
+  transition:background .2s var(--e),color .2s var(--e),scale .35s var(--fjader);
+}
+.sd-kal-dagar button:hover:not([disabled]){background:color-mix(in srgb,var(--bl) 6%,transparent)}
+.sd-kal-dagar button[disabled]{color:var(--ln-2);cursor:default}
+.sd-kal-dagar button.idag{box-shadow:inset 0 0 0 1px var(--ln-2)}
+.sd-kal-dagar button.pass::after{
+  content:"";position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;
+  border-radius:50%;background:var(--mossa);
+}
+.sd-kal-dagar button[aria-pressed="true"]{background:var(--acc);color:var(--acc-ink);scale:1.08}
+
+.sd-form{position:relative;transition:opacity .3s var(--e)}
+.sd-form .sd-grupp{margin-top:10px}
+.sd-form .sd-grupp > span{
+  display:block;margin-bottom:6px;
+  font-family:var(--f-mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--bl-3);
+}
+.sd-form-dag{font-size:.95rem;font-weight:700;letter-spacing:-.02em;min-height:1.4em}
+.sd-form-dag .fore{font-weight:500;color:var(--bl-3);font-size:.85rem}
+.sd-form:not(.bytt) .sd-grupp,
+.sd-form:not(.bytt) .sd-knapp{opacity:.4;pointer-events:none}
+.sd-form .sd-knapp{margin-top:14px;width:100%}
+.sd-chips{display:flex;flex-wrap:wrap;gap:5px}
+.sd-chips button{
+  padding:6px 11px;border-radius:100px;
+  border:1px solid var(--ln-2);
+  font-size:.76rem;font-weight:500;color:var(--bl-2);
+  cursor:pointer;
+  transition:background .2s var(--e),border-color .2s var(--e),color .2s var(--e),scale .3s var(--fjader);
+}
+.sd-chips button:hover{border-color:var(--bl);color:var(--bl)}
+.sd-chips button[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--pap)}
+.sd-chips button:active{scale:.94}
+
+/* Förslaget är skickat: ett lager som växer fram ur knappen. */
+.sd-skickat{
+  position:absolute;inset:0;z-index:2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  text-align:center;padding:18px;
+  border-radius:inherit;background:var(--pap);
+  opacity:0;visibility:hidden;scale:.96;
+  transition:opacity .35s var(--e),scale .5s var(--fjader),visibility 0s linear .35s;
+}
+.sd-skickat.bytt{opacity:1;visibility:visible;scale:1;transition-delay:0s}
+.sd-skickat b{font-size:1rem;letter-spacing:-.02em}
+.sd-skickat p{font-size:.8rem;color:var(--bl-2);max-width:26ch;line-height:1.45}
+
+/* Bocken ritas: strecket går från 0 till hel längd. */
+.sd-bock{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--mossa) 16%,transparent)}
+.sd-bock svg{width:22px;height:22px;fill:none;stroke:var(--mossa);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.sd-bock path{stroke-dasharray:1;stroke-dashoffset:1}
+.bytt > .sd-bock path,.sd-flyt.syns .sd-bock path{animation:sd-rita .6s var(--e-ut) .15s forwards}
+@keyframes sd-rita{to{stroke-dashoffset:0}}
+.sd-bock.liten{width:26px;height:26px}
+.sd-bock.liten svg{width:14px;height:14px}
+
+/* --- passlistan --- */
+.sd-flikar{display:flex;gap:4px;margin-bottom:12px;padding:4px;border-radius:100px;background:var(--pap-2);width:fit-content}
+.sd-flikar button{
+  padding:6px 13px;border-radius:100px;font-size:.78rem;font-weight:500;color:var(--bl-2);cursor:pointer;
+  transition:background .25s var(--e),color .25s var(--e),box-shadow .25s var(--e);
+}
+.sd-flikar button[aria-pressed="true"]{background:var(--kort);color:var(--bl);font-weight:600;box-shadow:0 1px 2px rgba(28,24,18,.08)}
+.sd-panel{display:none}
+.sd-panel.pa{display:block;animation:sd-in .45s var(--e-ut) both}
+
+.sd-rad{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;
+  padding:10px 0;border-bottom:1px solid var(--ln);
+}
+.sd-rad:last-child{border-bottom:0}
+.sd-datum{
+  width:42px;padding:5px 0;border-radius:12px;text-align:center;
+  background:var(--kort);border:1px solid var(--ln);line-height:1.05;
+}
+.sd-datum b{display:block;font-size:1rem;letter-spacing:-.03em}
+.sd-datum small{font-family:var(--f-mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3)}
+.sd-rad-text b{display:block;font-size:.84rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sd-rad-text small{display:block;margin-top:2px;font-size:.74rem;color:var(--bl-3)}
+.sd-lage{
+  font-family:var(--f-mono);font-size:9px;letter-spacing:.07em;text-transform:uppercase;
+  padding:4px 9px;border-radius:100px;border:1px solid var(--ln-2);color:var(--bl-3);
+  white-space:nowrap;
+}
+.sd-lage.varm{border-color:var(--acc-line);color:var(--acc-lugn);background:var(--acc-soft)}
+.sd-lage.gron,.sd-lage.bytt{border-color:color-mix(in srgb,var(--mossa) 40%,transparent);color:var(--mossa);background:color-mix(in srgb,var(--mossa) 10%,transparent)}
+/* En rad som finns först när något hänt: den fälls ut, den står inte
+   och väntar tom. */
+.sd-rad.sd-ny{display:none}
+.sd-rad.sd-ny.bytt{display:grid;animation:sd-fall .55s var(--fjader) both}
+@keyframes sd-fall{from{opacity:0;translate:0 -10px;scale:.97}}
+
+.sd-mal{font-size:.84rem;line-height:1.55;color:var(--bl-2)}
+.sd-mal b{color:var(--bl)}
+.sd-plansteg{margin-top:12px;display:grid;gap:7px}
+.sd-plansteg span{display:flex;align-items:center;gap:9px;font-size:.8rem;color:var(--bl-2)}
+.sd-plansteg span i{
+  width:16px;height:16px;border-radius:50%;flex:none;border:1.5px solid var(--ln-2);
+  display:grid;place-items:center;
+}
+.sd-plansteg span.gjort i{background:var(--mossa);border-color:var(--mossa)}
+.sd-plansteg span.gjort i::after{content:"";width:6px;height:3px;border:solid var(--pap);border-width:0 0 1.6px 1.6px;rotate:-45deg;translate:0 -1px}
+.sd-plansteg span.gjort{color:var(--bl-3);text-decoration:line-through;text-decoration-color:var(--ln-2)}
+.sd-rapport p{font-size:.84rem;line-height:1.6;color:var(--bl-2)}
+.sd-rapport .sd-lage{display:inline-block;margin-bottom:10px}
+
+/* --- läxorna --- */
+.sd-lax{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 12px;border-radius:14px;
+  border:1px solid var(--ln);background:var(--kort);
+  cursor:pointer;
+  transition:background .25s var(--e),border-color .25s var(--e);
+}
+.sd-lax + .sd-lax{margin-top:6px}
+.sd-lax input{
+  appearance:none;-webkit-appearance:none;margin:0;flex:none;
+  width:20px;height:20px;border-radius:7px;border:1.5px solid var(--ln-2);
+  display:grid;place-items:center;cursor:pointer;
+  transition:background .25s var(--e),border-color .25s var(--e),scale .4s var(--fjader);
+}
+.sd-lax input::after{
+  content:"";width:8px;height:4px;border:solid var(--pap);border-width:0 0 2px 2px;
+  rotate:-45deg;translate:0 -1px;scale:0;transition:scale .35s var(--fjader);
+}
+.sd-lax input:checked{background:var(--mossa);border-color:var(--mossa);scale:1.08}
+.sd-lax input:checked::after{scale:1}
+.sd-lax input:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
+.sd-lax span{flex:1;min-width:0;font-size:.84rem;font-weight:500;position:relative}
+.sd-lax span::after{
+  content:"";position:absolute;left:0;top:52%;height:1.5px;width:100%;
+  background:var(--bl-3);transform:scaleX(0);transform-origin:left;
+  transition:transform .45s var(--e-ut);
+}
+.sd-lax:has(input:checked) span{color:var(--bl-3)}
+.sd-lax:has(input:checked) span::after{transform:scaleX(1)}
+.sd-lax em{font-style:normal;font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--bl-3)}
+.sd-lax-alla{
+  display:none;align-items:center;gap:10px;margin-top:12px;
+  font-size:.84rem;font-weight:600;color:var(--mossa);
+}
+.sd-lax-alla.bytt{display:flex;animation:sd-pop .5s var(--fjader) both}
+.sd-lax-rakna{font-variant-numeric:tabular-nums}
+
+/* Konfetti: åtta prickar som flyger ut ur bocken när sista läxan är
+   klar. Riktningen står i --v på varje prick. */
+.sd-konfetti{position:relative;width:26px;height:26px;flex:none}
+.sd-konfetti i{
+  position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:2px;
+  background:var(--c,var(--acc));opacity:0;
+}
+.sd-lax-alla.bytt .sd-konfetti i{animation:sd-flyg .9s var(--e-ut) both}
+@keyframes sd-flyg{
+  0%{opacity:1;transform:rotate(var(--v)) translateX(0)}
+  100%{opacity:0;transform:rotate(var(--v)) translateX(26px) rotate(160deg)}
+}
+
+/* --- utvecklingen --- */
+.sd-omr{
+  display:grid;grid-template-columns:minmax(0,1fr) auto 86px;align-items:center;gap:12px;
+  padding:9px 0;border-bottom:1px solid var(--ln);
+}
+.sd-omr:last-child{border-bottom:0}
+.sd-omr b{display:block;font-size:.84rem;font-weight:600}
+.sd-omr small{display:block;font-size:.72rem;color:var(--bl-3);margin-top:1px}
+.sd-meter{display:flex;gap:3px}
+.sd-meter i{width:18px;height:8px;border-radius:3px;background:color-mix(in srgb,var(--bl) 10%,transparent);transform-origin:left}
+.sd-meter[data-steg="2"] i:nth-child(-n+2){background:var(--acc)}
+.sd-meter[data-steg="3"] i:nth-child(-n+3){background:var(--ockra)}
+.sd-meter[data-steg="4"] i:nth-child(-n+4){background:var(--mossa)}
+.sd-sek.pa .sd-meter i{animation:sd-dela .5s var(--e-ut) both;animation-delay:calc(var(--r,0) * 120ms + var(--n,0) * 60ms + 300ms)}
+.sd-meter i:nth-child(1){--n:0}.sd-meter i:nth-child(2){--n:1}.sd-meter i:nth-child(3){--n:2}
+.sd-meter i:nth-child(4){--n:3}.sd-meter i:nth-child(5){--n:4}
+.sd-omr em{font-style:normal;font-size:.74rem;color:var(--bl-2);text-align:right}
+.sd-upp{color:var(--mossa);font-weight:600}
+.sd-linje-hus{position:relative}
+/* Grafen dras ut på bredden (preserveAspectRatio none) och ritas fram
+   med en ridå från vänster. Strecket behåller sin tjocklek genom
+   non-scaling-stroke; pricken är html, för en cirkel i en utdragen
+   svg blir en ellips. */
+.sd-linje{width:100%;height:90px;display:block;overflow:visible}
+.sd-linje .yta{fill:color-mix(in srgb,var(--mossa) 12%,transparent)}
+.sd-linje .streck{fill:none;stroke:var(--mossa);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.sd-sek.pa .sd-linje{animation:sd-rida 1.4s var(--e-ut) .3s both}
+@keyframes sd-rida{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.sd-linje-prick{
+  position:absolute;left:98.67%;top:23.9%;width:10px;height:10px;margin:-5px;border-radius:50%;
+  background:var(--kort);border:2px solid var(--mossa);
+}
+.sd-sek.pa .sd-linje-prick{animation:sd-pop .45s var(--fjader) 1.5s both}
+.sd-skala{display:flex;justify-content:space-between;margin-top:6px;font-family:var(--f-mono);font-size:9px;color:var(--bl-3);letter-spacing:.06em;text-transform:uppercase}
+
+/* --- chatten --- */
+.sd-chatt{display:flex;flex-direction:column;height:100%;min-height:0}
+.sd-chatt-topp{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--ln)}
+.sd-chatt-topp picture,.sd-chatt-topp img{width:36px;height:36px;border-radius:50%;display:block;object-fit:cover}
+.sd-chatt-topp b{display:block;font-size:.9rem}
+.sd-chatt-topp small{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--bl-3)}
+.sd-chatt-topp small i{width:7px;height:7px;border-radius:50%;background:var(--mossa)}
+.sd-trad{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px 2px;display:flex;flex-direction:column;gap:7px;scrollbar-width:none}
+.sd-trad::-webkit-scrollbar{display:none}
+.sd-bubbla{
+  max-width:78%;padding:9px 13px;border-radius:18px 18px 18px 6px;
+  background:var(--pap-2);font-size:.84rem;line-height:1.45;
+  align-self:flex-start;
+}
+.sd-bubbla.egen{align-self:flex-end;border-radius:18px 18px 6px 18px;background:var(--acc);color:var(--acc-ink)}
+.sd-sek.pa .sd-bubbla{animation:sd-bubbla .5s var(--fjader) both;animation-delay:calc(var(--i) * .75s + .2s)}
+@keyframes sd-bubbla{from{opacity:0;translate:0 10px;scale:.9}}
+.sd-bubbla.egen{transform-origin:right bottom}
+.sd-bubbla{transform-origin:left bottom}
+/* Skriver-prickarna syns en stund och försvinner när svaret kommer. */
+.sd-skriver{
+  align-self:flex-start;display:flex;gap:4px;padding:11px 13px;border-radius:18px 18px 18px 6px;
+  background:var(--pap-2);
+}
+.sd-skriver i{width:6px;height:6px;border-radius:50%;background:var(--bl-3);animation:sd-hopp 1s var(--e) infinite}
+.sd-skriver i:nth-child(2){animation-delay:.15s}
+.sd-skriver i:nth-child(3){animation-delay:.3s}
+@keyframes sd-hopp{0%,60%,100%{translate:0 0;opacity:.5}30%{translate:0 -4px;opacity:1}}
+.sd-skriver.svar{display:none}
+.sd-skriver.svar.bytt{display:flex}
+.sd-skriver.svar.klar{display:none}
+.sd-bubbla.sd-sen{display:none}
+.sd-bubbla.sd-sen.bytt{display:block;animation:sd-bubbla .5s var(--fjader) both}
+.sd-snabb{display:flex;gap:6px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--ln)}
+.sd-snabb.bytt{display:none}
+.sd-snabb button{
+  padding:7px 12px;border-radius:100px;border:1px solid var(--ln-2);
+  font-size:.78rem;color:var(--bl-2);cursor:pointer;background:var(--kort);
+  transition:border-color .2s var(--e),color .2s var(--e),scale .3s var(--fjader);
+}
+.sd-snabb button:hover{border-color:var(--bl);color:var(--bl)}
+.sd-snabb button:active{scale:.95}
+.sd-skrivfalt{
+  margin-top:10px;display:flex;align-items:center;gap:8px;
+  padding:9px 9px 9px 14px;border-radius:100px;border:1px solid var(--ln);background:var(--kort);
+  font-size:.8rem;color:var(--bl-3);
+}
+.sd-skrivfalt i{margin-left:auto;width:28px;height:28px;border-radius:50%;background:var(--acc);display:grid;place-items:center}
+.sd-skrivfalt i svg{width:13px;height:13px;fill:none;stroke:var(--acc-ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* --- betalningen --- */
+.sd-betala{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px}
+.sd-betala .sd-knapp{grid-column:1/-1}
+.sd-belopp{font-size:1.1rem;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.sd-betald{
+  display:none;align-items:center;gap:10px;
+  font-size:.84rem;color:var(--bl-2);
+}
+.sd-betald.bytt{display:flex;animation:sd-pop .5s var(--fjader) both}
+.sd-betala.bytt{display:none}
+.sd-kortrad{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.74rem;color:var(--bl-3)}
+.sd-kortrad svg{width:26px;height:18px;flex:none}
+
+/* --- flytande lager: notiser som svävar framför fönstret --- */
+.sd-flyt{
+  position:absolute;z-index:8;
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px 11px 11px;border-radius:18px;
+  background:color-mix(in srgb,var(--kort) 92%,transparent);
+  border:1px solid var(--kort-kant);
+  box-shadow:0 24px 50px -24px rgba(28,24,18,.45),0 2px 6px rgba(28,24,18,.06);
+  font-size:.8rem;line-height:1.3;color:var(--bl);
+  pointer-events:none;
+  transform:translate3d(calc(var(--mx,0) * 30px),calc(var(--my,0) * 22px),0);
+  opacity:0;
+  transition:opacity .45s var(--e);
+}
+.sd-flyt b{display:block;font-size:.82rem;letter-spacing:-.01em}
+.sd-flyt small{display:block;font-size:.72rem;color:var(--bl-3)}
+.sd-flyt.syns{opacity:1;animation:sd-flyt-in .7s var(--fjader) both}
+@keyframes sd-flyt-in{from{translate:0 18px;scale:.85}}
+.sd-flyt-h{right:clamp(-26px,-2vw,-10px);top:18%}
+.sd-flyt-v{left:clamp(-26px,-2vw,-10px);bottom:14%}
+.sd-flyt .sd-bock{width:30px;height:30px;flex:none}
+.sd-flyt .sd-bock svg{width:15px;height:15px}
+.sd-flyt-ikon{
+  width:30px;height:30px;border-radius:10px;flex:none;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--acc) 12%,transparent);
+}
+.sd-flyt-ikon svg{width:16px;height:16px;fill:none;stroke:var(--acc);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* --- rundturens pekare --- */
+.sd-pekare{
+  position:absolute;left:0;top:0;z-index:9;
+  width:26px;height:26px;margin:-4px 0 0 -5px;
+  pointer-events:none;
+  opacity:0;
+  transform:translate(var(--px,60%),var(--py,70%));
+  transition:transform .85s cubic-bezier(.5,0,.2,1),opacity .4s var(--e);
+  filter:drop-shadow(0 4px 8px rgba(28,24,18,.35));
+}
+.sd-pekare.syns{opacity:1}
+.sd-pekare svg{width:100%;height:100%;display:block}
+.sd-pekare path{fill:#2E2A20;stroke:#FBFAF7;stroke-width:1.6;stroke-linejoin:round}
+.sd-pekare::after{
+  content:"";position:absolute;left:5px;top:4px;width:34px;height:34px;margin:-17px 0 0 -17px;
+  border-radius:50%;border:2px solid var(--acc);opacity:0;scale:.3;
+}
+.sd-pekare.klick::after{animation:sd-klick .5s var(--e-ut)}
+@keyframes sd-klick{0%{opacity:.9;scale:.3}100%{opacity:0;scale:1.3}}
+
+.sd-under{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  margin-top:clamp(18px,2vw,26px);
+}
+.sd-under .nx-bildtext{margin-top:0}
+.sd-tur{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:9px 16px;border-radius:100px;border:1px solid var(--ln-2);background:var(--kort);
+  font-size:.84rem;font-weight:600;letter-spacing:-.01em;color:var(--bl);cursor:pointer;
+  transition:border-color .2s var(--e);
+}
+.sd-tur:hover{border-color:var(--bl)}
+.sd-tur[hidden]{display:none}
+.sd-tur svg{width:12px;height:12px;fill:currentColor}
+.sd-tur .paus{display:none}
+.sd-tur.spelar .paus{display:inline-flex}
+.sd-tur.spelar .spela{display:none}
+.sd-tur span{display:inline-flex;align-items:center;gap:9px}
+
+/* --- smalare skärmar --- */
+@media (max-width:1100px){
+  .sd-tal{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sd-tal div:nth-child(n+4){display:none}
+}
+@media (max-width:900px){
+  .sd-flyt{display:none}
+  .sd-boka{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:760px){
+  .sd-app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:600px}
+  .sd-sido{
+    flex-direction:row;gap:4px;padding:8px;
+    border-right:0;border-bottom:1px solid var(--ln);
+    overflow-x:auto;
+  }
+  .sd-sido-rubrik{display:none}
+  .sd-sido button{padding:8px 12px;flex:none}
+  .sd-sido button svg{display:none}
+  .sd-sido .sd-bricka{margin-left:4px}
+  .sd-tva{grid-template-columns:minmax(0,1fr)}
+  .sd-sek{padding:16px}
+  .sd-hej b{font-size:1.3rem}
+  .sd-omr{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}
+  .sd-omr em{grid-column:1/-1;text-align:left}
+}
+
+/* ============================================================
+   9. SÅ KAN ETT PASS SE UT — bilderna kommer in
+
+   Varje foto öppnas som en ridå ur sin egen kant, och bilden inuti
+   glider från lite för nära till rätt avstånd. clip-path klipper
+   också skuggan, så skuggan tonar in först när ridån är helt borta
+   (.nx-klar). Riktningen varierar per bild så att väggen inte öppnar
+   sig som en rad jalusier.
+
+   parallaxen i NXFin äger transform på ramen. Ridån är clip-path,
+   zoomen är scale på bilden — tre egenskaper, inga två om samma.
+   ============================================================ */
+html.nx-sr .nx-vagg-grid figure{
+  box-shadow:none;
+  transition:clip-path 1.25s var(--e-ut),box-shadow .8s var(--e);
+}
+html.nx-sr .nx-vagg-grid .v1{clip-path:inset(100% 0 0 0 round var(--fig-r))}
+html.nx-sr .nx-vagg-grid .v2{clip-path:inset(0 0 100% 0 round var(--fig-r));transition-delay:.12s}
+html.nx-sr .nx-vagg-grid .v3{clip-path:inset(0 100% 0 0 round var(--fig-r))}
+html.nx-sr .nx-vagg-grid .v4{clip-path:inset(0 0 0 100% round var(--fig-r));transition-delay:.1s}
+html.nx-sr .nx-vagg-grid figure .nx-img{
+  scale:1.24;
+  transition:opacity .7s var(--e-mjuk),scale 1.9s var(--e-ut);
+}
+html.nx-sr .nx-vagg-grid figure.nx-in{clip-path:inset(0 0 0 0 round var(--fig-r))}
+html.nx-sr .nx-vagg-grid figure.nx-in .nx-img{scale:1}
+html.nx-sr .nx-vagg-grid figure.nx-klar{clip-path:none;box-shadow:var(--sk-foto)}
+
+/* ============================================================
+   10. REDUCERAD RÖRELSE
+   nx-sr sätts aldrig i det läget, så startlägena ovan gäller inte.
+   Det som är kvar är det som rör sig av sig självt.
+   ============================================================ */
+@media (prefers-reduced-motion:reduce){
+  .nx-holdpunkter > li,
+  .nx-holdpunkter:has(> li:hover) > li{scale:none !important}
+  .sd-rum{transform:none !important}
+  .sd-flyt{transform:none}
+}

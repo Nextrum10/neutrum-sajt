@@ -139,12 +139,50 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara |
+| `nextrum-start.css` + `nextrum-start.js` | **Bara startsidan** (sv och en), efter cinema respektive före sidans eget skript. Det ljusare papperet (`--pap:#F3F2EC`, Leo 2026-09-25) och rörelsen efter hero: bladet över filmen, ordfyllnaden, hållpunkterna 1–4, korten som delas ut, det rullande bandet, bildväggens ridåer och studievyn man kan klicka i. Skriptet startar av sig självt och skriver ingen text — allt man läser står i markupen, på båda språken |
 | `nextrum-admin-palett.css` | Bara `admin.html`, laddas **sist**. Sedan 2026-09-24 **ingen egen palett**: adminvyn ärver jordpaletten som de två andra vyerna. Filen bär bara `--fel`, `--ln-kontroll`, agentflikens `--acc-lugn` och felsemantiken |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
 Sju områdessidor (`laxhjalp-*.html`) genereras. `/en/` är elva
 översatta sidor.
+
+### Startsidan efter hero (2026-09-25)
+
+Hero är orörd med flit. Allt annat på startsidan bor i
+`nextrum-start.css` och `nextrum-start.js`, och startlägena gömmer
+ingenting utan `html.nx-sr` — klassen sätts av skriptet, så en fil som
+inte laddar lämnar sidan i slutläget. Fyra saker som kostade en omgång:
+
+1. **`once`-scenerna i `NXMotion` avslöjade aldrig något.** Scenen
+   markerades klar efter första anropet, och det kommer när elementet
+   når observatörens marginal — innan det syns, med p = 0. Nödbromsen
+   visade sedan ALLT efter två sekunder, så sidan såg frisk ut:
+   33 av 33 block under vikningen på startsidan var synliga innan
+   någon scrollat. Nu är en once-scen klar först när `run()` svarar
+   något annat än `false`, och bromsen visar bara det som står i eller
+   ovanför vyn. Gäller alla publika sidor.
+2. **`preserve-3d` och en rullbar behållare går inte ihop i Chrome.**
+   Studievyns fönster lutar mot pekaren. Med `transform-style:
+   preserve-3d` gav `elementFromPoint` föräldern i stället för knappen
+   i sidomenyn, och klicket gjorde ingenting. Lutningen står kvar;
+   3D-kontexten är borta.
+3. **`scrollIntoView` i en rad som flyttas med transform rullar
+   sidan.** `NX.initDrag()` visar kortet man tryckt på. I bandet, som
+   klipps och förskjuts med transform, räknade Chrome fram ett mål
+   400 px bort och rullade hela sidan dit. Anropet hoppas över i
+   `.nx-band.pa`. Bandet är `overflow:clip`, inte `hidden`, av samma
+   skäl: `hidden` gör det till något som går att scrolla.
+4. **Bandets kopior måste finnas när `NX.initDrag()` körs.** Därför
+   laddas `nextrum-start.js` före sidans eget skript. Kopiorna är
+   `aria-hidden`, utanför tabbordningen och har egna id:n; en
+   skärmläsare hör sex kort, inte arton.
+
+Studievyns markup byggs för båda språken ur samma mall, så att
+taggsekvensen är identisk. `jamfor-sprak.py` rapporterar bara den
+FÖRSTA strukturskillnaden, och på startsidan är den språkväljaren —
+en skillnad längre ner syns alltså inte i verktyget. Jämför
+taggsekvenserna med `difflib` när du ändrar i sektionen.
 
 ### Två fällor när en palett byts
 

@@ -82,7 +82,9 @@ const NXMotion = (function () {
        from     var progress ska vara 0. 'top' = elementets ovankant
                 möter vyns underkant. 'enter'/'center'/'cover'
        run(p)   körs med p = 0→1 varje bildruta scenen syns
-       once     kör bara en gång när den blir synlig (textavslöjanden)
+       once     scenen är klar när run() svarat något annat än false.
+                Svarar run() false har inget hänt än, och scenen räknas
+                om nästa gång. Se kommentaren i tick().
        pin      elementet är sticky inuti en hög behållare — då mäts
                 behållaren istället, vilket ger hela scrollsträckan  */
   function scene(el, opts) {
@@ -153,8 +155,15 @@ const NXMotion = (function () {
       /* hoppa över omritning när inget rört sig nämnvärt */
       if (Math.abs(p - s.senaste) < 0.0004 && s.senaste >= 0) continue;
       s.senaste = p;
-      s.run(p, s);
-      if (s.once) s.klar = true;
+      /* En once-scen är klar först när run() säger det. Förut sattes
+         klar efter FÖRSTA anropet, oavsett p. Det anropet kommer när
+         observatören ser elementet inom sin marginal på 25 %, alltså
+         innan det syns, med p = 0 — avslöjandet hände aldrig, och
+         nödbromsen visade allt efter två sekunder. Inget på sajten
+         steg alltså in när man scrollade fram till det (2026-09-25:
+         33 av 33 block under vikningen på startsidan). */
+      const svar = s.run(p, s);
+      if (s.once && svar !== false) s.klar = true;
     }
   }
 
@@ -576,7 +585,10 @@ const NXFin = (function () {
 
       NXMotion.scene(el, {
         läge: 'enter', once: true,
-        run: p => { if (p > 0.02) el.classList.add('nx-in'); }
+        run: p => {
+          if (p <= 0.02) return false;
+          el.classList.add('nx-in');
+        }
       });
     });
   }
@@ -640,7 +652,10 @@ const NXFin = (function () {
       if (NXMotion.reducerad || iVyn(el)) { el.classList.add('nx-in'); return; }
       NXMotion.scene(el, {
         läge: 'enter', once: true,
-        run: p => { if (p > 0.02) el.classList.add('nx-in'); }
+        run: p => {
+          if (p <= 0.02) return false;
+          el.classList.add('nx-in');
+        }
       });
     });
   }
@@ -650,14 +665,30 @@ const NXFin = (function () {
      [data-stig] och radmasken börjar osynliga. Blir de av någon
      anledning aldrig avslöjade — strypt requestAnimationFrame,
      mätvärden som inte går att läsa, ett skript som fallerar efter
-     oss — står halva sidan tom. Efter två sekunder visas därför allt
-     som fortfarande väntar, oavsett var det står.
+     oss — står halva sidan tom.
+
+     Från två sekunder efter start tittar bromsen därför efter
+     block som står I eller OVANFÖR vyn men ännu väntar, och visar
+     dem. Block längre ner lämnas åt scrollen. Förut visades allt
+     efter två sekunder oavsett var det stod, och det dolde att
+     scrollavslöjandet aldrig fungerade — sidan såg frisk ut för att
+     bromsen gjorde motorns jobb.
+
+     Går vyhöjden inte att läsa vet vi ingenting, och då visas allt.
 
      Rörelse är en bonus. Texten är inte förhandlingsbar. */
   function nödbroms() {
-    setTimeout(() => {
-      $$('[data-stig]:not(.nx-in), [data-avslöj]:not(.nx-in)')
-        .forEach(el => el.classList.add('nx-in'));
+    const kolla = () => {
+      const väntar = $$('[data-stig]:not(.nx-in), [data-avslöj]:not(.nx-in)');
+      if (!väntar.length) return false;
+      const h = document.documentElement.clientHeight || window.innerHeight || 0;
+      väntar.forEach(el => {
+        if (!h || el.getBoundingClientRect().top < h * 0.92) el.classList.add('nx-in');
+      });
+      return true;
+    };
+    setTimeout(function varv() {
+      if (kolla()) setTimeout(varv, 700);
     }, 2000);
   }
 
