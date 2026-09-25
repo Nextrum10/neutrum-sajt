@@ -115,6 +115,21 @@
     if (el.dataset && el.dataset.ans) {
       const a = S.ansokningar.find(x => x.id === el.dataset.ans);
       const gammal = a.status;
+      /* Godkänd mejlar en välkomst (Fas 16.1), och mejlet säger att
+         profilen är godkänd. Satt härifrån är den inte det: det är
+         "Ta in i poolen" som godkänner profilen och gör hen matchbar.
+         Ett välkomstmejl går inte att ta tillbaka. */
+      if (el.value === 'approved' && gammal !== 'approved') {
+        const ja = await bekräfta({
+          titel: 'Godkänna utan att ta in i poolen?',
+          text: (a.name || 'Den sökande') + ' får ett välkomstmejl som säger att profilen är '
+            + 'godkänd. Men bara läget ändras härifrån: profilen godkänns först med "Ta in i '
+            + 'poolen", och till dess går hen inte att matcha.',
+          knapp: 'Godkänn och mejla ändå',
+          avbryt: 'Avbryt'
+        });
+        if (!ja) { el.value = gammal; return; }
+      }
       a.status = el.value;
       if (!await skriv('applications', a.id, { status: el.value })) a.status = gammal;
       ritaAnsokningar(); ritaÖversikt();

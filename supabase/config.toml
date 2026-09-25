@@ -4,8 +4,8 @@
 # FILEN FINNS FÖR ATT EN DRIFTSÄTTNING INTE SKA SLÅ PÅ JWT-KRAVET
 #
 # Sex funktioner anropas av något som inte har en inloggad användare:
-# en databaswebhook, en trigger, ett pg_cron-jobb eller en knapp i ett
-# mejlprogram. De har därför verify_jwt av.
+# en databaswebhook, en trigger, ett pg_cron-jobb, Stripe eller en
+# knapp i ett mejlprogram. De har därför verify_jwt av.
 #
 # Den inställningen satt länge BARA i dashboarden. En `supabase
 # functions deploy` läser den här filen, och saknas raden för en
@@ -22,10 +22,12 @@
 #
 # VAD SOM SKYDDAR DEM I STÄLLET
 #
-# Ingen av dem är öppen. Fem kräver en delad hemlighet i en egen
-# header, jämförd i konstant tid mot en rad i databasen. Den sjätte,
-# notis-avanmal, kräver en HMAC-signerad token i länken och kan bara
-# stänga AV en notis, aldrig slå på någon och aldrig läsa något.
+# Ingen av dem är öppen. Fyra kräver en delad hemlighet i en egen
+# header, jämförd i konstant tid: fakturering sin egen nyckel,
+# lead-notis, notis-ko och ansokan-notis hemligheten i notis_konfig.
+# stripe-webhook kräver Stripes signatur. notis-avanmal kräver en
+# HMAC-signerad token i länken och kan bara stänga AV en notis,
+# aldrig slå på någon och aldrig läsa något.
 #
 # Att verify_jwt är av betyder alltså inte att funktionen är
 # oskyddad. Det betyder att skyddet inte är Supabases Auth.
@@ -64,6 +66,12 @@ verify_jwt = false
 # Kö-arbetaren. Väcks av pg_cron-jobbet notis-minut genom
 # notis_konfig.arbetare_url, med samma hemlighet i headern.
 [functions.notis-ko]
+verify_jwt = false
+
+# Mejlen till den som sökt jobb (Fas 16.1). Väcks av triggern
+# ansokan_besked och omförsöksjobbet genom notis_konfig.ansokan_url,
+# med samma hemlighet i headern.
+[functions.ansokan-notis]
 verify_jwt = false
 
 # Stripes webhook (Fas 12.2). Anroparen är Stripe, som inte har och

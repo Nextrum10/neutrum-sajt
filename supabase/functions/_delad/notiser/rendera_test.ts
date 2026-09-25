@@ -17,7 +17,8 @@
 // ============================================================
 
 import { assertEquals, assertStringIncludes, assertThrows } from 'jsr:@std/assert@1';
-import { renderaMejl, avregistreringsAdress, vyAdress, KONTAKT, SAJT } from './rendera.ts';
+import { renderaMejl, avregistreringsAdress, vyAdress, KONTAKT, LOGGA_URL, SAJT } from './rendera.ts';
+import { renderaKvitto } from './kvitto.ts';
 import { MEJLBARA, type Roll } from './typer.ts';
 
 const NU = new Date('2026-10-13T09:00:00Z');
@@ -291,5 +292,28 @@ Deno.test('mörkt läge är avstängt och typsnittet är systemets', () => {
   // Ingen extern begäran ur ett mejl: ett typsnitt från en annan
   // server är en spårningspixel.
   assertEquals(m.html.includes('fonts.googleapis.com'), false);
-  assertEquals(m.html.includes('<img'), false, 'loggan ritas som text');
+});
+
+Deno.test('loggan är den riktiga, och den kan inte spåra någon', () => {
+  // Fas 16.1: loggan är en PNG från nextrum.se, inte längre ett N i
+  // systemtypsnittet. Det som gör en bild i ett mejl till en
+  // spårningspixel är att adressen skiljer sig per mottagare. Den här
+  // är samma för alla — ingen fråga, inget id, ingen annan värd — och
+  // det är den enda bilden i mejlet.
+  for (const m of [rendera('meddelande', 'parent'), rendera('pass_nytt', 'tutor'), renderaKvitto('Anna')]) {
+    const bilder = m.html.match(/<img\b[^>]*>/g) ?? [];
+    assertEquals(bilder.length, 1, 'exakt en bild: loggan');
+    const bild = bilder[0] ?? '';
+    assertStringIncludes(bild, `src="${LOGGA_URL}"`);
+    assertEquals(LOGGA_URL.startsWith(`${SAJT}/`), true);
+    assertEquals(LOGGA_URL.includes('?'), false);
+    // Fasta mått, så att brevet inte hoppar när bilden laddar, och
+    // tom alt: ordet Nextrum står bredvid som text, och en skärmläsare
+    // ska inte läsa det två gånger.
+    assertStringIncludes(bild, 'width="32"');
+    assertStringIncludes(bild, 'height="32"');
+    assertStringIncludes(bild, 'alt=""');
+    // Med bilder avstängda står namnet kvar som text.
+    assertStringIncludes(m.html, '>Nextrum</a>');
+  }
 });

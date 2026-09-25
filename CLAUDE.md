@@ -407,6 +407,8 @@ Fas 16.1 la till `erbjudanden` (katalogen, alla läser) och `klippkort`
 `erbjudanden_pris` och `klippkort_saldo`. Timmarna dras bara i
 `klippkort_dra()`, och triggrarna för klippkortet är EGNA — de rör inte
 `skydda_bokningsfalt` eller `avvikelser_rader`, som Fas 14.6 skrev om.
+Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
+skrivs bara av triggern och funktionen, läses bara av admin).
 Runda 2 la till notisernas sju: `notiser` (i vyn), `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
 `notis_fel` — plus `flaggor`, som är strömbrytarna för det som
@@ -642,6 +644,76 @@ sandlådan slås på innan något provas, och de fem stegen för att lägga
 till en ny notistyp utan att den faller ut som `okänd notistyp` ur en
 trigger.
 
+### Beskeden till den som söker (Fas 16.1)
+
+Den som skickar in en intresseanmälan får ett kvitto (`lead-notis`,
+`_delad/notiser/kvitto.ts`). Den som söker jobb får ett kvitto och
+sedan ett mejl per steg framåt (`ansokan-notis`,
+`_delad/notiser/ansokan.ts`), och varje sådant mejl visar alla fyra
+stegen — Ansökan, Digitalt möte, Introduktion, Konto och godkännande —
+med en markör där hen står.
+
+```
+applications (insert/update)
+  → trigger ansokan_besked → intern.ansokan_besked_koa()
+      rad i ansokan_utskick, unik på (ansokan_id, nyckel)
+  → pg_net → ansokan-notis → ansokan_besked_ta() → Resend → ansokan_besked_klar()
+  → pg_cron "ansokan-besked" var femte minut: omförsök, högst tre, bara senaste dygnet
+```
+
+| Händelse i adminvyn | Mejl |
+|---|---|
+| ansökan kommer in (vem som helst) | `mottagen`: tack, svar inom 24 timmar |
+| "Kontakt" | **inget** — admin skriver själv, med förslag på tider |
+| mötet sparas eller får ny tid/länk | `mote`: tid i svensk tid, länken som knapp |
+| "Mötet är hållet" | `utbildning`: tack, introduktionen är nästa steg |
+| "Markera utbildad" | `sista_steget`: skapa konto med samma e-post |
+| läget blir Godkänd | `valkommen` |
+| läget blir Avböjd | **inget, med flit** |
+
+Sex regler bär det:
+
+1. **INSERT-grenen läser bara kvittot.** Vem som helst kan skriva en
+   rad i `applications`, så ingenting annat i raden får styra ett
+   mejl. `skydda_ansokningsfalt` nollar dessutom `mote_tid` och
+   `mote_lank` vid en insert som inte kommer från admin: annars hade
+   en främling kunnat få oss att mejla "ditt möte är bokat" med en
+   länk hen själv valt, från vår domän med godkänd DKIM.
+2. **Möteslänken prövas två gånger.** Adminvyn nekar allt som inte är
+   en https-adress innan det sparas, och `sakerLank()` gör bara en
+   https-adress utan inloggningsdel till en knapp. Annars säger mejlet
+   att länken kommer senare.
+3. **Ett steg mejlas en gång.** Nyckeln är steget, utom för mötet där
+   den är tid plus länk: ny tid är nytt mejl ("Ny tid för ditt möte"),
+   samma tid igen är det inte. Ångra och klicka igen ger inget nytt
+   mejl.
+4. **Ett nej skrivs av en människa.** Den som söker är ofta sexton, och
+   ett felklick som genast mejlar ett nej går inte att ta tillbaka.
+5. **Kvittot bromsas vid flod.** Fler än fem ansökningar på en minut
+   eller tjugo på en timme, eller samma adress igen inom ett dygn, blir
+   `bromsad` — raden finns, mejlet går inte. Det är skyddet mot att
+   formuläret används för att skicka våra mejl till främlingar. Samma
+   adress jämförs som den levereras (`intern.epost_nyckel()`: utan
+   skiftläge, kantmellanslag och plustillägg), och `created_at` sätts
+   av `skydda_ansokningsfalt`, inte av den som postar (Fas 16.1c).
+   Innan dess gick bromsen runt med en bakdaterad rad. **`leads` hade
+   samma hål och har samma rättelse** i `skydda_leadfalt`: bromsen i
+   `lead-notis` och analysvyerna räknar på den kolumnen.
+6. **Godkänd i rullgardinen är inte "Ta in i poolen".** Båda mejlar
+   välkomsten, men bara den senare godkänner profilen. Rullgardinen
+   frågar därför först.
+
+Utfallet syns i rekryteringsrutan vid det steg som skickade mejlet, och
+ett som inte gick fram är rött. Samma sort som kvittot till familjen:
+inget går att välja bort, avsändaren är info@, och ingenting ur
+ansökan återges utom förnamnet.
+
+**Loggan i alla mejl är en riktig bild** sedan Fas 16.1:
+`bilder/nextrum-logo-512.png`, ritad i 32×32 med `alt=""` och ordet
+Nextrum som text bredvid, så att ett mejlprogram som blockerar bilder
+fortfarande visar avsändaren. Filen är undantagen i `.gitignore`; tas
+undantaget bort blir loggan en trasig bild i varje mejl.
+
 ---
 
 ## 6. Säkerhetsmodellen
@@ -796,6 +868,7 @@ tillbaka en kopia.**
 | `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
+| `ansokan-notis` | Ett besked till den som sökt jobb (Fas 16.1): kvittot, eller mejlet om ett steg framåt med hela processen och var hen står. Databasen bestämmer vad, funktionen skickar | Triggern `ansokan_besked` och pg_cron `ansokan-besked`, via `notis_konfig.ansokan_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
 | `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris` | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
 | `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet | Betala med timmar i föräldravyn |
@@ -804,7 +877,7 @@ tillbaka en kopia.**
 | `stripe-avstamning` | Hämtar avgift, netto och läge (test eller skarpt) för betalningar som saknar dem (Fas 14.7). Högst femtio per tryck. Skriver bara de kolumnerna | Knappen Hämta från Stripe under Ekonomi → Kortbetalningar |
 | `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Ekonomi → Kortbetalningar |
 
-`supabase/config.toml` bär `verify_jwt = false` för de sju funktioner
+`supabase/config.toml` bär `verify_jwt = false` för de sex funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
 dashboarden, och en `supabase functions deploy` utan filen hade slagit
 på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och
@@ -832,6 +905,7 @@ Så här ser vägarna ut i dag:
 | `messages` | `messages_notis` | `notis_vid_meddelande` — köar |
 | `lesson_reports` | `lesson_reports_notis` | `notis_vid_rapport` — köar |
 | `leads` | `ny-intresseanmalan` | `http_request` → `lead-notis` |
+| `applications` | `ansokan_besked` | `intern.ansokan_besked` — köar i `ansokan_utskick` och väcker `ansokan-notis` (Fas 16.1) |
 
 `leads` är alltså den enda som fortfarande går via en webhook, och
 `lead-notis` den enda av de tre som lever.

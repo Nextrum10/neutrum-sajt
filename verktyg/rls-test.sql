@@ -27,7 +27,8 @@
 --
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
--- Fas 14.2–14.6, Fas 15.1–15.4 och Fas 16.1–16.1e är körda.
+-- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
+-- 16.1–16.1c) och Fas 16.1 (erbjudandena, 16.1–16.1e) är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -67,6 +68,12 @@ begin
     execute format('alter table public.%I disable trigger %I', t.tabell, t.namn);
   end loop;
 end $$;
+
+-- Fas 16.1: ansökningsmejlen. Triggern ansokan_besked på applications
+-- får vara PÅ, för proven längst ned mäter just vad den köar. Adressen
+-- till funktionen töms i stället, så att intern.ansokan_besked_skicka()
+-- returnerar innan pg_net ens anropas. Rullas tillbaka som allt annat.
+update public.notis_konfig set ansokan_url = null where id = 1;
 
 create temp table utfall (
   nr     serial,
@@ -2826,6 +2833,148 @@ select pg_temp.rakna('14.6 familjen ser sin faktura', '00000000-0000-4000-8000-0
 
 select pg_temp.rakna('14.6 en annan familj ser den inte', '00000000-0000-4000-8000-0000000000f2',
   $q$select count(*) from public.invoices where id = '00000000-0000-4000-8000-00000000f6a3'$q$, 0);
+
+-- ------------------------------------------------------------
+-- Fas 16.1: beskeden till den som söker jobb
+-- ------------------------------------------------------------
+
+-- En ansökan utifrån får ett kvitto i kön och ingenting annat, och
+-- inget av Nextrums fält går att skriva in utifrån. Skrivs som anon,
+-- läses som admin: anon får inte läsa applications, så en läsning som
+-- anon hade gett noll av fel skäl (se 10.4 ovan).
+do $$
+declare
+  kvitto bigint; ovrigt bigint; skyddad bigint; plus text; fel text;
+begin
+  begin
+    perform pg_temp.bli(null);
+    insert into public.applications (id, name, email, created_at, mote_tid, mote_lank, status, intervju_at)
+    values ('00000000-0000-4000-8000-0000000016a1', 'Prov Sökande', 'rls-161@example.invalid',
+            '2000-01-01', now() + interval '1 day', 'https://ond.example/logga-in', 'approved', now());
+    insert into public.applications (id, name, email)
+    values ('00000000-0000-4000-8000-0000000016a2', 'Prov Plus', 'rls-plus@example.invalid');
+    insert into public.applications (id, name, email)
+    values ('00000000-0000-4000-8000-0000000016a3', 'Prov Plus', '  RLS-plus+2@example.invalid ');
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    select count(*) into kvitto from public.ansokan_utskick
+     where ansokan_id = '00000000-0000-4000-8000-0000000016a1' and steg = 'mottagen' and status = 'vantar';
+    select count(*) into ovrigt from public.ansokan_utskick
+     where ansokan_id = '00000000-0000-4000-8000-0000000016a1' and steg <> 'mottagen';
+    select count(*) into skyddad from public.applications
+     where id = '00000000-0000-4000-8000-0000000016a1'
+       and created_at > now() - interval '1 minute'
+       and mote_tid is null and mote_lank is null and status = 'new' and intervju_at is null;
+    select status into plus from public.ansokan_utskick
+     where ansokan_id = '00000000-0000-4000-8000-0000000016a3';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('16.1 ansökan utifrån', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('16.1 en ansökan utifrån får ett kvitto i kön', kvitto = 1, 'rader: ' || kvitto),
+      ('16.1 och inget stegmejl, vad raden än påstår', ovrigt = 0, 'rader: ' || ovrigt),
+      ('16.1c tid, möte, läge och intervju utifrån skrivs över', skyddad = 1, 'rader: ' || skyddad),
+      ('16.1c samma adress med plustillägg och versaler bromsas', plus = 'bromsad', 'status: ' || coalesce(plus, 'ingen rad'));
+  end if;
+end $$;
+
+-- Samma rättelse i leads: kvittobromsen i lead-notis och analysvyerna
+-- räknar på created_at, och en tid den som postar väljer själv
+-- bromsar ingenting.
+do $$
+declare n bigint; fel text;
+begin
+  begin
+    perform pg_temp.bli(null);
+    insert into public.leads (parent_name, email, subject, tjanst, created_at)
+    values ('Prov Bakdaterad', 'rls-bakdat@example.invalid', 'Matte', 'laxhjalp', '2000-01-01');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select count(*) into n from public.leads
+     where email = 'rls-bakdat@example.invalid' and created_at > now() - interval '1 minute';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('16.1c en intresseanmälan utifrån kan inte bakdateras', fel = 'rulla tillbaka' and n = 1,
+          case when fel = 'rulla tillbaka' then 'rader med dagens tid: ' || n else fel end);
+end $$;
+
+-- Stegen: vad admin gör, och vad som köas av det. Körs som admin, med
+-- ansökan skapad som postgres så att bara stegmejlen mäts.
+do $$
+declare
+  mote1 bigint; mote2 bigint; mote3 bigint; utb bigint; nej bigint; fel text;
+  a constant uuid := '00000000-0000-4000-8000-0000000016b1';
+begin
+  begin
+    insert into public.applications (id, name, email)
+    values (a, 'Prov Steg', 'rls-steg@example.invalid');
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set mote_tid = date_trunc('minute', now()) + interval '2 days',
+                                   mote_lank = 'https://meet.example.com/abc' where id = a;
+    update public.applications set mote_lank = 'https://meet.example.com/abc' where id = a;
+    select count(*) into mote1 from public.ansokan_utskick where ansokan_id = a and steg = 'mote';
+    update public.applications set mote_tid = date_trunc('minute', now()) + interval '3 days' where id = a;
+    select count(*) into mote2 from public.ansokan_utskick where ansokan_id = a and steg = 'mote';
+    -- Ett möte som redan varit mejlas inte.
+    update public.applications set mote_tid = now() - interval '1 day' where id = a;
+    select count(*) into mote3 from public.ansokan_utskick where ansokan_id = a and steg = 'mote';
+
+    update public.applications set intervju_at = now() where id = a;
+    update public.applications set intervju_at = null where id = a;
+    update public.applications set intervju_at = now() where id = a;
+    select count(*) into utb from public.ansokan_utskick where ansokan_id = a and steg = 'utbildning';
+
+    update public.applications set status = 'rejected', utbildad_at = now() where id = a;
+    select count(*) into nej from public.ansokan_utskick where ansokan_id = a and steg in ('sista_steget', 'valkommen');
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('16.1 stegen', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('16.1 ett bokat möte köar ett mejl, samma tid igen inget', mote1 = 1, 'rader: ' || mote1),
+      ('16.1 en ny tid köar ett nytt', mote2 = 2, 'rader: ' || mote2),
+      ('16.1 en tid som redan varit köar inget', mote3 = 2, 'rader: ' || mote3),
+      ('16.1 mötet hållet, ångrat och hållet igen mejlas en gång', utb = 1, 'rader: ' || utb),
+      ('16.1 en avböjd ansökan köar inget, inte heller för andra steg', nej = 0, 'rader: ' || nej);
+  end if;
+end $$;
+
+-- Vem som ser beskeden och vem som kan låna en rad. En rad finns, så
+-- att noll betyder "får inte se", inte "finns inget".
+insert into public.applications (id, name, email)
+values ('00000000-0000-4000-8000-0000000016c1', 'Prov Läs', 'rls-las@example.invalid');
+
+select pg_temp.rakna('16.1 admin ser ansökans besked', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from public.ansokan_utskick where ansokan_id = '00000000-0000-4000-8000-0000000016c1'$q$, 1);
+
+select pg_temp.rakna('16.1 en studiehjälpare ser dem inte', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.ansokan_utskick where ansokan_id = '00000000-0000-4000-8000-0000000016c1'$q$, 0);
+
+select pg_temp.prova('16.1 anon kan inte låna en rad ur kön', null,
+  array[$q$select * from public.ansokan_besked_ta('00000000-0000-4000-8000-000000000000')$q$],
+  'nekad');
+
+select pg_temp.prova('16.1 inte en inloggad heller', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select * from public.ansokan_besked_ta('00000000-0000-4000-8000-000000000000')$q$],
+  'nekad');
+
+select pg_temp.prova('16.1 och ingen kan markera ett besked skickat', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select public.ansokan_besked_klar('00000000-0000-4000-8000-000000000000', true, null, null, false)$q$],
+  'nekad');
 
 -- ============================================================
 -- FAS 16.1 — planer och klippkort
