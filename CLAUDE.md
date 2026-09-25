@@ -238,12 +238,26 @@ Fyra saker som kostade en omgång:
    `aria-hidden`, utanför tabbordningen och har egna id:n; en
    skärmläsare hör sex kort, inte arton.
 
-**De mörka ytorna** (Bli studiehjälpare och Nästa steg) är sedan
-2026-09-25 rundade ytor som ligger på papperet, i en varmare bark än
-`--nt` (`--mork` i `nextrum-start.css`), och glider upp med klassen
-`.nx-framme` — aldrig `.nx-in`, för `.nx-in .nx-rad-i` i cinema tänder
-rubrikens rader på en gång. Stegen i ansökan har samma 1–4-beteende
-som hållpunkterna; `hållpunkter()` tar båda listorna.
+**De mörka ytorna** har sedan 2026-09-25 en varmare bark på hela
+sajten: `--nt` är `#2B221C` (var `#2E2A20`, en grönaktig olivbrun som
+blev en lerig vägg mot papperet), och `--band-bg` följer med. Sektionerna
+(`.nx-mork`, sidhuvudet och bandet på Bli studiehjälpare, "Nästa steg"
+på prissidan) mörknar nedåt mot `--nt-2` (`#1F1915`) och har ett svagt
+sken av lera och mossa ur `--nt-glod` och `--nt-mossa`, i cinemas DE
+MÖRKA YTORNA. Skenet tonar ut före nederkanten, och det som följer
+direkt på en mörk yta — footern, bandet under sidhuvudet — börjar i
+`--nt-2` utan lera i överkanten: annars syns en ljusare rand där två
+mörka block möts. Footern är därför `--nt-2` på alla sidor. I mörkt
+läge är `--nt-2` samma som `--nt`, och där är allt som förut. **Hero behåller den gamla tonen**
+(`--nt-film`), för hero är orörd med flit.
+
+Ytorna går kant i kant. En första version lade Bli studiehjälpare och
+Nästa steg som rundade kort på papperet som växte in med `scale`; Leo
+ville inte ha papperet runt dem. Nu står ytan still och innehållet
+glider upp med klassen `.nx-framme` — aldrig `.nx-in`, för
+`.nx-in .nx-rad-i` i cinema tänder rubrikens rader på en gång. Stegen i
+ansökan har samma 1–4-beteende som hållpunkterna; `hållpunkter()` tar
+båda listorna.
 
 Studievyns markup byggs för båda språken ur samma mall, så att
 taggsekvensen är identisk. Samma markup står på `for-elever-och-foraldrar.html`
