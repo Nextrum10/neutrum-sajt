@@ -212,6 +212,13 @@ Fyra saker som kostade en omgång:
    `aria-hidden`, utanför tabbordningen och har egna id:n; en
    skärmläsare hör sex kort, inte arton.
 
+**De mörka ytorna** (Bli studiehjälpare och Nästa steg) är sedan
+2026-09-25 rundade ytor som ligger på papperet, i en varmare bark än
+`--nt` (`--mork` i `nextrum-start.css`), och glider upp med klassen
+`.nx-framme` — aldrig `.nx-in`, för `.nx-in .nx-rad-i` i cinema tänder
+rubrikens rader på en gång. Stegen i ansökan har samma 1–4-beteende
+som hållpunkterna; `hållpunkter()` tar båda listorna.
+
 Studievyns markup byggs för båda språken ur samma mall, så att
 taggsekvensen är identisk. Samma markup står på `for-elever-och-foraldrar.html`
 (sv och en, 2026-09-25: den gamla `.nx-mock` stod kvar där). Ändras
