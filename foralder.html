@@ -567,6 +567,15 @@
             <div id="bet-att-betala"><div class="loading">Hämtar</div></div>
           </div>
 
+          <!-- Faktura (Fas 14.6). Fakturorna som skickats, och passen
+               som väntar på nästa månadsfaktura. Ritas av ritaFakturor()
+               och syns bara när det finns något, eller när faktura går
+               att välja. -->
+          <div class="dbox" hidden>
+            <h5>Faktura <em id="bet-faktura-antal"></em></h5>
+            <div id="bet-faktura"></div>
+          </div>
+
           <div class="dbox">
             <h5>Betalda pass <em id="bet-antal"></em></h5>
             <div id="bet-lista"><div class="loading">Hämtar</div></div>
