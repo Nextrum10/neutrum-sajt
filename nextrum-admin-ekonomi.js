@@ -28,36 +28,275 @@
      EKONOMI
      ============================================================ */
 
+  /* ============================================================
+     FAKTUROR (Fas 14.6)
+
+     Familjen kan välja faktura på ett pass. Månadskörningen samlar
+     varje familjs fakturapass på ett utkast här. Fakturan skapas och
+     skickas sedan i WINT, som också bokför den och ser när den
+     betalas. Härifrån skickas ingenting: det som sker här är att
+     utkastet läggs in i Wint för hand, med underlaget nedan, och att
+     Wints fakturanummer och förfallodag skrivs tillbaka. Betald
+     markeras när Wint visar att pengarna kommit in.
+
+     En API-koppling till Wint finns inte, med flit. Wint har inga
+     webhooks och ingen testmiljö, och API-åtkomst kräver att Wint slår
+     på den. Det manuella steget är en knapp i månaden per familj.
+
+     Beloppen går inte att ändra härifrån. De räknades av fakturering
+     ur passen, med samma pris som kortet tar, och las_fakturabelopp
+     vägrar skriva om dem från en webbläsare.
+     ============================================================ */
+  const DAGAR = Number((NX.CFG && NX.CFG.BETALNINGSVILLKOR_DAGAR) || 10);
+
+  /* Fakturapass som hölls men inte står på någon faktura än. De kommer
+     med på nästa månadskörning. */
+  const passPåFaktura = () => {
+    const s = new Set();
+    (S.fakturor || []).forEach(f => (f.invoice_lines || []).forEach(l => { if (l.booking_id) s.add(l.booking_id); }));
+    return s;
+  };
+
+  function ritaFakturaFlagga() {
+    const host = $('#fakt-flagga');
+    if (!host) return;
+    const f = S.fakturaFlagga;
+    if (!f) {
+      host.innerHTML = tomt('Strömbrytaren gick inte att läsa',
+        S.kortsparrFel || 'Raden faktura saknas i flaggor. Kör migrationen för Fas 14.6.');
+      return;
+    }
+    const spärrade = S.fakturaSparr ? S.fakturaSparr.size : 0;
+    host.innerHTML = '<div class="adm-koppling-kort">'
+      + '<h6>Faktura som betalsätt ' + (f.aktiv ? pill('På', 'ar-klar') : pill('Av', '')) + '</h6>'
+      + '<p>' + esc(f.beskrivning || '') + '</p>'
+      + (!f.aktiv && f.vantar_pa ? '<div class="adm-krav">Ska vara avgjort först: ' + esc(f.vantar_pa) + '</div>' : '')
+      + '<p class="xsmall" style="color:var(--bl-3);margin-top:10px">'
+      + (spärrade ? spärrade + (spärrade === 1 ? ' familj är avstängd' : ' familjer är avstängda')
+          + ' från faktura (under Familjer, i familjens ekonomi). ' : '')
+      + 'Ändrad ' + esc(kortDatum(f.uppdaterad)) + '</p>'
+      + '<div style="margin-top:12px"><button class="btn ' + (f.aktiv ? 'btn-ghost' : 'btn-primary')
+      + ' btn-sm" type="button" data-fakturaflagga="' + (f.aktiv ? '0' : '1') + '">'
+      + (f.aktiv ? 'Stäng av' : 'Slå på') + '</button></div>'
+      + '</div>';
+  }
+
   function ritaFakturor() {
+    ritaFakturaFlagga();
     const sök = $('#fakt-sok').value.trim();
     const st = $('#fakt-status').value;
-    const rader = S.fakturor
-      .filter(f => !st || f.status === st)
+    const rader = (S.fakturor || [])
+      .filter(f => !st || NXBetalning.fakturaLage(f) === st)
       .map(f => ({ ...f, familj: namnFör(f.parent_id) }))
-      .filter(f => matchar(f, ['familj'], sök));
+      .filter(f => matchar(f, ['familj', 'wint_fakturanummer'], sök));
 
-    $('#fakt-antal').textContent = rader.length + ' av ' + S.fakturor.length;
+    const på = passPåFaktura();
+    const väntar = (S.bokningar || []).filter(b => b.betalning_status === 'faktura'
+      && b.status === 'completed' && b.fakturerbar !== false && !på.has(b.id));
+    const vänt = $('#fakt-vantar');
+    if (vänt) {
+      vänt.textContent = väntar.length
+        ? väntar.length + (väntar.length === 1 ? ' genomfört fakturapass väntar' : ' genomförda fakturapass väntar')
+          + ' på nästa månadskörning.'
+        : '';
+    }
+
+    $('#fakt-antal').textContent = rader.length + ' av ' + (S.fakturor || []).length;
     $('#fakt-tabell').innerHTML = tabell([
       { namn: 'Period', rita: f => '<b>' + esc(NXBetalning.periodText(f.period)) + '</b>' },
       { namn: 'Familj', rita: f => esc(f.familj) },
+      { namn: 'Pass', rita: f => '<span class="adm-tal">' + (f.invoice_lines || []).length + '</span>' },
       { namn: 'Belopp', rita: f => '<span class="adm-tal">' + esc(kronor(f.belopp_ore)) + '</span>' },
+      { namn: 'I Wint', rita: f => f.wint_fakturanummer
+        ? '<span class="adm-tal">' + esc(f.wint_fakturanummer) + '</span>'
+        : '<span class="adm-und">inte inlagd</span>' },
       { namn: 'Förfaller', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.forfaller)) + '</span>' },
-      { namn: 'Skickad', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.skickad_at)) + '</span>' },
-      { namn: 'Betald', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.betald_at)) + '</span>' },
-      /* Knappen skickar ett riktigt mejl. Rullgardinen bredvid ändrar
-         bara vad som står i tabellen — de gör olika saker med flit,
-         och det ska synas att de gör det. */
+      { namn: 'Läge', rita: f => { const l = FAKT_LAGE[NXBetalning.fakturaLage(f)] || [f.status, '']; return pill(l[0], l[1]); } },
+      /* Nästa steg för just den här fakturan, och bara det. Rullgardinen
+         som förut bytte läge fritt är borta: Skickad utan Wints nummer
+         och förfallodag är en rad ingen kan följa upp i Wint. */
       { namn: '', höger: true, rita: f => {
-        if (f.status === 'makulerad' || f.status === 'betald') return '';
-        const påminn = f.status === 'skickad' || f.status === 'forfallen';
-        return '<button class="btn ' + (påminn ? 'btn-ghost' : 'btn-primary') + ' btn-sm"'
-          + ' data-skicka="faktura" data-id="' + f.id + '"'
-          + (påminn ? ' data-paminnelse="1"' : '') + '>'
-          + (påminn ? 'Påminn' : 'Skicka') + '</button>';
-      } },
-      { namn: 'Läge', höger: true, rita: f => väljare('fakt', FAKT_LAGE, f.status, 'data-fakt="' + f.id + '"') }
-    ], rader, 'Inga fakturor än');
+        const k = [];
+        k.push('<button class="btn btn-ghost btn-sm" type="button" data-fakt-underlag="' + f.id + '">Underlag</button>');
+        if (f.status === 'utkast') {
+          k.push('<button class="btn btn-primary btn-sm" type="button" data-fakt-wint="' + f.id + '">Lagd i Wint</button>');
+          k.push('<button class="btn btn-ghost btn-sm" type="button" data-fakt-bort="' + f.id + '">Ta bort</button>');
+        } else if (f.status === 'skickad' || f.status === 'forfallen') {
+          k.push('<button class="btn btn-primary btn-sm" type="button" data-fakt-betald="' + f.id + '">Betald</button>');
+          k.push('<button class="btn btn-ghost btn-sm" type="button" data-fakt-makulera="' + f.id + '">Makulera</button>');
+        }
+        return k.join(' ');
+      } }
+    ], rader, (S.fakturor || []).length ? 'Inga fakturor matchar' : 'Inga fakturor än');
   }
+
+  /* Underlaget för Wint: det som ska stå på fakturan, i den ordning
+     Wint frågar efter det. Kunden är familjens namn och e-post; Wint
+     skickar fakturan som PDF till adressen. Raderna säger ämne och
+     datum, aldrig barnets namn. */
+  function fakturaUnderlag(f) {
+    const p = S.personer[f.parent_id] || {};
+    const rader = (f.invoice_lines || []).slice().sort((a, c) => String(a.beskrivning).localeCompare(String(c.beskrivning)));
+    return [
+      'Kund: ' + (p.full_name || '—') + ' (privatperson)',
+      'E-post: ' + (p.email || '—'),
+      'Period: ' + NXBetalning.periodText(f.period),
+      'Betalningsvillkor: ' + DAGAR + ' dagar, ingen avgift',
+      '',
+      ...rader.map(r => r.beskrivning + '  ·  ' + NXBetalning.timmar(r.minuter) + ' à '
+        + kronor(r.pris_per_timme_ore) + '/h  ·  ' + kronor(r.belopp_ore)),
+      '',
+      'Att betala: ' + kronor(f.belopp_ore)
+    ].join('\n');
+  }
+
+  document.addEventListener('click', async e => {
+    const flagga = e.target.closest('[data-fakturaflagga]');
+    if (flagga) {
+      const på = flagga.dataset.fakturaflagga === '1';
+      const f = S.fakturaFlagga || {};
+      const ja = await bekräfta(på ? {
+        titel: 'Slå på faktura?',
+        text: 'Från och med nu kan alla familjer välja "Betala med faktura i stället" under kortknappen. '
+          + 'Deras pass kommer med på en faktura i början av nästa månad, att betala inom ' + DAGAR + ' dagar.',
+        forhandsvisning: f.vantar_pa ? 'Det här ska vara avgjort först:\n\n' + f.vantar_pa : null,
+        knapp: 'Slå på'
+      } : {
+        titel: 'Stäng av faktura?',
+        text: 'Familjerna kan inte längre välja faktura. Pass som redan valts för faktura faktureras ändå.',
+        knapp: 'Stäng av'
+      });
+      if (!ja) return;
+      await medan(flagga, på ? 'Slår på…' : 'Stänger av…', async () => {
+        const { error } = await supa.from('flaggor').update({ aktiv: på }).eq('kod', 'faktura');
+        if (error) { alert('Kunde inte ändra strömbrytaren: ' + felText(error)); return; }
+        const { data } = await supa.from('flaggor').select('*').eq('kod', 'faktura').maybeSingle();
+        if (data) S.fakturaFlagga = data;
+        ritaFakturaFlagga();
+      });
+      return;
+    }
+
+    const und = e.target.closest('[data-fakt-underlag]');
+    if (und) {
+      const f = (S.fakturor || []).find(x => x.id === und.dataset.faktUnderlag);
+      if (!f) return;
+      const text = fakturaUnderlag(f);
+      const kopiera = await bekräfta({
+        titel: 'Underlag för Wint',
+        text: 'Skapa en kundfaktura i Wint med de här uppgifterna, och skicka den som e-post. '
+          + 'Tryck sedan Lagd i Wint och skriv in fakturanumret.',
+        forhandsvisning: text,
+        knapp: 'Kopiera',
+        avbryt: 'Stäng'
+      });
+      if (kopiera) {
+        try { await navigator.clipboard.writeText(text); }
+        catch (fel) { alert('Kopieringen gick inte. Markera texten och kopiera den för hand.'); }
+      }
+      return;
+    }
+
+    const wint = e.target.closest('[data-fakt-wint]');
+    if (wint) {
+      const f = (S.fakturor || []).find(x => x.id === wint.dataset.faktWint);
+      if (!f) return;
+      const förval = new Date(Date.now() + DAGAR * 86400000);
+      const värde = await fråga({
+        titel: 'Lagd i Wint',
+        text: namnFör(f.parent_id) + ', ' + NXBetalning.periodText(f.period) + ', ' + kronor(f.belopp_ore)
+          + '. Skriv fakturanumret och förfallodagen som de står på fakturan i Wint.',
+        innehåll: '<div class="fgroup" style="margin-top:14px"><label for="fakt-nr">Fakturanummer i Wint</label>'
+          + '<input class="inp" id="fakt-nr" inputmode="numeric" autocomplete="off" maxlength="30"></div>'
+          + '<div class="fgroup" style="margin-top:12px"><label for="fakt-forfaller">Förfaller</label>'
+          + '<input class="inp" id="fakt-forfaller" type="date" value="' + isoFor(förval) + '"></div>',
+        knapp: 'Spara',
+        läs: ruta => {
+          const nr = $('#fakt-nr', ruta).value.trim();
+          const dag = $('#fakt-forfaller', ruta).value;
+          if (!/^[A-Za-z0-9-]{1,30}$/.test(nr)) return { fel: 'Fakturanumret är siffror, bokstäver och bindestreck, som i Wint.' };
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(dag)) return { fel: 'Välj förfallodagen.' };
+          return { värde: { nr, dag } };
+        }
+      });
+      if (!värde) return;
+      await medan(wint, 'Sparar…', async () => {
+        if (await skriv('invoices', f.id, {
+          status: 'skickad', skickad_at: new Date().toISOString(),
+          wint_fakturanummer: värde.nr, forfaller: värde.dag
+        })) {
+          Object.assign(f, { status: 'skickad', wint_fakturanummer: värde.nr, forfaller: värde.dag });
+          ritaFakturor(); await laddaOmEkonomi();
+        }
+      });
+      return;
+    }
+
+    const betald = e.target.closest('[data-fakt-betald]');
+    if (betald) {
+      const f = (S.fakturor || []).find(x => x.id === betald.dataset.faktBetald);
+      if (!f) return;
+      const ja = await bekräfta({
+        titel: 'Har pengarna kommit in?',
+        text: 'Faktura ' + (f.wint_fakturanummer || '') + ' till ' + namnFör(f.parent_id) + ', ' + kronor(f.belopp_ore)
+          + '. Markera bara betald när Wint visar att betalningen kommit in.',
+        knapp: 'Ja, den är betald'
+      });
+      if (!ja) return;
+      await medan(betald, 'Sparar…', async () => {
+        const nu = new Date().toISOString();
+        if (await skriv('invoices', f.id, { status: 'betald', betald_at: nu })) {
+          Object.assign(f, { status: 'betald', betald_at: nu });
+          ritaFakturor(); await laddaOmEkonomi();
+        }
+      });
+      return;
+    }
+
+    const mak = e.target.closest('[data-fakt-makulera]');
+    if (mak) {
+      const f = (S.fakturor || []).find(x => x.id === mak.dataset.faktMakulera);
+      if (!f) return;
+      const ja = await bekräfta({
+        titel: 'Makulera fakturan?',
+        text: 'Gör det bara när fakturan är krediterad i Wint. Passen på den faktureras inte igen: '
+          + 'de räknas som avskrivna. Ska de faktureras om, ta kontakt med familjen först.',
+        knapp: 'Makulera'
+      });
+      if (!ja) return;
+      await medan(mak, 'Sparar…', async () => {
+        if (await skriv('invoices', f.id, { status: 'makulerad' })) {
+          f.status = 'makulerad';
+          ritaFakturor(); await laddaOmEkonomi();
+        }
+      });
+      return;
+    }
+
+    const bort = e.target.closest('[data-fakt-bort]');
+    if (bort) {
+      const f = (S.fakturor || []).find(x => x.id === bort.dataset.faktBort);
+      if (!f || f.status !== 'utkast') return;
+      const ja = await bekräfta({
+        titel: 'Ta bort utkastet?',
+        text: 'Passen på det blir kvar som fakturapass och kommer med nästa gång månadskörningen körs '
+          + 'för samma månad eller senare. Ingenting har skickats.',
+        knapp: 'Ta bort'
+      });
+      if (!ja) return;
+      await medan(bort, 'Tar bort…', async () => {
+        /* .eq('status', 'utkast'): hann någon lägga in fakturan i Wint
+           under tiden ska den inte försvinna härifrån. Raderna följer
+           med (on delete cascade). */
+        const { data, error } = await supa.from('invoices').delete()
+          .eq('id', f.id).eq('status', 'utkast').select('id');
+        if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+        if (!data || !data.length) { alert('Utkastet hann ändras. Listan laddas om.'); }
+        await hämtaAllt();
+        ritaFakturor(); await laddaOmEkonomi();
+      });
+    }
+  });
 
   function ritaUtbetalningar() {
     const sök = $('#utb-sok').value.trim();
@@ -104,7 +343,7 @@
      ============================================================ */
   const KORT_LAGE = {
     ingen: 'Ej betald', vantar: 'Väntar', betald: 'Betald', aterbetald: 'Återbetald',
-    tvist: 'Tvist', misslyckad: 'Misslyckad'
+    tvist: 'Tvist', misslyckad: 'Misslyckad', faktura: 'Faktura'
   };
 
   /* "Ej betalda" är en annan fråga än de andra lägena: inte vilka
@@ -119,6 +358,7 @@
 
   function ritaKortbetalningar() {
     ritaKortsparr();
+    ritaAvstamning();
     /* Asynkron för rapporternas skull. Ett fel får inte lämna rutan på
        "Hämtar" — då ser det ut som att den fortfarande arbetar. */
     ritaTvister().catch(fel => {
@@ -127,9 +367,11 @@
     });
     const sök = $('#kort-sok').value.trim();
     const st = $('#kort-status').value;
+    /* Ett fakturapass är ingen kortbetalning (Fas 14.6). Det står under
+       Fakturor. */
     const alla = st === 'obetald'
       ? (S.bokningar || []).filter(obetaltPass)
-      : (S.bokningar || []).filter(b => b.betalning_status && b.betalning_status !== 'ingen');
+      : (S.bokningar || []).filter(b => b.betalning_status && b.betalning_status !== 'ingen' && b.betalning_status !== 'faktura');
     const rader = alla
       .filter(b => !st || st === 'obetald' || b.betalning_status === st)
       .map(b => ({ ...b, familj: namnFör(b.parent_id), hjalpare: namnFör(b.tutor_id) }))
@@ -151,6 +393,14 @@
           : '<span class="adm-und">—</span>' },
       { namn: 'Återbetalt', rita: b => Number(b.aterbetald_ore || 0) > 0
         ? '<span class="adm-tal">' + esc(kronor(b.aterbetald_ore)) + '</span>' : '' },
+      /* Stripes avgift (Fas 14.7). Saknas den på en betald rad är den
+         inte hämtad än: charge.updated kommer med den, eller knappen
+         under Stripe-läget. En testbetalning märks, så att den aldrig
+         läses som en intäkt. */
+      { namn: 'Avgift', rita: b => (b.stripe_avgift_ore != null
+          ? '<span class="adm-tal">' + esc(kronor(b.stripe_avgift_ore)) + '</span>'
+          : b.betald_at ? '<span class="adm-und">inte hämtad</span>' : '')
+        + (b.stripe_skarp === false ? ' ' + pill('Test', '') : '') },
       { namn: '', höger: true, rita: b => {
         const kvar = Number(b.betalt_ore || 0) - Number(b.aterbetald_ore || 0);
         const gar = (b.betalning_status === 'betald' || b.betalning_status === 'tvist') && kvar > 0;
@@ -211,7 +461,8 @@
       const ja = await bekräfta({
         titel: 'Slå på spärren?',
         text: 'Från och med nu går ett pass som familjen inte betalat inte att rapportera, '
-          + 'och studiehjälparen ser i sin vy att passet inte ska hållas.'
+          + 'och studiehjälparen ser i sin vy att passet inte ska hållas. Ett pass familjen valt '
+          + 'att betala mot faktura räknas som betalt nog: fakturan kommer efter passet.'
           + (kortbetalda() ? ''
             : '\n\nIngen kortbetalning har gått igenom än. Slår du på nu kan ingen '
               + 'studiehjälpare rapportera ett enda pass förrän en familj har betalat.'),
@@ -266,6 +517,49 @@
         { namn: 'Vad det betyder', rita: p => '<span class="adm-und" style="white-space:normal">' + esc(p.text) + '</span>' }
       ], punkter, 'Stripe svarade inte');
   }
+
+  /* ============================================================
+     AVGIFTERNA I EFTERHAND (Fas 14.7)
+
+     Stripe skapar balanstransaktionen en stund efter betalningen, och
+     de två första betalningarna fick ingen avgift. Webhooken tar nu
+     emot charge.updated och skriver in den när den kommer. Den här
+     knappen hämtar den för betalningar som kom in innan, eller där
+     händelsen inte kom fram: stripe-avstamning frågar Stripe om varje
+     charge och skriver avgiften, nettot och om betalningen var skarp.
+     ============================================================ */
+  const saknarAvstamning = () => (S.bokningar || [])
+    .filter(b => b.stripe_charge_id && (b.stripe_avgift_ore == null || b.stripe_skarp == null));
+
+  function ritaAvstamning() {
+    const host = $('#stripe-avstamning');
+    if (!host) return;
+    const n = saknarAvstamning().length;
+    host.innerHTML = n
+      ? '<p class="xsmall" style="color:var(--bl-3);margin:12px 0 8px">' + n
+        + (n === 1 ? ' betalning saknar' : ' betalningar saknar') + ' Stripes avgift eller läge (skarp eller test).</p>'
+        + '<button class="btn btn-ghost btn-sm" type="button" data-avstamning>Hämta från Stripe</button>'
+      : '';
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-avstamning]');
+    if (!knapp) return;
+    await medan(knapp, 'Frågar Stripe…', async () => {
+      const svar = await supa.functions.invoke('stripe-avstamning', { body: {} });
+      if (svar.error) { alert(await funktionsFel(svar.error)); return; }
+      const d = svar.data || {};
+      const delar = [];
+      if (d.avgifter) delar.push(d.avgifter + (d.avgifter === 1 ? ' avgift hämtad' : ' avgifter hämtade'));
+      if (d.markta) delar.push(d.markta + ' märkta som skarpa eller test');
+      if (d.vantar) delar.push(d.vantar + ' där Stripe inte har avgiften än');
+      if (d.fler) delar.push('fler finns, tryck igen');
+      (d.fel || []).forEach(f => delar.push('fel: ' + f));
+      alert(delar.length ? delar.join('\n') : 'Inget att hämta.');
+      await hämtaAllt();
+      ritaKortbetalningar();
+    });
+  });
 
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-stripe-lage]');
@@ -533,13 +827,16 @@
      ============================================================ */
   const AVV_TEXT = {
     ej_betalt: ['Inte betalt', 'Hölls och rapporterades, men familjen har inte betalat. Betala-knappen ligger kvar på passet i familjens vy.'],
+    /* Fas 14.6. */
+    faktura_saknas: ['Fakturapass utan faktura', 'Familjen valde faktura, månaden är slut och passet står inte på någon faktura. Kör månadskörningen.'],
+    betald_och_fakturerad: ['Betalt två gånger', 'Betalt med kort och dessutom på en faktura. Kreditera raden i Wint.'],
     /* Fas 14.2c. Betalsidan kan ligga öppen medan passet avbokas, och
        betalas den efteråt drar Stripe pengarna ändå. Beloppet är det
        som inte gått tillbaka än. */
     betald_men_avbokad: ['Betalt men avbokat', 'Familjen har betalat ett pass som är avbokat. Villkoren lovar hela beloppet tillbaka: återbetala under Kortbetalningar.'],
     ej_utbetalt: ['Inte utbetalt', 'Klart för underlag, men månaden det hölls är slut.'],
     faktura_forfallen: ['Förfallen faktura', 'Skickad, obetald och efter förfallodagen.'],
-    faktura_gammalt_utkast: ['Utkast som inte skickats', 'Fakturan skapades för mer än en vecka sedan.'],
+    faktura_gammalt_utkast: ['Faktura inte inlagd i Wint', 'Utkastet skapades för mer än en vecka sedan. Lägg in det i Wint under Fakturor.'],
     utbetalning_vantar: ['Utbetalning som väntar', 'Utkast eller godkänd, för en månad före förra.'],
     utbetalning_misslyckad: ['Misslyckad utbetalning', 'Pengarna gick inte iväg.'],
     timpenning_saknas: ['Ingen ersättning att räkna med', 'Studiehjälparen saknar timpenning och tjänsten saknar ersättning.'],
@@ -711,16 +1008,18 @@
   });
 
   /* ============================================================
-     MÅNADSKÖRNINGEN (Fas 2, bara underlag sedan Fas 14.2)
+     MÅNADSKÖRNINGEN (Fas 2; underlag, och fakturautkast sedan Fas 14.6)
 
      Två steg, som vid utskicket: först en torrkörning som visar vad
      som skulle skapas, sedan det skarpa anropet — och det går bara
      för samma månad som torrkörningen gällde. Det skarpa steget
      skapar UTKAST. Ingenting skickas och ingenting betalas härifrån.
 
-     Familjen får ingen faktura. Pass som hölls utan att familjen
-     betalat kommer tillbaka i svaret som `obetalda`, och står här
-     per familj, så att någon kan höra av sig.
+     En familj som valt faktura får ett utkast per månad, som läggs in
+     i Wint under Fakturor. Pass som hölls utan att familjen betalat
+     med kort, och utan att de valt faktura, kommer tillbaka i svaret
+     som `obetalda` och står här per familj, så att någon kan höra av
+     sig. De faktureras inte av sig själva.
      ============================================================ */
   function fyllPerioder() {
     const val = $('#kor-period');
@@ -744,6 +1043,7 @@
     const rad = (vänster, höger, total) => '<div class="sum-line' + (total ? ' total' : '') + '">'
       + '<span>' + vänster + '</span><span class="adm-tal">' + höger + '</span></div>';
     const underlag = d.utbetalningar || [];
+    const fakturor = d.fakturor || [];
     const obetalda = d.obetalda || [];
 
     let h = '<p class="small" style="margin:14px 0 8px"><b>'
@@ -754,6 +1054,12 @@
     h += underlag.map(u => rad(esc(namnFör(u.tutor_id)) + ' · ' + u.pass + ' pass',
       esc(kronor(u.belopp_ore)))).join('');
     h += rad('Studiehjälparna, ' + underlag.length + ' underlag', esc(kronor(summa(underlag))), true);
+
+    if (fakturor.length) {
+      h += fakturor.map(f => rad(esc(namnFör(f.parent_id)) + ' · ' + f.pass + ' pass',
+        esc(kronor(f.belopp_ore)))).join('');
+      h += rad('Fakturor att lägga in i Wint, ' + fakturor.length + ' st', esc(kronor(summa(fakturor))), true);
+    }
 
     /* Per familj, för det är familjen man hör av sig till. Ingen
        faktura skapas av det här: det är en lista, inte ett krav. */
@@ -768,7 +1074,7 @@
     const noter = [];
     if (obetalda.length) {
       noter.push('⚠️ ' + obetalda.length + (obetalda.length === 1 ? ' pass hölls' : ' pass hölls')
-        + ' utan att familjen betalat. Familjen får ingen faktura för dem — Betala-knappen ligger '
+        + ' utan att familjen betalat. De faktureras inte av sig själva: Betala-knappen ligger '
         + 'kvar på passet i familjens vy. <a href="#ekonomi/avvikelser">Se avvikelser</a>.');
     }
     const utan = d.hoppade_over_utan_rapport || [];
@@ -779,9 +1085,13 @@
     (d.hoppade_over_utan_timpenning || []).forEach(id => noter.push('⚠️ ' + esc(namnFör(id))
       + ' har ingen timpenning, så hens pass väntar till nästa körning.'));
     if (d.undantagna_pass) noter.push(d.undantagna_pass + ' undantagna pass räknades inte.');
-    if (d.skapade) noter.push('Skapade: ' + d.skapade.utbetalningar + ' underlag, alla som utkast.');
+    if (d.skapade) {
+      noter.push('Skapade: ' + d.skapade.utbetalningar + ' underlag'
+        + (d.skapade.fakturor ? ' och ' + d.skapade.fakturor + (d.skapade.fakturor === 1 ? ' faktura' : ' fakturor') : '')
+        + ', alla som utkast.' + (d.skapade.fakturor ? ' Lägg in fakturorna i Wint under <a href="#ekonomi/fakturor">Fakturor</a>.' : ''));
+    }
     (d.problem || []).forEach(p => noter.push('⚠️ ' + esc(p)));
-    if (!underlag.length && torr) noter.push('Inget underlag att skapa för den här månaden.');
+    if (!underlag.length && !fakturor.length && torr) noter.push('Inget underlag och ingen faktura att skapa för den här månaden.');
 
     return h + noter.map(n => '<p class="xsmall" style="margin:8px 0 0;line-height:1.6">' + n + '</p>').join('');
   }
@@ -803,16 +1113,18 @@
       if (fel) { host.innerHTML = tomt('Torrkörningen gick inte', await funktionsFel(fel)); return; }
       S.korning = { period, torr: res.data };
       host.innerHTML = ritaKörning(res.data, true);
-      $('#kor-skapa').disabled = !(res.data.utbetalningar || []).length;
+      $('#kor-skapa').disabled = !(res.data.utbetalningar || []).length && !(res.data.fakturor || []).length;
       return;
     }
 
     if (!S.korning || S.korning.period !== period) { skapa.disabled = true; return; }
     const t = S.korning.torr;
     const summa = lista => (lista || []).reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
+    const fakt = t.fakturor || [];
     const ja = await bekräfta({
       titel: 'Skapa utkast för ' + NXBetalning.periodText(t.period) + '?',
       text: t.utbetalningar.length + ' underlag på ' + kronor(summa(t.utbetalningar))
+        + (fakt.length ? ' och ' + fakt.length + (fakt.length === 1 ? ' faktura' : ' fakturor') + ' på ' + kronor(summa(fakt)) : '')
         + '. De skapas som utkast — ingenting skickas och ingenting betalas ut härifrån.',
       knapp: 'Skapa utkast'
     });

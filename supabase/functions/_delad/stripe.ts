@@ -379,11 +379,40 @@ export function tidFranUnix(s: unknown): string | null {
 export const WEBHOOK_HANDELSER = [
   'checkout.session.completed',
   'payment_intent.payment_failed',
+  // Fas 14.7. Balanstransaktionen, med Stripes avgift, finns ofta inte
+  // än när sessionen fullbordas. charge.updated kommer när den finns.
+  'charge.updated',
   'charge.refunded',
   'charge.dispute.created',
   'charge.dispute.updated',
   'charge.dispute.closed',
 ];
+
+export type Balans = { id: string | null; avgiftOre: number | null; nettoOre: number | null };
+
+/**
+ * Balanstransaktionen ur en charge (Fas 14.7). Expanderad är den ett
+ * objekt med avgift och netto, oexpanderad bara ett id, och innan
+ * Stripe skapat den null. Siffrorna gissas aldrig fram: saknas de är
+ * de null, och det syns som ett hål i avstämningen, vilket är sanningen.
+ */
+export function balans(bt: unknown): Balans {
+  if (bt && typeof bt === 'object') {
+    const b = bt as Record<string, unknown>;
+    return {
+      id: typeof b.id === 'string' && b.id ? b.id : null,
+      avgiftOre: typeof b.fee === 'number' ? b.fee : null,
+      nettoOre: typeof b.net === 'number' ? b.net : null,
+    };
+  }
+  if (typeof bt === 'string' && bt) return { id: bt, avgiftOre: null, nettoOre: null };
+  return { id: null, avgiftOre: null, nettoOre: null };
+}
+
+/** Ett id vi själva sparat, i Stripes form. Går in i en adress, så formen prövas. */
+export function arStripeId(v: unknown, prefix: string): v is string {
+  return typeof v === 'string' && new RegExp(`^${prefix}_[A-Za-z0-9]{6,}$`).test(v);
+}
 
 export type NyckelLage = 'saknas' | 'test' | 'skarp' | 'begransad' | 'publicerbar' | 'okand';
 
@@ -524,7 +553,7 @@ export function granskaStripe(g: Granskning): Punkt[] {
         const saknade = WEBHOOK_HANDELSER.filter((h) => !valda.includes(h));
         p.push(saknade.length
           ? { ok: false, rubrik: 'Händelserna', text: 'Saknas på endpointen: ' + saknade.join(', ') + '. De kommer aldrig fram.' }
-          : { ok: true, rubrik: 'Händelserna', text: 'Alla sex som webhooken hanterar är valda.' });
+          : { ok: true, rubrik: 'Händelserna', text: `Alla ${WEBHOOK_HANDELSER.length} som webhooken hanterar är valda.` });
       }
       if (!e.api_version) {
         p.push({ ok: null, rubrik: 'API-versionen', text: 'Stripe säger inte vilken version endpointen står på.' });

@@ -20,7 +20,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
 <link rel="stylesheet" href="nextrum-cinema.css?v=f3f0446e">
-<link rel="stylesheet" href="nextrum-vy.css?v=8ee4a830">
+<link rel="stylesheet" href="nextrum-vy.css?v=5c510982">
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=901ed6e0">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
@@ -961,16 +961,20 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Ekonomi</h2>
-              <p>Vad familjerna har betalat och vad studiehjälparna ska få. Samma pass, två sidor av samma rad i bookings. Familjen betalar varje pass med kort före passet; studiehjälparen får betalt den 25:e.</p>
+              <p>Vad familjerna har betalat och vad studiehjälparna ska få. Samma pass, två sidor av samma rad i bookings. Familjen betalar varje pass med kort före passet, eller mot en månadsfaktura från Wint om de valt det; studiehjälparen får betalt den 25:e.</p>
             </div>
           </div>
 
-          <!-- Kortbetalningarna först sedan Fas 14.2: det är familjens enda
-               betalväg, och den första fliken är den som syns när man
-               kommer hit. Fakturorna står sist, som historik. -->
+          <!-- Kortbetalningarna först: det är familjens vanliga betalväg, och
+               den första fliken är den som syns när man kommer hit.
+               Fakturorna bredvid sedan Fas 14.6, när familjen kan välja
+               faktura och utkasten ska läggas in i Wint. -->
           <div class="vy-flikar" role="tablist" aria-label="Betalningar eller utbetalningar">
             <button class="vy-flik" type="button" role="tab" data-flik="kortbetalningar"
                     id="flik-kortbetalningar" aria-controls="panel-kortbetalningar">Kortbetalningar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="fakturor"
+                    id="flik-fakturor" aria-controls="panel-fakturor">Fakturor
+              <span class="vy-flik-mark" id="flik-fakt-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="utbetalningar"
                     id="flik-utbetalningar" aria-controls="panel-utbetalningar">Utbetalningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="avvikelser"
@@ -978,42 +982,49 @@
               <span class="vy-flik-mark" id="flik-avv-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="korning"
                     id="flik-korning" aria-controls="panel-korning">Månadskörning</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="fakturor"
-                    id="flik-fakturor" aria-controls="panel-fakturor">Äldre fakturor
-              <span class="vy-flik-mark" id="flik-fakt-mark" hidden></span></button>
           </div>
 
+          <!-- Fakturor (Fas 14.6). Familjen kan välja faktura på ett pass,
+               och månadskörningen samlar passen på ett utkast per familj.
+               Utkastet läggs in i Wint, som skickar fakturan och bokför
+               den. Härifrån skickas ingenting. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="fakturor"
                id="panel-fakturor" aria-labelledby="flik-fakturor" hidden>
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Faktura som betalsätt</h5>
+              <div id="fakt-flagga"><div class="loading">Hämtar</div></div>
+            </div>
             <div class="dbox">
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
-                Familjen får ingen månadsfaktura sedan Fas 14.2 — varje pass betalas med kort
-                före passet, under <b>Kortbetalningar</b>. Här står fakturor som skapades
-                innan dess, så att de fortfarande går att skicka, följa upp och bokföra.
+                Familjer som valt faktura får en samlad faktura i början av månaden för förra
+                månadens pass. <b>Månadskörningen</b> skapar ett utkast per familj. Tryck
+                <b>Underlag</b> och lägg in fakturan i Wint med de uppgifterna, och tryck sedan
+                <b>Lagd i Wint</b> med Wints fakturanummer och förfallodag. Wint skickar fakturan
+                och ser när den betalas. Markera den <b>Betald</b> här när Wint visar det.
               </p>
+              <p class="xsmall" id="fakt-vantar" style="color:var(--bl-3);margin:0 0 12px"></p>
               <div class="adm-verktyg">
-                <input class="inp adm-sok" id="fakt-sok" type="search" placeholder="Sök familj" aria-label="Sök faktura" autocomplete="off">
-                <select class="sel" id="fakt-status" aria-label="Filtrera på status">
+                <input class="inp adm-sok" id="fakt-sok" type="search" placeholder="Sök familj eller fakturanummer" aria-label="Sök faktura" autocomplete="off">
+                <select class="sel" id="fakt-status" aria-label="Filtrera på läge">
                   <option value="">Alla lägen</option>
-                  <option value="utkast">Utkast</option>
+                  <option value="utkast">Inte inlagda i Wint</option>
                   <option value="skickad">Skickade</option>
-                  <option value="betald">Betalda</option>
                   <option value="forfallen">Förfallna</option>
+                  <option value="betald">Betalda</option>
                   <option value="makulerad">Makulerade</option>
                 </select>
                 <span class="small" id="fakt-antal" style="margin-left:auto;color:var(--bl-3)"></span>
               </div>
               <div id="fakt-tabell"><div class="loading">Hämtar</div></div>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
-                <b>Skicka</b> mejlar fakturan till familjen på riktigt. Du får läsa igenom
-                den först, och läget sätts till <em>Skickad</em> bara om mejlet faktiskt
-                gick iväg. Rullgardinen bredvid ändrar bara ordet i tabellen — den skickar
-                ingenting, och det är med flit att de är två olika knappar.
+                Beloppen går inte att ändra härifrån. De räknades fram av edge-funktionen
+                <code>fakturering</code> ur de pass som faktiskt hållits, med samma pris som kortet
+                tar, och en trigger vägrar skriva om dem från en webbläsare. Stämmer något inte:
+                ta bort utkastet, rätta passet och kör månadskörningen igen.
               </p>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
-                Beloppen går inte att ändra härifrån. De räknades fram av edge-funktionen
-                <code>fakturering</code> ur de pass som faktiskt hållits, och en trigger
-                vägrar skriva om dem från en webbläsare.
+                Ingen påminnelseavgift och ingen fakturaavgift: villkoren nämner ingen, och då
+                får ingen tas ut. Se till att Wints påminnelser står utan avgift.
               </p>
             </div>
           </div>
@@ -1110,6 +1121,9 @@
               </p>
               <div id="stripe-lage"></div>
               <div style="margin-top:12px"><button class="btn btn-ghost btn-sm" type="button" data-stripe-lage>Kontrollera Stripe</button></div>
+              <!-- Fas 14.7: avgiften och läget för betalningar som kom in
+                   innan webhooken tog emot charge.updated. -->
+              <div id="stripe-avstamning"></div>
             </div>
             <!-- Fas 14.3, punkt 9. Skrivs av stripe-webhook. Sista dagen att
                  svara är det enda som inte går att reparera i efterhand. -->
@@ -1156,8 +1170,9 @@
               <h5>Månadskörningen</h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:18px">
                 En gång i månaden samlas alla genomförda och rapporterade pass till
-                ett underlag per studiehjälpare — det som betalas ut den 25:e. Familjen
-                får ingen faktura: passen betalas med kort före passet, och pass som
+                ett underlag per studiehjälpare — det som betalas ut den 25:e — och
+                familjer som valt faktura får ett fakturautkast, som läggs in i Wint under
+                <b>Fakturor</b>. Andra pass betalas med kort före passet, och pass som
                 hölls utan betalning räknas upp i körningen i stället för att faktureras.
                 Här körs den med din inloggning. Kör alltid torrt först: den räknar ut
                 allt och visar vad som <em>skulle</em> skapas, utan att skriva en rad.
@@ -1172,9 +1187,9 @@
               <div class="sum-line"><span>Utbetalning</span><span class="adm-tal">den 25:e, från banken</span></div>
               <div class="sum-line total"><span>Pris per timme</span><span class="adm-tal" id="kor-pris">—</span></div>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-top:16px">
-                <b>Skapa utkast</b> skriver underlagen som utkast. Ingenting skickas och
-                ingenting betalas ut härifrån — underlaget skickar du per studiehjälpare
-                under Utbetalningar. Priset står med för att beloppen på pass som hölls
+                <b>Skapa utkast</b> skriver underlagen och fakturorna som utkast. Ingenting
+                skickas och ingenting betalas ut härifrån — underlaget skickar du per
+                studiehjälpare under Utbetalningar, och fakturan skickas från Wint. Priset står med för att beloppen på pass som hölls
                 utan betalning räknas på det. Ett schema som kör det här av sig självt
                 kommer senare, och använder då en nyckel på servern i stället för en
                 inloggning.
@@ -1338,7 +1353,7 @@
                     Kan den inte peka på en källa den läst lämnas svaret inte ut.
                   </p>
                   <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-top:12px">
-                    <b>Ekonomi</b> läser era siffror, läser Fortnox och slår upp Skatteverket.
+                    <b>Ekonomi</b> läser era siffror och slår upp Skatteverket.
                     Alla dess verktyg är läsande. Den bokför ingenting, och det är designen,
                     inte en tillfällig försiktighet.
                   </p>
@@ -1408,7 +1423,7 @@
             <div class="dbox">
               <h5>Ekonomiagenten</h5>
               <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
-                Bokföring, moms, deklarationer och avstämningar. Läser era siffror och Fortnox.
+                Bokföring, moms, deklarationer och avstämningar. Läser era siffror; bokföringen i Wint läser den inte.
                 Skriver aldrig något, någonstans.
               </p>
 
@@ -1494,7 +1509,7 @@
                 </div>
                 <div class="fgroup">
                   <label for="bf-system">Bokföringssystem</label>
-                  <input class="inp" id="bf-system" placeholder="fortnox, inget">
+                  <input class="inp" id="bf-system" placeholder="wint, inget">
                 </div>
                 <div class="fgroup">
                   <label for="bf-konsult">Redovisningskonsult</label>
@@ -1726,7 +1741,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>System</h2>
-              <p>Kopplingarna till Google och Fortnox, vem som är admin, felen användarna råkat på, inställningarna och auditloggen.</p>
+              <p>Kopplingen till Google, vem som är admin, felen användarna råkat på, inställningarna och auditloggen.</p>
             </div>
           </div>
 
@@ -2119,33 +2134,33 @@
 </footer>
 
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=f8a876f6"></script>
+<script src="nextrum-config.js?v=86b7287b"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=a8185e00"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=4a41bfce"></script>
+<script src="nextrum-studie.js?v=b19df734"></script>
 <script src="nextrum-arbetsyta.js?v=251ccc67"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
-<script src="nextrum-admin-agenter.js?v=0dc7226d"></script>
-<script src="nextrum-admin-karna.js?v=afd7575a"></script>
-<script src="nextrum-admin-detalj.js?v=423d69a9"></script>
-<script src="nextrum-admin-oversikt.js?v=bba9e74f"></script>
+<script src="nextrum-admin-agenter.js?v=ab70719d"></script>
+<script src="nextrum-admin-karna.js?v=5f4eaced"></script>
+<script src="nextrum-admin-detalj.js?v=0d44be0d"></script>
+<script src="nextrum-admin-oversikt.js?v=d21a3dae"></script>
 <script src="nextrum-admin-kunder.js?v=01b666e6"></script>
 <script src="nextrum-admin-rekrytering.js?v=9b6ce49f"></script>
 <script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
 <script src="nextrum-admin-kommunikation.js?v=24a9a868"></script>
 <script src="nextrum-admin-drift.js?v=2437242e"></script>
-<script src="nextrum-admin-ekonomi.js?v=83de4190"></script>
-<script src="nextrum-admin-tjanster.js?v=b5673580"></script>
-<script src="nextrum-admin-system.js?v=d0d24a80"></script>
+<script src="nextrum-admin-ekonomi.js?v=31a4d0ab"></script>
+<script src="nextrum-admin-tjanster.js?v=ab1ef476"></script>
+<script src="nextrum-admin-system.js?v=15488645"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=55760f40"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-admin.js?v=2caef37f"></script>
+<script src="nextrum-admin.js?v=7dec1ad3"></script>
 </body>
 </html>

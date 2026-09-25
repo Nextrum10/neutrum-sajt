@@ -1,18 +1,19 @@
 # Sätta upp betalning
 
-**Sedan Fas 14.2 betalar familjen varje pass med kort, före passet, och får ingen
-faktura.** Pengarna tas emot genom Stripe (avsnitt 9). Studiehjälparen får betalt
-den 25:e ur `payouts`, och det är vad månadskörningen gör nu: den skapar underlag,
-inga fakturor.
+**Sedan Fas 14.2 betalar familjen varje pass med kort, före passet.** Pengarna tas
+emot genom Stripe (avsnitt 9). **Sedan Fas 14.6 finns faktura som andra betalsätt,
+byggt men avstängt** tills bolaget och Wint finns (9.11). Studiehjälparen får betalt
+den 25:e ur `payouts`. Månadskörningen skapar underlagen, och ett fakturautkast per
+familj som valt faktura.
 
-Filen står därför i tre delar:
+Filen står därför i fyra delar:
 
 - **Avsnitt 1–6** är månadskörningen och underlagen till studiehjälparna. De
   fungerar utan Stripe.
-- **Avsnitt 7 och 8** är historik: planen att skicka månadsfakturan genom Stripe,
-  och utskicket av de fakturor som skapades före Fas 14.2. Det fanns inga.
-- **Avsnitt 9** är kortbetalningen, familjens enda väg att betala, och spärren
-  "ingen betalning, inget pass".
+- **Avsnitt 7** är historik: planen att skicka månadsfakturan genom Stripe.
+- **Avsnitt 8** är utskicket av underlagen. Fakturor skickas från Wint.
+- **Avsnitt 9** är kortbetalningen, spärren "ingen betalning, inget pass", och
+  (9.11) det som ska göras den dag fakturan slås på.
 
 Läs igenom hela filen innan du börjar. Det finns en torrkörning som du ska göra
 före den första skarpa körningen, och den är hela poängen med den här ordningen.
@@ -29,11 +30,11 @@ behövs om ni sätter upp en ny miljö.
 | 1. Schemat | Applicerat |
 | 2. Priset | Satt: 37900 ören, alltså 379 kr — samma som prissidan |
 | 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
-| 4. Deploy `fakturering` | ACTIVE, version 26. Sedan Fas 14.2 skapar den bara underlag, och räknar upp pass som hölls utan att betalas |
+| 4. Deploy `fakturering` | ACTIVE, version 28. Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas |
 | 5. Torrkörning | **Väntar på er** — knappen under Ekonomi → Månadskörning, ingen nyckel behövs |
 | 6. Schemaläggning | **Väntar på er** |
-| 7. Stripe | **Delvis.** Funktionerna driftsatta, webhooken skapad och dess hemlighet provad. Ingen betalning har gått igenom. Se avsnitt 9 |
-| 8. Deploy `faktura-utskick` | ACTIVE. Bara för fakturor som skapades före Fas 14.2, och sådana finns inte |
+| 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar. Se avsnitt 9 |
+| 8. Deploy `faktura-utskick` | ACTIVE, version 19. Skickar bara underlag sedan Fas 14.6 |
 
 Databasen är tom på fakturor och underlag: `invoices`, `invoice_lines`, `payouts`
 och `payout_lines` har noll rader (24 september 2026). Den första skarpa körningen
@@ -240,15 +241,14 @@ efterskrift har resonemanget.
 
 ---
 
-## 8. Fakturautskicket (bara äldre fakturor)
+## 8. Utskicket av underlag (fakturor skickas från Wint)
 
-**Sedan Fas 14.2 skapar månadskörningen inga fakturor**, och det fanns noll när
-omställningen gjordes. `faktura-utskick` står kvar för en faktura som ändå skulle
-finnas, och avsnittet står kvar för att förklara den. Om den ska tas bort är ert
-beslut (CLAUDE.md avsnitt 7).
-
-Utskicket ligger i en egen funktion, `faktura-utskick`, som knappen **Skicka**
-under Äldre fakturor anropar.
+`faktura-utskick` mejlar studiehjälparen underlaget, alltså vad hen kommer att få
+den 25:e. Knappen **Skicka underlag** under Ekonomi → Utbetalningar anropar den.
+Namnet är kvar från när den också skickade familjens faktura. **Sedan Fas 14.6
+vägrar den fakturor**: de skickas från Wint, som sköter bokföringen, påminnelserna
+och inbetalningarna. Två ställen som skickar samma faktura är två ställen som kan
+säga olika saker om den.
 
 ```
 supabase functions deploy faktura-utskick
@@ -263,38 +263,43 @@ schema. Att det är på räcker dock inte som skydd — varje inloggad familj ha
 en giltig token — så funktionen kontrollerar `is_admin` med anroparens EGEN token
 innan den rör `service_role`. Ordningen står kommenterad i filen.
 
-### Vad knappen faktiskt gör
+Knappen torrkör först: adminvyn visar exakt vad studiehjälparen kommer att läsa,
+och ingenting har skickats än. **Ingen reservavsändare.** `lead-notis` faller
+tillbaka på `onboarding@resend.dev` när nextrum.se inte är verifierad, och det är
+rätt där, för det mejlet går till oss. Reserven når bara Resend-kontots egen adress,
+alltså aldrig studiehjälparen. Är domänen inte verifierad får ni ett fel.
 
-1. Torrkörning först. Adminvyn visar exakt vad familjen kommer att läsa, och
-   ingenting har skickats än.
-2. Trycker du *Skicka nu* går mejlet via Resend.
-3. **Först därefter** sätts `status = 'skickad'` och `skickad_at`. Går mejlet fel
-   står fakturan kvar som utkast och går att försöka igen.
+### Fakturan (Fas 14.6)
 
-Den ordningen är hela poängen. Ett läge som säger "skickad" om ett mejl som aldrig
-gick är värre än ingen knapp: det får någon att sluta undra var fakturan tog vägen,
-och felet upptäcks först när betalningen uteblir.
+1. **Månadskörningen** skapar ett utkast per familj för de pass familjen valt
+   faktura för, som har en rapport och som inte står på någon faktura: förra
+   månadens, och äldre som blivit kvar. Beloppet räknas som kortets:
+   samma pris, samma tillägg för fler barn, samma frysta rabatt.
+2. **Ekonomi → Fakturor → Underlag** kopierar det Wint behöver: familjen, perioden,
+   raderna och summan.
+3. **Lägg in fakturan i Wint** och skicka den därifrån.
+4. **Lagd i Wint** här: Wints fakturanummer och förfallodagen. Fakturan står då som
+   skickad, och familjen ser den under Betalning. Som utkast syns den för familjen
+   bara som "står på fakturan för september, som snart skickas".
+5. **Betald** när Wint visar att pengarna kommit. Wint är inte kopplat, så ingen
+   annan än ni kan säga det här.
 
-**Ingen reservavsändare här.** `lead-notis` faller tillbaka på
-`onboarding@resend.dev` när nextrum.se inte är verifierad — rätt där, för det
-mejlet går till oss ändå. Reserven når bara Resend-kontots egen adress, alltså
-aldrig familjen. Att markera en faktura som skickad när den landade hos oss själva
-vore att skriva in en osanning i databasen och sedan fakturera på den. Är domänen
-inte verifierad får ni ett fel och fakturan står kvar som utkast.
+**Förfallodagen räknas från när fakturan skickas**, inte från när körningen skapade
+den. Villkoret är tio dagar; skapas utkastet den 1:a och skickas den 5:e vore det
+sex om man räknade från körningen. Knappen föreslår dagens datum plus tio.
 
-### Förfallodagen
-
-Räknas från när fakturan **skickas**, inte från när körningen skapade den. Villkoret
-lovar familjen tio dagar; skapas fakturan den 1:a och skickas den 5:e vore det sex.
-En påminnelse flyttar aldrig fram datumet.
+**Inga avgifter.** Villkoren nämner ingen fakturaavgift och ingen
+påminnelseavgift, och då får ingen tas ut. Kontrollera att Wints påminnelser står
+utan avgift innan den första fakturan går.
 
 ### Ändra betalningslöftet
 
 Sedan Fas 14.2 är löftet inte ett antal dagar. Det är en mening: familjen betalar
 varje pass med kort, före passet, och **ett pass som inte är betalt hålls inte**.
-Meningen står på femton ställen i nio filer: användarvillkoren, prissidan och FAQ:n
+Den gäller oförändrad tills flaggan `faktura` slås på; då ändras den enligt 9.11.
+Meningen står på sexton ställen i tio filer: användarvillkoren, prissidan och FAQ:n
 på båda språken, FAQ-schemat, studievyns Betalning och Pris & villkor, notisen om
-pass att betala i `nextrum-studie-vy.js`, och maskotens svarsfil. Alla måste säga
+pass att betala i `nextrum-studie-vy.js`, maskotens svarsfil och mejlmallarna. Alla måste säga
 samma sak. En betalning som tas på ett annat sätt än villkoren lovar är en tvist,
 inte ett skrivfel.
 
@@ -306,7 +311,7 @@ python3 verktyg/bygg-maskotsvar.py        # maskotens svar ur FAQ:n och prissida
 python3 verktyg/kolla-betalningsvillkor.py
 ```
 
-Den sista räknar meningen på alla femton ställen, och letar efter det gamla löftet
+Den sista räknar meningen på alla sexton ställen, och letar efter det gamla löftet
 ("efterskott", "10 dagars betalningsvillkor", "första faktura" och de engelska
 motsvarigheterna) i allt som serveras. Den säger ifrån om en mening formulerats om
 så att den slutat bevaka ett ställe — ett sökuttryck som inte hittar något ser
@@ -316,8 +321,9 @@ Två saker klarar den inte:
 
 - **Det som faktiskt körs.** Att spärren är på är en flagga i databasen, inte en
   mening på en sida (9.9).
-- **`BETALNINGSVILLKOR_DAGAR`** i `_delad/konstanter.ts` finns kvar bara för
-  `faktura-utskick` och äldre fakturor. Den lovar ingenting om ett nytt pass.
+- **Wints inställning.** `BETALNINGSVILLKOR_DAGAR` står i `_delad/konstanter.ts`
+  och i `nextrum-config.js`, och kontrollen säger ifrån om de skiljer sig. Men
+  dagarna på fakturan sätts i Wint, och dit når ingen kontroll.
 
 ### Utbetalningarna
 
@@ -333,11 +339,17 @@ dem den 25:e.
 
 ---
 
-## Om en äldre faktura ser fel ut
+## Om en faktura ser fel ut
 
-Behöver ni ta bort en felaktig faktura: ta bort den i Table Editor. Raderna följer
-med (`on delete cascade`). Passen på den räknas då som obetalda igen och syns som
-`ej_betalt`; de hamnar inte på en ny faktura, för det skapas inga.
+**Ett utkast** tas bort med **Ta bort** under Ekonomi → Fakturor. Raderna följer
+med, passen blir ofakturerade igen, och nästa månadskörning tar med dem. Rätta
+passet först.
+
+**En faktura som ligger i Wint** krediteras i Wint och **makuleras** här. Raderna
+står kvar på en makulerad faktura, så passen kommer INTE med på nästa körning: det
+är rätt när familjen inte ska betala dem. Ska de faktureras om: ta bort den
+makulerade fakturan i Table Editor (raderna följer med, `on delete cascade`) och kör
+månadskörningen igen.
 
 ---
 
@@ -355,12 +367,12 @@ löning, i en klump, ur `payouts`. En destination charge hade lagt ut hens del v
 varje pass och månadskörningen hade sedan betalat samma timmar en gång till.
 `SKISS-BETALNING-STRIPE.md` har efterskriften om hur det landade.
 
-**Ingen betalning har gått igenom.** Webhooken är skapad och dess hemlighet
-provad, men `stripe_handelser` är tom och inget pass har `betald_at` (24 september
-2026): Stripe har inte levererat en enda händelse, inte ens en testhändelse. Koden
-är typkontrollerad och signaturkontrollen har egna prov, men miljön där den skrevs
-når inte `api.stripe.com`. Provbetalningen i 9.6 är alltså det första riktiga
-provet. Gör den innan ni rör en skarp nyckel, och innan spärren slås på (9.9).
+**Två provbetalningar har gått hela vägen, i testläge** (25 september 2026, 09:39
+och 10:18). Båda landade i `stripe_handelser` som `checkout.session.completed` med
+`resultat = 'betald'`, och båda passen står som betalda med rätt `betalt_ore`. Två
+saker fattades, och Fas 14.7 lagade dem (9.4): Stripes avgift kom inte med, och
+testbetalningarna gick inte att skilja från skarpa. Resten av provlistan i 9.6 är
+kvar att köra innan ni rör en skarp nyckel, och innan spärren slås på (9.9).
 
 ### 9.1 Vad som finns
 
@@ -369,13 +381,16 @@ provet. Gör den innan ni rör en skarp nyckel, och innan spärren slås på (9.
 | Kolumnerna och skyddet (`20260922155740_fas12_1_*.sql`) | **Applicerad** |
 | `stripe-konto` | **Borttagen**, ur repot och ur driften (Fas 12.5) |
 | Korttvisterna (`20260924125618_fas14_3_*.sql`) | **Applicerad.** Tabellen `stripe_tvister`, se 9.10 |
-| `stripe-checkout` | **ACTIVE**, version 9, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5). Fas 14.5: kassan öppnas i en panel på sidan (9.2) |
-| `stripe-webhook` | **ACTIVE**, version 6, `verify_jwt = false`. Fas 14.3: tvisterna sparas med sista svarsdag, orsak och utfall |
-| `stripe-aterbetalning` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
-| `stripe-lage` | **ACTIVE**, version 2, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting. Fas 14.5: säger om den publicerbara nyckeln är satt och i samma läge som den hemliga |
+| Faktura som betalsätt (`20260925120727_fas14_6_*.sql`) | **Applicerad, flaggan `faktura` AV.** Se 9.11 |
+| Test eller skarpt (`20260925121120_fas14_7_*.sql`) | **Applicerad.** `bookings.stripe_skarp`, `stripe_handelser.skarp` |
+| `stripe-checkout` | **ACTIVE**, version 11, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5). Fas 14.5: kassan öppnas i en panel på sidan (9.2). Fas 14.6: vägrar ett fakturapass |
+| `stripe-webhook` | **ACTIVE**, version 8, `verify_jwt = false`. Fas 14.3: tvisterna sparas med sista svarsdag, orsak och utfall. Fas 14.7: avgiften ur `charge.updated`, läget ur `livemode`, och en betalning efter ett nekat kort tas emot |
+| `stripe-aterbetalning` | **ACTIVE**, version 6, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
+| `stripe-lage` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting. Fas 14.5: säger om den publicerbara nyckeln är satt och i samma läge som den hemliga |
+| `stripe-avstamning` | **ACTIVE**, version 1, `verify_jwt = true`. Bara för admin (Fas 14.7). Hämtar avgift, netto och läge för betalningar som saknar dem, högst femtio per tryck |
 | `STRIPE_SECRET_KEY` | **Visas i adminvyn** sedan Fas 14.3: Betalningar & utbetalningar → Kortbetalningar → **Kontrollera Stripe** säger om den saknas, är en test- eller skarp nyckel, eller har fel format. Inte ett tecken mer än så |
 | `STRIPE_WEBHOOK_SECRET` | **Satt och provad**: en påhittad signatur faller på tidsstämpeln, inte på hemligheten (slutet av 9.4) |
-| Webhook-endpoint hos Stripe | **Skapad** i sandlådan. Ingen leverans har kommit fram. **Saknar troligen `charge.dispute.updated`**, som kom till i Fas 14.3 (9.4) |
+| Webhook-endpoint hos Stripe | **Skapad** i sandlådan, och två leveranser har kommit fram. **Saknar `charge.dispute.updated`** (Kontrollera Stripe sa det 2026-09-25) **och `charge.updated`**, som kom till i Fas 14.7 (9.4) |
 | Knappen hos familjen | Finns: på passet när det är bekräftat, och på ett genomfört pass som inte är betalt |
 | Spärren `kortsparr` | **Av.** Se 9.9 |
 
@@ -384,10 +399,11 @@ formalitet: `apply_migration` och `functions deploy` ändrar driften direkt meda
 git är ett skilt steg, och de två har glidit isär i det här projektet förut
 (CLAUDE.md avsnitt 7).
 
-Skillnaden som stod här förut är borta: `stripe-checkout` bar en kopia av
-`_delad/pris.ts` från före Fas 14.2, och version 6 (Fas 14.3) har dagens. Alla
-fyra funktionerna, och `notis-ko` version 10 med de nya mejltexterna, är lästa
-tillbaka fil för fil och lika med repot.
+Fas 14.6–14.8 driftsattes 2026-09-25, och alla fem stripe-funktionerna,
+`fakturering`, `faktura-utskick`, `ekonomi`, `notis-ko`, `lead-notis` och
+`notis-avanmal` är lästa tillbaka fil för fil och lika med repot. Det hittade en
+glidning: `stripe-aterbetalning` hade legat ute med en `_delad/stripe.ts` från före
+Fas 14.3, utan tvistdelen. Den har dagens nu.
 
 ### 9.2 Nycklarna
 
@@ -463,10 +479,17 @@ kontrollerat mot referensen** — miljön som skrev det här når inte
 provlistan i 9.6 om.
 
 **Så blev det.** Basil fanns inte att välja när endpointen skapades i september
-2026, så den står troligen på kontots förval. Kontrollera versionen på endpointens
-sida, och läs raden i `stripe_handelser` efter provbetalningen: `resultat = 'betald'`
-och ifyllda `betalt_ore` och `stripe_avgift_ore` på passet betyder att fälten kom
-fram som koden väntar sig.
+2026, så den står troligen på kontots förval. Provbetalningarna den 25 september
+visar att fälten webhooken läser kom fram ändå: `resultat = 'betald'` och rätt
+`betalt_ore` på passet.
+
+**Men `stripe_avgift_ore` blev tom**, på båda. Det är inte versionen. Stripe skapar
+balanstransaktionen, som bär avgiften och nettot, ofta en stund EFTER att sessionen
+fullbordats, så `checkout.session.completed` kommer med `balance_transaction = null`.
+Fas 14.7 lagade det två vägar: webhooken tar emot `charge.updated`, som Stripe
+skickar när balanstransaktionen finns, och knappen **Hämta från Stripe** under
+Kortbetalningar (`stripe-avstamning`) hämtar den för betalningar som kom in före.
+Tryck på den en gång för de två provbetalningarna.
 
 Adressen är:
 
@@ -480,15 +503,16 @@ Händelser som ska väljas, och varför just de:
 |---|---|
 | `checkout.session.completed` | Sätter passet som betalt. **Enda vägen dit.** |
 | `payment_intent.payment_failed` | Familjen kan försöka igen |
+| `charge.updated` | Avgiften och nettot, när Stripe skapat balanstransaktionen. **Ny i Fas 14.7** |
 | `charge.refunded` | Skriver återbetalt belopp |
 | `charge.dispute.created` | Sparar tvisten med sista svarsdag och orsak, och lägger en uppgift (9.10) |
 | `charge.dispute.updated` | Stripe flyttar tvisten till `under_review` när underlaget skickats in, och kan ändra dagen. **Ny i Fas 14.3** |
 | `charge.dispute.closed` | Utfallet: vunnen blir en betalning igen, förlorad står kvar som tvist |
 
-**`charge.dispute.updated` saknas troligen på endpointen**, för den stod inte
-här när endpointen skapades. Lägg till den: endpointens sida → **Update details**
-→ Select events. Knappen **Kontrollera Stripe** i adminvyn säger vilka som
-saknas, så ni behöver inte gissa.
+**`charge.dispute.updated` och `charge.updated` saknas på endpointen**, för de
+stod inte här när endpointen skapades. Lägg till dem: endpointens sida → **Update
+details** → Select events. Knappen **Kontrollera Stripe** i adminvyn säger vilka
+som saknas, så ni behöver inte gissa.
 
 **Välj inga fler.** `transfer.*`, `account.updated` och `payout.*` stod här förut
 och hörde till Connect. Funktionen har inga grenar för dem sedan Fas 12.5: de
@@ -565,12 +589,17 @@ att fungera, och det är billigare att se det där än att leta efter det i
 1. **Boka ett pass och bekräfta det.** Betala-knappen ska dyka upp först då.
 2. **Betala med testkortet** `4242 4242 4242 4242`, valfritt framtida datum.
 3. **Kontrollera i databasen** att `betalning_status = 'betald'`, att
-   `betalt_ore` stämmer med vad familjen faktiskt betalade, och att
-   `stripe_avgift_ore`, `stripe_netto_ore` och `stripe_balanstransaktion_id` är
-   ifyllda. De tre sista går inte att hämta i efterhand.
+   `betalt_ore` stämmer med vad familjen faktiskt betalade, att `stripe_skarp` är
+   `false` i testläge, och att `stripe_avgift_ore`, `stripe_netto_ore` och
+   `stripe_balanstransaktion_id` är ifyllda. De tre sista kommer ofta med
+   `charge.updated` en stund efter betalningen. Saknas de efter några minuter:
+   tryck **Hämta från Stripe**. Stod det här förut att de inte gick att hämta i
+   efterhand, så var det fel: de hänger på chargen och går att hämta när som helst.
 4. **Prova 3D Secure** med `4000 0027 6000 3184`.
 5. **Prova ett nekat kort** med `4000 0000 0000 0002` och se att passet blir
-   `misslyckad` och går att betala igen.
+   `misslyckad` och går att betala igen. Betala sedan i SAMMA kassa med 4242: före
+   Fas 14.7 drogs pengarna då utan att passet blev betalt, för webhooken tog bara
+   emot en betalning på ett pass som stod `vantar`.
 6. **Prova en återbetalning**, både hel och delvis, från Betalningar &
    utbetalningar → Kortbetalningar.
 7. **Prova en tvist** med `4000 0000 0000 0259`. Den ska landa i
@@ -593,8 +622,11 @@ utbetalning**. Båda gällde anslutna konton och finns inte att prova sedan Fas 
   utbetalning får ske innan det är utrett.
 - **Moms.** Ni är inte momsregistrerade. Passerar ni omsättningsgränsen ändras vad
   379 kr betyder, och då ändras beloppet som går till Stripe.
-- **Dubbelfaktureringen är borta (Fas 14.2).** Månadskörningen skapar ingen faktura
-  till familjen, så ett kortbetalt pass kan inte faktureras en gång till.
+- **Dubbelfaktureringen.** Månadskörningen tar bara med pass som står `faktura`
+  (Fas 14.6), så ett kortbetalt pass kommer inte på en faktura. Det enda sättet
+  är att familjen byter till faktura medan en kassa står öppen och betalar den
+  ändå; webhooken tar emot betalningen, och avvikelsen **Betalt två gånger** larmar
+  om passet redan hunnit faktureras. Kreditera då raden i Wint.
 - **Startererbjudandet finns inte i koden.** Prissidan lovar "Första timmen på köpet
   … dras av när ni betalar", och `stripe-checkout` drar inte av något. Bestäm
   regeln innan en ny familj betalar sitt första pass. Tills den är byggd går det att
@@ -756,3 +788,56 @@ skrivs därför bara över av en annan stängning.
 innan den drar tillbaka något. Den får en uppgift på samma sätt: ett svar då kan
 hindra att det blir en tvist alls. Stängs den utan återkrav (`warning_closed`)
 räknas den som vunnen.
+
+### 9.11 Faktura som betalsätt: dagen den slås på (Fas 14.6)
+
+Allt i koden är byggt och driftsatt. Flaggan `faktura` står AV, och då syns inget
+av det för familjen: inget val på passet, ingen rad om faktura i mejlen, och
+`skydda_bokningsfalt` nekar bytet. Slå inte på den förrän allt nedan är gjort.
+Flaggans `vantar_pa` säger samma sak, och `stampla_flaggan()` hindrar att texten
+skrivs om från en vy.
+
+**Före, utanför koden:**
+
+1. **Bolaget är registrerat**, och Wint-kontot har bankgiro och OCR. Wint tar bara
+   aktiebolag.
+2. **Wints inställningar:** tio dagars betalningsvillkor, ingen fakturaavgift,
+   påminnelser utan avgift. Villkoren nämner ingen avgift, och då får ingen tas ut.
+3. **Befintliga familjer meddelas trettio dagar i förväg.** Villkoren har ett
+   avsnitt om ändringar, och en familj som godkänt kort före passet har inte
+   godkänt faktura i efterskott. Ett meddelande som säger att faktura blir ett
+   VAL, inte ett byte, räcker; det gör ingen sämre ställd.
+4. **Ångerrätten och återbetalningen.** Villkorens avsnitt om ångerrätt och om
+   pengar tillbaka för ett pass som aldrig hölls är skrivna för kort före passet.
+   Läs dem med en jurist, eller med `juridik`-agenten som första steg, innan
+   texten ändras, så att de säger vad som gäller för ett pass som betalas i
+   efterskott.
+
+**Samma dag, i en egen liten ändring:**
+
+5. **Texterna, på båda språken.** Meningen "betalar varje pass med kort, före
+   passet" står på sexton ställen i tio filer (avsnitt 8, Ändra betalningslöftet).
+   Den ska säga att familjen kan välja faktura, tio dagar, utan avgift: villkoren,
+   prissidan, FAQ:n, studievyns Pris & villkor och intro under Betalning i
+   `foralder.html`, och samma sidor under `/en/`.
+6. **Kontrollen följer med.** `verktyg/kolla-betalningsvillkor.py` räknar den
+   gamla meningen och letar efter "efterskott" och "10 dagars" som FÖRBJUDNA ord.
+   Båda blir sanna den dagen: ändra `LOFTET` och listan över förbjudna uttryck i
+   samma ändring, annars blir CI rött av en korrekt text.
+7. **Bygg om** FAQ-schemat och maskotens svar (`bygg-faq-schema.py`,
+   `bygg-maskotsvar.py`), och kör `jamfor-sprak.py`.
+8. **Mejlen.** Bokningsbekräftelsen och påminnelsen säger redan "månadens
+   faktura" för ett pass där familjen valt faktura (`betalsatt` i `RenData`).
+   Vill ni att mejlet till en kortfamilj ska nämna att faktura GÅR att välja: det
+   är en ny mening i `mallar.ts`, med prov.
+
+**Sist:**
+
+9. **Slå på flaggan** under Ekonomi → Fakturor. Knappen säger vad den gör innan
+   den gör det.
+10. **Provfakturera en familj**, gärna er egen: välj faktura på ett pass, rapportera
+   det, kör månadskörningen i torrkörning och sedan skarpt, lägg in utkastet i
+   Wint, skriv in numret, och markera den betald när pengarna kommit.
+
+**De sex gamla obetalda passen** (bokade när villkoren lovade månadsfaktura) kan bli
+den första riktiga fakturan: bytet till `faktura` går också på ett genomfört pass.

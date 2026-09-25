@@ -7,12 +7,19 @@
 // testa (pris_test.ts) — förut satt räkningen inne i Deno.serve och
 // hade inte ett enda test.
 //
-// SEDAN FAS 14.2 BYGGS BARA EN HALVA. Familjen betalar varje pass med
-// kort före passet (stripe-checkout) och får ingen månadsfaktura.
-// Körningen bygger studiehjälparens underlag, och räknar upp de pass
-// som hölls utan att familjen betalat, med det belopp passet skulle
-// ha kostat. En faktura skapas inte av det: listan är till för att
-// någon ska se passen, inte för att de ska drivas in av sig själva.
+// FAS 14.2 TOG BORT FAMILJENS HALVA. Familjen betalar varje pass med
+// kort före passet (stripe-checkout). Körningen bygger studiehjälparens
+// underlag, och räknar upp de pass som hölls utan att familjen betalat,
+// med det belopp passet skulle ha kostat. En faktura skapas inte av
+// det: listan är till för att någon ska se passen, inte för att de ska
+// drivas in av sig själva.
+//
+// FAS 14.6 GAV TILLBAKA EN DEL AV DEN. Familjen kan välja faktura på
+// ett pass (betalning_status = 'faktura'), och bara de passen samlas
+// på en månadsfaktura: byggFakturor(). Samma pris som kortet tar, ur
+// familjebelopp(), så att betalsättet aldrig ändrar vad passet kostar.
+// Ett pass familjen inte valt faktura för faktureras aldrig av sig
+// självt, också om det är obetalt.
 //
 // PRISLOGIKEN ÄR DENSAMMA SOM FÖRUT (planens avsnitt D):
 //   · tjänstens timpris, eller standardtjänstens om passets saknar pris
@@ -77,7 +84,9 @@ export type Pass = {
 //
 // 'betald' och 'tvist' är betalda. 'aterbetald' är inte med: där har
 // någon redan beslutat vad som ska hända med pengarna, och en lista
-// över obetalda pass ska inte se ut att riva det beslutet.
+// över obetalda pass ska inte se ut att riva det beslutet. 'faktura'
+// (Fas 14.6) är inte med: passet betalas mot faktura, och om fakturan
+// är betald står på fakturan, inte här.
 export const OBETALDA_LAGEN = new Set(['ingen', 'vantar', 'misslyckad']);
 
 export function obetalt(b: Pass): boolean {
@@ -236,6 +245,52 @@ export function byggUnderlag(o: {
   return { perTutor, utanTimpenning, obetalda };
 }
 
+export type Fakturarad = {
+  booking_id: string;
+  beskrivning: string;
+  minuter: number;
+  pris_per_timme_ore: number;
+  belopp_ore: number;
+};
+
+/**
+ * Familjens månadsfaktura (Fas 14.6): en lista rader per familj, för
+ * pass familjen valt att betala mot faktura och som inte redan står på
+ * en faktura. Priset räknas precis som stripe-checkout räknar det:
+ * tjänstens timpris, det fasta tillägget för flera barn, och rabatten
+ * som frystes vid bokningen. Beskrivningen är ämne och datum, aldrig
+ * barnets namn: fakturan läses av Wint och kan hamna i en inkorg.
+ */
+export function byggFakturor(o: { pass: Pass[]; tjanster: Tjanst[]; timprisOre: number }) {
+  const perKod = new Map<string, Tjanst>();
+  for (const t of o.tjanster) perKod.set(t.kod, t);
+  const standard = standardTjanst(o.tjanster);
+
+  const perFamilj = new Map<string, Fakturarad[]>();
+  for (const b of o.pass) {
+    if (!b.parent_id || b.fakturerad || b.betalning_status !== 'faktura') continue;
+    const t = perKod.get(b.tjanst ?? standard?.kod ?? '');
+    const timme = Number(t?.pris_per_timme_ore ?? 0) || o.timprisOre;
+    const extra = t ? Number(t.extra_personer_ore ?? 0) : 0;
+    const minuter = Number(b.duration_min || 60);
+    const barn = Math.max(1, Number(b.antal_barn || 1));
+    const brutto = familjebelopp(minuter, timme, extra, barn);
+    const rabatt = Math.min(Math.max(Number(b.rabatt_ore || 0), 0), brutto);
+    const lista = perFamilj.get(b.parent_id) ?? [];
+    lista.push({
+      booking_id: b.id,
+      beskrivning: radtext(b.subject, b.wanted_date)
+        + (barn > 1 ? ` (${barn} barn)` : '')
+        + (rabatt > 0 ? ' − rabatt' : ''),
+      minuter,
+      pris_per_timme_ore: timme + (barn > 1 ? extra : 0),
+      belopp_ore: brutto - rabatt,
+    });
+    perFamilj.set(b.parent_id, lista);
+  }
+  return perFamilj;
+}
+
 export const summa = (rader: { belopp_ore: number }[]) => rader.reduce((a, r) => a + r.belopp_ore, 0);
 export const minuterSum = (rader: Rad[]) => rader.reduce((a, r) => a + r.minuter, 0);
 
@@ -247,6 +302,7 @@ export function sammanfatta(o: {
   slut: string;
   timprisOre: number;
   underlag: ReturnType<typeof byggUnderlag>;
+  fakturor?: ReturnType<typeof byggFakturor>;
   utanRapport: ReturnType<typeof sorteraPass>['utanRapport'];
   undantagna: string[];
 }) {
@@ -257,6 +313,9 @@ export function sammanfatta(o: {
     pass_till_och_med: new Date(Date.parse(o.slut) - 86_400_000).toISOString().slice(0, 10),
     pris_per_timme_ore: o.timprisOre,
     utbetalningar: [...u.perTutor].map(([id, r]) => ({ tutor_id: id, pass: r.length, belopp_ore: summa(r) })),
+    // Fas 14.6. Står alltid med, också tom, av samma skäl som obetalda.
+    fakturor: [...(o.fakturor ?? new Map<string, Fakturarad[]>())]
+      .map(([id, r]) => ({ parent_id: id, pass: r.length, belopp_ore: summa(r) })),
     obetalda: u.obetalda,
     hoppade_over_utan_timpenning: [...new Set(u.utanTimpenning)],
     hoppade_over_utan_rapport: o.utanRapport,

@@ -190,8 +190,20 @@ Deno.serve(async (req) => {
   if (!pass.tutor_id) {
     return json({ error: 'Passet har ingen studiehjälpare än.' }, 409, CORS);
   }
+  /* EN TILLÅT-LISTA, INTE ETT UNDANTAG (Fas 14.6). Här stod bara
+     "neka 'betald'". Allt annat släpptes in och fick 'vantar' skrivet
+     över sig: en tvist blev en öppen kassa, en återbetalning likaså,
+     och sedan Fas 14.6 hade ett fakturapass kunnat betalas med kort
+     också och sedan faktureras en gång till. Ett pass som ska betalas
+     med kort står i ett av tre lägen, och bara de släpps in. */
   if (pass.betalning_status === 'betald') {
     return json({ error: 'Passet är redan betalt.' }, 409, CORS);
+  }
+  if (pass.betalning_status === 'faktura') {
+    return json({ error: 'Passet betalas mot faktura. Vill ni betala med kort: välj det på passet först.' }, 409, CORS);
+  }
+  if (!['ingen', 'vantar', 'misslyckad'].includes(String(pass.betalning_status ?? 'ingen'))) {
+    return json({ error: 'Passet har en återbetalning eller en tvist och kan inte betalas här. Skriv till oss.' }, 409, CORS);
   }
   if (!pass.fakturerbar) {
     return json({ error: 'Passet är undantaget och ska inte betalas.' }, 409, CORS);
@@ -335,8 +347,8 @@ Deno.serve(async (req) => {
     /* HÄR SKREVS FÖRUT betalt_ore, OCH DET VAR FEL (rättat i Fas 14.1).
        Ingen har betalat något när en session skapas. Siffran var vårt
        påstående, och den lästes som ett kvitto: adminvyn visade den,
-       stripe-aterbetalning använde den som tak, och Fortnox hade
-       bokfört den.
+       stripe-aterbetalning använde den som tak, och bokföringen hade
+       fått den.
 
        Skillnaden blir verklig så fort beloppet ändras mellan att
        sessionen skapas och att familjen betalar. Ändras rabatten eller

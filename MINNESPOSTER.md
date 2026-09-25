@@ -50,7 +50,8 @@ studiehjälpare, admin sätter matchningen, då först låses föräldravyn upp.
 Ingen katalog att bläddra i.
 
 Ordlista: studiehjälpare (aldrig "lärare" utåt), pass, rapport, underlag,
-betalning, tjänst. Faktura är historik sedan Fas 14.2.
+betalning, tjänst. Faktura är sedan Fas 14.6 ett betalsätt familjen kan
+välja per pass, avstängt (flaggan `faktura`) tills bolaget och Wint finns.
 
 Två siffror och ett löfte står på många ställen samtidigt: 379 kr/tim,
 69 kr/tim fast tillägg för flera barn (tak tre, alltså 448 för tre barn,
@@ -304,21 +305,22 @@ tryckte på med `NXStudie.håll`. `1fr` i ett grid ska vara
 `minmax(0,1fr)`. Inget som rör sig i onödan (video, zoom, oskärpa).
 Detaljen: `CLAUDE.md` avsnitt 3, "Fyra fällor som gör vyerna hackiga".
 
-Inte byggt än: en betalning som gått hela vägen. Sedan Fas 14.2 betalar
-familjen varje pass med kort, före passet, och får ingen faktura.
-Månadskörningen skapar bara studiehjälparens underlag, som betalas den
-25:e från banken, aldrig genom Stripe. Kortvägen är driftsatt och
-webhookens hemlighet provad, men ingen leverans från Stripe har kommit
-fram. Knappen Kontrollera Stripe under Kortbetalningar (Fas 14.3)
-frågar Stripe och säger vad som saknas; tryck på den före
-provbetalningen. Spärren "ingen betalning, inget pass" (flaggan
-`kortsparr`) står av tills en provbetalning gått igenom. En korttvist
+Inte byggt än: en skarp betalning. Sedan Fas 14.2 betalar familjen
+varje pass med kort, före passet. Kortvägen har gått hela vägen i
+testläge (två provbetalningar 2026-09-25). Stripes avgift kommer med
+charge.updated, eller med knappen Hämta från Stripe (Fas 14.7), och
+testbetalningar märks. Studiehjälparens underlag betalas den 25:e från
+banken, aldrig genom Stripe. Faktura som betalsätt (Fas 14.6) är byggt
+och AV: familjen väljer det per pass, månadskörningen gör ett utkast per
+familj, admin lägger in det i Wint för hand. Tio dagar, inga avgifter.
+De publika texterna lovar bara kort tills flaggan slås på
+(DEPLOY-BETALNING.md 9.11). Spärren "ingen betalning, inget pass"
+(flaggan `kortsparr`) står av. En korttvist
 har en sista dag att svara, sparas i `stripe_tvister` och blir en
 uppgift; att svara är en människas jobb (DEPLOY-BETALNING.md 9.10).
 Startererbjudandet på prissidan
 finns inte i koden, och priset räknas när familjen betalar fast
-villkoren lovar priset vid bokningen. Vidare: Google
-Workspace, Fortnox (fällan: refresh-token roteras
-vid varje användning, sparas inte det nya är ni utlåsta om en månad),
+villkoren lovar priset vid bokningen. Bokföringen sköts i Wint, för hand;
+Fortnox togs bort i Fas 14.8. Vidare: Google Workspace,
 bakgrundskontroller, skatt och anställning av minderåriga, riktiga foton
 på studiehjälparna.

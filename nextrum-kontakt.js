@@ -335,7 +335,11 @@ window.NXKontakt = (function () {
     misslyckad: { text: 'Betalningen nekades', klass: 'sen' },
     betald: { text: 'Betalt', klass: 'klar' },
     tvist: { text: 'Betalt, bestridd', klass: 'sen' },
-    aterbetald: { text: 'Återbetalt', klass: 'ej' }
+    aterbetald: { text: 'Återbetalt', klass: 'ej' },
+    /* Fas 14.6. Familjen betalar passet mot månadsfaktura. Om fakturan
+       är betald står på fakturan, inte på passet, så märket säger bara
+       hur det betalas. */
+    faktura: { text: 'Faktura', klass: 'pa' }
   };
 
   function betalMärke(b) {

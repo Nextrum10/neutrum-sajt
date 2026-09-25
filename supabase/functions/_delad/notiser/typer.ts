@@ -96,6 +96,8 @@ export type RenData = {
   timmar: number | null;
   status: 'requested' | 'confirmed' | 'cancelled' | 'completed' | null;
   skal: Avbokningsskal | null;
+  /** Fas 14.6. Bara 'faktura' eller null: en kod, aldrig text. */
+  betalsatt: 'faktura' | null;
   prov: boolean;
 };
 
@@ -134,6 +136,7 @@ export function renData(v: unknown): RenData {
     timmar: timmarOk(d.timmar),
     status,
     skal: AVBOKNINGSSKAL.find((k) => k === d.skal) ?? null,
+    betalsatt: d.betalsatt === 'faktura' ? 'faktura' : null,
     prov: d.prov === true,
   };
 }

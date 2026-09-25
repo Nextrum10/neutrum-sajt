@@ -141,8 +141,9 @@ Postgres RLS kan inte begränsa enskilda kolumner, så lösningen är två trigg
 - **Hero-videon i vyerna.** De inloggade vyerna letar efter
   `bilder/hero-studievy.mp4` och visar hero-fotot så länge filen inte
   finns. Läggs filen dit spelas den, utan att någon rad kod behöver ändras.
-- **Google Workspace och Fortnox.** Adminvyn har en statusflik för båda,
-  men ingen av dem är kopplad. Vad som krävs står i `INTEGRATIONER.md`.
+- **Google Workspace.** Adminvyn har en statusflik, men det är inte
+  kopplat. Vad som krävs står i `INTEGRATIONER.md`. Bokföringen och
+  fakturorna sköts i Wint, för hand.
 - **Bilder.** Studiehjälparna visas med en generisk siluett, inte riktiga foton.
 - **Skatt och anställning av minderåriga.** Fortfarande olöst. Prata med en revisor innan första utbetalningen, inte efter.
 - **Bakgrundskontroller.** Ni godkänner manuellt, men det finns ingen process bakom knappen än.

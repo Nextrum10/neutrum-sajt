@@ -45,10 +45,32 @@
 //    ligger kvar öppen med ett annat belopp.
 //
 //    Samtidigt hämtas BALANSTRANSAKTIONEN med sin avgift och sitt
-//    netto. Den finns bara att hämta här: senare vet ingen vilken
-//    charge den hörde till. Utan den går Stripes klumputbetalning
-//    aldrig att stämma av mot banken, och avgiften finns inte
-//    någonstans i systemet.
+//    netto. Utan den går Stripes klumputbetalning aldrig att stämma av
+//    mot banken, och avgiften finns inte någonstans i systemet.
+//
+// 5. AVGIFTEN KOMMER OFTA SENARE (Fas 14.7). Här stod att
+//    balanstransaktionen "bara finns att hämta här". Det var fel två
+//    gånger om. Den finns ofta INTE än när sessionen fullbordas:
+//    Stripe skapar den en stund efteråt, och de två första betalningarna
+//    som gick hela vägen fick båda null. Och den går att hämta senare,
+//    för charge-id:t sparas. charge.updated kommer när den finns, och
+//    då skrivs den in. stripe-avstamning hämtar den för betalningar som
+//    kom in innan händelsen fanns på endpointen.
+//
+// 6. BETALNINGEN TAS EMOT UR VARJE OBETALT LÄGE (Fas 14.6). Förut
+//    skrevs den bara in på ett pass som stod 'vantar'. Nekas ett kort
+//    sätter payment_intent.payment_failed 'misslyckad', men kassan är
+//    fortfarande öppen och familjen kan försöka igen med ett annat
+//    kort. Lyckades det träffade uppdateringen noll rader: pengarna var
+//    dragna och passet stod som misslyckat. Detsamma om familjen valt
+//    faktura, eller bytt tillbaka till kort, medan kassan stod öppen.
+//    Kortet vinner: pengarna är dragna, och en faktura hinner bara
+//    skapas om kassan stått öppen över en månadsskiftning, vilket
+//    avvikelsen betald_och_fakturerad fångar.
+//
+// 7. SKARP ELLER TEST (Fas 14.7). Händelsens livemode sparas på
+//    händelsen och på passet, så att en testbetalning aldrig ser ut
+//    som en intäkt i ett underlag till bokföringen.
 //
 //
 // verify_jwt = false. Anroparen är Stripe, inte en inloggad
@@ -60,15 +82,21 @@
 import { serviceklient } from '../_delad/auth.ts';
 import { json } from '../_delad/http.ts';
 import {
-  aterbetalningsLage, betallageEfterTvist, prövaSignatur, tidFranUnix, tvistOrsakText, tvistUnderlag,
-  tvistUtfall, tvistVantarPaOss, v1,
+  aterbetalningsLage, arStripeId, balans, betallageEfterTvist, prövaSignatur, tidFranUnix, tvistOrsakText,
+  tvistUnderlag, tvistUtfall, tvistVantarPaOss, v1,
 } from '../_delad/stripe.ts';
 
 type Handelse = {
   id?: string;
   type?: string;
+  livemode?: boolean;
   data?: { object?: Record<string, unknown> };
 };
+
+// Lägen där passet ännu inte är betalt med kort. Se punkt 6 i
+// filhuvudet. 'betald' är inte med: en andra leverans av samma
+// betalning ska träffa noll rader.
+const TAR_EMOT_BETALNING = ['ingen', 'vantar', 'misslyckad', 'faktura'];
 
 Deno.serve(async (req) => {
   // Ingen CORS och ingen OPTIONS: ingen webbläsare ska nå hit.
@@ -96,11 +124,12 @@ Deno.serve(async (req) => {
   const typ = String(h.type ?? '');
   const obj = (h.data?.object ?? {}) as Record<string, unknown>;
   if (!id || !typ) return json({ error: 'Händelsen saknar id eller typ.' }, 400, {});
+  const skarp = typeof h.livemode === 'boolean' ? h.livemode : null;
 
   const db = serviceklient();
 
   // ---------- taket mot dubbletter ----------
-  const { error: insfel } = await db.from('stripe_handelser').insert({ id, typ });
+  const { error: insfel } = await db.from('stripe_handelser').insert({ id, typ, skarp });
   if (insfel) {
     if (insfel.code !== '23505') {
       return json({ error: 'Kunde inte ta emot händelsen.' }, 500, {});
@@ -132,23 +161,21 @@ Deno.serve(async (req) => {
 
         const piId = String(obj.payment_intent ?? '');
         let chargeId: string | null = null;
-        let btId: string | null = null;
-        let avgiftOre: number | null = null;
-        let nettoOre: number | null = null;
+        let b = balans(null);
 
         if (piId) {
           /* Charge-id:t är det enda som gör en senare
              charge.refunded-händelse spårbar till rätt pass utan att
              lita på metadata vi inte skriver själva.
 
-             BALANSTRANSAKTIONEN ÄR DEN ANDRA HALVAN, och den hämtas
-             här för att den inte går att hämta senare utan att veta
-             vilken charge den hörde till. Stripe betalar ut i KLUMPAR,
-             netto efter avgift, med fördröjning: ingen rad på
+             BALANSTRANSAKTIONEN ÄR DEN ANDRA HALVAN. Stripe betalar ut
+             i KLUMPAR, netto efter avgift, med fördröjning: ingen rad på
              bankkontot motsvarar ett enskilt pass. txn_-id:t är enda
              vägen från passet till den bankraden, och avgiften finns
              ingen annanstans alls — den syns varken i vad familjen
-             betalade eller i vad vi begärde. */
+             betalade eller i vad vi begärde. Ofta finns den inte än
+             (punkt 5 i filhuvudet), och då kommer den med
+             charge.updated. */
           const pi = await v1(
             'GET',
             `/v1/payment_intents/${piId}?expand[]=latest_charge.balance_transaction`,
@@ -156,21 +183,7 @@ Deno.serve(async (req) => {
           const charge = (pi as { latest_charge?: Record<string, unknown> }).latest_charge;
           if (charge && typeof charge === 'object') {
             chargeId = String(charge.id ?? '') || null;
-            const bt = (charge as { balance_transaction?: unknown }).balance_transaction;
-            /* Expanderat blir den ett objekt, oexpanderat en sträng.
-               Båda kan förekomma: för vissa betalsätt finns
-               balanstransaktionen ännu inte när sessionen fullbordas,
-               och då svarar Stripe med null. Vi gissar aldrig fram
-               siffrorna — saknas de står kolumnerna kvar som null och
-               syns som ett hål i avstämningen, vilket är sanningen. */
-            if (bt && typeof bt === 'object') {
-              const b = bt as Record<string, unknown>;
-              btId = String(b.id ?? '') || null;
-              avgiftOre = typeof b.fee === 'number' ? b.fee : null;
-              nettoOre = typeof b.net === 'number' ? b.net : null;
-            } else if (typeof bt === 'string') {
-              btId = bt || null;
-            }
+            b = balans((charge as { balance_transaction?: unknown }).balance_transaction);
           }
         }
 
@@ -181,17 +194,19 @@ Deno.serve(async (req) => {
            ett annat belopp stod fel siffra i raden för alltid. */
         const draget = typeof obj.amount_total === 'number' ? obj.amount_total : null;
 
-        /* `.eq('betalning_status', 'vantar')` är inte pynt. Två
-           samtidiga leveranser som båda ser hanterad_at = null hinner
-           annars båda hit; den andra träffar noll rader. */
+        /* Villkoret på läget är inte pynt. Två samtidiga leveranser som
+           båda ser hanterad_at = null hinner annars båda hit; när den
+           första satt 'betald' träffar den andra noll rader. Listan
+           står i TAR_EMOT_BETALNING, se punkt 6 i filhuvudet. */
         await db.from('bookings').update({
           betalning_status: 'betald',
           betald_at: new Date().toISOString(),
           stripe_payment_intent_id: piId || null,
           stripe_charge_id: chargeId,
-          stripe_balanstransaktion_id: btId,
-          stripe_avgift_ore: avgiftOre,
-          stripe_netto_ore: nettoOre,
+          stripe_balanstransaktion_id: b.id,
+          stripe_avgift_ore: b.avgiftOre,
+          stripe_netto_ore: b.nettoOre,
+          stripe_skarp: skarp,
           betalt_ore: draget,
           /* NOLLAS, och det är avsiktligt. Kolumnerna beskriver den
              betalning som gäller NU. Ett pass som återbetalades och
@@ -201,9 +216,38 @@ Deno.serve(async (req) => {
              svarade "Hela beloppet är redan återbetalt" på en
              betalning som just kommit in. */
           aterbetald_ore: 0,
-        }).eq('id', passId).eq('betalning_status', 'vantar');
+        }).eq('id', passId).in('betalning_status', TAR_EMOT_BETALNING);
 
         return await klar('betald');
+      }
+
+      // ---------- avgiften kom (Fas 14.7) ----------
+      /* charge.updated kommer för många saker: en ändrad beskrivning,
+         metadata, en fångad betalning. Bara en sak intresserar oss:
+         att balanstransaktionen nu finns. Allt annat är klart utan att
+         något skrivs. En avgift som redan står skrivs aldrig över. */
+      case 'charge.updated': {
+        const chargeId = String(obj.id ?? '');
+        if (!arStripeId(chargeId, 'ch') && !arStripeId(chargeId, 'py')) return await klar('charge utan id');
+        let bt = balans(obj.balance_transaction);
+        if (!bt.id) return await klar('ingen balanstransaktion än');
+
+        const { data: pass } = await db.from('bookings')
+          .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
+        if (!pass) return await klar('charge utan pass');
+        if (pass.stripe_avgift_ore !== null && pass.stripe_avgift_ore !== undefined) {
+          return await klar('avgiften fanns redan');
+        }
+
+        if (bt.avgiftOre === null && arStripeId(bt.id, 'txn')) {
+          bt = balans(await v1('GET', `/v1/balance_transactions/${bt.id}`));
+        }
+        await db.from('bookings').update({
+          stripe_balanstransaktion_id: bt.id,
+          stripe_avgift_ore: bt.avgiftOre,
+          stripe_netto_ore: bt.nettoOre,
+        }).eq('id', pass.id).is('stripe_avgift_ore', null);
+        return await klar(bt.avgiftOre === null ? 'balanstransaktion utan avgift' : `avgift ${bt.avgiftOre} öre`);
       }
 
       // ---------- betalningen gick inte igenom ----------

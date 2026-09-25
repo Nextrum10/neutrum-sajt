@@ -117,7 +117,10 @@ const NXAdminAgenter = (function () {
               rader.push(prick(svar.bolagsfakta_ifylld, 'Bolagsfakta ifylld'));
               rader.push(prick(svar.studiehjalpare_form !== 'oklart',
                 'Studiehjälparnas form angiven (' + esc(svar.studiehjalpare_form || '?') + ')'));
-              rader.push(prick(svar.fortnox === 'kopplat', 'Fortnox kopplat', true));
+              /* Fas 14.8: bokföringen sköts i Wint, utan koppling hit.
+                 Raden säger bara om bolagsfakta vet vilket system det är. */
+              rader.push(prick(!!svar.bokforing && svar.bokforing !== 'inte ifyllt',
+                'Bokföringssystem angivet (' + esc(svar.bokforing || '?') + ')', true));
             }
           } catch (fel) {
             rader.push('<b style="display:block;margin:14px 0 6px;font-size:12px">' + namn + '</b>'
