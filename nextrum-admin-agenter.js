@@ -117,8 +117,9 @@ const NXAdminAgenter = (function () {
               rader.push(prick(svar.bolagsfakta_ifylld, 'Bolagsfakta ifylld'));
               rader.push(prick(svar.studiehjalpare_form !== 'oklart',
                 'Studiehjälparnas form angiven (' + esc(svar.studiehjalpare_form || '?') + ')'));
-              /* Fas 14.8: bokföringen sköts i Wint, utan koppling hit.
-                 Raden säger bara om bolagsfakta vet vilket system det är. */
+              /* Fas 14.9: bokföringen sköts i Fortnox (förut Wint), utan
+                 koppling hit. Raden säger bara om bolagsfakta vet vilket
+                 system det är. */
               rader.push(prick(!!svar.bokforing && svar.bokforing !== 'inte ifyllt',
                 'Bokföringssystem angivet (' + esc(svar.bokforing || '?') + ')', true));
             }

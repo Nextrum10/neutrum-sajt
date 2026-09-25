@@ -40,10 +40,11 @@ window.NEXTRUM_CONFIG = {
 
   /* Betalningstiden på en månadsfaktura, i dagar (Fas 14.6). Samma
      siffra som BETALNINGSVILLKOR_DAGAR i
-     supabase/functions/_delad/konstanter.ts, och samma som Wint ska stå
-     på: fakturan skapas där, med Wints betalningsvillkor. Står det
-     olika på fakturan och i villkoren är det en tvist, inte ett
-     skrivfel. verktyg/kolla-betalningsvillkor.py jämför de två filerna. */
+     supabase/functions/_delad/konstanter.ts, och samma som ska stå i
+     Fortnox: fakturan skapas där, med betalningsvillkoret som är satt
+     i Fortnox. Står det olika på fakturan och i villkoren är det en
+     tvist, inte ett skrivfel. verktyg/kolla-betalningsvillkor.py
+     jämför de två filerna. */
   BETALNINGSVILLKOR_DAGAR: 10,
 
   // Kontaktuppgifter som visas i sidfoten och i formulärsvar.

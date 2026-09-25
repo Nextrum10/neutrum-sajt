@@ -69,8 +69,9 @@ databas; filnamnet är det enda som skiljer dem åt.)
 
 Det lägger till fyra tabeller: `agent_korningar`, `agent_steg`,
 `foretagsfakta` och `fortnox_token`. Inget befintligt ändras.
-(`fortnox_token` togs bort i Fas 14.8, när bokföringen flyttade till
-Wint. Den var tom.)
+(`fortnox_token` togs bort i Fas 14.8, när bokföringen skulle ligga i
+Wint. Den var tom. Fas 14.9 bytte Wint mot Fortnox, utan koppling, och
+tabellen kom inte tillbaka.)
 
 ## 2. Fyll i bolagsfakta
 
@@ -154,17 +155,21 @@ källor det vilade på.
 ## Bokföringen
 
 `ekonomi` hade till Fas 14.8 ett verktyg, `las_fortnox`, som läste
-Fortnox. Fortnox kopplades aldrig, och bokföringen sköts i Wint, som
-inte är kopplat hit (`INTEGRATIONER.md` säger varför). Verktyget är
-borta, och agenten läser bara det som finns i databasen. Fyll i
-`bokforingssystem` i bolagsfakta med `wint`, så att agenten vet var
-verifikaten finns när den svarar.
+Fortnox. Kopplingen gjordes aldrig, och Fas 14.8 tog bort verktyget
+när bokföringen skulle ligga i Wint. Sedan Fas 14.9 sköts bokföringen,
+fakturorna och lönen i Fortnox, men utan koppling hit
+(`INTEGRATIONER.md` säger varför). Verktyget är borta, och agenten
+läser bara det som finns i databasen. Fyll i `bokforingssystem`
+i bolagsfakta med `fortnox`, så att agenten vet var verifikaten finns
+när den svarar.
 
 Står `FORTNOX_CLIENT_ID` och `FORTNOX_CLIENT_SECRET` (eller
 `FORTNOX_KLIENT_ID`, `FORTNOX_KLIENT_HEMLIGHET` och
-`FORTNOX_REFRESH_TOKEN`) kvar bland secrets: ta bort dem. Ingen kod
-läser dem längre, och en hemlighet ingen använder är en hemlighet ingen
-märker om den läcker.
+`FORTNOX_REFRESH_TOKEN`) kvar bland secrets: ta bort dem, fast
+bokföringen nu ligger i Fortnox. De hörde till den gamla kopplingen,
+ingen kod läser dem, och en hemlighet ingen använder är en hemlighet
+ingen märker om den läcker. Byggs en koppling senare sätts nycklarna
+samma dag som koden som läser dem.
 
 ---
 

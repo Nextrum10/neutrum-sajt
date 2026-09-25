@@ -33,15 +33,18 @@
 
      Familjen kan välja faktura på ett pass. Månadskörningen samlar
      varje familjs fakturapass på ett utkast här. Fakturan skapas och
-     skickas sedan i WINT, som också bokför den och ser när den
-     betalas. Härifrån skickas ingenting: det som sker här är att
-     utkastet läggs in i Wint för hand, med underlaget nedan, och att
-     Wints fakturanummer och förfallodag skrivs tillbaka. Betald
-     markeras när Wint visar att pengarna kommit in.
+     skickas sedan i FORTNOX, som också bokför den. Härifrån skickas
+     ingenting: det som sker här är att utkastet läggs in i Fortnox för
+     hand, med underlaget nedan, och att fakturanumret i Fortnox och
+     förfallodagen skrivs tillbaka. Betald markeras när betalningen
+     syns i Fortnox. Fas 14.6 byggde flödet för Wint; Fas 14.9 bytte
+     till Fortnox innan någon faktura skapats.
 
-     En API-koppling till Wint finns inte, med flit. Wint har inga
-     webhooks och ingen testmiljö, och API-åtkomst kräver att Wint slår
-     på den. Det manuella steget är en knapp i månaden per familj.
+     En API-koppling till Fortnox finns inte, med flit. Fortnox har ett
+     dokumenterat API, så kopplingen går att bygga senare, men den
+     byggs först när handarbetet faktiskt kostar tid: en koppling mot
+     bokföringen som går sönder tyst är värre än ingen. Det manuella
+     steget är en knapp i månaden per familj.
 
      Beloppen går inte att ändra härifrån. De räknades av fakturering
      ur passen, med samma pris som kortet tar, och las_fakturabelopp
@@ -88,7 +91,7 @@
     const rader = (S.fakturor || [])
       .filter(f => !st || NXBetalning.fakturaLage(f) === st)
       .map(f => ({ ...f, familj: namnFör(f.parent_id) }))
-      .filter(f => matchar(f, ['familj', 'wint_fakturanummer'], sök));
+      .filter(f => matchar(f, ['familj', 'fortnox_fakturanummer'], sök));
 
     const på = passPåFaktura();
     const väntar = (S.bokningar || []).filter(b => b.betalning_status === 'faktura'
@@ -107,19 +110,19 @@
       { namn: 'Familj', rita: f => esc(f.familj) },
       { namn: 'Pass', rita: f => '<span class="adm-tal">' + (f.invoice_lines || []).length + '</span>' },
       { namn: 'Belopp', rita: f => '<span class="adm-tal">' + esc(kronor(f.belopp_ore)) + '</span>' },
-      { namn: 'I Wint', rita: f => f.wint_fakturanummer
-        ? '<span class="adm-tal">' + esc(f.wint_fakturanummer) + '</span>'
+      { namn: 'I Fortnox', rita: f => f.fortnox_fakturanummer
+        ? '<span class="adm-tal">' + esc(f.fortnox_fakturanummer) + '</span>'
         : '<span class="adm-und">inte inlagd</span>' },
       { namn: 'Förfaller', rita: f => '<span class="adm-tal">' + esc(kortDatum(f.forfaller)) + '</span>' },
       { namn: 'Läge', rita: f => { const l = FAKT_LAGE[NXBetalning.fakturaLage(f)] || [f.status, '']; return pill(l[0], l[1]); } },
       /* Nästa steg för just den här fakturan, och bara det. Rullgardinen
-         som förut bytte läge fritt är borta: Skickad utan Wints nummer
-         och förfallodag är en rad ingen kan följa upp i Wint. */
+         som förut bytte läge fritt är borta: Skickad utan fakturanumret
+         i Fortnox och förfallodag är en rad ingen kan följa upp i Fortnox. */
       { namn: '', höger: true, rita: f => {
         const k = [];
         k.push('<button class="btn btn-ghost btn-sm" type="button" data-fakt-underlag="' + f.id + '">Underlag</button>');
         if (f.status === 'utkast') {
-          k.push('<button class="btn btn-primary btn-sm" type="button" data-fakt-wint="' + f.id + '">Lagd i Wint</button>');
+          k.push('<button class="btn btn-primary btn-sm" type="button" data-fakt-fortnox="' + f.id + '">Lagd i Fortnox</button>');
           k.push('<button class="btn btn-ghost btn-sm" type="button" data-fakt-bort="' + f.id + '">Ta bort</button>');
         } else if (f.status === 'skickad' || f.status === 'forfallen') {
           k.push('<button class="btn btn-primary btn-sm" type="button" data-fakt-betald="' + f.id + '">Betald</button>');
@@ -130,10 +133,9 @@
     ], rader, (S.fakturor || []).length ? 'Inga fakturor matchar' : 'Inga fakturor än');
   }
 
-  /* Underlaget för Wint: det som ska stå på fakturan, i den ordning
-     Wint frågar efter det. Kunden är familjens namn och e-post; Wint
-     skickar fakturan som PDF till adressen. Raderna säger ämne och
-     datum, aldrig barnets namn. */
+  /* Underlaget för Fortnox: det som ska stå på fakturan. Kunden är
+     familjens namn och e-post; Fortnox skickar fakturan till adressen.
+     Raderna säger ämne och datum, aldrig barnets namn. */
   function fakturaUnderlag(f) {
     const p = S.personer[f.parent_id] || {};
     const rader = (f.invoice_lines || []).slice().sort((a, c) => String(a.beskrivning).localeCompare(String(c.beskrivning)));
@@ -183,9 +185,9 @@
       if (!f) return;
       const text = fakturaUnderlag(f);
       const kopiera = await bekräfta({
-        titel: 'Underlag för Wint',
-        text: 'Skapa en kundfaktura i Wint med de här uppgifterna, och skicka den som e-post. '
-          + 'Tryck sedan Lagd i Wint och skriv in fakturanumret.',
+        titel: 'Underlag för Fortnox',
+        text: 'Skapa en kundfaktura i Fortnox med de här uppgifterna, och skicka den som e-post. '
+          + 'Tryck sedan Lagd i Fortnox och skriv in fakturanumret.',
         forhandsvisning: text,
         knapp: 'Kopiera',
         avbryt: 'Stäng'
@@ -197,16 +199,16 @@
       return;
     }
 
-    const wint = e.target.closest('[data-fakt-wint]');
-    if (wint) {
-      const f = (S.fakturor || []).find(x => x.id === wint.dataset.faktWint);
+    const fortnox = e.target.closest('[data-fakt-fortnox]');
+    if (fortnox) {
+      const f = (S.fakturor || []).find(x => x.id === fortnox.dataset.faktFortnox);
       if (!f) return;
       const förval = new Date(Date.now() + DAGAR * 86400000);
       const värde = await fråga({
-        titel: 'Lagd i Wint',
+        titel: 'Lagd i Fortnox',
         text: namnFör(f.parent_id) + ', ' + NXBetalning.periodText(f.period) + ', ' + kronor(f.belopp_ore)
-          + '. Skriv fakturanumret och förfallodagen som de står på fakturan i Wint.',
-        innehåll: '<div class="fgroup" style="margin-top:14px"><label for="fakt-nr">Fakturanummer i Wint</label>'
+          + '. Skriv fakturanumret och förfallodagen som de står på fakturan i Fortnox.',
+        innehåll: '<div class="fgroup" style="margin-top:14px"><label for="fakt-nr">Fakturanummer i Fortnox</label>'
           + '<input class="inp" id="fakt-nr" inputmode="numeric" autocomplete="off" maxlength="30"></div>'
           + '<div class="fgroup" style="margin-top:12px"><label for="fakt-forfaller">Förfaller</label>'
           + '<input class="inp" id="fakt-forfaller" type="date" value="' + isoFor(förval) + '"></div>',
@@ -214,18 +216,18 @@
         läs: ruta => {
           const nr = $('#fakt-nr', ruta).value.trim();
           const dag = $('#fakt-forfaller', ruta).value;
-          if (!/^[A-Za-z0-9-]{1,30}$/.test(nr)) return { fel: 'Fakturanumret är siffror, bokstäver och bindestreck, som i Wint.' };
+          if (!/^[A-Za-z0-9-]{1,30}$/.test(nr)) return { fel: 'Fakturanumret får bara innehålla siffror, bokstäver och bindestreck.' };
           if (!/^\d{4}-\d{2}-\d{2}$/.test(dag)) return { fel: 'Välj förfallodagen.' };
           return { värde: { nr, dag } };
         }
       });
       if (!värde) return;
-      await medan(wint, 'Sparar…', async () => {
+      await medan(fortnox, 'Sparar…', async () => {
         if (await skriv('invoices', f.id, {
           status: 'skickad', skickad_at: new Date().toISOString(),
-          wint_fakturanummer: värde.nr, forfaller: värde.dag
+          fortnox_fakturanummer: värde.nr, forfaller: värde.dag
         })) {
-          Object.assign(f, { status: 'skickad', wint_fakturanummer: värde.nr, forfaller: värde.dag });
+          Object.assign(f, { status: 'skickad', fortnox_fakturanummer: värde.nr, forfaller: värde.dag });
           ritaFakturor(); await laddaOmEkonomi();
         }
       });
@@ -238,8 +240,8 @@
       if (!f) return;
       const ja = await bekräfta({
         titel: 'Har pengarna kommit in?',
-        text: 'Faktura ' + (f.wint_fakturanummer || '') + ' till ' + namnFör(f.parent_id) + ', ' + kronor(f.belopp_ore)
-          + '. Markera bara betald när Wint visar att betalningen kommit in.',
+        text: 'Faktura ' + (f.fortnox_fakturanummer || '') + ' till ' + namnFör(f.parent_id) + ', ' + kronor(f.belopp_ore)
+          + '. Markera bara betald när Fortnox visar att betalningen kommit in.',
         knapp: 'Ja, den är betald'
       });
       if (!ja) return;
@@ -259,7 +261,7 @@
       if (!f) return;
       const ja = await bekräfta({
         titel: 'Makulera fakturan?',
-        text: 'Gör det bara när fakturan är krediterad i Wint. Passen på den faktureras inte igen: '
+        text: 'Gör det bara när fakturan är krediterad i Fortnox. Passen på den faktureras inte igen: '
           + 'de räknas som avskrivna. Ska de faktureras om, ta kontakt med familjen först.',
         knapp: 'Makulera'
       });
@@ -285,7 +287,7 @@
       });
       if (!ja) return;
       await medan(bort, 'Tar bort…', async () => {
-        /* .eq('status', 'utkast'): hann någon lägga in fakturan i Wint
+        /* .eq('status', 'utkast'): hann någon lägga in fakturan i Fortnox
            under tiden ska den inte försvinna härifrån. Raderna följer
            med (on delete cascade). */
         const { data, error } = await supa.from('invoices').delete()
@@ -922,14 +924,14 @@
     ej_betalt: ['Inte betalt', 'Hölls och rapporterades, men familjen har inte betalat. Betala-knappen ligger kvar på passet i familjens vy.'],
     /* Fas 14.6. */
     faktura_saknas: ['Fakturapass utan faktura', 'Familjen valde faktura, månaden är slut och passet står inte på någon faktura. Kör månadskörningen.'],
-    betald_och_fakturerad: ['Betalt två gånger', 'Betalt med kort och dessutom på en faktura. Kreditera raden i Wint.'],
+    betald_och_fakturerad: ['Betalt två gånger', 'Betalt med kort och dessutom på en faktura. Kreditera raden i Fortnox.'],
     /* Fas 14.2c. Betalsidan kan ligga öppen medan passet avbokas, och
        betalas den efteråt drar Stripe pengarna ändå. Beloppet är det
        som inte gått tillbaka än. */
     betald_men_avbokad: ['Betalt men avbokat', 'Familjen har betalat ett pass som är avbokat. Villkoren lovar hela beloppet tillbaka: återbetala under Kortbetalningar.'],
     ej_utbetalt: ['Inte utbetalt', 'Klart för underlag, men månaden det hölls är slut.'],
     faktura_forfallen: ['Förfallen faktura', 'Skickad, obetald och efter förfallodagen.'],
-    faktura_gammalt_utkast: ['Faktura inte inlagd i Wint', 'Utkastet skapades för mer än en vecka sedan. Lägg in det i Wint under Fakturor.'],
+    faktura_gammalt_utkast: ['Faktura inte inlagd i Fortnox', 'Utkastet skapades för mer än en vecka sedan. Lägg in det i Fortnox under Fakturor.'],
     utbetalning_vantar: ['Utbetalning som väntar', 'Utkast eller godkänd, för en månad före förra.'],
     utbetalning_misslyckad: ['Misslyckad utbetalning', 'Pengarna gick inte iväg.'],
     timpenning_saknas: ['Ingen ersättning att räkna med', 'Studiehjälparen saknar timpenning och tjänsten saknar ersättning.'],
@@ -1109,7 +1111,7 @@
      skapar UTKAST. Ingenting skickas och ingenting betalas härifrån.
 
      En familj som valt faktura får ett utkast per månad, som läggs in
-     i Wint under Fakturor. Pass som hölls utan att familjen betalat
+     i Fortnox under Fakturor. Pass som hölls utan att familjen betalat
      med kort, och utan att de valt faktura, kommer tillbaka i svaret
      som `obetalda` och står här per familj, så att någon kan höra av
      sig. De faktureras inte av sig själva.
@@ -1151,7 +1153,7 @@
     if (fakturor.length) {
       h += fakturor.map(f => rad(esc(namnFör(f.parent_id)) + ' · ' + f.pass + ' pass',
         esc(kronor(f.belopp_ore)))).join('');
-      h += rad('Fakturor att lägga in i Wint, ' + fakturor.length + ' st', esc(kronor(summa(fakturor))), true);
+      h += rad('Fakturor att lägga in i Fortnox, ' + fakturor.length + ' st', esc(kronor(summa(fakturor))), true);
     }
 
     /* Per familj, för det är familjen man hör av sig till. Ingen
@@ -1181,7 +1183,7 @@
     if (d.skapade) {
       noter.push('Skapade: ' + d.skapade.utbetalningar + ' underlag'
         + (d.skapade.fakturor ? ' och ' + d.skapade.fakturor + (d.skapade.fakturor === 1 ? ' faktura' : ' fakturor') : '')
-        + ', alla som utkast.' + (d.skapade.fakturor ? ' Lägg in fakturorna i Wint under <a href="#ekonomi/fakturor">Fakturor</a>.' : ''));
+        + ', alla som utkast.' + (d.skapade.fakturor ? ' Lägg in fakturorna i Fortnox under <a href="#ekonomi/fakturor">Fakturor</a>.' : ''));
     }
     (d.problem || []).forEach(p => noter.push('⚠️ ' + esc(p)));
     if (!underlag.length && !fakturor.length && torr) noter.push('Inget underlag och ingen faktura att skapa för den här månaden.');
