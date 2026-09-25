@@ -2279,13 +2279,20 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .nx-page-hero.on-band .wrap{max-width:var(--w-bred);padding-inline:var(--m)}
 .nx-page-hero.on-band .nx-lede{color:var(--nt-mut)}
 .nx-page-hero.on-band .nx-back{color:var(--nt-mut)}
+/* Fotot står i samma spalt som texten ovanför, med samma marginal. Det
+   mörka sidhuvudet nollar sin egen padding för att barken ska gå kant
+   i kant, och fotot fick då full bredd upp till --w-bred: på varje
+   skärm smalare än 1440 px gick det från kant till kant (Leo
+   2026-09-25: "ska inte vara från kant till kant").
+
+   Det hänger inte heller ner i bandet längre. Det var tanken med en
+   negativ marginal, men .nx-page-hero har overflow:clip (home.css, för
+   dekorcirkelns skull), så överhänget skars alltid av rakt vid
+   sidhuvudets kant: nederkanten blev fyrkantig. Utan klippningen hade
+   fotot i stället täckt överkanten på rutan med fördelarna. */
 .nx-page-hero.on-band .nx-page-hero-foto{
-  max-width:var(--w-bred);margin-inline:auto;
-  margin-bottom:calc(clamp(40px,5.5vw,80px) * -1 - 40px);
-  position:relative;z-index:2;
-}
-@media (max-width:900px){
-  .nx-page-hero.on-band .nx-page-hero-foto{margin-bottom:-24px}
+  width:min(calc(100% - 2 * var(--m)), calc(var(--w-bred) - 2 * var(--m)));
+  margin-inline:auto;
 }
 
 .nx-back{
