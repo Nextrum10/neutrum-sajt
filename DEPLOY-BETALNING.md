@@ -383,7 +383,7 @@ kvar att köra innan ni rör en skarp nyckel, och innan spärren slås på (9.9)
 | Korttvisterna (`20260924125618_fas14_3_*.sql`) | **Applicerad.** Tabellen `stripe_tvister`, se 9.10 |
 | Faktura som betalsätt (`20260925120727_fas14_6_*.sql`) | **Applicerad, flaggan `faktura` AV.** Se 9.11 |
 | Test eller skarpt (`20260925121120_fas14_7_*.sql`) | **Applicerad.** `bookings.stripe_skarp`, `stripe_handelser.skarp` |
-| `stripe-checkout` | **ACTIVE**, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5). Fas 14.5: kassan öppnas i en panel på sidan (9.2). Fas 14.6: vägrar ett fakturapass |
+| `stripe-checkout` | **ACTIVE**, version 11, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5). Fas 14.5: kassan öppnas i en panel på sidan (9.2). Fas 14.6: vägrar ett fakturapass |
 | `stripe-webhook` | **ACTIVE**, version 8, `verify_jwt = false`. Fas 14.3: tvisterna sparas med sista svarsdag, orsak och utfall. Fas 14.7: avgiften ur `charge.updated`, läget ur `livemode`, och en betalning efter ett nekat kort tas emot |
 | `stripe-aterbetalning` | **ACTIVE**, version 6, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
 | `stripe-lage` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting. Fas 14.5: säger om den publicerbara nyckeln är satt och i samma läge som den hemliga |
@@ -401,7 +401,9 @@ git är ett skilt steg, och de två har glidit isär i det här projektet förut
 
 Fas 14.6–14.8 driftsattes 2026-09-25, och alla fem stripe-funktionerna,
 `fakturering`, `faktura-utskick`, `ekonomi`, `notis-ko`, `lead-notis` och
-`notis-avanmal` är lästa tillbaka fil för fil och lika med repot.
+`notis-avanmal` är lästa tillbaka fil för fil och lika med repot. Det hittade en
+glidning: `stripe-aterbetalning` hade legat ute med en `_delad/stripe.ts` från före
+Fas 14.3, utan tvistdelen. Den har dagens nu.
 
 ### 9.2 Nycklarna
 
