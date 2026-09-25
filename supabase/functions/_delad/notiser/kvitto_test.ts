@@ -3,9 +3,10 @@
 //
 // Kör med:  deno test supabase/functions/_delad/
 //
-// Kvittot är det enda mejl som går till någon utan konto, och det
-// enda som inte går att välja bort. Proven håller fast de tre saker
-// som gör det till ett transaktionsmejl och inte en notis:
+// Kvittot går till någon utan konto och går inte att välja bort
+// (beskeden till den som sökt jobb är samma sort, se ansokan_test.ts).
+// Proven håller fast de tre saker som gör det till ett
+// transaktionsmejl och inte en notis:
 //
 //   · ingen avregistreringslänk, för det finns inget att avregistrera
 //   · avsändaren är info@, för mejlet ber om svar
@@ -14,7 +15,7 @@
 
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import { KVITTO_FRAN, KVITTO_TEXT, SVAR_INOM_TIMMAR, renderaKvitto } from './kvitto.ts';
-import { KONTAKT, SAJT } from './rendera.ts';
+import { KONTAKT, LOGGA_URL, SAJT } from './rendera.ts';
 
 Deno.test('ämnesraden är den som står i beställningen', () => {
   assertEquals(renderaKvitto('Anna').amne, 'Tack för din intresseanmälan till Nextrum');
@@ -111,7 +112,9 @@ Deno.test('både HTML och ren text produceras, och HTML är ett helt dokument', 
   // Samma ram som notismejlen: logga, palett, ljust läge.
   assertStringIncludes(m.html, 'content="light only"');
   assertStringIncludes(m.html, '#9C4520');
-  assertEquals(m.html.includes('<img'), false);
+  // Loggan, och ingenting annat som hämtas utifrån (rendera_test.ts).
+  assertEquals((m.html.match(/<img\b/g) ?? []).length, 1);
+  assertStringIncludes(m.html, LOGGA_URL);
 });
 
 Deno.test('kvittot märks aldrig som ett prov', () => {

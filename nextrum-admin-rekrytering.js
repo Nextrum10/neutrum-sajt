@@ -147,17 +147,9 @@
       + 'Hälsningar,\nNextrum';
   }
 
-  function mallMöte(a) {
-    const tid = mötesText(a);
-    return 'Hej ' + (String(a.name || '').split(' ')[0] || '') + ',\n\n'
-      + 'Vad kul att du vill jobba hos oss. Vi ses '
-      + (tid ? tid.toLowerCase() : '(fyll i tiden)') + '.\n\n'
-      + (a.mote_lank ? 'Länk: ' + a.mote_lank + '\n\n' : '')
-      + 'Det tar ungefär en kvart och är ett samtal, inget prov. Vi vill höra hur du '
-      + 'förklarar saker och vilka ämnen du känner dig trygg i.\n\n'
-      + 'Passar inte tiden är det bara att svara på det här mejlet.\n\n'
-      + 'Hälsningar,\nNextrum';
-  }
+  /* Mötestiden har ingen mall längre. Sedan Fas 16.1 mejlar
+     databasen tid och länk själv när mötet sparas, och ett utkast i
+     samma stund hade blivit samma besked två gånger. */
 
   function mallUtbildning(a) {
     return 'Hej ' + (String(a.name || '').split(' ')[0] || '') + ',\n\n'
@@ -210,9 +202,66 @@
         .update({ [kolumn]: nu }).eq('id', id);
       if (error) { alert('Kunde inte spara: ' + felText(error)); return; }
       a[kolumn] = nu;
+      await hämtaBesked(id);
       ritaOm();
     });
   });
+
+  /* ============================================================
+     BESKEDEN TILL DEN SOM SÖKER (Fas 16.1)
+
+     Databasen mejlar den sökande själv vid varje steg framåt:
+     kvittot när ansökan kommer in, tid och länk när mötet bokas, ett
+     tack när mötet är hållet, en uppmaning att skapa konto när
+     introduktionen är klar och en välkomst vid Godkänd. Varje mejl
+     visar hela processen och var hen står. Ett nej mejlas aldrig av
+     sig självt — det skriver en människa.
+
+     Här visas utfallet, vid det steg som skickade mejlet. Ett mejl
+     som inte gick fram ser annars likadant ut som ett som gick:
+     ingenting händer i rutan, och den sökande väntar på ett besked
+     som aldrig kommer.
+     ============================================================ */
+  const BESKED = {
+    mottagen: 'Kvittot på ansökan',
+    mote: 'Mötestiden',
+    utbildning: 'Tack för mötet',
+    sista_steget: 'Skapa ditt konto',
+    valkommen: 'Välkomstmejlet'
+  };
+
+  /* Omförsöken ger upp efter tredje försöket eller efter ett dygn
+     (intern.ansokan_besked_igen). Därefter är det en människas tur. */
+  const DYGN = 24 * 3600 * 1000;
+
+  function besked(a, steg) {
+    const rad = (S.ansokanUtskick[a.id] || []).find(r => r.steg === steg);
+    if (!rad) return '';
+    const uppgett = rad.forsok >= 3 || Date.now() - new Date(rad.skapad).getTime() > DYGN;
+    const läge = {
+      skickad: '✓ mejlat ' + kortDatum(rad.uppdaterad),
+      vantar: uppgett ? 'har fastnat och skickas inte. Skriv själv.' : 'på väg',
+      skickar: uppgett ? 'har fastnat och skickas inte. Skriv själv.' : 'på väg',
+      fel: 'gick inte fram' + (rad.fel ? ' (' + rad.fel + ')' : '')
+        + (uppgett ? '. Försöker inte igen — skriv själv.' : '. Försöker igen om en stund.'),
+      bromsad: 'skickades inte' + (rad.fel ? ': ' + rad.fel : ''),
+      hoppad: 'skickades inte, beskedet hann bli inaktuellt'
+    }[rad.status] || rad.status;
+    const fel = rad.status === 'fel' || (uppgett && rad.status !== 'skickad'
+      && rad.status !== 'bromsad' && rad.status !== 'hoppad');
+    return '<div class="ans-steg-fakta' + (fel ? ' ar-fel' : '') + '"><b>' + esc(BESKED[steg])
+      + ':</b> ' + esc(läge) + '</div>';
+  }
+
+  /* Raden skrivs av triggern i samma transaktion som ändringen, så
+     den finns redan när svaret kommit. Utan en ny hämtning hade rutan
+     visat det gamla läget tills hela vyn hämtats om. */
+  async function hämtaBesked(id) {
+    const { data, error } = await supa.from('ansokan_utskick')
+      .select('ansokan_id, steg, status, forsok, fel, skapad, uppdaterad')
+      .eq('ansokan_id', id).order('skapad', { ascending: false });
+    if (!error) S.ansokanUtskick[id] = data || [];
+  }
 
   /* ============================================================
      REKRYTERINGSRUTAN (Fas 13.1)
@@ -231,8 +280,8 @@
      Den bokar inte i någon kalender. Google Workspace är inte
      kopplat (se INTEGRATIONER.md), och en knapp som ser ut att boka
      men bara skriver i vår egen databas är värre än en som säger vad
-     den gör: den sparar tiden och länken här, och öppnar mejlet där
-     den sökande faktiskt får dem.
+     den gör: den sparar tiden och länken här, och databasen mejlar
+     dem till den sökande (Fas 16.1).
      ============================================================ */
 
   /* Den öppna rutan, om någon är öppen. Stegknapparna nedan ritar om
@@ -292,30 +341,35 @@
       + '<div class="ans-spar-lista">'
 
       + spårSteg(1, 'Kontakt',
-          'Tacka för ansökan och föreslå tider. Utkastet öppnas i ditt mejlprogram '
-          + 'med din adress som avsändare, så att svaret kommer till dig.',
+          'Kvittot på ansökan har redan gått av sig självt. Här föreslår du tider för mötet: '
+          + 'utkastet öppnas i ditt mejlprogram med din adress som avsändare, så att svaret '
+          + 'kommer till dig.',
           a.kontaktad_at,
           '<button type="button" class="btn btn-ghost btn-sm" data-ans-kontakt="' + id + '">'
-          + (a.kontaktad_at ? 'Skriv igen' : 'Skriv till hen') + '</button>')
+          + (a.kontaktad_at ? 'Skriv igen' : 'Skriv till hen') + '</button>',
+          besked(a, 'mottagen'))
 
       + spårSteg(2, 'Digitalt möte',
           'En kvart över video. Det är ett samtal, inget prov — vi vill höra hur hen '
-          + 'förklarar saker och vilka ämnen hen är trygg i. Tiden och länken sparas här '
-          + 'så att de inte bara finns i en inkorg.',
+          + 'förklarar saker och vilka ämnen hen är trygg i. Tiden och länken mejlas till hen '
+          + 'när du sparar dem, och igen om du ändrar dem. "Mötet är hållet" mejlar ett tack '
+          + 'och säger att introduktionen är nästa steg.',
           a.intervju_at,
           '<button type="button" class="btn btn-ghost btn-sm" data-ans-mote="' + id + '">'
           + (a.mote_tid ? 'Ändra mötet' : 'Boka möte') + '</button>'
           + ' <button type="button" class="btn btn-ghost btn-sm" data-ans-steg="intervju:' + id + '">'
           + (a.intervju_at ? 'Ångra "mötet är hållet"' : 'Mötet är hållet') + '</button>',
-          möte
+          (möte
             ? '<div class="ans-steg-fakta"><b>Bokat:</b> ' + esc(möte)
               + (a.mote_lank ? '<br><b>Länk:</b> ' + esc(a.mote_lank) : '') + '</div>'
             : '')
+          + besked(a, 'mote') + besked(a, 'utbildning'))
 
       + spårSteg(3, 'Utbildning',
           'Introduktionen och provet. Det här steget är inte en artighet: en studiehjälpare '
           + 'som inte vet hur rapporten fungerar lämnar inga rapporter, och utan rapport blir '
-          + 'passet aldrig genomfört — varken fakturerat eller utbetalt.',
+          + 'passet aldrig genomfört — varken fakturerat eller utbetalt. "Markera utbildad" '
+          + 'mejlar hen och ber hen skapa ett konto med samma e-postadress.',
           a.utbildad_at,
           (utbLänk
             ? '<button type="button" class="btn btn-ghost btn-sm" data-ans-utb="' + id + '">'
@@ -323,7 +377,7 @@
             : '')
           + '<button type="button" class="btn btn-ghost btn-sm" data-ans-steg="utbildad:' + id + '">'
           + (a.utbildad_at ? 'Ångra "utbildad"' : 'Markera utbildad') + '</button>',
-          utbLänk
+          (utbLänk
             ? '<div class="ans-steg-fakta"><b>Länk:</b> ' + esc(utbLänk) + '</div>'
             /* Ingen länk satt. Knappen ritas inte alls — en knapp som
                mejlar en tom rad ser ut att fungera och gör det inte.
@@ -332,15 +386,27 @@
             : '<div class="ans-steg-fakta">Ingen utbildningslänk är satt. '
               + 'Lägg den i <code>UTBILDNING_URL</code> i nextrum-config.js, '
               + 'så går den att skicka härifrån.</div>')
+          + besked(a, 'sista_steget'))
 
       + spårSteg(4, 'In i poolen',
-          'Profilen blir godkänd och dyker upp i matchningen. Den sökande måste ha ett '
-          + 'konto på nextrum.se först — annars finns ingen profil att godkänna.',
+          'Profilen blir godkänd och dyker upp i matchningen, och hen får ett välkomstmejl. '
+          + 'Den sökande måste ha ett konto på nextrum.se först — annars finns ingen profil '
+          + 'att godkänna.',
           a.status === 'approved' ? (a.utbildad_at || a.created_at) : null,
           '<button type="button" class="btn btn-primary btn-sm" data-ans-pool="' + id + '">'
-          + 'Ta in i poolen</button>')
+          + 'Ta in i poolen</button>',
+          besked(a, 'valkommen'))
 
       + '</div>'
+      /* Det enda steget utan eget mejl, och det enda som inte står i
+         listan ovan. Därför här, där den som ska säga nej läser. */
+      + '<p class="xsmall" style="color:var(--muted-2);margin-top:12px;line-height:1.6">'
+      + 'Ett nej mejlas aldrig automatiskt. Sätts läget till Avböjd går ingenting ut, '
+      + 'så det mejlet skriver du själv.'
+      + (S.ansokanUtskickFel
+        ? ' Mejlstatusen gick inte att läsa: ' + esc(S.ansokanUtskickFel) + '.'
+        : '')
+      + '</p>'
       + '<div class="nx-fraga-knappar">'
       + '<button type="button" class="btn btn-ghost" data-as-stang>Stäng</button>'
       + '</div>';
@@ -388,8 +454,9 @@
 
     const svar = await fråga({
       titel: 'Boka digitalt möte med ' + (a.name || 'den sökande'),
-      text: 'Tiden och länken sparas på ansökan, och utkastet till den sökande öppnas '
-        + 'sedan i ditt mejlprogram. Ingen kalender bokas — Google Workspace är inte kopplat.',
+      text: 'Tiden och länken sparas på ansökan och mejlas till den sökande direkt. Ändrar du '
+        + 'dem senare går ett nytt mejl med den nya tiden. Ingen kalender bokas — Google '
+        + 'Workspace är inte kopplat.',
       innehåll: '<div class="ag-faltrad">'
         + '<div class="fgroup"><label for="mo-datum">Datum</label>'
         + '<input class="inp" id="mo-datum" type="date" value="'
@@ -401,13 +468,23 @@
         + '<div class="fgroup" style="margin-top:12px"><label for="mo-lank">Möteslänk</label>'
         + '<input class="inp" id="mo-lank" placeholder="https://meet.google.com/…" value="'
         + esc(a.mote_lank || '') + '"></div>',
-      knapp: 'Spara och skriv',
+      knapp: 'Spara och mejla',
       läs: r => {
         const datum = $('#mo-datum', r).value;
         const tid = $('#mo-tid', r).value;
         if (!datum) return { fel: 'Välj ett datum.' };
         if (!tid) return { fel: 'Välj en tid.' };
-        return { värde: { datum: datum, tid: tid, länk: $('#mo-lank', r).value.trim() } };
+        /* Ett möte som redan varit mejlas inte (triggern hoppar över
+           det), och en bokning som tyst inte blir något mejl är värre
+           än ett nej här. */
+        if (new Date(datum + 'T' + tid).getTime() <= Date.now()) {
+          return { fel: 'Tiden har redan varit. Är mötet hållet: klicka "Mötet är hållet" i stället.' };
+        }
+        const länk = möteslänk($('#mo-lank', r).value);
+        if (länk === false) {
+          return { fel: 'Länken ska vara en vanlig webbadress, till exempel https://meet.google.com/abc-defg-hij.' };
+        }
+        return { värde: { datum: datum, tid: tid, länk: länk } };
       }
     });
     if (!svar) return;
@@ -417,20 +494,33 @@
        ett möte klockan 17 blivit 19 på sommaren. */
     const när = new Date(svar.datum + 'T' + svar.tid);
     const { error } = await supa.from('applications')
-      .update({ mote_tid: när.toISOString(), mote_lank: svar.länk || null })
+      .update({ mote_tid: när.toISOString(), mote_lank: svar.länk })
       .eq('id', a.id);
     if (error) { alert('Kunde inte spara mötet: ' + felText(error)); return; }
     a.mote_tid = när.toISOString();
-    a.mote_lank = svar.länk || null;
+    a.mote_lank = svar.länk;
+    await hämtaBesked(a.id);
     ritaOm();
-
-    kontaktaRuta({
-      titel: 'Skicka mötestiden till ' + (a.name || a.email || ''),
-      namn: a.name, till: a.email,
-      amne: 'Vårt möte om din ansökan till Nextrum',
-      text: mallMöte(a)
-    });
   });
+
+  /* Möteslänken som den ska sparas: null om fältet är tomt, false om
+     den inte går att använda.
+
+     Mejlet gör bara en https-adress till en knapp (sakerLank() i
+     _delad/notiser/ansokan.ts). "meet.google.com/abc" utan schema
+     hade alltså gett ett mejl som säger att länken kommer senare,
+     trots att admin skrev den. Därför får den sitt https:// här, och
+     det mejlet ändå inte skulle visa nekas innan det sparas. */
+  function möteslänk(värde) {
+    let s = String(värde || '').trim();
+    if (!s) return null;
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) s = 'https://' + s;
+    let u;
+    try { u = new URL(s); } catch (e) { return false; }
+    if (u.protocol !== 'https:' || u.username || u.password
+        || u.hostname.indexOf('.') < 0 || s.length > 500) return false;
+    return u.href;
+  }
 
   /* ---- skicka utbildningen ---- */
   document.addEventListener('click', e => {
@@ -525,8 +615,8 @@
     ruta.innerHTML =
       '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="ap-t">'
       + '<h3 id="ap-t">Ta in ' + esc(ans.name || 'den sökande') + ' i poolen</h3>'
-      + '<p>Profilen blir godkänd och dyker upp i matchningen direkt. '
-      + 'Uppgifterna nedan kommer från ansökan — ändra det som behöver ändras.</p>'
+      + '<p>Profilen blir godkänd och dyker upp i matchningen direkt, och hen får ett '
+      + 'välkomstmejl. Uppgifterna nedan kommer från ansökan — ändra det som behöver ändras.</p>'
       + '<div class="fgroup"><label for="ap-konto">Konto</label>' + tutorVal(trolig && trolig.id) + '</div>'
       + '<div class="ag-faltrad" style="margin-top:12px">'
       + '<div class="fgroup"><label for="ap-amnen">Ämnen (kommaseparerat)</label>'

@@ -28,13 +28,25 @@
 // mejlprogram, och en länk till Google Fonts i ett mejl är en
 // spårningspixel vi inte vill skicka med.
 //
-// LOGGAN är text, inte en bild. SVG visas inte i Gmail eller Outlook,
-// och PNG:en som finns sedan loggan kopplades in för Google
-// (bilder/nextrum-logo-512.png) laddas inte i Outlook förrän
-// mottagaren tillåter bilder. En bild som inte laddar är sämre än
-// ingen bild: märket ritas därför som en tabellcell med ett N, och
-// ordet Nextrum bredvid. Loggan BREDVID avsändaren i inkorgen är en
-// annan sak och styrs inte härifrån — se DEPLOY-EPOST.md.
+// LOGGAN är den riktiga, som PNG (Fas 16.1). Förut ritades märket som
+// en tabellcell med ett N i systemtypsnittet, med motiveringen att en
+// bild som inte laddar är sämre än ingen bild. Men det var inte vår
+// logga: vårt N har en diagonal som skjuter ut under grundlinjen, och
+// ett Helvetica-N i en mörk ruta är ett annat märke som råkar likna.
+// Gmail och Apple Mail, där de flesta familjer läser, visar bilder
+// direkt.
+//
+// Där bilder är avstängda (Outlook på Windows, tills mottagaren
+// tillåter dem) står ordet Nextrum kvar bredvid, som text. Bilden har
+// därför alt="" och fasta mått: ett alt="Nextrum" hade blivit
+// "Nextrum Nextrum" för den som läser med skärmläsare, och utan mått
+// hoppar brevet när bilden väl laddar. SVG används inte — Gmail och
+// Outlook visar den inte alls.
+//
+// PNG:en ligger på nextrum.se sedan loggan kopplades in för Google
+// (bilder/nextrum-logo-512.png, undantagen i .gitignore). Byts loggan
+// ska den filen bytas, inte adressen här. Loggan BREDVID avsändaren i
+// inkorgen är en annan sak och styrs inte härifrån — se DEPLOY-EPOST.md.
 // ============================================================
 
 import { esc } from '../http.ts';
@@ -43,6 +55,7 @@ import { KATEGORI, MALLAR, type Innehall, type Mal } from './mallar.ts';
 
 export const SAJT = 'https://nextrum.se';
 export const KONTAKT = 'info@nextrum.se';
+export const LOGGA_URL = `${SAJT}/bilder/nextrum-logo-512.png`;
 
 const FARG = {
   botten: '#E5D8C2',  // --pap-2, lugn yta runt brevet
@@ -115,7 +128,16 @@ export type Ram = {
   provrad: string | null;
   /** En sista rad efter knappen, före foten. Notismejlen har ingen. */
   avslutning?: string | null;
+  /**
+   * Var mottagaren står i en process, steg för steg. Bara mejlen till
+   * den som sökt jobb har den (Fas 16.1): den som söker ska kunna se i
+   * varje mejl hur långt hen kommit, inte bara vad som hänt senast.
+   */
+  resa?: Resa | null;
 };
+
+export type Resesteg = { text: string; lage: 'klar' | 'nu' | 'kommer' };
+export type Resa = { rubrik: string; steg: Resesteg[] };
 
 function ramen(rad: MejlIn): Ram {
   const typ = rad.typ;
@@ -156,7 +178,15 @@ function text(r: Ram): string {
   if (r.provrad) t.push(r.provrad, '');
   t.push(r.halsning, '', i.rubrik, '', i.mening, '');
   if (i.fakta.length) t.push(...i.fakta.map(([k, v]) => `${k}: ${v}`), '');
-  t.push(`${i.knapp}:`, r.knappAdress, '');
+  // Ett mejl utan något att klicka på (ett möte utan länk) har ingen knapp.
+  if (i.knapp) t.push(`${i.knapp}:`, r.knappAdress, '');
+  if (r.resa) {
+    t.push(r.resa.rubrik);
+    for (const s of r.resa.steg) {
+      t.push(s.lage === 'klar' ? `[x] ${s.text}` : s.lage === 'nu' ? `[>] ${s.text}  <- du är här` : `[ ] ${s.text}`);
+    }
+    t.push('');
+  }
   if (r.avslutning) t.push(r.avslutning, '');
   // "-- " är signaturavgränsaren som mejlprogram känner igen.
   t.push('-- ', 'Nextrum', r.varfor);
@@ -193,12 +223,37 @@ function knappHtml(text: string, adress: string): string {
     + `</td></tr></table>`;
 }
 
+/* Stegen som en lista med en markör till vänster: bock för det som är
+   gjort, en fylld prick för där mottagaren står, en tom för det som
+   kommer. Det som är gjort dämpas och det som gäller nu är fett —
+   tyngden ska ligga på var man är, inte på det man redan klarat. */
+function resaHtml(resa: Resa): string {
+  const rader = resa.steg.map((s) => {
+    const markor = s.lage === 'klar' ? '&#10003;' : s.lage === 'nu' ? '&#9679;' : '&#9675;';
+    const farg = s.lage === 'nu' ? FARG.text : FARG.dampad;
+    const vikt = s.lage === 'nu' ? 700 : 400;
+    return `<tr><td width="22" style="width:22px;padding:4px 10px 4px 0;font:700 14px/1.5 ${SANS};`
+      + `color:${s.lage === 'kommer' ? FARG.linje : FARG.knapp};vertical-align:top">${markor}</td>`
+      + `<td style="padding:4px 0;font:${vikt} 14px/1.5 ${SANS};color:${farg}">${esc(s.text)}`
+      + (s.lage === 'nu' ? ` <span style="font-weight:400;color:${FARG.dampad}">&middot; du är här</span>` : '')
+      + `</td></tr>`;
+  }).join('');
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" `
+    + `style="border:1px solid ${FARG.linje};border-radius:12px;margin:22px 0 0">`
+    + `<tr><td style="padding:14px 20px 12px">`
+    + `<p style="margin:0 0 6px;font:600 12px/1.5 ${SANS};letter-spacing:.04em;text-transform:uppercase;`
+    + `color:${FARG.dampad}">${esc(resa.rubrik)}</p>`
+    + `<table role="presentation" cellpadding="0" cellspacing="0" border="0">${rader}</table>`
+    + `</td></tr></table>`;
+}
+
 function logga(): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>`
-    + `<td width="26" height="26" align="center" valign="middle" bgcolor="${FARG.text}" `
-    + `style="width:26px;height:26px;background:${FARG.text};border-radius:7px;`
-    + `font:700 15px/26px ${SANS};color:${FARG.papper};text-align:center">N</td>`
-    + `<td style="padding-left:10px;font:700 17px/26px ${SANS};letter-spacing:-.01em;color:${FARG.text}">`
+    + `<td width="32" height="32" valign="middle" style="width:32px;height:32px">`
+    + `<a href="${SAJT}" style="text-decoration:none">`
+    + `<img src="${LOGGA_URL}" width="32" height="32" alt="" `
+    + `style="display:block;width:32px;height:32px;border:0;outline:none"></a></td>`
+    + `<td style="padding-left:11px;font:700 19px/32px ${SANS};letter-spacing:-.01em;color:${FARG.text}">`
     + `<a href="${SAJT}" style="color:${FARG.text};text-decoration:none">Nextrum</a></td>`
     + `</tr></table>`;
 }
@@ -236,7 +291,8 @@ function html(r: Ram): string {
     + `${esc(i.rubrik)}</h1>`
     + p(i.mening, `font:400 16px/1.6 ${SANS};color:${FARG.brod};margin-bottom:22px`)
     + faktaHtml(i.fakta)
-    + knappHtml(i.knapp, r.knappAdress)
+    + (i.knapp ? knappHtml(i.knapp, r.knappAdress) : '')
+    + (r.resa ? resaHtml(r.resa) : '')
     + (r.avslutning
       ? `<p style="margin:18px 0 0;font:400 15px/1.6 ${SANS};color:${FARG.brod}">${esc(r.avslutning)}</p>`
       : '')
@@ -269,11 +325,12 @@ export function renderaMejl(rad: MejlIn): Renderat {
 /**
  * Samma ram, för ett mejl som inte kommer ur kön.
  *
- * Finns för transaktionsmejlen — i dag kvittot på en intresseanmälan,
- * som går till någon som ännu inte har ett konto och därför varken
- * har en rad i notis_val eller en token att signera. De ska ändå se
- * likadana ut som allt annat vi skickar: samma logga, samma palett,
- * samma knapp, samma textversion.
+ * Finns för transaktionsmejlen — kvittot på en intresseanmälan och
+ * mejlen till den som sökt jobb (ansokan.ts). De går till någon som
+ * ännu inte har ett konto och därför varken har en rad i notis_val
+ * eller en token att signera. De ska ändå se likadana ut som allt
+ * annat vi skickar: samma logga, samma palett, samma knapp, samma
+ * textversion.
  */
 export function renderaRam(r: Ram): Renderat {
   return { amne: r.innehall.amne, text: text(r), html: html(r) };

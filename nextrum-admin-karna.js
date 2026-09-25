@@ -34,6 +34,8 @@ const NXAdmin = (function () {
     elever: {},        // parent_id → [elevrader]
     tutorProfiler: {}, // id → tutor_profiles-rad
     leads: [], ansokningar: [], kontakt: [], bokningar: [], bibliotek: [],
+    /* Fas 16.1: mejlen till den som sökt jobb, per ansökan. */
+    ansokanUtskick: {}, ansokanUtskickFel: null,
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [], notisfel: [],
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
@@ -199,7 +201,7 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr] = await Promise.all([
+           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, ansUt] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -245,12 +247,24 @@ const NXAdmin = (function () {
          ser tabellen; för alla andra är svaret tomt. */
       supa.from('stripe_tvister').select('*').order('skapad', { ascending: false }),
       /* Fas 14.6: familjer som inte får välja faktura. */
-      supa.from('faktura_sparr').select('parent_id, satt_at')
+      supa.from('faktura_sparr').select('parent_id, satt_at'),
+      /* Fas 16.1: vilka besked den som sökt jobb har fått. Tabellen
+         bär ingen adress och ingen brödtext, bara steg och utfall.
+         Bara admin läser den. */
+      supa.from('ansokan_utskick').select('ansokan_id, steg, status, forsok, fel, skapad, uppdaterad')
+        .order('skapad', { ascending: false })
     ]);
 
     S.leads = leads.data || [];
     S.bibliotek = bib.data || [];
     S.ansokningar = ans.data || [];
+    /* Nyast först per ansökan, så att ett ombokat möte visar det
+       senaste mejlet och inte det första. */
+    S.ansokanUtskick = {};
+    (ansUt.data || []).forEach(r => {
+      (S.ansokanUtskick[r.ansokan_id] = S.ansokanUtskick[r.ansokan_id] || []).push(r);
+    });
+    S.ansokanUtskickFel = ansUt.error ? felText(ansUt.error) : null;
     S.kontakt = kontakt.data || [];
     S.bokningar = bok.data || [];
     S.fakturor = fakt.data || [];

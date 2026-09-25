@@ -1,8 +1,10 @@
 // ============================================================
 // NEXTRUM — kvittot på en intresseanmälan
 //
-// Det enda mejl vi skickar till någon som INTE har ett konto. Det gör
-// tre saker annorlunda än notismejlen, och alla tre är avsiktliga.
+// Ett av två slags mejl vi skickar till någon som INTE har ett konto.
+// Det andra är beskeden till den som sökt jobb (ansokan.ts, Fas 16.1),
+// som följer samma tre regler av samma skäl. De gör tre saker
+// annorlunda än notismejlen, och alla tre är avsiktliga.
 //
 //
 // 1. DET GÅR INTE ATT VÄLJA BORT
