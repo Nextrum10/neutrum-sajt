@@ -358,6 +358,7 @@
 
   function ritaKortbetalningar() {
     ritaKortsparr();
+    ritaErbjudandenAdmin();
     ritaAvstamning();
     /* Asynkron för rapporternas skull. Ett fel får inte lämna rutan på
        "Hämtar" — då ser det ut som att den fortfarande arbetar. */
@@ -386,7 +387,9 @@
       /* betalt_ore är ett kvitto och skrivs bara av webhooken. Innan
          den kommit står det begärda beloppet, märkt som det det är —
          annars hade en öppnad betalning sett ut som 0 kr betalt. */
-      { namn: 'Betalt', rita: b => b.betalt_ore != null
+      { namn: 'Betalt', rita: b => b.klippkort_id && b.betalt_ore == null
+        ? '<span class="adm-und">med timmar</span>'
+        : b.betalt_ore != null
         ? '<span class="adm-tal">' + esc(kronor(b.betalt_ore)) + '</span>'
         : b.begart_ore
           ? '<span class="adm-und">begärt ' + esc(kronor(b.begart_ore)) + '</span>'
@@ -482,6 +485,96 @@
       const { data } = await supa.from('flaggor').select('*').eq('kod', 'kortsparr').maybeSingle();
       if (data) S.kortsparr = data;
       ritaKortsparr();
+    });
+  });
+
+  /* ============================================================
+     ERBJUDANDEN (Fas 16.1)
+
+     Strömbrytaren och köpen. Flaggan står av tills provbetalningen gått
+     igenom och stripe-webhook är driftsatt i den version som känner
+     igen ett köpt klippkort (vantar_pa säger det). Att stänga av är
+     nödbromsen och frågar inte: redan köpta timmar går fortfarande att
+     se, men inte att köpa nya eller dra från.
+
+     "Om de slutar i dag" är vad villkoren lovar: de använda timmarna
+     räknade till ordinarie pris, resten tillbaka. Beloppet räknas i
+     klippkort_saldo; här visas det bara. Återbetalningen görs i Stripes
+     dashboard, och webhooken stänger kortet när den kommer.
+
+     INOM ÅNGERFRISTEN gäller ett annat belopp (Fas 16.1e): den som
+     ångrar sig betalar en andel av det AVTALADE priset, alltså det
+     rabatterade, för det som hunnit användas. Att visa ordinariebeloppet
+     de första fjorton dagarna hade varit att be om pengar lagen inte ger
+     oss. Vilket av dem som gäller avgörs av dagens datum mot
+     angerfrist_till.
+     ============================================================ */
+  const KK_LAGE = { vantar: 'Obetalt', betald: 'Betalt', misslyckad: 'Misslyckades',
+    aterbetald: 'Återbetalt', tvist: 'Tvist' };
+
+  function ritaErbjudandenAdmin() {
+    const host = $('#erb-flagga'), lista = $('#erb-kop');
+    if (!host || !lista) return;
+    const f = S.erbFlagga;
+    if (!f) {
+      host.innerHTML = tomt('Erbjudandenas läge gick inte att läsa',
+        S.kortsparrFel || 'Raden erbjudanden saknas i flaggor. Kör migrationen för Fas 16.1.');
+    } else {
+      host.innerHTML = '<div class="adm-koppling-kort">'
+        + '<h6>Planer och klippkort ' + (f.aktiv ? pill('Går att köpa', 'ar-klar') : pill('Av', '')) + '</h6>'
+        + '<p>' + esc(f.beskrivning || '') + '</p>'
+        + (!f.aktiv && f.vantar_pa ? '<div class="adm-krav">Ska vara avgjort först: ' + esc(f.vantar_pa) + '</div>' : '')
+        + '<p class="xsmall" style="color:var(--bl-3);margin-top:10px">Ändrad ' + esc(kortDatum(f.uppdaterad)) + '</p>'
+        + '<div style="margin-top:12px"><button class="btn ' + (f.aktiv ? 'btn-ghost' : 'btn-primary')
+        + ' btn-sm" type="button" data-erbflagga="' + (f.aktiv ? '0' : '1') + '">'
+        + (f.aktiv ? 'Stäng av' : 'Slå på') + '</button></div>'
+        + '</div>';
+    }
+
+    // Ett köp som aldrig betalades är en kassa som stängdes, inte ett köp.
+    const kop = (S.klippkort || []).filter(k => k.status !== 'vantar' && k.status !== 'misslyckad');
+    $('#erb-kop-antal').textContent = kop.length ? kop.length + ' köp' : '';
+    if (S.klippkortFel) { lista.innerHTML = tomt('Köpen gick inte att läsa', S.klippkortFel); return; }
+    lista.innerHTML = tabell([
+      { namn: 'Köp', rita: k => '<b>' + esc(k.namn) + '</b><span class="adm-und">' + esc(kortDatum(k.betald_at || k.created_at)) + '</span>' },
+      { namn: 'Familj', rita: k => esc(namnFör(k.parent_id)) },
+      { namn: 'Timmar', rita: k => '<span class="adm-tal">' + esc(String(k.kvar)) + ' av ' + esc(String(k.timmar)) + '</span>'
+        + '<span class="adm-und">kvar</span>' },
+      { namn: 'Gäller till', rita: k => esc(kortDatum(k.giltigt_till)) },
+      { namn: 'Betalt', rita: k => (k.betalt_ore != null ? '<span class="adm-tal">' + esc(kronor(k.betalt_ore)) + '</span>' : '—')
+        + (Number(k.aterbetald_ore || 0) > 0 ? '<span class="adm-und">' + esc(kronor(k.aterbetald_ore)) + ' tillbaka</span>' : '') },
+      { namn: 'Om de slutar i dag', rita: k => {
+        if (k.status !== 'betald') return '';
+        const ånger = k.angerfrist_till && String(k.angerfrist_till) >= isoFor(new Date());
+        return '<span class="adm-tal">' + esc(kronor((ånger ? k.vid_anger_ore : k.vid_uppsagning_ore) || 0)) + '</span>'
+          + '<span class="adm-und">' + (ånger ? 'tillbaka · ångerrätt t.o.m. ' + esc(kortDatum(k.angerfrist_till)) : 'tillbaka') + '</span>';
+      } },
+      { namn: 'Läge', höger: true, rita: k => '<span class="adm-tal">' + esc(KK_LAGE[k.status] || k.status) + '</span>' }
+    ], kop, 'Inga köpta planer eller klippkort än');
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-erbflagga]');
+    if (!knapp) return;
+    const på = knapp.dataset.erbflagga === '1';
+    const f = S.erbFlagga || {};
+    if (på) {
+      const ja = await bekräfta({
+        titel: 'Öppna erbjudandena?',
+        text: 'Från och med nu kan familjerna köpa planer och klippkort i studievyn, och betala bekräftade pass med sina timmar. '
+          + 'Köpet går genom Stripe och blir betalt först när webhooken tagit emot det.',
+        forhandsvisning: f.vantar_pa ? 'Det här skulle vara avgjort först:\n\n' + f.vantar_pa : null,
+        knapp: 'Slå på'
+      });
+      if (!ja) return;
+    }
+    await medan(knapp, på ? 'Slår på…' : 'Stänger av…', async () => {
+      const { error } = await supa.from('flaggor').update({ aktiv: på }).eq('kod', 'erbjudanden');
+      if (error) { alert('Kunde inte ändra erbjudandena: ' + felText(error)); return; }
+      // Läses tillbaka, som spärren: en nekad uppdatering ger noll rader, inget fel.
+      const { data } = await supa.from('flaggor').select('*').eq('kod', 'erbjudanden').maybeSingle();
+      if (data) S.erbFlagga = data;
+      ritaErbjudandenAdmin();
     });
   });
 

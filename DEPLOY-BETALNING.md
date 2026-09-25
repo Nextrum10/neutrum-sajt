@@ -841,3 +841,84 @@ skrivs om från en vy.
 
 **De sex gamla obetalda passen** (bokade när villkoren lovade månadsfaktura) kan bli
 den första riktiga fakturan: bytet till `faktura` går också på ett genomfört pass.
+
+### 9.12 Planer och klippkort (Fas 16.1)
+
+Familjen kan köpa timmar i förväg: två planer för en månad (4 och 8 timmar, 10 %
+rabatt) och klippkort med 10, 20, 30, 60 eller 100 timmar (5 % rabatt, gäller 6, 6,
+6, 12 och 18 månader). Timmarna betalar sedan ett bekräftat pass i stället för
+kortet. Databasen är körd (`fas16_1` till `fas16_1e`), och flaggan `erbjudanden`
+står AV. Då syns erbjudandena med sina priser på prissidan och i studievyn, men
+knapparna säger "Snart", och inga timmar går att dra.
+
+**Var saker räknas, och bara där:**
+
+| Vad | Var |
+|---|---|
+| Priset | `erbjudanden_pris`. Timpriset med rabatt, nedåt till hel krona, gånger timmarna (16.1d). Prissidan, studievyn och `stripe-checkout` läser samma rad |
+| Timmar kvar | `klippkort_saldo.kvar`, ur passen som bär `klippkort_id`. Ett avbokat pass räknas inte, så timmarna kommer tillbaka av sig själva |
+| Att dra timmar | `klippkort_dra()`, bara `service_role`, anropad av `klippkort-betala` efter att familjens token prövats |
+| Pengar tillbaka | `klippkort_saldo.vid_anger_ore` inom ångerfristen, `vid_uppsagning_ore` efter den. Adminvyn väljer efter datumet |
+
+**Driftsätt i den här ordningen:**
+
+```
+supabase functions deploy stripe-webhook
+supabase functions deploy stripe-checkout
+supabase functions deploy klippkort-betala
+```
+
+Webhooken FÖRST. Den gamla känner inte igen ett köpt klippkort: sessionen har
+`klippkort_id` i metadata och inget pass, och en betalning den inte kan knyta till
+något blir en betald rad hos Stripe och ett kort som står på `vantar` för alltid.
+`klippkort-betala` anropas av en inloggad förälder och ska ha JWT-kravet kvar; den
+står därför inte i `config.toml`.
+
+**Prova, i testläge, innan flaggan slås på.** Sätt notisernas sandlåda först.
+
+1. Slå på flaggan under Ekonomi → Kortbetalningar → Erbjudanden, med en testfamilj
+   inloggad i en annan flik.
+2. Köp Klippkort 10 timmar med testkortet `4242 4242 4242 4242`. Raden i
+   `klippkort` ska bli `betald` med `stripe_skarp = false`, `giltigt_till` sex
+   månader fram och `stripe_charge_id` satt.
+3. Låt en studiehjälpare bekräfta ett pass på en timme. Familjen ska se "Betala med
+   timmar" först. Tryck; passet ska bli `betald` med `klippkort_id` satt och
+   `betalt_ore` tomt, och kortet ska ha 9 timmar kvar.
+4. Avboka passet som admin. `betalning_status` ska bli `ingen` (16.1c, annars larmar
+   `betald_men_avbokad` om pengar som aldrig drogs), och kortet ska ha 10 timmar igen.
+5. Återbetala en del av köpet i Stripes dashboard. Kortet ska bli `aterbetald` och
+   inte längre gå att dra från.
+6. Står något av det fel: stäng av flaggan. Redan köpta timmar syns fortfarande,
+   men inget nytt går att köpa eller dra.
+
+**Pengar tillbaka görs i Stripes dashboard, av en människa.** Beloppet står under
+Erbjudanden i adminvyn, kolumnen "Om de slutar i dag":
+
+- **Inom 14 dagar från köpet gäller ångerrätten.** De använda timmarna räknas som
+  en andel av det familjen BETALADE, inte till 379 kr. Lagen om distansavtal 2 kap.
+  15 § ger oss en proportionell andel av det avtalade priset och inte mer, så
+  regeln "använda timmar till ordinarie pris" gäller inte här. Kolumnen visar
+  då `vid_anger_ore` och säger sista dagen.
+- **Efter fristen** räknas de använda timmarna till ordinarie timpris vid köpet
+  (`klippkort.timpris_ore`, inte dagens pris: det är prisgarantin i villkoren).
+- **Varje återbetalning stänger kortet**, också en delvis. Betala alltså bara
+  tillbaka när familjen slutar, ångrar sig, eller för en timme som gick förlorad
+  när kortet löpte ut för att vi eller studiehjälparen avbokat för sent. Det sista
+  lovar villkoren, och ingen kod upptäcker det: läs passen på kortet när en familj
+  hör av sig.
+
+**Kvar, och inget av det sköter koden:**
+
+- **Familjen kan inte avboka ett pass de betalat med timmar själva.** Det är samma
+  spärr som för ett kortbetalt pass (`skydda_bokningsfalt`), och villkoren säger att
+  de kontaktar oss. Med klippkort är det onödigt strängt, för inga pengar ska
+  tillbaka: timmarna återkommer av sig själva. Att släppa igenom det kräver en
+  ändring i `skydda_bokningsfalt`, som Fas 14.6 skrev om, och gjordes därför inte
+  här.
+- **Timmar som löpt ut förfaller.** Ingen påminnelse går ut innan. En notis en vecka
+  före `giltigt_till` är en ny notistyp (DEPLOY-NOTISER.md har de fem stegen), och
+  för planerna, som gäller en månad, är det skillnaden mellan en nöjd familj och
+  en som känner sig lurad på en timme.
+- **Planerna säger "ett pass i veckan", men ingenting håller dem till det.** En plan
+  är fyra eller åtta timmar som gäller en månad. Hur de bokas är familjens sak.
+- **Startererbjudandet** (se 9.7) gäller fortfarande inte något av detta.

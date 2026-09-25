@@ -57,7 +57,9 @@ Två siffror och ett löfte står på många ställen samtidigt: 379 kr/tim,
 69 kr/tim fast tillägg för flera barn (tak tre, alltså 448 för tre barn,
 inte 517), och att familjen betalar varje pass med kort, före passet:
 ett pass som inte är betalt hålls inte. Studiehjälparen får betalt den
-25:e. Belopp lagras i ören överallt.
+25:e. Belopp lagras i ören överallt. Planerna och klippkorten (Fas 16.1)
+prissätts bara i vyn `erbjudanden_pris`, och inom ångerfristen räknas
+använda timmar till det betalda priset, inte till 379 kr.
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.

@@ -61,10 +61,11 @@
 // hade glidit isär från den första, precis som de sju esc() gjorde.
 // ============================================================
 
-import { kravInloggad, serviceklient } from '../_delad/auth.ts';
+import { type Inloggad, kravInloggad, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
 import { StripeError, v1, VALUTA } from '../_delad/stripe.ts';
 import { familjebelopp, radtext, standardTjanst, type Tjanst } from '../_delad/pris.ts';
+import { arErbjudandekod, type ErbjudandePris, kanAteranvandas, kassarad } from '../_delad/erbjudanden.ts';
 
 const CORS = cors();
 
@@ -137,6 +138,128 @@ function descriptor(s: string): string {
   return rent.slice(0, 10).trim() || 'LAXHJALP';
 }
 
+/* ============================================================
+   ETT ERBJUDANDE (Fas 16.1): en plan eller ett klippkort
+
+   Samma kassa som för ett pass, men köpet är en rad i klippkort, inte
+   ett pass. Tre saker skiljer:
+
+   · PRISET LÄSES UR erbjudanden_pris, med den inloggades token — samma
+     vy som prissidan och studievyn visar. Anropet säger bara VILKET
+     erbjudande; beloppet kommer aldrig därifrån.
+   · RADEN SKAPAS FÖRE KASSAN, med service_role, som 'vantar'. Ingen
+     familj kan skriva i klippkort (ingen skrivpolicy), och webhooken
+     hittar köpet genom metadata.klippkort_id.
+   · FLAGGAN erbjudanden måste vara på. Den står av tills
+     provbetalningen gått igenom och stripe-webhook är driftsatt i den
+     här versionen: en äldre webhook kvitterar ett köpt klippkort som
+     "utan pass-id", med pengarna dragna.
+
+   Inget client_reference_id: webhooken läser det som ett pass-id.
+   ============================================================ */
+async function köpErbjudande(
+  vem: Inloggad,
+  kropp: { retur?: string; ui?: string; erbjudande?: string },
+): Promise<Response> {
+  const kod = String(kropp.erbjudande ?? '').trim();
+  if (!arErbjudandekod(kod)) return json({ error: 'Vilket erbjudande?' }, 400, CORS);
+
+  const db = serviceklient();
+  const { data: flagga } = await db.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle();
+  if (!flagga?.aktiv) {
+    return json({ error: 'Erbjudandena går inte att köpa än. Skriv till oss, så ordnar vi det.' }, 409, CORS);
+  }
+
+  // Den inloggade och priset läses med den inloggades egen token.
+  const { data: prof } = await vem.klient
+    .from('profiles').select('email, role').eq('id', vem.anvandare).maybeSingle();
+  if (!prof || prof.role !== 'parent') {
+    return json({ error: 'Erbjudandena köps av familjen.' }, 403, CORS);
+  }
+  const { data: e } = await vem.klient
+    .from('erbjudanden_pris')
+    .select('kod, sort, namn, timmar, rabatt_procent, giltig_manader, timpris_ore, pris_ore')
+    .eq('kod', kod)
+    .maybeSingle();
+  if (!e || !(Number(e.pris_ore) > 0)) return json({ error: 'Erbjudandet finns inte.' }, 404, CORS);
+
+  try {
+    /* Trycker familjen Köp två gånger ska det bli ETT köp. Ett väntande
+       köp av samma erbjudande, till samma pris och yngre än ett dygn,
+       återanvänds — och därmed samma idempotensnyckel hos Stripe. */
+    const { data: forut } = await db.from('klippkort')
+      .select('id, begart_ore, created_at')
+      .eq('parent_id', vem.anvandare).eq('erbjudande', kod).eq('status', 'vantar')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    let kopId: string;
+    if (kanAteranvandas(forut, Number(e.pris_ore))) {
+      kopId = String(forut!.id);
+    } else {
+      const { data: ny, error: nyfel } = await db.from('klippkort').insert({
+        parent_id: vem.anvandare,
+        erbjudande: e.kod,
+        namn: e.namn,
+        sort: e.sort,
+        timmar: e.timmar,
+        giltig_manader: e.giltig_manader,
+        rabatt_procent: e.rabatt_procent,
+        timpris_ore: e.timpris_ore,
+        begart_ore: e.pris_ore,
+      }).select('id').single();
+      if (nyfel || !ny) return json({ error: 'Köpet gick inte att spara. Försök igen.' }, 500, CORS);
+      kopId = String(ny.id);
+    }
+
+    const bas = egenAdress(kropp.retur, 'https://nextrum.se');
+    const pk = kropp.ui === 'inbaddad' ? publicerbarNyckel() : null;
+    const inbaddad = pk !== null;
+    const efter = inbaddad
+      ? { ui_mode: 'embedded', redirect_on_completion: 'if_required',
+          return_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden` }
+      : { success_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden`,
+          cancel_url: `${bas}/foralder#erbjudanden` };
+
+    const rad = kassarad(e as ErbjudandePris);
+    const session = await v1('POST', '/v1/checkout/sessions', {
+      mode: 'payment',
+      locale: 'sv',
+      ...efter,
+      // Samma två val som för ett pass, av samma skäl: se Deno.serve.
+      payment_method_types: ['card'],
+      managed_payments: { enabled: false },
+      customer_email: prof.email ?? undefined,
+      metadata: { klippkort_id: kopId, erbjudande: e.kod },
+      line_items: [{
+        quantity: 1,
+        price_data: { currency: VALUTA, unit_amount: e.pris_ore, product_data: rad },
+      }],
+      payment_intent_data: {
+        metadata: { klippkort_id: kopId, erbjudande: e.kod },
+        statement_descriptor_suffix: descriptor(String(e.namn)),
+        receipt_email: prof.email ?? undefined,
+      },
+    }, `nextrum-klippkort-${kopId}-${e.pris_ore}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
+
+    await db.from('klippkort')
+      .update({ stripe_session_id: String((session as { id?: string }).id ?? '') })
+      .eq('id', kopId);
+
+    const svar = { session: (session as { id?: string }).id, belopp_ore: e.pris_ore, klippkort: kopId };
+    return inbaddad
+      ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
+               nyckel: pk, ...svar }, 200, CORS)
+      : json({ lage: 'sida', url: (session as { url?: string }).url ?? null, ...svar }, 200, CORS);
+  } catch (fel) {
+    if (fel instanceof StripeError) {
+      console.error('stripe-checkout: Stripe nekade erbjudandet', JSON.stringify({ erbjudande: kod, ...fel.fel }));
+      return json({ error: 'Stripe nekade: ' + fel.fel.meddelande, stripe: fel.fel }, 502, CORS);
+    }
+    console.error('stripe-checkout: fel i erbjudandet', JSON.stringify({ erbjudande: kod, fel: (fel as Error)?.message ?? String(fel) }));
+    return json({ error: (fel as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight(CORS);
   if (req.method !== 'POST') return json({ error: 'Bara POST.' }, 405, CORS);
@@ -145,12 +268,15 @@ Deno.serve(async (req) => {
   const vem = await kravInloggad(req.headers.get('authorization'));
   if (!vem.ok) return vem.svar;
 
-  let kropp: { pass?: string; retur?: string; ui?: string } = {};
+  let kropp: { pass?: string; retur?: string; ui?: string; erbjudande?: string } = {};
   try {
     kropp = await req.json();
   } catch {
     return json({ error: 'Kroppen är inte JSON.' }, 400, CORS);
   }
+  // Ett erbjudande (Fas 16.1) är ett eget köp, inte ett pass.
+  if (kropp.erbjudande !== undefined) return await köpErbjudande(vem, kropp);
+
   const passId = String(kropp.pass ?? '').trim();
   if (!passId) return json({ error: 'Vilket pass?' }, 400, CORS);
 

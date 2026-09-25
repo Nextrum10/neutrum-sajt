@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8 och 9)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14 och 16)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -27,8 +27,8 @@
 --
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
--- Fas 14.2–14.6, Fas 15.1–15.4 och Fas 16.1 (ansökningsmejlen,
--- 16.1–16.1c) är körda.
+-- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
+-- 16.1–16.1c) och Fas 16.1 (erbjudandena, 16.1–16.1e) är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -2975,6 +2975,190 @@ select pg_temp.prova('16.1 inte en inloggad heller', '00000000-0000-4000-8000-00
 select pg_temp.prova('16.1 och ingen kan markera ett besked skickat', '00000000-0000-4000-8000-0000000000ad',
   array[$q$select public.ansokan_besked_klar('00000000-0000-4000-8000-000000000000', true, null, null, false)$q$],
   'nekad');
+
+-- ============================================================
+-- FAS 16.1 — planer och klippkort
+--
+-- Katalogen och priset läses av alla, också anon (prissidan). Köpen
+-- läses bara av familjen själv och admin, och skrivs av ingen utom
+-- service_role: ingen skrivpolicy, som payouts. Timmarna dras bara i
+-- klippkort_dra(), som bara service_role når. Proven som drar timmar
+-- körs därför som postgres i egna block, och rullas tillbaka där.
+--
+-- EGNA FIXTURER: ett barn, två pass om sex dagar (ett med ett barn,
+-- ett med två) och ett betalt klippkort på tio timmar.
+-- ============================================================
+insert into public.students (id, parent_id, name, matched_tutor_id, match_status, created_at) values
+  ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000f1', 'Klippkortsprov',
+   '00000000-0000-4000-8000-0000000000a1', 'matched', now());
+
+insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn) values
+  ('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date + 6, '09:00', 60, 'confirmed', 1),
+  ('00000000-0000-4000-8000-00000000b16b', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date + 6, '11:00', 60, 'confirmed', 2);
+
+insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                              timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id) values
+  ('00000000-0000-4000-8000-00000000c16a', '00000000-0000-4000-8000-0000000000f1', 'klipp10', 'Klippkort 10 timmar',
+   'klippkort', 10, 6, 5, 37900, 360000, 360000, 'betald',
+   ((now() at time zone 'Europe/Stockholm')::date + interval '6 months')::date, now(), 'ch_rlsprov_16_1');
+
+-- ---------- katalogen och priset ----------
+select pg_temp.rakna('16.1 anon läser samma priser som databasen', null,
+  'select count(*) from public.erbjudanden_pris', (select count(*) from public.erbjudanden_pris));
+
+select pg_temp.rakna('16.1 anon ser minst en plan och ett klippkort', null,
+  $q$select count(distinct sort) from public.erbjudanden_pris$q$, 2);
+
+select pg_temp.rakna('16.1d summan är timpriset gånger timmarna', null,
+  'select count(*) from public.erbjudanden_pris where pris_ore <> timmar * rabatterat_timpris_ore', 0);
+
+select pg_temp.prova('16.1 familjen ändrar inte katalogen', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.erbjudanden set rabatt_procent = 50 where kod = 'klipp10'$q$],
+  'nekad');
+
+-- ---------- köpen ----------
+select pg_temp.rakna('16.1 anon läser inga köp', null,
+  'select count(*) from public.klippkort', 0);
+
+select pg_temp.prova('16.1 anon når inte saldot', null,
+  array['select * from public.klippkort_saldo'],
+  'nekad');
+
+select pg_temp.rakna('16.1 familj P ser sitt kort', '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from public.klippkort_saldo where id = '00000000-0000-4000-8000-00000000c16a'$q$, 1);
+
+select pg_temp.rakna('16.1 familj Q ser inte P:s kort', '00000000-0000-4000-8000-0000000000f2',
+  'select count(*) from public.klippkort_saldo', 0);
+
+select pg_temp.rakna('16.1 studiehjälparen ser inga köp', '00000000-0000-4000-8000-0000000000a1',
+  'select count(*) from public.klippkort', 0);
+
+select pg_temp.rakna('16.1 admin ser kortet', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from public.klippkort_saldo where id = '00000000-0000-4000-8000-00000000c16a'$q$, 1);
+
+select pg_temp.prova('16.1 familjen skapar inget kort själv', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.klippkort (parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                         timpris_ore, begart_ore, status, giltigt_till)
+          values ('00000000-0000-4000-8000-0000000000f1', 'klipp100', 'x', 'klippkort', 100, 18, 5,
+                  37900, 100, 'betald', current_date + 500)$q$],
+  'nekad');
+
+select pg_temp.prova('16.1 familjen ändrar inte sitt kort', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.klippkort set timmar = 100 where id = '00000000-0000-4000-8000-00000000c16a'$q$],
+  'nekad');
+
+-- ---------- timmarna dras bara av systemet ----------
+select pg_temp.prova('16.1 familjen drar inga timmar själv', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1')$q$],
+  'nekad');
+
+select pg_temp.prova('16.1 familjen sätter inte kortet på ett pass', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set klippkort_id = '00000000-0000-4000-8000-00000000c16a'
+          where id = '00000000-0000-4000-8000-00000000b16a'$q$],
+  'nekad');
+
+-- Kontrollprovet visar att förslaget annars går igenom, så att provet
+-- efter det nekas för klippkortets skull och inte för något annat.
+select pg_temp.prova('16.1 kontroll: familjen föreslår ett pass', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000f1',
+                  (now() at time zone 'Europe/Stockholm')::date + 10, '10:00', 60, 'requested')$q$],
+  'ok');
+
+select pg_temp.prova('16.1 familjen föreslår inget pass som redan bär ett kort', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, klippkort_id)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000f1',
+                  (now() at time zone 'Europe/Stockholm')::date + 10, '10:00', 60, 'requested',
+                  '00000000-0000-4000-8000-00000000c16a')$q$],
+  'nekad');
+
+select pg_temp.prova_med('16.1 familjen avbokar inte ett pass betalt med timmar',
+  array[$q$select public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1')$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-00000000b16a'$q$],
+  'nekad');
+
+-- Dragningen, avbokningen och pengarna tillbaka, i ett block som postgres.
+do $$
+declare
+  svar jsonb; kvar1 int; st1 text; kk1 uuid; bo1 int;
+  kvar2 int; st2 text; larm int;
+  anger int; uppsag int; frist date;
+  fel text;
+begin
+  begin
+    svar := public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    select kvar, vid_anger_ore, vid_uppsagning_ore, angerfrist_till into kvar1, anger, uppsag, frist
+      from public.klippkort_saldo where id = '00000000-0000-4000-8000-00000000c16a';
+    select betalning_status, klippkort_id, betalt_ore into st1, kk1, bo1
+      from public.bookings where id = '00000000-0000-4000-8000-00000000b16a';
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-00000000b16a';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select kvar into kvar2 from public.klippkort_saldo where id = '00000000-0000-4000-8000-00000000c16a';
+    select betalning_status into st2 from public.bookings where id = '00000000-0000-4000-8000-00000000b16a';
+    select count(*) into larm from public.avvikelser_rader()
+     where typ = 'betald_men_avbokad' and objekt_id = '00000000-0000-4000-8000-00000000b16a';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('16.1 dragningen', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('16.1 systemet drar en timme för ett pass på en timme',
+     (svar->>'ok')::boolean is true and kvar1 = 9, 'svar ' || svar::text || ', kvar ' || kvar1),
+    ('16.1 passet blir betalt med kortet, utan kortbelopp',
+     st1 = 'betald' and kk1 = '00000000-0000-4000-8000-00000000c16a' and bo1 is null,
+     'status ' || st1 || ', betalt_ore ' || coalesce(bo1::text, 'null')),
+    ('16.1e inom fristen räknas timmen till det betalda priset',
+     anger = 360000 - 36000, 'vid_anger_ore ' || anger),
+    ('16.1e efter fristen räknas timmen till ordinarie pris',
+     uppsag = 360000 - 37900, 'vid_uppsagning_ore ' || uppsag),
+    ('16.1e fristen är fjorton dagar från köpet',
+     frist = (now() at time zone 'Europe/Stockholm')::date + 14, 'angerfrist_till ' || frist),
+    ('16.1 admin avbokar: timmen kommer tillbaka', kvar2 = 10, 'kvar ' || kvar2),
+    ('16.1c ett avbokat klippkortspass är inte betalt', st2 = 'ingen', 'status ' || st2),
+    ('16.1c och larmar inte som betalt men avbokat', larm = 0, 'rader: ' || larm);
+end $$;
+
+-- Det dragningen vägrar. Varje svar är ett besked, inte ett fel.
+do $$
+declare
+  tva jsonb; annan jsonb; utgangen jsonb; tvist jsonb; fel text;
+begin
+  begin
+    tva := public.klippkort_dra('00000000-0000-4000-8000-00000000b16b', '00000000-0000-4000-8000-0000000000f1');
+    annan := public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f2');
+    update public.klippkort set giltigt_till = (now() at time zone 'Europe/Stockholm')::date - 1
+     where id = '00000000-0000-4000-8000-00000000c16a';
+    utgangen := public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    update public.klippkort set giltigt_till = (now() at time zone 'Europe/Stockholm')::date + 30, status = 'tvist'
+     where id = '00000000-0000-4000-8000-00000000c16a';
+    tvist := public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('16.1 dragningen vägrar', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('16.1 ett pass med två barn betalas inte med timmar', tva ? 'fel', tva::text),
+    ('16.1 en annan familj betalar inte passet med sina timmar', annan ? 'fel', annan::text),
+    ('16.1 ett kort som gått ut drar inget', utgangen ? 'fel', utgangen::text),
+    ('16.1 ett kort i tvist drar inget', tvist ? 'fel', tvist::text);
+end $$;
 
 select test, ok, detalj from utfall order by nr;
 

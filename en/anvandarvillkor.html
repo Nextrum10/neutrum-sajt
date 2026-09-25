@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=12b72e9c">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=f3f0446e">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=619f3441">
 </head>
 <body>
 
@@ -183,11 +183,52 @@
       <li>The hourly price is shown on the <a href="/en/priser">pricing page</a>, and the price that applies is the one shown at the time of booking.</li>
       <li>Each session is paid for separately, by card, once the tutor has confirmed the time.
         Payment must be made before the session starts. A session that has not been paid is not held.</li>
+      <li>If you have bought hours in advance, in a plan or as prepaid hours, a confirmed session
+        can be paid with them instead. See <a href="#erbjudanden">Plans and prepaid hours</a> below.</li>
       <li>Card payments are handled by Stripe. You give your card details directly to Stripe, never
         to us, and we do not store them.</li>
       <li>No registration fee, no monthly fee and no minimum term. You pay for the sessions you
-        book, nothing else.</li>
+        book and for hours you have chosen to buy in advance, nothing else.</li>
     </ul>
+
+    <!-- Fas 16.1. Vilka planer och klippkort som finns och vad de
+         kostar står på prissidan, ur vyn erbjudanden_pris. Här står
+         bara reglerna, så att en ändrad rabatt inte lämnar kvar en
+         siffra i villkoren som kassan inte tar. Återbetalningen räknas
+         i klippkort_saldo: vid_uppsagning_ore efter ångerfristen och
+         vid_anger_ore inom den, för inom fristen säger 2 kap. 15 §
+         distansavtalslagen att bara en andel av det AVTALADE priset
+         får behållas (Fas 16.1e). -->
+    <h2 id="erbjudanden">Plans and prepaid hours</h2>
+    <p>You can buy hours in advance at a lower price: a plan for one month, or prepaid hours.
+      What is available and what it costs is shown on the <a href="/en/priser#erbjudanden">pricing page</a>. It is a
+      one-off purchase, by card. It is not a subscription and does not renew by itself.</p>
+    <ul>
+      <li><b>How long the hours are valid.</b> A plan is valid for one month from the purchase.
+        10, 20 or 30 prepaid hours are valid for 6 months, 60 hours for 12 months and 100
+        hours for 18 months. The last day is shown in your view.</li>
+      <li><b>How the hours are used.</b> When the tutor has confirmed a session, you pay for it
+        with your hours instead of by card. Each started hour of the session uses one hour.
+        The hours cover sessions with one child; a session with more children is paid by card.</li>
+      <li><b>Cancelling.</b> You cancel a session paid with hours by contacting us, like other
+        paid sessions. The hours then come back and stay valid until the same day as before.
+        If an hour is lost because we or the tutor cancelled too late for you to use it, we
+        refund it at the price you paid.</li>
+      <li><b>Stopping.</b> If you want to stop before the hours are used, we refund what is left.
+        The hours you have already used are then counted at the regular hourly price, since the
+        discount applies because you buy all the hours. During the first 14 days after the
+        purchase, the <a href="#angerratt">right of withdrawal</a> applies instead, and the hours
+        used are then counted at the price you paid.</li>
+      <li><b>Hours that have not been used.</b> Hours left when the period has ended expire. Get
+        in touch before then if you will not have time to use them, and we refund the rest as
+        described in the point above.</li>
+    </ul>
+
+    <h2 id="prisgaranti">Price guarantee</h2>
+    <p>What you paid for a plan or prepaid hours is the price for all the hours in it. If we raise
+      the hourly price in the meantime, the hours you have already bought do not cost more, and
+      you never pay a difference. If you stop, the hours used are counted at the regular hourly
+      price that applied when you bought them, not at a later, higher one.</p>
 
     <!-- Lagen om distansavtal (2005:59), 2 kap. Informationen är ett
          krav i sig: saknas den förlängs ångerfristen med upp till tolv
@@ -210,13 +251,17 @@
         therefore asking us to hold the session even though the period has not yet ended. If you
         withdraw after the session has started, you pay for the part that has taken place. A
         session that has been fully held cannot be withdrawn from.</li>
+      <li>If you buy a plan or prepaid hours, the same right of withdrawal applies, counted from
+        the day of purchase. If you withdraw, we refund what you paid, except for the hours
+        already used. Those are counted at the hourly price you paid for the plan or the prepaid
+        hours, not at the regular price.</li>
     </ul>
     <div class="jur-ruta">
       <p><b>Withdrawal form</b></p>
       <p>To Nextrum (Leo Constantinos Thriskos and Alexandar Jovanovic), Mönsteråsgränd 4,
         122 42 Enskede, Sweden, info@nextrum.se:</p>
       <p>I hereby give notice that I withdraw from my contract for the following service: …<br>
-        Booked on: …<br>
+        Booked or bought on: …<br>
         Name: …<br>
         Address: …<br>
         Signature (only if this form is sent on paper): …<br>
@@ -251,8 +296,10 @@
       is written here. Nothing in these terms limits them.</p>
 
     <h2>Ending the agreement</h2>
-    <p>You can stop whenever you like. Paid sessions that have not taken place are refunded. We
-      may close an account that breaches these terms, and will say why.</p>
+    <p>You can stop whenever you like. Paid sessions that have not taken place are refunded, and
+      hours left in a plan or prepaid hours are refunded as described under
+      <a href="#erbjudanden">Plans and prepaid hours</a>. We may close an account that breaches
+      these terms, and will say why.</p>
 
     <h2>Changes</h2>
     <p>We may change these terms. We give at least 30 days’ notice of material changes to those who
@@ -400,7 +447,7 @@
 <script src="../nextrum-config.js?v=86b7287b"></script>
 <script src="../nextrum-images.js?v=50260f9d"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=a8185e00"></script>
+<script src="../nextrum-app.js?v=f81a0750"></script>
 <script src="../nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

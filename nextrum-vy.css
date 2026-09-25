@@ -1720,3 +1720,50 @@ a.pass-lank:hover{color:var(--acc)}
   .nx-nval{flex-direction:column;align-items:flex-start;gap:10px}
   .nx-nval .chip{width:100%}
 }
+
+/* ============================================================
+   ERBJUDANDEN (Fas 16.1)
+   Planer och klippkort som kort i ett rutnät, och familjens egna
+   timmar som en mätare. minmax(0,1fr), inte 1fr: ett kort med en lång
+   rad hade annars fått spalten att växa ut ur skärmen på en telefon
+   (CLAUDE.md avsnitt 3, fälla 2).
+   ============================================================ */
+.erb-grid{
+  display:grid;gap:12px;
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));
+}
+.erb-kort{
+  position:relative;
+  display:flex;flex-direction:column;gap:6px;
+  border:1px solid var(--ln);border-radius:20px;
+  background:var(--pap);
+  padding:18px 18px 16px;
+}
+.erb-kort.ar-framhavd{border-color:var(--acc-line);background:var(--acc-soft)}
+.erb-topp{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.erb-namn{font-size:1.05rem;letter-spacing:-.02em;color:var(--bl)}
+.erb-rabatt{
+  font-family:var(--f-mono);font-size:10.5px;font-weight:600;letter-spacing:.06em;
+  color:var(--acc-text);border:1px solid var(--acc-line);border-radius:100px;padding:2px 8px;
+}
+.erb-vad{font-size:.84rem;color:var(--bl-2)}
+.erb-pris{display:flex;align-items:baseline;gap:8px;margin-top:6px;flex-wrap:wrap}
+.erb-pris s{font-size:.88rem;color:var(--muted-2)}
+.erb-pris b{font-size:1.45rem;letter-spacing:-.03em;color:var(--bl)}
+.erb-tim{font-size:.78rem;line-height:1.45;color:var(--bl-2)}
+.erb-tim s{color:var(--muted-2)}
+.erb-kort .btn{margin-top:10px;align-self:flex-start}
+
+.erb-eget p{font-size:.92rem;line-height:1.6;color:var(--bl-2);margin:6px 0 14px;max-width:60ch}
+.erb-finstilt{font-size:.78rem;line-height:1.55;color:var(--muted-2);margin:2px 4px 0}
+.erb-finstilt a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+
+.erb-mitt + .erb-mitt{margin-top:16px;padding-top:16px;border-top:1px solid var(--ln)}
+.erb-mitt-topp{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.erb-mitt-topp b{color:var(--bl)}
+.erb-mitt-topp span{font-size:.82rem;color:var(--bl-2)}
+.erb-matare{height:8px;border-radius:100px;background:var(--pap-3);margin:10px 0 8px;overflow:hidden}
+.erb-matare i{display:block;height:100%;border-radius:inherit;background:var(--mossa)}
+.erb-kvar{font-size:.84rem;color:var(--bl-2)}
+.erb-kvar b{color:var(--bl);font-size:1rem}
+.erb-mitt.ar-slut{opacity:.6}

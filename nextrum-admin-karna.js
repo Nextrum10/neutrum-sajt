@@ -201,11 +201,11 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, ansUt] = await Promise.all([
+           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
-      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp').order('wanted_date', { ascending: false }),
+      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, klippkort_id').order('wanted_date', { ascending: false }),
       /* Raderna följer med (Fas 14.6): de är underlaget admin lägger in
          i Wint, och vilket pass som står på vilken faktura. */
       supa.from('invoices').select('*, invoice_lines(id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)')
@@ -242,12 +242,16 @@ const NXAdmin = (function () {
          Kortbetalningar, där det den styr också syns. */
       /* Fas 14.6: och strömbrytaren för faktura som betalsätt, samma
          sort. Båda i en fråga. */
-      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'faktura']),
+      /* Fas 16.1: och erbjudandena, samma sort. */
+      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'faktura', 'erbjudanden']),
       /* Fas 14.3: korttvisterna, med sista dagen att svara. Bara admin
          ser tabellen; för alla andra är svaret tomt. */
       supa.from('stripe_tvister').select('*').order('skapad', { ascending: false }),
       /* Fas 14.6: familjer som inte får välja faktura. */
       supa.from('faktura_sparr').select('parent_id, satt_at'),
+      /* Fas 16.1: köpta planer och klippkort, med timmarna räknade i
+         databasen och vad som går tillbaka om familjen slutar i dag. */
+      supa.from('klippkort_saldo').select('*').order('created_at', { ascending: false }),
       /* Fas 16.1: vilka besked den som sökt jobb har fått. Tabellen
          bär ingen adress och ingen brödtext, bara steg och utfall.
          Bara admin läser den. */
@@ -285,6 +289,9 @@ const NXAdmin = (function () {
     S.kortsparr = (flaggor.data || []).find(f => f.kod === 'kortsparr') || null;
     S.kortsparrFel = flaggor.error ? felText(flaggor.error) : null;
     S.fakturaFlagga = (flaggor.data || []).find(f => f.kod === 'faktura') || null;
+    S.erbFlagga = (flaggor.data || []).find(f => f.kod === 'erbjudanden') || null;
+    S.klippkort = kk.data || [];
+    S.klippkortFel = kk.error ? felText(kk.error) : null;
     S.fakturaSparr = new Set((fsparr.data || []).map(r => r.parent_id));
     S.fakturaSparrFel = fsparr.error ? felText(fsparr.error) : null;
     /* Ett läsfel är inte "inga tvister": rutan säger att den inte
