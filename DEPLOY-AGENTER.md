@@ -19,7 +19,7 @@ formalia. Den söker och läser bara primärkällor — riksdagen, Svensk
 författningssamling, lagrummet, IMY, Arbetsmiljöverket, Skatteverket,
 Konsumentverket, ARN, EUR-Lex. Frågor utanför de sex områdena avvisas.
 
-**`ekonomi`** läser bolagets egna siffror och Fortnox, slår upp vad
+**`ekonomi`** läser bolagets egna siffror, slår upp vad
 Skatteverket och Bokföringsnämnden säger, och lämnar förslag. Den bokför
 ingenting och deklarerar ingenting. Alla verktyg den har är läsande.
 
@@ -69,6 +69,8 @@ databas; filnamnet är det enda som skiljer dem åt.)
 
 Det lägger till fyra tabeller: `agent_korningar`, `agent_steg`,
 `foretagsfakta` och `fortnox_token`. Inget befintligt ändras.
+(`fortnox_token` togs bort i Fas 14.8, när bokföringen flyttade till
+Wint. Den var tom.)
 
 ## 2. Fyll i bolagsfakta
 
@@ -90,8 +92,6 @@ sig till, och egentligen inte en ni ska gissa er till heller.
 supabase secrets set ANTHROPIC_API_KEY=din-nyckel
 ```
 
-Fortnox väntar tills steg 6. Utan de secretsen svarar `las_fortnox` med
-"Fortnox är inte kopplat", vilket är precis vad den ska göra.
 
 ## 4. Deploya
 
@@ -151,53 +151,20 @@ källor det vilade på.
 
 ---
 
-## Fortnox
+## Bokföringen
 
-`las_fortnox` gör bara GET, och bara mot en fast lista vägar. Det finns
-ingen kod i funktionen som kan skriva till Fortnox. Det är avsiktligt: en
-felaktig post i en bokföring går inte att ångra, bara att rätta med ett
-nytt verifikat och en förklaring till revisorn.
+`ekonomi` hade till Fas 14.8 ett verktyg, `las_fortnox`, som läste
+Fortnox. Fortnox kopplades aldrig, och bokföringen sköts i Wint, som
+inte är kopplat hit (`INTEGRATIONER.md` säger varför). Verktyget är
+borta, och agenten läser bara det som finns i databasen. Fyll i
+`bokforingssystem` i bolagsfakta med `wint`, så att agenten vet var
+verifikaten finns när den svarar.
 
-### Koppla på
-
-1. Skapa en integration på `fortnox.se/developer`. Du får ett Client ID och
-   ett Client Secret.
-2. Kör auktoriseringen enligt Fortnox egen guide på
-   `fortnox.se/developer/authorization`. Du loggar in som er Fortnox-kund och
-   godkänner integrationen, och får tillbaka en engångskod i redirect-adressen.
-3. Byt koden mot tokens:
-
-```
-curl -X POST https://apps.fortnox.se/oauth-v1/token \
-  -u "CLIENT_ID:CLIENT_SECRET" \
-  -d "grant_type=authorization_code" \
-  -d "code=KODEN_DU_FICK" \
-  -d "redirect_uri=DIN_REDIRECT_URI"
-```
-
-4. Lägg in svaret i `fortnox_token`, raden med id 1: `access_token`,
-   `refresh_token`, och `gar_ut` en timme fram i tiden.
-5. Sätt secrets:
-
-```
-supabase secrets set FORTNOX_CLIENT_ID=... FORTNOX_CLIENT_SECRET=...
-```
-
-### En sak som kommer att bita er
-
-**Fortnox refresh_token byts vid varje förnyelse och dör efter 45 dagar
-utan användning.** Funktionen sparar den nya automatiskt. Men används
-agenten inte på sex veckor är kopplingen död och någon får göra om steg 2
-till 4 för hand.
-
-Kör ni agenten en gång i kvartalet håller den alltså inte sig själv vid
-liv. Vill ni slippa det: lägg ett schemalagt anrop en gång i veckan som
-bara läser `settings/company`, så räcker det.
-
-Får ni 401 från Fortnox med en token som borde vara giltig är det oftast
-för att integrationen är registrerad för den äldre autentiseringen med
-`Access-Token` och `Client-Secret` som separata headrar. Kolla
-integrationens inställningar hos Fortnox innan du ändrar i koden.
+Står `FORTNOX_CLIENT_ID` och `FORTNOX_CLIENT_SECRET` (eller
+`FORTNOX_KLIENT_ID`, `FORTNOX_KLIENT_HEMLIGHET` och
+`FORTNOX_REFRESH_TOKEN`) kvar bland secrets: ta bort dem. Ingen kod
+läser dem längre, och en hemlighet ingen använder är en hemlighet ingen
+märker om den läcker.
 
 ---
 

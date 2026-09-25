@@ -27,7 +27,7 @@
 --
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
--- Fas 14.2–14.3 och Fas 15.1–15.4 är körda.
+-- Fas 14.2–14.6 och Fas 15.1–15.4 är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -993,11 +993,19 @@ select pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
 select public.kor_kontrollerna();
 reset role;
 
+-- Bara raderna den här körningen skapade (created_at sätts till now()
+-- av triggern, och now() är transaktionens tid). Adminvyns knapp "Gör
+-- till uppgift" på en avvikelse skriver samma nyckelform, och en sådan
+-- rad ÄR en människas: den står rätt som 'manniska'. Provet räknade
+-- förut hela tabellen och föll på den första riktiga knapptryckningen
+-- i driften (2026-09-25).
 insert into utfall (test, ok, detalj)
 select '7.4 adminknappen stämplar maskinens uppgifter som system',
        count(*) > 0 and bool_and(skapad_av_typ = 'system' and skapad_av is null),
        'uppgifter: ' || count(*) || ', typer: ' || coalesce(string_agg(distinct skapad_av_typ, ','), 'inga')
-from public.uppgifter where nyckel like 'kontroll:%' or nyckel like 'avvikelse:%' or nyckel like 'uppfoljning:%';
+from public.uppgifter
+where (nyckel like 'kontroll:%' or nyckel like 'avvikelse:%' or nyckel like 'uppfoljning:%')
+  and created_at = now();
 
 -- En avbruten uppgift är ett svar: "det här tänker vi inte göra".
 -- Kommer den tillbaka nästa körning är knappen Avbryt utan verkan.
@@ -1162,7 +1170,9 @@ select '9.2 det finns en DELETE-policy för admin på material',
        count(*) = 1, coalesce(string_agg(policyname, ', '), 'ingen')
 from pg_policies
 where schemaname = 'storage' and tablename = 'objects' and cmd = 'DELETE'
-  and qual like '%is_admin()%' and qual like '%material%';
+  -- Hinkens namn med citattecken: bibliotekets policy (Fas 13.2) nämner
+  -- tabellen biblioteksmaterial och is_admin(), och räknades förut med.
+  and qual like '%is_admin()%' and qual like '%''material''%';
 
 select pg_temp.rakna('9.2 admin uppfyller villkoret', '00000000-0000-4000-8000-0000000000ad',
   $q$select count(*) from storage.objects
@@ -2489,6 +2499,333 @@ select pg_temp.prova('14.3 admin raderar ingen korttvist', '00000000-0000-4000-8
 select pg_temp.prova('14.3 familjen skapar ingen korttvist', '00000000-0000-4000-8000-0000000000f1',
   array[$q$insert into public.stripe_tvister (id, booking_id, charge_id, lage)
           values ('dp_rlsTest3', '00000000-0000-4000-8000-00000000b4c1', 'ch_rlsTest3', 'won')$q$], 'nekad');
+
+-- ============================================================
+-- FAS 14.6a — ett nytt pass föds obetalt
+--
+-- INSERT-grenen i skydda_bokningsfalt prövade status, närvaro, längd,
+-- tjänst och barn, men inte en enda betalningskolumn. En familj kunde
+-- skapa ett pass som redan stod 'betald': det slapp spärren, larmade
+-- aldrig som ej_betalt och kom med på studiehjälparens underlag den
+-- 25:e. Samma sak för studiehjälparens "föreslå tid". Proven skapar
+-- passet precis som vyerna gör, med en betalningskolumn till.
+-- ============================================================
+select pg_temp.prova('14.6a familjen skapar ett pass som redan är betalt', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst,
+                                        wanted_date, wanted_time, duration_min, status,
+                                        betalning_status, betald_at, betalt_ore)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+                  'Svenska', 'laxhjalp', (now() at time zone 'Europe/Stockholm')::date + 4, '16:00', 60,
+                  'requested', 'betald', now(), 37900)$q$],
+  'nekad');
+
+select pg_temp.prova('14.6a studiehjälparen föreslår ett pass som redan är betalt', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst,
+                                        wanted_date, wanted_time, duration_min, status, betalning_status)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  'Svenska', 'laxhjalp', (now() at time zone 'Europe/Stockholm')::date + 4, '17:00', 60,
+                  'requested', 'betald')$q$],
+  'nekad');
+
+select pg_temp.prova('14.6a familjen skapar ett pass med ett påhittat Stripe-id', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst,
+                                        wanted_date, wanted_time, duration_min, status, stripe_charge_id)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+                  'Svenska', 'laxhjalp', (now() at time zone 'Europe/Stockholm')::date + 4, '18:00', 60,
+                  'requested', 'ch_rlsPahittad')$q$],
+  'nekad');
+
+select pg_temp.prova('14.6a familjen skapar ett pass med ett återbetalt belopp', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst,
+                                        wanted_date, wanted_time, duration_min, status, aterbetald_ore)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+                  'Svenska', 'laxhjalp', (now() at time zone 'Europe/Stockholm')::date + 4, '19:00', 60,
+                  'requested', 100)$q$],
+  'nekad');
+
+-- Betalningen skrivs av webhooken med service_role, där auth.uid() är
+-- null. Den vägen ska gå, och den ska synas i auditloggen: förut
+-- fanns ingen betalningsändring där alls, varken från Stripe eller
+-- från en admin som skrev 'betald' för hand.
+do $$
+declare
+  fore bigint; efter bigint; senast jsonb; fel text;
+begin
+  begin
+    select count(*) into fore from public.audit_logg
+     where tabell = 'bookings' and objekt_id = '00000000-0000-4000-8000-00000000b4c1';
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = 37900
+     where id = '00000000-0000-4000-8000-00000000b4c1';
+    select count(*) into efter from public.audit_logg
+     where tabell = 'bookings' and objekt_id = '00000000-0000-4000-8000-00000000b4c1';
+    select a.efter into senast from public.audit_logg a
+     where a.tabell = 'bookings' and a.objekt_id = '00000000-0000-4000-8000-00000000b4c1'
+     order by a.id desc limit 1;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('14.6a betalningen i auditloggen', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('14.6a en betalning blir en rad i auditloggen', efter - fore = 1, fore || ' → ' || efter),
+      ('14.6a raden bär läget', senast ->> 'betalning_status' = 'betald',
+       coalesce(senast::text, 'ingen rad'));
+  end if;
+end $$;
+
+-- ============================================================
+-- FAS 14.6 — faktura som betalsätt
+--
+-- Familjen väljer faktura på ett pass, eller kort igen, och ingenting
+-- annat i samma skrivning. Flaggan 'faktura' är strömbrytaren och står
+-- av i drift; proven som vill ha den på slår på den i sin egen
+-- deltransaktion, och provet med den av slår av den uttryckligen.
+--
+-- EGNA FIXTURER, av samma skäl som under FAS 14.2: de äldre passen har
+-- hunnit ändras av blocken ovan.
+-- ============================================================
+insert into public.students (id, parent_id, name, matched_tutor_id, match_status, created_at) values
+  ('00000000-0000-4000-8000-0000000005f6', '00000000-0000-4000-8000-0000000000f1', 'Fakturaprov',
+   '00000000-0000-4000-8000-0000000000a1', 'matched', now());
+
+insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status) values
+  -- bekräftat, om fem dagar
+  ('00000000-0000-4000-8000-00000000b6c1', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005f6', '00000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date + 5, '09:00', 60, 'confirmed'),
+  -- bekräftat, igår, ingen rapport (för spärren)
+  ('00000000-0000-4000-8000-00000000b6d1', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005f6', '00000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date - 1, '09:00', 60, 'confirmed'),
+  -- genomfört förra månaden, med rapport, obetalt (för avvikelserna och fakturan)
+  ('00000000-0000-4000-8000-00000000b6e1', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005f6', '00000000-0000-4000-8000-0000000000f1',
+   (date_trunc('month', now() at time zone 'Europe/Stockholm') - interval '10 days')::date, '09:00', 60, 'completed');
+
+insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro) values
+  ('00000000-0000-4000-8000-00000000e6e1', '00000000-0000-4000-8000-0000000005f6',
+   '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-00000000b6e1', 'fixtur',
+   (date_trunc('month', now() at time zone 'Europe/Stockholm') - interval '10 days')::date, 'narvarande');
+update public.bookings set status = 'completed' where id = '00000000-0000-4000-8000-00000000b6e1';
+
+-- ---------- valet ----------
+select pg_temp.prova_med('14.6 flaggan av: familjen kan inte välja faktura',
+  array[$q$update public.flaggor set aktiv = false where kod = 'faktura'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  'nekad');
+
+select pg_temp.prova_med('14.6 flaggan på: familjen väljer faktura på ett bekräftat pass',
+  array[$q$update public.flaggor set aktiv = true where kod = 'faktura'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  'ok');
+
+select pg_temp.prova_med('14.6 familjen väljer faktura medan kassan står öppen',
+  array[$q$update public.flaggor set aktiv = true where kod = 'faktura'$q$,
+        $q$update public.bookings set betalning_status = 'vantar' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  'ok');
+
+select pg_temp.prova_med('14.6 familjen väljer faktura på ett genomfört obetalt pass',
+  array[$q$update public.flaggor set aktiv = true where kod = 'faktura'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6e1'$q$],
+  'ok');
+
+select pg_temp.prova_med('14.6 ett betalt pass kan inte bli fakturapass',
+  array[$q$update public.flaggor set aktiv = true where kod = 'faktura'$q$,
+        $q$update public.bookings set betalning_status = 'betald' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  'nekad');
+
+select pg_temp.prova_med('14.6 en spärrad familj kan inte välja faktura',
+  array[$q$update public.flaggor set aktiv = true where kod = 'faktura'$q$,
+        $q$insert into public.faktura_sparr (parent_id) values ('00000000-0000-4000-8000-0000000000f1')$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  'nekad');
+
+select pg_temp.prova_med('14.6 studiehjälparen väljer inte betalsätt åt familjen',
+  array[$q$update public.flaggor set aktiv = true where kod = 'faktura'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  'nekad');
+
+select pg_temp.prova_med('14.6 valet får inte ändra något annat i samma skrivning',
+  array[$q$update public.flaggor set aktiv = true where kod = 'faktura'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set betalning_status = 'faktura', duration_min = 180
+          where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  'nekad');
+
+select pg_temp.prova('14.6 familjen kan inte skriva betald själv', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set betalning_status = 'betald' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  'nekad');
+
+select pg_temp.prova_med('14.6 familjen byter tillbaka till kort innan passet fakturerats',
+  array[$q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set betalning_status = 'ingen' where id = '00000000-0000-4000-8000-00000000b6c1'$q$],
+  'ok');
+
+select pg_temp.prova_med('14.6 ett fakturerat pass går inte att byta till kort',
+  array[$q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6e1'$q$,
+        $q$insert into public.invoices (id, parent_id, period, status, belopp_ore)
+           values ('00000000-0000-4000-8000-00000000f6a1', '00000000-0000-4000-8000-0000000000f1',
+                   date_trunc('month', now() at time zone 'Europe/Stockholm')::date, 'utkast', 37900)$q$,
+        $q$insert into public.invoice_lines (invoice_id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)
+           values ('00000000-0000-4000-8000-00000000f6a1', '00000000-0000-4000-8000-00000000b6e1', 'x', 60, 37900, 37900)$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set betalning_status = 'ingen' where id = '00000000-0000-4000-8000-00000000b6e1'$q$],
+  'nekad');
+
+-- ---------- vad familjen får veta ----------
+select pg_temp.prova('14.6 anon frågar inte om faktura', null,
+  array[$q$select public.faktura_mojlig()$q$], 'nekad');
+
+do $$
+declare av boolean; pa boolean; sparrad boolean; fel text;
+begin
+  begin
+    update public.flaggor set aktiv = false where kod = 'faktura';
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    select public.faktura_mojlig() into av;
+    reset role;
+    update public.flaggor set aktiv = true where kod = 'faktura';
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    select public.faktura_mojlig() into pa;
+    reset role;
+    insert into public.faktura_sparr (parent_id) values ('00000000-0000-4000-8000-0000000000f1');
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    select public.faktura_mojlig() into sparrad;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('14.6 faktura_mojlig', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('14.6 faktura_mojlig är falsk när flaggan är av', av is false, coalesce(av::text, 'null')),
+      ('14.6 faktura_mojlig är sann när flaggan är på', pa is true, coalesce(pa::text, 'null')),
+      ('14.6 faktura_mojlig är falsk för en spärrad familj', sparrad is false, coalesce(sparrad::text, 'null'));
+  end if;
+end $$;
+
+select pg_temp.prova('14.6 familjen spärrar inte en annan familj', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.faktura_sparr (parent_id) values ('00000000-0000-4000-8000-0000000000f2')$q$],
+  'nekad');
+
+select pg_temp.prova_med('14.6 familjen tar inte bort sin egen spärr',
+  array[$q$insert into public.faktura_sparr (parent_id) values ('00000000-0000-4000-8000-0000000000f1')$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$delete from public.faktura_sparr where parent_id = '00000000-0000-4000-8000-0000000000f1'$q$],
+  'nekad');
+
+select pg_temp.prova('14.6 admin spärrar en familj', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into public.faktura_sparr (parent_id) values ('00000000-0000-4000-8000-0000000000f2')$q$],
+  'ok');
+
+-- ---------- spärren "ingen betalning, inget pass" ----------
+select pg_temp.prova_med('14.6 spärren på: ett fakturapass går att rapportera',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+        $q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6d1'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+          values ('00000000-0000-4000-8000-0000000005f6', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b6d1', 'x', current_date, 'narvarande')$q$,
+        $q$select 1 from public.bookings where id = '00000000-0000-4000-8000-00000000b6d1' and status = 'completed'$q$],
+  'ok');
+
+-- Samma pass som kortpass: undantaget får inte ha öppnat spärren.
+select pg_temp.prova_med('14.6 spärren på: ett obetalt kortpass nekas fortfarande',
+  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+          values ('00000000-0000-4000-8000-0000000005f6', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b6d1', 'x', current_date, 'narvarande')$q$],
+  'nekad');
+
+-- ---------- avvikelserna ----------
+do $$
+declare ej_betalt_fore int; ej_betalt_efter int; saknas int; dubbel int; fel text;
+begin
+  begin
+    select count(*) into ej_betalt_fore from public.avvikelser_rader()
+     where typ = 'ej_betalt' and objekt_id = '00000000-0000-4000-8000-00000000b6e1';
+    update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6e1';
+    select count(*) into ej_betalt_efter from public.avvikelser_rader()
+     where typ = 'ej_betalt' and objekt_id = '00000000-0000-4000-8000-00000000b6e1';
+    select count(*) into saknas from public.avvikelser_rader()
+     where typ = 'faktura_saknas' and objekt_id = '00000000-0000-4000-8000-00000000b6e1';
+    insert into public.invoices (id, parent_id, period, status, belopp_ore)
+    values ('00000000-0000-4000-8000-00000000f6a2', '00000000-0000-4000-8000-0000000000f1',
+            date_trunc('month', now() at time zone 'Europe/Stockholm')::date, 'skickad', 37900);
+    insert into public.invoice_lines (invoice_id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)
+    values ('00000000-0000-4000-8000-00000000f6a2', '00000000-0000-4000-8000-00000000b6e1', 'x', 60, 37900, 37900);
+    update public.bookings set betalning_status = 'betald' where id = '00000000-0000-4000-8000-00000000b6e1';
+    select count(*) into dubbel from public.avvikelser_rader()
+     where typ = 'betald_och_fakturerad' and objekt_id = '00000000-0000-4000-8000-00000000b6e1';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('14.6 avvikelserna', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('14.6 ett obetalt genomfört pass larmar som ej_betalt', ej_betalt_fore = 1, 'rader: ' || ej_betalt_fore),
+      ('14.6 samma pass som fakturapass larmar inte som ej_betalt', ej_betalt_efter = 0, 'rader: ' || ej_betalt_efter),
+      ('14.6 ett fakturapass från en slutad månad utan faktura larmar', saknas = 1, 'rader: ' || saknas),
+      ('14.6 betalt med kort och fakturerat larmar', dubbel = 1, 'rader: ' || dubbel);
+  end if;
+end $$;
+
+-- ---------- fakturan ----------
+insert into public.invoices (id, parent_id, period, status, belopp_ore)
+values ('00000000-0000-4000-8000-00000000f6a3', '00000000-0000-4000-8000-0000000000f1',
+        (date_trunc('month', now() at time zone 'Europe/Stockholm') - interval '1 month')::date, 'utkast', 37900);
+
+select pg_temp.prova('14.6 admin skriver in Wints fakturanummer', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.invoices set wint_fakturanummer = '1042', status = 'skickad',
+            skickad_at = now(), forfaller = current_date + 10
+          where id = '00000000-0000-4000-8000-00000000f6a3'$q$],
+  'ok');
+
+-- Ett check-villkor svarar 23514, inte 42501, så prova() hade räknat
+-- det som ett trasigt test. Därför ett eget block.
+do $$
+declare kod text;
+begin
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.invoices set wint_fakturanummer = '<script>'
+     where id = '00000000-0000-4000-8000-00000000f6a3';
+    raise exception using errcode = 'P0001', message = 'gick igenom';
+  exception when others then kod := sqlstate;
+  end;
+  reset role;
+  insert into utfall (test, ok, detalj) values
+    ('14.6 ett fakturanummer är bara siffror, bokstäver och bindestreck', kod = '23514', 'sqlstate ' || kod);
+end $$;
+
+select pg_temp.prova('14.6 familjen markerar inte sin faktura betald', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.invoices set status = 'betald', betald_at = now()
+          where id = '00000000-0000-4000-8000-00000000f6a3'$q$],
+  'nekad');
+
+select pg_temp.rakna('14.6 familjen ser sin faktura', '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from public.invoices where id = '00000000-0000-4000-8000-00000000f6a3'$q$, 1);
+
+select pg_temp.rakna('14.6 en annan familj ser den inte', '00000000-0000-4000-8000-0000000000f2',
+  $q$select count(*) from public.invoices where id = '00000000-0000-4000-8000-00000000f6a3'$q$, 0);
 
 select test, ok, detalj from utfall order by nr;
 

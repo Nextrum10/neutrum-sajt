@@ -199,12 +199,15 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib, sparr, tvister] = await Promise.all([
+           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
-      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id').order('wanted_date', { ascending: false }),
-      supa.from('invoices').select('*').order('period', { ascending: false }),
+      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp').order('wanted_date', { ascending: false }),
+      /* Raderna följer med (Fas 14.6): de är underlaget admin lägger in
+         i Wint, och vilket pass som står på vilken faktura. */
+      supa.from('invoices').select('*, invoice_lines(id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)')
+        .order('period', { ascending: false }),
       supa.from('payouts').select('*').order('period', { ascending: false }),
       supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400),
       supa.from('klientfel').select('*').order('created_at', { ascending: false }).limit(100),
@@ -235,10 +238,14 @@ const NXAdmin = (function () {
       /* Fas 14.2: spärren "ingen betalning, inget pass". En rad i
          flaggor, som notismejlen. Slås om under Ekonomi →
          Kortbetalningar, där det den styr också syns. */
-      supa.from('flaggor').select('*').eq('kod', 'kortsparr').maybeSingle(),
+      /* Fas 14.6: och strömbrytaren för faktura som betalsätt, samma
+         sort. Båda i en fråga. */
+      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'faktura']),
       /* Fas 14.3: korttvisterna, med sista dagen att svara. Bara admin
          ser tabellen; för alla andra är svaret tomt. */
-      supa.from('stripe_tvister').select('*').order('skapad', { ascending: false })
+      supa.from('stripe_tvister').select('*').order('skapad', { ascending: false }),
+      /* Fas 14.6: familjer som inte får välja faktura. */
+      supa.from('faktura_sparr').select('parent_id, satt_at')
     ]);
 
     S.leads = leads.data || [];
@@ -261,8 +268,11 @@ const NXAdmin = (function () {
     S.auditAktorer = audit.data || [];
     /* null betyder att raden inte gick att läsa, inte att spärren är
        av. Kortet säger det i stället för att visa ett läge det inte vet. */
-    S.kortsparr = sparr.data || null;
-    S.kortsparrFel = sparr.error ? felText(sparr.error) : null;
+    S.kortsparr = (flaggor.data || []).find(f => f.kod === 'kortsparr') || null;
+    S.kortsparrFel = flaggor.error ? felText(flaggor.error) : null;
+    S.fakturaFlagga = (flaggor.data || []).find(f => f.kod === 'faktura') || null;
+    S.fakturaSparr = new Set((fsparr.data || []).map(r => r.parent_id));
+    S.fakturaSparrFel = fsparr.error ? felText(fsparr.error) : null;
     /* Ett läsfel är inte "inga tvister": rutan säger att den inte
        kunde läsa, i stället för att se lugn ut. */
     S.tvister = tvister.data || [];

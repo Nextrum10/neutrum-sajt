@@ -2,14 +2,18 @@
 // NEXTRUM — Edge Function: ekonomi
 //
 // Administrations- och ekonomirådgivare. Läser bolagets egna siffror,
-// läser Fortnox, slår upp vad Skatteverket och Bokföringsnämnden
-// faktiskt säger, och LÄMNAR FÖRSLAG. Den bokför ingenting och
-// deklarerar ingenting.
+// slår upp vad Skatteverket och Bokföringsnämnden faktiskt säger, och
+// LÄMNAR FÖRSLAG. Den bokför ingenting och deklarerar ingenting.
+//
+// BOKFÖRINGEN SKÖTS I WINT (Fas 14.8), och agenten läser den inte. Här
+// fanns ett verktyg som läste Fortnox. Fortnox kopplades aldrig, och
+// Nextrum har valt Wint för fakturor och bokföring. Wint har inget
+// öppet API för det här; ett läsverktyg byggs när det finns ett.
 //
 // VARFÖR DEN ALDRIG SKRIVER
 // Bokföringslagen bygger på att varje post har en verifikation och att
 // kedjan går att följa bakåt. En modell som lägger in verifikat i
-// Fortnox på egen hand bryter inte mot lagen i sig, men den flyttar
+// bokföringen på egen hand bryter inte mot lagen i sig, men den flyttar
 // ansvaret till någon som inte kan bära det, och den gör en felaktig
 // post lika lätt att skapa som en riktig. Det finns ingen ångerknapp i
 // en bokföring, bara rättelseverifikat och förklaringar till revisorn.
@@ -43,9 +47,6 @@ import {
 } from '../_delad/agent.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-
-const FORTNOX_CLIENT_ID = Deno.env.get('FORTNOX_CLIENT_ID');
-const FORTNOX_CLIENT_SECRET = Deno.env.get('FORTNOX_CLIENT_SECRET');
 
 // Skatterätt och redovisning, primärkällor bara. Skatteverkets rättsliga
 // vägledning är myndighetens egen tolkning, inte lag, och ska citeras
@@ -212,101 +213,18 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
   },
 };
 
-// ============================================================
-// FORTNOX
-//
-// access_token lever en timme, refresh_token 45 dagar och BYTS varje
-// gång den används. Den nya måste sparas direkt, annars är kopplingen
-// död vid nästa körning och någon får logga in i Fortnox igen.
-//
-// Bara GET, och bara mot de vägar som står i FORTNOX_VAGAR. Även om
-// någon senare av misstag ger agenten en skrivande prompt finns det
-// ingen kod här som kan skriva.
-// ============================================================
-
-const FORTNOX_VAGAR = [
-  'invoices', 'customers', 'vouchers', 'voucherseries',
-  'accounts', 'financialyears', 'suppliers', 'supplierinvoices', 'settings/company',
-];
-
-async function fortnoxAccessToken(db: SupabaseClient): Promise<{ token: string } | { fel: string }> {
-  if (!FORTNOX_CLIENT_ID || !FORTNOX_CLIENT_SECRET) {
-    return { fel: 'Fortnox är inte kopplat: FORTNOX_CLIENT_ID och FORTNOX_CLIENT_SECRET saknas som secrets.' };
-  }
-
-  const { data: rad } = await db.from('fortnox_token').select('*').eq('id', 1).single();
-  if (!rad?.refresh_token) {
-    return { fel: 'Fortnox är inte kopplat än: ingen refresh_token i tabellen fortnox_token. Kör auktoriseringen först, se DEPLOY-AGENTER.md.' };
-  }
-
-  // Två minuters marginal. En token som går ut mitt i ett anrop kostar
-  // ett onödigt 401 att felsöka.
-  if (rad.access_token && rad.gar_ut && new Date(rad.gar_ut).getTime() > Date.now() + 120000) {
-    return { token: rad.access_token };
-  }
-
-  const basic = btoa(`${FORTNOX_CLIENT_ID}:${FORTNOX_CLIENT_SECRET}`);
-  const res = await fetch('https://apps.fortnox.se/oauth-v1/token', {
-    method: 'POST',
-    headers: {
-      authorization: `Basic ${basic}`,
-      'content-type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: rad.refresh_token }),
-  });
-
-  if (!res.ok) {
-    return { fel: `Fortnox ville inte förnya token (${res.status}). Är refresh_token äldre än 45 dagar måste kopplingen göras om.` };
-  }
-
-  const t = await res.json();
-  await db.from('fortnox_token').update({
-    access_token: t.access_token,
-    refresh_token: t.refresh_token,
-    gar_ut: new Date(Date.now() + Number(t.expires_in ?? 3600) * 1000).toISOString(),
-    uppdaterad: new Date().toISOString(),
-  }).eq('id', 1);
-
-  return { token: t.access_token };
-}
-
-async function fortnoxLas(db: SupabaseClient, vag: string, fraga: string): Promise<string> {
-  const ren = vag.replace(/^\/+/, '').split('?')[0];
-  if (!FORTNOX_VAGAR.includes(ren)) {
-    return `Vägen "${ren}" är inte tillåten. Tillåtna: ${FORTNOX_VAGAR.join(', ')}.`;
-  }
-
-  const t = await fortnoxAccessToken(db);
-  if ('fel' in t) return t.fel;
-
-  const url = `https://api.fortnox.se/3/${ren}${fraga ? '?' + fraga.replace(/^\?/, '') : ''}`;
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: { authorization: `Bearer ${t.token}`, accept: 'application/json' },
-  });
-
-  const text = await res.text();
-  if (!res.ok) {
-    // 401 här med giltig token betyder oftast att appen är registrerad
-    // för den äldre autentiseringen med Access-Token och Client-Secret
-    // som separata headrar. Kolla integrationens inställningar hos
-    // Fortnox innan du börjar ändra i koden.
-    return `Fortnox svarade ${res.status}: ${text.slice(0, 500)}`;
-  }
-  return text.slice(0, 40000);
-}
-
-// ============================================================
-
 const SYSTEM = `Du är Nextrums ekonomi- och administrationsrådgivare. Nextrum är ett litet svenskt
 bolag som förmedlar läxhjälp: familjer bokar pass, gymnasie- och högskolestudenter håller
-dem. Familjen betalar varje pass med kort, före passet, genom Stripe, och får ingen faktura.
+dem. Familjen betalar varje pass med kort, före passet, genom Stripe. Systemet kan också låta
+familjen välja en samlad månadsfaktura i efterskott, tio dagars betalningstid och ingen avgift,
+men det valet är avstängt tills bolaget är registrerat och har ett Wint-konto. Fakturorna och
+bokföringen sköts i Wint, och du kan inte läsa Wint.
 Studiehjälparen får ersättning den 25:e för månadens rapporterade pass, utbetald från banken.
 Stripe betalar ut till bolagets bankkonto i klumpar, netto efter sin avgift: ingen bankrad
 motsvarar ett pass, och avgiften är en egen kostnad.
 
 DU ÄR INTE REVISOR ELLER SKATTERÅDGIVARE, och du bokför ingenting. Du läser bolagets
-siffror, läser Fortnox, slår upp vad myndigheterna säger och LÄMNAR FÖRSLAG som en
+siffror, slår upp vad myndigheterna säger och LÄMNAR FÖRSLAG som en
 människa sedan tar ställning till.
 
 DITT OMRÅDE:
@@ -361,7 +279,7 @@ SVARETS FORM, på svenska:
   hämtat i det här samtalet. Adresser du inte hämtat plockas bort av systemet, och blir
   listan tom kastas hela svaret.
 
-Interna siffror ur databasen och Fortnox är inte webbadresser och hör inte hemma under
+Interna siffror ur databasen är inte webbadresser och hör inte hemma under
 KÄLLOR. Frågor som bara handlar om bolagets egna siffror behöver ingen webbkälla — men
 i samma sekund du uttalar dig om en REGEL måste du ha hämtat den.`;
 
@@ -394,23 +312,6 @@ const VERKTYG = [
         till: { type: 'string', description: 'Till och med, YYYY-MM-DD.' },
       },
       required: ['fraga', 'fran', 'till'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'las_fortnox',
-    description:
-      'Läser från Fortnox. Bara GET. Tillåtna vägar: ' + FORTNOX_VAGAR.join(', ') +
-      '. Exempel: vag "vouchers", fraga "financialyear=1". Svarar med ett tydligt fel om ' +
-      'Fortnox inte är kopplat, och då ska du säga det i stället för att gissa vad som står där.',
-    strict: true,
-    input_schema: {
-      type: 'object',
-      properties: {
-        vag: { type: 'string', enum: FORTNOX_VAGAR },
-        fraga: { type: 'string', description: 'Query-sträng utan inledande frågetecken. Tom sträng om ingen.' },
-      },
-      required: ['vag', 'fraga'],
       additionalProperties: false,
     },
   },
@@ -452,11 +353,11 @@ Deno.serve(async (req) => {
     // utan att röra modellen. Kör efter deploy.
     if (kropp.sjalvtest) {
       const { data: fakta } = await db.from('foretagsfakta').select('*').eq('id', 1).single();
-      const fx = await fortnoxAccessToken(db);
       return json({
         bolagsfakta_ifylld: !!fakta?.bolagsform,
         studiehjalpare_form: fakta?.studiehjalpare_form ?? 'saknas',
-        fortnox: 'fel' in fx ? fx.fel : 'kopplat',
+        // Fas 14.8: bokföringen sköts i Wint, utan koppling hit.
+        bokforing: fakta?.bokforingssystem ?? 'inte ifyllt',
         fragor: Object.keys(FRAGOR),
         kallor: KALLOR,
       }, 200);
@@ -477,11 +378,11 @@ Deno.serve(async (req) => {
       db,
       korning,
       koer: async (namn, arg) => {
-        /* De tre databasverktygen svarar med `data`, inte `text`.
+        /* De två databasverktygen svarar med `data`, inte `text`.
            Motorn lindar då svaret i somDatabasData innan modellen ser
            det (Fas 8). Förut gick rå JSON rakt in i samtalet, och
-           foretagsfakta och Fortnox-svar är fält som människor fyller
-           i — inte konstanter. */
+           foretagsfakta är fält som människor fyller i — inte
+           konstanter. */
         if (namn === 'las_bolagsfakta') {
           const { data } = await db.from('foretagsfakta').select('*').eq('id', 1).single();
           return { data: data ?? { fel: 'Bolagsfakta saknas. Fyll i tabellen foretagsfakta.' } };
@@ -493,10 +394,6 @@ Deno.serve(async (req) => {
           if (!q) return { text: `Okänd fråga. Tillgängliga: ${Object.keys(FRAGOR).join(', ')}.` };
           const data = await q.koer(db, String(arg.fran ?? '1900-01-01'), String(arg.till ?? '2999-12-31'));
           return { data };
-        }
-
-        if (namn === 'las_fortnox') {
-          return { data: await fortnoxLas(db, String(arg.vag ?? ''), String(arg.fraga ?? '')) };
         }
 
         if (namn === 'hamta_kalla') {

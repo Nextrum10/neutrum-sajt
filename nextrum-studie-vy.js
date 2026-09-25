@@ -1060,8 +1060,16 @@
      betyder bara att ett passerat pass väntar på rapporten i stället
      för att erbjudas till betalning. */
   async function laddaSparr() {
-    const { data } = await supa.from('flaggor').select('aktiv').eq('kod', 'kortsparr').maybeSingle();
-    S.kortsparr = !!(data && data.aktiv);
+    /* Fakturavalet läses samtidigt (Fas 14.6). faktura_mojlig() svarar
+       bara om den som frågar: flaggan är på och familjen är inte
+       spärrad. Kan den inte läsas finns inget fakturaval, och kortet
+       står kvar som förut. Databasen prövar valet ändå. */
+    const [flagga, faktura] = await Promise.all([
+      supa.from('flaggor').select('aktiv').eq('kod', 'kortsparr').maybeSingle(),
+      supa.rpc('faktura_mojlig')
+    ]);
+    S.kortsparr = !!(flagga.data && flagga.data.aktiv);
+    S.faktura = faktura.data === true;
   }
   function betalaKnapp(b, liten) {
     return '<button type="button" class="btn btn-primary' + (liten ? ' btn-sm' : '') + '" data-betala="' + esc(b.id) + '">'
@@ -1073,8 +1081,123 @@
     betald: 'Betalt',
     misslyckad: 'Betalningen gick inte igenom',
     aterbetald: 'Återbetalt',
-    tvist: 'Betalningen är ifrågasatt'
+    tvist: 'Betalningen är ifrågasatt',
+    faktura: 'Mot faktura'
   };
+
+  /* ============================================================
+     FAKTURA (Fas 14.6)
+
+     Under "Betala med kort" kan familjen välja "Betala med faktura i
+     stället". Passet kommer då med på en samlad faktura i början av
+     nästa månad, med alla pass familjen valt faktura för. Fakturan
+     skapas och skickas av Wint; här syns den när den skickats.
+
+     Valet är en textknapp under kortknappen, inte en knapp bredvid:
+     kortet är det vanliga, fakturan ett alternativ till det. Det går
+     att ångra tills passet står på en faktura. Databasen prövar båda
+     hållen (skydda_bokningsfalt): här ritas bara det den släpper
+     igenom, så att ingen trycker på något som sedan nekas.
+     ============================================================ */
+  const DAGAR = Number((NX.CFG && NX.CFG.BETALNINGSVILLKOR_DAGAR) || 10);
+
+  /* Fakturan passet står på, också ett utkast som ännu inte skickats.
+     Står passet på en faktura går det inte att byta till kort. */
+  const fakturaFör = id => (S.fakturaPerPass || {})[id] || null;
+
+  function fakturaVal(b) {
+    return S.faktura === true && kanBetalas(b)
+      ? '<button type="button" class="val-lank" data-faktura-val="' + esc(b.id) + '">Betala med faktura i stället</button>'
+      : '';
+  }
+  /* Tillbaka till kort går också när flaggan är av: ett pass som redan
+     valts för faktura ska inte bli omöjligt att betala. */
+  function kortVal(b) {
+    return b.betalning_status === 'faktura' && b.status !== 'cancelled' && b.fakturerbar !== false && !fakturaFör(b.id)
+      ? '<button type="button" class="val-lank" data-kort-val="' + esc(b.id) + '">Betala med kort i stället</button>'
+      : '';
+  }
+
+  async function laddaFakturor() {
+    const { data, error } = await supa.from('invoices')
+      .select('id, period, status, belopp_ore, forfaller, skickad_at, betald_at, wint_fakturanummer, invoice_lines(booking_id)')
+      .eq('parent_id', S.user.id).order('period', { ascending: false });
+    /* Kan fakturorna inte läsas står det som fanns kvar. En tom lista
+       hade sett ut som att ingenting är fakturerat, och då hade "Betala
+       med kort i stället" erbjudits på ett pass som redan står på en
+       faktura. */
+    if (error) { console.warn('Fakturorna gick inte att läsa', error); return; }
+    S.fakturor = data || [];
+    S.fakturaPerPass = {};
+    S.fakturor.forEach(f => (f.invoice_lines || []).forEach(l => {
+      if (l.booking_id) S.fakturaPerPass[l.booking_id] = f;
+    }));
+    ritaFakturor();
+    if (passIdIAdressen()) ritaPassSida();
+  }
+
+  /* Faktura eller kort, på ett pass. Omritningen hålls vid något som
+     står kvar: på passets sida titeln, i listan rubriken ovanför. Den
+     knapp man tryckte på försvinner, och utan det hoppar sidan. */
+  async function väljBetalsätt(knapp, passId, läge) {
+    knapp.setAttribute('aria-busy', 'true');
+    const { error } = await supa.from('bookings').update({ betalning_status: läge }).eq('id', passId);
+    knapp.removeAttribute('aria-busy');
+    if (error) {
+      alert((läge === 'faktura' ? 'Det gick inte att välja faktura: ' : 'Det gick inte att byta till kort: ') + felText(error));
+      return;
+    }
+    const ankare = document.querySelector('#pass-sida .ps-titel')
+      || (knapp.closest('.dbox') && knapp.closest('.dbox').querySelector('h5'))
+      || null;
+    await NXStudie.håll(ankare, () => Promise.all([laddaPass(), laddaFakturor()]));
+    const msg = $('#bet-msg');
+    if (msg && !document.querySelector('#pass-sida .ps-titel')) {
+      säg(msg, läge === 'faktura'
+        ? 'Klart. Passet kommer med på fakturan i början av nästa månad.'
+        : 'Klart. Betala passet med kort, senast innan det börjar.', true);
+    }
+  }
+
+  /* Fakturorna, och passen som väntar på nästa. Rutan syns bara när
+     det finns något att visa, eller när faktura går att välja. */
+  function ritaFakturor() {
+    const host = $('#bet-faktura');
+    if (!host) return;
+    const box = host.closest('.dbox');
+    const kronor = NXBetalning.kronor;
+    const väntar = (S.bokningar || [])
+      .filter(b => b.betalning_status === 'faktura' && b.status !== 'cancelled' && b.fakturerbar !== false)
+      .filter(b => { const f = fakturaFör(b.id); return !f || f.status === 'utkast'; })
+      .sort((a, c) => String(a.wanted_date).localeCompare(String(c.wanted_date)));
+    const skickade = (S.fakturor || []).filter(f => f.status !== 'utkast');
+    if (box) box.hidden = !väntar.length && !skickade.length && S.faktura !== true;
+    $('#bet-faktura-antal').textContent = skickade.length ? skickade.length + ' st' : '';
+
+    const delar = [];
+    skickade.forEach(f => {
+      const antal = (f.invoice_lines || []).length;
+      delar.push(NXBetalning.fakturaRad(f, {
+        under: [f.wint_fakturanummer ? 'Faktura ' + f.wint_fakturanummer : null,
+          antal ? antal + (antal === 1 ? ' pass' : ' pass') : null].filter(Boolean).join(' · ')
+      }));
+    });
+    väntar.forEach(b => {
+      const barn = S.barn.find(x => x.id === b.student_id);
+      const pris = passetsPris(b);
+      const utkast = fakturaFör(b.id);
+      delar.push(NXKontakt.passRad(b, {
+        href: '#pass/' + b.id,
+        under: [pris ? kronor(pris) : null, barn ? barn.name : null].filter(Boolean).join(' · '),
+        vem: utkast ? 'Står på fakturan för ' + NXBetalning.periodText(utkast.period) + ', som snart skickas.'
+          : 'Kommer med på fakturan i början av nästa månad.',
+        märke: NXKontakt.betalMärke(b),
+        atgarder: kortVal(b)
+      }));
+    });
+    host.innerHTML = delar.length ? delar.join('')
+      : tomt('Inga fakturor', 'Välj "Betala med faktura i stället" på ett pass, så kommer det med på en samlad faktura i början av nästa månad. Den ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra.');
+  }
 
   /* ============================================================
      BETALPANELEN (Fas 14.5)
@@ -1289,6 +1412,7 @@
     byggSchema();
     ritaAttBetala();
     ritaBetalda();
+    ritaFakturor();
     /* Står man på ett pass när listan laddas om — efter ett svar, en
        avbokning, en ny tid — ritas sidan om med det som nu gäller. */
     if (passIdIAdressen()) ritaPassSida();
@@ -1371,6 +1495,23 @@
        databasen — samma skäl som att invoices och payouts med flit
        saknar INSERT-policy för användare: kan ingen skicka in ett
        belopp kan ingen skicka in fel belopp. */
+    /* Faktura eller kort (Fas 14.6). Villkoren står i rutan, för det är
+       här familjen godkänner dem för det här passet. */
+    const fv = e.target.closest('[data-faktura-val]');
+    if (fv) {
+      const ok = await NXStudie.bekräfta({
+        titel: 'Betala med faktura?',
+        text: 'Passet kommer med på en samlad faktura från Nextrum i början av nästa månad, tillsammans med de andra pass ni valt faktura för. '
+          + 'Fakturan ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra. '
+          + 'Ni kan byta tillbaka till kort tills fakturan är skapad.',
+        knapp: 'Välj faktura'
+      });
+      if (ok) await väljBetalsätt(fv, fv.dataset.fakturaVal, 'faktura');
+      return;
+    }
+    const kv = e.target.closest('[data-kort-val]');
+    if (kv) { await väljBetalsätt(kv, kv.dataset.kortVal, 'ingen'); return; }
+
     const bet = e.target.closest('[data-betala]');
     if (bet) {
       const passId = bet.dataset.betala;
@@ -1474,6 +1615,17 @@
         rubrik: attBetalaNu.length === 1 ? 'Ett pass att betala' : attBetalaNu.length + ' pass att betala',
         text: 'Betala senast innan passet börjar. Ett pass som inte är betalt hålls inte.',
         mål: '#bet-att-betala'
+      });
+    }
+
+    /* En förfallen faktura (Fas 14.6). Samma sorts drag som ett pass
+       att betala, och lika lätt att missa i en inkorg. */
+    const förfallna = (S.fakturor || []).filter(f => NXBetalning.fakturaLage(f) === 'forfallen');
+    if (förfallna.length) {
+      poster.push({
+        rubrik: förfallna.length === 1 ? 'En faktura har förfallit' : förfallna.length + ' fakturor har förfallit',
+        text: 'Betala den så snart ni kan. Har ni redan betalat kan det ta några dagar innan det syns här.',
+        mål: '#bet-faktura'
       });
     }
 
@@ -1754,7 +1906,7 @@
           : b.wanted_date < isoFor(new Date()) ? 'Passet har varit men är inte betalt. Hölls det, betala det här.'
           : 'Betala senast innan passet börjar.',
         märke: NXKontakt.betalMärke(b),
-        atgarder: betalaKnapp(b, true)
+        atgarder: betalaKnapp(b, true) + fakturaVal(b)
       });
     }).join('');
   }
@@ -2042,7 +2194,7 @@
     const betalt = b.betalning_status === 'betald' || b.betalning_status === 'tvist';
     const viaOss = ' Passet är redan betalt. Ska det avbokas, hör av er till oss så betalar vi tillbaka.';
 
-    let besked = null, atgarder = '';
+    let besked = null, atgarder = '', alternativ = '';
     if (b.status === 'cancelled') {
       const skäl = NXStudie.skälText(b.avbokningsskal);
       besked = { text: 'Passet är avbokat' + (skäl ? ' — ' + skäl.toLowerCase() + '.' : '.'), ton: 'lugn' };
@@ -2068,10 +2220,13 @@
         ? { text: 'Passet är bokat.', ton: 'klart' }
         : b.betalning_status === 'aterbetald'
         ? { text: 'Passet är bokat, och det ni betalade för det är återbetalt. Undrar ni varför, hör av er till oss.', ton: 'lugn' }
+        : b.betalning_status === 'faktura'
+        ? { text: 'Passet är bokat och betalas mot faktura. Det kommer med på fakturan i början av nästa månad.', ton: 'klart' }
         : { text: 'Passet är bokat. Betala med kort senast innan passet börjar, annars hålls det inte.', ton: 'fraga' };
       atgarder = (kanBetalas(b) ? betalaKnapp(b, false) : '')
         + '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Föreslå ny tid</button>'
         + (betalt ? '' : '<button type="button" class="btn btn-ghost" data-avboka="' + esc(b.id) + '">Avboka</button>');
+      alternativ = fakturaVal(b) || kortVal(b);
     } else if (b.status === 'confirmed' && kanBetalas(b)) {
       /* Passerat och obetalt medan spärren är på — bara då släpper
          kanBetalas igenom det. Hölls passet kan rapporten inte skrivas
@@ -2080,11 +2235,27 @@
       besked = { text: 'Passet har varit men är inte betalt. Hölls det, betala det med kort, så kan ' + förnamn
         + ' skriva rapporten. Hölls det inte, avbokar ' + förnamn + ' det.', ton: 'fraga' };
       atgarder = betalaKnapp(b, false) + skriv;
+      alternativ = fakturaVal(b);
     } else if (b.status === 'completed' && kanBetalas(b)) {
       /* Genomfört men inte betalt. Det kan bara hända medan spärren är
          av (Fas 14.2), och då ska det gå att betala i efterhand. */
       besked = { text: 'Passet är genomfört men inte betalt. Betala det med kort.', ton: 'fraga' };
       atgarder = betalaKnapp(b, false) + skriv;
+      alternativ = fakturaVal(b);
+    } else if (b.status === 'completed' && b.betalning_status === 'faktura') {
+      /* Genomfört och betalas mot faktura (Fas 14.6). Står det på en
+         skickad faktura säger beskedet vilken, och om den är betald. */
+      const f = fakturaFör(b.id);
+      const skickad = f && f.status !== 'utkast';
+      const läge = skickad ? NXBetalning.fakturaLage(f) : null;
+      besked = !skickad
+        ? { text: 'Passet är genomfört och kommer med på nästa månadsfaktura.', ton: 'klart' }
+        : läge === 'betald'
+        ? { text: 'Passet är genomfört och betalt' + (f.wint_fakturanummer ? ', med faktura ' + f.wint_fakturanummer : '') + '.', ton: 'klart' }
+        : { text: 'Passet är genomfört och står på faktura' + (f.wint_fakturanummer ? ' ' + f.wint_fakturanummer : 'n')
+            + (f.forfaller ? ', att betala senast ' + datumText(f.forfaller) : '') + '.', ton: läge === 'forfallen' ? 'fraga' : 'klart' };
+      atgarder = '<a class="btn btn-primary" href="#boka">Boka nästa pass</a>' + skriv;
+      alternativ = kortVal(b);
     } else if (b.status === 'completed') {
       besked = { text: 'Passet är genomfört.', ton: 'klart' };
       atgarder = '<a class="btn btn-primary" href="#boka">Boka nästa pass</a>' + skriv;
@@ -2120,6 +2291,9 @@
            att hänvisa till: ett genomfört pass som inte är betalt är
            just det, och ska betalas på den här sidan. */
         ['Betalning', b.fakturerbar === false ? 'Betalas inte'
+          : b.betalning_status === 'faktura' && b.status !== 'cancelled'
+            ? (fakturaFör(b.id) && fakturaFör(b.id).wint_fakturanummer && fakturaFör(b.id).status !== 'utkast'
+                ? 'Faktura ' + fakturaFör(b.id).wint_fakturanummer : 'Mot faktura')
           : b.status === 'requested' ? 'Betalas när passet är bekräftat'
           : b.status === 'cancelled' ? (b.betalning_status && b.betalning_status !== 'ingen'
               ? BETALNING_TEXT[b.betalning_status] : null)
@@ -2148,6 +2322,7 @@
       steg,
       besked,
       atgarder,
+      alternativ,
       kort,
       block: block.concat(rapport ? [{ rubrik: 'Efter passet', html:
         (rapport.gick ? '<p><b>' + esc(NXStudie.GICK[rapport.gick] || rapport.gick) + '</b></p>' : '')
@@ -2356,7 +2531,7 @@
        får inte hålla passen och läxorna i kö; chatten startar när
        namnet finns. */
     await Promise.all([laddaBarn(), laddaSparr()]);
-    await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass(), laddaBokning()]);
+    await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor()]);
     /* Läxorna hämtas först, så märket ritas om när de finns. */
     ritaÖvLaxor();
     ritaNotiser();

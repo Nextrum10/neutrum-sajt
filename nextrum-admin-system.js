@@ -33,27 +33,22 @@
      ingen "koppla"-knapp här, för en OAuth-koppling kräver en
      klienthemlighet, och en hemlighet som webbläsaren kan läsa är
      ingen hemlighet. Kopplingen görs på servern; den här sidan
-     rapporterar bara vad servern säger. */
+     rapporterar bara vad servern säger.
+
+     Fortnox stod här till Fas 14.8. Det kopplades aldrig, och Nextrum
+     sköter fakturor och bokföring i Wint. Wint får inget kort: det
+     finns ingen koppling att rapportera om, och ett kort som står på
+     "Inte kopplad" för alltid är brus. */
   const TJANSTER = {
     google_workspace: {
       namn: 'Google Workspace',
       ikon: '<path d="M12 3.5 3.5 8 12 12.5 20.5 8z"/><path d="M3.5 12 12 16.5 20.5 12"/><path d="M3.5 16 12 20.5 20.5 16"/>',
       vad: 'Kalendern och mejlen. Bokade pass läggs som händelser i studiehjälparens '
-        + 'och familjens kalender, och fakturautskicket går från en riktig adress i stället '
-        + 'för en no-reply.',
+        + 'och familjens kalender, och underlagen till studiehjälparna går från en riktig '
+        + 'adress i stället för en no-reply.',
       krav: 'Krävs: ett Google Cloud-projekt med Calendar API och Gmail API påslagna, '
         + 'ett tjänstekonto med domänvid delegering, och GOOGLE_KLIENT_ID + '
         + 'GOOGLE_KLIENT_HEMLIGHET som secrets på edge-funktionen. Se GOOGLE.md.'
-    },
-    fortnox: {
-      namn: 'Fortnox',
-      ikon: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M7.5 9h9M7.5 12.5h6M7.5 16h4"/>',
-      vad: 'Bokföringen. Varje faktura som skapas av månadskörningen speglas som en '
-        + 'kundfaktura i Fortnox, och utbetalningarna som leverantörsfakturor — så att '
-        + 'ingen behöver knappa in samma siffra två gånger.',
-      krav: 'Krävs: en integrationslicens i Fortnox, en godkänd app med scope invoice '
-        + 'och supplierinvoice, och FORTNOX_KLIENT_ID + FORTNOX_KLIENT_HEMLIGHET + '
-        + 'FORTNOX_REFRESH_TOKEN som secrets på edge-funktionen.'
     }
   };
 
@@ -80,7 +75,7 @@
       '<div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">'
       + '<h5>Så kopplas en tjänst</h5>'
       + '<p class="xsmall" style="color:var(--muted-2);line-height:1.7">'
-      + 'Ingen av dem kopplas härifrån, och det är med flit. Båda kräver en '
+      + 'Den kopplas inte härifrån, och det är med flit. Den kräver en '
       + 'klienthemlighet, och en hemlighet som webbläsaren kan läsa är ingen '
       + 'hemlighet — den ligger då hos varenda person som öppnar sidan. '
       + 'Nycklarna sätts som secrets på edge-funktionen, dit ingen webbläsare '
@@ -91,7 +86,7 @@
       + (S.saknasV13.indexOf('integrationer') !== -1
         ? '<div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">'
           + tomt('Tabellen integrationer saknas',
-            'Kör schema-v13.sql i Supabase → SQL Editor. Tills dess står båda som inte kopplade, '
+            'Kör schema-v13.sql i Supabase → SQL Editor. Tills dess står den som inte kopplad, '
             + 'vilket råkar vara sant.') + '</div>'
         : '');
   }
@@ -524,7 +519,7 @@
         ['Bolagsfakta', 'Organisationsnummer, moms, F-skatt och hur studiehjälparna anlitas.', '#agenter/bolaget'],
         ['Tjänster och priser', 'Pris, ersättning, RUT-andel och villkor per tjänst.', '#katalog/tjanster'],
         ['Rabattkoder', 'Koder, värden och giltighet.', '#katalog/rabattkoder'],
-        ['Integrationer', 'Google och Fortnox.', '#system/integrationer'],
+        ['Integrationer', 'Google Workspace. Bokföringen sköts i Wint, utan koppling hit.', '#system/integrationer'],
         ['Adminanvändare', 'Vem som ser den här vyn.', '#system/adminanvandare']
       ];
       pekare.innerHTML = PEKARE.map(([namn, text, mål]) =>

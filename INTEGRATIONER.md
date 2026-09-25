@@ -1,7 +1,10 @@
-# Google Workspace och Fortnox
+# Google Workspace
 
 Adminsidan har en flik som heter **System → Integrationer**. Den visar om
-tjänsterna är kopplade. Just nu är svaret nej för båda, och det står så.
+Google Workspace är kopplat. Just nu är svaret nej, och det står så.
+
+Fortnox stod här till Fas 14.8. Bokföringen och fakturorna sköts i
+**Wint**, och Wint är med flit inte kopplat alls (se nedan).
 
 Den här filen säger vad som saknas och varför det inte går att klicka sig
 fram till det.
@@ -10,7 +13,7 @@ fram till det.
 
 ## Varför det inte finns en "Koppla"-knapp
 
-Båda tjänsterna kräver en **klienthemlighet**. En hemlighet som webbläsaren
+Kopplingen kräver en **klienthemlighet**. En hemlighet som webbläsaren
 kan läsa är ingen hemlighet — den ligger då hos varenda person som öppnar
 sidan, inklusive den som öppnar utvecklarverktygen.
 
@@ -28,80 +31,31 @@ Adminsidan rapporterar. Den kopplar inte.
 
 ---
 
-## Fortnox — bokföringen
+## Wint — bokföringen och fakturorna, utan koppling
 
-### Vad kopplingen ska göra
+Nextrum bokför och fakturerar i Wint. Ingenting härifrån når Wint
+automatiskt, och det är ett beslut, inte en lucka:
 
-Månadskörningen (`supabase/functions/fakturering`) skapar redan två saker
-av varje genomfört pass:
+- Wint har ett API, men det är inte dokumenterat publikt, och det
+  finns varken webhookar eller en sandlåda. En koppling som inte går att
+  prova utan att skapa riktiga fakturor hos ett riktigt bolag provas i
+  praktiken i drift.
+- Volymen är liten. En faktura per familj och månad, för de familjer som
+  valt faktura, läggs in för hand på några minuter.
 
-| Vår tabell | Vad det är | Motsvarighet i Fortnox |
-|---|---|---|
-| `invoices` + `invoice_lines` | vad familjen ska betala | kundfaktura (`/3/invoices`) |
-| `payouts` + `payout_lines` | vad studiehjälparen ska få | leverantörsfaktura (`/3/supplierinvoices`) |
+Så går det till (Fas 14.6): månadskörningen skapar ett fakturautkast per
+familj under **Ekonomi → Fakturor**. **Underlag** kopierar det Wint
+behöver. Fakturan läggs in i Wint, som skickar den och ser när den
+betalas. Wints fakturanummer och förfallodag skrivs sedan in här med
+**Lagd i Wint**, och fakturan markeras **Betald** när Wint visar det.
 
-Kopplingen speglar dem, så att ingen knappar in samma siffra två gånger.
+Kortbetalningarna når inte heller Wint automatiskt. Stripe betalar ut
+till banken i klumpar, netto efter avgiften; avgiften och nettot per
+pass står under **Ekonomi → Kortbetalningar**. Hur utbetalningen bokas
+bestäms med revisorn innan den första skarpa betalningen.
 
-### Vad ni behöver skaffa
-
-1. **Integrationslicens** i Fortnox (kostar per månad, beställs i deras
-   kundportal).
-2. En **app** i Fortnox Developer Portal med scope `invoice` och
-   `supplierinvoice`, plus `companyinformation` för att kunna visa vilket
-   bolag som är kopplat.
-3. Godkänn appen mot ert eget bolag en gång. Det ger en
-   `authorization_code` som växlas in mot ett **refresh token**.
-
-### Vad som ska bli secrets
-
-```
-FORTNOX_KLIENT_ID
-FORTNOX_KLIENT_HEMLIGHET
-FORTNOX_REFRESH_TOKEN
-```
-
-Sätt dem med `supabase secrets set` — aldrig i `nextrum-config.js`, aldrig
-i en tabell.
-
-### Hur token fungerar
-
-Fortnox roterar refresh-token vid varje användning. Det är den fällan som
-gör att integrationer slutar fungera efter en månad: man sparar det gamla,
-använder det en gång till, och blir utlåst.
-
-Alltså måste edge-funktionen **spara det nya refresh-token** direkt efter
-varje växling. Det ska ligga i en tabell som bara `service_role` når, inte
-i en secret (secrets går inte att skriva från en funktion).
-
-### Anropen
-
-```
-POST https://apps.fortnox.se/oauth-v1/token
-  grant_type=refresh_token&refresh_token=<det sparade>
-  Authorization: Basic base64(klient_id:klient_hemlighet)
-  → { access_token, refresh_token }   ← spara det NYA refresh_token direkt
-
-POST https://api.fortnox.se/3/invoices
-  Authorization: Bearer <access_token>
-  { "Invoice": { "CustomerNumber": …, "InvoiceDate": …, "DueDate": …,
-                 "InvoiceRows": [ { "Description": …, "DeliveredQuantity": …,
-                                    "Price": … } ] } }
-```
-
-`invoice_lines.beskrivning` blir `Description`, `minuter / 60` blir
-`DeliveredQuantity`, `pris_per_timme_ore / 100` blir `Price`. Beloppen i
-våra tabeller är i **ören**; Fortnox räknar i kronor. Den omvandlingen är
-det enda stället ett avrundningsfel kan smyga sig in, så gör den en gång
-och på ett ställe.
-
-### Ordningen att bygga i
-
-1. Token-växlingen, med sparandet av det nya refresh-token. Fungerar inte
-   den fungerar ingenting, och felet visar sig först nästa månad.
-2. En torrkörning som svarar med vad som *skulle* skickas.
-3. Skarp körning för **en** faktura.
-4. Skriv tillbaka `integrationer.senaste_synk` och eventuellt
-   `senaste_fel`, så adminsidan säger sanningen.
+Wint får därför ingen rad i `integrationer`. En statusrad för något som
+inte är kopplat hade sett ut som en koppling som väntar.
 
 ---
 
@@ -112,7 +66,7 @@ och på ett ställe.
 - **Kalender.** Ett bekräftat pass blir en händelse hos både familjen och
   studiehjälparen, med Meet-länk om formatet är online. Avbokas passet
   försvinner händelsen.
-- **Mejl.** Fakturautskicket och notiserna går från en riktig adress
+- **Mejl.** Underlagen och notiserna går från en riktig adress
   (`info@nextrum.se`) i stället för en no-reply hos någon annan.
 
 ### Vad ni behöver skaffa
@@ -166,12 +120,12 @@ Edge-funktionen skriver, med `service_role`:
 ```sql
 update public.integrationer
    set kopplad = true,
-       konto = 'Nextrum AB (556xxx-xxxx)',
+       konto = 'info@nextrum.se',
        kopplad_at = now(),
        senaste_synk = now(),
        senaste_fel = null,
        uppdaterad = now()
- where tjanst = 'fortnox';
+ where tjanst = 'google_workspace';
 ```
 
 Går en synk fel: lämna `kopplad` som den är och sätt `senaste_fel`. En
