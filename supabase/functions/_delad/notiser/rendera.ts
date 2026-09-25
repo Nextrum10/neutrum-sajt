@@ -18,11 +18,33 @@
 // tyst. Tabeller med style på varje element är fula att läsa men är
 // det som faktiskt kommer fram.
 //
-// FÄRGERNA är jordpaletten ur :root i nextrum-cinema.css: lin till
-// botten, bark till text, lera till knappen. Ändras paletten där ska
-// den ändras här; mejlet är en del av samma yta. Mörkt läge stängs
-// av: Gmail och Outlook färgar annars om bakgrunderna på egen hand
-// och lämnar texten kvar, och bark på bark är ett tomt mejl.
+// FÄRGERNA är jordpaletten ur :root i nextrum-cinema.css: papperet
+// till botten, bark till text, lera till knappen. Ändras paletten där
+// ska den ändras här; mejlet är en del av samma yta. Sajtens papper
+// ljusnade 2026-09-25 (#EFE6D6 → #F2EDE3) och mejlen låg kvar på det
+// gamla samma dag — det är så lätt den här meningen glöms. Mörkt läge
+// stängs av: Gmail och Outlook färgar annars om bakgrunderna på egen
+// hand och lämnar texten kvar, och bark på bark är ett tomt mejl.
+//
+// INGEN RAM RUNT BREVET (2026-09-25). Förut låg brevet som ett kort
+// med kant och rundade hörn på en mörkare yta, och mejlprogrammet
+// ritar redan sin egen yta runt allt — vit i Gmail. Det blev tre lager
+// kanter runt en enda text. Leo: "ta bort de vita kanterna runt
+// mailen". Nu är hela brevet sajtens papper, ända ut till kanten, som
+// sidorna, och det enda som bryter ytan är faktarutan och knappen. Det
+// vita som ändå syns runt ett mejl i Gmail på datorn är Gmails eget,
+// och det når inget mejl.
+//
+// PAPPERET STÅR PÅ FLERA STÄLLEN i skal(), med flit: på body för Apple
+// Mail, som målar hela fönstret med den, och på yttertabellen, både som
+// bgcolor och som style, för Gmail, som kastar body-stilen. Tas det
+// bort från något av dem blir det vitt i något program, och det syns
+// inte i den webbläsare man provar i.
+//
+// UNDERLAGET OCH AVISERINGEN använder samma skal (skal() nedan):
+// faktura-utskick och lead-notis anropar det direkt i stället för att
+// ha egna färger. Deras egna kopior hade hunnit glida isär med en kant
+// i en ton som inte finns i paletten längre, och aviseringen var vit.
 //
 // TYPSNITTET är systemets. Webbtypsnitt laddas inte i de flesta
 // mejlprogram, och en länk till Google Fonts i ett mejl är en
@@ -57,17 +79,18 @@ export const SAJT = 'https://nextrum.se';
 export const KONTAKT = 'info@nextrum.se';
 export const LOGGA_URL = `${SAJT}/bilder/nextrum-logo-512.png`;
 
-const FARG = {
-  botten: '#E5D8C2',  // --pap-2, lugn yta runt brevet
-  papper: '#EFE6D6',  // --pap, lin
-  text: '#2E2A20',    // --bl, bark
-  brod: '#4F4738',    // --bl-2, brödtext på lin (7.4:1)
-  dampad: '#665C49',  // --bl-3, klarar AA även mot --pap-2
-  linje: '#C9B492',   // --ln-2
-  knapp: '#9C4520',   // --acc, lera (5.16:1 mot lin, åt båda hållen)
-};
+export const FARG = {
+  papper: '#F2EDE3',     // --pap, hela brevet ända ut till kanten
+  yta: '#E9E2D4',        // --pap-2, lugn yta: faktarutan och provraden
+  text: '#2E2A20',       // --bl, bark (12,3:1 mot papperet)
+  brod: '#4F4738',       // --bl-2, brödtext (7,9:1)
+  dampad: '#665C49',     // --bl-3, klarar AA även mot --pap-2 (5,1:1)
+  linje: '#CDC2AC',      // --ln-2
+  knapp: '#9C4520',      // --acc, lera (5,5:1 mot papperet)
+  knapptext: '#EFE6D6',  // --acc-ink, som sajtens knappar (5,2:1 mot leran)
+} as const;
 
-const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+export const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
 
 /** Prov: 'nej' för ett riktigt utskick, 'sandlada' när mejlet gick till sandlådan i stället
  *  för till mottagaren, 'provmejl' när admin bett om ett prov till sig själv. */
@@ -206,8 +229,8 @@ function faktaHtml(rader: [string, string][]): string {
     + `white-space:nowrap;vertical-align:top">${esc(k)}</td>`
     + `<td style="padding:4px 0;font:600 14px/1.5 ${SANS};color:${FARG.text}">${esc(v)}</td></tr>`).join('');
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" `
-    + `style="background:${FARG.botten};border-radius:12px;margin:0 0 26px">`
-    + `<tr><td style="padding:16px 20px">`
+    + `style="background:${FARG.yta};border-radius:12px;margin:0 0 26px">`
+    + `<tr><td bgcolor="${FARG.yta}" style="padding:16px 20px;background:${FARG.yta};border-radius:12px">`
     + `<table role="presentation" cellpadding="0" cellspacing="0" border="0">${celler}</table>`
     + `</td></tr></table>`;
 }
@@ -219,7 +242,7 @@ function knappHtml(text: string, adress: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px">`
     + `<tr><td bgcolor="${FARG.knapp}" style="background:${FARG.knapp};border-radius:10px">`
     + `<a href="${esc(adress)}" style="display:inline-block;padding:14px 26px;font:600 15px/1 ${SANS};`
-    + `color:${FARG.papper};text-decoration:none;border-radius:10px">${esc(text)}</a>`
+    + `color:${FARG.knapptext};text-decoration:none;border-radius:10px">${esc(text)}</a>`
     + `</td></tr></table>`;
 }
 
@@ -258,37 +281,74 @@ function logga(): string {
     + `</tr></table>`;
 }
 
-function html(r: Ram): string {
-  const i = r.innehall;
-  const p = (s: string, stil: string) => `<p style="margin:0 0 16px;${stil}">${esc(s)}</p>`;
-  const lank = (text: string, adress: string) =>
-    `<a href="${esc(adress)}" style="color:${FARG.text};text-decoration:underline">${esc(text)}</a>`;
+export type Skal = {
+  amne: string;
+  /** Det som syns efter ämnesraden i inkorgen. Text, inte HTML. */
+  forhandstext: string;
+  /** Färdig HTML. Allt i den ska redan ha gått genom esc(). */
+  innehall: string;
+  provrad?: string | null;
+};
 
-  const provrad = r.provrad
-    ? `<tr><td style="padding:0 0 14px;font:600 13px/1.5 ${SANS};color:${FARG.text}">${esc(r.provrad)}</td></tr>`
+/**
+ * Skalet runt varje mejl vi skickar: dokumentet, papperet och loggan.
+ *
+ * Notismejlen, kvittot och ansökningsbeskeden går genom html() nedan.
+ * Underlaget (faktura-utskick) och aviseringen om en ny anmälan
+ * (lead-notis) har eget innehåll och anropar skalet direkt, så att
+ * papperet, loggan och kanterna — att det inte finns några — är
+ * desamma i allt vi skickar.
+ */
+export function skal(s: Skal): string {
+  /* Provraden står överst på en lugn yta, så att den som läser ett prov
+     ser det innan något annat. Den hör till kön och syns aldrig i ett
+     riktigt utskick. */
+  const provrad = s.provrad
+    ? `<tr><td style="padding:0 0 24px">`
+      + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>`
+      + `<td bgcolor="${FARG.yta}" style="padding:10px 14px;background:${FARG.yta};border-radius:10px;`
+      + `font:600 13px/1.5 ${SANS};color:${FARG.text}">${esc(s.provrad)}</td>`
+      + `</tr></table></td></tr>`
     : '';
 
   return `<!doctype html><html lang="sv"><head><meta charset="utf-8">`
     + `<meta name="viewport" content="width=device-width,initial-scale=1">`
     + `<meta name="color-scheme" content="light only">`
     + `<meta name="supported-color-schemes" content="light only">`
-    + `<title>${esc(i.amne)}</title></head>`
-    + `<body style="margin:0;padding:0;background:${FARG.botten};-webkit-text-size-adjust:100%">`
+    + `<title>${esc(s.amne)}</title></head>`
+    + `<body bgcolor="${FARG.papper}" style="margin:0;padding:0;background:${FARG.papper};-webkit-text-size-adjust:100%">`
     /* Förhandstexten: det som syns efter ämnesraden i inkorgen. Utan
        den plockar mejlprogrammet första bästa text, som är loggan. */
-    + `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${esc(i.mening)}</div>`
-    + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${FARG.botten}" `
-    + `style="background:${FARG.botten}"><tr><td align="center" style="padding:32px 16px">`
-    + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" `
-    + `style="width:100%;max-width:560px">`
+    + `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${esc(s.forhandstext)}</div>`
+    /* Yttertabellen ÄR brevet: papperet över hela bredden och ingen
+       marginal runt. Luften mot kanten är innerpadding på samma
+       papper, så att ingenting annat än papperet syns utanför texten. */
+    + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${FARG.papper}" `
+    + `style="background:${FARG.papper}"><tr><td align="center" style="padding:36px 24px 44px">`
+    + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="520" `
+    + `style="width:100%;max-width:520px">`
     + provrad
-    + `<tr><td bgcolor="${FARG.papper}" style="background:${FARG.papper};border:1px solid ${FARG.linje};border-radius:16px">`
-    + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">`
-    + `<tr><td style="padding:28px 32px 0">${logga()}</td></tr>`
-    + `<tr><td style="padding:26px 32px 28px">`
+    + `<tr><td style="padding:0 0 28px">${logga()}</td></tr>`
+    + `<tr><td>${s.innehall}</td></tr>`
+    + `</table></td></tr></table></body></html>`;
+}
+
+/** Rubriken, en gång. Underlaget och aviseringen har samma som notismejlen. */
+export function rubrikHtml(text: string): string {
+  return `<h1 style="margin:0 0 12px;font:700 24px/1.25 ${SANS};letter-spacing:-.015em;color:${FARG.text}">`
+    + `${esc(text)}</h1>`;
+}
+
+function html(r: Ram): string {
+  const i = r.innehall;
+  const p = (s: string, stil: string) => `<p style="margin:0 0 16px;${stil}">${esc(s)}</p>`;
+  const lank = (text: string, adress: string) =>
+    `<a href="${esc(adress)}" style="color:${FARG.text};text-decoration:underline">${esc(text)}</a>`;
+
+  const innehall = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">`
+    + `<tr><td style="padding:0 0 28px">`
     + p(r.halsning, `font:400 16px/1.6 ${SANS};color:${FARG.brod}`)
-    + `<h1 style="margin:0 0 12px;font:700 24px/1.25 ${SANS};letter-spacing:-.015em;color:${FARG.text}">`
-    + `${esc(i.rubrik)}</h1>`
+    + rubrikHtml(i.rubrik)
     + p(i.mening, `font:400 16px/1.6 ${SANS};color:${FARG.brod};margin-bottom:22px`)
     + faktaHtml(i.fakta)
     + (i.knapp ? knappHtml(i.knapp, r.knappAdress) : '')
@@ -297,8 +357,8 @@ function html(r: Ram): string {
       ? `<p style="margin:18px 0 0;font:400 15px/1.6 ${SANS};color:${FARG.brod}">${esc(r.avslutning)}</p>`
       : '')
     + `</td></tr>`
-    + `<tr><td style="padding:0 32px"><div style="height:1px;line-height:1px;font-size:1px;background:${FARG.linje}">&nbsp;</div></td></tr>`
-    + `<tr><td style="padding:20px 32px 28px;font:400 13px/1.6 ${SANS};color:${FARG.dampad}">`
+    + `<tr><td><div style="height:1px;line-height:1px;font-size:1px;background:${FARG.linje}">&nbsp;</div></td></tr>`
+    + `<tr><td style="padding:20px 0 0;font:400 13px/1.6 ${SANS};color:${FARG.dampad}">`
     + `<p style="margin:0 0 8px">${esc(r.varfor)}</p>`
     /* Var länk för sig, precis som i textversionen. Ett gemensamt
        villkor hade tyst tappat BÅDA om bara den ena vore null, och de
@@ -312,9 +372,9 @@ function html(r: Ram): string {
       : '')
     + `<p style="margin:0">Frågor? Svara på mejlet eller skriv till `
     + `<a href="mailto:${KONTAKT}" style="color:${FARG.text}">${KONTAKT}</a>.</p>`
-    + `</td></tr></table>`
-    + `</td></tr></table>`
-    + `</td></tr></table></body></html>`;
+    + `</td></tr></table>`;
+
+  return skal({ amne: i.amne, forhandstext: i.mening, innehall, provrad: r.provrad });
 }
 
 /** Ämne, text och HTML för en rad ur kön. Kastar för en typ som inte mejlas. */

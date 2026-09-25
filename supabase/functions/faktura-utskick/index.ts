@@ -49,6 +49,7 @@ import { json, preflight, esc, epostOk } from '../_delad/http.ts';
 import { kravAdmin, serviceklient } from '../_delad/auth.ts';
 import { MANADER } from '../_delad/konstanter.ts';
 import { skickaViaResend } from '../_delad/mejl.ts';
+import { FARG, SANS, rubrikHtml, skal } from '../_delad/notiser/rendera.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -81,9 +82,12 @@ function timmar(minuter: number): string {
 }
 
 // ------------------------------------------------------------
-// Mejlet. Ett bord med raderna och en summa. Inga bilder och ingen
-// extern CSS: ett underlag ska gå att läsa i vilken klient som helst,
-// också en som blockerar allt.
+// Mejlet. Ett bord med raderna och en summa, i samma skal som allt
+// annat vi skickar (_delad/notiser/rendera.ts): sajtens papper ända ut
+// till kanten och loggan överst. Ingen extern CSS: ett underlag ska gå
+// att läsa i vilken klient som helst, också en som blockerar allt. Den
+// enda bilden är loggan, och ordet Nextrum står bredvid den som text,
+// så med bilderna avstängda saknas ingenting.
 // ------------------------------------------------------------
 function utbetalningsMejl(u: any, rader: any[], namn: string) {
   const rubrik = `Ditt underlag för ${periodText(u.period)}`;
@@ -100,25 +104,35 @@ function utbetalningsMejl(u: any, rader: any[], namn: string) {
     `Underlaget finns också under Statistik & ersättning i din vy: https://nextrum.se/larare\n\n` +
     `Stämmer något inte — svara på det här mejlet innan utbetalningen görs.\n\nNextrum\n`;
 
-  const html =
-    `<div style="font:15px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;color:#2E2A20;max-width:560px">` +
-    `<h2 style="font-size:20px;font-weight:700;margin:0 0 6px">${esc(rubrik)}</h2>` +
-    `<p style="margin:0 0 18px">Hej ${esc(namn)}!</p>` +
-    `<p style="margin:0 0 18px">Här är underlaget för de pass du höll och rapporterade i ` +
+  const brod = `font:400 16px/1.6 ${SANS};color:${FARG.brod}`;
+  const cell = `font:400 15px/1.5 ${SANS};color:${FARG.text}`;
+  const kant = `border-bottom:1px solid ${FARG.linje}`;
+
+  const innehall =
+    rubrikHtml(rubrik) +
+    `<p style="margin:0 0 16px;${brod}">Hej ${esc(namn)}!</p>` +
+    `<p style="margin:0 0 20px;${brod}">Här är underlaget för de pass du höll och rapporterade i ` +
     `${esc(periodText(u.period))}.</p>` +
-    `<table style="width:100%;border-collapse:collapse;margin:0 0 18px">` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" ` +
+    `style="width:100%;border-collapse:collapse;margin:0 0 20px">` +
     rader.map((r) =>
-      `<tr><td style="padding:9px 0;border-bottom:1px solid #DDCDB2">${esc(r.beskrivning)}` +
-      `<br><span style="font-size:13px;color:#665C49">${esc(timmar(r.minuter))}</span></td>` +
-      `<td style="padding:9px 0;border-bottom:1px solid #DDCDB2;text-align:right;white-space:nowrap">` +
+      `<tr><td style="padding:10px 12px 10px 0;${kant};${cell}">${esc(r.beskrivning)}` +
+      `<br><span style="font-size:13px;color:${FARG.dampad}">${esc(timmar(r.minuter))}</span></td>` +
+      `<td style="padding:10px 0;${kant};${cell};text-align:right;white-space:nowrap;vertical-align:top">` +
       `${esc(kronor(r.belopp_ore))}</td></tr>`).join('') +
-    `<tr><td style="padding:13px 0;font-weight:700">Totalt</td>` +
-    `<td style="padding:13px 0;text-align:right;font-weight:700;white-space:nowrap">` +
+    `<tr><td style="padding:14px 12px 0 0;${cell};font-weight:700">Totalt</td>` +
+    `<td style="padding:14px 0 0;${cell};font-weight:700;text-align:right;white-space:nowrap">` +
     `${esc(kronor(u.belopp_ore))}</td></tr></table>` +
-    `<p style="margin:0 0 18px;font-size:14px;color:#4F4738">Ett pass räknas när du skrivit ` +
+    `<p style="margin:0 0 12px;font:400 14px/1.6 ${SANS};color:${FARG.brod}">Ett pass räknas när du skrivit ` +
     `rapporten.</p>` +
-    `<p style="margin:0;font-size:14px;color:#665C49">Stämmer något inte — svara på det här ` +
-    `mejlet innan utbetalningen görs.</p></div>`;
+    `<p style="margin:0;font:400 14px/1.6 ${SANS};color:${FARG.dampad}">Stämmer något inte — svara på det här ` +
+    `mejlet innan utbetalningen görs.</p>`;
+
+  const html = skal({
+    amne: `${rubrik} — Nextrum`,
+    forhandstext: `Här är underlaget för de pass du höll och rapporterade i ${periodText(u.period)}.`,
+    innehall,
+  });
 
   return { amne: `${rubrik} — Nextrum`, text, html };
 }

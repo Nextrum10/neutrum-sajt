@@ -179,7 +179,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
-| `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med |
+| `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med. Mejlen har sin egen kopia av paletten (`FARG` i `_delad/notiser/rendera.ts`) och följer INTE med av sig själva |
 | `nextrum-start.css` + `nextrum-start.js` | **Startsidan** (sv och en), efter cinema respektive före sidans eget skript, **och För elever & föräldrar**, som bara använder studievyns illustration ur dem. Rörelsen efter hero: ordfyllnaden, hållpunkterna 1–4, korten som stiger upp, det rullande bandet, bildväggen och studievyn som visar sig själv (en rundtur, men den går inte att klicka i). Skriptet startar av sig självt och skriver ingen text — allt man läser står i markupen, på båda språken |
 | `nextrum-admin-palett.css` | Bara `admin.html`, laddas **sist**. Sedan 2026-09-24 **ingen egen palett**: adminvyn ärver jordpaletten som de två andra vyerna. Filen bär bara `--fel`, `--ln-kontroll`, agentflikens `--acc-lugn` och felsemantiken |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
@@ -713,6 +713,21 @@ ansökan återges utom förnamnet.
 Nextrum som text bredvid, så att ett mejlprogram som blockerar bilder
 fortfarande visar avsändaren. Filen är undantagen i `.gitignore`; tas
 undantaget bort blir loggan en trasig bild i varje mejl.
+
+**Alla mejl vi skickar har samma skal** (2026-09-25): `skal()` i
+`_delad/notiser/rendera.ts`. Sajtens papper ända ut till kanten, ingen
+ram, kant eller mörkare yta runt brevet, loggan överst. Notismejlen,
+kvittot och ansökningsbeskeden går genom det via `renderaRam()`;
+underlaget i `faktura-utskick` och aviseringen i `lead-notis` anropar
+det direkt. Förut hade de två egna färger — underlaget en kant i en ton
+som inte fanns i paletten, aviseringen ingen alls — och ramen låg kvar
+på det gamla papperet samma dag som sajtens ljusnade. Papperet står på
+`body` för Apple Mail OCH som `bgcolor` på yttertabellen för Gmail, som
+kastar body-stilen: tas ett av dem bort blir det vitt i det programmet.
+Det vita som ändå syns runt ett mejl i Gmail på datorn är Gmails eget
+och går inte att nå inifrån ett mejl. Kontomejlen (bekräfta konto,
+inbjudan från `bjud-in`) skickas av Supabase Auth med mallar i
+dashboarden, inte härifrån, och har inte det här skalet.
 
 ---
 

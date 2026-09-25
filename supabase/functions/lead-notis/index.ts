@@ -43,7 +43,7 @@ import { json as jsonMed, esc, epostOk } from '../_delad/http.ts';
 import { lika, serviceklient } from '../_delad/auth.ts';
 import { skickaViaResend } from '../_delad/mejl.ts';
 import { KVITTO_FRAN, renderaKvitto } from '../_delad/notiser/kvitto.ts';
-import { KONTAKT } from '../_delad/notiser/rendera.ts';
+import { FARG, KONTAKT, SANS, rubrikHtml, skal } from '../_delad/notiser/rendera.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
@@ -280,19 +280,32 @@ Deno.serve(async (req) => {
     const r = kropp?.record;
     if (!r) return json({ error: 'Ingen record i webhook-anropet.' }, 400);
 
-    const text =
-      'Ny intresseanmälan på nextrum.se\n\n' +
+    const falt =
       rad('Namn', r.parent_name) +
       rad('E-post', r.email) +
       rad('Elevens namn', r.child_name) +
       rad('Årskurs', r.grade) +
-      rad('Ämne', r.subject) +
+      rad('Ämne', r.subject);
+
+    const text =
+      'Ny intresseanmälan på nextrum.se\n\n' +
+      falt +
       (r.message ? `\nMeddelande:\n${r.message}\n` : '') +
       `\nInkom: ${r.created_at ?? 'okänt'}\nRad-id: ${r.id ?? 'okänt'}\n`;
 
-    const html =
-      `<h2 style="font:600 18px system-ui;margin:0 0 14px">Ny intresseanmälan</h2>` +
-      `<pre style="font:14px/1.6 ui-monospace,monospace;white-space:pre-wrap;margin:0">${esc(text)}</pre>`;
+    /* Samma skal som allt annat vi skickar, och innehållet är texten
+       ovan ordagrant: HTML-versionen kan inte säga något annat än
+       textversionen, för den ÄR textversionen. <pre> och inte en div,
+       för radbrytningarna ska stå kvar också där white-space inte
+       stöds (Outlook på Windows). Fälten blir förhandstexten, så att
+       inkorgen visar vem och vad innan någon öppnat mejlet. */
+    const html = skal({
+      amne: 'Ny intresseanmälan',
+      forhandstext: falt.trim().split('\n').join(' · ') || 'Ny intresseanmälan på nextrum.se',
+      innehall: rubrikHtml('Ny intresseanmälan')
+        + `<pre style="margin:0;font:400 15px/1.6 ${SANS};color:${FARG.brod};`
+        + `white-space:pre-wrap;word-wrap:break-word">${esc(text)}</pre>`,
+    });
 
     const skicka = (avsandare: string, mottagare: string[]) => skickaViaResend({
       fran: avsandare,
