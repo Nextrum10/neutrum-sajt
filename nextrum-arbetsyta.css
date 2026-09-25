@@ -516,6 +516,10 @@
 /* Fälten för adress och anteckning: etiketten ovanför på en smal
    skärm, bredvid på en bred. */
 .bk-faltrad .inp{flex:1 1 260px;min-width:0}
+/* Ångerrätten under valen. Liten, men den ska gå att läsa: den är en
+   del av avtalet, inte en fotnot. */
+.bk-anger{margin:14px 0 0;font-size:.84rem;line-height:1.55;color:var(--muted);max-width:62ch}
+.bk-anger a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 /* På en telefon ligger kvittoraden klistrad längst ned. Ett fält som
    får fokus ska hamna ovanför den, inte bakom den. */
 .bk .inp{scroll-margin-bottom:190px}

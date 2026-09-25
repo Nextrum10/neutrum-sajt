@@ -656,7 +656,17 @@ window.NXArbete = (function () {
         + '<div class="bk-valrad bk-faltrad"><label class="bk-valrad-et" for="bk-not">Till studiehjälparen</label>'
         + '<input class="inp" id="bk-not" maxlength="300"'
         + ' placeholder="Valfritt — t.ex. provet på fredag, kapitel 4" value="' + esc(st.not) + '"></div>'
-        + '</div>';
+        + '</div>'
+        /* Ångerrätten (villkoren, #angerratt). Ett pass som hålls inom
+           de 14 dagarna går att ångra även efteråt, UTOM när familjen
+           uttryckligen bett att det hålls inom fristen (lagen om
+           distansavtal 2 kap. 11 och 15 §§). Den begäran är att föreslå
+           tiden, och den ska stå där den görs, inte bara i villkoren.
+           Sist i panelen: den står alltid där och ändrar ingen höjd
+           ovanför det man trycker på. */
+        + '<p class="bk-anger">När ni föreslår tiden ber ni också att passet får hållas inom '
+        + 'ångerfristen på 14 dagar. Ett genomfört pass går inte att ångra. '
+        + '<a href="/anvandarvillkor#angerratt" target="_blank" rel="noopener">Om ångerrätten</a></p>';
     }
 
     /* Tre steg överst, och en mening om vad som händer nu. Leo

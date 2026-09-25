@@ -45,6 +45,16 @@ läser ämnet genom `fornamn()`, så fritexten når dem som ett ord.
 Samma dag går det bara att föreslå tider minst en timme fram, och
 tidsraden säger det — annars ser det ut som att morgonen saknas.
 
+**Ångerrätten står i villkoren** (`#angerratt`, 2026-09-25): 14 dagar
+från att passet är bokat. Villkoren nämnde den inte alls förut, och
+utan informationen förlängs fristen med upp till tolv månader (lagen
+om distansavtal 2 kap. 13 §). Att ett genomfört pass inte går att
+ångra, och att en påbörjad del betalas, gäller bara för att familjen
+UTTRYCKLIGEN bett att passet hålls inom fristen — den begäran är att
+föreslå tiden, och meningen om det står sist i bokningens dagpanel.
+Tas meningen bort faller undantaget. Klippkort, när de byggs, har
+samma ångerrätt: den går inte att avtala bort.
+
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
 `note`. Fas 15.1 hade tagit bort frågan, och ett förslag hade då ingen
