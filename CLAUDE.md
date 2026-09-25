@@ -217,6 +217,13 @@ Fyra saker som kostade en omgång:
    `aria-hidden`, utanför tabbordningen och har egna id:n; en
    skärmläsare hör sex kort, inte arton.
 
+**De mörka ytorna** (Bli studiehjälpare och Nästa steg) är sedan
+2026-09-25 rundade ytor som ligger på papperet, i en varmare bark än
+`--nt` (`--mork` i `nextrum-start.css`), och glider upp med klassen
+`.nx-framme` — aldrig `.nx-in`, för `.nx-in .nx-rad-i` i cinema tänder
+rubrikens rader på en gång. Stegen i ansökan har samma 1–4-beteende
+som hållpunkterna; `hållpunkter()` tar båda listorna.
+
 Studievyns markup byggs för båda språken ur samma mall, så att
 taggsekvensen är identisk. Samma markup står på `for-elever-och-foraldrar.html`
 (sv och en, 2026-09-25: den gamla `.nx-mock` stod kvar där). Ändras
@@ -287,6 +294,16 @@ strypt processor och scroll anchoring avstängd (som Safari):
    `NXStudie.håll`. Samma omritning nollställde dessutom ämnesraden i
    sidled — en rad man dragit fram Engelska i hoppade tillbaka till
    Matematik.
+
+**Känslan i studievyn och studiehjälparvyn** (2026-09-25, sist i
+`nextrum-arbetsyta.css`, `.vy:not(.vy-admin)`): rundare ytor, runda
+dagar och tider som piller, och ett tryck som sjunker med `scale` och
+fjädrar tillbaka. Aldrig `transform` (cinemas `.btn:active` äger den)
+och aldrig en storlek som ändras av trycket (punkt 4). Ingen
+animation på `[aria-pressed]`: bokningen ritar om sin panel vid varje
+tryck, och allt som redan var valt hade studsat varje gång. iPhone
+tänder `:active` först med en touch-lyssnare på sidan; den står i
+`nextrum-studie.js`.
 
 Provbänken (`skanna.js` i en scratchpad, inte i repot) trycker på varje
 knapp i varje sektion och rapporterar hopp över 40 px. Admin var ren.
