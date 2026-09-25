@@ -698,7 +698,11 @@ Sex regler bär det:
    av `skydda_ansokningsfalt`, inte av den som postar (Fas 16.1c).
    Innan dess gick bromsen runt med en bakdaterad rad. **`leads` hade
    samma hål och har samma rättelse** i `skydda_leadfalt`: bromsen i
-   `lead-notis` och analysvyerna räknar på den kolumnen.
+   `lead-notis` och analysvyerna räknar på den kolumnen. Sedan Fas 16.2
+   har familjekvittot också samma regler, räknade i databasen av
+   `lead_kvitto_broms()` (bara `service_role`). Förut räknade
+   `lead-notis` själv med ilike på den exakta adressen, och ett
+   plustecken räckte för att få ett kvitto till.
 6. **Godkänd i rullgardinen är inte "Ta in i poolen".** Båda mejlar
    välkomsten, men bara den senare godkänner profilen. Rullgardinen
    frågar därför först.

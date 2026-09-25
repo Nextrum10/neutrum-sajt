@@ -286,16 +286,21 @@ Vanliga svar:
 - **Mejl går men ingen får dem** — kolla `notis_drift.mejl_sandlada`.
   Den kan ha blivit kvar efter ett prov.
 - **Kvittot på en intresseanmälan uteblev** — det är förmodligen med
-  flit. `lead-notis` bromsar av två skäl, och skriver alltid varför i
+  flit. `lead-notis` bromsar av tre skäl, och skriver alltid varför i
   funktionsloggen:
-  - samma adress har redan fått ett kvitto det senaste dygnet
+  - samma adress har redan anmält sig det senaste dygnet (jämfört utan
+    skiftläge och plustillägg: `anna+1@gmail.com` är samma inkorg som
+    `anna@gmail.com`)
   - det har kommit fler än fem anmälningar den senaste minuten
+  - det har kommit fler än tjugo den senaste timmen
 
-  `leads` tar emot INSERT från vem som helst — det är meningen,
-  formuläret är publikt. Utan broms kunde vem som helst posta rader i
-  en slinga med en adress de valt och få oss att mejlbomba en
-  utomstående från vår egen domän. **Aviseringen till er går ut i
-  båda fallen**, så att en människa ser att något pågår.
+  Reglerna räknas i databasen av `lead_kvitto_broms()` (Fas 16.2), med
+  samma jämförelse som ansökningskvittot. `leads` tar emot INSERT från
+  vem som helst — det är meningen, formuläret är publikt. Utan broms
+  kunde vem som helst posta rader i en slinga med en adress de valt och
+  få oss att mejlbomba en utomstående från vår egen domän.
+  **Aviseringen till er går ut i alla fallen**, så att en människa ser
+  att något pågår.
 
   Går kontrollen inte att göra skickas inget kvitto. En broms som
   släpper igenom när den är trasig är ingen broms.

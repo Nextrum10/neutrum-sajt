@@ -139,21 +139,28 @@ const KVITTO_TIDSGRANS_MS = 8_000;
    DKIM-signerade mejl från info@nextrum.se till en utomstående: en
    mejlbomb på vår domän, vår Resend-kvot och vårt rykte.
 
-   Två bromsar, båda utan att röra databasen:
+   Tre bromsar, räknade i databasen av lead_kvitto_broms() (Fas 16.2):
 
      1. EN ADRESS FÅR ETT KVITTO PER DYGN. Tusen anmälningar med samma
-        offers adress blir ett mejl, inte tusen.
-     2. ETT TAK PER MINUT ÖVER LAG. Kommer det fler än så är något
-        fel, och kvittona slutar gå ut tills det lugnat sig.
+        offers adress blir ett mejl, inte tusen. Adressen jämförs som
+        den levereras, utan skiftläge och plustillägg: offer+1@gmail.com
+        och offer+2@gmail.com är samma inkorg.
+     2. ETT TAK PER MINUT ÖVER LAG, fem.
+     3. ETT TAK PER TIMME ÖVER LAG, tjugo. Fem i minuten är annars
+        7 200 kvitton per dygn för den som håller takten.
 
-   ADVISERINGEN TILL OSS GÅR UT I BÅDA FALLEN. Den är inte spärrad,
+   Reglerna och jämförelsen är desamma som för ansökningskvittot, och
+   de står på ett ställe (intern.epost_nyckel). Förut räknade den här
+   filen själv, med ilike på den exakta adressen, och bromsen gick
+   runt med ett plustecken — och med en bakdaterad created_at, som
+   Fas 16.1c stängde.
+
+   ADVISERINGEN TILL OSS GÅR UT I ALLA FALLEN. Den är inte spärrad,
    för det är så en människa får veta att något pågår.
 
    Går kontrollen inte att göra skickas INGET kvitto. En broms som
    släpper igenom när den är trasig är ingen broms.
    ============================================================ */
-const KVITTO_TAK_PER_MINUT = 5;
-const KVITTO_DYGN_MS = 24 * 60 * 60 * 1000;
 
 export type KvittoUtfall = { skickat: boolean; id?: string | null; orsak?: string };
 
@@ -162,33 +169,13 @@ async function kvittoBromsat(r: Record<string, unknown>): Promise<string | null>
   if (!SUPABASE_URL || !SERVICE_ROLE) return 'Takten gick inte att kontrollera.';
 
   try {
-    const klient = serviceklient();
-    const enMinutSedan = new Date(Date.now() - 60_000).toISOString();
-    const ettDygnSedan = new Date(Date.now() - KVITTO_DYGN_MS).toISOString();
-
-    /* % och _ är jokertecken i ilike. En adress som innehåller dem
-       skulle annars matcha bredare än sig själv — eller smalare, om
-       någon sätter dem med flit för att slippa bromsen. */
-    const monster = String(r.email).trim().replace(/[\\%_]/g, (c) => '\\' + c);
-
-    let samma = klient.from('leads').select('id', { count: 'exact', head: true })
-      .ilike('email', monster).gte('created_at', ettDygnSedan);
-    /* Raden som just skapades räknas inte som en tidigare anmälan. */
-    if (typeof r.id === 'string' && r.id) samma = samma.neq('id', r.id);
-
-    const [flod, tidigare] = await Promise.all([
-      klient.from('leads').select('id', { count: 'exact', head: true }).gte('created_at', enMinutSedan),
-      samma,
-    ]);
-
-    if (flod.error || tidigare.error) return 'Takten gick inte att kontrollera.';
-    if ((flod.count ?? 0) > KVITTO_TAK_PER_MINUT) {
-      return `Fler än ${KVITTO_TAK_PER_MINUT} anmälningar den senaste minuten.`;
-    }
-    if ((tidigare.count ?? 0) > 0) {
-      return 'Adressen har redan fått ett kvitto det senaste dygnet.';
-    }
-    return null;
+    const { data, error } = await serviceklient().rpc('lead_kvitto_broms', {
+      p_epost: String(r.email).trim(),
+      /* Raden som just skapades räknas inte som en tidigare anmälan. */
+      p_id: typeof r.id === 'string' && r.id ? r.id : null,
+    });
+    if (error) return 'Takten gick inte att kontrollera.';
+    return typeof data === 'string' && data ? data : null;
   } catch {
     return 'Takten gick inte att kontrollera.';
   }
