@@ -305,9 +305,16 @@ Deno.serve(async (req) => {
       belopp_ore: netto,
     }, 200, CORS);
   } catch (e) {
+    /* Felet skrivs också till funktionens logg. Förut stod Stripes svar
+       bara i familjens ruta i webbläsaren: fem nekade betalningar på två
+       dagar syntes i loggen som "502" och ingenting mer, och ingen hos
+       oss kunde läsa varför. Stripes text innehåller varken nyckeln eller
+       kortet; passets id står med för att kunna hitta raden. */
     if (e instanceof StripeError) {
+      console.error('stripe-checkout: Stripe nekade', JSON.stringify({ pass: passId, ...e.fel }));
       return json({ error: 'Stripe nekade: ' + e.fel.meddelande, stripe: e.fel }, 502, CORS);
     }
+    console.error('stripe-checkout: fel', JSON.stringify({ pass: passId, fel: (e as Error)?.message ?? String(e) }));
     return json({ error: (e as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
   }
 });
