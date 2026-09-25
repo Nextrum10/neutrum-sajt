@@ -103,7 +103,9 @@ som en adress blir annars en länk i ett mejl med godkänd DKIM.
 CSP: `/admin`, `/larare` och `/foralder` har `script-src 'self'`. **Ingen
 inline-JavaScript i de tre sidorna.** Inga `<script>` utan `src`, inga
 `onclick`, inga `javascript:`-adresser. `verktyg/kolla-csp.py` vaktar det
-i CI.
+i CI. `/foralder` släpper dessutom in Stripes domäner (Fas 14.5), för
+kassan ritas i en panel på sidan; den har en egen rad i `vercel.json`, och
+två skarpa CSP-rader får aldrig matcha samma sida.
 
 En funktion som svarar på en fråga om en PERSON ska ha `is_admin`s vakt
 från första raden: svara bara när uid är anroparens eget eller

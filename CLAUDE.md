@@ -640,6 +640,18 @@ inga `onclick="…"`, inga `javascript:`-adresser.**
 `verktyg/kolla-csp.py` kontrollerar det i CI. De publika sidorna har
 kvar policyn i Report-Only eftersom de fortfarande har inline-skript.
 
+**`/foralder` släpper in Stripe, och bara Stripe** (Fas 14.5). Kassan
+ritas i en panel på sidan i stället för på Stripes egen, och Stripe.js
+får inte vendoras: det ska alltid hämtas från `js.stripe.com`. Sidan
+har därför en egen rad i `vercel.json`, med Stripes domäner i
+`script-src`, `frame-src`, `connect-src` och `img-src`, och
+`payment` tillåtet för Stripes ramar i Permissions-Policy (Apple Pay
+och Google Pay). `/admin` och `/larare` har kvar exakt den gamla
+policyn. Regeln om inline-JavaScript gäller oförändrat också på
+`/foralder`: Stripe.js laddas med en `src`, när familjen trycker
+Betala. **Lägg aldrig två skarpa CSP-rader som båda matchar samma
+sida**: webbläsaren kräver då båda, och Stripe stoppas av den strängare.
+
 ---
 
 ## 7. Edge functions (`supabase/functions/`)
@@ -662,7 +674,7 @@ tillbaka en kopia.**
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
-| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet | Knappen på passet i föräldravyn |
+| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv | Knappen på passet i föräldravyn |
 | `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser` | Stripe |
 | `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
 | `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Ekonomi → Kortbetalningar |

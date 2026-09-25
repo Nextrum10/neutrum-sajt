@@ -369,10 +369,10 @@ provet. Gör den innan ni rör en skarp nyckel, och innan spärren slås på (9.
 | Kolumnerna och skyddet (`20260922155740_fas12_1_*.sql`) | **Applicerad** |
 | `stripe-konto` | **Borttagen**, ur repot och ur driften (Fas 12.5) |
 | Korttvisterna (`20260924125618_fas14_3_*.sql`) | **Applicerad.** Tabellen `stripe_tvister`, se 9.10 |
-| `stripe-checkout` | **ACTIVE**, version 8, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5) |
+| `stripe-checkout` | **ACTIVE**, version 9, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5). Fas 14.5: kassan öppnas i en panel på sidan (9.2) |
 | `stripe-webhook` | **ACTIVE**, version 6, `verify_jwt = false`. Fas 14.3: tvisterna sparas med sista svarsdag, orsak och utfall |
 | `stripe-aterbetalning` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
-| `stripe-lage` | **ACTIVE**, version 1, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting |
+| `stripe-lage` | **ACTIVE**, version 2, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting. Fas 14.5: säger om den publicerbara nyckeln är satt och i samma läge som den hemliga |
 | `STRIPE_SECRET_KEY` | **Visas i adminvyn** sedan Fas 14.3: Betalningar & utbetalningar → Kortbetalningar → **Kontrollera Stripe** säger om den saknas, är en test- eller skarp nyckel, eller har fel format. Inte ett tecken mer än så |
 | `STRIPE_WEBHOOK_SECRET` | **Satt och provad**: en påhittad signatur faller på tidsstämpeln, inte på hemligheten (slutet av 9.4) |
 | Webhook-endpoint hos Stripe | **Skapad** i sandlådan. Ingen leverans har kommit fram. **Saknar troligen `charge.dispute.updated`**, som kom till i Fas 14.3 (9.4) |
@@ -391,15 +391,25 @@ tillbaka fil för fil och lika med repot.
 
 ### 9.2 Nycklarna
 
-**Klistra aldrig in dem i en chatt, i `nextrum-config.js` eller i någon fil
-webbläsaren hämtar.** De bor som secrets i Supabase. Den publicerbara nyckeln
-(`pk_...`) behövs inte: vi använder Stripes egen betalsida, så ingen Stripe-kod
-körs i webbläsaren.
+**Klistra aldrig in den hemliga i en chatt, i `nextrum-config.js` eller i
+någon fil webbläsaren hämtar.** Den bor som secret i Supabase.
+
+**Den publicerbara nyckeln (`pk_...`) behövs sedan Fas 14.5**, för kassan
+öppnas i en panel på föräldravyn i stället för på Stripes sida. Den är inte
+hemlig, men den bor ändå som secret, `STRIPE_PUBLISHABLE_KEY`, bredvid den
+hemliga. De två måste komma från samma läge: en testnyckel och en skarp ger en
+panel som inte går att öppna. `stripe-checkout` prövar det, och går det inte
+öppnas kassan på Stripes sida som förut. **Kontrollera Stripe** visar det på
+raden "Kassan på sidan". Saknas nyckeln händer samma sak: betalningen fungerar,
+men på Stripes sida.
+
+Byter ni till skarpt läge byts alltså BÅDA, i samma fönster.
 
 Via dashboarden: **Project Settings → Edge Functions → Secrets**. Eller med CLI:
 
 ```
 supabase secrets set STRIPE_SECRET_KEY=sk_test_...
+supabase secrets set STRIPE_PUBLISHABLE_KEY=pk_test_...
 ```
 
 `STRIPE_WEBHOOK_SECRET` är satt. Den skapas av webhook-endpointen i Stripe, och
