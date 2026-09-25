@@ -501,6 +501,13 @@
      räknade till ordinarie pris, resten tillbaka. Beloppet räknas i
      klippkort_saldo; här visas det bara. Återbetalningen görs i Stripes
      dashboard, och webhooken stänger kortet när den kommer.
+
+     INOM ÅNGERFRISTEN gäller ett annat belopp (Fas 16.1e): den som
+     ångrar sig betalar en andel av det AVTALADE priset, alltså det
+     rabatterade, för det som hunnit användas. Att visa ordinariebeloppet
+     de första fjorton dagarna hade varit att be om pengar lagen inte ger
+     oss. Vilket av dem som gäller avgörs av dagens datum mot
+     angerfrist_till.
      ============================================================ */
   const KK_LAGE = { vantar: 'Obetalt', betald: 'Betalt', misslyckad: 'Misslyckades',
     aterbetald: 'Återbetalt', tvist: 'Tvist' };
@@ -536,9 +543,12 @@
       { namn: 'Gäller till', rita: k => esc(kortDatum(k.giltigt_till)) },
       { namn: 'Betalt', rita: k => (k.betalt_ore != null ? '<span class="adm-tal">' + esc(kronor(k.betalt_ore)) + '</span>' : '—')
         + (Number(k.aterbetald_ore || 0) > 0 ? '<span class="adm-und">' + esc(kronor(k.aterbetald_ore)) + ' tillbaka</span>' : '') },
-      { namn: 'Om de slutar i dag', rita: k => k.status === 'betald'
-        ? '<span class="adm-tal">' + esc(kronor(k.vid_uppsagning_ore || 0)) + '</span><span class="adm-und">tillbaka</span>'
-        : '' },
+      { namn: 'Om de slutar i dag', rita: k => {
+        if (k.status !== 'betald') return '';
+        const ånger = k.angerfrist_till && String(k.angerfrist_till) >= isoFor(new Date());
+        return '<span class="adm-tal">' + esc(kronor((ånger ? k.vid_anger_ore : k.vid_uppsagning_ore) || 0)) + '</span>'
+          + '<span class="adm-und">' + (ånger ? 'tillbaka · ångerrätt t.o.m. ' + esc(kortDatum(k.angerfrist_till)) : 'tillbaka') + '</span>';
+      } },
       { namn: 'Läge', höger: true, rita: k => '<span class="adm-tal">' + esc(KK_LAGE[k.status] || k.status) + '</span>' }
     ], kop, 'Inga köpta planer eller klippkort än');
   }

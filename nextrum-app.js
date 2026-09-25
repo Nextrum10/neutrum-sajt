@@ -87,7 +87,9 @@ const NX = (function () {
     felOkant:        ['Något gick fel. Prova igen, eller mejla oss på {oss}.',
                       'Something went wrong. Please try again, or email us at {oss}.'],
     felEpost:        ['Kontrollera e-postadressen — den ser inte ut som en adress.',
-                      'Please check the email address — it does not look like an address.']
+                      'Please check the email address — it does not look like an address.'],
+    enManad:         ['1 månad', '1 month'],
+    flerManader:     ['{n} månader', '{n} months']
   };
   /* {oss} fylls alltid, utan att anroparen behöver veta om det. Varje
      mall som slutar i en återvändsgränd ska kunna peka på en adress,
@@ -523,6 +525,52 @@ const NX = (function () {
       });
     }, { threshold: 0.6 });
     io.observe(stor);
+  }
+
+  /* ---------- erbjudandena (Fas 16.1) ----------
+     Priserna på prissidan läses ur vyn erbjudanden_pris, den som
+     stripe-checkout tar betalt efter. Timpriset i CFG räcker inte:
+     rabatten och avrundningen räknas i databasen, och en andra räkning
+     här hade kunnat lova en krona som kassan inte drar.
+
+     Supabase-klienten laddas inte på de publika sidorna — den är
+     tvåhundra kilobyte för en fråga — så det här är ett rått anrop mot
+     PostgREST med anon-nyckeln. Svarar det inte står siffrorna i HTML
+     kvar; de är skrivna efter samma vy. Ett erbjudande som inte finns
+     i svaret är avstängt och döljs, och kommer inget alls tillbaka
+     döljs hela sektionen: en plan utan pris går inte att köpa. */
+  async function initErbjudanden() {
+    const sek = $('.pr-erb');
+    if (!sek || !String(CFG.SUPABASE_URL || '').startsWith('https://')) return;
+    let rader;
+    try {
+      const svar = await fetch(CFG.SUPABASE_URL + '/rest/v1/erbjudanden_pris'
+        + '?select=kod,timmar,rabatt_procent,giltig_manader,timpris_ore,ordinarie_ore,pris_ore,rabatterat_timpris_ore', {
+        headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY }
+      });
+      if (!svar.ok) throw new Error('HTTP ' + svar.status);
+      rader = await svar.json();
+    } catch (e) {
+      console.warn('Nextrum: erbjudandena kunde inte hämtas, siffrorna i sidan står kvar —', e.message);
+      return;
+    }
+    if (!Array.isArray(rader)) return;
+    if (!rader.length) { sek.hidden = true; return; }
+
+    const perKod = {};
+    rader.forEach(r => { perKod[r.kod] = r; });
+    const skriv = (el, sel, text) => $$(sel, el).forEach(x => { x.textContent = text; });
+    $$('[data-erb]', sek).forEach(el => {
+      const r = perKod[el.getAttribute('data-erb')];
+      if (!r) { el.hidden = true; return; }
+      const m = Number(r.giltig_manader);
+      skriv(el, '[data-erb-pris]', kr(r.pris_ore / 100));
+      skriv(el, '[data-erb-timpris]', kr(r.timpris_ore / 100));
+      skriv(el, '[data-erb-rabatterat]', kr(r.rabatterat_timpris_ore / 100));
+      skriv(el, '[data-erb-spar]', kr((r.ordinarie_ore - r.pris_ore) / 100));
+      skriv(el, '[data-erb-rabatt]', String(r.rabatt_procent));
+      skriv(el, '[data-erb-giltig]', m === 1 ? t('enManad') : t('flerManader', { n: m }));
+    });
   }
 
   /* ============================================================
@@ -985,7 +1033,7 @@ const NX = (function () {
   return {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling, spamskydd,
-    initFaq, initDrag, initPris, kopplaAnsökan, märkInloggad,
+    initFaq, initDrag, initPris, initErbjudanden, kopplaAnsökan, märkInloggad,
     källa, händelse,
     bildIntoning, initVagval,
     /* hämtaTillganglighet stod här i Fas 14.0-grenen. Main tog bort

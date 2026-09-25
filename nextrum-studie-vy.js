@@ -1089,7 +1089,7 @@
     const [flagga, katalog, kort] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
       supa.from('erbjudanden_pris')
-        .select('kod, sort, namn, timmar, rabatt_procent, giltig_manader, timpris_ore, ordinarie_ore, pris_ore')
+        .select('kod, sort, namn, timmar, rabatt_procent, giltig_manader, timpris_ore, ordinarie_ore, pris_ore, rabatterat_timpris_ore')
         .order('ordning'),
       supa.from('klippkort_saldo')
         .select('id, erbjudande, namn, sort, timmar, anvanda, kvar, giltigt_till, status, brukbar, created_at')
@@ -1538,7 +1538,10 @@
   function erbKort(e) {
     const kr = NXBetalning.kronor;
     const spar = Number(e.ordinarie_ore) - Number(e.pris_ore);
-    const perTimme = Math.floor(Number(e.pris_ore) / Number(e.timmar) / 100) * 100;
+    /* Timpriset räknas i vyn, och summan är timpriset gånger timmarna
+       (Fas 16.1d). En egen division här hade kunnat visa ett timpris
+       som inte går ihop med summan bredvid. */
+    const perTimme = Number(e.rabatterat_timpris_ore);
     const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
     const rubrik = e.sort === 'plan' ? e.namn : e.timmar + ' timmar';
     const vad = e.kod === 'standard' ? '4 pass · ett i veckan i en månad'

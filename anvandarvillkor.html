@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
-<link rel="stylesheet" href="nextrum-cinema.css?v=f3f0446e">
+<link rel="stylesheet" href="nextrum-cinema.css?v=619f3441">
 </head>
 <body>
 
@@ -184,11 +184,52 @@
         bokningstillfället.</li>
       <li>Varje pass betalas för sig, med kort, när studiehjälparen har bekräftat tiden.
         Betalningen ska vara klar innan passet börjar. Ett pass som inte är betalt hålls inte.</li>
+      <li>Har ni köpt timmar i förväg, i en plan eller ett klippkort, kan ett bekräftat pass
+        betalas med dem i stället. Se <a href="#erbjudanden">Planer och klippkort</a> nedan.</li>
       <li>Kortbetalningen sköts av Stripe. Kortuppgifterna lämnar ni direkt till Stripe, aldrig
         till oss, och vi sparar dem inte.</li>
       <li>Ingen anmälningsavgift, ingen månadsavgift och ingen bindningstid. Ni betalar för de
-        pass ni bokar, inget annat.</li>
+        pass ni bokar och för timmar ni själva valt att köpa i förväg, inget annat.</li>
     </ul>
+
+    <!-- Fas 16.1. Vilka planer och klippkort som finns och vad de
+         kostar står på prissidan, ur vyn erbjudanden_pris. Här står
+         bara reglerna, så att en ändrad rabatt inte lämnar kvar en
+         siffra i villkoren som kassan inte tar. Återbetalningen räknas
+         i klippkort_saldo: vid_uppsagning_ore efter ångerfristen och
+         vid_anger_ore inom den, för inom fristen säger 2 kap. 15 §
+         distansavtalslagen att bara en andel av det AVTALADE priset
+         får behållas (Fas 16.1e). -->
+    <h2 id="erbjudanden">Planer och klippkort</h2>
+    <p>Ni kan köpa timmar i förväg till ett lägre pris: en plan för en månad eller ett klippkort.
+      Vilka som finns och vad de kostar står på <a href="/priser#erbjudanden">prissidan</a>. Köpet
+      görs en gång, med kort. Det är inget abonnemang och förnyas inte av sig självt.</p>
+    <ul>
+      <li><b>Hur länge timmarna gäller.</b> En plan gäller i en månad från köpet. Ett klippkort
+        med 10, 20 eller 30 timmar gäller i 6 månader, med 60 timmar i 12 månader och med 100
+        timmar i 18 månader. Sista dagen står i er vy.</li>
+      <li><b>Hur timmarna används.</b> När studiehjälparen har bekräftat ett pass betalar ni det
+        med timmarna i stället för med kort. Varje påbörjad timme av passet drar en timme.
+        Timmarna gäller pass med ett barn; ett pass med fler barn betalas med kort.</li>
+      <li><b>Avbokning.</b> Ett pass som betalats med timmar avbokar ni genom att kontakta oss,
+        som andra betalda pass. Timmarna kommer då tillbaka och gäller till samma dag som förut.
+        Går en timme förlorad för att vi eller studiehjälparen avbokat för sent för att ni ska
+        hinna använda den, betalar vi tillbaka den till det pris ni betalat.</li>
+      <li><b>Att sluta.</b> Vill ni sluta innan timmarna är använda betalar vi tillbaka det som
+        är kvar. De timmar ni redan använt räknas då till ordinarie timpris, eftersom rabatten
+        gäller för att ni köper alla timmarna. De första 14 dagarna efter köpet gäller i stället
+        <a href="#angerratt">ångerrätten</a>, och då räknas de använda timmarna till det pris ni
+        betalat.</li>
+      <li><b>Timmar som inte hunnit användas.</b> Timmar som finns kvar när tiden gått ut
+        förfaller. Hör av er innan dess om ni inte kommer att hinna, så betalar vi tillbaka
+        resten enligt punkten ovan.</li>
+    </ul>
+
+    <h2 id="prisgaranti">Prisgaranti</h2>
+    <p>Det ni betalat för en plan eller ett klippkort är priset för alla timmarna i den. Höjer vi
+      timpriset under tiden kostar timmarna ni redan köpt inte mer, och ni betalar aldrig någon
+      mellanskillnad. Slutar ni räknas de använda timmarna till det ordinarie timpris som gällde
+      när ni köpte, inte till ett senare och högre.</p>
 
     <!-- Lagen om distansavtal (2005:59), 2 kap. Informationen är ett
          krav i sig: saknas den förlängs ångerfristen med upp till tolv
@@ -211,13 +252,17 @@
         hålla passet även om fristen inte har gått ut. Ångrar ni er efter att passet har börjat
         betalar ni för den del som hunnit hållas. Ett pass som är helt genomfört går inte att
         ångra.</li>
+      <li>Köper ni en plan eller ett klippkort gäller samma ångerrätt, räknad från dagen för
+        köpet. Ångrar ni er betalar vi tillbaka det ni betalat, utom för de timmar som redan
+        använts. De räknas till det timpris ni betalade för planen eller klippkortet, inte till
+        ordinarie pris.</li>
     </ul>
     <div class="jur-ruta">
       <p><b>Formulär för att ångra sig</b></p>
       <p>Till Nextrum (Leo Constantinos Thriskos och Alexandar Jovanovic), Mönsteråsgränd 4,
         122 42 Enskede, info@nextrum.se:</p>
       <p>Jag meddelar härmed att jag vill frånträda mitt avtal om följande tjänst: …<br>
-        Bokat den: …<br>
+        Bokat eller köpt den: …<br>
         Namn: …<br>
         Adress: …<br>
         Underskrift (bara om formuläret skickas på papper): …<br>
@@ -250,8 +295,10 @@
       här. Inget i de här villkoren inskränker dem.</p>
 
     <h2>Att sluta</h2>
-    <p>Ni kan sluta när ni vill. Betalda pass som inte hållits betalar vi tillbaka. Vi kan stänga
-      av ett konto som bryter mot villkoren, och säger då till varför.</p>
+    <p>Ni kan sluta när ni vill. Betalda pass som inte hållits betalar vi tillbaka, och timmar som
+      finns kvar i en plan eller ett klippkort betalar vi tillbaka enligt
+      <a href="#erbjudanden">Planer och klippkort</a>. Vi kan stänga av ett konto som bryter mot
+      villkoren, och säger då till varför.</p>
 
     <h2>Ändringar</h2>
     <p>Vi kan ändra villkoren. Väsentliga ändringar meddelar vi minst 30 dagar i förväg till er
@@ -400,7 +447,7 @@
 <script src="nextrum-config.js?v=86b7287b"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a8185e00"></script>
+<script src="nextrum-app.js?v=f81a0750"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

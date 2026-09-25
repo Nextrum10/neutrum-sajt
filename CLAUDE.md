@@ -52,8 +52,21 @@ om distansavtal 2 kap. 13 §). Att ett genomfört pass inte går att
 ångra, och att en påbörjad del betalas, gäller bara för att familjen
 UTTRYCKLIGEN bett att passet hålls inom fristen — den begäran är att
 föreslå tiden, och meningen om det står sist i bokningens dagpanel.
-Tas meningen bort faller undantaget. Klippkort, när de byggs, har
-samma ångerrätt: den går inte att avtala bort.
+Tas meningen bort faller undantaget. Planer och klippkort (Fas 16.1)
+har samma ångerrätt, räknad från köpet, och den går inte att avtala
+bort. Inom fristen får vi bara behålla en andel av det AVTALADE priset
+för de timmar som använts (2 kap. 15 §), alltså det rabatterade.
+Regeln att använda timmar räknas till 379 kr när en familj slutar
+gäller först efter fristen — adminvyn visar rätt belopp efter datumet
+(`vid_anger_ore` och `vid_uppsagning_ore`, Fas 16.1e).
+
+**Timmar kan köpas i förväg (Fas 16.1).** Två planer för en månad
+(4 och 8 timmar, −10 %) och klippkort med 10–100 timmar (−5 %, gäller
+6–18 månader). Köpet är ett engångsköp med kort, inget abonnemang.
+Timmarna betalar sedan ett bekräftat pass med ett barn i stället för
+kortet. Flaggan `erbjudanden` står av tills provköpet i
+DEPLOY-BETALNING.md 9.12 gått igenom; då syns priserna men inget går
+att köpa.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
@@ -112,6 +125,14 @@ En studiehjälpare syns publikt först när admin satt läget till
 - **Den 25:e** får studiehjälparen betalt, i en klump för månadens
   rapporterade pass (`payouts`). Det är en lön, inte en andel av varje
   kortbetalning.
+- **Erbjudandenas priser står i `erbjudanden_pris` och ingen
+  annanstans.** Timpriset med rabatt avrundas nedåt till hel krona och
+  summan är timpris gånger timmar (Fas 16.1d) — förut avrundades
+  summan, och 20 timmar kostade 7 201 kr bredvid texten "360 kr per
+  timme". Prissidans siffror är en reserv för den som läser utan
+  javascript; `NX.initErbjudanden()` skriver över dem ur vyn med ett
+  rått PostgREST-anrop, eftersom supabase-js inte laddas på de publika
+  sidorna.
 - Belopp lagras i **ören** överallt. Kronor blir det först vid visning
   (`NXBetalning.kronor`). Enda stället ett avrundningsfel kan smyga in
   är omvandlingen — gör den en gång, på ett ställe.
@@ -364,6 +385,11 @@ och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
 Fas 14.3 la till `stripe_tvister` (skrivs bara av `stripe-webhook`,
 läses bara av admin). Fas 14.6 la till `faktura_sparr` (admin skriver,
 familjen läser sin egen rad). Fas 14.8 tog bort `fortnox_token`.
+Fas 16.1 la till `erbjudanden` (katalogen, alla läser) och `klippkort`
+(köpen: familjen läser sina, bara `service_role` skriver), med vyerna
+`erbjudanden_pris` och `klippkort_saldo`. Timmarna dras bara i
+`klippkort_dra()`, och triggrarna för klippkortet är EGNA — de rör inte
+`skydda_bokningsfalt` eller `avvikelser_rader`, som Fas 14.6 skrev om.
 Runda 2 la till notisernas sju: `notiser` (i vyn), `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
 `notis_fel` — plus `flaggor`, som är strömbrytarna för det som
@@ -754,7 +780,8 @@ tillbaka en kopia.**
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
-| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv | Knappen på passet i föräldravyn |
+| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris` | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
+| `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet | Betala med timmar i föräldravyn |
 | `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser` | Stripe |
 | `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
 | `stripe-avstamning` | Hämtar avgift, netto och läge (test eller skarpt) för betalningar som saknar dem (Fas 14.7). Högst femtio per tryck. Skriver bara de kolumnerna | Knappen Hämta från Stripe under Ekonomi → Kortbetalningar |
@@ -1208,6 +1235,15 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   rapportera och en familj som inte får betala.
 
   `SKISS-BETALNING-STRIPE.md` beskriver hur beslutet gick.
+- **Planer och klippkort (Fas 16.1) är byggda men inte öppna.**
+  Flaggan `erbjudanden` står av. Före påslaget: driftsätt
+  `stripe-webhook`, `stripe-checkout` och `klippkort-betala` i den
+  ordningen — webhooken först, annars blir ett köpt kort en betalning
+  hos Stripe som aldrig blir `betald` hos oss — och gör provköpet i
+  DEPLOY-BETALNING.md 9.12. Kvar efter det: familjen kan inte själv
+  avboka ett pass de betalat med timmar (samma spärr som för kort, fast
+  inga pengar ska tillbaka), och ingen påminnelse går ut innan timmar
+  löper ut.
 - **Google Workspace.** Statusflik finns, koppling saknas.
   `INTEGRATIONER.md` har receptet. Fortnox stod här till Fas 14.8;
   bokföringen och fakturorna sköts i Wint, utan koppling hit.

@@ -333,10 +333,12 @@ Deno.serve(async (req) => {
         if (chargeId) {
           await db.from('bookings').update(andring).eq('stripe_charge_id', chargeId);
           /* Ett klippkort (Fas 16.1) STÄNGS av varje återbetalning, också
-             en delvis. Det finns bara två skäl att betala tillbaka ett
-             köp: ångerrätten och att familjen slutar, och i båda är
-             kortet slut. En delåterbetalning som lämnade det öppet hade
-             låtit familjen fortsätta dra timmar som redan gått tillbaka. */
+             en delvis. Villkoren har tre skäl att betala tillbaka ett
+             köp: ångerrätten, att familjen slutar, och en timme som gick
+             förlorad när kortet löpte ut för att vi avbokat för sent. I
+             alla tre är kortet slut. En delåterbetalning som lämnade det
+             öppet hade låtit familjen fortsätta dra timmar som redan gått
+             tillbaka. */
           const { data: kort } = await db.from('klippkort')
             .update({ aterbetald_ore: aterbetalt, status: 'aterbetald' })
             .eq('stripe_charge_id', chargeId).select('id');
