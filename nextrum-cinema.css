@@ -63,6 +63,10 @@
      överallt där den gamla stod. Skenet (--nt-glod, --nt-mossa) är det
      som gör ytan varm i stället för platt, se "DE MÖRKA YTORNA".
      Dämpat #B3A88F på den nya barken → 6,6:1, kräm → 12,6:1.
+     --nt-2 är barkens djup: ytorna mörknar ner mot den, och det som
+     ligger direkt under en mörk yta (footern, bandet) börjar i den, så
+     att övergången inte blir en skarv. I mörkt läge är den samma som
+     --nt, och där är allt som förut.
 
      --nt-film är den gamla tonen, och bara filmrutan läser den: hero
      är orörd med flit, och slöjan över videon är blandad ur --nt. */
@@ -70,6 +74,7 @@
   --nt-fg:#EFE6D6;
   --nt-mut:#B3A88F;
   --nt-ln:rgba(239,230,214,.15);
+  --nt-2:#1F1915;
   --nt-glod:rgba(217,129,79,.2);
   --nt-mossa:rgba(122,139,98,.16);
   --nt-film:#2E2A20;
@@ -168,6 +173,7 @@
     --nt-fg:#EFE6D6;
     --nt-mut:#A99E88;
     --nt-ln:rgba(239,230,214,.16);
+    --nt-2:#262319;
     --nt-glod:rgba(217,129,79,.09);
     --nt-mossa:rgba(157,173,134,.07);
     --nt-film:#262319;
@@ -222,7 +228,7 @@
   --ln:rgba(239,230,214,.13); --ln-2:rgba(239,230,214,.24);
   --tryck-yta:var(--pap-3); --tryck-tvatt:rgba(239,230,214,.05);
   --nt:#262319; --nt-fg:#EFE6D6; --nt-mut:#A99E88; --nt-ln:rgba(239,230,214,.16);
-  --nt-glod:rgba(217,129,79,.09); --nt-mossa:rgba(157,173,134,.07); --nt-film:#262319;
+  --nt-2:#262319; --nt-glod:rgba(217,129,79,.09); --nt-mossa:rgba(157,173,134,.07); --nt-film:#262319;
   --acc:#D9814F; --acc-lugn:#E89A6D; --mossa:#9DAD86; --ockra:#C08A2E;
   --band-bg:#22201A; --band-fg:#EFE6D6; --band-muted:#A99E88;
   --band-line:rgba(239,230,214,.14); --band-surface:rgba(239,230,214,.05);
@@ -989,15 +995,16 @@ html[lang="en"] .nx-hero-rubrik{
 /* ============================================================
    DE MÖRKA YTORNA (2026-09-25)
    Samma bark överallt där sajten är mörk: .nx-mork, sidhuvudet och
-   bandet på Bli studiehjälpare och "Nästa steg" på prissidan. Footern
-   är barken utan sken.
+   bandet på Bli studiehjälpare och "Nästa steg" på prissidan. Ytan
+   mörknar nedåt mot --nt-2, med ett svagt sken över: leran uppe till
+   vänster, mossan till höger. Så såg ytan på startsidan ut när Leo
+   valde den.
 
-   Skenet är två svaga fläckar över barken: leran uppe till vänster,
-   mossan till höger. De tonar ut innan ytans nederkant, med flit: två
-   mörka ytor ligger ofta vägg i vägg (sidhuvudet och bandet, "Nästa
-   steg" och footern), och en fläck som skars av vid kanten hade
-   blivit en synlig skarv mellan dem. Av samma skäl har en mörk yta som
-   följer direkt på en annan ingen lera i överkanten.
+   Två mörka ytor ligger ofta vägg i vägg (sidhuvudet och bandet,
+   "Nästa steg" och footern). Därför tonar skenet ut innan nederkanten,
+   och det som följer direkt på en mörk yta börjar i --nt-2, där den
+   förra slutade, utan lera i överkanten. Annars hade det blivit en
+   skarv: en ljusare rand där en mörk yta möter nästa.
    ============================================================ */
 .nx-mork,
 .nx-page-hero.on-band,
@@ -1006,13 +1013,13 @@ html[lang="en"] .nx-hero-rubrik{
   background:
     radial-gradient(110% 70% at 6% 0%, var(--nt-glod), transparent 55%),
     radial-gradient(60% 45% at 100% 55%, var(--nt-mossa), transparent 62%),
-    var(--nt);
+    linear-gradient(180deg, var(--nt), var(--nt-2));
 }
 .nx-mork + .nx-mork,
 .on-band + .on-band:not(.ftr){
   background:
     radial-gradient(60% 45% at 100% 55%, var(--nt-mossa), transparent 62%),
-    var(--nt);
+    var(--nt-2);
 }
 .nx-mork h1,.nx-mork h2,.nx-mork h3{color:var(--nt-fg)}
 .nx-mork .nx-lede,.nx-mork .nx-lede-s,.nx-mork p{color:var(--nt-mut)}
@@ -1412,8 +1419,11 @@ html[lang="en"] .nx-hero-rubrik{
 
 /* ============================================================
    FOTEN
+   Barkens djup (--nt-2), inte --nt: footern följer oftast direkt på
+   "Nästa steg", som mörknar ner mot samma ton, och då möts de utan
+   skarv. Se DE MÖRKA YTORNA.
    ============================================================ */
-.ftr{background:var(--nt);color:var(--nt-fg);padding-block:clamp(64px,8vw,110px) clamp(28px,3vw,40px)}
+.ftr{background:var(--nt-2);color:var(--nt-fg);padding-block:clamp(64px,8vw,110px) clamp(28px,3vw,40px)}
 .ftr .wrap{max-width:var(--w-bred)}
 .ftr-brand p{color:var(--nt-mut)}
 /* Kolumnrubrikerna i foten är h2 för rubrikordningens skull, men
