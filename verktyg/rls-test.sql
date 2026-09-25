@@ -27,7 +27,7 @@
 --
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
--- Fas 14.2–14.3 och Fas 15.1–15.4 är körda.
+-- Fas 14.2–14.6 och Fas 15.1–15.4 är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -2489,6 +2489,84 @@ select pg_temp.prova('14.3 admin raderar ingen korttvist', '00000000-0000-4000-8
 select pg_temp.prova('14.3 familjen skapar ingen korttvist', '00000000-0000-4000-8000-0000000000f1',
   array[$q$insert into public.stripe_tvister (id, booking_id, charge_id, lage)
           values ('dp_rlsTest3', '00000000-0000-4000-8000-00000000b4c1', 'ch_rlsTest3', 'won')$q$], 'nekad');
+
+-- ============================================================
+-- FAS 14.6a — ett nytt pass föds obetalt
+--
+-- INSERT-grenen i skydda_bokningsfalt prövade status, närvaro, längd,
+-- tjänst och barn, men inte en enda betalningskolumn. En familj kunde
+-- skapa ett pass som redan stod 'betald': det slapp spärren, larmade
+-- aldrig som ej_betalt och kom med på studiehjälparens underlag den
+-- 25:e. Samma sak för studiehjälparens "föreslå tid". Proven skapar
+-- passet precis som vyerna gör, med en betalningskolumn till.
+-- ============================================================
+select pg_temp.prova('14.6a familjen skapar ett pass som redan är betalt', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst,
+                                        wanted_date, wanted_time, duration_min, status,
+                                        betalning_status, betald_at, betalt_ore)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+                  'Svenska', 'laxhjalp', (now() at time zone 'Europe/Stockholm')::date + 4, '16:00', 60,
+                  'requested', 'betald', now(), 37900)$q$],
+  'nekad');
+
+select pg_temp.prova('14.6a studiehjälparen föreslår ett pass som redan är betalt', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst,
+                                        wanted_date, wanted_time, duration_min, status, betalning_status)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  'Svenska', 'laxhjalp', (now() at time zone 'Europe/Stockholm')::date + 4, '17:00', 60,
+                  'requested', 'betald')$q$],
+  'nekad');
+
+select pg_temp.prova('14.6a familjen skapar ett pass med ett påhittat Stripe-id', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst,
+                                        wanted_date, wanted_time, duration_min, status, stripe_charge_id)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+                  'Svenska', 'laxhjalp', (now() at time zone 'Europe/Stockholm')::date + 4, '18:00', 60,
+                  'requested', 'ch_rlsPahittad')$q$],
+  'nekad');
+
+select pg_temp.prova('14.6a familjen skapar ett pass med ett återbetalt belopp', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst,
+                                        wanted_date, wanted_time, duration_min, status, aterbetald_ore)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+                  'Svenska', 'laxhjalp', (now() at time zone 'Europe/Stockholm')::date + 4, '19:00', 60,
+                  'requested', 100)$q$],
+  'nekad');
+
+-- Betalningen skrivs av webhooken med service_role, där auth.uid() är
+-- null. Den vägen ska gå, och den ska synas i auditloggen: förut
+-- fanns ingen betalningsändring där alls, varken från Stripe eller
+-- från en admin som skrev 'betald' för hand.
+do $$
+declare
+  fore bigint; efter bigint; senast jsonb; fel text;
+begin
+  begin
+    select count(*) into fore from public.audit_logg
+     where tabell = 'bookings' and objekt_id = '00000000-0000-4000-8000-00000000b4c1';
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = 37900
+     where id = '00000000-0000-4000-8000-00000000b4c1';
+    select count(*) into efter from public.audit_logg
+     where tabell = 'bookings' and objekt_id = '00000000-0000-4000-8000-00000000b4c1';
+    select a.efter into senast from public.audit_logg a
+     where a.tabell = 'bookings' and a.objekt_id = '00000000-0000-4000-8000-00000000b4c1'
+     order by a.id desc limit 1;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('14.6a betalningen i auditloggen', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('14.6a en betalning blir en rad i auditloggen', efter - fore = 1, fore || ' → ' || efter),
+      ('14.6a raden bär läget', senast ->> 'betalning_status' = 'betald',
+       coalesce(senast::text, 'ingen rad'));
+  end if;
+end $$;
 
 select test, ok, detalj from utfall order by nr;
 
