@@ -28,7 +28,8 @@
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
 -- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
--- 16.1–16.1c) och Fas 16.1 (erbjudandena, 16.1–16.1e) är körda.
+-- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e) och Fas 16.2 är
+-- körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -2975,6 +2976,44 @@ select pg_temp.prova('16.1 inte en inloggad heller', '00000000-0000-4000-8000-00
 select pg_temp.prova('16.1 och ingen kan markera ett besked skickat', '00000000-0000-4000-8000-0000000000ad',
   array[$q$select public.ansokan_besked_klar('00000000-0000-4000-8000-000000000000', true, null, null, false)$q$],
   'nekad');
+
+-- ------------------------------------------------------------
+-- Fas 16.2: kvittot till familjen bromsas som ansökningskvittot
+-- ------------------------------------------------------------
+-- Sviten har redan lagt in anmälningar tidigare i samma transaktion,
+-- och de har alla now() som tid. Utan det första uppdraget slår
+-- minuttaket till före adresskontrollen, och provet mäter fel broms.
+-- Bara fixturerna flyttas (example.invalid), och allt rullas tillbaka.
+do $$
+declare samma text; annan text; flod text; fel text;
+begin
+  begin
+    update public.leads set created_at = now() - interval '2 days' where email like '%@example.invalid';
+    insert into public.leads (id, parent_name, email, subject, tjanst)
+    values ('00000000-0000-4000-8000-0000000016d1', 'Prov Kvitto', 'rls-kvitto@example.invalid', 'Matte', 'laxhjalp');
+    samma := public.lead_kvitto_broms('  RLS-kvitto+2@example.invalid ', '00000000-0000-4000-8000-0000000016d2');
+    annan := public.lead_kvitto_broms('rls-kvitto-annan@example.invalid', null);
+    insert into public.leads (parent_name, email, subject, tjanst)
+    select 'Prov Flod', 'rls-flod' || g || '@example.invalid', 'Matte', 'laxhjalp' from generate_series(1, 6) g;
+    flod := public.lead_kvitto_broms('rls-flod-ny@example.invalid', null);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('16.2 kvittobromsen', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('16.2 samma adress med plustillägg och versaler bromsas', samma like 'Adressen%', coalesce(samma, 'släpptes igenom')),
+      ('16.2 en ny adress släpps igenom', annan is null, coalesce(annan, 'släpptes igenom')),
+      ('16.2 fler än fem på en minut bromsas', flod like 'Fler än fem%', coalesce(flod, 'släpptes igenom'));
+  end if;
+end $$;
+
+select pg_temp.prova('16.2 anon kan inte fråga bromsen', null,
+  array[$q$select public.lead_kvitto_broms('x@example.invalid', null)$q$], 'nekad');
+
+select pg_temp.prova('16.2 inte admin heller', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select public.lead_kvitto_broms('x@example.invalid', null)$q$], 'nekad');
 
 -- ============================================================
 -- FAS 16.1 — planer och klippkort
