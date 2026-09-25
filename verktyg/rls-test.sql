@@ -993,11 +993,19 @@ select pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
 select public.kor_kontrollerna();
 reset role;
 
+-- Bara raderna den här körningen skapade (created_at sätts till now()
+-- av triggern, och now() är transaktionens tid). Adminvyns knapp "Gör
+-- till uppgift" på en avvikelse skriver samma nyckelform, och en sådan
+-- rad ÄR en människas: den står rätt som 'manniska'. Provet räknade
+-- förut hela tabellen och föll på den första riktiga knapptryckningen
+-- i driften (2026-09-25).
 insert into utfall (test, ok, detalj)
 select '7.4 adminknappen stämplar maskinens uppgifter som system',
        count(*) > 0 and bool_and(skapad_av_typ = 'system' and skapad_av is null),
        'uppgifter: ' || count(*) || ', typer: ' || coalesce(string_agg(distinct skapad_av_typ, ','), 'inga')
-from public.uppgifter where nyckel like 'kontroll:%' or nyckel like 'avvikelse:%' or nyckel like 'uppfoljning:%';
+from public.uppgifter
+where (nyckel like 'kontroll:%' or nyckel like 'avvikelse:%' or nyckel like 'uppfoljning:%')
+  and created_at = now();
 
 -- En avbruten uppgift är ett svar: "det här tänker vi inte göra".
 -- Kommer den tillbaka nästa körning är knappen Avbryt utan verkan.
@@ -1162,7 +1170,9 @@ select '9.2 det finns en DELETE-policy för admin på material',
        count(*) = 1, coalesce(string_agg(policyname, ', '), 'ingen')
 from pg_policies
 where schemaname = 'storage' and tablename = 'objects' and cmd = 'DELETE'
-  and qual like '%is_admin()%' and qual like '%material%';
+  -- Hinkens namn med citattecken: bibliotekets policy (Fas 13.2) nämner
+  -- tabellen biblioteksmaterial och is_admin(), och räknades förut med.
+  and qual like '%is_admin()%' and qual like '%''material''%';
 
 select pg_temp.rakna('9.2 admin uppfyller villkoret', '00000000-0000-4000-8000-0000000000ad',
   $q$select count(*) from storage.objects
