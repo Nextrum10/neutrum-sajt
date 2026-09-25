@@ -4,13 +4,22 @@
    Rörelsen på startsidan, från manifestet och nedåt. Hero rörs
    inte (Leo 2026-09-25: "jag vill bevara heron").
 
-     ordfyll        rubrikernas ord fylls i ett i taget vid scroll
-     ark            manifestets blad glider upp över filmen
+     ordfyll        rubrikernas ord tonar fram ett i taget
      hållpunkter    1–4: den man pekar på kommer fram
-     studiehjälpare korten delas ut när man scrollar fram
+     studiehjälpare korten stiger upp när raden syns
      band           Trygg hjälp: det rullande bandet
-     vägg           Så kan ett pass se ut: fotona öppnas som ridåer
+     vägg           Så kan ett pass se ut: fotona stiger fram
      studievy       illustrationen av föräldravyn, som går att röra
+
+   SKRIPTET SÄTTER KLASSER, CSS RÖR SIG. Första versionen räknade om
+   korten, orden och ett blad för varje bildruta medan man scrollade.
+   Det hackade (Leo: "alla animationer måste se mer smooth ut och inte
+   laggiga"): varje bildruta väntade på huvudtråden, och
+   getBoundingClientRect i en scrollslinga tvingar fram layout. Nu
+   säger en IntersectionObserver när något kommer in i bild, EN klass
+   sätts, och resten är transitions i nextrum-start.css som
+   webbläsaren kör på grafikkortet. Bandet är en Web Animation av
+   samma skäl. Skriv inte tillbaka stil per bildruta.
 
    STARTAR AV SIG SJÄLV, och det är med flit. Startsidans eget skript
    anropar inget här: laddar filen inte — gammal cache, ett nätfel —
@@ -42,7 +51,6 @@ const NXStart = (function () {
   const rörelse = M.tier !== 'still';
   const full = M.tier === 'full';
   const mus = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const vh = () => document.documentElement.clientHeight || window.innerHeight;
 
   /* Varje del för sig. En del som kastar ska inte ta de andra med
      sig — en trasig studievy är inget skäl att bandet står still. */
@@ -50,12 +58,33 @@ const NXStart = (function () {
     try { fn(); } catch (e) { console.warn('NXStart.' + namn + ':', e); }
   }
 
+  /* När elementet kommer in i bild: kör fn, en gång.
+
+     Står det redan OVANFÖR vyn räknas det också — den som laddar om
+     sidan halvvägs ner ska inte ha osynliga block ovanför sig. Utan
+     IntersectionObserver körs fn direkt: rörelse är en bonus, texten
+     är det inte. */
+  function närSyns(el, fn, marginal) {
+    if (!('IntersectionObserver' in window)) { fn(el); return; }
+    const io = new IntersectionObserver(poster => {
+      poster.forEach(p => {
+        if (!p.isIntersecting && p.boundingClientRect.top >= 0) return;
+        io.unobserve(p.target);
+        fn(p.target);
+      });
+    }, { rootMargin: marginal || '0px 0px -14% 0px' });
+    io.observe(el);
+  }
+
+  const kolumner = el =>
+    Math.max(1, getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length);
+
   /* ============================================================
      ORDFYLLNADEN
-     Varje ord blir ett eget <span>, och opaciteten följer scrollen
-     från vänster till höger. Texten ligger kvar i DOM:en som text —
-     den går att markera och läses av skärmläsare som förut, till
-     skillnad från radavslöjandet som animerar en kopia.
+     Varje ord blir ett eget <span> med sin plats i --n. När rubriken
+     syns får den .nx-fylld, och orden tonar fram i tur och ordning
+     genom transition-delay. Texten ligger kvar i DOM:en som text —
+     den går att markera och läses av skärmläsare som förut.
      ============================================================ */
   function delaOrd(el) {
     const gå = n => {
@@ -85,43 +114,8 @@ const NXStart = (function () {
     $$('[data-ordfyll]').forEach(el => {
       const ord = delaOrd(el);
       if (!rörelse || !ord.length) return;
-      const n = ord.length;
-      M.scene(el, {
-        läge: 'cover',
-        run: (p, s) => {
-          /* 0 när rubriken står längst ner, 1 när den nått en bit
-             ovanför mitten — då ska sista ordet vara fyllt och läsbart
-             innan man scrollat förbi. */
-          const f = M.span(s.top - window.scrollY, vh() * 0.9, vh() * 0.36);
-          for (let i = 0; i < n; i++) {
-            const t = M.clamp(f * (n + 1.2) - i, 0, 1);
-            ord[i].style.opacity = (0.14 + 0.86 * t).toFixed(3);
-          }
-        }
-      });
-    });
-  }
-
-  /* ============================================================
-     ARKET
-     Manifestets papper ligger som ett blad över filmens underkant,
-     indraget och med rundade hörn. Det växer ut till full bredd när
-     man scrollar. Bara två CSS-variabler på ett pseudoelement.
-     ============================================================ */
-  function ark() {
-    const sek = $('.nx-manifest');
-    if (!sek || !rörelse) return;
-    const bredd = () => document.documentElement.clientWidth;
-    M.scene(sek, {
-      läge: 'cover',
-      run: (p, s) => {
-        const q = M.easeOut(M.span(s.top - window.scrollY, vh() * 0.95, vh() * 0.2));
-        const sida = M.clamp(bredd() * 0.04, 12, 64);
-        const r = M.clamp(bredd() * 0.04, 28, 56);
-        sek.style.setProperty('--ark-sida', ((1 - q) * sida).toFixed(1) + 'px');
-        sek.style.setProperty('--ark-r', ((1 - q) * r).toFixed(1) + 'px');
-        sek.style.setProperty('--ark-grepp', M.clamp(1 - q * 1.6, 0, 1).toFixed(3));
-      }
+      ord.forEach((o, i) => o.style.setProperty('--n', String(i)));
+      närSyns(el, () => el.classList.add('nx-fylld'), '0px 0px -22% 0px');
     });
   }
 
@@ -131,6 +125,9 @@ const NXStart = (function () {
      pekare, så där tänds punkten mitt i skärmen när listan står i en
      spalt, och den man trycker på annars. Två spalter och "mitt i
      skärmen" går inte ihop: två punkter på samma rad står lika nära.
+
+     "Mitt i skärmen" är en IntersectionObserver vars rot är ett smalt
+     band över mitten — ingen mätning medan man scrollar.
      ============================================================ */
   function hållpunkter() {
     const ul = $('.nx-holdpunkter');
@@ -142,89 +139,34 @@ const NXStart = (function () {
     };
     li.forEach(x => x.addEventListener('click', () => välj(x)));
 
-    if (!rörelse) return;
-    let enSpalt = false;
-    const mät = () => {
-      enSpalt = getComputedStyle(ul).gridTemplateColumns.split(' ').filter(Boolean).length === 1;
-    };
-    mät();
-    window.addEventListener('resize', mät, { passive: true });
-    M.scene(ul, {
-      läge: 'cover',
-      run: () => {
-        if (!enSpalt) return;
-        const mitt = vh() * 0.5;
-        let bäst = null, avst = Infinity;
-        li.forEach(x => {
-          const r = x.getBoundingClientRect();
-          const d = Math.abs(r.top + r.height / 2 - mitt);
-          if (d < avst) { avst = d; bäst = x; }
-        });
-        if (bäst && !bäst.classList.contains('pa')) välj(bäst);
-      }
-    });
+    if (!rörelse || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(poster => {
+      if (kolumner(ul) !== 1) return;
+      poster.forEach(p => { if (p.isIntersecting) välj(p.target); });
+    }, { rootMargin: '-46% 0px -46% 0px' });
+    li.forEach(x => io.observe(x));
   }
 
   /* ============================================================
      STUDIEHJÄLPARNA
-     Korten stiger upp, vrider sig rätt och landar, ett i taget per
-     kolumn. Förloppet följer scrollen, så att det går baklänges om
-     man scrollar tillbaka — korten läggs tillbaka i leken.
-
-     Scenen mäter RADEN, inte korten. Ett kort som flyttas med
-     transform har en getBoundingClientRect som flyttar sig med det,
-     och en scen som mäter det den själv flyttar jagar sin egen svans.
-     Kortens läge i raden läses ur offsetTop, som inte ser transform.
+     Varje kort stiger upp när det kommer in i bild, med en fördröjning
+     per kolumn (--n) så att en rad kommer från vänster till höger.
 
      Korten ritas när Supabase svarat, så en MutationObserver fångar
-     dem. Startläget skrivs i observatörens callback, som körs före
-     nästa bildruta: inget kort hinner synas på sin slutplats först.
+     dem. Callbacken körs före nästa bildruta, och startläget står i
+     CSS, så inget kort hinner synas på sin slutplats först.
      ============================================================ */
   function studiehjälpare() {
     const host = $('#showcase');
     if (!host || !rörelse) return;
-    const dämp = full ? 1 : 0.55;
-    const VRID = [-7, 3, 6, -4, 5, -3];
-    let kol = 1;
-
-    const kort = () => $$('.sc-card', host);
-    function rita(k, t, i) {
-      const e = M.easeOut(t);
-      if (t >= 1) {
-        k.style.transform = '';
-        k.style.opacity = '';
-        k.classList.add('nx-landad');
-        return;
-      }
-      const vrid = VRID[i % VRID.length] * dämp * (1 - e);
-      k.style.opacity = M.clamp(t * 1.7, 0, 1).toFixed(3);
-      k.style.transform = 'translate3d(0,' + ((1 - e) * 120 * dämp).toFixed(1) + 'px,0)'
-        + ' rotate(' + vrid.toFixed(2) + 'deg)'
-        + ' scale(' + (0.86 + 0.14 * e).toFixed(4) + ')';
-    }
-
-    M.scene(host, {
-      läge: 'cover',
-      run: (p, s) => {
-        const y = window.scrollY, h = vh();
-        kort().forEach((k, i) => {
-          const topp = s.top + k.offsetTop;
-          const pk = M.span(y, topp - h * 0.98, topp - h * 0.32);
-          const c = i % kol;
-          rita(k, M.span(pk, c * 0.1, c * 0.1 + 0.8), i);
-        });
-      }
-    });
-
     function nya() {
-      kol = Math.max(1, getComputedStyle(host).gridTemplateColumns.split(' ').filter(Boolean).length);
-      kort().forEach((k, i) => {
+      const kol = kolumner(host);
+      $$('.sc-card', host).forEach((k, i) => {
         if (k.dataset.delad) return;
         k.dataset.delad = '1';
-        rita(k, 0, i);
+        k.style.setProperty('--n', String(i % kol));
+        närSyns(k, () => k.classList.add('nx-in'), '0px 0px -8% 0px');
       });
-      /* Raden bytte höjd — allt under den står nu på ett annat ställe. */
-      M.mätOm();
     }
     new MutationObserver(nya).observe(host, { childList: true });
     nya();
@@ -233,24 +175,28 @@ const NXStart = (function () {
   /* ============================================================
      BANDET
      Raden kopieras en gång till vänster och två gånger till höger,
-     och glider sedan åt höger. När den gått en hel uppsättning
-     hoppar den tillbaka lika långt — innehållet är periodiskt, så
-     hoppet syns inte.
+     och glider sedan åt höger. Efter en hel uppsättning börjar den
+     om — innehållet är periodiskt, så omstarten syns inte.
+
+     EN WEB ANIMATION, INTE requestAnimationFrame. Förflyttningen
+     beskrivs en gång och körs sedan av webbläsaren på grafikkortet;
+     huvudtråden kan vara upptagen utan att bandet rycker. Att stanna
+     och gå igång är playbackRate, som tonas mot 0 och tillbaka.
 
      Kopiorna är aria-hidden och ligger utanför tabbordningen, med
      egna id:n så att aria-controls fortfarande pekar rätt. En
      skärmläsare hör alltså sex kort, inte arton.
 
-     Bandet stannar mjukt under pekaren, när ett kort är utfällt, när
-     något i det har tangentbordsfokus, när man drar i det och när
-     pausknappen är nedtryckt. Tangentbordsfokus hamnar alltid på ett
-     ORIGINAL, och bandet glider då så att kortet står mitt i bild.
+     Bandet stannar under pekaren, när ett kort är utfällt och när man
+     drar i det. Tangentbordsfokus hamnar alltid på ett ORIGINAL, och
+     då tar ett handstyrt läge över: animationen släpps och raden
+     glider så att kortet står mitt i bild. När fokus lämnar bandet
+     fortsätter animationen från samma ställe.
      ============================================================ */
   function band() {
     const rot = $('[data-band]');
-    if (!rot || !rörelse) return;
+    if (!rot || !rörelse || typeof rot.animate !== 'function') return;
     const ul = $('.nx-drag', rot);
-    const knapp = $('[data-band-paus]');
     const orig = ul ? $$(':scope > li', ul) : [];
     if (orig.length < 2) return;
 
@@ -275,73 +221,115 @@ const NXStart = (function () {
     ul.insertBefore(klona(), ul.firstChild);
     ul.appendChild(klona());
     ul.appendChild(klona());
-    if (knapp) knapp.hidden = false;
 
-    const FART = full ? 30 : 22;           /* px per sekund, åt höger */
-    let period = 0, x = 0, v = FART;
-    let synlig = false, över = false, fokus = false, drar = false, pausad = false;
-    let fokusX = 0, raf = 0, senast = 0;
+    /* px per sekund. Leo: "de får scrolla lite snabbare" — var 30. */
+    const FART = full ? 48 : 38;
+    let period = 0, bas = 0, anim = null;
+    let fart = 1, rampa = 0;
+    let synlig = false, över = false, drar = false, hand = false, handX = 0;
 
     function mät() {
-      const förra = period;
       period = orig[0].offsetLeft - ul.firstElementChild.offsetLeft;
       /* Bred skärm: se till att det finns innehåll hela vägen ut. */
       while (ul.scrollWidth < period * 2 + rot.clientWidth + 40) ul.appendChild(klona());
-      if (förra) x = x * (period / förra);
-      else x = -orig[0].offsetLeft + rot.clientWidth * 0.06;
-      normalisera();
+      bas = -orig[0].offsetLeft + rot.clientWidth * 0.06;
     }
-    function normalisera() {
-      if (!period) return;
-      const golv = -(ul.scrollWidth - rot.clientWidth);
-      while (x > 0) x -= period;
-      while (x < golv) x += period;
-    }
-    const öppet = () => !!ul.querySelector('.dr-kort[aria-expanded="true"]');
+    const längd = () => period / FART * 1000;
+    const pos = t => ({ transform: 'translate3d(' + t.toFixed(1) + 'px,0,0)' });
 
-    function steg(t) {
-      raf = 0;
-      const dt = senast ? Math.min(0.05, (t - senast) / 1000) : 0;
-      senast = t;
-      const stilla = över || drar || pausad || fokus || öppet();
-      v += ((stilla ? 0 : FART) - v) * Math.min(1, dt * 4);
-      if (fokus) x += (fokusX - x) * Math.min(1, dt * 7);
-      else if (!drar) { x += v * dt; normalisera(); }
-      ul.style.transform = 'translate3d(' + x.toFixed(2) + 'px,0,0)';
-      if (synlig && !document.hidden) raf = requestAnimationFrame(steg);
+    /* Var raden står vid en viss tid i animationen, och tvärtom. */
+    function xFör(tid) {
+      const f = (((tid || 0) % längd()) + längd()) % längd() / längd();
+      return bas - period + f * period;
     }
-    function igång() {
-      if (!raf && synlig && !document.hidden) { senast = 0; raf = requestAnimationFrame(steg); }
+    function tidFör(x) {
+      const f = (((x - (bas - period)) / period) % 1 + 1) % 1;
+      return f * längd();
+    }
+    const nuX = () => (anim ? xFör(anim.currentTime) : handX);
+
+    function starta(x) {
+      if (anim) anim.cancel();
+      ul.style.transition = '';
+      ul.style.transform = '';
+      anim = ul.animate([pos(bas - period), pos(bas)],
+        { duration: längd(), iterations: Infinity, easing: 'linear' });
+      anim.currentTime = tidFör(x);
+      anim.playbackRate = fart;
+      if (!synlig) anim.pause();
+      hand = false;
+    }
+    function släppAnim() {
+      handX = nuX();
+      if (anim) { anim.cancel(); anim = null; }
+      ul.style.transform = pos(handX).transform;
+      hand = true;
+    }
+
+    const öppet = () => !!ul.querySelector('.dr-kort[aria-expanded="true"]');
+    /* Tona farten mot målet. rAF bara under de få bildrutor det tar,
+       och det enda som skrivs är playbackRate. */
+    function tona() {
+      if (rampa) return;
+      const steg = () => {
+        const mål = (över || drar || öppet()) ? 0 : 1;
+        fart += (mål - fart) * 0.14;
+        if (Math.abs(mål - fart) < 0.01) fart = mål;
+        if (anim) {
+          if (anim.updatePlaybackRate) anim.updatePlaybackRate(fart);
+          else anim.playbackRate = fart;
+        }
+        rampa = fart === mål ? 0 : requestAnimationFrame(steg);
+      };
+      rampa = requestAnimationFrame(steg);
     }
 
     mät();
-    ul.style.transform = 'translate3d(' + x.toFixed(2) + 'px,0,0)';
+    starta(bas);
+
     window.addEventListener('resize', () => {
       clearTimeout(mät._t);
-      mät._t = setTimeout(mät, 150);
+      mät._t = setTimeout(() => {
+        const f = anim ? anim.currentTime / längd() : 0;
+        mät();
+        if (!hand) starta(bas - period + (f % 1) * period);
+      }, 150);
     }, { passive: true });
-    document.addEventListener('visibilitychange', igång);
 
     if ('IntersectionObserver' in window) {
-      new IntersectionObserver(e => { synlig = e[0].isIntersecting; igång(); }).observe(rot);
-    } else { synlig = true; igång(); }
+      new IntersectionObserver(e => {
+        synlig = e[0].isIntersecting;
+        if (!anim) return;
+        if (synlig) anim.play(); else anim.pause();
+      }).observe(rot);
+    } else { synlig = true; anim.play(); }
 
     /* --- pekaren --- */
-    rot.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') över = true; });
-    rot.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') över = false; igång(); });
+    rot.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { över = true; tona(); } });
+    rot.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { över = false; tona(); } });
+
+    /* --- ett utfällt kort --- initDrag() fäller ut; vi läser läget efteråt. */
+    ul.addEventListener('click', () => setTimeout(tona, 0));
 
     /* --- tangentbordet --- */
     ul.addEventListener('focusin', e => {
       if (!e.target.matches(':focus-visible')) return;
       const li = e.target.closest('li');
       if (!li || li.hasAttribute('data-klon')) return;
-      fokus = true;
-      fokusX = rot.clientWidth / 2 - (li.offsetLeft + li.offsetWidth / 2);
-      igång();
+      if (!hand) {
+        släppAnim();
+        /* Läs stilen en gång, så att övergången nedan börjar där raden
+           faktiskt står och inte där animationen började. */
+        getComputedStyle(ul).transform;
+      }
+      const mål = rot.clientWidth / 2 - (li.offsetLeft + li.offsetWidth / 2);
+      ul.style.transition = 'transform .6s cubic-bezier(.16,1,.3,1)';
+      handX = mål;
+      ul.style.transform = pos(mål).transform;
     });
     ul.addEventListener('focusout', e => {
       if (e.relatedTarget && ul.contains(e.relatedTarget)) return;
-      fokus = false;
+      if (hand && !drar) starta(handX);
     });
 
     /* --- dra i det ---
@@ -349,10 +337,10 @@ const NXStart = (function () {
        scrollen, och det vågräta kommer hit. Ett drag längre än sex
        pixlar är ett drag, inte ett tryck, och klicket som följer
        stoppas så att inget kort fälls ut av misstag. */
-    let pid = null, startX = 0, startx = 0;
+    let pid = null, startX = 0, x0 = 0;
     rot.addEventListener('pointerdown', e => {
       if (!e.isPrimary || e.button !== 0) return;
-      pid = e.pointerId; startX = e.clientX; startx = x;
+      pid = e.pointerId; startX = e.clientX;
     });
     rot.addEventListener('pointermove', e => {
       if (e.pointerId !== pid) return;
@@ -361,13 +349,18 @@ const NXStart = (function () {
         drar = true;
         rot.classList.add('drar');
         try { rot.setPointerCapture(pid); } catch (_) { /* redan släppt */ }
+        släppAnim();
+        ul.style.transition = '';
+        x0 = handX - dx;
       }
       if (!drar) return;
-      const före = startx + dx;
-      x = före;
-      normalisera();
-      startx += x - före;
-      ul.style.transform = 'translate3d(' + x.toFixed(2) + 'px,0,0)';
+      let x = x0 + dx;
+      /* Håll raden inom en period åt vardera hållet. Innehållet är
+         periodiskt, så ett hopp på en hel period syns inte. */
+      while (x > bas) { x -= period; x0 -= period; }
+      while (x < bas - period) { x += period; x0 += period; }
+      handX = x;
+      ul.style.transform = pos(x).transform;
     });
     const släpp = e => {
       if (e.pointerId !== pid) return;
@@ -378,46 +371,22 @@ const NXStart = (function () {
       const stopp = ev => { ev.stopPropagation(); ev.preventDefault(); };
       rot.addEventListener('click', stopp, { capture: true, once: true });
       setTimeout(() => rot.removeEventListener('click', stopp, { capture: true }), 0);
-      igång();
+      fart = 0;
+      starta(handX);
+      tona();
     };
     rot.addEventListener('pointerup', släpp);
     rot.addEventListener('pointercancel', släpp);
-
-    if (knapp) knapp.addEventListener('click', () => {
-      pausad = !pausad;
-      knapp.setAttribute('aria-pressed', String(pausad));
-      igång();
-    });
   }
 
   /* ============================================================
      BILDVÄGGEN
-     Ridån går upp när fotot kommit en bit in i bild, en gång. Inte
-     once:true i scenen: motorn markerar en once-scen som klar redan
-     första gången den räknas, och det sker när den kommer inom
-     marginalen — alltså innan den syns, med p = 0.
+     Varje foto stiger fram när det kommer en bit in i bild, en gång.
      ============================================================ */
   function vägg() {
     if (!rörelse) return;
-    $$('.nx-vagg-grid figure').forEach(f => {
-      let uppe = false;
-      M.scene(f, {
-        läge: 'enter',
-        run: p => {
-          if (uppe || p < 0.16) return;
-          uppe = true;
-          f.classList.add('nx-in');
-          const klar = () => f.classList.add('nx-klar');
-          const vid = e => {
-            if (e.target !== f || e.propertyName !== 'clip-path') return;
-            f.removeEventListener('transitionend', vid);
-            klar();
-          };
-          f.addEventListener('transitionend', vid);
-          setTimeout(klar, 1900);
-        }
-      });
-    });
+    $$('.nx-vagg-grid figure').forEach(f =>
+      närSyns(f, () => f.classList.add('nx-in'), '0px 0px -12% 0px'));
   }
 
   /* ============================================================
@@ -437,7 +406,6 @@ const NXStart = (function () {
   function studievy() {
     const rot = $('[data-studievy]');
     if (!rot) return;
-    const rum = $('.sd-rum', rot);
     const fönster = $('.sd-fonster', rot);
     const pekare = $('.sd-pekare', rot);
     const turKnapp = $('[data-sd-tur]');
@@ -586,52 +554,46 @@ const NXStart = (function () {
 
     /* ---------- lutningen ----------
        Bara med mus på stor skärm. Fönstret vrider sig några grader
-       mot pekaren, notiserna som svävar framför det rör sig mer, och
-       en svag glans följer med över glaset. */
+       mot pekaren.
+
+       Transformen skrivs direkt på fönstret, med sitt eget
+       perspektiv. Den skrevs förut som CSS-variabler på .sd-rum, och
+       en variabel ärvs: varje musrörelse räknade om stilen för vart
+       och ett av fönstrets hundratals element. En transform ärvs inte
+       — den räknas om för ett element och flyttas på grafikkortet. */
     if (full && mus) {
-      let mx = 0, my = 0, tx = 0, ty = 0, g = 0, tg = 0, raf = 0;
+      let mx = 0, my = 0, tx = 0, ty = 0, raf = 0;
       const steg = () => {
-        mx += (tx - mx) * 0.09; my += (ty - my) * 0.09; g += (tg - g) * 0.1;
-        rum.style.setProperty('--mx', mx.toFixed(4));
-        rum.style.setProperty('--my', my.toFixed(4));
-        fönster.style.setProperty('--glans', g.toFixed(3));
-        raf = (Math.abs(tx - mx) + Math.abs(ty - my) + Math.abs(tg - g) > 0.002)
-          ? requestAnimationFrame(steg) : 0;
+        mx += (tx - mx) * 0.1; my += (ty - my) * 0.1;
+        const vila = Math.abs(tx - mx) + Math.abs(ty - my) < 0.001;
+        if (vila) { mx = tx; my = ty; }
+        fönster.style.transform = (mx || my)
+          ? 'perspective(1800px) rotateX(' + (-my * 5).toFixed(3) + 'deg) rotateY(' + (mx * 7).toFixed(3) + 'deg)'
+          : '';
+        raf = vila ? 0 : requestAnimationFrame(steg);
       };
       rot.addEventListener('pointermove', e => {
         if (e.pointerType !== 'mouse') return;
         const r = rot.getBoundingClientRect();
         tx = M.clamp((e.clientX - r.left) / r.width - 0.5, -0.5, 0.5);
         ty = M.clamp((e.clientY - r.top) / r.height - 0.5, -0.5, 0.5);
-        tg = 1;
         if (!raf) raf = requestAnimationFrame(steg);
       });
       rot.addEventListener('pointerleave', () => {
-        tx = 0; ty = 0; tg = 0;
+        tx = 0; ty = 0;
         if (!raf) raf = requestAnimationFrame(steg);
       });
     }
 
     /* ---------- resningen ----------
-       Fönstret ligger bakåtlutat som ett blad på ett bord och reser
-       sig medan man scrollar fram till det. */
-    let hälsat = false;
+       Fönstret ligger bakåtlutat och reser sig när det kommer in i
+       bild — en transition på .sd-rum, utlöst av en klass. */
     if (rörelse) {
-      const d = full ? 1 : 0.5;
-      M.scene(rot, {
-        läge: 'enter',
-        run: p => {
-          const e = M.easeOut(p);
-          rum.style.setProperty('--lyft-rx', ((1 - e) * 24 * d).toFixed(2) + 'deg');
-          rum.style.setProperty('--lyft-y', ((1 - e) * 80 * d).toFixed(1) + 'px');
-          rum.style.setProperty('--lyft-sk', (1 - (1 - e) * 0.08 * d).toFixed(4));
-          if (p > 0.9 && !hälsat) {
-            hälsat = true;
-            const n = $('.sd-flyt[data-sd-notis="rapport"]', rot);
-            if (n) setTimeout(() => notis(n), 500);
-          }
-        }
-      });
+      närSyns(rot, () => {
+        rot.classList.add('nx-in');
+        const n = $('.sd-flyt[data-sd-notis="rapport"]', rot);
+        if (n) setTimeout(() => notis(n), 1300);
+      }, '0px 0px -12% 0px');
     }
 
     /* ---------- rundturen ---------- */
@@ -777,7 +739,6 @@ const NXStart = (function () {
   function allt() {
     if (rörelse) document.documentElement.classList.add('nx-sr');
     prova('ordfyll', ordfyll);
-    prova('ark', ark);
     prova('hållpunkter', hållpunkter);
     prova('studiehjälpare', studiehjälpare);
     prova('band', band);

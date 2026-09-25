@@ -13,14 +13,25 @@
    Inget startläge här gömmer något utan den klassen. Laddar inte
    skriptet står sidan i sitt slutläge, fullt läsbar — samma regel
    som html[data-motion] i cinema, av samma skäl.
+
+   ALL RÖRELSE ÄR ÖVERGÅNGAR, INTE SCROLLRÄKNING (2026-09-25, andra
+   varvet). Första versionen räknade om korten, orden och bladet för
+   varje bildruta medan man scrollade, och studievyns lutning skrev
+   CSS-variabler som tvingade fram en omräkning av hela fönstrets stil
+   vid varje musrörelse. Leo: "alla animationer måste se mer smooth ut
+   och inte laggiga". Nu sätter skriptet EN klass när något kommer in
+   i bild, och resten är transition på opacity, transform, translate
+   och scale — det webbläsaren kör på grafikkortet, oavsett vad
+   huvudtråden håller på med. Bandet är en Web Animation av samma
+   skäl. Lägg inte tillbaka något som skriver stil per bildruta.
    ============================================================ */
 
 /* ============================================================
    1. PAPPERET
 
-   Ljusare och mindre gult än linet i cinema (#EFE6D6). Leo valde
-   #F3F2EC. Leran #9C4520 står kvar som accent; mot det ljusare
-   papperet går den från 5,2:1 till 5,9:1.
+   Ljusare än linet i cinema (#EFE6D6), men beige. Leo valde först
+   #F3F2EC och ville sedan ha det "lite beigare": #F2EDE3. Leran
+   #9C4520 står kvar som accent.
 
    Bara startsidan. Tokens sätts på :root i en fil bara den här
    sidan laddar, och det är därför alias-fällan i CLAUDE.md (--bg,
@@ -30,21 +41,21 @@
    så varje token som skrivs om här måste också finnas där. Det gör
    alla sex.
 
-   Kontrollerat mot AA: dämpad text #665C49 på #EAE7DE 5,6:1, på
-   korten #FBFAF7 6,4:1. Brödtext #4F4738 på korten 8,9:1.
+   Kontrollerat mot AA: dämpad text #665C49 på papperet 5,6:1, på den
+   lugna ytan #E9E2D4 5,1:1, på korten 6,2:1. Leran på papperet 5,5:1.
    ============================================================ */
 :root{
-  --pap:#F3F2EC;
-  --pap-2:#EAE7DE;
-  --pap-3:#DCD7C9;
-  --ln:#E2DED3;
-  --ln-2:#CEC7B6;
-  --acc-soft:#EFE1D6;
+  --pap:#F2EDE3;
+  --pap-2:#E9E2D4;
+  --pap-3:#DBD2BF;
+  --ln:#E2DACB;
+  --ln-2:#CDC2AC;
+  --acc-soft:#EFDFD1;
 
   /* Korten: en nyans LJUSARE än papperet, inte mörkare. En mörkare
      yta på ljus botten läser som ett hål; en ljusare läser som ett
      blad som ligger ovanpå. */
-  --kort:#FBFAF7;
+  --kort:#FBF8F2;
   --kort-kant:rgba(46,42,32,.08);
   --kort-sk:0 1px 0 rgba(255,255,255,.8) inset, 0 1px 2px rgba(46,42,32,.04),
             0 22px 44px -30px rgba(46,42,32,.30);
@@ -91,6 +102,18 @@
       color-mix(in srgb,var(--bl) 6%,transparent)) border-box;
   box-shadow:var(--kort-sk);
 }
+/* Lyftets skugga ligger i ett eget lager som bara tonas in. En
+   box-shadow som animeras ritas om för varje bildruta; opaciteten på
+   ett färdigritat lager kostar ingenting. isolation:isolate och
+   z-index:-1 håller lagret bakom texten men i bladets eget lager. */
+.nx-bubbla{isolation:isolate}
+.nx-bubbla::after{
+  content:"";position:absolute;inset:-1px;z-index:-1;
+  border-radius:inherit;pointer-events:none;
+  box-shadow:0 38px 70px -40px rgba(46,42,32,.40);
+  opacity:0;
+  transition:opacity .45s var(--e-ut);
+}
 .bu-fig{
   display:grid;place-items:center;
   width:42px;height:42px;border-radius:14px;
@@ -104,43 +127,26 @@
 }
 
 /* ============================================================
-   3. MANIFESTET — bladet som glider upp över filmen
+   3. MANIFESTET
 
-   Sektionens papper är ett ::before som ligger en bit upp över
-   hero. Vid sidladdning syns bara dess rundade överkant, indragen
-   från sidorna; medan man scrollar växer det ut till full bredd och
-   hörnen rätas ut. Det är övergången Leo bad om, och den rör bara
-   clip-path på ett pseudoelement — ingen layout, ingen text som
-   skalas.
+   Rubrikens ord tonar fram ett i taget när rubriken kommer in i bild,
+   och de två kolumnerna stiger efter.
 
-   --ark-sida och --ark-r skrivs av nextrum-start.js. Startvärdena
-   står här så att första bildrutan redan är rätt.
+   Det låg ett blad här förut, som gled upp över filmens underkant med
+   rundade hörn. Leo 2026-09-25: "den vita sektionen konstig när man
+   scrollar" och "konstigt på hero bilden i hörnen". Hörnen visade
+   filmen, men sidorna under filmens kant visade papperet — bladet
+   fick axlar. Det är borttaget, och heron slutar rakt som förut.
    ============================================================ */
-html.nx-sr .nx-manifest{
-  --ark-sida:clamp(12px,4vw,64px);
-  --ark-r:clamp(28px,4vw,56px);
-  background:transparent;
-  z-index:1;
-  margin-top:calc(clamp(28px,4vw,56px) * -1);
-}
-html.nx-sr .nx-manifest::before{
-  content:"";position:absolute;inset:0;z-index:-1;
-  background:var(--pap);
-  clip-path:inset(0 var(--ark-sida) 0 var(--ark-sida) round var(--ark-r) var(--ark-r) 0 0);
-}
-/* Den lilla linjen i bladets överkant: ett grepp, som på ett ark man
-   drar upp. Tonar bort när bladet ligger platt. */
-html.nx-sr .nx-manifest::after{
-  content:"";position:absolute;left:50%;top:14px;
-  width:44px;height:4px;border-radius:4px;margin-left:-22px;
-  background:var(--ln-2);
-  opacity:var(--ark-grepp,1);
-}
 
-/* Orden i rubriken fylls i ett i taget medan man scrollar.
-   Opaciteten skrivs av skriptet; startläget står här. */
-html.nx-sr [data-ordfyll] .nx-ord{opacity:.14}
-[data-ordfyll] .nx-ord{transition:opacity .18s linear}
+/* Ordfyllnaden. --n är ordets plats i rubriken och sätts av skriptet
+   en gång; det enda som sedan händer är en klass. */
+html.nx-sr [data-ordfyll] .nx-ord{
+  opacity:.14;
+  transition:opacity .9s var(--e-mjuk);
+  transition-delay:calc(var(--n,0) * 70ms);
+}
+html.nx-sr [data-ordfyll].nx-fylld .nx-ord{opacity:1}
 
 /* De två kolumnerna runt texten. Samma bredd och samma mellanrum som
    läxhjälpskortet under, så att de tre bladen står i en och samma
@@ -172,14 +178,9 @@ html.nx-sr [data-ordfyll] .nx-ord{opacity:.14}
 
 /* Bladen lyfter med en fjäder när man för musen över dem. translate,
    inte transform: data-stig äger transform på dem. */
-.nx-manifest .nx-bubbla{
-  transition:translate .5s var(--fjader),box-shadow .5s var(--e-ut);
-}
 @media (hover:hover) and (pointer:fine){
-  .nx-manifest .nx-bubbla:hover{
-    translate:0 -5px;
-    box-shadow:var(--kort-sk),0 30px 60px -36px rgba(46,42,32,.34);
-  }
+  .nx-manifest .nx-bubbla:hover{translate:0 -5px}
+  .nx-manifest .nx-bubbla:hover::after{opacity:1}
 }
 
 /* ============================================================
@@ -210,7 +211,6 @@ html.nx-sr [data-ordfyll] .nx-ord{opacity:.14}
   transition:
     scale .55s var(--fjader),
     filter .4s var(--e),
-    box-shadow .45s var(--e-ut),
     translate var(--tryck-tid) var(--e-ut);
 }
 /* Tvätten i cinema är till kolumner UTAN egen yta. De här är blad,
@@ -239,8 +239,8 @@ html.nx-sr [data-ordfyll] .nx-ord{opacity:.14}
     scale:1.055;
     filter:none;
     z-index:2;
-    box-shadow:var(--kort-sk),0 40px 70px -40px rgba(46,42,32,.38);
   }
+  .nx-holdpunkter > li:hover::after{opacity:1}
   .nx-holdpunkter > li:hover .hp-nr{color:var(--acc)}
 }
 /* På pekskärm finns ingen pekare. Där tänds den punkt man har mitt
@@ -250,18 +250,23 @@ html.nx-sr [data-ordfyll] .nx-ord{opacity:.14}
   scale:.965;
   filter:grayscale(1) opacity(.55);
 }
-.nx-holdpunkter.har-pa > li.pa{
-  scale:1.02;
-  box-shadow:var(--kort-sk),0 34px 60px -38px rgba(46,42,32,.34);
-}
+.nx-holdpunkter.har-pa > li.pa{scale:1.02}
+.nx-holdpunkter.har-pa > li.pa::after{opacity:1}
 .nx-holdpunkter.har-pa > li.pa .hp-nr{color:var(--acc)}
 
 /* ============================================================
    5. STUDIEHJÄLPARNA — kommer in i bild
 
-   Korten delas ut som från en kortlek när man scrollar fram: de
-   stiger, vrider sig rätt och landar. Transform skrivs av skriptet
-   per bildruta; här står bara landningen, där porträttet poppar.
+   Korten stiger upp ett i taget när raden kommer in i bild: en
+   rörelse, en kurva, ingen vridning och inget porträtt som poppar.
+   Leo: "Bilderna på möt våra studiehjälpare ska in ploppa ser
+   konstigt ut". Porträttets studs är borta; kortet och allt i det
+   kommer som en enhet.
+
+   transform, inte translate: hovern i cinema äger translate, och
+   två system på samma egenskap slåss (se TRYCKBARA YTOR där). Hela
+   övergångslistan står här, för den här regeln väger mer än cinemas
+   och ersätter den.
    ============================================================ */
 .sc-card{
   border-radius:clamp(24px,2.2vw,30px);
@@ -269,16 +274,19 @@ html.nx-sr [data-ordfyll] .nx-ord{opacity:.14}
   border-color:var(--kort-kant);
   box-shadow:var(--kort-sk);
 }
-/* position:relative så att kortens offsetTop räknas från raden —
-   skriptet läser dem för att veta när varje kort ska landa. */
-html.nx-sr .showcase{position:relative;perspective:1400px}
-html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidden}
-.sc-card.nx-landad .sc-face{animation:sc-pop .75s var(--fjader) both}
-.sc-card.nx-landad .tutor-meta .tag{animation:sc-tag .5s var(--e-ut) both}
-.sc-card.nx-landad .tutor-meta .tag:nth-child(2){animation-delay:.07s}
-.sc-card.nx-landad .tutor-meta .tag:nth-child(3){animation-delay:.14s}
-@keyframes sc-pop{0%{scale:.55}55%{scale:1.12}100%{scale:1}}
-@keyframes sc-tag{from{opacity:0;translate:0 6px}}
+html.nx-sr .showcase .sc-card{
+  opacity:0;
+  transform:translate3d(0,56px,0) scale(.965);
+  transition:
+    opacity .8s var(--e-mjuk),
+    transform 1.1s var(--e-ut),
+    translate var(--tryck-tid,.38s) var(--e-ut),
+    box-shadow var(--tryck-tid,.38s) var(--e-ut),
+    border-color var(--tryck-tid,.38s) var(--e),
+    background-color var(--tryck-tid,.38s) var(--e);
+  transition-delay:calc(var(--n,0) * 120ms),calc(var(--n,0) * 120ms),0s,0s,0s,0s;
+}
+html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
 
 /* ============================================================
    6. TRYGG HJÄLP — det rullande bandet
@@ -293,6 +301,15 @@ html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidd
    kortet man trycker på — då hade webbläsaren scrollat bandet i
    sidled OVANPÅ vår transform, och kortet hade hoppat. clip klipper
    utan att gå att scrolla.
+
+   Kanterna tonas med två pseudoelement i ytans färg, inte med
+   mask-image. En mask över något som rör sig måste räknas om för
+   varje bildruta i Safari; två stilla gradienter ovanpå kostar
+   ingenting.
+
+   Ingen pausknapp (Leo 2026-09-25: "ta bort play funktionen").
+   Bandet stannar under pekaren, när ett kort är utfällt och när
+   något i det har tangentbordsfokus.
    ============================================================ */
 .nx-band{position:relative;margin-top:clamp(8px,1vw,14px)}
 .nx-band:not(.pa) .nx-drag{
@@ -306,9 +323,13 @@ html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidd
   padding-block:16px 22px;
   touch-action:pan-y;
   cursor:grab;
-  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
-          mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
 }
+.nx-band.pa::before,.nx-band.pa::after{
+  content:"";position:absolute;top:0;bottom:0;z-index:2;
+  width:clamp(28px,7vw,110px);pointer-events:none;
+}
+.nx-band.pa::before{left:0;background:linear-gradient(90deg,var(--pap-2),transparent)}
+.nx-band.pa::after{right:0;background:linear-gradient(270deg,var(--pap-2),transparent)}
 .nx-band.pa.drar{cursor:grabbing}
 .nx-band.pa .nx-drag{
   position:relative;
@@ -326,34 +347,12 @@ html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidd
   border-color:var(--kort-kant);
   background:var(--kort);
   box-shadow:var(--kort-sk);
-  transition:border-color .25s var(--e),background .25s var(--e),translate .45s var(--fjader),box-shadow .45s var(--e-ut);
+  transition:border-color .25s var(--e),background .25s var(--e),translate .45s var(--fjader);
 }
 @media (hover:hover) and (pointer:fine){
-  .nx-band .dr-kort:hover{translate:0 -4px;box-shadow:var(--kort-sk),0 26px 50px -34px rgba(46,42,32,.34)}
+  .nx-band .dr-kort:hover{translate:0 -4px}
 }
 .nx-band .dr-kort[aria-expanded="true"]{background:var(--acc-soft);border-color:var(--acc)}
-
-/* Pausknappen. Rörelse som pågår längre än fem sekunder ska gå att
-   stoppa (WCAG 2.2.2). Bandet stannar också av sig självt under
-   pekaren, vid tangentbordsfokus och när ett kort är utfällt — men
-   den som läser långsamt ska inte behöva hålla musen still. */
-.nx-band-paus{
-  display:grid;place-items:center;
-  width:40px;height:40px;border-radius:50%;
-  /* Mitt under bandet. Till höger hamnade den under Hjälp-knappen,
-     som ligger fast i hörnet. */
-  margin:6px auto 0;
-  border:1px solid var(--ln-2);background:var(--kort);color:var(--bl);
-  cursor:pointer;
-  transition:border-color .2s var(--e),background .2s var(--e);
-}
-.nx-band-paus:hover{border-color:var(--bl)}
-.nx-band-paus[hidden]{display:none}
-.nx-band-paus svg{width:14px;height:14px;fill:currentColor}
-.nx-band-paus .spela{display:none}
-.nx-band-paus[aria-pressed="true"] .spela{display:block}
-.nx-band-paus[aria-pressed="true"] .pausa{display:none}
-.nx-band-rad{max-width:calc(var(--w-bred) + 2 * var(--m));margin-inline:auto;display:flex}
 
 /* ============================================================
    7. "VI BYGGER NÄSTA GENERATION TILLSAMMANS" — större
@@ -368,8 +367,12 @@ html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidd
   text-align:center;
 }
 .nx-statement p{
-  font-size:clamp(2.7rem,8.2vw,7.4rem);
-  line-height:.93;letter-spacing:-.055em;font-weight:800;
+  font-size:clamp(2.5rem,7.4vw,6.6rem);
+  /* 1,04 och inte ,93. Med ,93 nuddade g:et i "generation" ordet
+     under (Leo: "G på generation nuddar tillsammans"). Svensk text
+     har dessutom å, ä och ö ovanpå — raden behöver luft åt båda
+     hållen. */
+  line-height:1.04;letter-spacing:-.05em;font-weight:800;
   max-width:13ch;margin-inline:auto;
   text-wrap:balance;
 }
@@ -388,8 +391,13 @@ html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidd
    sidan runt omkring — det som står ovanför det man trycker på får
    inte byta höjd av trycket (CLAUDE.md, fälla 4).
 
-   Skriptet skriver --mx/--my (pekaren, -0,5 till 0,5) och
-   --lyft-* (scrollen). Utan skript ligger fönstret platt.
+   Två rörelser, på två element, så att de aldrig slåss:
+     .sd-rum      reser sig när vyn kommer in i bild — en transition
+     .sd-fonster  lutar mot pekaren — skriptet skriver dess transform
+   Lutningen skrevs förut som CSS-variabler på .sd-rum. En variabel
+   ärvs, så varje musrörelse räknade om stilen för vartenda element i
+   fönstret; det var en stor del av det som hackade. En transform
+   ärvs inte.
    ============================================================ */
 .nx-sd{
   position:relative;
@@ -405,15 +413,14 @@ html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidd
    ett platt lager med en perspektivlutning, och träffytan är den man
    ser. Notisernas djup (translateZ) försvinner; deras parallax står
    kvar. */
-.sd-rum{
-  position:relative;
-  transform:
-    translateY(var(--lyft-y,0px))
-    rotateX(calc(var(--lyft-rx,0deg) + var(--my,0) * -6deg))
-    rotateY(calc(var(--mx,0) * 8deg))
-    scale(var(--lyft-sk,1));
-  will-change:transform;
+.sd-rum{position:relative}
+html.nx-sr .sd-rum{
+  opacity:0;
+  transform:translate3d(0,70px,0) rotateX(16deg) scale(.95);
+  transform-origin:50% 0;
+  transition:opacity .9s var(--e-mjuk),transform 1.4s var(--e-ut);
 }
+html.nx-sr .nx-sd.nx-in .sd-rum{opacity:1;transform:none}
 .sd-fonster{
   position:relative;
   border-radius:clamp(18px,2vw,26px);
@@ -424,16 +431,6 @@ html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidd
   color:var(--bl);
   font-size:.9rem;
 }
-/* Glansen: ett svagt ljus som följer pekaren över glaset. */
-.sd-fonster::after{
-  content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
-  background:radial-gradient(600px circle at calc(50% + var(--mx,0) * 100%) calc(40% + var(--my,0) * 100%),
-             rgba(255,255,255,.22),transparent 60%);
-  opacity:var(--glans,0);
-  transition:opacity .4s var(--e);
-  mix-blend-mode:soft-light;
-}
-
 .sd-bar{
   display:flex;align-items:center;gap:7px;
   padding:12px 16px;
@@ -929,7 +926,6 @@ html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidd
   box-shadow:0 24px 50px -24px rgba(28,24,18,.45),0 2px 6px rgba(28,24,18,.06);
   font-size:.8rem;line-height:1.3;color:var(--bl);
   pointer-events:none;
-  transform:translate3d(calc(var(--mx,0) * 30px),calc(var(--my,0) * 22px),0);
   opacity:0;
   transition:opacity .45s var(--e);
 }
@@ -1016,30 +1012,29 @@ html.nx-sr .showcase .sc-card{transform-origin:50% 100%;backface-visibility:hidd
 /* ============================================================
    9. SÅ KAN ETT PASS SE UT — bilderna kommer in
 
-   Varje foto öppnas som en ridå ur sin egen kant, och bilden inuti
-   glider från lite för nära till rätt avstånd. clip-path klipper
-   också skuggan, så skuggan tonar in först när ridån är helt borta
-   (.nx-klar). Riktningen varierar per bild så att väggen inte öppnar
-   sig som en rad jalusier.
+   Varje foto stiger upp och tonar fram, och bilden inuti glider från
+   lite för nära till rätt avstånd. Förut öppnades de som ridåer med
+   clip-path, som webbläsaren ritar om bildruta för bildruta på ett
+   stort foto. translate, scale och opacity körs på grafikkortet.
 
-   parallaxen i NXFin äger transform på ramen. Ridån är clip-path,
-   zoomen är scale på bilden — tre egenskaper, inga två om samma.
+   Parallaxen i NXFin äger transform på ramen. Här används de fristående
+   egenskaperna translate och scale, som läggs TILL transform i stället
+   för att ersätta den — de två systemen rör alltså inte varandra.
    ============================================================ */
 html.nx-sr .nx-vagg-grid figure{
-  box-shadow:none;
-  transition:clip-path 1.25s var(--e-ut),box-shadow .8s var(--e);
+  opacity:0;
+  translate:0 64px;
+  scale:.96;
+  transition:opacity 1s var(--e-mjuk),translate 1.3s var(--e-ut),scale 1.3s var(--e-ut);
 }
-html.nx-sr .nx-vagg-grid .v1{clip-path:inset(100% 0 0 0 round var(--fig-r))}
-html.nx-sr .nx-vagg-grid .v2{clip-path:inset(0 0 100% 0 round var(--fig-r));transition-delay:.12s}
-html.nx-sr .nx-vagg-grid .v3{clip-path:inset(0 100% 0 0 round var(--fig-r))}
-html.nx-sr .nx-vagg-grid .v4{clip-path:inset(0 0 0 100% round var(--fig-r));transition-delay:.1s}
+html.nx-sr .nx-vagg-grid .v2{transition-delay:.12s}
+html.nx-sr .nx-vagg-grid .v4{transition-delay:.1s}
 html.nx-sr .nx-vagg-grid figure .nx-img{
-  scale:1.24;
-  transition:opacity .7s var(--e-mjuk),scale 1.9s var(--e-ut);
+  scale:1.16;
+  transition:opacity .7s var(--e-mjuk),scale 1.8s var(--e-ut);
 }
-html.nx-sr .nx-vagg-grid figure.nx-in{clip-path:inset(0 0 0 0 round var(--fig-r))}
+html.nx-sr .nx-vagg-grid figure.nx-in{opacity:1;translate:0 0;scale:1}
 html.nx-sr .nx-vagg-grid figure.nx-in .nx-img{scale:1}
-html.nx-sr .nx-vagg-grid figure.nx-klar{clip-path:none;box-shadow:var(--sk-foto)}
 
 /* ============================================================
    10. REDUCERAD RÖRELSE
@@ -1049,6 +1044,5 @@ html.nx-sr .nx-vagg-grid figure.nx-klar{clip-path:none;box-shadow:var(--sk-foto)
 @media (prefers-reduced-motion:reduce){
   .nx-holdpunkter > li,
   .nx-holdpunkter:has(> li:hover) > li{scale:none !important}
-  .sd-rum{transform:none !important}
-  .sd-flyt{transform:none}
+  .sd-rum,.sd-fonster{transform:none !important}
 }

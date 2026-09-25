@@ -139,7 +139,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara |
-| `nextrum-start.css` + `nextrum-start.js` | **Bara startsidan** (sv och en), efter cinema respektive före sidans eget skript. Det ljusare papperet (`--pap:#F3F2EC`, Leo 2026-09-25) och rörelsen efter hero: bladet över filmen, ordfyllnaden, hållpunkterna 1–4, korten som delas ut, det rullande bandet, bildväggens ridåer och studievyn man kan klicka i. Skriptet startar av sig självt och skriver ingen text — allt man läser står i markupen, på båda språken |
+| `nextrum-start.css` + `nextrum-start.js` | **Bara startsidan** (sv och en), efter cinema respektive före sidans eget skript. Det ljusare papperet (`--pap:#F2EDE3`, Leo 2026-09-25) och rörelsen efter hero: ordfyllnaden, hållpunkterna 1–4, korten som stiger upp, det rullande bandet, bildväggen och studievyn man kan klicka i. Skriptet startar av sig självt och skriver ingen text — allt man läser står i markupen, på båda språken |
 | `nextrum-admin-palett.css` | Bara `admin.html`, laddas **sist**. Sedan 2026-09-24 **ingen egen palett**: adminvyn ärver jordpaletten som de två andra vyerna. Filen bär bara `--fel`, `--ln-kontroll`, agentflikens `--acc-lugn` och felsemantiken |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
@@ -152,7 +152,23 @@ Sju områdessidor (`laxhjalp-*.html`) genereras. `/en/` är elva
 Hero är orörd med flit. Allt annat på startsidan bor i
 `nextrum-start.css` och `nextrum-start.js`, och startlägena gömmer
 ingenting utan `html.nx-sr` — klassen sätts av skriptet, så en fil som
-inte laddar lämnar sidan i slutläget. Fyra saker som kostade en omgång:
+inte laddar lämnar sidan i slutläget.
+
+**Skriptet sätter klasser, CSS rör sig.** Första versionen räknade om
+kort, ord och ett blad över filmen för varje bildruta medan man
+scrollade, och studievyns lutning skrev CSS-variabler på fönstret.
+Leo: "alla animationer måste se mer smooth ut och inte laggiga". En
+scrollkopplad effekt i JavaScript hamnar ur takt med en scroll som
+webbläsaren kör på grafikkortet, och **en custom property ärvs** — en
+variabel på ett element med hundratals barn räknar om stilen för alla
+vid varje skrivning. Nu säger en IntersectionObserver när något syns,
+en klass sätts, och resten är transitions på opacity, transform,
+translate och scale. Bandet är en Web Animation. Mätt med samma scroll
+och musrörelse: stilomräkningen gick från cirka 700 till 165 ms.
+Skriv inte tillbaka stil per bildruta, och animera inte box-shadow —
+lägg skuggan i ett eget lager och tona dess opacitet.
+
+Fyra saker som kostade en omgång:
 
 1. **`once`-scenerna i `NXMotion` avslöjade aldrig något.** Scenen
    markerades klar efter första anropet, och det kommer när elementet
@@ -172,7 +188,9 @@ inte laddar lämnar sidan i slutläget. Fyra saker som kostade en omgång:
    klipps och förskjuts med transform, räknade Chrome fram ett mål
    400 px bort och rullade hela sidan dit. Anropet hoppas över i
    `.nx-band.pa`. Bandet är `overflow:clip`, inte `hidden`, av samma
-   skäl: `hidden` gör det till något som går att scrolla.
+   skäl: `hidden` gör det till något som går att scrolla. Kanterna tonas
+   med två stilla gradienter, inte `mask-image`: en mask över något som
+   rör sig ritas om varje bildruta i Safari.
 4. **Bandets kopior måste finnas när `NX.initDrag()` körs.** Därför
    laddas `nextrum-start.js` före sidans eget skript. Kopiorna är
    `aria-hidden`, utanför tabbordningen och har egna id:n; en

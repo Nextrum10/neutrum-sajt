@@ -189,6 +189,10 @@ const NXMotion = (function () {
     const y = window.scrollY;
     for (let i = 0; i < scener.length; i++) {
       const s = scener[i];
+      /* En klar once-scen räknas aldrig om — att mäta den är en
+         tvingad layout för ingenting, fyra gånger i sekunden medan man
+         scrollar, för varje avslöjat block på sidan. */
+      if (s.klar) continue;
       const r = s.mät.getBoundingClientRect();
       /* Mät om medan vi ändå har rektangeln. Scenens top sattes när
          scenen skapades, och allt som ändrar höjden ovanför den efter
