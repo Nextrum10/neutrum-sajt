@@ -73,9 +73,92 @@ const KALLOR = [
 // och det är hela skyddet.
 // ============================================================
 
+/* SEDAN FAS 14.2 FÅR FAMILJEN INGEN FAKTURA. Familjen betalar varje
+   pass med kort, före passet, och studiehjälparen får sitt underlag
+   den 25:e som förut.
+
+   Frågan ofakturerade_pass fanns för att hitta intäkt som glidit
+   förbi fakturan. Efter omställningen hade den svarat med VARJE pass,
+   för inget pass hamnar längre på en fakturarad — och agenten hade
+   läst det som en växande hög pengar ingen skickat räkning på. Den
+   heter nu obetalda_pass och frågar det som betyder samma sak i dag:
+   pass som hållits och rapporterats utan att familjen betalat.
+
+   fakturor och obetalt står kvar för de äldre fakturorna. Det fanns
+   noll sådana när omställningen gjordes, men frågorna kostar ingenting
+   och ett tomt svar är också ett svar. */
+
+// Dagen i Stockholm, inte i UTC. En betalning strax efter midnatt den
+// första hör till den nya månaden, och det är så analysvyerna räknar.
+const stockholmsdag = (t: string) =>
+  new Date(t).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
+
 const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, fran: string, till: string) => Promise<unknown> }> = {
+  kortbetalningar: {
+    beskrivning:
+      'Kortbetalningar per pass, med betalningsdag mellan från och till. Belopp i ören: betalt, ' +
+      'återbetalt, Stripes avgift och netto när de finns, samt passets datum och längd. Stripe ' +
+      'betalar ut till banken i klumpar netto efter avgift, så ingen bankrad motsvarar ett pass.',
+    koer: async (db, fran, till) => {
+      const { data, error } = await db
+        .from('bookings')
+        .select('betald_at, betalt_ore, aterbetald_ore, stripe_avgift_ore, stripe_netto_ore, betalning_status, wanted_date, duration_min')
+        .not('betald_at', 'is', null)
+        .order('betald_at');
+      if (error) throw new Error(error.message);
+      const rader = (data ?? [])
+        .map((b) => ({ ...b, betaldag: stockholmsdag(b.betald_at) }))
+        .filter((b) => b.betaldag >= fran && b.betaldag <= till);
+      const summa = (f: 'betalt_ore' | 'aterbetald_ore' | 'stripe_avgift_ore') =>
+        rader.reduce((s, r) => s + Number(r[f] ?? 0), 0);
+      return {
+        antal: rader.length,
+        betalt_ore: summa('betalt_ore'),
+        aterbetalt_ore: summa('aterbetald_ore'),
+        // Avgiften hämtas när betalningen kommer in och finns inte
+        // annars. Saknas den på en rad är summan för låg.
+        avgift_ore: summa('stripe_avgift_ore'),
+        utan_avgift: rader.filter((r) => r.stripe_avgift_ore == null).length,
+        // Bara datum, belopp och läge. Vem som betalade har
+        // ekonomiagenten inget ärende till.
+        rader: rader.map((r) => ({
+          betaldag: r.betaldag, passets_datum: r.wanted_date, minuter: r.duration_min,
+          lage: r.betalning_status, betalt_ore: r.betalt_ore, aterbetalt_ore: r.aterbetald_ore,
+          avgift_ore: r.stripe_avgift_ore, netto_ore: r.stripe_netto_ore,
+        })),
+      };
+    },
+  },
+
+  obetalda_pass: {
+    beskrivning:
+      'Pass som hållits och rapporterats men som familjen inte betalat. Intäkt som borde ha ' +
+      'kommit in men inte har det. Ingen periodavgränsning — poängen är att hitta gamla pass ' +
+      'som glidit förbi.',
+    koer: async (db) => {
+      const { data, error } = await db
+        .from('passunderlag')
+        .select('wanted_date, duration_min, subject, betalning_status')
+        .eq('fakturerbar', true)
+        .eq('har_rapport', true)
+        .eq('fakturerad', false)
+        .in('betalning_status', ['ingen', 'vantar', 'misslyckad'])
+        .order('wanted_date');
+      if (error) throw new Error(error.message);
+      const kvar = data ?? [];
+      return {
+        antal: kvar.length,
+        minuter: kvar.reduce((s, b) => s + Number(b.duration_min ?? 0), 0),
+        pass: kvar.map((b) => ({
+          datum: b.wanted_date, minuter: b.duration_min, amne: b.subject, lage: b.betalning_status,
+        })),
+      };
+    },
+  },
+
   fakturor: {
-    beskrivning: 'Fakturor med period mellan från och till. Belopp i ören, status, förfallodatum.',
+    beskrivning: 'Äldre fakturor till familjer, från tiden före kortbetalningen. Inga nya skapas. ' +
+      'Period mellan från och till, belopp i ören, status, förfallodatum.',
     koer: async (db, fran, till) => {
       const { data, error } = await db
         .from('invoices')
@@ -88,7 +171,8 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
   },
 
   obetalt: {
-    beskrivning: 'Fakturor som är skickade eller förfallna men inte betalda. Ingen periodavgränsning.',
+    beskrivning: 'Äldre fakturor som är skickade eller förfallna men inte betalda. Ingen ' +
+      'periodavgränsning. Obetalda pass efter omställningen finns i obetalda_pass.',
     koer: async (db) => {
       const { data, error } = await db
         .from('invoices')
@@ -101,7 +185,7 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
   },
 
   utbetalningar: {
-    beskrivning: 'Ersättning till studiehjälpare per period. Belopp i ören och antal minuter.',
+    beskrivning: 'Ersättning till studiehjälpare per period, betalas ut den 25:e. Belopp i ören och antal minuter.',
     koer: async (db, fran, till) => {
       const { data, error } = await db
         .from('payouts')
@@ -114,28 +198,6 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
         summa_ore: (data ?? []).reduce((s, r) => s + Number(r.belopp_ore), 0),
         minuter: (data ?? []).reduce((s, r) => s + Number(r.minuter), 0),
         rader: data,
-      };
-    },
-  },
-
-  ofakturerade_pass: {
-    beskrivning:
-      'Genomförda pass som ännu inte hamnat på någon fakturarad. Intäkt som finns men inte syns. ' +
-      'Ingen periodavgränsning — poängen är att hitta gamla pass som glidit förbi.',
-    koer: async (db) => {
-      const [pass, rader] = await Promise.all([
-        db.from('bookings').select('id, wanted_date, duration_min, subject').eq('status', 'completed'),
-        db.from('invoice_lines').select('booking_id').not('booking_id', 'is', null),
-      ]);
-      if (pass.error) throw new Error(pass.error.message);
-      const med = new Set((rader.data ?? []).map((r) => r.booking_id));
-      const kvar = (pass.data ?? []).filter((b) => !med.has(b.id));
-      return {
-        antal: kvar.length,
-        minuter: kvar.reduce((s, b) => s + Number(b.duration_min ?? 0), 0),
-        // Bara datum och längd. Vem passet gällde har ekonomiagenten
-        // inget ärende till.
-        pass: kvar.map((b) => ({ datum: b.wanted_date, minuter: b.duration_min, amne: b.subject })),
       };
     },
   },
@@ -238,7 +300,10 @@ async function fortnoxLas(db: SupabaseClient, vag: string, fraga: string): Promi
 
 const SYSTEM = `Du är Nextrums ekonomi- och administrationsrådgivare. Nextrum är ett litet svenskt
 bolag som förmedlar läxhjälp: familjer bokar pass, gymnasie- och högskolestudenter håller
-dem, Nextrum fakturerar familjen i efterskott och betalar ut ersättning.
+dem. Familjen betalar varje pass med kort, före passet, genom Stripe, och får ingen faktura.
+Studiehjälparen får ersättning den 25:e för månadens rapporterade pass, utbetald från banken.
+Stripe betalar ut till bolagets bankkonto i klumpar, netto efter sin avgift: ingen bankrad
+motsvarar ett pass, och avgiften är en egen kostnad.
 
 DU ÄR INTE REVISOR ELLER SKATTERÅDGIVARE, och du bokför ingenting. Du läser bolagets
 siffror, läser Fortnox, slår upp vad myndigheterna säger och LÄMNAR FÖRSLAG som en
@@ -249,7 +314,7 @@ DITT OMRÅDE:
 · moms: redovisningsperiod, deklaration, avdrag
 · arbetsgivardeklaration och skatteavdrag, om studiehjälparna är anställda
 · inkomstdeklaration för bolaget, bokslut, räkenskapsår
-· fakturans innehåll och formkrav
+· kvitton, fakturor och formkraven på dem
 · vad som ska stämmas av mot vad, och vad som ser fel ut i siffrorna
 
 Frågor om avtal, ångerrätt, dataskydd, anställningsform eller minderårigas arbete tas av

@@ -1,11 +1,18 @@
 // ============================================================
-// NEXTRUM — prisräkningen för fakturering (Fas 5)
+// NEXTRUM — prisräkningen för månadskörningen (Fas 5, ombyggd i Fas 14.2)
 //
 // Allt fakturering/index.ts räknar ut, som rena funktioner: in med
 // passen, katalogen och timpenningarna, ut med raderna och svaret.
 // Ingen databas och inget nätverk här, så att varje öre går att
 // testa (pris_test.ts) — förut satt räkningen inne i Deno.serve och
 // hade inte ett enda test.
+//
+// SEDAN FAS 14.2 BYGGS BARA EN HALVA. Familjen betalar varje pass med
+// kort före passet (stripe-checkout) och får ingen månadsfaktura.
+// Körningen bygger studiehjälparens underlag, och räknar upp de pass
+// som hölls utan att familjen betalat, med det belopp passet skulle
+// ha kostat. En faktura skapas inte av det: listan är till för att
+// någon ska se passen, inte för att de ska drivas in av sig själva.
 //
 // PRISLOGIKEN ÄR DENSAMMA SOM FÖRUT (planens avsnitt D):
 //   · tjänstens timpris, eller standardtjänstens om passets saknar pris
@@ -14,16 +21,16 @@
 //   · ersättningen räknar inte med tillägget för flera barn
 // pris_test.ts jämför med en ordagrann kopia av den gamla koden.
 //
-// NYTT I FAS 5, och noll för läxhjälp:
-//   · RUT dras av på rader vars tjänst är RUT-berättigad — bara om
-//     kunden har skatteuppgifter och det finns ett tak för året.
-//     Annars 0, och kunden eller året listas i svaret.
-//   · Ersättningen: tjänstens (tjanster.ersattning_per_timme_ore) när
-//     den är satt, annars studiehjälparens egen timpenning — så som
-//     kolumnen och adminvyn beskriver den. Läxhjälp har ingen.
-//   · RUT avrundas NEDÅT till hela kronor. Skatteverket tar emot
-//     begäran i hela kronor, och avdraget får aldrig bli större än
-//     andelen.
+// ERSÄTTNINGEN: tjänstens (tjanster.ersattning_per_timme_ore) när den
+// är satt, annars studiehjälparens egen timpenning — så som kolumnen
+// och adminvyn beskriver den. Läxhjälp har ingen egen.
+//
+// RUT DRAS INTE LÄNGRE HÄR. Avdraget fanns bara på familjens faktura,
+// och den finns inte. skydda_tjansteaktivering() nekar en RUT-
+// berättigad tjänst för kunder tills kortbetalningen kan dra det, så
+// det finns inget pass som skulle ha fått avdraget. rutFor() står
+// kvar, testad, för den dagen: regeln om hela kronor nedåt och taket
+// är dyrköpt och ska inte behöva skrivas om ur minnet.
 // ============================================================
 
 import { MANADER } from './konstanter.ts';
@@ -54,31 +61,27 @@ export type Pass = {
   har_rapport: boolean;
   fakturerad: boolean;
   pa_underlag: boolean;
-  // Fas 14.0. Valfri i typen med flit: en anropare som inte hämtar
-  // kolumnen ska få samma beteende som förut, inte ett undantag.
+  // Valfri i typen med flit: en anropare som inte hämtar kolumnen får
+  // passet räknat som obetalt. Att gissa "betalt" hade gömt det.
   betalning_status?: string | null;
 };
 
-// Lägen där kortvägen RÖRT passet. Ett sådant pass får inte hamna på
-// familjens månadsfaktura automatiskt:
+// Lägen där familjen INTE har betalat. Samma tre som avvikelsen
+// ej_betalt i avvikelser_rader() — ändras den ena ska den andra
+// ändras i samma ändring.
 //
-//   betald      — pengarna är dragna. En fakturarad är en andra debitering.
-//   vantar      — en checkout-session är öppen. Fakturerar vi nu och
-//                 betalningen landar om en minut har familjen betalat två
-//                 gånger, och ingen av vägarna vet om den andra.
-//   aterbetald  — pengar har gått tillbaka. VARFÖR de gjorde det är ett
-//                 beslut någon tagit, och avbokningspolicyn är inte
-//                 skriven. Att automatiskt fakturera beloppet igen vore
-//                 att riva det beslutet.
-//   tvist       — familjen bestrider. Att skicka en faktura mitt i en
-//                 tvist är det sämsta svaret på den.
+//   ingen       — ingen betalning har ens påbörjats.
+//   vantar      — en checkout-session är öppnad. Det är inte en
+//                 betalning; bara webhooken kan säga att pengarna kom.
+//   misslyckad  — kortet nekades.
 //
-// 'ingen' och 'misslyckad' är inte med: då finns ingen betalning, och
-// passet ska faktureras precis som förut.
-export const KORTVAGEN_HAR_RORT = new Set(['vantar', 'betald', 'aterbetald', 'tvist']);
+// 'betald' och 'tvist' är betalda. 'aterbetald' är inte med: där har
+// någon redan beslutat vad som ska hända med pengarna, och en lista
+// över obetalda pass ska inte se ut att riva det beslutet.
+export const OBETALDA_LAGEN = new Set(['ingen', 'vantar', 'misslyckad']);
 
-export function kortvagenRorde(b: Pass): boolean {
-  return KORTVAGEN_HAR_RORT.has(String(b.betalning_status ?? 'ingen'));
+export function obetalt(b: Pass): boolean {
+  return OBETALDA_LAGEN.has(String(b.betalning_status ?? 'ingen'));
 }
 
 export type Rad = {
@@ -87,7 +90,14 @@ export type Rad = {
   minuter: number;
   belopp_ore: number;
   timpris_ore: number;
-  rut_ore: number;
+};
+
+export type Obetalt = {
+  booking_id: string;
+  parent_id: string;
+  datum: string;
+  lage: string;
+  belopp_ore: number;
 };
 
 // Ören, aldrig flyttal. Math.round sist så att 90 minuter à 379 kr
@@ -125,7 +135,8 @@ export function standardTjanst(tjanster: Tjanst[]): Tjanst | null {
 
 // Skattereduktionen på en rad: tjänstens andel av det kunden annars
 // hade betalat, aldrig mer än vad som är kvar av årets tak, och i
-// hela kronor nedåt.
+// hela kronor nedåt. Används inte av något sedan Fas 14.2 — se
+// filhuvudet om varför den står kvar.
 export function rutFor(nettoOre: number, t: Tjanst | undefined, kvarOre: number): number {
   if (!t || !t.rut_berattigad || !t.rut_procent || kvarOre <= 0 || nettoOre <= 0) return 0;
   const andel = Math.min((nettoOre * Number(t.rut_procent)) / 100, kvarOre);
@@ -150,20 +161,11 @@ export function sorteraPass(allaPass: Pass[]) {
   return { pass, utanRapport, undantagna };
 }
 
-// RUT-läget för körningen. Bara ifyllt när något pass gäller en
-// RUT-berättigad tjänst — för läxhjälp hämtas ingenting av det här.
-export type RutLage = {
-  medSkatteuppgifter: Set<string>;     // kunder med kund_skatteuppgifter
-  takOre: number | null;               // årets tak ur rut_tak, null = inte ifyllt
-  anvantOre: Map<string, number>;      // kund -> redan avdragen RUT i år
-};
-
 export function byggUnderlag(o: {
   pass: Pass[];
   tjanster: Tjanst[];
   timprisOre: number;
   timpenningar: Map<string, number>;
-  rut?: RutLage;
 }) {
   const perKod = new Map<string, Tjanst>();
   for (const t of o.tjanster) perKod.set(t.kod, t);
@@ -177,115 +179,71 @@ export function byggUnderlag(o: {
     ? { timme: Number(t.pris_per_timme_ore ?? 0), extra: Number(t.extra_personer_ore ?? 0) }
     : { timme: o.timprisOre, extra: 0 };
 
-  const perFamilj = new Map<string, Rad[]>();
   const perTutor = new Map<string, Rad[]>();
   const utanTimpenning: string[] = [];
-  // Pass där kortvägen redan varit inne. De RAPPORTERAS, de försvinner
-  // inte: ett pass som tyst hoppas över är ett pass ingen fakturerar,
-  // och det felet ser likadant ut som att allt gick bra.
-  const kortbetalda: { booking_id: string; parent_id: string; lage: string }[] = [];
-  const rutUtanSkatteuppgifter = new Set<string>();
-  let rutUtanTak = false;
-  const rutKvar = new Map<string, number>();
+  // Pass som hölls utan att familjen betalat. De RAPPORTERAS: ett pass
+  // som tyst hoppas över är ett pass ingen tar betalt för, och det
+  // felet ser likadant ut som att allt gick bra.
+  const obetalda: Obetalt[] = [];
 
   for (const b of o.pass) {
     const minuter = Number(b.duration_min || 60);
     const text = radtext(b.subject, b.wanted_date);
     const t = tjanstFor(b.tjanst);
 
-    // FAMILJENS HALVA. Studiehjälparens ligger nedanför och har med
-    // flit inte samma villkor: hen har hållit passet oavsett hur
-    // familjen betalade, och ersättningen den 25:e ska räknas fram
-    // som vanligt.
-    if (b.parent_id && !b.fakturerad && kortvagenRorde(b)) {
-      kortbetalda.push({
-        booking_id: b.id,
-        parent_id: b.parent_id,
-        lage: String(b.betalning_status ?? 'ingen'),
-      });
-    } else if (b.parent_id && !b.fakturerad) {
+    // FAMILJENS HALVA är en lista, inte en faktura. Ett pass som står
+    // på en äldre faktura drivs in genom den och räknas inte här.
+    if (b.parent_id && !b.fakturerad && obetalt(b)) {
       const p = prisFor(t);
       const barn = Math.max(1, Number(b.antal_barn || 1));
       const brutto = familjebelopp(minuter, p.timme || o.timprisOre, p.extra, barn);
-
       // Rabatten är framräknad och fryst vid bokningen. Den räknas
       // ALDRIG om här — annars ändrar sig ett gammalt pass pris den
       // dag någon justerar koden.
       const rabatt = Math.min(Math.max(Number(b.rabatt_ore || 0), 0), brutto);
-      const netto = brutto - rabatt;
-
-      let rut = 0;
-      if (t?.rut_berattigad && Number(t.rut_procent) > 0) {
-        if (!o.rut || !o.rut.medSkatteuppgifter.has(b.parent_id)) {
-          rutUtanSkatteuppgifter.add(b.parent_id);
-        } else if (o.rut.takOre === null) {
-          rutUtanTak = true;
-        } else {
-          const kvar = rutKvar.get(b.parent_id)
-            ?? (o.rut.takOre - (o.rut.anvantOre.get(b.parent_id) ?? 0));
-          rut = rutFor(netto, t, kvar);
-          rutKvar.set(b.parent_id, kvar - rut);
-        }
-      }
-
-      const lista = perFamilj.get(b.parent_id) ?? [];
-      lista.push({
+      obetalda.push({
         booking_id: b.id,
-        beskrivning: text
-          + (barn > 1 ? ` (${barn} barn)` : '')
-          + (rabatt > 0 ? ' − rabatt' : '')
-          + (rut > 0 ? ' − RUT' : ''),
-        minuter,
-        belopp_ore: netto - rut,
-        // Radens eget timpris — tjänstens, med tillägget för flera
-        // barn när det gäller.
-        timpris_ore: (p.timme || o.timprisOre) + (barn > 1 ? p.extra : 0),
-        rut_ore: rut,
+        parent_id: b.parent_id,
+        datum: b.wanted_date,
+        lage: String(b.betalning_status ?? 'ingen'),
+        belopp_ore: brutto - rabatt,
       });
-      perFamilj.set(b.parent_id, lista);
     }
 
+    // STUDIEHJÄLPARENS HALVA har med flit inte samma villkor: hen har
+    // hållit passet oavsett hur familjen betalade, och ersättningen den
+    // 25:e räknas fram som vanligt. Att ett obetalt pass inte ska hållas
+    // alls sköter spärren kortsparr i databasen, inte den här räkningen.
     if (b.tutor_id && !b.pa_underlag) {
       // Tjänstens ersättning när den är satt, annars studiehjälparens
       // egen timpenning. Utan någon av dem kan ersättningen inte räknas
-      // ut, och att
-      // gissa vore värre än att låta passet ligga kvar till nästa
-      // körning. Det rapporteras i svaret så att någon kan fylla i den.
+      // ut, och att gissa vore värre än att låta passet ligga kvar till
+      // nästa körning. Det rapporteras i svaret så att någon kan fylla i den.
       //
-      // Ersättningen påverkas ALDRIG av familjens rabatt eller RUT, och
-      // räknar inte med tillägget för flera barn.
+      // Ersättningen påverkas ALDRIG av familjens rabatt, och räknar
+      // inte med tillägget för flera barn.
       const timpenning = Number(t?.ersattning_per_timme_ore || 0) || o.timpenningar.get(b.tutor_id) || 0;
       if (!timpenning) { utanTimpenning.push(b.tutor_id); continue; }
       const lista = perTutor.get(b.tutor_id) ?? [];
       lista.push({
         booking_id: b.id, beskrivning: text, minuter,
-        belopp_ore: belopp(minuter, timpenning), timpris_ore: timpenning, rut_ore: 0,
+        belopp_ore: belopp(minuter, timpenning), timpris_ore: timpenning,
       });
       perTutor.set(b.tutor_id, lista);
     }
   }
 
-  return {
-    perFamilj,
-    perTutor,
-    utanTimpenning,
-    kortbetalda,
-    rutUtanSkatteuppgifter: [...rutUtanSkatteuppgifter],
-    rutUtanTak,
-  };
+  return { perTutor, utanTimpenning, obetalda };
 }
 
-export const summa = (rader: Rad[]) => rader.reduce((a, r) => a + r.belopp_ore, 0);
-export const summaRut = (rader: Rad[]) => rader.reduce((a, r) => a + r.rut_ore, 0);
+export const summa = (rader: { belopp_ore: number }[]) => rader.reduce((a, r) => a + r.belopp_ore, 0);
 export const minuterSum = (rader: Rad[]) => rader.reduce((a, r) => a + r.minuter, 0);
 
-// Svaret, i exakt samma form som före Fas 5. RUT-fälten läggs bara
-// till när de har något att säga — en körning med bara läxhjälp ger
-// samma svar, tecken för tecken, som den gjorde förut.
+// Svaret. `obetalda` står alltid med, också tom: en tom lista är ett
+// besked ("alla hållna pass är betalda"), en saknad nyckel är en fråga.
 export function sammanfatta(o: {
   korningAv: 'nyckel' | 'admin';
   period: string;
-  rutAr?: number;
   slut: string;
   timprisOre: number;
   underlag: ReturnType<typeof byggUnderlag>;
@@ -293,24 +251,15 @@ export function sammanfatta(o: {
   undantagna: string[];
 }) {
   const u = o.underlag;
-  const ut: Record<string, unknown> = {
+  return {
     korning_av: o.korningAv,
     period: o.period,
     pass_till_och_med: new Date(Date.parse(o.slut) - 86_400_000).toISOString().slice(0, 10),
     pris_per_timme_ore: o.timprisOre,
-    fakturor: [...u.perFamilj].map(([id, r]) => {
-      const rut = summaRut(r);
-      return rut > 0
-        ? { parent_id: id, pass: r.length, belopp_ore: summa(r), rut_ore: rut }
-        : { parent_id: id, pass: r.length, belopp_ore: summa(r) };
-    }),
     utbetalningar: [...u.perTutor].map(([id, r]) => ({ tutor_id: id, pass: r.length, belopp_ore: summa(r) })),
+    obetalda: u.obetalda,
     hoppade_over_utan_timpenning: [...new Set(u.utanTimpenning)],
     hoppade_over_utan_rapport: o.utanRapport,
     undantagna_pass: o.undantagna.length,
   };
-  if (u.kortbetalda.length) ut.hoppade_over_kortvagen = u.kortbetalda;
-  if (u.rutUtanSkatteuppgifter.length) ut.rut_utan_skatteuppgifter = u.rutUtanSkatteuppgifter;
-  if (u.rutUtanTak) ut.rut_utan_tak = o.rutAr ?? Number(o.period.slice(0, 4));
-  return ut;
 }

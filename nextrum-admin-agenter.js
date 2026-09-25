@@ -298,7 +298,7 @@ const NXAdminAgenter = (function () {
        som att ett svar stoppades. Agenten står som text bredvid.
 
        Adressen är #agenter/<agent>, inte #<agent>: agenterna är
-       flikar i en sektion nu, och #ekonomi är adminvyns fakturor. */
+       flikar i en sektion nu, och #ekonomi är adminvyns betalningar. */
     senaste.innerHTML = sen.map(k =>
       '<a href="#agenter/' + esc(k.agent) + '" style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--ln);text-decoration:none">'
       + '<span class="ag-status" data-s="' + esc(k.status) + '">' + esc(k.status.replace(/_/g, ' ')) + '</span>'

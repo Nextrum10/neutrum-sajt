@@ -151,8 +151,8 @@
 
     <h2>Kort sammanfattning</h2>
     <p>Vi sparar det som behövs för att kunna matcha en elev med rätt studiehjälpare, boka och
-      genomföra passen, hålla er informerade om vad som händer, och fakturera för det som
-      genomförts. Inget mer än så.</p>
+      genomföra passen, hålla er informerade om vad som händer, och ta betalt för passen.
+      Inget mer än så.</p>
     <p>Vi säljer inte uppgifter. Vi lämnar dem inte vidare för marknadsföring. Vi sätter inga
       cookies.</p>
     <p>Vi räknar hur många som besöker de öppna sidorna, men utan cookies och utan något som
@@ -194,7 +194,7 @@
       <li>Datum, tid, ämne, längd och format för varje bokat pass</li>
       <li>Om ett pass avbokas: när det avbokades och av vem</li>
       <li>Meddelanden mellan familj och studiehjälpare i plattformens chatt</li>
-      <li>Fakturor och ersättningsunderlag: perioder, timmar och belopp</li>
+      <li>Betalningar och ersättningsunderlag: vilket pass som betalats, belopp och när. Kortuppgifterna har vi aldrig</li>
     </ul>
 
     <h3>Om hur du hittade hit</h3>
@@ -218,7 +218,7 @@
     <ul>
       <li><b>En studiehjälpare</b> ser bara de elever hen är matchad med, och bara sina egna pass,
         läxor, material och meddelanden.</li>
-      <li><b>En familj</b> ser bara sina egna barn, pass, fakturor och meddelanden.</li>
+      <li><b>En familj</b> ser bara sina egna barn, pass, betalningar och meddelanden.</li>
       <li><b>Vi</b> kommer åt det som behövs för att driva tjänsten och lösa problem — med
         undantag för era privata anteckningar, som beskrivs ovan.</li>
       <li><b>Filer</b> — material och profilbilder — ligger i stängda utrymmen. Varje fil öppnas
@@ -237,6 +237,11 @@
         sidorna. Räkningen sker utan cookies: unika besökare härleds ur en hash av IP och
         webbläsartyp med ett dygnsvis skiftande salt, och den råa IP-adressen sparas inte.
         Studievyn och studiehjälparvyn mäts inte.</li>
+      <li><b>Stripe</b> — tar emot kortbetalningarna. Kortuppgifterna lämnar ni direkt till Stripe,
+        aldrig till oss, och vi sparar dem inte. Stripe får er e-postadress, beloppet och vilket pass
+        betalningen gäller (ämne och datum), och vi får tillbaka att passet är betalt. Hur Stripe
+        hanterar uppgifterna står i
+        <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripes integritetspolicy</a>.</li>
     </ul>
     <p>Utöver dem hämtas ingenting från någon annan. Typsnitten låg tidigare hos Google och
       programbiblioteket som inloggningen behöver låg hos unpkg.com — båda skickade din
@@ -246,7 +251,7 @@
     <ul>
       <li><b>Konto och studiehistorik</b> — så länge ni är kunder hos oss, och därefter
         tills ni ber oss ta bort dem.</li>
-      <li><b>Fakturaunderlag</b> — sju år. Det är bokföringslagens krav och något vi inte
+      <li><b>Bokföringsunderlag</b> — betalningar och ersättningsunderlag, sju år. Det är bokföringslagens krav och något vi inte
         kan förkorta, inte ens på begäran.</li>
       <li><b>Ansökningar som inte leder till anställning</b> — högst ett år, så att vi kan höra
         av oss om något dyker upp. Vill du att vi tar bort den tidigare, skriv till oss.</li>
@@ -283,7 +288,7 @@
     <p>Ändrar vi något väsentligt uppdaterar vi datumet nedan, och hör av oss till er som har
       konto om ändringen påverkar er.</p>
 
-    <p class="jur-datum">Senast uppdaterad 7 september 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 24 september 2026.</p>
   </div>
 </section>
 
@@ -426,7 +431,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=b9b1a4f7"></script>
+<script src="nextrum-maskot-svar.js?v=5064edce"></script>
 <script src="nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {

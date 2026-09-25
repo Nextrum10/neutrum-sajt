@@ -1,26 +1,30 @@
 // ============================================================
-// NEXTRUM — Edge Function: fakturering
+// NEXTRUM — Edge Function: fakturering (månadskörningen)
 //
 // Kör en gång i månaden. Samlar alla genomförda pass som ännu inte
-// tagits med någonstans, och skapar två saker av dem:
+// kommit med på ett underlag, och skapar ett underlag per
+// studiehjälpare: vad hen ska få den 25:e.
 //
-//   · en faktura per familj      (vad de ska betala)
-//   · ett underlag per studiehjälpare (vad de ska få)
+// FAMILJEN FÅR INGEN FAKTURA (Fas 14.2). Familjen betalar varje pass
+// med kort före passet, genom stripe-checkout, och körningen skriver
+// därför ingenting till invoices. Pass som hölls utan att familjen
+// betalat räknas upp i svaret under `obetalda`, med beloppet, och
+// syns under Avvikelser som Inte betalt. De försvinner inte tyst, och
+// de faktureras inte heller i efterhand av sig själva.
 //
-// Samma pass, två sidor. Priset familjen betalar kommer från
-// tjanster, ersättningen från tjanster.ersattning_per_timme_ore när
-// den är satt, annars från tutor_profiles.hourly_rate. Själva räkningen ligger i
-// _delad/pris.ts, där den är testad öre för öre (pris_test.ts).
+// Funktionen heter kvar fakturering. Namnet är adressen adminvyn och
+// ett framtida schema anropar, och ett nytt namn hade varit en ny
+// funktion i driften medan den gamla låg kvar ACTIVE utan anropare.
 //
-// RUT (Fas 5.3): dras bara av för RUT-berättigade tjänster, när kunden
-// har skatteuppgifter och admin fyllt i årets tak i rut_tak. För
-// läxhjälp är avdraget alltid 0 och svaret ser ut precis som förut.
+// Ersättningen kommer från tjanster.ersattning_per_timme_ore när den
+// är satt, annars från tutor_profiles.hourly_rate. Själva räkningen
+// ligger i _delad/pris.ts, där den är testad öre för öre (pris_test.ts).
 //
 // SÄKERHET
-// Den här funktionen använder service_role, för invoices och payouts
-// har med flit ingen INSERT-policy för användare: kan ingen skriva
-// belopp från webbläsaren kan ingen skriva fel belopp. Därför får
-// den heller inte gå att anropa av vem som helst. Två vägar in:
+// Den här funktionen använder service_role, för payouts har med flit
+// ingen INSERT-policy för användare: kan ingen skriva belopp från
+// webbläsaren kan ingen skriva fel belopp. Därför får den heller inte
+// gå att anropa av vem som helst. Två vägar in:
 //
 //   · x-fakturering-nyckel som matchar secreten FAKTURERING_NYCKEL —
 //     för ett schema, som inte är en inloggad användare.
@@ -34,17 +38,17 @@
 // VILKA PASS SOM KOMMER MED (Fas 2)
 // Urvalet läses ur vyn passunderlag. Ett pass kommer med om det är
 // genomfört, har en rapport kopplad, inte är undantaget av admin
-// (fakturerbar) och inte redan finns på en faktura respektive ett
-// underlag. Pass utan rapport och undantagna pass räknas upp i
-// svaret, så att någon kan ta ställning till dem.
+// (fakturerbar) och inte redan finns på ett underlag. Pass utan
+// rapport och undantagna pass räknas upp i svaret, så att någon kan
+// ta ställning till dem.
 //
 // PERIODEN
-// Fakturan gäller en månad, och standard är FÖREGÅENDE månad —
-// körningen den 1:a oktober fakturerar september. Med kommer alla
-// pass TILL OCH MED periodens sista dag som inte redan fakturerats,
-// så ett pass som rapporterades för sent till förra körningen kommer
-// med på nästa i stället för att falla bort. Pass efter perioden
-// väntar till nästa månad.
+// Underlaget gäller en månad, och standard är FÖREGÅENDE månad —
+// körningen den 1:a oktober tar med september, och pengarna går den
+// 25:e. Med kommer alla pass TILL OCH MED periodens sista dag som inte
+// redan finns på ett underlag, så ett pass som rapporterades för sent
+// till förra körningen kommer med på nästa i stället för att falla
+// bort. Pass efter perioden väntar till nästa månad.
 //
 // KÖR TORRT FÖRST
 // Med { "torrkorning": true } räknar den ut allt och svarar med vad
@@ -54,30 +58,26 @@
 
 import { cors, json as jsonMed, preflight } from '../_delad/http.ts';
 import { kravAdmin, lika, serviceklient } from '../_delad/auth.ts';
-import { BETALNINGSVILLKOR_DAGAR } from '../_delad/konstanter.ts';
 import {
-  byggUnderlag, minuterSum, type Pass, type RutLage, sammanfatta, sorteraPass,
-  standardTjanst, summa, summaRut, type Tjanst,
+  byggUnderlag, minuterSum, type Pass, sammanfatta, sorteraPass,
+  standardTjanst, summa, type Tjanst,
 } from '../_delad/pris.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const NYCKEL = Deno.env.get('FAKTURERING_NYCKEL');
 
-// Betalningsvillkoret ligger i _delad/konstanter.ts, en gång för alla
-// funktioner. Den driftsatta versionen av den här filen hade 14 dagar
-// när allt annat sa 10 — det är skälet till att siffran flyttade.
-
 const CORS = cors('x-fakturering-nyckel');
 const json = (body: unknown, status: number) => jsonMed(body, status, CORS);
 
 // Periodens första dag som YYYY-MM-DD. Alla belopp hör till en månad,
-// och unique(parent_id, period) gör att en omkörning inte kan skapa
-// dubbletter — den krockar i stället, vilket är precis vad vi vill.
+// och unique(tutor_id, period) på payouts gör att en omkörning inte
+// kan skapa dubbletter — den krockar i stället, vilket är precis vad
+// vi vill.
 //
 // Månaden räknas i svensk tid. I UTC är klockan 00.30 den 1:a
-// fortfarande förra månaden, och då hade körningen fakturerat fel
-// månad varannan gång den startades strax efter midnatt.
+// fortfarande förra månaden, och då hade körningen tagit fel månad
+// varannan gång den startades strax efter midnatt.
 function forraManaden(nu: Date): string {
   const [ar, man] = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit',
@@ -188,21 +188,27 @@ Deno.serve(async (req) => {
         error: 'Hittar inget timpris. Varken standardtjänsten i tjanster eller prissattning gick att läsa.',
         trolig_orsak: 'SUPABASE_SERVICE_ROLE_KEY på funktionen är sannolikt inte en '
           + 'service_role-nyckel. Utan den läser funktionen som anon, och kan då '
-          + 'varken läsa priset eller skriva fakturor.',
+          + 'varken läsa priset eller skriva underlag.',
       }, 500);
     }
 
     // ---------- passen som inte tagits med ----------
     // Vyn passunderlag svarar för varje genomfört pass om det har en
-    // rapport, är undantaget, redan fakturerat eller redan med på ett
-    // underlag. Bara pass till och med periodens sista dag.
+    // rapport, är undantaget, står på en äldre faktura, är betalt och
+    // redan är med på ett underlag. Bara pass till och med periodens
+    // sista dag, och bara de som inte redan finns på ett underlag.
+    //
+    // Förut hämtades också pass som fanns på ett underlag men inte på
+    // en faktura, för familjens halva. Den halvan finns inte längre.
+    // Ett obetalt pass som redan är med på ett underlag räknas inte upp
+    // här en gång till — avvikelsen ej_betalt ser det varje dag.
     let allaPass: Pass[];
     try {
       allaPass = await allaRader<Pass>((fran, till) => db.from('passunderlag')
         .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, '
           + 'rabatt_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status')
         .lt('wanted_date', slut)
-        .or('fakturerad.eq.false,pa_underlag.eq.false')
+        .eq('pa_underlag', false)
         .order('wanted_date').order('id')
         .range(fran, till));
     } catch (fel) {
@@ -223,92 +229,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Förfallodagen räknas redan här: RUT hör till året kunden BETALAR
-    // (Skatteverket), och det är förfallodagens år — en faktura för
-    // december betalas i januari och ska mot det nya årets tak.
-    const forfaller = new Date();
-    forfaller.setDate(forfaller.getDate() + BETALNINGSVILLKOR_DAGAR);
-    const forfallerIso = forfaller.toISOString().slice(0, 10);
-    const rutAr = Number(forfallerIso.slice(0, 4));
-
-    // ---------- RUT ----------
-    // Hämtas bara när något pass gäller en RUT-berättigad tjänst. För
-    // läxhjälp ställs inga av de här frågorna.
-    const rutKoder = new Set(katalog.filter((t) => t.rut_berattigad).map((t) => t.kod));
-    const rutKunder = [...new Set(pass
-      .filter((b) => b.parent_id && !b.fakturerad && rutKoder.has(b.tjanst ?? standard?.kod ?? ''))
-      .map((b) => b.parent_id as string))];
-    let rut: RutLage | undefined;
-    if (rutKunder.length) {
-      const [uppg, tak, anvant] = await Promise.all([
-        db.from('kund_skatteuppgifter').select('kund_id').in('kund_id', rutKunder),
-        db.from('rut_tak').select('tak_ore').eq('ar', rutAr).maybeSingle(),
-        db.from('rut_underlag').select('kund_id, rut_ore').eq('ar', rutAr).in('kund_id', rutKunder),
-      ]);
-      const fel = uppg.error ?? tak.error ?? anvant.error;
-      if (fel) return json({ error: 'Kunde inte läsa RUT-underlaget: ' + fel.message }, 500);
-      rut = {
-        medSkatteuppgifter: new Set((uppg.data ?? []).map((r): string => r.kund_id as string)),
-        takOre: tak.data ? Number(tak.data.tak_ore) : null,
-        anvantOre: new Map((anvant.data ?? []).map((r): [string, number] => [r.kund_id as string, Number(r.rut_ore)])),
-      };
-    }
-
     // ---------- räkna ----------
-    const underlag = byggUnderlag({ pass, tjanster: katalog, timprisOre, timpenningar, rut });
-    const { perFamilj, perTutor } = underlag;
+    const underlag = byggUnderlag({ pass, tjanster: katalog, timprisOre, timpenningar });
+    const { perTutor } = underlag;
 
     const sammanfattning = sammanfatta({
-      korningAv, period, rutAr, slut, timprisOre, underlag, utanRapport, undantagna,
+      korningAv, period, slut, timprisOre, underlag, utanRapport, undantagna,
     });
 
     if (torrkorning) return json({ torrkorning: true, ...sammanfattning }, 200);
 
     // ---------- skriv ----------
-    const skapade = { fakturor: 0, utbetalningar: 0 };
+    // Bara underlag. Familjens halva skrivs inte någonstans: den finns
+    // i svaret som `obetalda`, och i databasen som avvikelsen ej_betalt.
+    const skapade = { utbetalningar: 0 };
     const problem: string[] = [];
-
-    for (const [parentId, rader] of perFamilj) {
-      /* UTKAST, inte "skickad".
-         Fakturan skapades förut som skickad, med en skickad_at-stämpel
-         — trots att ingenting lämnade huset. Det var ofarligt så länge
-         ingen KUNDE skicka: ordet betydde bara "klar att visa i
-         familjens vy".
-
-         Nu finns edge-funktionen faktura-utskick, och då måste ordet
-         betyda vad det säger. "Skickad" sätts av den funktionen, och
-         bara efter att Resend svarat att mejlet gick iväg. En faktura
-         som står som skickad utan att någon fått den är en faktura
-         ingen letar efter — och den upptäcks först när betalningen
-         uteblir. */
-      // rut_ar: året avdraget prövades mot taket för. Bara när det
-      // finns ett avdrag — en läxhjälpsfaktura skrivs som förut.
-      const rut = summaRut(rader);
-      const f = await db.from('invoices').insert({
-        parent_id: parentId, period, status: 'utkast',
-        belopp_ore: summa(rader), rut_ore: rut, forfaller: forfallerIso,
-        ...(rut > 0 ? { rut_ar: rutAr } : {}),
-      }).select('id').single();
-
-      if (f.error) { problem.push(`faktura ${parentId}: ${f.error.message}`); continue; }
-
-      const l = await db.from('invoice_lines').insert(
-        rader.map((r) => ({
-          invoice_id: f.data.id, booking_id: r.booking_id, beskrivning: r.beskrivning,
-          minuter: r.minuter, pris_per_timme_ore: r.timpris_ore, belopp_ore: r.belopp_ore,
-          rut_ore: r.rut_ore,
-        })));
-
-      // Raderna är hela poängen med fakturan. Blir de inte skrivna
-      // ska fakturan inte heller stå kvar — annars finns ett belopp
-      // ingen kan förklara, och passen räknas som fakturerade.
-      if (l.error) {
-        await db.from('invoices').delete().eq('id', f.data.id);
-        problem.push(`fakturarader ${parentId}: ${l.error.message}`);
-        continue;
-      }
-      skapade.fakturor++;
-    }
 
     for (const [tutorId, rader] of perTutor) {
       const p = await db.from('payouts').insert({
@@ -334,26 +269,11 @@ Deno.serve(async (req) => {
       skapade.utbetalningar++;
     }
 
-    // ============================================================
-    // HÄR KOPPLAS STRIPE IN
-    //
-    // Allt ovanför fungerar utan Stripe: fakturan finns, beloppet är
-    // uträknat, familjen ser den i sin vy. Det som saknas är att ta
-    // emot pengarna. Steg när ni är redo:
-    //
-    //   1. Skapa en Stripe-kund per familj (spara id:t på profiles).
-    //   2. Skapa en Stripe Invoice med samma rader som invoice_lines,
-    //      och spara stripe_invoice_id + hosted_invoice_url i
-    //      stripe_url. Knappen "Betala" i familjens vy pekar redan dit.
-    //   3. Lyssna på invoice.paid i en webhook och sätt status
-    //      'betald' + betald_at.
-    //   4. För utbetalningar: Stripe Connect, en transfer per payout,
-    //      och spara stripe_transfer_id.
-    //
-    // Gör INTE något av det här härifrån förrän torrkörningen sett
-    // rätt ut mot riktig data. Ett fel i en uträkning är en rad att
-    // ändra; ett fel som redan dragit pengar är ett samtal.
-    // ============================================================
+    // Pengarna går inte härifrån. Underlaget är ett utkast som admin
+    // granskar, och utbetalningen den 25:e görs från banken. Stripe är
+    // inte med i den här halvan alls: Connect togs bort i Fas 12.5,
+    // eftersom en överföring per pass hade betalat samma timmar två
+    // gånger — en gång vid passet och en gång här.
 
     return json({ ...sammanfattning, skapade, problem }, problem.length ? 207 : 200);
   } catch (fel) {

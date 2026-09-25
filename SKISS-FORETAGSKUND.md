@@ -120,13 +120,16 @@ faktiskt frågat efter den.
 
 ## Vad som går sönder om man inte tänker efter
 
-**Betalningsvillkoret.** `verktyg/kolla-betalningsvillkor.py` vaktar i
-CI att det står **10 dagar** på alla ställen i repot. Företagskunder
-begär ofta 30. Ett villkor per kund bryter alltså en invariant som
-CI:s enda uppgift är att skydda, och som CLAUDE.md kallar skillnaden
-mellan ett skrivfel och en tvist. Det är inte omöjligt — men det är en
-egen leverans med ett eget beslut, inte en kolumn man lägger till i
-förbifarten.
+**Betalningssättet.** Sedan Fas 14.2 betalar kunden varje pass med
+kort, före passet, och `verktyg/kolla-betalningsvillkor.py` vaktar i CI
+att det löftet står likadant på alla ställen och att inget
+betalningsvillkor i dagar finns kvar. Företagskunder betalar sällan med
+kort per pass: de vill ha en faktura, ofta med 30 dagar. En fakturaväg
+för företag är alltså ingen kolumn utan en andra betalningsväg, med egna
+villkor, och den bryter en invariant som CI finns för att skydda och som
+CLAUDE.md kallar skillnaden mellan ett skrivfel och en tvist. Det är
+inte omöjligt — men det är en egen leverans med ett eget beslut, inte
+något man lägger till i förbifarten.
 
 **RLS.** Flera policyer talar om "familj" och utgår från
 `students.parent_id`. En företagskund utan barn faller utanför dem.
@@ -155,8 +158,9 @@ företagsuppdrag för hand.
 
 1. Leo svarar: är försäljning ett jobb vi förmedlar, eller en tjänst
    företag köper?
-2. Om det senare: vilket betalningsvillkor gäller företag? Svaret
-   avgör om CI-invarianten måste byggas om.
+2. Om det senare: hur betalar ett företag? Kort per pass som
+   familjerna, eller faktura? Svaret avgör om det behövs en andra
+   betalningsväg och en egen invariant i CI.
 3. Först därefter är det meningsfullt att rita tabeller.
 
 Se även [SKISS-RUT-EXPORT.md](SKISS-RUT-EXPORT.md), som har samma form

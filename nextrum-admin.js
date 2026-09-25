@@ -224,7 +224,15 @@
       const skäl = await NXStudie.avbokaRuta({
         admin: true,
         titel: 'Avboka passet?',
-        text: kortDatum(b.wanted_date) + ' hos ' + namnFör(b.tutor_id) + '. Passet faktureras inte.',
+        /* Admin är den enda som kan avboka ett betalt pass (Fas 13.1),
+           och en avbokning betalar inte tillbaka något av sig själv:
+           hur mycket som ska tillbaka är ett beslut. Rutan säger det,
+           så att pengarna inte blir liggande för att ingen tänkte på dem. */
+        text: kortDatum(b.wanted_date) + ' hos ' + namnFör(b.tutor_id) + '. '
+          + (b.betalning_status === 'betald' || b.betalning_status === 'tvist'
+            ? 'Passet är betalt, och pengarna går inte tillbaka av sig själva — återbetala '
+              + 'under Ekonomi → Kortbetalningar.'
+            : 'Passet är inte betalt, så det finns inget att betala tillbaka.'),
         not: 'Både familjen och studiehjälparen får ett mejl om att passet är avbokat och varför.'
       });
       if (!skäl) return;
@@ -356,7 +364,7 @@
     meddelanden: 'Frågor', familjer: 'Familjer', elever: 'Elever',
     studiehjalpare: 'Studiehjälpare', matchning: 'Matchning', bokningar: 'Bokningar',
     lektioner: 'Lektioner', statistik: 'Statistik',
-    ekonomi: 'Fakturor & utbetalningar', system: 'System',
+    ekonomi: 'Betalningar & utbetalningar', system: 'System',
     agenter: 'Agenter', uppdrag: 'Uppdrag', uppgifter: 'Uppgifter',
     bibliotek: 'Material', katalog: 'Tjänster & priser'
   };

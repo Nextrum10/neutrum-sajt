@@ -1,85 +1,94 @@
 # -*- coding: utf-8 -*-
-"""Kollar att betalningsvillkoret säger samma antal dagar överallt.
+"""Kollar att betalningslöftet säger samma sak överallt.
 
        python3 verktyg/kolla-betalningsvillkor.py
 
-Villkoret står på fjorton ställen i fyra olika sorters filer: en
-konstant i edge-funktionernas delade _delad/konstanter.ts (sedan Fas 3,
-förut två kopior), den synliga texten på fyra sidor på två språk,
-FAQ-schemat, raden i adminvyn och maskotens svarsfil. Koden vet om det —
-konstanten bär en kommentar om att den måste stämma med prissidan,
-FAQ:n och användarvillkoren. Men en kommentar kan inte köras.
+SEDAN FAS 14.2 ÄR LÖFTET INTE ETT ANTAL DAGAR. Familjen betalar varje
+pass med kort, FÖRE passet, och ett pass som inte är betalt hålls inte.
+Ingen månadsfaktura och inget betalningsvillkor.
 
-Det som gör det här värt ett verktyg är vad felet kostar. En faktura
-som förfaller på en annan dag än villkoret lovar är en tvist, inte ett
-skrivfel: familjen har läst tio dagar på prissidan, systemet har räknat
-fjorton, och det finns ingenting i en betalningspåminnelse som gör den
-diskussionen trevlig. Att ändra villkoret är dessutom precis den sortens
-uppgift där ett ställe glöms bort — det är utspritt, det är tråkigt, och
-alla ställen ser ut att vara "det sista".
+Förut vaktade verktyget att "10 dagars betalningsvillkor" stod likadant
+på fjorton ställen. Felet det fanns för är detsamma nu, åt andra hållet:
+står det kvar ett "ni betalar i efterskott" på någon sida lovar den
+något systemet inte gör, och en familj som läst det har rätt att bli
+förvånad när kortet dras före passet. En betalning som tas på ett annat
+sätt än villkoren lovar är en tvist, inte ett skrivfel. Och precis som
+förut är det en ändring där ett ställe glöms bort — det är utspritt,
+det är tråkigt, och alla ställen ser ut att vara "det sista".
 
-Verktyget läser siffran där den står och säger ifrån om de inte är
-överens. Det rättar ingenting. Vilken siffra som är den rätta är ett
-affärsbeslut, inte något ett skript ska gissa.
+Två listor:
 
-TÄCKS INTE: DEPLOY-BETALNING.md och kommentaren om förfallodagen i
-faktura-utskick skriver ut antalet med bokstäver ("tio dagar") och
-räknar dessutom ett exempel på det. Ändrar du villkoret får du läsa
-igenom dem för hand.
+  · LÖFTET — meningen som ska stå, med antal, där betalningen
+    beskrivs: villkoren, prissidan, FAQ:n, maskoten och studievyn, på
+    båda språken, och sedan Fas 14.3 familjens mejl. Antalet står med
+    för att ett sökuttryck som inte hittar något annars ser ut som ett
+    godkännande: formuleras
+    meningen om slutar mönstret matcha, och då ska verktyget säga det
+    i stället för att tiga om ett ställe det slutat bevaka.
 
-TÄCKER INTE HELLER det som faktiskt körs. Konstanten i repot är inte
-konstanten i Supabase förrän funktionerna har deployats om. Se
-DEPLOY-BETALNING.md.
+  · DET GAMLA LÖFTET — formuleringar som inte får stå i någon sida
+    som serveras, eller i maskotens svarsfil.
+
+Verktyget rättar ingenting. Vad löftet ska vara är ett affärsbeslut,
+inte något ett skript ska gissa.
+
+TÄCKS INTE: konstanten BETALNINGSVILLKOR_DAGAR i _delad/konstanter.ts.
+Den finns kvar för fakturor som skapades före Fas 14.2 — och sådana
+fanns det noll av — och lovar ingenting om ett nytt pass.
+
+Mejlmallarna i _delad/notiser/mallar.ts TÄCKS sedan Fas 14.3. Då
+började bekräftelsen och påminnelsen till familjen säga att passet
+betalas före, och mejlet är det familjen läser sist innan passet.
+Meningen står en gång i källan, som en konstant mallarna delar.
+
+TÄCKER INTE HELLER det som faktiskt körs: att spärren kortsparr är på
+är en flagga i databasen, inte en mening på en sida. Se CLAUDE.md
+avsnitt 11.
 """
-import io, os, re, sys
+import glob, io, os, re, sys
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+LOFTE_SV = r'[Ee]tt pass som inte är betalt hålls inte'
+LOFTE_EN = r'[Aa] session that has not been paid is not held'
+
 # (fil, mönster, hur många träffar som ska finnas, vad stället är)
-#
-# Antalet träffar står med för att ett sökuttryck som inte hittar något
-# annars ser ut som ett godkännande. Formuleras meningen om på
-# prissidan slutar mönstret matcha, och utan den här siffran skulle
-# verktyget tiga om ett ställe det har slutat bevaka.
-STALLEN = [
-    # En konstant, importerad av fakturering (förfallodagen när fakturan
-    # skapas) och faktura-utskick (förfallodagen när den skickas).
-    ('supabase/functions/_delad/konstanter.ts',
-     r'^export const BETALNINGSVILLKOR_DAGAR = (\d+);$', 1,
-     'förfallodagen i fakturering och faktura-utskick'),
+LOFTET = [
+    ('anvandarvillkor.html', LOFTE_SV, 1, 'användarvillkoren: pris och betalning'),
+    ('priser.html', LOFTE_SV, 1, 'prissidan: när betalar vi'),
+    ('faq.html', LOFTE_SV, 2, 'FAQ: hur betalningen fungerar (text + schema)'),
+    ('foralder.html', LOFTE_SV, 2, 'studievyn: Betalning och Pris & villkor'),
+    ('nextrum-studie-vy.js', LOFTE_SV, 1, 'studievyn: notisen om pass att betala'),
+    ('supabase/functions/_delad/notiser/mallar.ts', LOFTE_SV, 1,
+     'mejlen: bekräftelsen, påminnelsen och ett bokat pass till familjen'),
 
-    ('faq.html', r'(\d+) dagars betalningsvillkor', 2,
-     'FAQ: hur betalningen fungerar (text + schema)'),
-    ('faq.html', r'betalningsvillkoret är (\d+) dagar', 2,
-     'FAQ: när fakturan kommer (text + schema)'),
-    ('priser.html', r'(\d+) dagars betalningsvillkor', 1,
-     'prissidan: när betalar vi'),
-    ('anvandarvillkor.html', r'Betalningsvillkor är (\d+) dagar', 1,
-     'användarvillkoren'),
-    ('admin.html', r'adm-tal">(\d+) dagar<', 1,
-     'adminvyn: rutan om månadskörningen'),
+    ('en/anvandarvillkor.html', LOFTE_EN, 1, 'terms of use in English'),
+    ('en/priser.html', LOFTE_EN, 1, 'pricing page in English'),
+    ('en/faq.html', LOFTE_EN, 2, 'FAQ in English (text + schema)'),
 
-    ('en/faq.html', r'(\d+)-day payment terms', 2,
-     'FAQ in English: how payment works (text + schema)'),
-    ('en/faq.html', r'payment terms are (\d+) days', 2,
-     'FAQ in English: when the invoice arrives (text + schema)'),
-    ('en/priser.html', r'(\d+)-day payment terms', 1,
-     'pricing page in English'),
-    ('en/anvandarvillkor.html', r'Payment terms are (\d+) days', 1,
-     'terms of use in English'),
+    # Maskoten citerar FAQ:n och prissidan ordagrant och byggs av
+    # verktyg/bygg-maskotsvar.py. Står det gamla kvar här har någon
+    # ändrat sidorna utan att köra om verktyget — och då svarar chatten
+    # fortfarande det gamla löftet.
+    ('nextrum-maskot-svar.js', LOFTE_SV, 2, 'maskoten (svenska)'),
+    ('nextrum-maskot-svar.js', LOFTE_EN, 2, 'maskoten (engelska)'),
+]
 
-    # Maskoten citerar FAQ:n ordagrant och byggs av
-    # verktyg/bygg-maskotsvar.py. Står en gammal siffra kvar här har
-    # någon ändrat FAQ:n utan att köra om verktyget — och då svarar
-    # chatten fortfarande det gamla villkoret.
-    ('nextrum-maskot-svar.js', r'(\d+) dagars betalningsvillkor', 2,
-     'maskoten (svenska)'),
-    ('nextrum-maskot-svar.js', r'betalningsvillkoret är (\d+) dagar', 1,
-     'maskoten (svenska)'),
-    ('nextrum-maskot-svar.js', r'(\d+)-day payment terms', 2,
-     'maskoten (engelska)'),
-    ('nextrum-maskot-svar.js', r'payment terms are (\d+) days', 1,
-     'maskoten (engelska)'),
+# Det som gällde före Fas 14.2. Inget av det får stå kvar där en familj
+# kan läsa det.
+DET_GAMLA = [
+    r'efterskott',
+    r'samlingsfaktura',
+    r'\d+ dagars betalningsvillkor',
+    r'betalningsvillkor(?:et)? är \d+ dagar',
+    r'aldrig i förskott',
+    r'fakturan kommer från Nextrum',
+    r'första faktura',
+    r'in arrears',
+    r'\d+-day payment terms',
+    r'payment terms are \d+ days',
+    r'never up front',
+    r'first invoice',
 ]
 
 
@@ -88,39 +97,37 @@ def las(fil):
 
 
 def main():
-    cache, fynd, dagar = {}, [], {}
+    fynd = []
 
-    for fil, monster, antal, vad in STALLEN:
-        if fil not in cache:
-            try:
-                cache[fil] = las(fil)
-            except IOError:
-                fynd.append('SAKNAS   %s' % fil)
-                cache[fil] = ''
-        traffar = re.findall(monster, cache[fil], re.M)
-
-        if len(traffar) != antal:
+    for fil, monster, antal, vad in LOFTET:
+        try:
+            text = las(fil)
+        except IOError:
+            fynd.append('SAKNAS     %s' % fil)
+            continue
+        n = len(re.findall(monster, text))
+        if n != antal:
             fynd.append('OMSKRIVET  %s — %s: väntade %d träff%s på /%s/, hittade %d'
-                        % (fil, vad, antal, '' if antal == 1 else 'ar', monster, len(traffar)))
-        for t in traffar:
-            dagar.setdefault(int(t), []).append('%s (%s)' % (fil, vad))
+                        % (fil, vad, antal, '' if antal == 1 else 'ar', monster, n))
 
-    if len(dagar) > 1:
-        rader = ['SPRETAR  villkoret står med olika antal dagar:']
-        for n in sorted(dagar):
-            for var in sorted(set(dagar[n])):
-                rader.append('    %2d dagar   %s' % (n, var))
-        fynd.append('\n'.join(rader))
+    serveras = sorted(glob.glob(os.path.join(ROT, '*.html'))
+                      + glob.glob(os.path.join(ROT, 'en', '*.html'))
+                      + [os.path.join(ROT, 'nextrum-maskot-svar.js')])
+    for sokvag in serveras:
+        text = io.open(sokvag, encoding='utf-8').read()
+        for monster in DET_GAMLA:
+            for m in re.finditer(monster, text, re.I):
+                bit = text[max(0, m.start() - 50):m.end() + 30].replace('\n', ' ')
+                fynd.append('GAMMALT    %s: /%s/ … %s …'
+                            % (os.path.relpath(sokvag, ROT), monster, bit.strip()))
 
     if fynd:
         print('\n'.join(fynd))
-        print('\n%d problem. Villkoret måste säga samma sak på alla ställen.'
-              % len(fynd))
+        print('\n%d problem. Betalningslöftet måste säga samma sak på alla ställen.' % len(fynd))
         return 1
 
-    n = list(dagar)[0]
-    print('ok   betalningsvillkoret är %d dagar på alla %d ställen'
-          % (n, sum(len(v) for v in dagar.values())))
+    print('ok   betalningslöftet står på alla %d ställen i %d filer, och det gamla ingenstans'
+          % (sum(antal for _, _, antal, _ in LOFTET), len({fil for fil, _, _, _ in LOFTET})))
     return 0
 
 

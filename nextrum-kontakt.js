@@ -319,6 +319,35 @@ window.NXKontakt = (function () {
     cancelled: { text: 'Avbokad', klass: 'avbokad' }
   };
 
+  /* Betalningens läge, som ett andra märke bredvid passets (Fas 14.2).
+     Familjen betalar varje pass med kort före passet, och båda sidor
+     ska se samma ord för samma läge: "Ej betalt" hos familjen och
+     "Betalt" hos studiehjälparen om samma pass hade varit en tvist
+     innan någon ens sagt något.
+
+     null betyder inget märke. En förfrågan betalas inte än, och ett
+     pass Nextrum undantagit ska inte betalas alls. Ett avbokat pass
+     får märket bara om pengar faktiskt rört sig — då är det precis
+     vad familjen behöver se. */
+  var BETALLÄGEN = {
+    ingen: { text: 'Ej betalt', klass: 'pa' },
+    vantar: { text: 'Betalning påbörjad', klass: 'pa' },
+    misslyckad: { text: 'Betalningen nekades', klass: 'sen' },
+    betald: { text: 'Betalt', klass: 'klar' },
+    tvist: { text: 'Betalt, bestridd', klass: 'sen' },
+    aterbetald: { text: 'Återbetalt', klass: 'ej' }
+  };
+
+  function betalMärke(b) {
+    if (!b || b.fakturerbar === false) return null;
+    var läge = b.betalning_status || 'ingen';
+    if (b.status === 'cancelled') {
+      return (läge === 'betald' || läge === 'tvist' || läge === 'aterbetald') ? BETALLÄGEN[läge] : null;
+    }
+    if (b.status !== 'confirmed' && b.status !== 'completed') return null;
+    return BETALLÄGEN[läge] || null;
+  }
+
   function passRad(b, opts) {
     var o = opts || {};
     var l = LÄGEN[b.status] || { text: b.status, klass: '' };
@@ -342,11 +371,15 @@ window.NXKontakt = (function () {
       + (o.vem ? '<span class="pass-vem">' + esc(o.vem) + '</span>' : '')
       + '</span>'
       + '<span class="pass-atg"><span class="lage ' + l.klass + '">' + esc(l.text) + '</span>'
+      + (o.märke ? '<span class="lage ' + o.märke.klass + '">' + esc(o.märke.text) + '</span>' : '')
       + (o.atgarder || '')
       + '</span>'
       + (o.href ? '<span class="pass-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></span>' : '')
       + '</div>';
   }
 
-  return { tråd: tråd, olästa: olästa, passRad: passRad, dagText: dagText, LÄGEN: LÄGEN };
+  return {
+    tråd: tråd, olästa: olästa, passRad: passRad, dagText: dagText, LÄGEN: LÄGEN,
+    betalMärke: betalMärke
+  };
 })();

@@ -77,11 +77,12 @@
       + '<input class="inp" id="' + id('rutp') + '" type="number" min="0" max="100" step="1" inputmode="numeric"'
       + ' placeholder="0 = ingen RUT" value="' + (t.rut_procent || '') + '"></div>'
       + '</div>'
-      + '<p class="xsmall tj-villkor-not">Ersättningen och RUT gäller från nästa fakturering. '
+      + '<p class="xsmall tj-villkor-not">Ersättningen gäller från nästa månadskörning. '
       + 'Bokningstyp, kunder, jobbtyp, ålder, krav och matchningsregler sparas nu men styr ingenting '
-      + 'förrän tjänsten aktiveras med sina regler (Fas 10) — och ett pass faktureras alltid först när '
-      + 'det har en rapport. RUT-andelen och taket hämtas från Skatteverket; utan ett tak för året '
-      + '(tabellen rut_tak) drar faktureringen ingen RUT alls.</p>'
+      + 'förrän tjänsten aktiveras med sina regler (Fas 10) — och ett pass kommer alltid med på '
+      + 'underlaget först när det har en rapport. RUT-andelen sparas men dras inte: familjen betalar '
+      + 'med kort, och kortbetalningen drar inget avdrag. En RUT-berättigad tjänst går därför inte '
+      + 'att slå på för kunder.</p>'
       + '<div class="fgroup"><label for="' + id('krav') + '">Krav (JSON)</label>'
       + '<textarea class="inp tj-json" id="' + id('krav') + '" rows="3" spellcheck="false">' + json(t.krav) + '</textarea></div>'
       + '<div class="fgroup"><label for="' + id('match') + '">Matchningsregler (JSON)</label>'
@@ -96,9 +97,12 @@
 
      SPÄRRAR är det databasen vägrar. Varje rad här motsvarar ett
      villkor i skydda_tjansteaktivering(), och varje villkor finns
-     för att systemet annars räknar fel TYST: utan pris fakturerar
-     månadskörningen till läxhjälpens timpris och skriver det som om
-     det vore tjänstens eget (_delad/pris.ts:170 och :203).
+     för att systemet annars räknar fel TYST: utan pris tar
+     kortbetalningen läxhjälpens timpris (stripe-checkout läser
+     prissattning som reserv) och tar betalt som om det vore
+     tjänstens eget. Sedan Fas 14.2 också RUT: kortbetalningen drar
+     inget avdrag, så en RUT-tjänst för kunder hade tagit fullt pris
+     av någon som lovats avdrag.
 
      ATT BESTÄMMA är sådant databasen inte kan ha en åsikt om. Ett
      tomt `krav` är både förvalet och ett tänkbart svar, så ett krav
@@ -130,8 +134,14 @@
       spärrar.push({
         ok: !!(t.pris_per_timme_ore && t.pris_per_timme_ore > 0),
         text: 'Pris per timme är satt',
-        hjälp: 'Utan pris fakturerar månadskörningen till läxhjälpens timpris — och '
-             + 'skriver det på fakturaraden som om det vore den här tjänstens pris.'
+        hjälp: 'Utan pris tar kortbetalningen läxhjälpens timpris — och tar betalt '
+             + 'som om det vore den här tjänstens pris.'
+      });
+      spärrar.push({
+        ok: !t.rut_berattigad,
+        text: 'Inte RUT-berättigad',
+        hjälp: 'Kortbetalningen drar inte RUT-avdraget. En RUT-tjänst hade tagit fullt pris '
+             + 'av en kund som lovats avdrag, och ingen hade begärt resten från Skatteverket.'
       });
     }
     if (Number(t.extra_personer_max || 1) > 1) {
@@ -149,7 +159,7 @@
           ? 'Ersättning: studiehjälparens egen timpenning'
           : 'Ersättning: ' + kr(t.ersattning_per_timme_ore) + ' kr i timmen',
         hjälp: 'Tomt fält är ett giltigt svar och betyder den enskildes egen timpenning. '
-             + 'Saknas båda hoppar faktureringen över passet och rapporterar det.' },
+             + 'Saknas båda hoppar månadskörningen över passet och rapporterar det.' },
       { ok: t.krav && Object.keys(t.krav).length > 0,
         text: 'Kraven på den som utför tjänsten är skrivna',
         hjälp: 'Spärrar inte. Ett tomt krav går inte att skilja från ett oifyllt, så '
@@ -162,8 +172,8 @@
       bestäm.push({
         ok: harTak,
         text: 'RUT-tak för ' + år + ' är inlagt',
-        hjälp: 'Tjänsten är RUT-berättigad. Utan ett tak för året drar faktureringen '
-             + 'ingen RUT alls, och kunden får en faktura utan avdraget hen lovats.'
+        hjälp: 'Tjänsten är RUT-berättigad. Taket behövs den dag kortbetalningen kan dra '
+             + 'avdraget — i dag drar den inget, och tjänsten går inte att slå på för kunder.'
       });
     }
 
@@ -461,10 +471,22 @@
       const flerUtanTillagg = Number(rad.extra_personer_max || 1) > 1
         && (rad.extra_personer_ore === null || rad.extra_personer_ore === undefined);
       const oanvandbar = !rad.for_kund && !rad.for_jobb;
+      /* Fas 14.2. RUT-andelen skrivs i samma formulär, så det är
+         formulärets värde som gäller — inte radens, som kan vara på
+         väg att ändras. */
+      const rutFörKund = rad.for_kund && (villkor.värden.rut_berattigad !== undefined
+        ? villkor.värden.rut_berattigad : !!rad.rut_berattigad);
 
       if (prisSaknas) {
-        säg(msg, 'Sätt ett pris först. Utan pris fakturerar månadskörningen tjänsten '
-          + 'till läxhjälpens timpris och skriver det som om det vore tjänstens eget.', false);
+        säg(msg, 'Sätt ett pris först. Utan pris tar kortbetalningen läxhjälpens timpris '
+          + 'för tjänsten och tar betalt som om det vore tjänstens eget.', false);
+        aktivRuta.checked = false;
+        return;
+      }
+      if (rutFörKund) {
+        säg(msg, 'Kortbetalningen drar inte RUT-avdraget, så en RUT-berättigad tjänst kan inte '
+          + 'bokas av kunder än. Ta bort RUT-andelen, eller vänta tills kortbetalningen kan dra '
+          + 'avdraget.', false);
         aktivRuta.checked = false;
         return;
       }
@@ -492,6 +514,19 @@
       && (v.rut_procent !== (rad.rut_procent || 0)
           || v.ersattning_per_timme_ore !== (rad.ersattning_per_timme_ore ?? null));
 
+    /* VILLKOREN LOVAR PRISET SOM GÄLLDE VID BOKNINGEN, men kortbetalningen
+       räknar priset när familjen betalar. Ett bokat men obetalt pass får
+       alltså det nya priset. En sänkning skadar ingen; en höjning på ett
+       pass som redan är bokat är ett löfte som bryts. Tills priset fryses
+       på bokningen, som rabatten redan gör, är det den här dialogen som
+       säger det, med antalet pass det gäller. */
+    const höjt = öre !== null && rad.pris_per_timme_ore != null && öre > rad.pris_per_timme_ore;
+    const väntar = (S.bokningar || []).filter(b =>
+      (b.status === 'requested' || b.status === 'confirmed')
+      && b.fakturerbar !== false
+      && (!b.tjanst || b.tjanst === 'laxhjalp')
+      && ['ingen', 'vantar', 'misslyckad'].indexOf(b.betalning_status || 'ingen') !== -1).length;
+
     /* Bekräfta bara det som är värt att bekräfta. En dialog vid varje
        spara lär folk att klicka bort dialoger. */
     if (slårPå || (prisÄndrat && rad.kod === 'laxhjalp') || pengarÄndrade) {
@@ -508,11 +543,16 @@
             + '\n\nSvarar du ja utan att ha gjort dem kan man beställa något sajten '
             + 'inte beskriver.'
           : prisÄndrat && rad.kod === 'laxhjalp'
-            ? 'Gäller nya fakturarader. Redan skapade rader behåller sitt pris — en '
-              + 'prisändring får aldrig ändra vad någon redan fakturerats. Kom ihåg att '
-              + 'ändra priset på prissidan, i FAQ:n och i användarvillkoren också.'
-            : 'Gäller pass som faktureras eller betalas ut från nästa körning. Redan '
-              + 'skapade fakturor och utbetalningar ändras inte.',
+            ? 'Gäller varje pass som betalas efter ändringen — också pass som redan är '
+              + 'bokade men inte betalda. Pass som redan är betalda behåller sitt belopp.'
+              + (höjt && väntar
+                ? '\n\nVillkoren lovar familjen priset som gällde när passet bokades. Just nu '
+                  + 'finns ' + väntar + ' bokade pass som inte är betalda, och de skulle betala '
+                  + 'det nya priset. Vänta med höjningen tills de är betalda.'
+                : '')
+              + '\n\nKom ihåg att ändra priset på prissidan, i FAQ:n och i användarvillkoren också.'
+            : 'Gäller pass som kommer med på underlag från nästa körning. Redan skapade '
+              + 'underlag ändras inte.',
         knapp: slårPå ? 'Slå på' : 'Spara ändringen'
       });
       if (!ja) return;

@@ -149,7 +149,7 @@
 
     <h2>What Nextrum is</h2>
     <p>Nextrum arranges tutoring. We match a student with a tutor, provide the platform where
-      sessions are booked and followed up, and handle invoicing and payment.</p>
+      sessions are booked and followed up, and handle payment and the tutors’ pay.</p>
     <p>We are not a school and we do not promise a particular grade or result. What we do promise
       is that the tutor was selected by us, that you can see what happens between sessions, and
       that you can switch or stop whenever you like.</p>
@@ -167,24 +167,26 @@
       <li>Sessions are whole hours, one to three. The family suggests a time, and the tutor accepts it
         or suggests another. A session is booked only once both have said yes.</li>
       <li>A session can be moved or cancelled by either party until it has taken place. Whoever
-        cancels gives a reason, and the other party gets an email about the cancellation with the reason.</li>
+        cancels gives a reason, and the other party gets an email about the cancellation with the reason.
+        A session that has already been paid is cancelled by contacting us.</li>
       <li>A session counts as completed only once the tutor has written the report. A session that
-        never took place is never invoiced.</li>
-      <li>If the student does not turn up without cancelling, the session counts as completed and is invoiced.</li>
+        never took place costs nothing: if it has already been paid, we refund the full amount.</li>
+      <li>If the student does not turn up without cancelling, the session counts as completed and the
+        payment is not refunded.</li>
     </ul>
 
     <h2>Price and payment</h2>
     <ul>
       <li><b>Nextrum is your counterparty for the payment.</b> You pay us, you contact us if an
-        amount looks wrong, and we are the ones who credit or refund. The tutor is never your
+        amount looks wrong, and we are the ones who refund. The tutor is never your
         counterparty in a question about money.</li>
       <li>The hourly price is shown on the <a href="/en/priser">pricing page</a>, and the price that applies is the one shown at the time of booking.</li>
-      <li>You pay in arrears. Once a month, the sessions that actually took place are collected on
-        one invoice.</li>
-      <li>Payment terms are 10 days.</li>
-      <li>No registration fee, no monthly fee and no minimum term. You pay for the sessions that took
-        place, nothing else.</li>
-      <li>If you do not pay on time we may pause bookings until the invoice is settled.</li>
+      <li>Each session is paid for separately, by card, once the tutor has confirmed the time.
+        Payment must be made before the session starts. A session that has not been paid is not held.</li>
+      <li>Card payments are handled by Stripe. You give your card details directly to Stripe, never
+        to us, and we do not store them.</li>
+      <li>No registration fee, no monthly fee and no minimum term. You pay for the sessions you
+        book, nothing else.</li>
     </ul>
 
     <h2>If you are a tutor</h2>
@@ -215,7 +217,7 @@
       is written here. Nothing in these terms limits them.</p>
 
     <h2>Ending the agreement</h2>
-    <p>You can stop whenever you like. Invoices for sessions already completed remain payable. We
+    <p>You can stop whenever you like. Paid sessions that have not taken place are refunded. We
       may close an account that breaches these terms, and will say why.</p>
 
     <h2>Changes</h2>
@@ -369,7 +371,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=b9b1a4f7"></script>
+<script src="../nextrum-maskot-svar.js?v=5064edce"></script>
 <script src="../nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {

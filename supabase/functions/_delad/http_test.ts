@@ -83,8 +83,9 @@ Deno.test('kravInloggad och kravAdmin nekar utan token, före något nätverksan
 });
 
 Deno.test('betalningsvillkoret och månaderna', () => {
-  // Ändras villkoret ska det vara ett beslut. Se DEPLOY-BETALNING.md
-  // och verktyg/kolla-betalningsvillkor.py.
+  // Sedan Fas 14.2 gäller villkoret bara fakturor som skapades innan
+  // dess (se _delad/konstanter.ts). Ändras det ska det ändå vara ett
+  // beslut, för en sådan faktura har redan lovat familjen tio dagar.
   assertEquals(BETALNINGSVILLKOR_DAGAR, 10);
   assertEquals(MANADER.length, 12);
   assertEquals(MANADER[0], 'januari');

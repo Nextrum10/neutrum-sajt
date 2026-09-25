@@ -70,7 +70,7 @@ Supabase → **Project Settings → API**. Du behöver två saker:
 
 ### Den automatiska kontrollen
 
-`.github/workflows/kontroll.yml` körs på varje push och pull request. Den kör samma verktyg som finns i `verktyg/`: syntaxen i all JavaScript, `testa-agent.js`, betalningsvillkoret, migrationsnamnen, att maskotsvaren och FAQ-schemat är ombyggda, att engelskan följt med (mot `verktyg/jamfor-sprak-baslinje.txt`), samt `deno check` och `deno test` för edge-funktionerna. Den ska vara grön innan en gren mergas.
+`.github/workflows/kontroll.yml` körs på varje push och pull request. Den kör samma verktyg som finns i `verktyg/`: syntaxen i all JavaScript, `testa-agent.js`, betalningslöftet, migrationsnamnen, att maskotsvaren och FAQ-schemat är ombyggda, att engelskan följt med (mot `verktyg/jamfor-sprak-baslinje.txt`), samt `deno check` och `deno test` för edge-funktionerna. Den ska vara grön innan en gren mergas.
 
 ### Content-Security-Policy
 
@@ -130,11 +130,12 @@ Postgres RLS kan inte begränsa enskilda kolumner, så lösningen är två trigg
 
 ## Vad som fortfarande saknas
 
-- **Betalning.** Fakturor skapas av månadskörningen och **skickas på riktigt** med
-  knappen i adminvyn (`faktura-utskick`, se `DEPLOY-BETALNING.md`). Men ingen
-  betaltjänst är kopplad: familjen betalar utanför plattformen, och `Betald` är
-  något ni kryssar i när pengarna kommit. Utbetalningarna likaså — underlaget går
-  att mejla, själva överföringen gör ni från banken.
+- **Betalning.** Familjen betalar varje pass med kort, före passet, genom Stripe
+  (se `DEPLOY-BETALNING.md` avsnitt 9). Det finns ingen månadsfaktura till familjen
+  sedan Fas 14.2. Kortvägen är driftsatt, men ingen betalning har gått igenom än,
+  och spärren som stoppar ett obetalt pass är av tills en provbetalning fungerat.
+  Utbetalningarna till studiehjälparna: underlaget går att mejla, själva
+  överföringen gör ni från banken den 25:e.
 - **AI-återkopplingen är inte deployad.** Koden finns i `supabase/functions/generate-feedback/`, se `DEPLOY-AI-FUNKTION.md`. Tills den är uppe visas studiehjälparens råa anteckningar rakt av för föräldern. Det är en fallback, inte ett fel.
 - **Notiser.** Ingen får mejl när något händer. Ni får kolla adminvyn.
 - **Hero-videon i vyerna.** De inloggade vyerna letar efter

@@ -14,7 +14,11 @@
 // ============================================================
 
 import { assert, assertEquals, assertFalse } from 'https://deno.land/std@0.224.0/assert/mod.ts';
-import { aterbetalningsLage, formulardata, oreFor, prövaSignatur } from './stripe.ts';
+import {
+  API_VERSION, aterbetalningsLage, betallageEfterTvist, formulardata, granskaStripe, type Granskning,
+  nyckelLage, oreFor, prövaSignatur, tidFranUnix, tvistOrsakText, tvistUtfall, tvistVantarPaOss,
+  WEBHOOK_HANDELSER,
+} from './stripe.ts';
 
 const HEMLIGHET = 'whsec_prov_hemlighet_som_aldrig_anvands_skarpt';
 
@@ -181,4 +185,146 @@ Deno.test('ett nollbelopp kan inte bli aterbetald', () => {
   // 0 >= 0 är sant. Utan kravet på totalt > 0 hade ett pass utan
   // betalning räknats som fullt återbetalt.
   assertEquals(aterbetalningsLage(0, 0), 'betald');
+});
+
+// ============================================================
+// KORTTVISTERNA (Fas 14.3)
+// ============================================================
+
+Deno.test('en stängd förfrågan är vunnen, inte en tvist för alltid', () => {
+  // Förut räknades bara 'won'. warning_closed är en förfrågan från
+  // banken som stängdes utan återkrav: pengarna stannade.
+  assertEquals(tvistUtfall('won'), 'vunnen');
+  assertEquals(tvistUtfall('warning_closed'), 'vunnen');
+  assertEquals(tvistUtfall('lost'), 'forlorad');
+  assertEquals(tvistUtfall('needs_response'), 'oppen');
+  assertEquals(tvistUtfall('under_review'), 'oppen');
+  assertEquals(tvistUtfall('warning_needs_response'), 'oppen');
+  // En kod Stripe hittar på i morgon är öppen, inte avgjord åt något håll.
+  assertEquals(tvistUtfall('ny_kod_fran_stripe'), 'oppen');
+});
+
+Deno.test('bara en vunnen tvist gör passet betalt igen', () => {
+  assertEquals(betallageEfterTvist('vunnen'), 'betald');
+  assertEquals(betallageEfterTvist('forlorad'), 'tvist');
+  assertEquals(betallageEfterTvist('oppen'), 'tvist');
+});
+
+Deno.test('svarsdagen gäller bara när Stripe väntar på oss', () => {
+  assert(tvistVantarPaOss('needs_response'));
+  assert(tvistVantarPaOss('warning_needs_response'));
+  assertFalse(tvistVantarPaOss('under_review'));
+  assertFalse(tvistVantarPaOss('won'));
+});
+
+Deno.test('en okänd orsak visas som sin kod, inte som ingenting', () => {
+  assertEquals(tvistOrsakText('product_not_received'), 'Kortinnehavaren säger att passet inte blev av');
+  assertEquals(tvistOrsakText('helt_ny'), 'Annan orsak (helt_ny)');
+  assertEquals(tvistOrsakText(null), 'Ingen orsak angiven');
+});
+
+Deno.test('Stripes tider blir datum, och skräp blir null', () => {
+  assertEquals(tidFranUnix(1790000000), new Date(1790000000 * 1000).toISOString());
+  assertEquals(tidFranUnix('1790000000'), null);
+  assertEquals(tidFranUnix(0), null);
+  assertEquals(tidFranUnix(undefined), null);
+  assertEquals(tidFranUnix(NaN), null);
+});
+
+// ============================================================
+// STRIPE-LÄGET (Fas 14.3)
+// ============================================================
+
+Deno.test('nyckelns läge läses ur början, och den publicerbara känns igen', () => {
+  assertEquals(nyckelLage(undefined), 'saknas');
+  assertEquals(nyckelLage(''), 'saknas');
+  assertEquals(nyckelLage('sk_test_abc'), 'test');
+  assertEquals(nyckelLage('sk_live_abc'), 'skarp');
+  assertEquals(nyckelLage('rk_live_abc'), 'begransad');
+  assertEquals(nyckelLage('pk_test_abc'), 'publicerbar');
+  assertEquals(nyckelLage('whsec_abc'), 'okand');
+});
+
+const URL_HIT = 'https://ddkfiuvcppalutfulvbi.supabase.co/functions/v1/stripe-webhook';
+
+function granskning(o: Partial<Granskning> = {}): Granskning {
+  return {
+    nyckel: 'test',
+    webhookhemlighet: true,
+    vantadUrl: URL_HIT,
+    konto: {
+      country: 'SE', default_currency: 'sek', charges_enabled: true, payouts_enabled: true,
+      settings: { payments: { statement_descriptor: 'NEXTRUM LAXHJALP' }, card_payments: { statement_descriptor_prefix: 'NEXTRUM' } },
+      requirements: { currently_due: [], past_due: [] },
+    },
+    endpoints: [{ url: URL_HIT, status: 'enabled', api_version: API_VERSION, enabled_events: [...WEBHOOK_HANDELSER] }],
+    leveranser: { antal: 3, senast: '2026-09-24T10:00:00Z', typ: 'checkout.session.completed', resultat: 'betald' },
+    ...o,
+  };
+}
+const rad = (p: ReturnType<typeof granskaStripe>, rubrik: string) => p.find((x) => x.rubrik === rubrik);
+
+Deno.test('ett rätt uppsatt konto har inga röda rader', () => {
+  const p = granskaStripe(granskning());
+  assertEquals(p.filter((x) => x.ok === false), []);
+  assertEquals(rad(p, 'Händelserna')?.ok, true);
+  assertEquals(rad(p, 'API-versionen')?.ok, true);
+});
+
+Deno.test('utan nyckel stannar granskningen där, och säger varför', () => {
+  const p = granskaStripe(granskning({ nyckel: 'saknas', konto: null, endpoints: null }));
+  assertEquals(rad(p, 'Nyckeln')?.ok, false);
+  // Ingen rad om kontot eller webhooken: de gick inte att fråga om.
+  assertEquals(rad(p, 'Webhook-endpointen'), undefined);
+});
+
+Deno.test('en endpoint som saknar en händelse är röd och säger vilken', () => {
+  const p = granskaStripe(granskning({
+    endpoints: [{ url: URL_HIT, status: 'enabled', api_version: API_VERSION,
+      enabled_events: WEBHOOK_HANDELSER.filter((h) => h !== 'charge.dispute.updated') }],
+  }));
+  const r = rad(p, 'Händelserna');
+  assertEquals(r?.ok, false);
+  assert(r?.text.includes('charge.dispute.updated'));
+});
+
+Deno.test('en endpoint med snedstreck på slutet är samma adress', () => {
+  const p = granskaStripe(granskning({
+    endpoints: [{ url: URL_HIT + '/', status: 'enabled', api_version: API_VERSION, enabled_events: [...WEBHOOK_HANDELSER] }],
+  }));
+  assertEquals(rad(p, 'Webhook-endpointen')?.ok, true);
+});
+
+Deno.test('ingen endpoint på vår adress är röd, också när det finns andra', () => {
+  const p = granskaStripe(granskning({
+    endpoints: [{ url: 'https://example.com/hook', status: 'enabled', api_version: API_VERSION, enabled_events: ['*'] }],
+  }));
+  const r = rad(p, 'Webhook-endpointen');
+  assertEquals(r?.ok, false);
+  assert(r?.text.includes('1 som pekar någon annanstans'));
+});
+
+Deno.test('en annan API-version varnar men stoppar inte', () => {
+  const p = granskaStripe(granskning({
+    endpoints: [{ url: URL_HIT, status: 'enabled', api_version: '2026-01-28.dahlia', enabled_events: [...WEBHOOK_HANDELSER] }],
+  }));
+  assertEquals(rad(p, 'API-versionen')?.ok, null);
+});
+
+Deno.test('inga leveranser är rött: det är punkt 11 som inte är gjord', () => {
+  const p = granskaStripe(granskning({ leveranser: { antal: 0, senast: null, typ: null, resultat: null } }));
+  assertEquals(rad(p, 'Leveranser')?.ok, false);
+});
+
+Deno.test('ett konto som inte tar betalt är rött skarpt men bara en varning i test', () => {
+  const konto = { ...granskning().konto!, charges_enabled: false, requirements: { disabled_reason: 'requirements.past_due', past_due: ['external_account'] } };
+  assertEquals(rad(granskaStripe(granskning({ konto })), 'Kontot tar emot betalningar')?.ok, null);
+  assertEquals(rad(granskaStripe(granskning({ konto, nyckel: 'skarp' })), 'Kontot tar emot betalningar')?.ok, false);
+});
+
+Deno.test('ett kontoutdrag utan text är rött, ett utan Nextrum en varning', () => {
+  const tomt = { ...granskning().konto!, settings: { payments: { statement_descriptor: null }, card_payments: { statement_descriptor_prefix: null } } };
+  assertEquals(rad(granskaStripe(granskning({ konto: tomt })), 'Kontoutdraget')?.ok, false);
+  const annat = { ...granskning().konto!, settings: { payments: { statement_descriptor: 'LEO AB' }, card_payments: { statement_descriptor_prefix: 'LEO AB' } } };
+  assertEquals(rad(granskaStripe(granskning({ konto: annat })), 'Kontoutdraget')?.ok, null);
 });
