@@ -5,7 +5,9 @@
    inte (Leo 2026-09-25: "jag vill bevara heron").
 
      ordfyll        rubrikernas ord tonar fram ett i taget
-     hållpunkter    1–4: den man pekar på kommer fram
+     hållpunkter    1–4: den man pekar på kommer fram — både hållpunkterna
+                    och stegen i ansökan
+     mörkaYtor      Bli studiehjälpare och Nästa steg glider upp
      studiehjälpare korten stiger upp när raden syns
      band           Trygg hjälp: det rullande bandet
      vägg           Så kan ett pass se ut: fotona stiger fram
@@ -132,22 +134,38 @@ const NXStart = (function () {
      "Mitt i skärmen" är en IntersectionObserver vars rot är ett smalt
      band över mitten — ingen mätning medan man scrollar.
      ============================================================ */
+  /* Två listor med samma beteende: hållpunkterna och stegen i ansökan
+     (Leo 2026-09-25: "samma funktion som de andra 1,2,3,4"). */
   function hållpunkter() {
-    const ul = $('.nx-holdpunkter');
-    if (!ul || mus) return;
-    const li = $$(':scope > li', ul);
-    const välj = el => {
-      li.forEach(x => x.classList.toggle('pa', x === el));
-      ul.classList.add('har-pa');
-    };
-    li.forEach(x => x.addEventListener('click', () => välj(x)));
+    if (mus) return;
+    $$('.nx-holdpunkter, .nx-apply-flow').forEach(ul => {
+      const li = $$(':scope > *', ul);
+      const välj = el => {
+        li.forEach(x => x.classList.toggle('pa', x === el));
+        ul.classList.add('har-pa');
+      };
+      li.forEach(x => x.addEventListener('click', () => välj(x)));
 
-    if (!rörelse || !('IntersectionObserver' in window)) return;
-    const io = new IntersectionObserver(poster => {
-      if (kolumner(ul) !== 1) return;
-      poster.forEach(p => { if (p.isIntersecting) välj(p.target); });
-    }, { rootMargin: '-46% 0px -46% 0px' });
-    li.forEach(x => io.observe(x));
+      if (!rörelse || !('IntersectionObserver' in window)) return;
+      const io = new IntersectionObserver(poster => {
+        if (kolumner(ul) !== 1) return;
+        poster.forEach(p => { if (p.isIntersecting) välj(p.target); });
+      }, { rootMargin: '-46% 0px -46% 0px' });
+      li.forEach(x => io.observe(x));
+    });
+  }
+
+  /* ============================================================
+     DE MÖRKA YTORNA
+     Bli studiehjälpare och Nästa steg glider upp när de syns. En
+     egen klass, .nx-framme, och inte .nx-in: cinemas radmask tänds av
+     ".nx-in .nx-rad-i", och en .nx-in på ytan hade visat rubrikens
+     rader innan deras egen tur.
+     ============================================================ */
+  function mörkaYtor() {
+    if (!rörelse) return;
+    $$('.nx-mork.nx-sek, .nx-mork.nx-final-cinema').forEach(el =>
+      närSyns(el, () => el.classList.add('nx-framme'), '0px 0px -6% 0px'));
   }
 
   /* ============================================================
@@ -687,6 +705,7 @@ const NXStart = (function () {
     if (rörelse) document.documentElement.classList.add('nx-sr');
     prova('ordfyll', ordfyll);
     prova('hållpunkter', hållpunkter);
+    prova('mörkaYtor', mörkaYtor);
     prova('studiehjälpare', studiehjälpare);
     prova('band', band);
     prova('vägg', vägg);
