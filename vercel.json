@@ -27,11 +27,24 @@
       ]
     },
     {
-      "source": "/(admin|larare|foralder)",
+      "source": "/(admin|larare)",
       "headers": [
         {
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://ddkfiuvcppalutfulvbi.supabase.co; media-src 'self' blob: https://ddkfiuvcppalutfulvbi.supabase.co; font-src 'self'; connect-src 'self' https://ddkfiuvcppalutfulvbi.supabase.co wss://ddkfiuvcppalutfulvbi.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/foralder",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://js.stripe.com https://*.js.stripe.com https://checkout.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://ddkfiuvcppalutfulvbi.supabase.co https://*.stripe.com; media-src 'self' blob: https://ddkfiuvcppalutfulvbi.supabase.co; font-src 'self'; connect-src 'self' https://ddkfiuvcppalutfulvbi.supabase.co wss://ddkfiuvcppalutfulvbi.supabase.co https://api.stripe.com https://checkout.stripe.com; frame-src https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), payment=(self \"https://js.stripe.com\" \"https://checkout.stripe.com\"), usb=()"
         }
       ]
     },

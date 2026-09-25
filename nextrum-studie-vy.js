@@ -1076,6 +1076,202 @@
     tvist: 'Betalningen är ifrågasatt'
   };
 
+  /* ============================================================
+     BETALPANELEN (Fas 14.5)
+
+     Leo: "när man betalar med kort ska man fortfarande vara kvar på
+     sidan, som en split screen". Kassan ritas av Stripe i en ram i en
+     panel på vår sida: till höger på en dator, med sidan kvar bredvid,
+     och som ett ark underifrån på en telefon, där två kolumner inte får
+     plats. Kortnumret skrivs i Stripes ram och når aldrig oss, precis
+     som på Stripes egen sida.
+
+     STRIPE.JS LADDAS FÖRST VID KLICKET, och bara här. Det är ett skript
+     från js.stripe.com som vyn annars inte behöver, och Stripe tillåter
+     inte att det vendoras som supabase-js: det ska alltid hämtas från
+     dem. CSP:n för /foralder släpper därför in just Stripes domäner
+     (vercel.json), inga andra.
+
+     STRIPES SIDA ÄR RESERVEN. Går Stripe.js inte att ladda, eller
+     vägrar webbläsaren ramen, frågar vyn om en vanlig kassa och går
+     dit. En familj ska aldrig stå med en knapp som inte gör något.
+     ============================================================ */
+  const STRIPE_JS = 'https://js.stripe.com/v3/';
+  let stripeLaddas = null;
+  function laddaStripe() {
+    if (window.Stripe) return Promise.resolve(window.Stripe);
+    if (stripeLaddas) return stripeLaddas;
+    stripeLaddas = new Promise((klar, fel) => {
+      const s = document.createElement('script');
+      s.src = STRIPE_JS;
+      s.async = true;
+      s.onload = () => (window.Stripe ? klar(window.Stripe) : fel(new Error('Stripe.js laddades men gav ingenting')));
+      s.onerror = () => fel(new Error('Stripe.js gick inte att ladda'));
+      document.head.appendChild(s);
+      // Ett nät som varken svarar eller nekar ska inte lämna knappen hängande.
+      setTimeout(() => fel(new Error('Stripe.js svarade inte')), 12000);
+    }).catch(err => { stripeLaddas = null; throw err; });
+    return stripeLaddas;
+  }
+
+  /* Frågar betalfunktionen om en kassa. ui: 'inbaddad' eller 'sida'.
+     Svarar med funktionens svar, eller null när felet redan är visat. */
+  async function startaBetalning(passId, ui) {
+    const svar = await supa.functions.invoke('stripe-checkout', {
+      body: { pass: passId, retur: location.origin, ui: ui }
+    });
+    if (svar.error) {
+      /* Funktionens egen text ligger i error.context, inte i data.
+         Utan det här blir varje nekande "FunctionsHttpError", och
+         då får familjen veta att något gick fel men inte vad. */
+      let text = felText(svar.error);
+      try {
+        const kropp = await svar.error.context.json();
+        if (kropp && kropp.error) text = kropp.error;
+      } catch (_) { /* behåll texten ovan */ }
+      alert(text);
+      return null;
+    }
+    return svar.data || {};
+  }
+
+  let panel = null;
+  function betalpanel() {
+    if (panel) return panel;
+    const rot = document.createElement('aside');
+    rot.className = 'betalpanel';
+    rot.setAttribute('role', 'dialog');
+    rot.setAttribute('aria-label', 'Betala passet');
+    rot.innerHTML =
+        '<div class="betalpanel-huvud">'
+      +   '<div><p class="betalpanel-titel">Betala passet</p><p class="betalpanel-vad" data-betalpanel-vad></p></div>'
+      +   '<button type="button" class="betalpanel-stang" data-betalpanel-stang aria-label="Stäng betalningen">'
+      +     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+      + '</div>'
+      + '<p class="betalpanel-besked" data-betalpanel-besked role="status" hidden></p>'
+      + '<div class="betalpanel-kassa" data-betalpanel-kassa></div>';
+    document.body.appendChild(rot);
+    /* Panelen börjar där sidhuvudet slutar. Huvudet byter höjd när
+       man scrollat (.stuck har mindre luft), så höjden följs i stället
+       för att mätas en gång. */
+    const hdr = document.querySelector('.hdr');
+    const sättTopp = () => {
+      const topp = hdr ? Math.max(0, Math.round(hdr.getBoundingClientRect().bottom)) : 0;
+      document.documentElement.style.setProperty('--betalpanel-topp', topp + 'px');
+    };
+    sättTopp();
+    if (hdr && window.ResizeObserver) new ResizeObserver(sättTopp).observe(hdr);
+    panel = {
+      rot: rot,
+      vad: rot.querySelector('[data-betalpanel-vad]'),
+      besked: rot.querySelector('[data-betalpanel-besked]'),
+      kassa: rot.querySelector('[data-betalpanel-kassa]'),
+      checkout: null, knapp: null, pass: null, klar: false
+    };
+    return panel;
+  }
+
+  function passBeskrivning(passId) {
+    const b = (S.bokningar || []).find(x => x.id === passId);
+    if (!b) return '';
+    const pris = passetsPris(b);
+    return [b.subject || 'Pass', datumText(b.wanted_date) + (b.wanted_time ? ' ' + String(b.wanted_time).slice(0, 5) : ''),
+      pris ? NXBetalning.kronor(pris) : null].filter(Boolean).join(' · ');
+  }
+
+  async function öppnaKassa(knapp, passId, svar, Stripe) {
+    const p = betalpanel();
+    // Stripe tillåter en inbäddad kassa åt gången.
+    if (p.checkout) { try { p.checkout.destroy(); } catch (_) { /* redan borta */ } p.checkout = null; }
+    p.knapp = knapp; p.pass = passId; p.klar = false;
+    p.vad.textContent = passBeskrivning(passId);
+    p.besked.hidden = true;
+    p.kassa.textContent = '';
+
+    const stripe = Stripe(svar.nyckel);
+    if (typeof stripe.initEmbeddedCheckout !== 'function') throw new Error('Stripe.js saknar initEmbeddedCheckout');
+    const checkout = await stripe.initEmbeddedCheckout({
+      fetchClientSecret: () => Promise.resolve(svar.client_secret),
+      onComplete: () => betalningKlar(passId)
+    });
+
+    /* Panelen öppnas FÖRE mount, så att ramen får sin bredd direkt.
+       På en dator trycker den sidan åt sidan i stället för att lägga
+       sig över den; knappen man tryckte på hålls kvar på samma höjd,
+       så att ingenting under fingret flyttar sig (CLAUDE.md avsnitt 3,
+       fälla 4). */
+    NXStudie.håll(knapp, () => {
+      document.body.classList.add('betalar');
+      p.rot.classList.add('open');
+    });
+    checkout.mount(p.kassa);
+    p.checkout = checkout;
+    p.rot.querySelector('[data-betalpanel-stang]').focus();
+  }
+
+  function stängBetalpanel() {
+    const p = panel;
+    if (!p) return;
+    if (p.checkout) { try { p.checkout.destroy(); } catch (_) { /* redan borta */ } p.checkout = null; }
+    p.kassa.textContent = '';
+    // Listan kan ha ritats om medan panelen var öppen; då är det en ny knapp.
+    const knapp = p.knapp && p.knapp.isConnected ? p.knapp
+      : (p.pass ? document.querySelector('[data-betala="' + CSS.escape(p.pass) + '"]') : null);
+    NXStudie.håll(knapp, () => {
+      document.body.classList.remove('betalar');
+      p.rot.classList.remove('open');
+    });
+    if (knapp) knapp.focus();
+    /* Betald under tiden panelen var öppen: listorna ska visa det.
+       Omritningen byter ut knappen, så fokus flyttas till den nya om
+       passet fortfarande har en (webhooken har inte hunnit). */
+    if (p.klar) {
+      const passId = p.pass;
+      laddaPass().then(() => {
+        const ny = document.querySelector('[data-betala="' + CSS.escape(passId) + '"]');
+        if (ny) ny.focus();
+      }).catch(() => {});
+    }
+  }
+
+  /* Stripe säger att betalningen gick igenom. Passet blir betalt först
+     när webhooken skrivit det, och den brukar hinna före, men inte
+     alltid. Därför två omläsningar, i stället för att passet står som
+     obetalt tills någon laddar om. */
+  function betalningKlar(passId) {
+    const p = panel;
+    if (!p || p.pass !== passId) return;
+    p.klar = true;
+    p.besked.textContent = '✓ Tack! Betalningen är mottagen. Det kan ta en liten stund innan passet står som betalt.';
+    p.besked.hidden = false;
+    setTimeout(() => { laddaPass().catch(() => {}); }, 2500);
+    setTimeout(() => { laddaPass().catch(() => {}); }, 8000);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && panel && panel.rot.classList.contains('open')) stängBetalpanel();
+  });
+
+  /* Vägrar webbläsaren Stripes ram (en CSP som inte hunnit med, ett
+     tillägg som blockerar) syns det inte som ett fel i koden: ramen
+     blir bara tom. Webbläsaren säger det däremot här, och då går
+     familjen till Stripes egen sida i stället. */
+  document.addEventListener('securitypolicyviolation', async e => {
+    const p = panel;
+    if (!p || !p.rot.classList.contains('open') || p.klar) return;
+    /* Bara en policy som faktiskt STOPPAR. Hela sajten har också en
+       Report-Only-policy (vercel.json), som bara anmäler, och den
+       nämner inte Stripe: den ger ett sådant här anrop för varje
+       Stripe-skript utan att något är fel. */
+    if (e.disposition !== 'enforce') return;
+    if (!/stripe\.(com|network)/.test(String(e.blockedURI || ''))) return;
+    console.error('CSP stoppade Stripe:', e.violatedDirective, e.blockedURI);
+    const passId = p.pass;
+    stängBetalpanel();
+    const reserv = await startaBetalning(passId, 'sida');
+    if (reserv && reserv.url) location.href = reserv.url;
+  });
+
   /* ============ pass ============ */
   async function laddaPass() {
     const host = $('#pass-lista');
@@ -1177,27 +1373,32 @@
        belopp kan ingen skicka in fel belopp. */
     const bet = e.target.closest('[data-betala]');
     if (bet) {
+      const passId = bet.dataset.betala;
       await medan(bet, 'Öppnar…', async () => {
-        const svar = await supa.functions.invoke('stripe-checkout', {
-          body: { pass: bet.dataset.betala, retur: location.origin }
-        });
-        if (svar.error) {
-          /* Funktionens egen text ligger i error.context, inte i data.
-             Utan det här blir varje nekande "FunctionsHttpError", och
-             då får familjen veta att något gick fel men inte vad. */
-          let text = felText(svar.error);
-          try {
-            const kropp = await svar.error.context.json();
-            if (kropp && kropp.error) text = kropp.error;
-          } catch (_) { /* behåll texten ovan */ }
-          alert(text);
+        // Stripe.js hämtas medan sessionen skapas, inte efter.
+        const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
+        const svar = await startaBetalning(passId, 'inbaddad');
+        if (!svar) return;
+        if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
+          const Stripe = await stripeKlar;
+          if (Stripe) {
+            try { await öppnaKassa(bet, passId, svar, Stripe); return; }
+            catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
+          }
+          // Reserven: Stripes egen sida, som före Fas 14.5.
+          const reserv = await startaBetalning(passId, 'sida');
+          if (reserv && reserv.url) { location.href = reserv.url; return; }
+          if (!reserv) return;
+        } else if (svar.url) {
+          location.href = svar.url;
           return;
         }
-        if (svar.data && svar.data.url) { location.href = svar.data.url; return; }
         alert('Betalningen kunde inte öppnas. Försök igen, eller hör av dig till oss.');
       });
       return;
     }
+
+    if (e.target.closest('[data-betalpanel-stang]')) { stängBetalpanel(); return; }
 
     const btn = e.target.closest('[data-avboka]');
     if (!btn) return;

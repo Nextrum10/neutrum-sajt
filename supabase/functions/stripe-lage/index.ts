@@ -36,10 +36,41 @@
 import { kravAdmin, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
 import {
-  granskaStripe, nyckelLage, type StripeEndpoint, StripeError, type StripeKonto, v1,
+  granskaStripe, nyckelLage, type Punkt, type StripeEndpoint, StripeError, type StripeKonto, v1,
 } from '../_delad/stripe.ts';
 
 const CORS = cors();
+
+/* Den publicerbara nyckeln (Fas 14.5). Utan den öppnas kassan på
+   Stripes egen sida i stället för i panelen i föräldravyn. Det
+   fungerar, men det är inte vad som ska hända, och därför säger raden
+   det. Två nycklar från olika lägen ger ingen panel alls, och
+   stripe-checkout faller då tyst tillbaka på Stripes sida: den här
+   raden är enda stället det syns. Som med den hemliga nyckeln lämnar
+   bara läget funktionen, aldrig ett tecken av nyckeln. */
+function publicerbarPunkt(pk: string, sk: string): Punkt {
+  const rubrik = 'Kassan på sidan';
+  const lage = (k: string) => /^(pk|sk|rk)_test_/.test(k) ? 'test' : /^(pk|sk|rk)_live_/.test(k) ? 'skarp' : null;
+  if (!pk) {
+    return {
+      ok: null, rubrik,
+      text: 'STRIPE_PUBLISHABLE_KEY är inte satt. Betalningen öppnas då på Stripes egen sida i stället för i en panel '
+        + 'på er sida. Sätt den publicerbara nyckeln (pk_…) bredvid den hemliga, under Edge Functions → Secrets.',
+    };
+  }
+  if (!pk.startsWith('pk_')) {
+    return { ok: false, rubrik, text: 'STRIPE_PUBLISHABLE_KEY ska vara den publicerbara nyckeln, den som börjar med pk_.' };
+  }
+  if (lage(pk) !== lage(sk)) {
+    const namn = (l: string | null) => l === 'test' ? 'en testnyckel' : l === 'skarp' ? 'skarp' : 'av okänt läge';
+    return {
+      ok: false, rubrik,
+      text: `Den publicerbara nyckeln är ${namn(lage(pk))}, men den hemliga är ${namn(lage(sk))}. Då går panelen inte `
+        + 'att öppna, och betalningen öppnas på Stripes sida i stället. Båda ska komma från samma läge.',
+    };
+  }
+  return { ok: true, rubrik, text: 'Satt, och i samma läge som den hemliga. Kassan öppnas i en panel på er sida.' };
+}
 
 function felText(e: unknown): string {
   if (e instanceof StripeError) return `${e.fel.meddelande} (${e.fel.status})`;
@@ -108,6 +139,10 @@ Deno.serve(async (req) => {
   const punkter = granskaStripe({
     nyckel, webhookhemlighet, vantadUrl, konto, kontoFel, endpoints, endpointFel, leveranser,
   });
+  // Direkt under de två nyckelraderna, där den hör hemma.
+  punkter.splice(2, 0, publicerbarPunkt(
+    Deno.env.get('STRIPE_PUBLISHABLE_KEY') ?? '', Deno.env.get('STRIPE_SECRET_KEY') ?? '',
+  ));
 
   return json({
     nyckel,

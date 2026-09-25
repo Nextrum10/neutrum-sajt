@@ -69,8 +69,42 @@ import { familjebelopp, radtext, standardTjanst, type Tjanst } from '../_delad/p
 const CORS = cors();
 
 /* Räknas upp när sessionens parametrar ändras. Se idempotensnyckeln.
-   2: bara kort och kvitto till familjens adress (Fas 14.3). */
-const SESSIONSFORM = 2;
+   2: bara kort och kvitto till familjens adress (Fas 14.3).
+   3: Managed Payments uttryckligen av (Fas 14.4).
+   4: kassan kan bäddas in i föräldravyn (Fas 14.5). */
+const SESSIONSFORM = 4;
+
+/* DEN INBÄDDADE KASSAN (Fas 14.5)
+
+   Leo: "när man betalar med kort ska man fortfarande vara kvar på
+   sidan". Stripes Embedded Checkout ritar samma kassa i en ram på vår
+   sida, i stället för att skicka familjen till checkout.stripe.com.
+   Kortuppgifterna tas fortfarande emot av Stripe, i Stripes ram: vi
+   ser dem aldrig, precis som förut.
+
+   Den kräver den PUBLICERBARA nyckeln i webbläsaren. Den är inte
+   hemlig, men den ligger ändå som secret bredvid den hemliga
+   (STRIPE_PUBLISHABLE_KEY), för att de två måste höra till samma läge:
+   en testnyckel på ena sidan och en skarp på den andra ger en kassa som
+   inte går att öppna. Här prövas det, och stämmer det inte blir det
+   Stripes egen sida, som förut.
+
+   Stripes sida finns kvar som reserv av samma skäl. Vyn ber om den
+   inbäddade kassan, men om Stripe.js inte går att ladda (en
+   annonsblockerare, ett nätverk som stoppar js.stripe.com) frågar den
+   igen och får adressen. En familj ska aldrig stå utan väg att betala. */
+function publicerbarNyckel(): string | null {
+  const pk = Deno.env.get('STRIPE_PUBLISHABLE_KEY') ?? '';
+  const sk = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
+  const lage = (k: string) => /^(pk|sk|rk)_test_/.test(k) ? 'test'
+    : /^(pk|sk|rk)_live_/.test(k) ? 'skarp' : null;
+  if (!pk.startsWith('pk_')) return null;
+  if (!lage(pk) || lage(pk) !== lage(sk)) {
+    console.error('stripe-checkout: publicerbara nyckeln hör inte till samma läge som den hemliga; Stripes sida används');
+    return null;
+  }
+  return pk;
+}
 
 /* Bara vår egen sajt får vara returadress. En öppen omdirigering i ett
    betalflöde är en inloggningssida som ser äkta ut. */
@@ -111,7 +145,7 @@ Deno.serve(async (req) => {
   const vem = await kravInloggad(req.headers.get('authorization'));
   if (!vem.ok) return vem.svar;
 
-  let kropp: { pass?: string; retur?: string } = {};
+  let kropp: { pass?: string; retur?: string; ui?: string } = {};
   try {
     kropp = await req.json();
   } catch {
@@ -201,9 +235,32 @@ Deno.serve(async (req) => {
     const bas = egenAdress(kropp.retur, 'https://nextrum.se');
     const text = radtext(pass.subject, String(pass.wanted_date));
 
+    // Inbäddad bara när vyn ber om det OCH nyckeln finns. Se ovan.
+    const pk = kropp.ui === 'inbaddad' ? publicerbarNyckel() : null;
+    const inbaddad = pk !== null;
+
+    /* Vart familjen tar vägen efteråt. Stripes sida skickar tillbaka
+       till en av två adresser. Den inbäddade kassan stannar på sidan
+       när betalningen är klar (redirect_on_completion 'if_required':
+       ett kort behöver aldrig lämna sidan, också 3D Secure sker i
+       ramen), och vyn får beskedet genom onComplete. return_url är
+       Stripes krav för ett betalsätt som måste lämna sidan; med bara
+       kort används den inte, men den pekar på samma besked som förut. */
+    const efter = inbaddad
+      ? {
+        ui_mode: 'embedded',
+        redirect_on_completion: 'if_required',
+        return_url: `${bas}/foralder?betalt={CHECKOUT_SESSION_ID}`,
+      }
+      : {
+        success_url: `${bas}/foralder?betalt={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${bas}/foralder?betalning=avbruten`,
+      };
+
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
+      ...efter,
       /* BARA KORT (punkt 6 på MVP-listan, Fas 14.3). Utan raden väljer
          Stripe betalsätt ur dashboardens inställningar, och slås Klarna
          eller Swish på där erbjuds de här. Båda kan bli klara först i
@@ -214,6 +271,19 @@ Deno.serve(async (req) => {
          det som tas emot. Apple Pay och Google Pay är kort i plånbok och
          följer med. */
       payment_method_types: ['card'],
+      /* NEXTRUM SÄLJER, INTE STRIPE (Fas 14.4). Kontot hade Managed
+         Payments påslaget som förval, och då är Stripe säljaren gentemot
+         familjen: Stripe står på köpet, sköter tvisterna och tar en
+         avgift till ovanpå kortavgiften. Det är byggt för digitala
+         produkter, inte för ett pass med en människa, och det motsäger
+         villkoren, där Nextrum är den familjen köper av och den som
+         tar emot hela beloppet. Med förvalet på nekade Stripe dessutom
+         receipt_email nedan, och kassan gick inte att öppna alls.
+
+         Valet står här och inte bara i dashboarden, av samma skäl som
+         payment_method_types: ett förval någon slår om hos Stripe ska
+         inte kunna byta säljare på våra betalningar. */
+      managed_payments: { enabled: false },
       customer_email: kund?.email ?? undefined,
       // Passets id följer med hela vägen, så att webhooken vet vilken
       // rad som ska ändras utan att gissa.
@@ -244,8 +314,6 @@ Deno.serve(async (req) => {
            testläge skickas inga kvitton alls. */
         receipt_email: kund?.email ?? undefined,
       },
-      success_url: `${bas}/foralder?betalt={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${bas}/foralder?betalning=avbruten`,
     // En idempotensnyckel per pass OCH belopp. Klickar familjen två
     // gånger får de samma session. Ändras beloppet (rabatt, ny tjänst)
     // blir det en ny, för det är en annan betalning.
@@ -254,8 +322,10 @@ Deno.serve(async (req) => {
     // återanvänds med ANDRA parametrar inom ett dygn: den som klickat
     // Betala före en driftsättning som ändrar sessionen hade annars fått
     // ett idempotensfel i stället för en kassa. Räkna upp den när
-    // parametrarna ovan ändras.
-    }, `nextrum-pass-${pass.id}-${netto}-f${SESSIONSFORM}`);
+    // parametrarna ovan ändras. Kassans sort står med av samma skäl:
+    // en inbäddad och en på Stripes sida är olika parametrar, och vyn
+    // kan be om den ena efter den andra för samma pass.
+    }, `nextrum-pass-${pass.id}-${netto}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
 
     // ---------- vad vi BAD om skrivs ner ----------
     /* Först nu, och bara med service_role. Skrivningen kan inte göras
@@ -299,15 +369,36 @@ Deno.serve(async (req) => {
       }, 500, CORS);
     }
 
+    /* Den inbäddade kassan har ingen adress, bara en client_secret som
+       vyn ger Stripe.js. Den och den publicerbara nyckeln är allt vyn
+       behöver; ingen av dem går att använda till något annat än att
+       betala just det här passet. */
+    if (inbaddad) {
+      return json({
+        lage: 'inbaddad',
+        client_secret: (session as { client_secret?: string }).client_secret ?? null,
+        nyckel: pk,
+        session: (session as { id?: string }).id,
+        belopp_ore: netto,
+      }, 200, CORS);
+    }
     return json({
+      lage: 'sida',
       url: (session as { url?: string }).url ?? null,
       session: (session as { id?: string }).id,
       belopp_ore: netto,
     }, 200, CORS);
   } catch (e) {
+    /* Felet skrivs också till funktionens logg. Förut stod Stripes svar
+       bara i familjens ruta i webbläsaren: fem nekade betalningar på två
+       dagar syntes i loggen som "502" och ingenting mer, och ingen hos
+       oss kunde läsa varför. Stripes text innehåller varken nyckeln eller
+       kortet; passets id står med för att kunna hitta raden. */
     if (e instanceof StripeError) {
+      console.error('stripe-checkout: Stripe nekade', JSON.stringify({ pass: passId, ...e.fel }));
       return json({ error: 'Stripe nekade: ' + e.fel.meddelande, stripe: e.fel }, 502, CORS);
     }
+    console.error('stripe-checkout: fel', JSON.stringify({ pass: passId, fel: (e as Error)?.message ?? String(e) }));
     return json({ error: (e as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
   }
 });
