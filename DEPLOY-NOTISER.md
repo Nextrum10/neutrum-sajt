@@ -168,7 +168,9 @@ Deno.writeTextFileSync("/tmp/mejl.html", renderaKvitto("Anna").html);'
 ```
 
 Öppna `/tmp/mejl.html` i en webbläsare. Byt `renderaKvitto` mot
-`renderaMejl` för notismejlen.
+`renderaMejl` för notismejlen, eller mot
+`renderaAnsokan({ steg: "mote", namn: "Tove", moteTid: "2026-10-02T15:00:00Z", moteLank: "https://meet.google.com/abc-defg-hij" })`
+ur `ansokan.ts` för mejlen till den som sökt jobb.
 
 ---
 
@@ -186,9 +188,9 @@ plus två fällor som kostade en kväll var.
 > `p=none`; vägen till `quarantine` står i `DEPLOY-EPOST.md` avsnitt 5.
 
 Notismejlen skickas från `no-reply@nextrum.se` med svara-till
-`info@nextrum.se`. Kvittot på en intresseanmälan skickas från
-`info@nextrum.se`, eftersom det ber om svar. Båda ligger under samma
-domän och täcks av samma poster.
+`info@nextrum.se`. Kvittot på en intresseanmälan och mejlen till den
+som sökt jobb skickas från `info@nextrum.se`, eftersom de ber om svar.
+Alla ligger under samma domän och täcks av samma poster.
 
 ---
 
@@ -297,3 +299,26 @@ Vanliga svar:
 
   Går kontrollen inte att göra skickas inget kvitto. En broms som
   släpper igenom när den är trasig är ingen broms.
+- **Mejlet till den som sökt jobb uteblev** — öppna Rekryteringen på
+  ansökan i adminvyn. Varje steg visar sitt mejl: mejlat, på väg, gick
+  inte fram (med Resends statuskod) eller skickades inte (och varför).
+  Frågan bakom är
+
+  ```sql
+  select steg, status, forsok, fel, skapad, uppdaterad
+    from ansokan_utskick where ansokan_id = '…' order by skapad;
+  ```
+
+  `bromsad` är med flit, av samma skäl som kvittot ovan plus ett tak
+  på tjugo ansökningar i timmen; skälet står på raden. `hoppad`
+  betyder att ansökan hann avböjas eller mötet få en nyare tid innan
+  mejlet gick. Saknas raden helt har steget inget mejl: kontakten och
+  ett nej skriver admin själv. Står raden på `vantar` utan att röra
+  sig: kontrollera `notis_konfig.ansokan_url` och att
+  `ansokan-besked` finns i `cron.job`.
+
+  **De här mejlen går inte genom sandlådan och inte genom flaggan
+  `notiser_mejl`**, precis som kvittot på en intresseanmälan. De är
+  inte notiser utan besked om något mottagaren själv satt igång. Prova
+  dem med en ansökan i ditt eget namn och din egen adress, och ta bort
+  raden efteråt.

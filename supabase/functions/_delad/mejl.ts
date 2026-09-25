@@ -34,6 +34,28 @@ export type Mejl = {
   tidsgransMs?: number;
 };
 
+export type Mejlfel = 'permanent' | 'tillfalligt' | 'kontot';
+
+/**
+ * Hur ett felsvar från Resend ska tas emot.
+ *
+ *   401, 403   kontot: nyckeln saknas eller är fel, eller domänen är inte
+ *              verifierad. Gäller varje mejl, så körningen stoppas.
+ *   408        Resend hann inte. Samma anrop kan gå nästa gång.
+ *   409        krock på idempotensnyckeln: samma rad skickas redan, till
+ *              exempel efter ett lån som gått ut. Ett nytt försök med
+ *              samma nyckel får det första anropets svar.
+ *   429, 5xx   blir bättre av att vänta.
+ *   övriga 4xx fel i själva mejlet (adressen, innehållet). Ett nytt
+ *              försök ger samma svar.
+ */
+export function mejlfelSort(status: number): Mejlfel {
+  if (status === 401 || status === 403) return 'kontot';
+  if (status === 408 || status === 409 || status === 429) return 'tillfalligt';
+  if (status >= 400 && status < 500) return 'permanent';
+  return 'tillfalligt';
+}
+
 /** Skickar och lämnar svaret orört. Saknas nyckeln kastas ett fel. */
 export async function skickaViaResend(m: Mejl): Promise<Response> {
   const nyckel = Deno.env.get('RESEND_API_KEY');

@@ -105,6 +105,13 @@ body.vy-admin .kon-ut{--acc-lugn:var(--fel)}
   border-color:color-mix(in srgb,var(--ockra) 38%,transparent);
   background:color-mix(in srgb,var(--ockra) 8%,var(--pap-2));
 }
+/* Ett besked till den som sökt jobb som inte gick fram (Fas 16.1).
+   I faktarutans egen ton såg det ut som en rad fakta bland andra,
+   och den sökande väntar på ett mejl som aldrig kommer. */
+.vy-admin .ans-steg-fakta.ar-fel{
+  border-color:color-mix(in srgb,var(--fel) 42%,transparent);
+  background:color-mix(in srgb,var(--fel) 8%,var(--pap-2));
+}
 /* Avbokat pass i kalendern låg i accenten — samma färg som "idag". */
 .vy-admin .sch-pass.avbokad i{background:var(--fel)}
 

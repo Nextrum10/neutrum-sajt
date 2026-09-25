@@ -199,9 +199,12 @@ funktionen är aldrig åtkomlig utifrån utan hemligheten.
 
 Två olika saker kallas "loggan i mejlet":
 
-- **Loggan i själva brevet** finns redan. Märket ritas som en
-  tabellcell i `_delad/notiser/rendera.ts`, med flit text och inte
-  bild — kommentaren där säger varför.
+- **Loggan i själva brevet** finns. Sedan Fas 16.1 är den den riktiga
+  bilden, `bilder/nextrum-logo-512.png` ritad i 32×32, med ordet
+  Nextrum som text bredvid så att avsändaren syns också när
+  mejlprogrammet blockerar bilder. `_delad/notiser/rendera.ts`
+  (`LOGGA_URL`) säger varför den har `alt=""` och ingen fråga i
+  adressen.
 - **Den runda bilden bredvid avsändaren i inkorgen** är i dag en
   bokstav i en färgad cirkel. Den styrs inte av mejlet alls. Varje
   mejlprogram har sin egen regel för den, och ingen av dem går att
