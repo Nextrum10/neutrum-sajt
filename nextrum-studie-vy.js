@@ -1071,9 +1071,63 @@
     S.kortsparr = !!(flagga.data && flagga.data.aktiv);
     S.faktura = faktura.data === true;
   }
+  /* ============================================================
+     ERBJUDANDEN (Fas 16.1)
+
+     Planer och klippkort: timmar köpta i förväg. Katalogen och priserna
+     läses ur erbjudanden_pris — samma vy som prissidan visar och som
+     stripe-checkout tar betalt efter — och familjens egna kort ur
+     klippkort_saldo, där "kvar" räknas i databasen ur passen. Här
+     räknas ingenting om, det ritas bara.
+
+     Flaggan erbjudanden avgör om något går att köpa eller dra. Står den
+     av syns erbjudandena med sina priser, men knapparna säger "Snart".
+     ============================================================ */
+  S.erb = { aktiv: false, katalog: [], kort: [] };
+
+  async function laddaErbjudanden() {
+    const [flagga, katalog, kort] = await Promise.all([
+      supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
+      supa.from('erbjudanden_pris')
+        .select('kod, sort, namn, timmar, rabatt_procent, giltig_manader, timpris_ore, ordinarie_ore, pris_ore')
+        .order('ordning'),
+      supa.from('klippkort_saldo')
+        .select('id, erbjudande, namn, sort, timmar, anvanda, kvar, giltigt_till, status, brukbar, created_at')
+        .eq('parent_id', S.user.id).in('status', ['betald', 'tvist', 'aterbetald'])
+        .order('giltigt_till', { ascending: true })
+    ]);
+    S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
+    S.erb.katalog = katalog.data || [];
+    S.erb.kort = kort.data || [];
+    ritaErbjudanden();
+  }
+
+  /* En timme per påbörjad timme, som i klippkort_dra. */
+  const passTimmar = b => Math.max(1, Math.ceil((Number(b.duration_min) || 60) / 60));
+
+  /* Kortet timmarna dras från: det som går ut först och räcker. Samma
+     urval som klippkort_dra gör — funktionen väljer själv, det här
+     avgör bara om knappen ska stå där. Ett pass med fler barn betalas
+     med kort (villkoren, #erbjudanden). */
+  function kortFör(b) {
+    if (!S.erb.aktiv || Number(b.antal_barn || 1) > 1) return null;
+    const behov = passTimmar(b);
+    return S.erb.kort
+      .filter(k => k.brukbar && k.status === 'betald' && Number(k.kvar) >= behov
+        && String(k.giltigt_till) >= String(b.wanted_date))
+      .sort((a, c) => String(a.giltigt_till).localeCompare(String(c.giltigt_till)))[0] || null;
+  }
+
+  /* Har familjen timmar som räcker står den knappen först: då är det
+     vägen de valt, och kortet är reserven. */
   function betalaKnapp(b, liten) {
-    return '<button type="button" class="btn btn-primary' + (liten ? ' btn-sm' : '') + '" data-betala="' + esc(b.id) + '">'
+    const tim = kortFör(b);
+    const kortknapp = '<button type="button" class="btn ' + (tim ? 'btn-ghost' : 'btn-primary') + (liten ? ' btn-sm' : '')
+      + '" data-betala="' + esc(b.id) + '">'
       + (b.betalning_status === 'misslyckad' ? 'Försök betala igen' : 'Betala med kort') + '</button>';
+    if (!tim) return kortknapp;
+    return '<button type="button" class="btn btn-primary' + (liten ? ' btn-sm' : '') + '" data-timmar="' + esc(b.id) + '">'
+      + 'Betala med timmar</button>' + kortknapp;
   }
   const BETALNING_TEXT = {
     ingen: 'Inte betalt än',
@@ -1240,9 +1294,15 @@
   /* Frågar betalfunktionen om en kassa. ui: 'inbaddad' eller 'sida'.
      Svarar med funktionens svar, eller null när felet redan är visat. */
   async function startaBetalning(passId, ui) {
-    const svar = await supa.functions.invoke('stripe-checkout', {
-      body: { pass: passId, retur: location.origin, ui: ui }
-    });
+    return startaKassa({ pass: passId, retur: location.origin, ui: ui });
+  }
+  /* Ett erbjudande går genom samma kassa, med koden i stället för ett
+     pass (Fas 16.1). Beloppet räknas av stripe-checkout. */
+  async function startaKöp(kod, ui) {
+    return startaKassa({ erbjudande: kod, retur: location.origin, ui: ui });
+  }
+  async function startaKassa(body) {
+    const svar = await supa.functions.invoke('stripe-checkout', { body: body });
     if (svar.error) {
       /* Funktionens egen text ligger i error.context, inte i data.
          Utan det här blir varje nekande "FunctionsHttpError", och
@@ -1302,12 +1362,19 @@
       pris ? NXBetalning.kronor(pris) : null].filter(Boolean).join(' · ');
   }
 
-  async function öppnaKassa(knapp, passId, svar, Stripe) {
+  /* o (Fas 16.1): ett köp av ett erbjudande i samma panel. o.titel och
+     o.vad ersätter passets rader, o.kod är vad reserven köper om, och
+     o.klar körs när Stripe säger att betalningen gått igenom. */
+  async function öppnaKassa(knapp, passId, svar, Stripe, o) {
     const p = betalpanel();
     // Stripe tillåter en inbäddad kassa åt gången.
     if (p.checkout) { try { p.checkout.destroy(); } catch (_) { /* redan borta */ } p.checkout = null; }
     p.knapp = knapp; p.pass = passId; p.klar = false;
-    p.vad.textContent = passBeskrivning(passId);
+    p.kod = o && o.kod ? o.kod : null;
+    const titel = (o && o.titel) || 'Betala passet';
+    p.rot.querySelector('.betalpanel-titel').textContent = titel;
+    p.rot.setAttribute('aria-label', titel);
+    p.vad.textContent = o && o.vad ? o.vad : passBeskrivning(passId);
     p.besked.hidden = true;
     p.kassa.textContent = '';
 
@@ -1315,7 +1382,7 @@
     if (typeof stripe.initEmbeddedCheckout !== 'function') throw new Error('Stripe.js saknar initEmbeddedCheckout');
     const checkout = await stripe.initEmbeddedCheckout({
       fetchClientSecret: () => Promise.resolve(svar.client_secret),
-      onComplete: () => betalningKlar(passId)
+      onComplete: () => (o && o.klar ? o.klar() : betalningKlar(passId))
     });
 
     /* Panelen öppnas FÖRE mount, så att ramen får sin bredd direkt.
@@ -1348,7 +1415,10 @@
     /* Betald under tiden panelen var öppen: listorna ska visa det.
        Omritningen byter ut knappen, så fokus flyttas till den nya om
        passet fortfarande har en (webhooken har inte hunnit). */
-    if (p.klar) {
+    if (p.klar && !p.pass) {
+      // Ett köpt erbjudande: timmarna ska synas, och knapparna på passen.
+      Promise.all([laddaErbjudanden(), laddaPass()]).catch(() => {});
+    } else if (p.klar) {
       const passId = p.pass;
       laddaPass().then(() => {
         const ny = document.querySelector('[data-betala="' + CSS.escape(passId) + '"]');
@@ -1375,6 +1445,158 @@
     if (e.key === 'Escape' && panel && panel.rot.classList.contains('open')) stängBetalpanel();
   });
 
+  /* ---------- erbjudandena: köpa och dra (Fas 16.1) ---------- */
+
+  /* Funktionens egen text, som i startaKassa: den står i error.context. */
+  async function funktionsText(fel) {
+    let text = felText(fel);
+    try {
+      const kropp = await fel.context.json();
+      if (kropp && kropp.error) text = kropp.error;
+    } catch (_) { /* behåll texten ovan */ }
+    return text;
+  }
+
+  /* Beskedet hamnar i sektionen man står i: på passets sida, i listan
+     eller under Betalning — där knappen trycktes. */
+  function beskedNära(knapp, text, ok) {
+    const sek = knapp && knapp.isConnected ? knapp.closest('.vy-sek') : null;
+    const msg = (sek && sek.querySelector('.ok-msg')) || $('#bet-msg');
+    if (msg) säg(msg, text, ok);
+  }
+
+  /* Att dra timmar för ett pass. Rutan säger hur många och vad som är
+     kvar efteråt, och — för att ångerrätten ska vara begriplig — att
+     ett pass som hålls inte går att ångra (villkoren, #angerratt). */
+  async function betalaMedTimmar(knapp, passId) {
+    const b = (S.bokningar || []).find(x => x.id === passId);
+    const kort = b ? kortFör(b) : null;
+    if (!b || !kort) return;
+    const behov = passTimmar(b);
+    const ord = n => n === 1 ? '1 timme' : n + ' timmar';
+    const ok = await NXStudie.bekräfta({
+      titel: 'Betala med timmar?',
+      text: ord(behov) + ' dras från ' + kort.namn + '. Kvar efteråt: ' + ord(Number(kort.kvar) - behov)
+        + ' av ' + kort.timmar + '. Avbokas passet av oss kommer timmarna tillbaka.',
+      knapp: 'Dra ' + ord(behov)
+    });
+    if (!ok) return;
+    await medan(knapp, 'Drar…', async () => {
+      const svar = await supa.functions.invoke('klippkort-betala', { body: { pass: passId } });
+      if (svar.error) { beskedNära(knapp, await funktionsText(svar.error), false); return; }
+      const kvar = svar.data && svar.data.kvar;
+      await Promise.all([laddaErbjudanden(), laddaPass()]);
+      beskedNära(knapp, '✓ Passet är betalt med timmar.' + (kvar !== null && kvar !== undefined
+        ? ' ' + ord(Number(kvar)) + ' kvar på ' + kort.namn + '.' : ''), true);
+    });
+  }
+
+  function köpKlart() {
+    const p = panel;
+    if (!p) return;
+    p.klar = true;
+    p.besked.textContent = '✓ Tack! Köpet är klart. Timmarna syns under Era timmar om en liten stund.';
+    p.besked.hidden = false;
+    setTimeout(() => { laddaErbjudanden().catch(() => {}); }, 2500);
+    setTimeout(() => { Promise.all([laddaErbjudanden(), laddaPass()]).catch(() => {}); }, 8000);
+  }
+
+  async function köpErbjudande(knapp, kod) {
+    const e = S.erb.katalog.find(x => x.kod === kod);
+    if (!e || !S.erb.aktiv) return;
+    await medan(knapp, 'Öppnar…', async () => {
+      const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
+      const svar = await startaKöp(kod, 'inbaddad');
+      if (!svar) return;
+      if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
+        const Stripe = await stripeKlar;
+        if (Stripe) {
+          try {
+            await öppnaKassa(knapp, null, svar, Stripe, {
+              titel: 'Köp ' + e.namn,
+              vad: e.timmar + ' timmar · ' + NXBetalning.kronor(e.pris_ore),
+              kod: kod,
+              klar: köpKlart
+            });
+            return;
+          } catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
+        }
+        const reserv = await startaKöp(kod, 'sida');
+        if (reserv && reserv.url) { location.href = reserv.url; return; }
+        if (!reserv) return;
+      } else if (svar.url) {
+        location.href = svar.url;
+        return;
+      }
+      alert('Kassan kunde inte öppnas. Försök igen, eller hör av dig till oss.');
+    });
+  }
+
+  /* Ett erbjudande som ett kort. Det överstrukna är ordinarie pris för
+     samma timmar, och skillnaden står i kronor: "ni sparar" är ett
+     belopp, inte en procentsats man ska räkna om själv. */
+  function erbKort(e) {
+    const kr = NXBetalning.kronor;
+    const spar = Number(e.ordinarie_ore) - Number(e.pris_ore);
+    const perTimme = Math.floor(Number(e.pris_ore) / Number(e.timmar) / 100) * 100;
+    const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
+    const rubrik = e.sort === 'plan' ? e.namn : e.timmar + ' timmar';
+    const vad = e.kod === 'standard' ? '4 pass · ett i veckan i en månad'
+      : e.kod === 'intensiv' ? '8 pass · två i veckan i en månad'
+      : 'Gäller i ' + mån;
+    return '<div class="erb-kort' + (e.kod === 'intensiv' || e.kod === 'klipp20' ? ' ar-framhavd' : '') + '">'
+      + '<div class="erb-topp"><b class="erb-namn">' + esc(rubrik) + '</b>'
+      + '<span class="erb-rabatt">−' + esc(String(e.rabatt_procent)) + ' %</span></div>'
+      + '<span class="erb-vad">' + esc(vad) + '</span>'
+      + '<span class="erb-pris"><s>' + esc(kr(e.ordinarie_ore)) + '</s><b>' + esc(kr(e.pris_ore)) + '</b></span>'
+      + '<span class="erb-tim"><s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + ' per timme · ni sparar '
+      + esc(kr(spar)) + '</span>'
+      + (S.erb.aktiv
+        ? '<button type="button" class="btn btn-primary btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>'
+        : '<button type="button" class="btn btn-ghost btn-sm" disabled>Snart</button>')
+      + '</div>';
+  }
+
+  function ritaErbjudanden() {
+    const planer = $('#erb-planer'), klipp = $('#erb-klipp');
+    if (!planer || !klipp) return;
+    const kat = S.erb.katalog;
+    planer.innerHTML = kat.filter(e => e.sort === 'plan').map(erbKort).join('')
+      || tomt('Inga planer just nu', 'Skriv till oss om ni vill ha ett upplägg.');
+    klipp.innerHTML = kat.filter(e => e.sort === 'klippkort').map(erbKort).join('')
+      || tomt('Inga klippkort just nu', 'Skriv till oss om ni vill köpa timmar i förväg.');
+
+    const msg = $('#erb-msg');
+    if (msg && !S.erb.aktiv && !msg.classList.contains('show')) {
+      säg(msg, 'Erbjudandena går att köpa här inom kort. Vill ni ha ett redan nu, skriv till oss så ordnar vi det.', true);
+    }
+
+    const kontakt = $('#erb-kontakt');
+    if (kontakt && NX.CFG && NX.CFG.EPOST) {
+      kontakt.href = 'mailto:' + NX.CFG.EPOST + '?subject=' + encodeURIComponent('Eget upplägg');
+    }
+
+    const box = $('#erb-mina-box'), mina = $('#erb-mina');
+    if (!box || !mina) return;
+    box.hidden = !S.erb.kort.length;
+    const idag = isoFor(new Date());
+    mina.innerHTML = S.erb.kort.map(k => {
+      const kvar = Number(k.kvar), tim = Number(k.timmar);
+      const läge = k.status === 'aterbetald' ? 'Återbetalt'
+        : k.status === 'tvist' ? 'Betalningen är ifrågasatt'
+        : kvar === 0 ? 'Förbrukat'
+        : String(k.giltigt_till) < idag ? 'Gick ut ' + datumText(k.giltigt_till)
+        : 'Gäller till ' + datumText(k.giltigt_till);
+      const andel = tim ? Math.round(100 * kvar / tim) : 0;
+      return '<div class="erb-mitt' + (k.brukbar ? '' : ' ar-slut') + '">'
+        + '<div class="erb-mitt-topp"><b>' + esc(k.namn) + '</b><span>' + esc(läge) + '</span></div>'
+        + '<div class="erb-matare" role="img" aria-label="' + esc(kvar + ' av ' + tim + ' timmar kvar') + '">'
+        + '<i style="width:' + andel + '%"></i></div>'
+        + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar</span>'
+        + '</div>';
+    }).join('');
+  }
+
   /* Vägrar webbläsaren Stripes ram (en CSP som inte hunnit med, ett
      tillägg som blockerar) syns det inte som ett fel i koden: ramen
      blir bara tom. Webbläsaren säger det däremot här, och då går
@@ -1389,9 +1611,9 @@
     if (e.disposition !== 'enforce') return;
     if (!/stripe\.(com|network)/.test(String(e.blockedURI || ''))) return;
     console.error('CSP stoppade Stripe:', e.violatedDirective, e.blockedURI);
-    const passId = p.pass;
+    const passId = p.pass, kod = p.kod;
     stängBetalpanel();
-    const reserv = await startaBetalning(passId, 'sida');
+    const reserv = passId ? await startaBetalning(passId, 'sida') : kod ? await startaKöp(kod, 'sida') : null;
     if (reserv && reserv.url) location.href = reserv.url;
   });
 
@@ -1399,7 +1621,7 @@
   async function laddaPass() {
     const host = $('#pass-lista');
     const { data, error } = await supa
-      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, created_by, created_at, avbokningsskal, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore')
+      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, created_by, created_at, avbokningsskal, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id')
       .eq('parent_id', S.user.id).order('wanted_date', { ascending: true });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
@@ -1511,6 +1733,11 @@
     }
     const kv = e.target.closest('[data-kort-val]');
     if (kv) { await väljBetalsätt(kv, kv.dataset.kortVal, 'ingen'); return; }
+
+    const tim = e.target.closest('[data-timmar]');
+    if (tim) { await betalaMedTimmar(tim, tim.dataset.timmar); return; }
+    const köp = e.target.closest('[data-kop]');
+    if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
 
     const bet = e.target.closest('[data-betala]');
     if (bet) {
@@ -1928,7 +2155,10 @@
           const betalt = Number(b.betalt_ore || 0), tillbaka = Number(b.aterbetald_ore || 0);
           return NXKontakt.passRad(b, {
             href: '#pass/' + b.id,
-            under: [betalt ? kronor(betalt) : null, 'betalt ' + datumText(isoFor(new Date(b.betald_at))),
+            /* Ett pass betalt med timmar har inget kortbelopp: pengarna
+               ligger på klippkortet (Fas 16.1). */
+            under: [b.klippkort_id ? 'med timmar' : betalt ? kronor(betalt) : null,
+              'betalt ' + datumText(isoFor(new Date(b.betald_at))),
               barn ? barn.name : null].filter(Boolean).join(' · '),
             vem: !tillbaka ? null
               : tillbaka >= betalt ? 'Hela beloppet är återbetalt.'
@@ -1945,14 +2175,22 @@
      inte visar beskedet igen, och så att sidan öppnar på Betalning. */
   function läsBetalsvar() {
     const q = new URLSearchParams(location.search);
-    const svar = q.has('betalt') ? 'betalt' : q.get('betalning') === 'avbruten' ? 'avbruten' : null;
+    const svar = q.has('betalt') ? 'betalt' : q.has('kopt') ? 'kopt'
+      : q.get('betalning') === 'avbruten' ? 'avbruten' : null;
     if (svar && window.history && history.replaceState) {
-      history.replaceState(null, '', location.pathname + '#betalning');
+      // Ett köpt erbjudande (Fas 16.1) öppnar på Erbjudanden.
+      history.replaceState(null, '', location.pathname + (svar === 'kopt' ? '#erbjudanden' : '#betalning'));
     }
     return svar;
   }
 
   function visaBetalsvar(svar) {
+    if (svar === 'kopt') {
+      const em = $('#erb-msg');
+      if (em) säg(em, '✓ Tack! Köpet är klart. Timmarna syns under Era timmar om en liten stund.', true);
+      setTimeout(() => { Promise.all([laddaErbjudanden(), laddaPass()]).catch(() => {}); }, 5000);
+      return;
+    }
     const msg = $('#bet-msg');
     if (!svar || !msg) return;
     if (svar === 'betalt') {
@@ -2530,7 +2768,8 @@
        hjälparens kort — med en signerad profilbild, två frågor i rad —
        får inte hålla passen och läxorna i kö; chatten startar när
        namnet finns. */
-    await Promise.all([laddaBarn(), laddaSparr()]);
+    /* Erbjudandena före passen: knappen Betala med timmar ritas ur dem. */
+    await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden()]);
     await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor()]);
     /* Läxorna hämtas först, så märket ritas om när de finns. */
     ritaÖvLaxor();

@@ -20,7 +20,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
 <link rel="stylesheet" href="nextrum-cinema.css?v=f3f0446e">
-<link rel="stylesheet" href="nextrum-vy.css?v=5c510982">
+<link rel="stylesheet" href="nextrum-vy.css?v=2eb9e887">
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=901ed6e0">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
@@ -1110,6 +1110,15 @@
               <h5>Spärren</h5>
               <div id="kort-sparr"><div class="loading">Hämtar</div></div>
             </div>
+            <!-- Fas 16.1. Planer och klippkort: strömbrytaren och köpen,
+                 med timmarna kvar och vad som går tillbaka om familjen
+                 slutar i dag. Återbetalningen görs i Stripes dashboard;
+                 webhooken skriver ner den och stänger kortet. -->
+            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+              <h5>Erbjudanden <em id="erb-kop-antal"></em></h5>
+              <div id="erb-flagga"><div class="loading">Hämtar</div></div>
+              <div id="erb-kop" style="margin-top:18px"></div>
+            </div>
             <!-- Fas 14.3, punkt 10 och 11 på MVP-listan. Frågar Stripe med
                  servernyckeln genom stripe-lage. Läser bara: endpoints,
                  kontouppgifter och kvitton ändras i Stripes dashboard. -->
@@ -2144,7 +2153,7 @@
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=ab70719d"></script>
-<script src="nextrum-admin-karna.js?v=5f4eaced"></script>
+<script src="nextrum-admin-karna.js?v=200f07eb"></script>
 <script src="nextrum-admin-detalj.js?v=0d44be0d"></script>
 <script src="nextrum-admin-oversikt.js?v=d21a3dae"></script>
 <script src="nextrum-admin-kunder.js?v=01b666e6"></script>
@@ -2152,7 +2161,7 @@
 <script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
 <script src="nextrum-admin-kommunikation.js?v=24a9a868"></script>
 <script src="nextrum-admin-drift.js?v=2437242e"></script>
-<script src="nextrum-admin-ekonomi.js?v=31a4d0ab"></script>
+<script src="nextrum-admin-ekonomi.js?v=4265e3ab"></script>
 <script src="nextrum-admin-tjanster.js?v=ab1ef476"></script>
 <script src="nextrum-admin-system.js?v=15488645"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
