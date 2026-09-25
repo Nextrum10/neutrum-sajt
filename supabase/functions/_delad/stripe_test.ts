@@ -15,9 +15,9 @@
 
 import { assert, assertEquals, assertFalse } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
-  API_VERSION, aterbetalningsLage, betallageEfterTvist, formulardata, granskaStripe, type Granskning,
-  nyckelLage, oreFor, prövaSignatur, tidFranUnix, tvistOrsakText, tvistUtfall, tvistVantarPaOss,
-  WEBHOOK_HANDELSER,
+  API_VERSION, arStripeId, aterbetalningsLage, balans, betallageEfterTvist, formulardata, granskaStripe,
+  type Granskning, nyckelLage, oreFor, prövaSignatur, tidFranUnix, tvistOrsakText, tvistUtfall,
+  tvistVantarPaOss, WEBHOOK_HANDELSER,
 } from './stripe.ts';
 
 const HEMLIGHET = 'whsec_prov_hemlighet_som_aldrig_anvands_skarpt';
@@ -327,4 +327,36 @@ Deno.test('ett kontoutdrag utan text är rött, ett utan Nextrum en varning', ()
   assertEquals(rad(granskaStripe(granskning({ konto: tomt })), 'Kontoutdraget')?.ok, false);
   const annat = { ...granskning().konto!, settings: { payments: { statement_descriptor: 'LEO AB' }, card_payments: { statement_descriptor_prefix: 'LEO AB' } } };
   assertEquals(rad(granskaStripe(granskning({ konto: annat })), 'Kontoutdraget')?.ok, null);
+});
+
+// ---------- balanstransaktionen (Fas 14.7) ----------
+// De två första betalningarna som gick hela vägen fick null: Stripe
+// hade inte skapat balanstransaktionen när sessionen fullbordades.
+// balans() ska aldrig göra en saknad siffra till noll.
+
+Deno.test('en expanderad balanstransaktion ger avgift och netto', () => {
+  assertEquals(balans({ id: 'txn_1Abc', fee: 757, net: 37143 }), { id: 'txn_1Abc', avgiftOre: 757, nettoOre: 37143 });
+});
+
+Deno.test('en oexpanderad ger bara id:t, inte en påhittad avgift', () => {
+  assertEquals(balans('txn_1Abc'), { id: 'txn_1Abc', avgiftOre: null, nettoOre: null });
+});
+
+Deno.test('ingen balanstransaktion än är null, aldrig noll', () => {
+  assertEquals(balans(null), { id: null, avgiftOre: null, nettoOre: null });
+  assertEquals(balans(''), { id: null, avgiftOre: null, nettoOre: null });
+  assertEquals(balans({ id: 'txn_1Abc', fee: '757' }).avgiftOre, null);
+});
+
+Deno.test('charge.updated står bland händelserna endpointen måste ha', () => {
+  assert(WEBHOOK_HANDELSER.includes('charge.updated'));
+});
+
+Deno.test('ett id som går in i en adress prövas till formen', () => {
+  assert(arStripeId('ch_3Qx9AbCdEf', 'ch'));
+  assert(arStripeId('txn_1AbcDef', 'txn'));
+  assertFalse(arStripeId('ch_3Qx9/../../v1/customers', 'ch'));
+  assertFalse(arStripeId('ch_3Qx9?expand[]=x', 'ch'));
+  assertFalse(arStripeId('txn_1AbcDef', 'ch'));
+  assertFalse(arStripeId(null, 'ch'));
 });

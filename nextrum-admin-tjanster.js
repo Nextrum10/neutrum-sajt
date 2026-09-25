@@ -520,12 +520,19 @@
        pass som redan är bokat är ett löfte som bryts. Tills priset fryses
        på bokningen, som rabatten redan gör, är det den här dialogen som
        säger det, med antalet pass det gäller. */
+    /* Ett fakturapass (Fas 14.6) får också det nya priset: fakturan
+       räknas när månaden är slut, inte när passet bokas. Därför räknas
+       'faktura' med här, fast det inte är ett obetalt kortpass. Ett
+       genomfört fakturapass som inte fakturerats än gör det också. */
     const höjt = öre !== null && rad.pris_per_timme_ore != null && öre > rad.pris_per_timme_ore;
+    const fakturerade = new Set();
+    (S.fakturor || []).forEach(f => (f.invoice_lines || []).forEach(l => fakturerade.add(l.booking_id)));
     const väntar = (S.bokningar || []).filter(b =>
-      (b.status === 'requested' || b.status === 'confirmed')
+      (b.status === 'requested' || b.status === 'confirmed'
+        || (b.status === 'completed' && b.betalning_status === 'faktura' && !fakturerade.has(b.id)))
       && b.fakturerbar !== false
       && (!b.tjanst || b.tjanst === 'laxhjalp')
-      && ['ingen', 'vantar', 'misslyckad'].indexOf(b.betalning_status || 'ingen') !== -1).length;
+      && ['ingen', 'vantar', 'misslyckad', 'faktura'].indexOf(b.betalning_status || 'ingen') !== -1).length;
 
     /* Bekräfta bara det som är värt att bekräfta. En dialog vid varje
        spara lär folk att klicka bort dialoger. */

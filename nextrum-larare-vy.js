@@ -1026,11 +1026,15 @@
   }
 
   /* Betalt nog för att rapporteras. Tvist räknas som betalt: familjen
-     HAR betalat, och passet hölls på den betalningen. Ett pass Nextrum
-     undantagit ska inte betalas och stoppas därför inte. */
+     HAR betalat, och passet hölls på den betalningen. Faktura räknas
+     också (Fas 14.6): familjen betalar passet mot en månadsfaktura som
+     kommer efter passet, så det hålls innan det är betalt, och
+     databasen släpper igenom rapporten. Ett pass Nextrum undantagit ska
+     inte betalas och stoppas därför inte. */
   function betaltNog(b) {
     return !S.kortsparr || b.fakturerbar === false
-      || b.betalning_status === 'betald' || b.betalning_status === 'tvist';
+      || b.betalning_status === 'betald' || b.betalning_status === 'tvist'
+      || b.betalning_status === 'faktura';
   }
 
   /* ============================================================
@@ -2841,6 +2845,8 @@
         ? { text: 'Passet är bokat, men familjen har inte betalt än. Håll det inte förrän de har gjort det — det syns här när betalningen kommit in.', ton: 'fraga' }
         : betalt
         ? { text: 'Passet är bokat och betalt. ' + ses + ' Ska det avbokas går det genom Nextrum.', ton: 'klart' }
+        : b.betalning_status === 'faktura'
+        ? { text: 'Passet är bokat, och familjen betalar det mot faktura. ' + ses, ton: 'klart' }
         : { text: 'Passet är bokat. ' + ses, ton: 'klart' };
       atgarder = '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Föreslå ny tid</button>'
         + (betalt ? '' : avboka)
