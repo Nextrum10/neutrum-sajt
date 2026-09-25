@@ -1519,6 +1519,12 @@ section[data-sek]{overflow-anchor:none}
 .ps-rad:last-child{border-bottom:none}
 .ps-rad span{font-size:.82rem;color:var(--bl-2)}
 .ps-rad b{font-size:.9rem;font-weight:600;color:var(--bl);text-align:right}
+/* Möteslänken (Fas 18.1). Samma tyngd som raden, och understruken så
+   att den syns vara en länk utan en egen färg. Mötesskoden får brytas
+   hellre än att skjuta kortet utanför en smal skärm. */
+.ps-rad b .ps-lank{color:inherit;text-decoration:underline;text-decoration-thickness:1px;
+  text-underline-offset:3px;overflow-wrap:anywhere}
+.ps-rad b .ps-lank:hover{text-decoration-thickness:2px}
 .ps-block{margin-top:22px}
 .ps-block p{font-size:.92rem;line-height:1.6;color:var(--bl-2);white-space:pre-wrap;margin:0 0 8px}
 .ps-block p b{color:var(--bl)}

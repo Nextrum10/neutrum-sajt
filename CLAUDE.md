@@ -75,6 +75,16 @@ plats alls. Förval ur förra passet och barnets `format_onskemal`.
 Platsen ändras inte när tiden flyttas — `skydda_bokningsfalt` släpper
 bara igenom tid och status på ett befintligt pass.
 
+**Ett bekräftat onlinepass har en Meet-länk (Fas 18.1).** Den står under
+Var på passets sida, likadan hos familjen och studiehjälparen, och
+skapas av `google-meet` första gången någon öppnar passet, inte av en
+trigger. Rummet är öppet (den som har länken går in utan att knacka),
+för på ett pass är ingen från Nextrum med och släpper in. Blir rummet
+inte öppet sparas länken inte. Är Google inte kopplat står den gamla
+texten kvar: länken kommer i meddelanden. Leo valde bara det här av
+Workspace-kopplingen; kalendern, inbjudningarna och rekryteringsmötet
+valdes bort, och mejlen går genom Resend som förut (INTEGRATIONER.md).
+
 **Studiehjälparens schema öppnar i Kommande** (2026-09-24): de närmaste
 passen per dag, med klockslag och ämne, elevens namn och platsen på var
 sin rad. Studievyn och adminvyn öppnar fortfarande i månaden — hos
@@ -423,6 +433,10 @@ Fas 16.1 la till `erbjudanden` (katalogen, alla läser) och `klippkort`
 `skydda_bokningsfalt` eller `avvikelser_rader`, som Fas 14.6 skrev om.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
+Fas 18.1 la till `google_koppling` (nyckeln till Nextrums Google-konto:
+RLS utan policy, bara `service_role`) och `pass_moten` (Meet-länken per
+pass: parterna och admin läser, bara `service_role` skriver, och
+villkoret på kolumnen släpper bara igenom `https://meet.google.com/…`).
 Runda 2 la till notisernas sju: `notiser` (i vyn), `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
 `notis_fel` — plus `flaggor`, som är strömbrytarna för det som
@@ -783,7 +797,10 @@ att visa **rätt sida**, inte för att skydda data.
   användare.** Kan ingen skriva belopp från webbläsaren kan ingen
   skriva fel belopp. Beloppen sätts av `fakturering` med `service_role`.
 - **`integrationer` har ingen skrivpolicy alls.** Adminvyn rapporterar
-  status, den kopplar inte.
+  status. Koppla Google (Fas 18.1) skickar bara admin till Google:
+  engångskoden kommer tillbaka till `google-koppla`, byts mot en nyckel
+  där, med klienthemligheten, och nyckeln ligger i `google_koppling`,
+  som ingen inloggad ser, inte ens admin.
 - **Hinkarna är privata, och sökvägen är ett uuid — aldrig ett namn.**
   `material` har elevens id som mapp, `dokument` (Fas 9.10) har
   handlingens, `bibliotek` (Fas 13.2) har materialradens. Ett filnamn heter i praktiken "Avtal Alva Berg 2026.pdf",
@@ -811,7 +828,7 @@ gång till. **Kontrollerat 2026-09-23, med prov mot driften:**
 
 | Varning | Varför den är väntad |
 |---|---|
-| `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
+| `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
 | 23 SECURITY DEFINER-funktioner nåbara för `authenticated` | Alla fjorton adminfunktioner kontrollerar `is_admin()` internt. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
@@ -894,8 +911,10 @@ tillbaka en kopia.**
 | `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
 | `stripe-avstamning` | Hämtar avgift, netto och läge (test eller skarpt) för betalningar som saknar dem (Fas 14.7). Högst femtio per tryck. Skriver bara de kolumnerna | Knappen Hämta från Stripe under Ekonomi → Kortbetalningar |
 | `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Ekonomi → Kortbetalningar |
+| `google-koppla` | Kopplingen till Google (Fas 18.1): adressen till Google, återkomsten med engångskoden, Prova och Koppla från. Koden byts mot en nyckel HÄR; vyn ser aldrig nyckeln eller klienthemligheten. Återkomsten bär ingen inloggning och skyddas av ett HMAC-signerat läge som gäller i tio minuter. Ett konto utanför nextrum.se nekas | Knapparna under System → Integrationer, och Googles omdirigering |
+| `google-meet` | Meet-länken till ett bekräftat onlinepass (Fas 18.1). Läser passet med anroparens token först, skapar ett öppet rum och sparar länken i `pass_moten`. Ett rum som inte blev öppet sparas inte | Passets sida i föräldravyn och studiehjälparvyn |
 
-`supabase/config.toml` bär `verify_jwt = false` för de sex funktioner
+`supabase/config.toml` bär `verify_jwt = false` för de sju funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
 dashboarden, och en `supabase functions deploy` utan filen hade slagit
 på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och
@@ -1353,14 +1372,19 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   avboka ett pass de betalat med timmar (samma spärr som för kort, fast
   inga pengar ska tillbaka), och ingen påminnelse går ut innan timmar
   löper ut.
-- **Google Workspace.** Statusflik finns, koppling saknas.
-  `INTEGRATIONER.md` har receptet. Fortnox stod här till Fas 14.8;
-  bokföringen och fakturorna sköts i Wint, utan koppling hit.
+- **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
+  (Fas 18.1). Koden, tabellerna och Koppla-knappen finns; kopplingen
+  kräver stegen hos Google i `INTEGRATIONER.md` och ett klick på
+  Koppla Google, inloggad som `info@nextrum.se`. Tills dess står den
+  gamla texten om meddelanden kvar på passen. Kalendern, inbjudningarna
+  och rekryteringsmötets länk valdes bort. Fortnox stod här till Fas
+  14.8; bokföringen och fakturorna sköts i Wint, utan koppling hit.
 - **Bakgrundskontroller.** Godkännandet är en knapp, inte en process.
   Fas 13.1 gav rekryteringen en ORDNING (kontakt, digitalt möte,
   utbildning, poolen) med skälet till varje steg skrivet i vyn, men
   inget av stegen kontrollerar något utifrån: mötet bokas inte i en
-  kalender — Google Workspace är inte kopplat — och utbildningen är en
+  kalender (kopplingen till Google gör bara onlinepassens Meet-länkar,
+  Fas 18.1), och utbildningen är en
   länk i `UTBILDNING_URL`, inte ett prov systemet läser resultatet av.
 - **`materials` har inga läsare kvar utom oss själva** (efter Fas
   13.3). Studiehjälparvyns materialflik är ombyggd till biblioteket,

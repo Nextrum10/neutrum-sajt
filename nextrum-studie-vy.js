@@ -2519,7 +2519,10 @@
       ] },
       { rubrik: 'Var', rader: [
         ['Hur', b.format || 'Inte angivet'],
-        ['Plats', b.location || (b.format === 'Online' ? 'Länken kommer i meddelanden' : 'Inte angiven — skriv till ' + förnamn)]
+        /* Fas 18.1: ett bekräftat onlinepass har en Meet-länk här.
+           Texten efter är det som står när Google inte är kopplat. */
+        NXStudie.mötesRad(b, 'Länken kommer i meddelanden'),
+        ['Plats', b.location || (b.format === 'Online' ? null : 'Inte angiven — skriv till ' + förnamn)]
       ] },
       { rubrik: 'Vem', rader: [
         ['Elev', barn ? barn.name : null],
@@ -2574,6 +2577,9 @@
     });
 
     rita(rapportFör[b.id] || null);
+    /* Länken hämtas efter att sidan ritats, som rapporten. Raden står
+       redan på "Hämtar länken…", så kortet byter inte höjd när den kommer. */
+    NXStudie.hämtaMöte(supa, b, () => { if (passIdIAdressen() === b.id) ritaPassSida(); });
     if (b.status === 'completed' && !(b.id in rapportFör)) {
       const r = await hämtaRapport(b.id);
       if (r && passIdIAdressen() === b.id) rita(r);

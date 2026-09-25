@@ -3,9 +3,10 @@
 #
 # FILEN FINNS FÖR ATT EN DRIFTSÄTTNING INTE SKA SLÅ PÅ JWT-KRAVET
 #
-# Sex funktioner anropas av något som inte har en inloggad användare:
-# en databaswebhook, en trigger, ett pg_cron-jobb, Stripe eller en
-# knapp i ett mejlprogram. De har därför verify_jwt av.
+# Sju funktioner anropas av något som inte har en inloggad användare:
+# en databaswebhook, en trigger, ett pg_cron-jobb, Stripe, en knapp i
+# ett mejlprogram eller Googles omdirigering tillbaka efter ett
+# godkännande. De har därför verify_jwt av.
 #
 # Den inställningen satt länge BARA i dashboarden. En `supabase
 # functions deploy` läser den här filen, och saknas raden för en
@@ -27,7 +28,9 @@
 # lead-notis, notis-ko och ansokan-notis hemligheten i notis_konfig.
 # stripe-webhook kräver Stripes signatur. notis-avanmal kräver en
 # HMAC-signerad token i länken och kan bara stänga AV en notis,
-# aldrig slå på någon och aldrig läsa något.
+# aldrig slå på någon och aldrig läsa något. google-koppla kräver ett
+# HMAC-signerat läge som bara en inloggad admin kan ha fått, och
+# prövar adminens token själv på alla andra vägar.
 #
 # Att verify_jwt är av betyder alltså inte att funktionen är
 # oskyddad. Det betyder att skyddet inte är Supabases Auth.
@@ -90,4 +93,16 @@ verify_jwt = false
 # (RFC 8058) POSTar utan att någon öppnar sajten. Skyddet är
 # signaturen i tokenen.
 [functions.notis-avanmal]
+verify_jwt = false
+
+# Kopplingen till Google (Fas 18.1). Google skickar tillbaka
+# webbläsaren hit efter godkännandet, med en vanlig omdirigering, och
+# den bär ingen Supabase-token. Skyddet på den vägen är det signerade
+# läget i state (HMAC med klienthemligheten, tio minuter, säger vilken
+# admin som började). Knapparna i adminvyn POSTar till samma funktion
+# och prövar adminens token själva med kravAdmin.
+#
+# google-meet står MED FLIT INTE här: den anropas av en inloggad
+# familj eller studiehjälpare från passets sida och ska ha JWT-kravet.
+[functions.google-koppla]
 verify_jwt = false

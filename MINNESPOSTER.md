@@ -89,8 +89,10 @@ som vägrar ändringen från en inloggad session. Admin sätts med SQL, inte
 från någon vy.
 
 `invoices` och `payouts` har med flit ingen INSERT-policy för användare.
-`integrationer` har ingen skrivpolicy alls: adminvyn rapporterar status,
-den kopplar inte.
+`integrationer` har ingen skrivpolicy alls: adminvyn rapporterar status.
+Koppla Google (Fas 18.1) skickar bara admin till Google; engångskoden
+byts mot en nyckel i `google-koppla`, och nyckeln ligger i
+`google_koppling`, som ingen inloggad ser.
 
 Notishemligheten ligger i tabellen `notis_konfig`, inte i en secret. En
 secret och en webhook-header i två fönster glider isär, och då svarar
@@ -323,6 +325,7 @@ uppgift; att svara är en människas jobb (DEPLOY-BETALNING.md 9.10).
 Startererbjudandet på prissidan
 finns inte i koden, och priset räknas när familjen betalar fast
 villkoren lovar priset vid bokningen. Bokföringen sköts i Wint, för hand;
-Fortnox togs bort i Fas 14.8. Vidare: Google Workspace,
-bakgrundskontroller, skatt och anställning av minderåriga, riktiga foton
+Fortnox togs bort i Fas 14.8. Google Workspace ger bara Meet-länkar till
+onlinepassen (Fas 18.1) och är inte kopplat förrän stegen i
+INTEGRATIONER.md är gjorda. Vidare: bakgrundskontroller, skatt och anställning av minderåriga, riktiga foton
 på studiehjälparna.

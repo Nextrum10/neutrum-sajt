@@ -277,11 +277,12 @@
      Rutan är därför inte en meny. Den är ordningen, med skälet till
      varje steg skrivet bredvid knappen som utför det.
 
-     Den bokar inte i någon kalender. Google Workspace är inte
-     kopplat (se INTEGRATIONER.md), och en knapp som ser ut att boka
-     men bara skriver i vår egen databas är värre än en som säger vad
-     den gör: den sparar tiden och länken här, och databasen mejlar
-     dem till den sökande (Fas 16.1).
+     Den bokar inte i någon kalender och skapar ingen länk. Kopplingen
+     till Google (Fas 18.1) gör Meet-länkar till onlinepassen och
+     inget annat: Leo valde bort rekryteringsmötet 2026-09-25. En knapp
+     som ser ut att boka men bara skriver i vår egen databas är värre
+     än en som säger vad den gör: den sparar tiden och länken här, och
+     databasen mejlar dem till den sökande (Fas 16.1).
      ============================================================ */
 
   /* Den öppna rutan, om någon är öppen. Stegknapparna nedan ritar om
@@ -455,8 +456,8 @@
     const svar = await fråga({
       titel: 'Boka digitalt möte med ' + (a.name || 'den sökande'),
       text: 'Tiden och länken sparas på ansökan och mejlas till den sökande direkt. Ändrar du '
-        + 'dem senare går ett nytt mejl med den nya tiden. Ingen kalender bokas — Google '
-        + 'Workspace är inte kopplat.',
+        + 'dem senare går ett nytt mejl med den nya tiden. Ingen kalender bokas härifrån, och '
+        + 'länken skapar du själv i Google Meet.',
       innehåll: '<div class="ag-faltrad">'
         + '<div class="fgroup"><label for="mo-datum">Datum</label>'
         + '<input class="inp" id="mo-datum" type="date" value="'

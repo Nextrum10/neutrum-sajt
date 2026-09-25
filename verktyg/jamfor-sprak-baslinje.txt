@@ -28,7 +28,7 @@
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  TEXTNODER: sv 157 vs en 156 — engelskan har inte följt med
+  TEXTNODER: sv 161 vs en 160 — engelskan har inte följt med
   SVENSKA KVAR i engelskan, 4 stycken:
       Leo Constantinos Thriskos
       Alexandar Jovanovic
