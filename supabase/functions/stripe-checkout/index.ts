@@ -69,8 +69,9 @@ import { familjebelopp, radtext, standardTjanst, type Tjanst } from '../_delad/p
 const CORS = cors();
 
 /* Räknas upp när sessionens parametrar ändras. Se idempotensnyckeln.
-   2: bara kort och kvitto till familjens adress (Fas 14.3). */
-const SESSIONSFORM = 2;
+   2: bara kort och kvitto till familjens adress (Fas 14.3).
+   3: Managed Payments uttryckligen av (Fas 14.4). */
+const SESSIONSFORM = 3;
 
 /* Bara vår egen sajt får vara returadress. En öppen omdirigering i ett
    betalflöde är en inloggningssida som ser äkta ut. */
@@ -214,6 +215,19 @@ Deno.serve(async (req) => {
          det som tas emot. Apple Pay och Google Pay är kort i plånbok och
          följer med. */
       payment_method_types: ['card'],
+      /* NEXTRUM SÄLJER, INTE STRIPE (Fas 14.4). Kontot hade Managed
+         Payments påslaget som förval, och då är Stripe säljaren gentemot
+         familjen: Stripe står på köpet, sköter tvisterna och tar en
+         avgift till ovanpå kortavgiften. Det är byggt för digitala
+         produkter, inte för ett pass med en människa, och det motsäger
+         villkoren, där Nextrum är den familjen köper av och den som
+         tar emot hela beloppet. Med förvalet på nekade Stripe dessutom
+         receipt_email nedan, och kassan gick inte att öppna alls.
+
+         Valet står här och inte bara i dashboarden, av samma skäl som
+         payment_method_types: ett förval någon slår om hos Stripe ska
+         inte kunna byta säljare på våra betalningar. */
+      managed_payments: { enabled: false },
       customer_email: kund?.email ?? undefined,
       // Passets id följer med hela vägen, så att webhooken vet vilken
       // rad som ska ändras utan att gissa.

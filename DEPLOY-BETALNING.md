@@ -369,7 +369,7 @@ provet. Gör den innan ni rör en skarp nyckel, och innan spärren slås på (9.
 | Kolumnerna och skyddet (`20260922155740_fas12_1_*.sql`) | **Applicerad** |
 | `stripe-konto` | **Borttagen**, ur repot och ur driften (Fas 12.5) |
 | Korttvisterna (`20260924125618_fas14_3_*.sql`) | **Applicerad.** Tabellen `stripe_tvister`, se 9.10 |
-| `stripe-checkout` | **ACTIVE**, version 6, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken |
+| `stripe-checkout` | **ACTIVE**, version 8, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5) |
 | `stripe-webhook` | **ACTIVE**, version 6, `verify_jwt = false`. Fas 14.3: tvisterna sparas med sista svarsdag, orsak och utfall |
 | `stripe-aterbetalning` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
 | `stripe-lage` | **ACTIVE**, version 1, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting |
@@ -522,6 +522,22 @@ adress, och med den satt skickar Stripe kvittot i skarpt läge oavsett
 inställningen under Settings → Emails. I testläge skickar Stripe inga kvitton
 alls, så det går inte att se förrän första riktiga betalningen. Kvittots utseende
 (logga, färg, kontaktadress) sätts under Settings → Branding.
+
+**Managed Payments ska vara av, och koden slår av det för varje betalning**
+(Fas 14.4). Kontot hade det påslaget som förval. Då är Stripe säljaren gentemot
+familjen i stället för Nextrum, Stripe sköter tvisterna, och det kostar en egen
+avgift ovanpå kortavgiften. Det är byggt för digitala produkter, och det motsäger
+villkoren. Förvalet fick dessutom Stripe att neka `receipt_email`, så kassan gick
+inte att öppna alls: varje försök att betala den 24 och 25 september svarade 502.
+`stripe-checkout` skickar nu `managed_payments[enabled]=false`, så ett förval i
+dashboarden kan inte byta säljare. Slå ändå av förvalet under Settings → Managed
+Payments, i både test- och skarpt läge, så att dashboarden och koden säger samma
+sak.
+
+**Ett nej från Stripe står i loggen.** Förut gick Stripes förklaring bara till
+familjens ruta i webbläsaren, och loggen sa "502". Nu skriver `stripe-checkout`
+Stripes typ, kod och text till funktionens logg, med passets id. Leta efter
+`stripe-checkout: Stripe nekade` under Edge Functions → stripe-checkout → Logs.
 
 ### 9.6 Prova hela kedjan, i testläge
 
