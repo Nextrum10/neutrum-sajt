@@ -51,20 +51,22 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=12b72e9c">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=b9b953fc">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=f3f0446e">
 <link rel="stylesheet" href="../nextrum-start.css?v=aff1a601">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
-     type="image/webp" OCH webp-adresser: sedan bilderna blev
+     Det som förladdas är filmens affischbild, för det är den hero
+     visar. Här stod hero-nextrum i fem storlekar, en bild som slutat
+     synas på startsidan: den hämtades med hög prioritet före allt
+     annat, och kastades (mätt 2026-09-25).
+
+     type="image/webp" OCH webp-adressen: sedan bilderna blev
      <picture> väljer sidan webp, och en preload utan type drog
      jpg:en PARALLELLT. Två hämtningar av samma foto, varav en
      kastades bort — en preload som laddar fel fil är värre än ingen
-     preload alls. En webbläsare som inte kan webp hoppar över raden
-     och laddar jpg:en i sin vanliga ordning, som förut. -->
-<link rel="preload" as="image" type="image/webp" href="../bilder/hero-nextrum-1280.webp"
-      imagesrcset="../bilder/hero-nextrum-640.webp 640w, ../bilder/hero-nextrum-960.webp 960w, ../bilder/hero-nextrum-1280.webp 1280w, ../bilder/hero-nextrum-1600.webp 1600w, ../bilder/hero-nextrum-1920.webp 1920w"
-      imagesizes="(max-width: 900px) 92vw, 52vw" fetchpriority="high">
+     preload alls. En webbläsare som inte kan webp hoppar över raden. -->
+<link rel="preload" as="image" type="image/webp" href="../bilder/08-teamet-1920.webp" fetchpriority="high">
 
 <!-- Strukturerad data. Ger Google namn, logotyp, beskrivning och
      våra konton att knyta ihop sidan med. -->
@@ -209,9 +211,13 @@
 <section class="nx-hero-film" id="hem">
   <div class="nx-hero-media">
     <!-- poster i webp: attributet tar ingen <source>, så det här är
-         enda sättet. Bilden hämtas på telefon också, där filmen med
-         flit aldrig spelas, och vägde 172 kB som jpg mot 34 kB nu. -->
-    <video class="nx-hero-video" poster="/bilder/08-teamet-1280.webp"
+         enda sättet — och därför en storlek för alla skärmar. Den
+         största: hero fyller skärmen med object-fit:cover, så en
+         telefon på 390 px med tre bildpunkter per px visar bilden
+         ungefär 3 400 px bred. 1280 sträcktes nästan tre gånger och
+         såg suddig ut där, och på telefon spelas filmen aldrig, så
+         bilden ÄR hero. 136 kB mot 48. -->
+    <video class="nx-hero-video" poster="/bilder/08-teamet-1920.webp"
            muted playsinline preload="none" autoplay loop
            data-video="/bilder/08-teamet-orbit.mp4"
            aria-hidden="true" tabindex="-1"></video>
@@ -1148,7 +1154,7 @@
 <!-- Startsidans rörelse. FÖRE sidans eget skript: bandets kopior
      måste finnas när NX.initDrag() letar upp korten. Startar av sig
      självt, så att inget anrop här nere kan kasta om filen saknas. -->
-<script src="../nextrum-start.js?v=76a43c0a"></script>
+<script src="../nextrum-start.js?v=85421d26"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

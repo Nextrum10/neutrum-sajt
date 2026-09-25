@@ -19,8 +19,8 @@
   TEXTNODER: sv 153 vs en 152 — engelskan har inte följt med
 
 === for-elever-och-foraldrar.html  ->  en/for-elever-och-foraldrar.html
-  STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  TEXTNODER: sv 132 vs en 131 — engelskan har inte följt med
+  STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
+  TEXTNODER: sv 347 vs en 346 — engelskan har inte följt med
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>

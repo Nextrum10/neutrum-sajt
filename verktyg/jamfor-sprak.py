@@ -110,6 +110,10 @@ def jamfor(sv_fil, en_fil):
         if a.lower() in ('nextrum', 'sv', 'eng', 'e-post', 'ok', 'cv', 'faq',
                          'info@nextrum.se', 'stockholm'):
             continue
+        # En webbadress, som adressraden i studievyns illustration
+        # ("nextrum.se/foralder"), är densamma på båda språken.
+        if re.fullmatch(r'[a-z0-9.-]+\.[a-z]{2,}(/[\w./-]*)?', a):
+            continue
         if len(a) < 12:
             continue
         ooversatt.append(a)

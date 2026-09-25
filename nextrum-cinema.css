@@ -711,7 +711,9 @@ body .mobile-menu{display:block}
 @media (prefers-reduced-motion:reduce){
   .nx-hero-video{display:none}
   .nx-hero-media{
-    background:var(--nt) center/cover no-repeat url("bilder/08-teamet-1280.jpg");
+    background:var(--nt) center/cover no-repeat url("bilder/08-teamet-1920.jpg");
+    background-image:image-set(url("bilder/08-teamet-1920.webp") type("image/webp"),
+                               url("bilder/08-teamet-1920.jpg") type("image/jpeg"));
     filter:brightness(.54) saturate(.92);
   }
 }
@@ -837,7 +839,12 @@ html[lang="en"] .nx-hero-rubrik{
 @media (prefers-reduced-motion:reduce){
   .nx-hero-video{display:none}
   .nx-hero-media{
-    background:var(--bl) center/cover no-repeat url("bilder/08-teamet-1280.jpg");
+    /* Samma fil som affischen och förladdningen i index.html, så att
+       den inte hämtas två gånger. jpg:en först för den som inte kan
+       image-set. */
+    background:var(--bl) center/cover no-repeat url("bilder/08-teamet-1920.jpg");
+    background-image:image-set(url("bilder/08-teamet-1920.webp") type("image/webp"),
+                               url("bilder/08-teamet-1920.jpg") type("image/jpeg"));
   }
 }
 
