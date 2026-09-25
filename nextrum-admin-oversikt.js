@@ -136,6 +136,9 @@
 
     const obetalda = S.fakturor.filter(f =>
       f.status === 'skickad' || f.status === 'forfallen').length;
+    /* Fas 14.6. Ett fakturautkast är ingen faktura förrän någon lagt in
+       det i Wint. Ingen annan än vi kan göra det. */
+    const attLäggaIn = S.fakturor.filter(f => f.status === 'utkast').length;
     const attBetalaUt = S.utbetalningar.filter(u =>
       u.status === 'utkast' || u.status === 'godkand').length;
     const obekräftade = S.bokningar.filter(b =>
@@ -169,9 +172,12 @@
       { antal: utanRapport().length,
         rubrik: 'genomförda pass saknar rapport', ental: 'genomfört pass saknar rapport',
         under: 'Pass saknar rapport och kan därför inte behandlas automatiskt.', till: '#ekonomi/avvikelser' },
+      { antal: attLäggaIn,
+        rubrik: 'fakturor att lägga in i Wint', ental: 'faktura att lägga in i Wint',
+        under: 'Månadskörningen har skapat dem. Familjen har inte fått dem än.', till: '#ekonomi/fakturor' },
       { antal: obetalda,
         rubrik: 'obetalda fakturor', ental: 'obetald faktura',
-        under: 'Skickade men inte betalda.', till: '#ekonomi' },
+        under: 'Skickade från Wint men inte betalda.', till: '#ekonomi/fakturor' },
       { antal: attBetalaUt,
         rubrik: 'utbetalningar att göra', ental: 'utbetalning att göra',
         under: 'Studiehjälpare som väntar på sin ersättning.', till: '#ekonomi/utbetalningar' }
@@ -390,7 +396,10 @@
 
     const l = S.lage;
     if (l) {
-      märkFlik('#flik-fakt-mark', l.obetalda_fakturor);
+      /* Det som väntar på oss under Fakturor: utkast att lägga in i
+         Wint och fakturor som förfallit (Fas 14.6). En skickad faktura
+         som inte förfallit väntar på familjen, inte på oss. */
+      märkFlik('#flik-fakt-mark', Number(l.fakturor_att_lagga_in || 0) + Number(l.forfallna_fakturor || 0));
       märkFlik('#flik-inkorg-mark', l.ohanterade_meddelanden);
     }
     märkFlik('#flik-avv-mark', utanRapport().length + övrigaAvvikelser().length);

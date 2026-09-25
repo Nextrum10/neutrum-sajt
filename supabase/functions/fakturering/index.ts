@@ -5,12 +5,18 @@
 // kommit med på ett underlag, och skapar ett underlag per
 // studiehjälpare: vad hen ska få den 25:e.
 //
-// FAMILJEN FÅR INGEN FAKTURA (Fas 14.2). Familjen betalar varje pass
-// med kort före passet, genom stripe-checkout, och körningen skriver
-// därför ingenting till invoices. Pass som hölls utan att familjen
-// betalat räknas upp i svaret under `obetalda`, med beloppet, och
-// syns under Avvikelser som Inte betalt. De försvinner inte tyst, och
-// de faktureras inte heller i efterhand av sig själva.
+// FAMILJEN BETALAR MED KORT, ELLER MOT FAKTURA OM DEN VALT DET.
+// Fas 14.2 tog bort månadsfakturan: familjen betalar varje pass med
+// kort före passet, genom stripe-checkout. Pass som hölls utan att
+// familjen betalat räknas upp i svaret under `obetalda`, med beloppet,
+// och syns under Avvikelser som Inte betalt. De försvinner inte tyst,
+// och de faktureras inte i efterhand av sig själva.
+//
+// Fas 14.6 lät familjen välja faktura på ett pass. Bara de passen,
+// betalning_status = 'faktura', samlas på ett fakturautkast per
+// familj och period i invoices, med en rad per pass i invoice_lines.
+// Utkastet läggs in i Wint av admin (Ekonomi → Fakturor), och det är
+// Wint som skickar fakturan. Den här funktionen skickar ingenting.
 //
 // Funktionen heter kvar fakturering. Namnet är adressen adminvyn och
 // ett framtida schema anropar, och ett nytt namn hade varit en ny
@@ -21,10 +27,10 @@
 // ligger i _delad/pris.ts, där den är testad öre för öre (pris_test.ts).
 //
 // SÄKERHET
-// Den här funktionen använder service_role, för payouts har med flit
-// ingen INSERT-policy för användare: kan ingen skriva belopp från
-// webbläsaren kan ingen skriva fel belopp. Därför får den heller inte
-// gå att anropa av vem som helst. Två vägar in:
+// Den här funktionen använder service_role, för payouts och fakturornas
+// belopp skrivs med flit inte från webbläsaren: kan ingen skriva belopp
+// där kan ingen skriva fel belopp. Därför får den heller inte gå att
+// anropa av vem som helst. Två vägar in:
 //
 //   · x-fakturering-nyckel som matchar secreten FAKTURERING_NYCKEL —
 //     för ett schema, som inte är en inloggad användare.
@@ -59,7 +65,7 @@
 import { cors, json as jsonMed, preflight } from '../_delad/http.ts';
 import { kravAdmin, lika, serviceklient } from '../_delad/auth.ts';
 import {
-  byggUnderlag, minuterSum, type Pass, sammanfatta, sorteraPass,
+  byggFakturor, byggUnderlag, minuterSum, type Pass, sammanfatta, sorteraPass,
   standardTjanst, summa, type Tjanst,
 } from '../_delad/pris.ts';
 
@@ -219,6 +225,28 @@ Deno.serve(async (req) => {
     // i stället för att försvinna tyst.
     const { pass, utanRapport, undantagna } = sorteraPass(allaPass);
 
+    // ---------- fakturapassen (Fas 14.6) ----------
+    // En egen fråga, för urvalet ovan tar bara pass som inte står på ett
+    // underlag. Ett fakturapass kan redan ha kommit med på
+    // studiehjälparens underlag förra månaden (rapporten kom i tid) och
+    // ändå sakna faktura (familjen valde faktura efteråt, eller körningen
+    // fanns inte). Villkoret är fakturan, inte underlaget.
+    let fakturapass: Pass[];
+    try {
+      fakturapass = await allaRader<Pass>((fran, till) => db.from('passunderlag')
+        .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, '
+          + 'rabatt_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status')
+        .lt('wanted_date', slut)
+        .eq('betalning_status', 'faktura')
+        .eq('fakturerad', false)
+        .eq('fakturerbar', true)
+        .eq('har_rapport', true)
+        .order('wanted_date').order('id')
+        .range(fran, till));
+    } catch (fel) {
+      return json({ error: 'Kunde inte hämta fakturapassen: ' + (fel as Error).message }, 500);
+    }
+
     // ---------- timpenningarna ----------
     const tutorIdn = [...new Set(pass.filter((b) => !b.pa_underlag).map((b) => b.tutor_id).filter(Boolean))];
     const timpenningar = new Map<string, number>();
@@ -232,18 +260,46 @@ Deno.serve(async (req) => {
     // ---------- räkna ----------
     const underlag = byggUnderlag({ pass, tjanster: katalog, timprisOre, timpenningar });
     const { perTutor } = underlag;
+    const fakturor = byggFakturor({ pass: fakturapass, tjanster: katalog, timprisOre });
 
     const sammanfattning = sammanfatta({
-      korningAv, period, slut, timprisOre, underlag, utanRapport, undantagna,
+      korningAv, period, slut, timprisOre, underlag, fakturor, utanRapport, undantagna,
     });
 
     if (torrkorning) return json({ torrkorning: true, ...sammanfattning }, 200);
 
     // ---------- skriv ----------
-    // Bara underlag. Familjens halva skrivs inte någonstans: den finns
-    // i svaret som `obetalda`, och i databasen som avvikelsen ej_betalt.
-    const skapade = { utbetalningar: 0 };
+    // Underlag, och ett fakturautkast per familj som valt faktura. Ett
+    // obetalt kortpass skrivs inte någonstans: det finns i svaret som
+    // `obetalda`, och i databasen som avvikelsen ej_betalt.
+    const skapade = { utbetalningar: 0, fakturor: 0 };
     const problem: string[] = [];
+
+    /* Fakturan FÖRST, raderna SEDAN, och fakturan tas bort om raderna
+       inte gick in — samma ordning som underlaget nedan. En faktura
+       utan rader hade larmat som faktura_summa_fel, men ett utkast med
+       rätt summa och fel rader hade lagts in i Wint utan att någon sett
+       det. UNIQUE(parent_id, period) gör att en omkörning krockar i
+       stället för att skapa en andra faktura: krocken står i `problem`. */
+    for (const [foralder, rader] of fakturor) {
+      const f = await db.from('invoices').insert({
+        parent_id: foralder, period, status: 'utkast', belopp_ore: summa(rader),
+      }).select('id').single();
+
+      if (f.error) { problem.push(`faktura ${foralder}: ${f.error.message}`); continue; }
+
+      const l = await db.from('invoice_lines').insert(rader.map((r) => ({
+        invoice_id: f.data.id, booking_id: r.booking_id, beskrivning: r.beskrivning,
+        minuter: r.minuter, pris_per_timme_ore: r.pris_per_timme_ore, belopp_ore: r.belopp_ore,
+      })));
+
+      if (l.error) {
+        await db.from('invoices').delete().eq('id', f.data.id);
+        problem.push(`fakturarader ${foralder}: ${l.error.message}`);
+        continue;
+      }
+      skapade.fakturor++;
+    }
 
     for (const [tutorId, rader] of perTutor) {
       const p = await db.from('payouts').insert({
@@ -273,7 +329,8 @@ Deno.serve(async (req) => {
     // granskar, och utbetalningen den 25:e görs från banken. Stripe är
     // inte med i den här halvan alls: Connect togs bort i Fas 12.5,
     // eftersom en överföring per pass hade betalat samma timmar två
-    // gånger — en gång vid passet och en gång här.
+    // gånger — en gång vid passet och en gång här. Fakturan skickas av
+    // Wint, inte härifrån.
 
     return json({ ...sammanfattning, skapade, problem }, problem.length ? 207 : 200);
   } catch (fel) {

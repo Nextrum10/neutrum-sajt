@@ -453,18 +453,31 @@
     if (DP.flik === 'pass') return passLista(pass, b => elevNamn(b.student_id) || '');
 
     if (DP.flik === 'ekonomi') {
+      /* Fakturavalet (Fas 14.6). När strömbrytaren är på får alla
+         familjer välja faktura; det här är bromsen för en enda. En
+         familj som redan valt faktura behåller sina fakturapass. */
+      const spärrad = S.fakturaSparr && S.fakturaSparr.has(p.id);
+      const fakturapass = pass.filter(b => b.betalning_status === 'faktura' && b.status !== 'cancelled').length;
       return dpTal([
         [kronor(obetalt), 'Utestående'],
         [fakturor.length, 'Fakturor'],
-        [genomförda.length, 'Fakturerbara pass']
+        [fakturapass, 'Pass mot faktura']
       ])
+      + dpRubrik('Faktura som betalsätt')
+      + dpRad(spärrad ? 'Avstängd för den här familjen' : 'Tillåten',
+          spärrad ? 'Familjen kan bara betala med kort. Pass som redan valts för faktura faktureras ändå.'
+            : (S.fakturaFlagga && S.fakturaFlagga.aktiv ? 'Familjen kan välja faktura på ett pass.'
+              : 'Faktura är avstängt för alla just nu, under Ekonomi → Fakturor.'),
+          '<button class="btn btn-ghost btn-sm" type="button" data-fakturasparr="' + esc(p.id) + '" data-sparra="'
+            + (spärrad ? '0' : '1') + '">' + (spärrad ? 'Tillåt faktura' : 'Stäng av faktura') + '</button>')
       + dpRubrik('Fakturor')
       + (fakturor.length
         ? fakturor.map(f => dpRad(
             NX.MANADER[Number(String(f.period).slice(5, 7)) - 1] + ' ' + String(f.period).slice(0, 4),
-            kronor(f.belopp_ore) + (f.forfaller ? ' · förfaller ' + kortDatum(f.forfaller) : ''),
-            läge(FAKT_LAGE, f.status))).join('')
-        : tomt('Inga fakturor än', 'Den första skapas när en månad med genomförda pass är slut.'));
+            kronor(f.belopp_ore) + (f.wint_fakturanummer ? ' · faktura ' + f.wint_fakturanummer : '')
+              + (f.forfaller ? ' · förfaller ' + kortDatum(f.forfaller) : ''),
+            läge(FAKT_LAGE, NXBetalning.fakturaLage(f)))).join('')
+        : tomt('Inga fakturor', 'Familjen betalar med kort, eller har inga fakturapass från en avslutad månad än.'));
     }
 
     if (DP.flik === 'tidslinje') return dpTidslinje(p, d);
@@ -759,6 +772,33 @@
   /* En lyssnare för hela materialrutan: typväxlaren, AI-knappen,
      "Använd den här" och borttagningen. Panelen ritas om i sin
      helhet vid varje flikbyte, så inget får bindas vid uppritning. */
+  /* Fakturaspärren för en familj (Fas 14.6). En rad i faktura_sparr
+     betyder avstängd; bara admin skriver, och databasen prövar det. */
+  document.addEventListener('click', async ev => {
+    const k = ev.target.closest('[data-fakturasparr]');
+    if (!k) return;
+    const id = k.dataset.fakturasparr;
+    const stäng = k.dataset.sparra === '1';
+    if (stäng) {
+      const ja = await bekräfta({
+        titel: 'Stäng av faktura för familjen?',
+        text: namnFör(id) + ' kan då bara betala med kort. Pass de redan valt faktura för faktureras ändå, '
+          + 'och kan betalas med kort om de byter själva.',
+        knapp: 'Stäng av'
+      });
+      if (!ja) return;
+    }
+    await medan(k, 'Sparar…', async () => {
+      const { error } = stäng
+        ? await supa.from('faktura_sparr').insert({ parent_id: id })
+        : await supa.from('faktura_sparr').delete().eq('parent_id', id);
+      if (error && error.code !== '23505') { alert('Kunde inte ändra: ' + felText(error)); return; }
+      const { data } = await supa.from('faktura_sparr').select('parent_id');
+      S.fakturaSparr = new Set((data || []).map(r => r.parent_id));
+      ritaDetalj();
+    });
+  });
+
   document.addEventListener('click', async ev => {
     const typ = ev.target.closest('[data-dp-mat-typ]');
     if (typ) {

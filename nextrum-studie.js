@@ -773,6 +773,8 @@ window.NXStudie = (function () {
        steg:    [{ namn, klar, nu }],      vägen passet går
        besked:  { text, ton },             vad som väntar, på vem
        atgarder: html,                     knapparna
+       alternativ: html,                   ett andra val under knapparna,
+                                           t.ex. faktura i stället för kort
        kort:    [{ rubrik, rader: [[etikett, värde]] }],
        block:   [{ rubrik, html }]         anteckning, rapport, läxor
      }
@@ -818,6 +820,10 @@ window.NXStudie = (function () {
           ? '<div class="ps-gor' + (o.besked && o.besked.ton ? ' ar-' + esc(o.besked.ton) : '') + '">'
             + (o.besked ? '<p>' + esc(o.besked.text) + '</p>' : '')
             + (o.atgarder ? '<div class="ps-knappar">' + o.atgarder + '</div>' : '')
+            /* Under knapparna, inte bland dem (Fas 14.6). En knapp i
+               .ps-knappar blir full bredd på en telefon, och "Betala med
+               faktura i stället" är ett andra val, inte ett andra steg. */
+            + (o.alternativ ? '<div class="ps-alt">' + o.alternativ + '</div>' : '')
             + '</div>'
           : '')
       + (kort ? '<div class="ps-kortrad">' + kort + '</div>' : '')

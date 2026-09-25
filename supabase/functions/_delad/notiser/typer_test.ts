@@ -44,7 +44,7 @@ Deno.test('renData släpper bara igenom de vitlistade fälten', () => {
   // det här provet, och den som lägger till det får läsa kommentaren
   // överst innan det går igenom.
   assertEquals(Object.keys(rad).sort(), [
-    'amne', 'datum', 'elev', 'fran', 'franDatum', 'franTid',
+    'amne', 'betalsatt', 'datum', 'elev', 'fran', 'franDatum', 'franTid',
     'prov', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
   ]);
 
@@ -53,6 +53,13 @@ Deno.test('renData släpper bara igenom de vitlistade fälten', () => {
   for (const hemligt of ['behöver hjälp', 'Ring mamma', '070', 'Storgatan', 'Berg', 'example.se']) {
     assertEquals(allt.includes(hemligt), false, `${hemligt} följde med ut`);
   }
+});
+
+Deno.test('betalsättet är en kod, och bara en', () => {
+  assertEquals(renData({ betalsatt: 'faktura' }).betalsatt, 'faktura');
+  assertEquals(renData({ betalsatt: 'kort' }).betalsatt, null);
+  assertEquals(renData({ betalsatt: 'Faktura till Storgatan 4' }).betalsatt, null);
+  assertEquals(renData({}).betalsatt, null);
 });
 
 Deno.test('renData tar bara datum och tider som verkligen finns', () => {

@@ -5,14 +5,14 @@
 // faktura-utskick, och den driftsatta faktureringen hade 14 medan
 // allt annat sa 10. Nu finns siffran här, en gång.
 //
-// SEDAN FAS 14.2 ÄR DEN INGET LÖFTE LÄNGRE. Familjen betalar varje
-// pass med kort före passet och får ingen månadsfaktura, så varken
-// prissidan, FAQ:n eller användarvillkoren nämner ett antal dagar.
-// Konstanten används bara av faktura-utskick, när en faktura som
-// skapades före Fas 14.2 skickas — och sådana fanns det noll av när
-// månadsfakturan revs. Ändra den inte utan att läsa CLAUDE.md
-// avsnitt 1: ett villkor på en faktura som inte stämmer med det
-// familjen läst är en tvist, inte ett skrivfel.
+// FAS 14.2 GJORDE DEN TILL HISTORIA, FAS 14.6 TILL ETT LÖFTE IGEN.
+// Familjen kan välja faktura på ett pass, och passen samlas på en
+// månadsfaktura med den här betalningstiden. Fakturan skapas i Wint,
+// så Wints betalningsvillkor ska vara samma siffra. En spegel står i
+// nextrum-config.js för vyerna, och verktyg/kolla-betalningsvillkor.py
+// jämför de två. Ändra den inte utan att läsa CLAUDE.md avsnitt 1: ett
+// villkor på en faktura som inte stämmer med det familjen läst är en
+// tvist, inte ett skrivfel.
 // ============================================================
 
 export const BETALNINGSVILLKOR_DAGAR = 10;

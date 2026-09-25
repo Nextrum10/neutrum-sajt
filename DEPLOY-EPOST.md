@@ -157,7 +157,7 @@ in emellan. I en tabell byts båda i samma transaktion i stället.
 
 Tabellen har RLS på utan en enda policy, så `anon` och `authenticated`
 får noll rader. Databaslintern flaggar det som INFO — det är avsikten,
-precis som för `fortnox_token`.
+precis som för `stripe_handelser`.
 
 #### Rotera hemligheten
 

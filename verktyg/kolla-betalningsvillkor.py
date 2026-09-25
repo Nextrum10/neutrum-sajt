@@ -32,9 +32,16 @@ Två listor:
 Verktyget rättar ingenting. Vad löftet ska vara är ett affärsbeslut,
 inte något ett skript ska gissa.
 
-TÄCKS INTE: konstanten BETALNINGSVILLKOR_DAGAR i _delad/konstanter.ts.
-Den finns kvar för fakturor som skapades före Fas 14.2 — och sådana
-fanns det noll av — och lovar ingenting om ett nytt pass.
+BETALNINGSTIDEN PÅ FAKTURAN (Fas 14.6). Familjen kan välja faktura på
+ett pass, och då står antalet dagar på två ställen i koden:
+BETALNINGSVILLKOR_DAGAR i _delad/konstanter.ts och i nextrum-config.js,
+som vyerna läser. Verktyget kräver att de är samma tal. Fakturan skapas
+i Wint, och Wints inställning ser verktyget inte: den ska vara samma
+siffra, och det står i DEPLOY-BETALNING.md 9.11.
+
+Villkoren, prissidan och FAQ:n säger ännu inget om faktura. Det skrivs
+samma dag strömbrytaren 'faktura' slås på, och då ska det här verktyget
+räkna den meningen också (DEPLOY-BETALNING.md 9.11).
 
 Mejlmallarna i _delad/notiser/mallar.ts TÄCKS sedan Fas 14.3. Då
 började bekräftelsen och påminnelsen till familjen säga att passet
@@ -96,8 +103,19 @@ def las(fil):
     return io.open(os.path.join(ROT, fil), encoding='utf-8').read()
 
 
+def dagar(fil, monster):
+    m = re.search(monster, las(fil))
+    return int(m.group(1)) if m else None
+
+
 def main():
     fynd = []
+
+    i_koden = dagar('supabase/functions/_delad/konstanter.ts', r'BETALNINGSVILLKOR_DAGAR\s*=\s*(\d+)')
+    i_vyn = dagar('nextrum-config.js', r'BETALNINGSVILLKOR_DAGAR\s*:\s*(\d+)')
+    if i_koden is None or i_vyn is None or i_koden != i_vyn:
+        fynd.append('DAGAR      konstanter.ts säger %s, nextrum-config.js säger %s. Fakturans betalningstid '
+                    'ska vara samma tal på båda ställena.' % (i_koden, i_vyn))
 
     for fil, monster, antal, vad in LOFTET:
         try:
@@ -126,8 +144,9 @@ def main():
         print('\n%d problem. Betalningslöftet måste säga samma sak på alla ställen.' % len(fynd))
         return 1
 
-    print('ok   betalningslöftet står på alla %d ställen i %d filer, och det gamla ingenstans'
-          % (sum(antal for _, _, antal, _ in LOFTET), len({fil for fil, _, _, _ in LOFTET})))
+    print('ok   betalningslöftet står på alla %d ställen i %d filer, det gamla ingenstans, '
+          'och fakturans betalningstid är %d dagar i båda filerna'
+          % (sum(antal for _, _, antal, _ in LOFTET), len({fil for fil, _, _, _ in LOFTET}), i_koden))
     return 0
 
 

@@ -135,23 +135,10 @@
        ägs matchningen av eleven, och profiles.matched_tutor_id
        skrivs av en trigger. Se kommentaren i ritaFamiljer. */
 
-    /* Fakturans läge. Tidsstämplarna sätts av läget, inte av
-       handen: "betald" utan betald_at är en rad ingen kan följa
-       upp i efterhand. */
-    if (el.dataset && el.dataset.fakt) {
-      const f = S.fakturor.find(x => x.id === el.dataset.fakt);
-      const nu = new Date().toISOString();
-      const fält = { status: el.value };
-      if (el.value === 'betald' && !f.betald_at) fält.betald_at = nu;
-      if (el.value === 'skickad' && !f.skickad_at) fält.skickad_at = nu;
-      if (el.value === 'utkast') { fält.betald_at = null; fält.skickad_at = null; }
-      Object.assign(f, fält);
-      await skriv('invoices', f.id, fält);
-      /* Avvikelserna och översikten följer med: en betald faktura är
-         inte längre förfallen. */
-      ritaFakturor(); await laddaOmEkonomi();
-      return;
-    }
+    /* Fakturans läge hade en rullgardin här. Sedan Fas 14.6 har varje
+       läge sin egen knapp under Ekonomi → Fakturor (Lagd i Wint,
+       Betald, Makulera), för Skickad utan Wints nummer och förfallodag
+       är en rad ingen kan följa upp i Wint. */
 
     if (el.dataset && el.dataset.utb) {
       const u = S.utbetalningar.find(x => x.id === el.dataset.utb);
@@ -232,6 +219,9 @@
           + (b.betalning_status === 'betald' || b.betalning_status === 'tvist'
             ? 'Passet är betalt, och pengarna går inte tillbaka av sig själva — återbetala '
               + 'under Ekonomi → Kortbetalningar.'
+            : b.betalning_status === 'faktura'
+            ? 'Familjen betalar passet mot faktura. Står det redan på en faktura i Wint ska raden '
+              + 'krediteras där; annars kommer det inte med på nästa faktura.'
             : 'Passet är inte betalt, så det finns inget att betala tillbaka.'),
         not: 'Både familjen och studiehjälparen får ett mejl om att passet är avbokat och varför.'
       });
@@ -256,31 +246,27 @@
       return;
     }
 
-    /* ============ SKICKA FAKTURA ELLER UNDERLAG ============
+    /* ============ SKICKA UNDERLAG ============
        Två anrop till samma edge-funktion. Det första är en
-       torrkörning som svarar med vad mottagaren KOMMER att läsa;
+       torrkörning som svarar med vad studiehjälparen KOMMER att läsa;
        det andra skickar. Ett mejl som lämnat huset går inte att
        ångra, så det ska gå att läsa igenom först.
 
-       Statusen sätts av servern, och bara om Resend svarat att
-       mejlet gick iväg. Rullgardinen här bredvid ändrar bara ordet
-       i tabellen — det är två olika saker och de ska förbli det. */
+       Bara underlag sedan Fas 14.6. Fakturor skapas och skickas i
+       Wint, och faktura-utskick nekar dem. */
     const skicka = e.target.closest('[data-skicka]');
     if (skicka) {
-      const typ = skicka.dataset.skicka;
       const id = skicka.dataset.id;
-      const påminnelse = skicka.dataset.paminnelse === '1';
 
       const prov = await medan(skicka, 'Hämtar…', () =>
         supa.functions.invoke('faktura-utskick',
-          { body: { typ, id, paminnelse: påminnelse, torrkorning: true } }));
+          { body: { typ: 'utbetalning', id, torrkorning: true } }));
 
       const fel = prov.error || (prov.data && prov.data.error);
       if (fel) { alert(await funktionsFel(fel)); return; }
 
       const ja = await bekräfta({
-        titel: påminnelse ? 'Skicka påminnelse?'
-          : typ === 'faktura' ? 'Skicka fakturan?' : 'Skicka underlaget?',
+        titel: 'Skicka underlaget?',
         text: 'Går till ' + prov.data.till + '. Så här ser det ut:',
         forhandsvisning: prov.data.text,
         knapp: 'Skicka nu'
@@ -289,23 +275,9 @@
 
       await medan(skicka, 'Skickar…', async () => {
         const res = await supa.functions.invoke('faktura-utskick',
-          { body: { typ, id, paminnelse: påminnelse } });
+          { body: { typ: 'utbetalning', id } });
         const f2 = res.error || (res.data && res.data.error);
         if (f2) { alert(await funktionsFel(f2)); return; }
-        if (res.data && res.data.varning) alert('⚠️ ' + res.data.varning);
-
-        /* Servern har ändrat statusen. Hämta om raden i stället för
-           att gissa vad den blev — gissar vi fel står tabellen och
-           ljuger tills någon laddar om sidan. */
-        if (typ === 'faktura' && !påminnelse) {
-          const { data } = await supa.from('invoices').select('*').eq('id', id).maybeSingle();
-          if (data) {
-            const i = S.fakturor.findIndex(x => x.id === id);
-            if (i !== -1) S.fakturor[i] = data;
-          }
-          ritaFakturor();
-          await laddaOmEkonomi();
-        }
         alert('✓ Skickat till ' + res.data.till + '.');
       });
       return;

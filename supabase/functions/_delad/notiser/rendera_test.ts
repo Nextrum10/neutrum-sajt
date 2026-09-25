@@ -145,6 +145,21 @@ Deno.test('familjens bekräftelse och påminnelse säger att passet betalas för
   assertEquals(vyAdress('tutor', 'betalning'), `${SAJT}/larare#lektioner/pass`);
 });
 
+Deno.test('ett fakturapass får inget kortmejl (Fas 14.6)', () => {
+  for (const typ of ['pass_bekraftat', 'paminnelse', 'pass_nytt'] as const) {
+    const familj = rendera(typ, 'parent', { data: { ...SMUTSIG, status: 'confirmed', betalsatt: 'faktura' } });
+    assertStringIncludes(familj.text, 'månadens faktura', typ);
+    assertEquals(familj.text.includes('med kort'), false, `${typ} ber en fakturafamilj betala med kort`);
+    assertEquals(familj.text.includes('Ett pass som inte är betalt hålls inte'), false, typ);
+    assertEquals(familj.text.includes('#betalning'), false, `${typ} leder till betalningen`);
+
+    const hjalpare = rendera(typ, 'tutor', { data: { ...SMUTSIG, status: 'confirmed', betalsatt: 'faktura' } });
+    assertEquals(hjalpare.text.includes('faktura'), false, `${typ} till studiehjälparen nämner fakturan`);
+  }
+  // En okänd kod är samma sak som ingen kod: kortmejlet.
+  assertStringIncludes(rendera('pass_bekraftat', 'parent', { data: { ...SMUTSIG, betalsatt: 'swish' } }).text, 'med kort');
+});
+
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {
   const m = rendera('meddelande', 'parent');
   assertStringIncludes(m.text, 'Du får det här för att du har ett konto på Nextrum');

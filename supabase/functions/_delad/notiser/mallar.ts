@@ -31,6 +31,12 @@
 // låtit som en ny räkning. Studiehjälparen får ingenting om
 // betalningen: det är familjens sak, och studiehjälparvyn visar läget
 // när spärren är på.
+//
+// ETT FAKTURAPASS SÄGER FAKTURA (Fas 14.6). Har familjen valt faktura
+// för passet bär datan koden betalsatt = 'faktura', och då säger mejlet
+// att passet kommer med på månadens faktura i stället för att be
+// familjen betala med kort. Knappen går till passet, inte till
+// betalningen: det finns inget att betala där.
 // ============================================================
 
 import type { Avbokningsskal, MejlbarTyp, RenData, Roll } from './typer.ts';
@@ -74,6 +80,14 @@ const SVARA = 'Svara ja eller nej i Nextrum.';
    något annat än sidorna. */
 const HALLS_INTE = 'Ett pass som inte är betalt hålls inte.';
 const BETALA = `Betala det med kort i Nextrum senast innan det börjar, om ni inte redan har gjort det. ${HALLS_INTE}`;
+const FAKTURA = 'Ni har valt faktura, så passet kommer med på månadens faktura från Nextrum.';
+
+/** Vad familjen ska göra med betalningen, och vart knappen går. */
+function betalning(m: MallIn): { mening: string; knapp: string; mal: Mal } {
+  return m.d.betalsatt === 'faktura'
+    ? { mening: FAKTURA, knapp: 'Visa passet', mal: 'pass' }
+    : { mening: BETALA, knapp: 'Gå till betalningen', mal: 'betalning' };
+}
 
 /**
  * Skälet med våra egna ord. Databasen skickar bara koden, och ett
@@ -112,26 +126,28 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
   pass_nytt(m) {
     const nar = narText(m.d.datum, m.d.tid);
     const svara = m.d.status === 'requested';
+    const b = betalning(m);
     return {
       amne: medNar(svara ? 'Nytt pass att svara på' : 'Nytt pass bokat', nar),
       rubrik: svara ? 'Ett nytt pass väntar på ditt svar' : 'Ett nytt pass är bokat',
       mening: svara
         ? `Passet${med(m)} är inte bekräftat än. ${SVARA}`
-        : m.roll === 'tutor' ? `Passet${med(m)} är bokat hos dig.` : `Passet${med(m)} är bokat. ${BETALA}`,
-      knapp: svara ? 'Svara i Nextrum' : m.roll === 'parent' ? 'Gå till betalningen' : 'Visa passet',
-      mal: !svara && m.roll === 'parent' ? 'betalning' : 'pass',
+        : m.roll === 'tutor' ? `Passet${med(m)} är bokat hos dig.` : `Passet${med(m)} är bokat. ${b.mening}`,
+      knapp: svara ? 'Svara i Nextrum' : m.roll === 'parent' ? b.knapp : 'Visa passet',
+      mal: !svara && m.roll === 'parent' ? b.mal : 'pass',
       fakta: passFakta(m, nar),
     };
   },
 
   pass_bekraftat(m) {
     const nar = narText(m.d.datum, m.d.tid);
+    const b = betalning(m);
     return {
       amne: medNar('Passet är bekräftat', nar),
       rubrik: 'Passet är bekräftat',
-      mening: `Tiden gäller och passet${med(m)} är bokat.` + (m.roll === 'parent' ? ` ${BETALA}` : ''),
-      knapp: m.roll === 'parent' ? 'Gå till betalningen' : 'Visa passet',
-      mal: m.roll === 'parent' ? 'betalning' : 'pass',
+      mening: `Tiden gäller och passet${med(m)} är bokat.` + (m.roll === 'parent' ? ` ${b.mening}` : ''),
+      knapp: m.roll === 'parent' ? b.knapp : 'Visa passet',
+      mal: m.roll === 'parent' ? b.mal : 'pass',
       fakta: passFakta(m, nar),
     };
   },
@@ -214,7 +230,7 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
     return {
       amne: nar ? `Påminnelse: pass ${nar}` : 'Påminnelse om pass',
       rubrik: nar ? `Pass ${nar}` : 'Påminnelse om pass',
-      mening: `En påminnelse om passet${med(m)}.` + (m.roll === 'parent' ? ` ${BETALA}` : ''),
+      mening: `En påminnelse om passet${med(m)}.` + (m.roll === 'parent' ? ` ${betalning(m).mening}` : ''),
       knapp: 'Visa passet',
       mal: 'pass',
       fakta: passFakta(m, narText(m.d.datum, m.d.tid)),

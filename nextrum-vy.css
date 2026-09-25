@@ -1490,6 +1490,22 @@ section[data-sek]{overflow-anchor:none}
 .ps-knappar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ps-knappar .btn{text-decoration:none}
 
+/* Ett andra val under knapparna (Fas 14.6): "Betala med faktura i
+   stället" under kortknappen. En textknapp, inte en knapp i raden: det
+   är ett alternativ till det första steget, och en helbreddsknapp till
+   på en telefon hade sett ut som ett andra steg. Samma utseende i
+   listan Att betala, där den står under raden. */
+.ps-alt{margin-top:10px;font-size:.86rem;color:var(--bl-2)}
+.val-lank{
+  appearance:none;background:none;border:0;padding:4px 0;margin:0;
+  font:inherit;font-size:.86rem;color:var(--bl);cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;
+}
+.val-lank:hover{color:var(--acc)}
+.val-lank:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.val-lank[aria-busy="true"]{opacity:.6;cursor:progress}
+.pass-atg .val-lank{flex-basis:100%;text-align:left}
+
 .ps-kortrad{
   margin-top:18px;display:grid;gap:12px;
   grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));

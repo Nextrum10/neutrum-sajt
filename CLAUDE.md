@@ -85,8 +85,8 @@ En studiehjälpare syns publikt först när admin satt läget till
 | pass | ett bokat tillfälle (`bookings`). Hela timmar, 1–3 |
 | rapport | `lesson_reports`. **Passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
-| betalning | vad familjen betalat för ett pass: med kort, per pass, före passet (`bookings.betalning_status`, `betalt_ore`) |
-| faktura | historik sedan Fas 14.2 (`invoices`). Familjen får ingen ny |
+| betalning | vad familjen betalat för ett pass: med kort, per pass, före passet (`bookings.betalning_status`, `betalt_ore`). Eller mot faktura, när flaggan `faktura` är på (Fas 14.6) |
+| faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, avstängt tills bolaget och Wint finns. Skickas från Wint, aldrig härifrån |
 | tjänst | rad i `tjanster`. `aktiv` avgör vad som syns, inget annat |
 
 ### Siffror som måste stämma överallt
@@ -104,6 +104,11 @@ En studiehjälpare syns publikt först när admin satt läget till
   löftet ("efterskott", "10 dagars …") i allt som serveras, och körs i
   CI. **En betalning som tas på ett annat sätt än villkoren lovar är en
   tvist, inte ett skrivfel.**
+
+  Fakturan (Fas 14.6) ändrar inte meningen förrän flaggan `faktura`
+  slås på: då ska den säga att familjen kan välja faktura, tio dagar,
+  utan avgift, och kontrollen få den nya meningen i samma ändring.
+  DEPLOY-BETALNING.md 9.11 har listan över alla ställen.
 - **Den 25:e** får studiehjälparen betalt, i en klump för månadens
   rapporterade pass (`payouts`). Det är en lön, inte en andel av varje
   kortbetalning.
@@ -350,15 +355,16 @@ Tabeller: `profiles`, `students`, `tutor_profiles`, `tutor_availability`,
 `student_notes`, `messages`, `leads`, `applications`,
 `contact_messages`, `invoices`, `invoice_lines`, `payouts`,
 `payout_lines`, `tjanster`, `prissattning`, `rabattkoder`,
-`integrationer`, `fortnox_token`, `notis_konfig`, `klientfel`,
+`integrationer`, `notis_konfig`, `klientfel`,
 `agent_korningar`, `agent_steg`, `admin_noteringar`, `foretagsfakta`,
 och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
 `kund_skatteuppgifter`. Fas 8–9 la till `ai_forslag`, `ai_konfig` och
 `handlingar`. Fas 13.2 la till `biblioteksmaterial`. Fas 15.3 la till
 `progress_historik` (skrivs bara av en trigger; ingen skrivpolicy).
 Fas 14.3 la till `stripe_tvister` (skrivs bara av `stripe-webhook`,
-läses bara av admin). Runda 2 la till notisernas sju: `notiser` (i vyn),
-`notis_utskick` (kön), `notis_val` (av och på per person, typ och
+läses bara av admin). Fas 14.6 la till `faktura_sparr` (admin skriver,
+familjen läser sin egen rad). Fas 14.8 tog bort `fortnox_token`.
+Runda 2 la till notisernas sju: `notiser` (i vyn), `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
 `notis_fel` — plus `flaggor`, som är strömbrytarna för det som
 väntar på ett beslut om affär, juridik eller pengar.
@@ -672,7 +678,7 @@ gång till. **Kontrollerat 2026-09-23, med prov mot driften:**
 
 | Varning | Varför den är väntad |
 |---|---|
-| `rls_enabled_no_policy` på `notis_konfig`, `fortnox_token`, `kund_skatteuppgifter`, `stripe_handelser` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
+| `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
 | 23 SECURITY DEFINER-funktioner nåbara för `authenticated` | Alla fjorton adminfunktioner kontrollerar `is_admin()` internt. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
@@ -737,8 +743,8 @@ tillbaka en kopia.**
 
 | Funktion | Gör | Anropas av |
 |---|---|---|
-| `fakturering` | Månadskörningen: underlag per studiehjälpare, och en lista över pass som hölls utan att betalas. **Skapar ingen faktura sedan Fas 14.2** | Schema (`x-fakturering-nyckel`) eller admin |
-| `faktura-utskick` | Skickar en äldre faktura. **Mejlet först, statusen sedan.** Inga nya skapas sedan Fas 14.2, så den har bara historiken kvar | Knapp under Äldre fakturor |
+| `fakturering` | Månadskörningen: underlag per studiehjälpare, ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Wint för hand | Schema (`x-fakturering-nyckel`) eller admin |
+| `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Wint | Knapp under Ekonomi → Utbetalningar |
 | `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
 | `pass-notis`, `meddelande-notis` | **Anropas inte längre.** Se nedan | — |
@@ -751,6 +757,7 @@ tillbaka en kopia.**
 | `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv | Knappen på passet i föräldravyn |
 | `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser` | Stripe |
 | `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
+| `stripe-avstamning` | Hämtar avgift, netto och läge (test eller skarpt) för betalningar som saknar dem (Fas 14.7). Högst femtio per tryck. Skriver bara de kolumnerna | Knappen Hämta från Stripe under Ekonomi → Kortbetalningar |
 | `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Ekonomi → Kortbetalningar |
 
 `supabase/config.toml` bär `verify_jwt = false` för de sju funktioner
@@ -1004,23 +1011,81 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 ## 11. Vad som inte är byggt
 
 - **Betalning.** Familjen betalar varje pass med kort, **före passet**
-  (Fas 14.2). Månadsfakturan till familjen är riven: `fakturering`
-  skapar bara studiehjälparens underlag och räknar i sitt svar upp pass
-  som hölls utan att betalas (`obetalda`). Fakturor som redan fanns står
-  kvar som historik (det fanns noll), och `faktura-utskick` har bara dem
-  kvar att skicka.
+  (Fas 14.2). Faktura finns sedan Fas 14.6 som andra betalsätt, **byggt
+  och avstängt** (se nedan). `fakturering` skapar studiehjälparens
+  underlag, ett fakturautkast per familj som valt faktura, och räknar
+  i sitt svar upp pass som hölls utan att betalas (`obetalda`).
+  `faktura-utskick` skickar bara underlag till studiehjälparna sedan
+  Fas 14.6: en faktura skickas från Wint, aldrig härifrån.
 
-  **Kortvägen är driftsatt men har aldrig gått hela vägen.** Endpointen
-  finns hos Stripe (sandlådan), och `STRIPE_WEBHOOK_SECRET` är satt och
-  provad: en påhittad signatur faller på tidsstämpeln, inte på
-  hemligheten. Men `stripe_handelser` är tom och inget pass har
-  `betald_at` (kontrollerat 2026-09-24). Ingen leverans från Stripe har
-  kommit fram, inte ens en testhändelse. `basil`, som `_delad/stripe.ts`
-  pinnar, gick inte att välja när endpointen skapades, så den står
-  troligen på förvalet `dahlia` (DEPLOY-BETALNING.md förklarar varför
-  det sannolikt håller, och vad som ska kontrolleras). Provbetalningen i
-  `DEPLOY-BETALNING.md` avsnitt 9 är det första som ska göras, före
-  allt annat i den här listan.
+  **Kortvägen har gått hela vägen i testläge** (2026-09-25). Två
+  provbetalningar kom fram som `checkout.session.completed`, och båda
+  passen står som betalda. `basil`, som `_delad/stripe.ts` pinnar, gick
+  inte att välja när endpointen skapades, men fälten webhooken läser
+  kom fram ändå. Två saker saknades, och båda lagades i Fas 14.7:
+
+  - **Stripes avgift kom inte med.** Balanstransaktionen, med avgiften,
+    finns ofta inte ÄN när sessionen fullbordas. Webhooken tar nu emot
+    `charge.updated`, som kommer när den finns, och `stripe-avstamning`
+    (knappen **Hämta från Stripe** under Kortbetalningar) hämtar den i
+    efterhand för betalningar som kom in före.
+  - **Test och skarpt gick inte att skilja åt.** `livemode` sparas nu i
+    `bookings.stripe_skarp` och `stripe_handelser.skarp`, och adminvyn
+    märker testbetalningarna. Ett testpass i den riktiga databasen hade
+    annars sett ut som intäkt.
+
+  Webhooken tog dessutom inte emot en betalning efter ett nekat kort:
+  `misslyckad` stod inte bland lägena den skrev över, så pengarna drogs
+  och passet stod obetalt. Nu gör den det (`TAR_EMOT_BETALNING`).
+
+  **Endpointen hos Stripe måste ha `charge.updated` och
+  `charge.dispute.updated` valda.** Kontrollera Stripe säger vilka som
+  saknas.
+
+  **Fas 14.6a stängde ett hål i INSERT.** `skydda_bokningsfalt` prövade
+  betalningskolumnerna bara vid UPDATE, så en familj kunde skapa ett
+  pass som redan stod `betald`. Ett nytt pass föds nu obetalt, och
+  `betalning_status` och `betald_at` står i auditloggen.
+
+  **Faktura som betalsätt (Fas 14.6) är byggt och AV.** Leo
+  2026-09-25: familjen ska kunna välja faktura under kortknappen, och
+  fakturan och bokföringen sköts i Wint.
+
+  - **Strömbrytaren är flaggan `faktura`** i `flaggor`. Dess
+    `vantar_pa` säger vad den väntar på: bolaget registrerat och ett
+    Wint-konto med bankgiro, de publika texterna, trettio dagars
+    avisering till befintliga familjer och påminnelser utan avgift.
+    DEPLOY-BETALNING.md 9.11 är checklistan. **De publika texterna
+    lovar fortfarande bara kort, med flit**: ett löfte om ett betalsätt
+    som inte går att välja är samma fel som startererbjudandet. De
+    ändras i en egen liten ändring samma dag som flaggan slås på.
+  - **Familjen väljer per pass.** `betalning_status = 'faktura'`.
+    `skydda_bokningsfalt` släpper igenom `ingen`/`vantar`/`misslyckad`
+    → `faktura` när `intern.faktura_tillaten()` säger ja, och
+    `faktura` → `ingen` så länge passet inte står på en fakturarad.
+    Kortspärren godtar `faktura`, och `stripe-checkout` vägrar ett
+    fakturapass.
+  - **Sanningen om ett fakturapass står på fakturan.** Passet står kvar
+    som `faktura` också när fakturan är betald; `invoices.status`, nådd
+    genom `invoice_lines`, säger om den är det.
+  - **Alla familjer får välja, men admin kan spärra en** (`faktura_sparr`,
+    under familjens Ekonomi). Leo sa alla; spärren finns för familjen
+    som inte betalar sin förra faktura.
+  - **Wint är inte kopplat.** Månadskörningen skapar ett utkast per
+    familj. Admin lägger in det i Wint för hand, skriver in Wints
+    fakturanummer (`wint_fakturanummer`) och förfallodag, och markerar
+    fakturan betald när Wint visar det. Wint har ett odokumenterat API,
+    inga webhookar och ingen sandlåda; en automatisk väg hade varit
+    oprovbar.
+  - **Tio dagar, inga avgifter.** `BETALNINGSVILLKOR_DAGAR` står i
+    `nextrum-config.js` och `_delad/konstanter.ts`, och
+    `kolla-betalningsvillkor.py` jämför dem. Villkoren nämner ingen
+    påminnelseavgift, och då får ingen tas ut: Wints påminnelser ska stå
+    utan avgift.
+  - **Två nya avvikelser.** `faktura_saknas`: ett hållet fakturapass som
+    inte hamnat på någon faktura när månaden är slut.
+    `betald_och_fakturerad`: betalt med kort OCH på en faktura, vilket
+    bara händer om en kassa stod öppen när familjen bytte till faktura.
 
   **Det behöver inte gissas längre (Fas 14.3).** Miljön som skrev
   betalkoden når inte `api.stripe.com`, så nyckeln stod som "okänd
@@ -1081,10 +1146,12 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   - **Ingen avbokningsavgift.** Villkoren lovar hela beloppet tillbaka
     för ett pass som aldrig hölls. En avgift för sena avbokningar är ett
     nytt villkor, inte en inställning.
-  - **Fortnox.** Ingenting når bokföringen än. När det byggs: en
-    verifikation per betalt pass, spårad med
-    `stripe_balanstransaktion_id`, och Stripes utbetalning till banken
-    som en egen händelse, netto efter avgiften.
+  - **Bokföringen i Wint är för hand.** Ingenting härifrån når den.
+    Stripes utbetalning till banken är netto efter avgiften, i en klump
+    för flera pass; avgiften och nettot per pass står under
+    Kortbetalningar. Bestäm med Wint och revisorn hur den bokas innan
+    första skarpa betalningen. Fortnox togs bort i Fas 14.8: det
+    kopplades aldrig, och `fortnox_token` var tom.
 
   **Fas 14.3 tog säljarens MVP-lista som utgångspunkt** (punkterna står
   i DEPLOY-BETALNING.md 9.8). Utöver tvisterna och kontrollen ovan:
@@ -1108,11 +1175,13 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
     och **bara webhooken** skriver `betalt_ore`, ur sessionens
     `amount_total`. Skiljer de sig betalade familjen en äldre session
     som låg kvar öppen med ett annat belopp.
-  - **`stripe_balanstransaktion_id` finns bara att hämta i stunden.**
-    Stripe betalar ut i klumpar, netto efter avgift: ingen bankrad
-    motsvarar ett pass. txn_-id:t är enda vägen dit, och avgiften
-    (`stripe_avgift_ore`) finns ingen annanstans i systemet. Hämtas den
-    inte när betalningen kommer in går den inte att få tag på sedan.
+  - **`stripe_balanstransaktion_id` är vägen till avgiften.** Stripe
+    betalar ut i klumpar, netto efter avgift: ingen bankrad motsvarar
+    ett pass. txn_-id:t är enda vägen dit, och avgiften
+    (`stripe_avgift_ore`) finns ingen annanstans i systemet. Här stod
+    förut att den bara gick att hämta i stunden. Det var fel: den hänger
+    på chargen och går att hämta när som helst. Det som var sant är att
+    den ofta inte finns ÄN när sessionen fullbordas (Fas 14.7).
   - **Ett betalt pass går inte att avboka från en vy.**
     `skydda_bokningsfalt` hade `if new.status = 'cancelled' then null` —
     avbokning var det enda statusbytet som inte prövades alls. En familj
@@ -1127,10 +1196,11 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   beskriver den betalning som gäller NU, och en gammal återbetalning
   hör till den gamla chargen.
 
-  **Föräldravyn visar bara kortet** (Leos val 2026-09-24: "bara kort,
-  som Fas 14 sa"). Betalning listar pass att betala och betalda pass,
-  båda ritade ur passen; ingen fakturahistorik, eftersom det aldrig
-  skickades en enda faktura. Ett betalt pass har ingen
+  **Föräldravyn visar kortet först** (Leos val 2026-09-24: "bara kort,
+  som Fas 14 sa"; fakturan kom till 2026-09-25). Betalning listar pass
+  att betala och betalda pass, båda ritade ur passen. Med flaggan
+  `faktura` på står "Betala med faktura i stället" under kortknappen,
+  och rutan Faktura visar familjens fakturor. Ett betalt pass har ingen
   avbokningsknapp i någon vy, inte heller "Avböj" eller "Dra tillbaka"
   på en flyttad tid, eftersom databasen nekar det. Med spärren på går
   också ett passerat, obetalt pass att betala: annars hade ett pass som
@@ -1138,10 +1208,9 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   rapportera och en familj som inte får betala.
 
   `SKISS-BETALNING-STRIPE.md` beskriver hur beslutet gick.
-- **Google Workspace och Fortnox.** Statusflik finns, koppling saknas.
-  `INTEGRATIONER.md` har hela receptet, inklusive fällan att Fortnox
-  roterar refresh-token vid varje användning — sparas inte det nya
-  blir ni utlåsta om en månad.
+- **Google Workspace.** Statusflik finns, koppling saknas.
+  `INTEGRATIONER.md` har receptet. Fortnox stod här till Fas 14.8;
+  bokföringen och fakturorna sköts i Wint, utan koppling hit.
 - **Bakgrundskontroller.** Godkännandet är en knapp, inte en process.
   Fas 13.1 gav rekryteringen en ORDNING (kontakt, digitalt möte,
   utbildning, poolen) med skälet till varje steg skrivet i vyn, men
