@@ -90,6 +90,22 @@ betala, skriva rapporten. Föreslå ny tid och avboka ligger på sidan.
 En studiehjälpare syns publikt först när admin satt läget till
 **Godkänd**.
 
+**Omdömen hittas aldrig på** (2026-09-25). Falska
+konsumentrecensioner står på marknadsföringslagens svarta lista sedan
+1 september 2022, och den som visar recensioner måste säga om och hur
+de kontrolleras. Röster på startsidan var tre tomma platshållare; tills
+riktiga omdömen finns står där ett brev undertecknat Leo och
+Alexandar, under rubriken "Innan de första omdömena". Vad som gäller
+för ett riktigt omdöme står i kommentaren över sektionen i
+`index.html`. Google-recensionen frågas efter i studievyn
+(`ritaRecension`) så fort `GOOGLE_RECENSION_URL` är satt, och alla
+familjer med två rapporter får samma fråga: att bara skicka de nöjda
+vidare förbjuder Google. `tutor_reviews` (v7) är omdömen om
+studiehjälparen, inte om Nextrum, och ska aldrig bli publik, för
+studiehjälparna är ofta sexton. Den har noll rader och ingen vy skriver
+dit, men insert-policyn prövar inte att `tutor_id` är passets
+studiehjälpare: laga det innan något gör det.
+
 ### Ordlistan (använd den, i kod och i text)
 
 | Ord | Betyder |
