@@ -51,15 +51,17 @@ Ingen katalog att bläddra i.
 
 Ordlista: studiehjälpare (aldrig "lärare" utåt), pass, rapport, underlag,
 betalning, tjänst. Faktura är sedan Fas 14.6 ett betalsätt familjen kan
-välja per pass, avstängt (flaggan `faktura`) tills bolaget och Wint finns.
+välja per pass, avstängt (flaggan `faktura`) tills bolaget och
+Fortnox-kontot finns.
 
 Två siffror och ett löfte står på många ställen samtidigt: 379 kr/tim,
 69 kr/tim fast tillägg för flera barn (tak tre, alltså 448 för tre barn,
 inte 517), och att familjen betalar varje pass med kort, före passet:
 ett pass som inte är betalt hålls inte. Studiehjälparen får betalt den
-25:e. Belopp lagras i ören överallt. Planerna och klippkorten (Fas 16.1)
-prissätts bara i vyn `erbjudanden_pris`, och inom ångerfristen räknas
-använda timmar till det betalda priset, inte till 379 kr.
+25:e; blir hen anställd läggs underlaget in i Fortnox Lön för hand, men
+anställningsformen är inte avgjord. Belopp lagras i ören överallt. Planerna och klippkorten (Fas 16.1) prissätts bara i vyn
+`erbjudanden_pris`, och inom ångerfristen räknas använda timmar till det
+betalda priset, inte till 379 kr.
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
@@ -316,7 +318,7 @@ charge.updated, eller med knappen Hämta från Stripe (Fas 14.7), och
 testbetalningar märks. Studiehjälparens underlag betalas den 25:e från
 banken, aldrig genom Stripe. Faktura som betalsätt (Fas 14.6) är byggt
 och AV: familjen väljer det per pass, månadskörningen gör ett utkast per
-familj, admin lägger in det i Wint för hand. Tio dagar, inga avgifter.
+familj, admin lägger in det i Fortnox för hand. Tio dagar, inga avgifter.
 De publika texterna lovar bara kort tills flaggan slås på
 (DEPLOY-BETALNING.md 9.11). Spärren "ingen betalning, inget pass"
 (flaggan `kortsparr`) står av. En korttvist
@@ -324,8 +326,12 @@ har en sista dag att svara, sparas i `stripe_tvister` och blir en
 uppgift; att svara är en människas jobb (DEPLOY-BETALNING.md 9.10).
 Startererbjudandet på prissidan
 finns inte i koden, och priset räknas när familjen betalar fast
-villkoren lovar priset vid bokningen. Bokföringen sköts i Wint, för hand;
-Fortnox togs bort i Fas 14.8. Google Workspace ger bara Meet-länkar till
-onlinepassen (Fas 18.1) och är inte kopplat förrän stegen i
-INTEGRATIONER.md är gjorda. Vidare: bakgrundskontroller, skatt och anställning av minderåriga, riktiga foton
+villkoren lovar priset vid bokningen. Bokföringen, fakturorna och lönen
+sköts i Fortnox, för hand, med flit utan koppling hit (Fas 14.9 bytte
+Wint mot Fortnox). Ingen API-koppling förrän handarbetet faktiskt kostar
+tid. Stripe ska bokföras genom en färdig integration som kopplas i
+Fortnox, utanför koden, före första skarpa betalningen och med revisorn.
+Google Workspace ger bara Meet-länkar till onlinepassen (Fas 18.1) och
+är inte kopplat förrän stegen i INTEGRATIONER.md är gjorda. Vidare:
+bakgrundskontroller, skatt och anställning av minderåriga, riktiga foton
 på studiehjälparna.

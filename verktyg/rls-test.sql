@@ -2801,8 +2801,8 @@ insert into public.invoices (id, parent_id, period, status, belopp_ore)
 values ('00000000-0000-4000-8000-00000000f6a3', '00000000-0000-4000-8000-0000000000f1',
         (date_trunc('month', now() at time zone 'Europe/Stockholm') - interval '1 month')::date, 'utkast', 37900);
 
-select pg_temp.prova('14.6 admin skriver in Wints fakturanummer', '00000000-0000-4000-8000-0000000000ad',
-  array[$q$update public.invoices set wint_fakturanummer = '1042', status = 'skickad',
+select pg_temp.prova('14.6 admin skriver in fakturanumret från Fortnox', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.invoices set fortnox_fakturanummer = '1042', status = 'skickad',
             skickad_at = now(), forfaller = current_date + 10
           where id = '00000000-0000-4000-8000-00000000f6a3'$q$],
   'ok');
@@ -2814,7 +2814,7 @@ declare kod text;
 begin
   begin
     perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
-    update public.invoices set wint_fakturanummer = '<script>'
+    update public.invoices set fortnox_fakturanummer = '<script>'
      where id = '00000000-0000-4000-8000-00000000f6a3';
     raise exception using errcode = 'P0001', message = 'gick igenom';
   exception when others then kod := sqlstate;

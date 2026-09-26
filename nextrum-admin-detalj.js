@@ -474,7 +474,7 @@
       + (fakturor.length
         ? fakturor.map(f => dpRad(
             NX.MANADER[Number(String(f.period).slice(5, 7)) - 1] + ' ' + String(f.period).slice(0, 4),
-            kronor(f.belopp_ore) + (f.wint_fakturanummer ? ' · faktura ' + f.wint_fakturanummer : '')
+            kronor(f.belopp_ore) + (f.fortnox_fakturanummer ? ' · faktura ' + f.fortnox_fakturanummer : '')
               + (f.forfaller ? ' · förfaller ' + kortDatum(f.forfaller) : ''),
             läge(FAKT_LAGE, NXBetalning.fakturaLage(f)))).join('')
         : tomt('Inga fakturor', 'Familjen betalar med kort, eller har inga fakturapass från en avslutad månad än.'));

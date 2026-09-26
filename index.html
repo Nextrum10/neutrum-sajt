@@ -54,8 +54,8 @@
      sajtens. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
-<link rel="stylesheet" href="nextrum-cinema.css?v=23df350f">
-<link rel="stylesheet" href="nextrum-start.css?v=368bf295">
+<link rel="stylesheet" href="nextrum-cinema.css?v=79b10f40">
+<link rel="stylesheet" href="nextrum-start.css?v=7d02dde0">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -973,41 +973,48 @@
 
 <!-- ==========================================================
      12 — RÖSTER
-     Permanent platshållare. Vi hittar inte på omdömen — så fort
-     riktiga finns ersätter de den här ytan.
+     Här står inga omdömen än, och vi hittar inte på några. Falska
+     konsumentrecensioner står på marknadsföringslagens svarta lista
+     sedan 1 september 2022, och på en sajt vars hela produkt är
+     förtroende kostar en påhittad femma mer än den ger.
+
+     Tills riktiga finns står här ett brev från de två som driver
+     Nextrum, samma namn som i villkoren, och rubriken säger vad det
+     är. Förut stod här tre tomma kort med "här kommer det första
+     omdömet att stå": ärliga, men de sa till en förälder att ingen
+     använt oss än.
+
+     Ett riktigt omdöme blir en blockquote.nx-rost under brevet, med
+     personens lov (för ett barn: förälderns), förnamn och roll.
+     Aldrig ett barns namn, aldrig en studiehjälpares efternamn.
+     Visas omdömen ska sidan också säga hur de samlats in, för det
+     kräver samma lag. Samma ändring i en/index.html, tagg för tagg.
      ========================================================== -->
 <section class="nx-wrap-bred nx-sek" id="rost">
   <div class="nx-head split" data-stig>
     <div>
-      <span class="nx-et acc">Röster</span>
-      <h2 class="nx-d2" style="margin-top:20px">Vad säger våra användare?</h2>
+      <span class="nx-et acc">Från oss</span>
+      <h2 class="nx-d2" style="margin-top:20px">Innan de första omdömena.</h2>
     </div>
     <div class="nx-head-aside">
-      <p class="nx-lede">Vi är precis i början. Våra första familjer och studiehjälpare blir också
-        de första som får berätta om sin upplevelse. Tills dess visar vi hellre ingenting än
-        något påhittat.</p>
+      <p class="nx-lede">Vi är precis i början och har inga omdömen att visa än. De första kommer
+        från riktiga familjer och hamnar här när de finns, med deras tillåtelse. Tills dess får ni
+        höra det från oss, med namn.</p>
     </div>
   </div>
 
   <div class="nx-roster" id="reviews">
-    <article class="nx-rost-plats" data-stig>
-      <span class="rl">Förälder</span>
-      <div class="nx-rost-rader" aria-hidden="true"><i></i><i></i><i></i></div>
-      <p class="rt">Här kommer det första omdömet från en förälder att stå.</p>
-    </article>
-    <article class="nx-rost-plats" data-stig data-fördröj="1">
-      <span class="rl">Elev</span>
-      <div class="nx-rost-rader" aria-hidden="true"><i></i><i></i><i></i></div>
-      <p class="rt">Här kommer det första omdömet från en elev att stå.</p>
-    </article>
-    <article class="nx-rost-plats" data-stig data-fördröj="2">
-      <span class="rl">Studiehjälpare</span>
-      <div class="nx-rost-rader" aria-hidden="true"><i></i><i></i><i></i></div>
-      <p class="rt">Här kommer det första omdömet från en studiehjälpare att stå.</p>
-    </article>
+    <blockquote class="nx-rost nx-rost-brev nx-bubbla" data-stig data-fördröj="1">
+      <p>Vi startade Nextrum för att den som nyss själv kämpat med en kurs ofta är den som
+        förklarar den bäst. Därför är våra studiehjälpare unga, och vi väljer ut varenda en
+        själva. Varje familj får en person att lära känna, en studieplan och en rapport efter
+        varje pass, så att ni ser vad som händer. Och blir något fel vill vi höra det direkt, på
+        <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</p>
+      <cite><b>Leo och Alexandar</b> <span>som driver Nextrum</span></cite>
+    </blockquote>
   </div>
 
-  <div class="nx-cta-rad" data-stig data-fördröj="3">
+  <div class="nx-cta-rad" data-stig data-fördröj="2">
     <a class="nx-lank" href="/intresseanmalan">Bli en av de första
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
     </a>
@@ -1188,7 +1195,7 @@
 <!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
      för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
 <script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="nextrum-config.js?v=86b7287b"></script>
+<script src="nextrum-config.js?v=37357abd"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=f81a0750"></script>

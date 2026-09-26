@@ -45,10 +45,11 @@
      förut. Kortet lovade länge kalender och Gmail; ett kort som lovar
      det som inte byggts är ett kort ingen kan lita på.
 
-     Fortnox stod här till Fas 14.8. Det kopplades aldrig, och Nextrum
-     sköter fakturor och bokföring i Wint. Wint får inget kort: det
-     finns ingen koppling att rapportera om, och ett kort som står på
-     "Inte kopplad" för alltid är brus. */
+     Fortnox hade ett kort här till Fas 14.8, som tog bort den aldrig
+     gjorda kopplingen (fortnox_token) när bokföringen skulle ligga i
+     Wint. Fas 14.9 bytte Wint mot Fortnox, utan koppling. Fortnox får
+     ändå inget kort: det finns ingen koppling att rapportera om, och
+     ett kort som står på "Inte kopplad" för alltid är brus. */
   const TJANSTER = {
     google_workspace: {
       namn: 'Google Workspace',
@@ -639,7 +640,7 @@
         ['Bolagsfakta', 'Organisationsnummer, moms, F-skatt och hur studiehjälparna anlitas.', '#agenter/bolaget'],
         ['Tjänster och priser', 'Pris, ersättning, RUT-andel och villkor per tjänst.', '#katalog/tjanster'],
         ['Rabattkoder', 'Koder, värden och giltighet.', '#katalog/rabattkoder'],
-        ['Integrationer', 'Google Meet-länkar till onlinepassen. Bokföringen sköts i Wint, utan koppling hit.', '#system/integrationer'],
+        ['Integrationer', 'Google Meet-länkar till onlinepassen. Bokföringen sköts i Fortnox, utan koppling hit.', '#system/integrationer'],
         ['Adminanvändare', 'Vem som ser den här vyn.', '#system/adminanvandare']
       ];
       pekare.innerHTML = PEKARE.map(([namn, text, mål]) =>

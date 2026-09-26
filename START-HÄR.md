@@ -146,7 +146,8 @@ Postgres RLS kan inte begränsa enskilda kolumner, så lösningen är två trigg
   gjort stegen hos Google i `INTEGRATIONER.md` och tryckt **Koppla
   Google** under System → Integrationer. Tills dess står det som förut
   att länken kommer i meddelanden. Kalendern och inbjudningarna valdes
-  bort. Bokföringen och fakturorna sköts i Wint, för hand.
+  bort. Bokföringen, fakturorna och lönen sköts i Fortnox, utan
+  koppling hit (Fas 14.9).
 - **Bilder.** Studiehjälparna visas med en generisk siluett, inte riktiga foton.
 - **Skatt och anställning av minderåriga.** Fortfarande olöst. Prata med en revisor innan första utbetalningen, inte efter.
 - **Bakgrundskontroller.** Ni godkänner manuellt, men det finns ingen process bakom knappen än.

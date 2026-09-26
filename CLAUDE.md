@@ -100,6 +100,22 @@ betala, skriva rapporten. Föreslå ny tid och avboka ligger på sidan.
 En studiehjälpare syns publikt först när admin satt läget till
 **Godkänd**.
 
+**Omdömen hittas aldrig på** (2026-09-25). Falska
+konsumentrecensioner står på marknadsföringslagens svarta lista sedan
+1 september 2022, och den som visar recensioner måste säga om och hur
+de kontrolleras. Röster på startsidan var tre tomma platshållare; tills
+riktiga omdömen finns står där ett brev undertecknat Leo och
+Alexandar, under rubriken "Innan de första omdömena". Vad som gäller
+för ett riktigt omdöme står i kommentaren över sektionen i
+`index.html`. Google-recensionen frågas efter i studievyn
+(`ritaRecension`) så fort `GOOGLE_RECENSION_URL` är satt, och alla
+familjer med två rapporter får samma fråga: att bara skicka de nöjda
+vidare förbjuder Google. `tutor_reviews` (v7) är omdömen om
+studiehjälparen, inte om Nextrum, och ska aldrig bli publik, för
+studiehjälparna är ofta sexton. Den har noll rader och ingen vy skriver
+dit, men insert-policyn prövar inte att `tutor_id` är passets
+studiehjälpare: laga det innan något gör det.
+
 ### Ordlistan (använd den, i kod och i text)
 
 | Ord | Betyder |
@@ -109,7 +125,7 @@ En studiehjälpare syns publikt först när admin satt läget till
 | rapport | `lesson_reports`. **Passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
 | betalning | vad familjen betalat för ett pass: med kort, per pass, före passet (`bookings.betalning_status`, `betalt_ore`). Eller mot faktura, när flaggan `faktura` är på (Fas 14.6) |
-| faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, avstängt tills bolaget och Wint finns. Skickas från Wint, aldrig härifrån |
+| faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, avstängt tills bolaget och Fortnox-kontot finns. Skickas från Fortnox, aldrig härifrån |
 | tjänst | rad i `tjanster`. `aktiv` avgör vad som syns, inget annat |
 
 ### Siffror som måste stämma överallt
@@ -134,7 +150,9 @@ En studiehjälpare syns publikt först när admin satt läget till
   DEPLOY-BETALNING.md 9.11 har listan över alla ställen.
 - **Den 25:e** får studiehjälparen betalt, i en klump för månadens
   rapporterade pass (`payouts`). Det är en lön, inte en andel av varje
-  kortbetalning.
+  kortbetalning. Blir studiehjälparna anställda läggs underlaget in i
+  Fortnox Lön för hand (Fas 14.9); anställningsformen är inte avgjord
+  (avsnitt 11).
 - **Erbjudandenas priser står i `erbjudanden_pris` och ingen
   annanstans.** Timpriset med rabatt avrundas nedåt till hel krona och
   summan är timpris gånger timmar (Fas 16.1d) — förut avrundades
@@ -189,7 +207,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
-| `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med |
+| `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med. Mejlen har sin egen kopia av paletten (`FARG` i `_delad/notiser/rendera.ts`) och följer INTE med av sig själva |
 | `nextrum-start.css` + `nextrum-start.js` | **Startsidan** (sv och en), efter cinema respektive före sidans eget skript, **och För elever & föräldrar**, som bara använder studievyns illustration ur dem. Rörelsen efter hero: ordfyllnaden, hållpunkterna 1–4, korten som stiger upp, det rullande bandet, bildväggen och studievyn som visar sig själv (en rundtur, men den går inte att klicka i). Skriptet startar av sig självt och skriver ingen text — allt man läser står i markupen, på båda språken |
 | `nextrum-admin-palett.css` | Bara `admin.html`, laddas **sist**. Sedan 2026-09-24 **ingen egen palett**: adminvyn ärver jordpaletten som de två andra vyerna. Filen bär bara `--fel`, `--ln-kontroll`, agentflikens `--acc-lugn` och felsemantiken |
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
@@ -425,7 +443,11 @@ och sedan Fas 5–7: `uppdrag`, `uppgifter`, `audit_logg`, `rut_tak`,
 `progress_historik` (skrivs bara av en trigger; ingen skrivpolicy).
 Fas 14.3 la till `stripe_tvister` (skrivs bara av `stripe-webhook`,
 läses bara av admin). Fas 14.6 la till `faktura_sparr` (admin skriver,
-familjen läser sin egen rad). Fas 14.8 tog bort `fortnox_token`.
+familjen läser sin egen rad). Fas 14.8 tog bort `fortnox_token`, som
+hörde till en Fortnox-koppling som aldrig gjordes, när bokföringen
+skulle ligga i Wint. Fas 14.9 bytte Wint mot Fortnox, utan koppling:
+`fortnox_token` kom inte tillbaka, och `invoices.wint_fakturanummer`
+heter `fortnox_fakturanummer`.
 Fas 16.1 la till `erbjudanden` (katalogen, alla läser) och `klippkort`
 (köpen: familjen läser sina, bara `service_role` skriver), med vyerna
 `erbjudanden_pris` och `klippkort_saldo`. Timmarna dras bara i
@@ -746,6 +768,21 @@ Nextrum som text bredvid, så att ett mejlprogram som blockerar bilder
 fortfarande visar avsändaren. Filen är undantagen i `.gitignore`; tas
 undantaget bort blir loggan en trasig bild i varje mejl.
 
+**Alla mejl vi skickar har samma skal** (2026-09-25): `skal()` i
+`_delad/notiser/rendera.ts`. Sajtens papper ända ut till kanten, ingen
+ram, kant eller mörkare yta runt brevet, loggan överst. Notismejlen,
+kvittot och ansökningsbeskeden går genom det via `renderaRam()`;
+underlaget i `faktura-utskick` och aviseringen i `lead-notis` anropar
+det direkt. Förut hade de två egna färger — underlaget en kant i en ton
+som inte fanns i paletten, aviseringen ingen alls — och ramen låg kvar
+på det gamla papperet samma dag som sajtens ljusnade. Papperet står på
+`body` för Apple Mail OCH som `bgcolor` på yttertabellen för Gmail, som
+kastar body-stilen: tas ett av dem bort blir det vitt i det programmet.
+Det vita som ändå syns runt ett mejl i Gmail på datorn är Gmails eget
+och går inte att nå inifrån ett mejl. Kontomejlen (bekräfta konto,
+inbjudan från `bjud-in`) skickas av Supabase Auth med mallar i
+dashboarden, inte härifrån, och har inte det här skalet.
+
 ---
 
 ## 6. Säkerhetsmodellen
@@ -893,8 +930,8 @@ tillbaka en kopia.**
 
 | Funktion | Gör | Anropas av |
 |---|---|---|
-| `fakturering` | Månadskörningen: underlag per studiehjälpare, ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Wint för hand | Schema (`x-fakturering-nyckel`) eller admin |
-| `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Wint | Knapp under Ekonomi → Utbetalningar |
+| `fakturering` | Månadskörningen: underlag per studiehjälpare, ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand | Schema (`x-fakturering-nyckel`) eller admin |
+| `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Fortnox | Knapp under Ekonomi → Utbetalningar |
 | `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
 | `pass-notis`, `meddelande-notis` | **Anropas inte längre.** Se nedan | — |
@@ -1171,7 +1208,7 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   underlag, ett fakturautkast per familj som valt faktura, och räknar
   i sitt svar upp pass som hölls utan att betalas (`obetalda`).
   `faktura-utskick` skickar bara underlag till studiehjälparna sedan
-  Fas 14.6: en faktura skickas från Wint, aldrig härifrån.
+  Fas 14.6: en faktura skickas från Fortnox, aldrig härifrån.
 
   **Kortvägen har gått hela vägen i testläge** (2026-09-25). Två
   provbetalningar kom fram som `checkout.session.completed`, och båda
@@ -1204,11 +1241,13 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 
   **Faktura som betalsätt (Fas 14.6) är byggt och AV.** Leo
   2026-09-25: familjen ska kunna välja faktura under kortknappen, och
-  fakturan och bokföringen sköts i Wint.
+  fakturan och bokföringen sköts i Wint. Samma dag byttes Wint mot
+  Fortnox (Fas 14.9), för att Wint blev för dyrt. Bokföringen,
+  fakturorna och lönen sköts nu i Fortnox.
 
   - **Strömbrytaren är flaggan `faktura`** i `flaggor`. Dess
     `vantar_pa` säger vad den väntar på: bolaget registrerat och ett
-    Wint-konto med bankgiro, de publika texterna, trettio dagars
+    Fortnox-konto med bankgiro, de publika texterna, trettio dagars
     avisering till befintliga familjer och påminnelser utan avgift.
     DEPLOY-BETALNING.md 9.11 är checklistan. **De publika texterna
     lovar fortfarande bara kort, med flit**: ett löfte om ett betalsätt
@@ -1226,17 +1265,20 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   - **Alla familjer får välja, men admin kan spärra en** (`faktura_sparr`,
     under familjens Ekonomi). Leo sa alla; spärren finns för familjen
     som inte betalar sin förra faktura.
-  - **Wint är inte kopplat.** Månadskörningen skapar ett utkast per
-    familj. Admin lägger in det i Wint för hand, skriver in Wints
-    fakturanummer (`wint_fakturanummer`) och förfallodag, och markerar
-    fakturan betald när Wint visar det. Wint har ett odokumenterat API,
-    inga webhookar och ingen sandlåda; en automatisk väg hade varit
-    oprovbar.
+  - **Fortnox är inte kopplat, med flit.** Månadskörningen skapar ett
+    utkast per familj. Admin lägger in det i Fortnox för hand, skriver
+    in fakturanumret i Fortnox (`fortnox_fakturanummer`) och
+    förfallodagen med **Lagd i Fortnox**, och markerar fakturan betald
+    när Fortnox visar det. Fortnox skickar fakturan. Fortnox har ett
+    dokumenterat API, vilket Wint inte hade, så en koppling för fakturor
+    och lönetransaktioner går att bygga senare. Den byggs först när
+    handarbetet faktiskt kostar tid: en koppling mot bokföringen som går
+    sönder tyst är värre än ingen.
   - **Tio dagar, inga avgifter.** `BETALNINGSVILLKOR_DAGAR` står i
     `nextrum-config.js` och `_delad/konstanter.ts`, och
     `kolla-betalningsvillkor.py` jämför dem. Villkoren nämner ingen
-    påminnelseavgift, och då får ingen tas ut: Wints påminnelser ska stå
-    utan avgift.
+    påminnelseavgift, och då får ingen tas ut: påminnelserna i Fortnox
+    ska stå utan avgift.
   - **Två nya avvikelser.** `faktura_saknas`: ett hållet fakturapass som
     inte hamnat på någon faktura när månaden är slut.
     `betald_och_fakturerad`: betalt med kort OCH på en faktura, vilket
@@ -1301,12 +1343,16 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   - **Ingen avbokningsavgift.** Villkoren lovar hela beloppet tillbaka
     för ett pass som aldrig hölls. En avgift för sena avbokningar är ett
     nytt villkor, inte en inställning.
-  - **Bokföringen i Wint är för hand.** Ingenting härifrån når den.
+  - **Bokföringen i Fortnox har ingen koppling hit.** Ingenting ur den
+    här koden når den; kortbetalningarna ska nå den genom en färdig
+    Stripe-integration som väljs och kopplas i Fortnox, utanför koden.
     Stripes utbetalning till banken är netto efter avgiften, i en klump
     för flera pass; avgiften och nettot per pass står under
-    Kortbetalningar. Bestäm med Wint och revisorn hur den bokas innan
-    första skarpa betalningen. Fortnox togs bort i Fas 14.8: det
-    kopplades aldrig, och `fortnox_token` var tom.
+    Kortbetalningar. Koppla integrationen, och bestäm med revisorn hur
+    den bokar kortbetalningarna, avgifterna och utbetalningarna, innan
+    första skarpa betalningen (DEPLOY-BETALNING.md 9.7). Innan något
+    går till Fortnox ska Fortnox också stå under "Var uppgifterna
+    finns" i integritetspolicyn, på båda språken.
 
   **Fas 14.3 tog säljarens MVP-lista som utgångspunkt** (punkterna står
   i DEPLOY-BETALNING.md 9.8). Utöver tvisterna och kontrollen ovan:
@@ -1377,8 +1423,9 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   kräver stegen hos Google i `INTEGRATIONER.md` och ett klick på
   Koppla Google, inloggad som `info@nextrum.se`. Tills dess står den
   gamla texten om meddelanden kvar på passen. Kalendern, inbjudningarna
-  och rekryteringsmötets länk valdes bort. Fortnox stod här till Fas
-  14.8; bokföringen och fakturorna sköts i Wint, utan koppling hit.
+  och rekryteringsmötets länk valdes bort. Fortnox stod här som en
+  ogjord koppling till Fas 14.8. Sedan Fas 14.9 sköts bokföringen,
+  fakturorna och lönen i Fortnox, med flit utan koppling hit.
 - **Bakgrundskontroller.** Godkännandet är en knapp, inte en process.
   Fas 13.1 gav rekryteringen en ORDNING (kontakt, digitalt möte,
   utbildning, poolen) med skälet till varje steg skrivet i vyn, men
@@ -1398,7 +1445,8 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   `materials` bort helt (då är det en städning med en hink att tömma
   först)?
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
-  utbetalningen, inte efter.
+  utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
+  (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
 
 ---

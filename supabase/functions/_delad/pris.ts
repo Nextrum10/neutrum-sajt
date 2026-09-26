@@ -259,7 +259,7 @@ export type Fakturarad = {
  * en faktura. Priset räknas precis som stripe-checkout räknar det:
  * tjänstens timpris, det fasta tillägget för flera barn, och rabatten
  * som frystes vid bokningen. Beskrivningen är ämne och datum, aldrig
- * barnets namn: fakturan läses av Wint och kan hamna i en inkorg.
+ * barnets namn: fakturan läggs in i Fortnox och kan hamna i en inkorg.
  */
 export function byggFakturor(o: { pass: Pass[]; tjanster: Tjanst[]; timprisOre: number }) {
   const perKod = new Map<string, Tjanst>();

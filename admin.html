@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
-<link rel="stylesheet" href="nextrum-cinema.css?v=23df350f">
+<link rel="stylesheet" href="nextrum-cinema.css?v=79b10f40">
 <link rel="stylesheet" href="nextrum-vy.css?v=d912de75">
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=cc84fdfc">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
@@ -961,14 +961,14 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Ekonomi</h2>
-              <p>Vad familjerna har betalat och vad studiehjälparna ska få. Samma pass, två sidor av samma rad i bookings. Familjen betalar varje pass med kort före passet, eller mot en månadsfaktura från Wint om de valt det; studiehjälparen får betalt den 25:e.</p>
+              <p>Vad familjerna har betalat och vad studiehjälparna ska få. Samma pass, två sidor av samma rad i bookings. Familjen betalar varje pass med kort före passet, eller mot en månadsfaktura från Fortnox om de valt det; studiehjälparen får betalt den 25:e.</p>
             </div>
           </div>
 
           <!-- Kortbetalningarna först: det är familjens vanliga betalväg, och
                den första fliken är den som syns när man kommer hit.
                Fakturorna bredvid sedan Fas 14.6, när familjen kan välja
-               faktura och utkasten ska läggas in i Wint. -->
+               faktura och utkasten ska läggas in i Fortnox. -->
           <div class="vy-flikar" role="tablist" aria-label="Betalningar eller utbetalningar">
             <button class="vy-flik" type="button" role="tab" data-flik="kortbetalningar"
                     id="flik-kortbetalningar" aria-controls="panel-kortbetalningar">Kortbetalningar</button>
@@ -986,7 +986,7 @@
 
           <!-- Fakturor (Fas 14.6). Familjen kan välja faktura på ett pass,
                och månadskörningen samlar passen på ett utkast per familj.
-               Utkastet läggs in i Wint, som skickar fakturan och bokför
+               Utkastet läggs in i Fortnox, som skickar fakturan och bokför
                den. Härifrån skickas ingenting. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="fakturor"
                id="panel-fakturor" aria-labelledby="flik-fakturor" hidden>
@@ -998,16 +998,16 @@
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
                 Familjer som valt faktura får en samlad faktura i början av månaden för förra
                 månadens pass. <b>Månadskörningen</b> skapar ett utkast per familj. Tryck
-                <b>Underlag</b> och lägg in fakturan i Wint med de uppgifterna, och tryck sedan
-                <b>Lagd i Wint</b> med Wints fakturanummer och förfallodag. Wint skickar fakturan
-                och ser när den betalas. Markera den <b>Betald</b> här när Wint visar det.
+                <b>Underlag</b> och lägg in fakturan i Fortnox med de uppgifterna, och tryck sedan
+                <b>Lagd i Fortnox</b> med fakturanumret i Fortnox och förfallodagen. Fortnox skickar
+                fakturan. Markera den <b>Betald</b> här när betalningen syns i Fortnox.
               </p>
               <p class="xsmall" id="fakt-vantar" style="color:var(--bl-3);margin:0 0 12px"></p>
               <div class="adm-verktyg">
                 <input class="inp adm-sok" id="fakt-sok" type="search" placeholder="Sök familj eller fakturanummer" aria-label="Sök faktura" autocomplete="off">
                 <select class="sel" id="fakt-status" aria-label="Filtrera på läge">
                   <option value="">Alla lägen</option>
-                  <option value="utkast">Inte inlagda i Wint</option>
+                  <option value="utkast">Inte inlagda i Fortnox</option>
                   <option value="skickad">Skickade</option>
                   <option value="forfallen">Förfallna</option>
                   <option value="betald">Betalda</option>
@@ -1024,7 +1024,7 @@
               </p>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
                 Ingen påminnelseavgift och ingen fakturaavgift: villkoren nämner ingen, och då
-                får ingen tas ut. Se till att Wints påminnelser står utan avgift.
+                får ingen tas ut. Se till att påminnelserna i Fortnox står utan avgift.
               </p>
             </div>
           </div>
@@ -1180,7 +1180,7 @@
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:18px">
                 En gång i månaden samlas alla genomförda och rapporterade pass till
                 ett underlag per studiehjälpare — det som betalas ut den 25:e — och
-                familjer som valt faktura får ett fakturautkast, som läggs in i Wint under
+                familjer som valt faktura får ett fakturautkast, som läggs in i Fortnox under
                 <b>Fakturor</b>. Andra pass betalas med kort före passet, och pass som
                 hölls utan betalning räknas upp i körningen i stället för att faktureras.
                 Här körs den med din inloggning. Kör alltid torrt först: den räknar ut
@@ -1198,7 +1198,7 @@
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-top:16px">
                 <b>Skapa utkast</b> skriver underlagen och fakturorna som utkast. Ingenting
                 skickas och ingenting betalas ut härifrån — underlaget skickar du per
-                studiehjälpare under Utbetalningar, och fakturan skickas från Wint. Priset står med för att beloppen på pass som hölls
+                studiehjälpare under Utbetalningar, och fakturan skickas från Fortnox. Priset står med för att beloppen på pass som hölls
                 utan betalning räknas på det. Ett schema som kör det här av sig självt
                 kommer senare, och använder då en nyckel på servern i stället för en
                 inloggning.
@@ -1432,7 +1432,7 @@
             <div class="dbox">
               <h5>Ekonomiagenten</h5>
               <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
-                Bokföring, moms, deklarationer och avstämningar. Läser era siffror; bokföringen i Wint läser den inte.
+                Bokföring, moms, deklarationer och avstämningar. Läser era siffror; bokföringen i Fortnox läser den inte.
                 Skriver aldrig något, någonstans.
               </p>
 
@@ -1518,7 +1518,7 @@
                 </div>
                 <div class="fgroup">
                   <label for="bf-system">Bokföringssystem</label>
-                  <input class="inp" id="bf-system" placeholder="wint, inget">
+                  <input class="inp" id="bf-system" placeholder="fortnox, inget">
                 </div>
                 <div class="fgroup">
                   <label for="bf-konsult">Redovisningskonsult</label>
@@ -2143,7 +2143,7 @@
 </footer>
 
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=86b7287b"></script>
+<script src="nextrum-config.js?v=37357abd"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=f81a0750"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
@@ -2152,24 +2152,24 @@
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
-<script src="nextrum-admin-agenter.js?v=ab70719d"></script>
-<script src="nextrum-admin-karna.js?v=1ab3af3e"></script>
-<script src="nextrum-admin-detalj.js?v=0d44be0d"></script>
-<script src="nextrum-admin-oversikt.js?v=d21a3dae"></script>
+<script src="nextrum-admin-agenter.js?v=e40a04be"></script>
+<script src="nextrum-admin-karna.js?v=e0dd96fa"></script>
+<script src="nextrum-admin-detalj.js?v=c5fb2b6a"></script>
+<script src="nextrum-admin-oversikt.js?v=649ccacc"></script>
 <script src="nextrum-admin-kunder.js?v=01b666e6"></script>
 <script src="nextrum-admin-rekrytering.js?v=ef57bd22"></script>
 <script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
 <script src="nextrum-admin-kommunikation.js?v=24a9a868"></script>
 <script src="nextrum-admin-drift.js?v=2437242e"></script>
-<script src="nextrum-admin-ekonomi.js?v=546eb61c"></script>
+<script src="nextrum-admin-ekonomi.js?v=9b0a1a8e"></script>
 <script src="nextrum-admin-tjanster.js?v=ab1ef476"></script>
-<script src="nextrum-admin-system.js?v=fe622ad1"></script>
+<script src="nextrum-admin-system.js?v=25511141"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=55760f40"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-admin.js?v=f92d56cf"></script>
+<script src="nextrum-admin.js?v=6ba3f84f"></script>
 </body>
 </html>

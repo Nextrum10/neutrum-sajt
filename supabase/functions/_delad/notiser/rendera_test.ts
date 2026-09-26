@@ -17,7 +17,7 @@
 // ============================================================
 
 import { assertEquals, assertStringIncludes, assertThrows } from 'jsr:@std/assert@1';
-import { renderaMejl, avregistreringsAdress, vyAdress, KONTAKT, LOGGA_URL, SAJT } from './rendera.ts';
+import { renderaMejl, avregistreringsAdress, vyAdress, FARG, KONTAKT, LOGGA_URL, SAJT } from './rendera.ts';
 import { renderaKvitto } from './kvitto.ts';
 import { MEJLBARA, type Roll } from './typer.ts';
 
@@ -292,6 +292,21 @@ Deno.test('mörkt läge är avstängt och typsnittet är systemets', () => {
   // Ingen extern begäran ur ett mejl: ett typsnitt från en annan
   // server är en spårningspixel.
   assertEquals(m.html.includes('fonts.googleapis.com'), false);
+});
+
+Deno.test('brevet är sajtens papper ända ut till kanten, utan ram runt', () => {
+  // 2026-09-25: förut låg brevet som ett kort med kant och rundade
+  // hörn på en mörkare yta, och mejlprogrammet lade sin egen vita yta
+  // runt det. Nu är hela brevet papper. Det måste stå på body för
+  // Apple Mail OCH som bgcolor på yttertabellen för Gmail, som kastar
+  // body-stilen: saknas något av dem är det vitt i det programmet, och
+  // det syns inte i webbläsaren man provar i.
+  for (const m of [rendera('pass_bekraftat', 'parent'), rendera('paminnelse', 'tutor', { prov: 'provmejl' }),
+    renderaKvitto('Anna')]) {
+    assertStringIncludes(m.html, `<body bgcolor="${FARG.papper}"`);
+    assertStringIncludes(m.html, `width="100%" bgcolor="${FARG.papper}" style="background:${FARG.papper}"`);
+    assertEquals(/border:\s*1px/.test(m.html), false, 'en kant i brevet');
+  }
 });
 
 Deno.test('loggan är den riktiga, och den kan inte spåra någon', () => {
