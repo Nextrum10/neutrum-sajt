@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
-<link rel="stylesheet" href="nextrum-cinema.css?v=79b10f40">
+<link rel="stylesheet" href="nextrum-cinema.css?v=6ef975e8">
 
 <!-- Strukturerad data för tjänsten och timpriset. Ger Google en
      chans att visa priset direkt i träffen på "vad kostar läxhjälp".
@@ -241,7 +241,6 @@
     <div class="nx-head-aside"><p class="nx-lede">En plan för en månad med ett fast antal pass, eller ett klippkort med timmar ni använder när det passar. Båda köps en gång. Inget abonnemang, ingen bindningstid.</p></div>
   </div>
 
-  <h3 class="pr-erb-rubrik">Planer för en månad</h3>
   <div class="pr-erb-planer">
     <div class="nx-price-card pr-erb-plan rv" data-erb="standard">
       <div class="pr-erb-topp"><span class="eyebrow">Standardplan</span><span class="pr-erb-rabatt">−<span data-erb-rabatt>10</span> %</span></div>
@@ -262,53 +261,70 @@
       </div>
       <p class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>341 kr</b> / timme · Ni sparar <b data-erb-spar>304 kr</b></p>
     </div>
-  </div>
-  <p class="pr-erb-fin"><a href="/anvandarvillkor#prisgaranti">Se våra villkor för prisgaranti</a></p>
 
-  <h3 class="pr-erb-rubrik">Klippkort</h3>
-  <p class="pr-erb-ingress">Timmar som ni använder när det passar er, med 5 % rabatt på varje timme.</p>
-  <ul class="pr-erb-klipp">
-    <li class="pr-erb-kort rv" data-erb="klipp10">
-      <b class="pr-erb-namn">10 timmar</b>
-      <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / timme</span>
-      <b class="pr-erb-summa tnum" data-erb-pris>3 600 kr</b>
-      <span class="pr-erb-spar">Ni sparar <span data-erb-spar>190 kr</span></span>
-      <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
-    </li>
-    <li class="pr-erb-kort ar-framhavd rv" data-erb="klipp20">
-      <b class="pr-erb-namn">20 timmar</b>
-      <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / timme</span>
-      <b class="pr-erb-summa tnum" data-erb-pris>7 200 kr</b>
-      <span class="pr-erb-spar">Ni sparar <span data-erb-spar>380 kr</span></span>
-      <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
-    </li>
-    <li class="pr-erb-kort rv" data-erb="klipp30">
-      <b class="pr-erb-namn">30 timmar</b>
-      <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / timme</span>
-      <b class="pr-erb-summa tnum" data-erb-pris>10 800 kr</b>
-      <span class="pr-erb-spar">Ni sparar <span data-erb-spar>570 kr</span></span>
-      <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
-    </li>
-    <li class="pr-erb-kort rv" data-erb="klipp60">
-      <b class="pr-erb-namn">60 timmar</b>
-      <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / timme</span>
-      <b class="pr-erb-summa tnum" data-erb-pris>21 600 kr</b>
-      <span class="pr-erb-spar">Ni sparar <span data-erb-spar>1 140 kr</span></span>
-      <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>12 månader</span></span>
-    </li>
-    <li class="pr-erb-kort rv" data-erb="klipp100">
-      <b class="pr-erb-namn">100 timmar</b>
-      <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / timme</span>
-      <b class="pr-erb-summa tnum" data-erb-pris>36 000 kr</b>
-      <span class="pr-erb-spar">Ni sparar <span data-erb-spar>1 900 kr</span></span>
-      <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>18 månader</span></span>
-    </li>
-  </ul>
-  <p class="pr-erb-fin">Timmarna gäller ett barn per pass. Slutar ni innan de är använda får ni tillbaka det som är kvar, med de använda timmarna räknade till ordinarie pris. <a href="/anvandarvillkor#erbjudanden">Villkoren för erbjudandena</a></p>
+    <!-- Klippkorten är EN kolumn som fälls ut (2026-09-26). Fem kort
+         i en egen rad var en vägg under två planer. <details>, inte en
+         knapp med skript: kolumnen öppnas också utan javascript, och
+         siffrorna står i sidan för den som aldrig öppnar den. "Från",
+         spannet och rabatten i rubriken skriver initErbjudanden() ur
+         de kort som finns kvar i databasen. -->
+    <details class="nx-price-card pr-erb-plan pr-erb-klippkol rv" data-erb-grupp>
+      <summary>
+        <span class="pr-erb-topp"><span class="eyebrow">Klippkort</span><span class="pr-erb-rabatt">−<span data-erb-rabatt>5</span> %</span></span>
+        <span class="pr-erb-vad">Timmar ni använder när det passar, från <span data-erb-min>10</span> till <span data-erb-max>100</span> timmar.</span>
+        <span class="nx-amount"><span class="per">från</span> <b class="tnum" data-erb-fran>3 600 kr</b></span>
+        <span class="pr-erb-visa"><span class="pr-erb-visa-stangd">Se alternativen</span><span class="pr-erb-visa-oppen">Dölj alternativen</span> <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></span>
+      </summary>
+      <ul class="pr-erb-klipp">
+        <li class="pr-erb-kort" data-erb="klipp10">
+          <b class="pr-erb-namn">10 timmar</b>
+          <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / timme</span>
+          <b class="pr-erb-summa tnum" data-erb-pris>3 600 kr</b>
+          <span class="pr-erb-spar">Ni sparar <span data-erb-spar>190 kr</span></span>
+          <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
+        </li>
+        <li class="pr-erb-kort ar-framhavd" data-erb="klipp20">
+          <b class="pr-erb-namn">20 timmar</b>
+          <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / timme</span>
+          <b class="pr-erb-summa tnum" data-erb-pris>7 200 kr</b>
+          <span class="pr-erb-spar">Ni sparar <span data-erb-spar>380 kr</span></span>
+          <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
+        </li>
+        <li class="pr-erb-kort" data-erb="klipp30">
+          <b class="pr-erb-namn">30 timmar</b>
+          <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / timme</span>
+          <b class="pr-erb-summa tnum" data-erb-pris>10 800 kr</b>
+          <span class="pr-erb-spar">Ni sparar <span data-erb-spar>570 kr</span></span>
+          <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
+        </li>
+        <li class="pr-erb-kort" data-erb="klipp60">
+          <b class="pr-erb-namn">60 timmar</b>
+          <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / timme</span>
+          <b class="pr-erb-summa tnum" data-erb-pris>21 600 kr</b>
+          <span class="pr-erb-spar">Ni sparar <span data-erb-spar>1 140 kr</span></span>
+          <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>12 månader</span></span>
+        </li>
+        <li class="pr-erb-kort" data-erb="klipp100">
+          <b class="pr-erb-namn">100 timmar</b>
+          <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / timme</span>
+          <b class="pr-erb-summa tnum" data-erb-pris>36 000 kr</b>
+          <span class="pr-erb-spar">Ni sparar <span data-erb-spar>1 900 kr</span></span>
+          <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>18 månader</span></span>
+        </li>
+      </ul>
+    </details>
 
-  <div class="pr-erb-cta rv">
-    <a class="btn btn-primary btn-lg" href="/intresseanmalan">Kom igång <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-    <p class="nx-terms">Har ni redan ett konto köper ni under Erbjudanden i er vy. Vill ni ha ett eget upplägg? <a href="mailto:info@nextrum.se" data-mailtext="keep">Skriv till oss</a>.</p>
+    <!-- Villkoren och knappen står i griden, inte under den: utfälld
+         blir klippkortens kolumn lång, och de hade då tryckts ner
+         under den och lämnat två tomma kolumner. -->
+    <div class="pr-erb-fot">
+      <p class="pr-erb-fin">Timmarna gäller ett barn per pass. Slutar ni innan de är använda får ni tillbaka det som är kvar, med de använda timmarna räknade till ordinarie pris. <a href="/anvandarvillkor#erbjudanden">Villkoren för erbjudandena</a></p>
+      <p class="pr-erb-fin"><a href="/anvandarvillkor#prisgaranti">Se våra villkor för prisgaranti</a></p>
+      <div class="pr-erb-cta rv">
+        <a class="btn btn-primary btn-lg" href="/intresseanmalan">Kom igång <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        <p class="nx-terms">Har ni redan ett konto köper ni under Erbjudanden i er vy. Vill ni ha ett eget upplägg? <a href="mailto:info@nextrum.se" data-mailtext="keep">Skriv till oss</a>.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -572,7 +588,7 @@
 <script src="nextrum-config.js?v=37357abd"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=f81a0750"></script>
+<script src="nextrum-app.js?v=52c081aa"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

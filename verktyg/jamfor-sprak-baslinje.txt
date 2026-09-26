@@ -47,7 +47,7 @@
 
 === priser.html  ->  en/priser.html
   STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
-  TEXTNODER: sv 223 vs en 222 — engelskan har inte följt med
+  TEXTNODER: sv 233 vs en 232 — engelskan har inte följt med
 
 === sa-fungerar-nextrum.html  ->  en/sa-fungerar-nextrum.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
