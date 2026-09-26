@@ -91,8 +91,10 @@ som vägrar ändringen från en inloggad session. Admin sätts med SQL, inte
 från någon vy.
 
 `invoices` och `payouts` har med flit ingen INSERT-policy för användare.
-`integrationer` har ingen skrivpolicy alls: adminvyn rapporterar status,
-den kopplar inte.
+`integrationer` har ingen skrivpolicy alls: adminvyn rapporterar status.
+Koppla Google (Fas 18.1) skickar bara admin till Google; engångskoden
+byts mot en nyckel i `google-koppla`, och nyckeln ligger i
+`google_koppling`, som ingen inloggad ser.
 
 Notishemligheten ligger i tabellen `notis_konfig`, inte i en secret. En
 secret och en webhook-header i två fönster glider isär, och då svarar
@@ -329,6 +331,7 @@ sköts i Fortnox, för hand, med flit utan koppling hit (Fas 14.9 bytte
 Wint mot Fortnox). Ingen API-koppling förrän handarbetet faktiskt kostar
 tid. Stripe ska bokföras genom en färdig integration som kopplas i
 Fortnox, utanför koden, före första skarpa betalningen och med revisorn.
-Vidare: Google Workspace,
+Google Workspace ger bara Meet-länkar till onlinepassen (Fas 18.1) och
+är inte kopplat förrän stegen i INTEGRATIONER.md är gjorda. Vidare:
 bakgrundskontroller, skatt och anställning av minderåriga, riktiga foton
 på studiehjälparna.

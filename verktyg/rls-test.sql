@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14 och 16)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16 och 18)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -28,8 +28,8 @@
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
 -- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
--- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e) och Fas 16.2 är
--- körda.
+-- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2 och
+-- Fas 18.1 (Meet-länken) är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -3197,6 +3197,103 @@ begin
     ('16.1 en annan familj betalar inte passet med sina timmar', annan ? 'fel', annan::text),
     ('16.1 ett kort som gått ut drar inget', utgangen ? 'fel', utgangen::text),
     ('16.1 ett kort i tvist drar inget', tvist ? 'fel', tvist::text);
+end $$;
+
+-- ------------------------------------------------------------
+-- Fas 18.1: Meet-länken
+--
+-- Länken läggs in som postgres i varje prov (prova_med), inte bland
+-- fixturerna. Körs sviten mot en databas där migrationen saknas blir
+-- det röda rader här, inte en krasch i fixturerna som tar hela
+-- sviten med sig.
+--
+-- Passet b0d1 är familj P:s, hos studiehjälpare A, om en vecka.
+-- ------------------------------------------------------------
+select pg_temp.prova_med('18.1 familjen läser länken till sitt pass',
+  array[$q$insert into public.pass_moten (booking_id, lank, rum)
+          values ('00000000-0000-4000-8000-00000000b0d1', 'https://meet.google.com/abc-defg-hij', 'spaces/rlsprov')$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select 1 from public.pass_moten where booking_id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+  'ok');
+
+select pg_temp.prova_med('18.1 studiehjälparen läser länken till sitt pass',
+  array[$q$insert into public.pass_moten (booking_id, lank, rum)
+          values ('00000000-0000-4000-8000-00000000b0d1', 'https://meet.google.com/abc-defg-hij', 'spaces/rlsprov')$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select 1 from public.pass_moten where booking_id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+  'ok');
+
+select pg_temp.prova_med('18.1 admin läser länken',
+  array[$q$insert into public.pass_moten (booking_id, lank, rum)
+          values ('00000000-0000-4000-8000-00000000b0d1', 'https://meet.google.com/abc-defg-hij', 'spaces/rlsprov')$q$],
+  '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select 1 from public.pass_moten where booking_id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+  'ok');
+
+-- Länken är vägen in till ett barns pass. Den som inte hör till
+-- passet ska inte ens se att den finns.
+select pg_temp.prova_med('18.1 en annan familj ser inte länken',
+  array[$q$insert into public.pass_moten (booking_id, lank, rum)
+          values ('00000000-0000-4000-8000-00000000b0d1', 'https://meet.google.com/abc-defg-hij', 'spaces/rlsprov')$q$],
+  '00000000-0000-4000-8000-0000000000f2',
+  array[$q$select 1 from public.pass_moten where booking_id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+  'nekad');
+
+select pg_temp.prova_med('18.1 en annan studiehjälpare ser inte länken',
+  array[$q$insert into public.pass_moten (booking_id, lank, rum)
+          values ('00000000-0000-4000-8000-00000000b0d1', 'https://meet.google.com/abc-defg-hij', 'spaces/rlsprov')$q$],
+  '00000000-0000-4000-8000-0000000000b1',
+  array[$q$select 1 from public.pass_moten where booking_id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+  'nekad');
+
+select pg_temp.prova_med('18.1 anon ser inte länken',
+  array[$q$insert into public.pass_moten (booking_id, lank, rum)
+          values ('00000000-0000-4000-8000-00000000b0d1', 'https://meet.google.com/abc-defg-hij', 'spaces/rlsprov')$q$],
+  null,
+  array[$q$select 1 from public.pass_moten where booking_id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+  'nekad');
+
+-- Bara google-meet, med service_role, skriver. En länk som familjen
+-- kunde sätta hade kunnat leda studiehjälparen vart som helst.
+select pg_temp.prova_med('18.1 familjen kan inte lägga in en länk',
+  null,
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.pass_moten (booking_id, lank, rum)
+          values ('00000000-0000-4000-8000-00000000b0d1', 'https://meet.google.com/abc-defg-hij', 'spaces/egen')$q$],
+  'nekad');
+
+select pg_temp.prova_med('18.1 studiehjälparen kan inte byta länken',
+  array[$q$insert into public.pass_moten (booking_id, lank, rum)
+          values ('00000000-0000-4000-8000-00000000b0d1', 'https://meet.google.com/abc-defg-hij', 'spaces/rlsprov')$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.pass_moten set lank = 'https://meet.google.com/zzz-zzzz-zzz'
+          where booking_id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+  'nekad');
+
+-- Tokenen till Nextrums Google-konto. Inte ens admin ser den med sin
+-- egen token; adminvyn läser statusen i integrationer.
+select pg_temp.prova_med('18.1 admin ser inte Google-nyckeln',
+  array[$q$insert into public.google_koppling (konto, refresh_token, scopes)
+          values ('info@nextrum.se', 'rls-prov', 'openid')$q$],
+  '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select 1 from public.google_koppling$q$],
+  'nekad');
+
+-- Villkoret på kolumnen gäller också service_role, som går förbi RLS.
+-- Ett fel i google-meet ska inte kunna spara en länk någon annanstans.
+do $$
+declare fel text;
+begin
+  begin
+    insert into public.pass_moten (booking_id, lank, rum)
+    values ('00000000-0000-4000-8000-00000000b0d1', 'https://meet.google.com.evil.example/abc-defg-hij', 'spaces/x');
+    raise exception 'gick igenom';
+  exception
+    when check_violation then fel := 'nekad av villkoret';
+    when others then fel := sqlerrm;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('18.1 en länk utanför meet.google.com går inte att spara', fel = 'nekad av villkoret', fel);
 end $$;
 
 select test, ok, detalj from utfall order by nr;

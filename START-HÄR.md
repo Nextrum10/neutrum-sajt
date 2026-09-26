@@ -141,9 +141,13 @@ Postgres RLS kan inte begränsa enskilda kolumner, så lösningen är två trigg
 - **Hero-videon i vyerna.** De inloggade vyerna letar efter
   `bilder/hero-studievy.mp4` och visar hero-fotot så länge filen inte
   finns. Läggs filen dit spelas den, utan att någon rad kod behöver ändras.
-- **Google Workspace.** Adminvyn har en statusflik, men det är inte
-  kopplat. Vad som krävs står i `INTEGRATIONER.md`. Bokföringen,
-  fakturorna och lönen sköts i Fortnox, utan koppling hit (Fas 14.9).
+- **Google Workspace.** Kopplingen ger varje bekräftat onlinepass en
+  egen Meet-länk (Fas 18.1). Den är byggd, men inte kopplad förrän ni
+  gjort stegen hos Google i `INTEGRATIONER.md` och tryckt **Koppla
+  Google** under System → Integrationer. Tills dess står det som förut
+  att länken kommer i meddelanden. Kalendern och inbjudningarna valdes
+  bort. Bokföringen, fakturorna och lönen sköts i Fortnox, utan
+  koppling hit (Fas 14.9).
 - **Bilder.** Studiehjälparna visas med en generisk siluett, inte riktiga foton.
 - **Skatt och anställning av minderåriga.** Fortfarande olöst. Prata med en revisor innan första utbetalningen, inte efter.
 - **Bakgrundskontroller.** Ni godkänner manuellt, men det finns ingen process bakom knappen än.

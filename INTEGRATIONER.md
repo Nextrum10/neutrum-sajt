@@ -1,34 +1,50 @@
 # Google Workspace
 
 Adminsidan har en flik som heter **System → Integrationer**. Den visar om
-Google Workspace är kopplat. Just nu är svaret nej, och det står så.
+Google är kopplat, med vilket konto, när det senast skapades ett rum och
+vad Google senast sa nej till. Det den säger är det servern rapporterat,
+aldrig något vyn gissat.
+
+Sedan Fas 18.1 gör kopplingen **en sak**: varje bekräftat onlinepass får
+en egen Google Meet-länk, som står på passets sida hos familjen och
+studiehjälparen. Leo valde det 2026-09-25, av fyra förslag. Kalendern,
+inbjudningarna och rekryteringsmötet valdes bort, och mejlen går inte
+genom Google (se "Varför inte kalendern och mejlen" nedan).
 
 Fortnox stod här till Fas 14.8, som en koppling som aldrig gjordes.
 Sedan Fas 14.9 sköts bokföringen, fakturorna och lönen i **Fortnox**,
 och Fortnox är med flit inte kopplat hit (se nedan).
 
-Den här filen säger vad som saknas och varför det inte går att klicka sig
-fram till det.
-
 ---
 
-## Varför det inte finns en "Koppla"-knapp
+## Koppla-knappen, och varför den inte läcker hemligheten
 
-Kopplingen kräver en **klienthemlighet**. En hemlighet som webbläsaren
-kan läsa är ingen hemlighet — den ligger då hos varenda person som öppnar
+Den här filen hette länge "Varför det inte finns en Koppla-knapp".
+Kopplingen kräver en **klienthemlighet**, och en hemlighet som webbläsaren
+kan läsa är ingen hemlighet: den ligger då hos varenda person som öppnar
 sidan, inklusive den som öppnar utvecklarverktygen.
 
-Alltså:
+Det skälet gäller fortfarande, och knappen bryter inte mot det:
 
-- Nycklarna sätts som **secrets på en edge-funktion** i Supabase. Dit når
-  ingen webbläsare.
-- Tabellen `integrationer` (schema-v13.sql) innehåller **bara status**: om
-  det är kopplat, mot vilket konto, när synken kördes och vad den sa.
-- Tabellen har medvetet **ingen skrivpolicy alls**. Raderna sätts av
-  edge-funktionen med `service_role`, som går förbi RLS. Kan ingen skriva
-  från webbläsaren kan ingen få något att *se* kopplat ut som inte är det.
+1. **Koppla Google** i adminvyn frågar edge-funktionen `google-koppla`
+   efter en adress. Funktionen prövar att den som frågar är admin och
+   svarar med en adress till `accounts.google.com`. Ingenting annat.
+2. Admin loggar in hos Google och godkänner.
+3. Google skickar tillbaka en **engångskod** till funktionen, inte till
+   vyn. Funktionen byter koden mot en nyckel (refresh-token), med
+   hemligheten, och sparar nyckeln i tabellen `google_koppling`.
+4. Webbläsaren skickas tillbaka till `/admin?google=kopplad`.
 
-Adminsidan rapporterar. Den kopplar inte.
+Hemligheten lämnar aldrig funktionen. Tabellen `google_koppling` har RLS
+utan en enda policy: bara `service_role` ser den, alltså bara
+edge-funktionerna. `integrationer` bär bara status och har fortfarande
+ingen skrivpolicy alls. **Adminsidan rapporterar. Den kopplar inte själv.**
+
+Varför nyckeln ligger i en tabell och inte som en secret: den skapas av
+ett klick, och en funktion kan inte skriva sina egna secrets. Den räcker
+inte ensam. Google lämnar ut en åtkomst först mot nyckeln OCH
+klienthemligheten, och hemligheten är en secret. Två ställen måste läcka
+samtidigt, och det de då når är ett enda scope: att skapa Meet-rum.
 
 ---
 
@@ -69,85 +85,146 @@ betalningen (DEPLOY-BETALNING.md 9.7).
 
 Integritetspolicyn: innan något går till Fortnox (Stripe-integrationen,
 den första fakturan eller den första lönen) ska Fortnox stå under "Var
-uppgifterna finns", på svenska och engelska. I dag räknar den bara upp
-Supabase, Vercel och Stripe.
+uppgifterna finns", på svenska och engelska. I dag räknar den upp
+Supabase, Vercel, Stripe och Google (Meet-rummen, Fas 18.1).
 
 Fortnox får därför ingen rad i `integrationer`. En statusrad för något
 som inte är kopplat hade sett ut som en koppling som väntar.
 
 ---
 
-## Google Workspace — kalender och mejl
+## Google Meet-länkarna (Fas 18.1)
 
-### Vad kopplingen ska göra
+### Vad som händer
 
-- **Kalender.** Ett bekräftat pass blir en händelse hos både familjen och
-  studiehjälparen, med Meet-länk om formatet är online. Avbokas passet
-  försvinner händelsen.
-- **Mejl.** Underlagen och notiserna går från en riktig adress
-  (`info@nextrum.se`) i stället för en no-reply hos någon annan.
+- Familjen eller studiehjälparen öppnar ett **bekräftat onlinepass** som
+  inte har varit. Vyn läser `pass_moten`. Finns ingen länk anropas
+  `google-meet`, som prövar att anroparen ser passet genom RLS, skapar
+  ett rum hos Google och sparar länken.
+- Länken står under **Var** på passets sida, som
+  `meet.google.com/abc-defg-hij`. Samma länk hos båda.
+- Rummet är **öppet**: den som har länken går in utan att knacka. Det är
+  hela poängen. En länk ur en kalenderhändelse får Workspace förvalda
+  åtkomst, oftast betrodd, och då måste den som inte är inbjuden knacka.
+  På ett pass är ingen från Nextrum med för att släppa in, så ett barn på
+  skolans Chromebook hade stått utanför en dörr ingen öppnar.
+- Svarar Google med ett rum som inte är öppet **sparas länken inte**.
+  Vyn säger då att länken kommer i meddelanden, och kortet under
+  Integrationer säger varför.
+- Länken ligger kvar när passet flyttas. Den visas inte för ett avbokat,
+  genomfört eller passerat pass.
+- Är Google inte kopplat står det som förut: "Länken kommer i
+  meddelanden" hos familjen, "Skicka länken i meddelanden" hos
+  studiehjälparen. Ingenting går sönder.
 
-### Vad ni behöver skaffa
+Länken skapas när någon öppnar passet, inte av en trigger. En trigger
+hade behövt en kö, ett schema och omförsök, och ett sätt att märka när
+den tystnat. Här behövs länken först när någon letar efter den, och då
+sitter någon och väntar på svaret. Pass som bekräftades innan Google
+kopplades får sin länk nästa gång någon öppnar dem.
 
-1. Ett **Google Cloud-projekt** med **Calendar API** och **Gmail API**
-   påslagna.
-2. Ett **tjänstekonto** med **domänvid delegering** (domain-wide
-   delegation), godkänt i Google Workspace Admin under
-   *Säkerhet → API-kontroller → Domänvid delegering*.
-3. Scopes:
+### Vad ni gör hos Google (en gång)
+
+Det här går inte att göra härifrån: det kräver någon som är inloggad
+hos Google. Menynamnen är de Google använde hösten 2026 och kan ha
+flyttat, men stegen är desamma.
+
+1. **Logga in som `info@nextrum.se`** på `console.cloud.google.com`.
+   Kontot ska äga rummen: en rollbrevlåda finns kvar när någon slutar,
+   och tas kontot som äger rummen bort slutar länkarna fungera.
+2. **Skapa ett projekt**, till exempel "Nextrum". Under *Plats* ska det
+   stå organisationen **nextrum.se**, inte "Ingen organisation". Utan
+   organisationen går steg 4 inte att välja, och då slutar kopplingen
+   gälla efter sju dagar.
+3. **API:er och tjänster → Bibliotek**: sök **Google Meet REST API** och
+   slå på det.
+4. **Google Auth Platform** (hette förut *OAuth-samtyckesskärm*): fyll i
+   appnamn **Nextrum** och supportadress `info@nextrum.se`, och välj
+   målgrupp **Intern**. Intern betyder att bara konton i nextrum.se kan
+   godkänna, att Google inte granskar appen och att nyckeln inte går ut.
+5. **Google Auth Platform → Klienter → Skapa klient**. Typ
+   **Webbapplikation**. Under *Auktoriserade omdirigerings-URI:er*,
+   exakt:
    ```
-   https://www.googleapis.com/auth/calendar.events
-   https://www.googleapis.com/auth/gmail.send
+   https://ddkfiuvcppalutfulvbi.supabase.co/functions/v1/google-koppla
    ```
+   Kopiera **klient-id** och **klienthemlighet**.
+6. **Supabase → Edge Functions → Secrets**: lägg in
+   ```
+   GOOGLE_KLIENT_ID          klient-id från steg 5
+   GOOGLE_KLIENT_HEMLIGHET   klienthemligheten från steg 5
+   ```
+7. **Adminvyn → System → Integrationer → Koppla Google.** Logga in som
+   `info@nextrum.se` och godkänn. Låt rutan för Google Meet vara
+   ikryssad; utan den nekas kopplingen.
+8. **Prova.** Knappen skapar ett rum och visar länken. Öppna den i ett
+   privat fönster, utloggad från Google. Kommer du in utan att knacka
+   kommer familjerna också in.
 
-### Vad som ska bli secrets
+Inga tjänstekonton och inga nyckelfiler. Ett tjänstekonto med domänvid
+delegering, som den här filen föreslog förut, hade kunnat uppträda som
+varje konto i Workspace, och nya Google Cloud-organisationer stänger av
+nyckelfiler som förval. Godkännandet ovan når ett konto och ett scope.
 
-```
-GOOGLE_TJANSTEKONTO_JSON     (hela nyckelfilen, som en sträng)
-GOOGLE_DELEGERAD_ANVANDARE   (t.ex. info@nextrum.se)
-```
+### Om något är rött
 
-### Den viktiga begränsningen
+Kortet under Integrationer säger vad Google svarade. De vanligaste:
 
-Tjänstekontot får bara skriva i kalendrar inom **er egen domän**. En familj
-med en privat Gmail-adress är inte i er domän, så deras kalender kan ni inte
-skriva i utan att de själva loggar in och godkänner det (vanlig OAuth med
-samtycke, en helt annan sak än tjänstekonto).
+| Kortet säger | Gör så här |
+|---|---|
+| hör inte till Nextrums Google Workspace | Kopplat med ett privat konto. Koppla igen, inloggad som `info@nextrum.se` |
+| rutan för Google Meet var inte ikryssad | Koppla igen och låt rutan vara ikryssad |
+| Google Meet REST API är inte påslaget | Steg 3. Vänta en minut, tryck Prova |
+| Google känner inte igen klienten | Secrets från steg 6, eller adressen i steg 5, stämmer inte. Den ska vara exakt som ovan |
+| skapade rummet som TRUSTED/RESTRICTED | Workspace tillåter inte öppna möten. Google Admin (`admin.google.com`) → Appar → Google Workspace → Google Meet → Meet-säkerhetsinställningar: låt alla med länken gå med, också de som inte är inloggade med ett Google-konto. Tryck Prova |
+| Google godtar inte kopplingen längre | Någon har dragit tillbaka åtkomsten, eller ändrat kontot. Kortet står då på Inte kopplad. Koppla igen |
 
-Praktiskt betyder det:
+### Vad kortet betyder
 
-- **Studiehjälparen** kan få händelser direkt, om ni ger dem
-  Workspace-konton.
-- **Familjen** får en `.ics`-inbjudan i mejlet i stället. Den fungerar i
-  alla kalendrar och kräver inget konto hos er.
+`google-meet` och `google-koppla` skriver statusen med `service_role`
+(`_delad/google_konto.ts`):
 
-Bygg det andra först. Det är det som gäller de flesta, och det kräver inget
-utöver Gmail-scopet.
+- **Kopplad** betyder att det finns en nyckel. Den sätts när Google
+  skickat tillbaka en godkänd kod, och inte annars.
+- **Senaste rum skapat** är när ett rum senast skapades, av ett pass
+  eller av Prova.
+- **Senaste fel** är det senaste Google sa nej till. Ett lyckat rum
+  tömmer det.
 
-### Redan skrivet
+Går något fel sätts `senaste_fel` och `kopplad` lämnas som den är. En
+misslyckad förfrågan betyder inte att kopplingen är borta, och att slå
+om till "inte kopplad" vid varje hicka gör statusen oläslig.
 
-`GOOGLE.md` beskriver Google-uppsättningen för sajtens övriga delar. Läs den
-först — projekt och behörigheter är delvis samma sak.
+Undantaget är när Googles tokenändpunkt svarar `invalid_grant`. Då
+finns kopplingen inte längre, och ingenting härifrån kan väcka den.
+Nyckeln tas bort, kortet säger **Inte kopplad** och varför. Bara raden
+med den nyckel som föll tas bort: har någon hunnit koppla om under
+tiden står den nya kvar.
+
+**Koppla från** stänger nyckeln hos Google och tar bort raden. Länkar
+som redan skapats fortsätter att fungera; nya pass får ingen länk förrän
+någon kopplar igen.
 
 ---
 
-## När något är kopplat
+## Varför inte kalendern och mejlen
 
-Edge-funktionen skriver, med `service_role`:
+Kortet lovade länge "Kalendern och mejlen". Båda valdes bort
+2026-09-25, med skäl:
 
-```sql
-update public.integrationer
-   set kopplad = true,
-       konto = 'info@nextrum.se',
-       kopplad_at = now(),
-       senaste_synk = now(),
-       senaste_fel = null,
-       uppdaterad = now()
- where tjanst = 'google_workspace';
-```
+- **Mejlen går redan från nextrum.se**, genom Resend med domänens
+  DKIM (DEPLOY-EPOST.md). Att flytta dem till Gmail-API:t hade gett en
+  nyckel som kan skicka som Nextrum, ett sändtak per dygn, och en kö som
+  redan fungerar att bygga om.
+- **Kalenderinbjudningar** till familjer och studiehjälpare hade blivit
+  ännu en ström av mejl, från Google, ovanpå notiserna, och en ny
+  inbjudan och en avbokning varje gång ett pass flyttas.
+- **Rekryteringsmötet** bokas som förut: tiden och länken skrivs in för
+  hand och mejlas till den sökande (Fas 16.1). Kopplingen finns nu, så
+  en knapp som skapar mötets länk är en liten ändring den dag någon vill
+  ha den.
 
-Går en synk fel: lämna `kopplad` som den är och sätt `senaste_fel`. En
-misslyckad synk betyder inte att kopplingen är borta, och att sätta
-`kopplad = false` vid varje hicka gör statusen oläsbar.
-
-Adminsidan läser raden och visar den. Den gissar aldrig.
+Ändras beslutet: kalendern kräver scopet
+`https://www.googleapis.com/auth/calendar.events`, alltså ett nytt
+godkännande under Koppla Google, och sidan i Google Auth Platform ska
+få scopet i samma ändring.

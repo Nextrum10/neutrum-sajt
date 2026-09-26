@@ -630,7 +630,8 @@ utbetalning**. Båda gällde anslutna konton och finns inte att prova sedan Fas 
   Koppla den, och bestäm med revisorn hur den bokar, före den första skarpa
   kortbetalningen. Innan något går till Fortnox, genom integrationen, på en faktura
   eller i en lön, ska Fortnox stå under "Var uppgifterna finns" i integritetspolicyn,
-  på svenska och engelska: i dag räknar den bara upp Supabase, Vercel och Stripe.
+  på svenska och engelska: i dag räknar den upp Supabase, Vercel, Stripe och
+  Google (Meet-rummen, Fas 18.1).
 - **Dubbelfaktureringen.** Månadskörningen tar bara med pass som står `faktura`
   (Fas 14.6), så ett kortbetalt pass kommer inte på en faktura. Det enda sättet
   är att familjen byter till faktura medan en kassa står öppen och betalar den

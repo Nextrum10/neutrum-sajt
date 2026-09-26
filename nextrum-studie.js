@@ -783,9 +783,25 @@ window.NXStudie = (function () {
        alternativ: html,                   ett andra val under knapparna,
                                            t.ex. faktura i stället för kort
        kort:    [{ rubrik, rader: [[etikett, värde]] }],
+                                           värde är text, eller { href, text }
+                                           för möteslänken (Fas 18.1)
        block:   [{ rubrik, html }]         anteckning, rapport, läxor
      }
      ============================================================ */
+
+  /* Ett värde i ett kort är text. Möteslänken är det enda som är en
+     länk, och den blir det bara om adressen är https: mötesRad nedan
+     har redan prövat att den leder till meet.google.com, och det här
+     är andra gången. Allt annat escapas, som förut. */
+  function radVärde(v) {
+    if (v && typeof v === 'object') {
+      if (!/^https:\/\//.test(String(v.href || ''))) return esc(v.text || '');
+      return '<a class="ps-lank" href="' + esc(v.href) + '" target="_blank" rel="noopener noreferrer">'
+        + esc(v.text || v.href) + '</a>';
+    }
+    return esc(v);
+  }
+
   function passSida(o) {
     var host = o && o.host;
     if (!host) return;
@@ -801,7 +817,7 @@ window.NXStudie = (function () {
       if (!rader.length) return '';
       return '<div class="ps-kort"><h6>' + esc(k.rubrik) + '</h6>'
         + rader.map(function (r) {
-            return '<div class="ps-rad"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>';
+            return '<div class="ps-rad"><span>' + esc(r[0]) + '</span><b>' + radVärde(r[1]) + '</b></div>';
           }).join('')
         + '</div>';
     }).join('');
@@ -835,6 +851,95 @@ window.NXStudie = (function () {
           : '')
       + (kort ? '<div class="ps-kortrad">' + kort + '</div>' : '')
       + block;
+  }
+
+  /* ============================================================
+     MÖTESLÄNKEN (Fas 18.1)
+
+     Varje bekräftat onlinepass får en egen Google Meet-länk, och den
+     står på passets sida hos både familjen och studiehjälparen. Förut
+     stod där "Länken kommer i meddelanden" och "Skicka länken i
+     meddelanden", och en länk i en chatt ska letas fram fem minuter
+     innan passet. Här bestäms när länken behövs, hur den hämtas och
+     hur raden ser ut, så att de två vyerna aldrig säger olika saker om
+     samma pass.
+
+     Två steg. Först pass_moten, med den inloggades egen token: finns
+     länken är det en vanlig läsning. Annars edge-funktionen
+     google-meet, som skapar den — och som svarar att Google inte är
+     kopplat tills någon kopplat det under System → Integrationer. Då
+     står vyns gamla text kvar.
+
+     supa skickas in, som till notisval. Resten av filen rör ingen
+     databas.
+
+     En hittad länk sparas medan sidan är öppen: den ändras inte. Ett
+     svar UTAN länk sparas en minut. Utan den minuten hade varje
+     omritning frågat funktionen igen, och klar() ritar om; ett fel
+     hade blivit en slinga av anrop. Efter minuten frågar nästa besök
+     på passet igen, så att en koppling som gjorts medan fliken stått
+     öppen syns utan att någon laddar om.
+
+     En länk blir bara en länk om den är https://meet.google.com/…
+     Databasen och funktionen prövar samma form. Tre gånger är med
+     flit: det här är dörren in till ett barns pass.
+     ============================================================ */
+  var MEET = /^https:\/\/meet\.google\.com\/[a-z]+-[a-z]+-[a-z]+$/;
+  var MÖTE_UTAN_MS = 60000;
+  var möten = {};
+
+  /* Ett bekräftat onlinepass som inte har varit. Idag räknas med: ett
+     pass klockan fyra behöver länken klockan fyra. */
+  function behöverMöte(b) {
+    return !!b && b.status === 'confirmed' && b.format === 'Online'
+      && String(b.wanted_date || '') >= isoFor(new Date());
+  }
+
+  function mötetFör(id) {
+    var m = möten[id];
+    if (m && m.läge === 'utan' && Date.now() > m.till) { delete möten[id]; return null; }
+    return m || null;
+  }
+
+  /* Hämtar länken om passet behöver en och svaret inte redan finns.
+     klar() anropas när ett nytt svar kommit, så att vyn kan rita om;
+     finns svaret redan händer ingenting. Kastar aldrig: går något fel
+     står vyns egen text kvar, och varför står i adminvyn. */
+  function hämtaMöte(supa, b, klar) {
+    if (!supa || !behöverMöte(b) || mötetFör(b.id)) return;
+    var m = { läge: 'hämtar', lank: null, till: 0 };
+    möten[b.id] = m;
+
+    supa.from('pass_moten').select('lank').eq('booking_id', b.id).maybeSingle()
+      .then(function (r) {
+        if (r && r.data && MEET.test(r.data.lank || '')) return r.data.lank;
+        return supa.functions.invoke('google-meet', { body: { pass: b.id } }).then(function (s) {
+          return s && !s.error && s.data && MEET.test(s.data.lank || '') ? s.data.lank : null;
+        });
+      })
+      .catch(function () { return null; })
+      .then(function (lank) {
+        if (lank) { m.läge = 'klar'; m.lank = lank; }
+        else { m.läge = 'utan'; m.till = Date.now() + MÖTE_UTAN_MS; }
+        if (typeof klar === 'function') klar();
+      });
+  }
+
+  /* Raden i kortet om var man ses: [etikett, värde], eller null när
+     passet inte har eller behöver någon länk. reserv är vyns egen
+     text för när länken inte finns — familjen och studiehjälparen gör
+     olika saker då. Ett avbokat, genomfört eller passerat pass får
+     ingen rad: där hade en länk bara varit något att trycka fel på. */
+  function mötesRad(b, reserv) {
+    if (!b || b.format !== 'Online') return null;
+    if (b.status === 'requested' && String(b.wanted_date || '') >= isoFor(new Date())) {
+      return ['Möte', 'Länken kommer när passet är bekräftat'];
+    }
+    if (!behöverMöte(b)) return null;
+    var m = mötetFör(b.id);
+    if (m && m.läge === 'klar') return ['Möte', { href: m.lank, text: m.lank.replace(/^https:\/\//, '') }];
+    if (m && m.läge === 'utan') return ['Möte', reserv];
+    return ['Möte', 'Hämtar länken…'];
   }
 
   /* "idag", "imorgon", "om 3 dagar", "för 2 veckor sedan". Räknat i
@@ -1886,6 +1991,7 @@ window.NXStudie = (function () {
     progressRad: progressRad, progressPerÄmne: progressPerÄmne,
     tomt: tomt, laddar: laddar, laddarFörsta: laddarFörsta, håll: håll, scrollaTill: scrollaTill, visaÖverst: visaÖverst,
     passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,
+    hämtaMöte: hämtaMöte, mötesRad: mötesRad,
     dagMedVeckodag: dagMedVeckodag, GICK: GICK,
     bekräfta: bekräfta, avbokaRuta: avbokaRuta, medan: medan, kolla: kolla
   };

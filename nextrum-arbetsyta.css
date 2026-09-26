@@ -934,6 +934,14 @@ button.fel-person:hover{border-color:var(--bl-3)}
   padding-top:11px;
   word-break:break-word;
 }
+/* Koppla, Prova, Koppla från (Fas 18.1), och svaret från Prova under
+   dem. Svaret bär länken till rummet, så att den går att öppna. */
+.adm-koppling-knappar{display:flex;flex-wrap:wrap;gap:8px}
+.adm-koppling-prov{
+  border:1px solid var(--ln);border-radius:12px;background:var(--pap-2);
+  padding:10px 12px;overflow-wrap:anywhere;
+}
+.adm-koppling-kort .adm-koppling-prov p{flex:none}
 
 /* Adminvyn får vara bredare än familjevyn — tabeller mår illa av
    att klämmas ihop, och den som sitter här sitter vid en skärm. */

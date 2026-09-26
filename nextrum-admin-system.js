@@ -16,8 +16,8 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, kontaktaRuta, kortDatum, märkFlik, namnFör, närText,
-          pill, rad, skriv, tabell } = NXAdmin;
+  const { DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, kontaktaRuta, kortDatum, märkFlik, namnFör,
+          närText, pill, rad, skriv, tabell } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaDetalj = (...a) => NXAdmin.rita.ritaDetalj(...a);
@@ -29,11 +29,21 @@
      SYSTEM
      ============================================================ */
 
-  /* Integrationskorten. Det viktiga är vad de INTE gör: det finns
-     ingen "koppla"-knapp här, för en OAuth-koppling kräver en
-     klienthemlighet, och en hemlighet som webbläsaren kan läsa är
-     ingen hemlighet. Kopplingen görs på servern; den här sidan
-     rapporterar bara vad servern säger.
+  /* Integrationskortet. Fas 18.1 gav det en Koppla-knapp, och skälet
+     till att det länge inte fanns någon står kvar: en koppling kräver
+     en klienthemlighet, och en hemlighet som webbläsaren kan läsa är
+     ingen hemlighet. Knappen bryter inte mot det. Den hämtar en adress
+     till Google från google-koppla och skickar dit. Google skickar
+     tillbaka en engångskod till FUNKTIONEN, inte hit, och det är där
+     den byts mot en nyckel. Den här sidan rapporterar fortfarande bara
+     vad servern säger: raden i integrationer skrivs bara av
+     service_role.
+
+     Kortet säger vad kopplingen gör och vad den inte gör. Leo valde
+     Meet-länkar till onlinepassen och inget annat (2026-09-25): ingen
+     kalender och inga inbjudningar, och mejlen går genom Resend som
+     förut. Kortet lovade länge kalender och Gmail; ett kort som lovar
+     det som inte byggts är ett kort ingen kan lita på.
 
      Fortnox hade ett kort här till Fas 14.8, som tog bort den aldrig
      gjorda kopplingen (fortnox_token) när bokföringen skulle ligga i
@@ -44,14 +54,55 @@
     google_workspace: {
       namn: 'Google Workspace',
       ikon: '<path d="M12 3.5 3.5 8 12 12.5 20.5 8z"/><path d="M3.5 12 12 16.5 20.5 12"/><path d="M3.5 16 12 20.5 20.5 16"/>',
-      vad: 'Kalendern och mejlen. Bokade pass läggs som händelser i studiehjälparens '
-        + 'och familjens kalender, och underlagen till studiehjälparna går från en riktig '
-        + 'adress i stället för en no-reply.',
-      krav: 'Krävs: ett Google Cloud-projekt med Calendar API och Gmail API påslagna, '
-        + 'ett tjänstekonto med domänvid delegering, och GOOGLE_KLIENT_ID + '
-        + 'GOOGLE_KLIENT_HEMLIGHET som secrets på edge-funktionen. Se GOOGLE.md.'
+      vad: 'Meet-länkar till onlinepassen. Varje bekräftat onlinepass får en egen länk, som står på '
+        + 'passets sida hos familjen och studiehjälparen och går att gå in på utan att någon släpper in. '
+        + 'Kalendern och mejlen går inte genom Google: mejlen skickas från nextrum.se genom Resend, som förut.',
+      krav: 'Krävs: ett Google Cloud-projekt i Nextrums organisation med Google Meet REST API påslaget, '
+        + 'en OAuth-klient av typen webbapp, och GOOGLE_KLIENT_ID + GOOGLE_KLIENT_HEMLIGHET som secrets '
+        + 'på edge-funktionerna i Supabase. Steg för steg i INTEGRATIONER.md. Koppla sedan härifrån, '
+        + 'inloggad hos Google som info@nextrum.se.'
     }
   };
+
+  /* Google skickar tillbaka hit med ?google=<utfall> (google-koppla).
+     Ordet läses en gång, när filen laddas, och tas bort ur adressen:
+     en omladdning ska inte säga "Google är kopplat" en gång till. Bara
+     ord ur listan blir en mening; något annat i adressen visas inte. */
+  const GOOGLE_UTFALL = {
+    kopplad: ['Google är kopplat. Tryck Prova för att se att ett rum går att skapa.', 'ar-klar'],
+    nekad: ['Du avbröt hos Google. Ingenting kopplades.', ''],
+    fel: ['Kopplingen gick inte igenom. Vad Google svarade står i kortet nedan.', 'ar-ny'],
+    fel_konto: ['Kontot hör inte till Nextrums Google Workspace, så ingenting kopplades. '
+      + 'Tryck Koppla Google igen och logga in som info@nextrum.se.', 'ar-ny'],
+    saknar_meet: ['Rutan för Google Meet var inte ikryssad hos Google, så ingenting kopplades. '
+      + 'Tryck Koppla Google igen och låt den vara ikryssad.', 'ar-ny'],
+    ogiltig: ['Svaret från Google gick inte att lita på eller kom för sent (efter tio minuter). '
+      + 'Tryck Koppla Google igen.', 'ar-ny'],
+    ej_satt: ['GOOGLE_KLIENT_ID och GOOGLE_KLIENT_HEMLIGHET är inte satta i Supabase. Se INTEGRATIONER.md.', 'ar-ny']
+  };
+  let googleBesked = null;
+  (function läsGoogleUtfall() {
+    let utfall = null;
+    try { utfall = new URLSearchParams(location.search).get('google'); } catch (e) { /* ingen adress att läsa */ }
+    if (!utfall) return;
+    googleBesked = GOOGLE_UTFALL[utfall] || null;
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) { /* adressen står kvar */ }
+  })();
+
+  /* Svaret från Prova: länken, så att den går att öppna i ett privat
+     fönster och se att dörren faktiskt står öppen. Ett rum som inte
+     blev öppet säger det, med varför. */
+  let googleProv = null;
+
+  function googleKnappar(kopplad) {
+    return '<div class="adm-koppling-knappar">'
+      + (kopplad
+        ? '<button type="button" class="btn btn-ghost btn-sm" data-google="prova">Prova</button>'
+          + '<button type="button" class="btn btn-ghost btn-sm" data-google="koppla_fran">Koppla från</button>'
+        : '<button type="button" class="btn btn-primary btn-sm" data-google="starta">Koppla Google</button>')
+      + '</div>'
+      + (googleProv ? '<div class="adm-koppling-prov" role="status">' + googleProv + '</div>' : '');
+  }
 
   function ritaIntegrationer() {
     const rader = Object.keys(TJANSTER).map(nyckel => {
@@ -63,25 +114,31 @@
         + (kopplad ? pill('Kopplad', 'ar-klar') : pill('Inte kopplad', '')) + '</h6>'
         + '<p>' + esc(t.vad) + '</p>'
         + (kopplad && rad.konto ? '<p class="xsmall" style="color:var(--bl-3)">Konto: '
-          + esc(rad.konto) + '</p>' : '')
-        + (kopplad && rad.senaste_synk ? '<p class="xsmall" style="color:var(--bl-3)">Senaste synk: '
+          + esc(rad.konto) + (rad.kopplad_at ? ', kopplat ' + esc(kortDatum(rad.kopplad_at)) : '') + '</p>' : '')
+        + (kopplad && rad.senaste_synk ? '<p class="xsmall" style="color:var(--bl-3)">Senaste rum skapat: '
           + esc(kortDatum(rad.senaste_synk)) + '</p>' : '')
         + (rad && rad.senaste_fel ? '<p class="xsmall" style="color:var(--acc-text)">Senaste fel: '
           + esc(rad.senaste_fel) + '</p>' : '')
-        + '<div class="adm-krav">' + esc(t.krav) + '</div>'
+        + (nyckel === 'google_workspace' ? googleKnappar(kopplad) : '')
+        + (kopplad ? '' : '<div class="adm-krav">' + esc(t.krav) + '</div>')
         + '</div>';
     }).join('');
 
     $('#int-kort').innerHTML =
-      '<div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">'
+      (googleBesked
+        ? '<div class="dbox" role="status" style="margin-bottom:clamp(16px,1.8vw,22px)">'
+          + '<p class="xsmall" style="line-height:1.7;margin:0">'
+          + pill('Google', googleBesked[1]) + ' ' + esc(googleBesked[0]) + '</p></div>'
+        : '')
+      + '<div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">'
       + '<h5>Så kopplas en tjänst</h5>'
       + '<p class="xsmall" style="color:var(--muted-2);line-height:1.7">'
-      + 'Den kopplas inte härifrån, och det är med flit. Den kräver en '
-      + 'klienthemlighet, och en hemlighet som webbläsaren kan läsa är ingen '
-      + 'hemlighet — den ligger då hos varenda person som öppnar sidan. '
-      + 'Nycklarna sätts som secrets på edge-funktionen, dit ingen webbläsare '
-      + 'når, och den här sidan visar bara vad servern rapporterar tillbaka. '
-      + 'Står det "inte kopplad" är den inte kopplad, oavsett vad någon skrivit i en tabell.'
+      + 'Knappen skickar dig till Google, där du loggar in med Nextrums konto och godkänner. '
+      + 'Google skickar tillbaka en engångskod till vår server, som byter den mot en nyckel och '
+      + 'sparar den där ingen webbläsare når. Klienthemligheten lämnar aldrig servern: en hemlighet '
+      + 'som webbläsaren kan läsa hade legat hos varenda person som öppnar sidan. Den här sidan visar '
+      + 'bara vad servern rapporterar. Står det "inte kopplad" är den inte kopplad, oavsett vad '
+      + 'någon skrivit i en tabell.'
       + '</p></div>'
       + '<div class="adm-koppling">' + rader + '</div>'
       + (S.saknasV13.indexOf('integrationer') !== -1
@@ -91,6 +148,69 @@
             + 'vilket råkar vara sant.') + '</div>'
         : '');
   }
+
+  /* Statusraden läses om efter varje knapp. Funktionen skriver den med
+     service_role i samma anrop, så den finns redan när svaret kommit,
+     men S.integrationer är vad vyn hämtade när den startade. */
+  async function hämtaIntegrationerIgen() {
+    const { data, error } = await supa.from('integrationer').select('*');
+    if (!error) S.integrationer = data || [];
+  }
+
+  /* Koppla, Prova, Koppla från. Alla tre går till google-koppla, som
+     prövar att den som trycker är admin innan något annat händer. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-google]');
+    if (!knapp) return;
+    const steg = knapp.dataset.google;
+
+    if (steg === 'koppla_fran') {
+      const ja = await bekräfta({
+        titel: 'Koppla från Google?',
+        text: 'Nyckeln stängs hos Google och tas bort här. Länkar som redan skapats fortsätter att '
+          + 'fungera, men nya onlinepass får ingen länk förrän någon kopplar igen. Familjen och '
+          + 'studiehjälparen ser då texten om att länken kommer i meddelanden.',
+        knapp: 'Koppla från'
+      });
+      if (!ja) return;
+    }
+
+    await medan(knapp, steg === 'starta' ? 'Öppnar Google…' : steg === 'prova' ? 'Skapar ett rum…' : 'Kopplar från…',
+      async () => {
+        const svar = await supa.functions.invoke('google-koppla', {
+          body: { steg: steg, ursprung: location.origin }
+        });
+        if (svar.error) {
+          googleProv = '<p class="xsmall" style="color:var(--acc-text);margin:0">'
+            + esc(await funktionsFel(svar.error)) + '</p>';
+        } else if (steg === 'starta') {
+          /* Vidare till Google. Adressen kommer från funktionen och
+             pekar på accounts.google.com; den prövas ändå, så att inget
+             svar kan skicka en admin någon annanstans. */
+          const url = String((svar.data || {}).url || '');
+          if (url.indexOf('https://accounts.google.com/') === 0) { location.assign(url); return; }
+          googleProv = '<p class="xsmall" style="color:var(--acc-text);margin:0">'
+            + 'Funktionen svarade inte med en adress till Google.</p>';
+        } else if (steg === 'prova') {
+          const d = svar.data || {};
+          const lank = /^https:\/\/meet\.google\.com\/[a-z]+-[a-z]+-[a-z]+$/.test(d.lank || '') ? d.lank : null;
+          googleProv = d.varning
+            ? '<p class="xsmall" style="color:var(--acc-text);margin:0">' + esc(d.varning) + '</p>'
+            : '<p class="xsmall" style="margin:0;line-height:1.6">Ett öppet rum skapades'
+              + (d.konto ? ' av ' + esc(d.konto) : '') + '. '
+              + (lank ? 'Öppna <a href="' + esc(lank) + '" target="_blank" rel="noopener noreferrer">'
+                + esc(lank.replace(/^https:\/\//, '')) + '</a> i ett privat fönster, utloggad från Google. '
+                + 'Kommer du in utan att knacka kommer familjerna också in.' : '') + '</p>';
+        } else {
+          googleProv = '<p class="xsmall" style="margin:0">'
+            + ((svar.data || {}).stangd ? 'Google är frånkopplat.'
+              : 'Frånkopplat här, men nyckeln gick inte att stänga hos Google. Se kortet.') + '</p>';
+        }
+        googleBesked = null;
+        await hämtaIntegrationerIgen();
+        ritaIntegrationer();
+      });
+  });
 
   /* ------------------------------------------------------------
      KLIENTFEL
@@ -520,7 +640,7 @@
         ['Bolagsfakta', 'Organisationsnummer, moms, F-skatt och hur studiehjälparna anlitas.', '#agenter/bolaget'],
         ['Tjänster och priser', 'Pris, ersättning, RUT-andel och villkor per tjänst.', '#katalog/tjanster'],
         ['Rabattkoder', 'Koder, värden och giltighet.', '#katalog/rabattkoder'],
-        ['Integrationer', 'Google Workspace. Bokföringen sköts i Fortnox, utan koppling hit.', '#system/integrationer'],
+        ['Integrationer', 'Google Meet-länkar till onlinepassen. Bokföringen sköts i Fortnox, utan koppling hit.', '#system/integrationer'],
         ['Adminanvändare', 'Vem som ser den här vyn.', '#system/adminanvandare']
       ];
       pekare.innerHTML = PEKARE.map(([namn, text, mål]) =>
