@@ -211,8 +211,12 @@ Genererat:
 - `nextrum-maskot-svar.js` byggs av `verktyg/bygg-maskotsvar.py` ur
   `faq.html` och `en/faq.html`
 - FAQPage-märkningen i båda faq-sidorna byggs av `verktyg/bygg-faq-schema.py`
-- De sju `laxhjalp-*.html` byggs av `verktyg/bygg-omradessidor.py`, och
-  skalet läses ur `var-ide.html` vid varje körning
+- Sex stadsdelssidor och fyra ämnessidor (`laxhjalp-*.html`) och
+  ämneskorten i navet byggs av `verktyg/bygg-omradessidor.py`. Skalet
+  läses ur `var-ide.html`, alt-texten ur `nextrum-images.js`
+- `sitemap.xml` byggs av `verktyg/bygg-sitemap.py` ur sidornas
+  canonical och hreflang. `lastmod` flyttas bara när sidans text
+  ändras, inte vid varje commit
 - Ikonlänkar och bildstorlekar sätts av `verktyg/satt-logga.py`
 - `?v=`-stämplarna på varje script- och link-tagg sätts av
   `verktyg/satt-version.py`, som körs SIST — områdesgeneratorn skriver
@@ -221,8 +225,8 @@ Genererat:
   en bildkodare ger inte samma bytes mellan versioner. `kolla-webp.py`
   vaktar i stället att filen finns och inte är äldre än sin jpg
 
-CI (`.github/workflows/kontroll.yml`) kör om maskotsvaren och FAQ-schemat
-och gör `git diff --exit-code`. Ändrar du FAQ:n utan att bygga om blir
+CI (`.github/workflows/kontroll.yml`) kör om maskotsvaren, FAQ-schemat
+och kartan och gör `git diff --exit-code`. Ändrar du FAQ:n utan att bygga om blir
 bygget rött. Övriga steg: `node --check` på all JS, `testa-agent.js`,
 betalningslöftet, migrationsnamnen, CSP, webp-filerna,
 versionsstämplarna, språkdiffen (som jämför attributNAMN också),
@@ -230,9 +234,10 @@ versionsstämplarna, språkdiffen (som jämför attributNAMN också),
 
 Kör kontrollerna lokalt före push. De är snabba.
 
-Områdessidorna får inte innehålla något som inte är sant: inga antal,
-inga betyg, inga okontrollerade skolnamn. Sju sidor som säger samma sak
-med utbytt ortnamn är doorway pages.
+Områdessidorna och ämnessidorna får inte innehålla något som inte är
+sant: inga antal, inga betyg, inga betygshöjningar, inga okontrollerade
+skolnamn, inga kursnamn med årtal. Sju sidor som säger samma sak med
+utbytt ortnamn är doorway pages.
 
 ---
 

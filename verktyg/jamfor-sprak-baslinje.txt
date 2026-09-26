@@ -59,14 +59,18 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 10
+=== svenska sidor utan engelsk tvilling: 14
   admin.html
   foralder.html
   larare.html
   laxhjalp-bromma.html
+  laxhjalp-engelska.html
   laxhjalp-farsta.html
   laxhjalp-hammarby-sjostad.html
+  laxhjalp-matematik.html
   laxhjalp-nacka.html
+  laxhjalp-no.html
   laxhjalp-sodermalm.html
   laxhjalp-solna.html
   laxhjalp-stockholm.html
+  laxhjalp-svenska.html
