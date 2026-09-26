@@ -850,7 +850,7 @@ html.nx-sr .nx-sd.nx-in .sd-rum{opacity:1;transform:none}
   align-self:flex-start;
 }
 .sd-bubbla.egen{align-self:flex-end;border-radius:18px 18px 6px 18px;background:var(--acc);color:var(--acc-ink)}
-.sd-sek.pa .sd-bubbla{animation:sd-bubbla .5s var(--fjader) both;animation-delay:calc(var(--i) * .75s + .2s)}
+.sd-sek.pa .sd-bubbla{animation:sd-bubbla .5s var(--fjader) both;animation-delay:calc(var(--i) * .55s + .2s)}
 @keyframes sd-bubbla{from{opacity:0;translate:0 10px;scale:.9}}
 .sd-bubbla.egen{transform-origin:right bottom}
 .sd-bubbla{transform-origin:left bottom}
@@ -932,7 +932,7 @@ html.nx-sr .nx-sd.nx-in .sd-rum{opacity:1;transform:none}
   pointer-events:none;
   opacity:0;
   transform:translate(var(--px,60%),var(--py,70%));
-  transition:transform .85s cubic-bezier(.5,0,.2,1),opacity .4s var(--e);
+  transition:transform .6s cubic-bezier(.5,0,.2,1),opacity .4s var(--e);
   filter:drop-shadow(0 4px 8px rgba(28,24,18,.35));
 }
 .sd-pekare.syns{opacity:1}

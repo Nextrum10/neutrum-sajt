@@ -549,12 +549,12 @@ const NXStart = (function () {
       const ner = () => { if (tråd) tråd.scrollTo({ top: tråd.scrollHeight, behavior: rörelse ? 'smooth' : 'auto' }); };
       ner();
       const skriver = $('.sd-skriver.svar', app);
-      setTimeout(() => { if (skriver) skriver.classList.add('bytt'); ner(); }, rörelse ? 500 : 0);
+      setTimeout(() => { if (skriver) skriver.classList.add('bytt'); ner(); }, rörelse ? 350 : 0);
       setTimeout(() => {
         if (skriver) skriver.classList.add('klar');
         händelse('svar' + nr);
         ner();
-      }, rörelse ? 1800 : 0);
+      }, rörelse ? 1200 : 0);
     }
 
     fönster.addEventListener('click', e => {
@@ -566,9 +566,9 @@ const NXStart = (function () {
       else if (d.sdVal) väljChip(b);
       else if (d.sdFlik) flik(b);
       else if (d.sdSvar) svara(b);
-      else if ('sdForesla' in d) tänk(b, 750, () => händelse('foreslaget'));
+      else if ('sdForesla' in d) tänk(b, 500, () => händelse('foreslaget'));
       else if ('sdGodkann' in d) händelse('godkant');
-      else if ('sdBetala' in d) tänk(b, 900, () => händelse('betalt'));
+      else if ('sdBetala' in d) tänk(b, 650, () => händelse('betalt'));
     });
     fönster.addEventListener('change', e => {
       if (e.target.matches('.sd-lax input')) läxor();
@@ -588,22 +588,27 @@ const NXStart = (function () {
       }, '0px 0px -12% 0px');
     }
 
-    /* ---------- rundturen ---------- */
+    /* ---------- rundturen ----------
+       Ett tal är en paus. Pausen efter ett klick är så lång som det
+       klicket sätter igång: bubblorna i chatten, svaret, graferna i
+       Min utveckling. Kortas en paus under sin animation byter
+       pekaren sektion mitt i den. Leo 2026-09-26 ville ha den lite
+       snabbare; ett varv tog 47 sekunder och tar nu runt 33. */
     const TUR = [
-      1800,
-      '[data-sd-godkann]', 900,
+      1200,
+      '[data-sd-godkann]', 600,
       '.sd-sido [data-sd-visa="boka"]',
       '[data-sd-dag="15"]',
       '[data-sd-val="tid"]:nth-child(2)',
-      '[data-sd-foresla]', 1700,
-      '.sd-sido [data-sd-visa="lektioner"]', 1500,
-      '.sd-sido [data-sd-visa="meddelanden"]', 3400,
-      '[data-sd-svar="2"]', 2800,
+      '[data-sd-foresla]', 1100,
+      '.sd-sido [data-sd-visa="lektioner"]', 1000,
+      '.sd-sido [data-sd-visa="meddelanden"]', 2200,
+      '[data-sd-svar="2"]', 2000,
       '.sd-sido [data-sd-visa="betalning"]',
-      '[data-sd-betala]', 2000,
-      '.sd-sido [data-sd-visa="utveckling"]', 2800,
+      '[data-sd-betala]', 1400,
+      '.sd-sido [data-sd-visa="utveckling"]', 2000,
       '.sd-sido [data-sd-visa="laxor"]',
-      '.sd-lax input:not(:checked)', 1600,
+      '.sd-lax input:not(:checked)', 1100,
       '.sd-sido [data-sd-visa="oversikt"]'
     ];
     let tur = null, turSynlig = false;
@@ -676,20 +681,24 @@ const NXStart = (function () {
           if (typeof s === 'number') { await vänta(s, tok); continue; }
           const el = $(s, app);
           if (!el) continue;
-          if (fram(el) && !(await vänta(500, tok))) break;
+          if (fram(el) && !(await vänta(400, tok))) break;
           const l = läge(el);
           pekare.style.setProperty('--px', l.x.toFixed(1) + 'px');
           pekare.style.setProperty('--py', l.y.toFixed(1) + 'px');
-          if (!(await vänta(950, tok))) break;
+          /* Pekarens transition i CSS är .6s, och vänta() räknar ner i
+             steg om 100 ms med det första dragit direkt: 750 är 700 ms,
+             så pekaren står still en stund innan den klickar. Ändras
+             den ena ändras den andra. */
+          if (!(await vänta(750, tok))) break;
           pekare.classList.remove('klick');
           void pekare.offsetWidth;
           pekare.classList.add('klick');
           el.click();
-          if (!(await vänta(650, tok))) break;
+          if (!(await vänta(450, tok))) break;
         }
-        if (tok.stopp || !(await vänta(4500, tok))) break;
+        if (tok.stopp || !(await vänta(3000, tok))) break;
         nollställ();
-        if (!(await vänta(900, tok))) break;
+        if (!(await vänta(600, tok))) break;
       }
     }
 
