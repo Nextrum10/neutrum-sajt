@@ -213,7 +213,8 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
-Sju områdessidor (`laxhjalp-*.html`) genereras. `/en/` är elva
+Sex stadsdelssidor och fyra ämnessidor (`laxhjalp-*.html`) genereras;
+navet `laxhjalp-stockholm.html` är handskrivet. `/en/` är elva
 översatta sidor.
 
 ### Startsidan efter hero (2026-09-25)
@@ -1120,14 +1121,26 @@ hitta på ett pris, ett villkor eller ett löfte.
 |---|---|---|
 | `nextrum-maskot-svar.js` | `verktyg/bygg-maskotsvar.py` | `faq.html`, `en/faq.html` |
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
-| `laxhjalp-*.html` (7 st) | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html` |
+| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen) och ämneskorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
+| `sitemap.xml` | `verktyg/bygg-sitemap.py` | sidornas canonical, hreflang och noindex |
 | Ikonlänkar och storlekar | `verktyg/satt-logga.py` | `bilder/nextrum-logo.png` — finns inte i dag; PNG:erna är renderade ur `favicon.svg`, se `GOOGLE.md` |
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i verktyget. Körs för hand (kräver Chromium), inte i CI. `--sql` ger raderna till `biblioteksmaterial` |
 | `?v=`-stämplarna på alla script- och link-taggar | `verktyg/satt-version.py` | filernas egen md5 |
 | `bilder/*.webp` | `verktyg/bygg-webp.py` | `bilder/*.jpg` |
 
-CI kör om maskotsvaren och FAQ-schemat och gör `git diff --exit-code`.
-Ändrar du FAQ:n utan att bygga om blir bygget rött.
+CI kör om maskotsvaren, FAQ-schemat och kartan och gör `git diff
+--exit-code`. Ändrar du FAQ:n utan att bygga om blir bygget rött, och
+samma sak om du ändrar vad en sida säger, lägger till en eller tar bort
+en utan att köra `bygg-sitemap.py`.
+
+**Kartans `lastmod` räknas ur texten, inte ur git** (2026-09-26). Den
+skrevs för hand förut och hade glidit: `/laxhjalp-stockholm` stod två
+gånger och sex sidor saknade datum. Git hade inte hjälpt, för
+`satt-version.py` stämplar om varje sida när en js-fil ändras, och då
+ser hela sajten nyskriven ut efter varje commit. Google slutar läsa
+`lastmod` som inte stämmer. Skriptet räknar i stället en summa av
+titel, beskrivning och texten i `<main>`, och flyttar datumet bara när
+summan ändras.
 
 **`satt-version.py` körs SIST.** Områdesgeneratorn skriver sina egna
 script-taggar och tappar stämpeln, så ordningen är: bygg om, stämpla
@@ -1146,6 +1159,15 @@ okontrollerade skolnamn. Sju sidor som säger samma sak med utbytt
 ortnamn är doorway pages, och en påhittad siffra på en sådan sida är
 dessutom en påhittad siffra.
 
+**Ämnessidorna** (2026-09-26) finns för sökningar som "läxhjälp matte"
+och "läxhjälp kemi", som ingen områdessida svarar på. Samma regel, och
+två till: inga betygshöjningar, och inga kursnamn med årtal (gymnasiet
+bytte till ämnesbetyg och nivåer, och "Matte 2c" är fel för en del av
+eleverna). Det som står om ämnet är vad kursplanen innehåller; det som
+står om Nextrum är samma löfte som resten av sajten. Moderna språk, SO
+och programmering har ingen sida, för navet säger "fråga i anmälan så
+säger vi om vi har rätt person" och en egen sida hade lovat mer.
+
 ---
 
 ## 9. CI — `.github/workflows/kontroll.yml`
@@ -1159,7 +1181,8 @@ Körs på varje push och PR. Ska vara grön före merge.
 5. `verktyg/kolla-csp.py`
 6. `verktyg/kolla-webp.py`
 7. `verktyg/satt-version.py --kolla`
-8. Genererade filer är aktuella (bygg om + `git diff --exit-code`)
+8. Genererade filer är aktuella (bygg om + `git diff --exit-code`):
+   maskotsvaren, FAQ-schemat och `sitemap.xml`
 9. Språkdiff mot baslinjen — **inklusive attributNAMNEN**, sedan
    `<div role="img" alt="…">` stod på den engelska startsidan där
    svenskan hade `aria-label`. `alt` betyder ingenting på en div, så

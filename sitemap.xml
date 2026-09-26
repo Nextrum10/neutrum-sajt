@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Genererad. Rena adresser utan .html — cleanUrls i vercel.json
-     gör att /priser.html omdirigerar hit, inte tvärtom. Båda
-     språkversionerna listas med sina alternativ. -->
+<!-- Genererad av verktyg/bygg-sitemap.py ur sidornas canonical och
+     hreflang. Ändra sidan och kör om skriptet, inte den här filen.
+     Summan under varje adress är vad lastmod jämförs mot. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
@@ -9,240 +9,252 @@
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa f99acb87b77b -->
   </url>
   <url>
     <loc>https://nextrum.se/en/</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/laxhjalp-stockholm</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-stockholm"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-stockholm"/>
-    <lastmod>2026-09-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/bli-studiehjalpare</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/bli-studiehjalpare"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/bli-studiehjalpare"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/bli-studiehjalpare"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/en/bli-studiehjalpare</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/bli-studiehjalpare"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/bli-studiehjalpare"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/bli-studiehjalpare"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/intresseanmalan</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/intresseanmalan"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/intresseanmalan"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/intresseanmalan"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/en/intresseanmalan</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/intresseanmalan"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/intresseanmalan"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/intresseanmalan"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/sa-fungerar-nextrum</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/sa-fungerar-nextrum"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/sa-fungerar-nextrum"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/sa-fungerar-nextrum"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/en/sa-fungerar-nextrum</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/sa-fungerar-nextrum"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/sa-fungerar-nextrum"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/sa-fungerar-nextrum"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/for-elever-och-foraldrar</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/for-elever-och-foraldrar"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/for-elever-och-foraldrar"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/for-elever-och-foraldrar"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/en/for-elever-och-foraldrar</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/for-elever-och-foraldrar"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/for-elever-och-foraldrar"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/for-elever-och-foraldrar"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/var-ide</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/var-ide"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/var-ide"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/var-ide"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/en/var-ide</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/var-ide"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/var-ide"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/var-ide"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/priser</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/priser"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/priser"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/priser"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/en/priser</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/priser"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/priser"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/priser"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/faq</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/faq"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/faq"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/faq"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/en/faq</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/faq"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/faq"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/faq"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/integritetspolicy</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/integritetspolicy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/integritetspolicy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/integritetspolicy"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/en/integritetspolicy</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/integritetspolicy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/integritetspolicy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/integritetspolicy"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 6edee98f6ad4 -->
   </url>
   <url>
     <loc>https://nextrum.se/anvandarvillkor</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/anvandarvillkor"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/anvandarvillkor"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/anvandarvillkor"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 1c86119f56c2 -->
   </url>
   <url>
     <loc>https://nextrum.se/en/anvandarvillkor</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/anvandarvillkor"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/anvandarvillkor"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/anvandarvillkor"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 8c42b18947ca -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/bli-studiehjalpare</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/bli-studiehjalpare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/bli-studiehjalpare"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/bli-studiehjalpare"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa bb331a35317a -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/en/bli-studiehjalpare</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/bli-studiehjalpare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/bli-studiehjalpare"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/bli-studiehjalpare"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 0655a38c11a4 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/faq</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/faq"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/faq"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/faq"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa de22d84f5b6c -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/en/faq</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/faq"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/faq"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/faq"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa ea2c7bde647d -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/for-elever-och-foraldrar</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/for-elever-och-foraldrar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/for-elever-och-foraldrar"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/for-elever-och-foraldrar"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 4ef3e71340b0 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/en/for-elever-och-foraldrar</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/for-elever-och-foraldrar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/for-elever-och-foraldrar"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/for-elever-och-foraldrar"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 001cbcae3af4 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/integritetspolicy</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/integritetspolicy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/integritetspolicy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/integritetspolicy"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa a1659ea9e03b -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/en/integritetspolicy</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/integritetspolicy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/integritetspolicy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/integritetspolicy"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 164b99a46993 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/intresseanmalan</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/intresseanmalan"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/intresseanmalan"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/intresseanmalan"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa aa0d6d68267d -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/en/intresseanmalan</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/intresseanmalan"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/intresseanmalan"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/intresseanmalan"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa d2ff4c6a17b5 -->
   </url>
   <url>
     <loc>https://nextrum.se/lagring</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/lagring"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/lagring"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/lagring"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 7b4d2d49a1e8 -->
   </url>
   <url>
     <loc>https://nextrum.se/en/lagring</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/lagring"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/lagring"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/lagring"/>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/laxhjalp-stockholm</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/laxhjalp-sodermalm</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/laxhjalp-farsta</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/laxhjalp-nacka</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nextrum.se/laxhjalp-hammarby-sjostad</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 17fa05328eb1 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-bromma</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-bromma"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-bromma"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 19866376a60d -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-engelska</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-engelska"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-engelska"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 48de910785ee -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-farsta</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-farsta"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-farsta"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa a6469ba4cf27 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-hammarby-sjostad</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-hammarby-sjostad"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-hammarby-sjostad"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa a6d46cc5ee3a -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-matematik</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-matematik"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-matematik"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa d4c21e91a5d5 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-nacka</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-nacka"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-nacka"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 117bbd0f650d -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-no</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-no"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-no"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 77ee6478f9d4 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-sodermalm</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-sodermalm"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-sodermalm"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa d46d2637d27b -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-solna</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-solna"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-solna"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa c7867d9071bd -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-stockholm</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-stockholm"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-stockholm"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 84704b84d512 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-svenska</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-svenska"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-svenska"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 725b209d605a -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/priser</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/priser"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/priser"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/priser"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa d75408200355 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/en/priser</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/priser"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/priser"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/priser"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa f6e9e07d1db1 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/sa-fungerar-nextrum</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/sa-fungerar-nextrum"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/sa-fungerar-nextrum"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/sa-fungerar-nextrum"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa 5100c695410f -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/en/sa-fungerar-nextrum</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/sa-fungerar-nextrum"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/sa-fungerar-nextrum"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/sa-fungerar-nextrum"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa d621d5f55d12 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/var-ide</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/var-ide"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/var-ide"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/var-ide"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa a0ff24842054 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/en/var-ide</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/var-ide"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/var-ide"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/var-ide"/>
+    <lastmod>2026-09-26</lastmod>
+    <!-- summa c538ce0bf4d2 -->
   </url>
 </urlset>
