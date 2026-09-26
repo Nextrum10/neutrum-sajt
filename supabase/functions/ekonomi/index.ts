@@ -5,10 +5,14 @@
 // slår upp vad Skatteverket och Bokföringsnämnden faktiskt säger, och
 // LÄMNAR FÖRSLAG. Den bokför ingenting och deklarerar ingenting.
 //
-// BOKFÖRINGEN SKÖTS I WINT (Fas 14.8), och agenten läser den inte. Här
-// fanns ett verktyg som läste Fortnox. Fortnox kopplades aldrig, och
-// Nextrum har valt Wint för fakturor och bokföring. Wint har inget
-// öppet API för det här; ett läsverktyg byggs när det finns ett.
+// BOKFÖRINGEN SKÖTS I FORTNOX (Fas 14.9), och agenten läser den inte.
+// Här fanns ett verktyg som läste Fortnox genom en koppling som aldrig
+// gjordes. Fas 14.8 tog bort det, och fortnox_token, när bokföringen
+// skulle ligga i Wint. Fas 14.9 bytte Wint mot Fortnox, utan koppling.
+// Fortnox har ett dokumenterat API, så en koppling, och ett läsverktyg
+// här, går att bygga senare. Den byggs först när handarbetet faktiskt
+// kostar tid: en koppling mot bokföringen som går sönder tyst är värre
+// än ingen.
 //
 // VARFÖR DEN ALDRIG SKRIVER
 // Bokföringslagen bygger på att varje post har en verifikation och att
@@ -217,9 +221,14 @@ const SYSTEM = `Du är Nextrums ekonomi- och administrationsrådgivare. Nextrum 
 bolag som förmedlar läxhjälp: familjer bokar pass, gymnasie- och högskolestudenter håller
 dem. Familjen betalar varje pass med kort, före passet, genom Stripe. Systemet kan också låta
 familjen välja en samlad månadsfaktura i efterskott, tio dagars betalningstid och ingen avgift,
-men det valet är avstängt tills bolaget är registrerat och har ett Wint-konto. Fakturorna och
-bokföringen sköts i Wint, och du kan inte läsa Wint.
+men det valet är avstängt tills bolaget är registrerat och har ett Fortnox-konto. Bokföringen
+och fakturorna ska skötas i Fortnox, utan koppling till Nextrums system, och du kan inte läsa
+Fortnox. Fakturautkasten läggs in där för hand. Kortbetalningarna, Stripes avgifter och
+utbetalningarna ska bokföras genom en Stripe-integration som kopplas i Fortnox; om den är
+kopplad vet du inte.
 Studiehjälparen får ersättning den 25:e för månadens rapporterade pass, utbetald från banken.
+Blir studiehjälparna anställda läggs ersättningen in i Fortnox Lön; anställningsformen står i
+bolagsfakta.
 Stripe betalar ut till bolagets bankkonto i klumpar, netto efter sin avgift: ingen bankrad
 motsvarar ett pass, och avgiften är en egen kostnad.
 
@@ -356,7 +365,7 @@ Deno.serve(async (req) => {
       return json({
         bolagsfakta_ifylld: !!fakta?.bolagsform,
         studiehjalpare_form: fakta?.studiehjalpare_form ?? 'saknas',
-        // Fas 14.8: bokföringen sköts i Wint, utan koppling hit.
+        // Fas 14.9: bokföringen sköts i Fortnox, utan koppling hit.
         bokforing: fakta?.bokforingssystem ?? 'inte ifyllt',
         fragor: Object.keys(FRAGOR),
         kallor: KALLOR,

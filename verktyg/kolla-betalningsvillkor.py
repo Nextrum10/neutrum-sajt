@@ -36,7 +36,7 @@ BETALNINGSTIDEN PÅ FAKTURAN (Fas 14.6). Familjen kan välja faktura på
 ett pass, och då står antalet dagar på två ställen i koden:
 BETALNINGSVILLKOR_DAGAR i _delad/konstanter.ts och i nextrum-config.js,
 som vyerna läser. Verktyget kräver att de är samma tal. Fakturan skapas
-i Wint, och Wints inställning ser verktyget inte: den ska vara samma
+i Fortnox, och inställningen där ser verktyget inte: den ska vara samma
 siffra, och det står i DEPLOY-BETALNING.md 9.11.
 
 Villkoren, prissidan och FAQ:n säger ännu inget om faktura. Det skrivs

@@ -151,9 +151,9 @@
        skrivs av en trigger. Se kommentaren i ritaFamiljer. */
 
     /* Fakturans läge hade en rullgardin här. Sedan Fas 14.6 har varje
-       läge sin egen knapp under Ekonomi → Fakturor (Lagd i Wint,
-       Betald, Makulera), för Skickad utan Wints nummer och förfallodag
-       är en rad ingen kan följa upp i Wint. */
+       läge sin egen knapp under Ekonomi → Fakturor (Lagd i Fortnox,
+       Betald, Makulera), för Skickad utan fakturanumret i Fortnox och
+       förfallodag är en rad ingen kan följa upp i Fortnox. */
 
     if (el.dataset && el.dataset.utb) {
       const u = S.utbetalningar.find(x => x.id === el.dataset.utb);
@@ -235,7 +235,7 @@
             ? 'Passet är betalt, och pengarna går inte tillbaka av sig själva — återbetala '
               + 'under Ekonomi → Kortbetalningar.'
             : b.betalning_status === 'faktura'
-            ? 'Familjen betalar passet mot faktura. Står det redan på en faktura i Wint ska raden '
+            ? 'Familjen betalar passet mot faktura. Står det redan på en faktura i Fortnox ska raden '
               + 'krediteras där; annars kommer det inte med på nästa faktura.'
             : 'Passet är inte betalt, så det finns inget att betala tillbaka.'),
         not: 'Både familjen och studiehjälparen får ett mejl om att passet är avbokat och varför.'
@@ -268,7 +268,7 @@
        ångra, så det ska gå att läsa igenom först.
 
        Bara underlag sedan Fas 14.6. Fakturor skapas och skickas i
-       Wint, och faktura-utskick nekar dem. */
+       Fortnox, och faktura-utskick nekar dem. */
     const skicka = e.target.closest('[data-skicka]');
     if (skicka) {
       const id = skicka.dataset.id;

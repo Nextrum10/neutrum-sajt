@@ -2,7 +2,7 @@
 
 **Sedan Fas 14.2 betalar familjen varje pass med kort, före passet.** Pengarna tas
 emot genom Stripe (avsnitt 9). **Sedan Fas 14.6 finns faktura som andra betalsätt,
-byggt men avstängt** tills bolaget och Wint finns (9.11). Studiehjälparen får betalt
+byggt men avstängt** tills bolaget och Fortnox-kontot finns (9.11). Studiehjälparen får betalt
 den 25:e ur `payouts`. Månadskörningen skapar underlagen, och ett fakturautkast per
 familj som valt faktura.
 
@@ -11,7 +11,7 @@ Filen står därför i fyra delar:
 - **Avsnitt 1–6** är månadskörningen och underlagen till studiehjälparna. De
   fungerar utan Stripe.
 - **Avsnitt 7** är historik: planen att skicka månadsfakturan genom Stripe.
-- **Avsnitt 8** är utskicket av underlagen. Fakturor skickas från Wint.
+- **Avsnitt 8** är utskicket av underlagen. Fakturor skickas från Fortnox.
 - **Avsnitt 9** är kortbetalningen, spärren "ingen betalning, inget pass", och
   (9.11) det som ska göras den dag fakturan slås på.
 
@@ -241,13 +241,13 @@ efterskrift har resonemanget.
 
 ---
 
-## 8. Utskicket av underlag (fakturor skickas från Wint)
+## 8. Utskicket av underlag (fakturor skickas från Fortnox)
 
 `faktura-utskick` mejlar studiehjälparen underlaget, alltså vad hen kommer att få
 den 25:e. Knappen **Skicka underlag** under Ekonomi → Utbetalningar anropar den.
 Namnet är kvar från när den också skickade familjens faktura. **Sedan Fas 14.6
-vägrar den fakturor**: de skickas från Wint, som sköter bokföringen, påminnelserna
-och inbetalningarna. Två ställen som skickar samma faktura är två ställen som kan
+vägrar den fakturor**: de skickas från Fortnox, som också sköter bokföringen och
+påminnelserna. Två ställen som skickar samma faktura är två ställen som kan
 säga olika saker om den.
 
 ```
@@ -275,22 +275,22 @@ alltså aldrig studiehjälparen. Är domänen inte verifierad får ni ett fel.
    faktura för, som har en rapport och som inte står på någon faktura: förra
    månadens, och äldre som blivit kvar. Beloppet räknas som kortets:
    samma pris, samma tillägg för fler barn, samma frysta rabatt.
-2. **Ekonomi → Fakturor → Underlag** kopierar det Wint behöver: familjen, perioden,
+2. **Ekonomi → Fakturor → Underlag** kopierar det Fortnox behöver: familjen, perioden,
    raderna och summan.
-3. **Lägg in fakturan i Wint** och skicka den därifrån.
-4. **Lagd i Wint** här: Wints fakturanummer och förfallodagen. Fakturan står då som
+3. **Lägg in fakturan i Fortnox** och skicka den därifrån.
+4. **Lagd i Fortnox** här: fakturanumret i Fortnox och förfallodagen. Fakturan står då som
    skickad, och familjen ser den under Betalning. Som utkast syns den för familjen
    bara som "står på fakturan för september, som snart skickas".
-5. **Betald** när Wint visar att pengarna kommit. Wint är inte kopplat, så ingen
-   annan än ni kan säga det här.
+5. **Betald** när Fortnox visar att pengarna kommit. Fortnox är inte kopplat, med flit
+   (`INTEGRATIONER.md` säger varför), så ingen annan än ni kan säga det här.
 
 **Förfallodagen räknas från när fakturan skickas**, inte från när körningen skapade
 den. Villkoret är tio dagar; skapas utkastet den 1:a och skickas den 5:e vore det
 sex om man räknade från körningen. Knappen föreslår dagens datum plus tio.
 
 **Inga avgifter.** Villkoren nämner ingen fakturaavgift och ingen
-påminnelseavgift, och då får ingen tas ut. Kontrollera att Wints påminnelser står
-utan avgift innan den första fakturan går.
+påminnelseavgift, och då får ingen tas ut. Kontrollera att påminnelserna i Fortnox
+står utan avgift innan den första fakturan går.
 
 ### Ändra betalningslöftet
 
@@ -321,9 +321,9 @@ Två saker klarar den inte:
 
 - **Det som faktiskt körs.** Att spärren är på är en flagga i databasen, inte en
   mening på en sida (9.9).
-- **Wints inställning.** `BETALNINGSVILLKOR_DAGAR` står i `_delad/konstanter.ts`
+- **Inställningen i Fortnox.** `BETALNINGSVILLKOR_DAGAR` står i `_delad/konstanter.ts`
   och i `nextrum-config.js`, och kontrollen säger ifrån om de skiljer sig. Men
-  dagarna på fakturan sätts i Wint, och dit når ingen kontroll.
+  dagarna på fakturan sätts i Fortnox, och dit når ingen kontroll.
 
 ### Utbetalningarna
 
@@ -335,7 +335,8 @@ hinner säga ifrån innan pengarna går. Den ändrar ingen status — att visa e
 knapp i adminvyn flyttar pengar. `Utbetald` betyder "vi har betalat från banken", och
 det måste ni ha gjort innan ni sätter det. Kortbetalningen i avsnitt 9 ändrar inte
 det: den gäller familjens håll, och pengarna stannar hos Nextrum tills ni betalar ut
-dem den 25:e.
+dem den 25:e. Blir studiehjälparna anställda läggs underlaget in i Fortnox Lön för
+hand (Fas 14.9); anställningsfrågan står i 9.7.
 
 ---
 
@@ -345,7 +346,7 @@ dem den 25:e.
 med, passen blir ofakturerade igen, och nästa månadskörning tar med dem. Rätta
 passet först.
 
-**En faktura som ligger i Wint** krediteras i Wint och **makuleras** här. Raderna
+**En faktura som ligger i Fortnox** krediteras i Fortnox och **makuleras** här. Raderna
 står kvar på en makulerad faktura, så passen kommer INTE med på nästa körning: det
 är rätt när familjen inte ska betala dem. Ska de faktureras om: ta bort den
 makulerade fakturan i Table Editor (raderna följer med, `on delete cascade`) och kör
@@ -419,7 +420,8 @@ panel som inte går att öppna. `stripe-checkout` prövar det, och går det inte
 raden "Kassan på sidan". Saknas nyckeln händer samma sak: betalningen fungerar,
 men på Stripes sida.
 
-Byter ni till skarpt läge byts alltså BÅDA, i samma fönster.
+Byter ni till skarpt läge byts alltså BÅDA, i samma fönster. Innan dess ska
+Stripe-integrationen i Fortnox vara kopplad (9.7).
 
 Via dashboarden: **Project Settings → Edge Functions → Secrets**. Eller med CLI:
 
@@ -622,11 +624,18 @@ utbetalning**. Båda gällde anslutna konton och finns inte att prova sedan Fas 
   utbetalning får ske innan det är utrett.
 - **Moms.** Ni är inte momsregistrerade. Passerar ni omsättningsgränsen ändras vad
   379 kr betyder, och då ändras beloppet som går till Stripe.
+- **Bokföringen av korten (Fas 14.9).** Kortbetalningarna, Stripes avgifter och
+  utbetalningarna (netto, i klumpar) ska bokföras genom en färdig Stripe-integration
+  som väljs och kopplas i Fortnox, på integrationsmarknaden där. Ingen kod här rör den.
+  Koppla den, och bestäm med revisorn hur den bokar, före den första skarpa
+  kortbetalningen. Innan något går till Fortnox, genom integrationen, på en faktura
+  eller i en lön, ska Fortnox stå under "Var uppgifterna finns" i integritetspolicyn,
+  på svenska och engelska: i dag räknar den bara upp Supabase, Vercel och Stripe.
 - **Dubbelfaktureringen.** Månadskörningen tar bara med pass som står `faktura`
   (Fas 14.6), så ett kortbetalt pass kommer inte på en faktura. Det enda sättet
   är att familjen byter till faktura medan en kassa står öppen och betalar den
   ändå; webhooken tar emot betalningen, och avvikelsen **Betalt två gånger** larmar
-  om passet redan hunnit faktureras. Kreditera då raden i Wint.
+  om passet redan hunnit faktureras. Kreditera då raden i Fortnox.
 - **Startererbjudandet finns inte i koden.** Prissidan lovar "Första timmen på köpet
   … dras av när ni betalar", och `stripe-checkout` drar inte av något. Bestäm
   regeln innan en ny familj betalar sitt första pass. Tills den är byggd går det att
@@ -799,9 +808,12 @@ skrivs om från en vy.
 
 **Före, utanför koden:**
 
-1. **Bolaget är registrerat**, och Wint-kontot har bankgiro och OCR. Wint tar bara
-   aktiebolag.
-2. **Wints inställningar:** tio dagars betalningsvillkor, ingen fakturaavgift,
+1. **Bolaget är registrerat**, och Fortnox-kontot har bankgiro och OCR.
+   Stripe-integrationen i Fortnox och raden om Fortnox i integritetspolicyn står i
+   9.7: de gäller korten och ska vara klara före den första skarpa kortbetalningen,
+   som kan komma före den här dagen. Är de inte gjorda, gör dem nu, för fakturan
+   skickar familjens namn och e-post till Fortnox.
+2. **Inställningarna i Fortnox:** tio dagars betalningsvillkor, ingen fakturaavgift,
    påminnelser utan avgift. Villkoren nämner ingen avgift, och då får ingen tas ut.
 3. **Befintliga familjer meddelas trettio dagar i förväg.** Villkoren har ett
    avsnitt om ändringar, och en familj som godkänt kort före passet har inte
@@ -837,7 +849,7 @@ skrivs om från en vy.
    den gör det.
 10. **Provfakturera en familj**, gärna er egen: välj faktura på ett pass, rapportera
    det, kör månadskörningen i torrkörning och sedan skarpt, lägg in utkastet i
-   Wint, skriv in numret, och markera den betald när pengarna kommit.
+   Fortnox, skriv in numret, och markera den betald när pengarna kommit.
 
 **De sex gamla obetalda passen** (bokade när villkoren lovade månadsfaktura) kan bli
 den första riktiga fakturan: bytet till `faktura` går också på ett genomfört pass.

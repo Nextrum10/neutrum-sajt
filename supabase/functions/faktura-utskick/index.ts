@@ -8,10 +8,10 @@
 // förut också familjens månadsfaktura, som ett eget mejl från Nextrum
 // med texten "Ni betalar alltid i efterskott". Fas 14.2 rev
 // månadsfakturan, och Fas 14.6 gav familjen faktura som val igen, men
-// nu skapas och skickas fakturan i Wint, med Wints OCR-nummer och
-// bankgiro. Ett andra fakturamejl härifrån hade gett familjen två
-// fakturor för samma pass, med olika nummer. Ett anrop med
-// typ = 'faktura' nekas därför, med ett besked om vägen dit.
+// nu skapas och skickas fakturan i Fortnox (Fas 14.6 byggde det för
+// Wint), med ett fakturanummer därifrån. Ett andra fakturamejl härifrån hade
+// gett familjen två fakturor för samma pass, med olika nummer. Ett
+// anrop med typ = 'faktura' nekas därför, med ett besked om vägen dit.
 //
 // Namnet står kvar. Det är adressen adminvyn anropar, och ett nytt
 // namn hade varit en ny funktion i driften medan den gamla låg kvar
@@ -154,8 +154,8 @@ Deno.serve(async (req) => {
     const kropp = await req.json().catch(() => ({}));
     if (kropp?.typ !== 'utbetalning') {
       return json({
-        error: 'Fakturor skapas och skickas i Wint sedan Fas 14.6. Lägg in fakturan där, och skriv in '
-          + 'Wints fakturanummer under Ekonomi → Fakturor.',
+        error: 'Fakturor skapas och skickas i Fortnox, inte härifrån. Lägg in fakturan där, och skriv in '
+          + 'fakturanumret från Fortnox under Ekonomi → Fakturor.',
       }, 409);
     }
     const id = String(kropp?.id ?? '').trim();

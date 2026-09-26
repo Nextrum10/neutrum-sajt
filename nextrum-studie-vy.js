@@ -1145,7 +1145,7 @@
      Under "Betala med kort" kan familjen välja "Betala med faktura i
      stället". Passet kommer då med på en samlad faktura i början av
      nästa månad, med alla pass familjen valt faktura för. Fakturan
-     skapas och skickas av Wint; här syns den när den skickats.
+     skapas och skickas från Fortnox; här syns den när den skickats.
 
      Valet är en textknapp under kortknappen, inte en knapp bredvid:
      kortet är det vanliga, fakturan ett alternativ till det. Det går
@@ -1174,7 +1174,7 @@
 
   async function laddaFakturor() {
     const { data, error } = await supa.from('invoices')
-      .select('id, period, status, belopp_ore, forfaller, skickad_at, betald_at, wint_fakturanummer, invoice_lines(booking_id)')
+      .select('id, period, status, belopp_ore, forfaller, skickad_at, betald_at, fortnox_fakturanummer, invoice_lines(booking_id)')
       .eq('parent_id', S.user.id).order('period', { ascending: false });
     /* Kan fakturorna inte läsas står det som fanns kvar. En tom lista
        hade sett ut som att ingenting är fakturerat, och då hade "Betala
@@ -1232,7 +1232,7 @@
     skickade.forEach(f => {
       const antal = (f.invoice_lines || []).length;
       delar.push(NXBetalning.fakturaRad(f, {
-        under: [f.wint_fakturanummer ? 'Faktura ' + f.wint_fakturanummer : null,
+        under: [f.fortnox_fakturanummer ? 'Faktura ' + f.fortnox_fakturanummer : null,
           antal ? antal + (antal === 1 ? ' pass' : ' pass') : null].filter(Boolean).join(' · ')
       }));
     });
@@ -2492,8 +2492,8 @@
       besked = !skickad
         ? { text: 'Passet är genomfört och kommer med på nästa månadsfaktura.', ton: 'klart' }
         : läge === 'betald'
-        ? { text: 'Passet är genomfört och betalt' + (f.wint_fakturanummer ? ', med faktura ' + f.wint_fakturanummer : '') + '.', ton: 'klart' }
-        : { text: 'Passet är genomfört och står på faktura' + (f.wint_fakturanummer ? ' ' + f.wint_fakturanummer : 'n')
+        ? { text: 'Passet är genomfört och betalt' + (f.fortnox_fakturanummer ? ', med faktura ' + f.fortnox_fakturanummer : '') + '.', ton: 'klart' }
+        : { text: 'Passet är genomfört och står på faktura' + (f.fortnox_fakturanummer ? ' ' + f.fortnox_fakturanummer : 'n')
             + (f.forfaller ? ', att betala senast ' + datumText(f.forfaller) : '') + '.', ton: läge === 'forfallen' ? 'fraga' : 'klart' };
       atgarder = '<a class="btn btn-primary" href="#boka">Boka nästa pass</a>' + skriv;
       alternativ = kortVal(b);
@@ -2533,8 +2533,8 @@
            just det, och ska betalas på den här sidan. */
         ['Betalning', b.fakturerbar === false ? 'Betalas inte'
           : b.betalning_status === 'faktura' && b.status !== 'cancelled'
-            ? (fakturaFör(b.id) && fakturaFör(b.id).wint_fakturanummer && fakturaFör(b.id).status !== 'utkast'
-                ? 'Faktura ' + fakturaFör(b.id).wint_fakturanummer : 'Mot faktura')
+            ? (fakturaFör(b.id) && fakturaFör(b.id).fortnox_fakturanummer && fakturaFör(b.id).status !== 'utkast'
+                ? 'Faktura ' + fakturaFör(b.id).fortnox_fakturanummer : 'Mot faktura')
           : b.status === 'requested' ? 'Betalas när passet är bekräftat'
           : b.status === 'cancelled' ? (b.betalning_status && b.betalning_status !== 'ingen'
               ? BETALNING_TEXT[b.betalning_status] : null)

@@ -15,8 +15,9 @@
 // Fas 14.6 lät familjen välja faktura på ett pass. Bara de passen,
 // betalning_status = 'faktura', samlas på ett fakturautkast per
 // familj och period i invoices, med en rad per pass i invoice_lines.
-// Utkastet läggs in i Wint av admin (Ekonomi → Fakturor), och det är
-// Wint som skickar fakturan. Den här funktionen skickar ingenting.
+// Utkastet läggs in i Fortnox av admin, för hand (Ekonomi → Fakturor,
+// knappen Lagd i Fortnox), och det är Fortnox som skickar fakturan.
+// Den här funktionen skickar ingenting.
 //
 // Funktionen heter kvar fakturering. Namnet är adressen adminvyn och
 // ett framtida schema anropar, och ett nytt namn hade varit en ny
@@ -278,7 +279,7 @@ Deno.serve(async (req) => {
     /* Fakturan FÖRST, raderna SEDAN, och fakturan tas bort om raderna
        inte gick in — samma ordning som underlaget nedan. En faktura
        utan rader hade larmat som faktura_summa_fel, men ett utkast med
-       rätt summa och fel rader hade lagts in i Wint utan att någon sett
+       rätt summa och fel rader hade lagts in i Fortnox utan att någon sett
        det. UNIQUE(parent_id, period) gör att en omkörning krockar i
        stället för att skapa en andra faktura: krocken står i `problem`. */
     for (const [foralder, rader] of fakturor) {
@@ -330,7 +331,7 @@ Deno.serve(async (req) => {
     // inte med i den här halvan alls: Connect togs bort i Fas 12.5,
     // eftersom en överföring per pass hade betalat samma timmar två
     // gånger — en gång vid passet och en gång här. Fakturan skickas av
-    // Wint, inte härifrån.
+    // Fortnox, inte härifrån.
 
     return json({ ...sammanfattning, skapade, problem }, problem.length ? 207 : 200);
   } catch (fel) {

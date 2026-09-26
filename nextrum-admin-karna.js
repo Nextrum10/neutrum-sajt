@@ -207,7 +207,7 @@ const NXAdmin = (function () {
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
       supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, klippkort_id').order('wanted_date', { ascending: false }),
       /* Raderna följer med (Fas 14.6): de är underlaget admin lägger in
-         i Wint, och vilket pass som står på vilken faktura. */
+         i Fortnox, och vilket pass som står på vilken faktura. */
       supa.from('invoices').select('*, invoice_lines(id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)')
         .order('period', { ascending: false }),
       supa.from('payouts').select('*').order('period', { ascending: false }),

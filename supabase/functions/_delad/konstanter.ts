@@ -7,8 +7,8 @@
 //
 // FAS 14.2 GJORDE DEN TILL HISTORIA, FAS 14.6 TILL ETT LÖFTE IGEN.
 // Familjen kan välja faktura på ett pass, och passen samlas på en
-// månadsfaktura med den här betalningstiden. Fakturan skapas i Wint,
-// så Wints betalningsvillkor ska vara samma siffra. En spegel står i
+// månadsfaktura med den här betalningstiden. Fakturan skapas i Fortnox,
+// så betalningsvillkoren i Fortnox ska vara samma siffra. En spegel står i
 // nextrum-config.js för vyerna, och verktyg/kolla-betalningsvillkor.py
 // jämför de två. Ändra den inte utan att läsa CLAUDE.md avsnitt 1: ett
 // villkor på en faktura som inte stämmer med det familjen läst är en

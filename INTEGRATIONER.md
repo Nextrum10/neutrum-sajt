@@ -3,8 +3,9 @@
 Adminsidan har en flik som heter **System → Integrationer**. Den visar om
 Google Workspace är kopplat. Just nu är svaret nej, och det står så.
 
-Fortnox stod här till Fas 14.8. Bokföringen och fakturorna sköts i
-**Wint**, och Wint är med flit inte kopplat alls (se nedan).
+Fortnox stod här till Fas 14.8, som en koppling som aldrig gjordes.
+Sedan Fas 14.9 sköts bokföringen, fakturorna och lönen i **Fortnox**,
+och Fortnox är med flit inte kopplat hit (se nedan).
 
 Den här filen säger vad som saknas och varför det inte går att klicka sig
 fram till det.
@@ -31,31 +32,48 @@ Adminsidan rapporterar. Den kopplar inte.
 
 ---
 
-## Wint — bokföringen och fakturorna, utan koppling
+## Fortnox: bokföringen, fakturorna och lönen, utan koppling
 
-Nextrum bokför och fakturerar i Wint. Ingenting härifrån når Wint
-automatiskt, och det är ett beslut, inte en lucka:
+Nextrum bokför, fakturerar och lägger in lönen i Fortnox. Fas 14.9 bytte
+Wint mot Fortnox. Ingenting härifrån når Fortnox automatiskt, och det
+är ett beslut, inte en lucka:
 
-- Wint har ett API, men det är inte dokumenterat publikt, och det
-  finns varken webhookar eller en sandlåda. En koppling som inte går att
-  prova utan att skapa riktiga fakturor hos ett riktigt bolag provas i
-  praktiken i drift.
+- Fortnox har ett dokumenterat API, vilket Wint inte hade, så en
+  koppling för fakturor och lönetransaktioner går att bygga senare. Den
+  byggs först när handarbetet faktiskt kostar tid. En koppling mot
+  bokföringen som går sönder tyst är värre än ingen.
 - Volymen är liten. En faktura per familj och månad, för de familjer som
   valt faktura, läggs in för hand på några minuter.
 
-Så går det till (Fas 14.6): månadskörningen skapar ett fakturautkast per
-familj under **Ekonomi → Fakturor**. **Underlag** kopierar det Wint
-behöver. Fakturan läggs in i Wint, som skickar den och ser när den
-betalas. Wints fakturanummer och förfallodag skrivs sedan in här med
-**Lagd i Wint**, och fakturan markeras **Betald** när Wint visar det.
+Fakturorna (Fas 14.6): månadskörningen skapar ett fakturautkast per
+familj under **Ekonomi → Fakturor**. **Underlag** kopierar det Fortnox
+behöver. Fakturan läggs in i Fortnox, som skickar den. Fakturanumret i
+Fortnox och förfallodagen skrivs sedan in här med **Lagd i Fortnox**,
+och fakturan markeras **Betald** när Fortnox visar det. Påminnelserna i
+Fortnox ställs utan avgift: villkoren nämner ingen, och då får ingen
+tas ut.
 
-Kortbetalningarna når inte heller Wint automatiskt. Stripe betalar ut
-till banken i klumpar, netto efter avgiften; avgiften och nettot per
-pass står under **Ekonomi → Kortbetalningar**. Hur utbetalningen bokas
-bestäms med revisorn innan den första skarpa betalningen.
+Lönen: blir studiehjälparna anställda läggs underlaget den 25:e
+(`payouts`, **Ekonomi → Utbetalningar**) in i Fortnox Lön för hand.
+Anställningsformen är inte avgjord (`studiehjalpare_form` står på
+`oklart`). Revisor före första utbetalningen (CLAUDE.md avsnitt 11,
+DEPLOY-BETALNING.md 9.7).
 
-Wint får därför ingen rad i `integrationer`. En statusrad för något som
-inte är kopplat hade sett ut som en koppling som väntar.
+Kortbetalningarna: Stripe betalar ut till banken i klumpar, netto efter
+avgiften; avgiften och nettot per pass står under **Ekonomi →
+Kortbetalningar**. Betalningarna, avgifterna och utbetalningarna ska
+bokföras genom en färdig Stripe-integration som väljs och kopplas i
+Fortnox, på integrationsmarknaden där. Ingen kod här rör den. Koppla
+den, och bestäm med revisorn hur den bokar, innan den första skarpa
+betalningen (DEPLOY-BETALNING.md 9.7).
+
+Integritetspolicyn: innan något går till Fortnox (Stripe-integrationen,
+den första fakturan eller den första lönen) ska Fortnox stå under "Var
+uppgifterna finns", på svenska och engelska. I dag räknar den bara upp
+Supabase, Vercel och Stripe.
+
+Fortnox får därför ingen rad i `integrationer`. En statusrad för något
+som inte är kopplat hade sett ut som en koppling som väntar.
 
 ---
 
