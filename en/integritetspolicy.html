@@ -276,7 +276,9 @@
         notes after a session into a report, and suggests short greetings. Anthropic gets the
         notes and the student’s first name and school year. Personal identity numbers, phone
         numbers and email addresses are masked before anything is sent, and Anthropic does not
-        train its models on it.</li>
+        train its models on it. We also use Anthropic to support our own work, for example to
+        see which enquiries are waiting for a reply. It then gets students’ initials, school
+        year and subject and masked free text, never names, email addresses or addresses.</li>
       <li><b>Stripe</b>: receives card payments. You give your card details directly to Stripe,
         never to us, and we do not store them. Stripe gets your email address, the amount and
         which session the payment is for (subject and date), and we get back that the session
@@ -361,9 +363,10 @@
       optional can be left empty.</p>
 
     <h2>AI and automated decisions</h2>
-    <p>We make no automated decisions about you or your child. AI is only used to rewrite a
-      tutor’s own notes after a session, when the tutor chooses to, and to suggest a short
-      greeting. The content comes from the tutor.</p>
+    <p>We make no automated decisions about you or your child. AI is used to rewrite a
+      tutor’s own notes after a session, when the tutor chooses to, to suggest a short
+      greeting, and to support us when we plan our work. The AI suggests, and a person
+      decides. It cannot change anything on its own.</p>
 
     <h2>If something goes wrong</h2>
     <p>If data were to end up in the wrong hands, we report it to the Swedish Authority for
