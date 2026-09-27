@@ -271,7 +271,7 @@ Deno.test('körningen drar ingen RUT, och en RUT-tjänst står med hela beloppet
   assertEquals(u.perTutor.get('t1')!.map((r) => r.belopp_ore), [12000]);
 });
 
-// ---------- Fas 14.2: familjen betalar med kort, före passet ----------
+// ---------- Fas 14.2: familjen betalar med kort (sedan Fas 19.2 i förväg eller efter passet) ----------
 //
 // Månadsfakturan till familjen finns inte längre. Det som är kvar av
 // familjens halva är en fråga: hölls det här passet utan att någon
