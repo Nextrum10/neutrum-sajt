@@ -47,6 +47,13 @@ window.NEXTRUM_CONFIG = {
      jämför de två filerna. */
   BETALNINGSVILLKOR_DAGAR: 10,
 
+  /* Bankgironumret familjen betalar en faktura till (Fas 19.6), som
+     det står på fakturan i Fortnox, till exempel '123-4567'. Tom sträng
+     = inte satt: rutan Fakturor att betala hänvisar då till fakturan i
+     stället för att visa ett nummer. Fylls i när bolaget har bankgiro,
+     samma dag som flaggan faktura slås på. */
+  BANKGIRO: '',
+
   // Kontaktuppgifter som visas i sidfoten och i formulärsvar.
   EPOST: 'info@nextrum.se',
 

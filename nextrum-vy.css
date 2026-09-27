@@ -1505,6 +1505,19 @@ section[data-sek]{overflow-anchor:none}
 .val-lank:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 .val-lank[aria-busy="true"]{opacity:.6;cursor:progress}
 .pass-atg .val-lank{flex-basis:100%;text-align:left}
+/* Villkoren under "Få faktura nästa månad" (Fas 19.6): samma rad som
+   valet, i den dämpade tonen, så att knappen står först. */
+.val-not{display:block;flex-basis:100%;margin-top:4px;font-size:.82rem;line-height:1.5;color:var(--muted-2)}
+/* En faktura att betala (Fas 19.6). Raderna är prisrutans sum-line;
+   en förfallen faktura får den sena tonen i kanten, inte en ny färg. */
+.fakt-att{padding:12px 0;border-top:1px solid var(--line)}
+.fakt-att:first-child{border-top:0;padding-top:0}
+.fakt-att.ar-sen{border-left:3px solid var(--acc);padding-left:12px}
+.fakt-att-topp{margin-bottom:6px}
+.fakt-att .sum-line span:last-child{text-align:right}
+.fakt-att .sen{color:var(--acc);font-weight:500}
+.fakt-att-pass{list-style:none;margin:8px 0 0;padding:0;font-size:.85rem;color:var(--muted)}
+.fakt-att-pass li{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
 
 /* Bekräfta rapport (Fas 19.1). Rapporten överst, valet under ett
    streck: först läser man, sedan svarar man. Radbrytningarna i
