@@ -609,52 +609,91 @@ const NX = (function () {
      går det inte att veta om annonserna, Facebook-gruppen eller
      mun-mot-mun är det som funkar — och då går pengarna åt fel håll.
 
-     Källan läses ur sidan där formuläret skickas, och INGENTING
-     sparas i webbläsaren. Förut skrevs den till sessionStorage
-     ("först i sessionen vinner"), men källa() anropas bara när
-     formuläret skickas, så lagringen vann aldrig något: den gjorde
-     bara lagring.html osann, som lovar att ingenting lagras förrän
-     man loggar in. Att minnas landningssidan över flera sidbyten
-     är lagring för marknadsföring och kräver samtycke (LEK 9 kap.
-     28 §), alltså en samtyckesruta. Den finns inte, med flit. */
+     FÖRST I SESSIONEN VINNER, men bara med samtycke. Klickar någon
+     på en annons, läser prissidan och skickar in på tredje sidan är
+     det annonsen som gjorde jobbet. För att veta det måste webbläsaren
+     minnas landningen (sessionStorage 'nx-kalla'), och det är lagring
+     för marknadsföring: den kräver ett ja (LEK 9 kap. 28 §). Frågan
+     ställs av NXSamtycke; här läses bara svaret.
+
+     UTAN JA ÄR EN OKÄND KÄLLA OKÄND, INTE "DIREKT". Kom besökaren hit
+     från en annan sida hos oss vet vi inte var hen landade, och kanal,
+     medium och landningssida blir null. analys_leads_per_kalla räknar
+     null som okänd (Fas 9.6: luckor redovisas, de fylls inte). Förut
+     blev det "direkt", och varje familj som läst två sidor innan de
+     anmälde sig räknades som mun-mot-mun.
+
+     sessionStorage kan kasta (privat läge, blockerade kakor) och
+     ska aldrig fälla ett formulär, därför try/catch runt varje
+     åtkomst. */
+  const KÄLL_NYCKEL = 'nx-kalla';
+
+  function fårMinnas() {
+    try { return typeof NXSamtycke !== 'undefined' && NXSamtycke.har('kallsparning'); }
+    catch (e) { return false; }
+  }
+
+  function läsLagrad() {
+    try {
+      const rå = sessionStorage.getItem(KÄLL_NYCKEL);
+      return rå ? JSON.parse(rå) : null;
+    } catch (e) { return null; }
+  }
+
+  function skrivLagrad(k) {
+    try { sessionStorage.setItem(KÄLL_NYCKEL, JSON.stringify(k)); } catch (e) { /* strunt i det */ }
+  }
+
   function källa() {
+    const minns = fårMinnas();
+    if (minns) {
+      const lagrad = läsLagrad();
+      if (lagrad) return lagrad;
+    }
+
     let p;
     try { p = new URLSearchParams(location.search); } catch (e) { p = new URLSearchParams(); }
     const par = n => (p.get(n) || '').trim().slice(0, 120) || null;
 
     let hänvisare = null;
+    let inifrån = false;
     try {
       if (document.referrer) {
         const h = new URL(document.referrer).hostname.replace(/^www\./, '');
         if (h && h !== location.hostname.replace(/^www\./, '')) hänvisare = h;
+        else if (h) inifrån = true;
       }
     } catch (e) { /* trasig referrer räknas som ingen */ }
 
     /* Kanalen i fallande ordning av hur mycket vi vet. En utm-tagg
        är något vi själva satt och väger tyngst; klick-id:na kommer
-       från annonsnätverken; hänvisaren är en gissning; kvar blir
-       "direkt", vilket i praktiken betyder mun-mot-mun, en QR-kod
-       eller något vi inte taggat. */
+       från annonsnätverken; hänvisaren är en gissning; utan hänvisare
+       och utan taggar blir det "direkt", vilket i praktiken betyder
+       mun-mot-mun, en QR-kod eller något vi inte taggat. */
     let kanal = par('utm_source');
     let medium = par('utm_medium');
     if (!kanal && par('gclid')) { kanal = 'google'; medium = medium || 'cpc'; }
     if (!kanal && par('fbclid')) { kanal = 'facebook'; medium = medium || 'social'; }
     if (!kanal && hänvisare) { kanal = hänvisare; medium = medium || 'hänvisning'; }
-    if (!kanal) { kanal = 'direkt'; medium = medium || 'okänt'; }
+    const okänd = !kanal && inifrån;
+    if (!kanal && !okänd) { kanal = 'direkt'; medium = medium || 'okänt'; }
     /* utm_source utan utm_medium är vanligt i handskrivna länkar —
        utan den här raden blev strängen "facebook / null". */
-    if (!medium) medium = 'okänt';
+    if (kanal && !medium) medium = 'okänt';
 
     const k = {
       kanal: kanal,
-      medium: medium,
+      medium: okänd ? null : medium,
       kampanj: par('utm_campaign'),
       innehåll: par('utm_content'),
       term: par('utm_term'),
       hänvisare: hänvisare,
-      landning: (location.pathname + location.search).slice(0, 200),
+      landning: okänd ? null : (location.pathname + location.search).slice(0, 200),
       tid: new Date().toISOString()
     };
+    /* En okänd källa sparas aldrig: den hade låst sessionen vid
+       "okänd" också om besökaren sedan kom tillbaka via en annons. */
+    if (minns && !okänd) skrivLagrad(k);
     return k;
   }
 
@@ -663,24 +702,30 @@ const NX = (function () {
      kan gå sönder i schemat, och allt syns i adminvyn direkt. */
   function källrader() {
     const k = källa();
-    const rader = ['Källa: ' + k.kanal + ' / ' + k.medium];
+    const rader = [k.kanal ? 'Källa: ' + k.kanal + ' / ' + k.medium
+                           : 'Källa: okänd (inget samtycke, anmälan skickad efter flera sidor)'];
     if (k.kampanj)   rader.push('Kampanj: ' + k.kampanj);
     if (k.innehåll)  rader.push('Annonsvariant: ' + k.innehåll);
     if (k.term)      rader.push('Sökord: ' + k.term);
     if (k.hänvisare) rader.push('Hänvisad från: ' + k.hänvisare);
-    rader.push('Landningssida: ' + k.landning);
+    if (k.landning)  rader.push('Landningssida: ' + k.landning);
     return rader;
   }
 
   /* Konverteringar till Vercel Analytics. window.va finns först när
      insights-skriptet laddat, och saknas helt lokalt (sökvägen ger
      404 på egen dator) — därför den tysta utgången. En mätning som
-     kraschar ett formulär är värre än ingen mätning alls. */
+     kraschar ett formulär är värre än ingen mätning alls.
+
+     Samma händelse går till NXSamtycke, som skickar den vidare till
+     annonspixlarna bara om de är påslagna OCH besökaren sagt ja. */
   function händelse(namn, data) {
     try {
-      if (typeof window.va !== 'function') return;
-      window.va('event', { name: namn, data: data || {} });
+      if (typeof window.va === 'function') window.va('event', { name: namn, data: data || {} });
     } catch (e) { /* mätning får aldrig stoppa något */ }
+    try {
+      if (typeof NXSamtycke !== 'undefined') NXSamtycke.konvertering(namn);
+    } catch (e) { /* inte heller här */ }
   }
 
   /* ---------- ansökan om att bli studiehjälpare ----------
@@ -776,7 +821,7 @@ const NX = (function () {
       if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }
       form.reset();
       säg(msg, t('tackAnsokan'), true);
-      händelse('ansokan_studiehjalpare', { kanal: källa().kanal, kampanj: källa().kampanj || 'ingen' });
+      händelse('ansokan_studiehjalpare', { kanal: källa().kanal || 'okänd', kampanj: källa().kampanj || 'ingen' });
     });
   }
 

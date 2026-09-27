@@ -596,7 +596,7 @@
       { namn: 'Kanal', rita: r => r.kalla
         ? '<b>' + esc(r.kalla) + '</b>'
           + (r.medium ? '<span class="adm-und">' + esc(r.medium) + '</span>' : '')
-        : '<b>Okänd</b><span class="adm-und">kom in innan källan mättes</span>' },
+        : '<b>Okänd</b><span class="adm-und">inget samtycke och flera sidor före anmälan, eller före Fas 9.5</span>' },
       { namn: 'Anmälningar', höger: true, rita: r => '<span class="adm-tal">' + r.anmalningar + '</span>' },
       { namn: 'Matchade', höger: true, rita: r => '<span class="adm-tal">' + r.matchade + '</span>' },
       { namn: 'Blev kund', höger: true, rita: r => '<span class="adm-tal">' + r.blev_kund + '</span>' }
