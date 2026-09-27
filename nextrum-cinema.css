@@ -1820,7 +1820,9 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    scrollar med webbläsarens egen mekanik fungerar med
    tangentbord, styrplatta och pekskärm utan att vi skriver en rad.
 
-   Kortet är en <button>: ett tryck fäller ut den längre texten.
+   Korten var knappar som fällde ut en längre text. Utfällningen är
+   borttagen (2026-09-27): i startsidans band klipptes den av
+   bandets höjd och syntes bara till hälften.
    ============================================================ */
 .nx-drag{
   display:flex;
@@ -1844,46 +1846,15 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   .nx-drag > li{flex-basis:clamp(280px,31%,360px)}
 }
 
-/* Hela kortet är klickytan. text-align:left för att en <button>
-   centrerar sitt innehåll som standard, vilket hade gjort en
-   brödtext oläslig. */
 .dr-kort{
   display:block;width:100%;height:100%;text-align:left;
   padding:clamp(18px,2vw,24px);
   border:1px solid var(--line);border-radius:18px;
   background:var(--surface);
-  cursor:pointer;
   position:relative;
   transition:border-color .2s var(--ease), background .2s var(--ease);
 }
 .dr-kort:hover{border-color:var(--muted-2)}
-.dr-kort[aria-expanded="true"]{
-  border-color:var(--acc);
-  background:var(--acc-soft);
-}
-
-/* Pilen vänder nedåt när kortet är utfällt. Ren CSS: den ritas av
-   två kanter, så ingen SVG behöver bytas ut av JS. */
-.dr-pil{
-  position:absolute;right:clamp(16px,2vw,22px);top:clamp(20px,2.2vw,26px);
-  width:9px;height:9px;
-  border-right:1.6px solid var(--muted-2);
-  border-bottom:1.6px solid var(--muted-2);
-  transform:rotate(-45deg);
-  transition:transform .22s var(--ease);
-}
-.dr-kort[aria-expanded="true"] .dr-pil{
-  transform:rotate(45deg);
-  border-color:var(--acc);
-}
-
-.dr-mer{
-  padding:0 clamp(18px,2vw,24px) clamp(16px,2vw,20px);
-}
-.dr-mer p{
-  margin:14px 0 0;
-  font-size:.88rem;line-height:1.68;color:var(--muted-2);
-}
 .nx-drag li{
   padding-top:clamp(18px,2vw,24px);
   border-top:1px solid var(--ln);

@@ -54,8 +54,8 @@
      sajtens. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
-<link rel="stylesheet" href="nextrum-cinema.css?v=6ef975e8">
-<link rel="stylesheet" href="nextrum-start.css?v=7d02dde0">
+<link rel="stylesheet" href="nextrum-cinema.css?v=dc5d0b1f">
+<link rel="stylesheet" href="nextrum-start.css?v=902e7f66">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -504,68 +504,56 @@
          rutor. Rutnätet plus de fyra trygghetskorten under blev tio
          påståenden på en skärm, och tio påståenden läses som noll.
 
-         Korten är knappar: ett tryck fäller ut en längre förklaring.
-         Det som stod i de fyra borttagna korten — kontrollen,
-         betalningen, kommunikationen, uppföljningen — finns kvar i
-         utfällningarna, fast bara på ett ställe var.
+         Korten var knappar som fällde ut en längre förklaring. Leo
+         2026-09-27 tog bort utfällningen: bandet klipper sin höjd
+         (overflow:clip), så texten syntes bara till hälften. Korten
+         är nu bara kort, och den längre texten finns inte kvar.
 
-         Raden scrollar med scroll-snap, så den går att dra på både
-         mus och pekskärm. JS sköter bara utfällningen. -->
+         Utan skript scrollar raden med scroll-snap, så den går att
+         dra på både mus och pekskärm. -->
   <div class="nx-band" data-band>
     <ul class="nx-drag" data-drag>
       <li>
-        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-0">
+        <div class="dr-kort">
           <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg></span>
           <b>Personlig läxhjälp</b>
           <p>En studiehjälpare, en elev, en plan. Ingen grupp och ingen mall.</p>
-          <span class="dr-pil" aria-hidden="true"></span>
-        </button>
-        <div class="dr-mer" id="dr-mer-0" hidden><p>Samma person varje gång. Hen minns vad som var svårt förra veckan, för hen var där — och slipper börja om med en kartläggning varje pass.</p></div>
+        </div>
       </li>
       <li>
-        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-1">
+        <div class="dr-kort">
           <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
           <b>Matchning vi står för</b>
           <p>Ni bläddrar inte i en katalog. Vi väljer, för fel match är värre än ingen match.</p>
-          <span class="dr-pil" aria-hidden="true"></span>
-        </button>
-        <div class="dr-mer" id="dr-mer-1" hidden><p>Vi går igenom behovet med er först och väljer sedan ut en person utifrån ämne, nivå och personlighet. Fungerar det inte säger ni till, och vi matchar om. Det finns ingen bindningstid som gör det krångligt.</p></div>
+        </div>
       </li>
       <li>
-        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-2">
+        <div class="dr-kort">
           <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="10" rx="2"/><path d="M16 9h3.2l1.8 2.4V15H16z"/><path d="M6.5 19h2M15 19h2"/></svg></span>
           <b>Flexibelt</b>
           <p>Online eller på plats, och ni byter mellan formaten från pass till pass.</p>
-          <span class="dr-pil" aria-hidden="true"></span>
-        </button>
-        <div class="dr-mer" id="dr-mer-2" hidden><p>Format väljs per pass, inte i ett avtal. Ett pass hemma i veckan och ett online veckan efter kräver ingen ändring någonstans. Passen är en till tre timmar, på tider ni och studiehjälparen kommer överens om.</p></div>
+        </div>
       </li>
       <li>
-        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-3">
+        <div class="dr-kort">
           <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H10.5L6 20v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span>
           <b>Allt på ett ställe</b>
           <p>Bokning, meddelanden och betalning i plattformen — inget spretande mellan appar.</p>
-          <span class="dr-pil" aria-hidden="true"></span>
-        </button>
-        <div class="dr-mer" id="dr-mer-3" hidden><p>Bokning, meddelanden och betalning sker i plattformen. Kommunikationen går via oss, och bokning, betalning och pass hänger ihop — så det går alltid att se vad som faktiskt utförts.</p></div>
+        </div>
       </li>
       <li>
-        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-4">
+        <div class="dr-kort">
           <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19v-4.5M12 19V9M17 19v-7"/><path d="M6 10.5l5-4 3 2.2 4.5-4"/></svg></span>
           <b>Utveckling ni kan följa</b>
           <p>Studieplanen, passen och rapporten efter varje gång — samlat i studievyn.</p>
-          <span class="dr-pil" aria-hidden="true"></span>
-        </button>
-        <div class="dr-mer" id="dr-mer-4" hidden><p>Rapporten skrivs av studiehjälparen efter varje pass och beskriver vad ni gick igenom och hur det gick. Ett pass räknas som genomfört först när den är skriven. Elev och förälder ser samma sak.</p></div>
+        </div>
       </li>
       <li>
-        <button type="button" class="dr-kort" aria-expanded="false" aria-controls="dr-mer-5">
+        <div class="dr-kort">
           <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M12 9.5v3.2M12 15.4v.1"/></svg></span>
           <b>Trygghet i varje steg</b>
           <p>Kontrollerade studiehjälpare, betalning via Nextrum och uppföljning efter passen.</p>
-          <span class="dr-pil" aria-hidden="true"></span>
-        </button>
-        <div class="dr-mer" id="dr-mer-5" hidden><p>Alla studiehjälpare går igenom vår urvals- och kontrollprocess. All betalning går genom Nextrum — aldrig direkt mellan familj och studiehjälpare. Vi följer upp passen och samlar in återkoppling.</p></div>
+        </div>
       </li>
     </ul>
   </div>
@@ -1198,12 +1186,11 @@
 <script src="nextrum-config.js?v=37357abd"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=52c081aa"></script>
+<script src="nextrum-app.js?v=036d9884"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
-<!-- Startsidans rörelse. FÖRE sidans eget skript: bandets kopior
-     måste finnas när NX.initDrag() letar upp korten. Startar av sig
-     självt, så att inget anrop här nere kan kasta om filen saknas. -->
-<script src="nextrum-start.js?v=1ea54eda"></script>
+<!-- Startsidans rörelse. Startar av sig självt, så att inget
+     anrop här nere kan kasta om filen saknas. -->
+<script src="nextrum-start.js?v=4b4871dd"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
@@ -1222,7 +1209,6 @@
 
   /* ---------- rörelsen ---------- */
   NXFin.allt();         /* header, radavslöjning, magnetknappar, parallax, markör */
-  NX.initDrag();       /* de sex punkterna fälls ut vid tryck */
   NX.initVagval();      /* vyväljaren bakom "Logga in" */
   NX.bildIntoning();    /* de foton som ligger i markupen */
 

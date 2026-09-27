@@ -259,16 +259,20 @@ Fyra saker som kostade en omgång:
    bort att illustrationen går att röra (fönstret är `inert`), men
    fällan gäller varje lutat lager med något klickbart i.
 3. **`scrollIntoView` i en rad som flyttas med transform rullar
-   sidan.** `NX.initDrag()` visar kortet man tryckt på. I bandet, som
-   klipps och förskjuts med transform, räknade Chrome fram ett mål
-   400 px bort och rullade hela sidan dit. Anropet hoppas över i
-   `.nx-band.pa`. Bandet är `overflow:clip`, inte `hidden`, av samma
-   skäl: `hidden` gör det till något som går att scrolla. Kanterna tonas
-   med två stilla gradienter, inte `mask-image`: en mask över något som
-   rör sig ritas om varje bildruta i Safari.
-4. **Bandets kopior måste finnas när `NX.initDrag()` körs.** Därför
-   laddas `nextrum-start.js` före sidans eget skript. Kopiorna är
-   `aria-hidden`, utanför tabbordningen och har egna id:n; en
+   sidan.** Förr visade `NX.initDrag()` kortet man tryckt på. I
+   bandet, som klipps och förskjuts med transform, räknade Chrome fram
+   ett mål 400 px bort och rullade hela sidan dit. Bandet är
+   `overflow:clip`, inte `hidden`, av samma skäl: `hidden` gör det
+   till något som går att scrolla. Kanterna tonas med två stilla
+   gradienter, inte `mask-image`: en mask över något som rör sig ritas
+   om varje bildruta i Safari.
+4. **Det som fälls ut i bandet klipps.** Korten var knappar som
+   fällde ut en längre text, och bandet klipper sin höjd, så texten
+   syntes bara till hälften. Leo 2026-09-27: ta bort den. Korten är nu
+   vanliga `div`:ar utan pil, `NX.initDrag()` finns inte längre, och
+   de längre förklaringarna (kontrollen, betalningen,
+   kommunikationen, uppföljningen) står inte kvar någonstans på
+   startsidan. Kopiorna är `aria-hidden` och har egna id:n; en
    skärmläsare hör sex kort, inte arton.
 
 **De mörka ytorna** har sedan 2026-09-25 en varmare bark på hela
