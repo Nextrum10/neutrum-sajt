@@ -39,11 +39,14 @@
 <meta name="twitter:description" content="Läxhjälp i Nacka med unga studiehjälpare som nyligen läst samma kurser. Hemma hos er eller online, 379 kr i timmen, ingen bindningstid.">
 <meta name="twitter:image" content="https://nextrum.se/bilder/12-pa-vag-1280.jpg">
 
+<!-- Förladdad: utan den kommer typsnittet efter första ritningen, långa rubriker
+     bryts om och allt under dem hoppar (CLS 0,2 på /laxhjalp-stockholm). -->
+<link rel="preload" href="/typsnitt/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
-<link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
+<link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=dc5d0b1f">
 </head>
 <body>
@@ -322,10 +325,18 @@
         <ul>
           <li><a href="/var-ide">Vår idé</a></li>
           <li><a href="/sa-fungerar-nextrum">Så fungerar Nextrum</a></li>
-          <li><a href="/laxhjalp-stockholm">Läxhjälp i Stockholm</a></li>
           <li><a href="/#studiehjalpare">Studiehjälpare</a></li>
           <li><a href="/priser">Priser</a></li>
-          <li><a href="/laxhjalp-stockholm">Läxhjälp i Stockholm</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-laxhjalp">
+        <h2 class="ftr-rubrik" id="ftr-laxhjalp">Läxhjälp</h2>
+        <ul>
+          <li><a href="/laxhjalp-stockholm">I Stockholm</a></li>
+          <li><a href="/laxhjalp-matematik">Matte</a></li>
+          <li><a href="/laxhjalp-svenska">Svenska</a></li>
+          <li><a href="/laxhjalp-engelska">Engelska</a></li>
+          <li><a href="/laxhjalp-no">Fysik, kemi och biologi</a></li>
         </ul>
       </nav>
       <nav aria-labelledby="ftr-fordig">

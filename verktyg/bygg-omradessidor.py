@@ -696,6 +696,180 @@ AMNEN = [
 
 
 # ============================================================
+# GUIDERNA
+#
+# Svar på det föräldrar söker innan de vet att de letar efter
+# läxhjälp: "gratis läxhjälp stockholm", "hjälpa barn med matte".
+# De ska gå att läsa och ha nytta av utan att någon bokar något.
+# En guide som bara är en reklamsida för Nextrum rankar inte, och den
+# förtjänar inte att göra det.
+#
+# Samma sanningsregel som resten. Allt om andra organisationer är
+# kontrollerat mot deras egna sidor (2026-09-26) och länkat i
+# `kallor`, och tider står inte med: de ändras varje termin, och en
+# gammal tid på vår sida skickar en familj till ett stängt bibliotek.
+# ============================================================
+
+GUIDER = [
+    {
+        'slug': 'gratis-laxhjalp-stockholm',
+        'i_namn': 'gratis i Stockholm',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'pris': True,
+        'titel': 'Gratis läxhjälp i Stockholm, och när den inte räcker | Nextrum',
+        'beskrivning': (
+            'Var det finns gratis läxhjälp i Stockholm: biblioteken, Röda Korset och '
+            'Mattecentrums räknestugor. Och när det är värt att ta en egen studiehjälpare.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'Gratis läxhjälp i Stockholm',
+        'kort': 'Biblioteken, Röda Korset och Mattecentrum',
+        'h1': 'Gratis läxhjälp<br>i <em>Stockholm.</em>',
+        'lede': (
+            'Det finns bra läxhjälp i Stockholm som inte kostar något. Här är var den finns, '
+            'vem den passar och när det är värt att ta en egen studiehjälpare i stället.'
+        ),
+        'bild': '12-pa-vag',
+        'tint': '#73746C',
+        'focal': '34% 48%',
+        'lista_etikett': 'Var den finns',
+        'lista_rubrik': 'Fyra ställen<br>att <em>börja.</em>',
+        'lista_ingress': (
+            'Tiderna ändras mellan terminerna. Kolla alltid på respektive sida innan ni går dit.'
+        ),
+        'lista': [
+            ('Biblioteken',
+             'Stockholms stadsbibliotek samlar läxhjälpen på sina bibliotek på en sida, med '
+             'platser och tider. Den hålls av volontärer från olika organisationer, och för '
+             'det mesta är det bara att komma dit.'),
+            ('Röda Korset',
+             'Röda Korsets volontärer håller gratis läxhjälp på flera bibliotek i Stockholm, '
+             'bland annat på Södermalm, Östermalm och i Skärholmen. Det är drop-in, och den är '
+             'öppen för både barn och vuxna.'),
+            ('Mattecentrum',
+             'Mattecentrums räknestugor ger gratis hjälp med matte upp till gymnasiet, av '
+             'volontärer och utan bokning. Föräldrar som vill fräscha upp sin egen matte är '
+             'också välkomna. På nätet finns deras Matteboken och frågeforumet Pluggakuten.'),
+            ('Skolan',
+             'Fråga elevens lärare eller mentor vad skolan erbjuder. Många skolor har läxhjälp '
+             'eller studiestöd efter lektionstid, och där vet de redan vad klassen arbetar med.'),
+        ],
+        'kallor': [
+            ('Stockholms stadsbibliotek: läxhjälp', 'https://biblioteket.stockholm.se/laxhjalp'),
+            ('Röda Korset: gratis läxhjälp', 'https://www.rodakorset.se/fa-hjalp/laxhjalp/'),
+            ('Mattecentrum: räknestugor i Stockholm', 'https://www.mattecentrum.se/raknestugor/stockholm'),
+        ],
+        'vinkel_etikett': 'När gratis inte räcker',
+        'vinkel_rubrik': 'Drop-in räcker ofta.<br>Men inte <em>alltid.</em>',
+        'vinkel': [
+            'Gratis läxhjälp är ofta en ny volontär varje gång, på fasta tider och i ett rum med '
+            'andra elever. För en läxa i taget fungerar det bra. Det som saknas är det som tar '
+            'tid att bygga: någon som minns var det tog stopp förra veckan, en plan fram till '
+            'provet och uppföljning mellan gångerna.',
+            'Där gör en egen studiehjälpare skillnad. Samma person varje gång, en studieplan '
+            'skriven för eleven och en rapport efter varje pass, hemma hos er eller online. '
+            'Räcker den gratis hjälpen, använd den. Räcker den inte vet ni nu varför.',
+        ],
+        'faq_rubrik': 'Gratis läxhjälp, det ni brukar undra',
+        'faq': [
+            ('Är läxhjälpen på biblioteken verkligen gratis?',
+             'Ja. Den hålls av volontärer från organisationer som Röda Korset och Mattecentrum '
+             'och kostar ingenting.'),
+            ('Behöver man boka?',
+             'För det mesta inte. Både bibliotekens läxhjälp och Mattecentrums räknestugor är '
+             'drop-in. Tiderna ändras mellan terminerna, så kolla på respektive sida innan ni '
+             'går dit.'),
+            ('Vad skiljer Nextrum från gratis läxhjälp?',
+             'Ni får samma studiehjälpare varje gång, en studieplan och en rapport efter varje '
+             'pass, och passen hålls hemma hos er eller online när det passar er. Det kostar '
+             f'{PRIS} i timmen, utan bindningstid.'),
+            ('Går det att kombinera?',
+             'Ja. Det går bra att göra vardagsläxorna på biblioteket och ta en egen '
+             'studiehjälpare inför ett prov eller i ämnet där det tagit stopp. Det finns inget '
+             'avtal som hindrar att ni bara bokar när ni behöver.'),
+        ],
+    },
+    {
+        'slug': 'hjalpa-barn-med-matte',
+        'i_namn': 'i matte hemma',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'titel': 'Så hjälper du ditt barn med matteläxan | Nextrum',
+        'beskrivning': (
+            'Konkreta råd för föräldrar: fråga innan du förklarar, låt barnet hålla pennan och '
+            'gå tillbaka ett steg när det tar stopp. Och vad ni gör när det inte går hemma.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'Hjälpa barnet med matteläxan',
+        'kort': 'Sex saker som brukar fungera vid köksbordet',
+        'h1': 'Hjälpa barnet med<br><em>matteläxan.</em>',
+        'lede': (
+            'Många föräldrar kan matten men märker att hjälpen ändå inte går fram. Oftast '
+            'handlar det om hur hjälpen ges, inte om vad man kan. Här är det som brukar fungera.'
+        ),
+        'bild': '06-forklaringen',
+        'tint': '#9A8E79',
+        'focal': '62% 44%',
+        'lista_etikett': 'Det som brukar fungera',
+        'lista_rubrik': 'Sex saker<br>att <em>prova.</em>',
+        'lista_ingress': (
+            'Inget av det kräver att du kan matten själv. Det mesta handlar om att låta barnet '
+            'göra jobbet och om att sluta i tid.'
+        ),
+        'lista': [
+            ('Fråga innan du förklarar',
+             '"Vad frågar uppgiften efter?" och "vad har du provat?" säger mer om var det tar '
+             'stopp än en förklaring från början. Ofta räcker frågan.'),
+            ('Låt barnet hålla pennan',
+             'Den som skriver är den som tänker. Räknar du själv på ett papper bredvid blir det '
+             'din lösning, inte barnets.'),
+            ('Gå tillbaka ett steg',
+             'Tar det stopp på ekvationer är problemet ofta bråk eller negativa tal. Hitta '
+             'steget före och öva det en stund, så brukar resten lossna.'),
+            ('Använd bokens sätt',
+             'Uträkningar skrivs ibland annorlunda än när du gick i skolan. Be barnet visa hur '
+             'läraren gjorde och utgå från det, även om du själv räknar på ett annat sätt.'),
+            ('Kort och ofta',
+             'En kvart varje dag gör mer än en lång kväll före provet. Sluta medan det '
+             'fortfarande går bra, inte när någon har gett upp.'),
+            ('Beröm det barnet gör',
+             '"Du provade tre sätt innan det lossnade" bygger mer än "du är ju duktig på '
+             'matte". Det första går att göra om nästa gång, det andra går inte att påverka.'),
+        ],
+        'kallor': [
+            ('Matteboken från Mattecentrum', 'https://www.matteboken.se/'),
+        ],
+        'vinkel_etikett': 'När det inte går hemma',
+        'vinkel_rubrik': 'Ibland är det<br>fel <em>person.</em>',
+        'vinkel': [
+            'Det är vanligt att det låser sig just mellan förälder och barn. Tålamodet tar slut '
+            'på båda sidor, och läxan blir ett gräl om något annat än matte. Det säger '
+            'ingenting om vare sig barnet eller föräldern.',
+            'En studiehjälpare som nyligen läst samma kurs är en annan sorts person att fråga: '
+            'nära i ålder och utan förväntningar från middagsbordet. Hos Nextrum är det samma '
+            'person varje gång, med en studieplan och en rapport efter varje pass, så att ni '
+            'ser vad som händer utan att behöva sitta med.',
+        ],
+        'faq_rubrik': 'Matteläxan hemma, det ni brukar undra',
+        'faq': [
+            ('Jag kan inte den matte mitt barn läser. Kan jag ändå hjälpa till?',
+             'Ja. Att fråga, lyssna och låta barnet förklara för dig hjälper även när du inte '
+             'kan svaret. Mattecentrums Matteboken har gratis genomgångar med video om ni vill '
+             'läsa på tillsammans.'),
+            ('Hur länge ska vi sitta?',
+             'Hellre kort och ofta. Märker ni att ingen av er orkar längre är det bättre att '
+             'sluta och ta det dagen efter än att fortsätta.'),
+            ('När är det dags att ta in hjälp?',
+             'När samma sak tar stopp vecka efter vecka, när läxan blir ett gräl, eller när ett '
+             'prov närmar sig och ni inte vet var ni ska börja. Då hjälper det att någon utanför '
+             'familjen tar över en del av jobbet.'),
+        ],
+    },
+]
+
+
+# ============================================================
 # BILDTEXTERNA
 #
 # alt-texten läses ur nextrum-images.js, per filnamn. Den stod förut
@@ -879,7 +1053,7 @@ def head(o):
 <meta name="geo.placename" content="{esc(plats(o))}">
 
 <!-- delning -->
-<meta property="og:type" content="website">
+<meta property="og:type" content="{o.get('og_typ', 'website')}">
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="sv_SE">
 <meta property="og:title" content="{esc(o['titel'])}">
@@ -894,6 +1068,9 @@ def head(o):
 <meta name="twitter:description" content="{esc(o['beskrivning'])}">
 <meta name="twitter:image" content="{bild}">
 
+<!-- Förladdad: utan den kommer typsnittet efter första ritningen, långa rubriker
+     bryts om och allt under dem hoppar (CLS 0,2 på /laxhjalp-stockholm). -->
+<link rel="preload" href="/typsnitt/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="nextrum-typsnitt.css">
 
 <!-- ordningen spelar roll: bas → startsida → cinema -->
@@ -973,7 +1150,7 @@ def faq_sektion(o):
 <section class="sec wrap">
   <div class="rv">
     <span class="nx-et acc">Vanliga frågor</span>
-    <h2 class="nx-d2" style="margin-top:18px">{esc('Läxhjälp ' + o['i_namn'])} — det ni brukar undra</h2>
+    <h2 class="nx-d2" style="margin-top:18px">{esc(o.get('faq_rubrik') or 'Läxhjälp ' + o['i_namn'] + ' — det ni brukar undra')}</h2>
     <div class="faq" style="margin-top:clamp(24px,3vw,34px)">
 {poster}
     </div>
@@ -1165,6 +1342,120 @@ def amnessida(o):
 """
 
 
+# Sajtens länkar i löptext syns knappt (färgen är nästan brödtextens).
+# I en guide ÄR länkarna innehållet, så de stryks under som på
+# startsidan.
+UNDERSTRUKEN = 'color:inherit;text-decoration:underline;text-underline-offset:3px'
+
+
+def guidekort(guider):
+    return '\n'.join(kort(g['slug'], g['kort_titel'], g['kort']) for g in guider)
+
+
+def kallor_rad(o):
+    """Länkarna till organisationerna guiden nämner. Utan dem är
+    guiden en uppräkning man inte kan kontrollera."""
+    if not o.get('kallor'):
+        return ''
+    lankar = ' · '.join(f'<a href="{esc(u)}" rel="noopener" style="{UNDERSTRUKEN}">{esc(t)}</a>'
+                        for t, u in o['kallor'])
+    return f'\n  <p class="nx-note" style="margin-top:22px">Länkar: {lankar}</p>'
+
+
+def jsonld_guide(o):
+    """Article + FAQPage + BreadcrumbList. Författaren är Nextrum, inte
+    en person: ingen av oss har skrivit under texten, och ett påhittat
+    namn på en artikel är samma sak som ett påhittat omdöme."""
+    fragor = ',\n'.join(
+        '        {"@type":"Question","name":%s,'
+        '"acceptedAnswer":{"@type":"Answer","text":%s}}' % (jstr(q), jstr(a))
+        for q, a in o['faq'])
+    return f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@graph": [
+    {{
+      "@type": "Article",
+      "@id": "https://nextrum.se/{o['slug']}#artikel",
+      "headline": {jstr(o['kort_titel'])},
+      "description": {jstr(o['beskrivning'])},
+      "image": "https://nextrum.se/bilder/{o['bild']}-1280.jpg",
+      "inLanguage": "sv",
+      "author": {{ "@id": "https://nextrum.se/#org" }},
+      "publisher": {{ "@id": "https://nextrum.se/#org" }},
+      "mainEntityOfPage": "https://nextrum.se/{o['slug']}"
+    }},
+    {{
+      "@type": "FAQPage",
+      "@id": "https://nextrum.se/{o['slug']}#faq",
+      "mainEntity": [
+{fragor}
+      ]
+    }},
+    {{
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {{"@type":"ListItem","position":1,"name":"Nextrum","item":"https://nextrum.se/"}},
+        {{"@type":"ListItem","position":2,"name":"Läxhjälp i Stockholm","item":"https://nextrum.se/laxhjalp-stockholm"}},
+        {{"@type":"ListItem","position":3,"name":{jstr(o['kort_titel'])},"item":"https://nextrum.se/{o['slug']}"}}
+      ]
+    }}
+  ]
+}}
+</script>"""
+
+
+def guidesida(o):
+    """En guide: samma delar som en ämnessida, utan 'så går det till'.
+    Priset står bara med där det hör till frågan (gratis mot betalt)."""
+    huvud, fot = skal()
+    huvud = sprakvaxlare(huvud, o['slug'])
+
+    lista = '\n'.join(
+        f'      <li><em>{i:02d}</em><div><b>{esc(r)}</b><p>{esc(t)}</p></div></li>'
+        for i, (r, t) in enumerate(o['lista'], 1))
+    vinkel = '\n'.join(f'      <p>{esc(p)}</p>' for p in o['vinkel'])
+    pris = f'\n{prissektion()}' if o.get('pris') else ''
+    andra = [g for g in GUIDER if g['slug'] != o['slug']]
+    fler = kortsektion('Guider', 'Fler guider', guidekort(andra)) if andra else ''
+
+    return f"""{head(o)}{huvud}<main id="innehall">
+
+{hjalte(o, TILLBAKA_NAVET)}
+
+<section class="sec wrap">
+  <div class="nx-head split" data-stig>
+    <div><span class="nx-et acc">{esc(o['lista_etikett'])}</span>
+      <h2 class="nx-d2" style="margin-top:18px">{o['lista_rubrik']}</h2></div>
+    <div class="nx-head-aside"><p class="nx-lede">{esc(o['lista_ingress'])}</p></div>
+  </div>
+  <ul class="nx-list rv">
+{lista}
+  </ul>{kallor_rad(o)}
+</section>
+
+<section class="sec wrap">
+  <div class="nx-two">
+    <div class="nx-two-sticky rv">
+      <span class="nx-et acc">{esc(o['vinkel_etikett'])}</span>
+      <h2 class="nx-d2" style="margin-top:18px">{o['vinkel_rubrik']}</h2>
+    </div>
+    <div class="nx-text rv">
+{vinkel}
+      <p><a href="/intresseanmalan" style="{UNDERSTRUKEN}">Skicka en intresseanmälan</a>. Det kostar ingenting att fråga och binder er inte till något.</p>
+    </div>
+  </div>
+</section>
+{pris}
+{faq_sektion(o)}{amnen_sektion(o)}{fler}
+{NASTA_STEG}
+
+</main>{fot}{jsonld_guide(o)}
+</body>
+</html>
+"""
+
+
 # ============================================================
 # NAVET
 #
@@ -1184,14 +1475,15 @@ def skriv_navet():
         sys.exit(f'hittar inte ämnesmarkörerna i {p}')
     fore = s[:s.index(NAV_START) + len(NAV_START)]
     efter = s[s.index(NAV_SLUT):]
-    block = kortsektion('Ämnen', 'Läxhjälp per ämne', amneskort(AMNEN))
+    block = (kortsektion('Ämnen', 'Läxhjälp per ämne', amneskort(AMNEN))
+             + kortsektion('Guider', 'För er som hjälper till hemma', guidekort(GUIDER)))
     open(p, 'w', encoding='utf-8').write(fore + block + efter)
 
 
 def main():
     if not os.path.exists(SKAL):
         sys.exit(f'hittar inte skalsidan {SKAL}')
-    satt_bildtexter(OMRADEN + AMNEN)
+    satt_bildtexter(OMRADEN + AMNEN + GUIDER)
     delar = [a['namn'] for a in OMRADEN if not a.get('hub')]
     for o in AMNEN:
         o['delar'] = delar
@@ -1206,9 +1498,13 @@ def main():
         p = os.path.join(ROT, o['slug'] + '.html')
         open(p, 'w', encoding='utf-8').write(amnessida(o))
         print(f'  skrev {o["slug"]}.html')
+    for o in GUIDER:
+        p = os.path.join(ROT, o['slug'] + '.html')
+        open(p, 'w', encoding='utf-8').write(guidesida(o))
+        print(f'  skrev {o["slug"]}.html')
     skriv_navet()
     print('  skrev ämneskorten i laxhjalp-stockholm.html')
-    print(f'{len(OMRADEN)} områdessidor och {len(AMNEN)} ämnessidor byggda.')
+    print(f'{len(OMRADEN)} områdessidor, {len(AMNEN)} ämnessidor och {len(GUIDER)} guider byggda.')
     print('Kör sedan verktyg/bygg-sitemap.py och sist verktyg/satt-version.py.')
 
 

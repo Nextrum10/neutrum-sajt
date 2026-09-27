@@ -677,7 +677,18 @@
    ------------------------------------------------------------ */
 .ftr{border-top:1px solid var(--band-line)}
 .ftr-top{gap:44px}
-@media (min-width:820px){.ftr-top{grid-template-columns:1.5fr 1fr 1fr 1fr;gap:32px}}
+/* Fyra spalter sedan Läxhjälp fick en egen (2026-09-26): länkarna till
+   ämnessidorna står på varje sida, för att Google och besökaren ska
+   hitta dem från var som helst. Mellan 820 och 1100 px får märket en
+   egen rad, annars blir "Fysik, kemi och biologi" tre rader. */
+@media (min-width:820px){
+  .ftr-top{grid-template-columns:repeat(4,1fr);gap:32px}
+  .ftr-brand{grid-column:1/-1}
+}
+@media (min-width:1100px){
+  .ftr-top{grid-template-columns:1.5fr repeat(4,1fr)}
+  .ftr-brand{grid-column:auto}
+}
 .ftr ul a{font-size:.88rem}
 .ftr ul a:hover{color:var(--band-fg)}
 .ftr-bot{

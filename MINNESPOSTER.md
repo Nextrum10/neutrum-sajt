@@ -211,9 +211,10 @@ Genererat:
 - `nextrum-maskot-svar.js` byggs av `verktyg/bygg-maskotsvar.py` ur
   `faq.html` och `en/faq.html`
 - FAQPage-märkningen i båda faq-sidorna byggs av `verktyg/bygg-faq-schema.py`
-- Sex stadsdelssidor och fyra ämnessidor (`laxhjalp-*.html`) och
-  ämneskorten i navet byggs av `verktyg/bygg-omradessidor.py`. Skalet
-  läses ur `var-ide.html`, alt-texten ur `nextrum-images.js`
+- Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), två guider
+  och ämnes- och guidekorten i navet byggs av
+  `verktyg/bygg-omradessidor.py`. Skalet läses ur `var-ide.html`,
+  alt-texten ur `nextrum-images.js`
 - `sitemap.xml` byggs av `verktyg/bygg-sitemap.py` ur sidornas
   canonical och hreflang. `lastmod` flyttas bara när sidans text
   ändras, inte vid varje commit
@@ -233,6 +234,12 @@ versionsstämplarna, språkdiffen (som jämför attributNAMN också),
 `deno check` och `deno test`.
 
 Kör kontrollerna lokalt före push. De är snabba.
+
+`indexnow.yml` är ingen kontroll: efter varje produktionsdriftsättning
+skickar den de sidor vars text ändrats till Bing via IndexNow
+(`verktyg/indexnow.py`). Det som bara går att göra med egna konton
+(Search Console, företagsprofil, kataloger, Vercel Analytics) står i
+`TRAFIK.md`.
 
 Områdessidorna och ämnessidorna får inte innehålla något som inte är
 sant: inga antal, inga betyg, inga betygshöjningar, inga okontrollerade
