@@ -289,8 +289,12 @@ vendorad fil i `bibliotek/`.
   projektets Settings → Git (`gitComments` i API:t; Vercel-kopplingens
   `update_project` saknar fältet). `github.silent` i `vercel.json`
   hjälpte inte: grenen hade nyckeln, och botten kommenterade PR:en
-  ändå. Stäng inte av GitHub-driftsättningarna i samma veva:
-  `indexnow.yml` lyssnar på deras `deployment_status`
+  ändå. Stäng inte av repository_dispatch-händelserna i samma veva
+  (`disableRepositoryDispatchEvents` i API:t, som Vercel-kopplingens
+  `get_project` inte visar): `indexnow.yml` lyssnar på
+  `vercel.deployment.success` sedan 2026-09-27 och tystnar utan dem,
+  utan att något blir rött. GitHub-driftsättningarna behöver den inte
+  längre (avsnitt 9)
 - **Mejl:** Resend
 - **Modeller:** Anthropic, bara från edge functions — aldrig från
   webbläsaren
@@ -1423,6 +1427,40 @@ ligger i roten som `1ba8bf8c04595e17dff19c8eaf340825.txt` och i
 `verktyg/indexnow.py`; den är offentlig med flit. Byts den, byt båda.
 Det som återstår för trafiken och bara går att göra med era konton
 står i `TRAFIK.md`.
+
+Rapporten från Vercel är sedan 2026-09-27 en `repository_dispatch` av
+typen `vercel.deployment.success`, och workflowen skickar bara när
+`client_payload.environment` är `production`. Förut var det
+`deployment_status` från GitHub-driftsättningarna, som Vercel kallar
+föråldrad: slutade Vercel skapa dem hade IndexNow tystnat utan att
+någon kontroll blev röd. Payloadens fält (`environment`, `git.sha`,
+`git.ref`, `url`, `id`, `project`, `state`) är typade i Vercels eget
+paket, `vercel/repository-dispatch` under
+`packages/repository-dispatch/src/data/`. Tre saker följer av bytet:
+
+1. **Workflowen körs på main, inte på den driftsatta commiten.** En
+   repository_dispatch når bara workflows på default-grenen och körs
+   på dess senaste commit; med `deployment_status` var det den
+   driftsatta av sig självt. Därför checkas `client_payload.git.sha`
+   ut, med `fetch-depth: 2` för jämförelsen med föräldern, och
+   körningen blir röd om den inte fick just den commiten. Mergas två
+   PR:er tätt kan main redan vara nästa commit när händelsen för den
+   första kommer: en utcheckning av main hade då skickat nästa commits
+   sidor innan de fanns på nextrum.se, och den förstas aldrig. Av samma
+   skäl går en ändring i workflowen inte att prova på en gren.
+2. **Bara `success`, aldrig `promoted` också.**
+   `vercel.deployment.promoted` kommer för varje befordran till drift,
+   automatisk eller manuell, alltså också för samma driftsättning som
+   `success`: med båda skickas varje sida två gånger. Efter en
+   befordran av en äldre eller en annan driftsättning säger
+   jämförelsen med föräldercommiten ingenting om vad som ändrats på
+   nextrum.se. Kör då workflowen för hand med `alla`.
+3. **En händelse som uteblir syns inte.** Står
+   repository_dispatch-händelserna av hos Vercel (avsnitt 2), eller
+   slutar Vercel skicka dem, körs ingenting alls. Efter en
+   produktionsdriftsättning ska det finnas en körning
+   `IndexNow production <commit>` under Actions; saknas den har
+   signalen slutat komma.
 
 **`verktyg/rls-test.sql` körs inte i CI** — den behöver en databas.
 Kör hela filen som **ett** anrop i SQL Editor eller via `execute_sql`.
