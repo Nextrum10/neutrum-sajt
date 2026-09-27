@@ -52,7 +52,7 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 16
+=== svenska sidor utan engelsk tvilling: 17
   admin.html
   foralder.html
   gratis-laxhjalp-stockholm.html
@@ -69,3 +69,4 @@
   laxhjalp-solna.html
   laxhjalp-stockholm.html
   laxhjalp-svenska.html
+  utbildningsprov.html

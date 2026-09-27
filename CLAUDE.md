@@ -551,6 +551,12 @@ Fas 16.1 la till `erbjudanden` (katalogen, alla läser) och `klippkort`
 `skydda_bokningsfalt` eller `avvikelser_rader`, som Fas 14.6 skrev om.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
+Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
+försök på provet: admin läser, bara `utbildningsprov_lamna()` skriver)
+och fyra kolumner på `applications`: `utbildningsmote_at`,
+`prov_sista_dag`, `prov_nyckel` och `prov_godkant_at`. Numret krockar:
+timbanken kördes som `fas22_1_timbanken` samma förmiddag i en annan
+session. Namnen i driften går inte att byta i efterhand.
 Fas 18.1 la till `google_koppling` (nyckeln till Nextrums Google-konto:
 RLS utan policy, bara `service_role`) och `pass_moten` (Meet-länken per
 pass: parterna och admin läser, bara `service_role` skriver, och
@@ -839,7 +845,10 @@ applications (insert/update)
 | "Kontakt" | **inget** — admin skriver själv, med förslag på tider |
 | mötet sparas eller får ny tid/länk | `mote`: tid i svensk tid, länken som knapp |
 | "Mötet är hållet" | `utbildning`: tack, introduktionen är nästa steg |
-| "Markera utbildad" | `sista_steget`: skapa konto med samma e-post |
+| "Utbildningsmötet är hållet" | `prov`: länken till provet, öppet i tre dagar (Fas 22.1) |
+| dagen efter, och sista dagen, kl. 9 | `prov_paminnelse`, `prov_sista_dagen` (pg_cron `utbildningsprov-paminn`) |
+| "Öppna provet i tre dagar till" | `prov` igen, med den nya sista dagen |
+| provet klarat, eller "Markera utbildad" | `sista_steget`: skapa konto med samma e-post |
 | läget blir Godkänd | `valkommen` |
 | läget blir Avböjd | **inget, med flit** |
 
@@ -878,6 +887,49 @@ Sex regler bär det:
 6. **Godkänd i rullgardinen är inte "Ta in i poolen".** Båda mejlar
    välkomsten, men bara den senare godkänner profilen. Rullgardinen
    frågar därför först.
+
+### Utbildningsprovet (Fas 22.1)
+
+Efter utbildningsmötet gör den som söker ett prov på nätet:
+`/utbildningsprov?t=<nyckel>`, trettio flervalsfrågor om
+Handledarhandboken, ingen tidsgräns, godkänt vid 24 rätt (80 procent).
+Hen får göra om det tills det går. Klarat prov sätter `prov_godkant_at`
+OCH `utbildad_at`, och då går mejlet om kontot av sig självt; "Markera
+utbildad" finns kvar för admin, men frågar först om provet inte är
+klarat. Fem regler:
+
+1. **Facit finns bara i edge-funktionen** (`_delad/utbildningsprov.ts`).
+   Sidan får frågorna utan svaren, med alternativen i ny ordning vid
+   varje hämtning. Gränsen prövas en gång till i
+   `utbildningsprov_lamna()`, i heltal (`ratt * 5 >= antal * 4`).
+2. **Resultatet säger rätt per avsnitt, aldrig per fråga.** Med fritt
+   antal försök och svaret per fråga går provet att klara på tre
+   försök utan att ha läst något. Av samma skäl: högst tio försök per
+   dygn, räknat i databasen.
+3. **Den som söker har inget konto än**, så provet öppnas med en
+   slumpad nyckel (`prov_nyckel`, ett uuid). Den öppnar provet och
+   inget annat, står i mejlen och adminvyn men aldrig i en logg, och
+   sidan har ingen mätning och inget `Referer`. `utbildningsprov` har
+   `verify_jwt = false` och når databasen bara genom
+   `utbildningsprov_lage()` och `utbildningsprov_lamna()`, båda bara
+   för `service_role`.
+4. **Tre dagar räknas i svensk tid**: markeras mötet en måndag är
+   provet öppet till och med torsdag. `applications_utbildningsprov`
+   (en BEFORE-trigger) sätter `prov_sista_dag` och nyckeln.
+   **`ansokan_besked` måste lista `utbildningsmote_at`** fast den
+   aldrig läser kolumnen: en `UPDATE OF`-trigger går bara på kolumner
+   som står i själva UPDATE:n, inte på dem en BEFORE-trigger ändrar.
+   Utan den gick länken aldrig ut. Ett rullat prov fångade det.
+5. **Påminnelsernas nyckel bär sista dagen** (`prov_paminnelse:2026-09-30`).
+   Öppnas provet igen blir det ett nytt fönster med nya påminnelser,
+   och en påminnelse från det gamla hoppas över av
+   `ansokan_besked_ta()`. Ingenting skickas före klockan nio.
+
+Frågorna är skrivna ur handboken som den såg ut i september 2026.
+Handboken finns inte i repot. Ändras den ska frågorna läsas om, och
+en fråga som byter betydelse får ett nytt id:
+`utbildningsprov_forsok.svar` lagrar id:n. Sidan finns bara på
+svenska, med flit: handboken gör det också.
 
 Utfallet syns i rekryteringsrutan vid det steg som skickade mejlet, och
 ett som inte gick fram är rött. Samma sort som kvittot till familjen:
@@ -1126,8 +1178,9 @@ tillbaka en kopia.**
 | `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Ekonomi → Kortbetalningar |
 | `google-koppla` | Kopplingen till Google (Fas 18.1): adressen till Google, återkomsten med engångskoden, Prova och Koppla från. Koden byts mot en nyckel HÄR; vyn ser aldrig nyckeln eller klienthemligheten. Återkomsten bär ingen inloggning och skyddas av ett HMAC-signerat läge som gäller i tio minuter. Ett konto utanför nextrum.se nekas | Knapparna under System → Integrationer, och Googles omdirigering |
 | `google-meet` | Meet-länken till ett bekräftat onlinepass (Fas 18.1). Läser passet med anroparens token först, skapar ett öppet rum och sparar länken i `pass_moten`. Ett rum som inte blev öppet sparas inte | Passets sida i föräldravyn och studiehjälparvyn |
+| `utbildningsprov` | Provet efter utbildningsmötet (Fas 22.1). Lämnar ut frågorna utan facit, rättar, och sparar försöket genom `utbildningsprov_lamna()`. Skyddet är nyckeln i länken, inte en inloggning | `/utbildningsprov`, från länken i mejlet |
 
-`supabase/config.toml` bär `verify_jwt = false` för de sju funktioner
+`supabase/config.toml` bär `verify_jwt = false` för de åtta funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
 dashboarden, och en `supabase functions deploy` utan filen hade slagit
 på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och
@@ -1665,8 +1718,9 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   utbildning, poolen) med skälet till varje steg skrivet i vyn, men
   inget av stegen kontrollerar något utifrån: mötet bokas inte i en
   kalender (kopplingen till Google gör bara onlinepassens Meet-länkar,
-  Fas 18.1), och utbildningen är en
-  länk i `UTBILDNING_URL`, inte ett prov systemet läser resultatet av.
+  Fas 18.1). Sedan Fas 22.1 har utbildningen ett prov systemet läser
+  resultatet av, men det prövar att hen läst handboken, inte vem hen
+  är.
 - **`materials` har inga läsare kvar utom oss själva** (efter Fas
   13.3). Studiehjälparvyns materialflik är ombyggd till biblioteket,
   och adminvyns detaljpanel skriver fortfarande dit men säger nu i

@@ -2979,6 +2979,120 @@ select pg_temp.prova('16.1 och ingen kan markera ett besked skickat', '00000000-
   'nekad');
 
 -- ------------------------------------------------------------
+-- Fas 22.1: utbildningsprovet
+-- ------------------------------------------------------------
+
+-- En ansökan utifrån kan inte öppna ett prov åt sig själv: sista
+-- dagen, nyckeln och mötet sätts av Nextrum. Påminnelsejobbet mejlar
+-- varje rad med en satt sista dag, så det här är skyddet mot att
+-- formuläret blir ett sätt att få oss att mejla främlingar.
+do $$
+declare skyddad bigint; fel text;
+begin
+  begin
+    perform pg_temp.bli(null);
+    insert into public.applications (id, name, email, utbildningsmote_at, prov_sista_dag, prov_nyckel, prov_godkant_at)
+    values ('00000000-0000-4000-8000-0000000022a1', 'Prov Prov', 'rls-221@example.invalid',
+            now(), current_date + 3, '00000000-0000-4000-8000-0000000022ff', now());
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    select count(*) into skyddad from public.applications
+     where id = '00000000-0000-4000-8000-0000000022a1'
+       and utbildningsmote_at is null and prov_sista_dag is null
+       and prov_nyckel is null and prov_godkant_at is null;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('22.1 provets fält går inte att sätta utifrån', fel = 'rulla tillbaka' and skyddad = 1,
+          case when fel = 'rulla tillbaka' then 'rader: ' || skyddad else fel end);
+end $$;
+
+-- Admin markerar mötet: provet öppnas i tre dagar räknat i svensk tid,
+-- en nyckel skapas, och länken köas en gång. Klarar hen provet blir
+-- hen utbildad och mejlet om kontot köas. 23 av 30 räcker inte, och
+-- det elfte försöket samma dygn tas inte emot.
+do $$
+declare
+  a constant uuid := '00000000-0000-4000-8000-0000000022b1';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  r public.applications%rowtype;
+  provmejl bigint; stangt date; under record; over record; konto bigint;
+  tak text; fel text; n int;
+begin
+  begin
+    insert into public.applications (id, name, email, status)
+    values (a, 'Prov Utbildning', 'rls-utb@example.invalid', 'contacted');
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set utbildningsmote_at = now() where id = a;
+    update public.applications set utbildningsmote_at = null where id = a;
+    select prov_sista_dag into stangt from public.applications where id = a;
+    update public.applications set utbildningsmote_at = now() where id = a;
+    select * into r from public.applications where id = a;
+    select count(*) into provmejl from public.ansokan_utskick where ansokan_id = a and steg = 'prov';
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    select * into under from public.utbildningsprov_lamna(r.prov_nyckel, 23, 30, '{}');
+    select * into over from public.utbildningsprov_lamna(r.prov_nyckel, 24, 30, '{}');
+    select count(*) into konto from public.ansokan_utskick where ansokan_id = a and steg = 'sista_steget';
+
+    -- Taket: en ny ansökan, tio underkända, och ett elfte.
+    update public.applications set prov_godkant_at = null, utbildad_at = null where id = a;
+    delete from public.utbildningsprov_forsok where ansokan_id = a;
+    for n in 1..10 loop perform public.utbildningsprov_lamna(r.prov_nyckel, 1, 30, '{}'); end loop;
+    select utfall into tak from public.utbildningsprov_lamna(r.prov_nyckel, 30, 30, '{}');
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.1 provet', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('22.1 mötet öppnar provet till och med dag tre', r.prov_sista_dag = idag + 3 and r.prov_nyckel is not null,
+       coalesce(r.prov_sista_dag::text, 'null') || ' mot ' || (idag + 3)),
+      ('22.1 att ångra mötet stänger provet', stangt is null, coalesce(stangt::text, 'null')),
+      ('22.1 länken köas en gång, också när mötet ångras och markeras igen', provmejl = 1, 'rader: ' || provmejl),
+      ('22.1 23 av 30 är inte godkänt', under.utfall = 'ok' and not under.godkant, under::text),
+      ('22.1 24 av 30 är godkänt, och mejlet om kontot köas', over.godkant and konto = 1,
+       over::text || ' konto: ' || konto),
+      ('22.1 elfte försöket samma dygn tas inte emot', tak = 'for_manga', coalesce(tak, 'null'));
+  end if;
+end $$;
+
+select pg_temp.prova('22.1 anon läser inte provets läge', null,
+  array[$q$select * from public.utbildningsprov_lage('00000000-0000-4000-8000-000000000000')$q$],
+  'nekad');
+
+select pg_temp.prova('22.1 anon lämnar inte in ett försök förbi funktionen', null,
+  array[$q$select * from public.utbildningsprov_lamna('00000000-0000-4000-8000-000000000000', 30, 30, '{}')$q$],
+  'nekad');
+
+select pg_temp.prova('22.1 inte en inloggad heller', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select * from public.utbildningsprov_lamna('00000000-0000-4000-8000-000000000000', 30, 30, '{}')$q$],
+  'nekad');
+
+insert into public.applications (id, name, email) values
+  ('00000000-0000-4000-8000-0000000022c1', 'Prov Försök', 'rls-forsok@example.invalid');
+insert into public.utbildningsprov_forsok (ansokan_id, ratt, antal, godkant)
+values ('00000000-0000-4000-8000-0000000022c1', 20, 30, false);
+
+select pg_temp.rakna('22.1 admin ser provförsöken', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from public.utbildningsprov_forsok where ansokan_id = '00000000-0000-4000-8000-0000000022c1'$q$, 1);
+
+select pg_temp.rakna('22.1 en studiehjälpare ser dem inte', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from public.utbildningsprov_forsok where ansokan_id = '00000000-0000-4000-8000-0000000022c1'$q$, 0);
+
+select pg_temp.prova('22.1 admin skriver inga försök själv', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into public.utbildningsprov_forsok (ansokan_id, ratt, antal, godkant)
+           values ('00000000-0000-4000-8000-0000000022c1', 30, 30, true)$q$],
+  'nekad');
+
+-- ------------------------------------------------------------
 -- Fas 16.2: kvittot till familjen bromsas som ansökningskvittot
 -- ------------------------------------------------------------
 -- Sviten har redan lagt in anmälningar tidigare i samma transaktion,
