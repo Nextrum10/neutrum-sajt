@@ -1838,6 +1838,15 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-mitt.ar-slut{opacity:.6}
 /* Fas 22.1: timbanken, under klippkorten i Era timmar. */
 .erb-bank-text{margin:6px 0 0;font-size:.84rem;color:var(--bl-2);line-height:1.5}
+.erb-bank-text a{color:var(--acc);font-weight:600}
+/* Timbanken under Profil (2026-09-27): vad som gått in och ut, rad för
+   rad. Minuterna i en egen kolumn med jämnbreda siffror, så att plus och
+   minus står under varandra. */
+.tb-rorelser{list-style:none;margin:8px 0 0;padding:0}
+.tb-rorelser li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-top:1px solid var(--ln);font-size:.88rem;color:var(--bl-2);line-height:1.45}
+.tb-rorelser li:first-child{border-top:0}
+.tb-min{flex:none;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600;color:var(--bl)}
+.tb-min.ut{font-weight:500;color:var(--bl-2)}
 /* Fas 21.2: tio dagar före sista dagen, samma dag som mejlet går. */
 .erb-snart{margin:10px 0 0;font-size:.84rem;line-height:1.5;color:var(--bl)}
 .erb-snart a{color:var(--acc);font-weight:600}
