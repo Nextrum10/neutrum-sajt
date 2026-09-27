@@ -165,6 +165,25 @@ Deno.test('ett fakturapass får inget kortmejl (Fas 14.6)', () => {
   assertStringIncludes(rendera('pass_bekraftat', 'parent', { data: { ...SMUTSIG, betalsatt: 'swish' } }).text, 'med kort');
 });
 
+Deno.test('påminnelsen om timmarna säger hur många, vilken dag och att resten förfaller (Fas 21.2)', () => {
+  const m = rendera('timmar_gar_ut', 'parent', { data: { ...SMUTSIG, datum: '2026-10-23', kvar: 3, klippkort: 'c16a' } });
+  assertStringIncludes(m.amne, 'fredag 23 oktober');
+  assertStringIncludes(m.text, 'Ni har 3 timmar kvar');
+  assertStringIncludes(m.text, 'till och med fredag 23 oktober');
+  assertStringIncludes(m.text, 'förfaller');
+  assertStringIncludes(m.text, 'Timmar kvar: 3');
+  assertStringIncludes(m.text, `${SAJT}/foralder#boka`);
+  // Kortets id följer med i datan för dubbletternas skull, men läses aldrig.
+  assertEquals(m.text.includes('c16a'), false);
+
+  assertStringIncludes(rendera('timmar_gar_ut', 'parent', { data: { datum: '2026-10-23', kvar: 1 } }).text, 'Ni har 1 timme kvar');
+
+  // Utan ett giltigt antal eller datum blir det ett mejl utan tal, inte "undefined" eller "NaN".
+  const utan = rendera('timmar_gar_ut', 'parent', { data: { kvar: 'många', datum: 'snart' } });
+  assertStringIncludes(utan.text, 'Ni har köpta timmar kvar som snart går ut.');
+  assertEquals(/NaN|undefined|många/.test(utan.text), false);
+});
+
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {
   const m = rendera('meddelande', 'parent');
   assertStringIncludes(m.text, 'Du får det här för att du har ett konto på Nextrum');

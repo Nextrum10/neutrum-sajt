@@ -70,6 +70,20 @@ att köpa. Klippkorten står i studievyn och på prissidan som en kolumn
 bredvid planerna som fälls ut (2026-09-27). De var borta ur
 studievyn en förmiddag samma dag och kom tillbaka i den formen.
 
+**Ett pass betalt med timmar avbokar familjen själv** (Fas 21.1), och
+studiehjälparen kan också. Det har inga pengar på sig, och
+`klippkort_saldo` räknar bara pass som inte är avbokade, så timmarna
+kommer tillbaka av sig själva. Spärren för betalda pass gäller
+fortfarande så fort det ligger kortpengar på passet. Nollningen av
+betalningen (`klippkortspass_avbokat`) körs av triggern
+`bookings_timmarna_tillbaka`, som måste vara den SISTA
+before-triggern på `bookings`: körs den före `skydda_bokningsfalt`
+ser spärren betalningen ändras i samma skrivning och nekar. Den hette
+förut `bookings_klippkortspass_avbokat` och gällde bara admin.
+**Tio dagar innan ett kort går ut** mejlas familjen om det finns
+timmar kvar (Fas 21.2, notistypen `timmar_gar_ut`), och rutan Era
+timmar säger samma sak från samma dag.
+
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
 `note`. Fas 15.1 hade tagit bort frågan, och ett förslag hade då ingen
@@ -810,6 +824,13 @@ chattmejl samlas i 10 minuter, passändringar i 3. Samlingen sker i
 databasen genom `samlingsnyckel`, inte i arbetaren — fem repliker på
 tre minuter blir ett mejl, och den som får fem mejl slutar läsa det
 sjätte.
+
+**`timmar_gar_ut` (Fas 21.2) är den enda notisen som inte gäller ett
+pass.** Den köas av `intern.timmar_gar_ut_koa()`, som pg_cron-jobbet
+`timmar-gar-ut` kör varje timme och som bara gör något mellan 9 och 20
+svensk tid. En gång per kort och sista dag; ett förlängt kort får en ny.
+Mallen läser `kvar` (heltal, 1–200) och `datum` ur `RenData`, och bara
+familjen har raden i `NOTISVAL` (`bara: 'parent'`).
 
 `DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
 sandlådan slås på innan något provas, och de fem stegen för att lägga
@@ -1648,10 +1669,13 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   `stripe-webhook`, `stripe-checkout` och `klippkort-betala` i den
   ordningen — webhooken först, annars blir ett köpt kort en betalning
   hos Stripe som aldrig blir `betald` hos oss — och gör provköpet i
-  DEPLOY-BETALNING.md 9.12. Kvar efter det: familjen kan inte själv
-  avboka ett pass de betalat med timmar (samma spärr som för kort, fast
-  inga pengar ska tillbaka), och ingen påminnelse går ut innan timmar
-  löper ut.
+  DEPLOY-BETALNING.md 9.12. Sedan Fas 21 avbokar familjen själv ett
+  pass betalt med timmar, och påminns tio dagar innan timmarna går ut.
+  **Driftsätt `notis-ko` före påslaget**: mallen för `timmar_gar_ut`
+  finns bara i den versionen, och en äldre arbetare kan inte rendera
+  påminnelsen. Kvar: en familj som inte är matchad når inte
+  Erbjudanden (föräldravyn är låst till dess), så timmar köps först
+  efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
   (Fas 18.1). Koden, tabellerna och Koppla-knappen finns; kopplingen
   kräver stegen hos Google i `INTEGRATIONER.md` och ett klick på
