@@ -64,7 +64,7 @@
 import { type Inloggad, kravInloggad, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
 import { StripeError, v1, VALUTA } from '../_delad/stripe.ts';
-import { familjebelopp, radtext, standardTjanst, type Tjanst } from '../_delad/pris.ts';
+import { familjebelopp, radtext, standardTjanst, tillaggsbelopp, type Tjanst } from '../_delad/pris.ts';
 import { arErbjudandekod, type ErbjudandePris, kanAteranvandas, kassarad } from '../_delad/erbjudanden.ts';
 
 const CORS = cors();
@@ -72,8 +72,9 @@ const CORS = cors();
 /* Räknas upp när sessionens parametrar ändras. Se idempotensnyckeln.
    2: bara kort och kvitto till familjens adress (Fas 14.3).
    3: Managed Payments uttryckligen av (Fas 14.4).
-   4: kassan kan bäddas in i föräldravyn (Fas 14.5). */
-const SESSIONSFORM = 4;
+   4: kassan kan bäddas in i föräldravyn (Fas 14.5).
+   5: minuterna betalningen avser står i metadata (Fas 20.1). */
+const SESSIONSFORM = 5;
 
 /* DEN INBÄDDADE KASSAN (Fas 14.5)
 
@@ -260,6 +261,142 @@ async function köpErbjudande(
   }
 }
 
+/* ============================================================
+   TILLÄGGET (Fas 20.1): övertiden på ett pass som redan var betalt
+
+   Passet var betalt i förväg, med kort eller med timmar, och
+   studiehjälparen skrev i rapporten att det drog över. Familjen betalar
+   resten när de bekräftar rapporten. Leos val: inget dras automatiskt,
+   och det är familjen som trycker.
+
+   · MINUTERNA LÄSES UR passunderlag: debiterade_min är den hållna tiden
+     per påbörjad kvart, betalda_min det familjen redan betalat för
+     (kortet, timmarna, ett tidigare tillägg). Anropet säger bara vilket
+     pass.
+   · BELOPPET ÄR SKILLNADEN I PRIS, tillaggsbelopp() i pris.ts: samma
+     timpris, samma tillägg för syskon, och rabatten dras en gång.
+   · EN EGEN RAD I pass_tillagg, skapad före kassan med service_role.
+     Passets betalningskolumner beskriver passets betalning, och
+     webhooken skriver återbetalningar och tvister på den rad som bär
+     chargen. Hade tillägget legat där hade en återbetalning av det
+     skrivit över passets.
+   · INGET client_reference_id och inget booking_id i metadata: webhooken
+     läser båda som "det här passet är betalt". Tillägget bär
+     tillagg_booking_id.
+   ============================================================ */
+type PassForTillagg = {
+  id: string; parent_id: string | null; tutor_id: string | null; subject: string | null;
+  wanted_date: string; tjanst: string | null; antal_barn: number | null; rabatt_ore: number | null;
+  status: string; betalning_status: string | null; fakturerbar: boolean;
+};
+
+async function betalaTillagg(
+  vem: Inloggad,
+  kropp: { retur?: string; ui?: string },
+  pass: PassForTillagg,
+): Promise<Response> {
+  if (pass.status !== 'completed') {
+    return json({ error: 'Ett tillägg betalas när passet är rapporterat.' }, 409, CORS);
+  }
+  if (!pass.fakturerbar) return json({ error: 'Passet är undantaget och ska inte betalas.' }, 409, CORS);
+  if (pass.betalning_status !== 'betald') {
+    return json({ error: 'Passet är inte betalt än. Betala passet, så kommer hela tiden med.' }, 409, CORS);
+  }
+
+  const db = serviceklient();
+  try {
+    const [{ data: underlag }, { data: forut }, { data: katalog }, { data: pris }] = await Promise.all([
+      db.from('passunderlag').select('debiterade_min, betalda_min').eq('id', pass.id).maybeSingle(),
+      db.from('pass_tillagg').select('status, begart_ore').eq('booking_id', pass.id).maybeSingle(),
+      db.from('tjanster').select('kod, aktiv, for_kund, ordning, pris_per_timme_ore, extra_personer_ore, ersattning_per_timme_ore, rut_berattigad, rut_procent'),
+      db.from('prissattning').select('pris_per_timme_ore').maybeSingle(),
+    ]);
+
+    if (forut?.status === 'betald' || forut?.status === 'tvist') {
+      return json({ error: 'Tillägget är redan betalt.' }, 409, CORS);
+    }
+    const debiterade = Number(underlag?.debiterade_min ?? 0);
+    const betalda = Number(underlag?.betalda_min ?? 0);
+    if (!(debiterade > betalda)) return json({ error: 'Passet har inget tillägg att betala.' }, 409, CORS);
+
+    // Samma pris som passet betalades med: se Deno.serve nedan.
+    const tjanster = (katalog ?? []) as Tjanst[];
+    const tjanst = tjanster.find((t) => t.kod === pass.tjanst) ?? standardTjanst(tjanster) ?? undefined;
+    const timprisOre = Number(tjanst?.pris_per_timme_ore ?? 0) || Number(pris?.pris_per_timme_ore ?? 0);
+    if (!timprisOre) return json({ error: 'Tjänsten saknar pris. Sätt det i adminvyn först.' }, 409, CORS);
+
+    const minuter = debiterade - betalda;
+    const belopp = tillaggsbelopp({
+      debiteradeMin: debiterade, betaldaMin: betalda, timprisOre,
+      extraOre: Number(tjanst?.extra_personer_ore ?? 0),
+      barn: Math.max(1, Number(pass.antal_barn || 1)),
+      rabattOre: Number(pass.rabatt_ore || 0),
+    });
+    if (belopp <= 0) return json({ error: 'Passet har inget tillägg att betala.' }, 409, CORS);
+
+    const { error: radfel } = await db.from('pass_tillagg').upsert({
+      booking_id: pass.id, minuter, begart_ore: belopp, status: 'vantar',
+    }, { onConflict: 'booking_id' });
+    if (radfel) return json({ error: 'Tillägget gick inte att spara. Försök igen.' }, 500, CORS);
+
+    const { data: kund } = await vem.klient
+      .from('profiles').select('email').eq('id', vem.anvandare).maybeSingle();
+    const bas = egenAdress(kropp.retur, 'https://nextrum.se');
+    const pk = kropp.ui === 'inbaddad' ? publicerbarNyckel() : null;
+    const inbaddad = pk !== null;
+    const efter = inbaddad
+      ? { ui_mode: 'embedded', redirect_on_completion: 'if_required',
+          return_url: `${bas}/foralder?betalt={CHECKOUT_SESSION_ID}` }
+      : { success_url: `${bas}/foralder?betalt={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${bas}/foralder?betalning=avbruten` };
+
+    const metadata = { tillagg_booking_id: pass.id, minuter: String(minuter) };
+    const session = await v1('POST', '/v1/checkout/sessions', {
+      mode: 'payment',
+      locale: 'sv',
+      ...efter,
+      // Samma två val som för passet, av samma skäl: se Deno.serve.
+      payment_method_types: ['card'],
+      managed_payments: { enabled: false },
+      customer_email: kund?.email ?? undefined,
+      metadata,
+      line_items: [{
+        quantity: 1,
+        price_data: {
+          currency: VALUTA,
+          unit_amount: belopp,
+          product_data: {
+            name: `Tillägg: ${radtext(pass.subject, String(pass.wanted_date))}`,
+            description: `Passet drog över, ${minuter} minuter`,
+          },
+        },
+      }],
+      payment_intent_data: {
+        metadata,
+        statement_descriptor_suffix: descriptor(String(pass.subject ?? 'Laxhjalp')),
+        receipt_email: kund?.email ?? undefined,
+      },
+    }, `nextrum-tillagg-${pass.id}-${belopp}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
+
+    await db.from('pass_tillagg')
+      .update({ stripe_session_id: String((session as { id?: string }).id ?? '') })
+      .eq('booking_id', pass.id);
+
+    const svar = { session: (session as { id?: string }).id, belopp_ore: belopp, minuter };
+    return inbaddad
+      ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
+               nyckel: pk, ...svar }, 200, CORS)
+      : json({ lage: 'sida', url: (session as { url?: string }).url ?? null, ...svar }, 200, CORS);
+  } catch (fel) {
+    if (fel instanceof StripeError) {
+      console.error('stripe-checkout: Stripe nekade tillägget', JSON.stringify({ pass: pass.id, ...fel.fel }));
+      return json({ error: 'Stripe nekade: ' + fel.fel.meddelande, stripe: fel.fel }, 502, CORS);
+    }
+    console.error('stripe-checkout: fel i tillägget', JSON.stringify({ pass: pass.id, fel: (fel as Error)?.message ?? String(fel) }));
+    return json({ error: (fel as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight(CORS);
   if (req.method !== 'POST') return json({ error: 'Bara POST.' }, 405, CORS);
@@ -268,7 +405,7 @@ Deno.serve(async (req) => {
   const vem = await kravInloggad(req.headers.get('authorization'));
   if (!vem.ok) return vem.svar;
 
-  let kropp: { pass?: string; retur?: string; ui?: string; erbjudande?: string } = {};
+  let kropp: { pass?: string; retur?: string; ui?: string; erbjudande?: string; tillagg?: boolean } = {};
   try {
     kropp = await req.json();
   } catch {
@@ -291,7 +428,7 @@ Deno.serve(async (req) => {
      Kostade en röd CI-körning. fakturering/index.ts:220 gör rätt. */
   const { data: pass, error: passfel } = await vem.klient
     .from('bookings')
-    .select('id, parent_id, tutor_id, subject, wanted_date, duration_min, tjanst, antal_barn, rabatt_ore, status, betalning_status, stripe_session_id, fakturerbar')
+    .select('id, parent_id, tutor_id, subject, wanted_date, duration_min, tjanst, antal_barn, rabatt_ore, status, betalning_status, stripe_session_id, fakturerbar, klippkort_id')
     .eq('id', passId)
     .maybeSingle();
 
@@ -316,6 +453,8 @@ Deno.serve(async (req) => {
   if (!pass.tutor_id) {
     return json({ error: 'Passet har ingen studiehjälpare än.' }, 409, CORS);
   }
+  // Övertiden på ett pass som redan var betalt (Fas 20.1) är ett eget köp.
+  if (kropp.tillagg === true) return await betalaTillagg(vem, kropp, pass);
   /* EN TILLÅT-LISTA, INTE ETT UNDANTAG (Fas 14.6). Här stod bara
      "neka 'betald'". Allt annat släpptes in och fick 'vantar' skrivet
      över sig: en tvist blev en öppen kassa, en återbetalning likaså,
@@ -352,7 +491,17 @@ Deno.serve(async (req) => {
     const timprisOre = Number(tjanst?.pris_per_timme_ore ?? 0)
       || Number(pris?.pris_per_timme_ore ?? 0);
     const extraOre = Number(tjanst?.extra_personer_ore ?? 0);
-    const minuter = Number(pass.duration_min || 60);
+    /* FAS 20.1: ETT GENOMFÖRT PASS KOSTAR DEN TID DET HÖLLS. Rapporten
+       bär tiden, per påbörjad kvart, och passunderlag läser den. Ett
+       bekräftat pass som betalas i förväg kostar det bokade; drar det
+       över betalas resten som ett tillägg. Minuterna följer med i
+       metadata, så att webhooken kan skriva vad betalningen avsåg. */
+    let minuter = Number(pass.duration_min || 60);
+    if (pass.status === 'completed') {
+      const { data: underlag } = await db.from('passunderlag')
+        .select('debiterade_min').eq('id', pass.id).maybeSingle();
+      minuter = Number(underlag?.debiterade_min || minuter);
+    }
     const barn = Math.max(1, Number(pass.antal_barn || 1));
 
     if (!timprisOre) {
@@ -426,7 +575,7 @@ Deno.serve(async (req) => {
       // Passets id följer med hela vägen, så att webhooken vet vilken
       // rad som ska ändras utan att gissa.
       client_reference_id: pass.id,
-      metadata: { booking_id: pass.id, tutor_id: pass.tutor_id },
+      metadata: { booking_id: pass.id, tutor_id: pass.tutor_id, minuter: String(minuter) },
       line_items: [{
         quantity: 1,
         price_data: {

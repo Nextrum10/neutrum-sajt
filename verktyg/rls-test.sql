@@ -28,8 +28,9 @@
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
 -- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
--- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2 och
--- Fas 18.1 (Meet-länken) är körda.
+-- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2,
+-- Fas 18.1 (Meet-länken), Fas 19.5 (det frysta priset) och Fas 20.1
+-- (den hållna tiden) är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -3388,6 +3389,215 @@ end $$;
 select pg_temp.prova('19.2 admin slår fortfarande om fakturaflaggan', '00000000-0000-4000-8000-0000000000ad',
   array[$q$update public.flaggor set aktiv = not aktiv where kod = 'faktura'$q$],
   'ok');
+
+-- ------------------------------------------------------------
+-- Fas 20.1: passet debiteras på den tid det faktiskt hölls
+--
+-- Passet b0c1 är familj P:s, hos A, igår kl. 15, bokat på en timme.
+-- 15:00–16:20 är 80 minuter och debiteras som 90 (påbörjad kvart).
+-- Rapporten läggs in i varje prov för sig, så att inget prov ser ett
+-- annat provs tid.
+-- ------------------------------------------------------------
+select pg_temp.prova('20.1 A rapporterar med samma tid som bokat, utan skäl', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid)
+          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:00')$q$],
+  'ok');
+
+select pg_temp.prova('20.1 A rapporterar längre tid utan skäl', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid)
+          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:20')$q$],
+  'nekad');
+
+select pg_temp.prova('20.1 A rapporterar längre tid med skäl', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+          values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:20',
+                  'Provet på fredag, vi körde klart kapitlet')$q$],
+  'ok');
+
+-- Kontrollprovet visar att A annars får ändra sin rapport, så att de
+-- två efter det nekas för tidens skull och inte för något annat.
+select pg_temp.prova('20.1 kontroll: A ändrar anteckningen i efterhand', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid)
+          values ('00000000-0000-4000-8000-00000000e201', '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:00')$q$,
+        $q$update public.lesson_reports set raw_notes = 'y' where id = '00000000-0000-4000-8000-00000000e201'$q$],
+  'ok');
+
+select pg_temp.prova('20.1 A drar ut tiden i efterhand', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid)
+          values ('00000000-0000-4000-8000-00000000e201', '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:00')$q$,
+        $q$update public.lesson_reports set slut_tid = '17:00', avvikelse_skal = 'z' where id = '00000000-0000-4000-8000-00000000e201'$q$],
+  'nekad');
+
+select pg_temp.prova('20.1 A sätter en tid i efterhand på en rapport utan', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.lesson_reports set start_tid = '16:00', slut_tid = '19:00', avvikelse_skal = 'z'
+          where id = '00000000-0000-4000-8000-00000000e0a2'$q$],
+  'nekad');
+
+select pg_temp.prova('20.1 familjen skriver inget tillägg själv', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.pass_tillagg (booking_id, minuter, begart_ore, status)
+          values ('00000000-0000-4000-8000-00000000b0c1', 30, 1, 'betald')$q$],
+  'nekad');
+
+select pg_temp.prova('20.1 familjen sätter inte stripe_minuter på ett bokat pass', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set stripe_minuter = 180 where id = '00000000-0000-4000-8000-00000000b0d1'$q$],
+  'nekad');
+
+-- Siffrorna, som postgres, i ett block som rullas tillbaka.
+do $$
+declare
+  deb int; betalda int; lon int; larm int; larm2 int; belopp bigint; fel text;
+  deb_p int; lon_a int; syns_q int; syns_p int; kvar1 int; kvar2 int; lon_k int; ej int;
+begin
+  -- 1. Betalt i förväg för en timme, höll 80 minuter.
+  begin
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = 37900, stripe_minuter = 60
+     where id = '00000000-0000-4000-8000-00000000b0c1';
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:20', 'prov');
+    select debiterade_min, betalda_min, lon_min into deb, betalda, lon
+      from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
+    select count(*) into larm from public.avvikelser_rader()
+     where typ = 'tillagg_obetalt' and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+
+    -- Studiehjälparen och familjen läser samma vy med sin egen RLS.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+    select lon_min into lon_a from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    select debiterade_min into deb_p from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    insert into public.pass_tillagg (booking_id, minuter, begart_ore, status, betalt_ore, betald_at)
+    values ('00000000-0000-4000-8000-00000000b0c1', 30, 18950, 'betald', 18950, now());
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    select count(*) into syns_p from public.pass_tillagg;
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f2');
+    select count(*) into syns_q from public.pass_tillagg;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into larm2 from public.avvikelser_rader()
+     where typ = 'tillagg_obetalt' and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+    select betalda_min, lon_min into betalda, lon_k
+      from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('20.1 övertid på förbetalt pass', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('20.1 80 minuter debiteras som 90', deb = 90, 'debiterade_min ' || deb),
+      ('20.1 obetald övertid höjer inte lönen', lon = 60, 'lon_min ' || lon),
+      ('20.1 obetald övertid larmar', larm = 1, 'rader: ' || larm),
+      ('20.1 studiehjälparen läser sin lön i vyn', lon_a = 60, 'lon_min ' || coalesce(lon_a::text, 'null')),
+      ('20.1 familjen läser den debiterade tiden i vyn', deb_p = 90, 'debiterade_min ' || coalesce(deb_p::text, 'null')),
+      ('20.1 familjen ser sitt tillägg', syns_p = 1, 'rader: ' || syns_p),
+      ('20.1 en annan familj ser inte tillägget', syns_q = 0, 'rader: ' || syns_q),
+      ('20.1 betalt tillägg: larmet går', larm2 = 0, 'rader: ' || larm2),
+      ('20.1 betalt tillägg: övertiden räknas i lönen', betalda = 90 and lon_k = 90,
+       'betalda_min ' || betalda || ', lon_min ' || lon_k);
+  end if;
+
+  -- 2. Betalt i förväg för en timme, höll en halv.
+  fel := null;
+  begin
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = 37900, stripe_minuter = 60
+     where id = '00000000-0000-4000-8000-00000000b0c1';
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '15:30', 'prov');
+    select lon_min into lon from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
+    select sum(a.belopp_ore) into belopp from public.avvikelser_rader() a
+     where a.typ = 'betalt_for_lange' and a.objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+    update public.bookings set aterbetald_ore = 18950 where id = '00000000-0000-4000-8000-00000000b0c1';
+    select count(*) into larm from public.avvikelser_rader()
+     where typ = 'betalt_for_lange' and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('20.1 kortare än förbetalt', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('20.1 kortare pass sänker lönen', lon = 30, 'lon_min ' || lon),
+      ('20.1 kortare pass larmar med halva beloppet', belopp = 18950, 'belopp ' || coalesce(belopp::text, 'null')),
+      ('20.1 återbetalt: larmet går', larm = 0, 'rader: ' || larm);
+  end if;
+
+  -- 3. Betalt efter passet, för den hållna tiden.
+  fel := null;
+  begin
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:20', 'prov');
+    select count(*) into ej from public.avvikelser_rader()
+     where typ = 'ej_betalt' and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = 56850, stripe_minuter = 90
+     where id = '00000000-0000-4000-8000-00000000b0c1';
+    select lon_min into lon from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
+    select count(*) into larm from public.avvikelser_rader()
+     where typ in ('tillagg_obetalt', 'betalt_for_lange') and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('20.1 betalt efter passet', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('20.1 obetalt pass med övertid larmar som ej_betalt', ej = 1, 'rader: ' || ej),
+      ('20.1 betalt för den hållna tiden: övertiden i lönen', lon = 90, 'lon_min ' || lon),
+      ('20.1 betalt för den hållna tiden: inget tillägg, ingen återbetalning', larm = 0, 'rader: ' || larm);
+  end if;
+
+  -- 4. Klippkortet: ett pass på två timmar som höll i 50 minuter drar en.
+  fel := null;
+  begin
+    update public.bookings set duration_min = 120 where id = '00000000-0000-4000-8000-00000000b16a';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    select kvar into kvar1 from public.klippkort_saldo where id = '00000000-0000-4000-8000-00000000c16a';
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:50', 'prov');
+    select kvar into kvar2 from public.klippkort_saldo where id = '00000000-0000-4000-8000-00000000c16a';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('20.1 klippkortet', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('20.1 två bokade timmar drar två', kvar1 = 8, 'kvar ' || kvar1),
+      ('20.1 höll 50 minuter: en timme tillbaka', kvar2 = 9, 'kvar ' || kvar2);
+  end if;
+
+  -- 5. Det som inte går att skriva in.
+  fel := null;
+  begin
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'franvarande', '15:00', '16:00');
+    fel := 'gick igenom';
+  exception when check_violation then fel := 'nekad';
+  end;
+  insert into utfall (test, ok, detalj) values ('20.1 ett uteblivet pass har ingen tid', fel = 'nekad', fel);
+
+  fel := null;
+  begin
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '16:00', '15:00');
+    fel := 'gick igenom';
+  exception when check_violation then fel := 'nekad';
+  end;
+  insert into utfall (test, ok, detalj) values ('20.1 slutet kommer efter början', fel = 'nekad', fel);
+end $$;
 
 select test, ok, detalj from utfall order by nr;
 

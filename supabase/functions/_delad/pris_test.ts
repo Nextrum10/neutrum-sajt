@@ -19,8 +19,8 @@
 
 import { assert, assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
-  belopp, byggFakturor, byggUnderlag, familjebelopp, type Pass, radtext, rutFor, sammanfatta,
-  sorteraPass, standardTjanst, type Tjanst,
+  belopp, byggFakturor, byggUnderlag, familjebelopp, type Pass, passpris, radtext, rutFor, sammanfatta,
+  sorteraPass, standardTjanst, tillaggsbelopp, type Tjanst,
 } from './pris.ts';
 import { MANADER } from './konstanter.ts';
 
@@ -420,4 +420,50 @@ Deno.test('fakturaraden säger ämne och datum, aldrig ett namn, och priset är 
   assertEquals(rader.map((r) => r.beskrivning), [`Engelska 2 ${MANADER[8]} (2 barn)`, `Matematik 9 ${MANADER[8]} − rabatt`]);
   assertEquals(rader.map((r) => r.belopp_ore), [familjebelopp(120, 37900, 6900, 2), 37900 - 5000]);
   assertEquals(rader.map((r) => r.pris_per_timme_ore), [37900 + 6900, 37900]);
+});
+
+// ------------------------------------------------------------
+// Fas 20.1: passet debiteras på den tid det faktiskt hölls
+// ------------------------------------------------------------
+Deno.test('20.1 familjen betalar den debiterade tiden, lönen följer lon_min', () => {
+  const u = byggUnderlag({
+    pass: [
+      // bokat en timme, höll 80 minuter (90 debiteras), övertiden obetald
+      { ...GRUND, id: 'over', wanted_date: '2026-09-03', debiterade_min: 90, lon_min: 60 },
+      // bokat två timmar, höll en och en halv
+      { ...GRUND, id: 'kort', wanted_date: '2026-09-04', duration_min: 120, debiterade_min: 90, lon_min: 90 },
+      // äldre pass utan tid i rapporten: som förut
+      { ...GRUND, id: 'utan', wanted_date: '2026-09-05' },
+    ],
+    tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]),
+  });
+  assertEquals(u.obetalda.map((o) => [o.booking_id, o.belopp_ore]),
+    [['over', 56850], ['kort', 56850], ['utan', 37900]]);
+  assertEquals((u.perTutor.get(T) ?? []).map((r) => [r.booking_id, r.minuter, r.belopp_ore]),
+    [['over', 60, 12000], ['kort', 90, 18000], ['utan', 60, 12000]]);
+});
+
+Deno.test('20.1 fakturan tar den debiterade tiden', () => {
+  const f = byggFakturor({
+    pass: [{ ...GRUND, id: 'f', wanted_date: '2026-09-03', betalning_status: 'faktura', debiterade_min: 75 }],
+    tjanster: KATALOG, timprisOre: 37900,
+  });
+  const rad = (f.get(P) ?? [])[0];
+  assertEquals([rad.minuter, rad.belopp_ore], [75, Math.round(1.25 * 37900)]);
+});
+
+Deno.test('20.1 tillägget är skillnaden i pris, och rabatten dras en gång', () => {
+  const grund = { timprisOre: 37900, extraOre: 6900, barn: 1, rabattOre: 0 };
+  // två timmar betalda, höll två och en kvart
+  assertEquals(tillaggsbelopp({ ...grund, debiteradeMin: 135, betaldaMin: 120 }), 9475);
+  // tre syskon: tillägget per timme följer med, en gång
+  assertEquals(tillaggsbelopp({ ...grund, barn: 3, debiteradeMin: 90, betaldaMin: 60 }), Math.round(0.5 * (37900 + 6900)));
+  // första timmen bjuden (Fas 19.5): två timmar med en timmes rabatt
+  // betalda, höll två och en kvart. Tillägget är kvarten, inte en timme.
+  assertEquals(tillaggsbelopp({ ...grund, rabattOre: 37900, debiteradeMin: 135, betaldaMin: 120 }), 9475);
+  // en rabatt som täcker mer än det betalda: bara det som går över rabatten
+  assertEquals(tillaggsbelopp({ ...grund, rabattOre: 37900, debiteradeMin: 75, betaldaMin: 30 }), passpris({ ...grund, rabattOre: 37900, minuter: 75 }));
+  // ingen övertid, inget tillägg
+  assertEquals(tillaggsbelopp({ ...grund, debiteradeMin: 60, betaldaMin: 60 }), 0);
+  assertEquals(tillaggsbelopp({ ...grund, debiteradeMin: 45, betaldaMin: 60 }), 0);
 });
