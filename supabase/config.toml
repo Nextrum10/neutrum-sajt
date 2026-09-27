@@ -3,7 +3,7 @@
 #
 # FILEN FINNS FÖR ATT EN DRIFTSÄTTNING INTE SKA SLÅ PÅ JWT-KRAVET
 #
-# Sju funktioner anropas av något som inte har en inloggad användare:
+# Åtta funktioner anropas av något som inte har en inloggad användare:
 # en databaswebhook, en trigger, ett pg_cron-jobb, Stripe, en knapp i
 # ett mejlprogram eller Googles omdirigering tillbaka efter ett
 # godkännande. De har därför verify_jwt av.
@@ -23,9 +23,10 @@
 #
 # VAD SOM SKYDDAR DEM I STÄLLET
 #
-# Ingen av dem är öppen. Fyra kräver en delad hemlighet i en egen
+# Ingen av dem är öppen. Fem kräver en delad hemlighet i en egen
 # header, jämförd i konstant tid: fakturering sin egen nyckel,
-# lead-notis, notis-ko och ansokan-notis hemligheten i notis_konfig.
+# lead-notis, notis-ko, ansokan-notis och ansokan-gallring hemligheten
+# i notis_konfig.
 # stripe-webhook kräver Stripes signatur. notis-avanmal kräver en
 # HMAC-signerad token i länken och kan bara stänga AV en notis,
 # aldrig slå på någon och aldrig läsa något. google-koppla kräver ett
@@ -75,6 +76,14 @@ verify_jwt = false
 # ansokan_besked och omförsöksjobbet genom notis_konfig.ansokan_url,
 # med samma hemlighet i headern.
 [functions.ansokan-notis]
+verify_jwt = false
+
+# Gallringen av ansökningar och CV:n efter ett år. Väcks av pg_cron-
+# jobbet ansokan-gallring genom notis_konfig.gallring_url, med samma
+# hemlighet i headern. Står den här raden inte kvar svarar funktionen
+# 401 varje natt, ingenting gallras, och efter en vecka blir det
+# uppgiften "Gallringen av ansökningar har fastnat".
+[functions.ansokan-gallring]
 verify_jwt = false
 
 # Stripes webhook (Fas 12.2). Anroparen är Stripe, som inte har och
