@@ -3147,5 +3147,5 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   border:1px solid var(--ln-2);background:var(--pap-2);
 }
 .nx-kakor-panel p{margin:0 0 8px}
-.nx-kakor-panel .nx-kakor-lage{font-weight:600;color:var(--bl)}
+.nx-kakor-lage{font-weight:600;color:var(--bl)}
 .nx-kakor-panel .nx-kakor-knappar{max-width:420px;margin-bottom:0}

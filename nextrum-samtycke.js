@@ -65,8 +65,7 @@ const NXSamtycke = (function () {
                   'Your browser says you do not want to be tracked (Global Privacy Control), so we treat it as a no. You can change that here.'],
     ejValt:      ['Du har inte valt än.', 'You have not chosen yet.'],
     inget:       ['Det finns inget att samtycka till just nu: sajten använder ingenting som kräver det.',
-                  'There is nothing to consent to at the moment: the site uses nothing that requires it.'],
-    sparat:      ['Sparat.', 'Saved.']
+                  'There is nothing to consent to at the moment: the site uses nothing that requires it.']
   };
   function t(k, v) {
     let s = ORD[k][EN ? 1 : 0];
@@ -96,14 +95,20 @@ const NXSamtycke = (function () {
   /* ---------- svaret ---------- */
   /* localStorage kastar i privat läge i vissa webbläsare. Svaret
      gäller då sidan ut, och rutan kommer tillbaka på nästa. Det är
-     irriterande men ärligt: ett svar vi inte kan minnas har vi inte. */
+     irriterande men ärligt: ett svar vi inte kan minnas har vi inte.
+
+     Svaret som gavs PÅ SIDAN vinner över det som står lagrat. Går
+     skrivningen inte igenom (fullt, privat läge i äldre Safari) står
+     det gamla kvar i lagringen, och då hade ett gammalt nej slagit
+     ett nytt ja. */
   let minne = null;
   function läs() {
+    if (minne) return minne;
     try {
       const rå = localStorage.getItem(NYCKEL);
       if (rå) return JSON.parse(rå);
-    } catch (e) { /* faller till minnet */ }
-    return minne;
+    } catch (e) { /* ingenting lagrat som går att läsa */ }
+    return null;
   }
   function giltigt(s) {
     if (!s || typeof s.ja !== 'boolean' || !Array.isArray(s.omfattar)) return false;
@@ -120,10 +125,6 @@ const NXSamtycke = (function () {
     const s = läs();
     return giltigt(s) && s.ja === true && s.omfattar.indexOf(syfte) >= 0;
   }
-  function behöverFråga() {
-    return aktiva().length > 0 && !giltigt(läs()) && !gpc();
-  }
-
   function spara(ja) {
     const förut = läs();
     const s = { v: 1, ja: ja, omfattar: aktiva(), tid: new Date().toISOString() };
@@ -132,7 +133,6 @@ const NXSamtycke = (function () {
     if (ja) tillämpa();
     else rensa(förut && förut.ja === true);
     try { if (typeof NX !== 'undefined') NX.händelse('samtycke', { val: ja ? 'ja' : 'nej' }); } catch (e) {}
-    try { document.dispatchEvent(new CustomEvent('nx:samtycke', { detail: { ja: ja } })); } catch (e) {}
   }
 
   /* ---------- ja: det som får köras ---------- */
@@ -187,7 +187,17 @@ const NXSamtycke = (function () {
     });
     skript('https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id));
     window.gtag('js', new Date());
-    window.gtag('config', id, { allow_google_signals: false, allow_ad_personalization_signals: false });
+    const inst = { allow_google_signals: false, allow_ad_personalization_signals: false };
+    window.gtag('config', id, inst);
+    /* Konverteringen skickas till Ads-kontot i GOOGLE_ADS_LEAD. Är
+       taggen ovan en G- (Analytics) måste Ads-kontot konfigureras
+       för sig, annars kommer konverteringen aldrig fram. */
+    const aw = adsMål().split('/')[0];
+    if (aw && aw !== id) window.gtag('config', aw, inst);
+  }
+  function adsMål() {
+    const mål = String(CFG.GOOGLE_ADS_LEAD || '').trim();
+    return /^AW-[A-Z0-9]+\/[\w-]+$/.test(mål) ? mål : '';
   }
 
   /* En händelse från NX.händelse(). Bara anmälan är en konvertering:
@@ -200,8 +210,7 @@ const NXSamtycke = (function () {
       if (har('meta') && window.fbq) window.fbq('track', 'Lead');
       if (har('google') && window.gtag) {
         window.gtag('event', 'generate_lead');
-        const mål = String(CFG.GOOGLE_ADS_LEAD || '').trim();
-        if (/^AW-[A-Z0-9]+\/[\w-]+$/.test(mål)) window.gtag('event', 'conversion', { send_to: mål });
+        if (adsMål()) window.gtag('event', 'conversion', { send_to: adsMål() });
       }
     } catch (e) { /* mätning får aldrig stoppa något */ }
   }
@@ -236,6 +245,18 @@ const NXSamtycke = (function () {
     return st;
   }
 
+  /* Vad som gäller nu, i ord. Tomt när inget är valt i rutan: där
+     är frågan själv beskedet. */
+  function lägesText(förVal) {
+    const s = läs();
+    if (giltigt(s)) {
+      const d = new Date(s.tid).toLocaleDateString(EN ? 'en-GB' : 'sv-SE', { day: 'numeric', month: 'long', year: 'numeric' });
+      return t(s.ja ? 'valtJa' : 'valtNej', { d: d });
+    }
+    if (!förVal) return '';
+    return gpc() ? t('gpc') : t('ejValt');
+  }
+
   function knappar(värd, efter) {
     const rad = document.createElement('div');
     rad.className = 'nx-kakor-knappar';
@@ -261,7 +282,8 @@ const NXSamtycke = (function () {
   }
 
   function visa(fokus) {
-    if (ruta || !aktiva().length) return;
+    if (ruta) { if (fokus) ruta.querySelector('.nx-kakor-t').focus({ preventScroll: true }); return; }
+    if (!aktiva().length) return;
     const r = document.createElement('section');
     r.className = 'nx-kakor';
     r.setAttribute('aria-label', t('region'));
@@ -275,6 +297,15 @@ const NXSamtycke = (function () {
       p.textContent = s;
       r.appendChild(p);
     });
+    /* Öppnad från footern efter ett val: visa vad som gäller, så att
+       den som vill ändra sig ser vad den ändrar från. */
+    const nu = lägesText(false);
+    if (nu) {
+      const p = document.createElement('p');
+      p.className = 'nx-kakor-lage';
+      p.textContent = nu;
+      r.appendChild(p);
+    }
     knappar(r, stäng);
     const l = document.createElement('a');
     l.className = 'nx-kakor-mer';
@@ -294,7 +325,11 @@ const NXSamtycke = (function () {
     if (fokus) h.focus({ preventScroll: true });
   }
 
-  /* Panelen på lagring.html: samma fråga, med vad som gäller nu. */
+  /* Panelen på lagring.html: samma fråga, med vad som gäller nu.
+     Ritas en gång. Ett klick skriver bara om lägesraden: ritades
+     panelen om försvann knappen man just tryckt på, fokus hamnade i
+     sidans topp, och en skärmläsare hörde ingenting, eftersom en
+     status-rad som skapas på nytt inte läses upp. */
   function panel(värd) {
     värd.textContent = '';
     if (!aktiva().length) {
@@ -311,15 +346,9 @@ const NXSamtycke = (function () {
     const läge = document.createElement('p');
     läge.className = 'nx-kakor-lage';
     läge.setAttribute('role', 'status');
-    const s = läs();
-    if (giltigt(s)) {
-      const d = new Date(s.tid).toLocaleDateString(EN ? 'en-GB' : 'sv-SE', { day: 'numeric', month: 'long', year: 'numeric' });
-      läge.textContent = t(s.ja ? 'valtJa' : 'valtNej', { d: d });
-    } else {
-      läge.textContent = gpc() ? t('gpc') : t('ejValt');
-    }
+    läge.textContent = lägesText(true);
     värd.appendChild(läge);
-    knappar(värd, () => { panel(värd); stäng(); });
+    knappar(värd, () => { läge.textContent = lägesText(true); stäng(); });
   }
 
   function init() {
@@ -354,5 +383,5 @@ const NXSamtycke = (function () {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  return { har, behöverFråga, visa, konvertering, aktiva };
+  return { har, konvertering };
 })();

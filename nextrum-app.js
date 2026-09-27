@@ -703,7 +703,7 @@ const NX = (function () {
   function källrader() {
     const k = källa();
     const rader = [k.kanal ? 'Källa: ' + k.kanal + ' / ' + k.medium
-                           : 'Källa: okänd (inget samtycke, anmälan skickad efter flera sidor)'];
+                           : 'Källa: okänd (landningen gick inte att se)'];
     if (k.kampanj)   rader.push('Kampanj: ' + k.kampanj);
     if (k.innehåll)  rader.push('Annonsvariant: ' + k.innehåll);
     if (k.term)      rader.push('Sökord: ' + k.term);
