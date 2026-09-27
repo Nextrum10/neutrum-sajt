@@ -33,11 +33,6 @@
    nextrum-start.css gömmer något utan html.nx-sr, och den klassen
    sätts här.
 
-   ORDNINGEN I SIDAN SPELAR ROLL. Filen laddas FÖRE sidans eget
-   skript, så bandets kopior finns när NX.initDrag() letar upp
-   korten. Då får kopiorna samma utfällning som originalen utan att
-   den skrivs två gånger.
-
    INGEN TEXT SKRIVS HÄR. Allt man läser står i sidans markup, på
    båda språken. Generatorn översätter aldrig ett skript, och det
    som skrivs härifrån hade blivit svenskt på den engelska sidan
@@ -204,15 +199,15 @@ const NXStart = (function () {
      huvudtråden kan vara upptagen utan att bandet rycker. Att stanna
      och gå igång är playbackRate, som tonas mot 0 och tillbaka.
 
-     Kopiorna är aria-hidden och ligger utanför tabbordningen, med
-     egna id:n så att aria-controls fortfarande pekar rätt. En
-     skärmläsare hör alltså sex kort, inte arton.
+     Kopiorna är aria-hidden och har egna id:n. En skärmläsare hör
+     alltså sex kort, inte arton.
 
-     Bandet stannar under pekaren, när ett kort är utfällt och när man
-     drar i det. Tangentbordsfokus hamnar alltid på ett ORIGINAL, och
-     då tar ett handstyrt läge över: animationen släpps och raden
-     glider så att kortet står mitt i bild. När fokus lämnar bandet
-     fortsätter animationen från samma ställe.
+     Bandet stannar under pekaren och när man drar i det. Korten gick
+     förut att fälla ut, och bandet stannade då också när ett kort
+     var utfällt och när ett kort hade tangentbordsfokus. Utfällningen
+     är borttagen (2026-09-27): den klipptes av bandets höjd och
+     syntes bara till hälften. Korten är inte knappar längre, så
+     inget i bandet tar fokus.
      ============================================================ */
   function band() {
     const rot = $('[data-band]');
@@ -230,9 +225,6 @@ const NXStart = (function () {
         k.setAttribute('aria-hidden', 'true');
         k.setAttribute('data-klon', '');
         $$('[id]', k).forEach(e => { e.id += '-k' + nr; });
-        $$('[aria-controls]', k).forEach(e =>
-          e.setAttribute('aria-controls', e.getAttribute('aria-controls') + '-k' + nr));
-        $$('button, a, input, [tabindex]', k).forEach(e => e.setAttribute('tabindex', '-1'));
         frag.appendChild(k);
       });
       return frag;
@@ -287,13 +279,12 @@ const NXStart = (function () {
       hand = true;
     }
 
-    const öppet = () => !!ul.querySelector('.dr-kort[aria-expanded="true"]');
     /* Tona farten mot målet. rAF bara under de få bildrutor det tar,
        och det enda som skrivs är playbackRate. */
     function tona() {
       if (rampa) return;
       const steg = () => {
-        const mål = (över || drar || öppet()) ? 0 : 1;
+        const mål = (över || drar) ? 0 : 1;
         fart += (mål - fart) * 0.14;
         if (Math.abs(mål - fart) < 0.01) fart = mål;
         if (anim) {
@@ -329,35 +320,10 @@ const NXStart = (function () {
     rot.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { över = true; tona(); } });
     rot.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { över = false; tona(); } });
 
-    /* --- ett utfällt kort --- initDrag() fäller ut; vi läser läget efteråt. */
-    ul.addEventListener('click', () => setTimeout(tona, 0));
-
-    /* --- tangentbordet --- */
-    ul.addEventListener('focusin', e => {
-      if (!e.target.matches(':focus-visible')) return;
-      const li = e.target.closest('li');
-      if (!li || li.hasAttribute('data-klon')) return;
-      if (!hand) {
-        släppAnim();
-        /* Läs stilen en gång, så att övergången nedan börjar där raden
-           faktiskt står och inte där animationen började. */
-        getComputedStyle(ul).transform;
-      }
-      const mål = rot.clientWidth / 2 - (li.offsetLeft + li.offsetWidth / 2);
-      ul.style.transition = 'transform .6s cubic-bezier(.16,1,.3,1)';
-      handX = mål;
-      ul.style.transform = pos(mål).transform;
-    });
-    ul.addEventListener('focusout', e => {
-      if (e.relatedTarget && ul.contains(e.relatedTarget)) return;
-      if (hand && !drar) starta(handX);
-    });
-
     /* --- dra i det ---
        touch-action:pan-y i CSS: webbläsaren behåller den lodräta
        scrollen, och det vågräta kommer hit. Ett drag längre än sex
-       pixlar är ett drag, inte ett tryck, och klicket som följer
-       stoppas så att inget kort fälls ut av misstag. */
+       pixlar är ett drag, inte ett tryck. */
     let pid = null, startX = 0, x0 = 0;
     rot.addEventListener('pointerdown', e => {
       if (!e.isPrimary || e.button !== 0) return;
@@ -389,9 +355,6 @@ const NXStart = (function () {
       if (!drar) return;
       drar = false;
       rot.classList.remove('drar');
-      const stopp = ev => { ev.stopPropagation(); ev.preventDefault(); };
-      rot.addEventListener('click', stopp, { capture: true, once: true });
-      setTimeout(() => rot.removeEventListener('click', stopp, { capture: true }), 0);
       fart = 0;
       starta(handX);
       tona();

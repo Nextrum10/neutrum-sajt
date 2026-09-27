@@ -279,10 +279,11 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
    nextrum-start.js; här står bara formen.
 
    overflow:clip och inte hidden. hidden gör bandet till en
-   scrollbehållare, och NX.initDrag() kallar scrollIntoView på
-   kortet man trycker på — då hade webbläsaren scrollat bandet i
-   sidled OVANPÅ vår transform, och kortet hade hoppat. clip klipper
-   utan att gå att scrolla.
+   scrollbehållare, och ett scrollIntoView (förr på kortet man
+   tryckte på) hade då scrollat bandet i sidled OVANPÅ vår
+   transform, och kortet hade hoppat. clip klipper utan att gå att
+   scrolla. Samma klippning gjorde att en utfällning under ett kort
+   bara syntes till hälften, och därför finns ingen utfällning.
 
    Kanterna tonas med två pseudoelement i ytans färg, inte med
    mask-image. En mask över något som rör sig måste räknas om för
@@ -290,8 +291,7 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
    ingenting.
 
    Ingen pausknapp (Leo 2026-09-25: "ta bort play funktionen").
-   Bandet stannar under pekaren, när ett kort är utfällt och när
-   något i det har tangentbordsfokus.
+   Bandet stannar under pekaren och när man drar i det.
    ============================================================ */
 .nx-band{position:relative;margin-top:clamp(8px,1vw,14px)}
 .nx-band:not(.pa) .nx-drag{
@@ -334,7 +334,6 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
 @media (hover:hover) and (pointer:fine){
   .nx-band .dr-kort:hover{translate:0 -4px}
 }
-.nx-band .dr-kort[aria-expanded="true"]{background:var(--acc-soft);border-color:var(--acc)}
 
 /* ============================================================
    7. "VI BYGGER NÄSTA GENERATION TILLSAMMANS" — större
