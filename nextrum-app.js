@@ -609,30 +609,15 @@ const NX = (function () {
      går det inte att veta om annonserna, Facebook-gruppen eller
      mun-mot-mun är det som funkar — och då går pengarna åt fel håll.
 
-     Först i sessionen vinner. Klickar någon på en Google-annons,
-     läser prissidan och skickar in först på tredje sidan är det
-     annonsen som gjorde jobbet, inte "nextrum.se" som hänvisare.
-
-     sessionStorage kan kasta (privat läge, blockerade kakor) och
-     ska aldrig fälla ett formulär — därför try/catch runt varje
-     åtkomst och ett svar som fungerar även när lagringen är död. */
-  const KÄLL_NYCKEL = 'nx-kalla';
-
-  function läsLagrad() {
-    try {
-      const rå = sessionStorage.getItem(KÄLL_NYCKEL);
-      return rå ? JSON.parse(rå) : null;
-    } catch (e) { return null; }
-  }
-
-  function skrivLagrad(k) {
-    try { sessionStorage.setItem(KÄLL_NYCKEL, JSON.stringify(k)); } catch (e) { /* strunt i det */ }
-  }
-
+     Källan läses ur sidan där formuläret skickas, och INGENTING
+     sparas i webbläsaren. Förut skrevs den till sessionStorage
+     ("först i sessionen vinner"), men källa() anropas bara när
+     formuläret skickas, så lagringen vann aldrig något: den gjorde
+     bara lagring.html osann, som lovar att ingenting lagras förrän
+     man loggar in. Att minnas landningssidan över flera sidbyten
+     är lagring för marknadsföring och kräver samtycke (LEK 9 kap.
+     28 §), alltså en samtyckesruta. Den finns inte, med flit. */
   function källa() {
-    const lagrad = läsLagrad();
-    if (lagrad) return lagrad;
-
     let p;
     try { p = new URLSearchParams(location.search); } catch (e) { p = new URLSearchParams(); }
     const par = n => (p.get(n) || '').trim().slice(0, 120) || null;
@@ -670,7 +655,6 @@ const NX = (function () {
       landning: (location.pathname + location.search).slice(0, 200),
       tid: new Date().toISOString()
     };
-    skrivLagrad(k);
     return k;
   }
 

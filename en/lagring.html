@@ -129,7 +129,7 @@
   <a class="nx-back" href="/en/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> To the home page</a>
   <span class="nx-et acc" style="margin-top:22px">Cookies</span>
   <h1 class="nx-d1">Cookies and storage</h1>
-  <p class="nx-lede">A short page, because there is little to report: we set no cookies at all.</p>
+  <p class="nx-lede">A short page, because there is little to report: the public pages set no cookies at all.</p>
 </section>
 
 <section class="sec wrap" style="padding-top:clamp(16px,2vw,28px)">
@@ -138,12 +138,14 @@
        för att ett skript inte laddade är värdelöst. -->
   <div class="juridisk">
     <div class="jur-ruta">
-      <h2>We set no cookies</h2>
+      <h2>No cookies on the public pages</h2>
       <p>That is why there is no banner here asking for your consent. It would be asking permission
         for nothing.</p>
       <p>We measured this rather than assumed it: the public pages set zero cookies, and nothing is
         stored in your browser until you log in.</p>
       <p>We do count visits. How that works without cookies is explained just below.</p>
+      <p>The only place a cookie is set is when you pay for a session by card. Then it is Stripe
+        that sets it, and only for the payment. That is explained further down.</p>
     </div>
 
     <h2>What is stored when you log in</h2>
@@ -154,6 +156,21 @@
       <li>It requires no consent: it is necessary for something you asked for yourself.</li>
       <li>It disappears when you log out. You can also clear it yourself through your browser’s
         site data settings.</li>
+      <li>If you collapse the menu or a panel in the view, that is saved too, so the view looks
+        the same next time. It is a choice you made yourself, and it is sent nowhere.</li>
+    </ul>
+
+    <h2>When you pay by card</h2>
+    <p>Card payments are handled by Stripe. Their script is loaded only in the parent view, and
+      only when you press “Betala med kort” (pay by card). Stripe then sets two cookies, <i>__stripe_mid</i> (one year) and
+      <i>__stripe_sid</i> (30 minutes), and the checkout in the panel may set its own. They are
+      there to detect card fraud.</p>
+    <ul>
+      <li>They require no consent: the payment cannot be made safely without them, and you asked
+        for it yourself.</li>
+      <li>Nothing from Stripe is loaded before you press it, and nothing on the public pages.</li>
+      <li>How Stripe handles the data is described in
+        <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripe’s privacy policy</a>.</li>
     </ul>
 
     <h2>How we count visits</h2>
@@ -172,7 +189,7 @@
     <ul>
       <li>No cookie — not even for the statistics above</li>
       <li>No advertising trackers, no pixel from any social network</li>
-      <li>No third-party cookies whatsoever</li>
+      <li>No third-party cookies on the public pages</li>
       <li>No profiling and no automated decisions about you</li>
       <li>Nothing that follows you between sites, or between days</li>
     </ul>
@@ -185,6 +202,8 @@
         counting visits, in the way described above.</li>
       <li><b>Supabase</b> — the database and the login. Contacted when you submit a form or log in. The servers
         are within the EU.</li>
+      <li><b>Stripe</b> — card payments. Only in the parent view, and only when you press
+        “Betala med kort”.</li>
     </ul>
     <p>That is the whole list — and it has grown shorter. The fonts used to sit with Google, and
       the library the login needs used to sit with unpkg.com. Both sent your IP address to a
@@ -198,7 +217,7 @@
       sake of appearances, and we will not add measurement quietly: the visit counting above was
       added after this page was first published, and the page was rewritten the same day.</p>
 
-    <p class="jur-datum">Last updated 7 September 2026.</p>
+    <p class="jur-datum">Last updated 27 September 2026.</p>
   </div>
 </section>
 
@@ -344,7 +363,7 @@
 <script src="../nextrum-config.js?v=37357abd"></script>
 <script src="../nextrum-images.js?v=50260f9d"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=036d9884"></script>
+<script src="../nextrum-app.js?v=ad2e1071"></script>
 <script src="../nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

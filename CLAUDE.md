@@ -919,6 +919,31 @@ att visa **rätt sida**, inte för att skydda data.
   svarar funktionen 401 på varje anmälan emellan — de mejlen kommer
   aldrig. I en tabell byts båda i samma transaktion.
 
+### Ingen samtyckesruta, med flit (2026-09-27)
+
+De öppna sidorna sätter inga cookies och lagrar ingenting i
+webbläsaren. Besöksräkningen (Vercel Web Analytics) är cookiefri. Det
+som lagras är nödvändigt för något besökaren själv bett om och kräver
+inget samtycke (LEK 9 kap. 28 §): inloggningen och de hopfällda
+menyerna i vyerna, och Stripes två cookies (`__stripe_mid`,
+`__stripe_sid`), som sätts först när familjen trycker Betala med kort.
+En ruta som bad om lov till det hade bett om lov till ingenting.
+
+`lagring.html` (och `/en/`) säger exakt vad som lagras, och
+integritetspolicyn upprepar det i två meningar. **Ändras lagringen ska
+sidorna följa med i samma ändring.** Fas 14.5 lade till Stripe utan
+att sidan följde med, och i tre veckor stod det "vi sätter inga
+cookies alls". Källan till en intresseanmälan (`källa()` i
+`nextrum-app.js`) skrevs samtidigt till sessionStorage, vilket gjorde
+"ingenting lagras förrän du loggar in" osant; den läses nu bara ur
+sidan där formuläret skickas.
+
+**Samtyckesrutan behövs den dag något spårar**: en annonspixel (Meta,
+Google Ads, TikTok), en inbäddad video, eller att minnas
+landningssidan över flera sidbyten för att se vilken annons som gav en
+anmälan. Då byggs rutan före skriptet, inte efter, och inget av det
+laddas innan besökaren sagt ja.
+
 ### Supabases säkerhetsadvisor larmar om saker som är med flit
 
 `get_advisors(type: 'security')` ger ett fyrtiotal varningar. De flesta

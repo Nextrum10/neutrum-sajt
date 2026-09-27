@@ -34,8 +34,10 @@
 
 === lagring.html  ->  en/lagring.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 1 stycken:
+  SVENSKA KVAR i engelskan, 3 stycken:
       localStorage
+      __stripe_mid
+      __stripe_sid
 
 === priser.html  ->  en/priser.html
   STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
