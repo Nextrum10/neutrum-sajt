@@ -974,13 +974,16 @@
       });
     }
 
-    const orapporterade = (S.bokningar || []).filter(b =>
-      b.status === 'confirmed' && b.wanted_date < isoFor(new Date()) && betaltNog(b)).length;
+    /* Samma urval som siffran vid Skriv rapport i menyn, och notisen
+       leder dit. Förut räknade den bara bekräftade pass före idag, så
+       dagens pass och familjens egna bokningar syntes i listan men
+       inte här. */
+    const orapporterade = (S.bokningar || []).filter(b => väntarPåRapport(b) && betaltNog(b)).length;
     if (orapporterade) {
       poster.push({
         rubrik: orapporterade + ' pass utan rapport',
         text: 'Passet har varit. Rapporten gör det till en arbetad timme.',
-        mål: '#pass-lista'
+        mål: '#att-rapportera'
       });
     }
 
@@ -1047,7 +1050,12 @@
       .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, avbokningsskal, betalning_status, fakturerbar')
       .eq('tutor_id', S.user.id).order('wanted_date', { ascending: true });
 
-    if (error) { host.innerHTML = tomt('Kunde inte hämta passen', felText(error)); return; }
+    if (error) {
+      host.innerHTML = tomt('Kunde inte hämta passen', felText(error));
+      const rp = $('#att-rapportera');
+      if (rp) rp.innerHTML = tomt('Kunde inte hämta passen', felText(error));
+      return;
+    }
     S.bokningar = data || [];
     S.laddatPass = true;
 
@@ -1064,6 +1072,7 @@
        tider — här är rapporten det enda som är din tur. */
     märkFlik('#flik-pass-mark', lektioner.filter(b => rapporterbart(b) && harBörjat(b)).length);
     ritaFörslag();
+    ritaAttRapportera();
     ritaNästaPass();
     ritaStatistik();
     byggSchema();
@@ -1184,6 +1193,61 @@
         && harBörjat(b))
       .sort((a, c) => String(c.wanted_date + (c.wanted_time || ''))
         .localeCompare(String(a.wanted_date + (a.wanted_time || ''))));
+  }
+
+  /* ============================================================
+     SKRIV RAPPORT
+
+     Samma urval som rapporterbart() och harBörjat(), men för alla
+     elever och UTAN betalkravet. Ett pass som hölls men inte är
+     betalt saknar också en rapport, och ska stå här med beskedet om
+     varför den inte går att spara än — annars ser listan tom ut
+     medan passet i själva verket väntar. Knappen får bara det pass
+     databasen tar emot en rapport för.
+
+     Ett eget förslag familjen aldrig svarade på är inte med: tiden
+     blev aldrig bestämd, och databasen hade nekat rapporten.
+     ============================================================ */
+  function väntarPåRapport(b) {
+    return (b.status === 'confirmed'
+      || (b.status === 'requested' && b.created_by === b.parent_id))
+      && harBörjat(b);
+  }
+
+  function ritaAttRapportera() {
+    const host = $('#att-rapportera');
+    if (!host) return;
+    const nyckel = b => String(b.wanted_date || '') + String(b.wanted_time || '');
+    const väntar = (S.bokningar || []).filter(väntarPåRapport)
+      .sort((a, c) => nyckel(c).localeCompare(nyckel(a)));
+    const kan = väntar.filter(betaltNog);
+
+    $('#att-rapportera-antal').textContent = väntar.length ? väntar.length + ' st' : '';
+    /* Menyn räknar bara det du kan göra något åt nu, som fliken
+       Pass & rapport. Ett obetalt pass väntar på familjen. */
+    if (S.sido) S.sido.märke('rapporter', kan.length);
+
+    if (!väntar.length) {
+      host.innerHTML = tomt('Inga rapporter att skriva', 'När ett pass har hållits står det här tills du skrivit rapporten.');
+      return;
+    }
+
+    host.innerHTML = väntar.map(b => {
+      const e = S.elever.find(x => x.id === b.student_id);
+      const familj = S.familjer.find(f => f.id === b.parent_id);
+      const betalt = betaltNog(b);
+      const under = [e ? e.name : (familj ? familj.full_name : null),
+        b.format, (b.duration_min || 60) + ' min'].filter(Boolean).join(' · ');
+      return NXKontakt.passRad(b, {
+        href: '#pass/' + b.id,
+        under: under,
+        vem: betalt ? null : 'Inte betalt — rapporten kan sparas när familjen har betalat. Hölls passet inte, avboka det.',
+        märke: S.kortsparr ? NXKontakt.betalMärke(b) : null,
+        atgarder: betalt
+          ? '<button class="btn btn-primary btn-sm" data-rapportera="' + esc(b.id) + '">Skriv rapport</button>'
+          : ''
+      });
+    }).join('');
   }
 
   function fyllPassVal() {
@@ -2746,7 +2810,7 @@
      vad studiehjälparen ser: eleven och familjen, inte priset.
      Knapparna bär samma data-attribut som i listorna.
      ============================================================ */
-  const SEKTIONSNAMN = { oversikt: 'Översikt', tider: 'Föreslagna tider', lektioner: 'Lektioner & elever' };
+  const SEKTIONSNAMN = { oversikt: 'Översikt', tider: 'Föreslagna tider', lektioner: 'Lektioner & elever', rapporter: 'Skriv rapport' };
 
   function passIdIAdressen() {
     const [huvud, id] = String(location.hash || '').replace(/^#/, '').split('/');
