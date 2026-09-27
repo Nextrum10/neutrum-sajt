@@ -1506,6 +1506,21 @@ section[data-sek]{overflow-anchor:none}
 .val-lank[aria-busy="true"]{opacity:.6;cursor:progress}
 .pass-atg .val-lank{flex-basis:100%;text-align:left}
 
+/* Bekräfta rapport (Fas 19.1). Rapporten överst, valet under ett
+   streck: först läser man, sedan svarar man. Radbrytningarna i
+   studiehjälparens text står kvar, som på passets sida. Ingen höjd
+   som byts av trycket — kortet försvinner helt när det är bekräftat,
+   och rubriken ovanför hålls med NXStudie.håll. */
+.rb-kort p{white-space:pre-wrap}
+.rb-val{margin-top:14px;padding-top:12px;border-top:1px solid var(--ln)}
+.report .rb-lage{font-size:.86rem;color:var(--bl-2);margin:0 0 10px}
+.rb-knappar{display:flex;gap:8px;flex-wrap:wrap}
+.rb-knappar .btn{text-decoration:none}
+.rb-alt{margin-top:6px}
+@media (max-width:560px){
+  .rb-knappar .btn{flex:1 1 auto;justify-content:center}
+}
+
 .ps-kortrad{
   margin-top:18px;display:grid;gap:12px;
   grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));

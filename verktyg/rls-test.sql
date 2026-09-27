@@ -3296,6 +3296,71 @@ begin
   values ('18.1 en länk utanför meet.google.com går inte att spara', fel = 'nekad av villkoret', fel);
 end $$;
 
+-- ------------------------------------------------------------
+-- Fas 19.1: familjen bekräftar rapporten
+--
+-- Rapporten e0a2 hör till P:s barn Äldst. Bara P får bekräfta den,
+-- bara i eget namn och bara med databasens klocka.
+-- ------------------------------------------------------------
+
+select pg_temp.prova('19.1 P bekräftar sitt barns rapport', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.rapport_bekraftelser (rapport_id) values ('00000000-0000-4000-8000-00000000e0a2')$q$],
+  'ok');
+
+select pg_temp.prova('19.1 Q bekräftar P:s rapport', '00000000-0000-4000-8000-0000000000f2',
+  array[$q$insert into public.rapport_bekraftelser (rapport_id) values ('00000000-0000-4000-8000-00000000e0a2')$q$],
+  'nekad');
+
+select pg_temp.prova('19.1 studiehjälparen bekräftar åt familjen', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$insert into public.rapport_bekraftelser (rapport_id) values ('00000000-0000-4000-8000-00000000e0a2')$q$],
+  'nekad');
+
+-- Admin ser allt, men en bekräftelse admin skrivit är inte familjens.
+select pg_temp.prova('19.1 admin bekräftar åt familjen', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into public.rapport_bekraftelser (rapport_id) values ('00000000-0000-4000-8000-00000000e0a2')$q$],
+  'nekad');
+
+select pg_temp.prova('19.1 anon bekräftar', null,
+  array[$q$insert into public.rapport_bekraftelser (rapport_id) values ('00000000-0000-4000-8000-00000000e0a2')$q$],
+  'nekad');
+
+select pg_temp.prova('19.1 P bekräftar i Q:s namn', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.rapport_bekraftelser (rapport_id, foralder_id)
+          values ('00000000-0000-4000-8000-00000000e0a2', '00000000-0000-4000-8000-0000000000f2')$q$],
+  'nekad');
+
+select pg_temp.prova('19.1 P bakdaterar sin bekräftelse', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.rapport_bekraftelser (rapport_id, bekraftad_at)
+          values ('00000000-0000-4000-8000-00000000e0a2', now() - interval '30 days')$q$],
+  'nekad');
+
+-- En bekräftelse är något som hänt. Den går inte att ta tillbaka.
+select pg_temp.prova('19.1 P tar bort sin bekräftelse', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.rapport_bekraftelser (rapport_id) values ('00000000-0000-4000-8000-00000000e0a2')$q$,
+        $q$delete from public.rapport_bekraftelser where rapport_id = '00000000-0000-4000-8000-00000000e0a2'$q$],
+  'nekad');
+
+select pg_temp.prova_med('19.1 P ser sin bekräftelse',
+  array[$q$insert into public.rapport_bekraftelser (rapport_id, foralder_id)
+          values ('00000000-0000-4000-8000-00000000e0a2', '00000000-0000-4000-8000-0000000000f1')$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select 1 from public.rapport_bekraftelser where rapport_id = '00000000-0000-4000-8000-00000000e0a2'$q$],
+  'ok');
+
+select pg_temp.prova_med('19.1 Q ser inte P:s bekräftelse',
+  array[$q$insert into public.rapport_bekraftelser (rapport_id, foralder_id)
+          values ('00000000-0000-4000-8000-00000000e0a2', '00000000-0000-4000-8000-0000000000f1')$q$],
+  '00000000-0000-4000-8000-0000000000f2',
+  array[$q$select 1 from public.rapport_bekraftelser$q$],
+  'nekad');
+
+select pg_temp.prova_med('19.1 admin ser bekräftelsen',
+  array[$q$insert into public.rapport_bekraftelser (rapport_id, foralder_id)
+          values ('00000000-0000-4000-8000-00000000e0a2', '00000000-0000-4000-8000-0000000000f1')$q$],
+  '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select 1 from public.rapport_bekraftelser where rapport_id = '00000000-0000-4000-8000-00000000e0a2'$q$],
+  'ok');
+
 select test, ok, detalj from utfall order by nr;
 
 rollback;
