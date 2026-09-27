@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16 och 18)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18 och 19)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -28,8 +28,8 @@
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
 -- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
--- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2 och
--- Fas 18.1 (Meet-länken) är körda.
+-- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2,
+-- Fas 18.1 (Meet-länken) och Fas 19.1–19.4 är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -3388,6 +3388,136 @@ end $$;
 select pg_temp.prova('19.2 admin slår fortfarande om fakturaflaggan', '00000000-0000-4000-8000-0000000000ad',
   array[$q$update public.flaggor set aktiv = not aktiv where kod = 'faktura'$q$],
   'ok');
+
+-- ------------------------------------------------------------
+-- Fas 19.3: ett omdöme gäller passets egen studiehjälpare
+--
+-- b0e1 är P:s genomförda pass med A och barnet Äldst. Förut prövade
+-- policyn bara att passet var P:s, så P kunde skriva om B, eller om
+-- Q:s barn, genom att peka på b0e1.
+-- ------------------------------------------------------------
+
+select pg_temp.prova('19.3 P skriver omdöme om passets studiehjälpare', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.tutor_reviews (booking_id, tutor_id, parent_id, student_id, rating)
+          values ('00000000-0000-4000-8000-00000000b0e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000005a1', 5)$q$],
+  'ok');
+
+select pg_temp.prova('19.3 P skriver omdöme om en annan studiehjälpare', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.tutor_reviews (booking_id, tutor_id, parent_id, rating)
+          values ('00000000-0000-4000-8000-00000000b0e1', '00000000-0000-4000-8000-0000000000b1',
+                  '00000000-0000-4000-8000-0000000000f1', 1)$q$],
+  'nekad');
+
+select pg_temp.prova('19.3 P skriver omdöme om Q:s barn', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.tutor_reviews (booking_id, tutor_id, parent_id, student_id, rating)
+          values ('00000000-0000-4000-8000-00000000b0e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000005c1', 1)$q$],
+  'nekad');
+
+select pg_temp.prova('19.3 Q skriver omdöme på P:s pass', '00000000-0000-4000-8000-0000000000f2',
+  array[$q$insert into public.tutor_reviews (booking_id, tutor_id, parent_id, rating)
+          values ('00000000-0000-4000-8000-00000000b0e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000000f2', 1)$q$],
+  'nekad');
+
+-- ------------------------------------------------------------
+-- Fas 19.4: ingen triggerfunktion går att anropa utifrån
+--
+-- Att triggrarna ändå körs för anon och authenticated provas redan av
+-- 16.1-raderna ovan (klippkortet på ett nytt pass nekas, kvittot till
+-- den som söker köas). Den här raden fångar nästa triggerfunktion som
+-- får EXECUTE av Supabases förval.
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select '19.4 ingen triggerfunktion går att anropa', count(*) = 0,
+       coalesce(string_agg(p.oid::regprocedure::text, ', '), 'inga')
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where p.prorettype = 'trigger'::regtype and n.nspname in ('public', 'intern')
+   and (has_function_privilege('anon', p.oid, 'execute')
+        or has_function_privilege('authenticated', p.oid, 'execute'));
+
+-- ------------------------------------------------------------
+-- Fas 19.5: priset fryses på passet, och första timmen bjuds
+--
+-- Familj Q har inga pass i fixturerna, så Q är en ny familj. Barnet
+-- matchas med A inne i blocket, och allt rullas tillbaka i slutet.
+-- Pass 1 (en timme) har fullt pris, pass 2 (en timme, föreslaget av
+-- studiehjälparen) når två timmar och blir gratis, pass 3 har fullt pris.
+-- ------------------------------------------------------------
+do $$
+declare
+  qid uuid := '00000000-0000-4000-8000-0000000000f2';
+  aid uuid := '00000000-0000-4000-8000-0000000000a1';
+  sid uuid := '00000000-0000-4000-8000-0000000005c1';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  r1 record; r2 record; r3 record;
+  prisfel text; rabattfel text; kk jsonb; larm_gratis int; fel text;
+begin
+  begin
+    update public.students set matched_tutor_id = aid, match_status = 'matched' where id = sid;
+
+    perform pg_temp.bli(qid);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, timpris_ore, extra_ore)
+    values ('00000000-0000-4000-8000-0000000019b1', qid, aid, sid, qid, idag + 5, '10:00', 60, 'requested', 100, 0);
+    perform pg_temp.bli(aid);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values ('00000000-0000-4000-8000-0000000019b2', qid, aid, sid, aid, idag + 6, '10:00', 60, 'requested');
+    perform pg_temp.bli(qid);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values ('00000000-0000-4000-8000-0000000019b3', qid, aid, sid, qid, idag + 7, '10:00', 120, 'requested');
+
+    begin
+      update public.bookings set timpris_ore = 1 where id = '00000000-0000-4000-8000-0000000019b3';
+      prisfel := 'gick igenom';
+    exception when others then prisfel := sqlstate;
+    end;
+    begin
+      update public.bookings set startrabatt = false, rabatt_ore = null where id = '00000000-0000-4000-8000-0000000019b2';
+      rabattfel := 'gick igenom';
+    exception when others then rabattfel := sqlstate;
+    end;
+
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select timpris_ore, extra_ore, startrabatt, rabatt_ore into r1 from public.bookings where id = '00000000-0000-4000-8000-0000000019b1';
+    select timpris_ore, extra_ore, startrabatt, rabatt_ore into r2 from public.bookings where id = '00000000-0000-4000-8000-0000000019b2';
+    select timpris_ore, extra_ore, startrabatt, rabatt_ore into r3 from public.bookings where id = '00000000-0000-4000-8000-0000000019b3';
+
+    -- Pass 2 hålls: ett pass på noll kronor larmar inte som obetalt,
+    -- och klippkortet betalar det inte.
+    update public.bookings set status = 'confirmed', wanted_date = idag - 1
+     where id = '00000000-0000-4000-8000-0000000019b2';
+    kk := public.klippkort_dra('00000000-0000-4000-8000-0000000019b2', qid);
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values (sid, aid, '00000000-0000-4000-8000-0000000019b2', 'fixtur', current_date, 'narvarande');
+    select count(*) into larm_gratis from public.avvikelser_rader()
+     where typ = 'ej_betalt' and objekt_id = '00000000-0000-4000-8000-0000000019b2';
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('19.5 priset och första timmen', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('19.5 familjens eget pris skrivs över med tjänstens', r1.timpris_ore = 37900 and r1.extra_ore = 6900,
+     r1.timpris_ore || '/' || r1.extra_ore),
+    ('19.5 första timmen har fullt pris', not r1.startrabatt and r1.rabatt_ore is null,
+     r1.startrabatt || '/' || coalesce(r1.rabatt_ore::text, 'null')),
+    ('19.5 andra timmen bjuds, också när studiehjälparen föreslår', r2.startrabatt and r2.rabatt_ore = 37900,
+     r2.startrabatt || '/' || coalesce(r2.rabatt_ore::text, 'null')),
+    ('19.5 tredje passet har fullt pris', not r3.startrabatt and r3.rabatt_ore is null,
+     r3.startrabatt || '/' || coalesce(r3.rabatt_ore::text, 'null')),
+    ('19.5 familjen ändrar inte priset', prisfel = '42501', prisfel),
+    ('19.5 familjen tar inte bort rabatten', rabattfel = '42501', rabattfel),
+    ('19.5 ett pass på noll kronor larmar inte som obetalt', larm_gratis = 0, larm_gratis::text),
+    ('19.5 klippkortet betalar inte ett pass med startrabatt', kk->>'fel' like 'Första timmen%', kk::text);
+end $$;
 
 select test, ok, detalj from utfall order by nr;
 
