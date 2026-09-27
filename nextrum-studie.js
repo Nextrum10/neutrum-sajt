@@ -1602,47 +1602,76 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
-     LÄXFILTRET
+     LÄXLISTAN
 
      Läxlistan var allt eleven någonsin fått, med de klara kvar i
      ordningen. Efter en termin låg veckans läxa mellan tjugo
-     avklarade, och den enda vägen till "vad ska jag göra nu" var
-     att läsa varje rad.
+     avklarade. Då kom ett filter (Att göra, Klart, Alla) som stod
+     på Att göra — men ritades först vid fyra läxor. Med färre
+     försvann en läxa man bockat av, och det fanns ingen knapp att
+     komma tillbaka till den med. Leo 2026-09-27: "läxor som är
+     klara försvinner".
 
-     Tre lägen, med antalet i knappen så att man ser vad man får
-     innan man klickar. Klart ligger kvar och går att gå tillbaka
-     till — det är bevis på vad som gjorts.
+     Nu är det samma form som passlistan: det som ska göras ÄR
+     listan, och Klara läxor står under den, de senast avklarade
+     först, tre rader djupt och resten bakom en knapp. Ingenting
+     göms bakom ett läge man måste veta om.
+
+     opts: { host, laxor, rad(h), tomtAttGora }
      ============================================================ */
-  var LÄX_LÄGEN = [
-    ['attgora', 'Att göra'],
-    ['klart', 'Klart'],
-    ['alla', 'Alla']
-  ];
+  var LÄX_SYNLIGA = 3;
 
-  function läxUrval(laxor, valt) {
-    var lista = laxor || [];
-    if (valt === 'attgora') return lista.filter(function (h) { return h.status !== 'klar'; });
-    if (valt === 'klart') return lista.filter(function (h) { return h.status === 'klar'; });
-    return lista;
-  }
-
-  function läxFilter(o) {
+  function läxLista(opts) {
+    var o = opts || {};
     var host = o.host;
     if (!host) return;
-    var laxor = o.laxor || [];
-    var valt = o.valt || 'attgora';
 
-    /* Med tre läxor totalt är ett filter tre knappar som gör
-       ingenting. Det ritas när det finns något att sålla i. */
-    if (laxor.length < 4) { host.innerHTML = ''; host.hidden = true; return; }
-    host.hidden = false;
+    var alla = o.laxor || [];
+    var öppna = alla.filter(function (h) { return h.status !== 'klar'; });
+    /* När den blev klar, inte när den skulle vara klar: det man
+       letar efter är det man gjorde nyss. */
+    var klara = alla.filter(function (h) { return h.status === 'klar'; })
+      .sort(function (a, c) {
+        return String(c.completed_at || c.due_date || '').localeCompare(String(a.completed_at || a.due_date || ''));
+      });
 
-    host.innerHTML = LÄX_LÄGEN.map(function (l) {
-      var n = läxUrval(laxor, l[0]).length;
-      return '<button type="button" class="chip" data-laxfilter="' + l[0] + '"'
-        + ' aria-pressed="' + (l[0] === valt ? 'true' : 'false') + '">'
-        + esc(l[1]) + ' <span>' + n + '</span></button>';
-    }).join('');
+    var ut = öppna.length
+      ? '<div class="pl-grupp">' + öppna.map(o.rad).join('') + '</div>'
+      : '<div class="pl-inget">' + esc(o.tomtAttGora || 'Inget att göra just nu.') + '</div>';
+
+    var utfällt = !!PL_UTFÄLLD[host.id];
+
+    if (klara.length) {
+      var visade = klara.slice(0, LÄX_SYNLIGA);
+      var resten = klara.slice(LÄX_SYNLIGA);
+
+      ut += '<div class="pl-grupp pl-tidigare lx-klara">'
+        + '<div class="pl-rubrik">Klara läxor <em>' + klara.length + ' st</em></div>'
+        + visade.map(o.rad).join('')
+        + (resten.length
+            ? '<div class="pl-resten"' + (utfällt ? '' : ' hidden') + '>' + resten.map(o.rad).join('') + '</div>'
+              + '<button type="button" class="pl-mer" data-pl-mer aria-expanded="' + (utfällt ? 'true' : 'false') + '">'
+              + (utfällt ? 'Visa färre' : 'Visa alla ' + klara.length) + '</button>'
+            : '')
+        + '</div>';
+    }
+
+    host.innerHTML = ut;
+
+    var knapp = host.querySelector('[data-pl-mer]');
+    if (knapp) {
+      knapp.addEventListener('click', function () {
+        var lådan = host.querySelector('.pl-resten');
+        var öppet = !lådan.hidden;
+        function växla() {
+          lådan.hidden = öppet;
+          knapp.setAttribute('aria-expanded', öppet ? 'false' : 'true');
+          knapp.textContent = öppet ? 'Visa alla ' + klara.length : 'Visa färre';
+        }
+        if (öppet) håll(knapp, växla); else växla();
+        PL_UTFÄLLD[host.id] = !öppet;
+      });
+    }
   }
 
   /* ============================================================
@@ -1983,7 +2012,7 @@ window.NXStudie = (function () {
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
     inloggningsruta: inloggningsruta, schemaI: schemaI,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
-    passLista: passLista, läxFilter: läxFilter, läxUrval: läxUrval,
+    passLista: passLista, läxLista: läxLista,
     fordelning: fordelning,
     LAGE: LAGE, STEG: STEG, stegFör: stegFör, stegText: stegText, målFör: målFör,
     läxläge: läxläge, deadlineText: deadlineText,
