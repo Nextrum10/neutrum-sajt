@@ -1730,16 +1730,19 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   identiska med main, och `klippkort-betala` driftsattes då för första
   gången — den fanns inte i driften, så Betala med timmar hade fått 404.
   Provköpet i DEPLOY-BETALNING.md 9.12 är fortfarande ogjort och ska
-  göras innan en riktig familj köper. Går något fel: stäng av flaggan. Sedan Fas 21 avbokar familjen själv ett
-  pass betalt med timmar, och påminns tio dagar innan timmarna går ut.
-  `notis-ko` med mallen för `timmar_gar_ut` är driftsatt (version 18,
-  2026-09-27, jämförd byte för byte mot repot). **Timbanken (Fas 22.1)
-  är körd i databasen men inte i funktionerna**: versionerna ovan är
-  från före den. `stripe-webhook`, `stripe-checkout` och
-  `klippkort-betala` från Fas 22.1 måste driftsättas före påslaget, i
-  den ordningen. En äldre `stripe-checkout` tar kort för övertid
-  timbanken redan betalat, och en äldre webhook lämnar minuterna dragna
-  när kortet vinner. Kvar: en familj som inte är matchad når inte
+  göras innan en riktig familj köper. Går något fel: stäng av flaggan.
+  Sedan Fas 21 avbokar familjen själv ett pass betalt med timmar, och
+  påminns tio dagar innan timmarna går ut. `notis-ko` med mallen för
+  `timmar_gar_ut` är driftsatt (version 18, 2026-09-27, jämförd byte för
+  byte mot repot). **Timbanken (Fas 22.1) är driftsatt samma dag, i
+  databasen och i funktionerna**, i den här ordningen: `stripe-webhook`
+  (version 10), `stripe-checkout` (version 14), `klippkort-betala`
+  (version 2) och `fakturering` (version 31), var och en hämtad tillbaka
+  och jämförd byte för byte mot grenen. Webhooken först, för en äldre
+  lämnar minuterna dragna när kortet vinner; kassan före vyerna, för en
+  äldre tar kort för övertid timbanken redan betalat. Funktionerna
+  fungerar med de gamla vyerna, så knappen Betala med timbanken kommer
+  när vyerna gör det. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
