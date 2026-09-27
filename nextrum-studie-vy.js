@@ -1211,8 +1211,8 @@
         + (pris ? ' Att betala: ' + NXBetalning.kronor(pris) + '.' : '')
         + (b.betalning_status === 'vantar' ? ' En betalning är påbörjad men inte klar.'
           : b.betalning_status === 'misslyckad' ? ' Förra försöket gick inte igenom.' : '');
-      knappar = betalaKnapp(b, true);
-      alt = fakturaVal(b);
+      knappar = betalaKnapp(b, true) + fakturaKnapp(b, true);
+      alt = fakturaNot(b);
     } else if (till) {
       /* Betalt i förväg, och passet drog över (Fas 20.1). Samma regel
          som för ett obetalt pass: att betala tillägget ÄR bekräftelsen,
@@ -1513,13 +1513,15 @@
   /* ============================================================
      FAKTURA (Fas 14.6)
 
-     Under "Betala med kort" kan familjen välja "Betala med faktura i
-     stället". Passet kommer då med på en samlad faktura i början av
+     Bredvid "Betala med kort" kan familjen välja "Få faktura nästa
+     månad". Passet kommer då med på en samlad faktura i början av
      nästa månad, med alla pass familjen valt faktura för. Fakturan
      skapas och skickas från Fortnox; här syns den när den skickats.
 
-     Valet är en textknapp under kortknappen, inte en knapp bredvid:
-     kortet är det vanliga, fakturan ett alternativ till det. Det går
+     Valet är en knapp bredvid kortknappen (Leo 2026-09-27: "knappen
+     ska vara bredvid betala med kort"), och familjen bekräftar
+     betalsättet i en ruta innan det sparas. Förut var det en textlänk
+     under kortknappen, och den syntes inte. Det går
      att ångra tills passet står på en faktura. Databasen prövar båda
      hållen (skydda_bokningsfalt): här ritas bara det den släpper
      igenom, så att ingen trycker på något som sedan nekas.
@@ -1537,10 +1539,15 @@
      skickad till sig nästkommande månad". Knappen säger därför vad som
      händer, inte bara vilket betalsätt det är, och raden under säger
      villkoren: samma tio dagar och ingen avgift som villkoren lovar. */
-  function fakturaVal(b) {
-    return S.faktura === true && kanBetalas(b) && b.status === 'completed'
-      ? '<button type="button" class="val-lank" data-faktura-val="' + esc(b.id) + '">Få faktura nästa månad</button>'
-        + '<span class="val-not">Passet kommer med på en samlad faktura i början av nästa månad. Den betalas inom '
+  const fakturaMöjlig = b => S.faktura === true && kanBetalas(b) && b.status === 'completed';
+  function fakturaKnapp(b, liten) {
+    return fakturaMöjlig(b)
+      ? '<button type="button" class="btn btn-ghost' + (liten ? ' btn-sm' : '') + '" data-faktura-val="' + esc(b.id) + '">Få faktura nästa månad</button>'
+      : '';
+  }
+  function fakturaNot(b) {
+    return fakturaMöjlig(b)
+      ? '<span class="val-not">Faktura: passet kommer med på en samlad faktura i början av nästa månad. Den betalas inom '
         + DAGAR + ' dagar och kostar ingenting extra.</span>'
       : '';
   }
@@ -2486,13 +2493,16 @@
          samma som fakturaraden räknas på. */
       const fb = (S.bokningar || []).find(x => x.id === fv.dataset.fakturaVal);
       const fpris = fb ? passetsPris(fb) : null;
+      /* Rutan är steget där familjen bekräftar betalsättet, och med det
+         rapporten. Knappen säger båda, så att ingen tror att rapporten
+         bekräftas i ett senare steg. */
       const ok = await NXStudie.bekräfta({
-        titel: 'Betala med faktura?',
+        titel: 'Få faktura nästa månad?',
         text: (fpris ? 'Passet kostar ' + NXBetalning.kronor(fpris) + '. ' : '')
           + 'Passet kommer med på en samlad faktura från Nextrum i början av nästa månad, tillsammans med de andra pass ni valt faktura för. '
           + 'Fakturan ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra. '
-          + 'Ni kan byta tillbaka till kort tills fakturan är skapad.',
-        knapp: 'Välj faktura'
+          + 'Rapporten bekräftas samtidigt. Ni kan byta tillbaka till kort tills fakturan är skapad.',
+        knapp: 'Bekräfta faktura'
       });
       if (ok) { await bekräftaVid(fv, fv.dataset.fakturaVal); await väljBetalsätt(fv, fv.dataset.fakturaVal, 'faktura'); }
       return;
@@ -2920,7 +2930,7 @@
         märke: NXKontakt.betalMärke(b),
         atgarder: b.status === 'completed'
           ? '<a class="btn btn-primary btn-sm" href="#bekrafta">Till rapporten</a>'
-          : betalaKnapp(b, true) + fakturaVal(b)
+          : betalaKnapp(b, true) + fakturaKnapp(b, true)
       });
     }).join('');
   }
@@ -3303,7 +3313,7 @@
       atgarder = (kanBetalas(b) ? betalaKnapp(b, false) : '')
         + '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Föreslå ny tid</button>'
         + (betalt ? '' : '<button type="button" class="btn btn-ghost" data-avboka="' + esc(b.id) + '">Avboka</button>');
-      alternativ = fakturaVal(b) || kortVal(b);
+      alternativ = fakturaNot(b) || kortVal(b);
     } else if (b.status === 'confirmed' && kanBetalas(b)) {
       /* Passerat och obetalt medan spärren är på — bara då släpper
          kanBetalas igenom det. Hölls passet kan rapporten inte skrivas
@@ -3311,16 +3321,16 @@
          Hölls det inte är det studiehjälparen som avbokar. */
       besked = { text: 'Passet har varit men är inte betalt. Hölls det, betala det med kort, så kan ' + förnamn
         + ' skriva rapporten. Hölls det inte, avbokar ' + förnamn + ' det.', ton: 'fraga' };
-      atgarder = betalaKnapp(b, false) + skriv;
-      alternativ = fakturaVal(b);
+      atgarder = betalaKnapp(b, false) + fakturaKnapp(b, false) + skriv;
+      alternativ = fakturaNot(b);
     } else if (b.status === 'completed' && kanBetalas(b)) {
       /* Genomfört men inte betalt: betalningen efter passet (Fas 19.2).
          Rapporten står nedan, och att välja betalsätt här bekräftar den,
          som under Bekräfta rapport. */
       besked = { text: 'Passet är genomfört. Läs rapporten nedan och bekräfta den genom att betala'
         + (S.faktura === true ? ', med kort eller mot faktura.' : ' med kort.'), ton: 'fraga' };
-      atgarder = betalaKnapp(b, false) + skriv;
-      alternativ = fakturaVal(b);
+      atgarder = betalaKnapp(b, false) + fakturaKnapp(b, false) + skriv;
+      alternativ = fakturaNot(b);
     } else if (b.status === 'completed' && b.betalning_status === 'faktura') {
       /* Genomfört och betalas mot faktura (Fas 14.6). Står det på en
          skickad faktura säger beskedet vilken, och om den är betald. */
