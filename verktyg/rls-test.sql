@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16 och 18)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18 och 19)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -28,8 +28,8 @@
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
 -- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
--- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2 och
--- Fas 18.1 (Meet-länken) är körda.
+-- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2,
+-- Fas 18.1 (Meet-länken) och Fas 19.1–19.4 är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -3388,6 +3388,54 @@ end $$;
 select pg_temp.prova('19.2 admin slår fortfarande om fakturaflaggan', '00000000-0000-4000-8000-0000000000ad',
   array[$q$update public.flaggor set aktiv = not aktiv where kod = 'faktura'$q$],
   'ok');
+
+-- ------------------------------------------------------------
+-- Fas 19.3: ett omdöme gäller passets egen studiehjälpare
+--
+-- b0e1 är P:s genomförda pass med A och barnet Äldst. Förut prövade
+-- policyn bara att passet var P:s, så P kunde skriva om B, eller om
+-- Q:s barn, genom att peka på b0e1.
+-- ------------------------------------------------------------
+
+select pg_temp.prova('19.3 P skriver omdöme om passets studiehjälpare', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.tutor_reviews (booking_id, tutor_id, parent_id, student_id, rating)
+          values ('00000000-0000-4000-8000-00000000b0e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000005a1', 5)$q$],
+  'ok');
+
+select pg_temp.prova('19.3 P skriver omdöme om en annan studiehjälpare', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.tutor_reviews (booking_id, tutor_id, parent_id, rating)
+          values ('00000000-0000-4000-8000-00000000b0e1', '00000000-0000-4000-8000-0000000000b1',
+                  '00000000-0000-4000-8000-0000000000f1', 1)$q$],
+  'nekad');
+
+select pg_temp.prova('19.3 P skriver omdöme om Q:s barn', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.tutor_reviews (booking_id, tutor_id, parent_id, student_id, rating)
+          values ('00000000-0000-4000-8000-00000000b0e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000005c1', 1)$q$],
+  'nekad');
+
+select pg_temp.prova('19.3 Q skriver omdöme på P:s pass', '00000000-0000-4000-8000-0000000000f2',
+  array[$q$insert into public.tutor_reviews (booking_id, tutor_id, parent_id, rating)
+          values ('00000000-0000-4000-8000-00000000b0e1', '00000000-0000-4000-8000-0000000000a1',
+                  '00000000-0000-4000-8000-0000000000f2', 1)$q$],
+  'nekad');
+
+-- ------------------------------------------------------------
+-- Fas 19.4: ingen triggerfunktion går att anropa utifrån
+--
+-- Att triggrarna ändå körs för anon och authenticated provas redan av
+-- 16.1-raderna ovan (klippkortet på ett nytt pass nekas, kvittot till
+-- den som söker köas). Den här raden fångar nästa triggerfunktion som
+-- får EXECUTE av Supabases förval.
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select '19.4 ingen triggerfunktion går att anropa', count(*) = 0,
+       coalesce(string_agg(p.oid::regprocedure::text, ', '), 'inga')
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where p.prorettype = 'trigger'::regtype and n.nspname in ('public', 'intern')
+   and (has_function_privilege('anon', p.oid, 'execute')
+        or has_function_privilege('authenticated', p.oid, 'execute'));
 
 select test, ok, detalj from utfall order by nr;
 
