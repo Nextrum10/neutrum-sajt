@@ -218,7 +218,8 @@ bekräftad OCH passet är betalt eller satt på faktura. Ett genomfört
 obetalt pass larmar som förut, direkt, som `ej_betalt`: Leo valde det
 framför en frist. Fakturavalet heter "Få faktura nästa månad" (Fas 19.6,
 Leo: "betala senare genom att välja att få en faktura skickad till sig
-nästkommande månad"), och en skickad faktura står under Betalning i
+nästkommande månad") och är en knapp bredvid Betala med kort; en ruta
+frågar innan betalsättet sparas (Fas 19.7). En skickad faktura står under Betalning i
 rutan Fakturor att betala, med belopp, förfallodag, passen, bankgiro
 (`BANKGIRO` i `nextrum-config.js`) och OCR. OCR:et skriver admin av från
 Fortnox vid Lagd i Fortnox; det räknas aldrig fram här, och
@@ -1741,7 +1742,10 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   **Föräldravyn visar kortet först** (Leos val 2026-09-24: "bara kort,
   som Fas 14 sa"; fakturan kom till 2026-09-25). Betalning listar pass
   att betala och betalda pass, båda ritade ur passen. Med flaggan
-  `faktura` på står "Betala med faktura i stället" under kortknappen,
+  `faktura` på står "Få faktura nästa månad" som en knapp bredvid
+  kortknappen på ett genomfört pass (2026-09-27; förut en textlänk
+  under den, som inte syntes), och familjen bekräftar betalsättet i en
+  ruta innan det sparas,
   och rutan Faktura visar familjens fakturor. Ett betalt pass har ingen
   avbokningsknapp i någon vy, inte heller "Avböj" eller "Dra tillbaka"
   på en flyttad tid, eftersom databasen nekar det. Med spärren på går
