@@ -754,7 +754,11 @@ const NX = (function () {
                flit — ett CV bär namn, skola och ofta personnummer —
                så getPublicUrl hade gett en adress som svarar 400 och
                sett ut som en trasig fil i stället för en skyddad.
-               Filen öppnas i Supabase → Storage → cv. */
+               Adminvyn läser raden och öppnar filen med knappen CV
+               under Ansökningar (CV_RAD och CV_FEL i
+               nextrum-admin-rekrytering.js). Ändras formatet på den
+               här raden eller på den nedanför ska de ändras där i
+               samma ändring. */
             cvRad = 'CV: cv/' + väg;
           }
         } catch (e) { /* faller igenom till noteringen nedan */ }

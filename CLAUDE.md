@@ -968,6 +968,21 @@ att visa **rätt sida**, inte för att skydda data.
   tabellaliaset — familjen hade alltså aldrig kunnat se sitt barns
   material, och en policy som nekar för mycket ser ut som en tom lista,
   inte som ett fel.
+- **`cv` är undantaget** (v11, läsrätten 2026-09-27). Den som söker
+  har inget konto och ingen rad när filen laddas upp, så sökvägen är
+  tid, slump och filnamnet, och kopplingen till ansökan är raden
+  `CV: cv/<sökväg>` som `NX.kopplaAnsökan` skriver i
+  `applications.why`. Anon laddar upp, bara admin läser
+  (`admin läser cv`). Hinken hade ingen läsregel alls förut, så CV:t
+  kom fram men gick bara att öppna i dashboarden. Knappen CV under
+  Ansökningar läser raden med `CV_RAD` i `nextrum-admin-rekrytering.js`:
+  **ändras formatet i den ena ska den andra ändras i samma ändring**,
+  annars försvinner knappen utan att något blir rött. En PDF öppnas i
+  en ny flik med en länk som gäller fem minuter, och fliken öppnas i
+  samma tryck: Safari stoppar tyst ett fönster som öppnas efter en
+  väntan på nätet. Word hämtas som en blob och laddas ned. PDF:en kan
+  inte gå den vägen, för en blob-adress ärver adminvyns CSP och
+  `object-src 'none'` stoppar PDF-visaren.
 - **Tar du bort en fil: filen först, raden sedan, och LÄS SVARET.**
   Sökvägen finns bara i raden. Försvinner raden först blir filen omöjlig
   att hitta och omöjlig att städa. Det stod som en kommentar i
@@ -1635,6 +1650,12 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
+- **Ansökningar och CV:n rensas inte.** Integritetspolicyn lovar att en
+  ansökan som inte leder till anställning sparas högst ett år. Inget
+  schemalagt jobb, ingen knapp och ingen policy tar bort vare sig
+  raden i `applications` eller filen i `cv` (kontrollerat 2026-09-27).
+  Tas raden bort för hand står filen kvar, och sökvägen fanns bara i
+  raden.
 
 ---
 
