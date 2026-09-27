@@ -42,11 +42,14 @@
 <meta name="twitter:description" content="Läxhjälp i Stockholm med en personlig studiehjälpare, hemma hos er, på biblioteket eller online. Matte, svenska, engelska och NO för grundskola och gymnasium.">
 <meta name="twitter:image" content="https://nextrum.se/bilder/01-en-till-en-1280.jpg">
 
+<!-- Förladdad: utan den kommer typsnittet efter första ritningen, långa rubriker
+     bryts om och allt under dem hoppar (CLS 0,2 på /laxhjalp-stockholm). -->
+<link rel="preload" href="/typsnitt/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
-<link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
+<link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=dc5d0b1f">
 
 <!-- Tjänsten, med orten i sig.
@@ -366,6 +369,25 @@
     </div>
   </div>
 </section>
+
+<section class="sec wrap">
+  <div class="rv">
+    <span class="nx-et acc">Guider</span>
+    <h2 class="nx-d2" style="margin-top:18px">För er som hjälper till hemma</h2>
+    <div class="nx-omr-rutnat" style="margin-top:clamp(24px,3vw,34px)">
+      <a class="nx-omr-kort" href="/gratis-laxhjalp-stockholm">
+        <b>Gratis läxhjälp i Stockholm</b>
+        <span>Biblioteken, Röda Korset och Mattecentrum</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/hjalpa-barn-med-matte">
+        <b>Hjälpa barnet med matteläxan</b>
+        <span>Sex saker som brukar fungera vid köksbordet</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
 <!-- /ämneskort -->
 
 <section class="sec wrap">
@@ -519,9 +541,18 @@
         <ul>
           <li><a href="/var-ide">Vår idé</a></li>
           <li><a href="/sa-fungerar-nextrum">Så fungerar Nextrum</a></li>
-          <li><a href="/laxhjalp-stockholm">Läxhjälp i Stockholm</a></li>
           <li><a href="/#studiehjalpare">Studiehjälpare</a></li>
           <li><a href="/priser">Priser</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-laxhjalp">
+        <h2 class="ftr-rubrik" id="ftr-laxhjalp">Läxhjälp</h2>
+        <ul>
+          <li><a href="/laxhjalp-stockholm">I Stockholm</a></li>
+          <li><a href="/laxhjalp-matematik">Matte</a></li>
+          <li><a href="/laxhjalp-svenska">Svenska</a></li>
+          <li><a href="/laxhjalp-engelska">Engelska</a></li>
+          <li><a href="/laxhjalp-no">Fysik, kemi och biologi</a></li>
         </ul>
       </nav>
       <nav aria-labelledby="ftr-fordig">

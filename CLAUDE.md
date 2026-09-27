@@ -215,9 +215,9 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
-Sex stadsdelssidor och fyra ämnessidor (`laxhjalp-*.html`) genereras;
-navet `laxhjalp-stockholm.html` är handskrivet. `/en/` är elva
-översatta sidor.
+Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`) och två guider
+(`gratis-laxhjalp-stockholm`, `hjalpa-barn-med-matte`) genereras; navet
+`laxhjalp-stockholm.html` är handskrivet. `/en/` är elva översatta sidor.
 
 ### Startsidan efter hero (2026-09-25)
 
@@ -1127,7 +1127,7 @@ hitta på ett pris, ett villkor eller ett löfte.
 |---|---|---|
 | `nextrum-maskot-svar.js` | `verktyg/bygg-maskotsvar.py` | `faq.html`, `en/faq.html` |
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
-| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen) och ämneskorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
+| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen), de två guiderna och ämnes- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
 | `sitemap.xml` | `verktyg/bygg-sitemap.py` | sidornas canonical, hreflang och noindex |
 | Ikonlänkar och storlekar | `verktyg/satt-logga.py` | `bilder/nextrum-logo.png` — finns inte i dag; PNG:erna är renderade ur `favicon.svg`, se `GOOGLE.md` |
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i verktyget. Körs för hand (kräver Chromium), inte i CI. `--sql` ger raderna till `biblioteksmaterial` |
@@ -1174,6 +1174,25 @@ står om Nextrum är samma löfte som resten av sajten. Moderna språk, SO
 och programmering har ingen sida, för navet säger "fråga i anmälan så
 säger vi om vi har rätt person" och en egen sida hade lovat mer.
 
+**Guiderna** (2026-09-26) svarar på det föräldrar söker innan de vet
+att de letar efter läxhjälp. Allt om andra organisationer (biblioteken,
+Röda Korset, Mattecentrum) är kontrollerat mot deras egna sidor och
+länkat, och tider står med flit inte med: de ändras varje termin.
+Författaren i Article-märkningen är Nextrum, aldrig ett personnamn.
+
+**Typsnittet förladdas bara på läxhjälpssidorna och guiderna** (samma
+hero med lång rubrik). Utan förladdning bröts navets rubrik om när
+typsnittet kom, och bilden under hoppade 57 px (CLS 0,205 i Lighthouse
+på mobil, 0,007 efter). På startsidan och prissidan gjorde samma rad
+LCP 0,3–0,4 s sämre, eftersom den konkurrerar med herobilden om
+bandbredden, och de hade ingen förskjutning att laga. Lägg den inte på
+fler sidor utan att mäta.
+
+**Footern har en egen spalt Läxhjälp** med navet och de fyra ämnena, på
+alla publika sidor och på båda språken. Den ersatte en länk till navet
+som stod två gånger i den svenska footern, vilket också var skälet till
+nästan alla TEXTNODER-avvikelser i språkbaslinjen.
+
 ---
 
 ## 9. CI — `.github/workflows/kontroll.yml`
@@ -1198,6 +1217,15 @@ Körs på varje push och PR. Ska vara grön före merge.
 
 Kör dem lokalt innan du pushar. De är snabba och de fångar exakt det
 som annars upptäcks i drift.
+
+**`.github/workflows/indexnow.yml` är ingen kontroll** (2026-09-26). Den
+körs när Vercel rapporterat en lyckad produktionsdriftsättning och
+skickar de adresser vars summa i `sitemap.xml` ändrats till IndexNow
+(Bing, och därmed ChatGPT:s sökning, Copilot och DuckDuckGo). Nyckeln
+ligger i roten som `1ba8bf8c04595e17dff19c8eaf340825.txt` och i
+`verktyg/indexnow.py`; den är offentlig med flit. Byts den, byt båda.
+Det som återstår för trafiken och bara går att göra med era konton
+står i `TRAFIK.md`.
 
 **`verktyg/rls-test.sql` körs inte i CI** — den behöver en databas.
 Kör hela filen som **ett** anrop i SQL Editor eller via `execute_sql`.

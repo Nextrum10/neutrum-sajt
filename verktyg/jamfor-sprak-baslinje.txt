@@ -1,34 +1,28 @@
 
 === anvandarvillkor.html  ->  en/anvandarvillkor.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  TEXTNODER: sv 150 vs en 149 — engelskan har inte följt med
   SVENSKA KVAR i engelskan, 2 stycken:
       Leo Constantinos Thriskos
       Alexandar Jovanovic
 
 === avanmal.html  ->  en/avanmal.html
   STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
-  TEXTNODER: sv 64 vs en 63 — engelskan har inte följt med
 
 === bli-studiehjalpare.html  ->  en/bli-studiehjalpare.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  TEXTNODER: sv 150 vs en 149 — engelskan har inte följt med
 
 === faq.html  ->  en/faq.html
   STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
-  TEXTNODER: sv 153 vs en 152 — engelskan har inte följt med
 
 === for-elever-och-foraldrar.html  ->  en/for-elever-och-foraldrar.html
   STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
-  TEXTNODER: sv 347 vs en 346 — engelskan har inte följt med
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
-  TEXTNODER: sv 435 vs en 432 — engelskan har inte följt med
+  TEXTNODER: sv 439 vs en 437 — engelskan har inte följt med
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  TEXTNODER: sv 161 vs en 160 — engelskan har inte följt med
   SVENSKA KVAR i engelskan, 4 stycken:
       Leo Constantinos Thriskos
       Alexandar Jovanovic
@@ -37,31 +31,28 @@
 
 === intresseanmalan.html  ->  en/intresseanmalan.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  TEXTNODER: sv 120 vs en 119 — engelskan har inte följt med
 
 === lagring.html  ->  en/lagring.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  TEXTNODER: sv 92 vs en 91 — engelskan har inte följt med
   SVENSKA KVAR i engelskan, 1 stycken:
       localStorage
 
 === priser.html  ->  en/priser.html
   STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
-  TEXTNODER: sv 233 vs en 232 — engelskan har inte följt med
 
 === sa-fungerar-nextrum.html  ->  en/sa-fungerar-nextrum.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  TEXTNODER: sv 105 vs en 104 — engelskan har inte följt med
 
 === var-ide.html  ->  en/var-ide.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  TEXTNODER: sv 96 vs en 95 — engelskan har inte följt med
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 14
+=== svenska sidor utan engelsk tvilling: 16
   admin.html
   foralder.html
+  gratis-laxhjalp-stockholm.html
+  hjalpa-barn-med-matte.html
   larare.html
   laxhjalp-bromma.html
   laxhjalp-engelska.html

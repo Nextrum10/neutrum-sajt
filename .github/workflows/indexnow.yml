@@ -1,0 +1,60 @@
+# ============================================================
+# IndexNow: säg till Bing när en sida ändrats (verktyg/indexnow.py)
+#
+# Körs när Vercel rapporterat en lyckad PRODUKTIONSdriftsättning,
+# inte vid push. Före det finns varken nyckelfilen eller den nya
+# sidan på nextrum.se, och Bing hade hämtat en 404.
+#
+# Vad som skickas avgörs av kartan: adresser vars summa skiljer sig
+# från kartan i föräldercommiten. De flesta driftsättningar ändrar
+# ingen sidtext och skickar därför ingenting.
+#
+# Kan också köras för hand (Actions → IndexNow → Run workflow) med
+# "alla" för att skicka hela kartan, till exempel första gången.
+# ============================================================
+
+name: IndexNow
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      alla:
+        description: 'Skicka alla adresser i sitemap.xml, inte bara ändrade'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  skicka:
+    name: Skicka ändrade sidor
+    runs-on: ubuntu-latest
+    # Vercel skapar deployments för både förhandsversioner och drift.
+    # Bara drift räknas: en förhandsadress ska aldrig nå ett index.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       (github.event.deployment.environment == 'Production' ||
+        github.event.deployment.environment == 'production'))
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Skicka
+        run: |
+          # Första driftsättningen med IndexNow skickar allt: ingen sida
+          # har skickats förut, och kartan i föräldercommiten bär redan
+          # summor, så en jämförelse hade bara hittat de nya sidorna.
+          if [ "${{ inputs.alla }}" = "true" ] || ! git cat-file -e HEAD^1:verktyg/indexnow.py 2>/dev/null; then
+            python3 verktyg/indexnow.py --alla
+          else
+            git show HEAD^1:sitemap.xml > "$RUNNER_TEMP/fore.xml" 2>/dev/null || true
+            python3 verktyg/indexnow.py --fore "$RUNNER_TEMP/fore.xml"
+          fi
