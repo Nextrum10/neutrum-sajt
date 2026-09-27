@@ -73,11 +73,22 @@ export type Pass = {
   // Valfri i typen med flit: en anropare som inte hämtar kolumnen får
   // passet räknat som obetalt. Att gissa "betalt" hade gömt det.
   betalning_status?: string | null;
+  // Fas 20.1, ur passunderlag. Saknas de gäller det bokade, precis som
+  // förut: ett pass utan tid i rapporten kostar det som bokades.
+  //   debiterade_min  den hållna tiden per påbörjad kvart, det familjen betalar
+  //   lon_min         det studiehjälparen får betalt för: nedåt alltid,
+  //                   uppåt bara när övertiden är betald
+  debiterade_min?: number | null;
+  lon_min?: number | null;
   // Priset fryst vid bokningen (Fas 19.5). Saknas det räknas passet på
   // tjänstens pris, som före Fas 19.5.
   timpris_ore?: number | null;
   extra_ore?: number | null;
 };
+
+// Fas 20.1. Minuterna familjen betalar för, och minuterna lönen räknas på.
+export const familjensMinuter = (b: Pass) => Number(b.debiterade_min || b.duration_min || 60);
+export const lonensMinuter = (b: Pass) => Number(b.lon_min || b.duration_min || 60);
 
 /**
  * Passets pris per timme och tillägget för flera barn (Fas 19.5).
@@ -219,7 +230,6 @@ export function byggUnderlag(o: {
   const obetalda: Obetalt[] = [];
 
   for (const b of o.pass) {
-    const minuter = Number(b.duration_min || 60);
     const text = radtext(b.subject, b.wanted_date);
     const t = tjanstFor(b.tjanst);
 
@@ -228,7 +238,7 @@ export function byggUnderlag(o: {
     if (b.parent_id && !b.fakturerad && obetalt(b)) {
       const p = passpris(b, t, o.timprisOre);
       const barn = Math.max(1, Number(b.antal_barn || 1));
-      const brutto = familjebelopp(minuter, p.timme, p.extra, barn);
+      const brutto = familjebelopp(familjensMinuter(b), p.timme, p.extra, barn);
       // Rabatten är framräknad och fryst vid bokningen. Den räknas
       // ALDRIG om här — annars ändrar sig ett gammalt pass pris den
       // dag någon justerar koden.
@@ -260,6 +270,9 @@ export function byggUnderlag(o: {
       // inte med tillägget för flera barn.
       const timpenning = Number(t?.ersattning_per_timme_ore || 0) || o.timpenningar.get(b.tutor_id) || 0;
       if (!timpenning) { utanTimpenning.push(b.tutor_id); continue; }
+      // Fas 20.1: den hållna tiden nedåt alltid, uppåt bara när
+      // övertiden är betald. Regeln bor i passunderlag.lon_min.
+      const minuter = lonensMinuter(b);
       const lista = perTutor.get(b.tutor_id) ?? [];
       lista.push({
         booking_id: b.id, beskrivning: text, minuter,
@@ -298,7 +311,8 @@ export function byggFakturor(o: { pass: Pass[]; tjanster: Tjanst[]; timprisOre: 
     if (!b.parent_id || b.fakturerad || b.betalning_status !== 'faktura') continue;
     const t = perKod.get(b.tjanst ?? standard?.kod ?? '');
     const { timme, extra } = passpris(b, t, o.timprisOre);
-    const minuter = Number(b.duration_min || 60);
+    // Fas 20.1: fakturan tar den hållna tiden.
+    const minuter = familjensMinuter(b);
     const barn = Math.max(1, Number(b.antal_barn || 1));
     const brutto = familjebelopp(minuter, timme, extra, barn);
     const rabatt = Math.min(Math.max(Number(b.rabatt_ore || 0), 0), brutto);
@@ -317,6 +331,33 @@ export function byggFakturor(o: { pass: Pass[]; tjanster: Tjanst[]; timprisOre: 
     perFamilj.set(b.parent_id, lista);
   }
   return perFamilj;
+}
+
+/**
+ * Vad ett pass kostar familjen för ett antal minuter: tjänstens timpris,
+ * tillägget för flera barn, och rabatten som frystes vid bokningen.
+ * Aldrig under noll: en rabatt som täcker mer än minuterna kostar inget.
+ */
+export function minuterspris(o: {
+  minuter: number; timprisOre: number; extraOre: number; barn: number; rabattOre: number;
+}): number {
+  const brutto = familjebelopp(o.minuter, o.timprisOre, o.extraOre, Math.max(1, o.barn));
+  return brutto - Math.min(Math.max(o.rabattOre, 0), brutto);
+}
+
+/**
+ * Tillägget för övertid på ett pass som redan var betalt (Fas 20.1):
+ * vad den debiterade tiden kostar minus vad den betalda tiden kostar,
+ * båda med samma pris och samma rabatt. Rabatten dras alltså en gång,
+ * och ett pass med första timmen bjuden får inte timmen två gånger.
+ * Noll när ingenting är över.
+ */
+export function tillaggsbelopp(o: {
+  debiteradeMin: number; betaldaMin: number; timprisOre: number; extraOre: number; barn: number; rabattOre: number;
+}): number {
+  if (o.debiteradeMin <= o.betaldaMin) return 0;
+  const pris = (minuter: number) => minuterspris({ ...o, minuter });
+  return Math.max(pris(o.debiteradeMin) - pris(o.betaldaMin), 0);
 }
 
 export const summa = (rader: { belopp_ore: number }[]) => rader.reduce((a, r) => a + r.belopp_ore, 0);

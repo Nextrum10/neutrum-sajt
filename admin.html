@@ -20,8 +20,8 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=dc5d0b1f">
-<link rel="stylesheet" href="nextrum-vy.css?v=c30567f5">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=86a99a85">
+<link rel="stylesheet" href="nextrum-vy.css?v=7c96c0e3">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=f6fa7abc">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -965,11 +965,22 @@
             </div>
           </div>
 
-          <!-- Kortbetalningarna först: det är familjens vanliga betalväg, och
-               den första fliken är den som syns när man kommer hit.
-               Fakturorna bredvid sedan Fas 14.6, när familjen kan välja
-               faktura och utkasten ska läggas in i Fortnox. -->
+          <!-- Fas 20.2: månaden. Allt under flikarna gäller den månad som
+               är vald här: pass och betalningar på passets datum, underlag
+               och fakturor på sin period. Leo: "filtrera och stänga böckerna
+               ... månadsvis". Raden ritas av NXStudie.månadsval, och en
+               stängd månad bär märket Stängd. -->
+          <div id="eko-manader" aria-label="Välj månad för ekonomin"></div>
+
+          <!-- Bokslutet först sedan Fas 20.2: när en månad väljs är frågan
+               först hur månaden ser ut och om den kan stängas. Kortbetalningarna
+               bredvid, som familjens vanliga betalväg. Fakturorna sedan
+               Fas 14.6, när familjen kan välja faktura och utkasten ska
+               läggas in i Fortnox. -->
           <div class="vy-flikar" role="tablist" aria-label="Betalningar eller utbetalningar">
+            <button class="vy-flik" type="button" role="tab" data-flik="bokslut"
+                    id="flik-bokslut" aria-controls="panel-bokslut">Bokslut
+              <span class="vy-flik-mark" id="flik-bokslut-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="kortbetalningar"
                     id="flik-kortbetalningar" aria-controls="panel-kortbetalningar">Kortbetalningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="fakturor"
@@ -982,6 +993,25 @@
               <span class="vy-flik-mark" id="flik-avv-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="korning"
                     id="flik-korning" aria-controls="panel-korning">Månadskörning</button>
+          </div>
+
+          <!-- Bokslutet (Fas 20.2). Månadens siffror och larm ur manad_lage,
+               och knappen som stänger månaden. En stängd månad är låst i
+               databasen: inga pass och inga rapporter i den går att ändra,
+               inte heller härifrån, förrän någon öppnar den med ett skäl.
+               Knappen är grå när månaden pågår eller har larm, men det är
+               stang_manad() som bestämmer. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="bokslut"
+               id="panel-bokslut" aria-labelledby="flik-bokslut">
+            <div class="dbox">
+              <div id="bokslut"><div class="loading">Hämtar</div></div>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
+                Månaden är passets månad, inte betalningens: ett pass i september som betalas
+                i oktober hör till september. Testbetalningar räknas för sig och aldrig in i
+                summorna. Underlag och fakturor låses inte av stängningen, för de betalas
+                efter månadsskiftet.
+              </p>
+            </div>
           </div>
 
           <!-- Fakturor (Fas 14.6). Familjen kan välja faktura på ett pass,
@@ -1065,6 +1095,10 @@
                att bara utebli från underlaget. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="avvikelser"
                id="panel-avvikelser" aria-labelledby="flik-avvikelser" hidden>
+            <!-- Fas 20.2: listorna nedan gäller den valda månaden. Det som
+                 hör till andra månader räknas upp här, så att en avvikelse
+                 som översikten larmar om aldrig ser ut att vara borta. -->
+            <div id="avv-andra"></div>
             <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
               <h5>Genomförda pass utan rapport</h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
@@ -1105,7 +1139,7 @@
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="kortbetalningar"
-               id="panel-kortbetalningar" aria-labelledby="flik-kortbetalningar">
+               id="panel-kortbetalningar" aria-labelledby="flik-kortbetalningar" hidden>
             <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
               <h5>Spärren</h5>
               <div id="kort-sparr"><div class="loading">Hämtar</div></div>
@@ -1170,6 +1204,14 @@
                 ur rapporten, inte ur betalningen: ett avbokat pass får ingen rapport och
                 kommer aldrig med, men ett hållet pass som återbetalats gör det.
               </p>
+            </div>
+            <!-- Fas 20.1. Ett pass som redan var betalt och drog över betalas
+                 med ett tillägg för övertiden, med kort, när familjen
+                 bekräftar rapporten. Skrivs bara av stripe-checkout och
+                 stripe-webhook; här läses det. -->
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+              <h5>Tillägg för övertid <em id="tillagg-antal"></em></h5>
+              <div id="tillagg-tabell"><div class="loading">Hämtar</div></div>
             </div>
           </div>
 
@@ -2148,21 +2190,21 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=036d9884"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=9f720237"></script>
+<script src="nextrum-studie.js?v=895361a9"></script>
 <script src="nextrum-arbetsyta.js?v=9c034f66"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=e0dd96fa"></script>
-<script src="nextrum-admin-detalj.js?v=c5fb2b6a"></script>
+<script src="nextrum-admin-karna.js?v=da532d30"></script>
+<script src="nextrum-admin-detalj.js?v=3ce6626d"></script>
 <script src="nextrum-admin-oversikt.js?v=7a17b287"></script>
 <script src="nextrum-admin-kunder.js?v=01b666e6"></script>
 <script src="nextrum-admin-rekrytering.js?v=ef57bd22"></script>
 <script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
 <script src="nextrum-admin-kommunikation.js?v=24a9a868"></script>
 <script src="nextrum-admin-drift.js?v=2437242e"></script>
-<script src="nextrum-admin-ekonomi.js?v=6f6bfd16"></script>
+<script src="nextrum-admin-ekonomi.js?v=6dfacfaa"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
 <script src="nextrum-admin-system.js?v=25511141"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>

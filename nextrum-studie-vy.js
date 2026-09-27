@@ -14,7 +14,7 @@
 
   NX.initHeader();
 
-  const S = { aktivSek: null, passFrån: null, yFör: {}, laddatPass: false, user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, minAvatar: null, laxor: [], rapporter: [], progress: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false };
+  const S = { aktivSek: null, passFrån: null, yFör: {}, laddatPass: false, user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, minAvatar: null, laxor: [], rapporter: [], progress: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false, underlag: {}, tillagg: {} };
 
   const VYER = ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel'];
   function visa(id) { NXStudie.visaVy(VYER, id); }
@@ -924,7 +924,7 @@
 
     NXStudie.laddarFörsta(host);
     const { data, error } = await supa
-      .from('lesson_reports').select('id, lesson_date, raw_notes, ai_feedback, gick, amne, needs_practice, next_focus')
+      .from('lesson_reports').select('id, booking_id, lesson_date, raw_notes, ai_feedback, gick, amne, needs_practice, next_focus, start_tid, slut_tid, debiterade_min, avvikelse_skal')
       .eq('student_id', S.valtBarn).order('lesson_date', { ascending: false });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
@@ -942,6 +942,7 @@
     host.innerHTML = data.map(r =>
       '<div class="report">'
       + '<div class="report-head"><b>Pass</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
+      + hållenTid(r, rbPass(r))
       + (r.ai_feedback
           ? '<p>' + esc(r.ai_feedback) + '</p>'
           : '<span class="raw-note">Studiehjälparens anteckningar</span><p class="raw">' + esc(r.raw_notes) + '</p>')
@@ -1048,7 +1049,7 @@
     NXStudie.laddarFörsta(host);
     const [rap, bek] = await Promise.all([
       supa.from('lesson_reports')
-        .select('id, booking_id, student_id, lesson_date, amne, gick, ai_feedback, raw_notes, needs_practice, next_focus')
+        .select('id, booking_id, student_id, lesson_date, amne, gick, ai_feedback, raw_notes, needs_practice, next_focus, start_tid, slut_tid, debiterade_min, avvikelse_skal')
         .in('student_id', barn).order('lesson_date', { ascending: true }),
       supa.from('rapport_bekraftelser').select('rapport_id, bekraftad_at')
     ]);
@@ -1070,8 +1071,11 @@
 
   const rbPass = r => (r.booking_id && (S.bokningar || []).find(b => b.id === r.booking_id)) || null;
   const rbObetald = r => { const b = rbPass(r); return !!(b && kanBetalas(b)); };
-  /* Samma urval för listan, siffran i menyn och notisen. */
-  const rbAttBekräfta = () => S.rb.rapporter.filter(r => !S.rb.bekräftade[r.id] || rbObetald(r));
+  /* Samma urval för listan, siffran i menyn och notisen. Ett obetalt
+     tillägg (Fas 20.1) håller kvar rapporten på samma sätt som ett
+     obetalt pass: övertiden betalas när rapporten bekräftas. */
+  const rbAttBekräfta = () => S.rb.rapporter.filter(r => !S.rb.bekräftade[r.id] || rbObetald(r)
+    || !!(rbPass(r) && tillägg(rbPass(r))));
 
   function rbRubrik(r, b) {
     const barn = S.barn.find(x => x.id === r.student_id);
@@ -1086,19 +1090,111 @@
       + (r.next_focus ? '<p><b>Nästa gång:</b> ' + esc(r.next_focus) + '</p>' : '');
   }
 
+  /* ============================================================
+     DEN HÅLLNA TIDEN (Fas 20.1)
+
+     Studiehjälparen skriver i rapporten när passet faktiskt hölls, och
+     familjen betalar den tiden per påbörjad kvart (debiterade_min). Det
+     familjen ser ska vara det kassan tar: därför står tiden, och varför
+     den skiljer sig från det bokade, i rapporten där de bekräftar den —
+     överallt där rapporten läses, i samma ord.
+
+     Äldre rapporter har ingen tid, och då gäller det bokade. Då står
+     heller ingenting här: en rad som säger "tiden saknas" hade fått en
+     vanlig rapport att se ofullständig ut.
+
+     Skälet är studiehjälparens fritext och escapas som all annan
+     fritext. Det står i ett citat med vem som skrev det, så att det inte
+     läses som Nextrums besked.
+     ============================================================ */
+  function tidLängd(min) {
+    const m = Math.max(0, Math.round(Number(min) || 0));
+    const h = Math.floor(m / 60), rest = m % 60;
+    if (!h) return rest + ' min';
+    if (!rest) return h === 1 ? '1 timme' : h + ' timmar';
+    return h + ' h ' + rest + ' min';
+  }
+
+  /* b är passet, om det finns: utan det går det inte att säga vad som
+     bokades, och då står bara när passet hölls. */
+  function hållenTid(r, b) {
+    if (!r || !r.start_tid || !r.slut_tid) return '';
+    const hm = t => String(t).slice(0, 5);
+    const bokat = Number((b && b.duration_min) || 0);
+    const deb = Number(r.debiterade_min || 0);
+    const avviker = !!(bokat && deb && deb !== bokat);
+    return '<div class="hallen-tid">'
+      + '<p class="hallen-tid-rad"><b>Hölls ' + esc(hm(r.start_tid) + '–' + hm(r.slut_tid)) + '</b>'
+      + (avviker ? '<span>Bokat ' + esc(tidLängd(bokat)) + ' · debiteras ' + esc(tidLängd(deb)) + '</span>' : '')
+      + '</p>'
+      + (r.avvikelse_skal
+        ? '<blockquote class="hallen-tid-skal"><span>Studiehjälparen:</span> ' + esc(r.avvikelse_skal) + '</blockquote>'
+        : '')
+      + '</div>';
+  }
+
+  /* Tillägget på ett pass som var betalt i förväg och drog över.
+     Svarar null när det inte finns något att betala: passet är inte
+     genomfört eller inte betalt, tiden gick inte över det betalda,
+     eller tillägget är redan betalt (eller bestritt).
+
+     Beloppet räknas här bara för att visas. stripe-checkout räknar det
+     igen ur databasen och tar det den räknar; talet här är samma regel
+     (tillaggsbelopp i _delad/pris.ts), så att knappen och kassan säger
+     samma sak. Går priset inte att räkna står knappen utan belopp, och
+     kassan säger det. Blir det noll — rabatten täcker övertiden —
+     nekar funktionen, och då finns heller ingen knapp. */
+  function tillägg(b) {
+    if (!b || b.status !== 'completed' || b.fakturerbar === false || b.betalning_status !== 'betald') return null;
+    const u = underlagFör(b);
+    if (!u) return null;
+    const t = (S.tillagg || {})[b.id];
+    /* Återbetalt är ett beslut Nextrum tagit om tillägget, inte ett
+       obetalt tillägg: det erbjuds inte igen (Fas 20.4). */
+    if (t && (t.status === 'betald' || t.status === 'tvist' || t.status === 'aterbetald')) return null;
+    const deb = Number(u.debiterade_min || 0), betalda = Number(u.betalda_min || 0);
+    if (!(deb > betalda)) return null;
+    const hela = prisFör(b, deb), förut = prisFör(b, betalda);
+    const belopp = hela === null || förut === null ? null : Math.max(hela - förut, 0);
+    if (belopp === 0) return null;
+    return { minuter: deb - betalda, belopp: belopp, status: t ? t.status : null };
+  }
+
+  function tilläggRad(till) {
+    return 'Passet drog över med ' + tidLängd(till.minuter) + '.'
+      + (till.status === 'vantar' ? ' En betalning av tillägget är påbörjad men inte klar.'
+        : till.status === 'misslyckad' ? ' Förra försöket gick inte igenom.' : '');
+  }
+
+  function tilläggKnapp(b, till, liten) {
+    return '<button type="button" class="btn btn-primary' + (liten ? ' btn-sm' : '') + '" data-tillagg="' + esc(b.id) + '">'
+      + 'Betala tillägget' + (till.belopp ? ', ' + esc(NXBetalning.kronor(till.belopp)) : '') + '</button>';
+  }
+
   function rbKort(r) {
     const b = rbPass(r);
     const bekräftad = S.rb.bekräftade[r.id];
+    const till = b ? tillägg(b) : null;
     let läge = '', knappar = '', alt = '';
     if (b && kanBetalas(b)) {
       /* Obetalt: valet av betalsätt ÄR bekräftelsen. Ingen separat
          bekräfta-knapp här, för då hade det gått att bekräfta ett
-         obetalt pass ur listan utan att betala det. */
+         obetalt pass ur listan utan att betala det. Beloppet är det
+         kassan tar: den debiterade tiden (Fas 20.1). */
+      const pris = passetsPris(b);
       läge = (bekräftad ? 'Rapporten är bekräftad, men passet är inte betalt än.' : 'Passet är inte betalt än. Bekräfta rapporten genom att välja hur ni betalar.')
+        + (pris ? ' Att betala: ' + NXBetalning.kronor(pris) + '.' : '')
         + (b.betalning_status === 'vantar' ? ' En betalning är påbörjad men inte klar.'
           : b.betalning_status === 'misslyckad' ? ' Förra försöket gick inte igenom.' : '');
       knappar = betalaKnapp(b, true);
       alt = fakturaVal(b);
+    } else if (till) {
+      /* Betalt i förväg, och passet drog över (Fas 20.1). Samma regel
+         som för ett obetalt pass: att betala tillägget ÄR bekräftelsen,
+         så ingen bekräfta-knapp bredvid. */
+      läge = tilläggRad(till) + ' ' + (bekräftad ? 'Rapporten är bekräftad, men tillägget är inte betalt än.'
+        : 'Bekräfta rapporten genom att betala tillägget.');
+      knappar = tilläggKnapp(b, till, true);
     } else {
       läge = !b || b.fakturerbar === false ? ''
         : ingetAttBetala(b) ? 'Passet kostar ingenting: första timmen är på köpet.'
@@ -1109,6 +1205,7 @@
     }
     return '<article class="report rb-kort" data-rb-rapport="' + esc(r.id) + '">'
       + '<div class="report-head"><b>' + esc(rbRubrik(r, b)) + '</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
+      + hållenTid(r, b)
       + (rbInnehåll(r) || '<p class="raw">Rapporten är tom.</p>')
       + '<div class="rb-val">'
       + (läge ? '<p class="rb-lage">' + esc(läge) + '</p>' : '')
@@ -1486,8 +1583,13 @@
 
   /* Frågar betalfunktionen om en kassa. ui: 'inbaddad' eller 'sida'.
      Svarar med funktionens svar, eller null när felet redan är visat. */
-  async function startaBetalning(passId, ui) {
-    return startaKassa({ pass: passId, retur: location.origin, ui: ui });
+  async function startaBetalning(passId, ui, tillägg) {
+    /* tillägg (Fas 20.1): övertiden på ett pass som redan är betalt.
+       Samma kassa, samma svar; funktionen räknar minuterna och beloppet
+       ur passunderlag, och anropet säger bara vilket pass. */
+    return startaKassa(tillägg
+      ? { pass: passId, tillagg: true, ui: ui, retur: location.origin }
+      : { pass: passId, retur: location.origin, ui: ui });
   }
   /* Ett erbjudande går genom samma kassa, med koden i stället för ett
      pass (Fas 16.1). Beloppet räknas av stripe-checkout. */
@@ -1542,7 +1644,7 @@
       vad: rot.querySelector('[data-betalpanel-vad]'),
       besked: rot.querySelector('[data-betalpanel-besked]'),
       kassa: rot.querySelector('[data-betalpanel-kassa]'),
-      checkout: null, knapp: null, pass: null, klar: false
+      checkout: null, knapp: null, pass: null, klar: false, tillägg: false
     };
     return panel;
   }
@@ -1557,13 +1659,16 @@
 
   /* o (Fas 16.1): ett köp av ett erbjudande i samma panel. o.titel och
      o.vad ersätter passets rader, o.kod är vad reserven köper om, och
-     o.klar körs när Stripe säger att betalningen gått igenom. */
+     o.klar körs när Stripe säger att betalningen gått igenom.
+     o.tillägg (Fas 20.1): kassan gäller passets tillägg. Reserven ska
+     då be om tillägget igen, inte om passet, som redan är betalt. */
   async function öppnaKassa(knapp, passId, svar, Stripe, o) {
     const p = betalpanel();
     // Stripe tillåter en inbäddad kassa åt gången.
     if (p.checkout) { try { p.checkout.destroy(); } catch (_) { /* redan borta */ } p.checkout = null; }
     p.knapp = knapp; p.pass = passId; p.klar = false;
     p.kod = o && o.kod ? o.kod : null;
+    p.tillägg = !!(o && o.tillägg);
     const titel = (o && o.titel) || 'Betala passet';
     p.rot.querySelector('.betalpanel-titel').textContent = titel;
     p.rot.setAttribute('aria-label', titel);
@@ -1598,8 +1703,9 @@
     if (p.checkout) { try { p.checkout.destroy(); } catch (_) { /* redan borta */ } p.checkout = null; }
     p.kassa.textContent = '';
     // Listan kan ha ritats om medan panelen var öppen; då är det en ny knapp.
+    const attr = p.tillägg ? 'data-tillagg' : 'data-betala';
     const knapp = p.knapp && p.knapp.isConnected ? p.knapp
-      : (p.pass ? document.querySelector('[data-betala="' + CSS.escape(p.pass) + '"]') : null);
+      : (p.pass ? document.querySelector('[' + attr + '="' + CSS.escape(p.pass) + '"]') : null);
     NXStudie.håll(knapp, () => {
       document.body.classList.remove('betalar');
       p.rot.classList.remove('open');
@@ -1614,7 +1720,7 @@
     } else if (p.klar) {
       const passId = p.pass;
       laddaPass().then(() => {
-        const ny = document.querySelector('[data-betala="' + CSS.escape(passId) + '"]');
+        const ny = document.querySelector('[' + attr + '="' + CSS.escape(passId) + '"]');
         if (ny) ny.focus();
       }).catch(() => {});
     }
@@ -1628,7 +1734,8 @@
     const p = panel;
     if (!p || p.pass !== passId) return;
     p.klar = true;
-    p.besked.textContent = '✓ Tack! Betalningen är mottagen. Det kan ta en liten stund innan passet står som betalt.';
+    p.besked.textContent = '✓ Tack! Betalningen är mottagen. Det kan ta en liten stund innan '
+      + (p.tillägg ? 'tillägget' : 'passet') + ' står som betalt.';
     p.besked.hidden = false;
     setTimeout(() => { laddaPass().catch(() => {}); }, 2500);
     setTimeout(() => { laddaPass().catch(() => {}); }, 8000);
@@ -1860,23 +1967,47 @@
     if (e.disposition !== 'enforce') return;
     if (!/stripe\.(com|network)/.test(String(e.blockedURI || ''))) return;
     console.error('CSP stoppade Stripe:', e.violatedDirective, e.blockedURI);
-    const passId = p.pass, kod = p.kod;
+    const passId = p.pass, kod = p.kod, tillägg = p.tillägg;
     stängBetalpanel();
-    const reserv = passId ? await startaBetalning(passId, 'sida') : kod ? await startaKöp(kod, 'sida') : null;
+    const reserv = passId ? await startaBetalning(passId, 'sida', tillägg) : kod ? await startaKöp(kod, 'sida') : null;
     if (reserv && reserv.url) location.href = reserv.url;
   });
 
   /* ============ pass ============ */
   async function laddaPass() {
     const host = $('#pass-lista');
-    const { data, error } = await supa
-      .from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, created_by, created_at, avbokningsskal, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt')
-      .eq('parent_id', S.user.id).order('wanted_date', { ascending: true });
+    /* Passunderlaget och tilläggen hämtas med passen (Fas 20.1): de
+       säger vad ett genomfört pass kostar och om det drog över, och
+       listorna ritas ur alla tre på en gång. Ett pass som ritats utan
+       dem hade visat det bokade priset och bytt belopp under fingret. */
+    const [pass, und, till] = await Promise.all([
+      supa.from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, created_by, created_at, avbokningsskal, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt')
+        .eq('parent_id', S.user.id).order('wanted_date', { ascending: true }),
+      supa.from('passunderlag').select('id, debiterade_min, betalda_min, timpris_ore, extra_ore, rabatt_ore')
+        .eq('parent_id', S.user.id),
+      supa.from('pass_tillagg').select('booking_id, minuter, begart_ore, status, betalt_ore, betald_at')
+    ]);
+    const { data, error } = pass;
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
     S.bokningar = data || [];
+    /* Kan underlaget inte läsas står det som fanns kvar, och första
+       gången inget: då gäller det bokade, som för en rapport utan tid,
+       och inget tillägg syns. Ett tillägg som inte syns larmar hos oss
+       (tillagg_obetalt); ett belopp som gissats hade stått hos familjen. */
+    if (und.error) console.warn('Passunderlaget gick inte att läsa', und.error);
+    else {
+      S.underlag = {};
+      (und.data || []).forEach(u => { S.underlag[u.id] = u; });
+    }
+    if (till.error) console.warn('Tilläggen gick inte att läsa', till.error);
+    else {
+      S.tillagg = {};
+      (till.data || []).forEach(t => { S.tillagg[t.booking_id] = t; });
+    }
     /* Märket bredvid passet (NXKontakt.betalMärke) delas med
-       studiehjälparvyn och vet inget om priset. Här vet vi det. */
+       studiehjälparvyn och vet inget om priset. Här vet vi det. Efter
+       underlaget: ett genomfört pass kostar den debiterade tiden. */
     S.bokningar.forEach(b => { b.inget_att_betala = ingetAttBetala(b); });
     S.laddatPass = true;
     ritaNotiser();
@@ -1941,6 +2072,56 @@
     });
   }
 
+  /* Kortbetalningen av ett pass, eller av dess tillägg (Fas 20.1). EN
+     väg för båda: tillägget är en variant av samma kassa, inte en kopia
+     av den. Skillnaden är vad funktionen ombeds ta betalt för och vad
+     panelen säger överst. */
+  async function betalaIKassan(knapp, passId, tillägg) {
+    // Betalar ni ett genomfört pass bekräftar ni dess rapport (Fas 19.2).
+    const påRapport = !!knapp.closest('[data-rb-rapport]') || !!rapportFörPass(passId);
+    await medan(knapp, 'Öppnar…', async () => {
+      // Stripe.js hämtas medan sessionen skapas, inte efter.
+      const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
+      /* Fas 19.1: på en rapport bekräftar valet den. Före kassan, för
+         reserven lämnar sidan och tar ett pågående anrop med sig. */
+      await bekräftaVid(knapp, passId);
+      const svar = await startaBetalning(passId, 'inbaddad', tillägg);
+      if (!svar) return;
+      if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
+        const Stripe = await stripeKlar;
+        if (Stripe) {
+          try { await öppnaKassa(knapp, passId, svar, Stripe, tillägg ? tilläggsKassa(passId, svar) : undefined); return; }
+          catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
+        }
+        // Reserven: Stripes egen sida, som före Fas 14.5.
+        const reserv = await startaBetalning(passId, 'sida', tillägg);
+        if (reserv && reserv.url) { location.href = reserv.url; return; }
+        if (!reserv) return;
+      } else if (svar.url) {
+        location.href = svar.url;
+        return;
+      }
+      alert('Betalningen kunde inte öppnas. Försök igen, eller hör av dig till oss.');
+    });
+    /* Rapporten är bekräftad nu, betald eller inte. Kortet ska säga
+       det också om kassan aldrig öppnades eller stängs utan betalning.
+       stängBetalpanel() hittar den nya knappen om kortet ritats om. */
+    if (påRapport) rbRitaOm();
+  }
+
+  /* Panelens rubrik för ett tillägg. Minuterna och beloppet är
+     funktionens egna, ur svaret: det är dem kassan tar. */
+  function tilläggsKassa(passId, svar) {
+    const b = (S.bokningar || []).find(x => x.id === passId);
+    return {
+      titel: 'Betala tillägget',
+      vad: [b ? (b.subject || 'Pass') : null, b ? datumText(b.wanted_date) : null,
+        svar.minuter ? tidLängd(svar.minuter) + ' över' : null,
+        svar.belopp_ore ? NXBetalning.kronor(svar.belopp_ore) : null].filter(Boolean).join(' · '),
+      tillägg: true
+    };
+  }
+
   document.addEventListener('click', async e => {
     /* data-passvar, inte data-svar: data-svar är bekräfta-rutans egna
        knappar (NXStudie.bekräfta). Med samma namn tolkades varje klick
@@ -1974,9 +2155,14 @@
        här familjen godkänner dem för det här passet. */
     const fv = e.target.closest('[data-faktura-val]');
     if (fv) {
+      /* Beloppet står i rutan: det är den debiterade tiden (Fas 20.1),
+         samma som fakturaraden räknas på. */
+      const fb = (S.bokningar || []).find(x => x.id === fv.dataset.fakturaVal);
+      const fpris = fb ? passetsPris(fb) : null;
       const ok = await NXStudie.bekräfta({
         titel: 'Betala med faktura?',
-        text: 'Passet kommer med på en samlad faktura från Nextrum i början av nästa månad, tillsammans med de andra pass ni valt faktura för. '
+        text: (fpris ? 'Passet kostar ' + NXBetalning.kronor(fpris) + '. ' : '')
+          + 'Passet kommer med på en samlad faktura från Nextrum i början av nästa månad, tillsammans med de andra pass ni valt faktura för. '
           + 'Fakturan ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra. '
           + 'Ni kan byta tillbaka till kort tills fakturan är skapad.',
         knapp: 'Välj faktura'
@@ -1993,40 +2179,10 @@
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
 
     const bet = e.target.closest('[data-betala]');
-    if (bet) {
-      const passId = bet.dataset.betala;
-      // Betalar ni ett genomfört pass bekräftar ni dess rapport (Fas 19.2).
-      const påRapport = !!bet.closest('[data-rb-rapport]') || !!rapportFörPass(passId);
-      await medan(bet, 'Öppnar…', async () => {
-        // Stripe.js hämtas medan sessionen skapas, inte efter.
-        const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
-        /* Fas 19.1: på en rapport bekräftar valet den. Före kassan, för
-           reserven lämnar sidan och tar ett pågående anrop med sig. */
-        await bekräftaVid(bet, passId);
-        const svar = await startaBetalning(passId, 'inbaddad');
-        if (!svar) return;
-        if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
-          const Stripe = await stripeKlar;
-          if (Stripe) {
-            try { await öppnaKassa(bet, passId, svar, Stripe); return; }
-            catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
-          }
-          // Reserven: Stripes egen sida, som före Fas 14.5.
-          const reserv = await startaBetalning(passId, 'sida');
-          if (reserv && reserv.url) { location.href = reserv.url; return; }
-          if (!reserv) return;
-        } else if (svar.url) {
-          location.href = svar.url;
-          return;
-        }
-        alert('Betalningen kunde inte öppnas. Försök igen, eller hör av dig till oss.');
-      });
-      /* Rapporten är bekräftad nu, betald eller inte. Kortet ska säga
-         det också om kassan aldrig öppnades eller stängs utan betalning.
-         stängBetalpanel() hittar den nya knappen om kortet ritats om. */
-      if (påRapport) rbRitaOm();
-      return;
-    }
+    if (bet) { await betalaIKassan(bet, bet.dataset.betala, false); return; }
+    /* Tillägget (Fas 20.1): samma kassa, samma bekräftelse av rapporten. */
+    const tl = e.target.closest('[data-tillagg]');
+    if (tl) { await betalaIKassan(tl, tl.dataset.tillagg, true); return; }
 
     if (e.target.closest('[data-betalpanel-stang]')) { stängBetalpanel(); return; }
 
@@ -2661,29 +2817,46 @@
   async function hämtaRapport(id) {
     if (id in rapportFör) return rapportFör[id];
     const { data } = await supa.from('lesson_reports')
-      .select('gick, needs_practice, next_focus, ai_feedback, raw_notes')
+      .select('gick, needs_practice, next_focus, ai_feedback, raw_notes, start_tid, slut_tid, debiterade_min, avvikelse_skal')
       .eq('booking_id', id).maybeSingle();
     rapportFör[id] = data || null;
     return rapportFör[id];
   }
 
-  /* Det familjen betalar för passet, i ören (Fas 19.5): priset som
-     frystes när passet bokades, minus rabatten. Samma räkning som
-     stripe-checkout och passpris() i _delad/pris.ts. Förut räknades
-     dagens pris ur katalogen och rabatten drogs inte av, så ett pass
-     med första timmen bjuden hade stått för fullt pris här medan
-     kortet drog mindre. Katalogen är bara reserven, för ett pass som
-     saknar det frysta priset. */
+  /* Vad passet kostar familjen, i ören: det kassan tar. Ett genomfört
+     pass kostar den debiterade tiden, alla andra det bokade (Fas 20.1).
+     Priset är det som frystes när passet bokades, minus rabatten (Fas
+     19.5), som i stripe-checkout och passpris() i _delad/pris.ts. */
   function passetsPris(b) {
-    let timme = Number(b.timpris_ore) || 0, extra = Number(b.extra_ore) || 0;
+    return prisFör(b, b.status === 'completed' ? debiteradeMin(b) : Number(b.duration_min || 60));
+  }
+
+  /* Raden i passunderlag, för ett genomfört pass. Hämtas med passen. */
+  const underlagFör = b => (b && S.underlag && S.underlag[b.id]) || null;
+  const debiteradeMin = b => {
+    const u = underlagFör(b);
+    return Number((u && u.debiterade_min) || b.duration_min || 60);
+  };
+
+  /* pris(m) = max(avrundat m/60 × (timpris + tillägg för fler barn) − rabatt, 0),
+     samma regel som minuterspris() i _delad/pris.ts. Timpriset är passets
+     frysta (Fas 19.5), ur passet eller passunderlaget; katalogen är bara
+     reserven. Tillägget för fler barn följer samma källa som timpriset:
+     ett fryst timpris med dagens syskontillägg hade varit ett pris som
+     aldrig gällt. null när inget pris går att räkna. */
+  function prisFör(b, minuter) {
+    const u = underlagFör(b);
+    const källa = Number(b.timpris_ore) ? b : (u && Number(u.timpris_ore) ? u : null);
+    let timme = källa ? Number(källa.timpris_ore) : 0, extra = källa ? Number(källa.extra_ore) || 0 : 0;
     if (!timme) {
       const tj = NXTjanster.hitta(b.tjanst || NXTjanster.standard());
       if (!tj || !tj.pris_per_timme_ore) return null;
       timme = Number(tj.pris_per_timme_ore);
       extra = Number(tj.extra_personer_ore || 0);
     }
-    const brutto = Math.round((timme + ((b.antal_barn || 1) > 1 ? extra : 0)) * (b.duration_min || 60) / 60);
-    return brutto - Math.min(Math.max(Number(b.rabatt_ore) || 0, 0), brutto);
+    const perTimme = timme + ((b.antal_barn || 1) > 1 ? extra : 0);
+    const rabatt = Math.max(Number(b.rabatt_ore != null ? b.rabatt_ore : (u && u.rabatt_ore) || 0), 0);
+    return Math.max(Math.round(perTimme * Number(minuter) / 60) - rabatt, 0);
   }
   /* Första timmen bjuds (Fas 19.5): ett pass på en timme kan kosta
      ingenting. Det betalas inte, och ingen knapp ber om det. */
@@ -2713,6 +2886,11 @@
     const timmar = Math.max(1, Math.round((b.duration_min || 60) / 60));
     const pris = passetsPris(b);
     const skriv = '<a class="btn btn-ghost" href="#meddelanden">Skriv till ' + esc(förnamn) + '</a>';
+    /* Fas 20.1: den debiterade tiden, när den skiljer sig från den
+       bokade, och övertiden att betala på ett pass som redan var betalt. */
+    const deb = b.status === 'completed' && underlagFör(b) ? debiteradeMin(b) : null;
+    const till = tillägg(b);
+    const tillBetalt = (S.tillagg || {})[b.id];
 
     /* Vägen passet går. Ett avbokat pass har ingen väg kvar — där
        står beskedet i stället. */
@@ -2798,6 +2976,14 @@
       if (bekr) besked = { text: besked.text + ' Läs rapporten nedan och bekräfta den.', ton: 'fraga' };
       atgarder = bekr + '<a class="btn ' + (bekr ? 'btn-ghost' : 'btn-primary') + '" href="#boka">Boka nästa pass</a>' + skriv;
       alternativ = kortVal(b);
+    } else if (b.status === 'completed' && till) {
+      /* Betalt i förväg, och passet drog över (Fas 20.1). Tillägget
+         betalas när rapporten bekräftas, och att betala det bekräftar
+         den, som under Bekräfta rapport. */
+      const bekräftad = (() => { const r = rapportFörPass(b.id); return !!(r && S.rb.bekräftade[r.id]); })();
+      besked = { text: 'Passet är genomfört och betalt. ' + tilläggRad(till) + ' '
+        + (bekräftad ? 'Tillägget är inte betalt än.' : 'Läs rapporten nedan och bekräfta den genom att betala tillägget.'), ton: 'fraga' };
+      atgarder = tilläggKnapp(b, till, false) + skriv;
     } else if (b.status === 'completed') {
       /* Betalt i förväg, eller undantaget från betalning. Rapporten
          bekräftas ändå (Fas 19.2). */
@@ -2820,7 +3006,8 @@
       { rubrik: 'När', rader: [
         ['Dag', NXStudie.dagMedVeckodag(b.wanted_date)],
         ['Tid', NXStudie.tidsspann(b.wanted_time, b.duration_min)],
-        ['Längd', timmar === 1 ? '1 timme' : timmar + ' timmar']
+        ['Längd', timmar === 1 ? '1 timme' : timmar + ' timmar'],
+        ['Debiteras', deb && deb !== Number(b.duration_min || 60) ? tidLängd(deb) : null]
       ] },
       { rubrik: 'Var', rader: [
         ['Hur', b.format || 'Inte angivet'],
@@ -2848,7 +3035,15 @@
           : b.status === 'requested' ? 'Betalas när passet är bekräftat'
           : b.status === 'cancelled' ? (b.betalning_status && b.betalning_status !== 'ingen'
               ? BETALNING_TEXT[b.betalning_status] : null)
-          : (BETALNING_TEXT[b.betalning_status || 'ingen'] || null)]
+          : (BETALNING_TEXT[b.betalning_status || 'ingen'] || null)],
+        /* Tillägget för övertiden (Fas 20.1): att betala, påbörjat eller
+           betalt. Ett återbetalt eller bestritt tillägg har admin att
+           säga något om, inte den här raden. */
+        ['Tillägg', till ? (till.belopp ? NXBetalning.kronor(till.belopp) + ', ' : '')
+            + (till.status === 'vantar' ? 'påbörjat' : 'inte betalt')
+          : tillBetalt && tillBetalt.status === 'betald'
+            ? 'Betalt' + (tillBetalt.betalt_ore ? ', ' + NXBetalning.kronor(tillBetalt.betalt_ore) : '')
+          : null]
       ] }
     ];
 
@@ -2885,14 +3080,18 @@
       alternativ,
       kort,
       block: block.concat(rapport ? [{ rubrik: 'Efter passet', html:
-        (rapport.gick ? '<p><b>' + esc(NXStudie.GICK[rapport.gick] || rapport.gick) + '</b></p>' : '')
+        hållenTid(rapport, b)
+        + (rapport.gick ? '<p><b>' + esc(NXStudie.GICK[rapport.gick] || rapport.gick) + '</b></p>' : '')
         + ((rapport.ai_feedback || rapport.raw_notes) ? '<p>' + esc(rapport.ai_feedback || rapport.raw_notes) + '</p>' : '')
         + (rapport.needs_practice ? '<p><b>Öva mer på:</b> ' + esc(rapport.needs_practice) + '</p>' : '')
         + (rapport.next_focus ? '<p><b>Nästa gång:</b> ' + esc(rapport.next_focus) + '</p>' : '')
       }] : [])
     });
 
-    rita(rapportFör[b.id] || null);
+    /* Rapporten ur Bekräfta rapport finns ofta redan, med samma fält:
+       då står den från första ritningen i stället för att skjuta in
+       under sidan när hämtningen kommer. */
+    rita(rapportFör[b.id] || rapportFörPass(b.id) || null);
     /* Länken hämtas efter att sidan ritats, som rapporten. Raden står
        redan på "Hämtar länken…", så kortet byter inte höjd när den kommer. */
     NXStudie.hämtaMöte(supa, b, () => { if (passIdIAdressen() === b.id) ritaPassSida(); });

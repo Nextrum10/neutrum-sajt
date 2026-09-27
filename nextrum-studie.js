@@ -349,6 +349,112 @@ window.NXStudie = (function () {
     return svar;
   }
 
+  /* ---------- månadsväljaren (Fas 20.2) ----------
+     Leo 2026-09-27: "man ska inte kunna se rapporter från juli idag i
+     september ... gör det snyggt så man kan välja den månaden man vill
+     kolla för." En rad med månader, den innevarande förvald, och den
+     man trycker på är den som visas. Samma rad i studiehjälparvyn
+     (rapporterna och lönen) och i adminvyn (ekonomin och bokslutet).
+
+     RADEN RITAS EN GÅNG. Ett tryck byter bara aria-pressed: en rad som
+     ritades om vid varje tryck hoppade tillbaka till början i sidled
+     (samma fälla som ämnesraden i bokningen, CLAUDE.md avsnitt 3).
+     Den valda månaden förs in i bild med scrollLeft, inte med
+     scrollIntoView, som rullar hela sidan i en rad som klipps.
+
+     Månaden skickas som 'ÅÅÅÅ-MM-01'. månadsGräns() ger första dagen i
+     månaden och första dagen i nästa, att fråga med gte och lt.
+
+     o.antal     hur många månader bakåt, med den innevarande (12)
+     o.framåt    hur många månader efter den innevarande (0)
+     o.vald      förvald månad, 'ÅÅÅÅ-MM-01' (den innevarande)
+     o.märke     fn(månad) → '' | text: ett litet märke på knappen,
+                 t.ex. "Stängd" i adminvyn
+     o.vidVal    fn(månad): anropas när en annan månad trycks */
+  function månadIso(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01';
+  }
+  function månadsGräns(iso) {
+    var d = new Date(String(iso).slice(0, 7) + '-01T12:00:00');
+    var nästa = new Date(d.getFullYear(), d.getMonth() + 1, 1, 12);
+    return { från: månadIso(d), till: månadIso(nästa) };
+  }
+  function månadsNamn(iso, medÅr) {
+    var d = new Date(String(iso).slice(0, 7) + '-01T12:00:00');
+    var namn = NX.MANADER[d.getMonth()];
+    return medÅr === false ? namn : namn + ' ' + d.getFullYear();
+  }
+  function månadsval(host, o) {
+    o = o || {};
+    if (!host) return null;
+    var nu = new Date();
+    var denna = månadIso(nu);
+    var vald = o.vald || denna;
+    var lista = [];
+    /* framåt: månader efter den innevarande. Adminvyn visar två, för
+       ett pass som bokats och betalats i förväg hör till sin egen månad. */
+    for (var i = (o.antal || 12) - 1; i >= -(o.framåt || 0); i--) {
+      lista.push(månadIso(new Date(nu.getFullYear(), nu.getMonth() - i, 1, 12)));
+    }
+    if (lista.indexOf(vald) === -1) vald = denna;
+
+    host.classList.add('nx-manader');
+    host.setAttribute('role', 'group');
+    if (!host.getAttribute('aria-label')) host.setAttribute('aria-label', 'Välj månad');
+    host.innerHTML = lista.map(function (m, n) {
+      var år = m.slice(0, 4);
+      /* Året står bara där det byts, och på den första: tolv knappar
+         med "2026" på varje är brus. */
+      var visaÅr = n === 0 || år !== lista[n - 1].slice(0, 4);
+      return '<button type="button" data-manad="' + m + '" aria-pressed="' + (m === vald) + '"'
+        + (m === denna ? ' data-denna' : '') + '>'
+        + (visaÅr ? '<small>' + år + '</small>' : '')
+        + '<span>' + esc(månadsNamn(m, false)) + '</span>'
+        + '<i class="nx-manad-marke"></i></button>';
+    }).join('');
+
+    function märk() {
+      if (!o.märke) return;
+      Array.prototype.forEach.call(host.querySelectorAll('[data-manad]'), function (b) {
+        var text = o.märke(b.dataset.manad) || '';
+        var i = b.querySelector('.nx-manad-marke');
+        i.textContent = text;
+        i.hidden = !text;
+      });
+    }
+    function iBild() {
+      var b = host.querySelector('[aria-pressed="true"]');
+      if (!b) return;
+      var vänster = b.offsetLeft - host.offsetLeft;
+      if (vänster < host.scrollLeft || vänster + b.offsetWidth > host.scrollLeft + host.clientWidth) {
+        host.scrollLeft = Math.max(0, vänster - (host.clientWidth - b.offsetWidth) / 2);
+      }
+    }
+    function sätt(m, tyst) {
+      if (lista.indexOf(m) === -1 || m === vald) return;
+      vald = m;
+      Array.prototype.forEach.call(host.querySelectorAll('[data-manad]'), function (b) {
+        b.setAttribute('aria-pressed', b.dataset.manad === vald ? 'true' : 'false');
+      });
+      iBild();
+      if (!tyst && o.vidVal) o.vidVal(vald);
+    }
+
+    host.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-manad]');
+      if (b) sätt(b.dataset.manad);
+    });
+    märk();
+    /* Efter layout: offsetLeft är 0 innan raden syns. */
+    requestAnimationFrame(iBild);
+
+    return {
+      vald: function () { return vald; },
+      sätt: function (m) { sätt(m, true); },
+      märk: märk
+    };
+  }
+
   /* ---------- bekräftelse ----------
      Egen ruta i stället för confirm(): den går att skriva på svenska,
      den ser ut som resten av sajten, och den kan säga vad som faktiskt
@@ -2053,6 +2159,7 @@ window.NXStudie = (function () {
     läxRad: läxRad, nivåMätare: nivåMätare, historikRad: historikRad, ämnesSammanfattning: ämnesSammanfattning,
     progressRad: progressRad, progressPerÄmne: progressPerÄmne,
     tomt: tomt, laddar: laddar, laddarFörsta: laddarFörsta, håll: håll, scrollaTill: scrollaTill, visaÖverst: visaÖverst,
+    månadsval: månadsval, månadsGräns: månadsGräns, månadsNamn: månadsNamn, månadIso: månadIso,
     passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,
     hämtaMöte: hämtaMöte, mötesRad: mötesRad,
     dagMedVeckodag: dagMedVeckodag, GICK: GICK,

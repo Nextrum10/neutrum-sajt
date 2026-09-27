@@ -1344,9 +1344,84 @@
   $('#r-pass').addEventListener('change', e => {
     const b = S.bokningar.find(x => x.id === e.target.value);
     sättRapportTitel(b);
+    fyllTid(b);
     if (!b) return;
     $('#r-datum').value = b.wanted_date;
     sättÄmneFrånPass(b);
+  });
+
+  /* ============================================================
+     NÄR PASSET HÖLLS (Fas 20.1)
+
+     Leo: "man måste kunna skriva in exakta tiden själv ifall det har
+     skett avvikelser så att vi kan debitera mer eller mindre". Fälten
+     fylls med den bokade tiden; ändras de debiteras familjen det som
+     står här, per påbörjad kvart, och lönen följer med nedåt alltid,
+     uppåt när övertiden är betald.
+
+     Databasen räknar samma sak (lesson_reports.debiterade_min) och
+     nekar en avvikelse utan skäl, och en tid som ändras i efterhand.
+     Här står det för att den som skriver ska se vad familjen kommer
+     att se innan hen sparar. Raden under fälten har en reserverad höjd:
+     den byter text vid varje ändring, och ett formulär som hoppar under
+     fingret är fälla 4 i CLAUDE.md.
+     ============================================================ */
+  const minuterAv = hhmm => {
+    const [h, m] = String(hhmm || '').split(':').map(Number);
+    return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+  };
+  const hhmmAv = min => String(Math.floor(min / 60) % 24).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+  const längdText = min => {
+    const h = Math.floor(min / 60), m = min % 60;
+    return (h ? h + (h === 1 ? ' timme' : ' timmar') : '') + (h && m ? ' ' : '') + (m ? m + ' min' : '');
+  };
+
+  function tidsläge() {
+    const b = S.bokningar.find(x => x.id === $('#r-pass').value);
+    const start = minuterAv($('#r-start').value), slut = minuterAv($('#r-slut').value);
+    const bokat = b ? Number(b.duration_min || 60) : null;
+    if (!b || start === null || slut === null) return { b, bokat, klar: false };
+    const hallet = slut - start;
+    const debiterat = Math.ceil(hallet / 15) * 15;
+    return { b, bokat, start, slut, hallet, debiterat, klar: true, avviker: debiterat !== bokat };
+  }
+
+  function visaTid() {
+    const rad = $('#r-tid-rad');
+    const t = tidsläge();
+    let text = '';
+    if (t.klar && t.hallet <= 0) text = '⚠️ Passet måste sluta efter att det började.';
+    else if (t.klar && t.hallet > 240) text = '⚠️ Mer än fyra timmar går inte att skriva in. Stämmer tiden?';
+    else if (t.klar && !t.avviker) text = 'Som bokat: ' + längdText(t.bokat) + '.';
+    else if (t.klar) {
+      text = 'Hölls ' + längdText(t.hallet)
+        + (t.debiterat !== t.hallet ? ', debiteras ' + längdText(t.debiterat) + ' (påbörjad kvart)' : '')
+        + '. Bokat ' + längdText(t.bokat) + ' — familjen '
+        + (t.debiterat > t.bokat ? 'betalar ' + längdText(t.debiterat - t.bokat) + ' till.' : 'betalar ' + längdText(t.bokat - t.debiterat) + ' mindre.');
+    }
+    rad.textContent = text;
+    rad.dataset.lage = t.klar && t.avviker && t.hallet > 0 && t.hallet <= 240 ? 'avviker' : '';
+    $('#r-avvik-falt').hidden = !(t.klar && t.avviker && t.hallet > 0);
+  }
+
+  /* Den bokade tiden som förval. Döljs för en fristående rapport och
+     för en elev som uteblev: då gäller det bokade, och databasen tar
+     inte emot en tid. */
+  function fyllTid(b) {
+    const fält = $('#r-tid-falt');
+    const start = b ? minuterAv(String(b.wanted_time || '').slice(0, 5)) : null;
+    $('#r-start').value = start !== null ? hhmmAv(start) : '';
+    $('#r-slut').value = start !== null ? hhmmAv(start + Number(b.duration_min || 60)) : '';
+    $('#r-avvik').value = '';
+    fält.hidden = !b || $('#r-narvaro').value === 'franvarande';
+    visaTid();
+  }
+
+  $('#r-start').addEventListener('input', visaTid);
+  $('#r-slut').addEventListener('input', visaTid);
+  $('#r-narvaro').addEventListener('change', () => {
+    const b = S.bokningar.find(x => x.id === $('#r-pass').value);
+    $('#r-tid-falt').hidden = !b || $('#r-narvaro').value === 'franvarande';
   });
 
   document.addEventListener('click', async e => {
@@ -1459,10 +1534,28 @@
   $('#r-amne-val').addEventListener('click', e => {
     const b = e.target.closest('[data-v]');
     if (!b) return;
+    /* Annat öppnar ett fält, och det skrivna ordet är ämnet. Samma
+       regel som bokningen (2026-09-25): "Annat" i en rapport säger
+       ingenting till familjen. */
+    if (b.dataset.v === ANNAT) {
+      const på = !$('#r-amne-annat-falt').hidden;
+      $('#r-amne-annat-falt').hidden = på;
+      b.setAttribute('aria-pressed', på ? 'false' : 'true');
+      if (på) { $('#r-amne-annat').value = ''; }
+      else { rap.amne = null; väljChip($('#r-amne-val'), ANNAT); $('#r-amne-annat').focus(); }
+      return;
+    }
+    $('#r-amne-annat-falt').hidden = true;
+    $('#r-amne-annat').value = '';
     /* går att klicka bort igen: ämnet är valfritt, och ett chip som
        inte går att ångra tvingar fram ett svar man inte har */
     rap.amne = (rap.amne === b.dataset.v) ? null : b.dataset.v;
     väljChip($('#r-amne-val'), rap.amne);
+  });
+
+  /* Det skrivna ordet ÄR ämnet. Tomt fält, inget ämne. */
+  $('#r-amne-annat').addEventListener('input', e => {
+    rap.amne = e.target.value.trim().replace(/\s+/g, ' ') || null;
   });
 
   $('#r-niva-val').addEventListener('click', e => {
@@ -1473,8 +1566,20 @@
   });
 
   /* Ämnena kommer från tre håll: dina egna, elevens, och det som
-     faktiskt stod i bokningarna. Ingen hårdkodad lista — den som
-     hjälper till i spanska ska inte välja mellan matte och NO. */
+     faktiskt stod i bokningarna — de står först, för det är nästan
+     alltid något av dem. Efter dem en längre lista, och sist Annat
+     med ett fält (Leo 2026-09-27: "fler ämnen att välja mellan, eller
+     annat där man kan skriva fritt").
+
+     Listan är rapportens egen, inte NX.AMNEN. Den listan styr
+     bibliotekets filter och ska vara grov; en rapport säger vad ni
+     faktiskt gjorde, och "Kemi" säger mer än "NO / Fysik / Kemi /
+     Biologi". Ämnet i en rapport är fritext i databasen. */
+  const RAPPORT_AMNEN = ['Matematik', 'Svenska', 'Svenska som andraspråk', 'Engelska',
+    'Fysik', 'Kemi', 'Biologi', 'Teknik', 'Historia', 'Samhällskunskap', 'Geografi',
+    'Religion', 'Spanska', 'Tyska', 'Franska', 'Programmering', 'Studieteknik'];
+  const ANNAT = '__annat';
+
   function ämnesFörslag() {
     const e = elev();
     const ur = []
@@ -1491,17 +1596,17 @@
 
   function fyllÄmnesval() {
     const host = $('#r-amne-val');
-    const lista = ämnesFörslag();
-    if (rap.amne && lista.indexOf(rap.amne) === -1) lista.push(rap.amne);
+    const egna = ämnesFörslag();
+    const lista = egna.concat(RAPPORT_AMNEN.filter(a => egna.indexOf(a) === -1));
+    /* Ett ämne som skrivits under Annat, eller som kom ur passet och
+       inte står i listan, får en egen knapp i stället för att försvinna. */
+    if (rap.amne && lista.indexOf(rap.amne) === -1 && $('#r-amne-annat-falt').hidden) lista.unshift(rap.amne);
 
-    if (!lista.length) {
-      host.innerHTML = '<span class="xsmall" style="color:var(--bl-2)">'
-        + 'Lägg in dina ämnen under Min profil, så står de här.</span>';
-      return;
-    }
+    const annatÖppet = !$('#r-amne-annat-falt').hidden;
     host.innerHTML = lista.map(a =>
       '<button type="button" data-v="' + esc(a) + '" aria-pressed="'
-      + (a === rap.amne ? 'true' : 'false') + '">' + esc(a) + '</button>').join('');
+      + (a === rap.amne && !annatÖppet ? 'true' : 'false') + '">' + esc(a) + '</button>').join('')
+      + '<button type="button" data-v="' + ANNAT + '" aria-pressed="' + annatÖppet + '">Annat…</button>';
   }
 
   $('#r-omrade-pa').addEventListener('change', e => {
@@ -1527,7 +1632,7 @@
     const p = (S.progress || [])[Number(b.dataset.tidigare)];
     if (!p) return;
     $('#r-omrade').value = p.area || '';
-    if (p.subject) { rap.amne = p.subject; fyllÄmnesval(); }
+    if (p.subject) { stängAnnat(); rap.amne = p.subject; fyllÄmnesval(); }
     rap.steg = NXStudie.stegFör(p);
     väljChip($('#r-niva-val'), String(rap.steg));
   });
@@ -1536,8 +1641,14 @@
      bokningen är ett bättre förval än tomt. */
   function sättÄmneFrånPass(b) {
     if (!b || !b.subject) return;
+    stängAnnat();
     rap.amne = b.subject;
     fyllÄmnesval();
+  }
+
+  function stängAnnat() {
+    $('#r-amne-annat-falt').hidden = true;
+    $('#r-amne-annat').value = '';
   }
 
   function nollställRapport() {
@@ -1546,7 +1657,9 @@
     rap.steg = 3;
     väljChip($('#r-gick-val'), null);
     väljChip($('#r-niva-val'), '3');
+    stängAnnat();
     fyllÄmnesval();
+    fyllTid(S.bokningar.find(x => x.id === $('#r-pass').value));
     $('#r-notes').value = '';
     $('#r-fokus').value = '';
     $('#r-omrade').value = '';
@@ -1581,12 +1694,25 @@
       /* progress_items är unikt per (elev, ämne, område). Utan ämne
          finns ingen rad att uppdatera, bara en att skapa på nytt. */
       { fel: områdePå && !rap.amne, text: 'Välj vilket ämne området hör till.' },
-      { fel: $('#r-lax').checked && !laxTitel, text: 'Skriv vad läxan går ut på, eller kryssa ur rutan.', falt: $('#r-lax-titel') }
+      { fel: $('#r-lax').checked && !laxTitel, text: 'Skriv vad läxan går ut på, eller kryssa ur rutan.', falt: $('#r-lax-titel') },
+      { fel: !$('#r-amne-annat-falt').hidden && !rap.amne, text: 'Skriv vilket ämne, eller välj ett i listan.', falt: $('#r-amne-annat') }
     ]);
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
 
     const passId = $('#r-pass').value || null;
     const datum = $('#r-datum').value || isoFor(new Date());
+
+    /* Tiden (Fas 20.1). Bara för ett pass där eleven kom. */
+    const medTid = !!passId && $('#r-narvaro').value !== 'franvarande';
+    const tid = tidsläge();
+    const skäl = $('#r-avvik').value.trim();
+    const tidFel = medTid && kolla([
+      { fel: !tid.klar, text: 'Skriv när passet började och slutade.', falt: $('#r-start') },
+      { fel: tid.klar && tid.hallet <= 0, text: 'Passet måste sluta efter att det började.', falt: $('#r-slut') },
+      { fel: tid.klar && tid.hallet > 240, text: 'Mer än fyra timmar går inte att skriva in. Stämmer tiden?', falt: $('#r-slut') },
+      { fel: tid.klar && tid.avviker && !skäl, text: 'Skriv varför passet blev längre eller kortare, så att familjen förstår beloppet.', falt: $('#r-avvik') }
+    ]);
+    if (tidFel) { säg(msg, '⚠️ ' + tidFel, false); return; }
 
     await medan($('#r-spara'), 'Sparar…', async () => {
       const { data, error } = await supa.from('lesson_reports').insert({
@@ -1605,7 +1731,10 @@
            längre bli sparad medan passet står kvar orört — vägrar
            databasen passet sparas inte rapporten heller, och felet
            nedan säger varför. */
-        narvaro: passId ? $('#r-narvaro').value : null
+        narvaro: passId ? $('#r-narvaro').value : null,
+        start_tid: medTid ? $('#r-start').value : null,
+        slut_tid: medTid ? $('#r-slut').value : null,
+        avvikelse_skal: medTid && tid.avviker ? skäl : null
       }).select('id').single();
 
       if (error) { säg(msg, 'Kunde inte spara rapporten: ' + felText(error), false); return; }
@@ -1666,29 +1795,67 @@
     });
   });
 
+  /* MÅNAD FÖR MÅNAD (Fas 20.2). Leo: "man ska inte kunna se rapporter
+     från juli idag i september". Listan visar den månad som är vald i
+     raden ovanför, den innevarande som förval. Statistiken (Hur passen
+     gick) läser fortfarande de tjugo senaste, oavsett månad: den svarar
+     på hur det går, inte på vad som hände i juli. */
+  let rapportMånad = null;
+
   async function laddaMinaRapporter() {
     const host = $('#mina-rapporter');
-    const { data, error } = await supa
-      .from('lesson_reports')
-      .select('id, lesson_date, raw_notes, ai_feedback, gick, amne, needs_practice, next_focus, student_id')
-      .eq('tutor_id', S.user.id).order('lesson_date', { ascending: false }).limit(20);
+    if (!rapportMånad) {
+      rapportMånad = NXStudie.månadsval($('#rapport-manader'), {
+        vidVal: () => NXStudie.håll($('#rapport-manader'), laddaMinaRapporter)
+      });
+    }
+    const m = rapportMånad ? rapportMånad.vald() : NXStudie.månadIso(new Date());
+    const gräns = NXStudie.månadsGräns(m);
+    NXStudie.laddarFörsta(host);
 
-    if (error) { host.innerHTML = tomt('Kunde inte hämta rapporterna', felText(error)); return; }
+    const kolumner = 'id, lesson_date, raw_notes, ai_feedback, gick, amne, needs_practice, next_focus, student_id, booking_id, start_tid, slut_tid, debiterade_min, avvikelse_skal';
+    const [senaste, månad] = await Promise.all([
+      supa.from('lesson_reports').select(kolumner)
+        .eq('tutor_id', S.user.id).order('lesson_date', { ascending: false }).limit(20),
+      supa.from('lesson_reports').select(kolumner)
+        .eq('tutor_id', S.user.id).gte('lesson_date', gräns.från).lt('lesson_date', gräns.till)
+        .order('lesson_date', { ascending: false }).order('created_at', { ascending: false })
+    ]);
+    const { data, error } = månad;
 
-    S.minaRapporter = data;
+    if (error || senaste.error) { host.innerHTML = tomt('Kunde inte hämta rapporterna', felText(error || senaste.error)); return; }
+
+    S.minaRapporter = senaste.data || [];
     ritaGickFordelning();
 
-    if (!data.length) { host.innerHTML = tomt('Inga rapporter än', 'Den första skriver du efter ditt första pass.'); return; }
+    $('#mina-rapporter-antal').textContent = data.length ? data.length + ' st' : '';
+    if (!data.length) {
+      host.innerHTML = S.minaRapporter.length
+        ? tomt('Inga rapporter i ' + NXStudie.månadsNamn(m), 'Välj en annan månad ovanför för att se dem.')
+        : tomt('Inga rapporter än', 'Den första skriver du efter ditt första pass.');
+      return;
+    }
 
-    $('#mina-rapporter-antal').textContent = data.length + ' st';
     host.innerHTML = data.map(r => {
       const e = S.elever.find(x => x.id === r.student_id);
       const g = GICK[r.gick];
+      const b = r.booking_id ? S.bokningar.find(x => x.id === r.booking_id) : null;
+      /* Den hållna tiden, när den avvek från det bokade. Samma rad som
+         familjen ser, så att båda läser samma sak. */
+      const avvek = r.start_tid && b && Number(r.debiterade_min) !== Number(b.duration_min || 60);
       return '<div class="report">'
         + '<div class="report-head"><b>' + esc(e ? e.name : 'Elev') + '</b>'
         + (g ? '<span class="rp-marke" data-v="' + esc(r.gick) + '"><i></i>' + esc(g) + '</span>' : '')
         + (r.amne ? '<span class="rp-marke"><i></i>' + esc(r.amne) + '</span>' : '')
         + '<time>' + esc(datumText(r.lesson_date)) + '</time></div>'
+        + (r.start_tid
+            ? '<p class="rp-tid-hallet' + (avvek ? ' avviker' : '') + '">Hölls '
+              + esc(String(r.start_tid).slice(0, 5) + '–' + String(r.slut_tid).slice(0, 5))
+              + (avvek ? ' · debiteras ' + esc(längdText(Number(r.debiterade_min))) + ', bokat '
+                  + esc(längdText(Number(b.duration_min || 60))) : '')
+              + (avvek && r.avvikelse_skal ? '<span>' + esc(r.avvikelse_skal) + '</span>' : '')
+              + '</p>'
+            : '')
         + (r.ai_feedback
             ? '<p>' + esc(r.ai_feedback) + '</p>'
             : '<span class="raw-note">Inte omskriven, föräldern ser detta</span><p class="raw">' + esc(r.raw_notes) + '</p>')
@@ -2454,29 +2621,54 @@
      är skyddad i skydda_tutorfalt() sedan schema-v8, av samma skäl
      som beloppen inte går att skriva härifrån.
      ============================================================ */
+  /* MÅNAD FÖR MÅNAD (Fas 20.2). Leo: "samma med löner". Den valda
+     månadens rapporterade pass, timmarna lönen räknas på och
+     utbetalningen för just den månaden. Timmarna är passunderlag.lon_min
+     (Fas 20.1): den hållna tiden nedåt alltid, uppåt bara när
+     övertiden är betald — samma siffra som underlaget den 25:e. */
+  let ersMånad = null;
+
   async function laddaErsattning() {
     const B = NXBetalning;
     const pag = $('#ers-pagaende'), konto = $('#ers-konto'), lista = $('#ers-lista');
     if (!pag) return;
 
+    if (!ersMånad) {
+      ersMånad = NXStudie.månadsval($('#ers-manader'), {
+        vidVal: () => NXStudie.håll($('#ers-manader'), laddaErsattning)
+      });
+    }
+    const m = ersMånad ? ersMånad.vald() : NXStudie.månadIso(new Date());
+    const gräns = NXStudie.månadsGräns(m);
+    const denna = m === NXStudie.månadIso(new Date());
+    $('#ers-rubrik').textContent = denna ? 'Den här månaden' : NXStudie.månadsNamn(m).replace(/^./, c => c.toUpperCase());
+    NXStudie.laddarFörsta(pag);
+    NXStudie.laddarFörsta(lista);
+
     const rate = S.tutorProfil && S.tutorProfil.hourly_rate;
     const timpenningOre = rate ? Math.round(Number(rate) * 100) : null;
 
-    const [ej, ut] = await Promise.all([
-      supa.from('ej_utbetalt').select('pass, minuter').eq('tutor_id', S.user.id).maybeSingle(),
+    const [passen, ut] = await Promise.all([
+      supa.from('passunderlag').select('id, lon_min, duration_min, fakturerbar, har_rapport')
+        .eq('tutor_id', S.user.id).gte('wanted_date', gräns.från).lt('wanted_date', gräns.till),
       supa.from('payouts').select('id, period, status, belopp_ore, minuter, fel')
-        .eq('tutor_id', S.user.id).order('period', { ascending: false })
+        .eq('tutor_id', S.user.id).eq('period', gräns.från)
     ]);
 
-    const e = ej.data || { pass: 0, minuter: 0 };
-    pag.innerHTML = timpenningOre
+    const räknade = (passen.data || []).filter(p => p.fakturerbar && p.har_rapport);
+    const e = { pass: räknade.length, minuter: räknade.reduce((a, p) => a + Number(p.lon_min || p.duration_min || 0), 0) };
+    pag.innerHTML = passen.error
+      ? tomt('Kunde inte hämta passen', felText(passen.error))
+      : timpenningOre
       ? B.pagaende({
           pass: e.pass, minuter: e.minuter,
           belopp_ore: Math.round((Number(e.minuter || 0) / 60) * timpenningOre),
-          not: 'Räknat på ' + B.kronor(timpenningOre) + ' i timmen. Underlaget skapas när månaden är slut. '
-             + 'Ett pass räknas först när du skrivit rapporten.',
-          tomRubrik: 'Inget att få betalt för än',
-          tomText: 'Passen räknas ihop här när du rapporterat dem.'
+          not: 'Räknat på ' + B.kronor(timpenningOre) + ' i timmen. '
+             + (denna ? 'Underlaget skapas när månaden är slut. ' : '')
+             + 'Ett pass räknas först när du skrivit rapporten, och på den tid det hölls. '
+             + 'Drog det över räknas övertiden när familjen har betalat den.',
+          tomRubrik: denna ? 'Inget att få betalt för än' : 'Inga rapporterade pass den månaden',
+          tomText: denna ? 'Passen räknas ihop här när du rapporterat dem.' : 'Välj en annan månad ovanför.'
         })
       : tomt('Din timpenning är inte satt än',
              'Utan den går ersättningen inte att räkna ut. Hör av dig till oss så fyller vi i den.');
@@ -2501,7 +2693,9 @@
     $('#ers-antal').textContent = rader.length ? rader.length + ' st' : '';
 
     if (!rader.length) {
-      lista.innerHTML = tomt('Inga utbetalningar än', 'Den första skapas när en månad med rapporterade pass är slut.');
+      lista.innerHTML = denna
+        ? tomt('Ingen utbetalning än', 'Den skapas när månaden är slut och betalas den 25:e månaden efter.')
+        : tomt('Ingen utbetalning för ' + NXStudie.månadsNamn(m), 'Hade du rapporterade pass den månaden och ser inget här, hör av dig till oss.');
       return;
     }
 
@@ -2804,8 +2998,8 @@
   async function hämtaRapport(id) {
     if (id in rapportFör) return rapportFör[id];
     const { data } = await supa.from('lesson_reports')
-      .select('gick, raw_notes, needs_practice, next_focus')
-      .eq('booking_id', id).maybeSingle();
+      .select('gick, raw_notes, needs_practice, next_focus, start_tid, slut_tid, debiterade_min, avvikelse_skal')
+      .eq('booking_id', id).order('created_at').limit(1).maybeSingle();
     rapportFör[id] = data || null;
     return rapportFör[id];
   }
@@ -2968,7 +3162,17 @@
       atgarder,
       kort,
       block: block.concat(rapport ? [{ rubrik: 'Din rapport', html:
-        (rapport.gick ? '<p><b>' + esc(NXStudie.GICK[rapport.gick] || rapport.gick) + '</b></p>' : '')
+        /* Den hållna tiden (Fas 20.1), med samma ord som familjen läser. */
+        (rapport.start_tid
+          ? '<p class="rp-tid-hallet' + (Number(rapport.debiterade_min) !== Number(b.duration_min || 60) ? ' avviker' : '') + '">Hölls '
+            + esc(String(rapport.start_tid).slice(0, 5) + '–' + String(rapport.slut_tid).slice(0, 5))
+            + (Number(rapport.debiterade_min) !== Number(b.duration_min || 60)
+                ? ' · debiteras ' + esc(längdText(Number(rapport.debiterade_min))) + ', bokat ' + esc(längdText(Number(b.duration_min || 60)))
+                  + (rapport.avvikelse_skal ? '<span>' + esc(rapport.avvikelse_skal) + '</span>' : '')
+                : '')
+            + '</p>'
+          : '')
+        + (rapport.gick ? '<p><b>' + esc(NXStudie.GICK[rapport.gick] || rapport.gick) + '</b></p>' : '')
         + (rapport.raw_notes ? '<p>' + esc(rapport.raw_notes) + '</p>' : '')
         + (rapport.needs_practice ? '<p><b>Öva mer på:</b> ' + esc(rapport.needs_practice) + '</p>' : '')
         + (rapport.next_focus ? '<p><b>Nästa gång:</b> ' + esc(rapport.next_focus) + '</p>' : '')

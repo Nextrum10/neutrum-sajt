@@ -62,7 +62,13 @@ passet sa Fas 14.2). Rapporten bekräftas också när passet redan är
 betalt, och ett hållet pass ska betalas även utan bekräftelse. Spärren
 `kortsparr` kan inte slås på sedan dess. Studiehjälparen får betalt den
 25:e; blir hen anställd läggs underlaget in i Fortnox Lön för hand, men
-anställningsformen är inte avgjord. Belopp lagras i ören överallt. Planerna och klippkorten (Fas 16.1) prissätts bara i vyn
+anställningsformen är inte avgjord. Ett genomfört pass kostar den tid
+det faktiskt hölls, per påbörjad kvart (Fas 20.1): tiden och skälet står
+i rapporten, ett förbetalt pass som drog över får ett tillägg
+(`pass_tillagg`), och lönen följer tiden nedåt alltid men uppåt bara när
+övertiden är betald. En månad stängs i adminvyn när dess larm är noll,
+och är sedan låst i databasen tills admin öppnar den med ett skäl (Fas
+20.2). Belopp lagras i ören överallt. Planerna och klippkorten (Fas 16.1) prissätts bara i vyn
 `erbjudanden_pris`, och inom ångerfristen räknas använda timmar till det
 betalda priset, inte till 379 kr.
 
@@ -165,6 +171,12 @@ migrationer utan filer, och två ACTIVE funktioner som inte fanns i någon
 gren. Listan över det som faktiskt kör hämtas med `list_migrations` och
 `list_edge_functions`, inte ur mappen. **Driftsätter du något, commit:a
 det i samma arbetspass.**
+
+**Flera sessioner kör mot samma databas.** Fas 19.5 och 20.1 skrevs
+samma förmiddag och ändrade samma funktioner. Lappa en funktion med
+`replace()` på `pg_get_functiondef()` och en vakt som räknar träffarna,
+i stället för att skriva om den ur en kopia som kan vara äldre än
+driften. Läs vyns kolumner i driften innan en `create or replace view`.
 
 **Och tvärtom: en inställning som bara finns i databasen finns inte i
 produkten.** Flaggan `notiser_mejl` stod av från Runda 2 till Fas 13.4

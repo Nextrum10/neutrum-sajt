@@ -664,6 +664,46 @@
   background:var(--bl);color:var(--pap);border-color:var(--bl);font-weight:650;
 }
 
+/* Månadsväljaren (Fas 20.2, NXStudie.månadsval). Samma piller som
+   valen ovan, i en rad som går att dra i sidled i stället för att bryta
+   om: tolv månader på tre rader är en vägg, inte ett val. Året står
+   litet ovanför den månad där det byts. overflow-x:auto och inte clip:
+   raden SKA gå att scrolla. Kanten tonas inte med mask-image — den
+   ritas om vid varje scrollsteg i Safari (avsnitt 3, startsidans punkt 3). */
+.nx-manader{
+  display:flex;gap:6px;align-items:flex-end;
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  padding:2px 2px 4px;margin:0 0 18px;
+}
+.nx-manader::-webkit-scrollbar{display:none}
+.nx-manader button{
+  flex:0 0 auto;position:relative;
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  min-width:0;padding:8px 15px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  background:var(--pap);
+  font:inherit;font-size:.87rem;font-weight:550;color:var(--bl-2);
+  cursor:pointer;
+  transition:border-color .16s var(--e),background .16s var(--e),color .16s var(--e);
+}
+.nx-manader button span{text-transform:capitalize;white-space:nowrap}
+.nx-manader button small{
+  position:absolute;top:-15px;left:50%;transform:translateX(-50%);
+  font-size:.66rem;font-weight:650;letter-spacing:.04em;color:var(--bl-3);
+}
+.nx-manader:has(small){padding-top:17px}
+.nx-manader button:hover{border-color:var(--bl-3);color:var(--bl)}
+.nx-manader button[data-denna]:not([aria-pressed="true"]){border-color:var(--bl-3)}
+.nx-manader button[aria-pressed="true"]{
+  background:var(--bl);color:var(--pap);border-color:var(--bl);font-weight:650;
+}
+/* Märket (t.ex. "Stängd" i adminvyn) står under namnet, i pillret. */
+.nx-manad-marke{
+  font-style:normal;font-size:.64rem;font-weight:650;letter-spacing:.03em;
+  text-transform:uppercase;opacity:.75;line-height:1;
+}
+.nx-manad-marke[hidden]{display:none}
+
 /* Kvittot. Priset ska stå framme innan man trycker, inte efteråt. */
 .vy-kvitto{
   display:flex;align-items:center;justify-content:space-between;
@@ -2149,6 +2189,27 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .rp-gick button[data-v="bra"][aria-pressed="true"] i{background:var(--ockra)}
 .rp-gick button[data-v="folja_upp"][aria-pressed="true"] i{background:var(--acc)}
 
+/* När passet hölls (Fas 20.1). Raden under tiderna byter text vid
+   varje ändring, så den har en reserverad höjd för två rader: annars
+   flyttar sig skälet och knappen under fingret (fälla 4). */
+.rp-tid-rad{
+  min-height:2.9em;margin:8px 0 0;
+  font-size:.84rem;line-height:1.45;color:var(--bl-2);
+}
+.rp-tid-rad[data-lage="avviker"]{color:var(--bl);font-weight:550}
+/* Två klockslag får plats bredvid varandra också på en telefon.
+   minmax(0,1fr), inte 1fr: fälla 2 i avsnitt 3. */
+.rp-tid .vy-form-rad{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rp-tid .vy-form-rad .pay-field{min-width:0}
+.rp-tid #r-avvik-falt{margin-top:4px}
+.rp-tid-hallet{margin:6px 0 4px;font-size:.82rem;color:var(--bl-2)}
+.rp-tid-hallet.avviker{color:var(--bl);font-weight:550}
+.rp-tid-hallet span{
+  display:block;margin-top:4px;padding-left:10px;
+  border-left:2px solid var(--ln-2);
+  font-weight:400;font-style:italic;color:var(--bl-2);
+}
+
 /* Kunskapsområdet. Öppnas bara om man vill — de flesta pass
    handlar om samma sak som förra gången, och att kräva ett
    område varje gång är att kräva en dubblett. */
@@ -3004,3 +3065,32 @@ a:has(> .adm-status){
                          .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang]):active{scale:none}
   .vy:not(.vy-admin) :is(.vy-sek, .vy-flik-panel){animation:none !important}
 }
+
+/* ---------- Fas 20.1: den hållna tiden ----------
+   När passet hölls, och — när det skiljer sig från det bokade — vad
+   som debiteras och studiehjälparens skäl. Står överst i rapporten
+   under Bekräfta rapport, i rapportlistan och under Efter passet på
+   passets sida, med samma markup (hållenTid i nextrum-studie-vy.js).
+   Rutan har ingen höjd som byts av ett tryck: den ritas med rapporten
+   och står still tills rapporten ritas om. Skälet är fritext och får
+   bryta var som helst, annars trycker en lång adress ut sidan i sidled
+   på en telefon (fälla 2 i CLAUDE.md avsnitt 3). */
+.hallen-tid{
+  margin:2px 0 12px;padding:10px 12px;
+  border:1px solid var(--ln);border-radius:10px;
+  background:var(--pap);
+  min-width:0;
+}
+.hallen-tid p.hallen-tid-rad{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;
+  margin:0;font-size:.9rem;line-height:1.5;color:var(--bl);white-space:normal;
+}
+.hallen-tid p.hallen-tid-rad b{font-weight:650;color:var(--bl)}
+.hallen-tid p.hallen-tid-rad span{font-size:.85rem;color:var(--bl-3)}
+.hallen-tid blockquote.hallen-tid-skal{
+  margin:8px 0 0;padding:0 0 0 10px;
+  border-left:2px solid var(--ln-2);
+  font-size:.88rem;line-height:1.55;color:var(--bl-2);
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.hallen-tid blockquote.hallen-tid-skal span{font-weight:650;color:var(--bl)}

@@ -87,6 +87,49 @@ texten kvar: länken kommer i meddelanden. Leo valde bara det här av
 Workspace-kopplingen; kalendern, inbjudningarna och rekryteringsmötet
 valdes bort, och mejlen går genom Resend som förut (INTEGRATIONER.md).
 
+**Passet kostar den tid det faktiskt hölls (Fas 20.1, 2026-09-27).**
+Studiehjälparen skriver start och slut i rapporten, förifyllt med det
+bokade. Avviker tiden krävs ett skäl, som familjen ser bredvid tiden
+innan de bekräftar, och databasen nekar både avvikelsen utan skäl och
+en tid som ändras i efterhand (`intern.skydda_rapportens_tid`; admin
+rättar). Tre beslut av Leo samma dag:
+1. **Per påbörjad kvart.** `lesson_reports.debiterade_min` räknas ur
+   tiderna; 2 h 05 debiteras som 2 h 15. Saknar rapporten tid (äldre,
+   fristående, eleven uteblev) gäller det bokade.
+2. **Förbetalt och längre: familjen betalar tillägget** med kort när de
+   bekräftar rapporten, i en egen kassa och på en egen rad
+   (`pass_tillagg`), aldrig på passets betalningskolumner: webhooken
+   skriver återbetalningar och tvister på den rad som bär chargen, och
+   en återbetald kvart hade annars skrivit över passets betalning.
+   Förbetalt och kortare larmar `betalt_for_lange` med beloppet att
+   betala tillbaka (knappen under Kortbetalningar). Timmar på ett
+   klippkort går tillbaka av sig själva: klippkortet drar påbörjade
+   timmar av det som hölls, upp till det bokade.
+3. **Lönen följer tiden nedåt alltid, uppåt bara när övertiden är
+   betald** (`passunderlag.lon_min`). Den som skriver in tiden är den
+   som får lönen.
+Vad kortbetalningen avsåg står i `bookings.stripe_minuter`, skrivet av
+webhooken ur sessionens metadata. Namnet börjar med `stripe_` med flit:
+`skydda_bokningsfalt` nekar redan varje sådan kolumn från en vy.
+Villkoren säger det sedan samma dag (`#hallen-tid`, båda språken).
+
+**Månaden stängs i bokföringen (Fas 20.2).** Adminvyns Ekonomi väljer
+månad (`NXStudie.månadsval`, samma rad som i studiehjälparvyn) och visar
+`manad_lage()`: passen, tiden, pengarna, underlaget och larmen för
+PASSENS månad. **Stäng månaden** går bara när månadens larm är noll, och
+en stängd månad är låst i databasen: inget pass och ingen rapport i den
+kan skrivas, ändras eller tas bort, inte heller av admin, förrän admin
+öppnar den med ett skäl (`oppna_manad`, står i auditloggen). Webhooken
+och månadskörningen går igenom låset (`auth.uid()` är null): det som
+redan hänt hos Stripe ska gå att skriva ner. Rapportens TEXT går att
+skriva om i en stängd månad; bara pass, elev, datum, närvaro och tid är
+låsta. Underlag och fakturor låses inte: de betalas efter månaden.
+
+**Studiehjälparens rapporter och ersättning visas månad för månad**
+(2026-09-27): "man ska inte kunna se rapporter från juli idag i
+september". Förvalet är den innevarande månaden. Statistiken (Hur passen
+gick) läser fortfarande de tjugo senaste.
+
 **Studiehjälparens schema öppnar i Kommande** (2026-09-24): de närmaste
 passen per dag, med klockslag och ämne, elevens namn och platsen på var
 sin rad. Studievyn och adminvyn öppnar fortfarande i månaden — hos
@@ -516,6 +559,21 @@ grant; vem och när sätts av databasen, så en bekräftelse går varken att
 skriva i någon annans namn eller bakdatera. Ingen update eller delete,
 och admin bekräftar inte åt en familj. Egen tabell och inte en kolumn
 på `lesson_reports`, för en uppdatering där kör fyra triggrar.
+Fas 20.1 la till `pass_tillagg` (övertiden på ett förbetalt pass:
+parterna och admin läser, bara `service_role` skriver) och Fas 20.2
+`manadsbokslut` (stängda månader: admin läser, bara `stang_manad` och
+`oppna_manad` skriver).
+
+**Flera sessioner kör mot samma databas samtidigt.** Fas 19.5 och Fas
+20.1 skrevs samma förmiddag i två sessioner och ändrade båda
+`avvikelser_rader`, `klippkort_dra` och `passunderlag`. Den som skrev om
+en funktion ur sin egen kopia hade tagit bort den andras ändring utan
+att något blev rött. Båda lappade därför med `replace()` på
+`pg_get_functiondef()` och en vakt som räknar att texten hittades exakt
+så många gånger som väntat, och vyns kolumner lästes i driften före
+`create or replace view` (en vy kan inte tappa kolumner, så felet kom
+direkt, men först i driften). **Läs driften, inte grenen, innan du
+ändrar en funktion eller vy någon annan också ändrar.**
 Runda 2 la till notisernas sju: `notiser` (i vyn), `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
 `notis_fel` — plus `flaggor`, som är strömbrytarna för det som
@@ -1014,9 +1072,9 @@ tillbaka en kopia.**
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
 | `ansokan-notis` | Ett besked till den som sökt jobb (Fas 16.1): kvittot, eller mejlet om ett steg framåt med hela processen och var hen står. Databasen bestämmer vad, funktionen skickar | Triggern `ansokan_besked` och pg_cron `ansokan-besked`, via `notis_konfig.ansokan_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
-| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris` | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
+| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`) | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
 | `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet | Betala med timmar i föräldravyn |
-| `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser` | Stripe |
+| `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser`. Ett tillägg (Fas 20.1) bär `tillagg_booking_id` och skrivs, återbetalas och bestrids på sin egen rad | Stripe |
 | `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
 | `stripe-avstamning` | Hämtar avgift, netto och läge (test eller skarpt) för betalningar som saknar dem (Fas 14.7). Högst femtio per tryck. Skriver bara de kolumnerna | Knappen Hämta från Stripe under Ekonomi → Kortbetalningar |
 | `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Ekonomi → Kortbetalningar |
@@ -1442,6 +1500,19 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
     efter passet. Villkoren har ett avsnitt om ändringar (30 dagar för
     väsentliga). Fas 19.2 ger familjen fler val, inte färre, men ett nytt
     steg, att bekräfta rapporten. Meddela dem.
+  - **Övertid som betalas efter den 25:e kommer inte med på lönen av
+    sig själv** (Fas 20.1). Lönen räknar uppåt bara när övertiden är
+    betald, och underlaget byggs en gång. Betalar familjen tillägget
+    efter att passet kommit med på underlaget står övertiden kvar
+    obetald till studiehjälparen. En rättelse på nästa underlag är en
+    rad för hand tills någon bygger den.
+  - **Analysvyerna räknar fortfarande det bokade** (`analys_ekonomi`
+    m.fl., Fas 9.6). `passunderlag.debiterade_min` och `lon_min` finns;
+    vyerna läser dem inte än.
+  - **Villkoren om den hållna tiden (2026-09-27) är ett nytt villkor**
+    för den som redan har konto: att betala för mer tid än det bokade
+    har ingen godkänt förut. Villkoren har 30 dagar för väsentliga
+    ändringar. Meddela familjerna innan första tillägget tas.
   - **Betalningen efter passet har ingen sista dag, med flit.** Leo
     2026-09-27: ingen frist. Kortet dras direkt när familjen betalar,
     och fakturan (när flaggan är på) skickas den 1:a i nästa månad med
