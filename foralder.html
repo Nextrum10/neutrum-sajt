@@ -28,7 +28,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=ad8203ae">
-<link rel="stylesheet" href="nextrum-vy.css?v=797e3f99">
+<link rel="stylesheet" href="nextrum-vy.css?v=0b5eb56d">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=f6fa7abc">
@@ -697,7 +697,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Profil &amp; inställningar</h2>
-            <p>Ditt konto, barnen och vad passen kostar. Kontot här är
+            <p>Ditt konto, barnen, timbanken och vad passen kostar. Kontot här är
                ditt som förälder: det är du som står för betalningen,
                oavsett hur många barn som pluggar.</p>
           </div>
@@ -708,6 +708,8 @@
                   id="flik-konto" aria-controls="panel-konto">Konto &amp; inloggning</button>
           <button class="vy-flik" type="button" role="tab" data-flik="barn"
                   id="flik-barn" aria-controls="panel-barn">Barn</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="timbank"
+                  id="flik-timbank" aria-controls="panel-timbank">Timbanken</button>
           <button class="vy-flik" type="button" role="tab" data-flik="pris"
                   id="flik-pris" aria-controls="panel-pris">Pris &amp; villkor</button>
           <button class="vy-flik" type="button" role="tab" data-flik="notiser"
@@ -868,6 +870,23 @@
           </div>
         </div>
 
+        <!-- ============ TIMBANKEN ============
+             Leo 2026-09-27: timbanken ska finnas under Profil. Den stod
+             bara som en rad under Era timmar i Erbjudanden, och bara när
+             det fanns minuter. Minuterna är familjens och går inte ut,
+             och det är här man letar efter det som är ens eget.
+
+             Ritas av ritaTimbankProfil() ur samma hämtning som Era
+             timmar (laddaErbjudanden), så de två kan aldrig visa olika
+             saldo. -->
+        <div class="vy-flik-panel" role="tabpanel" data-flik="timbank"
+             id="panel-timbank" aria-labelledby="flik-timbank" hidden>
+          <div class="dbox">
+            <h5>Timbanken <em>går inte ut</em></h5>
+            <div id="timbank-profil"><div class="loading">Hämtar</div></div>
+          </div>
+        </div>
+
         <div class="vy-flik-panel" role="tabpanel" data-flik="pris"
              id="panel-pris" aria-labelledby="flik-pris" hidden>
           <!-- Siffrorna läses ur tjänsteraden (NXTjanster) av
@@ -947,6 +966,6 @@
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=973469fe"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=b8fb1473"></script>
+<script src="nextrum-studie-vy.js?v=3cbacd7d"></script>
 </body>
 </html>

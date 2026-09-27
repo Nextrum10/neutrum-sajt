@@ -1395,10 +1395,11 @@
      Flaggan erbjudanden avgör om något går att köpa eller dra. Står den
      av syns erbjudandena med sina priser, men knapparna säger "Snart".
      ============================================================ */
-  S.erb = { aktiv: false, katalog: [], kort: [], bank: { saldo: 0, varde: null, perPass: {}, finns: false } };
+  /* rorelser: undefined innan de hämtats, null om de inte gick att läsa. */
+  S.erb = { aktiv: false, katalog: [], kort: [], bank: { saldo: 0, varde: null, perPass: {}, finns: false }, rorelser: undefined };
 
   async function laddaErbjudanden() {
-    const [flagga, katalog, kort, saldo, uttag] = await Promise.all([
+    const [flagga, katalog, kort, saldo, uttag, rorelser] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
       supa.from('erbjudanden_pris')
         .select('kod, sort, namn, timmar, rabatt_procent, giltig_manader, timpris_ore, ordinarie_ore, pris_ore, rabatterat_timpris_ore')
@@ -1410,7 +1411,10 @@
       /* Timbanken (Fas 22.1): saldot räknas i databasen, och uttagen
          säger vilka pass som är betalda med den. */
       supa.from('timbank_saldo').select('saldo_min, varde_ore').eq('parent_id', S.user.id).maybeSingle(),
-      supa.from('timbank_uttag').select('booking_id, sort, minuter').eq('parent_id', S.user.id)
+      supa.from('timbank_uttag').select('booking_id, sort, minuter').eq('parent_id', S.user.id),
+      // Rörelserna rad för rad, för Profil → Timbanken.
+      supa.from('timbank_rorelser').select('booking_id, sort, minuter, varde_ore, datum, tid')
+        .eq('parent_id', S.user.id).order('tid', { ascending: false }).limit(50)
     ]);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
     S.erb.katalog = katalog.data || [];
@@ -1431,7 +1435,10 @@
         finns: !!(uttag.data || []).length || Number((saldo.data && saldo.data.saldo_min) || 0) > 0
       };
     }
+    if (rorelser.error) console.warn('Timbankens rörelser gick inte att läsa', rorelser.error);
+    S.erb.rorelser = rorelser.error ? null : (rorelser.data || []);
     ritaErbjudanden();
+    ritaTimbankProfil();
   }
 
   /* En timme per påbörjad timme, som i klippkort_dra. */
@@ -2139,7 +2146,63 @@
       + '<p class="erb-bank-text">Minuter som blev över när ett pass betalt med timmar slutade före en hel timme. '
       + 'Drar ett pass över tas tiden härifrån först, utan kostnad. Räcker minuterna till ett helt pass kan ni betala det med dem.'
       + (bank.varde ? ' Slutar ni betalar vi tillbaka dem, i dag ' + esc(NXBetalning.kronor(bank.varde)) + '.' : '')
+      + ' <a href="#profil/timbank">Se vad som gått in och ut</a>'
       + '</p></div>';
+  }
+
+  /* ============================================================
+     TIMBANKEN UNDER PROFIL (2026-09-27)
+
+     Leo: "timbanken ska finnas i profil i förälder vy". Den stod bara
+     som en rad under Era timmar, och bara när det fanns minuter. Här
+     står den alltid, också tom, med vad som gått in och ut rad för rad
+     (timbank_rorelser) och passet det gällde.
+
+     Saldot är samma som i Era timmar, ur samma hämtning. Passets namn
+     läses ur passlistan, som kan komma efter erbjudandena; laddaPass
+     ritar därför om fliken. Saknas passet i listan står dagen ensam.
+     ============================================================ */
+  const RORELSE_TEXT = { in: 'Över från', overtid: 'Övertid på', pass: 'Betalade' };
+
+  function ritaTimbankProfil() {
+    const host = $('#timbank-profil');
+    if (!host) return;
+    const bank = S.erb.bank;
+    const passet = r => {
+      const b = (S.bokningar || []).find(x => x.id === r.booking_id);
+      return b ? (b.subject || 'passet') + ' ' + datumText(b.wanted_date) : 'passet ' + datumText(r.datum);
+    };
+
+    const rader = S.erb.rorelser;
+    let lista;
+    if (rader === undefined) {
+      lista = '<div class="loading">Hämtar</div>';
+    } else if (rader === null) {
+      lista = '<p class="erb-bank-text">Rörelserna gick inte att hämta. Ladda om sidan, eller skriv till oss.</p>';
+    } else if (!rader.length) {
+      lista = '<p class="erb-bank-text">Inga minuter har gått in eller ut än.'
+        + (S.erb.aktiv ? ' Minuterna kommer ur timmar ni köpt i förväg. <a href="#erbjudanden">Se planer och klippkort</a>' : '')
+        + '</p>';
+    } else {
+      lista = '<ul class="tb-rorelser">' + rader.map(r => {
+        const m = Number(r.minuter);
+        const text = r.sort === 'utbetald'
+          ? 'Utbetalt till er ' + datumText(r.datum) + (r.varde_ore ? ', ' + NXBetalning.kronor(r.varde_ore) : '')
+          : (RORELSE_TEXT[r.sort] || 'Ändring på') + ' ' + passet(r);
+        return '<li><span>' + esc(text) + '</span>'
+          + '<span class="tb-min' + (m < 0 ? ' ut' : '') + '">' + (m < 0 ? '−' : '+') + esc(tidLängd(Math.abs(m))) + '</span></li>';
+      }).join('') + '</ul>'
+        + (rader.length >= 50 ? '<p class="erb-finstilt">De 50 senaste.</p>' : '');
+    }
+
+    host.innerHTML = '<div class="erb-mitt-topp"><b>' + esc(tidLängd(bank.saldo)) + ' sparat</b>'
+      + (bank.varde ? '<span>Värt ' + esc(NXBetalning.kronor(bank.varde)) + ' om ni slutar</span>' : '') + '</div>'
+      + '<p class="erb-bank-text">Här sparas det som blir över när ett pass betalt med timmar slutar före en hel timme: '
+      + 'ett pass på två timmar som höll 1 h 15 lägger 45 minuter här. Drar ett pass med ett barn över tas tiden härifrån '
+      + 'först, utan kostnad, och räcker minuterna till ett helt pass kan ni betala det med dem. Minuterna går inte ut, '
+      + 'och slutar ni betalar vi tillbaka dem. <a href="/anvandarvillkor#timbank" target="_blank" rel="noopener">Villkoren för timbanken</a></p>'
+      + '<p class="konto-inlogg-et" style="margin-top:18px">Vad som gått in och ut</p>'
+      + lista;
   }
 
   /* Vägrar webbläsaren Stripes ram (en CSP som inte hunnit med, ett
@@ -2208,6 +2271,8 @@
     ritaBetalda();
     ritaFakturor();
     ritaBekrafta();
+    // Timbankens rörelser under Profil nämner passen vid namn.
+    ritaTimbankProfil();
     /* Står man på ett pass när listan laddas om — efter ett svar, en
        avbokning, en ny tid — ritas sidan om med det som nu gäller. */
     if (passIdIAdressen()) ritaPassSida();

@@ -114,7 +114,12 @@ använda timmar räknas till då (`timbank_saldo.varde_ore`), och admin
 markerar banken utbetald under Ekonomi → Erbjudanden. Studiehjälparen
 ser familjens minuter på passet, så att hen vet hur långt passet kan
 dra över utan kostnad, men inte vad de är värda. Villkoren säger det
-sedan samma dag (`#timbank`, båda språken).
+sedan samma dag (`#timbank`, båda språken). Familjen ser banken på två
+ställen, ur samma hämtning: som en rad under Era timmar i Erbjudanden
+(bara när det finns något), och under **Profil → Timbanken**
+(`#profil/timbank`), där den står alltid, med vad som gått in och ut
+rad för rad ur `timbank_rorelser`. Leo samma kväll: "timbanken ska
+finnas i profil".
 
 **Uttagen följer passet** (`timbanken_foljer_passet`, samma kväll).
 Övertiden räknas i `intern.timbank_rakna_overtid` och räknas om när
