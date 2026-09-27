@@ -861,11 +861,23 @@ skrivs om från en vy.
 
 **Sist:**
 
-9. **Slå på flaggan** under Ekonomi → Fakturor. Knappen säger vad den gör innan
+9. **Bankgironumret** (Fas 19.6). Skriv det i `BANKGIRO` i `nextrum-config.js`,
+   som det står på fakturan i Fortnox. Rutan Fakturor att betala under Betalning
+   visar det med en Kopiera-knapp; tomt står det "står på fakturan".
+10. **Slå på flaggan** under Ekonomi → Fakturor. Knappen säger vad den gör innan
    den gör det.
-10. **Provfakturera en familj**, gärna er egen: välj faktura på ett pass, rapportera
-   det, kör månadskörningen i torrkörning och sedan skarpt, lägg in utkastet i
-   Fortnox, skriv in numret, och markera den betald när pengarna kommit.
+11. **Provfakturera en familj**, gärna er egen: välj "Få faktura nästa månad" när
+   rapporten bekräftas, kör månadskörningen i torrkörning och sedan skarpt, lägg in
+   utkastet i Fortnox, skriv in fakturanumret, **OCR-numret** och förfallodagen
+   med Lagd i Fortnox, kontrollera att fakturan står under Fakturor att betala i
+   familjens vy med rätt bankgiro och OCR, och markera den betald när pengarna
+   kommit.
+
+**OCR skrivs av, det räknas inte fram** (Fas 19.6). Fortnox bestämmer OCR:et ur
+fakturanumret enligt bankgiroavtalet, och ett som räknats fram här och blivit fel
+hade gett en betalning Bankgirot inte kan matcha. Kontrollsiffran prövas både i
+dialogen och i databasen (`invoices_ocr_giltigt`). Saknar fakturan OCR lämnas
+fältet tomt, och familjen ser fakturanumret som meddelande.
 
 **De sex gamla obetalda passen** (bokade när villkoren lovade månadsfaktura) kan bli
 den första riktiga fakturan: bytet till `faktura` går också på ett genomfört pass.
@@ -876,8 +888,9 @@ Familjen kan köpa timmar i förväg: två planer för en månad (4 och 8 timmar
 rabatt) och klippkort med 10, 20, 30, 60 eller 100 timmar (5 % rabatt, gäller 6, 6,
 6, 12 och 18 månader). Timmarna betalar sedan ett bekräftat pass i stället för
 kortet. Databasen är körd (`fas16_1` till `fas16_1e`), och flaggan `erbjudanden`
-står AV. Då syns erbjudandena med sina priser på prissidan och i studievyn, men
-knapparna säger "Snart", och inga timmar går att dra.
+är PÅ sedan 2026-09-27, påslagen innan provköpet nedan var gjort. Står den av
+syns erbjudandena med sina priser på prissidan och i studievyn, men knapparna
+säger "Snart", och inga timmar går att dra.
 
 **Var saker räknas, och bara där:**
 
@@ -898,7 +911,26 @@ supabase functions deploy notis-ko
 ```
 
 `notis-ko` sist (Fas 21.2): det är den som har mallen för påminnelsen
-`timmar_gar_ut`. En äldre arbetare kan inte rendera den.
+`timmar_gar_ut`. En äldre arbetare kan inte rendera den. Den är
+driftsatt sedan 2026-09-27 (version 18). Samma dag var `stripe-webhook`
+(version 9) och `stripe-checkout` (version 13) identiska med main, och
+`klippkort-betala` driftsattes för första gången (version 1). Alla fyra
+ligger alltså ute; kvar är provköpet nedan.
+
+Timbanken (Fas 22.1) driftsattes samma eftermiddag i samma ordning, med
+`fakturering` sist: `stripe-webhook` version 10, `stripe-checkout`
+version 14, `klippkort-betala` version 2 och `fakturering` version 31,
+alla jämförda byte för byte mot grenen. Provköpet ska därför också ta
+steg 6 nedan, om timbanken. Samma kväll kom rättelserna i
+`timbanken_foljer_passet`: `stripe-webhook` version 11, `stripe-checkout`
+version 15 och `klippkort-betala` version 3. Webhooken gick ut före
+migrationen som tog bort `timbank_kortet_vann`, som den äldre anropade.
+
+Driftsätts en funktion genom MCP i stället för `supabase functions
+deploy`: hämta tillbaka den efteråt och jämför varje fil mot repot.
+Version 17 av `notis-ko` gick ut med en fil som bara innehöll ett
+platshållarord och kunde inte starta; den låg ute i sex minuter innan
+jämförelsen fångade det.
 
 Webhooken FÖRST. Den gamla känner inte igen ett köpt klippkort: sessionen har
 `klippkort_id` i metadata och inget pass, och en betalning den inte kan knyta till
@@ -923,9 +955,16 @@ står därför inte i `config.toml`.
 5. Sätt kortets `giltigt_till` till om tio dagar och kör
    `select intern.timmar_gar_ut_koa();` mellan 9 och 20. Sandlådan ska få mejlet
    "Era köpta timmar går ut …" med antalet timmar kvar (Fas 21.2).
-6. Återbetala en del av köpet i Stripes dashboard. Kortet ska bli `aterbetald` och
+6. Timbanken (Fas 22.1). Boka ett pass på två timmar, betala med timmar, och låt
+   studiehjälparen rapportera 1 h 15 med ett skäl. Kortet ska ha dragit två
+   timmar, och `timbank_saldo.saldo_min` för familjen ska vara 45. Boka sedan ett
+   pass på en timme, betala med timmar, och rapportera 1 h 15: `timbank_uttag` ska
+   få en rad `overtid` på 15, familjen ska inte bli ombedd att betala något
+   tillägg, och saldot ska vara 30. När vyerna från Fas 22.1 ligger ute ska
+   studiehjälparen se minuterna på passet, och familjen dem under Era timmar.
+7. Återbetala en del av köpet i Stripes dashboard. Kortet ska bli `aterbetald` och
    inte längre gå att dra från.
-7. Står något av det fel: stäng av flaggan. Redan köpta timmar syns fortfarande,
+8. Står något av det fel: stäng av flaggan. Redan köpta timmar syns fortfarande,
    men inget nytt går att köpa eller dra.
 
 **Pengar tillbaka görs i Stripes dashboard, av en människa.** Beloppet står under

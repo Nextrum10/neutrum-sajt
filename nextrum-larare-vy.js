@@ -1028,10 +1028,25 @@
      ============================================================ */
   async function laddaPass() {
     const host = $('#pass-lista');
-    const { data, error } = await supa
-      .from('bookings')
-      .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, avbokningsskal, betalning_status, fakturerbar, klippkort_id')
-      .eq('tutor_id', S.user.id).order('wanted_date', { ascending: true });
+    /* Timbanken (Fas 22.1) hämtas med passen: vilka av dina pass som är
+       betalda med den eller fick övertiden ur den, och hur många minuter
+       familjerna har kvar. Kan den inte läsas står passen ändå, utan
+       timbanken; databasen tar minuterna oavsett vad vyn visar. */
+    const [pass, uttag, saldon] = await Promise.all([
+      supa.from('bookings')
+        .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, avbokningsskal, betalning_status, fakturerbar, klippkort_id')
+        .eq('tutor_id', S.user.id).order('wanted_date', { ascending: true }),
+      supa.from('timbank_uttag').select('booking_id, sort, minuter'),
+      supa.from('timbank_saldo').select('parent_id, saldo_min')
+    ]);
+    const { data, error } = pass;
+    if (!uttag.error && !saldon.error) {
+      S.bank = { perPass: {}, perFamilj: {} };
+      (uttag.data || []).forEach(u => {
+        if (u.booking_id) (S.bank.perPass[u.booking_id] = S.bank.perPass[u.booking_id] || {})[u.sort] = Number(u.minuter);
+      });
+      (saldon.data || []).forEach(s => { S.bank.perFamilj[s.parent_id] = Math.max(Number(s.saldo_min || 0), 0); });
+    }
 
     if (error) {
       host.innerHTML = tomt('Kunde inte hämta passen', felText(error));
@@ -1376,6 +1391,17 @@
     return (h ? h + (h === 1 ? ' timme' : ' timmar') : '') + (h && m ? ' ' : '') + (m ? m + ' min' : '');
   };
 
+  /* Fas 22.1. Minuterna familjen har i timbanken, och om passet kan ta
+     övertid ur dem: samma villkor som intern.timbank_overtid, ett barn
+     och ett pass som ska betalas. 0 när banken inte gäller passet. */
+  function bankFör(b) {
+    if (!S.bank || !b || b.fakturerbar === false || Number(b.antal_barn || 1) > 1) return 0;
+    return S.bank.perFamilj[b.parent_id] || 0;
+  }
+  const bankRad = b => (S.bank && b && S.bank.perPass[b.id]) || {};
+  const bankPass = b => !!bankRad(b).pass;
+  const bankÖvertid = b => bankRad(b).overtid || 0;
+
   function tidsläge() {
     const b = S.bokningar.find(x => x.id === $('#r-pass').value);
     const start = minuterAv($('#r-start').value), slut = minuterAv($('#r-slut').value);
@@ -1394,10 +1420,17 @@
     else if (t.klar && t.hallet > 240) text = '⚠️ Mer än fyra timmar går inte att skriva in. Stämmer tiden?';
     else if (t.klar && !t.avviker) text = 'Som bokat: ' + längdText(t.bokat) + '.';
     else if (t.klar) {
+      /* Övertiden tas ur familjens timbank först (Fas 22.1). Lika lång
+         mening som förut: raden har plats för två rader (fälla 4). */
+      const över = t.debiterat - t.bokat;
+      const ur = över > 0 ? Math.min(över, bankFör(t.b)) : 0;
       text = 'Hölls ' + längdText(t.hallet)
         + (t.debiterat !== t.hallet ? ', debiteras ' + längdText(t.debiterat) + ' (påbörjad kvart)' : '')
-        + '. Bokat ' + längdText(t.bokat) + ' — familjen '
-        + (t.debiterat > t.bokat ? 'betalar ' + längdText(t.debiterat - t.bokat) + ' till.' : 'betalar ' + längdText(t.bokat - t.debiterat) + ' mindre.');
+        + '. Bokat ' + längdText(t.bokat) + ' — '
+        + (över <= 0 ? 'familjen betalar ' + längdText(t.bokat - t.debiterat) + ' mindre.'
+          : ur >= över ? 'familjens timbank tar ' + längdText(över) + ', utan kostnad.'
+          : ur > 0 ? 'timbanken tar ' + längdText(ur) + ', familjen betalar ' + längdText(över - ur) + ' till.'
+          : 'familjen betalar ' + längdText(över) + ' till.');
     }
     rad.textContent = text;
     rad.dataset.lage = t.klar && t.avviker && t.hallet > 0 && t.hallet <= 240 ? 'avviker' : '';
@@ -3052,7 +3085,13 @@
        till familjen av sig själva. Kortpengarna på ett sådant pass, som
        databasen också prövar, syns inte i den här vyn och behöver inte
        göra det: nekar databasen står dess besked i rutan. */
-    const medTimmar = b.betalning_status === 'betald' && !!b.klippkort_id;
+    const medBanken = b.betalning_status === 'betald' && !b.klippkort_id && bankPass(b);
+    const medTimmar = b.betalning_status === 'betald' && (!!b.klippkort_id || medBanken);
+    /* Fas 22.1: på ett bokat pass säger vyn hur mycket längre passet kan
+       bli utan att det kostar familjen något. */
+    const bankMin = bankFör(b);
+    const bankTips = bankMin > 0 ? ' Familjen har ' + längdText(bankMin)
+      + ' i timbanken: drar passet över tas upp till så mycket därifrån, utan kostnad för dem.' : '';
     const betalt = (b.betalning_status === 'betald' || b.betalning_status === 'tvist') && !medTimmar;
     const viaNextrum = ' Passet är betalt, så ska det avbokas går det genom Nextrum.';
     /* Bokat men inte betalt, med spärren på. Med den av är betaltNog
@@ -3092,12 +3131,14 @@
       besked = obetalt
         ? { text: 'Passet är bokat, men familjen har inte betalt än. Håll det inte förrän de har gjort det — det syns här när betalningen kommit in.', ton: 'fraga' }
         : betalt
-        ? { text: 'Passet är bokat och betalt. ' + ses + ' Ska det avbokas går det genom Nextrum.', ton: 'klart' }
+        ? { text: 'Passet är bokat och betalt. ' + ses + ' Ska det avbokas går det genom Nextrum.' + bankTips, ton: 'klart' }
+        : medBanken
+        ? { text: 'Passet är bokat, och familjen har betalat det med sin timbank. ' + ses + ' Avbokas det går minuterna tillbaka till familjen.' + bankTips, ton: 'klart' }
         : medTimmar
-        ? { text: 'Passet är bokat, och familjen har betalat det med köpta timmar. ' + ses + ' Avbokas det går timmarna tillbaka till familjen.', ton: 'klart' }
+        ? { text: 'Passet är bokat, och familjen har betalat det med köpta timmar. ' + ses + ' Avbokas det går timmarna tillbaka till familjen.' + bankTips, ton: 'klart' }
         : b.betalning_status === 'faktura'
-        ? { text: 'Passet är bokat, och familjen betalar det mot faktura. ' + ses, ton: 'klart' }
-        : { text: 'Passet är bokat. ' + ses, ton: 'klart' };
+        ? { text: 'Passet är bokat, och familjen betalar det mot faktura. ' + ses + bankTips, ton: 'klart' }
+        : { text: 'Passet är bokat. ' + ses + bankTips, ton: 'klart' };
       atgarder = '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Föreslå ny tid</button>'
         + (betalt ? '' : avboka)
         + skriv;
@@ -3114,7 +3155,9 @@
       { rubrik: 'När', rader: [
         ['Dag', NXStudie.dagMedVeckodag(b.wanted_date)],
         ['Tid', NXStudie.tidsspann(b.wanted_time, b.duration_min)],
-        ['Längd', timmar === 1 ? '1 timme' : timmar + ' timmar']
+        ['Längd', timmar === 1 ? '1 timme' : timmar + ' timmar'],
+        // Fas 22.1: övertiden som togs ur familjens timbank.
+        ['Timbanken', bankÖvertid(b) ? längdText(bankÖvertid(b)) + ' av övertiden, utan kostnad för familjen' : null]
       ] },
       { rubrik: 'Var ni ses', rader: [
         ['Hur', b.format || önskar || 'Inte angivet'],

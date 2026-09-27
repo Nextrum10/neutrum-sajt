@@ -451,6 +451,27 @@ Deno.test('20.1 familjen betalar den debiterade tiden, lönen följer lon_min', 
     [['over', 60, 12000], ['kort', 90, 18000], ['utan', 60, 12000]]);
 });
 
+// ------------------------------------------------------------
+// Fas 22.1: övertiden timbanken tog betalas inte en gång till
+// ------------------------------------------------------------
+Deno.test('22.1 det banken tog står varken på listan över obetalda eller på fakturan', () => {
+  // bokat en timme, höll 75 minuter, och banken tog kvarten
+  const u = byggUnderlag({
+    pass: [{ ...GRUND, id: 'bank', wanted_date: '2026-09-03', debiterade_min: 75, timbank_min: 15, lon_min: 75 }],
+    tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]),
+  });
+  assertEquals(u.obetalda.map((o) => [o.booking_id, o.belopp_ore]), [['bank', 37900]]);
+  // lönen tar hela den hållna tiden: övertiden är betald, med minuterna
+  assertEquals((u.perTutor.get(T) ?? []).map((r) => r.minuter), [75]);
+
+  const f = byggFakturor({
+    pass: [{ ...GRUND, id: 'f', wanted_date: '2026-09-03', betalning_status: 'faktura', debiterade_min: 90, timbank_min: 15 }],
+    tjanster: KATALOG, timprisOre: 37900,
+  });
+  const rad = (f.get(P) ?? [])[0];
+  assertEquals([rad.minuter, rad.belopp_ore], [75, Math.round(1.25 * 37900)]);
+});
+
 Deno.test('20.1 fakturan tar den debiterade tiden', () => {
   const f = byggFakturor({
     pass: [{ ...GRUND, id: 'f', wanted_date: '2026-09-03', betalning_status: 'faktura', debiterade_min: 75 }],

@@ -72,7 +72,11 @@ och är sedan låst i databasen tills admin öppnar den med ett skäl (Fas
 `erbjudanden_pris`, och inom ångerfristen räknas använda timmar till det
 betalda priset, inte till 379 kr. Ett pass betalt med timmar avbokar
 familjen själv, och timmarna kommer tillbaka; tio dagar innan ett kort
-går ut mejlas familjen om timmar finns kvar (Fas 21).
+går ut mejlas familjen om timmar finns kvar (Fas 21). Det som blir över
+av den sista påbörjade timmen på ett timpass sparas i familjens timbank
+(Fas 22.1): minuterna tar övertiden på nästa pass av sig själva, kan
+betala ett helt pass och går inte ut. Kortpass som blev kortare får
+fortfarande pengarna tillbaka, inte minuter.
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.

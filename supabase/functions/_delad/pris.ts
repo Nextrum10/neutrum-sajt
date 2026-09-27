@@ -80,6 +80,9 @@ export type Pass = {
   //                   uppåt bara när övertiden är betald
   debiterade_min?: number | null;
   lon_min?: number | null;
+  // Fas 22.1: övertiden timbanken tog. Den är betald med minuter familjen
+  // redan köpt, och ska varken dras med kort eller stå på en faktura.
+  timbank_min?: number | null;
   // Priset fryst vid bokningen (Fas 19.5). Saknas det räknas passet på
   // tjänstens pris, som före Fas 19.5.
   timpris_ore?: number | null;
@@ -87,7 +90,9 @@ export type Pass = {
 };
 
 // Fas 20.1. Minuterna familjen betalar för, och minuterna lönen räknas på.
-export const familjensMinuter = (b: Pass) => Number(b.debiterade_min || b.duration_min || 60);
+// Fas 22.1: minus övertiden timbanken redan tagit.
+export const familjensMinuter = (b: Pass) =>
+  Number(b.debiterade_min || b.duration_min || 60) - Number(b.timbank_min || 0);
 export const lonensMinuter = (b: Pass) => Number(b.lon_min || b.duration_min || 60);
 
 /**

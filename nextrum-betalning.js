@@ -75,6 +75,22 @@ window.NXBetalning = (function () {
     return f.status;
   }
 
+  /* OCR-numrets kontrollsiffra (Fas 19.6), 10-modulen som Bankgirot
+     använder. Samma regel som intern.ocr_giltigt() i databasen, som är
+     den som faktiskt nekar: den här finns för att admin ska få beskedet
+     i rutan, inte som rått databasfel. */
+  function ocrGiltigt(s) {
+    s = String(s || '');
+    if (!/^[0-9]{2,25}$/.test(s)) return false;
+    var summa = 0;
+    for (var i = 1; i <= s.length; i++) {
+      var d = Number(s.charAt(s.length - i));
+      if (i % 2 === 0) { d *= 2; if (d > 9) d -= 9; }
+      summa += d;
+    }
+    return summa % 10 === 0;
+  }
+
   /* ---------- en faktura ----------
      atgarder() får fakturan och returnerar knapparnas HTML. */
   function fakturaRad(f, opts) {
@@ -147,7 +163,7 @@ window.NXBetalning = (function () {
   return {
     kronor: kronor, timmar: timmar, periodText: periodText,
     FAKTURA: FAKTURA, UTBETALNING: UTBETALNING, fakturaLage: fakturaLage,
-    fakturaRad: fakturaRad, utbetalningRad: utbetalningRad,
+    fakturaRad: fakturaRad, utbetalningRad: utbetalningRad, ocrGiltigt: ocrGiltigt,
     radLista: radLista, pagaende: pagaende
   };
 })();

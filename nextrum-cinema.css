@@ -3111,29 +3111,65 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    står framme, annars ligger de ovanpå varandra i samma hörn.
    ============================================================ */
 .nx-kakor{
-  position:fixed;left:clamp(12px,2.4vw,26px);bottom:clamp(12px,2.4vw,26px);z-index:860;
-  width:min(420px,calc(100vw - 24px));
-  padding:22px 22px 18px;border-radius:18px;
+  position:fixed;z-index:860;
+  left:clamp(12px,2.4vw,28px);bottom:max(clamp(12px,2.4vw,28px),env(safe-area-inset-bottom));
+  width:min(440px,calc(100vw - 24px));
+  padding:20px 20px 18px;border-radius:22px;
   background:var(--pap);color:var(--bl-2);
   border:1px solid var(--ln-2);box-shadow:var(--sk-3);
   font-size:.9rem;line-height:1.55;
-  opacity:0;transform:translateY(14px);
-  transition:opacity .3s var(--e),transform .42s var(--e-ut);
+  opacity:0;transform:translateY(18px) scale(.985);transform-origin:bottom left;
+  transition:opacity .32s var(--e),transform .55s var(--e-ut);
 }
 .nx-kakor.nx-kakor-in{opacity:1;transform:none}
+.nx-kakor-topp{
+  display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;align-items:center;
+  margin-bottom:12px;
+}
+.nx-kakor-ikon{
+  width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
+  background:var(--acc-soft);color:var(--acc-text);
+}
+.nx-kakor-ikon svg{width:22px;height:22px}
+.nx-kakor .nx-kakor-et{
+  margin:0 0 4px;font-family:var(--f-mono);font-size:10px;font-weight:500;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--acc-text);
+}
 .nx-kakor-t{
-  margin:0 0 8px;font-size:1.06rem;line-height:1.3;
-  font-weight:600;letter-spacing:-.014em;color:var(--bl);
+  margin:0;font-size:1.12rem;line-height:1.22;
+  font-weight:600;letter-spacing:-.02em;color:var(--bl);
 }
 .nx-kakor-t:focus{outline:none}
-.nx-kakor p{margin:0 0 8px}
+.nx-kakor p{margin:0 0 10px}
 .nx-kakor-knappar{
   display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;
-  margin:14px 0 10px;
+  margin:16px 0 12px;
 }
-.nx-kakor-knappar .btn{justify-content:center;padding:12px 14px;font-size:.9rem}
-.nx-kakor-mer{font-size:.82rem;color:var(--bl-3);text-decoration:underline;text-underline-offset:3px}
-.nx-kakor-mer:hover{color:var(--bl)}
+/* Samma knapp två gånger. Ingen av dem är primär. */
+.nx-kakor-knappar .nx-kakor-val{
+  justify-content:center;min-height:46px;padding:11px 14px;font-size:.92rem;
+  background:var(--pap-2);border:1px solid var(--ln-2);color:var(--bl);box-shadow:none;
+}
+.nx-kakor-knappar .nx-kakor-val:hover{background:var(--pap-3);border-color:var(--bl)}
+.nx-kakor .nx-kakor-fot{margin:0;font-size:.8rem;line-height:1.5;color:var(--bl-3)}
+.nx-kakor-fot a{color:var(--bl);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.nx-kakor-fot a:hover{color:var(--acc-text)}
+@media (max-width:560px){
+  .nx-kakor{
+    left:10px;right:10px;width:auto;
+    bottom:max(10px,env(safe-area-inset-bottom));
+    padding:16px 16px 14px;border-radius:20px;transform-origin:bottom center;
+    font-size:.84rem;line-height:1.5;
+  }
+  .nx-kakor-topp{grid-template-columns:38px minmax(0,1fr);gap:12px;margin-bottom:10px}
+  .nx-kakor-ikon{width:38px;height:38px;border-radius:12px}
+  .nx-kakor-ikon svg{width:19px;height:19px}
+  .nx-kakor-t{font-size:1rem}
+  .nx-kakor p{margin-bottom:8px}
+  .nx-kakor-knappar{margin:12px 0 10px}
+  .nx-kakor-knappar .nx-kakor-val{min-height:44px;padding:10px 12px}
+  .nx-kakor .nx-kakor-fot{font-size:.76rem}
+}
 @media (max-width:720px){
   body.nx-kakor-visas .mk{opacity:0;pointer-events:none}
 }
@@ -3149,3 +3185,5 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .nx-kakor-panel p{margin:0 0 8px}
 .nx-kakor-lage{font-weight:600;color:var(--bl)}
 .nx-kakor-panel .nx-kakor-knappar{max-width:420px;margin-bottom:0}
+.nx-kakor-panel .nx-kakor-knappar .nx-kakor-val{background:var(--pap)}
+.nx-kakor-panel .nx-kakor-knappar .nx-kakor-val:hover{background:var(--pap-3)}

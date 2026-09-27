@@ -27,8 +27,8 @@
      jordpaletten — utan den blir vyn vit och främmande. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=aa57ff03">
-<link rel="stylesheet" href="nextrum-vy.css?v=6aa97f7c">
+<link rel="stylesheet" href="nextrum-cinema.css?v=ad8203ae">
+<link rel="stylesheet" href="nextrum-vy.css?v=797e3f99">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=f6fa7abc">
@@ -646,6 +646,16 @@
 
           <p class="ok-msg" id="bet-msg"></p>
 
+          <!-- Fakturor att betala (Fas 19.6). Fakturor som skickats och
+               inte är betalda, med det familjen behöver för att betala
+               i sin bank: belopp, förfallodag, bankgiro och OCR. Ritas
+               av ritaFakturor() och syns bara när en sådan faktura
+               finns. Fakturor skapas bara när flaggan faktura är på. -->
+          <div class="dbox" id="bet-fakt-box" hidden>
+            <h5>Fakturor att betala <em id="bet-fakt-antal"></em></h5>
+            <div id="bet-fakt-betala"></div>
+          </div>
+
           <!-- Pass som väntar på betalning. Ritas av ritaAttBetala() ur
                samma lista som Mina lektioner, så att ett pass som
                betalats där försvinner här i samma stund. -->
@@ -927,7 +937,7 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=f8471f2e"></script>
+<script src="nextrum-config.js?v=ab7b84a1"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=a72665a2"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
@@ -935,8 +945,8 @@
 <script src="nextrum-studie.js?v=54dea043"></script>
 <script src="nextrum-arbetsyta.js?v=9c034f66"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
-<script src="nextrum-betalning.js?v=67f384a3"></script>
+<script src="nextrum-betalning.js?v=973469fe"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=0a7581fe"></script>
+<script src="nextrum-studie-vy.js?v=b8fb1473"></script>
 </body>
 </html>

@@ -960,13 +960,20 @@
      databasen en avbokning härifrån (Fas 14.1), för det är Nextrum som
      betalar tillbaka. Ett pass betalt med timmar har inga pengar på sig
      (Fas 21.1): familjen avbokar det själv, och timmarna kommer tillbaka
-     av sig själva. Samma villkor som skydda_bokningsfalt. */
+     av sig själva. Samma villkor som skydda_bokningsfalt, som sedan Fas
+     22.1 också släpper igenom ett pass betalt med timbanken. */
   function pengarPå(b) {
     if (b.betalning_status === 'tvist') return true;
     if (b.betalning_status !== 'betald') return false;
-    return !(b.klippkort_id && !Number(b.betalt_ore || 0));
+    return !((b.klippkort_id || medBanken(b)) && !Number(b.betalt_ore || 0));
   }
   const medTimmar = b => b.betalning_status === 'betald' && !!b.klippkort_id && !pengarPå(b);
+  /* Fas 22.1: passet är betalt med minuterna i timbanken. Uttagen läses
+     med erbjudandena (laddaErbjudanden). */
+  function medBanken(b) {
+    const u = S.erb && S.erb.bank && S.erb.bank.perPass[b.id];
+    return b.betalning_status === 'betald' && !b.klippkort_id && !!(u && u.pass);
+  }
 
   function svarsKnappar(b, små) {
     const s = små ? ' btn-sm' : '';
@@ -1135,9 +1142,15 @@
     const bokat = Number((b && b.duration_min) || 0);
     const deb = Number(r.debiterade_min || 0);
     const avviker = !!(bokat && deb && deb !== bokat);
+    /* Fas 22.1: övertiden timbanken tog när rapporten skrevs. Den är
+       betald, och står här så att familjen ser varför beloppet inte
+       följer den debiterade tiden. */
+    const u = b ? underlagFör(b) : null;
+    const bank = u ? Number(u.timbank_min || 0) : 0;
     return '<div class="hallen-tid">'
       + '<p class="hallen-tid-rad"><b>Hölls ' + esc(hm(r.start_tid) + '–' + hm(r.slut_tid)) + '</b>'
-      + (avviker ? '<span>Bokat ' + esc(tidLängd(bokat)) + ' · debiteras ' + esc(tidLängd(deb)) + '</span>' : '')
+      + (avviker ? '<span>Bokat ' + esc(tidLängd(bokat)) + ' · debiteras ' + esc(tidLängd(deb))
+        + (bank ? ' · ' + esc(tidLängd(bank)) + ' ur timbanken' : '') + '</span>' : '')
       + '</p>'
       + (r.avvikelse_skal
         ? '<blockquote class="hallen-tid-skal"><span>Studiehjälparen:</span> ' + esc(r.avvikelse_skal) + '</blockquote>'
@@ -1211,7 +1224,8 @@
       läge = !b || b.fakturerbar === false ? ''
         : ingetAttBetala(b) ? 'Passet kostar ingenting: första timmen är på köpet.'
         : b.betalning_status === 'faktura' ? 'Passet betalas mot faktura.'
-        : b.betalning_status === 'betald' ? (b.klippkort_id ? 'Passet är betalt med timmar.' : 'Passet är betalt.')
+        : b.betalning_status === 'betald' ? (b.klippkort_id ? 'Passet är betalt med timmar.'
+          : medBanken(b) ? 'Passet är betalt med timbanken.' : 'Passet är betalt.')
         : (BETALNING_TEXT[b.betalning_status] ? 'Betalning: ' + BETALNING_TEXT[b.betalning_status].toLowerCase() + '.' : '');
       knappar = '<button type="button" class="btn btn-primary btn-sm" data-rb-bekrafta="' + esc(r.id) + '">Bekräfta rapporten</button>';
     }
@@ -1381,10 +1395,10 @@
      Flaggan erbjudanden avgör om något går att köpa eller dra. Står den
      av syns erbjudandena med sina priser, men knapparna säger "Snart".
      ============================================================ */
-  S.erb = { aktiv: false, katalog: [], kort: [] };
+  S.erb = { aktiv: false, katalog: [], kort: [], bank: { saldo: 0, varde: null, perPass: {}, finns: false } };
 
   async function laddaErbjudanden() {
-    const [flagga, katalog, kort] = await Promise.all([
+    const [flagga, katalog, kort, saldo, uttag] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
       supa.from('erbjudanden_pris')
         .select('kod, sort, namn, timmar, rabatt_procent, giltig_manader, timpris_ore, ordinarie_ore, pris_ore, rabatterat_timpris_ore')
@@ -1392,11 +1406,31 @@
       supa.from('klippkort_saldo')
         .select('id, erbjudande, namn, sort, timmar, anvanda, kvar, giltigt_till, status, brukbar, created_at')
         .eq('parent_id', S.user.id).in('status', ['betald', 'tvist', 'aterbetald'])
-        .order('giltigt_till', { ascending: true })
+        .order('giltigt_till', { ascending: true }),
+      /* Timbanken (Fas 22.1): saldot räknas i databasen, och uttagen
+         säger vilka pass som är betalda med den. */
+      supa.from('timbank_saldo').select('saldo_min, varde_ore').eq('parent_id', S.user.id).maybeSingle(),
+      supa.from('timbank_uttag').select('booking_id, sort, minuter').eq('parent_id', S.user.id)
     ]);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
     S.erb.katalog = katalog.data || [];
     S.erb.kort = kort.data || [];
+    /* Kan banken inte läsas står den som fanns. Noll hade tagit bort
+       knappen Betala med timbanken från en familj som har minuter. */
+    if (saldo.error || uttag.error) console.warn('Timbanken gick inte att läsa', saldo.error || uttag.error);
+    else {
+      const perPass = {};
+      (uttag.data || []).forEach(u => {
+        if (!u.booking_id) return;
+        (perPass[u.booking_id] = perPass[u.booking_id] || {})[u.sort] = Number(u.minuter);
+      });
+      S.erb.bank = {
+        saldo: Math.max(Number((saldo.data && saldo.data.saldo_min) || 0), 0),
+        varde: saldo.data ? saldo.data.varde_ore : null,
+        perPass: perPass,
+        finns: !!(uttag.data || []).length || Number((saldo.data && saldo.data.saldo_min) || 0) > 0
+      };
+    }
     ritaErbjudanden();
   }
 
@@ -1418,13 +1452,27 @@
       .sort((a, c) => String(a.giltigt_till).localeCompare(String(c.giltigt_till)))[0] || null;
   }
 
+  /* Timbanken betalar ett helt pass när minuterna räcker till det
+     bokade (Fas 22.1). Samma pass som timmarna: ett barn, inte ett med
+     första timmen bjuden. timbank_dra prövar det igen. */
+  function bankFör(b) {
+    if (!S.erb.aktiv || Number(b.antal_barn || 1) > 1 || b.startrabatt) return false;
+    return S.erb.bank.saldo >= Number(b.duration_min || 60);
+  }
+
   /* Har familjen timmar som räcker står den knappen först: då är det
-     vägen de valt, och kortet är reserven. */
+     vägen de valt, och kortet är reserven. Klippkortet före timbanken:
+     timmarna på kortet går ut, minuterna i banken gör det inte. */
   function betalaKnapp(b, liten) {
     const tim = kortFör(b);
-    const kortknapp = '<button type="button" class="btn ' + (tim ? 'btn-ghost' : 'btn-primary') + (liten ? ' btn-sm' : '')
+    const bank = !tim && bankFör(b);
+    const kortknapp = '<button type="button" class="btn ' + (tim || bank ? 'btn-ghost' : 'btn-primary') + (liten ? ' btn-sm' : '')
       + '" data-betala="' + esc(b.id) + '">'
       + (b.betalning_status === 'misslyckad' ? 'Försök betala igen' : 'Betala med kort') + '</button>';
+    if (bank) {
+      return '<button type="button" class="btn btn-primary' + (liten ? ' btn-sm' : '') + '" data-timbank="' + esc(b.id) + '">'
+        + 'Betala med timbanken</button>' + kortknapp;
+    }
     if (!tim) return kortknapp;
     return '<button type="button" class="btn btn-primary' + (liten ? ' btn-sm' : '') + '" data-timmar="' + esc(b.id) + '">'
       + 'Betala med timmar</button>' + kortknapp;
@@ -1460,10 +1508,17 @@
   const fakturaFör = id => (S.fakturaPerPass || {})[id] || null;
 
   /* Fakturan är ett val EFTER passet, i samband med att rapporten
-     bekräftas (Fas 19.2). Före passet finns bara kortet. */
+     bekräftas (Fas 19.2). Före passet finns bara kortet.
+
+     Leo 2026-09-27: "betala senare genom att välja att få en faktura
+     skickad till sig nästkommande månad". Knappen säger därför vad som
+     händer, inte bara vilket betalsätt det är, och raden under säger
+     villkoren: samma tio dagar och ingen avgift som villkoren lovar. */
   function fakturaVal(b) {
     return S.faktura === true && kanBetalas(b) && b.status === 'completed'
-      ? '<button type="button" class="val-lank" data-faktura-val="' + esc(b.id) + '">Betala med faktura i stället</button>'
+      ? '<button type="button" class="val-lank" data-faktura-val="' + esc(b.id) + '">Få faktura nästa månad</button>'
+        + '<span class="val-not">Passet kommer med på en samlad faktura i början av nästa månad. Den betalas inom '
+        + DAGAR + ' dagar och kostar ingenting extra.</span>'
       : '';
   }
   /* Tillbaka till kort går också när flaggan är av: ett pass som redan
@@ -1476,7 +1531,7 @@
 
   async function laddaFakturor() {
     const { data, error } = await supa.from('invoices')
-      .select('id, period, status, belopp_ore, forfaller, skickad_at, betald_at, fortnox_fakturanummer, invoice_lines(booking_id)')
+      .select('id, period, status, belopp_ore, forfaller, skickad_at, betald_at, fortnox_fakturanummer, ocr, invoice_lines(booking_id, beskrivning, belopp_ore)')
       .eq('parent_id', S.user.id).order('period', { ascending: false });
     /* Kan fakturorna inte läsas står det som fanns kvar. En tom lista
        hade sett ut som att ingenting är fakturerat, och då hade "Betala
@@ -1515,6 +1570,50 @@
     }
   }
 
+  /* Fakturor som skickats och inte är betalda (Fas 19.6). Förfallen är
+     inget eget läge i databasen, bara en skickad faktura vars dag gått
+     (NXBetalning.fakturaLage), så den räknas med här. */
+  const obetaldaFakturor = () => (S.fakturor || []).filter(f => f.status === 'skickad')
+    .sort((a, c) => String(a.forfaller || '').localeCompare(String(c.forfaller || '')));
+
+  /* Siffran i menyn är fakturorna att betala. Sedan Fas 19.2 väntar
+     inget pass på Betalning (se ritaAttBetala), men en skickad faktura
+     gör det: den ska betalas i banken, och ingen annan del av vyn säger
+     det. */
+  function märkBetalning() {
+    if (S.sido) S.sido.märke('betalning', obetaldaFakturor().length);
+  }
+
+  /* En faktura att betala: det familjen behöver i sin bank. OCR:et är
+     det som står på fakturan i Fortnox, inskrivet av admin och prövat i
+     databasen (invoices_ocr_giltigt). Saknas det är fakturanumret
+     meddelandet. Saknas bankgironumret i konfigurationen står det på
+     fakturan, och det säger raden i stället för att visa ett tomt fält. */
+  function fakturaAttBetala(f) {
+    const kronor = NXBetalning.kronor;
+    const bg = String((NX.CFG && NX.CFG.BANKGIRO) || '').trim();
+    const sen = NXBetalning.fakturaLage(f) === 'forfallen';
+    const kopiera = v => ' <button type="button" class="val-lank" data-kopiera="' + esc(v) + '">Kopiera</button>';
+    const referens = f.ocr
+      ? ['OCR', f.ocr]
+      : f.fortnox_fakturanummer ? ['Meddelande', 'Faktura ' + f.fortnox_fakturanummer] : null;
+    const rader = [
+      ['Belopp', esc(kronor(f.belopp_ore))],
+      f.forfaller ? ['Betala senast', '<span' + (sen ? ' class="sen"' : '') + '>' + esc(datumText(f.forfaller))
+        + (sen ? ', förfallen' : '') + '</span>'] : null,
+      ['Bankgiro', bg ? esc(bg) + kopiera(bg) : 'står på fakturan'],
+      referens ? [referens[0], esc(referens[1]) + kopiera(referens[1])] : null
+    ].filter(Boolean);
+    const pass = (f.invoice_lines || []).map(l => '<li>' + esc(l.beskrivning || 'Pass')
+      + ' <span>' + esc(kronor(l.belopp_ore)) + '</span></li>').join('');
+    return '<div class="fakt-att' + (sen ? ' ar-sen' : '') + '">'
+      + '<div class="fakt-att-topp"><b>Faktura ' + esc(NXBetalning.periodText(f.period))
+      + (f.fortnox_fakturanummer ? ' · nr ' + esc(f.fortnox_fakturanummer) : '') + '</b></div>'
+      + rader.map(r => '<div class="sum-line"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('')
+      + (pass ? '<ul class="fakt-att-pass">' + pass + '</ul>' : '')
+      + '</div>';
+  }
+
   /* Fakturorna, och passen som väntar på nästa. Rutan syns bara när
      det finns något att visa, eller när faktura går att välja. */
   function ritaFakturor() {
@@ -1522,11 +1621,24 @@
     if (!host) return;
     const box = host.closest('.dbox');
     const kronor = NXBetalning.kronor;
+
+    const obetalda = obetaldaFakturor();
+    const attHost = $('#bet-fakt-betala');
+    if (attHost) {
+      $('#bet-fakt-box').hidden = !obetalda.length;
+      $('#bet-fakt-antal').textContent = obetalda.length ? obetalda.length + ' st' : '';
+      attHost.innerHTML = obetalda.map(fakturaAttBetala).join('')
+        + (obetalda.length ? '<p class="xsmall" style="margin-top:12px;color:var(--muted-2);line-height:1.6">'
+          + 'Har ni redan betalat kan det ta några bankdagar innan fakturan står som betald här.</p>' : '');
+    }
+    märkBetalning();
+
     const väntar = (S.bokningar || [])
       .filter(b => b.betalning_status === 'faktura' && b.status !== 'cancelled' && b.fakturerbar !== false)
       .filter(b => { const f = fakturaFör(b.id); return !f || f.status === 'utkast'; })
       .sort((a, c) => String(a.wanted_date).localeCompare(String(c.wanted_date)));
-    const skickade = (S.fakturor || []).filter(f => f.status !== 'utkast');
+    // De obetalda står i rutan ovanför; här står de betalda och de makulerade.
+    const skickade = (S.fakturor || []).filter(f => f.status !== 'utkast' && f.status !== 'skickad');
     if (box) box.hidden = !väntar.length && !skickade.length && S.faktura !== true;
     $('#bet-faktura-antal').textContent = skickade.length ? skickade.length + ' st' : '';
 
@@ -1552,8 +1664,22 @@
       }));
     });
     host.innerHTML = delar.length ? delar.join('')
-      : tomt('Inga fakturor', 'Välj "Betala med faktura i stället" på ett pass, så kommer det med på en samlad faktura i början av nästa månad. Den ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra.');
+      : tomt('Inga fakturor', 'Välj "Få faktura nästa månad" när ni bekräftar rapporten, så kommer passet med på en samlad faktura i början av nästa månad. Den ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra.');
   }
+
+  /* Kopiera bankgiro eller OCR (Fas 19.6). Går det inte står värdet
+     kvar synligt bredvid knappen, och familjen skriver av det. */
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-kopiera]');
+    if (!k) return;
+    try {
+      await navigator.clipboard.writeText(k.dataset.kopiera);
+      k.textContent = 'Kopierat';
+      setTimeout(() => { k.textContent = 'Kopiera'; }, 1800);
+    } catch (fel) {
+      k.textContent = 'Markera och kopiera';
+    }
+  });
 
   /* ============================================================
      BETALPANELEN (Fas 14.5)
@@ -1803,6 +1929,29 @@
     });
   }
 
+  /* Att betala ett pass med timbanken (Fas 22.1). Rutan säger hur många
+     minuter som dras och vad som är kvar, som för timmarna. */
+  async function betalaMedBanken(knapp, passId) {
+    const b = (S.bokningar || []).find(x => x.id === passId);
+    if (!b || !bankFör(b)) return;
+    const behov = Number(b.duration_min || 60);
+    const ok = await NXStudie.bekräfta({
+      titel: 'Betala med timbanken?',
+      text: tidLängd(behov) + ' dras ur timbanken. Kvar efteråt: ' + tidLängd(S.erb.bank.saldo - behov)
+        + '. Avbokas passet kommer minuterna tillbaka.',
+      knapp: 'Dra ' + tidLängd(behov)
+    });
+    if (!ok) return;
+    await medan(knapp, 'Drar…', async () => {
+      const svar = await supa.functions.invoke('klippkort-betala', { body: { pass: passId, timbank: true } });
+      if (svar.error) { beskedNära(knapp, await funktionsText(svar.error), false); return; }
+      const kvar = svar.data && svar.data.kvar;
+      await Promise.all([laddaErbjudanden(), laddaPass()]);
+      beskedNära(knapp, '✓ Passet är betalt med timbanken.' + (kvar !== null && kvar !== undefined
+        ? ' ' + tidLängd(Number(kvar)) + ' kvar i banken.' : ''), true);
+    });
+  }
+
   function köpKlart() {
     const p = panel;
     if (!p) return;
@@ -1951,7 +2100,7 @@
 
     const box = $('#erb-mina-box'), mina = $('#erb-mina');
     if (!box || !mina) return;
-    box.hidden = !S.erb.kort.length;
+    box.hidden = !S.erb.kort.length && !S.erb.bank.finns;
     const idag = isoFor(new Date());
     mina.innerHTML = S.erb.kort.map(k => {
       const kvar = Number(k.kvar), tim = Number(k.timmar);
@@ -1975,7 +2124,22 @@
           + esc(dagarKvar === 0 ? 'Sista dagen är i dag.' : dagarKvar === 1 ? 'Sista dagen är i morgon.' : 'Sista dagen är om ' + dagarKvar + ' dagar.')
           + ' Timmar som inte används förfaller. <a href="#boka">Boka ett pass</a></p>' : '')
         + '</div>';
-    }).join('');
+    }).join('') + bankRad();
+  }
+
+  /* Timbanken (Fas 22.1), under klippkorten. Minuterna går inte ut, och
+     raden säger vad de används till, i den ordning databasen tar dem. */
+  function bankRad() {
+    const bank = S.erb.bank;
+    if (!bank.finns) return '';
+    const saldo = bank.saldo;
+    return '<div class="erb-mitt erb-bank">'
+      + '<div class="erb-mitt-topp"><b>Timbanken</b><span>Går inte ut</span></div>'
+      + '<span class="erb-kvar"><b>' + esc(tidLängd(saldo)) + '</b> sparat</span>'
+      + '<p class="erb-bank-text">Minuter som blev över när ett pass betalt med timmar slutade före en hel timme. '
+      + 'Drar ett pass över tas tiden härifrån först, utan kostnad. Räcker minuterna till ett helt pass kan ni betala det med dem.'
+      + (bank.varde ? ' Slutar ni betalar vi tillbaka dem, i dag ' + esc(NXBetalning.kronor(bank.varde)) + '.' : '')
+      + '</p></div>';
   }
 
   /* Vägrar webbläsaren Stripes ram (en CSP som inte hunnit med, ett
@@ -2008,7 +2172,7 @@
     const [pass, und, till] = await Promise.all([
       supa.from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, created_by, created_at, avbokningsskal, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt')
         .eq('parent_id', S.user.id).order('wanted_date', { ascending: true }),
-      supa.from('passunderlag').select('id, debiterade_min, betalda_min, timpris_ore, extra_ore, rabatt_ore')
+      supa.from('passunderlag').select('id, debiterade_min, betalda_min, timpris_ore, extra_ore, rabatt_ore, timbank_min')
         .eq('parent_id', S.user.id),
       supa.from('pass_tillagg').select('booking_id, minuter, begart_ore, status, betalt_ore, betald_at')
     ]);
@@ -2200,6 +2364,8 @@
 
     const tim = e.target.closest('[data-timmar]');
     if (tim) { await bekräftaVid(tim, tim.dataset.timmar); await betalaMedTimmar(tim, tim.dataset.timmar); return; }
+    const tb = e.target.closest('[data-timbank]');
+    if (tb) { await bekräftaVid(tb, tb.dataset.timbank); await betalaMedBanken(tb, tb.dataset.timbank); return; }
     const köp = e.target.closest('[data-kop]');
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
 
@@ -2225,7 +2391,8 @@
     /* Fas 21.1: ett pass betalt med timmar går att avboka, och rutan
        säger vart timmarna tar vägen innan familjen bestämt sig. */
     const passet = (S.bokningar || []).find(x => x.id === btn.dataset.avboka);
-    const timmarTillbaka = passet && medTimmar(passet) ? ' Timmarna ni betalade med kommer tillbaka.' : '';
+    const timmarTillbaka = passet && medTimmar(passet) ? ' Timmarna ni betalade med kommer tillbaka.'
+      : passet && medBanken(passet) ? ' Minuterna ni betalade med kommer tillbaka till timbanken.' : '';
     const skäl = await NXStudie.avbokaRuta(förslag ? {
       titel: 'Dra tillbaka förslaget?',
       text: 'Vill ni hellre ha en annan tid, välj Ändra tiden i stället.',
@@ -2300,11 +2467,23 @@
     /* En förfallen faktura (Fas 14.6). Samma sorts drag som ett pass
        att betala, och lika lätt att missa i en inkorg. */
     const förfallna = (S.fakturor || []).filter(f => NXBetalning.fakturaLage(f) === 'forfallen');
+    const attBetala = obetaldaFakturor().filter(f => förfallna.indexOf(f) === -1);
     if (förfallna.length) {
       poster.push({
         rubrik: förfallna.length === 1 ? 'En faktura har förfallit' : förfallna.length + ' fakturor har förfallit',
         text: 'Betala den så snart ni kan. Har ni redan betalat kan det ta några dagar innan det syns här.',
-        mål: '#bet-faktura'
+        mål: '#bet-fakt-betala'
+      });
+    } else if (attBetala.length) {
+      /* Fas 19.6. En skickad faktura mejlas från Fortnox och kan
+         hamna bland annat i inkorgen; här står den med bankgiro och OCR. */
+      const f = attBetala[0];
+      poster.push({
+        rubrik: attBetala.length === 1 ? 'En faktura att betala' : attBetala.length + ' fakturor att betala',
+        text: attBetala.length === 1 && f.forfaller
+          ? NXBetalning.kronor(f.belopp_ore) + ', senast ' + datumText(f.forfaller) + '.'
+          : 'Bankgiro och OCR står under Betalning.',
+        mål: '#bet-fakt-betala'
       });
     }
 
@@ -2583,7 +2762,7 @@
        finns saker". Sedan Fas 19.2 väntar ingenting här: att betala i
        förväg är ett val, och det genomförda passet räknas under
        Bekräfta rapport. Därför ingen siffra alls. */
-    if (S.sido) S.sido.märke('betalning', 0);
+    märkBetalning();
     if (!att.length) {
       host.innerHTML = tomt('Inget att betala just nu',
         'När er studiehjälpare bekräftat ett pass kan ni betala det här i förväg. Annars betalar ni efter passet, när ni bekräftar rapporten.');
@@ -2627,7 +2806,7 @@
             href: '#pass/' + b.id,
             /* Ett pass betalt med timmar har inget kortbelopp: pengarna
                ligger på klippkortet (Fas 16.1). */
-            under: [b.klippkort_id ? 'med timmar' : betalt ? kronor(betalt) : null,
+            under: [b.klippkort_id ? 'med timmar' : medBanken(b) ? 'med timbanken' : betalt ? kronor(betalt) : null,
               'betalt ' + datumText(isoFor(new Date(b.betald_at))),
               barn ? barn.name : null].filter(Boolean).join(' · '),
             vem: !tillbaka ? null
@@ -2857,7 +3036,7 @@
      Priset är det som frystes när passet bokades, minus rabatten (Fas
      19.5), som i stripe-checkout och passpris() i _delad/pris.ts. */
   function passetsPris(b) {
-    return prisFör(b, b.status === 'completed' ? debiteradeMin(b) : Number(b.duration_min || 60));
+    return prisFör(b, b.status === 'completed' ? debiteradeMin(b) - bankMin(b) : Number(b.duration_min || 60));
   }
 
   /* Raden i passunderlag, för ett genomfört pass. Hämtas med passen. */
@@ -2865,6 +3044,11 @@
   const debiteradeMin = b => {
     const u = underlagFör(b);
     return Number((u && u.debiterade_min) || b.duration_min || 60);
+  };
+  /* Fas 22.1: övertiden timbanken tog. Kassan tar den inte (stripe-checkout). */
+  const bankMin = b => {
+    const u = underlagFör(b);
+    return Number((u && u.timbank_min) || 0);
   };
 
   /* pris(m) = max(avrundat m/60 × (timpris + tillägg för fler barn) − rabatt, 0),
