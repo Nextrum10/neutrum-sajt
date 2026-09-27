@@ -363,12 +363,43 @@
                           </div>
                         </div>
 
+                        <!-- ============ NÄR PASSET HÖLLS (Fas 20.1) ============
+                             Förifyllt med den bokade tiden. Ändras det,
+                             debiteras familjen den tid som står här, per
+                             påbörjad kvart, och då krävs ett skäl som
+                             familjen ser bredvid tiden. Döljs för en
+                             fristående rapport och när eleven uteblev:
+                             då gäller det bokade. -->
+                        <div class="rp-tid" id="r-tid-falt" hidden>
+                          <p class="rp-fraga" style="margin-top:20px">När hölls passet?</p>
+                          <div class="vy-form-rad">
+                            <div class="pay-field">
+                              <label for="r-start">Började</label>
+                              <input class="inp" id="r-start" type="time" step="300">
+                            </div>
+                            <div class="pay-field">
+                              <label for="r-slut">Slutade</label>
+                              <input class="inp" id="r-slut" type="time" step="300">
+                            </div>
+                          </div>
+                          <p class="rp-tid-rad" id="r-tid-rad" aria-live="polite"></p>
+                          <div class="fgroup" id="r-avvik-falt" hidden>
+                            <label for="r-avvik">Varför blev passet längre eller kortare?
+                              <span style="font-weight:400;color:var(--bl-2)">— familjen ser det bredvid tiden</span></label>
+                            <input class="inp" id="r-avvik" maxlength="300" placeholder="t.ex. Vi körde klart inför provet på fredag">
+                          </div>
+                        </div>
+
                         <!-- ============ VAD ARBETADE NI MED ============
                              Ämnet fylls i från passet när ett är valt.
                              Chipsen finns för de gånger man gjorde något
                              annat än det som stod i bokningen. -->
                         <p class="rp-fraga" style="margin-top:20px">Vad arbetade ni med?</p>
                         <div class="vy-val" id="r-amne-val" role="group" aria-label="Ämne"></div>
+                        <div class="fgroup" id="r-amne-annat-falt" hidden style="margin-top:10px">
+                          <label for="r-amne-annat">Vilket ämne?</label>
+                          <input class="inp" id="r-amne-annat" maxlength="40" placeholder="t.ex. Ekonomi eller Filosofi">
+                        </div>
 
                         <div class="fgroup" style="margin-top:18px">
                           <label for="r-notes">Kommentar <span style="font-weight:400;color:var(--bl-2)">— det familjen läser</span></label>
@@ -466,6 +497,7 @@
                                 aria-expanded="true" aria-label="Dölj tidigare rapporter"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
                       </h5>
                       <div class="vy-fall-kropp">
+                        <div id="rapport-manader" aria-label="Visa rapporterna för månaden"></div>
                         <div id="mina-rapporter"><div class="loading">Hämtar</div></div>
                       </div>
                     </div>
@@ -918,8 +950,12 @@
              id="panel-ersattning" aria-labelledby="flik-ersattning" hidden>
         <div class="stack">
 
+          <!-- Fas 20.2. Månaden man trycker på är den som visas: passen,
+               timmarna och utbetalningen för just den. -->
+          <div id="ers-manader" aria-label="Visa ersättningen för månaden"></div>
+
           <div class="dbox">
-            <h5>Den här månaden</h5>
+            <h5 id="ers-rubrik">Den här månaden</h5>
             <div id="ers-pagaende"><div class="loading">Hämtar</div></div>
           </div>
 
@@ -929,7 +965,7 @@
           </div>
 
           <div class="dbox">
-            <h5>Utbetalningar <em id="ers-antal"></em></h5>
+            <h5>Utbetalning för månaden <em id="ers-antal"></em></h5>
             <div id="ers-lista"><div class="loading">Hämtar</div></div>
           </div>
 
