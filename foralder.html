@@ -412,12 +412,12 @@
            en flik bort, och ingenting sa att en ny kommit.
 
            Rapporten står här tills den är bekräftad OCH passet är
-           betalt. Är passet redan betalt, som det normalt är, är
-           bekräftelsen att familjen läst den. Är det inte betalt
-           bekräftar familjen genom att välja hur: kort, timmar eller,
-           med flaggan faktura på, faktura. Villkoren gäller som förut
-           — betalt före passet — och bekräftelsen skjuter inte upp
-           något: rapporten kan bara bli obetald om spärren är av.
+           betalt. Sedan Fas 19.2 finns tre sätt att betala: kort i
+           förväg, kort efter passet och faktura efter passet (när
+           flaggan faktura är på). De två senare görs HÄR, i samband med
+           bekräftelsen: att välja betalsätt är att bekräfta rapporten.
+           Är passet redan betalt bekräftar familjen ändå, med knappen
+           Bekräfta rapporten.
 
            Alla barn på en gång, inte bara det valda: det som väntar på
            familjen ska inte gömma sig bakom barnväljaren. Ritas av
@@ -586,10 +586,12 @@
         </div>
       </section>
       <!-- ============================================================
-           BETALNING (Fas 14.2)
-           Varje pass betalas med kort, före passet. Ingen månadsfaktura:
-           det som står här är det som ska betalas och det som är betalt,
-           båda ritade ur passen, av ritaAttBetala() och ritaBetalda().
+           BETALNING (Fas 14.2, Fas 19.2)
+           Varje pass betalas med kort, i förväg eller efter passet när
+           rapporten bekräftas. Här står det som går att betala i förväg
+           och det som är betalt, båda ritade ur passen, av
+           ritaAttBetala() och ritaBetalda(). Ett genomfört pass betalas
+           under Bekräfta rapport, där rapporten står bredvid.
            ============================================================ -->
       <!-- ============================================================
            ERBJUDANDEN (Fas 16.1)
@@ -638,7 +640,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Betalning</h2>
-            <p>Ni betalar varje pass med kort när er studiehjälpare har bekräftat tiden, senast innan passet börjar. Ett pass som inte är betalt hålls inte. Kortuppgifterna skriver ni in hos Stripe, och vi sparar dem aldrig. Ett förslag som inte blivit ett pass kostar ingenting.</p>
+            <p>Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. I förväg går det här så fort er studiehjälpare har bekräftat tiden. Efter passet betalar ni under Bekräfta rapport. Kortuppgifterna skriver ni in hos Stripe, och vi sparar dem aldrig. Ett förslag som inte blivit ett pass kostar ingenting.</p>
           </div>
         </div>
         <div class="stack">
@@ -649,7 +651,7 @@
                samma lista som Mina lektioner, så att ett pass som
                betalats där försvinner här i samma stund. -->
           <div class="dbox">
-            <h5>Att betala <em id="bet-att-antal"></em></h5>
+            <h5>Betala i förväg <em id="bet-att-antal"></em></h5>
             <div id="bet-att-betala"><div class="loading">Hämtar</div></div>
           </div>
 
@@ -866,7 +868,7 @@
             <div class="sum-line"><span>Anmälningsavgift</span><span>0 kr</span></div>
             <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
             <p class="xsmall" data-pris-extra-not style="margin-top:14px;color:var(--muted-2);line-height:1.6">Tillägget för syskon är en fast summa per timme, oavsett om de är två eller tre — inte ett pris per barn.</p>
-            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar varje pass med kort när er studiehjälpare har bekräftat tiden, senast innan passet börjar. Ett pass som inte är betalt hålls inte. Betalningarna står under Betalning.</p>
+            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. Betalningarna står under Betalning.</p>
           </div>
         </div>
         <!-- ============ NOTISER ============
@@ -924,12 +926,12 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=036d9884"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-kontakt.js?v=eb2a6cef"></script>
+<script src="nextrum-kontakt.js?v=e3a95834"></script>
 <script src="nextrum-studie.js?v=5ceccb41"></script>
 <script src="nextrum-arbetsyta.js?v=251ccc67"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=289459d5"></script>
+<script src="nextrum-studie-vy.js?v=8efddd18"></script>
 </body>
 </html>

@@ -3,9 +3,12 @@
 
        python3 verktyg/kolla-betalningsvillkor.py
 
-SEDAN FAS 14.2 ÄR LÖFTET INTE ETT ANTAL DAGAR. Familjen betalar varje
-pass med kort, FÖRE passet, och ett pass som inte är betalt hålls inte.
-Ingen månadsfaktura och inget betalningsvillkor.
+SEDAN FAS 19.2 FÅR FAMILJEN BETALA EFTER PASSET. Familjen betalar varje
+pass med kort, antingen i förväg eller efter passet när de bekräftar
+rapporten, och ett pass som har hållits ska betalas även om rapporten
+inte bekräftats. Fas 14.2 sa kort FÖRE passet och att ett obetalt pass
+inte hålls; det löftet står nu bland det gamla nedan, för en sida som
+fortfarande säger det lovar familjen något som inte gäller.
 
 Förut vaktade verktyget att "10 dagars betalningsvillkor" stod likadant
 på fjorton ställen. Felet det fanns för är detsamma nu, åt andra hållet:
@@ -43,35 +46,44 @@ Villkoren, prissidan och FAQ:n säger ännu inget om faktura. Det skrivs
 samma dag strömbrytaren 'faktura' slås på, och då ska det här verktyget
 räkna den meningen också (DEPLOY-BETALNING.md 9.11).
 
-Mejlmallarna i _delad/notiser/mallar.ts TÄCKS sedan Fas 14.3. Då
-började bekräftelsen och påminnelsen till familjen säga att passet
-betalas före, och mejlet är det familjen läser sist innan passet.
-Meningen står en gång i källan, som en konstant mallarna delar.
+Mejlmallarna i _delad/notiser/mallar.ts TÄCKS sedan Fas 14.3, och
+säger sedan Fas 19.2 samma mening som sidorna. Mejlet är det familjen
+läser sist innan passet. Meningen står en gång i källan, som en
+konstant mallarna delar.
 
-TÄCKER INTE HELLER det som faktiskt körs: att spärren kortsparr är på
-är en flagga i databasen, inte en mening på en sida. Se CLAUDE.md
-avsnitt 11.
+TÄCKER INTE HELLER det som faktiskt körs: spärren kortsparr är en
+flagga i databasen, inte en mening på en sida. Sedan Fas 19.2 nekar
+databasen att den slås på (flaggor_kortsparr_av), för den och det här
+löftet kan inte gälla samtidigt. Se CLAUDE.md avsnitt 11.
 """
 import glob, io, os, re, sys
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-LOFTE_SV = r'[Ee]tt pass som inte är betalt hålls inte'
-LOFTE_EN = r'[Aa] session that has not been paid is not held'
+# Mellanrummen är \s+: i villkoren bryts meningen över två rader i
+# källan, och ett mönster med vanliga mellanslag hade sett det som ett
+# omskrivet löfte.
+LOFTE_SV = r'antingen\s+i\s+förväg\s+eller\s+efter\s+passet\s+när\s+ni\s+bekräftar\s+rapporten'
+LOFTE_EN = r'either\s+in\s+advance\s+or\s+after\s+the\s+session\s+when\s+you\s+confirm\s+the\s+report'
 
 # (fil, mönster, hur många träffar som ska finnas, vad stället är)
 LOFTET = [
     ('anvandarvillkor.html', LOFTE_SV, 1, 'användarvillkoren: pris och betalning'),
-    ('priser.html', LOFTE_SV, 1, 'prissidan: när betalar vi'),
+    ('priser.html', LOFTE_SV, 2, 'prissidan: per pass, och när betalar vi'),
     ('faq.html', LOFTE_SV, 2, 'FAQ: hur betalningen fungerar (text + schema)'),
     ('foralder.html', LOFTE_SV, 2, 'studievyn: Betalning och Pris & villkor'),
-    ('nextrum-studie-vy.js', LOFTE_SV, 1, 'studievyn: notisen om pass att betala'),
+    ('sa-fungerar-nextrum.html', LOFTE_SV, 1, 'så fungerar Nextrum: trygg betalning'),
+    ('index.html', LOFTE_SV, 1, 'startsidan: studievyn som visar sig själv'),
+    ('for-elever-och-foraldrar.html', LOFTE_SV, 1, 'för elever och föräldrar: samma illustration'),
     ('supabase/functions/_delad/notiser/mallar.ts', LOFTE_SV, 1,
      'mejlen: bekräftelsen, påminnelsen och ett bokat pass till familjen'),
 
     ('en/anvandarvillkor.html', LOFTE_EN, 1, 'terms of use in English'),
-    ('en/priser.html', LOFTE_EN, 1, 'pricing page in English'),
+    ('en/priser.html', LOFTE_EN, 2, 'pricing page in English'),
     ('en/faq.html', LOFTE_EN, 2, 'FAQ in English (text + schema)'),
+    ('en/sa-fungerar-nextrum.html', LOFTE_EN, 1, 'how Nextrum works in English'),
+    ('en/index.html', LOFTE_EN, 1, 'home page in English'),
+    ('en/for-elever-och-foraldrar.html', LOFTE_EN, 1, 'for students and parents in English'),
 
     # Maskoten citerar FAQ:n och prissidan ordagrant och byggs av
     # verktyg/bygg-maskotsvar.py. Står det gamla kvar här har någon
@@ -96,6 +108,21 @@ DET_GAMLA = [
     r'payment terms are \d+ days',
     r'never up front',
     r'first invoice',
+
+    # Fas 14.2 till Fas 19.2: kort FÖRE passet, och ett obetalt pass
+    # hålls inte. Familjen får sedan Fas 19.2 betala efter passet.
+    r'pass som inte är betalt hålls inte',
+    r'inte är betalt när det ska börja',
+    r'senast innan (?:passet|det) börjar',
+    r'före varje pass',
+    r'ingenting dras i efterhand',
+    r'inget att betala i efterhand',
+    r'not been paid is not held',
+    r'not been paid by the time it should start',
+    r'(?:at the latest|no later than) (?:before|when) (?:the session|it) starts',
+    r'before each session',
+    r'nothing is charged afterwards',
+    r'nothing to pay afterwards',
 ]
 
 

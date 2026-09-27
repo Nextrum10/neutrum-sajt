@@ -1,6 +1,7 @@
 # Sätta upp betalning
 
-**Sedan Fas 14.2 betalar familjen varje pass med kort, före passet.** Pengarna tas
+**Sedan Fas 19.2 betalar familjen varje pass med kort, i förväg eller efter passet
+när de bekräftar rapporten.** (Fas 14.2 till 19.2: före passet.) Pengarna tas
 emot genom Stripe (avsnitt 9). **Sedan Fas 14.6 finns faktura som andra betalsätt,
 byggt men avstängt** tills bolaget och Fortnox-kontot finns (9.11). Studiehjälparen får betalt
 den 25:e ur `payouts`. Månadskörningen skapar underlagen, och ett fakturautkast per
@@ -294,13 +295,16 @@ står utan avgift innan den första fakturan går.
 
 ### Ändra betalningslöftet
 
-Sedan Fas 14.2 är löftet inte ett antal dagar. Det är en mening: familjen betalar
-varje pass med kort, före passet, och **ett pass som inte är betalt hålls inte**.
-Den gäller oförändrad tills flaggan `faktura` slås på; då ändras den enligt 9.11.
-Meningen står på sexton ställen i tio filer: användarvillkoren, prissidan och FAQ:n
-på båda språken, FAQ-schemat, studievyns Betalning och Pris & villkor, notisen om
-pass att betala i `nextrum-studie-vy.js`, maskotens svarsfil och mejlmallarna. Alla måste säga
-samma sak. En betalning som tas på ett annat sätt än villkoren lovar är en tvist,
+Löftet är inte ett antal dagar. Det är en mening, och sedan Fas 19.2 lyder den:
+familjen betalar varje pass med kort, **antingen i förväg eller efter passet när ni
+bekräftar rapporten**. Ett pass som har hållits ska betalas även om rapporten inte
+bekräftats. (Fas 14.2 sa före passet och att ett obetalt pass inte hålls; de
+orden letar kontrollen nu efter som gamla.) Meningen gäller oförändrad tills
+flaggan `faktura` slås på; då ändras den enligt 9.11. Den står på 23 ställen i 15
+filer: användarvillkoren, prissidan, FAQ:n, Så fungerar Nextrum och studievyns
+illustration på startsidan och För elever & föräldrar, på båda språken, plus
+FAQ-schemat, föräldravyns Betalning och Pris & villkor, maskotens svarsfil och
+mejlmallarna. Alla måste säga samma sak. En betalning som tas på ett annat sätt än villkoren lovar är en tvist,
 inte ett skrivfel.
 
 Efter en ändring:
@@ -356,8 +360,8 @@ månadskörningen igen.
 
 ## 9. Kortbetalning per pass (Fas 12, enda vägen sedan Fas 14.2)
 
-Familjen betalar med kort när passet är **bekräftat**, och senast innan det
-börjar. HELA beloppet landar hos Nextrum. Ingen destination, ingen application
+Familjen betalar med kort när passet är **bekräftat**, eller efter passet när de
+bekräftar rapporten (Fas 19.2). HELA beloppet landar hos Nextrum. Ingen destination, ingen application
 fee, inget anslutet konto. Ett genomfört pass som inte är betalt går också att
 betala, från samma knapp.
 
@@ -714,6 +718,12 @@ står här bara för att frågan inte ska utredas från noll en gång till.
 
 ### 9.9 Spärren: "ingen betalning, inget pass"
 
+**Sedan Fas 19.2 kan spärren inte slås på.** Villkoren låter familjen betala
+efter passet, när de bekräftar rapporten, och påslagen hade spärren nekat just
+den rapporten. Databasen vägrar (`flaggor_kortsparr_av`) och adminvyn har ingen
+Slå på-knapp. Resten av avsnittet beskriver hur den fungerade, för den dag
+villkoren ändras tillbaka: då tas villkoret bort i samma migration som texterna.
+
 Villkoren säger att ett pass som inte är betalt inte hålls. Spärren är det som gör
 det sant i systemet, och **den är av** tills kortvägen bevisligen fungerar.
 Påslagen utan en fungerande betalning hade den låst varje studiehjälpare från att
@@ -817,11 +827,12 @@ skrivs om från en vy.
 2. **Inställningarna i Fortnox:** tio dagars betalningsvillkor, ingen fakturaavgift,
    påminnelser utan avgift. Villkoren nämner ingen avgift, och då får ingen tas ut.
 3. **Befintliga familjer meddelas trettio dagar i förväg.** Villkoren har ett
-   avsnitt om ändringar, och en familj som godkänt kort före passet har inte
-   godkänt faktura i efterskott. Ett meddelande som säger att faktura blir ett
+   avsnitt om ändringar, och en familj som godkänt kort i förväg eller efter
+   passet har inte godkänt faktura. Ett meddelande som säger att faktura blir ett
    VAL, inte ett byte, räcker; det gör ingen sämre ställd.
 4. **Ångerrätten och återbetalningen.** Villkorens avsnitt om ångerrätt och om
-   pengar tillbaka för ett pass som aldrig hölls är skrivna för kort före passet.
+   pengar tillbaka för ett pass som aldrig hölls skrevs för kort före passet, och
+   Fas 19.2 lade till kort efter passet utan att någon jurist läst dem.
    Läs dem med en jurist, eller med `juridik`-agenten som första steg, innan
    texten ändras, så att de säger vad som gäller för ett pass som betalas i
    efterskott.

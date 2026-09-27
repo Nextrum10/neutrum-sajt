@@ -237,8 +237,8 @@ går att följa vidare, och avbokningar räknar bara dem som har en tidpunkt spa
 Är en lucka stor är siffran bredvid den för låg — skriv det, i stället för att läsa
 ett tapp där det bara saknas mätning. Samma sak åt andra hållet: en månad med noll
 utbetalt betyder inte noll arbete, det kan betyda att månadskörningen inte är gjord.
-Och familjen betalar före passet, så betalt och genomfört samma månad hör inte ihop
-rad för rad.
+Och familjen betalar i förväg eller efter passet, när de bekräftar rapporten, så betalt
+och genomfört samma månad hör inte ihop rad för rad.
 
 SVARETS FORM, på svenska:
 · Kort läge först: vad som är viktigast just nu.

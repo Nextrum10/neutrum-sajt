@@ -329,7 +329,8 @@
   /* ============================================================
      KORTBETALNINGAR (Fas 12, familjens enda betalväg sedan Fas 14.2)
 
-     Familjen betalar varje pass med kort, före passet. Månadsfakturan
+     Familjen betalar varje pass med kort, i förväg eller när de
+     bekräftar rapporten efter passet (Fas 19.2). Månadsfakturan
      till familjen finns inte längre; fakturorna under sin egen flik är
      de som skapades innan dess.
 
@@ -429,6 +430,13 @@
      en kortväg som fungerar hade den låst varje studiehjälpare ute
      från att rapportera. Att stänga av den är nödbromsen, och den
      frågar därför inte efter något.
+
+     SEDAN FAS 19.2 GÅR DEN INTE ATT SLÅ PÅ. Villkoren låter familjen
+     betala efter passet, när de bekräftar rapporten, och spärren nekar
+     just den rapporten. Databasen vägrar (flaggor_kortsparr_av), och
+     kortet har därför ingen Slå på-knapp: en knapp som alltid ger ett
+     fel är sämre än en mening som säger varför. Stäng av står kvar för
+     den dag villkoret tas bort och någon slår på den igen.
      ============================================================ */
   const kortbetalda = () => (S.bokningar || [])
     .filter(b => b.betalning_status === 'betald' || b.betalning_status === 'tvist').length;
@@ -446,14 +454,13 @@
     host.innerHTML = '<div class="adm-koppling-kort">'
       + '<h6>Ingen betalning, inget pass ' + (f.aktiv ? pill('På', 'ar-klar') : pill('Av', '')) + '</h6>'
       + '<p>' + esc(f.beskrivning || '') + '</p>'
-      + (!f.aktiv && f.vantar_pa ? '<div class="adm-krav">Ska vara avgjort först: ' + esc(f.vantar_pa) + '</div>' : '')
+      + (!f.aktiv && f.vantar_pa ? '<div class="adm-krav">' + esc(f.vantar_pa) + '</div>' : '')
       + '<p class="xsmall" style="color:var(--bl-3);margin-top:10px">'
       + (n ? n + (n === 1 ? ' pass är betalt' : ' pass är betalda') + ' med kort. '
            : 'Ingen kortbetalning har gått igenom än. ')
       + 'Ändrad ' + esc(kortDatum(f.uppdaterad)) + '</p>'
-      + '<div style="margin-top:12px"><button class="btn ' + (f.aktiv ? 'btn-ghost' : 'btn-primary')
-      + ' btn-sm" type="button" data-kortsparr="' + (f.aktiv ? '0' : '1') + '">'
-      + (f.aktiv ? 'Stäng av' : 'Slå på') + '</button></div>'
+      + (f.aktiv ? '<div style="margin-top:12px"><button class="btn btn-ghost btn-sm" type="button" data-kortsparr="0">'
+          + 'Stäng av</button></div>' : '')
       + '</div>';
   }
 

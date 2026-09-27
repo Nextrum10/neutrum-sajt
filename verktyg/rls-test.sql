@@ -3361,6 +3361,34 @@ select pg_temp.prova_med('19.1 admin ser bekräftelsen',
   array[$q$select 1 from public.rapport_bekraftelser where rapport_id = '00000000-0000-4000-8000-00000000e0a2'$q$],
   'ok');
 
+-- ------------------------------------------------------------
+-- Fas 19.2: spärren kortsparr går inte att slå på
+--
+-- Villkoren låter familjen betala efter passet, och spärren nekar just
+-- den rapporten familjen ska bekräfta. Inte ens admin, som annars får
+-- slå om flaggorna, kommer förbi villkoret. Nekat av villkoret och
+-- inget annat: ett RLS-fel hade sett ut som ett skydd men betytt att
+-- adminens knapp slutat fungera för alla flaggor.
+-- ------------------------------------------------------------
+do $$
+declare fel text;
+begin
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.flaggor set aktiv = true where kod = 'kortsparr';
+    raise exception 'gick igenom';
+  exception
+    when check_violation then fel := 'nekad av villkoret';
+    when others then fel := sqlerrm;
+  end;
+  insert into utfall (test, ok, detalj)
+  values ('19.2 admin kan inte slå på kortsparr', fel = 'nekad av villkoret', fel);
+end $$;
+
+select pg_temp.prova('19.2 admin slår fortfarande om fakturaflaggan', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.flaggor set aktiv = not aktiv where kod = 'faktura'$q$],
+  'ok');
+
 select test, ok, detalj from utfall order by nr;
 
 rollback;

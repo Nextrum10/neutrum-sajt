@@ -320,7 +320,8 @@ window.NXKontakt = (function () {
   };
 
   /* Betalningens läge, som ett andra märke bredvid passets (Fas 14.2).
-     Familjen betalar varje pass med kort före passet, och båda sidor
+     Familjen betalar varje pass med kort, i förväg eller när de
+     bekräftar rapporten efter passet (Fas 19.2), och båda sidor
      ska se samma ord för samma läge: "Ej betalt" hos familjen och
      "Betalt" hos studiehjälparen om samma pass hade varit en tvist
      innan någon ens sagt något.

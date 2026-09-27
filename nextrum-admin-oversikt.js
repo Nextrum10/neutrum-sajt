@@ -512,8 +512,8 @@
          Allt räknat i analys_ekonomi, inte här. */
       NXArbete.graf($('#stat-intakt'), staplar(A.ekonomi, r =>
         Number(r.kortbetalt_ore || 0) - Number(r.aterbetalt_ore || 0) + Number(r.betalt_ore || 0)), {
-        nagot: 'Det familjerna betalat, efter återbetalningar. Ett pass betalas innan det '
-             + 'hålls, så pengarna kan stå på månaden före passet.',
+        nagot: 'Det familjerna betalat, efter återbetalningar, på den månad pengarna kom in. Ett '
+             + 'pass kan betalas i förväg, så pengarna kan stå på månaden före passet.',
         inget: 'Ingen betalning har kommit in de senaste sex månaderna.'
       }, v => kronor(v));
     }
