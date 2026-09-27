@@ -104,14 +104,34 @@ window.NXStudie = (function () {
     var o = opts || {};
     var l = LAGE[läxläge(h)];
     var sen = läxläge(h) === 'forsenad';
+    var klar = h.status === 'klar';
 
-    return '<div class="lax' + (h.status === 'klar' ? ' avklarad' : '') + '">'
-      + '<div class="lax-topp">'
-      + '<b>' + esc(h.title) + '</b>'
-      + '<span class="lage ' + l.klass + '">' + esc(l.text) + '</span>'
-      + '</div>'
+    /* En klar läxa är en rad man trycker upp (2026-09-27). Utfälld
+       var den ett helt kort, nedtonat och överstruket, och fem sådana
+       under det man ska göra var en vägg att skrolla förbi. Hopfälld
+       står rubriken, ämnet och när den blev klar; resten, med
+       materialet, finns ett tryck bort. */
+    var topp = klar
+      ? '<summary class="lax-summ">'
+        + '<span class="lax-summ-text"><b>' + esc(h.title) + '</b>'
+        + '<span class="lax-summ-meta">' + esc([h.subject, h.completed_at
+            ? 'Klar ' + deadlineText(isoFor(new Date(h.completed_at))).toLowerCase() : 'Klar'
+          ].filter(Boolean).join(' · ')) + '</span></span>'
+        + '<svg class="lax-pil" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" '
+        + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 8l4.5 4.5L14.5 8"/></svg>'
+        + '</summary><div class="lax-kropp">'
+      : '<div class="lax-topp">'
+        + '<b>' + esc(h.title) + '</b>'
+        + '<span class="lage ' + l.klass + '">' + esc(l.text) + '</span>'
+        + '</div>';
+
+    return (klar
+        ? '<details class="lax avklarad" data-lax-id="' + esc(h.id) + '"'
+          + (LÄX_UTFÄLLDA[h.id] ? ' open' : '') + '>'
+        : '<div class="lax">')
+      + topp
       + '<div class="lax-meta">'
-      + (h.subject ? '<span class="tag">' + esc(h.subject) + '</span>' : '')
+      + (h.subject && !klar ? '<span class="tag">' + esc(h.subject) + '</span>' : '')
       + (h.due_date
           ? '<span class="lax-datum' + (sen ? ' sen' : '') + '">Till ' + esc(deadlineText(h.due_date)) + '</span>'
           : '')
@@ -132,8 +152,12 @@ window.NXStudie = (function () {
             + '</div>'
           : '')
       + (o.atgarder ? '<div class="lax-atg">' + o.atgarder + '</div>' : '')
-      + '</div>';
+      + (klar ? '</div></details>' : '</div>');
   }
+  /* Vilka klara läxor som står utfällda. Listan ritas om efter varje
+     tryck på Klar eller Ångra, och en läxa man läste i hade annars
+     fällts ihop under fingret. */
+  var LÄX_UTFÄLLDA = {};
 
   /* ---------- ett kunskapsområde ----------
      o.historik(p) får lägga till en rad under nivån — utvecklingen
@@ -1657,6 +1681,16 @@ window.NXStudie = (function () {
     }
 
     host.innerHTML = ut;
+
+    /* toggle bubblar inte, därför capture. En gång per värd: listan
+       ritas om, värden står kvar. */
+    if (!host.dataset.laxToggle) {
+      host.dataset.laxToggle = '1';
+      host.addEventListener('toggle', function (e) {
+        var d = e.target;
+        if (d && d.dataset && d.dataset.laxId) LÄX_UTFÄLLDA[d.dataset.laxId] = d.open;
+      }, true);
+    }
 
     var knapp = host.querySelector('[data-pl-mer]');
     if (knapp) {
