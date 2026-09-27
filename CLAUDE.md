@@ -64,11 +64,25 @@ gäller först efter fristen — adminvyn visar rätt belopp efter datumet
 (4 och 8 timmar, −10 %) och klippkort med 10–100 timmar (−5 %, gäller
 6–18 månader). Köpet är ett engångsköp med kort, inget abonnemang.
 Timmarna betalar sedan ett bekräftat pass med ett barn i stället för
-kortet. Flaggan `erbjudanden` står av tills provköpet i
-DEPLOY-BETALNING.md 9.12 gått igenom; då syns priserna men inget går
-att köpa. Klippkorten står i studievyn och på prissidan som en kolumn
+kortet. Flaggan `erbjudanden` är PÅ sedan 2026-09-27: Leo slog på den
+innan provköpet i DEPLOY-BETALNING.md 9.12 var gjort. Står den av syns
+priserna men inget går att köpa. Klippkorten står i studievyn och på prissidan som en kolumn
 bredvid planerna som fälls ut (2026-09-27). De var borta ur
 studievyn en förmiddag samma dag och kom tillbaka i den formen.
+
+**Ett pass betalt med timmar avbokar familjen själv** (Fas 21.1), och
+studiehjälparen kan också. Det har inga pengar på sig, och
+`klippkort_saldo` räknar bara pass som inte är avbokade, så timmarna
+kommer tillbaka av sig själva. Spärren för betalda pass gäller
+fortfarande så fort det ligger kortpengar på passet. Nollningen av
+betalningen (`klippkortspass_avbokat`) körs av triggern
+`bookings_timmarna_tillbaka`, som måste vara den SISTA
+before-triggern på `bookings`: körs den före `skydda_bokningsfalt`
+ser spärren betalningen ändras i samma skrivning och nekar. Den hette
+förut `bookings_klippkortspass_avbokat` och gällde bara admin.
+**Tio dagar innan ett kort går ut** mejlas familjen om det finns
+timmar kvar (Fas 21.2, notistypen `timmar_gar_ut`), och rutan Era
+timmar säger samma sak från samma dag.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
@@ -269,7 +283,14 @@ vendorad fil i `bibliotek/`.
 - **Backend:** Supabase (Postgres + RLS + Auth + Storage) och Deno
   edge functions i `supabase/functions/`
 - **Hosting:** Vercel, `cleanUrls: true` (alltså `/priser`, inte
-  `/priser.html`)
+  `/priser.html`). Vercel-botten ska inte kommentera PR:er
+  (2026-09-27): varje kommentar blev ett mejl från GitHub till
+  info@nextrum.se, ett per PR. Det ställs in hos Vercel, under
+  projektets Settings → Git (`gitComments` i API:t; Vercel-kopplingens
+  `update_project` saknar fältet). `github.silent` i `vercel.json`
+  hjälpte inte: grenen hade nyckeln, och botten kommenterade PR:en
+  ändå. Stäng inte av GitHub-driftsättningarna i samma veva:
+  `indexnow.yml` lyssnar på deras `deployment_status`
 - **Mejl:** Resend
 - **Modeller:** Anthropic, bara från edge functions — aldrig från
   webbläsaren
@@ -817,6 +838,13 @@ databasen genom `samlingsnyckel`, inte i arbetaren — fem repliker på
 tre minuter blir ett mejl, och den som får fem mejl slutar läsa det
 sjätte.
 
+**`timmar_gar_ut` (Fas 21.2) är den enda notisen som inte gäller ett
+pass.** Den köas av `intern.timmar_gar_ut_koa()`, som pg_cron-jobbet
+`timmar-gar-ut` kör varje timme och som bara gör något mellan 9 och 20
+svensk tid. En gång per kort och sista dag; ett förlängt kort får en ny.
+Mallen läser `kvar` (heltal, 1–200) och `datum` ur `RenData`, och bara
+familjen har raden i `NOTISVAL` (`bara: 'parent'`).
+
 `DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
 sandlådan slås på innan något provas, och de fem stegen för att lägga
 till en ny notistyp utan att den faller ut som `okänd notistyp` ur en
@@ -1022,6 +1050,21 @@ att visa **rätt sida**, inte för att skydda data.
   tabellaliaset — familjen hade alltså aldrig kunnat se sitt barns
   material, och en policy som nekar för mycket ser ut som en tom lista,
   inte som ett fel.
+- **`cv` är undantaget** (v11, läsrätten 2026-09-27). Den som söker
+  har inget konto och ingen rad när filen laddas upp, så sökvägen är
+  tid, slump och filnamnet, och kopplingen till ansökan är raden
+  `CV: cv/<sökväg>` som `NX.kopplaAnsökan` skriver i
+  `applications.why`. Anon laddar upp, bara admin läser
+  (`admin läser cv`). Hinken hade ingen läsregel alls förut, så CV:t
+  kom fram men gick bara att öppna i dashboarden. Knappen CV under
+  Ansökningar läser raden med `CV_RAD` i `nextrum-admin-rekrytering.js`:
+  **ändras formatet i den ena ska den andra ändras i samma ändring**,
+  annars försvinner knappen utan att något blir rött. En PDF öppnas i
+  en ny flik med en länk som gäller fem minuter, och fliken öppnas i
+  samma tryck: Safari stoppar tyst ett fönster som öppnas efter en
+  väntan på nätet. Word hämtas som en blob och laddas ned. PDF:en kan
+  inte gå den vägen, för en blob-adress ärver adminvyns CSP och
+  `object-src 'none'` stoppar PDF-visaren.
 - **Tar du bort en fil: filen först, raden sedan, och LÄS SVARET.**
   Sökvägen finns bara i raden. Försvinner raden först blir filen omöjlig
   att hitta och omöjlig att städa. Det stod som en kommentar i
@@ -1696,15 +1739,19 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   rapportera och en familj som inte får betala.
 
   `SKISS-BETALNING-STRIPE.md` beskriver hur beslutet gick.
-- **Planer och klippkort (Fas 16.1) är byggda men inte öppna.**
-  Flaggan `erbjudanden` står av. Före påslaget: driftsätt
-  `stripe-webhook`, `stripe-checkout` och `klippkort-betala` i den
-  ordningen — webhooken först, annars blir ett köpt kort en betalning
-  hos Stripe som aldrig blir `betald` hos oss — och gör provköpet i
-  DEPLOY-BETALNING.md 9.12. Kvar efter det: familjen kan inte själv
-  avboka ett pass de betalat med timmar (samma spärr som för kort, fast
-  inga pengar ska tillbaka), och ingen påminnelse går ut innan timmar
-  löper ut.
+- **Planer och klippkort (Fas 16.1) är öppna sedan 2026-09-27**, på
+  Leos besked och INNAN provköpet var gjort. Stripe hade då bara körts i
+  testläge, och det fanns två föräldrakonton. Funktionerna ligger ute:
+  `stripe-webhook` (version 9) och `stripe-checkout` (version 13) är
+  identiska med main, och `klippkort-betala` driftsattes då för första
+  gången — den fanns inte i driften, så Betala med timmar hade fått 404.
+  Provköpet i DEPLOY-BETALNING.md 9.12 är fortfarande ogjort och ska
+  göras innan en riktig familj köper. Går något fel: stäng av flaggan. Sedan Fas 21 avbokar familjen själv ett
+  pass betalt med timmar, och påminns tio dagar innan timmarna går ut.
+  `notis-ko` med mallen för `timmar_gar_ut` är driftsatt (version 18,
+  2026-09-27, jämförd byte för byte mot repot). Kvar: en familj som inte är matchad når inte
+  Erbjudanden (föräldravyn är låst till dess), så timmar köps först
+  efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
   (Fas 18.1). Koden, tabellerna och Koppla-knappen finns; kopplingen
   kräver stegen hos Google i `INTEGRATIONER.md` och ett klick på
@@ -1735,6 +1782,12 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
+- **Ansökningar och CV:n rensas inte.** Integritetspolicyn lovar att en
+  ansökan som inte leder till anställning sparas högst ett år. Inget
+  schemalagt jobb, ingen knapp och ingen policy tar bort vare sig
+  raden i `applications` eller filen i `cv` (kontrollerat 2026-09-27).
+  Tas raden bort för hand står filen kvar, och sökvägen fanns bara i
+  raden.
 
 ---
 

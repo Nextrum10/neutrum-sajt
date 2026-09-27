@@ -23,7 +23,7 @@
 
 export const NOTIS_TYPER = [
   'pass_nytt', 'pass_bekraftat', 'pass_flyttat', 'pass_avbokat', 'pass_avbojt',
-  'meddelande', 'rapport', 'paminnelse',
+  'meddelande', 'rapport', 'paminnelse', 'timmar_gar_ut',
 ] as const;
 
 export type NotisTyp = typeof NOTIS_TYPER[number];
@@ -31,7 +31,7 @@ export type NotisTyp = typeof NOTIS_TYPER[number];
 /** Samma som notis_mejlbara(): allt utom rapport, som bara syns i appen. */
 export const MEJLBARA = [
   'pass_nytt', 'pass_bekraftat', 'pass_flyttat', 'pass_avbokat', 'pass_avbojt',
-  'meddelande', 'paminnelse',
+  'meddelande', 'paminnelse', 'timmar_gar_ut',
 ] as const;
 
 export type MejlbarTyp = typeof MEJLBARA[number];
@@ -98,6 +98,8 @@ export type RenData = {
   skal: Avbokningsskal | null;
   /** Fas 14.6. Bara 'faktura' eller null: en kod, aldrig text. */
   betalsatt: 'faktura' | null;
+  /** Fas 21.2. Köpta timmar som är kvar på ett kort som snart går ut. */
+  kvar: number | null;
   prov: boolean;
 };
 
@@ -119,6 +121,12 @@ function timmarOk(v: unknown): number | null {
   return Number.isInteger(n) && n >= 1 && n <= 168 ? n : null;
 }
 
+/** Ett klippkort har högst 200 timmar (erbjudanden.timmar). */
+function kvarOk(v: unknown): number | null {
+  const n = typeof v === 'number' ? v : typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : NaN;
+  return Number.isInteger(n) && n >= 1 && n <= 200 ? n : null;
+}
+
 const STATUSAR = ['requested', 'confirmed', 'cancelled', 'completed'] as const;
 
 export function renData(v: unknown): RenData {
@@ -137,6 +145,7 @@ export function renData(v: unknown): RenData {
     status,
     skal: AVBOKNINGSSKAL.find((k) => k === d.skal) ?? null,
     betalsatt: d.betalsatt === 'faktura' ? 'faktura' : null,
+    kvar: kvarOk(d.kvar),
     prov: d.prov === true,
   };
 }

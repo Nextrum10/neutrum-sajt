@@ -62,13 +62,15 @@ export const SMS_AVSANDARE = 'Nextrum';
 export const SMS_TIDSGRANS_MS = 8_000;
 
 /* GSM 03.38, grunduppsättningen (utan escape och utan tilläggstabellen,
-   vars tecken kostar två platser). Ordningen är tabellens, 0x00–0x7F. */
+   vars tecken kostar två platser). Ordningen är tabellens, 0x00–0x7F.
+   ESC står som \x1b, inte som tecknet självt: ett osynligt styrtecken
+   i källan föll bort i driftens kopia, och då släppte arGsm igenom det. */
 const GSM =
-  '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?' +
+  '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞ\x1bÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?' +
   '¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà';
 
 export function arGsm(s: string): boolean {
-  for (const c of s) if (c === '' || !GSM.includes(c)) return false;
+  for (const c of s) if (c === '\x1b' || !GSM.includes(c)) return false;
   return true;
 }
 

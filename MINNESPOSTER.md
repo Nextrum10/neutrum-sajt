@@ -70,7 +70,9 @@ i rapporten, ett förbetalt pass som drog över får ett tillägg
 och är sedan låst i databasen tills admin öppnar den med ett skäl (Fas
 20.2). Belopp lagras i ören överallt. Planerna och klippkorten (Fas 16.1) prissätts bara i vyn
 `erbjudanden_pris`, och inom ångerfristen räknas använda timmar till det
-betalda priset, inte till 379 kr.
+betalda priset, inte till 379 kr. Ett pass betalt med timmar avbokar
+familjen själv, och timmarna kommer tillbaka; tio dagar innan ett kort
+går ut mejlas familjen om timmar finns kvar (Fas 21).
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.

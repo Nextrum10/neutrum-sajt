@@ -2045,7 +2045,10 @@ window.NXStudie = (function () {
     { typ: 'pass_avbokat',   namn: 'Avbokat pass',         om: 'När ett bokat pass ställs in.' },
     { typ: 'pass_avbojt',    namn: 'Avböjd tid',           om: 'När en föreslagen tid inte passar.' },
     { typ: 'meddelande',     namn: 'Nya meddelanden',      om: 'När någon skriver till dig.' },
-    { typ: 'paminnelse',     namn: 'Påminnelse före pass', om: 'Innan ett bokat pass.' }
+    { typ: 'paminnelse',     namn: 'Påminnelse före pass', om: 'Innan ett bokat pass.' },
+    /* Fas 21.2. Bara familjen köper timmar, så bara föräldravyn visar
+       raden: en strömbrytare för ett mejl man aldrig kan få är brus. */
+    { typ: 'timmar_gar_ut',  namn: 'Köpta timmar går ut',  om: 'Tio dagar innan köpta timmar går ut, om det finns timmar kvar.', bara: 'parent' }
   ];
 
   function notisval(o) {
@@ -2070,8 +2073,11 @@ window.NXStudie = (function () {
       return rad.om;
     }
 
+    /* o.roll säger vilken vy som ritar. En rad med bara: visas bara där. */
+    var rader = NOTISVAL.filter(function (rad) { return !rad.bara || rad.bara === o.roll; });
+
     function rita() {
-      host.innerHTML = NOTISVAL.map(function (rad) {
+      host.innerHTML = rader.map(function (rad) {
         var på = pa[rad.typ] !== false;
         return '<div class="nx-nval">'
           + '<div class="nx-nval-text"><b>' + esc(rad.namn) + '</b>'

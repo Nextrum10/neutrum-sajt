@@ -956,13 +956,25 @@
      passlistan, passrutan och Översikt — och de tre måste säga samma
      sak. Två kopior fanns redan och hade hunnit skilja sig åt i
      märkningen; en tredje hade varit en tredje som kan glida isär. */
+  /* Pengar på passet: betalt med kort, eller i tvist. Då nekar
+     databasen en avbokning härifrån (Fas 14.1), för det är Nextrum som
+     betalar tillbaka. Ett pass betalt med timmar har inga pengar på sig
+     (Fas 21.1): familjen avbokar det själv, och timmarna kommer tillbaka
+     av sig själva. Samma villkor som skydda_bokningsfalt. */
+  function pengarPå(b) {
+    if (b.betalning_status === 'tvist') return true;
+    if (b.betalning_status !== 'betald') return false;
+    return !(b.klippkort_id && !Number(b.betalt_ore || 0));
+  }
+  const medTimmar = b => b.betalning_status === 'betald' && !!b.klippkort_id && !pengarPå(b);
+
   function svarsKnappar(b, små) {
     const s = små ? ' btn-sm' : '';
     /* Ett betalt pass som flyttats är en förfrågan igen, men att avböja
        det är att avboka det, och det nekar databasen (Fas 14.1). Passar
        ingen tid är det Nextrum som betalar tillbaka — passets sida
-       säger det. */
-    const betalt = b.betalning_status === 'betald' || b.betalning_status === 'tvist';
+       säger det. Ett pass betalt med timmar går att avböja (Fas 21.1). */
+    const betalt = pengarPå(b);
     return '<button type="button" class="btn btn-primary' + s + '" data-passvar="confirmed" data-id="' + esc(b.id) + '">Passar bra</button>'
          + (betalt ? '' : '<button type="button" class="btn btn-ghost' + s + '" data-passvar="cancelled" data-id="' + esc(b.id) + '">Avböj</button>');
   }
@@ -1777,7 +1789,7 @@
     const ok = await NXStudie.bekräfta({
       titel: 'Betala med timmar?',
       text: ord(behov) + ' dras från ' + kort.namn + '. Kvar efteråt: ' + ord(Number(kort.kvar) - behov)
-        + ' av ' + kort.timmar + '. Avbokas passet av oss kommer timmarna tillbaka.',
+        + ' av ' + kort.timmar + '. Avbokas passet kommer timmarna tillbaka.',
       knapp: 'Dra ' + ord(behov)
     });
     if (!ok) return;
@@ -1843,9 +1855,9 @@
        som inte går ihop med summan bredvid. */
     const perTimme = Number(e.rabatterat_timpris_ore);
     const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
-    const vad = e.kod === 'standard' ? '4 pass · ett i veckan i en månad'
-      : e.kod === 'intensiv' ? '8 pass · två i veckan i en månad'
-      : 'Gäller i ' + mån;
+    /* Ur raden, inte ur koden (Fas 21.3): ändras timmarna eller
+       giltigheten i katalogen ska kortet säga det nya av sig självt. */
+    const vad = e.timmar + ' timmar · gäller i ' + mån;
     return '<div class="erb-kort' + (e.kod === 'intensiv' ? ' ar-framhavd' : '') + '">'
       + '<div class="erb-topp"><b class="erb-namn">' + esc(e.namn) + '</b>'
       + '<span class="erb-rabatt">−' + esc(String(e.rabatt_procent)) + ' %</span></div>'
@@ -1932,12 +1944,22 @@
       kontakt.href = 'mailto:' + NX.CFG.EPOST + '?subject=' + encodeURIComponent('Eget upplägg');
     }
 
+    /* Vägen hit från Betalning (Fas 21.3). Har familjen redan timmar
+       står knappen Betala med timmar på passen, och då är tipset brus. */
+    const tips = $('#bet-erb-tips');
+    if (tips) tips.hidden = !(S.erb.aktiv && S.erb.katalog.length && !S.erb.kort.some(k => k.brukbar));
+
     const box = $('#erb-mina-box'), mina = $('#erb-mina');
     if (!box || !mina) return;
     box.hidden = !S.erb.kort.length;
     const idag = isoFor(new Date());
     mina.innerHTML = S.erb.kort.map(k => {
       const kvar = Number(k.kvar), tim = Number(k.timmar);
+      /* Tio dagar före sista dagen går påminnelsemejlet (Fas 21.2), och
+         vyn säger samma sak från samma dag: timmar som inte används
+         förfaller. */
+      const dagarKvar = Math.round((Date.parse(String(k.giltigt_till)) - Date.parse(idag)) / 864e5);
+      const snart = k.brukbar && dagarKvar >= 0 && dagarKvar <= 10;
       const läge = k.status === 'aterbetald' ? 'Återbetalt'
         : k.status === 'tvist' ? 'Betalningen är ifrågasatt'
         : kvar === 0 ? 'Förbrukat'
@@ -1949,6 +1971,9 @@
         + '<div class="erb-matare" role="img" aria-label="' + esc(kvar + ' av ' + tim + ' timmar kvar') + '">'
         + '<i style="width:' + andel + '%"></i></div>'
         + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar</span>'
+        + (snart ? '<p class="erb-snart">'
+          + esc(dagarKvar === 0 ? 'Sista dagen är i dag.' : dagarKvar === 1 ? 'Sista dagen är i morgon.' : 'Sista dagen är om ' + dagarKvar + ' dagar.')
+          + ' Timmar som inte används förfaller. <a href="#boka">Boka ett pass</a></p>' : '')
         + '</div>';
     }).join('');
   }
@@ -2197,16 +2222,20 @@
        hade gett två notiser, och den första — utan skäl — hade redan
        hunnit bli ett mejl. */
     const förslag = btn.dataset.forslag === '1';
+    /* Fas 21.1: ett pass betalt med timmar går att avboka, och rutan
+       säger vart timmarna tar vägen innan familjen bestämt sig. */
+    const passet = (S.bokningar || []).find(x => x.id === btn.dataset.avboka);
+    const timmarTillbaka = passet && medTimmar(passet) ? ' Timmarna ni betalade med kommer tillbaka.' : '';
     const skäl = await NXStudie.avbokaRuta(förslag ? {
       titel: 'Dra tillbaka förslaget?',
       text: 'Vill ni hellre ha en annan tid, välj Ändra tiden i stället.',
       knapp: 'Dra tillbaka',
       avbryt: 'Behåll förslaget',
-      not: 'Er studiehjälpare får ett mejl om att förslaget är tillbakadraget och varför.'
+      not: 'Er studiehjälpare får ett mejl om att förslaget är tillbakadraget och varför.' + timmarTillbaka
     } : {
       titel: 'Avboka passet?',
       text: 'Vill ni hellre byta tid, välj Föreslå ny tid i stället — då ligger passet kvar tills er studiehjälpare svarat.',
-      not: 'Er studiehjälpare får ett mejl om att passet är avbokat och varför.'
+      not: 'Er studiehjälpare får ett mejl om att passet är avbokat och varför.' + timmarTillbaka
     });
     if (!skäl) return;
     btn.setAttribute('aria-busy', 'true');
@@ -2214,7 +2243,7 @@
       .eq('id', btn.dataset.avboka);
     btn.removeAttribute('aria-busy');
     if (error) { alert('Kunde inte avboka: ' + felText(error)); return; }
-    await Promise.all([laddaPass(), laddaBokning()]);
+    await Promise.all([laddaPass(), laddaBokning()].concat(timmarTillbaka ? [laddaErbjudanden()] : []));
   });
 
   /* ============================================================
@@ -2906,7 +2935,7 @@
        tillbaka en flyttad tid är också en avbokning. Knapparna visas
        därför inte på ett betalt pass — ett nej efter ett klick är sämre
        än en mening som säger vart man vänder sig. */
-    const betalt = b.betalning_status === 'betald' || b.betalning_status === 'tvist';
+    const betalt = pengarPå(b);
     const viaOss = ' Passet är redan betalt. Ska det avbokas, hör av er till oss så betalar vi tillbaka.';
 
     let besked = null, atgarder = '', alternativ = '';
@@ -2929,8 +2958,11 @@
          kvar. Det är ett beslut någon hos oss tagit, och vyn gissar
          inte vilket — "betala med kort" utan en knapp hade varit en
          uppmaning som inte går att följa. */
+      const ses = förnamn + ' ses med ' + (barn ? barn.name.split(' ')[0] : 'er') + ' ' + NXStudie.relativDag(b.wanted_date) + '.';
       besked = betalt
-        ? { text: 'Passet är bokat och betalt. ' + förnamn + ' ses med ' + (barn ? barn.name.split(' ')[0] : 'er') + ' ' + NXStudie.relativDag(b.wanted_date) + '. Ska det avbokas, hör av er till oss så betalar vi tillbaka.', ton: 'klart' }
+        ? { text: 'Passet är bokat och betalt. ' + ses + ' Ska det avbokas, hör av er till oss så betalar vi tillbaka.', ton: 'klart' }
+        : medTimmar(b)
+        ? { text: 'Passet är bokat och betalt med era timmar. ' + ses + ' Avbokar ni det kommer timmarna tillbaka.', ton: 'klart' }
         : b.fakturerbar === false
         ? { text: 'Passet är bokat.', ton: 'klart' }
         : b.betalning_status === 'aterbetald'
@@ -3285,6 +3317,7 @@
       host: $('#notisval-lista'),
       supa: supa,
       anvandare: S.user.id,
+      roll: 'parent',
       msg: $('#notisval-msg')
     });
 
