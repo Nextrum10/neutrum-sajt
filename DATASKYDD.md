@@ -47,7 +47,7 @@ finnas. Det här är det.
 | 5 | Pass och bokningar (`bookings`, `pass_moten`) | förälder, barn, studiehjälpare | datum, tid, ämne, plats (ofta en hemadress), avbokningsskäl | 6.1 b | Supabase; Google (Meet-rum, när kopplat) | som kontot; pass med betalning 7 år |
 | 6 | Chatt (`messages`) | förälder, studiehjälpare | meddelandetext | 6.1 b | Supabase | som kontot |
 | 7 | Notiser och mejl (`notiser`, `notis_utskick`) | alla med konto | typ, datum, förnamn, ämne | 6.1 b | Resend | 180 dagar i vyn, 90 dagar för utskicken |
-| 8 | Betalning (`bookings.betalning_*`, `klippkort`, `pass_tillagg`, `stripe_handelser`, `stripe_tvister`, `invoices`) | förälder | belopp, tid, e-post, Stripe-id | 6.1 b; 6.1 c bokföringslagen | Stripe (e-post, belopp, ämne och datum) | 7 år |
+| 8 | Betalning (`bookings.betalning_*`, `klippkort`, `pass_tillagg`, `timbank_uttag`, `stripe_handelser`, `stripe_tvister`, `invoices`) | förälder | belopp, tid, e-post, Stripe-id | 6.1 b; 6.1 c bokföringslagen | Stripe (e-post, belopp, ämne och datum) | 7 år |
 | 9 | Ersättning till studiehjälpare (`payouts`) | studiehjälpare | timmar, belopp | 6.1 b; 6.1 c | Fortnox (för hand) | 7 år |
 | 10 | Jobbansökan (`applications`, hinken `cv`) | sökande, ofta 16 år | namn, ålder, e-post, skola, ämnen, fritext, CV | 6.1 f | Supabase, Resend (besked) | 1 år, eller 30 dagar efter senaste steget |
 | 11 | Kontaktformuläret (`contact_messages`) | vem som helst | namn, e-post, fritext | 6.1 f | Supabase | 6 mån efter inkommet eller besvarat |
@@ -174,6 +174,7 @@ som står på kontot, inte till en ny.
 **Utdrag (art. 15).** För en familj: `profiles`, `students`,
 `study_plans`, `homework`, `progress_items`, `lesson_reports`,
 `bookings`, `messages`, `leads` (om den inte är gallrad), `klippkort`,
+`timbank_rorelser`,
 `invoices`, `rapport_bekraftelser`, `notis_val`. Förälderns egna
 anteckningar (`student_notes`) når vi inte; familjen ser dem själv. För
 en sökande: `applications` och CV-filen. Skicka som en fil, inte som

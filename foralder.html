@@ -28,7 +28,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
-<link rel="stylesheet" href="nextrum-vy.css?v=5834920e">
+<link rel="stylesheet" href="nextrum-vy.css?v=c552270c">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=f6fa7abc">
@@ -609,7 +609,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Erbjudanden</h2>
-            <p>Köp timmar i förväg och betala mindre per timme. När er studiehjälpare har bekräftat ett pass betalar ni det med ett tryck ur era timmar, i stället för med kort.</p>
+            <p>Köp timmar i förväg och betala mindre per timme. När er studiehjälpare har bekräftat ett pass betalar timmarna det av sig själva, i stället för kortet.</p>
           </div>
         </div>
         <div class="stack">
@@ -666,7 +666,7 @@
                  Syns bara när erbjudandena går att köpa och familjen
                  inte redan har timmar att betala med; ritaErbjudanden()
                  avgör det. -->
-            <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Köp timmar i förväg och betala mindre per timme, så betalar ni passen med ett tryck. <a href="#erbjudanden">Se planer och klippkort</a></p>
+            <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Köp timmar i förväg och betala mindre per timme. Timmarna betalar sedan passen av sig själva. <a href="#erbjudanden">Se planer och klippkort</a></p>
           </div>
 
           <!-- Faktura (Fas 14.6). Fakturorna som skickats, och passen
@@ -878,11 +878,19 @@
 
              Ritas av ritaTimbankProfil() ur samma hämtning som Era
              timmar (laddaErbjudanden), så de två kan aldrig visa olika
-             saldo. -->
+             saldo.
+
+             Fas 22.2, samma dag: "timbanken ska även inkludera
+             klippkort". Fliken har därför två rutor: köpta timmar, kort
+             för kort med passen de betalat, och de sparade minuterna. -->
         <div class="vy-flik-panel" role="tabpanel" data-flik="timbank"
              id="panel-timbank" aria-labelledby="flik-timbank" hidden>
           <div class="dbox">
-            <h5>Timbanken <em>går inte ut</em></h5>
+            <h5>Köpta timmar</h5>
+            <div id="timbank-timmar"><div class="loading">Hämtar</div></div>
+          </div>
+          <div class="dbox">
+            <h5>Sparade minuter <em>går inte ut</em></h5>
             <div id="timbank-profil"><div class="loading">Hämtar</div></div>
           </div>
         </div>
@@ -966,6 +974,6 @@
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=973469fe"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=8655b927"></script>
+<script src="nextrum-studie-vy.js?v=2009b8c1"></script>
 </body>
 </html>
