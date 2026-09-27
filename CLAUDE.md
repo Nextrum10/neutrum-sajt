@@ -1519,6 +1519,17 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 `test, ok, detalj` — **varje rad ska vara ok**. Kör den efter varje
 ändring i en policy eller en trigger.
 
+**Kör hela filen, inte bara ditt eget avsnitt.** 2026-09-27 hade den
+varit röd sedan förmiddagen utan att någon sett det, för varje session
+provade sin egen del för sig. Fas 19.2 gjorde kortspärren omöjlig att
+slå på, och elva äldre prov som slog på den föll med 23514; de lyfter nu
+villkoret i sin egen deltransaktion (`pg_temp.sparren_pa()`), så att
+koden hålls i form till den dag villkoren går tillbaka till betalning
+före passet. Fas 19.5 flyttade sitt pass till i går klockan 10 hos
+studiehjälpare A, där fixturen från Fas 14.2 redan stod, och krockade
+med `bookings_tutor_slot_unique` i varje hel körning. En fixtur i
+huvudtransaktionen syns för allt som kommer efter den i filen.
+
 ---
 
 ## 10. Arbetssätt
