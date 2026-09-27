@@ -64,7 +64,7 @@
 import { type Inloggad, kravInloggad, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
 import { StripeError, v1, VALUTA } from '../_delad/stripe.ts';
-import { familjebelopp, radtext, standardTjanst, type Tjanst } from '../_delad/pris.ts';
+import { familjebelopp, passpris, radtext, standardTjanst, type Tjanst } from '../_delad/pris.ts';
 import { arErbjudandekod, type ErbjudandePris, kanAteranvandas, kassarad } from '../_delad/erbjudanden.ts';
 
 const CORS = cors();
@@ -72,8 +72,9 @@ const CORS = cors();
 /* Räknas upp när sessionens parametrar ändras. Se idempotensnyckeln.
    2: bara kort och kvitto till familjens adress (Fas 14.3).
    3: Managed Payments uttryckligen av (Fas 14.4).
-   4: kassan kan bäddas in i föräldravyn (Fas 14.5). */
-const SESSIONSFORM = 4;
+   4: kassan kan bäddas in i föräldravyn (Fas 14.5).
+   5: raden säger när första timmen är på köpet (Fas 19.5). */
+const SESSIONSFORM = 5;
 
 /* DEN INBÄDDADE KASSAN (Fas 14.5)
 
@@ -291,7 +292,7 @@ Deno.serve(async (req) => {
      Kostade en röd CI-körning. fakturering/index.ts:220 gör rätt. */
   const { data: pass, error: passfel } = await vem.klient
     .from('bookings')
-    .select('id, parent_id, tutor_id, subject, wanted_date, duration_min, tjanst, antal_barn, rabatt_ore, status, betalning_status, stripe_session_id, fakturerbar')
+    .select('id, parent_id, tutor_id, subject, wanted_date, duration_min, tjanst, antal_barn, rabatt_ore, timpris_ore, extra_ore, startrabatt, status, betalning_status, stripe_session_id, fakturerbar')
     .eq('id', passId)
     .maybeSingle();
 
@@ -349,9 +350,13 @@ Deno.serve(async (req) => {
     const standard = standardTjanst(tjanster);
     const tjanst = tjanster.find((t) => t.kod === pass.tjanst) ?? standard ?? undefined;
 
-    const timprisOre = Number(tjanst?.pris_per_timme_ore ?? 0)
-      || Number(pris?.pris_per_timme_ore ?? 0);
-    const extraOre = Number(tjanst?.extra_personer_ore ?? 0);
+    /* PRISET ÄR DET SOM FRYSTES VID BOKNINGEN (Fas 19.5). Villkoren
+       lovar priset vid bokningen, och här räknades förut dagens pris:
+       höjdes priset mellan bokningen och betalningen drog kortet mer än
+       vi lovat. Tjänstens pris är bara reserven, för ett pass som saknar
+       det frysta. */
+    const { timme: timprisOre, extra: extraOre } =
+      passpris(pass, tjanst, Number(pris?.pris_per_timme_ore ?? 0));
     const minuter = Number(pass.duration_min || 60);
     const barn = Math.max(1, Number(pass.antal_barn || 1));
 
@@ -364,7 +369,15 @@ Deno.serve(async (req) => {
     const rabatt = Math.min(Math.max(Number(pass.rabatt_ore || 0), 0), brutto);
     const netto = brutto - rabatt;
 
-    if (netto <= 0) return json({ error: 'Passets belopp blir noll.' }, 409, CORS);
+    /* Första timmen bjuds (Fas 19.5): ett pass på en timme kan kosta
+       ingenting. Det ska inte betalas, och vyn visar ingen knapp för det. */
+    if (netto <= 0) {
+      return json({
+        error: pass.startrabatt
+          ? 'Passet kostar ingenting: första timmen är på köpet.'
+          : 'Passets belopp blir noll.',
+      }, 409, CORS);
+    }
 
     // ---------- sessionen ----------
     const { data: kund } = await vem.klient
@@ -434,7 +447,8 @@ Deno.serve(async (req) => {
           unit_amount: netto,
           product_data: {
             name: `${text}${barn > 1 ? ` (${barn} barn)` : ''}`,
-            description: `Läxhjälp, ${minuter} minuter`,
+            description: `Läxhjälp, ${minuter} minuter`
+              + (pass.startrabatt && rabatt > 0 ? ', första timmen på köpet' : ''),
           },
         },
       }],

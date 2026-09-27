@@ -582,6 +582,14 @@ window.NXArbete = (function () {
       var perTimme = timprisOre() + (st.barn > 1 ? extraOre() : 0);
       return Math.round(perTimme * st.minuter / 60);
     }
+    /* Första timmen bjuds (Fas 19.5). o.bjuden(minuter) svarar om
+       förslaget blir passet som får timmen; databasen avgör
+       (forsta_timmen_bjuds), det här visar bara priset i förväg. En
+       timme till passets timpris, aldrig mer än passet kostar. */
+    function bjudenOre() {
+      if (!o.bjuden || !o.bjuden(st.minuter)) return 0;
+      return Math.min(timprisOre() + (st.barn > 1 ? extraOre() : 0), bruttoOre());
+    }
 
     /* ---------- vilka timmar som går ---------- */
 
@@ -728,8 +736,8 @@ window.NXArbete = (function () {
           : '<b>Välj en tid</b>'
             + '<span>' + esc(vem + ' accepterar tiden eller föreslår en annan.') + '</span>')
         + '</div>'
-        + '<div class="bk-sum-pris"><b>' + esc(kr(bruttoOre() / 100)) + '</b>'
-        + '<span>' + esc(längdText()) + '</span></div>'
+        + '<div class="bk-sum-pris"><b>' + esc(kr((bruttoOre() - bjudenOre()) / 100)) + '</b>'
+        + '<span>' + esc(bjudenOre() ? 'Första timmen på köpet' : längdText()) + '</span></div>'
         + '<button class="btn btn-primary" id="bk-boka" type="button"'
         + (klar ? '' : ' disabled') + '>Föreslå tiden</button>'
         + '</div>';
