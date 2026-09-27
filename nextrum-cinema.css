@@ -2686,11 +2686,13 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .nx-rakne li:first-child b{color:var(--acc-text)}
 
 /* ============================================================
-   ERBJUDANDEN PÅ PRISSIDAN (Fas 16.1)
-   Planerna är två kort bredvid varandra, klippkorten en rad med
-   fem. Det överstrukna timpriset och "ni sparar" står på varje
-   kort, för det är skillnaden mot 379 kr man jämför — inte
-   procentsatsen.
+   ERBJUDANDEN PÅ PRISSIDAN (Fas 16.1, kolumnerna 2026-09-26)
+   Tre kolumner: de två planerna och klippkorten. Klippkorten var
+   förut en egen rad med fem kort under planerna, och på en telefon
+   en vägg på två skärmar. Nu är de EN kolumn som fälls ut, och de
+   fem korten står i den som rader. Det överstrukna timpriset och
+   "ni sparar" står på varje rad, för det är skillnaden mot 379 kr
+   man jämför — inte procentsatsen.
 
    [hidden] måste skrivas ut: korten har egen display, och
    initErbjudanden() döljer ett erbjudande som stängts av i
@@ -2698,11 +2700,33 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    ============================================================ */
 .pr-erb [hidden]{display:none}
 
-.pr-erb-rubrik{
-  margin:clamp(34px,4vw,52px) 0 16px;
-  font-size:clamp(1.15rem,1.8vw,1.35rem);font-weight:700;letter-spacing:-.025em;color:var(--bl);
+.pr-erb-planer{
+  margin-top:clamp(34px,4vw,52px);
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2vw,26px);
 }
-.pr-erb-planer{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(14px,2vw,26px)}
+/* Tre kolumner i bredd. Villkoren och knappen (.pr-erb-fot) står i
+   andra raden under planerna. Utfälld sträcker sig klippkortens
+   kolumn ner genom den raden i stället för att göra den första
+   högre: planerna och knappen står kvar där de stod, och det enda
+   som rör sig är det man tryckte fram. Raden är 1fr för att det
+   bara är flexibla spår som tar emot överskottet från ett element
+   som spänner över flera; med auto hade det delats på båda raderna
+   och planerna hade sträckts. */
+@media (min-width:1001px){
+  .pr-erb-planer{grid-template-rows:auto 1fr}
+  .pr-erb-klippkol{grid-column:3;grid-row:1}
+  .pr-erb-klippkol[open]{grid-row:1 / span 2}
+  .pr-erb-fot{grid-column:1 / 3;grid-row:2}
+  /* Alla klippkort avstängda i databasen: två kolumner, som förut,
+     inte två planer och ett hål. */
+  .pr-erb-planer:has(> .pr-erb-klippkol[hidden]){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* Mellanbredd: planerna bredvid varandra och klippkorten under dem
+   över hela bredden. Tre smala kolumner hade brutit summorna. */
+@media (max-width:1000px){
+  .pr-erb-planer{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pr-erb-klippkol,.pr-erb-fot{grid-column:1 / -1}
+}
 @media (max-width:760px){.pr-erb-planer{grid-template-columns:minmax(0,1fr)}}
 .pr-erb-plan{padding:clamp(24px,2.8vw,36px)}
 .pr-erb-topp{display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -2710,63 +2734,100 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   font-size:.8rem;font-weight:700;padding:4px 11px;border-radius:999px;white-space:nowrap;
   background:var(--acc-soft);color:var(--acc-text);
 }
-.pr-erb-vad{margin:14px 0 18px;color:var(--muted);font-size:.98rem;line-height:1.5}
+.pr-erb-vad{display:block;margin:14px 0 18px;color:var(--muted);font-size:.98rem;line-height:1.5}
 .pr-erb-plan .nx-amount b{font-size:clamp(2.1rem,4vw,3rem)}
-.pr-erb-plan .pr-erb-tim{margin-top:16px}
+.pr-erb-plan > .pr-erb-tim{margin-top:16px}
 .pr-erb-tim{font-size:.9rem;color:var(--muted);line-height:1.5}
 .pr-erb-tim s{color:var(--muted-2)}
 .pr-erb-tim b{color:var(--bl);font-weight:700}
 
-.pr-erb-ingress{margin:-4px 0 18px;max-width:56ch;color:var(--muted);font-size:.98rem;line-height:1.55}
-/* Kolumnerna skapas av korten, inte av en fast femma: ett avstängt
-   kort är display:none och ska inte lämna ett hål i raden. */
+/* Klippkortens kolumn. Hela rubriken är det man trycker på, så
+   kortets luft ligger i summary och inte i kortet: ett tryck i
+   kanten ska också fälla ut. Kortet har overflow:hidden (glöden i
+   hörnet), därför ligger fokusringen innanför kanten. */
+.pr-erb-klippkol{padding:0}
+.pr-erb-klippkol > summary{
+  display:block;list-style:none;cursor:pointer;
+  padding:clamp(24px,2.8vw,36px);border-radius:inherit;
+  -webkit-tap-highlight-color:transparent;
+}
+.pr-erb-klippkol > summary::-webkit-details-marker{display:none}
+.pr-erb-klippkol > summary:focus-visible{outline-offset:-4px;border-radius:inherit}
+/* Raden tar ungefär planernas timprisrad i höjd. Blir rubriken
+   högre än planerna blir första raden i griden det också, och då
+   krymper planerna när kolumnen fälls ut och första raden går
+   tillbaka till deras höjd. */
+.pr-erb-visa{
+  display:flex;align-items:center;gap:10px;margin-top:12px;
+  font-size:.92rem;font-weight:700;color:var(--bl);
+}
+/* Pilen står i högerkanten, där den inte flyttar sig när texten
+   byts mellan "Se" och "Dölj". */
+.pr-erb-visa svg{
+  flex:none;margin-left:auto;width:28px;height:28px;padding:6px;
+  border:1px solid var(--ln);border-radius:50%;
+  transition:transform .35s var(--ease),border-color .2s,background-color .2s;
+}
+.pr-erb-klippkol > summary:hover .pr-erb-visa svg{border-color:var(--acc-line);background:var(--acc-soft)}
+.pr-erb-klippkol[open] .pr-erb-visa svg{transform:rotate(180deg)}
+.pr-erb-klippkol:not([open]) .pr-erb-visa-oppen,
+.pr-erb-klippkol[open] .pr-erb-visa-stangd{display:none}
+
+/* Korten i kolumnen. Kolumnerna i listan skapas av korten, inte av
+   ett fast antal: ett avstängt kort är display:none och ska inte
+   lämna ett hål. I den smala kolumnen blir det en rad per kort, över
+   hela bredden två bredvid varandra. */
 .pr-erb-klipp{
-  list-style:none;margin:0;padding:0;
-  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:12px;
+  list-style:none;margin:0;
+  padding:0 clamp(12px,1.8vw,20px) clamp(12px,1.8vw,20px);
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px;
 }
-@media (max-width:1080px){
-  .pr-erb-klipp{grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr))}
-}
+/* Timmarna och summan överst, där ögat jämför dem uppifrån och ner.
+   Timpriset har en egen rad: bredvid "ni sparar 1 900 kr" bröts det
+   i den smala kolumnen. Ytan är kortets egen: på papperet håller
+   kanten isär raderna, och i mörkt läge hade en egen yta varit samma
+   ton som kortet. */
 .pr-erb-kort{
-  display:flex;flex-direction:column;align-items:flex-start;gap:6px;
-  padding:20px 18px;border:1px solid var(--ln);border-radius:20px;
-  background:var(--pap);box-shadow:var(--sk-1);
+  display:grid;grid-template-columns:minmax(0,1fr) auto;
+  align-items:baseline;gap:4px 12px;
+  padding:16px 16px 14px;border:1px solid var(--ln);border-radius:18px;
 }
-.pr-erb-namn{font-size:1.05rem;font-weight:700;letter-spacing:-.02em;color:var(--bl)}
-.pr-erb-summa{margin-top:6px;font-size:clamp(1.5rem,2.2vw,1.8rem);font-weight:800;letter-spacing:-.04em;line-height:1.1;color:var(--bl)}
-.pr-erb-giltig{margin-top:auto;padding-top:8px;font-size:.82rem;color:var(--muted)}
-/* På en telefon är fem höga kort en vägg på två skärmar. Varje kort
-   blir en rad: timmarna och timpriset till vänster, summan och det
-   man sparar till höger, där ögat jämför dem uppifrån och ner. */
-@media (max-width:560px){
-  .pr-erb-kort{
-    display:grid;grid-template-columns:minmax(0,1fr) auto;
-    align-items:baseline;gap:4px 12px;padding:16px 16px 14px;
-  }
-  .pr-erb-namn{grid-area:1 / 1}
-  .pr-erb-summa{grid-area:1 / 2;justify-self:end;margin:0;font-size:1.35rem}
-  .pr-erb-tim{grid-area:2 / 1}
-  .pr-erb-spar{grid-area:2 / 2;justify-self:end}
-  .pr-erb-giltig{grid-area:3 / 1 / 4 / 3;margin:0;padding-top:2px}
+.pr-erb-namn{grid-area:1 / 1;font-size:1.05rem;font-weight:700;letter-spacing:-.02em;color:var(--bl)}
+.pr-erb-summa{
+  grid-area:1 / 2;justify-self:end;
+  font-size:1.35rem;font-weight:800;letter-spacing:-.04em;line-height:1.1;color:var(--bl);
 }
+.pr-erb-kort .pr-erb-tim{grid-area:2 / 1 / 3 / 3}
+.pr-erb-giltig{grid-area:3 / 1;align-self:center;font-size:.82rem;color:var(--muted)}
+.pr-erb-spar{grid-area:3 / 2;justify-self:end;margin-top:4px}
+/* Korten glider fram när kolumnen fälls ut. Bara opacity och
+   translate, och bara i öppningsögonblicket: stängd finns inget
+   att animera. */
+@media (prefers-reduced-motion:no-preference){
+  .pr-erb-klippkol[open] .pr-erb-kort{animation:pr-erb-fram .4s var(--ease) both}
+  .pr-erb-klippkol[open] .pr-erb-kort:nth-child(2){animation-delay:.04s}
+  .pr-erb-klippkol[open] .pr-erb-kort:nth-child(3){animation-delay:.08s}
+  .pr-erb-klippkol[open] .pr-erb-kort:nth-child(4){animation-delay:.12s}
+  .pr-erb-klippkol[open] .pr-erb-kort:nth-child(n+5){animation-delay:.16s}
+}
+@keyframes pr-erb-fram{from{opacity:0;translate:0 -8px}}
 
 /* Det mest köpta lyfts med kanten och skuggan, inte med en färgad
-   yta: priset ska vara det man läser först, på alla kort. */
-.pr-erb-plan.ar-framhavd,.pr-erb-kort.ar-framhavd{border-color:var(--acc-line);box-shadow:var(--sk-2)}
+   yta: priset ska vara det man läser först, på alla kort. Inne i
+   klippkortens kolumn bara med kanten — en skugga i ett kort som
+   redan har skugga blir grumlig. */
+.pr-erb-plan.ar-framhavd{border-color:var(--acc-line);box-shadow:var(--sk-2)}
+.pr-erb-kort.ar-framhavd{border-color:var(--acc-line)}
 
 /* "Pyttelitet", som Leo sa. Länken ska finnas, inte konkurrera. */
-.pr-erb-fin{margin-top:14px;max-width:70ch;font-size:.76rem;line-height:1.55;color:var(--muted-2)}
+.pr-erb-fin{margin-top:4px;max-width:70ch;font-size:.76rem;line-height:1.55;color:var(--muted-2)}
+.pr-erb-fot > .pr-erb-fin:first-child{margin-top:0}
 .pr-erb-fin a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 .pr-erb-fin a:hover{color:var(--bl)}
 
 .pr-erb-cta{margin-top:clamp(28px,3.4vw,44px);display:flex;flex-wrap:wrap;align-items:center;gap:14px 26px}
 .pr-erb-cta .nx-terms{margin:0;padding:0;border:0;max-width:52ch}
 .pr-erb-cta .nx-terms a{text-decoration:underline;text-underline-offset:3px}
-
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) .pr-erb-kort{background:var(--pap-2)}
-}
-:root[data-theme="dark"] .pr-erb-kort{background:var(--pap-2)}
 
 /* Foto i stället för initial på studiehjälparkortet. Bilden fyller
    samma ruta som bokstaven, så raden håller sin rytm oavsett vilka

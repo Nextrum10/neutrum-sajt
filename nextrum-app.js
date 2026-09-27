@@ -571,6 +571,27 @@ const NX = (function () {
       skriv(el, '[data-erb-rabatt]', String(r.rabatt_procent));
       skriv(el, '[data-erb-giltig]', m === 1 ? t('enManad') : t('flerManader', { n: m }));
     });
+
+    /* Klippkortens kolumn sammanfattar korten i den, och sammanfattningen
+       ska gälla de kort som finns KVAR: "från" det billigaste och spannet
+       i timmar. Rabatten skrivs bara om den är densamma på alla — en
+       procentsats som stämmer för ett av korten är ett pris som inte är
+       det kassan drar. Finns inget kort kvar döljs kolumnen, annars står
+       den där med gamla siffror och fälls ut till ingenting. */
+    $$('[data-erb-grupp]', sek).forEach(g => {
+      const kvar = $$('[data-erb]', g).filter(el => !el.hidden)
+        .map(el => perKod[el.getAttribute('data-erb')]);
+      if (!kvar.length) { g.hidden = true; return; }
+      const timmar = kvar.map(r => Number(r.timmar));
+      const rabatter = new Set(kvar.map(r => String(r.rabatt_procent)));
+      skriv(g, '[data-erb-fran]', kr(Math.min(...kvar.map(r => r.pris_ore)) / 100));
+      skriv(g, '[data-erb-min]', String(Math.min(...timmar)));
+      skriv(g, '[data-erb-max]', String(Math.max(...timmar)));
+      const rabatt = $('summary [data-erb-rabatt]', g);
+      if (!rabatt) return;
+      if (rabatter.size === 1) rabatt.textContent = [...rabatter][0];
+      else rabatt.closest('.pr-erb-rabatt').hidden = true;
+    });
   }
 
   /* ============================================================
