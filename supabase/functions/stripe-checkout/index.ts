@@ -315,6 +315,11 @@ async function betalaTillagg(
     if (forut?.status === 'betald' || forut?.status === 'tvist') {
       return json({ error: 'Tillägget är redan betalt.' }, 409, CORS);
     }
+    /* Ett återbetalt tillägg är ett beslut Nextrum tagit, och en ny kassa
+       hade rivit det. Samma regel som larmet tillagg_obetalt (Fas 20.4). */
+    if (forut?.status === 'aterbetald') {
+      return json({ error: 'Tillägget är återbetalt. Skriv till oss om något ska betalas.' }, 409, CORS);
+    }
     const debiterade = Number(underlag?.debiterade_min ?? 0);
     const betalda = Number(underlag?.betalda_min ?? 0);
     if (!(debiterade > betalda)) return json({ error: 'Passet har inget tillägg att betala.' }, 409, CORS);
