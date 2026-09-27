@@ -917,6 +917,15 @@ driftsatt sedan 2026-09-27 (version 18). Samma dag var `stripe-webhook`
 `klippkort-betala` driftsattes för första gången (version 1). Alla fyra
 ligger alltså ute; kvar är provköpet nedan.
 
+Timbanken (Fas 22.1) driftsattes samma eftermiddag i samma ordning, med
+`fakturering` sist: `stripe-webhook` version 10, `stripe-checkout`
+version 14, `klippkort-betala` version 2 och `fakturering` version 31,
+alla jämförda byte för byte mot grenen. Provköpet ska därför också ta
+steg 6 nedan, om timbanken. Samma kväll kom rättelserna i
+`timbanken_foljer_passet`: `stripe-webhook` version 11, `stripe-checkout`
+version 15 och `klippkort-betala` version 3. Webhooken gick ut före
+migrationen som tog bort `timbank_kortet_vann`, som den äldre anropade.
+
 Driftsätts en funktion genom MCP i stället för `supabase functions
 deploy`: hämta tillbaka den efteråt och jämför varje fil mot repot.
 Version 17 av `notis-ko` gick ut med en fil som bara innehöll ett
@@ -946,9 +955,16 @@ står därför inte i `config.toml`.
 5. Sätt kortets `giltigt_till` till om tio dagar och kör
    `select intern.timmar_gar_ut_koa();` mellan 9 och 20. Sandlådan ska få mejlet
    "Era köpta timmar går ut …" med antalet timmar kvar (Fas 21.2).
-6. Återbetala en del av köpet i Stripes dashboard. Kortet ska bli `aterbetald` och
+6. Timbanken (Fas 22.1). Boka ett pass på två timmar, betala med timmar, och låt
+   studiehjälparen rapportera 1 h 15 med ett skäl. Kortet ska ha dragit två
+   timmar, och `timbank_saldo.saldo_min` för familjen ska vara 45. Boka sedan ett
+   pass på en timme, betala med timmar, och rapportera 1 h 15: `timbank_uttag` ska
+   få en rad `overtid` på 15, familjen ska inte bli ombedd att betala något
+   tillägg, och saldot ska vara 30. När vyerna från Fas 22.1 ligger ute ska
+   studiehjälparen se minuterna på passet, och familjen dem under Era timmar.
+7. Återbetala en del av köpet i Stripes dashboard. Kortet ska bli `aterbetald` och
    inte längre gå att dra från.
-7. Står något av det fel: stäng av flaggan. Redan köpta timmar syns fortfarande,
+8. Står något av det fel: stäng av flaggan. Redan köpta timmar syns fortfarande,
    men inget nytt går att köpa eller dra.
 
 **Pengar tillbaka görs i Stripes dashboard, av en människa.** Beloppet står under

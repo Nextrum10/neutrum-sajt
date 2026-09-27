@@ -1836,6 +1836,8 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-kvar{font-size:.84rem;color:var(--bl-2)}
 .erb-kvar b{color:var(--bl);font-size:1rem}
 .erb-mitt.ar-slut{opacity:.6}
+/* Fas 22.1: timbanken, under klippkorten i Era timmar. */
+.erb-bank-text{margin:6px 0 0;font-size:.84rem;color:var(--bl-2);line-height:1.5}
 /* Fas 21.2: tio dagar före sista dagen, samma dag som mejlet går. */
 .erb-snart{margin:10px 0 0;font-size:.84rem;line-height:1.5;color:var(--bl)}
 .erb-snart a{color:var(--acc);font-weight:600}

@@ -311,6 +311,9 @@
        testpass i den riktiga databasen ska aldrig se ut som intäkt. */
     const också = [
       d.timmar ? d.timmar + (d.timmar === 1 ? ' pass betalt med timmar' : ' pass betalda med timmar') : null,
+      // Fas 22.1: timbanken, som inte heller är kortpengar.
+      d.timbank && d.timbank.pass ? d.timbank.pass + (d.timbank.pass === 1 ? ' pass betalt med timbanken' : ' pass betalda med timbanken') : null,
+      d.timbank && d.timbank.overtid_min ? NXBetalning.timmar(d.timbank.overtid_min) + ' övertid ur timbanken' : null,
       d.faktura && d.faktura.pass ? d.faktura.pass + ' pass mot faktura' : null,
       d.test ? d.test + (d.test === 1 ? ' testbetalning, som inte räknas in' : ' testbetalningar, som inte räknas in') : null
     ].filter(Boolean);
@@ -1008,7 +1011,62 @@
       } },
       { namn: 'Läge', höger: true, rita: k => '<span class="adm-tal">' + esc(KK_LAGE[k.status] || k.status) + '</span>' }
     ], kop, 'Inga köpta planer eller klippkort än');
+    ritaTimbanken();
   }
+
+  /* ============================================================
+     TIMBANKEN (Fas 22.1)
+
+     Minuter som blev över när ett pass betalt med timmar slutade före
+     en hel timme. De tar övertiden på nästa pass av sig själva, och kan
+     betala ett helt pass. Här står bara familjer som har minuter kvar:
+     det är betalda timmar som inte hållits, en skuld till familjen och
+     inte en intäkt.
+
+     Slutar familjen betalas värdet tillbaka tillsammans med resten av
+     klippkortet, i Stripes dashboard, och banken markeras sedan här.
+     Knappen flyttar inga pengar. Värdet räknas i databasen
+     (timbank_saldo): ordinarie timpris, som klippkortets använda timmar.
+     ============================================================ */
+  function ritaTimbanken() {
+    const host = $('#erb-bank');
+    if (!host) return;
+    if (S.timbankFel) { host.innerHTML = tomt('Timbanken gick inte att läsa', S.timbankFel); return; }
+    const rader = (S.timbank || []).slice().sort((a, c) => Number(c.saldo_min) - Number(a.saldo_min));
+    const tid = m => (Math.floor(m / 60) ? Math.floor(m / 60) + ' h ' : '') + (m % 60 ? (m % 60) + ' min' : '');
+    host.innerHTML = '<h6 style="margin:0 0 8px">Timbanken</h6>' + tabell([
+      { namn: 'Familj', rita: r => esc(namnFör(r.parent_id)) },
+      { namn: 'Minuter', rita: r => '<span class="adm-tal">' + esc(tid(Number(r.saldo_min)).trim()) + '</span>' },
+      { namn: 'Om de slutar i dag', rita: r => r.varde_ore != null
+        ? '<span class="adm-tal">' + esc(kronor(r.varde_ore)) + '</span><span class="adm-und">tillbaka</span>' : '—' },
+      { namn: '', höger: true, rita: r => '<button class="btn btn-ghost btn-sm" type="button" data-timbank-ut="'
+        + esc(r.parent_id) + '">Markera utbetald</button>' }
+    ], rader, 'Ingen familj har minuter i timbanken');
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-timbank-ut]');
+    if (!knapp) return;
+    const id = knapp.dataset.timbankUt;
+    const rad = (S.timbank || []).find(r => r.parent_id === id);
+    const ja = await bekräfta({
+      titel: 'Markera timbanken som utbetald?',
+      text: 'Gör det först när pengarna är tillbaka hos ' + namnFör(id) + ' (Stripes dashboard, tillsammans med klippkortet). '
+        + 'Minuterna försvinner ur banken, och raden går inte att ångra.'
+        + (rad && rad.varde_ore != null ? ' Värdet i dag: ' + kronor(rad.varde_ore) + '.' : ''),
+      knapp: 'Markera utbetald'
+    });
+    if (!ja) return;
+    await medan(knapp, 'Sparar…', async () => {
+      const { data, error } = await supa.rpc('timbank_utbetald', { p_foralder: id });
+      if (error) { alert('Kunde inte markera timbanken: ' + felText(error)); return; }
+      if (data && data.fel) { alert(data.fel); }
+      const { data: nu, error: fel } = await supa.from('timbank_saldo')
+        .select('parent_id, saldo_min, varde_ore').gt('saldo_min', 0);
+      if (!fel) S.timbank = nu || [];
+      ritaTimbanken();
+    });
+  });
 
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-erbflagga]');

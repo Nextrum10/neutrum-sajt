@@ -287,6 +287,17 @@ Deno.serve(async (req) => {
             .not('klippkort_id', 'is', null).is('stripe_payment_intent_id', null)
             .select('id');
           if (tillbaka?.length) return await klar('betald med kort, klippkortets timmar tillbaka');
+
+          /* PASSET VAR BETALT MED TIMBANKEN (Fas 22.1). Samma sak: kortet
+             vinner. timbank_kort_vinner skriver kortbetalningen och ger
+             tillbaka minuterna i samma transaktion. Förut var det två anrop,
+             och föll det andra stod passet som obetalt med pengarna dragna
+             tills Stripe levererade igen. Ett fel kastas, så att Stripe
+             försöker igen: ingenting är då skrivet. */
+          const { data: vann, error: bankfel } = await db.rpc('timbank_kort_vinner',
+            { p_pass: passId, p_kort: kortbetalning });
+          if (bankfel) throw new Error('timbank_kort_vinner: ' + bankfel.message);
+          if (vann === true) return await klar('betald med kort, timbankens minuter tillbaka');
         }
 
         return await klar('betald');
@@ -524,7 +535,7 @@ Deno.serve(async (req) => {
          överföringar till dem och Stripes utbetalningar från deras
          saldon. Inget av det finns kvar sedan Fas 12.5, så de faller
          igenom till default nedan och kvitteras som ohanterade. Skulle
-         de dyka upp ändå är det ett tecken på att någon slagit på
+         de dyka upp ändå är det ett tecken på att någon slått på
          Connect igen, inte något den här funktionen ska tolka. */
 
       default:
