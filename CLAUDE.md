@@ -1678,9 +1678,8 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   hos Stripe som aldrig blir `betald` hos oss — och gör provköpet i
   DEPLOY-BETALNING.md 9.12. Sedan Fas 21 avbokar familjen själv ett
   pass betalt med timmar, och påminns tio dagar innan timmarna går ut.
-  **Driftsätt `notis-ko` före påslaget**: mallen för `timmar_gar_ut`
-  finns bara i den versionen, och en äldre arbetare kan inte rendera
-  påminnelsen. Kvar: en familj som inte är matchad når inte
+  `notis-ko` med mallen för `timmar_gar_ut` är driftsatt (version 18,
+  2026-09-27, jämförd byte för byte mot repot). Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
