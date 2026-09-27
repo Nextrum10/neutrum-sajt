@@ -23,7 +23,7 @@
     elever: [], aktivElev: null,
     bokningar: [], trad: null, kal: null, olästa: {},
     minAvatar: null,
-    laxor: [], laxFilter: 'attgora', laxräkning: {}, minaRapporter: [], avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
+    laxor: [], laxräkning: {}, minaRapporter: [], avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
     senaste: {}
   };
 
@@ -590,38 +590,15 @@
     $('#lax-antal').textContent = öppna ? öppna + ' öppna' : 'alla klara';
     laxRakning();
     ritaElevLista();
-    ritaLaxFilter();
 
-    const urval = NXStudie.läxUrval(data, S.laxFilter);
-    if (!urval.length) {
-      host.innerHTML = tomt(S.laxFilter === 'klart' ? 'Inget avklarat än' : 'Inget öppet just nu',
-        S.laxFilter === 'klart' ? 'Läxor eleven markerat som klara samlas här.' : 'Eleven har gjort allt hen fått.');
-      return;
-    }
-
-    host.innerHTML = urval.map(h => NXStudie.läxRad(h, {
+    NXStudie.läxLista({ host, laxor: data, tomtAttGora: 'Inget öppet just nu. Eleven har gjort allt hen fått.', rad: h => NXStudie.läxRad(h, {
       material: h.biblioteksmaterial ? h.biblioteksmaterial.titel : null,
       materialKnapp: h.biblioteksmaterial
         ? '<button type="button" class="btn btn-ghost btn-sm" data-lax-mat="'
           + esc(h.bibliotek_id) + '">Öppna</button>' : '',
       atgarder: '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
-    })).join('');
+    }) });
   }
-
-  /* Vilket läge läxlistan står i. Lever i S så att det överlever en
-     omritning — annars hoppar listan tillbaka varje gång någon
-     lägger till eller tar bort en läxa. */
-  function ritaLaxFilter() {
-    NXStudie.läxFilter({ host: $('#lax-filter'), laxor: S.laxor, valt: S.laxFilter });
-  }
-
-  document.addEventListener('click', e => {
-    const k = e.target.closest('[data-laxfilter]');
-    if (!k) return;
-    S.laxFilter = k.dataset.laxfilter;
-    ritaLaxFilter();
-    laddaLaxor();
-  });
 
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-lax-bort]');
