@@ -183,6 +183,27 @@ elev.
   javascript; `NX.initErbjudanden()` skriver över dem ur vyn med ett
   rått PostgREST-anrop, eftersom supabase-js inte laddas på de publika
   sidorna.
+- **Priset fryses när passet bokas** (Fas 19.5). Villkoren lovar
+  priset vid bokningen, och kortet räknade förut dagens pris. Nu sätter
+  `frys_passets_pris` `bookings.timpris_ore` och `extra_ore` vid
+  bokningen, och `stripe-checkout`, `pris.ts` (`passpris()`) och
+  föräldravyn (`passetsPris`) räknar på dem, med katalogen som reserv.
+  En prishöjning gäller bara pass som bokas efter den. En vy kan inte
+  ändra kolumnerna: `skydda_bokningsfalt` släpper bara igenom status,
+  tid och skäl på ett befintligt pass.
+- **Första timmen är på köpet för nya familjer** (Fas 19.5, prissidans
+  starterbjudande). `forsta_timmen_bjuds` ger det läxhjälpspass som gör
+  att familjen har bokat två timmar en timme i `rabatt_ore`, till
+  passets eget timpris, och märker det `startrabatt`. En gång per
+  familj; avbokade pass räknas inte, och avbokas passet med rabatten
+  får nästa pass som når två timmar den. Två pass på en timme gör alltså
+  det andra gratis. Ett pass på noll kronor är INTE betalt (ett betalt
+  pass går inte att avboka), det står kvar som `ingen`, och varken
+  `ej_betalt`, `obetalda` eller fakturan räknar det. Klippkortet betalar
+  inte ett pass med startrabatt. Triggern heter `bookings_startrabatt`
+  för att köras efter `bookings_skydda_rabatt`, som nollar
+  `rabatt_ore` på varje ny rad från en vy: triggrar på samma händelse
+  körs i namnordning.
 - Belopp lagras i **ören** överallt. Kronor blir det först vid visning
   (`NXBetalning.kronor`). Enda stället ett avrundningsfel kan smyga in
   är omvandlingen — gör den en gång, på ett ställe.
@@ -1350,7 +1371,8 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
     avisering till befintliga familjer och påminnelser utan avgift.
     DEPLOY-BETALNING.md 9.11 är checklistan. **De publika texterna
     lovar fortfarande bara kort, med flit**: ett löfte om ett betalsätt
-    som inte går att välja är samma fel som startererbjudandet. De
+    som inte går att välja är samma fel som startererbjudandet var innan
+    Fas 19.5 byggde in det. De
     ändras i en egen liten ändring samma dag som flaggan slås på.
   - **Familjen väljer per pass.** `betalning_status = 'faktura'`.
     `skydda_bokningsfalt` släpper igenom `ingen`/`vantar`/`misslyckad`
@@ -1406,19 +1428,6 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 
   **Kvar, och inget av det sköter koden åt er:**
 
-  - **Startererbjudandet finns inte i koden.** Prissidan lovar "Första
-    timmen på köpet … dras av när ni betalar", och kortbetalningen drar
-    inte av något. Före en ny familjs första betalning: bestäm regeln
-    och bygg den i `stripe-checkout`, sätt `rabatt_ore` på passet för
-    hand innan familjen betalar (admin går förbi skyddet), eller ta bort
-    erbjudandet.
-  - **Villkoren lovar priset vid bokningen, kortbetalningen räknar
-    priset när familjen betalar.** Glappet fanns redan med
-    månadsfakturan, som också räknade på dagens pris. Rätt lösning är
-    att frysa timpriset på bokningen, som rabatten redan gör, och skydda
-    kolumnen i `skydda_bokningsfalt`. Tills dess säger prisdialogen i
-    adminvyn hur många bokade pass som väntar på betalning när priset
-    höjs.
   - **Ett avbokat pass kan bli betalt.** Betalsidan kan ligga öppen när
     passet avbokas, och Stripe drar pengarna om familjen betalar
     efteråt. Webhooken skriver ner betalningen, för pengarna är dragna,
@@ -1430,11 +1439,12 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
     efter passet. Villkoren har ett avsnitt om ändringar (30 dagar för
     väsentliga). Fas 19.2 ger familjen fler val, inte färre, men ett nytt
     steg, att bekräfta rapporten. Meddela dem.
-  - **Betalningen efter passet har ingen sista dag.** Villkoren säger
-    att den görs när familjen bekräftar rapporten, och att ett hållet
-    pass ska betalas även utan bekräftelse, men inte inom hur många
-    dagar. Larmet `ej_betalt` kommer direkt; det är människan som följer
-    upp. En frist i dagar är ett nytt villkor, inte en inställning.
+  - **Betalningen efter passet har ingen sista dag, med flit.** Leo
+    2026-09-27: ingen frist. Kortet dras direkt när familjen betalar,
+    och fakturan (när flaggan är på) skickas den 1:a i nästa månad med
+    tio dagars betalningsvillkor. Larmet `ej_betalt` kommer direkt; det
+    är människan som följer upp. En frist i dagar är ett nytt villkor,
+    inte en inställning.
   - **Korttvister har en sista dag, och den är människans (Fas 14.3).**
     Förut satte webhooken bara `betalning_status = 'tvist'`: sista dagen
     att svara, orsaken och utfallet stod ingenstans, och en förlorad
@@ -1544,10 +1554,9 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   lever kvar. `NXMedia.laddaMaterial`, `materialRad` och
   `sparaMaterialfil` gör det INTE längre — de hade noll anropare kvar
   efter ombyggnaden, och en delad hjälpare som ingen ringer är en
-  hjälpare nästa person bygger vidare på. Kvar att bestämma: ska
-  panelen vara kvar som internt underlag (då är det färdigt) eller ska
-  `materials` bort helt (då är det en städning med en hink att tömma
-  först)?
+  hjälpare nästa person bygger vidare på. Leo 2026-09-27: panelen står
+  kvar som internt underlag. Det är alltså färdigt, och `materials` ska
+  inte städas bort.
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.

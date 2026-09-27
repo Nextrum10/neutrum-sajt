@@ -641,18 +641,20 @@ utbetalning**. Båda gällde anslutna konton och finns inte att prova sedan Fas 
   är att familjen byter till faktura medan en kassa står öppen och betalar den
   ändå; webhooken tar emot betalningen, och avvikelsen **Betalt två gånger** larmar
   om passet redan hunnit faktureras. Kreditera då raden i Fortnox.
-- **Startererbjudandet finns inte i koden.** Prissidan lovar "Första timmen på köpet
-  … dras av när ni betalar", och `stripe-checkout` drar inte av något. Bestäm
-  regeln innan en ny familj betalar sitt första pass. Tills den är byggd går det att
-  sätta `rabatt_ore` på passet för hand innan familjen betalar: admin går förbi
-  skyddet, och checkout räknar med rabatten.
-- **Priset räknas när familjen betalar**, men villkoren lovar priset vid
-  bokningen. Höj inte priset medan bokade pass väntar på betalning; prisdialogen i
-  adminvyn räknar dem.
-- **Mejlen säger det nu (Fas 14.3).** Bokningsbekräftelsen och påminnelsen till
-  familjen säger att passet betalas med kort senast innan det börjar, och att ett
-  pass som inte är betalt inte hålls. Mallen vet inte om just det passet redan är
-  betalt, så meningen är villkorad: "om ni inte redan har gjort det".
+- **Startererbjudandet är byggt (Fas 19.5).** Det läxhjälpspass som gör att en ny
+  familj har bokat två timmar får en timme i `rabatt_ore` (`startrabatt`), satt av
+  databasen när passet bokas. `stripe-checkout` drar av den som vilken rabatt som
+  helst, och ett pass där den täcker allt kostar noll kronor: det betalas inte och
+  larmar inte som obetalt. Att ge en familj timmen för hand går fortfarande: admin
+  sätter `rabatt_ore` innan familjen betalar.
+- **Priset fryses vid bokningen (Fas 19.5).** `bookings.timpris_ore` och `extra_ore`
+  sätts när passet bokas, och kortet, fakturan och månadskörningen räknar på dem.
+  En prishöjning gäller bara pass som bokas efter den.
+- **Mejlen säger det (Fas 14.3, omskrivet i Fas 19.2).** Bokningsbekräftelsen och
+  påminnelsen till familjen säger att passet betalas med kort, i förväg eller efter
+  passet när rapporten bekräftas. Mallen vet inte om just det passet redan är
+  betalt, så meningen om att betala i förväg är villkorad: "om ni inte redan har
+  gjort det".
 
 ### 9.8 Säljarens MVP-checklista, punkt för punkt
 
@@ -945,4 +947,5 @@ Erbjudanden i adminvyn, kolumnen "Om de slutar i dag":
   en som känner sig lurad på en timme.
 - **Planerna säger "ett pass i veckan", men ingenting håller dem till det.** En plan
   är fyra eller åtta timmar som gäller en månad. Hur de bokas är familjens sak.
-- **Startererbjudandet** (se 9.7) gäller fortfarande inte något av detta.
+- **Startererbjudandet** (Fas 19.5) betalas inte med timmar: `klippkort_dra` nekar
+  ett pass med `startrabatt`, och det passet betalas med kort.
