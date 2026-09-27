@@ -561,13 +561,14 @@
       S.laxor = [];
       host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp för att se läxorna.');
       laxRakning();
+      if (passIdIAdressen()) ritaPassSida();
       return;
     }
 
     NXStudie.laddarFörsta(host);
     const { data, error } = await supa
       .from('homework')
-      .select('id, title, instructions, subject, due_date, status, completed_at, '
+      .select('id, student_id, title, instructions, subject, due_date, status, completed_at, '
         + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)')
       .eq('student_id', S.aktivElev)
       .order('due_date', { ascending: true, nullsFirst: false })
@@ -578,10 +579,13 @@
       S.laxor = [];
       host.innerHTML = tomt('Inga läxor än', 'Skapa den första med knappen ovanför — den dyker upp hos familjen direkt.');
       laxRakning();
+      if (passIdIAdressen()) ritaPassSida();
       return;
     }
 
     S.laxor = data;
+    /* Passets sida läser S.laxor; den kan ha ritats innan läxorna kom. */
+    if (passIdIAdressen()) ritaPassSida();
     const öppna = data.filter(h => h.status !== 'klar').length;
     $('#lax-antal').textContent = öppna ? öppna + ' öppna' : 'alla klara';
     laxRakning();
@@ -2932,17 +2936,24 @@
       ] }
     ];
 
+    /* Samma regel som i föräldravyn: det som ska vara klart senast på
+       passets dag, och blocket står kvar när det är tomt. S.laxor
+       håller bara den valda elevens läxor. */
     const läxor = (S.laxor || [])
-      .filter(h => h.student_id === b.student_id && h.status !== 'klar' && h.due_date && h.due_date >= b.wanted_date)
+      .filter(h => h.student_id === b.student_id && h.status !== 'klar' && h.due_date && h.due_date <= b.wanted_date)
       .slice(0, 3);
+    const läxTomt = b.student_id !== S.aktivElev
+      ? 'Välj ' + förnamn + ' högst upp för att se läxorna.'
+      : 'Inga öppna läxor till passet.';
 
     const block = [
       { rubrik: 'Familjens anteckning', html: b.note ? '<p>' + esc(b.note) + '</p>' : '' },
       { rubrik: 'Målet', html: e && e.goals ? '<p>' + esc(e.goals) + '</p>' : '' },
       { rubrik: 'Om ' + förnamn, html: e && e.about ? '<p>' + esc(e.about) + '</p>' : '' },
-      { rubrik: 'Läxor fram till passet', html: läxor.length
+      { rubrik: 'Läxor fram till passet', html: b.status === 'cancelled' ? '' : läxor.length
         ? läxor.map(h => '<div class="pass-lank">' + esc(h.title)
-            + '<span>Till ' + esc(NXStudie.deadlineText(h.due_date)) + '</span></div>').join('') : '' }
+            + '<span>Till ' + esc(NXStudie.deadlineText(h.due_date)) + '</span></div>').join('')
+        : '<p>' + esc(läxTomt) + '</p>' }
     ];
 
     const rita = (rapport) => NXStudie.passSida({

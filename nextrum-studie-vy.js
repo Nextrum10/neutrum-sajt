@@ -462,13 +462,14 @@
       S.laxor = [];
       host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.');
       ritaÖvLaxor();
+      if (passIdIAdressen()) ritaPassSida();
       return;
     }
 
     NXStudie.laddarFörsta(host);
     const { data, error } = await supa
       .from('homework')
-      .select('id, title, instructions, subject, due_date, status, completed_at, '
+      .select('id, student_id, title, instructions, subject, due_date, status, completed_at, '
         + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)')
       .eq('student_id', S.valtBarn)
       .order('due_date', { ascending: true, nullsFirst: false })
@@ -479,10 +480,13 @@
       S.laxor = [];
       host.innerHTML = tomt('Inga läxor än', 'När er studiehjälpare ger en läxa dyker den upp här.');
       ritaÖvLaxor();
+      if (passIdIAdressen()) ritaPassSida();
       return;
     }
 
     S.laxor = data;
+    /* Passets sida läser S.laxor; den kan ha ritats innan läxorna kom. */
+    if (passIdIAdressen()) ritaPassSida();
     ritaNotiser();
     ritaÖvLaxor();
     ritaStatistik();
@@ -2848,15 +2852,24 @@
       ] }
     ];
 
+    /* Det som ska vara klart senast på passets dag. Filtret stod förut
+       på >=, alltså läxor med deadline EFTER passet, och blocket
+       försvann helt när det var tomt: det såg trasigt ut, inte tomt.
+       S.laxor håller bara det valda barnets läxor, så för ett annat
+       barn säger raden det i stället för "inga läxor". */
     const läxor = (S.laxor || [])
-      .filter(h => h.status !== 'klar' && h.student_id === b.student_id && h.due_date && h.due_date >= b.wanted_date)
+      .filter(h => h.status !== 'klar' && h.student_id === b.student_id && h.due_date && h.due_date <= b.wanted_date)
       .slice(0, 3);
+    const läxTomt = b.student_id !== S.valtBarn && barn
+      ? 'Välj ' + barn.name.split(' ')[0] + ' för att se läxorna.'
+      : 'Inga öppna läxor till passet.';
 
     const block = [
       { rubrik: 'Anteckning', html: b.note ? '<p>' + esc(b.note) + '</p>' : '' },
-      { rubrik: 'Läxor fram till passet', html: läxor.length
+      { rubrik: 'Läxor fram till passet', html: b.status === 'cancelled' ? '' : läxor.length
         ? läxor.map(h => '<a class="pass-lank" href="#uppgifter">' + esc(h.title)
-            + '<span>Till ' + esc(NXStudie.deadlineText(h.due_date)) + '</span></a>').join('') : '' }
+            + '<span>Till ' + esc(NXStudie.deadlineText(h.due_date)) + '</span></a>').join('')
+        : '<p>' + esc(läxTomt) + '</p>' }
     ];
 
     const rita = (rapport) => NXStudie.passSida({
