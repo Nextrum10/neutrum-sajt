@@ -29,10 +29,10 @@
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
 -- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
 -- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2,
--- Fas 18.1 (Meet-länken), Fas 19.1–19.5 (19.5: det frysta priset), Fas 20.1
--- (den hållna tiden), Fas 20.2 (bokslutet), Fas 21.1–21.2,
--- admin_laser_ansokans_cv (admin läser CV:t) och Fas 22.1 (timbanken)
--- är körda.
+-- Fas 18.1 (Meet-länken), Fas 19.1–19.6 (19.5: det frysta priset,
+-- 19.6: OCR), Fas 20.1 (den hållna tiden), Fas 20.2 (bokslutet),
+-- Fas 21.1–21.2, admin_laser_ansokans_cv (admin läser CV:t) och
+-- Fas 22.1 (timbanken) är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -4278,6 +4278,52 @@ select pg_temp.prova('CV anon laddar fortfarande upp', null,
 insert into utfall (test, ok, detalj)
 select 'CV hinken cv är privat', not b.public, 'public = ' || b.public
 from storage.buckets b where b.id = 'cv';
+
+-- ------------------------------------------------------------
+-- Fas 19.6: fakturan bär sitt OCR-nummer
+--
+-- Admin skriver in OCR:et från Fortnox. Kontrollsiffran prövas av
+-- villkoret invoices_ocr_giltigt, och ett felskrivet ska nekas av
+-- VILLKORET (23514), inte med permission denied: villkoret körs som
+-- anroparen, och intern.ocr_giltigt måste vara nåbar för admin.
+-- ------------------------------------------------------------
+do $$
+declare
+  fel text; kod text; n int; o text;
+begin
+  begin
+    insert into public.invoices (id, parent_id, period, status, belopp_ore)
+    values ('00000000-0000-4000-8000-0000000019f6', '00000000-0000-4000-8000-0000000000f1', '2026-09-01', 'utkast', 37900);
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.invoices set status = 'skickad', fortnox_fakturanummer = '1001', ocr = '49927398716'
+     where id = '00000000-0000-4000-8000-0000000019f6';
+    get diagnostics n = row_count;
+    insert into utfall (test, ok, detalj) values ('19.6 admin sparar ett giltigt OCR', n = 1, 'rader ' || n);
+
+    begin
+      update public.invoices set ocr = '49927398717' where id = '00000000-0000-4000-8000-0000000019f6';
+      kod := 'gick igenom';
+    exception when others then kod := sqlstate;
+    end;
+    insert into utfall (test, ok, detalj) values ('19.6 ett felskrivet OCR nekas av villkoret', kod = '23514', kod);
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    select ocr into o from public.invoices where id = '00000000-0000-4000-8000-0000000019f6';
+    insert into utfall (test, ok, detalj) values ('19.6 familjen läser OCR på sin faktura', o = '49927398716', coalesce(o, 'null'));
+    update public.invoices set ocr = '18' where id = '00000000-0000-4000-8000-0000000019f6';
+    get diagnostics n = row_count;
+    insert into utfall (test, ok, detalj) values ('19.6 familjen skriver inte OCR', n = 0, 'rader ' || n);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('19.6 OCR', false, fel);
+  end if;
+end $$;
 
 select test, ok, detalj from utfall order by nr;
 

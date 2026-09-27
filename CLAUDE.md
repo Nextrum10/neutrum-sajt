@@ -196,7 +196,14 @@ pass som hållits ska betalas även om ingen bekräftat, och villkoren
 säger det. Rapporten står kvar under Att bekräfta tills den är
 bekräftad OCH passet är betalt eller satt på faktura. Ett genomfört
 obetalt pass larmar som förut, direkt, som `ej_betalt`: Leo valde det
-framför en frist. Fas 19.1 hade först valt bort betalning efter passet
+framför en frist. Fakturavalet heter "Få faktura nästa månad" (Fas 19.6,
+Leo: "betala senare genom att välja att få en faktura skickad till sig
+nästkommande månad"), och en skickad faktura står under Betalning i
+rutan Fakturor att betala, med belopp, förfallodag, passen, bankgiro
+(`BANKGIRO` i `nextrum-config.js`) och OCR. OCR:et skriver admin av från
+Fortnox vid Lagd i Fortnox; det räknas aldrig fram här, och
+`invoices_ocr_giltigt` prövar kontrollsiffran. Allt det syns först när
+flaggan `faktura` är på, för utan den skapas inga fakturor. Fas 19.1 hade först valt bort betalning efter passet
 för att villkoren sa före; Leo bestämde samma dag att villkoren skulle
 ändras i stället.
 

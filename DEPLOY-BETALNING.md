@@ -861,11 +861,23 @@ skrivs om från en vy.
 
 **Sist:**
 
-9. **Slå på flaggan** under Ekonomi → Fakturor. Knappen säger vad den gör innan
+9. **Bankgironumret** (Fas 19.6). Skriv det i `BANKGIRO` i `nextrum-config.js`,
+   som det står på fakturan i Fortnox. Rutan Fakturor att betala under Betalning
+   visar det med en Kopiera-knapp; tomt står det "står på fakturan".
+10. **Slå på flaggan** under Ekonomi → Fakturor. Knappen säger vad den gör innan
    den gör det.
-10. **Provfakturera en familj**, gärna er egen: välj faktura på ett pass, rapportera
-   det, kör månadskörningen i torrkörning och sedan skarpt, lägg in utkastet i
-   Fortnox, skriv in numret, och markera den betald när pengarna kommit.
+11. **Provfakturera en familj**, gärna er egen: välj "Få faktura nästa månad" när
+   rapporten bekräftas, kör månadskörningen i torrkörning och sedan skarpt, lägg in
+   utkastet i Fortnox, skriv in fakturanumret, **OCR-numret** och förfallodagen
+   med Lagd i Fortnox, kontrollera att fakturan står under Fakturor att betala i
+   familjens vy med rätt bankgiro och OCR, och markera den betald när pengarna
+   kommit.
+
+**OCR skrivs av, det räknas inte fram** (Fas 19.6). Fortnox bestämmer OCR:et ur
+fakturanumret enligt bankgiroavtalet, och ett som räknats fram här och blivit fel
+hade gett en betalning Bankgirot inte kan matcha. Kontrollsiffran prövas både i
+dialogen och i databasen (`invoices_ocr_giltigt`). Saknar fakturan OCR lämnas
+fältet tomt, och familjen ser fakturanumret som meddelande.
 
 **De sex gamla obetalda passen** (bokade när villkoren lovade månadsfaktura) kan bli
 den första riktiga fakturan: bytet till `faktura` går också på ett genomfört pass.

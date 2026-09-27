@@ -560,8 +560,9 @@
       const f = S.fakturaFlagga || {};
       const ja = await bekräfta(på ? {
         titel: 'Slå på faktura?',
-        text: 'Från och med nu kan alla familjer välja "Betala med faktura i stället" under kortknappen. '
-          + 'Deras pass kommer med på en faktura i början av nästa månad, att betala inom ' + DAGAR + ' dagar.',
+        text: 'Från och med nu kan alla familjer välja "Få faktura nästa månad" när de bekräftar rapporten. '
+          + 'Deras pass kommer med på en faktura i början av nästa månad, att betala inom ' + DAGAR + ' dagar. '
+          + 'Fyll i BANKGIRO i nextrum-config.js först, så att familjen ser vart de betalar.',
         forhandsvisning: f.vantar_pa ? 'Det här ska vara avgjort först:\n\n' + f.vantar_pa : null,
         knapp: 'Slå på'
       } : {
@@ -608,27 +609,37 @@
       const värde = await fråga({
         titel: 'Lagd i Fortnox',
         text: namnFör(f.parent_id) + ', ' + NXBetalning.periodText(f.period) + ', ' + kronor(f.belopp_ore)
-          + '. Skriv fakturanumret och förfallodagen som de står på fakturan i Fortnox.',
+          + '. Skriv fakturanumret, OCR-numret och förfallodagen som de står på fakturan i Fortnox.',
+        /* OCR (Fas 19.6). Familjen ser det under Fakturor att betala och
+           betalar med det i sin bank. Det skrivs av från fakturan, aldrig
+           räknas fram här: Fortnox bestämmer det ur bankgiroavtalet.
+           Kontrollsiffran prövas både här och i databasen
+           (invoices_ocr_giltigt). Tomt går, om fakturan saknar OCR; då
+           är fakturanumret familjens meddelande. */
         innehåll: '<div class="fgroup" style="margin-top:14px"><label for="fakt-nr">Fakturanummer i Fortnox</label>'
           + '<input class="inp" id="fakt-nr" inputmode="numeric" autocomplete="off" maxlength="30"></div>'
+          + '<div class="fgroup" style="margin-top:12px"><label for="fakt-ocr">OCR-nummer</label>'
+          + '<input class="inp" id="fakt-ocr" inputmode="numeric" autocomplete="off" maxlength="25"></div>'
           + '<div class="fgroup" style="margin-top:12px"><label for="fakt-forfaller">Förfaller</label>'
           + '<input class="inp" id="fakt-forfaller" type="date" value="' + isoFor(förval) + '"></div>',
         knapp: 'Spara',
         läs: ruta => {
           const nr = $('#fakt-nr', ruta).value.trim();
+          const ocr = $('#fakt-ocr', ruta).value.replace(/\s+/g, '');
           const dag = $('#fakt-forfaller', ruta).value;
           if (!/^[A-Za-z0-9-]{1,30}$/.test(nr)) return { fel: 'Fakturanumret får bara innehålla siffror, bokstäver och bindestreck.' };
+          if (ocr && !NXBetalning.ocrGiltigt(ocr)) return { fel: 'OCR-numret stämmer inte: kontrollsiffran är fel. Skriv det exakt som på fakturan.' };
           if (!/^\d{4}-\d{2}-\d{2}$/.test(dag)) return { fel: 'Välj förfallodagen.' };
-          return { värde: { nr, dag } };
+          return { värde: { nr, ocr: ocr || null, dag } };
         }
       });
       if (!värde) return;
       await medan(fortnox, 'Sparar…', async () => {
         if (await skriv('invoices', f.id, {
           status: 'skickad', skickad_at: new Date().toISOString(),
-          fortnox_fakturanummer: värde.nr, forfaller: värde.dag
+          fortnox_fakturanummer: värde.nr, ocr: värde.ocr, forfaller: värde.dag
         })) {
-          Object.assign(f, { status: 'skickad', fortnox_fakturanummer: värde.nr, forfaller: värde.dag });
+          Object.assign(f, { status: 'skickad', fortnox_fakturanummer: värde.nr, ocr: värde.ocr, forfaller: värde.dag });
           ritaFakturor(); await laddaOmEkonomi();
         }
       });
