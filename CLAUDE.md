@@ -1687,11 +1687,12 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 
   `SKISS-BETALNING-STRIPE.md` beskriver hur beslutet gick.
 - **Planer och klippkort (Fas 16.1) är byggda men inte öppna.**
-  Flaggan `erbjudanden` står av. Före påslaget: driftsätt
-  `stripe-webhook`, `stripe-checkout` och `klippkort-betala` i den
-  ordningen — webhooken först, annars blir ett köpt kort en betalning
-  hos Stripe som aldrig blir `betald` hos oss — och gör provköpet i
-  DEPLOY-BETALNING.md 9.12. Sedan Fas 21 avbokar familjen själv ett
+  Flaggan `erbjudanden` står av. Funktionerna ligger ute (2026-09-27):
+  `stripe-webhook` (version 9) och `stripe-checkout` (version 13) är
+  identiska med main, och `klippkort-betala` driftsattes då för första
+  gången — den fanns inte i driften, så Betala med timmar hade fått 404.
+  Kvar före påslaget är provköpet i DEPLOY-BETALNING.md 9.12, som kräver
+  en människa med testkortet i en webbläsare. Sedan Fas 21 avbokar familjen själv ett
   pass betalt med timmar, och påminns tio dagar innan timmarna går ut.
   `notis-ko` med mallen för `timmar_gar_ut` är driftsatt (version 18,
   2026-09-27, jämförd byte för byte mot repot). Kvar: en familj som inte är matchad når inte
