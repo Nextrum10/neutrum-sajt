@@ -898,7 +898,17 @@ supabase functions deploy notis-ko
 ```
 
 `notis-ko` sist (Fas 21.2): det är den som har mallen för påminnelsen
-`timmar_gar_ut`. En äldre arbetare kan inte rendera den.
+`timmar_gar_ut`. En äldre arbetare kan inte rendera den. Den är
+driftsatt sedan 2026-09-27 (version 18). Samma dag var `stripe-webhook`
+(version 9) och `stripe-checkout` (version 13) identiska med main, och
+`klippkort-betala` driftsattes för första gången (version 1). Alla fyra
+ligger alltså ute; kvar är provköpet nedan.
+
+Driftsätts en funktion genom MCP i stället för `supabase functions
+deploy`: hämta tillbaka den efteråt och jämför varje fil mot repot.
+Version 17 av `notis-ko` gick ut med en fil som bara innehöll ett
+platshållarord och kunde inte starta; den låg ute i sex minuter innan
+jämförelsen fångade det.
 
 Webhooken FÖRST. Den gamla känner inte igen ett köpt klippkort: sessionen har
 `klippkort_id` i metadata och inget pass, och en betalning den inte kan knyta till

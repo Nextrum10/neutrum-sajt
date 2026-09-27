@@ -30,8 +30,9 @@
 -- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
 -- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2,
 -- Fas 18.1 (Meet-länken), Fas 19.1–19.5 (19.5: det frysta priset), Fas 20.1
--- (den hållna tiden), Fas 20.2 (bokslutet), Fas 21.1–21.2 och Fas 22.1
--- (timbanken) är körda.
+-- (den hållna tiden), Fas 20.2 (bokslutet), Fas 21.1–21.2,
+-- admin_laser_ansokans_cv (admin läser CV:t) och Fas 22.1 (timbanken)
+-- är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -4241,6 +4242,42 @@ begin
       ('22.1 ett pass med två barn tar inget ur banken', flerbarn = 45, 'saldo ' || flerbarn);
   end if;
 end $$;
+
+-- ------------------------------------------------------------
+-- CV:t i en ansökan: admin läser, ingen annan (admin_laser_ansokans_cv)
+--
+-- Hinken cv hade bara skrivpolicyn för anon, så adminvyn kunde inte
+-- öppna ett enda CV. Filen läggs in som postgres: anon får inte läsa
+-- tillbaka det hen laddat upp, och då hade noll betytt "finns inte" i
+-- stället för "får inte se".
+-- ------------------------------------------------------------
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+insert into storage.objects (bucket_id, name)
+values ('cv', '1700000000000-rlsprov-Prov_CV.pdf');
+
+select pg_temp.rakna('CV admin ser CV:t', '00000000-0000-4000-8000-0000000000ad',
+  $q$select count(*) from storage.objects
+      where bucket_id = 'cv' and name = '1700000000000-rlsprov-Prov_CV.pdf'$q$, 1);
+select pg_temp.rakna('CV studiehjälparen ser det inte', '00000000-0000-4000-8000-0000000000a1',
+  $q$select count(*) from storage.objects
+      where bucket_id = 'cv' and name = '1700000000000-rlsprov-Prov_CV.pdf'$q$, 0);
+select pg_temp.rakna('CV familjen ser det inte', '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from storage.objects
+      where bucket_id = 'cv' and name = '1700000000000-rlsprov-Prov_CV.pdf'$q$, 0);
+select pg_temp.rakna('CV anon ser det inte', null,
+  $q$select count(*) from storage.objects
+      where bucket_id = 'cv' and name = '1700000000000-rlsprov-Prov_CV.pdf'$q$, 0);
+
+-- Formuläret laddar upp utan konto, och det ska det fortsätta göra.
+select pg_temp.prova('CV anon laddar fortfarande upp', null,
+  array[$q$insert into storage.objects (bucket_id, name)
+           values ('cv', '1700000000001-rlsprov-Nytt_CV.pdf')$q$], 'ok');
+
+insert into utfall (test, ok, detalj)
+select 'CV hinken cv är privat', not b.public, 'public = ' || b.public
+from storage.buckets b where b.id = 'cv';
 
 select test, ok, detalj from utfall order by nr;
 
