@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=dc5d0b1f">
+<link rel="stylesheet" href="nextrum-cinema.css?v=aa57ff03">
 </head>
 <body>
 
@@ -129,7 +129,7 @@
   <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
   <span class="nx-et acc" style="margin-top:22px">Cookies</span>
   <h1 class="nx-d1">Cookies och lagring</h1>
-  <p class="nx-lede">Kort sida, eftersom det finns lite att berätta: vi sätter inga cookies alls.</p>
+  <p class="nx-lede">Kort sida, eftersom det finns lite att berätta: de öppna sidorna sätter inga cookies, och det enda vi frågar om är varifrån du kom.</p>
 </section>
 
 <section class="sec wrap" style="padding-top:clamp(16px,2vw,28px)">
@@ -138,12 +138,37 @@
        för att ett skript inte laddade är värdelöst. -->
   <div class="juridisk">
     <div class="jur-ruta">
-      <h2>Vi sätter inga cookies</h2>
-      <p>Därför finns här ingen ruta som ber om ditt samtycke. En sådan hade bett om lov till
-        ingenting.</p>
-      <p>Vi har mätt det, inte antagit det: på de öppna sidorna sätts noll cookies, och ingenting
-        lagras i webbläsaren förrän du loggar in.</p>
+      <h2>Inga cookies på de öppna sidorna</h2>
+      <p>Vi har mätt det, inte antagit det: på de öppna sidorna sätts noll cookies. Utan ditt ja
+        lagras ingenting i webbläsaren förrän du loggar in, utom själva svaret.</p>
+      <p>Den ruta som ändå kan dyka upp frågar om en enda sak: om vi får se vilken annons eller
+        länk som ledde dig hit. Svaret ändrar du när som helst, här nedanför.</p>
       <p>Vi räknar däremot besök. Hur det går till utan cookies står strax nedanför.</p>
+      <p>Det enda stället där en cookie sätts är när du betalar ett pass med kort. Då är det
+        Stripe som sätter den, och bara för betalningens skull. Det står längre ner.</p>
+    </div>
+
+    <h2 id="ditt-val">Det vi frågar om</h2>
+    <p>Vi vill veta vilka annonser och länkar som leder till att familjer hör av sig, så att vi
+      inte lägger pengar på fel ställe. Säger du ja minns webbläsaren varifrån du kom tills du
+      stänger fliken, i det som kallas <i>sessionStorage</i>. Skickar du en intresseanmälan
+      eller en ansökan följer det med.</p>
+    <ul>
+      <li>Det som minns är den webbplats som länkade hit, sidan du landade på, och de märkord vi
+        själva lagt i adressen när vi annonserat. Inget om dig.</li>
+      <li>Det lämnar inte din webbläsare förrän du skickar ett formulär, och då bara till oss.</li>
+      <li>Säger du nej ser vi bara sidan där du skickade anmälan. Allt annat fungerar precis
+        likadant.</li>
+      <li>Ditt svar sparas i ett år i <i>localStorage</i>, så att vi inte frågar vid varje sidbyte.
+        Säger din webbläsare att du inte vill spåras (Global Privacy Control) räknar vi det som
+        ett nej.</li>
+      <li>Vi använder i dag ingen annonspixel från Meta, Google eller någon annan. Slår vi på en
+        frågar rutan om den särskilt, också den som redan sagt ja, och den här sidan skrivs om
+        samma dag.</li>
+    </ul>
+    <div class="nx-kakor-panel" data-samtycke-panel>
+      <p>Ditt val visas här när sidan har laddat. Utan JavaScript sparas ingenting, och det finns
+        inget att välja.</p>
     </div>
 
     <h2>Vad som lagras när du loggar in</h2>
@@ -154,6 +179,22 @@
       <li>Den kräver inget samtycke: den är nödvändig för en funktion du själv bett om.</li>
       <li>Loggar du ut försvinner den. Du kan också rensa den själv via webbläsarens
         inställningar för webbplatsdata.</li>
+      <li>Fäller du ihop menyn eller en ruta i vyn sparas det också, så att vyn ser likadan ut
+        nästa gång. Det är ett val du själv gjort, och det skickas ingenstans.</li>
+    </ul>
+
+    <h2>När du betalar med kort</h2>
+    <p>Kortbetalningen sköts av Stripe. Deras skript laddas bara i föräldravyn, och först när du
+      trycker på Betala med kort. Då sätter Stripe två cookies, <i>__stripe_mid</i> (ett år) och
+      <i>__stripe_sid</i> (30 minuter), och kassan i rutan kan sätta egna. De finns för att
+      upptäcka kortbedrägerier.</p>
+    <ul>
+      <li>De kräver inget samtycke: betalningen går inte att genomföra säkert utan dem, och den har
+        du själv bett om.</li>
+      <li>Ingenting från Stripe laddas innan du trycker på Betala med kort, och ingenting på de öppna
+        sidorna.</li>
+      <li>Hur Stripe hanterar uppgifterna står i
+        <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripes integritetspolicy</a>.</li>
     </ul>
 
     <h2>Hur vi räknar besök</h2>
@@ -170,8 +211,8 @@
     <h2>Vad som inte finns här</h2>
     <ul>
       <li>Ingen cookie — inte heller för statistiken ovan</li>
-      <li>Ingen annonsspårning, ingen pixel från något socialt nätverk</li>
-      <li>Inga tredjepartscookies över huvud taget</li>
+      <li>Ingen pixel från något socialt nätverk eller annonsnätverk</li>
+      <li>Inga tredjepartscookies på de öppna sidorna</li>
       <li>Ingen profilering och inga automatiska beslut om dig</li>
       <li>Ingenting som följer dig mellan sajter, eller mellan dagar</li>
     </ul>
@@ -184,6 +225,8 @@
         som räknar besöken, på det sätt som beskrivs ovan.</li>
       <li><b>Supabase</b> — databasen och inloggningen. Kontaktas när du skickar ett formulär
         eller loggar in. Servrarna står inom EU.</li>
+      <li><b>Stripe</b> — kortbetalningen. Bara i föräldravyn, och först när du trycker på
+        Betala med kort.</li>
     </ul>
     <p>Det är hela listan — och den har blivit kortare. Typsnitten låg tidigare hos Google och
       programbiblioteket som inloggningen behöver låg hos unpkg.com. Båda skickade din IP-adress
@@ -191,13 +234,13 @@
       finns inte längre.</p>
 
     <h2>Om det ändras</h2>
-    <p>Lägger vi någon gång till något som faktiskt kräver ditt samtycke — inbäddad video,
-      annonsverktyg, något som följer dig mellan sajter — kommer vi fråga först, och den här
-      sidan uppdateras samtidigt. Vi lägger inte en samtyckesruta på sidan i förväg för sakens
-      skull, och vi lägger inte till mätning i smyg: besöksräkningen ovan kom till efter att den
-      här sidan först publicerats, och då skrevs sidan om samma dag.</p>
+    <p>Lägger vi någon gång till något mer som kräver ditt samtycke — inbäddad video,
+      annonsverktyg, något som följer dig mellan sajter — frågar rutan om det innan det laddas,
+      och den här sidan uppdateras samtidigt. Vi lägger inte till mätning i smyg:
+      besöksräkningen ovan och frågan om var du kom ifrån lades till efter att den här sidan
+      först publicerats, och båda gångerna skrevs sidan om samma dag.</p>
 
-    <p class="jur-datum">Senast uppdaterad 7 september 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 27 september 2026.</p>
   </div>
 </section>
 
@@ -261,6 +304,7 @@
           <li><a href="/integritetspolicy">Integritetspolicy</a></li>
           <li><a href="/anvandarvillkor">Användarvillkor</a></li>
           <li><a href="/lagring">Cookies och lagring</a></li>
+          <li><a href="/lagring#ditt-val" data-samtycke-oppna>Cookieinställningar</a></li>
         </ul>
       </nav>
     </div>
@@ -340,10 +384,11 @@
 <!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
      för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
 <script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="nextrum-config.js?v=37357abd"></script>
+<script src="nextrum-config.js?v=f8471f2e"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=036d9884"></script>
+<script src="nextrum-app.js?v=726c204c"></script>
+<script src="nextrum-samtycke.js?v=12241438"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

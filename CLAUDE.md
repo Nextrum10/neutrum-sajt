@@ -264,7 +264,8 @@ vendorad fil i `bibliotek/`.
 
 - **Frontend:** vanilla ES5/ES6 i `<script src>`, delade moduler som
   IIFE:er på `window` (`NX`, `NXStudie`, `NXArbete`, `NXMedia`,
-  `NXKontakt`, `NXBetalning`, `NXTjanster`, `NXAgent`, `NXMotion`)
+  `NXKontakt`, `NXBetalning`, `NXTjanster`, `NXAgent`, `NXMotion`,
+  `NXSamtycke`)
 - **Backend:** Supabase (Postgres + RLS + Auth + Storage) och Deno
   edge functions i `supabase/functions/`
 - **Hosting:** Vercel, `cleanUrls: true` (alltså `/priser`, inte
@@ -286,6 +287,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-app.js` | `NX` — delad grund: supa-klient, i18n, datum, fel, header, inloggning |
 | `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen |
 | `nextrum-modulvakt.js` | Fångar "en modul laddade inte" innan vyn dör tyst på "Laddar din vy". Laddas i **alla tre** vyerna sedan Fas 14.0 — adminvyn saknade den, fast den har 26 skript mot de andras 17. Prövar en FUNKTION per fil, inte bara att globalen finns: en gammal fil i cachen definierar sin global och ser frisk ut. Modulerna nås som IDENTIFIERARE, aldrig som `window[...]` — hälften deklareras `const NX… = …` på toppnivå och hamnar då inte på window |
+| `nextrum-samtycke.js` | `NXSamtycke`: samtyckesrutan och det enda stället som svarar på "får vi?". Bara på de öppna sidorna, efter `nextrum-app.js`. Se avsnitt 6, Samtycket |
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
 | `nextrum-motion.js` | `NXImg` (bildmarkup), `NXMotion` (scrollmotor), `NXStory`. Tre lägen: full / lite / still |
 | `nextrum-studie.js`, `-arbetsyta.js`, `-kontakt.js`, `-betalning.js`, `-media.js`, `-tjanster.js` | Delat mellan vyerna |
@@ -976,6 +978,50 @@ att visa **rätt sida**, inte för att skydda data.
   secret och en webhook-header i två olika fönster glider isär, och då
   svarar funktionen 401 på varje anmälan emellan — de mejlen kommer
   aldrig. I en tabell byts båda i samma transaktion.
+
+### Samtycket (2026-09-27)
+
+De öppna sidorna sätter inga cookies. Det som kräver samtycke
+(LEK 9 kap. 28 §) går genom `NXSamtycke` i `nextrum-samtycke.js`, och
+vad som är påslaget står i `NEXTRUM_CONFIG.SAMTYCKE`. **Rutan visas
+bara när något där är på.** Är allt av finns ingen ruta, ingen länk i
+footern och ingenting lagras: en ruta som ber om lov till ingenting är
+brus.
+
+- **Källspårningen är det enda som är på.** Med ett ja minns
+  webbläsaren landningen tills fliken stängs (sessionStorage
+  `nx-kalla`, skrivs av `NX.källa()`), så att en anmälan krediteras
+  annonsen och inte sidan den skickades från. **Utan ja är en okänd
+  källa `null`, inte "direkt"**: har besökaren kommit från en annan sida
+  hos oss vet vi inte var hen landade, och `analys_leads_per_kalla`
+  räknar null som okänd (avsnitt 5, regel 3). Förut blev varje familj
+  som läst två sidor före anmälan "direkt".
+- **Pixlarna (Meta, Google) är byggda och tomma.** Ett id i
+  konfigurationen slår på dem, och de laddas först efter ja. Innan ett
+  id skrivs in: `lagring.html` och integritetspolicyn på båda språken
+  (mottagare, överföring till USA), domänerna i CSP:n i `vercel.json`,
+  och för Meta automatisk avancerad matchning AV i Events Manager. IMY
+  bötfällde svenska företag för Meta-pixeln 2024. Bara
+  `intresseanmalan` är en konvertering; en jobbansökan är inte en kund.
+- **Ett ja gäller det rutan beskrev** (`omfattar`). Slås ett nytt syfte
+  på frågar rutan alla igen. Svaret (`localStorage` `nx-samtycke`)
+  gäller ett år. Global Privacy Control räknas som nej.
+- **Ja och nej är samma knapp.** Samma storlek, samma stil, bredvid
+  varandra. Gör aldrig nej till en grå länk.
+- **Klasserna heter `nx-kakor-*`.** `.nx-samtycke` är GDPR-kryssrutan
+  under formulären; första versionen av rutan hette så och flyttade
+  kryssrutan ut i hörnet med `position:fixed`.
+- Rutan laddas bara på de öppna sidorna. De inloggade vyerna har inget
+  som kräver samtycke: inloggningen, de hopfällda menyerna och Stripes
+  två cookies (`__stripe_mid`, `__stripe_sid`, satta först när familjen
+  trycker Betala med kort) är nödvändiga för något besökaren själv bett
+  om.
+
+`lagring.html` (och `/en/`) säger exakt vad som lagras, och panelen
+där (`#ditt-val`) är samma val som rutan. **Ändras lagringen ska
+sidorna följa med i samma ändring.** Fas 14.5 lade till Stripe utan
+att sidan följde med, och i tre veckor stod det "vi sätter inga
+cookies alls".
 
 ### Supabases säkerhetsadvisor larmar om saker som är med flit
 

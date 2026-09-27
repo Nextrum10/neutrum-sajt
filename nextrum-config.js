@@ -61,4 +61,26 @@ window.NEXTRUM_CONFIG = {
      studiehjälpare som inte vet hur rapporten fungerar lämnar inga
      rapporter, och utan rapport blir passet aldrig genomfört. */
   UTBILDNING_URL: '',
+
+  /* Det som kräver besökarens samtycke (nextrum-samtycke.js).
+     Står allt här av visas ingen ruta och ingenting lagras.
+
+     KALLSPARNING: webbläsaren minns varifrån besökaren kom tills
+     fliken stängs, så att en anmälan krediteras annonsen och inte
+     sidan den skickades från. Kräver ett ja.
+
+     META_PIXEL_ID, GOOGLE_TAG_ID (G-… eller AW-…) och GOOGLE_ADS_LEAD
+     (AW-…/etikett, konverteringen "Lead"): tomma = av. INNAN ett id
+     skrivs in: lagring.html och integritetspolicyn (båda språken) ska
+     säga vem som får vad och att uppgifterna går till USA, CSP:n i
+     vercel.json ska släppa in domänerna, och för Meta ska automatisk
+     avancerad matchning vara AV i Events Manager. IMY har bötfällt
+     svenska företag för Meta-pixeln 2024. Ett nytt id gör att rutan
+     frågar alla igen: ett ja till det gamla är inte ett ja till det. */
+  SAMTYCKE: {
+    KALLSPARNING: true,
+    META_PIXEL_ID: '',
+    GOOGLE_TAG_ID: '',
+    GOOGLE_ADS_LEAD: '',
+  },
 };
