@@ -899,8 +899,10 @@ supabase functions deploy notis-ko
 
 `notis-ko` sist (Fas 21.2): det är den som har mallen för påminnelsen
 `timmar_gar_ut`. En äldre arbetare kan inte rendera den. Den är
-driftsatt sedan 2026-09-27 (version 18); de tre stripe-funktionerna är det
-inte från Fas 21.
+driftsatt sedan 2026-09-27 (version 18). Samma dag var `stripe-webhook`
+(version 9) och `stripe-checkout` (version 13) identiska med main, och
+`klippkort-betala` driftsattes för första gången (version 1). Alla fyra
+ligger alltså ute; kvar är provköpet nedan.
 
 Driftsätts en funktion genom MCP i stället för `supabase functions
 deploy`: hämta tillbaka den efteråt och jämför varje fil mot repot.
