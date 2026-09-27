@@ -1074,11 +1074,15 @@
   /* ============================================================
      ERBJUDANDEN (Fas 16.1)
 
-     Planer och klippkort: timmar köpta i förväg. Katalogen och priserna
-     läses ur erbjudanden_pris — samma vy som prissidan visar och som
+     Planer: timmar köpta i förväg. Katalogen och priserna läses ur
+     erbjudanden_pris — samma vy som prissidan visar och som
      stripe-checkout tar betalt efter — och familjens egna kort ur
      klippkort_saldo, där "kvar" räknas i databasen ur passen. Här
      räknas ingenting om, det ritas bara.
+
+     Klippkorten säljs inte här (2026-09-27), så katalogen är bara
+     planerna. Familjens egna kort läses ändå oavsett sort: ett
+     klippkort som redan köpts ska synas och gå att betala med.
 
      Flaggan erbjudanden avgör om något går att köpa eller dra. Står den
      av syns erbjudandena med sina priser, men knapparna säger "Snart".
@@ -1097,7 +1101,7 @@
         .order('giltigt_till', { ascending: true })
     ]);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
-    S.erb.katalog = katalog.data || [];
+    S.erb.katalog = (katalog.data || []).filter(e => e.sort === 'plan');
     S.erb.kort = kort.data || [];
     ritaErbjudanden();
   }
@@ -1543,12 +1547,11 @@
        som inte går ihop med summan bredvid. */
     const perTimme = Number(e.rabatterat_timpris_ore);
     const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
-    const rubrik = e.sort === 'plan' ? e.namn : e.timmar + ' timmar';
     const vad = e.kod === 'standard' ? '4 pass · ett i veckan i en månad'
       : e.kod === 'intensiv' ? '8 pass · två i veckan i en månad'
       : 'Gäller i ' + mån;
-    return '<div class="erb-kort' + (e.kod === 'intensiv' || e.kod === 'klipp20' ? ' ar-framhavd' : '') + '">'
-      + '<div class="erb-topp"><b class="erb-namn">' + esc(rubrik) + '</b>'
+    return '<div class="erb-kort' + (e.kod === 'intensiv' ? ' ar-framhavd' : '') + '">'
+      + '<div class="erb-topp"><b class="erb-namn">' + esc(e.namn) + '</b>'
       + '<span class="erb-rabatt">−' + esc(String(e.rabatt_procent)) + ' %</span></div>'
       + '<span class="erb-vad">' + esc(vad) + '</span>'
       + '<span class="erb-pris"><s>' + esc(kr(e.ordinarie_ore)) + '</s><b>' + esc(kr(e.pris_ore)) + '</b></span>'
@@ -1561,13 +1564,10 @@
   }
 
   function ritaErbjudanden() {
-    const planer = $('#erb-planer'), klipp = $('#erb-klipp');
-    if (!planer || !klipp) return;
-    const kat = S.erb.katalog;
-    planer.innerHTML = kat.filter(e => e.sort === 'plan').map(erbKort).join('')
+    const planer = $('#erb-planer');
+    if (!planer) return;
+    planer.innerHTML = S.erb.katalog.map(erbKort).join('')
       || tomt('Inga planer just nu', 'Skriv till oss om ni vill ha ett upplägg.');
-    klipp.innerHTML = kat.filter(e => e.sort === 'klippkort').map(erbKort).join('')
-      || tomt('Inga klippkort just nu', 'Skriv till oss om ni vill köpa timmar i förväg.');
 
     const msg = $('#erb-msg');
     if (msg && !S.erb.aktiv && !msg.classList.contains('show')) {

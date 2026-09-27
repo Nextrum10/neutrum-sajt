@@ -69,13 +69,15 @@ jobs:
       - name: Versionsstämplarna är aktuella
         run: python3 verktyg/satt-version.py --kolla
 
-      # Maskotens svar och FAQ-schemat byggs ur sidorna. Står något
-      # annat i repot har någon ändrat sidan utan att bygga om.
+      # Maskotens svar, FAQ-schemat och sitemap.xml byggs ur sidorna.
+      # Står något annat i repot har någon ändrat sidan utan att bygga
+      # om. Kartan byggs sist: den läser FAQ-sidornas text.
       - name: Genererade filer är aktuella
         run: |
           python3 verktyg/bygg-maskotsvar.py
           python3 verktyg/bygg-faq-schema.py
-          git diff --exit-code -- nextrum-maskot-svar.js faq.html en/faq.html
+          python3 verktyg/bygg-sitemap.py
+          git diff --exit-code -- nextrum-maskot-svar.js faq.html en/faq.html sitemap.xml
 
       # jamfor-sprak.py rapporterar avvikelser som är avsiktliga, till
       # exempel språkväljaren (<b>SV</b> på svenska, <a> på engelska)
