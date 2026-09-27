@@ -1847,6 +1847,10 @@ a.pass-lank:hover{color:var(--acc)}
 .tb-rorelser li:first-child{border-top:0}
 .tb-min{flex:none;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600;color:var(--bl)}
 .tb-min.ut{font-weight:500;color:var(--bl-2)}
+/* Fas 22.2: köpta timmar under samma flik, kort för kort med passen de
+   betalat under mätaren. Förklaringen står över korten, inte mellan dem. */
+.tb-forklaring{margin:0 0 16px}
+.erb-mitt .tb-rorelser{margin-top:10px}
 /* Fas 21.2: tio dagar före sista dagen, samma dag som mejlet går. */
 .erb-snart{margin:10px 0 0;font-size:.84rem;line-height:1.5;color:var(--bl)}
 .erb-snart a{color:var(--acc);font-weight:600}

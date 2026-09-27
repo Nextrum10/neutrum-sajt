@@ -36,6 +36,13 @@
 // att passet kommer med på månadens faktura i stället för att be
 // familjen betala med kort. Knappen går till passet, inte till
 // betalningen: det finns inget att betala där.
+//
+// ETT PASS SOM TIMMARNA BETALAT SÄGER DET (Fas 22.2). Timmar familjen
+// köpt i förväg betalar passet i samma skrivning som bekräftar det, och
+// då bär datan betalsatt = 'timmar'. Mejlet säger att det inte finns
+// något att betala, och knappen går till passet. Betalar familjen ändå
+// en gammal kassa vinner kortet och timmarna går tillbaka: passet är
+// betalt i båda fallen, så meningen står sig.
 // ============================================================
 
 import type { Avbokningsskal, MejlbarTyp, RenData, Roll } from './typer.ts';
@@ -81,12 +88,13 @@ const SVARA = 'Svara ja eller nej i Nextrum.';
 const VILLKORET = 'Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten.';
 const BETALA = `${VILLKORET} Vill ni betala i förväg gör ni det i Nextrum, om ni inte redan har gjort det.`;
 const FAKTURA = 'Ni har valt faktura, så passet kommer med på månadens faktura från Nextrum.';
+const TIMMAR = 'Passet är betalt med timmarna ni köpt i förväg, så det finns inget att betala.';
 
 /** Vad familjen ska göra med betalningen, och vart knappen går. */
 function betalning(m: MallIn): { mening: string; knapp: string; mal: Mal } {
-  return m.d.betalsatt === 'faktura'
-    ? { mening: FAKTURA, knapp: 'Visa passet', mal: 'pass' }
-    : { mening: BETALA, knapp: 'Gå till betalningen', mal: 'betalning' };
+  if (m.d.betalsatt === 'faktura') return { mening: FAKTURA, knapp: 'Visa passet', mal: 'pass' };
+  if (m.d.betalsatt === 'timmar') return { mening: TIMMAR, knapp: 'Visa passet', mal: 'pass' };
+  return { mening: BETALA, knapp: 'Gå till betalningen', mal: 'betalning' };
 }
 
 /**
@@ -241,7 +249,8 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
   // Mejlet säger hur många och vilken dag, och att det som blir över
   // förfaller — villkoren säger det, och en påminnelse som teg om det
   // hade inte varit en påminnelse. Knappen går till bokningen: timmarna
-  // används genom att boka pass, inte på sidan där de köptes.
+  // används genom att boka pass, inte på sidan där de köptes, och sedan
+  // Fas 22.2 betalar de passet när det är bekräftat.
   timmar_gar_ut(m) {
     const sista = m.d.datum ? datumText(m.d.datum) : null;
     const antal = m.d.kvar === null ? null : m.d.kvar === 1 ? '1 timme' : `${m.d.kvar} timmar`;
@@ -253,7 +262,7 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
       rubrik: 'Era timmar går snart ut',
       mening: (antal ? `Ni har ${antal} kvar` : 'Ni har köpta timmar kvar')
         + (sista ? `, och de gäller till och med ${sista}.` : ' som snart går ut.')
-        + ' Boka pass och betala dem med timmarna innan dess. Timmar som inte används förfaller.'
+        + ' Boka pass innan dess, så betalar timmarna dem när tiden är bekräftad. Timmar som inte används förfaller.'
         + ' Hinner ni inte, hör av er före sista dagen, så betalar vi tillbaka resten.',
       knapp: 'Boka ett pass',
       mal: 'boka',

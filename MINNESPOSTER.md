@@ -76,7 +76,11 @@ går ut mejlas familjen om timmar finns kvar (Fas 21). Det som blir över
 av den sista påbörjade timmen på ett timpass sparas i familjens timbank
 (Fas 22.1): minuterna tar övertiden på nästa pass av sig själva, kan
 betala ett helt pass och går inte ut. Kortpass som blev kortare får
-fortfarande pengarna tillbaka, inte minuter.
+fortfarande pengarna tillbaka, inte minuter. Sedan Fas 22.2 betalar köpta
+timmar ett pass av sig själva när det bekräftas eller genomförs (kortet
+som går ut först, annars timbanken), och ett nytt köp betalar de
+bekräftade pass som redan står obetalda. Vid ånger eller uppsägning
+avbokas kommande timpass först, annars räknas de som använda.
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
