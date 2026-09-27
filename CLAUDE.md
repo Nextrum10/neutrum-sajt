@@ -700,6 +700,9 @@ Fas 20.1 la till `pass_tillagg` (övertiden på ett förbetalt pass:
 parterna och admin läser, bara `service_role` skriver) och Fas 20.2
 `manadsbokslut` (stängda månader: admin läser, bara `stang_manad` och
 `oppna_manad` skriver).
+Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
+id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
+ingen roll utom ägaren når den). Se Notiserna nedan.
 
 **Flera sessioner kör mot samma databas samtidigt.** Fas 19.5 och Fas
 20.1 skrevs samma förmiddag i två sessioner och ändrade båda
@@ -952,6 +955,31 @@ pass.** Den köas av `intern.timmar_gar_ut_koa()`, som pg_cron-jobbet
 svensk tid. En gång per kort och sista dag; ett förlängt kort får en ny.
 Mallen läser `kvar` (heltal, 1–200) och `datum` ur `RenData`, och bara
 familjen har raden i `NOTISVAL` (`bara: 'parent'`).
+
+**Notiser som inte gick fram (System → Fel) är bara databasens egna
+utskick** (2026-09-27). `notisfel()` läste förut hela
+`net._http_response`, och dit kommer varje anrop genom pg_net, också
+när en session provar en funktion efter en driftsättning. Utan
+hemligheten svarar funktionen 401, med GET 405, och svaret stod sedan i
+sex timmar som en notis som inte gick fram: adminvyn sa 8 fel, där tre
+var samma fel i koden och fem var prov. Tabellen har ingen adress, och
+ett prov och ett utskick med fel hemlighet ger samma 401, så skillnaden
+syns bara när anropet görs.
+
+- **Ring aldrig `net.http_post` direkt.** Databasens anrop går genom
+  `intern.natanrop(mal, url := …)`, med samma parametrar som
+  `net.http_post` och målet först. Den minns anropets id i
+  `intern.natanrop_logg`, och `notisfel()` visar bara svar på de
+  anropen och på webhooken för intresseanmälan (som minns sina i
+  `supabase_functions.hooks`), med vägen i `kalla`. Ett anrop förbi
+  `intern.natanrop` syns inte när det går fel; `rls-test.sql` har en
+  rad som fångar det.
+- **`grindfel` skiljer två 401:or.** Supabases grind svarar med
+  `sb-error-code` (`UNAUTHORIZED_…`) när JWT-kravet slagits på igen
+  (avsnitt 7, `config.toml`); funktionen själv svarar 401 när
+  hemligheten inte stämmer. Adminvyn säger vilket.
+- **Svaren finns i sex timmar** (`pg_net.ttl`), inte ett dygn. Listan
+  svarar på "gick det fram nyss?", inte på "vad hände i natt?".
 
 `DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
 sandlådan slås på innan något provas, och de fem stegen för att lägga
@@ -1544,6 +1572,13 @@ Körs på varje push och PR. Ska vara grön före merge.
 Kör dem lokalt innan du pushar. De är snabba och de fångar exakt det
 som annars upptäcks i drift.
 
+**`node --check` prövar bara syntaxen.** Ett namn som inte finns där
+det används ger ReferenceError först när raden körs. I adminvyn är det
+vanligaste fallet ett namn ur kärnan som aldrig hämtats in ur `NXAdmin`:
+auditloggen kraschade från 2026-09-22 till 09-27 på `AVBOKNINGSSKAL`
+så fort en avbokning med skäl stod bland raderna, och det syntes bara
+som klientfel under System → Fel.
+
 **`.github/workflows/indexnow.yml` är ingen kontroll** (2026-09-26). Den
 körs när Vercel rapporterat en lyckad produktionsdriftsättning och
 skickar de adresser vars summa i `sitemap.xml` ändrats till IndexNow
@@ -1862,6 +1897,14 @@ körningen så att fixturpassen aldrig blir ett mejl, och flaggan
   hjälpare nästa person bygger vidare på. Leo 2026-09-27: panelen står
   kvar som internt underlag. Det är alltså färdigt, och `materials` ska
   inte städas bort.
+- **Klientfelen säger inte vem det gällde.** `klientfel.anvandare`
+  fylls aldrig i: varken `nextrum-fel.js` eller databasen sätter den
+  (kontrollerat 2026-09-27). Varje fel står därför som Utloggad under
+  System → Fel, också de en inloggad admin fick, och knappen Skriv till
+  de drabbade visas aldrig. Att fylla den (en trigger som sätter
+  `auth.uid()`, så att ingen kan skriva in någon annans id) knyter
+  felrapporterna till konton, och det nämner integritetspolicyn inte.
+  Det är ett beslut, inte en rättelse.
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.

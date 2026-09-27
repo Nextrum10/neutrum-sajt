@@ -16,8 +16,8 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, kontaktaRuta, kortDatum, märkFlik, namnFör,
-          närText, pill, rad, skriv, tabell } = NXAdmin;
+  const { AVBOKNINGSSKAL, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, kontaktaRuta, kortDatum,
+          märkFlik, namnFör, närText, pill, rad, skriv, tabell } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaDetalj = (...a) => NXAdmin.rita.ritaDetalj(...a);
@@ -468,21 +468,51 @@
     });
   });
 
-  /* Notiser som inte gick fram. Statuskoden är hela beskedet: 401 är
-     fel hemlighet mellan triggern och funktionen, 5xx är funktionen
-     själv, och en tom kod med "tog slut" är ett anrop som aldrig kom
-     fram. Innehållet i svaret visas inte — det kan bära uppgifter ur
-     anmälan som felet gällde. */
+  /* Utskick som inte gick fram, och sedan 2026-09-27 bara databasens
+     egna: notisfel() visar svaren på anrop som gått genom
+     intern.natanrop och på webhooken för intresseanmälan, och säger
+     vilken väg det var. Förut kom varje svar i net._http_response med,
+     också när en session provat en funktion efter en driftsättning.
+     Fem sådana prov stod en eftermiddag här som notiser som inte gick
+     fram, och ingen kunde se vad de gällde.
+
+     Statuskoden är det mesta av beskedet: 401 från funktionen är en
+     hemlighet som inte stämmer, 401 från Supabases grind (grindfel) är
+     JWT-kravet som slagits på igen, 5xx är funktionen själv, och inget
+     svar alls är ett anrop som aldrig kom fram. Innehållet i svaret
+     visas inte: det kan bära uppgifter ur anmälan som felet gällde. */
+  const NOTISVÄG = {
+    'notis-ko': 'Mejlen om pass, meddelanden och rapporter',
+    'lead-notis': 'Intresseanmälan: aviseringen och kvittot',
+    'ansokan-notis': 'Beskeden till den som sökt jobb',
+    'ansokan-gallring': 'Gallringen av gamla ansökningar'
+  };
+
+  function notisfelBetyder(n) {
+    if (!n.status_kod) return n.tog_slut ? 'Funktionen svarade inte i tid.' : (n.fel || 'Anropet kom aldrig fram.');
+    if (/^UNAUTHORIZED/.test(n.grindfel || '')) {
+      return 'Supabase släppte inte fram anropet, för funktionen kräver inloggning igen. '
+        + 'Raden för den i supabase/config.toml saknas eller kom inte med när den driftsattes.';
+    }
+    if (n.status_kod === 401) return 'Funktionen nekade: hemligheten som skickades stämmer inte med den i notis_konfig.';
+    if (n.status_kod === 404) return 'Funktionen finns inte i driften.';
+    if (n.status_kod >= 500) return 'Funktionen gick sönder. Varför står i dess logg i Supabase.';
+    return 'Funktionen svarade med felkod ' + n.status_kod + '.';
+  }
+
   function ritaNotisfel() {
     const rader = S.notisfel || [];
     $('#notis-antal').textContent = rader.length ? rader.length + ' st' : '';
     $('#notis-tabell').innerHTML = tabell([
-      { namn: 'När', rita: n => '<span class="adm-tal">' + esc(kortDatum(n.tidpunkt)) + '</span>' },
+      { namn: 'När', rita: n => '<span class="adm-tal">' + esc(kortDatum(n.tidpunkt)) + '</span>'
+        + '<span class="adm-und">' + esc(new Date(n.tidpunkt).toLocaleTimeString('sv-SE',
+          { hour: '2-digit', minute: '2-digit' })) + '</span>' },
+      { namn: 'Vad', rita: n => esc(NOTISVÄG[n.kalla] || n.kalla || 'Okänt') },
       { namn: 'Svar', rita: n => n.status_kod
         ? pill(String(n.status_kod), n.status_kod >= 500 ? '' : 'ar-vantar')
         : pill(n.tog_slut ? 'Tidsgräns' : 'Inget svar', '') },
-      { namn: 'Felet', rita: n => esc(n.fel || 'Funktionen svarade med en felkod.') }
-    ], rader, 'Inga misslyckade utskick det senaste dygnet');
+      { namn: 'Vad det betyder', rita: n => esc(notisfelBetyder(n)) }
+    ], rader, 'Inga misslyckade utskick de senaste sex timmarna');
   }
 
   /* ============================================================
