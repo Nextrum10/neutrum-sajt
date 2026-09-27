@@ -183,6 +183,7 @@
 
         <span class="vy-sido-rubrik" aria-hidden="true">Arbete</span>
         <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.2 2"/></svg>Lektioner &amp; elever</a>
+        <a href="#rapporter" data-sek="rapporter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3.5H6.5v17h11V7z"/><path d="M14 3.5V7h3.5"/><path d="M9 12.5h6M9 16h4"/></svg>Skriv rapport</a>
         <a href="#tider" data-sek="tider"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13.5 6.5 5h11L20 13.5V19H4z"/><path d="M4 13.5h4.5l1.2 2.2h4.6l1.2-2.2H20"/></svg>Föreslagna tider</a>
         <a href="#laxor" data-sek="laxor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Läxor &amp; material</a>
 
@@ -573,6 +574,31 @@
 
                       <div id="prg-lista" style="margin-top:20px"><div class="loading">Hämtar</div></div>
                     </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           SKRIV RAPPORT (2026-09-27)
+           Pass som har varit och saknar rapport, för ALLA elever. Under
+           Pass & rapport låg de blandade med allt som ska komma och
+           allt som redan är klart, och bara den valda elevens pass gick
+           att nå från rapportrutans rullgardin. Leo: rapporten ska
+           vara lättare att komma åt.
+
+           Elevraden är inte med här (MED_KONTEXT): listan gäller alla
+           elever, och öppnaRapport() byter elev själv när passet hör
+           till en annan. Ritas av ritaAttRapportera().
+           ============================================================ -->
+      <section class="vy-sek" data-sek="rapporter" hidden>
+        <div class="vy-sek-topp">
+          <div>
+            <h2>Skriv rapport</h2>
+            <p>Pass som har varit men saknar rapport. Rapporten är det familjen läser, och först med den blir passet en arbetad timme.</p>
+          </div>
+        </div>
+        <div class="dbox">
+          <h5>Väntar på rapport <em id="att-rapportera-antal"></em></h5>
+          <div id="att-rapportera"><div class="loading">Hämtar</div></div>
         </div>
       </section>
 
@@ -1076,6 +1102,6 @@
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-larare-vy.js?v=35353c49"></script>
+<script src="nextrum-larare-vy.js?v=fdd1a7eb"></script>
 </body>
 </html>
