@@ -156,11 +156,14 @@ studiehjälpare: laga det innan något gör det.
   betalar varje pass med kort, **antingen i förväg eller efter passet
   när de bekräftar rapporten**, och ett pass som har hållits ska betalas
   även om rapporten inte bekräftats. Fas 14.2 sa före passet och att ett
-  obetalt pass inte hålls; det gäller inte längre. Meningen står på 23
-  ställen i 15 filer, på båda språken och i familjens mejl.
+  obetalt pass inte hålls; det gäller inte längre. Meningen står på 36
+  ställen i 23 filer, på båda språken och i familjens mejl — också på
+  läxhjälpssidorna och Vår idé, som sa "innan det hålls" ett dygn efter
+  Fas 19.2 för att kontrollen inte räknade dem.
   `verktyg/kolla-betalningsvillkor.py` räknar dem, letar efter de gamla
   löftena ("efterskott", "10 dagars …", och sedan Fas 19.2 "hålls
-  inte", "senast innan passet börjar", "ingenting dras i efterhand") i
+  inte", "innan det hålls", "senast innan passet börjar", "ingenting
+  dras i efterhand") i
   allt som serveras, och körs i CI. **En betalning som tas på ett annat
   sätt än villkoren lovar är en tvist, inte ett skrivfel.**
 

@@ -8,7 +8,8 @@
 // hade inte ett enda test.
 //
 // FAS 14.2 TOG BORT FAMILJENS HALVA. Familjen betalar varje pass med
-// kort före passet (stripe-checkout). Körningen bygger studiehjälparens
+// kort (stripe-checkout), sedan Fas 19.2 i förväg eller efter passet
+// när de bekräftar rapporten. Körningen bygger studiehjälparens
 // underlag, och räknar upp de pass som hölls utan att familjen betalat,
 // med det belopp passet skulle ha kostat. En faktura skapas inte av
 // det: listan är till för att någon ska se passen, inte för att de ska

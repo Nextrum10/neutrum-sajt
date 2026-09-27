@@ -300,11 +300,12 @@ familjen betalar varje pass med kort, **antingen i förväg eller efter passet n
 bekräftar rapporten**. Ett pass som har hållits ska betalas även om rapporten inte
 bekräftats. (Fas 14.2 sa före passet och att ett obetalt pass inte hålls; de
 orden letar kontrollen nu efter som gamla.) Meningen gäller oförändrad tills
-flaggan `faktura` slås på; då ändras den enligt 9.11. Den står på 23 ställen i 15
-filer: användarvillkoren, prissidan, FAQ:n, Så fungerar Nextrum och studievyns
+flaggan `faktura` slås på; då ändras den enligt 9.11. Den står på 36 ställen i 23
+filer: användarvillkoren, prissidan, FAQ:n, Så fungerar Nextrum, Vår idé och studievyns
 illustration på startsidan och För elever & föräldrar, på båda språken, plus
-FAQ-schemat, föräldravyns Betalning och Pris & villkor, maskotens svarsfil och
-mejlmallarna. Alla måste säga samma sak. En betalning som tas på ett annat sätt än villkoren lovar är en tvist,
+FAQ-schemat, föräldravyns Betalning och Pris & villkor, maskotens svarsfil,
+mejlmallarna, navet Läxhjälp i Stockholm, de fyra ämnessidorna och Solna (de fem
+sista genereras av `verktyg/bygg-omradessidor.py`). Alla måste säga samma sak. En betalning som tas på ett annat sätt än villkoren lovar är en tvist,
 inte ett skrivfel.
 
 Efter en ändring:
@@ -839,8 +840,9 @@ skrivs om från en vy.
 
 **Samma dag, i en egen liten ändring:**
 
-5. **Texterna, på båda språken.** Meningen "betalar varje pass med kort, före
-   passet" står på sexton ställen i tio filer (avsnitt 8, Ändra betalningslöftet).
+5. **Texterna, på båda språken.** Meningen "antingen i förväg eller efter passet
+   när ni bekräftar rapporten" står på 36 ställen i 23 filer (avsnitt 8, Ändra
+   betalningslöftet; `LOFTET` i kontrollen är den fullständiga listan).
    Den ska säga att familjen kan välja faktura, tio dagar, utan avgift: villkoren,
    prissidan, FAQ:n, studievyns Pris & villkor och intro under Betalning i
    `foralder.html`, och samma sidor under `/en/`.

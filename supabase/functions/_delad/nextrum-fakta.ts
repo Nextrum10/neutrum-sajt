@@ -9,6 +9,11 @@
 // är alltså inte genomförda och ingen av dem går att betala ut
 // ersättning för" är ett besked.
 //
+// SEDAN FAS 19.2 FÅR FAMILJEN BETALA EFTER PASSET, när de bekräftar
+// rapporten. Texten nedan sa kort FÖRE passet och att ett obetalt pass
+// inte hålls, och en agent som läser det räknar varje hållet obetalt
+// pass som ett fel, fast det nu är normalt tills familjen bekräftat.
+//
 // SEDAN FAS 14.2 FÅR FAMILJEN INGEN FAKTURA. Texten sa förut "10
 // dagars betalningsvillkor" och "Betald kryssas i för hand", och en
 // agent som läser det letar efter förfallna fakturor som aldrig kommer
@@ -55,7 +60,8 @@ ORDEN. Använd dem, och inga andra:
   beläggning för hög.
 · underlag — vad studiehjälparen ska få.
 · betalning — vad familjen betalat för ett pass. Den görs med kort,
-  per pass, före passet. Familjen får ingen faktura. Äldre fakturor
+  per pass, antingen i förväg eller efter passet när familjen
+  bekräftar rapporten. Familjen får ingen faktura i dag. Äldre fakturor
   kan finnas kvar från tiden innan, men inga nya skapas.
 · tjänst — det som går att boka eller söka till.
 
@@ -74,19 +80,21 @@ SIFFRORNA:
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
   FAST, inte per barn, och taket är tre barn. Tre barn kostar alltså
   448 kronor i timmen, inte 517.
-· Familjen betalar varje pass med kort när studiehjälparen bekräftat
-  tiden, senast innan passet börjar. Ett pass som inte är betalt
-  hålls inte. En betalning som tas på ett annat sätt än villkoren
-  lovar är en tvist, inte ett skrivfel.
+· Familjen betalar varje pass med kort, antingen i förväg, när
+  studiehjälparen bekräftat tiden, eller efter passet när de bekräftar
+  rapporten. Rapporten bekräftas också när passet redan är betalt. Ett
+  pass som har hållits ska betalas även om rapporten inte bekräftats.
+  En betalning som tas på ett annat sätt än villkoren lovar är en
+  tvist, inte ett skrivfel.
 · Studiehjälparen får betalt den 25:e, i en klump för månadens
   rapporterade pass.
 · Belopp räknas i ören. Kronor blir det först när något visas.
 
 VAD SOM INTE ÄR BYGGT ÄN. Föreslå inte något som förutsätter det:
-· Kortbetalningen är ny. Tills den bevisligen fungerar kan spärren
-  som stoppar en rapport på ett obetalt pass vara avslagen, och då
-  kan ett pass hållas och rapporteras utan att vara betalt. Det är
-  något att påpeka, inte ett normalläge.
+· Kortbetalningen är ny. Ett pass som hållits och rapporterats men
+  inte är betalt är normalt en tid, för familjen får betala när de
+  bekräftar rapporten. Det ska ändå följas upp, och står det obetalt
+  länge är det något att påpeka.
 · Utbetalningen till studiehjälparna görs för hand från banken. Ett
   underlag som inte står som utbetalt kan alltså vara betalt utan att
   någon hunnit markera det.
@@ -102,7 +110,8 @@ siffra syns inte som gissad när den väl ligger i ett medelvärde. Är
 en lucka stor är talet bredvid den för lågt, och det ska du skriva.
 
 Betalt räknas på den dag betalningen kom in, inte på passets dag.
-Familjen betalar före passet, så en månads betalningar och samma
-månads genomförda pass hör inte ihop rad för rad. Fakturerat gäller
+Familjen betalar i förväg eller efter passet, så en månads
+betalningar och samma månads genomförda pass hör inte ihop rad för
+rad. Fakturerat gäller
 bara de äldre fakturorna och är noll för varje månad efter dem; en
 nolla där betyder inte att ingenting betalats.`;

@@ -386,8 +386,9 @@ OMRADEN = [
              'nyligen — det är särskilt märkbart på gymnasienivå, där den som läste kursen i '
              'fjol minns vilket steg som är det svåra.'),
             ('Måste vi binda upp oss?',
-             'Nej. Ingen bindningstid, ingen månadsavgift. Ni betalar varje pass med kort innan '
-             f'det hålls, {PRIS} i timmen, och betalningen går till Nextrum.'),
+             f'Nej. Ingen bindningstid, ingen månadsavgift. {PRIS} i timmen, och ni betalar varje '
+             'pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. '
+             'Betalningen går till Nextrum.'),
         ],
     },
 ]
@@ -482,7 +483,8 @@ AMNEN = [
              'att eleven ska klara nästa uppgift också när ingen sitter bredvid.'),
             ('Vad kostar mattehjälpen?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort innan det hålls.'),
+             'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
+             'passet när ni bekräftar rapporten.'),
         ],
     },
     {
@@ -552,7 +554,8 @@ AMNEN = [
              'varje pass visar hur det går.'),
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort innan det hålls.'),
+             'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
+             'passet när ni bekräftar rapporten.'),
         ],
     },
     {
@@ -620,7 +623,8 @@ AMNEN = [
              'eleverna brukar det gå lättare att ses.'),
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort innan det hålls.'),
+             'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
+             'passet när ni bekräftar rapporten.'),
         ],
     },
     {
@@ -689,7 +693,8 @@ AMNEN = [
              'med tre veckor hinner ni förstå det, inte bara känna igen det.'),
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort innan det hålls.'),
+             'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
+             'passet när ni bekräftar rapporten.'),
         ],
     },
 ]
