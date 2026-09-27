@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=dc5d0b1f">
+<link rel="stylesheet" href="nextrum-cinema.css?v=aa57ff03">
 </head>
 <body>
 
@@ -153,8 +153,9 @@
     <p>Vi sparar det som behövs för att kunna matcha en elev med rätt studiehjälpare, boka och
       genomföra passen, hålla er informerade om vad som händer, och ta betalt för passen.
       Inget mer än så.</p>
-    <p>Vi säljer inte uppgifter. Vi lämnar dem inte vidare för marknadsföring. Vi sätter inga
-      cookies.</p>
+    <p>Vi säljer inte uppgifter. Vi lämnar dem inte vidare för marknadsföring. De öppna
+      sidorna sätter inga cookies. Betalar du med kort sätter Stripe två, för att upptäcka
+      bedrägerier.</p>
     <p>Vi räknar hur många som besöker de öppna sidorna, men utan cookies och utan något som
       följer dig över tid. Hur det går till står under
       <a href="/lagring">Cookies och lagring</a>.</p>
@@ -201,10 +202,13 @@
     <p>Skickar du en intresseanmälan sparar vi också varifrån besöket kom: vilken sida du
       landade på, vilken webbplats som länkade hit, och de märkord vi själva lagt i adressen
       när vi annonserat. Det är för att vi ska veta vilka kanaler som faktiskt leder till att
-      någon hör av sig.</p>
+      någon hör av sig. Har du sagt ja i rutan om det minns webbläsaren var du landade tills du
+      stänger fliken, så att det blir rätt också om du läst några sidor först. Har du sagt nej
+      ser vi bara sidan där du skickade anmälan. Du ändrar svaret under
+      <a href="/lagring#ditt-val">Cookies och lagring</a>.</p>
     <p>Uppgifterna hör till besöket, inte till dig. Vi bygger ingen profil av dem, vi följer dig
       inte mellan besök, och de går inte att koppla till någon annan sida du varit på. Skickar
-      du ingen anmälan sparas ingenting alls.</p>
+      du ingen anmälan sparas ingenting hos oss.</p>
 
     <h3>Handlingar om verksamheten</h3>
     <p>Avtal, intyg och försäkringspapper sparas i ett eget stängt utrymme som bara vi når. Ett
@@ -286,14 +290,15 @@
       Hör gärna av dig till oss först — det går oftast snabbare att reda ut.</p>
 
     <h2>Cookies och lagring i webbläsaren</h2>
-    <p>Vi sätter inga cookies — inte heller för besöksräkningen. Vad som faktiskt lagras, vad som
+    <p>De öppna sidorna sätter inga cookies — inte heller för besöksräkningen. Den enda som
+      sätts är Stripes, när du betalar med kort. Vad som faktiskt lagras, vad som
       mäts och varför, står på en egen sida: <a href="/lagring">Cookies och lagring</a>.</p>
 
     <h2>Ändringar</h2>
     <p>Ändrar vi något väsentligt uppdaterar vi datumet nedan, och hör av oss till er som har
       konto om ändringen påverkar er.</p>
 
-    <p class="jur-datum">Senast uppdaterad 25 september 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 27 september 2026.</p>
   </div>
 </section>
 
@@ -357,6 +362,7 @@
           <li><a href="/integritetspolicy">Integritetspolicy</a></li>
           <li><a href="/anvandarvillkor">Användarvillkor</a></li>
           <li><a href="/lagring">Cookies och lagring</a></li>
+          <li><a href="/lagring#ditt-val" data-samtycke-oppna>Cookieinställningar</a></li>
         </ul>
       </nav>
     </div>
@@ -436,10 +442,11 @@
 <!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
      för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
 <script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="nextrum-config.js?v=37357abd"></script>
+<script src="nextrum-config.js?v=f8471f2e"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=7a009fcd"></script>
+<script src="nextrum-app.js?v=a72665a2"></script>
+<script src="nextrum-samtycke.js?v=12241438"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

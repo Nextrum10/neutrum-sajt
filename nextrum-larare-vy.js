@@ -1030,7 +1030,7 @@
     const host = $('#pass-lista');
     const { data, error } = await supa
       .from('bookings')
-      .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, avbokningsskal, betalning_status, fakturerbar')
+      .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, avbokningsskal, betalning_status, fakturerbar, klippkort_id')
       .eq('tutor_id', S.user.id).order('wanted_date', { ascending: true });
 
     if (error) {
@@ -3045,8 +3045,15 @@
        tillbaka en flyttad tid är också en avbokning. Knapparna visas
        därför inte på ett betalt pass; ett nej efter ett klick är sämre
        än en mening som säger vart man vänder sig. Samma regel som i
-       föräldravyn. */
-    const betalt = b.betalning_status === 'betald' || b.betalning_status === 'tvist';
+       föräldravyn.
+
+       Ett pass betalt med familjens köpta timmar har inga pengar på sig
+       (Fas 21.1). Det går att avboka härifrån, och timmarna går tillbaka
+       till familjen av sig själva. Kortpengarna på ett sådant pass, som
+       databasen också prövar, syns inte i den här vyn och behöver inte
+       göra det: nekar databasen står dess besked i rutan. */
+    const medTimmar = b.betalning_status === 'betald' && !!b.klippkort_id;
+    const betalt = (b.betalning_status === 'betald' || b.betalning_status === 'tvist') && !medTimmar;
     const viaNextrum = ' Passet är betalt, så ska det avbokas går det genom Nextrum.';
     /* Bokat men inte betalt, med spärren på. Med den av är betaltNog
        alltid sant och inget av det här syns. */
@@ -3086,6 +3093,8 @@
         ? { text: 'Passet är bokat, men familjen har inte betalt än. Håll det inte förrän de har gjort det — det syns här när betalningen kommit in.', ton: 'fraga' }
         : betalt
         ? { text: 'Passet är bokat och betalt. ' + ses + ' Ska det avbokas går det genom Nextrum.', ton: 'klart' }
+        : medTimmar
+        ? { text: 'Passet är bokat, och familjen har betalat det med köpta timmar. ' + ses + ' Avbokas det går timmarna tillbaka till familjen.', ton: 'klart' }
         : b.betalning_status === 'faktura'
         ? { text: 'Passet är bokat, och familjen betalar det mot faktura. ' + ses, ton: 'klart' }
         : { text: 'Passet är bokat. ' + ses, ton: 'klart' };

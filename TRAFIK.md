@@ -174,7 +174,8 @@ LinkedIn:   https://nextrum.se/bli-studiehjalpare?utm_source=linkedin&utm_medium
 ```
 
 Sidornas canonical tar bort parametrarna för Google. Det blir inga
-dubbletter.
+dubbletter. Säger besökaren ja i samtyckesrutan följer taggen också med
+in i anmälan (`leads.kalla`), även om familjen läst flera sidor först.
 
 ## 9. Google Ads (valfritt, kostar pengar)
 
@@ -188,6 +189,14 @@ Det enda sättet att stå först på "läxhjälp stockholm" i morgon.
   ämnessökorden
 - Sätt en dagsbudget ni klarar att förlora en månad, och läs
   sökordsrapporten varje vecka
+- **Klistra aldrig in Googles tagg i sidorna.** Konverteringsspårningen
+  skrivs som id:n i `NEXTRUM_CONFIG.SAMTYCKE` (`GOOGLE_TAG_ID`,
+  `GOOGLE_ADS_LEAD`) och laddas först när besökaren sagt ja. En tagg
+  direkt i sidan går förbi rutan, och då spårar sajten utan samtycke.
+  Läs checklistan i `nextrum-config.js` först. Utan den spårningen
+  syns annonsen ändå i anmälan som `google / cpc` (klick-id:t `gclid`
+  i adressen): alltid när familjen anmäler sig på sidan de landade på,
+  och efter flera sidor när de sagt ja i rutan
 
 ## 10. Beslut som är era
 
