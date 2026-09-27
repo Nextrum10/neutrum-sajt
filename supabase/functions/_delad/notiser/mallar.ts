@@ -19,18 +19,17 @@
 // får båda den. "Tove har flyttat passet" hade då varit fel. Texterna
 // säger vad som hänt, inte vem som gjorde det.
 //
-// BETALNINGEN STÅR I FAMILJENS MEJL (Fas 14.3). Familjen betalar varje
-// pass med kort före passet, och ett pass som inte är betalt hålls
-// inte. Bekräftelsen och påminnelsen sa ingenting om det, och det var
-// två av de fyra villkoren för spärren "ingen betalning, inget pass"
-// (DEPLOY-BETALNING.md 9.9). Mallen vet inte om passet är betalt —
+// BETALNINGEN STÅR I FAMILJENS MEJL (Fas 14.3). Sedan Fas 19.2
+// betalar familjen varje pass med kort, antingen i förväg eller efter
+// passet när de bekräftar rapporten, och mejlet säger samma mening som
+// villkoren. Förut stod här att ett obetalt pass inte hålls; det gäller
+// inte längre, och spärren som bar det kan inte slås på. Mallen vet inte om passet är betalt —
 // RenData bär bara datum, tid, ämne och förnamn, och läget hade ändå
 // hunnit ändras mellan kön och utskicket — så alla tre säger det
 // villkorat. Också en bekräftelse kan gälla ett betalt pass: flyttas
 // det och bekräftas igen går samma mejl ut, och "betala det" hade då
 // låtit som en ny räkning. Studiehjälparen får ingenting om
-// betalningen: det är familjens sak, och studiehjälparvyn visar läget
-// när spärren är på.
+// betalningen: det är familjens sak.
 //
 // ETT FAKTURAPASS SÄGER FAKTURA (Fas 14.6). Har familjen valt faktura
 // för passet bär datan koden betalsatt = 'faktura', och då säger mejlet
@@ -78,8 +77,8 @@ const SVARA = 'Svara ja eller nej i Nextrum.';
 /* Samma mening som villkoren, prissidan och FAQ:n. Den räknas av
    verktyg/kolla-betalningsvillkor.py, så att mejlet inte kan börja säga
    något annat än sidorna. */
-const HALLS_INTE = 'Ett pass som inte är betalt hålls inte.';
-const BETALA = `Betala det med kort i Nextrum senast innan det börjar, om ni inte redan har gjort det. ${HALLS_INTE}`;
+const VILLKORET = 'Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten.';
+const BETALA = `${VILLKORET} Vill ni betala i förväg gör ni det i Nextrum, om ni inte redan har gjort det.`;
 const FAKTURA = 'Ni har valt faktura, så passet kommer med på månadens faktura från Nextrum.';
 
 /** Vad familjen ska göra med betalningen, och vart knappen går. */

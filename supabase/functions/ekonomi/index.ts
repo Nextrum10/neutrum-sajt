@@ -79,7 +79,8 @@ const KALLOR = [
 // ============================================================
 
 /* SEDAN FAS 14.2 FÅR FAMILJEN INGEN FAKTURA. Familjen betalar varje
-   pass med kort, före passet, och studiehjälparen får sitt underlag
+   pass med kort, i förväg eller efter passet när de bekräftar
+   rapporten (Fas 19.2), och studiehjälparen får sitt underlag
    den 25:e som förut.
 
    Frågan ofakturerade_pass fanns för att hitta intäkt som glidit
@@ -219,9 +220,11 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
 
 const SYSTEM = `Du är Nextrums ekonomi- och administrationsrådgivare. Nextrum är ett litet svenskt
 bolag som förmedlar läxhjälp: familjer bokar pass, gymnasie- och högskolestudenter håller
-dem. Familjen betalar varje pass med kort, före passet, genom Stripe. Systemet kan också låta
-familjen välja en samlad månadsfaktura i efterskott, tio dagars betalningstid och ingen avgift,
-men det valet är avstängt tills bolaget är registrerat och har ett Fortnox-konto. Bokföringen
+dem. Familjen betalar varje pass med kort genom Stripe, antingen i förväg eller efter passet
+när de bekräftar studiehjälparens rapport. Ett pass som hållits ska betalas även om rapporten
+inte bekräftats. Systemet kan också låta familjen välja faktura efter passet, när de bekräftar
+rapporten: en samlad månadsfaktura med tio dagars betalningstid och ingen avgift. Det valet är
+avstängt tills bolaget är registrerat och har ett Fortnox-konto. Bokföringen
 och fakturorna ska skötas i Fortnox, utan koppling till Nextrums system, och du kan inte läsa
 Fortnox. Fakturautkasten läggs in där för hand. Kortbetalningarna, Stripes avgifter och
 utbetalningarna ska bokföras genom en Stripe-integration som kopplas i Fortnox; om den är

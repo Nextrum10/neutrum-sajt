@@ -1008,8 +1008,10 @@
   /* ============================================================
      SPÄRREN (Fas 14.2)
 
-     "Ingen betalning, inget pass." Familjen betalar varje pass med
-     kort före passet. När flaggan kortsparr är på nekar databasen
+     "Ingen betalning, inget pass." Sedan Fas 19.2 får familjen betala
+     efter passet, och flaggan kan inte slås på (flaggor_kortsparr_av);
+     grenen står kvar för den dag villkoren ändras tillbaka. När flaggan
+     kortsparr är på nekar databasen
      rapporten på ett pass som inte är betalt (skydda_bokningsfalt,
      genom triggern som gör passet genomfört), och då ska vyn säga det
      INNAN någon skrivit en hel rapport i onödan.

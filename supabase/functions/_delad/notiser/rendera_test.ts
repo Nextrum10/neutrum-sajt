@@ -123,11 +123,14 @@ Deno.test('varje mejl har en knapp till rätt vy, och bara en', () => {
   assertEquals(vyAdress('tutor', 'boka'), `${SAJT}/larare#lektioner/pass`);
 });
 
-Deno.test('familjens bekräftelse och påminnelse säger att passet betalas före, studiehjälparens inte', () => {
-  // Villkor 3 och 4 för spärren "ingen betalning, inget pass"
-  // (DEPLOY-BETALNING.md 9.9). Meningen är samma som på sidorna.
+Deno.test('familjens bekräftelse och påminnelse säger hur passet betalas, studiehjälparens inte', () => {
+  // Samma mening som villkoren och sidorna (Fas 19.2): i förväg eller
+  // efter passet när rapporten bekräftas. Det gamla löftet att ett
+  // obetalt pass inte hålls får inte stå kvar.
+  const VILLKORET = 'antingen i förväg eller efter passet när ni bekräftar rapporten';
   const bekraftat = rendera('pass_bekraftat', 'parent');
-  assertStringIncludes(bekraftat.text, 'Ett pass som inte är betalt hålls inte.');
+  assertStringIncludes(bekraftat.text, VILLKORET);
+  assertEquals(bekraftat.text.includes('hålls inte'), false);
   assertStringIncludes(bekraftat.text, `${SAJT}/foralder#betalning`);
   assertStringIncludes(bekraftat.html, 'Gå till betalningen');
   // Villkorat: ett betalt pass som flyttats och bekräftats igen får
@@ -136,7 +139,8 @@ Deno.test('familjens bekräftelse och påminnelse säger att passet betalas för
 
   const paminnelse = rendera('paminnelse', 'parent');
   assertStringIncludes(paminnelse.text, 'om ni inte redan har gjort det');
-  assertStringIncludes(paminnelse.text, 'Ett pass som inte är betalt hålls inte.');
+  assertStringIncludes(paminnelse.text, VILLKORET);
+  assertEquals(paminnelse.text.includes('hålls inte'), false);
 
   for (const typ of ['pass_bekraftat', 'paminnelse', 'pass_nytt'] as const) {
     const hjalpare = rendera(typ, 'tutor');
@@ -151,7 +155,7 @@ Deno.test('ett fakturapass får inget kortmejl (Fas 14.6)', () => {
     const familj = rendera(typ, 'parent', { data: { ...SMUTSIG, status: 'confirmed', betalsatt: 'faktura' } });
     assertStringIncludes(familj.text, 'månadens faktura', typ);
     assertEquals(familj.text.includes('med kort'), false, `${typ} ber en fakturafamilj betala med kort`);
-    assertEquals(familj.text.includes('Ett pass som inte är betalt hålls inte'), false, typ);
+    assertEquals(familj.text.includes('när ni bekräftar rapporten'), false, typ);
     assertEquals(familj.text.includes('#betalning'), false, `${typ} leder till betalningen`);
 
     const hjalpare = rendera(typ, 'tutor', { data: { ...SMUTSIG, status: 'confirmed', betalsatt: 'faktura' } });

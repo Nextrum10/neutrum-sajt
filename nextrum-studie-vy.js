@@ -1033,16 +1033,24 @@
      menyn, där de läser den och bekräftar den, och är passet inte
      betalt bekräftar de genom att välja hur det betalas.
 
-     BEKRÄFTELSEN ÄR INTE BETALNINGEN. Villkoren säger kort före passet,
-     och så är det fortfarande: ett pass som hölls ska betalas oavsett om
-     någon trycker här. rapport_bekraftelser säger bara att familjen läst
-     rapporten. En rapport står därför kvar under Att bekräfta tills den
-     är bekräftad OCH passet inte längre väntar på betalning — annars
-     hade ett obetalt pass kunnat "bekräftas" bort ur sikte.
+     TRE SÄTT ATT BETALA (Fas 19.2, Leo samma dag): kort i förväg, kort
+     efter passet och faktura efter passet. Det första görs när tiden är
+     bekräftad. De två andra görs HÄR, i samband med bekräftelsen, och
+     villkoren säger det. Är passet redan betalt bekräftar familjen
+     ändå: bekräftelsen är att de läst rapporten, betalningen är en egen
+     sak.
 
-     Att välja betalsätt på en rapport bekräftar den. Det är det Leo bad
-     om, och den som väljer kort har läst det de betalar för. Avbryts
-     kassan står rapporten kvar, bekräftad och obetald, och säger det.
+     BEKRÄFTELSEN ÄR INTE VILLKORET FÖR BETALNINGEN. Ett pass som hölls
+     ska betalas även om ingen trycker här, och villkoren säger det
+     också. rapport_bekraftelser säger bara att familjen läst rapporten.
+     En rapport står därför kvar under Att bekräfta tills den är
+     bekräftad OCH passet inte längre väntar på betalning — annars hade
+     ett obetalt pass kunnat "bekräftas" bort ur sikte.
+
+     Att välja betalsätt på ett genomfört pass bekräftar dess rapport,
+     här eller på passets sida (rapportFörPass). Den som väljer har
+     rapporten framför sig. Avbryts kassan står rapporten kvar,
+     bekräftad och obetald, och säger det.
 
      Alla barn på en gång, inte bara det valda i barnväljaren: det som
      väntar på familjen ska inte gömma sig bakom ett val de gjorde för
@@ -1075,6 +1083,8 @@
     S.rb.laddat = true;
     ritaBekrafta();
     ritaNotiser();
+    // Passets sida visar Bekräfta rapporten först när bekräftelserna finns.
+    if (passIdIAdressen()) ritaPassSida();
   }
 
   const rbPass = r => (r.booking_id && (S.bokningar || []).find(b => b.id === r.booking_id)) || null;
@@ -1169,12 +1179,34 @@
     return true;
   }
 
-  /* Ett betalsätt valt på en rapport bekräftar den. Ritar inte om:
-     kassan kan vara öppen, och laddaPass() ritar listan när betalningen
-     kommit fram. */
-  async function bekräftaVid(knapp) {
+  /* Rapporten till ett genomfört pass. Ett pass som inte är genomfört
+     har ingen, och där är ett betalsätt en betalning i förväg. */
+  function rapportFörPass(passId) {
+    const b = (S.bokningar || []).find(x => x.id === passId);
+    if (!b || b.status !== 'completed') return null;
+    return S.rb.rapporter.find(r => r.booking_id === passId) || null;
+  }
+
+  /* Bekräfta-knappen där rapporten står utanför listan: passets sida.
+     Bara när det finns något att bekräfta. */
+  function rbKnappFör(b) {
+    const r = rapportFörPass(b.id);
+    return r && !S.rb.bekräftade[r.id]
+      ? '<button type="button" class="btn btn-primary" data-rb-bekrafta="' + esc(r.id) + '">Bekräfta rapporten</button>'
+      : '';
+  }
+
+  /* Ett betalsätt valt på ett genomfört pass bekräftar dess rapport,
+     i listan eller på passets sida (Fas 19.2: betalningen efter passet
+     görs i samband med bekräftelsen). Ritar inte om: kassan kan vara
+     öppen, och laddaPass() ritar listan när betalningen kommit fram.
+     Svarar om det fanns en rapport att bekräfta. */
+  async function bekräftaVid(knapp, passId) {
     const kort = knapp && knapp.closest('[data-rb-rapport]');
-    if (kort) await bekräftaRapport(kort.dataset.rbRapport);
+    const r = kort ? { id: kort.dataset.rbRapport } : rapportFörPass(passId);
+    if (!r) return false;
+    await bekräftaRapport(r.id);
+    return true;
   }
 
   /* Omritning med rubriken Att bekräfta stilla. Kortet under den
@@ -1192,6 +1224,8 @@
     await medan(k, 'Bekräftar…', async () => {
       if (!(await bekräftaRapport(k.dataset.rbBekrafta))) return;
       rbRitaOm(() => säg($('#rb-msg'), 'Tack. Rapporten är bekräftad.', true));
+      // Knappen kan också stå på passets sida.
+      if (passIdIAdressen()) ritaPassSida();
     });
   });
 
@@ -1215,7 +1249,11 @@
      och utan en knapp här hade ett pass som faktiskt hölls fastnat
      mellan två vyer som båda väntar på den andra: studiehjälparvyn
      säger "rapporten kan sparas när familjen har betalat", och den här
-     vyn hade inte erbjudit någon betalning. */
+     vyn hade inte erbjudit någon betalning.
+
+     Sedan Fas 19.2 kan spärren inte slås på: villkoren låter familjen
+     betala efter passet, och databasen nekar flaggan (flaggor_kortsparr_av).
+     Grenen står kvar för den dag villkoren ändras tillbaka. */
   function kanBetalas(b) {
     if (b.fakturerbar === false) return false;
     if (OBETALDA.indexOf(b.betalning_status || 'ingen') === -1) return false;
@@ -1328,8 +1366,10 @@
      Står passet på en faktura går det inte att byta till kort. */
   const fakturaFör = id => (S.fakturaPerPass || {})[id] || null;
 
+  /* Fakturan är ett val EFTER passet, i samband med att rapporten
+     bekräftas (Fas 19.2). Före passet finns bara kortet. */
   function fakturaVal(b) {
-    return S.faktura === true && kanBetalas(b)
+    return S.faktura === true && kanBetalas(b) && b.status === 'completed'
       ? '<button type="button" class="val-lank" data-faktura-val="' + esc(b.id) + '">Betala med faktura i stället</button>'
       : '';
   }
@@ -1378,7 +1418,7 @@
     if (msg && !document.querySelector('#pass-sida .ps-titel')) {
       säg(msg, läge === 'faktura'
         ? 'Klart. Passet kommer med på fakturan i början av nästa månad.'
-        : 'Klart. Betala passet med kort, senast innan det börjar.', true);
+        : 'Klart. Betala passet med kort, i förväg eller när ni bekräftar rapporten.', true);
     }
   }
 
@@ -1954,27 +1994,28 @@
           + 'Ni kan byta tillbaka till kort tills fakturan är skapad.',
         knapp: 'Välj faktura'
       });
-      if (ok) { await bekräftaVid(fv); await väljBetalsätt(fv, fv.dataset.fakturaVal, 'faktura'); }
+      if (ok) { await bekräftaVid(fv, fv.dataset.fakturaVal); await väljBetalsätt(fv, fv.dataset.fakturaVal, 'faktura'); }
       return;
     }
     const kv = e.target.closest('[data-kort-val]');
     if (kv) { await väljBetalsätt(kv, kv.dataset.kortVal, 'ingen'); return; }
 
     const tim = e.target.closest('[data-timmar]');
-    if (tim) { await bekräftaVid(tim); await betalaMedTimmar(tim, tim.dataset.timmar); return; }
+    if (tim) { await bekräftaVid(tim, tim.dataset.timmar); await betalaMedTimmar(tim, tim.dataset.timmar); return; }
     const köp = e.target.closest('[data-kop]');
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
 
     const bet = e.target.closest('[data-betala]');
     if (bet) {
       const passId = bet.dataset.betala;
-      const påRapport = !!bet.closest('[data-rb-rapport]');
+      // Betalar ni ett genomfört pass bekräftar ni dess rapport (Fas 19.2).
+      const påRapport = !!bet.closest('[data-rb-rapport]') || !!rapportFörPass(passId);
       await medan(bet, 'Öppnar…', async () => {
         // Stripe.js hämtas medan sessionen skapas, inte efter.
         const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
         /* Fas 19.1: på en rapport bekräftar valet den. Före kassan, för
            reserven lämnar sidan och tar ett pågående anrop med sig. */
-        await bekräftaVid(bet);
+        await bekräftaVid(bet, passId);
         const svar = await startaBetalning(passId, 'inbaddad');
         if (!svar) return;
         if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
@@ -2067,17 +2108,10 @@
       });
     }
 
-    /* Pass att betala (Fas 14.2). Familjen betalar före passet, så det
-       här är lika mycket deras tur som en föreslagen tid — och ett pass
-       som ingen påmint om är ett pass som ingen betalar. */
-    const attBetalaNu = (S.bokningar || []).filter(kanBetalas);
-    if (attBetalaNu.length) {
-      poster.push({
-        rubrik: attBetalaNu.length === 1 ? 'Ett pass att betala' : attBetalaNu.length + ' pass att betala',
-        text: 'Betala senast innan passet börjar. Ett pass som inte är betalt hålls inte.',
-        mål: '#bet-att-betala'
-      });
-    }
+    /* Ingen notis om pass att betala i förväg (Fas 19.2). Sedan
+       familjen får betala efter passet är ett bekräftat, obetalt pass
+       inte deras drag: det är ett val. Det som faktiskt ska betalas, ett
+       genomfört pass, står i notisen om rapporten nedan, där det betalas. */
 
     /* En ny rapport (Fas 19.1). Rapporten mejlas aldrig (notis_mejlbara),
        så den här raden och siffran i menyn är det enda som säger att
@@ -2335,13 +2369,14 @@
   }
 
   /* ============================================================
-     BETALNING (Fas 14.2)
-     Familjen betalar varje pass med kort, när studiehjälparen
-     bekräftat tiden och senast innan passet börjar. Månadsfakturan
-     finns inte längre ("bara kort", Leo 2026-09-24), och därför inget
-     att vänta på här: en lista över det som ska betalas och en över
-     det som är betalt, båda ritade ur passen. Fakturahistoriken som
-     stod här är borta: det skickades aldrig en enda faktura.
+     BETALNING (Fas 14.2, Fas 19.2)
+     Familjen betalar varje pass med kort, antingen i förväg, när
+     studiehjälparen bekräftat tiden, eller efter passet när de
+     bekräftar rapporten. Här står det som går att betala i förväg och
+     det som är betalt, båda ritade ur passen. Ett genomfört pass betalas
+     under Bekräfta rapport, där rapporten står bredvid: betalningen efter
+     passet är en del av bekräftelsen, och en knapp här hade låtit
+     familjen betala utan att ha sett vad de betalar för.
 
      Ingenting här skriver till databasen. Beloppet räknas av
      stripe-checkout ur databasen, och kortuppgifterna tas emot av
@@ -2349,10 +2384,11 @@
      kan därför inte tappa bort ett.
      ============================================================ */
 
-  /* Pass som väntar på betalning. Ur samma S.bokningar som Mina
-     lektioner, så att ett pass som betalas på passets sida försvinner
-     här utan en egen hämtning. Knappen går rakt till Stripes kassa —
-     samma data-betala som överallt. */
+  /* Pass som går att betala. Ur samma S.bokningar som Mina lektioner,
+     så att ett pass som betalas på passets sida försvinner här utan en
+     egen hämtning. Knappen går rakt till Stripes kassa — samma
+     data-betala som överallt. Ett genomfört pass leder i stället till
+     Bekräfta rapport. */
   function ritaAttBetala() {
     const host = $('#bet-att-betala');
     if (!host) return;
@@ -2360,11 +2396,13 @@
     const att = (S.bokningar || []).filter(kanBetalas).sort((a, c) => nyckel(a).localeCompare(nyckel(c)));
     $('#bet-att-antal').textContent = att.length ? att.length + ' st' : '';
     /* Siffran i menyn ska betyda "något väntar på er", inte "här
-       finns saker". Bara det som ska betalas räknas. */
-    if (S.sido) S.sido.märke('betalning', att.length);
+       finns saker". Sedan Fas 19.2 väntar ingenting här: att betala i
+       förväg är ett val, och det genomförda passet räknas under
+       Bekräfta rapport. Därför ingen siffra alls. */
+    if (S.sido) S.sido.märke('betalning', 0);
     if (!att.length) {
       host.innerHTML = tomt('Inget att betala just nu',
-        'När er studiehjälpare bekräftat ett pass står det här, och ni betalar det med kort.');
+        'När er studiehjälpare bekräftat ett pass kan ni betala det här i förväg. Annars betalar ni efter passet, när ni bekräftar rapporten.');
       return;
     }
     host.innerHTML = att.map(b => {
@@ -2374,12 +2412,14 @@
         href: '#pass/' + b.id,
         under: [pris ? NXBetalning.kronor(pris) : null, barn ? barn.name : null,
           b.betalning_status === 'misslyckad' ? 'Förra försöket gick inte igenom' : null].filter(Boolean).join(' · '),
-        vem: b.status === 'completed' ? 'Passet har hållits men är inte betalt.'
+        vem: b.status === 'completed' ? 'Passet har hållits. Läs rapporten och betala under Bekräfta rapport.'
           : b.betalning_status === 'vantar' ? 'Betalningen är påbörjad men inte klar.'
           : b.wanted_date < isoFor(new Date()) ? 'Passet har varit men är inte betalt. Hölls det, betala det här.'
-          : 'Betala senast innan passet börjar.',
+          : 'Betala nu, eller efter passet när ni bekräftar rapporten.',
         märke: NXKontakt.betalMärke(b),
-        atgarder: betalaKnapp(b, true) + fakturaVal(b)
+        atgarder: b.status === 'completed'
+          ? '<a class="btn btn-primary btn-sm" href="#bekrafta">Till rapporten</a>'
+          : betalaKnapp(b, true) + fakturaVal(b)
       });
     }).join('');
   }
@@ -2706,7 +2746,7 @@
         ? { text: 'Passet är bokat, och det ni betalade för det är återbetalt. Undrar ni varför, hör av er till oss.', ton: 'lugn' }
         : b.betalning_status === 'faktura'
         ? { text: 'Passet är bokat och betalas mot faktura. Det kommer med på fakturan i början av nästa månad.', ton: 'klart' }
-        : { text: 'Passet är bokat. Betala med kort senast innan passet börjar, annars hålls det inte.', ton: 'fraga' };
+        : { text: 'Passet är bokat. Betala med kort nu, eller efter passet när ni bekräftar rapporten.', ton: 'klart' };
       atgarder = (kanBetalas(b) ? betalaKnapp(b, false) : '')
         + '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Föreslå ny tid</button>'
         + (betalt ? '' : '<button type="button" class="btn btn-ghost" data-avboka="' + esc(b.id) + '">Avboka</button>');
@@ -2721,9 +2761,11 @@
       atgarder = betalaKnapp(b, false) + skriv;
       alternativ = fakturaVal(b);
     } else if (b.status === 'completed' && kanBetalas(b)) {
-      /* Genomfört men inte betalt. Det kan bara hända medan spärren är
-         av (Fas 14.2), och då ska det gå att betala i efterhand. */
-      besked = { text: 'Passet är genomfört men inte betalt. Betala det med kort.', ton: 'fraga' };
+      /* Genomfört men inte betalt: betalningen efter passet (Fas 19.2).
+         Rapporten står nedan, och att välja betalsätt här bekräftar den,
+         som under Bekräfta rapport. */
+      besked = { text: 'Passet är genomfört. Läs rapporten nedan och bekräfta den genom att betala'
+        + (S.faktura === true ? ', med kort eller mot faktura.' : ' med kort.'), ton: 'fraga' };
       atgarder = betalaKnapp(b, false) + skriv;
       alternativ = fakturaVal(b);
     } else if (b.status === 'completed' && b.betalning_status === 'faktura') {
@@ -2738,11 +2780,18 @@
         ? { text: 'Passet är genomfört och betalt' + (f.fortnox_fakturanummer ? ', med faktura ' + f.fortnox_fakturanummer : '') + '.', ton: 'klart' }
         : { text: 'Passet är genomfört och står på faktura' + (f.fortnox_fakturanummer ? ' ' + f.fortnox_fakturanummer : 'n')
             + (f.forfaller ? ', att betala senast ' + datumText(f.forfaller) : '') + '.', ton: läge === 'forfallen' ? 'fraga' : 'klart' };
-      atgarder = '<a class="btn btn-primary" href="#boka">Boka nästa pass</a>' + skriv;
+      /* Fakturan kan vara vald före rapporten; bekräftelsen står kvar. */
+      const bekr = rbKnappFör(b);
+      if (bekr) besked = { text: besked.text + ' Läs rapporten nedan och bekräfta den.', ton: 'fraga' };
+      atgarder = bekr + '<a class="btn ' + (bekr ? 'btn-ghost' : 'btn-primary') + '" href="#boka">Boka nästa pass</a>' + skriv;
       alternativ = kortVal(b);
     } else if (b.status === 'completed') {
-      besked = { text: 'Passet är genomfört.', ton: 'klart' };
-      atgarder = '<a class="btn btn-primary" href="#boka">Boka nästa pass</a>' + skriv;
+      /* Betalt i förväg, eller undantaget från betalning. Rapporten
+         bekräftas ändå (Fas 19.2). */
+      const bekr = rbKnappFör(b);
+      besked = bekr ? { text: 'Passet är genomfört. Läs rapporten nedan och bekräfta den.', ton: 'fraga' }
+        : { text: 'Passet är genomfört.', ton: 'klart' };
+      atgarder = bekr + '<a class="btn ' + (bekr ? 'btn-ghost' : 'btn-primary') + '" href="#boka">Boka nästa pass</a>' + skriv;
     } else {
       /* Tiden har passerat men passet är varken genomfört eller
          avbokat: rapporten saknas, eller ett förslag blev aldrig

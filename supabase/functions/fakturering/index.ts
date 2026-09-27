@@ -7,7 +7,8 @@
 //
 // FAMILJEN BETALAR MED KORT, ELLER MOT FAKTURA OM DEN VALT DET.
 // Fas 14.2 tog bort månadsfakturan: familjen betalar varje pass med
-// kort före passet, genom stripe-checkout. Pass som hölls utan att
+// kort, genom stripe-checkout, i förväg eller efter passet när de
+// bekräftar rapporten (Fas 19.2). Pass som hölls utan att
 // familjen betalat räknas upp i svaret under `obetalda`, med beloppet,
 // och syns under Avvikelser som Inte betalt. De försvinner inte tyst,
 // och de faktureras inte i efterhand av sig själva.

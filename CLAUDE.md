@@ -93,16 +93,22 @@ sin rad. Studievyn och adminvyn öppnar fortfarande i månaden — hos
 familjen står schemat direkt under passlistan, och Kommande hade bara
 upprepat den.
 
-**Familjen bekräftar rapporten** (Fas 19.1, 2026-09-27) under en egen
-post i föräldravyns meny, Bekräfta rapport. Leo bad först att familjen
-skulle bekräfta rapporten genom att betala nu eller ta den på faktura,
-alltså betala efter passet. Det valdes bort: villkoren säger kort före
-passet, och en betalning som väntar på ett godkännande ger familjen en
-knapp som skjuter upp betalningen för ett pass som redan hållits.
-Bekräftelsen (`rapport_bekraftelser`) säger bara att familjen läst
-rapporten. Är passet ändå obetalt (bara möjligt med kortspärren av) är
-valet av betalsätt bekräftelsen, och rapporten står kvar under Att
-bekräfta tills passet är betalt eller satt på faktura.
+**Familjen bekräftar rapporten, och får betala då** (Fas 19.1 och 19.2,
+2026-09-27) under en egen post i föräldravyns meny, Bekräfta rapport.
+Tre sätt att betala: **kort i förväg**, när tiden är bekräftad, **kort
+efter passet** och **faktura efter passet** (när flaggan `faktura` är
+på). De två senare görs i samband med att familjen bekräftar rapporten:
+att välja betalsätt på ett genomfört pass ÄR bekräftelsen, under
+Bekräfta rapport och på passets sida. Är passet redan betalt bekräftar
+familjen ändå, med knappen Bekräfta rapporten. Bekräftelsen
+(`rapport_bekraftelser`) säger bara att familjen läst rapporten; ett
+pass som hållits ska betalas även om ingen bekräftat, och villkoren
+säger det. Rapporten står kvar under Att bekräfta tills den är
+bekräftad OCH passet är betalt eller satt på faktura. Ett genomfört
+obetalt pass larmar som förut, direkt, som `ej_betalt`: Leo valde det
+framför en frist. Fas 19.1 hade först valt bort betalning efter passet
+för att villkoren sa före; Leo bestämde samma dag att villkoren skulle
+ändras i stället.
 
 **Varje pass har en egen sida, `#pass/<id>`, i båda vyerna.** Ritas av
 `NXStudie.passSida`; vyn bestämmer innehållet (familjen ser pris och
@@ -137,7 +143,7 @@ studiehjälpare: laga det innan något gör det.
 | pass | ett bokat tillfälle (`bookings`). Hela timmar, 1–3 |
 | rapport | `lesson_reports`. **Passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
-| betalning | vad familjen betalat för ett pass: med kort, per pass, före passet (`bookings.betalning_status`, `betalt_ore`). Eller mot faktura, när flaggan `faktura` är på (Fas 14.6) |
+| betalning | vad familjen betalat för ett pass: med kort, per pass, i förväg eller efter passet när rapporten bekräftas (`bookings.betalning_status`, `betalt_ore`). Eller mot faktura, när flaggan `faktura` är på (Fas 14.6) |
 | faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, avstängt tills bolaget och Fortnox-kontot finns. Skickas från Fortnox, aldrig härifrån |
 | tjänst | rad i `tjanster`. `aktiv` avgör vad som syns, inget annat |
 
@@ -146,16 +152,17 @@ studiehjälpare: laga det innan något gör det.
 - **379 kr/tim** (`nextrum-config.js: PRIS_PER_TIMME`)
 - **69 kr/tim** tillägg för fler än ett barn — **fast, inte per barn**,
   tak tre barn (`tjanster.extra_personer_max`). Tre barn kostar 448, inte 517
-- **Kort per pass, före passet** (Fas 14.2). Familjen betalar varje
-  pass med kort när studiehjälparen bekräftat tiden, senast innan
-  passet börjar, och **ett pass som inte är betalt hålls inte**. Ingen
-  månadsfaktura och inget betalningsvillkor i dagar. Meningen står på
-  sexton ställen i tio filer, på båda språken, och sedan Fas 14.3 i
-  familjens mejl.
-  `verktyg/kolla-betalningsvillkor.py` räknar dem, letar efter det gamla
-  löftet ("efterskott", "10 dagars …") i allt som serveras, och körs i
-  CI. **En betalning som tas på ett annat sätt än villkoren lovar är en
-  tvist, inte ett skrivfel.**
+- **Kort per pass, i förväg eller efter passet** (Fas 19.2). Familjen
+  betalar varje pass med kort, **antingen i förväg eller efter passet
+  när de bekräftar rapporten**, och ett pass som har hållits ska betalas
+  även om rapporten inte bekräftats. Fas 14.2 sa före passet och att ett
+  obetalt pass inte hålls; det gäller inte längre. Meningen står på 23
+  ställen i 15 filer, på båda språken och i familjens mejl.
+  `verktyg/kolla-betalningsvillkor.py` räknar dem, letar efter de gamla
+  löftena ("efterskott", "10 dagars …", och sedan Fas 19.2 "hålls
+  inte", "senast innan passet börjar", "ingenting dras i efterhand") i
+  allt som serveras, och körs i CI. **En betalning som tas på ett annat
+  sätt än villkoren lovar är en tvist, inte ett skrivfel.**
 
   Fakturan (Fas 14.6) ändrar inte meningen förrän flaggan `faktura`
   slås på: då ska den säga att familjen kan välja faktura, tio dagar,
@@ -556,6 +563,11 @@ genomfört i samma skrivning (`rapport_gor_passet_genomfort`), så det
 är rapporten som nekas, med ett meddelande som säger varför. Admin går
 förbi, som i resten av triggern. Står den av syns ett hållet obetalt
 pass i stället som avvikelsen `ej_betalt`, som ersatte `ej_fakturerat`.
+**Sedan Fas 19.2 går den inte att slå på**: villkoren låter familjen
+betala efter passet, och spärren nekar just den rapporten familjen ska
+bekräfta. `flaggor_kortsparr_av` är ett check-villkor på `flaggor`, och
+adminvyn har ingen Slå på-knapp. Ska villkoren tillbaka till betalning
+före passet tas villkoret bort i samma migration som texterna ändras.
 `betald_men_avbokad` (Fas 14.2c) är samma sak åt andra hållet: ett
 avbokat pass som familjen betalat, med beloppet som inte gått tillbaka.
 
@@ -1276,8 +1288,9 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 
 ## 11. Vad som inte är byggt
 
-- **Betalning.** Familjen betalar varje pass med kort, **före passet**
-  (Fas 14.2). Faktura finns sedan Fas 14.6 som andra betalsätt, **byggt
+- **Betalning.** Familjen betalar varje pass med kort, **i förväg eller
+  efter passet när de bekräftar rapporten** (Fas 19.2; före passet från
+  Fas 14.2). Faktura finns sedan Fas 14.6 som andra betalsätt, **byggt
   och avstängt** (se nedan). `fakturering` skapar studiehjälparens
   underlag, ett fakturautkast per familj som valt faktura, och räknar
   i sitt svar upp pass som hölls utan att betalas (`obetalda`).
@@ -1374,12 +1387,10 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   lagt hjälparens del på hens Stripe-saldo vid varje pass, och sedan
   hade månadskörningen betalat samma timmar en gång till.
 
-  **Spärren "ingen betalning, inget pass" finns, och den är AV.** Den
-  slås om under Betalningar & utbetalningar → Kortbetalningar (se
-  avsnitt 5). **Slå inte på den förrän provbetalningen gått igenom.**
-  Påslagen i dag hade den låst varenda studiehjälpare från att
-  rapportera ett enda pass. Flaggans `vantar_pa` säger vad den väntar
-  på, och `stampla_flaggan()` hindrar att texten skrivs om från en vy.
+  **Spärren "ingen betalning, inget pass" finns, och den kan inte slås
+  på** (Fas 19.2, se avsnitt 5). Den hade låst studiehjälparen från att
+  rapportera ett obetalt pass, och sedan Fas 19.2 är det normalt att
+  familjen betalar först när rapporten finns.
 
   **Kvar, och inget av det sköter koden åt er:**
 
@@ -1401,10 +1412,17 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
     efteråt. Webhooken skriver ner betalningen, för pengarna är dragna,
     och `betald_men_avbokad` larmar tills beloppet är tillbaka.
     Återbetalningen är en knapp, inte automatisk.
-  - **Villkoren ändrades.** Den som redan har konto godkände
-    månadsfaktura i efterskott med tio dagars betalningsvillkor, och
-    villkoren har ett avsnitt om ändringar. Meddela dem innan det nya
-    gäller dem.
+  - **Villkoren ändrades, två gånger.** Den som redan har konto godkände
+    månadsfaktura i efterskott med tio dagars betalningsvillkor, sedan
+    kort före passet (Fas 14.2), och sedan Fas 19.2 kort i förväg eller
+    efter passet. Villkoren har ett avsnitt om ändringar (30 dagar för
+    väsentliga). Fas 19.2 ger familjen fler val, inte färre, men ett nytt
+    steg, att bekräfta rapporten. Meddela dem.
+  - **Betalningen efter passet har ingen sista dag.** Villkoren säger
+    att den görs när familjen bekräftar rapporten, och att ett hållet
+    pass ska betalas även utan bekräftelse, men inte inom hur många
+    dagar. Larmet `ej_betalt` kommer direkt; det är människan som följer
+    upp. En frist i dagar är ett nytt villkor, inte en inställning.
   - **Korttvister har en sista dag, och den är människans (Fas 14.3).**
     Förut satte webhooken bara `betalning_status = 'tvist'`: sista dagen
     att svara, orsaken och utfallet stod ingenstans, och en förlorad
