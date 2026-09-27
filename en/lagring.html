@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=dc5d0b1f">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=aa57ff03">
 </head>
 <body>
 
@@ -129,7 +129,7 @@
   <a class="nx-back" href="/en/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> To the home page</a>
   <span class="nx-et acc" style="margin-top:22px">Cookies</span>
   <h1 class="nx-d1">Cookies and storage</h1>
-  <p class="nx-lede">A short page, because there is little to report: we set no cookies at all.</p>
+  <p class="nx-lede">A short page, because there is little to report: the public pages set no cookies, and the only thing we ask about is where you came from.</p>
 </section>
 
 <section class="sec wrap" style="padding-top:clamp(16px,2vw,28px)">
@@ -138,12 +138,37 @@
        för att ett skript inte laddade är värdelöst. -->
   <div class="juridisk">
     <div class="jur-ruta">
-      <h2>We set no cookies</h2>
-      <p>That is why there is no banner here asking for your consent. It would be asking permission
-        for nothing.</p>
-      <p>We measured this rather than assumed it: the public pages set zero cookies, and nothing is
-        stored in your browser until you log in.</p>
+      <h2>No cookies on the public pages</h2>
+      <p>We measured this rather than assumed it: the public pages set zero cookies. Without your
+        yes, nothing is stored in your browser until you log in, except the answer itself.</p>
+      <p>The box that may still appear asks about one thing only: whether we may see which ad or
+        link brought you here. You can change your answer at any time, just below.</p>
       <p>We do count visits. How that works without cookies is explained just below.</p>
+      <p>The only place a cookie is set is when you pay for a session by card. Then it is Stripe
+        that sets it, and only for the payment. That is explained further down.</p>
+    </div>
+
+    <h2 id="ditt-val">What we ask about</h2>
+    <p>We want to know which ads and links lead families to get in touch, so that we do not spend
+      money in the wrong place. If you say yes, your browser remembers where you came from until
+      you close the tab, in what is called <i>sessionStorage</i>. If you send an enquiry or an
+      application, it is included.</p>
+    <ul>
+      <li>What is remembered is the website that linked here, the page you landed on, and the tags
+        we ourselves put in the address when we advertise. Nothing about you.</li>
+      <li>It does not leave your browser until you submit a form, and then only to us.</li>
+      <li>If you say no, we only see the page where you sent the enquiry. Everything else works
+        exactly the same.</li>
+      <li>Your answer is kept for a year in <i>localStorage</i>, so that we do not ask on every
+        page. If your browser says you do not want to be tracked (Global Privacy Control), we
+        treat it as a no.</li>
+      <li>We do not currently use any advertising pixel from Meta, Google or anyone else. If we
+        turn one on, the box asks about it specifically, including people who already said yes,
+        and this page is rewritten the same day.</li>
+    </ul>
+    <div class="nx-kakor-panel" data-samtycke-panel>
+      <p>Your choice is shown here once the page has loaded. Without JavaScript nothing is stored,
+        and there is nothing to choose.</p>
     </div>
 
     <h2>What is stored when you log in</h2>
@@ -154,6 +179,21 @@
       <li>It requires no consent: it is necessary for something you asked for yourself.</li>
       <li>It disappears when you log out. You can also clear it yourself through your browser’s
         site data settings.</li>
+      <li>If you collapse the menu or a panel in the view, that is saved too, so the view looks
+        the same next time. It is a choice you made yourself, and it is sent nowhere.</li>
+    </ul>
+
+    <h2>When you pay by card</h2>
+    <p>Card payments are handled by Stripe. Their script is loaded only in the parent view, and
+      only when you press “Betala med kort” (pay by card). Stripe then sets two cookies, <i>__stripe_mid</i> (one year) and
+      <i>__stripe_sid</i> (30 minutes), and the checkout in the panel may set its own. They are
+      there to detect card fraud.</p>
+    <ul>
+      <li>They require no consent: the payment cannot be made safely without them, and you asked
+        for it yourself.</li>
+      <li>Nothing from Stripe is loaded before you press it, and nothing on the public pages.</li>
+      <li>How Stripe handles the data is described in
+        <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripe’s privacy policy</a>.</li>
     </ul>
 
     <h2>How we count visits</h2>
@@ -171,8 +211,8 @@
     <h2>What is not here</h2>
     <ul>
       <li>No cookie — not even for the statistics above</li>
-      <li>No advertising trackers, no pixel from any social network</li>
-      <li>No third-party cookies whatsoever</li>
+      <li>No pixel from any social network or ad network</li>
+      <li>No third-party cookies on the public pages</li>
       <li>No profiling and no automated decisions about you</li>
       <li>Nothing that follows you between sites, or between days</li>
     </ul>
@@ -185,6 +225,8 @@
         counting visits, in the way described above.</li>
       <li><b>Supabase</b> — the database and the login. Contacted when you submit a form or log in. The servers
         are within the EU.</li>
+      <li><b>Stripe</b> — card payments. Only in the parent view, and only when you press
+        “Betala med kort”.</li>
     </ul>
     <p>That is the whole list — and it has grown shorter. The fonts used to sit with Google, and
       the library the login needs used to sit with unpkg.com. Both sent your IP address to a
@@ -192,13 +234,13 @@
       happen.</p>
 
     <h2>If that changes</h2>
-    <p>If we ever add something that genuinely requires your consent — embedded video, advertising
-      tools, anything that follows you between sites — we will ask first, and this page will be
-      updated at the same time. We will not put a consent banner on the site in advance for the
-      sake of appearances, and we will not add measurement quietly: the visit counting above was
-      added after this page was first published, and the page was rewritten the same day.</p>
+    <p>If we ever add anything else that requires your consent — embedded video, advertising
+      tools, anything that follows you between sites — the box asks about it before it is loaded,
+      and this page is updated at the same time. We do not add measurement quietly: the visit
+      counting above and the question about where you came from were added after this page was
+      first published, and both times the page was rewritten the same day.</p>
 
-    <p class="jur-datum">Last updated 7 September 2026.</p>
+    <p class="jur-datum">Last updated 27 September 2026.</p>
   </div>
 </section>
 
@@ -262,6 +304,7 @@
           <li><a href="/en/integritetspolicy">Privacy policy</a></li>
           <li><a href="/en/anvandarvillkor">Terms of use</a></li>
           <li><a href="/en/lagring">Cookies and storage</a></li>
+          <li><a href="/en/lagring#ditt-val" data-samtycke-oppna>Cookie settings</a></li>
         </ul>
       </nav>
     </div>
@@ -341,10 +384,11 @@
 <!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
      för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
 <script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="../nextrum-config.js?v=37357abd"></script>
+<script src="../nextrum-config.js?v=f8471f2e"></script>
 <script src="../nextrum-images.js?v=50260f9d"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=036d9884"></script>
+<script src="../nextrum-app.js?v=726c204c"></script>
+<script src="../nextrum-samtycke.js?v=12241438"></script>
 <script src="../nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

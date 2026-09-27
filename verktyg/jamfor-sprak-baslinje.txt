@@ -19,7 +19,7 @@
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
-  TEXTNODER: sv 438 vs en 436 — engelskan har inte följt med
+  TEXTNODER: sv 439 vs en 437 — engelskan har inte följt med
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
@@ -34,8 +34,12 @@
 
 === lagring.html  ->  en/lagring.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 1 stycken:
+  SVENSKA KVAR i engelskan, 5 stycken:
+      sessionStorage
       localStorage
+      localStorage
+      __stripe_mid
+      __stripe_sid
 
 === priser.html  ->  en/priser.html
   STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>

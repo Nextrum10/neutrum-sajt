@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=dc5d0b1f">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=aa57ff03">
 </head>
 <body>
 
@@ -152,7 +152,8 @@
     <p>We store what is needed to match a student with the right tutor, to book and run the
       sessions, to keep you informed about what is happening, and to take payment for the
       sessions. Nothing beyond that.</p>
-    <p>We do not sell data. We do not pass it on for marketing. We set no cookies.</p>
+    <p>We do not sell data. We do not pass it on for marketing. The public pages set no
+      cookies. If you pay by card, Stripe sets two, to detect fraud.</p>
     <p>We do count how many people visit the public pages, but without cookies and without anything
       that follows you over time. How that works is explained under
       <a href="/en/lagring">Cookies and storage</a>.</p>
@@ -198,10 +199,14 @@
     <h3>About how you found us</h3>
     <p>If you send an enquiry we also store where the visit came from: which page you landed on,
       which website linked here, and the tags we ourselves put in the address when advertising.
-      It is so that we know which channels actually lead to someone getting in touch.</p>
+      It is so that we know which channels actually lead to someone getting in touch. If you said
+      yes in the box asking about it, your browser remembers where you landed until you close the
+      tab, so that it is right even if you read a few pages first. If you said no, we only see
+      the page where you sent the enquiry. You change your answer under
+      <a href="/en/lagring#ditt-val">Cookies and storage</a>.</p>
     <p>The data belongs to the visit, not to you. We build no profile from it, we do not follow
       you between visits, and it cannot be linked to any other site you have been on. If you send
-      no enquiry, nothing at all is stored.</p>
+      no enquiry, nothing is stored with us.</p>
 
     <h3>Documents about the business</h3>
     <p>Agreements, certificates and insurance papers are kept in a separate closed storage only we
@@ -283,14 +288,15 @@
       Do get in touch with us first — it is usually quicker to sort out.</p>
 
     <h2>Cookies and browser storage</h2>
-    <p>We set no cookies — not even for the visit counting. What is actually stored, what is
+    <p>The public pages set no cookies — not even for the visit counting. The only ones set are
+      Stripe’s, when you pay by card. What is actually stored, what is
       measured and why, is on its own page: <a href="/en/lagring">Cookies and storage</a>.</p>
 
     <h2>Changes</h2>
     <p>If we change anything material we update the date below, and contact those of you with an
       account if the change affects you.</p>
 
-    <p class="jur-datum">Last updated 25 September 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 27 September 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 
@@ -354,6 +360,7 @@
           <li><a href="/en/integritetspolicy">Privacy policy</a></li>
           <li><a href="/en/anvandarvillkor">Terms of use</a></li>
           <li><a href="/en/lagring">Cookies and storage</a></li>
+          <li><a href="/en/lagring#ditt-val" data-samtycke-oppna>Cookie settings</a></li>
         </ul>
       </nav>
     </div>
@@ -433,10 +440,11 @@
 <!-- Speed Insights: Core Web Wetals från riktiga besökare i stället
      för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
 <script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="../nextrum-config.js?v=37357abd"></script>
+<script src="../nextrum-config.js?v=f8471f2e"></script>
 <script src="../nextrum-images.js?v=50260f9d"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=036d9884"></script>
+<script src="../nextrum-app.js?v=726c204c"></script>
+<script src="../nextrum-samtycke.js?v=12241438"></script>
 <script src="../nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
