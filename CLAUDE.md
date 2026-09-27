@@ -573,7 +573,7 @@ Fyra saker att veta, alla dyrköpta:
    skriven i sidans eget skript blir svensk på den engelska sidan och
    **ingen strukturkontroll ser det**.
 2. **Bara det som visas.** Strängar som skrivs till databasen
-   ("Telefon: ", "Samtycke till lagring: ja") förblir svenska — de
+   ("Telefon: ", "Läst integritetspolicyn: ja") förblir svenska — de
    läses av oss.
 3. **Generatorn finns inte i repot.** `/en/`-sidorna är incheckade
    artefakter. Ändras en svensk sida måste engelskan följa med för

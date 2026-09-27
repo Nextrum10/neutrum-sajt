@@ -16,6 +16,7 @@
 
 import { json, preflight } from '../_delad/http.ts';
 import { arAdmin, kravInloggad } from '../_delad/auth.ts';
+import { fornamn, maskera } from '../_delad/minimera.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
@@ -60,7 +61,9 @@ Deno.serve(async (req) => {
     }
 
     const student = (report as any).students;
-    const studentName = student?.name || 'eleven';
+    // Förnamnet räcker för ett utkast till föräldern, och anteckningarna
+    // maskas på nummer och adresser innan de lämnar oss (_delad/minimera.ts).
+    const studentName = fornamn(student?.name) || 'eleven';
     const grade = student?.grade ? ` (${student.grade})` : '';
 
     const prompt = `Du hjälper en gymnasieelev som jobbar som läxhjälpare att skriva en tydlig, varm lektionsrapport till en förälder.
@@ -68,7 +71,7 @@ Deno.serve(async (req) => {
 Elev: ${studentName}${grade}
 Lärarens råa anteckningar efter lektionen:
 """
-${report.raw_notes}
+${maskera(report.raw_notes)}
 """
 
 Skriv om detta till 3–5 korta meningar på svenska, riktat till föräldern. Regler:
