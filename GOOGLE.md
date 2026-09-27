@@ -5,7 +5,7 @@ Allt på sajtens sida är gjort och kontrollerat:
 | | |
 |---|---|
 | favicon | finns, svarar 200 |
-| sitemap.xml | 22 adresser, båda språken |
+| sitemap.xml | 33 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` |
 | robots.txt | pekar på sitemap, blockerar inget publikt |
 | strukturerad data | Organization + WebSite med namn, beskrivning, slogan, sociala konton |
 | verifieringspost i DNS | finns redan (`google-site-verification=5o3n…`) |
@@ -53,10 +53,10 @@ På smal skärm är menyn hopfälld bakom hamburgerikonen uppe till
 vänster.
 
 Väl inne: skriv `sitemap.xml` i rutan och klicka **Skicka**. Status
-ska bli *Lyckades* med 22 upptäckta adresser.
+ska bli *Lyckades* med 33 upptäckta adresser.
 
 Kartan är kontrollerad och fungerar — `https://nextrum.se/sitemap.xml`
-svarar 200 med giltig XML och 22 adresser. Öppna den i webbläsaren om
+svarar 200 med giltig XML och 33 adresser. Öppna den i webbläsaren om
 du vill se själv. Går den inte att skicka in är det något i Search
 Console, inte i filen.
 
@@ -76,14 +76,20 @@ Det här är steget som faktiskt sätter fart på det.
 3. Klicka **Begär indexering**
 4. Vänta ut kontrollen, ungefär en minut
 
-Upprepa för de sidor som är viktigast:
+Upprepa för de sidor som är viktigast, i den här ordningen:
 
 ```
+https://nextrum.se/laxhjalp-stockholm
+https://nextrum.se/laxhjalp-matematik
 https://nextrum.se/priser
 https://nextrum.se/bli-studiehjalpare
 https://nextrum.se/intresseanmalan
 https://nextrum.se/faq
 ```
+
+`/laxhjalp-stockholm` först efter startsidan: det är sidan som
+svarar på "läxhjälp stockholm", och den länkar vidare till alla
+stadsdelar och ämnen, så Google hittar resten därifrån.
 
 **Utan `.html`.** Adresserna är rena sedan september 2026 och
 `.html`-varianten svarar med en omdirigering. Skickar du in den
