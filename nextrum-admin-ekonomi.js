@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { DAG, FAKT_LAGE, S, UTB_LAGE, elevNamn, fråga, funktionsFel,
+  const { DAG, FAKT_LAGE, KORT_LAGE, S, TILLAGG_LAGE, UTB_LAGE, elevNamn, fråga, funktionsFel,
           hämtaAllt, hämtaEkonomiunderlag, kortDatum, matchar, märkFlik,
           namnFör, pill, rad, skriv, tabell, väljare } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
@@ -27,6 +27,402 @@
   /* ============================================================
      EKONOMI
      ============================================================ */
+
+  /* ============================================================
+     MÅNADEN (Fas 20.2)
+
+     Leo 2026-09-27: "i adminvyn ska vi kunna filtrera och stänga
+     böckerna utifrån det. månadsvis". Allt i Ekonomi gäller den månad
+     som är vald i raden överst: pass, kortbetalningar, tillägg, tvister
+     och avvikelser på PASSETS datum, underlag och fakturor på sin
+     period. Samma gräns som manad_lage() drar i databasen, så att en
+     rad i listan och ett tal i bokslutet aldrig räknas på två sätt.
+
+     Raden startas första gången något i Ekonomi ritas, inte i skalet:
+     alla ritfunktioner här frågar valdMånad(), och den som frågar först
+     får väljaren skapad. Då kan ingen lista ritas innan det finns en
+     månad att filtrera på.
+
+     Det som hör till en annan månad göms, men det försvinner inte:
+     avvikelserna, larmen och de öppna tvisterna räknar upp de andra
+     månaderna med en knapp dit. Översikten larmar för hela systemet,
+     och en avvikelse den pekar på ska inte se borta ut för att fel
+     månad råkade vara vald.
+     ============================================================ */
+  let MV = null;
+
+  function startaMånadsval() {
+    if (MV) return;
+    const host = $('#eko-manader');
+    if (!host) return;
+    MV = NXStudie.månadsval(host, {
+      antal: 12,
+      framåt: 2,
+      märke: m => S.stangdaManader && S.stangdaManader.has(m) ? 'Stängd' : '',
+      vidVal: bytMånad
+    });
+    laddaBokslut();
+  }
+
+  function valdMånad() {
+    startaMånadsval();
+    return MV ? MV.vald() : NXStudie.månadIso(new Date());
+  }
+
+  const månadFör = datum => String(datum).slice(0, 7) + '-01';
+
+  /* gte och lt, som i databasen. En sträng jämförd mot en sträng:
+     wanted_date är ett datum utan tid, och en tidszon hade bara kunnat
+     flytta ett pass den sista kvällen till nästa månad. */
+  function iMånaden(datum) {
+    if (!datum) return false;
+    const g = NXStudie.månadsGräns(valdMånad());
+    const d = String(datum).slice(0, 10);
+    return d >= g.från && d < g.till;
+  }
+  const periodIMånaden = period => !!period && månadFör(period) === valdMånad();
+  const månadText = () => NXStudie.månadsNamn(valdMånad());
+
+  /* Väljaren har de tolv senaste månaderna. En månad utanför den (ett
+     pass som är bokat i nästa månad, eller något äldre än ett år) går
+     inte att hoppa till, och står därför som text i stället för knapp. */
+  function iVäljaren(m) {
+    const nu = new Date();
+    const först = NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - 11, 1, 12));
+    return m >= först && m <= NXStudie.månadIso(nu);
+  }
+
+  function andraMånader(lista, datum) {
+    const vald = valdMånad();
+    const per = {};
+    lista.forEach(x => {
+      const d = datum(x);
+      if (!d) return;
+      const m = månadFör(d);
+      if (m !== vald) per[m] = (per[m] || 0) + 1;
+    });
+    return Object.keys(per).sort().map(m => [m, per[m]]);
+  }
+
+  function andraMånaderText(par, vad) {
+    if (!par.length) return '';
+    return '<p class="eko-andra">' + esc(vad) + ' i andra månader: ' + par.map(([m, n]) => {
+      const text = esc(NXStudie.månadsNamn(m)) + ' (' + n + ')';
+      return iVäljaren(m)
+        ? '<button type="button" class="eko-lank" data-eko-manad="' + m + '">' + text + '</button>'
+        : text;
+    }).join(', ') + '.</p>';
+  }
+
+  /* Datumet som en knapp till passets detalj. */
+  function passLänk(b, text) {
+    return '<button type="button" class="eko-lank" data-dp="pass:' + esc(b.id) + '"><b>'
+      + esc(text || kortDatum(b.wanted_date)) + '</b></button>';
+  }
+  const bokning = id => (S.bokningar || []).find(b => b.id === id) || null;
+
+  /* Månadskörningens egen väljare följer med när månaden byts, men
+     bara när någon valt: vid start står den kvar på förra månaden,
+     för det är den som körs, och den innevarande pågår. */
+  function synkaKörning() {
+    const val = $('#kor-period');
+    if (!val) return;
+    const p = valdMånad().slice(0, 7);
+    if (val.value === p || !Array.prototype.some.call(val.options, o => o.value === p)) return;
+    val.value = p;
+    const skapa = $('#kor-skapa');
+    if (skapa) skapa.disabled = true;
+    S.korning = null;
+  }
+
+  /* Allt ritas ur det som redan är hämtat; bara bokslutet frågar
+     databasen. Ingen lista byts mot "Hämtar" (CLAUDE.md avsnitt 3). */
+  function bytMånad() {
+    synkaKörning();
+    ritaFakturor();
+    ritaUtbetalningar();
+    ritaKortbetalningar();
+    ritaAvvikelser();
+    laddaBokslut();
+  }
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-eko-manad]');
+    if (!k || !MV) return;
+    MV.sätt(k.dataset.ekoManad);     // tyst: vidVal körs inte av sätt()
+    bytMånad();
+  });
+
+  /* ============================================================
+     BOKSLUTET (Fas 20.2)
+
+     Två beslut av Leo samma dag, och båda bor i databasen:
+       1. En stängd månad är låst. Inga pass och inga rapporter i den
+          går att ändra, inte heller av admin, förrän någon öppnar den
+          med ett skäl.
+       2. En månad stängs bara när dess larm är noll.
+
+     Knappen här är grå när månaden pågår eller har larm, och säger
+     varför. Det är en upplysning, inte skyddet: stang_manad() prövar
+     samma sak och nekar med ett eget besked, och det beskedet visas
+     ordagrant om det kommer.
+
+     Talen räknas i manad_lage(), inte här. Månaden har passens,
+     betalningarnas och underlagens tal i samma svar, och det svaret
+     sparas i manadsbokslut.summering när månaden stängs: det som
+     visas är alltså exakt det som frystes.
+     ============================================================ */
+  let bokslutFråga = 0;
+
+  async function laddaBokslut() {
+    const månad = valdMånad();
+    const nr = ++bokslutFråga;
+    NXStudie.laddarFörsta($('#bokslut'));
+    let läge, lista;
+    try {
+      [läge, lista] = await Promise.all([
+        supa.rpc('manad_lage', { p_manad: månad }),
+        supa.from('manadsbokslut').select('manad, stangd')
+      ]);
+    } catch (fel) {
+      läge = { error: fel };
+      lista = { error: fel };
+    }
+    // En annan månad hann väljas medan frågan gick. Dess svar gäller.
+    if (nr !== bokslutFråga) return;
+    if (!lista.error) {
+      S.stangdaManader = new Set((lista.data || []).filter(r => r.stangd)
+        .map(r => String(r.manad).slice(0, 10)));
+      if (MV) MV.märk();
+    }
+    S.bokslutFel = läge.error ? felText(läge.error) : null;
+    S.bokslut = läge.error ? null : läge.data;
+    ritaBokslut();
+  }
+
+  /* Datum och klockslag i svensk tid. kortDatum() skär av en
+     tidsstämpel vid tecken tio, alltså UTC-datumet: en månad stängd
+     strax efter midnatt hade stått på dagen innan. */
+  const lokalDag = ts => ts ? datumText(isoFor(new Date(ts))) : '—';
+  const avNamn = id => { const n = id ? namnFör(id) : '—'; return n && n !== '—' ? ' av ' + n : ''; };
+
+  function kpi(tal, rubrik, under, larm) {
+    return '<div class="adm-kpi' + (larm ? ' ar-larm' : '') + '"><b>' + esc(String(tal)) + '</b>'
+      + '<span>' + esc(rubrik) + '</span>'
+      + (under ? '<span class="adm-kpi-diff">' + esc(under) + '</span>' : '') + '</div>';
+  }
+
+  /* Vart ett larm leder. Ett pass öppnas i sin detalj; resten har en
+     flik där det åtgärdas. */
+  function larmÅtgärd(a) {
+    const k = [];
+    if (a.objekt_tabell === 'bookings' && bokning(a.objekt_id)) {
+      k.push('<button class="btn btn-ghost btn-sm" type="button" data-dp="pass:' + esc(a.objekt_id) + '">Öppna passet</button>');
+    }
+    const flik = {
+      pass_utan_rapport: 'avvikelser', fristaende_rapport: 'avvikelser',
+      betalt_for_lange: 'kortbetalningar', betald_men_avbokad: 'kortbetalningar',
+      faktura_saknas: 'korning', faktura_forfallen: 'fakturor', faktura_gammalt_utkast: 'fakturor',
+      betald_och_fakturerad: 'fakturor', faktura_summa_fel: 'fakturor', fakturerat_ogiltigt_pass: 'fakturor',
+      ej_utbetalt: 'korning', utbetalning_vantar: 'utbetalningar', utbetalning_misslyckad: 'utbetalningar',
+      utbetalning_summa_fel: 'utbetalningar'
+    }[a.typ];
+    const flikNamn = { avvikelser: 'Avvikelser', kortbetalningar: 'Kortbetalningar', korning: 'Månadskörning',
+      fakturor: 'Fakturor', utbetalningar: 'Utbetalningar' };
+    if (flik) k.push('<a class="btn btn-ghost btn-sm" href="#ekonomi/' + flik + '">' + esc(flikNamn[flik]) + '</a>');
+    if (a.objekt_tabell === 'profiles') {
+      k.push('<button class="btn btn-ghost btn-sm" type="button" data-dp="familj:' + esc(a.objekt_id) + '">Öppna familjen</button>');
+    }
+    return k.join('');
+  }
+
+  /* Vem och när, ur det vyn redan har. Databasen svarar med id:n och
+     aldrig med namn (manad_lage), så namnen slås upp här. */
+  function larmGäller(a) {
+    const b = a.objekt_tabell === 'bookings' ? bokning(a.objekt_id) : null;
+    if (b) {
+      return [kortDatum(b.wanted_date), b.subject, namnFör(b.parent_id), namnFör(b.tutor_id)]
+        .filter(x => x && x !== '—').join(' · ');
+    }
+    const rad = (S.avvikelser || []).find(x => x.typ === a.typ && x.objekt_id === a.objekt_id) || {};
+    return [a.datum ? kortDatum(a.datum) : null,
+      rad.kund_id ? namnFör(rad.kund_id) : null,
+      rad.studiehjalpare_id ? namnFör(rad.studiehjalpare_id) : null,
+      a.belopp_ore != null && a.typ !== 'betalt_for_lange' ? kronor(a.belopp_ore) : null]
+      .filter(x => x && x !== '—').join(' · ');
+  }
+
+  function ritaBokslut() {
+    const host = $('#bokslut');
+    if (!host) return;
+    const månad = valdMånad();
+    const namn = månadText();
+
+    if (S.bokslutFel) {
+      host.innerHTML = tomt('Bokslutet gick inte att läsa', S.bokslutFel);
+      märkFlik('#flik-bokslut-mark', 0);
+      return;
+    }
+    const d = S.bokslut;
+    // Svaret för en annan månad står kvar nedtonat tills det nya kommer.
+    if (!d || String(d.manad).slice(0, 10) !== månad) return;
+
+    const p = d.pass || {}, k = d.kort || {}, t = d.tillagg || {};
+    const u = d.underlag || {}, f = d.fakturor || {};
+    const larm = d.larm || [];
+    const b = d.bokslut;
+    const stängd = !!(b && b.stangd);
+    const utanRapport = Math.max(0, Number(p.genomforda || 0) - Number(p.med_rapport || 0));
+    /* Ur svaret sedan Fas 20.5, som rättade att manad_lage räknade
+       status 'betald' när ett underlag som gått iväg heter 'utbetald'.
+       Reserven läser payouts, om svaret skulle sakna talet. */
+    const utbetalda = u.betalda != null ? Number(u.betalda)
+      : (S.utbetalningar || []).filter(x => periodIMånaden(x.period) && x.status === 'utbetald').length;
+
+    const läge = stängd ? pill('Stängd', 'ar-klar')
+      : d.pagar ? pill('Pågår', 'ar-vantar')
+      : larm.length ? pill(larm.length + ' larm kvar', 'ar-ny')
+      : pill('Kan stängas', 'ar-vantar');
+
+    let h = '<div class="bokslut-topp"><div><h5>Bokslut för ' + esc(namn) + '</h5>'
+      + '<p>' + esc(stängd ? 'Månaden är låst. Pass och rapporter i den går inte att ändra.'
+        : d.pagar ? 'Månaden pågår. Talen ändras tills den är slut.'
+        : 'Månaden är slut men inte stängd.') + '</p></div>' + läge + '</div>';
+
+    h += '<div class="adm-tal-rad">'
+      + kpi(p.genomforda || 0, 'Genomförda pass', 'av ' + (p.bokade || 0) + ' bokade'
+        + (p.avbokade ? ' · ' + p.avbokade + ' avbokade' : ''))
+      + kpi(p.med_rapport || 0, 'Med rapport', utanRapport
+        ? utanRapport + ' saknar rapport' : 'alla har rapport', utanRapport > 0)
+      + kpi(NXBetalning.timmar(p.debiterade_min), 'Debiterad tid', 'bokat ' + NXBetalning.timmar(p.bokade_min))
+      + kpi(NXBetalning.timmar(p.lon_min), 'Lönetid', 'det studiehjälparna får betalt för')
+      + kpi(p.avvikande || 0, 'Avvikande pass', 'hållen tid inte lika med bokad')
+      + kpi(kronor(k.betalt_ore), 'Betalt med kort', (k.antal || 0) + (k.antal === 1 ? ' betalning' : ' betalningar')
+        + (Number(k.aterbetalt_ore) ? ' · ' + kronor(k.aterbetalt_ore) + ' tillbaka' : ''))
+      + kpi(kronor(k.netto_ore), 'Netto efter Stripe', 'avgift ' + kronor(k.avgift_ore)
+        + (k.utan_avgift ? ' · ' + k.utan_avgift + ' utan hämtad avgift' : ''), k.utan_avgift > 0)
+      + kpi(kronor(t.betalt_ore), 'Tillägg för övertid', (t.antal || 0) + ' betalda'
+        + (Number(t.aterbetalt_ore) ? ' · ' + kronor(t.aterbetalt_ore) + ' tillbaka' : ''))
+      + kpi(kronor(u.belopp_ore), 'Underlag', (u.antal || 0) + ' st · ' + utbetalda + ' utbetalda')
+      + kpi(kronor(f.belopp_ore), 'Fakturor', (f.antal || 0) + ' st · ' + (f.betalda || 0) + ' betalda')
+      + '</div>';
+
+    /* Det som inte är kortpengar, och testbetalningarna, för sig: ett
+       testpass i den riktiga databasen ska aldrig se ut som intäkt. */
+    const också = [
+      d.timmar ? d.timmar + (d.timmar === 1 ? ' pass betalt med timmar' : ' pass betalda med timmar') : null,
+      d.faktura && d.faktura.pass ? d.faktura.pass + ' pass mot faktura' : null,
+      d.test ? d.test + (d.test === 1 ? ' testbetalning, som inte räknas in' : ' testbetalningar, som inte räknas in') : null
+    ].filter(Boolean);
+    if (också.length) h += '<p class="bokslut-ovrigt">Också i månaden: ' + esc(också.join(' · ')) + '.</p>';
+
+    h += '<h6 class="bokslut-rubrik">Larm i ' + esc(namn) + (larm.length ? ' (' + larm.length + ')' : '') + '</h6>';
+    h += larm.length
+      ? '<ul class="bokslut-larm">' + larm.map(a => {
+          const [rubrik, under] = avvText(a);
+          const gäller = larmGäller(a);
+          return '<li><div><b>' + esc(rubrik) + '</b>'
+            + (gäller ? '<span class="bokslut-larm-vem">' + esc(gäller) + '</span>' : '')
+            + (under ? '<span class="bokslut-larm-hur">' + esc(under) + '</span>' : '') + '</div>'
+            + '<div class="bokslut-larm-atg">' + larmÅtgärd(a) + '</div></li>';
+        }).join('') + '</ul>'
+      : '<p class="bokslut-inga">Inga larm. Allt i månaden går ihop.</p>';
+
+    /* Larm i andra månader, ur samma räkning (avvikelser_rader) som
+       översikten läser. Utan datum hör ett larm inte till någon månad. */
+    h += andraMånaderText(andraMånader(S.avvikelser || [], a => a.datum), 'Larm');
+
+    h += '<div class="bokslut-stang">';
+    if (stängd) {
+      h += '<p>Stängd ' + esc(lokalDag(b.stangd_at) + avNamn(b.stangd_av)) + '.</p>'
+        + '<button class="btn btn-ghost btn-sm" type="button" data-bokslut-oppna>Öppna igen</button>';
+    } else {
+      const varför = d.pagar ? 'Månaden är inte slut.'
+        : larm.length ? larm.length + ' larm kvar.' : '';
+      if (b && b.oppnad_at) {
+        h += '<p class="bokslut-oppnad">Öppnad igen ' + esc(lokalDag(b.oppnad_at) + avNamn(b.oppnad_av))
+          + (b.oppnad_skal ? ': ' + esc(b.oppnad_skal) : '') + '</p>';
+      }
+      h += '<button class="btn btn-primary btn-sm" type="button" data-bokslut-stang'
+        + (varför ? ' disabled aria-describedby="bokslut-varfor"' : '') + '>Stäng månaden</button>'
+        + (varför ? '<span class="bokslut-varfor" id="bokslut-varfor">' + esc(varför) + '</span>' : '');
+    }
+    h += '</div><p class="ok-msg bokslut-msg" id="bokslut-msg" aria-live="polite"></p>';
+
+    host.innerHTML = h;
+    märkFlik('#flik-bokslut-mark', larm.length);
+  }
+
+  function efterBokslut(månad, data) {
+    if (!data) return;
+    /* Svaret från stäng eller öppna är färskare än en hämtning som
+       hann starta innan: den får inte skriva tillbaka det gamla läget. */
+    bokslutFråga++;
+    const m = String(data.manad || månad).slice(0, 10);
+    if (data.bokslut && data.bokslut.stangd) S.stangdaManader.add(m);
+    else S.stangdaManader.delete(m);
+    if (MV) MV.märk();
+    if (valdMånad() === m) { S.bokslut = data; S.bokslutFel = null; }
+    ritaBokslut();
+  }
+
+  document.addEventListener('click', async e => {
+    const stäng = e.target.closest('[data-bokslut-stang]');
+    const öppna = e.target.closest('[data-bokslut-oppna]');
+    if (!stäng && !öppna) return;
+    const månad = valdMånad();
+    const namn = månadText();
+
+    if (stäng) {
+      if (stäng.disabled) return;
+      const ja = await bekräfta({
+        titel: 'Stäng ' + namn + '?',
+        text: 'Pass och rapporter i månaden går inte att ändra efter det, inte heller härifrån. '
+          + 'Månadens tal sparas som de ser ut nu. Underlag och fakturor går fortfarande att markera '
+          + 'betalda. Månaden kan öppnas igen, med ett skäl.',
+        knapp: 'Stäng månaden'
+      });
+      if (!ja) return;
+      await medan(stäng, 'Stänger…', async () => {
+        const { data, error } = await supa.rpc('stang_manad', { p_manad: månad });
+        if (error) {
+          /* Databasen vet något knappen inte visste, till exempel ett
+             larm som kommit sedan sidan ritades. Läget hämtas om och
+             beskedet står kvar under knappen, ordagrant. */
+          await laddaBokslut();
+          säg($('#bokslut-msg'), felText(error), false);
+          return;
+        }
+        efterBokslut(månad, data);
+      });
+      return;
+    }
+
+    const skäl = await fråga({
+      titel: 'Öppna ' + namn + ' igen?',
+      text: 'Pass och rapporter i månaden går att ändra igen tills den stängs på nytt. '
+        + 'Skälet sparas med öppningen och står här tills dess.',
+      innehåll: '<div class="fgroup" style="margin-top:14px"><label for="bokslut-skal">Varför?</label>'
+        + '<textarea class="inp" id="bokslut-skal" rows="3" maxlength="500" '
+        + 'placeholder="Till exempel: rapporten den 12:e hade fel sluttid"></textarea></div>',
+      knapp: 'Öppna igen',
+      läs: ruta => {
+        const text = $('#bokslut-skal', ruta).value.trim();
+        return text.length >= 5 ? { värde: text }
+          : { fel: 'Skriv varför, med minst fem tecken. En öppnad månad utan skäl går inte att följa upp.' };
+      }
+    });
+    if (!skäl) return;
+    await medan(öppna, 'Öppnar…', async () => {
+      const { data, error } = await supa.rpc('oppna_manad', { p_manad: månad, p_skal: skäl });
+      if (error) {
+        await laddaBokslut();
+        säg($('#bokslut-msg'), felText(error), false);
+        return;
+      }
+      efterBokslut(månad, data);
+    });
+  });
 
   /* ============================================================
      FAKTUROR (Fas 14.6)
@@ -88,14 +484,16 @@
     ritaFakturaFlagga();
     const sök = $('#fakt-sok').value.trim();
     const st = $('#fakt-status').value;
-    const rader = (S.fakturor || [])
+    // Fas 20.2: fakturans period, alltså månaden passen på den hölls.
+    const iMån = (S.fakturor || []).filter(f => periodIMånaden(f.period));
+    const rader = iMån
       .filter(f => !st || NXBetalning.fakturaLage(f) === st)
       .map(f => ({ ...f, familj: namnFör(f.parent_id) }))
       .filter(f => matchar(f, ['familj', 'fortnox_fakturanummer'], sök));
 
     const på = passPåFaktura();
     const väntar = (S.bokningar || []).filter(b => b.betalning_status === 'faktura'
-      && b.status === 'completed' && b.fakturerbar !== false && !på.has(b.id));
+      && b.status === 'completed' && b.fakturerbar !== false && !på.has(b.id) && iMånaden(b.wanted_date));
     const vänt = $('#fakt-vantar');
     if (vänt) {
       vänt.textContent = väntar.length
@@ -104,7 +502,7 @@
         : '';
     }
 
-    $('#fakt-antal').textContent = rader.length + ' av ' + (S.fakturor || []).length;
+    $('#fakt-antal').textContent = rader.length + ' av ' + iMån.length;
     $('#fakt-tabell').innerHTML = tabell([
       { namn: 'Period', rita: f => '<b>' + esc(NXBetalning.periodText(f.period)) + '</b>' },
       { namn: 'Familj', rita: f => esc(f.familj) },
@@ -130,7 +528,7 @@
         }
         return k.join(' ');
       } }
-    ], rader, (S.fakturor || []).length ? 'Inga fakturor matchar' : 'Inga fakturor än');
+    ], rader, iMån.length ? 'Inga fakturor matchar' : 'Inga fakturor för ' + månadText());
   }
 
   /* Underlaget för Fortnox: det som ska stå på fakturan. Kunden är
@@ -303,12 +701,14 @@
   function ritaUtbetalningar() {
     const sök = $('#utb-sok').value.trim();
     const st = $('#utb-status').value;
-    const rader = S.utbetalningar
+    // Fas 20.2: underlagets period, alltså månaden passen hölls.
+    const iMån = (S.utbetalningar || []).filter(u => periodIMånaden(u.period));
+    const rader = iMån
       .filter(u => !st || u.status === st)
       .map(u => ({ ...u, hjalpare: namnFör(u.tutor_id) }))
       .filter(u => matchar(u, ['hjalpare'], sök));
 
-    $('#utb-antal').textContent = rader.length + ' av ' + S.utbetalningar.length;
+    $('#utb-antal').textContent = rader.length + ' av ' + iMån.length;
     $('#utb-tabell').innerHTML = tabell([
       { namn: 'Period', rita: u => '<b>' + esc(NXBetalning.periodText(u.period)) + '</b>' },
       { namn: 'Studiehjälpare', rita: u => esc(u.hjalpare) },
@@ -323,7 +723,7 @@
         : '<button class="btn btn-ghost btn-sm" data-skicka="utbetalning" data-id="'
           + u.id + '">Skicka underlag</button>' },
       { namn: 'Läge', höger: true, rita: u => väljare('utb', UTB_LAGE, u.status, 'data-utb="' + u.id + '"') }
-    ], rader, 'Inga utbetalningar än');
+    ], rader, iMån.length ? 'Inga underlag matchar' : 'Inga underlag för ' + månadText());
   }
 
   /* ============================================================
@@ -344,10 +744,7 @@
      går till Nextrum, och hjälparens ersättning hör hemma under
      Utbetalningar — den räknas den 25:e ur rapporterna, inte här.
      ============================================================ */
-  const KORT_LAGE = {
-    ingen: 'Ej betald', vantar: 'Väntar', betald: 'Betald', aterbetald: 'Återbetald',
-    tvist: 'Tvist', misslyckad: 'Misslyckad', faktura: 'Faktura'
-  };
+  /* KORT_LAGE bor i kärnan sedan Fas 20.2: passets detalj visar samma lägen. */
 
   /* "Ej betalda" är en annan fråga än de andra lägena: inte vilka
      betalningar som påbörjats, utan vilka bekräftade och genomförda
@@ -363,6 +760,7 @@
     ritaKortsparr();
     ritaErbjudandenAdmin();
     ritaAvstamning();
+    ritaTillägg();
     /* Asynkron för rapporternas skull. Ett fel får inte lämna rutan på
        "Hämtar" — då ser det ut som att den fortfarande arbetar. */
     ritaTvister().catch(fel => {
@@ -372,10 +770,12 @@
     const sök = $('#kort-sok').value.trim();
     const st = $('#kort-status').value;
     /* Ett fakturapass är ingen kortbetalning (Fas 14.6). Det står under
-       Fakturor. */
+       Fakturor. Fas 20.2: passets månad, inte betalningens — ett pass i
+       september som betalas i oktober står under september. */
+    const iMån = (S.bokningar || []).filter(b => iMånaden(b.wanted_date));
     const alla = st === 'obetald'
-      ? (S.bokningar || []).filter(obetaltPass)
-      : (S.bokningar || []).filter(b => b.betalning_status && b.betalning_status !== 'ingen' && b.betalning_status !== 'faktura');
+      ? iMån.filter(obetaltPass)
+      : iMån.filter(b => b.betalning_status && b.betalning_status !== 'ingen' && b.betalning_status !== 'faktura');
     const rader = alla
       .filter(b => !st || st === 'obetald' || b.betalning_status === st)
       .map(b => ({ ...b, familj: namnFör(b.parent_id), hjalpare: namnFör(b.tutor_id) }))
@@ -383,7 +783,7 @@
 
     $('#kort-antal').textContent = rader.length + ' av ' + alla.length;
     $('#kort-tabell').innerHTML = tabell([
-      { namn: 'Pass', rita: b => '<b>' + esc(kortDatum(b.wanted_date)) + '</b>'
+      { namn: 'Pass', rita: b => passLänk(b)
         + '<span class="adm-und">' + esc(b.subject || 'Pass') + '</span>' },
       { namn: 'Familj', rita: b => esc(b.familj) },
       { namn: 'Studiehjälpare', rita: b => esc(b.hjalpare) },
@@ -414,7 +814,44 @@
       } },
       { namn: 'Läge', höger: true, rita: b =>
         '<span class="adm-tal">' + esc(KORT_LAGE[b.betalning_status] || b.betalning_status) + '</span>' }
-    ], rader, st === 'obetald' ? 'Inga obetalda pass' : 'Inga kortbetalningar än');
+    ], rader, (st === 'obetald' ? 'Inga obetalda pass i ' : 'Inga kortbetalningar för ') + månadText());
+  }
+
+  /* ============================================================
+     TILLÄGGEN (Fas 20.1)
+
+     Ett pass som var betalt och drog över betalas med ett tillägg för
+     övertiden, med kort, när familjen bekräftar rapporten. Tillägget är
+     en egen betalning i pass_tillagg och skrivs bara av stripe-checkout
+     och stripe-webhook. Här läses det, per passets månad.
+
+     Ett obetalt tillägg larmar som tillagg_obetalt, och det är larmet
+     som håller månaden öppen, inte den här listan.
+     ============================================================ */
+  function ritaTillägg() {
+    const host = $('#tillagg-tabell');
+    if (!host) return;
+    if (S.tillaggFel) { host.innerHTML = tomt('Tilläggen gick inte att läsa', S.tillaggFel); return; }
+    const rader = (S.tillagg || [])
+      .map(t => ({ ...t, pass: bokning(t.booking_id) }))
+      .filter(t => t.pass && iMånaden(t.pass.wanted_date));
+    $('#tillagg-antal').textContent = rader.length ? rader.length + ' st' : '';
+    host.innerHTML = tabell([
+      { namn: 'Pass', rita: t => passLänk(t.pass)
+        + '<span class="adm-und">' + esc(t.pass.subject || 'Pass') + '</span>' },
+      { namn: 'Familj', rita: t => esc(namnFör(t.pass.parent_id)) },
+      { namn: 'Övertid', rita: t => '<span class="adm-tal">' + esc(t.minuter + ' min') + '</span>' },
+      { namn: 'Begärt', rita: t => '<span class="adm-tal">' + esc(kronor(t.begart_ore)) + '</span>' },
+      { namn: 'Betalt', rita: t => (t.betalt_ore != null
+          ? '<span class="adm-tal">' + esc(kronor(t.betalt_ore)) + '</span>'
+          : '<span class="adm-und">—</span>')
+        + (Number(t.aterbetald_ore || 0) > 0 ? '<span class="adm-und">' + esc(kronor(t.aterbetald_ore)) + ' tillbaka</span>' : '')
+        + (t.stripe_skarp === false ? ' ' + pill('Test', '') : '') },
+      { namn: 'Läge', höger: true, rita: t => {
+        const l = TILLAGG_LAGE[t.status] || [t.status, ''];
+        return pill(l[0], l[1]);
+      } }
+    ], rader, 'Inga tillägg för övertid i ' + månadText());
   }
 
   /* ============================================================
@@ -660,6 +1097,7 @@
       alert(delar.length ? delar.join('\n') : 'Inget att hämta.');
       await hämtaAllt();
       ritaKortbetalningar();
+      await laddaBokslut();       // avgiften och nettot står i bokslutet
     });
   });
 
@@ -716,11 +1154,17 @@
     const host = $('#tvist-lista');
     if (!host) return;
     if (S.tvisterFel) { host.innerHTML = tomt('Tvisterna gick inte att läsa', S.tvisterFel); return; }
-    const alla = S.tvister || [];
+    /* Fas 20.2: passets månad, som resten av Ekonomi. En tvist har en
+       sista dag att svara som inte väntar på att rätt månad väljs, så
+       de ÖPPNA i andra månader räknas upp ovanför tabellen. */
+    const bok = id => (S.bokningar || []).find(b => b.id === id);
+    const tvistDag = x => { const b = bok(x.booking_id); return b ? b.wanted_date : x.skapad; };
+    const alla = (S.tvister || []).filter(x => iMånaden(tvistDag(x)));
+    const andra = andraMånaderText(andraMånader((S.tvister || []).filter(x => !x.stangd), tvistDag), 'Öppna tvister');
     const öppna = alla.filter(x => !x.stangd).length;
     $('#tvist-antal').textContent = öppna ? öppna + (öppna === 1 ? ' öppen' : ' öppna') : '';
     if (!alla.length) {
-      host.innerHTML = tomt('Inga korttvister',
+      host.innerHTML = andra + tomt('Inga korttvister i ' + månadText(),
         'Bestrider en familj en betalning hos sin bank står det här, med sista dagen att svara.');
       return;
     }
@@ -736,12 +1180,11 @@
 
     const nyckel = x => (x.stangd ? '1' : '0') + (väntarPåOss(x) ? String(x.svara_senast || '9') : '9') + String(x.skapad || '');
     const rader = alla.slice().sort((a, b) => nyckel(a).localeCompare(nyckel(b)));
-    const bok = id => (S.bokningar || []).find(b => b.id === id);
 
-    host.innerHTML = tabell([
+    host.innerHTML = andra + tabell([
       { namn: 'Pass', rita: x => {
         const b = bok(x.booking_id);
-        return b ? '<b>' + esc(kortDatum(b.wanted_date)) + '</b><span class="adm-und">'
+        return b ? passLänk(b) + '<span class="adm-und">'
             + esc(b.subject || 'Pass') + ' · ' + esc(namnFör(b.parent_id)) + '</span>'
           : '<span class="adm-und">Passet hittades inte</span>';
       } },
@@ -791,6 +1234,13 @@
 
     const betalt = Number(b.betalt_ore || 0);
     const kvar = betalt - Number(b.aterbetald_ore || 0);
+    /* Fas 20.1: passet blev kortare än det familjen betalat för. Larmet
+       har räknat skillnaden till passets frysta pris, och den föreslås i
+       stället för hela beloppet. Rutan går fortfarande att ändra. */
+    const förLänge = (S.avvikelser || []).find(a => a.typ === 'betalt_for_lange'
+      && a.objekt_tabell === 'bookings' && a.objekt_id === b.id && a.belopp_ore > 0);
+    const förval = förLänge ? Math.min(Number(förLänge.belopp_ore), kvar) : kvar;
+    const förvalKr = Number.isInteger(förval / 100) ? String(förval / 100) : (förval / 100).toFixed(2);
     const valt = await fråga({
       titel: 'Återbetala passet?',
       /* Texten sa förut att studiehjälparens del dras tillbaka från
@@ -804,10 +1254,12 @@
         + 'inte ur betalningen.',
       innehåll: '<div class="fgroup" style="margin:14px 0 0">'
         + '<label for="ater-belopp">Belopp i kronor</label>'
-        + '<input class="inp" id="ater-belopp" type="number" min="1" step="1" inputmode="numeric" value="'
-        + Math.floor(kvar / 100) + '">'
-        + '<p class="xsmall" style="color:var(--bl-3);margin:8px 0 0">Högst '
-        + esc(kronor(kvar)) + '. Lägre belopp ger en delåterbetalning.</p></div>'
+        + '<input class="inp" id="ater-belopp" type="number" min="1" step="0.01" inputmode="decimal" value="'
+        + esc(förvalKr) + '">'
+        + '<p class="xsmall" style="color:var(--bl-3);margin:8px 0 0">'
+        + (förLänge ? 'Passet blev kortare än det som betalades: ' + esc(kronor(förLänge.belopp_ore))
+            + ' ska tillbaka. ' : '')
+        + 'Högst ' + esc(kronor(kvar)) + '. Lägre belopp ger en delåterbetalning.</p></div>'
         + '<div class="fgroup" style="margin:14px 0 0">'
         + '<label for="ater-anledning">Anledning, för vår egen skull</label>'
         + '<input class="inp" id="ater-anledning" placeholder="t.ex. studiehjälparen uteblev"></div>',
@@ -815,7 +1267,7 @@
       läs: ruta => {
         const kr = Number((ruta.querySelector('#ater-belopp') || {}).value);
         if (!kr || kr < 1) return { fel: 'Fyll i ett belopp.' };
-        if (kr * 100 > kvar) return { fel: 'Beloppet är högre än vad som är kvar att återbetala.' };
+        if (Math.round(kr * 100) > kvar) return { fel: 'Beloppet är högre än vad som är kvar att återbetala.' };
         return { värde: {
           belopp_ore: Math.round(kr * 100),
           anledning: ((ruta.querySelector('#ater-anledning') || {}).value || '').trim()
@@ -835,7 +1287,9 @@
       if (svar.data && svar.data.varning) alert(svar.data.varning);
       await hämtaAllt();
       ritaKortbetalningar();
-      await ritaÖversikt();
+      /* Larmet betalt_for_lange och bokslutets återbetalda belopp
+         räknas i databasen och måste hämtas om, inte ritas om. */
+      await laddaOmEkonomi();
     });
   });
 
@@ -869,6 +1323,18 @@
     const host = $('#avv-utan-rapport');
     if (!host) return;
 
+    /* Fas 20.2: listorna gäller den valda månaden, och det som hör till
+       andra räknas upp överst. utanRapport() står kvar ofiltrerad, för
+       översikten räknar hela systemet med den. */
+    const andra = $('#avv-andra');
+    if (andra) {
+      const utanför = [].concat(
+        S.passunderlagFel ? [] : utanRapport().map(p => p.wanted_date),
+        (S.fristaendeRapporter || []).map(r => r.lesson_date),
+        övrigaRader().map(a => a.datum));
+      andra.innerHTML = andraMånaderText(andraMånader(utanför, x => x), 'Avvikelser');
+    }
+
     if (S.passunderlagFel) {
       host.innerHTML = tomt('Passunderlaget gick inte att läsa', S.passunderlagFel);
       $('#avv-fristaende').innerHTML = '';
@@ -877,9 +1343,9 @@
       return;
     }
 
-    const saknar = utanRapport();
+    const saknar = utanRapport().filter(p => iMånaden(p.wanted_date));
     host.innerHTML = tabell([
-      { namn: 'Pass', rita: p => '<b>' + esc(kortDatum(p.wanted_date)) + '</b>'
+      { namn: 'Pass', rita: p => passLänk(p)
         + '<span class="adm-und">' + esc(p.subject || 'Pass') + '</span>' },
       { namn: 'Familj', rita: p => esc(namnFör(p.parent_id)) },
       { namn: 'Elev', rita: p => esc(elevNamn(p.student_id)) },
@@ -894,7 +1360,7 @@
           ? '<button class="btn btn-primary btn-sm" type="button" data-avv-koppla="' + p.id + '">Koppla rapport</button> '
           : '')
         + '<button class="btn btn-ghost btn-sm" type="button" data-avv-undanta="' + p.id + '">Undanta</button>' }
-    ], saknar, 'Alla genomförda pass har en rapport');
+    ], saknar, 'Alla genomförda pass i ' + månadText() + ' har en rapport');
 
     $('#avv-fristaende').innerHTML = tabell([
       { namn: 'Datum', rita: r => '<b>' + esc(kortDatum(r.lesson_date)) + '</b>' },
@@ -902,18 +1368,19 @@
       { namn: 'Elev', rita: r => esc(elevNamn(r.student_id)) },
       { namn: 'Anteckning', rita: r => '<span class="xsmall">'
         + esc(String(r.raw_notes || '').slice(0, 90)) + '</span>' }
-    ], S.fristaendeRapporter || [], 'Inga fristående rapporter');
+    ], (S.fristaendeRapporter || []).filter(r => iMånaden(r.lesson_date)),
+      'Inga fristående rapporter i ' + månadText());
 
-    const undantagna = (S.passunderlag || []).filter(p => !p.fakturerbar);
+    const undantagna = (S.passunderlag || []).filter(p => !p.fakturerbar && iMånaden(p.wanted_date));
     $('#avv-undantagna').innerHTML = tabell([
-      { namn: 'Pass', rita: p => '<b>' + esc(kortDatum(p.wanted_date)) + '</b>'
+      { namn: 'Pass', rita: p => passLänk(p)
         + '<span class="adm-und">' + esc(p.subject || 'Pass') + '</span>' },
       { namn: 'Familj', rita: p => esc(namnFör(p.parent_id)) },
       { namn: 'Studiehjälpare', rita: p => esc(namnFör(p.tutor_id)) },
       { namn: 'Anledning', rita: p => esc(p.fakturerbar_anledning || '—') },
       { namn: '', höger: true, rita: p =>
         '<button class="btn btn-ghost btn-sm" type="button" data-avv-ateruppta="' + p.id + '">Ångra</button>' }
-    ], undantagna, 'Inga undantagna pass');
+    ], undantagna, 'Inga undantagna pass i ' + månadText());
 
     const övriga = ritaÖvrigaAvvikelser();
     märkFlik('#flik-avv-mark', saknar.length + övriga);
@@ -928,7 +1395,19 @@
      bli en uppgift; en rad som redan har en öppen uppgift säger det.
      ============================================================ */
   const AVV_TEXT = {
+    /* Har egna listor under Avvikelser, men står i bokslutets larm
+       (manad_lage läser hela avvikelser_rader) och behöver ord där. */
+    pass_utan_rapport: ['Pass utan rapport', 'Genomfört men utan rapport, så det kommer inte med på underlaget. Koppla rapporten eller undanta passet under Avvikelser.'],
+    fristaende_rapport: ['Rapport utan pass', 'En rapport som inte hör till något pass. Koppla den till sitt pass under Avvikelser.'],
     ej_betalt: ['Inte betalt', 'Hölls och rapporterades, men familjen har inte betalat. Betala-knappen ligger kvar på passet i familjens vy.'],
+    /* Fas 20.1. Passet var betalt och drog över. Familjen betalar
+       tillägget med kort när de bekräftar rapporten; beloppet räknas i
+       stripe-checkout och står därför inte i larmet. */
+    tillagg_obetalt: ['Tillägget för övertid är inte betalt', 'Passet var betalt och drog över. Familjen betalar tillägget när de bekräftar rapporten.'],
+    /* Fas 20.1. Betalt med kort för mer tid än passet höll. Beloppet är
+       det som ska tillbaka, räknat till passets frysta pris; rubriken
+       bär det (avvText). */
+    betalt_for_lange: ['Betalt för längre tid än passet höll', 'Passet blev kortare än det familjen betalade för. Återbetala skillnaden under Kortbetalningar.'],
     /* Fas 14.6. */
     faktura_saknas: ['Fakturapass utan faktura', 'Familjen valde faktura, månaden är slut och passet står inte på någon faktura. Kör månadskörningen.'],
     betald_och_fakturerad: ['Betalt två gånger', 'Betalt med kort och dessutom på en faktura. Kreditera raden i Fortnox.'],
@@ -957,6 +1436,20 @@
      två olika problem på samma pass blir två (Fas 6, nyckel). */
   const avvNyckel = a => 'avvikelse:' + a.typ + ':' + a.objekt_tabell + ':' + a.objekt_id;
 
+  /* Rubrik och förklaring för en avvikelse, på ett ställe: tabellen här,
+     bokslutets larm, uppgiften som skapas och passets detalj läser alla
+     härifrån. En okänd typ visas med sin kod hellre än inte alls. */
+  function avvText(a) {
+    const t = AVV_TEXT[a.typ] || [a.typ, ''];
+    if (a.typ === 'betalt_for_lange' && a.belopp_ore != null) {
+      return ['Betalt för längre tid än passet höll: betala tillbaka ' + kronor(a.belopp_ore), t[1]];
+    }
+    return t;
+  }
+
+  const övrigaRader = () => (S.avvikelser || [])
+    .filter(a => a.typ !== 'pass_utan_rapport' && a.typ !== 'fristaende_rapport');
+
   function ritaÖvrigaAvvikelser() {
     const host = $('#avv-ovriga');
     if (!host) return 0;
@@ -964,26 +1457,30 @@
       host.innerHTML = tomt('Kunde inte räkna avvikelserna', S.avvikelserFel);
       return 0;
     }
-    const rader = (S.avvikelser || []).filter(a => a.typ !== 'pass_utan_rapport' && a.typ !== 'fristaende_rapport');
+    /* Fas 20.2: den valda månaden. En avvikelse utan datum (RUT-tak som
+       saknas) hör inte till någon månad och står därför i alla. */
+    const rader = övrigaRader().filter(a => !a.datum || iMånaden(a.datum));
     $('#avv-ovriga-antal').textContent = rader.length ? rader.length + ' st' : '';
     const öppna = new Set((S.uppgifter || [])
       .filter(u => u.nyckel && (u.status === 'oppen' || u.status === 'pagar'))
       .map(u => u.nyckel));
 
     host.innerHTML = tabell([
-      { namn: 'Vad', rita: a => '<b>' + esc((AVV_TEXT[a.typ] || [a.typ])[0]) + '</b>'
-        + '<span class="adm-und">' + esc((AVV_TEXT[a.typ] || ['', ''])[1]) + '</span>' },
+      { namn: 'Vad', rita: a => '<b>' + esc(avvText(a)[0]) + '</b>'
+        + '<span class="adm-und">' + esc(avvText(a)[1]) + '</span>' },
       { namn: 'Gäller', rita: a => esc([a.kund_id ? namnFör(a.kund_id) : null,
                                          a.studiehjalpare_id ? namnFör(a.studiehjalpare_id) : null]
         .filter(Boolean).join(' · ') || '—') },
-      { namn: 'Datum', rita: a => '<span class="adm-tal">' + esc(a.datum ? kortDatum(a.datum) : '—') + '</span>' },
+      { namn: 'Datum', rita: a => a.objekt_tabell === 'bookings' && bokning(a.objekt_id)
+        ? passLänk(bokning(a.objekt_id), a.datum ? kortDatum(a.datum) : null)
+        : '<span class="adm-tal">' + esc(a.datum ? kortDatum(a.datum) : '—') + '</span>' },
       { namn: 'Belopp', rita: a => a.belopp_ore == null ? '<span class="adm-und">—</span>'
         : '<span class="adm-tal">' + esc(kronor(a.belopp_ore)) + '</span>' },
       { namn: '', höger: true, rita: a => öppna.has(avvNyckel(a))
         ? pill('Uppgift finns', 'ar-vantar')
         : '<button class="btn btn-ghost btn-sm" type="button" data-avv-uppgift="'
           + esc(a.typ + '|' + a.objekt_tabell + '|' + a.objekt_id) + '">Gör till uppgift</button>' }
-    ], rader, 'Inget annat som inte går ihop');
+    ], rader, 'Inget annat som inte går ihop i ' + månadText());
     return rader.length;
   }
 
@@ -998,9 +1495,9 @@
       .filter(Boolean).join(' · ');
     await medan(knapp, 'Skapar…', async () => {
       const rad = await skapaUppgift({
-        titel: ((AVV_TEXT[typ] || [typ])[0] + (vem ? ' — ' + vem : '') + (a.datum ? ', ' + kortDatum(a.datum) : '')).slice(0, 200),
+        titel: (avvText(a)[0] + (vem ? ' — ' + vem : '') + (a.datum ? ', ' + kortDatum(a.datum) : '')).slice(0, 200),
         typ: 'problem',
-        beskrivning: (AVV_TEXT[typ] || ['', ''])[1] || null,
+        beskrivning: avvText(a)[1] || null,
         kopplad_tabell: kopplad ? tabellNamn : null,
         kopplad_id: kopplad ? id : null,
         nyckel: avvNyckel(a)
@@ -1009,10 +1506,12 @@
     });
   });
 
+  /* Bokslutet med: dess larm är samma avvikelser, och ett larm som
+     lösts här ska inte stå kvar som ett hinder för att stänga månaden. */
   async function laddaOmEkonomi() {
     await hämtaEkonomiunderlag();
     ritaAvvikelser();
-    await ritaÖversikt();
+    await Promise.all([ritaÖversikt(), laddaBokslut()]);
   }
 
   document.addEventListener('click', async e => {
@@ -1246,7 +1745,7 @@
     ritaUtbetalningar();
     ritaKortbetalningar();
     ritaAvvikelser();
-    await ritaÖversikt();
+    await Promise.all([ritaÖversikt(), laddaBokslut()]);
   });
 
   /* Priset redigeras inte längre här — det gör tjänstekatalogen
@@ -1264,7 +1763,7 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    fyllPerioder, kandidater, laddaOmEkonomi, ritaAvvikelser, ritaFakturor,
-    ritaKortbetalningar, ritaPris, ritaUtbetalningar, utanRapport
+    avvText, fyllPerioder, kandidater, laddaBokslut, laddaOmEkonomi, ritaAvvikelser,
+    ritaBokslut, ritaFakturor, ritaKortbetalningar, ritaPris, ritaUtbetalningar, utanRapport
   });
 })();

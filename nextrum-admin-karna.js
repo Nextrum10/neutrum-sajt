@@ -51,7 +51,12 @@ const NXAdmin = (function () {
     analysFel: null,
     /* Fas 9.10: handlingar om verksamheten. Hämtas först när fliken
        öppnas — de läses sällan och är inte en del av arbetskön. */
-    handlingar: [], handlingarFel: null
+    handlingar: [], handlingarFel: null,
+    /* Fas 20.1 och 20.2: tilläggen för övertid, och bokslutet för den
+       månad Ekonomi visar (manad_lage) med de månader som är stängda.
+       bokslut är null tills den första hämtningen svarat. */
+    tillagg: [], tillaggFel: null,
+    bokslut: null, bokslutFel: null, stangdaManader: new Set()
   };
 
   /* Har modulvakten (nextrum-modulvakt.js) redan konstaterat att en
@@ -125,6 +130,17 @@ const NXAdmin = (function () {
   const UTB_LAGE = {
     utkast: ['Utkast', ''], godkand: ['Godkänd', 'ar-vantar'],
     utbetald: ['Utbetald', 'ar-klar'], misslyckad: ['Misslyckad', 'ar-ny']
+  };
+  /* Passets betalning, och tillägget för övertid (Fas 20.1). Här och
+     inte i Ekonomi sedan Fas 20.2: passets detalj visar samma lägen, och
+     två kopior av samma ord hade glidit isär. */
+  const KORT_LAGE = {
+    ingen: 'Ej betald', vantar: 'Väntar', betald: 'Betald', aterbetald: 'Återbetald',
+    tvist: 'Tvist', misslyckad: 'Misslyckad', faktura: 'Faktura'
+  };
+  const TILLAGG_LAGE = {
+    vantar: ['Obetalt', 'ar-ny'], betald: ['Betalt', 'ar-klar'], misslyckad: ['Misslyckades', 'ar-ny'],
+    aterbetald: ['Återbetalt', ''], tvist: ['Tvist', 'ar-ny']
   };
 
   function läge(karta, värde) {
@@ -201,7 +217,7 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt] = await Promise.all([
+           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -256,7 +272,14 @@ const NXAdmin = (function () {
          bär ingen adress och ingen brödtext, bara steg och utfall.
          Bara admin läser den. */
       supa.from('ansokan_utskick').select('ansokan_id, steg, status, forsok, fel, skapad, uppdaterad')
-        .order('skapad', { ascending: false })
+        .order('skapad', { ascending: false }),
+      /* Fas 20.1: övertiden på ett pass som redan var betalt, betald som
+         en egen kortbetalning. En egen tabell och inte fler kolumner på
+         passet: en återbetalning av tillägget hade annars skrivit över
+         passets egen. Står under Kortbetalningar och i passets detalj. */
+      supa.from('pass_tillagg').select('id, booking_id, minuter, begart_ore, status, betalt_ore, '
+        + 'aterbetald_ore, betald_at, stripe_charge_id, stripe_skarp, created_at')
+        .order('created_at', { ascending: false })
     ]);
 
     S.leads = leads.data || [];
@@ -298,6 +321,9 @@ const NXAdmin = (function () {
        kunde läsa, i stället för att se lugn ut. */
     S.tvister = tvister.data || [];
     S.tvisterFel = tvister.error ? felText(tvister.error) : null;
+    /* Samma sak för tilläggen: ett läsfel är inte "inga tillägg". */
+    S.tillagg = tillagg.data || [];
+    S.tillaggFel = tillagg.error ? felText(tillagg.error) : null;
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */
@@ -634,8 +660,8 @@ const NXAdmin = (function () {
   };
 
   return {
-    ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, LEAD_LAGE, S, SH_LAGE,
-    UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
+    ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
+    TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, matchar, märkFlik, namnFör, närText, pill, rad, skriv,
     tabell, tomtText, visa, visaRuta, väljare, rita

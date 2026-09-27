@@ -342,6 +342,7 @@ window.NXStudie = (function () {
      månaden och första dagen i nästa, att fråga med gte och lt.
 
      o.antal     hur många månader bakåt, med den innevarande (12)
+     o.framåt    hur många månader efter den innevarande (0)
      o.vald      förvald månad, 'ÅÅÅÅ-MM-01' (den innevarande)
      o.märke     fn(månad) → '' | text: ett litet märke på knappen,
                  t.ex. "Stängd" i adminvyn
@@ -366,7 +367,9 @@ window.NXStudie = (function () {
     var denna = månadIso(nu);
     var vald = o.vald || denna;
     var lista = [];
-    for (var i = (o.antal || 12) - 1; i >= 0; i--) {
+    /* framåt: månader efter den innevarande. Adminvyn visar två, för
+       ett pass som bokats och betalats i förväg hör till sin egen månad. */
+    for (var i = (o.antal || 12) - 1; i >= -(o.framåt || 0); i--) {
       lista.push(månadIso(new Date(nu.getFullYear(), nu.getMonth() - i, 1, 12)));
     }
     if (lista.indexOf(vald) === -1) vald = denna;
