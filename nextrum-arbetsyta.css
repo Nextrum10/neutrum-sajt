@@ -2431,15 +2431,36 @@ button.fel-person:hover{border-color:var(--bl-3)}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 
-/* Filtret över läxlistan. Antalet står i knappen så att man ser
-   vad man får innan man klickar. */
-.lx-filter{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
-.lx-filter .chip span{
-  margin-left:5px;
-  font-family:var(--f-mono);font-size:.74rem;
-  opacity:.65;
+/* Klara läxor under läxlistan, i passlistans form. `.lax + .lax`
+   ger bara avstånd mellan syskon, och raderna bakom "Visa alla"
+   står i en egen låda — utan de här hade den första av dem legat
+   klistrad mot den sista synliga. */
+.lx-klara .pl-resten > .lax:first-child,
+.lx-klara > .pl-mer{margin-top:12px}
+
+/* En klar läxa är en rad som fälls ut. Ingen överstrykning och full
+   styrka: det är något man går tillbaka för att LÄSA, och en
+   genomstruken rubrik i 62 % är svår att läsa. Att den är gjord säger
+   rubriken Klara läxor, bakgrunden och "Klar igår". */
+.lx-klara .lax.avklarad{opacity:1;padding:0}
+.lx-klara .lax.avklarad .lax-topp b,
+.lx-klara .lax-summ b{text-decoration:none}
+.lax-summ{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 18px;
+  cursor:pointer;list-style:none;
 }
-.lx-filter .chip[aria-pressed="true"] span{opacity:.8}
+.lax-summ::-webkit-details-marker{display:none}
+.lax-summ-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.lax-summ b{font-size:.95rem;font-weight:600;letter-spacing:-.02em;line-height:1.3}
+.lax-summ-meta{
+  font-family:var(--f-mono);font-weight:600;font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
+}
+.lax-pil{width:18px;height:18px;flex:none;color:var(--bl-3);transition:rotate .2s var(--e)}
+.lax.avklarad[open] .lax-pil{rotate:180deg}
+.lax-kropp{padding:0 18px 16px}
+.lax-kropp .lax-meta:empty{display:none}
 
 /* Knappen som fäller ihop menyn i arbetsytorna. Sitter överst i
    kolumnen och inte i sidhuvudet: sidhuvudet är sajtens, menyn är
