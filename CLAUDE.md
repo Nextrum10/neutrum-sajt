@@ -93,6 +93,17 @@ sin rad. Studievyn och adminvyn öppnar fortfarande i månaden — hos
 familjen står schemat direkt under passlistan, och Kommande hade bara
 upprepat den.
 
+**Familjen bekräftar rapporten** (Fas 19.1, 2026-09-27) under en egen
+post i föräldravyns meny, Bekräfta rapport. Leo bad först att familjen
+skulle bekräfta rapporten genom att betala nu eller ta den på faktura,
+alltså betala efter passet. Det valdes bort: villkoren säger kort före
+passet, och en betalning som väntar på ett godkännande ger familjen en
+knapp som skjuter upp betalningen för ett pass som redan hållits.
+Bekräftelsen (`rapport_bekraftelser`) säger bara att familjen läst
+rapporten. Är passet ändå obetalt (bara möjligt med kortspärren av) är
+valet av betalsätt bekräftelsen, och rapporten står kvar under Att
+bekräfta tills passet är betalt eller satt på faktura.
+
 **Varje pass har en egen sida, `#pass/<id>`, i båda vyerna.** Ritas av
 `NXStudie.passSida`; vyn bestämmer innehållet (familjen ser pris och
 betalning, studiehjälparen eleven och familjen). Raderna i listorna
@@ -466,6 +477,12 @@ Fas 18.1 la till `google_koppling` (nyckeln till Nextrums Google-konto:
 RLS utan policy, bara `service_role`) och `pass_moten` (Meet-länken per
 pass: parterna och admin läser, bara `service_role` skriver, och
 villkoret på kolumnen släpper bara igenom `https://meet.google.com/…`).
+Fas 19.1 la till `rapport_bekraftelser` (familjen har läst rapporten).
+Familjen får skriva EN kolumn, `rapport_id`, genom ett kolumnvis
+grant; vem och när sätts av databasen, så en bekräftelse går varken att
+skriva i någon annans namn eller bakdatera. Ingen update eller delete,
+och admin bekräftar inte åt en familj. Egen tabell och inte en kolumn
+på `lesson_reports`, för en uppdatering där kör fyra triggrar.
 Runda 2 la till notisernas sju: `notiser` (i vyn), `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
 `notis_fel` — plus `flaggor`, som är strömbrytarna för det som

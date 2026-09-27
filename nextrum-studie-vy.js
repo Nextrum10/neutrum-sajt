@@ -1026,6 +1026,175 @@
     }).join('');
   }
 
+  /* ============================================================
+     BEKRÄFTA RAPPORT (Fas 19.1)
+
+     Leo 2026-09-27: rapporten ska komma till familjen i en egen post i
+     menyn, där de läser den och bekräftar den, och är passet inte
+     betalt bekräftar de genom att välja hur det betalas.
+
+     BEKRÄFTELSEN ÄR INTE BETALNINGEN. Villkoren säger kort före passet,
+     och så är det fortfarande: ett pass som hölls ska betalas oavsett om
+     någon trycker här. rapport_bekraftelser säger bara att familjen läst
+     rapporten. En rapport står därför kvar under Att bekräfta tills den
+     är bekräftad OCH passet inte längre väntar på betalning — annars
+     hade ett obetalt pass kunnat "bekräftas" bort ur sikte.
+
+     Att välja betalsätt på en rapport bekräftar den. Det är det Leo bad
+     om, och den som väljer kort har läst det de betalar för. Avbryts
+     kassan står rapporten kvar, bekräftad och obetald, och säger det.
+
+     Alla barn på en gång, inte bara det valda i barnväljaren: det som
+     väntar på familjen ska inte gömma sig bakom ett val de gjorde för
+     att läsa något annat.
+     ============================================================ */
+  S.rb = { rapporter: [], bekräftade: {}, laddat: false };
+
+  async function laddaBekrafta() {
+    const host = $('#rb-lista');
+    if (!host) return;
+    const barn = (S.barn || []).map(x => x.id);
+    if (!barn.length) { S.rb.rapporter = []; S.rb.laddat = true; ritaBekrafta(); return; }
+
+    NXStudie.laddarFörsta(host);
+    const [rap, bek] = await Promise.all([
+      supa.from('lesson_reports')
+        .select('id, booking_id, student_id, lesson_date, amne, gick, ai_feedback, raw_notes, needs_practice, next_focus')
+        .in('student_id', barn).order('lesson_date', { ascending: true }),
+      supa.from('rapport_bekraftelser').select('rapport_id, bekraftad_at')
+    ]);
+    if (rap.error) { host.innerHTML = '<div class="empty">' + esc(felText(rap.error)) + '</div>'; return; }
+    /* Kan bekräftelserna inte läsas står varje rapport som obekräftad.
+       Fel åt det säkra hållet: en rapport för mycket att bekräfta, aldrig
+       en som försvinner utan att ha lästs. En bekräftelse till av samma
+       rapport nekas av databasen och räknas här som att det gick. */
+    if (bek.error) console.warn('Bekräftelserna gick inte att läsa', bek.error);
+    S.rb.rapporter = rap.data || [];
+    S.rb.bekräftade = {};
+    (bek.data || []).forEach(x => { S.rb.bekräftade[x.rapport_id] = x.bekraftad_at; });
+    S.rb.laddat = true;
+    ritaBekrafta();
+    ritaNotiser();
+  }
+
+  const rbPass = r => (r.booking_id && (S.bokningar || []).find(b => b.id === r.booking_id)) || null;
+  const rbObetald = r => { const b = rbPass(r); return !!(b && kanBetalas(b)); };
+  /* Samma urval för listan, siffran i menyn och notisen. */
+  const rbAttBekräfta = () => S.rb.rapporter.filter(r => !S.rb.bekräftade[r.id] || rbObetald(r));
+
+  function rbRubrik(r, b) {
+    const barn = S.barn.find(x => x.id === r.student_id);
+    return [(b && b.subject) || r.amne || 'Pass', barn ? barn.name.split(' ')[0] : null].filter(Boolean).join(' · ');
+  }
+
+  /* Samma innehåll och ordning som "Efter passet" på passets sida. */
+  function rbInnehåll(r) {
+    return (r.gick ? '<p><b>' + esc(NXStudie.GICK[r.gick] || r.gick) + '</b></p>' : '')
+      + ((r.ai_feedback || r.raw_notes) ? '<p>' + esc(r.ai_feedback || r.raw_notes) + '</p>' : '')
+      + (r.needs_practice ? '<p><b>Öva mer på:</b> ' + esc(r.needs_practice) + '</p>' : '')
+      + (r.next_focus ? '<p><b>Nästa gång:</b> ' + esc(r.next_focus) + '</p>' : '');
+  }
+
+  function rbKort(r) {
+    const b = rbPass(r);
+    const bekräftad = S.rb.bekräftade[r.id];
+    let läge = '', knappar = '', alt = '';
+    if (b && kanBetalas(b)) {
+      /* Obetalt: valet av betalsätt ÄR bekräftelsen. Ingen separat
+         bekräfta-knapp här, för då hade det gått att bekräfta ett
+         obetalt pass ur listan utan att betala det. */
+      läge = (bekräftad ? 'Rapporten är bekräftad, men passet är inte betalt än.' : 'Passet är inte betalt än. Bekräfta rapporten genom att välja hur ni betalar.')
+        + (b.betalning_status === 'vantar' ? ' En betalning är påbörjad men inte klar.'
+          : b.betalning_status === 'misslyckad' ? ' Förra försöket gick inte igenom.' : '');
+      knappar = betalaKnapp(b, true);
+      alt = fakturaVal(b);
+    } else {
+      läge = !b || b.fakturerbar === false ? ''
+        : b.betalning_status === 'faktura' ? 'Passet betalas mot faktura.'
+        : b.betalning_status === 'betald' ? (b.klippkort_id ? 'Passet är betalt med timmar.' : 'Passet är betalt.')
+        : (BETALNING_TEXT[b.betalning_status] ? 'Betalning: ' + BETALNING_TEXT[b.betalning_status].toLowerCase() + '.' : '');
+      knappar = '<button type="button" class="btn btn-primary btn-sm" data-rb-bekrafta="' + esc(r.id) + '">Bekräfta rapporten</button>';
+    }
+    return '<article class="report rb-kort" data-rb-rapport="' + esc(r.id) + '">'
+      + '<div class="report-head"><b>' + esc(rbRubrik(r, b)) + '</b><time>' + esc(datumText(r.lesson_date)) + '</time></div>'
+      + (rbInnehåll(r) || '<p class="raw">Rapporten är tom.</p>')
+      + '<div class="rb-val">'
+      + (läge ? '<p class="rb-lage">' + esc(läge) + '</p>' : '')
+      + '<div class="rb-knappar">' + knappar
+      + (b ? '<a class="btn btn-ghost btn-sm" href="#pass/' + esc(b.id) + '">Visa passet</a>' : '') + '</div>'
+      + (alt ? '<div class="rb-alt">' + alt + '</div>' : '')
+      + '</div></article>';
+  }
+
+  /* Ritas först när både rapporterna och passen finns: utan passen ser
+     ett obetalt pass betalt ut, och knappen hade bytts under fingret. */
+  function ritaBekrafta() {
+    const host = $('#rb-lista'), klara = $('#rb-klara');
+    if (!host || !klara || !S.rb.laddat || !S.laddatPass) return;
+    const att = rbAttBekräfta();
+    const gjorda = S.rb.rapporter.filter(r => att.indexOf(r) === -1)
+      .sort((a, c) => String(S.rb.bekräftade[c.id]).localeCompare(String(S.rb.bekräftade[a.id])));
+    $('#rb-antal').textContent = att.length ? att.length + ' st' : '';
+    $('#rb-klara-antal').textContent = gjorda.length ? gjorda.length + ' st' : '';
+    if (S.sido) S.sido.märke('bekrafta', att.length);
+
+    host.innerHTML = att.length ? att.map(rbKort).join('')
+      : tomt('Inget att bekräfta', 'När er studiehjälpare har skrivit rapporten efter ett pass står den här.');
+    /* De bekräftade som en lista att gå tillbaka till, inte en vägg av
+       text. Hela rapporterna står också under Mina lektioner → Efter
+       passen. */
+    klara.innerHTML = gjorda.length
+      ? gjorda.slice(0, 20).map(r => {
+          const b = rbPass(r);
+          const text = esc(rbRubrik(r, b) + ', ' + datumText(r.lesson_date))
+            + '<span>Bekräftad ' + esc(datumText(isoFor(new Date(S.rb.bekräftade[r.id])))) + '</span>';
+          return b ? '<a class="pass-lank" href="#pass/' + esc(b.id) + '">' + text + '</a>'
+            : '<div class="pass-lank">' + text + '</div>';
+        }).join('')
+      : tomt('Inga bekräftade rapporter än', 'En rapport ni bekräftat står här.');
+  }
+
+  /* Svarar true när rapporten är bekräftad, också om den redan var det
+     (23505: bekräftad i en annan flik eller på en annan enhet). Vem och
+     när sätts av databasen; härifrån skickas bara vilken rapport. */
+  async function bekräftaRapport(id) {
+    if (!id) return false;
+    if (S.rb.bekräftade[id]) return true;
+    const { error } = await supa.from('rapport_bekraftelser').insert({ rapport_id: id });
+    if (error && error.code !== '23505') {
+      säg($('#rb-msg'), 'Rapporten gick inte att bekräfta: ' + felText(error), false);
+      return false;
+    }
+    S.rb.bekräftade[id] = new Date().toISOString();
+    return true;
+  }
+
+  /* Ett betalsätt valt på en rapport bekräftar den. Ritar inte om:
+     kassan kan vara öppen, och laddaPass() ritar listan när betalningen
+     kommit fram. */
+  async function bekräftaVid(knapp) {
+    const kort = knapp && knapp.closest('[data-rb-rapport]');
+    if (kort) await bekräftaRapport(kort.dataset.rbRapport);
+  }
+
+  /* Omritning med rubriken Att bekräfta stilla. Kortet under den
+     försvinner eller byter text; rubriken, och beskedet ovanför den,
+     står kvar på sin plats (fälla 4 i CLAUDE.md). */
+  function rbRitaOm(före) {
+    const rubrik = $('#rb-lista') && $('#rb-lista').closest('.dbox').querySelector('h5');
+    NXStudie.håll(rubrik, () => { ritaBekrafta(); if (före) före(); });
+    ritaNotiser();
+  }
+
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-rb-bekrafta]');
+    if (!k) return;
+    await medan(k, 'Bekräftar…', async () => {
+      if (!(await bekräftaRapport(k.dataset.rbBekrafta))) return;
+      rbRitaOm(() => säg($('#rb-msg'), 'Tack. Rapporten är bekräftad.', true));
+    });
+  });
+
   /* Kortbetalningen (Fas 12.2, "bara kort" enligt Fas 14). Samma
      tre lägen som avvikelsen ej_betalt och OBETALDA_LAGEN i
      _delad/pris.ts. 'vantar' är en öppen kassa hos Stripe: en påbörjad
@@ -1691,6 +1860,7 @@
     ritaAttBetala();
     ritaBetalda();
     ritaFakturor();
+    ritaBekrafta();
     /* Står man på ett pass när listan laddas om — efter ett svar, en
        avbokning, en ny tid — ritas sidan om med det som nu gäller. */
     if (passIdIAdressen()) ritaPassSida();
@@ -1784,23 +1954,27 @@
           + 'Ni kan byta tillbaka till kort tills fakturan är skapad.',
         knapp: 'Välj faktura'
       });
-      if (ok) await väljBetalsätt(fv, fv.dataset.fakturaVal, 'faktura');
+      if (ok) { await bekräftaVid(fv); await väljBetalsätt(fv, fv.dataset.fakturaVal, 'faktura'); }
       return;
     }
     const kv = e.target.closest('[data-kort-val]');
     if (kv) { await väljBetalsätt(kv, kv.dataset.kortVal, 'ingen'); return; }
 
     const tim = e.target.closest('[data-timmar]');
-    if (tim) { await betalaMedTimmar(tim, tim.dataset.timmar); return; }
+    if (tim) { await bekräftaVid(tim); await betalaMedTimmar(tim, tim.dataset.timmar); return; }
     const köp = e.target.closest('[data-kop]');
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
 
     const bet = e.target.closest('[data-betala]');
     if (bet) {
       const passId = bet.dataset.betala;
+      const påRapport = !!bet.closest('[data-rb-rapport]');
       await medan(bet, 'Öppnar…', async () => {
         // Stripe.js hämtas medan sessionen skapas, inte efter.
         const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
+        /* Fas 19.1: på en rapport bekräftar valet den. Före kassan, för
+           reserven lämnar sidan och tar ett pågående anrop med sig. */
+        await bekräftaVid(bet);
         const svar = await startaBetalning(passId, 'inbaddad');
         if (!svar) return;
         if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
@@ -1819,6 +1993,10 @@
         }
         alert('Betalningen kunde inte öppnas. Försök igen, eller hör av dig till oss.');
       });
+      /* Rapporten är bekräftad nu, betald eller inte. Kortet ska säga
+         det också om kassan aldrig öppnades eller stängs utan betalning.
+         stängBetalpanel() hittar den nya knappen om kortet ritats om. */
+      if (påRapport) rbRitaOm();
       return;
     }
 
@@ -1898,6 +2076,18 @@
         rubrik: attBetalaNu.length === 1 ? 'Ett pass att betala' : attBetalaNu.length + ' pass att betala',
         text: 'Betala senast innan passet börjar. Ett pass som inte är betalt hålls inte.',
         mål: '#bet-att-betala'
+      });
+    }
+
+    /* En ny rapport (Fas 19.1). Rapporten mejlas aldrig (notis_mejlbara),
+       så den här raden och siffran i menyn är det enda som säger att
+       den kommit. */
+    const rapporterAtt = S.rb.laddat && S.laddatPass ? rbAttBekräfta().length : 0;
+    if (rapporterAtt) {
+      poster.push({
+        rubrik: rapporterAtt === 1 ? 'En rapport att bekräfta' : rapporterAtt + ' rapporter att bekräfta',
+        text: 'Läs vad ni gick igenom på passet och bekräfta rapporten.',
+        mål: '#rb-lista'
       });
     }
 
@@ -2382,7 +2572,7 @@
 
   /* Sektionsbytet. Passets sida är en egen sektion utan egen post i
      menyn: den hör till där man kom ifrån. */
-  const SEKTIONSNAMN = { oversikt: 'Översikt', lektioner: 'Mina lektioner', betalning: 'Betalning', boka: 'Boka pass' };
+  const SEKTIONSNAMN = { oversikt: 'Översikt', lektioner: 'Mina lektioner', betalning: 'Betalning', boka: 'Boka pass', bekrafta: 'Bekräfta rapport' };
   function bytteSektion(vald) {
     const förra = S.aktivSek;
     S.aktivSek = vald;
@@ -2832,7 +3022,7 @@
        namnet finns. */
     /* Erbjudandena före passen: knappen Betala med timmar ritas ur dem. */
     await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden()]);
-    await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor()]);
+    await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor(), laddaBekrafta()]);
     /* Läxorna hämtas först, så märket ritas om när de finns. */
     ritaÖvLaxor();
     ritaNotiser();
