@@ -46,18 +46,26 @@ const NXSamtycke = (function () {
   const GILTIG_MS = 365 * 24 * 3600 * 1000;
   const EN = String(document.documentElement.lang || 'sv').slice(0, 2) === 'en';
 
+  /* Rubriken är en fråga man kan svara ja eller nej på, och texten
+     säger varför innan den säger vad: den som förstår skälet kan välja,
+     den som bara får en teknisk beskrivning klickar bort rutan. Allt
+     som krävs för ett giltigt samtycke står ändå där: syftet, vad som
+     sparas, hur länge, att nej är lika bra och var man ändrar sig. */
   const ORD = {
-    rubrik:      ['Får vi se hur du hittade hit?', 'May we see how you found us?'],
-    kalla:       ['Vi vill veta vilken annons eller länk som ledde dig hit, så att vi lägger pengarna där de gör nytta. Säger du ja minns webbläsaren varifrån du kom tills du stänger fliken, och det följer med om du skickar en anmälan.',
-                  'We want to know which ad or link brought you here, so that we spend money where it helps. If you say yes, your browser remembers where you came from until you close the tab, and it is included if you send an enquiry.'],
+    et:          ['Cookies och lagring', 'Cookies and storage'],
+    rubrik:      ['Får vi se vilken väg du tog hit?', 'Mind if we see how you found us?'],
+    kalla:       ['Då vet vi vilka annonser och länkar som faktiskt leder familjer till oss, och slutar lägga pengar där de inte gör nytta. Det stannar i din webbläsare tills du stänger fliken, och följer bara med om du skickar ett formulär till oss. Ingen cookie, ingen profil.',
+                  'Then we know which ads and links actually bring families to us, and stop spending money where it does no good. It stays in your browser until you close the tab, and only comes along if you send us a form. No cookie, no profile.'],
     meta:        ['Meta (Facebook och Instagram) får veta att du kom från deras annons och om du skickade en anmälan. Meta kan koppla det till ditt konto hos dem.',
                   'Meta (Facebook and Instagram) learns that you came from their ad and whether you sent an enquiry. Meta may link this to your account with them.'],
     google:      ['Google får veta att du kom från deras annons och om du skickade en anmälan.',
                   'Google learns that you came from their ad and whether you sent an enquiry.'],
-    nejGårBra:   ['Säger du nej fungerar allt precis likadant.', 'If you say no, everything works exactly the same.'],
-    ja:          ['Ja, det går bra', 'Yes, that is fine'],
+    fot:         ['Nej går lika bra, allt fungerar likadant. Du kan ändra dig när som helst längst ner på sidan.',
+                  'No is just as fine, everything works the same. You can change your mind any time at the bottom of the page.'],
+    nejOk:       ['Nej går lika bra, allt fungerar likadant.', 'No is just as fine, everything works the same.'],
+    ja:          ['Ja, gärna', 'Yes, sure'],
     nej:         ['Nej tack', 'No thanks'],
-    läsMer:      ['Mer om cookies och lagring', 'More about cookies and storage'],
+    läsMer:      ['Läs mer', 'Read more'],
     region:      ['Samtycke', 'Consent'],
     valtJa:      ['Ditt val: ja, sedan {d}.', 'Your choice: yes, since {d}.'],
     valtNej:     ['Ditt val: nej, sedan {d}.', 'Your choice: no, since {d}.'],
@@ -241,7 +249,6 @@ const NXSamtycke = (function () {
     if (a.indexOf('kallsparning') >= 0) st.push(t('kalla'));
     if (a.indexOf('meta') >= 0) st.push(t('meta'));
     if (a.indexOf('google') >= 0) st.push(t('google'));
-    st.push(t('nejGårBra'));
     return st;
   }
 
@@ -263,7 +270,7 @@ const NXSamtycke = (function () {
     [['ja', true], ['nej', false]].forEach(([k, ja]) => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'btn btn-ghost';
+      b.className = 'btn nx-kakor-val';
       b.textContent = t(k);
       b.addEventListener('click', () => { spara(ja); efter(ja); });
       rad.appendChild(b);
@@ -281,17 +288,37 @@ const NXSamtycke = (function () {
     setTimeout(() => r.remove(), 320);
   }
 
+  /* Vägen hit: en punkt, en slingrande väg, en pil. Statisk markup,
+     aldrig något ur en användare. */
+  const IKON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
+    + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
+    + '<circle cx="5.5" cy="18.5" r="2"/><path d="M7.5 18.5h5a3 3 0 0 0 0-6h-3a3 3 0 0 1 0-6h7.5"/>'
+    + '<path d="M16.5 4l2.5 2.5L16.5 9"/></svg>';
+
   function visa(fokus) {
     if (ruta) { if (fokus) ruta.querySelector('.nx-kakor-t').focus({ preventScroll: true }); return; }
     if (!aktiva().length) return;
     const r = document.createElement('section');
     r.className = 'nx-kakor';
     r.setAttribute('aria-label', t('region'));
+
+    const topp = document.createElement('div');
+    topp.className = 'nx-kakor-topp';
+    const ikon = document.createElement('span');
+    ikon.className = 'nx-kakor-ikon';
+    ikon.innerHTML = IKON;
+    const rubriker = document.createElement('div');
+    const et = document.createElement('p');
+    et.className = 'nx-kakor-et';
+    et.textContent = t('et');
     const h = document.createElement('h2');
     h.className = 'nx-kakor-t';
     h.tabIndex = -1;
     h.textContent = t('rubrik');
-    r.appendChild(h);
+    rubriker.append(et, h);
+    topp.append(ikon, rubriker);
+    r.appendChild(topp);
+
     text().forEach(s => {
       const p = document.createElement('p');
       p.textContent = s;
@@ -307,11 +334,14 @@ const NXSamtycke = (function () {
       r.appendChild(p);
     }
     knappar(r, stäng);
+    const fot = document.createElement('p');
+    fot.className = 'nx-kakor-fot';
+    fot.textContent = t('fot') + ' ';
     const l = document.createElement('a');
-    l.className = 'nx-kakor-mer';
     l.href = EN ? '/en/lagring' : '/lagring';
     l.textContent = t('läsMer');
-    r.appendChild(l);
+    fot.appendChild(l);
+    r.appendChild(fot);
 
     /* Tidigt i DOM:en, direkt efter hopplänken: en tangentbordsanvändare
        når rutan innan hela sidan, fast den ligger längst ner i bild.
@@ -343,6 +373,9 @@ const NXSamtycke = (function () {
       p.textContent = s;
       värd.appendChild(p);
     });
+    const ok = document.createElement('p');
+    ok.textContent = t('nejOk');
+    värd.appendChild(ok);
     const läge = document.createElement('p');
     läge.className = 'nx-kakor-lage';
     läge.setAttribute('role', 'status');
