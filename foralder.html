@@ -28,7 +28,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=12b72e9c">
 <link rel="stylesheet" href="nextrum-cinema.css?v=dc5d0b1f">
-<link rel="stylesheet" href="nextrum-vy.css?v=d912de75">
+<link rel="stylesheet" href="nextrum-vy.css?v=918481b5">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=cc84fdfc">
@@ -551,15 +551,16 @@
            ============================================================ -->
       <!-- ============================================================
            ERBJUDANDEN (Fas 16.1)
-           Planerna: timmar som köps i förväg till ett lägre timpris och
-           dras när ett pass är bekräftat. Priserna ritas av
+           Planer och klippkort: timmar som köps i förväg till ett lägre
+           timpris och dras när ett pass är bekräftat. Priserna ritas av
            ritaErbjudanden() ur erbjudanden_pris, samma vy som prissidan
            och stripe-checkout läser. Ett köp går genom samma kassa som
            ett pass; dragningen genom klippkort-betala.
 
-           Klippkorten säljs inte här (2026-09-27). Ett kort som
-           redan köpts står kvar under Era timmar och går att betala
-           med, för timmarna är familjens.
+           Klippkorten är en kolumn bredvid planerna som fälls ut, som
+           på prissidan (2026-09-27). Rubriken bär ingen procentsats:
+           planerna och klippkorten har olika rabatt, och varje kort
+           säger sin egen.
            ============================================================ -->
       <section class="vy-sek vy-sek-smal" data-sek="erbjudanden" hidden>
         <div class="vy-sek-topp">
@@ -577,7 +578,7 @@
           </div>
 
           <div class="dbox">
-            <h5>Planer <em>10 % rabatt</em></h5>
+            <h5>Planer och klippkort</h5>
             <div class="erb-grid" id="erb-planer"><div class="loading">Hämtar</div></div>
           </div>
 
@@ -887,6 +888,6 @@
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=67f384a3"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=838d03e0"></script>
+<script src="nextrum-studie-vy.js?v=26bbd6e3"></script>
 </body>
 </html>
