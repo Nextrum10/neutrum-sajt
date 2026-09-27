@@ -1460,10 +1460,17 @@
   const fakturaFör = id => (S.fakturaPerPass || {})[id] || null;
 
   /* Fakturan är ett val EFTER passet, i samband med att rapporten
-     bekräftas (Fas 19.2). Före passet finns bara kortet. */
+     bekräftas (Fas 19.2). Före passet finns bara kortet.
+
+     Leo 2026-09-27: "betala senare genom att välja att få en faktura
+     skickad till sig nästkommande månad". Knappen säger därför vad som
+     händer, inte bara vilket betalsätt det är, och raden under säger
+     villkoren: samma tio dagar och ingen avgift som villkoren lovar. */
   function fakturaVal(b) {
     return S.faktura === true && kanBetalas(b) && b.status === 'completed'
-      ? '<button type="button" class="val-lank" data-faktura-val="' + esc(b.id) + '">Betala med faktura i stället</button>'
+      ? '<button type="button" class="val-lank" data-faktura-val="' + esc(b.id) + '">Få faktura nästa månad</button>'
+        + '<span class="val-not">Passet kommer med på en samlad faktura i början av nästa månad. Den betalas inom '
+        + DAGAR + ' dagar och kostar ingenting extra.</span>'
       : '';
   }
   /* Tillbaka till kort går också när flaggan är av: ett pass som redan
@@ -1476,7 +1483,7 @@
 
   async function laddaFakturor() {
     const { data, error } = await supa.from('invoices')
-      .select('id, period, status, belopp_ore, forfaller, skickad_at, betald_at, fortnox_fakturanummer, invoice_lines(booking_id)')
+      .select('id, period, status, belopp_ore, forfaller, skickad_at, betald_at, fortnox_fakturanummer, ocr, invoice_lines(booking_id, beskrivning, belopp_ore)')
       .eq('parent_id', S.user.id).order('period', { ascending: false });
     /* Kan fakturorna inte läsas står det som fanns kvar. En tom lista
        hade sett ut som att ingenting är fakturerat, och då hade "Betala
@@ -1515,6 +1522,50 @@
     }
   }
 
+  /* Fakturor som skickats och inte är betalda (Fas 19.6). Förfallen är
+     inget eget läge i databasen, bara en skickad faktura vars dag gått
+     (NXBetalning.fakturaLage), så den räknas med här. */
+  const obetaldaFakturor = () => (S.fakturor || []).filter(f => f.status === 'skickad')
+    .sort((a, c) => String(a.forfaller || '').localeCompare(String(c.forfaller || '')));
+
+  /* Siffran i menyn är fakturorna att betala. Sedan Fas 19.2 väntar
+     inget pass på Betalning (se ritaAttBetala), men en skickad faktura
+     gör det: den ska betalas i banken, och ingen annan del av vyn säger
+     det. */
+  function märkBetalning() {
+    if (S.sido) S.sido.märke('betalning', obetaldaFakturor().length);
+  }
+
+  /* En faktura att betala: det familjen behöver i sin bank. OCR:et är
+     det som står på fakturan i Fortnox, inskrivet av admin och prövat i
+     databasen (invoices_ocr_giltigt). Saknas det är fakturanumret
+     meddelandet. Saknas bankgironumret i konfigurationen står det på
+     fakturan, och det säger raden i stället för att visa ett tomt fält. */
+  function fakturaAttBetala(f) {
+    const kronor = NXBetalning.kronor;
+    const bg = String((NX.CFG && NX.CFG.BANKGIRO) || '').trim();
+    const sen = NXBetalning.fakturaLage(f) === 'forfallen';
+    const kopiera = v => ' <button type="button" class="val-lank" data-kopiera="' + esc(v) + '">Kopiera</button>';
+    const referens = f.ocr
+      ? ['OCR', f.ocr]
+      : f.fortnox_fakturanummer ? ['Meddelande', 'Faktura ' + f.fortnox_fakturanummer] : null;
+    const rader = [
+      ['Belopp', esc(kronor(f.belopp_ore))],
+      f.forfaller ? ['Betala senast', '<span' + (sen ? ' class="sen"' : '') + '>' + esc(datumText(f.forfaller))
+        + (sen ? ', förfallen' : '') + '</span>'] : null,
+      ['Bankgiro', bg ? esc(bg) + kopiera(bg) : 'står på fakturan'],
+      referens ? [referens[0], esc(referens[1]) + kopiera(referens[1])] : null
+    ].filter(Boolean);
+    const pass = (f.invoice_lines || []).map(l => '<li>' + esc(l.beskrivning || 'Pass')
+      + ' <span>' + esc(kronor(l.belopp_ore)) + '</span></li>').join('');
+    return '<div class="fakt-att' + (sen ? ' ar-sen' : '') + '">'
+      + '<div class="fakt-att-topp"><b>Faktura ' + esc(NXBetalning.periodText(f.period))
+      + (f.fortnox_fakturanummer ? ' · nr ' + esc(f.fortnox_fakturanummer) : '') + '</b></div>'
+      + rader.map(r => '<div class="sum-line"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('')
+      + (pass ? '<ul class="fakt-att-pass">' + pass + '</ul>' : '')
+      + '</div>';
+  }
+
   /* Fakturorna, och passen som väntar på nästa. Rutan syns bara när
      det finns något att visa, eller när faktura går att välja. */
   function ritaFakturor() {
@@ -1522,11 +1573,24 @@
     if (!host) return;
     const box = host.closest('.dbox');
     const kronor = NXBetalning.kronor;
+
+    const obetalda = obetaldaFakturor();
+    const attHost = $('#bet-fakt-betala');
+    if (attHost) {
+      $('#bet-fakt-box').hidden = !obetalda.length;
+      $('#bet-fakt-antal').textContent = obetalda.length ? obetalda.length + ' st' : '';
+      attHost.innerHTML = obetalda.map(fakturaAttBetala).join('')
+        + (obetalda.length ? '<p class="xsmall" style="margin-top:12px;color:var(--muted-2);line-height:1.6">'
+          + 'Har ni redan betalat kan det ta några bankdagar innan fakturan står som betald här.</p>' : '');
+    }
+    märkBetalning();
+
     const väntar = (S.bokningar || [])
       .filter(b => b.betalning_status === 'faktura' && b.status !== 'cancelled' && b.fakturerbar !== false)
       .filter(b => { const f = fakturaFör(b.id); return !f || f.status === 'utkast'; })
       .sort((a, c) => String(a.wanted_date).localeCompare(String(c.wanted_date)));
-    const skickade = (S.fakturor || []).filter(f => f.status !== 'utkast');
+    // De obetalda står i rutan ovanför; här står de betalda och de makulerade.
+    const skickade = (S.fakturor || []).filter(f => f.status !== 'utkast' && f.status !== 'skickad');
     if (box) box.hidden = !väntar.length && !skickade.length && S.faktura !== true;
     $('#bet-faktura-antal').textContent = skickade.length ? skickade.length + ' st' : '';
 
@@ -1552,8 +1616,22 @@
       }));
     });
     host.innerHTML = delar.length ? delar.join('')
-      : tomt('Inga fakturor', 'Välj "Betala med faktura i stället" på ett pass, så kommer det med på en samlad faktura i början av nästa månad. Den ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra.');
+      : tomt('Inga fakturor', 'Välj "Få faktura nästa månad" när ni bekräftar rapporten, så kommer passet med på en samlad faktura i början av nästa månad. Den ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra.');
   }
+
+  /* Kopiera bankgiro eller OCR (Fas 19.6). Går det inte står värdet
+     kvar synligt bredvid knappen, och familjen skriver av det. */
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-kopiera]');
+    if (!k) return;
+    try {
+      await navigator.clipboard.writeText(k.dataset.kopiera);
+      k.textContent = 'Kopierat';
+      setTimeout(() => { k.textContent = 'Kopiera'; }, 1800);
+    } catch (fel) {
+      k.textContent = 'Markera och kopiera';
+    }
+  });
 
   /* ============================================================
      BETALPANELEN (Fas 14.5)
@@ -2300,11 +2378,23 @@
     /* En förfallen faktura (Fas 14.6). Samma sorts drag som ett pass
        att betala, och lika lätt att missa i en inkorg. */
     const förfallna = (S.fakturor || []).filter(f => NXBetalning.fakturaLage(f) === 'forfallen');
+    const attBetala = obetaldaFakturor().filter(f => förfallna.indexOf(f) === -1);
     if (förfallna.length) {
       poster.push({
         rubrik: förfallna.length === 1 ? 'En faktura har förfallit' : förfallna.length + ' fakturor har förfallit',
         text: 'Betala den så snart ni kan. Har ni redan betalat kan det ta några dagar innan det syns här.',
-        mål: '#bet-faktura'
+        mål: '#bet-fakt-betala'
+      });
+    } else if (attBetala.length) {
+      /* Fas 19.6. En skickad faktura mejlas från Fortnox och kan
+         hamna bland annat i inkorgen; här står den med bankgiro och OCR. */
+      const f = attBetala[0];
+      poster.push({
+        rubrik: attBetala.length === 1 ? 'En faktura att betala' : attBetala.length + ' fakturor att betala',
+        text: attBetala.length === 1 && f.forfaller
+          ? NXBetalning.kronor(f.belopp_ore) + ', senast ' + datumText(f.forfaller) + '.'
+          : 'Bankgiro och OCR står under Betalning.',
+        mål: '#bet-fakt-betala'
       });
     }
 
@@ -2583,7 +2673,7 @@
        finns saker". Sedan Fas 19.2 väntar ingenting här: att betala i
        förväg är ett val, och det genomförda passet räknas under
        Bekräfta rapport. Därför ingen siffra alls. */
-    if (S.sido) S.sido.märke('betalning', 0);
+    märkBetalning();
     if (!att.length) {
       host.innerHTML = tomt('Inget att betala just nu',
         'När er studiehjälpare bekräftat ett pass kan ni betala det här i förväg. Annars betalar ni efter passet, när ni bekräftar rapporten.');
