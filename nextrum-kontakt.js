@@ -350,6 +350,10 @@ window.NXKontakt = (function () {
       return (läge === 'betald' || läge === 'tvist' || läge === 'aterbetald') ? BETALLÄGEN[läge] : null;
     }
     if (b.status !== 'confirmed' && b.status !== 'completed') return null;
+    /* Fas 19.5. Första timmen bjuds, och ett pass på en timme kostar då
+       ingenting. "Ej betalt" hade varit fel ord. Föräldravyn märker
+       passet (inget_att_betala), för bara den hämtar priset. */
+    if (läge === 'ingen' && b.inget_att_betala) return { text: 'På köpet', klass: 'klar' };
     return BETALLÄGEN[läge] || null;
   }
 

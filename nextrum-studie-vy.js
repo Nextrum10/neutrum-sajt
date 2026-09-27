@@ -477,13 +477,14 @@
       S.laxor = [];
       host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.');
       ritaÖvLaxor();
+      if (passIdIAdressen()) ritaPassSida();
       return;
     }
 
     NXStudie.laddarFörsta(host);
     const { data, error } = await supa
       .from('homework')
-      .select('id, title, instructions, subject, due_date, status, completed_at, '
+      .select('id, student_id, title, instructions, subject, due_date, status, completed_at, '
         + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)')
       .eq('student_id', S.valtBarn)
       .order('due_date', { ascending: true, nullsFirst: false })
@@ -494,10 +495,13 @@
       S.laxor = [];
       host.innerHTML = tomt('Inga läxor än', 'När er studiehjälpare ger en läxa dyker den upp här.');
       ritaÖvLaxor();
+      if (passIdIAdressen()) ritaPassSida();
       return;
     }
 
     S.laxor = data;
+    /* Passets sida läser S.laxor; den kan ha ritats innan läxorna kom. */
+    if (passIdIAdressen()) ritaPassSida();
     ritaNotiser();
     ritaÖvLaxor();
     ritaStatistik();
@@ -1216,6 +1220,7 @@
       knappar = tilläggKnapp(b, till, true);
     } else {
       läge = !b || b.fakturerbar === false ? ''
+        : ingetAttBetala(b) ? 'Passet kostar ingenting: första timmen är på köpet.'
         : b.betalning_status === 'faktura' ? 'Passet betalas mot faktura.'
         : b.betalning_status === 'betald' ? (b.klippkort_id ? 'Passet är betalt med timmar.' : 'Passet är betalt.')
         : (BETALNING_TEXT[b.betalning_status] ? 'Betalning: ' + BETALNING_TEXT[b.betalning_status].toLowerCase() + '.' : '');
@@ -1352,7 +1357,7 @@
      betala efter passet, och databasen nekar flaggan (flaggor_kortsparr_av).
      Grenen står kvar för den dag villkoren ändras tillbaka. */
   function kanBetalas(b) {
-    if (b.fakturerbar === false) return false;
+    if (b.fakturerbar === false || ingetAttBetala(b)) return false;
     if (OBETALDA.indexOf(b.betalning_status || 'ingen') === -1) return false;
     if (b.status === 'completed') return true;
     if (b.status !== 'confirmed') return false;
@@ -1414,7 +1419,9 @@
      avgör bara om knappen ska stå där. Ett pass med fler barn betalas
      med kort (villkoren, #erbjudanden). */
   function kortFör(b) {
-    if (!S.erb.aktiv || Number(b.antal_barn || 1) > 1) return null;
+    /* Ett pass med första timmen bjuden betalas med kort (Fas 19.5):
+       timmarna dras ur passets hela längd, och klippkort_dra nekar det. */
+    if (!S.erb.aktiv || Number(b.antal_barn || 1) > 1 || b.startrabatt) return null;
     const behov = passTimmar(b);
     return S.erb.kort
       .filter(k => k.brukbar && k.status === 'betald' && Number(k.kvar) >= behov
@@ -1997,7 +2004,7 @@
        listorna ritas ur alla tre på en gång. Ett pass som ritats utan
        dem hade visat det bokade priset och bytt belopp under fingret. */
     const [pass, und, till] = await Promise.all([
-      supa.from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, created_by, created_at, avbokningsskal, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, rabatt_ore')
+      supa.from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, created_by, created_at, avbokningsskal, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt')
         .eq('parent_id', S.user.id).order('wanted_date', { ascending: true }),
       supa.from('passunderlag').select('id, debiterade_min, betalda_min, timpris_ore, extra_ore, rabatt_ore')
         .eq('parent_id', S.user.id),
@@ -2021,6 +2028,10 @@
       S.tillagg = {};
       (till.data || []).forEach(t => { S.tillagg[t.booking_id] = t; });
     }
+    /* Märket bredvid passet (NXKontakt.betalMärke) delas med
+       studiehjälparvyn och vet inget om priset. Här vet vi det. Efter
+       underlaget: ett genomfört pass kostar den debiterade tiden. */
+    S.bokningar.forEach(b => { b.inget_att_betala = ingetAttBetala(b); });
     S.laddatPass = true;
     ritaNotiser();
     ritaÖvBekrafta();
@@ -2364,6 +2375,18 @@
        flera barn. En funktion, inte ett värde: ytan skapas innan
        katalogen laddats. */
     tjanst: () => NXTjanster.standard(),
+    /* Prissidans starterbjudande (Fas 19.5), samma regel som
+       forsta_timmen_bjuds() i databasen: det läxhjälpspass som gör att
+       familjen har bokat två timmar får en timme bjuden, en gång.
+       Avbokade pass räknas inte. Databasen avgör; här visas bara vad
+       förslaget kommer att kosta. */
+    bjuden: minuter => {
+      const aktiva = (S.bokningar || []).filter(b => b.status !== 'cancelled'
+        && b.fakturerbar !== false && (b.tjanst || 'laxhjalp') === 'laxhjalp');
+      if (aktiva.some(b => b.startrabatt)) return false;
+      const före = aktiva.reduce((a, b) => a + (Number(b.duration_min) || 60), 0);
+      return före < 120 && före + minuter >= 120;
+    },
 
     /* Spärren förr yttrade sig som en avstängd knapp utan
        förklaring. Nu står skälet där kalendern skulle ha stått. */
@@ -2825,8 +2848,8 @@
 
   /* Vad passet kostar familjen, i ören: det kassan tar. Ett genomfört
      pass kostar den debiterade tiden, alla andra det bokade (Fas 20.1).
-     Rabatten är fryst på passet och dras av, som i stripe-checkout —
-     förut visade vyn priset före rabatten, och kassan tog ett annat. */
+     Priset är det som frystes när passet bokades, minus rabatten (Fas
+     19.5), som i stripe-checkout och passpris() i _delad/pris.ts. */
   function passetsPris(b) {
     return prisFör(b, b.status === 'completed' ? debiteradeMin(b) : Number(b.duration_min || 60));
   }
@@ -2839,18 +2862,16 @@
   };
 
   /* pris(m) = max(avrundat m/60 × (timpris + tillägg för fler barn) − rabatt, 0),
-     samma regel som passpris() i _delad/pris.ts. Timpriset är passets
-     frysta när passunderlag har det (Fas 19.5), annars tjänstens.
-     Tillägget för fler barn följer samma källa som timpriset: ett fryst
-     timpris med dagens syskontillägg hade varit ett pris som aldrig
-     gällt. null när inget pris går att räkna. */
+     samma regel som minuterspris() i _delad/pris.ts. Timpriset är passets
+     frysta (Fas 19.5), ur passet eller passunderlaget; katalogen är bara
+     reserven. Tillägget för fler barn följer samma källa som timpriset:
+     ett fryst timpris med dagens syskontillägg hade varit ett pris som
+     aldrig gällt. null när inget pris går att räkna. */
   function prisFör(b, minuter) {
     const u = underlagFör(b);
-    let timme, extra;
-    if (u && Number(u.timpris_ore)) {
-      timme = Number(u.timpris_ore);
-      extra = Number(u.extra_ore || 0);
-    } else {
+    const källa = Number(b.timpris_ore) ? b : (u && Number(u.timpris_ore) ? u : null);
+    let timme = källa ? Number(källa.timpris_ore) : 0, extra = källa ? Number(källa.extra_ore) || 0 : 0;
+    if (!timme) {
       const tj = NXTjanster.hitta(b.tjanst || NXTjanster.standard());
       if (!tj || !tj.pris_per_timme_ore) return null;
       timme = Number(tj.pris_per_timme_ore);
@@ -2860,6 +2881,9 @@
     const rabatt = Math.max(Number(b.rabatt_ore != null ? b.rabatt_ore : (u && u.rabatt_ore) || 0), 0);
     return Math.max(Math.round(perTimme * Number(minuter) / 60) - rabatt, 0);
   }
+  /* Första timmen bjuds (Fas 19.5): ett pass på en timme kan kosta
+     ingenting. Det betalas inte, och ingen knapp ber om det. */
+  const ingetAttBetala = b => passetsPris(b) === 0;
 
   async function ritaPassSida() {
     const host = $('#pass-sida');
@@ -3021,11 +3045,13 @@
         ['Studiehjälpare', hjälpare]
       ] },
       { rubrik: 'Pris', rader: [
-        ['Pris', pris ? NXBetalning.kronor(pris) : null],
+        ['Pris', pris === null ? null
+          : NXBetalning.kronor(pris) + (b.startrabatt ? ', första timmen på köpet' : '')],
         /* Passets eget betalläge. Sedan Fas 14.2 finns ingen faktura
            att hänvisa till: ett genomfört pass som inte är betalt är
            just det, och ska betalas på den här sidan. */
         ['Betalning', b.fakturerbar === false ? 'Betalas inte'
+          : ingetAttBetala(b) && b.status !== 'cancelled' ? 'Inget att betala'
           : b.betalning_status === 'faktura' && b.status !== 'cancelled'
             ? (fakturaFör(b.id) && fakturaFör(b.id).fortnox_fakturanummer && fakturaFör(b.id).status !== 'utkast'
                 ? 'Faktura ' + fakturaFör(b.id).fortnox_fakturanummer : 'Mot faktura')
@@ -3044,15 +3070,24 @@
       ] }
     ];
 
+    /* Det som ska vara klart senast på passets dag. Filtret stod förut
+       på >=, alltså läxor med deadline EFTER passet, och blocket
+       försvann helt när det var tomt: det såg trasigt ut, inte tomt.
+       S.laxor håller bara det valda barnets läxor, så för ett annat
+       barn säger raden det i stället för "inga läxor". */
     const läxor = (S.laxor || [])
-      .filter(h => h.status !== 'klar' && h.student_id === b.student_id && h.due_date && h.due_date >= b.wanted_date)
+      .filter(h => h.status !== 'klar' && h.student_id === b.student_id && h.due_date && h.due_date <= b.wanted_date)
       .slice(0, 3);
+    const läxTomt = b.student_id !== S.valtBarn && barn
+      ? 'Välj ' + barn.name.split(' ')[0] + ' för att se läxorna.'
+      : 'Inga öppna läxor till passet.';
 
     const block = [
       { rubrik: 'Anteckning', html: b.note ? '<p>' + esc(b.note) + '</p>' : '' },
-      { rubrik: 'Läxor fram till passet', html: läxor.length
+      { rubrik: 'Läxor fram till passet', html: b.status === 'cancelled' ? '' : läxor.length
         ? läxor.map(h => '<a class="pass-lank" href="#uppgifter">' + esc(h.title)
-            + '<span>Till ' + esc(NXStudie.deadlineText(h.due_date)) + '</span></a>').join('') : '' }
+            + '<span>Till ' + esc(NXStudie.deadlineText(h.due_date)) + '</span></a>').join('')
+        : '<p>' + esc(läxTomt) + '</p>' }
     ];
 
     const rita = (rapport) => NXStudie.passSida({
@@ -3109,11 +3144,11 @@
      innan katalogen laddats. Ören blir kronor i NXBetalning.kronor,
      och bara där.
 
-     "Första timmen gratis" står INTE här, med flit. Kampanjen finns
-     inte i prislogiken: kortbetalningen
-     drar av någon timme. Att lova den på sidan som visar priset hade
-     gjort den till ett villkor vi sedan tar betalt i strid mot. Den
-     läggs till här i samma ändring som den byggs in i prisräkningen. */
+     Första timmen på köpet står i markupen sedan Fas 19.5, samma
+     ändring som byggde in den i prisräkningen (forsta_timmen_bjuds i
+     databasen). Innan dess stod den med flit inte här: ett löfte på
+     sidan som visar priset, som kortet inte höll, hade varit ett
+     villkor vi tog betalt i strid mot. */
   function ritaPris() {
     const t = NXTjanster.hitta(NXTjanster.standard());
     if (!t) return;

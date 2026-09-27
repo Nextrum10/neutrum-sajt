@@ -86,6 +86,11 @@ SIFFRORNA:
   pass som har hållits ska betalas även om rapporten inte bekräftats.
   En betalning som tas på ett annat sätt än villkoren lovar är en
   tvist, inte ett skrivfel.
+· Priset är det som gällde när passet bokades. En prishöjning gäller
+  bara pass som bokas efter den.
+· Nya familjer får första timmen på köpet: det pass som gör att familjen
+  har bokat två timmar får en timme avdragen, en gång. Ett pass på en
+  timme kan alltså kosta noll kronor, och det är då inte obetalt.
 · Studiehjälparen får betalt den 25:e, i en klump för månadens
   rapporterade pass.
 · Belopp räknas i ören. Kronor blir det först när något visas.

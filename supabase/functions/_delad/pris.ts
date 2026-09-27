@@ -23,6 +23,7 @@
 // självt, också om det är obetalt.
 //
 // PRISLOGIKEN ÄR DENSAMMA SOM FÖRUT (planens avsnitt D):
+//   · priset som frystes på passet när det bokades (Fas 19.5), annars
 //   · tjänstens timpris, eller standardtjänstens om passets saknar pris
 //   · ett FAST tillägg per timme när fler än ett barn sitter med
 //   · rabatten är fryst vid bokningen och sänker aldrig ersättningen
@@ -79,11 +80,35 @@ export type Pass = {
   //                   uppåt bara när övertiden är betald
   debiterade_min?: number | null;
   lon_min?: number | null;
+  // Priset fryst vid bokningen (Fas 19.5). Saknas det räknas passet på
+  // tjänstens pris, som före Fas 19.5.
+  timpris_ore?: number | null;
+  extra_ore?: number | null;
 };
 
 // Fas 20.1. Minuterna familjen betalar för, och minuterna lönen räknas på.
 export const familjensMinuter = (b: Pass) => Number(b.debiterade_min || b.duration_min || 60);
 export const lonensMinuter = (b: Pass) => Number(b.lon_min || b.duration_min || 60);
+
+/**
+ * Passets pris per timme och tillägget för flera barn (Fas 19.5).
+ *
+ * Villkoren lovar priset vid bokningen, så det frysta priset på passet
+ * går först. Tjänstens pris är reserven, för ett pass som bokades innan
+ * priset började frysas, och det är samma räkning som före Fas 19.5:
+ * tjänstens timpris eller reserven, och inget tillägg för en okänd tjänst.
+ */
+export function passpris(
+  b: { timpris_ore?: number | null; extra_ore?: number | null },
+  t: Tjanst | undefined,
+  reservOre: number,
+): { timme: number; extra: number } {
+  const fryst = Number(b.timpris_ore ?? 0);
+  if (fryst > 0) return { timme: fryst, extra: Number(b.extra_ore ?? 0) };
+  return t
+    ? { timme: Number(t.pris_per_timme_ore ?? 0) || reservOre, extra: Number(t.extra_personer_ore ?? 0) }
+    : { timme: reservOre, extra: 0 };
+}
 
 // Lägen där familjen INTE har betalat. Samma tre som avvikelsen
 // ej_betalt i avvikelser_rader() — ändras den ena ska den andra
@@ -196,9 +221,6 @@ export function byggUnderlag(o: {
   // tjänsten; en okänd kod får standardpriset utan tillägg.
   const tjanstFor = (kod: string | null): Tjanst | undefined =>
     perKod.get(kod ?? standard?.kod ?? '');
-  const prisFor = (t: Tjanst | undefined) => t
-    ? { timme: Number(t.pris_per_timme_ore ?? 0), extra: Number(t.extra_personer_ore ?? 0) }
-    : { timme: o.timprisOre, extra: 0 };
 
   const perTutor = new Map<string, Rad[]>();
   const utanTimpenning: string[] = [];
@@ -214,20 +236,24 @@ export function byggUnderlag(o: {
     // FAMILJENS HALVA är en lista, inte en faktura. Ett pass som står
     // på en äldre faktura drivs in genom den och räknas inte här.
     if (b.parent_id && !b.fakturerad && obetalt(b)) {
-      const p = prisFor(t);
+      const p = passpris(b, t, o.timprisOre);
       const barn = Math.max(1, Number(b.antal_barn || 1));
-      const brutto = familjebelopp(familjensMinuter(b), p.timme || o.timprisOre, p.extra, barn);
+      const brutto = familjebelopp(familjensMinuter(b), p.timme, p.extra, barn);
       // Rabatten är framräknad och fryst vid bokningen. Den räknas
       // ALDRIG om här — annars ändrar sig ett gammalt pass pris den
       // dag någon justerar koden.
       const rabatt = Math.min(Math.max(Number(b.rabatt_ore || 0), 0), brutto);
-      obetalda.push({
-        booking_id: b.id,
-        parent_id: b.parent_id,
-        datum: b.wanted_date,
-        lage: String(b.betalning_status ?? 'ingen'),
-        belopp_ore: brutto - rabatt,
-      });
+      // Ett pass där rabatten täcker allt (första timmen bjuds, Fas 19.5)
+      // har ingenting att betala och är inte obetalt.
+      if (brutto - rabatt > 0) {
+        obetalda.push({
+          booking_id: b.id,
+          parent_id: b.parent_id,
+          datum: b.wanted_date,
+          lage: String(b.betalning_status ?? 'ingen'),
+          belopp_ore: brutto - rabatt,
+        });
+      }
     }
 
     // STUDIEHJÄLPARENS HALVA har med flit inte samma villkor: hen har
@@ -284,13 +310,14 @@ export function byggFakturor(o: { pass: Pass[]; tjanster: Tjanst[]; timprisOre: 
   for (const b of o.pass) {
     if (!b.parent_id || b.fakturerad || b.betalning_status !== 'faktura') continue;
     const t = perKod.get(b.tjanst ?? standard?.kod ?? '');
-    const timme = Number(t?.pris_per_timme_ore ?? 0) || o.timprisOre;
-    const extra = t ? Number(t.extra_personer_ore ?? 0) : 0;
+    const { timme, extra } = passpris(b, t, o.timprisOre);
     // Fas 20.1: fakturan tar den hållna tiden.
     const minuter = familjensMinuter(b);
     const barn = Math.max(1, Number(b.antal_barn || 1));
     const brutto = familjebelopp(minuter, timme, extra, barn);
     const rabatt = Math.min(Math.max(Number(b.rabatt_ore || 0), 0), brutto);
+    // En rad på noll kronor är ingen faktura (Fas 19.5).
+    if (brutto - rabatt <= 0) continue;
     const lista = perFamilj.get(b.parent_id) ?? [];
     lista.push({
       booking_id: b.id,
@@ -311,7 +338,7 @@ export function byggFakturor(o: { pass: Pass[]; tjanster: Tjanst[]; timprisOre: 
  * tillägget för flera barn, och rabatten som frystes vid bokningen.
  * Aldrig under noll: en rabatt som täcker mer än minuterna kostar inget.
  */
-export function passpris(o: {
+export function minuterspris(o: {
   minuter: number; timprisOre: number; extraOre: number; barn: number; rabattOre: number;
 }): number {
   const brutto = familjebelopp(o.minuter, o.timprisOre, o.extraOre, Math.max(1, o.barn));
@@ -329,7 +356,7 @@ export function tillaggsbelopp(o: {
   debiteradeMin: number; betaldaMin: number; timprisOre: number; extraOre: number; barn: number; rabattOre: number;
 }): number {
   if (o.debiteradeMin <= o.betaldaMin) return 0;
-  const pris = (minuter: number) => passpris({ ...o, minuter });
+  const pris = (minuter: number) => minuterspris({ ...o, minuter });
   return Math.max(pris(o.debiteradeMin) - pris(o.betaldaMin), 0);
 }
 

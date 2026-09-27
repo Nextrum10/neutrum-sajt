@@ -20,7 +20,7 @@
 import { assert, assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
   belopp, byggFakturor, byggUnderlag, familjebelopp, type Pass, passpris, radtext, rutFor, sammanfatta,
-  sorteraPass, standardTjanst, tillaggsbelopp, type Tjanst,
+  minuterspris, sorteraPass, standardTjanst, tillaggsbelopp, type Tjanst,
 } from './pris.ts';
 import { MANADER } from './konstanter.ts';
 
@@ -194,8 +194,10 @@ Deno.test('underlaget är den gamla räkningen, och varje obetalt pass kostar si
 
     // De slumpade passen saknar betalning_status, alltså är inget av
     // dem betalt: listan ska ha precis de pass den gamla koden
-    // fakturerade, med precis de beloppen.
+    // fakturerade, med precis de beloppen. Utom raderna på noll kronor:
+    // sedan Fas 19.5 är ett pass där rabatten täcker allt inte obetalt.
     const gamlaRader = [...gammal.perFamilj.values()].flat()
+      .filter((r) => r.belopp_ore > 0)
       .map((r): [string, number] => [r.booking_id, r.belopp_ore]);
     const obetalda = ny.obetalda.map((o): [string, number] => [o.booking_id, o.belopp_ore]);
     assert(gamlaRader.length > 0);
@@ -329,9 +331,10 @@ Deno.test('obetalda räknas som kortbetalningen: tillägg för syskon och fryst 
     ],
     tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]),
   });
-  // Två timmar à 379 + 69 (fast, inte per barn), 379 − 50, och en
-  // rabatt större än passet blir noll — aldrig negativt.
-  assertEquals(u.obetalda.map((o) => o.belopp_ore), [89600, 32900, 0]);
+  // Två timmar à 379 + 69 (fast, inte per barn) och 379 − 50. En rabatt
+  // större än passet blir aldrig negativ, och sedan Fas 19.5 står ett
+  // pass som inte kostar något inte bland de obetalda alls.
+  assertEquals(u.obetalda.map((o) => o.belopp_ore), [89600, 32900]);
   // Ersättningen påverkas varken av syskonen eller av rabatten.
   assertEquals(u.perTutor.get(T)!.map((r) => r.belopp_ore), [24000, 12000, 12000]);
 });
@@ -373,12 +376,17 @@ Deno.test('fakturan är den gamla månadsfakturan, rad för rad, för pass som v
     const fakturapass = pass.map((b) => ({ ...b, betalning_status: 'faktura' }));
     const gammal = gammalUnderlag(fakturapass, KATALOG, 37900, new Map());
     const ny = byggFakturor({ pass: fakturapass, tjanster: KATALOG, timprisOre: 37900 });
+    // En rad på noll kronor är ingen faktura sedan Fas 19.5, så den
+    // gamla koden jämförs utan dem.
+    const utanNoll = new Map([...gammal.perFamilj]
+      .map(([f, r]) => [f, r.filter((x) => x.belopp_ore > 0)] as const)
+      .filter(([, r]) => r.length > 0));
     const platt = (m: Map<string, { booking_id: string; beskrivning: string; belopp_ore: number }[]>) =>
       [...m].flatMap(([f, r]) => r.map((x) => [f, x.booking_id, x.beskrivning, x.belopp_ore].join('|'))).sort();
-    assert(gammal.perFamilj.size > 0);
-    assertEquals(platt(ny), platt(gammal.perFamilj));
+    assert(utanNoll.size > 0);
+    assertEquals(platt(ny), platt(utanNoll));
     for (const [f, rader] of ny) {
-      assertEquals(rader.map((r) => r.pris_per_timme_ore), gammal.perFamilj.get(f)!.map((r) => r.timpris_ore));
+      assertEquals(rader.map((r) => r.pris_per_timme_ore), utanNoll.get(f)!.map((r) => r.timpris_ore));
     }
   }
 });
@@ -462,8 +470,47 @@ Deno.test('20.1 tillägget är skillnaden i pris, och rabatten dras en gång', (
   // betalda, höll två och en kvart. Tillägget är kvarten, inte en timme.
   assertEquals(tillaggsbelopp({ ...grund, rabattOre: 37900, debiteradeMin: 135, betaldaMin: 120 }), 9475);
   // en rabatt som täcker mer än det betalda: bara det som går över rabatten
-  assertEquals(tillaggsbelopp({ ...grund, rabattOre: 37900, debiteradeMin: 75, betaldaMin: 30 }), passpris({ ...grund, rabattOre: 37900, minuter: 75 }));
+  assertEquals(tillaggsbelopp({ ...grund, rabattOre: 37900, debiteradeMin: 75, betaldaMin: 30 }), minuterspris({ ...grund, rabattOre: 37900, minuter: 75 }));
   // ingen övertid, inget tillägg
   assertEquals(tillaggsbelopp({ ...grund, debiteradeMin: 60, betaldaMin: 60 }), 0);
   assertEquals(tillaggsbelopp({ ...grund, debiteradeMin: 45, betaldaMin: 60 }), 0);
+});
+
+// ---------- Fas 19.5: priset fryses, och första timmen bjuds ----------
+
+Deno.test('passpris: det frysta priset går först, tjänstens är reserven', () => {
+  const lax = KATALOG[0];
+  assertEquals(passpris({ timpris_ore: 35000, extra_ore: 5000 }, lax, 37900), { timme: 35000, extra: 5000 });
+  assertEquals(passpris({ timpris_ore: 35000, extra_ore: null }, lax, 37900), { timme: 35000, extra: 0 });
+  assertEquals(passpris({}, lax, 1), { timme: 37900, extra: 6900 });
+  assertEquals(passpris({ timpris_ore: 0 }, lax, 1), { timme: 37900, extra: 6900 });
+  assertEquals(passpris({}, KATALOG[1], 37900), { timme: 37900, extra: 0 });
+  assertEquals(passpris({}, undefined, 37900), { timme: 37900, extra: 0 });
+});
+
+Deno.test('ett höjt pris når inte ett pass som bokades före höjningen', () => {
+  const dyr: Tjanst[] = [{ ...KATALOG[0], pris_per_timme_ore: 45000 }, ...KATALOG.slice(1)];
+  const fore = { ...GRUND, id: 'b-fore', wanted_date: '2026-09-02', timpris_ore: 37900, extra_ore: 6900 };
+  const efter = { ...GRUND, id: 'b-efter', wanted_date: '2026-09-03' };
+  const u = byggUnderlag({ pass: [fore, efter], tjanster: dyr, timprisOre: 37900, timpenningar: new Map([[T, 12000]]) });
+  assertEquals(u.obetalda.map((o) => o.belopp_ore), [37900, 45000]);
+  const f = byggFakturor({
+    pass: [{ ...fore, betalning_status: 'faktura' }, { ...efter, betalning_status: 'faktura' }],
+    tjanster: dyr, timprisOre: 37900,
+  });
+  assertEquals(f.get(P)!.map((r) => [r.pris_per_timme_ore, r.belopp_ore]), [[37900, 37900], [45000, 45000]]);
+});
+
+Deno.test('ett pass där första timmen bjuds och täcker allt är varken obetalt eller en fakturarad', () => {
+  const gratis = { ...GRUND, id: 'b-gratis', wanted_date: '2026-09-02', timpris_ore: 37900, extra_ore: 6900, rabatt_ore: 37900 };
+  const halv = { ...GRUND, id: 'b-halv', wanted_date: '2026-09-03', duration_min: 120, timpris_ore: 37900, extra_ore: 6900, rabatt_ore: 37900 };
+  const u = byggUnderlag({ pass: [gratis, halv], tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]) });
+  assertEquals(u.obetalda.map((o) => [o.booking_id, o.belopp_ore]), [['b-halv', 37900]]);
+  // Studiehjälparen får betalt för båda: rabatten sänker aldrig ersättningen.
+  assertEquals((u.perTutor.get(T) ?? []).map((r) => r.belopp_ore), [12000, 24000]);
+  const f = byggFakturor({
+    pass: [{ ...gratis, betalning_status: 'faktura' }, { ...halv, betalning_status: 'faktura' }],
+    tjanster: KATALOG, timprisOre: 37900,
+  });
+  assertEquals(f.get(P)!.map((r) => r.booking_id), ['b-halv']);
 });
