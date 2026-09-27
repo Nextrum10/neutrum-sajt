@@ -510,9 +510,11 @@ Deno.serve(async (req) => {
        metadata, så att webhooken kan skriva vad betalningen avsåg. */
     let minuter = Number(pass.duration_min || 60);
     if (pass.status === 'completed') {
+      /* Fas 22.1: övertiden timbanken tog när rapporten skrevs är
+         betald, med minuter familjen redan köpt. Kortet tar resten. */
       const { data: underlag } = await db.from('passunderlag')
-        .select('debiterade_min').eq('id', pass.id).maybeSingle();
-      minuter = Number(underlag?.debiterade_min || minuter);
+        .select('debiterade_min, timbank_min').eq('id', pass.id).maybeSingle();
+      minuter = Number(underlag?.debiterade_min || minuter) - Number(underlag?.timbank_min || 0);
     }
     const barn = Math.max(1, Number(pass.antal_barn || 1));
 

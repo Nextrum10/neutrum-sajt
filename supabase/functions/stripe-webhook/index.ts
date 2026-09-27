@@ -287,6 +287,20 @@ Deno.serve(async (req) => {
             .not('klippkort_id', 'is', null).is('stripe_payment_intent_id', null)
             .select('id');
           if (tillbaka?.length) return await klar('betald med kort, klippkortets timmar tillbaka');
+
+          /* PASSET VAR BETALT MED TIMBANKEN (Fas 22.1). Samma sak: kortet
+             vinner. timbank_kortet_vann tar bort uttaget och ställer passet
+             som väntande, och då träffar den vanliga skrivningen. Går den
+             inte igenom kastas felet, och Stripe levererar igen: passet
+             väntar då fortfarande, och nästa leverans träffar. */
+          const { data: frigjort, error: bankfel } = await db.rpc('timbank_kortet_vann', { p_pass: passId });
+          if (bankfel) throw new Error('timbank_kortet_vann: ' + bankfel.message);
+          if (frigjort === true) {
+            const { data: igen, error: igenfel } = await db.from('bookings').update(kortbetalning)
+              .eq('id', passId).in('betalning_status', TAR_EMOT_BETALNING).select('id');
+            if (igenfel || !igen?.length) throw new Error('bookings efter timbanken: ' + (igenfel?.message ?? 'ingen rad'));
+            return await klar('betald med kort, timbankens minuter tillbaka');
+          }
         }
 
         return await klar('betald');

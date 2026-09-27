@@ -25,6 +25,15 @@
 // Den stängs här, så att passet inte kan betalas två gånger. Hinner en
 // betalning igenom ändå vinner kortet i webhooken, och timmarna kommer
 // tillbaka på klippkortet.
+//
+//
+// TIMBANKEN (Fas 22.1)
+//
+// Med { timbank: true } betalas passet med minuterna i familjens
+// timbank i stället, av timbank_dra(), under samma regler och samma
+// flagga: minuterna kommer ur köpta timmar, och utan erbjudandena finns
+// inga. Kommer en kortbetalning ändå vinner kortet, och minuterna går
+// tillbaka i banken (timbank_kortet_vann i stripe-webhook).
 // ============================================================
 
 import { kravInloggad, serviceklient } from '../_delad/auth.ts';
@@ -40,7 +49,7 @@ Deno.serve(async (req) => {
   const vem = await kravInloggad(req.headers.get('authorization'));
   if (!vem.ok) return vem.svar;
 
-  let kropp: { pass?: string } = {};
+  let kropp: { pass?: string; timbank?: boolean } = {};
   try {
     kropp = await req.json();
   } catch {
@@ -60,22 +69,26 @@ Deno.serve(async (req) => {
     return json({ error: 'Timmarna går inte att använda än. Betala passet med kort.' }, 409, CORS);
   }
 
-  const { data: svar, error } = await db.rpc('klippkort_dra', { p_pass: passId, p_foralder: vem.anvandare });
+  const bank = kropp.timbank === true;
+  const { data: svar, error } = await db.rpc(bank ? 'timbank_dra' : 'klippkort_dra',
+    { p_pass: passId, p_foralder: vem.anvandare });
   if (error) {
-    console.error('klippkort-betala: klippkort_dra', JSON.stringify({ pass: passId, fel: error.message }));
-    return json({ error: 'Timmarna gick inte att dra. Försök igen, eller betala med kort.' }, 500, CORS);
+    console.error('klippkort-betala: ' + (bank ? 'timbank_dra' : 'klippkort_dra'),
+      JSON.stringify({ pass: passId, fel: error.message }));
+    return json({ error: (bank ? 'Minuterna' : 'Timmarna') + ' gick inte att dra. Försök igen, eller betala med kort.' }, 500, CORS);
   }
   const s = (svar ?? {}) as { ok?: boolean; fel?: string; kvar?: number; session?: string | null };
   // Ett besked från databasen, skrivet för familjen: visas som det är.
-  if (!s.ok) return json({ error: s.fel ?? 'Timmarna gick inte att dra.' }, 409, CORS);
+  if (!s.ok) return json({ error: s.fel ?? (bank ? 'Minuterna' : 'Timmarna') + ' gick inte att dra.' }, 409, CORS);
 
   if (s.session) {
     try {
       await v1('POST', `/v1/checkout/sessions/${s.session}/expire`);
     } catch (e) {
       /* En kassa som redan gått ut eller betalats kan inte stängas, och
-         det är inget fel här: passet är betalt med timmar, och en
-         betalning som ändå kom in hanteras av webhooken. */
+         det är inget fel här: passet är betalt med timmar eller med
+         timbanken, och en betalning som ändå kom in hanteras av
+         webhooken. */
       if (!(e instanceof StripeError)) {
         console.error('klippkort-betala: kassan stängdes inte', JSON.stringify({ pass: passId, fel: (e as Error)?.message }));
       }
