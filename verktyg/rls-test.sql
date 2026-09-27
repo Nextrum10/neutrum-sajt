@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18 och 19)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19 och 21)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -3118,11 +3118,76 @@ select pg_temp.prova('16.1 familjen föreslår inget pass som redan bär ett kor
                   '00000000-0000-4000-8000-00000000c16a')$q$],
   'nekad');
 
-select pg_temp.prova_med('16.1 familjen avbokar inte ett pass betalt med timmar',
+-- Fas 21.1: familjen avbokar ett pass betalt med timmar själv. Förut
+-- nekades det som varje annat betalt pass (Fas 14.1). Skälet krävs som
+-- för alla avbokningar, och ett pass med kortpengar på är låst som förut.
+select pg_temp.prova_med('21.1 familjen avbokar inte ett timpass utan skäl',
   array[$q$select public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1')$q$],
   '00000000-0000-4000-8000-0000000000f1',
   array[$q$update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-00000000b16a'$q$],
   'nekad');
+
+select pg_temp.prova_med('21.1 familjen avbokar ett pass betalt med timmar',
+  array[$q$select public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1')$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom'
+          where id = '00000000-0000-4000-8000-00000000b16a'$q$],
+  'ok');
+
+select pg_temp.prova_med('21.1 studiehjälparen avbokar ett pass betalt med timmar',
+  array[$q$select public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1')$q$],
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'forhinder'
+          where id = '00000000-0000-4000-8000-00000000b16a'$q$],
+  'ok');
+
+select pg_temp.prova_med('21.1 ett timpass med kortpengar på avbokas inte av familjen',
+  array[$q$select public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1')$q$,
+        $q$update public.bookings set betalt_ore = 37900 where id = '00000000-0000-4000-8000-00000000b16a'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom'
+          where id = '00000000-0000-4000-8000-00000000b16a'$q$],
+  'nekad');
+
+select pg_temp.prova_med('21.1 familjen avbokar inte ett pass betalt med kort',
+  array[$q$update public.bookings set betalning_status = 'betald', betalt_ore = 37900, betald_at = now()
+          where id = '00000000-0000-4000-8000-00000000b16a'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom'
+          where id = '00000000-0000-4000-8000-00000000b16a'$q$],
+  'nekad');
+
+-- Familjens avbokning: timmen tillbaka, passet obetalt, inget larm.
+do $$
+declare
+  kvar1 int; kvar2 int; st text; larm int; fel text;
+begin
+  begin
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    select kvar into kvar1 from public.klippkort_saldo where id = '00000000-0000-4000-8000-00000000c16a';
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom'
+     where id = '00000000-0000-4000-8000-00000000b16a';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select kvar into kvar2 from public.klippkort_saldo where id = '00000000-0000-4000-8000-00000000c16a';
+    select betalning_status into st from public.bookings where id = '00000000-0000-4000-8000-00000000b16a';
+    select count(*) into larm from public.avvikelser_rader()
+     where typ = 'betald_men_avbokad' and objekt_id = '00000000-0000-4000-8000-00000000b16a';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('21.1 familjens avbokning', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('21.1 familjen avbokar: timmen kommer tillbaka', kvar1 = 9 and kvar2 = 10, kvar1 || ' → ' || kvar2),
+    ('21.1 familjens avbokade timpass är inte betalt', st = 'ingen', 'status ' || st),
+    ('21.1 och larmar inte som betalt men avbokat', larm = 0, 'rader: ' || larm);
+end $$;
 
 -- Dragningen, avbokningen och pengarna tillbaka, i ett block som postgres.
 do $$
@@ -3861,6 +3926,78 @@ begin
     ('19.5 ett pass på noll kronor larmar inte som obetalt', larm_gratis = 0, larm_gratis::text),
     ('19.5 klippkortet betalar inte ett pass med startrabatt', kk->>'fel' like 'Första timmen%', kk::text);
 end $$;
+
+-- ============================================================
+-- FAS 21.2 — påminnelsen tio dagar innan timmarna går ut
+--
+-- Körs som postgres, som schemat. Tiden skickas in (kl. 12 och kl. 3
+-- svensk tid i dag), annars hade fönstret 9–20 avgjort om proven gick
+-- igenom. Kortet är fixturen från 16.1, med tio timmar kvar.
+-- ============================================================
+do $$
+declare
+  idag   date := (now() at time zone 'Europe/Stockholm')::date;
+  mitt   timestamptz := (idag + time '12:00') at time zone 'Europe/Stockholm';
+  natt   timestamptz := (idag + time '03:00') at time zone 'Europe/Stockholm';
+  langt  int; forsta int; igen int; nattn int; aterb int; nytt int;
+  ko     record; ko_n int; val int; fel text;
+begin
+  begin
+    update public.klippkort set giltigt_till = idag + 11 where id = '00000000-0000-4000-8000-00000000c16a';
+    langt := intern.timmar_gar_ut_koa(mitt);
+
+    update public.klippkort set giltigt_till = idag + 10 where id = '00000000-0000-4000-8000-00000000c16a';
+    nattn := intern.timmar_gar_ut_koa(natt);
+    forsta := intern.timmar_gar_ut_koa(mitt);
+    igen := intern.timmar_gar_ut_koa(mitt);
+    select count(*) into ko_n from public.notis_utskick where typ = 'timmar_gar_ut'
+       and mottagare = '00000000-0000-4000-8000-0000000000f1';
+    select * into ko from public.notis_utskick where typ = 'timmar_gar_ut'
+       and mottagare = '00000000-0000-4000-8000-0000000000f1' limit 1;
+
+    -- Nytt sista datum (admin förlänger): en ny påminnelse.
+    update public.klippkort set giltigt_till = idag + 9 where id = '00000000-0000-4000-8000-00000000c16a';
+    nytt := intern.timmar_gar_ut_koa(mitt);
+
+    update public.klippkort set status = 'aterbetald', giltigt_till = idag + 8
+     where id = '00000000-0000-4000-8000-00000000c16a';
+    aterb := intern.timmar_gar_ut_koa(mitt);
+
+    -- Familjen kan stänga av typen under Profil → Notiser.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    insert into public.notis_val (profil_id, typ, kanal, pa)
+    values ('00000000-0000-4000-8000-0000000000f1', 'timmar_gar_ut', 'mejl', false);
+    get diagnostics val = row_count;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('21.2 påminnelsen', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('21.2 elva dagar kvar: ingen påminnelse än', langt = 0, langt::text),
+    ('21.2 ingen påminnelse klockan tre på natten', nattn = 0, nattn::text),
+    ('21.2 tio dagar kvar: en påminnelse', forsta = 1, forsta::text),
+    ('21.2 samma kort och dag påminns en gång', igen = 0 and ko_n = 1, igen || ', i kön ' || ko_n),
+    ('21.2 mejlet bär timmarna kvar och sista dagen',
+     (ko.data ->> 'kvar')::int = 10 and ko.data ->> 'datum' = (idag + 10)::text and ko.kanal = 'mejl',
+     coalesce(ko.data::text, 'ingen rad')),
+    ('21.2 mejlet går inte ut efter sista dagen',
+     ko.skicka_senast = ((idag + 11)::timestamp at time zone 'Europe/Stockholm'),
+     coalesce(ko.skicka_senast::text, 'null')),
+    ('21.2 ett nytt sista datum ger en ny påminnelse', nytt = 1, nytt::text),
+    ('21.2 ett återbetalt kort påminns inte', aterb = 0, aterb::text),
+    ('21.2 familjen kan stänga av påminnelsen', val = 1, val::text);
+end $$;
+
+select pg_temp.prova('21.2 familjen kör inte påminnelsen själv', '00000000-0000-4000-8000-0000000000f1',
+  array['select intern.timmar_gar_ut_koa()'],
+  'nekad');
 
 select test, ok, detalj from utfall order by nr;
 

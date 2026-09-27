@@ -45,7 +45,7 @@ Deno.test('renData släpper bara igenom de vitlistade fälten', () => {
   // överst innan det går igenom.
   assertEquals(Object.keys(rad).sort(), [
     'amne', 'betalsatt', 'datum', 'elev', 'fran', 'franDatum', 'franTid',
-    'prov', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
+    'kvar', 'prov', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
   ]);
 
   // Ingen av texterna finns kvar någonstans i svaret.
@@ -53,6 +53,17 @@ Deno.test('renData släpper bara igenom de vitlistade fälten', () => {
   for (const hemligt of ['behöver hjälp', 'Ring mamma', '070', 'Storgatan', 'Berg', 'example.se']) {
     assertEquals(allt.includes(hemligt), false, `${hemligt} följde med ut`);
   }
+});
+
+Deno.test('timmarna kvar är ett heltal, aldrig text (Fas 21.2)', () => {
+  assertEquals(renData({ kvar: 3 }).kvar, 3);
+  assertEquals(renData({ kvar: '12' }).kvar, 12);
+  assertEquals(renData({ kvar: 200 }).kvar, 200);
+  // Noll timmar kvar är inget att påminna om, och ett kort har högst 200.
+  assertEquals(renData({ kvar: 0 }).kvar, null);
+  assertEquals(renData({ kvar: 201 }).kvar, null);
+  assertEquals(renData({ kvar: 2.5 }).kvar, null);
+  assertEquals(renData({ kvar: '3 timmar, ring 070-123' }).kvar, null);
 });
 
 Deno.test('betalsättet är en kod, och bara en', () => {
@@ -151,8 +162,8 @@ Deno.test('rapport finns som notistyp men mejlas aldrig', () => {
 
   // Listorna står också i databasen (notis_typer, notis_mejlbara).
   // Ändras den ena ska den andra ändras i samma ändring.
-  assertEquals(NOTIS_TYPER.length, 8);
-  assertEquals(MEJLBARA.length, 7);
+  assertEquals(NOTIS_TYPER.length, 9);
+  assertEquals(MEJLBARA.length, 8);
   for (const t of MEJLBARA) assertEquals(arNotisTyp(t), true, `${t} saknas i NOTIS_TYPER`);
 
   assertEquals(arNotisTyp('pass_installt'), false);

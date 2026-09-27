@@ -39,7 +39,7 @@
 // ============================================================
 
 import type { Avbokningsskal, MejlbarTyp, RenData, Roll } from './typer.ts';
-import { narText, paminnelseNar } from './tid.ts';
+import { datumText, narText, paminnelseNar } from './tid.ts';
 
 /**
  * Vart knappen går. Hashen läses som #sektion/flik i vyerna.
@@ -70,6 +70,7 @@ export const KATEGORI: Record<MejlbarTyp, string> = {
   pass_avbojt: 'avböjda tider',
   meddelande: 'nya meddelanden',
   paminnelse: 'påminnelser före pass',
+  timmar_gar_ut: 'köpta timmar som går ut',
 };
 
 const SVARA = 'Svara ja eller nej i Nextrum.';
@@ -233,6 +234,30 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
       knapp: 'Visa passet',
       mal: 'pass',
       fakta: passFakta(m, narText(m.d.datum, m.d.tid)),
+    };
+  },
+
+  // Fas 21.2. Tio dagar innan ett köpt kort går ut, med timmar kvar.
+  // Mejlet säger hur många och vilken dag, och att det som blir över
+  // förfaller — villkoren säger det, och en påminnelse som teg om det
+  // hade inte varit en påminnelse. Knappen går till bokningen: timmarna
+  // används genom att boka pass, inte på sidan där de köptes.
+  timmar_gar_ut(m) {
+    const sista = m.d.datum ? datumText(m.d.datum) : null;
+    const antal = m.d.kvar === null ? null : m.d.kvar === 1 ? '1 timme' : `${m.d.kvar} timmar`;
+    const fakta: [string, string][] = [];
+    if (m.d.kvar !== null) fakta.push(['Timmar kvar', String(m.d.kvar)]);
+    if (sista) fakta.push(['Sista dagen', sista]);
+    return {
+      amne: sista ? `Era köpta timmar går ut ${sista}` : 'Era köpta timmar går snart ut',
+      rubrik: 'Era timmar går snart ut',
+      mening: (antal ? `Ni har ${antal} kvar` : 'Ni har köpta timmar kvar')
+        + (sista ? `, och de gäller till och med ${sista}.` : ' som snart går ut.')
+        + ' Boka pass och betala dem med timmarna innan dess. Timmar som inte används förfaller.'
+        + ' Hinner ni inte, hör av er före sista dagen, så betalar vi tillbaka resten.',
+      knapp: 'Boka ett pass',
+      mal: 'boka',
+      fakta,
     };
   },
 };

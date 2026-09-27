@@ -894,7 +894,11 @@ knapparna säger "Snart", och inga timmar går att dra.
 supabase functions deploy stripe-webhook
 supabase functions deploy stripe-checkout
 supabase functions deploy klippkort-betala
+supabase functions deploy notis-ko
 ```
+
+`notis-ko` sist (Fas 21.2): det är den som har mallen för påminnelsen
+`timmar_gar_ut`. En äldre arbetare kan inte rendera den.
 
 Webhooken FÖRST. Den gamla känner inte igen ett köpt klippkort: sessionen har
 `klippkort_id` i metadata och inget pass, och en betalning den inte kan knyta till
@@ -912,11 +916,16 @@ står därför inte i `config.toml`.
 3. Låt en studiehjälpare bekräfta ett pass på en timme. Familjen ska se "Betala med
    timmar" först. Tryck; passet ska bli `betald` med `klippkort_id` satt och
    `betalt_ore` tomt, och kortet ska ha 9 timmar kvar.
-4. Avboka passet som admin. `betalning_status` ska bli `ingen` (16.1c, annars larmar
-   `betald_men_avbokad` om pengar som aldrig drogs), och kortet ska ha 10 timmar igen.
-5. Återbetala en del av köpet i Stripes dashboard. Kortet ska bli `aterbetald` och
+4. Avboka passet som familjen, på passets sida, med ett skäl (Fas 21.1).
+   `betalning_status` ska bli `ingen` (annars larmar `betald_men_avbokad` om pengar
+   som aldrig drogs), kortet ska ha 10 timmar igen, och studiehjälparen ska få
+   mejlet om avbokningen.
+5. Sätt kortets `giltigt_till` till om tio dagar och kör
+   `select intern.timmar_gar_ut_koa();` mellan 9 och 20. Sandlådan ska få mejlet
+   "Era köpta timmar går ut …" med antalet timmar kvar (Fas 21.2).
+6. Återbetala en del av köpet i Stripes dashboard. Kortet ska bli `aterbetald` och
    inte längre gå att dra från.
-6. Står något av det fel: stäng av flaggan. Redan köpta timmar syns fortfarande,
+7. Står något av det fel: stäng av flaggan. Redan köpta timmar syns fortfarande,
    men inget nytt går att köpa eller dra.
 
 **Pengar tillbaka görs i Stripes dashboard, av en människa.** Beloppet står under
@@ -937,16 +946,9 @@ Erbjudanden i adminvyn, kolumnen "Om de slutar i dag":
 
 **Kvar, och inget av det sköter koden:**
 
-- **Familjen kan inte avboka ett pass de betalat med timmar själva.** Det är samma
-  spärr som för ett kortbetalt pass (`skydda_bokningsfalt`), och villkoren säger att
-  de kontaktar oss. Med klippkort är det onödigt strängt, för inga pengar ska
-  tillbaka: timmarna återkommer av sig själva. Att släppa igenom det kräver en
-  ändring i `skydda_bokningsfalt`, som Fas 14.6 skrev om, och gjordes därför inte
-  här.
-- **Timmar som löpt ut förfaller.** Ingen påminnelse går ut innan. En notis en vecka
-  före `giltigt_till` är en ny notistyp (DEPLOY-NOTISER.md har de fem stegen), och
-  för planerna, som gäller en månad, är det skillnaden mellan en nöjd familj och
-  en som känner sig lurad på en timme.
+- **Timmar som löpt ut förfaller.** Tio dagar innan mejlas familjen (Fas 21.2),
+  men pengarna för timmar som ändå går förlorade kommer bara tillbaka om familjen
+  hör av sig, som villkoren säger.
 - **Planerna säger "ett pass i veckan", men ingenting håller dem till det.** En plan
   är fyra eller åtta timmar som gäller en månad. Hur de bokas är familjens sak.
 - **Startererbjudandet** (Fas 19.5) betalas inte med timmar: `klippkort_dra` nekar
