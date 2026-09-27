@@ -921,7 +921,10 @@ Timbanken (Fas 22.1) driftsattes samma eftermiddag i samma ordning, med
 `fakturering` sist: `stripe-webhook` version 10, `stripe-checkout`
 version 14, `klippkort-betala` version 2 och `fakturering` version 31,
 alla jämförda byte för byte mot grenen. Provköpet ska därför också ta
-steg 6 nedan, om timbanken.
+steg 6 nedan, om timbanken. Samma kväll kom rättelserna i
+`timbanken_foljer_passet`: `stripe-webhook` version 11, `stripe-checkout`
+version 15 och `klippkort-betala` version 3. Webhooken gick ut före
+migrationen som tog bort `timbank_kortet_vann`, som den äldre anropade.
 
 Driftsätts en funktion genom MCP i stället för `supabase functions
 deploy`: hämta tillbaka den efteråt och jämför varje fil mot repot.

@@ -660,12 +660,35 @@ Deno.serve(async (req) => {
 
        ersattning_ore och avgift_ore lämnas orörda med flit:
        studiehjälparens ersättning räknas av fakturering ur rapporten,
-       och två källor till samma siffra är en siffra ingen kan lita på. */
-    const { error: sparfel } = await db.from('bookings').update({
+       och två källor till samma siffra är en siffra ingen kan lita på.
+
+       SKRIVNINGEN KRÄVER ATT PASSET FORTFARANDE ÄR OBETALT (Fas 22.1).
+       Passet lästes innan sessionen skapades, och under tiden kan familjen
+       ha betalat det med timmar eller timbanken, eller valt faktura. Utan
+       villkoret skrev 'vantar' över 'betald': timmarna var dragna och
+       passet stod som obetalt, och betalade familjen sedan kassan togs
+       passet två gånger. Nu träffar skrivningen ingenting, och kassan som
+       just skapades stängs innan någon hunnit se den. */
+    const sessionId = String((session as { id?: string }).id ?? '');
+    const { data: skrivna, error: sparfel } = await db.from('bookings').update({
       betalning_status: 'vantar',
-      stripe_session_id: String((session as { id?: string }).id ?? ''),
+      stripe_session_id: sessionId,
       begart_ore: netto,
-    }).eq('id', pass.id);
+    }).eq('id', pass.id).in('betalning_status', ['ingen', 'vantar', 'misslyckad']).select('id');
+
+    if (!sparfel && !skrivna?.length) {
+      try {
+        await v1('POST', `/v1/checkout/sessions/${sessionId}/expire`);
+      } catch (e) {
+        /* En kassa som redan betalats eller gått ut kan inte stängas. Det
+           händer när familjen betalat samma kassa i en annan flik, och då
+           är passet betalt med just den. */
+        if (!(e instanceof StripeError)) {
+          console.error('stripe-checkout: kassan stängdes inte', JSON.stringify({ pass: pass.id, fel: (e as Error)?.message }));
+        }
+      }
+      return json({ error: 'Passet har just betalats, eller fått ett annat betalsätt. Ladda om sidan.' }, 409, CORS);
+    }
 
     if (sparfel) {
       /* Sessionen finns hos Stripe men raden vet inte om den. Det är

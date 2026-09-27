@@ -33,7 +33,7 @@
 // timbank i stället, av timbank_dra(), under samma regler och samma
 // flagga: minuterna kommer ur köpta timmar, och utan erbjudandena finns
 // inga. Kommer en kortbetalning ändå vinner kortet, och minuterna går
-// tillbaka i banken (timbank_kortet_vann i stripe-webhook).
+// tillbaka i banken (timbank_kort_vinner i stripe-webhook).
 // ============================================================
 
 import { kravInloggad, serviceklient } from '../_delad/auth.ts';

@@ -116,6 +116,21 @@ ser familjens minuter på passet, så att hen vet hur långt passet kan
 dra över utan kostnad, men inte vad de är värda. Villkoren säger det
 sedan samma dag (`#timbank`, båda språken).
 
+**Uttagen följer passet** (`timbanken_foljer_passet`, samma kväll).
+Övertiden räknas i `intern.timbank_rakna_overtid` och räknas om när
+rapportens tid rättas OCH när admin ändrar längden, antalet barn eller
+undantaget (`bookings_timbank_foljer_passet`). Den räknas från det
+bokade, eller från det kortet betalade om det var mer: ett kortpass som
+betalades efter passet bär den hållna tiden minus det banken tog i
+`stripe_minuter`, och banken ska inte ta de minuterna en gång till. Ett
+helt pass ur banken drar den nya längden, så att banken alltid betalar
+den tid som hölls. När kortet vinner över ett pass betalt med banken
+skriver `timbank_kort_vinner` kortbetalningen och ger tillbaka
+minuterna i samma transaktion; förut var det två anrop från webhooken.
+Kassan skriver `vantar` bara på ett pass som fortfarande är obetalt, och
+stänger annars sin nya session: förut kunde den skriva över ett pass som
+hann betalas med timmar medan kassan skapades.
+
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
 `note`. Fas 15.1 hade tagit bort frågan, och ett förslag hade då ingen
@@ -1749,7 +1764,12 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   lämnar minuterna dragna när kortet vinner; kassan före vyerna, för en
   äldre tar kort för övertid timbanken redan betalat. Funktionerna
   fungerar med de gamla vyerna, så knappen Betala med timbanken kommer
-  när vyerna gör det. Kvar: en familj som inte är matchad når inte
+  när vyerna gör det. Samma kväll gick rättelserna ut
+  (`timbanken_foljer_passet`, se avsnitt 1): `stripe-webhook` version
+  11, `stripe-checkout` version 15 och `klippkort-betala` version 3,
+  också de jämförda byte för byte, och därefter togs
+  `timbank_kortet_vann` bort ur databasen, när ingen webhook längre
+  anropade den. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
