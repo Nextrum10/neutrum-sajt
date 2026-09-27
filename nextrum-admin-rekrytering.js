@@ -44,10 +44,16 @@
       { namn: 'Skola', rita: a => esc(a.school || '—') },
       { namn: 'Ämnen', rita: a => esc(a.subjects || '—') },
       { namn: 'Kan jobba', rita: a => esc(a.availability || '—') },
-      { namn: 'Varför', rita: a => a.why
-        ? '<span title="' + esc(a.why) + '">' + esc(a.why.slice(0, 90))
-          + (a.why.length > 90 ? '…' : '') + '</span>'
-        : '<span style="color:var(--bl-3)">—</span>' },
+      /* Utan CV-raden: den står i kolumnen bredvid, som en knapp i
+         stället för en sökväg. Hela texten står kvar i title. */
+      { namn: 'Varför', rita: a => {
+        const text = String(a.why || '').replace(CV_RAD, '').replace(CV_FEL, '').trim();
+        return text
+          ? '<span title="' + esc(a.why) + '">' + esc(text.slice(0, 90))
+            + (text.length > 90 ? '…' : '') + '</span>'
+          : '<span style="color:var(--bl-3)">—</span>';
+      } },
+      { namn: 'CV', rita: a => cvKnapp(a) || '<span style="color:var(--bl-3)">—</span>' },
       { namn: 'Inkom', rita: a => '<span class="adm-tal">' + esc(kortDatum(a.created_at)) + '</span>' },
       /* Rekryteringens fyra steg som ett spår. En tom stämpel säger
          "inte gjort" utan att det behöver vara en egen status, och
@@ -132,6 +138,102 @@
       + (tid ? '<em>' + esc(kortDatum(tid)) + '</em>' : '')
       + '</button>';
   }
+
+  /* ============================================================
+     CV:T
+
+     Den som söker kan bifoga ett CV. NX.kopplaAnsökan i
+     nextrum-app.js laddar upp det till den privata hinken "cv" och
+     skriver sökvägen som raden "CV: cv/<sökväg>" i ansökans why. Den
+     som söker har inget konto och ingen rad att peka på när filen
+     laddas upp, så raden är den enda kopplingen mellan filen och
+     ansökan. Ändras formatet där ska CV_RAD ändras här i samma
+     ändring: annars försvinner knappen utan att något blir rött.
+
+     Hinken hade ingen läsregel alls. CV:t kom fram, men bara
+     service_role nådde det, och här stod sökvägen som text. Sedan
+     migrationen admin_laser_ansokans_cv läser admin och ingen annan.
+
+     Gick uppladdningen inte igenom står det som en egen rad i why.
+     Det visas i stället för knappen, för den som sökt tror att CV:t
+     kom fram, och då frågar ingen efter det.
+     ============================================================ */
+  const CV_RAD = /^CV: cv\/(\d+-[0-9a-z]*-[\w.\-]+)$/m;
+  const CV_FEL = /^CV: bifogad fil .* kunde inte laddas upp.*$/m;
+
+  function cvVäg(a) {
+    const m = CV_RAD.exec(String(a.why || ''));
+    return m ? m[1] : null;
+  }
+
+  /* Filens eget namn, utan tiden och slumpen som gör sökvägen unik. */
+  function cvNamn(väg) { return väg.replace(/^\d+-[0-9a-z]*-/, ''); }
+
+  /* En PDF visas i webbläsaren. Word gör det inte och laddas ned, och
+     knappen säger vilket av dem som händer. Tom sträng när ansökan
+     inte har något CV. */
+  function cvKnapp(a) {
+    const väg = cvVäg(a);
+    if (väg) {
+      return '<button type="button" class="btn btn-ghost btn-sm" data-ans-cv="' + esc(a.id)
+        + '" title="' + esc(cvNamn(väg)) + '">'
+        + (/\.pdf$/i.test(väg) ? 'Öppna CV' : 'Ladda ned CV') + '</button>';
+    }
+    return CV_FEL.test(String(a.why || ''))
+      ? '<span class="adm-und">CV:t kom inte fram. Be om det via mejl.</span>'
+      : '';
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-ans-cv]');
+    if (!knapp) return;
+    const a = S.ansokningar.find(x => x.id === knapp.dataset.ansCv);
+    const väg = a && cvVäg(a);
+    if (!väg) return;
+
+    if (/\.pdf$/i.test(väg)) {
+      /* Fliken öppnas i samma tryck, innan länken finns. Ett fönster
+         som öppnas efter en väntan på nätet räknas inte längre som
+         användarens i Safari och stoppas tyst: knappen hade sett ut
+         att inte göra någonting. */
+      const flik = window.open('', '_blank');
+      if (!flik) {
+        alert('Webbläsaren stoppade fliken. Tillåt popupfönster för nextrum.se och tryck igen.');
+        return;
+      }
+      flik.opener = null;
+      await medan(knapp, 'Öppnar…', async () => {
+        /* Fem minuter. Länken i adressfältet öppnar filen för vem som
+           helst så länge den gäller, och det är ett CV, ofta en
+           sextonårings. */
+        const url = await M.signera('cv', väg, 300);
+        if (!url) {
+          flik.close();
+          alert('CV:t gick inte att öppna. Filen kan ha tagits bort ur lagringen.');
+          return;
+        }
+        flik.location.replace(url);
+      });
+      return;
+    }
+
+    /* Word hämtas hit och sparas med sitt eget namn. I en ny flik hade
+       filen laddats ned och lämnat en tom flik efter sig. PDF:en kan
+       inte gå samma väg: en blob-adress ärver adminvyns CSP, och
+       object-src 'none' stoppar webbläsarens PDF-visare. */
+    await medan(knapp, 'Hämtar…', async () => {
+      const { data, error } = await supa.storage.from('cv').download(väg);
+      if (error) { alert('CV:t gick inte att hämta: ' + felText(error)); return; }
+      const url = URL.createObjectURL(data);
+      const länk = document.createElement('a');
+      länk.href = url;
+      länk.download = cvNamn(väg);
+      document.body.appendChild(länk);
+      länk.click();
+      länk.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    });
+  });
 
   /* Mallarna. Skrivna för att kunna skickas som de är, men de är
      utkast: rutan är redigerbar just för att ingen familj ska få ett
@@ -332,12 +434,15 @@
     const id = esc(a.id);
     const möte = mötesText(a);
     const utbLänk = String(CFG.UTBILDNING_URL || '').trim();
+    /* Här också, inte bara i listan: det är inför mötet CV:t läses. */
+    const cv = cvKnapp(a);
 
     return '<h3 id="as-t">Rekryteringen — ' + esc(a.name || 'ansökan') + '</h3>'
       + '<p>' + esc(a.email)
       + (a.school ? ' · ' + esc(a.school) : '')
       + (a.age ? ' · ' + a.age + ' år' : '')
       + (a.subjects ? ' · ' + esc(a.subjects) : '') + '</p>'
+      + (cv ? '<div class="ans-steg-knappar">' + cv + '</div>' : '')
 
       + '<div class="ans-spar-lista">'
 
