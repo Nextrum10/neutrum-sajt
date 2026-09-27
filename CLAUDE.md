@@ -268,7 +268,12 @@ vendorad fil i `bibliotek/`.
 - **Backend:** Supabase (Postgres + RLS + Auth + Storage) och Deno
   edge functions i `supabase/functions/`
 - **Hosting:** Vercel, `cleanUrls: true` (alltså `/priser`, inte
-  `/priser.html`)
+  `/priser.html`). `github.silent` (2026-09-27) hindrar Vercel-botten
+  från att kommentera PR:er och commits: varje kommentar blev ett mejl
+  från GitHub till info@nextrum.se, ett per PR. Vercel kallar nyckeln
+  föråldrad; slutar den gälla stängs samma sak av under Settings → Git
+  i projektet. Stäng inte av GitHub-driftsättningarna i samma veva:
+  `indexnow.yml` lyssnar på deras `deployment_status`
 - **Mejl:** Resend
 - **Modeller:** Anthropic, bara från edge functions — aldrig från
   webbläsaren
