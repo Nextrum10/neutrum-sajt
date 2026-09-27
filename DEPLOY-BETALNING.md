@@ -300,11 +300,12 @@ familjen betalar varje pass med kort, **antingen i förväg eller efter passet n
 bekräftar rapporten**. Ett pass som har hållits ska betalas även om rapporten inte
 bekräftats. (Fas 14.2 sa före passet och att ett obetalt pass inte hålls; de
 orden letar kontrollen nu efter som gamla.) Meningen gäller oförändrad tills
-flaggan `faktura` slås på; då ändras den enligt 9.11. Den står på 23 ställen i 15
-filer: användarvillkoren, prissidan, FAQ:n, Så fungerar Nextrum och studievyns
+flaggan `faktura` slås på; då ändras den enligt 9.11. Den står på 36 ställen i 23
+filer: användarvillkoren, prissidan, FAQ:n, Så fungerar Nextrum, Vår idé och studievyns
 illustration på startsidan och För elever & föräldrar, på båda språken, plus
-FAQ-schemat, föräldravyns Betalning och Pris & villkor, maskotens svarsfil och
-mejlmallarna. Alla måste säga samma sak. En betalning som tas på ett annat sätt än villkoren lovar är en tvist,
+FAQ-schemat, föräldravyns Betalning och Pris & villkor, maskotens svarsfil,
+mejlmallarna, navet Läxhjälp i Stockholm, de fyra ämnessidorna och Solna (de fem
+sista genereras av `verktyg/bygg-omradessidor.py`). Alla måste säga samma sak. En betalning som tas på ett annat sätt än villkoren lovar är en tvist,
 inte ett skrivfel.
 
 Efter en ändring:
@@ -641,18 +642,20 @@ utbetalning**. Båda gällde anslutna konton och finns inte att prova sedan Fas 
   är att familjen byter till faktura medan en kassa står öppen och betalar den
   ändå; webhooken tar emot betalningen, och avvikelsen **Betalt två gånger** larmar
   om passet redan hunnit faktureras. Kreditera då raden i Fortnox.
-- **Startererbjudandet finns inte i koden.** Prissidan lovar "Första timmen på köpet
-  … dras av när ni betalar", och `stripe-checkout` drar inte av något. Bestäm
-  regeln innan en ny familj betalar sitt första pass. Tills den är byggd går det att
-  sätta `rabatt_ore` på passet för hand innan familjen betalar: admin går förbi
-  skyddet, och checkout räknar med rabatten.
-- **Priset räknas när familjen betalar**, men villkoren lovar priset vid
-  bokningen. Höj inte priset medan bokade pass väntar på betalning; prisdialogen i
-  adminvyn räknar dem.
-- **Mejlen säger det nu (Fas 14.3).** Bokningsbekräftelsen och påminnelsen till
-  familjen säger att passet betalas med kort senast innan det börjar, och att ett
-  pass som inte är betalt inte hålls. Mallen vet inte om just det passet redan är
-  betalt, så meningen är villkorad: "om ni inte redan har gjort det".
+- **Startererbjudandet är byggt (Fas 19.5).** Det läxhjälpspass som gör att en ny
+  familj har bokat två timmar får en timme i `rabatt_ore` (`startrabatt`), satt av
+  databasen när passet bokas. `stripe-checkout` drar av den som vilken rabatt som
+  helst, och ett pass där den täcker allt kostar noll kronor: det betalas inte och
+  larmar inte som obetalt. Att ge en familj timmen för hand går fortfarande: admin
+  sätter `rabatt_ore` innan familjen betalar.
+- **Priset fryses vid bokningen (Fas 19.5).** `bookings.timpris_ore` och `extra_ore`
+  sätts när passet bokas, och kortet, fakturan och månadskörningen räknar på dem.
+  En prishöjning gäller bara pass som bokas efter den.
+- **Mejlen säger det (Fas 14.3, omskrivet i Fas 19.2).** Bokningsbekräftelsen och
+  påminnelsen till familjen säger att passet betalas med kort, i förväg eller efter
+  passet när rapporten bekräftas. Mallen vet inte om just det passet redan är
+  betalt, så meningen om att betala i förväg är villkorad: "om ni inte redan har
+  gjort det".
 
 ### 9.8 Säljarens MVP-checklista, punkt för punkt
 
@@ -839,8 +842,9 @@ skrivs om från en vy.
 
 **Samma dag, i en egen liten ändring:**
 
-5. **Texterna, på båda språken.** Meningen "betalar varje pass med kort, före
-   passet" står på sexton ställen i tio filer (avsnitt 8, Ändra betalningslöftet).
+5. **Texterna, på båda språken.** Meningen "antingen i förväg eller efter passet
+   när ni bekräftar rapporten" står på 36 ställen i 23 filer (avsnitt 8, Ändra
+   betalningslöftet; `LOFTET` i kontrollen är den fullständiga listan).
    Den ska säga att familjen kan välja faktura, tio dagar, utan avgift: villkoren,
    prissidan, FAQ:n, studievyns Pris & villkor och intro under Betalning i
    `foralder.html`, och samma sidor under `/en/`.
@@ -945,4 +949,5 @@ Erbjudanden i adminvyn, kolumnen "Om de slutar i dag":
   en som känner sig lurad på en timme.
 - **Planerna säger "ett pass i veckan", men ingenting håller dem till det.** En plan
   är fyra eller åtta timmar som gäller en månad. Hur de bokas är familjens sak.
-- **Startererbjudandet** (se 9.7) gäller fortfarande inte något av detta.
+- **Startererbjudandet** (Fas 19.5) betalas inte med timmar: `klippkort_dra` nekar
+  ett pass med `startrabatt`, och det passet betalas med kort.

@@ -514,25 +514,12 @@
       && (v.rut_procent !== (rad.rut_procent || 0)
           || v.ersattning_per_timme_ore !== (rad.ersattning_per_timme_ore ?? null));
 
-    /* VILLKOREN LOVAR PRISET SOM GÄLLDE VID BOKNINGEN, men kortbetalningen
-       räknar priset när familjen betalar. Ett bokat men obetalt pass får
-       alltså det nya priset. En sänkning skadar ingen; en höjning på ett
-       pass som redan är bokat är ett löfte som bryts. Tills priset fryses
-       på bokningen, som rabatten redan gör, är det den här dialogen som
-       säger det, med antalet pass det gäller. */
-    /* Ett fakturapass (Fas 14.6) får också det nya priset: fakturan
-       räknas när månaden är slut, inte när passet bokas. Därför räknas
-       'faktura' med här, fast det inte är ett obetalt kortpass. Ett
-       genomfört fakturapass som inte fakturerats än gör det också. */
-    const höjt = öre !== null && rad.pris_per_timme_ore != null && öre > rad.pris_per_timme_ore;
-    const fakturerade = new Set();
-    (S.fakturor || []).forEach(f => (f.invoice_lines || []).forEach(l => fakturerade.add(l.booking_id)));
-    const väntar = (S.bokningar || []).filter(b =>
-      (b.status === 'requested' || b.status === 'confirmed'
-        || (b.status === 'completed' && b.betalning_status === 'faktura' && !fakturerade.has(b.id)))
-      && b.fakturerbar !== false
-      && (!b.tjanst || b.tjanst === 'laxhjalp')
-      && ['ingen', 'vantar', 'misslyckad', 'faktura'].indexOf(b.betalning_status || 'ingen') !== -1).length;
+    /* VILLKOREN LOVAR PRISET SOM GÄLLDE VID BOKNINGEN, och sedan Fas 19.5
+       håller databasen det: priset fryses på passet när det bokas
+       (bookings.timpris_ore), och kortet, fakturan och månadskörningen
+       räknar på det. Förut räknade kortet dagens pris, och den här
+       dialogen räknade de bokade passen en höjning hade slagit mot. Nu
+       gäller ett nytt pris bara pass som bokas efter ändringen. */
 
     /* Bekräfta bara det som är värt att bekräfta. En dialog vid varje
        spara lär folk att klicka bort dialoger. */
@@ -550,13 +537,8 @@
             + '\n\nSvarar du ja utan att ha gjort dem kan man beställa något sajten '
             + 'inte beskriver.'
           : prisÄndrat && rad.kod === 'laxhjalp'
-            ? 'Gäller varje pass som betalas efter ändringen — också pass som redan är '
-              + 'bokade men inte betalda. Pass som redan är betalda behåller sitt belopp.'
-              + (höjt && väntar
-                ? '\n\nVillkoren lovar familjen priset som gällde när passet bokades. Just nu '
-                  + 'finns ' + väntar + ' bokade pass som inte är betalda, och de skulle betala '
-                  + 'det nya priset. Vänta med höjningen tills de är betalda.'
-                : '')
+            ? 'Gäller pass som bokas efter ändringen. Pass som redan är bokade behåller '
+              + 'priset de bokades till, som villkoren lovar.'
               + '\n\nKom ihåg att ändra priset på prissidan, i FAQ:n och i användarvillkoren också.'
             : 'Gäller pass som kommer med på underlag från nästa körning. Redan skapade '
               + 'underlag ändras inte.',

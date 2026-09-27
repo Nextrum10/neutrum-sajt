@@ -23,7 +23,8 @@ Två listor:
 
   · LÖFTET — meningen som ska stå, med antal, där betalningen
     beskrivs: villkoren, prissidan, FAQ:n, maskoten och studievyn, på
-    båda språken, och sedan Fas 14.3 familjens mejl. Antalet står med
+    båda språken, och sedan Fas 14.3 familjens mejl. Sedan Fas 19.2c
+    också Vår idé och läxhjälpssidorna. Antalet står med
     för att ett sökuttryck som inte hittar något annars ser ut som ett
     godkännande: formuleras
     meningen om slutar mönstret matcha, och då ska verktyget säga det
@@ -85,6 +86,19 @@ LOFTET = [
     ('en/index.html', LOFTE_EN, 1, 'home page in English'),
     ('en/for-elever-och-foraldrar.html', LOFTE_EN, 1, 'for students and parents in English'),
 
+    # Läxhjälpssidorna och Vår idé sa "innan det hålls" i ett dygn efter
+    # Fas 19.2, för de stod inte i den här listan och ingen såg dem.
+    # Ämnessidorna och Solna genereras av verktyg/bygg-omradessidor.py;
+    # meningen ändras där, inte i sidan.
+    ('var-ide.html', LOFTE_SV, 1, 'vår idé: priset'),
+    ('laxhjalp-stockholm.html', LOFTE_SV, 1, 'läxhjälp i Stockholm: priset'),
+    ('laxhjalp-matematik.html', LOFTE_SV, 2, 'ämnessidan matematik: vad kostar det (text + schema)'),
+    ('laxhjalp-svenska.html', LOFTE_SV, 2, 'ämnessidan svenska: vad kostar det (text + schema)'),
+    ('laxhjalp-engelska.html', LOFTE_SV, 2, 'ämnessidan engelska: vad kostar det (text + schema)'),
+    ('laxhjalp-no.html', LOFTE_SV, 2, 'ämnessidan NO: vad kostar det (text + schema)'),
+    ('laxhjalp-solna.html', LOFTE_SV, 2, 'Solna: måste vi binda upp oss (text + schema)'),
+    ('en/var-ide.html', LOFTE_EN, 1, 'our idea in English: the price'),
+
     # Maskoten citerar FAQ:n och prissidan ordagrant och byggs av
     # verktyg/bygg-maskotsvar.py. Står det gamla kvar här har någon
     # ändrat sidorna utan att köra om verktyget — och då svarar chatten
@@ -123,6 +137,8 @@ DET_GAMLA = [
     r'before each session',
     r'nothing is charged afterwards',
     r'nothing to pay afterwards',
+    r'innan det hålls',
+    r'before it takes place',
 ]
 
 

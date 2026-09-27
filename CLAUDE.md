@@ -132,8 +132,10 @@ familjer med två rapporter får samma fråga: att bara skicka de nöjda
 vidare förbjuder Google. `tutor_reviews` (v7) är omdömen om
 studiehjälparen, inte om Nextrum, och ska aldrig bli publik, för
 studiehjälparna är ofta sexton. Den har noll rader och ingen vy skriver
-dit, men insert-policyn prövar inte att `tutor_id` är passets
-studiehjälpare: laga det innan något gör det.
+dit. Insert-policyn prövade förut bara att passet var familjens, så en
+familj kunde skriva om vilken studiehjälpare som helst; sedan Fas 19.3
+måste `tutor_id` vara passets studiehjälpare och `student_id` passets
+elev.
 
 ### Ordlistan (använd den, i kod och i text)
 
@@ -156,11 +158,14 @@ studiehjälpare: laga det innan något gör det.
   betalar varje pass med kort, **antingen i förväg eller efter passet
   när de bekräftar rapporten**, och ett pass som har hållits ska betalas
   även om rapporten inte bekräftats. Fas 14.2 sa före passet och att ett
-  obetalt pass inte hålls; det gäller inte längre. Meningen står på 23
-  ställen i 15 filer, på båda språken och i familjens mejl.
+  obetalt pass inte hålls; det gäller inte längre. Meningen står på 36
+  ställen i 23 filer, på båda språken och i familjens mejl — också på
+  läxhjälpssidorna och Vår idé, som sa "innan det hålls" ett dygn efter
+  Fas 19.2 för att kontrollen inte räknade dem.
   `verktyg/kolla-betalningsvillkor.py` räknar dem, letar efter de gamla
   löftena ("efterskott", "10 dagars …", och sedan Fas 19.2 "hålls
-  inte", "senast innan passet börjar", "ingenting dras i efterhand") i
+  inte", "innan det hålls", "senast innan passet börjar", "ingenting
+  dras i efterhand") i
   allt som serveras, och körs i CI. **En betalning som tas på ett annat
   sätt än villkoren lovar är en tvist, inte ett skrivfel.**
 
@@ -181,6 +186,27 @@ studiehjälpare: laga det innan något gör det.
   javascript; `NX.initErbjudanden()` skriver över dem ur vyn med ett
   rått PostgREST-anrop, eftersom supabase-js inte laddas på de publika
   sidorna.
+- **Priset fryses när passet bokas** (Fas 19.5). Villkoren lovar
+  priset vid bokningen, och kortet räknade förut dagens pris. Nu sätter
+  `frys_passets_pris` `bookings.timpris_ore` och `extra_ore` vid
+  bokningen, och `stripe-checkout`, `pris.ts` (`passpris()`) och
+  föräldravyn (`passetsPris`) räknar på dem, med katalogen som reserv.
+  En prishöjning gäller bara pass som bokas efter den. En vy kan inte
+  ändra kolumnerna: `skydda_bokningsfalt` släpper bara igenom status,
+  tid och skäl på ett befintligt pass.
+- **Första timmen är på köpet för nya familjer** (Fas 19.5, prissidans
+  starterbjudande). `forsta_timmen_bjuds` ger det läxhjälpspass som gör
+  att familjen har bokat två timmar en timme i `rabatt_ore`, till
+  passets eget timpris, och märker det `startrabatt`. En gång per
+  familj; avbokade pass räknas inte, och avbokas passet med rabatten
+  får nästa pass som når två timmar den. Två pass på en timme gör alltså
+  det andra gratis. Ett pass på noll kronor är INTE betalt (ett betalt
+  pass går inte att avboka), det står kvar som `ingen`, och varken
+  `ej_betalt`, `obetalda` eller fakturan räknar det. Klippkortet betalar
+  inte ett pass med startrabatt. Triggern heter `bookings_startrabatt`
+  för att köras efter `bookings_skydda_rabatt`, som nollar
+  `rabatt_ore` på varje ny rad från en vy: triggrar på samma händelse
+  körs i namnordning.
 - Belopp lagras i **ören** överallt. Kronor blir det först vid visning
   (`NXBetalning.kronor`). Enda stället ett avrundningsfel kan smyga in
   är omvandlingen — gör den en gång, på ett ställe.
@@ -895,16 +921,26 @@ att visa **rätt sida**, inte för att skydda data.
 
 ### Supabases säkerhetsadvisor larmar om saker som är med flit
 
-`get_advisors(type: 'security')` ger ett trettiotal varningar. De flesta
+`get_advisors(type: 'security')` ger ett fyrtiotal varningar. De flesta
 är väntade, och listan nedan finns för att ingen ska utreda dem en
-gång till. **Kontrollerat 2026-09-23, med prov mot driften:**
+gång till. **Kontrollerat 2026-09-23, med prov mot driften, och
+igen 2026-09-27:**
 
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 23 SECURITY DEFINER-funktioner nåbara för `authenticated` | Alla fjorton adminfunktioner kontrollerar `is_admin()` internt. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 26 SECURITY DEFINER-funktioner nåbara för `authenticated` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
+| `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
+| `publika_studiehjalpare` nåbar för `anon` | Den ÄR den publika listan: förnamn, ålder, stad, ämnen, bio, bara godkända med `visa_publikt` |
+| `extension_in_public` för `btree_gist` och `pg_net` | `btree_gist` bär överlappsvillkoret på `bookings` (v9), och `pg_net` går inte att flytta med `set schema`. Att flytta dem vinner ingenting och riskerar det som hänger på dem |
+
+**Triggerfunktioner har ingen EXECUTE** (v14b, v16c, Fas 19.4). Supabases
+förval ger varje ny funktion EXECUTE för anon och authenticated, och
+Fas 16.1 fick tillbaka tre. En trigger prövar rättigheten när den
+skapas, inte när den körs, så en revoke ändrar ingenting i vad den
+gör. `rls-test.sql` har en rad som fångar nästa.
 
 Proven, körda som `anon` i en transaktion som rullades tillbaka:
 `is_admin(<en riktig admin>)` → `false`, `is_admin(<vanlig användare>)`
@@ -1338,7 +1374,8 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
     avisering till befintliga familjer och påminnelser utan avgift.
     DEPLOY-BETALNING.md 9.11 är checklistan. **De publika texterna
     lovar fortfarande bara kort, med flit**: ett löfte om ett betalsätt
-    som inte går att välja är samma fel som startererbjudandet. De
+    som inte går att välja är samma fel som startererbjudandet var innan
+    Fas 19.5 byggde in det. De
     ändras i en egen liten ändring samma dag som flaggan slås på.
   - **Familjen väljer per pass.** `betalning_status = 'faktura'`.
     `skydda_bokningsfalt` släpper igenom `ingen`/`vantar`/`misslyckad`
@@ -1394,19 +1431,6 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
 
   **Kvar, och inget av det sköter koden åt er:**
 
-  - **Startererbjudandet finns inte i koden.** Prissidan lovar "Första
-    timmen på köpet … dras av när ni betalar", och kortbetalningen drar
-    inte av något. Före en ny familjs första betalning: bestäm regeln
-    och bygg den i `stripe-checkout`, sätt `rabatt_ore` på passet för
-    hand innan familjen betalar (admin går förbi skyddet), eller ta bort
-    erbjudandet.
-  - **Villkoren lovar priset vid bokningen, kortbetalningen räknar
-    priset när familjen betalar.** Glappet fanns redan med
-    månadsfakturan, som också räknade på dagens pris. Rätt lösning är
-    att frysa timpriset på bokningen, som rabatten redan gör, och skydda
-    kolumnen i `skydda_bokningsfalt`. Tills dess säger prisdialogen i
-    adminvyn hur många bokade pass som väntar på betalning när priset
-    höjs.
   - **Ett avbokat pass kan bli betalt.** Betalsidan kan ligga öppen när
     passet avbokas, och Stripe drar pengarna om familjen betalar
     efteråt. Webhooken skriver ner betalningen, för pengarna är dragna,
@@ -1418,11 +1442,12 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
     efter passet. Villkoren har ett avsnitt om ändringar (30 dagar för
     väsentliga). Fas 19.2 ger familjen fler val, inte färre, men ett nytt
     steg, att bekräfta rapporten. Meddela dem.
-  - **Betalningen efter passet har ingen sista dag.** Villkoren säger
-    att den görs när familjen bekräftar rapporten, och att ett hållet
-    pass ska betalas även utan bekräftelse, men inte inom hur många
-    dagar. Larmet `ej_betalt` kommer direkt; det är människan som följer
-    upp. En frist i dagar är ett nytt villkor, inte en inställning.
+  - **Betalningen efter passet har ingen sista dag, med flit.** Leo
+    2026-09-27: ingen frist. Kortet dras direkt när familjen betalar,
+    och fakturan (när flaggan är på) skickas den 1:a i nästa månad med
+    tio dagars betalningsvillkor. Larmet `ej_betalt` kommer direkt; det
+    är människan som följer upp. En frist i dagar är ett nytt villkor,
+    inte en inställning.
   - **Korttvister har en sista dag, och den är människans (Fas 14.3).**
     Förut satte webhooken bara `betalning_status = 'tvist'`: sista dagen
     att svara, orsaken och utfallet stod ingenstans, och en förlorad
@@ -1532,10 +1557,9 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   lever kvar. `NXMedia.laddaMaterial`, `materialRad` och
   `sparaMaterialfil` gör det INTE längre — de hade noll anropare kvar
   efter ombyggnaden, och en delad hjälpare som ingen ringer är en
-  hjälpare nästa person bygger vidare på. Kvar att bestämma: ska
-  panelen vara kvar som internt underlag (då är det färdigt) eller ska
-  `materials` bort helt (då är det en städning med en hink att tömma
-  först)?
+  hjälpare nästa person bygger vidare på. Leo 2026-09-27: panelen står
+  kvar som internt underlag. Det är alltså färdigt, och `materials` ska
+  inte städas bort.
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
