@@ -1074,15 +1074,11 @@
   /* ============================================================
      ERBJUDANDEN (Fas 16.1)
 
-     Planer: timmar köpta i förväg. Katalogen och priserna läses ur
-     erbjudanden_pris — samma vy som prissidan visar och som
+     Planer och klippkort: timmar köpta i förväg. Katalogen och priserna
+     läses ur erbjudanden_pris — samma vy som prissidan visar och som
      stripe-checkout tar betalt efter — och familjens egna kort ur
      klippkort_saldo, där "kvar" räknas i databasen ur passen. Här
      räknas ingenting om, det ritas bara.
-
-     Klippkorten säljs inte här (2026-09-27), så katalogen är bara
-     planerna. Familjens egna kort läses ändå oavsett sort: ett
-     klippkort som redan köpts ska synas och gå att betala med.
 
      Flaggan erbjudanden avgör om något går att köpa eller dra. Står den
      av syns erbjudandena med sina priser, men knapparna säger "Snart".
@@ -1101,7 +1097,7 @@
         .order('giltigt_till', { ascending: true })
     ]);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
-    S.erb.katalog = (katalog.data || []).filter(e => e.sort === 'plan');
+    S.erb.katalog = katalog.data || [];
     S.erb.kort = kort.data || [];
     ritaErbjudanden();
   }
@@ -1557,17 +1553,74 @@
       + '<span class="erb-pris"><s>' + esc(kr(e.ordinarie_ore)) + '</s><b>' + esc(kr(e.pris_ore)) + '</b></span>'
       + '<span class="erb-tim"><s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + ' per timme · ni sparar '
       + esc(kr(spar)) + '</span>'
-      + (S.erb.aktiv
-        ? '<button type="button" class="btn btn-primary btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>'
-        : '<button type="button" class="btn btn-ghost btn-sm" disabled>Snart</button>')
+      + köpKnapp(e)
       + '</div>';
+  }
+
+  /* Köpknappen, lika på planerna och klippkorten. */
+  const köpKnapp = e => S.erb.aktiv
+    ? '<button type="button" class="btn btn-primary btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>'
+    : '<button type="button" class="btn btn-ghost btn-sm" disabled>Snart</button>';
+
+  /* Klippkorten som EN kolumn bredvid planerna, som fälls ut
+     (2026-09-27, som på prissidan). Fem kort i en egen ruta var en
+     vägg under planerna.
+
+     Rubriken sammanfattar korten som finns: "från" det billigaste och
+     spannet i timmar. Rabatten och timpriset står bara där om de är
+     desamma på alla kort — ett tal som stämmer för ett av dem är ett
+     pris som inte är det kassan drar. <details>, så att kolumnen går
+     att öppna med tangentbordet utan en rad skript. */
+  function klippKolumn(kort, öppen) {
+    if (!kort.length) return '';
+    const kr = NXBetalning.kronor;
+    const lika = f => new Set(kort.map(e => String(e[f]))).size === 1;
+    const tim = kort.map(e => Number(e.timmar));
+    const billigast = kort.reduce((a, e) => Number(e.pris_ore) < Number(a.pris_ore) ? e : a);
+    const spann = Math.min(...tim) === Math.max(...tim)
+      ? Math.min(...tim) + ' timmar'
+      : Math.min(...tim) + ' till ' + Math.max(...tim) + ' timmar';
+    const rader = kort.map(e => {
+      const spar = Number(e.ordinarie_ore) - Number(e.pris_ore);
+      const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
+      return '<div class="erb-klipp-rad">'
+        + '<div class="erb-topp"><b class="erb-namn">' + esc(e.timmar + ' timmar') + '</b>'
+        + '<b class="erb-summa">' + esc(kr(e.pris_ore)) + '</b></div>'
+        + '<span class="erb-tim"><s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(e.rabatterat_timpris_ore))
+        + ' per timme · ni sparar ' + esc(kr(spar)) + '</span>'
+        + '<div class="erb-klipp-fot"><span class="erb-vad">Gäller i ' + esc(mån) + '</span>' + köpKnapp(e) + '</div>'
+        + '</div>';
+    }).join('');
+    return '<details class="erb-kort erb-klippkol"' + (öppen ? ' open' : '') + '>'
+      + '<summary>'
+      + '<span class="erb-topp"><b class="erb-namn">Klippkort</b>'
+      + (lika('rabatt_procent') ? '<span class="erb-rabatt">−' + esc(String(kort[0].rabatt_procent)) + ' %</span>' : '')
+      + '</span>'
+      + '<span class="erb-vad">' + esc(spann) + ', när det passar er</span>'
+      + '<span class="erb-pris"><span class="erb-fran">från</span><b>' + esc(kr(billigast.pris_ore)) + '</b></span>'
+      + (lika('rabatterat_timpris_ore') && lika('timpris_ore')
+        ? '<span class="erb-tim"><s>' + esc(kr(kort[0].timpris_ore)) + '</s> ' + esc(kr(kort[0].rabatterat_timpris_ore))
+          + ' per timme</span>'
+        : '')
+      + '<span class="erb-visa"><span class="erb-visa-stangd">Se alternativen</span>'
+      + '<span class="erb-visa-oppen">Dölj alternativen</span>'
+      + '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"'
+      + ' stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></span>'
+      + '</summary>'
+      + '<div class="erb-klipp">' + rader + '</div>'
+      + '</details>';
   }
 
   function ritaErbjudanden() {
     const planer = $('#erb-planer');
     if (!planer) return;
-    planer.innerHTML = S.erb.katalog.map(erbKort).join('')
-      || tomt('Inga planer just nu', 'Skriv till oss om ni vill ha ett upplägg.');
+    /* Omritningen (efter ett köp, eller när timmarna laddas om) ska
+       inte fälla ihop kolumnen under fingret på den som läser i den. */
+    const öppen = !!planer.querySelector('.erb-klippkol[open]');
+    const kat = S.erb.katalog;
+    planer.innerHTML = kat.filter(e => e.sort === 'plan').map(erbKort).join('')
+      + klippKolumn(kat.filter(e => e.sort === 'klippkort'), öppen)
+      || tomt('Inga erbjudanden just nu', 'Skriv till oss om ni vill ha ett upplägg.');
 
     const msg = $('#erb-msg');
     if (msg && !S.erb.aktiv && !msg.classList.contains('show')) {

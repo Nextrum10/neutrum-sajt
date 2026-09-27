@@ -1760,6 +1760,41 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-tim s{color:var(--muted-2)}
 .erb-kort .btn{margin-top:10px;align-self:flex-start}
 
+/* Klippkorten som en kolumn som fälls ut (2026-09-27), som på
+   prissidan. Kortets luft ligger i summary, så att ett tryck i
+   kanten också fäller ut. Fokusringen ligger innanför kanten. */
+.erb-klippkol{padding:0;gap:0}
+.erb-klippkol > summary{
+  display:flex;flex-direction:column;gap:6px;
+  padding:18px 18px 16px;border-radius:inherit;
+  list-style:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.erb-klippkol > summary::-webkit-details-marker{display:none}
+.erb-klippkol > summary:focus-visible{outline-offset:-4px}
+.erb-fran{font-size:.84rem;color:var(--bl-2)}
+/* Pilen står i högerkanten, där den inte flyttar sig när texten byts
+   mellan "Se" och "Dölj". */
+.erb-visa{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:.86rem;font-weight:600;color:var(--bl)}
+.erb-visa svg{
+  flex:none;margin-left:auto;width:26px;height:26px;padding:5px;
+  border:1px solid var(--ln);border-radius:50%;transition:transform .3s ease;
+}
+.erb-klippkol > summary:hover .erb-visa svg{border-color:var(--acc-line)}
+.erb-klippkol[open] .erb-visa svg{transform:rotate(180deg)}
+.erb-klippkol:not([open]) .erb-visa-oppen,
+.erb-klippkol[open] .erb-visa-stangd{display:none}
+.erb-klipp{padding:0 18px 8px}
+.erb-klipp-rad{display:flex;flex-direction:column;gap:4px;padding:14px 0;border-top:1px solid var(--ln)}
+.erb-klipp-rad .erb-topp{align-items:baseline}
+.erb-summa{font-size:1.15rem;letter-spacing:-.03em;color:var(--bl);white-space:nowrap}
+/* Giltigheten och knappen på samma rad: en knapp under varje kort
+   gjorde fem rader till en skärm och en halv på en telefon. */
+.erb-klipp-fot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px}
+.erb-klipp-fot .btn{margin-top:0;flex:none}
+/* Utfälld blir kolumnen lång. Planerna bredvid ska inte sträckas med
+   den till kort som mest är tom yta. */
+.erb-grid:has(> .erb-klippkol[open]){align-items:start}
+
 .erb-eget p{font-size:.92rem;line-height:1.6;color:var(--bl-2);margin:6px 0 14px;max-width:60ch}
 .erb-finstilt{font-size:.78rem;line-height:1.55;color:var(--muted-2);margin:2px 4px 0}
 .erb-finstilt a{color:inherit;text-decoration:underline;text-underline-offset:2px}

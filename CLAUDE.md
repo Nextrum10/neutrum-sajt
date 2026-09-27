@@ -66,11 +66,9 @@ gäller först efter fristen — adminvyn visar rätt belopp efter datumet
 Timmarna betalar sedan ett bekräftat pass med ett barn i stället för
 kortet. Flaggan `erbjudanden` står av tills provköpet i
 DEPLOY-BETALNING.md 9.12 gått igenom; då syns priserna men inget går
-att köpa. Sedan 2026-09-27 säljs klippkorten inte i studievyn, bara
-planerna; ett kort som redan köpts står kvar under Era timmar och går
-att betala med. Prissidan visar fortfarande klippkorten, med flit:
-bara studievyn skulle ändras. När flaggan slås på visar prissidan
-alltså ett klippkort som inte går att köpa i vyn.
+att köpa. Klippkorten står i studievyn och på prissidan som en kolumn
+bredvid planerna som fälls ut (2026-09-27). De var borta ur
+studievyn en förmiddag samma dag och kom tillbaka i den formen.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
