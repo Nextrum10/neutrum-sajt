@@ -1,5 +1,5 @@
 /* ============================================================
-   NEXTRUM — adminvyn, detaljpanelen (familj, elev, studiehjälpare)
+   NEXTRUM — adminvyn, detaljpanelen (familj, elev, studiehjälpare, pass)
 
    En del av nextrum-admin.js, utflyttad i Fas 6 utan att någon
    funktion skrivits om. Kärnan (nextrum-admin-karna.js) laddas
@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { BOK_LAGE, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, elevHjälpare,
+  const { BOK_LAGE, DP, FAKT_LAGE, KORT_LAGE, S, SH_LAGE, TILLAGG_LAGE, UTB_LAGE, elevHjälpare,
           elevNamn, kortDatum, läge, namnFör, närText, pill, rad } = NXAdmin;
 
   /* ============================================================
@@ -114,6 +114,18 @@
       lägg('rapporter', supa.from('lesson_reports')
         .select('id, lesson_date, went_well, needs_practice, next_focus, ai_feedback, created_at')
         .eq('student_id', id).order('lesson_date', { ascending: false }).limit(30));
+    } else if (typ === 'pass') {
+      /* Fas 20.1: tiden står på rapporten, inte på passet. Passet bär
+         det som bokades; rapporten säger vad som hände. Tillägget för
+         övertid och vad kortbetalningen avsåg (stripe_minuter) hämtas
+         färskt, för det är de som avgör vad familjen är skyldig. */
+      lägg('rapporter', supa.from('lesson_reports')
+        .select('id, lesson_date, narvaro, start_tid, slut_tid, hallna_min, debiterade_min, avvikelse_skal, created_at')
+        .eq('booking_id', id).order('created_at'));
+      lägg('tillagg', supa.from('pass_tillagg')
+        .select('id, minuter, begart_ore, status, betalt_ore, aterbetald_ore, betald_at, stripe_skarp, created_at')
+        .eq('booking_id', id));
+      lägg('pass', supa.from('bookings').select('id, stripe_minuter').eq('id', id));
     } else if (typ === 'studiehjalpare') {
       lägg('rapporter', supa.from('lesson_reports')
         .select('id, student_id, lesson_date, created_at').eq('tutor_id', id)
@@ -177,11 +189,19 @@
        veckoschema längre. Familjen föreslår en tid och hjälparen svarar. */
     studiehjalpare: [['oversikt', 'Översikt'], ['elever', 'Elever'], ['pass', 'Pass'],
                      ['ersattning', 'Ersättning'],
-                     ['anteckningar', 'Anteckningar']]
+                     ['anteckningar', 'Anteckningar']],
+    /* Fas 20.2: ett pass, öppnat från bokslutets larm, Ekonomis listor
+       och passlistorna i panelen. En flik: allt om ett pass ryms på en. */
+    pass:           [['oversikt', 'Passet']]
   };
 
   async function öppnaDetalj(typ, id) {
     if (!DP_FLIKAR[typ]) return;
+    /* Ett pass hämtas om varje gång. Tiden, tillägget och betalningen
+       ändras av andra (studiehjälparen, familjen, Stripe), och ett
+       cachat pass hade visat ett tillägg som obetalt efter att det
+       betalats. */
+    if (typ === 'pass') delete S.detaljCache[typ + ':' + id];
     byggPanel();
     DP.sistaFokus = document.activeElement;
     DP.typ = typ; DP.id = id;
@@ -411,7 +431,102 @@
       kortDatum(b.wanted_date) + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
       [b.subject, b.format, (b.duration_min || 60) + ' min',
         visaVem ? visaVem(b) : null].filter(Boolean).join(' · '),
-      läge(BOK_LAGE, b.status))).join('');
+      läge(BOK_LAGE, b.status)
+        + ' <button class="btn btn-ghost btn-sm" type="button" data-dp="pass:' + esc(b.id) + '">Öppna</button>')).join('');
+  }
+
+  /* ------------------------------------------------------------
+     PASSET (Fas 20.1 och 20.2)
+
+     Vad som bokades, vad som hölls och vad det kostar. Den hållna
+     tiden är studiehjälparens egen uppgift i rapporten, och skälet till
+     en avvikelse är hens fritext: det escapas som allt annat, och det
+     visas bara här och för familjen, aldrig i ett mejl.
+
+     Talen för betalt och lön kommer ur passunderlag, samma vy som
+     månadskörningen och bokslutet räknar på. Att räkna dem en gång
+     till här hade gett en tredje definition av samma minuter.
+     ------------------------------------------------------------ */
+  const minText = m => m == null ? '—' : m + ' min';
+
+  function dpPass(b, d) {
+    const pu = (S.passunderlag || []).find(p => p.id === b.id) || null;
+    const extra = (d.pass || [])[0] || {};
+    const rapporter = d.rapporter || [];
+    const rapport = rapporter.find(r => r.start_tid) || rapporter[0] || null;
+    const tillägg = (d.tillagg || [])[0] || null;
+    const bokat = b.duration_min || 60;
+    const klock = t => String(t || '').slice(0, 5);
+    const knapp = (typ, id, text) => '<button class="btn btn-ghost btn-sm" type="button" data-dp="'
+      + typ + ':' + esc(id) + '">' + esc(text) + '</button>';
+
+    let h = dpFakta([
+      ['När', esc(kortDatum(b.wanted_date) + (b.wanted_time ? ' kl. ' + klock(b.wanted_time) : ''))],
+      ['Bokat', esc(NXBetalning.timmar(bokat) + ' (' + bokat + ' min)')],
+      ['Ämne', b.subject ? esc(b.subject) : null],
+      ['Elev', b.student_id ? knapp('elev', b.student_id, elevNamn(b.student_id)) : null, 'inget barn valt'],
+      ['Familj', b.parent_id ? knapp('familj', b.parent_id, namnFör(b.parent_id)) : null],
+      ['Studiehjälpare', b.tutor_id ? knapp('studiehjalpare', b.tutor_id, namnFör(b.tutor_id)) : null, 'ingen'],
+      ['Betalning', esc((KORT_LAGE[b.betalning_status || 'ingen'] || b.betalning_status)
+        + (b.klippkort_id ? ', med timmar' : '')
+        + (b.betalt_ore != null ? ' · ' + kronor(b.betalt_ore) : '')
+        + (extra.stripe_minuter ? ' för ' + minText(extra.stripe_minuter) : '')
+        + (Number(b.aterbetald_ore || 0) > 0 ? ' · ' + kronor(b.aterbetald_ore) + ' tillbaka' : ''))
+        + (b.stripe_skarp === false ? ' ' + pill('Test', '') : '')]
+    ]);
+
+    h += dpRubrik('Hållen tid');
+    if (d.rapporterFel) {
+      h += tomt('Rapporten gick inte att läsa', d.rapporterFel);
+    } else if (!rapport) {
+      h += '<p class="xsmall" style="color:var(--bl-3);margin:0 0 14px">Ingen rapport än. '
+        + 'Studiehjälparen skriver in tiden med rapporten.</p>';
+    } else if (!rapport.start_tid) {
+      h += '<p class="xsmall" style="color:var(--bl-3);margin:0 0 14px">Rapporten har ingen tid, så det bokade gäller: '
+        + esc(minText(bokat)) + '.</p>';
+    } else {
+      const deb = rapport.debiterade_min;
+      const skillnad = deb - bokat;
+      h += dpFakta([
+        ['Hölls', esc(klock(rapport.start_tid) + '–' + klock(rapport.slut_tid) + ' (' + minText(rapport.hallna_min) + ')')],
+        ['Debiteras', esc(minText(deb) + ' mot ' + bokat + ' bokade')
+          + (skillnad ? ' ' + pill((skillnad > 0 ? '+' : '−') + Math.abs(skillnad) + ' min', 'ar-vantar') : '')],
+        ['Skäl', rapport.avvikelse_skal ? esc(rapport.avvikelse_skal) : null,
+          skillnad ? 'inget skäl angivet' : 'ingen avvikelse']
+      ]);
+    }
+    if (pu) {
+      h += dpFakta([
+        ['Familjen har betalat för', esc(minText(pu.betalda_min))],
+        ['Studiehjälparen får lön för', esc(minText(pu.lon_min))]
+      ]);
+    }
+
+    h += dpRubrik('Tillägg för övertid');
+    if (d.tillaggFel) {
+      h += tomt('Tillägget gick inte att läsa', d.tillaggFel);
+    } else if (!tillägg) {
+      h += '<p class="xsmall" style="color:var(--bl-3);margin:0 0 14px">Inget tillägg.</p>';
+    } else {
+      const l = TILLAGG_LAGE[tillägg.status] || [tillägg.status, ''];
+      h += dpFakta([
+        ['Läge', pill(l[0], l[1]) + (tillägg.stripe_skarp === false ? ' ' + pill('Test', '') : '')],
+        ['Övertid', esc(minText(tillägg.minuter))],
+        ['Begärt', esc(kronor(tillägg.begart_ore))],
+        ['Betalt', tillägg.betalt_ore != null
+          ? esc(kronor(tillägg.betalt_ore) + (tillägg.betald_at ? ' · ' + kortDatum(tillägg.betald_at) : '')) : null, 'inte betalt'],
+        ['Återbetalt', Number(tillägg.aterbetald_ore || 0) > 0 ? esc(kronor(tillägg.aterbetald_ore)) : null, 'inget']
+      ]);
+    }
+
+    /* Larmen för just det här passet, med samma ord som i Ekonomi. */
+    const larm = (S.avvikelser || []).filter(a => a.objekt_tabell === 'bookings' && a.objekt_id === b.id);
+    if (larm.length) {
+      const text = a => (NXAdmin.rita.avvText ? NXAdmin.rita.avvText(a) : [a.typ, '']);
+      h += dpRubrik('Larm', String(larm.length))
+        + larm.map(a => dpRad(text(a)[0], text(a)[1], '')).join('');
+    }
+    return h;
   }
 
   /* Samma fem steg och samma ord som studievyerna (NXStudie.STEG).
@@ -958,7 +1073,15 @@
     const flikar = DP_FLIKAR[DP.typ] || [];
     let person, rubrik, under, märken = '';
 
-    if (DP.typ === 'elev') {
+    if (DP.typ === 'pass') {
+      person = S.bokningar.find(x => x.id === DP.id);
+      if (!person) { stängDetalj(); return; }
+      rubrik = 'Pass ' + kortDatum(person.wanted_date);
+      under = [person.subject, elevNamn(person.student_id), namnFör(person.tutor_id)]
+        .filter(x => x && x !== '—').join(' · ');
+      märken = läge(BOK_LAGE, person.status)
+        + (person.attendance === 'franvarande' ? ' ' + pill('Uteblev', 'ar-ny') : '');
+    } else if (DP.typ === 'elev') {
       person = S.elevlista.find(x => x.id === DP.id);
       if (!person) { stängDetalj(); return; }
       const f = S.personer[person.parent_id];
@@ -987,13 +1110,15 @@
     const d = S.detaljCache[DP.typ + ':' + DP.id];
     let kropp;
     if (laddarÄn || !d) kropp = laddar();
+    else if (DP.typ === 'pass') kropp = dpPass(person, d);
     else if (DP.typ === 'familj') kropp = dpFamilj(person, d);
     else if (DP.typ === 'elev') kropp = dpElev(person, d);
     else kropp = dpStudiehjalpare(person, d);
 
     DP.panel.innerHTML =
       '<div class="dp-topp">'
-      + M.avatar(rubrik, (person.avatar_url || null), {})
+      /* Ett pass har inget ansikte; ämnet får ge initialen. */
+      + M.avatar(DP.typ === 'pass' ? (person.subject || 'Pass') : rubrik, (person.avatar_url || null), {})
       + '<span class="dp-namn"><b>' + esc(rubrik) + '</b>'
       + (under ? '<span>' + esc(under) + '</span>' : '')
       + (märken ? '<span class="dp-marken">' + märken + '</span>' : '')

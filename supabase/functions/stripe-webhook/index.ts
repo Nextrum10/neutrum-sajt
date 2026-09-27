@@ -160,10 +160,13 @@ Deno.serve(async (req) => {
            ett klippkort har inget pass, och grenen nedanför hade
            kvitterat den som "utan pass-id" med pengarna dragna. */
         const kkId = String((obj.metadata as Record<string, string> | undefined)?.klippkort_id ?? '');
+        // Ett tillägg för övertid (Fas 20.1) bär sitt pass här, aldrig i
+        // booking_id: det är inte passets betalning.
+        const tillaggId = String((obj.metadata as Record<string, string> | undefined)?.tillagg_booking_id ?? '');
 
         const passId = String(obj.client_reference_id
           ?? (obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
-        if (!passId && !kkId) return await klar('session utan pass-id');
+        if (!passId && !kkId && !tillaggId) return await klar('session utan pass-id');
 
         const piId = String(obj.payment_intent ?? '');
         let chargeId: string | null = null;
@@ -214,6 +217,34 @@ Deno.serve(async (req) => {
           return await klar(blev ? 'klippkort betalt' : 'klippkortet var redan betalt');
         }
 
+        /* TILLÄGGET (Fas 20.1) skrivs på sin egen rad, aldrig på passets
+           betalningskolumner. Villkoret på läget gör en andra leverans
+           till noll rader, som för passet. Ett fel kastas: ett betalt
+           tillägg som inte blev skrivet fortsätter larma som obetalt. */
+        if (tillaggId) {
+          const { data: blev, error: tfel } = await db.from('pass_tillagg').update({
+            status: 'betald',
+            betald_at: new Date().toISOString(),
+            betalt_ore: draget,
+            aterbetald_ore: 0,
+            stripe_payment_intent_id: piId || null,
+            stripe_charge_id: chargeId,
+            stripe_balanstransaktion_id: b.id,
+            stripe_avgift_ore: b.avgiftOre,
+            stripe_netto_ore: b.nettoOre,
+            stripe_skarp: skarp,
+          }).eq('booking_id', tillaggId).in('status', ['vantar', 'misslyckad']).select('booking_id');
+          if (tfel) throw new Error('pass_tillagg: ' + tfel.message);
+          return await klar(blev?.length ? 'tillägg betalt' : 'tillägget var redan betalt');
+        }
+
+        /* Minuterna betalningen avsåg (Fas 20.1), ur metadata vi själva
+           skrev i stripe-checkout. Saknas de, eller ser de fel ut, skrivs
+           inget: passunderlag räknar då med det bokade, som förut. */
+        const minText = (obj.metadata as Record<string, string> | undefined)?.minuter;
+        const minuter = /^\d{2,3}$/.test(String(minText ?? '')) && Number(minText) >= 15 && Number(minText) <= 240
+          ? Number(minText) : null;
+
         const kortbetalning = {
           betalning_status: 'betald',
           betald_at: new Date().toISOString(),
@@ -224,6 +255,7 @@ Deno.serve(async (req) => {
           stripe_netto_ore: b.nettoOre,
           stripe_skarp: skarp,
           betalt_ore: draget,
+          stripe_minuter: minuter,
           /* NOLLAS, och det är avsiktligt. Kolumnerna beskriver den
              betalning som gäller NU. Ett pass som återbetalades och
              sedan betalades igen har en ny charge, och den gamla
@@ -277,7 +309,10 @@ Deno.serve(async (req) => {
           .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
         const { data: kort } = pass ? { data: null } : await db.from('klippkort')
           .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
-        const rad = pass ?? kort;
+        // Ett tillägg för övertid (Fas 20.1) bär också en egen charge.
+        const { data: tillagg } = pass || kort ? { data: null } : await db.from('pass_tillagg')
+          .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
+        const rad = pass ?? kort ?? tillagg;
         if (!rad) return await klar('charge utan pass');
         if (rad.stripe_avgift_ore !== null && rad.stripe_avgift_ore !== undefined) {
           return await klar('avgiften fanns redan');
@@ -286,7 +321,7 @@ Deno.serve(async (req) => {
         if (bt.avgiftOre === null && arStripeId(bt.id, 'txn')) {
           bt = balans(await v1('GET', `/v1/balance_transactions/${bt.id}`));
         }
-        await db.from(pass ? 'bookings' : 'klippkort').update({
+        await db.from(pass ? 'bookings' : kort ? 'klippkort' : 'pass_tillagg').update({
           stripe_balanstransaktion_id: bt.id,
           stripe_avgift_ore: bt.avgiftOre,
           stripe_netto_ore: bt.nettoOre,
@@ -296,6 +331,12 @@ Deno.serve(async (req) => {
 
       // ---------- betalningen gick inte igenom ----------
       case 'payment_intent.payment_failed': {
+        const tillaggId = String((obj.metadata as Record<string, string> | undefined)?.tillagg_booking_id ?? '');
+        if (tillaggId) {
+          await db.from('pass_tillagg').update({ status: 'misslyckad' })
+            .eq('booking_id', tillaggId).eq('status', 'vantar');
+          return await klar('tillägg misslyckat');
+        }
         const kkId = String((obj.metadata as Record<string, string> | undefined)?.klippkort_id ?? '');
         if (kkId) {
           await db.from('klippkort').update({ status: 'misslyckad' })
@@ -343,6 +384,11 @@ Deno.serve(async (req) => {
             .update({ aterbetald_ore: aterbetalt, status: 'aterbetald' })
             .eq('stripe_charge_id', chargeId).select('id');
           if (kort?.length) return await klar(`klippkort återbetalt ${aterbetalt} öre, stängt`);
+          // Ett tillägg (Fas 20.1) har sin egen charge, och sin egen rad.
+          const { data: tillagg } = await db.from('pass_tillagg')
+            .update({ aterbetald_ore: aterbetalt, status: aterbetalningsLage(aterbetalt, totalt) })
+            .eq('stripe_charge_id', chargeId).select('booking_id');
+          if (tillagg?.length) return await klar(`tillägg återbetalt ${aterbetalt} öre`);
           return await klar(`återbetalt ${aterbetalt} öre`);
         }
         const passId = String((obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
@@ -380,6 +426,9 @@ Deno.serve(async (req) => {
         // Ett köpt klippkort kan också bestridas (Fas 16.1).
         const { data: kort } = pass ? { data: null } : await db.from('klippkort')
           .select('id, status').eq('stripe_charge_id', chargeId).maybeSingle();
+        // Ett tillägg för övertid (Fas 20.1) kan också bestridas.
+        const { data: tillagg } = pass || kort ? { data: null } : await db.from('pass_tillagg')
+          .select('id, booking_id, status').eq('stripe_charge_id', chargeId).maybeSingle();
 
         const { data: forut } = await db.from('stripe_tvister')
           .select('stangd, lage').eq('id', tvistId).maybeSingle();
@@ -390,7 +439,7 @@ Deno.serve(async (req) => {
         const evidens = obj.evidence_details as Record<string, unknown> | undefined;
         const { error: tvfel } = await db.from('stripe_tvister').upsert({
           id: tvistId,
-          booking_id: pass?.id ?? null,
+          booking_id: pass?.id ?? tillagg?.booking_id ?? null,
           charge_id: chargeId,
           orsak: String(obj.reason ?? '') || null,
           lage,
@@ -418,6 +467,11 @@ Deno.serve(async (req) => {
            (klippkort_dra kräver 'betald'): pengarna kan vara på väg
            tillbaka. Vinner vi öppnas det igen; förlorar vi står det kvar
            som tvist, som passen. */
+        if (tillagg && (tillagg.status === 'betald' || tillagg.status === 'tvist')) {
+          await db.from('pass_tillagg')
+            .update({ status: betallageEfterTvist(tvistUtfall(lage)) })
+            .eq('id', tillagg.id);
+        }
         if (kort && (kort.status === 'betald' || kort.status === 'tvist')) {
           await db.from('klippkort')
             .update({ status: betallageEfterTvist(tvistUtfall(lage)) })
@@ -448,8 +502,8 @@ Deno.serve(async (req) => {
             p_beskrivning: `${tvistOrsakText(String(obj.reason ?? ''))}. Belopp: ${kr}. `
               + `${tvistUnderlag(String(obj.reason ?? ''))} Underlaget skickas in i Stripes dashboard, `
               + 'under Tvister. Missas dagen är tvisten förlorad. Se DEPLOY-BETALNING.md 9.10.',
-            p_kopplad_tabell: pass ? 'bookings' : kort ? 'klippkort' : null,
-            p_kopplad_id: pass?.id ?? kort?.id ?? null,
+            p_kopplad_tabell: pass || tillagg ? 'bookings' : kort ? 'klippkort' : null,
+            p_kopplad_id: pass?.id ?? tillagg?.booking_id ?? kort?.id ?? null,
             p_forfallodag: senast ? senast.slice(0, 10) : null,
             p_skapad_av_typ: 'system',
           });

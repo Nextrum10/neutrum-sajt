@@ -1823,3 +1823,80 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-kvar{font-size:.84rem;color:var(--bl-2)}
 .erb-kvar b{color:var(--bl);font-size:1rem}
 .erb-mitt.ar-slut{opacity:.6}
+
+/* ============================================================
+   Fas 20.2: bokslutet
+
+   Ekonomi i adminvyn filtreras på en månad (NXStudie.månadsval, stilen
+   i nextrum-arbetsyta.css) och har en flik som stänger den. Nyckeltalen
+   är .adm-tal-rad och .adm-kpi som förut; här står bara det som är nytt:
+   rubrikraden med månadens läge, larmen som en checklista, raden med
+   knappen, och länkarna till ett pass eller en annan månad.
+
+   Inga hexkoder: allt är befintliga tokens, så mörkt läge och adminvyns
+   palett följer med av sig själva.
+   ============================================================ */
+.bokslut-topp{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:12px;flex-wrap:wrap;margin-bottom:18px;
+}
+.bokslut-topp h5{margin:0}
+.bokslut-topp p{margin:5px 0 0;font-size:.86rem;line-height:1.5;color:var(--bl-3)}
+.bokslut-ovrigt{margin:-8px 0 20px;font-size:.84rem;line-height:1.6;color:var(--bl-3)}
+.bokslut-rubrik{margin:0 0 8px;font-size:.92rem;font-weight:650;color:var(--bl)}
+
+/* Larmen. En ring per rad i stället för en bock: ett larm är något som
+   ska göras, och listan är tom när månaden kan stängas. Knapparna står
+   till höger på en bred skärm och under texten på en smal, och
+   minmax(0,1fr) så att en lång rad aldrig spränger kolumnen
+   (CLAUDE.md avsnitt 3, fälla 2). */
+.bokslut-larm{list-style:none;margin:0 0 16px;padding:0;border-top:1px solid var(--ln)}
+.bokslut-larm li{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  gap:10px 12px;align-items:start;
+  padding:12px 0;border-bottom:1px solid var(--ln);
+}
+.bokslut-larm li::before{
+  content:"";width:14px;height:14px;margin-top:3px;
+  border:1.5px solid var(--fel);border-radius:50%;
+}
+.bokslut-larm b{display:block;font-size:.92rem;font-weight:650;line-height:1.4;color:var(--bl)}
+.bokslut-larm-vem,
+.bokslut-larm-hur{display:block;margin-top:3px;font-size:.8rem;line-height:1.45;color:var(--bl-3)}
+.bokslut-larm-vem{color:var(--bl-2)}
+.bokslut-larm-atg{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.bokslut-larm-atg:empty{display:none}
+@media (max-width:620px){
+  .bokslut-larm li{grid-template-columns:auto minmax(0,1fr)}
+  .bokslut-larm-atg{grid-column:2;justify-content:flex-start}
+}
+.bokslut-inga{
+  margin:0 0 16px;padding:12px 14px;
+  border:1px solid var(--ln);border-radius:12px;
+  font-size:.88rem;color:var(--bl-2);
+}
+
+/* Knappen och varför den är grå. Förklaringen står bredvid, inte i en
+   title: en grå knapp utan skäl ser trasig ut, och title syns inte på
+   en telefon. */
+.bokslut-stang{
+  display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;
+  margin-top:6px;padding-top:16px;border-top:1px solid var(--ln-2);
+}
+.bokslut-stang p{margin:0;font-size:.88rem;color:var(--bl)}
+.bokslut-stang .bokslut-oppnad{flex-basis:100%;font-size:.84rem;color:var(--bl-3)}
+.bokslut-varfor{font-size:.84rem;color:var(--bl-3)}
+.bokslut-msg{margin-top:10px}
+
+/* Det som hör till andra månader, och länkarna dit och till ett pass.
+   Knappar som ser ut som länkar: de byter vy på sidan, de går inte
+   någonstans. */
+.eko-andra{margin:0 0 14px;font-size:.84rem;line-height:1.6;color:var(--bl-3)}
+.eko-lank{
+  appearance:none;-webkit-appearance:none;
+  margin:0;padding:0;border:0;background:none;
+  font:inherit;color:var(--bl);text-align:left;cursor:pointer;
+  text-decoration:underline;text-decoration-color:var(--ln-2);text-underline-offset:3px;
+}
+.eko-lank:hover{text-decoration-color:currentColor}
+.eko-lank b{font-weight:650}
