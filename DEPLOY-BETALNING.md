@@ -876,8 +876,9 @@ Familjen kan köpa timmar i förväg: två planer för en månad (4 och 8 timmar
 rabatt) och klippkort med 10, 20, 30, 60 eller 100 timmar (5 % rabatt, gäller 6, 6,
 6, 12 och 18 månader). Timmarna betalar sedan ett bekräftat pass i stället för
 kortet. Databasen är körd (`fas16_1` till `fas16_1e`), och flaggan `erbjudanden`
-står AV. Då syns erbjudandena med sina priser på prissidan och i studievyn, men
-knapparna säger "Snart", och inga timmar går att dra.
+är PÅ sedan 2026-09-27, påslagen innan provköpet nedan var gjort. Står den av
+syns erbjudandena med sina priser på prissidan och i studievyn, men knapparna
+säger "Snart", och inga timmar går att dra.
 
 **Var saker räknas, och bara där:**
 

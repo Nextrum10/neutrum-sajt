@@ -64,9 +64,9 @@ gäller först efter fristen — adminvyn visar rätt belopp efter datumet
 (4 och 8 timmar, −10 %) och klippkort med 10–100 timmar (−5 %, gäller
 6–18 månader). Köpet är ett engångsköp med kort, inget abonnemang.
 Timmarna betalar sedan ett bekräftat pass med ett barn i stället för
-kortet. Flaggan `erbjudanden` står av tills provköpet i
-DEPLOY-BETALNING.md 9.12 gått igenom; då syns priserna men inget går
-att köpa. Klippkorten står i studievyn och på prissidan som en kolumn
+kortet. Flaggan `erbjudanden` är PÅ sedan 2026-09-27: Leo slog på den
+innan provköpet i DEPLOY-BETALNING.md 9.12 var gjort. Står den av syns
+priserna men inget går att köpa. Klippkorten står i studievyn och på prissidan som en kolumn
 bredvid planerna som fälls ut (2026-09-27). De var borta ur
 studievyn en förmiddag samma dag och kom tillbaka i den formen.
 
@@ -1686,13 +1686,14 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   rapportera och en familj som inte får betala.
 
   `SKISS-BETALNING-STRIPE.md` beskriver hur beslutet gick.
-- **Planer och klippkort (Fas 16.1) är byggda men inte öppna.**
-  Flaggan `erbjudanden` står av. Funktionerna ligger ute (2026-09-27):
+- **Planer och klippkort (Fas 16.1) är öppna sedan 2026-09-27**, på
+  Leos besked och INNAN provköpet var gjort. Stripe hade då bara körts i
+  testläge, och det fanns två föräldrakonton. Funktionerna ligger ute:
   `stripe-webhook` (version 9) och `stripe-checkout` (version 13) är
   identiska med main, och `klippkort-betala` driftsattes då för första
   gången — den fanns inte i driften, så Betala med timmar hade fått 404.
-  Kvar före påslaget är provköpet i DEPLOY-BETALNING.md 9.12, som kräver
-  en människa med testkortet i en webbläsare. Sedan Fas 21 avbokar familjen själv ett
+  Provköpet i DEPLOY-BETALNING.md 9.12 är fortfarande ogjort och ska
+  göras innan en riktig familj köper. Går något fel: stäng av flaggan. Sedan Fas 21 avbokar familjen själv ett
   pass betalt med timmar, och påminns tio dagar innan timmarna går ut.
   `notis-ko` med mallen för `timmar_gar_ut` är driftsatt (version 18,
   2026-09-27, jämförd byte för byte mot repot). Kvar: en familj som inte är matchad når inte
