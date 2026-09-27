@@ -29,8 +29,8 @@
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
 -- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
 -- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2,
--- Fas 18.1 (Meet-länken), Fas 19.5 (det frysta priset) och Fas 20.1
--- (den hållna tiden) är körda.
+-- Fas 18.1 (Meet-länken), Fas 19.5 (det frysta priset), Fas 20.1
+-- (den hållna tiden) och Fas 20.2 (bokslutet) är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -3598,6 +3598,139 @@ begin
   end;
   insert into utfall (test, ok, detalj) values ('20.1 slutet kommer efter början', fel = 'nekad', fel);
 end $$;
+
+-- ------------------------------------------------------------
+-- Fas 20.2: månaden stängs i bokföringen
+--
+-- En egen månad för proven, ett halvår bakåt, med ett undantaget pass
+-- (fakturerbar = false) och dess rapport: undantaget ger inga larm, så
+-- månaden går att stänga. Det andra passet, som räknas, ger larm.
+-- ------------------------------------------------------------
+insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                             duration_min, status, fakturerbar, fakturerbar_anledning) values
+  ('00000000-0000-4000-8000-00000000b202', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+   (date_trunc('month', now() at time zone 'Europe/Stockholm') - interval '6 months')::date + 9, '15:00', 60,
+   'completed', false, 'rlsprov');
+insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro) values
+  ('00000000-0000-4000-8000-00000000e202', '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-00000000b202', 'fixtur', current_date, 'narvarande');
+
+do $$
+declare
+  m date := (date_trunc('month', now() at time zone 'Europe/Stockholm') - interval '6 months')::date;
+  fel text; lage jsonb; resultat text[] := '{}';
+  steg text;
+begin
+  begin
+    -- 1. Den pågående månaden går inte att stänga.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    begin
+      perform public.stang_manad((now() at time zone 'Europe/Stockholm')::date);
+      steg := 'gick igenom';
+    exception when others then steg := sqlerrm;
+    end;
+    resultat := resultat || ('pågående|' || (steg = 'Månaden är inte slut än.')::text || '|' || steg);
+
+    -- 2. En familj stänger ingenting, och läser inget bokslut.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    begin
+      perform public.stang_manad(m);
+      steg := 'gick igenom';
+    exception when others then steg := sqlstate;
+    end;
+    resultat := resultat || ('familj|' || (steg = '42501')::text || '|' || steg);
+
+    -- 3. Ett pass som räknas ger larm, och larm hindrar stängningen.
+    reset role; perform set_config('request.jwt.claims', '', true);
+    update public.bookings set fakturerbar = true, fakturerbar_anledning = null
+     where id = '00000000-0000-4000-8000-00000000b202';
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    lage := public.manad_lage(m);
+    begin
+      perform public.stang_manad(m);
+      steg := 'gick igenom';
+    exception when others then steg := sqlerrm;
+    end;
+    resultat := resultat || ('larm|' || (jsonb_array_length(lage -> 'larm') > 0 and steg like 'Månaden har % larm kvar.%')::text
+                             || '|' || jsonb_array_length(lage -> 'larm') || ' larm, ' || steg);
+    reset role; perform set_config('request.jwt.claims', '', true);
+    update public.bookings set fakturerbar = false, fakturerbar_anledning = 'rlsprov'
+     where id = '00000000-0000-4000-8000-00000000b202';
+
+    -- 4. Utan larm stänger admin.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    lage := public.stang_manad(m);
+    resultat := resultat || ('stängd|' || ((lage -> 'bokslut' ->> 'stangd')::boolean)::text || '|' || coalesce(lage -> 'bokslut' ->> 'stangd', 'null'));
+
+    -- 5. Studiehjälparen ändrar närvaron: nekad. Texten: går igenom.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+    begin
+      update public.lesson_reports set narvaro = 'sen' where id = '00000000-0000-4000-8000-00000000e202';
+      steg := 'gick igenom';
+    exception when others then steg := sqlstate;
+    end;
+    resultat := resultat || ('närvaro|' || (steg = '42501')::text || '|' || steg);
+    begin
+      update public.lesson_reports set raw_notes = 'omskriven' where id = '00000000-0000-4000-8000-00000000e202';
+      steg := 'gick igenom';
+    exception when others then steg := sqlerrm;
+    end;
+    resultat := resultat || ('text|' || (steg = 'gick igenom')::text || '|' || steg);
+
+    -- 6. Admin ändrar passet i den stängda månaden: nekad.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    begin
+      update public.bookings set subject = 'Kemi' where id = '00000000-0000-4000-8000-00000000b202';
+      steg := 'gick igenom';
+    exception when others then steg := sqlstate;
+    end;
+    resultat := resultat || ('admin|' || (steg = '42501')::text || '|' || steg);
+
+    -- 7. Systemet (webhooken, ingen inloggning) skriver igenom låset.
+    reset role; perform set_config('request.jwt.claims', '', true);
+    update public.bookings set aterbetald_ore = 0 where id = '00000000-0000-4000-8000-00000000b202';
+    resultat := resultat || ('system|' || found::text || '|' || found::text);
+
+    -- 8. Öppna kräver ett skäl, och sedan går ändringen igenom.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    begin
+      perform public.oppna_manad(m, 'x');
+      steg := 'gick igenom';
+    exception when others then steg := sqlerrm;
+    end;
+    resultat := resultat || ('skäl|' || (steg = 'Skriv varför månaden öppnas.')::text || '|' || steg);
+    lage := public.oppna_manad(m, 'Rättelse av ämnet på ett pass');
+    update public.bookings set subject = 'Kemi' where id = '00000000-0000-4000-8000-00000000b202';
+    resultat := resultat || ('öppnad|' || (found and not (lage -> 'bokslut' ->> 'stangd')::boolean)::text || '|' || found::text);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('20.2 bokslutet', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj)
+  select '20.2 ' || case split_part(r, '|', 1)
+           when 'pågående' then 'den pågående månaden går inte att stänga'
+           when 'familj'   then 'en familj stänger ingen månad'
+           when 'larm'     then 'larm i månaden hindrar stängningen'
+           when 'stängd'   then 'admin stänger en månad utan larm'
+           when 'närvaro'  then 'studiehjälparen ändrar inte närvaron i en stängd månad'
+           when 'text'     then 'rapportens text går att skriva om i en stängd månad'
+           when 'admin'    then 'admin ändrar inte ett pass i en stängd månad'
+           when 'system'   then 'webhooken skriver igenom låset'
+           when 'skäl'     then 'en månad öppnas inte utan skäl'
+           when 'öppnad'   then 'öppnad månad går att ändra igen'
+         end,
+         split_part(r, '|', 2)::boolean, split_part(r, '|', 3)
+    from unnest(resultat) r;
+end $$;
+
+select pg_temp.rakna('20.2 studiehjälparen läser inget bokslut', '00000000-0000-4000-8000-0000000000a1',
+  'select count(*) from public.manadsbokslut', 0);
 
 select test, ok, detalj from utfall order by nr;
 
