@@ -261,7 +261,10 @@ kan skrivas, ändras eller tas bort, inte heller av admin, förrän admin
 och månadskörningen går igenom låset (`auth.uid()` är null): det som
 redan hänt hos Stripe ska gå att skriva ner. Rapportens TEXT går att
 skriva om i en stängd månad; bara pass, elev, datum, närvaro och tid är
-låsta. Underlag och fakturor låses inte: de betalas efter månaden.
+låsta. Passets plats och rad till studiehjälparen går att TÖMMA men inte
+ändra: det är vad `radera_person()` gör när en familj slutar
+(2026-09-28, avsnitt 5). Underlag och fakturor låses inte: de betalas
+efter månaden.
 
 **Studiehjälparens rapporter och ersättning visas månad för månad**
 (2026-09-27): "man ska inte kunna se rapporter från juli idag i
@@ -463,7 +466,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, sök, notiser, bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |
-| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
+| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, tjanster, system, automationer, ai, radera. Anropar varandra via `NXAdmin.rita`. En ny områdesfil ska också in i `nextrum-modulvakt.js` |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med. Mejlen har sin egen kopia av paletten (`FARG` i `_delad/notiser/rendera.ts`) och följer INTE med av sig själva |
@@ -956,6 +959,88 @@ registret; det här är det som rör koden.
 - Ansökningar och CV:n gallras av `ansokan-gallring`, med samma
   princip: filen först, raden sedan. Se "Gallringen: ansökningar och
   CV:n efter ett år" nedan.
+
+### Rätta och radera en person (2026-09-28)
+
+Leo: "alla personer som finns i våra system i admin, ska vi kunna
+redigera och trycka ta bort på", och "radera personen från våra system
+med en knapp där ifall personen inte ska anställas eller om personen
+inte vill senare ha vår tjänst".
+
+**Listorna är namn.** Intresseanmälningar, Ansökningar (med flikarna
+Intervju och Utbildning), Familjer, Elever och Studiehjälpare ritas av
+`namnlista()` i `nextrum-admin-karna.js`: namnet och läget, inget annat.
+Allt annat står i personpanelen (`nextrum-admin-detalj.js`), som sedan
+dess också öppnar anmälan och ansökan. Rekryteringens steg är fliken
+Rekryteringen där; rutan de stod i förut är borta. Söket i sidhuvudet
+öppnar träffen i panelen. Panelen ritas om när en lista gör det, utom
+när något i den är påbörjat (`ritaPanelen()`): listorna ritas om när en
+anmälan kommer in via realtid, och det hade suddat ut en halvskriven
+anteckning.
+
+**Redigera** sist i Översikt rättar de kolumner vyerna och formulären
+själva skriver (`RED` i detalj.js), och bara det som ändrats skrivs.
+E-posten på ett konto är inloggningen och ändras inte där: profiles
+följer inte med när adressen byts i Auth. CV-raden i en ansökans `why`
+står utanför formuläret och läggs tillbaka när texten sparas, för den är
+enda kopplingen till filen (`CV_RAD`).
+
+**Radera** (`nextrum-admin-radera.js`) frågar först `radering_lage()` och
+visar svaret; `radera_person()` gör det. Båda är SECURITY DEFINER med
+`is_admin()` på första raden, och samma `intern.radering_underlag()`
+avgör vad rutan lovar och vad som händer. Sju regler:
+
+1. **Databasen väljer sättet.** *Helt* när ingenting om personen är
+   bokföring: inloggningen (`auth.users`) tas bort och resten följer med
+   genom nycklarna. *Avidentifieras* annars: kontot heter "Raderad
+   familj" eller "Raderad studiehjälpare", barnen "Raderad elev",
+   adress, telefon, profilbild, chatten, läxorna, planerna och
+   rapporternas text är borta, och inloggningen stängs som GoTrues egen
+   mjuka radering gör. Vad som är bokföring står i
+   `intern.passet_bar_bokforing()` och ingen annanstans.
+2. **Pengar som inte är uppgjorda hindrar.** Betalt men inte hållet,
+   timmar eller minuter kvar, en öppen kassa eller tvist, betalt för
+   länge, ett pass som börjat utan rapport, och för en studiehjälpare
+   matchade elever och kommande kortbetalda pass. Pengar personen är
+   skyldig oss hindrar inte: de står som larm i rutan, och admin
+   bestämmer.
+3. **Samma adress följer med** (`intern.epost_nyckel`): anmälningar
+   avidentifieras som i nattjobbet, ansökningar och frågor tas bort. Det
+   är personen som raderas, inte en rad.
+4. **Kommande obetalda pass avbokas**, med skälet `familjen_avslutar`
+   eller `ingen_hjalpare`, och motparten får mejlet. Den som raderas får
+   inget: `raderad_at` sätts först, och `notis_vill()` svarar nej för ett
+   raderat konto.
+5. **Filen först, och databasen vaktar ordningen.** `radering_lage()`
+   svarar med profilbilden, barnens mapp och CV:t, adminvyn tar bort dem
+   genom Storage och läser svaret, och `radera_person()` vägrar medan en
+   fil finns kvar. Admin fick därför ta bort i hinkarna `cv` och
+   `avatarer`.
+6. **Ett adminkonto raderas inte här**, inte heller ens eget.
+7. **Auditloggen får en rad utan namn**: `konto.raderat` eller
+   `konto.avidentifierat`, `elev.raderad` eller `elev.avidentifierad`,
+   `anmalan.avidentifierad`, `kontaktmeddelande.borttagen` och, genom
+   sin egen trigger, `ansokan.borttagen`.
+
+`profiles.raderad_at` och `students.raderad_at` är markeringen, och bara
+databasen och admin sätter dem (`skydda_profilfalt`,
+`skydda_studentfalt`). Ett avidentifierat konto eller barn står inte i
+någon lista (`ärRaderad()` i kärnan), och en familj ser inte ett raderat
+barn (policyn `förälder ser egna barn`). Ett gammalt pass pekar
+fortfarande på dem, och panelen säger då varför namnet är borta.
+`intern.konton_oanvanda()` hoppar över raderade konton.
+
+**Radera aldrig en person i dashboarden.** `bookings.parent_id` är ON
+DELETE CASCADE: ett konto som tas bort där tar med sig sina betalda pass,
+och bokföringen med dem. Ett konto med klippkort går inte att ta bort
+alls där (`klippkort_parent_id_fkey` är RESTRICT).
+
+Migrationen heter `personer_redigeras_och_raderas` och kördes inte från
+grenen: den körs efter merge (avsnitt 7, driftsätt aldrig från en gren
+som inte är mergad). Tills den är körd svarar knappen att raderingen
+inte finns i databasen än, och listorna och Redigera fungerar ändå.
+`rls-test.sql` har avsnittet RADERA EN PERSON; kör hela filen efter
+varje ändring.
 
 ### Notiserna (Runda 2)
 
@@ -1454,7 +1539,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 30 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 30 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28), och `radering_lage` och `radera_person` när `personer_redigeras_och_raderas` är körd | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
@@ -2227,15 +2312,6 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
-- **Ansökningar gallras efter ett år, men en sak återstår.** Sedan
-  2026-09-27 tar `ansokan-gallring` varje natt bort en ansökan som inte
-  ledde till anställning, med CV:t, och CV-filer utan ansökan (avsnitt
-  5, Gallringen). Kvar:
-  1. **"Vill du att vi tar bort den tidigare, skriv till oss" har ingen
-     knapp.** Tas raden bort för hand i dashboarden blir CV:t
-     föräldralöst och står kvar tills gallringen tar det, ett år efter
-     uppladdningen. Ta bort filen under Storage → cv först, sedan
-     raden.
 
 ---
 

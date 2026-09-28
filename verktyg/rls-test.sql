@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22 och gallringen)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, gallringen och raderingen)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -36,8 +36,9 @@
 -- passen), ansokningar_gallras_efter_ett_ar (gallringen),
 -- notisfelen_bara_egna_utskick, klientfelen_minns_vem, Fas 22.3
 -- (lediga timmar betalar nästa pass),
--- godkand_ansokan_gallras_tva_ar_efter_sista_passet och
--- ai_texterna_och_avslutade_uppgifter_gallras är körda.
+-- godkand_ansokan_gallras_tva_ar_efter_sista_passet,
+-- ai_texterna_och_avslutade_uppgifter_gallras och
+-- personer_redigeras_och_raderas är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -3818,11 +3819,11 @@ end $$;
 -- månaden går att stänga. Det andra passet, som räknas, ger larm.
 -- ------------------------------------------------------------
 insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
-                             duration_min, status, fakturerbar, fakturerbar_anledning) values
+                             duration_min, status, fakturerbar, fakturerbar_anledning, location) values
   ('00000000-0000-4000-8000-00000000b202', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
    '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
    (date_trunc('month', now() at time zone 'Europe/Stockholm') - interval '6 months')::date + 9, '15:00', 60,
-   'completed', false, 'rlsprov');
+   'completed', false, 'rlsprov', 'Provgatan 3');
 insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro) values
   ('00000000-0000-4000-8000-00000000e202', '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
    '00000000-0000-4000-8000-00000000b202', 'fixtur', current_date, 'narvarande');
@@ -3898,6 +3899,29 @@ begin
     end;
     resultat := resultat || ('admin|' || (steg = '42501')::text || '|' || steg);
 
+    -- 6b. Raderingen (personer_redigeras_och_raderas) tömmer platsen och
+    --     raden till studiehjälparen också i en stängd månad. Bara
+    --     tömningen går igenom: en ny adress, eller tömningen tillsammans
+    --     med något annat, är fortfarande en ändring av passet.
+    begin
+      update public.bookings set location = 'Annan gata' where id = '00000000-0000-4000-8000-00000000b202';
+      steg := 'gick igenom';
+    exception when others then steg := sqlstate;
+    end;
+    resultat := resultat || ('ny adress|' || (steg = '42501')::text || '|' || steg);
+    begin
+      update public.bookings set location = null, subject = 'Kemi' where id = '00000000-0000-4000-8000-00000000b202';
+      steg := 'gick igenom';
+    exception when others then steg := sqlstate;
+    end;
+    resultat := resultat || ('tömd och ändrad|' || (steg = '42501')::text || '|' || steg);
+    begin
+      update public.bookings set location = null, note = null where id = '00000000-0000-4000-8000-00000000b202';
+      steg := 'gick igenom';
+    exception when others then steg := sqlerrm;
+    end;
+    resultat := resultat || ('tömd|' || (steg = 'gick igenom')::text || '|' || steg);
+
     -- 7. Systemet (webhooken, ingen inloggning) skriver igenom låset.
     reset role; perform set_config('request.jwt.claims', '', true);
     update public.bookings set aterbetald_ore = 0 where id = '00000000-0000-4000-8000-00000000b202';
@@ -3932,6 +3956,9 @@ begin
            when 'närvaro'  then 'studiehjälparen ändrar inte närvaron i en stängd månad'
            when 'text'     then 'rapportens text går att skriva om i en stängd månad'
            when 'admin'    then 'admin ändrar inte ett pass i en stängd månad'
+           when 'ny adress' then 'admin skriver ingen ny adress på ett pass i en stängd månad'
+           when 'tömd och ändrad' then 'raderingens tömning släpper inte igenom andra ändringar'
+           when 'tömd'     then 'platsen och raden till studiehjälparen töms i en stängd månad'
            when 'system'   then 'webhooken skriver igenom låset'
            when 'skäl'     then 'en månad öppnas inte utan skäl'
            when 'öppnad'   then 'öppnad månad går att ändra igen'
@@ -5712,6 +5739,619 @@ begin
       ('Uppgiftsgallring en nyss klar står kvar', n2 = 1, 'rader: ' || n2),
       ('Uppgiftsgallring en öppen rörs aldrig', n3 = 1, 'rader: ' || n3);
   end if;
+end $$;
+
+-- ============================================================
+-- RADERA EN PERSON (personer_redigeras_och_raderas)
+--
+-- Varje prov bygger sin egen familj, studiehjälpare, anmälan eller
+-- ansökan i en deltransaktion och rullar tillbaka den. Fixturerna ovan
+-- används bara som motpart: studiehjälpare A, familj Q och admin. De
+-- nya passen ligger klockan 06 hos A, där inget annat pass står.
+-- ============================================================
+
+-- 1. Vem som når dörrarna. Hjälparna i intern når ingen.
+select pg_temp.prova('Radera anon når inte underlaget', null,
+  array[$q$select public.radering_lage('familj', '00000000-0000-4000-8000-0000000000f1')$q$], 'nekad');
+select pg_temp.prova('Radera anon raderar ingen', null,
+  array[$q$select public.radera_person('familj', '00000000-0000-4000-8000-0000000000f1')$q$], 'nekad');
+select pg_temp.prova('Radera en familj når inte underlaget', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select public.radering_lage('familj', '00000000-0000-4000-8000-0000000000f2')$q$], 'nekad');
+select pg_temp.prova('Radera en familj raderar inte en annan', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select public.radera_person('familj', '00000000-0000-4000-8000-0000000000f2')$q$], 'nekad');
+select pg_temp.prova('Radera en studiehjälpare raderar inte sin elev', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select public.radera_person('elev', '00000000-0000-4000-8000-0000000005a1')$q$], 'nekad');
+select pg_temp.prova('Radera admin når inte hjälparna i intern', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select intern.radering_underlag('familj', '00000000-0000-4000-8000-0000000000f1')$q$], 'nekad');
+
+-- 2. Ett adminkonto raderas inte här, inte heller ens eget.
+do $$
+declare fel text; kod text;
+begin
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    perform public.radera_person('familj', '00000000-0000-4000-8000-0000000000ad');
+    fel := 'gick igenom';
+  exception when others then fel := sqlerrm; kod := sqlstate;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  insert into utfall (test, ok, detalj)
+  values ('Radera admin raderar inte ett adminkonto', fel = 'Ett adminkonto raderas inte här.',
+          coalesce(kod, '') || ' ' || fel);
+end $$;
+
+-- 3. En familj utan bokföring tas bort helt. Anmälan och
+--    kontaktmeddelandet med samma adress följer med, det kommande
+--    passet avbokas först, och studiehjälparen får mejlet.
+do $$
+declare
+  adm   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  a     constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  fam   constant uuid := '00000000-0000-4000-8000-00000000d1f1';
+  elev  constant uuid := '00000000-0000-4000-8000-00000000d1e1';
+  pass  constant uuid := '00000000-0000-4000-8000-00000000d1b1';
+  anm   constant uuid := '00000000-0000-4000-8000-00000000d1a1';
+  kon   constant uuid := '00000000-0000-4000-8000-00000000d1c1';
+  idag  date := (now() at time zone 'Europe/Stockholm')::date;
+  lage jsonb; svar jsonb; fel text;
+  kvar bigint; l_epost text; l_kund uuid; l_status text; n_kon bigint; n_mejl bigint; n_eget bigint; n_audit bigint;
+begin
+  begin
+    alter table public.bookings enable trigger bookings_notis;
+    insert into auth.users (id, email, raw_user_meta_data)
+    values (fam, 'rls-radera-f@example.invalid', '{"role":"parent","full_name":"Radera Familj"}');
+    insert into public.students (id, parent_id, name) values (elev, fam, 'Radera Barn');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, location)
+    values (pass, fam, a, elev, fam, idag + 45, '06:00', 60, 'confirmed', 'Radergatan 1');
+    insert into public.leads (id, parent_name, email, child_name)
+    values (anm, 'Radera Förälder', 'rls-radera-f@example.invalid', 'Radera Barn');
+    update public.leads set kund_id = fam where id = anm;
+    insert into public.contact_messages (id, name, email, message)
+    values (kon, 'Radera', 'RLS-Radera-F+fraga@example.invalid', 'Hej');
+
+    perform pg_temp.bli(adm);
+    lage := public.radering_lage('familj', fam);
+    svar := public.radera_person('familj', fam);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    select (select count(*) from auth.users where id = fam) + (select count(*) from public.profiles where id = fam)
+         + (select count(*) from public.students where id = elev) + (select count(*) from public.bookings where id = pass)
+      into kvar;
+    select l.email, l.kund_id, l.status into l_epost, l_kund, l_status from public.leads l where l.id = anm;
+    select count(*) into n_kon from public.contact_messages where id = kon;
+    select count(*) into n_mejl from public.notis_utskick
+     where mottagare = a and typ = 'pass_avbokat' and data ->> 'skal' = 'familjen_avslutar';
+    select count(*) into n_eget from public.notis_utskick where mottagare = fam;
+    select count(*) into n_audit from public.audit_logg
+     where handling = 'konto.raderat' and objekt_id = fam::text and aktor = adm;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Radera familj utan bokföring', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Radera familj utan bokföring tas bort helt',
+      lage ->> 'satt' = 'helt' and svar ->> 'gjort' = 'raderat' and (lage ->> 'avbokas')::int = 1
+      and jsonb_array_length(lage -> 'hinder') = 0, lage::text),
+    ('Radera inloggningen, kontot, barnet och passet är borta', kvar = 0, 'kvar: ' || kvar),
+    ('Radera anmälan avidentifieras och stängs',
+      l_epost = 'gallrad' and l_kund is null and l_status = 'declined',
+      coalesce(l_epost, 'null') || ' ' || coalesce(l_status, 'null')),
+    ('Radera kontaktmeddelandet med samma adress tas bort', n_kon = 0, 'kvar: ' || n_kon),
+    ('Radera studiehjälparen får mejlet om det avbokade passet', n_mejl = 1, 'mejl: ' || n_mejl),
+    ('Radera familjen själv får inget mejl', n_eget = 0, 'mejl: ' || n_eget),
+    ('Radera auditloggen säger vem som raderade', n_audit = 1, 'rader: ' || n_audit);
+end $$;
+
+-- 4. En familj med ett betalt, hållet pass i en stängd månad
+--    avidentifieras. Passet och rapporten står kvar, utan adress och
+--    text; det kommande passet avbokas; inloggningen stängs.
+do $$
+declare
+  adm      constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  a        constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  fam      constant uuid := '00000000-0000-4000-8000-00000000d2f1';
+  elev     constant uuid := '00000000-0000-4000-8000-00000000d2e1';
+  hallet   constant uuid := '00000000-0000-4000-8000-00000000d2b1';
+  kommande constant uuid := '00000000-0000-4000-8000-00000000d2b2';
+  rapport  constant uuid := '00000000-0000-4000-8000-00000000d2d1';
+  idag  date := (now() at time zone 'Europe/Stockholm')::date;
+  dag   date := (date_trunc('month', (now() at time zone 'Europe/Stockholm')) - interval '3 months')::date + 9;
+  lage jsonb; svar jsonb; fel text;
+  pr public.profiles; el public.students; rp public.lesson_reports; bh public.bookings; bk public.bookings;
+  u_epost text; u_raderad timestamptz; u_sparr timestamptz; n_ident bigint;
+  n_rest bigint; vill boolean; n_audit bigint;
+begin
+  begin
+    insert into auth.users (id, email, raw_user_meta_data)
+    values (fam, 'rls-radera-g@example.invalid', '{"role":"parent","full_name":"Radera Gamla"}');
+    insert into auth.identities (provider_id, user_id, identity_data, provider)
+    values (fam::text, fam, jsonb_build_object('sub', fam::text, 'email', 'rls-radera-g@example.invalid'), 'email');
+    insert into public.students (id, parent_id, name, school, goals, matched_tutor_id, match_status)
+    values (elev, fam, 'Radera Alva', 'Raderskolan', 'Klara bråken', a, 'matched');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, location, note)
+    values (hallet, fam, a, elev, fam, dag, '06:00', 60, 'confirmed', 'Hemgatan 2', 'Ring på');
+    insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, went_well)
+    values (rapport, elev, a, hallet, 'Alva räknade bråk', dag, 'narvarande', 'Bråken satt');
+    update public.bookings
+       set betalning_status = 'betald', betalt_ore = 37900, betald_at = now(), stripe_payment_intent_id = 'pi_rls_radera'
+     where id = hallet;
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, location)
+    values (kommande, fam, a, elev, fam, idag + 46, '06:00', 60, 'confirmed', 'Hemgatan 2');
+    insert into public.messages (parent_id, tutor_id, sender_id, body) values (fam, a, fam, 'Hej Anna, Alva är sjuk');
+    insert into public.homework (student_id, tutor_id, title) values (elev, a, 'Bråk sidan 12');
+    insert into public.study_plans (student_id, tutor_id, plan_text) values (elev, a, 'Alva ska klara bråk');
+    insert into public.manadsbokslut (manad, stangd, stangd_at) values (date_trunc('month', dag)::date, true, now());
+
+    perform pg_temp.bli(adm);
+    lage := public.radering_lage('familj', fam);
+    svar := public.radera_person('familj', fam);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    select * into pr from public.profiles where id = fam;
+    select u.email, u.deleted_at, u.banned_until into u_epost, u_raderad, u_sparr from auth.users u where u.id = fam;
+    select count(*) into n_ident from auth.identities where user_id = fam;
+    select * into el from public.students where id = elev;
+    select * into rp from public.lesson_reports where id = rapport;
+    select * into bh from public.bookings where id = hallet;
+    select * into bk from public.bookings where id = kommande;
+    select (select count(*) from public.messages where parent_id = fam)
+         + (select count(*) from public.homework where student_id = elev)
+         + (select count(*) from public.study_plans where student_id = elev)
+      into n_rest;
+    vill := public.notis_vill(fam, 'pass_avbokat', 'mejl');
+    select count(*) into n_audit from public.audit_logg
+     where handling = 'konto.avidentifierat' and objekt_id = fam::text and aktor = adm;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Radera familj med bokföring', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Radera familj med bokföring avidentifieras',
+      lage ->> 'satt' = 'avidentifieras' and svar ->> 'gjort' = 'avidentifierat'
+      and (lage ->> 'avbokas')::int = 1 and jsonb_array_length(lage -> 'hinder') = 0, lage::text),
+    ('Radera kontot står kvar utan namn, adress och telefon',
+      pr.full_name = 'Raderad familj' and pr.email = '' and pr.phone is null and pr.raderad_at is not null,
+      coalesce(pr.full_name, 'borta') || ' / ' || coalesce(pr.email, 'null')),
+    ('Radera inloggningen stängs som GoTrues mjuka radering',
+      u_epost is null and u_raderad is not null and u_sparr > now() + interval '50 years' and n_ident = 0,
+      coalesce(u_epost, 'ingen adress') || ', identiteter: ' || n_ident),
+    ('Radera barnet står kvar utan uppgifter och utan studiehjälpare',
+      el.name = 'Raderad elev' and el.school is null and el.goals is null
+      and el.matched_tutor_id is null and el.raderad_at is not null,
+      coalesce(el.name, 'borta')),
+    ('Radera rapporten står kvar, utan text', rp.id is not null and rp.raw_notes = '' and rp.went_well is null
+      and rp.narvaro = 'narvarande', coalesce(rp.raw_notes, 'borta')),
+    ('Radera det betalda passet står kvar i den stängda månaden, utan adress',
+      bh.id is not null and bh.betalt_ore = 37900 and bh.location is null and bh.note is null,
+      coalesce(bh.location, 'ingen adress') || ', ' || coalesce(bh.betalt_ore::text, 'inget belopp')),
+    ('Radera det kommande passet avbokas', bk.status = 'cancelled' and bk.avbokningsskal = 'familjen_avslutar',
+      coalesce(bk.status, 'borta') || ' ' || coalesce(bk.avbokningsskal, '')),
+    ('Radera chatten, läxan och studieplanen tas bort', n_rest = 0, 'kvar: ' || n_rest),
+    ('Radera ett raderat konto vill inga mejl', not vill, vill::text),
+    ('Radera auditloggen skriver avidentifierat', n_audit = 1, 'rader: ' || n_audit);
+end $$;
+
+-- 5. Pengar som inte är uppgjorda hindrar raderingen: ett pass betalt
+--    med kort som inte hållits, och ett som passerat utan rapport.
+do $$
+declare
+  adm      constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  a        constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  fam      constant uuid := '00000000-0000-4000-8000-00000000d3f1';
+  elev     constant uuid := '00000000-0000-4000-8000-00000000d3e1';
+  idag  date := (now() at time zone 'Europe/Stockholm')::date;
+  lage jsonb; fel text; kod text; slut text; hinder text; kvar bigint;
+begin
+  begin
+    insert into auth.users (id, email, raw_user_meta_data)
+    values (fam, 'rls-radera-h@example.invalid', '{"role":"parent","full_name":"Radera Hinder"}');
+    insert into public.students (id, parent_id, name) values (elev, fam, 'Radera Hinder');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status)
+    values ('00000000-0000-4000-8000-00000000d3b1', fam, a, elev, fam, idag + 47, '06:00', 60, 'confirmed'),
+           ('00000000-0000-4000-8000-00000000d3b2', fam, a, elev, fam, idag - 2, '06:00', 60, 'confirmed');
+    update public.bookings
+       set betalning_status = 'betald', betalt_ore = 37900, stripe_payment_intent_id = 'pi_rls_hinder'
+     where id = '00000000-0000-4000-8000-00000000d3b1';
+
+    perform pg_temp.bli(adm);
+    lage := public.radering_lage('familj', fam);
+    begin
+      perform public.radera_person('familj', fam);
+      fel := 'gick igenom';
+    exception when others then fel := sqlerrm; kod := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select string_agg(h ->> 'kod', ',' order by h ->> 'kod') into hinder from jsonb_array_elements(lage -> 'hinder') h;
+    select count(*) into kvar from public.profiles where id = fam and raderad_at is null;
+    raise exception 'rulla tillbaka';
+  exception when others then slut := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if slut <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Radera hinder', false, slut);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Radera betalt och inte hållet, och passerat utan rapport, är hinder',
+      hinder = 'betalt_ej_hallet,ej_rapporterat', coalesce(hinder, 'inga')),
+    ('Radera databasen vägrar så länge hindren finns',
+      kod = '23514' and fel like 'Något måste göras först%' and kvar = 1, coalesce(kod, '') || ' ' || fel);
+end $$;
+
+-- 6. Filen först: finns profilbilden kvar i lagringen vägrar databasen.
+do $$
+declare
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  fam constant uuid := '00000000-0000-4000-8000-00000000d4f1';
+  lage jsonb; fel text; slut text;
+begin
+  begin
+    insert into auth.users (id, email, raw_user_meta_data)
+    values (fam, 'rls-radera-i@example.invalid', '{"role":"parent","full_name":"Radera Bild"}');
+    insert into storage.objects (bucket_id, name) values ('avatarer', fam::text || '/bild.png');
+    perform pg_temp.bli(adm);
+    lage := public.radering_lage('familj', fam);
+    begin
+      perform public.radera_person('familj', fam);
+      fel := 'gick igenom';
+    exception when others then fel := sqlerrm;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    raise exception 'rulla tillbaka';
+  exception when others then slut := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if slut <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Radera filen först', false, slut);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Radera profilbilden står bland filerna som ska bort först',
+      jsonb_array_length(lage -> 'filer') = 1 and lage -> 'filer' -> 0 ->> 'hink' = 'avatarer', (lage -> 'filer')::text),
+    ('Radera databasen vägrar medan filen finns kvar', fel like 'Filerna finns kvar%', fel);
+end $$;
+
+-- 7. Studiehjälpare: en matchad elev hindrar. A har Äldst.
+do $$
+declare lage jsonb; fel text;
+begin
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    lage := public.radering_lage('studiehjalpare', '00000000-0000-4000-8000-0000000000a1');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  insert into utfall (test, ok, detalj)
+  values ('Radera en studiehjälpare med matchade elever hindras',
+          fel = 'rulla tillbaka' and exists (select 1 from jsonb_array_elements(lage -> 'hinder') h
+                                              where h ->> 'kod' = 'matchade_elever'),
+          coalesce((lage -> 'hinder')::text, fel));
+end $$;
+
+-- 8. En studiehjälpare som aldrig hållit ett pass tas bort helt, med
+--    sin ansökan.
+do $$
+declare
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  t   constant uuid := '00000000-0000-4000-8000-00000000d5a1';
+  app constant uuid := '00000000-0000-4000-8000-00000000d5a2';
+  lage jsonb; svar jsonb; fel text; kvar bigint; n_audit bigint;
+begin
+  begin
+    insert into auth.users (id, email, raw_user_meta_data)
+    values (t, 'rls-radera-t@example.invalid', '{"role":"tutor","full_name":"Radera Hjälpare"}');
+    update public.tutor_profiles set status = 'approved', hourly_rate = 150 where id = t;
+    insert into public.applications (id, name, email, why)
+    values (app, 'Radera Hjälpare', 'rls-radera-t@example.invalid', 'Jag vill hjälpa till');
+    perform pg_temp.bli(adm);
+    lage := public.radering_lage('studiehjalpare', t);
+    svar := public.radera_person('studiehjalpare', t);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select (select count(*) from auth.users where id = t) + (select count(*) from public.tutor_profiles where id = t)
+         + (select count(*) from public.applications where id = app)
+      into kvar;
+    select count(*) into n_audit from public.audit_logg
+     where aktor = adm and ((handling = 'konto.raderat' and objekt_id = t::text)
+                         or (handling = 'ansokan.borttagen' and objekt_id = app::text));
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Radera studiehjälpare utan pass', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Radera studiehjälpare utan pass tas bort helt, med ansökan',
+      lage ->> 'satt' = 'helt' and (lage -> 'tas_bort' ->> 'ansokningar')::int = 1 and kvar = 0, lage::text),
+    ('Radera auditloggen har kontot och ansökan', n_audit = 2, 'rader: ' || n_audit);
+end $$;
+
+-- 9. En studiehjälpare med en rapport avidentifieras: rapporten och
+--    timpenningen står kvar för lönen, det kommande passet avbokas.
+do $$
+declare
+  adm      constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  q        constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  qelev    constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  t        constant uuid := '00000000-0000-4000-8000-00000000d6a1';
+  hallet   constant uuid := '00000000-0000-4000-8000-00000000d6b1';
+  kommande constant uuid := '00000000-0000-4000-8000-00000000d6b2';
+  rapport  constant uuid := '00000000-0000-4000-8000-00000000d6d1';
+  idag  date := (now() at time zone 'Europe/Stockholm')::date;
+  lage jsonb; svar jsonb; fel text;
+  pr public.profiles; tp public.tutor_profiles; n_rapport bigint; bk public.bookings; n_medd bigint;
+begin
+  begin
+    insert into auth.users (id, email, raw_user_meta_data)
+    values (t, 'rls-radera-u@example.invalid', '{"role":"tutor","full_name":"Radera Lärd"}');
+    update public.tutor_profiles
+       set status = 'approved', hourly_rate = 150, school = 'Hjälparskolan', bio = 'Jag heter Lärd'
+     where id = t;
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status)
+    values (hallet, q, t, qelev, q, idag - 30, '06:00', 60, 'confirmed'),
+           (kommande, q, t, qelev, q, idag + 48, '06:00', 60, 'confirmed');
+    insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values (rapport, qelev, t, hallet, 'Bra pass', idag - 30, 'narvarande');
+    insert into public.messages (parent_id, tutor_id, sender_id, body) values (q, t, t, 'Hej från Lärd');
+
+    perform pg_temp.bli(adm);
+    lage := public.radering_lage('studiehjalpare', t);
+    svar := public.radera_person('studiehjalpare', t);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select * into pr from public.profiles where id = t;
+    select * into tp from public.tutor_profiles where id = t;
+    select count(*) into n_rapport from public.lesson_reports where id = rapport and tutor_id = t;
+    select * into bk from public.bookings where id = kommande;
+    select count(*) into n_medd from public.messages where tutor_id = t;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Radera studiehjälpare med rapport', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Radera studiehjälpare med rapport avidentifieras',
+      lage ->> 'satt' = 'avidentifieras' and svar ->> 'gjort' = 'avidentifierat', lage::text),
+    ('Radera profilen står kvar utan namn och text, utanför poolen',
+      pr.full_name = 'Raderad studiehjälpare' and pr.email = '' and tp.status = 'rejected'
+      and tp.school is null and tp.bio is null and not tp.visa_publikt,
+      coalesce(pr.full_name, 'borta') || ' ' || coalesce(tp.status, '')),
+    ('Radera timpenningen och rapporten står kvar för lönen', tp.hourly_rate = 150 and n_rapport = 1,
+      coalesce(tp.hourly_rate::text, 'ingen') || ', rapporter: ' || n_rapport),
+    ('Radera det kommande passet avbokas med skälet ingen studiehjälpare',
+      bk.status = 'cancelled' and bk.avbokningsskal = 'ingen_hjalpare',
+      coalesce(bk.status, 'borta') || ' ' || coalesce(bk.avbokningsskal, '')),
+    ('Radera chatten med studiehjälparen tas bort', n_medd = 0, 'kvar: ' || n_medd);
+end $$;
+
+-- 10. En intresseanmälan avidentifieras, med alla anmälningar och
+--     kontaktmeddelanden från samma adress och uppgifterna om dem.
+do $$
+declare
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  l1  constant uuid := '00000000-0000-4000-8000-00000000d7a1';
+  l2  constant uuid := '00000000-0000-4000-8000-00000000d7a2';
+  k1  constant uuid := '00000000-0000-4000-8000-00000000d7c1';
+  lage jsonb; svar jsonb; fel text;
+  kvar bigint; st1 text; st2 text; n_kon bigint; n_upg bigint; n_audit bigint;
+begin
+  begin
+    insert into public.leads (id, parent_name, email, child_name, message, status)
+    values (l1, 'Radera Lead', 'Rls-Radera-L@example.invalid', 'Barnet', 'Vi bor på Storgatan', 'new'),
+           (l2, 'Radera Lead', 'rls-radera-l+igen@example.invalid', null, null, 'contacted');
+    insert into public.contact_messages (id, name, email, message)
+    values (k1, 'Lead', 'rls-radera-l@example.invalid', 'En fråga');
+    insert into public.uppgifter (titel, kopplad_tabell, kopplad_id, skapad_av_typ)
+    values ('Ring Radera Lead', 'leads', l1::text, 'manniska');
+
+    perform pg_temp.bli(adm);
+    lage := public.radering_lage('anmalan', l1);
+    svar := public.radera_person('anmalan', l1);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into kvar from public.leads
+     where id in (l1, l2) and (email <> 'gallrad' or parent_name <> 'Gallrad' or child_name is not null or message is not null);
+    select status into st1 from public.leads where id = l1;
+    select status into st2 from public.leads where id = l2;
+    select count(*) into n_kon from public.contact_messages where id = k1;
+    select count(*) into n_upg from public.uppgifter where kopplad_tabell = 'leads' and kopplad_id = l1::text;
+    select count(*) into n_audit from public.audit_logg where handling = 'anmalan.avidentifierad' and objekt_id = l1::text;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Radera anmälan', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Radera anmälan räknar med samma adress, också med plustillägg',
+      (lage -> 'tas_bort' ->> 'anmalningar')::int = 2 and (lage -> 'tas_bort' ->> 'kontaktmeddelanden')::int = 1,
+      (lage -> 'tas_bort')::text),
+    ('Radera båda anmälningarna avidentifieras och stängs',
+      kvar = 0 and st1 = 'declined' and st2 = 'declined', 'kvar: ' || kvar || ', ' || st1 || '/' || st2),
+    ('Radera kontaktmeddelandet och uppgiften tas bort', n_kon = 0 and n_upg = 0, n_kon || '/' || n_upg),
+    ('Radera auditloggen skriver att anmälan avidentifierats', n_audit = 1, 'rader: ' || n_audit);
+end $$;
+
+-- 11. En ansökan: med CV:t kvar i lagringen vägrar databasen. Utan CV
+--     tas den bort, och auditloggen säger av vem.
+do $$
+declare
+  adm  constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  app  constant uuid := '00000000-0000-4000-8000-00000000d8a1';
+  app2 constant uuid := '00000000-0000-4000-8000-00000000d8a2';
+  lage jsonb; svar jsonb; fel text; slut text; kvar bigint; n_audit bigint;
+begin
+  begin
+    insert into public.applications (id, name, email, why)
+    values (app, 'Radera Sökande', 'rls-radera-s@example.invalid',
+            'Jag vill jobba' || E'\n' || 'CV: cv/1700000000000-rlsprov-Radera.pdf'),
+           (app2, 'Radera Annan', 'rls-radera-s2@example.invalid', 'Jag vill också');
+    insert into storage.objects (bucket_id, name) values ('cv', '1700000000000-rlsprov-Radera.pdf');
+    perform pg_temp.bli(adm);
+    lage := public.radering_lage('ansokan', app);
+    begin
+      perform public.radera_person('ansokan', app);
+      fel := 'gick igenom';
+    exception when others then fel := sqlerrm;
+    end;
+    svar := public.radera_person('ansokan', app2);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into kvar from public.applications where id = app2;
+    select count(*) into n_audit from public.audit_logg
+     where handling = 'ansokan.borttagen' and objekt_id = app2::text and aktor = adm;
+    raise exception 'rulla tillbaka';
+  exception when others then slut := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if slut <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Radera ansökan', false, slut);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Radera CV:t står bland filerna som ska bort först',
+      lage -> 'filer' @> '[{"hink": "cv", "namn": "1700000000000-rlsprov-Radera.pdf"}]', (lage -> 'filer')::text),
+    ('Radera databasen vägrar medan CV:t finns kvar', fel like 'Filerna finns kvar%', fel),
+    ('Radera en ansökan utan CV tas bort, och loggas med vem', kvar = 0 and n_audit = 1,
+      'kvar: ' || kvar || ', rader: ' || n_audit);
+end $$;
+
+-- 12. Ett kontaktmeddelande tas bort och loggas.
+do $$
+declare
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  k   constant uuid := '00000000-0000-4000-8000-00000000d9c1';
+  fel text; kvar bigint; n_audit bigint;
+begin
+  begin
+    insert into public.contact_messages (id, name, email, message)
+    values (k, 'Radera Fråga', 'rls-radera-k@example.invalid', 'Hej');
+    perform pg_temp.bli(adm);
+    perform public.radera_person('kontakt', k);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into kvar from public.contact_messages where id = k;
+    select count(*) into n_audit from public.audit_logg
+     where handling = 'kontaktmeddelande.borttagen' and objekt_id = k::text and aktor = adm;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  insert into utfall (test, ok, detalj)
+  values ('Radera ett kontaktmeddelande tas bort och loggas',
+          fel = 'rulla tillbaka' and kvar = 0 and n_audit = 1,
+          case when fel = 'rulla tillbaka' then 'kvar: ' || kvar || ', rader: ' || n_audit else fel end);
+end $$;
+
+-- 13. Ett barn i en familj som står kvar: utan rapporter bort helt,
+--     med en rapport kvar som "Raderad elev" som familjen inte ser.
+do $$
+declare
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  a   constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  q   constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  c1  constant uuid := '00000000-0000-4000-8000-00000000dae1';
+  c2  constant uuid := '00000000-0000-4000-8000-00000000dae2';
+  pass constant uuid := '00000000-0000-4000-8000-00000000dab1';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  s1 jsonb; s2 jsonb; fel text; n1 bigint; namn2 text; syns bigint; fam bigint;
+begin
+  begin
+    insert into public.students (id, parent_id, name) values (c1, q, 'Radera Syskon'), (c2, q, 'Radera Syskon Två');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status)
+    values (pass, q, a, c2, q, idag - 40, '06:00', 60, 'confirmed');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values (c2, a, pass, 'Syskonet räknade', idag - 40, 'narvarande');
+
+    perform pg_temp.bli(adm);
+    s1 := public.radera_person('elev', c1);
+    s2 := public.radera_person('elev', c2);
+    perform pg_temp.bli(q);
+    select count(*) into syns from public.students where id = c2;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into n1 from public.students where id = c1;
+    select name into namn2 from public.students where id = c2;
+    select count(*) into fam from public.profiles where id = q and raderad_at is null;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Radera ett barn', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Radera ett barn utan rapporter tas bort helt', s1 ->> 'gjort' = 'raderad' and n1 = 0, s1::text),
+    ('Radera ett barn med rapport står kvar utan namn', s2 ->> 'gjort' = 'avidentifierad' and namn2 = 'Raderad elev',
+      coalesce(namn2, 'borta')),
+    ('Radera familjen ser inte det raderade barnet, och står själv kvar', syns = 0 and fam = 1,
+      'syns: ' || syns || ', familjen: ' || fam);
+end $$;
+
+-- 14. Markeringen går inte att sätta, eller ta bort, från en vy.
+do $$
+declare
+  p  constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  fel text; prof timestamptz; barn timestamptz;
+begin
+  begin
+    perform pg_temp.bli(p);
+    update public.profiles set raderad_at = now() where id = p;
+    update public.students set raderad_at = now() where id = '00000000-0000-4000-8000-0000000005a1';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select raderad_at into prof from public.profiles where id = p;
+    select raderad_at into barn from public.students where id = '00000000-0000-4000-8000-0000000005a1';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  insert into utfall (test, ok, detalj)
+  values ('Radera en familj markerar inte sig själv eller sitt barn som raderade',
+          fel = 'rulla tillbaka' and prof is null and barn is null,
+          case when fel = 'rulla tillbaka' then coalesce(prof::text, 'null') || ' / ' || coalesce(barn::text, 'null') else fel end);
 end $$;
 
 select test, ok, detalj from utfall order by nr;

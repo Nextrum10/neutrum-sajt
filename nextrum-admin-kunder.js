@@ -17,8 +17,8 @@
   const M = NXMedia;
 
   const { LEAD_LAGE, S, SH_LAGE, elevHjälpare, funktionsFel, hämtaAllt,
-          hämtaMatchunderlag, kontaktaRuta, kortDatum, matchar, namnFör,
-          pill, tabell, tomtText, visaRuta, väljare } = NXAdmin;
+          hämtaMatchunderlag, kontaktaRuta, kortDatum, läge, matchar, namnFör,
+          namnlista, pill, ritaPanelen, tomtText, visaRuta, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
@@ -50,38 +50,33 @@
     return d.join('\n');
   }
 
+  /* Namnen, med läget. Allt annat, med knapparna Kontakta och Skapa
+     elev, står i panelen (dpAnmalan i nextrum-admin-detalj.js). Söket
+     går fortfarande mot allt de skrev. */
   function ritaLeads() {
     const sök = $('#leads-sok').value.trim();
     const st = $('#leads-status').value;
-    const rader = S.leads
+    /* En avidentifierad anmälan är ingen person längre, bara en rad som
+       statistiken räknar. Den står inte i listan, men antalet sägs. */
+    const alla = S.leads.filter(l => !ärRaderad(l));
+    const gallrade = S.leads.length - alla.length;
+    const rader = alla
       .filter(l => !st || l.status === st)
       .filter(l => matchar(l, ['parent_name', 'email', 'child_name', 'subject', 'grade',
                                'message', 'kalla', 'kampanj'], sök));
 
-    $('#leads-antal').textContent = rader.length + ' av ' + S.leads.length;
-    $('#leads-tabell').innerHTML = tabell([
-      { namn: 'Familj', rita: l => '<b>' + esc(l.parent_name) + '</b>'
-        + '<span class="adm-und">' + esc(l.email) + '</span>' },
-      { namn: 'Barn', rita: l => esc(l.child_name || '—')
-        + (l.grade ? '<span class="adm-und">' + esc(l.grade) + '</span>' : '') },
-      { namn: 'Ämne', rita: l => esc(l.subject || '—') },
-      { namn: 'Vad de skrev', rita: l => l.message
-        ? '<span title="' + esc(l.message) + '">' + esc(l.message.slice(0, 90))
-          + (l.message.length > 90 ? '…' : '') + '</span>'
-        : '<span style="color:var(--bl-3)">—</span>' },
-      { namn: 'Källa', rita: l => källText(l)
-        ? '<span title="' + esc(källTitel(l)) + '">' + esc(källText(l)) + '</span>'
-        : '<span style="color:var(--bl-3)" title="Anmälan kom in innan källan '
-          + 'mättes i egna kolumner. Okänd, inte direkt.">—</span>' },
-      { namn: 'Inkom', rita: l => '<span class="adm-tal">' + esc(kortDatum(l.created_at)) + '</span>' },
-      { namn: 'Läge', höger: true, rita: l => väljare('lead', LEAD_LAGE, l.status, 'data-lead="' + l.id + '"')
-        /* Vägen vidare. En anmälan som inte kan bli en elev fastnar
-           här: matchningskön arbetar på elever, inte på anmälningar,
-           så utan det här steget når ingen familj någonsin fram. */
-        + ' <button class="btn btn-ghost btn-sm" data-lead-kontakt="' + l.id + '">'
-        + (l.kontaktad_at ? 'Skriv igen' : 'Kontakta') + '</button>'
-        + ' <button class="btn btn-ghost btn-sm" data-lead-elev="' + l.id + '">Skapa elev</button>' }
-    ], rader, tomtText(sök || st, 'Ingen intresseanmälan matchar filtret', 'Inga intresseanmälningar än'));
+    $('#leads-antal').textContent = rader.length + ' av ' + alla.length;
+    $('#leads-tabell').innerHTML = namnlista(rader, {
+      typ: 'anmalan', id: l => l.id,
+      namn: l => l.parent_name || l.email,
+      läge: l => läge(LEAD_LAGE, l.status),
+      tomt: tomtText(sök || st, 'Ingen intresseanmälan matchar filtret', 'Inga intresseanmälningar än')
+    }) + (gallrade
+      ? '<p class="xsmall" style="color:var(--bl-3);margin:12px 0 0">'
+        + gallrade + (gallrade === 1 ? ' anmälan är avidentifierad' : ' anmälningar är avidentifierade')
+        + ' och räknas bara i statistiken.</p>'
+      : '');
+    ritaPanelen();
   }
 
   /* ============================================================
@@ -92,75 +87,38 @@
      kolumnen Studiehjälpare nedan.
      ============================================================ */
 
+  /* Hur långt matchningen kommit, i ett ord. Här satt förr en
+     rullgardin som skrev profiles.matched_tutor_id, och den är borta
+     med flit: sedan schema-v14 äger ELEVEN sin matchning, och
+     profiles-kolumnen skrivs av en trigger som räknar om den ur barnen.
+     Två skrivvägar till samma sanning är en bugg som väntar. Matchningen
+     görs under Matchning, och panelen har knappen dit. */
+  function familjLäge(p) {
+    const barn = S.elever[p.id] || [];
+    const matchade = barn.filter(e => e.matched_tutor_id && e.match_status === 'matched').length;
+    if (!barn.length) return pill('Inga barn', '');
+    if (!matchade) return pill('Ingen matchad', 'ar-ny');
+    if (matchade < barn.length) return pill(matchade + ' av ' + barn.length + ' matchade', 'ar-vantar');
+    return pill('Matchad', 'ar-klar');
+  }
+
   function ritaFamiljer() {
     const sök = $('#fam-sok').value.trim();
     const st = $('#fam-status').value;
-    const alla = Object.values(S.personer).filter(p => p.role === 'parent')
+    const alla = Object.values(S.personer).filter(p => p.role === 'parent' && !ärRaderad(p))
       .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
     const rader = alla
       .filter(p => !st || (st === 'matched' ? p.match_status === 'matched' : p.match_status !== 'matched'))
       .filter(p => matchar(p, ['full_name', 'email', 'phone'], sök));
 
     $('#fam-antal').textContent = rader.length + ' av ' + alla.length;
-    $('#fam-tabell').innerHTML = tabell([
-      { namn: 'Familj', rita: p => '<b>' + esc(p.full_name || '(namn saknas)') + '</b>'
-        + '<span class="adm-und">' + esc(p.email || '') + (p.phone ? ' · ' + esc(p.phone) : '') + '</span>' },
-      { namn: 'Barn', rita: p => {
-        const b = S.elever[p.id] || [];
-        return b.length
-          ? b.map(e => esc(e.name) + (e.grade ? ' <span style="color:var(--bl-3)">(' + esc(e.grade) + ')</span>' : '')).join('<br>')
-          : '<span style="color:var(--bl-3)">Inga inlagda</span>';
-      } },
-      { namn: 'Pass', rita: p => {
-        const n = S.bokningar.filter(b => b.parent_id === p.id && b.status === 'completed').length;
-        return '<span class="adm-tal">' + n + '</span>';
-      } },
-      { namn: 'Studiehjälpare', höger: true, rita: p => {
-        /* Här satt förr en rullgardin som skrev
-           profiles.matched_tutor_id. Den är borttagen med flit.
-
-           Sedan schema-v14 äger ELEVEN sin matchning, och
-           profiles-kolumnen skrivs av en trigger som räknar om
-           den ur barnen. En rullgardin här hade alltså varit en
-           andra väg att skriva samma sak, som inte höll ihop med
-           den första: familjen hade fått en studiehjälpare som
-           inget av barnen var kopplat till.
-
-           Två skrivvägar till samma sanning är inte en bekvämlighet,
-           det är en bugg som väntar. Här står resultatet, och
-           knappen leder dit arbetet faktiskt görs. */
-        const barn = S.elever[p.id] || [];
-        const matchade = barn.filter(e => e.matched_tutor_id && e.match_status === 'matched');
-        const namn = [];
-        matchade.forEach(e => {
-          const t = S.personer[e.matched_tutor_id];
-          const n = t ? (t.full_name || t.email) : null;
-          if (n && namn.indexOf(n) === -1) namn.push(n);
-        });
-
-        let text;
-        if (!barn.length) text = '<span style="color:var(--bl-2)">Inga barn inlagda</span>';
-        else if (!matchade.length) text = pill('Ingen matchad', 'ar-ny');
-        else if (matchade.length < barn.length) {
-          text = esc(namn.join(', ')) + '<span class="adm-und">'
-            + matchade.length + ' av ' + barn.length + ' barn matchade</span>';
-        } else {
-          text = esc(namn.join(', '))
-            + (namn.length > 1 ? '<span class="adm-und">olika per barn</span>' : '');
-        }
-
-        return text
-          + '<span style="display:inline-flex;gap:6px;margin-left:10px;vertical-align:middle">'
-          + (matchade.length < barn.length
-            ? '<a class="btn btn-ghost btn-sm" href="#matchning">Matcha</a>' : '')
-          /* Anteckningsknappen är borta. Anteckningarna är en flik i
-             detaljpanelen nu, tillsammans med allt annat om samma
-             person — två knappar som öppnade två olika paneler om
-             samma familj var en uppdelning utan skäl. */
-          + '<button class="btn btn-ghost btn-sm" data-dp="familj:' + esc(p.id) + '">Öppna</button>'
-          + '</span>';
-      } }
-    ], rader, tomtText(sök || st, 'Ingen familj matchar filtret', 'Inga familjer registrerade än'));
+    $('#fam-tabell').innerHTML = namnlista(rader, {
+      typ: 'familj', id: p => p.id,
+      namn: p => p.full_name || p.email,
+      läge: familjLäge,
+      tomt: tomtText(sök || st, 'Ingen familj matchar filtret', 'Inga familjer registrerade än')
+    });
+    ritaPanelen();
   }
 
 
@@ -176,14 +134,6 @@
      matchandet sker under Matchning — här visas bara resultatet,
      med en väg dit för den som saknar.
      ============================================================ */
-
-  function nästaPassFör(elevId) {
-    const idag = isoFor(new Date());
-    return S.bokningar
-      .filter(b => b.student_id === elevId && b.wanted_date >= idag && b.status !== 'cancelled')
-      .sort((a, b) => (a.wanted_date + (a.wanted_time || ''))
-        .localeCompare(b.wanted_date + (b.wanted_time || '')))[0] || null;
-  }
 
   function fyllÅrskurser() {
     const sel = $('#elev-ak');
@@ -217,43 +167,16 @@
       });
 
     $('#elev-antal').textContent = rader.length + ' av ' + alla.length;
-    $('#elev-tabell').innerHTML = tabell([
-      { namn: 'Elev', rita: e => '<b>' + esc(e.name || '(namn saknas)') + '</b>'
-        + '<span class="adm-und">' + esc([e.grade, e.school].filter(Boolean).join(' · ') || 'Årskurs saknas') + '</span>' },
-      { namn: 'Familj', rita: e => {
-        const f = S.personer[e.parent_id];
-        if (!f) return '<span style="color:var(--bl-2)">Okänd</span>';
-        return esc(f.full_name || f.email || '—')
-          + '<span class="adm-und">' + esc(f.email || '') + '</span>';
-      } },
-      { namn: 'Ämnen', rita: e => (e.subjects && e.subjects.length)
-        ? esc(e.subjects.join(', '))
-        : '<span style="color:var(--bl-2)">Inga angivna</span>' },
-      { namn: 'Studiehjälpare', rita: e => {
-        const t = elevHjälpare(e);
-        if (t) return esc(t.full_name || t.email || '—');
-        /* Ett larm som inte går att trycka på är en påminnelse om
-           arbete någon annanstans. Den här tar dig dit. */
-        return '<a href="#matchning" data-mt-hoppa="' + esc(e.id) + '">'
-          + pill('Matcha', 'ar-ny') + '</a>';
-      } },
-      { namn: 'Nästa pass', rita: e => {
-        const b = nästaPassFör(e.id);
-        if (!b) return '<span style="color:var(--bl-2)">—</span>';
-        return '<span class="adm-tal">' + esc(kortDatum(b.wanted_date)
-          + (b.wanted_time ? ' ' + String(b.wanted_time).slice(0, 5) : '')) + '</span>'
-          + '<span class="adm-und">' + esc(b.subject || '') + '</span>';
-      } },
-      { namn: 'Pass', rita: e => {
-        const n = S.bokningar.filter(b => b.student_id === e.id && b.status === 'completed').length;
-        return '<span class="adm-tal">' + n + '</span>';
-      } },
-      { namn: '', höger: true, rita: e =>
-        '<button class="btn btn-ghost btn-sm" data-dp="elev:' + esc(e.id) + '">Öppna</button>' }
-    ], rader, tomtText(sök || åk || m, 'Ingen elev matchar filtret', 'Inga elever inlagda än'));
+    $('#elev-tabell').innerHTML = namnlista(rader, {
+      typ: 'elev', id: e => e.id,
+      namn: e => e.name,
+      läge: e => elevHjälpare(e) ? pill('Matchad', 'ar-klar') : pill('Ingen studiehjälpare', 'ar-ny'),
+      tomt: tomtText(sök || åk || m, 'Ingen elev matchar filtret', 'Inga elever inlagda än')
+    });
+    ritaPanelen();
   }
 
-  /* Från elevlistan rakt in i matchningen med rätt elev vald.
+  /* Från elevens panel rakt in i matchningen med rätt elev vald.
      Utan det får man leta upp samma elev en gång till i en annan
      lista, vilket är precis det som gör ett system tröttsamt. */
   document.addEventListener('click', e => {
@@ -308,10 +231,14 @@
       + kort(utanElev, 'Utan elev', utanElev ? 'ledig kapacitet' : 'alla har minst en');
   }
 
+  /* Läget och om hen syns på startsidan. Publiceringen är ett EGET
+     beslut, inte en följd av att vara godkänd (schema-v23), och står
+     därför som ett eget märke. Knapparna står i panelen. */
   function ritaStudiehjalpare() {
     const sök = $('#sh-sok').value.trim();
     const st = $('#sh-status').value;
     const alla = Object.values(S.tutorProfiler)
+      .filter(t => !ärRaderad(S.personer[t.id]))
       .map(t => ({ ...t, namn: namnFör(t.id), epost: (S.personer[t.id] || {}).email || '' }))
       .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
     const rader = alla
@@ -321,41 +248,14 @@
 
     ritaPoolsammanfattning(alla);
     $('#sh-antal').textContent = rader.length + ' av ' + alla.length;
-    $('#sh-tabell').innerHTML = tabell([
-      { namn: 'Namn', rita: t => '<b>' + esc(t.namn) + '</b>'
-        + '<span class="adm-und">' + esc(t.epost) + (t.age ? ' · ' + t.age + ' år' : '') + '</span>' },
-      { namn: 'Ort & skola', rita: t => esc(t.city || '—')
-        + (t.school ? '<span class="adm-und">' + esc(t.school) + '</span>' : '') },
-      { namn: 'Ämnen', rita: t => esc((t.subjects || []).join(', ') || '—') },
-      /* Två tal i en kolumn. Var två, och tabellen sköt då ut sista
-         kolumnen ur rutan på en vanlig skärm — och "elever" och
-         "genomförda pass" läses ändå alltid tillsammans. */
-      { namn: 'Elever / pass', rita: t => {
-        const elever = Object.values(S.personer).filter(p => p.matched_tutor_id === t.id).length;
-        const pass = S.bokningar.filter(b => b.tutor_id === t.id && b.status === 'completed').length;
-        return '<span class="adm-tal">' + elever + ' / ' + pass + '</span>';
-      } },
-      { namn: 'Timpenning', rita: t => t.hourly_rate
-        ? '<span class="adm-tal">' + esc(NX.kr(t.hourly_rate)) + '</span>'
-        : '<span style="color:var(--bl-3)">Ej satt</span>' },
-      /* Publicering är ett EGET beslut, inte en följd av att vara
-         godkänd — se schema-v23. Kolumnen står bredvid läget just
-         för att de två inte ska förväxlas. */
-      { namn: 'På startsidan', rita: t => t.status !== 'approved'
-        ? '<span style="color:var(--bl-3)">—</span>'
-        : '<button class="btn btn-ghost btn-sm" data-sh-publik="' + esc(t.id) + '">'
-          + (t.visa_publikt ? 'Syns' : 'Dold') + '</button>' },
-      { namn: 'Läge', höger: true, rita: t => väljare('sh', SH_LAGE, t.status, 'data-sh="' + t.id + '"')
-        /* Kontakt bara när adressen finns. En knapp som öppnar ett
-           mejlutkast utan mottagare ser ut att fungera och gör det
-           inte — värre än ingen knapp. */
-        + (t.epost
-            ? '<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-sh-kontakt="'
-              + esc(t.id) + '">Kontakta</button>'
-            : '')
-        + '<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-dp="studiehjalpare:'
-        + esc(t.id) + '">Öppna</button>' }
-    ], rader, tomtText(sök || st, 'Ingen studiehjälpare matchar filtret', 'Inga studiehjälpare registrerade än'));
+    $('#sh-tabell').innerHTML = namnlista(rader, {
+      typ: 'studiehjalpare', id: t => t.id,
+      namn: t => t.namn,
+      läge: t => läge(SH_LAGE, t.status)
+        + (t.status === 'approved' && t.visa_publikt ? ' ' + pill('På startsidan', '') : ''),
+      tomt: tomtText(sök || st, 'Ingen studiehjälpare matchar filtret', 'Inga studiehjälpare registrerade än')
+    });
+    ritaPanelen();
   }
 
   function mallLead(l) {
@@ -718,8 +618,9 @@
   });
 
 
-  /* Det andra områden anropar. */
+  /* Det andra områden anropar. källText, källTitel och anmälansFamilj
+     läser anmälans panel. */
   Object.assign(NXAdmin.rita, {
-    ritaElever, ritaFamiljer, ritaLeads, ritaStudiehjalpare
+    anmälansFamilj, källText, källTitel, ritaElever, ritaFamiljer, ritaLeads, ritaStudiehjalpare
   });
 })();
