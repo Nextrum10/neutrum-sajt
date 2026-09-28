@@ -68,6 +68,9 @@ Deno.test('timmarna kvar är ett heltal, aldrig text (Fas 21.2)', () => {
 
 Deno.test('betalsättet är en kod, och bara en', () => {
   assertEquals(renData({ betalsatt: 'faktura' }).betalsatt, 'faktura');
+  // Fas 22.2: köpta timmar eller timbanken betalade passet.
+  assertEquals(renData({ betalsatt: 'timmar' }).betalsatt, 'timmar');
+  assertEquals(renData({ betalsatt: 'Timmar' }).betalsatt, null);
   assertEquals(renData({ betalsatt: 'kort' }).betalsatt, null);
   assertEquals(renData({ betalsatt: 'Faktura till Storgatan 4' }).betalsatt, null);
   assertEquals(renData({}).betalsatt, null);

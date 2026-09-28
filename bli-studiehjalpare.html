@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=ad8203ae">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
 </head>
 <body>
 
@@ -254,13 +254,13 @@
               </label>
               <span class="nx-fil-namn" id="ap-cv-namn">Ingen fil vald</span>
             </div>
-            <p class="nx-fil-hjalp">PDF eller Word, högst 5 MB. Du kan skicka in utan CV — vi läser ansökan ändå.</p>
+            <p class="nx-fil-hjalp">PDF eller Word, högst 5 MB. Du kan skicka in utan CV — vi läser ansökan ändå. Ta bort ditt personnummer ur CV:t innan du laddar upp det, vi behöver det inte.</p>
           </div>
 
           <label class="nx-samtycke" for="ap-gdpr">
             <input type="checkbox" id="ap-gdpr" required>
-            <span>Jag godkänner att Nextrum sparar uppgifterna för att kunna behandla min
-              ansökan. <a href="/integritetspolicy">Så hanterar vi uppgifter</a>.</span>
+            <span>Jag har läst <a href="/integritetspolicy">hur Nextrum hanterar uppgifterna</a>. De sparas
+              för att vi ska kunna behandla din ansökan, högst ett år om du inte börjar hos oss.</span>
           </label>
 
           <button class="btn btn-primary btn-block btn-lg" type="submit" style="margin-top:8px">Skicka ansökan</button>
@@ -358,6 +358,7 @@
           <li><a href="/laxhjalp-svenska">Svenska</a></li>
           <li><a href="/laxhjalp-engelska">Engelska</a></li>
           <li><a href="/laxhjalp-no">Fysik, kemi och biologi</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
         </ul>
       </nav>
       <nav aria-labelledby="ftr-fordig">
@@ -439,35 +440,17 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<!-- Vercel Web Analytics.
-
-     Sätter INGA cookies: unika besökare räknas via en hash av
-     IP och webbläsare med ett salt som byts dagligen, och den råa
-     IP-adressen sparas inte. Därför krävs inget samtycke — men det
-     står ändå i integritetspolicyn och på lagring.html, eftersom
-     "vi mäter ingenting" inte längre är sant.
-
-     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
-     finns inget att optimera för besökarens skull, och det vore ett
-     onödigt anrop från en sida där någon sköter sitt barns skolgång.
-
-     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
-     vilket är ofarligt — inget mäts när man utvecklar. -->
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
-     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="nextrum-config.js?v=f8471f2e"></script>
+<script src="nextrum-config.js?v=21cecc53"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a72665a2"></script>
-<script src="nextrum-samtycke.js?v=c15d8f5b"></script>
+<script src="nextrum-app.js?v=d85467f7"></script>
+<script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=77b12db4"></script>
+<script src="nextrum-maskot-svar.js?v=49674614"></script>
 <script src="nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {
@@ -528,7 +511,7 @@
       const erf = $('#ap-erf') && $('#ap-erf').value.trim();
       if (tel) rader.push('Telefon: ' + tel);
       if (erf) rader.push('Erfarenhet: ' + erf);
-      rader.push('Samtycke till lagring: ja (' + new Date().toISOString().slice(0, 10) + ')');
+      rader.push('Läst integritetspolicyn: ja (' + new Date().toISOString().slice(0, 10) + ')');
       return rader.join('\n');
     }
   });

@@ -19,6 +19,7 @@
 
 import { json, preflight } from '../_delad/http.ts';
 import { kravInloggad } from '../_delad/auth.ts';
+import { fornamn, maskera } from '../_delad/minimera.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
@@ -60,12 +61,13 @@ Deno.serve(async (req) => {
     }
 
     const b = await req.json().catch(() => ({}));
-    const elev = kort(b.elev, 60) || 'eleven';
+    // Bara förnamnet och maskade stödord går vidare (_delad/minimera.ts).
+    const elev = fornamn(kort(b.elev, 60)) || 'eleven';
     const datum = kort(b.datum, 40);
     const tid = kort(b.tid, 10);
     const minuter = Math.min(600, Math.max(15, Number(b.minuter) || 60));
     const ämne = kort(b.amne, 80);
-    const anteckning = kort(b.anteckning, 400);
+    const anteckning = maskera(kort(b.anteckning, 400));
 
     const prompt = `Du hjälper en gymnasieelev som jobbar som studiehjälpare att skriva den korta hälsning som följer med ett tidsförslag till en familj.
 

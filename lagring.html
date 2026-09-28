@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=ad8203ae">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
 </head>
 <body>
 
@@ -129,7 +129,7 @@
   <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
   <span class="nx-et acc" style="margin-top:22px">Cookies</span>
   <h1 class="nx-d1">Cookies och lagring</h1>
-  <p class="nx-lede">Kort sida, eftersom det finns lite att berätta: de öppna sidorna sätter inga cookies, och det enda vi frågar om är varifrån du kom.</p>
+  <p class="nx-lede">Kort sida, eftersom det finns lite att berätta: de öppna sidorna sätter inga cookies, och vi mäter bara det du säger ja till.</p>
 </section>
 
 <section class="sec wrap" style="padding-top:clamp(16px,2vw,28px)">
@@ -140,36 +140,58 @@
     <div class="jur-ruta">
       <h2>Inga cookies på de öppna sidorna</h2>
       <p>Vi har mätt det, inte antagit det: på de öppna sidorna sätts noll cookies. Utan ditt ja
-        lagras ingenting i webbläsaren förrän du loggar in, utom själva svaret.</p>
-      <p>Den ruta som ändå kan dyka upp frågar om en enda sak: om vi får se vilken annons eller
-        länk som ledde dig hit. Svaret ändrar du när som helst, här nedanför.</p>
-      <p>Vi räknar däremot besök. Hur det går till utan cookies står strax nedanför.</p>
+        lagras ingenting i din webbläsare, utom själva svaret, förrän du loggar in.</p>
+      <p>Rutan som dyker upp första gången frågar om två saker, och du väljer var för sig:
+        besöksstatistik och annonsmätning. Nej till båda fungerar precis lika bra. Ditt val ändrar
+        du här nedanför, eller via Cookieinställningar längst ner på varje sida.</p>
       <p>Det enda stället där en cookie sätts är när du betalar ett pass med kort. Då är det
-        Stripe som sätter den, och bara för betalningens skull. Det står längre ner.</p>
+        Stripe som sätter den, och bara för betalningens skull.</p>
     </div>
 
-    <h2 id="ditt-val">Det vi frågar om</h2>
-    <p>Vi vill veta vilka annonser och länkar som leder till att familjer hör av sig, så att vi
-      inte lägger pengar på fel ställe. Säger du ja minns webbläsaren varifrån du kom tills du
-      stänger fliken, i det som kallas <i>sessionStorage</i>. Skickar du en intresseanmälan
-      eller en ansökan följer det med.</p>
-    <ul>
-      <li>Det som minns är den webbplats som länkade hit, sidan du landade på, och de märkord vi
-        själva lagt i adressen när vi annonserat. Inget om dig.</li>
-      <li>Det lämnar inte din webbläsare förrän du skickar ett formulär, och då bara till oss.</li>
-      <li>Säger du nej ser vi bara sidan där du skickade anmälan. Allt annat fungerar precis
-        likadant.</li>
-      <li>Ditt svar sparas i ett år i <i>localStorage</i>, så att vi inte frågar vid varje sidbyte.
-        Säger din webbläsare att du inte vill spåras (Global Privacy Control) räknar vi det som
-        ett nej.</li>
-      <li>Vi använder i dag ingen annonspixel från Meta, Google eller någon annan. Slår vi på en
-        frågar rutan om den särskilt, också den som redan sagt ja, och den här sidan skrivs om
-        samma dag.</li>
-    </ul>
+    <h2 id="ditt-val">Ditt val</h2>
     <div class="nx-kakor-panel" data-samtycke-panel>
       <p>Ditt val visas här när sidan har laddat. Utan JavaScript sparas ingenting, och det finns
         inget att välja.</p>
     </div>
+
+    <h2>Besöksstatistik</h2>
+    <p>Säger du ja räknar Vercel Web Analytics hur många som besöker sajten och vilka sidor som
+      läses, och Vercel Speed Insights mäter hur snabbt sidorna laddas. Utan ja laddas inget av
+      det.</p>
+    <ul>
+      <li>Ingen cookie. Unika besökare räknas fram ur en hash av IP-adressen och webbläsartypen,
+        med ett salt som byts varje dygn. Den råa IP-adressen sparas inte, och samma besökare får
+        ett nytt värde nästa dag.</li>
+      <li>Det som skickas är vilken sida som lästes, varifrån du kom, land, operativsystem,
+        webbläsare, om du sitter vid dator eller telefon, och hur lång tid sidan tog att ladda.</li>
+      <li>Vi frågar för att skriptet får din webbläsare att skicka de uppgifterna, och lagen om
+        elektronisk kommunikation kräver ditt samtycke för det, också utan cookies.</li>
+      <li>Studievyn och studiehjälparvyn mäts inte alls.</li>
+    </ul>
+
+    <h2>Annonsmätning</h2>
+    <p>Vi vill veta vilka annonser och länkar som leder till att familjer hör av sig, så att vi
+      inte lägger pengar på fel ställe. Säger du ja minns webbläsaren varifrån du kom tills du
+      stänger fliken, i det som kallas <i>sessionStorage</i>. Skickar du en intresseanmälan eller
+      en ansökan följer det med.</p>
+    <ul>
+      <li>Det som minns är den webbplats som länkade hit, sidan du landade på, och de märkord vi
+        själva lagt i adressen när vi annonserat. Inget om dig.</li>
+      <li>Det lämnar inte din webbläsare förrän du skickar ett formulär, och då bara till oss.</li>
+      <li>Säger du nej ser vi bara sidan där du skickade anmälan.</li>
+      <li>Vi använder i dag ingen annonspixel från Meta, Google eller någon annan. Slår vi på en
+        frågar rutan om den särskilt, också den som redan sagt ja, och den här sidan skrivs om
+        samma dag.</li>
+    </ul>
+
+    <h2>Hur ditt svar sparas</h2>
+    <ul>
+      <li>Svaret sparas i din webbläsare i ett år, i <i>localStorage</i>, så att vi inte frågar vid
+        varje sidbyte. Det kräver inget samtycke: utan det går det inte att låta bli att fråga.</li>
+      <li>Säger din webbläsare att du inte vill spåras (Global Privacy Control) räknar vi det som
+        nej till allt, och rutan visas inte.</li>
+      <li>Drar du tillbaka ett ja laddas sidan om, utan det du sagt nej till.</li>
+    </ul>
 
     <h2>Vad som lagras när du loggar in</h2>
     <p>Loggar du in sparas din inloggningssession i din egen webbläsare, i det som kallas
@@ -197,20 +219,9 @@
         <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripes integritetspolicy</a>.</li>
     </ul>
 
-    <h2>Hur vi räknar besök</h2>
-    <p>Vi använder Vercel Web Analytics för att se hur många som hittar hit och vilka sidor de
-      läser. Den fungerar utan cookies, vilket är hela skälet till att vi valde den.</p>
-    <p>I stället för att märka din webbläsare räknas unika besökare fram ur en hash av din
-      IP-adress och din webbläsartyp, med ett salt som byts varje dygn. Den råa IP-adressen
-      sparas inte, och hashen går inte att räkna baklänges. Efter ett dygn byts saltet och samma
-      besökare får ett annat värde — det finns alltså inget som följer dig över tid.</p>
-    <p>Det som samlas in är vilken sida som lästes, varifrån du kom, land, operativsystem,
-      webbläsare och om du satt vid dator eller telefon. Inget av det pekar ut dig.</p>
-    <p>Mätningen finns bara på de öppna sidorna. Studievyn och studiehjälparvyn mäts inte alls.</p>
-
     <h2>Vad som inte finns här</h2>
     <ul>
-      <li>Ingen cookie — inte heller för statistiken ovan</li>
+      <li>Ingen cookie på de öppna sidorna, inte heller för statistiken</li>
       <li>Ingen pixel från något socialt nätverk eller annonsnätverk</li>
       <li>Inga tredjepartscookies på de öppna sidorna</li>
       <li>Ingen profilering och inga automatiska beslut om dig</li>
@@ -221,24 +232,21 @@
     <p>Även utan cookies innebär varje besök att din webbläsare hämtar filer från någon. Det här
       är hela listan:</p>
     <ul>
-      <li><b>Vercel</b> — webbplatsen ligger där, så all trafik går genom dem. Det är också de
-        som räknar besöken, på det sätt som beskrivs ovan.</li>
-      <li><b>Supabase</b> — databasen och inloggningen. Kontaktas när du skickar ett formulär
+      <li><b>Vercel</b>: webbplatsen ligger där, så all trafik går genom dem. Säger du ja till
+        besöksstatistik är det också de som räknar besöken.</li>
+      <li><b>Supabase</b>: databasen och inloggningen. Kontaktas när du skickar ett formulär
         eller loggar in. Servrarna står inom EU.</li>
-      <li><b>Stripe</b> — kortbetalningen. Bara i föräldravyn, och först när du trycker på
+      <li><b>Stripe</b>: kortbetalningen. Bara i föräldravyn, och först när du trycker på
         Betala med kort.</li>
     </ul>
-    <p>Det är hela listan — och den har blivit kortare. Typsnitten låg tidigare hos Google och
-      programbiblioteket som inloggningen behöver låg hos unpkg.com. Båda skickade din IP-adress
-      till en tredjepart vid varje sidvisning. Båda ligger nu hos oss, och de överföringarna
-      finns inte längre.</p>
+    <p>Typsnitten och programbiblioteket som inloggningen behöver ligger hos oss, så att din
+      IP-adress inte skickas till fler än så.</p>
 
     <h2>Om det ändras</h2>
-    <p>Lägger vi någon gång till något mer som kräver ditt samtycke — inbäddad video,
-      annonsverktyg, något som följer dig mellan sajter — frågar rutan om det innan det laddas,
-      och den här sidan uppdateras samtidigt. Vi lägger inte till mätning i smyg:
-      besöksräkningen ovan och frågan om var du kom ifrån lades till efter att den här sidan
-      först publicerats, och båda gångerna skrevs sidan om samma dag.</p>
+    <p>Lägger vi någon gång till något mer som kräver ditt samtycke, som en inbäddad video eller
+      ett annonsverktyg, frågar rutan om det innan det laddas, och den här sidan uppdateras
+      samtidigt. Det som redan står här ändras inte i smyg: den här sidan har skrivits om varje
+      gång något lagts till.</p>
 
     <p class="jur-datum">Senast uppdaterad 27 september 2026.</p>
   </div>
@@ -285,6 +293,7 @@
           <li><a href="/laxhjalp-svenska">Svenska</a></li>
           <li><a href="/laxhjalp-engelska">Engelska</a></li>
           <li><a href="/laxhjalp-no">Fysik, kemi och biologi</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
         </ul>
       </nav>
       <nav aria-labelledby="ftr-fordig">
@@ -366,34 +375,16 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<!-- Vercel Web Analytics.
-
-     Sätter INGA cookies: unika besökare räknas via en hash av
-     IP och webbläsare med ett salt som byts dagligen, och den råa
-     IP-adressen sparas inte. Därför krävs inget samtycke — men det
-     står ändå i integritetspolicyn och på lagring.html, eftersom
-     "vi mäter ingenting" inte längre är sant.
-
-     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
-     finns inget att optimera för besökarens skull, och det vore ett
-     onödigt anrop från en sida där någon sköter sitt barns skolgång.
-
-     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
-     vilket är ofarligt — inget mäts när man utvecklar. -->
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
-     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="nextrum-config.js?v=f8471f2e"></script>
+<script src="nextrum-config.js?v=21cecc53"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a72665a2"></script>
-<script src="nextrum-samtycke.js?v=c15d8f5b"></script>
+<script src="nextrum-app.js?v=d85467f7"></script>
+<script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=77b12db4"></script>
+<script src="nextrum-maskot-svar.js?v=49674614"></script>
 <script src="nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {

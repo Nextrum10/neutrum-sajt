@@ -861,11 +861,23 @@ skrivs om från en vy.
 
 **Sist:**
 
-9. **Slå på flaggan** under Ekonomi → Fakturor. Knappen säger vad den gör innan
+9. **Bankgironumret** (Fas 19.6). Skriv det i `BANKGIRO` i `nextrum-config.js`,
+   som det står på fakturan i Fortnox. Rutan Fakturor att betala under Betalning
+   visar det med en Kopiera-knapp; tomt står det "står på fakturan".
+10. **Slå på flaggan** under Ekonomi → Fakturor. Knappen säger vad den gör innan
    den gör det.
-10. **Provfakturera en familj**, gärna er egen: välj faktura på ett pass, rapportera
-   det, kör månadskörningen i torrkörning och sedan skarpt, lägg in utkastet i
-   Fortnox, skriv in numret, och markera den betald när pengarna kommit.
+11. **Provfakturera en familj**, gärna er egen: välj "Få faktura nästa månad" när
+   rapporten bekräftas, kör månadskörningen i torrkörning och sedan skarpt, lägg in
+   utkastet i Fortnox, skriv in fakturanumret, **OCR-numret** och förfallodagen
+   med Lagd i Fortnox, kontrollera att fakturan står under Fakturor att betala i
+   familjens vy med rätt bankgiro och OCR, och markera den betald när pengarna
+   kommit.
+
+**OCR skrivs av, det räknas inte fram** (Fas 19.6). Fortnox bestämmer OCR:et ur
+fakturanumret enligt bankgiroavtalet, och ett som räknats fram här och blivit fel
+hade gett en betalning Bankgirot inte kan matcha. Kontrollsiffran prövas både i
+dialogen och i databasen (`invoices_ocr_giltigt`). Saknar fakturan OCR lämnas
+fältet tomt, och familjen ser fakturanumret som meddelande.
 
 **De sex gamla obetalda passen** (bokade när villkoren lovade månadsfaktura) kan bli
 den första riktiga fakturan: bytet till `faktura` går också på ett genomfört pass.
@@ -875,7 +887,11 @@ den första riktiga fakturan: bytet till `faktura` går också på ett genomför
 Familjen kan köpa timmar i förväg: två planer för en månad (4 och 8 timmar, 10 %
 rabatt) och klippkort med 10, 20, 30, 60 eller 100 timmar (5 % rabatt, gäller 6, 6,
 6, 12 och 18 månader). Timmarna betalar sedan ett bekräftat pass i stället för
-kortet. Databasen är körd (`fas16_1` till `fas16_1e`), och flaggan `erbjudanden`
+kortet, av sig själva sedan Fas 22.2: när passet bekräftas eller genomförs, och när
+ett köp blir betalt för de bekräftade pass som redan står obetalda. Sedan Fas 22.3
+betalar timmar som blir lediga efter det nästa bekräftade pass inom fem minuter.
+Databasen är körd (`fas16_1` till `fas16_1e`, `fas22_2_timmarna_betalar_passen` och
+`fas22_3_lediga_timmar_betalar_nasta_pass`), och flaggan `erbjudanden`
 är PÅ sedan 2026-09-27, påslagen innan provköpet nedan var gjort. Står den av
 syns erbjudandena med sina priser på prissidan och i studievyn, men knapparna
 säger "Snart", och inga timmar går att dra.
@@ -886,7 +902,7 @@ säger "Snart", och inga timmar går att dra.
 |---|---|
 | Priset | `erbjudanden_pris`. Timpriset med rabatt, nedåt till hel krona, gånger timmarna (16.1d). Prissidan, studievyn och `stripe-checkout` läser samma rad |
 | Timmar kvar | `klippkort_saldo.kvar`, ur passen som bär `klippkort_id`. Ett avbokat pass räknas inte, så timmarna kommer tillbaka av sig själva |
-| Att dra timmar | `klippkort_dra()`, bara `service_role`, anropad av `klippkort-betala` efter att familjens token prövats |
+| Att dra timmar | Triggern `bookings_timmar_betalar` när ett pass bekräftas eller genomförs, och `klippkort_betalar_passen` när ett köp blir betalt (Fas 22.2). pg_cron `timmar-betalar` var femte minut för timmar som blivit lediga (Fas 22.3). Alla tre väljer genom `intern.timmar_betala`. Annars `klippkort_dra()`, bara `service_role`, anropad av `klippkort-betala` efter att familjens token prövats |
 | Pengar tillbaka | `klippkort_saldo.vid_anger_ore` inom ångerfristen, `vid_uppsagning_ore` efter den. Adminvyn väljer efter datumet |
 
 **Driftsätt i den här ordningen:**
@@ -904,6 +920,24 @@ driftsatt sedan 2026-09-27 (version 18). Samma dag var `stripe-webhook`
 (version 9) och `stripe-checkout` (version 13) identiska med main, och
 `klippkort-betala` driftsattes för första gången (version 1). Alla fyra
 ligger alltså ute; kvar är provköpet nedan.
+
+Timbanken (Fas 22.1) driftsattes samma eftermiddag i samma ordning, med
+`fakturering` sist: `stripe-webhook` version 10, `stripe-checkout`
+version 14, `klippkort-betala` version 2 och `fakturering` version 31,
+alla jämförda byte för byte mot grenen. Provköpet ska därför också ta
+steg 6 nedan, om timbanken. Samma kväll kom rättelserna i
+`timbanken_foljer_passet`: `stripe-webhook` version 11, `stripe-checkout`
+version 15 och `klippkort-betala` version 3. Webhooken gick ut före
+migrationen som tog bort `timbank_kortet_vann`, som den äldre anropade.
+
+Fas 22.2 (timmarna betalar passen av sig själva) är databasen och `notis-ko`
+version 19, i den ordningen och samma kväll. Ingen annan funktion ändrades:
+`klippkort_betald`, som webhooken redan anropar, är det som väcker triggern på
+köpet.
+
+Fas 22.3 (lediga timmar betalar nästa pass) är bara databasen: migrationen
+`fas22_3_lediga_timmar_betalar_nasta_pass`, som också schemalägger
+`timmar-betalar`. Ingen funktion ändrades.
 
 Driftsätts en funktion genom MCP i stället för `supabase functions
 deploy`: hämta tillbaka den efteråt och jämför varje fil mot repot.
@@ -924,9 +958,13 @@ står därför inte i `config.toml`.
 2. Köp Klippkort 10 timmar med testkortet `4242 4242 4242 4242`. Raden i
    `klippkort` ska bli `betald` med `stripe_skarp = false`, `giltigt_till` sex
    månader fram och `stripe_charge_id` satt.
-3. Låt en studiehjälpare bekräfta ett pass på en timme. Familjen ska se "Betala med
-   timmar" först. Tryck; passet ska bli `betald` med `klippkort_id` satt och
-   `betalt_ore` tomt, och kortet ska ha 9 timmar kvar.
+3. Låt en studiehjälpare bekräfta ett pass på en timme. Passet ska bli betalt av
+   sig självt (Fas 22.2): `betald` med `klippkort_id` satt och `betalt_ore` tomt,
+   kortet ska ha 9 timmar kvar, familjen ska inte se någon betalknapp, och
+   bekräftelsemejlet i sandlådan ska säga att passet är betalt med timmarna.
+   Pröva också köpet åt andra hållet: bekräfta ett pass innan familjen har timmar,
+   köp sedan ett kort, och passet ska stå som betalt med det nya kortet när köpet
+   kommit in.
 4. Avboka passet som familjen, på passets sida, med ett skäl (Fas 21.1).
    `betalning_status` ska bli `ingen` (annars larmar `betald_men_avbokad` om pengar
    som aldrig drogs), kortet ska ha 10 timmar igen, och studiehjälparen ska få
@@ -934,13 +972,25 @@ står därför inte i `config.toml`.
 5. Sätt kortets `giltigt_till` till om tio dagar och kör
    `select intern.timmar_gar_ut_koa();` mellan 9 och 20. Sandlådan ska få mejlet
    "Era köpta timmar går ut …" med antalet timmar kvar (Fas 21.2).
-6. Återbetala en del av köpet i Stripes dashboard. Kortet ska bli `aterbetald` och
+6. Timbanken (Fas 22.1). Boka ett pass på två timmar, som timmarna betalar när det
+   bekräftas, och låt
+   studiehjälparen rapportera 1 h 15 med ett skäl. Kortet ska ha dragit två
+   timmar, och `timbank_saldo.saldo_min` för familjen ska vara 45. Boka sedan ett
+   pass på en timme, bekräfta det, och rapportera 1 h 15: `timbank_uttag` ska
+   få en rad `overtid` på 15, familjen ska inte bli ombedd att betala något
+   tillägg, och saldot ska vara 30. När vyerna från Fas 22.1 ligger ute ska
+   studiehjälparen se minuterna på passet, och familjen dem under Era timmar.
+7. Återbetala en del av köpet i Stripes dashboard. Kortet ska bli `aterbetald` och
    inte längre gå att dra från.
-7. Står något av det fel: stäng av flaggan. Redan köpta timmar syns fortfarande,
+8. Står något av det fel: stäng av flaggan. Redan köpta timmar syns fortfarande,
    men inget nytt går att köpa eller dra.
 
 **Pengar tillbaka görs i Stripes dashboard, av en människa.** Beloppet står under
-Erbjudanden i adminvyn, kolumnen "Om de slutar i dag":
+Erbjudanden i adminvyn, kolumnen "Om de slutar i dag". **Avboka först alla kommande
+pass familjen inte vill ha**, inte bara de timmarna betalat: kolumnen räknar varje
+pass som inte är avbokat som använt, också ett som inte hållits, och sedan Fas 22.3
+betalar en timme som blir ledig nästa bekräftade pass inom fem minuter. Avbokas bara
+det betalda passet flyttar timmen alltså till nästa.
 
 - **Inom 14 dagar från köpet gäller ångerrätten.** De använda timmarna räknas som
   en andel av det familjen BETALADE, inte till 379 kr. Lagen om distansavtal 2 kap.

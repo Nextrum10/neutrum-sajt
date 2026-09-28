@@ -19,9 +19,9 @@
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=ad8203ae">
-<link rel="stylesheet" href="nextrum-vy.css?v=6aa97f7c">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=f6fa7abc">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
+<link rel="stylesheet" href="nextrum-vy.css?v=c552270c">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=786d38cc">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -1152,6 +1152,9 @@
               <h5>Erbjudanden <em id="erb-kop-antal"></em></h5>
               <div id="erb-flagga"><div class="loading">Hämtar</div></div>
               <div id="erb-kop" style="margin-top:18px"></div>
+              <!-- Fas 22.1. Timbanken: minuter familjerna har kvar när ett
+                   pass betalt med timmar slutade före en hel timme. -->
+              <div id="erb-bank" style="margin-top:18px"></div>
             </div>
             <!-- Fas 14.3, punkt 10 och 11 på MVP-listan. Frågar Stripe med
                  servernyckeln genom stripe-lage. Läser bara: endpoints,
@@ -1877,9 +1880,10 @@
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
                 Mejlen om nya anmälningar, tidsförslag och meddelanden skickas av databasen.
                 Går ett utskick fel sparas raden ändå — och tidigare fanns felet bara i ett
-                loggbord ingen kunde läsa. Här står de senaste dygnets misslyckade utskick.
-                Databasen städar bort äldre svar själv, så en tom lista betyder "inget de
-                senaste timmarna", inte "aldrig något".
+                loggbord ingen kunde läsa. Här står databasens egna utskick som inte gick
+                fram, och vilken väg det gällde. Ett prov av en funktion efter en
+                driftsättning räknas inte. Databasen glömmer svaren efter sex timmar, så en
+                tom lista betyder "inget de senaste timmarna", inte "aldrig något".
               </p>
               <div id="notis-tabell"><div class="loading">Hämtar</div></div>
             </div>
@@ -2186,27 +2190,27 @@
 </footer>
 
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=f8471f2e"></script>
+<script src="nextrum-config.js?v=21cecc53"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a72665a2"></script>
+<script src="nextrum-app.js?v=d85467f7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-studie.js?v=54dea043"></script>
-<script src="nextrum-arbetsyta.js?v=9c034f66"></script>
+<script src="nextrum-arbetsyta.js?v=570cc6c2"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
-<script src="nextrum-betalning.js?v=67f384a3"></script>
+<script src="nextrum-betalning.js?v=973469fe"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=77c046cf"></script>
+<script src="nextrum-admin-karna.js?v=da16d38b"></script>
 <script src="nextrum-admin-detalj.js?v=3ce6626d"></script>
-<script src="nextrum-admin-oversikt.js?v=09f16568"></script>
+<script src="nextrum-admin-oversikt.js?v=045dcecd"></script>
 <script src="nextrum-admin-kunder.js?v=01b666e6"></script>
 <script src="nextrum-admin-rekrytering.js?v=abdfc940"></script>
 <script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
 <script src="nextrum-admin-kommunikation.js?v=24a9a868"></script>
 <script src="nextrum-admin-drift.js?v=2437242e"></script>
-<script src="nextrum-admin-ekonomi.js?v=6dfacfaa"></script>
+<script src="nextrum-admin-ekonomi.js?v=eb933656"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
-<script src="nextrum-admin-system.js?v=25511141"></script>
+<script src="nextrum-admin-system.js?v=fab56355"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar

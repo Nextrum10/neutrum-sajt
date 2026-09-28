@@ -217,7 +217,7 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, prov] = await Promise.all([
+           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -280,6 +280,10 @@ const NXAdmin = (function () {
       supa.from('pass_tillagg').select('id, booking_id, minuter, begart_ore, status, betalt_ore, '
         + 'aterbetald_ore, betald_at, stripe_charge_id, stripe_skarp, created_at')
         .order('created_at', { ascending: false }),
+      /* Fas 22.1: familjernas timbank, räknad i databasen. Bara de som
+         har minuter: det är pengar vi är skyldiga, och en lista med alla
+         familjer på noll hade gömt dem. */
+      supa.from('timbank_saldo').select('parent_id, saldo_min, varde_ore').gt('saldo_min', 0),
       /* Fas 22.1: försöken på utbildningsprovet. Bara resultatet, inte
          svaren: rekryteringsrutan säger hur det gått, inte vad hen
          kryssade. Bara admin läser tabellen. */
@@ -333,6 +337,8 @@ const NXAdmin = (function () {
     /* Samma sak för tilläggen: ett läsfel är inte "inga tillägg". */
     S.tillagg = tillagg.data || [];
     S.tillaggFel = tillagg.error ? felText(tillagg.error) : null;
+    S.timbank = bank.data || [];
+    S.timbankFel = bank.error ? felText(bank.error) : null;
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */

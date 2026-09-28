@@ -16,10 +16,10 @@ säljer något.
 
 ## 1. Mät först (5 minuter)
 
-Sidorna laddar redan Vercels mätskript, men mätningen är **inte
-påslagen** i projektet. Den 27 september 2026 svarade Vercel "Web
-Analytics not found". Ni vet alltså i dag inte hur många som besöker
-sajten eller varifrån de kommer.
+Mätningen är **inte påslagen** i projektet. Den 28 september 2026
+svarade Vercel fortfarande "Web Analytics not found". Ni vet alltså i
+dag inte hur många som besöker sajten eller varifrån de kommer. Det går
+inte att slå på härifrån: Vercels verktyg har inget reglage för det.
 
 1. vercel.com → projektet **nextrum-sajt** → fliken **Analytics** →
    **Enable**
@@ -27,14 +27,27 @@ sajten eller varifrån de kommer.
 3. Gör det **före** nästa merge till main. Skripten börjar svara först
    i en driftsättning som görs efter påslaget.
 
-Sätter inga cookies. Det står redan i integritetspolicyn och på
-`/lagring`.
+Skripten laddas först när besökaren sagt ja till statistik i
+samtyckesrutan (sedan 2026-09-27). Siffrorna i Vercel visar alltså bara
+de som tackat ja och blir för låga. Jämför med Search Console, som
+räknar sökträffarna oavsett rutan.
 
-## 2. Merga PR:en med guiderna
+## 2. Gör repot privat (2 minuter)
 
-Ämnessidorna och sitemapen är redan i drift. Guiderna, footerlänkarna,
-IndexNow och det snabbare navet ligger i en egen PR. Inget av det gör
-nytta förrän det är i drift.
+En sökning på "nextrum läxhjälp stockholm" gav den 28 september en
+GitHub-PR som första träff, inte nextrum.se. Repot är publikt, så den
+som söker på ert namn hamnar i era interna PR:er och i `CLAUDE.md`, som
+beskriver hela säkerhetsmodellen.
+
+GitHub → repot → Settings → Danger Zone → Change visibility → Private.
+`Nextrum10` är ett personligt konto, inte en organisation, så Vercel
+fortsätter driftsätta som vanligt. De gamla träffarna försvinner ur
+sökmotorerna av sig själva när sidorna svarar 404.
+
+Det kostar en sak: i ett privat repo räknas GitHub Actions mot kontots
+gratisminuter (2 000 i månaden på ett gratiskonto). Kontrollerna tar
+några minuter per push, så håll ett öga på Settings → Billing den
+första månaden.
 
 ## 3. Search Console och Bing (20 minuter)
 
@@ -52,6 +65,7 @@ nytta förrän det är i drift.
    https://nextrum.se/laxhjalp-engelska
    https://nextrum.se/laxhjalp-no
    https://nextrum.se/hjalpa-barn-med-matte
+   https://nextrum.se/laxhjalp-online
    ```
 3. **Bing Webmaster Tools** (bing.com/webmasters): logga in och välj
    *Importera från Google Search Console*. Det är ett klick. Bing
@@ -200,16 +214,25 @@ Det enda sättet att stå först på "läxhjälp stockholm" i morgon.
 
 ## 10. Beslut som är era
 
-- **"privatlärare"** är ett stort sökord. Ordlistan säger aldrig
-  "lärare" utåt. Företagsprofilen har redan tjänsten "Privatlärare".
-  Ska sajten också ha det, till exempel i en rubrik som "Privatlärare
-  eller studiehjälpare?"
+- **"privatlärare"** är ett stort sökord, och nästan alla konkurrenter
+  har det i titeln. Sajten har det nu på ett ställe: FAQ-frågan "Är en
+  studiehjälpare samma sak som en privatlärare?", som svarar nej och
+  varför. Mer än så går inte utan att bryta ordlistan. Vill ni ha ordet
+  i en titel eller rubrik är det ert beslut, och då med samma ärliga
+  svar bredvid.
+- **Online i hela Sverige?** Sidan `/laxhjalp-online` säger ingenting om
+  var eleven får bo. "Läxhjälp online" söks i hela landet, men att ta
+  emot familjer utanför Stockholm är ett beslut om affären. Bestämmer
+  ni er för det ska sidan säga det.
+- **Stadsdelssidorna är för lika varandra.** De sex har i snitt 72 %
+  samma text, ord för ord. Google indexerar troligen bara några av dem.
+  Bygg inga fler. Har ni något sant och lokalt att skriva om en
+  stadsdel (en skola ni faktiskt har elever på, en studiehjälpare som
+  bor där och vill synas) blir sidan starkare; annars är det bättre att
+  slå ihop dem än att fylla ut.
 - **Startsidans H1** är "Av unga, för unga." och har inget sökord.
   Titeln bär "Läxhjälp i Stockholm", så det är en liten sak, men heron
   är orörd med flit och därför er att ändra.
-- **Repot är publikt.** GitHub-PR:erna syns när man söker på Nextrum,
-  och `CLAUDE.md` beskriver hela säkerhetsmodellen för vem som helst.
-  GitHub → Settings → Danger Zone → Change visibility.
 
 ## 11. Följ upp efter fyra veckor
 
@@ -224,7 +247,11 @@ Det enda sättet att stå först på "läxhjälp stockholm" i morgon.
 
 - Fyra ämnessidor (matte, svenska, engelska, NO) och två guider, byggda
   av `verktyg/bygg-omradessidor.py`
-- Footern länkar till alla ämnessidor från varje sida
+- `/laxhjalp-online`: hur ett onlinepass går till, när hemma är bättre,
+  och samma pris. Länkad från footern, navet och ämnessidorna
+- FAQ-frågan om privatlärare, på båda språken
+- Footern länkar till alla ämnessidor och onlinesidan från varje sida,
+  och ämnessidorna länkar till guiderna
 - `sitemap.xml` byggs ur sidorna, med `lastmod` som bara flyttas när
   texten ändras (`verktyg/bygg-sitemap.py`, kontrolleras i CI)
 - IndexNow: Bing får ändrade sidor inom minuter efter varje

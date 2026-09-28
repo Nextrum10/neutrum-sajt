@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=ad8203ae">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
 </head>
 <body>
 
@@ -153,16 +153,15 @@
     <p>Vi sparar det som behövs för att kunna matcha en elev med rätt studiehjälpare, boka och
       genomföra passen, hålla er informerade om vad som händer, och ta betalt för passen.
       Inget mer än så.</p>
-    <p>Vi säljer inte uppgifter. Vi lämnar dem inte vidare för marknadsföring. De öppna
-      sidorna sätter inga cookies. Betalar du med kort sätter Stripe två, för att upptäcka
-      bedrägerier.</p>
-    <p>Vi räknar hur många som besöker de öppna sidorna, men utan cookies och utan något som
-      följer dig över tid. Hur det går till står under
-      <a href="/lagring">Cookies och lagring</a>.</p>
+    <p>Vi säljer inte uppgifter. Vi lämnar dem inte vidare för marknadsföring. De öppna sidorna
+      sätter inga cookies, och besöksstatistik och annonsmätning sker bara om du säger ja.
+      Betalar du med kort sätter Stripe två cookies, för att upptäcka bedrägerier.</p>
+    <p>Längre ner står varför vi får göra det, vilka som hanterar uppgifterna åt oss, hur länge
+      de sparas och vad du har rätt till. Är du elev finns ett eget avsnitt för dig.</p>
 
     <h2>Vad vi sparar</h2>
 
-    <h3>Om dig som förälder eller elev med konto</h3>
+    <h3>Om dig som har ett konto</h3>
     <ul>
       <li>Namn, e-postadress och — om du fyller i det — telefonnummer</li>
       <li>Profilbild, om du laddar upp en</li>
@@ -188,6 +187,8 @@
       <li>Namn, ålder, e-post, skola, ämnen och när du kan arbeta</li>
       <li>Det du skriver i fritextfältet, och ditt CV om du bifogar ett</li>
       <li>Blir du antagen: din profiltext, ort, ämnen och den timpenning vi kommit överens om</li>
+      <li>Ta bort ditt personnummer ur CV:t innan du skickar det. Vi behöver det inte för att
+        läsa en ansökan.</li>
     </ul>
 
     <h3>Om passen och kontakten</h3>
@@ -196,6 +197,17 @@
       <li>Om ett pass avbokas: när det avbokades och av vem</li>
       <li>Meddelanden mellan familj och studiehjälpare i plattformens chatt</li>
       <li>Betalningar och ersättningsunderlag: vilket pass som betalats, belopp och när. Kortuppgifterna har vi aldrig</li>
+    </ul>
+
+    <h3>Om du skriver till oss eller något går sönder</h3>
+    <ul>
+      <li>Skriver du i kontaktformuläret sparar vi namnet, e-postadressen och det du skrev,
+        för att kunna svara.</li>
+      <li>Går något fel på en sida sparar vi felet, vilken sida det var och vilken sorts
+        webbläsare, och vilket konto som var inloggat om någon var det. Det är för att kunna
+        laga felet.</li>
+      <li>Notiserna i vyerna och mejlen vi skickar sparas en tid, så att vi ser att de kommit
+        fram.</li>
     </ul>
 
     <h3>Om hur du hittade hit</h3>
@@ -216,6 +228,31 @@
       ligger inte där utan tillsammans med resten av elevens uppgifter, så att familjen och
       studiehjälparen kommer åt det.</p>
 
+    <h2>Varför vi får göra det</h2>
+    <p>Varje sak vi gör med uppgifterna vilar på en av grunderna i dataskyddsförordningen
+      (GDPR artikel 6):</p>
+    <ul>
+      <li><b>Intresseanmälan</b>: för att kunna svara på er förfrågan innan ni blir kunder
+        (artikel 6.1 b).</li>
+      <li><b>Konto, bokningar, pass, meddelanden, notiser och betalningar</b>: för att fullgöra
+        avtalet med er (artikel 6.1 b).</li>
+      <li><b>Uppgifter om barnet, studieplan, läxor och rapporter</b>: berättigat intresse
+        (artikel 6.1 f). Barnet är inte själv part i avtalet, men det är hjälpen till barnet ni
+        har bett om, och den går inte att ge utan uppgifterna. Barnets intressen väger tyngst i
+        den avvägningen, och därför samlar vi bara det som behövs för undervisningen.</li>
+      <li><b>Bokföringsunderlag</b>: rättslig förpliktelse (artikel 6.1 c), bokföringslagen.</li>
+      <li><b>Jobbansökningar</b>: berättigat intresse (artikel 6.1 f), att kunna anställa rätt
+        studiehjälpare. Blir du anställd gäller avtalet.</li>
+      <li><b>Kontaktformuläret och felrapporterna</b>: berättigat intresse (artikel 6.1 f),
+        att kunna svara den som skriver och hålla webbplatsen igång.</li>
+      <li><b>Ändringsloggen och skyddet av uppgifterna</b>: berättigat intresse (artikel 6.1 f),
+        att kunna visa vem som gjort vad och upptäcka om något gått fel.</li>
+      <li><b>Besöksstatistik och annonsmätning</b>: ditt samtycke (artikel 6.1 a), som du kan
+        dra tillbaka när som helst.</li>
+    </ul>
+    <p>Vi ber inte om känsliga uppgifter, som hälsa eller diagnoser, och ber er att inte skriva
+      sådant i rutorna. Står det ändå något sådant tar vi bort det när vi ser det.</p>
+
     <h2>Vem som kan se vad</h2>
     <p>Åtkomsten är begränsad i databasen, rad för rad — inte bara i gränssnittet. Det betyder att
       begränsningen gäller även för den som skulle försöka gå runt sidan.</p>
@@ -234,65 +271,131 @@
       adresser, meddelandetexter eller något som skrivits om ett barn. Den går inte att ändra
       eller radera i efterhand, inte heller av oss, och det är hela poängen med den.</p>
 
-    <h2>Var uppgifterna finns</h2>
+    <h2>Vilka som hanterar uppgifterna åt oss</h2>
+    <p>Vi använder några leverantörer för att driva tjänsten. De får bara det som behövs för
+      just deras del, och får bara använda det för oss. Med var och en har vi ett
+      personuppgiftsbiträdesavtal (GDPR artikel 28).</p>
     <ul>
-      <li><b>Supabase</b> — databas, inloggning och filer. Servrarna står inom EU (Irland).</li>
-      <li><b>Vercel</b> — värd för själva webbplatsen, och den som räknar besöken på de öppna
-        sidorna. Räkningen sker utan cookies: unika besökare härleds ur en hash av IP och
-        webbläsartyp med ett dygnsvis skiftande salt, och den råa IP-adressen sparas inte.
-        Studievyn och studiehjälparvyn mäts inte.</li>
-      <li><b>Stripe</b> — tar emot kortbetalningarna. Kortuppgifterna lämnar ni direkt till Stripe,
-        aldrig till oss, och vi sparar dem inte. Stripe får er e-postadress, beloppet och vilket pass
-        betalningen gäller (ämne och datum), och vi får tillbaka att passet är betalt. Hur Stripe
-        hanterar uppgifterna står i
+      <li><b>Supabase</b>: databas, inloggning och filer. Servrarna står inom EU (Irland).</li>
+      <li><b>Vercel</b> (USA): värd för själva webbplatsen, och den som räknar besöken om du sagt
+        ja till besöksstatistik. Räkningen sker utan cookies: unika besökare härleds ur en hash av
+        IP och webbläsartyp med ett salt som byts varje dygn, och den råa IP-adressen sparas
+        inte. Studievyn och studiehjälparvyn mäts inte.</li>
+      <li><b>Resend</b> (USA): skickar våra mejl, som bokningsbekräftelser, påminnelser och
+        notiser. Resend får mottagarens adress och mejlets innehåll.</li>
+      <li><b>Anthropic</b> (USA): när en studiehjälpare väljer det formulerar Anthropics AI om
+        hens anteckningar efter ett pass till en rapport, och föreslår korta hälsningar.
+        Anthropic får anteckningarna och elevens förnamn och årskurs. Personnummer,
+        telefonnummer och e-postadresser maskas innan något skickas, och Anthropic tränar inte
+        sina modeller på det. Vi använder också Anthropic som stöd i vårt eget arbete, till
+        exempel för att se vilka anmälningar som väntar på svar. Då får den elevers initialer,
+        årskurs och ämne och maskad fritext, aldrig namn, e-post eller adresser.</li>
+      <li><b>Stripe</b>: tar emot kortbetalningarna. Kortuppgifterna lämnar ni direkt till Stripe,
+        aldrig till oss, och vi sparar dem inte. Stripe får er e-postadress, beloppet och vilket
+        pass betalningen gäller (ämne och datum), och vi får tillbaka att passet är betalt. För
+        bedrägerikontroll och det lagen kräver av en betaltjänst är Stripe själv
+        personuppgiftsansvarig, vilket står i
         <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripes integritetspolicy</a>.</li>
-      <li><b>Google</b> — onlinepassen hålls i Google Meet. Varje bekräftat onlinepass får ett eget rum,
-        och länken står på passets sida. Under passet går bild och ljud genom Google, och Google ser det
-        namn var och en anger när hen går in. Vi spelar inte in passen. Hur Google hanterar uppgifterna
-        står i
+      <li><b>Google</b>: onlinepassen hålls i Google Meet. Varje bekräftat onlinepass får ett eget
+        rum, och länken står på passets sida. Under passet går bild och ljud genom Google, och
+        Google ser det namn var och en anger när hen går in. Vi spelar inte in passen. Hur Google
+        hanterar uppgifterna står i
         <a href="https://policies.google.com/privacy?hl=sv" target="_blank" rel="noopener noreferrer">Googles integritetspolicy</a>.</li>
     </ul>
-    <p>Utöver dem hämtas ingenting från någon annan. Typsnitten låg tidigare hos Google och
-      programbiblioteket som inloggningen behöver låg hos unpkg.com — båda skickade din
-      IP-adress dit vid varje sidvisning. Båda ligger nu hos oss.</p>
+    <p>Utöver dem hämtas ingenting från någon annan. Typsnitten och programbiblioteket som
+      inloggningen behöver ligger hos oss.</p>
+
+    <h2>Uppgifter som lämnar EU</h2>
+    <p>Vercel, Resend och Anthropic är amerikanska bolag, och Stripe och Google kan behandla
+      uppgifter i USA. Överföringarna skyddas av EU-kommissionens standardavtalsklausuler, och
+      för de leverantörer som är certifierade även av EU:s beslut om ramen för dataskydd mellan
+      EU och USA (Data Privacy Framework). Vill du ha en kopia av skyddsåtgärderna, skriv till
+      <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</p>
 
     <h2>Hur länge vi sparar</h2>
     <ul>
-      <li><b>Konto och studiehistorik</b> — så länge ni är kunder hos oss, och därefter
-        tills ni ber oss ta bort dem.</li>
-      <li><b>Bokföringsunderlag</b> — betalningar och ersättningsunderlag, sju år. Det är bokföringslagens krav och något vi inte
-        kan förkorta, inte ens på begäran.</li>
-      <li><b>Ansökningar som inte leder till anställning</b> — högst ett år, så att vi kan höra
-        av oss om något dyker upp. Vill du att vi tar bort den tidigare, skriv till oss.</li>
-      <li><b>Intresseanmälningar</b> — tills vi svarat och ärendet är avslutat. Uppgiften om
-        varifrån besöket kom försvinner med anmälan; den finns ingen annanstans.</li>
-      <li><b>Ändringsloggen</b> — så länge verksamheten finns. Den är vårt eget kvitto på vem
-        som gjort vad, och en logg som går att rensa är ingen logg.</li>
-      <li><b>Avtal och intyg</b> — så länge de gäller, och därefter så länge lagen kräver.</li>
+      <li><b>Intresseanmälningar</b>: sex månader efter senaste kontakten tas namn, e-post,
+        barnets namn och det ni skrivit bort. Kvar blir bara datum, årskurs, ämne och varifrån
+        besöket kom, som inte pekar ut någon. Det sker automatiskt varje natt.</li>
+      <li><b>Ansökningar och CV</b>: tas bort ett år efter att de kom in, eller trettio dagar
+        efter senaste steget i rekryteringen om det är senare. Det sker automatiskt varje natt.
+        Blir du studiehjälpare står ansökan kvar medan du arbetar hos oss, och tas bort två år
+        efter ditt senaste pass, din senaste rapport eller din senaste inloggning.</li>
+      <li><b>Konto och studiehistorik</b>: så länge ni använder tjänsten. Har ett konto inte
+        använts på två år hör vi av oss och raderar det som inte behöver finnas kvar. Ni kan
+        när som helst be oss radera tidigare.</li>
+      <li><b>Kontaktmeddelanden</b>: tas bort sex månader efter att de kom in eller
+        besvarades. Det sker automatiskt varje natt.</li>
+      <li><b>Felrapporter</b>: tas bort efter 90 dagar, automatiskt.</li>
+      <li><b>Notiser och mejlutskick</b>: notiserna i vyerna tas bort efter 180 dagar, och
+        uppgifterna om varje skickat mejl efter 90 dagar.</li>
+      <li><b>Bokföringsunderlag</b>: betalningar och ersättningsunderlag, sju år. Det är
+        bokföringslagens krav och något vi inte kan förkorta, inte ens på begäran.</li>
+      <li><b>Ändringsloggen</b>: så länge verksamheten finns. Den bär tillstånd och tidpunkter,
+        aldrig namn eller text, och den är vårt kvitto på vem som gjort vad.</li>
+      <li><b>Avtal och intyg</b>: så länge de gäller, och därefter så länge lagen kräver.</li>
+      <li><b>Vårt eget arbetsunderlag</b>: uppgifter och påminnelser vi skriver till oss själva
+        tas bort ett år efter att de avslutats, och det vår AI-assistent läst och skrivit töms
+        efter 90 dagar. Det sker automatiskt varje natt.</li>
     </ul>
+    <p>Det vi raderar kan finnas kvar en kort tid i våra leverantörers säkerhetskopior, tills
+      de skrivs över. Ingen använder dem till något annat än att återställa tjänsten efter ett
+      fel.</p>
 
     <h2>Barns uppgifter</h2>
     <p>Tjänsten handlar om barn, och deras uppgifter är därför det känsligaste vi hanterar.</p>
     <ul>
       <li>Barn har inga egna konton. Det är föräldern som registrerar sig, godkänner villkoren
         och lägger in uppgifterna om barnet.</li>
-      <li>Vi samlar bara in det som behövs för undervisningen — årskurs, skola, ämnen och mål.
-        Inte personnummer, inte diagnoser, inte betyg.</li>
+      <li>Vi samlar bara in det som behövs för undervisningen: årskurs, skola, ämnen och mål. Vi
+        ber aldrig om personnummer, diagnoser eller betyg, och ber er att inte skriva sådant i
+        rutorna.</li>
       <li>Som förälder kan du när som helst se, ändra och radera det som står om ditt barn.</li>
+    </ul>
+
+    <h2>För dig som är elev</h2>
+    <p>Samma sak som ovan, fast kortare.</p>
+    <ul>
+      <li>Din förälder har bett oss om hjälp till dig. För att kunna hjälpa dig sparar vi ditt
+        namn, din årskurs, dina ämnen, dina läxor och vad du och din studiehjälpare gjort på
+        passen.</li>
+      <li>Bara din förälder, din studiehjälpare och vi på Nextrum kan se det.</li>
+      <li>Vi säljer det aldrig och visar det aldrig för någon annan.</li>
+      <li>Vill du veta vad som står om dig, eller vill du att något tas bort? Säg till din
+        förälder, eller mejla oss på <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</li>
     </ul>
 
     <h2>Dina rättigheter</h2>
     <p>Du har rätt att få veta vad vi sparat om dig, få det rättat om det är fel, få det raderat,
-      begränsa hur vi använder det, invända mot behandlingen, och få ut dina uppgifter i ett
-      format du kan ta med dig. Skriv till <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</p>
+      begränsa hur vi använder det, invända mot det vi gör med stöd av berättigat intresse, och
+      få ut det du själv lämnat i ett format du kan ta med dig. Har du sagt ja till
+      besöksstatistik eller annonsmätning drar du tillbaka det när som helst under
+      <a href="/lagring#ditt-val">Cookies och lagring</a>, lika enkelt som du gav det. För allt
+      annat, skriv till <a href="mailto:info@nextrum.se">info@nextrum.se</a>, så svarar vi inom
+      en månad.</p>
     <p>Tycker du att vi hanterar dina uppgifter fel har du rätt att klaga till
       <a href="https://www.imy.se" target="_blank" rel="noopener noreferrer">Integritetsskyddsmyndigheten</a>.
-      Hör gärna av dig till oss först — det går oftast snabbare att reda ut.</p>
+      Hör gärna av dig till oss först, det går oftast snabbare att reda ut.</p>
+
+    <h2>Måste ni lämna uppgifterna?</h2>
+    <p>Nej, men utan dem kan vi inte hjälpa er. En intresseanmälan behöver ett namn och en
+      e-postadress för att vi ska kunna svara, och passen går inte att boka utan ett konto.
+      Det som står som valfritt kan ni lämna tomt.</p>
+
+    <h2>AI och automatiska beslut</h2>
+    <p>Vi fattar inga beslut om dig eller ditt barn automatiskt. AI används för att
+      formulera om en studiehjälpares egna anteckningar efter ett pass, när studiehjälparen
+      väljer det, för att föreslå en kort hälsning, och som stöd åt oss när vi planerar
+      arbetet. AI:n föreslår, och en människa bestämmer. Den kan inte ändra något själv.</p>
+
+    <h2>Om något går fel</h2>
+    <p>Skulle uppgifter komma i fel händer anmäler vi det till Integritetsskyddsmyndigheten
+      inom 72 timmar, och berättar det för er som berörs om det innebär en risk för er.</p>
 
     <h2>Cookies och lagring i webbläsaren</h2>
-    <p>De öppna sidorna sätter inga cookies — inte heller för besöksräkningen. Den enda som
-      sätts är Stripes, när du betalar med kort. Vad som faktiskt lagras, vad som
-      mäts och varför, står på en egen sida: <a href="/lagring">Cookies och lagring</a>.</p>
+    <p>De öppna sidorna sätter inga cookies. Besöksstatistik och annonsmätning sker bara om du
+      säger ja, och Stripe sätter två cookies när du betalar med kort. Allt som lagras, och
+      varför, står på en egen sida: <a href="/lagring">Cookies och lagring</a>.</p>
 
     <h2>Ändringar</h2>
     <p>Ändrar vi något väsentligt uppdaterar vi datumet nedan, och hör av oss till er som har
@@ -343,6 +446,7 @@
           <li><a href="/laxhjalp-svenska">Svenska</a></li>
           <li><a href="/laxhjalp-engelska">Engelska</a></li>
           <li><a href="/laxhjalp-no">Fysik, kemi och biologi</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
         </ul>
       </nav>
       <nav aria-labelledby="ftr-fordig">
@@ -424,34 +528,16 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<!-- Vercel Web Analytics.
-
-     Sätter INGA cookies: unika besökare räknas via en hash av
-     IP och webbläsare med ett salt som byts dagligen, och den råa
-     IP-adressen sparas inte. Därför krävs inget samtycke — men det
-     står ändå i integritetspolicyn och på lagring.html, eftersom
-     "vi mäter ingenting" inte längre är sant.
-
-     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
-     finns inget att optimera för besökarens skull, och det vore ett
-     onödigt anrop från en sida där någon sköter sitt barns skolgång.
-
-     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
-     vilket är ofarligt — inget mäts när man utvecklar. -->
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
-     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="nextrum-config.js?v=f8471f2e"></script>
+<script src="nextrum-config.js?v=21cecc53"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a72665a2"></script>
-<script src="nextrum-samtycke.js?v=c15d8f5b"></script>
+<script src="nextrum-app.js?v=d85467f7"></script>
+<script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=77b12db4"></script>
+<script src="nextrum-maskot-svar.js?v=49674614"></script>
 <script src="nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {

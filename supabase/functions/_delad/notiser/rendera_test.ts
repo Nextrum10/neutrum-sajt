@@ -165,6 +165,18 @@ Deno.test('ett fakturapass får inget kortmejl (Fas 14.6)', () => {
   assertStringIncludes(rendera('pass_bekraftat', 'parent', { data: { ...SMUTSIG, betalsatt: 'swish' } }).text, 'med kort');
 });
 
+Deno.test('ett pass som timmarna betalat ber inte om betalning (Fas 22.2)', () => {
+  for (const typ of ['pass_bekraftat', 'paminnelse', 'pass_nytt'] as const) {
+    const familj = rendera(typ, 'parent', { data: { ...SMUTSIG, status: 'confirmed', betalsatt: 'timmar' } });
+    assertStringIncludes(familj.text, 'betalt med timmarna ni köpt i förväg', typ);
+    assertEquals(familj.text.includes('med kort'), false, `${typ} ber en familj med timmar betala med kort`);
+    assertEquals(familj.text.includes('#betalning'), false, `${typ} leder till betalningen`);
+
+    const hjalpare = rendera(typ, 'tutor', { data: { ...SMUTSIG, status: 'confirmed', betalsatt: 'timmar' } });
+    assertEquals(hjalpare.text.includes('timmarna'), false, `${typ} till studiehjälparen nämner timmarna`);
+  }
+});
+
 Deno.test('påminnelsen om timmarna säger hur många, vilken dag och att resten förfaller (Fas 21.2)', () => {
   const m = rendera('timmar_gar_ut', 'parent', { data: { ...SMUTSIG, datum: '2026-10-23', kvar: 3, klippkort: 'c16a' } });
   assertStringIncludes(m.amne, 'fredag 23 oktober');

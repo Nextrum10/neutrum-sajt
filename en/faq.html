@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=ad8203ae">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=1ba60ec7">
 <!-- GENERERAD av verktyg/bygg-faq-schema.py. Ändra inte för hand:
      kör om verktyget när en fråga ändras, annars säger märkningen
      och sidan olika saker och då är den ett fel, inte en bonus. -->
@@ -76,6 +76,14 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Because a tutor who is brilliant at Year 9 maths is not automatically the right person for a Year 4 child who has lost their confidence. We go through the need with you first and then choose someone. It costs us an extra day and saves you weeks."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are your tutors qualified teachers?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No, and we do not call them teachers. A tutor at Nextrum is at upper secondary school or university and has recently taken the same courses as the student, but is not a trained teacher. That is also the point: they remember where they got stuck and explain in a way that is close to the student. If you are looking for a certified teacher, we are the wrong choice, and we would rather say so now than after the first session."
       }
     },
     {
@@ -400,6 +408,10 @@
           <div class="faq-a"><p>Because a tutor who is brilliant at Year 9 maths is not automatically the right person for a Year 4 child who has lost their confidence. We go through the need with you first and then choose someone. It costs us an extra day and saves you weeks.</p></div>
         </div>
         <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Are your tutors qualified teachers?<span class="pm"></span></button>
+          <div class="faq-a"><p>No, and we do not call them teachers. A tutor at Nextrum is at upper secondary school or university and has recently taken the same courses as the student, but is not a trained teacher. That is also the point: they remember where they got stuck and explain in a way that is close to the student. If you are looking for a certified teacher, we are the wrong choice, and we would rather say so now than after the first session.</p></div>
+        </div>
+        <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Which subjects do you offer?<span class="pm"></span></button>
           <div class="faq-a"><p>The most common are maths, Swedish and English, but we also arrange help in the sciences, humanities, modern languages and programming. Tell us what you need when you get in touch and we will say whether we have the right person.</p></div>
         </div>
@@ -617,6 +629,7 @@
           <li><a href="/laxhjalp-svenska">Swedish</a></li>
           <li><a href="/laxhjalp-engelska">English</a></li>
           <li><a href="/laxhjalp-no">Physics, chemistry and biology</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
         </ul>
       </nav>
       <nav aria-labelledby="ftr-fordig">
@@ -698,34 +711,16 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<!-- Vercel Web Analytics.
-
-     Sätter INGA cookies: unika besökare räknas via en hash av
-     IP och webbläsare med ett salt som byts dagligen, och den råa
-     IP-adressen sparas inte. Därför krävs inget samtycke — men det
-     står ändå i integritetspolicyn och på lagring.html, eftersom
-     "vi mäter ingenting" inte längre är sant.
-
-     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
-     finns inget att optimera för besökarens skull, och det vore ett
-     onödigt anrop från en sida där någon sköter sitt barns skolgång.
-
-     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
-     vilket är ofarligt — inget mäts när man utvecklar. -->
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
-     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="../nextrum-config.js?v=f8471f2e"></script>
+<script src="../nextrum-config.js?v=21cecc53"></script>
 <script src="../nextrum-images.js?v=50260f9d"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=a72665a2"></script>
-<script src="../nextrum-samtycke.js?v=c15d8f5b"></script>
+<script src="../nextrum-app.js?v=d85467f7"></script>
+<script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=77b12db4"></script>
+<script src="../nextrum-maskot-svar.js?v=49674614"></script>
 <script src="../nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {

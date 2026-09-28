@@ -1490,11 +1490,11 @@ section[data-sek]{overflow-anchor:none}
 .ps-knappar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ps-knappar .btn{text-decoration:none}
 
-/* Ett andra val under knapparna (Fas 14.6): "Betala med faktura i
-   stället" under kortknappen. En textknapp, inte en knapp i raden: det
-   är ett alternativ till det första steget, och en helbreddsknapp till
-   på en telefon hade sett ut som ett andra steg. Samma utseende i
-   listan Att betala, där den står under raden. */
+/* Ett andra val under knapparna (Fas 14.6): "Betala med kort i
+   stället" på ett pass som valts för faktura. En textknapp, inte en
+   knapp i raden: det är en ångra, inte ett steg. "Få faktura nästa
+   månad" var också en sådan tills 2026-09-27, då den blev en knapp
+   bredvid kortknappen: som textlänk syntes den inte. */
 .ps-alt{margin-top:10px;font-size:.86rem;color:var(--bl-2)}
 .val-lank{
   appearance:none;background:none;border:0;padding:4px 0;margin:0;
@@ -1505,6 +1505,19 @@ section[data-sek]{overflow-anchor:none}
 .val-lank:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 .val-lank[aria-busy="true"]{opacity:.6;cursor:progress}
 .pass-atg .val-lank{flex-basis:100%;text-align:left}
+/* Villkoren för "Få faktura nästa månad" (Fas 19.6), under knapparna,
+   i den dämpade tonen, så att knapparna står först. */
+.val-not{display:block;flex-basis:100%;margin-top:4px;font-size:.82rem;line-height:1.5;color:var(--muted-2)}
+/* En faktura att betala (Fas 19.6). Raderna är prisrutans sum-line;
+   en förfallen faktura får den sena tonen i kanten, inte en ny färg. */
+.fakt-att{padding:12px 0;border-top:1px solid var(--line)}
+.fakt-att:first-child{border-top:0;padding-top:0}
+.fakt-att.ar-sen{border-left:3px solid var(--acc);padding-left:12px}
+.fakt-att-topp{margin-bottom:6px}
+.fakt-att .sum-line span:last-child{text-align:right}
+.fakt-att .sen{color:var(--acc);font-weight:500}
+.fakt-att-pass{list-style:none;margin:8px 0 0;padding:0;font-size:.85rem;color:var(--muted)}
+.fakt-att-pass li{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
 
 /* Bekräfta rapport (Fas 19.1). Rapporten överst, valet under ett
    streck: först läser man, sedan svarar man. Radbrytningarna i
@@ -1823,6 +1836,21 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-kvar{font-size:.84rem;color:var(--bl-2)}
 .erb-kvar b{color:var(--bl);font-size:1rem}
 .erb-mitt.ar-slut{opacity:.6}
+/* Fas 22.1: timbanken, under klippkorten i Era timmar. */
+.erb-bank-text{margin:6px 0 0;font-size:.84rem;color:var(--bl-2);line-height:1.5}
+.erb-bank-text a{color:var(--acc);font-weight:600}
+/* Timbanken under Profil (2026-09-27): vad som gått in och ut, rad för
+   rad. Minuterna i en egen kolumn med jämnbreda siffror, så att plus och
+   minus står under varandra. */
+.tb-rorelser{list-style:none;margin:8px 0 0;padding:0}
+.tb-rorelser li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-top:1px solid var(--ln);font-size:.88rem;color:var(--bl-2);line-height:1.45}
+.tb-rorelser li:first-child{border-top:0}
+.tb-min{flex:none;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600;color:var(--bl)}
+.tb-min.ut{font-weight:500;color:var(--bl-2)}
+/* Fas 22.2: köpta timmar under samma flik, kort för kort med passen de
+   betalat under mätaren. Förklaringen står över korten, inte mellan dem. */
+.tb-forklaring{margin:0 0 16px}
+.erb-mitt .tb-rorelser{margin-top:10px}
 /* Fas 21.2: tio dagar före sista dagen, samma dag som mejlet går. */
 .erb-snart{margin:10px 0 0;font-size:.84rem;line-height:1.5;color:var(--bl)}
 .erb-snart a{color:var(--acc);font-weight:600}

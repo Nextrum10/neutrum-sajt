@@ -5,7 +5,7 @@ Allt på sajtens sida är gjort och kontrollerat:
 | | |
 |---|---|
 | favicon | finns, svarar 200 |
-| sitemap.xml | 35 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` |
+| sitemap.xml | 36 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` |
 | robots.txt | pekar på sitemap, blockerar inget publikt |
 | strukturerad data | Organization + WebSite med namn, beskrivning, slogan, sociala konton |
 | verifieringspost i DNS | finns redan (`google-site-verification=5o3n…`) |
@@ -56,7 +56,7 @@ Väl inne: skriv `sitemap.xml` i rutan och klicka **Skicka**. Status
 ska bli *Lyckades* med 35 upptäckta adresser.
 
 Kartan är kontrollerad och fungerar — `https://nextrum.se/sitemap.xml`
-svarar 200 med giltig XML och 35 adresser. Öppna den i webbläsaren om
+svarar 200 med giltig XML och 36 adresser. Öppna den i webbläsaren om
 du vill se själv. Går den inte att skicka in är det något i Search
 Console, inte i filen.
 

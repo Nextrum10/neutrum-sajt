@@ -27,11 +27,11 @@
      jordpaletten — utan den blir vyn vit och främmande. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=ad8203ae">
-<link rel="stylesheet" href="nextrum-vy.css?v=6aa97f7c">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
+<link rel="stylesheet" href="nextrum-vy.css?v=c552270c">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=f6fa7abc">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=786d38cc">
 </head>
 <body class="vy">
 
@@ -358,6 +358,7 @@
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="pass"
              id="panel-pass" aria-labelledby="flik-pass">
+          <p class="ok-msg" id="lek-msg"></p>
           <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
             <h5>Pass <em id="pass-antal"></em></h5>
             <div id="pass-lista"><div class="loading">Hämtar</div></div>
@@ -454,6 +455,9 @@
            ritaPassSida() i nextrum-studie-vy.js.
            ============================================================ -->
       <section class="vy-sek" data-sek="pass" hidden aria-label="Passet">
+        <!-- Beskedet efter ett tryck på sidan (timmar, timbanken,
+             rapporten). Utan den hamnade det i den dolda Betalning. -->
+        <p class="ok-msg" id="ps-msg"></p>
         <div class="ps" id="pass-sida"><div class="loading">Hämtar</div></div>
       </section>
 
@@ -609,7 +613,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Erbjudanden</h2>
-            <p>Köp timmar i förväg och betala mindre per timme. När er studiehjälpare har bekräftat ett pass betalar ni det med ett tryck ur era timmar, i stället för med kort.</p>
+            <p>Köp timmar i förväg och betala mindre per timme. När er studiehjälpare har bekräftat ett pass betalar timmarna det av sig själva, i stället för kortet.</p>
           </div>
         </div>
         <div class="stack">
@@ -646,6 +650,16 @@
 
           <p class="ok-msg" id="bet-msg"></p>
 
+          <!-- Fakturor att betala (Fas 19.6). Fakturor som skickats och
+               inte är betalda, med det familjen behöver för att betala
+               i sin bank: belopp, förfallodag, bankgiro och OCR. Ritas
+               av ritaFakturor() och syns bara när en sådan faktura
+               finns. Fakturor skapas bara när flaggan faktura är på. -->
+          <div class="dbox" id="bet-fakt-box" hidden>
+            <h5>Fakturor att betala <em id="bet-fakt-antal"></em></h5>
+            <div id="bet-fakt-betala"></div>
+          </div>
+
           <!-- Pass som väntar på betalning. Ritas av ritaAttBetala() ur
                samma lista som Mina lektioner, så att ett pass som
                betalats där försvinner här i samma stund. -->
@@ -656,7 +670,7 @@
                  Syns bara när erbjudandena går att köpa och familjen
                  inte redan har timmar att betala med; ritaErbjudanden()
                  avgör det. -->
-            <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Köp timmar i förväg och betala mindre per timme, så betalar ni passen med ett tryck. <a href="#erbjudanden">Se planer och klippkort</a></p>
+            <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Köp timmar i förväg och betala mindre per timme. Timmarna betalar sedan passen av sig själva. <a href="#erbjudanden">Se planer och klippkort</a></p>
           </div>
 
           <!-- Faktura (Fas 14.6). Fakturorna som skickats, och passen
@@ -687,7 +701,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Profil &amp; inställningar</h2>
-            <p>Ditt konto, barnen och vad passen kostar. Kontot här är
+            <p>Ditt konto, barnen, timbanken och vad passen kostar. Kontot här är
                ditt som förälder: det är du som står för betalningen,
                oavsett hur många barn som pluggar.</p>
           </div>
@@ -698,6 +712,8 @@
                   id="flik-konto" aria-controls="panel-konto">Konto &amp; inloggning</button>
           <button class="vy-flik" type="button" role="tab" data-flik="barn"
                   id="flik-barn" aria-controls="panel-barn">Barn</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="timbank"
+                  id="flik-timbank" aria-controls="panel-timbank">Timbanken</button>
           <button class="vy-flik" type="button" role="tab" data-flik="pris"
                   id="flik-pris" aria-controls="panel-pris">Pris &amp; villkor</button>
           <button class="vy-flik" type="button" role="tab" data-flik="notiser"
@@ -858,6 +874,31 @@
           </div>
         </div>
 
+        <!-- ============ TIMBANKEN ============
+             Leo 2026-09-27: timbanken ska finnas under Profil. Den stod
+             bara som en rad under Era timmar i Erbjudanden, och bara när
+             det fanns minuter. Minuterna är familjens och går inte ut,
+             och det är här man letar efter det som är ens eget.
+
+             Ritas av ritaTimbankProfil() ur samma hämtning som Era
+             timmar (laddaErbjudanden), så de två kan aldrig visa olika
+             saldo.
+
+             Fas 22.2, samma dag: "timbanken ska även inkludera
+             klippkort". Fliken har därför två rutor: köpta timmar, kort
+             för kort med passen de betalat, och de sparade minuterna. -->
+        <div class="vy-flik-panel" role="tabpanel" data-flik="timbank"
+             id="panel-timbank" aria-labelledby="flik-timbank" hidden>
+          <div class="dbox">
+            <h5>Köpta timmar</h5>
+            <div id="timbank-timmar"><div class="loading">Hämtar</div></div>
+          </div>
+          <div class="dbox">
+            <h5>Sparade minuter <em>går inte ut</em></h5>
+            <div id="timbank-profil"><div class="loading">Hämtar</div></div>
+          </div>
+        </div>
+
         <div class="vy-flik-panel" role="tabpanel" data-flik="pris"
              id="panel-pris" aria-labelledby="flik-pris" hidden>
           <!-- Siffrorna läses ur tjänsteraden (NXTjanster) av
@@ -927,16 +968,16 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=f8471f2e"></script>
+<script src="nextrum-config.js?v=21cecc53"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a72665a2"></script>
+<script src="nextrum-app.js?v=d85467f7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=2c9440de"></script>
 <script src="nextrum-studie.js?v=54dea043"></script>
-<script src="nextrum-arbetsyta.js?v=9c034f66"></script>
+<script src="nextrum-arbetsyta.js?v=570cc6c2"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
-<script src="nextrum-betalning.js?v=67f384a3"></script>
+<script src="nextrum-betalning.js?v=973469fe"></script>
 <script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=0a7581fe"></script>
+<script src="nextrum-studie-vy.js?v=6ef17a09"></script>
 </body>
 </html>

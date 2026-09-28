@@ -19,7 +19,7 @@
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
-  TEXTNODER: sv 439 vs en 437 — engelskan har inte följt med
+  TEXTNODER: sv 440 vs en 438 — engelskan har inte följt med
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
@@ -52,7 +52,7 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 17
+=== svenska sidor utan engelsk tvilling: 18
   admin.html
   foralder.html
   gratis-laxhjalp-stockholm.html
@@ -65,6 +65,7 @@
   laxhjalp-matematik.html
   laxhjalp-nacka.html
   laxhjalp-no.html
+  laxhjalp-online.html
   laxhjalp-sodermalm.html
   laxhjalp-solna.html
   laxhjalp-stockholm.html

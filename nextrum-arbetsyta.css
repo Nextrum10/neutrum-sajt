@@ -2029,10 +2029,8 @@ button.fel-person:hover{border-color:var(--bl-3)}
    Passen och rapporterna växer varje vecka och krymper aldrig.
    En pil längst till höger fäller ihop det som redan är avklarat.
 
-   Pilen finns i två lägen och ser likadan ut i båda: i en rubrik
-   (h5), där den gömmer hela rutans innehåll, och i en rad inne i
-   en lista, där den gömmer en grupp. Samma klass, samma riktning,
-   samma vridning nedåt när något är ihopfällt.
+   Pilen står i en rubrik (h5) och gömmer hela rutans innehåll.
+   Den vrids nedåt när något är utfällt.
    ============================================================ */
 .vy-fall-pil{
   flex:none;width:26px;height:26px;
@@ -2054,20 +2052,7 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .vy .dbox h5 > .vy-fall-pil{margin-left:10px}
 .vy .dbox h5 > .vy-fall-pil:first-of-type:not(em + .vy-fall-pil){margin-left:auto}
 
-/* En grupp inne i en lista. Strecket ovanför skiljer den från raderna
-   före utan att bli ännu en ruta i rutan. */
 .vy-fall{display:block}
-.vy-fall-rad{
-  display:flex;align-items:center;gap:12px;
-  margin-top:18px;padding-top:15px;
-  border-top:1px solid var(--ln);
-}
-.vy-fall-et{
-  font-family:var(--f-mono);font-size:10px;font-weight:600;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-2);
-  margin-right:auto;
-}
-.vy-fall-et em{font-style:normal;letter-spacing:.1em;color:var(--bl-3)}
 .vy-fall-kropp[hidden]{display:none}
 
 /* ============================================================

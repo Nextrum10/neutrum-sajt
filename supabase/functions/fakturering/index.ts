@@ -142,8 +142,11 @@ Deno.serve(async (req) => {
     let korningAv: 'nyckel' | 'admin';
     const nyckel = req.headers.get('x-fakturering-nyckel');
     if (nyckel !== null) {
+      // Att secreten saknas står i funktionens logg, inte i svaret: den
+      // som gissar på en nyckel ska inte få veta hur servern är inställd.
       if (!NYCKEL) {
-        return json({ error: 'FAKTURERING_NYCKEL är inte satt som secret. Nyckelvägen är stängd.' }, 500);
+        console.error('fakturering: FAKTURERING_NYCKEL är inte satt som secret. Nyckelvägen är stängd.');
+        return json({ error: 'Fel nyckel.' }, 401);
       }
       if (!lika(nyckel, NYCKEL)) return json({ error: 'Fel nyckel.' }, 401);
       korningAv = 'nyckel';
@@ -214,7 +217,7 @@ Deno.serve(async (req) => {
     try {
       allaPass = await allaRader<Pass>((fran, till) => db.from('passunderlag')
         .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, '
-          + 'rabatt_ore, timpris_ore, extra_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status, debiterade_min, lon_min')
+          + 'rabatt_ore, timpris_ore, extra_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status, debiterade_min, lon_min, timbank_min')
         .lt('wanted_date', slut)
         .eq('pa_underlag', false)
         .order('wanted_date').order('id')
@@ -237,7 +240,7 @@ Deno.serve(async (req) => {
     try {
       fakturapass = await allaRader<Pass>((fran, till) => db.from('passunderlag')
         .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, '
-          + 'rabatt_ore, timpris_ore, extra_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status, debiterade_min, lon_min')
+          + 'rabatt_ore, timpris_ore, extra_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status, debiterade_min, lon_min, timbank_min')
         .lt('wanted_date', slut)
         .eq('betalning_status', 'faktura')
         .eq('fakturerad', false)

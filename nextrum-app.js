@@ -36,7 +36,7 @@ const NX = (function () {
      precis vad generatorn behöver för att kunna kopiera den rakt av.
 
      OBS: bara det som VISAS. Strängar som skrivs till databasen
-     ("Telefon: ", "Samtycke till lagring: ja") ska förbli svenska —
+     ("Telefon: ", "Läst integritetspolicyn: ja") ska förbli svenska —
      de läses av oss, inte av besökaren.
      ============================================================ */
   const SPRÅK = /^en/i.test(document.documentElement.getAttribute('lang') || 'sv') ? 1 : 0;
@@ -45,10 +45,10 @@ const NX = (function () {
                       'Please fill in your name and email.'],
     fyllKontakt:     ['Fyll i namn, e-post och meddelande.',
                       'Please fill in your name, email and message.'],
-    samtyckeAnsokan: ['Du behöver godkänna att vi sparar uppgifterna för att kunna behandla ansökan.',
-                      'You need to agree to us storing your details so we can process your application.'],
-    samtyckeIntresse:['Du behöver godkänna att vi sparar uppgifterna för att kunna höra av oss.',
-                      'You need to agree to us storing your details so we can get back to you.'],
+    samtyckeAnsokan: ['Kryssa i att du har läst hur vi hanterar uppgifterna i ansökan.',
+                      'Please tick the box to confirm you have read how we handle the details in your application.'],
+    samtyckeIntresse:['Kryssa i att du har läst hur vi hanterar uppgifterna i anmälan.',
+                      'Please tick the box to confirm you have read how we handle the details in your enquiry.'],
     ingenDatabas:    ['Databasen är inte kopplad än.',
                       'The database is not connected yet.'],
     /* De två nedan läses av en förälder, inte av den som byggt sajten.
@@ -681,6 +681,16 @@ const NX = (function () {
        utan den här raden blev strängen "facebook / null". */
     if (kanal && !medium) medium = 'okänt';
 
+    /* Landningen bär bara våra egna utm-taggar. gclid och fbclid är
+       annonsnätverkens klick-id, unika per klick och möjliga att
+       koppla till en person hos Google och Meta. Att klicket kom
+       därifrån står redan i kanalen; värdet behöver vi inte, och
+       integritetspolicyn lovar bara "de märkord vi själva lagt i
+       adressen". */
+    const egna = new URLSearchParams();
+    p.forEach((v, n) => { if (/^utm_/.test(n)) egna.append(n, v); });
+    const sök = egna.toString();
+
     const k = {
       kanal: kanal,
       medium: okänd ? null : medium,
@@ -688,7 +698,7 @@ const NX = (function () {
       innehåll: par('utm_content'),
       term: par('utm_term'),
       hänvisare: hänvisare,
-      landning: okänd ? null : (location.pathname + location.search).slice(0, 200),
+      landning: okänd ? null : (location.pathname + (sök ? '?' + sök : '')).slice(0, 200),
       tid: new Date().toISOString()
     };
     /* En okänd källa sparas aldrig: den hade låst sessionen vid

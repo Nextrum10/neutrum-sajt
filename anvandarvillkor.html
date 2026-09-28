@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=ad8203ae">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
 </head>
 <body>
 
@@ -191,10 +191,11 @@
         Studiehjälparen skriver in tiden i rapporten, och blev passet längre eller kortare än bokat
         står det där, med skälet, innan ni bekräftar. Stämmer inte tiden, skriv till oss innan ni
         betalar. Har ni redan betalt och passet blev längre betalar ni tillägget när ni bekräftar
-        rapporten. Blev det kortare betalar vi tillbaka mellanskillnaden, och timmar från en plan
-        eller ett klippkort kommer tillbaka av sig själva.</li>
-      <li>Har ni köpt timmar i förväg, i en plan eller ett klippkort, kan ett bekräftat pass
-        betalas med dem i stället. Se <a href="#erbjudanden">Planer och klippkort</a> nedan.</li>
+        rapporten. Blev det kortare betalar vi tillbaka mellanskillnaden. Var passet betalt med
+        timmar från en plan eller ett klippkort kommer timmar som inte påbörjades tillbaka av sig
+        själva, och det som blev över av den sista timmen sparas i er <a href="#timbank">timbank</a>.</li>
+      <li>Har ni köpt timmar i förväg, i en plan eller ett klippkort, betalar timmarna ett
+        bekräftat pass i stället, av sig själva. Se <a href="#erbjudanden">Planer och klippkort</a> nedan.</li>
       <li>Kortbetalningen sköts av Stripe. Kortuppgifterna lämnar ni direkt till Stripe, aldrig
         till oss, och vi sparar dem inte.</li>
       <li>Ingen anmälningsavgift, ingen månadsavgift och ingen bindningstid. Ni betalar för de
@@ -217,9 +218,19 @@
       <li><b>Hur länge timmarna gäller.</b> En plan gäller i en månad från köpet. Ett klippkort
         med 10, 20 eller 30 timmar gäller i 6 månader, med 60 timmar i 12 månader och med 100
         timmar i 18 månader. Sista dagen står i er vy.</li>
-      <li><b>Hur timmarna används.</b> När studiehjälparen har bekräftat ett pass betalar ni det
-        med timmarna i stället för med kort. Varje påbörjad timme av passet drar en timme.
-        Timmarna gäller pass med ett barn; ett pass med fler barn betalas med kort.</li>
+      <li><b>Hur timmarna används.</b> Timmarna betalar passen av sig själva. När studiehjälparen
+        har bekräftat ett pass dras timmarna från den plan eller det klippkort som går ut först,
+        och köper ni timmar, eller kommer timmar tillbaka när ett pass avbokas, medan ni har
+        bekräftade pass framför er betalar de dem i datumordning, så långt de räcker. Varje påbörjad timme av passet drar en timme, och det
+        som blir över av den sista timmen sparas i er <a href="#timbank">timbank</a>.
+        Timmarna gäller pass med ett barn; ett pass med fler barn betalas med kort, liksom passet
+        där första timmen är på köpet och ett pass som timmarna inte räcker till.</li>
+      <li id="timbank"><b>Timbanken.</b> Slutar ett pass som betalats med timmar före en hel timme
+        sparas resten i er timbank, räknat per påbörjad kvart: höll ett pass på två timmar i 1 timme
+        och 45 minuter sparas 15 minuter. Drar ett senare pass över tas tiden ur timbanken först,
+        utan kostnad, så långt minuterna räcker och när passet gäller ett barn. Räcker minuterna
+        till ett helt pass betalar de nästa bekräftade pass, om inga köpta timmar gör det. Timbanken är familjens,
+        syskon delar den, och minuterna går inte ut.</li>
       <li><b>Avbokning.</b> Ett pass som betalats med timmar avbokar ni själva i er vy, som ett
         obetalt pass. Timmarna kommer då tillbaka och gäller till samma dag som förut.
         Går en timme förlorad för att vi eller studiehjälparen avbokat för sent för att ni ska
@@ -228,7 +239,7 @@
         är kvar. De timmar ni redan använt räknas då till ordinarie timpris, eftersom rabatten
         gäller för att ni köper alla timmarna. De första 14 dagarna efter köpet gäller i stället
         <a href="#angerratt">ångerrätten</a>, och då räknas de använda timmarna till det pris ni
-        betalat.</li>
+        betalat. Minuter i timbanken betalar vi tillbaka till ordinarie timpris.</li>
       <li><b>Timmar som inte hunnit användas.</b> Timmar som finns kvar när tiden gått ut
         förfaller. Tio dagar innan mejlar vi er om ni har timmar kvar. Hör av er innan dess om
         ni inte kommer att hinna, så betalar vi tillbaka resten enligt punkten ovan.</li>
@@ -305,7 +316,7 @@
 
     <h2>Att sluta</h2>
     <p>Ni kan sluta när ni vill. Betalda pass som inte hållits betalar vi tillbaka, och timmar som
-      finns kvar i en plan eller ett klippkort betalar vi tillbaka enligt
+      finns kvar i en plan eller ett klippkort och minuter i timbanken betalar vi tillbaka enligt
       <a href="#erbjudanden">Planer och klippkort</a>. Vi kan stänga av ett konto som bryter mot
       villkoren, och säger då till varför.</p>
 
@@ -363,6 +374,7 @@
           <li><a href="/laxhjalp-svenska">Svenska</a></li>
           <li><a href="/laxhjalp-engelska">Engelska</a></li>
           <li><a href="/laxhjalp-no">Fysik, kemi och biologi</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
         </ul>
       </nav>
       <nav aria-labelledby="ftr-fordig">
@@ -444,34 +456,16 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<!-- Vercel Web Analytics.
-
-     Sätter INGA cookies: unika besökare räknas via en hash av
-     IP och webbläsare med ett salt som byts dagligen, och den råa
-     IP-adressen sparas inte. Därför krävs inget samtycke — men det
-     står ändå i integritetspolicyn och på lagring.html, eftersom
-     "vi mäter ingenting" inte längre är sant.
-
-     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
-     finns inget att optimera för besökarens skull, och det vore ett
-     onödigt anrop från en sida där någon sköter sitt barns skolgång.
-
-     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
-     vilket är ofarligt — inget mäts när man utvecklar. -->
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
-     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="nextrum-config.js?v=f8471f2e"></script>
+<script src="nextrum-config.js?v=21cecc53"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a72665a2"></script>
-<script src="nextrum-samtycke.js?v=c15d8f5b"></script>
+<script src="nextrum-app.js?v=d85467f7"></script>
+<script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=77b12db4"></script>
+<script src="nextrum-maskot-svar.js?v=49674614"></script>
 <script src="nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {

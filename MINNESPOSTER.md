@@ -42,14 +42,15 @@ färskare än den här posten.**
 Stacken: inget byggsteg, ingen pakethanterare, inget ramverk. Statiska
 filer i repotroten serveras direkt. Vanilla JS som IIFE:er på `window`
 (NX, NXStudie, NXArbete, NXMedia, NXKontakt, NXBetalning, NXTjanster,
-NXAgent, NXMotion). Backend: Supabase plus Deno edge functions. Mejl via
+NXAgent, NXMotion, NXSamtycke). Backend: Supabase plus Deno edge functions. Mejl via
 Resend. Modeller från Anthropic, bara i edge functions.
 
 Affären: familjen skickar intresseanmälan, Nextrum ringer och väljer
 studiehjälpare, admin sätter matchningen, då först låses föräldravyn upp.
 Ingen katalog att bläddra i.
 
-Ordlista: studiehjälpare (aldrig "lärare" utåt), pass, rapport, underlag,
+Ordlista: studiehjälpare (aldrig "lärare" utåt; "privatlärare" står
+bara i FAQ:n, för att säga att de inte är det), pass, rapport, underlag,
 betalning, tjänst. Faktura är sedan Fas 14.6 ett betalsätt familjen kan
 välja per pass, avstängt (flaggan `faktura`) tills bolaget och
 Fortnox-kontot finns.
@@ -72,7 +73,18 @@ och är sedan låst i databasen tills admin öppnar den med ett skäl (Fas
 `erbjudanden_pris`, och inom ångerfristen räknas använda timmar till det
 betalda priset, inte till 379 kr. Ett pass betalt med timmar avbokar
 familjen själv, och timmarna kommer tillbaka; tio dagar innan ett kort
-går ut mejlas familjen om timmar finns kvar (Fas 21).
+går ut mejlas familjen om timmar finns kvar (Fas 21). Det som blir över
+av den sista påbörjade timmen på ett timpass sparas i familjens timbank
+(Fas 22.1): minuterna tar övertiden på nästa pass av sig själva, kan
+betala ett helt pass och går inte ut. Kortpass som blev kortare får
+fortfarande pengarna tillbaka, inte minuter. Sedan Fas 22.2 betalar köpta
+timmar ett pass av sig själva när det bekräftas eller genomförs (kortet
+som går ut först, annars timbanken), och ett nytt köp betalar de
+bekräftade pass som redan står obetalda. Sedan Fas 22.3 betalar timmar
+som blir lediga (avbokning, kortet som vann, banken som fyllts på) nästa
+bekräftade pass inom fem minuter, genom pg_cron-jobbet `timmar-betalar`.
+Vid ånger eller uppsägning avbokas alla kommande pass familjen inte vill
+ha först, annars räknas de som använda.
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
@@ -142,6 +154,13 @@ bär `{oss}`, som `t()` fyller med `CFG.EPOST`.
 `verktyg/rls-test.sql` körs som ett anrop mot databasen efter varje
 ändring i en policy eller trigger. Varje rad i svaret ska vara ok.
 
+Dataskyddet på pappret (registret över behandlingar,
+konsekvensbedömningen, incidentrutinen, biträdena) står i
+`DATASKYDD.md`. Ändras vad som sparas, till vem eller hur länge: ändra
+den och integritetspolicyn på båda språken i samma ändring. Inget
+skript som skickar data laddas på en öppen sida före ett ja i rutan,
+inte heller Vercels besöksstatistik.
+
 ---
 
 ## `project-nextrum-databas`
@@ -210,7 +229,7 @@ skript blir svensk på den engelska sidan och ingen strukturkontroll ser
 det.
 
 Bara det som visas översätts. Strängar som skrivs till databasen
-("Telefon: ", "Samtycke till lagring: ja") förblir svenska, de läses av
+("Telefon: ", "Läst integritetspolicyn: ja") förblir svenska, de läses av
 oss.
 
 `verktyg/jamfor-sprak-baslinje.txt` innehåller de avsiktliga avvikelserna
@@ -228,8 +247,8 @@ Genererat:
 - `nextrum-maskot-svar.js` byggs av `verktyg/bygg-maskotsvar.py` ur
   `faq.html` och `en/faq.html`
 - FAQPage-märkningen i båda faq-sidorna byggs av `verktyg/bygg-faq-schema.py`
-- Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), två guider
-  och ämnes- och guidekorten i navet byggs av
+- Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), onlinesidan,
+  två guider och ämnes- och guidekorten i navet byggs av
   `verktyg/bygg-omradessidor.py`. Skalet läses ur `var-ide.html`,
   alt-texten ur `nextrum-images.js`
 - `sitemap.xml` byggs av `verktyg/bygg-sitemap.py` ur sidornas

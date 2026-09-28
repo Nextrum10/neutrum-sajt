@@ -64,7 +64,7 @@ gäller först efter fristen — adminvyn visar rätt belopp efter datumet
 (4 och 8 timmar, −10 %) och klippkort med 10–100 timmar (−5 %, gäller
 6–18 månader). Köpet är ett engångsköp med kort, inget abonnemang.
 Timmarna betalar sedan ett bekräftat pass med ett barn i stället för
-kortet. Flaggan `erbjudanden` är PÅ sedan 2026-09-27: Leo slog på den
+kortet, av sig själva sedan Fas 22.2 (nedan). Flaggan `erbjudanden` är PÅ sedan 2026-09-27: Leo slog på den
 innan provköpet i DEPLOY-BETALNING.md 9.12 var gjort. Står den av syns
 priserna men inget går att köpa. Klippkorten står i studievyn och på prissidan som en kolumn
 bredvid planerna som fälls ut (2026-09-27). De var borta ur
@@ -83,6 +83,120 @@ förut `bookings_klippkortspass_avbokat` och gällde bara admin.
 **Tio dagar innan ett kort går ut** mejlas familjen om det finns
 timmar kvar (Fas 21.2, notistypen `timmar_gar_ut`), och rutan Era
 timmar säger samma sak från samma dag.
+
+**Det som blir över på ett timpass sparas i timbanken** (Fas 22.1,
+2026-09-27). Klippkortet drar en timme per påbörjad timme, men sedan
+Fas 20.1 kostar ett kortpass den hållna tiden per påbörjad kvart: ett
+pass på två timmar som höll 1 h 15 drog två timmar ur klippkortet och
+kostade 1 h 15 med kort. Familjen med rabatt betalade mer. Nu drar
+klippkortet som förut, och resten upp till hel timme (45 minuter)
+står i familjens timbank. Tre beslut av Leo samma dag:
+1. **Bara köpta timmar fyller banken.** Ett kortpass som blev kortare
+   får pengarna tillbaka (`betalt_for_lange`), som villkoren lovar. Ett
+   tillgodohavande i stället för en återbetalning är sämre för
+   familjen, och det var det som föreslogs först.
+2. **Banken är familjens**, som klippkortet. Syskon delar den.
+3. **Minuterna tar övertiden först, av sig själva, och kan betala ett
+   helt pass.** Övertiden dras när rapporten skrivs
+   (`intern.timbank_overtid`), innan någon ser ett tillägg, och bara på
+   pass med ett barn. Räcker minuterna till det bokade går passet att
+   betala med Betala med timbanken (`timbank_dra` genom
+   `klippkort-betala`), och sedan Fas 22.2 betalar de det av sig
+   själva när det bekräftas, sedan Fas 22.3 också när banken fylls på
+   efter bekräftelsen. Utan det hade en familj vars pass ofta blir
+   korta samlat minuter ingen använder, och det är pengar vi är skyldiga.
+Insättningarna RÄKNAS ur passen (`intern.timbank_in`), uttagen LAGRAS i
+`timbank_uttag`: övertiden beror på vad saldot var när rapporten skrevs,
+och en senare insättning ska inte göra ett betalt tillägg onödigt.
+`passunderlag.timbank_min` är övertiden banken tog; den räknas som
+betald (`betalda_min`, och därmed lönen), och kassan och fakturan tar
+`debiterade_min` minus den. **Minuterna går inte ut.** Slutar familjen
+betalas de tillbaka till ordinarie timpris, samma pris som klippkortets
+använda timmar räknas till då (`timbank_saldo.varde_ore`), och admin
+markerar banken utbetald under Ekonomi → Erbjudanden. Studiehjälparen
+ser familjens minuter på passet, så att hen vet hur långt passet kan
+dra över utan kostnad, men inte vad de är värda. Villkoren säger det
+sedan samma dag (`#timbank`, båda språken). Familjen ser banken på två
+ställen, ur samma hämtning: som en rad under Era timmar i Erbjudanden
+(bara när det finns något), och under **Profil → Timbanken**
+(`#profil/timbank`), där den står alltid, med vad som gått in och ut
+rad för rad ur `timbank_rorelser`. Leo samma kväll: "timbanken ska
+finnas i profil".
+
+**Uttagen följer passet** (`timbanken_foljer_passet`, samma kväll).
+Övertiden räknas i `intern.timbank_rakna_overtid` och räknas om när
+rapportens tid rättas OCH när admin ändrar längden, antalet barn eller
+undantaget (`bookings_timbank_foljer_passet`). Den räknas från det
+bokade, eller från det kortet betalade om det var mer: ett kortpass som
+betalades efter passet bär den hållna tiden minus det banken tog i
+`stripe_minuter`, och banken ska inte ta de minuterna en gång till. Ett
+helt pass ur banken drar den nya längden, så att banken alltid betalar
+den tid som hölls. När kortet vinner över ett pass betalt med banken
+skriver `timbank_kort_vinner` kortbetalningen och ger tillbaka
+minuterna i samma transaktion; förut var det två anrop från webhooken.
+Kassan skriver `vantar` bara på ett pass som fortfarande är obetalt, och
+stänger annars sin nya session: förut kunde den skriva över ett pass som
+hann betalas med timmar medan kassan skapades.
+
+**Timmarna betalar passen av sig själva (Fas 22.2, 2026-09-27).** Leo:
+"köper man klippkorten eller timmarna i förväg innan bokade lektioner,
+då kostar ej nästkommande lektioner som man har timmar för", och
+"timbanken ska även inkludera klippkort". Förut betalade familjen varje
+pass med Betala med timmar, och ett pass de glömt larmade som obetalt
+med timmarna oanvända bredvid.
+- **När ett pass bekräftas eller genomförs** betalar triggern
+  `bookings_timmar_betalar` (`intern.timmar_betalar_passet`) det i samma
+  skrivning: klippkortet som går ut först och räcker, som
+  `klippkort_dra` väljer, annars timbanken när minuterna räcker till det
+  bokade. Samma pass som knappen: ett barn, inte passet med första timmen
+  bjuden, inte ett undantaget, och bara med flaggan `erbjudanden` på.
+  Triggern kör efter `skydda_bokningsfalt` och `skydda_klippkortet`
+  (namnordning), så betalningen prövas inte som en ändring från vyn, och
+  före `bookings_timmarna_tillbaka`, som ska stå sist.
+- **När ett köp blir betalt** betalar `klippkort_betalar_passen`
+  (`intern.timmar_betalar_kommande`, efter `klippkort_betald`) familjens
+  bekräftade obetalda pass från och med i dag, i datumordning, så långt
+  de nya timmarna räcker. Ett pass som inte ryms hoppas över. Bara det
+  nya kortet: att låsa familjens andra kort med köpet redan låst hade
+  kunnat låsa fast mot en bekräftelse som låser i andra ordningen. Blir
+  något fel skrivs köpet ändå och admin får en uppgift.
+- **Ett pass med en påbörjad kassa (`vantar`) betalas också**, för en
+  kassa som aldrig slutförts står kvar som `vantar` för alltid. Kassan
+  stängs inte härifrån; betalar familjen den ändå vinner kortet och
+  timmarna går tillbaka (webhooken, Fas 16.1).
+- **Timmar som blir lediga betalar nästa pass inom fem minuter** (Fas
+  22.3, Leo samma kväll: "se till att den funkar som den ska"). Fas 22.2
+  betalade bara i de två ögonblicken ovan, så en timme som kom tillbaka
+  när ett pass avbokades, eller när kortet vann, lämnade ett bekräftat
+  pass obetalt bredvid timmen tills rapporten skrevs. Detsamma gällde
+  timbanken som fylldes på och flaggan som slogs på. En trigger på
+  avbokningen går inte: den körs i familjens eller studiehjälparens
+  session, och `skydda_bokningsfalt` nekar då en betalning på ett annat
+  pass. I stället kör pg_cron `timmar-betalar` var femte minut
+  (`intern.timmar_betalar_obetalda`), som postgres, och låter samma val
+  som triggern (`intern.timmar_betala`, utflyttat ur den) betala de
+  bekräftade obetalda passen från och med i dag i datumordning. Jobbet
+  väntar aldrig på ett lås (`skip locked` på passet, `nowait` på korten
+  och banken), för det låser pass efter pass i en transaktion och hade
+  annars kunnat låsa fast mot en bekräftelse. Knappen Betala med timmar
+  står kvar och gör samma sak direkt.
+- **Mejlen säger det.** `intern.betalsatt_kod` ger `timmar` till
+  `notis_vid_pass` och `notis_planera`, och bekräftelsen och påminnelsen
+  säger att passet är betalt med timmarna, med knappen till passet. Ett
+  pass jobbet betalar får inget eget mejl; påminnelsen säger det.
+- **Vid ånger eller när en familj slutar: avboka först ALLA kommande
+  pass familjen inte vill ha**, inte bara de timmarna betalat.
+  `vid_anger_ore` och `vid_uppsagning_ore` räknar varje pass som inte är
+  avbokat som använt, också ett som inte hållits, och sedan Fas 22.3
+  betalar en timme som blir ledig nästa bekräftade pass inom fem
+  minuter: avbokas bara det betalda passet flyttar timmen till nästa.
+Profil → Timbanken visar köpta timmar kort för kort, med passen varje
+kort betalat ur vyn `klippkort_rorelser` (samma timmar som
+`klippkort_saldo`), och de sparade minuterna under dem. `rls-test.sql`
+slår av flaggan `erbjudanden` överst, så att proven som räknar med
+obetalda pass inte får dem betalda, och på i blocken för 22.2 och 22.3.
+Blocken för 22.3 kör jobbet för familj P direkt i stället för att vänta
+på schemat.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
@@ -118,7 +232,8 @@ rättar). Tre beslut av Leo samma dag:
    Förbetalt och kortare larmar `betalt_for_lange` med beloppet att
    betala tillbaka (knappen under Kortbetalningar). Timmar på ett
    klippkort går tillbaka av sig själva: klippkortet drar påbörjade
-   timmar av det som hölls, upp till det bokade.
+   timmar av det som hölls, upp till det bokade, och resten av den
+   sista timmen går till timbanken (Fas 22.1).
 3. **Lönen följer tiden nedåt alltid, uppåt bara när övertiden är
    betald** (`passunderlag.lon_min`). Den som skriver in tiden är den
    som får lönen.
@@ -163,7 +278,15 @@ pass som hållits ska betalas även om ingen bekräftat, och villkoren
 säger det. Rapporten står kvar under Att bekräfta tills den är
 bekräftad OCH passet är betalt eller satt på faktura. Ett genomfört
 obetalt pass larmar som förut, direkt, som `ej_betalt`: Leo valde det
-framför en frist. Fas 19.1 hade först valt bort betalning efter passet
+framför en frist. Fakturavalet heter "Få faktura nästa månad" (Fas 19.6,
+Leo: "betala senare genom att välja att få en faktura skickad till sig
+nästkommande månad") och är en knapp bredvid Betala med kort; en ruta
+frågar innan betalsättet sparas (Fas 19.7). En skickad faktura står under Betalning i
+rutan Fakturor att betala, med belopp, förfallodag, passen, bankgiro
+(`BANKGIRO` i `nextrum-config.js`) och OCR. OCR:et skriver admin av från
+Fortnox vid Lagd i Fortnox; det räknas aldrig fram här, och
+`invoices_ocr_giltigt` prövar kontrollsiffran. Allt det syns först när
+flaggan `faktura` är på, för utan den skapas inga fakturor. Fas 19.1 hade först valt bort betalning efter passet
 för att villkoren sa före; Leo bestämde samma dag att villkoren skulle
 ändras i stället.
 
@@ -198,7 +321,7 @@ elev.
 
 | Ord | Betyder |
 |---|---|
-| studiehjälpare | den som håller passet. Aldrig "lärare" utåt — `larare.html` heter så av historiska skäl |
+| studiehjälpare | den som håller passet. Aldrig "lärare" utåt — `larare.html` heter så av historiska skäl. "Privatlärare" står en gång, i FAQ:n, för att säga att en studiehjälpare INTE är det (2026-09-28): ordet är det konkurrenterna och föräldrarna söker på, och svaret är ärligare än att tiga |
 | pass | ett bokat tillfälle (`bookings`). Hela timmar, 1–3 |
 | rapport | `lesson_reports`. **Passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
@@ -289,8 +412,12 @@ vendorad fil i `bibliotek/`.
   projektets Settings → Git (`gitComments` i API:t; Vercel-kopplingens
   `update_project` saknar fältet). `github.silent` i `vercel.json`
   hjälpte inte: grenen hade nyckeln, och botten kommenterade PR:en
-  ändå. Stäng inte av GitHub-driftsättningarna i samma veva:
-  `indexnow.yml` lyssnar på deras `deployment_status`
+  ändå. Stäng inte av repository_dispatch-händelserna i samma veva
+  (`disableRepositoryDispatchEvents` i API:t, som Vercel-kopplingens
+  `get_project` inte visar): `indexnow.yml` lyssnar på
+  `vercel.deployment.success` sedan 2026-09-27 och tystnar utan dem,
+  utan att något blir rött. GitHub-driftsättningarna behöver den inte
+  längre (avsnitt 9)
 - **Mejl:** Resend
 - **Modeller:** Anthropic, bara från edge functions — aldrig från
   webbläsaren
@@ -306,7 +433,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 |---|---|
 | `nextrum-config.js` | **Enda filen som ska ändras vid uppsättning.** URL, anon-nyckel, pris, e-post, utbildningslänk |
 | `nextrum-app.js` | `NX` — delad grund: supa-klient, i18n, datum, fel, header, inloggning |
-| `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen |
+| `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen. Vem felet gällde sätter databasen (`intern.klientfel_vem`, 2026-09-28) ur `auth.uid()` och skriver över det klienten skickar: kolumnen fylldes aldrig förut, och varje fel stod som Utloggad. DATASKYDD.md rad 12 och integritetspolicyn räknar med konto-id, 90 dagar |
 | `nextrum-modulvakt.js` | Fångar "en modul laddade inte" innan vyn dör tyst på "Laddar din vy". Laddas i **alla tre** vyerna sedan Fas 14.0 — adminvyn saknade den, fast den har 26 skript mot de andras 17. Prövar en FUNKTION per fil, inte bara att globalen finns: en gammal fil i cachen definierar sin global och ser frisk ut. Modulerna nås som IDENTIFIERARE, aldrig som `window[...]` — hälften deklareras `const NX… = …` på toppnivå och hamnar då inte på window |
 | `nextrum-samtycke.js` | `NXSamtycke`: samtyckesrutan och det enda stället som svarar på "får vi?". Bara på de öppna sidorna, efter `nextrum-app.js`. Se avsnitt 6, Samtycket |
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
@@ -325,8 +452,9 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
-Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`) och två guider
-(`gratis-laxhjalp-stockholm`, `hjalpa-barn-med-matte`) genereras; navet
+Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), onlinesidan
+(`laxhjalp-online`) och två guider (`gratis-laxhjalp-stockholm`,
+`hjalpa-barn-med-matte`) genereras; navet
 `laxhjalp-stockholm.html` är handskrivet. `/en/` är elva översatta sidor.
 
 ### Startsidan efter hero (2026-09-25)
@@ -512,7 +640,7 @@ Fyra saker att veta, alla dyrköpta:
    skriven i sidans eget skript blir svensk på den engelska sidan och
    **ingen strukturkontroll ser det**.
 2. **Bara det som visas.** Strängar som skrivs till databasen
-   ("Telefon: ", "Samtycke till lagring: ja") förblir svenska — de
+   ("Telefon: ", "Läst integritetspolicyn: ja") förblir svenska — de
    läses av oss.
 3. **Generatorn finns inte i repot.** `/en/`-sidorna är incheckade
    artefakter. Ändras en svensk sida måste engelskan följa med för
@@ -570,6 +698,15 @@ Fas 16.1 la till `erbjudanden` (katalogen, alla läser) och `klippkort`
 `erbjudanden_pris` och `klippkort_saldo`. Timmarna dras bara i
 `klippkort_dra()`, och triggrarna för klippkortet är EGNA — de rör inte
 `skydda_bokningsfalt` eller `avvikelser_rader`, som Fas 14.6 skrev om.
+Fas 22.1 la till `timbank_uttag` (minuterna familjen använt ur timbanken
+eller fått utbetalda: parterna och admin läser, bara databasen skriver),
+med vyerna `timbank_saldo` och `timbank_rorelser`. Insättningarna står
+inte i någon tabell, de räknas ur passen. Fas 22.2 la till vyn
+`klippkort_rorelser` (passen varje kort betalat) och triggrarna
+`bookings_timmar_betalar` och `klippkort_betalar_passen`, som låter
+timmarna betala passen av sig själva (avsnitt 1). Fas 22.3 la till
+pg_cron-jobbet `timmar-betalar`, som låter timmar som blivit lediga
+betala nästa bekräftade pass.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
@@ -592,6 +729,9 @@ Fas 20.1 la till `pass_tillagg` (övertiden på ett förbetalt pass:
 parterna och admin läser, bara `service_role` skriver) och Fas 20.2
 `manadsbokslut` (stängda månader: admin läser, bara `stang_manad` och
 `oppna_manad` skriver).
+Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
+id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
+ingen roll utom ägaren når den). Se Notiserna nedan.
 
 **Flera sessioner kör mot samma databas samtidigt.** Fas 19.5 och Fas
 20.1 skrevs samma förmiddag i två sessioner och ändrade båda
@@ -755,6 +895,47 @@ kör alla fyra från fliken System → Automationer.
    det bakfylldes: en gissad siffra räknas med i medelvärdet utan att
    någon ser att den är gissad.
 
+### Gallringen (2026-09-27)
+
+Integritetspolicyn lovar lagringstider, och det är databasen som
+håller dem, inte en människa som kommer ihåg. `DATASKYDD.md` har hela
+registret; det här är det som rör koden.
+
+- **Intresseanmälningar avidentifieras, de tas inte bort.**
+  `intern.leads_avidentifiera()` (pg_cron `leads-avidentifiering`,
+  varje natt) tömmer namn, e-post, barnets namn, fritexten och
+  noteringen sex månader efter senaste kontakten
+  (`intern.leads_avidentifieras_fran()`, enda stället regeln står).
+  `email = 'gallrad'` är markeringen. Raden står kvar så att
+  analysvyerna räknar lika många anmälningar bakåt i tiden.
+- **Konton raderas aldrig automatiskt.** `intern.konton_oanvanda()`
+  (`konton-oanvanda`, den 1:a varje månad) gör ett konto som inte
+  använts på två år till en uppgift. Ett konto hänger ihop med
+  bokföringsunderlag som ska sparas i sju år, och det avgör en
+  människa.
+- **Ett jobb som fastnat blir en uppgift** (`gallring:leads:fastnat`).
+  Ett jobb som tyst slutat fungera ser annars ut som ett som inte har
+  något att göra.
+- **Kontaktmeddelanden tas bort efter sex månader, klientfel efter
+  nittio dagar** (`intern.kontakt_och_fel_gallra()`, pg_cron
+  `kontakt-och-fel-gallring`). Notiserna har egna tider i
+  `notis_stada()`: 180 dagar i vyn, 90 för utskicken.
+- **AI-texterna och de avslutade uppgifterna** (2026-09-28,
+  `intern.ai_och_uppgifter_gallra()`, pg_cron
+  `ai-och-uppgifter-gallring`): agentloggens text efter 90 dagar
+  (`gallra_agentloggen(90)`, som bara kördes från en knapp förut),
+  `ai_forslag.motivering` 90 dagar efter beslutet, och klara eller
+  avbrutna uppgifter ett år efter att de stängdes. `frys_forslaget`
+  släpper igenom exakt den tömningen: till null, på ett avgjort förslag,
+  utan inloggad användare. Allt annat i ett förslag är fortfarande fryst.
+- **`landningssida` bär bara våra egna utm-taggar.** `NX.källa()` sparade
+  förut hela adressen, med annonsnätverkens klick-id (`gclid`,
+  `fbclid`), som går att koppla till en person hos Google och Meta.
+  Avidentifieringen kapar dessutom fältet vid "?".
+- Ansökningar och CV:n gallras av `ansokan-gallring`, med samma
+  princip: filen först, raden sedan. Se "Gallringen: ansökningar och
+  CV:n efter ett år" nedan.
+
 ### Notiserna (Runda 2)
 
 Vägen är alltid densamma, och ingen del av den kan hoppas över:
@@ -844,6 +1025,31 @@ pass.** Den köas av `intern.timmar_gar_ut_koa()`, som pg_cron-jobbet
 svensk tid. En gång per kort och sista dag; ett förlängt kort får en ny.
 Mallen läser `kvar` (heltal, 1–200) och `datum` ur `RenData`, och bara
 familjen har raden i `NOTISVAL` (`bara: 'parent'`).
+
+**Notiser som inte gick fram (System → Fel) är bara databasens egna
+utskick** (2026-09-27). `notisfel()` läste förut hela
+`net._http_response`, och dit kommer varje anrop genom pg_net, också
+när en session provar en funktion efter en driftsättning. Utan
+hemligheten svarar funktionen 401, med GET 405, och svaret stod sedan i
+sex timmar som en notis som inte gick fram: adminvyn sa 8 fel, där tre
+var samma fel i koden och fem var prov. Tabellen har ingen adress, och
+ett prov och ett utskick med fel hemlighet ger samma 401, så skillnaden
+syns bara när anropet görs.
+
+- **Ring aldrig `net.http_post` direkt.** Databasens anrop går genom
+  `intern.natanrop(mal, url := …)`, med samma parametrar som
+  `net.http_post` och målet först. Den minns anropets id i
+  `intern.natanrop_logg`, och `notisfel()` visar bara svar på de
+  anropen och på webhooken för intresseanmälan (som minns sina i
+  `supabase_functions.hooks`), med vägen i `kalla`. Ett anrop förbi
+  `intern.natanrop` syns inte när det går fel; `rls-test.sql` har en
+  rad som fångar det.
+- **`grindfel` skiljer två 401:or.** Supabases grind svarar med
+  `sb-error-code` (`UNAUTHORIZED_…`) när JWT-kravet slagits på igen
+  (avsnitt 7, `config.toml`); funktionen själv svarar 401 när
+  hemligheten inte stämmer. Adminvyn säger vilket.
+- **Svaren finns i sex timmar** (`pg_net.ttl`), inte ett dygn. Listan
+  svarar på "gick det fram nyss?", inte på "vad hände i natt?".
 
 `DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
 sandlådan slås på innan något provas, och de fem stegen för att lägga
@@ -985,11 +1191,94 @@ och går inte att nå inifrån ett mejl. Kontomejlen (bekräfta konto,
 inbjudan från `bjud-in`) skickas av Supabase Auth med mallar i
 dashboarden, inte härifrån, och har inte det här skalet.
 
+### Gallringen: ansökningar och CV:n efter ett år (2026-09-27)
+
+Integritetspolicyn lovar att en ansökan som inte leder till anställning
+sparas högst ett år. Förut höll ingenting det: ingen policy, inget jobb
+och ingen knapp tog bort vare sig raden eller CV:t.
+
+```
+pg_cron "ansokan-gallring", 03:41 UTC
+  → intern.ansokan_gallring_vack()   något förfallet? annars inget anrop
+  → pg_net → ansokan-gallring        hemligheten i x-nextrum-notis
+      → ansokan_gallring_lista()     ansökan och dess filer
+      → Storage tar bort filerna     svaret läses
+      → ansokan_gallra(id)           raden, bara om filerna är borta
+      → cv_foraldralosa() → Storage  filer som ingen ansökan pekar ut
+```
+
+Regeln står i `intern.ansokan_gallras_fran()` och ingen annanstans:
+
+1. **En studiehjälpares ansökan står kvar medan hen arbetar, och två
+   år till** (2026-09-28). Har ansökan samma adress
+   (`intern.epost_nyckel`) som en godkänd studiehjälpare, och är den
+   inte avböjd, räknas tiden från studiehjälparens senaste aktivitet:
+   kontot, senaste inloggning, senaste pass som inte avbokats, senaste
+   rapport. Det finns ingen status för "har slutat", så aktiviteten ÄR
+   signalen. Adressen och inte bara läget, för "Ta in i poolen"
+   godkänner profilen först och läser inte svaret när ansökan sätts
+   till godkänd. En godkänd ansökan utan konto med den adressen gallras
+   två år efter sitt senaste steg. En avböjd ansökan gallras alltid,
+   också när samma person senare fått ja.
+2. **Ett år från `created_at`, men inte mitt i en rekrytering.** En
+   ansökan väntar till trettio dagar efter sitt senaste steg: kontakten,
+   mötet, utbildningsmötet, provets sista dag, det godkända provet,
+   utbildningen. Policyn säger "så att vi kan höra av oss om något dyker
+   upp", och den som hörs av i månad elva ska inte förlora ansökan mitt i
+   provet. **Får rekryteringen ett nytt steg med en egen tidsstämpel ska
+   det in i funktionen**, annars kan en ansökan försvinna mitt i steget.
+3. **Filen först, raden sedan, och databasen vaktar ordningen.**
+   `storage.objects` går inte att ta bort ur med SQL
+   (`protect_objects_delete`), så filen tas bort genom Storage-API:t i
+   edge-funktionen. `ansokan_gallra()` vägrar ta bort raden så länge en
+   fil den pekar ut finns kvar. En fil som en ansökan som ska vara kvar
+   också pekar ut står kvar.
+4. **Filer utan ansökan gallras ett år efter uppladdningen.** Kopplingen
+   är raden `CV: cv/<sökväg>` i `why` (avsnitt 6, hinkarna), läst av
+   `intern.ansokan_cv_namn()`, med flit vidare än `CV_RAD`. Året är också
+   ett skydd: ändras CV-raden utan att tolkningen följer med ser varje CV
+   föräldralöst ut, och då tas ändå inget bort som inte redan var ett år
+   gammalt.
+5. **Det som följer med:** `ansokan_utskick` och `utbildningsprov_forsok`
+   (cascade) och uppgifter kopplade till ansökan, som kan bära namnet.
+   Auditloggens rader om ansökan står kvar, för de bär bara läge och
+   tidsstämplar. Borttagningen får en egen, `ansokan.borttagen` av
+   `system`, med tidsstämplarna som visar att den var förfallen. Egen
+   trigger (`applications_audit_borttagen`): `applications_audit` skrivs
+   om av rekryteringens migrationer, och en borttagningsgren där hade
+   försvunnit nästa gång.
+6. **Vakten räknar utfallet, inte vägen.** Är något en vecka över tiden
+   skapar väckningen uppgiften "Gallringen av ansökningar har fastnat".
+   En funktion som svarar 401, en fil Storage vägrar ta bort och en rad
+   som väntar på sin fil syns alla där. Funktionens svar står i
+   `net._http_response`: 200 bara när inget gick fel, och aldrig ett
+   filnamn, för det är vad den sökande själv döpt filen till.
+
+Bara `service_role` når `ansokan_gallring_lista`, `cv_foraldralosa` och
+`ansokan_gallra`, inte admin. Adressen står i `notis_konfig.gallring_url`,
+härledd ur `arbetare_url` som `ansokan_url`. Provad mot driften
+2026-09-27 med tre provansökningar och fyra provfiler. **pg_net skickar
+bara `application/json`**, och hinken `cv` tar bara PDF och Word: filerna
+laddades upp som anon med tillägget `http`, installerat i en transaktion
+som rullades tillbaka. Storage sparar filen i sin egen anslutning, så den
+blir kvar medan tillägget inte gör det.
+
 ---
 
 ## 6. Säkerhetsmodellen
 
 Den här är inte förhandlingsbar och förklarar större delen av koden.
+
+Dataskyddet på pappret (registret över behandlingar,
+konsekvensbedömningen, incidentrutinen och biträdena) står i
+`DATASKYDD.md`. **Ändras vad som sparas, till vem det går eller hur
+länge: ändra `DATASKYDD.md` och integritetspolicyn på båda språken i
+samma ändring.**
+
+Det som skickas till Anthropic från rapportutkasten och hälsningarna
+går genom `_delad/minimera.ts`: förnamnet, och fritext där
+personnummer, telefonnummer och e-post är maskade. Samma regler som
+`maska_kontakt()` i databasen; ändras den ena ska den andra ändras.
 
 **Allt skydd ligger i RLS. Ingenting ligger i gränssnittet.**
 Adminvyn hämtar med samma anon-nyckel som alla andra. Att gömma en
@@ -1064,11 +1353,14 @@ att visa **rätt sida**, inte för att skydda data.
   samma tryck: Safari stoppar tyst ett fönster som öppnas efter en
   väntan på nätet. Word hämtas som en blob och laddas ned. PDF:en kan
   inte gå den vägen, för en blob-adress ärver adminvyns CSP och
-  `object-src 'none'` stoppar PDF-visaren.
+  `object-src 'none'` stoppar PDF-visaren. Filen och ansökan gallras
+  efter ett år (avsnitt 5, Gallringen).
 - **Tar du bort en fil: filen först, raden sedan, och LÄS SVARET.**
   Sökvägen finns bara i raden. Försvinner raden först blir filen omöjlig
   att hitta och omöjlig att städa. Det stod som en kommentar i
-  adminvyn långt innan koden faktiskt gjorde det (Fas 9.2).
+  adminvyn långt innan koden faktiskt gjorde det (Fas 9.2). För
+  ansökningarna vaktar databasen ordningen: `ansokan_gallra()` tar inte
+  bort raden medan filen finns.
 - **Notishemligheten ligger i `notis_konfig`, inte i en secret.** En
   secret och en webhook-header i två olika fönster glider isär, och då
   svarar funktionen 401 på varje anmälan emellan — de mejlen kommer
@@ -1083,7 +1375,20 @@ bara när något där är på.** Är allt av finns ingen ruta, ingen länk i
 footern och ingenting lagras: en ruta som ber om lov till ingenting är
 brus.
 
-- **Källspårningen är det enda som är på.** Med ett ja minns
+- **Två syften, två val: statistik och annonser.** Rutan har Neka
+  alla, Godkänn alla och en kryssruta per syfte (ingen förkryssad) med
+  Spara mitt val. Svaret är `{v:2, val:{statistik, annonser}}`; ett
+  svar i det gamla formatet räknas som inget svar. `SYFTE` i
+  `nextrum-samtycke.js` säger vilket syfte varje reglage hör till.
+- **Vercels besöksstatistik laddas först efter ja** (2026-09-27).
+  Taggarna till `/_vercel/insights` och `/_vercel/speed-insights` stod
+  förut statiskt på alla 35 sidor och körde innan någon frågats. Den
+  räknar utan cookies, men skriptet får webbläsaren att skicka data,
+  och det är "åtkomst" enligt EDPB:s riktlinjer 2/2023; PTS räknar
+  statistik som inte nödvändig. Nu lägger `laddaVercel()` in dem vid
+  ja. **Lägg aldrig tillbaka en statisk tagg.** Dras ett ja tillbaka
+  laddas sidan om, för ett skript som redan kört går inte att stänga av.
+- **Källspårningen hör till annonser.** Med ett ja minns
   webbläsaren landningen tills fliken stängs (sessionStorage
   `nx-kalla`, skrivs av `NX.källa()`), så att en anmälan krediteras
   annonsen och inte sidan den skickades från. **Utan ja är en okänd
@@ -1128,7 +1433,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 26 SECURITY DEFINER-funktioner nåbara för `authenticated` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 30 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
@@ -1212,18 +1517,19 @@ tillbaka en kopia.**
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
 | `ansokan-notis` | Ett besked till den som sökt jobb (Fas 16.1): kvittot, eller mejlet om ett steg framåt med hela processen och var hen står. Databasen bestämmer vad, funktionen skickar | Triggern `ansokan_besked` och pg_cron `ansokan-besked`, via `notis_konfig.ansokan_url` |
+| `ansokan-gallring` | Tar bort ansökningar som inte ledde till anställning och CV-filer utan ansökan när de är ett år gamla (2026-09-27, avsnitt 5). Filen först genom Storage-API:t, sedan raden genom `ansokan_gallra()`, som vägrar medan filen finns. Svarar 500 om något inte gick | pg_cron `ansokan-gallring` via `intern.ansokan_gallring_vack()` och `notis_konfig.gallring_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
 | `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`) | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
-| `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet | Betala med timmar i föräldravyn |
+| `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet. Med `timbank: true` dras minuterna i timbanken i stället, i `timbank_dra()` (Fas 22.1). Sedan Fas 22.2 betalar timmarna passen av sig själva i databasen, och knappen tar det de inte hann | Betala med timmar och Betala med timbanken i föräldravyn |
 | `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser`. Ett tillägg (Fas 20.1) bär `tillagg_booking_id` och skrivs, återbetalas och bestrids på sin egen rad | Stripe |
 | `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
 | `stripe-avstamning` | Hämtar avgift, netto och läge (test eller skarpt) för betalningar som saknar dem (Fas 14.7). Högst femtio per tryck. Skriver bara de kolumnerna | Knappen Hämta från Stripe under Ekonomi → Kortbetalningar |
 | `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Ekonomi → Kortbetalningar |
 | `google-koppla` | Kopplingen till Google (Fas 18.1): adressen till Google, återkomsten med engångskoden, Prova och Koppla från. Koden byts mot en nyckel HÄR; vyn ser aldrig nyckeln eller klienthemligheten. Återkomsten bär ingen inloggning och skyddas av ett HMAC-signerat läge som gäller i tio minuter. Ett konto utanför nextrum.se nekas | Knapparna under System → Integrationer, och Googles omdirigering |
 | `google-meet` | Meet-länken till ett bekräftat onlinepass (Fas 18.1). Läser passet med anroparens token först, skapar ett öppet rum och sparar länken i `pass_moten`. Ett rum som inte blev öppet sparas inte | Passets sida i föräldravyn och studiehjälparvyn |
-| `utbildningsprov` | Provet efter utbildningsmötet (Fas 22.1). Lämnar ut frågorna utan facit, rättar, och sparar försöket genom `utbildningsprov_lamna()`. Skyddet är nyckeln i länken, inte en inloggning | `/utbildningsprov`, från länken i mejlet |
+| `utbildningsprov` | Provet efter utbildningsmötet (Fas 22.1). Lämnar ut frågorna utan facit, rättar, och sparar försöket genom `utbildningsprov_lamna()`. Skyddet är nyckeln i länken, inte en inloggning. I drift sedan 2026-09-27 | `/utbildningsprov`, från länken i mejlet |
 
-`supabase/config.toml` bär `verify_jwt = false` för de åtta funktioner
+`supabase/config.toml` bär `verify_jwt = false` för de nio funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
 dashboarden, och en `supabase functions deploy` utan filen hade slagit
 på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och
@@ -1291,6 +1597,16 @@ git är ett skilt steg som ingen kontroll tvingar fram. Två system kan
 alltså glida isär utan att något blir rött. Kör frågan i avsnitt 5
 innan du tror på filerna — och när du driftsatt något, commit:a det
 i samma arbetspass, inte i nästa.
+
+Samma sak hände utbildningsprovet (Fas 22.1). Migrationerna, jobbet
+`utbildningsprov-paminn`, funktionen `utbildningsprov` och
+`ansokan-notis` med provstegen driftsattes 2026-09-27 från utkastet i
+PR #88, som inte var mergat. I ett dygn låg en trigger, ett schemajobb
+och mejlmallar i drift som main inte visste om, och en databas byggd ur
+main föll på gallringens migration, som läste provkolumnerna. PR #99
+tog hem databasdelen och funktionerna ordagrant 2026-09-28, och sidan
+och adminvyns del kom med PR #88. **Driftsätt aldrig från en gren som
+inte är mergad.**
 
 ### Agentregeln
 
@@ -1392,7 +1708,7 @@ hitta på ett pris, ett villkor eller ett löfte.
 |---|---|---|
 | `nextrum-maskot-svar.js` | `verktyg/bygg-maskotsvar.py` | `faq.html`, `en/faq.html` |
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
-| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen), de två guiderna och ämnes- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
+| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen, online), de två guiderna och ämnes- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
 | `sitemap.xml` | `verktyg/bygg-sitemap.py` | sidornas canonical, hreflang och noindex |
 | Ikonlänkar och storlekar | `verktyg/satt-logga.py` | `bilder/nextrum-logo.png` — finns inte i dag; PNG:erna är renderade ur `favicon.svg`, se `GOOGLE.md` |
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i verktyget. Körs för hand (kräver Chromium), inte i CI. `--sql` ger raderna till `biblioteksmaterial` |
@@ -1439,6 +1755,17 @@ står om Nextrum är samma löfte som resten av sajten. Moderna språk, SO
 och programmering har ingen sida, för navet säger "fråga i anmälan så
 säger vi om vi har rätt person" och en egen sida hade lovat mer.
 
+**Onlinesidan** (2026-09-28, `laxhjalp-online`) svarar på "läxhjälp
+online", som ingen sida hade ett ord om fast tjänsten finns. Den byggs
+med `amnessida()` men står i `ONLINE`, inte i `AMNEN`: annars hade den
+stått som ett ämne under "Läxhjälp per ämne" överallt. Ämnessidorna
+länkar dit bland områdena, under rubriken som redan säger "eller
+online", och till guiderna längst ner. Sidan säger med flit ingenting
+om var i landet eleven får bo, och nämner ingen videotjänst: länken
+står "i studievyn", vilket är sant både med och utan Google-kopplingen
+(Fas 18.1). Att ta emot familjer utanför Stockholm är ett beslut om
+affären; fattas det ska sidan säga det, och inte förr.
+
 **Guiderna** (2026-09-26) svarar på det föräldrar söker innan de vet
 att de letar efter läxhjälp. Allt om andra organisationer (biblioteken,
 Röda Korset, Mattecentrum) är kontrollerat mot deras egna sidor och
@@ -1453,7 +1780,8 @@ LCP 0,3–0,4 s sämre, eftersom den konkurrerar med herobilden om
 bandbredden, och de hade ingen förskjutning att laga. Lägg den inte på
 fler sidor utan att mäta.
 
-**Footern har en egen spalt Läxhjälp** med navet och de fyra ämnena, på
+**Footern har en egen spalt Läxhjälp** med navet, de fyra ämnena och
+onlinesidan, på
 alla publika sidor och på båda språken. Den ersatte en länk till navet
 som stod två gånger i den svenska footern, vilket också var skälet till
 nästan alla TEXTNODER-avvikelser i språkbaslinjen.
@@ -1483,6 +1811,13 @@ Körs på varje push och PR. Ska vara grön före merge.
 Kör dem lokalt innan du pushar. De är snabba och de fångar exakt det
 som annars upptäcks i drift.
 
+**`node --check` prövar bara syntaxen.** Ett namn som inte finns där
+det används ger ReferenceError först när raden körs. I adminvyn är det
+vanligaste fallet ett namn ur kärnan som aldrig hämtats in ur `NXAdmin`:
+auditloggen kraschade från 2026-09-22 till 09-27 på `AVBOKNINGSSKAL`
+så fort en avbokning med skäl stod bland raderna, och det syntes bara
+som klientfel under System → Fel.
+
 **`.github/workflows/indexnow.yml` är ingen kontroll** (2026-09-26). Den
 körs när Vercel rapporterat en lyckad produktionsdriftsättning och
 skickar de adresser vars summa i `sitemap.xml` ändrats till IndexNow
@@ -1492,14 +1827,60 @@ ligger i roten som `1ba8bf8c04595e17dff19c8eaf340825.txt` och i
 Det som återstår för trafiken och bara går att göra med era konton
 står i `TRAFIK.md`.
 
+Rapporten från Vercel är sedan 2026-09-27 en `repository_dispatch` av
+typen `vercel.deployment.success`, och workflowen skickar bara när
+`client_payload.environment` är `production`. Förut var det
+`deployment_status` från GitHub-driftsättningarna, som Vercel kallar
+föråldrad: slutade Vercel skapa dem hade IndexNow tystnat utan att
+någon kontroll blev röd. Payloadens fält (`environment`, `git.sha`,
+`git.ref`, `url`, `id`, `project`, `state`) är typade i Vercels eget
+paket, `vercel/repository-dispatch` under
+`packages/repository-dispatch/src/data/`. Tre saker följer av bytet:
+
+1. **Workflowen körs på main, inte på den driftsatta commiten.** En
+   repository_dispatch når bara workflows på default-grenen och körs
+   på dess senaste commit; med `deployment_status` var det den
+   driftsatta av sig självt. Därför checkas `client_payload.git.sha`
+   ut, med `fetch-depth: 2` för jämförelsen med föräldern, och
+   körningen blir röd om den inte fick just den commiten. Mergas två
+   PR:er tätt kan main redan vara nästa commit när händelsen för den
+   första kommer: en utcheckning av main hade då skickat nästa commits
+   sidor innan de fanns på nextrum.se, och den förstas aldrig. Av samma
+   skäl går en ändring i workflowen inte att prova på en gren.
+2. **Bara `success`, aldrig `promoted` också.**
+   `vercel.deployment.promoted` kommer för varje befordran till drift,
+   automatisk eller manuell, alltså också för samma driftsättning som
+   `success`: med båda skickas varje sida två gånger. Efter en
+   befordran av en äldre eller en annan driftsättning säger
+   jämförelsen med föräldercommiten ingenting om vad som ändrats på
+   nextrum.se. Kör då workflowen för hand med `alla`.
+3. **En händelse som uteblir syns inte.** Står
+   repository_dispatch-händelserna av hos Vercel (avsnitt 2), eller
+   slutar Vercel skicka dem, körs ingenting alls. Efter en
+   produktionsdriftsättning ska det finnas en körning
+   `IndexNow production <commit>` under Actions; saknas den har
+   signalen slutat komma.
+
 **`verktyg/rls-test.sql` körs inte i CI** — den behöver en databas.
 Kör hela filen som **ett** anrop i SQL Editor eller via `execute_sql`.
 Den lägger upp två hjälpare, två familjer, tre barn, pass och en admin,
 kör varje behörighetstest i en egen deltransaktion och rullar tillbaka
 allt på sista raden. Notistriggern på `bookings` stängs av under
-körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
+körningen så att fixturpassen aldrig blir ett mejl, och flaggan
+`erbjudanden` står av så att timmarna inte betalar dem (Fas 22.2). Svaret är en tabell
 `test, ok, detalj` — **varje rad ska vara ok**. Kör den efter varje
 ändring i en policy eller en trigger.
+
+**Kör hela filen, inte bara ditt eget avsnitt.** 2026-09-27 hade den
+varit röd sedan förmiddagen utan att någon sett det, för varje session
+provade sin egen del för sig. Fas 19.2 gjorde kortspärren omöjlig att
+slå på, och elva äldre prov som slog på den föll med 23514; de lyfter nu
+villkoret i sin egen deltransaktion (`pg_temp.sparren_pa()`), så att
+koden hålls i form till den dag villkoren går tillbaka till betalning
+före passet. Fas 19.5 flyttade sitt pass till i går klockan 10 hos
+studiehjälpare A, där fixturen från Fas 14.2 redan stod, och krockade
+med `bookings_tutor_slot_unique` i varje hel körning. En fixtur i
+huvudtransaktionen syns för allt som kommer efter den i filen.
 
 ---
 
@@ -1513,7 +1894,7 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   filhuvuden säger vilket fel konstruktionen finns för att hindra. Håll
   den stilen — den är halva minnet.
 - **Bilder:** `bilder/*.png` är gitignorerade (originalen, ~50 MB).
-  Sajten laddar bara JPG-varianterna. Tappar du datorn finns
+  Sajten laddar WebP genom `<picture>`, med JPG som reserv. Tappar du datorn finns
   originalen ingenstans.
 - **`.claude/skills/`, `.agents/`, `skills-lock.json`** är
   gitignorerade Higgsfield-verktyg. De försvinner när miljön återskapas.
@@ -1730,7 +2111,10 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   **Föräldravyn visar kortet först** (Leos val 2026-09-24: "bara kort,
   som Fas 14 sa"; fakturan kom till 2026-09-25). Betalning listar pass
   att betala och betalda pass, båda ritade ur passen. Med flaggan
-  `faktura` på står "Betala med faktura i stället" under kortknappen,
+  `faktura` på står "Få faktura nästa månad" som en knapp bredvid
+  kortknappen på ett genomfört pass (2026-09-27; förut en textlänk
+  under den, som inte syntes), och familjen bekräftar betalsättet i en
+  ruta innan det sparas,
   och rutan Faktura visar familjens fakturor. Ett betalt pass har ingen
   avbokningsknapp i någon vy, inte heller "Avböj" eller "Dra tillbaka"
   på en flyttad tid, eftersom databasen nekar det. Med spärren på går
@@ -1746,10 +2130,33 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   identiska med main, och `klippkort-betala` driftsattes då för första
   gången — den fanns inte i driften, så Betala med timmar hade fått 404.
   Provköpet i DEPLOY-BETALNING.md 9.12 är fortfarande ogjort och ska
-  göras innan en riktig familj köper. Går något fel: stäng av flaggan. Sedan Fas 21 avbokar familjen själv ett
-  pass betalt med timmar, och påminns tio dagar innan timmarna går ut.
-  `notis-ko` med mallen för `timmar_gar_ut` är driftsatt (version 18,
-  2026-09-27, jämförd byte för byte mot repot). Kvar: en familj som inte är matchad når inte
+  göras innan en riktig familj köper. Går något fel: stäng av flaggan.
+  Sedan Fas 21 avbokar familjen själv ett pass betalt med timmar, och
+  påminns tio dagar innan timmarna går ut. `notis-ko` med mallen för
+  `timmar_gar_ut` är driftsatt (version 18, 2026-09-27, jämförd byte för
+  byte mot repot). **Timbanken (Fas 22.1) är driftsatt samma dag, i
+  databasen och i funktionerna**, i den här ordningen: `stripe-webhook`
+  (version 10), `stripe-checkout` (version 14), `klippkort-betala`
+  (version 2) och `fakturering` (version 31), var och en hämtad tillbaka
+  och jämförd byte för byte mot grenen. Webhooken först, för en äldre
+  lämnar minuterna dragna när kortet vinner; kassan före vyerna, för en
+  äldre tar kort för övertid timbanken redan betalat. Funktionerna
+  fungerar med de gamla vyerna, så knappen Betala med timbanken kommer
+  när vyerna gör det. Samma kväll gick rättelserna ut
+  (`timbanken_foljer_passet`, se avsnitt 1): `stripe-webhook` version
+  11, `stripe-checkout` version 15 och `klippkort-betala` version 3,
+  också de jämförda byte för byte, och därefter togs
+  `timbank_kortet_vann` bort ur databasen, när ingen webhook längre
+  anropade den. **Fas 22.2, samma kväll**: migrationen
+  `fas22_2_timmarna_betalar_passen` är körd och `notis-ko` version 19
+  driftsatt, jämförd byte för byte, i den ordningen: en äldre arbetare
+  läser koden `timmar` som ingen kod och skriver det vanliga
+  betalningsmejlet, så databasen kunde gå först. Inga köpta timmar
+  fanns i driften då, så ingen familj fick ett pass betalt av
+  ändringen. **Fas 22.3** (2026-09-28) är bara databasen:
+  migrationen `fas22_3_lediga_timmar_betalar_nasta_pass` med jobbet
+  `timmar-betalar`. Ingen funktion ändrades, och fortfarande fanns
+  inga köpta timmar i driften. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
@@ -1782,12 +2189,15 @@ körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
-- **Ansökningar och CV:n rensas inte.** Integritetspolicyn lovar att en
-  ansökan som inte leder till anställning sparas högst ett år. Inget
-  schemalagt jobb, ingen knapp och ingen policy tar bort vare sig
-  raden i `applications` eller filen i `cv` (kontrollerat 2026-09-27).
-  Tas raden bort för hand står filen kvar, och sökvägen fanns bara i
-  raden.
+- **Ansökningar gallras efter ett år, men en sak återstår.** Sedan
+  2026-09-27 tar `ansokan-gallring` varje natt bort en ansökan som inte
+  ledde till anställning, med CV:t, och CV-filer utan ansökan (avsnitt
+  5, Gallringen). Kvar:
+  1. **"Vill du att vi tar bort den tidigare, skriv till oss" har ingen
+     knapp.** Tas raden bort för hand i dashboarden blir CV:t
+     föräldralöst och står kvar tills gallringen tar det, ett år efter
+     uppladdningen. Ta bort filen under Storage → cv först, sedan
+     raden.
 
 ---
 

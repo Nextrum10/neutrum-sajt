@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=ad8203ae">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
 <!-- GENERERAD av verktyg/bygg-faq-schema.py. Ändra inte för hand:
      kör om verktyget när en fråga ändras, annars säger märkningen
      och sidan olika saker och då är den ett fel, inte en bonus. -->
@@ -76,6 +76,14 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "För att en studiehjälpare som är grym på matte i åk 9 inte automatiskt är rätt person för ett barn i åk 4 som tappat självförtroendet. Vi går igenom behovet med er först och väljer sedan ut en person. Det tar oss någon dag extra och sparar er veckor."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Är en studiehjälpare samma sak som en privatlärare?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nej, och vi kallar dem inte så. En studiehjälpare går på gymnasiet eller högskolan och har nyligen läst samma kurser som eleven, men är inte utbildad lärare. Det är också poängen: de minns var det tog stopp och förklarar på ett sätt som ligger nära eleven. Söker ni en legitimerad lärare är vi fel val, och det säger vi hellre nu än efter första passet."
       }
     },
     {
@@ -400,6 +408,10 @@
           <div class="faq-a"><p>För att en studiehjälpare som är grym på matte i åk 9 inte automatiskt är rätt person för ett barn i åk 4 som tappat självförtroendet. Vi går igenom behovet med er först och väljer sedan ut en person. Det tar oss någon dag extra och sparar er veckor.</p></div>
         </div>
         <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Är en studiehjälpare samma sak som en privatlärare?<span class="pm"></span></button>
+          <div class="faq-a"><p>Nej, och vi kallar dem inte så. En studiehjälpare går på gymnasiet eller högskolan och har nyligen läst samma kurser som eleven, men är inte utbildad lärare. Det är också poängen: de minns var det tog stopp och förklarar på ett sätt som ligger nära eleven. Söker ni en legitimerad lärare är vi fel val, och det säger vi hellre nu än efter första passet.</p></div>
+        </div>
+        <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Vilka ämnen erbjuder ni?<span class="pm"></span></button>
           <div class="faq-a"><p>Vanligast är matematik, svenska och engelska, men vi förmedlar även hjälp i NO-ämnen, SO-ämnen, moderna språk och programmering. Berätta i intresseanmälan vad ni behöver så säger vi till om vi har rätt person.</p></div>
         </div>
@@ -617,6 +629,7 @@
           <li><a href="/laxhjalp-svenska">Svenska</a></li>
           <li><a href="/laxhjalp-engelska">Engelska</a></li>
           <li><a href="/laxhjalp-no">Fysik, kemi och biologi</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
         </ul>
       </nav>
       <nav aria-labelledby="ftr-fordig">
@@ -698,34 +711,16 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<!-- Vercel Web Analytics.
-
-     Sätter INGA cookies: unika besökare räknas via en hash av
-     IP och webbläsare med ett salt som byts dagligen, och den råa
-     IP-adressen sparas inte. Därför krävs inget samtycke — men det
-     står ändå i integritetspolicyn och på lagring.html, eftersom
-     "vi mäter ingenting" inte längre är sant.
-
-     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
-     finns inget att optimera för besökarens skull, och det vore ett
-     onödigt anrop från en sida där någon sköter sitt barns skolgång.
-
-     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
-     vilket är ofarligt — inget mäts när man utvecklar. -->
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
-     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="nextrum-config.js?v=f8471f2e"></script>
+<script src="nextrum-config.js?v=21cecc53"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a72665a2"></script>
-<script src="nextrum-samtycke.js?v=c15d8f5b"></script>
+<script src="nextrum-app.js?v=d85467f7"></script>
+<script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=77b12db4"></script>
+<script src="nextrum-maskot-svar.js?v=49674614"></script>
 <script src="nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {

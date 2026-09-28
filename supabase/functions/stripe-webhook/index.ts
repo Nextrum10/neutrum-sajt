@@ -149,6 +149,31 @@ Deno.serve(async (req) => {
     return json({ ok: true, resultat }, 200, {});
   };
 
+  /* EN BETALNING SOM INTE KUNDE SKRIVAS NER: två kassor stod öppna och
+     familjen betalade båda, eller raden tog inte emot betalningen av
+     något annat skäl. Pengarna är dragna, men raden bär en annan
+     betalning eller ingen, så den här syns ingenstans utom i Stripe.
+     Förut kvitterades den som betald och försvann. Nu en uppgift, så att
+     en människa betalar tillbaka den. skapa_uppgift svarar null på en
+     andra leverans med samma nyckel, så en omleverans ger ingen dubblett. */
+  const ejNedskriven = async (vad: string, pi: string, belopp: number | null,
+    kopplad: { tabell: 'bookings'; id: string } | null) => {
+    const kr = typeof belopp === 'number' ? `${Math.round(belopp / 100)} kr` : 'okänt belopp';
+    const { error } = await db.rpc('skapa_uppgift', {
+      p_titel: 'Kontrollera en kortbetalning som inte blev nedskriven',
+      p_nyckel: `ej-nedskriven:${pi || 'utan-pi'}`,
+      p_typ: 'problem',
+      p_beskrivning: `Stripe tog ${kr} för ${vad} (${pi || 'utan payment intent'}), men raden bär redan `
+        + 'en annan betalning eller tog inte emot den. Troligen en andra kassa som stod öppen. '
+        + 'Stäm av i Stripes dashboard och betala tillbaka det som betalats två gånger.',
+      p_kopplad_tabell: kopplad?.tabell ?? null,
+      p_kopplad_id: kopplad?.id ?? null,
+      p_skapad_av_typ: 'system',
+    });
+    if (error) throw new Error('skapa_uppgift: ' + error.message);
+    return await klar(`ej nedskriven: ${vad}, uppgift skapad`);
+  };
+
   try {
     switch (typ) {
       // ---------- betalningen gick igenom ----------
@@ -214,7 +239,14 @@ Deno.serve(async (req) => {
             p_bt: b.id, p_avgift: b.avgiftOre, p_netto: b.nettoOre, p_skarp: skarp,
           });
           if (kkfel) throw new Error('klippkort_betald: ' + kkfel.message);
-          return await klar(blev ? 'klippkort betalt' : 'klippkortet var redan betalt');
+          if (blev) return await klar('klippkort betalt');
+          const { data: kk, error: kklas } = await db.from('klippkort')
+            .select('stripe_payment_intent_id').eq('id', kkId).maybeSingle();
+          if (kklas) throw new Error('klippkort: ' + kklas.message);
+          if (piId && kk?.stripe_payment_intent_id !== piId) {
+            return await ejNedskriven(`klippkortet ${kkId}`, piId, draget, null);
+          }
+          return await klar('klippkortet var redan betalt');
         }
 
         /* TILLÄGGET (Fas 20.1) skrivs på sin egen rad, aldrig på passets
@@ -222,7 +254,13 @@ Deno.serve(async (req) => {
            till noll rader, som för passet. Ett fel kastas: ett betalt
            tillägg som inte blev skrivet fortsätter larma som obetalt. */
         if (tillaggId) {
+          /* Minuterna betalningen avsåg, som för passet: raden kan ha
+             skrivits om av en senare kassa medan den här stod öppen. */
+          const tMinText = (obj.metadata as Record<string, string> | undefined)?.minuter;
+          const tMin = /^\d{1,3}$/.test(String(tMinText ?? '')) && Number(tMinText) >= 1 && Number(tMinText) <= 240
+            ? Number(tMinText) : null;
           const { data: blev, error: tfel } = await db.from('pass_tillagg').update({
+            ...(tMin !== null ? { minuter: tMin } : {}),
             status: 'betald',
             betald_at: new Date().toISOString(),
             betalt_ore: draget,
@@ -235,7 +273,14 @@ Deno.serve(async (req) => {
             stripe_skarp: skarp,
           }).eq('booking_id', tillaggId).in('status', ['vantar', 'misslyckad']).select('booking_id');
           if (tfel) throw new Error('pass_tillagg: ' + tfel.message);
-          return await klar(blev?.length ? 'tillägg betalt' : 'tillägget var redan betalt');
+          if (blev?.length) return await klar('tillägg betalt');
+          const { data: tr, error: tlas } = await db.from('pass_tillagg')
+            .select('stripe_payment_intent_id').eq('booking_id', tillaggId).maybeSingle();
+          if (tlas) throw new Error('pass_tillagg: ' + tlas.message);
+          if (piId && tr?.stripe_payment_intent_id !== piId) {
+            return await ejNedskriven('tillägget till passet', piId, draget, { tabell: 'bookings', id: tillaggId });
+          }
+          return await klar('tillägget var redan betalt');
         }
 
         /* Minuterna betalningen avsåg (Fas 20.1), ur metadata vi själva
@@ -270,8 +315,12 @@ Deno.serve(async (req) => {
            båda ser hanterad_at = null hinner annars båda hit; när den
            första satt 'betald' träffar den andra noll rader. Listan
            står i TAR_EMOT_BETALNING, se punkt 6 i filhuvudet. */
-        const { data: traffade } = await db.from('bookings').update(kortbetalning)
+        const { data: traffade, error: skrivfel } = await db.from('bookings').update(kortbetalning)
           .eq('id', passId).in('betalning_status', TAR_EMOT_BETALNING).select('id');
+        /* Ett fel kastas, så att raden i stripe_handelser står kvar ohanterad
+           och Stripe försöker igen. Förut lästes felet aldrig: ett tillfälligt
+           fel gav 200, och passet stod obetalt med pengarna dragna. */
+        if (skrivfel) throw new Error('bookings: ' + skrivfel.message);
 
         /* PASSET VAR REDAN BETALT MED TIMMAR (Fas 16.1). Kassan kan ha
            stått öppen när familjen drog timmarna — klippkort-betala
@@ -281,12 +330,34 @@ Deno.serve(async (req) => {
            att timmarna kommer tillbaka på kortet. En andra leverans
            träffar noll rader, för då finns stripe_payment_intent_id. */
         if (!traffade?.length) {
-          const { data: tillbaka } = await db.from('bookings')
+          const { data: tillbaka, error: tbfel } = await db.from('bookings')
             .update({ ...kortbetalning, klippkort_id: null })
             .eq('id', passId).eq('betalning_status', 'betald')
             .not('klippkort_id', 'is', null).is('stripe_payment_intent_id', null)
             .select('id');
+          if (tbfel) throw new Error('bookings: ' + tbfel.message);
           if (tillbaka?.length) return await klar('betald med kort, klippkortets timmar tillbaka');
+
+          /* PASSET VAR BETALT MED TIMBANKEN (Fas 22.1). Samma sak: kortet
+             vinner. timbank_kort_vinner skriver kortbetalningen och ger
+             tillbaka minuterna i samma transaktion. Förut var det två anrop,
+             och föll det andra stod passet som obetalt med pengarna dragna
+             tills Stripe levererade igen. Ett fel kastas, så att Stripe
+             försöker igen: ingenting är då skrivet. */
+          const { data: vann, error: bankfel } = await db.rpc('timbank_kort_vinner',
+            { p_pass: passId, p_kort: kortbetalning });
+          if (bankfel) throw new Error('timbank_kort_vinner: ' + bankfel.message);
+          if (vann === true) return await klar('betald med kort, timbankens minuter tillbaka');
+
+          /* Ingenting tog emot betalningen. Bär passet samma betalning är
+             det en andra leverans av samma händelse, och allt är redan
+             nedskrivet. Annars är det en betalning till. */
+          const { data: nu, error: nufel } = await db.from('bookings')
+            .select('stripe_payment_intent_id').eq('id', passId).maybeSingle();
+          if (nufel) throw new Error('bookings: ' + nufel.message);
+          if (piId && nu?.stripe_payment_intent_id !== piId) {
+            return await ejNedskriven('passet', piId, draget, nu ? { tabell: 'bookings', id: passId } : null);
+          }
         }
 
         return await klar('betald');
@@ -524,7 +595,7 @@ Deno.serve(async (req) => {
          överföringar till dem och Stripes utbetalningar från deras
          saldon. Inget av det finns kvar sedan Fas 12.5, så de faller
          igenom till default nedan och kvitteras som ohanterade. Skulle
-         de dyka upp ändå är det ett tecken på att någon slagit på
+         de dyka upp ändå är det ett tecken på att någon slått på
          Connect igen, inte något den här funktionen ska tolka. */
 
       default:

@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19 och 21)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22 och gallringen)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -29,9 +29,15 @@
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
 -- Fas 14.2–14.6, Fas 15.1–15.4, Fas 16.1 (ansökningsmejlen,
 -- 16.1–16.1c), Fas 16.1 (erbjudandena, 16.1–16.1e), Fas 16.2,
--- Fas 18.1 (Meet-länken), Fas 19.1–19.5 (19.5: det frysta priset), Fas 20.1
--- (den hållna tiden), Fas 20.2 (bokslutet) och admin_laser_ansokans_cv
--- (admin läser CV:t) är körda.
+-- Fas 18.1 (Meet-länken), Fas 19.1–19.6 (19.5: det frysta priset,
+-- 19.6: OCR), Fas 20.1 (den hållna tiden), Fas 20.2 (bokslutet),
+-- Fas 21.1–21.2, admin_laser_ansokans_cv (admin läser CV:t), Fas 22.1
+-- (timbanken), timbanken_foljer_passet, Fas 22.2 (timmarna betalar
+-- passen), ansokningar_gallras_efter_ett_ar (gallringen),
+-- notisfelen_bara_egna_utskick, klientfelen_minns_vem, Fas 22.3
+-- (lediga timmar betalar nästa pass),
+-- godkand_ansokan_gallras_tva_ar_efter_sista_passet och
+-- ai_texterna_och_avslutade_uppgifter_gallras är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -77,6 +83,13 @@ end $$;
 -- till funktionen töms i stället, så att intern.ansokan_besked_skicka()
 -- returnerar innan pg_net ens anropas. Rullas tillbaka som allt annat.
 update public.notis_konfig set ansokan_url = null where id = 1;
+
+-- Fas 22.2: med flaggan erbjudanden på betalar köpta timmar ett pass
+-- av sig själva när det bekräftas eller genomförs. Proven nedan är
+-- skrivna för pass som står obetalda tills någon betalar dem, så
+-- flaggan står av under körningen, oavsett hur den står i driften, och
+-- slås på i blocken för 22.2 och 22.3. Rullas tillbaka som allt annat.
+update public.flaggor set aktiv = false where kod = 'erbjudanden';
 
 create temp table utfall (
   nr     serial,
@@ -2241,6 +2254,20 @@ update public.bookings set status = 'confirmed', attendance = null
 -- ---------- spärren ----------
 -- Rapporten gör passet genomfört i samma skrivning
 -- (rapport_gor_passet_genomfort), så det är rapporten spärren stoppar.
+--
+-- SEDAN FAS 19.2 GÅR SPÄRREN INTE ATT SLÅ PÅ: check-villkoret
+-- flaggor_kortsparr_av nekar det, också för admin (proven under Fas
+-- 19.2 längre ned). Koden i skydda_bokningsfalt står kvar för den dag
+-- villkoren går tillbaka till betalning före passet, och proven här
+-- håller den i form. Därför lyfter varje prov villkoret själv, inne i
+-- sin egen deltransaktion, och det rullas tillbaka med provet. Förut
+-- satte proven flaggan rakt av, och från Fas 19.2 föll alla med 23514.
+create function pg_temp.sparren_pa() returns void
+language plpgsql as $$
+begin
+  alter table public.flaggor drop constraint flaggor_kortsparr_av;
+  update public.flaggor set aktiv = true where kod = 'kortsparr';
+end $$;
 
 select pg_temp.prova_med('14.2 spärren av: rapport på obetalt pass gör det genomfört',
   array[$q$update public.flaggor set aktiv = false where kod = 'kortsparr'$q$],
@@ -2252,7 +2279,7 @@ select pg_temp.prova_med('14.2 spärren av: rapport på obetalt pass gör det ge
   'ok');
 
 select pg_temp.prova_med('14.2 spärren på: rapport på obetalt pass nekas',
-  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$],
+  array[$q$select pg_temp.sparren_pa()$q$],
   '00000000-0000-4000-8000-0000000000a1',
   array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
           values ('00000000-0000-4000-8000-0000000005e1', '00000000-0000-4000-8000-0000000000a1',
@@ -2260,7 +2287,7 @@ select pg_temp.prova_med('14.2 spärren på: rapport på obetalt pass nekas',
   'nekad');
 
 select pg_temp.prova_med('14.2 spärren på: rapport på betalt pass gör det genomfört',
-  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+  array[$q$select pg_temp.sparren_pa()$q$,
         $q$update public.bookings set betalning_status = 'betald' where id = '00000000-0000-4000-8000-00000000b4c1'$q$],
   '00000000-0000-4000-8000-0000000000a1',
   array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
@@ -2272,7 +2299,7 @@ select pg_temp.prova_med('14.2 spärren på: rapport på betalt pass gör det ge
 -- En tvist är pengar som kommit in och som banken ännu inte tagit
 -- tillbaka. Passet har hållits på den betalningen.
 select pg_temp.prova_med('14.2 spärren på: tvist räknas som betalt',
-  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+  array[$q$select pg_temp.sparren_pa()$q$,
         $q$update public.bookings set betalning_status = 'tvist' where id = '00000000-0000-4000-8000-00000000b4c1'$q$],
   '00000000-0000-4000-8000-0000000000a1',
   array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
@@ -2283,7 +2310,7 @@ select pg_temp.prova_med('14.2 spärren på: tvist räknas som betalt',
 -- Ett pass Nextrum undantagit ska aldrig betalas, och får därför
 -- aldrig fastna på att det inte är betalt.
 select pg_temp.prova_med('14.2 spärren på: undantaget pass stoppas inte',
-  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+  array[$q$select pg_temp.sparren_pa()$q$,
         $q$update public.bookings set fakturerbar = false, fakturerbar_anledning = 'prov'
            where id = '00000000-0000-4000-8000-00000000b4c1'$q$],
   '00000000-0000-4000-8000-0000000000a1',
@@ -2293,7 +2320,7 @@ select pg_temp.prova_med('14.2 spärren på: undantaget pass stoppas inte',
   'ok');
 
 select pg_temp.prova_med('14.2 spärren på: en öppnad betalsida är ingen betalning',
-  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+  array[$q$select pg_temp.sparren_pa()$q$,
         $q$update public.bookings set betalning_status = 'vantar' where id = '00000000-0000-4000-8000-00000000b4c1'$q$],
   '00000000-0000-4000-8000-0000000000a1',
   array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
@@ -2302,7 +2329,7 @@ select pg_temp.prova_med('14.2 spärren på: en öppnad betalsida är ingen beta
   'nekad');
 
 select pg_temp.prova_med('14.2 spärren på: ett återbetalt pass är inte betalt',
-  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+  array[$q$select pg_temp.sparren_pa()$q$,
         $q$update public.bookings set betalning_status = 'aterbetald' where id = '00000000-0000-4000-8000-00000000b4c1'$q$],
   '00000000-0000-4000-8000-0000000000a1',
   array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
@@ -2313,7 +2340,7 @@ select pg_temp.prova_med('14.2 spärren på: ett återbetalt pass är inte betal
 -- Vägen runt rapporten: passet har redan en rapport, och
 -- studiehjälparen försöker sätta genomfört direkt.
 select pg_temp.prova_med('14.2 spärren på: direkt statusbyte på obetalt pass nekas',
-  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$],
+  array[$q$select pg_temp.sparren_pa()$q$],
   '00000000-0000-4000-8000-0000000000a1',
   array[$q$update public.bookings set status = 'completed', attendance = 'narvarande'
           where id = '00000000-0000-4000-8000-00000000b4a2'$q$],
@@ -2323,7 +2350,7 @@ select pg_temp.prova_med('14.2 spärren på: direkt statusbyte på obetalt pass 
 -- för ett pass som ändå ska räknas, till exempel en betalning som
 -- kommit in utanför Stripe.
 select pg_temp.prova_med('14.2 spärren på: admin sätter genomfört ändå',
-  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$],
+  array[$q$select pg_temp.sparren_pa()$q$],
   '00000000-0000-4000-8000-0000000000ad',
   array[$q$update public.bookings set status = 'completed', attendance = 'narvarande'
           where id = '00000000-0000-4000-8000-00000000b4a2'$q$],
@@ -2336,7 +2363,11 @@ select pg_temp.prova('14.2 studiehjälparen slår på spärren', '00000000-0000-
 select pg_temp.prova('14.2 familjen slår på spärren', '00000000-0000-4000-8000-0000000000f1',
   array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$], 'nekad');
 
-select pg_temp.prova('14.2 admin slår på spärren', '00000000-0000-4000-8000-0000000000ad',
+-- Policyn släpper igenom admin. Att villkoret från Fas 19.2 ändå nekar
+-- prövas under Fas 19.2; här är det lyft, så att det är policyn som mäts.
+select pg_temp.prova_med('14.2 admin slår på spärren, med villkoret från 19.2 lyft',
+  array[$q$alter table public.flaggor drop constraint flaggor_kortsparr_av$q$],
+  '00000000-0000-4000-8000-0000000000ad',
   array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$], 'ok');
 
 -- Beskrivningen och vantar_pa är det som säger vad flaggan gör och
@@ -2746,7 +2777,7 @@ select pg_temp.prova('14.6 admin spärrar en familj', '00000000-0000-4000-8000-0
 
 -- ---------- spärren "ingen betalning, inget pass" ----------
 select pg_temp.prova_med('14.6 spärren på: ett fakturapass går att rapportera',
-  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$,
+  array[$q$select pg_temp.sparren_pa()$q$,
         $q$update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b6d1'$q$],
   '00000000-0000-4000-8000-0000000000a1',
   array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
@@ -2757,7 +2788,7 @@ select pg_temp.prova_med('14.6 spärren på: ett fakturapass går att rapportera
 
 -- Samma pass som kortpass: undantaget får inte ha öppnat spärren.
 select pg_temp.prova_med('14.6 spärren på: ett obetalt kortpass nekas fortfarande',
-  array[$q$update public.flaggor set aktiv = true where kod = 'kortsparr'$q$],
+  array[$q$select pg_temp.sparren_pa()$q$],
   '00000000-0000-4000-8000-0000000000a1',
   array[$q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
           values ('00000000-0000-4000-8000-0000000005f6', '00000000-0000-4000-8000-0000000000a1',
@@ -4009,7 +4040,9 @@ begin
 
     -- Pass 2 hålls: ett pass på noll kronor larmar inte som obetalt,
     -- och klippkortet betalar det inte.
-    update public.bookings set status = 'confirmed', wanted_date = idag - 1
+    -- Klockan 13: fixturen b4c1 (Fas 14.2) står redan i går klockan 10
+    -- hos A, och på samma tid krockade passet med bookings_tutor_slot_unique.
+    update public.bookings set status = 'confirmed', wanted_date = idag - 1, wanted_time = '13:00'
      where id = '00000000-0000-4000-8000-0000000019b2';
     kk := public.klippkort_dra('00000000-0000-4000-8000-0000000019b2', qid);
     insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
@@ -4114,6 +4147,1017 @@ select pg_temp.prova('21.2 familjen kör inte påminnelsen själv', '00000000-00
   array['select intern.timmar_gar_ut_koa()'],
   'nekad');
 
+-- ============================================================
+-- FAS 22.1 — timbanken
+--
+-- Samma fixturer som Fas 16.1 och 20.1: klippkortet c16a (tio timmar,
+-- familj P), klippkortspassen b16a och b16b om sex dagar, och P:s pass
+-- b0c1 (igår, en timme) och b0d1 (om en vecka, en timme), båda hos A.
+-- Banken fylls i varje block för sig, som postgres, och rullas tillbaka.
+-- Block 6 och 7 är rättelserna i timbanken_foljer_passet: övertiden
+-- räknas från det kortet betalade, och uttagen följer passet när admin
+-- ändrar det.
+-- ============================================================
+select pg_temp.prova('22.1 familjen skriver inte en kortbetalning genom timbanken', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select public.timbank_kort_vinner('00000000-0000-4000-8000-00000000b0d1', '{}'::jsonb)$q$],
+  'nekad');
+
+select pg_temp.prova('22.1 familjen skriver inga minuter i banken själv', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.timbank_uttag (parent_id, booking_id, sort, minuter)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-00000000b0d1', 'pass', 60)$q$],
+  'nekad');
+
+select pg_temp.prova('22.1 familjen tar inte ut en utbetalning ur uttagen', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$delete from public.timbank_uttag where parent_id = '00000000-0000-4000-8000-0000000000f1'$q$],
+  'nekad');
+
+select pg_temp.prova('22.1 familjen betalar inte ett pass med banken förbi funktionen', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select public.timbank_dra('00000000-0000-4000-8000-00000000b0d1', '00000000-0000-4000-8000-0000000000f1')$q$],
+  'nekad');
+
+select pg_temp.prova('22.1 familjen betalar inte ut sin egen bank', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select public.timbank_utbetald('00000000-0000-4000-8000-0000000000f1')$q$],
+  'nekad');
+
+select pg_temp.prova('22.1 anon når inte saldot', null,
+  array['select * from public.timbank_saldo'],
+  'nekad');
+
+select pg_temp.rakna('22.1 familj P ser sitt saldo', '00000000-0000-4000-8000-0000000000f1',
+  $q$select count(*) from public.timbank_saldo where parent_id = '00000000-0000-4000-8000-0000000000f1'$q$, 1);
+
+select pg_temp.rakna('22.1 familj Q ser inte P:s saldo', '00000000-0000-4000-8000-0000000000f2',
+  $q$select count(*) from public.timbank_saldo where parent_id = '00000000-0000-4000-8000-0000000000f1'$q$, 0);
+
+do $$
+declare
+  fel text; kvar int; s1 int; s2 int; s_a int; s_q int; s_p int; v_p int; v_a int;
+  deb int; betalda int; bank int; lon int; larm int; ror int; efter_ratt int;
+  s_del int; larm_del int; bank_del int; ej int; att_betala int;
+  svar jsonb; svar_q jsonb; svar_lite jsonb; st text; s_hel int; s_avb int; st_avb text;
+  vann boolean; st_vann text; s_vann int; ut jsonb; ut2 jsonb; s_ut int; flerbarn int;
+  pi_vann text; min_vann int; tut_vann uuid; vann2 boolean; vann_fel boolean; st_fel text;
+  s_kort int; bank_kort int; betalda_kort int; larm_kort int;
+  u_lang int; s_lang int; s_tillbaka int; s_barn int; bank_barn int; s_barn1 int;
+  s_undantag int; s_langd int;
+begin
+  -- 1. Ett klippkortspass på två timmar höll 1 h 15: två timmar dras, 45
+  --    minuter går in. Nästa pass, betalt med kort, drog över en kvart,
+  --    och banken tar den.
+  begin
+    update public.bookings set duration_min = 120 where id = '00000000-0000-4000-8000-00000000b16a';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '10:15', 'prov');
+    select k.kvar into kvar from public.klippkort_saldo k where k.id = '00000000-0000-4000-8000-00000000c16a';
+    s1 := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = 37900, stripe_minuter = 60
+     where id = '00000000-0000-4000-8000-00000000b0c1';
+    insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-00000000e221', '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:15', 'prov');
+    s2 := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    select debiterade_min, betalda_min, timbank_min, lon_min into deb, betalda, bank, lon
+      from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
+    select count(*) into larm from public.avvikelser_rader()
+     where typ in ('tillagg_obetalt', 'betalt_for_lange') and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+    select saldo_min, varde_ore into s_a, v_a from public.timbank_saldo where parent_id = '00000000-0000-4000-8000-0000000000f1';
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f2');
+    select count(*) into s_q from public.timbank_rorelser;
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    select saldo_min, varde_ore into s_p, v_p from public.timbank_saldo where parent_id = '00000000-0000-4000-8000-0000000000f1';
+    select count(*) into ror from public.timbank_rorelser;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Admin rättar tiden: passet drog inte över, och kvarten går tillbaka.
+    update public.lesson_reports set slut_tid = '16:00', avvikelse_skal = null
+     where id = '00000000-0000-4000-8000-00000000e221';
+    efter_ratt := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.1 in och övertid', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('22.1 1 h 15 ur klippkortet drar två timmar', kvar = 8, 'kvar ' || kvar),
+      ('22.1 och 45 minuter går in i banken', s1 = 45, 'saldo ' || s1),
+      ('22.1 övertiden tas ur banken', s2 = 30 and bank = 15, 'saldo ' || s2 || ', timbank_min ' || bank),
+      ('22.1 övertiden ur banken är betald', deb = 75 and betalda = 75 and larm = 0,
+       'debiterade ' || deb || ', betalda ' || betalda || ', larm ' || larm),
+      ('22.1 övertiden ur banken räknas i lönen', lon = 75, 'lon_min ' || lon),
+      ('22.1 studiehjälparen ser familjens minuter men inte beloppet', s_a = 30 and v_a is null,
+       coalesce(s_a::text, 'null') || ' / ' || coalesce(v_a::text, 'null')),
+      ('22.1 familjen ser sina minuter och vad de är värda', s_p = 30 and v_p = 18950,
+       coalesce(s_p::text, 'null') || ' / ' || coalesce(v_p::text, 'null')),
+      ('22.1 familjen ser in och ut', ror = 2, 'rader: ' || ror),
+      ('22.1 en annan familj ser inga rörelser', s_q = 0, 'rader: ' || s_q),
+      ('22.1 rättad tid: kvarten går tillbaka', efter_ratt = 45, 'saldo ' || efter_ratt);
+  end if;
+
+  -- 2. Banken räcker inte till hela övertiden: den tar det den har, och
+  --    resten är ett tillägg. Betalt efter passet tar kassan bara det
+  --    banken inte täckte.
+  fel := null;
+  begin
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:45', 'prov');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:30', 'prov');
+    select timbank_min, debiterade_min - timbank_min into bank_del, att_betala
+      from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
+    s_del := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    select count(*) into ej from public.avvikelser_rader()
+     where typ = 'ej_betalt' and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = 37900, stripe_minuter = 60
+     where id = '00000000-0000-4000-8000-00000000b0c1';
+    select count(*) into larm_del from public.avvikelser_rader()
+     where typ = 'tillagg_obetalt' and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.1 banken räcker inte', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('22.1 banken tar det den har av övertiden', bank_del = 15 and s_del = 0,
+       'timbank_min ' || bank_del || ', saldo ' || s_del),
+      ('22.1 betalt efter passet: kassan tar det banken inte täckte', att_betala = 75, 'minuter ' || att_betala),
+      ('22.1 obetalt pass larmar fortfarande', ej = 1, 'rader: ' || ej),
+      ('22.1 resten av övertiden är ett tillägg', larm_del = 1, 'rader: ' || larm_del);
+  end if;
+
+  -- 3. Ett helt pass med banken, och avbokningen som ger minuterna
+  --    tillbaka. Två klippkortspass på en timme som höll en kvart och en
+  --    halvtimme ger 45 + 30.
+  fel := null;
+  begin
+    update public.bookings set antal_barn = 1 where id = '00000000-0000-4000-8000-00000000b16b';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16b', '00000000-0000-4000-8000-0000000000f1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:15', 'prov'),
+           ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16b', 'x', current_date, 'narvarande', '11:00', '11:30', 'prov');
+    svar_q := public.timbank_dra('00000000-0000-4000-8000-00000000b0d1', '00000000-0000-4000-8000-0000000000f2');
+    svar := public.timbank_dra('00000000-0000-4000-8000-00000000b0d1', '00000000-0000-4000-8000-0000000000f1');
+    select betalning_status into st from public.bookings where id = '00000000-0000-4000-8000-00000000b0d1';
+    s_hel := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    svar_lite := public.timbank_dra('00000000-0000-4000-8000-00000000b0c1', '00000000-0000-4000-8000-0000000000f1');
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    update public.bookings set status = 'cancelled', avbokningsskal = 'forhinder'
+     where id = '00000000-0000-4000-8000-00000000b0d1';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status into st_avb from public.bookings where id = '00000000-0000-4000-8000-00000000b0d1';
+    s_avb := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.1 ett helt pass med banken', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('22.1 en annan familj betalar inte med P:s bank', svar_q->>'fel' like 'Det är familjen%', svar_q::text),
+      ('22.1 75 minuter betalar ett pass på en timme', (svar->>'ok')::boolean and st = 'betald' and s_hel = 15,
+       svar::text || ', ' || st || ', saldo ' || s_hel),
+      ('22.1 15 minuter räcker inte till nästa', svar_lite->>'fel' like 'Timbanken räcker inte%', svar_lite::text),
+      ('22.1 familjen avbokar passet och minuterna kommer tillbaka', st_avb = 'ingen' and s_avb = 75,
+       st_avb || ', saldo ' || s_avb);
+  end if;
+
+  -- 4. Kortet vinner: en öppen kassa betalades efter att banken tagit
+  --    passet. Kortbetalningen skrivs och minuterna går tillbaka i samma
+  --    anrop, och en andra leverans gör ingenting. Admin betalar sedan ut
+  --    banken, en gång.
+  fel := null;
+  begin
+    update public.bookings set antal_barn = 1 where id = '00000000-0000-4000-8000-00000000b16b';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16b', '00000000-0000-4000-8000-0000000000f1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:15', 'prov'),
+           ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16b', 'x', current_date, 'narvarande', '11:00', '11:30', 'prov');
+    perform public.timbank_dra('00000000-0000-4000-8000-00000000b0d1', '00000000-0000-4000-8000-0000000000f1');
+    -- Ett pass som inte är betalt med banken rörs inte.
+    vann_fel := public.timbank_kort_vinner('00000000-0000-4000-8000-00000000b0c1',
+      '{"betalning_status": "betald", "stripe_payment_intent_id": "pi_rlsprov0", "betalt_ore": 37900}');
+    select betalning_status into st_fel from public.bookings where id = '00000000-0000-4000-8000-00000000b0c1';
+    vann := public.timbank_kort_vinner('00000000-0000-4000-8000-00000000b0d1',
+      '{"betalning_status": "betald", "betald_at": "2026-09-27T12:00:00Z", "stripe_payment_intent_id": "pi_rlsprov1",
+        "stripe_charge_id": "ch_rlsprov1", "stripe_skarp": false, "betalt_ore": 37900, "stripe_minuter": 60,
+        "aterbetald_ore": 0, "tutor_id": "00000000-0000-4000-8000-0000000000a2"}');
+    vann2 := public.timbank_kort_vinner('00000000-0000-4000-8000-00000000b0d1',
+      '{"betalning_status": "betald", "stripe_payment_intent_id": "pi_rlsprov1", "betalt_ore": 37900}');
+    select betalning_status, stripe_payment_intent_id, stripe_minuter, tutor_id into st_vann, pi_vann, min_vann, tut_vann
+      from public.bookings where id = '00000000-0000-4000-8000-00000000b0d1';
+    s_vann := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    ut := public.timbank_utbetald('00000000-0000-4000-8000-0000000000f1');
+    ut2 := public.timbank_utbetald('00000000-0000-4000-8000-0000000000f1');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    s_ut := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.1 kortet vinner och utbetalningen', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('22.1 kortet vinner: betalningen skrivs och minuterna går tillbaka i samma anrop',
+       vann and st_vann = 'betald' and pi_vann = 'pi_rlsprov1' and min_vann = 60 and s_vann = 75,
+       coalesce(vann::text, 'null') || ', ' || st_vann || ', ' || coalesce(pi_vann, 'null')
+       || ', ' || coalesce(min_vann::text, 'null') || ' min, saldo ' || s_vann),
+      ('22.1 kortet vinner: bara betalningens kolumner når passet', tut_vann = '00000000-0000-4000-8000-0000000000a1',
+       coalesce(tut_vann::text, 'null')),
+      ('22.1 kortet vinner: en andra leverans gör ingenting', vann2 = false, coalesce(vann2::text, 'null')),
+      ('22.1 kortet vinner inte på ett pass som inte är betalt med banken', vann_fel = false and st_fel = 'ingen',
+       coalesce(vann_fel::text, 'null') || ', ' || st_fel),
+      ('22.1 admin betalar ut hela banken till ordinarie pris', (ut->>'minuter')::int = 75
+         and (ut->>'varde_ore')::int = 47375 and s_ut = 0, ut::text || ', saldo ' || s_ut),
+      ('22.1 en tom bank betalas inte ut två gånger', ut2->>'fel' = 'Timbanken är tom.', ut2::text);
+  end if;
+
+  -- 5. Ett pass med två barn tar inget ur banken.
+  fel := null;
+  begin
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:15', 'prov');
+    update public.bookings set antal_barn = 2 where id = '00000000-0000-4000-8000-00000000b0c1';
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:15', 'prov');
+    flerbarn := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.1 flera barn', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('22.1 ett pass med två barn tar inget ur banken', flerbarn = 45, 'saldo ' || flerbarn);
+  end if;
+
+  -- 6. Kortet betalade efter passet, och admin rättar tiden uppåt. Banken
+  --    hade 15 när rapporten skrevs och tog dem av en halvtimmes övertid,
+  --    och kortet betalade resten, 75 minuter. Med 30 nya minuter i banken
+  --    rättas passet till 1 h 45: banken tar de 30 som ligger utöver det
+  --    kortet betalade. Räknat från det bokade hade den tagit 45, och
+  --    passet hade stått som betalt för länge.
+  fel := null;
+  begin
+    update public.bookings set antal_barn = 1 where id = '00000000-0000-4000-8000-00000000b16b';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:45', 'prov');
+    insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-00000000e221', '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:30', 'prov');
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = 47375, stripe_minuter = 75
+     where id = '00000000-0000-4000-8000-00000000b0c1';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16b', '00000000-0000-4000-8000-0000000000f1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16b', 'x', current_date, 'narvarande', '11:00', '11:30', 'prov');
+    update public.lesson_reports set slut_tid = '16:45' where id = '00000000-0000-4000-8000-00000000e221';
+    s_kort := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    select timbank_min, betalda_min into bank_kort, betalda_kort
+      from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
+    select count(*) into larm_kort from public.avvikelser_rader()
+     where typ in ('tillagg_obetalt', 'betalt_for_lange') and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.1 rättad tid efter kortet', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('22.1 rättad tid: banken tar bara det kortet inte betalat', s_kort = 15 and bank_kort = 30,
+       'saldo ' || s_kort || ', timbank_min ' || bank_kort),
+      ('22.1 rättad tid: passet är betalt precis, inget larm', betalda_kort = 105 and larm_kort = 0,
+       'betalda ' || betalda_kort || ', larm ' || larm_kort);
+  end if;
+
+  -- 7. Admin ändrar ett pass som drog en kvart över, med 45 i banken. Två
+  --    barn tar inget ur banken, ett barn igen tar kvarten, ett undantaget
+  --    pass tar inget, och ett pass bokat på två timmar som höll 1 h 15
+  --    har ingen övertid.
+  fel := null;
+  begin
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:15', 'prov');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:15', 'prov');
+    update public.bookings set antal_barn = 2 where id = '00000000-0000-4000-8000-00000000b0c1';
+    s_barn := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    select timbank_min into bank_barn from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
+    update public.bookings set antal_barn = 1 where id = '00000000-0000-4000-8000-00000000b0c1';
+    s_barn1 := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    update public.bookings set fakturerbar = false, fakturerbar_anledning = 'prov'
+     where id = '00000000-0000-4000-8000-00000000b0c1';
+    s_undantag := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    update public.bookings set fakturerbar = true, fakturerbar_anledning = null, duration_min = 120
+     where id = '00000000-0000-4000-8000-00000000b0c1';
+    s_langd := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.1 admin ändrar passet', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('22.1 två barn i efterhand: kvarten går tillbaka', s_barn = 45 and bank_barn = 0,
+       'saldo ' || s_barn || ', timbank_min ' || bank_barn),
+      ('22.1 ett barn igen: banken tar kvarten', s_barn1 = 30, 'saldo ' || s_barn1),
+      ('22.1 undantaget i efterhand: kvarten går tillbaka', s_undantag = 45, 'saldo ' || s_undantag),
+      ('22.1 längre bokning i efterhand: ingen övertid', s_langd = 45, 'saldo ' || s_langd);
+  end if;
+
+  -- 8. Ett helt pass ur banken, och admin gör det längre i efterhand. Banken
+  --    har 75, passet höll en timme och betalas med banken: 15 kvar. Bokat
+  --    på två timmar drar uttaget två timmar, och timmen som inte hölls
+  --    kommer tillbaka: fortfarande 15, för banken betalar det som hölls.
+  --    Stod uttaget kvar på en timme hade familjen fått timmen gratis.
+  fel := null;
+  begin
+    update public.bookings set antal_barn = 1 where id = '00000000-0000-4000-8000-00000000b16b';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-0000000000f1');
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16b', '00000000-0000-4000-8000-0000000000f1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:15', 'prov'),
+           ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16b', 'x', current_date, 'narvarande', '11:00', '11:30', 'prov');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '16:00');
+    svar := public.timbank_dra('00000000-0000-4000-8000-00000000b0c1', '00000000-0000-4000-8000-0000000000f1');
+    update public.bookings set duration_min = 120 where id = '00000000-0000-4000-8000-00000000b0c1';
+    select minuter into u_lang from public.timbank_uttag
+     where booking_id = '00000000-0000-4000-8000-00000000b0c1' and sort = 'pass';
+    s_lang := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    update public.bookings set duration_min = 60 where id = '00000000-0000-4000-8000-00000000b0c1';
+    s_tillbaka := intern.timbank_saldo('00000000-0000-4000-8000-0000000000f1');
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.1 ett helt pass görs längre', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('22.1 längre pass ur banken: uttaget följer det bokade', (svar->>'ok')::boolean and u_lang = 120 and s_lang = 15,
+       svar::text || ', uttag ' || coalesce(u_lang::text, 'null') || ', saldo ' || s_lang),
+      ('22.1 och tillbaka till en timme: samma saldo', s_tillbaka = 15, 'saldo ' || s_tillbaka);
+  end if;
+end $$;
+
+-- ============================================================
+-- FAS 22.2 — timmarna betalar passen av sig själva
+--
+-- Flaggan erbjudanden står av i resten av körningen (överst). Här slås
+-- den på i varje block. Klippkortet c16a (tio timmar, familj P, sex
+-- månader) och passen är fixturerna från början och från Fas 16.1: b0c1
+-- igår och b0d1 om en vecka, b16a om sex dagar och b16b med två barn,
+-- alla bekräftade och obetalda. De nya passen ligger på egna tider hos
+-- A, så att överlappsregeln inte slår till.
+-- ============================================================
+
+-- 1. Studiehjälparen bekräftar familjens förslag. Timmarna betalar ett
+--    pass med ett barn inom kortets giltighet, och inga andra.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  st1 text; kk1 uuid; kvar1 int; kod1 text;
+  st2 text; st3 text; st4 text; st5 text;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn) values
+      ('00000000-0000-4000-8000-0000000022a1', p, a, s, p, idag + 3, '10:00', 120, 'requested', 1),
+      ('00000000-0000-4000-8000-0000000022a2', p, a, s, p, idag + 4, '10:00', 60, 'requested', 2),
+      ('00000000-0000-4000-8000-0000000022a3', p, a, s, p, idag + 5, '10:00', 60, 'requested', 1),
+      ('00000000-0000-4000-8000-0000000022a4', p, a, s, p, idag + 250, '10:00', 60, 'requested', 1),
+      ('00000000-0000-4000-8000-0000000022a5', p, a, s, p, idag + 8, '10:00', 60, 'requested', 1);
+    update public.bookings set startrabatt = true where id = '00000000-0000-4000-8000-0000000022a3';
+
+    perform pg_temp.bli(a);
+    update public.bookings set status = 'confirmed'
+     where id in ('00000000-0000-4000-8000-0000000022a1', '00000000-0000-4000-8000-0000000022a2',
+                  '00000000-0000-4000-8000-0000000022a3', '00000000-0000-4000-8000-0000000022a4');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    update public.flaggor set aktiv = false where kod = 'erbjudanden';
+    perform pg_temp.bli(a);
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022a5';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    select betalning_status, klippkort_id into st1, kk1 from public.bookings where id = '00000000-0000-4000-8000-0000000022a1';
+    select kvar into kvar1 from public.klippkort_saldo where id = '00000000-0000-4000-8000-00000000c16a';
+    kod1 := intern.betalsatt_kod('00000000-0000-4000-8000-0000000022a1');
+    select betalning_status into st2 from public.bookings where id = '00000000-0000-4000-8000-0000000022a2';
+    select betalning_status into st3 from public.bookings where id = '00000000-0000-4000-8000-0000000022a3';
+    select betalning_status into st4 from public.bookings where id = '00000000-0000-4000-8000-0000000022a4';
+    select betalning_status into st5 from public.bookings where id = '00000000-0000-4000-8000-0000000022a5';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.2 bekräftelsen', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.2 studiehjälparen bekräftar: timmarna betalar passet',
+     st1 = 'betald' and kk1 = '00000000-0000-4000-8000-00000000c16a' and kvar1 = 8,
+     st1 || ', ' || coalesce(kk1::text, 'inget kort') || ', kvar ' || kvar1),
+    ('22.2 mejlet om passet får koden timmar', kod1 = 'timmar', coalesce(kod1, 'null')),
+    ('22.2 ett pass med två barn betalas inte med timmarna', st2 = 'ingen', st2),
+    ('22.2 passet med första timmen bjuden betalas inte med timmarna', st3 = 'ingen', st3),
+    ('22.2 ett pass efter kortets sista dag betalas inte med kortet', st4 = 'ingen', st4),
+    ('22.2 flaggan av: timmarna betalar ingenting själva', st5 = 'ingen', st5);
+end $$;
+
+-- 2. Familjen bekräftar studiehjälparens förslag. Kortet som går ut
+--    först betalar, sedan nästa kort, och utan ett kort som går att
+--    använda betalar timbanken när minuterna räcker till det bokade.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  kk1 uuid; kk2 uuid; fore int; st3 text; uttag3 int; saldo3 int; kod3 text; st4 text;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+    values ('00000000-0000-4000-8000-00000000c22b', p, 'klipp10', 'Prov 1 timme', 'klippkort', 1, 1, 5,
+            37900, 36000, 36000, 'betald', idag + 30, now(), 'ch_rlsprov_22_2b');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn) values
+      ('00000000-0000-4000-8000-0000000022b1', p, a, s, a, idag + 3, '12:00', 60, 'requested', 1),
+      ('00000000-0000-4000-8000-0000000022b2', p, a, s, a, idag + 4, '12:00', 120, 'requested', 1),
+      ('00000000-0000-4000-8000-0000000022b3', p, a, s, a, idag + 5, '12:00', 60, 'requested', 1),
+      ('00000000-0000-4000-8000-0000000022b4', p, a, s, a, idag + 9, '12:00', 60, 'requested', 1);
+
+    perform pg_temp.bli(p);
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022b1';
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022b2';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select klippkort_id into kk1 from public.bookings where id = '00000000-0000-4000-8000-0000000022b1';
+    select klippkort_id into kk2 from public.bookings where id = '00000000-0000-4000-8000-0000000022b2';
+
+    -- Två klippkortspass som höll en kvart och en halvtimme lägger
+    -- 45 + 30 minuter i banken, som i 22.1. Sedan är båda korten i tvist.
+    update public.bookings set antal_barn = 1 where id = '00000000-0000-4000-8000-00000000b16b';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', p);
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16b', p);
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values (s, a, '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:15', 'prov'),
+           (s, a, '00000000-0000-4000-8000-00000000b16b', 'x', current_date, 'narvarande', '11:00', '11:30', 'prov');
+    update public.klippkort set status = 'tvist'
+     where id in ('00000000-0000-4000-8000-00000000c16a', '00000000-0000-4000-8000-00000000c22b');
+    fore := intern.timbank_saldo(p);
+
+    perform pg_temp.bli(p);
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022b3';
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022b4';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status into st3 from public.bookings where id = '00000000-0000-4000-8000-0000000022b3';
+    select minuter into uttag3 from public.timbank_uttag
+     where booking_id = '00000000-0000-4000-8000-0000000022b3' and sort = 'pass';
+    saldo3 := intern.timbank_saldo(p);
+    kod3 := intern.betalsatt_kod('00000000-0000-4000-8000-0000000022b3');
+    select betalning_status into st4 from public.bookings where id = '00000000-0000-4000-8000-0000000022b4';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.2 korten och banken', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.2 familjen bekräftar: kortet som går ut först betalar', kk1 = '00000000-0000-4000-8000-00000000c22b',
+     coalesce(kk1::text, 'inget kort')),
+    ('22.2 räcker det kortet inte betalar nästa', kk2 = '00000000-0000-4000-8000-00000000c16a',
+     coalesce(kk2::text, 'inget kort')),
+    ('22.2 utan kort betalar timbanken det bokade', fore = 75 and st3 = 'betald' and uttag3 = 60 and saldo3 = 15,
+     'före ' || fore || ', ' || st3 || ', uttag ' || coalesce(uttag3::text, 'null') || ', saldo ' || saldo3),
+    ('22.2 mejlet säger timmar också för timbanken', kod3 = 'timmar', coalesce(kod3, 'null')),
+    ('22.2 räcker minuterna inte står passet obetalt', st4 = 'ingen', st4);
+end $$;
+
+-- 3. Rapporten gör ett obetalt pass genomfört, och timmarna betalar det.
+--    b0c1 höll 45 minuter: en timme dras, och en kvart går in i banken.
+do $$
+declare
+  p  uuid := '00000000-0000-4000-8000-0000000000f1';
+  st text; kk uuid; kvar int; larm int; saldo int; fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '15:45', 'Eleven var trött');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status, klippkort_id into st, kk from public.bookings where id = '00000000-0000-4000-8000-00000000b0c1';
+    select k.kvar into kvar from public.klippkort_saldo k where k.id = '00000000-0000-4000-8000-00000000c16a';
+    select count(*) into larm from public.avvikelser_rader()
+     where typ = 'ej_betalt' and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+    saldo := intern.timbank_saldo(p);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.2 rapporten', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.2 rapporten gör passet genomfört, och timmarna betalar det',
+     st = 'betald' and kk = '00000000-0000-4000-8000-00000000c16a' and kvar = 9,
+     st || ', ' || coalesce(kk::text, 'inget kort') || ', kvar ' || kvar),
+    ('22.2 det genomförda passet larmar inte som obetalt', larm = 0, 'rader: ' || larm),
+    ('22.2 och det som blev över av timmen går in i banken', saldo = 15, 'saldo ' || saldo);
+end $$;
+
+-- 4. Ett köp blir betalt (webhooken, klippkort_betald). De nya timmarna
+--    betalar P:s bekräftade pass från och med i dag i datumordning: 22c1
+--    (tre timmar), 22c2 ryms inte (tre timmar, en kassa påbörjad) och
+--    hoppas över, 22c3 (en timme, kortet nekades förra gången) och b16a.
+--    Sedan är de fem timmarna slut, och b0d1 står obetalt. Två barn,
+--    faktura, ett passerat pass och ett pass med första timmen bjuden
+--    rörs inte. c16a har timmar kvar men betalar ingenting här: bara det
+--    nya kortet gör det.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  ny   uuid := '00000000-0000-4000-8000-00000000c22c';
+  blev boolean; igen boolean; kvar int; kvar16 int;
+  k1 uuid; k2 uuid; k3 uuid; k16a uuid; kd1 uuid; k0 uuid; k8 uuid; kc1 uuid;
+  st2 text; st5 text; st_d1 text;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn, betalning_status) values
+      ('00000000-0000-4000-8000-0000000022c0', p, a, s, p, idag + 1, '10:00', 60, 'confirmed', 2, 'ingen'),
+      ('00000000-0000-4000-8000-0000000022c5', p, a, s, p, idag + 1, '12:00', 60, 'confirmed', 1, 'faktura'),
+      ('00000000-0000-4000-8000-0000000022c8', p, a, s, p, idag + 1, '14:00', 60, 'confirmed', 1, 'ingen'),
+      ('00000000-0000-4000-8000-0000000022c1', p, a, s, p, idag + 2, '10:00', 180, 'confirmed', 1, 'ingen'),
+      ('00000000-0000-4000-8000-0000000022c2', p, a, s, p, idag + 3, '12:00', 180, 'confirmed', 1, 'vantar'),
+      ('00000000-0000-4000-8000-0000000022c3', p, a, s, p, idag + 4, '14:00', 60, 'confirmed', 1, 'misslyckad');
+    update public.bookings set startrabatt = true where id = '00000000-0000-4000-8000-0000000022c8';
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status)
+    values (ny, p, 'klipp10', 'Prov 5 timmar', 'klippkort', 5, 6, 5, 37900, 180000, 'vantar');
+
+    blev := public.klippkort_betald(ny, 180000, 'pi_rlsprov_22_2c', 'ch_rlsprov_22_2c', null, null, null, false);
+    igen := public.klippkort_betald(ny, 180000, 'pi_rlsprov_22_2c', 'ch_rlsprov_22_2c', null, null, null, false);
+
+    select k.kvar into kvar from public.klippkort_saldo k where k.id = ny;
+    select k.kvar into kvar16 from public.klippkort_saldo k where k.id = '00000000-0000-4000-8000-00000000c16a';
+    select klippkort_id into k1 from public.bookings where id = '00000000-0000-4000-8000-0000000022c1';
+    select klippkort_id, betalning_status into k2, st2 from public.bookings where id = '00000000-0000-4000-8000-0000000022c2';
+    select klippkort_id into k3 from public.bookings where id = '00000000-0000-4000-8000-0000000022c3';
+    select klippkort_id into k16a from public.bookings where id = '00000000-0000-4000-8000-00000000b16a';
+    select klippkort_id, betalning_status into kd1, st_d1 from public.bookings where id = '00000000-0000-4000-8000-00000000b0d1';
+    select klippkort_id into k0 from public.bookings where id = '00000000-0000-4000-8000-0000000022c0';
+    select klippkort_id into k8 from public.bookings where id = '00000000-0000-4000-8000-0000000022c8';
+    select klippkort_id into kc1 from public.bookings where id = '00000000-0000-4000-8000-00000000b0c1';
+    select betalning_status into st5 from public.bookings where id = '00000000-0000-4000-8000-0000000022c5';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.2 köpet betalar passen', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.2 köpet blir betalt: timmarna betalar de kommande passen i datumordning',
+     blev and k1 = ny and k3 = ny and k16a = ny and kvar = 0,
+     coalesce(blev::text, 'null') || ', 22c1 ' || coalesce(k1::text, '-') || ', 22c3 ' || coalesce(k3::text, '-')
+     || ', b16a ' || coalesce(k16a::text, '-') || ', kvar ' || kvar),
+    ('22.2 ett pass som inte ryms hoppas över', k2 is null and st2 = 'vantar', coalesce(k2::text, '-') || ', ' || st2),
+    ('22.2 när timmarna är slut står nästa pass obetalt', kd1 is null and st_d1 = 'ingen',
+     coalesce(kd1::text, '-') || ', ' || st_d1),
+    ('22.2 två barn, faktura, första timmen och ett passerat pass rörs inte',
+     k0 is null and k8 is null and kc1 is null and st5 = 'faktura',
+     coalesce(k0::text, '-') || ', ' || coalesce(k8::text, '-') || ', ' || coalesce(kc1::text, '-') || ', ' || st5),
+    ('22.2 bara det nya kortet betalar', kvar16 = 10, 'c16a kvar ' || kvar16),
+    ('22.2 en andra leverans betalar ingenting', igen = false, coalesce(igen::text, 'null'));
+end $$;
+
+-- 5. Kortets giltighet, en påbörjad kassa som ryms, och flaggan. b16a och
+--    b0d1 avbokas först, så att de inte tar timmarna.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  kd1 uuid; kd2 uuid; kd3 uuid; kvar int; std2 text;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    update public.bookings set status = 'cancelled'
+     where id in ('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-00000000b0d1');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn, betalning_status) values
+      ('00000000-0000-4000-8000-0000000022d1', p, a, s, p, idag + 40, '10:00', 60, 'confirmed', 1, 'ingen'),
+      ('00000000-0000-4000-8000-0000000022d2', p, a, s, p, idag + 10, '10:00', 60, 'confirmed', 1, 'vantar'),
+      ('00000000-0000-4000-8000-0000000022d3', p, a, s, p, idag + 12, '10:00', 60, 'confirmed', 1, 'ingen');
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status)
+    values ('00000000-0000-4000-8000-00000000c22d', p, 'klipp10', 'Prov plan 3 timmar', 'plan', 3, 1, 10, 37900, 102300, 'vantar'),
+           ('00000000-0000-4000-8000-00000000c22e', p, 'klipp10', 'Prov 1 timme', 'klippkort', 1, 6, 5, 37900, 36000, 'vantar');
+
+    -- Planen har tre timmar och gäller en månad. 22d2 om tio dagar (en
+    -- påbörjad kassa) och 22d3 om tolv tar två av dem. 22d1 om fyrtio
+    -- dagar ligger efter sista dagen, och en timme blir kvar.
+    perform public.klippkort_betald('00000000-0000-4000-8000-00000000c22d', 102300, 'pi_rlsprov_22_2d', 'ch_rlsprov_22_2d', null, null, null, false);
+    select klippkort_id into kd1 from public.bookings where id = '00000000-0000-4000-8000-0000000022d1';
+    select klippkort_id, betalning_status into kd2, std2 from public.bookings where id = '00000000-0000-4000-8000-0000000022d2';
+    select k.kvar into kvar from public.klippkort_saldo k where k.id = '00000000-0000-4000-8000-00000000c22d';
+
+    -- Med flaggan av betalar ett nytt köp ingenting. 22d1 ligger kvar
+    -- obetalt, inom det nya kortets sex månader.
+    update public.flaggor set aktiv = false where kod = 'erbjudanden';
+    perform public.klippkort_betald('00000000-0000-4000-8000-00000000c22e', 36000, 'pi_rlsprov_22_2e', 'ch_rlsprov_22_2e', null, null, null, false);
+    select klippkort_id into kd3 from public.bookings where id = '00000000-0000-4000-8000-0000000022d1';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.2 giltigheten och flaggan', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.2 ett pass efter köpets sista dag betalas inte', kd1 is null and kvar = 1,
+     coalesce(kd1::text, '-') || ', kvar ' || kvar),
+    ('22.2 ett pass med en påbörjad kassa betalas när det ryms',
+     kd2 = '00000000-0000-4000-8000-00000000c22d' and std2 = 'betald', coalesce(kd2::text, '-') || ', ' || std2),
+    ('22.2 flaggan av: ett nytt köp betalar ingenting', kd3 is null, coalesce(kd3::text, '-'));
+end $$;
+
+-- 6. Vilka pass korten betalat. Ett pass på två timmar som höll 1 h 15
+--    drar två timmar, i vyn som i saldot. Bara familjen ser sina rader.
+do $$
+declare
+  p uuid := '00000000-0000-4000-8000-0000000000f1';
+  rader_p int; timmar_p int; anv int; rader_q int; rader_a int; kod_kort text; kod_faktura text; kod_ingen text;
+  fel text;
+begin
+  begin
+    update public.bookings set duration_min = 120 where id = '00000000-0000-4000-8000-00000000b16a';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', p);
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values ('00000000-0000-4000-8000-000000000516', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '10:15', 'prov');
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = 37900,
+                               stripe_payment_intent_id = 'pi_rlsprov_22_2f'
+     where id = '00000000-0000-4000-8000-00000000b0d1';
+    update public.bookings set betalning_status = 'faktura' where id = '00000000-0000-4000-8000-00000000b0c1';
+    kod_kort := intern.betalsatt_kod('00000000-0000-4000-8000-00000000b0d1');
+    kod_faktura := intern.betalsatt_kod('00000000-0000-4000-8000-00000000b0c1');
+    kod_ingen := intern.betalsatt_kod('00000000-0000-4000-8000-00000000b0f1');
+    select k.anvanda into anv from public.klippkort_saldo k where k.id = '00000000-0000-4000-8000-00000000c16a';
+
+    perform pg_temp.bli(p);
+    select count(*), coalesce(sum(timmar), 0) into rader_p, timmar_p from public.klippkort_rorelser
+     where klippkort_id = '00000000-0000-4000-8000-00000000c16a';
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f2');
+    select count(*) into rader_q from public.klippkort_rorelser;
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+    select count(*) into rader_a from public.klippkort_rorelser;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.2 klippkortets rörelser', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.2 familjen ser passen kortet betalat, med samma timmar som saldot',
+     rader_p = 1 and timmar_p = 2 and anv = 2, 'rader ' || rader_p || ', timmar ' || timmar_p || ', anvanda ' || anv),
+    ('22.2 en annan familj ser inga rader', rader_q = 0, 'rader: ' || rader_q),
+    ('22.2 studiehjälparen ser inga rader', rader_a = 0, 'rader: ' || rader_a),
+    ('22.2 mejlets kod: kort, faktura och obetalt',
+     kod_kort is null and kod_faktura = 'faktura' and kod_ingen is null,
+     coalesce(kod_kort, 'null') || ' / ' || coalesce(kod_faktura, 'null') || ' / ' || coalesce(kod_ingen, 'null'));
+end $$;
+
+select pg_temp.prova('22.2 anon når inte klippkortets rörelser', null,
+  array['select * from public.klippkort_rorelser'],
+  'nekad');
+
+select pg_temp.prova('22.2 familjen läser inte mejlets kod själv', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select intern.betalsatt_kod('00000000-0000-4000-8000-00000000b0d1')$q$],
+  'nekad');
+
+-- 7. Mejlet: notistriggern slås på i blocket, och bekräftelsen till
+--    familjen bär koden timmar. Kön rullas tillbaka med allt annat, och
+--    ingenting i notisvägen går ut på nätet förrän schemat läser kön.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  kod_mejl text; fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    alter table public.bookings enable trigger bookings_notis;
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn) values
+      ('00000000-0000-4000-8000-0000000022e1', p, a, '00000000-0000-4000-8000-000000000516', p, idag + 3, '16:00', 60, 'requested', 1);
+    perform pg_temp.bli(a);
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022e1';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select n.data ->> 'betalsatt' into kod_mejl from public.notiser n
+     where n.pass_id = '00000000-0000-4000-8000-0000000022e1' and n.mottagare = p and n.typ = 'pass_bekraftat';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.2 mejlet', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.2 bekräftelsen till familjen säger att timmarna betalat passet', kod_mejl = 'timmar', coalesce(kod_mejl, 'ingen notis'));
+end $$;
+
+-- ============================================================
+-- FAS 22.3 — timmar som blir lediga betalar nästa pass
+--
+-- intern.timmar_betalar_obetalda() körs här direkt, för familj P, i
+-- stället för att vänta på schemat. Där ett nytt kort ska betala sätts
+-- c16a i tvist, så att dess tio timmar inte hinner först. De nya passen
+-- ligger klockan 13 hos A, där inget annat pass står.
+-- ============================================================
+
+-- 1. En avbokning och ett kort som vann ger tillbaka en timme var, och
+--    jobbet låter den betala nästa bekräftade pass. En körning till
+--    betalar ingenting.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  kort uuid := '00000000-0000-4000-8000-00000000c22f';
+  st3_fore text; n1 int; k3 uuid; st4_fore text; n2 int; k4 uuid; n3 int; kvar int;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    update public.klippkort set status = 'tvist' where id = '00000000-0000-4000-8000-00000000c16a';
+    update public.bookings set status = 'cancelled'
+     where id in ('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-00000000b0d1');
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+    values (kort, p, 'klipp10', 'Prov 2 timmar', 'klippkort', 2, 1, 5,
+            37900, 72000, 72000, 'betald', idag + 30, now(), 'ch_rlsprov_22_3a');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn) values
+      ('00000000-0000-4000-8000-0000000022f1', p, a, s, p, idag + 2, '13:00', 60, 'requested', 1),
+      ('00000000-0000-4000-8000-0000000022f2', p, a, s, p, idag + 3, '13:00', 60, 'requested', 1),
+      ('00000000-0000-4000-8000-0000000022f3', p, a, s, p, idag + 4, '13:00', 60, 'requested', 1),
+      ('00000000-0000-4000-8000-0000000022f4', p, a, s, p, idag + 5, '13:00', 60, 'requested', 1);
+
+    -- Två timmar: 22f1 och 22f2 betalas när de bekräftas, 22f3 ryms
+    -- inte. En sats per pass, för en sats över flera rader besöker dem i
+    -- ingen bestämd ordning. Familjen avbokar sedan 22f1, och timmen
+    -- kommer tillbaka.
+    perform pg_temp.bli(a);
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022f1';
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022f2';
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022f3';
+    perform pg_temp.bli(p);
+    update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom'
+     where id = '00000000-0000-4000-8000-0000000022f1';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status into st3_fore from public.bookings where id = '00000000-0000-4000-8000-0000000022f3';
+    n1 := intern.timmar_betalar_obetalda(p);
+    select klippkort_id into k3 from public.bookings where id = '00000000-0000-4000-8000-0000000022f3';
+
+    -- 22f4 bekräftas utan timmar kvar. Sedan vinner kortet över 22f2:
+    -- webhooken skriver kortbetalningen och släpper klippkortet.
+    perform pg_temp.bli(a);
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022f4';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status into st4_fore from public.bookings where id = '00000000-0000-4000-8000-0000000022f4';
+    update public.bookings set klippkort_id = null, betalt_ore = 37900, betald_at = now(),
+                               stripe_payment_intent_id = 'pi_rlsprov_22_3a'
+     where id = '00000000-0000-4000-8000-0000000022f2';
+    n2 := intern.timmar_betalar_obetalda(p);
+    select klippkort_id into k4 from public.bookings where id = '00000000-0000-4000-8000-0000000022f4';
+    n3 := intern.timmar_betalar_obetalda(p);
+    select k.kvar into kvar from public.klippkort_saldo k where k.id = kort;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.3 avbokningen och kortet som vann', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.3 en avbokning: timmen betalar nästa bekräftade pass',
+     st3_fore = 'ingen' and n1 = 1 and k3 = '00000000-0000-4000-8000-00000000c22f',
+     'före ' || st3_fore || ', betalade ' || n1 || ', 22f3 ' || coalesce(k3::text, 'inget kort')),
+    ('22.3 kortet vann: timmen betalar nästa bekräftade pass',
+     st4_fore = 'ingen' and n2 = 1 and k4 = '00000000-0000-4000-8000-00000000c22f',
+     'före ' || st4_fore || ', betalade ' || n2 || ', 22f4 ' || coalesce(k4::text, 'inget kort')),
+    ('22.3 en körning till betalar ingenting', n3 = 0 and kvar = 0, 'betalade ' || n3 || ', kvar ' || kvar);
+end $$;
+
+-- 2. 2231 bekräftas med flaggan av, och jobbet rör det inte så länge
+--    den står av. Sedan slås den på, timbanken fylls till 75 minuter som
+--    i 22.2, och c16a hamnar i tvist: jobbet betalar 2231 med banken, och
+--    b0d1 om en vecka ryms inte i kvarten som blir kvar.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  n0 int; st0 text; fore int; n1 int; st1 text; uttag int; saldo int; st_d1 text;
+  fel text;
+begin
+  begin
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn) values
+      ('00000000-0000-4000-8000-000000002231', p, a, s, p, idag + 3, '13:00', 60, 'requested', 1);
+    perform pg_temp.bli(a);
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-000000002231';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    n0 := intern.timmar_betalar_obetalda(p);
+    select betalning_status into st0 from public.bookings where id = '00000000-0000-4000-8000-000000002231';
+
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    update public.bookings set antal_barn = 1 where id = '00000000-0000-4000-8000-00000000b16b';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', p);
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16b', p);
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values (s, a, '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:15', 'prov'),
+           (s, a, '00000000-0000-4000-8000-00000000b16b', 'x', current_date, 'narvarande', '11:00', '11:30', 'prov');
+    update public.klippkort set status = 'tvist' where id = '00000000-0000-4000-8000-00000000c16a';
+    fore := intern.timbank_saldo(p);
+
+    n1 := intern.timmar_betalar_obetalda(p);
+    select betalning_status into st1 from public.bookings where id = '00000000-0000-4000-8000-000000002231';
+    select minuter into uttag from public.timbank_uttag
+     where booking_id = '00000000-0000-4000-8000-000000002231' and sort = 'pass';
+    saldo := intern.timbank_saldo(p);
+    select betalning_status into st_d1 from public.bookings where id = '00000000-0000-4000-8000-00000000b0d1';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.3 flaggan och timbanken', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.3 flaggan av: jobbet betalar ingenting', n0 = 0 and st0 = 'ingen', 'betalade ' || n0 || ', ' || st0),
+    ('22.3 timbanken som fyllts på betalar ett bekräftat pass',
+     fore = 75 and n1 = 1 and st1 = 'betald' and uttag = 60 and saldo = 15,
+     'före ' || fore || ', betalade ' || n1 || ', ' || st1 || ', uttag ' || coalesce(uttag::text, 'null') || ', saldo ' || saldo),
+    ('22.3 räcker minuterna inte står nästa pass obetalt', st_d1 = 'ingen', st_d1);
+end $$;
+
+-- 3. Jobbet betalar samma pass som bekräftelsen och inga andra. c16a (tio
+--    timmar) betalar 2244 med en påbörjad kassa, b16a och b0d1 i
+--    datumordning. Två barn, första timmen bjuden, faktura, b0c1 igår
+--    och ett pass efter kortets sista dag rörs inte.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  c16a uuid := '00000000-0000-4000-8000-00000000c16a';
+  n int; k0 uuid; k1 uuid; st2 text; k3 uuid; k4 uuid; kb16a uuid; kd1 uuid; kc1 uuid; kb16b uuid;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn, betalning_status) values
+      ('00000000-0000-4000-8000-000000002240', p, a, s, p, idag + 2, '13:00', 60, 'confirmed', 2, 'ingen'),
+      ('00000000-0000-4000-8000-000000002241', p, a, s, p, idag + 3, '13:00', 60, 'confirmed', 1, 'ingen'),
+      ('00000000-0000-4000-8000-000000002242', p, a, s, p, idag + 4, '13:00', 60, 'confirmed', 1, 'faktura'),
+      ('00000000-0000-4000-8000-000000002244', p, a, s, p, idag + 5, '13:00', 60, 'confirmed', 1, 'vantar'),
+      ('00000000-0000-4000-8000-000000002243', p, a, s, p, idag + 250, '13:00', 60, 'confirmed', 1, 'ingen');
+    update public.bookings set startrabatt = true where id = '00000000-0000-4000-8000-000000002241';
+
+    n := intern.timmar_betalar_obetalda(p);
+    select klippkort_id into k0 from public.bookings where id = '00000000-0000-4000-8000-000000002240';
+    select klippkort_id into k1 from public.bookings where id = '00000000-0000-4000-8000-000000002241';
+    select betalning_status into st2 from public.bookings where id = '00000000-0000-4000-8000-000000002242';
+    select klippkort_id into k3 from public.bookings where id = '00000000-0000-4000-8000-000000002243';
+    select klippkort_id into k4 from public.bookings where id = '00000000-0000-4000-8000-000000002244';
+    select klippkort_id into kb16a from public.bookings where id = '00000000-0000-4000-8000-00000000b16a';
+    select klippkort_id into kd1 from public.bookings where id = '00000000-0000-4000-8000-00000000b0d1';
+    select klippkort_id into kc1 from public.bookings where id = '00000000-0000-4000-8000-00000000b0c1';
+    select klippkort_id into kb16b from public.bookings where id = '00000000-0000-4000-8000-00000000b16b';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.3 vilka pass jobbet betalar', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.3 jobbet betalar de bekräftade passen timmarna räcker till',
+     n = 3 and k4 = c16a and kb16a = c16a and kd1 = c16a,
+     'betalade ' || n || ', 2244 ' || coalesce(k4::text, '-') || ', b16a ' || coalesce(kb16a::text, '-')
+     || ', b0d1 ' || coalesce(kd1::text, '-')),
+    ('22.3 två barn, första timmen, faktura, igår och efter kortets sista dag rörs inte',
+     k0 is null and k1 is null and st2 = 'faktura' and k3 is null and kc1 is null and kb16b is null,
+     coalesce(k0::text, '-') || ', ' || coalesce(k1::text, '-') || ', ' || st2 || ', ' || coalesce(k3::text, '-')
+     || ', ' || coalesce(kc1::text, '-') || ', ' || coalesce(kb16b::text, '-'));
+end $$;
+
+-- 4. Schemats anrop gäller alla familjer. Det provas för sig, och rullas
+--    tillbaka: i driften kan det finnas riktiga pass att betala. Av
+--    fixturerna betalar c16a b16a och b0d1.
+do $$
+declare
+  n int; fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    n := intern.timmar_betalar_obetalda();
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  insert into utfall (test, ok, detalj) values
+    ('22.3 schemats anrop för alla familjer går igenom', fel = 'rulla tillbaka' and n >= 2,
+     coalesce(fel, 'null') || ', betalade ' || coalesce(n::text, 'null'));
+end $$;
+
+insert into utfall (test, ok, detalj)
+select '22.3 schemat kör jobbet var femte minut', count(*) = 1,
+       coalesce(string_agg(schedule || ' ' || command, '; '), 'inget jobb')
+  from cron.job
+ where jobname = 'timmar-betalar' and active and schedule = '*/5 * * * *'
+   and command like '%intern.timmar_betalar_obetalda()%';
+
+select pg_temp.prova('22.3 familjen kör inte jobbet själv', '00000000-0000-4000-8000-0000000000f1',
+  array['select intern.timmar_betalar_obetalda()'],
+  'nekad');
+
 -- ------------------------------------------------------------
 -- CV:t i en ansökan: admin läser, ingen annan (admin_laser_ansokans_cv)
 --
@@ -4149,6 +5193,526 @@ select pg_temp.prova('CV anon laddar fortfarande upp', null,
 insert into utfall (test, ok, detalj)
 select 'CV hinken cv är privat', not b.public, 'public = ' || b.public
 from storage.buckets b where b.id = 'cv';
+
+-- ------------------------------------------------------------
+-- Fas 19.6: fakturan bär sitt OCR-nummer
+--
+-- Admin skriver in OCR:et från Fortnox. Kontrollsiffran prövas av
+-- villkoret invoices_ocr_giltigt, och ett felskrivet ska nekas av
+-- VILLKORET (23514), inte med permission denied: villkoret körs som
+-- anroparen, och intern.ocr_giltigt måste vara nåbar för admin.
+--
+-- Svaren samlas i variabler och skrivs efter återrullningen, som i
+-- blocken ovan. Blocket skrev dem först inne i deltransaktionen, som
+-- inloggad: utfall ägs av postgres, så första raden nekades, och det
+-- enda som stod kvar var "19.6 OCR: permission denied for table
+-- utfall". Hade skrivningen gått igenom hade återrullningen tagit den.
+-- ------------------------------------------------------------
+do $$
+declare
+  fel text; kod text; n_admin int; n_familj int; o text;
+begin
+  begin
+    insert into public.invoices (id, parent_id, period, status, belopp_ore)
+    values ('00000000-0000-4000-8000-0000000019f6', '00000000-0000-4000-8000-0000000000f1', '2026-09-01', 'utkast', 37900);
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.invoices set status = 'skickad', fortnox_fakturanummer = '1001', ocr = '49927398716'
+     where id = '00000000-0000-4000-8000-0000000019f6';
+    get diagnostics n_admin = row_count;
+
+    begin
+      update public.invoices set ocr = '49927398717' where id = '00000000-0000-4000-8000-0000000019f6';
+      kod := 'gick igenom';
+    exception when others then kod := sqlstate;
+    end;
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    select ocr into o from public.invoices where id = '00000000-0000-4000-8000-0000000019f6';
+    update public.invoices set ocr = '18' where id = '00000000-0000-4000-8000-0000000019f6';
+    get diagnostics n_familj = row_count;
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('19.6 OCR', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('19.6 admin sparar ett giltigt OCR', n_admin = 1, 'rader ' || n_admin),
+      ('19.6 ett felskrivet OCR nekas av villkoret', kod = '23514', kod),
+      ('19.6 familjen läser OCR på sin faktura', o = '49927398716', coalesce(o, 'null')),
+      ('19.6 familjen skriver inte OCR', n_familj = 0, 'rader ' || n_familj);
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- Notisfelen är bara databasens egna utskick (2026-09-27)
+--
+-- notisfel() läste förut hela net._http_response, och fem prov som
+-- sessioner gjort efter en driftsättning stod en eftermiddag som
+-- notiser som inte gick fram. Nu räknas bara svar på anrop som gått
+-- genom intern.natanrop eller webhooken för intresseanmälan. Svaren
+-- läggs in för hand med negativa id, som inget riktigt anrop får.
+-- Anropet genom natanrop köas i pg_net, men rullas tillbaka innan
+-- pg_net ser det.
+-- ------------------------------------------------------------
+do $$
+declare
+  rader jsonb; n_familj bigint; b bigint; minns bigint; fel text;
+begin
+  begin
+    insert into net._http_response (id, status_code, timed_out, created, headers) values
+      (-9001, 401, false, now(), '{}'::jsonb),
+      (-9002, 405, false, now(), '{}'::jsonb),
+      (-9003, 200, false, now(), '{}'::jsonb),
+      (-9004, 500, false, now(), '{}'::jsonb),
+      (-9005, 401, false, now(), '{"sb-error-code": "UNAUTHORIZED_NO_AUTH_HEADER"}'::jsonb);
+    -- -9002 är provet: ett svar ingen av vägarna minns
+    insert into intern.natanrop_logg (id, mal) values
+      (-9001, 'notis-ko'), (-9003, 'notis-ko'), (-9005, 'ansokan-gallring');
+    insert into supabase_functions.hooks (hook_table_id, hook_name, request_id)
+    values (0, 'ny-intresseanmalan', -9004);
+
+    b := intern.natanrop('rls-prov', url := 'https://example.invalid/nextrum-rls-test');
+    select count(*) into minns from intern.natanrop_logg where id = b and mal = 'rls-prov';
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    select coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'kalla', x.kalla, 'grindfel', x.grindfel)
+                              order by x.id), '[]')
+      into rader from public.notisfel(24) x where x.id < 0;
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    select count(*) into n_familj from public.notisfel(24);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('notisfel', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('notisfel: admin ser de egna felen och vägen, inte provet eller det som gick fram',
+       rader = '[{"id": -9005, "kalla": "ansokan-gallring", "grindfel": "UNAUTHORIZED_NO_AUTH_HEADER"},
+                 {"id": -9004, "kalla": "lead-notis", "grindfel": null},
+                 {"id": -9001, "kalla": "notis-ko", "grindfel": null}]'::jsonb,
+       rader::text),
+      ('notisfel: en familj får noll rader', n_familj = 0, 'rader: ' || n_familj),
+      ('natanrop minns sitt anrop', minns = 1, 'rader: ' || minns);
+  end if;
+end $$;
+
+insert into utfall (test, ok, detalj)
+select 'natanrop och dess logg går inte att nå utifrån',
+       coalesce(not has_function_privilege('anon', to_regprocedure('intern.natanrop(text,text,jsonb,jsonb,integer)'), 'execute')
+            and not has_function_privilege('authenticated', to_regprocedure('intern.natanrop(text,text,jsonb,jsonb,integer)'), 'execute')
+            and not has_table_privilege('anon', to_regclass('intern.natanrop_logg'), 'select')
+            and not has_table_privilege('authenticated', to_regclass('intern.natanrop_logg'), 'select'), false),
+       case when to_regprocedure('intern.natanrop(text,text,jsonb,jsonb,integer)') is null
+            then 'funktionen finns inte' else 'anon/authenticated' end;
+
+-- Nästa funktion som ringer pg_net direkt syns inte i notisfel() när
+-- anropet går fel. Den här raden fångar den.
+insert into utfall (test, ok, detalj)
+select 'ingen funktion ringer net.http_* förbi intern.natanrop', count(*) = 0,
+       coalesce(string_agg(p.oid::regprocedure::text, ', '), 'inga')
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname in ('public', 'intern')
+   and p.prosrc ~ 'net\.http_(post|get|delete)\s*\('
+   and p.oid is distinct from to_regprocedure('intern.natanrop(text,text,jsonb,jsonb,integer)');
+
+-- ------------------------------------------------------------
+-- Klientfelen minns vem det gällde (2026-09-28)
+--
+-- Databasen sätter klientfel.anvandare ur auth.uid() och skriver över
+-- det klienten skickar: insert-policyn släpper in vem som helst, och
+-- ett fel i någon annans namn hade fått Skriv till de drabbade att
+-- mejla fel person. P försöker lägga sitt fel på Q.
+-- ------------------------------------------------------------
+do $$
+declare
+  inloggad uuid; utloggad uuid; utan_profil uuid; n_utan int; fel text;
+begin
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    insert into public.klientfel (meddelande, sida, anvandare)
+    values ('rls-vem-inloggad', '/foralder', '00000000-0000-4000-8000-0000000000f2');
+    perform pg_temp.bli(null);
+    insert into public.klientfel (meddelande, sida, anvandare)
+    values ('rls-vem-utloggad', '/', '00000000-0000-4000-8000-0000000000f2');
+    perform set_config('request.jwt.claims',
+      '{"sub":"00000000-0000-4000-8000-00000000dead","role":"authenticated"}', true);
+    execute 'set local role authenticated';
+    insert into public.klientfel (meddelande, sida) values ('rls-vem-utan-profil', '/admin');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    select anvandare into inloggad from public.klientfel where meddelande = 'rls-vem-inloggad';
+    select anvandare into utloggad from public.klientfel where meddelande = 'rls-vem-utloggad';
+    select anvandare, 1 into utan_profil, n_utan from public.klientfel where meddelande = 'rls-vem-utan-profil';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('klientfel minns vem', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('klientfel: det inloggade kontot, inte det klienten skickade',
+       inloggad is not distinct from '00000000-0000-4000-8000-0000000000f1'::uuid, coalesce(inloggad::text, 'null')),
+      ('klientfel: utloggad blir null, fast klienten skickade ett id', utloggad is null, coalesce(utloggad::text, 'null')),
+      ('klientfel: ett konto utan profil sparas ändå, utan id', n_utan = 1 and utan_profil is null,
+       coalesce(utan_profil::text, 'null') || ', rader ' || coalesce(n_utan, 0));
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- Gallringen: ansökningar och CV:n tas bort efter ett år
+-- (ansokningar_gallras_efter_ett_ar)
+--
+-- Regeln, spärren som håller filen före raden, filerna utan ansökan
+-- och vem som når dörrarna. Att en fil faktiskt försvinner går bara att
+-- se genom Storage-API:t och provades mot driften med en provfil.
+-- Filerna här är rader i storage.objects utan någon fil bakom, och
+-- rullas tillbaka som allt annat.
+-- ------------------------------------------------------------
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+insert into utfall (test, ok, detalj)
+select 'Gallring CV-raden läses bara på en egen rad', v = array['1600000000000-abc-Mitt_CV.pdf'], array_to_string(v, ', ')
+from (select intern.ansokan_cv_namn(
+  E'Mitt CV: cv/inte-egen-rad.pdf\r\nRad två.\n\nCV: cv/1600000000000-abc-Mitt_CV.pdf\r\nKälla: okänd') as v) x;
+
+insert into utfall (test, ok, detalj)
+select 'Gallring en uppladdning som inte gick fram pekar inte ut någon fil', v = '{}', array_to_string(v, ', ')
+from (select intern.ansokan_cv_namn(
+  'CV: bifogad fil "a.pdf" kunde inte laddas upp — be om den via mejl') as v) x;
+
+-- En borttagning ska ta bort innehållet. Med versionshantering på hinken
+-- hade en borttagen fil kunnat ligga kvar som en äldre version.
+insert into utfall (test, ok, detalj)
+select 'Gallring hinken cv har ingen versionshantering',
+       coalesce(to_jsonb(b) ->> 'versioning_status', 'DISABLED') = 'DISABLED',
+       coalesce(to_jsonb(b) ->> 'versioning_status', 'kolumnen saknas')
+from storage.buckets b where b.id = 'cv';
+
+-- Regeln. Ansökningarna läggs in som postgres, så att created_at och
+-- stegen står som provet säger; utifrån skrivs de över (16.1c).
+do $$
+declare
+  lista uuid[]; fel text;
+  g1 constant uuid := '00000000-0000-4000-8000-00000000cc01';
+  g2 constant uuid := '00000000-0000-4000-8000-00000000cc02';
+  g3 constant uuid := '00000000-0000-4000-8000-00000000cc03';
+  g4 constant uuid := '00000000-0000-4000-8000-00000000cc04';
+  g5 constant uuid := '00000000-0000-4000-8000-00000000cc05';
+  g6 constant uuid := '00000000-0000-4000-8000-00000000cc06';
+  g7 constant uuid := '00000000-0000-4000-8000-00000000cc07';
+  g8 constant uuid := '00000000-0000-4000-8000-00000000cc08';
+  g9 constant uuid := '00000000-0000-4000-8000-00000000cc09';
+  g10 constant uuid := '00000000-0000-4000-8000-00000000cc10';
+  g11 constant uuid := '00000000-0000-4000-8000-00000000cc11';
+  g12 constant uuid := '00000000-0000-4000-8000-00000000cc12';
+  slutad constant uuid := '00000000-0000-4000-8000-0000000000c9';
+  tva_ar constant timestamptz := now() - interval '2 years';
+  tre_ar constant timestamptz := now() - interval '3 years';
+begin
+  begin
+    -- Studiehjälpare B är inte godkänd i det här provet. A är det.
+    update public.tutor_profiles set status = 'pending' where id = '00000000-0000-4000-8000-0000000000b1';
+
+    -- En godkänd studiehjälpare som slutade för tre år sedan: kontot,
+    -- inloggningen och profilen är tre år gamla, och inga pass.
+    insert into auth.users (id, email, raw_user_meta_data, created_at, last_sign_in_at) values
+      (slutad, 'rls-slutad@example.invalid', '{"role":"tutor","full_name":"Test Slutad"}', tre_ar, tre_ar);
+    update public.profiles set created_at = tre_ar, last_seen_at = null where id = slutad;
+    update public.tutor_profiles set status = 'approved', created_at = tre_ar where id = slutad;
+
+    insert into public.applications (id, name, email, status, created_at, kontaktad_at, mote_tid, prov_sista_dag) values
+      (g1, 'Prov Avböjd',   'rls-gall-1@example.invalid',   'rejected',  tva_ar, null, null, null),
+      (g2, 'Prov Godkänd',  'rls-gall-2@example.invalid',   'approved',  now() - interval '1 year', null, null, null),
+      (g3, 'Prov Anna',     'rls-a@example.invalid',        'new',       tva_ar, null, null, null),
+      (g4, 'Prov Anna',     ' RLS-A+igen@example.invalid',  'rejected',  tva_ar, null, null, null),
+      (g5, 'Prov Kontakt',  'rls-gall-5@example.invalid',   'contacted', tva_ar, now() - interval '10 days', null, null),
+      (g6, 'Prov Möte',     'rls-gall-6@example.invalid',   'contacted', tva_ar, null, now() + interval '10 days', null),
+      (g7, 'Prov Ung',      'rls-gall-7@example.invalid',   'new',       now() - interval '11 months', null, null, null),
+      (g8, 'Prov Provet',   'rls-gall-8@example.invalid',   'new',       tva_ar, null, null, current_date - 40),
+      (g9, 'Prov Bo',       'rls-b@example.invalid',        'new',       tva_ar, null, null, null),
+      (g10, 'Prov Gammal',  'rls-gall-10@example.invalid',  'approved',  tre_ar, null, null, null),
+      (g11, 'Prov Anna',    'rls-a@example.invalid',        'approved',  tre_ar, null, null, null),
+      (g12, 'Prov Slutad',  'rls-slutad@example.invalid',   'approved',  tre_ar, null, null, null);
+
+    select array_agg(l.ansokan_id) into lista
+      from public.ansokan_gallring_lista(1000) l
+     where l.ansokan_id in (g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Gallring regeln', false, fel);
+  else
+    lista := coalesce(lista, '{}');
+    insert into utfall (test, ok, detalj) values
+      ('Gallring en avböjd ansökan äldre än ett år gallras', g1 = any (lista), 'med: ' || (g1 = any (lista))),
+      ('Gallring en godkänd ansökan utan konto står kvar i två år', not g2 = any (lista), 'med: ' || (g2 = any (lista))),
+      ('Gallring men gallras två år efter sitt senaste steg', g10 = any (lista), 'med: ' || (g10 = any (lista))),
+      ('Gallring en godkänd ansökan står kvar så länge studiehjälparen är aktiv', not g11 = any (lista), 'med: ' || (g11 = any (lista))),
+      ('Gallring och gallras två år efter att studiehjälparen slutat', g12 = any (lista), 'med: ' || (g12 = any (lista))),
+      ('Gallring samma adress som en godkänd studiehjälpare håller kvar en ny ansökan', not g3 = any (lista), 'med: ' || (g3 = any (lista))),
+      ('Gallring men inte en avböjd, inte heller med plustillägg', g4 = any (lista), 'med: ' || (g4 = any (lista))),
+      ('Gallring ett steg de senaste trettio dagarna håller kvar ansökan', not g5 = any (lista), 'med: ' || (g5 = any (lista))),
+      ('Gallring ett bokat möte håller kvar ansökan', not g6 = any (lista), 'med: ' || (g6 = any (lista))),
+      ('Gallring en ansökan under ett år står kvar', not g7 = any (lista), 'med: ' || (g7 = any (lista))),
+      ('Gallring provets sista dag är ett steg, och trettio dagar efter gallras ansökan', g8 = any (lista), 'med: ' || (g8 = any (lista))),
+      ('Gallring en studiehjälpare som inte är godkänd skyddar ingenting', g9 = any (lista), 'med: ' || (g9 = any (lista)));
+  end if;
+end $$;
+
+-- Filen först, raden sedan. Spärren sitter i ansokan_gallra(), inte i
+-- edge-funktionen: raden går inte att ta bort medan dess fil finns.
+do $$
+declare
+  fel text;
+  filer1 text[]; filer3 text[];
+  u1 text; u2 text; u3 text; u4 text; u5 text;
+  kvar1 bigint; kvar2 bigint; utskick2 bigint; uppgift2 bigint; delad bigint;
+  audit jsonb;
+  h1 constant uuid := '00000000-0000-4000-8000-00000000cd01';
+  h2 constant uuid := '00000000-0000-4000-8000-00000000cd02';
+  h3 constant uuid := '00000000-0000-4000-8000-00000000cd03';
+  h4 constant uuid := '00000000-0000-4000-8000-00000000cd04';
+  tva_ar constant timestamptz := now() - interval '2 years';
+begin
+  begin
+    insert into storage.objects (bucket_id, name) values
+      ('cv', '1600000000000-gprov-Finns.pdf'),
+      ('cv', '1600000000002-gprov-Delad.pdf');
+
+    insert into public.applications (id, name, email, status, created_at, why) values
+      (h1, 'Prov Fil',    'rls-gfil-1@example.invalid', 'rejected', tva_ar, E'Hej.\n\nCV: cv/1600000000000-gprov-Finns.pdf'),
+      (h2, 'Prov Borta',  'rls-gfil-2@example.invalid', 'rejected', tva_ar, E'Hej.\n\nCV: cv/1600000000001-gprov-Borta.pdf'),
+      (h3, 'Prov Delad',  'rls-gfil-3@example.invalid', 'rejected', tva_ar, E'CV: cv/1600000000002-gprov-Delad.pdf'),
+      (h4, 'Prov Delad',  'rls-gfil-4@example.invalid', 'approved', now() - interval '1 year', E'CV: cv/1600000000002-gprov-Delad.pdf');
+
+    perform public.skapa_uppgift('Obesvarad ansökan (prov)', 'rls:gallring:' || h2, 'uppfoljning',
+      null, 'applications', h2::text, current_date);
+
+    select l.filer into filer1 from public.ansokan_gallring_lista(1000) l where l.ansokan_id = h1;
+    select l.filer into filer3 from public.ansokan_gallring_lista(1000) l where l.ansokan_id = h3;
+
+    u1 := public.ansokan_gallra(h1);
+    u2 := public.ansokan_gallra(h2);
+    u3 := public.ansokan_gallra(h3);
+    u4 := public.ansokan_gallra(h4);
+    u5 := public.ansokan_gallra('00000000-0000-4000-8000-000000000000');
+
+    select count(*) into kvar1 from public.applications where id = h1;
+    select count(*) into kvar2 from public.applications where id = h2;
+    select count(*) into utskick2 from public.ansokan_utskick where ansokan_id = h2;
+    select count(*) into uppgift2 from public.uppgifter where kopplad_tabell = 'applications' and kopplad_id = h2::text;
+    select count(*) into delad from storage.objects where bucket_id = 'cv' and name = '1600000000002-gprov-Delad.pdf';
+    select l.fore into audit from public.audit_logg l
+     where l.tabell = 'applications' and l.objekt_id = h2::text and l.handling = 'ansokan.borttagen';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Gallring filen före raden', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('Gallring listan bär ansökans fil', filer1 = array['1600000000000-gprov-Finns.pdf'], coalesce(array_to_string(filer1, ', '), 'ingen rad')),
+      ('Gallring raden står kvar så länge filen finns', u1 = 'filen_finns_kvar' and kvar1 = 1, u1 || ', rader: ' || kvar1),
+      ('Gallring utan fil i hinken tas raden bort', u2 = 'borttagen' and kvar2 = 0, u2 || ', rader: ' || kvar2),
+      ('Gallring beskeden följer med', utskick2 = 0, 'rader: ' || utskick2),
+      ('Gallring uppgifterna om ansökan följer med', uppgift2 = 0, 'rader: ' || uppgift2),
+      ('Gallring borttagningen står i auditloggen, med läge och ålder',
+        audit ->> 'status' = 'rejected' and audit ? 'created_at', coalesce(audit::text, 'ingen rad')),
+      ('Gallring men utan namn, adress eller text',
+        audit is not null and not (audit ?| array['name', 'email', 'why', 'school', 'notering', 'mote_lank']),
+        coalesce((select string_agg(k, ', ') from jsonb_object_keys(audit) k), 'ingen rad')),
+      ('Gallring en fil som en kvarvarande ansökan pekar ut står inte i listan', filer3 = '{}', coalesce(array_to_string(filer3, ', '), 'ingen rad')),
+      ('Gallring och spärrar inte den andra ansökan', u3 = 'borttagen' and delad = 1, u3 || ', filen: ' || delad),
+      ('Gallring en godkänd ansökan tas inte bort före sin tid, ens på begäran', u4 = 'inte_forfallen', u4),
+      ('Gallring ett okänt id', u5 = 'finns_inte', u5);
+  end if;
+end $$;
+
+-- Filer utan ansökan: ett år från uppladdningen, bara i hinken cv.
+do $$
+declare
+  lista text[]; fel text;
+begin
+  begin
+    insert into storage.objects (bucket_id, name, created_at) values
+      ('cv', '1500000000000-gprov-Foraldralos.pdf', now() - interval '2 years'),
+      ('cv', '1500000000001-gprov-Ung.pdf', now() - interval '11 months'),
+      ('cv', '1500000000002-gprov-Pekad.pdf', now() - interval '2 years'),
+      ('dokument', '00000000-0000-4000-8000-00000000ce01/1500000000003-gprov-Annan.pdf', now() - interval '2 years');
+    insert into public.applications (id, name, email, why)
+    values ('00000000-0000-4000-8000-00000000ce02', 'Prov Pekar', 'rls-gorf@example.invalid',
+            E'Hej.\n\nCV: cv/1500000000002-gprov-Pekad.pdf');
+
+    select array_agg(f.namn) into lista from public.cv_foraldralosa(1000) f where f.namn like '%gprov%';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Gallring filer utan ansökan', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('Gallring en fil utan ansökan gallras ett år efter uppladdningen',
+        lista = array['1500000000000-gprov-Foraldralos.pdf'], coalesce(array_to_string(lista, ', '), 'inga'));
+  end if;
+end $$;
+
+-- Väckningen och vakten. Adressen pekar på en domän som inte finns, och
+-- anropet köas i samma deltransaktion som rullas tillbaka: pg_net
+-- skickar bara det som checkats in.
+do $$
+declare
+  svar jsonb; svar2 jsonb; oppna bigint; fel text;
+begin
+  begin
+    update public.notis_konfig set gallring_url = 'https://example.invalid/functions/v1/ansokan-gallring' where id = 1;
+    insert into public.applications (id, name, email, status, created_at)
+    values ('00000000-0000-4000-8000-00000000cf01', 'Prov Fastnad', 'rls-gfast@example.invalid',
+            'rejected', now() - interval '3 years');
+
+    svar := intern.ansokan_gallring_vack();
+    svar2 := intern.ansokan_gallring_vack();
+    select count(*) into oppna from public.uppgifter
+     where nyckel = 'gallring:ansokan:fastnat' and status = 'oppen';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Gallring väckningen', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('Gallring något att gallra väcker funktionen',
+        (svar ->> 'ansokningar')::int >= 1 and svar ->> 'begaran' is not null, svar::text),
+      ('Gallring det som borde varit borta för en vecka sedan blir en uppgift, en gång',
+        (svar2 ->> 'fastnade')::int >= 1 and oppna = 1, 'öppna: ' || oppna || ', ' || svar2::text);
+  end if;
+end $$;
+
+-- Vem som når dörrarna: bara service_role. Admin ingår inte, för
+-- admin tar inte bort ansökningar för hand här heller.
+select pg_temp.prova('Gallring anon når inte listan', null,
+  array['select * from public.ansokan_gallring_lista()'], 'nekad');
+select pg_temp.prova('Gallring inte en inloggad familj heller', '00000000-0000-4000-8000-0000000000f1',
+  array['select * from public.ansokan_gallring_lista()'], 'nekad');
+select pg_temp.prova('Gallring inte admin heller', '00000000-0000-4000-8000-0000000000ad',
+  array['select * from public.ansokan_gallring_lista()'], 'nekad');
+select pg_temp.prova('Gallring anon når inte filerna utan ansökan', null,
+  array['select * from public.cv_foraldralosa()'], 'nekad');
+-- En förfallen ansökan finns, så att noll betyder "får inte", inte
+-- "finns inget att ta bort".
+select pg_temp.prova_med('Gallring admin kan inte gallra en ansökan',
+  array[$q$insert into public.applications (id, name, email, status, created_at)
+           values ('00000000-0000-4000-8000-00000000cf02', 'Prov Admin', 'rls-gadm@example.invalid',
+                   'rejected', now() - interval '2 years')$q$],
+  '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select public.ansokan_gallra('00000000-0000-4000-8000-00000000cf02')$q$], 'nekad');
+select pg_temp.prova_med('Gallring och ingen tar bort en ansökan direkt, inte admin heller',
+  array[$q$insert into public.applications (id, name, email, status, created_at)
+           values ('00000000-0000-4000-8000-00000000cf02', 'Prov Admin', 'rls-gadm@example.invalid',
+                   'rejected', now() - interval '2 years')$q$],
+  '00000000-0000-4000-8000-0000000000ad',
+  array[$q$delete from public.applications where id = '00000000-0000-4000-8000-00000000cf02'$q$], 'nekad');
+
+do $$
+declare n bigint; fel text;
+begin
+  begin
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    select count(*) into n from public.ansokan_gallring_lista();
+    select count(*) into n from public.cv_foraldralosa();
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('Gallring service_role når dörrarna', fel = 'rulla tillbaka', fel);
+end $$;
+
+-- AI-texterna och de avslutade uppgifterna (2026-09-28). Motiveringen
+-- töms 90 dagar efter beslutet, klara uppgifter tas bort efter ett år,
+-- och frysningen släpper bara igenom just den tömningen, utan inloggad
+-- användare.
+do $$
+declare
+  fel text; v jsonb;
+  m1 text; m2 text; n1 bigint; n2 bigint; n3 bigint;
+  skriva text; inloggad text;
+  f1 constant uuid := '00000000-0000-4000-8000-00000000ce01';
+  f2 constant uuid := '00000000-0000-4000-8000-00000000ce02';
+  u1 constant uuid := '00000000-0000-4000-8000-00000000cf01';
+  u2 constant uuid := '00000000-0000-4000-8000-00000000cf02';
+  u3 constant uuid := '00000000-0000-4000-8000-00000000cf03';
+begin
+  begin
+    insert into public.ai_forslag (id, typ, payload, motivering, status, nyckel, beslutad, skapad) values
+      (f1, 'lead_status', '{}', 'Gammal motivering', 'avvisad', 'rls:ai:gammal', now() - interval '100 days', now() - interval '101 days'),
+      (f2, 'lead_status', '{}', 'Ny motivering',     'avvisad', 'rls:ai:ny',     now() - interval '10 days',  now() - interval '11 days');
+    -- uppgift_stampel sätter klar_at vid skrivning; stängs av för att
+    -- kunna backdatera.
+    alter table public.uppgifter disable trigger user;
+    insert into public.uppgifter (id, typ, titel, status, klar_at, uppdaterad, created_at, skapad_av_typ) values
+      (u1, 'ovrigt', 'Prov klar gammal', 'klar', now() - interval '2 years', now() - interval '2 years', now() - interval '2 years', 'manniska'),
+      (u2, 'ovrigt', 'Prov klar ny',     'klar', now() - interval '1 month', now() - interval '1 month', now() - interval '2 years', 'manniska'),
+      (u3, 'ovrigt', 'Prov öppen gammal', 'oppen', null, now() - interval '2 years', now() - interval '2 years', 'manniska');
+    alter table public.uppgifter enable trigger user;
+
+    v := intern.ai_och_uppgifter_gallra();
+    select motivering into m1 from public.ai_forslag where id = f1;
+    select motivering into m2 from public.ai_forslag where id = f2;
+    select count(*) into n1 from public.uppgifter where id = u1;
+    select count(*) into n2 from public.uppgifter where id = u2;
+    select count(*) into n3 from public.uppgifter where id = u3;
+
+    begin
+      update public.ai_forslag set motivering = 'Utbytt' where id = f2;
+      skriva := 'tillåten';
+    exception when others then skriva := 'nekad';
+    end;
+    begin
+      perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+      update public.ai_forslag set motivering = null where id = f2;
+      inloggad := 'tillåten';
+    exception when others then inloggad := 'nekad';
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('AI-gallring', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('AI-gallring motiveringen töms 90 dagar efter beslutet', m1 is null, coalesce(m1, 'tömd')),
+      ('AI-gallring men inte före', m2 = 'Ny motivering', coalesce(m2, 'tömd')),
+      ('AI-gallring frysningen nekar fortfarande en ny motivering', skriva = 'nekad', skriva),
+      ('AI-gallring och en inloggad får inte tömma den', inloggad = 'nekad', inloggad),
+      ('Uppgiftsgallring en klar uppgift äldre än ett år tas bort', n1 = 0, 'rader: ' || n1),
+      ('Uppgiftsgallring en nyss klar står kvar', n2 = 1, 'rader: ' || n2),
+      ('Uppgiftsgallring en öppen rörs aldrig', n3 = 1, 'rader: ' || n3);
+  end if;
+end $$;
 
 select test, ok, detalj from utfall order by nr;
 
