@@ -52,10 +52,11 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 18
+=== svenska sidor utan engelsk tvilling: 20
   admin.html
+  barnet-vill-inte-gora-laxorna.html
   foralder.html
-  gratis-laxhjalp-stockholm.html
+  hjalpa-barn-med-lasforstaelse.html
   hjalpa-barn-med-matte.html
   larare.html
   laxhjalp-bromma.html
@@ -70,4 +71,5 @@
   laxhjalp-solna.html
   laxhjalp-stockholm.html
   laxhjalp-svenska.html
+  plugga-infor-prov.html
   utbildningsprov.html

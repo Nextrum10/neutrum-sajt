@@ -42,8 +42,20 @@ kräver ett skäl (fast kod), och motparten får det i mejlet (Fas 15.2).
 Väljer familjen ämnet Annat måste de skriva vilket, och det skrivna
 ordet är det som sparas i `bookings.subject` (2026-09-25). Mejlen
 läser ämnet genom `fornamn()`, så fritexten når dem som ett ord.
-Samma dag går det bara att föreslå tider minst en timme fram, och
-tidsraden säger det — annars ser det ut som att morgonen saknas.
+Tiderna börjar klockan 11 på vardagar och klockan 9 på lördag och
+söndag, och slutar senast 22 (`HELA_DAGEN` i `nextrum-arbetsyta.js`,
+som förslaget och flytta-rutan delar). Leo 2026-09-28: "man ska inte
+kunna skicka förfrågan innan 11 på vardagar, helger ska man kunna
+skicka förfrågan tidigast kl 9", samma kväll som 11 först gällde alla
+dagar. Det är passets starttid, inte när förslaget skickas. Röda dagar
+mitt i veckan räknas som vardagar. Listan började 07:00, och Leos "man
+kan inte föreslå tider före 11:00" från 2026-09-25 lästes då som en
+felanmälan i stället för en regel.
+Regeln står bara i vyn, som resten av fönstret: databasen spärrar inga
+timmar, och en flik som laddats före en ändring erbjuder de gamla
+tiderna tills den laddas om. Samma dag går det bara att föreslå tider
+minst en timme fram, och tidsraden säger det — annars ser det ut som
+att dagens första timmar saknas.
 
 **Ångerrätten står i villkoren** (`#angerratt`, 2026-09-25): 14 dagar
 från att passet är bokat. Villkoren nämnde den inte alls förut, och
@@ -185,27 +197,64 @@ med timmarna oanvända bredvid.
   säger att passet är betalt med timmarna, med knappen till passet. Ett
   pass jobbet betalar får inget eget mejl; påminnelsen säger det.
 - **Vid ånger eller när en familj slutar: avboka först ALLA kommande
-  pass familjen inte vill ha**, inte bara de timmarna betalat.
-  `vid_anger_ore` och `vid_uppsagning_ore` räknar varje pass som inte är
-  avbokat som använt, också ett som inte hållits, och sedan Fas 22.3
-  betalar en timme som blir ledig nästa bekräftade pass inom fem
-  minuter: avbokas bara det betalda passet flyttar timmen till nästa.
+  pass familjen inte vill ha, och deras förslag**, inte bara de
+  timmarna betalat. `vid_anger_ore` och `vid_uppsagning_ore` räknar
+  varje pass som inte är avbokat som använt, också ett som inte hållits
+  och sedan Fas 22.4 också ett förslag, och sedan Fas 22.3 betalar en
+  timme som blir ledig nästa pass inom fem minuter: avbokas bara det
+  betalda passet flyttar timmen till nästa.
+
+**Timmen dras när familjen föreslår passet (Fas 22.4, 2026-09-28).**
+Leo: "när man skickar ett förslag försvinner en av de förköpta timmarna
+man köpt, om studiehjälparen inte kan den tiden och föreslår om är det
+den timmen som fortfarande betalar av passet." Förut drogs timmarna vid
+bekräftelsen, och ett förslag ägde ingen timme: bekräftades ett senare
+förslag medan familjen funderade på ett motförslag, tog det senare
+timmen. Migrationen (`20260928174612_fas22_4_…`) kördes minuten efter
+att PR #105 mergats, i samma stund som föräldravyn gick ut: vyn räknar
+inte längre bort väntande förslag, så utan migrationen hade Boka pass
+lovat timmar som databasen inte dragit.
+- **Förslaget betalas när det skapas.** `bookings_timmar_betalar_forslaget`
+  (BEFORE INSERT, status `requested`) kör samma val som bekräftelsen.
+  Namnet gör att den kör efter skydden och `bookings_startrabatt`: första
+  timmen är avgjord innan timmarna väljer. Timbankens uttag skrivs i
+  samma BEFORE INSERT, innan passets rad finns, och därför är
+  `timbank_uttag_booking_id_fkey` `deferrable initially deferred`.
+- **Timmen följer passet.** Ett motförslag ändrar bara tid, status och
+  `created_by` (`skydda_bokningsfalt`), så betalningen ligger kvar, också
+  när tiden flyttas förbi kortets sista dag, som för ett bekräftat pass
+  som flyttas. `bookings_timmar_betalar` går också på `requested`: ett
+  obetalt bekräftat pass som flyttas betalas som ett nytt förslag.
+- **Ett nej ger tillbaka timmen**, som en avbokning (Fas 21.1): avböjt
+  och tillbakadraget är avbokat.
+- **Ett förslag som ingen svarat på när dagen gått lämnar tillbaka
+  timmen** (`intern.obesvarade_forslag_slapper_timmarna`, först i jobbet
+  `timmar-betalar`, oavsett flaggan). Utan det hade en timme legat kvar
+  på ett förslag som aldrig blev ett pass. Hölls passet ändå betalar
+  timmarna det igen när rapporten gör det genomfört.
+- **Jobbet och köpet betalar förslag** som bekräftade pass, i
+  datumordning. Ett förslag som skickas när timmarna tagit slut står
+  obetalt tills timmar blir lediga eller köps.
+- Boka pass räknar som databasen: ett kort som gäller dagen och räcker
+  till hela passet, annars timbanken. Kvittot säger vad som drogs och
+  att det följer med ett motförslag.
 **Boka pass visar timmarna innan något är valt** (2026-09-28, Leo:
 "innan du bokar ett pass ska det stå 4 av 4 timmar kvar"). Överst står
 varje kort med timmarna kvar och sista dagen (`#boka-timmar`), och vid
 knappen står "Era timmar, −1 timme, 3 kvar efter" i stället för
 priset när timmarna räcker (`opts.timmar` i `NXArbete.bokning`).
-Förslag och bekräftade obetalda pass som redan väntar på timmarna
-räknas bort (`lovadeTimmar`), så att fem förslag på fyra timmar inte
-alla får höra att de är betalda. Passet med första timmen bjuden visar
-priset som förut: timmarna betalar det inte.
+Förslagen räknades bort här (`lovadeTimmar`) innan Fas 22.4; sedan
+dess har de redan dragit sina timmar, och kvar står som databasen
+räknat det. Passet med första timmen bjuden visar priset som förut:
+timmarna betalar det inte.
 Profil → Timbanken visar köpta timmar kort för kort, med passen varje
 kort betalat ur vyn `klippkort_rorelser` (samma timmar som
 `klippkort_saldo`), och de sparade minuterna under dem. `rls-test.sql`
 slår av flaggan `erbjudanden` överst, så att proven som räknar med
-obetalda pass inte får dem betalda, och på i blocken för 22.2 och 22.3.
-Blocken för 22.3 kör jobbet för familj P direkt i stället för att vänta
-på schemat.
+obetalda pass inte får dem betalda, och på i blocken för 22.2, 22.3 och
+22.4. Blocken för 22.2 som provar bekräftelsen slår på den först efter
+förslagen, annars betalar förslagen sig själva. Blocken för 22.3 och
+22.4 kör jobbet för familj P direkt i stället för att vänta på schemat.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
@@ -290,7 +339,14 @@ obetalt pass larmar som förut, direkt, som `ej_betalt`: Leo valde det
 framför en frist. Fakturavalet heter "Få faktura nästa månad" (Fas 19.6,
 Leo: "betala senare genom att välja att få en faktura skickad till sig
 nästkommande månad") och är en knapp bredvid Betala med kort; en ruta
-frågar innan betalsättet sparas (Fas 19.7). En skickad faktura står under Betalning i
+frågar innan betalsättet sparas (Fas 19.7). Vill familjen ändå betala
+med kort trycker de **Betala med kort nu**, under Faktura i Betalning
+eller på passets sida, och kassan öppnas direkt (2026-09-28, Leo: "passet
+kan räknas som betalt efter att man betalat det"). Passet står kvar som
+`faktura` tills webhooken skrivit kortbetalningen, så en kassa som
+stängs utan betalning ändrar ingenting. Förut hette knappen Betala med
+kort i stället och bytte bara passet till obetalt: ingen kassa öppnades,
+och rapporten kom tillbaka under Att bekräfta. En skickad faktura står under Betalning i
 rutan Fakturor att betala, med belopp, förfallodag, passen, bankgiro
 (`BANKGIRO` i `nextrum-config.js`) och OCR. OCR:et skriver admin av från
 Fortnox vid Lagd i Fortnox; det räknas aldrig fram här, och
@@ -431,7 +487,8 @@ elev.
   **Fakturan står bredvid meningen sedan 2026-09-28**: "Efter passet
   kan ni i stället välja faktura, som kommer i början av nästa månad
   med tio dagars betalningstid och utan avgift", på samma 36 ställen,
-  också i mejlen. Kontrollen räknar den lika många gånger som
+  också i mejlen (`notis-ko` version 20, driftsatt från main samma dag
+  och jämförd byte för byte). Kontrollen räknar den lika många gånger som
   kortmeningen och läser antalet dagar ur `BETALNINGSVILLKOR_DAGAR`, så
   en ändrad betalningstid som inte når texterna blir röd. Flaggan
   `faktura` slogs på 2026-09-27, med SQL medan Fas 19.7 byggdes, och
@@ -543,8 +600,9 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
 Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), onlinesidan
-(`laxhjalp-online`) och två guider (`gratis-laxhjalp-stockholm`,
-`hjalpa-barn-med-matte`) genereras; navet
+(`laxhjalp-online`) och fyra guider (`hjalpa-barn-med-matte`,
+`hjalpa-barn-med-lasforstaelse`, `plugga-infor-prov`,
+`barnet-vill-inte-gora-laxorna`) genereras; navet
 `laxhjalp-stockholm.html` är handskrivet. `/en/` är elva översatta sidor.
 
 ### Startsidan efter hero (2026-09-25)
@@ -796,7 +854,10 @@ inte i någon tabell, de räknas ur passen. Fas 22.2 la till vyn
 `bookings_timmar_betalar` och `klippkort_betalar_passen`, som låter
 timmarna betala passen av sig själva (avsnitt 1). Fas 22.3 la till
 pg_cron-jobbet `timmar-betalar`, som låter timmar som blivit lediga
-betala nästa bekräftade pass.
+betala nästa bekräftade pass. Fas 22.4 la till
+`bookings_timmar_betalar_forslaget` och
+`intern.obesvarade_forslag_slapper_timmarna`: timmen dras när förslaget
+skapas och kommer tillbaka om ingen svarat när dagen gått.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
@@ -1617,7 +1678,7 @@ tillbaka en kopia.**
 | `ansokan-notis` | Ett besked till den som sökt jobb (Fas 16.1): kvittot, eller mejlet om ett steg framåt med hela processen och var hen står. Databasen bestämmer vad, funktionen skickar | Triggern `ansokan_besked` och pg_cron `ansokan-besked`, via `notis_konfig.ansokan_url` |
 | `ansokan-gallring` | Tar bort ansökningar som inte ledde till anställning och CV-filer utan ansökan när de är ett år gamla (2026-09-27, avsnitt 5). Filen först genom Storage-API:t, sedan raden genom `ansokan_gallra()`, som vägrar medan filen finns. Svarar 500 om något inte gick | pg_cron `ansokan-gallring` via `intern.ansokan_gallring_vack()` och `notis_konfig.gallring_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
-| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`) | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
+| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`). Sedan 2026-09-28 också ett pass som valts för faktura och inte står på en faktura än: det står kvar som `faktura` tills webhooken skrivit betalningen | Knappen på passet i föräldravyn, Betala med kort nu på ett fakturapass, och Köp under Erbjudanden |
 | `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet. Med `timbank: true` dras minuterna i timbanken i stället, i `timbank_dra()` (Fas 22.1). Sedan Fas 22.2 betalar timmarna passen av sig själva i databasen, och knappen tar det de inte hann | Betala med timmar och Betala med timbanken i föräldravyn |
 | `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser`. Ett tillägg (Fas 20.1) bär `tillagg_booking_id` och skrivs, återbetalas och bestrids på sin egen rad | Stripe |
 | `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
@@ -1806,7 +1867,7 @@ hitta på ett pris, ett villkor eller ett löfte.
 |---|---|---|
 | `nextrum-maskot-svar.js` | `verktyg/bygg-maskotsvar.py` | `faq.html`, `en/faq.html` |
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
-| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen, online), de två guiderna och ämnes- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
+| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen, online), de fyra guiderna och ämnes- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
 | `sitemap.xml` | `verktyg/bygg-sitemap.py` | sidornas canonical, hreflang och noindex |
 | Ikonlänkar och storlekar | `verktyg/satt-logga.py` | `bilder/nextrum-logo.png` — finns inte i dag; PNG:erna är renderade ur `favicon.svg`, se `GOOGLE.md` |
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i verktyget. Körs för hand (kräver Chromium), inte i CI. `--sql` ger raderna till `biblioteksmaterial` |
@@ -1866,10 +1927,22 @@ står "i studievyn", vilket är sant både med och utan Google-kopplingen
 affären; fattas det ska sidan säga det, och inte förr.
 
 **Guiderna** (2026-09-26) svarar på det föräldrar söker innan de vet
-att de letar efter läxhjälp. Allt om andra organisationer (biblioteken,
-Röda Korset, Mattecentrum) är kontrollerat mot deras egna sidor och
-länkat, och tider står med flit inte med: de ändras varje termin.
-Författaren i Article-märkningen är Nextrum, aldrig ett personnamn.
+att de letar efter läxhjälp, och ska gå att ha nytta av utan att någon
+bokar något. Det en guide påstår om forskning eller om andra
+organisationer är länkat i `kallor`, och tider står med flit inte med:
+de ändras varje termin. Författaren i Article-märkningen är Nextrum,
+aldrig ett personnamn.
+
+**Guiden om gratis läxhjälp är borttagen** (2026-09-28). Leo: "på
+guider ta bort gratis läxhjälp och skriv andra guider istället". Den
+räknade upp biblioteken, Röda Korset och Mattecentrums räknestugor. I
+stället kom tre: läsförståelsen, plugga inför prov och när barnet inte
+vill göra läxorna. `/gratis-laxhjalp-stockholm` omdirigeras permanent
+till navet (`redirects` i `vercel.json`): adressen stod i kartan och i
+`GOOGLE.md`:s lista att skicka in, och en adress som stått i kartan
+ska inte bli en 404. Provguidens tre källor (Umeå universitet,
+Dunlosky m.fl. 2013, SRCD om sömn) är kontrollerade mot sökträffarna,
+inte öppnade: nätet i sessionen som skrev dem släppte inte fram sidorna.
 
 **Typsnittet förladdas bara på läxhjälpssidorna och guiderna** (samma
 hero med lång rubrik). Utan förladdning bröts navets rubrik om när
@@ -1968,8 +2041,20 @@ kör varje behörighetstest i en egen deltransaktion och rullar tillbaka
 allt på sista raden. Notistriggern på `bookings` stängs av under
 körningen så att fixturpassen aldrig blir ett mejl, och flaggan
 `erbjudanden` står av så att timmarna inte betalar dem (Fas 22.2). Svaret är en tabell
-`test, ok, detalj` — **varje rad ska vara ok**. Kör den efter varje
-ändring i en policy eller en trigger.
+`test, ok, detalj` — **varje rad ska vara ok**. Ett villkor som blir
+null visas som false sedan 2026-09-28: tre prov stod null i en lista
+över ok utan att någon såg det. Kör den efter varje ändring i en policy
+eller en trigger.
+
+**Filen är för stor för ett enda `execute_sql` från en session** (350
+kB). Låt databasen hämta den själv, i en transaktion som rullas
+tillbaka: `begin; create extension if not exists http with schema
+extensions;`, sedan ett do-block som hämtar filen (och en ny migration)
+från `raw.githubusercontent.com` på en commit, inte en gren, prövar
+md5, tar bort raden `begin;`, slutraden och `rollback;`, och kör dem
+med `execute`. Sist `select … from utfall` och `rollback;`, som tar
+tillägget med sig. Så provades Fas 22.4: hela filen med migrationen,
+och utan den, mot driften, utan att något blev kvar.
 
 **Kör hela filen, inte bara ditt eget avsnitt.** 2026-09-27 hade den
 varit röd sedan förmiddagen utan att någon sett det, för varje session
@@ -1981,6 +2066,10 @@ före passet. Fas 19.5 flyttade sitt pass till i går klockan 10 hos
 studiehjälpare A, där fixturen från Fas 14.2 redan stod, och krockade
 med `bookings_tutor_slot_unique` i varje hel körning. En fixtur i
 huvudtransaktionen syns för allt som kommer efter den i filen.
+2026-09-28 igen: blocket för Fas 9.3/9.4 avbokar b0d1 på riktigt, och
+b6c1 från Fas 14.6 står bekräftat och obetalt, så sex prov för
+timmarna (22.1–22.3) föll i varje hel körning. Fixturerna ställs nu
+tillbaka överst i avsnittet för 22.1.
 
 ---
 
@@ -2067,8 +2156,14 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
     `skydda_bokningsfalt` släpper igenom `ingen`/`vantar`/`misslyckad`
     → `faktura` när `intern.faktura_tillaten()` säger ja, och
     `faktura` → `ingen` så länge passet inte står på en fakturarad.
-    Kortspärren godtar `faktura`, och `stripe-checkout` vägrar ett
-    fakturapass.
+    Kortspärren godtar `faktura`. `stripe-checkout` tar sedan
+    2026-09-28 ett fakturapass som inte står på en fakturarad, utan att
+    skriva `vantar`: passet betalas mot fakturan tills webhooken skrivit
+    `betald` (`faktura` står i `TAR_EMOT_BETALNING`), och
+    månadskörningen tar bara `faktura`. Vyn använder inte längre bytet
+    `faktura` → `ingen`, men databasen släpper igenom det. Hinner
+    månadskörningen lägga passet på fakturan medan kassan står öppen,
+    och familjen betalar ändå, larmar `betald_och_fakturerad`.
   - **Sanningen om ett fakturapass står på fakturan.** Passet står kvar
     som `faktura` också när fakturan är betald; `invoices.status`, nådd
     genom `invoice_lines`, säger om den är det.
@@ -2261,7 +2356,12 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
   ändringen. **Fas 22.3** (2026-09-28) är bara databasen:
   migrationen `fas22_3_lediga_timmar_betalar_nasta_pass` med jobbet
   `timmar-betalar`. Ingen funktion ändrades, och fortfarande fanns
-  inga köpta timmar i driften. Kvar: en familj som inte är matchad når inte
+  inga köpta timmar i driften. **Fas 22.4** (2026-09-28) är också bara
+  databasen: migrationen `fas22_4_timmen_dras_nar_forslaget_skickas`,
+  körd som `20260928174612` direkt efter att PR #105 mergats, och
+  ordagrant filen (samma md5 som satserna i `schema_migrations`). Hela
+  `rls-test.sql` gick igenom mot driften efteråt, 693 av 693. Då fanns
+  ett betalt klippkort i driften, och inget förslag att betala. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**

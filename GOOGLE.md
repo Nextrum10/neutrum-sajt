@@ -5,7 +5,7 @@ Allt på sajtens sida är gjort och kontrollerat:
 | | |
 |---|---|
 | favicon | finns, svarar 200 |
-| sitemap.xml | 36 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` |
+| sitemap.xml | 38 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` |
 | robots.txt | pekar på sitemap, blockerar inget publikt |
 | strukturerad data | Organization + WebSite med namn, beskrivning, slogan, sociala konton |
 | verifieringspost i DNS | finns redan (`google-site-verification=5o3n…`) |
@@ -53,10 +53,10 @@ På smal skärm är menyn hopfälld bakom hamburgerikonen uppe till
 vänster.
 
 Väl inne: skriv `sitemap.xml` i rutan och klicka **Skicka**. Status
-ska bli *Lyckades* med 35 upptäckta adresser.
+ska bli *Lyckades* med 38 upptäckta adresser.
 
 Kartan är kontrollerad och fungerar — `https://nextrum.se/sitemap.xml`
-svarar 200 med giltig XML och 36 adresser. Öppna den i webbläsaren om
+svarar 200 med giltig XML. Öppna den i webbläsaren om
 du vill se själv. Går den inte att skicka in är det något i Search
 Console, inte i filen.
 
@@ -81,7 +81,6 @@ Upprepa för de sidor som är viktigast, i den här ordningen:
 ```
 https://nextrum.se/laxhjalp-stockholm
 https://nextrum.se/laxhjalp-matematik
-https://nextrum.se/gratis-laxhjalp-stockholm
 https://nextrum.se/priser
 https://nextrum.se/bli-studiehjalpare
 https://nextrum.se/intresseanmalan
