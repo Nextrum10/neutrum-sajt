@@ -1,10 +1,11 @@
 -- ============================================================
 -- NEXTRUM — månadskörningen går av sig själv den 1:a
 --
--- INTE KÖRD I DRIFTEN ÄN (2026-09-28). Den körs sist av stegen i
--- DEPLOY-BETALNING.md avsnitt 6, när provpassen är undantagna och
--- väckningen torrkörts, och filen döps då om till versionen
--- apply_migration ger den.
+-- Körd 2026-09-28, sist av stegen i DEPLOY-BETALNING.md avsnitt 6,
+-- när väckningen torrkörts. Provpasset undantogs inte: Leo valde samma
+-- kväll att ha det kvar, för att se hur lönespecen ser ut. Körningen
+-- den 1 oktober skriver alltså ett underlag och ett fakturautkast för
+-- det, och de ska varken betalas ut eller läggas in i Fortnox.
 --
 -- intern.manadskorning_vack() kom i manadskorningen_vacks_av_databasen
 -- men schemalades inte där. Fas 7:s regel: ett jobb schemaläggs när det
