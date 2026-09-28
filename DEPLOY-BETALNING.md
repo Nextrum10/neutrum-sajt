@@ -207,8 +207,8 @@ när någon kommit ihåg knappen. pg_cron-jobbet `manadskorning` kör
 `intern.manadskorning_vack()` den 1:a klockan 04:17 UTC, som väcker `fakturering`
 med hemligheten ur `notis_konfig` (adressen i `notis_konfig.fakturering_url`).
 Den vägen skriver alltid förra månaden, och samma underlag och fakturautkast som
-knappen. Gick det fel står det under System → Fel, och passen larmar som Inte
-utbetalt.
+knappen. Gick det fel, eller skrev den bara en del (207), står det under System →
+Fel i sex timmar, och passen larmar som Inte utbetalt och Fakturapass utan faktura.
 
 Det är fortfarande ett aktivt beslut, inte något som råkar vara påslaget. Ordningen:
 

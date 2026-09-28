@@ -480,7 +480,13 @@
      hemlighet som inte stämmer, 401 från Supabases grind (grindfel) är
      JWT-kravet som slagits på igen, 5xx är funktionen själv, och inget
      svar alls är ett anrop som aldrig kom fram. Innehållet i svaret
-     visas inte: det kan bära uppgifter ur anmälan som felet gällde. */
+     visas inte: det kan bära uppgifter ur anmälan som felet gällde.
+
+     207 kommer bara från månadskörningen (2026-09-28): den skrev en
+     del men inte allt, och det som gick in står kvar. notisfel() tar
+     inte med 207 från någon annan väg. Vad som inte gick står i
+     fakturerings svar, som inte visas här, men en torrkörning under
+     Ekonomi → Månadskörning visar det som saknas. */
   const NOTISVÄG = {
     'notis-ko': 'Mejlen om pass, meddelanden och rapporter',
     'lead-notis': 'Intresseanmälan: aviseringen och kvittot',
@@ -497,6 +503,10 @@
     }
     if (n.status_kod === 401) return 'Funktionen nekade: hemligheten som skickades stämmer inte med den i notis_konfig.';
     if (n.status_kod === 404) return 'Funktionen finns inte i driften.';
+    if (n.status_kod === 207 && n.kalla === 'fakturering') {
+      return 'Månadskörningen skrev inte allt: något underlag eller fakturautkast gick inte att spara. '
+        + 'Torrkör förra månaden under Ekonomi → Månadskörning och skapa det som saknas. Svaret där säger vad som inte gick in.';
+    }
     if (n.status_kod >= 500) return 'Funktionen gick sönder. Varför står i dess logg i Supabase.';
     return 'Funktionen svarade med felkod ' + n.status_kod + '.';
   }
@@ -512,7 +522,10 @@
       { namn: 'Svar', rita: n => n.status_kod
         ? pill(String(n.status_kod), n.status_kod >= 500 ? '' : 'ar-vantar')
         : pill(n.tog_slut ? 'Tidsgräns' : 'Inget svar', '') },
-      { namn: 'Vad det betyder', rita: n => esc(notisfelBetyder(n)) }
+      { namn: 'Vad det betyder', rita: n => esc(notisfelBetyder(n))
+        + (n.kalla === 'fakturering'
+          ? '<div style="margin-top:8px"><a class="btn btn-ghost btn-sm" href="#ekonomi/korning">Öppna Månadskörning</a></div>'
+          : '') }
     ], rader, 'Inga misslyckade utskick de senaste sex timmarna');
   }
 

@@ -42,8 +42,8 @@
 -- godkand_ansokan_gallras_tva_ar_efter_sista_passet,
 -- ai_texterna_och_avslutade_uppgifter_gallras, Fas 22.4 (timmen dras
 -- när förslaget skickas), manadskorningen_vacks_av_databasen,
--- manadskorningen_gar_den_forsta och Fas 23.1 (de digitala uppgifterna)
--- är körda.
+-- manadskorningen_gar_den_forsta, notisfelen_visar_manadskorningens_207
+-- och Fas 23.1 (de digitala uppgifterna) är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -6189,6 +6189,52 @@ select 'Månadskörning går den 1:a', count(*) = 1,
   from cron.job
  where jobname = 'manadskorning' and active and schedule = '17 4 1 * *'
    and command = 'select intern.manadskorning_vack()';
+
+-- ------------------------------------------------------------
+-- Månadskörningen som bara skrev en del syns under System → Fel
+-- (notisfelen_visar_manadskorningens_207, 2026-09-28)
+--
+-- fakturering svarar 207 när en del av skrivningarna gick fel, och
+-- notisfel() tog bara med 400 och uppåt, så en körning den 1:a som
+-- lämnat en studiehjälpare utan lönespecifikation syntes ingenstans.
+-- Anropet görs genom väckningen som schemat kör, så att det är
+-- schemavägens eget id och mål som provas, och svaret läggs in för hand
+-- med samma id. En 207 från notis-ko ska inte synas, och inte en 200
+-- från fakturering heller.
+-- ------------------------------------------------------------
+do $$
+declare
+  svar jsonb; begaran bigint; rader jsonb; fel text;
+begin
+  begin
+    update public.notis_konfig set fakturering_url = 'https://example.invalid/functions/v1/fakturering' where id = 1;
+    svar := intern.manadskorning_vack();
+    begaran := (svar ->> 'begaran')::bigint;
+    if begaran is null then
+      raise exception 'väckningen anropade inget: %', svar;
+    end if;
+    insert into net._http_response (id, status_code, timed_out, created, headers) values
+      (begaran, 207, false, now(), '{}'::jsonb),
+      (-9011, 207, false, now(), '{}'::jsonb),
+      (-9012, 200, false, now(), '{}'::jsonb);
+    insert into intern.natanrop_logg (id, mal) values (-9011, 'notis-ko'), (-9012, 'fakturering');
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    select coalesce(jsonb_agg(jsonb_build_object('status_kod', x.status_kod, 'kalla', x.kalla) order by x.id), '[]')
+      into rader from public.notisfel(24) x where x.id in (begaran, -9011, -9012);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Månadskörning 207 under System → Fel', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('Månadskörning en 207 från schemat syns under System → Fel med källan fakturering, en 207 från notis-ko och en 200 inte',
+       rader = '[{"status_kod": 207, "kalla": "fakturering"}]'::jsonb, rader::text);
+  end if;
+end $$;
 
 -- ------------------------------------------------------------
 -- Fas 23.1: de digitala uppgifterna

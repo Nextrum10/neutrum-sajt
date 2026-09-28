@@ -985,8 +985,12 @@ den 1:a klockan 04:17 UTC, och `notis_konfig.fakturering_url`.
 `intern.manadskorning_vack()` väcker `fakturering` genom
 `intern.natanrop` med hemligheten i `x-nextrum-notis`, och den vägen
 skriver alltid förra månaden. Saknas adressen blir det en uppgift
-(`manadskorning:adress`) i stället för en tyst månad; går anropet fel
-står det under System → Fel och passen larmar som `ej_utbetalt`.
+(`manadskorning:adress`) i stället för en tyst månad. Går anropet fel,
+eller skriver körningen bara en del (207, till exempel en krock på
+`unique(tutor_id, period)`), står det under System → Fel med källan
+`fakturering` (`notisfelen_visar_manadskorningens_207`, 2026-09-28),
+men bara i sex timmar, alltså till förmiddagen den 1:a. Efter det är
+larmen `ej_utbetalt` och `faktura_saknas` det enda spåret.
 Adminvyn visar om jobbet är på (`manadskorning_lage()`, bara admin): ett
 schema som står av ser annars ut precis som ett som fungerar.
 **Jobbet ska inte slås på förrän provpassen är undantagna**: det första
@@ -1341,6 +1345,16 @@ syns bara när anropet görs.
   `sb-error-code` (`UNAUTHORIZED_…`) när JWT-kravet slagits på igen
   (avsnitt 7, `config.toml`); funktionen själv svarar 401 när
   hemligheten inte stämmer. Adminvyn säger vilket.
+- **207 är ett fel bara från `fakturering`** (2026-09-28,
+  `notisfelen_visar_manadskorningens_207`). Månadskörningen svarar 207
+  när en del av skrivningarna gick fel, och det som gick in står kvar.
+  `notisfel()` tog bara med 400 och uppåt, så en körning som lämnat en
+  studiehjälpare utan lönespecifikation syntes inte. Nu säger adminvyn
+  vad 207 betyder och pekar på Ekonomi → Månadskörning, och översikten
+  räknar det som fel i månadskörningen, inte som en notis. Ingen annan
+  väg svarar 207; ett delvis misslyckat utskick svarar 500 (`notis-ko`,
+  `ansokan-gallring`). En väg som börjar svara 207 syns inte förrän
+  villkoret i `notisfel()` säger det, med flit.
 - **Svaren finns i sex timmar** (`pg_net.ttl`), inte ett dygn. Listan
   svarar på "gick det fram nyss?", inte på "vad hände i natt?".
 

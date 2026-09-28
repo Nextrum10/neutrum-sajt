@@ -228,6 +228,11 @@
     const idag = isoFor(new Date());
     const öppna = (S.uppgifter || []).filter(u => u.status === 'oppen' || u.status === 'pagar');
     const sena = öppna.filter(u => u.forfallodag && u.forfallodag < idag);
+    /* Månadskörningen står i notisfel() men är inget mejl, och sedan
+       2026-09-28 syns också en körning som bara skrev en del (207).
+       Under "notiser som inte gick fram" hade en studiehjälpare utan
+       lönespecifikation sett ut som ett mejl som inte kom fram. */
+    const körning = (S.notisfel || []).filter(n => n.kalla === 'fakturering').length;
     const förfallna = l.forfallna_fakturor != null ? l.forfallna_fakturor
       : (S.fakturor || []).filter(f => (f.status === 'skickad' || f.status === 'forfallen')
           && !f.betald_at && f.forfaller && f.forfaller < idag).length;
@@ -242,8 +247,10 @@
         under: 'Pass som hölls utan betalning, eller något i utbetalningarna som inte går ihop.', till: '#ekonomi/avvikelser' },
       { antal: l.klientfel_24h != null ? l.klientfel_24h : 0, rubrik: 'fel hos användarna', ental: 'fel hos en användare',
         under: 'Rapporterade från webbläsarna det senaste dygnet.', till: '#system/fel' },
-      { antal: (S.notisfel || []).length, rubrik: 'notiser som inte gick fram', ental: 'notis som inte gick fram',
+      { antal: (S.notisfel || []).length - körning, rubrik: 'notiser som inte gick fram', ental: 'notis som inte gick fram',
         under: 'Mejl som skulle ha skickats de senaste sex timmarna.', till: '#system/fel' },
+      { antal: körning, rubrik: 'fel i månadskörningen', ental: 'fel i månadskörningen',
+        under: 'Underlag eller fakturautkast som inte skrevs när den gick, de senaste sex timmarna.', till: '#system/fel' },
       { antal: öppna.length - (l.forsenade_uppgifter != null ? l.forsenade_uppgifter : sena.length),
         rubrik: 'öppna uppgifter', ental: 'öppen uppgift',
         under: 'Inte klara, men inte heller sena.', till: '#uppgifter' }
