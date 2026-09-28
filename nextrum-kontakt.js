@@ -4,6 +4,9 @@
    tråd, från var sitt håll; skillnaden är bara vem som är "jag".
 
    Kräver: nextrum-app.js (NX) och den globala supa-klienten.
+   passRad ritar brickan, statusen och bubblan med NXStudie
+   (nextrum-studie.js), som laddas efter den här filen men alltid
+   finns när en rad ritas. Adminvyn laddar inte den här filen.
    Databasen: messages-tabellen i schema-v4.sql.
    ============================================================ */
 window.NXKontakt = (function () {
@@ -311,37 +314,47 @@ window.NXKontakt = (function () {
      EN PASSRAD
      Samma markup i båda vyerna, olika knappar. atgarder() får
      bokningen och returnerar knapparnas HTML.
+
+     Passets läge med ton och ikon (Vyerna i ny form, 2026-09-28):
+     statusen är en färgad prick och ett ord, och orden är neutrum —
+     det är passet som är bekräftat, inte tiden. klass står kvar för
+     den som läser den.
      ============================================================ */
   var LÄGEN = {
-    requested: { text: 'Önskad', klass: 'onskad' },
-    confirmed: { text: 'Bekräftad', klass: 'bekraftad' },
-    completed: { text: 'Genomförd', klass: 'genomford' },
-    cancelled: { text: 'Avbokad', klass: 'avbokad' }
+    requested: { text: 'Föreslaget', klass: 'onskad', ton: 'ockra' },
+    confirmed: { text: 'Bekräftat', klass: 'bekraftad', ton: 'mossa' },
+    completed: { text: 'Genomfört', klass: 'genomford', ton: 'neutral', ikon: 'bock' },
+    cancelled: { text: 'Avbokat', klass: 'avbokad', ton: 'neutral', ikon: 'kryss' }
   };
 
   /* Betalningens läge, som ett andra märke bredvid passets (Fas 14.2).
      Familjen betalar varje pass med kort, i förväg eller när de
      bekräftar rapporten efter passet (Fas 19.2), och båda sidor
-     ska se samma ord för samma läge: "Ej betalt" hos familjen och
+     ska se samma ord för samma läge: "Inte betalt" hos familjen och
      "Betalt" hos studiehjälparen om samma pass hade varit en tvist
      innan någon ens sagt något.
 
      null betyder inget märke. En förfrågan betalas inte än, och ett
      pass Nextrum undantagit ska inte betalas alls. Ett avbokat pass
      får märket bara om pengar faktiskt rört sig — då är det precis
-     vad familjen behöver se. */
+     vad familjen behöver se.
+
+     Märket står sedan 2026-09-28 som tonad text i radens högerspalt,
+     inte som ett piller. Obetalt är lera: det kräver något av någon. */
   var BETALLÄGEN = {
-    ingen: { text: 'Ej betalt', klass: 'pa' },
-    vantar: { text: 'Betalning påbörjad', klass: 'pa' },
-    misslyckad: { text: 'Betalningen nekades', klass: 'sen' },
-    betald: { text: 'Betalt', klass: 'klar' },
-    tvist: { text: 'Betalt, bestridd', klass: 'sen' },
-    aterbetald: { text: 'Återbetalt', klass: 'ej' },
+    ingen: { text: 'Inte betalt', klass: 'pa', ton: 'lera' },
+    vantar: { text: 'Betalning påbörjad', klass: 'pa', ton: 'ockra' },
+    misslyckad: { text: 'Betalningen nekades', klass: 'sen', ton: 'lera' },
+    betald: { text: 'Betalt', klass: 'klar', ton: 'mossa', ikon: 'bock' },
+    tvist: { text: 'Betalt, bestridd', klass: 'sen', ton: 'lera' },
+    aterbetald: { text: 'Återbetalt', klass: 'ej', ton: 'neutral' },
     /* Fas 14.6. Familjen betalar passet mot månadsfaktura. Om fakturan
        är betald står på fakturan, inte på passet, så märket säger bara
        hur det betalas. */
-    faktura: { text: 'Faktura', klass: 'pa' }
+    faktura: { text: 'Faktura', klass: 'pa', ton: 'ockra' }
   };
+  /* Ett märke utan ton (äldre anropare) får den ur klassen. */
+  var KLASS_TON = { klar: 'mossa', pa: 'ockra', sen: 'lera', ej: 'neutral' };
 
   function betalMärke(b) {
     if (!b || b.fakturerbar === false) return null;
@@ -351,40 +364,97 @@ window.NXKontakt = (function () {
     }
     if (b.status !== 'confirmed' && b.status !== 'completed') return null;
     /* Fas 19.5. Första timmen bjuds, och ett pass på en timme kostar då
-       ingenting. "Ej betalt" hade varit fel ord. Föräldravyn märker
+       ingenting. "Inte betalt" hade varit fel ord. Föräldravyn märker
        passet (inget_att_betala), för bara den hämtar priset. */
-    if (läge === 'ingen' && b.inget_att_betala) return { text: 'På köpet', klass: 'klar' };
+    if (läge === 'ingen' && b.inget_att_betala) return { text: 'På köpet', klass: 'klar', ton: 'mossa' };
     return BETALLÄGEN[läge] || null;
   }
 
+  /* ============================================================
+     RADEN I NY FORM (Vyerna i ny form, 2026-09-28)
+
+     En tabellrad: datumbricka · titel och metarad · status · högerspalt
+     (pengar, betalläge, en knapp) · pil när raden är en länk. Tiden
+     flyttade ur brickan in i metaraden, först, som ett tidsspann
+     räknat ur duration_min: "16:00–17:00 · På plats, Hammarby allé 12".
+     Stilen står i nextrum-innehall.css (PASSRADEN). Brickan, statusen
+     och bubblan ritas av NXStudie, som laddas efter den här filen men
+     finns när en rad ritas.
+
+     Raden är en container: är den smalare än 560 px står bricka och
+     text överst, och status, högerspalt och knappar på en rad under —
+     vilken panel den än står i. Inget i den byter höjd av ett tryck
+     (fälla 4), och spalterna är minmax(0,1fr) (fälla 2).
+
+     o: {
+       href       passets sida. Titeln blir en länk (tangentbord och
+                  skärmläsare), hela raden går att trycka på — det
+                  sköter NXStudie — och pilen säger att det finns mer
+       titel      rubriken, t.ex. "Matematik med Alva". Förval: ämnet
+       under      metaraden efter tidsspannet
+       tid        false: inget tidsspann först i metaraden
+       vem        en rad vanlig text under metaraden
+       citat      { text, vem }: en anteckning som pratbubbla under
+       status     { text, ton, ikon } — ton mossa|ockra|lera|neutral,
+                  ikon bock|kryss. Förval ur LÄGEN. false: ingen
+                  statuskolumn alls
+       märke      { text, ton|klass, ikon }: betalläget (betalMärke),
+                  som tonad text i högerspalten
+       sida       html i högerspalten i stället för märket, t.ex.
+                  beloppet och "Inte betalt"
+       atgarder   knapparnas html, sist i högerspalten
+       markerad   raden är tonad: här behövs ett svar
+       tidigare   brickan bara med kant. Förval: passets dag har varit,
+                  eller passet är avbokat
+       forslag    brickan med streckad kant: ett förslag som väntar på
+                  motparten
+       veckodag   false: brickan utan veckodag
+     }
+     ============================================================ */
   function passRad(b, opts) {
     var o = opts || {};
-    var l = LÄGEN[b.status] || { text: b.status, klass: '' };
-    var d = String(b.wanted_date || '').split('-');
-    var dag = d[2] || '', mån = d[1] ? (NX.MANADER[Number(d[1]) - 1] || '').slice(0, 3) : '';
+    var avbokad = b.status === 'cancelled';
+    var tidigare = o.tidigare != null ? !!o.tidigare
+      : avbokad || String(b.wanted_date || '') < isoFor(new Date());
+    var status = o.status === false ? null
+      : o.status || LÄGEN[b.status] || { text: b.status || '', ton: 'neutral' };
 
-    /* o.href: raden leder till passets egen sida. Rubriken blir en
-       länk (tangentbord och skärmläsare), och hela raden går att
-       trycka på — det sköter NXStudie. Pilen säger att det finns mer
-       bakom raden än det som står på den. */
+    var namn = o.titel || b.subject || 'Pass';
     var titel = o.href
-      ? '<a class="pass-titel" href="' + esc(o.href) + '">' + esc(b.subject || 'Pass') + '</a>'
-      : '<b>' + esc(b.subject || 'Pass') + '</b>';
+      ? '<a class="nx-passrad-titel" href="' + esc(o.href) + '">' + esc(namn) + '</a>'
+      : '<b class="nx-passrad-titel">' + esc(namn) + '</b>';
+    var meta = [o.tid === false ? '' : NXStudie.tidsspann(b.wanted_time, b.duration_min), o.under]
+      .filter(Boolean).join(' · ');
 
-    return '<div class="pass' + (o.href ? ' pass-klickbar' : '') + '"'
+    var märke = '';
+    if (o.märke && o.märke.text) {
+      var mTon = o.märke.ton || KLASS_TON[o.märke.klass] || 'neutral';
+      märke = '<span class="nx-passrad-marke ar-' + esc(mTon) + '">'
+        + (o.märke.ikon && NXStudie.IKON[o.märke.ikon] ? NXStudie.IKON[o.märke.ikon] : '')
+        + esc(o.märke.text) + '</span>';
+    }
+    var sida = (o.sida != null ? o.sida : märke)
+      + (o.atgarder ? '<span class="nx-passrad-knappar">' + o.atgarder + '</span>' : '');
+    var statusHtml = status ? NXStudie.status(status) : '';
+
+    return '<div class="nx-passrad' + (o.href ? ' ar-klickbar' : '') + (o.markerad ? ' ar-markerad' : '')
+      + (tidigare ? ' ar-tidigare' : '') + (avbokad ? ' ar-avbokad' : '') + (status ? '' : ' ar-utan-status') + '"'
       + (o.href ? ' data-href="' + esc(o.href) + '"' : '') + '>'
-      + '<span class="pass-nar"><b>' + esc(dag) + '</b>' + esc(mån)
-      + (b.wanted_time ? '<br>' + esc(b.wanted_time) : '') + '</span>'
-      + '<span class="pass-vad">' + titel
-      + (o.under ? '<span>' + esc(o.under) + '</span>' : '')
-      + (o.vem ? '<span class="pass-vem">' + esc(o.vem) + '</span>' : '')
-      + '</span>'
-      + '<span class="pass-atg"><span class="lage ' + l.klass + '">' + esc(l.text) + '</span>'
-      + (o.märke ? '<span class="lage ' + o.märke.klass + '">' + esc(o.märke.text) + '</span>' : '')
-      + (o.atgarder || '')
-      + '</span>'
-      + (o.href ? '<span class="pass-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></span>' : '')
-      + '</div>';
+      + '<div class="nx-passrad-in">'
+      + NXStudie.datum(b.wanted_date, { tidigare: tidigare, forslag: !!o.forslag, avbokad: avbokad, veckodag: o.veckodag })
+      + '<div class="nx-passrad-text">' + titel
+      + (meta ? '<span class="nx-passrad-meta">' + esc(meta) + '</span>' : '')
+      + (o.vem ? '<span class="nx-passrad-vem">' + esc(o.vem) + '</span>' : '')
+      + '</div>'
+      + (o.citat && o.citat.text ? NXStudie.citat(o.citat.text, o.citat.vem, 'nx-passrad-citat') : '')
+      + (statusHtml || sida
+          ? '<div class="nx-passrad-fot">'
+            + (statusHtml ? '<span class="nx-passrad-status">' + statusHtml + '</span>' : '')
+            + (sida ? '<span class="nx-passrad-sida">' + sida + '</span>' : '')
+            + '</div>'
+          : '')
+      + (o.href ? '<span class="nx-passrad-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></span>' : '')
+      + '</div></div>';
   }
 
   return {

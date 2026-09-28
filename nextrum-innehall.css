@@ -1,0 +1,729 @@
+/* ============================================================
+   NEXTRUM — innehållet i vyerna, i ny form
+   Laddas BARA av foralder.html och larare.html, sist, efter
+   nextrum-arbetsyta.css. Adminvyn laddar den inte: den ska se ut som
+   förut, och den är ett arbetsbord där tätheten är poängen.
+
+   Leo 2026-09-28: "fixa allt och implementera på vår sida" — förslaget
+   "Vyerna i ny form" byggt in i studievyn och studiehjälparvyn.
+   Sidomenyn, hero och bokningen rörs inte. Innehållet följer sju
+   regler:
+     1. en yta per sak: ett objekt är ETT kort direkt på sidan, inga
+        lådor i lådor. Inne i kortet högst en inskjuten yta.
+     2. ett huvudval per kort: en primär knapp, andraval som liten
+        ghost, det tredje som textlänk.
+     3. status är en färgad prick och ett ord, inte en ram som ser ut
+        som en knapp.
+     4. mono versaler bara för korta etiketter, aldrig för meningar.
+     5. beloppet syns: det som ska betalas står stort.
+     6. korta ingresser; regeln förklaras där beslutet fattas.
+     7. rapporten är ett brev, med avsändare.
+
+   TONERNA är fyra och betyder samma sak överallt (.ar-mossa …):
+     mossa    klart, bekräftat, betalt
+     ockra    väntar, föreslaget, pågående — bara det
+     lera     kräver handling: obetalt, tillägg, följas upp, försenad
+     neutral  genomfört, avbokat, upplysning
+
+   INGEN HEXKOD I FILEN, med flit. Allt är tokens ur cinema, och då
+   följer mörkt läge med av sig självt. Där mörkt läge ändå måste
+   skrivas (en yta som ska lyfta) står regeln i MÖRKT LÄGE sist i
+   grunden, med samma fyra klassnivåer som nextrum-vy.css — fälla 2 i
+   CLAUDE.md avsnitt 3: en mörkerregel på (0,4,0) slår en vanlig
+   regel oavsett filordning.
+
+   Filen har sex delar i den här ordningen, och rubrikerna står kvar
+   exakt så, så att parallella ändringar kan slås ihop: grunden,
+   passraden, passets sida, månaderna och schemat, och så en del per
+   vy. Vyernas egna regler står bara under sin egen rubrik.
+   ============================================================ */
+
+
+/* ============ GRUNDEN ============ */
+
+/* Tonen som variabel: prickar, etiketter och tinter läser den. Sätts
+   av klassen på det som bär tonen, och ärvs av det inuti. */
+.vy .ar-mossa{--nx-ton:var(--mossa);--nx-ton-text:var(--mossa)}
+.vy .ar-ockra{--nx-ton:var(--ockra);--nx-ton-text:var(--ockra)}
+.vy .ar-lera{--nx-ton:var(--acc);--nx-ton-text:var(--acc-text)}
+.vy .ar-neutral{--nx-ton:var(--bl-3);--nx-ton-text:var(--bl-2)}
+
+/* Ikonerna är streck i currentColor (NXStudie.IKON). */
+.vy .nx-ikon{
+  width:16px;height:16px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+}
+.vy .nx-ikon-maltavla{color:var(--acc);stroke-width:1.7}
+.vy .nx-ikon-pil{color:var(--mossa);stroke-width:1.7}
+
+/* ---------- kortet ----------
+   Ett objekt, en yta. Samma ton som sidan: kanten och skuggan håller
+   isär det, inte en ny färg. ar-lugn är det sekundära — tidigare,
+   betalda, bekräftade — med bara kant. */
+.vy .nx-kort{
+  background:var(--pap);
+  border:1px solid var(--ln);
+  border-radius:26px;
+  box-shadow:var(--sk-1);
+  padding:clamp(18px,2.4vw,28px);
+  min-width:0;
+}
+.vy .nx-kort.ar-lugn{background:transparent;box-shadow:none}
+/* En lista är ett kort med rader, åtskilda av en hårlinje. */
+.vy .nx-kort.nx-lista{padding:6px 24px}
+@media (max-width:560px){
+  .vy .nx-kort{border-radius:24px}
+  .vy .nx-kort.nx-lista{padding:4px 16px}
+}
+
+/* ---------- gruppetiketten ----------
+   Strecket, ordet i mono, räknaren till höger: "— KOMMANDE · 3 PASS".
+   Samma anslag som panelrubriken (.dbox h5), men utan panelen. */
+.vy .nx-grupp{
+  display:flex;align-items:center;gap:11px;
+  margin:0 0 12px;min-height:18px;
+  font-family:var(--f-mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--bl-2);
+}
+.vy .nx-grupp::before{content:"";width:18px;height:1px;flex:none;background:currentColor;opacity:.55}
+.vy .nx-grupp > em{margin-left:auto;font-style:normal;letter-spacing:.1em}
+/* En länk längst till höger ("Hela schemat ›") är text, inte etikett. */
+.vy .nx-grupp > a{
+  margin-left:auto;font-family:var(--f-sans);font-size:13.5px;font-weight:600;
+  letter-spacing:0;text-transform:none;color:var(--acc-text);text-decoration:none;
+}
+.vy .nx-grupp > em + a{margin-left:14px}
+.vy .nx-grupp > a:hover{color:var(--acc)}
+
+/* ---------- status: prick och ord ----------
+   Ordet i brödtextens färg, pricken i tonen. Bock för genomfört och
+   kryss för avbokat, i stället för pricken. ar-tint är pillret på
+   passets sida: samma prick, med tonad botten. */
+.vy .nx-status{
+  display:inline-flex;align-items:center;gap:8px;min-width:0;
+  font-size:14px;line-height:1.3;color:var(--bl-2);
+}
+.vy .nx-status > i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--nx-ton,var(--bl-3))}
+.vy .nx-status > .nx-ikon{width:15px;height:15px;color:var(--nx-ton,var(--bl-3))}
+.vy .nx-status.ar-tint{
+  padding:7px 13px 7px 11px;border-radius:100px;
+  background:color-mix(in srgb,var(--nx-ton) 13%,transparent);
+  color:var(--nx-ton-text);font-size:13.5px;font-weight:650;white-space:nowrap;
+}
+
+/* ---------- omdömet ----------
+   Mycket bra mossa, Bra neutral, Behöver följas upp lera. Ockra betyder
+   väntar, inte bra — därför bytte Bra färg 2026-09-28. Samma tre toner
+   i rapportens etikett, i formuläret och i fördelningen nedan. */
+.vy .nx-omdome{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 12px 6px 10px;border-radius:100px;
+  font-size:13px;font-weight:650;line-height:1.2;white-space:nowrap;
+  background:color-mix(in srgb,var(--nx-ton) 13%,transparent);color:var(--nx-ton-text);
+}
+.vy .nx-omdome > i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--nx-ton)}
+.vy .nx-omdome[data-v="mycket_bra"]{--nx-ton:var(--mossa);--nx-ton-text:var(--mossa)}
+.vy .nx-omdome[data-v="bra"]{
+  --nx-ton:var(--bl-2);--nx-ton-text:var(--bl-2);
+  background:color-mix(in srgb,var(--bl) 8%,transparent);
+}
+.vy .nx-omdome[data-v="folja_upp"]{--nx-ton:var(--acc);--nx-ton-text:var(--acc-text);background:var(--acc-soft)}
+
+/* Samma toner där omdömet redan fanns: pricken i studiehjälparens
+   rapportlista och i formulärets tre val, och stapeln "Hur passen
+   gick" i båda vyerna. Kunskapsnivåernas stapel (ar-bra, ar-mitten,
+   ar-folj) är en annan sak och står kvar. */
+.vy .rp-marke[data-v]{border-color:transparent;font-weight:650}
+.vy .rp-marke[data-v="mycket_bra"]{background:color-mix(in srgb,var(--mossa) 13%,transparent);color:var(--mossa)}
+.vy .rp-marke[data-v="bra"]{background:color-mix(in srgb,var(--bl) 8%,transparent);color:var(--bl-2)}
+.vy .rp-marke[data-v="bra"] i{background:var(--bl-2)}
+.vy .rp-marke[data-v="folja_upp"]{background:var(--acc-soft);color:var(--acc-text)}
+.vy .rp-gick button[data-v="bra"][aria-pressed="true"] i{background:var(--bl-2)}
+.vy .fd-stapel i.ar-mossa{background:var(--mossa)}
+.vy .fd-stapel i.ar-neutral{background:var(--bl-3)}
+.vy .fd-stapel i.ar-lera{background:var(--acc)}
+.vy .fd-post i.ar-mossa{background:var(--mossa)}
+.vy .fd-post i.ar-neutral{background:var(--bl-2)}
+.vy .fd-post i.ar-lera{background:var(--acc)}
+
+/* ---------- beloppet ----------
+   Det som ska betalas står stort, med en etikett i tonen ovanför:
+   "INTE BETALT ÄN", "TILLÄGG ATT BETALA". Ingen tabular-nums: med
+   Schibsted blir kommat i 94,75 kr brett.
+     <div class="nx-belopp ar-lera"><span class="nx-belopp-et">…</span>
+       <b>379 kr</b><span class="nx-belopp-under">1 timme · …</span></div>
+   ar-rad är samma sak i en passrads högerspalt: talet först, läget
+   under, till höger. */
+.vy .nx-belopp{display:flex;flex-direction:column;gap:2px;min-width:0}
+.vy .nx-belopp-et{
+  font-family:var(--f-mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--nx-ton-text,var(--bl-3));
+}
+.vy .nx-belopp > b{font-size:clamp(24px,2.4vw,30px);line-height:1.15;font-weight:700;letter-spacing:-.03em;color:var(--bl)}
+.vy .nx-belopp-under{font-size:13.5px;line-height:1.45;color:var(--bl-3)}
+.vy .nx-belopp.ar-rad{align-items:flex-end;text-align:right;gap:1px}
+.vy .nx-belopp.ar-rad > b{font-size:15px;font-weight:650;letter-spacing:-.01em}
+.vy .nx-belopp.ar-rad .nx-belopp-et{
+  font-family:var(--f-sans);font-size:12.5px;letter-spacing:0;text-transform:none;
+}
+
+/* ---------- datumbrickan ----------
+   Veckodag och månad i mono, dagen stor. Fylld för det som kommer,
+   bara kant för det som varit (ar-tidigare), streckad kant för ett
+   förslag som väntar på motparten (ar-forslag). Avbokat stryker dagen. */
+.vy .nx-datum{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;
+  width:56px;height:60px;border-radius:16px;
+  background:var(--pap-2);border:1px solid transparent;color:var(--bl);
+  line-height:1;text-align:center;
+}
+.vy .nx-datum > span{
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3);
+}
+.vy .nx-datum > b{font-size:22px;line-height:1.05;font-weight:700;letter-spacing:-.04em;margin:2px 0 1px}
+.vy .nx-datum.ar-tidigare{background:transparent;border-color:var(--ln)}
+.vy .nx-datum.ar-tidigare > b{color:var(--bl-2)}
+.vy .nx-datum.ar-forslag{background:transparent;border:1px dashed var(--ln-2)}
+.vy .nx-datum.ar-avbokad > b{text-decoration:line-through;text-decoration-thickness:1.5px;color:var(--bl-3)}
+.vy .nx-datum.ar-stor{width:78px;height:88px;border-radius:20px;border-color:var(--ln)}
+.vy .nx-datum.ar-stor > span{font-size:10.5px}
+.vy .nx-datum.ar-stor > b{font-size:32px;line-height:1;margin:3px 0 2px}
+
+/* ---------- brevet ----------
+   Rapporten är ett brev: initialerna i en rund avatar (NXMedia.avatar),
+   texten, och en signatur med namnet ur profilen.
+     <div class="nx-brev"><span class="nx-avatar">TB</span>
+       <p class="nx-brev-vem">Tove skrev efter passet</p>   (bara telefon)
+       <p class="nx-brev-text">…</p>
+       <p class="nx-brev-signatur">Tove Berg, studiehjälpare</p></div> */
+.vy .nx-brev{
+  display:grid;grid-template-columns:38px minmax(0,1fr);column-gap:14px;align-items:start;
+}
+.vy .nx-brev > .nx-avatar{
+  grid-row:1 / span 3;width:38px;height:38px;border:0;
+  background:var(--pap-3);color:var(--bl);font-size:12.5px;letter-spacing:.02em;
+}
+.vy .nx-brev > p{grid-column:2;margin:0}
+.vy .nx-brev-vem{display:none}
+.vy .nx-brev-text{
+  font-size:16.5px;line-height:1.65;color:var(--bl);
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.vy .nx-brev-signatur{margin-top:8px !important;font-size:13px;color:var(--bl-3)}
+@media (max-width:560px){
+  .vy .nx-brev{grid-template-columns:28px minmax(0,1fr);column-gap:10px;align-items:center}
+  .vy .nx-brev > .nx-avatar{grid-row:auto;width:28px;height:28px;font-size:10px}
+  .vy .nx-brev-vem{display:block;font-size:13px;color:var(--bl-3)}
+  .vy .nx-brev > .nx-brev-text,
+  .vy .nx-brev > .nx-brev-signatur{grid-column:1 / -1;margin-top:10px}
+  .vy .nx-brev-text{font-size:16px}
+}
+
+/* ---------- två spalter ----------
+   "Öva mer på" och "Nästa gång": en hårlinje ovanför, etiketten i mono
+   med sin lilla ikon (NXStudie.IKON.maltavla och .pil). En spalt på
+   telefon. */
+.vy .nx-tva{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.vy .nx-tva > *{border-top:1px solid var(--ln);padding-top:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.vy .nx-tva-et{
+  display:flex;align-items:center;gap:7px;
+  font-family:var(--f-mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--bl-3);
+}
+.vy .nx-tva-et .nx-ikon{width:15px;height:15px}
+.vy .nx-tva p{margin:0;font-size:15px;line-height:1.55;color:var(--bl);white-space:pre-wrap;overflow-wrap:anywhere}
+@media (max-width:560px){.vy .nx-tva{grid-template-columns:minmax(0,1fr);gap:12px}}
+
+/* ---------- citatet ----------
+   En anteckning i en pratbubbla, med vem som skrev den under. Den
+   inskjutna ytan i kortet. */
+.vy .nx-citat{
+  background:var(--pap-2);border-radius:4px 18px 18px 18px;
+  padding:11px 14px;display:flex;flex-direction:column;gap:3px;min-width:0;
+}
+.vy .nx-citat > p{margin:0;font-size:14.5px;line-height:1.5;color:var(--bl);white-space:pre-wrap;overflow-wrap:anywhere}
+.vy .nx-citat > span{font-size:12.5px;color:var(--bl-3)}
+
+/* ---------- rutan med ton ----------
+   Ett besked som hör till något annat: "Tove väntar på ert svar",
+   "2 pass räknas inte än". Tonad botten och kant, aldrig en ny färg.
+     <a class="nx-ruta ar-ockra" href="…"><svg class="nx-ikon">…</svg>
+       <span><b>…</b><span>…</span></span></a> */
+.vy .nx-ruta{
+  display:flex;align-items:center;gap:12px;min-width:0;
+  padding:14px 16px;border-radius:20px;
+  background:color-mix(in srgb,var(--nx-ton,var(--bl-3)) 9%,transparent);
+  border:1px solid color-mix(in srgb,var(--nx-ton,var(--bl-3)) 28%,transparent);
+  color:var(--bl);text-decoration:none;
+}
+.vy .nx-ruta > .nx-ikon{width:20px;height:20px;color:var(--nx-ton-text,var(--bl-2))}
+.vy .nx-ruta > span{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+.vy .nx-ruta b{font-size:14.5px;font-weight:650}
+.vy .nx-ruta span span{font-size:13px;line-height:1.45;color:var(--bl-2)}
+.vy a.nx-ruta:hover{background:color-mix(in srgb,var(--nx-ton,var(--bl-3)) 14%,transparent)}
+
+/* ---------- stegraden ----------
+   Prickar med en linje emellan: klart är mossa med bock, det som pågår
+   en ockra ring, det som kommer bara kant. Linjen efter ett klart steg
+   är mossa och går över i ockra mot det som pågår. Används på passets
+   sida och för ersättningens "så betalas månaden" (ar-liten). */
+.vy .nx-steg{
+  list-style:none;margin:0;padding:0;
+  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+}
+.vy .nx-steg > li{
+  position:relative;min-width:0;padding:31px 8px 0 0;
+  display:flex;flex-direction:column;gap:2px;
+}
+.vy .nx-steg-prick{
+  position:absolute;top:0;left:0;box-sizing:border-box;
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--ln-2);background:var(--pap);color:var(--pap);
+}
+.vy .nx-steg-prick .nx-ikon{width:13px;height:13px;stroke-width:2.6}
+.vy .nx-steg > li::after{
+  content:"";position:absolute;top:10px;left:28px;right:6px;height:2px;border-radius:2px;
+  background:var(--pap-3);
+}
+.vy .nx-steg > li:last-child::after{display:none}
+.vy .nx-steg > li.ar-klar::after{background:var(--mossa)}
+.vy .nx-steg > li.ar-klar:has(+ li.ar-nu)::after{background:linear-gradient(90deg,var(--mossa),var(--ockra))}
+.vy .nx-steg > li.ar-klar .nx-steg-prick{background:var(--mossa);border-color:var(--mossa)}
+.vy .nx-steg > li.ar-nu .nx-steg-prick{border-color:var(--ockra)}
+.vy .nx-steg > li.ar-nu .nx-steg-prick::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--ockra)}
+.vy .nx-steg > li > b{font-size:14px;font-weight:650;line-height:1.3;color:var(--bl);overflow-wrap:anywhere}
+.vy .nx-steg > li.ar-nu > b{color:var(--ockra)}
+.vy .nx-steg > li.ar-kommande > b{color:var(--bl-3)}
+.vy .nx-steg > li > span:not(.nx-steg-prick){font-size:13px;line-height:1.35;color:var(--bl-3);overflow-wrap:anywhere}
+.vy .nx-steg.ar-liten > li{padding-top:21px;padding-right:6px}
+.vy .nx-steg.ar-liten .nx-steg-prick{width:14px;height:14px}
+.vy .nx-steg.ar-liten .nx-steg-prick .nx-ikon{width:9px;height:9px}
+.vy .nx-steg.ar-liten > li.ar-nu .nx-steg-prick::after{width:0;height:0}
+.vy .nx-steg.ar-liten > li::after{top:6px;left:18px;right:4px}
+.vy .nx-steg.ar-liten > li > b{font-size:13px}
+.vy .nx-steg.ar-liten > li > span:not(.nx-steg-prick){font-size:12px}
+@media (max-width:560px){
+  .vy .nx-steg > li > b{font-size:13px}
+  .vy .nx-steg > li > span:not(.nx-steg-prick){font-size:12px}
+}
+
+/* ---------- knappraden ----------
+   Knapparna i ett kort. På telefon full bredd, den primära överst. */
+.vy .nx-knapprad{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+.vy .nx-knapprad .btn{text-decoration:none}
+@media (max-width:560px){
+  .vy .nx-knapprad{flex-direction:column;align-items:stretch}
+  .vy .nx-knapprad .btn{width:100%;justify-content:center}
+  .vy .nx-knapprad .btn-primary{order:-1}
+}
+
+/* ---------- textlänken ----------
+   Det tredje valet: text i lerans mörka ton, ingen ram. En knapp som
+   ser ut som en länk, eller en länk. */
+.vy .nx-lank{
+  appearance:none;background:none;border:0;border-radius:6px;
+  padding:4px 2px;margin:0;cursor:pointer;
+  font:inherit;font-size:14.5px;font-weight:600;line-height:1.3;
+  color:var(--acc-text);text-decoration:none;
+}
+.vy .nx-lank:hover{color:var(--acc)}
+.vy .nx-lank:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.vy .nx-lank[aria-busy="true"]{opacity:.6;cursor:progress}
+
+/* Trycket, som resten av vyn (KÄNSLAN i nextrum-arbetsyta.css):
+   scale, aldrig transform, och ingen storlek som ändras. */
+.vy:not(.vy-admin) :is(.nx-lank, .nx-manadsteg-pil){
+  transition:color .22s var(--e),border-color .22s var(--e),background-color .22s var(--e),
+    opacity .22s var(--e),scale .5s var(--vy-fjader,var(--e));
+  -webkit-tap-highlight-color:transparent;
+}
+.vy:not(.vy-admin) :is(.nx-lank, .nx-manadsteg-pil):active:not(:disabled){scale:.94;transition-duration:.09s}
+@media (prefers-reduced-motion:reduce){
+  .vy:not(.vy-admin) :is(.nx-lank, .nx-manadsteg-pil):active{scale:none}
+}
+
+/* ---------- mörkt läge ----------
+   Ett kort på mörk botten måste lyfta, som panelerna (.dbox) gör, och
+   det inskjutna i det måste lyfta ett steg till — annars försvinner
+   brickan och bubblan i sitt eget kort. Fyra klassnivåer, som
+   mörkerreglerna i nextrum-vy.css. */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .vy .nx-kort:not(.ar-lugn){background:var(--pap-2)}
+  :root:not([data-theme="light"]) .vy .nx-datum:not(.ar-tidigare):not(.ar-forslag){background:var(--pap-3)}
+  :root:not([data-theme="light"]) .vy .nx-citat{background:var(--pap-3)}
+}
+:root[data-theme="dark"] .vy .nx-kort:not(.ar-lugn){background:var(--pap-2)}
+:root[data-theme="dark"] .vy .nx-datum:not(.ar-tidigare):not(.ar-forslag){background:var(--pap-3)}
+:root[data-theme="dark"] .vy .nx-citat{background:var(--pap-3)}
+
+
+/* ============ PASSRADEN ============ */
+
+/* NXKontakt.passRad. En tabellrad: bricka · titel och metarad ·
+   status · högerspalt · pil. Raden är sin egen container, så att den
+   väljer form efter sin egen bredd och inte fönstrets: samma rad står
+   i en smal spalt på Översikt och i en bred lista under Mina lektioner.
+
+     bred (> 840 px)   bricka  text    status  sida  pil
+     mellan            bricka  text            sida  pil
+                               status
+     smal (≤ 560 px)   bricka  text                  pil
+                       status ............ sida och knappar
+
+   Spalterna är fasta där de ska linjera rad för rad (statusen) och
+   minmax(0,1fr) där texten står (fälla 2). Högerspalten växer med
+   raden men har ett tak: knapparna radbryts i den hellre än att skjuta
+   texten ur bild. Inget här byter höjd av ett tryck (fälla 4). */
+.vy .nx-passrad{
+  container:passrad / inline-size;
+  position:relative;
+  margin-inline:-10px;
+  border-radius:18px;
+  transition:background-color .18s var(--e);
+}
+.vy .nx-passrad-in{
+  --nx-pr-sida:clamp(220px,27cqi,300px);
+  display:grid;align-items:center;column-gap:18px;
+  grid-template-columns:56px minmax(0,1fr) 120px var(--nx-pr-sida) 14px;
+  grid-template-areas:"datum text status sida pil";
+  padding:16px 10px;
+}
+.vy .nx-passrad:has(.nx-passrad-citat) .nx-passrad-in{
+  grid-template-areas:"datum text status sida pil" "datum citat status sida pil";
+}
+.vy .nx-passrad.ar-utan-status .nx-passrad-in{
+  grid-template-columns:56px minmax(0,1fr) var(--nx-pr-sida) 14px;
+  grid-template-areas:"datum text sida pil";
+}
+.vy .nx-passrad.ar-utan-status:has(.nx-passrad-citat) .nx-passrad-in{
+  grid-template-areas:"datum text sida pil" "datum citat sida pil";
+}
+
+/* Hårlinjen mellan raderna, inskjuten lika mycket som raden sticker
+   ut. En linje i en rundad ram hade böjt sig i hörnen. */
+.vy .nx-passrad + .nx-passrad::before,
+.vy .pl-resten > .nx-passrad:first-child::before{
+  content:"";position:absolute;top:0;left:10px;right:10px;height:1px;background:var(--ln);
+  transition:opacity .18s var(--e);
+}
+.vy .nx-passrad.ar-klickbar{cursor:pointer}
+.vy .nx-passrad.ar-klickbar:hover{background:color-mix(in srgb,var(--bl) 4%,transparent)}
+.vy .nx-passrad.ar-klickbar:hover::before,
+.vy .nx-passrad.ar-klickbar:hover + .nx-passrad::before{opacity:0}
+
+.vy .nx-passrad .nx-datum{grid-area:datum}
+.vy .nx-passrad-text{grid-area:text;min-width:0;display:flex;flex-direction:column;gap:3px}
+.vy .nx-passrad-titel{
+  font-size:16.5px;line-height:1.3;font-weight:650;letter-spacing:-.015em;
+  color:var(--bl);text-decoration:none;overflow-wrap:anywhere;
+}
+.vy a.nx-passrad-titel:hover{color:var(--acc)}
+.vy .nx-passrad-meta{font-size:14px;line-height:1.45;color:var(--bl-3);overflow-wrap:anywhere}
+.vy .nx-passrad-vem{font-size:13.5px;line-height:1.45;color:var(--bl-3);overflow-wrap:anywhere}
+.vy .nx-passrad-citat{grid-area:citat;margin-top:10px}
+
+/* Status och högerspalt hör ihop i en fot som bara finns på telefon.
+   I den breda raden är foten luft: barnen är rader i rutnätet. */
+.vy .nx-passrad-fot{display:contents}
+.vy .nx-passrad-status{grid-area:status;min-width:0}
+.vy .nx-passrad-sida{
+  grid-area:sida;min-width:0;
+  display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px 12px;
+  text-align:right;
+}
+/* Betalläget som tonad text, inte som ett piller. */
+.vy .nx-passrad-marke{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13.5px;font-weight:600;line-height:1.3;color:var(--nx-ton-text,var(--bl-3));
+}
+.vy .nx-passrad-marke .nx-ikon{width:15px;height:15px;color:var(--nx-ton,var(--bl-3))}
+.vy .nx-passrad-marke.ar-neutral{font-weight:500}
+.vy .nx-passrad-knappar{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px}
+.vy .nx-passrad-knappar .btn{padding:8px 14px;font-size:13.5px;white-space:nowrap;text-decoration:none}
+.vy .nx-passrad-knappar :is(.val-lank,.val-not){flex-basis:100%;text-align:right}
+.vy .nx-passrad-pil{grid-area:pil;display:flex;align-items:center;justify-content:flex-end;color:var(--bl-3)}
+.vy .nx-passrad-pil svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+.vy .nx-passrad.ar-avbokad .nx-passrad-titel{color:var(--bl-3)}
+
+/* Markerad: här behövs ett svar. Raden blir ett eget tonat kort, och
+   brickan står på papperet med ockran i kanten. */
+.vy .nx-passrad.ar-markerad{
+  margin-inline:0;border-radius:26px;
+  background:color-mix(in srgb,var(--ockra) 8%,transparent);
+  border:1px solid color-mix(in srgb,var(--ockra) 28%,transparent);
+}
+.vy .nx-passrad.ar-markerad > .nx-passrad-in{padding:20px 22px}
+.vy .nx-passrad.ar-markerad + .nx-passrad{margin-top:10px}
+.vy .nx-passrad.ar-markerad::before,
+.vy .nx-passrad.ar-markerad + .nx-passrad::before{display:none}
+.vy .nx-passrad.ar-markerad.ar-klickbar:hover{background:color-mix(in srgb,var(--ockra) 12%,transparent)}
+.vy .nx-passrad.ar-markerad .nx-datum{background:var(--pap);border-color:color-mix(in srgb,var(--ockra) 28%,transparent)}
+.vy .nx-passrad.ar-markerad .nx-datum > span{color:var(--ockra)}
+
+/* Mellanbredd: statusen flyttar in under texten, så att texten får
+   plats. Spalterna linjerar fortfarande: högerspalten är fast. */
+@container passrad (max-width:840px){
+  .vy .nx-passrad-in{
+    --nx-pr-sida:clamp(190px,32cqi,250px);
+    grid-template-columns:56px minmax(0,1fr) var(--nx-pr-sida) 14px;
+    grid-template-areas:"datum text sida pil" "datum status sida pil";
+  }
+  /* Utan status en rad: en tom rad under texten hade dragit texten
+     ur mitten av brickan. */
+  .vy .nx-passrad.ar-utan-status .nx-passrad-in{
+    grid-template-columns:56px minmax(0,1fr) var(--nx-pr-sida) 14px;
+    grid-template-areas:"datum text sida pil";
+  }
+  .vy .nx-passrad:has(.nx-passrad-citat) .nx-passrad-in{
+    grid-template-areas:"datum text sida pil" "datum status sida pil" "datum citat sida pil";
+  }
+  .vy .nx-passrad-status{margin-top:6px}
+  .vy .nx-passrad-status .nx-status{font-size:13.5px}
+}
+
+/* Smal: bricka och text överst, status och högerspalt på en rad under,
+   i hela radens bredd. */
+@container passrad (max-width:560px){
+  .vy .nx-passrad-in,
+  .vy .nx-passrad.ar-utan-status .nx-passrad-in,
+  .vy .nx-passrad:has(.nx-passrad-citat) .nx-passrad-in,
+  .vy .nx-passrad.ar-utan-status:has(.nx-passrad-citat) .nx-passrad-in{
+    grid-template-columns:50px minmax(0,1fr) 12px;
+    grid-template-areas:"datum text pil" "citat citat citat" "fot fot fot";
+    column-gap:14px;padding:14px 10px;
+  }
+  .vy .nx-passrad.ar-markerad > .nx-passrad-in{padding:16px}
+  .vy .nx-passrad .nx-datum{width:50px;height:56px;border-radius:14px}
+  .vy .nx-passrad .nx-datum > b{font-size:20px}
+  .vy .nx-passrad-titel{font-size:15.5px}
+  .vy .nx-passrad-meta{font-size:13.5px}
+  .vy .nx-passrad-vem{font-size:13px}
+  .vy .nx-passrad-citat{margin-top:12px}
+  .vy .nx-passrad-fot{
+    grid-area:fot;display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:8px 10px;margin-top:12px;min-width:0;
+  }
+  .vy .nx-passrad-status{margin-top:0}
+  .vy .nx-passrad-sida{margin-left:auto;gap:6px 10px}
+  .vy .nx-passrad-knappar .btn{padding:8px 12px}
+  .vy .nx-passrad-knappar :is(.val-lank,.val-not){text-align:right}
+}
+
+/* Passlistan (NXStudie.passLista). Förut tonades det som varit ner,
+   och då också knappen Betala på ett hållet, obetalt pass: den gick
+   att trycka på men såg avstängd ut. Nu är det brickan som säger att
+   passet varit (bara kant), och raden är lika skarp som de andra.
+   Regeln som tonade (.pl-tidigare .pass) är borta ur arbetsytan. */
+.vy .pl-tidigare-grupp{margin-top:28px}
+.vy .pl-mer-lank{margin-top:10px}
+.vy .pl-tidigare .pl-rubrik + .nx-passrad{margin-top:-6px}
+
+
+/* ============ PASSETS SIDA ============ */
+
+/* NXStudie.passSida (#pass/<id>) i båda vyerna. Sidan är en container:
+   den byter form efter sin egen bredd. Den breda formen följer
+   förslaget "Passets sida"; den smala är samma sak staplad. */
+.vy .ps{
+  container:ps / inline-size;
+  max-width:none;
+  display:flex;flex-direction:column;gap:26px;
+}
+.vy .ps > .ps-tillbaka{
+  align-self:flex-start;margin:0 0 -6px -6px;padding:6px 10px 6px 6px;border-radius:100px;
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:15px;font-weight:600;color:var(--bl-2);text-decoration:none;
+}
+.vy .ps > .ps-tillbaka:hover{color:var(--bl);background:color-mix(in srgb,var(--bl) 4%,transparent)}
+
+/* Huvudet: stor bricka, titel, när-raden med den relativa tiden i
+   fetstil, och statusen som tonad etikett. */
+.vy .ps-topp{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-areas:"datum text status";column-gap:22px;align-items:center;
+}
+.vy .ps-topp > .nx-datum{grid-area:datum}
+.vy .ps-topp-text{grid-area:text;min-width:0;display:flex;flex-direction:column;gap:7px}
+.vy .ps-topp > .nx-status{grid-area:status;align-self:start}
+.vy .ps .ps-titel{
+  margin:0;font-size:clamp(26px,3.6vw,34px);line-height:1.05;font-weight:700;
+  letter-spacing:-.035em;color:var(--bl);overflow-wrap:anywhere;outline:none;
+}
+.vy .ps .ps-nar{margin:0;font-size:16px;line-height:1.5;color:var(--bl-2)}
+.vy .ps .ps-nar::first-letter{text-transform:uppercase}
+.vy .ps .ps-nar b{font-weight:650;color:var(--bl)}
+
+/* Nästa steg: ett kort. Etiketten i tonen, beskedet som huvudtext, och
+   till höger beloppet ovanför knapparna. */
+.vy .ps-nasta{display:flex;align-items:center;gap:24px;padding:26px 28px}
+.vy .ps-nasta-text{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px}
+.vy .ps-nasta-et{
+  font-family:var(--f-mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--nx-ton-text,var(--bl-3));
+}
+.vy .ps-nasta-besked{margin:0;font-size:18px;line-height:1.4;font-weight:600;letter-spacing:-.015em;color:var(--bl)}
+.vy .ps-nasta-under{margin:0;font-size:13.5px;line-height:1.5;color:var(--bl-3)}
+.vy .ps-nasta-hoger{
+  flex:0 1 auto;max-width:58%;min-width:0;
+  display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+}
+.vy .ps-nasta-belopp{margin:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.vy .ps-nasta-belopp b{font-size:30px;line-height:1;font-weight:700;letter-spacing:-.03em;color:var(--bl)}
+.vy .ps-nasta-belopp span{font-size:13px;color:var(--bl-3)}
+.vy .ps-nasta .nx-knapprad .btn{padding:12px 20px;font-size:14.5px}
+.vy .ps-nasta .ps-alt{margin:0;max-width:44ch;text-align:right;font-size:13px;line-height:1.5;color:var(--bl-3)}
+
+/* Detaljerna: ETT kort, en kolumn per sak. Mono-rubrik, fet huvudrad,
+   dämpade rader under. */
+.vy .ps-kolumner{
+  padding:0;overflow:hidden;
+  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+}
+.vy .ps-kol{min-width:0;padding:22px 24px;display:flex;flex-direction:column;gap:6px}
+.vy .ps-kol + .ps-kol{border-left:1px solid var(--ln)}
+.vy .ps-kol-rubrik{
+  margin:0 0 2px;font-family:var(--f-mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
+}
+.vy .ps-kol-huvud{font-size:16px;line-height:1.35;font-weight:650;color:var(--bl);overflow-wrap:anywhere}
+.vy .ps-kol-rad{font-size:14px;line-height:1.5;color:var(--bl-2);overflow-wrap:anywhere}
+.vy .ps-kol-et{color:var(--bl-3)}
+.vy .ps-kol .ps-lank{
+  color:var(--acc-text);font-weight:600;overflow-wrap:anywhere;
+  text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;
+}
+.vy .ps-kol .ps-lank:hover{color:var(--acc)}
+/* En adress i vyn ("Skriv till Tove ›") är en textlänk; möteslänken
+   är understruken, för den leder ut ur sidan. */
+.vy .ps-kol .ps-lank.ar-intern{text-decoration:none}
+
+/* Blocken: gruppetiketten, och innehållet i ett kant-kort. Stilen på
+   det inuti (stycken, läxraderna, den hållna tiden) står kvar i
+   nextrum-vy.css och arbetsytan. */
+.vy .ps .ps-block{margin:0;display:flex;flex-direction:column}
+.vy .ps .ps-block > .nx-grupp{margin-bottom:12px}
+.vy .ps-block-kropp{padding:18px 22px;border-radius:22px}
+.vy .ps-block-kropp > :first-child{margin-top:0}
+.vy .ps-block-kropp > :last-child{margin-bottom:0}
+.vy .ps-block-kropp .pass-lank:first-child{padding-top:0}
+.vy .ps-block-kropp .pass-lank:last-child{padding-bottom:0}
+/* Den hållna tiden är den enda inskjutna ytan i kortet: tonad, utan
+   egen kant — en ram i ett kort är en låda i en låda. */
+.vy .ps-block-kropp .hallen-tid{background:var(--pap-2);border:0;border-radius:16px;padding:12px 14px}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .vy .ps-block-kropp .hallen-tid{background:var(--pap-3)}
+}
+:root[data-theme="dark"] .vy .ps-block-kropp .hallen-tid{background:var(--pap-3)}
+
+/* Det man sällan gör, längst ner i en lugn rad: Föreslå ny tid, Avboka. */
+.vy .ps-andra{
+  display:flex;align-items:center;flex-wrap:wrap;gap:12px 14px;
+  border-top:1px solid var(--ln);padding-top:20px;
+}
+.vy .ps-andra > p{flex:1 1 220px;margin:0;font-size:14px;line-height:1.5;color:var(--bl-3)}
+.vy .ps-andra-knappar{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.vy .ps-andra .btn{padding:10px 18px;font-size:14px;text-decoration:none}
+
+@container ps (max-width:640px){
+  .vy .ps{gap:20px}
+  .vy .ps-topp{
+    grid-template-columns:auto minmax(0,1fr);
+    grid-template-areas:"datum text" "datum status";column-gap:16px;row-gap:10px;
+  }
+  .vy .ps-topp > .nx-status{justify-self:start;align-self:start}
+  .vy .ps-topp > .nx-datum{width:64px;height:74px;border-radius:18px;align-self:start}
+  .vy .ps-topp > .nx-datum > b{font-size:26px}
+  .vy .ps .ps-nar{font-size:14.5px}
+
+  .vy .ps-nasta{flex-direction:column;align-items:stretch;gap:16px;padding:20px 18px}
+  .vy .ps-nasta-besked{font-size:16.5px}
+  .vy .ps-nasta-hoger{max-width:none;align-items:stretch}
+  .vy .ps-nasta-belopp{align-items:flex-start}
+  .vy .ps-nasta-belopp b{font-size:26px}
+  .vy .ps-nasta .nx-knapprad{flex-direction:column;align-items:stretch}
+  .vy .ps-nasta .nx-knapprad .btn{width:100%;justify-content:center}
+  .vy .ps-nasta .nx-knapprad .btn-primary{order:-1}
+  .vy .ps-nasta .ps-alt{text-align:left;max-width:none}
+
+  .vy .ps-kolumner{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .vy .ps-kol{padding:16px}
+  .vy .ps-kol + .ps-kol{border-left:0}
+  .vy .ps-kol:nth-child(even){border-left:1px solid var(--ln)}
+  .vy .ps-kol:nth-child(n+3){border-top:1px solid var(--ln)}
+  .vy .ps-kol-huvud{font-size:15px}
+  .vy .ps-kol-rad{font-size:13.5px}
+
+  .vy .ps-block-kropp{padding:14px 16px;border-radius:20px}
+  .vy .ps-andra .ps-andra-knappar{flex:1 1 100%}
+}
+
+
+/* ============ MÅNADERNA OCH SCHEMAT ============ */
+
+/* Stegaren (NXStudie.månadsval med stegare): en månad i taget.
+   Raden under namnet har sin höjd också när den är tom — stegaren står
+   ovanför det den styr och får inte byta höjd av ett tryck. */
+.vy .nx-manadsteg{display:flex;align-items:center;gap:10px;margin:0 0 18px}
+.vy .nx-manadsteg-pil{
+  flex:none;width:40px;height:40px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--ln-2);background:transparent;color:var(--bl);cursor:pointer;
+}
+.vy .nx-manadsteg-pil svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.vy .nx-manadsteg-pil:hover:not(:disabled){border-color:var(--bl-3);background:color-mix(in srgb,var(--bl) 4%,transparent)}
+.vy .nx-manadsteg-pil:disabled{border-color:var(--ln);opacity:.45;cursor:default}
+.vy .nx-manadsteg-pil:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.vy .nx-manadsteg-namn{
+  flex:1 1 auto;min-width:0;margin:0;
+  display:flex;flex-direction:column;align-items:center;gap:1px;text-align:center;
+}
+.vy .nx-manadsteg-namn b{font-size:17px;line-height:1.3;font-weight:650;letter-spacing:-.015em;color:var(--bl)}
+.vy .nx-manadsteg-namn small{
+  min-height:1.3em;font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--bl-3);
+}
+
+/* Schemat, månaden på en telefon. 1fr är minmax(auto,1fr): en dag med
+   ett pass i blev bredare än de andra, och söndagen stack ut förbi
+   rutans kant (fälla 2). Sju lika spalter som får krympa, och i en smal
+   ruta ett tätare pass där klockslaget ryms. */
+.vy .sch-manad{grid-template-columns:repeat(7,minmax(0,1fr))}
+.vy .sch-manad > *{min-width:0}
+.vy .sch-pass{min-width:0}
+.vy .sch-pass b{overflow:hidden;text-overflow:clip;white-space:nowrap;min-width:0}
+/* Lägesvalet ovanför får brytas hellre än att Dag hamnar utanför
+   rutan på en smal telefon. */
+.vy .sch-val{flex-wrap:wrap}
+@container (max-width:460px){
+  .vy .sch-val button{padding:6px 11px}
+  .vy .sch-manad{gap:3px}
+  .vy .sch-dag{padding:5px 2px;border-radius:9px;min-height:64px}
+  .vy .sch-pass{padding:3px 1px 3px 2px;gap:2px;border-radius:5px}
+  .vy .sch-pass i{width:3px;height:12px}
+  .vy .sch-pass b{font-size:8.5px;letter-spacing:-.05em}
+  .vy .sch-datum{padding-left:2px}
+}
+@media (max-width:420px){
+  .vy .sch-manad{gap:3px}
+  .vy .sch-dag{padding:5px 2px;border-radius:9px;min-height:64px}
+  .vy .sch-pass{padding:3px 1px 3px 2px;gap:2px;border-radius:5px}
+  .vy .sch-pass i{width:3px;height:12px}
+  .vy .sch-pass b{font-size:8.5px;letter-spacing:-.05em}
+  .vy .sch-datum{padding-left:2px}
+}
+
+
+/* ============ STUDIEVYN (foralder.html) ============ */
+/* Studievyns regler står under den här raden. */
+
+/* ============ SLUT PÅ STUDIEVYN ============ */
+
+
+
+/* ============ STUDIEHJÄLPARVYN (larare.html) ============ */
+/* Studiehjälparvyns regler står under den här raden. */
+
+/* ============ SLUT PÅ STUDIEHJÄLPARVYN ============ */

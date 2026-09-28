@@ -868,7 +868,9 @@
     return NXKontakt.passRad(b, {
       href: '#pass/' + b.id,
       under: [under, plats].filter(Boolean).join(' · ') + (b.note ? ' · ”' + String(b.note).slice(0, 60) + (String(b.note).length > 60 ? '…' : '') + '”' : ''),
-      vem, atgarder: knappar
+      vem, atgarder: knappar,
+      // Ditt eget förslag väntar på familjen: brickan streckad.
+      forslag: b.created_by === S.user.id
     });
   }
 
@@ -999,7 +1001,7 @@
 
      Av är den förvalda: tills en betalning gått hela vägen hade
      spärren låst ute varje studiehjälpare. Då visar vyn ingenting om
-     betalningen alls — ett "Ej betalt" på varje pass hade betytt
+     betalningen alls — ett "Inte betalt" på varje pass hade betytt
      "håll inte passet" i en tid då ingen familj kan betala än.
 
      Kan flaggan inte läsas räknas den som av. Databasen är skyddet;
@@ -1117,8 +1119,9 @@
       }
 
       /* Platsen står direkt på raden, inte bara i detaljvyn. Ett pass
-         på plats är en resa — var man ska vara är halva beskedet. */
-      const under = [b.format, b.location, (b.duration_min || 60) + ' min',
+         på plats är en resa — var man ska vara är halva beskedet.
+         Längden står inte: raden börjar med tidsspannet (passRad). */
+      const under = [b.format, b.location,
         e ? e.name : (familj ? familj.full_name : null)].filter(Boolean).join(' · ');
 
       return NXKontakt.passRad(b, {
@@ -1135,7 +1138,7 @@
           : (b.attendance === 'franvarande' ? 'Eleven uteblev'
             : b.attendance === 'sen' ? 'Eleven kom sent' : null),
         /* Betalmärket bara med spärren på. Av betyder att passen hålls
-           som förut, och då hade "Ej betalt" varit en order ingen gett. */
+           som förut, och då hade "Inte betalt" varit en order ingen gett. */
         märke: S.kortsparr ? NXKontakt.betalMärke(b) : null,
         atgarder: knappar
       });
@@ -1234,8 +1237,9 @@
       const e = S.elever.find(x => x.id === b.student_id);
       const familj = S.familjer.find(f => f.id === b.parent_id);
       const betalt = betaltNog(b);
+      // Längden står i tidsspannet som raden börjar med (passRad).
       const under = [e ? e.name : (familj ? familj.full_name : null),
-        b.format, (b.duration_min || 60) + ' min'].filter(Boolean).join(' · ');
+        b.format].filter(Boolean).join(' · ');
       return NXKontakt.passRad(b, {
         href: '#pass/' + b.id,
         under: under,
@@ -2555,7 +2559,7 @@
     }
     host.innerHTML = NXKontakt.passRad(b, {
       href: '#pass/' + b.id,
-      under: [b.format, b.location, (b.duration_min || 60) + ' min'].filter(Boolean).join(' · '),
+      under: [b.format, b.location].filter(Boolean).join(' · '),
       vem: vem
     });
   }
@@ -2918,11 +2922,12 @@
 
   /* Samma lägen och samma färger som i rapportformuläret. Ett
      omdöme ska se likadant ut där man sätter det och där man
-     räknar på det. */
+     räknar på det. Bra är neutralt sedan 2026-09-28: ockra betyder
+     väntar (nextrum-innehall.css). */
   const GICK_LAGEN = [
-    ['mycket_bra', 'Mycket bra', 'ar-bra'],
-    ['bra', 'Bra', 'ar-mitten'],
-    ['folja_upp', 'Behöver följas upp', 'ar-folj']
+    ['mycket_bra', 'Mycket bra', 'ar-mossa'],
+    ['bra', 'Bra', 'ar-neutral'],
+    ['folja_upp', 'Behöver följas upp', 'ar-lera']
   ];
 
   function ritaGickFordelning() {
@@ -3205,6 +3210,7 @@
     const rita = (rapport) => NXStudie.passSida({
       host,
       tillbaka,
+      datum: b.wanted_date,
       titel: (b.subject || 'Pass') + (elevNamn ? ' med ' + förnamn : ''),
       nar: NXStudie.dagMedVeckodag(b.wanted_date) + (b.wanted_time ? ', ' + NXStudie.tidsspann(b.wanted_time, b.duration_min) : ''),
       relativ: b.status === 'cancelled' ? null : NXStudie.relativDag(b.wanted_date),
@@ -3224,7 +3230,8 @@
                 : '')
             + '</p>'
           : '')
-        + (rapport.gick ? '<p><b>' + esc(NXStudie.GICK[rapport.gick] || rapport.gick) + '</b></p>' : '')
+        // Omdömet som färgad etikett, i samma toner som överallt annars.
+        + (rapport.gick ? '<p>' + (NXStudie.omdöme(rapport.gick) || '<b>' + esc(rapport.gick) + '</b>') + '</p>' : '')
         + (rapport.raw_notes ? '<p>' + esc(rapport.raw_notes) + '</p>' : '')
         + (rapport.needs_practice ? '<p><b>Öva mer på:</b> ' + esc(rapport.needs_practice) + '</p>' : '')
         + (rapport.next_focus ? '<p><b>Nästa gång:</b> ' + esc(rapport.next_focus) + '</p>' : '')

@@ -1103,7 +1103,7 @@
 
   /* Samma innehåll och ordning som "Efter passet" på passets sida. */
   function rbInnehåll(r) {
-    return (r.gick ? '<p><b>' + esc(NXStudie.GICK[r.gick] || r.gick) + '</b></p>' : '')
+    return (r.gick ? '<p>' + (NXStudie.omdöme(r.gick) || '<b>' + esc(r.gick) + '</b>') + '</p>' : '')
       + ((r.ai_feedback || r.raw_notes) ? '<p>' + esc(r.ai_feedback || r.raw_notes) + '</p>' : '')
       + (r.needs_practice ? '<p><b>Öva mer på:</b> ' + esc(r.needs_practice) + '</p>' : '')
       + (r.next_focus ? '<p><b>Nästa gång:</b> ' + esc(r.next_focus) + '</p>' : '');
@@ -2401,7 +2401,9 @@
         vem: derasFörslag && b.status === 'requested' ? 'Föreslaget av er studiehjälpare'
           : b.status === 'requested' ? 'Väntar på svar från er studiehjälpare' : null,
         märke: NXKontakt.betalMärke(b),
-        atgarder: knappar
+        atgarder: knappar,
+        // Ert eget förslag väntar på studiehjälparen: brickan streckad.
+        forslag: b.status === 'requested' && !derasFörslag
       });
       }
     });
@@ -3010,11 +3012,12 @@
      ============================================================ */
   /* De två fördelningarna. Lägena och färgerna är samma som i
      rapportformuläret och i nivåmätaren — samma sak ska ha samma
-     färg i hela produkten. */
+     färg i hela produkten. Omdömet i tonerna sedan 2026-09-28: Bra är
+     neutralt, för ockra betyder väntar (nextrum-innehall.css). */
   const GICK_LAGEN = [
-    ['mycket_bra', 'Mycket bra', 'ar-bra'],
-    ['bra', 'Bra', 'ar-mitten'],
-    ['folja_upp', 'Behöver följas upp', 'ar-folj']
+    ['mycket_bra', 'Mycket bra', 'ar-mossa'],
+    ['bra', 'Bra', 'ar-neutral'],
+    ['folja_upp', 'Behöver följas upp', 'ar-lera']
   ];
   /* Tre grupper av de fem stegen. Fem färger i en stapel går inte att
      läsa av på en halv sekund, och frågan på Översikt är "hur mycket
@@ -3448,6 +3451,7 @@
     const rita = (rapport) => NXStudie.passSida({
       host,
       tillbaka,
+      datum: b.wanted_date,
       titel: (b.subject || 'Pass') + (barn ? ' · ' + barn.name.split(' ')[0] : ''),
       nar: NXStudie.dagMedVeckodag(b.wanted_date) + (b.wanted_time ? ', ' + NXStudie.tidsspann(b.wanted_time, b.duration_min) : ''),
       relativ: b.status === 'cancelled' ? null : NXStudie.relativDag(b.wanted_date),
@@ -3459,7 +3463,8 @@
       kort,
       block: block.concat(rapport ? [{ rubrik: 'Efter passet', html:
         hållenTid(rapport, b)
-        + (rapport.gick ? '<p><b>' + esc(NXStudie.GICK[rapport.gick] || rapport.gick) + '</b></p>' : '')
+        // Omdömet som färgad etikett, i samma toner som överallt annars.
+        + (rapport.gick ? '<p>' + (NXStudie.omdöme(rapport.gick) || '<b>' + esc(rapport.gick) + '</b>') + '</p>' : '')
         + ((rapport.ai_feedback || rapport.raw_notes) ? '<p>' + esc(rapport.ai_feedback || rapport.raw_notes) + '</p>' : '')
         + (rapport.needs_practice ? '<p><b>Öva mer på:</b> ' + esc(rapport.needs_practice) + '</p>' : '')
         + (rapport.next_focus ? '<p><b>Nästa gång:</b> ' + esc(rapport.next_focus) + '</p>' : '')

@@ -2280,10 +2280,12 @@ button.fel-person:hover{border-color:var(--bl-3)}
   font-style:normal;font-weight:500;letter-spacing:0;text-transform:none;
   font-size:.78rem;color:var(--bl-3);
 }
-/* Hållna pass ska gå att läsa men inte dra blicken från det som
-   inte hänt än. */
-.pl-tidigare .pass{opacity:.72}
-.pl-tidigare .pass:hover{opacity:1}
+/* Här tonades hållna pass ner (opacity .72) så att de inte skulle dra
+   blicken från det som inte hänt än. Det tonade också knappen Betala
+   på ett hållet, obetalt pass, som då såg avstängd ut fast den var det
+   viktigaste på raden. Borttaget 2026-09-28: sedan Vyerna i ny form
+   säger datumbrickan att passet varit (bara kant), och raden är lika
+   skarp som de andra. Se PASSRADEN i nextrum-innehall.css. */
 .pl-mer{
   margin-top:4px;
   padding:9px 16px;

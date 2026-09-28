@@ -365,12 +365,22 @@ window.NXStudie = (function () {
      Månaden skickas som 'ÅÅÅÅ-MM-01'. månadsGräns() ger första dagen i
      månaden och första dagen i nästa, att fråga med gte och lt.
 
+     RADEN SKAPAS OFTA DOLD (2026-09-28). Ersättningen och rapporterna
+     ligger bakom en flik, och i en dold rad är alla mått noll: den
+     valda månaden fördes aldrig in, och när fliken visades stod raden
+     på oktober förra året, med september utanför. Nu vakar en
+     ResizeObserver på raden: när den får en bredd förs den valda in,
+     med scrollLeft som förut.
+
      o.antal     hur många månader bakåt, med den innevarande (12)
      o.framåt    hur många månader efter den innevarande (0)
      o.vald      förvald månad, 'ÅÅÅÅ-MM-01' (den innevarande)
      o.märke     fn(månad) → '' | text: ett litet märke på knappen,
                  t.ex. "Stängd" i adminvyn
-     o.vidVal    fn(månad): anropas när en annan månad trycks */
+     o.vidVal    fn(månad): anropas när en annan månad trycks
+     o.stegare   true: en kompakt stegare, "‹ September 2026 ›", i
+                 stället för raden (Vyerna i ny form). Samma svar ut,
+                 samma vidVal. Adminvyn använder raden. */
   function månadIso(d) {
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01';
   }
@@ -398,6 +408,8 @@ window.NXStudie = (function () {
     }
     if (lista.indexOf(vald) === -1) vald = denna;
 
+    if (o.stegare) return månadssteg(host, o, lista, vald, denna);
+
     host.classList.add('nx-manader');
     host.setAttribute('role', 'group');
     if (!host.getAttribute('aria-label')) host.setAttribute('aria-label', 'Välj månad');
@@ -422,12 +434,17 @@ window.NXStudie = (function () {
         i.hidden = !text;
       });
     }
+    /* Mäts mot raden själv, inte med offsetLeft: den räknas från
+       närmaste positionerade förälder, och det är inte alltid raden. En
+       dold rad har ingen bredd, och då väntar vi på att den får en. */
     function iBild() {
       var b = host.querySelector('[aria-pressed="true"]');
-      if (!b) return;
-      var vänster = b.offsetLeft - host.offsetLeft;
-      if (vänster < host.scrollLeft || vänster + b.offsetWidth > host.scrollLeft + host.clientWidth) {
-        host.scrollLeft = Math.max(0, vänster - (host.clientWidth - b.offsetWidth) / 2);
+      if (!b || !host.clientWidth) return;
+      var bredd = b.getBoundingClientRect().width;
+      var vänster = b.getBoundingClientRect().left - host.getBoundingClientRect().left
+        - host.clientLeft + host.scrollLeft;
+      if (vänster < host.scrollLeft || vänster + bredd > host.scrollLeft + host.clientWidth) {
+        host.scrollLeft = Math.max(0, vänster - (host.clientWidth - bredd) / 2);
       }
     }
     function sätt(m, tyst) {
@@ -445,13 +462,68 @@ window.NXStudie = (function () {
       if (b) sätt(b.dataset.manad);
     });
     märk();
-    /* Efter layout: offsetLeft är 0 innan raden syns. */
-    requestAnimationFrame(iBild);
+    /* När raden får en bredd — första gången den syns, och när fönstret
+       ändras — förs den valda in. Ändras inget annat än scrollLeft, så
+       observatören väcker inte sig själv. Utan ResizeObserver (äldre
+       webbläsare) blir det som förut: ett försök efter första layouten. */
+    if (window.ResizeObserver) new ResizeObserver(function () { iBild(); }).observe(host);
+    else requestAnimationFrame(iBild);
 
     return {
       vald: function () { return vald; },
       sätt: function (m) { sätt(m, true); },
       märk: märk
+    };
+  }
+
+  /* Stegaren (o.stegare). En månad i taget, med pilar på var sida och
+     "Den här månaden" under när den valda är den innevarande. Raden
+     under namnet har alltid sin höjd, också när den är tom: stegaren
+     står ovanför det den styr, och den får inte byta höjd av ett tryck
+     (fälla 4, CLAUDE.md avsnitt 3). Framåt-pilen är avstängd vid sista
+     månaden; blir pilen man står på avstängd flyttas fokus till den
+     andra, så att tangentbordet inte tappar platsen. */
+  function månadssteg(host, o, lista, vald, denna) {
+    host.classList.add('nx-manadsteg');
+    host.setAttribute('role', 'group');
+    if (!host.getAttribute('aria-label')) host.setAttribute('aria-label', 'Välj månad');
+    host.innerHTML =
+      '<button type="button" class="nx-manadsteg-pil" data-manad-steg="-1" aria-label="Föregående månad">'
+      + '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.5 2.5 4 6l3.5 3.5"/></svg></button>'
+      + '<p class="nx-manadsteg-namn" aria-live="polite"><b></b><small></small></p>'
+      + '<button type="button" class="nx-manadsteg-pil" data-manad-steg="1" aria-label="Nästa månad">'
+      + '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></button>';
+    var bak = host.querySelector('[data-manad-steg="-1"]');
+    var fram = host.querySelector('[data-manad-steg="1"]');
+
+    function rita() {
+      var namn = månadsNamn(vald);
+      host.querySelector('.nx-manadsteg-namn b').textContent = namn.charAt(0).toUpperCase() + namn.slice(1);
+      var märke = o.märke ? (o.märke(vald) || '') : '';
+      host.querySelector('.nx-manadsteg-namn small').textContent =
+        [vald === denna ? 'Den här månaden' : '', märke].filter(Boolean).join(' · ');
+      bak.disabled = lista.indexOf(vald) <= 0;
+      fram.disabled = lista.indexOf(vald) >= lista.length - 1;
+    }
+    function sätt(m, tyst) {
+      if (lista.indexOf(m) === -1 || m === vald) return;
+      vald = m;
+      rita();
+      if (!tyst && o.vidVal) o.vidVal(vald);
+    }
+
+    host.addEventListener('click', function (e) {
+      var k = e.target.closest('[data-manad-steg]');
+      if (!k || k.disabled) return;
+      sätt(lista[lista.indexOf(vald) + Number(k.dataset.manadSteg)]);
+      if (k.disabled) (k === bak ? fram : bak).focus();
+    });
+    rita();
+
+    return {
+      vald: function () { return vald; },
+      sätt: function (m) { sätt(m, true); },
+      märk: rita
     };
   }
 
@@ -880,6 +952,89 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
+     BITARNA SOM VYERNA BYGGER AV (Vyerna i ny form, 2026-09-28)
+
+     Leo: "fixa allt och implementera på vår sida" — förhandsvisningen
+     av studievyn och studiehjälparvyn i ny form. Sju regler bär den
+     (en yta per sak, ett huvudval per kort, status som prick och ord,
+     mono bara för korta etiketter, beloppet syns, korta ingresser,
+     rapporten som ett brev), och de här bitarna är dem båda vyerna
+     ritar med. Stilen står i nextrum-innehall.css, som bara de två
+     vyerna laddar: adminvyn ska se ut som förut.
+
+     Tonerna är fyra, och de betyder samma sak överallt:
+       mossa    klart, bekräftat, betalt
+       ockra    väntar, föreslaget, pågående
+       lera     kräver handling: obetalt, tillägg, följas upp, försenad
+       neutral  genomfört, avbokat, upplysning
+     Ockra betyder INTE "bra": omdömet Bra är neutralt sedan samma dag.
+     ============================================================ */
+  var TONER = ['mossa', 'ockra', 'lera', 'neutral'];
+  function ton(t) { return TONER.indexOf(t) !== -1 ? t : 'neutral'; }
+
+  /* Ikonerna ritas med currentColor; tonen sätts av det de står i.
+     maltavla och pil hör till rapportens två spalter (Öva mer på, Nästa
+     gång) och har sin egen färg, lera och mossa. */
+  var IKON = {
+    bock: '<svg class="nx-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12.5 10 17l8.5-9"/></svg>',
+    kryss: '<svg class="nx-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg>',
+    maltavla: '<svg class="nx-ikon nx-ikon-maltavla" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/>'
+      + '<circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/></svg>',
+    pil: '<svg class="nx-ikon nx-ikon-pil" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15"/><path d="M13.5 6.5 19 12l-5.5 5.5"/></svg>'
+  };
+
+  /* Status: en färgad prick och ett ord, inte en ram som ser ut som en
+     knapp. s: { text, ton, ikon: 'bock'|'kryss', tint } — tint ger
+     pillret med tonad botten (passets sida). */
+  function status(s) {
+    if (!s || !s.text) return '';
+    return '<span class="nx-status ar-' + ton(s.ton) + (s.tint ? ' ar-tint' : '') + '">'
+      + (IKON[s.ikon] || '<i aria-hidden="true"></i>') + esc(s.text) + '</span>';
+  }
+
+  /* Datumbrickan: veckodag, dag, månad. Tiden står inte i den: den står
+     först i raden bredvid, som ett tidsspann.
+     o: { stor, tidigare (bara kant), forslag (streckad kant),
+          avbokad (dagen struken), veckodag: false } */
+  function datum(iso, o) {
+    o = o || {};
+    var dag = String(iso || '').slice(0, 10);
+    var d = new Date(dag + 'T12:00:00');
+    if (!dag || isNaN(d.getTime())) return '<span class="nx-datum ar-tom" aria-hidden="true"></span>';
+    var klass = 'nx-datum' + (o.stor ? ' ar-stor' : '') + (o.tidigare ? ' ar-tidigare' : '')
+      + (o.forslag ? ' ar-forslag' : '') + (o.avbokad ? ' ar-avbokad' : '')
+      + (o.veckodag === false ? ' ar-utan-veckodag' : '');
+    return '<time class="' + klass + '" datetime="' + esc(dag) + '">'
+      + (o.veckodag === false ? '' : '<span>' + esc(NX.DAGAR[(d.getDay() + 6) % 7]) + '</span>')
+      + '<b>' + d.getDate() + '</b>'
+      + '<span>' + esc((NX.MANADER[d.getMonth()] || '').slice(0, 3)) + '</span></time>';
+  }
+
+  /* Gruppetiketten ovanför en lista: streck, ord i mono, räknaren till
+     höger. extra är html längst till höger, t.ex. en länk. */
+  function grupp(text, räknare, extra) {
+    return '<div class="nx-grupp"><span>' + esc(text) + '</span>'
+      + (räknare ? '<em>' + esc(räknare) + '</em>' : '') + (extra || '') + '</div>';
+  }
+
+  /* En anteckning i en pratbubbla, med vem som skrev den: familjens
+     rad i ett förslag, studiehjälparens skäl. Fritext, escapas. */
+  function citat(text, vem, klass) {
+    if (!text) return '';
+    return '<div class="nx-citat' + (klass ? ' ' + klass : '') + '">'
+      + '<p>”' + esc(text) + '”</p>' + (vem ? '<span>' + esc(vem) + '</span>' : '') + '</div>';
+  }
+
+  /* Omdömet som färgad etikett. Mycket bra är mossa, Bra neutral och
+     Behöver följas upp lera — samma färger i rapporten, i formuläret
+     och i fördelningen "Hur passen gick". */
+  function omdöme(kod) {
+    var text = GICK[kod];
+    if (!text) return '';
+    return '<span class="nx-omdome" data-v="' + esc(kod) + '"><i aria-hidden="true"></i>' + esc(text) + '</span>';
+  }
+
+  /* ============================================================
      PASSETS EGEN SIDA
 
      Leo 2026-09-24: "på mina lektioner tycker jag det ska byggas en
@@ -904,83 +1059,163 @@ window.NXStudie = (function () {
      finns tar hand om dem. En andra uppsättning logik för samma
      skrivning hade varit en andra uppsättning som kan bli fel.
 
+     FORMEN (2026-09-28, förslaget "Passets sida"): huvudet med en stor
+     datumbricka, titeln och när-raden, statusen som tonad etikett;
+     stegraden med prickar; "nästa steg" som ett kort med beloppet och
+     knapparna till höger; detaljerna som ETT kort med en kolumn per
+     kort; blocken med gruppetikett i ett kant-kort; och sist, i en
+     lugn rad, det man sällan gör (andra).
+
      o: {
        host, tillbaka: { href, text },
-       titel, nar, relativ, lage: { text, klass },
-       steg:    [{ namn, klar, nu }],      vägen passet går
-       besked:  { text, ton },             vad som väntar, på vem
+       datum,                              'ÅÅÅÅ-MM-DD', den stora brickan
+       titel, nar, relativ,                relativ står i fetstil efter när
+       lage: { text, klass, ton, ikon },   statusen; ton ur klass om den saknas
+       steg:    [{ namn, klar, nu, under }], vägen passet går, under är
+                                           en rad under namnet
+       besked:  { text, ton, etikett, under },
+                                           vad som väntar, på vem. ton är
+                                           fraga|vantar|klart|lugn; etikett är
+                                           den lilla raden i mono ovanför
+                                           (förval för fraga och vantar)
+       belopp:  { text, not },             stort till höger, ovanför knapparna
        atgarder: html,                     knapparna
        alternativ: html,                   ett andra val under knapparna,
                                            t.ex. faktura i stället för kort
-       kort:    [{ rubrik, rader: [[etikett, värde]] }],
-                                           värde är text, eller { href, text }
+       kort:    [{ rubrik, huvud, under, rader }],
+                                           en kolumn var. huvud är den feta
+                                           raden, under en lista av text eller
+                                           { href, text }. Utan dem blir första
+                                           raden i rader huvudet och resten
+                                           dämpade rader med sin etikett.
+                                           Värden är text, eller { href, text }
                                            för möteslänken (Fas 18.1)
-       block:   [{ rubrik, html }]         anteckning, rapport, läxor
+       block:   [{ rubrik, html }],        anteckning, rapport, läxor
+       andra: html, andraText              längst ner: Föreslå ny tid, Avboka
      }
      ============================================================ */
 
-  /* Ett värde i ett kort är text. Möteslänken är det enda som är en
-     länk, och den blir det bara om adressen är https: mötesRad nedan
-     har redan prövat att den leder till meet.google.com, och det här
-     är andra gången. Allt annat escapas, som förut. */
+  /* Ett värde är text. En länk blir det bara i två fall: en adress i
+     vyn (#meddelanden), eller https — möteslänken, som mötesRad nedan
+     redan prövat leder till meet.google.com. Det här är andra gången.
+     Allt annat escapas, som förut. */
   function radVärde(v) {
     if (v && typeof v === 'object') {
-      if (!/^https:\/\//.test(String(v.href || ''))) return esc(v.text || '');
-      return '<a class="ps-lank" href="' + esc(v.href) + '" target="_blank" rel="noopener noreferrer">'
-        + esc(v.text || v.href) + '</a>';
+      var href = String(v.href || '');
+      if (/^#[\w\/-]*$/.test(href)) {
+        return '<a class="ps-lank ar-intern" href="' + esc(href) + '">' + esc(v.text || '') + '</a>';
+      }
+      if (!/^https:\/\//.test(href)) return esc(v.text || '');
+      return '<a class="ps-lank" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">'
+        + esc(v.text || href) + '</a>';
     }
     return esc(v);
   }
+
+  /* Besked-tonen (vems drag det är) i färgens språk: frågan är ert
+     drag och kräver handling, väntan är ockra, klart är mossa. */
+  var BESKED_TON = { fraga: 'lera', vantar: 'ockra', klart: 'mossa', lugn: 'neutral' };
+  /* Etiketten ovanför beskedet när vyn inte sagt någon. Bara där den
+     aldrig kan bli fel: "Klart" hade stått över "Passet är bokat. Betala
+     …", och ett lugnt besked behöver ingen rubrik. */
+  var BESKED_ETIKETT = { fraga: 'Nästa steg', vantar: 'Väntar på svar' };
+  /* Passets läge (NXKontakt.LÄGEN) när vyn bara skickat klassen. */
+  var LAGE_TON = { onskad: 'ockra', bekraftad: 'mossa', genomford: 'neutral', avbokad: 'neutral' };
+  var LAGE_IKON = { genomford: 'bock', avbokad: 'kryss' };
 
   function passSida(o) {
     var host = o && o.host;
     if (!host) return;
 
-    var steg = (o.steg || []).map(function (s) {
-      return '<li class="ps-steg' + (s.klar ? ' ar-klar' : '') + (s.nu ? ' ar-nu' : '') + '"'
+    var stegRad = (o.steg || []).map(function (s) {
+      return '<li class="' + (s.klar ? 'ar-klar' : s.nu ? 'ar-nu' : 'ar-kommande') + '"'
         + (s.nu ? ' aria-current="step"' : '') + '>'
-        + '<span class="ps-steg-prick" aria-hidden="true"></span>' + esc(s.namn) + '</li>';
+        + '<span class="nx-steg-prick" aria-hidden="true">' + (s.klar ? IKON.bock : '') + '</span>'
+        + '<b>' + esc(s.namn) + '</b>'
+        + (s.under ? '<span>' + esc(s.under) + '</span>' : '')
+        + '</li>';
     }).join('');
 
-    var kort = (o.kort || []).map(function (k) {
-      var rader = (k.rader || []).filter(function (r) { return r && r[1]; });
-      if (!rader.length) return '';
-      return '<div class="ps-kort"><h6>' + esc(k.rubrik) + '</h6>'
-        + rader.map(function (r) {
-            return '<div class="ps-rad"><span>' + esc(r[0]) + '</span><b>' + radVärde(r[1]) + '</b></div>';
+    /* En kolumn per kort. Utan huvud och under ritas raderna som i dag,
+       i den nya formen: den första blir huvudet (etiketten säger
+       rubriken redan — "När", "onsdag 30 september"), resten står
+       dämpade med sin etikett, så att inget som stod förut försvinner. */
+    var kolumner = (o.kort || []).map(function (k) {
+      var huvud = k.huvud, under = k.under;
+      if (huvud == null && !under) {
+        var rader = (k.rader || []).filter(function (r) { return r && r[1]; });
+        if (!rader.length) return '';
+        huvud = rader[0][1];
+        under = rader.slice(1).map(function (r) { return { etikett: r[0], värde: r[1] }; });
+      }
+      under = (under || []).filter(function (u) { return u && (typeof u !== 'object' || u.text || u.värde); });
+      return '<div class="ps-kol">'
+        + '<h3 class="ps-kol-rubrik">' + esc(k.rubrik) + '</h3>'
+        + (huvud != null && huvud !== '' ? '<b class="ps-kol-huvud">' + radVärde(huvud) + '</b>' : '')
+        + under.map(function (u) {
+            if (u && typeof u === 'object' && 'värde' in u) {
+              return '<span class="ps-kol-rad"><span class="ps-kol-et">' + esc(u.etikett) + ':</span> '
+                + radVärde(u.värde) + '</span>';
+            }
+            return '<span class="ps-kol-rad">' + radVärde(u) + '</span>';
           }).join('')
         + '</div>';
     }).join('');
 
     var block = (o.block || []).filter(function (b) { return b && b.html; }).map(function (b) {
-      return '<div class="ps-block"><h6>' + esc(b.rubrik) + '</h6>' + b.html + '</div>';
+      return '<div class="ps-block">' + grupp(b.rubrik)
+        + '<div class="nx-kort ar-lugn ps-block-kropp">' + b.html + '</div></div>';
     }).join('');
+
+    var lage = o.lage || null;
+    var lageTon = lage ? (lage.ton || LAGE_TON[lage.klass] || 'neutral') : null;
+    var besked = o.besked || null;
+    var beskedTon = besked ? (BESKED_TON[besked.ton] || 'neutral') : 'neutral';
+    var etikett = besked ? (besked.etikett != null ? besked.etikett : BESKED_ETIKETT[besked.ton]) : null;
+    var belopp = o.belopp && o.belopp.text ? o.belopp : null;
+    var höger = belopp || o.atgarder || o.alternativ;
 
     host.innerHTML =
       '<a class="ps-tillbaka" href="' + esc(o.tillbaka ? o.tillbaka.href : '#') + '">'
       + '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.5 2.5 4 6l3.5 3.5"/></svg>'
       + esc(o.tillbaka ? o.tillbaka.text : 'Tillbaka') + '</a>'
-      + '<div class="ps-huvud">'
-      + '<div>'
+      + '<div class="ps-topp">'
+      + (o.datum ? datum(o.datum, { stor: true, avbokad: !!(lage && lage.klass === 'avbokad') }) : '')
+      + '<div class="ps-topp-text">'
       + '<h2 class="ps-titel" tabindex="-1">' + esc(o.titel || 'Passet') + '</h2>'
       + '<p class="ps-nar">' + esc(o.nar || '')
-      + (o.relativ ? ' <em>· ' + esc(o.relativ) + '</em>' : '') + '</p>'
+      + (o.relativ ? ' · <b>' + esc(o.relativ) + '</b>' : '') + '</p>'
       + '</div>'
-      + (o.lage ? '<span class="lage ' + esc(o.lage.klass || '') + '">' + esc(o.lage.text) + '</span>' : '')
+      + (lage ? status({ text: lage.text, ton: lageTon, ikon: lage.ikon || LAGE_IKON[lage.klass], tint: true }) : '')
       + '</div>'
-      + (steg ? '<ol class="ps-vag" aria-label="Var passet står">' + steg + '</ol>' : '')
-      + (o.besked || o.atgarder
-          ? '<div class="ps-gor' + (o.besked && o.besked.ton ? ' ar-' + esc(o.besked.ton) : '') + '">'
-            + (o.besked ? '<p>' + esc(o.besked.text) + '</p>' : '')
-            + (o.atgarder ? '<div class="ps-knappar">' + o.atgarder + '</div>' : '')
-            /* Under knapparna, inte bland dem (Fas 14.6). En knapp i
-               .ps-knappar blir full bredd på en telefon, och "Betala med
-               faktura i stället" är ett andra val, inte ett andra steg. */
-            + (o.alternativ ? '<div class="ps-alt">' + o.alternativ + '</div>' : '')
+      + (stegRad ? '<ol class="nx-steg ps-stegrad" aria-label="Var passet står">' + stegRad + '</ol>' : '')
+      + (besked || o.atgarder
+          ? '<div class="nx-kort ps-nasta ar-' + beskedTon + '">'
+            + '<div class="ps-nasta-text">'
+            + (etikett ? '<span class="ps-nasta-et">' + esc(etikett) + '</span>' : '')
+            + (besked ? '<p class="ps-nasta-besked">' + esc(besked.text) + '</p>' : '')
+            + (besked && besked.under ? '<p class="ps-nasta-under">' + esc(besked.under) + '</p>' : '')
+            + '</div>'
+            + (höger
+                ? '<div class="ps-nasta-hoger">'
+                  + (belopp ? '<p class="ps-nasta-belopp"><b>' + esc(belopp.text) + '</b>'
+                      + (belopp.not ? '<span>' + esc(belopp.not) + '</span>' : '') + '</p>' : '')
+                  + (o.atgarder ? '<div class="nx-knapprad">' + o.atgarder + '</div>' : '')
+                  /* Under knapparna, inte bland dem (Fas 14.6). En knapp i
+                     knappraden blir full bredd på en telefon, och "Betala med
+                     kort i stället" är ett andra val, inte ett andra steg. */
+                  + (o.alternativ ? '<div class="ps-alt">' + o.alternativ + '</div>' : '')
+                  + '</div>'
+                : '')
             + '</div>'
           : '')
-      + (kort ? '<div class="ps-kortrad">' + kort + '</div>' : '')
-      + block;
+      + (kolumner ? '<div class="nx-kort ar-lugn ps-kolumner">' + kolumner + '</div>' : '')
+      + block
+      + (o.andra
+          ? '<div class="ps-andra">'
+            + (o.andraText ? '<p>' + esc(o.andraText) + '</p>' : '')
+            + '<div class="ps-andra-knappar">' + o.andra + '</div></div>'
+          : '');
   }
 
   /* ============================================================
@@ -1117,7 +1352,7 @@ window.NXStudie = (function () {
      inte bara rubriken — på en telefon är raden det man träffar.
      Knappar och länkar i raden gör sitt eget och öppnar inget. */
   document.addEventListener('click', function (e) {
-    var rad = e.target.closest('.pass-klickbar[data-href]');
+    var rad = e.target.closest('.nx-passrad[data-href], .pass-klickbar[data-href]');
     if (!rad || e.target.closest('button, a, input, select, textarea, label')) return;
     location.hash = rad.dataset.href;
   });
@@ -1827,7 +2062,18 @@ window.NXStudie = (function () {
      försvinner — historiken är kvitto på vad som fakturerats och
      får inte gå att tappa bort, bara att lägga undan.
 
-     opts: { host, bokningar, rad(b), tomtKommande, tomtAllt }
+     rad(b, { tidigare }) får veta vilken grupp raden står i. Förr
+     tonades hela den tidigare gruppen ner (opacity .72), och då också
+     knappen Betala på ett hållet, obetalt pass. Nu säger brickan det i
+     stället (NXKontakt.passRad, tidigare), och knappen är en knapp.
+
+     o.kort (Vyerna i ny form): grupperna med gruppetikett, Kommande i
+     ett kort och Tidigare i ett kant-kort, och "Visa alla" som en
+     textlänk under. Utan det ritas listan som förut, i den panel den
+     står i: att lägga kort i en panel är lådor i lådor.
+
+     opts: { host, bokningar, rad(b, läge), tomtKommande, tomtAllt,
+             kort, rubrikKommande, rubrikTidigare }
      ============================================================ */
   var PASS_SYNLIGA = 3;
 
@@ -1858,11 +2104,26 @@ window.NXStudie = (function () {
       return;
     }
 
+    function raderAv(lista, tidig) {
+      return lista.map(function (b) { return o.rad(b, { tidigare: tidig }); }).join('');
+    }
+    var antal = function (n) { return n + ' pass'; };
+    var merText = function (öppen) {
+      return öppen ? 'Visa färre' : o.kort ? 'Visa alla ' + tidigare.length + ' tidigare pass' : 'Visa alla ' + tidigare.length;
+    };
+
     var ut = '';
 
-    ut += kommande.length
-      ? '<div class="pl-grupp">' + kommande.map(o.rad).join('') + '</div>'
-      : '<div class="pl-inget">' + esc(o.tomtKommande || 'Inga kommande pass just nu.') + '</div>';
+    if (o.kort) {
+      ut += grupp(o.rubrikKommande || 'Kommande', kommande.length ? antal(kommande.length) : '')
+        + (kommande.length
+            ? '<div class="nx-kort nx-lista">' + raderAv(kommande, false) + '</div>'
+            : '<div class="pl-inget">' + esc(o.tomtKommande || 'Inga kommande pass just nu.') + '</div>');
+    } else {
+      ut += kommande.length
+        ? '<div class="pl-grupp">' + raderAv(kommande, false) + '</div>'
+        : '<div class="pl-inget">' + esc(o.tomtKommande || 'Inga kommande pass just nu.') + '</div>';
+    }
 
     /* Utfällt förblir utfällt när listan ritas om. Förut föll den
        ihop efter varje avbokning och varje svar — listan krympte med
@@ -1872,16 +2133,20 @@ window.NXStudie = (function () {
     if (tidigare.length) {
       var visade = tidigare.slice(0, PASS_SYNLIGA);
       var resten = tidigare.slice(PASS_SYNLIGA);
+      var lådan = resten.length
+        ? '<div class="pl-resten"' + (utfällt ? '' : ' hidden') + '>' + raderAv(resten, true) + '</div>' : '';
+      var mer = resten.length
+        ? '<button type="button" class="' + (o.kort ? 'nx-lank pl-mer-lank' : 'pl-mer') + '" data-pl-mer aria-expanded="'
+          + (utfällt ? 'true' : 'false') + '">' + esc(merText(utfällt)) + '</button>'
+        : '';
 
-      ut += '<div class="pl-grupp pl-tidigare">'
-        + '<div class="pl-rubrik">Tidigare pass <em>' + tidigare.length + ' st</em></div>'
-        + visade.map(o.rad).join('')
-        + (resten.length
-            ? '<div class="pl-resten"' + (utfällt ? '' : ' hidden') + '>' + resten.map(o.rad).join('') + '</div>'
-              + '<button type="button" class="pl-mer" data-pl-mer aria-expanded="' + (utfällt ? 'true' : 'false') + '">'
-              + (utfällt ? 'Visa färre' : 'Visa alla ' + tidigare.length) + '</button>'
-            : '')
-        + '</div>';
+      ut += o.kort
+        ? '<div class="pl-tidigare-grupp">' + grupp(o.rubrikTidigare || 'Tidigare', antal(tidigare.length))
+          + '<div class="nx-kort ar-lugn nx-lista">' + raderAv(visade, true) + lådan + '</div>' + mer + '</div>'
+        : '<div class="pl-grupp pl-tidigare">'
+          + '<div class="pl-rubrik">Tidigare pass <em>' + tidigare.length + ' st</em></div>'
+          + raderAv(visade, true) + lådan + mer
+          + '</div>';
     }
 
     host.innerHTML = ut;
@@ -1894,7 +2159,7 @@ window.NXStudie = (function () {
         function växla() {
           lådan.hidden = öppet;
           knapp.setAttribute('aria-expanded', öppet ? 'false' : 'true');
-          knapp.textContent = öppet ? 'Visa alla ' + tidigare.length : 'Visa färre';
+          knapp.textContent = merText(!öppet);
         }
         /* "Visa färre" längst ned i en lång lista tog bort allt
            ovanför knappen, och man hamnade 600 px högre upp än man
@@ -2169,6 +2434,7 @@ window.NXStudie = (function () {
     passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,
     hämtaMöte: hämtaMöte, mötesRad: mötesRad,
     dagMedVeckodag: dagMedVeckodag, GICK: GICK,
+    status: status, datum: datum, grupp: grupp, citat: citat, omdöme: omdöme, IKON: IKON,
     bekräfta: bekräfta, avbokaRuta: avbokaRuta, medan: medan, kolla: kolla
   };
 })();
