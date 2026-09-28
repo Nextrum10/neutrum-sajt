@@ -346,10 +346,20 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   Rutan säger också när månaden pågår, och när en tidigare månad har pass
   men inga underlag (`data-kor-not`).
 - **Löner** (`#loner`, `nextrum-admin-loner.js`) listar de godkända
-  studiehjälparna och alla med något att få för månaden, förvalt förra
-  månaden. Anställningsnumret (`lon_anstallning`, Fas 17.1) och
+  studiehjälparna och alla med något att få för månaden.
+  **Månadsraden är utbetalningsmånaden** (samma kväll, Leo: "september
+  jobb betalas i oktober, därför ska 240kronorna visas i oktober"):
+  oktober är lönen den 25 oktober, för septembers pass, som en
+  lönekörning i Fortnox Lön. Förvalt är nästa lönedag (efter den 25:e
+  nästa månad), och en månad märks Utbetald när alla dess underlag är
+  det. Allt under raden räknas på passens månad, månaden före
+  (`passmånad`), och underlaget (`payouts.period`), körningen, Ekonomi,
+  Månadens ekonomi och studiehjälparens lönespec räknar fortfarande på
+  passens månad. Länken från Månadens ekonomi öppnar därför månaden
+  efter, och lönefilen heter efter utbetalningen. Anställningsnumret
+  (`lon_anstallning`, Fas 17.1) och
   timpenningen sätts där; personnummer, adress, bankkonto och
-  skattetabell står i Fortnox Lön och inte här, med flit. Finns månadens
+  skattetabell står i Fortnox Lön och inte här, med flit. Finns passens
   underlag gäller underlagets tal; annars räknas de pass som månadens
   körning kommer att ta (genomförda, rapporterade, inte undantagna, inte
   på ett underlag) och märks beräknat. **Varje pass räknas i EN månad**
