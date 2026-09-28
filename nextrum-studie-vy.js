@@ -1491,31 +1491,28 @@
     return S.erb.bank.saldo >= Number(b.duration_min || 60);
   }
 
-  /* Timmar som pass redan väntar på. Ett förslag har inte dragit något,
-     men det tar timmarna när det bekräftas, och ett bekräftat obetalt
-     pass tar dem när de blir lediga (Fas 22.3). De räknas bort innan ett
-     nytt förslag får höra att timmarna räcker. */
-  function lovadeTimmar() {
-    const idag = isoFor(new Date());
-    return (S.bokningar || []).filter(b => (b.status === 'requested' || b.status === 'confirmed')
-      && String(b.wanted_date) >= idag && !b.klippkort_id
-      && ['ingen', 'vantar', 'misslyckad'].includes(b.betalning_status || 'ingen')
-      && Number(b.antal_barn || 1) <= 1 && !b.startrabatt && b.fakturerbar !== false)
-      .reduce((a, b) => a + passTimmar(b), 0);
-  }
   const timText = t => t === 1 ? '1 timme' : t + ' timmar';
 
   /* Leo 2026-09-28: "innan du bokar ett pass ska det stå 4 av 4 timmar
      kvar". Vid knappen i Boka pass står vad förslaget tar av timmarna,
-     i stället för priset. Databasen avgör när passet bekräftas
-     (bookings_timmar_betalar); det här är samma räkning i förväg, med
-     korten som gäller den dagen. */
+     i stället för priset.
+
+     Sedan Fas 22.4 drar databasen timmen när förslaget skapas
+     (bookings_timmar_betalar_forslaget), och det här är samma val i
+     förväg: ett kort som gäller dagen och räcker till hela passet,
+     annars timbanken. Förslag som redan skickats har redan dragit sina
+     timmar, så kvar står som databasen räknat det. Förut räknades de
+     bort här (lovadeTimmar), för databasen drog först vid bekräftelsen,
+     och en summa över flera kort kunde säga "räcker" om ett pass som
+     inget enskilt kort räckte till. */
   function timmarFörFörslag(minuter, datum, barn) {
     if (!S.erb.aktiv || Number(barn) > 1 || !datum) return null;
     const behov = passTimmar({ duration_min: minuter });
-    const kvar = S.erb.kort.filter(k => k.brukbar && String(k.giltigt_till) >= String(datum))
-      .reduce((a, k) => a + Number(k.kvar), 0) - lovadeTimmar();
-    if (kvar >= behov) return { titel: 'Era timmar', under: '−' + timText(behov) + ', ' + (kvar - behov) + ' kvar efter' };
+    const brukbara = S.erb.kort.filter(k => k.brukbar);
+    if (brukbara.some(k => String(k.giltigt_till) >= String(datum) && Number(k.kvar) >= behov)) {
+      const kvar = brukbara.reduce((a, k) => a + Number(k.kvar), 0);
+      return { titel: 'Era timmar', under: '−' + timText(behov) + ', ' + (kvar - behov) + ' kvar efter' };
+    }
     if (S.erb.bank.saldo >= minuter) return { titel: 'Timbanken', under: '−' + tidLängd(minuter) };
     return null;
   }
@@ -1529,13 +1526,12 @@
     const bank = S.erb.aktiv ? Number(S.erb.bank.saldo) || 0 : 0;
     el.hidden = !kort.length && !bank;
     if (el.hidden) { el.innerHTML = ''; return; }
-    const lovade = lovadeTimmar();
     el.innerHTML = kort.map(k => '<p><b>' + esc(k.kvar + ' av ' + k.timmar + ' timmar kvar') + '</b> på '
         + esc(k.namn) + ', till ' + esc(datumText(k.giltigt_till)) + '.</p>').join('')
       + (bank ? '<p><b>' + esc(tidLängd(bank)) + '</b> i timbanken.</p>' : '')
-      + '<p class="bk-timmar-not">' + esc((kort.length ? 'Timmarna betalar' : 'Minuterna betalar')
-        + ' passet när er studiehjälpare har bekräftat det, ett barn per pass.'
-        + (kort.length && lovade ? ' ' + timText(lovade) + ' går till pass ni redan föreslagit.' : '')) + '</p>';
+      + '<p class="bk-timmar-not">' + esc((kort.length ? 'Timmarna' : 'Minuterna')
+        + ' dras när ni föreslår ett pass, ett barn per pass. Föreslår er studiehjälpare en annan tid följer de med passet. '
+        + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka.') + '</p>';
   }
 
   /* Har familjen timmar som räcker står den knappen först: då är det
@@ -1546,7 +1542,9 @@
      bekräftas eller genomförs, och när ett köp blir betalt. Sedan Fas
      22.3 betalar timmar som blivit lediga (en avbokning, kortet som vann,
      timbanken som fyllts på) ett bekräftat pass inom fem minuter, genom
-     jobbet timmar-betalar. Knappen gör samma sak direkt. */
+     jobbet timmar-betalar, och sedan Fas 22.4 betalar de förslaget redan
+     när det skickas. Knappen gör samma sak direkt, för det som timmarna
+     inte hann. */
   function betalaKnapp(b, liten) {
     const tim = kortFör(b);
     const bank = !tim && bankFör(b);
@@ -2052,10 +2050,11 @@
     const p = panel;
     if (!p) return;
     p.klar = true;
-    /* Fas 22.2: köpet betalar de bekräftade passen framför familjen i
-       samma stund som det blir betalt, så passen laddas om med timmarna. */
+    /* Fas 22.2: köpet betalar passen framför familjen i samma stund som
+       det blir betalt, så passen laddas om med timmarna. Sedan Fas 22.4
+       också förslagen. */
     p.besked.textContent = '✓ Tack! Köpet är klart. Timmarna syns under Era timmar om en liten stund, '
-      + 'och de betalar era bekräftade pass av sig själva.';
+      + 'och de betalar era pass av sig själva.';
     p.besked.hidden = false;
     setTimeout(() => { laddaErbjudanden().catch(() => {}); }, 2500);
     setTimeout(() => { Promise.all([laddaErbjudanden(), laddaPass()]).catch(() => {}); }, 8000);
@@ -2245,7 +2244,7 @@
       + '<span class="erb-kvar"><b>' + esc(tidLängd(saldo)) + '</b> sparat</span>'
       + '<p class="erb-bank-text">Minuter som blev över när ett pass betalt med timmar slutade före en hel timme. '
       + 'Drar ett pass över tas tiden härifrån först, utan kostnad, och räcker minuterna till ett helt pass betalar de '
-      + 'nästa bekräftade pass, om inga köpta timmar gör det.'
+      + 'nästa pass ni föreslår, om inga köpta timmar gör det.'
       + (bank.varde ? ' Slutar ni betalar vi tillbaka dem, i dag ' + esc(NXBetalning.kronor(bank.varde)) + '.' : '')
       + ' <a href="#profil/timbank">Se vad som gått in och ut</a>'
       + '</p></div>';
@@ -2277,7 +2276,9 @@
 
   /* Passen ett kort betalat, äldst först. Ett pass som inte har hållits
      än står som kommande: timmarna är dragna, men passet finns kvar att
-     avboka, och då kommer de tillbaka. */
+     avboka, och då kommer de tillbaka. Ett förslag står som föreslaget
+     (Fas 22.4): timmen är dragen, och säger studiehjälparen nej kommer
+     den tillbaka. */
   function kortetsPass(k) {
     const per = S.erb.dragningar;
     if (per === undefined) return '<div class="loading">Hämtar</div>';
@@ -2287,8 +2288,9 @@
     const idag = isoFor(new Date());
     return '<ul class="tb-rorelser">' + rader.map(r => {
       const t = Number(r.timmar);
-      const kommande = r.status !== 'completed' && String(r.datum) >= idag;
-      return '<li><span>' + esc(passNamn(r.booking_id, r.datum)) + (kommande ? ', kommande' : '') + '</span>'
+      const läge = r.status === 'requested' ? ', föreslaget'
+        : r.status !== 'completed' && String(r.datum) >= idag ? ', kommande' : '';
+      return '<li><span>' + esc(passNamn(r.booking_id, r.datum)) + läge + '</span>'
         + '<span class="tb-min ut">−' + esc(t === 1 ? '1 timme' : t + ' timmar') + '</span></li>';
     }).join('') + '</ul>';
   }
@@ -2299,14 +2301,16 @@
     const kort = S.erb.kort;
     if (!kort.length) {
       host.innerHTML = '<p class="erb-bank-text">Ni har inga köpta timmar.'
-        + (S.erb.aktiv ? ' Köper ni en plan eller ett klippkort betalar timmarna era bekräftade pass av sig själva. '
+        + (S.erb.aktiv ? ' Köper ni en plan eller ett klippkort betalar timmarna era pass av sig själva. '
           + '<a href="#erbjudanden">Se planer och klippkort</a>' : '')
         + '</p>';
       return;
     }
-    host.innerHTML = '<p class="erb-bank-text tb-forklaring">Timmarna betalar era pass av sig själva. När studiehjälparen '
-      + 'har bekräftat ett pass dras timmarna från det kort som går ut först. Köper ni timmar, eller kommer timmar tillbaka '
-      + 'när ett pass avbokas, betalar de era bekräftade pass i datumordning. Ett pass med fler barn, och passet där första timmen är på köpet, '
+    host.innerHTML = '<p class="erb-bank-text tb-forklaring">Timmarna betalar era pass av sig själva. När ni föreslår '
+      + 'ett pass dras timmarna från det kort som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
+      + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka, och det gör de också när ett förslag ingen '
+      + 'svarat på har passerat. Köper ni timmar, eller kommer timmar tillbaka, betalar de era pass i datumordning. '
+      + 'Ett pass med fler barn, och passet där första timmen är på köpet, '
       + 'betalas med kort. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för timmarna</a></p>'
       + kort.map(k => kortRad(k, kortetsPass(k))).join('');
   }
@@ -2344,7 +2348,7 @@
       + (bank.varde ? '<span>Värt ' + esc(NXBetalning.kronor(bank.varde)) + ' om ni slutar</span>' : '') + '</div>'
       + '<p class="erb-bank-text">Här sparas det som blir över när ett pass betalt med timmar slutar före en hel timme: '
       + 'ett pass på två timmar som höll 1 h 15 lägger 45 minuter här. Drar ett pass med ett barn över tas tiden härifrån '
-      + 'först, utan kostnad, och räcker minuterna till ett helt pass betalar de nästa bekräftade pass, om inga köpta '
+      + 'först, utan kostnad, och räcker minuterna till ett helt pass betalar de nästa pass ni föreslår, om inga köpta '
       + 'timmar gör det. Minuterna går inte ut, och slutar ni betalar vi tillbaka dem. '
       + '<a href="/anvandarvillkor#timbank" target="_blank" rel="noopener">Villkoren för timbanken</a></p>'
       + '<p class="konto-inlogg-et" style="margin-top:18px">Vad som gått in och ut</p>'
@@ -2538,10 +2542,16 @@
        "Kunde inte svara". */
     const svar = e.target.closest('[data-passvar]');
     if (svar) {
+      /* Fas 22.4: ett förslag kan redan vara betalt med timmarna. Avböjs
+         det kommer de tillbaka, och rutan säger det innan. */
+      const passet = (S.bokningar || []).find(x => x.id === svar.dataset.id);
+      const tillbaka = svar.dataset.passvar !== 'cancelled' || !passet ? ''
+        : medTimmar(passet) ? ' Timmarna ni betalade med kommer tillbaka.'
+        : medBanken(passet) ? ' Minuterna ni betalade med kommer tillbaka till timbanken.' : '';
       if (svar.dataset.passvar === 'cancelled') {
         const nej = await NXStudie.bekräfta({
           titel: 'Avböj tiden?',
-          text: 'Er studiehjälpare ser att tiden inte passade. Skriv gärna i chatten vilka tider som fungerar.',
+          text: 'Er studiehjälpare ser att tiden inte passade. Skriv gärna i chatten vilka tider som fungerar.' + tillbaka,
           knapp: 'Avböj'
         });
         if (!nej) return;
@@ -2550,7 +2560,7 @@
       const { error } = await supa.from('bookings').update({ status: svar.dataset.passvar }).eq('id', svar.dataset.id);
       svar.removeAttribute('aria-busy');
       if (error) { alert('Kunde inte svara: ' + felText(error)); return; }
-      await Promise.all([laddaPass(), laddaBokning()]);
+      await Promise.all([laddaPass(), laddaBokning()].concat(tillbaka ? [laddaErbjudanden()] : []));
       return;
     }
 
@@ -2845,7 +2855,7 @@
         location: v.plats || null,
         note: v.not || null,
         status: 'requested'
-      }).select('id, status').single();
+      }).select('id, status, klippkort_id, betalning_status').single();
       if (error) {
         /* 23505 = samma starttid, 23P01 = passet krockar med ett annat
            som redan ligger där. Samma sak för den som föreslår. */
@@ -2854,10 +2864,17 @@
         }
         return 'Kunde inte skicka förslaget: ' + felText(error);
       }
+      /* Fas 22.4: databasen betalar förslaget med timmarna i samma
+         skrivning som skapar det. Ett nytt förslag kan inte ha
+         kortpengar, så betalt utan kort är timbanken. Kvittot säger det,
+         och Era timmar laddas om. */
+      const betalt = !data || data.betalning_status !== 'betald' ? null
+        : data.klippkort_id ? 'timmar' : 'timbanken';
       /* Listan laddas om bakom kvittot, inte före det. Den som trycker
          på Föreslå tiden ska få svaret när databasen gett det. */
       laddaPass();
-      return { status: data ? data.status : null, id: data ? data.id : null };
+      if (betalt) laddaErbjudanden().catch(() => {});
+      return { status: data ? data.status : null, id: data ? data.id : null, betalt: betalt };
     }
   });
 
@@ -3353,17 +3370,30 @@
       besked = { text: 'Passet är avbokat' + (skäl ? ' — ' + skäl.toLowerCase() + '.' : '.'), ton: 'lugn' };
       atgarder = '<a class="btn btn-primary" href="#boka">Föreslå en ny tid</a>' + skriv;
     } else if (b.status === 'requested' && derasFörslag && framåt) {
-      const timmarna = !betalt && b.betalning_status !== 'betald' && (kortFör(b) || bankFör(b))
-        ? ' Säger ni ja betalar era timmar passet.' : '';
+      /* Fas 22.4: timmarna betalade förslaget när det skickades, och ett
+         motförslag flyttar bara tiden. Leo 2026-09-28: det är den timmen
+         som fortfarande betalar passet. Obetalt står det bara när
+         timmarna inte räckte då, och då betalar de passet när de blir
+         lediga (timmar-betalar). */
+      const svarsText = medTimmar(b) ? 'Passet är betalt med era timmar, och de följer med till den här tiden. '
+          + 'Svarar ni nej kommer de tillbaka, och ni kan föreslå en annan tid.'
+        : medBanken(b) ? 'Passet är betalt med timbanken, och minuterna följer med till den här tiden. '
+          + 'Svarar ni nej kommer de tillbaka, och ni kan föreslå en annan tid.'
+        : 'Svarar ni nej kan ni föreslå en annan.'
+          + (b.betalning_status !== 'betald' && (kortFör(b) || bankFör(b)) ? ' Era timmar räcker till passet och betalar det av sig själva.' : '');
       besked = { text: förnamn + ' föreslår den här tiden. Passar den? '
-        + (betalt ? 'Passar den inte kan ni föreslå en annan.' + viaOss : 'Svarar ni nej kan ni föreslå en annan.' + timmarna), ton: 'fraga' };
+        + (betalt ? 'Passar den inte kan ni föreslå en annan.' + viaOss : svarsText), ton: 'fraga' };
       atgarder = svarsKnappar(b, false)
         + '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Föreslå annan tid</button>';
     } else if (b.status === 'requested' && framåt) {
-      /* Fas 22.2: timmarna betalar passet när det bekräftas. Villkorat,
-         för ett annat pass kan hinna ta de sista timmarna först. */
-      const timmarna = !betalt && b.betalning_status !== 'betald' && (kortFör(b) || bankFör(b))
-        ? ' Räcker era timmar när hen har accepterat betalar de passet.' : '';
+      /* Fas 22.4: timmarna betalar förslaget redan när det skickas, och
+         ligger kvar om studiehjälparen föreslår en annan tid. */
+      const timmarna = medTimmar(b) ? ' Passet är betalt med era timmar. Föreslår ' + förnamn
+          + ' en annan tid följer de med, och säger hen nej kommer de tillbaka.'
+        : medBanken(b) ? ' Passet är betalt med timbanken. Föreslår ' + förnamn
+          + ' en annan tid följer minuterna med, och säger hen nej kommer de tillbaka.'
+        : !betalt && b.betalning_status !== 'betald' && (kortFör(b) || bankFör(b))
+          ? ' Era timmar räcker till passet och betalar det av sig själva.' : '';
       besked = { text: 'Väntar på att ' + förnamn + ' accepterar tiden. Ni får ett mejl när hen svarat.' + timmarna + (betalt ? viaOss : ''), ton: 'vantar' };
       atgarder = '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Ändra tiden</button>'
         + (betalt ? '' : '<button type="button" class="btn btn-ghost" data-avboka="' + esc(b.id) + '" data-forslag="1">Dra tillbaka förslaget</button>')
@@ -3483,6 +3513,9 @@
            just det, och ska betalas på den här sidan. */
         ['Betalning', b.fakturerbar === false ? 'Betalas inte'
           : ingetAttBetala(b) && b.status !== 'cancelled' ? 'Inget att betala'
+          /* Fas 22.4: också ett förslag kan vara betalt, med timmarna. */
+          : medTimmar(b) && b.status !== 'cancelled' ? 'Betalt med era timmar'
+          : medBanken(b) && b.status !== 'cancelled' ? 'Betalt med timbanken'
           : b.betalning_status === 'faktura' && b.status !== 'cancelled'
             ? (fakturaFör(b.id) && fakturaFör(b.id).fortnox_fakturanummer && fakturaFör(b.id).status !== 'utkast'
                 ? 'Faktura ' + fakturaFör(b.id).fortnox_fakturanummer : 'Mot faktura')

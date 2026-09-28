@@ -42,8 +42,16 @@ kräver ett skäl (fast kod), och motparten får det i mejlet (Fas 15.2).
 Väljer familjen ämnet Annat måste de skriva vilket, och det skrivna
 ordet är det som sparas i `bookings.subject` (2026-09-25). Mejlen
 läser ämnet genom `fornamn()`, så fritexten når dem som ett ord.
-Samma dag går det bara att föreslå tider minst en timme fram, och
-tidsraden säger det — annars ser det ut som att morgonen saknas.
+Tiderna börjar klockan 11 alla dagar och slutar senast 22
+(`HELA_DAGEN` i `nextrum-arbetsyta.js`, som förslaget och flytta-rutan
+delar). Leo 2026-09-28: "man inte kan boka studiehjälp innan kl 11".
+Listan började 07:00, och Leos "man kan inte föreslå tider före 11:00"
+från 2026-09-25 lästes då som en felanmälan i stället för en regel.
+Regeln står bara i vyn, som resten av fönstret: databasen spärrar inga
+timmar, och en flik som laddats före en ändring erbjuder de gamla
+tiderna tills den laddas om. Samma dag går det bara att föreslå tider
+minst en timme fram, och tidsraden säger det — annars ser det ut som
+att dagens första timmar saknas.
 
 **Ångerrätten står i villkoren** (`#angerratt`, 2026-09-25): 14 dagar
 från att passet är bokat. Villkoren nämnde den inte alls förut, och
@@ -185,27 +193,64 @@ med timmarna oanvända bredvid.
   säger att passet är betalt med timmarna, med knappen till passet. Ett
   pass jobbet betalar får inget eget mejl; påminnelsen säger det.
 - **Vid ånger eller när en familj slutar: avboka först ALLA kommande
-  pass familjen inte vill ha**, inte bara de timmarna betalat.
-  `vid_anger_ore` och `vid_uppsagning_ore` räknar varje pass som inte är
-  avbokat som använt, också ett som inte hållits, och sedan Fas 22.3
-  betalar en timme som blir ledig nästa bekräftade pass inom fem
-  minuter: avbokas bara det betalda passet flyttar timmen till nästa.
+  pass familjen inte vill ha, och deras förslag**, inte bara de
+  timmarna betalat. `vid_anger_ore` och `vid_uppsagning_ore` räknar
+  varje pass som inte är avbokat som använt, också ett som inte hållits
+  och sedan Fas 22.4 också ett förslag, och sedan Fas 22.3 betalar en
+  timme som blir ledig nästa pass inom fem minuter: avbokas bara det
+  betalda passet flyttar timmen till nästa.
+
+**Timmen dras när familjen föreslår passet (Fas 22.4, 2026-09-28).**
+Leo: "när man skickar ett förslag försvinner en av de förköpta timmarna
+man köpt, om studiehjälparen inte kan den tiden och föreslår om är det
+den timmen som fortfarande betalar av passet." Förut drogs timmarna vid
+bekräftelsen, och ett förslag ägde ingen timme: bekräftades ett senare
+förslag medan familjen funderade på ett motförslag, tog det senare
+timmen. **Migrationen `fas22_4_timmen_dras_nar_forslaget_skickas` är
+INTE körd i driften** (2026-09-28). Kör den i samma stund som
+föräldravyn går ut: vyn räknar inte längre bort väntande förslag, så
+utan migrationen lovar Boka pass timmar som databasen inte dragit.
+- **Förslaget betalas när det skapas.** `bookings_timmar_betalar_forslaget`
+  (BEFORE INSERT, status `requested`) kör samma val som bekräftelsen.
+  Namnet gör att den kör efter skydden och `bookings_startrabatt`: första
+  timmen är avgjord innan timmarna väljer. Timbankens uttag skrivs i
+  samma BEFORE INSERT, innan passets rad finns, och därför är
+  `timbank_uttag_booking_id_fkey` `deferrable initially deferred`.
+- **Timmen följer passet.** Ett motförslag ändrar bara tid, status och
+  `created_by` (`skydda_bokningsfalt`), så betalningen ligger kvar, också
+  när tiden flyttas förbi kortets sista dag, som för ett bekräftat pass
+  som flyttas. `bookings_timmar_betalar` går också på `requested`: ett
+  obetalt bekräftat pass som flyttas betalas som ett nytt förslag.
+- **Ett nej ger tillbaka timmen**, som en avbokning (Fas 21.1): avböjt
+  och tillbakadraget är avbokat.
+- **Ett förslag som ingen svarat på när dagen gått lämnar tillbaka
+  timmen** (`intern.obesvarade_forslag_slapper_timmarna`, först i jobbet
+  `timmar-betalar`, oavsett flaggan). Utan det hade en timme legat kvar
+  på ett förslag som aldrig blev ett pass. Hölls passet ändå betalar
+  timmarna det igen när rapporten gör det genomfört.
+- **Jobbet och köpet betalar förslag** som bekräftade pass, i
+  datumordning. Ett förslag som skickas när timmarna tagit slut står
+  obetalt tills timmar blir lediga eller köps.
+- Boka pass räknar som databasen: ett kort som gäller dagen och räcker
+  till hela passet, annars timbanken. Kvittot säger vad som drogs och
+  att det följer med ett motförslag.
 **Boka pass visar timmarna innan något är valt** (2026-09-28, Leo:
 "innan du bokar ett pass ska det stå 4 av 4 timmar kvar"). Överst står
 varje kort med timmarna kvar och sista dagen (`#boka-timmar`), och vid
 knappen står "Era timmar, −1 timme, 3 kvar efter" i stället för
 priset när timmarna räcker (`opts.timmar` i `NXArbete.bokning`).
-Förslag och bekräftade obetalda pass som redan väntar på timmarna
-räknas bort (`lovadeTimmar`), så att fem förslag på fyra timmar inte
-alla får höra att de är betalda. Passet med första timmen bjuden visar
-priset som förut: timmarna betalar det inte.
+Förslagen räknades bort här (`lovadeTimmar`) innan Fas 22.4; sedan
+dess har de redan dragit sina timmar, och kvar står som databasen
+räknat det. Passet med första timmen bjuden visar priset som förut:
+timmarna betalar det inte.
 Profil → Timbanken visar köpta timmar kort för kort, med passen varje
 kort betalat ur vyn `klippkort_rorelser` (samma timmar som
 `klippkort_saldo`), och de sparade minuterna under dem. `rls-test.sql`
 slår av flaggan `erbjudanden` överst, så att proven som räknar med
-obetalda pass inte får dem betalda, och på i blocken för 22.2 och 22.3.
-Blocken för 22.3 kör jobbet för familj P direkt i stället för att vänta
-på schemat.
+obetalda pass inte får dem betalda, och på i blocken för 22.2, 22.3 och
+22.4. Blocken för 22.2 som provar bekräftelsen slår på den först efter
+förslagen, annars betalar förslagen sig själva. Blocken för 22.3 och
+22.4 kör jobbet för familj P direkt i stället för att vänta på schemat.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
@@ -727,7 +772,10 @@ inte i någon tabell, de räknas ur passen. Fas 22.2 la till vyn
 `bookings_timmar_betalar` och `klippkort_betalar_passen`, som låter
 timmarna betala passen av sig själva (avsnitt 1). Fas 22.3 la till
 pg_cron-jobbet `timmar-betalar`, som låter timmar som blivit lediga
-betala nästa bekräftade pass.
+betala nästa bekräftade pass. Fas 22.4 la till
+`bookings_timmar_betalar_forslaget` och
+`intern.obesvarade_forslag_slapper_timmarna`: timmen dras när förslaget
+skapas och kommer tillbaka om ingen svarat när dagen gått.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
@@ -1901,8 +1949,20 @@ kör varje behörighetstest i en egen deltransaktion och rullar tillbaka
 allt på sista raden. Notistriggern på `bookings` stängs av under
 körningen så att fixturpassen aldrig blir ett mejl, och flaggan
 `erbjudanden` står av så att timmarna inte betalar dem (Fas 22.2). Svaret är en tabell
-`test, ok, detalj` — **varje rad ska vara ok**. Kör den efter varje
-ändring i en policy eller en trigger.
+`test, ok, detalj` — **varje rad ska vara ok**. Ett villkor som blir
+null visas som false sedan 2026-09-28: tre prov stod null i en lista
+över ok utan att någon såg det. Kör den efter varje ändring i en policy
+eller en trigger.
+
+**Filen är för stor för ett enda `execute_sql` från en session** (350
+kB). Låt databasen hämta den själv, i en transaktion som rullas
+tillbaka: `begin; create extension if not exists http with schema
+extensions;`, sedan ett do-block som hämtar filen (och en ny migration)
+från `raw.githubusercontent.com` på en commit, inte en gren, prövar
+md5, tar bort raden `begin;`, slutraden och `rollback;`, och kör dem
+med `execute`. Sist `select … from utfall` och `rollback;`, som tar
+tillägget med sig. Så provades Fas 22.4: hela filen med migrationen,
+och utan den, mot driften, utan att något blev kvar.
 
 **Kör hela filen, inte bara ditt eget avsnitt.** 2026-09-27 hade den
 varit röd sedan förmiddagen utan att någon sett det, för varje session
@@ -1914,6 +1974,10 @@ före passet. Fas 19.5 flyttade sitt pass till i går klockan 10 hos
 studiehjälpare A, där fixturen från Fas 14.2 redan stod, och krockade
 med `bookings_tutor_slot_unique` i varje hel körning. En fixtur i
 huvudtransaktionen syns för allt som kommer efter den i filen.
+2026-09-28 igen: blocket för Fas 9.3/9.4 avbokar b0d1 på riktigt, och
+b6c1 från Fas 14.6 står bekräftat och obetalt, så sex prov för
+timmarna (22.1–22.3) föll i varje hel körning. Fixturerna ställs nu
+tillbaka överst i avsnittet för 22.1.
 
 ---
 
@@ -2194,7 +2258,11 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
   ändringen. **Fas 22.3** (2026-09-28) är bara databasen:
   migrationen `fas22_3_lediga_timmar_betalar_nasta_pass` med jobbet
   `timmar-betalar`. Ingen funktion ändrades, och fortfarande fanns
-  inga köpta timmar i driften. Kvar: en familj som inte är matchad når inte
+  inga köpta timmar i driften. **Fas 22.4** (2026-09-28) är också bara
+  databasen, och **inte körd**: migrationen
+  `fas22_4_timmen_dras_nar_forslaget_skickas` ska köras när grenen är
+  mergad, i samma stund som föräldravyn går ut. Då fanns ett betalt
+  klippkort i driften. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
