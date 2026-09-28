@@ -21,12 +21,20 @@
    studiehjälparna är ofta sexton.
 
    TIMMARNA ATT BETALA UT. Finns månadens underlag är det underlagets
-   tal. Finns det inte än räknas samma urval som månadskörningen gör
-   (fakturering, _delad/pris.ts): genomförda pass till och med
-   månadens sista dag, med rapport, inte undantagna och inte redan på
-   ett underlag, med lönetiden ur passunderlaget (lon_min) och
-   tjänstens ersättning eller studiehjälparens timpenning. Det är ett
-   beräknat tal och märks så; underlaget är det som betalas.
+   tal. Finns det inte än räknas de pass som månadens körning kommer
+   att ta (NXAdmin.lönemånad): genomförda, med rapport, inte
+   undantagna och inte redan på ett underlag, med lönetiden ur
+   passunderlaget (lon_min) och tjänstens ersättning eller
+   studiehjälparens timpenning. Det är ett beräknat tal och märks så;
+   underlaget är det som betalas.
+
+   Varje pass räknas i EN månad. Körningen tar allt till och med
+   periodens slut som inte står på ett underlag, och första versionen
+   räknade som körningen: septembers pass stod både i september och i
+   oktober, och Månadens ekonomi visade dem som lön båda månaderna.
+   Ett pass som rapporterats efter att dess månad körts står nu i nästa
+   körnings månad, märkt "från tidigare månader", och i sin egen som
+   "på nästa underlag".
 
    LÖNEFILEN (Fas 17.1 byggde halvan i databasen). PAXml 2.0, som
    Fortnox Lön läser in under Lön → Kalender → Importera löneunderlag.
@@ -53,7 +61,7 @@
   const { $, esc, säg, felText, isoFor } = NX;
   const { bekräfta, medan, tomt } = NXStudie;
   const kronor = NXBetalning.kronor;
-  const { S, UTB_LAGE, fråga, kortDatum, namnFör, pill, tabell, väljare } = NXAdmin;
+  const { S, UTB_LAGE, fråga, lönemånad, namnFör, pill, senasteLönemånad, tabell, väljare } = NXAdmin;
 
   /* Anställningsnumren och bolagsfakta. Hämtas när sidan ritas första
      gången, och om efter varje ändring härifrån. */
@@ -141,28 +149,31 @@
 
   const lönMin = p => Number(p.lon_min || p.duration_min || 60);
 
+  const tomRad = id => ({
+    id, underlag: null, passIMånaden: 0, tidigare: 0,
+    beräknat: { pass: 0, min: 0, öre: 0, utanTimpenning: 0 },
+    senare: { pass: 0, min: 0 }, utanRapport: { pass: 0, min: 0 }
+  });
+
   /* En rad per studiehjälpare för månaden. underlag är månadens
-     underlag om det finns; beräknat är vad nästa körning för månaden
-     tar med om det inte finns; senare är pass som väntar på nästa
-     underlag när månadens redan är skapat; utanRapport är pass som
-     inte kommer med förrän rapporten finns. */
+     underlag om det finns; beräknat är vad månadens körning tar med om
+     det inte finns, och tidigare hur många av de passen som hölls en
+     tidigare månad; senare är månadens egna pass som väntar på en
+     senare körning; utanRapport är månadens egna pass som inte kommer
+     med förrän rapporten finns.
+
+     Ett pass räknas bara i den månad vars körning tar det. Här stod
+     förut samma urval som körningen gör, allt till och med månadens
+     slut, och då stod septembers pass i oktober också. */
   function månadensLöner(månad) {
     const g = NXStudie.månadsGräns(månad);
+    const senast = senasteLönemånad();
     const per = new Map();
     const post = id => {
-      if (!per.has(id)) {
-        per.set(id, {
-          id, underlag: null, passIMånaden: 0,
-          beräknat: { pass: 0, min: 0, öre: 0, utanTimpenning: 0 },
-          senare: { pass: 0, min: 0 }, utanRapport: { pass: 0, min: 0 }
-        });
-      }
+      if (!per.has(id)) per.set(id, tomRad(id));
       return per.get(id);
     };
 
-    /* Underlagen först: finns månadens underlag räknas inget pass som
-       beräknat, för en ny körning för samma månad skapar inget till åt
-       samma person (unique på studiehjälpare och period). */
     (S.utbetalningar || []).forEach(u => {
       if (String(u.period).slice(0, 10) === g.från) post(u.tutor_id).underlag = u;
     });
@@ -171,12 +182,22 @@
       if (!p.tutor_id || !p.fakturerbar) return;
       const d = String(p.wanted_date).slice(0, 10);
       if (d >= g.till) return;
-      if (d >= g.från) post(p.tutor_id).passIMånaden++;
+      const egen = d >= g.från;
+      if (egen) post(p.tutor_id).passIMånaden++;
       if (p.pa_underlag) return;
-      const r = post(p.tutor_id);
       const min = lönMin(p);
-      if (!p.har_rapport) { r.utanRapport.pass++; r.utanRapport.min += min; return; }
-      if (r.underlag) { r.senare.pass++; r.senare.min += min; return; }
+      if (!p.har_rapport) {
+        if (egen) { const r = post(p.tutor_id); r.utanRapport.pass++; r.utanRapport.min += min; }
+        return;
+      }
+      /* En månad med underlag är körd, så ett pass som inte står på det
+         tas av en senare körning. */
+      if (lönemånad(d, senast) !== g.från) {
+        if (egen) { const r = post(p.tutor_id); r.senare.pass++; r.senare.min += min; }
+        return;
+      }
+      const r = post(p.tutor_id);
+      if (!egen) r.tidigare++;
       const öre = timpenningÖre(p);
       if (!öre) { r.beräknat.utanTimpenning++; return; }
       r.beräknat.pass++;
@@ -221,10 +242,7 @@
       if (r.underlag || r.beräknat.pass || r.beräknat.utanTimpenning || r.utanRapport.pass
         || r.senare.pass || r.passIMånaden) ids.add(id);
     });
-    const tom = id => ({ id, underlag: null, passIMånaden: 0,
-      beräknat: { pass: 0, min: 0, öre: 0, utanTimpenning: 0 },
-      senare: { pass: 0, min: 0 }, utanRapport: { pass: 0, min: 0 } });
-    return Array.from(ids).map(id => per.get(id) || tom(id))
+    return Array.from(ids).map(id => per.get(id) || tomRad(id))
       .sort((a, b) => (attBetala(b) - attBetala(a)) || namnFör(a.id).localeCompare(namnFör(b.id), 'sv'));
   }
 
@@ -237,6 +255,7 @@
     const öre = rader.reduce((n, r) => n + attBetala(r), 0);
     const min = rader.reduce((n, r) => n + lönetid(r), 0);
     const pass = rader.reduce((n, r) => n + (r.underlag ? 0 : r.beräknat.pass), 0);
+    const tidigare = rader.reduce((n, r) => n + (r.underlag ? 0 : r.tidigare), 0);
     const underlag = rader.filter(r => r.underlag).map(r => r.underlag);
     const godkända = underlag.filter(u => u.status === 'godkand').length;
     const utbetalda = underlag.filter(u => u.status === 'utbetald').length;
@@ -247,8 +266,11 @@
 
     host.innerHTML = '<div class="adm-tal-rad">'
       + kpi(kronor(öre), 'Att betala ut', (beräknat ? 'beräknat · ' : '') + 'den 25 ' + NXStudie.månadsNamn(g.till, false))
-      + kpi(tim(min), 'Lönetid', underlag.length ? 'ur underlagen' + (pass ? ' och ' + pass + ' pass till' : '')
-        : pass ? pass + ' pass med rapport' : 'inga pass att betala för')
+      /* En körd månad har inga beräknade pass: det som inte står på
+         underlaget tas av nästa körning (NXAdmin.lönemånad). */
+      + kpi(tim(min), 'Lönetid', underlag.length ? 'ur underlagen'
+        : pass ? pass + ' pass med rapport' + (tidigare ? ', ' + tidigare + ' från tidigare månader' : '')
+          : 'inga pass att betala för')
       + kpi(underlag.length, 'Underlag',
         underlag.length ? godkända + ' godkända · ' + utbetalda + ' utbetalda' : 'inte skapade än')
       + kpi(utanRapport, 'Pass utan rapport', utanRapport ? 'kommer inte med förrän rapporten finns' : 'alla har rapport',
@@ -289,7 +311,8 @@
       } },
       { namn: 'Pass', rita: r => '<span class="adm-tal">' + r.passIMånaden + '</span>'
         + (r.utanRapport.pass ? '<span class="adm-und">' + r.utanRapport.pass + ' utan rapport</span>' : '')
-        + (r.senare.pass ? '<span class="adm-und">' + r.senare.pass + ' på nästa underlag</span>' : '') },
+        + (r.senare.pass ? '<span class="adm-und">' + r.senare.pass + ' på nästa underlag</span>' : '')
+        + (r.tidigare ? '<span class="adm-und">+ ' + r.tidigare + ' från tidigare månader</span>' : '') },
       { namn: 'Lönetid', rita: r => '<span class="adm-tal">' + esc(lönetid(r) ? tim(lönetid(r)) : '—') + '</span>' },
       { namn: 'Att få', rita: r => {
         const öre = attBetala(r);

@@ -2047,10 +2047,13 @@ a.pass-lank:hover{color:var(--acc)}
 }
 .lon-krav li.ar-ok::before{border-color:var(--mossa);background:var(--mossa)}
 /* Det som ska sägas men inte stoppar filen: formen som inte är avgjord,
-   underlag som inte är godkända. */
-.lon-varning{
+   underlag som inte är godkända. Samma ruta i månadskörningen, när
+   månaden inte har börjat eller en tidigare saknar underlag. */
+.lon-varning,
+.kor-not{
   list-style:none;margin:12px 0 0;padding:10px 12px;
   border:1px solid var(--acc-line);border-radius:10px;background:var(--acc-soft);
   font-size:.82rem;line-height:1.55;color:var(--acc-text);
 }
 .lon-varning li+li{margin-top:6px}
+.kor-not[hidden]{display:none}

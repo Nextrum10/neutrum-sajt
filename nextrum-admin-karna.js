@@ -173,6 +173,39 @@ const NXAdmin = (function () {
     return datumText(String(iso).slice(0, 10));
   }
 
+  /* VILKEN MÅNADS LÖN ETT PASS HÖR TILL (2026-09-28)
+     Månadskörningen (fakturering) tar alla pass till och med periodens
+     sista dag som inte står på ett underlag, inte bara periodens egna:
+     ett pass som rapporteras efter körningen kommer med nästa gång. Löner
+     räknade därför septembers pass både i september och i oktober, för
+     båda körningarna hade tagit dem så länge ingen av dem var gjord. Leo:
+     "septembers pass räknar för lön i sep och okt".
+
+     Ett pass hör till sin egen månads lön. Har den månaden, eller en
+     senare, redan underlag hör passet till månaden efter den senaste med
+     underlag: det är den körningen som tar passet när månaderna körs i
+     tur och ordning. Bara underlagen räknas, inte fakturorna. Körningen
+     skapar fakturorna först, och gick underlagen inte in står månaden
+     med fakturor men utan löner; då ska månaden köras igen, och det är
+     vad sidan ska säga. */
+  function senasteLönemånad() {
+    let senast = null;
+    (S.utbetalningar || []).forEach(u => {
+      const p = String(u.period || '').slice(0, 10);
+      if (p && (!senast || p > senast)) senast = p;
+    });
+    return senast;
+  }
+
+  /* Datumet är passets. senast skickas med av den som räknar många pass. */
+  function lönemånad(datum, senast) {
+    const egen = String(datum).slice(0, 7) + '-01';
+    const s = senast === undefined ? senasteLönemånad() : senast;
+    if (!s) return egen;
+    const efter = NXStudie.månadsGräns(s).till;
+    return egen > efter ? egen : efter;
+  }
+
   /* Tom lista eller tomt filter är två olika besked. "Inga familjer
      matchar" i en databas utan familjer skickar folk på jakt efter
      ett filter som inte är satt. Alla listor nedan väljer därför
@@ -694,7 +727,7 @@ const NXAdmin = (function () {
     ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
     TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
-    kortDatum, läge, matchar, märkFlik, namnFör, närText, pill, rad, skriv,
-    tabell, tomtText, visa, visaRuta, väljare, rita
+    kortDatum, läge, lönemånad, matchar, märkFlik, namnFör, närText, pill, rad,
+    senasteLönemånad, skriv, tabell, tomtText, visa, visaRuta, väljare, rita
   };
 })();

@@ -339,15 +339,31 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   under Ekonomi → Fakturor (`data-fakt-*`, lyssnarna i
   `nextrum-admin-ekonomi.js`). Körningen är en ruta med `data-kor-ruta`
   som kan stå på flera ställen; torrkörningen hör till sin ruta, så en
-  torrkörning på en sida ger ingen Skapa-knapp på en annan.
+  torrkörning på en sida ger ingen Skapa-knapp på en annan. **En månad
+  som inte har börjat går inte att köra** från någon av rutorna
+  (`körningensLäge`): sidorna visar kommande månader, och en körning för
+  oktober i september hade lagt septembers pass på oktobers underlag.
+  Rutan säger också när månaden pågår, och när en tidigare månad har pass
+  men inga underlag (`data-kor-not`).
 - **Löner** (`#loner`, `nextrum-admin-loner.js`) listar de godkända
   studiehjälparna och alla med något att få för månaden, förvalt förra
   månaden. Anställningsnumret (`lon_anstallning`, Fas 17.1) och
   timpenningen sätts där; personnummer, adress, bankkonto och
   skattetabell står i Fortnox Lön och inte här, med flit. Finns månadens
-  underlag gäller underlagets tal; annars räknas samma urval som
-  `fakturering` tar (genomförda, rapporterade, inte undantagna, inte på
-  ett underlag, till och med månadens sista dag) och märks beräknat.
+  underlag gäller underlagets tal; annars räknas de pass som månadens
+  körning kommer att ta (genomförda, rapporterade, inte undantagna, inte
+  på ett underlag) och märks beräknat. **Varje pass räknas i EN månad**
+  (`NXAdmin.lönemånad`): sin egen, eller, när den månaden eller en senare
+  redan har underlag, månaden efter den senaste med underlag. Leo samma
+  kväll: "septembers pass räknar för lön i sep och okt". Körningen tar
+  allt till och med periodens slut som inte står på ett underlag, och
+  sidan räknade först likadant, så septembers pass stod som lön både i
+  september och i oktober, också i Månadens ekonomi. Ett pass som
+  rapporterats efter att dess månad fått underlag står i sin månad som
+  "på nästa underlag" och i nästa som "från tidigare månader". Bara
+  underlagen räknas som körda, inte fakturorna: körningen skapar
+  fakturorna först, och står en månad med fakturor men utan underlag ska
+  den köras igen.
 - **Lönefilen är PAXml 2.0**, som Fortnox Lön läser in under Lön →
   Kalender → Importera löneunderlag och matchar på anställningsnumret.
   En `lonetrans` per underlagsrad: anstid, löneart

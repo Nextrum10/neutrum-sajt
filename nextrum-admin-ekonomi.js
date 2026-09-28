@@ -17,8 +17,8 @@
   const M = NXMedia;
 
   const { DAG, FAKT_LAGE, KORT_LAGE, S, TILLAGG_LAGE, UTB_LAGE, elevNamn, fråga, funktionsFel,
-          hämtaAllt, hämtaEkonomiunderlag, kortDatum, matchar, märkFlik,
-          namnFör, pill, rad, skriv, tabell, väljare } = NXAdmin;
+          hämtaAllt, hämtaEkonomiunderlag, kortDatum, lönemånad, matchar, märkFlik,
+          namnFör, pill, rad, senasteLönemånad, skriv, tabell, väljare } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
@@ -131,6 +131,7 @@
     if (val.value === p || !Array.prototype.some.call(val.options, o => o.value === p)) return;
     val.value = p;
     glömKörning(val.closest('[data-kor-ruta]'));
+    ritaKörningsnot(val.closest('[data-kor-ruta]'));
   }
 
   /* Allt ritas ur det som redan är hämtat; bara bokslutet frågar
@@ -1584,6 +1585,7 @@
     ['ritaMånaden', 'ritaLöner'].forEach(n => {
       if (typeof NXAdmin.rita[n] === 'function') NXAdmin.rita[n]();
     });
+    ritaKörningsnoterna();
   }
 
   /* Bokslutet med: dess larm är samma avvikelser, och ett larm som
@@ -1709,10 +1711,21 @@
      dem. Det är samma körning på alla tre, och samma lyssnare. En ruta
      är ett element med data-kor-ruta: perioden (en väljare med
      data-kor-period, eller attributet på rutan själv), knapparna
-     data-kor-torr och data-kor-skapa, och data-kor-resultat för svaret.
+     data-kor-torr och data-kor-skapa, data-kor-not för det rutan säger
+     om månaden, och data-kor-resultat för svaret.
      Torrkörningen hör till sin ruta. En torrkörning under Löner ger
      ingen Skapa-knapp under Ekonomi, för den som trycker där har inte
      sett vad som skapas.
+
+     EN MÅNAD SOM INTE HAR BÖRJAT GÅR INTE ATT KÖRA (2026-09-28).
+     Löner och Månadens ekonomi visar också kommande månader, och deras
+     rutor körde den månad sidan visade. Körningen tar allt till och med
+     periodens slut som inte står på ett underlag, så en körning för
+     oktober mitt i september hade lagt septembers pass på oktobers
+     underlag, och lönen för dem hade kommit en månad för sent. Väljaren
+     här har aldrig erbjudit en kommande månad. En pågående månad går att
+     köra, som förut, och en månad efter en som saknar underlag också,
+     men rutan säger vad som händer med passen.
      ============================================================ */
   /* SCHEMAT (2026-09-28). pg_cron-jobbet manadskorning skriver förra
      månadens underlag den 1:a, och underlaget är studiehjälparens
@@ -1759,6 +1772,57 @@
     host.innerHTML = rad(pill('På', 'ar-klar'), 'Går av sig själv ' + när + ', för förra månaden.');
   }
 
+  /* Vad rutan säger om sin månad, och om den går att köra: EN MÅNAD
+     SOM INTE HAR BÖRJAT GÅR INTE ATT KÖRA, ovan. */
+  function körningensLäge(period) {
+    const p = String(period || '').slice(0, 7) + '-01';
+    const nu = NXStudie.månadIso(new Date());
+    const namn = m => NXStudie.månadsNamn(m, false);
+    const stor = s => s.charAt(0).toUpperCase() + s.slice(1);
+    if (p > nu) {
+      return { spärr: true, text: stor(namn(p)) + ' har inte börjat och går inte att köra än. En körning nu '
+        + 'hade lagt tidigare månaders pass på underlaget för ' + namn(p) + '.' };
+    }
+    /* Månader före den här som har pass att betala men inga underlag
+       (NXAdmin.lönemånad). Körs den här först tar den deras pass. */
+    const senast = senasteLönemånad();
+    const före = new Set();
+    (S.passunderlag || []).forEach(x => {
+      if (!x.fakturerbar || !x.har_rapport || x.pa_underlag || !x.wanted_date) return;
+      const m = lönemånad(x.wanted_date, senast);
+      if (m < p) före.add(m);
+    });
+    const texter = [];
+    if (före.size) {
+      const lista = Array.from(före).sort().map(namn);
+      const en = lista.length === 1;
+      texter.push(stor(en ? lista[0] : lista.slice(0, -1).join(', ') + ' och ' + lista[lista.length - 1])
+        + ' har inga underlag än. Kör ' + (en ? 'den' : 'dem') + ' först, annars kommer '
+        + (en ? 'dess' : 'deras') + ' pass med på underlaget för ' + namn(p) + '.');
+    }
+    if (p === nu) texter.push(stor(namn(p)) + ' pågår. Pass som hålls efter körningen kommer med nästa månad.');
+    return { spärr: false, text: texter.join(' ') };
+  }
+
+  function ritaKörningsnot(ruta) {
+    if (!ruta) return;
+    const läge = körningensLäge(körningsperiod(ruta));
+    const not = ruta.querySelector('[data-kor-not]');
+    if (not) {
+      not.textContent = läge.text;
+      not.hidden = !läge.text;
+    }
+    const torr = ruta.querySelector('[data-kor-torr]');
+    if (torr) torr.disabled = läge.spärr;
+    if (läge.spärr) glömKörning(ruta);
+  }
+
+  /* Efter en körning, och när passen hämtats om, kan en tidigare månad
+     ha fått underlag. */
+  function ritaKörningsnoterna() {
+    $$('[data-kor-ruta]').forEach(ritaKörningsnot);
+  }
+
   function fyllPerioder() {
     // Rutan får inte stå kvar på "Hämtar" om frågan kastar.
     ritaSchema().catch(fel => {
@@ -1778,7 +1842,11 @@
     alt.push('<option value="' + iår + '">' + esc(NXBetalning.periodText(iår + '-01'))
       + ' (pågår)</option>');
     val.innerHTML = alt.join('');
-    val.addEventListener('change', () => glömKörning(val.closest('[data-kor-ruta]')));
+    val.addEventListener('change', () => {
+      glömKörning(val.closest('[data-kor-ruta]'));
+      ritaKörningsnot(val.closest('[data-kor-ruta]'));
+    });
+    ritaKörningsnot(val.closest('[data-kor-ruta]'));
   }
 
   /* Den torrkörning som gäller, per ruta. Skapa går bara för samma
@@ -1804,11 +1872,13 @@
   function sättKörningsperiod(ruta, period) {
     if (!ruta) return;
     const p = String(period || '').slice(0, 7);
-    if (ruta.dataset.korPeriod === p) return;
-    ruta.dataset.korPeriod = p;
-    glömKörning(ruta);
-    const host = ruta.querySelector('[data-kor-resultat]');
-    if (host) host.innerHTML = '';
+    if (ruta.dataset.korPeriod !== p) {
+      ruta.dataset.korPeriod = p;
+      glömKörning(ruta);
+      const host = ruta.querySelector('[data-kor-resultat]');
+      if (host) host.innerHTML = '';
+    }
+    ritaKörningsnot(ruta);
   }
 
   function ritaKörning(d, torr) {
@@ -1894,6 +1964,10 @@
     const host = ruta.querySelector('[data-kor-resultat]');
     const skapaKnapp = ruta.querySelector('[data-kor-skapa]');
     if (!period || !host || !skapaKnapp) return;
+    /* Knappen är grå för en månad som inte har börjat. En körning som
+       lagt passen på fel månads underlag går inte att ta tillbaka
+       härifrån, så frågan ställs här också och inte bara i knappen. */
+    if (körningensLäge(period).spärr) { ritaKörningsnot(ruta); return; }
 
     if (torr) {
       glömKörning(ruta);
