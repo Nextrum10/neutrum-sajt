@@ -17,7 +17,7 @@
   const M = NXMedia;
 
   const { AVBOKNINGSSKAL, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, kontaktaRuta, kortDatum,
-          märkFlik, namnFör, närText, pill, rad, skriv, tabell } = NXAdmin;
+          märkFlik, namnFör, närText, pill, rad, skriv, tabell, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaDetalj = (...a) => NXAdmin.rita.ritaDetalj(...a);
@@ -576,7 +576,7 @@
     if (sök.length < 2) { host.innerHTML = ''; return; }
 
     const träffar = Object.values(S.personer)
-      .filter(p => !p.is_admin)
+      .filter(p => !p.is_admin && !ärRaderad(p))
       .filter(p => [p.full_name, p.email].filter(Boolean).join(' ')
         .toLowerCase().indexOf(sök) !== -1)
       .slice(0, 8);
@@ -747,11 +747,15 @@
     /* Fas 8 och 9.3. Passet loggas numera hela vägen, inte bara när
        det undantas från fakturering. */
     ai_forslag: 'AI-förslag', ai_konfig: 'AI-taket', kontaktmeddelande: 'Kontaktmeddelande',
-    klientfel: 'Klientfel', bolagsfakta: 'Bolagsfakta'
+    klientfel: 'Klientfel', bolagsfakta: 'Bolagsfakta',
+    /* 2026-09-28: radera_person() skriver konto.raderat eller
+       konto.avidentifierat, och elev.raderad eller elev.avidentifierad. */
+    konto: 'Konto', elev: 'Elev'
   };
   const AUDIT_HANDLING = {
     skapad: 'skapad', borttagen: 'borttagen', andrad: 'ändrad', status: 'ny status',
-    aktiverad: 'aktiverad', avaktiverad: 'avaktiverad', sparade: 'sparat', lasta: 'läst', raderade: 'raderat'
+    aktiverad: 'aktiverad', avaktiverad: 'avaktiverad', sparade: 'sparat', lasta: 'läst', raderade: 'raderat',
+    raderat: 'raderat', raderad: 'raderad', avidentifierat: 'avidentifierat', avidentifierad: 'avidentifierad'
   };
   const AUDIT_FALT = {
     status: 'läge', match_status: 'matchning', matched_tutor_id: 'studiehjälpare', parent_id: 'familj',
@@ -774,7 +778,10 @@
     organisationsnummer: 'orgnr', bolagsform: 'bolagsform', rakenskapsar_slut: 'räkenskapsår',
     momsregistrerad: 'momsregistrerad', momsperiod: 'momsperiod', f_skatt: 'F-skatt',
     arbetsgivarregistrerad: 'arbetsgivarregistrerad',
-    studiehjalpare_form: 'studiehjälparnas form', bokforingssystem: 'bokföringssystem'
+    studiehjalpare_form: 'studiehjälparnas form', bokforingssystem: 'bokföringssystem',
+    /* Raderingen (2026-09-28). Bara antal, aldrig vem. */
+    roll: 'roll', avbokade_pass: 'avbokade pass', barn: 'barn', anmalningar: 'anmälningar',
+    ansokningar: 'ansökningar', kontaktmeddelanden: 'frågor'
   };
 
 
@@ -787,6 +794,7 @@
       return String(STATUS_KARTA[tabellNamn][v][0]).toLowerCase();
     }
     if (nyckel === 'match_status' && MATCH_LAGE[v]) return MATCH_LAGE[v];
+    if (nyckel === 'roll') return v === 'tutor' ? 'studiehjälpare' : v === 'parent' ? 'familj' : String(v);
     if (nyckel === 'avbokningsskal' && AVBOKNINGSSKAL[v]) {
       return String(AVBOKNINGSSKAL[v][0]).toLowerCase();
     }

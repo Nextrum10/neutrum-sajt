@@ -38,11 +38,16 @@
         + '<span class="adm-und">' + esc(m.email) + (m.role ? ' · ' + esc(m.role) : '') + '</span>' },
       { namn: 'Frågan', rita: m => esc(m.message) },
       { namn: 'Inkom', rita: m => '<span class="adm-tal">' + esc(kortDatum(m.created_at)) + '</span>' },
-      { namn: '', höger: true, rita: m => m.hanterad_at
+      { namn: '', höger: true, rita: m => (m.hanterad_at
         ? pill('Hanterad ' + kortDatum(m.hanterad_at), 'ar-klar')
         : '<a class="btn btn-ghost btn-sm" href="mailto:' + esc(m.email)
           + '" data-mailtext="keep" style="margin-right:7px">Svara</a>'
-          + '<button class="btn btn-primary btn-sm" data-hanterad="' + m.id + '">Klart</button>' }
+          + '<button class="btn btn-primary btn-sm" data-hanterad="' + m.id + '">Klart</button>')
+        /* 2026-09-28: en fråga bär ett namn, en adress och fritext, och
+           tas bort ur våra system på samma väg som en person
+           (nextrum-admin-radera.js). Rutan säger vad som följer med. */
+        + '<button class="btn btn-ghost btn-sm" type="button" style="margin-left:7px" data-radera="kontakt:'
+        + esc(m.id) + '">Ta bort</button>' }
     ], rader, bara ? 'Inget ohanterat kvar' : tomtText(sök, 'Ingen fråga matchar filtret', 'Inga frågor än'));
   }
 

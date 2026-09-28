@@ -1,5 +1,5 @@
 /* ============================================================
-   NEXTRUM — adminvyn, detaljpanelen (familj, elev, studiehjälpare, pass)
+   NEXTRUM — adminvyn, detaljpanelen (familj, elev, studiehjälpare, anmälan, ansökan, pass)
 
    En del av nextrum-admin.js, utflyttad i Fas 6 utan att någon
    funktion skrivits om. Kärnan (nextrum-admin-karna.js) laddas
@@ -16,8 +16,16 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { BOK_LAGE, DP, FAKT_LAGE, KORT_LAGE, S, SH_LAGE, TILLAGG_LAGE, UTB_LAGE, elevHjälpare,
-          elevNamn, kortDatum, läge, namnFör, närText, pill, rad } = NXAdmin;
+  const { ANS_LAGE, BOK_LAGE, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE, TILLAGG_LAGE,
+          UTB_LAGE, elevHjälpare, elevNamn, hämtaMatchunderlag, kortDatum, läge, namnFör, närText,
+          pill, rad, väljare, ärRaderad } = NXAdmin;
+  /* Funktioner som bor i andra områden, nådda när de anropas. En som
+     saknas hoppas över: panelen ska inte dö för att en lista inte
+     laddade. */
+  const kör = (namn, ...a) => {
+    const f = NXAdmin.rita[namn];
+    return typeof f === 'function' ? f(...a) : undefined;
+  };
 
   /* ============================================================
      DETALJPANELEN
@@ -58,8 +66,18 @@
 
     DP.panel.addEventListener('click', e => {
       if (e.target.closest('[data-dp-stang]')) { stängDetalj(); return; }
+      if (e.target.closest('[data-dp-redigera]')) {
+        DP.redigera = true;
+        ritaDetalj();
+        const första = DP.panel.querySelector('.dp-red input, .dp-red select, .dp-red textarea');
+        if (första) första.focus();
+        return;
+      }
+      if (e.target.closest('[data-dp-red-avbryt]')) { DP.redigera = false; ritaDetalj(); return; }
+      /* Ett flikbyte lämnar redigeringen. Det som inte sparats sparas
+         inte, och formuläret står inte kvar och väntar i en annan flik. */
       const f = e.target.closest('[data-dp-flik]');
-      if (f) { DP.flik = f.dataset.dpFlik; ritaDetalj(); }
+      if (f) { DP.flik = f.dataset.dpFlik; DP.redigera = false; ritaDetalj(); }
     });
 
     document.addEventListener('keydown', e => {
@@ -71,7 +89,7 @@
     if (!DP.panel) return;
     DP.panel.classList.remove('ar-oppen');
     DP.bak.classList.remove('ar-oppen');
-    DP.typ = null; DP.id = null;
+    DP.typ = null; DP.id = null; DP.redigera = false;
     /* Vänta ut övergången innan hidden sätts, annars hoppar
        panelen bort i stället för att glida. */
     setTimeout(() => {
@@ -126,6 +144,9 @@
         .select('id, minuter, begart_ore, status, betalt_ore, aterbetald_ore, betald_at, stripe_skarp, created_at')
         .eq('booking_id', id));
       lägg('pass', supa.from('bookings').select('id, stripe_minuter').eq('id', id));
+    } else if (typ === 'anmalan' || typ === 'ansokan') {
+      /* Allt om en anmälan eller en ansökan finns redan i S: raden,
+         besöken i mejlkön och provförsöken. Ingen fråga till. */
     } else if (typ === 'studiehjalpare') {
       lägg('rapporter', supa.from('lesson_reports')
         .select('id, student_id, lesson_date, created_at').eq('tutor_id', id)
@@ -192,11 +213,18 @@
                      ['anteckningar', 'Anteckningar']],
     /* Fas 20.2: ett pass, öppnat från bokslutets larm, Ekonomis listor
        och passlistorna i panelen. En flik: allt om ett pass ryms på en. */
-    pass:           [['oversikt', 'Passet']]
+    pass:           [['oversikt', 'Passet']],
+    /* 2026-09-28: den som skickat en intresseanmälan eller sökt jobb har
+       inget konto, men är lika mycket en person i våra system. Listorna
+       är bara namn, och allt de skrev står här, med Redigera och Radera
+       som för alla andra. Rekryteringens steg stod förut i en egen ruta. */
+    anmalan:        [['oversikt', 'Anmälan']],
+    ansokan:        [['oversikt', 'Ansökan'], ['rekrytering', 'Rekryteringen']]
   };
 
   async function öppnaDetalj(typ, id) {
     if (!DP_FLIKAR[typ]) return;
+    DP.redigera = false;
     /* Ett pass hämtas om varje gång. Tiden, tillägget och betalningen
        ändras av andra (studiehjälparen, familjen, Stripe), och ett
        cachat pass hade visat ett tillägg som obetalt efter att det
@@ -619,7 +647,13 @@
           [elevNamn(nästa.student_id), nästa.subject, namnFör(nästa.tutor_id)]
             .filter(Boolean).join(' · '),
           läge(BOK_LAGE, nästa.status))
-      : tomt('Inget pass inbokat', 'Familjen bokar i studievyn.'));
+      : tomt('Inget pass inbokat', 'Familjen bokar i studievyn.'))
+    + dpHantera('familj', p, {
+        rubrik: 'Radera familjen',
+        text: 'När familjen inte vill ha tjänsten längre. Kontot, barnen, chatten och det de skrivit '
+          + 'tas bort ur våra system. Pass som hållits eller betalats står kvar utan namn, för '
+          + 'bokföringen. Rutan säger exakt vad innan något händer.'
+      });
   }
 
   function dpElev(e, d) {
@@ -628,6 +662,9 @@
     const pass = passFör(b => b.student_id === e.id);
     const genomförda = pass.filter(b => b.status === 'completed');
     const plan = (d.plan || [])[0];
+    /* passFör sorterar nyast först, så det närmaste kommande står sist. */
+    const idag = isoFor(new Date());
+    const nästa = pass.filter(b => b.wanted_date >= idag && b.status !== 'cancelled').pop();
 
     if (DP.flik === 'pass') return passLista(pass, b => namnFör(b.tutor_id));
 
@@ -691,10 +728,26 @@
           + esc(t.full_name || t.email || '—') + '</button>'
         : null, 'ingen matchad än']
     ])
+    + dpRubrik('Nästa pass')
+    + (nästa
+      ? dpRad(kortDatum(nästa.wanted_date)
+          + (nästa.wanted_time ? ' kl. ' + String(nästa.wanted_time).slice(0, 5) : ''),
+          [nästa.subject, namnFör(nästa.tutor_id)].filter(x => x && x !== '—').join(' · '),
+          läge(BOK_LAGE, nästa.status))
+      : tomt('Inget pass inbokat', 'Familjen bokar i studievyn.'))
     + dpRubrik('Studieplan', plan && plan.updated_at ? 'uppdaterad ' + kortDatum(plan.updated_at) : '')
     + (plan && (plan.plan_text || plan.goals)
       ? '<div class="dp-text">' + esc(plan.plan_text || plan.goals) + '</div>'
-      : tomt('Ingen studieplan', 'Studiehjälparen skriver den efter första passet.'));
+      : tomt('Ingen studieplan', 'Studiehjälparen skriver den efter första passet.'))
+    + dpHantera('elev', e, {
+        /* Matchningen görs under Matchning, med eleven redan vald. */
+        knappar: '<a class="btn btn-ghost btn-sm" href="#matchning" data-mt-hoppa="' + esc(e.id)
+          + '" data-dp-stang>' + (t ? 'Byt studiehjälpare' : 'Matcha') + '</a>',
+        rubrik: 'Radera eleven',
+        text: 'När barnet inte ska ha hjälp längre men familjen stannar. Läxorna, studieplanen, '
+          + 'materialet och det familjen skrev om barnet tas bort. Rapporter och pass som hållits '
+          + 'står kvar utan namn och text, för bokföringen och studiehjälparens lön.'
+      });
   }
 
   function dpStudiehjalpare(p, d) {
@@ -760,7 +813,29 @@
       ['Timpenning', tp.hourly_rate ? esc(NX.kr(tp.hourly_rate)) : null, 'ej satt'],
       ['Senast inloggad', p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : null, 'aldrig']
     ])
-    + (tp.bio ? dpRubrik('Om hen') + '<div class="dp-text">' + esc(tp.bio) + '</div>' : '');
+    + (tp.bio ? dpRubrik('Om hen') + '<div class="dp-text">' + esc(tp.bio) + '</div>' : '')
+    /* Läget och startsidan stod förut i listan. Publiceringen är ett
+       eget beslut, inte en följd av att vara godkänd (schema-v23), och
+       knappen står därför bara när hen är godkänd. */
+    + dpRubrik('Läge')
+    + '<div class="dp-atgard">'
+    + (tp.id ? väljare('sh', SH_LAGE, tp.status, 'data-sh="' + esc(p.id) + '"') : '')
+    + (tp.status === 'approved'
+      ? '<button class="btn btn-ghost btn-sm" type="button" data-sh-publik="' + esc(p.id) + '">'
+        + (tp.visa_publikt ? 'Syns på startsidan: dölj' : 'Visa på startsidan') + '</button>'
+      : '')
+    /* Kontakt bara när adressen finns. En knapp som öppnar ett
+       mejlutkast utan mottagare ser ut att fungera och gör det inte. */
+    + (p.email
+      ? '<button class="btn btn-ghost btn-sm" type="button" data-sh-kontakt="' + esc(p.id) + '">Kontakta</button>'
+      : '')
+    + '</div>'
+    + dpHantera('studiehjalpare', p, {
+        rubrik: 'Radera studiehjälparen',
+        text: 'När hen slutar eller inte ska anställas. Kontot, ansökan, chatten och profilen tas bort '
+          + 'ur våra system. Pass, rapporter och underlag som redan finns står kvar utan namn, för '
+          + 'bokföringen och lönen. Elever ska matchas om först.'
+      });
   }
 
   function dpNoteringar(profilId, d) {
@@ -778,6 +853,368 @@
               .join('')
           : tomt('Inga anteckningar än', 'Den första du skriver hamnar överst.'));
   }
+
+  /* ------------------------------------------------------------
+     ANMÄLAN OCH ANSÖKAN (2026-09-28)
+
+     Samma uppgifter som tabellerna hade, och samma knappar, men för en
+     person i taget. Tabellerna visade ett nittio tecken långt utdrag ur
+     det familjen och den sökande skrivit; här står hela texten.
+     ------------------------------------------------------------ */
+  function dpAnmalan(l) {
+    const familj = kör('anmälansFamilj', l);
+    const källa = kör('källText', l);
+    const tjänst = (S.tjanster || []).find(t => t.kod === l.tjanst);
+    return dpRubrik('Anmälan', 'kom in ' + kortDatum(l.created_at))
+      + dpFakta([
+        ['Förälder', l.parent_name ? esc(l.parent_name) : null],
+        ['E-post', dpMejl(l.email)],
+        ['Barn', l.child_name ? esc(l.child_name) : null],
+        ['Årskurs', l.grade ? esc(l.grade) : null],
+        ['Ämne', l.subject ? esc(l.subject) : null],
+        ['Tjänst', l.tjanst ? esc((tjänst && tjänst.namn) || l.tjanst) : null],
+        /* Tomt är okänt, inte "direkt" (Fas 9.5). */
+        ['Källa', källa ? '<span title="' + esc(kör('källTitel', l) || '') + '">' + esc(källa) + '</span>' : null,
+          'okänd'],
+        ['Kontaktad', l.kontaktad_at ? esc(kortDatum(l.kontaktad_at)) : null, 'inte än'],
+        ['Familj', familj
+          ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="familj:' + esc(familj.id) + '">'
+            + esc(familj.full_name || familj.email || '—') + '</button>'
+          : null, 'inget konto än']
+      ])
+      + dpRubrik('Vad de skrev')
+      + (l.message ? '<div class="dp-text">' + esc(l.message) + '</div>'
+        : tomt('Inget meddelande', 'Familjen skrev ingenting i rutan.'))
+      + (l.notering ? dpRubrik('Vår notering') + '<div class="dp-text">' + esc(l.notering) + '</div>' : '')
+      /* Vägen vidare. Matchningskön arbetar på elever, inte på
+         anmälningar, så utan Skapa elev når ingen familj fram. */
+      + dpRubrik('Läge')
+      + '<div class="dp-atgard">'
+      + väljare('lead', LEAD_LAGE, l.status, 'data-lead="' + esc(l.id) + '"')
+      + '<button class="btn btn-ghost btn-sm" type="button" data-lead-kontakt="' + esc(l.id) + '">'
+      + (l.kontaktad_at ? 'Skriv igen' : 'Kontakta') + '</button>'
+      + (l.status !== 'matched'
+        ? '<button class="btn btn-primary btn-sm" type="button" data-lead-elev="' + esc(l.id) + '">Skapa elev</button>'
+        : '')
+      + '</div>'
+      + dpHantera('anmalan', l, {
+          rubrik: 'Radera anmälan',
+          text: 'När familjen inte vill ha tjänsten. Namnet, adressen och det de skrev tas bort, också ur '
+            + 'andra anmälningar och meddelanden med samma adress. Raden står kvar utan dem, så att '
+            + 'statistiken över anmälningar räknar rätt. Har familjen ett konto raderas det under Familjer.'
+        });
+  }
+
+  function dpAnsokan(a) {
+    if (DP.flik === 'rekrytering') return kör('spårLista', a) || '';
+
+    const text = kör('ansökansText', a);
+    const cv = kör('cvKnapp', a);
+    const tjänster = (a.tjanster || []).map(k => ((S.tjanster || []).find(t => t.kod === k) || {}).namn || k);
+    /* Kontot hen skapat, om det finns. Samma jämförelse som "Ta in i
+       poolen" gör när den föreslår ett konto. */
+    const epost = String(a.email || '').toLowerCase();
+    const konto = epost && Object.values(S.personer).find(p =>
+      p.role === 'tutor' && !ärRaderad(p) && String(p.email || '').toLowerCase() === epost);
+
+    return dpRubrik('Ansökan', 'kom in ' + kortDatum(a.created_at))
+      + dpFakta([
+        ['E-post', dpMejl(a.email)],
+        ['Ålder', a.age ? esc(a.age + ' år') : null],
+        ['Skola', a.school ? esc(a.school) : null],
+        ['Ämnen', a.subjects ? esc(a.subjects) : null],
+        ['Kan jobba', a.availability ? esc(a.availability) : null],
+        ['Söker till', tjänster.length ? esc(tjänster.join(', ')) : null],
+        ['CV', cv || null, 'inget bifogat'],
+        ['Konto', konto
+          ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(konto.id) + '">'
+            + esc(konto.full_name || konto.email) + '</button>'
+          : null, 'inget konto med adressen än'],
+        ['Provet', esc(kör('provKort', a) || '')]
+      ])
+      + dpRubrik('Varför hen söker')
+      + (text ? '<div class="dp-text">' + esc(text) + '</div>' : tomt('Inget skrivet', ''))
+      + (a.notering ? dpRubrik('Vår notering') + '<div class="dp-text">' + esc(a.notering) + '</div>' : '')
+      + dpRubrik('Läge')
+      + '<div class="dp-atgard">'
+      + väljare('ans', ANS_LAGE, a.status, 'data-ans="' + esc(a.id) + '"')
+      + '<button class="btn btn-ghost btn-sm" type="button" data-dp-flik="rekrytering">Rekryteringens steg</button>'
+      + (a.status !== 'approved'
+        ? '<button class="btn btn-primary btn-sm" type="button" data-ans-pool="' + esc(a.id) + '">Ta in i poolen</button>'
+        : '')
+      + '</div>'
+      + dpHantera('ansokan', a, {
+          rubrik: 'Radera ansökan',
+          text: 'När hen inte ska anställas, eller själv ber om det. Ansökan, CV:t och meddelanden med '
+            + 'samma adress tas bort ur våra system. Ett nej mejlas inte av sig självt: skriv det först. '
+            + 'Har hen ett konto raderas det under Studiehjälpare.'
+        });
+  }
+
+  /* ------------------------------------------------------------
+     EN RADERAD PERSON
+
+     radera_person() tar bort det som pekar ut någon men lämnar det
+     bokföringen kräver (supabase/migrations/…_personer_redigeras_och_
+     raderas.sql). Kontot eller barnet står då kvar utan namn och syns
+     inte i någon lista, men ett gammalt pass pekar på det och går att
+     öppna därifrån. Här står varför det finns kvar, och ingenting går
+     att ändra.
+     ------------------------------------------------------------ */
+  function dpRaderad(typ, p) {
+    const pass = typ === 'elev' ? passFör(b => b.student_id === p.id)
+      : passFör(b => b.parent_id === p.id || b.tutor_id === p.id);
+    const vad = typ === 'elev'
+      ? 'Namnet och allt familjen och studiehjälparen skrev om barnet är borta. Rapporterna står kvar utan text, för att studiehjälparens lön räknas på dem.'
+      : typ === 'studiehjalpare'
+        ? 'Namnet, kontaktuppgifterna, profilen och inloggningen är borta. Rapporterna och underlagen står kvar, för lönen och bokföringen.'
+        : 'Namnet, kontaktuppgifterna, inloggningen och barnens uppgifter är borta. Passen, fakturorna och klippkorten står kvar, för bokföringen.';
+    return '<div class="dp-text">Raderad ' + esc(kortDatum(p.raderad_at)) + '. ' + esc(vad)
+      + ' Det sparas i sju år (bokföringslagen).</div>'
+      + dpRubrik('Pass', pass.length ? String(pass.length) : '')
+      + passLista(pass, b => typ === 'studiehjalpare' ? namnFör(b.parent_id) : namnFör(b.tutor_id));
+  }
+
+  /* ------------------------------------------------------------
+     REDIGERA OCH RADERA (2026-09-28)
+
+     Leo: "alla personer som finns i våra system i admin, ska vi kunna
+     redigera och trycka ta bort på." Två knappar sist i Översikt, för
+     varje sorts person. Radera öppnar en ruta som först frågar
+     databasen vad raderingen tar med sig (nextrum-admin-radera.js);
+     här är det bara knappen. Ett adminkonto raderas inte härifrån:
+     databasen vägrar, och knappen ritas inte.
+     ------------------------------------------------------------ */
+  function dpHantera(typ, rad, o) {
+    return '<div class="dp-atgard dp-hantera">'
+      + '<button class="btn btn-ghost btn-sm" type="button" data-dp-redigera>Redigera uppgifterna</button>'
+      + (o.knappar || '')
+      + '</div>'
+      + (rad.is_admin ? ''
+        : '<div class="dp-fara">'
+          + '<div class="dp-fara-text"><b>' + esc(o.rubrik) + '</b><span>' + esc(o.text) + '</span></div>'
+          + '<button class="btn btn-fara btn-sm" type="button" data-radera="' + esc(typ + ':' + rad.id) + '">'
+          + esc(o.rubrik) + '…</button>'
+          + '</div>');
+  }
+
+  /* Fälten som går att rätta, per sort. Samma kolumner som vyerna och
+     formulären själva skriver, och inget annat: läget, matchningen och
+     tidsstämplarna har egna knappar, och e-posten på ett konto är
+     inloggningen. En adress som ändras här men inte i Auth hade gett ett
+     konto som loggar in med en adress och får mejlen till en annan.
+
+     max följer längdtaken i skydda_leadfalt och skydda_ansokningsfalt,
+     och formulären i studievyerna för resten. */
+  const RED = {
+    anmalan: { tabell: 'leads', fält: [
+      { k: 'parent_name', et: 'Förälderns namn', krav: true, max: 120 },
+      { k: 'email', et: 'E-post', krav: true, epost: true, max: 200 },
+      { k: 'child_name', et: 'Barnets namn', max: 120 },
+      { k: 'grade', et: 'Årskurs', max: 60 },
+      { k: 'subject', et: 'Ämne', max: 200 },
+      { k: 'message', et: 'Vad de skrev', text: true, max: 4000 },
+      { k: 'notering', et: 'Vår notering', text: true, max: 2000 }
+    ] },
+    ansokan: { tabell: 'applications', fält: [
+      { k: 'name', et: 'Namn', krav: true, max: 120 },
+      { k: 'email', et: 'E-post', krav: true, epost: true, max: 200 },
+      { k: 'age', et: 'Ålder', tal: [10, 99] },
+      { k: 'school', et: 'Skola', max: 120 },
+      { k: 'subjects', et: 'Ämnen', max: 200 },
+      { k: 'availability', et: 'Kan jobba', max: 200 },
+      /* Utan CV-raden, som läggs tillbaka när det sparas: den är enda
+         kopplingen mellan ansökan och filen (CV_RAD i
+         nextrum-admin-rekrytering.js), och gallringen läser den. */
+      { k: 'why', et: 'Varför hen söker', text: true, max: 3800, cv: true },
+      { k: 'notering', et: 'Vår notering', text: true, max: 2000 }
+    ] },
+    familj: { tabell: 'profiles', fält: [
+      { k: 'full_name', et: 'Namn', krav: true, max: 120 },
+      { k: 'phone', et: 'Telefon', max: 40, typ: 'tel' },
+      { k: 'bio', et: 'Om familjen', text: true, max: 1000 }
+    ] },
+    elev: { tabell: 'students', fält: [
+      { k: 'name', et: 'Namn', krav: true, max: 80 },
+      { k: 'grade', et: 'Årskurs', val: () => NX.ARSKURSER.map(a => a.text) },
+      { k: 'school', et: 'Skola', max: 120 },
+      { k: 'subjects', et: 'Ämnen, med komma emellan', lista: true, max: 400 },
+      { k: 'goals', et: 'Mål', text: true, max: 600 },
+      { k: 'about', et: 'Lär sig bäst', text: true, max: 800 }
+    ] },
+    studiehjalpare: { tabell: 'profiles', fält: [
+      { k: 'full_name', et: 'Namn', krav: true, max: 120 },
+      { k: 'phone', et: 'Telefon', max: 40, typ: 'tel' },
+      { k: 'age', et: 'Ålder', tal: [13, 99], tabell: 'tutor_profiles' },
+      { k: 'school', et: 'Skola', max: 120, tabell: 'tutor_profiles' },
+      { k: 'city', et: 'Ort', max: 80, tabell: 'tutor_profiles' },
+      { k: 'subjects', et: 'Ämnen, med komma emellan', lista: true, max: 400, tabell: 'tutor_profiles' },
+      /* Utan timpenning hoppar månadskörningen över hen: passen hålls
+         och ingen lön räknas ut. Därför krävs den för en godkänd. */
+      { k: 'hourly_rate', et: 'Timpenning, kronor', tal: [1, 10000], tabell: 'tutor_profiles' },
+      { k: 'availability', et: 'Kan jobba', max: 200, tabell: 'tutor_profiles' },
+      { k: 'bio', et: 'Om hen', text: true, max: 1000, tabell: 'tutor_profiles' }
+    ] }
+  };
+
+  /* Raden ett fält läser ur och skrivs till. */
+  function redRad(typ, id, f) {
+    if (f.tabell === 'tutor_profiles') return S.tutorProfiler[id] || null;
+    if (typ === 'anmalan') return S.leads.find(x => x.id === id) || null;
+    if (typ === 'ansokan') return S.ansokningar.find(x => x.id === id) || null;
+    if (typ === 'elev') return (S.allaElever || S.elevlista).find(x => x.id === id) || null;
+    return S.personer[id] || null;
+  }
+
+  const CV_RADER = /^CV: .*$/gm;
+
+  function redVärde(typ, id, f) {
+    const r = redRad(typ, id, f);
+    const v = r ? r[f.k] : null;
+    if (f.cv) return String(v || '').replace(CV_RADER, '').trim();
+    if (Array.isArray(v)) return v.join(', ');
+    return v == null ? '' : String(v);
+  }
+
+  function redFält(typ, id, f) {
+    const fid = 'dp-red-' + f.k + (f.tabell ? '-tp' : '');
+    const namn = f.k + (f.tabell ? '@tp' : '');
+    const v = redVärde(typ, id, f);
+    let fält;
+    if (f.text) {
+      fält = '<textarea class="inp" id="' + fid + '" name="' + namn + '" maxlength="' + f.max + '" rows="4">'
+        + esc(v) + '</textarea>';
+    } else if (f.val) {
+      /* Ett värde som inte står i listan (en äldre stavning) visas
+         ändå, så att det inte byts ut bara för att formuläret sparas. */
+      const val = f.val();
+      const alla = v && val.indexOf(v) === -1 ? [v].concat(val) : val;
+      fält = '<select class="sel" id="' + fid + '" name="' + namn + '">'
+        + '<option value="">Ej angivet</option>'
+        + alla.map(x => '<option' + (x === v ? ' selected' : '') + '>' + esc(x) + '</option>').join('')
+        + '</select>';
+    } else if (f.tal) {
+      fält = '<input class="inp" id="' + fid + '" name="' + namn + '" type="number" inputmode="numeric"'
+        + ' min="' + f.tal[0] + '" max="' + f.tal[1] + '" step="1" value="' + esc(v) + '">';
+    } else {
+      fält = '<input class="inp" id="' + fid + '" name="' + namn + '" type="'
+        + (f.epost ? 'email' : f.typ || 'text') + '" maxlength="' + f.max + '" value="' + esc(v) + '">';
+    }
+    return '<div class="fgroup"><label for="' + fid + '">' + esc(f.et)
+      + (f.krav ? '' : ' <span class="dp-red-valfri">valfritt</span>') + '</label>' + fält + '</div>';
+  }
+
+  function dpRedigera(typ, rad) {
+    const spec = RED[typ];
+    if (!spec) return tomt('Går inte att redigera här', '');
+    return '<form class="dp-red" data-dp-red="' + esc(typ + ':' + rad.id) + '" novalidate>'
+      + dpRubrik('Redigera uppgifterna')
+      + (typ === 'familj' || typ === 'studiehjalpare'
+        ? '<p class="dp-red-not">E-post: <b>' + esc(rad.email || '—') + '</b>. Adressen är '
+          + 'inloggningen och ändras inte här.</p>'
+        : '')
+      + spec.fält.map(f => redFält(typ, rad.id, f)).join('')
+      + '<p class="ok-msg" data-dp-red-msg></p>'
+      + '<div class="dp-atgard">'
+      + '<button class="btn btn-ghost btn-sm" type="button" data-dp-red-avbryt>Avbryt</button>'
+      + '<button class="btn btn-primary btn-sm" type="submit">Spara</button>'
+      + '</div></form>';
+  }
+
+  /* Samma värde? Tomt och null är samma sak, och ett tal ur en
+     numeric-kolumn jämförs som tal. Utan det hade varje sparning
+     skrivit om fält ingen rört, med en rad i auditloggen var. */
+  function sammaVärde(ny, gammal) {
+    if (Array.isArray(ny) || Array.isArray(gammal)) {
+      return JSON.stringify(ny || []) === JSON.stringify(gammal || []);
+    }
+    if (ny == null || ny === '') return gammal == null || gammal === '';
+    if (typeof ny === 'number') return gammal != null && gammal !== '' && Number(gammal) === ny;
+    return String(ny) === String(gammal == null ? '' : gammal);
+  }
+
+  document.addEventListener('submit', async ev => {
+    const form = ev.target.closest('[data-dp-red]');
+    if (!form) return;
+    ev.preventDefault();
+    const [typ, id] = form.dataset.dpRed.split(':');
+    const spec = RED[typ];
+    const msg = form.querySelector('[data-dp-red-msg]');
+    rensa(msg);
+    if (!spec) return;
+
+    const ändringar = {};
+    for (const f of spec.fält) {
+      const el = form.elements[f.k + (f.tabell ? '@tp' : '')];
+      if (!el) continue;
+      const rå = String(el.value || '').trim();
+      const r = redRad(typ, id, f);
+      let värde;
+
+      if (f.krav && !rå) { säg(msg, '⚠️ ' + f.et + ' får inte vara tomt.', false); el.focus(); return; }
+      if (f.epost && rå && !NX.epostOk(rå)) {
+        säg(msg, '⚠️ E-postadressen ser inte ut att stämma.', false); el.focus(); return;
+      }
+      if (f.tal) {
+        const n = Number(rå);
+        if (rå && (!Number.isInteger(n) || n < f.tal[0] || n > f.tal[1])) {
+          säg(msg, '⚠️ ' + f.et + ' ska vara ett heltal mellan ' + f.tal[0] + ' och ' + f.tal[1] + '.', false);
+          el.focus(); return;
+        }
+        värde = rå ? n : null;
+      } else if (f.lista) {
+        värde = rå.split(',').map(x => x.trim()).filter(Boolean);
+      } else if (f.cv) {
+        const cvRader = String((r && r.why) || '').match(CV_RADER) || [];
+        värde = (rå + (cvRader.length ? '\n\n' + cvRader.join('\n') : '')).trim() || null;
+      } else {
+        värde = rå || null;
+      }
+
+      if (f.k === 'hourly_rate' && värde == null && (S.tutorProfiler[id] || {}).status === 'approved') {
+        säg(msg, '⚠️ En godkänd studiehjälpare behöver en timpenning. Utan den räknas ingen lön ut för passen.', false);
+        el.focus(); return;
+      }
+
+      if (!sammaVärde(värde, r ? r[f.k] : null)) {
+        const tabell = f.tabell || spec.tabell;
+        (ändringar[tabell] = ändringar[tabell] || {})[f.k] = värde;
+      }
+    }
+
+    const tabeller = Object.keys(ändringar);
+    if (!tabeller.length) { DP.redigera = false; ritaDetalj(); return; }
+
+    await medan(form.querySelector('[type="submit"]'), 'Sparar…', async () => {
+      for (const tabell of tabeller) {
+        /* Raden tillbaka, så att det som står i panelen är det
+           databasen sparade: triggrarna kortar av och skriver om. */
+        const { data, error } = await supa.from(tabell).update(ändringar[tabell])
+          .eq('id', id).select('*').maybeSingle();
+        if (error) { säg(msg, '⚠️ Kunde inte spara: ' + felText(error), false); return; }
+        if (!data) {
+          säg(msg, '⚠️ Ingenting sparades. Raden finns inte längre, eller så nekade databasen ändringen.', false);
+          return;
+        }
+        const mål = tabell === 'tutor_profiles' ? S.tutorProfiler[id]
+          : redRad(typ, id, { tabell: null });
+        if (mål) Object.assign(mål, data);
+      }
+
+      DP.redigera = false;
+      if (typ === 'anmalan') kör('ritaLeads');
+      else if (typ === 'ansokan') kör('ritaAnsokningar');
+      else if (typ === 'familj') { kör('ritaFamiljer'); kör('ritaElever'); }
+      else if (typ === 'elev') { kör('ritaElever'); kör('ritaFamiljer'); }
+      else if (typ === 'studiehjalpare') kör('ritaStudiehjalpare');
+      /* Matchningen läser namn, ämnen och årskurs ur en egen vy. */
+      if (typ === 'elev' || typ === 'studiehjalpare') {
+        await hämtaMatchunderlag();
+        kör('ritaMatchning');
+      }
+      ritaDetalj();
+    });
+  });
 
   /* ------------------------------------------------------------
      MATERIAL, INLAGT AV ADMIN
@@ -1070,7 +1507,7 @@
 
   function ritaDetalj(laddarÄn) {
     if (!DP.panel || !DP.typ) return;
-    const flikar = DP_FLIKAR[DP.typ] || [];
+    let flikar = DP_FLIKAR[DP.typ] || [];
     let person, rubrik, under, märken = '';
 
     if (DP.typ === 'pass') {
@@ -1081,8 +1518,22 @@
         .filter(x => x && x !== '—').join(' · ');
       märken = läge(BOK_LAGE, person.status)
         + (person.attendance === 'franvarande' ? ' ' + pill('Uteblev', 'ar-ny') : '');
+    } else if (DP.typ === 'anmalan') {
+      person = S.leads.find(x => x.id === DP.id);
+      if (!person || ärRaderad(person)) { stängDetalj(); return; }
+      rubrik = person.parent_name || person.email || '(namn saknas)';
+      under = [person.child_name, person.grade, person.subject].filter(Boolean).join(' · ');
+      märken = läge(LEAD_LAGE, person.status);
+    } else if (DP.typ === 'ansokan') {
+      person = S.ansokningar.find(x => x.id === DP.id);
+      if (!person) { stängDetalj(); return; }
+      rubrik = person.name || person.email || '(namn saknas)';
+      under = [person.age ? person.age + ' år' : null, person.school].filter(Boolean).join(' · ');
+      märken = läge(ANS_LAGE, person.status);
     } else if (DP.typ === 'elev') {
-      person = S.elevlista.find(x => x.id === DP.id);
+      /* Ur alla elever, också de raderade: ett gammalt pass pekar på
+         dem, och därifrån ska det gå att se varför namnet är borta. */
+      person = (S.allaElever || S.elevlista).find(x => x.id === DP.id);
       if (!person) { stängDetalj(); return; }
       const f = S.personer[person.parent_id];
       rubrik = person.name || '(namn saknas)';
@@ -1107,18 +1558,33 @@
       if (person.is_admin) märken += ' ' + pill('Admin', 'ar-vantar');
     }
 
+    /* En raderad person har en flik, och inget att ändra. */
+    const raderad = DP.typ !== 'pass' && ärRaderad(person);
+    if (raderad) {
+      flikar = [['oversikt', 'Raderad']];
+      DP.flik = 'oversikt';
+      DP.redigera = false;
+      märken = pill('Raderad', '');
+    }
+
     const d = S.detaljCache[DP.typ + ':' + DP.id];
     let kropp;
     if (laddarÄn || !d) kropp = laddar();
+    else if (raderad) kropp = dpRaderad(DP.typ, person);
+    else if (DP.redigera && DP.typ !== 'pass') kropp = dpRedigera(DP.typ, person);
     else if (DP.typ === 'pass') kropp = dpPass(person, d);
+    else if (DP.typ === 'anmalan') kropp = dpAnmalan(person);
+    else if (DP.typ === 'ansokan') kropp = dpAnsokan(person);
     else if (DP.typ === 'familj') kropp = dpFamilj(person, d);
     else if (DP.typ === 'elev') kropp = dpElev(person, d);
     else kropp = dpStudiehjalpare(person, d);
 
     DP.panel.innerHTML =
       '<div class="dp-topp">'
-      /* Ett pass har inget ansikte; ämnet får ge initialen. */
-      + M.avatar(DP.typ === 'pass' ? (person.subject || 'Pass') : rubrik, (person.avatar_url || null), {})
+      /* Ett pass har inget ansikte; ämnet får ge initialen. Aldrig
+         avatar_url: den är en sökväg i den privata hinken avatarer, inte
+         en adress, och som bildadress blir den en trasig bild. */
+      + M.avatar(DP.typ === 'pass' ? (person.subject || 'Pass') : rubrik, null, {})
       + '<span class="dp-namn"><b>' + esc(rubrik) + '</b>'
       + (under ? '<span>' + esc(under) + '</span>' : '')
       + (märken ? '<span class="dp-marken">' + märken + '</span>' : '')
@@ -1163,8 +1629,9 @@
 
 
 
-  /* Det andra områden anropar. */
+  /* Det andra områden anropar. stängDetalj anropas av raderingen, som
+     inte har något kvar att visa efteråt. */
   Object.assign(NXAdmin.rita, {
-    ritaDetalj
+    ritaDetalj, stängDetalj
   });
 })();
