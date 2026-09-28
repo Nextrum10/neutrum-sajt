@@ -412,8 +412,12 @@ vendorad fil i `bibliotek/`.
   projektets Settings → Git (`gitComments` i API:t; Vercel-kopplingens
   `update_project` saknar fältet). `github.silent` i `vercel.json`
   hjälpte inte: grenen hade nyckeln, och botten kommenterade PR:en
-  ändå. Stäng inte av GitHub-driftsättningarna i samma veva:
-  `indexnow.yml` lyssnar på deras `deployment_status`
+  ändå. Stäng inte av repository_dispatch-händelserna i samma veva
+  (`disableRepositoryDispatchEvents` i API:t, som Vercel-kopplingens
+  `get_project` inte visar): `indexnow.yml` lyssnar på
+  `vercel.deployment.success` sedan 2026-09-27 och tystnar utan dem,
+  utan att något blir rött. GitHub-driftsättningarna behöver den inte
+  längre (avsnitt 9)
 - **Mejl:** Resend
 - **Modeller:** Anthropic, bara från edge functions — aldrig från
   webbläsaren
@@ -429,7 +433,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 |---|---|
 | `nextrum-config.js` | **Enda filen som ska ändras vid uppsättning.** URL, anon-nyckel, pris, e-post, utbildningslänk |
 | `nextrum-app.js` | `NX` — delad grund: supa-klient, i18n, datum, fel, header, inloggning |
-| `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen |
+| `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen. Vem felet gällde sätter databasen (`intern.klientfel_vem`, 2026-09-28) ur `auth.uid()` och skriver över det klienten skickar: kolumnen fylldes aldrig förut, och varje fel stod som Utloggad. DATASKYDD.md rad 12 och integritetspolicyn räknar med konto-id, 90 dagar |
 | `nextrum-modulvakt.js` | Fångar "en modul laddade inte" innan vyn dör tyst på "Laddar din vy". Laddas i **alla tre** vyerna sedan Fas 14.0 — adminvyn saknade den, fast den har 26 skript mot de andras 17. Prövar en FUNKTION per fil, inte bara att globalen finns: en gammal fil i cachen definierar sin global och ser frisk ut. Modulerna nås som IDENTIFIERARE, aldrig som `window[...]` — hälften deklareras `const NX… = …` på toppnivå och hamnar då inte på window |
 | `nextrum-samtycke.js` | `NXSamtycke`: samtyckesrutan och det enda stället som svarar på "får vi?". Bara på de öppna sidorna, efter `nextrum-app.js`. Se avsnitt 6, Samtycket |
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
@@ -635,7 +639,7 @@ Fyra saker att veta, alla dyrköpta:
    skriven i sidans eget skript blir svensk på den engelska sidan och
    **ingen strukturkontroll ser det**.
 2. **Bara det som visas.** Strängar som skrivs till databasen
-   ("Telefon: ", "Samtycke till lagring: ja") förblir svenska — de
+   ("Telefon: ", "Läst integritetspolicyn: ja") förblir svenska — de
    läses av oss.
 3. **Generatorn finns inte i repot.** `/en/`-sidorna är incheckade
    artefakter. Ändras en svensk sida måste engelskan följa med för
@@ -718,6 +722,9 @@ Fas 20.1 la till `pass_tillagg` (övertiden på ett förbetalt pass:
 parterna och admin läser, bara `service_role` skriver) och Fas 20.2
 `manadsbokslut` (stängda månader: admin läser, bara `stang_manad` och
 `oppna_manad` skriver).
+Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
+id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
+ingen roll utom ägaren når den). Se Notiserna nedan.
 
 **Flera sessioner kör mot samma databas samtidigt.** Fas 19.5 och Fas
 20.1 skrevs samma förmiddag i två sessioner och ändrade båda
@@ -881,6 +888,34 @@ kör alla fyra från fliken System → Automationer.
    det bakfylldes: en gissad siffra räknas med i medelvärdet utan att
    någon ser att den är gissad.
 
+### Gallringen (2026-09-27)
+
+Integritetspolicyn lovar lagringstider, och det är databasen som
+håller dem, inte en människa som kommer ihåg. `DATASKYDD.md` har hela
+registret; det här är det som rör koden.
+
+- **Intresseanmälningar avidentifieras, de tas inte bort.**
+  `intern.leads_avidentifiera()` (pg_cron `leads-avidentifiering`,
+  varje natt) tömmer namn, e-post, barnets namn, fritexten och
+  noteringen sex månader efter senaste kontakten
+  (`intern.leads_avidentifieras_fran()`, enda stället regeln står).
+  `email = 'gallrad'` är markeringen. Raden står kvar så att
+  analysvyerna räknar lika många anmälningar bakåt i tiden.
+- **Konton raderas aldrig automatiskt.** `intern.konton_oanvanda()`
+  (`konton-oanvanda`, den 1:a varje månad) gör ett konto som inte
+  använts på två år till en uppgift. Ett konto hänger ihop med
+  bokföringsunderlag som ska sparas i sju år, och det avgör en
+  människa.
+- **Ett jobb som fastnat blir en uppgift** (`gallring:leads:fastnat`).
+  Ett jobb som tyst slutat fungera ser annars ut som ett som inte har
+  något att göra.
+- **Kontaktmeddelanden tas bort efter sex månader, klientfel efter
+  nittio dagar** (`intern.kontakt_och_fel_gallra()`, pg_cron
+  `kontakt-och-fel-gallring`). Notiserna har egna tider i
+  `notis_stada()`: 180 dagar i vyn, 90 för utskicken.
+- Ansökningar och CV:n gallras av `ansokan-gallring` (PR #90), med
+  samma princip: filen först, raden sedan.
+
 ### Notiserna (Runda 2)
 
 Vägen är alltid densamma, och ingen del av den kan hoppas över:
@@ -970,6 +1005,31 @@ pass.** Den köas av `intern.timmar_gar_ut_koa()`, som pg_cron-jobbet
 svensk tid. En gång per kort och sista dag; ett förlängt kort får en ny.
 Mallen läser `kvar` (heltal, 1–200) och `datum` ur `RenData`, och bara
 familjen har raden i `NOTISVAL` (`bara: 'parent'`).
+
+**Notiser som inte gick fram (System → Fel) är bara databasens egna
+utskick** (2026-09-27). `notisfel()` läste förut hela
+`net._http_response`, och dit kommer varje anrop genom pg_net, också
+när en session provar en funktion efter en driftsättning. Utan
+hemligheten svarar funktionen 401, med GET 405, och svaret stod sedan i
+sex timmar som en notis som inte gick fram: adminvyn sa 8 fel, där tre
+var samma fel i koden och fem var prov. Tabellen har ingen adress, och
+ett prov och ett utskick med fel hemlighet ger samma 401, så skillnaden
+syns bara när anropet görs.
+
+- **Ring aldrig `net.http_post` direkt.** Databasens anrop går genom
+  `intern.natanrop(mal, url := …)`, med samma parametrar som
+  `net.http_post` och målet först. Den minns anropets id i
+  `intern.natanrop_logg`, och `notisfel()` visar bara svar på de
+  anropen och på webhooken för intresseanmälan (som minns sina i
+  `supabase_functions.hooks`), med vägen i `kalla`. Ett anrop förbi
+  `intern.natanrop` syns inte när det går fel; `rls-test.sql` har en
+  rad som fångar det.
+- **`grindfel` skiljer två 401:or.** Supabases grind svarar med
+  `sb-error-code` (`UNAUTHORIZED_…`) när JWT-kravet slagits på igen
+  (avsnitt 7, `config.toml`); funktionen själv svarar 401 när
+  hemligheten inte stämmer. Adminvyn säger vilket.
+- **Svaren finns i sex timmar** (`pg_net.ttl`), inte ett dygn. Listan
+  svarar på "gick det fram nyss?", inte på "vad hände i natt?".
 
 `DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
 sandlådan slås på innan något provas, och de fem stegen för att lägga
@@ -1065,11 +1125,89 @@ och går inte att nå inifrån ett mejl. Kontomejlen (bekräfta konto,
 inbjudan från `bjud-in`) skickas av Supabase Auth med mallar i
 dashboarden, inte härifrån, och har inte det här skalet.
 
+### Gallringen: ansökningar och CV:n efter ett år (2026-09-27)
+
+Integritetspolicyn lovar att en ansökan som inte leder till anställning
+sparas högst ett år. Förut höll ingenting det: ingen policy, inget jobb
+och ingen knapp tog bort vare sig raden eller CV:t.
+
+```
+pg_cron "ansokan-gallring", 03:41 UTC
+  → intern.ansokan_gallring_vack()   något förfallet? annars inget anrop
+  → pg_net → ansokan-gallring        hemligheten i x-nextrum-notis
+      → ansokan_gallring_lista()     ansökan och dess filer
+      → Storage tar bort filerna     svaret läses
+      → ansokan_gallra(id)           raden, bara om filerna är borta
+      → cv_foraldralosa() → Storage  filer som ingen ansökan pekar ut
+```
+
+Regeln står i `intern.ansokan_gallras_fran()` och ingen annanstans:
+
+1. **En godkänd ansökan gallras aldrig.** `status = 'approved'` är
+   anställningen. En ny eller kontaktad ansökan med samma adress
+   (`intern.epost_nyckel`) som en godkänd studiehjälpare gallras inte
+   heller: "Ta in i poolen" godkänner profilen först och läser inte
+   svaret när ansökan sedan sätts till godkänd. En avböjd ansökan
+   gallras alltid, också när samma person senare fått ja.
+2. **Ett år från `created_at`, men inte mitt i en rekrytering.** En
+   ansökan väntar till trettio dagar efter sitt senaste steg: kontakten,
+   mötet, utbildningsmötet, provets sista dag, det godkända provet,
+   utbildningen. Policyn säger "så att vi kan höra av oss om något dyker
+   upp", och den som hörs av i månad elva ska inte förlora ansökan mitt i
+   provet. **Får rekryteringen ett nytt steg med en egen tidsstämpel ska
+   det in i funktionen**, annars kan en ansökan försvinna mitt i steget.
+3. **Filen först, raden sedan, och databasen vaktar ordningen.**
+   `storage.objects` går inte att ta bort ur med SQL
+   (`protect_objects_delete`), så filen tas bort genom Storage-API:t i
+   edge-funktionen. `ansokan_gallra()` vägrar ta bort raden så länge en
+   fil den pekar ut finns kvar. En fil som en ansökan som ska vara kvar
+   också pekar ut står kvar.
+4. **Filer utan ansökan gallras ett år efter uppladdningen.** Kopplingen
+   är raden `CV: cv/<sökväg>` i `why` (avsnitt 6, hinkarna), läst av
+   `intern.ansokan_cv_namn()`, med flit vidare än `CV_RAD`. Året är också
+   ett skydd: ändras CV-raden utan att tolkningen följer med ser varje CV
+   föräldralöst ut, och då tas ändå inget bort som inte redan var ett år
+   gammalt.
+5. **Det som följer med:** `ansokan_utskick` och `utbildningsprov_forsok`
+   (cascade) och uppgifter kopplade till ansökan, som kan bära namnet.
+   Auditloggens rader om ansökan står kvar, för de bär bara läge och
+   tidsstämplar. Borttagningen får en egen, `ansokan.borttagen` av
+   `system`, med tidsstämplarna som visar att den var förfallen. Egen
+   trigger (`applications_audit_borttagen`): `applications_audit` skrivs
+   om av rekryteringens migrationer, och en borttagningsgren där hade
+   försvunnit nästa gång.
+6. **Vakten räknar utfallet, inte vägen.** Är något en vecka över tiden
+   skapar väckningen uppgiften "Gallringen av ansökningar har fastnat".
+   En funktion som svarar 401, en fil Storage vägrar ta bort och en rad
+   som väntar på sin fil syns alla där. Funktionens svar står i
+   `net._http_response`: 200 bara när inget gick fel, och aldrig ett
+   filnamn, för det är vad den sökande själv döpt filen till.
+
+Bara `service_role` når `ansokan_gallring_lista`, `cv_foraldralosa` och
+`ansokan_gallra`, inte admin. Adressen står i `notis_konfig.gallring_url`,
+härledd ur `arbetare_url` som `ansokan_url`. Provad mot driften
+2026-09-27 med tre provansökningar och fyra provfiler. **pg_net skickar
+bara `application/json`**, och hinken `cv` tar bara PDF och Word: filerna
+laddades upp som anon med tillägget `http`, installerat i en transaktion
+som rullades tillbaka. Storage sparar filen i sin egen anslutning, så den
+blir kvar medan tillägget inte gör det.
+
 ---
 
 ## 6. Säkerhetsmodellen
 
 Den här är inte förhandlingsbar och förklarar större delen av koden.
+
+Dataskyddet på pappret (registret över behandlingar,
+konsekvensbedömningen, incidentrutinen och biträdena) står i
+`DATASKYDD.md`. **Ändras vad som sparas, till vem det går eller hur
+länge: ändra `DATASKYDD.md` och integritetspolicyn på båda språken i
+samma ändring.**
+
+Det som skickas till Anthropic från rapportutkasten och hälsningarna
+går genom `_delad/minimera.ts`: förnamnet, och fritext där
+personnummer, telefonnummer och e-post är maskade. Samma regler som
+`maska_kontakt()` i databasen; ändras den ena ska den andra ändras.
 
 **Allt skydd ligger i RLS. Ingenting ligger i gränssnittet.**
 Adminvyn hämtar med samma anon-nyckel som alla andra. Att gömma en
@@ -1144,11 +1282,14 @@ att visa **rätt sida**, inte för att skydda data.
   samma tryck: Safari stoppar tyst ett fönster som öppnas efter en
   väntan på nätet. Word hämtas som en blob och laddas ned. PDF:en kan
   inte gå den vägen, för en blob-adress ärver adminvyns CSP och
-  `object-src 'none'` stoppar PDF-visaren.
+  `object-src 'none'` stoppar PDF-visaren. Filen och ansökan gallras
+  efter ett år (avsnitt 5, Gallringen).
 - **Tar du bort en fil: filen först, raden sedan, och LÄS SVARET.**
   Sökvägen finns bara i raden. Försvinner raden först blir filen omöjlig
   att hitta och omöjlig att städa. Det stod som en kommentar i
-  adminvyn långt innan koden faktiskt gjorde det (Fas 9.2).
+  adminvyn långt innan koden faktiskt gjorde det (Fas 9.2). För
+  ansökningarna vaktar databasen ordningen: `ansokan_gallra()` tar inte
+  bort raden medan filen finns.
 - **Notishemligheten ligger i `notis_konfig`, inte i en secret.** En
   secret och en webhook-header i två olika fönster glider isär, och då
   svarar funktionen 401 på varje anmälan emellan — de mejlen kommer
@@ -1163,7 +1304,20 @@ bara när något där är på.** Är allt av finns ingen ruta, ingen länk i
 footern och ingenting lagras: en ruta som ber om lov till ingenting är
 brus.
 
-- **Källspårningen är det enda som är på.** Med ett ja minns
+- **Två syften, två val: statistik och annonser.** Rutan har Neka
+  alla, Godkänn alla och en kryssruta per syfte (ingen förkryssad) med
+  Spara mitt val. Svaret är `{v:2, val:{statistik, annonser}}`; ett
+  svar i det gamla formatet räknas som inget svar. `SYFTE` i
+  `nextrum-samtycke.js` säger vilket syfte varje reglage hör till.
+- **Vercels besöksstatistik laddas först efter ja** (2026-09-27).
+  Taggarna till `/_vercel/insights` och `/_vercel/speed-insights` stod
+  förut statiskt på alla 35 sidor och körde innan någon frågats. Den
+  räknar utan cookies, men skriptet får webbläsaren att skicka data,
+  och det är "åtkomst" enligt EDPB:s riktlinjer 2/2023; PTS räknar
+  statistik som inte nödvändig. Nu lägger `laddaVercel()` in dem vid
+  ja. **Lägg aldrig tillbaka en statisk tagg.** Dras ett ja tillbaka
+  laddas sidan om, för ett skript som redan kört går inte att stänga av.
+- **Källspårningen hör till annonser.** Med ett ja minns
   webbläsaren landningen tills fliken stängs (sessionStorage
   `nx-kalla`, skrivs av `NX.källa()`), så att en anmälan krediteras
   annonsen och inte sidan den skickades från. **Utan ja är en okänd
@@ -1292,6 +1446,7 @@ tillbaka en kopia.**
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
 | `ansokan-notis` | Ett besked till den som sökt jobb (Fas 16.1): kvittot, eller mejlet om ett steg framåt med hela processen och var hen står. Databasen bestämmer vad, funktionen skickar | Triggern `ansokan_besked` och pg_cron `ansokan-besked`, via `notis_konfig.ansokan_url` |
+| `ansokan-gallring` | Tar bort ansökningar som inte ledde till anställning och CV-filer utan ansökan när de är ett år gamla (2026-09-27, avsnitt 5). Filen först genom Storage-API:t, sedan raden genom `ansokan_gallra()`, som vägrar medan filen finns. Svarar 500 om något inte gick | pg_cron `ansokan-gallring` via `intern.ansokan_gallring_vack()` och `notis_konfig.gallring_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
 | `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`) | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
 | `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet. Med `timbank: true` dras minuterna i timbanken i stället, i `timbank_dra()` (Fas 22.1). Sedan Fas 22.2 betalar timmarna passen av sig själva i databasen, och knappen tar det de inte hann | Betala med timmar och Betala med timbanken i föräldravyn |
@@ -1302,7 +1457,7 @@ tillbaka en kopia.**
 | `google-koppla` | Kopplingen till Google (Fas 18.1): adressen till Google, återkomsten med engångskoden, Prova och Koppla från. Koden byts mot en nyckel HÄR; vyn ser aldrig nyckeln eller klienthemligheten. Återkomsten bär ingen inloggning och skyddas av ett HMAC-signerat läge som gäller i tio minuter. Ett konto utanför nextrum.se nekas | Knapparna under System → Integrationer, och Googles omdirigering |
 | `google-meet` | Meet-länken till ett bekräftat onlinepass (Fas 18.1). Läser passet med anroparens token först, skapar ett öppet rum och sparar länken i `pass_moten`. Ett rum som inte blev öppet sparas inte | Passets sida i föräldravyn och studiehjälparvyn |
 
-`supabase/config.toml` bär `verify_jwt = false` för de sju funktioner
+`supabase/config.toml` bär `verify_jwt = false` för de åtta funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
 dashboarden, och en `supabase functions deploy` utan filen hade slagit
 på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och
@@ -1562,6 +1717,13 @@ Körs på varje push och PR. Ska vara grön före merge.
 Kör dem lokalt innan du pushar. De är snabba och de fångar exakt det
 som annars upptäcks i drift.
 
+**`node --check` prövar bara syntaxen.** Ett namn som inte finns där
+det används ger ReferenceError först när raden körs. I adminvyn är det
+vanligaste fallet ett namn ur kärnan som aldrig hämtats in ur `NXAdmin`:
+auditloggen kraschade från 2026-09-22 till 09-27 på `AVBOKNINGSSKAL`
+så fort en avbokning med skäl stod bland raderna, och det syntes bara
+som klientfel under System → Fel.
+
 **`.github/workflows/indexnow.yml` är ingen kontroll** (2026-09-26). Den
 körs när Vercel rapporterat en lyckad produktionsdriftsättning och
 skickar de adresser vars summa i `sitemap.xml` ändrats till IndexNow
@@ -1570,6 +1732,40 @@ ligger i roten som `1ba8bf8c04595e17dff19c8eaf340825.txt` och i
 `verktyg/indexnow.py`; den är offentlig med flit. Byts den, byt båda.
 Det som återstår för trafiken och bara går att göra med era konton
 står i `TRAFIK.md`.
+
+Rapporten från Vercel är sedan 2026-09-27 en `repository_dispatch` av
+typen `vercel.deployment.success`, och workflowen skickar bara när
+`client_payload.environment` är `production`. Förut var det
+`deployment_status` från GitHub-driftsättningarna, som Vercel kallar
+föråldrad: slutade Vercel skapa dem hade IndexNow tystnat utan att
+någon kontroll blev röd. Payloadens fält (`environment`, `git.sha`,
+`git.ref`, `url`, `id`, `project`, `state`) är typade i Vercels eget
+paket, `vercel/repository-dispatch` under
+`packages/repository-dispatch/src/data/`. Tre saker följer av bytet:
+
+1. **Workflowen körs på main, inte på den driftsatta commiten.** En
+   repository_dispatch når bara workflows på default-grenen och körs
+   på dess senaste commit; med `deployment_status` var det den
+   driftsatta av sig självt. Därför checkas `client_payload.git.sha`
+   ut, med `fetch-depth: 2` för jämförelsen med föräldern, och
+   körningen blir röd om den inte fick just den commiten. Mergas två
+   PR:er tätt kan main redan vara nästa commit när händelsen för den
+   första kommer: en utcheckning av main hade då skickat nästa commits
+   sidor innan de fanns på nextrum.se, och den förstas aldrig. Av samma
+   skäl går en ändring i workflowen inte att prova på en gren.
+2. **Bara `success`, aldrig `promoted` också.**
+   `vercel.deployment.promoted` kommer för varje befordran till drift,
+   automatisk eller manuell, alltså också för samma driftsättning som
+   `success`: med båda skickas varje sida två gånger. Efter en
+   befordran av en äldre eller en annan driftsättning säger
+   jämförelsen med föräldercommiten ingenting om vad som ändrats på
+   nextrum.se. Kör då workflowen för hand med `alla`.
+3. **En händelse som uteblir syns inte.** Står
+   repository_dispatch-händelserna av hos Vercel (avsnitt 2), eller
+   slutar Vercel skicka dem, körs ingenting alls. Efter en
+   produktionsdriftsättning ska det finnas en körning
+   `IndexNow production <commit>` under Actions; saknas den har
+   signalen slutat komma.
 
 **`verktyg/rls-test.sql` körs inte i CI** — den behöver en databas.
 Kör hela filen som **ett** anrop i SQL Editor eller via `execute_sql`.
@@ -1580,6 +1776,17 @@ körningen så att fixturpassen aldrig blir ett mejl, och flaggan
 `erbjudanden` står av så att timmarna inte betalar dem (Fas 22.2). Svaret är en tabell
 `test, ok, detalj` — **varje rad ska vara ok**. Kör den efter varje
 ändring i en policy eller en trigger.
+
+**Kör hela filen, inte bara ditt eget avsnitt.** 2026-09-27 hade den
+varit röd sedan förmiddagen utan att någon sett det, för varje session
+provade sin egen del för sig. Fas 19.2 gjorde kortspärren omöjlig att
+slå på, och elva äldre prov som slog på den föll med 23514; de lyfter nu
+villkoret i sin egen deltransaktion (`pg_temp.sparren_pa()`), så att
+koden hålls i form till den dag villkoren går tillbaka till betalning
+före passet. Fas 19.5 flyttade sitt pass till i går klockan 10 hos
+studiehjälpare A, där fixturen från Fas 14.2 redan stod, och krockade
+med `bookings_tutor_slot_unique` i varje hel körning. En fixtur i
+huvudtransaktionen syns för allt som kommer efter den i filen.
 
 ---
 
@@ -1887,12 +2094,18 @@ körningen så att fixturpassen aldrig blir ett mejl, och flaggan
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
-- **Ansökningar och CV:n rensas inte.** Integritetspolicyn lovar att en
-  ansökan som inte leder till anställning sparas högst ett år. Inget
-  schemalagt jobb, ingen knapp och ingen policy tar bort vare sig
-  raden i `applications` eller filen i `cv` (kontrollerat 2026-09-27).
-  Tas raden bort för hand står filen kvar, och sökvägen fanns bara i
-  raden.
+- **Ansökningar gallras efter ett år, men två saker återstår.** Sedan
+  2026-09-27 tar `ansokan-gallring` varje natt bort en ansökan som inte
+  ledde till anställning, med CV:t, och CV-filer utan ansökan (avsnitt
+  5, Gallringen). Kvar:
+  1. **En godkänd ansökan gallras aldrig**, och ingenting säger hur
+     länge en studiehjälpares ansökan och uppgifter sparas efter att hen
+     slutat. Integritetspolicyn säger inget om det heller.
+  2. **"Vill du att vi tar bort den tidigare, skriv till oss" har ingen
+     knapp.** Tas raden bort för hand i dashboarden blir CV:t
+     föräldralöst och står kvar tills gallringen tar det, ett år efter
+     uppladdningen. Ta bort filen under Storage → cv först, sedan
+     raden.
 
 ---
 

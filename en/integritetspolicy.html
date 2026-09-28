@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=ad8203ae">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=1ba60ec7">
 </head>
 <body>
 
@@ -149,18 +149,19 @@
     </div>
 
     <h2>In short</h2>
-    <p>We store what is needed to match a student with the right tutor, to book and run the
-      sessions, to keep you informed about what is happening, and to take payment for the
-      sessions. Nothing beyond that.</p>
+    <p>We store what is needed to match a student with the right tutor, book and hold the
+      sessions, keep you informed about what is happening, and charge for the sessions.
+      Nothing more.</p>
     <p>We do not sell data. We do not pass it on for marketing. The public pages set no
-      cookies. If you pay by card, Stripe sets two, to detect fraud.</p>
-    <p>We do count how many people visit the public pages, but without cookies and without anything
-      that follows you over time. How that works is explained under
-      <a href="/en/lagring">Cookies and storage</a>.</p>
+      cookies, and visitor statistics and ad measurement only happen if you say yes. If you
+      pay by card, Stripe sets two cookies to detect fraud.</p>
+    <p>Further down you will find why we are allowed to do this, who handles the data for us,
+      how long it is kept and what your rights are. If you are a student, there is a section
+      just for you.</p>
 
     <h2>What we store</h2>
 
-    <h3>About you as a parent or student with an account</h3>
+    <h3>About you, if you have an account</h3>
     <ul>
       <li>Name, email address and — if you fill it in — phone number</li>
       <li>A profile picture, if you upload one</li>
@@ -186,6 +187,8 @@
       <li>Name, age, email, school, subjects and when you can work</li>
       <li>What you write in the free-text field, and your CV if you attach one</li>
       <li>If you are accepted: your profile text, town, subjects and the hourly rate we agreed</li>
+      <li>Remove your personal identity number from the CV before you send it. We do not need it
+        to read an application.</li>
     </ul>
 
     <h3>About the sessions and the contact</h3>
@@ -194,6 +197,17 @@
       <li>If a session is cancelled: when it was cancelled and by whom</li>
       <li>Messages between family and tutor in the platform’s chat</li>
       <li>Payments and pay statements: which session was paid, amounts and when. We never have the card details</li>
+    </ul>
+
+    <h3>If you write to us or something breaks</h3>
+    <ul>
+      <li>If you use the contact form, we store your name, email address and what you wrote,
+        so that we can reply.</li>
+      <li>If something goes wrong on a page, we store the error, which page it was and what
+        kind of browser, and which account was logged in, if any. That is so we can fix the
+        error.</li>
+      <li>The notifications in the views and the emails we send are kept for a while, so that
+        we can see that they arrived.</li>
     </ul>
 
     <h3>About how you found us</h3>
@@ -214,6 +228,33 @@
       is not kept there but together with the rest of the student’s data, so that the family and
       the tutor can reach it.</p>
 
+    <h2>Why we are allowed to do this</h2>
+    <p>Everything we do with the data rests on one of the legal bases in the General Data
+      Protection Regulation (GDPR Article 6):</p>
+    <ul>
+      <li><b>Enquiries</b>: to answer your request before you become customers
+        (Article 6(1)(b)).</li>
+      <li><b>Account, bookings, sessions, messages, notifications and payments</b>: to perform
+        the contract with you (Article 6(1)(b)).</li>
+      <li><b>Data about the child, study plan, homework and reports</b>: legitimate interest
+        (Article 6(1)(f)). The child is not a party to the contract, but help for the child is
+        what you asked for, and it cannot be given without the data. The child’s interests
+        weigh the most in that balance, which is why we only collect what teaching needs.</li>
+      <li><b>Accounting records</b>: legal obligation (Article 6(1)(c)), the Swedish Accounting
+        Act.</li>
+      <li><b>Job applications</b>: legitimate interest (Article 6(1)(f)), being able to hire the
+        right tutors. If you are hired, the contract applies.</li>
+      <li><b>The contact form and error reports</b>: legitimate interest (Article 6(1)(f)),
+        being able to reply to whoever writes and to keep the website running.</li>
+      <li><b>The change log and protecting the data</b>: legitimate interest (Article 6(1)(f)),
+        being able to show who did what and to notice if something went wrong.</li>
+      <li><b>Visitor statistics and ad measurement</b>: your consent (Article 6(1)(a)), which you
+        can withdraw at any time.</li>
+    </ul>
+    <p>We do not ask for sensitive data, such as health or diagnoses, and ask you not to write
+      it in the text boxes. If something like that is there anyway, we remove it when we see
+      it.</p>
+
     <h2>Who can see what</h2>
     <p>Access is restricted in the database, row by row — not only in the interface. That means the
       restriction holds even for someone who tried to go around the site.</p>
@@ -232,65 +273,128 @@
       texts or anything written about a child. It cannot be altered or deleted afterwards, not by
       us either, and that is the whole point of it.</p>
 
-    <h2>Where the data lives</h2>
+    <h2>Who handles the data for us</h2>
+    <p>We use a few suppliers to run the service. They only get what their part needs, and may
+      only use it for us. We have a data processing agreement with each of them (GDPR
+      Article 28).</p>
     <ul>
-      <li><b>Supabase</b> — database, login and files. The servers are within the EU (Ireland).</li>
-      <li><b>Vercel</b> — host of the site itself, and the party counting visits on the public pages. The counting
-        happens without cookies: unique visitors are derived from a hash of IP and browser type
-        with a salt that changes daily, and the raw IP address is not stored. The student view
-        and the tutor view are not measured.</li>
-      <li><b>Stripe</b> — receives the card payments. You give your card details directly to Stripe,
-        never to us, and we do not store them. Stripe receives your email address, the amount and which
-        session the payment is for (subject and date), and we get back that the session has been paid.
-        How Stripe handles the data is set out in
-        <a href="https://stripe.com/en-se/privacy" target="_blank" rel="noopener noreferrer">Stripe’s privacy policy</a>.</li>
-      <li><b>Google</b> — online sessions are held in Google Meet. Each confirmed online session gets its own
-        room, and the link is on the session’s page. During the session, video and audio pass through Google,
-        and Google sees the name each person enters when joining. We do not record the sessions. How Google
-        handles the data is set out in
+      <li><b>Supabase</b>: database, login and files. The servers are within the EU (Ireland).</li>
+      <li><b>Vercel</b> (USA): hosts the website itself, and counts visits if you said yes to
+        visitor statistics. The counting happens without cookies: unique visitors are derived
+        from a hash of IP and browser type with a salt that changes every day, and the raw IP
+        address is not stored. The student view and the tutor view are not measured.</li>
+      <li><b>Resend</b> (USA): sends our emails, such as booking confirmations, reminders and
+        notifications. Resend gets the recipient’s address and the email’s content.</li>
+      <li><b>Anthropic</b> (USA): when a tutor chooses to, Anthropic’s AI rewrites the tutor’s
+        notes after a session into a report, and suggests short greetings. Anthropic gets the
+        notes and the student’s first name and school year. Personal identity numbers, phone
+        numbers and email addresses are masked before anything is sent, and Anthropic does not
+        train its models on it. We also use Anthropic to support our own work, for example to
+        see which enquiries are waiting for a reply. It then gets students’ initials, school
+        year and subject and masked free text, never names, email addresses or addresses.</li>
+      <li><b>Stripe</b>: receives card payments. You give your card details directly to Stripe,
+        never to us, and we do not store them. Stripe gets your email address, the amount and
+        which session the payment is for (subject and date), and we get back that the session
+        is paid. For fraud checks and what the law requires of a payment service, Stripe is
+        itself the controller, as described in
+        <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripe’s privacy policy</a>.</li>
+      <li><b>Google</b>: online sessions are held in Google Meet. Every confirmed online session
+        gets its own room, and the link is on the session’s page. During the session, video and
+        audio pass through Google, and Google sees the name each person enters when joining. We
+        do not record the sessions. How Google handles the data is described in
         <a href="https://policies.google.com/privacy?hl=en" target="_blank" rel="noopener noreferrer">Google’s privacy policy</a>.</li>
     </ul>
-    <p>Beyond those, nothing is fetched from anyone else. The fonts used to sit with Google and the
-      library the login needs used to sit with unpkg.com — both sent your IP address there on
-      every page view. Both now sit with us.</p>
+    <p>Beyond them, nothing is fetched from anyone else. The fonts and the library the login
+      needs are hosted by us.</p>
+
+    <h2>Data that leaves the EU</h2>
+    <p>Vercel, Resend and Anthropic are American companies, and Stripe and Google may process
+      data in the USA. The transfers are protected by the European Commission’s standard
+      contractual clauses and, for suppliers that are certified, also by the EU’s decision on
+      the EU-US Data Privacy Framework. If you would like a copy of the safeguards, write to
+      <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</p>
 
     <h2>How long we keep things</h2>
     <ul>
-      <li><b>Account and study history</b> — for as long as you are customers, and after that until you ask us to delete them.</li>
-      <li><b>Accounting records</b> — payments and pay statements, seven years. That is required by Swedish accounting law and is not something we can
-        shorten, not even on request.</li>
-      <li><b>Applications that do not lead to work</b> — at most one year, so that we can get in touch if something comes up. If you want it
-        deleted sooner, write to us.</li>
-      <li><b>Enquiries</b> — until we have replied and the matter is closed. The note of where the
-        visit came from goes with the enquiry; it exists nowhere else.</li>
-      <li><b>The change log</b> — for as long as the business exists. It is our own receipt of who
-        did what, and a log that can be cleared is no log.</li>
-      <li><b>Agreements and certificates</b> — for as long as they apply, and after that for as long
-        as the law requires.</li>
+      <li><b>Enquiries</b>: six months after the last contact, the name, email, the child’s name
+        and what you wrote are removed. Only the date, school year, subject and where the visit
+        came from remain, which do not identify anyone. This happens automatically every
+        night.</li>
+      <li><b>Applications and CVs</b>: deleted a year after they arrived, or thirty days after
+        the last step in the recruitment if that is later. This happens automatically every
+        night. If you become a tutor, we keep what the employment needs.</li>
+      <li><b>Account and study history</b>: as long as you use the service. If an account has not
+        been used for two years, we get in touch and delete what does not need to remain. You
+        can ask us to delete it earlier at any time.</li>
+      <li><b>Contact messages</b>: deleted six months after they arrived or were answered.
+        This happens automatically every night.</li>
+      <li><b>Error reports</b>: deleted after 90 days, automatically.</li>
+      <li><b>Notifications and sent emails</b>: the notifications in the views are deleted after
+        180 days, and the records of each sent email after 90 days.</li>
+      <li><b>Accounting records</b>: payments and payout records, seven years. That is required
+        by the Swedish Accounting Act and not something we can shorten, not even on request.</li>
+      <li><b>The change log</b>: as long as the business exists. It carries states and times,
+        never names or text, and it is our receipt of who did what.</li>
+      <li><b>Agreements and certificates</b>: as long as they apply, and after that as long as
+        the law requires.</li>
     </ul>
 
     <h2>Children’s data</h2>
-    <p>The service is about children, and their data is therefore the most sensitive thing we handle.</p>
+    <p>The service is about children, so their data is the most sensitive thing we handle.</p>
     <ul>
-      <li>Children do not have their own accounts. It is the parent who registers, accepts the terms
-        and enters the details about the child.</li>
-      <li>We collect only what the teaching requires — year group, school, subjects and goals. No
-        personal identity numbers, no diagnoses, no grades.</li>
-      <li>As a parent you can see, change and delete what is recorded about your child at any time.</li>
+      <li>Children have no accounts of their own. The parent registers, accepts the terms and
+        enters the details about the child.</li>
+      <li>We only collect what teaching needs: school year, school, subjects and goals. We never
+        ask for personal identity numbers, diagnoses or grades, and ask you not to write such
+        things in the text boxes.</li>
+      <li>As a parent you can see, change and delete what is stored about your child at any
+        time.</li>
+    </ul>
+
+    <h2>For you as a student</h2>
+    <p>The same as above, but shorter.</p>
+    <ul>
+      <li>Your parent has asked us for help for you. To be able to help you, we store your name,
+        your school year, your subjects, your homework and what you and your tutor did in the
+        sessions.</li>
+      <li>Only your parent, your tutor and we at Nextrum can see it.</li>
+      <li>We never sell it and never show it to anyone else.</li>
+      <li>Do you want to know what is stored about you, or want something removed? Tell your
+        parent, or email us at <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</li>
     </ul>
 
     <h2>Your rights</h2>
     <p>You have the right to know what we have stored about you, to have it corrected if it is
-      wrong, to have it erased, to restrict how we use it, to object to the processing, and to
-      receive your data in a format you can take with you. Write to <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</p>
+      wrong, to have it erased, to restrict how we use it, to object to what we do on the basis
+      of legitimate interest, and to receive what you yourself provided in a format you can
+      take with you. If you said yes to visitor statistics or ad measurement, you withdraw it at
+      any time under <a href="/en/lagring#ditt-val">Cookies and storage</a>, as easily as you gave
+      it. For everything else, write to <a href="mailto:info@nextrum.se">info@nextrum.se</a>, and
+      we reply within one month.</p>
     <p>If you think we are handling your data wrongly, you have the right to complain to the
       <a href="https://www.imy.se" target="_blank" rel="noopener noreferrer">Swedish Authority for Privacy Protection (IMY)</a>.
-      Do get in touch with us first — it is usually quicker to sort out.</p>
+      Do get in touch with us first, it is usually quicker to sort out.</p>
+
+    <h2>Do you have to provide the data?</h2>
+    <p>No, but without it we cannot help you. An enquiry needs a name and an email address so
+      that we can reply, and sessions cannot be booked without an account. Anything marked as
+      optional can be left empty.</p>
+
+    <h2>AI and automated decisions</h2>
+    <p>We make no automated decisions about you or your child. AI is used to rewrite a
+      tutor’s own notes after a session, when the tutor chooses to, to suggest a short
+      greeting, and to support us when we plan our work. The AI suggests, and a person
+      decides. It cannot change anything on its own.</p>
+
+    <h2>If something goes wrong</h2>
+    <p>If data were to end up in the wrong hands, we report it to the Swedish Authority for
+      Privacy Protection within 72 hours, and tell those of you affected if it poses a risk to
+      you.</p>
 
     <h2>Cookies and browser storage</h2>
-    <p>The public pages set no cookies — not even for the visit counting. The only ones set are
-      Stripe’s, when you pay by card. What is actually stored, what is
-      measured and why, is on its own page: <a href="/en/lagring">Cookies and storage</a>.</p>
+    <p>The public pages set no cookies. Visitor statistics and ad measurement only happen if you
+      say yes, and Stripe sets two cookies when you pay by card. Everything stored, and why, is
+      on its own page: <a href="/en/lagring">Cookies and storage</a>.</p>
 
     <h2>Changes</h2>
     <p>If we change anything material we update the date below, and contact those of you with an
@@ -422,29 +526,11 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<!-- Vercel Web Analytics.
-
-     Sätter INGA cookies: unika besökare räknas via en hash av
-     IP and webbläsare med ett salt som byts dagligen, and den råa
-     IP-adressen sparas inte. Därför krävs inget samtycke — men det
-     står ändå i integritetspolicyn and på lagring.html, eftersom
-     "vi mäter ingenting" inte längre är sant.
-
-     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
-     finns inget att optimera för besökarens skull, and det vore ett
-     onödigt anrop från en sida där någon sköter sitt barns skolgång.
-
-     Sökvägen är absolut and serveras av Vercel. Lokalt ger den 404,
-     vilket är ofarligt — inget mäts när man utvecklar. -->
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Speed Insights: Core Web Wetals från riktiga besökare i stället
-     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="../nextrum-config.js?v=ab7b84a1"></script>
+<script src="../nextrum-config.js?v=21cecc53"></script>
 <script src="../nextrum-images.js?v=50260f9d"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=a72665a2"></script>
-<script src="../nextrum-samtycke.js?v=c15d8f5b"></script>
+<script src="../nextrum-app.js?v=936814f4"></script>
+<script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

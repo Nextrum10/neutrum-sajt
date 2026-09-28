@@ -243,7 +243,7 @@
       { antal: l.klientfel_24h != null ? l.klientfel_24h : 0, rubrik: 'fel hos användarna', ental: 'fel hos en användare',
         under: 'Rapporterade från webbläsarna det senaste dygnet.', till: '#system/fel' },
       { antal: (S.notisfel || []).length, rubrik: 'notiser som inte gick fram', ental: 'notis som inte gick fram',
-        under: 'Mejl som skulle ha skickats det senaste dygnet.', till: '#system/fel' },
+        under: 'Mejl som skulle ha skickats de senaste sex timmarna.', till: '#system/fel' },
       { antal: öppna.length - (l.forsenade_uppgifter != null ? l.forsenade_uppgifter : sena.length),
         rubrik: 'öppna uppgifter', ental: 'öppen uppgift',
         under: 'Inte klara, men inte heller sena.', till: '#uppgifter' }
