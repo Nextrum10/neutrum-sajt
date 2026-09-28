@@ -1458,6 +1458,14 @@ en fråga som byter betydelse får ett nytt id:
 `utbildningsprov_forsok.svar` lagrar id:n. Sidan finns bara på
 svenska, med flit: handboken gör det också.
 
+**Formen får inte avslöja svaret** (2026-09-28). Första versionen hade
+det längsta alternativet rätt i 25 av 30 frågor, så provet gick att
+klara utan att ha läst något. De fel alternativen är nu lika utförliga
+som det rätta, och Nextrum och rutinerna står också i fel svar.
+`utbildningsprov_test.ts` räknar vad "alltid längsta", "alltid
+kortaste" och "det som nämner Nextrum" ger, och taket ligger kring
+slumpen (8 av 30). Skriver du om en fråga, kör proven.
+
 Utfallet syns i rekryteringsrutan vid det steg som skickade mejlet, och
 ett som inte gick fram är rött. Samma sort som kvittot till familjen:
 inget går att välja bort, avsändaren är info@, och ingenting ur

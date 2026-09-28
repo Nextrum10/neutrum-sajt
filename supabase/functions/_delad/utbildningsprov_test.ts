@@ -50,10 +50,33 @@ Deno.test('rätt svar är utspritt, så att "välj alltid b" inte räcker', () =
   const per = new Map<string, number>();
   for (const f of FRAGOR) per.set(f.ratt, (per.get(f.ratt) ?? 0) + 1);
   for (const [bokstav, n] of per) assert(n <= 10, `${bokstav} är rätt ${n} gånger`);
-  // Och det längsta alternativet är inte alltid det rätta.
-  const langstRatt = FRAGOR.filter((f) =>
-    f.alternativ.reduce((a, b) => (b.text.length > a.text.length ? b : a)).id === f.ratt).length;
-  assert(langstRatt < FRAGOR.length, 'det längsta svaret är alltid rätt');
+});
+
+// Förut prövade det här provet bara att det längsta svaret inte var rätt
+// i ALLA frågor. Det var rätt i 25 av 30, och den som alltid valde det
+// längsta klarade provet utan att ha läst handboken. Gränsen är satt
+// kring slumpen: med fyra alternativ träffar en regel rätt i sju eller
+// åtta frågor av trettio utan att säga något om svaret.
+const TAK_FOR_EN_TUMREGEL = 8;
+
+function valjAlltid(valj: (alt: { id: string; text: string }[]) => string): number {
+  return ratta(Object.fromEntries(FRAGOR.map((f) => [f.id, valj(f.alternativ)]))).ratt;
+}
+
+Deno.test('provet går inte att klara på svarens längd', () => {
+  const langst = valjAlltid((alt) => alt.reduce((a, b) => (b.text.length > a.text.length ? b : a)).id);
+  const kortast = valjAlltid((alt) => alt.reduce((a, b) => (b.text.length < a.text.length ? b : a)).id);
+  assert(langst <= TAK_FOR_EN_TUMREGEL, `alltid det längsta svaret ger ${langst} rätt`);
+  assert(kortast <= TAK_FOR_EN_TUMREGEL, `alltid det kortaste svaret ger ${kortast} rätt`);
+});
+
+Deno.test('Nextrum och rutinerna pekar inte ut det rätta svaret', () => {
+  // I de svåra situationerna är rätt svar ofta att gå till Nextrum. Står
+  // Nextrum bara i det rätta alternativet är frågan redan besvarad.
+  for (const f of FRAGOR) {
+    const med = f.alternativ.filter((a) => /Nextrum/.test(a.text));
+    assert(!(med.length === 1 && med[0].id === f.ratt), `${f.id}: bara rätt svar nämner Nextrum`);
+  }
 });
 
 Deno.test('80 procent är 24 av 30', () => {
