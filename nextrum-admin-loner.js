@@ -94,12 +94,29 @@
   }
 
   /* ------------------------------------------------------------
-     MÅNADEN
-     Förvald är förra månaden: det är den som körs och betalas ut den
-     25:e, och den innevarande pågår.
+     MÅNADEN ÄR UTBETALNINGSMÅNADEN (2026-09-28)
+     Leo: "september jobb betalas i oktober, därför ska 240kronorna
+     visas i oktober". Raden väljer månaden lönen betalas ut, den 25:e,
+     och sidan visar passen månaden före: oktober är lönen för
+     septembers pass. Så heter en lönekörning i Fortnox Lön också, efter
+     utbetalningen. Första versionen valde passens månad, och septembers
+     lön stod under september fast den betalas i oktober.
+
+     Bara raden byter. Underlaget (payouts.period), körningen, Ekonomi,
+     Månadens ekonomi och studiehjälparens lönespecifikation räknar
+     fortfarande på passens månad, och allt under raden räknas på den
+     (passmånad).
+
+     Förvald är nästa lönedag: till och med den 25:e den här månadens
+     utbetalning, efter den nästa månads.
      ------------------------------------------------------------ */
   let MV = null;
   let önskad = null;
+
+  function passmånad(utbetalning) {
+    const [år, mån] = String(utbetalning).split('-').map(Number);
+    return NXStudie.månadIso(new Date(år, mån - 2, 1, 12));
+  }
 
   function starta() {
     if (MV) return;
@@ -109,19 +126,26 @@
     MV = NXStudie.månadsval(host, {
       antal: 12,
       framåt: 1,
-      vald: önskad || NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - 1, 1, 12)),
-      märke: m => S.stangdaManader && S.stangdaManader.has(m) ? 'Stängd' : '',
+      vald: önskad || NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() + (nu.getDate() > 25 ? 1 : 0), 1, 12)),
+      /* Utbetald när varje underlag för passen är det. Stängd (Fas 20.2)
+         gäller passens månad och står under Ekonomi; här hade den stått
+         en månad senare och sett ut att gälla utbetalningen. */
+      märke: m => {
+        const p = passmånad(m);
+        const u = (S.utbetalningar || []).filter(x => String(x.period).slice(0, 10) === p);
+        return u.length && u.every(x => x.status === 'utbetald') ? 'Utbetald' : '';
+      },
       vidVal: () => ritaLöner()
     });
   }
 
   const valdMånad = () => { starta(); return MV ? MV.vald() : NXStudie.månadIso(new Date()); };
-  const månadText = m => NXStudie.månadsNamn(m || valdMånad());
+  const namn = (m, medÅr) => NXStudie.månadsNamn(m, medÅr);
 
-  /* Månadens ekonomi länkar hit med sin månad vald. */
-  function visaLönemånad(m) {
-    önskad = m;
-    if (MV) { MV.sätt(m); ritaLöner(); }
+  /* Månadens ekonomi länkar hit med utbetalningsmånaden för sina pass. */
+  function visaLönemånad(utbetalning) {
+    önskad = utbetalning;
+    if (MV) { MV.sätt(utbetalning); ritaLöner(); }
   }
 
   /* ------------------------------------------------------------
@@ -265,7 +289,8 @@
     const utanTimpenning = rader.reduce((n, r) => n + r.beräknat.utanTimpenning, 0);
 
     host.innerHTML = '<div class="adm-tal-rad">'
-      + kpi(kronor(öre), 'Att betala ut', (beräknat ? 'beräknat · ' : '') + 'den 25 ' + NXStudie.månadsNamn(g.till, false))
+      + kpi(kronor(öre), 'Att betala ut', (beräknat ? 'beräknat · ' : '') + 'den 25 ' + namn(g.till, false)
+        + ', pass i ' + namn(månad, false))
       /* En körd månad har inga beräknade pass: det som inte står på
          underlaget tas av nästa körning (NXAdmin.lönemånad). */
       + kpi(tim(min), 'Lönetid', underlag.length ? 'ur underlagen'
@@ -285,7 +310,7 @@
       + '</div>';
   }
 
-  function ritaPersoner(rader) {
+  function ritaPersoner(rader, månad) {
     const host = $('#lon-personer');
     if (!host) return;
     host.innerHTML = (L.anstFel ? '<p class="eko-andra">Anställningsnumren gick inte att läsa: '
@@ -309,7 +334,7 @@
         return '<button type="button" class="btn btn-ghost btn-sm" data-lon-timpenning="' + esc(r.id) + '">'
           + esc(tp.hourly_rate != null ? NX.kr(tp.hourly_rate) : 'Ej satt') + '</button>';
       } },
-      { namn: 'Pass', rita: r => '<span class="adm-tal">' + r.passIMånaden + '</span>'
+      { namn: 'Pass i ' + namn(månad, false), rita: r => '<span class="adm-tal">' + r.passIMånaden + '</span>'
         + (r.utanRapport.pass ? '<span class="adm-und">' + r.utanRapport.pass + ' utan rapport</span>' : '')
         + (r.senare.pass ? '<span class="adm-und">' + r.senare.pass + ' på nästa underlag</span>' : '')
         + (r.tidigare ? '<span class="adm-und">+ ' + r.tidigare + ' från tidigare månader</span>' : '') },
@@ -330,7 +355,7 @@
             ? ' <button class="btn btn-ghost btn-sm" type="button" data-skicka="utbetalning" data-id="'
               + esc(r.underlag.id) + '">Skicka underlag</button>' : '')
         : '<span class="adm-und">inte skapat</span>' }
-    ], rader, 'Inga godkända studiehjälpare, och ingen med pass i ' + månadText());
+    ], rader, 'Inga godkända studiehjälpare, och ingen med pass i ' + namn(månad));
   }
 
   /* ------------------------------------------------------------
@@ -338,8 +363,8 @@
      ------------------------------------------------------------ */
   const FORM = { anstallda: 'anställda', uppdragstagare: 'uppdragstagare', oklart: 'oklart' };
 
-  /* Vad som hindrar filen, och vad som bara ska sägas. */
-  function lönefilensLäge(rader) {
+  /* Vad som hindrar filen, och vad som bara ska sägas. månad är passens. */
+  function lönefilensLäge(rader, månad) {
     const b = L.bolag;
     const underlag = rader.filter(r => r.underlag).map(r => r.underlag);
     const godkända = underlag.filter(u => u.status === 'godkand');
@@ -352,8 +377,8 @@
     }
     if (!godkända.length) {
       hinder.push(underlag.length
-        ? 'Inget av månadens underlag är godkänt. Godkänn dem i listan ovanför när du granskat dem.'
-        : 'Månadens underlag är inte skapade. Kör månadskörningen först.');
+        ? 'Inget av underlagen för pass i ' + namn(månad) + ' är godkänt. Godkänn dem i listan ovanför när du granskat dem.'
+        : 'Underlagen för pass i ' + namn(månad) + ' är inte skapade. Kör månadskörningen först.');
     }
     if (utanNummer.length) {
       hinder.push('Anställningsnummer saknas för ' + utanNummer.map(u => namnFör(u.tutor_id)).join(', ') + '.');
@@ -378,7 +403,7 @@
     if (läsfel) { host.innerHTML = tomt('Lönefilen går inte att bygga', läsfel); return; }
     if (!L.klar) { NXStudie.laddarFörsta(host); return; }
     const b = L.bolag;
-    const l = lönefilensLäge(rader);
+    const l = lönefilensLäge(rader, månad);
     const summa = l.godkända.reduce((n, u) => n + Number(u.belopp_ore || 0), 0);
     const bock = (ok, text, knapp) => '<li class="' + (ok ? 'ar-ok' : 'ar-saknas') + '"><span>' + text + '</span>'
       + (knapp || '') + '</li>';
@@ -388,7 +413,7 @@
           '<button type="button" class="btn btn-ghost btn-sm" data-lon-lonart>' + (b.lonart_timlon ? 'Ändra' : 'Sätt') + '</button>')
       + bock(l.godkända.length > 0, l.godkända.length
           ? l.godkända.length + (l.godkända.length === 1 ? ' godkänt underlag, ' : ' godkända underlag, ') + esc(kronor(summa))
-          : 'Inga godkända underlag för ' + esc(månadText(månad)))
+          : 'Inga godkända underlag för pass i ' + esc(namn(månad)))
       + bock(!l.godkända.some(u => !L.anst.has(u.tutor_id)), l.godkända.some(u => !L.anst.has(u.tutor_id))
           ? 'Anställningsnummer saknas för någon med godkänt underlag' : 'Alla med godkänt underlag har anställningsnummer')
       + bock(b.studiehjalpare_form === 'anstallda', 'Studiehjälparnas form i bolagsfakta: <b>'
@@ -475,9 +500,10 @@
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-lon-fil]');
     if (!knapp || knapp.disabled) return;
-    const månad = valdMånad();
+    const utbetalning = valdMånad();
+    const månad = passmånad(utbetalning);
     const msg = $('#lon-fil-msg');
-    const l = lönefilensLäge(personerna(månadensLöner(månad)));
+    const l = lönefilensLäge(personerna(månadensLöner(månad)), månad);
     if (l.hinder.length) { säg(msg, l.hinder.join(' '), false); return; }
 
     let rader;
@@ -512,8 +538,9 @@
         + '  ·  ' + kronor(u.belopp_ore);
     });
     const ja = await bekräfta({
-      titel: 'Ladda ned lönefilen för ' + månadText(månad) + '?',
-      text: 'I Fortnox: Lön → Kalender → Importera löneunderlag, och välj filen. Läs in den en gång: '
+      titel: 'Ladda ned lönefilen för den 25 ' + namn(utbetalning) + '?',
+      text: 'Passen i ' + namn(månad) + '. I Fortnox: Lön → Kalender → Importera löneunderlag, för utbetalningen '
+        + 'den 25 ' + namn(utbetalning, false) + ', och välj filen. Läs in den en gång: '
         + 'finns timmarna redan i Fortnox läggs de till en gång till. Markera underlagen Utbetald här '
         + 'när lönen är betald, så kommer de inte med i nästa fil.'
         + (l.varningar.length ? '\n\n' + l.varningar.join('\n') : '')
@@ -530,7 +557,8 @@
     const url = URL.createObjectURL(new Blob([xml], { type: 'application/xml;charset=utf-8' }));
     const länk = document.createElement('a');
     länk.href = url;
-    länk.download = 'nextrum-lonefil-' + månad.slice(0, 7) + '.xml';
+    /* Filen heter efter utbetalningen, som lönekörningen i Fortnox. */
+    länk.download = 'nextrum-lonefil-' + utbetalning.slice(0, 7) + '.xml';
     document.body.appendChild(länk);
     länk.click();
     länk.remove();
@@ -644,18 +672,21 @@
     starta();
     laddaEnGång();
     if (MV) MV.märk();
-    const månad = valdMånad();
+    const utbetalning = valdMånad();
+    const månad = passmånad(utbetalning);
     const rader = personerna(månadensLöner(månad));
     ritaTal(rader, månad);
-    ritaPersoner(rader);
+    ritaPersoner(rader, månad);
     ritaLönefil(rader, månad);
     const filMånad = $('#lon-fil-manad');
-    if (filMånad) filMånad.textContent = månadText(månad);
+    if (filMånad) filMånad.textContent = 'den 25 ' + namn(utbetalning);
+    /* Körningen gäller passens månad: oktobers lön är körningen för
+       september. */
     const körning = $('#lon-korning');
     if (körning && NXAdmin.rita.sättKörningsperiod) {
       NXAdmin.rita.sättKörningsperiod(körning, månad);
-      const namn = körning.querySelector('[data-kor-namn]');
-      if (namn) namn.textContent = månadText(månad);
+      const rubrik = körning.querySelector('[data-kor-namn]');
+      if (rubrik) rubrik.textContent = 'pass i ' + namn(månad);
     }
   }
 
