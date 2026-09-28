@@ -417,7 +417,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 |---|---|
 | `nextrum-config.js` | **Enda filen som ska ändras vid uppsättning.** URL, anon-nyckel, pris, e-post, utbildningslänk |
 | `nextrum-app.js` | `NX` — delad grund: supa-klient, i18n, datum, fel, header, inloggning |
-| `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen |
+| `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen. Vem felet gällde sätter databasen (`intern.klientfel_vem`, 2026-09-28) ur `auth.uid()` och skriver över det klienten skickar: kolumnen fylldes aldrig förut, och varje fel stod som Utloggad. DATASKYDD.md rad 12 och integritetspolicyn räknar med konto-id, 90 dagar |
 | `nextrum-modulvakt.js` | Fångar "en modul laddade inte" innan vyn dör tyst på "Laddar din vy". Laddas i **alla tre** vyerna sedan Fas 14.0 — adminvyn saknade den, fast den har 26 skript mot de andras 17. Prövar en FUNKTION per fil, inte bara att globalen finns: en gammal fil i cachen definierar sin global och ser frisk ut. Modulerna nås som IDENTIFIERARE, aldrig som `window[...]` — hälften deklareras `const NX… = …` på toppnivå och hamnar då inte på window |
 | `nextrum-samtycke.js` | `NXSamtycke`: samtyckesrutan och det enda stället som svarar på "får vi?". Bara på de öppna sidorna, efter `nextrum-app.js`. Se avsnitt 6, Samtycket |
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
@@ -704,6 +704,9 @@ Fas 20.1 la till `pass_tillagg` (övertiden på ett förbetalt pass:
 parterna och admin läser, bara `service_role` skriver) och Fas 20.2
 `manadsbokslut` (stängda månader: admin läser, bara `stang_manad` och
 `oppna_manad` skriver).
+Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
+id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
+ingen roll utom ägaren når den). Se Notiserna nedan.
 
 **Flera sessioner kör mot samma databas samtidigt.** Fas 19.5 och Fas
 20.1 skrevs samma förmiddag i två sessioner och ändrade båda
@@ -984,6 +987,31 @@ pass.** Den köas av `intern.timmar_gar_ut_koa()`, som pg_cron-jobbet
 svensk tid. En gång per kort och sista dag; ett förlängt kort får en ny.
 Mallen läser `kvar` (heltal, 1–200) och `datum` ur `RenData`, och bara
 familjen har raden i `NOTISVAL` (`bara: 'parent'`).
+
+**Notiser som inte gick fram (System → Fel) är bara databasens egna
+utskick** (2026-09-27). `notisfel()` läste förut hela
+`net._http_response`, och dit kommer varje anrop genom pg_net, också
+när en session provar en funktion efter en driftsättning. Utan
+hemligheten svarar funktionen 401, med GET 405, och svaret stod sedan i
+sex timmar som en notis som inte gick fram: adminvyn sa 8 fel, där tre
+var samma fel i koden och fem var prov. Tabellen har ingen adress, och
+ett prov och ett utskick med fel hemlighet ger samma 401, så skillnaden
+syns bara när anropet görs.
+
+- **Ring aldrig `net.http_post` direkt.** Databasens anrop går genom
+  `intern.natanrop(mal, url := …)`, med samma parametrar som
+  `net.http_post` och målet först. Den minns anropets id i
+  `intern.natanrop_logg`, och `notisfel()` visar bara svar på de
+  anropen och på webhooken för intresseanmälan (som minns sina i
+  `supabase_functions.hooks`), med vägen i `kalla`. Ett anrop förbi
+  `intern.natanrop` syns inte när det går fel; `rls-test.sql` har en
+  rad som fångar det.
+- **`grindfel` skiljer två 401:or.** Supabases grind svarar med
+  `sb-error-code` (`UNAUTHORIZED_…`) när JWT-kravet slagits på igen
+  (avsnitt 7, `config.toml`); funktionen själv svarar 401 när
+  hemligheten inte stämmer. Adminvyn säger vilket.
+- **Svaren finns i sex timmar** (`pg_net.ttl`), inte ett dygn. Listan
+  svarar på "gick det fram nyss?", inte på "vad hände i natt?".
 
 `DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
 sandlådan slås på innan något provas, och de fem stegen för att lägga
@@ -1670,6 +1698,13 @@ Körs på varje push och PR. Ska vara grön före merge.
 
 Kör dem lokalt innan du pushar. De är snabba och de fångar exakt det
 som annars upptäcks i drift.
+
+**`node --check` prövar bara syntaxen.** Ett namn som inte finns där
+det används ger ReferenceError först när raden körs. I adminvyn är det
+vanligaste fallet ett namn ur kärnan som aldrig hämtats in ur `NXAdmin`:
+auditloggen kraschade från 2026-09-22 till 09-27 på `AVBOKNINGSSKAL`
+så fort en avbokning med skäl stod bland raderna, och det syntes bara
+som klientfel under System → Fel.
 
 **`.github/workflows/indexnow.yml` är ingen kontroll** (2026-09-26). Den
 körs när Vercel rapporterat en lyckad produktionsdriftsättning och

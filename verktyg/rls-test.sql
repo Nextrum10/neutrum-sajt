@@ -33,7 +33,8 @@
 -- 19.6: OCR), Fas 20.1 (den hållna tiden), Fas 20.2 (bokslutet),
 -- Fas 21.1–21.2, admin_laser_ansokans_cv (admin läser CV:t), Fas 22.1
 -- (timbanken), timbanken_foljer_passet, Fas 22.2 (timmarna betalar
--- passen) och ansokningar_gallras_efter_ett_ar (gallringen) är körda.
+-- passen), ansokningar_gallras_efter_ett_ar (gallringen),
+-- notisfelen_bara_egna_utskick och klientfelen_minns_vem är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -4859,10 +4860,16 @@ from storage.buckets b where b.id = 'cv';
 -- villkoret invoices_ocr_giltigt, och ett felskrivet ska nekas av
 -- VILLKORET (23514), inte med permission denied: villkoret körs som
 -- anroparen, och intern.ocr_giltigt måste vara nåbar för admin.
+--
+-- Svaren samlas i variabler och skrivs efter återrullningen, som i
+-- blocken ovan. Blocket skrev dem först inne i deltransaktionen, som
+-- inloggad: utfall ägs av postgres, så första raden nekades, och det
+-- enda som stod kvar var "19.6 OCR: permission denied for table
+-- utfall". Hade skrivningen gått igenom hade återrullningen tagit den.
 -- ------------------------------------------------------------
 do $$
 declare
-  fel text; kod text; n int; o text;
+  fel text; kod text; n_admin int; n_familj int; o text;
 begin
   begin
     insert into public.invoices (id, parent_id, period, status, belopp_ore)
@@ -4871,22 +4878,18 @@ begin
     perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
     update public.invoices set status = 'skickad', fortnox_fakturanummer = '1001', ocr = '49927398716'
      where id = '00000000-0000-4000-8000-0000000019f6';
-    get diagnostics n = row_count;
-    insert into utfall (test, ok, detalj) values ('19.6 admin sparar ett giltigt OCR', n = 1, 'rader ' || n);
+    get diagnostics n_admin = row_count;
 
     begin
       update public.invoices set ocr = '49927398717' where id = '00000000-0000-4000-8000-0000000019f6';
       kod := 'gick igenom';
     exception when others then kod := sqlstate;
     end;
-    insert into utfall (test, ok, detalj) values ('19.6 ett felskrivet OCR nekas av villkoret', kod = '23514', kod);
 
     perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
     select ocr into o from public.invoices where id = '00000000-0000-4000-8000-0000000019f6';
-    insert into utfall (test, ok, detalj) values ('19.6 familjen läser OCR på sin faktura', o = '49927398716', coalesce(o, 'null'));
     update public.invoices set ocr = '18' where id = '00000000-0000-4000-8000-0000000019f6';
-    get diagnostics n = row_count;
-    insert into utfall (test, ok, detalj) values ('19.6 familjen skriver inte OCR', n = 0, 'rader ' || n);
+    get diagnostics n_familj = row_count;
 
     raise exception 'rulla tillbaka';
   exception when others then fel := sqlerrm;
@@ -4895,6 +4898,133 @@ begin
   perform set_config('request.jwt.claims', '', true);
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('19.6 OCR', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('19.6 admin sparar ett giltigt OCR', n_admin = 1, 'rader ' || n_admin),
+      ('19.6 ett felskrivet OCR nekas av villkoret', kod = '23514', kod),
+      ('19.6 familjen läser OCR på sin faktura', o = '49927398716', coalesce(o, 'null')),
+      ('19.6 familjen skriver inte OCR', n_familj = 0, 'rader ' || n_familj);
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- Notisfelen är bara databasens egna utskick (2026-09-27)
+--
+-- notisfel() läste förut hela net._http_response, och fem prov som
+-- sessioner gjort efter en driftsättning stod en eftermiddag som
+-- notiser som inte gick fram. Nu räknas bara svar på anrop som gått
+-- genom intern.natanrop eller webhooken för intresseanmälan. Svaren
+-- läggs in för hand med negativa id, som inget riktigt anrop får.
+-- Anropet genom natanrop köas i pg_net, men rullas tillbaka innan
+-- pg_net ser det.
+-- ------------------------------------------------------------
+do $$
+declare
+  rader jsonb; n_familj bigint; b bigint; minns bigint; fel text;
+begin
+  begin
+    insert into net._http_response (id, status_code, timed_out, created, headers) values
+      (-9001, 401, false, now(), '{}'::jsonb),
+      (-9002, 405, false, now(), '{}'::jsonb),
+      (-9003, 200, false, now(), '{}'::jsonb),
+      (-9004, 500, false, now(), '{}'::jsonb),
+      (-9005, 401, false, now(), '{"sb-error-code": "UNAUTHORIZED_NO_AUTH_HEADER"}'::jsonb);
+    -- -9002 är provet: ett svar ingen av vägarna minns
+    insert into intern.natanrop_logg (id, mal) values
+      (-9001, 'notis-ko'), (-9003, 'notis-ko'), (-9005, 'ansokan-gallring');
+    insert into supabase_functions.hooks (hook_table_id, hook_name, request_id)
+    values (0, 'ny-intresseanmalan', -9004);
+
+    b := intern.natanrop('rls-prov', url := 'https://example.invalid/nextrum-rls-test');
+    select count(*) into minns from intern.natanrop_logg where id = b and mal = 'rls-prov';
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    select coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'kalla', x.kalla, 'grindfel', x.grindfel)
+                              order by x.id), '[]')
+      into rader from public.notisfel(24) x where x.id < 0;
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    select count(*) into n_familj from public.notisfel(24);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('notisfel', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('notisfel: admin ser de egna felen och vägen, inte provet eller det som gick fram',
+       rader = '[{"id": -9005, "kalla": "ansokan-gallring", "grindfel": "UNAUTHORIZED_NO_AUTH_HEADER"},
+                 {"id": -9004, "kalla": "lead-notis", "grindfel": null},
+                 {"id": -9001, "kalla": "notis-ko", "grindfel": null}]'::jsonb,
+       rader::text),
+      ('notisfel: en familj får noll rader', n_familj = 0, 'rader: ' || n_familj),
+      ('natanrop minns sitt anrop', minns = 1, 'rader: ' || minns);
+  end if;
+end $$;
+
+insert into utfall (test, ok, detalj)
+select 'natanrop och dess logg går inte att nå utifrån',
+       coalesce(not has_function_privilege('anon', to_regprocedure('intern.natanrop(text,text,jsonb,jsonb,integer)'), 'execute')
+            and not has_function_privilege('authenticated', to_regprocedure('intern.natanrop(text,text,jsonb,jsonb,integer)'), 'execute')
+            and not has_table_privilege('anon', to_regclass('intern.natanrop_logg'), 'select')
+            and not has_table_privilege('authenticated', to_regclass('intern.natanrop_logg'), 'select'), false),
+       case when to_regprocedure('intern.natanrop(text,text,jsonb,jsonb,integer)') is null
+            then 'funktionen finns inte' else 'anon/authenticated' end;
+
+-- Nästa funktion som ringer pg_net direkt syns inte i notisfel() när
+-- anropet går fel. Den här raden fångar den.
+insert into utfall (test, ok, detalj)
+select 'ingen funktion ringer net.http_* förbi intern.natanrop', count(*) = 0,
+       coalesce(string_agg(p.oid::regprocedure::text, ', '), 'inga')
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname in ('public', 'intern')
+   and p.prosrc ~ 'net\.http_(post|get|delete)\s*\('
+   and p.oid is distinct from to_regprocedure('intern.natanrop(text,text,jsonb,jsonb,integer)');
+
+-- ------------------------------------------------------------
+-- Klientfelen minns vem det gällde (2026-09-28)
+--
+-- Databasen sätter klientfel.anvandare ur auth.uid() och skriver över
+-- det klienten skickar: insert-policyn släpper in vem som helst, och
+-- ett fel i någon annans namn hade fått Skriv till de drabbade att
+-- mejla fel person. P försöker lägga sitt fel på Q.
+-- ------------------------------------------------------------
+do $$
+declare
+  inloggad uuid; utloggad uuid; utan_profil uuid; n_utan int; fel text;
+begin
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    insert into public.klientfel (meddelande, sida, anvandare)
+    values ('rls-vem-inloggad', '/foralder', '00000000-0000-4000-8000-0000000000f2');
+    perform pg_temp.bli(null);
+    insert into public.klientfel (meddelande, sida, anvandare)
+    values ('rls-vem-utloggad', '/', '00000000-0000-4000-8000-0000000000f2');
+    perform set_config('request.jwt.claims',
+      '{"sub":"00000000-0000-4000-8000-00000000dead","role":"authenticated"}', true);
+    execute 'set local role authenticated';
+    insert into public.klientfel (meddelande, sida) values ('rls-vem-utan-profil', '/admin');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    select anvandare into inloggad from public.klientfel where meddelande = 'rls-vem-inloggad';
+    select anvandare into utloggad from public.klientfel where meddelande = 'rls-vem-utloggad';
+    select anvandare, 1 into utan_profil, n_utan from public.klientfel where meddelande = 'rls-vem-utan-profil';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('klientfel minns vem', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('klientfel: det inloggade kontot, inte det klienten skickade',
+       inloggad is not distinct from '00000000-0000-4000-8000-0000000000f1'::uuid, coalesce(inloggad::text, 'null')),
+      ('klientfel: utloggad blir null, fast klienten skickade ett id', utloggad is null, coalesce(utloggad::text, 'null')),
+      ('klientfel: ett konto utan profil sparas ändå, utan id', n_utan = 1 and utan_profil is null,
+       coalesce(utan_profil::text, 'null') || ', rader ' || coalesce(n_utan, 0));
   end if;
 end $$;
 

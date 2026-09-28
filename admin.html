@@ -1880,9 +1880,10 @@
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
                 Mejlen om nya anmälningar, tidsförslag och meddelanden skickas av databasen.
                 Går ett utskick fel sparas raden ändå — och tidigare fanns felet bara i ett
-                loggbord ingen kunde läsa. Här står de senaste dygnets misslyckade utskick.
-                Databasen städar bort äldre svar själv, så en tom lista betyder "inget de
-                senaste timmarna", inte "aldrig något".
+                loggbord ingen kunde läsa. Här står databasens egna utskick som inte gick
+                fram, och vilken väg det gällde. Ett prov av en funktion efter en
+                driftsättning räknas inte. Databasen glömmer svaren efter sex timmar, så en
+                tom lista betyder "inget de senaste timmarna", inte "aldrig något".
               </p>
               <div id="notis-tabell"><div class="loading">Hämtar</div></div>
             </div>
@@ -2201,7 +2202,7 @@
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=5b944079"></script>
 <script src="nextrum-admin-detalj.js?v=3ce6626d"></script>
-<script src="nextrum-admin-oversikt.js?v=09f16568"></script>
+<script src="nextrum-admin-oversikt.js?v=045dcecd"></script>
 <script src="nextrum-admin-kunder.js?v=01b666e6"></script>
 <script src="nextrum-admin-rekrytering.js?v=316a28da"></script>
 <script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
@@ -2209,7 +2210,7 @@
 <script src="nextrum-admin-drift.js?v=2437242e"></script>
 <script src="nextrum-admin-ekonomi.js?v=eb933656"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
-<script src="nextrum-admin-system.js?v=25511141"></script>
+<script src="nextrum-admin-system.js?v=fab56355"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
