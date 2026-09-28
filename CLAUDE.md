@@ -910,7 +910,8 @@ står klart, och provpasset den 27 september undantogs inte: Leo ville
 se hur lönespecen ser ut. Körningen den 1 oktober skriver därför ett
 underlag på 240 kr och ett fakturautkast på 758 kr för det, som ska
 tas bort när lönespecen är sedd, inte betalas ut eller läggas in i
-Fortnox (DEPLOY-BETALNING.md avsnitt 6).
+Fortnox (DEPLOY-BETALNING.md avsnitt 6). Hela `rls-test.sql` gick
+igenom mot driften efteråt, 702 av 702.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
