@@ -83,8 +83,13 @@ som går ut först, annars timbanken), och ett nytt köp betalar de
 bekräftade pass som redan står obetalda. Sedan Fas 22.3 betalar timmar
 som blir lediga (avbokning, kortet som vann, banken som fyllts på) nästa
 bekräftade pass inom fem minuter, genom pg_cron-jobbet `timmar-betalar`.
-Vid ånger eller uppsägning avbokas alla kommande pass familjen inte vill
-ha först, annars räknas de som använda.
+Sedan Fas 22.4 dras timmen redan när familjen föreslår passet, och ett
+motförslag flyttar bara tiden: timmen följer med. Avböjt, tillbakadraget
+eller obesvarat när dagen gått ger tillbaka den (migrationen körd
+2026-09-28). Vid ånger eller uppsägning avbokas alla kommande pass och
+förslag familjen inte vill ha först, annars räknas de som använda.
+Tiderna i bokningen börjar klockan 11 på vardagar och klockan 9 på
+helger (2026-09-28).
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
@@ -370,7 +375,9 @@ och PÅ sedan 2026-09-27: familjen väljer det per pass, månadskörningen
 gör ett utkast per familj, admin lägger in det i Fortnox för hand. Tio
 dagar, inga avgifter. Sedan 2026-09-28 står fakturan bredvid
 kortmeningen på alla 36 ställen, och kontrollen räknar den; fakturan
-väljs efter passet, när rapporten bekräftas. Bankgirot, bolaget och
+väljs efter passet, när rapporten bekräftas. Ett fakturapass som inte
+står på en faktura än betalas med kort genom Betala med kort nu, och
+står kvar som faktura tills kortet är draget. Bankgirot, bolaget och
 beskedet till befintliga familjer återstår (DEPLOY-BETALNING.md 9.11). Spärren "ingen betalning, inget pass" (flaggan `kortsparr`)
 kan inte slås på sedan Fas 19.2 (`flaggor_kortsparr_av`). En korttvist
 har en sista dag att svara, sparas i `stripe_tvister` och blir en
