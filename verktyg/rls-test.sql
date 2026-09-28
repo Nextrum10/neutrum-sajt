@@ -33,7 +33,8 @@
 -- 19.6: OCR), Fas 20.1 (den hållna tiden), Fas 20.2 (bokslutet),
 -- Fas 21.1–21.2, admin_laser_ansokans_cv (admin läser CV:t), Fas 22.1
 -- (timbanken), timbanken_foljer_passet, Fas 22.2 (timmarna betalar
--- passen) och notisfelen_bara_egna_utskick är körda.
+-- passen), notisfelen_bara_egna_utskick och klientfelen_minns_vem är
+-- körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -4960,6 +4961,52 @@ select 'ingen funktion ringer net.http_* förbi intern.natanrop', count(*) = 0,
  where n.nspname in ('public', 'intern')
    and p.prosrc ~ 'net\.http_(post|get|delete)\s*\('
    and p.oid is distinct from to_regprocedure('intern.natanrop(text,text,jsonb,jsonb,integer)');
+
+-- ------------------------------------------------------------
+-- Klientfelen minns vem det gällde (2026-09-28)
+--
+-- Databasen sätter klientfel.anvandare ur auth.uid() och skriver över
+-- det klienten skickar: insert-policyn släpper in vem som helst, och
+-- ett fel i någon annans namn hade fått Skriv till de drabbade att
+-- mejla fel person. P försöker lägga sitt fel på Q.
+-- ------------------------------------------------------------
+do $$
+declare
+  inloggad uuid; utloggad uuid; utan_profil uuid; n_utan int; fel text;
+begin
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+    insert into public.klientfel (meddelande, sida, anvandare)
+    values ('rls-vem-inloggad', '/foralder', '00000000-0000-4000-8000-0000000000f2');
+    perform pg_temp.bli(null);
+    insert into public.klientfel (meddelande, sida, anvandare)
+    values ('rls-vem-utloggad', '/', '00000000-0000-4000-8000-0000000000f2');
+    perform set_config('request.jwt.claims',
+      '{"sub":"00000000-0000-4000-8000-00000000dead","role":"authenticated"}', true);
+    execute 'set local role authenticated';
+    insert into public.klientfel (meddelande, sida) values ('rls-vem-utan-profil', '/admin');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    select anvandare into inloggad from public.klientfel where meddelande = 'rls-vem-inloggad';
+    select anvandare into utloggad from public.klientfel where meddelande = 'rls-vem-utloggad';
+    select anvandare, 1 into utan_profil, n_utan from public.klientfel where meddelande = 'rls-vem-utan-profil';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('klientfel minns vem', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('klientfel: det inloggade kontot, inte det klienten skickade',
+       inloggad is not distinct from '00000000-0000-4000-8000-0000000000f1'::uuid, coalesce(inloggad::text, 'null')),
+      ('klientfel: utloggad blir null, fast klienten skickade ett id', utloggad is null, coalesce(utloggad::text, 'null')),
+      ('klientfel: ett konto utan profil sparas ändå, utan id', n_utan = 1 and utan_profil is null,
+       coalesce(utan_profil::text, 'null') || ', rader ' || coalesce(n_utan, 0));
+  end if;
+end $$;
 
 select test, ok, detalj from utfall order by nr;
 

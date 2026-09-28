@@ -417,7 +417,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 |---|---|
 | `nextrum-config.js` | **Enda filen som ska ändras vid uppsättning.** URL, anon-nyckel, pris, e-post, utbildningslänk |
 | `nextrum-app.js` | `NX` — delad grund: supa-klient, i18n, datum, fel, header, inloggning |
-| `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen |
+| `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen. Vem felet gällde sätter databasen (`intern.klientfel_vem`, 2026-09-28) ur `auth.uid()` och skriver över det klienten skickar: kolumnen fylldes aldrig förut, och varje fel stod som Utloggad. DATASKYDD.md rad 12 och integritetspolicyn räknar med konto-id, 90 dagar |
 | `nextrum-modulvakt.js` | Fångar "en modul laddade inte" innan vyn dör tyst på "Laddar din vy". Laddas i **alla tre** vyerna sedan Fas 14.0 — adminvyn saknade den, fast den har 26 skript mot de andras 17. Prövar en FUNKTION per fil, inte bara att globalen finns: en gammal fil i cachen definierar sin global och ser frisk ut. Modulerna nås som IDENTIFIERARE, aldrig som `window[...]` — hälften deklareras `const NX… = …` på toppnivå och hamnar då inte på window |
 | `nextrum-samtycke.js` | `NXSamtycke`: samtyckesrutan och det enda stället som svarar på "får vi?". Bara på de öppna sidorna, efter `nextrum-app.js`. Se avsnitt 6, Samtycket |
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
@@ -1987,14 +1987,6 @@ körningen så att fixturpassen aldrig blir ett mejl, och flaggan
   hjälpare nästa person bygger vidare på. Leo 2026-09-27: panelen står
   kvar som internt underlag. Det är alltså färdigt, och `materials` ska
   inte städas bort.
-- **Klientfelen säger inte vem det gällde.** `klientfel.anvandare`
-  fylls aldrig i: varken `nextrum-fel.js` eller databasen sätter den
-  (kontrollerat 2026-09-27). Varje fel står därför som Utloggad under
-  System → Fel, också de en inloggad admin fick, och knappen Skriv till
-  de drabbade visas aldrig. Att fylla den (en trigger som sätter
-  `auth.uid()`, så att ingen kan skriva in någon annans id) knyter
-  felrapporterna till konton, och det nämner integritetspolicyn inte.
-  Det är ett beslut, inte en rättelse.
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
