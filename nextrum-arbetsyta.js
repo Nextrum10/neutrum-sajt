@@ -1029,8 +1029,10 @@ window.NXArbete = (function () {
      för de tre som faktiskt är kvar att göra något åt.
 
      En pil längst till höger i rubriken fäller ihop delen. Valet
-     sparas per webbläsare — den som gömt de genomförda passen har
-     gömt dem, inte gömt dem tills sidan laddas om.
+     sparas per webbläsare: den som gömt de gamla rapporterna har
+     gömt dem, inte gömt dem tills sidan laddas om. Pilen står i
+     markupen; en grupp inne i en lista (fallGrupp) togs bort när
+     passlistan fick en egen utfällning i NXStudie.passLista.
 
      Markupen bär allt, så en lista som ritas om med innerHTML
      behåller sitt läge utan att sidan behöver koppla om något:
@@ -1040,9 +1042,6 @@ window.NXArbete = (function () {
          <div class="vy-fall-kropp"> … </div>
        </div>
      ============================================================ */
-  var FALL_PIL = '<svg viewBox="0 0 12 12" aria-hidden="true">'
-    + '<path d="M2.5 4.5 6 8l3.5-3.5"/></svg>';
-
   /* localStorage kastar i privat läge i vissa webbläsare. Ett gömt
      pass är inte värt en trasig vy, så allt här får misslyckas tyst
      och falla tillbaka på utfällt. */
@@ -1053,32 +1052,6 @@ window.NXArbete = (function () {
   function fallSpara(nyckel, dolt) {
     try { window.localStorage.setItem('nx.fall.' + nyckel, dolt ? 'dolt' : 'oppet'); }
     catch (e) { /* strunt samma */ }
-  }
-
-  /* Pilen som sitter i en rubrik. Etiketten talar om vad den gömmer,
-     för den som hör sidan i stället för att se den. */
-  function fallKnapp(nyckel, namn) {
-    var dolt = fallDolt(nyckel);
-    return '<button type="button" class="vy-fall-pil" data-fall-knapp'
-      + ' aria-expanded="' + (dolt ? 'false' : 'true') + '"'
-      + ' aria-label="' + esc(namn || 'Dölj') + '">' + FALL_PIL + '</button>';
-  }
-
-  /* En grupp inne i en lista: egen rubrikrad med antal och pil.
-     Returnerar html i stället för en nod — listorna ritas om med
-     innerHTML vid varje laddning, och en nod hade ändå varit borta
-     nästa gång. */
-  function fallGrupp(o) {
-    var nyckel = o.nyckel, dolt = fallDolt(nyckel);
-    return '<div class="vy-fall" data-fall="' + esc(nyckel) + '">'
-      + '<div class="vy-fall-rad">'
-      + '<span class="vy-fall-et">' + esc(o.etikett)
-      + (o.antal ? ' <em>' + esc(String(o.antal)) + '</em>' : '') + '</span>'
-      + fallKnapp(nyckel, o.namn || ('Dölj ' + String(o.etikett).toLowerCase()))
-      + '</div>'
-      + '<div class="vy-fall-kropp"' + (dolt ? ' hidden' : '') + '>'
-      + (o.kropp || '') + '</div>'
-      + '</div>';
   }
 
   /* Rutor vars pil står i markupen läses av en gång när vyn öppnas,
@@ -1183,7 +1156,6 @@ window.NXArbete = (function () {
     tidsrad: tidsrad,
     månadFör: månadFör,
     plusMånader: plusMånader,
-    fallGrupp: fallGrupp,
     fallStall: fallStall,
     sexMånader: sexMånader,
     graf: graf,
