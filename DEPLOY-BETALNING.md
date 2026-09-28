@@ -870,8 +870,8 @@ meningen om faktura bort ur texterna i samma ändring (steg 5–6 baklänges).
    faktura" för ett pass där familjen valt faktura (`betalsatt` i `RenData`).
    Vill ni att mejlet till en kortfamilj ska nämna att faktura GÅR att välja: det
    är en ny mening i `mallar.ts`, med prov. **Gjort 2026-09-28**, i `VILLKORET`,
-   med prov i `rendera_test.ts`. Mejlen ändras i driften först när `notis-ko`
-   driftsätts från main.
+   med prov i `rendera_test.ts`. `notis-ko` version 20 driftsattes från main
+   samma dag, jämförd byte för byte, så mejlen i driften säger det också.
 
 **Sist:**
 

@@ -361,7 +361,8 @@ elev.
   **Fakturan står bredvid meningen sedan 2026-09-28**: "Efter passet
   kan ni i stället välja faktura, som kommer i början av nästa månad
   med tio dagars betalningstid och utan avgift", på samma 36 ställen,
-  också i mejlen. Kontrollen räknar den lika många gånger som
+  också i mejlen (`notis-ko` version 20, driftsatt från main samma dag
+  och jämförd byte för byte). Kontrollen räknar den lika många gånger som
   kortmeningen och läser antalet dagar ur `BETALNINGSVILLKOR_DAGAR`, så
   en ändrad betalningstid som inte når texterna blir röd. Flaggan
   `faktura` slogs på 2026-09-27, med SQL medan Fas 19.7 byggdes, och
