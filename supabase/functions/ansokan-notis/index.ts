@@ -21,6 +21,10 @@
 // (config.toml) eftersom anroparen är databasen. De två funktionerna
 // den anropar kan bara service_role köra.
 //
+// PROVETS TRE MEJL (Fas 22.1) bär en länk med provets nyckel. Nyckeln
+// kommer ur ansokan_besked_ta och skrivs aldrig i loggen: en nyckel i
+// en logg är en länk till någon annans prov.
+//
 // ALDRIG RÅA FEL UTÅT, ALDRIG ADRESSER I LOGGEN. Svaret hamnar i
 // net._http_response, som flera roller kan läsa. Loggen får radens id
 // och steg, aldrig adress eller namn.
@@ -31,7 +35,7 @@ import { CORS, db, hemlighetOk, json } from '../_delad/notis.ts';
 import { epostOk, preflight } from '../_delad/http.ts';
 import { mejlfelSort, skickaViaResend } from '../_delad/mejl.ts';
 import { KONTAKT } from '../_delad/notiser/rendera.ts';
-import { ANSOKAN_FRAN, arAnsokanSteg, renderaAnsokan } from '../_delad/notiser/ansokan.ts';
+import { ANSOKAN_FRAN, arAnsokanSteg, provAdress, provDag, renderaAnsokan } from '../_delad/notiser/ansokan.ts';
 
 /** Kortare än radens lån på två minuter, så att ett hängande anrop aldrig överlever lånet. */
 const TIDSGRANS_MS = 8_000;
@@ -47,6 +51,9 @@ type Rad = {
   mote_lank: string | null;
   ombokat: boolean | null;
   forsok: number | null;
+  /** Fas 22.1. Bara satta för provets tre steg. */
+  prov_nyckel?: string | null;
+  prov_sista_dag?: string | null;
 };
 
 Deno.serve(async (req) => {
@@ -93,6 +100,12 @@ Deno.serve(async (req) => {
     await klar(false, 'Okänt steg.', null, true);
     return json({ error: 'Okänt steg.' }, 400);
   }
+  // Ett provmejl utan länk eller sista dag är ett mejl om ett prov som
+  // inte går att göra. Det blir inte bättre av ett nytt försök.
+  if (rad.steg.startsWith('prov') && (!provAdress(rad.prov_nyckel) || !provDag(rad.prov_sista_dag))) {
+    await klar(false, 'Provet saknar nyckel eller sista dag.', null, true);
+    return json({ ok: false, orsak: 'provet saknar nyckel' }, 200);
+  }
   if (!epostOk(rad.epost)) {
     await klar(false, 'Ansökan har ingen giltig e-postadress.', null, true);
     return json({ ok: false, orsak: 'ogiltig adress' }, 200);
@@ -105,6 +118,8 @@ Deno.serve(async (req) => {
       moteTid: rad.mote_tid,
       moteLank: rad.mote_lank,
       ombokat: rad.ombokat === true,
+      provNyckel: rad.prov_nyckel,
+      provSistaDag: rad.prov_sista_dag,
     });
 
     const svar = await skickaViaResend({

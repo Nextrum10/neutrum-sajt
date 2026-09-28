@@ -5,8 +5,9 @@
 #
 # Åtta funktioner anropas av något som inte har en inloggad användare:
 # en databaswebhook, en trigger, ett pg_cron-jobb, Stripe, en knapp i
-# ett mejlprogram eller Googles omdirigering tillbaka efter ett
-# godkännande. De har därför verify_jwt av.
+# ett mejlprogram, Googles omdirigering tillbaka efter ett godkännande
+# eller den som gör utbildningsprovet innan hen har ett konto. De har
+# därför verify_jwt av.
 #
 # Den inställningen satt länge BARA i dashboarden. En `supabase
 # functions deploy` läser den här filen, och saknas raden för en
@@ -31,7 +32,9 @@
 # HMAC-signerad token i länken och kan bara stänga AV en notis,
 # aldrig slå på någon och aldrig läsa något. google-koppla kräver ett
 # HMAC-signerat läge som bara en inloggad admin kan ha fått, och
-# prövar adminens token själv på alla andra vägar.
+# prövar adminens token själv på alla andra vägar. utbildningsprov
+# kräver den slumpade nyckeln ur provlänken och kan bara läsa provets
+# läge och spara ett försök.
 #
 # Att verify_jwt är av betyder alltså inte att funktionen är
 # oskyddad. Det betyder att skyddet inte är Supabases Auth.
@@ -114,4 +117,12 @@ verify_jwt = false
 # google-meet står MED FLIT INTE här: den anropas av en inloggad
 # familj eller studiehjälpare från passets sida och ska ha JWT-kravet.
 [functions.google-koppla]
+verify_jwt = false
+
+# Utbildningsprovet (Fas 22.1). Den som gör provet har sökt jobb men
+# har inget konto än: kontot skapas i steget efter provet. Skyddet är
+# den slumpade nyckeln i länken i mejlet (applications.prov_nyckel),
+# som bara öppnar provet för en ansökan. Funktionen når databasen bara
+# genom utbildningsprov_lage och utbildningsprov_lamna.
+[functions.utbildningsprov]
 verify_jwt = false
