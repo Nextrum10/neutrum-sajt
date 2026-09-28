@@ -321,7 +321,7 @@ elev.
 
 | Ord | Betyder |
 |---|---|
-| studiehjälpare | den som håller passet. Aldrig "lärare" utåt — `larare.html` heter så av historiska skäl |
+| studiehjälpare | den som håller passet. Aldrig "lärare" utåt — `larare.html` heter så av historiska skäl. "Privatlärare" står en gång, i FAQ:n, för att säga att en studiehjälpare INTE är det (2026-09-28): ordet är det konkurrenterna och föräldrarna söker på, och svaret är ärligare än att tiga |
 | pass | ett bokat tillfälle (`bookings`). Hela timmar, 1–3 |
 | rapport | `lesson_reports`. **Passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
@@ -452,8 +452,9 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
-Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`) och två guider
-(`gratis-laxhjalp-stockholm`, `hjalpa-barn-med-matte`) genereras; navet
+Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), onlinesidan
+(`laxhjalp-online`) och två guider (`gratis-laxhjalp-stockholm`,
+`hjalpa-barn-med-matte`) genereras; navet
 `laxhjalp-stockholm.html` är handskrivet. `/en/` är elva översatta sidor.
 
 ### Startsidan efter hero (2026-09-25)
@@ -1644,7 +1645,7 @@ hitta på ett pris, ett villkor eller ett löfte.
 |---|---|---|
 | `nextrum-maskot-svar.js` | `verktyg/bygg-maskotsvar.py` | `faq.html`, `en/faq.html` |
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
-| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen), de två guiderna och ämnes- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
+| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen, online), de två guiderna och ämnes- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
 | `sitemap.xml` | `verktyg/bygg-sitemap.py` | sidornas canonical, hreflang och noindex |
 | Ikonlänkar och storlekar | `verktyg/satt-logga.py` | `bilder/nextrum-logo.png` — finns inte i dag; PNG:erna är renderade ur `favicon.svg`, se `GOOGLE.md` |
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i verktyget. Körs för hand (kräver Chromium), inte i CI. `--sql` ger raderna till `biblioteksmaterial` |
@@ -1691,6 +1692,17 @@ står om Nextrum är samma löfte som resten av sajten. Moderna språk, SO
 och programmering har ingen sida, för navet säger "fråga i anmälan så
 säger vi om vi har rätt person" och en egen sida hade lovat mer.
 
+**Onlinesidan** (2026-09-28, `laxhjalp-online`) svarar på "läxhjälp
+online", som ingen sida hade ett ord om fast tjänsten finns. Den byggs
+med `amnessida()` men står i `ONLINE`, inte i `AMNEN`: annars hade den
+stått som ett ämne under "Läxhjälp per ämne" överallt. Ämnessidorna
+länkar dit bland områdena, under rubriken som redan säger "eller
+online", och till guiderna längst ner. Sidan säger med flit ingenting
+om var i landet eleven får bo, och nämner ingen videotjänst: länken
+står "i studievyn", vilket är sant både med och utan Google-kopplingen
+(Fas 18.1). Att ta emot familjer utanför Stockholm är ett beslut om
+affären; fattas det ska sidan säga det, och inte förr.
+
 **Guiderna** (2026-09-26) svarar på det föräldrar söker innan de vet
 att de letar efter läxhjälp. Allt om andra organisationer (biblioteken,
 Röda Korset, Mattecentrum) är kontrollerat mot deras egna sidor och
@@ -1705,7 +1717,8 @@ LCP 0,3–0,4 s sämre, eftersom den konkurrerar med herobilden om
 bandbredden, och de hade ingen förskjutning att laga. Lägg den inte på
 fler sidor utan att mäta.
 
-**Footern har en egen spalt Läxhjälp** med navet och de fyra ämnena, på
+**Footern har en egen spalt Läxhjälp** med navet, de fyra ämnena och
+onlinesidan, på
 alla publika sidor och på båda språken. Den ersatte en länk till navet
 som stod två gånger i den svenska footern, vilket också var skälet till
 nästan alla TEXTNODER-avvikelser i språkbaslinjen.

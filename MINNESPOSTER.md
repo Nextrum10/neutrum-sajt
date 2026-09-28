@@ -49,7 +49,8 @@ Affären: familjen skickar intresseanmälan, Nextrum ringer och väljer
 studiehjälpare, admin sätter matchningen, då först låses föräldravyn upp.
 Ingen katalog att bläddra i.
 
-Ordlista: studiehjälpare (aldrig "lärare" utåt), pass, rapport, underlag,
+Ordlista: studiehjälpare (aldrig "lärare" utåt; "privatlärare" står
+bara i FAQ:n, för att säga att de inte är det), pass, rapport, underlag,
 betalning, tjänst. Faktura är sedan Fas 14.6 ett betalsätt familjen kan
 välja per pass, avstängt (flaggan `faktura`) tills bolaget och
 Fortnox-kontot finns.
@@ -246,8 +247,8 @@ Genererat:
 - `nextrum-maskot-svar.js` byggs av `verktyg/bygg-maskotsvar.py` ur
   `faq.html` och `en/faq.html`
 - FAQPage-märkningen i båda faq-sidorna byggs av `verktyg/bygg-faq-schema.py`
-- Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), två guider
-  och ämnes- och guidekorten i navet byggs av
+- Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), onlinesidan,
+  två guider och ämnes- och guidekorten i navet byggs av
   `verktyg/bygg-omradessidor.py`. Skalet läses ur `var-ide.html`,
   alt-texten ur `nextrum-images.js`
 - `sitemap.xml` byggs av `verktyg/bygg-sitemap.py` ur sidornas

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Bygger områdessidorna och ämnessidorna.
 
-Sex stadsdelssidor (/laxhjalp-farsta …) och fyra ämnessidor
-(/laxhjalp-matematik, -svenska, -engelska, -no). Navet,
+Sex stadsdelssidor (/laxhjalp-farsta …), fyra ämnessidor
+(/laxhjalp-matematik, -svenska, -engelska, -no), /laxhjalp-online och
+guiderna. Navet,
 /laxhjalp-stockholm, är handskrivet men får sina ämneskort härifrån.
 Kör verktyg/bygg-sitemap.py och sist verktyg/satt-version.py efteråt.
 
@@ -701,6 +702,98 @@ AMNEN = [
 
 
 # ============================================================
+# ONLINE
+#
+# "Läxhjälp online" stod inte på en enda sida, fast tjänsten finns och
+# anmälan frågar efter önskat upplägg. Sidan byggs som en ämnessida (lista, vinkel,
+# samma löfte) men hör inte till AMNEN: den hade då stått som ett
+# ämne i "Läxhjälp per ämne" på varje sida.
+#
+# Den säger ingenting om var i landet eleven får bo. Att ta emot
+# familjer utanför Stockholm är ett beslut om affären, inte om en
+# sida, och tills det är fattat lovar sidan inte mer än resten av
+# sajten. Länken till samtalet beskrivs som "i studievyn": där står
+# Meet-länken när Google är kopplat, och meddelandet med länken när
+# det inte är det (Fas 18.1). Ingen tjänst nämns vid namn.
+# ============================================================
+
+ONLINE = {
+    'slug': 'laxhjalp-online',
+    'i_namn': 'online',
+    'plats': 'Stockholm',
+    'titel': 'Läxhjälp online med en personlig studiehjälpare | Nextrum',
+    'beskrivning': (
+        'Läxhjälp online med en studiehjälpare som nyss läst samma kurser. Matte, svenska, '
+        f'engelska och NO, med studieplan och rapport efter varje pass. {PRIS} i timmen.'
+    ),
+    'etikett': 'Läxhjälp online',
+    'h1': 'Läxhjälp<br><em>online.</em>',
+    'lede': (
+        'Samma studiehjälpare, samma studieplan och samma rapport efter varje pass som när '
+        'ni ses hemma, fast över video. Ni väljer för varje pass om det ska hållas online '
+        'eller hemma hos er.'
+    ),
+    'kort': 'Samma studiehjälpare och rapport, över video',
+    'bild': '03-digital-laxhjalp',
+    'tint': '#948A78',
+    'focal': '60% 44%',
+    'lista_etikett': 'Så går ett onlinepass till',
+    'lista_rubrik': 'Från länken<br>till <em>rapporten.</em>',
+    'lista_ingress': (
+        'Ett onlinepass är inte en föreläsning. Eleven har sina egna uppgifter framför sig, '
+        'och studiehjälparen frågar och förklarar tills det sitter.'
+    ),
+    'lista': [
+        ('Ni föreslår en tid',
+         'I studievyn väljer ni dag, ämne och tid, och att passet ska hållas online. '
+         'Studiehjälparen bekräftar tiden eller föreslår en annan.'),
+        ('Länken',
+         'När passet är bekräftat får ni länken till samtalet i studievyn. Eleven går in '
+         'från datorn eller surfplattan när passet börjar.'),
+        ('Under passet',
+         'Eleven har boken, uppgiften eller provet framför sig och räknar och skriver själv. '
+         'Studiehjälparen frågar hur eleven tänker och förklarar där det tar stopp. Det som '
+         'är svårt att beskriva i ord går att hålla upp framför kameran.'),
+        ('Rapporten',
+         'Efter passet skriver studiehjälparen en rapport om vad ni gick igenom och hur det '
+         'gick. Den hamnar i studievyn precis som efter ett pass hemma, och passet räknas som '
+         'genomfört först när den finns.'),
+    ],
+    'vinkel_etikett': 'Online eller hemma',
+    'vinkel_rubrik': 'Skärmen eller<br><em>köksbordet?</em>',
+    'vinkel': [
+        'Online sparar restid för båda, och det blir lättare att hitta någon som läst just '
+        'den kurs eleven läser, eftersom studiehjälparen inte behöver bo nära er. Det '
+        'fungerar ofta bäst för den som går på högstadiet eller gymnasiet och har något '
+        'konkret att jobba med: en uppgift, ett kapitel, ett prov på fredag.',
+        'Hemma är ofta bättre för yngre barn, och för den som har svårt att komma igång '
+        'framför en skärm. Ni behöver inte välja en gång för alla: ni kan ses hemma i '
+        'vardagen och ta passet inför provet online.',
+        'Det som gör mest skillnad för ett onlinepass är enkla saker. Hörlurar med '
+        'mikrofon, en dator hellre än en telefon, ett rum där eleven får vara ifred, och '
+        'boken och uppgiften framme innan passet börjar.',
+    ],
+    'omraden_rubrik': 'Hellre hemma hos er?',
+    'faq': [
+        ('Vad behövs för ett onlinepass?',
+         'En dator eller surfplatta med kamera och mikrofon, och en uppkoppling som klarar '
+         'ett videosamtal. Hörlurar gör det lättare att höra. En telefon fungerar, men '
+         'skärmen blir liten när ni ska titta på samma uppgift.'),
+        ('Kostar ett onlinepass mindre än ett pass hemma?',
+         f'Nej. {PRIS} i timmen oavsett om passet hålls online eller hemma hos er, och '
+         'ingen restidsavgift när studiehjälparen kommer hem till er.'),
+        ('Kan vi byta mellan online och hemma?',
+         'Ja. Ni väljer för varje pass när ni föreslår tiden. Det är samma studiehjälpare, '
+         'samma studieplan och samma rapport efteråt, så ingenting går förlorat när ni byter.'),
+        ('Passar online för yngre barn?',
+         'Det beror på barnet. Den som går på lågstadiet eller mellanstadiet har ofta '
+         'lättare att hålla fokus när någon sitter bredvid, och då är ett pass hemma hos er '
+         'oftast bättre. Skriv vad ni tror i anmälan, så pratar vi om det när vi hör av oss.'),
+    ],
+}
+
+
+# ============================================================
 # GUIDERNA
 #
 # Svar på det föräldrar söker innan de vet att de letar efter
@@ -1296,6 +1389,10 @@ def amnessida(o):
         for i, (r, t) in enumerate(o['lista'], 1))
     vinkel = '\n'.join(f'      <p>{esc(p)}</p>' for p in o['vinkel'])
     omraden = [a for a in OMRADEN if not a.get('hub')]
+    omrkort = omradeskort(omraden)
+    # Rubriken säger "eller online", så onlinesidan står bland områdena.
+    if o is not ONLINE:
+        omrkort += '\n' + kort(ONLINE['slug'], 'Läxhjälp online', ONLINE['kort'])
 
     return f"""{head(o)}{huvud}<main id="innehall">
 
@@ -1338,7 +1435,7 @@ def amnessida(o):
 </section>
 
 {prissektion()}
-{faq_sektion(o)}{kortsektion('Områden', 'Hemma hos er i Stockholm, eller online', omradeskort(omraden))}{amnen_sektion(o)}
+{faq_sektion(o)}{kortsektion('Områden', o.get('omraden_rubrik', 'Hemma hos er i Stockholm, eller online'), omrkort)}{amnen_sektion(o)}{kortsektion('Guider', 'För er som hjälper till hemma', guidekort(GUIDER))}
 {NASTA_STEG}
 
 </main>{fot}{jsonld(o, OMRADEN)}
@@ -1488,9 +1585,9 @@ def skriv_navet():
 def main():
     if not os.path.exists(SKAL):
         sys.exit(f'hittar inte skalsidan {SKAL}')
-    satt_bildtexter(OMRADEN + AMNEN + GUIDER)
+    satt_bildtexter(OMRADEN + AMNEN + GUIDER + [ONLINE])
     delar = [a['namn'] for a in OMRADEN if not a.get('hub')]
-    for o in AMNEN:
+    for o in AMNEN + [ONLINE]:
         o['delar'] = delar
     for o in OMRADEN:
         if o.get('handskriven'):
@@ -1507,9 +1604,12 @@ def main():
         p = os.path.join(ROT, o['slug'] + '.html')
         open(p, 'w', encoding='utf-8').write(guidesida(o))
         print(f'  skrev {o["slug"]}.html')
+    p = os.path.join(ROT, ONLINE['slug'] + '.html')
+    open(p, 'w', encoding='utf-8').write(amnessida(ONLINE))
+    print(f'  skrev {ONLINE["slug"]}.html')
     skriv_navet()
     print('  skrev ämneskorten i laxhjalp-stockholm.html')
-    print(f'{len(OMRADEN)} områdessidor, {len(AMNEN)} ämnessidor och {len(GUIDER)} guider byggda.')
+    print(f'{len(OMRADEN)} områdessidor, {len(AMNEN)} ämnessidor, onlinesidan och {len(GUIDER)} guider byggda.')
     print('Kör sedan verktyg/bygg-sitemap.py och sist verktyg/satt-version.py.')
 
 
