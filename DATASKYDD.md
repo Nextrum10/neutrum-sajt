@@ -93,9 +93,10 @@ som Privacy Shield gjorde. Luta därför inte på det ensamt:
 standardavtalsklausulerna ska finnas i varje avtal oavsett.
 
 **Vercels Hobby-plan** får enligt Vercels villkor bara användas
-icke-kommersiellt. Driver Nextrum sin sajt på Hobby är det ett
-avtalsbrott mot Vercel, inte mot GDPR, men det betyder också att
-DPA:n vilar på villkor vi bryter mot. Kontrollera planen.
+icke-kommersiellt. **Nextrum står på Hobby** (kontrollerat
+2026-09-28 mot kontot info@nextrum.se). Det är ett avtalsbrott mot
+Vercel, inte mot GDPR, men det betyder också att DPA:n vilar på
+villkor vi bryter mot. Byt till Pro.
 
 ---
 
@@ -241,8 +242,8 @@ Inget av det här går att göra i koden.
 
 - [ ] **Godkänn eller begär DPA hos varje leverantör** i avsnitt 3 och
   spara en kopia (PDF) i hinken `dokument` via adminvyns Handlingar.
-- [ ] **Kontrollera Vercel-planen.** Hobby får inte användas
-  kommersiellt.
+- [ ] **Byt Vercel till Pro.** Kontot står på Hobby, som inte får
+  användas kommersiellt (kontrollerat 2026-09-28).
 - [ ] **Slå på kontroll av läckta lösenord** i Supabase: Authentication
   → Policies (HaveIBeenPwned).
 - [ ] **Låt en jurist läsa** integritetspolicyn, villkoren och den här
