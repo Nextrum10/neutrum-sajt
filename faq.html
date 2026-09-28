@@ -568,14 +568,14 @@
 
       <div class="nx-form-yta" data-stig data-fördröj="1">
         <form class="form-grid" id="contact-form" novalidate data-spamskydd>
-          <div class="pay-field"><label for="c-name">Namn</label><input class="inp" id="c-name" name="namn" required autocomplete="name"></div>
-          <div class="pay-field"><label for="c-email">E-post</label><input class="inp" id="c-email" name="epost" type="email" required autocomplete="email"></div>
+          <div class="pay-field"><label for="c-name">Namn</label><input class="inp" id="c-name" name="namn" required maxlength="200" autocomplete="name"></div>
+          <div class="pay-field"><label for="c-email">E-post</label><input class="inp" id="c-email" name="epost" type="email" required maxlength="320" autocomplete="email"></div>
           <div class="pay-field full"><label for="c-role">Jag är</label>
             <select class="sel" id="c-role" name="roll">
               <option>Förälder</option><option>Elev</option><option>Gymnasieelev som vill jobba</option><option>Skola</option><option>Annat</option>
             </select>
           </div>
-          <div class="pay-field full"><label for="c-msg">Meddelande</label><textarea class="inp" id="c-msg" name="meddelande" required></textarea></div>
+          <div class="pay-field full"><label for="c-msg">Meddelande</label><textarea class="inp" id="c-msg" name="meddelande" required maxlength="5000"></textarea></div>
           <div class="nx-submit-row">
             <span class="nx-magnet">
               <button class="btn btn-primary btn-lg" type="submit">Skicka meddelande</button>
@@ -714,7 +714,7 @@
 <script src="nextrum-config.js?v=21cecc53"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=d85467f7"></script>
+<script src="nextrum-app.js?v=f83aadf2"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och

@@ -785,6 +785,8 @@ const NX = (function () {
       const cvFil = cvInp && cvInp.files && cvInp.files[0];
       if (cvFil) {
         try {
+          /* Formen prövas av policyn på hinken cv (2026-09-29, avsnitt 6):
+             ändras den här ska policyn ändras i samma ändring. */
           const rent = cvFil.name.replace(/[^\w.\-]+/g, '_');
           const väg = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '-' + rent;
           const upp = await supa.storage.from('cv').upload(väg, cvFil, { upsert: false });

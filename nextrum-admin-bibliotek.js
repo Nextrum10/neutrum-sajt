@@ -179,6 +179,9 @@
       if (fel) { säg(msg, fel, false); return; }
     } else if (!länk) {
       säg(msg, 'Fyll i adressen.', false); return;
+    } else if (!/^https?:\/\/\S+$/i.test(länk)) {
+      // Samma regel som biblioteksmaterial_lank_webbadress i databasen.
+      säg(msg, 'Adressen måste börja med http:// eller https:// och sakna mellanslag.', false); return;
     }
 
     await medan($('#bib-spara'), 'Sparar…', async () => {
