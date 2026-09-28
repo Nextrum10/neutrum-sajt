@@ -52,8 +52,8 @@ Ingen katalog att bläddra i.
 Ordlista: studiehjälpare (aldrig "lärare" utåt; "privatlärare" står
 bara i FAQ:n, för att säga att de inte är det), pass, rapport, underlag,
 betalning, tjänst. Faktura är sedan Fas 14.6 ett betalsätt familjen kan
-välja per pass, avstängt (flaggan `faktura`) tills bolaget och
-Fortnox-kontot finns.
+välja per pass, efter passet. Flaggan `faktura` är på sedan 2026-09-27,
+och texterna säger det sedan dagen efter.
 
 Två siffror och ett löfte står på många ställen samtidigt: 379 kr/tim,
 69 kr/tim fast tillägg för flera barn (tak tre, alltså 448 för tre barn,
@@ -366,11 +366,12 @@ testläge (två provbetalningar 2026-09-25). Stripes avgift kommer med
 charge.updated, eller med knappen Hämta från Stripe (Fas 14.7), och
 testbetalningar märks. Studiehjälparens underlag betalas den 25:e från
 banken, aldrig genom Stripe. Faktura som betalsätt (Fas 14.6) är byggt
-och AV: familjen väljer det per pass, månadskörningen gör ett utkast per
-familj, admin lägger in det i Fortnox för hand. Tio dagar, inga avgifter.
-De publika texterna lovar bara kort tills flaggan slås på
-(DEPLOY-BETALNING.md 9.11); fakturan väljs efter passet, när rapporten
-bekräftas. Spärren "ingen betalning, inget pass" (flaggan `kortsparr`)
+och PÅ sedan 2026-09-27: familjen väljer det per pass, månadskörningen
+gör ett utkast per familj, admin lägger in det i Fortnox för hand. Tio
+dagar, inga avgifter. Sedan 2026-09-28 står fakturan bredvid
+kortmeningen på alla 36 ställen, och kontrollen räknar den; fakturan
+väljs efter passet, när rapporten bekräftas. Bankgirot, bolaget och
+beskedet till befintliga familjer återstår (DEPLOY-BETALNING.md 9.11). Spärren "ingen betalning, inget pass" (flaggan `kortsparr`)
 kan inte slås på sedan Fas 19.2 (`flaggor_kortsparr_av`). En korttvist
 har en sista dag att svara, sparas i `stripe_tvister` och blir en
 uppgift; att svara är en människas jobb (DEPLOY-BETALNING.md 9.10).

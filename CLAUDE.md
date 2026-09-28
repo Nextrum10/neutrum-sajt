@@ -326,7 +326,7 @@ elev.
 | rapport | `lesson_reports`. **Passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
 | betalning | vad familjen betalat för ett pass: med kort, per pass, i förväg eller efter passet när rapporten bekräftas (`bookings.betalning_status`, `betalt_ore`). Eller mot faktura, när flaggan `faktura` är på (Fas 14.6) |
-| faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, avstängt tills bolaget och Fortnox-kontot finns. Skickas från Fortnox, aldrig härifrån |
+| faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, efter passet. Påslaget sedan 2026-09-27 (flaggan `faktura`). Skickas från Fortnox, aldrig härifrån |
 | tjänst | rad i `tjanster`. `aktiv` avgör vad som syns, inget annat |
 
 ### Siffror som måste stämma överallt
@@ -349,10 +349,20 @@ elev.
   allt som serveras, och körs i CI. **En betalning som tas på ett annat
   sätt än villkoren lovar är en tvist, inte ett skrivfel.**
 
-  Fakturan (Fas 14.6) ändrar inte meningen förrän flaggan `faktura`
-  slås på: då ska den säga att familjen kan välja faktura, tio dagar,
-  utan avgift, och kontrollen få den nya meningen i samma ändring.
-  DEPLOY-BETALNING.md 9.11 har listan över alla ställen.
+  **Fakturan står bredvid meningen sedan 2026-09-28**: "Efter passet
+  kan ni i stället välja faktura, som kommer i början av nästa månad
+  med tio dagars betalningstid och utan avgift", på samma 36 ställen,
+  också i mejlen. Kontrollen räknar den lika många gånger som
+  kortmeningen och läser antalet dagar ur `BETALNINGSVILLKOR_DAGAR`, så
+  en ändrad betalningstid som inte når texterna blir röd. Flaggan
+  `faktura` slogs på 2026-09-27, med SQL medan Fas 19.7 byggdes, och
+  texterna följde med först dagen efter; Leo valde att ha kvar den.
+  Slås den av ska meningen bort i samma ändring och `FAKTURA_I_TEXTEN`
+  i kontrollen bli `False`. Villkoren har en egen punkt om fakturan
+  (`#faktura`): de pass under månaden som valts, spärren för den som
+  inte betalat en tidigare faktura, och att den hållna tiden kommer
+  med på den. DEPLOY-BETALNING.md 9.11 har listan över alla ställen och
+  det som återstår.
 - **Den 25:e** får studiehjälparen betalt, i en klump för månadens
   rapporterade pass (`payouts`). Det är en lön, inte en andel av varje
   kortbetalning. Blir studiehjälparna anställda läggs underlaget in i
@@ -1892,7 +1902,7 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
   pass som redan stod `betald`. Ett nytt pass föds nu obetalt, och
   `betalning_status` och `betald_at` står i auditloggen.
 
-  **Faktura som betalsätt (Fas 14.6) är byggt och AV.** Leo
+  **Faktura som betalsätt (Fas 14.6) är byggt och PÅ sedan 2026-09-27.** Leo
   2026-09-25: familjen ska kunna välja faktura under kortknappen, och
   fakturan och bokföringen sköts i Wint. Samma dag byttes Wint mot
   Fortnox (Fas 14.9), för att Wint blev för dyrt. Bokföringen,
@@ -1902,11 +1912,16 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
     `vantar_pa` säger vad den väntar på: bolaget registrerat och ett
     Fortnox-konto med bankgiro, de publika texterna, trettio dagars
     avisering till befintliga familjer och påminnelser utan avgift.
-    DEPLOY-BETALNING.md 9.11 är checklistan. **De publika texterna
-    lovar fortfarande bara kort, med flit**: ett löfte om ett betalsätt
-    som inte går att välja är samma fel som startererbjudandet var innan
-    Fas 19.5 byggde in det. De
-    ändras i en egen liten ändring samma dag som flaggan slås på.
+    DEPLOY-BETALNING.md 9.11 är checklistan. Flaggan slogs på
+    2026-09-27 innan den var avbockad, och de publika texterna sa då
+    bara kort i ett dygn. Sedan 2026-09-28 säger villkoren, prissidan,
+    FAQ:n, maskoten, studievyn, mejlen och /en/ att familjen kan välja
+    faktura efter passet, och Fortnox står i integritetspolicyn. **Kvar,
+    och inget av det är kod:** bolaget och Fortnox med bankgiro och OCR
+    (`BANKGIRO` i `nextrum-config.js` är tomt, så rutan Fakturor att
+    betala säger "står på fakturan"), beskedet trettio dagar i förväg
+    till dem som redan har konto, en jurist som läser ångerrätten för
+    betalning i efterskott, och provfaktureringen i 9.11 steg 11.
   - **Familjen väljer per pass.** `betalning_status = 'faktura'`.
     `skydda_bokningsfalt` släpper igenom `ingen`/`vantar`/`misslyckad`
     → `faktura` när `intern.faktura_tillaten()` säger ja, och
@@ -2010,9 +2025,9 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
     för flera pass; avgiften och nettot per pass står under
     Kortbetalningar. Koppla integrationen, och bestäm med revisorn hur
     den bokar kortbetalningarna, avgifterna och utbetalningarna, innan
-    första skarpa betalningen (DEPLOY-BETALNING.md 9.7). Innan något
-    går till Fortnox ska Fortnox också stå under "Var uppgifterna
-    finns" i integritetspolicyn, på båda språken.
+    första skarpa betalningen (DEPLOY-BETALNING.md 9.7). Fortnox står
+    bland leverantörerna i integritetspolicyn sedan 2026-09-28, på båda
+    språken: fakturorna bär familjens namn och e-post dit.
 
   **Fas 14.3 tog säljarens MVP-lista som utgångspunkt** (punkterna står
   i DEPLOY-BETALNING.md 9.8). Utöver tvisterna och kontrollen ovan:

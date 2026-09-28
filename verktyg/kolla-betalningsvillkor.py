@@ -43,9 +43,15 @@ som vyerna läser. Verktyget kräver att de är samma tal. Fakturan skapas
 i Fortnox, och inställningen där ser verktyget inte: den ska vara samma
 siffra, och det står i DEPLOY-BETALNING.md 9.11.
 
-Villkoren, prissidan och FAQ:n säger ännu inget om faktura. Det skrivs
-samma dag strömbrytaren 'faktura' slås på, och då ska det här verktyget
-räkna den meningen också (DEPLOY-BETALNING.md 9.11).
+FAKTURAN ÄR ETT VAL SEDAN 2026-09-28. Flaggan 'faktura' står på, och
+varje ställe som lovar kortet säger också att familjen efter passet kan
+välja faktura, med betalningstiden i ord och utan avgift. Verktyget
+räknar den meningen på samma ställen och lika många gånger som
+kortmeningen, och bygger siffran i den ur BETALNINGSVILLKOR_DAGAR: en
+ändrad betalningstid som inte når texterna blir rött här, inte en tvist
+om vad familjen lovades. Slås flaggan av ska meningen bort i samma
+ändring, och FAKTURA_I_TEXTEN nedan sättas till False
+(DEPLOY-BETALNING.md 9.11).
 
 Mejlmallarna i _delad/notiser/mallar.ts TÄCKS sedan Fas 14.3, och
 säger sedan Fas 19.2 samma mening som sidorna. Mejlet är det familjen
@@ -66,6 +72,21 @@ ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # omskrivet löfte.
 LOFTE_SV = r'antingen\s+i\s+förväg\s+eller\s+efter\s+passet\s+när\s+ni\s+bekräftar\s+rapporten'
 LOFTE_EN = r'either\s+in\s+advance\s+or\s+after\s+the\s+session\s+when\s+you\s+confirm\s+the\s+report'
+
+# Fakturameningen, med betalningstiden i ord. Står den på ett ställe som
+# lovar kortet ska den stå på alla: en familj som läst prissidan och
+# sedan villkoren ska inte få två olika svar på hur de kan betala.
+FAKTURA_I_TEXTEN = True
+DAGAR_I_ORD = {10: ('tio', 'ten'), 14: ('fjorton', 'fourteen'), 20: ('tjugo', 'twenty'), 30: ('trettio', 'thirty')}
+
+
+def fakturameningen(dagar, svenska):
+    sv, en = DAGAR_I_ORD[dagar]
+    if svenska:
+        return (r'välja\s+faktura,\s+som\s+kommer\s+i\s+början\s+av\s+nästa\s+månad\s+med\s+'
+                + sv + r'\s+dagars\s+betalningstid\s+och\s+utan\s+avgift')
+    return (r'choose\s+an\s+invoice\s+instead,\s+which\s+comes\s+at\s+the\s+start\s+of\s+the\s+following\s+month\s+with\s+'
+            + en + r'\s+days\s+to\s+pay\s+and\s+no\s+fee')
 
 # (fil, mönster, hur många träffar som ska finnas, vad stället är)
 LOFTET = [
@@ -160,6 +181,10 @@ def main():
         fynd.append('DAGAR      konstanter.ts säger %s, nextrum-config.js säger %s. Fakturans betalningstid '
                     'ska vara samma tal på båda ställena.' % (i_koden, i_vyn))
 
+    if FAKTURA_I_TEXTEN and i_koden not in DAGAR_I_ORD:
+        fynd.append('DAGAR      betalningstiden är %s dagar, och verktyget vet inte hur det skrivs i ord. '
+                    'Lägg till det i DAGAR_I_ORD och skriv om fakturameningen.' % i_koden)
+
     for fil, monster, antal, vad in LOFTET:
         try:
             text = las(fil)
@@ -170,6 +195,13 @@ def main():
         if n != antal:
             fynd.append('OMSKRIVET  %s — %s: väntade %d träff%s på /%s/, hittade %d'
                         % (fil, vad, antal, '' if antal == 1 else 'ar', monster, n))
+        if FAKTURA_I_TEXTEN and i_koden in DAGAR_I_ORD:
+            faktura = fakturameningen(i_koden, monster == LOFTE_SV)
+            n = len(re.findall(faktura, text))
+            if n != antal:
+                fynd.append('FAKTURA    %s — %s: väntade %d gång%s att familjen kan välja faktura '
+                            '(%s dagar, utan avgift), hittade %d'
+                            % (fil, vad, antal, '' if antal == 1 else 'er', i_koden, n))
 
     serveras = sorted(glob.glob(os.path.join(ROT, '*.html'))
                       + glob.glob(os.path.join(ROT, 'en', '*.html'))
@@ -187,9 +219,10 @@ def main():
         print('\n%d problem. Betalningslöftet måste säga samma sak på alla ställen.' % len(fynd))
         return 1
 
-    print('ok   betalningslöftet står på alla %d ställen i %d filer, det gamla ingenstans, '
+    print('ok   betalningslöftet står på alla %d ställen i %d filer%s, det gamla ingenstans, '
           'och fakturans betalningstid är %d dagar i båda filerna'
-          % (sum(antal for _, _, antal, _ in LOFTET), len({fil for fil, _, _, _ in LOFTET}), i_koden))
+          % (sum(antal for _, _, antal, _ in LOFTET), len({fil for fil, _, _, _ in LOFTET}),
+             ', med fakturan bredvid' if FAKTURA_I_TEXTEN else '', i_koden))
     return 0
 
 
