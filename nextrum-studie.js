@@ -687,8 +687,9 @@ window.NXStudie = (function () {
       if (o.datum && o.tid && !isNaN(start)) {
         for (var j = 0; j < timmar; j++) egna.add(o.datum + '|' + String(start + j).padStart(2, '0') + ':00');
       }
-      /* Varje timme 11–22, samma lista som förslaget i bokningen
-         (NXArbete.HELA_DAGEN). Studiehjälparens veckoschema finns inte
+      /* Varje timme från 11 på vardagar och 9 på helger till 22, samma
+         lista som förslaget i bokningen (NXArbete.HELA_DAGEN).
+         Studiehjälparens veckoschema finns inte
          kvar, och ett motförslag som bara fick ligga inom ett schema
          som inte längre går att ändra hade varit ett motförslag som
          inte går att ge. */

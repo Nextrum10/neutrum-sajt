@@ -42,11 +42,15 @@ kräver ett skäl (fast kod), och motparten får det i mejlet (Fas 15.2).
 Väljer familjen ämnet Annat måste de skriva vilket, och det skrivna
 ordet är det som sparas i `bookings.subject` (2026-09-25). Mejlen
 läser ämnet genom `fornamn()`, så fritexten når dem som ett ord.
-Tiderna börjar klockan 11 alla dagar och slutar senast 22
-(`HELA_DAGEN` i `nextrum-arbetsyta.js`, som förslaget och flytta-rutan
-delar). Leo 2026-09-28: "man inte kan boka studiehjälp innan kl 11".
-Listan började 07:00, och Leos "man kan inte föreslå tider före 11:00"
-från 2026-09-25 lästes då som en felanmälan i stället för en regel.
+Tiderna börjar klockan 11 på vardagar och klockan 9 på lördag och
+söndag, och slutar senast 22 (`HELA_DAGEN` i `nextrum-arbetsyta.js`,
+som förslaget och flytta-rutan delar). Leo 2026-09-28: "man ska inte
+kunna skicka förfrågan innan 11 på vardagar, helger ska man kunna
+skicka förfrågan tidigast kl 9", samma kväll som 11 först gällde alla
+dagar. Det är passets starttid, inte när förslaget skickas. Röda dagar
+mitt i veckan räknas som vardagar. Listan började 07:00, och Leos "man
+kan inte föreslå tider före 11:00" från 2026-09-25 lästes då som en
+felanmälan i stället för en regel.
 Regeln står bara i vyn, som resten av fönstret: databasen spärrar inga
 timmar, och en flik som laddats före en ändring erbjuder de gamla
 tiderna tills den laddas om. Samma dag går det bara att föreslå tider
@@ -206,10 +210,10 @@ man köpt, om studiehjälparen inte kan den tiden och föreslår om är det
 den timmen som fortfarande betalar av passet." Förut drogs timmarna vid
 bekräftelsen, och ett förslag ägde ingen timme: bekräftades ett senare
 förslag medan familjen funderade på ett motförslag, tog det senare
-timmen. **Migrationen `fas22_4_timmen_dras_nar_forslaget_skickas` är
-INTE körd i driften** (2026-09-28). Kör den i samma stund som
-föräldravyn går ut: vyn räknar inte längre bort väntande förslag, så
-utan migrationen lovar Boka pass timmar som databasen inte dragit.
+timmen. Migrationen (`20260928174612_fas22_4_…`) kördes minuten efter
+att PR #105 mergats, i samma stund som föräldravyn gick ut: vyn räknar
+inte längre bort väntande förslag, så utan migrationen hade Boka pass
+lovat timmar som databasen inte dragit.
 - **Förslaget betalas när det skapas.** `bookings_timmar_betalar_forslaget`
   (BEFORE INSERT, status `requested`) kör samma val som bekräftelsen.
   Namnet gör att den kör efter skydden och `bookings_startrabatt`: första
@@ -2259,10 +2263,11 @@ tillbaka överst i avsnittet för 22.1.
   migrationen `fas22_3_lediga_timmar_betalar_nasta_pass` med jobbet
   `timmar-betalar`. Ingen funktion ändrades, och fortfarande fanns
   inga köpta timmar i driften. **Fas 22.4** (2026-09-28) är också bara
-  databasen, och **inte körd**: migrationen
-  `fas22_4_timmen_dras_nar_forslaget_skickas` ska köras när grenen är
-  mergad, i samma stund som föräldravyn går ut. Då fanns ett betalt
-  klippkort i driften. Kvar: en familj som inte är matchad når inte
+  databasen: migrationen `fas22_4_timmen_dras_nar_forslaget_skickas`,
+  körd som `20260928174612` direkt efter att PR #105 mergats, och
+  ordagrant filen (samma md5 som satserna i `schema_migrations`). Hela
+  `rls-test.sql` gick igenom mot driften efteråt, 693 av 693. Då fanns
+  ett betalt klippkort i driften, och inget förslag att betala. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**

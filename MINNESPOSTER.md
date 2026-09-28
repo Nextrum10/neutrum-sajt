@@ -85,11 +85,11 @@ som blir lediga (avbokning, kortet som vann, banken som fyllts på) nästa
 bekräftade pass inom fem minuter, genom pg_cron-jobbet `timmar-betalar`.
 Sedan Fas 22.4 dras timmen redan när familjen föreslår passet, och ett
 motförslag flyttar bara tiden: timmen följer med. Avböjt, tillbakadraget
-eller obesvarat när dagen gått ger tillbaka den. Migrationen är inte körd
-i driften (2026-09-28) och ska köras när föräldravyn går ut. Vid ånger
-eller uppsägning avbokas alla kommande pass och förslag familjen inte
-vill ha först, annars räknas de som använda. Tiderna i bokningen börjar
-klockan 11 (2026-09-28).
+eller obesvarat när dagen gått ger tillbaka den (migrationen körd
+2026-09-28). Vid ånger eller uppsägning avbokas alla kommande pass och
+förslag familjen inte vill ha först, annars räknas de som använda.
+Tiderna i bokningen börjar klockan 11 på vardagar och klockan 9 på
+helger (2026-09-28).
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
