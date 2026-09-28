@@ -102,7 +102,8 @@ står i familjens timbank. Tre beslut av Leo samma dag:
    pass med ett barn. Räcker minuterna till det bokade går passet att
    betala med Betala med timbanken (`timbank_dra` genom
    `klippkort-betala`), och sedan Fas 22.2 betalar de det av sig
-   själva när det bekräftas. Utan det hade en familj vars pass ofta blir
+   själva när det bekräftas, sedan Fas 22.3 också när banken fylls på
+   efter bekräftelsen. Utan det hade en familj vars pass ofta blir
    korta samlat minuter ingen använder, och det är pengar vi är skyldiga.
 Insättningarna RÄKNAS ur passen (`intern.timbank_in`), uttagen LAGRAS i
 `timbank_uttag`: övertiden beror på vad saldot var när rapporten skrevs,
@@ -163,24 +164,39 @@ med timmarna oanvända bredvid.
   kassa som aldrig slutförts står kvar som `vantar` för alltid. Kassan
   stängs inte härifrån; betalar familjen den ändå vinner kortet och
   timmarna går tillbaka (webhooken, Fas 16.1).
-- **Knappen står kvar** för det triggrarna inte når: timmar som kommer
-  tillbaka när ett pass avbokas betalar inte ett annat obetalt pass av
-  sig själva, för avbokningen görs i familjens session och
-  `skydda_bokningsfalt` släpper inte igenom en betalning på ett annat
-  pass därifrån.
+- **Timmar som blir lediga betalar nästa pass inom fem minuter** (Fas
+  22.3, Leo samma kväll: "se till att den funkar som den ska"). Fas 22.2
+  betalade bara i de två ögonblicken ovan, så en timme som kom tillbaka
+  när ett pass avbokades, eller när kortet vann, lämnade ett bekräftat
+  pass obetalt bredvid timmen tills rapporten skrevs. Detsamma gällde
+  timbanken som fylldes på och flaggan som slogs på. En trigger på
+  avbokningen går inte: den körs i familjens eller studiehjälparens
+  session, och `skydda_bokningsfalt` nekar då en betalning på ett annat
+  pass. I stället kör pg_cron `timmar-betalar` var femte minut
+  (`intern.timmar_betalar_obetalda`), som postgres, och låter samma val
+  som triggern (`intern.timmar_betala`, utflyttat ur den) betala de
+  bekräftade obetalda passen från och med i dag i datumordning. Jobbet
+  väntar aldrig på ett lås (`skip locked` på passet, `nowait` på korten
+  och banken), för det låser pass efter pass i en transaktion och hade
+  annars kunnat låsa fast mot en bekräftelse. Knappen Betala med timmar
+  står kvar och gör samma sak direkt.
 - **Mejlen säger det.** `intern.betalsatt_kod` ger `timmar` till
   `notis_vid_pass` och `notis_planera`, och bekräftelsen och påminnelsen
-  säger att passet är betalt med timmarna, med knappen till passet.
-- **Vid ånger eller när en familj slutar: avboka först de kommande pass
-  timmarna betalat**, om familjen inte vill ha dem. `vid_anger_ore` och
-  `vid_uppsagning_ore` räknar varje pass som inte är avbokat som använt,
-  också ett som inte hållits, och sedan Fas 22.2 betalar timmarna varje
-  bekräftat pass av sig själva.
+  säger att passet är betalt med timmarna, med knappen till passet. Ett
+  pass jobbet betalar får inget eget mejl; påminnelsen säger det.
+- **Vid ånger eller när en familj slutar: avboka först ALLA kommande
+  pass familjen inte vill ha**, inte bara de timmarna betalat.
+  `vid_anger_ore` och `vid_uppsagning_ore` räknar varje pass som inte är
+  avbokat som använt, också ett som inte hållits, och sedan Fas 22.3
+  betalar en timme som blir ledig nästa bekräftade pass inom fem
+  minuter: avbokas bara det betalda passet flyttar timmen till nästa.
 Profil → Timbanken visar köpta timmar kort för kort, med passen varje
 kort betalat ur vyn `klippkort_rorelser` (samma timmar som
 `klippkort_saldo`), och de sparade minuterna under dem. `rls-test.sql`
 slår av flaggan `erbjudanden` överst, så att proven som räknar med
-obetalda pass inte får dem betalda, och på i blocken för 22.2.
+obetalda pass inte får dem betalda, och på i blocken för 22.2 och 22.3.
+Blocken för 22.3 kör jobbet för familj P direkt i stället för att vänta
+på schemat.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
@@ -417,7 +433,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 |---|---|
 | `nextrum-config.js` | **Enda filen som ska ändras vid uppsättning.** URL, anon-nyckel, pris, e-post, utbildningslänk |
 | `nextrum-app.js` | `NX` — delad grund: supa-klient, i18n, datum, fel, header, inloggning |
-| `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen |
+| `nextrum-fel.js` | Felrapportering till `klientfel`. Laddas **före** `nextrum-app.js`, annars missas uppstartsfelen. Vem felet gällde sätter databasen (`intern.klientfel_vem`, 2026-09-28) ur `auth.uid()` och skriver över det klienten skickar: kolumnen fylldes aldrig förut, och varje fel stod som Utloggad. DATASKYDD.md rad 12 och integritetspolicyn räknar med konto-id, 90 dagar |
 | `nextrum-modulvakt.js` | Fångar "en modul laddade inte" innan vyn dör tyst på "Laddar din vy". Laddas i **alla tre** vyerna sedan Fas 14.0 — adminvyn saknade den, fast den har 26 skript mot de andras 17. Prövar en FUNKTION per fil, inte bara att globalen finns: en gammal fil i cachen definierar sin global och ser frisk ut. Modulerna nås som IDENTIFIERARE, aldrig som `window[...]` — hälften deklareras `const NX… = …` på toppnivå och hamnar då inte på window |
 | `nextrum-samtycke.js` | `NXSamtycke`: samtyckesrutan och det enda stället som svarar på "får vi?". Bara på de öppna sidorna, efter `nextrum-app.js`. Se avsnitt 6, Samtycket |
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
@@ -687,7 +703,9 @@ med vyerna `timbank_saldo` och `timbank_rorelser`. Insättningarna står
 inte i någon tabell, de räknas ur passen. Fas 22.2 la till vyn
 `klippkort_rorelser` (passen varje kort betalat) och triggrarna
 `bookings_timmar_betalar` och `klippkort_betalar_passen`, som låter
-timmarna betala passen av sig själva (avsnitt 1).
+timmarna betala passen av sig själva (avsnitt 1). Fas 22.3 la till
+pg_cron-jobbet `timmar-betalar`, som låter timmar som blivit lediga
+betala nästa bekräftade pass.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 18.1 la till `google_koppling` (nyckeln till Nextrums Google-konto:
@@ -704,6 +722,9 @@ Fas 20.1 la till `pass_tillagg` (övertiden på ett förbetalt pass:
 parterna och admin läser, bara `service_role` skriver) och Fas 20.2
 `manadsbokslut` (stängda månader: admin läser, bara `stang_manad` och
 `oppna_manad` skriver).
+Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
+id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
+ingen roll utom ägaren når den). Se Notiserna nedan.
 
 **Flera sessioner kör mot samma databas samtidigt.** Fas 19.5 och Fas
 20.1 skrevs samma förmiddag i två sessioner och ändrade båda
@@ -997,6 +1018,31 @@ pass.** Den köas av `intern.timmar_gar_ut_koa()`, som pg_cron-jobbet
 svensk tid. En gång per kort och sista dag; ett förlängt kort får en ny.
 Mallen läser `kvar` (heltal, 1–200) och `datum` ur `RenData`, och bara
 familjen har raden i `NOTISVAL` (`bara: 'parent'`).
+
+**Notiser som inte gick fram (System → Fel) är bara databasens egna
+utskick** (2026-09-27). `notisfel()` läste förut hela
+`net._http_response`, och dit kommer varje anrop genom pg_net, också
+när en session provar en funktion efter en driftsättning. Utan
+hemligheten svarar funktionen 401, med GET 405, och svaret stod sedan i
+sex timmar som en notis som inte gick fram: adminvyn sa 8 fel, där tre
+var samma fel i koden och fem var prov. Tabellen har ingen adress, och
+ett prov och ett utskick med fel hemlighet ger samma 401, så skillnaden
+syns bara när anropet görs.
+
+- **Ring aldrig `net.http_post` direkt.** Databasens anrop går genom
+  `intern.natanrop(mal, url := …)`, med samma parametrar som
+  `net.http_post` och målet först. Den minns anropets id i
+  `intern.natanrop_logg`, och `notisfel()` visar bara svar på de
+  anropen och på webhooken för intresseanmälan (som minns sina i
+  `supabase_functions.hooks`), med vägen i `kalla`. Ett anrop förbi
+  `intern.natanrop` syns inte när det går fel; `rls-test.sql` har en
+  rad som fångar det.
+- **`grindfel` skiljer två 401:or.** Supabases grind svarar med
+  `sb-error-code` (`UNAUTHORIZED_…`) när JWT-kravet slagits på igen
+  (avsnitt 7, `config.toml`); funktionen själv svarar 401 när
+  hemligheten inte stämmer. Adminvyn säger vilket.
+- **Svaren finns i sex timmar** (`pg_net.ttl`), inte ett dygn. Listan
+  svarar på "gick det fram nyss?", inte på "vad hände i natt?".
 
 `DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
 sandlådan slås på innan något provas, och de fem stegen för att lägga
@@ -1689,6 +1735,13 @@ Körs på varje push och PR. Ska vara grön före merge.
 Kör dem lokalt innan du pushar. De är snabba och de fångar exakt det
 som annars upptäcks i drift.
 
+**`node --check` prövar bara syntaxen.** Ett namn som inte finns där
+det används ger ReferenceError först när raden körs. I adminvyn är det
+vanligaste fallet ett namn ur kärnan som aldrig hämtats in ur `NXAdmin`:
+auditloggen kraschade från 2026-09-22 till 09-27 på `AVBOKNINGSSKAL`
+så fort en avbokning med skäl stod bland raderna, och det syntes bara
+som klientfel under System → Fel.
+
 **`.github/workflows/indexnow.yml` är ingen kontroll** (2026-09-26). Den
 körs när Vercel rapporterat en lyckad produktionsdriftsättning och
 skickar de adresser vars summa i `sitemap.xml` ändrats till IndexNow
@@ -2024,7 +2077,10 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
   läser koden `timmar` som ingen kod och skriver det vanliga
   betalningsmejlet, så databasen kunde gå först. Inga köpta timmar
   fanns i driften då, så ingen familj fick ett pass betalt av
-  ändringen. Kvar: en familj som inte är matchad når inte
+  ändringen. **Fas 22.3** (2026-09-28) är bara databasen:
+  migrationen `fas22_3_lediga_timmar_betalar_nasta_pass` med jobbet
+  `timmar-betalar`. Ingen funktion ändrades, och fortfarande fanns
+  inga köpta timmar i driften. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**

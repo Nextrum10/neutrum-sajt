@@ -888,8 +888,10 @@ Familjen kan köpa timmar i förväg: två planer för en månad (4 och 8 timmar
 rabatt) och klippkort med 10, 20, 30, 60 eller 100 timmar (5 % rabatt, gäller 6, 6,
 6, 12 och 18 månader). Timmarna betalar sedan ett bekräftat pass i stället för
 kortet, av sig själva sedan Fas 22.2: när passet bekräftas eller genomförs, och när
-ett köp blir betalt för de bekräftade pass som redan står obetalda. Databasen är
-körd (`fas16_1` till `fas16_1e`, och `fas22_2_timmarna_betalar_passen`), och flaggan `erbjudanden`
+ett köp blir betalt för de bekräftade pass som redan står obetalda. Sedan Fas 22.3
+betalar timmar som blir lediga efter det nästa bekräftade pass inom fem minuter.
+Databasen är körd (`fas16_1` till `fas16_1e`, `fas22_2_timmarna_betalar_passen` och
+`fas22_3_lediga_timmar_betalar_nasta_pass`), och flaggan `erbjudanden`
 är PÅ sedan 2026-09-27, påslagen innan provköpet nedan var gjort. Står den av
 syns erbjudandena med sina priser på prissidan och i studievyn, men knapparna
 säger "Snart", och inga timmar går att dra.
@@ -900,7 +902,7 @@ säger "Snart", och inga timmar går att dra.
 |---|---|
 | Priset | `erbjudanden_pris`. Timpriset med rabatt, nedåt till hel krona, gånger timmarna (16.1d). Prissidan, studievyn och `stripe-checkout` läser samma rad |
 | Timmar kvar | `klippkort_saldo.kvar`, ur passen som bär `klippkort_id`. Ett avbokat pass räknas inte, så timmarna kommer tillbaka av sig själva |
-| Att dra timmar | Triggern `bookings_timmar_betalar` när ett pass bekräftas eller genomförs, och `klippkort_betalar_passen` när ett köp blir betalt (Fas 22.2). Annars `klippkort_dra()`, bara `service_role`, anropad av `klippkort-betala` efter att familjens token prövats |
+| Att dra timmar | Triggern `bookings_timmar_betalar` när ett pass bekräftas eller genomförs, och `klippkort_betalar_passen` när ett köp blir betalt (Fas 22.2). pg_cron `timmar-betalar` var femte minut för timmar som blivit lediga (Fas 22.3). Alla tre väljer genom `intern.timmar_betala`. Annars `klippkort_dra()`, bara `service_role`, anropad av `klippkort-betala` efter att familjens token prövats |
 | Pengar tillbaka | `klippkort_saldo.vid_anger_ore` inom ångerfristen, `vid_uppsagning_ore` efter den. Adminvyn väljer efter datumet |
 
 **Driftsätt i den här ordningen:**
@@ -932,6 +934,10 @@ Fas 22.2 (timmarna betalar passen av sig själva) är databasen och `notis-ko`
 version 19, i den ordningen och samma kväll. Ingen annan funktion ändrades:
 `klippkort_betald`, som webhooken redan anropar, är det som väcker triggern på
 köpet.
+
+Fas 22.3 (lediga timmar betalar nästa pass) är bara databasen: migrationen
+`fas22_3_lediga_timmar_betalar_nasta_pass`, som också schemalägger
+`timmar-betalar`. Ingen funktion ändrades.
 
 Driftsätts en funktion genom MCP i stället för `supabase functions
 deploy`: hämta tillbaka den efteråt och jämför varje fil mot repot.
@@ -980,10 +986,11 @@ står därför inte i `config.toml`.
    men inget nytt går att köpa eller dra.
 
 **Pengar tillbaka görs i Stripes dashboard, av en människa.** Beloppet står under
-Erbjudanden i adminvyn, kolumnen "Om de slutar i dag". **Avboka först de kommande
-pass som timmarna betalat**, om familjen inte vill ha dem: kolumnen räknar varje
-pass som inte är avbokat som använt, också ett som inte hållits, och sedan Fas 22.2
-betalar timmarna varje bekräftat pass av sig själva.
+Erbjudanden i adminvyn, kolumnen "Om de slutar i dag". **Avboka först alla kommande
+pass familjen inte vill ha**, inte bara de timmarna betalat: kolumnen räknar varje
+pass som inte är avbokat som använt, också ett som inte hållits, och sedan Fas 22.3
+betalar en timme som blir ledig nästa bekräftade pass inom fem minuter. Avbokas bara
+det betalda passet flyttar timmen alltså till nästa.
 
 - **Inom 14 dagar från köpet gäller ångerrätten.** De använda timmarna räknas som
   en andel av det familjen BETALADE, inte till 379 kr. Lagen om distansavtal 2 kap.
