@@ -290,7 +290,14 @@ obetalt pass larmar som förut, direkt, som `ej_betalt`: Leo valde det
 framför en frist. Fakturavalet heter "Få faktura nästa månad" (Fas 19.6,
 Leo: "betala senare genom att välja att få en faktura skickad till sig
 nästkommande månad") och är en knapp bredvid Betala med kort; en ruta
-frågar innan betalsättet sparas (Fas 19.7). En skickad faktura står under Betalning i
+frågar innan betalsättet sparas (Fas 19.7). Vill familjen ändå betala
+med kort trycker de **Betala med kort nu**, under Faktura i Betalning
+eller på passets sida, och kassan öppnas direkt (2026-09-28, Leo: "passet
+kan räknas som betalt efter att man betalat det"). Passet står kvar som
+`faktura` tills webhooken skrivit kortbetalningen, så en kassa som
+stängs utan betalning ändrar ingenting. Förut hette knappen Betala med
+kort i stället och bytte bara passet till obetalt: ingen kassa öppnades,
+och rapporten kom tillbaka under Att bekräfta. En skickad faktura står under Betalning i
 rutan Fakturor att betala, med belopp, förfallodag, passen, bankgiro
 (`BANKGIRO` i `nextrum-config.js`) och OCR. OCR:et skriver admin av från
 Fortnox vid Lagd i Fortnox; det räknas aldrig fram här, och
@@ -1540,7 +1547,7 @@ tillbaka en kopia.**
 | `ansokan-notis` | Ett besked till den som sökt jobb (Fas 16.1): kvittot, eller mejlet om ett steg framåt med hela processen och var hen står. Databasen bestämmer vad, funktionen skickar | Triggern `ansokan_besked` och pg_cron `ansokan-besked`, via `notis_konfig.ansokan_url` |
 | `ansokan-gallring` | Tar bort ansökningar som inte ledde till anställning och CV-filer utan ansökan när de är ett år gamla (2026-09-27, avsnitt 5). Filen först genom Storage-API:t, sedan raden genom `ansokan_gallra()`, som vägrar medan filen finns. Svarar 500 om något inte gick | pg_cron `ansokan-gallring` via `intern.ansokan_gallring_vack()` och `notis_konfig.gallring_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
-| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`) | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
+| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`). Sedan 2026-09-28 också ett pass som valts för faktura och inte står på en faktura än: det står kvar som `faktura` tills webhooken skrivit betalningen | Knappen på passet i föräldravyn, Betala med kort nu på ett fakturapass, och Köp under Erbjudanden |
 | `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet. Med `timbank: true` dras minuterna i timbanken i stället, i `timbank_dra()` (Fas 22.1). Sedan Fas 22.2 betalar timmarna passen av sig själva i databasen, och knappen tar det de inte hann | Betala med timmar och Betala med timbanken i föräldravyn |
 | `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser`. Ett tillägg (Fas 20.1) bär `tillagg_booking_id` och skrivs, återbetalas och bestrids på sin egen rad | Stripe |
 | `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
@@ -2000,8 +2007,14 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
     `skydda_bokningsfalt` släpper igenom `ingen`/`vantar`/`misslyckad`
     → `faktura` när `intern.faktura_tillaten()` säger ja, och
     `faktura` → `ingen` så länge passet inte står på en fakturarad.
-    Kortspärren godtar `faktura`, och `stripe-checkout` vägrar ett
-    fakturapass.
+    Kortspärren godtar `faktura`. `stripe-checkout` tar sedan
+    2026-09-28 ett fakturapass som inte står på en fakturarad, utan att
+    skriva `vantar`: passet betalas mot fakturan tills webhooken skrivit
+    `betald` (`faktura` står i `TAR_EMOT_BETALNING`), och
+    månadskörningen tar bara `faktura`. Vyn använder inte längre bytet
+    `faktura` → `ingen`, men databasen släpper igenom det. Hinner
+    månadskörningen lägga passet på fakturan medan kassan står öppen,
+    och familjen betalar ändå, larmar `betald_och_fakturerad`.
   - **Sanningen om ett fakturapass står på fakturan.** Passet står kvar
     som `faktura` också när fakturan är betald; `invoices.status`, nådd
     genom `invoice_lines`, säger om den är det.
