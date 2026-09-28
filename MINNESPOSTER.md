@@ -64,9 +64,9 @@ betalt, och ett hållet pass ska betalas även utan bekräftelse. Spärren
 `kortsparr` kan inte slås på sedan dess. Studiehjälparen får betalt den
 25:e och ser underlaget som månadens lönespecifikation, före skatt
 (2026-09-28); pg_cron-jobbet `manadskorning` skriver det den 1:a när
-det är påslaget, och adminvyn visar om det är det. Blir
-hen anställd läggs underlaget in i Fortnox Lön för hand, men
-anställningsformen är inte avgjord. Ett genomfört pass kostar den tid
+det är påslaget, och adminvyn visar om det är det. Blir hen anställd
+går underlaget till Fortnox Lön som en PAXml-fil från adminvyns Löner,
+men anställningsformen är inte avgjord. Ett genomfört pass kostar den tid
 det faktiskt hölls, per påbörjad kvart (Fas 20.1): tiden och skälet står
 i rapporten, ett förbetalt pass som drog över får ett tillägg
 (`pass_tillagg`), och lönen följer tiden nedåt alltid men uppåt bara när
@@ -86,8 +86,13 @@ som går ut först, annars timbanken), och ett nytt köp betalar de
 bekräftade pass som redan står obetalda. Sedan Fas 22.3 betalar timmar
 som blir lediga (avbokning, kortet som vann, banken som fyllts på) nästa
 bekräftade pass inom fem minuter, genom pg_cron-jobbet `timmar-betalar`.
-Vid ånger eller uppsägning avbokas alla kommande pass familjen inte vill
-ha först, annars räknas de som använda.
+Sedan Fas 22.4 dras timmen redan när familjen föreslår passet, och ett
+motförslag flyttar bara tiden: timmen följer med. Avböjt, tillbakadraget
+eller obesvarat när dagen gått ger tillbaka den (migrationen körd
+2026-09-28). Vid ånger eller uppsägning avbokas alla kommande pass och
+förslag familjen inte vill ha först, annars räknas de som använda.
+Tiderna i bokningen börjar klockan 11 på vardagar och klockan 9 på
+helger (2026-09-28).
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
@@ -373,7 +378,9 @@ och PÅ sedan 2026-09-27: familjen väljer det per pass, månadskörningen
 gör ett utkast per familj, admin lägger in det i Fortnox för hand. Tio
 dagar, inga avgifter. Sedan 2026-09-28 står fakturan bredvid
 kortmeningen på alla 36 ställen, och kontrollen räknar den; fakturan
-väljs efter passet, när rapporten bekräftas. Bankgirot, bolaget och
+väljs efter passet, när rapporten bekräftas. Ett fakturapass som inte
+står på en faktura än betalas med kort genom Betala med kort nu, och
+står kvar som faktura tills kortet är draget. Bankgirot, bolaget och
 beskedet till befintliga familjer återstår (DEPLOY-BETALNING.md 9.11). Spärren "ingen betalning, inget pass" (flaggan `kortsparr`)
 kan inte slås på sedan Fas 19.2 (`flaggor_kortsparr_av`). En korttvist
 har en sista dag att svara, sparas i `stripe_tvister` och blir en
@@ -382,9 +389,12 @@ Priset fryses på passet när det bokas (Fas 19.5, `timpris_ore`), och
 första timmen är på köpet för nya familjer: passet som gör två bokade
 timmar får en timme i `rabatt_ore` (`startrabatt`). Ett pass på noll
 kronor är inte obetalt. Bokföringen, fakturorna och lönen
-sköts i Fortnox, för hand, med flit utan koppling hit (Fas 14.9 bytte
-Wint mot Fortnox). Ingen API-koppling förrän handarbetet faktiskt kostar
-tid. Stripe ska bokföras genom en färdig integration som kopplas i
+sköts i Fortnox, med flit utan API-koppling hit (Fas 14.9 bytte Wint mot
+Fortnox). Lönen går dit som en PAXml-fil från Löner (2026-09-28);
+fakturorna läggs in för hand, för Fortnox läser inte in kundfakturor från
+fil. Ingen API-koppling förrän handarbetet kostar tid och ett
+Fortnox-konto med bankgiro finns. Adminvyns Månadens ekonomi visar per
+familj vad månadens pass dragit in och vad som väntar. Stripe ska bokföras genom en färdig integration som kopplas i
 Fortnox, utanför koden, före första skarpa betalningen och med revisorn.
 Google Workspace ger bara Meet-länkar till onlinepassen (Fas 18.1) och
 är inte kopplat förrän stegen i INTEGRATIONER.md är gjorda. Vidare:

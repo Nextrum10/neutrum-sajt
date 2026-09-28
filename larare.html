@@ -25,10 +25,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
-<link rel="stylesheet" href="nextrum-vy.css?v=b377f03a">
+<link rel="stylesheet" href="nextrum-vy.css?v=e12c1795">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      veckorutnätet för tider. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=b77efced">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=1166c66d">
 </head>
 <body class="vy">
 
@@ -198,8 +198,11 @@
       <div>
 
         <!-- Eleven allt nedanför gäller. Ligger utanför sektionerna
-             eftersom läxor, material, rapport och plan alla utgår
-             från den som är vald. -->
+             eftersom läxor och material utgår från den som är vald,
+             och meddelandena från hens familj. Under Lektioner &
+             elever står den inte sedan 2026-09-28: passen där gäller
+             alla elever, och Plan & utveckling har ett eget val där
+             man skriver (#plan-elev). -->
         <div class="vy-kontext">
     <!-- ============================================================
          VEM JOBBAR DU MED
@@ -526,9 +529,22 @@
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="plan"
              id="panel-plan" aria-labelledby="flik-plan" hidden>
-                    <!-- ============ STUDIEPLAN ============ -->
+          <div class="stack">
+                    <!-- ============ VEM DU SKRIVER OM ============
+                         Leo 2026-09-28: här väljer man först vilken
+                         elev man skriver om, för man kan ha flera.
+                         Formulären nedanför står inte framme förrän en
+                         elev är vald, och namnet står i deras rubriker.
+                         Ritas av ritaPlanElev(), som också säger varför
+                         valet inte ärvs från rutan som stod ovanför. -->
                     <div class="dbox">
-                      <h5>Studieplan</h5>
+                      <h5>Eleven</h5>
+                      <div id="plan-elev"><div class="loading">Hämtar</div></div>
+                    </div>
+
+                    <!-- ============ STUDIEPLAN ============ -->
+                    <div class="dbox" data-plan-skriv hidden>
+                      <h5>Studieplan <span data-plan-namn></span></h5>
                       <form id="plan-form">
                         <div class="fgroup">
                           <label for="p-amne">Ämne</label>
@@ -556,8 +572,8 @@
 
                          Tidigare rapporter som syntes här hörde till
                          Pass & rapport, och står nu bara där. -->
-                    <div class="dbox">
-                      <h5>Kunskapsområden <em id="prg-antal"></em></h5>
+                    <div class="dbox" data-plan-skriv hidden>
+                      <h5>Kunskapsområden <span data-plan-namn></span> <em id="prg-antal"></em></h5>
                       <p class="xsmall" style="color:var(--muted-2);margin-bottom:16px;line-height:1.6">
                         Det här är vad familjen ser som utveckling. Varje bedömning sparas, så att
                         utvecklingen syns över tid. Bedöm samma område igen för att flytta nivån.
@@ -607,6 +623,7 @@
 
                       <div id="prg-lista" style="margin-top:20px"><div class="loading">Hämtar</div></div>
                     </div>
+          </div>
         </div>
       </section>
 
@@ -1136,11 +1153,11 @@
 <script src="nextrum-app.js?v=d85467f7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=2c9440de"></script>
-<script src="nextrum-studie.js?v=54dea043"></script>
-<script src="nextrum-arbetsyta.js?v=e071024e"></script>
+<script src="nextrum-studie.js?v=39c0e0ca"></script>
+<script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
-<script src="nextrum-betalning.js?v=04742b06"></script>
-<script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-larare-vy.js?v=77f1afd1"></script>
+<script src="nextrum-betalning.js?v=91457326"></script>
+<script src="nextrum-modulvakt.js?v=4551791b"></script>
+<script src="nextrum-larare-vy.js?v=c56071dc"></script>
 </body>
 </html>

@@ -28,10 +28,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
-<link rel="stylesheet" href="nextrum-vy.css?v=b377f03a">
+<link rel="stylesheet" href="nextrum-vy.css?v=e12c1795">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=b77efced">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=1166c66d">
 </head>
 <body class="vy">
 
@@ -426,6 +426,10 @@
            Alla barn på en gång, inte bara det valda: det som väntar på
            familjen ska inte gömma sig bakom barnväljaren. Ritas av
            ritaBekrafta() i nextrum-studie-vy.js.
+
+           De bekräftade visas månad för månad (2026-09-28), på passets
+           månad, med samma rad som rapporterna i studiehjälparvyn. Att
+           bekräfta har ingen månad: det som väntar står alltid framme.
            ============================================================ -->
       <section class="vy-sek vy-sek-smal" data-sek="bekrafta" hidden>
         <div class="vy-sek-topp">
@@ -444,6 +448,7 @@
 
           <div class="dbox">
             <h5>Bekräftade <em id="rb-klara-antal"></em></h5>
+            <div id="rb-manader" aria-label="Visa de bekräftade rapporterna för månaden" hidden></div>
             <div id="rb-klara"><div class="loading">Hämtar</div></div>
           </div>
         </div>
@@ -602,7 +607,8 @@
       <!-- ============================================================
            ERBJUDANDEN (Fas 16.1)
            Planer och klippkort: timmar som köps i förväg till ett lägre
-           timpris och dras när ett pass är bekräftat. Priserna ritas av
+           timpris och dras när familjen föreslår ett pass (Fas 22.4;
+           förut när det bekräftades). Priserna ritas av
            ritaErbjudanden() ur erbjudanden_pris, samma vy som prissidan
            och stripe-checkout läser. Ett köp går genom samma kassa som
            ett pass; dragningen genom klippkort-betala.
@@ -616,7 +622,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Erbjudanden</h2>
-            <p>Köp timmar i förväg och betala mindre per timme. När er studiehjälpare har bekräftat ett pass betalar timmarna det av sig själva, i stället för kortet.</p>
+            <p>Köp timmar i förväg och betala mindre per timme. När ni föreslår ett pass betalar timmarna det av sig själva, i stället för kortet, och säger er studiehjälpare nej kommer de tillbaka.</p>
           </div>
         </div>
         <div class="stack">
@@ -976,11 +982,11 @@
 <script src="nextrum-app.js?v=d85467f7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=2c9440de"></script>
-<script src="nextrum-studie.js?v=54dea043"></script>
-<script src="nextrum-arbetsyta.js?v=e071024e"></script>
+<script src="nextrum-studie.js?v=39c0e0ca"></script>
+<script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
-<script src="nextrum-betalning.js?v=04742b06"></script>
-<script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=0f3de4a9"></script>
+<script src="nextrum-betalning.js?v=91457326"></script>
+<script src="nextrum-modulvakt.js?v=4551791b"></script>
+<script src="nextrum-studie-vy.js?v=a51295f4"></script>
 </body>
 </html>

@@ -447,6 +447,22 @@ window.NXStudie = (function () {
     märk();
     /* Efter layout: offsetLeft är 0 innan raden syns. */
     requestAnimationFrame(iBild);
+    /* Och igen när den börjar synas. Vyerna hämtar allt vid start, men
+       bara en sektion syns, så de flesta rader skapas dolda. Där har
+       raden bredden noll och iBild() gör ingenting: när sektionen
+       öppnades stod raden längst till vänster, med den valda månaden
+       (den innevarande, sist i raden) utanför. Mätt i provbänken
+       2026-09-28: 935 px in i en rad som var 308 px bred på en telefon
+       och 759 px på en dator. Bara när bredden går från noll: en rad man
+       själv dragit i sidled ska inte hoppa tillbaka när fönstret ändras. */
+    if (typeof ResizeObserver === 'function') {
+      var bredd = host.clientWidth;
+      new ResizeObserver(function () {
+        var ny = host.clientWidth;
+        if (!bredd && ny) iBild();
+        bredd = ny;
+      }).observe(host);
+    }
 
     return {
       vald: function () { return vald; },
@@ -687,8 +703,9 @@ window.NXStudie = (function () {
       if (o.datum && o.tid && !isNaN(start)) {
         for (var j = 0; j < timmar; j++) egna.add(o.datum + '|' + String(start + j).padStart(2, '0') + ':00');
       }
-      /* Varje timme 07–22, samma lista som förslaget i bokningen
-         (NXArbete.HELA_DAGEN). Studiehjälparens veckoschema finns inte
+      /* Varje timme från 11 på vardagar och 9 på helger till 22, samma
+         lista som förslaget i bokningen (NXArbete.HELA_DAGEN).
+         Studiehjälparens veckoschema finns inte
          kvar, och ett motförslag som bara fick ligga inom ett schema
          som inte längre går att ändra hade varit ett motförslag som
          inte går att ge. */
