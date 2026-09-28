@@ -40,7 +40,7 @@
       [typeof NXStudie !== 'undefined' && !!NXStudie.bekräfta, 'nextrum-studie.js'],
       [typeof NXArbete !== 'undefined', 'nextrum-arbetsyta.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],
-      [typeof NXBetalning !== 'undefined' && !!NXBetalning.kronor, 'nextrum-betalning.js'],
+      [typeof NXBetalning !== 'undefined' && !!NXBetalning.passpris, 'nextrum-betalning.js'],
       [typeof NXAgent !== 'undefined', 'nextrum-agent.js'],
       [typeof NXAdminAgenter !== 'undefined', 'nextrum-admin-agenter.js'],
       [typeof NXAdmin !== 'undefined' && !!NXAdmin.rita, 'nextrum-admin-karna.js']
@@ -62,6 +62,8 @@
         ritaChattar:       'nextrum-admin-kommunikation.js',
         ritaBokningar:     'nextrum-admin-drift.js',
         ritaAvvikelser:    'nextrum-admin-ekonomi.js',
+        ritaMånaden:       'nextrum-admin-manaden.js',
+        ritaLöner:         'nextrum-admin-loner.js',
         ritaTjanster:      'nextrum-admin-tjanster.js',
         ritaAudit:         'nextrum-admin-system.js',
         ritaAutomationer:  'nextrum-admin-automationer.js',
@@ -79,7 +81,7 @@
       [typeof NXKontakt !== 'undefined', 'nextrum-kontakt.js'],
       [typeof NXStudie !== 'undefined' && !!NXStudie.bekräfta, 'nextrum-studie.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],
-      [typeof NXBetalning !== 'undefined' && !!NXBetalning.kronor, 'nextrum-betalning.js'],
+      [typeof NXBetalning !== 'undefined' && !!NXBetalning.passpris, 'nextrum-betalning.js'],
       /* Fas 23.1: banan och spelaren i Uppgifter. En gammal fil i
          cachen saknar områdesrättningen, som kom sist. */
       [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.områdesHtml, 'nextrum-uppgifter.js']

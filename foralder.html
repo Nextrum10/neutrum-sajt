@@ -28,10 +28,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
-<link rel="stylesheet" href="nextrum-vy.css?v=84d799dd">
+<link rel="stylesheet" href="nextrum-vy.css?v=143737d0">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=b77efced">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=1166c66d">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=4eac3aef">
 </head>
 <body class="vy">
@@ -427,6 +427,10 @@
            Alla barn på en gång, inte bara det valda: det som väntar på
            familjen ska inte gömma sig bakom barnväljaren. Ritas av
            ritaBekrafta() i nextrum-studie-vy.js.
+
+           De bekräftade visas månad för månad (2026-09-28), på passets
+           månad, med samma rad som rapporterna i studiehjälparvyn. Att
+           bekräfta har ingen månad: det som väntar står alltid framme.
            ============================================================ -->
       <section class="vy-sek vy-sek-smal" data-sek="bekrafta" hidden>
         <div class="vy-sek-topp">
@@ -445,6 +449,7 @@
 
           <div class="dbox">
             <h5>Bekräftade <em id="rb-klara-antal"></em></h5>
+            <div id="rb-manader" aria-label="Visa de bekräftade rapporterna för månaden" hidden></div>
             <div id="rb-klara"><div class="loading">Hämtar</div></div>
           </div>
         </div>
@@ -1085,12 +1090,12 @@
 <script src="nextrum-app.js?v=d85467f7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=2c9440de"></script>
-<script src="nextrum-studie.js?v=685a9ec3"></script>
+<script src="nextrum-studie.js?v=815ef46e"></script>
 <script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
-<script src="nextrum-betalning.js?v=973469fe"></script>
+<script src="nextrum-betalning.js?v=cf621f61"></script>
 <script src="nextrum-uppgifter.js?v=8fe89b7f"></script>
-<script src="nextrum-modulvakt.js?v=43c4a798"></script>
-<script src="nextrum-studie-vy.js?v=9e0c2836"></script>
+<script src="nextrum-modulvakt.js?v=aa7653c6"></script>
+<script src="nextrum-studie-vy.js?v=7f265457"></script>
 </body>
 </html>
