@@ -892,8 +892,9 @@ registret; det här är det som rör koden.
   nittio dagar** (`intern.kontakt_och_fel_gallra()`, pg_cron
   `kontakt-och-fel-gallring`). Notiserna har egna tider i
   `notis_stada()`: 180 dagar i vyn, 90 för utskicken.
-- Ansökningar och CV:n gallras av `ansokan-gallring` (PR #90), med
-  samma princip: filen först, raden sedan.
+- Ansökningar och CV:n gallras av `ansokan-gallring`, med samma
+  princip: filen först, raden sedan. Se "Gallringen: ansökningar och
+  CV:n efter ett år" nedan.
 
 ### Notiserna (Runda 2)
 
@@ -1316,7 +1317,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 26 SECURITY DEFINER-funktioner nåbara för `authenticated` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 30 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
