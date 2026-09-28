@@ -79,7 +79,16 @@ Deno.serve(async (req) => {
     if (!pass.stripe_payment_intent_id) {
       return json({ error: 'Passet har ingen genomförd kortbetalning.' }, 409, CORS);
     }
-    if (pass.betalning_status !== 'betald' && pass.betalning_status !== 'tvist') {
+    /* En betalning i tvist återbetalas inte härifrån (2026-09-29). Pengarna
+       är redan på väg tillbaka genom kortutgivaren, och Stripe nekar en
+       återbetalning av en bestriden charge. Förut släpptes den in och
+       admin fick Stripes engelska fel i stället för ett besked. */
+    if (pass.betalning_status === 'tvist') {
+      return json({
+        error: 'Passet har en korttvist. Pengarna går tillbaka genom tvisten; svara på den under Tvister i Stripe i stället.',
+      }, 409, CORS);
+    }
+    if (pass.betalning_status !== 'betald') {
       return json({
         error: `Passet står som "${pass.betalning_status}" och går inte att återbetala.`,
       }, 409, CORS);

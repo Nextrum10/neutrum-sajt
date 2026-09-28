@@ -825,7 +825,8 @@
         + (b.stripe_skarp === false ? ' ' + pill('Test', '') : '') },
       { namn: '', höger: true, rita: b => {
         const kvar = Number(b.betalt_ore || 0) - Number(b.aterbetald_ore || 0);
-        const gar = (b.betalning_status === 'betald' || b.betalning_status === 'tvist') && kvar > 0;
+        // Inte i tvist: stripe-aterbetalning nekar den (2026-09-29).
+        const gar = b.betalning_status === 'betald' && kvar > 0;
         return gar ? '<button class="btn btn-ghost btn-sm" data-aterbetala="' + b.id + '">Återbetala</button>' : '';
       } },
       { namn: 'Läge', höger: true, rita: b =>

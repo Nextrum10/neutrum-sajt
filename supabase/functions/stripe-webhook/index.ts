@@ -376,13 +376,18 @@ Deno.serve(async (req) => {
 
         /* Ett pass eller ett köpt klippkort (Fas 16.1): avgiften hör till
            den rad som bär chargen, och det är aldrig båda. */
-        const { data: pass } = await db.from('bookings')
+        /* En läsning som faller kastas: annars såg den ut som "ingen rad",
+           och händelsen kvitterades som en charge utan pass. */
+        const { data: pass, error: l1 } = await db.from('bookings')
           .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
-        const { data: kort } = pass ? { data: null } : await db.from('klippkort')
+        if (l1) throw new Error('bookings: ' + l1.message);
+        const { data: kort, error: l2 } = pass ? { data: null, error: null } : await db.from('klippkort')
           .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
+        if (l2) throw new Error('klippkort: ' + l2.message);
         // Ett tillägg för övertid (Fas 20.1) bär också en egen charge.
-        const { data: tillagg } = pass || kort ? { data: null } : await db.from('pass_tillagg')
+        const { data: tillagg, error: l3 } = pass || kort ? { data: null, error: null } : await db.from('pass_tillagg')
           .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
+        if (l3) throw new Error('pass_tillagg: ' + l3.message);
         const rad = pass ?? kort ?? tillagg;
         if (!rad) return await klar('charge utan pass');
         if (rad.stripe_avgift_ore !== null && rad.stripe_avgift_ore !== undefined) {
@@ -392,34 +397,41 @@ Deno.serve(async (req) => {
         if (bt.avgiftOre === null && arStripeId(bt.id, 'txn')) {
           bt = balans(await v1('GET', `/v1/balance_transactions/${bt.id}`));
         }
-        await db.from(pass ? 'bookings' : kort ? 'klippkort' : 'pass_tillagg').update({
+        const { error: avgfel } = await db.from(pass ? 'bookings' : kort ? 'klippkort' : 'pass_tillagg').update({
           stripe_balanstransaktion_id: bt.id,
           stripe_avgift_ore: bt.avgiftOre,
           stripe_netto_ore: bt.nettoOre,
         }).eq('id', rad.id).is('stripe_avgift_ore', null);
+        if (avgfel) throw new Error('avgiften: ' + avgfel.message);
         return await klar(bt.avgiftOre === null ? 'balanstransaktion utan avgift' : `avgift ${bt.avgiftOre} öre`);
       }
 
       // ---------- betalningen gick inte igenom ----------
       case 'payment_intent.payment_failed': {
         const tillaggId = String((obj.metadata as Record<string, string> | undefined)?.tillagg_booking_id ?? '');
+        /* Varje skrivning läser sitt fel och kastar det (2026-09-29), som
+           betalningen ovan. Förut kvitterades händelsen även när
+           skrivningen föll, och Stripe försökte aldrig igen. */
         if (tillaggId) {
-          await db.from('pass_tillagg').update({ status: 'misslyckad' })
+          const { error } = await db.from('pass_tillagg').update({ status: 'misslyckad' })
             .eq('booking_id', tillaggId).eq('status', 'vantar');
+          if (error) throw new Error('pass_tillagg: ' + error.message);
           return await klar('tillägg misslyckat');
         }
         const kkId = String((obj.metadata as Record<string, string> | undefined)?.klippkort_id ?? '');
         if (kkId) {
-          await db.from('klippkort').update({ status: 'misslyckad' })
+          const { error } = await db.from('klippkort').update({ status: 'misslyckad' })
             .eq('id', kkId).eq('status', 'vantar');
+          if (error) throw new Error('klippkort: ' + error.message);
           return await klar('klippkort misslyckat');
         }
         const passId = String((obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
         if (!passId) return await klar('utan pass-id');
         // Tillbaka till "misslyckad", inte till "ingen": familjen ska
         // kunna försöka igen, och adminvyn ska kunna se att det hände.
-        await db.from('bookings').update({ betalning_status: 'misslyckad' })
+        const { error } = await db.from('bookings').update({ betalning_status: 'misslyckad' })
           .eq('id', passId).eq('betalning_status', 'vantar');
+        if (error) throw new Error('bookings: ' + error.message);
         return await klar('misslyckad');
       }
 
@@ -427,9 +439,33 @@ Deno.serve(async (req) => {
       case 'charge.refunded': {
         const aterbetalt = Number(obj.amount_refunded ?? 0);
         const totalt = Number(obj.amount ?? 0);
-        const andring = {
-          aterbetald_ore: aterbetalt,
-          betalning_status: aterbetalningsLage(aterbetalt, totalt),
+        const lage = aterbetalningsLage(aterbetalt, totalt);
+
+        /* EN TVIST ÄGER LÄGET (2026-09-29). Beloppet skrivs alltid, men en
+           rad som står i tvist behåller 'tvist': förut skrev en sen
+           charge.refunded 'betald' över den, och ett bestritt pass såg ut
+           som ett vanligt betalt. När tvisten stängs räknas läget om ur
+           utfallet, i grenen för tvisterna nedan.
+
+           Varje skrivning läser sitt fel och kastar det. Förut kvitterades
+           händelsen även när skrivningen föll, och återbetalningen syntes
+           aldrig i raden. */
+        const aterbetala = async (
+          tabell: 'bookings' | 'klippkort' | 'pass_tillagg',
+          kolumn: 'id' | 'stripe_charge_id',
+          varde: string,
+          lageKolumn: 'betalning_status' | 'status',
+          nytt: string,
+        ): Promise<number> => {
+          const { data: vanliga, error: fel1 } = await db.from(tabell)
+            .update({ aterbetald_ore: aterbetalt, [lageKolumn]: nytt })
+            .eq(kolumn, varde).neq(lageKolumn, 'tvist').select('id');
+          if (fel1) throw new Error(tabell + ': ' + fel1.message);
+          const { data: itvist, error: fel2 } = await db.from(tabell)
+            .update({ aterbetald_ore: aterbetalt })
+            .eq(kolumn, varde).eq(lageKolumn, 'tvist').select('id');
+          if (fel2) throw new Error(tabell + ': ' + fel2.message);
+          return (vanliga?.length ?? 0) + (itvist?.length ?? 0);
         };
 
         /* CHARGE-ID FÖRST, metadata bara som reserv.
@@ -443,7 +479,7 @@ Deno.serve(async (req) => {
            det HÄR siffran hamnar. */
         const chargeId = String(obj.id ?? '');
         if (chargeId) {
-          await db.from('bookings').update(andring).eq('stripe_charge_id', chargeId);
+          await aterbetala('bookings', 'stripe_charge_id', chargeId, 'betalning_status', lage);
           /* Ett klippkort (Fas 16.1) STÄNGS av varje återbetalning, också
              en delvis. Villkoren har tre skäl att betala tillbaka ett
              köp: ångerrätten, att familjen slutar, och en timme som gick
@@ -451,20 +487,18 @@ Deno.serve(async (req) => {
              alla tre är kortet slut. En delåterbetalning som lämnade det
              öppet hade låtit familjen fortsätta dra timmar som redan gått
              tillbaka. */
-          const { data: kort } = await db.from('klippkort')
-            .update({ aterbetald_ore: aterbetalt, status: 'aterbetald' })
-            .eq('stripe_charge_id', chargeId).select('id');
-          if (kort?.length) return await klar(`klippkort återbetalt ${aterbetalt} öre, stängt`);
+          if (await aterbetala('klippkort', 'stripe_charge_id', chargeId, 'status', 'aterbetald')) {
+            return await klar(`klippkort återbetalt ${aterbetalt} öre, stängt`);
+          }
           // Ett tillägg (Fas 20.1) har sin egen charge, och sin egen rad.
-          const { data: tillagg } = await db.from('pass_tillagg')
-            .update({ aterbetald_ore: aterbetalt, status: aterbetalningsLage(aterbetalt, totalt) })
-            .eq('stripe_charge_id', chargeId).select('booking_id');
-          if (tillagg?.length) return await klar(`tillägg återbetalt ${aterbetalt} öre`);
+          if (await aterbetala('pass_tillagg', 'stripe_charge_id', chargeId, 'status', lage)) {
+            return await klar(`tillägg återbetalt ${aterbetalt} öre`);
+          }
           return await klar(`återbetalt ${aterbetalt} öre`);
         }
         const passId = String((obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
         if (!passId) return await klar('återbetalning utan charge-id och utan pass-id');
-        await db.from('bookings').update(andring).eq('id', passId);
+        await aterbetala('bookings', 'id', passId, 'betalning_status', lage);
         return await klar(`återbetalt ${aterbetalt} öre (via metadata)`);
       }
 
@@ -491,18 +525,23 @@ Deno.serve(async (req) => {
         const stangs = typ === 'charge.dispute.closed' || tvistUtfall(lage) !== 'oppen';
         const nu = new Date().toISOString();
 
-        const { data: passen } = await db.from('bookings')
+        // Läsfel kastas, av samma skäl som i charge.updated.
+        const { data: passen, error: l1 } = await db.from('bookings')
           .select('id, betalning_status').eq('stripe_charge_id', chargeId).limit(1);
+        if (l1) throw new Error('bookings: ' + l1.message);
         const pass = passen?.[0] ?? null;
         // Ett köpt klippkort kan också bestridas (Fas 16.1).
-        const { data: kort } = pass ? { data: null } : await db.from('klippkort')
+        const { data: kort, error: l2 } = pass ? { data: null, error: null } : await db.from('klippkort')
           .select('id, status').eq('stripe_charge_id', chargeId).maybeSingle();
+        if (l2) throw new Error('klippkort: ' + l2.message);
         // Ett tillägg för övertid (Fas 20.1) kan också bestridas.
-        const { data: tillagg } = pass || kort ? { data: null } : await db.from('pass_tillagg')
+        const { data: tillagg, error: l3 } = pass || kort ? { data: null, error: null } : await db.from('pass_tillagg')
           .select('id, booking_id, status').eq('stripe_charge_id', chargeId).maybeSingle();
+        if (l3) throw new Error('pass_tillagg: ' + l3.message);
 
-        const { data: forut } = await db.from('stripe_tvister')
+        const { data: forut, error: l4 } = await db.from('stripe_tvister')
           .select('stangd, lage').eq('id', tvistId).maybeSingle();
+        if (l4) throw new Error('stripe_tvister: ' + l4.message);
         if (forut?.stangd && !stangs) {
           return await klar(`tvist ${tvistId}: sen händelse efter stängning, ignorerad`);
         }
@@ -530,23 +569,26 @@ Deno.serve(async (req) => {
            tvisten syns i stripe_tvister, och läget ska inte ljuga om att
            de dragits igen. */
         if (pass && (pass.betalning_status === 'betald' || pass.betalning_status === 'tvist')) {
-          await db.from('bookings')
+          const { error } = await db.from('bookings')
             .update({ betalning_status: betallageEfterTvist(tvistUtfall(lage)) })
             .eq('id', pass.id);
+          if (error) throw new Error('bookings: ' + error.message);
         }
         /* Ett klippkort i tvist går inte att dra timmar från
            (klippkort_dra kräver 'betald'): pengarna kan vara på väg
            tillbaka. Vinner vi öppnas det igen; förlorar vi står det kvar
            som tvist, som passen. */
         if (tillagg && (tillagg.status === 'betald' || tillagg.status === 'tvist')) {
-          await db.from('pass_tillagg')
+          const { error } = await db.from('pass_tillagg')
             .update({ status: betallageEfterTvist(tvistUtfall(lage)) })
             .eq('id', tillagg.id);
+          if (error) throw new Error('pass_tillagg: ' + error.message);
         }
         if (kort && (kort.status === 'betald' || kort.status === 'tvist')) {
-          await db.from('klippkort')
+          const { error } = await db.from('klippkort')
             .update({ status: betallageEfterTvist(tvistUtfall(lage)) })
             .eq('id', kort.id);
+          if (error) throw new Error('klippkort: ' + error.message);
         }
 
         /* En uppgift när Stripe väntar på oss, med dagen som förfallodag.

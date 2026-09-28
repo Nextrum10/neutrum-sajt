@@ -1230,6 +1230,11 @@ sökvägen.
   knappen "Lyft in i banken", och bara åt det hållet: en delad rad som
   lämnades tillbaka hade försvunnit ur listan hos alla som redan gett
   den som läxa.
+- **En länk är en webbadress** (2026-09-29,
+  `biblioteksmaterial_lank_webbadress`): http eller https, utan
+  mellanslag. Familjen öppnar den med `window.open`, och förut var det
+  bara CSP:n som stoppade en `javascript:`-adress. Vyerna prövar samma
+  regel innan de sparar.
 - **`ar_godkand_studiehjalpare()`** är den första policyn som ställer
   frågan "är den här personen godkänd" i databasen. Före Fas 13.2
   nämnde noll policyer `tutor_profiles` — det var något adminvyn visste
@@ -1751,6 +1756,20 @@ att visa **rätt sida**, inte för att skydda data.
   inte gå den vägen, för en blob-adress ärver adminvyns CSP och
   `object-src 'none'` stoppar PDF-visaren. Filen och ansökan gallras
   efter ett år (avsnitt 5, Gallringen).
+  **Uppladdningen har ett tak** (2026-09-29): policyn släpper bara in
+  sökvägen `NX.kopplaAnsökan` bygger (13 siffror, slump, rensat
+  filnamn) och högst tjugo filer i timmen
+  (`intern.cv_uppladdning_tillaten()`). Nekas filen går ansökan in
+  ändå, med filnamnet noterat. **Ändras sökvägens form i
+  `kopplaAnsökan` ska policyn ändras i samma ändring**, annars kommer
+  inget CV fram och ingenting blir rött.
+- **Det anonyma har tak** (2026-09-29). `klientfel` kapas i databasen
+  till samma längder som `nextrum-fel.js` skickar, och över sextio rader
+  på en minut tas raden tyst bort (`intern.klientfel_tak()`).
+  `contact_messages` har längder på fälten (formulärets `maxlength`
+  följer dem) och nekar över trettio meddelanden i timmen eller tre
+  från samma adress (`intern.kontakt_broms()`). Båda sätter
+  `created_at` själva, som `leads` och `applications`.
 - **Tar du bort en fil: filen först, raden sedan, och LÄS SVARET.**
   Sökvägen finns bara i raden. Försvinner raden först blir filen omöjlig
   att hitta och omöjlig att städa. Det stod som en kommentar i
@@ -2496,6 +2515,13 @@ tillbaka överst i avsnittet för 22.1.
     DEPLOY-BETALNING.md 9.10 har processen. En förlorad tvist står kvar
     som `tvist`, inte `aterbetald`: passet hölls, och ett återkrav vi
     förlorat är inte en återbetalning vi valt.
+    **En tvist äger läget** (2026-09-29): `stripe-aterbetalning` nekar
+    ett pass i tvist (Stripe nekar det också), adminvyn visar ingen
+    knapp, och `charge.refunded` skriver beloppet men lämnar `tvist`
+    orört på passet, klippkortet och tillägget. Läget räknas om när
+    tvisten stängs. Varje skrivning och läsning i webhooken kastar sitt
+    fel sedan samma dag, så att Stripe försöker igen i stället för att
+    händelsen kvitteras med raden oskriven.
   - **Ingen avbokningsavgift.** Villkoren lovar hela beloppet tillbaka
     för ett pass som aldrig hölls. En avgift för sena avbokningar är ett
     nytt villkor, inte en inställning.

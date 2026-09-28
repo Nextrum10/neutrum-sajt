@@ -601,7 +601,7 @@ Deno.serve(async (req) => {
         cancel_url: `${bas}/foralder?betalning=avbruten`,
       };
 
-    const session = await v1('POST', '/v1/checkout/sessions', {
+    const parametrar = {
       mode: 'payment',
       locale: 'sv',
       ...efter,
@@ -659,6 +659,7 @@ Deno.serve(async (req) => {
            testläge skickas inga kvitton alls. */
         receipt_email: kund?.email ?? undefined,
       },
+    };
     // En idempotensnyckel per pass OCH belopp. Klickar familjen två
     // gånger får de samma session. Ändras beloppet (rabatt, ny tjänst)
     // blir det en ny, för det är en annan betalning.
@@ -670,7 +671,30 @@ Deno.serve(async (req) => {
     // parametrarna ovan ändras. Kassans sort står med av samma skäl:
     // en inbäddad och en på Stripes sida är olika parametrar, och vyn
     // kan be om den ena efter den andra för samma pass.
-    }, `nextrum-pass-${pass.id}-${netto}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
+    const nyckel = `nextrum-pass-${pass.id}-${netto}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`;
+    let session = await v1('POST', '/v1/checkout/sessions', parametrar, nyckel);
+
+    /* EN ÅTERANVÄND NYCKEL KAN GE EN STÄNGD KASSA (2026-09-29). Stripe
+       minns svaret på en idempotensnyckel i ett dygn och lämnar ut det
+       igen, också när kassan det beskriver har stängts sedan dess. Gick
+       beloppet från A till B och tillbaka till A (en rapport som rättas)
+       fick familjen A-kassan igen, som stängdes när B skapades: en kassa
+       som inte gick att öppna, i upp till ett dygn.
+
+       Är kassan inte den passet redan bär frågas Stripe om den är
+       öppen. Är den stängd skapas en ny med en egen nyckel. Är den
+       betald är passet betalt med den, och webhooken är på väg. */
+    const förra = String(pass.stripe_session_id ?? '');
+    const fåttId = String((session as { id?: string }).id ?? '');
+    if (fåttId && fåttId !== förra) {
+      const läge = String((await v1('GET', `/v1/checkout/sessions/${fåttId}`) as { status?: string }).status ?? '');
+      if (läge === 'complete') {
+        return json({ error: 'Passet har just betalats. Ladda om sidan.' }, 409, CORS);
+      }
+      if (läge === 'expired') {
+        session = await v1('POST', '/v1/checkout/sessions', parametrar, `${nyckel}-n${Date.now()}`);
+      }
+    }
 
     // ---------- vad vi BAD om skrivs ner ----------
     /* Först nu, och bara med service_role. Skrivningen kan inte göras
@@ -748,7 +772,6 @@ Deno.serve(async (req) => {
        tiden), kunde familjen betala båda och kortet dras två gånger. En
        kassa som redan betalats eller gått ut går inte att stänga; det felet
        är väntat och sväljs. */
-    const förra = String(pass.stripe_session_id ?? '');
     if (förra && förra !== sessionId) {
       try {
         await v1('POST', `/v1/checkout/sessions/${förra}/expire`);

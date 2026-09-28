@@ -401,6 +401,8 @@ beskedet till befintliga familjer återstår (DEPLOY-BETALNING.md 9.11). Spärre
 kan inte slås på sedan Fas 19.2 (`flaggor_kortsparr_av`). En korttvist
 har en sista dag att svara, sparas i `stripe_tvister` och blir en
 uppgift; att svara är en människas jobb (DEPLOY-BETALNING.md 9.10).
+Ett pass i tvist återbetalas inte, och en återbetalning skriver inte
+över `tvist`.
 Priset fryses på passet när det bokas (Fas 19.5, `timpris_ore`), och
 första timmen är på köpet för nya familjer: passet som gör två bokade
 timmar får en timme i `rabatt_ore` (`startrabatt`). Ett pass på noll

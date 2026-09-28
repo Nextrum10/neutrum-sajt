@@ -2557,8 +2557,9 @@
       { fel: !titel, text: 'Ge materialet en rubrik.', falt: $('#be-titel') },
       { fel: bibEgetTyp === 'fil' && !fil, text: 'Välj en fil att ladda upp.', falt: $('#be-fil') },
       { fel: bibEgetTyp === 'lank' && !länk, text: 'Klistra in adressen.', falt: $('#be-lank') },
-      { fel: bibEgetTyp === 'lank' && länk && !/^https?:\/\//i.test(länk),
-        text: 'Adressen måste börja med http:// eller https://.', falt: $('#be-lank') },
+      // Samma regel som biblioteksmaterial_lank_webbadress i databasen.
+      { fel: bibEgetTyp === 'lank' && länk && !/^https?:\/\/\S+$/i.test(länk),
+        text: 'Adressen måste börja med http:// eller https:// och sakna mellanslag.', falt: $('#be-lank') },
       { fel: bibEgetTyp === 'fil' && fil && !!M.granskaFil(fil),
         text: fil ? M.granskaFil(fil) : '', falt: $('#be-fil') }
     ]);
