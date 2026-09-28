@@ -150,6 +150,13 @@ bär `{oss}`, som `t()` fyller med `CFG.EPOST`.
 `verktyg/rls-test.sql` körs som ett anrop mot databasen efter varje
 ändring i en policy eller trigger. Varje rad i svaret ska vara ok.
 
+Dataskyddet på pappret (registret över behandlingar,
+konsekvensbedömningen, incidentrutinen, biträdena) står i
+`DATASKYDD.md`. Ändras vad som sparas, till vem eller hur länge: ändra
+den och integritetspolicyn på båda språken i samma ändring. Inget
+skript som skickar data laddas på en öppen sida före ett ja i rutan,
+inte heller Vercels besöksstatistik.
+
 ---
 
 ## `project-nextrum-databas`
@@ -218,7 +225,7 @@ skript blir svensk på den engelska sidan och ingen strukturkontroll ser
 det.
 
 Bara det som visas översätts. Strängar som skrivs till databasen
-("Telefon: ", "Samtycke till lagring: ja") förblir svenska, de läses av
+("Telefon: ", "Läst integritetspolicyn: ja") förblir svenska, de läses av
 oss.
 
 `verktyg/jamfor-sprak-baslinje.txt` innehåller de avsiktliga avvikelserna

@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=ad8203ae">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=1ba60ec7">
 </head>
 <body>
 
@@ -129,7 +129,7 @@
   <a class="nx-back" href="/en/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> To the home page</a>
   <span class="nx-et acc" style="margin-top:22px">Cookies</span>
   <h1 class="nx-d1">Cookies and storage</h1>
-  <p class="nx-lede">A short page, because there is little to report: the public pages set no cookies, and the only thing we ask about is where you came from.</p>
+  <p class="nx-lede">A short page, because there is little to report: the public pages set no cookies, and we only measure what you say yes to.</p>
 </section>
 
 <section class="sec wrap" style="padding-top:clamp(16px,2vw,28px)">
@@ -140,15 +140,36 @@
     <div class="jur-ruta">
       <h2>No cookies on the public pages</h2>
       <p>We measured this rather than assumed it: the public pages set zero cookies. Without your
-        yes, nothing is stored in your browser until you log in, except the answer itself.</p>
-      <p>The box that may still appear asks about one thing only: whether we may see which ad or
-        link brought you here. You can change your answer at any time, just below.</p>
-      <p>We do count visits. How that works without cookies is explained just below.</p>
+        yes, nothing is stored in your browser, except the answer itself, until you log in.</p>
+      <p>The box that appears the first time asks about two things, and you choose each one
+        separately: visitor statistics and ad measurement. Saying no to both works just as well.
+        You change your choice below, or via Cookie settings at the bottom of every page.</p>
       <p>The only place a cookie is set is when you pay for a session by card. Then it is Stripe
-        that sets it, and only for the payment. That is explained further down.</p>
+        that sets it, and only for the payment.</p>
     </div>
 
-    <h2 id="ditt-val">What we ask about</h2>
+    <h2 id="ditt-val">Your choice</h2>
+    <div class="nx-kakor-panel" data-samtycke-panel>
+      <p>Your choice is shown here once the page has loaded. Without JavaScript nothing is stored,
+        and there is nothing to choose.</p>
+    </div>
+
+    <h2>Visitor statistics</h2>
+    <p>If you say yes, Vercel Web Analytics counts how many people visit the site and which pages
+      are read, and Vercel Speed Insights measures how fast the pages load. Without a yes, none
+      of it is loaded.</p>
+    <ul>
+      <li>No cookie. Unique visitors are derived from a hash of the IP address and browser type,
+        with a salt that changes every day. The raw IP address is not stored, and the same visitor
+        gets a new value the next day.</li>
+      <li>What is sent is which page was read, where you came from, country, operating system,
+        browser, whether you are on a computer or a phone, and how long the page took to load.</li>
+      <li>We ask because the script makes your browser send that information, and the Swedish
+        Electronic Communications Act requires your consent for that, even without cookies.</li>
+      <li>The student view and the tutor view are not measured at all.</li>
+    </ul>
+
+    <h2>Ad measurement</h2>
     <p>We want to know which ads and links lead families to get in touch, so that we do not spend
       money in the wrong place. If you say yes, your browser remembers where you came from until
       you close the tab, in what is called <i>sessionStorage</i>. If you send an enquiry or an
@@ -157,19 +178,20 @@
       <li>What is remembered is the website that linked here, the page you landed on, and the tags
         we ourselves put in the address when we advertise. Nothing about you.</li>
       <li>It does not leave your browser until you submit a form, and then only to us.</li>
-      <li>If you say no, we only see the page where you sent the enquiry. Everything else works
-        exactly the same.</li>
-      <li>Your answer is kept for a year in <i>localStorage</i>, so that we do not ask on every
-        page. If your browser says you do not want to be tracked (Global Privacy Control), we
-        treat it as a no.</li>
+      <li>If you say no, we only see the page where you sent the enquiry.</li>
       <li>We do not currently use any advertising pixel from Meta, Google or anyone else. If we
         turn one on, the box asks about it specifically, including people who already said yes,
         and this page is rewritten the same day.</li>
     </ul>
-    <div class="nx-kakor-panel" data-samtycke-panel>
-      <p>Your choice is shown here once the page has loaded. Without JavaScript nothing is stored,
-        and there is nothing to choose.</p>
-    </div>
+
+    <h2>How your answer is stored</h2>
+    <ul>
+      <li>Your answer is kept in your browser for a year, in <i>localStorage</i>, so that we do not
+        ask on every page. That requires no consent: without it, we could not avoid asking.</li>
+      <li>If your browser says you do not want to be tracked (Global Privacy Control), we treat it
+        as no to everything, and the box is not shown.</li>
+      <li>If you withdraw a yes, the page reloads without what you said no to.</li>
+    </ul>
 
     <h2>What is stored when you log in</h2>
     <p>When you log in, your session is saved in your own browser, in what is called
@@ -196,21 +218,9 @@
         <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripe’s privacy policy</a>.</li>
     </ul>
 
-    <h2>How we count visits</h2>
-    <p>We use Vercel Web Analytics to see how many people find us and which pages they read. It
-      works without cookies, which is the entire reason we chose it.</p>
-    <p>Instead of marking your browser, unique visitors are derived from a hash of your IP address
-      and your browser type, with a salt that changes every day. The raw IP address is not
-      stored, and the hash cannot be reversed. After a day the salt changes and the same visitor
-      gets a different value — so nothing follows you over time.</p>
-    <p>What is collected is which page was read, where you came from, country, operating system,
-      browser, and whether you were on a computer or a phone. None of it identifies you.</p>
-    <p>Measurement exists only on the public pages. The student view and the tutor view are not
-      measured at all.</p>
-
     <h2>What is not here</h2>
     <ul>
-      <li>No cookie — not even for the statistics above</li>
+      <li>No cookie on the public pages, not even for the statistics</li>
       <li>No pixel from any social network or ad network</li>
       <li>No third-party cookies on the public pages</li>
       <li>No profiling and no automated decisions about you</li>
@@ -221,24 +231,21 @@
     <p>Even without cookies, every visit means your browser fetches files from someone. This is
       the entire list:</p>
     <ul>
-      <li><b>Vercel</b> — the site is hosted there, so all traffic passes through them. They are also the ones
-        counting visits, in the way described above.</li>
-      <li><b>Supabase</b> — the database and the login. Contacted when you submit a form or log in. The servers
-        are within the EU.</li>
-      <li><b>Stripe</b> — card payments. Only in the parent view, and only when you press
+      <li><b>Vercel</b>: the site is hosted there, so all traffic passes through them. If you say
+        yes to visitor statistics, they are also the ones counting visits.</li>
+      <li><b>Supabase</b>: the database and the login. Contacted when you submit a form or log in.
+        The servers are within the EU.</li>
+      <li><b>Stripe</b>: card payments. Only in the parent view, and only when you press
         “Betala med kort”.</li>
     </ul>
-    <p>That is the whole list — and it has grown shorter. The fonts used to sit with Google, and
-      the library the login needs used to sit with unpkg.com. Both sent your IP address to a
-      third party on every page view. Both now sit with us, and those transfers no longer
-      happen.</p>
+    <p>The fonts and the library the login needs are hosted by us, so that your IP address is
+      not sent to anyone beyond that.</p>
 
     <h2>If that changes</h2>
-    <p>If we ever add anything else that requires your consent — embedded video, advertising
-      tools, anything that follows you between sites — the box asks about it before it is loaded,
-      and this page is updated at the same time. We do not add measurement quietly: the visit
-      counting above and the question about where you came from were added after this page was
-      first published, and both times the page was rewritten the same day.</p>
+    <p>If we ever add anything else that requires your consent, such as an embedded video or an
+      advertising tool, the box asks about it before it is loaded, and this page is updated at
+      the same time. What is already here does not change quietly: this page has been rewritten
+      every time something was added.</p>
 
     <p class="jur-datum">Last updated 27 September 2026.</p>
   </div>
@@ -366,29 +373,11 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<!-- Vercel Web Analytics.
-
-     Sätter INGA cookies: unika besökare räknas via en hash av
-     IP och webbläsare med ett salt som byts dagligen, och den råa
-     IP-adressen sparas inte. Därför krävs inget samtycke — men det
-     står ändå i integritetspolicyn och på lagring.html, eftersom
-     "vi mäter ingenting" inte längre är sant.
-
-     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
-     finns inget att optimera för besökarens skull, och det vore ett
-     onödigt anrop från en sida där någon sköter sitt barns skolgång.
-
-     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
-     vilket är ofarligt — inget mäts när man utvecklar. -->
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
-     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="../nextrum-config.js?v=ab7b84a1"></script>
+<script src="../nextrum-config.js?v=21cecc53"></script>
 <script src="../nextrum-images.js?v=50260f9d"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=a72665a2"></script>
-<script src="../nextrum-samtycke.js?v=c15d8f5b"></script>
+<script src="../nextrum-app.js?v=936814f4"></script>
+<script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
