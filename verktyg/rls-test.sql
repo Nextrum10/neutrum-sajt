@@ -23,7 +23,10 @@
 -- besökare som skickar intresseanmälan på nextrum.se. Kör sviten när
 -- formuläret är lugnt, eller mot en gren.
 --
--- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok.
+-- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok. Ett
+-- villkor som blir null (ett kort som saknas jämfört med ett id) visas
+-- som false, inte som en tom ruta: tre prov stod null utan att någon
+-- såg det (2026-09-28).
 --
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
@@ -4158,7 +4161,21 @@ select pg_temp.prova('21.2 familjen kör inte påminnelsen själv', '00000000-00
 -- Block 6 och 7 är rättelserna i timbanken_foljer_passet: övertiden
 -- räknas från det kortet betalade, och uttagen följer passet när admin
 -- ändrar det.
+--
+-- FIXTURERNA STÄLLS TILLBAKA HÄR, för timmarnas alla prov (22.1–22.4).
+-- De är skrivna mot b0d1 bekräftat om en vecka, och mot b16a och b16b
+-- som P:s enda andra pass som väntar på timmar. Så såg det inte ut när
+-- hela filen kördes: blocket för Fas 9.3/9.4 avbokar b0d1 på riktigt,
+-- och b6c1 från Fas 14.6 står bekräftat och obetalt om fem dagar, så
+-- timmarna gav sig på det före provens egna pass. Sex prov föll eller
+-- blev null (2026-09-28), och null syns inte som ett fel i en lista
+-- över ok. Sedan det här kommer hit rör inget prov b6c1.
 -- ============================================================
+update public.bookings set status = 'confirmed', avbokad_at = null, avbokad_av = null, avbokningsskal = null
+ where id = '00000000-0000-4000-8000-00000000b0d1';
+update public.bookings set status = 'cancelled', avbokningsskal = 'annat'
+ where id = '00000000-0000-4000-8000-00000000b6c1';
+
 select pg_temp.prova('22.1 familjen skriver inte en kortbetalning genom timbanken', '00000000-0000-4000-8000-0000000000f1',
   array[$q$select public.timbank_kort_vinner('00000000-0000-4000-8000-00000000b0d1', '{}'::jsonb)$q$],
   'nekad');
@@ -6115,6 +6132,6 @@ begin
   end if;
 end $$;
 
-select test, ok, detalj from utfall order by nr;
+select test, ok is true as ok, detalj from utfall order by nr;
 
 rollback;
