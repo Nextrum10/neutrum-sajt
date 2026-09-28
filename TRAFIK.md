@@ -6,7 +6,7 @@ för Google står i `GOOGLE.md` och `GOOGLE-FORETAGSPROFIL.md` och
 upprepas inte här.
 
 **Ärligt om tiden:** långa sökningar ("läxhjälp matte södermalm",
-"gratis läxhjälp stockholm") kan ge besök inom 2–6 månader. Kartrutan
+"hjälpa barn med läsförståelse") kan ge besök inom 2–6 månader. Kartrutan
 för "läxhjälp stockholm" kräver företagsprofil och recensioner. Topp
 tre i de vanliga träffarna för "läxhjälp stockholm" tar snarare ett år,
 mot bolag som hållit på sedan 2004–2008. Den som lovar något annat
@@ -54,18 +54,20 @@ första månaden.
 1. Search Console: lägg till domänen och skicka in `sitemap.xml`
    (`GOOGLE.md` steg 1–3).
 2. Be om indexering av de här, i den här ordningen (kvoten är ungefär
-   tio om dagen):
+   tio om dagen, så de sista får vänta till dagen efter):
    ```
    https://nextrum.se/
    https://nextrum.se/laxhjalp-stockholm
    https://nextrum.se/laxhjalp-matematik
-   https://nextrum.se/gratis-laxhjalp-stockholm
    https://nextrum.se/priser
    https://nextrum.se/laxhjalp-svenska
    https://nextrum.se/laxhjalp-engelska
    https://nextrum.se/laxhjalp-no
    https://nextrum.se/hjalpa-barn-med-matte
    https://nextrum.se/laxhjalp-online
+   https://nextrum.se/plugga-infor-prov
+   https://nextrum.se/hjalpa-barn-med-lasforstaelse
+   https://nextrum.se/barnet-vill-inte-gora-laxorna
    ```
 3. **Bing Webmaster Tools** (bing.com/webmasters): logga in och välj
    *Importera från Google Search Console*. Det är ett klick. Bing
@@ -172,8 +174,9 @@ Lova inte en familj i tipset innan ni har frågat en.
 
 **c) Föräldragrupper** i stadsdelarna (Facebook och liknande). Skriv
 bara där reklam är tillåten, säg att ni driver företaget och länka
-hellre till guiden `/gratis-laxhjalp-stockholm` än till en säljsida.
-Folk sparar en användbar lista och scrollar förbi reklam.
+hellre till en guide (`/plugga-infor-prov`,
+`/barnet-vill-inte-gora-laxorna`) än till en säljsida. Folk sparar
+något de har nytta av och scrollar förbi reklam.
 
 ## 8. Sociala medier med spårning
 
@@ -245,7 +248,7 @@ Det enda sättet att stå först på "läxhjälp stockholm" i morgon.
 
 ## Det som redan är gjort i koden
 
-- Fyra ämnessidor (matte, svenska, engelska, NO) och två guider, byggda
+- Fyra ämnessidor (matte, svenska, engelska, NO) och fyra guider, byggda
   av `verktyg/bygg-omradessidor.py`
 - `/laxhjalp-online`: hur ett onlinepass går till, när hemma är bättre,
   och samma pris. Länkad från footern, navet och ämnessidorna
