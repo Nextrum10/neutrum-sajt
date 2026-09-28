@@ -367,6 +367,22 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
 september". Förvalet är den innevarande månaden. Statistiken (Hur passen
 gick) läser fortfarande de tjugo senaste.
 
+**Familjens bekräftade rapporter likaså** (2026-09-28, Leo: "bekräftade
+rapporter ska filtreras efter månad"): Bekräftade under Bekräfta rapport
+har samma rad, på PASSETS månad, och raden är dold tills något är
+bekräftat. Att bekräfta filtreras inte. Två saker kom fram i provbänken:
+- **En månadsrad som skapas i en dold sektion visade fel månader.**
+  Föräldravyns rad och studiehjälparvyns två skapas vid start, när
+  sektionen är dold, och bredden noll gjorde att den valda månaden aldrig
+  fördes in i bild: när sektionen öppnades stod oktober förra året
+  längst till vänster och september låg utanför, på telefon och dator.
+  `månadsval` för nu fram den valda när raden börjar synas.
+- **`håll()` kan inte scrolla förbi sidans slut.** Listan står sist, och
+  en kortare månad längst ned på sidan klämde scrollen: raden flyttade
+  sig 84 px under fingret på en telefon. `rbBytMånad` låter listan
+  behålla höjden tills tomrummet ligger under skärmkanten.
+  Studiehjälparvyns två rader har bara `håll()`.
+
 **Studiehjälparens schema öppnar i Kommande** (2026-09-24): de närmaste
 passen per dag, med klockslag och ämne, elevens namn och platsen på var
 sin rad. Studievyn och adminvyn öppnar fortfarande i månaden — hos
