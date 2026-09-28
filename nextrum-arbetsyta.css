@@ -2139,6 +2139,11 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .ev-nasta.ar-idag{color:var(--acc-text)}
 .ev-kort .vy-sido-mark{margin-left:0;align-self:flex-start}
 
+/* Plan & utveckling (ritaPlanElev). Med en enda elev säger kortet vem
+   man skriver om men är inget val, och ska inte se tryckbart ut. */
+.ev-kort.ev-ensam:hover{border-color:var(--ln);transform:none}
+.plan-elev-tips{margin-top:12px;color:var(--bl-2);line-height:1.6}
+
 /* ------------------------------------------------------------
    RAPPORTEN
 

@@ -339,6 +339,19 @@ sin rad. Studievyn och adminvyn öppnar fortfarande i månaden — hos
 familjen står schemat direkt under passlistan, och Kommande hade bara
 upprepat den.
 
+**Plan & utveckling börjar med vem man skriver om** (2026-09-28, Leo:
+"man kan ha flera elever därför behöver man välja"). Med flera elever
+står studieplanen och kunskapsområdena dolda tills studiehjälparen själv
+tryckt på en elev: där, under Mina elever, eller på ett elevkort eller en
+länk i elevens rad ovanför Läxor och Meddelanden. Namnet står sedan i
+rubrikerna. Blev eleven aktiv av något annat (den första i listan, en
+familj i meddelandelistan, ett pass) frågar fliken igen: `S.elevVald`
+minns vem man tryckt på, inte bara att man tryckt. Förut skrev
+formulären på den första eleven tills man bytt, och rutan som sa vem
+det var stod ovanför sektionen, 800 px över formuläret på en telefon.
+Rutan står därför inte längre under Lektioner & elever, bara ovanför
+Läxor och Meddelanden. En enda elev väljs inte; kortet säger bara vem.
+
 **Familjen bekräftar rapporten, och får betala då** (Fas 19.1 och 19.2,
 2026-09-27) under en egen post i föräldravyns meny, Bekräfta rapport.
 Tre sätt att betala: **kort i förväg**, när tiden är bekräftad, **kort
@@ -672,6 +685,10 @@ strypt processor och scroll anchoring avstängd (som Safari):
    `NXStudie.laddarFörsta(host)`: "Hämtar" bara första gången, annars
    står listan kvar nedtonad tills den nya är ritad. Ett formulär som
    stängs ovanför det man tittar på hålls med `NXStudie.håll(ankare, fn)`.
+   Samma sak inom en och samma omritning: tar man bort något och visar
+   det som ersätter det först efteråt, räcker en påtvingad layout
+   emellan (ett `focus()`, en `getBoundingClientRect`) för att scrollen
+   ska klämmas. Visa det nya först (`ritaPlanElev`, 2026-09-28).
 2. **`1fr` i ett grid är `minmax(auto,1fr)`.** Bokningens kolumn växte
    till 614 px på en 390 px bred telefon så fort en dag valdes, för att
    ämnesraden (en rad man drar i sidled) räknades som kolumnens minsta

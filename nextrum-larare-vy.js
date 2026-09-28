@@ -20,7 +20,7 @@
     aktivSek: null, passFrån: null, yFör: {}, laddatPass: false,
     user: null, profil: null, tutorProfil: null,
     familjer: [], aktivFamilj: null,
-    elever: [], aktivElev: null,
+    elever: [], aktivElev: null, elevVald: null, planFör: null, områdenFör: null,
     bokningar: [], trad: null, kal: null, olästa: {},
     minAvatar: null,
     laxor: [], laxräkning: {}, minaRapporter: [], avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
@@ -197,11 +197,118 @@
 
   document.addEventListener('click', async e => {
     const k = e.target.closest('[data-elevkort]');
+    if (k) await tryckPåElev(k.dataset.elevkort);
+  });
+
+  /* ------------------------------------------------------------
+     VEM DU SKRIVER OM (Plan & utveckling)
+
+     Leo 2026-09-28: "där ska man välja först vilken elev man ska
+     skriva om, man kan ha flera elever". Studieplanen och
+     kunskapsområdena skrevs på den elev som var vald i rutan ovanför
+     sektionen, och innan man tryckt på någon var det den första i
+     listan. En bedömning av Maja kunde sparas hos Elsa utan att något
+     sa emot, och på en telefon stod rutan 800 px ovanför formuläret.
+
+     Med flera elever står formulären därför inte framme förrän
+     studiehjälparen själv tryckt på en elev: här, under Mina elever,
+     eller på ett elevkort eller en av elevens länkar ovanför Läxor
+     och Meddelanden. S.elevVald minns VEM man tryckt på, inte bara
+     ATT: byts den aktiva eleven av något annat, som en familj i
+     meddelandelistan eller ett pass som hör till ett annat barn,
+     frågar rutan igen i stället för att låta nästa barn ärva valet.
+
+     Med en elev finns inget att välja, men kortet står ändå: namnet
+     ska stå där man skriver.
+     ------------------------------------------------------------ */
+  function elevenÄrVald() {
+    return !!S.aktivElev && (S.elever.length === 1 || S.elevVald === S.aktivElev);
+  }
+
+  function planElevKort(e, knapp) {
+    const inne = M.avatar(e.name, null, { liten: true })
+      + '<span class="ev-kort-text"><b>' + esc(e.name) + '</b>'
+      + '<span>' + esc([e.grade, (e.subjects || [])[0]].filter(Boolean).join(' · ')
+          || 'Inga uppgifter') + '</span></span>';
+    return knapp
+      ? '<button type="button" class="ev-kort" data-plan-elev="' + esc(e.id) + '"'
+        + ' aria-pressed="' + (elevenÄrVald() && e.id === S.aktivElev) + '">' + inne + '</button>'
+      : '<div class="ev-kort ev-ensam">' + inne + '</div>';
+  }
+
+  function ritaPlanElev() {
+    const host = $('#plan-elev');
+    if (!host) return;
+    const vald = elevenÄrVald() ? elev() : null;
+    /* Korten ritas om, och den som valde med tangentbordet ska stå
+       kvar på kortet och inte hamna överst på sidan. */
+    const fokus = host.contains(document.activeElement) ? document.activeElement.dataset.planElev : null;
+
+    /* Formulären FÖRE korten. Raden under korten försvinner när man
+       valt, och fokus nedanför tvingar fram en layout: stod
+       formulären kvar dolda i den stunden var sidan 52 px kortare på
+       en telefon, och den som stod längst ner flyttades upp.
+
+       Namnet och formulären byts först när det som står i dem är den
+       valda elevens (S.planFör, S.områdenFör). Ett andra tryck på
+       samma kort medan eleven hämtas hade annars visat förra elevens
+       plan under det nya namnet. Hämtas eleven står det gamla kvar. */
+    const ifyllt = vald && S.planFör === vald.id && S.områdenFör === vald.id;
+    if (!vald || ifyllt) {
+      $$('[data-plan-skriv]').forEach(ruta => { ruta.hidden = !vald; });
+      $$('[data-plan-namn]').forEach(s => { s.textContent = vald ? 'för ' + vald.name : ''; });
+    }
+
+    if (!S.elever.length) {
+      host.innerHTML = tomt('Ingen elev än', 'Familjen lägger in sitt barn i sin vy. Skriv till dem om det dröjer.');
+    } else if (S.elever.length === 1 && vald) {
+      host.innerHTML = '<div class="ev-rad">' + planElevKort(vald, false) + '</div>';
+    } else {
+      /* Hit också med en enda elev som inte är den aktiva: den första
+         familjen i listan kan sakna barn när en annan har ett, och då
+         är kortet vägen dit. */
+      host.innerHTML = '<p class="rp-fraga" id="plan-elev-fraga">Vem skriver du om?</p>'
+        + '<div class="ev-rad" role="group" aria-labelledby="plan-elev-fraga">'
+        + S.elever.map(x => planElevKort(x, true)).join('') + '</div>'
+        /* Under korten, inte över: raden försvinner när man valt, och
+           det som står ovanför det man trycker på får inte flytta sig. */
+        + (vald ? '' : '<p class="xsmall plan-elev-tips">Studieplanen och kunskapsområdena visas när du valt en elev.</p>');
+    }
+    if (fokus) {
+      const k = host.querySelector('[data-plan-elev="' + fokus + '"]');
+      if (k) k.focus({ preventScroll: true });
+    }
+  }
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-plan-elev]');
     if (!k) return;
-    if (k.dataset.elevkort === S.aktivElev) return;
-    S.aktivElev = k.dataset.elevkort;
-    $('#elev-val').value = S.aktivElev;
-    await byggElev();
+    /* Kortet trycks ner direkt. Formulären kommer när elevens plan och
+       områden är hämtade (byggElev), inte före: annars hade förra
+       elevens plan stått en stund under det nya namnet. */
+    $$('#plan-elev [data-plan-elev]').forEach(b => b.setAttribute('aria-pressed', String(b === k)));
+    tryckPåElev(k.dataset.planElev);
+  });
+
+  /* Ett tryck på en elev, var i vyn det än görs. Korten i Plan &
+     utveckling, under Mina elever och i rutan ovanför Läxor går alla
+     hit, så att de minns valet likadant. */
+  async function tryckPåElev(id) {
+    if (!id) return;
+    S.elevVald = id;
+    if (id === S.aktivElev) { ritaPlanElev(); ritaElevLista(); return; }
+    await väljElev(id);
+  }
+
+  /* Länkarna i elevens rad gäller eleven som står där, så ett tryck
+     på dem är också ett val. Annars hade Utveckling lett till Plan &
+     utveckling och frågat vem man skriver om, direkt efter att man
+     tryckt på elevens egen länk dit. */
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.ep-vagar a') || !S.aktivElev) return;
+    S.elevVald = S.aktivElev;
+    ritaPlanElev();
+    ritaElevLista();
   });
 
   /* ------------------------------------------------------------
@@ -426,6 +533,9 @@
        läxor, och inget av det är hämtat när de ritas första gången */
     ritaElevkort();
     ritaElevProfil();
+    /* Sist: formulären i Plan & utveckling visas först när elevens
+       plan och områden står i dem. */
+    ritaPlanElev();
   }
 
   /* ============ kontakt ============ */
@@ -717,15 +827,25 @@
     }
 
     NXStudie.laddarFörsta(host);
+    /* Svaret gäller eleven frågan ställdes om. Byter man elev två
+       gånger i rad kan det första svaret komma sist, och då hade förra
+       elevens områden stått under det nya namnet — med Bedöm igen, som
+       sparar på den elev som är vald NU. */
+    const id = S.aktivElev;
     const [svar, hist] = await Promise.all([
       supa.from('progress_items').select('id, subject, area, level, steg, mal_steg, comment, updated_at')
-        .eq('student_id', S.aktivElev).order('subject').order('area'),
+        .eq('student_id', id).order('subject').order('area'),
       supa.from('progress_historik').select('progress_id, steg, bedomd_at')
-        .eq('student_id', S.aktivElev).order('bedomd_at')
+        .eq('student_id', id).order('bedomd_at')
     ]);
+    if (id !== S.aktivElev) return;
     const { data, error } = svar;
 
-    if (error) { host.innerHTML = tomt('Kunde inte hämta områdena', felText(error)); return; }
+    if (error) {
+      S.områdenFör = id;
+      host.innerHTML = tomt('Kunde inte hämta områdena', felText(error));
+      return;
+    }
 
     /* Historiken är ett tillägg, inte en förutsättning: faller den
        frågan visas läget ändå, bara utan staplarna. */
@@ -742,6 +862,9 @@
 
     S.progressAntal = data.length;
     await laddaOmrådesräkning();
+    if (id !== S.aktivElev) return;
+    /* Listan nedanför är elevens från och med här (ritaPlanElev). */
+    S.områdenFör = id;
     if (!data.length) {
       host.innerHTML = tomt('Inga områden än', 'Lägg till det första ovanför — det är så familjen ser att det går framåt.');
       return;
@@ -2315,14 +2438,20 @@
   async function laddaPlanIFormulär() {
     ['#p-amne', '#p-mal', '#p-text'].forEach(id => { $(id).disabled = !S.aktivElev; });
     if (!S.aktivElev) { $('#p-amne').value = $('#p-mal').value = $('#p-text').value = ''; return; }
+    /* Samma vakt som i laddaProgress: ett sent svar om förra eleven
+       får inte lägga hens plan i formuläret, för Spara skriver den på
+       eleven som är vald nu. */
+    const id = S.aktivElev;
     const { data } = await supa
       .from('study_plans').select('subject, goals, plan_text')
-      .eq('student_id', S.aktivElev).eq('tutor_id', S.user.id)
+      .eq('student_id', id).eq('tutor_id', S.user.id)
       .order('updated_at', { ascending: false }).limit(1);
+    if (id !== S.aktivElev) return;
     const p = (data && data[0]) || {};
     $('#p-amne').value = p.subject || '';
     $('#p-mal').value = p.goals || '';
     $('#p-text').value = p.plan_text || '';
+    S.planFör = id;
   }
 
   $('#plan-form').addEventListener('submit', async e => {
@@ -2842,8 +2971,12 @@
         .filter(Boolean).join(' · ');
       const t = elevSiffror(e);
       const tal = (v, etikett) => '<span class="ek-tal"><b>' + v + '</b><i>' + esc(etikett) + '</i></span>';
+      /* Nedtryckt bara när studiehjälparen själv valt eleven, som i
+         Plan & utveckling en flik bort. Den första i listan är vald
+         av sig själv, och två flikar i samma sektion ska inte säga
+         olika om vem som är vald. */
       return '<button type="button" class="elev-kort ek-rik" data-elev="' + esc(e.id) + '"'
-        + ' aria-pressed="' + (e.id === S.aktivElev) + '">'
+        + ' aria-pressed="' + (e.id === S.aktivElev && elevenÄrVald()) + '">'
         + '<span class="ek-topp">'
         + M.avatar(e.name, null, { liten: true })
         + '<span class="elev-kort-text"><b>' + esc(e.name) + '</b>'
@@ -2877,7 +3010,12 @@
 
   document.addEventListener('click', e => {
     const kort = e.target.closest('[data-elev]');
-    if (kort) väljElev(kort.dataset.elev);
+    if (!kort) return;
+    /* Skriv till familjen på passets sida bär också data-elev. Den
+       väljer vems familj man skriver till, inte vem man skriver om i
+       planen, och räknas därför inte som ett val. */
+    if (kort.classList.contains('elev-kort')) tryckPåElev(kort.dataset.elev);
+    else väljElev(kort.dataset.elev);
   });
 
   /* Byt aktiv elev, och familj om eleven hör till en annan. Används
@@ -3385,8 +3523,12 @@
        vald elev eller familj. På Översikt och kontosidorna är den
        250px brus överst — precis den scrollning menyn ska bort med. */
     /* Föreslagna tider är inte med: förslagen gäller alla familjer,
-       inte den valda eleven. */
-    const MED_KONTEXT = ['laxor', 'lektioner', 'meddelanden'];
+       inte den valda eleven. Lektioner & elever inte heller, sedan
+       2026-09-28: passen där gäller alla elever, Mina elever är själva
+       listan, och Plan & utveckling väljer eleven där man skriver
+       (ritaPlanElev). Rutan hade annars stått ovanför ett eget val och
+       sagt emot det så länge ingen elev var vald. */
+    const MED_KONTEXT = ['laxor', 'meddelanden'];
     /* Var i varje sektion man stod, så att tillbaka från ett pass
        landar där man tryckte. */
     window.addEventListener('scroll', () => {
