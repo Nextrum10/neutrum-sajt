@@ -389,7 +389,8 @@ OMRADEN = [
             ('Måste vi binda upp oss?',
              f'Nej. Ingen bindningstid, ingen månadsavgift. {PRIS} i timmen, och ni betalar varje '
              'pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. '
-             'Betalningen går till Nextrum.'),
+             'Efter passet kan ni i stället välja faktura, som kommer i början av nästa månad '
+             'med tio dagars betalningstid och utan avgift. Betalningen går till Nextrum.'),
         ],
     },
 ]
@@ -485,7 +486,8 @@ AMNEN = [
             ('Vad kostar mattehjälpen?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
              'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
-             'passet när ni bekräftar rapporten.'),
+             'passet när ni bekräftar rapporten. Efter passet kan ni i stället välja faktura, '
+             'som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.'),
         ],
     },
     {
@@ -556,7 +558,8 @@ AMNEN = [
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
              'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
-             'passet när ni bekräftar rapporten.'),
+             'passet när ni bekräftar rapporten. Efter passet kan ni i stället välja faktura, '
+             'som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.'),
         ],
     },
     {
@@ -625,7 +628,8 @@ AMNEN = [
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
              'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
-             'passet när ni bekräftar rapporten.'),
+             'passet när ni bekräftar rapporten. Efter passet kan ni i stället välja faktura, '
+             'som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.'),
         ],
     },
     {
@@ -695,7 +699,8 @@ AMNEN = [
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
              'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
-             'passet när ni bekräftar rapporten.'),
+             'passet när ni bekräftar rapporten. Efter passet kan ni i stället välja faktura, '
+             'som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.'),
         ],
     },
 ]

@@ -85,7 +85,8 @@ const SVARA = 'Svara ja eller nej i Nextrum.';
 /* Samma mening som villkoren, prissidan och FAQ:n. Den räknas av
    verktyg/kolla-betalningsvillkor.py, så att mejlet inte kan börja säga
    något annat än sidorna. */
-const VILLKORET = 'Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten.';
+const VILLKORET = 'Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. '
+  + 'Efter passet kan ni i stället välja faktura, som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.';
 const BETALA = `${VILLKORET} Vill ni betala i förväg gör ni det i Nextrum, om ni inte redan har gjort det.`;
 const FAKTURA = 'Ni har valt faktura, så passet kommer med på månadens faktura från Nextrum.';
 const TIMMAR = 'Passet är betalt med timmarna ni köpt i förväg, så det finns inget att betala.';

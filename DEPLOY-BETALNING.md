@@ -814,11 +814,17 @@ räknas den som vunnen.
 
 ### 9.11 Faktura som betalsätt: dagen den slås på (Fas 14.6)
 
-Allt i koden är byggt och driftsatt. Flaggan `faktura` står AV, och då syns inget
-av det för familjen: inget val på passet, ingen rad om faktura i mejlen, och
-`skydda_bokningsfalt` nekar bytet. Slå inte på den förrän allt nedan är gjort.
-Flaggans `vantar_pa` säger samma sak, och `stampla_flaggan()` hindrar att texten
-skrivs om från en vy.
+**Läget 2026-09-28: flaggan är PÅ.** Den slogs på 2026-09-27, med SQL medan
+Fas 19.7 byggdes och innan listan nedan var avbockad, och Leo valde dagen efter att
+ha kvar den. Steg 5–8 och raden om Fortnox i integritetspolicyn gjordes
+2026-09-28. **Kvar: steg 1–4, 9 och 11.** Tills bankgirot står i
+`nextrum-config.js` säger rutan Fakturor att betala att det står på fakturan.
+Flaggans `vantar_pa` beskriver fortfarande förutsättningarna, och
+`stampla_flaggan()` hindrar att texten skrivs om från en vy.
+
+Står flaggan av syns inget av det för familjen: inget val på passet, ingen rad om
+faktura i mejlen, och `skydda_bokningsfalt` nekar bytet. Slås den av igen ska
+meningen om faktura bort ur texterna i samma ändring (steg 5–6 baklänges).
 
 **Före, utanför koden:**
 
@@ -847,17 +853,25 @@ skrivs om från en vy.
    betalningslöftet; `LOFTET` i kontrollen är den fullständiga listan).
    Den ska säga att familjen kan välja faktura, tio dagar, utan avgift: villkoren,
    prissidan, FAQ:n, studievyns Pris & villkor och intro under Betalning i
-   `foralder.html`, och samma sidor under `/en/`.
+   `foralder.html`, och samma sidor under `/en/`. **Gjort 2026-09-28**: "Efter
+   passet kan ni i stället välja faktura, som kommer i början av nästa månad med
+   tio dagars betalningstid och utan avgift" står bredvid kortmeningen på alla
+   36 ställen, och villkoren har en egen punkt (`#faktura`).
 6. **Kontrollen följer med.** `verktyg/kolla-betalningsvillkor.py` räknar den
    gamla meningen och letar efter "efterskott" och "10 dagars" som FÖRBJUDNA ord.
    Båda blir sanna den dagen: ändra `LOFTET` och listan över förbjudna uttryck i
-   samma ändring, annars blir CI rött av en korrekt text.
+   samma ändring, annars blir CI rött av en korrekt text. **Gjort 2026-09-28**:
+   kontrollen räknar fakturameningen på samma ställen som kortmeningen, med
+   dagarna ur `BETALNINGSVILLKOR_DAGAR`. Texten undviker de förbjudna orden, så
+   listan över det gamla står kvar som den var.
 7. **Bygg om** FAQ-schemat och maskotens svar (`bygg-faq-schema.py`,
-   `bygg-maskotsvar.py`), och kör `jamfor-sprak.py`.
+   `bygg-maskotsvar.py`), och kör `jamfor-sprak.py`. **Gjort 2026-09-28.**
 8. **Mejlen.** Bokningsbekräftelsen och påminnelsen säger redan "månadens
    faktura" för ett pass där familjen valt faktura (`betalsatt` i `RenData`).
    Vill ni att mejlet till en kortfamilj ska nämna att faktura GÅR att välja: det
-   är en ny mening i `mallar.ts`, med prov.
+   är en ny mening i `mallar.ts`, med prov. **Gjort 2026-09-28**, i `VILLKORET`,
+   med prov i `rendera_test.ts`. Mejlen ändras i driften först när `notis-ko`
+   driftsätts från main.
 
 **Sist:**
 
