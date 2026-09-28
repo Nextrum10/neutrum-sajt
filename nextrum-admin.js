@@ -81,6 +81,8 @@
   const ritaUppdrag = (...a) => NXAdmin.rita.ritaUppdrag(...a);
   const ritaUppgifter = (...a) => NXAdmin.rita.ritaUppgifter(...a);
   const laddaOmEkonomi = (...a) => NXAdmin.rita.laddaOmEkonomi(...a);
+  const ritaMånaden = (...a) => NXAdmin.rita.ritaMånaden(...a);
+  const ritaLöner = (...a) => NXAdmin.rita.ritaLöner(...a);
 
   document.addEventListener('change', async e => {
     const el = e.target;
@@ -351,7 +353,8 @@
     meddelanden: 'Frågor', familjer: 'Familjer', elever: 'Elever',
     studiehjalpare: 'Studiehjälpare', matchning: 'Matchning', bokningar: 'Bokningar',
     lektioner: 'Lektioner', statistik: 'Statistik',
-    ekonomi: 'Betalningar & utbetalningar', system: 'System',
+    ekonomi: 'Betalningar & utbetalningar', manaden: 'Månadens ekonomi', loner: 'Löner',
+    system: 'System',
     agenter: 'Agenter', uppdrag: 'Uppdrag', uppgifter: 'Uppgifter',
     bibliotek: 'Material', katalog: 'Tjänster & priser'
   };
@@ -369,7 +372,8 @@
        Kunder: det som kommer in utifrån läses av samma person samma
        morgon, och en egen grupp längst ned gjorde att ingen tittade. */
     uppgifter: 'System',
-    meddelanden: 'Kommunikation', ekonomi: 'Ekonomi', ansokningar: 'Kunder',
+    meddelanden: 'Kommunikation', ekonomi: 'Ekonomi', manaden: 'Ekonomi', loner: 'Ekonomi',
+    ansokningar: 'Kunder',
     katalog: 'Tjänster', agenter: 'AI', system: 'System'
   };
 
@@ -908,6 +912,9 @@
       ritaKortbetalningar();
       ritaAvvikelser();
       fyllPerioder();
+      /* Efter Ekonomi: båda läser dess stängda månader och passunderlaget. */
+      ritaMånaden();
+      ritaLöner();
       ritaIntegrationer();
       ritaAdminanvandare();
       ritaPris();

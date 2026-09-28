@@ -48,7 +48,7 @@ finnas. Det här är det.
 | 6 | Chatt (`messages`) | förälder, studiehjälpare | meddelandetext | 6.1 b | Supabase | som kontot |
 | 7 | Notiser och mejl (`notiser`, `notis_utskick`) | alla med konto | typ, datum, förnamn, ämne | 6.1 b | Resend | 180 dagar i vyn, 90 dagar för utskicken |
 | 8 | Betalning (`bookings.betalning_*`, `klippkort`, `pass_tillagg`, `timbank_uttag`, `stripe_handelser`, `stripe_tvister`, `invoices`) | förälder | belopp, tid, e-post, Stripe-id | 6.1 b; 6.1 c bokföringslagen | Stripe (e-post, belopp, ämne och datum) | 7 år |
-| 9 | Ersättning till studiehjälpare (`payouts`) | studiehjälpare | timmar, belopp | 6.1 b; 6.1 c | Fortnox (för hand) | 7 år |
+| 9 | Ersättning till studiehjälpare (`payouts`, `lon_anstallning`) | studiehjälpare | timmar, belopp, anställningsnummer | 6.1 b; 6.1 c | Fortnox (lönefil i PAXml som admin laddar upp: anställningsnummer, datum, timmar, belopp, inga namn) | 7 år |
 | 10 | Jobbansökan (`applications`, hinken `cv`) | sökande, ofta 16 år | namn, ålder, e-post, skola, ämnen, fritext, CV | 6.1 f | Supabase, Resend (besked) | 1 år, eller 30 dagar efter senaste steget; blev personen studiehjälpare: 2 år efter senaste pass, rapport eller inloggning |
 | 11 | Kontaktformuläret (`contact_messages`) | vem som helst | namn, e-post, fritext | 6.1 f | Supabase | 6 mån efter inkommet eller besvarat |
 | 12 | Felrapporter (`klientfel`) | inloggade och besökare | felet, sidan, webbläsaren, konto-id | 6.1 f | Supabase | 90 dagar |
@@ -90,7 +90,7 @@ avsnitt 8).
 | Anthropic | rapportutkast, hälsningar, agenterna | USA | standardavtalsklausuler | ingår i Commercial Terms för API:t |
 | Stripe | kortbetalningar | EU och USA | standardavtalsklausuler, DPF | ingår i Stripes villkor; Stripe är självt ansvarigt för bedrägerikontroll |
 | Google | Meet-rum (inte kopplat än) | EU och USA | standardavtalsklausuler, DPF | Workspace Data Processing Amendment, godkänns i Admin Console |
-| Fortnox | bokföring, fakturor, lön (för hand) | Sverige | ingen överföring | Fortnox villkor; står inte i policyn än, se avsnitt 8 |
+| Fortnox | bokföring, fakturor, lön (för hand, lönen som fil) | Sverige | ingen överföring | Fortnox villkor; fakturorna står i policyn sedan 2026-09-28, lönen inte än, se avsnitt 8 |
 
 **Data Privacy Framework (DPF).** EU-kommissionens beslut från 2023
 gäller, men EDPB begärde en översyn i juli 2026 och beslutet kan falla

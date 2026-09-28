@@ -1,11 +1,13 @@
 /* ============================================================
    NEXTRUM — fakturor och utbetalningar
-   Delas av foralder.html och larare.html. Familjen ser vad de ska
-   betala, studiehjälparen vad de ska få. Samma pass, två sidor av
-   samma rad i bookings.
+   Delas av foralder.html, larare.html och admin.html. Familjen ser vad
+   de ska betala, studiehjälparen vad de ska få. Samma pass, två sidor
+   av samma rad i bookings.
 
-   Kräver nextrum-app.js (NX). Ingen egen databaskoppling — varje vy
-   äger sina frågor, det här är språket de talar.
+   Kräver nextrum-app.js (NX), och passpris() dessutom NXTjanster
+   (nextrum-tjanster.js) med katalogen laddad. Ingen egen
+   databaskoppling — varje vy äger sina frågor, det här är språket de
+   talar.
 
    Tabellerna ligger i schema-v8.sql. Ingenting här skriver: belopp
    sätts av edge-funktionen, aldrig från webbläsaren.
@@ -91,6 +93,38 @@ window.NXBetalning = (function () {
     return summa % 10 === 0;
   }
 
+  /* ---------- vad ett pass kostar ----------
+     Familjens pris för ett pass i ören, för så många minuter som ska
+     betalas: max(avrundat m/60 × (timpris + tillägg för fler barn)
+     − rabatt, 0). Samma regel som familjebelopp() i _delad/pris.ts,
+     som kortet och fakturan räknas med, och som ej_betalt i
+     avvikelser_rader().
+
+     Låg förut i studievyn (prisFör). Sedan 2026-09-28 räknar adminvyns
+     Månadens ekonomi samma sak för det som inte är betalt än, och två
+     kopior av en prisregel i webbläsaren hade glidit isär.
+
+     Timpriset är passets frysta (Fas 19.5), ur passet eller ur dess
+     rad i passunderlag (u); katalogen är bara reserven, för ett pass
+     som bokades innan priset började frysas. Tillägget för fler barn
+     följer samma källa som timpriset: ett fryst timpris med dagens
+     syskontillägg hade varit ett pris som aldrig gällt. null när inget
+     pris går att räkna, till exempel innan katalogen är laddad. */
+  function passpris(b, u, minuter) {
+    var källa = Number(b.timpris_ore) ? b : (u && Number(u.timpris_ore) ? u : null);
+    var timme = källa ? Number(källa.timpris_ore) : 0;
+    var extra = källa ? Number(källa.extra_ore) || 0 : 0;
+    if (!timme) {
+      var tj = NXTjanster.hitta(b.tjanst || NXTjanster.standard());
+      if (!tj || !tj.pris_per_timme_ore) return null;
+      timme = Number(tj.pris_per_timme_ore);
+      extra = Number(tj.extra_personer_ore || 0);
+    }
+    var perTimme = timme + ((b.antal_barn || 1) > 1 ? extra : 0);
+    var rabatt = Math.max(Number(b.rabatt_ore != null ? b.rabatt_ore : (u && u.rabatt_ore) || 0), 0);
+    return Math.max(Math.round(perTimme * Number(minuter) / 60) - rabatt, 0);
+  }
+
   /* ---------- en faktura ----------
      atgarder() får fakturan och returnerar knapparnas HTML. */
   function fakturaRad(f, opts) {
@@ -164,6 +198,6 @@ window.NXBetalning = (function () {
     kronor: kronor, timmar: timmar, periodText: periodText,
     FAKTURA: FAKTURA, UTBETALNING: UTBETALNING, fakturaLage: fakturaLage,
     fakturaRad: fakturaRad, utbetalningRad: utbetalningRad, ocrGiltigt: ocrGiltigt,
-    radLista: radLista, pagaende: pagaende
+    radLista: radLista, pagaende: pagaende, passpris: passpris
   };
 })();

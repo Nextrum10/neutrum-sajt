@@ -62,8 +62,8 @@ förväg eller efter passet när de bekräftar rapporten (Fas 19.2; före
 passet sa Fas 14.2). Rapporten bekräftas också när passet redan är
 betalt, och ett hållet pass ska betalas även utan bekräftelse. Spärren
 `kortsparr` kan inte slås på sedan dess. Studiehjälparen får betalt den
-25:e; blir hen anställd läggs underlaget in i Fortnox Lön för hand, men
-anställningsformen är inte avgjord. Ett genomfört pass kostar den tid
+25:e; blir hen anställd går underlaget till Fortnox Lön som en
+PAXml-fil från adminvyns Löner, men anställningsformen är inte avgjord. Ett genomfört pass kostar den tid
 det faktiskt hölls, per påbörjad kvart (Fas 20.1): tiden och skälet står
 i rapporten, ett förbetalt pass som drog över får ett tillägg
 (`pass_tillagg`), och lönen följer tiden nedåt alltid men uppåt bara när
@@ -386,9 +386,12 @@ Priset fryses på passet när det bokas (Fas 19.5, `timpris_ore`), och
 första timmen är på köpet för nya familjer: passet som gör två bokade
 timmar får en timme i `rabatt_ore` (`startrabatt`). Ett pass på noll
 kronor är inte obetalt. Bokföringen, fakturorna och lönen
-sköts i Fortnox, för hand, med flit utan koppling hit (Fas 14.9 bytte
-Wint mot Fortnox). Ingen API-koppling förrän handarbetet faktiskt kostar
-tid. Stripe ska bokföras genom en färdig integration som kopplas i
+sköts i Fortnox, med flit utan API-koppling hit (Fas 14.9 bytte Wint mot
+Fortnox). Lönen går dit som en PAXml-fil från Löner (2026-09-28);
+fakturorna läggs in för hand, för Fortnox läser inte in kundfakturor från
+fil. Ingen API-koppling förrän handarbetet kostar tid och ett
+Fortnox-konto med bankgiro finns. Adminvyns Månadens ekonomi visar per
+familj vad månadens pass dragit in och vad som väntar. Stripe ska bokföras genom en färdig integration som kopplas i
 Fortnox, utanför koden, före första skarpa betalningen och med revisorn.
 Google Workspace ger bara Meet-länkar till onlinepassen (Fas 18.1) och
 är inte kopplat förrän stegen i INTEGRATIONER.md är gjorda. Vidare:
