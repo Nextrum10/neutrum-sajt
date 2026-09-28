@@ -24,11 +24,11 @@
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
-<link rel="stylesheet" href="nextrum-vy.css?v=9c7e2280">
+<link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
+<link rel="stylesheet" href="nextrum-vy.css?v=b97a95f6">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      veckorutnätet för tider. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=1166c66d">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=7f32fa2b">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=4eac3aef">
 </head>
 <body class="vy">
@@ -241,6 +241,15 @@
             <p>Läget just nu. Menyn leder vidare till varje del.</p>
           </div>
         </div>
+        <!-- ============ ATT GÖRA (2026-09-28) ============
+             Det som är ditt drag, först: tider att svara på och
+             rapporter att skriva. Förut stod siffrorna överst och
+             förslagen bara i sidomenyns märke. Dold när det inte finns
+             något. Fylls av ritaÖvGöra(). -->
+        <div class="vy-del" id="ov-gora-grupp" hidden>
+          <div class="vy-grupp"><h3>Att göra</h3><span class="vy-antal ar-gor" id="ov-gora-antal"></span></div>
+          <div class="vy-kort vy-lista" id="ov-gora"></div>
+        </div>
         <div class="kpis">
           <div class="kpi"><b id="kpi-timmar">0</b><span>Arbetade timmar</span></div>
           <div class="kpi"><b id="kpi-kommande">0</b><span>Kommande pass</span></div>
@@ -324,14 +333,20 @@
                     <div class="nx-fraga rp-overlay" id="rapport-overlay" hidden>
                     <div class="nx-fraga-box nx-fraga-bred rp-box" id="rapport-ruta" role="dialog"
                          aria-modal="true" aria-labelledby="rp-titel">
+                      <!-- Passet i rubriken, dagen och tiden under (2026-09-28).
+                           Förut en rad med namn, datum och klockslag, och
+                           sedan samma pass en gång till i en rullgardin. -->
                       <div class="rp-huvud">
-                        <h3 id="rp-titel">Rapport för passet</h3>
+                        <div>
+                          <h3 id="rp-titel">Rapport för passet</h3>
+                          <p class="rp-under" id="rp-under"></p>
+                        </div>
                         <button type="button" class="rp-stang" data-rapport-stang aria-label="Stäng">
                           <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
                       </div>
-                      <p class="xsmall" style="color:var(--bl-2);margin-bottom:18px;line-height:1.6">
-                        Rapporten är det familjen läser. Väljer du ett pass markeras det samtidigt som
-                        genomfört — och det är först då timmarna räknas och kommer med på din lönespecifikation.
+                      <p class="rp-intro">
+                        Familjen läser rapporten. När den är sparad är passet genomfört, och
+                        timmarna kommer med på din lönespecifikation.
                       </p>
                       <form id="rapport-form">
 
@@ -347,16 +362,26 @@
                           <button type="button" data-v="folja_upp" aria-pressed="false"><i></i>Behöver följas upp</button>
                         </div>
 
-                        <!-- ============ VILKET PASS ============ -->
-                        <div class="vy-form-rad" style="margin-top:20px">
-                          <div class="pay-field">
-                            <label for="r-pass">Vilket pass</label>
-                            <select class="sel" id="r-pass"></select>
+                        <!-- ============ VILKET PASS ============
+                             Passet står redan i rubriken när rutan
+                             öppnas från ett pass, så valet ligger bakom
+                             en rad. Öppet för en fristående rapport,
+                             där det är det första man ska välja. -->
+                        <details class="rp-byt" id="r-byt-pass">
+                          <summary>Annat pass eller datum</summary>
+                          <div class="vy-form-rad">
+                            <div class="pay-field">
+                              <label for="r-pass">Vilket pass</label>
+                              <select class="sel" id="r-pass"></select>
+                            </div>
+                            <div class="pay-field">
+                              <label for="r-datum">Datum</label>
+                              <input class="inp" id="r-datum" type="date">
+                            </div>
                           </div>
-                          <div class="pay-field">
-                            <label for="r-datum">Datum</label>
-                            <input class="inp" id="r-datum" type="date">
-                          </div>
+                        </details>
+
+                        <div class="rp-narvaro">
                           <div class="pay-field">
                             <label for="r-narvaro">Närvaro</label>
                             <select class="sel" id="r-narvaro">
@@ -398,7 +423,15 @@
                              Ämnet fylls i från passet när ett är valt.
                              Chipsen finns för de gånger man gjorde något
                              annat än det som stod i bokningen. -->
+                        <!-- Ämnet som ett val med Byt ämne (2026-09-28). Passet
+                             vet nästan alltid ämnet, och tjugo knappar för
+                             att bekräfta det tog en halv skärm på en telefon.
+                             Listan öppnas när inget ämne är valt. -->
                         <p class="rp-fraga" style="margin-top:20px">Vad arbetade ni med?</p>
+                        <div class="rp-amne-vald" id="r-amne-vald" hidden>
+                          <b id="r-amne-namn"></b>
+                          <button type="button" class="vy-lank" id="r-amne-byt" aria-controls="r-amne-val" aria-expanded="false">Byt ämne</button>
+                        </div>
                         <div class="vy-val" id="r-amne-val" role="group" aria-label="Ämne"></div>
                         <div class="fgroup" id="r-amne-annat-falt" hidden style="margin-top:10px">
                           <label for="r-amne-annat">Vilket ämne?</label>
@@ -472,13 +505,18 @@
                           </div>
                         </div>
 
-                        <div class="vy-knapprad">
+                        <!-- Beskedet ovanför foten: under den hade ett fel
+                             hamnat bakom den fasta foten. -->
+                        <p class="ok-msg" id="r-msg"></p>
+                        <!-- Foten står kvar längst ner medan man scrollar i
+                             rutan: formuläret är långt, och Spara låg under
+                             kanten på en telefon. -->
+                        <div class="vy-knapprad rp-fot">
                           <button class="btn btn-primary btn-sm" type="submit" id="r-spara">Spara rapport</button>
                           <label class="xsmall" style="display:flex;gap:7px;align-items:center;cursor:pointer">
                             <input type="checkbox" id="r-ai" checked> Låt AI:n formulera om den åt föräldern
                           </label>
                         </div>
-                        <p class="ok-msg" id="r-msg"></p>
                       </form>
                     </div>
                     </div>
@@ -1186,13 +1224,13 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=d85467f7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-kontakt.js?v=2c9440de"></script>
-<script src="nextrum-studie.js?v=815ef46e"></script>
+<script src="nextrum-kontakt.js?v=63957b13"></script>
+<script src="nextrum-studie.js?v=a6e02354"></script>
 <script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-uppgifter.js?v=8fe89b7f"></script>
 <script src="nextrum-modulvakt.js?v=aa7653c6"></script>
-<script src="nextrum-larare-vy.js?v=1d65fe0f"></script>
+<script src="nextrum-larare-vy.js?v=a2bdea05"></script>
 </body>
 </html>

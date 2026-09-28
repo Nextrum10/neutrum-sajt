@@ -325,9 +325,25 @@ window.NXStudie = (function () {
      för att gissas — en gissning lade tillbaka-länken under det. */
   function visaÖverst(el) {
     if (!el) return;
+    scrollaTill(el.getBoundingClientRect().top + window.scrollY - täcktÖverst() - 12);
+  }
+
+  /* Hur mycket av skärmens överkant som är täckt: sidhuvudet, och på en
+     telefon sektionsraden, som står fast under det sedan 2026-09-28
+     (TUMMEN i nextrum-arbetsyta.css). Utan raden hade en ny sektion
+     lagts med rubriken bakom den. Den lodräta menyn på en dator står
+     bredvid innehållet, inte över det, och räknas inte. */
+  function täcktÖverst() {
     var hdr = document.querySelector('.hdr');
-    var under = (hdr ? hdr.getBoundingClientRect().bottom : 72) + 12;
-    scrollaTill(el.getBoundingClientRect().top + window.scrollY - under);
+    var nederkant = hdr ? hdr.getBoundingClientRect().bottom : 72;
+    var sido = document.querySelector('.vy:not(.vy-admin) .vy-sido');
+    if (sido) {
+      var cs = window.getComputedStyle(sido);
+      if (cs.position === 'sticky' && cs.flexDirection !== 'column') {
+        nederkant = Math.max(nederkant, sido.getBoundingClientRect().bottom);
+      }
+    }
+    return nederkant;
   }
 
   /* Håller ett element kvar på samma plats på skärmen medan något
@@ -387,6 +403,63 @@ window.NXStudie = (function () {
     var namn = NX.MANADER[d.getMonth()];
     return medÅr === false ? namn : namn + ' ' + d.getFullYear();
   }
+  /* Stegaren (2026-09-28, o.stegare): ‹ September 2026 › i stället för
+     tolv knappar i en rad man drar i sidled. I studiehjälparvyn låg
+     raden i en flik som var dold när den ritades, så den innevarande
+     månaden hamnade utanför kanten till höger, och på en telefon syntes
+     tre månader av tolv. Samma svar utåt (vald, sätt, märk) som raden,
+     så att anroparen inte märker skillnaden. Adminvyn har kvar raden:
+     där jämför man månader bredvid varandra. */
+  function månadsstegare(host, o, lista, vald, denna) {
+    host.classList.add('nx-manad-stegare');
+    host.setAttribute('role', 'group');
+    if (!host.getAttribute('aria-label')) host.setAttribute('aria-label', 'Välj månad');
+    function rita(fokus) {
+      var n = lista.indexOf(vald);
+      host.innerHTML =
+        '<button type="button" class="nx-steg-pil" data-steg="-1" aria-label="Förra månaden"' + (n <= 0 ? ' disabled' : '') + '>' + IKON.tillbaka + '</button>'
+        + '<span class="nx-steg-namn" aria-live="polite"><b>' + esc(månadsNamn(vald)) + '</b>'
+        + '<small class="nx-manad-marke" hidden></small></span>'
+        + '<button type="button" class="nx-steg-pil" data-steg="1" aria-label="Nästa månad"' + (n >= lista.length - 1 ? ' disabled' : '') + '>' + IKON.pil + '</button>'
+        /* Tillbaka till i dag: från juli är september fyra tryck bort.
+           Knappen står alltid och tar sin plats, osynlig på den
+           innevarande: annars dök den upp efter första trycket och sköt
+           ner allt under raden på en telefon. */
+        + '<button type="button" class="nx-steg-nu" data-manad="' + denna + '"'
+        + (vald === denna ? ' tabindex="-1" aria-hidden="true" data-dold' : '') + '>Den här månaden</button>';
+      märk();
+      if (fokus) {
+        var k = host.querySelector('[data-steg="' + fokus + '"]:not([disabled])') || host.querySelector('.nx-steg-pil:not([disabled])');
+        if (k) k.focus();
+      }
+    }
+    function märk() {
+      if (!o.märke) return;
+      var i = host.querySelector('.nx-manad-marke');
+      var text = o.märke(vald) || '';
+      i.textContent = text;
+      i.hidden = !text;
+    }
+    function sätt(m, tyst, fokus) {
+      if (lista.indexOf(m) === -1 || m === vald) return;
+      vald = m;
+      rita(fokus);
+      if (!tyst && o.vidVal) o.vidVal(vald);
+    }
+    host.addEventListener('click', function (e) {
+      var pil = e.target.closest('[data-steg]');
+      if (pil) { sätt(lista[lista.indexOf(vald) + Number(pil.dataset.steg)], false, pil.dataset.steg); return; }
+      var nu = e.target.closest('[data-manad]');
+      if (nu) sätt(nu.dataset.manad);
+    });
+    rita();
+    return {
+      vald: function () { return vald; },
+      sätt: function (m) { sätt(m, true); },
+      märk: märk
+    };
+  }
+
   function månadsval(host, o) {
     o = o || {};
     if (!host) return null;
@@ -400,6 +473,7 @@ window.NXStudie = (function () {
       lista.push(månadIso(new Date(nu.getFullYear(), nu.getMonth() - i, 1, 12)));
     }
     if (lista.indexOf(vald) === -1) vald = denna;
+    if (o.stegare) return månadsstegare(host, o, lista, vald, denna);
 
     host.classList.add('nx-manader');
     host.setAttribute('role', 'group');
@@ -648,14 +722,19 @@ window.NXStudie = (function () {
      låst för alltid när något kastar. */
   async function medan(knapp, text, jobb) {
     if (!knapp) return jobb();
-    var original = knapp.textContent;
+    /* Ett betalval (.vy-valk, 2026-09-28) har en rubrik och en rad
+       under. Med textContent på hela knappen försvann ikonen och raden,
+       och tillbaka kom en enda sammanslagen textrad. Rubriken bär
+       data-medan och är det enda som byter text. */
+    var mål = knapp.querySelector('[data-medan]') || knapp;
+    var original = mål.textContent;
     knapp.setAttribute('aria-busy', 'true');
-    knapp.textContent = text;
+    mål.textContent = text;
     try {
       return await jobb();
     } finally {
       knapp.removeAttribute('aria-busy');
-      knapp.textContent = original;
+      mål.textContent = original;
     }
   }
 
@@ -935,8 +1014,27 @@ window.NXStudie = (function () {
        kort:    [{ rubrik, rader: [[etikett, värde]] }],
                                            värde är text, eller { href, text }
                                            för möteslänken (Fas 18.1)
-       block:   [{ rubrik, html }]         anteckning, rapport, läxor
+       block:   [{ rubrik, html, forst }]  anteckning, rapport, läxor. forst:
+                                           under beskedet i stället för sist
      }
+
+     Sedan 2026-09-28 (innehållet i vyerna, Leo: "det behöver se bra ut
+     på mobil och enkelt att använda") också:
+       datum:   'YYYY-MM-DD'               datumrutan bredvid rubriken
+       val:     html                       betalvalen som stora knappar
+                                           (NXStudie.betalval), i beskedets
+                                           ruta under texten
+       belopp:  { etikett, text }          "Att betala 379 kr" i samma ruta
+       fakta:   [{ ikon, etikett, varde, under }]
+                                           i stället för kort: ett kort med
+                                           När, Var, Vem och Pris, en ikon
+                                           var. varde som i kort
+       fot:     html                       det som inte är ett drag just nu
+                                           (föreslå ny tid, skriv, avboka),
+                                           stilla, sist på sidan
+     Ett drag överst och resten nedanför: på en telefon stod förut fem
+     knappar i full bredd under beskedet, och Avboka var lika stor som
+     Betala.
      ============================================================ */
 
   /* Ett värde i ett kort är text. Möteslänken är det enda som är en
@@ -956,10 +1054,13 @@ window.NXStudie = (function () {
     var host = o && o.host;
     if (!host) return;
 
+    /* Ett gjort steg får en bock: strecket ensamt sa inte om det var
+       gjort eller pågick, bara i färgen. */
     var steg = (o.steg || []).map(function (s) {
       return '<li class="ps-steg' + (s.klar ? ' ar-klar' : '') + (s.nu ? ' ar-nu' : '') + '"'
         + (s.nu ? ' aria-current="step"' : '') + '>'
-        + '<span class="ps-steg-prick" aria-hidden="true"></span>' + esc(s.namn) + '</li>';
+        + '<span class="ps-steg-prick" aria-hidden="true"></span>'
+        + (s.klar ? IKON.bock : '') + esc(s.namn) + '</li>';
     }).join('');
 
     var kort = (o.kort || []).map(function (k) {
@@ -972,16 +1073,41 @@ window.NXStudie = (function () {
         + '</div>';
     }).join('');
 
-    var block = (o.block || []).filter(function (b) { return b && b.html; }).map(function (b) {
-      return '<div class="ps-block"><h6>' + esc(b.rubrik) + '</h6>' + b.html + '</div>';
+    var fakta = (o.fakta || []).filter(function (f) { return f && f.varde; }).map(function (f) {
+      return '<div class="ps-fakta-rad">'
+        + '<span class="ps-fakta-ik">' + (IKON[f.ikon] || IKON.info) + '</span>'
+        + '<span class="ps-fakta-text"><span class="ps-fakta-et">' + esc(f.etikett) + '</span>'
+        + '<span class="ps-fakta-v">' + radVärde(f.varde) + '</span>'
+        + (f.under ? '<small>' + radVärde(f.under) + '</small>' : '')
+        + '</span></div>';
     }).join('');
+
+    /* Ett block med forst står direkt under beskedet, före fakta: på
+       ett genomfört pass är det rapporten, som beskedet ber en läsa. */
+    function blockHtml(först) {
+      return (o.block || []).filter(function (b) { return b && b.html && !!b.forst === först; }).map(function (b) {
+        return '<div class="ps-block"><h6>' + esc(b.rubrik) + '</h6>' + b.html + '</div>';
+      }).join('');
+    }
+    var blockFörst = blockHtml(true), block = blockHtml(false);
+
+    /* Datumrutan, samma som i listorna men större. */
+    var dagRuta = '';
+    if (o.datum) {
+      var d = new Date(String(o.datum) + 'T12:00:00');
+      if (!isNaN(d)) {
+        dagRuta = '<span class="ps-dag" aria-hidden="true"><small>' + esc(VECKODAGAR[d.getDay()].slice(0, 3)) + '</small>'
+          + '<b>' + d.getDate() + '</b><small>' + esc((NX.MANADER[d.getMonth()] || '').slice(0, 3)) + '</small></span>';
+      }
+    }
 
     host.innerHTML =
       '<a class="ps-tillbaka" href="' + esc(o.tillbaka ? o.tillbaka.href : '#') + '">'
       + '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M7.5 2.5 4 6l3.5 3.5"/></svg>'
       + esc(o.tillbaka ? o.tillbaka.text : 'Tillbaka') + '</a>'
-      + '<div class="ps-huvud">'
-      + '<div>'
+      + '<div class="ps-huvud' + (dagRuta ? ' har-dag' : '') + '">'
+      + dagRuta
+      + '<div class="ps-huvud-text">'
       + '<h2 class="ps-titel" tabindex="-1">' + esc(o.titel || 'Passet') + '</h2>'
       + '<p class="ps-nar">' + esc(o.nar || '')
       + (o.relativ ? ' <em>· ' + esc(o.relativ) + '</em>' : '') + '</p>'
@@ -989,9 +1115,13 @@ window.NXStudie = (function () {
       + (o.lage ? '<span class="lage ' + esc(o.lage.klass || '') + '">' + esc(o.lage.text) + '</span>' : '')
       + '</div>'
       + (steg ? '<ol class="ps-vag" aria-label="Var passet står">' + steg + '</ol>' : '')
-      + (o.besked || o.atgarder
+      + (o.besked || o.atgarder || o.val
           ? '<div class="ps-gor' + (o.besked && o.besked.ton ? ' ar-' + esc(o.besked.ton) : '') + '">'
-            + (o.besked ? '<p>' + esc(o.besked.text) + '</p>' : '')
+            + (o.belopp
+                ? '<div class="ps-gor-topp">' + (o.besked ? '<p>' + esc(o.besked.text) + '</p>' : '<span></span>')
+                  + '<span class="ps-belopp"><small>' + esc(o.belopp.etikett) + '</small><b>' + esc(o.belopp.text) + '</b></span></div>'
+                : (o.besked ? '<p>' + esc(o.besked.text) + '</p>' : ''))
+            + (o.val ? '<div class="vy-betalval">' + o.val + '</div>' : '')
             + (o.atgarder ? '<div class="ps-knappar">' + o.atgarder + '</div>' : '')
             /* Under knapparna, inte bland dem (Fas 14.6). En knapp i
                .ps-knappar blir full bredd på en telefon, och "Betala med
@@ -999,8 +1129,11 @@ window.NXStudie = (function () {
             + (o.alternativ ? '<div class="ps-alt">' + o.alternativ + '</div>' : '')
             + '</div>'
           : '')
-      + (kort ? '<div class="ps-kortrad">' + kort + '</div>' : '')
-      + block;
+      + blockFörst
+      + (fakta ? '<div class="ps-block"><h6>Om passet</h6><div class="vy-kort ps-fakta">' + fakta + '</div></div>'
+          : kort ? '<div class="ps-kortrad">' + kort + '</div>' : '')
+      + block
+      + (o.fot ? '<div class="ps-fot">' + o.fot + '</div>' : '');
   }
 
   /* ============================================================
@@ -1120,6 +1253,173 @@ window.NXStudie = (function () {
   /* Rapportens omdöme, samma ord som i formuläret studiehjälparen
      fyller i (GICK i nextrum-larare-vy.js). */
   var GICK = { mycket_bra: 'Mycket bra', bra: 'Bra', folja_upp: 'Behöver följas upp' };
+
+  /* ============================================================
+     IKONERNA I INNEHÅLLET (2026-09-28)
+     Samma streckikoner som sidomenyn, 24-rutan och strecket från CSS.
+     aria-hidden på alla: texten bredvid säger samma sak.
+     ============================================================ */
+  function ikon(d) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + d + '</svg>'; }
+  var IKON = {
+    dag: ikon('<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>'),
+    tid: ikon('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.7l3 1.8"/>'),
+    online: ikon('<rect x="3.5" y="6.5" width="12" height="11" rx="2.5"/><path d="m15.5 10.5 5-3v9l-5-3z"/>'),
+    plats: ikon('<path d="M4 11.5 12 5l8 6.5"/><path d="M6 10v9.5h12V10"/><path d="M10 19.5v-5h4v5"/>'),
+    mal: ikon('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>'),
+    nasta: ikon('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+    bock: ikon('<path d="m5 12.5 4.5 4.5L19 7.5"/>'),
+    dubbelbock: ikon('<path d="m3.5 12.5 4 4L15 9"/><path d="m10.5 16.5 1 0L20.5 7.5"/>'),
+    flagga: ikon('<path d="M6 20.5V4"/><path d="M6 4.5h11l-2.5 4 2.5 4H6"/>'),
+    kort: ikon('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/>'),
+    faktura: ikon('<path d="M7 3.5h10A1.5 1.5 0 0 1 18.5 5v14.5l-3-2-3 2-3-2-3 2V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M9 8.5h6M9 12h6"/>'),
+    timmar: ikon('<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3.5 13.5V3.5h10l7.1 7.1a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.4"/>'),
+    bank: ikon('<path d="M4 9.5 12 4l8 5.5"/><path d="M5.5 10v7M10 10v7M14 10v7M18.5 10v7M4 19.5h16"/>'),
+    rapport: ikon('<path d="M14 3.5H6.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9z"/><path d="M14 3.5V9h5.5M8.5 14.5l2.5 2.5 4.5-4.5"/>'),
+    skriv: ikon('<path d="M14 3.5H6.5v17h11V7z"/><path d="M14 3.5V7h3.5"/><path d="M9 12.5h6M9 16h4"/>'),
+    forslag: ikon('<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/><path d="M10.2 13.6a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.3M12 18.6h.01"/>'),
+    lax: ikon('<path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/>'),
+    meddelande: ikon('<path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/>'),
+    vem: ikon('<circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><circle cx="16.5" cy="8" r="2.6"/><path d="M15.5 13.7c2.8-.2 5 1.8 5 4.8"/>'),
+    trend: ikon('<path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15.5 7H20v4.5"/>'),
+    pil: ikon('<path d="m9 6 6 6-6 6"/>'),
+    tillbaka: ikon('<path d="m15 6-6 6 6 6"/>'),
+    ner: ikon('<path d="m6 9 6 6 6-6"/>'),
+    lås: ikon('<rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>'),
+    info: ikon('<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>')
+  };
+  var GICK_IKON = { mycket_bra: 'dubbelbock', bra: 'bock', folja_upp: 'flagga' };
+
+  var stor = function (s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
+  var hm = function (t) { return String(t || '').slice(0, 5); };
+  function minuterAv(t) {
+    var d = hm(t).split(':');
+    return Number(d[0]) * 60 + Number(d[1] || 0);
+  }
+  function längdText(min) {
+    var m = Math.max(0, Math.round(Number(min) || 0));
+    var h = Math.floor(m / 60), rest = m % 60;
+    if (!h) return rest + ' min';
+    if (!rest) return h === 1 ? '1 timme' : h + ' timmar';
+    return h + ' h ' + rest + ' min';
+  }
+
+  /* ============================================================
+     RAPPORTEN SOM ETT BREV (2026-09-28)
+
+     Samma kort överallt där en rapport läses: under Bekräfta rapport,
+     under Efter passen och på passets sida. Förut låg rapporten i en
+     ruta i en ruta i en panel, och omdömet var en fetstilad rad bland
+     de andra. Nu står vem som skrev, när och hur det gick överst, sedan
+     texten och de två sakerna att ta med sig: Öva mer på och Nästa gång.
+
+     Den hållna tiden (Fas 20.1) blir en tidslinje, men bara när den
+     skiljer sig från det bokade eller har ett skäl. Annars står tiden i
+     raden överst, som när passet hölls. Skälet är studiehjälparens egen
+     text, i en pratbubbla med vem som skrev den, så att den inte läses
+     som Nextrums besked.
+
+     o: { titel, vem: { namn, bild }, meta: [text | { ikon, text }],
+          gick, text, trana, nasta, tid, attr, fot }
+       tid: { start, slut, bokat, deb, bank, skal, skalAv } i minuter och
+            'HH:MM[:SS]', eller null
+       attr: färdig attributtext på kortet (data-rb-rapport)
+       fot: färdig HTML i kortets fot, eller inget
+     All text escapas här; bara attr och fot är färdig HTML.
+     ============================================================ */
+  function rapportKort(o) {
+    var meta = (o.meta || []).filter(Boolean).map(function (m) {
+      return typeof m === 'string' ? '<span>' + esc(m) + '</span>'
+        : '<span>' + (IKON[m.ikon] || '') + esc(m.text) + '</span>';
+    }).join('');
+    var gick = o.gick && GICK[o.gick]
+      ? '<span class="rb-omdome ar-' + esc(o.gick) + '">' + IKON[GICK_IKON[o.gick]] + esc(GICK[o.gick]) + '</span>'
+      : '';
+    var duo = [
+      o.trana ? '<div><span class="rb-duo-ik">' + IKON.mal + '</span><div><small>Öva mer på</small><b>' + esc(o.trana) + '</b></div></div>' : '',
+      o.nasta ? '<div><span class="rb-duo-ik">' + IKON.nasta + '</span><div><small>Nästa gång</small><b>' + esc(o.nasta) + '</b></div></div>' : ''
+    ].join('');
+    var avatar = avatarFör(o.vem);
+
+    return '<article class="vy-kort rb-brev"' + (o.attr ? ' ' + o.attr : '') + '>'
+      + '<div class="vy-kort-kropp">'
+      + '<div class="rb-huvud">' + avatar
+      + '<div class="rb-vem"><p class="rb-titel">' + esc(o.titel || 'Pass') + '</p>'
+      + (meta ? '<p class="rb-meta">' + meta + '</p>' : '') + '</div>'
+      + gick + '</div>'
+      + (o.text ? '<p class="rb-text">' + esc(o.text) + '</p>' : '<p class="rb-text ar-tom">Rapporten är tom.</p>')
+      + (duo ? '<div class="rb-duo">' + duo + '</div>' : '')
+      + tidslinje(o.tid, avatarFör(o.vem, true))
+      + '</div>'
+      + (o.fot ? '<div class="vy-kort-fot rb-fot">' + o.fot + '</div>' : '')
+      + '</article>';
+  }
+
+  /* En rad som leder någonstans (2026-09-28): ikon, rubrik, vad det
+     gäller och vart den leder. Att göra på Översikt i båda vyerna.
+     Texten i länken göms på en telefon, pilen står kvar.
+     o: { href, ikon, ton ('ockra'|'mossa'|'tyst'), titel, meta: [text], lank } */
+  function radLank(o) {
+    return '<a class="vy-rad" href="' + esc(o.href) + '">'
+      + '<span class="vy-rad-ik' + (o.ton ? ' ar-' + esc(o.ton) : '') + '">' + (IKON[o.ikon] || IKON.info) + '</span>'
+      + '<span class="vy-rad-mitt"><span class="vy-rad-titel">' + esc(o.titel) + '</span>'
+      + '<span class="vy-rad-meta">' + (o.meta || []).filter(Boolean).map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('') + '</span></span>'
+      + '<span class="vy-rad-hoger"><span class="vy-lank"><span class="vy-lank-text">' + esc(o.lank || '') + '</span>' + IKON.pil + '</span></span></a>';
+  }
+
+  /* NXMedia laddas efter den här filen; när ett kort ritas finns den. */
+  function avatarFör(vem, liten) {
+    if (!vem || !window.NXMedia || !window.NXMedia.avatar) return '';
+    return window.NXMedia.avatar(vem.namn, vem.bild, liten ? { liten: true } : undefined);
+  }
+
+  function tidslinje(t, avatar) {
+    if (!t || !t.start || !t.slut) return '';
+    var start = minuterAv(t.start), slut = minuterAv(t.slut);
+    var hållet = Math.max(slut - start, 0);
+    var bokat = Number(t.bokat) || 0, deb = Number(t.deb) || 0, bank = Number(t.bank) || 0;
+    var avviker = !!(bokat && deb && deb !== bokat);
+    if (!avviker && !t.skal) return '';
+
+    var skillnad = bokat ? hållet - bokat : 0;
+    var rubrik = skillnad > 0 ? 'Passet blev ' + längdText(skillnad).replace(/^1 timme$/, 'en timme') + ' längre'
+      : skillnad < 0 ? 'Passet blev ' + längdText(-skillnad).replace(/^1 timme$/, 'en timme') + ' kortare'
+      : 'Passet hölls ' + hm(t.start) + '–' + hm(t.slut);
+    var under = [bokat ? 'Bokat ' + längdText(bokat) : null,
+      deb ? 'debiteras ' + längdText(deb) + (deb !== hållet ? ', per påbörjad kvart' : '') : null,
+      bank ? längdText(bank) + ' ur timbanken' : null].filter(Boolean).join(' · ');
+
+    /* Stapeln: det bokade i mossa, övertiden i lera. Ett kortare pass
+       fyller det hållna och lämnar resten av det bokade tomt. */
+    var total = Math.max(hållet, bokat, 1);
+    var mossa = Math.min(hållet, bokat || hållet) / total * 100;
+    var lera = bokat && hållet > bokat ? (hållet - bokat) / total * 100 : 0;
+    var hhmm = function (m) { return (m / 60 < 10 ? '0' : '') + Math.floor(m / 60) + ':' + (m % 60 < 10 ? '0' : '') + (m % 60); };
+    var kortare = Math.min(hållet, bokat || hållet), längre = Math.max(hållet, bokat);
+    var mitt = kortare / total * 100;
+    var skala = '<span>' + esc(hm(t.start)) + '</span>'
+      + (bokat && kortare !== längre && mitt > 18 && mitt < 82
+        ? '<span class="ar-mitt" style="left:' + mitt.toFixed(1) + '%">' + esc(hhmm(start + kortare)) + '</span>' : '')
+      + '<span>' + esc(hhmm(start + längre)) + '</span>';
+
+    return '<div class="rb-tid">'
+      + '<div class="rb-tid-topp"><b>' + esc(rubrik) + '</b>' + (under ? '<span>' + esc(under) + '</span>' : '') + '</div>'
+      + '<div class="rb-tid-bar" aria-hidden="true"><i class="rb-tid-bokat" style="width:' + mossa.toFixed(1) + '%"></i>'
+      + (lera ? '<i class="rb-tid-extra" style="width:' + lera.toFixed(1) + '%"></i>' : '') + '</div>'
+      + '<div class="rb-tid-skala" aria-hidden="true">' + skala + '</div>'
+      + (t.skal ? '<div class="rb-tid-skal">' + (avatar || '') + '<p><small>' + esc((t.skalAv || 'Studiehjälparen') + ' skrev varför')
+        + '</small>' + esc(t.skal) + '</p></div>' : '')
+      + '</div>';
+  }
+
+  /* Ett betalval: en stor knapp med vad som händer på raden under.
+     attr är knappens data-attribut, samma som de gamla knapparnas, så
+     att samma hanterare tar dem. Rubriken bär data-medan (medan()). */
+  function betalval(o) {
+    return '<button type="button" class="vy-valk' + (o.först ? ' ar-forst' : '') + '" ' + o.attr + '>'
+      + '<span class="vy-valk-ik">' + (IKON[o.ikon] || '') + '</span>'
+      + '<span><b data-medan>' + esc(o.titel) + '</b>' + (o.under ? '<span>' + esc(o.under) + '</span>' : '') + '</span>'
+      + '</button>';
+  }
 
   /* "16:00–17:00". Längden står i minuter i databasen; ett pass utan
      längd finns inte sedan Fas 9.7, men en gammal rad ska inte bli
@@ -1476,6 +1776,7 @@ window.NXStudie = (function () {
     if (!namn.length) return null;
     var standard = namn.indexOf(o.standard) !== -1 ? o.standard : namn[0];
     var första = true;
+    var aktiv = null;
 
     function giltig(n) { return namn.indexOf(n) !== -1 ? n : standard; }
 
@@ -1493,6 +1794,17 @@ window.NXStudie = (function () {
         if (här) a.setAttribute('aria-current', 'page');
         else a.removeAttribute('aria-current');
       });
+      /* På en telefon är menyn en rad man drar i sidled. Kom man till
+         sektionen från en länk i innehållet kan dess post stå utanför
+         kanten; då dras raden, inte sidan (inte scrollIntoView, som
+         kan rulla hela sidan: fälla 3 i CLAUDE.md, startsidan). */
+      var vald_a = nav.querySelector('a.ar-har');
+      if (vald_a && nav.scrollWidth > nav.clientWidth + 1) {
+        var d = vald_a.getBoundingClientRect().left - nav.getBoundingClientRect().left;
+        if (d < 0 || d + vald_a.offsetWidth > nav.clientWidth) {
+          nav.scrollLeft += d - (nav.clientWidth - vald_a.offsetWidth) / 2;
+        }
+      }
 
       /* Ett sektionsbyte flyttar INTE sidan.
 
@@ -1504,19 +1816,22 @@ window.NXStudie = (function () {
          fel: i provbänken slutade ett klick på "Dina tider" 1253px
          ned i en sektion som just öppnats.
 
-         Kvar står bara det som sidan inte kan lösa själv: blev den
-         nya sektionen så mycket kortare att webbläsaren KLÄMDE ned
-         scrollen, hamnar man annars i sektionens slut utan att ha
-         sett dess början. Då — och bara då — läggs sidan vid
-         sektionens början, utan animering. 'instant' och inte 'auto':
-         'auto' läser scroll-behavior ur CSS, och den är smooth. */
-      if (!första) {
+         Kvar står bara det som sidan inte kan lösa själv: skulle man
+         annars hamna INNE i den nya sektionen, utan att se dess
+         början, läggs sidan vid början, direkt och utan animering.
+         Förut gällde det bara när webbläsaren klämt ned scrollen för
+         att sektionen blev kortare. Var den nya lika lång eller
+         längre stod man kvar på samma höjd: på en telefon ledde
+         "Till rapporten" långt ned i Betalning till mitten av Bekräfta
+         rapport, med rubriken 1 000 px ovanför skärmen (2026-09-28).
+         Syns början redan, som när man står överst, flyttas ingenting.
+         Bara vid ett byte av sektion: en flik i samma sektion
+         (#lektioner/plan) ska inte skicka en uppåt. */
+      if (!första && vald !== aktiv) {
         var sektion = rot.querySelector('section[data-sek="' + vald + '"]');
-        if (sektion && window.scrollY < föreY) {
-          var topp = sektion.getBoundingClientRect().top + window.scrollY;
-          try { window.scrollTo({ top: topp, behavior: 'instant' }); }
-          catch (e) { window.scrollTo(0, topp); }
-        }
+        if (sektion && (window.scrollY < föreY || sektion.getBoundingClientRect().top < täcktÖverst() + 12)) visaÖverst(sektion);
+      }
+      if (!första) {
         var rubrik = rot.querySelector('section[data-sek="' + vald + '"] h2, section[data-sek="' + vald + '"] h5');
         if (rubrik) {
           rubrik.setAttribute('tabindex', '-1');
@@ -1524,6 +1839,7 @@ window.NXStudie = (function () {
         }
       }
       första = false;
+      aktiv = vald;
 
       if (typeof o.onByt === 'function') o.onByt(vald);
       return vald;
@@ -1590,6 +1906,17 @@ window.NXStudie = (function () {
           sättFall(!layout.classList.contains('ar-hopfalld'));
         });
       }
+    }
+
+    /* Sidhuvudets höjd, för sektionsraden som står fast under det på
+       en telefon. Satt på raden och inte på :root: en variabel på
+       roten ärvs av hela sidan och räknar om stilen för allt när den
+       ändras (CLAUDE.md, startsidan efter hero). */
+    var hdrEl = document.querySelector('.hdr');
+    if (hdrEl && window.ResizeObserver) {
+      new ResizeObserver(function () {
+        nav.style.setProperty('--vy-hdr-h', hdrEl.offsetHeight + 'px');
+      }).observe(hdrEl);
     }
 
     window.addEventListener('hashchange', frånHash);
@@ -2189,6 +2516,8 @@ window.NXStudie = (function () {
     passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,
     hämtaMöte: hämtaMöte, mötesRad: mötesRad,
     dagMedVeckodag: dagMedVeckodag, GICK: GICK,
+    rapportKort: rapportKort,
+    radLank: radLank, betalval: betalval, IKON: IKON, längdText: längdText,
     bekräfta: bekräfta, avbokaRuta: avbokaRuta, medan: medan, kolla: kolla
   };
 })();
