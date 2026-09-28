@@ -409,10 +409,10 @@ månaden efter, eller dagen den betalades), varje pass och summan, och
 den går att skriva ut eller spara som PDF. Den räknar ingenting själv:
 siffrorna är underlagets, frysta när månadskörningen skrev det
 (`NXBetalning.lonespec`). Månadskörningen skriver underlaget den 1:a
-varje månad, av sig själv när pg_cron-jobbet `manadskorning` är
-påslaget (avsnitt 5; läget står under Ekonomi → Månadskörning), så en
-månad har sin lönespec när den är slut. Ett pass som rapporteras efter
-körningen kommer med nästa månad, och lönespecen säger det under
+varje månad, av sig själv sedan 2026-09-28 (pg_cron-jobbet
+`manadskorning`, avsnitt 5; läget står under Ekonomi → Månadskörning),
+så en månad har sin lönespec när den är slut. Ett pass som rapporteras
+efter körningen kommer med nästa månad, och lönespecen säger det under
 summan, liksom pass som saknar rapport. Månaderna som har en lönespec
 är märkta i månadsraden. **Ingen skatt, med flit**: `studiehjalpare_form`
 står på `oklart` (avsnitt 11), och utan anställningsform finns ingen
@@ -989,9 +989,16 @@ skriver alltid förra månaden. Saknas adressen blir det en uppgift
 står det under System → Fel och passen larmar som `ej_utbetalt`.
 Adminvyn visar om jobbet är på (`manadskorning_lage()`, bara admin): ett
 schema som står av ser annars ut precis som ett som fungerar.
-**Jobbet ska inte slås på förrän provpassen är undantagna**: det första
-som körs skarpt skriver underlag och fakturautkast för allt som står
-klart, och DEPLOY-BETALNING.md avsnitt 5–6 säger i vilken ordning.
+**Jobbet är på sedan 2026-09-28**, efter stegen i DEPLOY-BETALNING.md
+avsnitt 6: `fakturering` version 32 driftsatt från main och jämförd
+byte för byte, väckningen torrkörd, och sist migrationen med jobbet.
+Det som körs skarpt skriver underlag och fakturautkast för allt som
+står klart, och provpasset den 27 september undantogs inte: Leo ville
+se hur lönespecen ser ut. Körningen den 1 oktober skriver därför ett
+underlag på 240 kr och ett fakturautkast på 758 kr för det, som ska
+tas bort när lönespecen är sedd, inte betalas ut eller läggas in i
+Fortnox (DEPLOY-BETALNING.md avsnitt 6). Hela `rls-test.sql` gick
+igenom mot driften efteråt, 702 av 702.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
@@ -1726,7 +1733,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 30 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28), 31 med `manadskorning_lage` när lönespecens migration är körd | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 31 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28, den senaste är `manadskorning_lage`) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |

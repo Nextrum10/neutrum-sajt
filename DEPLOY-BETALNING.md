@@ -31,23 +31,24 @@ behövs om ni sätter upp en ny miljö.
 | 1. Schemat | Applicerat |
 | 2. Priset | Satt: 37900 ören, alltså 379 kr — samma som prissidan |
 | 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
-| 4. Deploy `fakturering` | ACTIVE, version 28. Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas |
-| 5. Torrkörning | **Väntar på er** — knappen under Ekonomi → Månadskörning, ingen nyckel behövs |
-| 6. Schemaläggning | **Byggd, inte påslagen** (2026-09-28): pg_cron `manadskorning` den 1:a, genom `intern.manadskorning_vack()`. Slås på med migrationen `manadskorningen_gar_den_forsta` när steg 5 är gjort och provpassen undantagna, se avsnitt 6 |
+| 4. Deploy `fakturering` | ACTIVE, version 32 (2026-09-28, från main, jämförd byte för byte). Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas |
+| 5. Torrkörning | **Gjord 2026-09-28** genom schemavägen: 200, augusti utan pass. Septembers enda pass är provpasset, se avsnitt 6. Knappen under Ekonomi → Månadskörning torrkör vilken månad som helst |
+| 6. Schemaläggning | **På sedan 2026-09-28**: pg_cron `manadskorning` den 1:a klockan 04:17 UTC, genom `intern.manadskorning_vack()`. Första skarpa körningen är den 1 oktober 2026, med provpasset kvar, se avsnitt 6 |
 | 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar. Se avsnitt 9 |
 | 8. Deploy `faktura-utskick` | ACTIVE, version 19. Skickar bara underlag sedan Fas 14.6 |
 
 Databasen är tom på fakturor och underlag: `invoices`, `invoice_lines`, `payouts`
-och `payout_lines` har noll rader (24 september 2026). Den första skarpa körningen
-har alltså inte skett, och torrkörningen i steg 5 är fortfarande det första som ska
-göras.
+och `payout_lines` har noll rader (28 september 2026). Den första skarpa körningen
+gör schemat den 1 oktober 2026.
 
 **Obs (17 september 2026):** alla pass i driften hör än så länge till adminkontot
 och till en enda studiehjälpare — det är provpass, inga riktiga kunder. Fyra av de
 fem genomförda passen skapades samtidigt den 2 september, och sedan Fas 14.2 står
 de under Betalningar & utbetalningar → Avvikelser som **Inte betalt**. Ta ställning
 till dem innan en skarp körning: undanta dem, annars betalar ni ut ersättning för
-provpass.
+provpass. Den 28 september stod ett enda pass klart för ett underlag, provpasset den
+27 september, och Leo valde att ha det kvar för att se lönespecen. Vad som ska
+städas efter den 1 oktober står i avsnitt 6.
 
 ## Vilka pass som kommer med på underlaget
 
@@ -201,7 +202,7 @@ per månad (`unique (tutor_id, period)`).
 
 ## 6. Schemalägg
 
-**Byggt 2026-09-28, inte påslaget.** Leo ville ha en lönespecifikation för varje
+**Påslaget 2026-09-28.** Leo ville ha en lönespecifikation för varje
 månad när den är slut, och lönespecen är underlaget: utan schemat finns den först
 när någon kommit ihåg knappen. pg_cron-jobbet `manadskorning` kör
 `intern.manadskorning_vack()` den 1:a klockan 04:17 UTC, som väcker `fakturering`
@@ -221,6 +222,24 @@ Det är fortfarande ett aktivt beslut, inte något som råkar vara påslaget. Or
    läs svaret i `net._http_response` (200 med förra månadens sammanfattning).
 4. Kör migrationen `manadskorningen_gar_den_forsta`. Först då finns jobbet.
 5. Döp om de två migrationsfilerna till versionerna `apply_migration` gav dem.
+
+Alla fem gjordes 2026-09-28: `fakturering` version 32, migrationerna
+`20260928224950` och `20260928225203`, och torrkörningen svarade 200 för augusti,
+utan pass. Fel hemlighet gav 401, och rätt hemlighet som bad om september fick
+ändå augusti.
+
+**Steg 1 avgjordes åt andra hållet: provpasset står kvar.** Leo ville se hur
+lönespecen ser ut. Den 1 oktober skriver körningen därför ett underlag på 240 kr
+till studiehjälparen leo (Matematik 27 september, 2 h à 120 kr) och ett
+fakturautkast på 758 kr till adminfamiljen, för passet står på faktura. Får
+provpassen 29 och 30 september en rapport före körningen kommer de med på
+underlaget också. När lönespecen är sedd, och före den 1 november:
+
+1. Ta bort fakturautkastet under Ekonomi → Fakturor (Ta bort).
+2. Ta bort underlaget. Det har ingen knapp, så det görs med SQL.
+3. Undanta provpassen, annars kommer de med på nästa månads underlag och faktura.
+
+Betala inte ut underlaget och lägg inte in fakturan i Fortnox.
 
 Stänga av: `select cron.unschedule('manadskorning');`, som en egen migration.
 
