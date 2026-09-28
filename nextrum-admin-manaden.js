@@ -518,12 +518,12 @@
 
     let rubrik, text, kropp;
     if (vy === 'fakturor') {
-      const g = NXStudie.månadsGräns(valdMånad());
+      /* Att månaden pågår, eller inte har börjat, säger körningens ruta
+         (data-kor-not), likadant på alla tre ställen. */
       rubrik = 'Fakturorna för ' + månadText();
       text = 'Pass där familjen valt faktura. Månadskörningen skapar ett utkast per familj, och det läggs in i Fortnox för hand: '
         + 'Fortnox läser inte in kundfakturor från en fil. Tryck Underlag, skapa fakturan i Fortnox och tryck Lagd i Fortnox med numret, OCR och förfallodagen. '
-        + 'Fortnox skickar fakturan och visar när den är betald.'
-        + (isoFor(new Date()) < g.till ? ' Månaden pågår: körs den nu kommer senare pass på nästa månads faktura.' : '');
+        + 'Fortnox skickar fakturan och visar när den är betald.';
       kropp = fakturaLista(räknas);
     } else if (vy === 'kopta') {
       rubrik = 'Köpta timmar i ' + månadText();
