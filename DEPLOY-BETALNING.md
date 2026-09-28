@@ -904,8 +904,12 @@ rabatt) och klippkort med 10, 20, 30, 60 eller 100 timmar (5 % rabatt, gäller 6
 kortet, av sig själva sedan Fas 22.2: när passet bekräftas eller genomförs, och när
 ett köp blir betalt för de bekräftade pass som redan står obetalda. Sedan Fas 22.3
 betalar timmar som blir lediga efter det nästa bekräftade pass inom fem minuter.
+Sedan Fas 22.4 dras timmarna redan när familjen föreslår passet, och ett motförslag
+flyttar bara tiden: timmen följer med. Ett förslag som avböjs, dras tillbaka eller
+inte besvarats när dagen gått ger tillbaka den.
 Databasen är körd (`fas16_1` till `fas16_1e`, `fas22_2_timmarna_betalar_passen` och
-`fas22_3_lediga_timmar_betalar_nasta_pass`), och flaggan `erbjudanden`
+`fas22_3_lediga_timmar_betalar_nasta_pass`; `fas22_4_timmen_dras_nar_forslaget_skickas`
+är INTE körd än, se nedan), och flaggan `erbjudanden`
 är PÅ sedan 2026-09-27, påslagen innan provköpet nedan var gjort. Står den av
 syns erbjudandena med sina priser på prissidan och i studievyn, men knapparna
 säger "Snart", och inga timmar går att dra.
@@ -916,7 +920,7 @@ säger "Snart", och inga timmar går att dra.
 |---|---|
 | Priset | `erbjudanden_pris`. Timpriset med rabatt, nedåt till hel krona, gånger timmarna (16.1d). Prissidan, studievyn och `stripe-checkout` läser samma rad |
 | Timmar kvar | `klippkort_saldo.kvar`, ur passen som bär `klippkort_id`. Ett avbokat pass räknas inte, så timmarna kommer tillbaka av sig själva |
-| Att dra timmar | Triggern `bookings_timmar_betalar` när ett pass bekräftas eller genomförs, och `klippkort_betalar_passen` när ett köp blir betalt (Fas 22.2). pg_cron `timmar-betalar` var femte minut för timmar som blivit lediga (Fas 22.3). Alla tre väljer genom `intern.timmar_betala`. Annars `klippkort_dra()`, bara `service_role`, anropad av `klippkort-betala` efter att familjens token prövats |
+| Att dra timmar | Triggern `bookings_timmar_betalar_forslaget` när ett förslag skapas (Fas 22.4), `bookings_timmar_betalar` när ett pass bekräftas, genomförs eller blir förslag igen, och `klippkort_betalar_passen` när ett köp blir betalt (Fas 22.2). pg_cron `timmar-betalar` var femte minut för timmar som blivit lediga (Fas 22.3), och för förslag som ingen svarat på när dagen gått, som lämnar tillbaka sina (Fas 22.4). Alla väljer genom `intern.timmar_betala`. Annars `klippkort_dra()`, bara `service_role`, anropad av `klippkort-betala` efter att familjens token prövats |
 | Pengar tillbaka | `klippkort_saldo.vid_anger_ore` inom ångerfristen, `vid_uppsagning_ore` efter den. Adminvyn väljer efter datumet |
 
 **Driftsätt i den här ordningen:**
@@ -953,6 +957,14 @@ Fas 22.3 (lediga timmar betalar nästa pass) är bara databasen: migrationen
 `fas22_3_lediga_timmar_betalar_nasta_pass`, som också schemalägger
 `timmar-betalar`. Ingen funktion ändrades.
 
+Fas 22.4 (timmen dras när förslaget skickas) är också bara databasen:
+migrationen `fas22_4_timmen_dras_nar_forslaget_skickas`. Ingen funktion ändrades,
+och mejlen säger redan "betalt med timmarna" när passet bekräftas. Kör den i samma
+stund som föräldravyn går ut: vyn räknar inte längre bort väntande förslag i Boka
+pass, så en vy utan migrationen lovar timmar som databasen ännu inte dragit.
+Migrationen prövar först att de fyra funktionerna den bygger på är de som lästes i
+driften 2026-09-28, och avbryts annars.
+
 Driftsätts en funktion genom MCP i stället för `supabase functions
 deploy`: hämta tillbaka den efteråt och jämför varje fil mot repot.
 Version 17 av `notis-ko` gick ut med en fil som bara innehöll ett
@@ -972,13 +984,15 @@ står därför inte i `config.toml`.
 2. Köp Klippkort 10 timmar med testkortet `4242 4242 4242 4242`. Raden i
    `klippkort` ska bli `betald` med `stripe_skarp = false`, `giltigt_till` sex
    månader fram och `stripe_charge_id` satt.
-3. Låt en studiehjälpare bekräfta ett pass på en timme. Passet ska bli betalt av
-   sig självt (Fas 22.2): `betald` med `klippkort_id` satt och `betalt_ore` tomt,
-   kortet ska ha 9 timmar kvar, familjen ska inte se någon betalknapp, och
-   bekräftelsemejlet i sandlådan ska säga att passet är betalt med timmarna.
-   Pröva också köpet åt andra hållet: bekräfta ett pass innan familjen har timmar,
-   köp sedan ett kort, och passet ska stå som betalt med det nya kortet när köpet
-   kommit in.
+3. Föreslå ett pass på en timme som familjen. Förslaget ska bli betalt direkt
+   (Fas 22.4): `betald` med `klippkort_id` satt och `betalt_ore` tomt, kortet ska ha
+   9 timmar kvar, och kvittot i Boka pass ska säga att en timme är dragen. Låt
+   studiehjälparen föreslå en annan tid: passet ska stå kvar som betalt med samma
+   kort och kortet ha 9 timmar kvar. Säg ja som familjen: ingenting mer dras,
+   familjen ska inte se någon betalknapp, och bekräftelsemejlet i sandlådan ska
+   säga att passet är betalt med timmarna. Pröva också köpet åt andra hållet:
+   föreslå ett pass innan familjen har timmar, köp sedan ett kort, och passet ska
+   stå som betalt med det nya kortet när köpet kommit in.
 4. Avboka passet som familjen, på passets sida, med ett skäl (Fas 21.1).
    `betalning_status` ska bli `ingen` (annars larmar `betald_men_avbokad` om pengar
    som aldrig drogs), kortet ska ha 10 timmar igen, och studiehjälparen ska få
@@ -987,7 +1001,7 @@ står därför inte i `config.toml`.
    `select intern.timmar_gar_ut_koa();` mellan 9 och 20. Sandlådan ska få mejlet
    "Era köpta timmar går ut …" med antalet timmar kvar (Fas 21.2).
 6. Timbanken (Fas 22.1). Boka ett pass på två timmar, som timmarna betalar när det
-   bekräftas, och låt
+   föreslås, och låt
    studiehjälparen rapportera 1 h 15 med ett skäl. Kortet ska ha dragit två
    timmar, och `timbank_saldo.saldo_min` för familjen ska vara 45. Boka sedan ett
    pass på en timme, bekräfta det, och rapportera 1 h 15: `timbank_uttag` ska
@@ -1001,10 +1015,11 @@ står därför inte i `config.toml`.
 
 **Pengar tillbaka görs i Stripes dashboard, av en människa.** Beloppet står under
 Erbjudanden i adminvyn, kolumnen "Om de slutar i dag". **Avboka först alla kommande
-pass familjen inte vill ha**, inte bara de timmarna betalat: kolumnen räknar varje
-pass som inte är avbokat som använt, också ett som inte hållits, och sedan Fas 22.3
-betalar en timme som blir ledig nästa bekräftade pass inom fem minuter. Avbokas bara
-det betalda passet flyttar timmen alltså till nästa.
+pass familjen inte vill ha, och deras förslag**, inte bara de timmarna betalat:
+kolumnen räknar varje pass som inte är avbokat som använt, också ett som inte
+hållits och sedan Fas 22.4 också ett förslag, och sedan Fas 22.3 betalar en timme
+som blir ledig nästa pass inom fem minuter. Avbokas bara det betalda passet flyttar
+timmen alltså till nästa.
 
 - **Inom 14 dagar från köpet gäller ångerrätten.** De använda timmarna räknas som
   en andel av det familjen BETALADE, inte till 379 kr. Lagen om distansavtal 2 kap.
