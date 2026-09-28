@@ -1475,6 +1475,7 @@ tillbaka en kopia.**
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
 | `ansokan-notis` | Ett besked till den som sökt jobb (Fas 16.1): kvittot, eller mejlet om ett steg framåt med hela processen och var hen står. Databasen bestämmer vad, funktionen skickar | Triggern `ansokan_besked` och pg_cron `ansokan-besked`, via `notis_konfig.ansokan_url` |
 | `ansokan-gallring` | Tar bort ansökningar som inte ledde till anställning och CV-filer utan ansökan när de är ett år gamla (2026-09-27, avsnitt 5). Filen först genom Storage-API:t, sedan raden genom `ansokan_gallra()`, som vägrar medan filen finns. Svarar 500 om något inte gick | pg_cron `ansokan-gallring` via `intern.ansokan_gallring_vack()` och `notis_konfig.gallring_url` |
+| `utbildningsprov` | Provet efter utbildningsmötet (Fas 22.1): hämtar frågorna och tar emot svaren genom `utbildningsprov_lage` och `utbildningsprov_lamna`, med provnyckeln som behörighet. Ligger i drift sedan 2026-09-27; se avsnitt 11 om vad som saknas | Sidan `/utbildningsprov`, som bara finns i utkastet (PR #88) |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
 | `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`) | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
 | `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet. Med `timbank: true` dras minuterna i timbanken i stället, i `timbank_dra()` (Fas 22.1). Sedan Fas 22.2 betalar timmarna passen av sig själva i databasen, och knappen tar det de inte hann | Betala med timmar och Betala med timbanken i föräldravyn |
@@ -1485,7 +1486,7 @@ tillbaka en kopia.**
 | `google-koppla` | Kopplingen till Google (Fas 18.1): adressen till Google, återkomsten med engångskoden, Prova och Koppla från. Koden byts mot en nyckel HÄR; vyn ser aldrig nyckeln eller klienthemligheten. Återkomsten bär ingen inloggning och skyddas av ett HMAC-signerat läge som gäller i tio minuter. Ett konto utanför nextrum.se nekas | Knapparna under System → Integrationer, och Googles omdirigering |
 | `google-meet` | Meet-länken till ett bekräftat onlinepass (Fas 18.1). Läser passet med anroparens token först, skapar ett öppet rum och sparar länken i `pass_moten`. Ett rum som inte blev öppet sparas inte | Passets sida i föräldravyn och studiehjälparvyn |
 
-`supabase/config.toml` bär `verify_jwt = false` för de åtta funktioner
+`supabase/config.toml` bär `verify_jwt = false` för de nio funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
 dashboarden, och en `supabase functions deploy` utan filen hade slagit
 på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och
@@ -1840,7 +1841,7 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
   filhuvuden säger vilket fel konstruktionen finns för att hindra. Håll
   den stilen — den är halva minnet.
 - **Bilder:** `bilder/*.png` är gitignorerade (originalen, ~50 MB).
-  Sajten laddar bara JPG-varianterna. Tappar du datorn finns
+  Sajten laddar WebP genom `<picture>`, med JPG som reserv. Tappar du datorn finns
   originalen ingenstans.
 - **`.claude/skills/`, `.agents/`, `skills-lock.json`** är
   gitignorerade Higgsfield-verktyg. De försvinner när miljön återskapas.
@@ -1851,6 +1852,17 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
 
 ## 11. Vad som inte är byggt
 
+- **Utbildningsprovet (Fas 22.1) står halvvägs i drift.** Migrationerna,
+  jobbet `utbildningsprov-paminn` (varje timme), funktionen
+  `utbildningsprov` och `ansokan-notis` med provstegen driftsattes
+  2026-09-27 från utkastet (PR #88), som aldrig mergades. Sedan
+  2026-09-28 står databasdelen och funktionerna i main, så att repot och
+  driften är samma; gallringen läste redan provkolumnerna. Sidan
+  `/utbildningsprov` och adminvyns del finns fortfarande bara i
+  utkastet, så den som når provsteget får en länk som svarar 404. Leo
+  avgör: gör klart utkastet, eller ta bort provet med en migration (låt
+  kolumnerna stå, gallringen läser dem). **Driftsätt aldrig från en gren
+  som inte är mergad**: det var så det här hände.
 - **Betalning.** Familjen betalar varje pass med kort, **i förväg eller
   efter passet när de bekräftar rapporten** (Fas 19.2; före passet från
   Fas 14.2). Faktura finns sedan Fas 14.6 som andra betalsätt, **byggt
