@@ -225,7 +225,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Översikt</h2>
-            <p>Boka nästa pass och se hur det går. Menyn leder vidare till varje del.</p>
+            <p>Det som väntar på er, och hur det går.</p>
           </div>
           <!-- Barnväljaren. Tom och osynlig när familjen har ett
                enda barn, vilket de flesta har — då finns inget att
@@ -242,51 +242,57 @@
              och en gång som "Kvar att göra". Numren finns kvar allihop
              i "I siffror" nedanför, en gång var. -->
 
-        <div class="stack">
+        <!-- ============ INNEHÅLLET (2026-09-28) ============
+             Leo: "innehållet tycker jag kan bli snyggare", och sedan
+             "det behöver se bra ut på mobil och enkelt att använda".
+             Det som väntar på familjen står först, i en lista, och
+             resten under det: nästa pass, hur det går, siffrorna.
+             Förut var Översikt fem lådor med statistik, och det enda
+             som väntade (en föreslagen tid) stod ensamt överst. -->
 
-          <!-- ============ TIDER ATT SVARA PÅ ============
-               Det enda på hela Översikt som VÄNTAR på familjen.
-               Föreslagna tider stod förut bara under Mina lektioner,
-               en sektion bort, och en föreslagen tid håller
-               studiehjälparens kalender ockuperad tills någon svarat
-               ja eller nej. Då duger det inte att svaret ligger
-               bakom ett klick till.
+        <!-- ============ ATT GÖRA ============
+             Tider att svara på, rapporter att bekräfta och försenade
+             läxor, i den ordningen: en föreslagen tid håller
+             studiehjälparens kalender ockuperad tills någon svarat,
+             och därför duger det inte att svaret ligger bakom ett
+             klick till. Dold när det inte finns något: en tom ruta
+             överst lär en att sluta titta där. Fylls av ritaÖvGöra();
+             knapparna på en föreslagen tid är samma data-passvar som
+             i passlistan, så samma hanterare tar dem. -->
+        <div class="vy-del" id="ov-gora-grupp" hidden>
+          <div class="vy-grupp"><h3>Att göra</h3><span class="vy-antal ar-gor" id="ov-gora-antal"></span></div>
+          <div class="vy-kort vy-lista" id="ov-gora"></div>
+        </div>
 
-               Rutan är dold när det inte finns något att svara på.
-               En tom ruta överst på första skärmen är brus, och brus
-               överst lär en att sluta titta där. Fylls av
-               ritaÖvBekrafta(); knapparna är samma data-passvar som
-               i passlistan, så samma hanterare tar dem. -->
-          <div class="dbox" id="ov-bekrafta-box" hidden>
-            <h5>Tider att svara på <em id="ov-bekrafta-antal"></em></h5>
-            <div id="ov-bekrafta"></div>
-          </div>
-
-          <!-- ============ STATISTIK ============
-               Låg under Min utveckling. Men "hur går det" är en
-               översiktsfråga, och Utveckling handlar om kunskapsområden
-               ämne för ämne — en annan sak, på en annan detaljnivå. -->
-          <div class="dbox">
-            <h5>I siffror</h5>
-            <div id="stat-tal"><div class="loading">Hämtar</div></div>
-          </div>
-          <div class="dbox">
-            <h5>Pass över tid <em>senaste sex månaderna</em></h5>
-            <div id="stat-graf"><div class="loading">Hämtar</div></div>
+        <div class="ov-tva">
+          <div>
+            <div class="vy-grupp"><h3>Kommande pass</h3><a class="vy-lank" href="#lektioner">Alla pass<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a></div>
+            <div class="vy-kort vy-lista" id="ov-kommande"><div class="loading">Hämtar</div></div>
           </div>
           <!-- Två frågor som båda är "hur går det", på olika
                tidsskalor: hur passen gick, och var kunskapen ligger
                nu. Antalet pass säger hur mycket ni hunnit, inte hur
                det gått. -->
-          <div class="dbox">
-            <h5>Hur passen gick <em id="stat-gick-antal"></em></h5>
-            <div id="stat-gick"></div>
-          </div>
-          <div class="dbox">
-            <h5>Kunskapsområdena <em id="stat-niva-antal"></em></h5>
-            <div id="stat-niva"></div>
+          <div>
+            <div class="vy-grupp"><h3>Så går det</h3><a class="vy-lank" href="#utveckling">Min utveckling<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a></div>
+            <div class="vy-kort"><div class="vy-kort-kropp">
+              <p class="ov-delrub">Hur passen gick <em id="stat-gick-antal"></em></p>
+              <div id="stat-gick"></div>
+              <p class="ov-delrub">Kunskapsområdena <em id="stat-niva-antal"></em></p>
+              <div id="stat-niva"></div>
+            </div></div>
           </div>
         </div>
+
+        <!-- ============ HITTILLS ============
+             Siffrorna och studietiden vecka för vecka. Förut sex
+             månader, och för en familj som just börjat var fem av sex
+             staplar noll. Veckorna framåt visar det som är bokat. -->
+        <div class="vy-grupp"><h3>Hittills</h3></div>
+        <div class="vy-kort"><div class="vy-kort-kropp ov-hittills">
+          <div id="stat-tal"><div class="loading">Hämtar</div></div>
+          <div id="stat-graf"></div>
+        </div></div>
       </section>
       <!-- ============================================================
            BOKA PASS
@@ -431,22 +437,19 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Bekräfta rapport</h2>
-            <p>Efter varje pass skriver er studiehjälpare vad ni gick igenom och vad som är nästa steg. Läs rapporten här och bekräfta att ni tagit del av den. Är passet inte betalt än, bekräftar ni den genom att välja hur ni betalar. Drog ett betalt pass över, betalar ni tillägget för tiden när ni bekräftar.</p>
+            <p>Läs vad ni gick igenom på passet och bekräfta att ni tagit del av rapporten. Är passet inte betalt än, bekräftar ni genom att välja hur ni betalar.</p>
           </div>
         </div>
-        <div class="stack">
-          <p class="ok-msg" id="rb-msg"></p>
+        <!-- Rubrikerna står på papperet och korten under (2026-09-28).
+             Förut låg varje rapport i en ruta i en panel, och i den en
+             ruta till för tiden. #rb-grupp är det omritningen håller
+             stilla (rbRitaOm, väljFaktura). -->
+        <p class="ok-msg" id="rb-msg"></p>
+        <div class="vy-grupp" id="rb-grupp"><h3>Att bekräfta</h3><span class="vy-antal ar-gor" id="rb-antal"></span></div>
+        <div id="rb-lista"><div class="loading">Hämtar</div></div>
 
-          <div class="dbox">
-            <h5>Att bekräfta <em id="rb-antal"></em></h5>
-            <div id="rb-lista"><div class="loading">Hämtar</div></div>
-          </div>
-
-          <div class="dbox">
-            <h5>Bekräftade <em id="rb-klara-antal"></em></h5>
-            <div id="rb-klara"><div class="loading">Hämtar</div></div>
-          </div>
-        </div>
+        <div class="vy-grupp"><h3>Bekräftade</h3><span class="vy-antal" id="rb-klara-antal"></span></div>
+        <div class="vy-kort vy-lista" id="rb-klara"><div class="loading">Hämtar</div></div>
       </section>
 
       <!-- ============================================================
@@ -650,49 +653,58 @@
             <p>Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. I förväg går det här så fort er studiehjälpare har bekräftat tiden. Efter passet betalar ni under Bekräfta rapport. Där kan ni i stället välja faktura, som kommer i början av nästa månad med tio dagars betalningstid och utan avgift. Kortuppgifterna skriver ni in hos Stripe, och vi sparar dem aldrig. Ett förslag som inte blivit ett pass kostar ingenting.</p>
           </div>
         </div>
-        <div class="stack">
+        <!-- ============ INNEHÅLLET (2026-09-28) ============
+             Summan överst: vad som väntar efter passet, vad som går
+             att betala i förväg och vad som betalats den här månaden.
+             Sedan en grupp per sort, med rubriken på papperet och
+             raderna i ett kort. Det som väntar på familjen (en faktura,
+             ett genomfört pass) står före det som är ett val (i
+             förväg) och det som är gjort (betalda pass). -->
+        <p class="ok-msg" id="bet-msg"></p>
+        <div class="bet-sam" id="bet-sam"></div>
 
-          <p class="ok-msg" id="bet-msg"></p>
-
-          <!-- Fakturor att betala (Fas 19.6). Fakturor som skickats och
-               inte är betalda, med det familjen behöver för att betala
-               i sin bank: belopp, förfallodag, bankgiro och OCR. Ritas
-               av ritaFakturor() och syns bara när en sådan faktura
-               finns. Fakturor skapas bara när flaggan faktura är på. -->
-          <div class="dbox" id="bet-fakt-box" hidden>
-            <h5>Fakturor att betala <em id="bet-fakt-antal"></em></h5>
-            <div id="bet-fakt-betala"></div>
-          </div>
-
-          <!-- Pass som väntar på betalning. Ritas av ritaAttBetala() ur
-               samma lista som Mina lektioner, så att ett pass som
-               betalats där försvinner här i samma stund. -->
-          <div class="dbox">
-            <h5>Betala i förväg <em id="bet-att-antal"></em></h5>
-            <div id="bet-att-betala"><div class="loading">Hämtar</div></div>
-            <!-- Fas 21.3: vägen till köpta timmar där familjen betalar.
-                 Syns bara när erbjudandena går att köpa och familjen
-                 inte redan har timmar att betala med; ritaErbjudanden()
-                 avgör det. -->
-            <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Köp timmar i förväg och betala mindre per timme. Timmarna betalar sedan passen av sig själva. <a href="#erbjudanden">Se planer och klippkort</a></p>
-          </div>
-
-          <!-- Faktura (Fas 14.6). Fakturorna som skickats, och passen
-               som väntar på nästa månadsfaktura. Ritas av ritaFakturor()
-               och syns bara när det finns något, eller när faktura går
-               att välja. -->
-          <div class="dbox" hidden>
-            <h5>Faktura <em id="bet-faktura-antal"></em></h5>
-            <div id="bet-faktura"></div>
-          </div>
-
-          <div class="dbox">
-            <h5>Betalda pass <em id="bet-antal"></em></h5>
-            <div id="bet-lista"><div class="loading">Hämtar</div></div>
-            <p class="xsmall" style="margin-top:14px;color:var(--muted-2);line-height:1.6">Ett pass som aldrig hölls kostar ingenting. Är det betalt med kort och behöver avbokas, hör av er till oss så betalar vi tillbaka. Ett pass betalt med köpta timmar avbokar ni själva på passets sida, och timmarna kommer tillbaka.</p>
-          </div>
-
+        <!-- Fakturor att betala (Fas 19.6). Fakturor som skickats och
+             inte är betalda, med det familjen behöver för att betala
+             i sin bank: belopp, förfallodag, bankgiro och OCR. Ritas
+             av ritaFakturor() och syns bara när en sådan faktura
+             finns. Fakturor skapas bara när flaggan faktura är på. -->
+        <div class="vy-del" id="bet-fakt-box" hidden>
+          <div class="vy-grupp"><h3>Fakturor att betala</h3><span class="vy-antal ar-gor" id="bet-fakt-antal"></span></div>
+          <div class="vy-kort"><div class="vy-kort-kropp" id="bet-fakt-betala"></div></div>
         </div>
+
+        <!-- Genomförda pass som inte är betalda, och tillägg för ett pass
+             som drog över (Fas 19.2, 20.1). De betalas under Bekräfta
+             rapport, där rapporten står. Ritas av ritaAttBetala(). -->
+        <div class="vy-del" id="bet-efter-grupp" hidden>
+          <div class="vy-grupp"><h3>Efter passet</h3><span class="vy-antal ar-gor" id="bet-efter-antal"></span>
+            <a class="vy-lank" href="#bekrafta">Bekräfta rapport<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a></div>
+          <div class="vy-kort vy-lista" id="bet-efter"></div>
+        </div>
+
+        <!-- Pass som går att betala i förväg. Ritas av ritaAttBetala() ur
+             samma lista som Mina lektioner, så att ett pass som
+             betalats där försvinner här i samma stund. -->
+        <div class="vy-grupp"><h3>Betala i förväg</h3><span class="vy-antal" id="bet-att-antal"></span></div>
+        <div class="vy-kort vy-lista" id="bet-att-betala"><div class="loading">Hämtar</div></div>
+        <!-- Fas 21.3: vägen till köpta timmar där familjen betalar.
+             Syns bara när erbjudandena går att köpa och familjen
+             inte redan har timmar att betala med; ritaErbjudanden()
+             avgör det. -->
+        <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Köp timmar i förväg och betala mindre per timme. Timmarna betalar sedan passen av sig själva. <a href="#erbjudanden">Se planer och klippkort</a></p>
+
+        <!-- Faktura (Fas 14.6). Fakturorna som skickats, och passen
+             som väntar på nästa månadsfaktura. Ritas av ritaFakturor()
+             och syns bara när det finns något, eller när faktura går
+             att välja. -->
+        <div class="vy-del" id="bet-faktura-grupp" hidden>
+          <div class="vy-grupp"><h3>Faktura</h3><span class="vy-antal" id="bet-faktura-antal"></span></div>
+          <div class="vy-kort vy-lista" id="bet-faktura"></div>
+        </div>
+
+        <div class="vy-grupp"><h3>Betalda pass</h3><span class="vy-antal" id="bet-antal"></span></div>
+        <div class="vy-kort vy-lista" id="bet-lista"><div class="loading">Hämtar</div></div>
+        <p class="vy-finstilt">Ett pass som aldrig hölls kostar ingenting. Är det betalt med kort och behöver avbokas, hör av er till oss så betalar vi tillbaka. Ett pass betalt med köpta timmar avbokar ni själva på passets sida, och timmarna kommer tillbaka.</p>
       </section>
 
       <!-- ============================================================

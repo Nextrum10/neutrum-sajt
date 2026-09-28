@@ -122,6 +122,25 @@
   --acc-soft:#EFDFD1;
   --acc-line:rgba(156,69,32,.28);
 
+  /* --- innehållet i vyerna (2026-09-28) ---
+     Ett kort i studievyn och studiehjälparvyn är ett ljusare ark på
+     papperet (--yta), med en fot där man väljer (--yta-fot) och rutor
+     inne i kortet (--tint). Ett läge har en färg som betyder något:
+     lera är ert drag, ockra väntar på någon annan, mossa är klart. De
+     mjuka tonerna bär sin egen text:
+       mossa-text #3D4930 på mossa-soft → 7,5:1
+       ockra-text #664510 på ockra-soft → 6,9:1
+       lera mörk #7A3417 på --acc-soft  → 6,9:1
+       dämpat #665C49 på --yta → 6,1:1, på --tint → 5,6:1 */
+  --yta:#F9F6F0;
+  --yta-fot:#F2ECE2;
+  --tint:#F1EBE1;
+  --mossa-soft:#E1E6D6;
+  --mossa-text:#3D4930;
+  --ockra-soft:#F0E4C9;
+  --ockra-text:#664510;
+  --bricka:#E9E2D4;       /* datumrutan och ikonrutan i ett kort */
+
   /* --- rytm --- */
   --w-text:1180px;        /* text och formulär */
   --w-bred:1440px;        /* redaktionella bildkompositioner */
@@ -195,6 +214,14 @@
     --acc-soft:rgba(217,129,79,.14);
     --acc-line:rgba(217,129,79,.34);
 
+    /* Innehållet i vyerna: arket lyfter en aning ur botten, och de
+       mjuka tonerna blir genomskinliga på det. Texten på dem håller
+       5,8–6,8:1, dämpat på --tint 4,8:1. */
+    --yta:#221F19; --yta-fot:#26231C; --tint:#2A2720;
+    --mossa-soft:rgba(157,173,134,.16); --mossa-text:#B8C6A2;
+    --ockra-soft:rgba(192,138,46,.17); --ockra-text:#D9AE62;
+    --bricka:#2C2921;
+
     /* Bastokens måste skrivas om HÄR, inte i det vanliga :root-blocket
        längre ner. nextrum.css sätter sina mörka färger med
        :root:not([data-theme="light"]) — två klasser specificitet mot
@@ -234,6 +261,10 @@
   --band-line:rgba(239,230,214,.14); --band-surface:rgba(239,230,214,.05);
   --acc-ink:#1A1813; --acc-text:#D9814F;
   --acc-soft:rgba(217,129,79,.14); --acc-line:rgba(217,129,79,.34);
+  --yta:#221F19; --yta-fot:#26231C; --tint:#2A2720;
+  --mossa-soft:rgba(157,173,134,.16); --mossa-text:#B8C6A2;
+  --ockra-soft:rgba(192,138,46,.17); --ockra-text:#D9AE62;
+  --bricka:#2C2921;
   --bg:var(--pap-2); --fg:var(--bl); --muted:var(--bl-2); --muted-2:var(--bl-3);
   --line:var(--ln); --line-2:var(--ln-2); --surface:var(--pap-3); --surface-2:var(--pap-3);
   --btn-bg:var(--bl); --btn-fg:var(--pap); --focus:var(--bl);

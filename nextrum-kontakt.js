@@ -357,38 +357,93 @@ window.NXKontakt = (function () {
     return BETALLÄGEN[läge] || null;
   }
 
+  /* ============================================================
+     RADENS DELAR (2026-09-28)
+     Datumrutan säger veckodag, dag och månad. Tiden och platsen står i
+     raden, med var sin ikon, i stället för i rutan: tiden stod där med
+     sekunder ("16:00:00"), och platsen fick varje anropare foga in i sin
+     egen rad med punkter emellan. Läget är ETT märke när det räcker: på
+     ett bekräftat eller genomfört pass säger betalningen mer än att det
+     är bekräftat, och två märken bredvid varandra var två saker att läsa
+     för en.
+     ============================================================ */
+  var VECKODAG_KORT = ['sön', 'mån', 'tis', 'ons', 'tor', 'fre', 'lör'];
+  var IKON_TID = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.7l3 1.8"/></svg>';
+  var IKON_ONLINE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6.5" width="12" height="11" rx="2.5"/><path d="m15.5 10.5 5-3v9l-5-3z"/></svg>';
+  var IKON_VARNING = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5 21 19.5H3z"/><path d="M12 10v4.5M12 17h.01"/></svg>';
+  var IKON_PLATS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6 10v9.5h12V10"/><path d="M10 19.5v-5h4v5"/></svg>';
+
+  function tidsspann(tid, minuter) {
+    if (!tid) return '';
+    var d = String(tid).slice(0, 5).split(':');
+    var start = Number(d[0]) * 60 + Number(d[1] || 0);
+    var slut = start + (Number(minuter) || 60);
+    function hhmm(m) { return (m / 60 < 10 ? '0' : '') + Math.floor(m / 60) + ':' + (m % 60 < 10 ? '0' : '') + (m % 60); }
+    return hhmm(start) + '–' + hhmm(slut);
+  }
+
   function passRad(b, opts) {
     var o = opts || {};
     var l = LÄGEN[b.status] || { text: b.status, klass: '' };
     var d = String(b.wanted_date || '').split('-');
-    var dag = d[2] || '', mån = d[1] ? (NX.MANADER[Number(d[1]) - 1] || '').slice(0, 3) : '';
+    var dag = d[2] ? String(Number(d[2])) : '', mån = d[1] ? (NX.MANADER[Number(d[1]) - 1] || '').slice(0, 3) : '';
+    var veckodag = b.wanted_date ? VECKODAG_KORT[new Date(String(b.wanted_date) + 'T12:00:00').getDay()] : '';
 
     /* o.href: raden leder till passets egen sida. Rubriken blir en
        länk (tangentbord och skärmläsare), och hela raden går att
        trycka på — det sköter NXStudie. Pilen säger att det finns mer
-       bakom raden än det som står på den. */
+       bakom raden än det som står på den. o.med är vem passet gäller,
+       efter ämnet: "Matematik med Alva". */
+    var namn = esc(b.subject || 'Pass') + (o.med ? '<em> ' + esc(o.med) + '</em>' : '');
     var titel = o.href
-      ? '<a class="pass-titel" href="' + esc(o.href) + '">' + esc(b.subject || 'Pass') + '</a>'
-      : '<b>' + esc(b.subject || 'Pass') + '</b>';
+      ? '<a class="pass-titel" href="' + esc(o.href) + '">' + namn + '</a>'
+      : '<b class="pass-titel">' + namn + '</b>';
+
+    /* Tiden och platsen, om inte anroparen säger annat (o.tid, o.plats
+       = false). En adress på plats står som den skrevs: var man ska
+       vara är halva beskedet. */
+    var meta = [];
+    if (o.tid !== false && b.wanted_time) meta.push('<span>' + IKON_TID + esc(tidsspann(b.wanted_time, b.duration_min)) + '</span>');
+    if (o.plats !== false) {
+      if (b.format === 'Online') meta.push('<span>' + IKON_ONLINE + 'Online</span>');
+      else if (b.location || b.format) meta.push('<span>' + IKON_PLATS + esc(b.location || b.format) + '</span>');
+    }
+    if (o.under) meta.push('<span>' + esc(o.under) + '</span>');
+
+    /* Ett märke, eller två. o.lage ersätter passets eget (null tar bort
+       det). Har passet ett betalmärke och är bekräftat eller genomfört
+       står bara betalmärket. */
+    var egetLäge = o.lage !== undefined ? o.lage
+      : (o.märke && (b.status === 'confirmed' || b.status === 'completed')) ? null : l;
+    var märken = (egetLäge ? '<span class="lage ' + esc(egetLäge.klass || '') + '">' + esc(egetLäge.text) + '</span>' : '')
+      + (o.märke ? '<span class="lage ' + esc(o.märke.klass || '') + '">' + esc(o.märke.text) + '</span>' : '');
 
     return '<div class="pass' + (o.href ? ' pass-klickbar' : '') + '"'
       + (o.href ? ' data-href="' + esc(o.href) + '"' : '') + '>'
-      + '<span class="pass-nar"><b>' + esc(dag) + '</b>' + esc(mån)
-      + (b.wanted_time ? '<br>' + esc(b.wanted_time) : '') + '</span>'
+      + '<span class="pass-nar' + (o.nu ? ' ar-nu' : '') + '"><small>' + esc(veckodag) + '</small><b>' + esc(dag) + '</b><small>' + esc(mån) + '</small></span>'
       + '<span class="pass-vad">' + titel
-      + (o.under ? '<span>' + esc(o.under) + '</span>' : '')
+      + (meta.length ? '<span class="pass-meta">' + meta.join('') + '</span>' : '')
+      + (o.not ? '<span class="pass-not">”' + esc(o.not) + '”</span>' : '')
+      /* o.varning: något man ska veta innan man svarar, som att tiden
+         krockar med ett annat pass. Lerans ton, med en ikon: färgen
+         ensam säger inget till den som inte ser den. */
+      + (o.varning ? '<span class="pass-varning">' + IKON_VARNING + esc(o.varning) + '</span>' : '')
       + (o.vem ? '<span class="pass-vem">' + esc(o.vem) + '</span>' : '')
       + '</span>'
-      + '<span class="pass-atg"><span class="lage ' + l.klass + '">' + esc(l.text) + '</span>'
-      + (o.märke ? '<span class="lage ' + o.märke.klass + '">' + esc(o.märke.text) + '</span>' : '')
-      + (o.atgarder || '')
-      + '</span>'
+      + '<span class="pass-atg">' + märken + (o.atgarder || '') + '</span>'
       + (o.href ? '<span class="pass-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></span>' : '')
       + '</div>';
   }
 
+  /* Familjens anteckning, kapad: raden ska gå att skumma. Hela står på
+     passets sida. */
+  function kortNot(text) {
+    var t = String(text || '');
+    return t.length > 80 ? t.slice(0, 80).replace(/\s+\S*$/, '') + '…' : t;
+  }
+
   return {
     tråd: tråd, olästa: olästa, passRad: passRad, dagText: dagText, LÄGEN: LÄGEN,
-    betalMärke: betalMärke
+    betalMärke: betalMärke, kortNot: kortNot
   };
 })();
