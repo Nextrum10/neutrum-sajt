@@ -3705,3 +3705,65 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 #mina-rapporter > .rb-brev + .rb-brev{margin-top:14px}
 .nx-steg-nu[data-dold]{visibility:hidden}
 .nx-manad-stegare[hidden]{display:none}
+
+/* ============================================================
+   TUMMEN (2026-09-28)
+   Leo: "är det smidigt att använda mobilen?" Mätt i provbänken på
+   360 px bredd, i varje sektion av båda vyerna: inget spillde över
+   kanten och inget hoppade av ett tryck, men en stor del av det man
+   trycker på var mindre än de 44 px en tumme behöver. Kalenderdagarna
+   i Boka pass var 34 px med dött mellanrum emellan, schemats pilar
+   28 px, länkarna 21 px och de små knapparna 29–39 px.
+
+   Här växer tryckytan, inte utseendet: små knappar och val får en
+   minsta höjd, länkarna en osynlig yta runt texten, och kalendern
+   förlorar sitt inre kort så att dagarna får bredden. Bara på en
+   smal skärm eller med ett finger som pekare; med en mus är de små
+   ytorna rätt.
+   ============================================================ */
+@media (max-width:560px), (pointer:coarse){
+  .vy:not(.vy-admin) :is(.btn-sm, .sel-sm, .vy-flik, .bk-slot, .vy-val button, .sch-val button, .chip, .pl-mer){min-height:44px}
+  .vy:not(.vy-admin) :is(.btn-sm, .bk-slot, .vy-val button, .sch-val button, .chip){display:inline-flex;align-items:center;justify-content:center}
+
+  /* Länkar i löptext och rubrikrader: ytan växer, raden står kvar. */
+  .vy:not(.vy-admin) :is(a.vy-lank, a.vy-mer, button.vy-lank){position:relative}
+  .vy:not(.vy-admin) :is(a.vy-lank, a.vy-mer, button.vy-lank)::after{content:"";position:absolute;inset:-11px -8px}
+
+  /* Pilar och små fyrkanter. */
+  .vy:not(.vy-admin) :is(.nx-steg-pil, .bk-pil, .cal-nav button, .vy-fall-pil){width:44px;height:44px;min-width:44px}
+  .vy:not(.vy-admin) .sch-idag{height:44px}
+  .vy:not(.vy-admin) .ps-tillbaka{min-height:44px}
+  .vy:not(.vy-admin) .ps-fot-lank{min-height:44px}
+
+  /* Kalendern i Boka pass: inget inre kort på en telefon, och inget
+     mellanrum mellan dagarna. Dagen är 41 × 44 px och ytorna möter
+     varandra, så ett tryck mellan två dagar träffar alltid en av dem. */
+  .vy:not(.vy-admin) .bk-kal{padding:10px 4px;border-color:transparent;background:transparent}
+  .vy:not(.vy-admin) :is(.mv-grid, .mv-vd){column-gap:0}
+  .vy:not(.vy-admin) .mv-grid{row-gap:2px}
+  .vy:not(.vy-admin) .mv-dag{aspect-ratio:auto;min-height:44px;border-radius:14px}
+}
+
+/* Ett pass i månadens ruta är ett streck på en telefon (se ovan), och
+   ett streck går inte att träffa. Har dagen ett enda pass är hela
+   rutan passets tryckyta; har den flera står de i Kommande och i
+   listan ovanför, där de går att skilja åt. */
+@container (max-width:460px){
+  .vy:not(.vy-admin) .sch-manad .sch-dag{position:relative}
+  .vy:not(.vy-admin) .sch-manad .sch-dag:not(:has(.sch-pass ~ .sch-pass)) .sch-pass::after{content:"";position:absolute;inset:0}
+}
+
+/* Sektionsraden står fast under sidhuvudet på en telefon och en
+   platta (2026-09-28). Den stod still, så långt ned på en sida fanns
+   ingen väg till en annan sektion utan att rulla upp igen. Bakgrunden
+   går kant i kant (skuggan och klippet), annars syns det som rullar
+   under raden i sidornas marginaler. Höjden på huvudet sätter
+   sidomenyn på raden (--vy-hdr-h). Den lodräta menyn på en dator står
+   redan fast. */
+@media (max-width:899px){
+  .vy:not(.vy-admin) .vy-sido{
+    position:sticky;top:var(--vy-hdr-h,75px);z-index:40;
+    padding-top:8px;background:var(--pap);
+    box-shadow:0 0 0 100vmax var(--pap);clip-path:inset(0 -100vmax);
+  }
+}

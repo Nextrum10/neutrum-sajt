@@ -325,9 +325,25 @@ window.NXStudie = (function () {
      för att gissas — en gissning lade tillbaka-länken under det. */
   function visaÖverst(el) {
     if (!el) return;
+    scrollaTill(el.getBoundingClientRect().top + window.scrollY - täcktÖverst() - 12);
+  }
+
+  /* Hur mycket av skärmens överkant som är täckt: sidhuvudet, och på en
+     telefon sektionsraden, som står fast under det sedan 2026-09-28
+     (TUMMEN i nextrum-arbetsyta.css). Utan raden hade en ny sektion
+     lagts med rubriken bakom den. Den lodräta menyn på en dator står
+     bredvid innehållet, inte över det, och räknas inte. */
+  function täcktÖverst() {
     var hdr = document.querySelector('.hdr');
-    var under = (hdr ? hdr.getBoundingClientRect().bottom : 72) + 12;
-    scrollaTill(el.getBoundingClientRect().top + window.scrollY - under);
+    var nederkant = hdr ? hdr.getBoundingClientRect().bottom : 72;
+    var sido = document.querySelector('.vy:not(.vy-admin) .vy-sido');
+    if (sido) {
+      var cs = window.getComputedStyle(sido);
+      if (cs.position === 'sticky' && cs.flexDirection !== 'column') {
+        nederkant = Math.max(nederkant, sido.getBoundingClientRect().bottom);
+      }
+    }
+    return nederkant;
   }
 
   /* Håller ett element kvar på samma plats på skärmen medan något
@@ -1760,6 +1776,7 @@ window.NXStudie = (function () {
     if (!namn.length) return null;
     var standard = namn.indexOf(o.standard) !== -1 ? o.standard : namn[0];
     var första = true;
+    var aktiv = null;
 
     function giltig(n) { return namn.indexOf(n) !== -1 ? n : standard; }
 
@@ -1777,6 +1794,17 @@ window.NXStudie = (function () {
         if (här) a.setAttribute('aria-current', 'page');
         else a.removeAttribute('aria-current');
       });
+      /* På en telefon är menyn en rad man drar i sidled. Kom man till
+         sektionen från en länk i innehållet kan dess post stå utanför
+         kanten; då dras raden, inte sidan (inte scrollIntoView, som
+         kan rulla hela sidan: fälla 3 i CLAUDE.md, startsidan). */
+      var vald_a = nav.querySelector('a.ar-har');
+      if (vald_a && nav.scrollWidth > nav.clientWidth + 1) {
+        var d = vald_a.getBoundingClientRect().left - nav.getBoundingClientRect().left;
+        if (d < 0 || d + vald_a.offsetWidth > nav.clientWidth) {
+          nav.scrollLeft += d - (nav.clientWidth - vald_a.offsetWidth) / 2;
+        }
+      }
 
       /* Ett sektionsbyte flyttar INTE sidan.
 
@@ -1788,19 +1816,22 @@ window.NXStudie = (function () {
          fel: i provbänken slutade ett klick på "Dina tider" 1253px
          ned i en sektion som just öppnats.
 
-         Kvar står bara det som sidan inte kan lösa själv: blev den
-         nya sektionen så mycket kortare att webbläsaren KLÄMDE ned
-         scrollen, hamnar man annars i sektionens slut utan att ha
-         sett dess början. Då — och bara då — läggs sidan vid
-         sektionens början, utan animering. 'instant' och inte 'auto':
-         'auto' läser scroll-behavior ur CSS, och den är smooth. */
-      if (!första) {
+         Kvar står bara det som sidan inte kan lösa själv: skulle man
+         annars hamna INNE i den nya sektionen, utan att se dess
+         början, läggs sidan vid början, direkt och utan animering.
+         Förut gällde det bara när webbläsaren klämt ned scrollen för
+         att sektionen blev kortare. Var den nya lika lång eller
+         längre stod man kvar på samma höjd: på en telefon ledde
+         "Till rapporten" långt ned i Betalning till mitten av Bekräfta
+         rapport, med rubriken 1 000 px ovanför skärmen (2026-09-28).
+         Syns början redan, som när man står överst, flyttas ingenting.
+         Bara vid ett byte av sektion: en flik i samma sektion
+         (#lektioner/plan) ska inte skicka en uppåt. */
+      if (!första && vald !== aktiv) {
         var sektion = rot.querySelector('section[data-sek="' + vald + '"]');
-        if (sektion && window.scrollY < föreY) {
-          var topp = sektion.getBoundingClientRect().top + window.scrollY;
-          try { window.scrollTo({ top: topp, behavior: 'instant' }); }
-          catch (e) { window.scrollTo(0, topp); }
-        }
+        if (sektion && (window.scrollY < föreY || sektion.getBoundingClientRect().top < täcktÖverst() + 12)) visaÖverst(sektion);
+      }
+      if (!första) {
         var rubrik = rot.querySelector('section[data-sek="' + vald + '"] h2, section[data-sek="' + vald + '"] h5');
         if (rubrik) {
           rubrik.setAttribute('tabindex', '-1');
@@ -1808,6 +1839,7 @@ window.NXStudie = (function () {
         }
       }
       första = false;
+      aktiv = vald;
 
       if (typeof o.onByt === 'function') o.onByt(vald);
       return vald;
@@ -1874,6 +1906,17 @@ window.NXStudie = (function () {
           sättFall(!layout.classList.contains('ar-hopfalld'));
         });
       }
+    }
+
+    /* Sidhuvudets höjd, för sektionsraden som står fast under det på
+       en telefon. Satt på raden och inte på :root: en variabel på
+       roten ärvs av hela sidan och räknar om stilen för allt när den
+       ändras (CLAUDE.md, startsidan efter hero). */
+    var hdrEl = document.querySelector('.hdr');
+    if (hdrEl && window.ResizeObserver) {
+      new ResizeObserver(function () {
+        nav.style.setProperty('--vy-hdr-h', hdrEl.offsetHeight + 'px');
+      }).observe(hdrEl);
     }
 
     window.addEventListener('hashchange', frånHash);
