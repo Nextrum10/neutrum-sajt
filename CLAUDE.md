@@ -361,7 +361,8 @@ elev.
   **Fakturan står bredvid meningen sedan 2026-09-28**: "Efter passet
   kan ni i stället välja faktura, som kommer i början av nästa månad
   med tio dagars betalningstid och utan avgift", på samma 36 ställen,
-  också i mejlen. Kontrollen räknar den lika många gånger som
+  också i mejlen (`notis-ko` version 20, driftsatt från main samma dag
+  och jämförd byte för byte). Kontrollen räknar den lika många gånger som
   kortmeningen och läser antalet dagar ur `BETALNINGSVILLKOR_DAGAR`, så
   en ändrad betalningstid som inte når texterna blir röd. Flaggan
   `faktura` slogs på 2026-09-27, med SQL medan Fas 19.7 byggdes, och
@@ -472,8 +473,9 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
 Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), onlinesidan
-(`laxhjalp-online`) och två guider (`gratis-laxhjalp-stockholm`,
-`hjalpa-barn-med-matte`) genereras; navet
+(`laxhjalp-online`) och fyra guider (`hjalpa-barn-med-matte`,
+`hjalpa-barn-med-lasforstaelse`, `plugga-infor-prov`,
+`barnet-vill-inte-gora-laxorna`) genereras; navet
 `laxhjalp-stockholm.html` är handskrivet. `/en/` är elva översatta sidor.
 
 ### Startsidan efter hero (2026-09-25)
@@ -1727,7 +1729,7 @@ hitta på ett pris, ett villkor eller ett löfte.
 |---|---|---|
 | `nextrum-maskot-svar.js` | `verktyg/bygg-maskotsvar.py` | `faq.html`, `en/faq.html` |
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
-| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen, online), de två guiderna och ämnes- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
+| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen, online), de fyra guiderna och ämnes- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
 | `sitemap.xml` | `verktyg/bygg-sitemap.py` | sidornas canonical, hreflang och noindex |
 | Ikonlänkar och storlekar | `verktyg/satt-logga.py` | `bilder/nextrum-logo.png` — finns inte i dag; PNG:erna är renderade ur `favicon.svg`, se `GOOGLE.md` |
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i verktyget. Körs för hand (kräver Chromium), inte i CI. `--sql` ger raderna till `biblioteksmaterial` |
@@ -1786,10 +1788,22 @@ står "i studievyn", vilket är sant både med och utan Google-kopplingen
 affären; fattas det ska sidan säga det, och inte förr.
 
 **Guiderna** (2026-09-26) svarar på det föräldrar söker innan de vet
-att de letar efter läxhjälp. Allt om andra organisationer (biblioteken,
-Röda Korset, Mattecentrum) är kontrollerat mot deras egna sidor och
-länkat, och tider står med flit inte med: de ändras varje termin.
-Författaren i Article-märkningen är Nextrum, aldrig ett personnamn.
+att de letar efter läxhjälp, och ska gå att ha nytta av utan att någon
+bokar något. Det en guide påstår om forskning eller om andra
+organisationer är länkat i `kallor`, och tider står med flit inte med:
+de ändras varje termin. Författaren i Article-märkningen är Nextrum,
+aldrig ett personnamn.
+
+**Guiden om gratis läxhjälp är borttagen** (2026-09-28). Leo: "på
+guider ta bort gratis läxhjälp och skriv andra guider istället". Den
+räknade upp biblioteken, Röda Korset och Mattecentrums räknestugor. I
+stället kom tre: läsförståelsen, plugga inför prov och när barnet inte
+vill göra läxorna. `/gratis-laxhjalp-stockholm` omdirigeras permanent
+till navet (`redirects` i `vercel.json`): adressen stod i kartan och i
+`GOOGLE.md`:s lista att skicka in, och en adress som stått i kartan
+ska inte bli en 404. Provguidens tre källor (Umeå universitet,
+Dunlosky m.fl. 2013, SRCD om sömn) är kontrollerade mot sökträffarna,
+inte öppnade: nätet i sessionen som skrev dem släppte inte fram sidorna.
 
 **Typsnittet förladdas bara på läxhjälpssidorna och guiderna** (samma
 hero med lång rubrik). Utan förladdning bröts navets rubrik om när

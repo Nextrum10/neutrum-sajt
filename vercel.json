@@ -1,5 +1,12 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/gratis-laxhjalp-stockholm",
+      "destination": "/laxhjalp-stockholm",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
