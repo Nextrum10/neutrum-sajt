@@ -342,10 +342,19 @@ async function betalaTillagg(
     });
     if (belopp <= 0) return json({ error: 'Passet har inget tillägg att betala.' }, 409, CORS);
 
-    const { error: radfel } = await db.from('pass_tillagg').upsert({
+    /* Raden skapas om den saknas och skrivs om bara medan tillägget är
+       obetalt. Förut skrev upserten status 'vantar' utan villkor: hann
+       webhooken sätta 'betald' mellan kontrollen ovan och skrivningen
+       blev ett betalt tillägg obetalt igen. */
+    const { error: nyfel } = await db.from('pass_tillagg').upsert({
       booking_id: pass.id, minuter, begart_ore: belopp, status: 'vantar',
-    }, { onConflict: 'booking_id' });
+    }, { onConflict: 'booking_id', ignoreDuplicates: true });
+    if (nyfel) return json({ error: 'Tillägget gick inte att spara. Försök igen.' }, 500, CORS);
+    const { data: skrevs, error: radfel } = await db.from('pass_tillagg')
+      .update({ minuter, begart_ore: belopp, status: 'vantar' })
+      .eq('booking_id', pass.id).in('status', ['vantar', 'misslyckad']).select('booking_id');
     if (radfel) return json({ error: 'Tillägget gick inte att spara. Försök igen.' }, 500, CORS);
+    if (!skrevs?.length) return json({ error: 'Tillägget är redan betalt.' }, 409, CORS);
 
     const { data: kund } = await vem.klient
       .from('profiles').select('email').eq('id', vem.anvandare).maybeSingle();
@@ -700,6 +709,23 @@ Deno.serve(async (req) => {
         detalj: sparfel.message,
         session: (session as { id?: string }).id,
       }, 500, CORS);
+    }
+
+    /* DEN FÖRRA KASSAN STÄNGS. Passet bär bara en session åt gången, men
+       Stripe glömmer inte den förra: stod den öppen i en annan flik, eller
+       skapades den med ett annat belopp (förbetalt, sedan den hållna
+       tiden), kunde familjen betala båda och kortet dras två gånger. En
+       kassa som redan betalats eller gått ut går inte att stänga; det felet
+       är väntat och sväljs. */
+    const förra = String(pass.stripe_session_id ?? '');
+    if (förra && förra !== sessionId) {
+      try {
+        await v1('POST', `/v1/checkout/sessions/${förra}/expire`);
+      } catch (e) {
+        if (!(e instanceof StripeError)) {
+          console.error('stripe-checkout: förra kassan stängdes inte', JSON.stringify({ pass: pass.id, fel: (e as Error)?.message }));
+        }
+      }
     }
 
     /* Den inbäddade kassan har ingen adress, bara en client_secret som
