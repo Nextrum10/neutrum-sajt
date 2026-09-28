@@ -11,10 +11,13 @@
   const { $, $$, esc, kr, säg, rensa, felText, datumText, isoFor } = NX;
   const { bekräfta, medan, kolla, tomt, laddar } = NXStudie;
   const M = NXMedia;
+  const U = NXUppgifter;
 
   NX.initHeader();
 
-  const S = { aktivSek: null, passFrån: null, yFör: {}, laddatPass: false, user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, minAvatar: null, laxor: [], rapporter: [], progress: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false, underlag: {}, tillagg: {} };
+  const S = { aktivSek: null, passFrån: null, yFör: {}, laddatPass: false, user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, minAvatar: null, laxor: [], rapporter: [], progress: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false, underlag: {}, tillagg: {},
+    /* Fas 23.1: banan. banaVal minns ämne och årskurs per barn. */
+    katalog: null, forsok: [], banaVal: {}, banaÖppen: null };
 
   const VYER = ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel'];
   function visa(id) { NXStudie.visaVy(VYER, id); }
@@ -251,7 +254,13 @@
     const val = $('#barn-val');
     if (val && !val.disabled) val.value = S.valtBarn || '';
     ritaBarnväxel();
-    laddaPlan(); laddaRapporter(); laddaLaxor(); laddaProgress(); laddaBokning();
+    /* Försöken hör till barnet. Står det förra barnets kvar medan det
+       nya hämtas kan ett syskon med samma nivå få fel resultat på sin
+       uppgift, ett ögonblick. */
+    S.forsok = [];
+    S.bananLaddad = false;
+    S.banaÖppen = null;
+    laddaPlan(); laddaRapporter(); laddaLaxor(); laddaBanan(); laddaProgress(); laddaBokning();
   }
 
   $('#barn-val').addEventListener('change', e => bytBarn(e.target.value));
@@ -273,7 +282,7 @@
 
     const ja = await NXStudie.bekräfta({
       titel: 'Ta bort ' + barn.name + '?',
-      text: 'Allt som hör till barnet försvinner: studieplan, läxor och rapporter. '
+      text: 'Allt som hör till barnet försvinner: studieplan, uppgifter och rapporter. '
         + 'Har barnet haft pass eller fått rapporter går det inte att ta bort — '
         + 'hör av er till oss i stället.',
       knapp: 'Ta bort'
@@ -433,7 +442,7 @@
         if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
         stängBarnForm();
         await laddaBarn();
-        await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass()]);
+        await Promise.all([laddaPlan(), laddaRapporter(), laddaLaxor(), laddaBanan(), laddaProgress(), laddaPass()]);
         return;
       }
 
@@ -453,10 +462,13 @@
   });
 
   /* ============================================================
-     LÄXOR
-     Familjen kan bara flytta status — titel, instruktion och
-     deadline ägs av studiehjälparen. Det är en trigger i databasen
-     som håller den gränsen, inte det här formuläret.
+     UPPGIFTER (hette Läxor till Fas 23.1)
+     Två sorter i samma lista. En VANLIG uppgift bockar familjen av
+     själv: titel, instruktion och deadline ägs av studiehjälparen, och
+     det är en trigger i databasen som håller den gränsen. En DIGITAL
+     uppgift (homework.niva_id) är en nivå i banan: den startas härifrån
+     och blir klar när nivån klaras, av databasen. Familjen kan inte
+     bocka av den, och databasen nekar det om någon försöker.
      ============================================================ */
   async function laddaLaxor() {
     const host = $('#lax-lista');
@@ -470,36 +482,69 @@
     }
 
     NXStudie.laddarFörsta(host);
-    const { data, error } = await supa
+    const barnet = S.valtBarn;
+    let svar = await supa
       .from('homework')
-      .select('id, student_id, title, instructions, subject, due_date, status, completed_at, '
-        + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)')
-      .eq('student_id', S.valtBarn)
+      .select('id, student_id, title, instructions, subject, due_date, status, completed_at, created_at, '
+        + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank), '
+        + 'niva_id, nivaer(id, titel, amne, arskurs, omrade, beskrivning, antal_fragor, aktiv)')
+      .eq('student_id', barnet)
       .order('due_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
-
-    if (error) { host.innerHTML = tomt('Kunde inte hämta läxorna', felText(error)); return; }
-    if (!data.length) {
-      S.laxor = [];
-      host.innerHTML = tomt('Inga läxor än', 'När er studiehjälpare ger en läxa dyker den upp här.');
-      ritaÖvLaxor();
-      if (passIdIAdressen()) ritaPassSida();
-      return;
+    /* Utan Fas 23.1 i databasen finns varken niva_id eller nivaer.
+       Uppgifterna ska synas ändå, som förut. */
+    if (svar.error && /niva/.test(svar.error.message || '')) {
+      svar = await supa.from('homework')
+        .select('id, student_id, title, instructions, subject, due_date, status, completed_at, created_at, '
+          + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)')
+        .eq('student_id', barnet)
+        .order('due_date', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: false });
     }
+    if (barnet !== S.valtBarn) return;
+    const { data, error } = svar;
 
-    S.laxor = data;
-    /* Passets sida läser S.laxor; den kan ha ritats innan läxorna kom. */
+    if (error) { host.innerHTML = tomt('Kunde inte hämta uppgifterna', felText(error)); return; }
+    S.laxor = data || [];
+    S.laxorLaddade = true;
+    /* Passets sida läser S.laxor; den kan ha ritats innan uppgifterna kom. */
     if (passIdIAdressen()) ritaPassSida();
     ritaNotiser();
     ritaÖvLaxor();
     ritaStatistik();
+    ritaLaxor();
+    ritaBanan();
+    visaUppgiftsflik();
+  }
+
+  function ritaLaxor() {
+    const host = $('#lax-lista');
+    if (!host || !S.valtBarn) return;
+    const data = S.laxor || [];
+    if (!data.length) {
+      $('#lax-antal').textContent = '';
+      host.innerHTML = tomt('Inga uppgifter från studiehjälparen än',
+        'När er studiehjälpare ger en uppgift dyker den upp här. Under Banan finns nivåer att göra redan nu.');
+      return;
+    }
 
     const öppna = data.filter(h => h.status !== 'klar').length;
     $('#lax-antal').textContent = öppna ? öppna + ' att göra' : 'allt klart';
 
     NXStudie.läxLista({ host, laxor: data, tomtAttGora: 'Inget att göra just nu. Allt ni fått är avklarat.', rad: h => {
       let knappar = '';
-      if (h.status === 'ej_paborjad') {
+      if (h.niva_id) {
+        /* En digital uppgift har inga bockar: den blir klar när nivån
+           klaras. Knappen startar nivån, också en klar, för ett nytt
+           försök. */
+        const n = h.nivaer;
+        const påbörjad = (S.forsok || []).some(f => f.niva_id === h.niva_id && !f.klar_at
+          && Date.parse(f.startad_at) > Date.now() - 86400000);
+        knappar = n && n.aktiv !== false
+          ? '<button class="btn btn-primary btn-sm" data-lax-starta="' + esc(h.id) + '">'
+            + (h.status === 'klar' ? 'Gör om' : påbörjad ? 'Fortsätt' : 'Starta') + '</button>'
+          : '<span class="xsmall" style="color:var(--bl-3)">Nivån finns inte längre. Fråga er studiehjälpare.</span>';
+      } else if (h.status === 'ej_paborjad') {
         knappar = '<button class="btn btn-ghost btn-sm" data-lax="pagaende" data-id="' + h.id + '">Jag har börjat</button>'
                 + '<button class="btn btn-primary btn-sm" data-lax="klar" data-id="' + h.id + '">Klar</button>';
       } else if (h.status === 'pagaende') {
@@ -509,20 +554,18 @@
         knappar = '<button class="btn btn-ghost btn-sm" data-lax="pagaende" data-id="' + h.id + '">Ångra</button>';
       }
       return NXStudie.läxRad(h, {
-        /* Materialet läxan bygger på (Fas 13.2). Fliken Material är
-           borttagen — det som hörde till en läxa står nu på läxan,
-           och det som inte hörde till någon läxa fanns det ingen
-           anledning att leta efter. */
+        /* Materialet uppgiften bygger på (Fas 13.2). */
         material: h.biblioteksmaterial ? h.biblioteksmaterial.titel : null,
         materialKnapp: h.biblioteksmaterial
           ? '<button type="button" class="btn btn-ghost btn-sm" data-lax-mat="'
             + esc(h.bibliotek_id) + '">Öppna</button>' : '',
+        digital: h.niva_id && h.nivaer ? U.digitalRad(h, S.forsok) : '',
         atgarder: knappar
       });
     } });
   }
 
-  /* Materialet från en läxrad. Sökvägen följde med i hämtningen —
+  /* Materialet från en uppgiftsrad. Sökvägen följde med i hämtningen —
      hinken är privat, så adressen skapas först vid klicket och
      slutar gälla av sig själv. */
   document.addEventListener('click', async e => {
@@ -545,9 +588,147 @@
     await medan(knapp, '…', async () => {
       const { error } = await supa.from('homework')
         .update({ status: knapp.dataset.lax }).eq('id', knapp.dataset.id);
-      if (error) { alert('Kunde inte uppdatera läxan: ' + felText(error)); return; }
+      if (error) { alert('Kunde inte uppdatera uppgiften: ' + felText(error)); return; }
       await laddaLaxor();
     });
+  });
+
+  /* ============================================================
+     BANAN (Fas 23.1)
+     Nivåerna i ett ämne och en årskurs, en i taget. Katalogen hämtas
+     en gång, försöken per barn. Allt som ritas här räknas ur de två
+     och ur uppgifterna, i nextrum-uppgifter.js.
+     ============================================================ */
+  async function laddaBanan() {
+    const host = $('#upg-bana');
+    if (!S.valtBarn) {
+      S.forsok = [];
+      if (host) host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.');
+      const bel = $('#upg-belo');
+      if (bel) bel.innerHTML = '';
+      ritaUtvecklingUppgifter();
+      return;
+    }
+    const barnet = S.valtBarn;
+    if (host) NXStudie.laddarFörsta(host);
+    const [katalog, forsok] = await Promise.all([U.laddaKatalog(supa), U.laddaFörsök(supa, barnet)]);
+    if (barnet !== S.valtBarn) return;
+    S.katalog = katalog;
+    S.forsok = forsok || [];
+    S.bananLaddad = true;
+    ritaBanan();
+    ritaLaxor();
+    ritaUtvecklingUppgifter();
+    ritaStatistik();
+  }
+
+  function valtBarnet() { return S.barn.find(x => x.id === S.valtBarn) || null; }
+
+  function ritaBanan() {
+    const host = $('#upg-bana');
+    if (!host || !S.valtBarn || !S.bananLaddad) return;
+    if (!S.katalog) {
+      host.innerHTML = tomt('Banan gick inte att hämta', 'Ladda om sidan om en stund. Uppgifterna från studiehjälparen finns under Att göra.');
+      return;
+    }
+    const barn = valtBarnet();
+    const val = S.banaVal[S.valtBarn] || {};
+    /* Förvalt ämne: det första av barnets ämnen som har en bana, sedan
+       ämnet i en öppen digital uppgift, annars matematik. */
+    const finns = U.banor(S.katalog);
+    const given = (S.laxor || []).find(h => h.niva_id && h.status !== 'klar' && h.nivaer);
+    const förval = ((barn && barn.subjects) || []).find(a => finns[a])
+      || (given && finns[given.nivaer.amne] ? given.nivaer.amne : null)
+      || (finns.Matematik ? 'Matematik' : null);
+    U.ritaBana({
+      host, katalog: S.katalog, forsok: S.forsok, uppgifter: S.laxor,
+      amne: val.amne || förval, arskurs: val.arskurs || '',
+      elevKod: NX.årskursKod(barn && barn.grade), öppen: S.banaÖppen
+    });
+    const namn = $('#bana-namn');
+    if (namn) namn.textContent = host.dataset.amne
+      ? host.dataset.amne.split(' / ')[0] + ' · ' + NX.årskursText(host.dataset.arskurs) : '';
+    const bel = $('#upg-belo');
+    if (bel) U.ritaBelöningar(bel, S.katalog, S.forsok, S.laxor);
+  }
+
+  /* Att göra står framme när det finns något öppet där, annars Banan.
+     Bara första gången, och bara när adressen inte redan säger en flik:
+     ett val man gjort själv ska inte bytas under en. */
+  function visaUppgiftsflik() {
+    if (S.uppgiftsflikVald || !S.flikar || !S.flikar.uppgifter) return;
+    S.uppgiftsflikVald = true;
+    if (/^#uppgifter\/./.test(location.hash)) return;
+    const öppna = (S.laxor || []).some(h => h.status !== 'klar');
+    S.flikar.uppgifter.visa(öppna ? 'attgora' : 'bana');
+  }
+
+  document.addEventListener('click', e => {
+    const amne = e.target.closest('[data-upg-amne]');
+    if (amne) {
+      S.banaVal[S.valtBarn] = { amne: amne.dataset.upgAmne, arskurs: '' };
+      S.banaÖppen = null;
+      ritaBanan();
+      return;
+    }
+    const nod = e.target.closest('[data-upg-nod]');
+    if (nod) {
+      const id = nod.dataset.upgNod;
+      S.banaÖppen = S.banaÖppen === id ? null : id;
+      /* Kortet växer under noden, och ett annat kort som stängs ovanför
+         hade flyttat noden under fingret. Banan ritas om, så knappen är
+         en ny: den mäts före och efter och sidan flyttas med skillnaden,
+         som NXStudie.håll gör för ett element som står kvar. */
+      const före = nod.getBoundingClientRect().top;
+      ritaBanan();
+      const ny = $('[data-upg-nod="' + id + '"]');
+      if (ny) {
+        const efter = ny.getBoundingClientRect().top;
+        if (Math.abs(efter - före) > 1) NXStudie.scrollaTill(window.scrollY + efter - före);
+        ny.focus({ preventScroll: true });
+      }
+    }
+  });
+  document.addEventListener('change', e => {
+    const sel = e.target.closest('[data-upg-arskurs]');
+    if (!sel) return;
+    const host = $('#upg-bana');
+    S.banaVal[S.valtBarn] = { amne: host ? host.dataset.amne : '', arskurs: sel.value };
+    S.banaÖppen = null;
+    ritaBanan();
+  });
+
+  /* Starta en nivå, ur banan eller ur en digital uppgift. */
+  function spelaNivå(niva) {
+    if (!niva || !S.valtBarn) return;
+    U.spela({
+      supa, niva, elev: S.valtBarn,
+      katalog: S.katalog || [], forsok: S.forsok || [], uppgifter: S.laxor || [],
+      onStäng: ändrat => {
+        if (!ändrat) return;
+        S.banaÖppen = null;
+        laddaLaxor();
+        laddaBanan();
+      }
+    });
+  }
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-upg-starta]');
+    if (k) {
+      const niva = (S.katalog || []).find(n => n.id === k.dataset.upgStarta);
+      spelaNivå(niva);
+      return;
+    }
+    const u = e.target.closest('[data-lax-starta]');
+    if (u) {
+      const h = (S.laxor || []).find(x => x.id === u.dataset.laxStarta);
+      if (!h || !h.nivaer) return;
+      if (!S.katalog) S.katalog = await U.laddaKatalog(supa) || [];
+      spelaNivå((S.katalog || []).find(n => n.id === h.niva_id) || h.nivaer);
+      return;
+    }
+    const g = e.target.closest('[data-upg-genomgang]');
+    if (g) U.genomgång(supa, g.dataset.upgGenomgang);
   });
 
   /* ============================================================
@@ -586,6 +767,9 @@
     S.progress = data;
     S.progressAntal = data.length;
     ritaStatistik();
+    /* Områdesrättningen under Uppgifter ställer studiehjälparens
+       bedömning bredvid, och kan ha ritats innan den kom. */
+    ritaUtvecklingUppgifter();
     if (!data.length) {
       $('#prg-antal').textContent = '';
       ['#ut-amnen', '#ut-graf', '#ut-framsteg'].forEach(id => { const e = $(id); if (e) e.innerHTML = ''; });
@@ -773,6 +957,149 @@
       + '</div>').join('') + '</div>';
   }
 
+  /* ============================================================
+     MIN UTVECKLING → UPPGIFTER (Fas 23.1)
+     Rättningen av de digitala nivåerna. Allt räknas ur S.forsok, som
+     bara databasen skriver, och ur uppgifterna från studiehjälparen.
+     Fyra rutor i den ordning man frågar: hur det går, i vilket område,
+     hur ofta, och sedan varje rättad nivå för sig.
+     ============================================================ */
+  function ritaUtvecklingUppgifter() {
+    const tal = $('#ut-upg-tal'), omr = $('#ut-upg-omraden'), veckor = $('#ut-upg-veckor'), lista = $('#ut-upg-lista');
+    if (!tal) return;
+    const töm = () => { [omr, veckor, lista].forEach(e => { if (e) e.innerHTML = ''; }); $('#ut-upg-antal').textContent = ''; };
+    if (!S.valtBarn) { töm(); tal.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.'); return; }
+    if (!S.bananLaddad) return;
+    if (!S.katalog) { töm(); tal.innerHTML = tomt('Uppgifterna gick inte att hämta', 'Ladda om sidan om en stund.'); return; }
+
+    const f = S.forsok || [];
+    const klara = f.filter(x => x.klar_at).sort((a, b) => Date.parse(b.klar_at) - Date.parse(a.klar_at));
+    if (!klara.length) {
+      töm();
+      tal.innerHTML = tomt('Inga rättade nivåer än',
+        'När ' + namnPåBarnet() + ' gjort en nivå under Uppgifter står rättningen här: vad som var rätt första gången, område för område.');
+      return;
+    }
+
+    const d = U.underlag(S.katalog, f, S.laxor);
+    let rätt = 0, antal = 0;
+    Object.values(U.perNivå(f)).forEach(l => {
+      if (!l.första) return;
+      rätt += Number(l.första.ratt_direkt) || 0;
+      antal += Number(l.första.antal) || 0;
+    });
+    const idag = isoFor(new Date());
+    const medDeadline = (S.laxor || []).filter(h => h.due_date && (h.status === 'klar' || h.due_date < idag));
+    const iTid = medDeadline.filter(h => h.status === 'klar' && h.completed_at && isoFor(new Date(h.completed_at)) <= h.due_date).length;
+
+    const ruta = (v, rubrik, förklaring) => '<div><b>' + v + '</b><span>' + esc(rubrik) + '</span><small>' + esc(förklaring) + '</small></div>';
+    tal.innerHTML = '<div class="upg-sum">'
+      + ruta(String(d.klaradeNivåer), 'Klarade nivåer',
+          'Nivåer med minst en stjärna. ' + klara.length + ' försök totalt.')
+      + ruta(antal ? Math.round(rätt / antal * 100) + '<i> %</i>' : '–', 'Rätt första gången',
+          rätt + ' av ' + antal + ' frågor, i första försöket på varje nivå.')
+      + ruta(String(d.stjärnor), 'Stjärnor', 'Det bästa försöket på varje nivå, högst tre per nivå.')
+      + ruta(medDeadline.length ? iTid + '<i> av ' + medDeadline.length + '</i>' : '–', 'Uppgifter i tid',
+          medDeadline.length ? 'Av uppgifterna från studiehjälparen vars deadline passerat eller som är klara.'
+            : 'Ingen uppgift från studiehjälparen har haft en deadline än.')
+      + '</div>';
+
+    omr.innerHTML = U.områdesHtml(S.katalog, f, S.progress)
+      || tomt('Inget område än', 'Områdena fylls i när en nivå är klar.');
+
+    const v = U.perVecka(f);
+    const högst = Math.max(3, ...v.map(x => x.antal));
+    veckor.innerHTML = '<div class="upg-veckor">' + v.map((x, i) =>
+      '<div class="upg-vecka' + (i === v.length - 1 ? ' nu' : '') + '" aria-label="'
+      + esc('Vecka ' + x.nr + ': ' + x.antal + (x.antal === 1 ? ' klarad nivå' : ' klarade nivåer')) + '">'
+      + '<b>' + x.antal + '</b><i style="height:' + Math.round(x.antal / högst * 100) + '%"></i>'
+      + '<span>v.' + x.nr + '</span></div>').join('') + '</div>';
+
+    const nivå = U.efterId(S.katalog);
+    const synliga = S.utUpgAlla ? klara : klara.slice(0, 8);
+    $('#ut-upg-antal').textContent = klara.length + ' st';
+    lista.innerHTML = '<div class="upg-forsok-lista">' + synliga.map(x => U.försöksRad(x, nivå[x.niva_id])).join('') + '</div>'
+      + (klara.length > 8
+          ? '<button type="button" class="pl-mer" data-ut-upg-alla aria-expanded="' + (S.utUpgAlla ? 'true' : 'false') + '">'
+            + (S.utUpgAlla ? 'Visa färre' : 'Visa alla ' + klara.length) + '</button>'
+          : '');
+  }
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-ut-upg-alla]');
+    if (!k) return;
+    const öppnar = !S.utUpgAlla;
+    const rita = () => { S.utUpgAlla = öppnar; ritaUtvecklingUppgifter(); };
+    /* Visa färre krymper listan ovanför knappen: den hålls kvar. */
+    if (öppnar) rita();
+    else { const före = k.getBoundingClientRect().top; rita();
+      const ny = $('[data-ut-upg-alla]');
+      if (ny) NXStudie.scrollaTill(window.scrollY + ny.getBoundingClientRect().top - före); }
+  });
+
+  /* ============================================================
+     MIN UTVECKLING → PASSEN (Fas 23.1)
+     Passen med rapport för det valda barnet: hur många, hur mycket
+     tid, närvaron, och vad rapporterna sagt om vad som ska övas.
+     Ur S.rapporter och S.bokningar, samma rader som Mina lektioner.
+     ============================================================ */
+  function ritaUtvecklingPassen() {
+    const tal = $('#ut-pass-tal'), graf = $('#ut-pass-graf'), lista = $('#ut-pass-lista');
+    if (!tal) return;
+    if (!S.valtBarn) {
+      tal.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.');
+      graf.innerHTML = ''; lista.innerHTML = '';
+      return;
+    }
+    const rapporter = (S.rapporter || []).slice().sort((a, b) => String(b.lesson_date).localeCompare(String(a.lesson_date)));
+    const pass = id => (S.bokningar || []).find(b => b.id === id);
+    const minuter = r => r.narvaro === 'franvarande' ? 0
+      : Number(r.hallna_min) || Number(r.debiterade_min) || ((pass(r.booking_id) || {}).duration_min) || 60;
+    const tid = rapporter.reduce((n, r) => n + minuter(r), 0);
+    const medNärvaro = rapporter.filter(r => r.narvaro);
+    const närvarande = medNärvaro.filter(r => r.narvaro !== 'franvarande').length;
+    const idag = isoFor(new Date());
+    const kommande = (S.bokningar || []).filter(b => b.student_id === S.valtBarn && b.status === 'confirmed'
+      && String(b.wanted_date) >= idag).length;
+    const timText = m => (m >= 60 ? (Math.round(m / 6) / 10).toString().replace('.', ',') + ' h' : m + ' min');
+
+    const ruta = (v, rubrik, förklaring) => '<div><b>' + v + '</b><span>' + esc(rubrik) + '</span><small>' + esc(förklaring) + '</small></div>';
+    tal.innerHTML = '<div class="upg-sum">'
+      + ruta(String(rapporter.length), 'Pass med rapport', 'Bokade pass utan rapport räknas inte än.')
+      + ruta(esc(timText(tid)), 'Tid på passen', 'Den tid som hölls, när rapporten säger den.')
+      + ruta(medNärvaro.length ? närvarande + '<i> av ' + medNärvaro.length + '</i>' : '–', 'Närvaro',
+          medNärvaro.length ? 'Pass där ' + namnPåBarnet() + ' var med, också sent.' : 'Ingen rapport har närvaro ifylld än.')
+      + ruta(String(kommande), 'Kommande pass', 'Bekräftade pass från och med i dag.')
+      + '</div>';
+
+    const månader = NXArbete.sexMånader();
+    rapporter.forEach(r => {
+      const m = månader.find(x => x.nyckel === String(r.lesson_date || '').slice(0, 7));
+      if (m) m.antal += minuter(r);
+    });
+    NXArbete.graf(graf, månader, {
+      nagot: 'Tiden på passen med rapport, månad för månad. Den sista stapeln är den här månaden.',
+      inget: 'Inga pass med rapport de senaste sex månaderna.'
+    }, m => m ? timText(m) : '0');
+
+    if (!rapporter.length) {
+      lista.innerHTML = tomt('Inga rapporter än', 'Efter första passet står här vad ni jobbat med och vad som är nästa steg.');
+      return;
+    }
+    lista.innerHTML = '<div class="upg-pass-tidslinje">' + rapporter.slice(0, 6).map(r => {
+      const b = pass(r.booking_id);
+      const ämne = (b && b.subject) || r.amne || 'Pass';
+      return '<div class="upg-pass-rad">'
+        + '<time>' + esc(datumText(r.lesson_date)) + '</time>'
+        + '<b>' + esc(ämne + (r.gick && NXStudie.GICK[r.gick] ? ' · ' + NXStudie.GICK[r.gick] : '')) + '</b>'
+        + (r.narvaro === 'franvarande' ? '<p>' + esc(namnPåBarnet() + ' var inte med på passet.') + '</p>' : '')
+        + (r.needs_practice ? '<p><em>Öva mer på:</em> ' + esc(r.needs_practice) + '</p>' : '')
+        + (r.next_focus ? '<p><em>Nästa fokus:</em> ' + esc(r.next_focus) + '</p>' : '')
+        + '</div>';
+    }).join('') + '</div>';
+  }
+
+
 
   /* ============================================================
      DITT KONTO
@@ -927,13 +1254,14 @@
 
     NXStudie.laddarFörsta(host);
     const { data, error } = await supa
-      .from('lesson_reports').select('id, booking_id, student_id, tutor_id, lesson_date, raw_notes, ai_feedback, gick, amne, needs_practice, next_focus, start_tid, slut_tid, debiterade_min, avvikelse_skal')
+      .from('lesson_reports').select('id, booking_id, student_id, tutor_id, lesson_date, raw_notes, ai_feedback, gick, amne, went_well, needs_practice, next_focus, start_tid, slut_tid, debiterade_min, hallna_min, narvaro, avvikelse_skal')
       .eq('student_id', S.valtBarn).order('lesson_date', { ascending: false });
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
 
     S.rapporter = data || [];
     ritaStatistik();
+    ritaUtvecklingPassen();
 
     if (!data || !data.length) {
       host.innerHTML = '<div class="empty">Inga rapporter än. Den första kommer efter första passet.</div>';
@@ -1042,16 +1370,16 @@
       }));
     }
 
-    /* S.laxor är det valda barnets läxor, som under Läxor. */
+    /* S.laxor är det valda barnets uppgifter, som under Uppgifter. */
     const sena = (S.laxor || []).filter(h => h.status !== 'klar' && h.due_date && h.due_date < idag)
       .sort((a, c) => String(a.due_date).localeCompare(String(c.due_date)));
     if (sena.length) {
       rader.push(NXStudie.radLank({
-        href: '#uppgifter', ikon: 'lax', ton: 'ockra',
-        titel: sena.length === 1 ? 'En läxa är försenad' : sena.length + ' läxor är försenade',
+        href: '#uppgifter/attgora', ikon: 'lax', ton: 'ockra',
+        titel: sena.length === 1 ? 'En uppgift är försenad' : sena.length + ' uppgifter är försenade',
         meta: [sena[0].title + (sena.length > 1 ? ' och ' + (sena.length - 1) + ' till' : ''),
           'skulle vara klar ' + NXStudie.deadlineText(sena[0].due_date).replace(/^./, c => c.toLowerCase())],
-        lank: sena.length === 1 ? 'Till läxan' : 'Till läxorna'
+        lank: sena.length === 1 ? 'Till uppgiften' : 'Till uppgifterna'
       }));
     }
 
@@ -1331,23 +1659,56 @@
   /* Ritas först när både rapporterna och passen finns: utan passen ser
      ett obetalt pass betalt ut, och knappen hade bytts under fingret. */
   function ritaBekrafta() {
-    const host = $('#rb-lista'), klara = $('#rb-klara');
-    if (!host || !klara || !S.rb.laddat || !S.laddatPass) return;
+    const host = $('#rb-lista');
+    if (!host || !S.rb.laddat || !S.laddatPass) return;
     const att = rbAttBekräfta();
-    const gjorda = S.rb.rapporter.filter(r => att.indexOf(r) === -1)
-      .sort((a, c) => String(S.rb.bekräftade[c.id]).localeCompare(String(S.rb.bekräftade[a.id])));
     $('#rb-antal').textContent = att.length ? String(att.length) : '';
-    $('#rb-klara-antal').textContent = gjorda.length ? String(gjorda.length) : '';
     if (S.sido) S.sido.märke('bekrafta', att.length);
     ritaÖvGöra();
 
     host.innerHTML = att.length ? att.map(rbKort).join('')
       : tomt('Inget att bekräfta', 'När er studiehjälpare har skrivit rapporten efter ett pass står den här.');
-    /* De bekräftade som en lista att gå tillbaka till, inte en vägg av
-       text. Hela rapporterna står också under Mina lektioner → Efter
-       passen. */
+    rbRitaKlara(att);
+  }
+
+  /* DE BEKRÄFTADE, MÅNAD FÖR MÅNAD (2026-09-28). Leo: "bekräftade
+     rapporter ska filtreras efter månad". Samma rad som rapporterna i
+     studiehjälparvyn, den innevarande månaden förvald, och månaden är
+     PASSETS: en rapport från den 28 augusti som bekräftades den 2
+     september står under augusti, som i studiehjälparens lista och i
+     adminvyns Ekonomi. Förut stod de tjugo senast bekräftade, och den
+     tjugoförsta gick inte att hitta härifrån.
+
+     Att bekräfta filtreras inte: det som väntar på familjen ska inte
+     gömma sig bakom en månad, lika lite som bakom barnväljaren.
+
+     Rapporterna finns redan, alla, så månaden väljs här och inte i en
+     ny fråga. Raden skapas första gången listan ritas och står dold
+     tills något är bekräftat: tolv månader ovanför "Inga bekräftade
+     rapporter än" är ett val utan något att välja. Hela rapporterna står
+     också under Mina lektioner → Efter passen. */
+  let rbMånad = null, rbReserv = 0;
+
+  function rbRitaKlara(att = rbAttBekräfta()) {
+    const klara = $('#rb-klara'), rad = $('#rb-manader');
+    if (!klara) return;
+    /* Stegaren, som studiehjälparens rapporter sedan samma dag:
+       ‹ September 2026 › i stället för tolv knappar i sidled. */
+    if (!rbMånad && rad) rbMånad = NXStudie.månadsval(rad, { stegare: true, vidVal: rbBytMånad });
+    const m = rbMånad ? rbMånad.vald() : NXStudie.månadIso(new Date());
+    const g = NXStudie.månadsGräns(m);
+    const alla = S.rb.rapporter.filter(r => att.indexOf(r) === -1);
+    /* lesson_date är ett datum utan tid, så strängen jämförs med
+       strängen, som i adminvyns iMånaden(). */
+    const gjorda = alla.filter(r => r.lesson_date >= g.från && r.lesson_date < g.till)
+      .sort((a, c) => String(c.lesson_date).localeCompare(String(a.lesson_date))
+        || String(S.rb.bekräftade[c.id]).localeCompare(String(S.rb.bekräftade[a.id])));
+    if (rad) rad.hidden = !alla.length;
+    $('#rb-klara-antal').textContent = gjorda.length ? String(gjorda.length) : '';
+
+    /* En lista att gå tillbaka till, inte en vägg av text. */
     klara.innerHTML = gjorda.length
-      ? gjorda.slice(0, 20).map(r => {
+      ? gjorda.map(r => {
           const b = rbPass(r);
           const inre = '<span class="rb-bock">' + NXStudie.IKON.bock + '</span>'
             + '<span class="vy-rad-mitt"><span class="vy-rad-titel">' + esc(rbTitel(r, b)) + '</span>'
@@ -1358,8 +1719,39 @@
           return b ? '<a class="vy-rad" href="#pass/' + esc(b.id) + '">' + inre + '</a>'
             : '<div class="vy-rad">' + inre + '</div>';
         }).join('')
-      : tomt('Inga bekräftade rapporter än', 'En rapport ni bekräftat står här.');
+      : alla.length
+        ? tomt('Inga bekräftade rapporter i ' + NXStudie.månadsNamn(m), 'Välj en annan månad ovanför för att se dem.')
+        : tomt('Inga bekräftade rapporter än', 'En rapport ni bekräftat står här.');
   }
+
+  /* Ett byte av månad håller raden stilla (fälla 4 i CLAUDE.md), men
+     håll() kan inte scrolla förbi sidans slut. Listan står sist på
+     sidan, och har den nya månaden färre rapporter blir sidan kortare:
+     står man längst ned klämmer webbläsaren scrollen, och raden man
+     just tryckte i flyttade sig 84 px nedåt på en telefon i provbänken.
+     Listan behåller därför så mycket av sin höjd som behövs för att
+     raden ska stå kvar, och släpper den när tomrummet hamnat under
+     skärmkanten, där ingen ser sidan krympa. */
+  function rbBytMånad() {
+    const rad = $('#rb-manader'), klara = $('#rb-klara');
+    const förut = klara.offsetHeight;
+    const underSkärmen = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+    NXStudie.håll(rad, () => {
+      klara.style.minHeight = '';
+      rbRitaKlara();
+      rbReserv = Math.max(0, förut - klara.offsetHeight - underSkärmen);
+      if (rbReserv) klara.style.minHeight = (klara.offsetHeight + rbReserv) + 'px';
+    });
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!rbReserv) return;
+    const klara = $('#rb-klara');
+    if (klara.getBoundingClientRect().bottom - rbReserv >= window.innerHeight) {
+      klara.style.minHeight = '';
+      rbReserv = 0;
+    }
+  }, { passive: true });
 
   /* Svarar true när rapporten är bekräftad, också om den redan var det
      (23505: bekräftad i en annan flik eller på en annan enhet). Vem och
@@ -2543,6 +2935,9 @@
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
     S.bokningar = data || [];
+    /* Passen-fliken i Min utveckling räknar kommande pass och passens
+       längd ur samma rader. */
+    ritaUtvecklingPassen();
     /* Kan underlaget inte läsas står det som fanns kvar, och första
        gången inget: då gäller det bokade, som för en rapport utan tid,
        och inget tillägg syns. Ett tillägg som inte syns larmar hos oss
@@ -2881,7 +3276,7 @@
     if (brådskande.length) {
       const sena = brådskande.filter(h => h.due_date < idag).length;
       poster.push({
-        rubrik: brådskande.length + ' läx' + (brådskande.length > 1 ? 'or' : 'a') + ' att göra',
+        rubrik: brådskande.length + (brådskande.length > 1 ? ' uppgifter' : ' uppgift') + ' att göra',
         text: sena ? sena + ' av dem skulle redan ha varit klara.' : 'Ska vara klar idag.',
         mål: '#lax-lista'
       });
@@ -3393,7 +3788,7 @@
       + '<div><b>' + genomforda.length + '</b><span>Genomförda pass</span></div>'
       + '<div><b>' + esc(timmar) + '</b><span>Studietid</span></div>'
       + '<div><b>' + (S.kommandeAntal || 0) + '</b><span>Kommande pass</span></div>'
-      + '<div><b>' + klara + '</b><span>Avklarade läxor</span></div>'
+      + '<div><b>' + klara + '</b><span>Avklarade uppgifter</span></div>'
       + '</div>';
 
     ritaFordelningar();
@@ -3570,25 +3965,12 @@
     return Number((u && u.timbank_min) || 0);
   };
 
-  /* pris(m) = max(avrundat m/60 × (timpris + tillägg för fler barn) − rabatt, 0),
-     samma regel som minuterspris() i _delad/pris.ts. Timpriset är passets
-     frysta (Fas 19.5), ur passet eller passunderlaget; katalogen är bara
-     reserven. Tillägget för fler barn följer samma källa som timpriset:
-     ett fryst timpris med dagens syskontillägg hade varit ett pris som
-     aldrig gällt. null när inget pris går att räkna. */
+  /* pris(m) = max(avrundat m/60 × (timpris + tillägg för fler barn) − rabatt, 0).
+     Regeln bor i NXBetalning.passpris sedan 2026-09-28, för adminvyns
+     Månadens ekonomi räknar samma sak; här skickas bara passets rad i
+     passunderlaget med. null när inget pris går att räkna. */
   function prisFör(b, minuter) {
-    const u = underlagFör(b);
-    const källa = Number(b.timpris_ore) ? b : (u && Number(u.timpris_ore) ? u : null);
-    let timme = källa ? Number(källa.timpris_ore) : 0, extra = källa ? Number(källa.extra_ore) || 0 : 0;
-    if (!timme) {
-      const tj = NXTjanster.hitta(b.tjanst || NXTjanster.standard());
-      if (!tj || !tj.pris_per_timme_ore) return null;
-      timme = Number(tj.pris_per_timme_ore);
-      extra = Number(tj.extra_personer_ore || 0);
-    }
-    const perTimme = timme + ((b.antal_barn || 1) > 1 ? extra : 0);
-    const rabatt = Math.max(Number(b.rabatt_ore != null ? b.rabatt_ore : (u && u.rabatt_ore) || 0), 0);
-    return Math.max(Math.round(perTimme * Number(minuter) / 60) - rabatt, 0);
+    return NXBetalning.passpris(b, underlagFör(b), minuter);
   }
   /* Första timmen bjuds (Fas 19.5): ett pass på en timme kan kosta
      ingenting. Det betalas inte, och ingen knapp ber om det. */
@@ -3831,18 +4213,18 @@
       .filter(h => h.status !== 'klar' && h.student_id === b.student_id && h.due_date && h.due_date <= b.wanted_date)
       .slice(0, 3);
     const läxTomt = b.student_id !== S.valtBarn && barn
-      ? 'Välj ' + barn.name.split(' ')[0] + ' för att se läxorna.'
-      : 'Inga öppna läxor till passet.';
+      ? 'Välj ' + barn.name.split(' ')[0] + ' för att se uppgifterna.'
+      : 'Inga öppna uppgifter till passet.';
 
-    /* Läxorna som rader i ett kort, med samma ikon som under Läxor. */
+    /* Uppgifterna som rader i ett kort, med samma ikon som under Uppgifter. */
     const I = NXStudie.IKON;
     const block = [
       { rubrik: derasFörslag ? 'Anteckning från ' + förnamn : 'Er anteckning till ' + förnamn,
         html: b.note ? '<p class="ps-citat">' + esc(b.note) + '</p>' : '' },
-      /* Efter passet är "läxor fram till passet" historia: de står
-         under Läxor, och här står rapporten. */
-      { rubrik: 'Läxor fram till passet', html: b.status === 'cancelled' || b.status === 'completed' ? '' : läxor.length
-        ? '<div class="vy-kort vy-lista">' + läxor.map(h => '<a class="vy-rad" href="#uppgifter">'
+      /* Efter passet är "uppgifter fram till passet" historia: de står
+         under Uppgifter, och här står rapporten. */
+      { rubrik: 'Uppgifter fram till passet', html: b.status === 'cancelled' || b.status === 'completed' ? '' : läxor.length
+        ? '<div class="vy-kort vy-lista">' + läxor.map(h => '<a class="vy-rad" href="#uppgifter/attgora">'
             + '<span class="vy-rad-ik ar-ockra">' + I.lax + '</span>'
             + '<span class="vy-rad-mitt"><span class="vy-rad-titel">' + esc(h.title) + '</span>'
             + '<span class="vy-rad-meta"><span>Till ' + esc(NXStudie.deadlineText(h.due_date).replace(/^./, c => c.toLowerCase())) + '</span></span></span>'
@@ -3972,6 +4354,7 @@
     S.flikar = {
       lektioner: NXArbete.flikar($('section[data-sek="lektioner"]')),
       uppgifter: NXArbete.flikar($('section[data-sek="uppgifter"]')),
+      utveckling: NXArbete.flikar($('section[data-sek="utveckling"]')),
       profil: NXArbete.flikar($('section[data-sek="profil"]'))
     };
 
@@ -4009,8 +4392,8 @@
       /* #material fanns som en egen flik till Fas 13.2. Materialet
          hör nu till läxan det gäller, så den gamla adressen landar
          på läxorna i stället för på ingenting. */
-      material: ['uppgifter', null],
-      laxor: ['uppgifter', null],
+      material: ['uppgifter', 'attgora'],
+      laxor: ['uppgifter', 'attgora'],
       studiehjalpare: ['meddelanden', null],
       installningar: ['profil', 'pris']
     };
@@ -4081,8 +4464,8 @@
        namnet finns. */
     /* Erbjudandena före passen: knappen Betala med timmar ritas ur dem. */
     await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden()]);
-    await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor(), laddaBekrafta()]);
-    /* Läxorna hämtas först, så märket ritas om när de finns. */
+    await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaBanan(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor(), laddaBekrafta()]);
+    /* Uppgifterna hämtas först, så märket ritas om när de finns. */
     ritaÖvLaxor();
     ritaNotiser();
     await ritaÖvSamtal();

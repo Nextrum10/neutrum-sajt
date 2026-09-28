@@ -19,9 +19,9 @@
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
-<link rel="stylesheet" href="nextrum-vy.css?v=84d799dd">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=b77efced">
+<link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
+<link rel="stylesheet" href="nextrum-vy.css?v=9c7e2280">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=e20098b3">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -224,7 +224,12 @@
         <a href="#meddelanden" data-sek="meddelanden" title="Frågor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Frågor</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Ekonomi</span>
+        <!-- Månadens ekonomi och Löner (2026-09-28): samma rader som
+             Betalningar & utbetalningar, lästa för två andra frågor.
+             Vad har kommit in och vad väntar, och vad ska ut. -->
+        <a href="#manaden" data-sek="manaden" title="Månadens ekonomi"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M8.5 17v-3M12 17v-4.5M15.5 17v-2"/></svg><span class="adm-etikett">Månadens ekonomi</span></a>
         <a href="#ekonomi" data-sek="ekonomi" title="Betalningar &amp; utbetalningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg><span class="adm-etikett">Betalningar &amp; utbetalningar</span></a>
+        <a href="#loner" data-sek="loner" title="Löner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3.2 2.5-5 5.5-5 1 0 1.9.2 2.7.5"/><circle cx="16.5" cy="15.5" r="4"/><path d="M16.5 13.5v4M15 14.5h2.2a1 1 0 0 1 0 2H15"/></svg><span class="adm-etikett">Löner</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Tjänster</span>
         <a href="#katalog" data-sek="katalog" title="Tjänster &amp; priser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.3V4.5a1 1 0 0 1 1-1h7.8l8.2 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.6"/></svg><span class="adm-etikett">Tjänster &amp; priser</span></a>
@@ -951,6 +956,53 @@
         </section>
 
         <!-- ============================================================
+             MÅNADENS EKONOMI (2026-09-28)
+
+             Leo: "där ska man aktuellt se hur många fakturor som ska
+             skickas samt så många lektioner som är betalda för. hur många
+             timmar är betalt samt ej ännu betalt ... detta för att ej ha
+             problem om kassalikviditet".
+
+             Talen är knappar. Ett tryck visar familjerna bakom talet, med
+             passen och en knapp till familjens panel. Allt räknas ur det
+             Ekonomi redan hämtat, på passets månad
+             (nextrum-admin-manaden.js). Månadskörningen under fakturorna
+             är samma körning som under Ekonomi och Löner.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="manaden" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Månadens ekonomi</h2>
+              <p>Vad månadens pass har dragit in, vad som väntar och hos vem. Tryck på ett tal för att se familjerna bakom det, och på en familj för att öppna den.</p>
+            </div>
+          </div>
+
+          <div id="man-manader" aria-label="Välj månad"></div>
+          <div id="man-tal"><div class="loading">Hämtar</div></div>
+
+          <div class="dbox" id="man-detalj">
+            <div id="man-lista-topp"></div>
+            <!-- Månadskörningen, bara när fakturorna är valda. Rutan ritas
+                 inte om när talen gör det, så en torrkörning står kvar
+                 tills någon byter månad. -->
+            <div class="man-korning" id="man-korning" data-kor-ruta hidden>
+              <div class="adm-verktyg">
+                <button class="btn btn-ghost btn-sm" type="button" data-kor-torr>Torrkör månadskörningen</button>
+                <button class="btn btn-primary btn-sm" type="button" data-kor-skapa disabled>Skapa utkast</button>
+              </div>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 8px">
+                Samma körning som under Ekonomi och Löner: den skapar fakturautkasten för månaden
+                och underlagen till studiehjälparna i samma steg. Torrkörningen visar vad som skulle
+                skapas utan att skriva något.
+              </p>
+              <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
+              <div data-kor-resultat aria-live="polite"></div>
+            </div>
+            <div id="man-lista" aria-live="polite"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
              EKONOMI
              Kortbetalningen från familjen och underlaget till
              studiehjälparen är två sidor av samma pass. Två flikar, inte
@@ -1220,7 +1272,10 @@
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="korning"
                id="panel-korning" aria-labelledby="flik-korning" hidden>
-            <div class="dbox">
+            <!-- data-kor-*: samma körning står under Löner och Månadens
+                 ekonomi (2026-09-28), och en lyssnare i
+                 nextrum-admin-ekonomi.js sköter alla tre rutorna. -->
+            <div class="dbox" data-kor-ruta>
               <h5>Månadskörningen</h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:18px">
                 En gång i månaden samlas alla genomförda och rapporterade pass till
@@ -1229,15 +1284,23 @@
                 <b>Fakturor</b>. Andra pass betalas med kort, i förväg eller när familjen
                 bekräftar rapporten, och pass som hölls utan betalning räknas upp i
                 körningen i stället för att faktureras.
-                Här körs den med din inloggning. Kör alltid torrt först: den räknar ut
-                allt och visar vad som <em>skulle</em> skapas, utan att skriva en rad.
+                Med schemat på går den av sig själv den 1:a varje månad, tidigt på
+                morgonen, för förra månaden: underlaget är studiehjälparens
+                lönespecifikation, och den ska finnas när månaden är slut. Här körs den
+                med din inloggning, för en månad som aldrig kördes eller en körning som
+                inte gick. Kör alltid torrt först: den räknar ut allt och visar vad som
+                <em>skulle</em> skapas, utan att skriva en rad.
               </p>
+              <!-- Schemat står i cron.job, inte här: rutan frågar databasen
+                   (manadskorning_lage) om det är på. -->
+              <div id="kor-schema" class="kor-schema" aria-live="polite"><div class="loading">Hämtar</div></div>
               <div class="adm-verktyg">
-                <select class="sel" id="kor-period" aria-label="Vilken månad underlaget gäller"></select>
-                <button class="btn btn-ghost btn-sm" type="button" id="kor-torr">Torrkör</button>
-                <button class="btn btn-primary btn-sm" type="button" id="kor-skapa" disabled>Skapa utkast</button>
+                <select class="sel" id="kor-period" data-kor-period aria-label="Vilken månad underlaget gäller"></select>
+                <button class="btn btn-ghost btn-sm" type="button" id="kor-torr" data-kor-torr>Torrkör</button>
+                <button class="btn btn-primary btn-sm" type="button" id="kor-skapa" data-kor-skapa disabled>Skapa utkast</button>
               </div>
-              <div id="kor-resultat" aria-live="polite" style="margin:6px 0 18px"></div>
+              <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
+              <div id="kor-resultat" data-kor-resultat aria-live="polite" style="margin:6px 0 18px"></div>
               <div class="sum-line"><span>Vilka pass</span><span class="adm-tal">genomförda och rapporterade, till och med månadens slut</span></div>
               <div class="sum-line"><span>Utbetalning</span><span class="adm-tal">den 25:e, från banken</span></div>
               <div class="sum-line total"><span>Pris per timme</span><span class="adm-tal" id="kor-pris">—</span></div>
@@ -1245,10 +1308,77 @@
                 <b>Skapa utkast</b> skriver underlagen och fakturorna som utkast. Ingenting
                 skickas och ingenting betalas ut härifrån — underlaget skickar du per
                 studiehjälpare under Utbetalningar, och fakturan skickas från Fortnox. Priset står med för att beloppen på pass som hölls
-                utan betalning räknas på det. Ett schema som kör det här av sig självt
-                kommer senare, och använder då en nyckel på servern i stället för en
-                inloggning.
+                utan betalning räknas på det. Gick körningen den 1:a inte står det under
+                System → Fel, och passen larmar som Inte utbetalt tills någon kört den här.
+                Ett pass som rapporteras efter körningen kommer med nästa månad.
               </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             LÖNER (2026-09-28)
+
+             Leo: "lägg till en till avdelning för löner, personer och
+             deras uppgifter samt exportera löner till tex fortnox. timmar
+             att betala ut och vanlig månadskörning".
+
+             Personerna med anställningsnummer och timpenning, timmarna och
+             beloppen för månaden, månadskörningen och lönefilen i PAXml
+             till Fortnox Lön (nextrum-admin-loner.js). Personnummer,
+             bankkonto och skattetabell står i Fortnox, inte här.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="loner" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Löner</h2>
+              <p>Vad studiehjälparna ska ha för månadens pass, och lönefilen till Fortnox Lön. Lönen för en månad betalas ut den 25:e månaden efter, ur underlaget som månadskörningen skapar.</p>
+            </div>
+          </div>
+
+          <div id="lon-manader" aria-label="Välj månad för lönerna"></div>
+          <div id="lon-tal"><div class="loading">Hämtar</div></div>
+
+          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
+            <h5>Personer</h5>
+            <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 14px">
+              Anställningsnumret ska vara samma som i Fortnox Lön: lönefilen matchar på det.
+              Personnummer, adress, bankkonto och skattetabell läggs in i Fortnox, inte här.
+              Läget på underlaget ändras här eller under Ekonomi → Utbetalningar; godkänn det
+              när du granskat det, och sätt Utbetald när pengarna gått.
+            </p>
+            <div id="lon-personer"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <div class="split">
+            <div class="stack">
+              <div class="dbox" id="lon-korning" data-kor-ruta>
+                <h5>Månadskörningen <em data-kor-namn></em></h5>
+                <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                  Samlar månadens genomförda och rapporterade pass till ett underlag per
+                  studiehjälpare, och skapar fakturautkasten för familjer som valt faktura.
+                  Kör alltid torrt först: den visar vad som skulle skapas utan att skriva något.
+                  Ingenting skickas och ingenting betalas ut härifrån.
+                </p>
+                <div class="adm-verktyg">
+                  <button class="btn btn-ghost btn-sm" type="button" data-kor-torr>Torrkör</button>
+                  <button class="btn btn-primary btn-sm" type="button" data-kor-skapa disabled>Skapa utkast</button>
+                </div>
+                <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
+                <div data-kor-resultat aria-live="polite"></div>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="dbox">
+                <h5>Lönefilen till Fortnox Lön <em id="lon-fil-manad"></em></h5>
+                <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
+                  En fil i PAXml med månadens godkända underlag, en rad per pass. I Fortnox:
+                  Lön → Kalender → Importera löneunderlag. Semesterersättningen lägger Fortnox på
+                  själv. Läs in den första filen i en löneperiod ni kan kontrollera, och jämför
+                  timmar och belopp mot underlagen innan lönen körs.
+                </p>
+                <div id="lon-fil"><div class="loading">Hämtar</div></div>
+              </div>
             </div>
           </div>
         </section>
@@ -2194,13 +2324,13 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=d85467f7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=ab1237a7"></script>
+<script src="nextrum-studie.js?v=ec30bd2d"></script>
 <script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
-<script src="nextrum-betalning.js?v=973469fe"></script>
+<script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=da16d38b"></script>
+<script src="nextrum-admin-karna.js?v=11384a58"></script>
 <script src="nextrum-admin-detalj.js?v=3ce6626d"></script>
 <script src="nextrum-admin-oversikt.js?v=045dcecd"></script>
 <script src="nextrum-admin-kunder.js?v=01b666e6"></script>
@@ -2208,15 +2338,17 @@
 <script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
 <script src="nextrum-admin-kommunikation.js?v=24a9a868"></script>
 <script src="nextrum-admin-drift.js?v=2437242e"></script>
-<script src="nextrum-admin-ekonomi.js?v=eb933656"></script>
+<script src="nextrum-admin-ekonomi.js?v=fa80714f"></script>
+<script src="nextrum-admin-manaden.js?v=ea7e5831"></script>
+<script src="nextrum-admin-loner.js?v=1d554ed8"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
-<script src="nextrum-admin-system.js?v=fab56355"></script>
+<script src="nextrum-admin-system.js?v=9750fd97"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=55760f40"></script>
-<script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-admin.js?v=6ba3f84f"></script>
+<script src="nextrum-modulvakt.js?v=aa7653c6"></script>
+<script src="nextrum-admin.js?v=f76f6ba8"></script>
 </body>
 </html>

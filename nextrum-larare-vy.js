@@ -13,6 +13,7 @@
   const { $, $$, esc, kr, säg, rensa, felText, datumText, isoFor } = NX;
   const { bekräfta, medan, kolla, tomt, laddar } = NXStudie;
   const M = NXMedia;
+  const U = NXUppgifter;
 
   NX.initHeader();
 
@@ -20,11 +21,13 @@
     aktivSek: null, passFrån: null, yFör: {}, laddatPass: false,
     user: null, profil: null, tutorProfil: null,
     familjer: [], aktivFamilj: null,
-    elever: [], aktivElev: null,
+    elever: [], aktivElev: null, elevVald: null, planFör: null, områdenFör: null,
     bokningar: [], trad: null, kal: null, olästa: {},
     minAvatar: null,
     laxor: [], laxräkning: {}, minaRapporter: [], avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
-    senaste: {}
+    senaste: {},
+    /* Fas 23.1: katalogen över nivåer och den valda elevens försök. */
+    katalog: null, forsok: [], rättadeAlla: false
   };
 
   const elev = () => S.elever.find(e => e.id === S.aktivElev) || null;
@@ -197,11 +200,118 @@
 
   document.addEventListener('click', async e => {
     const k = e.target.closest('[data-elevkort]');
+    if (k) await tryckPåElev(k.dataset.elevkort);
+  });
+
+  /* ------------------------------------------------------------
+     VEM DU SKRIVER OM (Plan & utveckling)
+
+     Leo 2026-09-28: "där ska man välja först vilken elev man ska
+     skriva om, man kan ha flera elever". Studieplanen och
+     kunskapsområdena skrevs på den elev som var vald i rutan ovanför
+     sektionen, och innan man tryckt på någon var det den första i
+     listan. En bedömning av Maja kunde sparas hos Elsa utan att något
+     sa emot, och på en telefon stod rutan 800 px ovanför formuläret.
+
+     Med flera elever står formulären därför inte framme förrän
+     studiehjälparen själv tryckt på en elev: här, under Mina elever,
+     eller på ett elevkort eller en av elevens länkar ovanför Läxor
+     och Meddelanden. S.elevVald minns VEM man tryckt på, inte bara
+     ATT: byts den aktiva eleven av något annat, som en familj i
+     meddelandelistan eller ett pass som hör till ett annat barn,
+     frågar rutan igen i stället för att låta nästa barn ärva valet.
+
+     Med en elev finns inget att välja, men kortet står ändå: namnet
+     ska stå där man skriver.
+     ------------------------------------------------------------ */
+  function elevenÄrVald() {
+    return !!S.aktivElev && (S.elever.length === 1 || S.elevVald === S.aktivElev);
+  }
+
+  function planElevKort(e, knapp) {
+    const inne = M.avatar(e.name, null, { liten: true })
+      + '<span class="ev-kort-text"><b>' + esc(e.name) + '</b>'
+      + '<span>' + esc([e.grade, (e.subjects || [])[0]].filter(Boolean).join(' · ')
+          || 'Inga uppgifter') + '</span></span>';
+    return knapp
+      ? '<button type="button" class="ev-kort" data-plan-elev="' + esc(e.id) + '"'
+        + ' aria-pressed="' + (elevenÄrVald() && e.id === S.aktivElev) + '">' + inne + '</button>'
+      : '<div class="ev-kort ev-ensam">' + inne + '</div>';
+  }
+
+  function ritaPlanElev() {
+    const host = $('#plan-elev');
+    if (!host) return;
+    const vald = elevenÄrVald() ? elev() : null;
+    /* Korten ritas om, och den som valde med tangentbordet ska stå
+       kvar på kortet och inte hamna överst på sidan. */
+    const fokus = host.contains(document.activeElement) ? document.activeElement.dataset.planElev : null;
+
+    /* Formulären FÖRE korten. Raden under korten försvinner när man
+       valt, och fokus nedanför tvingar fram en layout: stod
+       formulären kvar dolda i den stunden var sidan 52 px kortare på
+       en telefon, och den som stod längst ner flyttades upp.
+
+       Namnet och formulären byts först när det som står i dem är den
+       valda elevens (S.planFör, S.områdenFör). Ett andra tryck på
+       samma kort medan eleven hämtas hade annars visat förra elevens
+       plan under det nya namnet. Hämtas eleven står det gamla kvar. */
+    const ifyllt = vald && S.planFör === vald.id && S.områdenFör === vald.id;
+    if (!vald || ifyllt) {
+      $$('[data-plan-skriv]').forEach(ruta => { ruta.hidden = !vald; });
+      $$('[data-plan-namn]').forEach(s => { s.textContent = vald ? 'för ' + vald.name : ''; });
+    }
+
+    if (!S.elever.length) {
+      host.innerHTML = tomt('Ingen elev än', 'Familjen lägger in sitt barn i sin vy. Skriv till dem om det dröjer.');
+    } else if (S.elever.length === 1 && vald) {
+      host.innerHTML = '<div class="ev-rad">' + planElevKort(vald, false) + '</div>';
+    } else {
+      /* Hit också med en enda elev som inte är den aktiva: den första
+         familjen i listan kan sakna barn när en annan har ett, och då
+         är kortet vägen dit. */
+      host.innerHTML = '<p class="rp-fraga" id="plan-elev-fraga">Vem skriver du om?</p>'
+        + '<div class="ev-rad" role="group" aria-labelledby="plan-elev-fraga">'
+        + S.elever.map(x => planElevKort(x, true)).join('') + '</div>'
+        /* Under korten, inte över: raden försvinner när man valt, och
+           det som står ovanför det man trycker på får inte flytta sig. */
+        + (vald ? '' : '<p class="xsmall plan-elev-tips">Studieplanen och kunskapsområdena visas när du valt en elev.</p>');
+    }
+    if (fokus) {
+      const k = host.querySelector('[data-plan-elev="' + fokus + '"]');
+      if (k) k.focus({ preventScroll: true });
+    }
+  }
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-plan-elev]');
     if (!k) return;
-    if (k.dataset.elevkort === S.aktivElev) return;
-    S.aktivElev = k.dataset.elevkort;
-    $('#elev-val').value = S.aktivElev;
-    await byggElev();
+    /* Kortet trycks ner direkt. Formulären kommer när elevens plan och
+       områden är hämtade (byggElev), inte före: annars hade förra
+       elevens plan stått en stund under det nya namnet. */
+    $$('#plan-elev [data-plan-elev]').forEach(b => b.setAttribute('aria-pressed', String(b === k)));
+    tryckPåElev(k.dataset.planElev);
+  });
+
+  /* Ett tryck på en elev, var i vyn det än görs. Korten i Plan &
+     utveckling, under Mina elever och i rutan ovanför Läxor går alla
+     hit, så att de minns valet likadant. */
+  async function tryckPåElev(id) {
+    if (!id) return;
+    S.elevVald = id;
+    if (id === S.aktivElev) { ritaPlanElev(); ritaElevLista(); return; }
+    await väljElev(id);
+  }
+
+  /* Länkarna i elevens rad gäller eleven som står där, så ett tryck
+     på dem är också ett val. Annars hade Utveckling lett till Plan &
+     utveckling och frågat vem man skriver om, direkt efter att man
+     tryckt på elevens egen länk dit. */
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.ep-vagar a') || !S.aktivElev) return;
+    S.elevVald = S.aktivElev;
+    ritaPlanElev();
+    ritaElevLista();
   });
 
   /* ------------------------------------------------------------
@@ -426,6 +536,9 @@
        läxor, och inget av det är hämtat när de ritas första gången */
     ritaElevkort();
     ritaElevProfil();
+    /* Sist: formulären i Plan & utveckling visas först när elevens
+       plan och områden står i dem. */
+    ritaPlanElev();
   }
 
   /* ============ kontakt ============ */
@@ -452,13 +565,17 @@
   }
 
   /* ============================================================
-     LÄXOR
+     UPPGIFTER (hette Läxor till Fas 23.1)
+     En uppgift kan peka på en nivå i banan (homework.niva_id). Då
+     rättas den när eleven gör den, blir klar av sig själv, och
+     resultatet och rättningen står på uppgiften. Utan nivå är det en
+     vanlig uppgift som familjen bockar av.
      ============================================================ */
   $('#ny-lax').addEventListener('click', () => {
     const f = $('#lax-form');
     f.hidden = !f.hidden;
-    $('#ny-lax').textContent = f.hidden ? 'Ny läxa' : 'Stäng';
-    if (!f.hidden) $('#lx-titel').focus();
+    $('#ny-lax').textContent = f.hidden ? 'Ny uppgift' : 'Stäng';
+    if (!f.hidden) { fyllNivåval(); $('#lx-titel').focus(); }
   });
   /* Formuläret ligger ovanför listan. När det stängs försvinner dess
      höjd ovanför det man tittar på, och listan hoppade upp 550 px —
@@ -466,7 +583,7 @@
   function stängLaxForm(efter) {
     NXStudie.håll($('#lax-lista'), () => {
       $('#lax-form').hidden = true;
-      $('#ny-lax').textContent = 'Ny läxa';
+      $('#ny-lax').textContent = 'Ny uppgift';
       /* Allt som ändrar höjd ovanför listan i samma svep — meddelandet
          och det valda materialet — annars flyttade listan sig ändå de
          sista 75–90 px. */
@@ -478,6 +595,7 @@
       rensa($('#lx-msg'));
       valtBibliotek = null;
       visaValtMaterial();
+      lx.niva = null;
     });
   });
 
@@ -497,7 +615,7 @@
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
 
     await medan($('#lx-spara'), 'Skapar…', async () => {
-      const { error } = await supa.from('homework').insert({
+      const rad = {
         student_id: S.aktivElev,
         tutor_id: S.user.id,
         title: titel,
@@ -505,23 +623,118 @@
         instructions: $('#lx-text').value.trim() || null,
         due_date: datum || null,
         bibliotek_id: valtBibliotek ? valtBibliotek.id : null
-      });
-      if (error) { säg(msg, 'Kunde inte skapa läxan: ' + felText(error), false); return; }
+      };
+      /* niva_id bara när en nivå är vald: utan Fas 23.1 i databasen
+         finns inte kolumnen, och en vanlig uppgift ska gå att ge ändå. */
+      if (lx.niva) rad.niva_id = lx.niva.id;
+      const { error } = await supa.from('homework').insert(rad);
+      if (error) { säg(msg, 'Kunde inte skapa uppgiften: ' + felText(error), false); return; }
 
+      const digital = !!lx.niva;
       $('#lax-form').reset();
       stängLaxForm(() => {
-        säg(msg, '✓ Läxan har skapats. Familjen ser den direkt.', true);
+        säg(msg, digital
+          ? '✓ Uppgiften är given. Familjen ser den direkt, och den rättas när eleven gör nivån.'
+          : '✓ Uppgiften är given. Familjen ser den direkt.', true);
         valtBibliotek = null;
         visaValtMaterial();
+        lx.niva = null;
       });
       await laddaLaxor();
     });
   });
 
+  /* ---------- digital nivå i formuläret ----------
+     Ämne och årskurs förväljs ur eleven. Väljer man en nivå fylls
+     rubriken och ämnet i; rubriken följer nivån så länge den inte
+     skrivits om för hand. */
+  const lx = { niva: null, amne: null, arskurs: null };
 
-  /* Materialet från en läxrad. Raden bär bara ett id; sökvägen och
+  async function fyllNivåval() {
+    const ruta = $('#lx-digital');
+    if (!ruta) return;
+    S.katalog = await U.laddaKatalog(supa);
+    if (!S.katalog || !S.katalog.length) { ruta.hidden = true; return; }
+    ruta.hidden = false;
+    const finns = U.banor(S.katalog);
+    const ämnen = Object.keys(finns).sort((a, b) => NX.AMNEN.indexOf(a) - NX.AMNEN.indexOf(b));
+    const e = elev();
+    const förval = (lx.amne && finns[lx.amne]) ? lx.amne
+      : ((e && e.subjects) || []).find(a => finns[a]) || ämnen[0];
+    $('#lx-niva-amne').innerHTML = ämnen.map(a => '<option value="' + esc(a) + '">' + esc(a) + '</option>').join('');
+    $('#lx-niva-amne').value = förval;
+    fyllNivåÅrskurser();
+  }
+  function fyllNivåÅrskurser() {
+    const finns = U.banor(S.katalog);
+    const kurser = finns[$('#lx-niva-amne').value] || [];
+    const e = elev();
+    const förval = lx.arskurs && kurser.includes(lx.arskurs) ? lx.arskurs
+      : U.förvaldÅrskurs(kurser, NX.årskursKod(e && e.grade));
+    $('#lx-niva-ak').innerHTML = kurser.map(k => '<option value="' + k + '">' + esc(NX.årskursText(k)) + '</option>').join('');
+    $('#lx-niva-ak').value = förval;
+    fyllNivåer();
+  }
+  function fyllNivåer() {
+    const amne = $('#lx-niva-amne').value, ak = $('#lx-niva-ak').value;
+    const nivåer = (S.katalog || []).filter(n => n.aktiv && n.amne === amne && n.arskurs === ak)
+      .sort((a, b) => a.ordning - b.ordning);
+    const gjort = U.perNivå(S.forsok);
+    $('#lx-niva').innerHTML = '<option value="">Ingen, en vanlig uppgift</option>' + nivåer.map(n => {
+      const g = gjort[n.id];
+      return '<option value="' + esc(n.id) + '">' + esc(n.ordning + '. ' + n.titel + ' (' + n.omrade + ')'
+        + (g && g.klar ? ', klarad med ' + g.stjarnor + ' av 3' : '')) + '</option>';
+    }).join('');
+    $('#lx-niva').value = lx.niva && nivåer.some(n => n.id === lx.niva.id) ? lx.niva.id : '';
+    visaNivåOm();
+  }
+  function visaNivåOm() {
+    const om = $('#lx-niva-om');
+    if (!om) return;
+    const n = lx.niva;
+    om.innerHTML = n
+      ? esc((n.beskrivning ? n.beskrivning + ' ' : '') + (n.antal_fragor ? n.antal_fragor + ' frågor. ' : '')
+          + 'Uppgiften blir klar när eleven klarat nivån, och resultatet står på uppgiften.')
+        + ' <button type="button" class="upg-lank" data-lx-niva-visa>Se frågorna och facit</button>'
+      : esc('Välj en nivå så rättas uppgiften när eleven gör den. Utan nivå är det en vanlig uppgift som familjen bockar av.');
+  }
+  function väljNivå(n) {
+    const förra = lx.niva;
+    const titel = $('#lx-titel');
+    lx.niva = n;
+    if (n && (!titel.value.trim() || (förra && titel.value === förra.titel))) titel.value = n.titel;
+    if (!n && förra && titel.value === förra.titel) titel.value = '';
+    if (n) $('#lx-amne').value = n.amne;
+    visaNivåOm();
+  }
+  $('#lx-niva-amne').addEventListener('change', () => {
+    lx.amne = $('#lx-niva-amne').value; lx.arskurs = null; väljNivå(null); fyllNivåÅrskurser();
+  });
+  $('#lx-niva-ak').addEventListener('change', () => {
+    lx.arskurs = $('#lx-niva-ak').value; väljNivå(null); fyllNivåer();
+  });
+  $('#lx-niva').addEventListener('change', () => {
+    väljNivå((S.katalog || []).find(x => x.id === $('#lx-niva').value) || null);
+  });
+
+  /* Frågorna och facit, innan nivån ges. Och rättningen av ett klart
+     försök, från uppgiften eller från listan Rättade nivåer. */
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-lx-niva-visa]') && lx.niva) { U.förhandsvisa(supa, lx.niva); return; }
+    const f = e.target.closest('[data-upg-forhand]');
+    if (f) {
+      const n = (S.katalog || []).find(x => x.id === f.dataset.upgForhand)
+        || ((S.laxor || []).find(h => h.niva_id === f.dataset.upgForhand) || {}).nivaer;
+      if (n) U.förhandsvisa(supa, n);
+      return;
+    }
+    const g = e.target.closest('[data-upg-genomgang]');
+    if (g) U.genomgång(supa, g.dataset.upgGenomgang);
+  });
+
+  /* Materialet från en uppgiftsrad. Raden bär bara ett id; sökvägen och
      länken följde med i hämtningen ovan, så uppslaget görs där
-     läxorna finns — inte i en ny fråga per klick. */
+     uppgifterna finns — inte i en ny fråga per klick. */
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-lax-mat]');
     if (!knapp) return;
@@ -536,8 +749,8 @@
     });
   });
 
-  /* Antalet öppna läxor per elev, för märket på elevkorten.
-     S.laxor innehåller bara den valda elevens läxor, så den går inte
+  /* Antalet öppna uppgifter per elev, för märket på elevkorten.
+     S.laxor innehåller bara den valda elevens uppgifter, så den går inte
      att räkna på: märket hade bara kunnat stå på kortet man redan
      klickat på, vilket är det enda kort man inte behöver det på. */
   async function laddaLaxräkning() {
@@ -559,32 +772,49 @@
     $('#lax-antal').textContent = '';
     if (!S.aktivElev) {
       S.laxor = [];
-      host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp för att se läxorna.');
+      S.forsok = [];
+      host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp för att se uppgifterna.');
+      ritaRättade();
       laxRakning();
       if (passIdIAdressen()) ritaPassSida();
       return;
     }
 
     NXStudie.laddarFörsta(host);
-    const { data, error } = await supa
-      .from('homework')
-      .select('id, student_id, title, instructions, subject, due_date, status, completed_at, '
-        + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)')
-      .eq('student_id', S.aktivElev)
+    const eleven = S.aktivElev;
+    const kolumner = 'id, student_id, title, instructions, subject, due_date, status, completed_at, created_at, '
+      + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)';
+    const hämta = extra => supa.from('homework').select(kolumner + extra)
+      .eq('student_id', eleven)
       .order('due_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
+    const [svar0, katalog, forsok] = await Promise.all([
+      hämta(', niva_id, nivaer(id, titel, amne, arskurs, omrade, beskrivning, antal_fragor, aktiv)'),
+      U.laddaKatalog(supa),
+      U.laddaFörsök(supa, eleven)
+    ]);
+    /* Utan Fas 23.1 i databasen finns varken niva_id eller nivaer.
+       Uppgifterna ska synas ändå, som förut. */
+    let svar = svar0;
+    if (svar.error && /niva/.test(svar.error.message || '')) svar = await hämta('');
+    if (eleven !== S.aktivElev) return;
+    const { data, error } = svar;
+    S.katalog = katalog;
+    S.forsok = forsok || [];
+    ritaRättade();
+    fyllPgFörslag(S.progress || []);
 
-    if (error) { host.innerHTML = tomt('Kunde inte hämta läxorna', felText(error)); return; }
+    if (error) { host.innerHTML = tomt('Kunde inte hämta uppgifterna', felText(error)); return; }
     if (!data.length) {
       S.laxor = [];
-      host.innerHTML = tomt('Inga läxor än', 'Skapa den första med knappen ovanför — den dyker upp hos familjen direkt.');
+      host.innerHTML = tomt('Inga uppgifter än', 'Ge den första med knappen ovanför — den dyker upp hos familjen direkt.');
       laxRakning();
       if (passIdIAdressen()) ritaPassSida();
       return;
     }
 
     S.laxor = data;
-    /* Passets sida läser S.laxor; den kan ha ritats innan läxorna kom. */
+    /* Passets sida läser S.laxor; den kan ha ritats innan uppgifterna kom. */
     if (passIdIAdressen()) ritaPassSida();
     const öppna = data.filter(h => h.status !== 'klar').length;
     $('#lax-antal').textContent = öppna ? öppna + ' öppna' : 'alla klara';
@@ -596,19 +826,61 @@
       materialKnapp: h.biblioteksmaterial
         ? '<button type="button" class="btn btn-ghost btn-sm" data-lax-mat="'
           + esc(h.bibliotek_id) + '">Öppna</button>' : '',
-      atgarder: '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
+      digital: h.niva_id && h.nivaer ? U.digitalRad(h, S.forsok) : '',
+      atgarder: (h.niva_id && h.nivaer
+          ? '<button class="btn btn-ghost btn-sm" type="button" data-upg-forhand="' + esc(h.niva_id) + '">Frågorna</button>' : '')
+        + '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
     }) });
   }
+
+  /* Rättade nivåer: området för området och varje klar nivå. Samma
+     siffror som familjen ser under Min utveckling → Uppgifter. */
+  function ritaRättade() {
+    const omr = $('#upg-rattade-omraden'), lista = $('#upg-rattade'), antal = $('#upg-rattade-antal');
+    if (!lista) return;
+    if (!S.aktivElev) { omr.innerHTML = ''; lista.innerHTML = ''; antal.textContent = ''; return; }
+    if (!S.katalog) {
+      omr.innerHTML = '';
+      antal.textContent = '';
+      lista.innerHTML = tomt('Nivåerna gick inte att hämta', 'Ladda om sidan om en stund.');
+      return;
+    }
+    const klara = (S.forsok || []).filter(f => f.klar_at).sort((a, b) => Date.parse(b.klar_at) - Date.parse(a.klar_at));
+    antal.textContent = klara.length ? klara.length + ' st' : '';
+    if (!klara.length) {
+      omr.innerHTML = '';
+      lista.innerHTML = tomt('Inga klara nivåer än', 'När eleven gjort en nivå, ur banan eller som uppgift från dig, står rättningen här.');
+      return;
+    }
+    omr.innerHTML = U.områdesHtml(S.katalog, S.forsok, S.progress);
+    const nivå = U.efterId(S.katalog);
+    const synliga = S.rättadeAlla ? klara : klara.slice(0, 6);
+    lista.innerHTML = '<div class="upg-forsok-lista" style="margin-top:14px">'
+      + synliga.map(f => U.försöksRad(f, nivå[f.niva_id])).join('') + '</div>'
+      + (klara.length > 6
+          ? '<button type="button" class="pl-mer" data-rattade-alla>' + (S.rättadeAlla ? 'Visa färre' : 'Visa alla ' + klara.length) + '</button>'
+          : '');
+  }
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-rattade-alla]');
+    if (!k) return;
+    const före = k.getBoundingClientRect().top;
+    S.rättadeAlla = !S.rättadeAlla;
+    ritaRättade();
+    const ny = $('[data-rattade-alla]');
+    if (ny && !S.rättadeAlla) NXStudie.scrollaTill(window.scrollY + ny.getBoundingClientRect().top - före);
+  });
 
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-lax-bort]');
     if (!knapp) return;
     const rad = knapp.closest('.lax');
-    const titel = rad ? rad.querySelector('b').textContent : 'läxan';
+    const titel = rad ? rad.querySelector('b').textContent : 'uppgiften';
 
     const ja = await bekräfta({
-      titel: 'Ta bort läxan?',
-      text: '"' + titel + '" försvinner för både dig och familjen. Det går inte att ångra.',
+      titel: 'Ta bort uppgiften?',
+      text: '"' + titel + '" försvinner för både dig och familjen. Det går inte att ångra. '
+        + 'Har eleven gjort en nivå står rättningen kvar under Rättade nivåer.',
       knapp: 'Ta bort'
     });
     if (!ja) return;
@@ -697,7 +969,14 @@
   function fyllPgFörslag(rader) {
     const e = elev();
     const ämnen = Array.from(new Set([...((e && e.subjects) || []), ...rader.map(p => p.subject)]));
-    const områden = Array.from(new Set(rader.map(p => p.area)));
+    /* Fas 23.1: områdena i banan för elevens årskurs står också bland
+       förslagen. Min utveckling ställer rättningen av nivåerna bredvid
+       bedömningen när området heter likadant, och ett område som
+       stavas på två sätt hade blivit två. */
+    const kod = NX.årskursKod(e && e.grade);
+    const iBanan = (S.katalog || []).filter(n => n.aktiv && (!kod || n.arskurs === kod)
+      && (!ämnen.length || ämnen.includes(n.amne))).map(n => n.omrade);
+    const områden = Array.from(new Set(rader.map(p => p.area).concat(iBanan)));
     $('#pg-amnen').innerHTML = ämnen.map(a => '<option value="' + esc(a) + '">').join('');
     $('#pg-omraden').innerHTML = områden.map(a => '<option value="' + esc(a) + '">').join('');
   }
@@ -717,15 +996,25 @@
     }
 
     NXStudie.laddarFörsta(host);
+    /* Svaret gäller eleven frågan ställdes om. Byter man elev två
+       gånger i rad kan det första svaret komma sist, och då hade förra
+       elevens områden stått under det nya namnet — med Bedöm igen, som
+       sparar på den elev som är vald NU. */
+    const id = S.aktivElev;
     const [svar, hist] = await Promise.all([
       supa.from('progress_items').select('id, subject, area, level, steg, mal_steg, comment, updated_at')
-        .eq('student_id', S.aktivElev).order('subject').order('area'),
+        .eq('student_id', id).order('subject').order('area'),
       supa.from('progress_historik').select('progress_id, steg, bedomd_at')
-        .eq('student_id', S.aktivElev).order('bedomd_at')
+        .eq('student_id', id).order('bedomd_at')
     ]);
+    if (id !== S.aktivElev) return;
     const { data, error } = svar;
 
-    if (error) { host.innerHTML = tomt('Kunde inte hämta områdena', felText(error)); return; }
+    if (error) {
+      S.områdenFör = id;
+      host.innerHTML = tomt('Kunde inte hämta områdena', felText(error));
+      return;
+    }
 
     /* Historiken är ett tillägg, inte en förutsättning: faller den
        frågan visas läget ändå, bara utan staplarna. */
@@ -737,11 +1026,16 @@
     /* samma rader används av chipsen i rapporten, så de sparas undan
        i stället för att hämtas en gång till */
     S.progress = data;
+    /* Rättade nivåer ställer bedömningen bredvid områdets procent. */
+    ritaRättade();
     ritaTidigareOmraden();
     fyllPgFörslag(data);
 
     S.progressAntal = data.length;
     await laddaOmrådesräkning();
+    if (id !== S.aktivElev) return;
+    /* Listan nedanför är elevens från och med här (ritaPlanElev). */
+    S.områdenFör = id;
     if (!data.length) {
       host.innerHTML = tomt('Inga områden än', 'Lägg till det första ovanför — det är så familjen ser att det går framåt.');
       return;
@@ -1825,7 +2119,7 @@
       /* progress_items är unikt per (elev, ämne, område). Utan ämne
          finns ingen rad att uppdatera, bara en att skapa på nytt. */
       { fel: områdePå && !rap.amne, text: 'Välj vilket ämne området hör till.' },
-      { fel: $('#r-lax').checked && !laxTitel, text: 'Skriv vad läxan går ut på, eller kryssa ur rutan.', falt: $('#r-lax-titel') },
+      { fel: $('#r-lax').checked && !laxTitel, text: 'Skriv vad uppgiften går ut på, eller kryssa ur rutan.', falt: $('#r-lax-titel') },
       { fel: !$('#r-amne-annat-falt').hidden && !rap.amne, text: 'Skriv vilket ämne, eller välj ett i listan.', falt: $('#r-amne-annat') }
     ]);
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
@@ -1898,7 +2192,7 @@
           instructions: $('#r-fokus').value.trim() || null,
           due_date: $('#r-lax-datum').value || null
         });
-        if (lErr) varning += ' Läxan kunde inte skapas: ' + felText(lErr);
+        if (lErr) varning += ' Uppgiften kunde inte skapas: ' + felText(lErr);
       }
 
       if ($('#r-ai').checked) {
@@ -2064,7 +2358,7 @@
       + (b.beskrivning ? '<p>' + esc(b.beskrivning) + '</p>' : '')
       + '<div class="bib-kort-knappar">'
       + '<button type="button" class="btn btn-ghost btn-sm" data-bib-titt="' + esc(b.id) + '">Titta på det</button>'
-      + '<button type="button" class="btn btn-primary btn-sm" data-bib-lax="' + esc(b.id) + '">Ge som läxa</button>'
+      + '<button type="button" class="btn btn-primary btn-sm" data-bib-lax="' + esc(b.id) + '">Ge som uppgift</button>'
       /* Bara ditt eget går att ta bort. Nextrums bank sköts av admin,
          och en knapp som alltid svarar "det gick inte" är sämre än
          ingen knapp. */
@@ -2179,6 +2473,7 @@
     if (S.flikar && S.flikar.laxor) S.flikar.laxor.visa('laxor');
     $('#lax-form').hidden = false;
     $('#ny-lax').textContent = 'Stäng';
+    fyllNivåval();
     $('#lx-titel').value = b.titel;
     $('#lx-amne').value = b.amne;
     if (!$('#lx-text').value.trim() && b.beskrivning) $('#lx-text').value = b.beskrivning;
@@ -2319,7 +2614,7 @@
 
     const ja = await bekräfta({
       titel: 'Ta bort ' + b.titel + '?',
-      text: 'Materialet försvinner ur din lista. Läxor som redan pekar på det blir '
+      text: 'Materialet försvinner ur din lista. Uppgifter som redan pekar på det blir '
         + 'kvar men tappar materialet.',
       knapp: 'Ta bort'
     });
@@ -2415,14 +2710,20 @@
   async function laddaPlanIFormulär() {
     ['#p-amne', '#p-mal', '#p-text'].forEach(id => { $(id).disabled = !S.aktivElev; });
     if (!S.aktivElev) { $('#p-amne').value = $('#p-mal').value = $('#p-text').value = ''; return; }
+    /* Samma vakt som i laddaProgress: ett sent svar om förra eleven
+       får inte lägga hens plan i formuläret, för Spara skriver den på
+       eleven som är vald nu. */
+    const id = S.aktivElev;
     const { data } = await supa
       .from('study_plans').select('subject, goals, plan_text')
-      .eq('student_id', S.aktivElev).eq('tutor_id', S.user.id)
+      .eq('student_id', id).eq('tutor_id', S.user.id)
       .order('updated_at', { ascending: false }).limit(1);
+    if (id !== S.aktivElev) return;
     const p = (data && data[0]) || {};
     $('#p-amne').value = p.subject || '';
     $('#p-mal').value = p.goals || '';
     $('#p-text').value = p.plan_text || '';
+    S.planFör = id;
   }
 
   $('#plan-form').addEventListener('submit', async e => {
@@ -2759,7 +3060,25 @@
      utbetalningen för just den månaden. Timmarna är passunderlag.lon_min
      (Fas 20.1): den hållna tiden nedåt alltid, uppåt bara när
      övertiden är betald — samma siffra som underlaget den 25:e. */
+  /* LÖNESPECIFIKATIONEN (2026-09-28). Leo: "skriv lönespec för månaden
+     efter att månaden är klar för studiehjälparen, under utbetalning för
+     månaden. Så ska det vara för varje månad." Rutan Utbetalning för
+     månaden visar månadens underlag som en lönespecifikation
+     (NXBetalning.lonespec). Underlaget skrivs av månadskörningen den 1:a
+     i månaden efter, av pg_cron-jobbet manadskorning eller knappen i
+     adminvyn. Här ritas det bara; ingenting räknas om.
+
+     Ett pass från månaden kan stå på en senare lönespecifikation.
+     Körningen tar bara pass som har en rapport, och ett pass som
+     rapporteras efter den kommer med nästa månad (fakturering,
+     PERIODEN). Det sägs under specifikationen, liksom pass som saknar
+     rapport: annars ser det ut som att passet aldrig betalades. */
   let ersMånad = null;
+  // Ett senare månadsval vinner. Svaret för en månad man redan lämnat
+  // får inte rita över den man står på.
+  let ersFråga = 0;
+  // Månadens underlag, 'ÅÅÅÅ-MM-01' → raden i payouts.
+  let ersSpecar = {};
 
   async function laddaErsattning() {
     const B = NXBetalning;
@@ -2769,9 +3088,12 @@
     if (!ersMånad) {
       ersMånad = NXStudie.månadsval($('#ers-manader'), {
         stegare: true,
+        // Månaden som har en lönespecifikation säger det under namnet.
+        märke: m => ersSpecar[m] ? 'Lönespec' : '',
         vidVal: () => NXStudie.håll($('#ers-manader'), laddaErsattning)
       });
     }
+    const nr = ++ersFråga;
     const m = ersMånad ? ersMånad.vald() : NXStudie.månadIso(new Date());
     const gräns = NXStudie.månadsGräns(m);
     const denna = m === NXStudie.månadIso(new Date());
@@ -2783,11 +3105,15 @@
     const timpenningOre = rate ? Math.round(Number(rate) * 100) : null;
 
     const [passen, ut] = await Promise.all([
-      supa.from('passunderlag').select('id, lon_min, duration_min, fakturerbar, har_rapport')
+      supa.from('passunderlag').select('id, lon_min, duration_min, fakturerbar, har_rapport, pa_underlag')
         .eq('tutor_id', S.user.id).gte('wanted_date', gräns.från).lt('wanted_date', gräns.till),
-      supa.from('payouts').select('id, period, status, belopp_ore, minuter, fel')
-        .eq('tutor_id', S.user.id).eq('period', gräns.från)
+      /* Alla underlag, inte bara månadens. Det är ett per månad, och
+         listan behövs för märkena i månadsraden och för att veta vilken
+         månads specifikation ett sent rapporterat pass hamnade på. */
+      supa.from('payouts').select('id, period, status, belopp_ore, minuter, fel, utbetald_at')
+        .eq('tutor_id', S.user.id)
     ]);
+    if (nr !== ersFråga) return;
 
     const räknade = (passen.data || []).filter(p => p.fakturerbar && p.har_rapport);
     const e = { pass: räknade.length, minuter: räknade.reduce((a, p) => a + Number(p.lon_min || p.duration_min || 0), 0) };
@@ -2798,7 +3124,7 @@
           pass: e.pass, minuter: e.minuter,
           belopp_ore: Math.round((Number(e.minuter || 0) / 60) * timpenningOre),
           not: 'Räknat på ' + B.kronor(timpenningOre) + ' i timmen. '
-             + (denna ? 'Underlaget skapas när månaden är slut. ' : '')
+             + (denna ? 'Lönespecifikationen skrivs när månaden är slut. ' : '')
              + 'Ett pass räknas först när du skrivit rapporten, och på den tid det hölls. '
              + 'Drog det över räknas övertiden när familjen har betalat den.',
           tomRubrik: denna ? 'Inget att få betalt för än' : 'Inga rapporterade pass den månaden',
@@ -2818,34 +3144,166 @@
        Att lämna kvar knappen hade bett om uppgifter — personnummer,
        legitimation, bankkonto — som ingenting sedan använder. */
     konto.innerHTML = '<p class="bet-not" style="margin-top:0">Din ersättning betalas '
-      + 'den 25:e varje månad, för de pass du rapporterat. Underlaget nedan är det vi '
+      + 'den 25:e varje månad, för de pass du rapporterat. Lönespecifikationen nedan är det vi '
       + 'betalar efter, så hör av dig i god tid om något ser fel ut. '
       + 'Kontouppgifterna har vi av dig sedan tidigare, och de ligger inte här.</p>';
 
-    if (ut.error) { lista.innerHTML = tomt('Kunde inte hämta utbetalningarna', felText(ut.error)); return; }
-    const rader = ut.data || [];
-    $('#ers-antal').textContent = rader.length ? rader.length + ' st' : '';
+    if (ut.error) { lista.innerHTML = tomt('Kunde inte hämta lönespecifikationerna', felText(ut.error)); return; }
+    ersSpecar = {};
+    (ut.data || []).forEach(p => { ersSpecar[String(p.period).slice(0, 10)] = p; });
+    if (ersMånad) ersMånad.märk();
+    const spec = ersSpecar[m] || null;
 
-    if (!rader.length) {
-      lista.innerHTML = denna
-        ? tomt('Ingen utbetalning än', 'Den skapas när månaden är slut och betalas den 25:e månaden efter.')
-        : tomt('Ingen utbetalning för ' + NXStudie.månadsNamn(m), 'Hade du rapporterade pass den månaden och ser inget här, hör av dig till oss.');
+    /* Var månadens rapporterade pass står: på månadens egen
+       specifikation, på en senare, eller ingenstans än. */
+    const påUnderlag = räknade.filter(p => p.pa_underlag).map(p => p.id);
+    const [linjer, plats] = await Promise.all([
+      spec ? supa.from('payout_lines')
+        .select('booking_id, beskrivning, minuter, timpenning_ore, belopp_ore')
+        .eq('payout_id', spec.id) : null,
+      påUnderlag.length ? supa.from('payout_lines')
+        .select('booking_id, payout_id').in('booking_id', påUnderlag) : null
+    ]);
+    if (nr !== ersFråga) return;
+
+    const noter = [];
+    const mNamn = NXStudie.månadsNamn(m, false);
+    const rapporten = n => n === 1 ? 'rapporten' : 'rapporterna';
+    let väntar = 0;
+    /* Går det inte att läsa var passen står sägs ingenting om dem. En
+       gissning hade kunnat säga att ett betalt pass väntar. */
+    const platsFel = passen.error || (plats && plats.error) || null;
+    if (!platsFel) {
+      const periodFör = {};
+      const periodPerId = {};
+      Object.keys(ersSpecar).forEach(k => { periodPerId[ersSpecar[k].id] = k; });
+      ((plats && plats.data) || []).forEach(l => { periodFör[l.booking_id] = periodPerId[l.payout_id]; });
+      const senare = {};
+      räknade.forEach(p => {
+        const per = periodFör[p.id];
+        if (per === m) return;
+        if (per) senare[per] = (senare[per] || 0) + 1;
+        // Står det på ett underlag vi inte ser är det inte vårt att förklara.
+        else if (!p.pa_underlag) väntar++;
+      });
+      Object.keys(senare).sort().forEach(per => noter.push(senare[per] + ' pass från ' + mNamn
+        + ' står på lönespecifikationen för ' + B.periodText(per) + ', för ' + rapporten(senare[per])
+        + ' skrevs efter att ' + mNamn + ' hade räknats.'));
+      if (spec && väntar) {
+        noter.push(väntar + ' pass från ' + mNamn + ' kommer med på nästa lönespecifikation, för '
+          + rapporten(väntar) + ' skrevs efter att ' + mNamn + ' hade räknats.');
+      }
+    }
+    const utanRapport = S.bokningar.filter(b => String(b.wanted_date || '') >= gräns.från
+      && String(b.wanted_date || '') < gräns.till && rapporterbart(b) && harBörjat(b)).length;
+    if (utanRapport) {
+      noter.push(utanRapport + ' pass i ' + mNamn + ' saknar rapport och kommer med på en '
+        + 'lönespecifikation först när ' + (utanRapport === 1 ? 'den är skriven.' : 'de är skrivna.'));
+    }
+
+    if (spec) {
+      let rader = null;
+      if (!linjer.error) {
+        // I passens ordning. Raderna har inget datum av sig själva.
+        const när = {};
+        S.bokningar.forEach(b => { när[b.id] = String(b.wanted_date || '') + ' ' + String(b.wanted_time || ''); });
+        rader = (linjer.data || []).slice()
+          .sort((a, b) => (när[a.booking_id] || '~').localeCompare(när[b.booking_id] || '~'));
+      }
+      lista.innerHTML = B.lonespec(spec, rader, { namn: S.profil && S.profil.full_name, noter });
       return;
     }
 
-    const linjer = await supa.from('payout_lines')
-      .select('payout_id, beskrivning, minuter, belopp_ore')
-      .in('payout_id', rader.map(p => p.id));
-    const per = {};
-    (linjer.data || []).forEach(l => { (per[l.payout_id] = per[l.payout_id] || []).push(l); });
+    const noterHtml = noter.map(n => '<p class="lonespec-not">' + esc(n) + '</p>').join('');
+    const nästa = NXStudie.månadsNamn(gräns.till, false);
 
-    lista.innerHTML = rader.map(p => {
-      const antal = (per[p.id] || []).length;
-      return '<div class="bet-post">'
-        + B.utbetalningRad(p, { under: antal ? antal + ' pass' : '' })
-        + B.radLista(per[p.id])
-        + '</div>';
-    }).join('');
+    if (denna) {
+      /* Månaden pågår. Finns förra månadens lönespecifikation är den
+         vad man letar efter här, och den ligger ett tryck bort. */
+      const förraM = NXStudie.månadIso(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 2, 1, 12));
+      lista.innerHTML = tomt('Lönespecifikationen skrivs när månaden är slut',
+          'Lönen för ' + mNamn + ' betalas den 25 ' + nästa + '.')
+        + noterHtml
+        + (ersSpecar[förraM]
+          ? '<div class="lonespec-atg"><button class="btn btn-ghost btn-sm" type="button" data-ers-visa="'
+            + esc(förraM) + '">Visa lönespecifikationen för ' + esc(B.periodText(förraM)) + '</button></div>'
+          : '');
+      return;
+    }
+
+    if (platsFel) {
+      lista.innerHTML = tomt('Kunde inte hämta lönespecifikationen', felText(platsFel));
+      return;
+    }
+
+    if (väntar) {
+      /* Skrivs den 1:a. En vecka in i nästa månad är den försenad, och
+         då ska det inte stå att den kommer. */
+      const sen = isoFor(new Date()) >= gräns.till.slice(0, 8) + '08';
+      lista.innerHTML = tomt('Lönespecifikationen för ' + mNamn + ' är inte skriven än', sen
+          ? 'Den skulle ha skrivits i början av ' + nästa + '. Hör av dig till oss, så tittar vi på det.'
+          : 'Den skrivs i början av ' + nästa + ', och lönen betalas den 25 ' + nästa + '.')
+        + noterHtml;
+      return;
+    }
+
+    lista.innerHTML = (räknade.length
+        ? tomt('Ingen lönespecifikation för ' + mNamn, '')
+        : tomt('Ingen lön för ' + mNamn, 'Du hade inga rapporterade pass den månaden.'))
+      + noterHtml;
+  }
+
+  /* Genvägen från den pågående månaden till förra månadens
+     lönespecifikation, och utskriften. */
+  document.addEventListener('click', e => {
+    const skriv = e.target.closest('[data-lonespec-skriv]');
+    if (skriv) {
+      const spec = skriv.closest('.lonespec');
+      if (spec) skrivUt(spec);
+      return;
+    }
+    const visa = e.target.closest('[data-ers-visa]');
+    if (visa && ersMånad) {
+      ersMånad.sätt(visa.dataset.ersVisa);
+      NXStudie.håll($('#ers-manader'), laddaErsattning);
+    }
+  });
+
+  /* UTSKRIFTEN. En kopia av lönespecifikationen läggs i #utskrift,
+     direkt under body, och nextrum-vy.css gömmer allt annat så länge
+     html bär .skriver-ut. En kopia och inte originalet: vyn runt
+     omkring har sidhuvud, meny och flikar, och att gömma dem en och en
+     hade glömt nästa som läggs till. Sidans titel blir filnamnet när
+     man sparar som PDF, så den byts medan utskriften pågår.
+
+     Städningen väntar på afterprint. Safari på iPhone återvänder från
+     print() innan utskriften är gjord, och en kopia som tagits bort
+     då hade gett ett tomt papper. Blir afterprint aldrig av står
+     kopian kvar osynlig, och nästa utskrift städar först: annars hade
+     den sparat den förra utskriftens titel som sidans. */
+  let utskriftKlar = null;
+
+  function skrivUt(spec) {
+    if (utskriftKlar) utskriftKlar();
+    let ruta = document.getElementById('utskrift');
+    if (!ruta) {
+      ruta = document.createElement('div');
+      ruta.id = 'utskrift';
+      document.body.appendChild(ruta);
+    }
+    ruta.replaceChildren(spec.cloneNode(true));
+    const titel = document.title;
+    document.title = (spec.dataset.titel || 'Lönespecifikation') + ' – Nextrum';
+    document.documentElement.classList.add('skriver-ut');
+    utskriftKlar = () => {
+      window.removeEventListener('afterprint', utskriftKlar);
+      document.documentElement.classList.remove('skriver-ut');
+      document.title = titel;
+      ruta.replaceChildren();
+      utskriftKlar = null;
+    };
+    window.addEventListener('afterprint', utskriftKlar);
+    window.print();
   }
 
   /* Här satt hanteraren för "Koppla utbetalningskonto". Både knappen
@@ -2943,8 +3401,12 @@
         .filter(Boolean).join(' · ');
       const t = elevSiffror(e);
       const tal = (v, etikett) => '<span class="ek-tal"><b>' + v + '</b><i>' + esc(etikett) + '</i></span>';
+      /* Nedtryckt bara när studiehjälparen själv valt eleven, som i
+         Plan & utveckling en flik bort. Den första i listan är vald
+         av sig själv, och två flikar i samma sektion ska inte säga
+         olika om vem som är vald. */
       return '<button type="button" class="elev-kort ek-rik" data-elev="' + esc(e.id) + '"'
-        + ' aria-pressed="' + (e.id === S.aktivElev) + '">'
+        + ' aria-pressed="' + (e.id === S.aktivElev && elevenÄrVald()) + '">'
         + '<span class="ek-topp">'
         + M.avatar(e.name, null, { liten: true })
         + '<span class="elev-kort-text"><b>' + esc(e.name) + '</b>'
@@ -2953,7 +3415,7 @@
         + '<span class="ek-siffror">'
         + tal(t.genomforda, 'Genomförda')
         + tal(t.kommande, 'Kommande')
-        + tal(t.laxor, t.laxor === 1 ? 'Öppen läxa' : 'Öppna läxor')
+        + tal(t.laxor, t.laxor === 1 ? 'Öppen uppgift' : 'Öppna uppgifter')
         + '<span class="ek-tal"><b>' + t.områden + '</b><i>'
         + esc(t.områden === 1 ? 'Område' : 'Områden') + '</i>'
         + (t.snitt ? NXStudie.nivåMätare(Math.round(t.snitt)) : '') + '</span>'
@@ -2978,7 +3440,12 @@
 
   document.addEventListener('click', e => {
     const kort = e.target.closest('[data-elev]');
-    if (kort) väljElev(kort.dataset.elev);
+    if (!kort) return;
+    /* Skriv till familjen på passets sida bär också data-elev. Den
+       väljer vems familj man skriver till, inte vem man skriver om i
+       planen, och räknas därför inte som ett val. */
+    if (kort.classList.contains('elev-kort')) tryckPåElev(kort.dataset.elev);
+    else väljElev(kort.dataset.elev);
   });
 
   /* Byt aktiv elev, och familj om eleven hör till en annan. Används
@@ -3290,15 +3757,15 @@
       .filter(h => h.student_id === b.student_id && h.status !== 'klar' && h.due_date && h.due_date <= b.wanted_date)
       .slice(0, 3);
     const läxTomt = b.student_id !== S.aktivElev
-      ? 'Välj ' + förnamn + ' högst upp för att se läxorna.'
-      : 'Inga öppna läxor till passet.';
+      ? 'Välj ' + förnamn + ' högst upp för att se uppgifterna.'
+      : 'Inga öppna uppgifter till passet.';
 
     const block = [
       { rubrik: mitt ? 'Din anteckning till familjen' : 'Familjens anteckning', html: b.note ? '<p class="ps-citat">' + esc(b.note) + '</p>' : '' },
       { rubrik: 'Målet', html: e && e.goals ? '<p>' + esc(e.goals) + '</p>' : '' },
       { rubrik: 'Om ' + förnamn, html: e && e.about ? '<p>' + esc(e.about) + '</p>' : '' },
-      /* Efter passet står rapporten här, och läxorna under Läxor. */
-      { rubrik: 'Läxor fram till passet', html: b.status === 'cancelled' || b.status === 'completed' ? '' : läxor.length
+      /* Efter passet står rapporten här, och uppgifterna under Uppgifter. */
+      { rubrik: 'Uppgifter fram till passet', html: b.status === 'cancelled' || b.status === 'completed' ? '' : läxor.length
         ? '<div class="vy-kort vy-lista">' + läxor.map(h => '<div class="vy-rad">'
             + '<span class="vy-rad-ik ar-ockra">' + NXStudie.IKON.lax + '</span>'
             + '<span class="vy-rad-mitt"><span class="vy-rad-titel">' + esc(h.title) + '</span>'
@@ -3496,8 +3963,12 @@
        vald elev eller familj. På Översikt och kontosidorna är den
        250px brus överst — precis den scrollning menyn ska bort med. */
     /* Föreslagna tider är inte med: förslagen gäller alla familjer,
-       inte den valda eleven. */
-    const MED_KONTEXT = ['laxor', 'lektioner', 'meddelanden'];
+       inte den valda eleven. Lektioner & elever inte heller, sedan
+       2026-09-28: passen där gäller alla elever, Mina elever är själva
+       listan, och Plan & utveckling väljer eleven där man skriver
+       (ritaPlanElev). Rutan hade annars stått ovanför ett eget val och
+       sagt emot det så länge ingen elev var vald. */
+    const MED_KONTEXT = ['laxor', 'meddelanden'];
     /* Var i varje sektion man stod, så att tillbaka från ett pass
        landar där man tryckte. */
     window.addEventListener('scroll', () => {

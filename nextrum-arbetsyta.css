@@ -2139,6 +2139,11 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .ev-nasta.ar-idag{color:var(--acc-text)}
 .ev-kort .vy-sido-mark{margin-left:0;align-self:flex-start}
 
+/* Plan & utveckling (ritaPlanElev). Med en enda elev säger kortet vem
+   man skriver om men är inget val, och ska inte se tryckbart ut. */
+.ev-kort.ev-ensam:hover{border-color:var(--ln);transform:none}
+.plan-elev-tips{margin-top:12px;color:var(--bl-2);line-height:1.6}
+
 /* ------------------------------------------------------------
    RAPPORTEN
 
@@ -3318,7 +3323,7 @@ a:has(> .adm-status){
 .vy-valk.ar-forst{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);box-shadow:var(--sk-1)}
 .vy-valk.ar-forst:hover{background:var(--acc-lugn);border-color:var(--acc-lugn)}
 .vy-valk.ar-forst span span{color:var(--acc-ink);opacity:.82}
-.vy-valk.ar-forst .vy-valk-ik{background:rgba(255,255,255,.16);color:var(--acc-ink)}
+.vy-valk.ar-forst .vy-valk-ik{background:color-mix(in srgb,var(--acc-ink) 16%,transparent);color:var(--acc-ink)}
 .vy-valk[aria-busy="true"]{opacity:.7;cursor:progress}
 .vy:not(.vy-admin) .vy-valk{
   transition:background-color .22s var(--e),border-color .22s var(--e),box-shadow .25s var(--e),scale .5s var(--vy-fjader);
@@ -3699,3 +3704,4 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 /* Breven i en ruta (Dina tidigare rapporter) står med luft emellan. */
 #mina-rapporter > .rb-brev + .rb-brev{margin-top:14px}
 .nx-steg-nu[data-dold]{visibility:hidden}
+.nx-manad-stegare[hidden]{display:none}

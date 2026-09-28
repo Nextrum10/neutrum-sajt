@@ -312,16 +312,132 @@ redan hänt hos Stripe ska gå att skriva ner. Rapportens TEXT går att
 skriva om i en stängd månad; bara pass, elev, datum, närvaro och tid är
 låsta. Underlag och fakturor låses inte: de betalas efter månaden.
 
+**Månadens ekonomi och Löner (2026-09-28)** är två egna sidor under
+Ekonomi i adminvyn, bredvid Betalningar & utbetalningar. Leo: "där ska
+man aktuellt se hur många fakturor som ska skickas samt så många
+lektioner som är betalda för. hur många timmar är betalt samt ej ännu
+betalt ... detta för att ej ha problem om kassalikviditet", och "en till
+avdelning för löner, personer och deras uppgifter samt exportera löner
+till tex fortnox". Inget av dem ändrar databasen eller en edge function:
+allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
+är hela driftsättningen.
+- **Månadens ekonomi** (`#manaden`, `nextrum-admin-manaden.js`) ger
+  varje bekräftat eller genomfört pass i månaden ett läge (`läge()`):
+  betalt med kort, på betald faktura, med köpta timmar, ur timbanken,
+  eller varför det inte är betalt (ska faktureras, faktura inte inlagd i
+  Fortnox, fakturerat, förfallen faktura, hölls utan betalning, inte
+  hållet än). Talen är summor av lägena och är knappar: ett tryck visar
+  familjerna bakom talet, med passen och Öppna familjen (detaljpanelen).
+  Beloppet för det obetalda är vad passet kostar, med samma regel som
+  familjens vy: `NXBetalning.passpris`, flyttad dit ur studievyn samma dag
+  så att webbläsaren har en prisregel och inte två. Köpta timmar räknas
+  på dagen de betalades, och testbetalningar och testköp aldrig
+  (`S.klippkortTest`). Timbankens pass känns igen på
+  `timbank_uttag.sort = 'pass'` (`S.timbankPass`).
+- **Fakturorna skapas från sidan med månadskörningen**, samma körning som
+  under Ekonomi och Löner, och knapparna på varje faktura är desamma som
+  under Ekonomi → Fakturor (`data-fakt-*`, lyssnarna i
+  `nextrum-admin-ekonomi.js`). Körningen är en ruta med `data-kor-ruta`
+  som kan stå på flera ställen; torrkörningen hör till sin ruta, så en
+  torrkörning på en sida ger ingen Skapa-knapp på en annan. **En månad
+  som inte har börjat går inte att köra** från någon av rutorna
+  (`körningensLäge`): sidorna visar kommande månader, och en körning för
+  oktober i september hade lagt septembers pass på oktobers underlag.
+  Rutan säger också när månaden pågår, och när en tidigare månad har pass
+  men inga underlag (`data-kor-not`).
+- **Löner** (`#loner`, `nextrum-admin-loner.js`) listar de godkända
+  studiehjälparna och alla med något att få för månaden, förvalt förra
+  månaden. Anställningsnumret (`lon_anstallning`, Fas 17.1) och
+  timpenningen sätts där; personnummer, adress, bankkonto och
+  skattetabell står i Fortnox Lön och inte här, med flit. Finns månadens
+  underlag gäller underlagets tal; annars räknas de pass som månadens
+  körning kommer att ta (genomförda, rapporterade, inte undantagna, inte
+  på ett underlag) och märks beräknat. **Varje pass räknas i EN månad**
+  (`NXAdmin.lönemånad`): sin egen, eller, när den månaden eller en senare
+  redan har underlag, månaden efter den senaste med underlag. Leo samma
+  kväll: "septembers pass räknar för lön i sep och okt". Körningen tar
+  allt till och med periodens slut som inte står på ett underlag, och
+  sidan räknade först likadant, så septembers pass stod som lön både i
+  september och i oktober, också i Månadens ekonomi. Ett pass som
+  rapporterats efter att dess månad fått underlag står i sin månad som
+  "på nästa underlag" och i nästa som "från tidigare månader". Bara
+  underlagen räknas som körda, inte fakturorna: körningen skapar
+  fakturorna först, och står en månad med fakturor men utan underlag ska
+  den köras igen.
+- **Lönefilen är PAXml 2.0**, som Fortnox Lön läser in under Lön →
+  Kalender → Importera löneunderlag och matchar på anställningsnumret.
+  En `lonetrans` per underlagsrad: anstid, löneart
+  (`foretagsfakta.lonart_timlon`), passets datum, timmar, timpris och
+  belopp. Bara GODKÄNDA underlag kommer med, och utbetalda inte, så ett
+  underlag markerat Utbetald kan inte läsas in igen. Filen byggs inte om
+  lönearten saknas, om någon med godkänt underlag saknar nummer, om
+  raderna inte summerar till underlaget, eller om bolagsfakta säger att
+  studiehjälparna är uppdragstagare. Semesterersättningen står inte i
+  filen: Fortnox lägger på den. **Filen är byggd efter standarden men
+  inte provläst i Fortnox** (Fortnox hjälpsidor och paxml.se nåddes inte
+  från sessionen som byggde den). Läs in den första i en löneperiod som
+  går att kontrollera; nekar Fortnox den är det `paxml()` som ska rättas.
+
 **Studiehjälparens rapporter och ersättning visas månad för månad**
 (2026-09-27): "man ska inte kunna se rapporter från juli idag i
 september". Förvalet är den innevarande månaden. Statistiken (Hur passen
 gick) läser fortfarande de tjugo senaste.
+
+**Familjens bekräftade rapporter likaså** (2026-09-28, Leo: "bekräftade
+rapporter ska filtreras efter månad"): Bekräftade under Bekräfta rapport
+har samma rad, på PASSETS månad, och raden är dold tills något är
+bekräftat. Att bekräfta filtreras inte. Två saker kom fram i provbänken:
+- **En månadsrad som skapas i en dold sektion visade fel månader.**
+  Föräldravyns rad och studiehjälparvyns två skapas vid start, när
+  sektionen är dold, och bredden noll gjorde att den valda månaden aldrig
+  fördes in i bild: när sektionen öppnades stod oktober förra året
+  längst till vänster och september låg utanför, på telefon och dator.
+  `månadsval` för nu fram den valda när raden börjar synas.
+- **`håll()` kan inte scrolla förbi sidans slut.** Listan står sist, och
+  en kortare månad längst ned på sidan klämde scrollen: raden flyttade
+  sig 84 px under fingret på en telefon. `rbBytMånad` låter listan
+  behålla höjden tills tomrummet ligger under skärmkanten.
+  Studiehjälparvyns två rader har bara `håll()`.
+
+**Varje avslutad månad har en lönespecifikation** (2026-09-28). Leo:
+"skriv lönespec för månaden efter att månaden är klar för
+studiehjälparen, under utbetalning för månaden. Så ska det vara för
+varje månad." Rutan Utbetalning för månaden (Statistik & ersättning →
+Ersättning) visar månadens underlag, `payouts` och `payout_lines`, som
+ett dokument: namn, period, timpenning, utbetalningsdag (den 25:e i
+månaden efter, eller dagen den betalades), varje pass och summan, och
+den går att skriva ut eller spara som PDF. Den räknar ingenting själv:
+siffrorna är underlagets, frysta när månadskörningen skrev det
+(`NXBetalning.lonespec`). Månadskörningen skriver underlaget den 1:a
+varje månad, av sig själv när pg_cron-jobbet `manadskorning` är
+påslaget (avsnitt 5; läget står under Ekonomi → Månadskörning), så en
+månad har sin lönespec när den är slut. Ett pass som rapporteras efter
+körningen kommer med nästa månad, och lönespecen säger det under
+summan, liksom pass som saknar rapport. Månaderna som har en lönespec
+är märkta i månadsraden. **Ingen skatt, med flit**: `studiehjalpare_form`
+står på `oklart` (avsnitt 11), och utan anställningsform finns ingen
+skattetabell att dra efter. Summan står "före skatt". Blir
+studiehjälparna anställda gör Fortnox Lön lönebeskedet med skatten, och
+då ska lönespecen här säga var det finns i stället för att räkna själv.
 
 **Studiehjälparens schema öppnar i Kommande** (2026-09-24): de närmaste
 passen per dag, med klockslag och ämne, elevens namn och platsen på var
 sin rad. Studievyn och adminvyn öppnar fortfarande i månaden — hos
 familjen står schemat direkt under passlistan, och Kommande hade bara
 upprepat den.
+
+**Plan & utveckling börjar med vem man skriver om** (2026-09-28, Leo:
+"man kan ha flera elever därför behöver man välja"). Med flera elever
+står studieplanen och kunskapsområdena dolda tills studiehjälparen själv
+tryckt på en elev: där, under Mina elever, eller på ett elevkort eller en
+länk i elevens rad ovanför Läxor och Meddelanden. Namnet står sedan i
+rubrikerna. Blev eleven aktiv av något annat (den första i listan, en
+familj i meddelandelistan, ett pass) frågar fliken igen: `S.elevVald`
+minns vem man tryckt på, inte bara att man tryckt. Förut skrev
+formulären på den första eleven tills man bytt, och rutan som sa vem
+det var stod ovanför sektionen, 800 px över formuläret på en telefon.
+Rutan står därför inte längre under Lektioner & elever, bara ovanför
+Läxor och Meddelanden. En enda elev väljs inte; kortet säger bara vem.
 
 **Familjen bekräftar rapporten, och får betala då** (Fas 19.1 och 19.2,
 2026-09-27) under en egen post i föräldravyns meny, Bekräfta rapport.
@@ -361,6 +477,74 @@ betalning, studiehjälparen eleven och familjen). Raderna i listorna
 leder dit och bär bara det som är ens eget drag just nu — svara,
 betala, skriva rapporten. Föreslå ny tid och avboka ligger på sidan.
 
+**Läxorna heter uppgifter, och de digitala görs som i Duolingo (Fas
+23.1, 2026-09-28).** Leo: "istället för läxor uppgifter", och att göra
+dem ska vara roligare, "lite som duolingo, du klarar en nivå och går
+vidare", i mobilen och i steg, med belöningar ju fler man klarar, och
+Min utveckling ska fungera som rättningen av dem. I studievyn och
+studiehjälparvyn heter de uppgifter. Tabellen heter fortfarande
+`homework`, sektionerna `uppgifter` (studievyn) och `laxor`
+(studiehjälparvyn), och i adminvyn står de kvar som läxor: där betyder
+Uppgifter redan adminens att göra-lista (`uppgifter`, `skapa_uppgift()`).
+Läxhjälp är fortfarande tjänstens namn; skolan ger läxor, vi ger uppgifter.
+- **En nivå** (`nivaer`) är 5–12 frågor i en **bana** per ämne och
+  årskurs. Tre frågetyper, för att det är de som en maskin kan rätta och
+  en tumme kan göra: val, skriv och ordna (brickor i rätt ordning).
+  Innehållet skrivs i `verktyg/uppgiftsbanken/` och blir en migration
+  genom `verktyg/bygg-uppgifter.py` (avsnitt 8).
+- **Rättningen sker i databasen.** `niva_starta()` lämnar ut frågorna
+  utan facit, `niva_svara()` rättar och sparar varje svar, och när varje
+  fråga är rätt besvarad är nivån klar. Betyget räknas på FÖRSTA svaret
+  på varje fråga: tre stjärnor för allt rätt, två för minst 80 procent,
+  en för minst 60. Under 60 procent är nivån inte klarad och nästa
+  öppnas inte. `niva_forsok` och `niva_svar` har ingen skrivpolicy: ett
+  resultat som går att skriva från en vy är ett påstående. Facit är inte
+  hemligt för den som svarat fel (rätt svar och förklaringen visas, och
+  frågan kommer tillbaka sist); poängen är att ett resultat har räknats
+  av databasen och inte av webbläsaren.
+- **Tal jämförs som tal bara när facit är ett rent tal** (med ett
+  procenttecken som enda tillägg). Då godtas "0,5", "0.50" och ",5", och
+  en enhet efter elevens tal struntas i ("12 cm" är 12). Ett facit med
+  bokstäver jämförs som text. Först lästes y i facit "5y" som en enhet,
+  och "5" och "5x" rättades som rätt; en granskare av innehållet hittade
+  det. `grund.lika()` är samma regel i Python, för att pröva ett svar
+  innan frågan går ut. Klockslag ("14.30") är tal för rättningen och
+  frågas därför bara som val.
+- **En digital uppgift** är en uppgift med `homework.niva_id`. Den blir
+  påbörjad och klar av rättningen (klar när nivån KLARAS, alltså med
+  minst en stjärna), och `skydda_laxa` nekar familjen att bocka av den.
+  Samma trigger låser sedan Fas 23.1 också `bibliotek_id` och `niva_id`:
+  familjen kunde förut peka om en läxa till vilket material som helst
+  vars id de kände, och policyn "familj läser bibliotek via läxa" gav dem
+  då läsrätt till det.
+- **Upplåsningen är en spelregel, inte ett skydd.** Den räknas i
+  `nextrum-uppgifter.js`: en nivå är öppen när den är först i banan, när
+  den före är klarad, när den redan är klarad eller påbörjad, eller när
+  studiehjälparen gett den. `niva_starta()` startar vilken nivå som helst
+  åt familjens eget barn; den som hoppar fram genom API:t hoppar i sitt
+  eget spel.
+- **Stjärnorna, veckoserien och märkena räknas ur försöken** och sparas
+  inte, så de kan aldrig säga något annat än raderna. Stjärnorna i banan
+  är det BÄSTA försöket per nivå (det är spelet). Rättningen i Min
+  utveckling är det FÖRSTA klara försöket per nivå: efter det har eleven
+  sett svaren. Serien räknar veckor, inte dagar: ett barn med uppgifter
+  två gånger i veckan ska inte ha en serie som bryts varje torsdag, och
+  ingenting påminner om den.
+- **Belöningarna är märken, inte pengar.** Leo skrev "eventuellt". En
+  belöning med ett värde i kronor (en rabatt, en bjuden timme) är ett
+  pris som ändras och marknadsföring riktad till barn, och den gör
+  fusket lönsamt. Det är ett beslut om affären och juridiken; fattas det
+  ska det in här och i villkoren, inte bara i koden.
+- **Min utveckling har tre flikar**: Uppgifter (rättningen, rätt första
+  gången per kunskapsområde med studiehjälparens bedömning bredvid när
+  området heter likadant, klarade nivåer per vecka och varje rättad nivå
+  med genomgången fråga för fråga), Passen (passen med rapport, tiden,
+  närvaron och vad rapporterna sagt) och Bedömningen (femstegsskalan, som
+  förut). Bedömningen är en människas omdöme och blandas inte ihop med
+  en maskins rättning.
+- Barnet har inget eget konto: nivåerna görs i familjens inloggning
+  (avsnitt 11).
+
 En studiehjälpare syns publikt först när admin satt läget till
 **Godkänd**.
 
@@ -393,6 +577,8 @@ elev.
 | betalning | vad familjen betalat för ett pass: med kort, per pass, i förväg eller efter passet när rapporten bekräftas (`bookings.betalning_status`, `betalt_ore`). Eller mot faktura, när flaggan `faktura` är på (Fas 14.6) |
 | faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, efter passet. Påslaget sedan 2026-09-27 (flaggan `faktura`). Skickas från Fortnox, aldrig härifrån |
 | tjänst | rad i `tjanster`. `aktiv` avgör vad som syns, inget annat |
+| uppgift | i studievyn och studiehjälparvyn det eleven ska göra mellan passen (`homework`, Fas 23.1). Hette läxa. I adminvyn och i tabellen `uppgifter` betyder ordet fortfarande adminens att göra-lista; koden för elevens uppgifter säger `laxor` och `homework` |
+| nivå | en digital uppgift i banan (`nivaer`): 5–12 frågor som rättas i databasen. En **bana** är nivåerna i ett ämne och en årskurs |
 
 ### Siffror som måste stämma överallt
 
@@ -431,8 +617,10 @@ elev.
   det som återstår.
 - **Den 25:e** får studiehjälparen betalt, i en klump för månadens
   rapporterade pass (`payouts`). Det är en lön, inte en andel av varje
-  kortbetalning. Blir studiehjälparna anställda läggs underlaget in i
-  Fortnox Lön för hand (Fas 14.9); anställningsformen är inte avgjord
+  kortbetalning. Studiehjälparen ser underlaget som månadens
+  lönespecifikation, före skatt (2026-09-28). Blir studiehjälparna
+  anställda går underlaget till Fortnox Lön som en PAXml-fil från
+  adminvyns Löner (avsnitt 1); anställningsformen är inte avgjord
   (avsnitt 11).
 - **Erbjudandenas priser står i `erbjudanden_pris` och ingen
   annanstans.** Timpriset med rabatt avrundas nedåt till hel krona och
@@ -478,7 +666,7 @@ vendorad fil i `bibliotek/`.
 - **Frontend:** vanilla ES5/ES6 i `<script src>`, delade moduler som
   IIFE:er på `window` (`NX`, `NXStudie`, `NXArbete`, `NXMedia`,
   `NXKontakt`, `NXBetalning`, `NXTjanster`, `NXAgent`, `NXMotion`,
-  `NXSamtycke`)
+  `NXSamtycke`, `NXUppgifter`)
 - **Backend:** Supabase (Postgres + RLS + Auth + Storage) och Deno
   edge functions i `supabase/functions/`
 - **Hosting:** Vercel, `cleanUrls: true` (alltså `/priser`, inte
@@ -515,11 +703,12 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
 | `nextrum-motion.js` | `NXImg` (bildmarkup), `NXMotion` (scrollmotor), `NXStory`. Tre lägen: full / lite / still |
 | `nextrum-studie.js`, `-arbetsyta.js`, `-kontakt.js`, `-betalning.js`, `-media.js`, `-tjanster.js` | Delat mellan vyerna |
+| `nextrum-uppgifter.js` + `nextrum-uppgifter.css` | `NXUppgifter` (Fas 23.1): banan, spelaren, stjärnorna, märkena, rättningen per område och genomgången. Studievyn och studiehjälparvyn, CSS:en efter arbetsytan. Rättar ingenting själv och skriver inget resultat; det gör `niva_svara()` |
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, sök, notiser, bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |
-| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
+| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, manaden (Månadens ekonomi), loner (Löner), tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita`. En ny områdesfil ska in i `nextrum-modulvakt.js` också |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med. Mejlen har sin egen kopia av paletten (`FARG` i `_delad/notiser/rendera.ts`) och följer INTE med av sig själva |
@@ -656,6 +845,10 @@ strypt processor och scroll anchoring avstängd (som Safari):
    `NXStudie.laddarFörsta(host)`: "Hämtar" bara första gången, annars
    står listan kvar nedtonad tills den nya är ritad. Ett formulär som
    stängs ovanför det man tittar på hålls med `NXStudie.håll(ankare, fn)`.
+   Samma sak inom en och samma omritning: tar man bort något och visar
+   det som ersätter det först efteråt, räcker en påtvingad layout
+   emellan (ett `focus()`, en `getBoundingClientRect`) för att scrollen
+   ska klämmas. Visa det nya först (`ritaPlanElev`, 2026-09-28).
 2. **`1fr` i ett grid är `minmax(auto,1fr)`.** Bokningens kolumn växte
    till 614 px på en 390 px bred telefon så fort en dag valdes, för att
    ämnesraden (en rad man drar i sidled) räknades som kolumnens minsta
@@ -787,6 +980,18 @@ betala nästa bekräftade pass. Fas 22.4 la till
 `bookings_timmar_betalar_forslaget` och
 `intern.obesvarade_forslag_slapper_timmarna`: timmen dras när förslaget
 skapas och kommer tillbaka om ingen svarat när dagen gått.
+Lönespecifikationen (2026-09-28) la till pg_cron-jobbet `manadskorning`,
+den 1:a klockan 04:17 UTC, och `notis_konfig.fakturering_url`.
+`intern.manadskorning_vack()` väcker `fakturering` genom
+`intern.natanrop` med hemligheten i `x-nextrum-notis`, och den vägen
+skriver alltid förra månaden. Saknas adressen blir det en uppgift
+(`manadskorning:adress`) i stället för en tyst månad; går anropet fel
+står det under System → Fel och passen larmar som `ej_utbetalt`.
+Adminvyn visar om jobbet är på (`manadskorning_lage()`, bara admin): ett
+schema som står av ser annars ut precis som ett som fungerar.
+**Jobbet ska inte slås på förrän provpassen är undantagna**: det första
+som körs skarpt skriver underlag och fakturautkast för allt som står
+klart, och DEPLOY-BETALNING.md avsnitt 5–6 säger i vilken ordning.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
@@ -809,6 +1014,14 @@ Fas 20.1 la till `pass_tillagg` (övertiden på ett förbetalt pass:
 parterna och admin läser, bara `service_role` skriver) och Fas 20.2
 `manadsbokslut` (stängda månader: admin läser, bara `stang_manad` och
 `oppna_manad` skriver).
+Fas 23.1 la till `nivaer` (katalogen: alla inloggade läser, admin och
+migrationerna skriver), `niva_fragor` (frågorna MED facit: familjen har
+ingen policy, godkända studiehjälpare och admin läser), `niva_forsok` och
+`niva_svar` (försöken och svaren: familjen, elevens studiehjälpare och
+admin läser, bara `niva_starta()` och `niva_svara()` skriver) och
+`homework.niva_id`. `niva_fragor` får aldrig en rad borttagen som har
+svar: en ändrad fråga får ett nytt id och den gamla blir inaktiv, så att
+gamla svar pekar på det som faktiskt frågades.
 Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
 id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
 ingen roll utom ägaren når den). Se Notiserna nedan.
@@ -1513,7 +1726,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 30 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 30 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28), 31 med `manadskorning_lage` när lönespecens migration är körd | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
@@ -1586,7 +1799,7 @@ tillbaka en kopia.**
 
 | Funktion | Gör | Anropas av |
 |---|---|---|
-| `fakturering` | Månadskörningen: underlag per studiehjälpare, ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand | Schema (`x-fakturering-nyckel`) eller admin |
+| `fakturering` | Månadskörningen: underlag per studiehjälpare, som är studiehjälparens lönespecifikation (2026-09-28), ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand | pg_cron `manadskorning` den 1:a (`x-nextrum-notis`, alltid förra månaden), admin, eller `x-fakturering-nyckel` |
 | `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Fortnox | Knapp under Ekonomi → Utbetalningar |
 | `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
@@ -1794,6 +2007,7 @@ hitta på ett pris, ett villkor eller ett löfte.
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i verktyget. Körs för hand (kräver Chromium), inte i CI. `--sql` ger raderna till `biblioteksmaterial` |
 | `?v=`-stämplarna på alla script- och link-taggar | `verktyg/satt-version.py` | filernas egen md5 |
 | `bilder/*.webp` | `verktyg/bygg-webp.py` | `bilder/*.jpg` |
+| `supabase/migrations/*_uppgiftsbanken_*.sql` (nivåerna och frågorna) | `verktyg/bygg-uppgifter.py --sql` | `verktyg/uppgiftsbanken/*.py`. Ändras banken skrivs en NY migration, den gamla står kvar. `--kolla` (CI) jämför den senaste med vad verktyget skriver nu, och `--visa` skriver ut frågorna med facit för den som ska läsa igenom dem |
 
 CI kör om maskotsvaren, FAQ-schemat och kartan och gör `git diff
 --exit-code`. Ändrar du FAQ:n utan att bygga om blir bygget rött, och
@@ -1887,7 +2101,8 @@ Körs på varje push och PR. Ska vara grön före merge.
 1. `node --check` på all JavaScript
 2. `node verktyg/testa-agent.js`
 3. `verktyg/kolla-betalningsvillkor.py` (betalningslöftet, och att det gamla är borta)
-4. `verktyg/kolla-migrationer.py`
+4. `verktyg/kolla-migrationer.py`, och `verktyg/bygg-uppgifter.py --kolla`
+   (uppgiftsbankens form, och att den har sin migration)
 5. `verktyg/kolla-csp.py`
 6. `verktyg/kolla-webp.py`
 7. `verktyg/satt-version.py --kolla`
@@ -2098,6 +2313,14 @@ tillbaka överst i avsnittet för 22.1.
     och lönetransaktioner går att bygga senare. Den byggs först när
     handarbetet faktiskt kostar tid: en koppling mot bokföringen som går
     sönder tyst är värre än ingen.
+    Leo bad 2026-09-28 att fakturorna skulle "kopplas vidare till tex
+    fortnox". Lönen går sedan dess dit som en fil (PAXml, under Löner,
+    avsnitt 1). Fakturorna gör det inte: Fortnox läser inte in
+    kundfakturor från en fil, bara genom API:t eller betalda
+    tilläggsappar, och en API-koppling gick inte att prova utan ett
+    Fortnox-konto med bankgiro, som bolaget inte har än. Den byggs som ett
+    eget steg när kontot finns, på samma sätt som Google (Fas 18.1):
+    OAuth, nyckeln i en tabell utan policy, och ett anrop per faktura.
   - **Tio dagar, inga avgifter.** `BETALNINGSVILLKOR_DAGAR` står i
     `nextrum-config.js` och `_delad/konstanter.ts`, och
     `kolla-betalningsvillkor.py` jämför dem. Villkoren nämner ingen
@@ -2280,7 +2503,13 @@ tillbaka överst i avsnittet för 22.1.
   körd som `20260928174612` direkt efter att PR #105 mergats, och
   ordagrant filen (samma md5 som satserna i `schema_migrations`). Hela
   `rls-test.sql` gick igenom mot driften efteråt, 693 av 693. Då fanns
-  ett betalt klippkort i driften, och inget förslag att betala. Kvar: en familj som inte är matchad når inte
+  ett betalt klippkort i driften, och inget förslag att betala.
+  **Betala med kort nu** (2026-09-28, PR #106, avsnitt 1):
+  `stripe-checkout` version 16 och `stripe-webhook` version 12,
+  driftsatta från main efter mergen och jämförda byte för byte. De bar
+  också 38a646e, som låg i main utan att vara driftsatt: ett skrivfel i
+  webhooken ger Stripe ett nytt försök, en betalning som inte blev
+  nedskriven blir en uppgift, och kassan stänger passets förra session. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
@@ -2312,7 +2541,34 @@ tillbaka överst i avsnittet för 22.1.
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
+  Därför räknar lönespecifikationen i studiehjälparvyn (2026-09-28)
+  ingen skatt och ingen semesterersättning: den visar underlaget, före
+  skatt. En lönespec med skatteavdrag är ett lönebesked, och det gör
+  Fortnox Lön den dag frågan är avgjord. Den 25 oktober 2026, första
+  utbetalningsdagen efter att lönespecen kom, är en söndag; vilken
+  bankdag lönen går då är inte bestämt, och lönespecen visar den 25:e.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
+- **Uppgifterna (Fas 23.1) har ett startpaket, inte en kursplan.**
+  Matematik från åk 1 till gymnasiet 1, engelska och svenska i tre
+  årskurser var, NO i åk 5 och 8 — se `python3 verktyg/bygg-uppgifter.py`
+  för vad som finns. SO, moderna språk och programmering har inga nivåer.
+  Innehållet är skrivet med AI och granskat fråga för fråga, med facit
+  uträknat i kod där det går; läs igenom en bana med `--visa` innan den
+  används på riktigt, och låt en studiehjälpare som undervisar i ämnet
+  göra det. Kvar:
+  1. **Barnet har inget eget konto.** Nivåerna görs i familjens
+     inloggning, alltså med betalning, bokning och meddelanden en knapp
+     bort. Ett elevkonto, eller en länk per barn som bara öppnar
+     Uppgifter (som utbildningsprovets nyckel), rör Auth och ska göras
+     för sig. Konsekvensbedömningen i `DATASKYDD.md` säger redan att
+     den ska göras om den dagen barn får egna konton.
+  2. **Adminvyn har ingen vy över nivåerna.** Banken ändras i
+     `verktyg/uppgiftsbanken/` och går in genom en migration.
+  3. **Migrationerna är inte körda när det här skrivs.**
+     `fas23_1_uppgifterna_blir_digitala` först, sedan
+     `uppgiftsbanken_startpaketet`, båda EFTER merge, och filerna döps om
+     till versionerna driften registrerade (avsnitt 5). Vyerna tål att
+     tabellerna saknas: uppgifterna syns som förut, utan banan.
 - **Ansökningar gallras efter ett år, men en sak återstår.** Sedan
   2026-09-27 tar `ansokan-gallring` varje natt bort en ansökan som inte
   ledde till anställning, med CV:t, och CV-filer utan ansökan (avsnitt

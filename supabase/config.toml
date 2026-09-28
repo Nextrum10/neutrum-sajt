@@ -25,9 +25,9 @@
 # VAD SOM SKYDDAR DEM I STÄLLET
 #
 # Ingen av dem är öppen. Fem kräver en delad hemlighet i en egen
-# header, jämförd i konstant tid: fakturering sin egen nyckel,
-# lead-notis, notis-ko, ansokan-notis och ansokan-gallring hemligheten
-# i notis_konfig.
+# header, jämförd i konstant tid: fakturering sin egen nyckel eller,
+# från schemat, hemligheten i notis_konfig, och lead-notis, notis-ko,
+# ansokan-notis och ansokan-gallring hemligheten i notis_konfig.
 # stripe-webhook kräver Stripes signatur. notis-avanmal kräver en
 # HMAC-signerad token i länken och kan bara stänga AV en notis,
 # aldrig slå på någon och aldrig läsa något. google-koppla kräver ett
@@ -42,8 +42,10 @@
 
 project_id = "ddkfiuvcppalutfulvbi"
 
-# Månadskörningen. Anropas av ett schema med x-fakturering-nyckel,
-# eller av en inloggad admin (funktionen prövar båda vägarna själv).
+# Månadskörningen. Anropas av pg_cron-jobbet manadskorning med
+# hemligheten ur notis_konfig i x-nextrum-notis (2026-09-28), av en
+# inloggad admin, eller med x-fakturering-nyckel. Funktionen prövar
+# alla tre vägarna själv.
 [functions.fakturering]
 verify_jwt = false
 

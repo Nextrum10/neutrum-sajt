@@ -33,7 +33,7 @@ behövs om ni sätter upp en ny miljö.
 | 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
 | 4. Deploy `fakturering` | ACTIVE, version 28. Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas |
 | 5. Torrkörning | **Väntar på er** — knappen under Ekonomi → Månadskörning, ingen nyckel behövs |
-| 6. Schemaläggning | **Väntar på er** |
+| 6. Schemaläggning | **Byggd, inte påslagen** (2026-09-28): pg_cron `manadskorning` den 1:a, genom `intern.manadskorning_vack()`. Slås på med migrationen `manadskorningen_gar_den_forsta` när steg 5 är gjort och provpassen undantagna, se avsnitt 6 |
 | 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar. Se avsnitt 9 |
 | 8. Deploy `faktura-utskick` | ACTIVE, version 19. Skickar bara underlag sedan Fas 14.6 |
 
@@ -131,14 +131,17 @@ update public.tutor_profiles set hourly_rate = 250 where id = 'STUDIEHJÄLPARENS
 Samma verktyg som `generate-feedback` — se `DEPLOY-AI-FUNKTION.md` om du inte har
 Supabase CLI installerat och länkat än.
 
-Sätt nyckeln som skyddar funktionen. Hitta på en lång slumpsträng:
+Schemat i databasen (avsnitt 6) behöver ingen egen nyckel: det skickar
+hemligheten i `notis_konfig`, som notiserna och gallringen. `FAKTURERING_NYCKEL`
+behövs bara för ett schema UTANFÖR databasen, och ett sådant finns inte. Vill ni
+ändå ha den vägen, hitta på en lång slumpsträng:
 
 ```
 supabase secrets set FAKTURERING_NYCKEL=en-lang-slumpstrang-du-hittar-pa
 ```
 
 Funktionen anropas av ett schema, inte av en inloggad användare, så den ska inte
-kräva JWT — men då måste den skyddas av nyckeln i stället. Lägg i
+kräva JWT — den skyddas av hemligheten eller nyckeln i stället. Det står redan i
 `supabase/config.toml`:
 
 ```toml
@@ -188,8 +191,9 @@ curl -X POST "https://DITT-PROJEKT-ID.supabase.co/functions/v1/fakturering" \
   -H "content-type: application/json" -d '{}'
 ```
 
-Underlagen dyker upp hos studiehjälparen under **Ersättning**. Familjen ser
-ingenting nytt: deras betalningar är kortbetalningarna i avsnitt 9.
+Underlagen dyker upp hos studiehjälparen under **Ersättning → Utbetalning för
+månaden**, som månadens lönespecifikation (2026-09-28). Familjen ser ingenting
+nytt: deras betalningar är kortbetalningarna i avsnitt 9.
 
 En omkörning skapar inte dubbletter: ett pass kan bara ligga på en underlagsrad
 (`payout_lines_ett_pass_en_gang`), och en studiehjälpare kan bara ha ett underlag
@@ -197,9 +201,28 @@ per månad (`unique (tutor_id, period)`).
 
 ## 6. Schemalägg
 
-När ni kört skarpt en gång för hand och det såg rätt ut — Supabase → Database →
-Cron, den första i varje månad. Gör det till ett aktivt beslut, inte något som
-råkar vara påslaget. (Planeras i Fas 7.)
+**Byggt 2026-09-28, inte påslaget.** Leo ville ha en lönespecifikation för varje
+månad när den är slut, och lönespecen är underlaget: utan schemat finns den först
+när någon kommit ihåg knappen. pg_cron-jobbet `manadskorning` kör
+`intern.manadskorning_vack()` den 1:a klockan 04:17 UTC, som väcker `fakturering`
+med hemligheten ur `notis_konfig` (adressen i `notis_konfig.fakturering_url`).
+Den vägen skriver alltid förra månaden, och samma underlag och fakturautkast som
+knappen. Gick det fel står det under System → Fel, och passen larmar som Inte
+utbetalt.
+
+Det är fortfarande ett aktivt beslut, inte något som råkar vara påslaget. Ordningen:
+
+1. Ta ställning till provpassen (Obs-rutan överst). Ett provpass som står klart
+   när schemat går blir ett riktigt underlag och, om det står på faktura, ett
+   fakturautkast. Undanta dem under Avvikelser.
+2. Driftsätt `fakturering` från main och kör migrationen
+   `manadskorningen_vacks_av_databasen`.
+3. Torrkör vägen, som postgres: `select intern.manadskorning_vack(true);` och
+   läs svaret i `net._http_response` (200 med förra månadens sammanfattning).
+4. Kör migrationen `manadskorningen_gar_den_forsta`. Först då finns jobbet.
+5. Döp om de två migrationsfilerna till versionerna `apply_migration` gav dem.
+
+Stänga av: `select cron.unschedule('manadskorning');`, som en egen migration.
 
 ## 6b. Utbetala
 
@@ -389,8 +412,8 @@ kvar att köra innan ni rör en skarp nyckel, och innan spärren slås på (9.9)
 | Korttvisterna (`20260924125618_fas14_3_*.sql`) | **Applicerad.** Tabellen `stripe_tvister`, se 9.10 |
 | Faktura som betalsätt (`20260925120727_fas14_6_*.sql`) | **Applicerad, flaggan `faktura` AV.** Se 9.11 |
 | Test eller skarpt (`20260925121120_fas14_7_*.sql`) | **Applicerad.** `bookings.stripe_skarp`, `stripe_handelser.skarp` |
-| `stripe-checkout` | **ACTIVE**, version 11, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5). Fas 14.5: kassan öppnas i en panel på sidan (9.2). Fas 14.6: vägrar ett fakturapass. 2026-09-28, i main och i drift först när funktionen driftsatts därifrån: tar ett fakturapass som inte står på en faktura, och läget står kvar som `faktura` tills webhooken skrivit betalningen |
-| `stripe-webhook` | **ACTIVE**, version 8, `verify_jwt = false`. Fas 14.3: tvisterna sparas med sista svarsdag, orsak och utfall. Fas 14.7: avgiften ur `charge.updated`, läget ur `livemode`, och en betalning efter ett nekat kort tas emot |
+| `stripe-checkout` | **ACTIVE**, version 16, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5). Fas 14.5: kassan öppnas i en panel på sidan (9.2). Fas 14.6: vägrade ett fakturapass. Version 16 (2026-09-28): tar ett fakturapass som inte står på en faktura, och läget står kvar som `faktura` tills webhooken skrivit betalningen; passets förra kassa stängs när en ny skapas |
+| `stripe-webhook` | **ACTIVE**, version 12, `verify_jwt = false`. Fas 14.3: tvisterna sparas med sista svarsdag, orsak och utfall. Fas 14.7: avgiften ur `charge.updated`, läget ur `livemode`, och en betalning efter ett nekat kort tas emot. Version 12 (2026-09-28): ett skrivfel ger Stripe ett nytt försök, och en betalning som inte blev nedskriven blir en uppgift |
 | `stripe-aterbetalning` | **ACTIVE**, version 6, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
 | `stripe-lage` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting. Fas 14.5: säger om den publicerbara nyckeln är satt och i samma läge som den hemliga |
 | `stripe-avstamning` | **ACTIVE**, version 1, `verify_jwt = true`. Bara för admin (Fas 14.7). Hämtar avgift, netto och läge för betalningar som saknar dem, högst femtio per tryck |
@@ -964,6 +987,15 @@ migrationen `fas22_4_timmen_dras_nar_forslaget_skickas`, körd 2026-09-28 som
 och databasen hör ihop: vyn räknar inte längre bort väntande förslag i Boka pass,
 så en vy utan migrationen hade lovat timmar som databasen inte dragit. Migrationen
 prövade först att de fyra funktionerna den bygger på var de som lästes i driften.
+
+Betala med kort nu på ett fakturapass (2026-09-28, PR #106) är föräldravyn och
+`stripe-checkout` version 16, driftsatt från main efter mergen. Samma gång gick
+`stripe-webhook` version 12 ut. Båda bar 38a646e, som låg i main utan att vara
+driftsatt: webhooken kastar ett skrivfel så att Stripe försöker igen och gör en
+betalning som inte blev nedskriven till en uppgift, och kassan stänger passets
+förra session. Båda hämtades tillbaka och jämfördes byte för byte mot main. Ingen
+migration: webhooken tog redan emot en betalning på ett fakturapass
+(`TAR_EMOT_BETALNING`), så ordningen spelade ingen roll.
 
 Driftsätts en funktion genom MCP i stället för `supabase functions
 deploy`: hämta tillbaka den efteråt och jämför varje fil mot repot.
