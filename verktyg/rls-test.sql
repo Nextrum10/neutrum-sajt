@@ -4883,9 +4883,9 @@ begin
     ('22.3 en körning till betalar ingenting', n3 = 0 and kvar = 0, 'betalade ' || n3 || ', kvar ' || kvar);
 end $$;
 
--- 2. 22g1 bekräftas med flaggan av, och jobbet rör det inte så länge
+-- 2. 2231 bekräftas med flaggan av, och jobbet rör det inte så länge
 --    den står av. Sedan slås den på, timbanken fylls till 75 minuter som
---    i 22.2, och c16a hamnar i tvist: jobbet betalar 22g1 med banken, och
+--    i 22.2, och c16a hamnar i tvist: jobbet betalar 2231 med banken, och
 --    b0d1 om en vecka ryms inte i kvarten som blir kvar.
 do $$
 declare
@@ -4898,13 +4898,13 @@ declare
 begin
   begin
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn) values
-      ('00000000-0000-4000-8000-0000000022g1', p, a, s, p, idag + 3, '13:00', 60, 'requested', 1);
+      ('00000000-0000-4000-8000-000000002231', p, a, s, p, idag + 3, '13:00', 60, 'requested', 1);
     perform pg_temp.bli(a);
-    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022g1';
+    update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-000000002231';
     reset role;
     perform set_config('request.jwt.claims', '', true);
     n0 := intern.timmar_betalar_obetalda(p);
-    select betalning_status into st0 from public.bookings where id = '00000000-0000-4000-8000-0000000022g1';
+    select betalning_status into st0 from public.bookings where id = '00000000-0000-4000-8000-000000002231';
 
     update public.flaggor set aktiv = true where kod = 'erbjudanden';
     update public.bookings set antal_barn = 1 where id = '00000000-0000-4000-8000-00000000b16b';
@@ -4917,9 +4917,9 @@ begin
     fore := intern.timbank_saldo(p);
 
     n1 := intern.timmar_betalar_obetalda(p);
-    select betalning_status into st1 from public.bookings where id = '00000000-0000-4000-8000-0000000022g1';
+    select betalning_status into st1 from public.bookings where id = '00000000-0000-4000-8000-000000002231';
     select minuter into uttag from public.timbank_uttag
-     where booking_id = '00000000-0000-4000-8000-0000000022g1' and sort = 'pass';
+     where booking_id = '00000000-0000-4000-8000-000000002231' and sort = 'pass';
     saldo := intern.timbank_saldo(p);
     select betalning_status into st_d1 from public.bookings where id = '00000000-0000-4000-8000-00000000b0d1';
     raise exception 'rulla tillbaka';
@@ -4940,7 +4940,7 @@ begin
 end $$;
 
 -- 3. Jobbet betalar samma pass som bekräftelsen och inga andra. c16a (tio
---    timmar) betalar 22h4 med en påbörjad kassa, b16a och b0d1 i
+--    timmar) betalar 2244 med en påbörjad kassa, b16a och b0d1 i
 --    datumordning. Två barn, första timmen bjuden, faktura, b0c1 igår
 --    och ett pass efter kortets sista dag rörs inte.
 do $$
@@ -4956,19 +4956,19 @@ begin
   begin
     update public.flaggor set aktiv = true where kod = 'erbjudanden';
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn, betalning_status) values
-      ('00000000-0000-4000-8000-0000000022h0', p, a, s, p, idag + 2, '13:00', 60, 'confirmed', 2, 'ingen'),
-      ('00000000-0000-4000-8000-0000000022h1', p, a, s, p, idag + 3, '13:00', 60, 'confirmed', 1, 'ingen'),
-      ('00000000-0000-4000-8000-0000000022h2', p, a, s, p, idag + 4, '13:00', 60, 'confirmed', 1, 'faktura'),
-      ('00000000-0000-4000-8000-0000000022h4', p, a, s, p, idag + 5, '13:00', 60, 'confirmed', 1, 'vantar'),
-      ('00000000-0000-4000-8000-0000000022h3', p, a, s, p, idag + 250, '13:00', 60, 'confirmed', 1, 'ingen');
-    update public.bookings set startrabatt = true where id = '00000000-0000-4000-8000-0000000022h1';
+      ('00000000-0000-4000-8000-000000002240', p, a, s, p, idag + 2, '13:00', 60, 'confirmed', 2, 'ingen'),
+      ('00000000-0000-4000-8000-000000002241', p, a, s, p, idag + 3, '13:00', 60, 'confirmed', 1, 'ingen'),
+      ('00000000-0000-4000-8000-000000002242', p, a, s, p, idag + 4, '13:00', 60, 'confirmed', 1, 'faktura'),
+      ('00000000-0000-4000-8000-000000002244', p, a, s, p, idag + 5, '13:00', 60, 'confirmed', 1, 'vantar'),
+      ('00000000-0000-4000-8000-000000002243', p, a, s, p, idag + 250, '13:00', 60, 'confirmed', 1, 'ingen');
+    update public.bookings set startrabatt = true where id = '00000000-0000-4000-8000-000000002241';
 
     n := intern.timmar_betalar_obetalda(p);
-    select klippkort_id into k0 from public.bookings where id = '00000000-0000-4000-8000-0000000022h0';
-    select klippkort_id into k1 from public.bookings where id = '00000000-0000-4000-8000-0000000022h1';
-    select betalning_status into st2 from public.bookings where id = '00000000-0000-4000-8000-0000000022h2';
-    select klippkort_id into k3 from public.bookings where id = '00000000-0000-4000-8000-0000000022h3';
-    select klippkort_id into k4 from public.bookings where id = '00000000-0000-4000-8000-0000000022h4';
+    select klippkort_id into k0 from public.bookings where id = '00000000-0000-4000-8000-000000002240';
+    select klippkort_id into k1 from public.bookings where id = '00000000-0000-4000-8000-000000002241';
+    select betalning_status into st2 from public.bookings where id = '00000000-0000-4000-8000-000000002242';
+    select klippkort_id into k3 from public.bookings where id = '00000000-0000-4000-8000-000000002243';
+    select klippkort_id into k4 from public.bookings where id = '00000000-0000-4000-8000-000000002244';
     select klippkort_id into kb16a from public.bookings where id = '00000000-0000-4000-8000-00000000b16a';
     select klippkort_id into kd1 from public.bookings where id = '00000000-0000-4000-8000-00000000b0d1';
     select klippkort_id into kc1 from public.bookings where id = '00000000-0000-4000-8000-00000000b0c1';
@@ -4983,7 +4983,7 @@ begin
   insert into utfall (test, ok, detalj) values
     ('22.3 jobbet betalar de bekräftade passen timmarna räcker till',
      n = 3 and k4 = c16a and kb16a = c16a and kd1 = c16a,
-     'betalade ' || n || ', 22h4 ' || coalesce(k4::text, '-') || ', b16a ' || coalesce(kb16a::text, '-')
+     'betalade ' || n || ', 2244 ' || coalesce(k4::text, '-') || ', b16a ' || coalesce(kb16a::text, '-')
      || ', b0d1 ' || coalesce(kd1::text, '-')),
     ('22.3 två barn, första timmen, faktura, igår och efter kortets sista dag rörs inte',
      k0 is null and k1 is null and st2 = 'faktura' and k3 is null and kc1 is null and kb16b is null,
