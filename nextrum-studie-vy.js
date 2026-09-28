@@ -1580,15 +1580,16 @@
      Valet är en knapp bredvid kortknappen (Leo 2026-09-27: "knappen
      ska vara bredvid betala med kort"), och familjen bekräftar
      betalsättet i en ruta innan det sparas. Förut var det en textlänk
-     under kortknappen, och den syntes inte. Det går
-     att ångra tills passet står på en faktura. Databasen prövar båda
-     hållen (skydda_bokningsfalt): här ritas bara det den släpper
-     igenom, så att ingen trycker på något som sedan nekas.
+     under kortknappen, och den syntes inte. Tills passet står på en
+     faktura går det att betala med kort i stället, direkt i kassan
+     (kortNu). Databasen och stripe-checkout prövar det också: här ritas
+     bara det de släpper igenom, så att ingen trycker på något som sedan
+     nekas.
      ============================================================ */
   const DAGAR = Number((NX.CFG && NX.CFG.BETALNINGSVILLKOR_DAGAR) || 10);
 
   /* Fakturan passet står på, också ett utkast som ännu inte skickats.
-     Står passet på en faktura går det inte att byta till kort. */
+     Står passet på en faktura betalas det genom den, inte med kort. */
   const fakturaFör = id => (S.fakturaPerPass || {})[id] || null;
 
   /* Fakturan är ett val EFTER passet, i samband med att rapporten
@@ -1610,11 +1611,25 @@
         + DAGAR + ' dagar och kostar ingenting extra.</span>'
       : '';
   }
-  /* Tillbaka till kort går också när flaggan är av: ett pass som redan
-     valts för faktura ska inte bli omöjligt att betala. */
-  function kortVal(b) {
-    return b.betalning_status === 'faktura' && b.status !== 'cancelled' && b.fakturerbar !== false && !fakturaFör(b.id)
-      ? '<button type="button" class="val-lank" data-kort-val="' + esc(b.id) + '">Betala med kort i stället</button>'
+  /* Betala med kort nu, på ett pass som valts för faktura (2026-09-28).
+     Leo: "trycker man på betala nu ska man komma vidare till stripe och
+     passet kan räknas som betalt efter att man betalat det". Förut var
+     det en textlänk, "Betala med kort i stället", som bara bytte passet
+     tillbaka till obetalt: ingen kassa öppnades, och rapporten kom
+     tillbaka under Bekräfta rapport som obetald. Nu är det samma
+     data-betala som överallt. Kassan öppnas direkt, passet står kvar på
+     fakturan tills webhooken skrivit betalningen, och stängs kassan
+     utan betalning ändras ingenting (stripe-checkout skriver inget
+     'vantar' på ett fakturapass).
+
+     Samma pass som kortknappen annars står på (kanBetalas), bara att
+     det valts för faktura. Det går också när flaggan är av: ett pass som
+     redan valts för faktura ska inte bli omöjligt att betala med kort.
+     Står passet på en faktura, också ett utkast, betalas det genom den. */
+  function kortNu(b, liten) {
+    const somObetalt = Object.assign({}, b, { betalning_status: 'ingen' });
+    return b.betalning_status === 'faktura' && !fakturaFör(b.id) && kanBetalas(somObetalt)
+      ? '<button type="button" class="btn btn-ghost' + (liten ? ' btn-sm' : '') + '" data-betala="' + esc(b.id) + '">Betala med kort nu</button>'
       : '';
   }
 
@@ -1624,8 +1639,7 @@
       .eq('parent_id', S.user.id).order('period', { ascending: false });
     /* Kan fakturorna inte läsas står det som fanns kvar. En tom lista
        hade sett ut som att ingenting är fakturerat, och då hade "Betala
-       med kort i stället" erbjudits på ett pass som redan står på en
-       faktura. */
+       med kort nu" erbjudits på ett pass som redan står på en faktura. */
     if (error) { console.warn('Fakturorna gick inte att läsa', error); return; }
     S.fakturor = data || [];
     S.fakturaPerPass = {};
@@ -1636,26 +1650,25 @@
     if (passIdIAdressen()) ritaPassSida();
   }
 
-  /* Faktura eller kort, på ett pass. Omritningen hålls vid något som
-     står kvar: på passets sida titeln, i listan rubriken ovanför. Den
-     knapp man tryckte på försvinner, och utan det hoppar sidan. */
-  async function väljBetalsätt(knapp, passId, läge) {
+  /* Faktura på ett pass. Omritningen hålls vid något som står kvar: på
+     passets sida titeln, i listan rubriken ovanför. Den knapp man
+     tryckte på försvinner, och utan det hoppar sidan.
+
+     Vägen tillbaka till kort går inte härifrån (2026-09-28). Den skrev
+     'ingen' på passet och lämnade betalningen till ett senare tryck;
+     nu betalar Betala med kort nu passet direkt (kortNu). */
+  async function väljFaktura(knapp, passId) {
     knapp.setAttribute('aria-busy', 'true');
-    const { error } = await supa.from('bookings').update({ betalning_status: läge }).eq('id', passId);
+    const { error } = await supa.from('bookings').update({ betalning_status: 'faktura' }).eq('id', passId);
     knapp.removeAttribute('aria-busy');
-    if (error) {
-      alert((läge === 'faktura' ? 'Det gick inte att välja faktura: ' : 'Det gick inte att byta till kort: ') + felText(error));
-      return;
-    }
+    if (error) { alert('Det gick inte att välja faktura: ' + felText(error)); return; }
     const ankare = document.querySelector('#pass-sida .ps-titel')
       || (knapp.closest('.dbox') && knapp.closest('.dbox').querySelector('h5'))
       || null;
     await NXStudie.håll(ankare, () => Promise.all([laddaPass(), laddaFakturor()]));
     const msg = $('#bet-msg');
     if (msg && !document.querySelector('#pass-sida .ps-titel')) {
-      säg(msg, läge === 'faktura'
-        ? 'Klart. Passet kommer med på fakturan i början av nästa månad.'
-        : 'Klart. Betala passet med kort, i förväg eller när ni bekräftar rapporten.', true);
+      säg(msg, 'Klart. Passet kommer med på fakturan i början av nästa månad.', true);
     }
   }
 
@@ -1749,7 +1762,7 @@
         vem: utkast ? 'Står på fakturan för ' + NXBetalning.periodText(utkast.period) + ', som snart skickas.'
           : 'Kommer med på fakturan i början av nästa månad.',
         märke: NXKontakt.betalMärke(b),
-        atgarder: kortVal(b)
+        atgarder: kortNu(b, true)
       }));
     });
     host.innerHTML = delar.length ? delar.join('')
@@ -2585,14 +2598,12 @@
         text: (fpris ? 'Passet kostar ' + NXBetalning.kronor(fpris) + '. ' : '')
           + 'Passet kommer med på en samlad faktura från Nextrum i början av nästa månad, tillsammans med de andra pass ni valt faktura för. '
           + 'Fakturan ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra. '
-          + 'Rapporten bekräftas samtidigt. Ni kan byta tillbaka till kort tills fakturan är skapad.',
+          + 'Rapporten bekräftas samtidigt. Vill ni hellre betala med kort går det tills fakturan är skapad.',
         knapp: 'Bekräfta faktura'
       });
-      if (ok) { await bekräftaVid(fv, fv.dataset.fakturaVal); await väljBetalsätt(fv, fv.dataset.fakturaVal, 'faktura'); }
+      if (ok) { await bekräftaVid(fv, fv.dataset.fakturaVal); await väljFaktura(fv, fv.dataset.fakturaVal); }
       return;
     }
-    const kv = e.target.closest('[data-kort-val]');
-    if (kv) { await väljBetalsätt(kv, kv.dataset.kortVal, 'ingen'); return; }
 
     const tim = e.target.closest('[data-timmar]');
     if (tim) { await betalaMedTimmar(tim, tim.dataset.timmar); return; }
@@ -3425,7 +3436,7 @@
       atgarder = (kanBetalas(b) ? betalaKnapp(b, false) : '')
         + '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Föreslå ny tid</button>'
         + (betalt ? '' : '<button type="button" class="btn btn-ghost" data-avboka="' + esc(b.id) + '">Avboka</button>');
-      alternativ = fakturaNot(b) || kortVal(b);
+      alternativ = fakturaNot(b) || kortNu(b, true);
     } else if (b.status === 'confirmed' && kanBetalas(b)) {
       /* Passerat och obetalt medan spärren är på — bara då släpper
          kanBetalas igenom det. Hölls passet kan rapporten inte skrivas
@@ -3459,7 +3470,7 @@
       const bekr = rbKnappFör(b);
       if (bekr) besked = { text: besked.text + ' Läs rapporten nedan och bekräfta den.', ton: 'fraga' };
       atgarder = bekr + '<a class="btn ' + (bekr ? 'btn-ghost' : 'btn-primary') + '" href="#boka">Boka nästa pass</a>' + skriv;
-      alternativ = kortVal(b);
+      alternativ = kortNu(b, true);
     } else if (b.status === 'completed' && till) {
       /* Betalt i förväg, och passet drog över (Fas 20.1). Tillägget
          betalas när rapporten bekräftas, och att betala det bekräftar
