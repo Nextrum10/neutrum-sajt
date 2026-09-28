@@ -248,7 +248,7 @@ Genererat:
   `faq.html` och `en/faq.html`
 - FAQPage-märkningen i båda faq-sidorna byggs av `verktyg/bygg-faq-schema.py`
 - Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), onlinesidan,
-  två guider och ämnes- och guidekorten i navet byggs av
+  fyra guider och ämnes- och guidekorten i navet byggs av
   `verktyg/bygg-omradessidor.py`. Skalet läses ur `var-ide.html`,
   alt-texten ur `nextrum-images.js`
 - `sitemap.xml` byggs av `verktyg/bygg-sitemap.py` ur sidornas

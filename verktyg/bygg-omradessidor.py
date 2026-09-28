@@ -802,97 +802,25 @@ ONLINE = {
 # GUIDERNA
 #
 # Svar på det föräldrar söker innan de vet att de letar efter
-# läxhjälp: "gratis läxhjälp stockholm", "hjälpa barn med matte".
-# De ska gå att läsa och ha nytta av utan att någon bokar något.
-# En guide som bara är en reklamsida för Nextrum rankar inte, och den
-# förtjänar inte att göra det.
+# läxhjälp: "hjälpa barn med matte", "läsförståelse", "plugga inför
+# prov", "barn vill inte göra läxor". De ska gå att läsa och ha nytta
+# av utan att någon bokar något. En guide som bara är en reklamsida
+# för Nextrum rankar inte, och den förtjänar inte att göra det.
 #
-# Samma sanningsregel som resten. Allt om andra organisationer är
-# kontrollerat mot deras egna sidor (2026-09-26) och länkat i
-# `kallor`, och tider står inte med: de ändras varje termin, och en
-# gammal tid på vår sida skickar en familj till ett stängt bibliotek.
+# Samma sanningsregel som resten. Det en guide påstår om forskning
+# eller om andra organisationer ska gå att kontrollera, och länken
+# står i `kallor`. Provguidens källor kontrollerades 2026-09-28 mot
+# sökträffarna (titel, adress och vad sidan säger), inte genom att
+# öppna sidorna: nätet där texten skrevs släppte inte fram dem. Öppna
+# dem en gång innan någon mening som vilar på dem skrivs om.
+#
+# Guiden om gratis läxhjälp (biblioteken, Röda Korset, Mattecentrum)
+# togs bort 2026-09-28, Leos beslut: andra guider i stället. Adressen
+# stod i kartan och bland dem GOOGLE.md säger åt er att skicka in, så
+# den omdirigeras till navet i vercel.json i stället för att svara 404.
 # ============================================================
 
 GUIDER = [
-    {
-        'slug': 'gratis-laxhjalp-stockholm',
-        'i_namn': 'gratis i Stockholm',
-        'plats': 'Stockholm',
-        'og_typ': 'article',
-        'pris': True,
-        'titel': 'Gratis läxhjälp i Stockholm, och när den inte räcker | Nextrum',
-        'beskrivning': (
-            'Var det finns gratis läxhjälp i Stockholm: biblioteken, Röda Korset och '
-            'Mattecentrums räknestugor. Och när det är värt att ta en egen studiehjälpare.'
-        ),
-        'etikett': 'Guide för föräldrar',
-        'kort_titel': 'Gratis läxhjälp i Stockholm',
-        'kort': 'Biblioteken, Röda Korset och Mattecentrum',
-        'h1': 'Gratis läxhjälp<br>i <em>Stockholm.</em>',
-        'lede': (
-            'Det finns bra läxhjälp i Stockholm som inte kostar något. Här är var den finns, '
-            'vem den passar och när det är värt att ta en egen studiehjälpare i stället.'
-        ),
-        'bild': '12-pa-vag',
-        'tint': '#73746C',
-        'focal': '34% 48%',
-        'lista_etikett': 'Var den finns',
-        'lista_rubrik': 'Fyra ställen<br>att <em>börja.</em>',
-        'lista_ingress': (
-            'Tiderna ändras mellan terminerna. Kolla alltid på respektive sida innan ni går dit.'
-        ),
-        'lista': [
-            ('Biblioteken',
-             'Stockholms stadsbibliotek samlar läxhjälpen på sina bibliotek på en sida, med '
-             'platser och tider. Den hålls av volontärer från olika organisationer, och för '
-             'det mesta är det bara att komma dit.'),
-            ('Röda Korset',
-             'Röda Korsets volontärer håller gratis läxhjälp på flera bibliotek i Stockholm, '
-             'bland annat på Södermalm, Östermalm och i Skärholmen. Det är drop-in, och den är '
-             'öppen för både barn och vuxna.'),
-            ('Mattecentrum',
-             'Mattecentrums räknestugor ger gratis hjälp med matte upp till gymnasiet, av '
-             'volontärer och utan bokning. Föräldrar som vill fräscha upp sin egen matte är '
-             'också välkomna. På nätet finns deras Matteboken och frågeforumet Pluggakuten.'),
-            ('Skolan',
-             'Fråga elevens lärare eller mentor vad skolan erbjuder. Många skolor har läxhjälp '
-             'eller studiestöd efter lektionstid, och där vet de redan vad klassen arbetar med.'),
-        ],
-        'kallor': [
-            ('Stockholms stadsbibliotek: läxhjälp', 'https://biblioteket.stockholm.se/laxhjalp'),
-            ('Röda Korset: gratis läxhjälp', 'https://www.rodakorset.se/fa-hjalp/laxhjalp/'),
-            ('Mattecentrum: räknestugor i Stockholm', 'https://www.mattecentrum.se/raknestugor/stockholm'),
-        ],
-        'vinkel_etikett': 'När gratis inte räcker',
-        'vinkel_rubrik': 'Drop-in räcker ofta.<br>Men inte <em>alltid.</em>',
-        'vinkel': [
-            'Gratis läxhjälp är ofta en ny volontär varje gång, på fasta tider och i ett rum med '
-            'andra elever. För en läxa i taget fungerar det bra. Det som saknas är det som tar '
-            'tid att bygga: någon som minns var det tog stopp förra veckan, en plan fram till '
-            'provet och uppföljning mellan gångerna.',
-            'Där gör en egen studiehjälpare skillnad. Samma person varje gång, en studieplan '
-            'skriven för eleven och en rapport efter varje pass, hemma hos er eller online. '
-            'Räcker den gratis hjälpen, använd den. Räcker den inte vet ni nu varför.',
-        ],
-        'faq_rubrik': 'Gratis läxhjälp, det ni brukar undra',
-        'faq': [
-            ('Är läxhjälpen på biblioteken verkligen gratis?',
-             'Ja. Den hålls av volontärer från organisationer som Röda Korset och Mattecentrum '
-             'och kostar ingenting.'),
-            ('Behöver man boka?',
-             'För det mesta inte. Både bibliotekens läxhjälp och Mattecentrums räknestugor är '
-             'drop-in. Tiderna ändras mellan terminerna, så kolla på respektive sida innan ni '
-             'går dit.'),
-            ('Vad skiljer Nextrum från gratis läxhjälp?',
-             'Ni får samma studiehjälpare varje gång, en studieplan och en rapport efter varje '
-             'pass, och passen hålls hemma hos er eller online när det passar er. Det kostar '
-             f'{PRIS} i timmen, utan bindningstid.'),
-            ('Går det att kombinera?',
-             'Ja. Det går bra att göra vardagsläxorna på biblioteket och ta en egen '
-             'studiehjälpare inför ett prov eller i ämnet där det tagit stopp. Det finns inget '
-             'avtal som hindrar att ni bara bokar när ni behöver.'),
-        ],
-    },
     {
         'slug': 'hjalpa-barn-med-matte',
         'i_namn': 'i matte hemma',
@@ -967,6 +895,258 @@ GUIDER = [
              'När samma sak tar stopp vecka efter vecka, när läxan blir ett gräl, eller när ett '
              'prov närmar sig och ni inte vet var ni ska börja. Då hjälper det att någon utanför '
              'familjen tar över en del av jobbet.'),
+        ],
+    },
+    {
+        'slug': 'hjalpa-barn-med-lasforstaelse',
+        'i_namn': 'i läsförståelse hemma',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'titel': 'Så hjälper du ditt barn med läsförståelsen | Nextrum',
+        'beskrivning': (
+            'Läs högt också för den som kan läsa själv, prata om texten och förklara orden. '
+            'Råd för föräldrar, och vad ni gör när läsningen går trögt.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'Hjälpa barnet med läsförståelsen',
+        'kort': 'Högläsning, ord och skolans faktatexter',
+        'h1': 'Hjälpa barnet med<br><em>läsförståelsen.</em>',
+        'lede': (
+            'Ett barn kan läsa varje ord rätt och ändå inte förstå vad det läst. Läsförståelse '
+            'går att öva hemma, och det mesta handlar om att läsa tillsammans och prata om texten.'
+        ),
+        'bild': '07-genombrottet',
+        'tint': '#898268',
+        'focal': '38% 40%',
+        'lista_etikett': 'Det ni kan göra hemma',
+        'lista_rubrik': 'Före, under<br>och efter <em>läsningen.</em>',
+        'lista_ingress': (
+            'Det gäller både böcker och skolans faktatexter. Texterna i SO- och NO-böckerna är '
+            'ofta tätare än de ser ut.'
+        ),
+        'lista': [
+            ('Läs högt, också för den som kan själv',
+             'Högläsning låter barnet möta texter som den egna läsningen inte når än: fler ord, '
+             'längre meningar och svårare berättelser. Och det är en stund tillsammans som inte '
+             'är en läxa.'),
+            ('Titta på texten innan ni läser',
+             'Rubrikerna, bilderna, de fetstilta orden och frågorna i slutet av kapitlet säger vad '
+             'texten handlar om. Den som vet vad den letar efter förstår mer av det den läser.'),
+            ('Stanna och prata',
+             '"Vad har hänt hittills?" och "vad tror du händer nu?" håller tanken igång medan ni '
+             'läser. Be barnet berätta med egna ord efteråt: då hörs vad som faktiskt gick fram.'),
+            ('Förklara orden runt facktermerna',
+             'Facktermerna brukar förklaras i texten. Det som tar stopp är oftare orden runt '
+             'omkring: jämför, orsak, påverka, däremot. Förklara dem när de dyker upp, och använd '
+             'dem själv vid middagen.'),
+            ('Låt barnet välja',
+             'Serier, fakta om fotboll eller samma bok för tredje gången. Man blir en bättre läsare '
+             'av att läsa mycket, och det är lättare att läsa mycket när man får läsa det man '
+             'tycker om.'),
+            ('Ljudbok med boken framme',
+             'Ljudböcker ger ord och berättelser, men de tränar inte själva läsningen. Lyssna gärna '
+             'med boken uppslagen framför er, så får barnet båda.'),
+        ],
+        'vinkel_etikett': 'När läsningen går trögt',
+        'vinkel_rubrik': 'Läsningen bär<br>alla <em>ämnen.</em>',
+        'vinkel': [
+            'Den som läser långsamt eller tappar tråden märker det inte bara i svenskan. Det syns i '
+            'SO och NO, där texterna är långa och täta, och i matten, där en textuppgift kan vara '
+            'svårare att läsa än att räkna. Ett barn som säger att det inte kan matte räknar '
+            'ibland bra men fastnar i texten.',
+            'Går läsningen trögt fast ni läser mycket hemma, prata med läraren eller skolans '
+            'specialpedagog. De kan se efter vad det är som gör läsningen svår. Handlar det om att '
+            'förstå snarare än om att läsa orden kan en studiehjälpare hos Nextrum läsa skolans '
+            'egna texter tillsammans med eleven, och rapporten efter varje pass visar hur det går.',
+        ],
+        'faq_rubrik': 'Läsförståelse, det ni brukar undra',
+        'faq': [
+            ('Mitt barn läser orden rätt men förstår inte vad det läst. Vad gör vi?',
+             'Läs kortare bitar och stanna oftare. Låt barnet berätta med egna ord vad som hänt '
+             'innan ni läser vidare, och gå tillbaka i texten tillsammans när något saknas. Det '
+             'övar det som faktiskt är svårt: att hålla ihop det man läst.'),
+            ('Vi pratar ett annat språk hemma. Ska vi läsa på svenska?',
+             'Läs gärna på ert eget språk också. Det barnet förstår och kan prata om på ett språk '
+             'går att bygga vidare på i ett annat, och samtalet om texten är lika mycket värt. '
+             'Svenskan övar barnet i skolan och i böckerna det läser själv.'),
+            ('Hur vet vi om det är dyslexi?',
+             'Det går inte att avgöra hemma. Går läsningen trögt trots övning, gissar barnet ofta '
+             'på orden eller undviker allt som har med text att göra, prata med skolan. En '
+             'specialpedagog kan kartlägga läsningen och se om den behöver utredas vidare.'),
+            ('Hur mycket ska vi läsa?',
+             'Hellre lite varje dag än mycket ibland, och hellre en bok barnet vill läsa än en som '
+             'känns som ett straff.'),
+        ],
+    },
+    {
+        'slug': 'plugga-infor-prov',
+        'i_namn': 'inför prov',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'titel': 'Plugga inför prov: så hjälper du ditt barn | Nextrum',
+        'beskrivning': (
+            'Testa i stället för att läsa om, sprid ut pluggandet och börja med det svåra. '
+            'Råd för föräldrar vars barn har ett prov på gång.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'Plugga inför provet',
+        'kort': 'Testa i stället för att läsa om',
+        'h1': 'Plugga inför<br><em>provet.</em>',
+        'lede': (
+            'Att läsa igenom kapitlet en gång till känns som att plugga, men det är sällan det som '
+            'gör skillnad på provet. Här är det som brukar göra det, och hur du hjälper till utan '
+            'att kunna ämnet själv.'
+        ),
+        'bild': '13-kvallsplugg',
+        'tint': '#453B28',
+        'focal': '46% 44%',
+        'lista_etikett': 'Det som fungerar',
+        'lista_rubrik': 'Från planen<br>till <em>provdagen.</em>',
+        'lista_ingress': (
+            'Inget av det kräver att du kan ämnet. Det mesta handlar om hur och när barnet '
+            'pluggar, inte om hur länge.'
+        ),
+        'lista': [
+            ('Ta reda på vad provet gäller',
+             'Vilka kapitel, vilka begrepp och vilka sorters uppgifter? Läraren brukar säga det i '
+             'klassen eller lägga ut det i skolans plattform. Utan svaret pluggar barnet det som '
+             'känns bekant i stället för det som kommer.'),
+            ('Testa i stället för att läsa om',
+             'Med boken stängd: skriva ner allt man minns, svara på frågorna i slutet av kapitlet, '
+             'räkna uppgifter utan att titta i facit. Att plocka fram något ur minnet gör att det '
+             'sitter bättre än att läsa det en gång till.'),
+            ('Sprid ut det',
+             'Två timmar fördelade på fyra dagar gör mer än två timmar kvällen före. Det som hunnit '
+             'glömmas lite och plockas fram igen sitter bättre än det som pluggats in i ett svep.'),
+            ('Börja med det svåra',
+             'Det är lätt att plugga det man redan kan, för det känns bra. Ta det svåra först, '
+             'medan det finns tid att fråga läraren om det som inte lossnar.'),
+            ('Låt barnet förklara för dig',
+             'Be om en förklaring med egna ord: ett begrepp, en uträkning, varför något hände. Du '
+             'behöver inte kunna svaret. Det hörs var förklaringen tar stopp, och där behövs '
+             'pluggandet.'),
+            ('Sov',
+             'Den som stryker sömn för att plugga mer än vanligt har oftare svårt dagen efter, både '
+             'att hänga med på lektionen och att klara provet. Den sista timmen är sällan värd '
+             'natten.'),
+        ],
+        'kallor': [
+            ('Umeå universitet: testbaserat lärande är effektivt för alla elever',
+             'https://www.umu.se/nyheter/testbaserat-larande-effektivt_11846680/'),
+            ('Dunlosky m.fl. 2013: tio studietekniker jämförda (engelska)',
+             'https://pubmed.ncbi.nlm.nih.gov/26173288/'),
+            ('SRCD: att stryka sömn för att plugga (engelska)',
+             'https://www.srcd.org/news/sacrificing-sleep-study-can-lead-academic-problems'),
+        ],
+        'vinkel_etikett': 'Varför det känns fel',
+        'vinkel_rubrik': 'Det som känns bra<br>är inte det som <em>fungerar.</em>',
+        'vinkel': [
+            'Att läsa om och stryka under känns effektivt, för texten blir mer bekant för varje '
+            'gång. Men att känna igen något är inte samma sak som att kunna det, och på provet '
+            'finns ingen text att känna igen. Att testa sig själv känns tvärtom trögt, för det '
+            'visar det man inte kan än. Det är också det som gör det värt tiden: nu vet man var '
+            'luckorna är.',
+            'Inför ett prov kan studieplanen hos Nextrum byggas bakåt från provdagen, med det '
+            'svåra först och tid att repetera på slutet. Studiehjälparen har nyligen läst samma '
+            'kurs och minns var det brukade ta stopp, och rapporten efter varje pass visar hur '
+            'långt ni har kommit.',
+        ],
+        'faq_rubrik': 'Plugga inför prov, det ni brukar undra',
+        'faq': [
+            ('Hur långt innan provet ska man börja?',
+             'Gärna en till två veckor innan, med korta stunder några dagar i veckan. Då finns det '
+             'tid att repetera, och det som inte lossnar hinner bli en fråga till läraren i stället '
+             'för en överraskning på provet.'),
+            ('Hjälper det att plugga hela kvällen innan?',
+             'Lite, men mindre än samma tid utspridd över flera dagar, och det glöms fortare. Blir '
+             'det sent är sömnen värd mer än den sista timmen.'),
+            ('Barnet säger att det kan allt, men provet går ändå dåligt. Varför?',
+             'Ofta för att det känns bekant, inte för att det sitter. Be barnet svara på några '
+             'frågor utan boken eller räkna ett par uppgifter utan facit. Då syns skillnaden mellan '
+             'att känna igen och att kunna, medan det fortfarande finns tid att göra något åt den.'),
+            ('Hur hjälper jag till om jag inte kan ämnet?',
+             'Förhör. Läs frågorna i slutet av kapitlet högt, eller gör frågor av rubrikerna, och '
+             'låt barnet svara utan att titta. Svaren står i boken, så du behöver inte kunna dem.'),
+        ],
+    },
+    {
+        'slug': 'barnet-vill-inte-gora-laxorna',
+        'i_namn': 'när läxorna tar emot',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'titel': 'När barnet inte vill göra läxorna | Nextrum',
+        'beskrivning': (
+            'Blir läxan ett gräl varje kväll? Rutiner som tar bort förhandlingen, varför '
+            '"jag vill inte" ofta betyder "jag förstår inte", och när ni behöver hjälp.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'När barnet inte vill göra läxorna',
+        'kort': 'Rutiner, motstånd och vad det kan betyda',
+        'h1': 'När barnet inte vill<br>göra <em>läxorna.</em>',
+        'lede': (
+            'Läxan tar tio minuter, men det tar en timme att komma igång. Känns det igen är ni inte '
+            'ensamma. Motståndet går oftast att minska, och ibland säger det något om vad som är '
+            'svårt.'
+        ),
+        'bild': '04-sjalvfortroende',
+        'tint': '#897D6A',
+        'focal': '56% 36%',
+        'lista_etikett': 'Det som brukar hjälpa',
+        'lista_rubrik': 'Mindre förhandling,<br>mer <em>läxa.</em>',
+        'lista_ingress': (
+            'Mycket av bråket handlar om att komma igång, inte om själva läxan. Därför gör små '
+            'ändringar i vardagen ofta mest.'
+        ),
+        'lista': [
+            ('Samma tid, samma plats',
+             'När läxan alltid görs efter mellanmålet vid köksbordet behöver ingen förhandla om '
+             'när. Det är förhandlingen varje dag som tar kraft, för er båda.'),
+            ('Bara den första uppgiften',
+             'Det svåra är att börja. Be om en uppgift, eller tio minuter. När barnet väl är igång '
+             'brukar resten gå lättare än det såg ut.'),
+            ('Dela upp det stora',
+             'En inlämning om tre veckor är svår att börja på, för den ser inte ut att ha någon '
+             'början. Skriv upp stegen tillsammans och bocka av dem ett i taget.'),
+            ('Telefonen i ett annat rum',
+             'Inte upp och ner på bordet, utan någon annanstans. Det är lättare att låta bli något '
+             'som inte finns inom räckhåll.'),
+            ('Fråga vad som är svårt',
+             '"Jag vill inte" betyder ofta "jag förstår inte", för det är lättare att säga. Fråga '
+             'vad uppgiften går ut på, inte varför den inte är gjord.'),
+            ('Berätta för läraren',
+             'Tar läxan en timme när den var tänkt att ta en kvart, eller är den för svår vecka '
+             'efter vecka, behöver läraren veta det. Skolan kan bara anpassa det den känner till.'),
+        ],
+        'vinkel_etikett': 'När det är något mer',
+        'vinkel_rubrik': 'Samma ämne<br>varje <em>gång?</em>',
+        'vinkel': [
+            'Är det samma ämne som tar stopp varje gång handlar det sällan om lathet. Oftare finns '
+            'det en lucka längre bak, ett steg som aldrig satt, och varje ny läxa bygger på det. Då '
+            'blir läxan svår på ett sätt som inte syns utifrån, och att skjuta upp den blir ett '
+            'sätt att slippa känna sig dålig.',
+            'Att sitta längre hjälper sällan då. Det som hjälper är att hitta luckan. En '
+            'studiehjälpare hos Nextrum har nyligen läst samma kurser, börjar med att ta reda på '
+            'var det tar stopp och skriver studieplanen utifrån det. Efter varje pass kommer en '
+            'rapport, så att ni ser vad som händer utan att läxan blir ert gräl.',
+        ],
+        'faq_rubrik': 'Läxbråk, det ni brukar undra',
+        'faq': [
+            ('Ska vi belöna att läxan blir gjord?',
+             'Det kan hjälpa för att komma igång, men det blir lätt en förhandling i sig. En fast '
+             'rutin och en läxa som går att klara håller längre. Beröm hellre det barnet gjorde, '
+             'som att det började själv, än att det blev klart.'),
+            ('Hur mycket ska jag hjälpa till?',
+             'Var i närheten och svara på frågor, men låt barnet göra jobbet. Blir det du som gör '
+             'uppgifterna ser läraren inte vad som är svårt, och då kan skolan inte hjälpa till '
+             'med det.'),
+            ('Hur länge ska läxan få ta?',
+             'Fråga läraren hur lång tid den är tänkt att ta. Tar den mycket längre gång på gång är '
+             'det bättre att sluta efter en rimlig stund och skriva några rader till läraren om var '
+             'det tog stopp, än att sitta tills alla är slut.'),
+            ('Barnet säger att det inte har några läxor. Hur vet vi?',
+             'Fråga skolan var läxorna står. Många skolor lägger ut dem i en app eller på en '
+             'lärplattform, och då går det att se själv i stället för att det blir ett förhör vid '
+             'middagen.'),
         ],
     },
 ]
@@ -1513,8 +1693,9 @@ def jsonld_guide(o):
 
 
 def guidesida(o):
-    """En guide: samma delar som en ämnessida, utan 'så går det till'.
-    Priset står bara med där det hör till frågan (gratis mot betalt)."""
+    """En guide: samma delar som en ämnessida, utan 'så går det till'
+    och utan priset. Priset stod bara i guiden om gratis läxhjälp, där
+    det var själva frågan, och den guiden finns inte längre."""
     huvud, fot = skal()
     huvud = sprakvaxlare(huvud, o['slug'])
 
@@ -1522,7 +1703,6 @@ def guidesida(o):
         f'      <li><em>{i:02d}</em><div><b>{esc(r)}</b><p>{esc(t)}</p></div></li>'
         for i, (r, t) in enumerate(o['lista'], 1))
     vinkel = '\n'.join(f'      <p>{esc(p)}</p>' for p in o['vinkel'])
-    pris = f'\n{prissektion()}' if o.get('pris') else ''
     andra = [g for g in GUIDER if g['slug'] != o['slug']]
     fler = kortsektion('Guider', 'Fler guider', guidekort(andra)) if andra else ''
 
@@ -1553,7 +1733,7 @@ def guidesida(o):
     </div>
   </div>
 </section>
-{pris}
+
 {faq_sektion(o)}{amnen_sektion(o)}{fler}
 {NASTA_STEG}
 
