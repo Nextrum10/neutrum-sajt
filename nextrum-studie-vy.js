@@ -3276,25 +3276,12 @@
     return Number((u && u.timbank_min) || 0);
   };
 
-  /* pris(m) = max(avrundat m/60 × (timpris + tillägg för fler barn) − rabatt, 0),
-     samma regel som minuterspris() i _delad/pris.ts. Timpriset är passets
-     frysta (Fas 19.5), ur passet eller passunderlaget; katalogen är bara
-     reserven. Tillägget för fler barn följer samma källa som timpriset:
-     ett fryst timpris med dagens syskontillägg hade varit ett pris som
-     aldrig gällt. null när inget pris går att räkna. */
+  /* pris(m) = max(avrundat m/60 × (timpris + tillägg för fler barn) − rabatt, 0).
+     Regeln bor i NXBetalning.passpris sedan 2026-09-28, för adminvyns
+     Månadens ekonomi räknar samma sak; här skickas bara passets rad i
+     passunderlaget med. null när inget pris går att räkna. */
   function prisFör(b, minuter) {
-    const u = underlagFör(b);
-    const källa = Number(b.timpris_ore) ? b : (u && Number(u.timpris_ore) ? u : null);
-    let timme = källa ? Number(källa.timpris_ore) : 0, extra = källa ? Number(källa.extra_ore) || 0 : 0;
-    if (!timme) {
-      const tj = NXTjanster.hitta(b.tjanst || NXTjanster.standard());
-      if (!tj || !tj.pris_per_timme_ore) return null;
-      timme = Number(tj.pris_per_timme_ore);
-      extra = Number(tj.extra_personer_ore || 0);
-    }
-    const perTimme = timme + ((b.antal_barn || 1) > 1 ? extra : 0);
-    const rabatt = Math.max(Number(b.rabatt_ore != null ? b.rabatt_ore : (u && u.rabatt_ore) || 0), 0);
-    return Math.max(Math.round(perTimme * Number(minuter) / 60) - rabatt, 0);
+    return NXBetalning.passpris(b, underlagFör(b), minuter);
   }
   /* Första timmen bjuds (Fas 19.5): ett pass på en timme kan kosta
      ingenting. Det betalas inte, och ingen knapp ber om det. */

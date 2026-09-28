@@ -56,7 +56,10 @@ const NXAdmin = (function () {
        månad Ekonomi visar (manad_lage) med de månader som är stängda.
        bokslut är null tills den första hämtningen svarat. */
     tillagg: [], tillaggFel: null,
-    bokslut: null, bokslutFel: null, stangdaManader: new Set()
+    bokslut: null, bokslutFel: null, stangdaManader: new Set(),
+    /* 2026-09-28: Månadens ekonomi. Pass som timbanken betalat hela,
+       och köp av timmar som var testbetalningar. */
+    timbankPass: new Set(), klippkortTest: new Set()
   };
 
   /* Har modulvakten (nextrum-modulvakt.js) redan konstaterat att en
@@ -217,11 +220,15 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov] = await Promise.all([
+           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov,
+           bankPass, kkSkarp] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
-      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, klippkort_id').order('wanted_date', { ascending: false }),
+      /* antal_barn, rabatt_ore, timpris_ore, extra_ore och startrabatt
+         sedan 2026-09-28: Månadens ekonomi räknar vad ett obetalt pass
+         kostar, med samma regel som familjens vy (NXBetalning.passpris). */
+      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, klippkort_id, antal_barn, rabatt_ore, timpris_ore, extra_ore, startrabatt').order('wanted_date', { ascending: false }),
       /* Raderna följer med (Fas 14.6): de är underlaget admin lägger in
          i Fortnox, och vilket pass som står på vilken faktura. */
       supa.from('invoices').select('*, invoice_lines(id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)')
@@ -288,7 +295,14 @@ const NXAdmin = (function () {
          svaren: rekryteringsrutan säger hur det gått, inte vad hen
          kryssade. Bara admin läser tabellen. */
       supa.from('utbildningsprov_forsok').select('ansokan_id, ratt, antal, godkant, skapad')
-        .order('skapad', { ascending: false })
+        .order('skapad', { ascending: false }),
+      /* 2026-09-28, för Månadens ekonomi: vilka pass timbanken betalat
+         hela (ett sådant pass är betalt utan kort och utan klippkort),
+         och vilka köp av timmar som var testbetalningar. klippkort_saldo
+         bär inte stripe_skarp, och ett testköp ska aldrig se ut som
+         pengar in. */
+      supa.from('timbank_uttag').select('booking_id').eq('sort', 'pass'),
+      supa.from('klippkort').select('id, stripe_skarp')
     ]);
 
     S.leads = leads.data || [];
@@ -339,6 +353,8 @@ const NXAdmin = (function () {
     S.tillaggFel = tillagg.error ? felText(tillagg.error) : null;
     S.timbank = bank.data || [];
     S.timbankFel = bank.error ? felText(bank.error) : null;
+    S.timbankPass = new Set((bankPass.data || []).map(r => r.booking_id).filter(Boolean));
+    S.klippkortTest = new Set((kkSkarp.data || []).filter(r => r.stripe_skarp === false).map(r => r.id));
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */

@@ -263,6 +263,56 @@ redan hänt hos Stripe ska gå att skriva ner. Rapportens TEXT går att
 skriva om i en stängd månad; bara pass, elev, datum, närvaro och tid är
 låsta. Underlag och fakturor låses inte: de betalas efter månaden.
 
+**Månadens ekonomi och Löner (2026-09-28)** är två egna sidor under
+Ekonomi i adminvyn, bredvid Betalningar & utbetalningar. Leo: "där ska
+man aktuellt se hur många fakturor som ska skickas samt så många
+lektioner som är betalda för. hur många timmar är betalt samt ej ännu
+betalt ... detta för att ej ha problem om kassalikviditet", och "en till
+avdelning för löner, personer och deras uppgifter samt exportera löner
+till tex fortnox". Inget av dem ändrar databasen eller en edge function:
+allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
+är hela driftsättningen.
+- **Månadens ekonomi** (`#manaden`, `nextrum-admin-manaden.js`) ger
+  varje bekräftat eller genomfört pass i månaden ett läge (`läge()`):
+  betalt med kort, på betald faktura, med köpta timmar, ur timbanken,
+  eller varför det inte är betalt (ska faktureras, faktura inte inlagd i
+  Fortnox, fakturerat, förfallen faktura, hölls utan betalning, inte
+  hållet än). Talen är summor av lägena och är knappar: ett tryck visar
+  familjerna bakom talet, med passen och Öppna familjen (detaljpanelen).
+  Beloppet för det obetalda är vad passet kostar, med samma regel som
+  familjens vy: `NXBetalning.passpris`, flyttad dit ur studievyn samma dag
+  så att webbläsaren har en prisregel och inte två. Köpta timmar räknas
+  på dagen de betalades, och testbetalningar och testköp aldrig
+  (`S.klippkortTest`). Timbankens pass känns igen på
+  `timbank_uttag.sort = 'pass'` (`S.timbankPass`).
+- **Fakturorna skapas från sidan med månadskörningen**, samma körning som
+  under Ekonomi och Löner, och knapparna på varje faktura är desamma som
+  under Ekonomi → Fakturor (`data-fakt-*`, lyssnarna i
+  `nextrum-admin-ekonomi.js`). Körningen är en ruta med `data-kor-ruta`
+  som kan stå på flera ställen; torrkörningen hör till sin ruta, så en
+  torrkörning på en sida ger ingen Skapa-knapp på en annan.
+- **Löner** (`#loner`, `nextrum-admin-loner.js`) listar de godkända
+  studiehjälparna och alla med något att få för månaden, förvalt förra
+  månaden. Anställningsnumret (`lon_anstallning`, Fas 17.1) och
+  timpenningen sätts där; personnummer, adress, bankkonto och
+  skattetabell står i Fortnox Lön och inte här, med flit. Finns månadens
+  underlag gäller underlagets tal; annars räknas samma urval som
+  `fakturering` tar (genomförda, rapporterade, inte undantagna, inte på
+  ett underlag, till och med månadens sista dag) och märks beräknat.
+- **Lönefilen är PAXml 2.0**, som Fortnox Lön läser in under Lön →
+  Kalender → Importera löneunderlag och matchar på anställningsnumret.
+  En `lonetrans` per underlagsrad: anstid, löneart
+  (`foretagsfakta.lonart_timlon`), passets datum, timmar, timpris och
+  belopp. Bara GODKÄNDA underlag kommer med, och utbetalda inte, så ett
+  underlag markerat Utbetald kan inte läsas in igen. Filen byggs inte om
+  lönearten saknas, om någon med godkänt underlag saknar nummer, om
+  raderna inte summerar till underlaget, eller om bolagsfakta säger att
+  studiehjälparna är uppdragstagare. Semesterersättningen står inte i
+  filen: Fortnox lägger på den. **Filen är byggd efter standarden men
+  inte provläst i Fortnox** (Fortnox hjälpsidor och paxml.se nåddes inte
+  från sessionen som byggde den). Läs in den första i en löneperiod som
+  går att kontrollera; nekar Fortnox den är det `paxml()` som ska rättas.
+
 **Studiehjälparens rapporter och ersättning visas månad för månad**
 (2026-09-27): "man ska inte kunna se rapporter från juli idag i
 september". Förvalet är den innevarande månaden. Statistiken (Hur passen
@@ -463,7 +513,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, sök, notiser, bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |
-| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita` |
+| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, manaden (Månadens ekonomi), loner (Löner), tjanster, system, automationer, ai. Anropar varandra via `NXAdmin.rita`. En ny områdesfil ska in i `nextrum-modulvakt.js` också |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med. Mejlen har sin egen kopia av paletten (`FARG` i `_delad/notiser/rendera.ts`) och följer INTE med av sig själva |
@@ -2017,6 +2067,14 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
     och lönetransaktioner går att bygga senare. Den byggs först när
     handarbetet faktiskt kostar tid: en koppling mot bokföringen som går
     sönder tyst är värre än ingen.
+    Leo bad 2026-09-28 att fakturorna skulle "kopplas vidare till tex
+    fortnox". Lönen går sedan dess dit som en fil (PAXml, under Löner,
+    avsnitt 1). Fakturorna gör det inte: Fortnox läser inte in
+    kundfakturor från en fil, bara genom API:t eller betalda
+    tilläggsappar, och en API-koppling gick inte att prova utan ett
+    Fortnox-konto med bankgiro, som bolaget inte har än. Den byggs som ett
+    eget steg när kontot finns, på samma sätt som Google (Fas 18.1):
+    OAuth, nyckeln i en tabell utan policy, och ett anrop per faktura.
   - **Tio dagar, inga avgifter.** `BETALNINGSVILLKOR_DAGAR` står i
     `nextrum-config.js` och `_delad/konstanter.ts`, och
     `kolla-betalningsvillkor.py` jämför dem. Villkoren nämner ingen
