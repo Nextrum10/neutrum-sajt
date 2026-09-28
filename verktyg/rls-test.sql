@@ -6399,34 +6399,48 @@ end $$;
 -- skriva med den. Ett fel här är en fråga som barnet inte kan klara,
 -- och det syns inte i någon vy: det ser ut som att barnet svarade fel.
 -- Innan banken är inläst finns inga rader, och proven går igenom.
-insert into utfall (test, ok, detalj)
-select 'UPG banken: varje godtaget skrivsvar rättas rätt', count(*) = 0,
-       coalesce(string_agg(q.id::text || ' "' || a || '"', ', '), 'inga')
-  from public.niva_fragor q, jsonb_array_elements_text(q.ratt) a
- where q.aktiv and q.typ = 'skriv' and not intern.niva_ratta(q, jsonb_build_object('text', a));
+--
+-- I ett block, och bara när tabellen finns: är Fas 23.1 inte körd
+-- blir det en röd rad som säger det. Stod satserna fritt hade de
+-- avbrutit hela filen, och en svit som inte går att köra provar
+-- ingenting.
+do $$
+begin
+  if to_regclass('public.niva_fragor') is null then
+    insert into utfall (test, ok, detalj)
+    values ('UPG banken', false, 'Fas 23.1 är inte körd: niva_fragor finns inte');
+    return;
+  end if;
 
-insert into utfall (test, ok, detalj)
-select 'UPG banken: rätt alternativ rättas rätt, och inget annat', count(*) = 0,
-       coalesce(string_agg(q.id::text || ' ' || i, ', '), 'inga')
-  from public.niva_fragor q, generate_series(0, jsonb_array_length(q.alternativ) - 1) i
- where q.aktiv and q.typ = 'val'
-   and intern.niva_ratta(q, jsonb_build_object('val', i)) <> (i = (q.ratt #>> '{}')::int);
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: varje godtaget skrivsvar rättas rätt', count(*) = 0,
+         coalesce(string_agg(q.id::text || ' "' || a || '"', ', '), 'inga')
+    from public.niva_fragor q, jsonb_array_elements_text(q.ratt) a
+   where q.aktiv and q.typ = 'skriv' and not intern.niva_ratta(q, jsonb_build_object('text', a));
 
-insert into utfall (test, ok, detalj)
-select 'UPG banken: rätt ordning rättas rätt, omvänd fel', count(*) = 0,
-       coalesce(string_agg(q.id::text, ', '), 'inga')
-  from public.niva_fragor q
- where q.aktiv and q.typ = 'ordna'
-   and (not intern.niva_ratta(q, jsonb_build_object('ordning', q.ratt))
-        or intern.niva_ratta(q, jsonb_build_object('ordning',
-             (select jsonb_agg(x order by n desc) from jsonb_array_elements(q.ratt) with ordinality y(x, n)))));
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: rätt alternativ rättas rätt, och inget annat', count(*) = 0,
+         coalesce(string_agg(q.id::text || ' ' || i, ', '), 'inga')
+    from public.niva_fragor q, generate_series(0, jsonb_array_length(q.alternativ) - 1) i
+   where q.aktiv and q.typ = 'val'
+     and intern.niva_ratta(q, jsonb_build_object('val', i)) <> (i = (q.ratt #>> '{}')::int);
 
-insert into utfall (test, ok, detalj)
-select 'UPG banken: sifferknappar bara när varje svar är siffror', count(*) = 0,
-       coalesce(string_agg(q.id::text, ', '), 'inga')
-  from public.niva_fragor q
- where q.aktiv and q.typ = 'skriv' and (intern.niva_fraga_ut(q) ->> 'numerisk')::boolean
-   and exists (select 1 from jsonb_array_elements_text(q.ratt) a where a !~ '^[0-9 ,.%]+$');
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: rätt ordning rättas rätt, omvänd fel', count(*) = 0,
+         coalesce(string_agg(q.id::text, ', '), 'inga')
+    from public.niva_fragor q
+   where q.aktiv and q.typ = 'ordna'
+     and (not intern.niva_ratta(q, jsonb_build_object('ordning', q.ratt))
+          or intern.niva_ratta(q, jsonb_build_object('ordning',
+               (select jsonb_agg(x order by n desc) from jsonb_array_elements(q.ratt) with ordinality y(x, n)))));
+
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: sifferknappar bara när varje svar är siffror', count(*) = 0,
+         coalesce(string_agg(q.id::text, ', '), 'inga')
+    from public.niva_fragor q
+   where q.aktiv and q.typ = 'skriv' and (intern.niva_fraga_ut(q) ->> 'numerisk')::boolean
+     and exists (select 1 from jsonb_array_elements_text(q.ratt) a where a !~ '^[0-9 ,.%]+$');
+end $$;
 
 select test, ok is true as ok, detalj from utfall order by nr;
 
