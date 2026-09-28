@@ -883,6 +883,55 @@ tryck, och allt som redan var valt hade studsat varje gång. iPhone
 tänder `:active` först med en touch-lyssnare på sidan; den står i
 `nextrum-studie.js`.
 
+### Innehållet i studievyn och studiehjälparvyn (2026-09-28)
+
+Leo: "spalterna till vänster är snygga men innehållet kan bli
+snyggare", och sedan "det behöver se bra ut på mobil och enkelt att
+använda". Förslaget visades som skärmbilder bredvid skisser och godkändes
+("jätte bra"). Sidomenyn är orörd, och adminvyn också:
+allt står sist i `nextrum-arbetsyta.css` under `.vy:not(.vy-admin)`,
+avsnittet INNEHÅLLET. Sex regler:
+
+1. **Färgen på ett läge säger vems drag det är.** Lera är ert drag
+   eller ett fel, ockra väntar på någon annan, mossa är klart. Förut
+   hade Betalt och Ej betalt samma grå kant. De mjuka tonerna
+   (`--mossa-soft`, `--ockra-soft` och texttonerna), `--yta`,
+   `--yta-fot`, `--tint` och `--bricka` står i cinemas `:root`, i båda
+   mörka blocken; avsnittet i arbetsyta har inga egna hexkoder.
+2. **Ett drag överst, resten längst ner.** Passets sida
+   (`NXStudie.passSida`) tar `datum`, `val` (betalvalen), `belopp`,
+   `fakta` och `fot`, och ett block med `forst` står direkt under
+   beskedet. Föreslå ny tid, skriv och avboka står i foten, och Avboka
+   är en stilla länk (`.ps-fot-lank`), inte en knapp lika stor som
+   Betala. Samma i båda vyerna.
+3. **En knapp per rad i en lista** (`radBetala`). Två knappar bredvid ett
+   märke bröt raden i tre på en telefon. Alla betalval står på passets
+   sida, dit raden leder.
+4. **Tiden och platsen ritar `NXKontakt.passRad`**, med ikon, ur passet.
+   Anroparen skickar `med` ("med Alva"), `not`, `varning` och `lage`
+   (null tar bort märket), inte tid eller plats i `under`: förut stod
+   platsen två gånger när både raden och anroparen skrev den.
+5. **Betalvalen heter `.vy-betalval`, inte `.vy-val`.** `.vy-val` är
+   ämnes- och formatväljarna i formulären, och första versionen gjorde
+   dem till ett rutnät med 220 px breda celler.
+6. **Månaden väljs med en stegare** (`månadsval` med `stegare: true`) i
+   studiehjälparens rapporter och ersättning och i familjens Bekräftade.
+   Raden med tolv knappar låg i en dold flik när den ritades, så den
+   innevarande månaden hamnade utanför kanten. "Den här månaden" står
+   alltid och tar sin plats, osynlig på den innevarande, annars sköt den
+   ner allt under raden efter första trycket. Adminvyns Ekonomi har kvar
+   raden: där jämför man månader bredvid varandra.
+
+Och några saker som kostade en omgång: basrubriken `h5` bär en
+`margin-top` i em, som med den större rubriken blev 27 px luft överst i
+varje kort. En grupp som döljs när den är tom ligger i en `.vy-del`, och
+då är rubriken första barnet där och tappar sin luft; regeln för
+`.vy-del` ger tillbaka den. Studietiden per vecka på Översikt är fyllt
+(genomfört) och streckat (bokat) i samma mossa: mossa och lera som två
+serier föll i palettprovet för färgblinda. Krockkollen på föreslagna
+tider (`krockFör`) finns bara i vyn: databasen nekar två bekräftade pass
+på samma starttid, inte två som överlappar.
+
 Provbänken (`skanna.js` i en scratchpad, inte i repot) trycker på varje
 knapp i varje sektion och rapporterar hopp över 40 px. Admin var ren.
 Den mäter `scrollY`, inte vad som står stilla på skärmen, så fällan i
