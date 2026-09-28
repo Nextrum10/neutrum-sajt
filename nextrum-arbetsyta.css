@@ -520,6 +520,13 @@
    del av avtalet, inte en fotnot. */
 .bk-anger{margin:14px 0 0;font-size:.84rem;line-height:1.55;color:var(--muted);max-width:62ch}
 .bk-anger a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+/* Köpta timmar överst i Boka pass (2026-09-28): vad familjen har kvar
+   innan en dag är vald. Samma lugna yta som tryckytorna. */
+.bk-timmar{margin:0 0 16px;padding:12px 16px;border-radius:14px;background:var(--pap-2);
+  font-size:.92rem;line-height:1.5;color:var(--bl-2)}
+.bk-timmar p{margin:0}
+.bk-timmar b{color:var(--bl)}
+.bk-timmar .bk-timmar-not{margin-top:4px;font-size:.84rem;color:var(--bl-3)}
 /* På en telefon ligger kvittoraden klistrad längst ned. Ett fält som
    får fokus ska hamna ovanför den, inte bakom den. */
 .bk .inp{scroll-margin-bottom:190px}

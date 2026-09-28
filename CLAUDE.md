@@ -190,6 +190,15 @@ med timmarna oanvända bredvid.
   avbokat som använt, också ett som inte hållits, och sedan Fas 22.3
   betalar en timme som blir ledig nästa bekräftade pass inom fem
   minuter: avbokas bara det betalda passet flyttar timmen till nästa.
+**Boka pass visar timmarna innan något är valt** (2026-09-28, Leo:
+"innan du bokar ett pass ska det stå 4 av 4 timmar kvar"). Överst står
+varje kort med timmarna kvar och sista dagen (`#boka-timmar`), och vid
+knappen står "Era timmar, −1 timme, 3 kvar efter" i stället för
+priset när timmarna räcker (`opts.timmar` i `NXArbete.bokning`).
+Förslag och bekräftade obetalda pass som redan väntar på timmarna
+räknas bort (`lovadeTimmar`), så att fem förslag på fyra timmar inte
+alla får höra att de är betalda. Passet med första timmen bjuden visar
+priset som förut: timmarna betalar det inte.
 Profil → Timbanken visar köpta timmar kort för kort, med passen varje
 kort betalat ur vyn `klippkort_rorelser` (samma timmar som
 `klippkort_saldo`), och de sparade minuterna under dem. `rls-test.sql`
