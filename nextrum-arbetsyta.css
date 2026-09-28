@@ -1124,7 +1124,11 @@ button.fel-person:hover{border-color:var(--bl-3)}
    ------------------------------------------------------------ */
 .adm-topp{
   position:sticky;
-  top:clamp(64px,7vw,84px);
+  /* Sidhuvudets verkliga höjd, satt av sidomeny() i nextrum-studie.js.
+     Fästet var clamp(64px,7vw,84px), en gissning som stod 9 px under
+     sidhuvudet på en bred skärm (innehåll syntes glida förbi i springan)
+     och 11 px in under det på en telefon. */
+  top:var(--vy-hdr-h,75px);
   z-index:30;
   display:flex;align-items:center;gap:12px;
   margin-bottom:clamp(16px,2vw,22px);
@@ -1341,7 +1345,29 @@ button.fel-person:hover{border-color:var(--bl-3)}
    toppraden när man scrollar — offseten i vy-lagret räknar bara
    med sidhuvudet, som är det enda klistrade i de andra vyerna. */
 @media (min-width:900px){
-  .vy-admin .vy-sido{top:calc(clamp(64px,7vw,84px) + 66px)}
+  .vy-admin .vy-sido{
+    top:calc(var(--vy-hdr-h,75px) + 66px);
+    /* Menyn är 1 236 px hög och stod fast utan egen rullning. På en
+       bärbar syntes hälften: Ekonomi, Löner och System nåddes först när
+       sidan rullats drygt en meter, och under en kort sektion var det
+       menyn som bestämde sidans höjd, så det fanns nästan 600 px tom sida
+       att rulla. Nu rullar den själv, och foten med vem som är inloggad står
+       kvar längst ned i den. Sidomeny() håller den valda posten i bild. */
+    max-height:calc(100vh - var(--vy-hdr-h,75px) - 66px - 16px);
+    overflow-x:hidden;overflow-y:auto;
+    scrollbar-width:thin;
+    scrollbar-color:color-mix(in srgb,var(--bl-3) 60%,transparent) transparent;
+  }
+  /* Markeringen ritas inuti posten: en ring utanför den klipps av
+     menyns egen rullning. */
+  .vy-admin .vy-sido a:focus-visible{outline-offset:-2px}
+  /* "Betalningar & utbetalningar" är 199 px men får plats på 158: den
+     stack ut 29 px, och på den valda posten var slutet osynligt (ljus
+     text på sidans ljusa bakgrund utanför den mörka pillen). Med menyns
+     klippta sida hade det blivit en avhuggen etikett. Den bryter rad.
+     Ord bryts aldrig mitt i. Hopfälld meny döljer etiketten som förut. */
+  .vy-admin .vy-sido .adm-etikett{white-space:normal;min-width:0}
+  .vy-admin .vy-sido .adm-sido-fot{position:sticky;bottom:0;background:var(--pap)}
 }
 @media (max-width:899px){.adm-sido-fot{display:none}}
 .adm-sido-fot .nx-avatar{flex:none}
@@ -1959,10 +1985,18 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .dp-flik[aria-selected="true"]{color:var(--bl);border-bottom-color:var(--acc)}
 
 .dp-kropp{
-  flex:1;overflow-y:auto;
+  flex:1;overflow-y:auto;overscroll-behavior:contain;
   padding:20px 22px 32px;
 }
 .dp-panel[hidden]{display:none}
+
+/* Sidan bakom panelen står still medan den är öppen. Förut rullade den:
+   ett hjulsteg över den mörka bakgrunden flyttade sidan 500 px, och när
+   panelen nått sitt slut fortsatte rullningen ut i sidan bakom. Låset
+   följer panelens egen hidden, så det finns inget läge att glömma att
+   släppa. Springan för rullningslisten hålls kvar, annars hoppar sidan
+   åt sidan när listen försvinner. */
+html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 
 /* Nyckeltal i panelen. Tre eller fyra små tal överst i en flik,
    smalare än adminvyns egna eftersom kolumnen är 560px. */

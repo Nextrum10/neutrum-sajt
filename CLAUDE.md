@@ -974,6 +974,52 @@ Sidhuvudet i vyerna är helt täckande sedan dess: med 97 % syntes text
 som rullade under det. Hälsningen överst tar fortfarande 446 px av en
 844 px hög telefon, med flit: nästa pass och meddelandena står där.
 
+**Adminvyns rullning** (2026-09-28, Leo: "skroll funktion i admin är
+konstig"). Provbänken nedan sa "Admin var ren", för den mäter hopp vid
+tryck. Det som var fel hörde inte dit. Fyra saker, mätta före och efter i
+Chromium på 1440×800 med en stubbad `supabase-js` (en falsk `createClient`
+som svarar "inloggad admin" och tomma listor, lagd över filen i `bibliotek/`
+med en route i Playwright):
+
+1. **Ett sektionsbyte lade rubriken bakom toppraden.** `täcktÖverst()`
+   räknade sidhuvudet och telefonens sektionsrad men inte adminvyns egen
+   toppråd (`.adm-topp`, klistrad under sidhuvudet på alla bredder). Från
+   ett scrollat läge landade varje byte 66 px för lågt, med rubriken och
+   ingressen dolda: 4 av 4 byten. Raden räknas nu där den STÅR när den
+   klistrat (`top` + höjd), inte där den ligger just nu, för överst på
+   sidan ligger den längre ned. Mät var rubriken hamnar mot radens
+   nederkant, inte bara `scrollY`.
+2. **Menyn var fast men kunde inte rullas.** Den är 1 236 px hög. På en
+   bärbar syntes hälften: Ekonomi, Löner och System nåddes först när sidan
+   rullats 1 140 px, utloggningen gick inte att trycka på, och under en
+   kort sektion var det menyn som bestämde sidans höjd (593 px tom sida
+   utöver det som hör dit). Nu har den `max-height` och egen rullning på en
+   dator. Foten med den inloggade är `position:sticky` längst ned i den, och
+   `sidomeny()` drar menyn, aldrig sidan, så att den valda posten syns när
+   man kommer dit från en länk eller en adress. Menyn klipper i sidled,
+   och etiketten "Betalningar & utbetalningar" (199 px på 158) stack ut 29 px
+   och var på den valda posten delvis osynlig (ljus text på ljust): den
+   bryter nu rad. Kommer en längre etikett måste den också få göra det.
+3. **Sidan bakom personpanelen rullade.** Ett hjulsteg över den mörka
+   bakgrunden flyttade sidan 500 px. `html:has(.dp:not([hidden]))` låser den
+   nu, av panelens egen `hidden`, så det finns inget lås att glömma att
+   släppa, och `.dp-kropp` har `overscroll-behavior:contain`.
+4. **Toppraden fäste på en gissning.** `clamp(64px,7vw,84px)`: 9 px under
+   sidhuvudet på en bred skärm, så innehåll syntes glida förbi i springan,
+   och 11 px in under det på en telefon. Sidhuvudet är 75 px på alla
+   bredder. Raden och menyn läser nu `--vy-hdr-h`, som `sidomeny()` mäter.
+
+Headless Chromium döljer rullningslister som standard. Starta med
+`ignoreDefaultArgs: ['--hide-scrollbars']`, annars syns inte vad en 15 px
+list gör med menyns bredd. Familje- och studiehjälparvyn provades mot
+orörda filer efter ändringen och beter sig likadant i alla byten.
+
+**Kvar, medvetet inte gjort:** adminmenyn står inte fast på en telefon, till
+skillnad från de andra vyerna, och där står toppradens sökfält över
+brödsmulan så att sektionens namn inte syns. Två fasta rader ovanför
+innehållet tar 144 av 844 px, och det är en avvägning för den som sitter
+i adminvyn på telefon, inte ett fel.
+
 Provbänken (`skanna.js` i en scratchpad, inte i repot) trycker på varje
 knapp i varje sektion och rapporterar hopp över 40 px. Admin var ren.
 Den mäter `scrollY`, inte vad som står stilla på skärmen, så fällan i
