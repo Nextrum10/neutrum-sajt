@@ -766,7 +766,7 @@
       + '<span class="ut-framsteg-pil" aria-hidden="true">↑</span>'
       + '<span class="ut-framsteg-text"><b>' + esc(e.område) + '</b>'
       + '<span>' + esc(e.ämne + ' · ' + NXStudie.stegText(e.från) + ' → ' + NXStudie.stegText(e.till)) + '</span></span>'
-      + '<time>' + esc(datumText(String(e.när).slice(0, 10))) + '</time>'
+      + '<time>' + esc(datumText(isoFor(new Date(e.när)))) + '</time>'
       + '</div>').join('') + '</div>';
   }
 
@@ -879,7 +879,7 @@
     }
     const p = data[0];
     S.plan = p;
-    $('#plan-uppdaterad').textContent = p.updated_at ? 'uppdaterad ' + datumText(String(p.updated_at).slice(0, 10)) : '';
+    $('#plan-uppdaterad').textContent = p.updated_at ? 'uppdaterad ' + datumText(isoFor(new Date(p.updated_at))) : '';
     host.innerHTML =
       '<div class="plan-meta">'
       + (p.subject ? '<span class="tag">' + esc(p.subject) + '</span>' : '')
@@ -1001,8 +1001,10 @@
     if (!box || !host) return;
 
     const nyckel = b => String(b.wanted_date || '') + String(b.wanted_time || '');
+    const idag = isoFor(new Date());
     const föreslagna = (S.bokningar || [])
-      .filter(b => b.status === 'requested' && b.created_by && b.created_by !== S.user.id)
+      .filter(b => b.status === 'requested' && b.created_by && b.created_by !== S.user.id
+        && b.wanted_date >= idag)
       .sort((a, c) => nyckel(a).localeCompare(nyckel(c)));
 
     /* Dold, inte tom: en ruta som står kvar och säger "inget att
@@ -1272,12 +1274,16 @@
   /* Svarar true när rapporten är bekräftad, också om den redan var det
      (23505: bekräftad i en annan flik eller på en annan enhet). Vem och
      när sätts av databasen; härifrån skickas bara vilken rapport. */
-  async function bekräftaRapport(id) {
+  async function bekräftaRapport(id, knapp) {
     if (!id) return false;
     if (S.rb.bekräftade[id]) return true;
     const { error } = await supa.from('rapport_bekraftelser').insert({ rapport_id: id });
     if (error && error.code !== '23505') {
-      säg($('#rb-msg'), 'Rapporten gick inte att bekräfta: ' + felText(error), false);
+      /* Beskedet där familjen tryckte: på passets sida eller i
+         passlistan syns #rb-msg inte. */
+      const sek = knapp && knapp.isConnected ? knapp.closest('.vy-sek') : null;
+      säg((sek && sek.querySelector('.ok-msg')) || $('#rb-msg'),
+        'Rapporten gick inte att bekräfta: ' + felText(error), false);
       return false;
     }
     S.rb.bekräftade[id] = new Date().toISOString();
@@ -1310,7 +1316,7 @@
     const kort = knapp && knapp.closest('[data-rb-rapport]');
     const r = kort ? { id: kort.dataset.rbRapport } : rapportFörPass(passId);
     if (!r) return false;
-    await bekräftaRapport(r.id);
+    await bekräftaRapport(r.id, knapp);
     return true;
   }
 
@@ -1327,7 +1333,7 @@
     const k = e.target.closest('[data-rb-bekrafta]');
     if (!k) return;
     await medan(k, 'Bekräftar…', async () => {
-      if (!(await bekräftaRapport(k.dataset.rbBekrafta))) return;
+      if (!(await bekräftaRapport(k.dataset.rbBekrafta, k))) return;
       rbRitaOm(() => säg($('#rb-msg'), 'Tack. Rapporten är bekräftad.', true));
       // Knappen kan också stå på passets sida.
       if (passIdIAdressen()) ritaPassSida();
@@ -1452,8 +1458,14 @@
     ritaTimbankProfil();
   }
 
-  /* En timme per påbörjad timme, som i klippkort_dra. */
-  const passTimmar = b => Math.max(1, Math.ceil((Number(b.duration_min) || 60) / 60));
+  /* En timme per påbörjad timme, som i klippkort_dra: på ett genomfört
+     pass av den hållna tiden, upp till det bokade (Fas 20.1). Förut
+     räknades alltid det bokade, och rutan lovade två timmar där en drogs. */
+  const passTimmar = b => {
+    const bokat = Number(b.duration_min) || 60;
+    const min = b.status === 'completed' && underlagFör(b) ? Math.min(bokat, debiteradeMin(b)) : bokat;
+    return Math.max(1, Math.ceil(min / 60));
+  };
 
   /* Kortet timmarna dras från: det som går ut först och räcker. Samma
      urval som klippkort_dra gör — funktionen väljer själv, det här
@@ -1950,6 +1962,10 @@
       knapp: 'Dra ' + ord(behov)
     });
     if (!ok) return;
+    /* Rapporten bekräftas först när familjen sagt ja i rutan (Fas 19.2:
+       betalsättet ÄR bekräftelsen). Förut skrevs bekräftelsen innan
+       rutan visades, och ett Avbryt lämnade den kvar. */
+    await bekräftaVid(knapp, passId);
     await medan(knapp, 'Drar…', async () => {
       const svar = await supa.functions.invoke('klippkort-betala', { body: { pass: passId } });
       if (svar.error) { beskedNära(knapp, await funktionsText(svar.error), false); return; }
@@ -1973,6 +1989,7 @@
       knapp: 'Dra ' + tidLängd(behov)
     });
     if (!ok) return;
+    await bekräftaVid(knapp, passId);
     await medan(knapp, 'Drar…', async () => {
       const svar = await supa.functions.invoke('klippkort-betala', { body: { pass: passId, timbank: true } });
       if (svar.error) { beskedNära(knapp, await funktionsText(svar.error), false); return; }
@@ -2379,17 +2396,23 @@
          raden leder. Tre knappar på varje rad blev på en telefon tre
          rader knappar under varje pass, och listan gick inte att läsa. */
       let knappar = '';
-      if (derasFörslag && b.status === 'requested') {
+      /* Ett förslag vars tid passerat går inte att svara på: passets
+         sida säger redan "Tiden har passerat", och ett ja hade gett ett
+         bekräftat pass i går som timmarna sedan betalar. */
+      if (derasFörslag && b.status === 'requested' && b.wanted_date >= isoFor(new Date())) {
         knappar = svarsKnappar(b, true);
       } else if (kanBetalas(b)) {
         /* Betalningen hör till BEKRÄFTADE pass, inte till förfrågningar
            (Fas 12.2). Ett pass som studiehjälparen ännu inte tackat ja
            till kan avböjas, och då hade varje förfrågan blivit en
            återbetalning: en kortavgift vi inte får tillbaka, och en
-           familj som undrar vad som hände. Ett genomfört pass som inte
-           är betalt får knappen också (Fas 14.2): utan månadsfakturan
-           finns ingen annan väg att betala det. */
-        knappar = betalaKnapp(b, true);
+           familj som undrar vad som hände. Ett genomfört pass betalas
+           under Bekräfta rapport, där rapporten står (Fas 19.2): ett
+           betalsätt valt här hade bekräftat en rapport familjen aldrig
+           sett, och bekräftelsen går inte att ta tillbaka. */
+        knappar = b.status === 'completed'
+          ? '<a class="btn btn-primary btn-sm" href="#bekrafta">Till rapporten</a>'
+          : betalaKnapp(b, true);
       }
 
       /* Platsen står direkt på raden. Ett pass på plats är en resa —
@@ -2512,9 +2535,9 @@
     if (kv) { await väljBetalsätt(kv, kv.dataset.kortVal, 'ingen'); return; }
 
     const tim = e.target.closest('[data-timmar]');
-    if (tim) { await bekräftaVid(tim, tim.dataset.timmar); await betalaMedTimmar(tim, tim.dataset.timmar); return; }
+    if (tim) { await betalaMedTimmar(tim, tim.dataset.timmar); return; }
     const tb = e.target.closest('[data-timbank]');
-    if (tb) { await bekräftaVid(tb, tb.dataset.timbank); await betalaMedBanken(tb, tb.dataset.timbank); return; }
+    if (tb) { await betalaMedBanken(tb, tb.dataset.timbank); return; }
     const köp = e.target.closest('[data-kop]');
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
 
@@ -2576,7 +2599,8 @@
        som helst, men en föreslagen tid blockerar studiehjälparens
        kalender tills någon säger ja eller nej. */
     const föreslagna = (S.bokningar || []).filter(b =>
-      b.status === 'requested' && b.created_by && b.created_by !== S.user.id);
+      b.status === 'requested' && b.created_by && b.created_by !== S.user.id
+      && b.wanted_date >= isoFor(new Date()));
     if (föreslagna.length) {
       const f = föreslagna[0];
       poster.push({
@@ -3410,7 +3434,8 @@
           : b.betalning_status === 'faktura' && b.status !== 'cancelled'
             ? (fakturaFör(b.id) && fakturaFör(b.id).fortnox_fakturanummer && fakturaFör(b.id).status !== 'utkast'
                 ? 'Faktura ' + fakturaFör(b.id).fortnox_fakturanummer : 'Mot faktura')
-          : b.status === 'requested' ? 'Betalas när passet är bekräftat'
+          : b.status === 'requested' && ['betald', 'tvist'].indexOf(b.betalning_status) === -1
+            ? 'Betalas när passet är bekräftat'
           : b.status === 'cancelled' ? (b.betalning_status && b.betalning_status !== 'ingen'
               ? BETALNING_TEXT[b.betalning_status] : null)
           : (BETALNING_TEXT[b.betalning_status || 'ingen'] || null)],
@@ -3679,7 +3704,10 @@
     ritaNotiser();
     await ritaÖvSamtal();
     visaBetalsvar(betalsvar);
-    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
+    /* then() är det som skickar frågan: supabase-js bygger bara anropet
+       tills någon väntar på det. Utan den skrevs last_seen_at aldrig. */
+    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id)
+      .then(() => {}, () => {});
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');
    }

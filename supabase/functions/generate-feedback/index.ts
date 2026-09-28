@@ -29,13 +29,14 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight();
 
   try {
+    // Agerar SOM den inloggade läraren, inte som admin. RLS gäller.
+    // Behörigheten före nyckeln, som i drift och lead-notis.
+    const vem = await kravInloggad(req.headers.get('Authorization'));
+    if (!vem.ok) return vem.svar;
+
     if (!ANTHROPIC_API_KEY) {
       return json({ error: 'ANTHROPIC_API_KEY är inte satt som secret på servern.' }, 500);
     }
-
-    // Agerar SOM den inloggade läraren, inte som admin. RLS gäller.
-    const vem = await kravInloggad(req.headers.get('Authorization'));
-    if (!vem.ok) return vem.svar;
     const supa = vem.klient;
 
     const { report_id } = await req.json();

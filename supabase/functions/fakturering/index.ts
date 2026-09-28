@@ -142,8 +142,11 @@ Deno.serve(async (req) => {
     let korningAv: 'nyckel' | 'admin';
     const nyckel = req.headers.get('x-fakturering-nyckel');
     if (nyckel !== null) {
+      // Att secreten saknas står i funktionens logg, inte i svaret: den
+      // som gissar på en nyckel ska inte få veta hur servern är inställd.
       if (!NYCKEL) {
-        return json({ error: 'FAKTURERING_NYCKEL är inte satt som secret. Nyckelvägen är stängd.' }, 500);
+        console.error('fakturering: FAKTURERING_NYCKEL är inte satt som secret. Nyckelvägen är stängd.');
+        return json({ error: 'Fel nyckel.' }, 401);
       }
       if (!lika(nyckel, NYCKEL)) return json({ error: 'Fel nyckel.' }, 401);
       korningAv = 'nyckel';

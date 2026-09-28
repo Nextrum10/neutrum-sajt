@@ -3483,7 +3483,9 @@
     ritaNotiser();
     await Promise.all([ritaÖvSamtal(), laddaErsattning()]);
     /* Stämpla besöket sist — notiserna räknas mot den förra. */
-    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id);
+    /* then() är det som skickar frågan: utan den skrevs last_seen_at aldrig. */
+    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id)
+      .then(() => {}, () => {});
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');
    }

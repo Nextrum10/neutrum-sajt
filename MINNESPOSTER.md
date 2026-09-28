@@ -42,7 +42,7 @@ färskare än den här posten.**
 Stacken: inget byggsteg, ingen pakethanterare, inget ramverk. Statiska
 filer i repotroten serveras direkt. Vanilla JS som IIFE:er på `window`
 (NX, NXStudie, NXArbete, NXMedia, NXKontakt, NXBetalning, NXTjanster,
-NXAgent, NXMotion). Backend: Supabase plus Deno edge functions. Mejl via
+NXAgent, NXMotion, NXSamtycke). Backend: Supabase plus Deno edge functions. Mejl via
 Resend. Modeller från Anthropic, bara i edge functions.
 
 Affären: familjen skickar intresseanmälan, Nextrum ringer och väljer

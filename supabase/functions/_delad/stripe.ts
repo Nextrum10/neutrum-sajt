@@ -114,14 +114,26 @@ export async function v1(
     'Stripe-Version': API_VERSION,
   };
   if (metod === 'POST') headers['content-type'] = 'application/x-www-form-urlencoded';
+  const text = metod === 'POST' ? formulardata(kropp ?? {}).join('&') : undefined;
   // Idempotensnyckeln gäller bara skrivningar. Stripe struntar i den
   // på GET, men att skicka den där hade dolt att den saknas på en POST.
-  if (idempotens && metod === 'POST') headers['Idempotency-Key'] = idempotens;
+  //
+  // KROPPENS SUMMA STÅR I NYCKELN. Stripe vägrar en nyckel som återanvänds
+  // med andra parametrar inom ett dygn. Anroparnas nycklar bär pass och
+  // belopp, men sessionen bär också datum, ämne och e-post: en familj som
+  // tryckt Betala, flyttat passet och tryckt igen fick ett idempotensfel i
+  // stället för en kassa, i upp till ett dygn. Samma kropp ger fortfarande
+  // samma nyckel, så ett dubbeltryck ger fortfarande en kassa.
+  if (idempotens && metod === 'POST') {
+    const summa = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)));
+    headers['Idempotency-Key'] = idempotens + '-'
+      + Array.from(summa.slice(0, 8), (b) => b.toString(16).padStart(2, '0')).join('');
+  }
 
   const r = await fetch(`${BAS}${vag}`, {
     method: metod,
     headers,
-    body: metod === 'POST' ? formulardata(kropp ?? {}).join('&') : undefined,
+    body: text,
   });
   const data = await las(r);
   kastaOmFel(r, data);
