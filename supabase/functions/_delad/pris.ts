@@ -371,7 +371,7 @@ export const minuterSum = (rader: Rad[]) => rader.reduce((a, r) => a + r.minuter
 // Svaret. `obetalda` står alltid med, också tom: en tom lista är ett
 // besked ("alla hållna pass är betalda"), en saknad nyckel är en fråga.
 export function sammanfatta(o: {
-  korningAv: 'nyckel' | 'admin';
+  korningAv: 'nyckel' | 'schema' | 'admin';
   period: string;
   slut: string;
   timprisOre: number;

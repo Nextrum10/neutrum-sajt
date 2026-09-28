@@ -5,6 +5,15 @@
 // kommit med på ett underlag, och skapar ett underlag per
 // studiehjälpare: vad hen ska få den 25:e.
 //
+// Underlaget är lönespecifikationen studiehjälparen ser under
+// Utbetalning för månaden (2026-09-28). Därför finns sedan samma dag
+// ett schema som kör funktionen den 1:a varje månad, pg_cron
+// manadskorning: utan det finns ingen lönespec för en månad förrän
+// någon kommer ihåg knappen under Ekonomi → Månadskörning.
+// DEPLOY-BETALNING.md avsnitt 6 säger när schemat slås på. Knappen
+// finns kvar, för en månad som aldrig kördes och en körning som inte
+// gick.
+//
 // FAMILJEN BETALAR MED KORT, ELLER MOT FAKTURA OM DEN VALT DET.
 // Fas 14.2 tog bort månadsfakturan: familjen betalar varje pass med
 // kort, genom stripe-checkout, i förväg eller efter passet när de
@@ -32,10 +41,19 @@
 // Den här funktionen använder service_role, för payouts och fakturornas
 // belopp skrivs med flit inte från webbläsaren: kan ingen skriva belopp
 // där kan ingen skriva fel belopp. Därför får den heller inte gå att
-// anropa av vem som helst. Två vägar in:
+// anropa av vem som helst. Tre vägar in:
 //
-//   · x-fakturering-nyckel som matchar secreten FAKTURERING_NYCKEL —
-//     för ett schema, som inte är en inloggad användare.
+//   · x-nextrum-notis med hemligheten i notis_konfig: SCHEMAT, pg_cron
+//     manadskorning den 1:a varje månad genom intern.manadskorning_vack()
+//     (2026-09-28). Samma väg och samma hemlighet som notiserna och
+//     gallringen. Den vägen skriver alltid FÖRRA månaden, vad anropet än
+//     säger: hemligheten delas med notisfunktionerna, och den som kommit
+//     över den ska inte kunna skriva ett underlag för en månad som pågår.
+//   · x-fakturering-nyckel som matchar secreten FAKTURERING_NYCKEL. Byggd
+//     för ett schema utanför databasen som aldrig kom. Ett schema i
+//     databasen hade behövt nyckeln på två ställen, secreten och en
+//     tabell, och två kopior av en hemlighet glider isär (CLAUDE.md
+//     avsnitt 6). Vägen står kvar för den som satt secreten.
 //   · en inloggad ADMIN. Knapparna under Ekonomi → Månadskörning.
 //     Inloggningen prövas mot Auth och is_admin läses med anroparens
 //     egen token, innan service_role används till något.
@@ -66,6 +84,7 @@
 
 import { cors, json as jsonMed, preflight } from '../_delad/http.ts';
 import { kravAdmin, lika, serviceklient } from '../_delad/auth.ts';
+import { hemlighetOk } from '../_delad/notis.ts';
 import {
   byggFakturor, byggUnderlag, minuterSum, type Pass, sammanfatta, sorteraPass,
   standardTjanst, summa, type Tjanst,
@@ -75,7 +94,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const NYCKEL = Deno.env.get('FAKTURERING_NYCKEL');
 
-const CORS = cors('x-fakturering-nyckel');
+const CORS = cors('x-fakturering-nyckel', 'x-nextrum-notis');
 const json = (body: unknown, status: number) => jsonMed(body, status, CORS);
 
 // Periodens första dag som YYYY-MM-DD. Alla belopp hör till en månad,
@@ -139,7 +158,7 @@ Deno.serve(async (req) => {
     }
 
     // ---------- vem anropar ----------
-    let korningAv: 'nyckel' | 'admin';
+    let korningAv: 'nyckel' | 'schema' | 'admin';
     const nyckel = req.headers.get('x-fakturering-nyckel');
     if (nyckel !== null) {
       // Att secreten saknas står i funktionens logg, inte i svaret: den
@@ -150,6 +169,18 @@ Deno.serve(async (req) => {
       }
       if (!lika(nyckel, NYCKEL)) return json({ error: 'Fel nyckel.' }, 401);
       korningAv = 'nyckel';
+    } else if (req.headers.get('x-nextrum-notis') !== null) {
+      // Schemat. Går notis_konfig inte att läsa är det servern som är
+      // trasig och inte hemligheten, och då blir det 500, inte 401:
+      // svaret står i net._http_response och under System → Fel, och en
+      // 401 där läses som fel hemlighet (_delad/notis.ts, hemlighetOk).
+      try {
+        if (!await hemlighetOk(req, serviceklient())) return json({ error: 'Fel eller saknad hemlighet.' }, 401);
+      } catch {
+        console.error('fakturering: hemligheten gick inte att pröva');
+        return json({ error: 'Tjänsten är inte tillgänglig just nu.' }, 500);
+      }
+      korningAv = 'schema';
     } else {
       const auth = req.headers.get('Authorization');
       if (!auth) return json({ error: 'Ingen nyckel och ingen inloggning.' }, 401);
@@ -160,7 +191,8 @@ Deno.serve(async (req) => {
 
     const kropp = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     const torrkorning = kropp.torrkorning === true;
-    const period = kropp.period === undefined || kropp.period === null || kropp.period === ''
+    // Schemat får ingen period att välja. Se SÄKERHET ovan.
+    const period = korningAv === 'schema' || kropp.period === undefined || kropp.period === null || kropp.period === ''
       ? forraManaden(new Date())
       : tolkaPeriod(kropp.period);
     if (!period) return json({ error: 'Perioden ska skrivas ÅÅÅÅ-MM, till exempel 2026-09.' }, 400);

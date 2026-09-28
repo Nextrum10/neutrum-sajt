@@ -1091,36 +1091,12 @@ section[data-sek]{overflow-anchor:none}
 
 .bet-vad b{font-size:1.02rem;font-weight:700;letter-spacing:-.024em;display:block;color:var(--bl)}
 .bet-vad span{font-size:.82rem;color:var(--bl-2);display:block;margin-top:3px}
-.bet-fel{color:var(--acc) !important}
 
 .bet-atg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-self:end}
 .bet-atg .btn{padding:6px 12px;font-size:.8rem}
 @container (max-width:430px){
   .bet{grid-template-columns:auto 1fr}
   .bet-atg{grid-column:1/-1;justify-self:start;margin-top:2px}
-}
-
-/* ------------------------------------------------------------
-   RADERNA I EN FAKTURA
-   Ett pass per rad. Den som undrar varför summan ser ut som den
-   gör ska kunna räkna efter själv.
-   ------------------------------------------------------------ */
-.bet-rader{
-  margin-top:12px;padding-top:12px;
-  border-top:1px dashed var(--ln);
-}
-.bet-rad{
-  display:grid;grid-template-columns:1fr auto auto;
-  gap:12px;align-items:baseline;
-  padding:6px 0;font-size:.85rem;color:var(--bl-2);
-}
-.bet-rad-tid{
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.08em;color:var(--bl-3);
-}
-.bet-rad-belopp{
-  font-variant-numeric:tabular-nums;
-  font-weight:600;color:var(--bl);min-width:76px;text-align:right;
 }
 
 /* ------------------------------------------------------------
@@ -1143,13 +1119,69 @@ section[data-sek]{overflow-anchor:none}
   margin-top:14px;font-size:.83rem;line-height:1.6;color:var(--bl-2);
 }
 
+/* ------------------------------------------------------------
+   LÖNESPECIFIKATIONEN (2026-09-28)
+   Studiehjälparens underlag för en månad, som det dokument det är:
+   vem, vilken period, när pengarna kommer, varje pass och summan.
+   Den som undrar varför summan ser ut som den gör ska kunna räkna
+   efter själv, därför är raderna en tabell och inte en lista.
+   ------------------------------------------------------------ */
+.lonespec-topp{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.lonespec-avs{
+  display:block;font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3);
+}
+.lonespec-man{
+  margin:6px 0 0;font-size:clamp(1.25rem,2.4vw,1.55rem);font-weight:700;
+  letter-spacing:-.03em;line-height:1.1;color:var(--bl);
+}
+.lonespec-fakta{margin:16px 0 0}
+.lonespec-fakta div{
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:7px 0;border-bottom:1px solid var(--ln);
+}
+.lonespec-fakta dt{font-size:.82rem;color:var(--bl-2)}
+.lonespec-fakta dd{margin:0;font-size:.9rem;font-weight:600;color:var(--bl);text-align:right}
+.lonespec-rader{width:100%;border-collapse:collapse;margin-top:18px;font-size:.86rem}
+.lonespec-rader th,.lonespec-rader td{padding:8px 0;text-align:left;vertical-align:baseline}
+.lonespec-rader th + th,.lonespec-rader td + td{padding-left:14px}
+.lonespec-rader thead th{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--bl-3);border-bottom:1px solid var(--ln);
+}
+.lonespec-rader tbody td{color:var(--bl-2);border-bottom:1px dashed var(--ln)}
+.lonespec-rader tbody tr:last-child td{border-bottom:none}
+.lonespec-rader .lonespec-tal{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.lonespec-rader tbody .lonespec-tal:last-child{color:var(--bl);font-weight:600}
+.lonespec-rader tfoot th,.lonespec-rader tfoot td{
+  border-top:1px solid var(--ln-2);padding-top:12px;
+  font-size:1rem;font-weight:700;color:var(--bl);
+}
+.lonespec-rader tfoot th span{display:block;margin-top:3px;font-size:.78rem;font-weight:500;color:var(--bl-2)}
+.lonespec-not{margin:12px 0 0;font-size:.83rem;line-height:1.6;color:var(--bl-2)}
+.lonespec-fel{color:var(--acc)}
+.lonespec-fraga{margin:14px 0 0;font-size:.8rem;color:var(--bl-3)}
+.lonespec-fraga a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.lonespec-atg{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+.lonespec-atg .btn{padding:6px 12px;font-size:.8rem}
 
-/* En faktura och dess rader hör ihop som ett block. Utan omslaget
-   träffar .bet:last-child fel, eftersom raderna ligger emellan. */
-.bet-post{padding:16px 0;border-bottom:1px solid var(--ln)}
-.bet-post:first-child{padding-top:0}
-.bet-post:last-child{border-bottom:none;padding-bottom:0}
-.bet-post .bet{padding:0;border-bottom:none}
+/* Utskriften. Knappen lägger en kopia av lönespecifikationen i
+   #utskrift, direkt under body (skrivUt i nextrum-larare-vy.js), och
+   allt annat göms så länge html bär .skriver-ut. Färgerna står med
+   namn och inte med variablerna: i mörkt läge är texten ljus, och ljus
+   text på vitt papper syns inte. */
+#utskrift{display:none}
+@media print{
+  html.skriver-ut body > :not(#utskrift){display:none !important}
+  html.skriver-ut body{margin:0;padding:0;background:white}
+  html.skriver-ut #utskrift{display:block;color:black}
+  html.skriver-ut #utskrift *{
+    color:black !important;background:none !important;
+    border-color:silver !important;box-shadow:none !important;
+  }
+  html.skriver-ut #utskrift .lonespec-atg{display:none}
+  html.skriver-ut #utskrift .lonespec-rader tr{break-inside:avoid}
+}
 
 /* ============================================================
    ELEVLISTAN
