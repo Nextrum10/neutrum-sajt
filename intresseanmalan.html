@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=ad8203ae">
+<link rel="stylesheet" href="nextrum-cinema.css?v=1ba60ec7">
 </head>
 <body>
 
@@ -220,12 +220,13 @@
               <input class="inp" id="l-tider" name="tider" placeholder="t.ex. vardagar efter 16"></div>
             <div class="pay-field full"><label for="l-msg">Vad eleven behöver hjälp med</label>
               <textarea class="inp" id="l-msg" name="message" placeholder="Vad går trögt just nu? Finns det något vi bör veta för att välja rätt person?"></textarea>
+              <p class="nx-fil-hjalp">Skriv inte diagnoser, personnummer eller annat känsligt här. Det räcker med vad eleven behöver hjälp med, resten tar vi i samtalet.</p>
             </div>
 
             <label class="nx-samtycke full" for="l-gdpr">
               <input type="checkbox" id="l-gdpr" required>
-              <span>Jag godkänner att Nextrum sparar uppgifterna för att kunna kontakta er om
-                intresseanmälan. <a href="/integritetspolicy">Så hanterar vi uppgifter</a>.</span>
+              <span>Jag har läst <a href="/integritetspolicy">hur Nextrum hanterar uppgifterna</a>.
+                De sparas för att vi ska kunna kontakta er om anmälan.</span>
             </label>
 
             <div class="nx-submit-row">
@@ -366,29 +367,11 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<!-- Vercel Web Analytics.
-
-     Sätter INGA cookies: unika besökare räknas via en hash av
-     IP och webbläsare med ett salt som byts dagligen, och den råa
-     IP-adressen sparas inte. Därför krävs inget samtycke — men det
-     står ändå i integritetspolicyn och på lagring.html, eftersom
-     "vi mäter ingenting" inte längre är sant.
-
-     Bara på de öppna sidorna. De inloggade vyerna mäts inte: där
-     finns inget att optimera för besökarens skull, och det vore ett
-     onödigt anrop från en sida där någon sköter sitt barns skolgång.
-
-     Sökvägen är absolut och serveras av Vercel. Lokalt ger den 404,
-     vilket är ofarligt — inget mäts när man utvecklar. -->
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Speed Insights: Core Web Vitals från riktiga besökare i stället
-     för gissningar. Samma cookiefria upplägg som mätningen ovan. -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
-<script src="nextrum-config.js?v=ab7b84a1"></script>
+<script src="nextrum-config.js?v=21cecc53"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a72665a2"></script>
-<script src="nextrum-samtycke.js?v=c15d8f5b"></script>
+<script src="nextrum-app.js?v=936814f4"></script>
+<script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
@@ -505,7 +488,7 @@
       if (tel) extra.push('Telefon: ' + tel);
       if (format) extra.push('Önskat upplägg: ' + format);
       if (tider) extra.push('Tider som passar: ' + tider);
-      extra.push('Samtycke till lagring: ja (' + new Date().toISOString().slice(0, 10) + ')');
+      extra.push('Läst integritetspolicyn: ja (' + new Date().toISOString().slice(0, 10) + ')');
 
       const fritext = $('#l-msg').value.trim();
       const message = [fritext, extra.join('\n')].filter(Boolean).join('\n\n');

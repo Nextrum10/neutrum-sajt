@@ -623,7 +623,7 @@ Fyra saker att veta, alla dyrköpta:
    skriven i sidans eget skript blir svensk på den engelska sidan och
    **ingen strukturkontroll ser det**.
 2. **Bara det som visas.** Strängar som skrivs till databasen
-   ("Telefon: ", "Samtycke till lagring: ja") förblir svenska — de
+   ("Telefon: ", "Läst integritetspolicyn: ja") förblir svenska — de
    läses av oss.
 3. **Generatorn finns inte i repot.** `/en/`-sidorna är incheckade
    artefakter. Ändras en svensk sida måste engelskan följa med för
@@ -870,6 +870,34 @@ kör alla fyra från fliken System → Automationer.
    det bakfylldes: en gissad siffra räknas med i medelvärdet utan att
    någon ser att den är gissad.
 
+### Gallringen (2026-09-27)
+
+Integritetspolicyn lovar lagringstider, och det är databasen som
+håller dem, inte en människa som kommer ihåg. `DATASKYDD.md` har hela
+registret; det här är det som rör koden.
+
+- **Intresseanmälningar avidentifieras, de tas inte bort.**
+  `intern.leads_avidentifiera()` (pg_cron `leads-avidentifiering`,
+  varje natt) tömmer namn, e-post, barnets namn, fritexten och
+  noteringen sex månader efter senaste kontakten
+  (`intern.leads_avidentifieras_fran()`, enda stället regeln står).
+  `email = 'gallrad'` är markeringen. Raden står kvar så att
+  analysvyerna räknar lika många anmälningar bakåt i tiden.
+- **Konton raderas aldrig automatiskt.** `intern.konton_oanvanda()`
+  (`konton-oanvanda`, den 1:a varje månad) gör ett konto som inte
+  använts på två år till en uppgift. Ett konto hänger ihop med
+  bokföringsunderlag som ska sparas i sju år, och det avgör en
+  människa.
+- **Ett jobb som fastnat blir en uppgift** (`gallring:leads:fastnat`).
+  Ett jobb som tyst slutat fungera ser annars ut som ett som inte har
+  något att göra.
+- **Kontaktmeddelanden tas bort efter sex månader, klientfel efter
+  nittio dagar** (`intern.kontakt_och_fel_gallra()`, pg_cron
+  `kontakt-och-fel-gallring`). Notiserna har egna tider i
+  `notis_stada()`: 180 dagar i vyn, 90 för utskicken.
+- Ansökningar och CV:n gallras av `ansokan-gallring` (PR #90), med
+  samma princip: filen först, raden sedan.
+
 ### Notiserna (Runda 2)
 
 Vägen är alltid densamma, och ingen del av den kan hoppas över:
@@ -1085,6 +1113,17 @@ dashboarden, inte härifrån, och har inte det här skalet.
 
 Den här är inte förhandlingsbar och förklarar större delen av koden.
 
+Dataskyddet på pappret (registret över behandlingar,
+konsekvensbedömningen, incidentrutinen och biträdena) står i
+`DATASKYDD.md`. **Ändras vad som sparas, till vem det går eller hur
+länge: ändra `DATASKYDD.md` och integritetspolicyn på båda språken i
+samma ändring.**
+
+Det som skickas till Anthropic från rapportutkasten och hälsningarna
+går genom `_delad/minimera.ts`: förnamnet, och fritext där
+personnummer, telefonnummer och e-post är maskade. Samma regler som
+`maska_kontakt()` i databasen; ändras den ena ska den andra ändras.
+
 **Allt skydd ligger i RLS. Ingenting ligger i gränssnittet.**
 Adminvyn hämtar med samma anon-nyckel som alla andra. Att gömma en
 knapp är inte säkerhet — den som inte är admin får tomma svar oavsett
@@ -1177,7 +1216,20 @@ bara när något där är på.** Är allt av finns ingen ruta, ingen länk i
 footern och ingenting lagras: en ruta som ber om lov till ingenting är
 brus.
 
-- **Källspårningen är det enda som är på.** Med ett ja minns
+- **Två syften, två val: statistik och annonser.** Rutan har Neka
+  alla, Godkänn alla och en kryssruta per syfte (ingen förkryssad) med
+  Spara mitt val. Svaret är `{v:2, val:{statistik, annonser}}`; ett
+  svar i det gamla formatet räknas som inget svar. `SYFTE` i
+  `nextrum-samtycke.js` säger vilket syfte varje reglage hör till.
+- **Vercels besöksstatistik laddas först efter ja** (2026-09-27).
+  Taggarna till `/_vercel/insights` och `/_vercel/speed-insights` stod
+  förut statiskt på alla 35 sidor och körde innan någon frågats. Den
+  räknar utan cookies, men skriptet får webbläsaren att skicka data,
+  och det är "åtkomst" enligt EDPB:s riktlinjer 2/2023; PTS räknar
+  statistik som inte nödvändig. Nu lägger `laddaVercel()` in dem vid
+  ja. **Lägg aldrig tillbaka en statisk tagg.** Dras ett ja tillbaka
+  laddas sidan om, för ett skript som redan kört går inte att stänga av.
+- **Källspårningen hör till annonser.** Med ett ja minns
   webbläsaren landningen tills fliken stängs (sessionStorage
   `nx-kalla`, skrivs av `NX.källa()`), så att en anmälan krediteras
   annonsen och inte sidan den skickades från. **Utan ja är en okänd

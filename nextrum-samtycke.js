@@ -2,40 +2,49 @@
    NEXTRUM — samtycket (NXSamtycke)
 
    Rutan som frågar om lov, och det enda stället som får svara på
-   frågan "får vi?". Allt som kräver samtycke (LEK 9 kap. 28 §) går
-   genom har() och laddas först när svaret är ja.
+   frågan "får vi?". Allt som lagrar eller läser något i besökarens
+   enhet utan att vara nödvändigt för det besökaren bett om kräver
+   samtycke (LEK 9 kap. 28 §), och går genom har() och laddas först
+   när svaret är ja.
 
-   RUTAN VISAS BARA NÄR DET FINNS NÅGOT ATT FRÅGA OM. Vad det är
-   står i NEXTRUM_CONFIG.SAMTYCKE. Är allt där av finns ingen ruta,
-   ingen länk i footern och ingenting lagras; en ruta som ber om lov
-   till ingenting är brus, och den som ser en sådan slutar läsa den
-   som betyder något.
+   RUTAN VISAS BARA NÄR DET FINNS NÅGOT ATT FRÅGA OM. Vad det är står
+   i NEXTRUM_CONFIG.SAMTYCKE. Är allt där av finns ingen ruta, ingen
+   länk i footern och ingenting lagras.
 
-   Tre syften, ett beslut:
-   - kallsparning: webbläsaren minns varifrån besökaren kom tills
-     fliken stängs (sessionStorage 'nx-kalla', skrivs av NX.källa()).
-     Utan det krediteras en anmälan sidan den skickades från, och en
-     familj som kom från en annons och läste tre sidor först blev
-     "direkt". Då går annonspengarna åt fel håll.
-   - meta, google: annonspixlarna. Laddas aldrig förrän svaret är ja,
-     och bara när ett id står i konfigurationen.
-   Ett ja gäller de syften rutan beskrev när det gavs (`omfattar`).
-   Slås ett nytt syfte på frågar rutan igen: ett ja till att minnas
-   en länk är inte ett ja till Meta.
+   TVÅ SYFTEN, OCH BESÖKAREN VÄLJER VARJE FÖR SIG. Ett samtycke ska
+   vara specifikt (GDPR art. 4.11), och ett ja till statistik är inte
+   ett ja till annonsmätning:
+   - statistik: Vercel Web Analytics och Speed Insights. De sätter
+     ingen cookie, men skriptet får webbläsaren att skicka sidadress,
+     hänvisare och enhet, och EDPB räknar det som "åtkomst" i
+     enheten (riktlinjer 2/2023). Sverige har inget undantag för
+     statistik, och PTS räknar statistik som inte nödvändigt. Därför
+     laddas skripten här, efter ja, och inte i sidorna. Före 27
+     september 2026 stod de i varje sida med en kommentar om att
+     inget samtycke krävdes.
+   - annonser: källspårningen (webbläsaren minns i sessionStorage
+     'nx-kalla', skrivet av NX.källa(), varifrån besökaren kom tills
+     fliken stängs) och, om ett id står i konfigurationen, Metas och
+     Googles pixlar.
+   Ett svar gäller de funktioner rutan beskrev när det gavs
+   (`omfattar`). Slås en ny på frågar rutan igen: ett ja till att
+   minnas en länk är inte ett ja till Meta.
 
-   JA OCH NEJ SER LIKADANA UT. Samma knapp, samma storlek, samma
-   plats. En ruta där nej är en grå länk är inte ett fritt val, och
-   IMY har sagt det i klartext.
+   NEJ ÄR LIKA LÄTT SOM JA. "Neka alla" och "Godkänn alla" är samma
+   knapp bredvid varandra, på första nivån, och inget är förkryssat.
+   PTS och IMY kräver det (IMY:s reprimand mot ATG 2025 gällde just
+   en Acceptera som syntes tydligare än Neka).
 
    Svaret sparas i localStorage ('nx-samtycke') i ett år och frågas
    sedan igen. Att minnas svaret kräver inget samtycke, för utan det
-   går det inte att låta bli att fråga. Webbläsare som skickar Global
-   Privacy Control behandlas som ett nej utan att rutan visas.
+   går det inte att låta bli att fråga. Global Privacy Control räknas
+   som nej till allt utan att rutan visas; panelen på lagring.html
+   säger det, och där går det att ändra.
 
    Laddas efter nextrum-app.js, bara på de öppna sidorna. De inloggade
-   vyerna har ingenting som kräver samtycke, och deras CSP släpper
-   inte in någon pixel. Allt som skrivs till besökaren står som par i
-   ORD: /en/-generatorn översätter aldrig <script>.
+   vyerna har ingenting som kräver samtycke. Allt som skrivs till
+   besökaren står som par i ORD: /en/-generatorn översätter aldrig
+   <script>.
    ============================================================ */
 const NXSamtycke = (function () {
   'use strict';
@@ -46,31 +55,36 @@ const NXSamtycke = (function () {
   const GILTIG_MS = 365 * 24 * 3600 * 1000;
   const EN = String(document.documentElement.lang || 'sv').slice(0, 2) === 'en';
 
-  /* Rubriken är en fråga man kan svara ja eller nej på, och texten
-     säger varför innan den säger vad: den som förstår skälet kan välja,
-     den som bara får en teknisk beskrivning klickar bort rutan. Allt
-     som krävs för ett giltigt samtycke står ändå där: syftet, vad som
-     sparas, hur länge, att nej är lika bra och var man ändrar sig. */
+  /* Texten säger vad som mäts, av vem, hur länge och att nej fungerar
+     lika bra: det ett giltigt samtycke kräver, i vanliga ord. Två
+     tidigare rubriker med ordlekar valdes bort samma dag. */
   const ORD = {
     et:          ['Cookies och lagring', 'Cookies and storage'],
-    rubrik:      ['Får vi se vilken väg du tog hit?', 'Mind if we see how you found us?'],
-    kalla:       ['Då vet vi vilka annonser och länkar som faktiskt leder familjer till oss, och slutar lägga pengar där de inte gör nytta. Det stannar i din webbläsare tills du stänger fliken, och följer bara med om du skickar ett formulär till oss. Ingen cookie, ingen profil.',
-                  'Then we know which ads and links actually bring families to us, and stop spending money where it does no good. It stays in your browser until you close the tab, and only comes along if you send us a form. No cookie, no profile.'],
-    meta:        ['Meta (Facebook och Instagram) får veta att du kom från deras annons och om du skickade en anmälan. Meta kan koppla det till ditt konto hos dem.',
-                  'Meta (Facebook and Instagram) learns that you came from their ad and whether you sent an enquiry. Meta may link this to your account with them.'],
+    rubrik:      ['Du bestämmer vad vi får mäta', 'You decide what we may measure'],
+    intro:       ['Sajten fungerar likadant oavsett vad du väljer, och inget av det sätter cookies.',
+                  'The site works the same whatever you choose, and none of it sets cookies.'],
+    statistik:   ['Besöksstatistik', 'Visitor statistics'],
+    statistikOm: ['Hur många som besöker sajten och vilka sidor som läses. Vercel räknar åt oss.',
+                  'How many people visit and which pages are read. Vercel counts for us.'],
+    annonser:    ['Annonsmätning', 'Ad measurement'],
+    kalla:       ['Om du kom hit via en annons eller en länk, så att vi ser vad som fungerar. Webbläsaren minns det tills du stänger fliken.',
+                  'Whether you came through an ad or a link, so we can see what works. Your browser remembers it until you close the tab.'],
+    meta:        ['Meta (Facebook och Instagram) får veta att du kom från deras annons och om du skickade en anmälan, och kan koppla det till ditt konto hos dem.',
+                  'Meta (Facebook and Instagram) learns that you came from their ad and whether you sent an enquiry, and may link this to your account with them.'],
     google:      ['Google får veta att du kom från deras annons och om du skickade en anmälan.',
                   'Google learns that you came from their ad and whether you sent an enquiry.'],
-    fot:         ['Nej går lika bra, allt fungerar likadant. Du kan ändra dig när som helst längst ner på sidan.',
-                  'No is just as fine, everything works the same. You can change your mind any time at the bottom of the page.'],
-    nejOk:       ['Nej går lika bra, allt fungerar likadant.', 'No is just as fine, everything works the same.'],
-    ja:          ['Ja, gärna', 'Yes, sure'],
-    nej:         ['Nej tack', 'No thanks'],
+    nekaAlla:    ['Neka alla', 'Reject all'],
+    godkannAlla: ['Godkänn alla', 'Accept all'],
+    sparaVal:    ['Spara mitt val', 'Save my choice'],
+    fot:         ['Ändra dig när som helst under Cookieinställningar längst ner.',
+                  'Change your mind any time under Cookie settings at the bottom.'],
     läsMer:      ['Läs mer', 'Read more'],
     region:      ['Samtycke', 'Consent'],
-    valtJa:      ['Ditt val: ja, sedan {d}.', 'Your choice: yes, since {d}.'],
-    valtNej:     ['Ditt val: nej, sedan {d}.', 'Your choice: no, since {d}.'],
-    gpc:         ['Din webbläsare säger att du inte vill spåras (Global Privacy Control), så vi räknar det som ett nej. Du kan ändra det här.',
-                  'Your browser says you do not want to be tracked (Global Privacy Control), so we treat it as a no. You can change that here.'],
+    valt:        ['Ditt val sedan {d}: {lista}.', 'Your choice since {d}: {lista}.'],
+    ja:          ['ja', 'yes'],
+    nej:         ['nej', 'no'],
+    gpc:         ['Din webbläsare säger att du inte vill spåras (Global Privacy Control), så vi räknar det som nej till allt. Du kan ändra det här.',
+                  'Your browser says you do not want to be tracked (Global Privacy Control), so we treat it as no to everything. You can change that here.'],
     ejValt:      ['Du har inte valt än.', 'You have not chosen yet.'],
     inget:       ['Det finns inget att samtycka till just nu: sajten använder ingenting som kräver det.',
                   'There is nothing to consent to at the moment: the site uses nothing that requires it.']
@@ -92,23 +106,30 @@ const NXSamtycke = (function () {
     const id = String(CFG.GOOGLE_TAG_ID || '').trim();
     return /^(G|AW)-[A-Z0-9]{4,20}$/.test(id) ? id : '';
   }
-  function aktiva() {
+  function adsMål() {
+    const mål = String(CFG.GOOGLE_ADS_LEAD || '').trim();
+    return /^AW-[A-Z0-9]+\/[\w-]+$/.test(mål) ? mål : '';
+  }
+  /* Funktionerna, och vilket syfte var och en hör till. */
+  const SYFTE = { statistik: 'statistik', kallsparning: 'annonser', meta: 'annonser', google: 'annonser' };
+  function funktioner() {
     const a = [];
+    if (CFG.STATISTIK) a.push('statistik');
     if (CFG.KALLSPARNING) a.push('kallsparning');
     if (metaId()) a.push('meta');
     if (googleId()) a.push('google');
     return a;
   }
+  function syften() {
+    const f = funktioner();
+    return ['statistik', 'annonser'].filter(s => f.some(x => SYFTE[x] === s));
+  }
 
   /* ---------- svaret ---------- */
-  /* localStorage kastar i privat läge i vissa webbläsare. Svaret
-     gäller då sidan ut, och rutan kommer tillbaka på nästa. Det är
-     irriterande men ärligt: ett svar vi inte kan minnas har vi inte.
-
-     Svaret som gavs PÅ SIDAN vinner över det som står lagrat. Går
+  /* Svaret som gavs PÅ SIDAN vinner över det som står lagrat. Går
      skrivningen inte igenom (fullt, privat läge i äldre Safari) står
-     det gamla kvar i lagringen, och då hade ett gammalt nej slagit
-     ett nytt ja. */
+     det gamla kvar i lagringen, och då hade ett gammalt nej slagit ett
+     nytt ja. Går lagringen inte alls gäller svaret sidan ut. */
   let minne = null;
   function läs() {
     if (minne) return minne;
@@ -118,34 +139,54 @@ const NXSamtycke = (function () {
     } catch (e) { /* ingenting lagrat som går att läsa */ }
     return null;
   }
+  /* Ett svar från före september 2026 (v1, ett enda ja eller nej)
+     gäller inte: det beskrev inte statistiken. */
   function giltigt(s) {
-    if (!s || typeof s.ja !== 'boolean' || !Array.isArray(s.omfattar)) return false;
+    if (!s || s.v !== 2 || typeof s.val !== 'object' || !s.val || !Array.isArray(s.omfattar)) return false;
     const tid = Date.parse(s.tid);
     if (!tid || Date.now() - tid > GILTIG_MS) return false;
-    return aktiva().every(a => s.omfattar.indexOf(a) >= 0);
+    return funktioner().every(f => s.omfattar.indexOf(f) >= 0);
   }
   function gpc() {
     try { return navigator.globalPrivacyControl === true; } catch (e) { return false; }
   }
-  /* Har besökaren sagt ja till just det här syftet, och är det på? */
-  function har(syfte) {
-    if (aktiva().indexOf(syfte) < 0) return false;
+  /* Har besökaren sagt ja till syftet den här funktionen hör till,
+     och är funktionen på? */
+  function har(funktion) {
+    if (funktioner().indexOf(funktion) < 0) return false;
     const s = läs();
-    return giltigt(s) && s.ja === true && s.omfattar.indexOf(syfte) >= 0;
+    return giltigt(s) && s.val[SYFTE[funktion]] === true;
   }
-  function spara(ja) {
-    const förut = läs();
-    const s = { v: 1, ja: ja, omfattar: aktiva(), tid: new Date().toISOString() };
+  function nuvarande() {
+    const s = läs();
+    return giltigt(s) ? s.val : null;
+  }
+
+  let laddat = { statistik: false, annonser: false };
+  function spara(val) {
+    const förut = nuvarande() || {};
+    const s = { v: 2, val: {}, omfattar: funktioner(), tid: new Date().toISOString() };
+    syften().forEach(k => { s.val[k] = val[k] === true; });
     minne = s;
     try { localStorage.setItem(NYCKEL, JSON.stringify(s)); } catch (e) { /* minnet får räcka */ }
-    if (ja) tillämpa();
-    else rensa(förut && förut.ja === true);
-    try { if (typeof NX !== 'undefined') NX.händelse('samtycke', { val: ja ? 'ja' : 'nej' }); } catch (e) {}
+
+    tillämpa();
+    let laddaOm = false;
+    if (!s.val.annonser) { rensaAnnonser(); if (förut.annonser && laddat.annonser) laddaOm = true; }
+    if (!s.val.statistik && förut.statistik && laddat.statistik) laddaOm = true;
+    try {
+      if (typeof NX !== 'undefined') NX.händelse('samtycke', {
+        statistik: s.val.statistik ? 'ja' : 'nej', annonser: s.val.annonser ? 'ja' : 'nej'
+      });
+    } catch (e) {}
+    /* Ett skript som redan körts går inte att ladda ur. Drogs ett ja
+       tillbaka medan skripten var igång laddas sidan om, utan dem. */
+    if (laddaOm) location.reload();
   }
 
   /* ---------- ja: det som får köras ---------- */
-  let pixlarLaddade = false;
   function tillämpa() {
+    if (har('statistik') && !laddat.statistik) { laddaVercel(); laddat.statistik = true; }
     /* Källan skrivs direkt, så att sidan besökaren landade på räknas
        också när ja kom först här. Kom ja på en senare sida är
        landningen redan borta; NX.källa() sparar då inget alls hellre
@@ -153,8 +194,8 @@ const NXSamtycke = (function () {
     if (har('kallsparning') && typeof NX !== 'undefined' && NX.källa) {
       try { NX.källa(); } catch (e) {}
     }
-    if (har('meta')) { laddaMeta(metaId()); pixlarLaddade = true; }
-    if (har('google')) { laddaGoogle(googleId()); pixlarLaddade = true; }
+    if (har('meta')) { laddaMeta(metaId()); laddat.annonser = true; }
+    if (har('google')) { laddaGoogle(googleId()); laddat.annonser = true; }
   }
 
   function skript(src) {
@@ -162,6 +203,16 @@ const NXSamtycke = (function () {
     s.async = true;
     s.src = src;
     document.head.appendChild(s);
+  }
+
+  /* Vercels egna köer, så att NX.händelse() kan anropa window.va innan
+     skriptet hunnit laddas. Sökvägarna serveras av Vercel; lokalt ger
+     de 404, vilket är ofarligt. De inloggade vyerna mäts inte alls. */
+  function laddaVercel() {
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    skript('/_vercel/insights/script.js');
+    skript('/_vercel/speed-insights/script.js');
   }
 
   /* Metas egen laddare, utskriven. autoConfig av: annars läser
@@ -203,10 +254,6 @@ const NXSamtycke = (function () {
     const aw = adsMål().split('/')[0];
     if (aw && aw !== id) window.gtag('config', aw, inst);
   }
-  function adsMål() {
-    const mål = String(CFG.GOOGLE_ADS_LEAD || '').trim();
-    return /^AW-[A-Z0-9]+\/[\w-]+$/.test(mål) ? mål : '';
-  }
 
   /* En händelse från NX.händelse(). Bara anmälan är en konvertering:
      en jobbansökan är inte en kund, och en annons som optimeras mot
@@ -225,10 +272,9 @@ const NXSamtycke = (function () {
 
   /* ---------- nej: det som ska bort ---------- */
   /* Pixlarnas cookies sätts på vår domän och försvinner inte av sig
-     själva. Ett skript som redan körts går inte att ladda ur, så
-     sidan laddas om när pixlar var igång. */
+     själva. */
   const PIXELKAKOR = /^(_fbp|_fbc|_ga|_ga_[A-Z0-9]+|_gid|_gcl_au|_gcl_aw|_gcl_dc)$/;
-  function rensa(varJa) {
+  function rensaAnnonser() {
     try { sessionStorage.removeItem(KÄLL_NYCKEL); } catch (e) {}
     const värd = location.hostname;
     const domäner = ['', värd, '.' + värd.replace(/^www\./, '')];
@@ -239,17 +285,16 @@ const NXSamtycke = (function () {
         document.cookie = namn + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + (d ? '; domain=' + d : '');
       });
     });
-    if (varJa && pixlarLaddade) location.reload();
   }
 
-  /* ---------- rutan ---------- */
-  function text() {
-    const a = aktiva();
-    const st = [];
-    if (a.indexOf('kallsparning') >= 0) st.push(t('kalla'));
-    if (a.indexOf('meta') >= 0) st.push(t('meta'));
-    if (a.indexOf('google') >= 0) st.push(t('google'));
-    return st;
+  /* ---------- rutan och panelen ---------- */
+  function beskrivning(syfte) {
+    if (syfte === 'statistik') return t('statistikOm');
+    const f = funktioner(), st = [];
+    if (f.indexOf('kallsparning') >= 0) st.push(t('kalla'));
+    if (f.indexOf('meta') >= 0) st.push(t('meta'));
+    if (f.indexOf('google') >= 0) st.push(t('google'));
+    return st.join(' ');
   }
 
   /* Vad som gäller nu, i ord. Tomt när inget är valt i rutan: där
@@ -258,25 +303,75 @@ const NXSamtycke = (function () {
     const s = läs();
     if (giltigt(s)) {
       const d = new Date(s.tid).toLocaleDateString(EN ? 'en-GB' : 'sv-SE', { day: 'numeric', month: 'long', year: 'numeric' });
-      return t(s.ja ? 'valtJa' : 'valtNej', { d: d });
+      const lista = syften().map(k => t(k).toLowerCase() + ' ' + t(s.val[k] ? 'ja' : 'nej')).join(', ');
+      return t('valt', { d: d, lista: lista });
     }
     if (!förVal) return '';
     return gpc() ? t('gpc') : t('ejValt');
   }
 
-  function knappar(värd, efter) {
+  /* Ett val per syfte, inget förkryssat, och tre knappar som ser
+     likadana ut. Kryssrutorna visar det som gäller nu, så att den som
+     öppnar rutan igen ser vad hen ändrar från. */
+  let löpnr = 0;
+  function valen(värd, efter) {
+    const nu = nuvarande() || {};
+    const lista = document.createElement('div');
+    lista.className = 'nx-kakor-syften';
+    const rutor = {};
+    syften().forEach(k => {
+      const id = 'nx-kakor-' + k + '-' + (++löpnr);
+      const rad = document.createElement('label');
+      rad.className = 'nx-kakor-syfte';
+      rad.htmlFor = id;
+      const in_ = document.createElement('input');
+      in_.type = 'checkbox';
+      in_.id = id;
+      in_.checked = nu[k] === true;
+      rutor[k] = in_;
+      const text = document.createElement('span');
+      const b = document.createElement('b');
+      b.textContent = t(k);
+      const om = document.createElement('span');
+      om.textContent = beskrivning(k);
+      text.append(b, om);
+      rad.append(in_, text);
+      lista.appendChild(rad);
+    });
+    värd.appendChild(lista);
+
     const rad = document.createElement('div');
     rad.className = 'nx-kakor-knappar';
-    [['ja', true], ['nej', false]].forEach(([k, ja]) => {
+    const knapp = (ord, fn) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'btn nx-kakor-val';
-      b.textContent = t(k);
-      b.addEventListener('click', () => { spara(ja); efter(ja); });
+      b.textContent = t(ord);
+      b.addEventListener('click', fn);
       rad.appendChild(b);
-    });
+      return b;
+    };
+    const alla = ja => () => {
+      const val = {};
+      syften().forEach(k => { val[k] = ja; rutor[k].checked = ja; });
+      spara(val); efter();
+    };
+    knapp('nekaAlla', alla(false));
+    knapp('godkannAlla', alla(true));
+    knapp('sparaVal', () => {
+      const val = {};
+      syften().forEach(k => { val[k] = rutor[k].checked; });
+      spara(val); efter();
+    }).classList.add('nx-kakor-spara');
     värd.appendChild(rad);
   }
+
+  /* Reglagen: tre linjer med var sin knopp. Statisk markup, aldrig
+     något ur en användare. */
+  const IKON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
+    + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
+    + '<path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/>'
+    + '<circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></svg>';
 
   let ruta = null;
   function stäng() {
@@ -288,16 +383,9 @@ const NXSamtycke = (function () {
     setTimeout(() => r.remove(), 320);
   }
 
-  /* Vägen hit: en punkt, en slingrande väg, en pil. Statisk markup,
-     aldrig något ur en användare. */
-  const IKON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
-    + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
-    + '<circle cx="5.5" cy="18.5" r="2"/><path d="M7.5 18.5h5a3 3 0 0 0 0-6h-3a3 3 0 0 1 0-6h7.5"/>'
-    + '<path d="M16.5 4l2.5 2.5L16.5 9"/></svg>';
-
   function visa(fokus) {
     if (ruta) { if (fokus) ruta.querySelector('.nx-kakor-t').focus({ preventScroll: true }); return; }
-    if (!aktiva().length) return;
+    if (!syften().length) return;
     const r = document.createElement('section');
     r.className = 'nx-kakor';
     r.setAttribute('aria-label', t('region'));
@@ -319,13 +407,10 @@ const NXSamtycke = (function () {
     topp.append(ikon, rubriker);
     r.appendChild(topp);
 
-    text().forEach(s => {
-      const p = document.createElement('p');
-      p.textContent = s;
-      r.appendChild(p);
-    });
-    /* Öppnad från footern efter ett val: visa vad som gäller, så att
-       den som vill ändra sig ser vad den ändrar från. */
+    const intro = document.createElement('p');
+    intro.textContent = t('intro');
+    r.appendChild(intro);
+
     const nu = lägesText(false);
     if (nu) {
       const p = document.createElement('p');
@@ -333,7 +418,8 @@ const NXSamtycke = (function () {
       p.textContent = nu;
       r.appendChild(p);
     }
-    knappar(r, stäng);
+    valen(r, stäng);
+
     const fot = document.createElement('p');
     fot.className = 'nx-kakor-fot';
     fot.textContent = t('fot') + ' ';
@@ -355,37 +441,32 @@ const NXSamtycke = (function () {
     if (fokus) h.focus({ preventScroll: true });
   }
 
-  /* Panelen på lagring.html: samma fråga, med vad som gäller nu.
-     Ritas en gång. Ett klick skriver bara om lägesraden: ritades
-     panelen om försvann knappen man just tryckt på, fokus hamnade i
-     sidans topp, och en skärmläsare hörde ingenting, eftersom en
-     status-rad som skapas på nytt inte läses upp. */
+  /* Panelen på lagring.html: samma val, i texten. Ritas en gång. Ett
+     klick skriver bara om lägesraden: ritades panelen om försvann
+     knappen man just tryckt på, fokus hamnade i sidans topp, och en
+     skärmläsare hörde ingenting, eftersom en status-rad som skapas på
+     nytt inte läses upp. */
   function panel(värd) {
     värd.textContent = '';
-    if (!aktiva().length) {
+    if (!syften().length) {
       const p = document.createElement('p');
       p.textContent = t('inget');
       värd.appendChild(p);
       return;
     }
-    text().forEach(s => {
-      const p = document.createElement('p');
-      p.textContent = s;
-      värd.appendChild(p);
-    });
-    const ok = document.createElement('p');
-    ok.textContent = t('nejOk');
-    värd.appendChild(ok);
+    const intro = document.createElement('p');
+    intro.textContent = t('intro');
+    värd.appendChild(intro);
     const läge = document.createElement('p');
     läge.className = 'nx-kakor-lage';
     läge.setAttribute('role', 'status');
     läge.textContent = lägesText(true);
     värd.appendChild(läge);
-    knappar(värd, () => { läge.textContent = lägesText(true); stäng(); });
+    valen(värd, () => { läge.textContent = lägesText(true); stäng(); });
   }
 
   function init() {
-    const på = aktiva().length > 0;
+    const på = syften().length > 0;
 
     /* Länken i footern. Utan javascript går den till panelen på
        lagring.html; med går den inte någonstans, den öppnar rutan.
@@ -397,8 +478,7 @@ const NXSamtycke = (function () {
         return;
       }
       a.addEventListener('click', e => {
-        const panelHär = document.querySelector('[data-samtycke-panel]');
-        if (panelHär) return;        // låt ankaret skrolla dit
+        if (document.querySelector('[data-samtycke-panel]')) return;   // låt ankaret skrolla dit
         e.preventDefault();
         visa(true);
       });
