@@ -1450,6 +1450,7 @@
     }, {});
     ritaErbjudanden();
     ritaTimbankProfil();
+    ritaBokaTimmar();
   }
 
   /* En timme per påbörjad timme, som i klippkort_dra. */
@@ -1476,6 +1477,53 @@
   function bankFör(b) {
     if (!S.erb.aktiv || Number(b.antal_barn || 1) > 1 || b.startrabatt) return false;
     return S.erb.bank.saldo >= Number(b.duration_min || 60);
+  }
+
+  /* Timmar som pass redan väntar på. Ett förslag har inte dragit något,
+     men det tar timmarna när det bekräftas, och ett bekräftat obetalt
+     pass tar dem när de blir lediga (Fas 22.3). De räknas bort innan ett
+     nytt förslag får höra att timmarna räcker. */
+  function lovadeTimmar() {
+    const idag = isoFor(new Date());
+    return (S.bokningar || []).filter(b => (b.status === 'requested' || b.status === 'confirmed')
+      && String(b.wanted_date) >= idag && !b.klippkort_id
+      && ['ingen', 'vantar', 'misslyckad'].includes(b.betalning_status || 'ingen')
+      && Number(b.antal_barn || 1) <= 1 && !b.startrabatt && b.fakturerbar !== false)
+      .reduce((a, b) => a + passTimmar(b), 0);
+  }
+  const timText = t => t === 1 ? '1 timme' : t + ' timmar';
+
+  /* Leo 2026-09-28: "innan du bokar ett pass ska det stå 4 av 4 timmar
+     kvar". Vid knappen i Boka pass står vad förslaget tar av timmarna,
+     i stället för priset. Databasen avgör när passet bekräftas
+     (bookings_timmar_betalar); det här är samma räkning i förväg, med
+     korten som gäller den dagen. */
+  function timmarFörFörslag(minuter, datum, barn) {
+    if (!S.erb.aktiv || Number(barn) > 1 || !datum) return null;
+    const behov = passTimmar({ duration_min: minuter });
+    const kvar = S.erb.kort.filter(k => k.brukbar && String(k.giltigt_till) >= String(datum))
+      .reduce((a, k) => a + Number(k.kvar), 0) - lovadeTimmar();
+    if (kvar >= behov) return { titel: 'Era timmar', under: '−' + timText(behov) + ', ' + (kvar - behov) + ' kvar efter' };
+    if (S.erb.bank.saldo >= minuter) return { titel: 'Timbanken', under: '−' + tidLängd(minuter) };
+    return null;
+  }
+
+  /* Överst i Boka pass: timmarna kvar, innan någon dag är vald. Dold för
+     den som inte köpt några. */
+  function ritaBokaTimmar() {
+    const el = $('#boka-timmar');
+    if (!el) return;
+    const kort = S.erb.aktiv ? S.erb.kort.filter(k => k.brukbar) : [];
+    const bank = S.erb.aktiv ? Number(S.erb.bank.saldo) || 0 : 0;
+    el.hidden = !kort.length && !bank;
+    if (el.hidden) { el.innerHTML = ''; return; }
+    const lovade = lovadeTimmar();
+    el.innerHTML = kort.map(k => '<p><b>' + esc(k.kvar + ' av ' + k.timmar + ' timmar kvar') + '</b> på '
+        + esc(k.namn) + ', till ' + esc(datumText(k.giltigt_till)) + '.</p>').join('')
+      + (bank ? '<p><b>' + esc(tidLängd(bank)) + '</b> i timbanken.</p>' : '')
+      + '<p class="bk-timmar-not">' + esc((kort.length ? 'Timmarna betalar' : 'Minuterna betalar')
+        + ' passet när er studiehjälpare har bekräftat det, ett barn per pass.'
+        + (kort.length && lovade ? ' ' + timText(lovade) + ' går till pass ni redan föreslagit.' : '')) + '</p>';
   }
 
   /* Har familjen timmar som räcker står den knappen först: då är det
@@ -2354,6 +2402,8 @@
     ritaBekrafta();
     // Timbankens rörelser under Profil nämner passen vid namn.
     ritaTimbankProfil();
+    // Förslagen som väntar tar av timmarna överst i Boka pass.
+    ritaBokaTimmar();
     /* Står man på ett pass när listan laddas om — efter ett svar, en
        avbokning, en ny tid — ritas sidan om med det som nu gäller. */
     if (passIdIAdressen()) ritaPassSida();
@@ -2721,6 +2771,8 @@
       const före = aktiva.reduce((a, b) => a + (Number(b.duration_min) || 60), 0);
       return före < 120 && före + minuter >= 120;
     },
+    /* Köpta timmar i stället för priset vid knappen (2026-09-28). */
+    timmar: (minuter, datum, barn) => timmarFörFörslag(minuter, datum, barn),
 
     /* Spärren förr yttrade sig som en avstängd knapp utan
        förklaring. Nu står skälet där kalendern skulle ha stått. */

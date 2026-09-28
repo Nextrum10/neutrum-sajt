@@ -451,6 +451,9 @@ window.NXArbete = (function () {
        pris   — kr per timme, gäller bara innan katalogen laddats
        hos    — studiehjälparens namn
        tjanst — tjänstens kod, eller en funktion som ger den
+       timmar — (minuter, datum, barn) => null | { titel, under }:
+                vad köpta timmar gör med förslaget. Står i stället för
+                priset vid knappen
        ladda  — async () => { upptagna, tidigare } | { spärr }
        boka   — async ({datum, tid, minuter, amne, barn})
                 => 'felmeddelande' | { status }
@@ -722,6 +725,12 @@ window.NXArbete = (function () {
       var vald = !!st.tid;
       var klar = vald && platsOk() && ämneOk();
       var vem = o.hos || 'Er studiehjälpare';
+      /* Räcker köpta timmar står de där priset hade stått (Leo
+         2026-09-28). Passet med första timmen bjuden betalas inte med
+         timmar, så där står priset kvar. Samma två rader som priset,
+         så att summeringen inte byter höjd när längden ändras. */
+      var bjuden = bjudenOre();
+      var tim = !bjuden && o.timmar ? o.timmar(st.minuter, st.dag, st.barn) : null;
       var d = new Date(st.dag + 'T12:00:00');
       var när = vald
         ? DAGAR_KORTA[(d.getDay() + 6) % 7] + ' ' + datumText(st.dag) + ' kl. ' + st.tid.slice(0, 5)
@@ -736,8 +745,11 @@ window.NXArbete = (function () {
           : '<b>Välj en tid</b>'
             + '<span>' + esc(vem + ' accepterar tiden eller föreslår en annan.') + '</span>')
         + '</div>'
-        + '<div class="bk-sum-pris"><b>' + esc(kr((bruttoOre() - bjudenOre()) / 100)) + '</b>'
-        + '<span>' + esc(bjudenOre() ? 'Första timmen på köpet' : längdText()) + '</span></div>'
+        + '<div class="bk-sum-pris">' + (tim
+          ? '<b>' + esc(tim.titel) + '</b><span>' + esc(tim.under) + '</span>'
+          : '<b>' + esc(kr((bruttoOre() - bjuden) / 100)) + '</b>'
+            + '<span>' + esc(bjuden ? 'Första timmen på köpet' : längdText()) + '</span>')
+        + '</div>'
         + '<button class="btn btn-primary" id="bk-boka" type="button"'
         + (klar ? '' : ' disabled') + '>Föreslå tiden</button>'
         + '</div>';
