@@ -477,6 +477,74 @@ betalning, studiehjälparen eleven och familjen). Raderna i listorna
 leder dit och bär bara det som är ens eget drag just nu — svara,
 betala, skriva rapporten. Föreslå ny tid och avboka ligger på sidan.
 
+**Läxorna heter uppgifter, och de digitala görs som i Duolingo (Fas
+23.1, 2026-09-28).** Leo: "istället för läxor uppgifter", och att göra
+dem ska vara roligare, "lite som duolingo, du klarar en nivå och går
+vidare", i mobilen och i steg, med belöningar ju fler man klarar, och
+Min utveckling ska fungera som rättningen av dem. I studievyn och
+studiehjälparvyn heter de uppgifter. Tabellen heter fortfarande
+`homework`, sektionerna `uppgifter` (studievyn) och `laxor`
+(studiehjälparvyn), och i adminvyn står de kvar som läxor: där betyder
+Uppgifter redan adminens att göra-lista (`uppgifter`, `skapa_uppgift()`).
+Läxhjälp är fortfarande tjänstens namn; skolan ger läxor, vi ger uppgifter.
+- **En nivå** (`nivaer`) är 5–12 frågor i en **bana** per ämne och
+  årskurs. Tre frågetyper, för att det är de som en maskin kan rätta och
+  en tumme kan göra: val, skriv och ordna (brickor i rätt ordning).
+  Innehållet skrivs i `verktyg/uppgiftsbanken/` och blir en migration
+  genom `verktyg/bygg-uppgifter.py` (avsnitt 8).
+- **Rättningen sker i databasen.** `niva_starta()` lämnar ut frågorna
+  utan facit, `niva_svara()` rättar och sparar varje svar, och när varje
+  fråga är rätt besvarad är nivån klar. Betyget räknas på FÖRSTA svaret
+  på varje fråga: tre stjärnor för allt rätt, två för minst 80 procent,
+  en för minst 60. Under 60 procent är nivån inte klarad och nästa
+  öppnas inte. `niva_forsok` och `niva_svar` har ingen skrivpolicy: ett
+  resultat som går att skriva från en vy är ett påstående. Facit är inte
+  hemligt för den som svarat fel (rätt svar och förklaringen visas, och
+  frågan kommer tillbaka sist); poängen är att ett resultat har räknats
+  av databasen och inte av webbläsaren.
+- **Tal jämförs som tal bara när facit är ett rent tal** (med ett
+  procenttecken som enda tillägg). Då godtas "0,5", "0.50" och ",5", och
+  en enhet efter elevens tal struntas i ("12 cm" är 12). Ett facit med
+  bokstäver jämförs som text. Först lästes y i facit "5y" som en enhet,
+  och "5" och "5x" rättades som rätt; en granskare av innehållet hittade
+  det. `grund.lika()` är samma regel i Python, för att pröva ett svar
+  innan frågan går ut. Klockslag ("14.30") är tal för rättningen och
+  frågas därför bara som val.
+- **En digital uppgift** är en uppgift med `homework.niva_id`. Den blir
+  påbörjad och klar av rättningen (klar när nivån KLARAS, alltså med
+  minst en stjärna), och `skydda_laxa` nekar familjen att bocka av den.
+  Samma trigger låser sedan Fas 23.1 också `bibliotek_id` och `niva_id`:
+  familjen kunde förut peka om en läxa till vilket material som helst
+  vars id de kände, och policyn "familj läser bibliotek via läxa" gav dem
+  då läsrätt till det.
+- **Upplåsningen är en spelregel, inte ett skydd.** Den räknas i
+  `nextrum-uppgifter.js`: en nivå är öppen när den är först i banan, när
+  den före är klarad, när den redan är klarad eller påbörjad, eller när
+  studiehjälparen gett den. `niva_starta()` startar vilken nivå som helst
+  åt familjens eget barn; den som hoppar fram genom API:t hoppar i sitt
+  eget spel.
+- **Stjärnorna, veckoserien och märkena räknas ur försöken** och sparas
+  inte, så de kan aldrig säga något annat än raderna. Stjärnorna i banan
+  är det BÄSTA försöket per nivå (det är spelet). Rättningen i Min
+  utveckling är det FÖRSTA klara försöket per nivå: efter det har eleven
+  sett svaren. Serien räknar veckor, inte dagar: ett barn med uppgifter
+  två gånger i veckan ska inte ha en serie som bryts varje torsdag, och
+  ingenting påminner om den.
+- **Belöningarna är märken, inte pengar.** Leo skrev "eventuellt". En
+  belöning med ett värde i kronor (en rabatt, en bjuden timme) är ett
+  pris som ändras och marknadsföring riktad till barn, och den gör
+  fusket lönsamt. Det är ett beslut om affären och juridiken; fattas det
+  ska det in här och i villkoren, inte bara i koden.
+- **Min utveckling har tre flikar**: Uppgifter (rättningen, rätt första
+  gången per kunskapsområde med studiehjälparens bedömning bredvid när
+  området heter likadant, klarade nivåer per vecka och varje rättad nivå
+  med genomgången fråga för fråga), Passen (passen med rapport, tiden,
+  närvaron och vad rapporterna sagt) och Bedömningen (femstegsskalan, som
+  förut). Bedömningen är en människas omdöme och blandas inte ihop med
+  en maskins rättning.
+- Barnet har inget eget konto: nivåerna görs i familjens inloggning
+  (avsnitt 11).
+
 En studiehjälpare syns publikt först när admin satt läget till
 **Godkänd**.
 
@@ -509,6 +577,8 @@ elev.
 | betalning | vad familjen betalat för ett pass: med kort, per pass, i förväg eller efter passet när rapporten bekräftas (`bookings.betalning_status`, `betalt_ore`). Eller mot faktura, när flaggan `faktura` är på (Fas 14.6) |
 | faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, efter passet. Påslaget sedan 2026-09-27 (flaggan `faktura`). Skickas från Fortnox, aldrig härifrån |
 | tjänst | rad i `tjanster`. `aktiv` avgör vad som syns, inget annat |
+| uppgift | i studievyn och studiehjälparvyn det eleven ska göra mellan passen (`homework`, Fas 23.1). Hette läxa. I adminvyn och i tabellen `uppgifter` betyder ordet fortfarande adminens att göra-lista; koden för elevens uppgifter säger `laxor` och `homework` |
+| nivå | en digital uppgift i banan (`nivaer`): 5–12 frågor som rättas i databasen. En **bana** är nivåerna i ett ämne och en årskurs |
 
 ### Siffror som måste stämma överallt
 
@@ -596,7 +666,7 @@ vendorad fil i `bibliotek/`.
 - **Frontend:** vanilla ES5/ES6 i `<script src>`, delade moduler som
   IIFE:er på `window` (`NX`, `NXStudie`, `NXArbete`, `NXMedia`,
   `NXKontakt`, `NXBetalning`, `NXTjanster`, `NXAgent`, `NXMotion`,
-  `NXSamtycke`)
+  `NXSamtycke`, `NXUppgifter`)
 - **Backend:** Supabase (Postgres + RLS + Auth + Storage) och Deno
   edge functions i `supabase/functions/`
 - **Hosting:** Vercel, `cleanUrls: true` (alltså `/priser`, inte
@@ -633,6 +703,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
 | `nextrum-motion.js` | `NXImg` (bildmarkup), `NXMotion` (scrollmotor), `NXStory`. Tre lägen: full / lite / still |
 | `nextrum-studie.js`, `-arbetsyta.js`, `-kontakt.js`, `-betalning.js`, `-media.js`, `-tjanster.js` | Delat mellan vyerna |
+| `nextrum-uppgifter.js` + `nextrum-uppgifter.css` | `NXUppgifter` (Fas 23.1): banan, spelaren, stjärnorna, märkena, rättningen per område och genomgången. Studievyn och studiehjälparvyn, CSS:en efter arbetsytan. Rättar ingenting själv och skriver inget resultat; det gör `niva_svara()` |
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, sök, notiser, bevakning och `start()` |
@@ -943,6 +1014,14 @@ Fas 20.1 la till `pass_tillagg` (övertiden på ett förbetalt pass:
 parterna och admin läser, bara `service_role` skriver) och Fas 20.2
 `manadsbokslut` (stängda månader: admin läser, bara `stang_manad` och
 `oppna_manad` skriver).
+Fas 23.1 la till `nivaer` (katalogen: alla inloggade läser, admin och
+migrationerna skriver), `niva_fragor` (frågorna MED facit: familjen har
+ingen policy, godkända studiehjälpare och admin läser), `niva_forsok` och
+`niva_svar` (försöken och svaren: familjen, elevens studiehjälpare och
+admin läser, bara `niva_starta()` och `niva_svara()` skriver) och
+`homework.niva_id`. `niva_fragor` får aldrig en rad borttagen som har
+svar: en ändrad fråga får ett nytt id och den gamla blir inaktiv, så att
+gamla svar pekar på det som faktiskt frågades.
 Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
 id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
 ingen roll utom ägaren når den). Se Notiserna nedan.
@@ -1928,6 +2007,7 @@ hitta på ett pris, ett villkor eller ett löfte.
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i verktyget. Körs för hand (kräver Chromium), inte i CI. `--sql` ger raderna till `biblioteksmaterial` |
 | `?v=`-stämplarna på alla script- och link-taggar | `verktyg/satt-version.py` | filernas egen md5 |
 | `bilder/*.webp` | `verktyg/bygg-webp.py` | `bilder/*.jpg` |
+| `supabase/migrations/*_uppgiftsbanken_*.sql` (nivåerna och frågorna) | `verktyg/bygg-uppgifter.py --sql` | `verktyg/uppgiftsbanken/*.py`. Ändras banken skrivs en NY migration, den gamla står kvar. `--kolla` (CI) jämför den senaste med vad verktyget skriver nu, och `--visa` skriver ut frågorna med facit för den som ska läsa igenom dem |
 
 CI kör om maskotsvaren, FAQ-schemat och kartan och gör `git diff
 --exit-code`. Ändrar du FAQ:n utan att bygga om blir bygget rött, och
@@ -2021,7 +2101,8 @@ Körs på varje push och PR. Ska vara grön före merge.
 1. `node --check` på all JavaScript
 2. `node verktyg/testa-agent.js`
 3. `verktyg/kolla-betalningsvillkor.py` (betalningslöftet, och att det gamla är borta)
-4. `verktyg/kolla-migrationer.py`
+4. `verktyg/kolla-migrationer.py`, och `verktyg/bygg-uppgifter.py --kolla`
+   (uppgiftsbankens form, och att den har sin migration)
 5. `verktyg/kolla-csp.py`
 6. `verktyg/kolla-webp.py`
 7. `verktyg/satt-version.py --kolla`
@@ -2467,6 +2548,27 @@ tillbaka överst i avsnittet för 22.1.
   utbetalningsdagen efter att lönespecen kom, är en söndag; vilken
   bankdag lönen går då är inte bestämt, och lönespecen visar den 25:e.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
+- **Uppgifterna (Fas 23.1) har ett startpaket, inte en kursplan.**
+  Matematik från åk 1 till gymnasiet 1, engelska och svenska i tre
+  årskurser var, NO i åk 5 och 8 — se `python3 verktyg/bygg-uppgifter.py`
+  för vad som finns. SO, moderna språk och programmering har inga nivåer.
+  Innehållet är skrivet med AI och granskat fråga för fråga, med facit
+  uträknat i kod där det går; läs igenom en bana med `--visa` innan den
+  används på riktigt, och låt en studiehjälpare som undervisar i ämnet
+  göra det. Kvar:
+  1. **Barnet har inget eget konto.** Nivåerna görs i familjens
+     inloggning, alltså med betalning, bokning och meddelanden en knapp
+     bort. Ett elevkonto, eller en länk per barn som bara öppnar
+     Uppgifter (som utbildningsprovets nyckel), rör Auth och ska göras
+     för sig. Konsekvensbedömningen i `DATASKYDD.md` säger redan att
+     den ska göras om den dagen barn får egna konton.
+  2. **Adminvyn har ingen vy över nivåerna.** Banken ändras i
+     `verktyg/uppgiftsbanken/` och går in genom en migration.
+  3. **Migrationerna är inte körda när det här skrivs.**
+     `fas23_1_uppgifterna_blir_digitala` först, sedan
+     `uppgiftsbanken_startpaketet`, båda EFTER merge, och filerna döps om
+     till versionerna driften registrerade (avsnitt 5). Vyerna tål att
+     tabellerna saknas: uppgifterna syns som förut, utan banan.
 - **Ansökningar gallras efter ett år, men en sak återstår.** Sedan
   2026-09-27 tar `ansokan-gallring` varje natt bort en ansökan som inte
   ledde till anställning, med CV:t, och CV-filer utan ansökan (avsnitt

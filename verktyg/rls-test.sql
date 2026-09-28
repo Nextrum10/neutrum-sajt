@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, gallringen och månadskörningen)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen och månadskörningen)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -41,8 +41,9 @@
 -- (lediga timmar betalar nästa pass),
 -- godkand_ansokan_gallras_tva_ar_efter_sista_passet,
 -- ai_texterna_och_avslutade_uppgifter_gallras, Fas 22.4 (timmen dras
--- när förslaget skickas), manadskorningen_vacks_av_databasen och
--- manadskorningen_gar_den_forsta är körda.
+-- när förslaget skickas), manadskorningen_vacks_av_databasen,
+-- manadskorningen_gar_den_forsta och Fas 23.1 (de digitala uppgifterna)
+-- är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -6188,6 +6189,316 @@ select 'Månadskörning går den 1:a', count(*) = 1,
   from cron.job
  where jobname = 'manadskorning' and active and schedule = '17 4 1 * *'
    and command = 'select intern.manadskorning_vack()';
+
+-- ------------------------------------------------------------
+-- Fas 23.1: de digitala uppgifterna
+--
+-- Allt i ett block som rullas tillbaka, så att nivån, frågorna och
+-- försöken aldrig syns för något prov efter det. Utfallet samlas i en
+-- variabel (de överlever återrullningen) och skrivs efteråt.
+--
+-- Rättningen görs i databasen och prövas här: frågorna lämnas ut utan
+-- facit, familjen skriver inget resultat själv, en digital uppgift
+-- bockas inte av för hand, och bara familjen, elevens studiehjälpare
+-- och admin läser försöken. Och den rättning som felade en gång:
+-- facit "5y" lästes som talet 5 med enheten y, så "5" och "5x"
+-- rättades som rätt.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut     jsonb := '[]'::jsonb;
+  fel    text;
+  r      jsonb;
+  forsok uuid;
+  n      int;
+  st     text;
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  B    constant uuid := '00000000-0000-4000-8000-0000000000b1';
+  ADM  constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  ELEV constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  NIVA constant uuid := '00000000-0000-4000-8000-00000000c2a1';
+  F1   constant uuid := '00000000-0000-4000-8000-00000000c2b1';
+  F2   constant uuid := '00000000-0000-4000-8000-00000000c2b2';
+  F3   constant uuid := '00000000-0000-4000-8000-00000000c2b3';
+  F4   constant uuid := '00000000-0000-4000-8000-00000000c2b4';
+  F5   constant uuid := '00000000-0000-4000-8000-00000000c2b5';
+  HD   constant uuid := '00000000-0000-4000-8000-00000000c2c1';
+  HV   constant uuid := '00000000-0000-4000-8000-00000000c2c2';
+begin
+  begin
+    -- Fixturen, som postgres.
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning)
+    values (NIVA, 'rls-prov-niva', 'Matematik', 'ak8', 'Algebra', 'RLS-nivå', 1);
+    insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt, forklaring) values
+      (F1, NIVA, 1, 'val',   'Vilket är störst?', '["1/2","1/3","1/4"]', '0', 'Halva är mest.'),
+      (F2, NIVA, 2, 'skriv', 'Vad är 1 000 + 250?', null, '["1250"]', null),
+      (F3, NIVA, 3, 'skriv', 'Förenkla 7y − 2y.', null, '["5y"]', null),
+      (F4, NIVA, 4, 'ordna', 'Bygg meningen.', '["hund"]', '["Jag","har","en","katt"]', null),
+      (F5, NIVA, 5, 'skriv', 'Skriv en halv som decimaltal.', null, '["0,5"]', null);
+    insert into public.homework (id, student_id, tutor_id, title, niva_id) values
+      (HD, ELEV, A, 'RLS digital uppgift', NIVA),
+      (HV, ELEV, A, 'RLS vanlig uppgift', null);
+
+    select antal_fragor into n from public.nivaer where id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG antal_fragor räknas av triggern', 'ok', n = 5, 'd', n::text);
+
+    ut := ut || jsonb_build_object('t', 'UPG rättning: 1 250 är 1250', 'ok', intern.niva_lika('1250', '1 250'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: 0.50 är 0,5', 'ok', intern.niva_lika('0,5', '0.50'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: Went. är went', 'ok', intern.niva_lika('went', ' Went. '), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: 12 cm är 12', 'ok', intern.niva_lika('12', '12 cm'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: −3 är -3', 'ok', intern.niva_lika('-3', '−3'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: 5 är inte 5y', 'ok', not intern.niva_lika('5y', '5'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: 5x är inte 5y', 'ok', not intern.niva_lika('5y', '5x'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: 3/4 är inte 0,75', 'ok', not intern.niva_lika('3/4', '0,75'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: tomt är fel', 'ok', not intern.niva_lika('12', '  '), 'd', null);
+
+    -- Fel familj och anon startar inte.
+    begin
+      perform pg_temp.bli(Q);
+      r := public.niva_starta(NIVA, ELEV);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    reset role;
+    ut := ut || jsonb_build_object('t', 'UPG annan familj startar inte nivån åt barnet', 'ok', fel = '42501', 'd', fel);
+    begin
+      perform pg_temp.bli(null);
+      r := public.niva_starta(NIVA, ELEV);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    reset role;
+    ut := ut || jsonb_build_object('t', 'UPG anon startar inte', 'ok', fel = '42501', 'd', fel);
+
+    perform pg_temp.bli(P);
+    r := public.niva_starta(NIVA, ELEV);
+    forsok := (r ->> 'forsok')::uuid;
+    ut := ut || jsonb_build_object('t', 'UPG start: frågorna utan facit', 'ok',
+                jsonb_array_length(r -> 'fragor') = 5 and position('"ratt"' in r::text) = 0
+                and position('katt' in (r -> 'fragor' -> 3 ->> 'fraga')) = 0, 'd', left(r::text, 200))
+             || jsonb_build_object('t', 'UPG start: brickorna med den extra', 'ok',
+                jsonb_array_length(r -> 'fragor' -> 3 -> 'brickor') = 5, 'd', r -> 'fragor' -> 3 ->> 'brickor')
+             || jsonb_build_object('t', 'UPG start: sifferknappar för ett tal, inte för 5y', 'ok',
+                (r -> 'fragor' -> 1 ->> 'numerisk')::boolean and not (r -> 'fragor' -> 2 ->> 'numerisk')::boolean,
+                'd', (r -> 'fragor' -> 1 ->> 'numerisk') || '/' || (r -> 'fragor' -> 2 ->> 'numerisk'));
+    select status into st from public.homework where id = HD;
+    ut := ut || jsonb_build_object('t', 'UPG start: den digitala uppgiften blir påbörjad', 'ok', st = 'pagaende', 'd', st);
+    r := public.niva_starta(NIVA, ELEV);
+    ut := ut || jsonb_build_object('t', 'UPG start igen fortsätter samma försök', 'ok', (r ->> 'forsok')::uuid = forsok, 'd', r ->> 'forsok');
+
+    select count(*) into n from public.niva_fragor;
+    ut := ut || jsonb_build_object('t', 'UPG familjen läser inga frågor med facit', 'ok', n = 0, 'd', n::text);
+
+    begin
+      insert into public.niva_forsok (niva_id, student_id, fragor, klar_at, antal, ratt_direkt, stjarnor, godkand)
+      values (NIVA, ELEV, array[F1], now(), 1, 1, 3, true);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG familjen skriver inget eget resultat', 'ok', fel = '42501', 'd', fel);
+    begin
+      update public.niva_forsok set stjarnor = 3 where id = forsok;
+      get diagnostics n = row_count;
+      fel := 'rader ' || n;
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG familjen skriver inte om ett försök', 'ok', fel in ('42501', 'rader 0'), 'd', fel);
+    begin
+      insert into public.niva_svar (forsok_id, fraga_id, svar, ratt, forsta) values (forsok, F1, '{"val":0}', true, true);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG familjen skriver inget eget svar', 'ok', fel = '42501', 'd', fel);
+
+    begin
+      update public.homework set status = 'klar' where id = HD;
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG familjen bockar inte av en digital uppgift', 'ok', fel = '42501', 'd', fel);
+    update public.homework set status = 'klar' where id = HV;
+    get diagnostics n = row_count;
+    ut := ut || jsonb_build_object('t', 'UPG familjen bockar av en vanlig uppgift', 'ok', n = 1, 'd', n::text);
+    -- Luckan som stängdes: bibliotek_id gick att skriva om, och läxan gav
+    -- då läsrätt till materialet. e3 är studiehjälpare A:s eget.
+    update public.homework set bibliotek_id = '00000000-0000-4000-8000-0000000000e3', niva_id = null where id = HV;
+    select coalesce(bibliotek_id::text, 'null') || '/' || coalesce(niva_id::text, 'null') into st
+      from public.homework where id = HV;
+    ut := ut || jsonb_build_object('t', 'UPG familjen pekar inte om uppgiften till annat material', 'ok', st = 'null/null', 'd', st);
+    select count(*) into n from public.biblioteksmaterial where id = '00000000-0000-4000-8000-0000000000e3';
+    ut := ut || jsonb_build_object('t', 'UPG och når därför inte A:s eget material', 'ok', n = 0, 'd', n::text);
+
+    -- Svaren. Fråga 1 fel och sedan rätt, fråga 3 med "5" (fel) och sedan 5y.
+    r := public.niva_svara(forsok, F1, '{"val":2}');
+    ut := ut || jsonb_build_object('t', 'UPG fel svar ger facit och förklaring', 'ok',
+                not (r ->> 'ratt')::boolean and (r ->> 'facit')::int = 0 and r ->> 'forklaring' = 'Halva är mest.', 'd', r::text);
+    r := public.niva_svara(forsok, F1, '{"val":0}');
+    r := public.niva_svara(forsok, F1, '{"val":0}');
+    select count(*) into n from public.niva_svar where forsok_id = forsok;
+    ut := ut || jsonb_build_object('t', 'UPG ett dubbeltryck ger ingen ny rad', 'ok', n = 2, 'd', n::text);
+    r := public.niva_svara(forsok, F2, '{"text":"1 250"}');
+    ut := ut || jsonb_build_object('t', 'UPG skriv: tal med mellanslag rättas som tal', 'ok', (r ->> 'ratt')::boolean, 'd', r::text);
+    r := public.niva_svara(forsok, F3, '{"text":"5"}');
+    ut := ut || jsonb_build_object('t', 'UPG skriv: 5 är fel när facit är 5y', 'ok', not (r ->> 'ratt')::boolean, 'd', r::text);
+    r := public.niva_svara(forsok, F3, '{"text":"5Y"}');
+    r := public.niva_svara(forsok, F4, '"skräp"');
+    ut := ut || jsonb_build_object('t', 'UPG ett trasigt svar är fel, inte ett fel', 'ok', not (r ->> 'ratt')::boolean, 'd', r::text);
+    r := public.niva_svara(forsok, F4, '{"ordning":["Jag","har","en","katt"]}');
+    begin
+      r := public.niva_svara(forsok, '00000000-0000-4000-8000-00000000c2b9', '{"val":0}');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG en fråga utanför nivån nekas', 'ok', fel = '22023', 'd', fel);
+    -- Fel först på fråga 1, 3 och 4: 2 av 5 rätt direkt, 40 procent.
+    -- Nivån blir klar (allt är till slut rätt besvarat) men inte klarad.
+    r := public.niva_svara(forsok, F5, '{"text":"0.5"}');
+    ut := ut || jsonb_build_object('t', 'UPG sista rätta svaret avslutar nivån: 2 av 5 direkt = 0 stjärnor, inte klarad', 'ok',
+                (r ->> 'klar')::boolean and (r -> 'resultat' ->> 'stjarnor')::int = 0
+                and (r -> 'resultat' ->> 'ratt_direkt')::int = 2 and not (r -> 'resultat' ->> 'godkand')::boolean, 'd', r ->> 'resultat');
+    select status into st from public.homework where id = HD;
+    ut := ut || jsonb_build_object('t', 'UPG under 60 procent gör inte uppgiften klar', 'ok', st = 'pagaende', 'd', st);
+    r := public.niva_genomgang(forsok);
+    ut := ut || jsonb_build_object('t', 'UPG genomgången: varje fråga, med alla svar', 'ok',
+                jsonb_array_length(r -> 'fragor') = 5 and jsonb_array_length(r -> 'fragor' -> 0 -> 'svar') = 2, 'd', left(r::text, 120));
+
+    -- Ett nytt försök med allt rätt direkt: tre stjärnor, och uppgiften blir klar.
+    r := public.niva_starta(NIVA, ELEV);
+    forsok := (r ->> 'forsok')::uuid;
+    perform public.niva_svara(forsok, F1, '{"val":0}');
+    perform public.niva_svara(forsok, F2, '{"text":"1250"}');
+    perform public.niva_svara(forsok, F3, '{"text":"5y"}');
+    perform public.niva_svara(forsok, F4, '{"ordning":["Jag","har","en","katt"]}');
+    r := public.niva_svara(forsok, F5, '{"text":",5"}');
+    ut := ut || jsonb_build_object('t', 'UPG allt rätt direkt = 3 stjärnor, och förut 0', 'ok',
+                (r -> 'resultat' ->> 'stjarnor')::int = 3 and (r -> 'resultat' ->> 'forut')::int = 0
+                and (r -> 'resultat' ->> 'godkand')::boolean, 'd', r ->> 'resultat');
+    select status into st from public.homework where id = HD;
+    ut := ut || jsonb_build_object('t', 'UPG en klarad nivå gör den digitala uppgiften klar', 'ok', st = 'klar', 'd', st);
+
+    -- Exakt 60 procent (3 av 5) ger en stjärna. Förut är nu tre.
+    r := public.niva_starta(NIVA, ELEV);
+    forsok := (r ->> 'forsok')::uuid;
+    perform public.niva_svara(forsok, F1, '{"val":1}');
+    perform public.niva_svara(forsok, F1, '{"val":0}');
+    perform public.niva_svara(forsok, F2, '{"text":"125"}');
+    perform public.niva_svara(forsok, F2, '{"text":"1250"}');
+    perform public.niva_svara(forsok, F3, '{"text":"5y"}');
+    perform public.niva_svara(forsok, F4, '{"ordning":["Jag","har","en","katt"]}');
+    r := public.niva_svara(forsok, F5, '{"text":"0,5"}');
+    ut := ut || jsonb_build_object('t', 'UPG 3 av 5 direkt (60 procent) = 1 stjärna, och förut 3', 'ok',
+                (r -> 'resultat' ->> 'stjarnor')::int = 1 and (r -> 'resultat' ->> 'forut')::int = 3
+                and (r -> 'resultat' ->> 'godkand')::boolean, 'd', r ->> 'resultat');
+    reset role;
+
+    -- Vem läser försöken.
+    perform pg_temp.bli(Q);
+    select count(*) into n from public.niva_forsok where niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG annan familj ser inga försök', 'ok', n = 0, 'd', n::text);
+    select count(*) into n from public.niva_svar s join public.niva_forsok f on f.id = s.forsok_id where f.niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG annan familj ser inga svar', 'ok', n = 0, 'd', n::text);
+    begin
+      r := public.niva_genomgang(forsok);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG annan familj får ingen genomgång', 'ok', fel = '42501', 'd', fel);
+    reset role;
+    perform pg_temp.bli(A);
+    select count(*) into n from public.niva_forsok where niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG elevens studiehjälpare ser försöken', 'ok', n = 3, 'd', n::text);
+    select count(*) into n from public.niva_fragor where niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG godkänd studiehjälpare läser frågorna med facit', 'ok', n = 5, 'd', n::text);
+    r := public.niva_genomgang(forsok);
+    ut := ut || jsonb_build_object('t', 'UPG elevens studiehjälpare får genomgången', 'ok', r ? 'fragor', 'd', null);
+    begin
+      r := public.niva_starta(NIVA, ELEV);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG studiehjälparen startar inte nivån åt eleven', 'ok', fel = '42501', 'd', fel);
+    reset role;
+    perform pg_temp.bli(B);
+    select count(*) into n from public.niva_forsok where niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG en annan studiehjälpare ser inga försök', 'ok', n = 0, 'd', n::text);
+    reset role;
+    perform pg_temp.bli(ADM);
+    select count(*) into n from public.niva_forsok where niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG admin ser försöken', 'ok', n = 3, 'd', n::text);
+    reset role;
+    perform pg_temp.bli(null);
+    begin
+      select count(*) into n from public.nivaer;
+      fel := 'rader ' || n;
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG anon läser inga nivåer', 'ok', fel in ('42501', 'rader 0'), 'd', fel);
+    reset role;
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('UPG Fas 23.1', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- Fas 23.1: banken rättas som den står. Varje godtaget svar på varje
+-- aktiv fråga ska rättas som rätt av databasens egen rättning, och
+-- sifferknappsatsen ska bara visas när varje godtaget svar går att
+-- skriva med den. Ett fel här är en fråga som barnet inte kan klara,
+-- och det syns inte i någon vy: det ser ut som att barnet svarade fel.
+-- Innan banken är inläst finns inga rader, och proven går igenom.
+--
+-- I ett block, och bara när tabellen finns: är Fas 23.1 inte körd
+-- blir det en röd rad som säger det. Stod satserna fritt hade de
+-- avbrutit hela filen, och en svit som inte går att köra provar
+-- ingenting.
+do $$
+begin
+  if to_regclass('public.niva_fragor') is null then
+    insert into utfall (test, ok, detalj)
+    values ('UPG banken', false, 'Fas 23.1 är inte körd: niva_fragor finns inte');
+    return;
+  end if;
+
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: varje godtaget skrivsvar rättas rätt', count(*) = 0,
+         coalesce(string_agg(q.id::text || ' "' || a || '"', ', '), 'inga')
+    from public.niva_fragor q, jsonb_array_elements_text(q.ratt) a
+   where q.aktiv and q.typ = 'skriv' and not intern.niva_ratta(q, jsonb_build_object('text', a));
+
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: rätt alternativ rättas rätt, och inget annat', count(*) = 0,
+         coalesce(string_agg(q.id::text || ' ' || i, ', '), 'inga')
+    from public.niva_fragor q, generate_series(0, jsonb_array_length(q.alternativ) - 1) i
+   where q.aktiv and q.typ = 'val'
+     and intern.niva_ratta(q, jsonb_build_object('val', i)) <> (i = (q.ratt #>> '{}')::int);
+
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: rätt ordning rättas rätt, omvänd fel', count(*) = 0,
+         coalesce(string_agg(q.id::text, ', '), 'inga')
+    from public.niva_fragor q
+   where q.aktiv and q.typ = 'ordna'
+     and (not intern.niva_ratta(q, jsonb_build_object('ordning', q.ratt))
+          or intern.niva_ratta(q, jsonb_build_object('ordning',
+               (select jsonb_agg(x order by n desc) from jsonb_array_elements(q.ratt) with ordinality y(x, n)))));
+
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: sifferknappar bara när varje svar är siffror', count(*) = 0,
+         coalesce(string_agg(q.id::text, ', '), 'inga')
+    from public.niva_fragor q
+   where q.aktiv and q.typ = 'skriv' and (intern.niva_fraga_ut(q) ->> 'numerisk')::boolean
+     and exists (select 1 from jsonb_array_elements_text(q.ratt) a where a !~ '^[0-9 ,.%]+$');
+end $$;
 
 select test, ok is true as ok, detalj from utfall order by nr;
 

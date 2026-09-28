@@ -1,0 +1,350 @@
+# -*- coding: utf-8 -*-
+"""Svenska åk 3, 6 och 8. Skrivregler, ordklasser, stavning och meningsbyggnad ur Lgr22:s centrala innehåll, med bara regler som Språkrådet och läromedlen är ense om.
+
+Tre saker styr hur frågorna är skrivna:
+
+- Rättningen struntar i stora och små bokstäver och i punkt sist. Allt
+  som gäller stor bokstav eller skiljetecken är därför val eller ordna,
+  aldrig skriv. Kontrollen jämför också alternativen utan skiftläge och
+  punkt sist, så två alternativ får inte skilja sig bara i det: fråga
+  hellre vilket ORD som ska ha stor bokstav.
+- Det språkvårdarna inte är ense om frågas inte: i dag eller idag, dom,
+  komma före men eller efter en inledande bisats, kolon direkt efter ett
+  verb. Ett barn som skrivit något godtagbart ska inte få höra att det
+  är fel.
+- En ordna-mening med inte har ofta två rätta ordningar ("Jag tror inte
+  att hon kommer" och "Jag tror att hon inte kommer"). Inte i bisatsen
+  frågas därför som val, där de felaktiga alternativen är fel för alla.
+"""
+from grund import bana, niva, val, skriv, ordna, tal
+
+BANOR = [
+    bana('Svenska', 'ak3', [
+        niva('sv-ak3-skrivregler-1', 'Stor bokstav och punkt', 'Skrivregler', [
+            val('Hur börjar en mening?',
+                ['Med stor bokstav', 'Med liten bokstav', 'Med en punkt'], 'Med stor bokstav',
+                'Det första ordet i en mening har alltid stor bokstav.'),
+            val('Vad ska stå sist? ”Vi ska bada i sjön”',
+                ['punkt', 'frågetecken', 'komma'], 'punkt',
+                'Meningen berättar något. Då sätter man punkt sist.'),
+            val('Vad ska stå sist? ”Vill du leka med mig”',
+                ['punkt', 'frågetecken', 'komma'], 'frågetecken',
+                'Meningen är en fråga. Efter en fråga sätter man frågetecken.'),
+            val('Vilket ord ska skrivas med stor bokstav?',
+                ['stockholm', 'måndag', 'juli', 'skola'], 'stockholm',
+                'Stockholm är namnet på en stad, och namn har stor bokstav. '
+                'Dagar och månader har liten bokstav.'),
+            # Facit visas som det första svaret: Bella, med den stora bokstaven.
+            skriv('Ett ord saknar stor bokstav. Skriv ordet. ”Min hund heter bella.”', 'Bella',
+                  'Bella är ett namn. Namn har alltid stor bokstav, var de än står.'),
+            skriv('Hur många meningar är det? ”Det regnar. Vi är inne. Vi spelar spel.”',
+                  [tal(3), 'tre'],
+                  'Varje mening slutar med punkt. Det finns tre punkter, alltså tre meningar.'),
+            ordna('Bygg meningen. Den börjar med stor bokstav och slutar med punkt.',
+                  ['Katten', 'sover', 'i', 'soffan.'],
+                  forklaring='Katten har stor bokstav, så det ordet står först. '
+                             'Soffan har punkt, så det står sist.'),
+            ordna('Bygg frågan. En bricka hör inte dit.', ['Vad', 'heter', 'du?'], extra=['du.'],
+                  forklaring='Det är en fråga, så den slutar med frågetecken och inte med punkt.'),
+        ], beskrivning='Tränar när man skriver stor bokstav och vilket tecken som avslutar en mening.'),
+
+        niva('sv-ak3-alfabetet-1', 'Alfabetisk ordning', 'Alfabetet', [
+            val('Vilken bokstav kommer efter k i alfabetet?', ['l', 'j', 'm'], 'l',
+                'Alfabetet går j, k, l, m. Direkt efter k kommer l.'),
+            skriv('Vilken bokstav står mellan r och t i alfabetet?', 's',
+                  'Alfabetet går r, s, t. Bokstaven mellan r och t är s.'),
+            skriv('Vilken bokstav kommer direkt efter z?', 'å',
+                  'I det svenska alfabetet kommer å, ä och ö sist, efter z.'),
+            val('Vilket ord kommer först i alfabetisk ordning?', ['boll', 'apa', 'cykel'], 'apa',
+                'Titta på första bokstaven. A kommer före b och c.'),
+            val('Alla orden börjar på m. Vilket kommer först i alfabetisk ordning?',
+                ['mus', 'mjölk', 'mamma'], 'mamma',
+                'När första bokstaven är samma tittar man på den andra: a, j och u. '
+                'A kommer först, så mamma står först.'),
+            val('Vilket ord kommer sist i alfabetisk ordning?', ['zebra', 'öga', 'ål'], 'öga',
+                'Ö är den allra sista bokstaven i alfabetet. Därför kommer öga efter både zebra och ål.'),
+            ordna('Ordna orden i alfabetisk ordning.', ['boll', 'fisk', 'sol', 'zebra', 'äpple'],
+                  forklaring='B, f, s, z och sist ä. Å, ä och ö kommer efter z i alfabetet.'),
+            ordna('Ordna orden i alfabetisk ordning. Alla börjar på b, så titta på andra bokstaven.',
+                  ['bad', 'bil', 'bok', 'buss'],
+                  forklaring='Andra bokstäverna är a, i, o och u. I alfabetet kommer de i den ordningen.'),
+        ], beskrivning='Tränar alfabetets ordning och att sortera ord efter första och andra bokstaven.'),
+
+        niva('sv-ak3-ljud-1', 'Vokaler och konsonanter', 'Ljud och bokstäver', [
+            val('Vilken bokstav är en vokal?', ['e', 'k', 's', 'm'], 'e',
+                'Vokalerna är a, e, i, o, u, y, å, ä och ö. E är en av dem.'),
+            val('Vilken bokstav är en konsonant?', ['r', 'a', 'y', 'ö'], 'r',
+                'A, y och ö är vokaler. R är en konsonant, som alla bokstäver som inte är vokaler.'),
+            skriv('Hur många vokaler finns det i det svenska alfabetet?', [tal(9), 'nio'],
+                  'Vokalerna är a, e, i, o, u, y, å, ä och ö. Det är nio stycken.'),
+            skriv('En vokal fattas. Vilken? a, e, i, o, u, y, å, ä', 'ö',
+                  'Alla nio vokaler är a, e, i, o, u, y, å, ä och ö. Det var ö som fattades.'),
+            skriv('Hur många vokaler finns det i ordet ”tomat”?', [tal(2), 'två'],
+                  'T-o-m-a-t. O och a är vokaler, så det blir två. T och m är konsonanter.'),
+            val('Vilket ord börjar med en vokal?', ['äpple', 'banan', 'päron', 'melon'], 'äpple',
+                'Ä är en vokal. B, p och m är konsonanter.'),
+            val('Vilket ord har bara en vokal?', ['katt', 'hunden', 'kanin', 'kamel'], 'katt',
+                'I katt finns bara a. Hunden har u och e, kanin har a och i, kamel har a och e.'),
+            ordna('Ordna vokalerna så som de står i alfabetet.', ['i', 'o', 'y', 'å', 'ö'],
+                  forklaring='I kommer före o och o före y. Å och ö står sist i alfabetet.'),
+        ], beskrivning='Tränar att skilja vokaler från konsonanter och att hitta vokalerna i ett ord.'),
+
+        niva('sv-ak3-ordklasser-1', 'Substantiv och verb', 'Ordklasser', [
+            val('Vilket ord är ett substantiv?', ['bord', 'springa', 'glad'], 'bord',
+                'Ett substantiv är namnet på en sak, ett djur eller en människa. Man kan säga ett bord.'),
+            val('Vilket ord är ett verb?', ['hoppar', 'boll', 'stor'], 'hoppar',
+                'Ett verb berättar vad någon gör: jag hoppar.'),
+            val('Vilket ord säger vad Ali gör? ”Ali cyklar till skolan.”',
+                ['cyklar', 'Ali', 'till', 'skolan'], 'cyklar',
+                'Att cykla är det Ali gör. Ord som säger vad någon gör är verb.'),
+            skriv('Skriv verbet i meningen: ”Hunden skäller.”', 'skäller',
+                  'Skäller är det hunden gör. Därför är det ett verb.'),
+            skriv('Skriv substantivet i meningen: ”Fågeln flyger.”', ['fågeln', 'fågel'],
+                  'Fågeln är ett djur. Namn på djur, saker och människor är substantiv.'),
+            val('Framför vilket ord kan man sätta ”en” eller ”ett”?',
+                ['penna', 'skriver', 'ritar'], 'penna',
+                'Man säger en penna. Ord som kan ha en eller ett framför sig är substantiv.'),
+            skriv('Hur många substantiv finns det i meningen? ”Pojken har en hund och en katt.”',
+                  [tal(3), 'tre'],
+                  'Pojken, hund och katt är substantiv. Har är ett verb.'),
+            ordna('Bygg meningen.', ['Flickan', 'läser', 'en', 'bok.'],
+                  forklaring='Flickan har stor bokstav och står först. Sedan kommer verbet läser, '
+                             'och bok har punkt och står sist.'),
+        ], beskrivning='Tränar att känna igen substantiv och verb i korta meningar.'),
+    ]),
+
+    bana('Svenska', 'ak6', [
+        niva('sv-ak6-ordklasser-1', 'Fyra ordklasser', 'Ordklasser', [
+            val('Vilken ordklass är ordet ”snabb”?',
+                ['adjektiv', 'verb', 'substantiv', 'pronomen'], 'adjektiv',
+                'Snabb beskriver hur något är, som i en snabb häst. Ord som beskriver är adjektiv.'),
+            val('Vilken ordklass är ordet ”hon”?',
+                ['pronomen', 'substantiv', 'adjektiv', 'verb'], 'pronomen',
+                'Hon står i stället för ett namn, till exempel Sara. Sådana ord är pronomen.'),
+            val('Vilket ord i meningen är ett adjektiv? ”Den gamla hunden sov länge.”',
+                ['gamla', 'hunden', 'sov', 'länge'], 'gamla',
+                'Gamla beskriver hur hunden är, och det gör adjektiv. '
+                'Länge säger något om sovandet, inte om hunden.'),
+            val('Vilket ord är ett verb?', ['simmar', 'simhall', 'simkunnig'], 'simmar',
+                'Simmar säger vad någon gör: hon simmar. Simhall är ett substantiv och simkunnig ett adjektiv.'),
+            skriv('Skriv pronomenet i meningen: ”Efter maten diskade vi.”', 'vi',
+                  'Vi står i stället för namnen på dem som diskade. Därför är vi ett pronomen.'),
+            skriv('Skriv adjektivet i meningen: ”Sara köpte en blå jacka.”', 'blå',
+                  'Blå beskriver hur jackan ser ut. Ord som beskriver är adjektiv.'),
+            skriv('Hur många substantiv finns det i meningen? ”Morfar lagade cykeln i garaget.”',
+                  [tal(3), 'tre'],
+                  'Morfar, cykeln och garaget är substantiv. Lagade är ett verb och i är en preposition.'),
+            ordna('Ställ orden i den här ordningen: substantiv, verb, adjektiv, pronomen.',
+                  ['bok', 'läser', 'tjock', 'hon'],
+                  forklaring='Bok är en sak, läser är något man gör, tjock beskriver '
+                             'och hon står i stället för ett namn.'),
+        ], beskrivning='Tränar att känna igen substantiv, verb, adjektiv och pronomen.'),
+
+        niva('sv-ak6-stavning-1', 'Dubbelteckning och ck', 'Stavning', [
+            val('Vilket ord passar och är rätt stavat? ”Pengarna ligger i min …”',
+                ['ficka', 'fikka', 'fika'], 'ficka',
+                'I ficka är i kort, och ett k-ljud efter en kort vokal skrivs ck. Fika är ett annat ord.'),
+            val('När stavas k-ljudet med ck?',
+                ['Efter en kort vokal', 'Efter en lång vokal', 'I början av ett ord'],
+                'Efter en kort vokal',
+                'Efter en kort vokal skrivs k-ljudet ck, som i klocka och sticka. '
+                'Efter en lång vokal räcker ett k, som i kaka.'),
+            val('I vilket ord är vokalen kort?', ['tack', 'tak', 'mat', 'fin'], 'tack',
+                'Två konsonanter efter vokalen, som ck i tack, visar att vokalen är kort. '
+                'I tak, mat och fin är vokalen lång.'),
+            val('Vilket ord är felstavat?', ['hoppa', 'glass', 'pena', 'socker'], 'pena',
+                'E är kort i penna, så n ska dubbleras. Rätt stavning är penna.'),
+            skriv('Ordet är felstavat: ”vaten”. Skriv det rätt.', 'vatten',
+                  'A är kort i vatten. Efter en kort vokal dubbleras konsonanten, så det blir tt.'),
+            # Utan meningen går ”soker” lika gärna att rätta till söker.
+            skriv('Ett ord är felstavat: ”Mormor bakar med mjöl och soker.” Skriv ordet rätt.', 'socker',
+                  'O är kort i socker. Ett k-ljud efter en kort vokal skrivs ck.'),
+            skriv('Ordet är felstavat: ”titar”. Skriv det rätt.', 'tittar',
+                  'I är kort i tittar, så t ska dubbleras.'),
+            ordna('Bygg meningen. En bricka är felstavad och hör inte dit.',
+                  ['Pappa', 'dricker', 'vatten', 'och', 'kaffe.'], extra=['vaten'],
+                  forklaring='Vatten stavas med tt eftersom a är kort. '
+                             'I dricker skrivs k-ljudet ck av samma skäl.'),
+        ], beskrivning='Tränar när konsonanten dubbleras och när k-ljudet stavas ck.'),
+
+        niva('sv-ak6-ordforrad-1', 'Synonymer och motsatsord', 'Ordförråd', [
+            val('Vad är en synonym?',
+                ['Ett ord som betyder nästan samma sak som ett annat',
+                 'Ett ord som betyder motsatsen till ett annat',
+                 'Ett ord som rimmar på ett annat'],
+                'Ett ord som betyder nästan samma sak som ett annat',
+                'Synonymer betyder nästan samma sak, som prata och tala. '
+                'Ord med motsatt betydelse kallas motsatsord.'),
+            val('Vilket ord är en synonym till ”tala”?', ['prata', 'tiga', 'lyssna', 'skriva'], 'prata',
+                'Tala och prata betyder nästan samma sak. Tiga är tvärtom, ett motsatsord.'),
+            val('Vilket ord betyder nästan samma sak som ”börja”?', ['starta', 'sluta', 'vänta'], 'starta',
+                'Man kan säga att filmen börjar eller att filmen startar. Sluta är motsatsen.'),
+            val('Vilket ord är ett motsatsord till ”tidig”?', ['sen', 'snabb', 'morgon'], 'sen',
+                'Den som inte kommer tidigt kommer sent. Tidig och sen är motsatser.'),
+            skriv('Skriv motsatsordet till ”tung”.', 'lätt',
+                  'Det som inte är tungt är lätt att bära. Tung och lätt är motsatser.'),
+            skriv('Skriv motsatsordet till ”vinna”.', 'förlora',
+                  'I en match vinner det ena laget och det andra förlorar.'),
+            skriv('Skriv motsatsordet till ”stark”, som i ”Hon är stark.”', ['svag', 'klen'],
+                  'Den som inte är stark är svag. Stark och svag är motsatser.'),
+            ordna('Ordna orden från minst till störst.', ['pytteliten', 'liten', 'stor', 'enorm'],
+                  forklaring='Pytteliten är mindre än liten, och enorm är större än stor.'),
+        ], beskrivning='Tränar ord som betyder nästan samma sak och ord som betyder motsatsen.'),
+
+        niva('sv-ak6-meningsbyggnad-1', 'Bygg meningar', 'Meningsbyggnad', [
+            ordna('Bygg meningen.', ['Efter', 'skolan', 'spelar', 'vi', 'fotboll.'],
+                  forklaring='Efter skolan är meningens första del. Då kommer verbet spelar direkt efter, '
+                             'och sedan vi.'),
+            ordna('Bygg frågan.', ['Har', 'du', 'ätit', 'frukost?'],
+                  forklaring='I en fråga som man svarar ja eller nej på står verbet först: Har du …?'),
+            ordna('Bygg en fråga som börjar med frågeordet var.', ['Var', 'bor', 'din', 'kusin?'],
+                  forklaring='Efter frågeordet kommer verbet bor, och sedan den man frågar om: din kusin.'),
+            ordna('Bygg meningen. Den har en bisats som säger när.',
+                  ['Vi', 'går', 'hem', 'när', 'filmen', 'är', 'slut.'],
+                  forklaring='Vi går hem är huvudsatsen. När filmen är slut är en bisats som säger när vi går.'),
+            val('Vilken mening har rätt ordföljd?',
+                ['Nu ska vi baka.', 'Nu vi ska baka.', 'Nu ska baka vi.'], 'Nu ska vi baka.',
+                'Verbet ska står på andra plats, direkt efter nu. Sedan kommer vi och sist baka.'),
+            val('Vilken mening är rätt?',
+                ['Det är en film som jag inte har sett.',
+                 'Det är en film som jag har inte sett.',
+                 'Det är en film som jag har sett inte.'],
+                'Det är en film som jag inte har sett.',
+                'Som jag inte har sett är en bisats. I en bisats står inte före verbet.'),
+            skriv('Gör en mening av orden ”vi”, ”Sedan” och ”äter”. Vilket ord hamnar i mitten?', 'äter',
+                  'Sedan äter vi. När meningen börjar med sedan kommer verbet på andra plats.'),
+            skriv('Vilket ord inleder bisatsen? ”Jag stannar inne eftersom det regnar.”', 'eftersom',
+                  'Eftersom det regnar är en bisats. Den kan inte stå ensam som en hel mening.'),
+        ], beskrivning='Tränar ordföljd i påståenden, frågor och meningar med bisats.'),
+    ]),
+
+    bana('Svenska', 'ak8', [
+        niva('sv-ak8-stavning-1', 'Sär- och sammanskrivning', 'Stavning', [
+            val('Hur skrivs ordet rätt? ”Vi ska se en … på lördag.”',
+                ['fotbollsmatch', 'fotbolls match', 'fotboll match'], 'fotbollsmatch',
+                'Fotbollsmatch är ett sammansatt ord: fotboll + s + match. Sammansatta ord skrivs ihop.'),
+            val('Vilket ord betyder en lärare som undervisar i engelska?',
+                ['engelsklärare', 'engelsk lärare', 'engelska lärare'], 'engelsklärare',
+                'Engelsklärare är ett sammansatt ord och skrivs ihop. '
+                'En engelsk lärare är en lärare som kommer från England.'),
+            val('Det är förbjudet att röka här. Vilken skylt är rätt?',
+                ['Rökfritt', 'Rök fritt', 'Rök-fritt'], 'Rökfritt',
+                'Rökfritt betyder att ingen får röka. Rök fritt, i två ord, betyder tvärtom '
+                'att man får röka hur mycket man vill.'),
+            val('Vilket är rätt skrivet?', ['till exempel', 'tillexempel', 'till-exempel'], 'till exempel',
+                'Till exempel är inget sammansatt ord utan två ord som hör ihop. De skrivs isär.'),
+            skriv('Skriv det särskrivna ordet rätt: ”Vi åt lamm kotletter.”', 'lammkotletter',
+                  'Kotletter av lamm heter lammkotletter. Ett sammansatt ord skrivs ihop.'),
+            skriv('Skriv det särskrivna ordet rätt: ”Hon är en duktig fotbolls spelare.”', 'fotbollsspelare',
+                  'Fotboll + s + spelare blir fotbollsspelare i ett ord. Därför står två s i rad.'),
+            skriv('Skriv det särskrivna ordet rätt: ”Stek pannan är varm.”', 'stekpannan',
+                  'Stek pannan låter som en uppmaning att steka pannan. Pannan man steker i heter stekpannan.'),
+            ordna('Bygg meningen. Två brickor hör inte dit.',
+                  ['Min', 'storebror', 'är', 'fotbollstränare.'], extra=['fotbolls', 'tränare.'],
+                  forklaring='Fotbollstränare är ett sammansatt ord och skrivs ihop, precis som storebror.'),
+        ], beskrivning='Tränar att skriva sammansatta ord ihop och att se hur betydelsen ändras när de särskrivs.'),
+
+        niva('sv-ak8-pronomen-1', 'De eller dem', 'Pronomen', [
+            val('Hur kan man testa om det ska vara de eller dem?',
+                ['Byt ut ordet mot vi eller oss',
+                 'Se om ordet står först i meningen',
+                 'Se om det handlar om flera personer'],
+                'Byt ut ordet mot vi eller oss',
+                'De fungerar som vi och dem som oss. Passar vi ska det vara de, passar oss ska det vara dem.'),
+            skriv('De eller dem? ”Mamma träffade … på bussen.”', 'dem',
+                  'Man säger ”mamma träffade oss”, inte ”mamma träffade vi”. Oss motsvarar dem.'),
+            skriv('De eller dem? ”… bor i huset bredvid.”', 'de',
+                  'Man säger ”vi bor i huset bredvid”, inte ”oss bor”. Där vi passar ska det vara de.'),
+            skriv('De eller dem? ”Mina kusiner ringde och sa att … var sena.”', 'de',
+                  'Man säger ”sa att vi var sena”, inte ”sa att oss var sena”. Därför de.'),
+            val('I vilken mening är de eller dem rätt använt?',
+                ['Läraren berömde dem.', 'Dem som vill får följa med.', 'Jag gav de en present.'],
+                'Läraren berömde dem.',
+                'Läraren berömde oss, alltså dem. I de andra meningarna ska det vara ”De som vill” '
+                'och ”Jag gav dem”.'),
+            val('Vilket ord ska stå i luckan? ”Har du sett … nya eleverna?”', ['de', 'dem', 'den'], 'de',
+                'Här är de en artikel, som i de stora husen. Framför ett adjektiv och ett substantiv '
+                'i bestämd form plural står alltid de.'),
+            val('Varför ska det stå dem i ”Vi väntade på dem.”?',
+                ['Man kan byta mot oss: väntade på oss',
+                 'Ordet står sist i meningen',
+                 'Det handlar om flera personer'],
+                'Man kan byta mot oss: väntade på oss',
+                'Oss passar, och oss motsvarar dem. Var ordet står i meningen avgör ingenting.'),
+            ordna('Bygg meningen. En bricka hör inte dit.',
+                  ['De', 'som', 'är', 'klara', 'får', 'gå', 'hem.'], extra=['Dem'],
+                  forklaring='Man kan säga ”vi som är klara får gå hem”. Vi passar, alltså de.'),
+        ], beskrivning='Tränar att välja mellan de och dem med hjälp av vi och oss.'),
+
+        niva('sv-ak8-satsdelar-1', 'Subjekt och predikat', 'Satsdelar', [
+            val('Vilket ord är predikat i meningen ”Hunden jagar katten.”?',
+                ['jagar', 'Hunden', 'katten'], 'jagar',
+                'Predikatet är verbet som säger vad som händer. Här är det jagar.'),
+            val('Vilket ord är subjekt i meningen ”På lördag spelar Omar match.”?',
+                ['Omar', 'spelar', 'lördag', 'match'], 'Omar',
+                'Fråga ”vem spelar?”. Svaret är Omar. Subjektet står inte alltid först i meningen.'),
+            val('Hur hittar man subjektet i en sats?',
+                ['Hitta predikatet och fråga vem eller vad som gör det',
+                 'Ta ordet som står först i meningen',
+                 'Ta det sista substantivet i meningen'],
+                'Hitta predikatet och fråga vem eller vad som gör det',
+                'Först predikatet, till exempel spelar. Sedan frågan ”vem spelar?”. '
+                'Svaret på frågan är subjektet.'),
+            val('Vad av detta saknar predikat?',
+                ['En kall morgon i januari.', 'Det snöade hela natten.', 'Vi frös.'],
+                'En kall morgon i januari.',
+                'En kall morgon i januari har inget verb. Utan predikat blir det ingen sats.'),
+            skriv('Skriv predikatet i meningen: ”Barnen byggde en koja i skogen.”', 'byggde',
+                  'Byggde är verbet som säger vad barnen gjorde. Det är predikatet.'),
+            skriv('Skriv subjektet i frågan: ”Varför skrattar Elsa?”', 'Elsa',
+                  'Fråga ”vem skrattar?”. Svaret är Elsa. I frågor står subjektet ofta efter predikatet.'),
+            skriv('Hur många predikat finns det i meningen? ”Vi åt middag och sedan diskade vi.”',
+                  [tal(2), 'två'],
+                  'Meningen har två satser, och varje sats har ett eget predikat: åt och diskade.'),
+            ordna('Bygg frågan.', ['Spelar', 'din', 'syster', 'fotboll?'],
+                  forklaring='I en ja- eller nej-fråga står predikatet spelar först, '
+                             'och subjektet din syster kommer direkt efter.'),
+        ], beskrivning='Tränar att hitta subjekt och predikat, också när subjektet inte står först.'),
+
+        niva('sv-ak8-skiljetecken-1', 'Komma, kolon och repliker', 'Skiljetecken', [
+            val('I vilken mening står kolonet rätt?',
+                ['Vi behöver tre saker till kalaset: ballonger, tårta och saft.',
+                 'Vi behöver tre saker: till kalaset ballonger, tårta och saft.',
+                 'Vi behöver: tre saker till kalaset ballonger, tårta och saft.'],
+                'Vi behöver tre saker till kalaset: ballonger, tårta och saft.',
+                'Kolon står före uppräkningen, direkt efter orden som säger att något ska räknas upp.'),
+            val('Vilken mening har rätt skiljetecken?',
+                ['Vi köpte äpplen, päron och bananer.',
+                 'Vi köpte äpplen päron och bananer.',
+                 'Vi köpte, äpplen päron och bananer.'],
+                'Vi köpte äpplen, päron och bananer.',
+                'I en uppräkning står komma mellan orden. Före och behövs normalt inget komma.'),
+            val('Vilken replik är rätt skriven?',
+                ['– Jag är hungrig, sa Elin.', '– Jag är hungrig. Sa Elin.', '– Jag är hungrig sa Elin.'],
+                '– Jag är hungrig, sa Elin.',
+                'Efter repliken står komma, och sa skrivs med liten bokstav eftersom meningen fortsätter.'),
+            val('Repliken är en fråga. Hur ska den skrivas?',
+                ['– Vill du ha glass? frågade Tim.',
+                 '– Vill du ha glass?, frågade Tim.',
+                 '– Vill du ha glass, frågade Tim?'],
+                '– Vill du ha glass? frågade Tim.',
+                'Frågetecknet står direkt efter frågan. Då behövs inget komma, '
+                'och frågade skrivs med liten bokstav.'),
+            skriv('Vad heter tecknet efter ”saker” i meningen ”Ta med tre saker: matsäck, vatten och regnjacka.”?',
+                  'kolon',
+                  'Tecknet med två prickar är kolon. Det står ofta före en uppräkning eller en förklaring.'),
+            skriv('Hur många kommatecken behövs i meningen? ”Vi såg älgar rådjur harar och en räv.”',
+                  [tal(2), 'två'],
+                  'Det blir ”älgar, rådjur, harar och en räv”. Komma står mellan orden i uppräkningen '
+                  'men normalt inte före och.'),
+            skriv('Vad heter tecknen som står runt ett citat, som runt ”Hej”?',
+                  ['citattecken', 'citationstecken', 'anföringstecken', 'citattecknen',
+                   'citationstecknen', 'anföringstecknen', 'gåsögon'],
+                  'Citattecken, som också kallas anföringstecken och i vardagligt tal gåsögon, visar '
+                  'var det någon sagt eller skrivit börjar och slutar.'),
+            ordna('Bygg repliken.', ['–', 'Var', 'är', 'mina', 'skor?', 'frågade', 'Ali.'],
+                  forklaring='Talstrecket står först. Frågetecknet avslutar frågan, och sedan kommer '
+                             'frågade Ali med punkt sist.'),
+        ], beskrivning='Tränar komma i uppräkningar, kolon och hur repliker skrivs med talstreck.'),
+    ]),
+]

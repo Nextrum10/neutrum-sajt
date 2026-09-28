@@ -36,3 +36,8 @@ skills-lock.json
 # den i repot hamnar den på webben. Den hör hemma i scratchpaden, och
 # har en gång checkats in av misstag.
 _prov-*
+
+# Python skriver en bytecode-cache bredvid det som importeras.
+# verktyg/bygg-uppgifter.py stänger av den, men den som importerar
+# grund.py själv för att pröva ett svar får en ändå.
+__pycache__/

@@ -48,6 +48,13 @@ jobs:
       - name: Migrationsfilerna har versionsnamn
         run: python3 verktyg/kolla-migrationer.py
 
+      # Fas 23.1: de digitala uppgifterna. Formen på varje nivå och
+      # fråga prövas, och den senaste *_uppgiftsbanken*.sql ska vara
+      # exakt det verktyget skriver. En bank som ändrats utan en ny
+      # migration når aldrig databasen, och det syns bara här.
+      - name: Uppgiftsbanken är prövad och har sin migration
+        run: python3 verktyg/bygg-uppgifter.py --kolla
+
       # /admin, /larare och /foralder har skarp CSP (vercel.json).
       # Inline-kod där fungerar inte i produktion.
       - name: Vyerna tål den skarpa CSP:n

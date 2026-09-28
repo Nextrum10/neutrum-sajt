@@ -42,7 +42,7 @@ finnas. Det här är det.
 |---|---|---|---|---|---|---|
 | 1 | Intresseanmälan (`leads`) | förälder, barn | förälderns namn, e-post, telefon; barnets namn, årskurs, ämne; fritext; varifrån besöket kom | 6.1 b, åtgärd före avtal | Supabase, Resend (kvitto och avisering) | avidentifieras 6 mån efter senaste kontakt |
 | 2 | Konto (`profiles`) | förälder, studiehjälpare | namn, e-post, telefon, profilbild | 6.1 b, avtal | Supabase | så länge det används; granskas efter 2 år utan användning |
-| 3 | Barnet och undervisningen (`students`, `study_plans`, `homework`, `progress_items`, `lesson_reports`, `materials`) | barn | namn, årskurs, skola, ämnen, mål, läxor, rapporter | 6.1 f, berättigat intresse (barnet är inte part) | Supabase; Anthropic (förnamn, årskurs, maskade anteckningar) när studiehjälparen ber om utkast | som kontot |
+| 3 | Barnet och undervisningen (`students`, `study_plans`, `homework`, `progress_items`, `lesson_reports`, `materials`, `niva_forsok`, `niva_svar`) | barn | namn, årskurs, skola, ämnen, mål, uppgifter, svaren på de digitala uppgifterna och rättningen av dem, rapporter | 6.1 f, berättigat intresse (barnet är inte part) | Supabase; Anthropic (förnamn, årskurs, maskade anteckningar) när studiehjälparen ber om utkast | som kontot |
 | 4 | Förälderns privata anteckningar (`student_notes`) | barn | fritext | 6.1 f | Supabase. Ingen hos oss har läsrätt | som kontot |
 | 5 | Pass och bokningar (`bookings`, `pass_moten`) | förälder, barn, studiehjälpare | datum, tid, ämne, plats (ofta en hemadress), avbokningsskäl | 6.1 b | Supabase; Google (Meet-rum, när kopplat) | som kontot; pass med betalning 7 år |
 | 6 | Chatt (`messages`) | förälder, studiehjälpare | meddelandetext | 6.1 b | Supabase | som kontot |
@@ -154,7 +154,12 @@ pass, och AI kan formulera om studiehjälparens anteckningar.
 
 **Nödvändighet och proportionalitet.** Uppgifterna om barnet är de som
 undervisningen kräver: årskurs, ämnen, mål, vad man gjorde. Vi ber inte
-om personnummer, betyg eller diagnoser. AI:n är frivillig för
+om personnummer, betyg eller diagnoser. Svaren på de digitala uppgifterna
+(Fas 23.1) rättas automatiskt i databasen, men rättningen är inget beslut
+om barnet i artikel 22:s mening: den ger stjärnor och en procentsats som
+barnet, familjen och studiehjälparen ser, och ingenting följer av den av
+sig själv. Svaren är korta (ett alternativ, ett tal, några ord) och går
+inte till någon utanför oss. AI:n är frivillig för
 studiehjälparen, får förnamnet och maskad text, och en människa läser
 och skickar varje utkast.
 
@@ -184,6 +189,7 @@ som står på kontot, inte till en ny.
 
 **Utdrag (art. 15).** För en familj: `profiles`, `students`,
 `study_plans`, `homework`, `progress_items`, `lesson_reports`,
+`niva_forsok` och `niva_svar` (Fas 23.1: svaren på de digitala uppgifterna),
 `bookings`, `messages`, `leads` (om den inte är gallrad), `klippkort`,
 `timbank_rorelser`,
 `invoices`, `rapport_bekraftelser`, `notis_val`. Förälderns egna

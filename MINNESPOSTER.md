@@ -51,7 +51,10 @@ Ingen katalog att bläddra i.
 
 Ordlista: studiehjälpare (aldrig "lärare" utåt; "privatlärare" står
 bara i FAQ:n, för att säga att de inte är det), pass, rapport, underlag,
-betalning, tjänst. Faktura är sedan Fas 14.6 ett betalsätt familjen kan
+betalning, tjänst, uppgift (det eleven gör mellan passen, `homework`;
+hette läxa till Fas 23.1, och i adminvyn betyder Uppgifter fortfarande
+adminens att göra-lista) och nivå (en digital uppgift i en bana per ämne
+och årskurs, `nivaer`). Faktura är sedan Fas 14.6 ett betalsätt familjen kan
 välja per pass, efter passet. Flaggan `faktura` är på sedan 2026-09-27,
 och texterna säger det sedan dagen efter.
 
@@ -93,6 +96,14 @@ eller obesvarat när dagen gått ger tillbaka den (migrationen körd
 förslag familjen inte vill ha först, annars räknas de som använda.
 Tiderna i bokningen börjar klockan 11 på vardagar och klockan 9 på
 helger (2026-09-28).
+
+Uppgifterna (Fas 23.1): nivåer att klara en i taget, som i Duolingo, i
+mobilen. Rättningen sker i databasen (`niva_starta`, `niva_svara`),
+betyget är första svaret på varje fråga (3 stjärnor allt rätt, 2 minst
+80 %, 1 minst 60 %, under det inte klarad), och en digital uppgift blir
+klar av sig själv. Innehållet skrivs i `verktyg/uppgiftsbanken/` och blir
+en migration med `verktyg/bygg-uppgifter.py`. Märkena räknas ur
+försöken, belöningarna är inte pengar, och barnet har inget eget konto.
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
@@ -158,6 +169,11 @@ sida beskriver den en tabell och en policy för vem som helst, och
 föräldern förstår den inte. `NX.felText` skickar den till konsolen och
 `klientfel` i stället. Varje meddelande som slutar i en återvändsgränd
 bär `{oss}`, som `t()` fyller med `CFG.EPOST`.
+
+Ett resultat som går att skriva från en vy är ett påstående. Därför
+rättas uppgifterna i databasen (Fas 23.1): frågorna lämnas ut utan
+facit, `niva_forsok` och `niva_svar` har ingen skrivpolicy, och en
+digital uppgift går inte att bocka av för hand.
 
 `verktyg/rls-test.sql` körs som ett anrop mot databasen efter varje
 ändring i en policy eller trigger. Varje rad i svaret ska vara ok.
