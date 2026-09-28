@@ -1483,9 +1483,10 @@
      timmarna på kortet går ut, minuterna i banken gör det inte.
 
      Sedan Fas 22.2 betalar timmarna passet av sig själva när det
-     bekräftas eller genomförs, och när ett köp blir betalt. Knappen står
-     kvar för det de inte hann: ett pass som bekräftades medan timmarna
-     inte räckte, och timmar som kommit tillbaka efter en avbokning. */
+     bekräftas eller genomförs, och när ett köp blir betalt. Sedan Fas
+     22.3 betalar timmar som blivit lediga (en avbokning, kortet som vann,
+     timbanken som fyllts på) ett bekräftat pass inom fem minuter, genom
+     jobbet timmar-betalar. Knappen gör samma sak direkt. */
   function betalaKnapp(b, liten) {
     const tim = kortFör(b);
     const bank = !tim && bankFör(b);
@@ -2178,8 +2179,8 @@
       + '<div class="erb-mitt-topp"><b>Timbanken</b><span>Går inte ut</span></div>'
       + '<span class="erb-kvar"><b>' + esc(tidLängd(saldo)) + '</b> sparat</span>'
       + '<p class="erb-bank-text">Minuter som blev över när ett pass betalt med timmar slutade före en hel timme. '
-      + 'Drar ett pass över tas tiden härifrån först, utan kostnad, och räcker minuterna till ett helt pass betalar de det '
-      + 'när det bekräftas, om inga köpta timmar gör det.'
+      + 'Drar ett pass över tas tiden härifrån först, utan kostnad, och räcker minuterna till ett helt pass betalar de '
+      + 'nästa bekräftade pass, om inga köpta timmar gör det.'
       + (bank.varde ? ' Slutar ni betalar vi tillbaka dem, i dag ' + esc(NXBetalning.kronor(bank.varde)) + '.' : '')
       + ' <a href="#profil/timbank">Se vad som gått in och ut</a>'
       + '</p></div>';
@@ -2239,8 +2240,8 @@
       return;
     }
     host.innerHTML = '<p class="erb-bank-text tb-forklaring">Timmarna betalar era pass av sig själva. När studiehjälparen '
-      + 'har bekräftat ett pass dras timmarna från det kort som går ut först, och köper ni timmar när ni redan har bekräftade '
-      + 'pass framför er betalar de nya timmarna dem. Ett pass med fler barn, och passet där första timmen är på köpet, '
+      + 'har bekräftat ett pass dras timmarna från det kort som går ut först. Köper ni timmar, eller kommer timmar tillbaka '
+      + 'när ett pass avbokas, betalar de era bekräftade pass i datumordning. Ett pass med fler barn, och passet där första timmen är på köpet, '
       + 'betalas med kort. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för timmarna</a></p>'
       + kort.map(k => kortRad(k, kortetsPass(k))).join('');
   }
@@ -2278,7 +2279,7 @@
       + (bank.varde ? '<span>Värt ' + esc(NXBetalning.kronor(bank.varde)) + ' om ni slutar</span>' : '') + '</div>'
       + '<p class="erb-bank-text">Här sparas det som blir över när ett pass betalt med timmar slutar före en hel timme: '
       + 'ett pass på två timmar som höll 1 h 15 lägger 45 minuter här. Drar ett pass med ett barn över tas tiden härifrån '
-      + 'först, utan kostnad, och räcker minuterna till ett helt pass betalar de det när det bekräftas, om inga köpta '
+      + 'först, utan kostnad, och räcker minuterna till ett helt pass betalar de nästa bekräftade pass, om inga köpta '
       + 'timmar gör det. Minuterna går inte ut, och slutar ni betalar vi tillbaka dem. '
       + '<a href="/anvandarvillkor#timbank" target="_blank" rel="noopener">Villkoren för timbanken</a></p>'
       + '<p class="konto-inlogg-et" style="margin-top:18px">Vad som gått in och ut</p>'
@@ -3309,6 +3310,11 @@
         ? { text: 'Passet är bokat, och det ni betalade för det är återbetalt. Undrar ni varför, hör av er till oss.', ton: 'lugn' }
         : b.betalning_status === 'faktura'
         ? { text: 'Passet är bokat och betalas mot faktura. Det kommer med på fakturan i början av nästa månad.', ton: 'klart' }
+        /* Fas 22.3: timmarna räcker men har inte betalat än, för de blev
+           lediga efter att passet bekräftades. Jobbet tar det inom fem
+           minuter; knappen gör det nu. */
+        : kortFör(b) || bankFör(b)
+        ? { text: 'Passet är bokat, och era timmar räcker till det. De betalar det av sig själva inom fem minuter, eller nu med knappen.', ton: 'klart' }
         : { text: 'Passet är bokat. Betala med kort nu, eller efter passet när ni bekräftar rapporten.', ton: 'klart' };
       atgarder = (kanBetalas(b) ? betalaKnapp(b, false) : '')
         + '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Föreslå ny tid</button>'

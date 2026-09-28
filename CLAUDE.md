@@ -102,7 +102,8 @@ står i familjens timbank. Tre beslut av Leo samma dag:
    pass med ett barn. Räcker minuterna till det bokade går passet att
    betala med Betala med timbanken (`timbank_dra` genom
    `klippkort-betala`), och sedan Fas 22.2 betalar de det av sig
-   själva när det bekräftas. Utan det hade en familj vars pass ofta blir
+   själva när det bekräftas, sedan Fas 22.3 också när banken fylls på
+   efter bekräftelsen. Utan det hade en familj vars pass ofta blir
    korta samlat minuter ingen använder, och det är pengar vi är skyldiga.
 Insättningarna RÄKNAS ur passen (`intern.timbank_in`), uttagen LAGRAS i
 `timbank_uttag`: övertiden beror på vad saldot var när rapporten skrevs,
@@ -163,24 +164,39 @@ med timmarna oanvända bredvid.
   kassa som aldrig slutförts står kvar som `vantar` för alltid. Kassan
   stängs inte härifrån; betalar familjen den ändå vinner kortet och
   timmarna går tillbaka (webhooken, Fas 16.1).
-- **Knappen står kvar** för det triggrarna inte når: timmar som kommer
-  tillbaka när ett pass avbokas betalar inte ett annat obetalt pass av
-  sig själva, för avbokningen görs i familjens session och
-  `skydda_bokningsfalt` släpper inte igenom en betalning på ett annat
-  pass därifrån.
+- **Timmar som blir lediga betalar nästa pass inom fem minuter** (Fas
+  22.3, Leo samma kväll: "se till att den funkar som den ska"). Fas 22.2
+  betalade bara i de två ögonblicken ovan, så en timme som kom tillbaka
+  när ett pass avbokades, eller när kortet vann, lämnade ett bekräftat
+  pass obetalt bredvid timmen tills rapporten skrevs. Detsamma gällde
+  timbanken som fylldes på och flaggan som slogs på. En trigger på
+  avbokningen går inte: den körs i familjens eller studiehjälparens
+  session, och `skydda_bokningsfalt` nekar då en betalning på ett annat
+  pass. I stället kör pg_cron `timmar-betalar` var femte minut
+  (`intern.timmar_betalar_obetalda`), som postgres, och låter samma val
+  som triggern (`intern.timmar_betala`, utflyttat ur den) betala de
+  bekräftade obetalda passen från och med i dag i datumordning. Jobbet
+  väntar aldrig på ett lås (`skip locked` på passet, `nowait` på korten
+  och banken), för det låser pass efter pass i en transaktion och hade
+  annars kunnat låsa fast mot en bekräftelse. Knappen Betala med timmar
+  står kvar och gör samma sak direkt.
 - **Mejlen säger det.** `intern.betalsatt_kod` ger `timmar` till
   `notis_vid_pass` och `notis_planera`, och bekräftelsen och påminnelsen
-  säger att passet är betalt med timmarna, med knappen till passet.
-- **Vid ånger eller när en familj slutar: avboka först de kommande pass
-  timmarna betalat**, om familjen inte vill ha dem. `vid_anger_ore` och
-  `vid_uppsagning_ore` räknar varje pass som inte är avbokat som använt,
-  också ett som inte hållits, och sedan Fas 22.2 betalar timmarna varje
-  bekräftat pass av sig själva.
+  säger att passet är betalt med timmarna, med knappen till passet. Ett
+  pass jobbet betalar får inget eget mejl; påminnelsen säger det.
+- **Vid ånger eller när en familj slutar: avboka först ALLA kommande
+  pass familjen inte vill ha**, inte bara de timmarna betalat.
+  `vid_anger_ore` och `vid_uppsagning_ore` räknar varje pass som inte är
+  avbokat som använt, också ett som inte hållits, och sedan Fas 22.3
+  betalar en timme som blir ledig nästa bekräftade pass inom fem
+  minuter: avbokas bara det betalda passet flyttar timmen till nästa.
 Profil → Timbanken visar köpta timmar kort för kort, med passen varje
 kort betalat ur vyn `klippkort_rorelser` (samma timmar som
 `klippkort_saldo`), och de sparade minuterna under dem. `rls-test.sql`
 slår av flaggan `erbjudanden` överst, så att proven som räknar med
-obetalda pass inte får dem betalda, och på i blocken för 22.2.
+obetalda pass inte får dem betalda, och på i blocken för 22.2 och 22.3.
+Blocken för 22.3 kör jobbet för familj P direkt i stället för att vänta
+på schemat.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
@@ -683,7 +699,9 @@ med vyerna `timbank_saldo` och `timbank_rorelser`. Insättningarna står
 inte i någon tabell, de räknas ur passen. Fas 22.2 la till vyn
 `klippkort_rorelser` (passen varje kort betalat) och triggrarna
 `bookings_timmar_betalar` och `klippkort_betalar_passen`, som låter
-timmarna betala passen av sig själva (avsnitt 1).
+timmarna betala passen av sig själva (avsnitt 1). Fas 22.3 la till
+pg_cron-jobbet `timmar-betalar`, som låter timmar som blivit lediga
+betala nästa bekräftade pass.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 18.1 la till `google_koppling` (nyckeln till Nextrums Google-konto:
@@ -1834,7 +1852,10 @@ körningen så att fixturpassen aldrig blir ett mejl, och flaggan
   läser koden `timmar` som ingen kod och skriver det vanliga
   betalningsmejlet, så databasen kunde gå först. Inga köpta timmar
   fanns i driften då, så ingen familj fick ett pass betalt av
-  ändringen. Kvar: en familj som inte är matchad når inte
+  ändringen. **Fas 22.3** (2026-09-28) är bara databasen:
+  migrationen `fas22_3_lediga_timmar_betalar_nasta_pass` med jobbet
+  `timmar-betalar`. Ingen funktion ändrades, och fortfarande fanns
+  inga köpta timmar i driften. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
