@@ -393,11 +393,10 @@ window.NXArbete = (function () {
       return '<p class="mv-inga">' + esc(o.tom || 'Inga lediga tider den dagen.') + '</p>';
     }
     /* I dag börjar tiderna först en timme fram (NX.tiderFörDatum). Utan
-       en mening om det ser det ut som att morgonen inte går att
-       föreslå alls — Leo 2026-09-25: "man kan inte föreslå tider före
-       11:00". Det gick, bara inte samma dag. */
-    var förstaTimme = HELA_DAGEN[0].start_time;
-    var idagKapad = o.datum === idagISO() && String(o.tider[0]).slice(0, 5) > förstaTimme;
+       en mening om det ser det ut som att dagens första timmar saknas,
+       fast de bara har passerat. Andra dagar börjar raden vid dagens
+       första tid i HELA_DAGEN, och meningen säger vilka de är. */
+    var idagKapad = o.datum === idagISO() && String(o.tider[0]).slice(0, 5) > förstaTid(o.datum);
     return '<div class="mv-tider" role="group" aria-label="' + esc('Tider ' + datumText(o.datum)) + '">'
       + o.tider.map(function (t) {
           return '<button type="button" class="bk-slot mv-tid" data-datum="' + o.datum + '"'
@@ -407,8 +406,25 @@ window.NXArbete = (function () {
       + '</div>'
       + (idagKapad
         ? '<p class="mv-inga">I dag går det bara att föreslå tider minst en timme fram. '
-          + 'Andra dagar går det från kl. ' + esc(förstaTimme) + '.</p>'
+          + esc(andraDagar()) + '</p>'
         : '');
+  }
+
+  /* Dagens första tid ur HELA_DAGEN. Veckodagen räknas som i
+     NX.tiderFörDatum och tutor_availability: 0 är måndag. */
+  function förstaTid(iso) {
+    var v = (new Date(iso + 'T12:00:00').getDay() + 6) % 7;
+    var f = HELA_DAGEN.filter(function (t) { return t.weekday === v; })[0];
+    return f ? f.start_time : HELA_DAGEN[0].start_time;
+  }
+
+  /* Var andra dagar börjar, i ord, ur samma lista. Måndag och söndag
+     står för vardagar och helger. */
+  function andraDagar() {
+    var kl = function (t) { return 'kl. ' + Number(String(t).slice(0, 2)); };
+    var vardag = HELA_DAGEN[0].start_time, helg = HELA_DAGEN[6].start_time;
+    return vardag === helg ? 'Andra dagar går det från ' + kl(vardag) + '.'
+      : 'Andra dagar går det från ' + kl(vardag) + ' på vardagar och ' + kl(helg) + ' på helger.';
   }
 
   /* ============================================================
@@ -456,20 +472,32 @@ window.NXArbete = (function () {
                 priset vid knappen
        ladda  — async () => { upptagna, tidigare } | { spärr }
        boka   — async ({datum, tid, minuter, amne, barn})
-                => 'felmeddelande' | { status }
+                => 'felmeddelande' | { status, id, betalt }, där betalt
+                är 'timmar' eller 'timbanken' när databasen betalade
+                förslaget när det skapades (Fas 22.4)
      ============================================================ */
 
   /* Timmarna ett förslag kan ligga på, varje dag i veckan. Hela timmar,
-     eftersom allt bokas och faktureras i hela timmar; 07–22 för att
+     eftersom allt bokas och faktureras i hela timmar; till 22 för att
      ett pass som börjar 21 ska sluta senast 22.
 
-     Formen är tutor_availability:s med flit. Då kan NX.tiderFörDatum,
+     Vardagar från 11, lördag och söndag från 9. Leo 2026-09-28: "man
+     ska inte kunna skicka förfrågan innan 11 på vardagar, helger ska man
+     kunna skicka förfrågan tidigast kl 9", samma kväll som 11 först
+     gällde alla dagar. Listan började 07:00, och 2026-09-25 lästes "man
+     kan inte föreslå tider före 11:00" som en felanmälan i stället för
+     en regel. Röda dagar mitt i veckan räknas som vardagar. Regeln finns
+     bara här, som resten av fönstret: databasen spärrar inga timmar, och
+     en flik som laddats före ändringen erbjuder de gamla tiderna tills
+     den laddas om.
+
+     Formen är tutor_availability:s med flit (weekday 0 är måndag). Då kan NX.tiderFörDatum,
      med sin regel om minst en timme fram idag, användas som den är i
      stället för att skrivas en gång till här — och flyttaRuta i
      nextrum-studie.js använder samma lista, så att ett förslag och
      ett motförslag erbjuder samma timmar. */
   var HELA_DAGEN = [0, 1, 2, 3, 4, 5, 6].map(function (d) {
-    return { weekday: d, start_time: '07:00', end_time: '22:00' };
+    return { weekday: d, start_time: d >= 5 ? '09:00' : '11:00', end_time: '22:00' };
   });
 
   function bokning(opts) {
@@ -497,6 +525,9 @@ window.NXArbete = (function () {
       /* Id:t på förslaget som just skickades, för länken "Visa
          förslaget" i kvittot. */
       nyttId: null,
+      /* Vad som betalade förslaget när det skapades (Fas 22.4):
+         { sort: 'timmar' | 'timbanken', minuter }, eller null. */
+      betalt: null,
       /* Var man ses (Leo 2026-09-24: studiehjälparen ska se "var man
          ska ses"). Fas 15.1 tog bort frågan, och ett förslag hade då
          ingen plats alls — studiehjälparen fick fråga i chatten varje
@@ -710,10 +741,20 @@ window.NXArbete = (function () {
        händer härnäst. */
     function kvitto() {
       var vem = o.hos || 'er studiehjälpare';
+      /* Fas 22.4: timmarna dras när förslaget skickas, och Leo ville att
+         det är samma timme som betalar passet om studiehjälparen
+         föreslår en annan tid. Kvittot säger båda. */
+      var h = st.betalt ? Math.max(1, Math.ceil(st.betalt.minuter / 60)) : 0;
+      var betalt = !st.betalt ? ''
+        : 'Passet är betalt med ' + (h === 1 ? '1 timme' : h + ' timmar')
+          + (st.betalt.sort === 'timbanken' ? ' ur timbanken' : ' av era timmar') + '. Föreslår ' + vem
+          + ' en annan tid följer ' + (st.betalt.sort === 'timbanken' ? 'minuterna' : h === 1 ? 'timmen' : 'timmarna')
+          + ' med, och säger hen nej kommer ' + (st.betalt.sort === 'timbanken' || h > 1 ? 'de' : 'den') + ' tillbaka.';
       return '<div class="bk-kvitto" role="status">'
         + '<b>✓ Förslaget är skickat</b>'
         + '<p>' + esc(vem.charAt(0).toUpperCase() + vem.slice(1)) + ' accepterar tiden eller föreslår en annan. '
         + 'Ni får ett mejl när hen svarat, och passet står under Mina lektioner så länge.</p>'
+        + (betalt ? '<p>' + esc(betalt) + '</p>' : '')
         + '<div class="bk-kvitto-knappar">'
         + (st.nyttId ? '<a class="btn btn-primary btn-sm" href="#pass/' + esc(st.nyttId) + '">Visa förslaget</a>' : '')
         + '<button type="button" class="btn btn-ghost btn-sm" data-bk-igen>Föreslå en tid till</button>'
@@ -963,7 +1004,8 @@ window.NXArbete = (function () {
        säger vad databasen gjorde av förslaget. */
     function tolka(svar) {
       if (typeof svar === 'string') return { fel: svar };
-      return { status: svar && svar.status ? svar.status : null, id: svar && svar.id ? svar.id : null };
+      return { status: svar && svar.status ? svar.status : null, id: svar && svar.id ? svar.id : null,
+               betalt: svar && svar.betalt ? svar.betalt : null };
     }
 
     function skicka() {
@@ -990,6 +1032,7 @@ window.NXArbete = (function () {
            förslaget redan låg i databasen. Omladdningen sker bakom. */
         st.besked = true;
         st.nyttId = r.id;
+        st.betalt = r.betalt ? { sort: r.betalt, minuter: st.minuter } : null;
         st.dag = null; st.tid = null; st.barn = 1; st.not = '';
         ritaDel();
         var kv = host.querySelector('.bk-kvitto');
