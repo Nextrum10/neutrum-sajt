@@ -565,9 +565,13 @@
   }
 
   document.addEventListener('click', e => {
-    /* Lönerna öppnas med samma månad vald. Länken går dit själv. */
+    /* Lönerna väljer utbetalningsmånaden, och lönen för månadens pass
+       betalas månaden efter: september här öppnar oktober där. Länken
+       går dit själv. */
     if (e.target.closest('[data-man-loner]')) {
-      if (typeof NXAdmin.rita.visaLönemånad === 'function') NXAdmin.rita.visaLönemånad(valdMånad());
+      if (typeof NXAdmin.rita.visaLönemånad === 'function') {
+        NXAdmin.rita.visaLönemånad(NXStudie.månadsGräns(valdMånad()).till);
+      }
       return;
     }
     const k = e.target.closest('[data-man-vy]');
