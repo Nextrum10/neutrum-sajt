@@ -551,7 +551,13 @@ begin
      where b.parent_id = p_id and b.status in ('requested', 'confirmed')
        and not intern.passet_har_borjat(b) and not intern.passet_betalt_ej_hallet(b);
 
+    -- Försöken på de digitala uppgifterna, när tabellen finns (Fas 23.1).
+    n := 0;
+    if to_regclass('public.niva_forsok') is not null then
+      execute 'select count(*) from public.niva_forsok where student_id = any ($1)' into n using barn;
+    end if;
     tas := jsonb_build_object(
+      'forsok', n,
       'barn', (select count(*) from public.students x where x.parent_id = p_id and x.raderad_at is null),
       'meddelanden', (select count(*) from public.messages x where x.parent_id = p_id),
       'anmalningar', (select count(*) from intern.radering_anmalningar(p_typ, p_id)),
@@ -677,7 +683,12 @@ begin
      where b.student_id = p_id and b.status in ('requested', 'confirmed')
        and not intern.passet_har_borjat(b) and not intern.passet_betalt_ej_hallet(b);
 
+    n := 0;
+    if to_regclass('public.niva_forsok') is not null then
+      execute 'select count(*) from public.niva_forsok where student_id = $1' into n using p_id;
+    end if;
     tas := jsonb_build_object(
+      'forsok', n,
       'laxor', (select count(*) from public.homework x where x.student_id = p_id),
       'material', (select count(*) from public.materials x where x.student_id = p_id),
       'omraden', (select count(*) from public.progress_items x where x.student_id = p_id),
@@ -736,6 +747,13 @@ begin
   delete from public.progress_items where student_id = p_id;
   delete from public.study_plans where student_id = p_id;
   delete from public.student_notes where student_id = p_id;
+  -- De digitala uppgifterna (Fas 23.1): barnets egna försök och svar
+  -- (niva_svar följer med försöket). Tabellen finns först när
+  -- fas23_1_uppgifterna_blir_digitala är körd, och den och den här
+  -- migrationen kan köras i vilken ordning som helst.
+  if to_regclass('public.niva_forsok') is not null then
+    execute 'delete from public.niva_forsok where student_id = $1' using p_id;
+  end if;
 
   update public.lesson_reports
      set raw_notes = '', ai_feedback = null, went_well = null, needs_practice = null, next_focus = null

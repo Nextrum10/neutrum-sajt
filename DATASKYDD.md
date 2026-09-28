@@ -42,13 +42,13 @@ finnas. Det här är det.
 |---|---|---|---|---|---|---|
 | 1 | Intresseanmälan (`leads`) | förälder, barn | förälderns namn, e-post, telefon; barnets namn, årskurs, ämne; fritext; varifrån besöket kom | 6.1 b, åtgärd före avtal | Supabase, Resend (kvitto och avisering) | avidentifieras 6 mån efter senaste kontakt |
 | 2 | Konto (`profiles`) | förälder, studiehjälpare | namn, e-post, telefon, profilbild | 6.1 b, avtal | Supabase | så länge det används; granskas efter 2 år utan användning |
-| 3 | Barnet och undervisningen (`students`, `study_plans`, `homework`, `progress_items`, `lesson_reports`, `materials`) | barn | namn, årskurs, skola, ämnen, mål, läxor, rapporter | 6.1 f, berättigat intresse (barnet är inte part) | Supabase; Anthropic (förnamn, årskurs, maskade anteckningar) när studiehjälparen ber om utkast | som kontot |
+| 3 | Barnet och undervisningen (`students`, `study_plans`, `homework`, `progress_items`, `lesson_reports`, `materials`, `niva_forsok`, `niva_svar`) | barn | namn, årskurs, skola, ämnen, mål, uppgifter, svaren på de digitala uppgifterna och rättningen av dem, rapporter | 6.1 f, berättigat intresse (barnet är inte part) | Supabase; Anthropic (förnamn, årskurs, maskade anteckningar) när studiehjälparen ber om utkast | som kontot |
 | 4 | Förälderns privata anteckningar (`student_notes`) | barn | fritext | 6.1 f | Supabase. Ingen hos oss har läsrätt | som kontot |
 | 5 | Pass och bokningar (`bookings`, `pass_moten`) | förälder, barn, studiehjälpare | datum, tid, ämne, plats (ofta en hemadress), avbokningsskäl | 6.1 b | Supabase; Google (Meet-rum, när kopplat) | som kontot; pass med betalning 7 år |
 | 6 | Chatt (`messages`) | förälder, studiehjälpare | meddelandetext | 6.1 b | Supabase | som kontot |
 | 7 | Notiser och mejl (`notiser`, `notis_utskick`) | alla med konto | typ, datum, förnamn, ämne | 6.1 b | Resend | 180 dagar i vyn, 90 dagar för utskicken |
 | 8 | Betalning (`bookings.betalning_*`, `klippkort`, `pass_tillagg`, `timbank_uttag`, `stripe_handelser`, `stripe_tvister`, `invoices`) | förälder | belopp, tid, e-post, Stripe-id | 6.1 b; 6.1 c bokföringslagen | Stripe (e-post, belopp, ämne och datum) | 7 år |
-| 9 | Ersättning till studiehjälpare (`payouts`) | studiehjälpare | timmar, belopp | 6.1 b; 6.1 c | Fortnox (för hand) | 7 år |
+| 9 | Ersättning till studiehjälpare (`payouts`, `lon_anstallning`) | studiehjälpare | timmar, belopp, anställningsnummer | 6.1 b; 6.1 c | Fortnox (lönefil i PAXml som admin laddar upp: anställningsnummer, datum, timmar, belopp, inga namn) | 7 år |
 | 10 | Jobbansökan (`applications`, hinken `cv`) | sökande, ofta 16 år | namn, ålder, e-post, skola, ämnen, fritext, CV | 6.1 f | Supabase, Resend (besked) | 1 år, eller 30 dagar efter senaste steget; blev personen studiehjälpare: 2 år efter senaste pass, rapport eller inloggning |
 | 11 | Kontaktformuläret (`contact_messages`) | vem som helst | namn, e-post, fritext | 6.1 f | Supabase | 6 mån efter inkommet eller besvarat |
 | 12 | Felrapporter (`klientfel`) | inloggade och besökare | felet, sidan, webbläsaren, konto-id | 6.1 f | Supabase | 90 dagar |
@@ -90,7 +90,7 @@ avsnitt 8).
 | Anthropic | rapportutkast, hälsningar, agenterna | USA | standardavtalsklausuler | ingår i Commercial Terms för API:t |
 | Stripe | kortbetalningar | EU och USA | standardavtalsklausuler, DPF | ingår i Stripes villkor; Stripe är självt ansvarigt för bedrägerikontroll |
 | Google | Meet-rum (inte kopplat än) | EU och USA | standardavtalsklausuler, DPF | Workspace Data Processing Amendment, godkänns i Admin Console |
-| Fortnox | bokföring, fakturor, lön (för hand) | Sverige | ingen överföring | Fortnox villkor; står inte i policyn än, se avsnitt 8 |
+| Fortnox | bokföring, fakturor, lön (för hand, lönen som fil) | Sverige | ingen överföring | Fortnox villkor; fakturorna står i policyn sedan 2026-09-28, lönen inte än, se avsnitt 8 |
 
 **Data Privacy Framework (DPF).** EU-kommissionens beslut från 2023
 gäller, men EDPB begärde en översyn i juli 2026 och beslutet kan falla
@@ -154,7 +154,12 @@ pass, och AI kan formulera om studiehjälparens anteckningar.
 
 **Nödvändighet och proportionalitet.** Uppgifterna om barnet är de som
 undervisningen kräver: årskurs, ämnen, mål, vad man gjorde. Vi ber inte
-om personnummer, betyg eller diagnoser. AI:n är frivillig för
+om personnummer, betyg eller diagnoser. Svaren på de digitala uppgifterna
+(Fas 23.1) rättas automatiskt i databasen, men rättningen är inget beslut
+om barnet i artikel 22:s mening: den ger stjärnor och en procentsats som
+barnet, familjen och studiehjälparen ser, och ingenting följer av den av
+sig själv. Svaren är korta (ett alternativ, ett tal, några ord) och går
+inte till någon utanför oss. AI:n är frivillig för
 studiehjälparen, får förnamnet och maskad text, och en människa läser
 och skickar varje utkast.
 
@@ -184,6 +189,7 @@ som står på kontot, inte till en ny.
 
 **Utdrag (art. 15).** För en familj: `profiles`, `students`,
 `study_plans`, `homework`, `progress_items`, `lesson_reports`,
+`niva_forsok` och `niva_svar` (Fas 23.1: svaren på de digitala uppgifterna),
 `bookings`, `messages`, `leads` (om den inte är gallrad), `klippkort`,
 `timbank_rorelser`,
 `invoices`, `rapport_bekraftelser`, `notis_val`. Förälderns egna
@@ -206,7 +212,8 @@ reglerna står i `radera_person()` (migrationen
 - **Avidentifieras** när personen har pass som hållits eller betalats,
   klippkort, fakturor, rapporter eller underlag. Namn, adress, telefon,
   profilbild, chatten, barnens uppgifter, läxorna, planerna,
-  kunskapsområdena och rapporternas text tas bort, inloggningen stängs,
+  kunskapsområdena, svaren på de digitala uppgifterna (`niva_forsok`,
+  `niva_svar`) och rapporternas text tas bort, inloggningen stängs,
   och betalda pass, `klippkort`, `invoices`, `payouts` och `stripe_*`
   står kvar utan namn i sju år.
 - Anmälningar med samma adress avidentifieras som i nattjobbet (raden

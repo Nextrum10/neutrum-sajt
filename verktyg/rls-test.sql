@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, gallringen och raderingen)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen och raderingen)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -23,7 +23,10 @@
 -- besökare som skickar intresseanmälan på nextrum.se. Kör sviten när
 -- formuläret är lugnt, eller mot en gren.
 --
--- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok.
+-- Svaret är en tabell: test, ok, detalj. Varje rad ska vara ok. Ett
+-- villkor som blir null (ett kort som saknas jämfört med ett id) visas
+-- som false, inte som en tom ruta: tre prov stod null utan att någon
+-- såg det (2026-09-28).
 --
 -- Förutsättning: migrationerna för Fas 1.1–1.6, Fas 2.1–2.3,
 -- Fas 5.1–5.6, Fas 6.1–6.2, Fas 7, Fas 8, Fas 9.1–9.4,
@@ -37,8 +40,10 @@
 -- notisfelen_bara_egna_utskick, klientfelen_minns_vem, Fas 22.3
 -- (lediga timmar betalar nästa pass),
 -- godkand_ansokan_gallras_tva_ar_efter_sista_passet,
--- ai_texterna_och_avslutade_uppgifter_gallras och
--- personer_redigeras_och_raderas är körda.
+-- ai_texterna_och_avslutade_uppgifter_gallras, Fas 22.4 (timmen dras
+-- när förslaget skickas), manadskorningen_vacks_av_databasen,
+-- manadskorningen_gar_den_forsta, Fas 23.1 (de digitala uppgifterna)
+-- och personer_redigeras_och_raderas är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -4184,7 +4189,21 @@ select pg_temp.prova('21.2 familjen kör inte påminnelsen själv', '00000000-00
 -- Block 6 och 7 är rättelserna i timbanken_foljer_passet: övertiden
 -- räknas från det kortet betalade, och uttagen följer passet när admin
 -- ändrar det.
+--
+-- FIXTURERNA STÄLLS TILLBAKA HÄR, för timmarnas alla prov (22.1–22.4).
+-- De är skrivna mot b0d1 bekräftat om en vecka, och mot b16a och b16b
+-- som P:s enda andra pass som väntar på timmar. Så såg det inte ut när
+-- hela filen kördes: blocket för Fas 9.3/9.4 avbokar b0d1 på riktigt,
+-- och b6c1 från Fas 14.6 står bekräftat och obetalt om fem dagar, så
+-- timmarna gav sig på det före provens egna pass. Sex prov föll eller
+-- blev null (2026-09-28), och null syns inte som ett fel i en lista
+-- över ok. Sedan det här kommer hit rör inget prov b6c1.
 -- ============================================================
+update public.bookings set status = 'confirmed', avbokad_at = null, avbokad_av = null, avbokningsskal = null
+ where id = '00000000-0000-4000-8000-00000000b0d1';
+update public.bookings set status = 'cancelled', avbokningsskal = 'annat'
+ where id = '00000000-0000-4000-8000-00000000b6c1';
+
 select pg_temp.prova('22.1 familjen skriver inte en kortbetalning genom timbanken', '00000000-0000-4000-8000-0000000000f1',
   array[$q$select public.timbank_kort_vinner('00000000-0000-4000-8000-00000000b0d1', '{}'::jsonb)$q$],
   'nekad');
@@ -4585,7 +4604,6 @@ declare
   fel text;
 begin
   begin
-    update public.flaggor set aktiv = true where kod = 'erbjudanden';
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn) values
       ('00000000-0000-4000-8000-0000000022a1', p, a, s, p, idag + 3, '10:00', 120, 'requested', 1),
       ('00000000-0000-4000-8000-0000000022a2', p, a, s, p, idag + 4, '10:00', 60, 'requested', 2),
@@ -4593,6 +4611,9 @@ begin
       ('00000000-0000-4000-8000-0000000022a4', p, a, s, p, idag + 250, '10:00', 60, 'requested', 1),
       ('00000000-0000-4000-8000-0000000022a5', p, a, s, p, idag + 8, '10:00', 60, 'requested', 1);
     update public.bookings set startrabatt = true where id = '00000000-0000-4000-8000-0000000022a3';
+    -- Flaggan slås på efter förslagen: sedan Fas 22.4 betalar timmarna
+    -- ett förslag redan när det skapas, och här provas bekräftelsen.
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
 
     perform pg_temp.bli(a);
     update public.bookings set status = 'confirmed'
@@ -4647,7 +4668,6 @@ declare
   fel text;
 begin
   begin
-    update public.flaggor set aktiv = true where kod = 'erbjudanden';
     insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
                                   timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
     values ('00000000-0000-4000-8000-00000000c22b', p, 'klipp10', 'Prov 1 timme', 'klippkort', 1, 1, 5,
@@ -4657,6 +4677,8 @@ begin
       ('00000000-0000-4000-8000-0000000022b2', p, a, s, a, idag + 4, '12:00', 120, 'requested', 1),
       ('00000000-0000-4000-8000-0000000022b3', p, a, s, a, idag + 5, '12:00', 60, 'requested', 1),
       ('00000000-0000-4000-8000-0000000022b4', p, a, s, a, idag + 9, '12:00', 60, 'requested', 1);
+    -- Efter förslagen, som i 1: här provas bekräftelsen, inte förslaget (Fas 22.4).
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
 
     perform pg_temp.bli(p);
     update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022b1';
@@ -4998,10 +5020,11 @@ begin
       ('00000000-0000-4000-8000-0000000022f3', p, a, s, p, idag + 4, '13:00', 60, 'requested', 1),
       ('00000000-0000-4000-8000-0000000022f4', p, a, s, p, idag + 5, '13:00', 60, 'requested', 1);
 
-    -- Två timmar: 22f1 och 22f2 betalas när de bekräftas, 22f3 ryms
-    -- inte. En sats per pass, för en sats över flera rader besöker dem i
-    -- ingen bestämd ordning. Familjen avbokar sedan 22f1, och timmen
-    -- kommer tillbaka.
+    -- Två timmar: 22f1 och 22f2 betalas redan när de föreslås (Fas
+    -- 22.4), 22f3 och 22f4 ryms inte. En sats per pass, för en sats över
+    -- flera rader besöker dem i ingen bestämd ordning. Familjen avbokar
+    -- sedan 22f1, och timmen kommer tillbaka. Jobbet ger den till 22f3,
+    -- som ligger före förslaget 22f4.
     perform pg_temp.bli(a);
     update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022f1';
     update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-0000000022f2';
@@ -5183,6 +5206,402 @@ select '22.3 schemat kör jobbet var femte minut', count(*) = 1,
 
 select pg_temp.prova('22.3 familjen kör inte jobbet själv', '00000000-0000-4000-8000-0000000000f1',
   array['select intern.timmar_betalar_obetalda()'],
+  'nekad');
+
+-- ============================================================
+-- FAS 22.4 — timmen dras när familjen föreslår passet
+--
+-- Familj P föreslår som föräldravyn gör: inloggad, med samma kolumner.
+-- P:s andra kommande pass som väntar på timmar avbokas först i varje
+-- block där det spelar roll, så att jobbet och köpet inte ger dem
+-- timmarna och kvar bara räknar provets egna pass. De nya passen ligger
+-- klockan 19 och 20, där inget annat pass står.
+-- ============================================================
+
+-- 1. Förslaget tar timmen, motförslaget behåller den, ett ja drar
+--    ingenting till, och ett nej eller ett tillbakadraget förslag ger
+--    tillbaka den.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  c16a uuid := '00000000-0000-4000-8000-00000000c16a';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  f1 uuid; f2 uuid; f3 uuid;
+  kvar0 int; kvar1 int; kvar2 int; kvar3 int; kvar4 int; kvar5 int;
+  st1 text; kk1 uuid; st2 text; kk2 uuid; dag2 date; st3 text; kk3 uuid; st4 text; st5 text;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    update public.bookings set status = 'cancelled'
+     where parent_id = p and status in ('requested', 'confirmed') and wanted_date >= idag;
+    select kvar into kvar0 from public.klippkort_saldo where id = c16a;
+
+    perform pg_temp.bli(p);
+    insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, antal_barn,
+                                 wanted_date, wanted_time, duration_min, format, status)
+    values (p, a, s, p, 'Matematik', 'laxhjalp', 1, idag + 3, '19:00', 60, 'Online', 'requested')
+    returning id into f1;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status, klippkort_id into st1, kk1 from public.bookings where id = f1;
+    select kvar into kvar1 from public.klippkort_saldo where id = c16a;
+
+    -- Studiehjälparen kan inte den tiden och föreslår dagen efter.
+    perform pg_temp.bli(a);
+    update public.bookings set wanted_date = idag + 4, wanted_time = '19:00', status = 'requested', created_by = a
+     where id = f1;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status, klippkort_id, wanted_date into st2, kk2, dag2 from public.bookings where id = f1;
+    select kvar into kvar2 from public.klippkort_saldo where id = c16a;
+
+    perform pg_temp.bli(p);
+    update public.bookings set status = 'confirmed' where id = f1;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status, klippkort_id into st3, kk3 from public.bookings where id = f1;
+    select kvar into kvar3 from public.klippkort_saldo where id = c16a;
+
+    -- Ett förslag till, som studiehjälparen avböjer.
+    perform pg_temp.bli(p);
+    insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, antal_barn,
+                                 wanted_date, wanted_time, duration_min, format, status)
+    values (p, a, s, p, 'Matematik', 'laxhjalp', 1, idag + 5, '19:00', 60, 'Online', 'requested')
+    returning id into f2;
+    perform pg_temp.bli(a);
+    update public.bookings set status = 'cancelled' where id = f2;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status into st4 from public.bookings where id = f2;
+    select kvar into kvar4 from public.klippkort_saldo where id = c16a;
+
+    -- Ett förslag på två timmar, som familjen drar tillbaka.
+    perform pg_temp.bli(p);
+    insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, antal_barn,
+                                 wanted_date, wanted_time, duration_min, format, status)
+    values (p, a, s, p, 'Matematik', 'laxhjalp', 1, idag + 2, '19:00', 120, 'Online', 'requested')
+    returning id into f3;
+    update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id = f3;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status into st5 from public.bookings where id = f3;
+    select kvar into kvar5 from public.klippkort_saldo where id = c16a;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.4 förslaget', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.4 familjen föreslår: timmen dras direkt',
+     st1 = 'betald' and kk1 = c16a and kvar1 = kvar0 - 1,
+     coalesce(st1, '-') || ', ' || coalesce(kk1::text, 'inget kort') || ', kvar ' || kvar0 || ' → ' || kvar1),
+    ('22.4 studiehjälparen föreslår en annan tid: samma timme betalar passet',
+     st2 = 'betald' and kk2 = c16a and dag2 = idag + 4 and kvar2 = kvar0 - 1,
+     coalesce(st2, '-') || ', ' || coalesce(kk2::text, 'inget kort') || ', ' || dag2 || ', kvar ' || kvar2),
+    ('22.4 familjen säger ja: inget dras till',
+     st3 = 'betald' and kk3 = c16a and kvar3 = kvar0 - 1,
+     coalesce(st3, '-') || ', ' || coalesce(kk3::text, 'inget kort') || ', kvar ' || kvar3),
+    ('22.4 studiehjälparen avböjer: timmen kommer tillbaka', st4 = 'ingen' and kvar4 = kvar0 - 1,
+     coalesce(st4, '-') || ', kvar ' || kvar4),
+    ('22.4 familjen drar tillbaka: timmarna kommer tillbaka', st5 = 'ingen' and kvar5 = kvar0 - 1,
+     coalesce(st5, '-') || ', kvar ' || kvar5);
+end $$;
+
+-- 2. Ett förslag som ingen svarat på när dagen gått lämnar tillbaka
+--    timmen när jobbet kör, men ett bekräftat pass som varit behåller
+--    sin. Ett obetalt bekräftat pass som flyttas blir ett förslag igen
+--    och betalas som ett.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  c16a uuid := '00000000-0000-4000-8000-00000000c16a';
+  g1   uuid := '00000000-0000-4000-8000-0000000224b1';
+  m1   uuid := '00000000-0000-4000-8000-0000000224b2';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  kvar0 int; kvar1 int; n int;
+  st_fore text; kk_fore uuid; st_g1 text; kk_g1 uuid; st_c1 text; kk_c1 uuid; st_m1 text; kk_m1 uuid;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    update public.bookings set status = 'cancelled'
+     where parent_id = p and status in ('requested', 'confirmed') and wanted_date >= idag;
+    select kvar into kvar0 from public.klippkort_saldo where id = c16a;
+
+    -- I går, och ingen svarade. Som postgres: en vy skapar inget pass
+    -- bakåt i tiden.
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn)
+    values (g1, p, a, s, p, idag - 1, '20:00', 60, 'requested', 1);
+    select betalning_status, klippkort_id into st_fore, kk_fore from public.bookings where id = g1;
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b0c1', p);
+
+    -- Bokat med flaggan av, alltså obetalt, och familjen flyttar det.
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn)
+    values (m1, p, a, s, p, idag + 6, '20:00', 60, 'confirmed', 1);
+    perform pg_temp.bli(p);
+    update public.bookings set wanted_date = idag + 8, wanted_time = '20:00', status = 'requested', created_by = p
+     where id = m1;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status, klippkort_id into st_m1, kk_m1 from public.bookings where id = m1;
+
+    n := intern.timmar_betalar_obetalda(p);
+    select betalning_status, klippkort_id into st_g1, kk_g1 from public.bookings where id = g1;
+    select betalning_status, klippkort_id into st_c1, kk_c1 from public.bookings where id = '00000000-0000-4000-8000-00000000b0c1';
+    select kvar into kvar1 from public.klippkort_saldo where id = c16a;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.4 förslag som ingen svarat på', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.4 ett förslag som ingen svarat på när dagen gått ger tillbaka timmen',
+     st_fore = 'betald' and kk_fore = c16a and st_g1 = 'ingen' and kk_g1 is null,
+     'före ' || coalesce(st_fore, '-') || ', efter ' || coalesce(st_g1, '-') || ', ' || coalesce(kk_g1::text, 'inget kort')),
+    ('22.4 ett bekräftat pass som varit behåller sin timme', st_c1 = 'betald' and kk_c1 = c16a,
+     coalesce(st_c1, '-') || ', ' || coalesce(kk_c1::text, 'inget kort')),
+    ('22.4 ett obetalt bekräftat pass som flyttas betalas som ett nytt förslag', st_m1 = 'betald' and kk_m1 = c16a,
+     coalesce(st_m1, '-') || ', ' || coalesce(kk_m1::text, 'inget kort')),
+    ('22.4 jobbet räknar inte släppet som en betalning, och kvar stämmer', n = 0 and kvar1 = kvar0 - 2,
+     'betalade ' || n || ', kvar ' || kvar0 || ' → ' || kvar1);
+end $$;
+
+-- 3. Ett förslag som skickas utan timmar kvar står obetalt. Köper
+--    familjen nya betalar de det, och blir en timme ledig betalar jobbet
+--    nästa förslag. c16a hamnar i tvist, så att dess timmar inte hinner
+--    först.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  ny   uuid := '00000000-0000-4000-8000-0000000224d0';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  u1 uuid; u2 uuid;
+  st1_fore text; blev boolean; k1 uuid; st2_fore text; n int; k2 uuid;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    update public.klippkort set status = 'tvist' where id = '00000000-0000-4000-8000-00000000c16a';
+    update public.bookings set status = 'cancelled'
+     where parent_id = p and status in ('requested', 'confirmed') and wanted_date >= idag;
+
+    perform pg_temp.bli(p);
+    insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, antal_barn,
+                                 wanted_date, wanted_time, duration_min, format, status)
+    values (p, a, s, p, 'Matematik', 'laxhjalp', 1, idag + 3, '19:00', 60, 'Online', 'requested')
+    returning id into u1;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status into st1_fore from public.bookings where id = u1;
+
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status)
+    values (ny, p, 'klipp10', 'Prov 1 timme', 'klippkort', 1, 6, 5, 37900, 36000, 'vantar');
+    blev := public.klippkort_betald(ny, 36000, 'pi_rlsprov_22_4c', 'ch_rlsprov_22_4c', null, null, null, false);
+    select klippkort_id into k1 from public.bookings where id = u1;
+
+    perform pg_temp.bli(p);
+    insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, antal_barn,
+                                 wanted_date, wanted_time, duration_min, format, status)
+    values (p, a, s, p, 'Matematik', 'laxhjalp', 1, idag + 4, '19:00', 60, 'Online', 'requested')
+    returning id into u2;
+    update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id = u1;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status into st2_fore from public.bookings where id = u2;
+    n := intern.timmar_betalar_obetalda(p);
+    select klippkort_id into k2 from public.bookings where id = u2;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.4 köpet och jobbet', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.4 ett förslag utan timmar kvar står obetalt', st1_fore = 'ingen' and st2_fore = 'ingen',
+     coalesce(st1_fore, '-') || ' / ' || coalesce(st2_fore, '-')),
+    ('22.4 köpet blir betalt: de nya timmarna betalar förslaget', blev and k1 = ny,
+     coalesce(blev::text, 'null') || ', ' || coalesce(k1::text, 'inget kort')),
+    ('22.4 en timme blir ledig: jobbet betalar nästa förslag', n = 1 and k2 = ny,
+     'betalade ' || n || ', ' || coalesce(k2::text, 'inget kort'));
+end $$;
+
+-- 4. Samma undantag som bekräftelsen. Första timmen bjuden avgörs i
+--    bookings_startrabatt, före timmarna: familj Q:s första förslag på
+--    två timmar får timmen bjuden och betalas inte med timmarna, nästa
+--    gör det. Ett förslag med två barn betalas inte, och med flaggan av
+--    betalar timmarna ingenting.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  q    uuid := '00000000-0000-4000-8000-0000000000f2';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  b    uuid := '00000000-0000-4000-8000-0000000000b1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  sq   uuid := '00000000-0000-4000-8000-0000000005c1';
+  cq   uuid := '00000000-0000-4000-8000-0000000224e0';
+  q1   uuid := '00000000-0000-4000-8000-0000000224e1';
+  q2   uuid := '00000000-0000-4000-8000-0000000224e2';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  x2 uuid; x3 uuid;
+  rab1 boolean; st_q1 text; st_q2 text; kk_q2 uuid; st_x2 text; st_x3 text;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+    values (cq, q, 'klipp10', 'Prov 5 timmar', 'klippkort', 5, 6, 5,
+            37900, 180000, 180000, 'betald', idag + 30, now(), 'ch_rlsprov_22_4e');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn)
+    values (q1, q, b, sq, q, idag + 3, '19:00', 120, 'requested', 1);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn)
+    values (q2, q, b, sq, q, idag + 4, '19:00', 60, 'requested', 1);
+    select startrabatt, betalning_status into rab1, st_q1 from public.bookings where id = q1;
+    select betalning_status, klippkort_id into st_q2, kk_q2 from public.bookings where id = q2;
+
+    perform pg_temp.bli(p);
+    insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, antal_barn,
+                                 wanted_date, wanted_time, duration_min, format, status)
+    values (p, a, s, p, 'Matematik', 'laxhjalp', 2, idag + 3, '20:00', 60, 'Online', 'requested')
+    returning id into x2;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status into st_x2 from public.bookings where id = x2;
+
+    update public.flaggor set aktiv = false where kod = 'erbjudanden';
+    perform pg_temp.bli(p);
+    insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, antal_barn,
+                                 wanted_date, wanted_time, duration_min, format, status)
+    values (p, a, s, p, 'Matematik', 'laxhjalp', 1, idag + 4, '20:00', 60, 'Online', 'requested')
+    returning id into x3;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select betalning_status into st_x3 from public.bookings where id = x3;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.4 undantagen', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.4 första timmen bjuden avgörs före timmarna, och det förslaget betalas inte med dem',
+     rab1 and st_q1 = 'ingen', coalesce(rab1::text, 'null') || ', ' || coalesce(st_q1, '-')),
+    ('22.4 nästa förslag från samma familj betalas med timmarna', st_q2 = 'betald' and kk_q2 = cq,
+     coalesce(st_q2, '-') || ', ' || coalesce(kk_q2::text, 'inget kort')),
+    ('22.4 ett förslag med två barn betalas inte med timmarna', st_x2 = 'ingen', coalesce(st_x2, '-')),
+    ('22.4 flaggan av: förslaget betalas inte', st_x3 = 'ingen', coalesce(st_x3, '-'));
+end $$;
+
+-- 5. Timbanken betalar ett förslag när det skapas. Uttaget skrivs i samma
+--    skrivning som passet, innan passets rad finns, och prövas mot det
+--    vid commit; set constraints tvingar fram den prövningen här. Ett
+--    förslag i går som ingen svarat på lämnar tillbaka minuterna.
+--    Timbanken fylls till 75 minuter som i 22.2, och c16a hamnar i tvist.
+do $$
+declare
+  p    uuid := '00000000-0000-4000-8000-0000000000f1';
+  a    uuid := '00000000-0000-4000-8000-0000000000a1';
+  s    uuid := '00000000-0000-4000-8000-000000000516';
+  t0   uuid := '00000000-0000-4000-8000-0000000224c0';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  t1 uuid;
+  fore int; st0_fore text; saldo0 int; st0 text; uttag0 int; saldo1 int;
+  st1 text; uttag1 int; saldo2 int; kod1 text;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    update public.bookings set antal_barn = 1 where id = '00000000-0000-4000-8000-00000000b16b';
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16a', p);
+    perform public.klippkort_dra('00000000-0000-4000-8000-00000000b16b', p);
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+    values (s, a, '00000000-0000-4000-8000-00000000b16a', 'x', current_date, 'narvarande', '09:00', '09:15', 'prov'),
+           (s, a, '00000000-0000-4000-8000-00000000b16b', 'x', current_date, 'narvarande', '11:00', '11:30', 'prov');
+    update public.klippkort set status = 'tvist' where id = '00000000-0000-4000-8000-00000000c16a';
+    update public.bookings set status = 'cancelled'
+     where parent_id = p and status in ('requested', 'confirmed') and wanted_date >= idag;
+    fore := intern.timbank_saldo(p);
+
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn)
+    values (t0, p, a, s, p, idag - 1, '20:00', 60, 'requested', 1);
+    select betalning_status into st0_fore from public.bookings where id = t0;
+    saldo0 := intern.timbank_saldo(p);
+    perform intern.timmar_betalar_obetalda(p);
+    select betalning_status into st0 from public.bookings where id = t0;
+    select count(*) into uttag0 from public.timbank_uttag where booking_id = t0;
+    saldo1 := intern.timbank_saldo(p);
+
+    perform pg_temp.bli(p);
+    insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, antal_barn,
+                                 wanted_date, wanted_time, duration_min, format, status)
+    values (p, a, s, p, 'Matematik', 'laxhjalp', 1, idag + 3, '19:00', 60, 'Online', 'requested')
+    returning id into t1;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    set constraints public.timbank_uttag_booking_id_fkey immediate;
+    select betalning_status into st1 from public.bookings where id = t1;
+    select minuter into uttag1 from public.timbank_uttag where booking_id = t1 and sort = 'pass';
+    saldo2 := intern.timbank_saldo(p);
+    kod1 := intern.betalsatt_kod(t1);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('22.4 timbanken', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('22.4 timbanken betalar förslaget direkt, och uttaget pekar på passet vid commit',
+     fore = 75 and st1 = 'betald' and uttag1 = 60 and saldo2 = 15 and kod1 = 'timmar',
+     'före ' || fore || ', ' || coalesce(st1, '-') || ', uttag ' || coalesce(uttag1::text, 'null')
+     || ', saldo ' || saldo2 || ', ' || coalesce(kod1, 'null')),
+    ('22.4 minuterna på ett förslag som ingen svarat på kommer tillbaka',
+     st0_fore = 'betald' and saldo0 = 15 and st0 = 'ingen' and uttag0 = 0 and saldo1 = 75,
+     coalesce(st0_fore, '-') || ', saldo ' || saldo0 || ' → ' || coalesce(st0, '-') || ', uttag ' || uttag0 || ', saldo ' || saldo1);
+end $$;
+
+insert into utfall (test, ok, detalj)
+select '22.4 förslagets trigger kör efter skydden och startrabatten', count(*) = 1,
+       coalesce(string_agg(pg_get_triggerdef(t.oid), '; '), 'ingen trigger')
+  from pg_trigger t
+ where t.tgrelid = 'public.bookings'::regclass
+   and t.tgname = 'bookings_timmar_betalar_forslaget'
+   and not t.tgisinternal
+   and t.tgname > 'bookings_skydda_klippkortet'
+   and t.tgname > 'bookings_startrabatt';
+
+insert into utfall (test, ok, detalj)
+select '22.4 timbankens uttag prövas mot passet vid commit', coalesce(bool_and(c.condeferrable and c.condeferred), false),
+       coalesce(string_agg('deferrable ' || c.condeferrable || ', deferred ' || c.condeferred, '; '), 'ingen nyckel')
+  from pg_constraint c
+ where c.conrelid = 'public.timbank_uttag'::regclass and c.conname = 'timbank_uttag_booking_id_fkey';
+
+select pg_temp.prova('22.4 familjen släpper inga timmar själv', '00000000-0000-4000-8000-0000000000f1',
+  array['select intern.obesvarade_forslag_slapper_timmarna()'],
   'nekad');
 
 -- ------------------------------------------------------------
@@ -5739,6 +6158,372 @@ begin
       ('Uppgiftsgallring en nyss klar står kvar', n2 = 1, 'rader: ' || n2),
       ('Uppgiftsgallring en öppen rörs aldrig', n3 = 1, 'rader: ' || n3);
   end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- Månadskörningen (2026-09-28): pg_cron väcker fakturering den 1:a,
+-- som skriver förra månadens underlag, alltså studiehjälparnas
+-- lönespecifikationer. Adressen pekar på en domän som inte finns, och
+-- anropet köas i en deltransaktion som rullas tillbaka: pg_net skickar
+-- bara det som checkats in.
+-- ------------------------------------------------------------
+do $$
+declare
+  svar jsonb; utan jsonb; mal text; hdr jsonb; kropp jsonb; oppna bigint; fel text;
+begin
+  begin
+    update public.notis_konfig set fakturering_url = 'https://example.invalid/functions/v1/fakturering' where id = 1;
+    svar := intern.manadskorning_vack(true);
+    select l.mal into mal from intern.natanrop_logg l where l.id = (svar ->> 'begaran')::bigint;
+    select q.headers, convert_from(q.body, 'utf8')::jsonb into hdr, kropp
+      from net.http_request_queue q where q.id = (svar ->> 'begaran')::bigint;
+    update public.notis_konfig set fakturering_url = null where id = 1;
+    utan := intern.manadskorning_vack();
+    select count(*) into oppna from public.uppgifter where nyckel = 'manadskorning:adress' and status = 'oppen';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Månadskörning väckningen', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('Månadskörning väckningen går genom natanrop, med hemligheten',
+        mal = 'fakturering' and hdr ? 'x-nextrum-notis', coalesce(mal, 'inget anrop')),
+      ('Månadskörning torrkörningen säger det i anropet',
+        (kropp ->> 'torrkorning')::boolean, coalesce(kropp::text, 'ingen kropp')),
+      ('Månadskörning utan adress anropas inget, och det blir en uppgift',
+        utan ->> 'begaran' is null and oppna = 1, 'öppna: ' || oppna || ', ' || utan::text);
+  end if;
+end $$;
+
+select pg_temp.prova('Månadskörning anon kör inte schemat', null,
+  array['select intern.manadskorning_vack()'], 'nekad');
+select pg_temp.prova('Månadskörning inte en studiehjälpare heller', '00000000-0000-4000-8000-0000000000a1',
+  array['select intern.manadskorning_vack(true)'], 'nekad');
+-- Läget i adminvyn: admin ser om schemat är på, ingen annan.
+select pg_temp.prova('Månadskörning admin ser om schemat är på', '00000000-0000-4000-8000-0000000000ad',
+  array['select public.manadskorning_lage()'], 'ok');
+select pg_temp.prova('Månadskörning en familj ser inte schemat', '00000000-0000-4000-8000-0000000000f1',
+  array['select public.manadskorning_lage()'], 'nekad');
+select pg_temp.prova('Månadskörning anon ser inte schemat', null,
+  array['select public.manadskorning_lage()'], 'nekad');
+
+insert into utfall (test, ok, detalj)
+select 'Månadskörning går den 1:a', count(*) = 1,
+       coalesce(string_agg(schedule || ' ' || command, '; '), 'inget jobb')
+  from cron.job
+ where jobname = 'manadskorning' and active and schedule = '17 4 1 * *'
+   and command = 'select intern.manadskorning_vack()';
+
+-- ------------------------------------------------------------
+-- Fas 23.1: de digitala uppgifterna
+--
+-- Allt i ett block som rullas tillbaka, så att nivån, frågorna och
+-- försöken aldrig syns för något prov efter det. Utfallet samlas i en
+-- variabel (de överlever återrullningen) och skrivs efteråt.
+--
+-- Rättningen görs i databasen och prövas här: frågorna lämnas ut utan
+-- facit, familjen skriver inget resultat själv, en digital uppgift
+-- bockas inte av för hand, och bara familjen, elevens studiehjälpare
+-- och admin läser försöken. Och den rättning som felade en gång:
+-- facit "5y" lästes som talet 5 med enheten y, så "5" och "5x"
+-- rättades som rätt.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut     jsonb := '[]'::jsonb;
+  fel    text;
+  r      jsonb;
+  forsok uuid;
+  n      int;
+  st     text;
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  B    constant uuid := '00000000-0000-4000-8000-0000000000b1';
+  ADM  constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  ELEV constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  NIVA constant uuid := '00000000-0000-4000-8000-00000000c2a1';
+  F1   constant uuid := '00000000-0000-4000-8000-00000000c2b1';
+  F2   constant uuid := '00000000-0000-4000-8000-00000000c2b2';
+  F3   constant uuid := '00000000-0000-4000-8000-00000000c2b3';
+  F4   constant uuid := '00000000-0000-4000-8000-00000000c2b4';
+  F5   constant uuid := '00000000-0000-4000-8000-00000000c2b5';
+  HD   constant uuid := '00000000-0000-4000-8000-00000000c2c1';
+  HV   constant uuid := '00000000-0000-4000-8000-00000000c2c2';
+begin
+  begin
+    -- Fixturen, som postgres.
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning)
+    values (NIVA, 'rls-prov-niva', 'Matematik', 'ak8', 'Algebra', 'RLS-nivå', 1);
+    insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt, forklaring) values
+      (F1, NIVA, 1, 'val',   'Vilket är störst?', '["1/2","1/3","1/4"]', '0', 'Halva är mest.'),
+      (F2, NIVA, 2, 'skriv', 'Vad är 1 000 + 250?', null, '["1250"]', null),
+      (F3, NIVA, 3, 'skriv', 'Förenkla 7y − 2y.', null, '["5y"]', null),
+      (F4, NIVA, 4, 'ordna', 'Bygg meningen.', '["hund"]', '["Jag","har","en","katt"]', null),
+      (F5, NIVA, 5, 'skriv', 'Skriv en halv som decimaltal.', null, '["0,5"]', null);
+    insert into public.homework (id, student_id, tutor_id, title, niva_id) values
+      (HD, ELEV, A, 'RLS digital uppgift', NIVA),
+      (HV, ELEV, A, 'RLS vanlig uppgift', null);
+
+    select antal_fragor into n from public.nivaer where id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG antal_fragor räknas av triggern', 'ok', n = 5, 'd', n::text);
+
+    ut := ut || jsonb_build_object('t', 'UPG rättning: 1 250 är 1250', 'ok', intern.niva_lika('1250', '1 250'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: 0.50 är 0,5', 'ok', intern.niva_lika('0,5', '0.50'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: Went. är went', 'ok', intern.niva_lika('went', ' Went. '), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: 12 cm är 12', 'ok', intern.niva_lika('12', '12 cm'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: −3 är -3', 'ok', intern.niva_lika('-3', '−3'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: 5 är inte 5y', 'ok', not intern.niva_lika('5y', '5'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: 5x är inte 5y', 'ok', not intern.niva_lika('5y', '5x'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: 3/4 är inte 0,75', 'ok', not intern.niva_lika('3/4', '0,75'), 'd', null)
+             || jsonb_build_object('t', 'UPG rättning: tomt är fel', 'ok', not intern.niva_lika('12', '  '), 'd', null);
+
+    -- Fel familj och anon startar inte.
+    begin
+      perform pg_temp.bli(Q);
+      r := public.niva_starta(NIVA, ELEV);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    reset role;
+    ut := ut || jsonb_build_object('t', 'UPG annan familj startar inte nivån åt barnet', 'ok', fel = '42501', 'd', fel);
+    begin
+      perform pg_temp.bli(null);
+      r := public.niva_starta(NIVA, ELEV);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    reset role;
+    ut := ut || jsonb_build_object('t', 'UPG anon startar inte', 'ok', fel = '42501', 'd', fel);
+
+    perform pg_temp.bli(P);
+    r := public.niva_starta(NIVA, ELEV);
+    forsok := (r ->> 'forsok')::uuid;
+    ut := ut || jsonb_build_object('t', 'UPG start: frågorna utan facit', 'ok',
+                jsonb_array_length(r -> 'fragor') = 5 and position('"ratt"' in r::text) = 0
+                and position('katt' in (r -> 'fragor' -> 3 ->> 'fraga')) = 0, 'd', left(r::text, 200))
+             || jsonb_build_object('t', 'UPG start: brickorna med den extra', 'ok',
+                jsonb_array_length(r -> 'fragor' -> 3 -> 'brickor') = 5, 'd', r -> 'fragor' -> 3 ->> 'brickor')
+             || jsonb_build_object('t', 'UPG start: sifferknappar för ett tal, inte för 5y', 'ok',
+                (r -> 'fragor' -> 1 ->> 'numerisk')::boolean and not (r -> 'fragor' -> 2 ->> 'numerisk')::boolean,
+                'd', (r -> 'fragor' -> 1 ->> 'numerisk') || '/' || (r -> 'fragor' -> 2 ->> 'numerisk'));
+    select status into st from public.homework where id = HD;
+    ut := ut || jsonb_build_object('t', 'UPG start: den digitala uppgiften blir påbörjad', 'ok', st = 'pagaende', 'd', st);
+    r := public.niva_starta(NIVA, ELEV);
+    ut := ut || jsonb_build_object('t', 'UPG start igen fortsätter samma försök', 'ok', (r ->> 'forsok')::uuid = forsok, 'd', r ->> 'forsok');
+
+    select count(*) into n from public.niva_fragor;
+    ut := ut || jsonb_build_object('t', 'UPG familjen läser inga frågor med facit', 'ok', n = 0, 'd', n::text);
+
+    begin
+      insert into public.niva_forsok (niva_id, student_id, fragor, klar_at, antal, ratt_direkt, stjarnor, godkand)
+      values (NIVA, ELEV, array[F1], now(), 1, 1, 3, true);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG familjen skriver inget eget resultat', 'ok', fel = '42501', 'd', fel);
+    begin
+      update public.niva_forsok set stjarnor = 3 where id = forsok;
+      get diagnostics n = row_count;
+      fel := 'rader ' || n;
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG familjen skriver inte om ett försök', 'ok', fel in ('42501', 'rader 0'), 'd', fel);
+    begin
+      insert into public.niva_svar (forsok_id, fraga_id, svar, ratt, forsta) values (forsok, F1, '{"val":0}', true, true);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG familjen skriver inget eget svar', 'ok', fel = '42501', 'd', fel);
+
+    begin
+      update public.homework set status = 'klar' where id = HD;
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG familjen bockar inte av en digital uppgift', 'ok', fel = '42501', 'd', fel);
+    update public.homework set status = 'klar' where id = HV;
+    get diagnostics n = row_count;
+    ut := ut || jsonb_build_object('t', 'UPG familjen bockar av en vanlig uppgift', 'ok', n = 1, 'd', n::text);
+    -- Luckan som stängdes: bibliotek_id gick att skriva om, och läxan gav
+    -- då läsrätt till materialet. e3 är studiehjälpare A:s eget.
+    update public.homework set bibliotek_id = '00000000-0000-4000-8000-0000000000e3', niva_id = null where id = HV;
+    select coalesce(bibliotek_id::text, 'null') || '/' || coalesce(niva_id::text, 'null') into st
+      from public.homework where id = HV;
+    ut := ut || jsonb_build_object('t', 'UPG familjen pekar inte om uppgiften till annat material', 'ok', st = 'null/null', 'd', st);
+    select count(*) into n from public.biblioteksmaterial where id = '00000000-0000-4000-8000-0000000000e3';
+    ut := ut || jsonb_build_object('t', 'UPG och når därför inte A:s eget material', 'ok', n = 0, 'd', n::text);
+
+    -- Svaren. Fråga 1 fel och sedan rätt, fråga 3 med "5" (fel) och sedan 5y.
+    r := public.niva_svara(forsok, F1, '{"val":2}');
+    ut := ut || jsonb_build_object('t', 'UPG fel svar ger facit och förklaring', 'ok',
+                not (r ->> 'ratt')::boolean and (r ->> 'facit')::int = 0 and r ->> 'forklaring' = 'Halva är mest.', 'd', r::text);
+    r := public.niva_svara(forsok, F1, '{"val":0}');
+    r := public.niva_svara(forsok, F1, '{"val":0}');
+    select count(*) into n from public.niva_svar where forsok_id = forsok;
+    ut := ut || jsonb_build_object('t', 'UPG ett dubbeltryck ger ingen ny rad', 'ok', n = 2, 'd', n::text);
+    r := public.niva_svara(forsok, F2, '{"text":"1 250"}');
+    ut := ut || jsonb_build_object('t', 'UPG skriv: tal med mellanslag rättas som tal', 'ok', (r ->> 'ratt')::boolean, 'd', r::text);
+    r := public.niva_svara(forsok, F3, '{"text":"5"}');
+    ut := ut || jsonb_build_object('t', 'UPG skriv: 5 är fel när facit är 5y', 'ok', not (r ->> 'ratt')::boolean, 'd', r::text);
+    r := public.niva_svara(forsok, F3, '{"text":"5Y"}');
+    r := public.niva_svara(forsok, F4, '"skräp"');
+    ut := ut || jsonb_build_object('t', 'UPG ett trasigt svar är fel, inte ett fel', 'ok', not (r ->> 'ratt')::boolean, 'd', r::text);
+    r := public.niva_svara(forsok, F4, '{"ordning":["Jag","har","en","katt"]}');
+    begin
+      r := public.niva_svara(forsok, '00000000-0000-4000-8000-00000000c2b9', '{"val":0}');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG en fråga utanför nivån nekas', 'ok', fel = '22023', 'd', fel);
+    -- Fel först på fråga 1, 3 och 4: 2 av 5 rätt direkt, 40 procent.
+    -- Nivån blir klar (allt är till slut rätt besvarat) men inte klarad.
+    r := public.niva_svara(forsok, F5, '{"text":"0.5"}');
+    ut := ut || jsonb_build_object('t', 'UPG sista rätta svaret avslutar nivån: 2 av 5 direkt = 0 stjärnor, inte klarad', 'ok',
+                (r ->> 'klar')::boolean and (r -> 'resultat' ->> 'stjarnor')::int = 0
+                and (r -> 'resultat' ->> 'ratt_direkt')::int = 2 and not (r -> 'resultat' ->> 'godkand')::boolean, 'd', r ->> 'resultat');
+    select status into st from public.homework where id = HD;
+    ut := ut || jsonb_build_object('t', 'UPG under 60 procent gör inte uppgiften klar', 'ok', st = 'pagaende', 'd', st);
+    r := public.niva_genomgang(forsok);
+    ut := ut || jsonb_build_object('t', 'UPG genomgången: varje fråga, med alla svar', 'ok',
+                jsonb_array_length(r -> 'fragor') = 5 and jsonb_array_length(r -> 'fragor' -> 0 -> 'svar') = 2, 'd', left(r::text, 120));
+
+    -- Ett nytt försök med allt rätt direkt: tre stjärnor, och uppgiften blir klar.
+    r := public.niva_starta(NIVA, ELEV);
+    forsok := (r ->> 'forsok')::uuid;
+    perform public.niva_svara(forsok, F1, '{"val":0}');
+    perform public.niva_svara(forsok, F2, '{"text":"1250"}');
+    perform public.niva_svara(forsok, F3, '{"text":"5y"}');
+    perform public.niva_svara(forsok, F4, '{"ordning":["Jag","har","en","katt"]}');
+    r := public.niva_svara(forsok, F5, '{"text":",5"}');
+    ut := ut || jsonb_build_object('t', 'UPG allt rätt direkt = 3 stjärnor, och förut 0', 'ok',
+                (r -> 'resultat' ->> 'stjarnor')::int = 3 and (r -> 'resultat' ->> 'forut')::int = 0
+                and (r -> 'resultat' ->> 'godkand')::boolean, 'd', r ->> 'resultat');
+    select status into st from public.homework where id = HD;
+    ut := ut || jsonb_build_object('t', 'UPG en klarad nivå gör den digitala uppgiften klar', 'ok', st = 'klar', 'd', st);
+
+    -- Exakt 60 procent (3 av 5) ger en stjärna. Förut är nu tre.
+    r := public.niva_starta(NIVA, ELEV);
+    forsok := (r ->> 'forsok')::uuid;
+    perform public.niva_svara(forsok, F1, '{"val":1}');
+    perform public.niva_svara(forsok, F1, '{"val":0}');
+    perform public.niva_svara(forsok, F2, '{"text":"125"}');
+    perform public.niva_svara(forsok, F2, '{"text":"1250"}');
+    perform public.niva_svara(forsok, F3, '{"text":"5y"}');
+    perform public.niva_svara(forsok, F4, '{"ordning":["Jag","har","en","katt"]}');
+    r := public.niva_svara(forsok, F5, '{"text":"0,5"}');
+    ut := ut || jsonb_build_object('t', 'UPG 3 av 5 direkt (60 procent) = 1 stjärna, och förut 3', 'ok',
+                (r -> 'resultat' ->> 'stjarnor')::int = 1 and (r -> 'resultat' ->> 'forut')::int = 3
+                and (r -> 'resultat' ->> 'godkand')::boolean, 'd', r ->> 'resultat');
+    reset role;
+
+    -- Vem läser försöken.
+    perform pg_temp.bli(Q);
+    select count(*) into n from public.niva_forsok where niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG annan familj ser inga försök', 'ok', n = 0, 'd', n::text);
+    select count(*) into n from public.niva_svar s join public.niva_forsok f on f.id = s.forsok_id where f.niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG annan familj ser inga svar', 'ok', n = 0, 'd', n::text);
+    begin
+      r := public.niva_genomgang(forsok);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG annan familj får ingen genomgång', 'ok', fel = '42501', 'd', fel);
+    reset role;
+    perform pg_temp.bli(A);
+    select count(*) into n from public.niva_forsok where niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG elevens studiehjälpare ser försöken', 'ok', n = 3, 'd', n::text);
+    select count(*) into n from public.niva_fragor where niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG godkänd studiehjälpare läser frågorna med facit', 'ok', n = 5, 'd', n::text);
+    r := public.niva_genomgang(forsok);
+    ut := ut || jsonb_build_object('t', 'UPG elevens studiehjälpare får genomgången', 'ok', r ? 'fragor', 'd', null);
+    begin
+      r := public.niva_starta(NIVA, ELEV);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG studiehjälparen startar inte nivån åt eleven', 'ok', fel = '42501', 'd', fel);
+    reset role;
+    perform pg_temp.bli(B);
+    select count(*) into n from public.niva_forsok where niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG en annan studiehjälpare ser inga försök', 'ok', n = 0, 'd', n::text);
+    reset role;
+    perform pg_temp.bli(ADM);
+    select count(*) into n from public.niva_forsok where niva_id = NIVA;
+    ut := ut || jsonb_build_object('t', 'UPG admin ser försöken', 'ok', n = 3, 'd', n::text);
+    reset role;
+    perform pg_temp.bli(null);
+    begin
+      select count(*) into n from public.nivaer;
+      fel := 'rader ' || n;
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'UPG anon läser inga nivåer', 'ok', fel in ('42501', 'rader 0'), 'd', fel);
+    reset role;
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('UPG Fas 23.1', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- Fas 23.1: banken rättas som den står. Varje godtaget svar på varje
+-- aktiv fråga ska rättas som rätt av databasens egen rättning, och
+-- sifferknappsatsen ska bara visas när varje godtaget svar går att
+-- skriva med den. Ett fel här är en fråga som barnet inte kan klara,
+-- och det syns inte i någon vy: det ser ut som att barnet svarade fel.
+-- Innan banken är inläst finns inga rader, och proven går igenom.
+--
+-- I ett block, och bara när tabellen finns: är Fas 23.1 inte körd
+-- blir det en röd rad som säger det. Stod satserna fritt hade de
+-- avbrutit hela filen, och en svit som inte går att köra provar
+-- ingenting.
+do $$
+begin
+  if to_regclass('public.niva_fragor') is null then
+    insert into utfall (test, ok, detalj)
+    values ('UPG banken', false, 'Fas 23.1 är inte körd: niva_fragor finns inte');
+    return;
+  end if;
+
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: varje godtaget skrivsvar rättas rätt', count(*) = 0,
+         coalesce(string_agg(q.id::text || ' "' || a || '"', ', '), 'inga')
+    from public.niva_fragor q, jsonb_array_elements_text(q.ratt) a
+   where q.aktiv and q.typ = 'skriv' and not intern.niva_ratta(q, jsonb_build_object('text', a));
+
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: rätt alternativ rättas rätt, och inget annat', count(*) = 0,
+         coalesce(string_agg(q.id::text || ' ' || i, ', '), 'inga')
+    from public.niva_fragor q, generate_series(0, jsonb_array_length(q.alternativ) - 1) i
+   where q.aktiv and q.typ = 'val'
+     and intern.niva_ratta(q, jsonb_build_object('val', i)) <> (i = (q.ratt #>> '{}')::int);
+
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: rätt ordning rättas rätt, omvänd fel', count(*) = 0,
+         coalesce(string_agg(q.id::text, ', '), 'inga')
+    from public.niva_fragor q
+   where q.aktiv and q.typ = 'ordna'
+     and (not intern.niva_ratta(q, jsonb_build_object('ordning', q.ratt))
+          or intern.niva_ratta(q, jsonb_build_object('ordning',
+               (select jsonb_agg(x order by n desc) from jsonb_array_elements(q.ratt) with ordinality y(x, n)))));
+
+  insert into utfall (test, ok, detalj)
+  select 'UPG banken: sifferknappar bara när varje svar är siffror', count(*) = 0,
+         coalesce(string_agg(q.id::text, ', '), 'inga')
+    from public.niva_fragor q
+   where q.aktiv and q.typ = 'skriv' and (intern.niva_fraga_ut(q) ->> 'numerisk')::boolean
+     and exists (select 1 from jsonb_array_elements_text(q.ratt) a where a !~ '^[0-9 ,.%]+$');
 end $$;
 
 -- ============================================================
@@ -6354,6 +7139,58 @@ begin
           case when fel = 'rulla tillbaka' then coalesce(prof::text, 'null') || ' / ' || coalesce(barn::text, 'null') else fel end);
 end $$;
 
-select test, ok, detalj from utfall order by nr;
+-- 15. Barnets försök på de digitala uppgifterna (Fas 23.1) följer inte
+--     med ett avidentifierat barn. Före fas23_1_uppgifterna_blir_digitala
+--     finns tabellen inte, och då säger raden det i stället.
+do $$
+declare
+  adm  constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  a    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  barn constant uuid := '00000000-0000-4000-8000-00000000dbe1';
+  pass constant uuid := '00000000-0000-4000-8000-00000000dbb1';
+  niva constant uuid := '00000000-0000-4000-8000-00000000dba1';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  lage jsonb; svar jsonb; fel text; kvar bigint;
+begin
+  if to_regclass('public.niva_forsok') is null then
+    insert into utfall (test, ok, detalj)
+    values ('Radera ett barns digitala försök (Fas 23.1 är inte körd)', true, 'niva_forsok finns inte än');
+    return;
+  end if;
+  begin
+    insert into public.students (id, parent_id, name) values (barn, q, 'Radera Nivåbarn');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status)
+    values (pass, q, a, barn, q, idag - 41, '06:00', 60, 'confirmed');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values (barn, a, pass, 'Nivåbarnet räknade', idag - 41, 'narvarande');
+    execute 'insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning)
+             values ($1, ''rls-radera-niva'', ''Matematik'', ''ak8'', ''Algebra'', ''RLS radera'', 1)' using niva;
+    execute 'insert into public.niva_forsok (niva_id, student_id, fragor) values ($1, $2, array[$1])'
+      using niva, barn;
+
+    perform pg_temp.bli(adm);
+    lage := public.radering_lage('elev', barn);
+    svar := public.radera_person('elev', barn);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    execute 'select count(*) from public.niva_forsok where student_id = $1' into kvar using barn;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Radera ett barns digitala försök', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Radera ett barns digitala försök räknas i rutan', (lage -> 'tas_bort' ->> 'forsok')::int = 1, lage::text),
+    ('Radera ett barns digitala försök tas bort när barnet avidentifieras',
+      svar ->> 'gjort' = 'avidentifierad' and kvar = 0, svar::text || ' kvar: ' || kvar);
+end $$;
+
+select test, ok is true as ok, detalj from utfall order by nr;
 
 rollback;

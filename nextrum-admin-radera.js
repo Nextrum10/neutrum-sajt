@@ -120,7 +120,9 @@
     laxor: ['läxa', 'läxor'],
     material: ['material i elevens mapp', 'material i elevens mapp'],
     omraden: ['kunskapsområde', 'kunskapsområden'],
-    studieplaner: ['studieplan', 'studieplaner']
+    studieplaner: ['studieplan', 'studieplaner'],
+    /* Fas 23.1: barnets försök och svar på de digitala uppgifterna. */
+    forsok: ['försök på en digital uppgift', 'försök på digitala uppgifter']
   };
 
   const STAR_KVAR = {

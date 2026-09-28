@@ -1091,36 +1091,12 @@ section[data-sek]{overflow-anchor:none}
 
 .bet-vad b{font-size:1.02rem;font-weight:700;letter-spacing:-.024em;display:block;color:var(--bl)}
 .bet-vad span{font-size:.82rem;color:var(--bl-2);display:block;margin-top:3px}
-.bet-fel{color:var(--acc) !important}
 
 .bet-atg{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-self:end}
 .bet-atg .btn{padding:6px 12px;font-size:.8rem}
 @container (max-width:430px){
   .bet{grid-template-columns:auto 1fr}
   .bet-atg{grid-column:1/-1;justify-self:start;margin-top:2px}
-}
-
-/* ------------------------------------------------------------
-   RADERNA I EN FAKTURA
-   Ett pass per rad. Den som undrar varför summan ser ut som den
-   gör ska kunna räkna efter själv.
-   ------------------------------------------------------------ */
-.bet-rader{
-  margin-top:12px;padding-top:12px;
-  border-top:1px dashed var(--ln);
-}
-.bet-rad{
-  display:grid;grid-template-columns:1fr auto auto;
-  gap:12px;align-items:baseline;
-  padding:6px 0;font-size:.85rem;color:var(--bl-2);
-}
-.bet-rad-tid{
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.08em;color:var(--bl-3);
-}
-.bet-rad-belopp{
-  font-variant-numeric:tabular-nums;
-  font-weight:600;color:var(--bl);min-width:76px;text-align:right;
 }
 
 /* ------------------------------------------------------------
@@ -1143,13 +1119,69 @@ section[data-sek]{overflow-anchor:none}
   margin-top:14px;font-size:.83rem;line-height:1.6;color:var(--bl-2);
 }
 
+/* ------------------------------------------------------------
+   LÖNESPECIFIKATIONEN (2026-09-28)
+   Studiehjälparens underlag för en månad, som det dokument det är:
+   vem, vilken period, när pengarna kommer, varje pass och summan.
+   Den som undrar varför summan ser ut som den gör ska kunna räkna
+   efter själv, därför är raderna en tabell och inte en lista.
+   ------------------------------------------------------------ */
+.lonespec-topp{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.lonespec-avs{
+  display:block;font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3);
+}
+.lonespec-man{
+  margin:6px 0 0;font-size:clamp(1.25rem,2.4vw,1.55rem);font-weight:700;
+  letter-spacing:-.03em;line-height:1.1;color:var(--bl);
+}
+.lonespec-fakta{margin:16px 0 0}
+.lonespec-fakta div{
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:7px 0;border-bottom:1px solid var(--ln);
+}
+.lonespec-fakta dt{font-size:.82rem;color:var(--bl-2)}
+.lonespec-fakta dd{margin:0;font-size:.9rem;font-weight:600;color:var(--bl);text-align:right}
+.lonespec-rader{width:100%;border-collapse:collapse;margin-top:18px;font-size:.86rem}
+.lonespec-rader th,.lonespec-rader td{padding:8px 0;text-align:left;vertical-align:baseline}
+.lonespec-rader th + th,.lonespec-rader td + td{padding-left:14px}
+.lonespec-rader thead th{
+  font-family:var(--f-mono);font-size:9px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--bl-3);border-bottom:1px solid var(--ln);
+}
+.lonespec-rader tbody td{color:var(--bl-2);border-bottom:1px dashed var(--ln)}
+.lonespec-rader tbody tr:last-child td{border-bottom:none}
+.lonespec-rader .lonespec-tal{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.lonespec-rader tbody .lonespec-tal:last-child{color:var(--bl);font-weight:600}
+.lonespec-rader tfoot th,.lonespec-rader tfoot td{
+  border-top:1px solid var(--ln-2);padding-top:12px;
+  font-size:1rem;font-weight:700;color:var(--bl);
+}
+.lonespec-rader tfoot th span{display:block;margin-top:3px;font-size:.78rem;font-weight:500;color:var(--bl-2)}
+.lonespec-not{margin:12px 0 0;font-size:.83rem;line-height:1.6;color:var(--bl-2)}
+.lonespec-fel{color:var(--acc)}
+.lonespec-fraga{margin:14px 0 0;font-size:.8rem;color:var(--bl-3)}
+.lonespec-fraga a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.lonespec-atg{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+.lonespec-atg .btn{padding:6px 12px;font-size:.8rem}
 
-/* En faktura och dess rader hör ihop som ett block. Utan omslaget
-   träffar .bet:last-child fel, eftersom raderna ligger emellan. */
-.bet-post{padding:16px 0;border-bottom:1px solid var(--ln)}
-.bet-post:first-child{padding-top:0}
-.bet-post:last-child{border-bottom:none;padding-bottom:0}
-.bet-post .bet{padding:0;border-bottom:none}
+/* Utskriften. Knappen lägger en kopia av lönespecifikationen i
+   #utskrift, direkt under body (skrivUt i nextrum-larare-vy.js), och
+   allt annat göms så länge html bär .skriver-ut. Färgerna står med
+   namn och inte med variablerna: i mörkt läge är texten ljus, och ljus
+   text på vitt papper syns inte. */
+#utskrift{display:none}
+@media print{
+  html.skriver-ut body > :not(#utskrift){display:none !important}
+  html.skriver-ut body{margin:0;padding:0;background:white}
+  html.skriver-ut #utskrift{display:block;color:black}
+  html.skriver-ut #utskrift *{
+    color:black !important;background:none !important;
+    border-color:silver !important;box-shadow:none !important;
+  }
+  html.skriver-ut #utskrift .lonespec-atg{display:none}
+  html.skriver-ut #utskrift .lonespec-rader tr{break-inside:avoid}
+}
 
 /* ============================================================
    ELEVLISTAN
@@ -1490,11 +1522,13 @@ section[data-sek]{overflow-anchor:none}
 .ps-knappar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ps-knappar .btn{text-decoration:none}
 
-/* Ett andra val under knapparna (Fas 14.6): "Betala med kort i
-   stället" på ett pass som valts för faktura. En textknapp, inte en
-   knapp i raden: det är en ångra, inte ett steg. "Få faktura nästa
-   månad" var också en sådan tills 2026-09-27, då den blev en knapp
-   bredvid kortknappen: som textlänk syntes den inte. */
+/* Ett andra val under knapparna (Fas 14.6): "Betala med kort nu" på
+   ett pass som valts för faktura. Under raden, inte i den: fakturan är
+   vägen familjen valt, kortet ett andra val. Det var en textknapp,
+   "Betala med kort i stället", som bara bytte tillbaka till kort. Sedan
+   2026-09-28 öppnar den kassan, och är en knapp som de andra. "Få
+   faktura nästa månad" blev en knapp av samma skäl 2026-09-27: som
+   textlänk syntes den inte. */
 .ps-alt{margin-top:10px;font-size:.86rem;color:var(--bl-2)}
 .val-lank{
   appearance:none;background:none;border:0;padding:4px 0;margin:0;
@@ -1504,7 +1538,6 @@ section[data-sek]{overflow-anchor:none}
 .val-lank:hover{color:var(--acc)}
 .val-lank:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 .val-lank[aria-busy="true"]{opacity:.6;cursor:progress}
-.pass-atg .val-lank{flex-basis:100%;text-align:left}
 /* Villkoren för "Få faktura nästa månad" (Fas 19.6), under knapparna,
    i den dämpade tonen, så att knapparna står först. */
 .val-not{display:block;flex-basis:100%;margin-top:4px;font-size:.82rem;line-height:1.5;color:var(--muted-2)}
@@ -1934,3 +1967,93 @@ a.pass-lank:hover{color:var(--acc)}
 }
 .eko-lank:hover{text-decoration-color:currentColor}
 .eko-lank b{font-weight:650}
+
+/* ============================================================
+   2026-09-28: Månadens ekonomi och Löner
+
+   Talen på Månadens ekonomi är knappar (.man-tavla): ett tryck visar
+   familjerna bakom talet i rutan under. Samma .adm-kpi som bokslutet,
+   med knappens egna stilar bortplockade och ett valt läge som syns
+   utan färg: en tjockare kant. Trycket ändrar ingen höjd ovanför det
+   man trycker på (CLAUDE.md avsnitt 3, fälla 4), bara kanten.
+
+   Familjerna (.man-fam) är rader, inte en tabell: under varje familj
+   fälls passen ut, och en tabellcell som växer på höjden gör hela
+   tabellen oläslig på en telefon. minmax(0,1fr) överallt, så att en
+   lång adress aldrig spränger kolumnen (fälla 2).
+
+   Inga hexkoder: allt är befintliga tokens.
+   ============================================================ */
+.man-rubrik{
+  margin:0 0 10px;font-size:.76rem;font-weight:650;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--bl-3);
+}
+.man-tavla{
+  appearance:none;-webkit-appearance:none;
+  display:block;width:100%;margin:0;
+  font:inherit;color:inherit;text-align:left;text-decoration:none;
+  cursor:pointer;
+}
+.man-tavla:hover{border-color:var(--ln-2)}
+.man-tavla[aria-pressed="true"]{border-color:var(--bl);box-shadow:inset 0 0 0 1px var(--bl)}
+.man-tavla.ar-larm[aria-pressed="true"]{border-color:var(--acc-text);box-shadow:inset 0 0 0 1px var(--acc-text)}
+.man-tavla:focus-visible{outline:2px solid var(--focus,var(--bl));outline-offset:2px}
+
+.man-lista-text{margin:6px 0 16px;line-height:1.6;color:var(--bl-3)}
+.man-korning{margin:0 0 18px;padding:0 0 14px;border-bottom:1px solid var(--ln)}
+
+.man-familjer{border-top:1px solid var(--ln)}
+.man-fam{padding:14px 0;border-bottom:1px solid var(--ln)}
+.man-fam-topp{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto;
+  gap:8px 16px;align-items:center;
+}
+.man-fam-vem b{display:block;font-size:.95rem;font-weight:650;line-height:1.35;color:var(--bl)}
+.man-fam-vem span{display:block;margin-top:3px;font-size:.8rem;line-height:1.45;color:var(--bl-3);overflow-wrap:anywhere}
+.man-fam-tal{text-align:right}
+.man-fam-tal b{display:block;font-size:.98rem;font-weight:700;color:var(--bl);font-variant-numeric:tabular-nums;white-space:nowrap}
+.man-fam-tal span{display:block;margin-top:3px;font-size:.8rem;color:var(--bl-3);white-space:nowrap}
+.man-fam-atg{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.man-fam-lagen{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.man-fam-pass{margin-top:10px}
+.man-fam-pass summary{cursor:pointer;font-size:.84rem;color:var(--bl-2)}
+.man-fam-pass ul{list-style:none;margin:8px 0 0;padding:0}
+.man-fam-pass li{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  gap:4px 12px;align-items:baseline;
+  padding:8px 0;border-top:1px dashed var(--ln);font-size:.84rem;
+}
+.man-pass-vad{color:var(--bl-2);line-height:1.5}
+.man-not{font-size:.8rem;color:var(--bl-3)}
+.man-pass-belopp{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--bl)}
+@media (max-width:620px){
+  .man-fam-topp{grid-template-columns:minmax(0,1fr) auto}
+  .man-fam-atg{grid-column:1/-1;justify-content:flex-start}
+  .man-fam-pass li{grid-template-columns:auto minmax(0,1fr)}
+  .man-pass-belopp{grid-column:2;text-align:left}
+}
+
+/* Lönefilens villkor: en bock eller en ring per rad, som bokslutets
+   larm, och knappen till höger om texten. */
+.lon-krav{list-style:none;margin:0;padding:0;border-top:1px solid var(--ln)}
+.lon-krav li{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  gap:10px;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--ln);font-size:.88rem;color:var(--bl);
+}
+.lon-krav li::before{
+  content:"";width:12px;height:12px;border-radius:50%;
+  border:1.5px solid var(--fel);
+}
+.lon-krav li.ar-ok::before{border-color:var(--mossa);background:var(--mossa)}
+/* Det som ska sägas men inte stoppar filen: formen som inte är avgjord,
+   underlag som inte är godkända. Samma ruta i månadskörningen, när
+   månaden inte har börjat eller en tidigare saknar underlag. */
+.lon-varning,
+.kor-not{
+  list-style:none;margin:12px 0 0;padding:10px 12px;
+  border:1px solid var(--acc-line);border-radius:10px;background:var(--acc-soft);
+  font-size:.82rem;line-height:1.55;color:var(--acc-text);
+}
+.lon-varning li+li{margin-top:6px}
+.kor-not[hidden]{display:none}
