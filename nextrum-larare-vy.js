@@ -2960,7 +2960,25 @@
      utbetalningen för just den månaden. Timmarna är passunderlag.lon_min
      (Fas 20.1): den hållna tiden nedåt alltid, uppåt bara när
      övertiden är betald — samma siffra som underlaget den 25:e. */
+  /* LÖNESPECIFIKATIONEN (2026-09-28). Leo: "skriv lönespec för månaden
+     efter att månaden är klar för studiehjälparen, under utbetalning för
+     månaden. Så ska det vara för varje månad." Rutan Utbetalning för
+     månaden visar månadens underlag som en lönespecifikation
+     (NXBetalning.lonespec). Underlaget skrivs av månadskörningen den 1:a
+     i månaden efter, av pg_cron-jobbet manadskorning eller knappen i
+     adminvyn. Här ritas det bara; ingenting räknas om.
+
+     Ett pass från månaden kan stå på en senare lönespecifikation.
+     Körningen tar bara pass som har en rapport, och ett pass som
+     rapporteras efter den kommer med nästa månad (fakturering,
+     PERIODEN). Det sägs under specifikationen, liksom pass som saknar
+     rapport: annars ser det ut som att passet aldrig betalades. */
   let ersMånad = null;
+  // Ett senare månadsval vinner. Svaret för en månad man redan lämnat
+  // får inte rita över den man står på.
+  let ersFråga = 0;
+  // Månadens underlag, 'ÅÅÅÅ-MM-01' → raden i payouts.
+  let ersSpecar = {};
 
   async function laddaErsattning() {
     const B = NXBetalning;
@@ -2969,9 +2987,12 @@
 
     if (!ersMånad) {
       ersMånad = NXStudie.månadsval($('#ers-manader'), {
+        // Månaderna som har en lönespecifikation syns i raden.
+        märke: m => ersSpecar[m] ? 'Lönespec' : '',
         vidVal: () => NXStudie.håll($('#ers-manader'), laddaErsattning)
       });
     }
+    const nr = ++ersFråga;
     const m = ersMånad ? ersMånad.vald() : NXStudie.månadIso(new Date());
     const gräns = NXStudie.månadsGräns(m);
     const denna = m === NXStudie.månadIso(new Date());
@@ -2983,11 +3004,15 @@
     const timpenningOre = rate ? Math.round(Number(rate) * 100) : null;
 
     const [passen, ut] = await Promise.all([
-      supa.from('passunderlag').select('id, lon_min, duration_min, fakturerbar, har_rapport')
+      supa.from('passunderlag').select('id, lon_min, duration_min, fakturerbar, har_rapport, pa_underlag')
         .eq('tutor_id', S.user.id).gte('wanted_date', gräns.från).lt('wanted_date', gräns.till),
-      supa.from('payouts').select('id, period, status, belopp_ore, minuter, fel')
-        .eq('tutor_id', S.user.id).eq('period', gräns.från)
+      /* Alla underlag, inte bara månadens. Det är ett per månad, och
+         listan behövs för märkena i månadsraden och för att veta vilken
+         månads specifikation ett sent rapporterat pass hamnade på. */
+      supa.from('payouts').select('id, period, status, belopp_ore, minuter, fel, utbetald_at')
+        .eq('tutor_id', S.user.id)
     ]);
+    if (nr !== ersFråga) return;
 
     const räknade = (passen.data || []).filter(p => p.fakturerbar && p.har_rapport);
     const e = { pass: räknade.length, minuter: räknade.reduce((a, p) => a + Number(p.lon_min || p.duration_min || 0), 0) };
@@ -2998,7 +3023,7 @@
           pass: e.pass, minuter: e.minuter,
           belopp_ore: Math.round((Number(e.minuter || 0) / 60) * timpenningOre),
           not: 'Räknat på ' + B.kronor(timpenningOre) + ' i timmen. '
-             + (denna ? 'Underlaget skapas när månaden är slut. ' : '')
+             + (denna ? 'Lönespecifikationen skrivs när månaden är slut. ' : '')
              + 'Ett pass räknas först när du skrivit rapporten, och på den tid det hölls. '
              + 'Drog det över räknas övertiden när familjen har betalat den.',
           tomRubrik: denna ? 'Inget att få betalt för än' : 'Inga rapporterade pass den månaden',
@@ -3018,34 +3043,166 @@
        Att lämna kvar knappen hade bett om uppgifter — personnummer,
        legitimation, bankkonto — som ingenting sedan använder. */
     konto.innerHTML = '<p class="bet-not" style="margin-top:0">Din ersättning betalas '
-      + 'den 25:e varje månad, för de pass du rapporterat. Underlaget nedan är det vi '
+      + 'den 25:e varje månad, för de pass du rapporterat. Lönespecifikationen nedan är det vi '
       + 'betalar efter, så hör av dig i god tid om något ser fel ut. '
       + 'Kontouppgifterna har vi av dig sedan tidigare, och de ligger inte här.</p>';
 
-    if (ut.error) { lista.innerHTML = tomt('Kunde inte hämta utbetalningarna', felText(ut.error)); return; }
-    const rader = ut.data || [];
-    $('#ers-antal').textContent = rader.length ? rader.length + ' st' : '';
+    if (ut.error) { lista.innerHTML = tomt('Kunde inte hämta lönespecifikationerna', felText(ut.error)); return; }
+    ersSpecar = {};
+    (ut.data || []).forEach(p => { ersSpecar[String(p.period).slice(0, 10)] = p; });
+    if (ersMånad) ersMånad.märk();
+    const spec = ersSpecar[m] || null;
 
-    if (!rader.length) {
-      lista.innerHTML = denna
-        ? tomt('Ingen utbetalning än', 'Den skapas när månaden är slut och betalas den 25:e månaden efter.')
-        : tomt('Ingen utbetalning för ' + NXStudie.månadsNamn(m), 'Hade du rapporterade pass den månaden och ser inget här, hör av dig till oss.');
+    /* Var månadens rapporterade pass står: på månadens egen
+       specifikation, på en senare, eller ingenstans än. */
+    const påUnderlag = räknade.filter(p => p.pa_underlag).map(p => p.id);
+    const [linjer, plats] = await Promise.all([
+      spec ? supa.from('payout_lines')
+        .select('booking_id, beskrivning, minuter, timpenning_ore, belopp_ore')
+        .eq('payout_id', spec.id) : null,
+      påUnderlag.length ? supa.from('payout_lines')
+        .select('booking_id, payout_id').in('booking_id', påUnderlag) : null
+    ]);
+    if (nr !== ersFråga) return;
+
+    const noter = [];
+    const mNamn = NXStudie.månadsNamn(m, false);
+    const rapporten = n => n === 1 ? 'rapporten' : 'rapporterna';
+    let väntar = 0;
+    /* Går det inte att läsa var passen står sägs ingenting om dem. En
+       gissning hade kunnat säga att ett betalt pass väntar. */
+    const platsFel = passen.error || (plats && plats.error) || null;
+    if (!platsFel) {
+      const periodFör = {};
+      const periodPerId = {};
+      Object.keys(ersSpecar).forEach(k => { periodPerId[ersSpecar[k].id] = k; });
+      ((plats && plats.data) || []).forEach(l => { periodFör[l.booking_id] = periodPerId[l.payout_id]; });
+      const senare = {};
+      räknade.forEach(p => {
+        const per = periodFör[p.id];
+        if (per === m) return;
+        if (per) senare[per] = (senare[per] || 0) + 1;
+        // Står det på ett underlag vi inte ser är det inte vårt att förklara.
+        else if (!p.pa_underlag) väntar++;
+      });
+      Object.keys(senare).sort().forEach(per => noter.push(senare[per] + ' pass från ' + mNamn
+        + ' står på lönespecifikationen för ' + B.periodText(per) + ', för ' + rapporten(senare[per])
+        + ' skrevs efter att ' + mNamn + ' hade räknats.'));
+      if (spec && väntar) {
+        noter.push(väntar + ' pass från ' + mNamn + ' kommer med på nästa lönespecifikation, för '
+          + rapporten(väntar) + ' skrevs efter att ' + mNamn + ' hade räknats.');
+      }
+    }
+    const utanRapport = S.bokningar.filter(b => String(b.wanted_date || '') >= gräns.från
+      && String(b.wanted_date || '') < gräns.till && rapporterbart(b) && harBörjat(b)).length;
+    if (utanRapport) {
+      noter.push(utanRapport + ' pass i ' + mNamn + ' saknar rapport och kommer med på en '
+        + 'lönespecifikation först när ' + (utanRapport === 1 ? 'den är skriven.' : 'de är skrivna.'));
+    }
+
+    if (spec) {
+      let rader = null;
+      if (!linjer.error) {
+        // I passens ordning. Raderna har inget datum av sig själva.
+        const när = {};
+        S.bokningar.forEach(b => { när[b.id] = String(b.wanted_date || '') + ' ' + String(b.wanted_time || ''); });
+        rader = (linjer.data || []).slice()
+          .sort((a, b) => (när[a.booking_id] || '~').localeCompare(när[b.booking_id] || '~'));
+      }
+      lista.innerHTML = B.lonespec(spec, rader, { namn: S.profil && S.profil.full_name, noter });
       return;
     }
 
-    const linjer = await supa.from('payout_lines')
-      .select('payout_id, beskrivning, minuter, belopp_ore')
-      .in('payout_id', rader.map(p => p.id));
-    const per = {};
-    (linjer.data || []).forEach(l => { (per[l.payout_id] = per[l.payout_id] || []).push(l); });
+    const noterHtml = noter.map(n => '<p class="lonespec-not">' + esc(n) + '</p>').join('');
+    const nästa = NXStudie.månadsNamn(gräns.till, false);
 
-    lista.innerHTML = rader.map(p => {
-      const antal = (per[p.id] || []).length;
-      return '<div class="bet-post">'
-        + B.utbetalningRad(p, { under: antal ? antal + ' pass' : '' })
-        + B.radLista(per[p.id])
-        + '</div>';
-    }).join('');
+    if (denna) {
+      /* Månaden pågår. Finns förra månadens lönespecifikation är den
+         vad man letar efter här, och den ligger ett tryck bort. */
+      const förraM = NXStudie.månadIso(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 2, 1, 12));
+      lista.innerHTML = tomt('Lönespecifikationen skrivs när månaden är slut',
+          'Lönen för ' + mNamn + ' betalas den 25 ' + nästa + '.')
+        + noterHtml
+        + (ersSpecar[förraM]
+          ? '<div class="lonespec-atg"><button class="btn btn-ghost btn-sm" type="button" data-ers-visa="'
+            + esc(förraM) + '">Visa lönespecifikationen för ' + esc(B.periodText(förraM)) + '</button></div>'
+          : '');
+      return;
+    }
+
+    if (platsFel) {
+      lista.innerHTML = tomt('Kunde inte hämta lönespecifikationen', felText(platsFel));
+      return;
+    }
+
+    if (väntar) {
+      /* Skrivs den 1:a. En vecka in i nästa månad är den försenad, och
+         då ska det inte stå att den kommer. */
+      const sen = isoFor(new Date()) >= gräns.till.slice(0, 8) + '08';
+      lista.innerHTML = tomt('Lönespecifikationen för ' + mNamn + ' är inte skriven än', sen
+          ? 'Den skulle ha skrivits i början av ' + nästa + '. Hör av dig till oss, så tittar vi på det.'
+          : 'Den skrivs i början av ' + nästa + ', och lönen betalas den 25 ' + nästa + '.')
+        + noterHtml;
+      return;
+    }
+
+    lista.innerHTML = (räknade.length
+        ? tomt('Ingen lönespecifikation för ' + mNamn, '')
+        : tomt('Ingen lön för ' + mNamn, 'Du hade inga rapporterade pass den månaden.'))
+      + noterHtml;
+  }
+
+  /* Genvägen från den pågående månaden till förra månadens
+     lönespecifikation, och utskriften. */
+  document.addEventListener('click', e => {
+    const skriv = e.target.closest('[data-lonespec-skriv]');
+    if (skriv) {
+      const spec = skriv.closest('.lonespec');
+      if (spec) skrivUt(spec);
+      return;
+    }
+    const visa = e.target.closest('[data-ers-visa]');
+    if (visa && ersMånad) {
+      ersMånad.sätt(visa.dataset.ersVisa);
+      NXStudie.håll($('#ers-manader'), laddaErsattning);
+    }
+  });
+
+  /* UTSKRIFTEN. En kopia av lönespecifikationen läggs i #utskrift,
+     direkt under body, och nextrum-vy.css gömmer allt annat så länge
+     html bär .skriver-ut. En kopia och inte originalet: vyn runt
+     omkring har sidhuvud, meny och flikar, och att gömma dem en och en
+     hade glömt nästa som läggs till. Sidans titel blir filnamnet när
+     man sparar som PDF, så den byts medan utskriften pågår.
+
+     Städningen väntar på afterprint. Safari på iPhone återvänder från
+     print() innan utskriften är gjord, och en kopia som tagits bort
+     då hade gett ett tomt papper. Blir afterprint aldrig av står
+     kopian kvar osynlig, och nästa utskrift städar först: annars hade
+     den sparat den förra utskriftens titel som sidans. */
+  let utskriftKlar = null;
+
+  function skrivUt(spec) {
+    if (utskriftKlar) utskriftKlar();
+    let ruta = document.getElementById('utskrift');
+    if (!ruta) {
+      ruta = document.createElement('div');
+      ruta.id = 'utskrift';
+      document.body.appendChild(ruta);
+    }
+    ruta.replaceChildren(spec.cloneNode(true));
+    const titel = document.title;
+    document.title = (spec.dataset.titel || 'Lönespecifikation') + ' – Nextrum';
+    document.documentElement.classList.add('skriver-ut');
+    utskriftKlar = () => {
+      window.removeEventListener('afterprint', utskriftKlar);
+      document.documentElement.classList.remove('skriver-ut');
+      document.title = titel;
+      ruta.replaceChildren();
+      utskriftKlar = null;
+    };
+    window.addEventListener('afterprint', utskriftKlar);
+    window.print();
   }
 
   /* Här satt hanteraren för "Koppla utbetalningskonto". Både knappen

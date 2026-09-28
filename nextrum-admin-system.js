@@ -485,7 +485,8 @@
     'notis-ko': 'Mejlen om pass, meddelanden och rapporter',
     'lead-notis': 'Intresseanmälan: aviseringen och kvittot',
     'ansokan-notis': 'Beskeden till den som sökt jobb',
-    'ansokan-gallring': 'Gallringen av gamla ansökningar'
+    'ansokan-gallring': 'Gallringen av gamla ansökningar',
+    'fakturering': 'Månadskörningen: lönespecifikationerna och fakturautkasten'
   };
 
   function notisfelBetyder(n) {

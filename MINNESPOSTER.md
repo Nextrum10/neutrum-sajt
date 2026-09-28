@@ -65,8 +65,11 @@ förväg eller efter passet när de bekräftar rapporten (Fas 19.2; före
 passet sa Fas 14.2). Rapporten bekräftas också när passet redan är
 betalt, och ett hållet pass ska betalas även utan bekräftelse. Spärren
 `kortsparr` kan inte slås på sedan dess. Studiehjälparen får betalt den
-25:e; blir hen anställd går underlaget till Fortnox Lön som en
-PAXml-fil från adminvyns Löner, men anställningsformen är inte avgjord. Ett genomfört pass kostar den tid
+25:e och ser underlaget som månadens lönespecifikation, före skatt
+(2026-09-28); pg_cron-jobbet `manadskorning` skriver det den 1:a när
+det är påslaget, och adminvyn visar om det är det. Blir hen anställd
+går underlaget till Fortnox Lön som en PAXml-fil från adminvyns Löner,
+men anställningsformen är inte avgjord. Ett genomfört pass kostar den tid
 det faktiskt hölls, per påbörjad kvart (Fas 20.1): tiden och skälet står
 i rapporten, ett förbetalt pass som drog över får ett tillägg
 (`pass_tillagg`), och lönen följer tiden nedåt alltid men uppåt bara när
