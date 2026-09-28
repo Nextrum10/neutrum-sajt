@@ -681,6 +681,16 @@ const NX = (function () {
        utan den här raden blev strängen "facebook / null". */
     if (kanal && !medium) medium = 'okänt';
 
+    /* Landningen bär bara våra egna utm-taggar. gclid och fbclid är
+       annonsnätverkens klick-id, unika per klick och möjliga att
+       koppla till en person hos Google och Meta. Att klicket kom
+       därifrån står redan i kanalen; värdet behöver vi inte, och
+       integritetspolicyn lovar bara "de märkord vi själva lagt i
+       adressen". */
+    const egna = new URLSearchParams();
+    p.forEach((v, n) => { if (/^utm_/.test(n)) egna.append(n, v); });
+    const sök = egna.toString();
+
     const k = {
       kanal: kanal,
       medium: okänd ? null : medium,
@@ -688,7 +698,7 @@ const NX = (function () {
       innehåll: par('utm_content'),
       term: par('utm_term'),
       hänvisare: hänvisare,
-      landning: okänd ? null : (location.pathname + location.search).slice(0, 200),
+      landning: okänd ? null : (location.pathname + (sök ? '?' + sök : '')).slice(0, 200),
       tid: new Date().toISOString()
     };
     /* En okänd källa sparas aldrig: den hade låst sessionen vid
