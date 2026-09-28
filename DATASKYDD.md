@@ -49,14 +49,15 @@ finnas. Det här är det.
 | 7 | Notiser och mejl (`notiser`, `notis_utskick`) | alla med konto | typ, datum, förnamn, ämne | 6.1 b | Resend | 180 dagar i vyn, 90 dagar för utskicken |
 | 8 | Betalning (`bookings.betalning_*`, `klippkort`, `pass_tillagg`, `timbank_uttag`, `stripe_handelser`, `stripe_tvister`, `invoices`) | förälder | belopp, tid, e-post, Stripe-id | 6.1 b; 6.1 c bokföringslagen | Stripe (e-post, belopp, ämne och datum) | 7 år |
 | 9 | Ersättning till studiehjälpare (`payouts`) | studiehjälpare | timmar, belopp | 6.1 b; 6.1 c | Fortnox (för hand) | 7 år |
-| 10 | Jobbansökan (`applications`, hinken `cv`) | sökande, ofta 16 år | namn, ålder, e-post, skola, ämnen, fritext, CV | 6.1 f | Supabase, Resend (besked) | 1 år, eller 30 dagar efter senaste steget |
+| 10 | Jobbansökan (`applications`, hinken `cv`) | sökande, ofta 16 år | namn, ålder, e-post, skola, ämnen, fritext, CV | 6.1 f | Supabase, Resend (besked) | 1 år, eller 30 dagar efter senaste steget; blev personen studiehjälpare: 2 år efter senaste pass, rapport eller inloggning |
 | 11 | Kontaktformuläret (`contact_messages`) | vem som helst | namn, e-post, fritext | 6.1 f | Supabase | 6 mån efter inkommet eller besvarat |
 | 12 | Felrapporter (`klientfel`) | inloggade och besökare | felet, sidan, webbläsaren, konto-id | 6.1 f | Supabase | 90 dagar |
 | 13 | Ändringsloggen (`audit_logg`) | alla med konto | tillstånd, kopplingar, tid. Aldrig namn eller text | 6.1 f | Supabase | så länge verksamheten finns |
 | 14 | Besöksstatistik | besökare | sida, ungefärligt land, enhetstyp; unik besökare ur en hash som byts varje dygn | 6.1 a, samtycke (LEK 9:28) | Vercel | enligt Vercel |
 | 15 | Källspårning och annonsmätning | besökare som skickar anmälan | landningssida, hänvisare, UTM | 6.1 a, samtycke | ingen i dag; Meta och Google om ett id sätts | som anmälan |
-| 16 | Vår AI-assistent (drift-agenten) | barn, förälder | initialer, årskurs, ämne, maskad fritext | 6.1 f | Anthropic | Anthropics villkor; `agent_korningar` här |
+| 16 | Vår AI-assistent (drift-agenten) | barn, förälder | initialer, årskurs, ämne, maskad fritext | 6.1 f | Anthropic | Anthropics villkor; frågor, svar och steg i `agent_korningar` och `agent_steg` töms efter 90 dagar, AI-förslagens motivering 90 dagar efter beslutet |
 | 17 | Handlingar om verksamheten (`handlingar`, hinken `dokument`) | studiehjälpare | avtal, intyg | 6.1 b, 6.1 c | Supabase | så länge de gäller, sedan så länge lagen kräver |
+| 18 | Vårt arbetsunderlag (`uppgifter`, `admin_noteringar`) | alla | titel och text vi skriver själva, kan nämna namn | 6.1 f | Supabase | uppgifter: 1 år efter att de stängts; anteckningar om en person: med personens konto |
 
 **Känsliga uppgifter (art. 9) samlas inte in.** Vi ber aldrig om hälsa
 eller diagnoser, men fritexten kan få dem ändå ("Elsa har ADHD"). Därför
@@ -64,9 +65,13 @@ står en rad under fritextrutorna i intresseanmälan och i rapporten som
 ber om att låta bli, och därför tar vi bort sådant när vi ser det. Ingen
 rättslig grund i art. 9.2 täcker att vi SPARAR en diagnos vi inte bett om.
 
-**Personnummer** behandlas inte (dataskyddslagen 3 kap. 10 §). CV-fältet
-ber den sökande ta bort det, och det som ändå skickas till Anthropic maskas
-av `_delad/minimera.ts`.
+**Personnummer** behandlas inte i dag (dataskyddslagen 3 kap. 10 §).
+CV-fältet ber den sökande ta bort det, och det som ändå skickas till
+Anthropic maskas av `_delad/minimera.ts`. Ett undantag är byggt men
+oanvänt: `kund_skatteuppgifter` kan bära förälderns personnummer för
+RUT-avdrag. Tabellen är tom och ingen RUT-tjänst är aktiv
+(kontrollerat 2026-09-28). Slås RUT på ska behandlingen in i registret,
+i integritetspolicyn på båda språken och i konsekvensbedömningen först.
 
 ---
 
@@ -108,9 +113,10 @@ ihåg dem. Alla jobb körs av pg_cron och syns i `cron.job`.
 | Jobb | När | Gör |
 |---|---|---|
 | `leads-avidentifiering` | varje natt 03.47 UTC | tömmer namn, e-post, barnets namn och fritext i anmälningar 6 mån efter senaste kontakt; raden står kvar för statistiken |
-| `ansokan-gallring` | varje natt 03.41 UTC | tar bort ansökan och CV 1 år efter inkommen eller 30 dagar efter senaste steget; godkända behålls |
+| `ansokan-gallring` | varje natt 03.41 UTC | tar bort ansökan och CV 1 år efter inkommen eller 30 dagar efter senaste steget; en studiehjälpares ansökan 2 år efter senaste pass, rapport eller inloggning |
 | `kontakt-och-fel-gallring` | varje natt 03.44 UTC | tar bort kontaktmeddelanden efter 6 mån och klientfel efter 90 dagar |
 | `notis-stada` | varje natt 03.17 UTC | notiser 180 dagar, utskick och fel 90 dagar, körningar 30 dagar |
+| `ai-och-uppgifter-gallring` | varje natt 03.51 UTC | agentloggens text efter 90 dagar, AI-förslagens motivering 90 dagar efter beslut, klara och avbrutna uppgifter efter 1 år |
 | `konton-oanvanda` | den 1:a varje månad | gör varje konto som inte använts på 2 år till en uppgift i adminvyn |
 | `cron-stada` | varje natt | jobbens egen logg efter 7 dagar |
 
@@ -124,9 +130,13 @@ pass och underlag står kvar.
 ni en sådan: öppna `cron.job_run_details` och läs felet.
 
 **Inte gallrat, med flit:** ändringsloggen (den går inte att ändra, och
-den bär inga namn), bokföringsunderlag (7 år), `ai_forslag` och
-`agent_korningar` (tomma i dag; ta upp frågan när agenterna används på
-riktigt).
+den bär inga namn), bokföringsunderlag (7 år), raderna i `ai_forslag`
+(en nyckel är ett förslag för alltid; bara motiveringen töms) och
+körningarna i `agent_korningar` (status och tokens; texten töms).
+
+**Säkerhetskopior.** Det som raderas kan finnas kvar en kort tid i
+leverantörernas säkerhetskopior, och policyn säger det. Supabase-projektet
+står på gratisplanen (kontrollerat 2026-09-28); se avsnitt 8.
 
 ---
 
@@ -244,6 +254,10 @@ Inget av det här går att göra i koden.
   spara en kopia (PDF) i hinken `dokument` via adminvyns Handlingar.
 - [ ] **Byt Vercel till Pro.** Kontot står på Hobby, som inte får
   användas kommersiellt (kontrollerat 2026-09-28).
+- [ ] **Supabase står på gratisplanen.** Kontrollera att DPA:n går
+  att få på den, och tänk på att ett gratisprojekt pausas efter en tid
+  utan trafik och har begränsade säkerhetskopior. För en tjänst med
+  betalande familjer är Pro rimligare.
 - [ ] **Slå på kontroll av läckta lösenord** i Supabase: Authentication
   → Policies (HaveIBeenPwned).
 - [ ] **Låt en jurist läsa** integritetspolicyn, villkoren och den här

@@ -913,8 +913,21 @@ registret; det här är det som rör koden.
   nittio dagar** (`intern.kontakt_och_fel_gallra()`, pg_cron
   `kontakt-och-fel-gallring`). Notiserna har egna tider i
   `notis_stada()`: 180 dagar i vyn, 90 för utskicken.
-- Ansökningar och CV:n gallras av `ansokan-gallring` (PR #90), med
-  samma princip: filen först, raden sedan.
+- **AI-texterna och de avslutade uppgifterna** (2026-09-28,
+  `intern.ai_och_uppgifter_gallra()`, pg_cron
+  `ai-och-uppgifter-gallring`): agentloggens text efter 90 dagar
+  (`gallra_agentloggen(90)`, som bara kördes från en knapp förut),
+  `ai_forslag.motivering` 90 dagar efter beslutet, och klara eller
+  avbrutna uppgifter ett år efter att de stängdes. `frys_forslaget`
+  släpper igenom exakt den tömningen: till null, på ett avgjort förslag,
+  utan inloggad användare. Allt annat i ett förslag är fortfarande fryst.
+- **`landningssida` bär bara våra egna utm-taggar.** `NX.källa()` sparade
+  förut hela adressen, med annonsnätverkens klick-id (`gclid`,
+  `fbclid`), som går att koppla till en person hos Google och Meta.
+  Avidentifieringen kapar dessutom fältet vid "?".
+- Ansökningar och CV:n gallras av `ansokan-gallring`, med samma
+  princip: filen först, raden sedan. Se "Gallringen: ansökningar och
+  CV:n efter ett år" nedan.
 
 ### Notiserna (Runda 2)
 
@@ -1143,12 +1156,17 @@ pg_cron "ansokan-gallring", 03:41 UTC
 
 Regeln står i `intern.ansokan_gallras_fran()` och ingen annanstans:
 
-1. **En godkänd ansökan gallras aldrig.** `status = 'approved'` är
-   anställningen. En ny eller kontaktad ansökan med samma adress
-   (`intern.epost_nyckel`) som en godkänd studiehjälpare gallras inte
-   heller: "Ta in i poolen" godkänner profilen först och läser inte
-   svaret när ansökan sedan sätts till godkänd. En avböjd ansökan
-   gallras alltid, också när samma person senare fått ja.
+1. **En studiehjälpares ansökan står kvar medan hen arbetar, och två
+   år till** (2026-09-28). Har ansökan samma adress
+   (`intern.epost_nyckel`) som en godkänd studiehjälpare, och är den
+   inte avböjd, räknas tiden från studiehjälparens senaste aktivitet:
+   kontot, senaste inloggning, senaste pass som inte avbokats, senaste
+   rapport. Det finns ingen status för "har slutat", så aktiviteten ÄR
+   signalen. Adressen och inte bara läget, för "Ta in i poolen"
+   godkänner profilen först och läser inte svaret när ansökan sätts
+   till godkänd. En godkänd ansökan utan konto med den adressen gallras
+   två år efter sitt senaste steg. En avböjd ansökan gallras alltid,
+   också när samma person senare fått ja.
 2. **Ett år från `created_at`, men inte mitt i en rekrytering.** En
    ansökan väntar till trettio dagar efter sitt senaste steg: kontakten,
    mötet, utbildningsmötet, provets sista dag, det godkända provet,
@@ -1362,7 +1380,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 26 SECURITY DEFINER-funktioner nåbara för `authenticated` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 30 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
@@ -2094,14 +2112,11 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
-- **Ansökningar gallras efter ett år, men två saker återstår.** Sedan
+- **Ansökningar gallras efter ett år, men en sak återstår.** Sedan
   2026-09-27 tar `ansokan-gallring` varje natt bort en ansökan som inte
   ledde till anställning, med CV:t, och CV-filer utan ansökan (avsnitt
   5, Gallringen). Kvar:
-  1. **En godkänd ansökan gallras aldrig**, och ingenting säger hur
-     länge en studiehjälpares ansökan och uppgifter sparas efter att hen
-     slutat. Integritetspolicyn säger inget om det heller.
-  2. **"Vill du att vi tar bort den tidigare, skriv till oss" har ingen
+  1. **"Vill du att vi tar bort den tidigare, skriv till oss" har ingen
      knapp.** Tas raden bort för hand i dashboarden blir CV:t
      föräldralöst och står kvar tills gallringen tar det, ett år efter
      uppladdningen. Ta bort filen under Storage → cv först, sedan

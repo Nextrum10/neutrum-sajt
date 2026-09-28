@@ -34,8 +34,10 @@
 -- Fas 21.1–21.2, admin_laser_ansokans_cv (admin läser CV:t), Fas 22.1
 -- (timbanken), timbanken_foljer_passet, Fas 22.2 (timmarna betalar
 -- passen), ansokningar_gallras_efter_ett_ar (gallringen),
--- notisfelen_bara_egna_utskick, klientfelen_minns_vem och Fas 22.3
--- (lediga timmar betalar nästa pass) är körda.
+-- notisfelen_bara_egna_utskick, klientfelen_minns_vem, Fas 22.3
+-- (lediga timmar betalar nästa pass),
+-- godkand_ansokan_gallras_tva_ar_efter_sista_passet och
+-- ai_texterna_och_avslutade_uppgifter_gallras är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -5298,26 +5300,41 @@ declare
   g7 constant uuid := '00000000-0000-4000-8000-00000000cc07';
   g8 constant uuid := '00000000-0000-4000-8000-00000000cc08';
   g9 constant uuid := '00000000-0000-4000-8000-00000000cc09';
+  g10 constant uuid := '00000000-0000-4000-8000-00000000cc10';
+  g11 constant uuid := '00000000-0000-4000-8000-00000000cc11';
+  g12 constant uuid := '00000000-0000-4000-8000-00000000cc12';
+  slutad constant uuid := '00000000-0000-4000-8000-0000000000c9';
   tva_ar constant timestamptz := now() - interval '2 years';
+  tre_ar constant timestamptz := now() - interval '3 years';
 begin
   begin
     -- Studiehjälpare B är inte godkänd i det här provet. A är det.
     update public.tutor_profiles set status = 'pending' where id = '00000000-0000-4000-8000-0000000000b1';
 
+    -- En godkänd studiehjälpare som slutade för tre år sedan: kontot,
+    -- inloggningen och profilen är tre år gamla, och inga pass.
+    insert into auth.users (id, email, raw_user_meta_data, created_at, last_sign_in_at) values
+      (slutad, 'rls-slutad@example.invalid', '{"role":"tutor","full_name":"Test Slutad"}', tre_ar, tre_ar);
+    update public.profiles set created_at = tre_ar, last_seen_at = null where id = slutad;
+    update public.tutor_profiles set status = 'approved', created_at = tre_ar where id = slutad;
+
     insert into public.applications (id, name, email, status, created_at, kontaktad_at, mote_tid, prov_sista_dag) values
       (g1, 'Prov Avböjd',   'rls-gall-1@example.invalid',   'rejected',  tva_ar, null, null, null),
-      (g2, 'Prov Godkänd',  'rls-gall-2@example.invalid',   'approved',  tva_ar, null, null, null),
+      (g2, 'Prov Godkänd',  'rls-gall-2@example.invalid',   'approved',  now() - interval '1 year', null, null, null),
       (g3, 'Prov Anna',     'rls-a@example.invalid',        'new',       tva_ar, null, null, null),
       (g4, 'Prov Anna',     ' RLS-A+igen@example.invalid',  'rejected',  tva_ar, null, null, null),
       (g5, 'Prov Kontakt',  'rls-gall-5@example.invalid',   'contacted', tva_ar, now() - interval '10 days', null, null),
       (g6, 'Prov Möte',     'rls-gall-6@example.invalid',   'contacted', tva_ar, null, now() + interval '10 days', null),
       (g7, 'Prov Ung',      'rls-gall-7@example.invalid',   'new',       now() - interval '11 months', null, null, null),
       (g8, 'Prov Provet',   'rls-gall-8@example.invalid',   'new',       tva_ar, null, null, current_date - 40),
-      (g9, 'Prov Bo',       'rls-b@example.invalid',        'new',       tva_ar, null, null, null);
+      (g9, 'Prov Bo',       'rls-b@example.invalid',        'new',       tva_ar, null, null, null),
+      (g10, 'Prov Gammal',  'rls-gall-10@example.invalid',  'approved',  tre_ar, null, null, null),
+      (g11, 'Prov Anna',    'rls-a@example.invalid',        'approved',  tre_ar, null, null, null),
+      (g12, 'Prov Slutad',  'rls-slutad@example.invalid',   'approved',  tre_ar, null, null, null);
 
     select array_agg(l.ansokan_id) into lista
       from public.ansokan_gallring_lista(1000) l
-     where l.ansokan_id in (g1, g2, g3, g4, g5, g6, g7, g8, g9);
+     where l.ansokan_id in (g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12);
     raise exception 'rulla tillbaka';
   exception when others then fel := sqlerrm;
   end;
@@ -5328,7 +5345,10 @@ begin
     lista := coalesce(lista, '{}');
     insert into utfall (test, ok, detalj) values
       ('Gallring en avböjd ansökan äldre än ett år gallras', g1 = any (lista), 'med: ' || (g1 = any (lista))),
-      ('Gallring en godkänd ansökan gallras aldrig', not g2 = any (lista), 'med: ' || (g2 = any (lista))),
+      ('Gallring en godkänd ansökan utan konto står kvar i två år', not g2 = any (lista), 'med: ' || (g2 = any (lista))),
+      ('Gallring men gallras två år efter sitt senaste steg', g10 = any (lista), 'med: ' || (g10 = any (lista))),
+      ('Gallring en godkänd ansökan står kvar så länge studiehjälparen är aktiv', not g11 = any (lista), 'med: ' || (g11 = any (lista))),
+      ('Gallring och gallras två år efter att studiehjälparen slutat', g12 = any (lista), 'med: ' || (g12 = any (lista))),
       ('Gallring samma adress som en godkänd studiehjälpare håller kvar en ny ansökan', not g3 = any (lista), 'med: ' || (g3 = any (lista))),
       ('Gallring men inte en avböjd, inte heller med plustillägg', g4 = any (lista), 'med: ' || (g4 = any (lista))),
       ('Gallring ett steg de senaste trettio dagarna håller kvar ansökan', not g5 = any (lista), 'med: ' || (g5 = any (lista))),
@@ -5363,7 +5383,7 @@ begin
       (h1, 'Prov Fil',    'rls-gfil-1@example.invalid', 'rejected', tva_ar, E'Hej.\n\nCV: cv/1600000000000-gprov-Finns.pdf'),
       (h2, 'Prov Borta',  'rls-gfil-2@example.invalid', 'rejected', tva_ar, E'Hej.\n\nCV: cv/1600000000001-gprov-Borta.pdf'),
       (h3, 'Prov Delad',  'rls-gfil-3@example.invalid', 'rejected', tva_ar, E'CV: cv/1600000000002-gprov-Delad.pdf'),
-      (h4, 'Prov Delad',  'rls-gfil-4@example.invalid', 'approved', tva_ar, E'CV: cv/1600000000002-gprov-Delad.pdf');
+      (h4, 'Prov Delad',  'rls-gfil-4@example.invalid', 'approved', now() - interval '1 year', E'CV: cv/1600000000002-gprov-Delad.pdf');
 
     perform public.skapa_uppgift('Obesvarad ansökan (prov)', 'rls:gallring:' || h2, 'uppfoljning',
       null, 'applications', h2::text, current_date);
@@ -5404,7 +5424,7 @@ begin
         coalesce((select string_agg(k, ', ') from jsonb_object_keys(audit) k), 'ingen rad')),
       ('Gallring en fil som en kvarvarande ansökan pekar ut står inte i listan', filer3 = '{}', coalesce(array_to_string(filer3, ', '), 'ingen rad')),
       ('Gallring och spärrar inte den andra ansökan', u3 = 'borttagen' and delad = 1, u3 || ', filen: ' || delad),
-      ('Gallring en godkänd ansökan tas inte bort ens på begäran', u4 = 'inte_forfallen', u4),
+      ('Gallring en godkänd ansökan tas inte bort före sin tid, ens på begäran', u4 = 'inte_forfallen', u4),
       ('Gallring ett okänt id', u5 = 'finns_inte', u5);
   end if;
 end $$;
@@ -5510,6 +5530,74 @@ begin
   perform set_config('request.jwt.claims', null, true);
   insert into utfall (test, ok, detalj)
   values ('Gallring service_role når dörrarna', fel = 'rulla tillbaka', fel);
+end $$;
+
+-- AI-texterna och de avslutade uppgifterna (2026-09-28). Motiveringen
+-- töms 90 dagar efter beslutet, klara uppgifter tas bort efter ett år,
+-- och frysningen släpper bara igenom just den tömningen, utan inloggad
+-- användare.
+do $$
+declare
+  fel text; v jsonb;
+  m1 text; m2 text; n1 bigint; n2 bigint; n3 bigint;
+  skriva text; inloggad text;
+  f1 constant uuid := '00000000-0000-4000-8000-00000000ce01';
+  f2 constant uuid := '00000000-0000-4000-8000-00000000ce02';
+  u1 constant uuid := '00000000-0000-4000-8000-00000000cf01';
+  u2 constant uuid := '00000000-0000-4000-8000-00000000cf02';
+  u3 constant uuid := '00000000-0000-4000-8000-00000000cf03';
+begin
+  begin
+    insert into public.ai_forslag (id, typ, payload, motivering, status, nyckel, beslutad, skapad) values
+      (f1, 'lead_status', '{}', 'Gammal motivering', 'avvisad', 'rls:ai:gammal', now() - interval '100 days', now() - interval '101 days'),
+      (f2, 'lead_status', '{}', 'Ny motivering',     'avvisad', 'rls:ai:ny',     now() - interval '10 days',  now() - interval '11 days');
+    -- uppgift_stampel sätter klar_at vid skrivning; stängs av för att
+    -- kunna backdatera.
+    alter table public.uppgifter disable trigger user;
+    insert into public.uppgifter (id, typ, titel, status, klar_at, uppdaterad, created_at, skapad_av_typ) values
+      (u1, 'ovrigt', 'Prov klar gammal', 'klar', now() - interval '2 years', now() - interval '2 years', now() - interval '2 years', 'manniska'),
+      (u2, 'ovrigt', 'Prov klar ny',     'klar', now() - interval '1 month', now() - interval '1 month', now() - interval '2 years', 'manniska'),
+      (u3, 'ovrigt', 'Prov öppen gammal', 'oppen', null, now() - interval '2 years', now() - interval '2 years', 'manniska');
+    alter table public.uppgifter enable trigger user;
+
+    v := intern.ai_och_uppgifter_gallra();
+    select motivering into m1 from public.ai_forslag where id = f1;
+    select motivering into m2 from public.ai_forslag where id = f2;
+    select count(*) into n1 from public.uppgifter where id = u1;
+    select count(*) into n2 from public.uppgifter where id = u2;
+    select count(*) into n3 from public.uppgifter where id = u3;
+
+    begin
+      update public.ai_forslag set motivering = 'Utbytt' where id = f2;
+      skriva := 'tillåten';
+    exception when others then skriva := 'nekad';
+    end;
+    begin
+      perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+      update public.ai_forslag set motivering = null where id = f2;
+      inloggad := 'tillåten';
+    exception when others then inloggad := 'nekad';
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('AI-gallring', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('AI-gallring motiveringen töms 90 dagar efter beslutet', m1 is null, coalesce(m1, 'tömd')),
+      ('AI-gallring men inte före', m2 = 'Ny motivering', coalesce(m2, 'tömd')),
+      ('AI-gallring frysningen nekar fortfarande en ny motivering', skriva = 'nekad', skriva),
+      ('AI-gallring och en inloggad får inte tömma den', inloggad = 'nekad', inloggad),
+      ('Uppgiftsgallring en klar uppgift äldre än ett år tas bort', n1 = 0, 'rader: ' || n1),
+      ('Uppgiftsgallring en nyss klar står kvar', n2 = 1, 'rader: ' || n2),
+      ('Uppgiftsgallring en öppen rörs aldrig', n3 = 1, 'rader: ' || n3);
+  end if;
 end $$;
 
 select test, ok, detalj from utfall order by nr;
