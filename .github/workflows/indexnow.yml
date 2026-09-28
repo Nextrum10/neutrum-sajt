@@ -5,6 +5,18 @@
 # inte vid push. Före det finns varken nyckelfilen eller den nya
 # sidan på nextrum.se, och Bing hade hämtat en 404.
 #
+# Rapporten är Vercels repository_dispatch (2026-09-27). Förut var
+# det deployment_status från GitHub-driftsättningarna, som Vercel
+# kallar föråldrad: slutade Vercel skapa dem hade IndexNow tystnat
+# utan att någon kontroll blev röd. Samma sak gäller nu om
+# repository_dispatch-händelserna stängs av hos Vercel, så efter en
+# produktionsdriftsättning ska det stå en körning
+# "IndexNow production <commit>" under Actions.
+#
+# En repository_dispatch når bara workflows på main. En ändring i
+# den här filen går alltså inte att prova på en gren; den gäller
+# från och med merge.
+#
 # Vad som skickas avgörs av kartan: adresser vars summa skiljer sig
 # från kartan i föräldercommiten. De flesta driftsättningar ändrar
 # ingen sidtext och skickar därför ingenting.
@@ -14,9 +26,20 @@
 # ============================================================
 
 name: IndexNow
+run-name: IndexNow ${{ github.event.client_payload.environment || 'för hand' }} ${{ github.event.client_payload.git.shortSha }}
 
 on:
-  deployment_status:
+  repository_dispatch:
+    # Bara success. Enligt README:n i vercel/repository-dispatch kommer
+    # vercel.deployment.promoted för varje befordran till drift,
+    # "automatic or manual", alltså också för samma driftsättning som
+    # success: med båda hade varje sida skickats två gånger. Och
+    # jämförelsen med föräldercommiten förutsätter att commiten följer
+    # på den förra driftsättningen, vilket en befordran av en äldre
+    # eller en annan driftsättning inte gör. Efter en sådan: kör
+    # workflowen för hand med "alla".
+    types:
+      - 'vercel.deployment.success'
   workflow_dispatch:
     inputs:
       alla:
@@ -31,16 +54,22 @@ jobs:
   skicka:
     name: Skicka ändrade sidor
     runs-on: ubuntu-latest
-    # Vercel skapar deployments för både förhandsversioner och drift.
     # Bara drift räknas: en förhandsadress ska aldrig nå ett index.
+    # client_payload.environment är 'production' eller 'preview'
+    # (vercel/repository-dispatch, src/constants.ts).
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event.deployment_status.state == 'success' &&
-       (github.event.deployment.environment == 'Production' ||
-        github.event.deployment.environment == 'production'))
+      (github.event_name == 'repository_dispatch' &&
+       github.event.client_payload.environment == 'production')
     steps:
+      # En repository_dispatch körs på main:s senaste commit, inte på
+      # den som driftsattes. Mergas två PR:er tätt kan main redan vara
+      # nästa commit, och då hade dess sidor skickats innan de fanns på
+      # nextrum.se. Den driftsatta står i payloaden. För hand är fältet
+      # tomt, och då gäller grenen körningen startades på.
       - uses: actions/checkout@v5
         with:
+          ref: ${{ github.event.client_payload.git.sha }}
           fetch-depth: 2
 
       - uses: actions/setup-python@v6
@@ -48,7 +77,17 @@ jobs:
           python-version: '3.12'
 
       - name: Skicka
+        env:
+          HANDELSE: ${{ github.event_name }}
+          DRIFTSATT: ${{ github.event.client_payload.git.sha }}
         run: |
+          # Utan commit i payloaden tar checkout main utan att säga
+          # något, och jämförelsen gäller fel driftsättning. Hellre rött.
+          if [ "$HANDELSE" = "repository_dispatch" ] && [ "$(git rev-parse HEAD)" != "$DRIFTSATT" ]; then
+            echo "::error::Den utcheckade commiten är inte den driftsatta (client_payload.git.sha: '$DRIFTSATT')"
+            exit 1
+          fi
+
           # Första driftsättningen med IndexNow skickar allt: ingen sida
           # har skickats förut, och kartan i föräldercommiten bär redan
           # summor, så en jämförelse hade bara hittat de nya sidorna.
