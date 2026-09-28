@@ -79,8 +79,11 @@ betala ett helt pass och går inte ut. Kortpass som blev kortare får
 fortfarande pengarna tillbaka, inte minuter. Sedan Fas 22.2 betalar köpta
 timmar ett pass av sig själva när det bekräftas eller genomförs (kortet
 som går ut först, annars timbanken), och ett nytt köp betalar de
-bekräftade pass som redan står obetalda. Vid ånger eller uppsägning
-avbokas kommande timpass först, annars räknas de som använda.
+bekräftade pass som redan står obetalda. Sedan Fas 22.3 betalar timmar
+som blir lediga (avbokning, kortet som vann, banken som fyllts på) nästa
+bekräftade pass inom fem minuter, genom pg_cron-jobbet `timmar-betalar`.
+Vid ånger eller uppsägning avbokas alla kommande pass familjen inte vill
+ha först, annars räknas de som använda.
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
