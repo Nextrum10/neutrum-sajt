@@ -474,17 +474,15 @@ Deno.serve(async (req) => {
   if (kropp.tillagg === true) return await betalaTillagg(vem, kropp, pass);
   /* EN TILLÅT-LISTA, INTE ETT UNDANTAG (Fas 14.6). Här stod bara
      "neka 'betald'". Allt annat släpptes in och fick 'vantar' skrivet
-     över sig: en tvist blev en öppen kassa, en återbetalning likaså,
-     och sedan Fas 14.6 hade ett fakturapass kunnat betalas med kort
-     också och sedan faktureras en gång till. Ett pass som ska betalas
-     med kort står i ett av tre lägen, och bara de släpps in. */
+     över sig: en tvist blev en öppen kassa, en återbetalning likaså.
+     Ett pass som ska betalas med kort står i ett av tre lägen, och bara
+     de släpps in, plus ett fakturapass som inte står på en faktura än
+     (nedan). */
   if (pass.betalning_status === 'betald') {
     return json({ error: 'Passet är redan betalt.' }, 409, CORS);
   }
-  if (pass.betalning_status === 'faktura') {
-    return json({ error: 'Passet betalas mot faktura. Vill ni betala med kort: välj det på passet först.' }, 409, CORS);
-  }
-  if (!['ingen', 'vantar', 'misslyckad'].includes(String(pass.betalning_status ?? 'ingen'))) {
+  const påFaktura = pass.betalning_status === 'faktura';
+  if (!påFaktura && !['ingen', 'vantar', 'misslyckad'].includes(String(pass.betalning_status ?? 'ingen'))) {
     return json({ error: 'Passet har en återbetalning eller en tvist och kan inte betalas här. Skriv till oss.' }, 409, CORS);
   }
   if (!pass.fakturerbar) {
@@ -492,6 +490,34 @@ Deno.serve(async (req) => {
   }
 
   const db = serviceklient();
+
+  /* ETT FAKTURAPASS BETALAS MED KORT I SAMMA TRYCK (2026-09-28). Leo:
+     "trycker man på betala nu ska man komma vidare till stripe och
+     passet kan räknas som betalt efter att man betalat det". Förut
+     nekade funktionen ett fakturapass, och vyn bytte därför först
+     passet till obetalt: rapporten kom tillbaka under Bekräfta rapport,
+     och stängdes kassan utan betalning hade passet inget betalsätt kvar.
+
+     Nu står passet kvar som 'faktura' medan kassan är öppen (skrivningen
+     nedan rör inte läget), och webhooken skriver 'betald' när kortet
+     dragits: 'faktura' står i dess TAR_EMOT_BETALNING sedan Fas 14.6.
+     Stängs kassan betalas passet mot fakturan, som familjen valt.
+     Månadskörningen tar bara 'faktura', så ett pass som betalats med
+     kort kommer aldrig med på en faktura.
+
+     Står passet redan på en faktura, också ett utkast, betalas det
+     genom den: samma regel som skydda_bokningsfalt har för bytet
+     tillbaka till kort. Hinner månadskörningen lägga passet på fakturan
+     medan kassan står öppen, och familjen betalar ändå, larmar
+     betald_och_fakturerad. */
+  if (påFaktura) {
+    const { data: rader, error: radfel } = await db.from('invoice_lines')
+      .select('id').eq('booking_id', pass.id).limit(1);
+    if (radfel) return json({ error: 'Passet gick inte att läsa.' }, 500, CORS);
+    if (rader?.length) {
+      return json({ error: 'Passet står redan på en faktura och betalas genom den.' }, 409, CORS);
+    }
+  }
 
   try {
     // ---------- beloppet, ur databasen ----------
@@ -677,13 +703,18 @@ Deno.serve(async (req) => {
        villkoret skrev 'vantar' över 'betald': timmarna var dragna och
        passet stod som obetalt, och betalade familjen sedan kassan togs
        passet två gånger. Nu träffar skrivningen ingenting, och kassan som
-       just skapades stängs innan någon hunnit se den. */
+       just skapades stängs innan någon hunnit se den.
+
+       Ett fakturapass får inget 'vantar' (se ovan): det betalas mot
+       fakturan tills kortet är draget. Villkoret är då att det
+       fortfarande är ett fakturapass. */
     const sessionId = String((session as { id?: string }).id ?? '');
     const { data: skrivna, error: sparfel } = await db.from('bookings').update({
-      betalning_status: 'vantar',
+      ...(påFaktura ? {} : { betalning_status: 'vantar' }),
       stripe_session_id: sessionId,
       begart_ore: netto,
-    }).eq('id', pass.id).in('betalning_status', ['ingen', 'vantar', 'misslyckad']).select('id');
+    }).eq('id', pass.id)
+      .in('betalning_status', påFaktura ? ['faktura'] : ['ingen', 'vantar', 'misslyckad']).select('id');
 
     if (!sparfel && !skrivna?.length) {
       try {

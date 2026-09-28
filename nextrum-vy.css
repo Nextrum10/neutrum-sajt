@@ -1490,11 +1490,13 @@ section[data-sek]{overflow-anchor:none}
 .ps-knappar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ps-knappar .btn{text-decoration:none}
 
-/* Ett andra val under knapparna (Fas 14.6): "Betala med kort i
-   stället" på ett pass som valts för faktura. En textknapp, inte en
-   knapp i raden: det är en ångra, inte ett steg. "Få faktura nästa
-   månad" var också en sådan tills 2026-09-27, då den blev en knapp
-   bredvid kortknappen: som textlänk syntes den inte. */
+/* Ett andra val under knapparna (Fas 14.6): "Betala med kort nu" på
+   ett pass som valts för faktura. Under raden, inte i den: fakturan är
+   vägen familjen valt, kortet ett andra val. Det var en textknapp,
+   "Betala med kort i stället", som bara bytte tillbaka till kort. Sedan
+   2026-09-28 öppnar den kassan, och är en knapp som de andra. "Få
+   faktura nästa månad" blev en knapp av samma skäl 2026-09-27: som
+   textlänk syntes den inte. */
 .ps-alt{margin-top:10px;font-size:.86rem;color:var(--bl-2)}
 .val-lank{
   appearance:none;background:none;border:0;padding:4px 0;margin:0;
@@ -1504,7 +1506,6 @@ section[data-sek]{overflow-anchor:none}
 .val-lank:hover{color:var(--acc)}
 .val-lank:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 .val-lank[aria-busy="true"]{opacity:.6;cursor:progress}
-.pass-atg .val-lank{flex-basis:100%;text-align:left}
 /* Villkoren för "Få faktura nästa månad" (Fas 19.6), under knapparna,
    i den dämpade tonen, så att knapparna står först. */
 .val-not{display:block;flex-basis:100%;margin-top:4px;font-size:.82rem;line-height:1.5;color:var(--muted-2)}
