@@ -122,9 +122,9 @@ ihåg dem. Alla jobb körs av pg_cron och syns i `cron.job`.
 
 **Ett konto raderas aldrig automatiskt.** Det hänger ihop med
 bokföringsunderlag som ska sparas i sju år. När uppgiften "Konto oanvänt
-i två år" dyker upp: mejla familjen, vänta 30 dagar, radera sedan
-kontot, barnen och det som inte är bokföring (se avsnitt 6). Betalda
-pass och underlag står kvar.
+i två år" dyker upp: mejla familjen, vänta 30 dagar, och tryck sedan
+Radera i familjens panel i adminvyn (se avsnitt 6). Betalda pass och
+underlag står kvar utan namn.
 
 **Ett jobb som fastnat blir en uppgift** (`gallring:leads:fastnat`). Ser
 ni en sådan: öppna `cron.job_run_details` och läs felet.
@@ -197,10 +197,39 @@ anteckningar (`student_notes`) når vi inte; familjen ser dem själv. För
 en sökande: `applications` och CV-filen. Skicka som en fil, inte som
 text i ett mejl.
 
-**Radering (art. 17).** Radera allt ovan utom bokföringen: betalda pass,
-`klippkort`, `invoices`, `payouts` och `stripe_*` står kvar i sju år.
-Filer först, raden sedan (CLAUDE.md avsnitt 6). Ändringsloggen raderas
-inte; den bär inga namn.
+**Rättelse (art. 16).** Redigera uppgifterna i personens panel i
+adminvyn: familj, elev, studiehjälpare, intresseanmälan och ansökan.
+E-posten på ett konto är inloggningen och ändras inte där.
+
+**Radering (art. 17).** Knappen Radera sist i personens panel i
+adminvyn, och Ta bort på en fråga under Kommunikation (sedan
+2026-09-28). Rutan frågar databasen först och säger vad som händer;
+reglerna står i `radera_person()` (migrationen
+`personer_redigeras_och_raderas`) och ingen annanstans:
+
+- **Helt** när ingenting om personen är bokföring: kontot, inloggningen,
+  barnen, passen och chatten tas bort.
+- **Avidentifieras** när personen har pass som hållits eller betalats,
+  klippkort, fakturor, rapporter eller underlag. Namn, adress, telefon,
+  profilbild, chatten, barnens uppgifter, läxorna, planerna,
+  kunskapsområdena, svaren på de digitala uppgifterna (`niva_forsok`,
+  `niva_svar`) och rapporternas text tas bort, inloggningen stängs,
+  och betalda pass, `klippkort`, `invoices`, `payouts` och `stripe_*`
+  står kvar utan namn i sju år.
+- Anmälningar med samma adress avidentifieras som i nattjobbet (raden
+  står kvar för statistiken). Ansökningar, CV och frågor med samma
+  adress tas bort.
+- **Det går inte så länge pengar inte är uppgjorda:** betalt men inte
+  hållet, timmar eller minuter kvar, en öppen kassa eller tvist, ett
+  pass som börjat utan rapport, eller (studiehjälpare) matchade elever.
+  Rutan säger vad som ska göras först. Pengar personen är skyldig oss
+  hindrar inte; de står som larm under Ekonomi.
+
+Filer först, raden sedan (CLAUDE.md avsnitt 6): adminvyn tar bort
+profilbilden, barnens mapp och CV:t innan raden, och databasen vägrar
+radera medan en fil finns kvar. Ändringsloggen raderas inte; den bär
+inga namn, och raderingen får en egen rad där (vem, när, sättet och
+antalen).
 
 **Invändning (art. 21).** Gäller allt som vilar på berättigat intresse
 (rad 3, 4, 10–13, 16). För barnets uppgifter betyder en invändning i

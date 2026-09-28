@@ -43,7 +43,7 @@
 
   const { S, elevNamn, funktionsFel, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag,
           hämtaMatchunderlag, kortDatum, namnFör, närText, skriv, tabell,
-          visa } = NXAdmin;
+          visa, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const byggFlöde = (...a) => NXAdmin.rita.byggFlöde(...a);
@@ -488,11 +488,16 @@
     const i = text => String(text || '').toLowerCase().indexOf(s) !== -1;
     const ut = [];
 
+    /* En träff öppnar personen i panelen (data-dp), och sektionen
+       bakom byts till personens lista. Raderade står inte med: de är
+       ingen person längre, bara bokföring. */
     Object.values(S.personer).forEach(p => {
+      if (ärRaderad(p)) return;
       if (!i(p.full_name) && !i(p.email) && !i(p.phone)) return;
       const typ = p.role === 'tutor' ? 'Studiehjälpare' : 'Familj';
       ut.push({ typ, namn: p.full_name || p.email || '—',
-        under: p.email || '', till: p.role === 'tutor' ? '#studiehjalpare' : '#familjer' });
+        under: p.email || '', till: p.role === 'tutor' ? '#studiehjalpare' : '#familjer',
+        dp: (p.role === 'tutor' ? 'studiehjalpare:' : 'familj:') + p.id });
     });
 
     S.elevlista.forEach(e => {
@@ -500,26 +505,30 @@
       const f = S.personer[e.parent_id];
       ut.push({ typ: 'Elev', namn: e.name,
         under: [e.grade, f && (f.full_name || f.email)].filter(Boolean).join(' · '),
-        till: '#elever' });
+        till: '#elever', dp: 'elev:' + e.id });
     });
 
     S.leads.forEach(l => {
+      if (ärRaderad(l)) return;
       if (!i(l.parent_name) && !i(l.email) && !i(l.child_name)) return;
       ut.push({ typ: 'Anmälan', namn: l.parent_name || l.email || '—',
-        under: [l.child_name, l.subject].filter(Boolean).join(' · '), till: '#leads' });
+        under: [l.child_name, l.subject].filter(Boolean).join(' · '), till: '#leads',
+        dp: 'anmalan:' + l.id });
     });
 
     S.ansokningar.forEach(a => {
       if (!i(a.name) && !i(a.email) && !i(a.school)) return;
       ut.push({ typ: 'Ansökan', namn: a.name || a.email || '—',
-        under: [a.school, a.subjects].filter(Boolean).join(' · '), till: '#ansokningar' });
+        under: [a.school, a.subjects].filter(Boolean).join(' · '), till: '#ansokningar',
+        dp: 'ansokan:' + a.id });
     });
 
     S.bokningar.forEach(b => {
       const elev = elevNamn(b.student_id);
       if (!i(b.subject) && !i(elev) && !i(namnFör(b.parent_id)) && !i(namnFör(b.tutor_id))) return;
       ut.push({ typ: 'Bokning', namn: (b.subject || 'Pass') + ' · ' + kortDatum(b.wanted_date),
-        under: (elev || namnFör(b.parent_id)) + ' → ' + namnFör(b.tutor_id), till: '#bokningar' });
+        under: (elev || namnFör(b.parent_id)) + ' → ' + namnFör(b.tutor_id), till: '#bokningar',
+        dp: 'pass:' + b.id });
     });
 
     return ut;
@@ -549,7 +558,8 @@
     panel.innerHTML = '<div class="adm-panel-rubrik"><span>'
       + alla.length + (alla.length === 1 ? ' träff' : ' träffar') + '</span></div>'
       + alla.slice(0, 12).map(t =>
-        '<a class="adm-rad" href="' + esc(t.till) + '" data-stang-sok>'
+        '<a class="adm-rad" href="' + esc(t.till) + '" data-stang-sok'
+        + (t.dp ? ' data-dp="' + esc(t.dp) + '"' : '') + '>'
         + '<span class="adm-rad-ikon"><svg viewBox="0 0 24 24" aria-hidden="true">'
         + (SOK_IKON[t.typ] || '') + '</svg></span>'
         + '<span class="adm-rad-text"><b>' + esc(t.namn) + '</b>'

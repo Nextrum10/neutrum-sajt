@@ -38,7 +38,7 @@ const NXAdmin = (function () {
     ansokanUtskick: {}, ansokanUtskickFel: null, provForsok: {},
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [], notisfel: [],
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
-    elevlista: [], rapporter: [], lage: null, attGora: [],
+    elevlista: [], allaElever: [], rapporter: [], lage: null, attGora: [],
     matchunderlag: [], matchunderlagFel: null, valdElev: null, kalender: null,
     matForslag: [], detaljCache: {},
     /* Fas 6: uppdrag, uppgifter, RUT-tak, auditloggens senaste
@@ -92,6 +92,52 @@ const NXAdmin = (function () {
         return '<td' + (k.höger ? ' class="adm-atg"' : '') + '>' + v + '</td>';
       }).join('') + '</tr>').join('')
       + '</tbody></table></div>';
+  }
+
+  /* ============================================================
+     NAMNLISTAN (2026-09-28)
+
+     Leo: "istället för att lägga info om de utspritt, lägg bara namn
+     och så att man kan trycka på namnen". Listorna över personer var
+     tabeller med sex kolumner och upp till fyra knappar per rad, och
+     samma person stod i bitar på flera ställen. Nu är listan namnen,
+     och allt annat står i panelen som öppnas när man trycker: uppgifterna,
+     knapparna, Redigera och Radera.
+
+     Läget står kvar till höger, för det är arbetskön: en ny anmälan
+     ska synas som ny utan att någon öppnar den. o.under är för de två
+     rekryteringsflikarna, där frågan är hur länge någon har väntat.
+     ============================================================ */
+  function namnlista(rader, o) {
+    if (!rader.length) return tomt(o.tomt || 'Inget här', '');
+    return '<ul class="adm-namnlista">' + rader.map(r => {
+      const under = o.under ? o.under(r) : '';
+      return '<li><button type="button" class="adm-namn" data-dp="' + esc(o.typ + ':' + o.id(r)) + '">'
+        + '<span class="adm-namn-text"><b>' + esc(o.namn(r) || '(namn saknas)') + '</b>'
+        + (under ? '<span>' + esc(under) + '</span>' : '')
+        + '</span>'
+        + (o.läge ? '<span class="adm-namn-lage">' + o.läge(r) + '</span>' : '')
+        + '</button></li>';
+    }).join('') + '</ul>';
+  }
+
+  /* En person som radera_person() avidentifierat står kvar i databasen
+     för bokföringens skull. Den är ingen person längre, och ska inte
+     stå i någon lista. En anmälan märks som nattjobbet märker den. */
+  function ärRaderad(rad) {
+    return !!rad && (!!rad.raderad_at || rad.email === 'gallrad');
+  }
+
+  /* Panelen ritas om när en lista gör det, så att ett nytt läge syns på
+     båda ställena. Aldrig mitt i något som skrivs: listorna ritas om när
+     en anmälan kommer in via realtid, och det hade suddat ut en
+     anteckning eller en rättelse som admin höll på med. Ett fält med
+     text som inte är sparad räknas som påbörjat. */
+  function ritaPanelen() {
+    if (!DP.panel || !DP.typ || DP.redigera || !rita.ritaDetalj) return;
+    const påbörjat = Array.prototype.some.call(DP.panel.querySelectorAll('textarea, input'), f =>
+      f.type !== 'checkbox' && f.type !== 'radio' && f.type !== 'hidden' && f.value !== f.defaultValue);
+    if (!påbörjat) rita.ritaDetalj();
   }
 
   /* Statusprickar. Färgen är en genväg, texten är beskedet — den
@@ -229,25 +275,40 @@ const NXAdmin = (function () {
      ============================================================ */
 
   async function hämtaAllt() {
+    /* Alla kolumner, inte en lista (2026-09-28). raderad_at finns först
+       när migrationen personer_redigeras_och_raderas är körd, och en
+       lista som nämner en kolumn som saknas gör att HELA vyn dör på
+       uppstarten. Med * följer den med när den finns. Listan hade dessutom
+       tappat bio och formats, så "Om familjen" och studiehjälparens format
+       stod alltid tomma i panelen. */
     const [profiler, elever, tutorer] = await Promise.all([
-      supa.from('profiles').select('id, role, full_name, email, is_admin, match_status, matched_tutor_id, phone, created_at, last_seen_at'),
-      supa.from('students').select('id, parent_id, name, grade, school, subjects, goals, about, behov, format_onskemal, created_at, matched_tutor_id, match_status, uppdrag_id'),
-      supa.from('tutor_profiles').select('id, age, school, city, subjects, grade_levels, status, hourly_rate, visa_publikt, created_at')
+      supa.from('profiles').select('*'),
+      supa.from('students').select('*'),
+      supa.from('tutor_profiles').select('*')
     ]);
     if (profiler.error) throw profiler.error;
 
+    /* Alla konton, också de radera_person() avidentifierat: ett gammalt
+       pass eller underlag ska fortfarande kunna säga "Raderad familj".
+       Listorna frågar ärRaderad() själva. */
     S.personer = {};
     (profiler.data || []).forEach(p => { S.personer[p.id] = p; });
 
+    /* Ett avidentifierat barn är inget barn längre. Det står varken
+       under familjen, i elevlistan eller i matchningskön, där det
+       annars hade legat som omatchat för alltid. Namnet finns kvar i
+       S.allaElever, för passen som pekar på det. */
+    S.allaElever = elever.data || [];
+    const kvar = S.allaElever.filter(e => !ärRaderad(e));
     S.elever = {};
-    (elever.data || []).forEach(e => {
+    kvar.forEach(e => {
       (S.elever[e.parent_id] = S.elever[e.parent_id] || []).push(e);
     });
     /* Samma rader platt. Familjesidan vill ha dem grupperade per
        förälder, elevsidan och söket vill ha dem i en lista — och
        att bygga om kartan till en lista vid varje omritning är
        arbete för något som aldrig ändrar sig mellan hämtningar. */
-    S.elevlista = elever.data || [];
+    S.elevlista = kvar;
 
     S.tutorProfiler = {};
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
@@ -554,7 +615,7 @@ const NXAdmin = (function () {
   }
 
   function elevNamn(id) {
-    const e = (S.elevlista || []).find(x => x.id === id);
+    const e = (S.allaElever || S.elevlista || []).find(x => x.id === id);
     return e ? (e.name || '—') : '—';
   }
 
@@ -719,15 +780,17 @@ const NXAdmin = (function () {
   }
 
 
+  /* redigera: panelen visar formuläret i stället för uppgifterna. */
   const DP = {
-    bak: null, panel: null, typ: null, id: null, flik: null
+    bak: null, panel: null, typ: null, id: null, flik: null, redigera: false
   };
 
   return {
     ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
     TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
-    kortDatum, läge, lönemånad, matchar, märkFlik, namnFör, närText, pill, rad,
-    senasteLönemånad, skriv, tabell, tomtText, visa, visaRuta, väljare, rita
+    kortDatum, läge, lönemånad, matchar, märkFlik, namnFör, namnlista, närText, pill, rad,
+    ritaPanelen, senasteLönemånad, skriv, tabell, tomtText, visa, visaRuta, väljare, ärRaderad,
+    rita
   };
 })();

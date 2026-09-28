@@ -817,6 +817,42 @@ table.adm .adm-tal{
   white-space:nowrap;
 }
 
+/* ------------------------------------------------------------
+   NAMNLISTAN (2026-09-28)
+   Personerna som namn, inte som tabeller: allt annat står i panelen
+   som öppnas när man trycker (namnlista() i nextrum-admin-karna.js).
+   Hela raden är knappen, ut i kanterna, som sökträffarna (.adm-rad):
+   en träffyta som bara är texten är en missad träff varannan gång.
+   Läget står till höger, för det är arbetskön.
+   ------------------------------------------------------------ */
+.adm-namnlista{
+  list-style:none;margin:0;padding:0;
+  border:1px solid var(--ln);border-radius:14px;
+  background:var(--pap);overflow:hidden;
+}
+.adm-namnlista li + li{border-top:1px solid var(--ln)}
+.adm-namn{
+  display:flex;align-items:center;gap:12px;
+  width:100%;text-align:left;
+  padding:13px 16px;
+  transition:background .16s var(--e);
+}
+.adm-namn:hover{background:var(--pap-2)}
+.adm-namn:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.adm-namn-text{min-width:0;flex:1}
+.adm-namn-text b{
+  display:block;font-size:.93rem;font-weight:650;color:var(--bl);
+  line-height:1.35;overflow-wrap:anywhere;
+}
+.adm-namn-text span{
+  display:block;margin-top:2px;
+  font-size:.8rem;line-height:1.45;color:var(--bl-2);
+}
+.adm-namn-lage{
+  display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;
+  flex:none;max-width:55%;
+}
+
 /* Statusprickar. Färgen är en genväg, aldrig hela beskedet — texten
    står alltid kvar bredvid, för färgen ensam funkar inte för alla. */
 .adm-status{
@@ -2030,6 +2066,65 @@ button.fel-person:hover{border-color:var(--bl-3)}
   background:var(--pap-2);border-radius:12px;padding:14px 16px;
 }
 
+/* Knapprader i panelen: läget med sina knappar, och Redigera sist i
+   Översikt. Raden bryts hellre än trängs, panelen är smal. */
+.dp-atgard{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dp-atgard .sel{min-width:0}
+.dp-hantera{margin-top:26px;padding-top:18px;border-top:1px solid var(--ln)}
+
+/* Radera, sist av allt och avskilt: det enda i panelen som inte går
+   att ångra. Färgen står i nextrum-admin-palett.css. */
+.dp-fara{
+  display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  margin-top:14px;padding:14px 16px;
+  border:1px solid var(--ln);border-radius:12px;
+}
+.dp-fara-text{min-width:0;flex:1 1 240px}
+.dp-fara-text b{display:block;font-size:.88rem;font-weight:650;color:var(--bl)}
+.dp-fara-text span{display:block;margin-top:3px;font-size:.8rem;line-height:1.5;color:var(--bl-2)}
+
+/* Redigera: fälten staplade, en etikett per fält. "valfritt" står
+   i etiketten i stället för en stjärna på de obligatoriska. */
+.dp-red{display:flex;flex-direction:column;gap:12px}
+.dp-red .fgroup{margin:0}
+.dp-red textarea.inp{min-height:96px;resize:vertical}
+.dp-red-valfri{font-weight:400;color:var(--bl-2)}
+.dp-red-not{
+  margin:0;font-size:.84rem;line-height:1.55;color:var(--bl-2);
+  background:var(--pap-2);border-radius:10px;padding:10px 13px;
+}
+
+/* ------------------------------------------------------------
+   RADERA-RUTAN (nextrum-admin-radera.js)
+   Svaret från databasen, i fyra grupper: vad som hindrar, vad som
+   avbokas, vad som tas bort och vad som står kvar. Hindren står
+   först, för så länge de finns går ingenting att radera.
+   ------------------------------------------------------------ */
+.nx-fraga-box.rad-box{max-width:540px}
+.rad-grupp{margin:16px 0 0}
+.rad-grupp > b{
+  display:block;margin-bottom:7px;
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
+}
+.rad-grupp ul{margin:0;padding:0;list-style:none;display:grid;gap:7px}
+.rad-grupp li{
+  position:relative;padding-left:15px;
+  font-size:.88rem;line-height:1.5;color:var(--bl-2);
+}
+.rad-grupp li::before{
+  content:"";position:absolute;left:0;top:.6em;
+  width:5px;height:5px;border-radius:50%;background:var(--bl-3);
+}
+.rad-grupp li b{color:var(--bl);font-weight:650}
+.rad-grupp li span{display:block;font-size:.82rem;color:var(--bl-2)}
+.rad-hinder{border:1px solid var(--ln-2);border-radius:12px;padding:12px 14px;background:var(--pap-2)}
+.rad-ok{
+  display:flex;gap:10px;align-items:flex-start;margin-top:18px;
+  font-size:.88rem;line-height:1.5;color:var(--bl);cursor:pointer;
+}
+.rad-ok input{margin-top:4px;flex:none}
+
 /* ============================================================
   10. FÄLLBARA DELAR
 
@@ -2795,47 +2890,14 @@ a:has(> .adm-status){
 }
 
 /* ============================================================
-  16. REKRYTERINGSSPÅRET OCH KONTAKTRUTAN
+  16. REKRYTERINGEN (Fas 13.1)
 
-   Fyra steg på en ansökan: kontakt, intervju, utbildad, poolen.
-   Ett gjort steg visar sitt datum, ett ogjort är en knapp som gör
-   det. Samma element i båda lägena — annars hoppar raden när man
-   klickar, och en tabell som hoppar är en tabell man slutar lita
-   på.
-   ============================================================ */
-.adm-spar{display:flex;flex-wrap:wrap;gap:6px}
-
-.adm-steg{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 10px 4px 8px;
-  border:1px solid var(--ln);border-radius:100px;
-  background:transparent;
-  font-size:.76rem;color:var(--bl-3);
-  white-space:nowrap;
-  transition:border-color .16s ease, color .16s ease;
-}
-.adm-steg:hover{border-color:var(--ln-2);color:var(--bl-2)}
-
-/* Pricken är hela statusen. Tom ring = inte gjort, fylld = gjort. */
-.adm-steg i{
-  width:7px;height:7px;border-radius:50%;flex:none;
-  border:1.5px solid var(--bl-3);
-}
-.adm-steg.ar-gjord{border-color:var(--mossa);color:var(--bl-2)}
-.adm-steg.ar-gjord i{background:var(--mossa);border-color:var(--mossa)}
-.adm-steg em{
-  font-style:normal;font-family:var(--f-mono);font-size:.68rem;
-  color:var(--bl-3);margin-left:2px;
-}
-
-/* ============================================================
-   REKRYTERINGSRUTAN (Fas 13.1)
-
-   Spåret i tabellen ovan är fyra prickar: det säger vad som är
-   gjort. Den här listan säger vad man GÖR, i ordning, med skälet
-   bredvid knappen. Numret till vänster är hela hierarkin — steg 3
-   kommer efter steg 2 därför att utbildningen ska vara gjord innan
-   någon släpps in i poolen, inte därför att den råkade hamna där.
+   Spåret med fyra prickar i ansökningstabellen är borta sedan
+   2026-09-28: listan är namnen, och stegen står i personpanelens
+   flik Rekryteringen. Listan där säger vad man GÖR, i ordning, med
+   skälet bredvid knappen. Numret till vänster är hela hierarkin —
+   steg 3 kommer efter steg 2 därför att utbildningen ska vara gjord
+   innan någon släpps in i poolen, inte därför att den råkade hamna där.
    ============================================================ */
 .ans-spar-lista{display:grid;gap:14px;margin:18px 0 4px}
 
@@ -2850,8 +2912,7 @@ a:has(> .adm-status){
   border:1px solid var(--ln-2);
   font-family:var(--f-mono);font-size:.76rem;color:var(--bl-3);
 }
-/* Gjort steg: samma gröna som pricken i spåret, så att de två
-   vyerna av samma sak ser ut som samma sak. */
+/* Gjort steg: mossgrönt, samma gröna som läget Klar i listorna. */
 .ans-steg.ar-gjord{border-color:var(--mossa)}
 .ans-steg.ar-gjord .ans-steg-nr{
   background:var(--mossa);border-color:var(--mossa);color:var(--pap);

@@ -131,6 +131,28 @@ body.vy-admin .kon-ut{--acc-lugn:var(--fel)}
   background:color-mix(in srgb,var(--fel) 8%,var(--pap-3));
 }
 
+/* Radera (2026-09-28). Den enda knappen i vyn som inte går att ångra
+   ska inte se ut som Spara: leran är accenten, och accenten är färgen
+   på varje primärknapp. I panelen en kant i --fel; i rutan, där den
+   gör det, fylld. Avstängd så länge något hindrar. */
+.vy-admin .btn-fara{
+  border:1px solid color-mix(in srgb,var(--fel) 55%,transparent);
+  background:transparent;color:var(--fel);
+}
+.vy-admin .btn-fara:hover{background:color-mix(in srgb,var(--fel) 9%,transparent)}
+.vy-admin .nx-fraga .btn-fara:not([disabled]){
+  background:var(--fel);border-color:var(--fel);color:var(--pap);
+}
+.vy-admin .nx-fraga .btn-fara:not([disabled]):hover{
+  background:color-mix(in srgb,var(--fel) 86%,var(--bl));
+}
+.vy-admin .dp-fara{border-color:color-mix(in srgb,var(--fel) 32%,var(--ln))}
+.vy-admin .rad-hinder{
+  border-color:color-mix(in srgb,var(--fel) 42%,transparent);
+  background:color-mix(in srgb,var(--fel) 8%,var(--pap-2));
+}
+.vy-admin .rad-hinder > b{color:var(--fel)}
+
 /* ============================================================
    4. RULLGARDINSPILEN
    nextrum.css:311 ritar pilen som en background-image, men

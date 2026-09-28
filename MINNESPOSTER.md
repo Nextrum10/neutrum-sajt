@@ -170,6 +170,13 @@ föräldern förstår den inte. `NX.felText` skickar den till konsolen och
 `klientfel` i stället. Varje meddelande som slutar i en återvändsgränd
 bär `{oss}`, som `t()` fyller med `CFG.EPOST`.
 
+En person raderas med Radera i adminvyns panel (`radera_person()`),
+aldrig i dashboarden: `bookings.parent_id` är ON DELETE CASCADE, och ett
+konto som tas bort där tar bokföringen med sig. Databasen väljer helt
+eller avidentifierad, vägrar så länge pengar inte är uppgjorda, och
+vägrar medan personens filer finns kvar. Detaljen: `CLAUDE.md` avsnitt
+5, Rätta och radera en person.
+
 Ett resultat som går att skriva från en vy är ett påstående. Därför
 rättas uppgifterna i databasen (Fas 23.1): frågorna lämnas ut utan
 facit, `niva_forsok` och `niva_svar` har ingen skrivpolicy, och en

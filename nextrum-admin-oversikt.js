@@ -17,11 +17,10 @@
   const M = NXMedia;
 
   const { DAG, S, dagarSedan, elevNamn, kortDatum, märkFlik, namnFör,
-          närText, tabell } = NXAdmin;
+          närText, tabell, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaNotiser = (...a) => NXAdmin.rita.ritaNotiser(...a);
-  const steg = (...a) => NXAdmin.rita.steg(...a);
   const utanRapport = (...a) => NXAdmin.rita.utanRapport(...a);
 
   /* En elev räknas som aktiv om hen haft ett pass de senaste 30
@@ -292,7 +291,9 @@
     const p = [];
     const lägg = (när, rubrik, under) => { if (när) p.push({ när, rubrik, under }); };
 
-    S.leads.forEach(l => lägg(l.created_at, 'Ny intresseanmälan',
+    /* En avidentifierad anmälan har inget namn kvar, och "gallrad
+       skickade in en intresseanmälan" är inget att läsa. */
+    S.leads.filter(l => !ärRaderad(l)).forEach(l => lägg(l.created_at, 'Ny intresseanmälan',
       (l.parent_name || l.email || 'Någon') + ' skickade in en intresseanmälan.'));
     S.ansokningar.forEach(a => lägg(a.created_at, 'Ny ansökan',
       (a.name || 'Någon') + ' vill bli studiehjälpare.'));
@@ -538,7 +539,7 @@
 
     const pass = summa(ek, 'genomforda_pass');
     const minuter = summa(ek, 'minuter');
-    const familjer = Object.values(S.personer).filter(p => p.role === 'parent').length;
+    const familjer = Object.values(S.personer).filter(p => p.role === 'parent' && !ärRaderad(p)).length;
     /* Betalt = kort efter återbetalningar plus betalda äldre fakturor,
        samma definition som grafen ovanför. ej_betalda är pass som
        hölls och rapporterades utan att familjen betalat. */

@@ -68,6 +68,7 @@
         ritaAudit:         'nextrum-admin-system.js',
         ritaAutomationer:  'nextrum-admin-automationer.js',
         ritaAI:            'nextrum-admin-ai.js',
+        visaRadering:      'nextrum-admin-radera.js',
         ritaKonsol:        'nextrum-admin-konsol.js'
       };
       for (var namn in omr) {

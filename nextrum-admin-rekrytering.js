@@ -17,7 +17,8 @@
   const M = NXMedia;
 
   const { ANS_LAGE, S, fråga, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
-          kortDatum, matchar, tabell, tomtText, visaRuta, väljare } = NXAdmin;
+          kortDatum, läge, matchar, namnlista, ritaPanelen, tomtText, visaRuta,
+          ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const kandidater = (...a) => NXAdmin.rita.kandidater(...a);
@@ -30,6 +31,9 @@
      ANSÖKNINGAR
      ============================================================ */
 
+  /* Namnen, med läget. Uppgifterna, CV:t och rekryteringens steg står
+     i panelen: Ansökan och Rekryteringen (nextrum-admin-detalj.js).
+     Söket går fortfarande mot allt de skrev. */
   function ritaAnsokningar() {
     const sök = $('#ans-sok').value.trim();
     const st = $('#ans-status').value;
@@ -38,52 +42,25 @@
       .filter(a => matchar(a, ['name', 'email', 'school', 'subjects', 'why'], sök));
 
     $('#ans-antal').textContent = rader.length + ' av ' + S.ansokningar.length;
-    $('#ans-tabell').innerHTML = tabell([
-      { namn: 'Namn', rita: a => '<b>' + esc(a.name) + '</b>'
-        + '<span class="adm-und">' + esc(a.email) + (a.age ? ' · ' + a.age + ' år' : '') + '</span>' },
-      { namn: 'Skola', rita: a => esc(a.school || '—') },
-      { namn: 'Ämnen', rita: a => esc(a.subjects || '—') },
-      { namn: 'Kan jobba', rita: a => esc(a.availability || '—') },
-      /* Utan CV-raden: den står i kolumnen bredvid, som en knapp i
-         stället för en sökväg. Hela texten står kvar i title. */
-      { namn: 'Varför', rita: a => {
-        const text = String(a.why || '').replace(CV_RAD, '').replace(CV_FEL, '').trim();
-        return text
-          ? '<span title="' + esc(a.why) + '">' + esc(text.slice(0, 90))
-            + (text.length > 90 ? '…' : '') + '</span>'
-          : '<span style="color:var(--bl-3)">—</span>';
-      } },
-      { namn: 'CV', rita: a => cvKnapp(a) || '<span style="color:var(--bl-3)">—</span>' },
-      { namn: 'Inkom', rita: a => '<span class="adm-tal">' + esc(kortDatum(a.created_at)) + '</span>' },
-      /* Rekryteringens fyra steg som ett spår. En tom stämpel säger
-         "inte gjort" utan att det behöver vara en egen status, och
-         datumet svarar på det man faktiskt undrar: hur länge har det
-         här legat still? */
-      { namn: 'Steg', rita: a => '<div class="adm-spar">'
-        + steg('Kontakt', a.kontaktad_at, 'data-ans-kontakt="' + esc(a.id) + '"')
-        + steg('Intervju', a.intervju_at, 'data-ans-steg="intervju:' + esc(a.id) + '"')
-        + steg('Utbildad', a.utbildad_at, 'data-ans-steg="utbildad:' + esc(a.id) + '"')
-        + '</div>' },
-      { namn: 'Läge', höger: true, rita: a => väljare('ans', ANS_LAGE, a.status, 'data-ans="' + a.id + '"')
-        /* EN knapp, inte fyra. Spåret ovan visar var en ansökan
-           står; rutan bakom den här knappen säger vad man gör
-           härnäst och varför, och har varje steg som en knapp på
-           samma ställe. Fyra knappar på en rad i en tabell är fyra
-           saker att välja mellan utan att veta vilken som är rätt. */
-        + ' <button class="btn btn-ghost btn-sm" data-ans-spar="' + a.id + '">Rekryteringen</button>'
-        + ' <button class="btn btn-ghost btn-sm" data-ans-pool="' + a.id + '">Ta in i poolen</button>' }
-    ], rader, tomtText(sök || st, 'Ingen ansökan matchar filtret', 'Inga ansökningar än'));
+    $('#ans-tabell').innerHTML = namnlista(rader, {
+      typ: 'ansokan', id: a => a.id,
+      namn: a => a.name || a.email,
+      läge: a => läge(ANS_LAGE, a.status),
+      tomt: tomtText(sök || st, 'Ingen ansökan matchar filtret', 'Inga ansökningar än')
+    });
 
     ritaStegflikar();
+    ritaPanelen();
   }
 
   /* ============================================================
      INTERVJU OCH UTBILDNING (Fas 6)
 
      Rekryteringens två steg som egna flikar: vem som väntar på en
-     intervju, och vem som intervjuats men inte utbildats. Samma
-     stegknappar som i listan, så att man kan bocka av direkt här.
-     Avböjda och godkända ligger bara under Alla.
+     intervju, och vem som intervjuats men inte utbildats. Namnen, och
+     under dem hur länge de väntat, för det är vad flikarna svarar på.
+     Stegen bockas av i panelen. Avböjda och godkända ligger bara under
+     Alla.
      ============================================================ */
   function ritaStegflikar() {
     const aktiva = S.ansokningar.filter(a => a.status !== 'rejected' && a.status !== 'approved');
@@ -92,53 +69,27 @@
     const tillUtbildning = aktiva.filter(a => a.intervju_at && !a.utbildad_at)
       .sort((a, b) => String(a.intervju_at).localeCompare(String(b.intervju_at)));
 
-    const namn = a => '<b>' + esc(a.name) + '</b><span class="adm-und">' + esc(a.email)
-      + (a.age ? ' · ' + a.age + ' år' : '') + '</span>';
-    const väntat = (tid, ord) => tid
-      ? '<span class="adm-tal">' + esc(kortDatum(tid)) + '</span><span class="adm-und">' + esc(ord) + '</span>'
-      : '<span class="adm-und">Inte kontaktad än</span>';
-
     const intervju = $('#ans-intervju');
     if (intervju) {
       $('#ans-intervju-antal').textContent = tillIntervju.length ? tillIntervju.length + ' st' : '';
-      intervju.innerHTML = tabell([
-        { namn: 'Namn', rita: namn },
-        { namn: 'Kontaktad', rita: a => väntat(a.kontaktad_at, 'kontaktad') },
-        { namn: 'Kan jobba', rita: a => esc(a.availability || '—') },
-        { namn: 'Steg', rita: a => '<div class="adm-spar">'
-          + steg('Kontakt', a.kontaktad_at, 'data-ans-kontakt="' + esc(a.id) + '"')
-          + steg('Intervju', a.intervju_at, 'data-ans-steg="intervju:' + esc(a.id) + '"')
-          + '</div>' }
-      ], tillIntervju, 'Ingen väntar på en intervju');
+      intervju.innerHTML = namnlista(tillIntervju, {
+        typ: 'ansokan', id: a => a.id,
+        namn: a => a.name || a.email,
+        under: a => a.kontaktad_at ? 'Kontaktad ' + kortDatum(a.kontaktad_at) : 'Inte kontaktad än',
+        tomt: 'Ingen väntar på en intervju'
+      });
     }
 
     const utbildning = $('#ans-utbildning');
     if (utbildning) {
       $('#ans-utbildning-antal').textContent = tillUtbildning.length ? tillUtbildning.length + ' st' : '';
-      utbildning.innerHTML = tabell([
-        { namn: 'Namn', rita: namn },
-        { namn: 'Intervjuad', rita: a => väntat(a.intervju_at, 'intervjuad') },
-        { namn: 'Ämnen', rita: a => esc(a.subjects || '—') },
-        { namn: 'Provet', rita: a => esc(provKort(a)) },
-        { namn: 'Steg', rita: a => '<div class="adm-spar">'
-          + steg('Utb.möte', a.utbildningsmote_at, 'data-ans-steg="utbmote:' + esc(a.id) + '"')
-          + steg('Utbildad', a.utbildad_at, 'data-ans-steg="utbildad:' + esc(a.id) + '"')
-          + '</div>' },
-        { namn: '', höger: true, rita: a =>
-          '<button class="btn btn-ghost btn-sm" data-ans-pool="' + a.id + '">Ta in i poolen</button>' }
-      ], tillUtbildning, 'Ingen väntar på utbildning');
+      utbildning.innerHTML = namnlista(tillUtbildning, {
+        typ: 'ansokan', id: a => a.id,
+        namn: a => a.name || a.email,
+        under: a => 'Intervjuad ' + kortDatum(a.intervju_at) + ' · ' + provKort(a),
+        tomt: 'Ingen väntar på utbildning'
+      });
     }
-  }
-
-  /* Ett steg i rekryteringsspåret. Gjort = datumet; ogjort = en
-     knapp som gör det. Samma element i båda lägena, så raden inte
-     hoppar när något klickas. */
-  function steg(namn, tid, attr) {
-    return '<button type="button" class="adm-steg' + (tid ? ' ar-gjord' : '') + '" '
-      + attr + ' title="' + esc(namn) + (tid ? ' ' + kortDatum(tid) : ' — inte gjort') + '">'
-      + '<i></i>' + esc(namn)
-      + (tid ? '<em>' + esc(kortDatum(tid)) + '</em>' : '')
-      + '</button>';
   }
 
   /* ============================================================
@@ -497,9 +448,9 @@
   }
 
   /* ============================================================
-     REKRYTERINGSRUTAN (Fas 13.1)
+     REKRYTERINGEN (Fas 13.1)
 
-     Stegen fanns redan som stämplar i listan, men bara som fyra
+     Stegen fanns först som stämplar i listan, men bara som fyra
      prickar: de sa VAD som var gjort, aldrig vad som görs härnäst
      eller varför steget finns. Den som inte rekryterat förut fick
      gissa, och den som gissade hoppade över utbildningen — vilket
@@ -507,8 +458,13 @@
      studiehjälpare utan introduktion inte skriver rapporter och ett
      pass utan rapport aldrig blir genomfört.
 
-     Rutan är därför inte en meny. Den är ordningen, med skälet till
+     Listan är därför inte en meny. Den är ordningen, med skälet till
      varje steg skrivet bredvid knappen som utför det.
+
+     Den stod i en egen ruta till 2026-09-28. Nu är den fliken
+     Rekryteringen i personpanelen, bredvid uppgifterna om den som
+     sökt: en person, ett ställe (Leo: "lägg bara namn och så att man
+     kan trycka på namnen").
 
      Den bokar inte i någon kalender och skapar ingen länk. Kopplingen
      till Google (Fas 18.1) gör Meet-länkar till onlinepassen och
@@ -518,24 +474,11 @@
      databasen mejlar dem till den sökande (Fas 16.1).
      ============================================================ */
 
-  /* Den öppna rutan, om någon är öppen. Stegknapparna nedan ritar om
-     listan — utan den här ritas rutan inte om, och en stämpel man
-     precis satt syns först när man stängt och öppnat igen. */
-  let öppenSpår = null;
-
+  /* Stegknapparna nedan ritar om listan, och listan ritar om panelen
+     (ritaPanelen). Utan det syns en stämpel man precis satt först när
+     panelen stängts och öppnats igen. */
   function ritaOm() {
     ritaAnsokningar();
-    if (öppenSpår) {
-      const a = S.ansokningar.find(x => x.id === öppenSpår.id);
-      if (a) öppenSpår.rita(a); else stängSpår();
-    }
-  }
-
-  function stängSpår() {
-    if (!öppenSpår) return;
-    öppenSpår.ruta.remove();
-    öppenSpår = null;
-    document.body.style.overflow = '';
   }
 
   function mötesText(a) {
@@ -545,7 +488,7 @@
       hour: '2-digit', minute: '2-digit' });
   }
 
-  /* Ett steg i rutan: nummer, namn, skälet, stämpeln och knapparna.
+  /* Ett steg i listan: nummer, namn, skälet, stämpeln och knapparna.
      Skälet står kvar när steget är gjort — den som kommer tillbaka
      om ett halvår ska slippa lista ut varför det gjordes. */
   function spårSteg(nr, namn, varför, tid, knappar, extra) {
@@ -561,21 +504,13 @@
       + '</div></div>';
   }
 
-  function spårInnehåll(a) {
+  /* Fliken Rekryteringen i panelen (dpAnsokan i nextrum-admin-detalj.js). */
+  function spårLista(a) {
     const id = esc(a.id);
     const möte = mötesText(a);
     const utbLänk = String(CFG.UTBILDNING_URL || '').trim();
-    /* Här också, inte bara i listan: det är inför mötet CV:t läses. */
-    const cv = cvKnapp(a);
 
-    return '<h3 id="as-t">Rekryteringen — ' + esc(a.name || 'ansökan') + '</h3>'
-      + '<p>' + esc(a.email)
-      + (a.school ? ' · ' + esc(a.school) : '')
-      + (a.age ? ' · ' + a.age + ' år' : '')
-      + (a.subjects ? ' · ' + esc(a.subjects) : '') + '</p>'
-      + (cv ? '<div class="ans-steg-knappar">' + cv + '</div>' : '')
-
-      + '<div class="ans-spar-lista">'
+    return '<div class="ans-spar-lista">'
 
       + spårSteg(1, 'Kontakt',
           'Kvittot på ansökan har redan gått av sig självt. Här föreslår du tider för mötet: '
@@ -654,37 +589,8 @@
       + (S.ansokanUtskickFel
         ? ' Mejlstatusen gick inte att läsa: ' + esc(S.ansokanUtskickFel) + '.'
         : '')
-      + '</p>'
-      + '<div class="nx-fraga-knappar">'
-      + '<button type="button" class="btn btn-ghost" data-as-stang>Stäng</button>'
-      + '</div>';
+      + '</p>';
   }
-
-  document.addEventListener('click', e => {
-    const knapp = e.target.closest('[data-ans-spar]');
-    if (!knapp) return;
-    const a = S.ansokningar.find(x => x.id === knapp.dataset.ansSpar);
-    if (!a) return;
-
-    stängSpår();
-    const ruta = document.createElement('div');
-    ruta.className = 'nx-fraga';
-    const rita = rad => {
-      ruta.innerHTML = '<div class="nx-fraga-box nx-fraga-bred" role="dialog" '
-        + 'aria-modal="true" aria-labelledby="as-t">' + spårInnehåll(rad) + '</div>';
-    };
-    rita(a);
-    visaRuta(ruta);
-    öppenSpår = { id: a.id, ruta: ruta, rita: rita };
-
-    /* Bara ridån och Stäng stänger rutan. Stegknapparna sitter inne i
-       den och hanteras av sina egna lyssnare på document — stängde
-       rutan på varje klick försvann den under fingret varje gång man
-       bockade av ett steg. */
-    ruta.addEventListener('click', ev => {
-      if (ev.target === ruta || ev.target.closest('[data-as-stang]')) stängSpår();
-    });
-  });
 
   /* ---- boka det digitala mötet ---- */
   document.addEventListener('click', async e => {
@@ -810,7 +716,7 @@
        godkänd studiehjälpare i listan är att be om att någons ämnen
        skrivs över av en ansökan från en annan person. */
     const kandidater = Object.values(S.personer)
-      .filter(p => p.role === 'tutor')
+      .filter(p => p.role === 'tutor' && !ärRaderad(p))
       .filter(p => (S.tutorProfiler[p.id] || {}).status !== 'approved')
       .sort((a, b) => String(a.full_name || a.email || '')
         .localeCompare(String(b.full_name || b.email || ''), 'sv'));
@@ -846,8 +752,8 @@
         titel: 'Introduktionen är inte gjord',
         text: (ans.name || 'Den sökande') + ' är inte markerad som utbildad. En studiehjälpare '
           + 'som inte vet hur rapporten fungerar lämnar inga rapporter, och då blir passen '
-          + 'aldrig genomförda — varken fakturerade eller utbetalda. Markera Utbildad i spåret '
-          + 'först, eller fortsätt om introduktionen är gjord ändå.',
+          + 'aldrig genomförda — varken fakturerade eller utbetalda. Markera Utbildad under '
+          + 'Rekryteringen först, eller fortsätt om introduktionen är gjord ändå.',
         knapp: 'Ta in ändå',
         avbryt: 'Avbryt'
       });
@@ -855,7 +761,7 @@
     }
 
     const trolig = Object.values(S.personer).find(p =>
-      p.role === 'tutor' && p.email
+      p.role === 'tutor' && p.email && !ärRaderad(p)
       && String(p.email).toLowerCase() === String(ans.email || '').toLowerCase());
 
     const ruta = document.createElement('div');
@@ -920,7 +826,6 @@
         ans.status = 'approved';
 
         stäng();
-        stängSpår();
         await hämtaAllt();
         ritaAnsokningar();
         ritaStudiehjalpare();
@@ -932,8 +837,14 @@
   });
 
 
+  /* Det de skrev under "Varför", utan CV-raden: den står som en knapp
+     i panelen i stället för som en sökväg. */
+  function ansökansText(a) {
+    return String(a.why || '').replace(CV_RAD, '').replace(CV_FEL, '').trim();
+  }
+
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    ritaAnsokningar, steg
+    ansökansText, cvKnapp, provKort, ritaAnsokningar, spårLista
   });
 })();

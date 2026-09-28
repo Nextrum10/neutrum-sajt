@@ -21,12 +21,12 @@
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
 <link rel="stylesheet" href="nextrum-vy.css?v=b97a95f6">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=7f32fa2b">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=0aae3e61">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
      densamma som i studievyn och studiehjälparvyn. -->
-<link rel="stylesheet" href="nextrum-admin-palett.css?v=cd4582f1">
+<link rel="stylesheet" href="nextrum-admin-palett.css?v=510b6564">
 <link rel="stylesheet" href="nextrum-admin-konsol.css?v=2b1d0f38">
 </head>
 <body class="vy vy-admin">
@@ -427,7 +427,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Intresseanmälningar</h2>
-              <p>Familjer som hört av sig. Statusen säger var i samtalet ni är — den ändras här, inte i Table Editor.</p>
+              <p>Familjer som hört av sig. Tryck på ett namn för allt de skrev och för knapparna: läget, Kontakta, Skapa elev, Redigera och Radera.</p>
             </div>
           </div>
           <div class="dbox">
@@ -453,7 +453,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Ansökningar</h2>
-              <p>Unga som vill jobba. Att godkänna ansökan är inte samma sak som att godkänna kontot — kontot ligger under Studiehjälpare, och skapas först när personen registrerat sig.</p>
+              <p>Unga som vill jobba. Tryck på ett namn för ansökan, CV:t och rekryteringens steg, och för Redigera och Radera. Att godkänna ansökan är inte samma sak som att godkänna kontot — kontot ligger under Studiehjälpare, och skapas först när personen registrerat sig.</p>
             </div>
           </div>
           <div class="vy-flikar" role="tablist" aria-label="Rekryteringens steg">
@@ -562,7 +562,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Familjer</h2>
-              <p>Matchningen görs här. Sätter du en studiehjälpare låses familjens vy upp direkt — studieplan, bokning och chatt.</p>
+              <p>Familjer med konto. Tryck på ett namn för barnen, passen, betalningarna och tidslinjen, och för Redigera och Radera. Matchningen görs per barn, under Matchning.</p>
             </div>
           </div>
           <div class="dbox">
@@ -593,7 +593,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Elever</h2>
-              <p>Alla elever i systemet, vilken familj de hör till och vem som hjälper dem.</p>
+              <p>Alla elever i systemet. Tryck på ett namn för familjen, studiehjälparen, passen och studieplanen, och för Redigera och Radera.</p>
             </div>
           </div>
 
@@ -621,7 +621,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Studiehjälpare</h2>
-              <p>Poolen: alla som har en profil hos oss, godkända som väntande. En godkänd studiehjälpare kan matchas med en familj och kan visas på startsidan — två beslut, två knappar.</p>
+              <p>Poolen: alla som har en profil hos oss, godkända som väntande. En godkänd studiehjälpare kan matchas med en familj och kan visas på startsidan — två beslut, två knappar, båda i panelen när du trycker på namnet.</p>
             </div>
           </div>
           <!-- Sammanfattningen står FÖRE sökrutan med flit. Filtret
@@ -2239,6 +2239,8 @@
                   <option value="kontaktmeddelande">Kontaktmeddelanden</option>
                   <option value="klientfel">Bortstädade fel</option>
                   <option value="bolagsfakta">Bolagsfakta</option>
+                  <option value="konto">Raderade konton</option>
+                  <option value="elev">Raderade elever</option>
                 </select>
                 <select class="sel" id="audit-vem" aria-label="Visa händelser av en viss person">
                   <option value="">Vem som helst</option>
@@ -2334,25 +2336,28 @@
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=11384a58"></script>
-<script src="nextrum-admin-detalj.js?v=3ce6626d"></script>
-<script src="nextrum-admin-oversikt.js?v=045dcecd"></script>
-<script src="nextrum-admin-kunder.js?v=01b666e6"></script>
-<script src="nextrum-admin-rekrytering.js?v=abdfc940"></script>
+<script src="nextrum-admin-karna.js?v=710e5977"></script>
+<script src="nextrum-admin-detalj.js?v=7ccf2625"></script>
+<script src="nextrum-admin-oversikt.js?v=1311e21f"></script>
+<script src="nextrum-admin-kunder.js?v=155120f9"></script>
+<script src="nextrum-admin-rekrytering.js?v=d08ab262"></script>
 <script src="nextrum-admin-bibliotek.js?v=867e9596"></script>
-<script src="nextrum-admin-kommunikation.js?v=24a9a868"></script>
+<script src="nextrum-admin-kommunikation.js?v=97c8d085"></script>
 <script src="nextrum-admin-drift.js?v=2437242e"></script>
 <script src="nextrum-admin-ekonomi.js?v=fa80714f"></script>
 <script src="nextrum-admin-manaden.js?v=9d66770e"></script>
 <script src="nextrum-admin-loner.js?v=7138b540"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
-<script src="nextrum-admin-system.js?v=9750fd97"></script>
+<script src="nextrum-admin-system.js?v=07cdfb67"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
+<!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
+     når genom NXAdmin.rita när den körs. -->
+<script src="nextrum-admin-radera.js?v=54bcb289"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=55760f40"></script>
-<script src="nextrum-modulvakt.js?v=aa7653c6"></script>
-<script src="nextrum-admin.js?v=f76f6ba8"></script>
+<script src="nextrum-modulvakt.js?v=d2b973be"></script>
+<script src="nextrum-admin.js?v=291d4b7e"></script>
 </body>
 </html>
