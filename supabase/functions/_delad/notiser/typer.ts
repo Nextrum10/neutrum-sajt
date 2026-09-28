@@ -96,8 +96,9 @@ export type RenData = {
   timmar: number | null;
   status: 'requested' | 'confirmed' | 'cancelled' | 'completed' | null;
   skal: Avbokningsskal | null;
-  /** Fas 14.6. Bara 'faktura' eller null: en kod, aldrig text. */
-  betalsatt: 'faktura' | null;
+  /** Fas 14.6. En kod, aldrig text: 'faktura', 'timmar' (Fas 22.2: köpta
+   *  timmar eller timbanken har betalat passet) eller null. */
+  betalsatt: Betalsatt | null;
   /** Fas 21.2. Köpta timmar som är kvar på ett kort som snart går ut. */
   kvar: number | null;
   prov: boolean;
@@ -129,6 +130,10 @@ function kvarOk(v: unknown): number | null {
 
 const STATUSAR = ['requested', 'confirmed', 'cancelled', 'completed'] as const;
 
+/** Koderna intern.betalsatt_kod() skickar. Allt annat blir null. */
+const BETALSATT = ['faktura', 'timmar'] as const;
+export type Betalsatt = typeof BETALSATT[number];
+
 export function renData(v: unknown): RenData {
   const d = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
   const status = STATUSAR.find((s) => s === d.status) ?? null;
@@ -144,7 +149,7 @@ export function renData(v: unknown): RenData {
     timmar: timmarOk(d.timmar),
     status,
     skal: AVBOKNINGSSKAL.find((k) => k === d.skal) ?? null,
-    betalsatt: d.betalsatt === 'faktura' ? 'faktura' : null,
+    betalsatt: BETALSATT.find((k) => k === d.betalsatt) ?? null,
     kvar: kvarOk(d.kvar),
     prov: d.prov === true,
   };

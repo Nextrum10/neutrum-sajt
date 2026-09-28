@@ -64,7 +64,7 @@ gäller först efter fristen — adminvyn visar rätt belopp efter datumet
 (4 och 8 timmar, −10 %) och klippkort med 10–100 timmar (−5 %, gäller
 6–18 månader). Köpet är ett engångsköp med kort, inget abonnemang.
 Timmarna betalar sedan ett bekräftat pass med ett barn i stället för
-kortet. Flaggan `erbjudanden` är PÅ sedan 2026-09-27: Leo slog på den
+kortet, av sig själva sedan Fas 22.2 (nedan). Flaggan `erbjudanden` är PÅ sedan 2026-09-27: Leo slog på den
 innan provköpet i DEPLOY-BETALNING.md 9.12 var gjort. Står den av syns
 priserna men inget går att köpa. Klippkorten står i studievyn och på prissidan som en kolumn
 bredvid planerna som fälls ut (2026-09-27). De var borta ur
@@ -101,7 +101,8 @@ står i familjens timbank. Tre beslut av Leo samma dag:
    (`intern.timbank_overtid`), innan någon ser ett tillägg, och bara på
    pass med ett barn. Räcker minuterna till det bokade går passet att
    betala med Betala med timbanken (`timbank_dra` genom
-   `klippkort-betala`). Utan det hade en familj vars pass ofta blir
+   `klippkort-betala`), och sedan Fas 22.2 betalar de det av sig
+   själva när det bekräftas. Utan det hade en familj vars pass ofta blir
    korta samlat minuter ingen använder, och det är pengar vi är skyldiga.
 Insättningarna RÄKNAS ur passen (`intern.timbank_in`), uttagen LAGRAS i
 `timbank_uttag`: övertiden beror på vad saldot var när rapporten skrevs,
@@ -114,7 +115,12 @@ använda timmar räknas till då (`timbank_saldo.varde_ore`), och admin
 markerar banken utbetald under Ekonomi → Erbjudanden. Studiehjälparen
 ser familjens minuter på passet, så att hen vet hur långt passet kan
 dra över utan kostnad, men inte vad de är värda. Villkoren säger det
-sedan samma dag (`#timbank`, båda språken).
+sedan samma dag (`#timbank`, båda språken). Familjen ser banken på två
+ställen, ur samma hämtning: som en rad under Era timmar i Erbjudanden
+(bara när det finns något), och under **Profil → Timbanken**
+(`#profil/timbank`), där den står alltid, med vad som gått in och ut
+rad för rad ur `timbank_rorelser`. Leo samma kväll: "timbanken ska
+finnas i profil".
 
 **Uttagen följer passet** (`timbanken_foljer_passet`, samma kväll).
 Övertiden räknas i `intern.timbank_rakna_overtid` och räknas om när
@@ -130,6 +136,51 @@ minuterna i samma transaktion; förut var det två anrop från webhooken.
 Kassan skriver `vantar` bara på ett pass som fortfarande är obetalt, och
 stänger annars sin nya session: förut kunde den skriva över ett pass som
 hann betalas med timmar medan kassan skapades.
+
+**Timmarna betalar passen av sig själva (Fas 22.2, 2026-09-27).** Leo:
+"köper man klippkorten eller timmarna i förväg innan bokade lektioner,
+då kostar ej nästkommande lektioner som man har timmar för", och
+"timbanken ska även inkludera klippkort". Förut betalade familjen varje
+pass med Betala med timmar, och ett pass de glömt larmade som obetalt
+med timmarna oanvända bredvid.
+- **När ett pass bekräftas eller genomförs** betalar triggern
+  `bookings_timmar_betalar` (`intern.timmar_betalar_passet`) det i samma
+  skrivning: klippkortet som går ut först och räcker, som
+  `klippkort_dra` väljer, annars timbanken när minuterna räcker till det
+  bokade. Samma pass som knappen: ett barn, inte passet med första timmen
+  bjuden, inte ett undantaget, och bara med flaggan `erbjudanden` på.
+  Triggern kör efter `skydda_bokningsfalt` och `skydda_klippkortet`
+  (namnordning), så betalningen prövas inte som en ändring från vyn, och
+  före `bookings_timmarna_tillbaka`, som ska stå sist.
+- **När ett köp blir betalt** betalar `klippkort_betalar_passen`
+  (`intern.timmar_betalar_kommande`, efter `klippkort_betald`) familjens
+  bekräftade obetalda pass från och med i dag, i datumordning, så långt
+  de nya timmarna räcker. Ett pass som inte ryms hoppas över. Bara det
+  nya kortet: att låsa familjens andra kort med köpet redan låst hade
+  kunnat låsa fast mot en bekräftelse som låser i andra ordningen. Blir
+  något fel skrivs köpet ändå och admin får en uppgift.
+- **Ett pass med en påbörjad kassa (`vantar`) betalas också**, för en
+  kassa som aldrig slutförts står kvar som `vantar` för alltid. Kassan
+  stängs inte härifrån; betalar familjen den ändå vinner kortet och
+  timmarna går tillbaka (webhooken, Fas 16.1).
+- **Knappen står kvar** för det triggrarna inte når: timmar som kommer
+  tillbaka när ett pass avbokas betalar inte ett annat obetalt pass av
+  sig själva, för avbokningen görs i familjens session och
+  `skydda_bokningsfalt` släpper inte igenom en betalning på ett annat
+  pass därifrån.
+- **Mejlen säger det.** `intern.betalsatt_kod` ger `timmar` till
+  `notis_vid_pass` och `notis_planera`, och bekräftelsen och påminnelsen
+  säger att passet är betalt med timmarna, med knappen till passet.
+- **Vid ånger eller när en familj slutar: avboka först de kommande pass
+  timmarna betalat**, om familjen inte vill ha dem. `vid_anger_ore` och
+  `vid_uppsagning_ore` räknar varje pass som inte är avbokat som använt,
+  också ett som inte hållits, och sedan Fas 22.2 betalar timmarna varje
+  bekräftat pass av sig själva.
+Profil → Timbanken visar köpta timmar kort för kort, med passen varje
+kort betalat ur vyn `klippkort_rorelser` (samma timmar som
+`klippkort_saldo`), och de sparade minuterna under dem. `rls-test.sql`
+slår av flaggan `erbjudanden` överst, så att proven som räknar med
+obetalda pass inte får dem betalda, och på i blocken för 22.2.
 
 **Förslaget bär var man ses (Fas 15.6).** Online, eller På plats med en
 adress i `bookings.location`, och en valfri rad till studiehjälparen i
@@ -213,7 +264,8 @@ bekräftad OCH passet är betalt eller satt på faktura. Ett genomfört
 obetalt pass larmar som förut, direkt, som `ej_betalt`: Leo valde det
 framför en frist. Fakturavalet heter "Få faktura nästa månad" (Fas 19.6,
 Leo: "betala senare genom att välja att få en faktura skickad till sig
-nästkommande månad"), och en skickad faktura står under Betalning i
+nästkommande månad") och är en knapp bredvid Betala med kort; en ruta
+frågar innan betalsättet sparas (Fas 19.7). En skickad faktura står under Betalning i
 rutan Fakturor att betala, med belopp, förfallodag, passen, bankgiro
 (`BANKGIRO` i `nextrum-config.js`) och OCR. OCR:et skriver admin av från
 Fortnox vid Lagd i Fortnox; det räknas aldrig fram här, och
@@ -628,7 +680,10 @@ Fas 16.1 la till `erbjudanden` (katalogen, alla läser) och `klippkort`
 Fas 22.1 la till `timbank_uttag` (minuterna familjen använt ur timbanken
 eller fått utbetalda: parterna och admin läser, bara databasen skriver),
 med vyerna `timbank_saldo` och `timbank_rorelser`. Insättningarna står
-inte i någon tabell, de räknas ur passen.
+inte i någon tabell, de räknas ur passen. Fas 22.2 la till vyn
+`klippkort_rorelser` (passen varje kort betalat) och triggrarna
+`bookings_timmar_betalar` och `klippkort_betalar_passen`, som låter
+timmarna betala passen av sig själva (avsnitt 1).
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 18.1 la till `google_koppling` (nyckeln till Nextrums Google-konto:
@@ -1292,7 +1347,7 @@ tillbaka en kopia.**
 | `ansokan-gallring` | Tar bort ansökningar som inte ledde till anställning och CV-filer utan ansökan när de är ett år gamla (2026-09-27, avsnitt 5). Filen först genom Storage-API:t, sedan raden genom `ansokan_gallra()`, som vägrar medan filen finns. Svarar 500 om något inte gick | pg_cron `ansokan-gallring` via `intern.ansokan_gallring_vack()` och `notis_konfig.gallring_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
 | `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`) | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
-| `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet. Med `timbank: true` dras minuterna i timbanken i stället, i `timbank_dra()` (Fas 22.1) | Betala med timmar och Betala med timbanken i föräldravyn |
+| `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet. Med `timbank: true` dras minuterna i timbanken i stället, i `timbank_dra()` (Fas 22.1). Sedan Fas 22.2 betalar timmarna passen av sig själva i databasen, och knappen tar det de inte hann | Betala med timmar och Betala med timbanken i föräldravyn |
 | `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser`. Ett tillägg (Fas 20.1) bär `tillagg_booking_id` och skrivs, återbetalas och bestrids på sin egen rad | Stripe |
 | `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
 | `stripe-avstamning` | Hämtar avgift, netto och läge (test eller skarpt) för betalningar som saknar dem (Fas 14.7). Högst femtio per tryck. Skriver bara de kolumnerna | Knappen Hämta från Stripe under Ekonomi → Kortbetalningar |
@@ -1574,7 +1629,8 @@ Kör hela filen som **ett** anrop i SQL Editor eller via `execute_sql`.
 Den lägger upp två hjälpare, två familjer, tre barn, pass och en admin,
 kör varje behörighetstest i en egen deltransaktion och rullar tillbaka
 allt på sista raden. Notistriggern på `bookings` stängs av under
-körningen så att fixturpassen aldrig blir ett mejl. Svaret är en tabell
+körningen så att fixturpassen aldrig blir ett mejl, och flaggan
+`erbjudanden` står av så att timmarna inte betalar dem (Fas 22.2). Svaret är en tabell
 `test, ok, detalj` — **varje rad ska vara ok**. Kör den efter varje
 ändring i en policy eller en trigger.
 
@@ -1818,7 +1874,10 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
   **Föräldravyn visar kortet först** (Leos val 2026-09-24: "bara kort,
   som Fas 14 sa"; fakturan kom till 2026-09-25). Betalning listar pass
   att betala och betalda pass, båda ritade ur passen. Med flaggan
-  `faktura` på står "Betala med faktura i stället" under kortknappen,
+  `faktura` på står "Få faktura nästa månad" som en knapp bredvid
+  kortknappen på ett genomfört pass (2026-09-27; förut en textlänk
+  under den, som inte syntes), och familjen bekräftar betalsättet i en
+  ruta innan det sparas,
   och rutan Faktura visar familjens fakturor. Ett betalt pass har ingen
   avbokningsknapp i någon vy, inte heller "Avböj" eller "Dra tillbaka"
   på en flyttad tid, eftersom databasen nekar det. Med spärren på går
@@ -1851,7 +1910,13 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
   11, `stripe-checkout` version 15 och `klippkort-betala` version 3,
   också de jämförda byte för byte, och därefter togs
   `timbank_kortet_vann` bort ur databasen, när ingen webhook längre
-  anropade den. Kvar: en familj som inte är matchad når inte
+  anropade den. **Fas 22.2, samma kväll**: migrationen
+  `fas22_2_timmarna_betalar_passen` är körd och `notis-ko` version 19
+  driftsatt, jämförd byte för byte, i den ordningen: en äldre arbetare
+  läser koden `timmar` som ingen kod och skriver det vanliga
+  betalningsmejlet, så databasen kunde gå först. Inga köpta timmar
+  fanns i driften då, så ingen familj fick ett pass betalt av
+  ändringen. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
