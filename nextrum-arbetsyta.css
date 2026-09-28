@@ -3152,3 +3152,679 @@ a:has(> .adm-status){
   white-space:pre-wrap;overflow-wrap:anywhere;
 }
 .hallen-tid blockquote.hallen-tid-skal span{font-weight:650;color:var(--bl)}
+
+/* ============================================================
+   INNEHÅLLET (2026-09-28)
+
+   Leo: "spalterna till vänster är snygga men innehållet kan bli
+   snyggare". Förslaget visades på en designyta, bredvid skärmbilder
+   av hur vyerna såg ut, och Leo sa "jätte bra". Sidomenyn är orörd.
+   Fem grepp:
+
+     1. Färre lådor. En rapport låg i en låda i en låda i en låda, och
+        på en telefon blev texten en smal remsa. Ett kort (.dbox,
+        .vy-kort) är ett ljusare ark på papperet (--yta), och det som
+        ligger i det är rutor utan egen kant (--tint).
+     2. Färgen betyder något. Ett läge (.lage) är lera när det är ert
+        drag, ockra när det väntar på någon annan och mossa när det är
+        klart. Förut hade Betalt och Ej betalt samma grå kant.
+     3. Mono-versaler bara till små etiketter. En hel mening i spärrade
+        versaler ("PASSET HAR HÅLLITS. LÄS RAPPORTEN …") läses inte.
+     4. Ett drag per kort. Betalvalen är stora knappar med en rad om vad
+        som händer (.vy-betalval); det som inte är ett drag är en länk.
+     5. Grupper med rubrik på papperet (.vy-grupp), korten under.
+
+   Bara .vy:not(.vy-admin): adminvyn är ett arbetsbord där tätheten är
+   poängen. Färgerna står i cinemas :root (--yta, --tint, --bricka och
+   de mjuka tonerna); här finns inga hexkoder. Ingenting byter höjd av
+   ett tryck (fälla 4 i CLAUDE.md avsnitt 3), och trycket är samma
+   scale som resten av KÄNSLAN ovan.
+   ============================================================ */
+
+/* ---------- korten ---------- */
+.vy:not(.vy-admin) .dbox{background:var(--yta)}
+.vy:not(.vy-admin) .dbox h5{
+  font-family:var(--f-sans);font-size:1.03rem;font-weight:650;
+  letter-spacing:-.015em;text-transform:none;color:var(--bl);
+  /* Utan margin-top: basrubriken bär en i em, och med den större
+     storleken blev den 27 px luft ovanför varje rubrik i korten. */
+  margin-top:0;margin-bottom:clamp(14px,1.6vw,18px);
+}
+.vy:not(.vy-admin) .dbox h5::before{display:none}
+.vy:not(.vy-admin) .dbox h5 em{
+  font-family:var(--f-sans);font-size:.82rem;font-weight:500;
+  letter-spacing:0;text-transform:none;color:var(--bl-3);
+}
+
+.vy-kort{
+  background:var(--yta);border:1px solid var(--ln);
+  border-radius:clamp(22px,2.4vw,24px);box-shadow:var(--sk-1);
+  overflow:hidden;min-width:0;
+}
+.vy-kort + .vy-kort{margin-top:14px}
+.vy-kort-kropp{padding:clamp(18px,2.2vw,24px)}
+.vy-kort-fot{
+  background:var(--yta-fot);border-top:1px solid var(--ln);
+  padding:clamp(16px,2vw,20px) clamp(18px,2.2vw,24px);
+}
+
+/* ---------- gruppens rubrik: text på papperet, ingen låda ---------- */
+.vy-grupp{display:flex;align-items:center;gap:10px;margin:30px 0 12px;min-height:26px}
+.vy-grupp:first-child{margin-top:0}
+/* En grupp som döljs när den är tom ligger i en egen ruta (.vy-del), och
+   då är rubriken första barnet där. Står rutan efter något annat än
+   sektionens topp ska rubriken ha samma luft som de andra. */
+:not(.vy-sek-topp) + .vy-del > .vy-grupp:first-child{margin-top:30px}
+.vy-grupp h3{font-size:1.03rem;font-weight:650;letter-spacing:-.015em;line-height:1.3;margin:0;color:var(--bl)}
+.vy-grupp .vy-lank{margin-left:auto}
+.vy-antal{
+  display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 7px;
+  border-radius:100px;font-size:.75rem;font-weight:650;line-height:1;
+  background:var(--bricka);color:var(--bl-2);
+}
+.vy-antal:empty{display:none}
+.vy-antal.ar-gor{background:var(--acc);color:var(--acc-ink)}
+.vy-lank{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:.84rem;font-weight:600;color:var(--acc-lugn);text-decoration:none;white-space:nowrap;
+}
+.vy-lank:hover{color:var(--acc)}
+.vy-lank svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- lägen: färgen säger vems drag det är ---------- */
+.vy:not(.vy-admin) .lage{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--f-sans);font-size:.78rem;font-weight:600;
+  letter-spacing:0;text-transform:none;line-height:1;
+  padding:6px 11px 6px 9px;border:0;border-radius:100px;
+  background:var(--bricka);color:var(--bl-2);white-space:nowrap;
+}
+.vy:not(.vy-admin) .lage::before{content:"";width:7px;height:7px;border-radius:50%;flex:none;background:currentColor;opacity:.85}
+/* ockra: väntar på någon annan */
+.vy:not(.vy-admin) :is(.lage.onskad,.lage.pa,.lage.vantar){background:var(--ockra-soft);color:var(--ockra-text)}
+.vy:not(.vy-admin) :is(.lage.onskad,.lage.pa,.lage.vantar)::before{background:var(--ockra);opacity:1}
+/* mossa: klart */
+.vy:not(.vy-admin) :is(.lage.bekraftad,.lage.klar){background:var(--mossa-soft);color:var(--mossa-text)}
+.vy:not(.vy-admin) :is(.lage.bekraftad,.lage.klar)::before{background:var(--mossa);opacity:1}
+/* lera: ert drag, eller något som gick fel */
+.vy:not(.vy-admin) :is(.lage.gor,.lage.sen){background:var(--acc-soft);color:var(--acc-lugn)}
+.vy:not(.vy-admin) :is(.lage.gor,.lage.sen)::before{background:var(--acc);opacity:1}
+.vy:not(.vy-admin) .lage.avbokad{text-decoration:line-through}
+
+/* ---------- passraderna ----------
+   Datumrutan säger veckodag, dag och månad; tiden och platsen står i
+   raden med var sin ikon. Förut stod tiden med sekunder i rutan, och
+   "FÖRESLAGET AV ER STUDIEHJÄLPARE" i spärrade versaler under. */
+.vy:not(.vy-admin) .pass-nar{
+  width:54px;padding:7px 0 8px;border:0;border-radius:14px;background:var(--bricka);
+  font-family:var(--f-mono);font-size:9.5px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--bl-3);line-height:1.3;
+}
+.vy:not(.vy-admin) .pass-nar b{
+  display:block;font-family:var(--f-sans);font-size:1.3rem;font-weight:700;
+  letter-spacing:-.03em;line-height:1.15;color:var(--bl);
+}
+.vy:not(.vy-admin) .pass-nar small{display:block;font-size:inherit}
+.vy:not(.vy-admin) .pass-nar.ar-nu{background:var(--bl)}
+.vy:not(.vy-admin) .pass-nar.ar-nu,.vy:not(.vy-admin) .pass-nar.ar-nu b{color:var(--pap)}
+.vy:not(.vy-admin) .pass-titel{font-size:1rem;font-weight:650;letter-spacing:-.015em}
+.vy:not(.vy-admin) .pass-titel em{font-style:normal;font-weight:500;color:var(--bl-2)}
+.vy:not(.vy-admin) .pass-vad .pass-meta{display:flex;flex-wrap:wrap;gap:3px 14px;margin-top:3px;font-size:.84rem;color:var(--bl-2)}
+.vy:not(.vy-admin) .pass-vad .pass-meta > span{display:inline-flex;align-items:center;gap:6px;margin:0;min-width:0;overflow-wrap:anywhere}
+.vy:not(.vy-admin) .pass-meta svg{width:14px;height:14px;flex:none;fill:none;stroke:var(--bl-3);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.vy:not(.vy-admin) .pass-vad .pass-not{font-size:.84rem;font-style:italic;color:var(--bl-2);margin-top:5px;overflow-wrap:anywhere}
+.vy:not(.vy-admin) .pass-vem{
+  font-family:var(--f-sans);font-size:.84rem;font-weight:500;letter-spacing:0;
+  text-transform:none;color:var(--bl-2);margin-top:5px;
+}
+.vy:not(.vy-admin) .pass-atg{align-items:center;gap:10px}
+.vy:not(.vy-admin) .pass-atg .btn{padding:8px 15px;font-size:.84rem}
+.vy:not(.vy-admin) .pass-klickbar:hover{background:var(--tint)}
+
+/* Raderna i ett kort går kant i kant, med ett streck emellan. */
+.vy-lista > .pass,
+.vy-lista > .pl-resten > .pass{padding:14px clamp(14px,2vw,20px);border-bottom:0;border-top:1px solid var(--ln);border-radius:0}
+.vy-lista > .pass:first-child{padding-top:14px;border-top:0}
+.vy-lista > .pass:last-child{padding-bottom:14px}
+.vy-lista .pl-resten > .pass:last-child{padding-bottom:14px}
+.vy-lista > .pl-mer{margin:10px clamp(14px,2vw,20px) 14px}
+
+/* ---------- personen som skrev ---------- */
+.vy:not(.vy-admin) .rb-brev .nx-avatar{width:40px;height:40px;font-size:.8rem;flex:none}
+
+/* ---------- rapporten: ett brev från studiehjälparen ----------
+   Samma kort under Bekräfta rapport, Efter passen och på passets sida
+   (rbBrev i nextrum-studie-vy.js). Vem som skrev, när och hur det gick
+   står överst, sedan texten och de två sakerna att ta med sig. */
+.rb-huvud{display:flex;gap:14px;align-items:flex-start}
+.rb-vem{flex:1;min-width:0}
+.rb-titel{font-size:1.06rem;font-weight:650;letter-spacing:-.02em;line-height:1.3;margin:0;color:var(--bl)}
+.rb-meta{display:flex;flex-wrap:wrap;gap:3px 14px;margin:4px 0 0;font-size:.84rem;color:var(--bl-2)}
+.rb-meta > span{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.rb-meta svg,.rb-omdome svg,.rb-duo svg,.rb-klart svg,.vy-valk svg,.rb-tid svg{
+  width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round
+}
+.rb-meta svg{color:var(--bl-3)}
+.rb-omdome{
+  display:inline-flex;align-items:center;gap:6px;flex:none;
+  font-size:.8rem;font-weight:650;line-height:1;padding:6px 12px 6px 9px;border-radius:100px;
+  background:var(--bricka);color:var(--bl-2);
+}
+.rb-omdome svg{stroke-width:2}
+.rb-omdome.ar-mycket_bra{background:var(--mossa-soft);color:var(--mossa-text)}
+.rb-omdome.ar-bra{background:var(--ockra-soft);color:var(--ockra-text)}
+.rb-omdome.ar-folja_upp{background:var(--acc-soft);color:var(--acc-lugn)}
+.rb-text{font-size:.97rem;line-height:1.68;color:var(--bl);margin:14px 0 0;max-width:66ch;white-space:pre-wrap;overflow-wrap:anywhere}
+.rb-text.ar-tom{color:var(--bl-3)}
+.rb-duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px;margin-top:18px}
+.rb-duo > div{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:var(--tint);min-width:0}
+.rb-duo-ik{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--yta);color:var(--bl-2);border:1px solid var(--ln)}
+.rb-duo small{display:block;font-size:.75rem;font-weight:600;color:var(--bl-3)}
+.rb-duo b{display:block;font-size:.9rem;font-weight:600;line-height:1.4;margin-top:2px;color:var(--bl);overflow-wrap:anywhere}
+
+/* Den hållna tiden (Fas 20.1), när den skiljer sig från det bokade.
+   Stapeln är det bokade i mossa och övertiden i lera; ett kortare pass
+   lämnar resten tom. Skälet är studiehjälparens egen text, i en
+   pratbubbla med vem som skrev den, så att den inte läses som vår. */
+.rb-tid{margin-top:18px;padding:16px 18px;border-radius:16px;background:var(--tint);min-width:0}
+.rb-tid-topp{display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap}
+.rb-tid-topp b{font-size:.92rem;font-weight:650;color:var(--bl)}
+.rb-tid-topp span{font-size:.82rem;color:var(--bl-2)}
+.rb-tid-bar{display:flex;gap:2px;height:10px;border-radius:100px;overflow:hidden;margin:12px 0 6px;background:var(--bricka)}
+.rb-tid-bar i{display:block}
+.rb-tid-bokat{background:var(--mossa)}
+.rb-tid-extra{background:var(--acc)}
+.rb-tid-skala{position:relative;height:14px;font-family:var(--f-mono);font-size:10.5px;color:var(--bl-3)}
+.rb-tid-skala span{position:absolute;top:0;white-space:nowrap}
+.rb-tid-skala span:first-child{left:0}
+.rb-tid-skala span:last-child{right:0}
+.rb-tid-skala span.ar-mitt{transform:translateX(-50%)}
+.rb-tid-skal{display:flex;gap:10px;align-items:flex-start;margin-top:14px}
+.rb-tid-skal .nx-avatar{width:30px;height:30px;font-size:.66rem;flex:none}
+.rb-tid-skal p{
+  margin:0;font-size:.88rem;line-height:1.55;color:var(--bl);white-space:pre-wrap;overflow-wrap:anywhere;
+  background:var(--yta);border:1px solid var(--ln);padding:10px 14px;border-radius:4px 16px 16px 16px;min-width:0;
+}
+.rb-tid-skal p small{display:block;font-size:.75rem;font-weight:600;color:var(--bl-3);margin-bottom:2px}
+
+/* ---------- foten: det som väntar, och valen ---------- */
+.rb-fot-rad{display:flex;justify-content:space-between;align-items:center;gap:14px 20px;flex-wrap:wrap}
+.rb-fot-rad > :first-child{flex:1 1 300px;min-width:0}
+.rb-fot-knappar{display:flex;align-items:center;gap:18px;flex:none;flex-wrap:wrap}
+.rb-fot-knappar .btn{text-decoration:none}
+.rb-att{display:flex;align-items:baseline;gap:10px;margin:0}
+.rb-att small{font-size:.8rem;font-weight:600;color:var(--bl-2)}
+.rb-att b{font-size:1.38rem;font-weight:700;letter-spacing:-.03em;color:var(--bl)}
+.rb-hjalp{font-size:.84rem;line-height:1.5;color:var(--bl-2);margin:4px 0 0}
+.rb-finstilt{font-size:.78rem;line-height:1.55;color:var(--bl-3);margin:12px 0 0}
+.rb-klart{display:flex;align-items:center;gap:10px;font-size:.88rem;color:var(--bl-2);margin:0}
+.rb-klart b{color:var(--bl);font-weight:650}
+.rb-bock{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--mossa-soft);color:var(--mossa-text)}
+.rb-bock svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Betalvalen: en knapp per sätt, med vad som händer på raden under.
+   Samma data-attribut som de gamla knapparna (data-betala, data-timmar,
+   data-timbank, data-faktura-val), så att samma hanterare tar dem.
+   Rubriken bär data-medan: den byter text medan kassan öppnas, raden
+   under står kvar (NXStudie.medan). */
+/* Inte .vy-val: den klassen är ämnes- och formatväljarna i formulären,
+   och ett rutnät där hade gjort om dem. */
+.vy-betalval{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin-top:14px}
+.vy-valk{
+  display:flex;gap:12px;align-items:center;text-align:left;min-width:0;
+  padding:13px 14px;border-radius:18px;border:1px solid var(--ln-2);background:var(--yta);
+  font:inherit;color:var(--bl);cursor:pointer;
+}
+.vy-valk:hover{border-color:var(--bl-3)}
+.vy-valk:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.vy-valk-ik{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--bricka);color:var(--bl-2)}
+.vy-valk-ik svg{width:16px;height:16px}
+.vy-valk b{display:block;font-size:.92rem;font-weight:650;letter-spacing:-.01em;line-height:1.25}
+.vy-valk span span{display:block;font-size:.8rem;color:var(--bl-3);line-height:1.35;margin-top:2px}
+.vy-valk.ar-forst{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);box-shadow:var(--sk-1)}
+.vy-valk.ar-forst:hover{background:var(--acc-lugn);border-color:var(--acc-lugn)}
+.vy-valk.ar-forst span span{color:var(--acc-ink);opacity:.82}
+.vy-valk.ar-forst .vy-valk-ik{background:color-mix(in srgb,var(--acc-ink) 16%,transparent);color:var(--acc-ink)}
+.vy-valk[aria-busy="true"]{opacity:.7;cursor:progress}
+.vy:not(.vy-admin) .vy-valk{
+  transition:background-color .22s var(--e),border-color .22s var(--e),box-shadow .25s var(--e),scale .5s var(--vy-fjader);
+  -webkit-tap-highlight-color:transparent;
+}
+.vy:not(.vy-admin) .vy-valk:active:not(:disabled){scale:.97;transition-duration:.09s}
+@media (prefers-reduced-motion:reduce){.vy:not(.vy-admin) .vy-valk:active{scale:none}}
+
+/* På en telefon: omdömet under namnet, och knapparna i foten på egen
+   rad i full bredd, med Visa passet under. */
+@media (max-width:560px){
+  .rb-huvud{flex-wrap:wrap}
+  .rb-vem{flex:1 1 calc(100% - 60px)}
+  .rb-huvud > .rb-omdome{margin-left:54px;margin-top:-2px}
+  .rb-fot-knappar{flex:1 1 100%;flex-direction:column-reverse;align-items:stretch;gap:12px}
+  .rb-fot-knappar .btn{width:100%;justify-content:center}
+  .rb-fot-knappar .vy-lank{justify-content:center}
+}
+
+/* ---------- en rad i en lista ----------
+   Något till vänster (en ikon, en bock, en datumruta), rubriken och en
+   rad under, och till höger ett läge, ett belopp eller en knapp. Hela
+   raden är en länk när den leder någonstans. */
+.vy-rad{display:flex;align-items:center;gap:14px;padding:14px clamp(14px,2vw,20px);color:inherit;text-decoration:none;min-width:0}
+.vy-lista > * + .vy-rad,.vy-lista > .vy-rad + *{border-top:1px solid var(--ln)}
+a.vy-rad:hover{background:var(--tint)}
+a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.vy-rad-mitt{flex:1;min-width:0;display:block}
+.vy-rad-titel{display:block;font-size:.97rem;font-weight:650;letter-spacing:-.015em;line-height:1.35;color:var(--bl)}
+.vy-rad-titel em{font-style:normal;font-weight:500;color:var(--bl-2)}
+.vy-rad-meta{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:.84rem;color:var(--bl-2);margin-top:3px}
+.vy-rad-meta > span{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.vy-rad-meta svg{width:14px;height:14px;flex:none;fill:none;stroke:var(--bl-3);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.vy-rad-not{display:block;font-size:.84rem;font-style:italic;color:var(--bl-2);margin-top:5px;overflow-wrap:anywhere}
+.vy-rad-hoger{display:flex;align-items:center;gap:10px;flex:none;margin-left:auto}
+.vy-rad-hoger small{font-size:.8rem;color:var(--bl-3);white-space:nowrap}
+.vy-rad-hoger .btn{padding:8px 15px;font-size:.84rem;text-decoration:none}
+.vy-rad-belopp{font-size:.95rem;font-weight:650;letter-spacing:-.01em;white-space:nowrap;color:var(--bl)}
+.vy-rad-pil{display:inline-flex;color:var(--bl-3)}
+.vy-rad-pil svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.vy-rad-ik{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;flex:none;background:var(--acc-soft);color:var(--acc-lugn)}
+.vy-rad-ik svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.vy-rad-ik.ar-ockra{background:var(--ockra-soft);color:var(--ockra-text)}
+.vy-rad-ik.ar-mossa{background:var(--mossa-soft);color:var(--mossa-text)}
+.vy-rad-ik.ar-tyst{background:var(--tint);color:var(--bl-3)}
+/* Ett tomt läge i en lista är en rad, inte en streckad ruta mitt i ett
+   kort: på en telefon var "Inga fakturor" en halv skärm tomrum. */
+.vy-lista > .empty{margin:0;border:0;border-radius:0;padding:18px clamp(16px,2vw,20px);text-align:left}
+.vy-lista > .empty b{margin-bottom:2px;color:var(--bl)}
+.vy-lista > .empty br{display:none}
+.vy-grupp .vy-fall-pil{margin-left:auto}
+.vy-grupp .vy-antal + .vy-fall-pil,.vy-grupp .vy-lank + .vy-fall-pil{margin-left:10px}
+/* På en telefon: räcker inte bredden flyttar det högra ned under
+   texten i stället för att klämma den till ett ord per rad. En rad med
+   bara en pil får plats och flyttar inte. */
+@media (max-width:560px){
+  .vy-rad{flex-wrap:wrap}
+  .vy-rad-mitt{min-width:150px}
+  .vy-rad-hoger{margin-left:auto}
+}
+
+/* ---------- passets sida ----------
+   Datumrutan bredvid rubriken, stegen med en bock när de är gjorda,
+   beskedet som ett kort med draget i (betalvalen som stora knappar),
+   fakta i ETT kort med en ikon per rad, och det som inte är ett drag
+   (föreslå ny tid, skriv, avboka) stilla längst ner. På en telefon
+   står draget överst och resten under det, en sak i taget. */
+.vy:not(.vy-admin) .ps-huvud.har-dag{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px}
+.vy:not(.vy-admin) .ps-huvud .lage{margin-top:0}
+.vy:not(.vy-admin) .ps-dag{
+  width:66px;padding:9px 0 10px;border-radius:20px;background:var(--bl);color:var(--pap);
+  text-align:center;font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;line-height:1.3;
+}
+.vy:not(.vy-admin) .ps-dag small{display:block;font-size:inherit;opacity:.75}
+.vy:not(.vy-admin) .ps-dag b{display:block;font-family:var(--f-sans);font-size:1.75rem;font-weight:700;letter-spacing:-.04em;line-height:1.1}
+.vy:not(.vy-admin) .ps-titel{font-size:clamp(1.45rem,3vw,1.85rem);font-weight:700}
+.vy:not(.vy-admin) .ps-nar{margin-top:5px;font-size:.95rem}
+
+.vy:not(.vy-admin) .ps-vag{gap:8px;margin-top:22px}
+.vy:not(.vy-admin) .ps-steg{
+  display:flex;align-items:center;gap:6px;padding-top:12px;
+  font-family:var(--f-sans);font-size:.8rem;font-weight:600;letter-spacing:0;text-transform:none;
+  color:var(--bl-3);min-width:0;
+}
+.vy:not(.vy-admin) .ps-steg::before{top:0;height:3px}
+.vy:not(.vy-admin) .ps-steg svg{width:14px;height:14px;flex:none;fill:none;stroke:var(--mossa);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+.vy:not(.vy-admin) .ps-gor{
+  margin-top:20px;padding:clamp(18px,2.2vw,22px);border-radius:clamp(22px,2.4vw,24px);
+  background:var(--yta);border:1px solid var(--ln);box-shadow:var(--sk-1);
+}
+.vy:not(.vy-admin) .ps-gor.ar-fraga{border-color:color-mix(in srgb,var(--ockra) 40%,var(--ln))}
+.vy:not(.vy-admin) .ps-gor.ar-klart{border-color:color-mix(in srgb,var(--mossa) 40%,var(--ln))}
+.vy:not(.vy-admin) .ps-gor p{font-size:.97rem;line-height:1.55}
+.ps-gor-topp{display:flex;align-items:flex-start;gap:18px}
+.ps-gor-topp p{flex:1;min-width:0}
+.ps-belopp{flex:none;text-align:right}
+.ps-belopp small{display:block;font-size:.76rem;color:var(--bl-3)}
+.ps-belopp b{display:block;font-size:1.35rem;font-weight:700;letter-spacing:-.025em;color:var(--bl);white-space:nowrap}
+.vy:not(.vy-admin) .ps-gor .vy-betalval{margin-top:16px}
+.vy:not(.vy-admin) .ps-gor .ps-knappar{margin-top:16px}
+.vy:not(.vy-admin) .ps-gor .vy-betalval + .ps-knappar{margin-top:10px}
+.vy:not(.vy-admin) .ps-alt{margin-top:12px}
+
+/* Rubrikerna ovanför korten: text på papperet, som .vy-grupp. */
+.vy:not(.vy-admin) .ps-block{margin-top:28px}
+.vy:not(.vy-admin) .ps-block > h6{
+  font-family:var(--f-sans);font-size:1.03rem;font-weight:650;letter-spacing:-.015em;
+  text-transform:none;color:var(--bl);margin:0 0 12px;
+}
+.vy:not(.vy-admin) .ps-block > p{font-size:.95rem;color:var(--bl-2)}
+.ps-citat{
+  margin:0;padding:2px 0 2px 16px;border-left:3px solid var(--ln-2);
+  font-size:.97rem;font-style:italic;line-height:1.6;color:var(--bl);white-space:pre-wrap;
+}
+
+.ps-fakta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.ps-fakta-rad{display:flex;gap:14px;align-items:flex-start;padding:16px clamp(16px,2vw,20px);min-width:0;border-top:1px solid var(--ln)}
+.ps-fakta-rad:nth-child(-n+2){border-top:0}
+.ps-fakta-rad:nth-child(even){border-left:1px solid var(--ln)}
+.ps-fakta-ik{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--tint);color:var(--bl-2)}
+.ps-fakta-ik svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ps-fakta-text{display:block;min-width:0}
+.ps-fakta-et{display:block;font-size:.76rem;font-weight:600;color:var(--bl-3);margin-bottom:2px}
+.ps-fakta-v{display:block;font-size:.95rem;font-weight:600;line-height:1.4;color:var(--bl);overflow-wrap:anywhere}
+.ps-fakta-v .ps-lank{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.ps-fakta-text small{display:block;font-size:.84rem;line-height:1.4;color:var(--bl-2);margin-top:2px}
+
+.ps-fot{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  margin-top:32px;padding-top:20px;border-top:1px solid var(--ln);
+}
+.ps-fot .btn{text-decoration:none}
+.ps-fot-lank{
+  appearance:none;background:none;border:0;padding:8px 2px;margin:0 0 0 auto;
+  font:inherit;font-size:.86rem;font-weight:600;color:var(--bl-2);cursor:pointer;
+}
+.ps-fot-lank:hover{text-decoration:underline;text-underline-offset:3px}
+.ps-fot-lank.ar-fara{color:var(--acc-lugn)}
+.ps-fot-lank:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+.ps-fot-lank[aria-busy="true"]{opacity:.6;cursor:progress}
+
+/* Ett tidigare pass tonas ned, men inte det man ska trycka på i det:
+   Till rapporten såg annars avstängd ut. */
+.vy:not(.vy-admin) .pl-tidigare .pass{opacity:1}
+.vy:not(.vy-admin) .pl-tidigare .pass :is(.pass-nar,.pass-vad){opacity:.72}
+.vy:not(.vy-admin) .pl-tidigare .pass:hover :is(.pass-nar,.pass-vad){opacity:1}
+
+/* Månaden på en telefon: en kolumn är fyrtio pixlar, och tiden fick
+   inte plats i rutan. Kolumnen växte då och veckan sköts utanför
+   skärmen (fälla 2 i CLAUDE.md avsnitt 3). Nu är passet ett färgat
+   streck, och tiden står i Kommande och på passets sida. */
+.vy:not(.vy-admin) .sch-manad{grid-template-columns:repeat(7,minmax(0,1fr))}
+@container (max-width:460px){
+  .vy:not(.vy-admin) .sch-manad .sch-pass{padding:0;height:6px;background:none}
+  .vy:not(.vy-admin) .sch-manad .sch-pass i{width:100%;height:6px}
+  .vy:not(.vy-admin) .sch-manad .sch-pass b{display:none}
+  .vy:not(.vy-admin) .sch-manad .sch-dag{min-height:56px;padding:6px 4px}
+}
+
+@media (max-width:560px){
+  .vy:not(.vy-admin) .ps-huvud.har-dag{grid-template-columns:auto minmax(0,1fr);gap:14px}
+  .vy:not(.vy-admin) .ps-huvud.har-dag > .lage{grid-column:2;justify-self:start;margin-top:-6px}
+  .vy:not(.vy-admin) .ps-dag{width:58px}
+  .vy:not(.vy-admin) .ps-dag b{font-size:1.5rem}
+  .ps-gor-topp{flex-direction:column;gap:6px}
+  .ps-belopp{text-align:left;display:flex;align-items:baseline;gap:8px}
+  .ps-fakta{grid-template-columns:minmax(0,1fr)}
+  .ps-fakta-rad:nth-child(2){border-top:1px solid var(--ln)}
+  .ps-fakta-rad:nth-child(even){border-left:0}
+  .ps-fot .btn{flex:1 1 auto;justify-content:center}
+  .ps-fot-lank{flex:1 1 100%;margin:4px 0 0;text-align:center}
+}
+
+/* ---------- översikten ----------
+   Att göra överst, sedan två kolumner (kommande pass, hur det går)
+   som blir en på en telefon, och siffrorna sist. Talen är rutor på
+   kortet i stället för ett rutnät med synliga fogar, och etiketten
+   under talet är vanlig text: spärrade versaler läses inte. */
+.ov-tva{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px;align-items:start}
+.ov-tva > div > .vy-grupp{margin-top:30px}
+.ov-delrub{
+  display:flex;align-items:baseline;gap:8px;
+  font-size:.86rem;font-weight:650;color:var(--bl);margin:22px 0 10px;
+}
+.ov-delrub:first-child{margin-top:0}
+.ov-delrub em{font-style:normal;font-weight:500;font-size:.8rem;color:var(--bl-3);margin-left:auto}
+.ov-delrub em:empty{display:none}
+.ov-hittills{container-type:inline-size}
+.ov-hittills #stat-graf{margin-top:22px}
+
+.vy:not(.vy-admin) .stat-tal{background:none;border:0;border-radius:0;gap:10px}
+.vy:not(.vy-admin) .stat-tal div{background:var(--tint);border-radius:16px;padding:14px 16px}
+.vy:not(.vy-admin) .stat-tal b{font-size:clamp(1.3rem,2.4vw,1.6rem)}
+.vy:not(.vy-admin) .stat-tal span{
+  margin-top:6px;font-family:var(--f-sans);font-size:.8rem;font-weight:500;
+  letter-spacing:0;text-transform:none;color:var(--bl-2);
+}
+
+/* Studietiden per vecka: fyllt är genomfört, streckat är bokat, i
+   samma mossa. Timmarna ovanför stapeln, veckan under. */
+.vg{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;align-items:end;height:150px}
+.vg-v{display:flex;flex-direction:column;align-items:stretch;height:100%;min-width:0;text-align:center}
+.vg-v b{font-size:.78rem;font-weight:650;color:var(--bl);min-height:1.2em;margin-bottom:4px;white-space:nowrap}
+.vg-stapel{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;min-height:0}
+.vg-stapel i{display:block;border-radius:6px 6px 2px 2px;min-height:4px}
+.vg-gjort{background:var(--mossa)}
+.vg-bokat{background:var(--mossa-soft);border:1.5px dashed var(--mossa)}
+.vg-stapel .vg-gjort:not(:first-child){border-radius:2px}
+.vg-noll{height:3px;min-height:3px !important;background:var(--ln-2);border-radius:2px !important}
+.vg-v small{display:block;margin-top:6px;font-size:.74rem;color:var(--bl-3)}
+.vg-v.ar-nu small{color:var(--bl);font-weight:650}
+.vg-leg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:.8rem;color:var(--bl-2)}
+.vg-leg span{display:inline-flex;align-items:center;gap:7px}
+.vg-leg i{width:14px;height:10px;border-radius:3px;display:inline-block}
+
+@media (max-width:760px){
+  .ov-tva{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .vy-rad-hoger .vy-lank-text{display:none}
+  .vg{gap:6px;height:130px}
+}
+
+/* ---------- betalningen ----------
+   Tre rutor överst som svarar på "är vi skyldiga något?". Efter passet
+   får lerans ton när något väntar; de andra är besked. På en telefon
+   står de under varandra, som rader, med beloppet till höger. */
+.bet-sam{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:6px}
+.bet-sam > div{
+  background:var(--yta);border:1px solid var(--ln);border-radius:20px;box-shadow:var(--sk-1);
+  padding:16px 18px;min-width:0;
+}
+.bet-sam small{display:block;font-size:.8rem;font-weight:600;color:var(--bl-3)}
+.bet-sam b{display:block;margin-top:4px;font-size:1.45rem;font-weight:700;letter-spacing:-.03em;color:var(--bl);white-space:nowrap}
+.bet-sam span{display:block;margin-top:2px;font-size:.82rem;color:var(--bl-2)}
+.bet-sam > div.ar-gor{background:var(--acc-soft);border-color:color-mix(in srgb,var(--acc) 30%,var(--ln))}
+.bet-sam > div.ar-gor small,.bet-sam > div.ar-gor span{color:var(--acc-lugn)}
+.bet-sam:empty{display:none}
+.vy:not(.vy-admin) [data-sek="betalning"] .bet-erb-tips{margin:10px 4px 0;font-size:.84rem}
+.vy-finstilt{margin:12px 4px 0;font-size:.8rem;line-height:1.6;color:var(--bl-3)}
+.vy:not(.vy-admin) .pass-atg .vy-rad-belopp{font-size:.95rem}
+
+@media (max-width:560px){
+  .bet-sam{grid-template-columns:minmax(0,1fr);gap:8px}
+  .bet-sam > div{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px;padding:12px 16px;border-radius:16px}
+  .bet-sam small{grid-column:1}
+  .bet-sam b{grid-column:2;grid-row:1 / span 2;margin:0;font-size:1.2rem}
+  .bet-sam span{grid-column:1}
+}
+/* En rad med bara ett belopp till höger: på en telefon står beloppet
+   under texten, inte på en egen rad under datumrutan. */
+@media (max-width:560px){
+  .vy:not(.vy-admin) .pass-klickbar .pass-atg:has(> .vy-rad-belopp:only-child){grid-column:2;margin-top:-2px}
+}
+
+/* En varning på en passrad: tiden krockar med ett annat pass. */
+.vy:not(.vy-admin) .pass-vad .pass-varning{
+  display:inline-flex;align-items:center;gap:6px;margin-top:6px;
+  font-size:.82rem;font-weight:600;color:var(--acc-lugn);
+}
+.pass-varning svg{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* Stegen på passets sida i två rader på en telefon: luft mellan raderna,
+   annars läses andra radens streck som en understrykning av den första. */
+@media (max-width:560px){
+  .vy:not(.vy-admin) .ps-vag{row-gap:18px}
+}
+
+/* Studiehjälparens nyckeltal: rutor på papperet som summan i
+   familjens Betalning, med vanlig text under talet. */
+.vy:not(.vy-admin) .kpis{background:none;border:0;border-radius:0;gap:12px;margin-top:30px}
+.vy-sek-topp + .kpis{margin-top:0}
+.vy:not(.vy-admin) .kpi{
+  background:var(--yta);border:1px solid var(--ln);border-radius:20px;box-shadow:var(--sk-1);
+  padding:16px 18px;
+}
+.vy:not(.vy-admin) .kpi b{display:block;font-size:clamp(1.4rem,2.4vw,1.8rem)}
+.vy:not(.vy-admin) .kpi span{
+  display:block;margin-top:4px;font-family:var(--f-sans);font-size:.82rem;font-weight:500;
+  letter-spacing:0;text-transform:none;color:var(--bl-2);
+}
+@media (max-width:560px){
+  .vy:not(.vy-admin) .kpis{gap:8px}
+  .vy:not(.vy-admin) .kpi{padding:12px 14px;border-radius:16px}
+}
+
+/* ---------- rapportrutan ----------
+   Passet i rubriken och dagen under, fälten med vanliga etiketter i
+   stället för spärrade versaler, ämnet som ett val med Byt ämne, och
+   Spara i en fot som står kvar längst ner medan man scrollar i rutan.
+   Rutan scrollar själv (.rp-box), så foten är sticky i den. */
+.vy:not(.vy-admin) .rp-box{background:var(--yta);padding:0 clamp(20px,3vw,30px)}
+.vy:not(.vy-admin) .rp-huvud{padding-top:clamp(20px,3vw,28px);margin-bottom:4px}
+.vy:not(.vy-admin) .rp-huvud h3{font-size:1.3rem;font-weight:700;letter-spacing:-.025em;line-height:1.25}
+.rp-under{margin:4px 0 0;font-size:.92rem;color:var(--bl-2)}
+.rp-under:empty{display:none}
+.rp-intro{margin:10px 0 20px;font-size:.84rem;line-height:1.55;color:var(--bl-3)}
+.vy:not(.vy-admin) .rp-box .pay-field label,
+.vy:not(.vy-admin) .rp-box .fgroup > label{
+  font-family:var(--f-sans);font-size:.82rem;font-weight:600;letter-spacing:0;
+  text-transform:none;color:var(--bl-2);
+}
+.vy:not(.vy-admin) .rp-fraga{font-size:.95rem;font-weight:650;color:var(--bl)}
+
+.rp-byt{margin-top:16px;border:1px solid var(--ln);border-radius:16px;background:var(--tint)}
+.rp-byt > summary{
+  list-style:none;cursor:pointer;padding:11px 14px;display:flex;align-items:center;gap:8px;
+  font-size:.86rem;font-weight:600;color:var(--bl-2);
+}
+.rp-byt > summary::-webkit-details-marker{display:none}
+.rp-byt > summary::after{
+  content:"";width:7px;height:7px;margin-left:auto;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;
+  transform:rotate(45deg) translateY(-2px);transition:transform .2s var(--e);
+}
+.rp-byt[open] > summary::after{transform:rotate(-135deg) translateY(-2px)}
+.rp-byt > .vy-form-rad{padding:0 14px 14px}
+.rp-narvaro{margin-top:16px;max-width:240px}
+
+.rp-amne-vald{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:10px;
+  border:1px solid var(--ln);border-radius:16px;background:var(--tint);
+}
+.rp-amne-vald b{font-size:.95rem;font-weight:650;color:var(--bl)}
+.rp-amne-vald .vy-lank{margin-left:auto;background:none;border:0;padding:4px 0;cursor:pointer;font:inherit;font-size:.84rem;font-weight:600}
+.rp-amne-vald[hidden],#r-amne-val[hidden]{display:none}
+
+/* Tillvalen (kunskapsområde, läxa) som två rader med en ruta var. */
+.vy:not(.vy-admin) .rp-box :is(.rp-omrade, #rapport-form > .vy-fall){
+  margin-top:14px;padding:13px 14px;border:1px solid var(--ln);border-radius:16px;background:var(--tint);
+}
+.vy:not(.vy-admin) .rp-box :is(.rp-omrade, #rapport-form > .vy-fall) > label{font-size:.88rem}
+
+.rp-fot{
+  position:sticky;bottom:0;z-index:2;margin:20px calc(-1 * clamp(20px,3vw,30px)) 0;
+  padding:14px clamp(20px,3vw,30px) calc(14px + env(safe-area-inset-bottom));
+  background:var(--yta-fot);border-top:1px solid var(--ln);
+}
+.rp-fot .btn{padding:11px 22px;font-size:.92rem}
+.rp-box #r-msg:empty{display:none}
+@media (max-width:560px){
+  .rp-narvaro{max-width:none}
+  .rp-fot{flex-direction:column;align-items:stretch;gap:10px}
+  .rp-fot .btn{width:100%;justify-content:center}
+}
+@media (max-width:560px){
+  /* Tre omdömen under varandra: bredvid varandra bröt "Behöver följas
+     upp" på två rader och hamnade ensam på en egen. */
+  .vy:not(.vy-admin) .rp-gick{grid-template-columns:minmax(0,1fr)}
+}
+
+/* Månadsstegaren (NXStudie.månadsval med stegare): pilarna, månaden i
+   mitten och en väg tillbaka till den innevarande. Pilarna har samma
+   storlek och plats oavsett månad, så att man kan trycka fram och
+   tillbaka utan att flytta fingret. */
+.nx-manad-stegare{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.nx-steg-pil{
+  width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;
+  border:1px solid var(--ln-2);background:var(--yta);color:var(--bl);cursor:pointer;
+}
+.nx-steg-pil svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nx-steg-pil:hover:not(:disabled){border-color:var(--bl-3)}
+.nx-steg-pil:disabled{opacity:.35;cursor:default}
+.nx-steg-pil:focus-visible,.nx-steg-nu:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.nx-steg-namn{display:flex;flex-direction:column;align-items:center;min-width:150px;text-align:center}
+.nx-steg-namn b{font-size:1.02rem;font-weight:650;color:var(--bl);text-transform:capitalize;white-space:nowrap}
+.nx-steg-namn small{font-size:.78rem;color:var(--bl-3)}
+.nx-steg-nu{
+  margin-left:auto;background:none;border:0;padding:6px 2px;cursor:pointer;
+  font:inherit;font-size:.84rem;font-weight:600;color:var(--acc-lugn);
+}
+.nx-steg-nu:hover{color:var(--acc)}
+@media (max-width:560px){
+  .nx-manad-stegare{justify-content:space-between}
+  .nx-steg-namn{flex:1;min-width:0}
+  .nx-steg-nu{flex:1 1 100%;margin:0;text-align:center}
+}
+/* Breven i en ruta (Dina tidigare rapporter) står med luft emellan. */
+#mina-rapporter > .rb-brev + .rb-brev{margin-top:14px}
+.nx-steg-nu[data-dold]{visibility:hidden}
+.nx-manad-stegare[hidden]{display:none}
+
+/* ============================================================
+   TUMMEN (2026-09-28)
+   Leo: "är det smidigt att använda mobilen?" Mätt i provbänken på
+   360 px bredd, i varje sektion av båda vyerna: inget spillde över
+   kanten och inget hoppade av ett tryck, men en stor del av det man
+   trycker på var mindre än de 44 px en tumme behöver. Kalenderdagarna
+   i Boka pass var 34 px med dött mellanrum emellan, schemats pilar
+   28 px, länkarna 21 px och de små knapparna 29–39 px.
+
+   Här växer tryckytan, inte utseendet: små knappar och val får en
+   minsta höjd, länkarna en osynlig yta runt texten, och kalendern
+   förlorar sitt inre kort så att dagarna får bredden. Bara på en
+   smal skärm eller med ett finger som pekare; med en mus är de små
+   ytorna rätt.
+   ============================================================ */
+@media (max-width:560px), (pointer:coarse){
+  .vy:not(.vy-admin) :is(.btn-sm, .sel-sm, .vy-flik, .bk-slot, .vy-val button, .sch-val button, .chip, .pl-mer){min-height:44px}
+  .vy:not(.vy-admin) :is(.btn-sm, .bk-slot, .vy-val button, .sch-val button, .chip){display:inline-flex;align-items:center;justify-content:center}
+
+  /* Länkar i löptext och rubrikrader: ytan växer, raden står kvar. */
+  .vy:not(.vy-admin) :is(a.vy-lank, a.vy-mer, button.vy-lank){position:relative}
+  .vy:not(.vy-admin) :is(a.vy-lank, a.vy-mer, button.vy-lank)::after{content:"";position:absolute;inset:-11px -8px}
+
+  /* Pilar och små fyrkanter. */
+  .vy:not(.vy-admin) :is(.nx-steg-pil, .bk-pil, .cal-nav button, .vy-fall-pil){width:44px;height:44px;min-width:44px}
+  .vy:not(.vy-admin) .sch-idag{height:44px}
+  .vy:not(.vy-admin) .ps-tillbaka{min-height:44px}
+  .vy:not(.vy-admin) .ps-fot-lank{min-height:44px}
+
+  /* Kalendern i Boka pass: inget inre kort på en telefon, och inget
+     mellanrum mellan dagarna. Dagen är 41 × 44 px och ytorna möter
+     varandra, så ett tryck mellan två dagar träffar alltid en av dem. */
+  .vy:not(.vy-admin) .bk-kal{padding:10px 4px;border-color:transparent;background:transparent}
+  .vy:not(.vy-admin) :is(.mv-grid, .mv-vd){column-gap:0}
+  .vy:not(.vy-admin) .mv-grid{row-gap:2px}
+  .vy:not(.vy-admin) .mv-dag{aspect-ratio:auto;min-height:44px;border-radius:14px}
+}
+
+/* Ett pass i månadens ruta är ett streck på en telefon (se ovan), och
+   ett streck går inte att träffa. Har dagen ett enda pass är hela
+   rutan passets tryckyta; har den flera står de i Kommande och i
+   listan ovanför, där de går att skilja åt. */
+@container (max-width:460px){
+  .vy:not(.vy-admin) .sch-manad .sch-dag{position:relative}
+  .vy:not(.vy-admin) .sch-manad .sch-dag:not(:has(.sch-pass ~ .sch-pass)) .sch-pass::after{content:"";position:absolute;inset:0}
+}
+
+/* Sektionsraden står fast under sidhuvudet på en telefon och en
+   platta (2026-09-28). Den stod still, så långt ned på en sida fanns
+   ingen väg till en annan sektion utan att rulla upp igen. Bakgrunden
+   går kant i kant (skuggan och klippet), annars syns det som rullar
+   under raden i sidornas marginaler. Höjden på huvudet sätter
+   sidomenyn på raden (--vy-hdr-h). Den lodräta menyn på en dator står
+   redan fast. */
+@media (max-width:899px){
+  .vy:not(.vy-admin) .vy-sido{
+    position:sticky;top:var(--vy-hdr-h,75px);z-index:40;
+    padding-top:8px;background:var(--pap);
+    box-shadow:0 0 0 100vmax var(--pap);clip-path:inset(0 -100vmax);
+  }
+}

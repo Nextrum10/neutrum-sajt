@@ -26,7 +26,10 @@ html:has(> body.vy){scroll-behavior:auto}
      om för hela remsan vid varje scrollsteg, på varje sida i vyerna.
      På en telefon var det skillnaden mellan en scroll som följer
      fingret och en som hackar. */
-  background:color-mix(in srgb,var(--pap) 97%,transparent);
+  /* Helt täckande sedan 2026-09-28: med 97 % syntes text som rullade
+     under huvudet som en skugga, tydligast på en telefon där
+     sektionsraden står fast strax under. */
+  background:var(--pap);
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
   border-bottom-color:var(--ln);
