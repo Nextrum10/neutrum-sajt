@@ -1246,30 +1246,92 @@
   /* Ritas först när både rapporterna och passen finns: utan passen ser
      ett obetalt pass betalt ut, och knappen hade bytts under fingret. */
   function ritaBekrafta() {
-    const host = $('#rb-lista'), klara = $('#rb-klara');
-    if (!host || !klara || !S.rb.laddat || !S.laddatPass) return;
+    const host = $('#rb-lista');
+    if (!host || !S.rb.laddat || !S.laddatPass) return;
     const att = rbAttBekräfta();
-    const gjorda = S.rb.rapporter.filter(r => att.indexOf(r) === -1)
-      .sort((a, c) => String(S.rb.bekräftade[c.id]).localeCompare(String(S.rb.bekräftade[a.id])));
     $('#rb-antal').textContent = att.length ? att.length + ' st' : '';
-    $('#rb-klara-antal').textContent = gjorda.length ? gjorda.length + ' st' : '';
     if (S.sido) S.sido.märke('bekrafta', att.length);
 
     host.innerHTML = att.length ? att.map(rbKort).join('')
       : tomt('Inget att bekräfta', 'När er studiehjälpare har skrivit rapporten efter ett pass står den här.');
-    /* De bekräftade som en lista att gå tillbaka till, inte en vägg av
-       text. Hela rapporterna står också under Mina lektioner → Efter
-       passen. */
+    rbRitaKlara(att);
+  }
+
+  /* DE BEKRÄFTADE, MÅNAD FÖR MÅNAD (2026-09-28). Leo: "bekräftade
+     rapporter ska filtreras efter månad". Samma rad som rapporterna i
+     studiehjälparvyn, den innevarande månaden förvald, och månaden är
+     PASSETS: en rapport från den 28 augusti som bekräftades den 2
+     september står under augusti, som i studiehjälparens lista och i
+     adminvyns Ekonomi. Förut stod de tjugo senast bekräftade, och den
+     tjugoförsta gick inte att hitta härifrån.
+
+     Att bekräfta filtreras inte: det som väntar på familjen ska inte
+     gömma sig bakom en månad, lika lite som bakom barnväljaren.
+
+     Rapporterna finns redan, alla, så månaden väljs här och inte i en
+     ny fråga. Raden skapas första gången listan ritas och står dold
+     tills något är bekräftat: tolv månader ovanför "Inga bekräftade
+     rapporter än" är ett val utan något att välja. Hela rapporterna står
+     också under Mina lektioner → Efter passen. */
+  let rbMånad = null, rbReserv = 0;
+
+  function rbRitaKlara(att = rbAttBekräfta()) {
+    const klara = $('#rb-klara'), rad = $('#rb-manader');
+    if (!klara) return;
+    if (!rbMånad && rad) rbMånad = NXStudie.månadsval(rad, { vidVal: rbBytMånad });
+    const m = rbMånad ? rbMånad.vald() : NXStudie.månadIso(new Date());
+    const g = NXStudie.månadsGräns(m);
+    const alla = S.rb.rapporter.filter(r => att.indexOf(r) === -1);
+    /* lesson_date är ett datum utan tid, så strängen jämförs med
+       strängen, som i adminvyns iMånaden(). */
+    const gjorda = alla.filter(r => r.lesson_date >= g.från && r.lesson_date < g.till)
+      .sort((a, c) => String(c.lesson_date).localeCompare(String(a.lesson_date))
+        || String(S.rb.bekräftade[c.id]).localeCompare(String(S.rb.bekräftade[a.id])));
+    if (rad) rad.hidden = !alla.length;
+    $('#rb-klara-antal').textContent = gjorda.length ? gjorda.length + ' st' : '';
+
+    /* En lista att gå tillbaka till, inte en vägg av text. */
     klara.innerHTML = gjorda.length
-      ? gjorda.slice(0, 20).map(r => {
+      ? gjorda.map(r => {
           const b = rbPass(r);
           const text = esc(rbRubrik(r, b) + ', ' + datumText(r.lesson_date))
             + '<span>Bekräftad ' + esc(datumText(isoFor(new Date(S.rb.bekräftade[r.id])))) + '</span>';
           return b ? '<a class="pass-lank" href="#pass/' + esc(b.id) + '">' + text + '</a>'
             : '<div class="pass-lank">' + text + '</div>';
         }).join('')
-      : tomt('Inga bekräftade rapporter än', 'En rapport ni bekräftat står här.');
+      : alla.length
+        ? tomt('Inga bekräftade rapporter i ' + NXStudie.månadsNamn(m), 'Välj en annan månad ovanför för att se dem.')
+        : tomt('Inga bekräftade rapporter än', 'En rapport ni bekräftat står här.');
   }
+
+  /* Ett byte av månad håller raden stilla (fälla 4 i CLAUDE.md), men
+     håll() kan inte scrolla förbi sidans slut. Listan står sist på
+     sidan, och har den nya månaden färre rapporter blir sidan kortare:
+     står man längst ned klämmer webbläsaren scrollen, och raden man
+     just tryckte i flyttade sig 84 px nedåt på en telefon i provbänken.
+     Listan behåller därför så mycket av sin höjd som behövs för att
+     raden ska stå kvar, och släpper den när tomrummet hamnat under
+     skärmkanten, där ingen ser sidan krympa. */
+  function rbBytMånad() {
+    const rad = $('#rb-manader'), klara = $('#rb-klara');
+    const förut = klara.offsetHeight;
+    const underSkärmen = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+    NXStudie.håll(rad, () => {
+      klara.style.minHeight = '';
+      rbRitaKlara();
+      rbReserv = Math.max(0, förut - klara.offsetHeight - underSkärmen);
+      if (rbReserv) klara.style.minHeight = (klara.offsetHeight + rbReserv) + 'px';
+    });
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!rbReserv) return;
+    const klara = $('#rb-klara');
+    if (klara.getBoundingClientRect().bottom - rbReserv >= window.innerHeight) {
+      klara.style.minHeight = '';
+      rbReserv = 0;
+    }
+  }, { passive: true });
 
   /* Svarar true när rapporten är bekräftad, också om den redan var det
      (23505: bekräftad i en annan flik eller på en annan enhet). Vem och
