@@ -907,9 +907,9 @@ betalar timmar som blir lediga efter det nästa bekräftade pass inom fem minute
 Sedan Fas 22.4 dras timmarna redan när familjen föreslår passet, och ett motförslag
 flyttar bara tiden: timmen följer med. Ett förslag som avböjs, dras tillbaka eller
 inte besvarats när dagen gått ger tillbaka den.
-Databasen är körd (`fas16_1` till `fas16_1e`, `fas22_2_timmarna_betalar_passen` och
-`fas22_3_lediga_timmar_betalar_nasta_pass`; `fas22_4_timmen_dras_nar_forslaget_skickas`
-är INTE körd än, se nedan), och flaggan `erbjudanden`
+Databasen är körd (`fas16_1` till `fas16_1e`, `fas22_2_timmarna_betalar_passen`,
+`fas22_3_lediga_timmar_betalar_nasta_pass` och `fas22_4_timmen_dras_nar_forslaget_skickas`),
+och flaggan `erbjudanden`
 är PÅ sedan 2026-09-27, påslagen innan provköpet nedan var gjort. Står den av
 syns erbjudandena med sina priser på prissidan och i studievyn, men knapparna
 säger "Snart", och inga timmar går att dra.
@@ -958,12 +958,12 @@ Fas 22.3 (lediga timmar betalar nästa pass) är bara databasen: migrationen
 `timmar-betalar`. Ingen funktion ändrades.
 
 Fas 22.4 (timmen dras när förslaget skickas) är också bara databasen:
-migrationen `fas22_4_timmen_dras_nar_forslaget_skickas`. Ingen funktion ändrades,
-och mejlen säger redan "betalt med timmarna" när passet bekräftas. Kör den i samma
-stund som föräldravyn går ut: vyn räknar inte längre bort väntande förslag i Boka
-pass, så en vy utan migrationen lovar timmar som databasen ännu inte dragit.
-Migrationen prövar först att de fyra funktionerna den bygger på är de som lästes i
-driften 2026-09-28, och avbryts annars.
+migrationen `fas22_4_timmen_dras_nar_forslaget_skickas`, körd 2026-09-28 som
+`20260928174612` direkt efter att föräldravyn mergats (PR #105). Ingen funktion
+ändrades, och mejlen säger redan "betalt med timmarna" när passet bekräftas. Vyn
+och databasen hör ihop: vyn räknar inte längre bort väntande förslag i Boka pass,
+så en vy utan migrationen hade lovat timmar som databasen inte dragit. Migrationen
+prövade först att de fyra funktionerna den bygger på var de som lästes i driften.
 
 Driftsätts en funktion genom MCP i stället för `supabase functions
 deploy`: hämta tillbaka den efteråt och jämför varje fil mot repot.
