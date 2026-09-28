@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22 och gallringen)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, gallringen och månadskörningen)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -40,8 +40,9 @@
 -- notisfelen_bara_egna_utskick, klientfelen_minns_vem, Fas 22.3
 -- (lediga timmar betalar nästa pass),
 -- godkand_ansokan_gallras_tva_ar_efter_sista_passet,
--- ai_texterna_och_avslutade_uppgifter_gallras och Fas 22.4 (timmen dras
--- när förslaget skickas) är körda.
+-- ai_texterna_och_avslutade_uppgifter_gallras, Fas 22.4 (timmen dras
+-- när förslaget skickas), manadskorningen_vacks_av_databasen och
+-- manadskorningen_gar_den_forsta är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -6131,6 +6132,62 @@ begin
       ('Uppgiftsgallring en öppen rörs aldrig', n3 = 1, 'rader: ' || n3);
   end if;
 end $$;
+
+-- ------------------------------------------------------------
+-- Månadskörningen (2026-09-28): pg_cron väcker fakturering den 1:a,
+-- som skriver förra månadens underlag, alltså studiehjälparnas
+-- lönespecifikationer. Adressen pekar på en domän som inte finns, och
+-- anropet köas i en deltransaktion som rullas tillbaka: pg_net skickar
+-- bara det som checkats in.
+-- ------------------------------------------------------------
+do $$
+declare
+  svar jsonb; utan jsonb; mal text; hdr jsonb; kropp jsonb; oppna bigint; fel text;
+begin
+  begin
+    update public.notis_konfig set fakturering_url = 'https://example.invalid/functions/v1/fakturering' where id = 1;
+    svar := intern.manadskorning_vack(true);
+    select l.mal into mal from intern.natanrop_logg l where l.id = (svar ->> 'begaran')::bigint;
+    select q.headers, convert_from(q.body, 'utf8')::jsonb into hdr, kropp
+      from net.http_request_queue q where q.id = (svar ->> 'begaran')::bigint;
+    update public.notis_konfig set fakturering_url = null where id = 1;
+    utan := intern.manadskorning_vack();
+    select count(*) into oppna from public.uppgifter where nyckel = 'manadskorning:adress' and status = 'oppen';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Månadskörning väckningen', false, fel);
+  else
+    insert into utfall (test, ok, detalj) values
+      ('Månadskörning väckningen går genom natanrop, med hemligheten',
+        mal = 'fakturering' and hdr ? 'x-nextrum-notis', coalesce(mal, 'inget anrop')),
+      ('Månadskörning torrkörningen säger det i anropet',
+        (kropp ->> 'torrkorning')::boolean, coalesce(kropp::text, 'ingen kropp')),
+      ('Månadskörning utan adress anropas inget, och det blir en uppgift',
+        utan ->> 'begaran' is null and oppna = 1, 'öppna: ' || oppna || ', ' || utan::text);
+  end if;
+end $$;
+
+select pg_temp.prova('Månadskörning anon kör inte schemat', null,
+  array['select intern.manadskorning_vack()'], 'nekad');
+select pg_temp.prova('Månadskörning inte en studiehjälpare heller', '00000000-0000-4000-8000-0000000000a1',
+  array['select intern.manadskorning_vack(true)'], 'nekad');
+-- Läget i adminvyn: admin ser om schemat är på, ingen annan.
+select pg_temp.prova('Månadskörning admin ser om schemat är på', '00000000-0000-4000-8000-0000000000ad',
+  array['select public.manadskorning_lage()'], 'ok');
+select pg_temp.prova('Månadskörning en familj ser inte schemat', '00000000-0000-4000-8000-0000000000f1',
+  array['select public.manadskorning_lage()'], 'nekad');
+select pg_temp.prova('Månadskörning anon ser inte schemat', null,
+  array['select public.manadskorning_lage()'], 'nekad');
+
+insert into utfall (test, ok, detalj)
+select 'Månadskörning går den 1:a', count(*) = 1,
+       coalesce(string_agg(schedule || ' ' || command, '; '), 'inget jobb')
+  from cron.job
+ where jobname = 'manadskorning' and active and schedule = '17 4 1 * *'
+   and command = 'select intern.manadskorning_vack()';
 
 select test, ok is true as ok, detalj from utfall order by nr;
 

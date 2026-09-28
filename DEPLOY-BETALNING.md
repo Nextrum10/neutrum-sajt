@@ -33,7 +33,7 @@ behövs om ni sätter upp en ny miljö.
 | 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
 | 4. Deploy `fakturering` | ACTIVE, version 28. Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas |
 | 5. Torrkörning | **Väntar på er** — knappen under Ekonomi → Månadskörning, ingen nyckel behövs |
-| 6. Schemaläggning | **Väntar på er** |
+| 6. Schemaläggning | **Byggd, inte påslagen** (2026-09-28): pg_cron `manadskorning` den 1:a, genom `intern.manadskorning_vack()`. Slås på med migrationen `manadskorningen_gar_den_forsta` när steg 5 är gjort och provpassen undantagna, se avsnitt 6 |
 | 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar. Se avsnitt 9 |
 | 8. Deploy `faktura-utskick` | ACTIVE, version 19. Skickar bara underlag sedan Fas 14.6 |
 
@@ -131,14 +131,17 @@ update public.tutor_profiles set hourly_rate = 250 where id = 'STUDIEHJÄLPARENS
 Samma verktyg som `generate-feedback` — se `DEPLOY-AI-FUNKTION.md` om du inte har
 Supabase CLI installerat och länkat än.
 
-Sätt nyckeln som skyddar funktionen. Hitta på en lång slumpsträng:
+Schemat i databasen (avsnitt 6) behöver ingen egen nyckel: det skickar
+hemligheten i `notis_konfig`, som notiserna och gallringen. `FAKTURERING_NYCKEL`
+behövs bara för ett schema UTANFÖR databasen, och ett sådant finns inte. Vill ni
+ändå ha den vägen, hitta på en lång slumpsträng:
 
 ```
 supabase secrets set FAKTURERING_NYCKEL=en-lang-slumpstrang-du-hittar-pa
 ```
 
 Funktionen anropas av ett schema, inte av en inloggad användare, så den ska inte
-kräva JWT — men då måste den skyddas av nyckeln i stället. Lägg i
+kräva JWT — den skyddas av hemligheten eller nyckeln i stället. Det står redan i
 `supabase/config.toml`:
 
 ```toml
@@ -188,8 +191,9 @@ curl -X POST "https://DITT-PROJEKT-ID.supabase.co/functions/v1/fakturering" \
   -H "content-type: application/json" -d '{}'
 ```
 
-Underlagen dyker upp hos studiehjälparen under **Ersättning**. Familjen ser
-ingenting nytt: deras betalningar är kortbetalningarna i avsnitt 9.
+Underlagen dyker upp hos studiehjälparen under **Ersättning → Utbetalning för
+månaden**, som månadens lönespecifikation (2026-09-28). Familjen ser ingenting
+nytt: deras betalningar är kortbetalningarna i avsnitt 9.
 
 En omkörning skapar inte dubbletter: ett pass kan bara ligga på en underlagsrad
 (`payout_lines_ett_pass_en_gang`), och en studiehjälpare kan bara ha ett underlag
@@ -197,9 +201,28 @@ per månad (`unique (tutor_id, period)`).
 
 ## 6. Schemalägg
 
-När ni kört skarpt en gång för hand och det såg rätt ut — Supabase → Database →
-Cron, den första i varje månad. Gör det till ett aktivt beslut, inte något som
-råkar vara påslaget. (Planeras i Fas 7.)
+**Byggt 2026-09-28, inte påslaget.** Leo ville ha en lönespecifikation för varje
+månad när den är slut, och lönespecen är underlaget: utan schemat finns den först
+när någon kommit ihåg knappen. pg_cron-jobbet `manadskorning` kör
+`intern.manadskorning_vack()` den 1:a klockan 04:17 UTC, som väcker `fakturering`
+med hemligheten ur `notis_konfig` (adressen i `notis_konfig.fakturering_url`).
+Den vägen skriver alltid förra månaden, och samma underlag och fakturautkast som
+knappen. Gick det fel står det under System → Fel, och passen larmar som Inte
+utbetalt.
+
+Det är fortfarande ett aktivt beslut, inte något som råkar vara påslaget. Ordningen:
+
+1. Ta ställning till provpassen (Obs-rutan överst). Ett provpass som står klart
+   när schemat går blir ett riktigt underlag och, om det står på faktura, ett
+   fakturautkast. Undanta dem under Avvikelser.
+2. Driftsätt `fakturering` från main och kör migrationen
+   `manadskorningen_vacks_av_databasen`.
+3. Torrkör vägen, som postgres: `select intern.manadskorning_vack(true);` och
+   läs svaret i `net._http_response` (200 med förra månadens sammanfattning).
+4. Kör migrationen `manadskorningen_gar_den_forsta`. Först då finns jobbet.
+5. Döp om de två migrationsfilerna till versionerna `apply_migration` gav dem.
+
+Stänga av: `select cron.unschedule('manadskorning');`, som en egen migration.
 
 ## 6b. Utbetala
 

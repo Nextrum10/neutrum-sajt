@@ -1714,7 +1714,57 @@
      ingen Skapa-knapp under Ekonomi, för den som trycker där har inte
      sett vad som skapas.
      ============================================================ */
+  /* SCHEMAT (2026-09-28). pg_cron-jobbet manadskorning skriver förra
+     månadens underlag den 1:a, och underlaget är studiehjälparens
+     lönespecifikation. Jobbet finns bara i cron.job, och ett schema som
+     står av ser härifrån ut precis som ett som fungerar. Rutan frågar
+     därför databasen i stället för att texten ovanför påstår något. */
+  async function ritaSchema() {
+    const host = $('#kor-schema');
+    if (!host) return;
+    const rad = (märke, text) => '<p class="xsmall" style="margin:0 0 16px;line-height:1.7">'
+      + märke + ' ' + esc(text) + '</p>';
+    const { data, error } = await supa.rpc('manadskorning_lage');
+    if (error) {
+      host.innerHTML = error.code === 'PGRST202'
+        ? rad(pill('Av', ''), 'Databasen har inte schemat än: migrationen manadskorningen_vacks_av_databasen '
+            + 'är inte körd. Månadskörningen går bara från knappen här.')
+        : rad(pill('Okänt', 'ar-ny'), 'Schemat gick inte att läsa: ' + felText(error));
+      return;
+    }
+    const d = data || {};
+    if (!d.pa) {
+      host.innerHTML = rad(pill('Av', ''), 'Månadskörningen går bara från knappen här, och en månad har '
+        + 'ingen lönespecifikation förrän någon kört den. Schemat slås på med en migration, när '
+        + 'provpassen är undantagna: DEPLOY-BETALNING.md avsnitt 6.');
+      return;
+    }
+    if (!d.adress) {
+      host.innerHTML = rad(pill('Adressen saknas', 'ar-ny'), 'Schemat är på, men notis_konfig saknar '
+        + 'fakturering_url. Den 1:a blir det en uppgift i stället för underlag.');
+      return;
+    }
+    /* Nästa körning i svensk tid. Schemat står i UTC, och 04:17 UTC är
+       05:17 på vintern och 06:17 på sommaren. Ett annat schema än det
+       migrationen satte visas som det står. */
+    let när = 'enligt schemat ' + d.schema + ' (UTC)';
+    if (d.schema === '17 4 1 * *') {
+      const nu = new Date();
+      let nästa = new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), 1, 4, 17));
+      if (nästa <= nu) nästa = new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth() + 1, 1, 4, 17));
+      när = 'den 1:a varje månad, nästa gång ' + nästa.toLocaleString('sv-SE', {
+        timeZone: 'Europe/Stockholm', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
+      });
+    }
+    host.innerHTML = rad(pill('På', 'ar-klar'), 'Går av sig själv ' + när + ', för förra månaden.');
+  }
+
   function fyllPerioder() {
+    // Rutan får inte stå kvar på "Hämtar" om frågan kastar.
+    ritaSchema().catch(fel => {
+      const host = $('#kor-schema');
+      if (host) host.innerHTML = tomt('Schemat gick inte att läsa', felText(fel));
+    });
     const val = $('#kor-period');
     if (!val || val.options.length) return;
     const nu = new Date();

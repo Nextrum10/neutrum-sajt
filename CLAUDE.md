@@ -383,6 +383,27 @@ bekräftat. Att bekräfta filtreras inte. Två saker kom fram i provbänken:
   behålla höjden tills tomrummet ligger under skärmkanten.
   Studiehjälparvyns två rader har bara `håll()`.
 
+**Varje avslutad månad har en lönespecifikation** (2026-09-28). Leo:
+"skriv lönespec för månaden efter att månaden är klar för
+studiehjälparen, under utbetalning för månaden. Så ska det vara för
+varje månad." Rutan Utbetalning för månaden (Statistik & ersättning →
+Ersättning) visar månadens underlag, `payouts` och `payout_lines`, som
+ett dokument: namn, period, timpenning, utbetalningsdag (den 25:e i
+månaden efter, eller dagen den betalades), varje pass och summan, och
+den går att skriva ut eller spara som PDF. Den räknar ingenting själv:
+siffrorna är underlagets, frysta när månadskörningen skrev det
+(`NXBetalning.lonespec`). Månadskörningen skriver underlaget den 1:a
+varje månad, av sig själv när pg_cron-jobbet `manadskorning` är
+påslaget (avsnitt 5; läget står under Ekonomi → Månadskörning), så en
+månad har sin lönespec när den är slut. Ett pass som rapporteras efter
+körningen kommer med nästa månad, och lönespecen säger det under
+summan, liksom pass som saknar rapport. Månaderna som har en lönespec
+är märkta i månadsraden. **Ingen skatt, med flit**: `studiehjalpare_form`
+står på `oklart` (avsnitt 11), och utan anställningsform finns ingen
+skattetabell att dra efter. Summan står "före skatt". Blir
+studiehjälparna anställda gör Fortnox Lön lönebeskedet med skatten, och
+då ska lönespecen här säga var det finns i stället för att räkna själv.
+
 **Studiehjälparens schema öppnar i Kommande** (2026-09-24): de närmaste
 passen per dag, med klockslag och ämne, elevens namn och platsen på var
 sin rad. Studievyn och adminvyn öppnar fortfarande i månaden — hos
@@ -510,8 +531,10 @@ elev.
   det som återstår.
 - **Den 25:e** får studiehjälparen betalt, i en klump för månadens
   rapporterade pass (`payouts`). Det är en lön, inte en andel av varje
-  kortbetalning. Blir studiehjälparna anställda läggs underlaget in i
-  Fortnox Lön för hand (Fas 14.9); anställningsformen är inte avgjord
+  kortbetalning. Studiehjälparen ser underlaget som månadens
+  lönespecifikation, före skatt (2026-09-28). Blir studiehjälparna
+  anställda går underlaget till Fortnox Lön som en PAXml-fil från
+  adminvyns Löner (avsnitt 1); anställningsformen är inte avgjord
   (avsnitt 11).
 - **Erbjudandenas priser står i `erbjudanden_pris` och ingen
   annanstans.** Timpriset med rabatt avrundas nedåt till hel krona och
@@ -870,6 +893,18 @@ betala nästa bekräftade pass. Fas 22.4 la till
 `bookings_timmar_betalar_forslaget` och
 `intern.obesvarade_forslag_slapper_timmarna`: timmen dras när förslaget
 skapas och kommer tillbaka om ingen svarat när dagen gått.
+Lönespecifikationen (2026-09-28) la till pg_cron-jobbet `manadskorning`,
+den 1:a klockan 04:17 UTC, och `notis_konfig.fakturering_url`.
+`intern.manadskorning_vack()` väcker `fakturering` genom
+`intern.natanrop` med hemligheten i `x-nextrum-notis`, och den vägen
+skriver alltid förra månaden. Saknas adressen blir det en uppgift
+(`manadskorning:adress`) i stället för en tyst månad; går anropet fel
+står det under System → Fel och passen larmar som `ej_utbetalt`.
+Adminvyn visar om jobbet är på (`manadskorning_lage()`, bara admin): ett
+schema som står av ser annars ut precis som ett som fungerar.
+**Jobbet ska inte slås på förrän provpassen är undantagna**: det första
+som körs skarpt skriver underlag och fakturautkast för allt som står
+klart, och DEPLOY-BETALNING.md avsnitt 5–6 säger i vilken ordning.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
@@ -1596,7 +1631,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 30 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 30 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28), 31 med `manadskorning_lage` när lönespecens migration är körd | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
@@ -1669,7 +1704,7 @@ tillbaka en kopia.**
 
 | Funktion | Gör | Anropas av |
 |---|---|---|
-| `fakturering` | Månadskörningen: underlag per studiehjälpare, ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand | Schema (`x-fakturering-nyckel`) eller admin |
+| `fakturering` | Månadskörningen: underlag per studiehjälpare, som är studiehjälparens lönespecifikation (2026-09-28), ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand | pg_cron `manadskorning` den 1:a (`x-nextrum-notis`, alltid förra månaden), admin, eller `x-fakturering-nyckel` |
 | `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Fortnox | Knapp under Ekonomi → Utbetalningar |
 | `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
@@ -2409,6 +2444,12 @@ tillbaka överst i avsnittet för 22.1.
 - **Skatt och anställning av minderåriga.** Olöst. Revisor före första
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
+  Därför räknar lönespecifikationen i studiehjälparvyn (2026-09-28)
+  ingen skatt och ingen semesterersättning: den visar underlaget, före
+  skatt. En lönespec med skatteavdrag är ett lönebesked, och det gör
+  Fortnox Lön den dag frågan är avgjord. Den 25 oktober 2026, första
+  utbetalningsdagen efter att lönespecen kom, är en söndag; vilken
+  bankdag lönen går då är inte bestämt, och lönespecen visar den 25:e.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
 - **Ansökningar gallras efter ett år, men en sak återstår.** Sedan
   2026-09-27 tar `ansokan-gallring` varje natt bort en ansökan som inte
