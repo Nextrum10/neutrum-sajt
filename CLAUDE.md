@@ -1404,12 +1404,14 @@ DELETE CASCADE: ett konto som tas bort där tar med sig sina betalda pass,
 och bokföringen med dem. Ett konto med klippkort går inte att ta bort
 alls där (`klippkort_parent_id_fkey` är RESTRICT).
 
-Migrationen heter `personer_redigeras_och_raderas` och kördes inte från
-grenen: den körs efter merge (avsnitt 7, driftsätt aldrig från en gren
-som inte är mergad). Tills den är körd svarar knappen att raderingen
-inte finns i databasen än, och listorna och Redigera fungerar ändå.
+Migrationen `personer_redigeras_och_raderas` kördes i driften efter
+merge, som version `20260928231551`, och det driften sparade har samma
+md5 som filen. Hela `rls-test.sql` gick igenom efteråt: 754 av 756, där
+de två är Fas 23.1:s prov, som väntar på sin egen migration.
 `rls-test.sql` har avsnittet RADERA EN PERSON; kör hela filen efter
-varje ändring.
+varje ändring. Adminvyn tål att funktionerna saknas (en databas byggd
+utan migrationen): Radera säger då att raderingen inte finns, och
+ingenting raderas.
 
 ### Notiserna (Runda 2)
 
@@ -1916,7 +1918,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 31 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28, den senaste är `manadskorning_lage`), och `radering_lage` och `radera_person` när `personer_redigeras_och_raderas` är körd | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 33 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28, de senaste är `radering_lage` och `radera_person`, och `manadskorning_lage` före dem) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
