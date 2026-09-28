@@ -119,7 +119,9 @@
         { namn: 'Namn', rita: namn },
         { namn: 'Intervjuad', rita: a => väntat(a.intervju_at, 'intervjuad') },
         { namn: 'Ämnen', rita: a => esc(a.subjects || '—') },
+        { namn: 'Provet', rita: a => esc(provKort(a)) },
         { namn: 'Steg', rita: a => '<div class="adm-spar">'
+          + steg('Utb.möte', a.utbildningsmote_at, 'data-ans-steg="utbmote:' + esc(a.id) + '"')
           + steg('Utbildad', a.utbildad_at, 'data-ans-steg="utbildad:' + esc(a.id) + '"')
           + '</div>' },
         { namn: '', höger: true, rita: a =>
@@ -296,18 +298,144 @@
     const a = S.ansokningar.find(x => x.id === id);
     if (!a) return;
 
-    const kolumn = steg === 'intervju' ? 'intervju_at' : 'utbildad_at';
+    const kolumn = { intervju: 'intervju_at', utbmote: 'utbildningsmote_at' }[steg] || 'utbildad_at';
     const nu = a[kolumn] ? null : new Date().toISOString();
 
+    /* Fas 22.1: utbildningen är provet. Att markera någon som utbildad
+       utan godkänt prov går, men det ska vara ett val och inte ett
+       felklick: mejlet om kontot går direkt. */
+    if (kolumn === 'utbildad_at' && nu && !a.prov_godkant_at) {
+      const ändå = await bekräfta({
+        titel: 'Provet är inte godkänt',
+        text: (a.name || 'Den sökande') + ' har inte klarat utbildningsprovet'
+          + (a.prov_sista_dag ? '' : ', och provet är inte öppnat') + '. Markerar du utbildad ändå '
+          + 'mejlas hen direkt om att skapa sitt konto. Gör det bara om introduktionen är klar på '
+          + 'annat sätt.',
+        knapp: 'Markera utbildad ändå',
+        avbryt: 'Avbryt'
+      });
+      if (!ändå) return;
+    }
+    /* Att ångra mötet stänger provet. Har hen redan börjat är det
+       värt en fråga. */
+    if (kolumn === 'utbildningsmote_at' && !nu && !a.prov_godkant_at
+        && (S.provForsok[a.id] || []).length) {
+      const ändå = await bekräfta({
+        titel: 'Stänga provet?',
+        text: 'Ångrar du utbildningsmötet stängs provet, och länken slutar gälla tills mötet '
+          + 'markeras igen. ' + (a.name || 'Den sökande') + ' har redan gjort provet '
+          + S.provForsok[a.id].length + ' gånger.',
+        knapp: 'Ångra och stäng provet',
+        avbryt: 'Avbryt'
+      });
+      if (!ändå) return;
+    }
+
     await medan(knapp, '…', async () => {
-      const { error } = await supa.from('applications')
-        .update({ [kolumn]: nu }).eq('id', id);
+      /* Raden tillbaka: triggern sätter provets sista dag och nyckel när
+         mötet markeras, och rutan ska visa dem utan en ny hämtning. */
+      const { data, error } = await supa.from('applications')
+        .update({ [kolumn]: nu }).eq('id', id).select('*').single();
       if (error) { alert('Kunde inte spara: ' + felText(error)); return; }
-      a[kolumn] = nu;
+      Object.assign(a, data || { [kolumn]: nu });
       await hämtaBesked(id);
       ritaOm();
     });
   });
+
+  /* ---- öppna provet i tre dagar till (Fas 22.1) ---- */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-ans-prov-igen]');
+    if (!knapp) return;
+    const a = S.ansokningar.find(x => x.id === knapp.dataset.ansProvIgen);
+    if (!a) return;
+
+    /* Dagen i dag, i adminens egen tid, plus tre. Samma räkning som när
+       mötet markeras: i dag och tre dagar till. */
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    const sista = isoFor(d);
+
+    const ja = await bekräfta({
+      titel: 'Öppna provet igen',
+      text: 'Provet öppnas till och med ' + provDag(sista) + ', med samma länk som förut. '
+        + (a.name || 'Den sökande') + ' får ett mejl om det nu, en påminnelse i morgon och en '
+        + 'sista dagen.',
+      knapp: 'Öppna provet',
+      avbryt: 'Avbryt'
+    });
+    if (!ja) return;
+
+    await medan(knapp, '…', async () => {
+      const { data, error } = await supa.from('applications')
+        .update({ prov_sista_dag: sista }).eq('id', a.id).select('*').single();
+      if (error) { alert('Kunde inte öppna provet: ' + felText(error)); return; }
+      Object.assign(a, data || { prov_sista_dag: sista });
+      await hämtaBesked(a.id);
+      ritaOm();
+    });
+  });
+
+  /* ============================================================
+     UTBILDNINGSPROVET (Fas 22.1)
+
+     Provet öppnas när "Utbildningsmötet är hållet" klickas, i tre
+     dagar räknat i svensk tid, och databasen mejlar länken, en
+     påminnelse dagen efter och en sista dagen. Klarar hen provet
+     sätts Utbildad av sig själv och mejlet om kontot går. Här visas
+     bara läget: öppet till när, hur många försök, bästa resultatet.
+     ============================================================ */
+  function idagIso() { return isoFor(new Date()); }
+
+  function provDag(iso) {
+    if (!iso) return '';
+    const [y, m, d] = String(iso).split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  function provLäge(a) {
+    const försök = S.provForsok[a.id] || [];
+    const bäst = försök.reduce((b, f) => (!b || f.ratt / f.antal > b.ratt / b.antal ? f : b), null);
+    let läge = 'ej_öppnat';
+    if (a.prov_godkant_at) läge = 'godkänt';
+    else if (a.prov_sista_dag && a.prov_sista_dag >= idagIso()) läge = 'öppet';
+    else if (a.prov_sista_dag || a.utbildningsmote_at) läge = 'stängt';
+    return { läge: läge, försök: försök, bäst: bäst };
+  }
+
+  /* En rad för tabellen. */
+  function provKort(a) {
+    const p = provLäge(a);
+    const res = p.bäst ? ', bäst ' + p.bäst.ratt + '/' + p.bäst.antal : '';
+    return {
+      'godkänt': 'Godkänt ' + kortDatum(a.prov_godkant_at) + res,
+      'öppet': 'Öppet t.o.m. ' + kortDatum(a.prov_sista_dag) + ' · ' + p.försök.length + ' försök' + res,
+      'stängt': 'Stängt · ' + p.försök.length + ' försök' + res,
+      'ej_öppnat': 'Inte öppnat'
+    }[p.läge];
+  }
+
+  /* Faktarutan i rekryteringsrutan. */
+  function provFakta(a) {
+    const p = provLäge(a);
+    if (p.läge === 'ej_öppnat') return '';
+    const länk = a.prov_nyckel ? location.origin + '/utbildningsprov?t=' + a.prov_nyckel : '';
+    const rader = [];
+    rader.push('<b>Provet:</b> ' + esc({
+      'godkänt': 'godkänt ' + kortDatum(a.prov_godkant_at),
+      'öppet': 'öppet till och med ' + provDag(a.prov_sista_dag),
+      'stängt': 'stängt' + (a.prov_sista_dag ? ' sedan ' + provDag(a.prov_sista_dag) : '')
+    }[p.läge]));
+    rader.push('<b>Försök:</b> ' + (p.försök.length
+      ? esc(p.försök.length + ' st, bäst ' + p.bäst.ratt + ' av ' + p.bäst.antal
+        + ', senast ' + kortDatum(p.försök[0].skapad))
+      : 'inga än'));
+    /* Länken står här för den som vill skicka den själv, till exempel
+       när mejlet inte gick fram. Samma länk hela vägen. */
+    if (länk && p.läge === 'öppet') rader.push('<b>Länk:</b> ' + esc(länk));
+    return '<div class="ans-steg-fakta' + (p.läge === 'stängt' ? ' ar-fel' : '') + '">'
+      + rader.join('<br>') + '</div>';
+  }
 
   /* ============================================================
      BESKEDEN TILL DEN SOM SÖKER (Fas 16.1)
@@ -328,6 +456,9 @@
     mottagen: 'Kvittot på ansökan',
     mote: 'Mötestiden',
     utbildning: 'Tack för mötet',
+    prov: 'Länken till provet',
+    prov_paminnelse: 'Påminnelsen dagen efter',
+    prov_sista_dagen: 'Påminnelsen sista dagen',
     sista_steget: 'Skapa ditt konto',
     valkommen: 'Välkomstmejlet'
   };
@@ -472,14 +603,23 @@
           + besked(a, 'mote') + besked(a, 'utbildning'))
 
       + spårSteg(3, 'Utbildning',
-          'Introduktionen och provet. Det här steget är inte en artighet: en studiehjälpare '
+          'Utbildningsmötet och provet. Det här steget är inte en artighet: en studiehjälpare '
           + 'som inte vet hur rapporten fungerar lämnar inga rapporter, och utan rapport blir '
-          + 'passet aldrig genomfört — varken fakturerat eller utbetalt. "Markera utbildad" '
-          + 'mejlar hen och ber hen skapa ett konto med samma e-postadress.',
+          + 'passet aldrig genomfört — varken fakturerat eller utbetalt. "Utbildningsmötet är '
+          + 'hållet" öppnar provet i tre dagar och mejlar länken, med en påminnelse dagen efter '
+          + 'och en sista dagen. 80 procent rätt är godkänt, och då markeras hen som utbildad av '
+          + 'sig själv och får mejlet om att skapa sitt konto.',
           a.utbildad_at,
           (utbLänk
             ? '<button type="button" class="btn btn-ghost btn-sm" data-ans-utb="' + id + '">'
               + 'Skicka utbildningen</button> '
+            : '')
+          + '<button type="button" class="btn btn-ghost btn-sm" data-ans-steg="utbmote:' + id + '">'
+          + (a.utbildningsmote_at ? 'Ångra "utbildningsmötet är hållet"' : 'Utbildningsmötet är hållet')
+          + '</button> '
+          + (provLäge(a).läge === 'stängt'
+            ? '<button type="button" class="btn btn-ghost btn-sm" data-ans-prov-igen="' + id + '">'
+              + 'Öppna provet i tre dagar till</button> '
             : '')
           + '<button type="button" class="btn btn-ghost btn-sm" data-ans-steg="utbildad:' + id + '">'
           + (a.utbildad_at ? 'Ångra "utbildad"' : 'Markera utbildad') + '</button>',
@@ -492,6 +632,8 @@
             : '<div class="ans-steg-fakta">Ingen utbildningslänk är satt. '
               + 'Lägg den i <code>UTBILDNING_URL</code> i nextrum-config.js, '
               + 'så går den att skicka härifrån.</div>')
+          + provFakta(a)
+          + besked(a, 'prov') + besked(a, 'prov_paminnelse') + besked(a, 'prov_sista_dagen')
           + besked(a, 'sista_steget'))
 
       + spårSteg(4, 'In i poolen',

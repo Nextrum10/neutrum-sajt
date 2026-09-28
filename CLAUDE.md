@@ -728,6 +728,12 @@ pg_cron-jobbet `timmar-betalar`, som låter timmar som blivit lediga
 betala nästa bekräftade pass.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
+Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
+försök på provet: admin läser, bara `utbildningsprov_lamna()` skriver)
+och fyra kolumner på `applications`: `utbildningsmote_at`,
+`prov_sista_dag`, `prov_nyckel` och `prov_godkant_at`. Numret krockar:
+timbanken kördes som `fas22_1_timbanken` samma förmiddag i en annan
+session. Namnen i driften går inte att byta i efterhand.
 Fas 18.1 la till `google_koppling` (nyckeln till Nextrums Google-konto:
 RLS utan policy, bara `service_role`) och `pass_moten` (Meet-länken per
 pass: parterna och admin läser, bara `service_role` skriver, och
@@ -1092,7 +1098,10 @@ applications (insert/update)
 | "Kontakt" | **inget** — admin skriver själv, med förslag på tider |
 | mötet sparas eller får ny tid/länk | `mote`: tid i svensk tid, länken som knapp |
 | "Mötet är hållet" | `utbildning`: tack, introduktionen är nästa steg |
-| "Markera utbildad" | `sista_steget`: skapa konto med samma e-post |
+| "Utbildningsmötet är hållet" | `prov`: länken till provet, öppet i tre dagar (Fas 22.1) |
+| dagen efter, och sista dagen, kl. 9 | `prov_paminnelse`, `prov_sista_dagen` (pg_cron `utbildningsprov-paminn`) |
+| "Öppna provet i tre dagar till" | `prov` igen, med den nya sista dagen |
+| provet klarat, eller "Markera utbildad" | `sista_steget`: skapa konto med samma e-post |
 | läget blir Godkänd | `valkommen` |
 | läget blir Avböjd | **inget, med flit** |
 
@@ -1131,6 +1140,49 @@ Sex regler bär det:
 6. **Godkänd i rullgardinen är inte "Ta in i poolen".** Båda mejlar
    välkomsten, men bara den senare godkänner profilen. Rullgardinen
    frågar därför först.
+
+### Utbildningsprovet (Fas 22.1)
+
+Efter utbildningsmötet gör den som söker ett prov på nätet:
+`/utbildningsprov?t=<nyckel>`, trettio flervalsfrågor om
+Handledarhandboken, ingen tidsgräns, godkänt vid 24 rätt (80 procent).
+Hen får göra om det tills det går. Klarat prov sätter `prov_godkant_at`
+OCH `utbildad_at`, och då går mejlet om kontot av sig självt; "Markera
+utbildad" finns kvar för admin, men frågar först om provet inte är
+klarat. Fem regler:
+
+1. **Facit finns bara i edge-funktionen** (`_delad/utbildningsprov.ts`).
+   Sidan får frågorna utan svaren, med alternativen i ny ordning vid
+   varje hämtning. Gränsen prövas en gång till i
+   `utbildningsprov_lamna()`, i heltal (`ratt * 5 >= antal * 4`).
+2. **Resultatet säger rätt per avsnitt, aldrig per fråga.** Med fritt
+   antal försök och svaret per fråga går provet att klara på tre
+   försök utan att ha läst något. Av samma skäl: högst tio försök per
+   dygn, räknat i databasen.
+3. **Den som söker har inget konto än**, så provet öppnas med en
+   slumpad nyckel (`prov_nyckel`, ett uuid). Den öppnar provet och
+   inget annat, står i mejlen och adminvyn men aldrig i en logg, och
+   sidan har ingen mätning och inget `Referer`. `utbildningsprov` har
+   `verify_jwt = false` och når databasen bara genom
+   `utbildningsprov_lage()` och `utbildningsprov_lamna()`, båda bara
+   för `service_role`.
+4. **Tre dagar räknas i svensk tid**: markeras mötet en måndag är
+   provet öppet till och med torsdag. `applications_utbildningsprov`
+   (en BEFORE-trigger) sätter `prov_sista_dag` och nyckeln.
+   **`ansokan_besked` måste lista `utbildningsmote_at`** fast den
+   aldrig läser kolumnen: en `UPDATE OF`-trigger går bara på kolumner
+   som står i själva UPDATE:n, inte på dem en BEFORE-trigger ändrar.
+   Utan den gick länken aldrig ut. Ett rullat prov fångade det.
+5. **Påminnelsernas nyckel bär sista dagen** (`prov_paminnelse:2026-09-30`).
+   Öppnas provet igen blir det ett nytt fönster med nya påminnelser,
+   och en påminnelse från det gamla hoppas över av
+   `ansokan_besked_ta()`. Ingenting skickas före klockan nio.
+
+Frågorna är skrivna ur handboken som den såg ut i september 2026.
+Handboken finns inte i repot. Ändras den ska frågorna läsas om, och
+en fråga som byter betydelse får ett nytt id:
+`utbildningsprov_forsok.svar` lagrar id:n. Sidan finns bara på
+svenska, med flit: handboken gör det också.
 
 Utfallet syns i rekryteringsrutan vid det steg som skickade mejlet, och
 ett som inte gick fram är rött. Samma sort som kvittot till familjen:
@@ -1485,7 +1537,6 @@ tillbaka en kopia.**
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
 | `ansokan-notis` | Ett besked till den som sökt jobb (Fas 16.1): kvittot, eller mejlet om ett steg framåt med hela processen och var hen står. Databasen bestämmer vad, funktionen skickar | Triggern `ansokan_besked` och pg_cron `ansokan-besked`, via `notis_konfig.ansokan_url` |
 | `ansokan-gallring` | Tar bort ansökningar som inte ledde till anställning och CV-filer utan ansökan när de är ett år gamla (2026-09-27, avsnitt 5). Filen först genom Storage-API:t, sedan raden genom `ansokan_gallra()`, som vägrar medan filen finns. Svarar 500 om något inte gick | pg_cron `ansokan-gallring` via `intern.ansokan_gallring_vack()` och `notis_konfig.gallring_url` |
-| `utbildningsprov` | Provet efter utbildningsmötet (Fas 22.1): hämtar frågorna och tar emot svaren genom `utbildningsprov_lage` och `utbildningsprov_lamna`, med provnyckeln som behörighet. Ligger i drift sedan 2026-09-27; se avsnitt 11 om vad som saknas | Sidan `/utbildningsprov`, som bara finns i utkastet (PR #88) |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
 | `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`) | Knappen på passet i föräldravyn, och Köp under Erbjudanden |
 | `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet. Med `timbank: true` dras minuterna i timbanken i stället, i `timbank_dra()` (Fas 22.1). Sedan Fas 22.2 betalar timmarna passen av sig själva i databasen, och knappen tar det de inte hann | Betala med timmar och Betala med timbanken i föräldravyn |
@@ -1495,6 +1546,7 @@ tillbaka en kopia.**
 | `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Ekonomi → Kortbetalningar |
 | `google-koppla` | Kopplingen till Google (Fas 18.1): adressen till Google, återkomsten med engångskoden, Prova och Koppla från. Koden byts mot en nyckel HÄR; vyn ser aldrig nyckeln eller klienthemligheten. Återkomsten bär ingen inloggning och skyddas av ett HMAC-signerat läge som gäller i tio minuter. Ett konto utanför nextrum.se nekas | Knapparna under System → Integrationer, och Googles omdirigering |
 | `google-meet` | Meet-länken till ett bekräftat onlinepass (Fas 18.1). Läser passet med anroparens token först, skapar ett öppet rum och sparar länken i `pass_moten`. Ett rum som inte blev öppet sparas inte | Passets sida i föräldravyn och studiehjälparvyn |
+| `utbildningsprov` | Provet efter utbildningsmötet (Fas 22.1). Lämnar ut frågorna utan facit, rättar, och sparar försöket genom `utbildningsprov_lamna()`. Skyddet är nyckeln i länken, inte en inloggning. I drift sedan 2026-09-27 | `/utbildningsprov`, från länken i mejlet |
 
 `supabase/config.toml` bär `verify_jwt = false` för de nio funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
@@ -1564,6 +1616,16 @@ git är ett skilt steg som ingen kontroll tvingar fram. Två system kan
 alltså glida isär utan att något blir rött. Kör frågan i avsnitt 5
 innan du tror på filerna — och när du driftsatt något, commit:a det
 i samma arbetspass, inte i nästa.
+
+Samma sak hände utbildningsprovet (Fas 22.1). Migrationerna, jobbet
+`utbildningsprov-paminn`, funktionen `utbildningsprov` och
+`ansokan-notis` med provstegen driftsattes 2026-09-27 från utkastet i
+PR #88, som inte var mergat. I ett dygn låg en trigger, ett schemajobb
+och mejlmallar i drift som main inte visste om, och en databas byggd ur
+main föll på gallringens migration, som läste provkolumnerna. PR #99
+tog hem databasdelen och funktionerna ordagrant 2026-09-28, och sidan
+och adminvyns del kom med PR #88. **Driftsätt aldrig från en gren som
+inte är mergad.**
 
 ### Agentregeln
 
@@ -1862,17 +1924,6 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
 
 ## 11. Vad som inte är byggt
 
-- **Utbildningsprovet (Fas 22.1) står halvvägs i drift.** Migrationerna,
-  jobbet `utbildningsprov-paminn` (varje timme), funktionen
-  `utbildningsprov` och `ansokan-notis` med provstegen driftsattes
-  2026-09-27 från utkastet (PR #88), som aldrig mergades. Sedan
-  2026-09-28 står databasdelen och funktionerna i main, så att repot och
-  driften är samma; gallringen läste redan provkolumnerna. Sidan
-  `/utbildningsprov` och adminvyns del finns fortfarande bara i
-  utkastet, så den som når provsteget får en länk som svarar 404. Leo
-  avgör: gör klart utkastet, eller ta bort provet med en migration (låt
-  kolumnerna stå, gallringen läser dem). **Driftsätt aldrig från en gren
-  som inte är mergad**: det var så det här hände.
 - **Betalning.** Familjen betalar varje pass med kort, **i förväg eller
   efter passet när de bekräftar rapporten** (Fas 19.2; före passet från
   Fas 14.2). Faktura finns sedan Fas 14.6 som andra betalsätt, **byggt
@@ -2145,8 +2196,9 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
   utbildning, poolen) med skälet till varje steg skrivet i vyn, men
   inget av stegen kontrollerar något utifrån: mötet bokas inte i en
   kalender (kopplingen till Google gör bara onlinepassens Meet-länkar,
-  Fas 18.1), och utbildningen är en
-  länk i `UTBILDNING_URL`, inte ett prov systemet läser resultatet av.
+  Fas 18.1). Sedan Fas 22.1 har utbildningen ett prov systemet läser
+  resultatet av, men det prövar att hen läst handboken, inte vem hen
+  är.
 - **`materials` har inga läsare kvar utom oss själva** (efter Fas
   13.3). Studiehjälparvyns materialflik är ombyggd till biblioteket,
   och adminvyns detaljpanel skriver fortfarande dit men säger nu i

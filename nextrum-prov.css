@@ -1,0 +1,78 @@
+/* ============================================================
+   NEXTRUM — /utbildningsprov (Fas 22.1)
+
+   Bara provsidan, efter cinema. Inga egna färger: allt ur paletten,
+   och varje avsnitt står i en .nx-panel, som redan är en ljus ö i
+   mörkt läge. Ett alternativ som är valt ska synas på avstånd, för
+   den som bläddrar tillbaka för att se vad som saknas.
+   ============================================================ */
+
+.prov-lage{margin-top:22px}
+.prov-lage:empty{display:none}
+
+.prov-avsnitt{margin-top:clamp(20px,3vw,32px)}
+/* Panelen är en ljus ö också i mörkt läge (cinema, DE STORA
+   FORMULÄREN). Radioknapparna ritas av webbläsaren efter
+   color-scheme, och utan den här raden blev de mörka fyllda rundlar
+   på det ljusa papperet: ett alternativ som inte var valt såg ut
+   som ett valt. */
+.prov-avsnitt,.prov-resultat{color-scheme:light}
+.prov-avsnitt > h2{
+  font-size:clamp(1.15rem,1.6vw,1.35rem);letter-spacing:-.02em;margin:0 0 4px;
+}
+.prov-avsnitt > .prov-raknare{font-size:.82rem;color:var(--muted-2);margin:0 0 8px}
+
+.prov-fraga{border:0;margin:0;padding:22px 0 0;min-width:0}
+.prov-fraga + .prov-fraga{border-top:1px solid var(--line);margin-top:22px}
+/* float lyfter legenden ur fieldsetens kant. Utan den ritas kanten
+   ovanför frågan som ett streck bredvid texten, för en legend sitter
+   annars I kanten. clear på alternativen tar tillbaka flödet. */
+.prov-fraga legend{
+  float:left;width:100%;margin-bottom:12px;
+  padding:0;font-weight:600;font-size:1rem;line-height:1.45;color:var(--fg);
+  display:flex;gap:10px;
+}
+.prov-fraga legend em{
+  font-style:normal;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.08em;
+  color:var(--muted-2);flex:none;padding-top:3px;min-width:24px;
+}
+
+.prov-alt{display:grid;gap:8px;clear:both}
+.prov-alt label{
+  display:flex;gap:12px;align-items:flex-start;cursor:pointer;
+  padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-sm, 10px);
+  background:var(--bg);line-height:1.45;font-size:.95rem;color:var(--fg);
+  transition:border-color .15s ease, background-color .15s ease;
+}
+.prov-alt label:hover{border-color:var(--line-2)}
+.prov-alt input{margin:3px 0 0;flex:none;accent-color:var(--acc);width:18px;height:18px}
+.prov-alt label:has(input:checked){border-color:var(--acc-line);background:var(--acc-soft)}
+.prov-alt input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* En obesvarad fråga när man försökt lämna in. Markeringen sitter på
+   legendens nummer och en rad text, inte bara i en färg. */
+.prov-fraga.ar-obesvarad legend em{color:var(--acc-text)}
+.prov-fraga .prov-saknas{display:none;margin:8px 0 0;font-size:.85rem;color:var(--acc-text)}
+.prov-fraga.ar-obesvarad .prov-saknas{display:block}
+
+/* Raden längst ner: hur många som är besvarade, och knappen. Den står
+   kvar i flödet i stället för att klibba fast: en fast rad över
+   sista frågan på en telefon döljer precis de alternativ man ska
+   trycka på. */
+.prov-lamna{margin-top:clamp(20px,3vw,32px);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.prov-lamna p{margin:0;font-size:.9rem;color:var(--muted)}
+
+.prov-resultat h2{margin:0 0 8px;font-size:clamp(1.3rem,2vw,1.6rem);letter-spacing:-.02em}
+.prov-resultat .prov-poang{
+  font-family:var(--f-mono);font-size:clamp(2rem,4vw,2.6rem);letter-spacing:-.03em;
+  margin:6px 0 4px;color:var(--fg);
+}
+.prov-resultat ul{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:2px}
+.prov-resultat li{
+  display:flex;justify-content:space-between;gap:16px;padding:10px 0;
+  border-top:1px solid var(--line);font-size:.93rem;
+}
+.prov-resultat li:last-child{border-bottom:1px solid var(--line)}
+.prov-resultat li b{font-family:var(--f-mono);font-weight:500;white-space:nowrap}
+.prov-resultat li.ar-miss b{color:var(--acc-text)}
+.prov-resultat .nx-cta-rad{margin-top:20px}

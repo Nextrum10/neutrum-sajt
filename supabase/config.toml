@@ -3,7 +3,7 @@
 #
 # FILEN FINNS FÖR ATT EN DRIFTSÄTTNING INTE SKA SLÅ PÅ JWT-KRAVET
 #
-# Åtta funktioner anropas av något som inte har en inloggad användare:
+# Nio funktioner anropas av något som inte har en inloggad användare:
 # en databaswebhook, en trigger, ett pg_cron-jobb, Stripe, en knapp i
 # ett mejlprogram, Googles omdirigering tillbaka efter ett godkännande
 # eller den som gör utbildningsprovet innan hen har ett konto. De har

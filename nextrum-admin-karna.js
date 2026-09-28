@@ -35,7 +35,7 @@ const NXAdmin = (function () {
     tutorProfiler: {}, // id → tutor_profiles-rad
     leads: [], ansokningar: [], kontakt: [], bokningar: [], bibliotek: [],
     /* Fas 16.1: mejlen till den som sökt jobb, per ansökan. */
-    ansokanUtskick: {}, ansokanUtskickFel: null,
+    ansokanUtskick: {}, ansokanUtskickFel: null, provForsok: {},
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [], notisfel: [],
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
     elevlista: [], rapporter: [], lage: null, attGora: [],
@@ -217,7 +217,7 @@ const NXAdmin = (function () {
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank] = await Promise.all([
+           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov] = await Promise.all([
       supa.from('leads').select('*').order('created_at', { ascending: false }),
       supa.from('applications').select('*').order('created_at', { ascending: false }),
       supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
@@ -283,7 +283,12 @@ const NXAdmin = (function () {
       /* Fas 22.1: familjernas timbank, räknad i databasen. Bara de som
          har minuter: det är pengar vi är skyldiga, och en lista med alla
          familjer på noll hade gömt dem. */
-      supa.from('timbank_saldo').select('parent_id, saldo_min, varde_ore').gt('saldo_min', 0)
+      supa.from('timbank_saldo').select('parent_id, saldo_min, varde_ore').gt('saldo_min', 0),
+      /* Fas 22.1: försöken på utbildningsprovet. Bara resultatet, inte
+         svaren: rekryteringsrutan säger hur det gått, inte vad hen
+         kryssade. Bara admin läser tabellen. */
+      supa.from('utbildningsprov_forsok').select('ansokan_id, ratt, antal, godkant, skapad')
+        .order('skapad', { ascending: false })
     ]);
 
     S.leads = leads.data || [];
@@ -296,6 +301,10 @@ const NXAdmin = (function () {
       (S.ansokanUtskick[r.ansokan_id] = S.ansokanUtskick[r.ansokan_id] || []).push(r);
     });
     S.ansokanUtskickFel = ansUt.error ? felText(ansUt.error) : null;
+    S.provForsok = {};
+    (prov.data || []).forEach(r => {
+      (S.provForsok[r.ansokan_id] = S.provForsok[r.ansokan_id] || []).push(r);
+    });
     S.kontakt = kontakt.data || [];
     S.bokningar = bok.data || [];
     S.fakturor = fakt.data || [];
