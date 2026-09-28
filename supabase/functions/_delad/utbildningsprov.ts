@@ -34,6 +34,7 @@
 // utförliga som det rätta, och Nextrum och rutinerna står också i fel
 // alternativ. Proven i utbildningsprov_test.ts räknar vad en tumregel
 // ger; skriver du om en fråga, kör dem.
+//
 // Ändras en fråga ska id:t bytas om svaret byter betydelse:
 // utbildningsprov_forsok.svar lagrar id:n, och ett gammalt försök ska
 // inte se ut att ha svarat på en ny fråga.
