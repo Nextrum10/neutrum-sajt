@@ -2280,7 +2280,13 @@ tillbaka överst i avsnittet för 22.1.
   körd som `20260928174612` direkt efter att PR #105 mergats, och
   ordagrant filen (samma md5 som satserna i `schema_migrations`). Hela
   `rls-test.sql` gick igenom mot driften efteråt, 693 av 693. Då fanns
-  ett betalt klippkort i driften, och inget förslag att betala. Kvar: en familj som inte är matchad når inte
+  ett betalt klippkort i driften, och inget förslag att betala.
+  **Betala med kort nu** (2026-09-28, PR #106, avsnitt 1):
+  `stripe-checkout` version 16 och `stripe-webhook` version 12,
+  driftsatta från main efter mergen och jämförda byte för byte. De bar
+  också 38a646e, som låg i main utan att vara driftsatt: ett skrivfel i
+  webhooken ger Stripe ett nytt försök, en betalning som inte blev
+  nedskriven blir en uppgift, och kassan stänger passets förra session. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
