@@ -79,7 +79,10 @@
       [typeof NXKontakt !== 'undefined', 'nextrum-kontakt.js'],
       [typeof NXStudie !== 'undefined' && !!NXStudie.bekräfta, 'nextrum-studie.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],
-      [typeof NXBetalning !== 'undefined' && !!NXBetalning.kronor, 'nextrum-betalning.js']
+      [typeof NXBetalning !== 'undefined' && !!NXBetalning.kronor, 'nextrum-betalning.js'],
+      /* Fas 23.1: banan och spelaren i Uppgifter. En gammal fil i
+         cachen saknar områdesrättningen, som kom sist. */
+      [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.områdesHtml, 'nextrum-uppgifter.js']
     );
   }
 

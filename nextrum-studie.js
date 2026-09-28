@@ -151,6 +151,9 @@ window.NXStudie = (function () {
             + (o.materialKnapp || '')
             + '</div>'
           : '')
+      /* Fas 23.1: nivån en digital uppgift går ut på, och resultatet.
+         Ritas av vyn med NXUppgifter, som vet vad försöken säger. */
+      + (o.digital || '')
       + (o.atgarder ? '<div class="lax-atg">' + o.atgarder + '</div>' : '')
       + (klar ? '</div></details>' : '</div>');
   }
@@ -832,7 +835,7 @@ window.NXStudie = (function () {
       + (o.rapport
           ? '<div class="pass-block"><h6>Efter passet</h6><p>' + esc(o.rapport) + '</p></div>' : '')
       + (o.laxor && o.laxor.length
-          ? '<div class="pass-block"><h6>Läxor omkring passet</h6>'
+          ? '<div class="pass-block"><h6>Uppgifter omkring passet</h6>'
             + o.laxor.map(function (h) {
                 return '<div class="pass-lank">' + esc(h.title)
                   + (h.due_date ? '<span>Till ' + esc(deadlineText(h.due_date)) + '</span>' : '')
@@ -1776,7 +1779,7 @@ window.NXStudie = (function () {
       var resten = klara.slice(LÄX_SYNLIGA);
 
       ut += '<div class="pl-grupp pl-tidigare lx-klara">'
-        + '<div class="pl-rubrik">Klara läxor <em>' + klara.length + ' st</em></div>'
+        + '<div class="pl-rubrik">Klara uppgifter <em>' + klara.length + ' st</em></div>'
         + visade.map(o.rad).join('')
         + (resten.length
             ? '<div class="pl-resten"' + (utfällt ? '' : ' hidden') + '>' + resten.map(o.rad).join('') + '</div>'

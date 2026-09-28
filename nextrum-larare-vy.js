@@ -13,6 +13,7 @@
   const { $, $$, esc, kr, säg, rensa, felText, datumText, isoFor } = NX;
   const { bekräfta, medan, kolla, tomt, laddar } = NXStudie;
   const M = NXMedia;
+  const U = NXUppgifter;
 
   NX.initHeader();
 
@@ -24,7 +25,9 @@
     bokningar: [], trad: null, kal: null, olästa: {},
     minAvatar: null,
     laxor: [], laxräkning: {}, minaRapporter: [], avatarer: {}, sido: null, progress: [], progressAntal: 0, schema: null,
-    senaste: {}
+    senaste: {},
+    /* Fas 23.1: katalogen över nivåer och den valda elevens försök. */
+    katalog: null, forsok: [], rättadeAlla: false
   };
 
   const elev = () => S.elever.find(e => e.id === S.aktivElev) || null;
@@ -452,13 +455,17 @@
   }
 
   /* ============================================================
-     LÄXOR
+     UPPGIFTER (hette Läxor till Fas 23.1)
+     En uppgift kan peka på en nivå i banan (homework.niva_id). Då
+     rättas den när eleven gör den, blir klar av sig själv, och
+     resultatet och rättningen står på uppgiften. Utan nivå är det en
+     vanlig uppgift som familjen bockar av.
      ============================================================ */
   $('#ny-lax').addEventListener('click', () => {
     const f = $('#lax-form');
     f.hidden = !f.hidden;
-    $('#ny-lax').textContent = f.hidden ? 'Ny läxa' : 'Stäng';
-    if (!f.hidden) $('#lx-titel').focus();
+    $('#ny-lax').textContent = f.hidden ? 'Ny uppgift' : 'Stäng';
+    if (!f.hidden) { fyllNivåval(); $('#lx-titel').focus(); }
   });
   /* Formuläret ligger ovanför listan. När det stängs försvinner dess
      höjd ovanför det man tittar på, och listan hoppade upp 550 px —
@@ -466,7 +473,7 @@
   function stängLaxForm(efter) {
     NXStudie.håll($('#lax-lista'), () => {
       $('#lax-form').hidden = true;
-      $('#ny-lax').textContent = 'Ny läxa';
+      $('#ny-lax').textContent = 'Ny uppgift';
       /* Allt som ändrar höjd ovanför listan i samma svep — meddelandet
          och det valda materialet — annars flyttade listan sig ändå de
          sista 75–90 px. */
@@ -478,6 +485,7 @@
       rensa($('#lx-msg'));
       valtBibliotek = null;
       visaValtMaterial();
+      lx.niva = null;
     });
   });
 
@@ -497,7 +505,7 @@
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
 
     await medan($('#lx-spara'), 'Skapar…', async () => {
-      const { error } = await supa.from('homework').insert({
+      const rad = {
         student_id: S.aktivElev,
         tutor_id: S.user.id,
         title: titel,
@@ -505,23 +513,118 @@
         instructions: $('#lx-text').value.trim() || null,
         due_date: datum || null,
         bibliotek_id: valtBibliotek ? valtBibliotek.id : null
-      });
-      if (error) { säg(msg, 'Kunde inte skapa läxan: ' + felText(error), false); return; }
+      };
+      /* niva_id bara när en nivå är vald: utan Fas 23.1 i databasen
+         finns inte kolumnen, och en vanlig uppgift ska gå att ge ändå. */
+      if (lx.niva) rad.niva_id = lx.niva.id;
+      const { error } = await supa.from('homework').insert(rad);
+      if (error) { säg(msg, 'Kunde inte skapa uppgiften: ' + felText(error), false); return; }
 
+      const digital = !!lx.niva;
       $('#lax-form').reset();
       stängLaxForm(() => {
-        säg(msg, '✓ Läxan har skapats. Familjen ser den direkt.', true);
+        säg(msg, digital
+          ? '✓ Uppgiften är given. Familjen ser den direkt, och den rättas när eleven gör nivån.'
+          : '✓ Uppgiften är given. Familjen ser den direkt.', true);
         valtBibliotek = null;
         visaValtMaterial();
+        lx.niva = null;
       });
       await laddaLaxor();
     });
   });
 
+  /* ---------- digital nivå i formuläret ----------
+     Ämne och årskurs förväljs ur eleven. Väljer man en nivå fylls
+     rubriken och ämnet i; rubriken följer nivån så länge den inte
+     skrivits om för hand. */
+  const lx = { niva: null, amne: null, arskurs: null };
 
-  /* Materialet från en läxrad. Raden bär bara ett id; sökvägen och
+  async function fyllNivåval() {
+    const ruta = $('#lx-digital');
+    if (!ruta) return;
+    S.katalog = await U.laddaKatalog(supa);
+    if (!S.katalog || !S.katalog.length) { ruta.hidden = true; return; }
+    ruta.hidden = false;
+    const finns = U.banor(S.katalog);
+    const ämnen = Object.keys(finns).sort((a, b) => NX.AMNEN.indexOf(a) - NX.AMNEN.indexOf(b));
+    const e = elev();
+    const förval = (lx.amne && finns[lx.amne]) ? lx.amne
+      : ((e && e.subjects) || []).find(a => finns[a]) || ämnen[0];
+    $('#lx-niva-amne').innerHTML = ämnen.map(a => '<option value="' + esc(a) + '">' + esc(a) + '</option>').join('');
+    $('#lx-niva-amne').value = förval;
+    fyllNivåÅrskurser();
+  }
+  function fyllNivåÅrskurser() {
+    const finns = U.banor(S.katalog);
+    const kurser = finns[$('#lx-niva-amne').value] || [];
+    const e = elev();
+    const förval = lx.arskurs && kurser.includes(lx.arskurs) ? lx.arskurs
+      : U.förvaldÅrskurs(kurser, NX.årskursKod(e && e.grade));
+    $('#lx-niva-ak').innerHTML = kurser.map(k => '<option value="' + k + '">' + esc(NX.årskursText(k)) + '</option>').join('');
+    $('#lx-niva-ak').value = förval;
+    fyllNivåer();
+  }
+  function fyllNivåer() {
+    const amne = $('#lx-niva-amne').value, ak = $('#lx-niva-ak').value;
+    const nivåer = (S.katalog || []).filter(n => n.aktiv && n.amne === amne && n.arskurs === ak)
+      .sort((a, b) => a.ordning - b.ordning);
+    const gjort = U.perNivå(S.forsok);
+    $('#lx-niva').innerHTML = '<option value="">Ingen, en vanlig uppgift</option>' + nivåer.map(n => {
+      const g = gjort[n.id];
+      return '<option value="' + esc(n.id) + '">' + esc(n.ordning + '. ' + n.titel + ' (' + n.omrade + ')'
+        + (g && g.klar ? ', klarad med ' + g.stjarnor + ' av 3' : '')) + '</option>';
+    }).join('');
+    $('#lx-niva').value = lx.niva && nivåer.some(n => n.id === lx.niva.id) ? lx.niva.id : '';
+    visaNivåOm();
+  }
+  function visaNivåOm() {
+    const om = $('#lx-niva-om');
+    if (!om) return;
+    const n = lx.niva;
+    om.innerHTML = n
+      ? esc((n.beskrivning ? n.beskrivning + ' ' : '') + (n.antal_fragor ? n.antal_fragor + ' frågor. ' : '')
+          + 'Uppgiften blir klar när eleven klarat nivån, och resultatet står på uppgiften.')
+        + ' <button type="button" class="upg-lank" data-lx-niva-visa>Se frågorna och facit</button>'
+      : esc('Välj en nivå så rättas uppgiften när eleven gör den. Utan nivå är det en vanlig uppgift som familjen bockar av.');
+  }
+  function väljNivå(n) {
+    const förra = lx.niva;
+    const titel = $('#lx-titel');
+    lx.niva = n;
+    if (n && (!titel.value.trim() || (förra && titel.value === förra.titel))) titel.value = n.titel;
+    if (!n && förra && titel.value === förra.titel) titel.value = '';
+    if (n) $('#lx-amne').value = n.amne;
+    visaNivåOm();
+  }
+  $('#lx-niva-amne').addEventListener('change', () => {
+    lx.amne = $('#lx-niva-amne').value; lx.arskurs = null; väljNivå(null); fyllNivåÅrskurser();
+  });
+  $('#lx-niva-ak').addEventListener('change', () => {
+    lx.arskurs = $('#lx-niva-ak').value; väljNivå(null); fyllNivåer();
+  });
+  $('#lx-niva').addEventListener('change', () => {
+    väljNivå((S.katalog || []).find(x => x.id === $('#lx-niva').value) || null);
+  });
+
+  /* Frågorna och facit, innan nivån ges. Och rättningen av ett klart
+     försök, från uppgiften eller från listan Rättade nivåer. */
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-lx-niva-visa]') && lx.niva) { U.förhandsvisa(supa, lx.niva); return; }
+    const f = e.target.closest('[data-upg-forhand]');
+    if (f) {
+      const n = (S.katalog || []).find(x => x.id === f.dataset.upgForhand)
+        || ((S.laxor || []).find(h => h.niva_id === f.dataset.upgForhand) || {}).nivaer;
+      if (n) U.förhandsvisa(supa, n);
+      return;
+    }
+    const g = e.target.closest('[data-upg-genomgang]');
+    if (g) U.genomgång(supa, g.dataset.upgGenomgang);
+  });
+
+  /* Materialet från en uppgiftsrad. Raden bär bara ett id; sökvägen och
      länken följde med i hämtningen ovan, så uppslaget görs där
-     läxorna finns — inte i en ny fråga per klick. */
+     uppgifterna finns — inte i en ny fråga per klick. */
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-lax-mat]');
     if (!knapp) return;
@@ -536,8 +639,8 @@
     });
   });
 
-  /* Antalet öppna läxor per elev, för märket på elevkorten.
-     S.laxor innehåller bara den valda elevens läxor, så den går inte
+  /* Antalet öppna uppgifter per elev, för märket på elevkorten.
+     S.laxor innehåller bara den valda elevens uppgifter, så den går inte
      att räkna på: märket hade bara kunnat stå på kortet man redan
      klickat på, vilket är det enda kort man inte behöver det på. */
   async function laddaLaxräkning() {
@@ -559,32 +662,49 @@
     $('#lax-antal').textContent = '';
     if (!S.aktivElev) {
       S.laxor = [];
-      host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp för att se läxorna.');
+      S.forsok = [];
+      host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp för att se uppgifterna.');
+      ritaRättade();
       laxRakning();
       if (passIdIAdressen()) ritaPassSida();
       return;
     }
 
     NXStudie.laddarFörsta(host);
-    const { data, error } = await supa
-      .from('homework')
-      .select('id, student_id, title, instructions, subject, due_date, status, completed_at, '
-        + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)')
-      .eq('student_id', S.aktivElev)
+    const eleven = S.aktivElev;
+    const kolumner = 'id, student_id, title, instructions, subject, due_date, status, completed_at, created_at, '
+      + 'bibliotek_id, biblioteksmaterial(titel, filvag, lank)';
+    const hämta = extra => supa.from('homework').select(kolumner + extra)
+      .eq('student_id', eleven)
       .order('due_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
+    const [svar0, katalog, forsok] = await Promise.all([
+      hämta(', niva_id, nivaer(id, titel, amne, arskurs, omrade, beskrivning, antal_fragor, aktiv)'),
+      U.laddaKatalog(supa),
+      U.laddaFörsök(supa, eleven)
+    ]);
+    /* Utan Fas 23.1 i databasen finns varken niva_id eller nivaer.
+       Uppgifterna ska synas ändå, som förut. */
+    let svar = svar0;
+    if (svar.error && /niva/.test(svar.error.message || '')) svar = await hämta('');
+    if (eleven !== S.aktivElev) return;
+    const { data, error } = svar;
+    S.katalog = katalog;
+    S.forsok = forsok || [];
+    ritaRättade();
+    fyllPgFörslag(S.progress || []);
 
-    if (error) { host.innerHTML = tomt('Kunde inte hämta läxorna', felText(error)); return; }
+    if (error) { host.innerHTML = tomt('Kunde inte hämta uppgifterna', felText(error)); return; }
     if (!data.length) {
       S.laxor = [];
-      host.innerHTML = tomt('Inga läxor än', 'Skapa den första med knappen ovanför — den dyker upp hos familjen direkt.');
+      host.innerHTML = tomt('Inga uppgifter än', 'Ge den första med knappen ovanför — den dyker upp hos familjen direkt.');
       laxRakning();
       if (passIdIAdressen()) ritaPassSida();
       return;
     }
 
     S.laxor = data;
-    /* Passets sida läser S.laxor; den kan ha ritats innan läxorna kom. */
+    /* Passets sida läser S.laxor; den kan ha ritats innan uppgifterna kom. */
     if (passIdIAdressen()) ritaPassSida();
     const öppna = data.filter(h => h.status !== 'klar').length;
     $('#lax-antal').textContent = öppna ? öppna + ' öppna' : 'alla klara';
@@ -596,19 +716,61 @@
       materialKnapp: h.biblioteksmaterial
         ? '<button type="button" class="btn btn-ghost btn-sm" data-lax-mat="'
           + esc(h.bibliotek_id) + '">Öppna</button>' : '',
-      atgarder: '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
+      digital: h.niva_id && h.nivaer ? U.digitalRad(h, S.forsok) : '',
+      atgarder: (h.niva_id && h.nivaer
+          ? '<button class="btn btn-ghost btn-sm" type="button" data-upg-forhand="' + esc(h.niva_id) + '">Frågorna</button>' : '')
+        + '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
     }) });
   }
+
+  /* Rättade nivåer: området för området och varje klar nivå. Samma
+     siffror som familjen ser under Min utveckling → Uppgifter. */
+  function ritaRättade() {
+    const omr = $('#upg-rattade-omraden'), lista = $('#upg-rattade'), antal = $('#upg-rattade-antal');
+    if (!lista) return;
+    if (!S.aktivElev) { omr.innerHTML = ''; lista.innerHTML = ''; antal.textContent = ''; return; }
+    if (!S.katalog) {
+      omr.innerHTML = '';
+      antal.textContent = '';
+      lista.innerHTML = tomt('Nivåerna gick inte att hämta', 'Ladda om sidan om en stund.');
+      return;
+    }
+    const klara = (S.forsok || []).filter(f => f.klar_at).sort((a, b) => Date.parse(b.klar_at) - Date.parse(a.klar_at));
+    antal.textContent = klara.length ? klara.length + ' st' : '';
+    if (!klara.length) {
+      omr.innerHTML = '';
+      lista.innerHTML = tomt('Inga klara nivåer än', 'När eleven gjort en nivå, ur banan eller som uppgift från dig, står rättningen här.');
+      return;
+    }
+    omr.innerHTML = U.områdesHtml(S.katalog, S.forsok, S.progress);
+    const nivå = U.efterId(S.katalog);
+    const synliga = S.rättadeAlla ? klara : klara.slice(0, 6);
+    lista.innerHTML = '<div class="upg-forsok-lista" style="margin-top:14px">'
+      + synliga.map(f => U.försöksRad(f, nivå[f.niva_id])).join('') + '</div>'
+      + (klara.length > 6
+          ? '<button type="button" class="pl-mer" data-rattade-alla>' + (S.rättadeAlla ? 'Visa färre' : 'Visa alla ' + klara.length) + '</button>'
+          : '');
+  }
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-rattade-alla]');
+    if (!k) return;
+    const före = k.getBoundingClientRect().top;
+    S.rättadeAlla = !S.rättadeAlla;
+    ritaRättade();
+    const ny = $('[data-rattade-alla]');
+    if (ny && !S.rättadeAlla) NXStudie.scrollaTill(window.scrollY + ny.getBoundingClientRect().top - före);
+  });
 
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-lax-bort]');
     if (!knapp) return;
     const rad = knapp.closest('.lax');
-    const titel = rad ? rad.querySelector('b').textContent : 'läxan';
+    const titel = rad ? rad.querySelector('b').textContent : 'uppgiften';
 
     const ja = await bekräfta({
-      titel: 'Ta bort läxan?',
-      text: '"' + titel + '" försvinner för både dig och familjen. Det går inte att ångra.',
+      titel: 'Ta bort uppgiften?',
+      text: '"' + titel + '" försvinner för både dig och familjen. Det går inte att ångra. '
+        + 'Har eleven gjort en nivå står rättningen kvar under Rättade nivåer.',
       knapp: 'Ta bort'
     });
     if (!ja) return;
@@ -697,7 +859,14 @@
   function fyllPgFörslag(rader) {
     const e = elev();
     const ämnen = Array.from(new Set([...((e && e.subjects) || []), ...rader.map(p => p.subject)]));
-    const områden = Array.from(new Set(rader.map(p => p.area)));
+    /* Fas 23.1: områdena i banan för elevens årskurs står också bland
+       förslagen. Min utveckling ställer rättningen av nivåerna bredvid
+       bedömningen när området heter likadant, och ett område som
+       stavas på två sätt hade blivit två. */
+    const kod = NX.årskursKod(e && e.grade);
+    const iBanan = (S.katalog || []).filter(n => n.aktiv && (!kod || n.arskurs === kod)
+      && (!ämnen.length || ämnen.includes(n.amne))).map(n => n.omrade);
+    const områden = Array.from(new Set(rader.map(p => p.area).concat(iBanan)));
     $('#pg-amnen').innerHTML = ämnen.map(a => '<option value="' + esc(a) + '">').join('');
     $('#pg-omraden').innerHTML = områden.map(a => '<option value="' + esc(a) + '">').join('');
   }
@@ -737,6 +906,8 @@
     /* samma rader används av chipsen i rapporten, så de sparas undan
        i stället för att hämtas en gång till */
     S.progress = data;
+    /* Rättade nivåer ställer bedömningen bredvid områdets procent. */
+    ritaRättade();
     ritaTidigareOmraden();
     fyllPgFörslag(data);
 
@@ -1727,7 +1898,7 @@
       /* progress_items är unikt per (elev, ämne, område). Utan ämne
          finns ingen rad att uppdatera, bara en att skapa på nytt. */
       { fel: områdePå && !rap.amne, text: 'Välj vilket ämne området hör till.' },
-      { fel: $('#r-lax').checked && !laxTitel, text: 'Skriv vad läxan går ut på, eller kryssa ur rutan.', falt: $('#r-lax-titel') },
+      { fel: $('#r-lax').checked && !laxTitel, text: 'Skriv vad uppgiften går ut på, eller kryssa ur rutan.', falt: $('#r-lax-titel') },
       { fel: !$('#r-amne-annat-falt').hidden && !rap.amne, text: 'Skriv vilket ämne, eller välj ett i listan.', falt: $('#r-amne-annat') }
     ]);
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
@@ -1800,7 +1971,7 @@
           instructions: $('#r-fokus').value.trim() || null,
           due_date: $('#r-lax-datum').value || null
         });
-        if (lErr) varning += ' Läxan kunde inte skapas: ' + felText(lErr);
+        if (lErr) varning += ' Uppgiften kunde inte skapas: ' + felText(lErr);
       }
 
       if ($('#r-ai').checked) {
@@ -1964,7 +2135,7 @@
       + (b.beskrivning ? '<p>' + esc(b.beskrivning) + '</p>' : '')
       + '<div class="bib-kort-knappar">'
       + '<button type="button" class="btn btn-ghost btn-sm" data-bib-titt="' + esc(b.id) + '">Titta på det</button>'
-      + '<button type="button" class="btn btn-primary btn-sm" data-bib-lax="' + esc(b.id) + '">Ge som läxa</button>'
+      + '<button type="button" class="btn btn-primary btn-sm" data-bib-lax="' + esc(b.id) + '">Ge som uppgift</button>'
       /* Bara ditt eget går att ta bort. Nextrums bank sköts av admin,
          och en knapp som alltid svarar "det gick inte" är sämre än
          ingen knapp. */
@@ -2079,6 +2250,7 @@
     if (S.flikar && S.flikar.laxor) S.flikar.laxor.visa('laxor');
     $('#lax-form').hidden = false;
     $('#ny-lax').textContent = 'Stäng';
+    fyllNivåval();
     $('#lx-titel').value = b.titel;
     $('#lx-amne').value = b.amne;
     if (!$('#lx-text').value.trim() && b.beskrivning) $('#lx-text').value = b.beskrivning;
@@ -2219,7 +2391,7 @@
 
     const ja = await bekräfta({
       titel: 'Ta bort ' + b.titel + '?',
-      text: 'Materialet försvinner ur din lista. Läxor som redan pekar på det blir '
+      text: 'Materialet försvinner ur din lista. Uppgifter som redan pekar på det blir '
         + 'kvar men tappar materialet.',
       knapp: 'Ta bort'
     });
@@ -2852,7 +3024,7 @@
         + '<span class="ek-siffror">'
         + tal(t.genomforda, 'Genomförda')
         + tal(t.kommande, 'Kommande')
-        + tal(t.laxor, t.laxor === 1 ? 'Öppen läxa' : 'Öppna läxor')
+        + tal(t.laxor, t.laxor === 1 ? 'Öppen uppgift' : 'Öppna uppgifter')
         + '<span class="ek-tal"><b>' + t.områden + '</b><i>'
         + esc(t.områden === 1 ? 'Område' : 'Områden') + '</i>'
         + (t.snitt ? NXStudie.nivåMätare(Math.round(t.snitt)) : '') + '</span>'
@@ -3189,14 +3361,14 @@
       .filter(h => h.student_id === b.student_id && h.status !== 'klar' && h.due_date && h.due_date <= b.wanted_date)
       .slice(0, 3);
     const läxTomt = b.student_id !== S.aktivElev
-      ? 'Välj ' + förnamn + ' högst upp för att se läxorna.'
-      : 'Inga öppna läxor till passet.';
+      ? 'Välj ' + förnamn + ' högst upp för att se uppgifterna.'
+      : 'Inga öppna uppgifter till passet.';
 
     const block = [
       { rubrik: 'Familjens anteckning', html: b.note ? '<p>' + esc(b.note) + '</p>' : '' },
       { rubrik: 'Målet', html: e && e.goals ? '<p>' + esc(e.goals) + '</p>' : '' },
       { rubrik: 'Om ' + förnamn, html: e && e.about ? '<p>' + esc(e.about) + '</p>' : '' },
-      { rubrik: 'Läxor fram till passet', html: b.status === 'cancelled' ? '' : läxor.length
+      { rubrik: 'Uppgifter fram till passet', html: b.status === 'cancelled' ? '' : läxor.length
         ? läxor.map(h => '<div class="pass-lank">' + esc(h.title)
             + '<span>Till ' + esc(NXStudie.deadlineText(h.due_date)) + '</span></div>').join('')
         : '<p>' + esc(läxTomt) + '</p>' }

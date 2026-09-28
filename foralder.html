@@ -32,6 +32,7 @@
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=b77efced">
+<link rel="stylesheet" href="nextrum-uppgifter.css?v=4eac3aef">
 </head>
 <body class="vy">
 
@@ -206,7 +207,7 @@
         <a href="#boka" data-sek="boka"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M12 13v4M10 15h4"/></svg>Boka pass</a>
         <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Mina lektioner</a>
         <a href="#bekrafta" data-sek="bekrafta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3.5H6.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9z"/><path d="M14 3.5V9h5.5M8.5 14.5l2.5 2.5 4.5-4.5"/></svg>Bekräfta rapport</a>
-        <a href="#uppgifter" data-sek="uppgifter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Läxor</a>
+        <a href="#uppgifter" data-sek="uppgifter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Uppgifter</a>
         <a href="#utveckling" data-sek="utveckling"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15.5 7H20v4.5"/></svg>Min utveckling</a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Kontakt</span>
@@ -465,23 +466,31 @@
       </section>
 
       <!-- ============================================================
-           LÄXOR
+           UPPGIFTER (Fas 23.1)
 
-           Var tre saker: "Mina uppgifter", "Material" och en flikrad
-           mellan dem. Materialfliken är borttagen i Fas 13.2 — det
-           material en läxa bygger på står nu PÅ läxan, hämtat ur
-           Nextrums bibliotek, och en flik med filer utan sammanhang
-           var något man fick leta i.
+           Hette Läxor. Leo 2026-09-28: "istället för läxor uppgifter",
+           och de ska vara roligare, "lite som duolingo, du klarar en
+           nivå och går vidare". Tre flikar:
 
-           data-sek heter fortfarande "uppgifter". Adressen står i
-           bokmärken och i gamla mejl, och sektionens id är inte en
-           rubrik man byter för att rubriken ändras.
+             Banan     nivåerna i ämnet och årskursen, en i taget.
+                       Ritas av NXUppgifter.ritaBana().
+             Att göra  det studiehjälparen gett, med deadline. En
+                       digital uppgift startas härifrån och blir klar
+                       av sig själv när nivån klaras.
+             Märken    stjärnorna, veckoserien och märkena, räknade
+                       ur försöken. Ingenting av det sparas för sig.
+
+           Att göra står framme när det finns något öppet där, annars
+           Banan (visaUppgiftsflik i nextrum-studie-vy.js).
+
+           data-sek heter "uppgifter" sedan länge. Adressen står i
+           bokmärken och i gamla mejl; #laxor och #material leder hit.
            ============================================================ -->
       <section class="vy-sek" data-sek="uppgifter" hidden>
         <div class="vy-sek-topp">
           <div>
-            <h2>Läxor</h2>
-            <p>Läxorna er studiehjälpare gett. Bocka av dem när de är gjorda. Hör det ett övningsblad till en läxa ligger det direkt på läxan.</p>
+            <h2>Uppgifter</h2>
+            <p>Nivåer att klara en i taget, och det er studiehjälpare gett. Varje svar rättas direkt, och under Min utveckling står hur det gått.</p>
           </div>
           <!-- Barnväljaren. Tom och osynlig när familjen har ett
                enda barn, vilket de flesta har — då finns inget att
@@ -493,17 +502,47 @@
           </label>
         </div>
 
-        <div class="dbox">
-          <h5>Läxor <em id="lax-antal"></em>
-            <span class="vy-flik-mark" id="flik-lax-mark" hidden></span></h5>
-          <div id="lax-lista"><div class="loading">Hämtar</div></div>
+        <div class="vy-flikar" role="tablist" aria-label="Delar av uppgifterna">
+          <button class="vy-flik" type="button" role="tab" data-flik="bana"
+                  id="flik-bana" aria-controls="panel-bana">Banan</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="attgora"
+                  id="flik-attgora" aria-controls="panel-attgora">Att göra
+            <span class="vy-flik-mark" id="flik-lax-mark" hidden></span></button>
+          <button class="vy-flik" type="button" role="tab" data-flik="marken"
+                  id="flik-marken" aria-controls="panel-marken">Märken</button>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="bana"
+             id="panel-bana" aria-labelledby="flik-bana">
+          <p class="ok-msg" id="upg-msg"></p>
+          <div class="dbox">
+            <h5>Banan <em id="bana-namn"></em></h5>
+            <div id="upg-bana"><div class="loading">Hämtar</div></div>
+          </div>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="attgora"
+             id="panel-attgora" aria-labelledby="flik-attgora" hidden>
+          <div class="dbox">
+            <h5>Från studiehjälparen <em id="lax-antal"></em></h5>
+            <div id="lax-lista"><div class="loading">Hämtar</div></div>
+          </div>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="marken"
+             id="panel-marken" aria-labelledby="flik-marken" hidden>
+          <div class="dbox">
+            <h5>Stjärnor och märken</h5>
+            <p class="ut-forklaring">Varje nivå ger upp till tre stjärnor, och det bästa försöket räknas: en stjärna för minst 60 procent rätt på första försöket, två för minst 80 procent och tre för allt rätt. Serien räknar veckor i rad med något klarat, en nivå eller en uppgift.</p>
+            <div id="upg-belo"><div class="loading">Hämtar</div></div>
+          </div>
         </div>
       </section>
       <section class="vy-sek" data-sek="utveckling" hidden>
         <div class="vy-sek-topp">
           <div>
             <h2>Min utveckling</h2>
-            <p>Vad som sitter, vad som går framåt och vad som är nästa steg — ämne för ämne, bedömt av er studiehjälpare efter passen.</p>
+            <p>Hur uppgifterna gått, vad passen jobbat med och vad studiehjälparen bedömt. Varje tal säger vad det räknas ur.</p>
           </div>
           <!-- Barnväljaren. Tom och osynlig när familjen har ett
                enda barn, vilket de flesta har — då finns inget att
@@ -514,6 +553,74 @@
             <select class="sel sel-sm" aria-label="Byt barn"></select>
           </label>
         </div>
+
+        <!-- Fas 23.1. Leo 2026-09-28: Min utveckling ska fungera som
+             rättningen av uppgifterna, och visa både hur uppgifterna
+             och passen går. Tre flikar, och varje flik säger vad dess
+             tal räknas ur:
+               Uppgifter    de digitala nivåerna, rättade av databasen
+               Passen       passen med rapport, tiden och vad de gällt
+               Bedömningen  studiehjälparens femstegsskala, som förut
+             Bedömningen är orörd: den är en människas omdöme och ska
+             inte blandas ihop med en maskins rättning. Området står
+             bredvid varandra under Uppgifter när namnen är samma. -->
+        <div class="vy-flikar" role="tablist" aria-label="Delar av utvecklingen">
+          <button class="vy-flik" type="button" role="tab" data-flik="uppgifter"
+                  id="flik-ut-uppgifter" aria-controls="panel-ut-uppgifter">Uppgifter</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="passen"
+                  id="flik-ut-passen" aria-controls="panel-ut-passen">Passen</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="bedomning"
+                  id="flik-ut-bedomning" aria-controls="panel-ut-bedomning">Bedömningen</button>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="uppgifter"
+             id="panel-ut-uppgifter" aria-labelledby="flik-ut-uppgifter">
+          <div class="stack">
+            <div class="dbox">
+              <h5>Uppgifterna i siffror</h5>
+              <p class="ut-forklaring">Allt räknas ur de digitala nivåerna, som rättas direkt när de görs. <b>Rätt första gången</b> räknar bara första svaret på varje fråga, i det första försöket på varje nivå: efter det har man sett svaren.</p>
+              <div id="ut-upg-tal"><div class="loading">Hämtar</div></div>
+            </div>
+            <div class="dbox">
+              <h5>Område för område</h5>
+              <p class="ut-forklaring">Hur stor del som var rätt första gången, per kunskapsområde. Har studiehjälparen bedömt samma område står bedömningen bredvid.</p>
+              <div id="ut-upg-omraden"></div>
+            </div>
+            <div class="dbox">
+              <h5>Klarade nivåer per vecka</h5>
+              <p class="ut-forklaring">De åtta senaste veckorna. Den sista stapeln är den här veckan.</p>
+              <div id="ut-upg-veckor"></div>
+            </div>
+            <div class="dbox">
+              <h5>Rättade uppgifter <em id="ut-upg-antal"></em></h5>
+              <p class="ut-forklaring">Varje klar nivå, senaste först. Rättningen visar varje fråga, vad som svarades och rätt svar.</p>
+              <div id="ut-upg-lista"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="passen"
+             id="panel-ut-passen" aria-labelledby="flik-ut-passen" hidden>
+          <div class="stack">
+            <div class="dbox">
+              <h5>Passen i siffror</h5>
+              <p class="ut-forklaring">Ett pass räknas när studiehjälparen skrivit rapporten. Tiden är den som hölls när rapporten säger det, annars den bokade.</p>
+              <div id="ut-pass-tal"><div class="loading">Hämtar</div></div>
+            </div>
+            <div class="dbox">
+              <h5>Timmar per månad</h5>
+              <div id="ut-pass-graf"></div>
+            </div>
+            <div class="dbox">
+              <h5>Vad passen jobbat med</h5>
+              <p class="ut-forklaring">De senaste rapporterna i korthet: ämnet, vad som behöver övas och nästa fokus. Hela rapporterna står under Mina lektioner.</p>
+              <div id="ut-pass-lista"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="bedomning"
+             id="panel-ut-bedomning" aria-labelledby="flik-ut-bedomning" hidden>
         <div class="stack">
 
           <!-- ============ MIN UTVECKLING ============
@@ -558,6 +665,7 @@
             <div id="prg-lista"><div class="loading">Hämtar</div></div>
           </div>
 
+        </div>
         </div>
       </section>
       <!-- ============================================================
@@ -976,11 +1084,12 @@
 <script src="nextrum-app.js?v=d85467f7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=2c9440de"></script>
-<script src="nextrum-studie.js?v=54dea043"></script>
+<script src="nextrum-studie.js?v=98d53d54"></script>
 <script src="nextrum-arbetsyta.js?v=e071024e"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=973469fe"></script>
-<script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-studie-vy.js?v=0f3de4a9"></script>
+<script src="nextrum-uppgifter.js?v=8fe89b7f"></script>
+<script src="nextrum-modulvakt.js?v=43c4a798"></script>
+<script src="nextrum-studie-vy.js?v=228824cd"></script>
 </body>
 </html>

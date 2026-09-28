@@ -29,6 +29,7 @@
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      veckorutnätet för tider. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=b77efced">
+<link rel="stylesheet" href="nextrum-uppgifter.css?v=4eac3aef">
 </head>
 <body class="vy">
 
@@ -185,7 +186,7 @@
         <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.2 2"/></svg>Lektioner &amp; elever</a>
         <a href="#tider" data-sek="tider"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13.5 6.5 5h11L20 13.5V19H4z"/><path d="M4 13.5h4.5l1.2 2.2h4.6l1.2-2.2H20"/></svg>Föreslagna tider</a>
         <a href="#rapporter" data-sek="rapporter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3.5H6.5v17h11V7z"/><path d="M14 3.5V7h3.5"/><path d="M9 12.5h6M9 16h4"/></svg>Skriv rapport</a>
-        <a href="#laxor" data-sek="laxor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Läxor &amp; material</a>
+        <a href="#laxor" data-sek="laxor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5 6 8l2.5-2.5M4.5 12.5 6 14l2.5-2.5M4.5 18.5 6 20l2.5-2.5M11.5 7h8M11.5 13h8M11.5 19h8"/></svg>Uppgifter &amp; material</a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Kontakt</span>
         <a href="#meddelanden" data-sek="meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>Meddelanden</a>
@@ -225,7 +226,7 @@
 
       <div id="elev-profil"></div>
       <p class="xsmall" id="elev-hjalp" style="margin-top:12px;color:var(--bl-2);line-height:1.6">
-        Läxor, kunskapsområden, rapporter och studieplan gäller eleven du valt här.
+        Uppgifter, kunskapsområden, rapporter och studieplan gäller eleven du valt här.
       </p>
     </div>
         </div>
@@ -452,12 +453,12 @@
                         <!-- ============ LÄXA ============ -->
                         <div class="vy-fall" style="margin-top:16px">
                           <label class="xsmall" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600">
-                            <input type="checkbox" id="r-lax"> Skapa en läxa direkt
+                            <input type="checkbox" id="r-lax"> Ge en uppgift direkt
                           </label>
                           <div id="r-lax-falt" hidden style="margin-top:12px">
                             <div class="vy-form-rad">
                               <div class="pay-field">
-                                <label for="r-lax-titel">Läxan</label>
+                                <label for="r-lax-titel">Uppgiften</label>
                                 <input class="inp" id="r-lax-titel" maxlength="200" placeholder="t.ex. Uppgift 12–20 i kapitel 4">
                               </div>
                               <div class="pay-field">
@@ -693,13 +694,13 @@
       <section class="vy-sek" data-sek="laxor" hidden>
         <div class="vy-sek-topp">
           <div>
-            <h2>Läxor &amp; material</h2>
+            <h2>Uppgifter &amp; material</h2>
             <p>För eleven du valt ovan. Familjen ser allt direkt.</p>
           </div>
         </div>
-        <div class="vy-flikar" role="tablist" aria-label="Läxor eller material">
+        <div class="vy-flikar" role="tablist" aria-label="Uppgifter eller material">
           <button class="vy-flik" type="button" role="tab" data-flik="laxor"
-                  id="flik-laxor" aria-controls="panel-laxor">Läxor
+                  id="flik-laxor" aria-controls="panel-laxor">Uppgifter
             <span class="vy-flik-mark" id="flik-lax-mark" hidden></span></button>
           <button class="vy-flik" type="button" role="tab" data-flik="material"
                   id="flik-material" aria-controls="panel-material">Material</button>
@@ -709,9 +710,9 @@
              id="panel-laxor" aria-labelledby="flik-laxor">
                 <!-- ============ LÄXOR ============ -->
                 <div class="dbox">
-                  <h5>Läxor <em id="lax-antal"></em></h5>
+                  <h5>Uppgifter <em id="lax-antal"></em></h5>
                   <div class="vy-knapprad" style="margin-top:0;margin-bottom:16px">
-                    <button class="btn btn-primary btn-sm" type="button" id="ny-lax">Ny läxa</button>
+                    <button class="btn btn-primary btn-sm" type="button" id="ny-lax">Ny uppgift</button>
                     <!-- Vägen till materialet går genom fliken Material
                          bredvid (Fas 13.3). Knappen "Ur biblioteket" satt
                          här i 13.2, när Material var något annat — två
@@ -721,6 +722,28 @@
                   </div>
 
                   <form id="lax-form" class="vy-fall" hidden>
+                    <!-- Fas 23.1: en uppgift kan vara en nivå i banan. Då
+                         rättas den när eleven gör den, blir klar av sig
+                         själv, och resultatet står på uppgiften. Utan nivå
+                         är den en vanlig uppgift som familjen bockar av. -->
+                    <div class="lx-digital" id="lx-digital" hidden>
+                      <p class="lx-digital-rubrik">Digital nivå <span>(valfritt)</span></p>
+                      <div class="vy-form-rad">
+                        <div class="pay-field">
+                          <label for="lx-niva-amne">Ämne</label>
+                          <select class="sel" id="lx-niva-amne"></select>
+                        </div>
+                        <div class="pay-field">
+                          <label for="lx-niva-ak">Årskurs</label>
+                          <select class="sel" id="lx-niva-ak"></select>
+                        </div>
+                        <div class="pay-field">
+                          <label for="lx-niva">Nivå</label>
+                          <select class="sel" id="lx-niva"></select>
+                        </div>
+                      </div>
+                      <p class="lx-digital-not" id="lx-niva-om"></p>
+                    </div>
                     <div class="vy-form-rad">
                       <div class="pay-field">
                         <label for="lx-titel">Vad ska eleven göra?</label>
@@ -744,7 +767,7 @@
                          själv, och kopplingen följer med läxan ändå. -->
                     <div class="lx-material" id="lx-material" hidden></div>
                     <div class="vy-knapprad">
-                      <button class="btn btn-primary btn-sm" type="submit" id="lx-spara">Skapa läxa</button>
+                      <button class="btn btn-primary btn-sm" type="submit" id="lx-spara">Ge uppgiften</button>
                       <button class="btn btn-ghost btn-sm" type="button" id="lx-avbryt">Avbryt</button>
                     </div>
                   </form>
@@ -754,6 +777,17 @@
                   <p class="ok-msg" id="lx-msg"></p>
 
                   <div id="lax-lista"><div class="loading">Hämtar</div></div>
+                </div>
+
+                <!-- Rättningen av elevens nivåer (Fas 23.1): område för
+                     område, och varje klar nivå med svaren. Samma som
+                     familjen ser under Min utveckling, så att ni pratar
+                     om samma siffror på passet. -->
+                <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+                  <h5>Rättade nivåer <em id="upg-rattade-antal"></em></h5>
+                  <p class="ut-forklaring">Nivåerna eleven gjort, ur banan eller som uppgift från dig. Procenten är rätt första gången, i första försöket på varje nivå.</p>
+                  <div id="upg-rattade-omraden"></div>
+                  <div id="upg-rattade"></div>
                 </div>
         </div>
 
@@ -776,7 +810,7 @@
                 <div class="dbox">
                   <h5>Material <em id="mat-antal"></em></h5>
                   <p class="xsmall" style="margin:0 0 14px;line-height:1.6;color:var(--muted-2)">
-                    Nextrums material och ditt eget. Välj något och ge det som läxa — det är
+                    Nextrums material och ditt eget. Välj något och ge det som uppgift — det är
                     så det når familjen.</p>
 
                   <div class="mat-typ" id="bib-agare" role="group" aria-label="Vems material">
@@ -797,7 +831,7 @@
                        inte gör — det man lägger till hamnar aldrig i
                        Nextrums bank, bara hos en själv. -->
                   <div class="bib-eget-rad" id="bib-eget-rad" hidden>
-                    <p>Ditt eget material ser bara du. Ge det som läxa precis som Nextrums.</p>
+                    <p>Ditt eget material ser bara du. Ge det som uppgift precis som Nextrums.</p>
                     <button class="btn btn-primary btn-sm" type="button" id="bib-eget-ny">Lägg till eget material</button>
                   </div>
 
@@ -1133,11 +1167,12 @@
 <script src="nextrum-app.js?v=d85467f7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=2c9440de"></script>
-<script src="nextrum-studie.js?v=54dea043"></script>
+<script src="nextrum-studie.js?v=98d53d54"></script>
 <script src="nextrum-arbetsyta.js?v=e071024e"></script>
 <script src="nextrum-media.js?v=370e4cac"></script>
 <script src="nextrum-betalning.js?v=973469fe"></script>
-<script src="nextrum-modulvakt.js?v=1d7a203b"></script>
-<script src="nextrum-larare-vy.js?v=457f2d1a"></script>
+<script src="nextrum-uppgifter.js?v=8fe89b7f"></script>
+<script src="nextrum-modulvakt.js?v=43c4a798"></script>
+<script src="nextrum-larare-vy.js?v=c8f608ba"></script>
 </body>
 </html>
