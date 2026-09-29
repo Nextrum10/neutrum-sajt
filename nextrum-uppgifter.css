@@ -900,3 +900,124 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
   }
   .vy .vy-sido a[data-sek="nexlax"].ar-har svg{color:currentColor}
 }
+
+/* ============================================================
+   FÄRGEN PER ÄMNE (2026-09-29)
+   Leo: "gör designen lite mer interaktiv och lite mer färgig för att
+   navigera enklare". Varje ämne har sin färg i cinema (--amne-*), och
+   det valda ämnet sätter den på vägen (data-nl-f på #nl-vag, satt av
+   ritaVäg), på sitt kort i ämnesraden och på sin rad i Din
+   utveckling. Färgen säger VAR man är: i vilket ämne, vilket område
+   och vilken nivå som är nästa. Lägena behåller sina färger från
+   INNEHÅLLET i arbetsytan: mossa är klart, ockra är bemästrat och
+   väntar. Ett ämne utan egen färg står i lera, som förut.
+   ============================================================ */
+[data-nl-f]{--nl-f:var(--acc);--nl-f-l:var(--lera-l)}
+[data-nl-f="ma"]{--nl-f:var(--amne-ma);--nl-f-l:var(--amne-ma-l)}
+[data-nl-f="sv"]{--nl-f:var(--amne-sv);--nl-f-l:var(--amne-sv-l)}
+[data-nl-f="en"]{--nl-f:var(--amne-en);--nl-f-l:var(--amne-en-l)}
+[data-nl-f="no"]{--nl-f:var(--amne-no);--nl-f-l:var(--amne-no-l)}
+[data-nl-f="so"]{--nl-f:var(--amne-so);--nl-f-l:var(--amne-so-l)}
+[data-nl-f="prog"]{--nl-f:var(--amne-prog);--nl-f-l:var(--amne-prog-l)}
+[data-nl-f="ms"]{--nl-f:var(--amne-ms);--nl-f-l:var(--amne-ms-l)}
+
+/* Toppen: ämnets sken uppe till höger och mätaren i ämnets färg. Det
+   primära steget står kvar i lera: det är ert drag. */
+[data-nl-f] .nl-topp{
+  background:
+    radial-gradient(70% 60% at 100% 0%, color-mix(in srgb,var(--nl-f-l) 24%,transparent), transparent 60%),
+    radial-gradient(110% 70% at 6% 0%, var(--nt-glod), transparent 55%),
+    linear-gradient(180deg, var(--nt), var(--nt-2));
+}
+[data-nl-f] .nl-topp .nl-mat i{background:linear-gradient(90deg,var(--nl-f-l),color-mix(in srgb,var(--nl-f-l) 55%,var(--nt-fg)))}
+[data-nl-f] .nl-bana-rad strong{color:var(--nl-f-l)}
+
+/* Ämnesraden: varje kort i sitt ämnes färg, det valda fyllt. */
+.nl-amne[data-nl-f]{border-color:color-mix(in srgb,var(--nl-f) 30%,var(--ln));background:color-mix(in srgb,var(--nl-f) 4%,var(--yta))}
+.nl-amne[data-nl-f] .nl-ring-bas{stroke:color-mix(in srgb,var(--nl-f) 16%,var(--pap-3))}
+.nl-amne[data-nl-f] .nl-ring-fyll,
+.nl-amne[data-nl-f][aria-pressed="true"] .nl-ring-fyll{stroke:var(--nl-f)}
+.nl-amne[data-nl-f][aria-pressed="true"]{border-color:var(--nl-f);background:color-mix(in srgb,var(--nl-f) 12%,var(--yta))}
+.nl-amne[data-nl-f][aria-pressed="true"] .nl-amne-text b{color:var(--nl-f)}
+@media (hover:hover){
+  .nl-amne[data-nl-f]:hover{border-color:color-mix(in srgb,var(--nl-f) 60%,var(--ln))}
+}
+
+/* Områdena: det man står i bär ämnets färg, det öppna en ton av den. */
+.nl-omr{scroll-margin-top:136px}
+@media (min-width:900px){ .nl-omr{scroll-margin-top:110px} }
+[data-nl-f] .nl-omr-aktuellt{
+  border-color:color-mix(in srgb,var(--nl-f) 55%,transparent);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--nl-f) 9%,var(--yta)) 0,var(--yta) 160px);
+}
+[data-nl-f] .nl-omr-aktuellt .nl-omr-ik{background:var(--nl-f);color:var(--yta)}
+[data-nl-f] .nl-omr-aktuellt .nl-omr-lage{background:color-mix(in srgb,var(--nl-f) 14%,var(--yta));color:var(--nl-f)}
+[data-nl-f] .nl-omr-oppet .nl-omr-ik{background:color-mix(in srgb,var(--nl-f) 15%,var(--yta));color:var(--nl-f)}
+
+/* Noderna: nästa steg i ämnets färg, de öppna tonade, de klarade i
+   mossa som förut. Hovringen lyfter med scale, aldrig translate: den
+   äger sicksacken (--x ovan). */
+[data-nl-f] .upg-nod.aktuell .upg-nod-knapp{
+  background:var(--nl-f);color:var(--yta);
+  box-shadow:0 6px 0 0 color-mix(in srgb,var(--nl-f) 60%,var(--bl));
+}
+[data-nl-f] .upg-nod.aktuell .upg-nod-knapp::after{border-color:color-mix(in srgb,var(--nl-f) 55%,transparent)}
+[data-nl-f] .upg-nod.oppen .upg-nod-knapp{
+  background:color-mix(in srgb,var(--nl-f) 9%,var(--yta));color:var(--nl-f);
+  border-color:color-mix(in srgb,var(--nl-f) 45%,transparent);
+}
+[data-nl-f] .upg-nod.vald .upg-nod-knapp{outline-color:color-mix(in srgb,var(--nl-f) 35%,transparent)}
+[data-nl-f] .upg-nod-bubbla{background:var(--nl-f);color:var(--yta)}
+[data-nl-f] .upg-nod-bubbla::after{border-top-color:var(--nl-f)}
+[data-nl-f] .upg-nod-given{color:var(--nl-f)}
+@media (hover:hover){
+  .upg-nod-knapp:hover{scale:1.07}
+  .upg-nod.last .upg-nod-knapp:hover{scale:1.02}
+  .upg-nod-knapp:active{scale:.92}
+}
+
+/* Genvägarna till områdena: en rad man drar i sidled, med läget i
+   samma färger som områdenas huvuden. Minst 44 px (TUMMEN). */
+.nl-hopp{
+  display:flex;gap:8px;overflow-x:auto;min-width:0;
+  margin:-2px 0 12px;padding:2px 2px 6px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.nl-hopp::-webkit-scrollbar{display:none}
+.nl-hopp-knapp{
+  flex:none;display:inline-flex;align-items:center;gap:8px;
+  min-height:44px;padding:5px 14px 5px 5px;border-radius:100px;cursor:pointer;
+  border:1.5px solid var(--ln);background:var(--yta);color:var(--bl);
+  font:inherit;font-size:.86rem;font-weight:600;white-space:nowrap;
+  transition:scale .45s var(--vy-fjader,ease), border-color .15s var(--e), background-color .15s var(--e);
+  -webkit-tap-highlight-color:transparent;
+}
+.nl-hopp-knapp:active{scale:.95;transition-duration:.09s}
+.nl-hopp-knapp:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nl-hopp-ik{
+  flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;
+  background:var(--bricka);color:var(--bl-2);font-size:.8rem;font-weight:750;font-variant-numeric:tabular-nums;
+}
+.nl-hopp-ik svg{width:15px;height:15px}
+.nl-hopp-klart .nl-hopp-ik{background:var(--mossa);color:var(--pap)}
+.nl-hopp-klart .nl-hopp-ik svg{stroke-width:2.8}
+.nl-hopp-bem .nl-hopp-ik{background:var(--ockra);color:var(--pap)}
+.nl-hopp-aktuellt{border-color:var(--nl-f,var(--acc));background:color-mix(in srgb,var(--nl-f,var(--acc)) 11%,var(--yta))}
+.nl-hopp-aktuellt .nl-hopp-ik{background:var(--nl-f,var(--acc));color:var(--yta)}
+.nl-hopp-oppet .nl-hopp-ik{background:color-mix(in srgb,var(--nl-f,var(--acc)) 15%,var(--yta));color:var(--nl-f,var(--acc))}
+.nl-hopp-last,.nl-hopp-nasta{color:var(--bl-3);border-style:dashed}
+@media (hover:hover){
+  .nl-hopp-knapp:hover{border-color:color-mix(in srgb,var(--nl-f,var(--acc)) 55%,var(--ln))}
+}
+
+/* Din utveckling: varje ämnes rad i sin färg. */
+.nl-amnesrad[data-nl-f] .nl-mat i{background:var(--nl-f)}
+.nl-amnesrad[data-nl-f] .nl-amnesrad-topp b{display:inline-flex;align-items:center;gap:8px}
+.nl-amnesrad[data-nl-f] .nl-amnesrad-topp b::before{
+  content:"";width:10px;height:10px;border-radius:50%;background:var(--nl-f);flex:none;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .nl-hopp-knapp,.upg-nod-knapp{transition:none}
+  .upg-nod-knapp:hover{scale:1}
+}

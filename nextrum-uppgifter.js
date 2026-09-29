@@ -123,6 +123,14 @@ window.NXUppgifter = (function () {
   function xpText(n) { return tusen(n) + ' XP'; }
   function kortÄmne(a) { return String(a || '').split(' / ')[0]; }
   function banaNamn(amne, arskurs) { return kortÄmne(amne) + ' · ' + NX.årskursText(arskurs); }
+  /* Ämnets färg (2026-09-29): koden sätts som data-nl-f, och
+     nextrum-uppgifter.css gör den till --nl-f ur cinemas --amne-*.
+     Samma koder som prefixen i uppgiftsbanken. Ett ämne utan kod får
+     ingen egen färg och står i lera, som förut. */
+  const ÄMNESKOD = { 'Matematik': 'ma', 'Svenska': 'sv', 'Engelska': 'en',
+    'NO / Fysik / Kemi / Biologi': 'no', 'SO / Historia / Samhällskunskap': 'so',
+    'Moderna språk': 'ms', 'Programmering': 'prog' };
+  function ämnesKod(a) { return ÄMNESKOD[a] || ''; }
 
   /* ============================================================
      DATAN
@@ -565,6 +573,7 @@ window.NXUppgifter = (function () {
 
     host.dataset.amne = amne;
     host.dataset.arskurs = arskurs;
+    host.dataset.nlF = ämnesKod(amne);
     const raden = host.querySelector('.nl-amnen');
     if (raden && sidled) raden.scrollLeft = sidled;
     return { väg, nästa, amne, arskurs };
@@ -767,7 +776,7 @@ window.NXUppgifter = (function () {
       + '<div class="nl-amnen" role="group" aria-label="Välj ämne">' + ämnen.map(a => {
         const ak = a === vald && o.arskurs && finns[a].includes(o.arskurs) ? o.arskurs : förvaldÅrskurs(finns[a], o.elevKod);
         const v = vägen(Object.assign({}, o, { amne: a, arskurs: ak }));
-        return '<button type="button" class="nl-amne" data-nl-amne="' + esc(a) + '" aria-pressed="' + (a === vald ? 'true' : 'false') + '">'
+        return '<button type="button" class="nl-amne" data-nl-f="' + ämnesKod(a) + '" data-nl-amne="' + esc(a) + '" aria-pressed="' + (a === vald ? 'true' : 'false') + '">'
           + ring(v.procent)
           + '<span class="nl-amne-text"><b>' + esc(kortÄmne(a)) + '</b><span>' + esc(NX.årskursText(ak)) + '</span></span>'
           + '</button>';
@@ -802,7 +811,7 @@ window.NXUppgifter = (function () {
         : a.läge === 'oppet' ? 'Öppet' : a.läge === 'nasta' ? 'Nästa område' : 'Låst';
       const visaSteg = a.läge !== 'last';
       const noder = visaSteg ? a.nivåer.concat(a.mästare ? [a.mästare] : []).map(n => nodHtml(n, o, väg, XLED[x++ % XLED.length])).join('') : '';
-      return '<li class="nl-omr nl-omr-' + a.läge + (a.bemästrat ? ' nl-omr-bem' : '') + '">'
+      return '<li class="nl-omr nl-omr-' + a.läge + (a.bemästrat ? ' nl-omr-bem' : '') + '" id="nl-omr-' + i + '">'
         + '<div class="nl-omr-huvud">'
         + '<span class="nl-omr-ik" aria-hidden="true">' + ikon + '</span>'
         + '<span class="nl-omr-text"><span class="nl-omr-et">Område ' + (i + 1) + '</span><b>' + esc(a.namn) + '</b></span>'
@@ -813,7 +822,20 @@ window.NXUppgifter = (function () {
             : '<p class="nl-omr-las">' + IKON.lås + 'Öppnas när du klarat ' + esc(förra ? förra.namn : 'området före') + '.</p>')
         + '</li>';
     }).join('');
+    /* Genvägarna till områdena (2026-09-29, Leo: "för att navigera
+       enklare"). Vägen är flera skärmar lång på en telefon; raden säger
+       var man står i den och hoppar dit. Läget har samma färg som i
+       områdets eget huvud. */
+    const hopp = väg.områden.length > 1
+      ? '<nav class="nl-hopp" aria-label="Områdena i banan">' + väg.områden.map((a, i) =>
+          '<button type="button" class="nl-hopp-knapp nl-hopp-' + (a.bemästrat ? 'bem' : a.klart ? 'klart' : a.läge) + '" data-nl-hopp="' + i + '"'
+          + (a.läge === 'aktuellt' ? ' aria-current="step"' : '') + '>'
+          + '<span class="nl-hopp-ik" aria-hidden="true">' + (a.bemästrat ? IKON.krona : a.klart ? IKON.bock
+              : a.läge === 'last' || a.läge === 'nasta' ? IKON.lås : String(i + 1)) + '</span>'
+          + '<span class="nl-hopp-namn">' + esc(a.namn) + '</span></button>').join('') + '</nav>'
+      : '';
     return '<div class="nl-grupp nl-vag-rubrik"><h3>Din väg</h3>' + välj + '</div>'
+      + hopp
       + '<ol class="nl-vag" aria-label="' + esc('Din väg i ' + banaNamn(väg.amne, väg.arskurs)) + '">' + områden
       + (väg.helaKlar ? '<li class="nl-mal-flagga"><span>' + IKON.pokal + '</span><b>Banan är klar</b></li>' : '')
       + '</ol>';
@@ -937,7 +959,7 @@ window.NXUppgifter = (function () {
       .map(([a, ak]) => {
         const v = vägen({ katalog: o.katalog, amne: a, arskurs: ak, forsok: o.forsok, uppgifter: o.uppgifter });
         const xp = ((l && l.banor) || []).find(b => b.amne === a && b.arskurs === ak);
-        return '<div class="nl-amnesrad">'
+        return '<div class="nl-amnesrad" data-nl-f="' + ämnesKod(a) + '">'
           + '<div class="nl-amnesrad-topp"><b>' + esc(banaNamn(a, ak)) + '</b>'
           + (xp ? '<span>' + esc(xpText(xp.xp)) + '</span>' : '') + '<strong>' + v.procent + ' %</strong></div>'
           + '<span class="nl-mat" aria-hidden="true"><i style="width:' + v.procent + '%"></i></span>'
