@@ -3436,16 +3436,39 @@ tillbaka överst i avsnittet för 22.1.
   utbetalningsdagen efter att lönespecen kom, är en söndag; vilken
   bankdag lönen går då är inte bestämt, och lönespecen visar den 25:e.
 - **Riktiga foton på studiehjälparna.** Generisk siluett nu.
-- **Uppgifterna (Fas 23.1) har ett startpaket, inte en kursplan.**
-  Matematik från åk 1 till gymnasiet 1, engelska och svenska i tre
-  årskurser var, NO i åk 5 och 8 — se `python3 verktyg/bygg-uppgifter.py`
-  för vad som finns. SO, moderna språk och programmering har inga nivåer.
-  Fas 23.2 la till trettio nivåer (flest i matematik åk 8, där den enda
-  eleven i drift går), och banken har nu 109 nivåer och 872 frågor, med
-  27 Mästarprov och 18 repetitioner som drar ur dem. Det är fortfarande
-  tunt: flera banor har områden med en enda nivå (svenska åk 8 har
-  fyra), och en väg med en nivå per område tar slut fort. Det är
-  innehållet, inte vyn, som gör NexLäx djupt.
+- **Uppgifterna (Fas 23.1) har en bank, inte en kursplan.** Se
+  `python3 verktyg/bygg-uppgifter.py` för vad som finns. Fas 23.1 och
+  23.2 gav 109 nivåer och 872 frågor i matematik, svenska, engelska och
+  NO. **Fas 23.3 (2026-09-29, `uppgiftsbanken_fler_amnen`)** gav 40
+  banor, 359 vanliga nivåer och 2 895 frågor, med 199 Mästarprov och
+  repetitioner. Leo: "pusha in så mycket material i vårat system som
+  möjligt ... fler ämnen fler årskurserna, fler uppgifter". Nya banor
+  är SO åk 4, 6, 7 och 9, NO åk 4, 6, 7 och 9, svenska åk 2, 4, 5, 7,
+  9 och gy1, engelska åk 3, 5, 7, 9 och gy1, matematik gy2 och
+  programmering åk 6 och 9. Varje område som hade en enda nivå fick en
+  andra, och därmed ett Mästarprov. Moderna språk har ingen bana: ett
+  ämne i `NX.AMNEN` som rymmer flera språk hade blandat spanska och
+  tyska i samma bana.
+  **Inget är kopierat.** Leo bad om uppgifter ur gamla nationella prov
+  och det som finns gratis på nätet. De nationella proven är skyddade
+  (Skolverket släpper dem för undervisning, inte för en betald tjänst),
+  och sajter som Khan Academy har licenser som inte tillåter
+  kommersiell användning. Allt är skrivet från grunden mot Lgr22:s
+  centrala innehåll, och lästexterna är påhittade. Skriv så också
+  nästa gång; att hämta en uppgift ur ett prov är ingen genväg.
+  **Matematik åk 8 fick två nya områden sist**, inte nya nivåer mitt i:
+  den enda eleven i drift går där, och en nivå mitt i vägen låser nästa
+  (punkt 5 nedan). Andra banor fick nivåer mitt i, för ingen gör dem.
+  **Frågorna ska gå att förstå var för sig.** Mästarprovet och
+  repetitionen drar dem en och en, så "Samma tes", "Räntan får stå
+  kvar" eller en fråga vars svar står i förra frågans förklaring är
+  trasig där. Granskningen hittade fyra sådana. Samma sak gäller en
+  ordna-fråga med två korrekta ordningar ("raining dogs and cats"): gör
+  den till ett val.
+  **Kod i en fråga står på raderna efter frågan** (programmeringen),
+  med indrag i hårda mellanslag, och spelaren ritar det i ett block med
+  lika breda tecken (`frågaHtml` och `.upg-kod`). Ingen annan fråga har
+  radbrytningar; en som får det ritas också så.
   Innehållet är skrivet med AI och granskat fråga för fråga, med facit
   uträknat i kod där det går; läs igenom en bana med `--visa` innan den
   används på riktigt, och låt en studiehjälpare som undervisar i ämnet
@@ -3497,6 +3520,29 @@ tillbaka överst i avsnittet för 22.1.
      klarad. En påbörjad, klarad eller given nivå står öppen, så ingen
      förlorar något hen gjort, men en elev kan se en öppen nivå bli
      låst efter att banken lästs in.
+  6. **Fas 23.3:s innehåll** (2 000 nya frågor) är skrivet av sex
+     skribenter med AI, ett ämne var, och läst av tre granskare som
+     räknade om varje facit. Inga fel facit hittades; en fråga med två
+     rätta svar, fyra frågor som byggde på frågan före, ett
+     sant-påstående som förklaringen sa emot, kortformer som nekades
+     och en ordna-fråga med två ordningar är rättade. Varje facit är
+     dessutom rättat som rätt av `intern.niva_ratta` i en lokal databas
+     (3 536 svar), och inget fel valalternativ godtas. Skribenterna och
+     granskarna listade det en lärare bör läsa; det viktigaste:
+     gymnasiets innehåll (gy1 och gy2 i matematik är skrivna efter
+     Matematik 1 och 2 i Gy11, och ämnessystemet har nya nivåer),
+     förenklingar i SO och NO (Kalmarunionen och Gustav Vasa, spärren
+     på 4 procent, lufttrycket 100 kPa, rösträtten 1909), ungefärliga
+     pH-värden, svårigheten i programmering åk 9 (`global`,
+     `continue`), och språkhistorien i svenska åk 9. Programmeringen
+     förutsätter Python i åk 9; Lgr22 kräver inget visst språk.
+     **I drift sedan 2026-09-29**, som `20260929155611`
+     (`uppgiftsbanken_fler_amnen`), körd efter att PR #144 mergats, och
+     det driften sparade har samma md5 som filen. Banken är 1,2 MB och
+     gick samma väg som punkt 3 och 4, och tillägget `http` togs bort
+     igen. Hela `rls-test.sql` gick igenom före, i en transaktion som
+     rullades tillbaka med migrationen inläst, och efter: 923 av 923.
+     Ingen fråga blev inaktiv, så gamla svar och XP står kvar.
 - **Avtalen som delas med personen (2026-09-29, avsnitt 1) är i drift.**
   Migrationen `dokument_delas_med_personen` kördes efter att PR #126
   mergats, som version `20260929080900`, och det driften sparade har

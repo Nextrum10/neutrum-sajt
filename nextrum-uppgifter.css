@@ -541,6 +541,21 @@ html.upg-spelar, html.upg-spelar body{overflow:hidden}
   white-space:pre-line;overflow-wrap:anywhere;outline:none;
 }
 
+/* Kod under frågan (frågaHtml i nextrum-uppgifter.js): lika breda
+   tecken och indragen kvar, i brödtextens storlek. Blocket rullar i
+   sidled i stället för att bryta en rad kod mitt i, för en bruten rad
+   läses som två satser. */
+.upg-kod{
+  display:block;margin:12px 0 0;padding:12px 14px;border-radius:12px;
+  background:var(--tint);color:var(--bl);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.92rem;font-weight:500;line-height:1.55;letter-spacing:0;
+  white-space:pre;overflow-x:auto;overflow-wrap:normal;tab-size:4;
+}
+.upg-fraga-text .upg-kod{font-size:clamp(.88rem,3.4vw,1rem)}
+.upg-genom-q{min-width:0;flex:1}
+.upg-genom-q .upg-kod{font-size:.85rem;margin-top:8px}
+
 /* Lästexten: läsbar, inte en ruta i en ruta. */
 .upg-lastext p{margin:0 0 14px;font-size:1.06rem;line-height:1.7;color:var(--bl);max-width:62ch}
 .upg-lastext p:last-child{margin-bottom:0}

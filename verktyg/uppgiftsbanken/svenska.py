@@ -64,6 +64,47 @@ TOMATERNA = '\n\n'.join([
     'lätt när det händer mycket.”',
 ])
 
+KOMPASSEN = '\n\n'.join([
+    'Mika hade gått i sin nya klass i två veckor när det var dags för orienteringsdagen. Läraren '
+    'delade in klassen i par, och Mika hamnade med Jonna. Hon hade inte sagt ett enda ord till honom '
+    'sedan han började.',
+    'De fick en karta, en kompass och en lapp med fem kontroller som de skulle hitta i skogen bakom '
+    'skolan. Jonna tog kartan direkt och började gå. Mika följde efter med kompassen i handen.',
+    'Efter den tredje kontrollen stannade Jonna vid en stor sten. Hon vände kartan åt olika håll och '
+    'bet sig i läppen. Stigen de hade gått på tog slut, och runt dem stod bara granar som såg '
+    'likadana ut.',
+    '– Jag vet inte var vi är, sa hon tyst.',
+    'Mika tittade på kartan. Han hittade den stora stenen, och han hittade den lilla sjön där den '
+    'fjärde kontrollen låg. Han vred på kompassen så som morfar hade lärt honom på fjällen varje sommar.',
+    '– Sjön ligger åt nordost, sa han och pekade. Om vi går rakt dit kommer vi fram.',
+    'Tjugo minuter senare stod de vid sjön. Kontrollen hängde på en björk vid stranden. Jonna '
+    'stämplade lappen och log för första gången.',
+    '– Var har du lärt dig det där? frågade hon.',
+    'På vägen tillbaka pratade de hela tiden. De kom sist av alla par, men ingen av dem brydde sig '
+    'om det.',
+])
+
+MATSALEN = '\n\n'.join([
+    'Ge oss en tystare matsal',
+    'Varje dag klockan elva fylls matsalen med över trehundra elever. Ljudet studsar mellan de kala '
+    'väggarna, och den som vill prata med sin kompis måste skrika. Jag anser att skolan måste göra '
+    'matsalen tystare, och det redan till nästa termin.',
+    'Mitt första skäl är att vi behöver få äta i lugn och ro. Många av mina klasskamrater säger att '
+    'de hellre tar en macka i korridoren än sitter i bullret. Den som inte äter ordentligt på lunchen '
+    'orkar mindre på eftermiddagens lektioner.',
+    'Mitt andra skäl är att det inte behöver kosta mycket. Ljuddämpande skivor i taket och filtdynor '
+    'under stolarna är två enkla åtgärder. Elevrådet har redan frågat en förälder som är snickare, och '
+    'han har erbjudit sig att hjälpa till.',
+    'Vissa säger att det är eleverna själva som låter, och att vi bara borde prata tystare. Det ligger '
+    'något i det. Men i ett rum där ljudet ekar måste alla höja rösten för att höras, och då blir det '
+    'snart ännu högre. Det är rummet som behöver ändras först.',
+    'Därför föreslår jag att rektorn och elevrådet går igenom matsalen tillsammans före jul och '
+    'bestämmer vad som ska göras. Vi tillbringar en halvtimme där varje dag. Den halvtimmen borde vara '
+    'en paus, inte en prövning.',
+    'Elvira, 8B',
+])
+
+
 BANOR = [
     bana('Svenska', 'ak3', [
         niva('sv-ak3-skrivregler-1', 'Stor bokstav och punkt', 'Skrivregler', [
@@ -94,6 +135,30 @@ BANOR = [
                   forklaring='Det är en fråga, så den slutar med frågetecken och inte med punkt.'),
         ], beskrivning='Tränar när man skriver stor bokstav och vilket tecken som avslutar en mening.'),
 
+        niva('sv-ak3-skrivregler-2', 'Frågetecken, utropstecken och namn', 'Skrivregler', [
+            val('Vilket tecken ska stå sist? ”Akta dig, bilen kommer”',
+                ['utropstecken', 'frågetecken', 'komma'], 'utropstecken',
+                'Den som varnar någon ropar. Efter ett rop sätter man utropstecken.'),
+            val('Vilket tecken ska stå sist? ”Vad är klockan”',
+                ['frågetecken', 'utropstecken', 'punkt'], 'frågetecken',
+                'Meningen frågar något, och en fråga slutar med frågetecken.'),
+            val('Vilket ord ska skrivas med stor bokstav?',
+                ['sverige', 'land', 'sjö', 'fredag'], 'sverige',
+                'Sverige är namnet på ett land, och namn har stor bokstav. Fredag är en veckodag och '
+                'har liten bokstav.'),
+            val('Vilket av orden är ett namn och ska ha stor bokstav?',
+                ['astrid', 'flicka', 'lärare', 'kompis'], 'astrid',
+                'Astrid är ett namn. Flicka, lärare och kompis är vanliga ord och har liten bokstav.'),
+            sant('Månader, som maj och juni, skrivs med stor bokstav.', False,
+                 'På svenska skrivs månader och veckodagar med liten bokstav: maj, juni, måndag.'),
+            skriv('Hur många ord ska ha stor bokstav? ”i morgon leker nora och kim.”', [tal(3), 'tre'],
+                  'I står först i meningen, och Nora och Kim är namn. Det blir tre ord.'),
+            ordna('Bygg frågan om glass. En bricka hör inte dit.', ['Vill', 'du', 'ha', 'glass?'], extra=['glass!'],
+                  forklaring='Det är en fråga, så den slutar med frågetecken.'),
+            ordna('Bygg meningen. Den är något man ropar.', ['Titta,', 'en', 'regnbåge!'],
+                  forklaring='Den som ropar titta blir glad eller förvånad. Därför står det utropstecken sist.'),
+        ], beskrivning='Tränar frågetecken och utropstecken, och stor bokstav i namn.'),
+
         niva('sv-ak3-alfabetet-1', 'Alfabetisk ordning', 'Alfabetet', [
             val('Vilken bokstav kommer efter k i alfabetet?', ['l', 'j', 'm'], 'l',
                 'Alfabetet går j, k, l, m. Direkt efter k kommer l.'),
@@ -115,6 +180,30 @@ BANOR = [
                   ['bad', 'bil', 'bok', 'buss'],
                   forklaring='Andra bokstäverna är a, i, o och u. I alfabetet kommer de i den ordningen.'),
         ], beskrivning='Tränar alfabetets ordning och att sortera ord efter första och andra bokstaven.'),
+
+        niva('sv-ak3-alfabetet-2', 'Leta i ordlistan', 'Alfabetet', [
+            val('Vilken bokstav kommer direkt före g i alfabetet?', ['f', 'h', 'e'], 'f',
+                'Alfabetet går e, f, g, h. Direkt före g kommer f.'),
+            skriv('Vilken bokstav kommer direkt efter å?', 'ä',
+                  'De tre sista bokstäverna är å, ä och ö. Efter å kommer ä.'),
+            skriv('Vilken bokstav står mellan z och ä i alfabetet?', 'å',
+                  'Alfabetet slutar z, å, ä, ö. Mellan z och ä står å.'),
+            val('Alla orden börjar på s. Vilket kommer först i alfabetisk ordning?',
+                ['sko', 'sal', 'sil'], 'sal',
+                'Titta på andra bokstaven: k, a och i. A kommer först, så sal står först.'),
+            val('Alla orden börjar på ka. Vilket kommer sist i alfabetisk ordning?',
+                ['kaka', 'katt', 'kam'], 'katt',
+                'De två första bokstäverna är samma. Titta på den tredje: k, t och m. T kommer sist.'),
+            val('I en ordlista står orden i alfabetisk ordning. Vilket ord står mellan ”hund” och ”hus”?',
+                ['hunger', 'hopp', 'hylla'], 'hunger',
+                'Hunger börjar som hund, men g kommer efter d. Och n kommer före s, så hunger står före hus.'),
+            ordna('Ordna orden i alfabetisk ordning. Titta på tredje bokstaven.', ['fana', 'fart', 'fat'],
+                  forklaring='Alla börjar på fa. Tredje bokstäverna är n, r och t, och de kommer i den ordningen.'),
+            ordna('Ordna orden i alfabetisk ordning.', ['zoo', 'ål', 'ängel', 'öra'],
+                  forklaring='Z kommer före å, ä och ö, som står allra sist i alfabetet.'),
+            val('Hur många bokstäver har det svenska alfabetet?', [tal(29), tal(26), tal(28)], tal(29),
+                'Det har samma 26 bokstäver som det engelska, och dessutom å, ä och ö.'),
+        ], beskrivning='Tränar att hitta ord i en ordlista med hjälp av andra och tredje bokstaven.'),
 
         niva('sv-ak3-ljud-1', 'Vokaler och konsonanter', 'Ljud och bokstäver', [
             val('Vilken bokstav är en vokal?', ['e', 'k', 's', 'm'], 'e',
@@ -185,6 +274,28 @@ BANOR = [
                   forklaring='Flickan har stor bokstav och står först. Sedan kommer verbet läser, '
                              'och bok har punkt och står sist.'),
         ], beskrivning='Tränar att känna igen substantiv och verb i korta meningar.'),
+        niva('sv-ak3-ordklasser-2', 'Adjektiv', 'Ordklasser', [
+            val('Vilket ord är ett adjektiv?', ['röd', 'äpple', 'äter'], 'röd',
+                'Ett adjektiv beskriver hur något är. Man kan säga ett rött äpple.'),
+            val('Vilket ord beskriver hur hunden är? ”Den lilla hunden skäller.”',
+                ['lilla', 'hunden', 'skäller', 'Den'], 'lilla',
+                'Lilla berättar hur hunden är. Ord som beskriver är adjektiv.'),
+            skriv('Skriv adjektivet i meningen: ”Vi har en snäll katt.”', 'snäll',
+                  'Snäll beskriver hur katten är.'),
+            skriv('Skriv motsatsen till adjektivet ”varm”.', 'kall',
+                  'Varm och kall beskriver båda hur något är, fast tvärtom.'),
+            val('Vilket ord passar? ”Elefanten är …”', ['stor', 'springer', 'snabel'], 'stor',
+                'Efter ”är” passar ett ord som beskriver elefanten. Stor är ett adjektiv.'),
+            para('Para ihop ordet med ordklassen.',
+                 [('bil', 'substantiv'), ('kör', 'verb'), ('snabb', 'adjektiv')],
+                 'Bil är en sak, kör är något man gör och snabb beskriver hur något är.'),
+            skriv('Hur många adjektiv finns det? ”En glad och pigg flicka åt en god smörgås.”',
+                  [tal(3), 'tre'],
+                  'Glad, pigg och god beskriver flickan och smörgåsen. Det blir tre adjektiv.'),
+            ordna('Bygg meningen.', ['Jag', 'har', 'en', 'blå', 'tröja.'],
+                  forklaring='Adjektivet blå står före ordet det beskriver, tröja.'),
+        ], beskrivning='Tränar adjektiv, ord som beskriver hur något är.'),
+
     ]),
 
     bana('Svenska', 'ak6', [
@@ -214,6 +325,29 @@ BANOR = [
                              'och hon står i stället för ett namn.'),
         ], beskrivning='Tränar att känna igen substantiv, verb, adjektiv och pronomen.'),
 
+        # Bara ordklasser som alla läromedel räknar likadant. Att och som
+        # frågas inte: de heter olika saker i olika grammatikböcker.
+        niva('sv-ak6-ordklasser-2', 'Fler ordklasser', 'Ordklasser', [
+            val('Vilket ord är en preposition?', ['under', 'bord', 'snabbt', 'sju'], 'under',
+                'Under visar var något är i förhållande till något annat: under bordet.'),
+            val('Vilken ordklass är ”tolv”?', ['räkneord', 'adjektiv', 'pronomen', 'preposition'], 'räkneord',
+                'Tolv är ett tal. Ord för tal är räkneord.'),
+            val('Vilket ord är en interjektion?', ['aj', 'och', 'på', 'fem'], 'aj',
+                'Aj är ett utrop. Utrop som aj, hej och hurra kallas interjektioner.'),
+            skriv('Skriv prepositionen i meningen: ”Katten sover på mattan.”', 'på',
+                  'På visar var katten sover i förhållande till mattan.'),
+            skriv('Skriv räkneordet i meningen: ”Vi har tre kaniner.”', 'tre',
+                  'Tre är ett tal, alltså ett räkneord.'),
+            sant('”Första” är ett räkneord.', True,
+                 'Räkneord är både grundtal, som ett och två, och ordningstal, som första och andra.'),
+            val('Vilket ord är en konjunktion? ”Jag vill ha te och en bulle.”',
+                ['och', 'vill', 'te', 'bulle'], 'och',
+                'Och binder ihop te och en bulle. Ord som binder ihop ord eller satser är konjunktioner.'),
+            para('Para ihop ordet med ordklassen.',
+                 [('bakom', 'preposition'), ('nio', 'räkneord'), ('hurra', 'interjektion'), ('men', 'konjunktion')],
+                 'Prepositioner visar läge, räkneord är tal, interjektioner är utrop och konjunktioner binder ihop.'),
+        ], beskrivning='Tränar prepositioner, räkneord, konjunktioner och interjektioner.'),
+
         niva('sv-ak6-stavning-1', 'Dubbelteckning och ck', 'Stavning', [
             val('Vilket ord passar och är rätt stavat? ”Pengarna ligger i min …”',
                 ['ficka', 'fikka', 'fika'], 'ficka',
@@ -240,6 +374,28 @@ BANOR = [
                   forklaring='Vatten stavas med tt eftersom a är kort. '
                              'I dricker skrivs k-ljudet ck av samma skäl.'),
         ], beskrivning='Tränar när konsonanten dubbleras och när k-ljudet stavas ck.'),
+
+        # Förkortningarna står som Språkrådet och Svenska skrivregler skriver
+        # dem. Varianter utan punkter (tex) räknas som fel av båda.
+        niva('sv-ak6-stavning-2', 'Förkortningar', 'Stavning', [
+            val('Hur förkortas ”till exempel”?', ['t.ex.', 'te.x.', 'tex'], 't.ex.',
+                'Till exempel förkortas t.ex., med en punkt efter varje förkortat ord.'),
+            val('Vad betyder ”bl.a.”?', ['bland annat', 'bland alla', 'bli av'], 'bland annat',
+                'Bl.a. är bland annat. Punkterna visar att ord har förkortats.'),
+            val('Vad betyder ”osv.”?', ['och så vidare', 'och sedan var', 'om så vill'], 'och så vidare',
+                'Osv. betyder och så vidare. Den skrivs ihop, med en punkt sist.'),
+            val('Vad betyder ”kl.”?', ['klockan', 'klassen', 'klart'], 'klockan',
+                'Kl. 8 betyder klockan åtta.'),
+            skriv('Vad står ”m.m.” för? Skriv orden.', 'med mera',
+                  'M.m. betyder med mera. Den står sist i en uppräkning som kunde ha fortsatt.'),
+            val('Hur förkortas ”bland annat”?', ['bl.a.', 'b.a.', 'bla.a.'], 'bl.a.',
+                'Bland förkortas bl. och annat a. Det blir bl.a.'),
+            sant('”ca” betyder ungefär.', True,
+                 'Ca är en förkortning av cirka, som betyder ungefär: ca 20 elever.'),
+            para('Para ihop förkortningen med vad den betyder.',
+                 [('t.ex.', 'till exempel'), ('osv.', 'och så vidare'), ('kl.', 'klockan'), ('s.', 'sidan')],
+                 'Förkortningar sparar plats, men läsaren måste känna igen dem.'),
+        ], beskrivning='Tränar vanliga förkortningar och hur de skrivs.'),
 
         niva('sv-ak6-ordforrad-1', 'Synonymer och motsatsord', 'Ordförråd', [
             val('Vad är en synonym?',
@@ -330,6 +486,25 @@ BANOR = [
                   'Eftersom det regnar är en bisats. Den kan inte stå ensam som en hel mening.'),
         ], beskrivning='Tränar ordföljd i påståenden, frågor och meningar med bisats.'),
 
+        niva('sv-ak6-meningsbyggnad-2', 'Sambandsord', 'Meningsbyggnad', [
+            val('Vilket ord passar? ”Jag ville gå ut, … det regnade.”', ['men', 'och', 'eller'], 'men',
+                'Men visar att något går emot: jag ville gå ut, men regnet hindrade mig.'),
+            val('Vilket ord passar? ”Vi stannade inne … det var kallt.”', ['eftersom', 'fast', 'eller'], 'eftersom',
+                'Eftersom säger varför vi stannade inne. Fast hade betytt att vi stannade inne trots kylan.'),
+            val('Vilket ord passar? ”Vill du ha äpple … päron?”', ['eller', 'men', 'för'], 'eller',
+                'Eller används när man ska välja mellan två saker.'),
+            val('Vilket sambandsord visar tid?', ['sedan', 'men', 'eftersom', 'eller'], 'sedan',
+                'Sedan säger vad som händer efter något annat.'),
+            val('Vilket sambandsord visar en orsak?', ['eftersom', 'sedan', 'eller', 'först'], 'eftersom',
+                'Eftersom säger varför något händer: vi tog bussen eftersom det regnade.'),
+            ordna('Bygg meningen.', ['Vi', 'tog', 'bussen', 'eftersom', 'det', 'regnade.'],
+                  forklaring='Vi tog bussen är huvudsatsen, och eftersom det regnade säger varför.'),
+            skriv('Vilket ord binder ihop? ”Hon var sjuk, så hon stannade hemma.”', 'så',
+                  'Så visar en följd: hon var sjuk, och därför stannade hon hemma.'),
+            sant('”Och”, ”men” och ”eller” kan binda ihop två meningar till en.', True,
+                 'Jag är trött och jag vill sova. Två meningar har blivit en med hjälp av och.'),
+        ], beskrivning='Tränar ord som binder ihop meningar och visar tid, orsak och motsättning.'),
+
         niva('sv-ak6-lasforstaelse-1', 'Allemansrätten', 'Läsförståelse', [
             val('Vad är textens syfte?',
                 ['Att informera om vad man får och inte får göra i naturen',
@@ -374,6 +549,38 @@ BANOR = [
         ], beskrivning='En saklig text om allemansrätten, med frågor om vad som står, vad ett ord betyder '
                        'och vad texten vill.',
             text=ALLEMANSRATTEN),
+        niva('sv-ak6-lasforstaelse-2', 'Kompassen', 'Läsförståelse', [
+            skriv('Vad hette flickan som Mika hamnade med?', 'Jonna',
+                  'Det står i första stycket: Mika hamnade med Jonna.'),
+            sant('Mika och Jonna hade pratat mycket med varandra före orienteringsdagen.', False,
+                 'Jonna hade inte sagt ett enda ord till Mika sedan han började.'),
+            skriv('Hur många kontroller skulle de hitta? Svara med en siffra.', [tal(5), 'fem'],
+                  'De fick en lapp med fem kontroller.'),
+            val('Varför bet Jonna sig i läppen vid den stora stenen?',
+                ['Hon var orolig för att de hade gått vilse', 'Hon var hungrig och ville äta',
+                 'Hon var arg på Mika för att han gick långsamt', 'Hon hade fått ont i foten'],
+                'Hon var orolig för att de hade gått vilse',
+                'Stigen tog slut och hon vände kartan åt olika håll. Strax efter säger hon att hon inte vet var de är.'),
+            val('Vem hade lärt Mika att använda kompass?', ['hans morfar', 'läraren', 'Jonna', 'hans mamma'],
+                'hans morfar', 'Han vred på kompassen så som morfar hade lärt honom på fjällen.'),
+            skriv('Åt vilket väderstreck låg sjön? Skriv ordet ur texten.', ['nordost', 'åt nordost'],
+                  'Mika säger: ”Sjön ligger åt nordost.”'),
+            sant('Mika och Jonna kom först tillbaka av alla par.', False,
+                 'De kom sist av alla par, men ingen av dem brydde sig om det.'),
+            val('Vad förstår man av att Jonna log ”för första gången”?',
+                ['Hon hade varit spänd eller blyg tidigare under dagen', 'Hon tyckte inte om orientering alls',
+                 'Hon ville vinna över alla de andra paren', 'Hon var arg på läraren för paren'],
+                'Hon hade varit spänd eller blyg tidigare under dagen',
+                'Hon hade inte pratat med Mika och blivit orolig i skogen. Nu släpper det.'),
+            val('Vad handlar texten mest om?',
+                ['Hur två klasskamrater börjar bli vänner', 'Hur man vinner en tävling i orientering',
+                 'Hur man läser en karta', 'Varför Mikas familj flyttade'],
+                'Hur två klasskamrater börjar bli vänner',
+                'Orienteringen är det som händer, men det viktiga är att Mika och Jonna börjar prata.'),
+        ], beskrivning='En berättelse om en orienteringsdag, med frågor om vad som står och vad man förstår '
+                       'mellan raderna.',
+            text=KOMPASSEN),
+
     ]),
 
     bana('Svenska', 'ak8', [
@@ -401,6 +608,33 @@ BANOR = [
                   ['Min', 'storebror', 'är', 'fotbollstränare.'], extra=['fotbolls', 'tränare.'],
                   forklaring='Fotbollstränare är ett sammansatt ord och skrivs ihop, precis som storebror.'),
         ], beskrivning='Tränar att skriva sammansatta ord ihop och att se hur betydelsen ändras när de särskrivs.'),
+
+        # Ett-formen av adjektiv. Adjektiv på lång vokal eller på lång vokal
+        # plus d eller t får tt (blått, rött, vitt); på konsonant plus d
+        # blir d:et t (hårt, känt). Bara ord där regeln gäller utan undantag.
+        niva('sv-ak8-stavning-2', 'T eller tt', 'Stavning', [
+            val('Hur skrivs det? ”ett … hus” (röd)', ['rött', 'röt', 'rödt'], 'rött',
+                'Röd har lång vokal följd av d. Då blir ett-formen tt, och vokalen blir kort: rött.'),
+            val('Hur skrivs det? ”ett … äpple” (söt)', ['sött', 'söt', 'södt'], 'sött',
+                'Söt har lång vokal följd av t. I ett-formen blir vokalen kort och t dubbleras: sött.'),
+            val('Hur skrivs det? ”ett … golv” (hård)', ['hårt', 'hårtt', 'hårdt'], 'hårt',
+                'Hård slutar på konsonant plus d. Då byts d mot t: hårt. Ingen dubbelteckning efter två konsonanter.'),
+            skriv('Skriv adjektivet i rätt form: ”ett (ny) år”', 'nytt',
+                  'Ny slutar på lång vokal. Då får ett-formen tt: nytt.'),
+            skriv('Skriv adjektivet i rätt form: ”ett (blå) täcke”', 'blått',
+                  'Blå slutar på lång vokal, så det blir blått.'),
+            skriv('Skriv adjektivet i rätt form: ”ett (glad) barn”', 'glatt',
+                  'Glad har lång vokal plus d. I ett-formen blir det glatt.'),
+            val('Vilket är rätt skrivet?', ['ett känt band', 'ett kännt band', 'ett kändt band'], 'ett känt band',
+                'Känd slutar på n plus d. D byts mot t, och eftersom det redan står en konsonant före blir det bara ett t.'),
+            sant('”ett runt bord” är rätt skrivet.', True,
+                 'Rund slutar på n plus d, så ett-formen blir runt, med ett t.'),
+            val('Varför skrivs det tt i ”ett vitt papper”?',
+                ['Vokalen blir kort i vitt, och efter kort vokal dubbleras t', 'Alla adjektiv får alltid tt i ett-formen',
+                 'Papper har två p, och då blir det tt'],
+                'Vokalen blir kort i vitt, och efter kort vokal dubbleras t',
+                'Säg vit och vitt. I vitt är i kort, och en kort vokal följs av dubbel konsonant.'),
+        ], beskrivning='Tränar adjektivens ett-form: när det blir t och när det blir tt.'),
 
         niva('sv-ak8-pronomen-1', 'De eller dem', 'Pronomen', [
             val('Hur kan man testa om det ska vara de eller dem?',
@@ -433,6 +667,32 @@ BANOR = [
                   ['De', 'som', 'är', 'klara', 'får', 'gå', 'hem.'], extra=['Dem'],
                   forklaring='Man kan säga ”vi som är klara får gå hem”. Vi passar, alltså de.'),
         ], beskrivning='Tränar att välja mellan de och dem med hjälp av vi och oss.'),
+
+        # Sin syftar på subjektet i samma sats. Meningarna här har en enda
+        # sats och en ägare som texten pekar ut, så att bara ett svar är rätt.
+        niva('sv-ak8-pronomen-2', 'Sin eller hans och hennes', 'Pronomen', [
+            val('Lisa tvättade sin egen tröja. Vilket ord ska stå? ”Lisa tvättade … tröja.”',
+                ['sin', 'hennes', 'sitt'], 'sin',
+                'Tröjan är Lisas, och Lisa är subjekt i satsen. Då blir det sin.'),
+            val('Omar lånade Adams cykel. Vilket ord ska stå? ”Omar cyklade hem på … cykel.”',
+                ['hans', 'sin', 'sitt'], 'hans',
+                'Cykeln är Adams, inte Omars. Sin hade betytt att det var Omars egen cykel.'),
+            val('Barnen hämtade sina egna jackor. Vilket ord ska stå? ”Barnen hämtade … jackor.”',
+                ['sina', 'sin', 'sitt'], 'sina',
+                'Jackor är plural, så det blir sina.'),
+            val('Hunden låg i sin egen korg. Vilket ord ska stå? ”Hunden låg i … korg.”',
+                ['sin', 'sitt', 'sina'], 'sin', 'En korg, alltså sin korg.'),
+            val('Mormor sålde sitt eget hus. Vilket ord ska stå? ”Mormor sålde … hus.”',
+                ['sitt', 'sin', 'sina'], 'sitt', 'Ett hus, alltså sitt hus.'),
+            sant('I meningen ”Pelle och hans syster gick hem.” ska det stå hans, inte sin.', True,
+                 'Hans syster är en del av subjektet. Sin kan inte stå i subjektet.'),
+            skriv('Skriv rätt ord: ”Karin och … bror spelar schack.” Det är Karins bror.', 'hennes',
+                  'Karins bror är en del av subjektet, och där kan sin inte stå. Då blir det hennes.'),
+            val('Vad avgör om det ska vara sin eller hennes?',
+                ['Om ägaren är subjekt i samma sats', 'Om ägaren är en flicka', 'Om ordet står först i meningen'],
+                'Om ägaren är subjekt i samma sats',
+                'Sin, sitt och sina syftar på subjektet i samma sats. Annars blir det hans, hennes eller deras.'),
+        ], beskrivning='Tränar när det ska vara sin, sitt och sina och när det ska vara hans och hennes.'),
 
         niva('sv-ak8-satsdelar-1', 'Subjekt och predikat', 'Satsdelar', [
             val('Vilket ord är predikat i meningen ”Hunden jagar katten.”?',
@@ -545,6 +805,28 @@ BANOR = [
                              'frågade Ali med punkt sist.'),
         ], beskrivning='Tränar komma i uppräkningar, kolon och hur repliker skrivs med talstreck.'),
 
+        niva('sv-ak8-skiljetecken-2', 'Bindestreck, stor bokstav och indirekta frågor', 'Skiljetecken', [
+            val('Vilket är rätt skrivet?', ['tv-program', 'tvprogram', 'tv program'], 'tv-program',
+                'En förkortning som tv sätts ihop med ett ord med bindestreck.'),
+            val('Vilket är rätt skrivet? ”Hon bodde där på …”', ['1800-talet', '1800 talet', '1800talet'], '1800-talet',
+                'När siffror sätts ihop med ett ord används bindestreck.'),
+            val('En flicka som är tolv år. Hur skrivs det med siffror?', ['12-åring', '12 åring', '12åring'],
+                '12-åring', 'Siffror och ord sätts ihop med bindestreck: 12-åring.'),
+            skriv('Sätt ihop ”EU” och ”land” till ett ord.', 'EU-land',
+                  'En förkortning i versaler sätts ihop med ett ord med bindestreck.'),
+            val('Vilket ord ska ha stor bokstav?', ['norge', 'norsk', 'norska', 'tisdag'], 'norge',
+                'Norge är namnet på ett land. Nationaliteter, språk och veckodagar har liten bokstav.'),
+            sant('Språk, som engelska och arabiska, skrivs med liten bokstav på svenska.', True,
+                 'På engelska har språknamn stor bokstav, men inte på svenska.'),
+            sant('Högtider som jul och påsk skrivs med stor bokstav.', False,
+                 'Jul, påsk och midsommar skrivs med liten bokstav på svenska.'),
+            val('Vilken mening har rätt tecken?',
+                ['Hon undrade om jag ville följa med.', 'Hon undrade om jag ville följa med?',
+                 'Hon undrade, om jag ville följa med.'],
+                'Hon undrade om jag ville följa med.',
+                'Det är en indirekt fråga: meningen berättar att någon frågade. Då står det punkt, inte frågetecken.'),
+        ], beskrivning='Tränar bindestreck i ord med förkortningar och siffror, stor bokstav och indirekta frågor.'),
+
         niva('sv-ak8-lasforstaelse-1', 'Tomaterna på balkongen', 'Läsförståelse', [
             skriv('Vart reste fru Lind? Skriv namnet på staden.', ['Luleå', 'till Luleå'],
                   'Det står i början av texten: hon reste till sin syster i Luleå.'),
@@ -591,5 +873,44 @@ BANOR = [
         ], beskrivning='En berättelse om ett löfte som glöms bort, med frågor om vad som står, vad ett ord '
                        'betyder och vad man kan förstå mellan raderna.',
             text=TOMATERNA),
+        niva('sv-ak8-lasforstaelse-2', 'Ge oss en tystare matsal', 'Läsförståelse', [
+            val('Vad är skribentens tes, alltså huvudåsikt?',
+                ['Skolan måste göra matsalen tystare', 'Eleverna ska få äta i korridoren',
+                 'Lunchen borde vara längre', 'Elevrådet ska bestämma över maten'],
+                'Skolan måste göra matsalen tystare',
+                'Tesen står i första stycket: jag anser att skolan måste göra matsalen tystare.'),
+            val('Vilken textsort är det?', ['debattartikel', 'novell', 'instruktion', 'nyhetsartikel'],
+                'debattartikel', 'Texten har en tes, argument och ett motargument, och vill övertyga.'),
+            sant('Skribenten ger två argument för sin tes.', True,
+                 'Mitt första skäl och mitt andra skäl: att få äta i lugn och ro, och att det inte behöver kosta mycket.'),
+            val('Vilket motargument tar skribenten upp?',
+                ['Att eleverna själva borde prata tystare', 'Att åtgärderna kostar för mycket',
+                 'Att matsalen är för liten', 'Att maten inte är god'],
+                'Att eleverna själva borde prata tystare',
+                'Vissa säger att det är eleverna själva som låter.'),
+            val('Hur bemöter skribenten motargumentet?',
+                ['Hon menar att rummet ekar så att alla måste höja rösten',
+                 'Hon menar att eleverna inte låter alls, bara stolarna',
+                 'Hon håller med och vill att de högljudda ska äta i korridoren'],
+                'Hon menar att rummet ekar så att alla måste höja rösten',
+                'Hon håller med om att det ligger något i det, men säger att det är rummet som måste ändras först.'),
+            skriv('Hur många elever äter i matsalen enligt texten? Skriv det som det står.',
+                  ['över trehundra', 'trehundra', 'över 300', '300', 'mer än 300', 'mer än trehundra'],
+                  'Det står att matsalen fylls med över trehundra elever.'),
+            val('Varför nämner skribenten föräldern som är snickare?',
+                ['För att visa att åtgärderna går att göra utan stora kostnader',
+                 'För att visa att hon känner många vuxna på skolan', 'För att snickaren ska bestämma allt',
+                 'För att klaga på snickaren'],
+                'För att visa att åtgärderna går att göra utan stora kostnader',
+                'Det står i stycket om hennes andra skäl: att det inte behöver kosta mycket.'),
+            val('Vad menar skribenten med att halvtimmen ska vara ”en paus, inte en prövning”?',
+                ['Lunchen ska vila eleverna, inte vara jobbig', 'Eleverna ska ha prov under lunchen',
+                 'Lunchen ska bli kortare', 'Ingen ska få prata i matsalen'],
+                'Lunchen ska vila eleverna, inte vara jobbig',
+                'En prövning är något svårt man måste ta sig igenom. Lunchen ska vara vila.'),
+            sant('Skribenten föreslår att eleverna ska bygga om matsalen själva.', False,
+                 'Hon föreslår att rektorn och elevrådet går igenom matsalen tillsammans och bestämmer vad som ska göras.'),
+        ], beskrivning='En debattartikel från en skoltidning, med frågor om tes, argument och motargument.',
+            text=MATSALEN),
     ]),
 ]

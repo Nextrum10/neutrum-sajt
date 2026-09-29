@@ -117,7 +117,10 @@ för en nivå första gången och 100 för ett område (`intern.nexlax_*`,
 inräknade, bryts först efter en hel dag utan något och påminns aldrig
 om. Mästarprovet (områden med minst två nivåer) och repetitionen drar
 sina frågor ur banan, och banans procent räknar bara de vanliga
-nivåerna.
+nivåerna. Banken (Fas 23.3) har 40 banor i sex ämnen, skrivna från
+grunden mot Lgr22: inget kopieras ur nationella prov eller från nätet,
+för det är skyddat eller icke-kommersiellt. En fråga ska gå att förstå
+ensam, för Mästarprovet och repetitionen drar den ur sin nivå.
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
