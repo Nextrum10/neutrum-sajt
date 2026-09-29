@@ -1422,13 +1422,13 @@ väntar på pg_cron: pg_cron finns. Schemaläggs de ska texterna i
 
 **Schemat syns under System → Automationer** (2026-09-29). Rutan
 Schemalagda körningar läser `driftkorningar()` (migrationen
-`schemalagda_korningar_syns`, som körs i driften efter merge och sedan
-döps om till versionen driften registrerar). Fas 7 lät rutan tolka en
-saknad funktion (PGRST202) som att pg_cron saknades, för funktionen
-skulle komma med pg_cron. pg_cron kom med notiserna utan den, och rutan
-sa "Inget schema installerat" medan tretton jobb gick varje minut och
-varje natt. Ett saknat svar betyder nu bara att migrationen inte är
-körd, och rutan säger det. Fyra regler:
+`schemalagda_korningar_syns`, körd i driften efter att PR #129 mergats,
+som version `20260929084809`; det driften sparade har samma md5 som
+filen). Fas 7 lät rutan tolka en saknad funktion (PGRST202) som att
+pg_cron saknades, för funktionen skulle komma med pg_cron. pg_cron kom
+med notiserna utan den, och rutan sa "Inget schema installerat" medan
+tretton jobb gick varje minut och varje natt. Ett saknat svar betyder
+nu bara att migrationen inte är körd, och rutan säger det. Fyra regler:
 
 1. **En rad per jobb, inte en per körning.** `cron.job_run_details` hade
    11 800 körningar på en vecka, 10 355 av dem `notis-minut`. En lista
@@ -1456,7 +1456,8 @@ Provat mot driften 2026-09-29 med hela `rls-test.sql` i en transaktion
 som rullades tillbaka, på det sätt avsnitt 9 beskriver: 762 av 764 med
 migrationen, där de två är Fas 23.1:s prov, som väntar på sin egen, och
 754 av 762 utan den, där alla sex raderna för schemat föll. Med main
-inslagen (de delade dokumenten): 779 av 781, samma två. Provet lägger
+inslagen (de delade dokumenten): 779 av 781, samma två, och lika efter
+att migrationen körts i driften. Provet lägger
 in en misslyckad körning i `cron.job_run_details` med runid −9101, och
 den försvinner med återrullningen.
 
@@ -2195,7 +2196,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 35 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-29, den senaste är `driftkorningar`; `mina_handlingar`, `radering_lage` och `radera_person` före den. 34 i driften tills `schemalagda_korningar_syns` är körd) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 35 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-29, räknat i driften; den senaste är `driftkorningar`, och `mina_handlingar`, `radering_lage` och `radera_person` före den) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
