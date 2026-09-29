@@ -325,7 +325,20 @@ window.NXStudie = (function () {
      för att gissas — en gissning lade tillbaka-länken under det. */
   function visaÖverst(el) {
     if (!el) return;
-    scrollaTill(el.getBoundingClientRect().top + window.scrollY - täcktÖverst() - 12);
+    scrollaTill(platsUtanInglidning(el) + window.scrollY - täcktÖverst() - 12);
+  }
+
+  /* Var elementets ruta ligger, utan inglidningen. En sektion som visas
+     tonar in med translate:0 12px till 0 (vy-in i nextrum-arbetsyta.css),
+     och den mäts i samma ögonblick som den släpps: en mätning då är 12 px
+     för låg. När inglidningen sedan var klar stod rubriken 12 px närmare
+     raden än den var lagd, tätt intill den i stället för med luft
+     (2026-09-29, mätt i adminvyn; samma i de två andra). */
+  function platsUtanInglidning(el) {
+    var topp = el.getBoundingClientRect().top;
+    var t = window.getComputedStyle(el).translate;
+    if (t && t !== 'none') topp -= parseFloat(t.split(' ')[1]) || 0;
+    return topp;
   }
 
   /* Hur mycket av skärmens överkant som är täckt: sidhuvudet, och på en
@@ -1857,7 +1870,7 @@ window.NXStudie = (function () {
          (#lektioner/plan) ska inte skicka en uppåt. */
       if (!första && vald !== aktiv) {
         var sektion = rot.querySelector('section[data-sek="' + vald + '"]');
-        if (sektion && (window.scrollY < föreY || sektion.getBoundingClientRect().top < täcktÖverst() + 12)) visaÖverst(sektion);
+        if (sektion && (window.scrollY < föreY || platsUtanInglidning(sektion) < täcktÖverst() + 12)) visaÖverst(sektion);
       }
       if (!första) {
         var rubrik = rot.querySelector('section[data-sek="' + vald + '"] h2, section[data-sek="' + vald + '"] h5');
@@ -1939,17 +1952,20 @@ window.NXStudie = (function () {
     /* Sidhuvudets höjd, för sektionsraden som står fast under det på
        en telefon. Satt på raden och inte på :root: en variabel på
        roten ärvs av hela sidan och räknar om stilen för allt när den
-       ändras (CLAUDE.md, startsidan efter hero). Adminvyns toppråd
-       står utanför menyn och får därför en egen: den fäste förut på en
-       gissad höjd (clamp), 9 px under sidhuvudet på en bred skärm, så
-       att innehåll syntes glida förbi i springan. */
+       ändras (CLAUDE.md, startsidan efter hero). Adminvyns toppråd och
+       sidan runt den (main, vars överkant tidigare höll undan en hero
+       som inte finns) står utanför menyn och får därför var sin: toppraden
+       fäste förut på en gissad höjd (clamp), 9 px under sidhuvudet på en
+       bred skärm, så att innehåll syntes glida förbi i springan. */
     var hdrEl = document.querySelector('.hdr');
     if (hdrEl && window.ResizeObserver) {
       var toppEl = document.querySelector('.adm-topp');
+      var huvudEl = toppEl ? document.getElementById('innehall') : null;
       new ResizeObserver(function () {
         var h = hdrEl.offsetHeight + 'px';
         nav.style.setProperty('--vy-hdr-h', h);
         if (toppEl) toppEl.style.setProperty('--vy-hdr-h', h);
+        if (huvudEl) huvudEl.style.setProperty('--vy-hdr-h', h);
       }).observe(hdrEl);
     }
 

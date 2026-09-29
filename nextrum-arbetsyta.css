@@ -775,29 +775,30 @@
 .adm-verktyg .sel{max-width:230px}
 .adm-sok{flex:1 1 180px;max-width:300px}
 
-.adm-skal{
-  overflow-x:auto;
-  border:1px solid var(--ln);
-  border-radius:14px;
-  background:var(--pap);
-}
+/* Tabellen står på kortet (2026-09-29, adminvyn i samma hus som
+   studievyn): en låda i lådan är precis vad INNEHÅLLET-avsnittet längst
+   ned tog bort. Rubrikraden är en ruta i --tint, raderna har streck
+   emellan. border-collapse:separate, för i det andra läget går det inte
+   att runda hörnen på en cell. */
+.adm-skal{overflow-x:auto}
 table.adm{
   width:100%;
-  border-collapse:collapse;
+  border-collapse:separate;border-spacing:0;
   font-size:.89rem;
   min-width:640px;
 }
 table.adm th{
   text-align:left;
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.13em;text-transform:uppercase;
+  font-family:var(--f-sans);font-size:.78rem;font-weight:650;
+  letter-spacing:0;text-transform:none;
   color:var(--bl-3);
-  padding:13px 14px;
-  border-bottom:1px solid var(--ln);
-  background:var(--pap-2);
+  padding:11px 14px;
+  background:var(--tint);
   white-space:nowrap;
   position:sticky;top:0;z-index:1;
 }
+table.adm th:first-child{border-radius:14px 0 0 14px}
+table.adm th:last-child{border-radius:0 14px 14px 0}
 table.adm td{
   padding:13px 14px;
   border-bottom:1px solid var(--ln);
@@ -806,14 +807,17 @@ table.adm td{
   line-height:1.45;
 }
 table.adm tr:last-child td{border-bottom:none}
-table.adm tbody tr:hover td{background:var(--pap-2)}
+table.adm tbody tr:hover td{background:var(--tint)}
 table.adm td b{color:var(--bl);font-weight:650;font-size:.92rem}
 table.adm td .adm-und{
   display:block;font-size:.79rem;color:var(--bl-3);margin-top:2px;
 }
 table.adm td.adm-atg{white-space:nowrap;text-align:right}
+/* Tal och datum i en cell: samma sans som resten, med tabelltal så att
+   kolumnen linjerar. Monospace är till små etiketter och tekniska texter
+   (stackspår, JSON), inte till ett datum. */
 table.adm .adm-tal{
-  font-family:var(--f-mono);font-variant-numeric:tabular-nums;
+  font-variant-numeric:tabular-nums;
   white-space:nowrap;
 }
 
@@ -825,19 +829,15 @@ table.adm .adm-tal{
    en träffyta som bara är texten är en missad träff varannan gång.
    Läget står till höger, för det är arbetskön.
    ------------------------------------------------------------ */
-.adm-namnlista{
-  list-style:none;margin:0;padding:0;
-  border:1px solid var(--ln);border-radius:14px;
-  background:var(--pap);overflow:hidden;
-}
+.adm-namnlista{list-style:none;margin:0;padding:0}
 .adm-namnlista li + li{border-top:1px solid var(--ln)}
 .adm-namn{
   display:flex;align-items:center;gap:12px;
   width:100%;text-align:left;
-  padding:13px 16px;
+  padding:13px 14px;border-radius:14px;
   transition:background .16s var(--e);
 }
-.adm-namn:hover{background:var(--pap-2)}
+.adm-namn:hover{background:var(--tint)}
 .adm-namn:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .adm-namn-text{min-width:0;flex:1}
 .adm-namn-text b{
@@ -856,23 +856,28 @@ table.adm .adm-tal{
 /* Statusprickar. Färgen är en genväg, aldrig hela beskedet — texten
    står alltid kvar bredvid, för färgen ensam funkar inte för alla. */
 .adm-status{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:.8rem;font-weight:600;
-  padding:3px 10px 3px 8px;
-  border-radius:100px;
-  border:1px solid var(--ln-2);
-  background:var(--pap-2);
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:.78rem;font-weight:600;line-height:1;
+  padding:6px 11px 6px 9px;
+  border-radius:100px;border:0;
+  background:var(--bricka);
   color:var(--bl-2);
   white-space:nowrap;
 }
 .adm-status::before{
-  content:"";width:6px;height:6px;border-radius:100px;
-  background:var(--bl-3);flex:none;
+  content:"";width:7px;height:7px;border-radius:50%;
+  background:currentColor;opacity:.85;flex:none;
 }
-.adm-status.ar-ny::before{background:var(--acc)}
-.adm-status.ar-ny{color:var(--acc-text);border-color:var(--acc-line)}
-.adm-status.ar-klar::before{background:var(--mossa,#9DAD86)}
-.adm-status.ar-vantar::before{background:var(--ockra,#C08A2E)}
+/* Färgen säger vems drag det är, som .lage i studievyn (INNEHÅLLET):
+   lera är ert drag eller något som gick fel (Ny, Förfallen), ockra väntar
+   på någon annan (Kontaktad, Skickad), mossa är klart. Ingen färg är
+   ensam: texten står alltid kvar. */
+.adm-status.ar-ny{background:var(--acc-soft);color:var(--acc-lugn)}
+.adm-status.ar-ny::before{background:var(--acc);opacity:1}
+.adm-status.ar-vantar{background:var(--ockra-soft);color:var(--ockra-text)}
+.adm-status.ar-vantar::before{background:var(--ockra,#C08A2E);opacity:1}
+.adm-status.ar-klar{background:var(--mossa-soft);color:var(--mossa-text)}
+.adm-status.ar-klar::before{background:var(--mossa,#9DAD86);opacity:1}
 
 /* Nyckeltalen överst. Samma idé som .kpi i vy-lagret, men de får
    vara fler och smalare — ledningen läser åtta tal, familjen tre. */
@@ -884,9 +889,9 @@ table.adm .adm-tal{
 }
 .adm-kpi{
   border:1px solid var(--ln);
-  border-radius:14px;
-  background:var(--pap);
-  padding:16px 17px;
+  border-radius:20px;
+  background:var(--yta);box-shadow:var(--sk-1);
+  padding:16px 18px;
 }
 .adm-kpi b{
   display:block;
@@ -896,9 +901,9 @@ table.adm .adm-tal{
 }
 .adm-kpi span{
   display:block;margin-top:7px;
-  font-size:.79rem;line-height:1.35;color:var(--bl-3);
+  font-size:.82rem;line-height:1.35;color:var(--bl-2);
 }
-.adm-kpi.ar-larm{border-color:var(--acc-line);background:var(--acc-soft)}
+.adm-kpi.ar-larm{border-color:color-mix(in srgb,var(--acc) 30%,var(--ln));background:var(--acc-soft)}
 .adm-kpi.ar-larm b{color:var(--acc-text)}
 
 /* Integrationskorten. Ett kort per tjänst, med ett rakt besked om
@@ -910,10 +915,10 @@ table.adm .adm-tal{
   gap:14px;
 }
 .adm-koppling-kort{
-  border:1px solid var(--ln);
-  border-radius:16px;
-  background:var(--pap);
-  padding:20px;
+  border:0;
+  border-radius:20px;
+  background:var(--tint);
+  padding:22px;
   display:flex;flex-direction:column;gap:11px;
 }
 /* Klientfelen, en ruta per sort (2026-09-24). Antalet står först
@@ -1026,11 +1031,51 @@ button.fel-person:hover{border-color:var(--bl-3)}
 }
 .adm-koppling-kort .adm-koppling-prov p{flex:none}
 
+/* .btn-sm är en liten knapp, och har aldrig varit det: den står i
+   nextrum.css (10px 18px), och cinemas .btn laddas efter den med samma
+   tyngd och vinner. Studievyn löser det där knapparna står
+   (.pass-atg .btn, .vy-rad-hoger .btn). Adminvyn har 120 små knappar i
+   rader och tabeller, och en rad med en knapp på 54 px blev en rad på
+   80 px. Här är den liten på riktigt, med samma mått som studievyns
+   radknappar. Den är fortfarande minst 44 px hög med ett finger som
+   pekare (TUMMEN). Bara i innehållet: sidhuvudets Logga ut är en .btn-sm
+   och ska se ut som i de andra vyerna. */
+.vy-admin main .btn-sm{padding:8px 16px;font-size:.84rem}
+
+/* Rubrikerna på Månadens ekonomi (Passen i september, Pengarna): text på
+   papperet som .vy-grupp i studievyn, inte spärrade versaler. */
+.vy-admin .man-rubrik{
+  margin:24px 0 12px;font-size:1.03rem;font-weight:650;
+  letter-spacing:-.015em;text-transform:none;color:var(--bl);
+}
+.vy-admin .man-rubrik:first-child{margin-top:0}
+
+/* Etiketterna i formulären: vanlig text, som i rapportrutan i studievyn.
+   Fyra fält i en rad med spärrade versaler bredvid ett med vanlig text
+   var två sorters formulär i samma ruta. */
+.vy-admin :is(.pay-field, .fgroup) > label{
+  font-family:var(--f-sans);font-size:.82rem;font-weight:600;
+  letter-spacing:0;text-transform:none;color:var(--bl-2);
+  margin-bottom:7px;
+}
+
+/* Raderna i chattlistan och sökträffarna går genom rad() i
+   nextrum-admin-karna.js, som lånar .mat från studievyn (materialraden:
+   titel och en liten etikett i spärrade versaler). I adminvyn är andra
+   raden en mening ur ett meddelande, och den blev oläslig som versaler. */
+.vy-admin .mat-vad span{
+  font-family:var(--f-sans);font-weight:400;font-size:.84rem;
+  letter-spacing:0;text-transform:none;color:var(--bl-2);
+  margin-top:3px;
+}
+
 /* Adminvyn får vara bredare än familjevyn — tabeller mår illa av
    att klämmas ihop, och den som sitter här sitter vid en skärm. */
 .vy-admin .vy-layout{max-width:var(--w-bred)}
+/* 244 px: "Intresseanmälningar" och märket bredvid går inte in i 212 med en
+   rullningslist, och märket lade sig över ordet. */
 @media (min-width:900px){
-  .vy-admin .vy-layout{grid-template-columns:212px minmax(0,1fr)}
+  .vy-admin .vy-layout{grid-template-columns:244px minmax(0,1fr)}
 }
 
 /* ============================================================
@@ -1102,8 +1147,8 @@ button.fel-person:hover{border-color:var(--bl-3)}
    mikrotexter upp ett steg, och storleken med dem.
    ------------------------------------------------------------ */
 .vy-admin table.adm th{
-  font-size:10.5px;
-  letter-spacing:.11em;
+  font-size:.78rem;
+  letter-spacing:0;
   color:var(--bl-2);
 }
 .vy-admin table.adm td{color:var(--bl-2)}
@@ -1121,41 +1166,56 @@ button.fel-person:hover{border-color:var(--bl-3)}
 
    Den är avsiktligt låg. Sidhuvudet tar redan en remsa, och två
    fasta rader ovanför innehållet börjar bli en hiss.
+
+   Höjden är ett MÅTT (--adm-topp-h) och inte något innehållet råkar
+   bli: sidomenyn står fast under raden och räknar sin egen övre kant
+   och höjd på det, och en rad som växte eller krympte med sökfältet
+   hade lämnat menyn under skärmkanten. Sidhuvudets höjd är den
+   uppmätta (--vy-hdr-h, satt av sidomeny() i nextrum-studie.js). Fästet
+   var clamp(64px,7vw,84px), en gissning som stod 9 px under sidhuvudet
+   på en bred skärm (innehåll syntes glida förbi i springan) och 11 px in
+   under det på en telefon.
    ------------------------------------------------------------ */
+.vy-admin{--adm-topp-h:64px}
 .adm-topp{
   position:sticky;
-  /* Sidhuvudets verkliga höjd, satt av sidomeny() i nextrum-studie.js.
-     Fästet var clamp(64px,7vw,84px), en gissning som stod 9 px under
-     sidhuvudet på en bred skärm (innehåll syntes glida förbi i springan)
-     och 11 px in under det på en telefon. */
   top:var(--vy-hdr-h,75px);
   z-index:30;
   display:flex;align-items:center;gap:12px;
-  margin-bottom:clamp(16px,2vw,22px);
-  padding:9px 0;
+  height:var(--adm-topp-h);box-sizing:border-box;
+  margin-bottom:20px;
   background:var(--pap);
   border-bottom:1px solid var(--ln);
 }
+/* Adminvyn har ingen hero. .vy main håller undan 150 px för den, och det
+   blev ett tomt band mellan sidhuvudet och toppraden: raden låg 75 px för
+   lågt, och menyn under den hängde ut under skärmkanten på sidans topp. */
+.vy-admin main{padding-top:calc(var(--vy-hdr-h,75px) + 12px)}
 /* Sidomenyn rullar till sektionens topp. I adminvyn ligger den här
    raden fast under sidhuvudet, så sektionen behöver landa så mycket
    längre ner — annars hamnade rubriken bakom raden. Sidhuvudet
    självt täcks av scroll-padding-top i nextrum.css. */
-.vy-admin .vy-sek{scroll-margin-top:calc(clamp(64px,7vw,84px) - 8px)}
+.vy-admin .vy-sek{scroll-margin-top:calc(var(--vy-hdr-h,75px) + var(--adm-topp-h) + 12px)}
 .adm-topp-var{
   display:flex;align-items:center;gap:9px;
   min-width:0;flex:1;
 }
 .adm-topp-var b{
-  font-size:1rem;font-weight:700;color:var(--bl);
-  letter-spacing:-.01em;
+  font-size:1.02rem;font-weight:700;color:var(--bl);
+  letter-spacing:-.015em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
+/* Var man är, före sidans namn. Vanlig text: spärrade versaler i
+   monospace är till små etiketter, inte till en väg. */
 .adm-topp-var .adm-topp-hem{
-  font-family:var(--f-mono);font-size:10px;font-weight:600;
-  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
+  font-size:.82rem;font-weight:600;
+  letter-spacing:0;text-transform:none;color:var(--bl-3);
   white-space:nowrap;
 }
 .adm-topp-var .adm-topp-hem::after{content:"/";margin-left:9px;opacity:.5}
+/* På en telefon fick sökfältet all plats och brödsmulan blev bara "Admin".
+   Var man är står redan i sektionsraden och i rubriken under. */
+@media (max-width:560px){.adm-topp-var{display:none}}
 
 /* Knappen som fäller ihop menyn. Bara på skärmar där menyn står
    som en kolumn — under det ligger den redan som en rad flikar
@@ -1164,12 +1224,12 @@ button.fel-person:hover{border-color:var(--bl-3)}
 @media (min-width:900px){
   .adm-fall{
     display:inline-flex;align-items:center;justify-content:center;
-    width:34px;height:34px;flex:none;
-    border:1px solid var(--ln-2);border-radius:10px;
-    background:var(--pap);color:var(--bl-2);
+    width:40px;height:40px;flex:none;
+    border:1px solid var(--ln-2);border-radius:50%;
+    background:var(--yta);color:var(--bl-2);
     transition:background .18s var(--e),color .18s var(--e),border-color .18s var(--e);
   }
-  .adm-fall:hover{background:var(--pap-2);color:var(--bl);border-color:var(--bl-3)}
+  .adm-fall:hover{background:var(--tint);color:var(--bl);border-color:var(--bl-3)}
   .adm-fall svg{
     width:17px;height:17px;fill:none;stroke:currentColor;
     stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
@@ -1187,11 +1247,11 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .adm-sokfalt{position:relative;flex:0 1 320px;min-width:0}
 @media (max-width:760px){.adm-sokfalt{flex:1 1 auto}}
 .adm-sokfalt .inp{
-  width:100%;padding-left:36px;
-  font-size:.88rem;
+  width:100%;padding-left:40px;
+  font-size:.88rem;border-radius:100px;
 }
 .adm-sokfalt > svg{
-  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  position:absolute;left:15px;top:50%;transform:translateY(-50%);
   width:15px;height:15px;pointer-events:none;
   fill:none;stroke:var(--bl-3);stroke-width:1.8;
   stroke-linecap:round;stroke-linejoin:round;
@@ -1200,13 +1260,13 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .adm-knapp{
   position:relative;
   display:inline-flex;align-items:center;justify-content:center;
-  width:38px;height:38px;flex:none;
-  border:1px solid var(--ln-2);border-radius:11px;
-  background:var(--pap);color:var(--bl-2);
+  width:40px;height:40px;flex:none;
+  border:1px solid var(--ln-2);border-radius:50%;
+  background:var(--yta);color:var(--bl-2);
   transition:background .18s var(--e),color .18s var(--e),border-color .18s var(--e);
 }
 .adm-knapp:hover,
-.adm-knapp[aria-expanded="true"]{background:var(--pap-2);color:var(--bl);border-color:var(--bl-3)}
+.adm-knapp[aria-expanded="true"]{background:var(--tint);color:var(--bl);border-color:var(--bl-3)}
 .adm-knapp svg{
   width:18px;height:18px;fill:none;stroke:currentColor;
   stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
@@ -1217,7 +1277,7 @@ button.fel-person:hover{border-color:var(--bl-3)}
   position:absolute;top:7px;right:8px;
   width:7px;height:7px;border-radius:100px;
   background:var(--acc);
-  box-shadow:0 0 0 2px var(--pap);
+  box-shadow:0 0 0 2px var(--yta);
 }
 
 /* Panelen som fälls ut. Ligger absolut under sin knapp och
@@ -1228,17 +1288,17 @@ button.fel-person:hover{border-color:var(--bl-3)}
   z-index:40;
   width:min(360px,calc(100vw - 32px));
   max-height:min(440px,60vh);overflow-y:auto;
-  border:1px solid var(--ln-2);border-radius:16px;
-  background:var(--pap);
+  border:1px solid var(--ln);border-radius:22px;
+  background:var(--yta);
   box-shadow:0 18px 44px rgba(46,42,32,.16);
-  padding:7px;
+  padding:8px;
 }
 .adm-panel[hidden]{display:none}
 .adm-panel-rubrik{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:9px 11px 10px;
-  font-family:var(--f-mono);font-size:10px;font-weight:600;
-  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
+  padding:10px 12px 11px;
+  font-size:.86rem;font-weight:650;
+  letter-spacing:0;text-transform:none;color:var(--bl);
   border-bottom:1px solid var(--ln);
   margin-bottom:5px;
 }
@@ -1287,10 +1347,10 @@ button.fel-person:hover{border-color:var(--bl-3)}
 /* Sökträffarnas typetikett. Säger vilken sorts sak raden är, så
    att två personer med samma namn går att skilja åt. */
 .adm-rad-typ{
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
-  border:1px solid var(--ln-2);border-radius:100px;
-  padding:2px 7px;flex:none;margin-top:2px;
+  font-size:.74rem;font-weight:650;line-height:1;
+  color:var(--bl-2);
+  background:var(--bricka);border-radius:100px;
+  padding:5px 10px;flex:none;margin-top:2px;
 }
 
 /* ------------------------------------------------------------
@@ -1343,18 +1403,27 @@ button.fel-person:hover{border-color:var(--bl-3)}
 /* Sidomenyn är klistrad, och nu ligger toppraden klistrad ovanför
    den. Utan det här tillägget glider menyns första post in under
    toppraden när man scrollar — offseten i vy-lagret räknar bara
-   med sidhuvudet, som är det enda klistrade i de andra vyerna. */
+   med sidhuvudet, som är det enda klistrade i de andra vyerna.
+
+   Menyn är sin egen rullyta (2026-09-29, Leo: "när man scrollar på
+   sidbaren behöver allt annat scrollas ner för att komma längre ned på
+   sidbaren"). Den är 1 236 px hög: på en bärbar syntes hälften, och
+   resten nåddes först när HELA sidan rullats, med Översiktens innehåll
+   med sig. Nu har menyn en högsta höjd och rullar för sig, och sidan för
+   sig, med overscroll-behavior:contain så att det ena aldrig drar med
+   sig det andra.
+
+   Högsta höjden räknas på var menyn STÅR när den klistrat, och lådan
+   ska rymmas i fönstret också överst på sidan, där menyn ligger 12 px
+   lägre (huvudets padding-top): 16 px marginal längst ned ger 4 px kvar.
+   Räknades den på något annat hängde nederdelen, och foten med
+   utloggningen, under skärmkanten tills man rullat en bit. */
 @media (min-width:900px){
   .vy-admin .vy-sido{
-    top:calc(var(--vy-hdr-h,75px) + 66px);
-    /* Menyn är 1 236 px hög och stod fast utan egen rullning. På en
-       bärbar syntes hälften: Ekonomi, Löner och System nåddes först när
-       sidan rullats drygt en meter, och under en kort sektion var det
-       menyn som bestämde sidans höjd, så det fanns nästan 600 px tom sida
-       att rulla. Nu rullar den själv, och foten med vem som är inloggad står
-       kvar längst ned i den. Sidomeny() håller den valda posten i bild. */
-    max-height:calc(100vh - var(--vy-hdr-h,75px) - 66px - 16px);
-    overflow-x:hidden;overflow-y:auto;
+    --adm-sido-topp:calc(var(--vy-hdr-h,75px) + var(--adm-topp-h) + 20px);
+    top:var(--adm-sido-topp);
+    max-height:calc(100vh - var(--adm-sido-topp) - 16px);
+    overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
     scrollbar-width:thin;
     scrollbar-color:color-mix(in srgb,var(--bl-3) 60%,transparent) transparent;
   }
@@ -1415,8 +1484,7 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .adm-kpi-diff{
   display:inline-flex;align-items:center;gap:5px;
   margin-top:9px;
-  font-family:var(--f-mono);font-size:10.5px;font-weight:600;
-  letter-spacing:.03em;
+  font-size:.78rem;font-weight:600;
   color:var(--bl-2);
 }
 .adm-kpi-diff svg{
@@ -1451,10 +1519,10 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .adm-att-gora a{
   display:flex;align-items:center;gap:13px;
   padding:13px 14px;
-  border-radius:12px;
+  border-radius:16px;
   transition:background .16s var(--e);
 }
-.adm-att-gora a:hover{background:var(--pap-2)}
+.adm-att-gora a:hover{background:var(--tint)}
 .adm-att-gora a + a{box-shadow:0 -1px 0 var(--ln)}
 .adm-att-gora a:hover + a,
 .adm-att-gora a:hover{box-shadow:none}
@@ -1463,10 +1531,10 @@ button.fel-person:hover{border-color:var(--bl-3)}
    arbetskö. */
 .adm-att-antal{
   display:flex;align-items:center;justify-content:center;
-  min-width:30px;height:30px;flex:none;padding:0 7px;
-  border-radius:9px;
-  background:var(--acc-soft);color:var(--acc-text);
-  font-family:var(--f-mono);font-size:.88rem;font-weight:700;
+  min-width:32px;height:32px;flex:none;padding:0 9px;
+  border-radius:100px;
+  background:var(--acc-soft);color:var(--acc-lugn);
+  font-size:.88rem;font-weight:700;
   font-variant-numeric:tabular-nums;
 }
 .adm-att-text{min-width:0;flex:1}
@@ -1491,8 +1559,8 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .adm-lugnt{
   display:flex;align-items:center;gap:13px;
   padding:18px 16px;
-  border-radius:12px;
-  background:var(--pap-2);
+  border-radius:18px;
+  background:var(--tint);
 }
 .adm-lugnt svg{
   width:22px;height:22px;flex:none;
@@ -1563,20 +1631,19 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .adm-pass{
   display:flex;align-items:center;gap:15px;
   width:100%;text-align:left;
-  padding:14px 16px;
-  border:1px solid var(--ln);border-radius:14px;
-  background:var(--pap);
-  transition:border-color .18s var(--e),transform .18s var(--e),box-shadow .18s var(--e);
+  padding:12px 16px 12px 12px;
+  border:0;border-radius:20px;
+  background:var(--tint);
+  transition:background .18s var(--e);
 }
-.adm-pass:hover{
-  border-color:var(--ln-2);
-  transform:translateY(-1px);
-  box-shadow:0 6px 18px rgba(46,42,32,.07);
-}
+.adm-pass:hover{background:var(--bricka)}
+/* Tiden är det man söker efter: en ruta i --bricka som datumrutan i
+   studievyn (.pass-nar), inte en spalt med ett streck. */
 .adm-pass-nar{
-  flex:none;text-align:center;min-width:58px;
-  padding-right:15px;border-right:1px solid var(--ln);
+  flex:none;text-align:center;min-width:70px;
+  padding:9px 8px 10px;border-radius:14px;background:var(--bricka);
 }
+.adm-pass:hover .adm-pass-nar{background:var(--yta)}
 .adm-pass-nar b{
   display:block;font-size:1.12rem;font-weight:700;color:var(--bl);
   letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1;
@@ -1584,7 +1651,7 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .adm-pass-nar span{
   display:block;margin-top:3px;
   font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
 }
 .adm-pass-vad{min-width:0;flex:1}
 .adm-pass-vad b{
@@ -1601,13 +1668,12 @@ button.fel-person:hover{border-color:var(--bl-3)}
 /* Format: online eller på plats. En liten bricka, inte en färg — 
    färgen ensam säger inget för den som inte lärt sig koden. */
 .adm-format{
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.1em;text-transform:uppercase;
+  font-size:.76rem;font-weight:650;line-height:1;
   color:var(--bl-2);
-  border:1px solid var(--ln-2);border-radius:100px;
-  padding:3px 9px;flex:none;white-space:nowrap;
+  background:var(--bricka);border:0;border-radius:100px;
+  padding:6px 11px;flex:none;white-space:nowrap;
 }
-.adm-format.ar-plats{color:var(--mossa);border-color:var(--mossa)}
+.adm-format.ar-plats{color:var(--mossa-text);background:var(--mossa-soft)}
 
 /* På en telefon ryms inte tid, ämne, två namn och ett format på en
    rad. Kortet bryts i två i stället för att klämmas ihop: när och
@@ -1879,9 +1945,8 @@ button.fel-person:hover{border-color:var(--bl-3)}
    hamnar därför aldrig på en faktura.
    ------------------------------------------------------------ */
 .lekt-fakturerad{
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.1em;text-transform:uppercase;
-  color:var(--mossa);white-space:nowrap;
+  font-size:.78rem;font-weight:600;
+  color:var(--mossa-text);white-space:nowrap;
 }
 
 /* ============================================================
@@ -1916,8 +1981,9 @@ button.fel-person:hover{border-color:var(--bl-3)}
   position:fixed;top:0;right:0;bottom:0;z-index:851;
   width:min(560px,100vw);
   display:flex;flex-direction:column;
-  background:var(--pap);
+  background:var(--yta);
   border-left:1px solid var(--ln);
+  border-radius:clamp(22px,2.4vw,28px) 0 0 clamp(22px,2.4vw,28px);
   box-shadow:-18px 0 50px rgba(46,42,32,.18);
   transform:translateX(100%);
   transition:transform .28s var(--e);
@@ -1935,9 +2001,8 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .dp-topp{
   flex:none;
   display:flex;align-items:flex-start;gap:14px;
-  padding:20px 22px 16px;
+  padding:22px 22px 16px;
   border-bottom:1px solid var(--ln);
-  background:var(--pap-2);
 }
 .dp-topp .nx-avatar{flex:none}
 .dp-namn{min-width:0;flex:1}
@@ -1954,12 +2019,12 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .dp-stang{
   flex:none;
   display:inline-flex;align-items:center;justify-content:center;
-  width:34px;height:34px;
-  border:1px solid var(--ln-2);border-radius:10px;
-  background:var(--pap);color:var(--bl-2);
+  width:40px;height:40px;
+  border:1px solid var(--ln-2);border-radius:50%;
+  background:var(--yta);color:var(--bl-2);
   transition:background .18s var(--e),color .18s var(--e);
 }
-.dp-stang:hover{background:var(--pap-3);color:var(--bl)}
+.dp-stang:hover{background:var(--tint);color:var(--bl)}
 .dp-stang svg{
   width:16px;height:16px;fill:none;stroke:currentColor;
   stroke-width:1.9;stroke-linecap:round;
@@ -1968,25 +2033,28 @@ button.fel-person:hover{border-color:var(--bl-3)}
 /* Flikarna i panelen är smalare än sektionernas: de sitter i en
    560px-kolumn och ska rymma fyra ord utan att bryta rad. */
 .dp-flikar{
-  flex:none;display:flex;gap:2px;
-  padding:10px 16px 0;
+  flex:none;display:flex;gap:6px;
+  padding:12px 16px;
   border-bottom:1px solid var(--ln);
   overflow-x:auto;scrollbar-width:none;
 }
 .dp-flikar::-webkit-scrollbar{display:none}
+/* Flikarna som piller, som menyn: den valda är mörk, resten tonar in vid
+   hovring. Underlinjen var en annan sorts flik än resten av huset. */
 .dp-flik{
-  flex:none;padding:9px 13px 11px;
+  flex:none;padding:8px 14px;border-radius:100px;
   font-size:.86rem;font-weight:600;color:var(--bl-2);
-  border-bottom:2px solid transparent;
   white-space:nowrap;
-  transition:color .16s var(--e),border-color .16s var(--e);
+  transition:color .16s var(--e),background-color .16s var(--e);
 }
-.dp-flik:hover{color:var(--bl)}
-.dp-flik[aria-selected="true"]{color:var(--bl);border-bottom-color:var(--acc)}
+.dp-flik:hover{color:var(--bl);background:var(--tint)}
+.dp-flik[aria-selected="true"]{color:var(--pap);background:var(--bl)}
 
 .dp-kropp{
   flex:1;overflow-y:auto;overscroll-behavior:contain;
   padding:20px 22px 32px;
+  scrollbar-width:thin;
+  scrollbar-color:color-mix(in srgb,var(--bl-3) 60%,transparent) transparent;
 }
 .dp-panel[hidden]{display:none}
 
@@ -2002,19 +2070,18 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
    smalare än adminvyns egna eftersom kolumnen är 560px. */
 .dp-tal{
   display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));
-  gap:1px;background:var(--ln);
-  border:1px solid var(--ln);border-radius:13px;overflow:hidden;
+  gap:10px;
   margin-bottom:18px;
 }
-.dp-tal > div{background:var(--pap);padding:13px 14px}
+.dp-tal > div{background:var(--tint);border-radius:16px;padding:13px 14px}
 .dp-tal b{
   display:block;font-size:1.22rem;font-weight:700;color:var(--bl);
   letter-spacing:-.025em;line-height:1;font-variant-numeric:tabular-nums;
 }
 .dp-tal span{
   display:block;margin-top:6px;
-  font-family:var(--f-mono);font-size:9px;font-weight:600;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-2);
+  font-size:.78rem;font-weight:500;
+  color:var(--bl-2);
   line-height:1.4;
 }
 
@@ -2023,22 +2090,23 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
    blir en till nivå att läsa förbi. */
 .dp-rubrik{
   display:flex;align-items:baseline;justify-content:space-between;gap:10px;
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
-  margin:22px 0 11px;
+  font-size:.9rem;font-weight:650;
+  letter-spacing:-.005em;color:var(--bl);
+  margin:24px 0 11px;
 }
 .dp-rubrik:first-child{margin-top:0}
 .dp-rubrik em{font-style:normal;font-weight:500;text-transform:none;letter-spacing:0;font-size:.78rem}
 
 /* Fält och värde. Två kolumner på en bred panel, staplade på en
    telefon där 560px är hela skärmen. */
-.dp-fakta{display:flex;flex-direction:column;gap:1px;background:var(--ln);
-  border:1px solid var(--ln);border-radius:12px;overflow:hidden}
+.dp-fakta{display:flex;flex-direction:column;background:var(--tint);
+  border-radius:16px;overflow:hidden}
 .dp-fakta > div{
   display:grid;grid-template-columns:minmax(96px,34%) minmax(0,1fr);
-  gap:14px;padding:11px 14px;background:var(--pap);
+  gap:14px;padding:11px 16px;
   font-size:.87rem;line-height:1.5;
 }
+.dp-fakta > div + div{border-top:1px solid var(--ln)}
 .dp-fakta dt,
 .dp-fakta > div > span:first-child{color:var(--bl-2)}
 .dp-fakta > div > span:last-child{color:var(--bl);word-break:break-word}
@@ -2082,8 +2150,8 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
    "Använd den här" hamnar utanför skärmen. */
 .dp-forslag{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .dp-forslag-kort{
-  background:var(--pap-2);border:1px solid var(--ln);
-  border-radius:12px;padding:13px 15px;
+  background:var(--tint);border:0;
+  border-radius:16px;padding:14px 16px;
 }
 .dp-forslag-kort b{display:block;font-size:.88rem;font-weight:650;color:var(--bl)}
 .dp-forslag-kort pre{
@@ -2097,7 +2165,7 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 .dp-text{
   font-size:.87rem;line-height:1.65;color:var(--bl-2);
   white-space:pre-wrap;word-break:break-word;
-  background:var(--pap-2);border-radius:12px;padding:14px 16px;
+  background:var(--tint);border-radius:16px;padding:14px 16px;
 }
 
 /* Knapprader i panelen: läget med sina knappar, och Redigera sist i
@@ -2111,7 +2179,7 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 .dp-fara{
   display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;
   margin-top:14px;padding:14px 16px;
-  border:1px solid var(--ln);border-radius:12px;
+  border:1px solid var(--ln);border-radius:16px;
 }
 .dp-fara-text{min-width:0;flex:1 1 240px}
 .dp-fara-text b{display:block;font-size:.88rem;font-weight:650;color:var(--bl)}
@@ -2125,7 +2193,7 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 .dp-red-valfri{font-weight:400;color:var(--bl-2)}
 .dp-red-not{
   margin:0;font-size:.84rem;line-height:1.55;color:var(--bl-2);
-  background:var(--pap-2);border-radius:10px;padding:10px 13px;
+  background:var(--tint);border-radius:14px;padding:11px 14px;
 }
 
 /* ------------------------------------------------------------
@@ -2138,8 +2206,8 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 .rad-grupp{margin:16px 0 0}
 .rad-grupp > b{
   display:block;margin-bottom:7px;
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.12em;text-transform:uppercase;color:var(--bl-2);
+  font-size:.86rem;font-weight:650;
+  letter-spacing:0;color:var(--bl);
 }
 .rad-grupp ul{margin:0;padding:0;list-style:none;display:grid;gap:7px}
 .rad-grupp li{
@@ -2152,7 +2220,7 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 }
 .rad-grupp li b{color:var(--bl);font-weight:650}
 .rad-grupp li span{display:block;font-size:.82rem;color:var(--bl-2)}
-.rad-hinder{border:1px solid var(--ln-2);border-radius:12px;padding:12px 14px;background:var(--pap-2)}
+.rad-hinder{border:1px solid var(--ln-2);border-radius:16px;padding:12px 14px;background:var(--tint)}
 .rad-ok{
   display:flex;gap:10px;align-items:flex-start;margin-top:18px;
   font-size:.88rem;line-height:1.5;color:var(--bl);cursor:pointer;
@@ -3075,9 +3143,14 @@ a:has(> .adm-status){
 
    Leo 2026-09-25: "allt på vyn är lite mer rundat och bubbly, de ska
    vara sköna att trycka på de olika knapparna. Nu känns allt så
-   gammalt." Studievyn och studiehjälparvyn, inte adminvyn: de två är
-   samma hus (Leo 2026-09-24), och adminvyn är ett arbetsbord där
-   tätheten är poängen.
+   gammalt." Först studievyn och studiehjälparvyn, som är samma hus
+   (Leo 2026-09-24). Sedan 2026-09-29 också adminvyn, på Leos besked:
+   "ändra designen i admin så den blir samma som studievyernas nya
+   design". Reglerna står därför på .vy och inte på .vy:not(.vy-admin).
+   Det som är adminvyns eget (tabellen, namnlistan, nyckeltalen,
+   lägena, konsolen, panelen) står under sina egna namn längre upp och
+   följer samma språk; tätheten i raderna är densamma, det är ytorna
+   runt dem som är rundare.
 
    Tre regler håller det här ifrån fällorna i CLAUDE.md avsnitt 3:
      · trycket är scale, aldrig en ändrad storlek eller marginal: inget
@@ -3087,26 +3160,26 @@ a:has(> .adm-status){
      · sektionerna tonar in med opacity och translate, inte med höjd,
        och en lista byts aldrig mot något annat under tiden (fälla 1)
    ============================================================ */
-.vy:not(.vy-admin){
+.vy{
   /* Fjädern: släppet studsar en aning förbi och landar. */
   --vy-fjader:cubic-bezier(.34,1.56,.64,1);
 }
 
 /* ---------- ytorna ---------- */
-.vy:not(.vy-admin) .dbox{border-radius:clamp(22px,2.4vw,28px)}
-.vy:not(.vy-admin) .lax{border-radius:20px}
-.vy:not(.vy-admin) .pass-nar{border-radius:16px}
-.vy:not(.vy-admin) :is(.inp,.sel){border-radius:16px}
-.vy:not(.vy-admin) .vy-sido a{border-radius:100px}
-.vy:not(.vy-admin) .vy-flikar{border-radius:100px}
-.vy:not(.vy-admin) .vy-flik{border-radius:100px}
-.vy:not(.vy-admin) .mv-dag{border-radius:50%}
-.vy:not(.vy-admin) .bk-slot{border-radius:100px;padding-inline:15px}
-.vy:not(.vy-admin) .bk-pil{border-radius:50%}
-.vy:not(.vy-admin) :is(.bk-kal, .bk-sum, .bk-kvitto){border-radius:22px}
-.vy:not(.vy-admin) .bk-steg{border-radius:18px}
-.vy:not(.vy-admin) .vy-hero-kort > *{border-radius:20px}
-.vy:not(.vy-admin) .nx-fraga-box{
+.vy .dbox{border-radius:clamp(22px,2.4vw,28px)}
+.vy .lax{border-radius:20px}
+.vy .pass-nar{border-radius:16px}
+.vy :is(.inp,.sel){border-radius:16px}
+.vy .vy-sido a{border-radius:100px}
+.vy .vy-flikar{border-radius:100px}
+.vy .vy-flik{border-radius:100px}
+.vy .mv-dag{border-radius:50%}
+.vy .bk-slot{border-radius:100px;padding-inline:15px}
+.vy .bk-pil{border-radius:50%}
+.vy :is(.bk-kal, .bk-sum, .bk-kvitto){border-radius:22px}
+.vy .bk-steg{border-radius:18px}
+.vy .vy-hero-kort > *{border-radius:20px}
+.vy .nx-fraga-box{
   border-radius:clamp(24px,3vw,30px);
   transition:transform .5s var(--vy-fjader);
 }
@@ -3116,7 +3189,7 @@ a:has(> .adm-status){
    tillbaka när det släpper. Nedtrycket är snabbt (90 ms), släppet
    långsamt och studsande — det är skillnaden mellan en knapp som
    känns och en som bara byter färg. */
-.vy:not(.vy-admin) :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .mv-dag, .bk-slot,
+.vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .mv-dag, .bk-slot,
                        .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang], .vy-hero-kort > a){
   transition:
     background-color .22s var(--e), color .22s var(--e),
@@ -3124,15 +3197,15 @@ a:has(> .adm-status){
     opacity .22s var(--e), scale .5s var(--vy-fjader);
   -webkit-tap-highlight-color:transparent;
 }
-.vy:not(.vy-admin) .btn:active{transform:none}
-.vy:not(.vy-admin) :is(.btn, .vy-sido a, .vy-flik, .pl-mer, .nx-notis-rad, [data-pass-stang], .vy-hero-kort > a):active:not(:disabled){
+.vy .btn:active{transform:none}
+.vy :is(.btn, .vy-sido a, .vy-flik, .pl-mer, .nx-notis-rad, [data-pass-stang], .vy-hero-kort > a):active:not(:disabled){
   scale:.96;
   transition-duration:.09s;
 }
 /* Små runda saker trycks djupare: 96 % av en dag i kalendern syns
    knappt, och en knapp över halva skärmen hade rört sig en centimeter
    på 92 %. */
-.vy:not(.vy-admin) :is(.mv-dag, .bk-slot, .bk-pil, .chip, .vy-val button):active:not(:disabled){
+.vy :is(.mv-dag, .bk-slot, .bk-pil, .chip, .vy-val button):active:not(:disabled){
   scale:.9;
   transition-duration:.09s;
 }
@@ -3145,17 +3218,17 @@ a:has(> .adm-status){
 /* ---------- övergångarna ----------
    En sektion som visas glider upp och tonar in. Animationen startar
    varje gång [hidden] släpps, så varje menyval får den. */
-.vy:not(.vy-admin) .vy-sek:not([hidden]){animation:vy-in .46s var(--e-ut) both}
-.vy:not(.vy-admin) .vy-flik-panel:not([hidden]){animation:vy-in .36s var(--e-ut) both}
+.vy .vy-sek:not([hidden]){animation:vy-in .46s var(--e-ut) both}
+.vy .vy-flik-panel:not([hidden]){animation:vy-in .36s var(--e-ut) both}
 @keyframes vy-in{
   from{opacity:0;translate:0 12px}
   to{opacity:1;translate:0 0}
 }
 
 @media (prefers-reduced-motion:reduce){
-  .vy:not(.vy-admin) :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .mv-dag, .bk-slot,
+  .vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .mv-dag, .bk-slot,
                          .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang]):active{scale:none}
-  .vy:not(.vy-admin) :is(.vy-sek, .vy-flik-panel){animation:none !important}
+  .vy :is(.vy-sek, .vy-flik-panel){animation:none !important}
 }
 
 /* ---------- Fas 20.1: den hållna tiden ----------
@@ -3192,8 +3265,8 @@ a:has(> .adm-status){
 
    Leo: "spalterna till vänster är snygga men innehållet kan bli
    snyggare". Förslaget visades på en designyta, bredvid skärmbilder
-   av hur vyerna såg ut, och Leo sa "jätte bra". Sidomenyn är orörd.
-   Fem grepp:
+   av hur vyerna såg ut, och Leo sa "jätte bra". Sidomenyn var orörd då;
+   den fick pillformen med KÄNSLAN ovan. Fem grepp:
 
      1. Färre lådor. En rapport låg i en låda i en låda i en låda, och
         på en telefon blev texten en smal remsa. Ett kort (.dbox,
@@ -3208,24 +3281,24 @@ a:has(> .adm-status){
         som händer (.vy-betalval); det som inte är ett drag är en länk.
      5. Grupper med rubrik på papperet (.vy-grupp), korten under.
 
-   Bara .vy:not(.vy-admin): adminvyn är ett arbetsbord där tätheten är
-   poängen. Färgerna står i cinemas :root (--yta, --tint, --bricka och
+   Gäller alla tre vyerna (.vy) sedan 2026-09-29; adminvyns egna delar
+   följer samma språk. Färgerna står i cinemas :root (--yta, --tint, --bricka och
    de mjuka tonerna); här finns inga hexkoder. Ingenting byter höjd av
    ett tryck (fälla 4 i CLAUDE.md avsnitt 3), och trycket är samma
    scale som resten av KÄNSLAN ovan.
    ============================================================ */
 
 /* ---------- korten ---------- */
-.vy:not(.vy-admin) .dbox{background:var(--yta)}
-.vy:not(.vy-admin) .dbox h5{
+.vy .dbox{background:var(--yta)}
+.vy .dbox h5{
   font-family:var(--f-sans);font-size:1.03rem;font-weight:650;
   letter-spacing:-.015em;text-transform:none;color:var(--bl);
   /* Utan margin-top: basrubriken bär en i em, och med den större
      storleken blev den 27 px luft ovanför varje rubrik i korten. */
   margin-top:0;margin-bottom:clamp(14px,1.6vw,18px);
 }
-.vy:not(.vy-admin) .dbox h5::before{display:none}
-.vy:not(.vy-admin) .dbox h5 em{
+.vy .dbox h5::before{display:none}
+.vy .dbox h5 em{
   font-family:var(--f-sans);font-size:.82rem;font-weight:500;
   letter-spacing:0;text-transform:none;color:var(--bl-3);
 }
@@ -3266,54 +3339,54 @@ a:has(> .adm-status){
 .vy-lank svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- lägen: färgen säger vems drag det är ---------- */
-.vy:not(.vy-admin) .lage{
+.vy .lage{
   display:inline-flex;align-items:center;gap:7px;
   font-family:var(--f-sans);font-size:.78rem;font-weight:600;
   letter-spacing:0;text-transform:none;line-height:1;
   padding:6px 11px 6px 9px;border:0;border-radius:100px;
   background:var(--bricka);color:var(--bl-2);white-space:nowrap;
 }
-.vy:not(.vy-admin) .lage::before{content:"";width:7px;height:7px;border-radius:50%;flex:none;background:currentColor;opacity:.85}
+.vy .lage::before{content:"";width:7px;height:7px;border-radius:50%;flex:none;background:currentColor;opacity:.85}
 /* ockra: väntar på någon annan */
-.vy:not(.vy-admin) :is(.lage.onskad,.lage.pa,.lage.vantar){background:var(--ockra-soft);color:var(--ockra-text)}
-.vy:not(.vy-admin) :is(.lage.onskad,.lage.pa,.lage.vantar)::before{background:var(--ockra);opacity:1}
+.vy :is(.lage.onskad,.lage.pa,.lage.vantar){background:var(--ockra-soft);color:var(--ockra-text)}
+.vy :is(.lage.onskad,.lage.pa,.lage.vantar)::before{background:var(--ockra);opacity:1}
 /* mossa: klart */
-.vy:not(.vy-admin) :is(.lage.bekraftad,.lage.klar){background:var(--mossa-soft);color:var(--mossa-text)}
-.vy:not(.vy-admin) :is(.lage.bekraftad,.lage.klar)::before{background:var(--mossa);opacity:1}
+.vy :is(.lage.bekraftad,.lage.klar){background:var(--mossa-soft);color:var(--mossa-text)}
+.vy :is(.lage.bekraftad,.lage.klar)::before{background:var(--mossa);opacity:1}
 /* lera: ert drag, eller något som gick fel */
-.vy:not(.vy-admin) :is(.lage.gor,.lage.sen){background:var(--acc-soft);color:var(--acc-lugn)}
-.vy:not(.vy-admin) :is(.lage.gor,.lage.sen)::before{background:var(--acc);opacity:1}
-.vy:not(.vy-admin) .lage.avbokad{text-decoration:line-through}
+.vy :is(.lage.gor,.lage.sen){background:var(--acc-soft);color:var(--acc-lugn)}
+.vy :is(.lage.gor,.lage.sen)::before{background:var(--acc);opacity:1}
+.vy .lage.avbokad{text-decoration:line-through}
 
 /* ---------- passraderna ----------
    Datumrutan säger veckodag, dag och månad; tiden och platsen står i
    raden med var sin ikon. Förut stod tiden med sekunder i rutan, och
    "FÖRESLAGET AV ER STUDIEHJÄLPARE" i spärrade versaler under. */
-.vy:not(.vy-admin) .pass-nar{
+.vy .pass-nar{
   width:54px;padding:7px 0 8px;border:0;border-radius:14px;background:var(--bricka);
   font-family:var(--f-mono);font-size:9.5px;font-weight:600;letter-spacing:.12em;
   text-transform:uppercase;color:var(--bl-3);line-height:1.3;
 }
-.vy:not(.vy-admin) .pass-nar b{
+.vy .pass-nar b{
   display:block;font-family:var(--f-sans);font-size:1.3rem;font-weight:700;
   letter-spacing:-.03em;line-height:1.15;color:var(--bl);
 }
-.vy:not(.vy-admin) .pass-nar small{display:block;font-size:inherit}
-.vy:not(.vy-admin) .pass-nar.ar-nu{background:var(--bl)}
-.vy:not(.vy-admin) .pass-nar.ar-nu,.vy:not(.vy-admin) .pass-nar.ar-nu b{color:var(--pap)}
-.vy:not(.vy-admin) .pass-titel{font-size:1rem;font-weight:650;letter-spacing:-.015em}
-.vy:not(.vy-admin) .pass-titel em{font-style:normal;font-weight:500;color:var(--bl-2)}
-.vy:not(.vy-admin) .pass-vad .pass-meta{display:flex;flex-wrap:wrap;gap:3px 14px;margin-top:3px;font-size:.84rem;color:var(--bl-2)}
-.vy:not(.vy-admin) .pass-vad .pass-meta > span{display:inline-flex;align-items:center;gap:6px;margin:0;min-width:0;overflow-wrap:anywhere}
-.vy:not(.vy-admin) .pass-meta svg{width:14px;height:14px;flex:none;fill:none;stroke:var(--bl-3);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.vy:not(.vy-admin) .pass-vad .pass-not{font-size:.84rem;font-style:italic;color:var(--bl-2);margin-top:5px;overflow-wrap:anywhere}
-.vy:not(.vy-admin) .pass-vem{
+.vy .pass-nar small{display:block;font-size:inherit}
+.vy .pass-nar.ar-nu{background:var(--bl)}
+.vy .pass-nar.ar-nu,.vy .pass-nar.ar-nu b{color:var(--pap)}
+.vy .pass-titel{font-size:1rem;font-weight:650;letter-spacing:-.015em}
+.vy .pass-titel em{font-style:normal;font-weight:500;color:var(--bl-2)}
+.vy .pass-vad .pass-meta{display:flex;flex-wrap:wrap;gap:3px 14px;margin-top:3px;font-size:.84rem;color:var(--bl-2)}
+.vy .pass-vad .pass-meta > span{display:inline-flex;align-items:center;gap:6px;margin:0;min-width:0;overflow-wrap:anywhere}
+.vy .pass-meta svg{width:14px;height:14px;flex:none;fill:none;stroke:var(--bl-3);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.vy .pass-vad .pass-not{font-size:.84rem;font-style:italic;color:var(--bl-2);margin-top:5px;overflow-wrap:anywhere}
+.vy .pass-vem{
   font-family:var(--f-sans);font-size:.84rem;font-weight:500;letter-spacing:0;
   text-transform:none;color:var(--bl-2);margin-top:5px;
 }
-.vy:not(.vy-admin) .pass-atg{align-items:center;gap:10px}
-.vy:not(.vy-admin) .pass-atg .btn{padding:8px 15px;font-size:.84rem}
-.vy:not(.vy-admin) .pass-klickbar:hover{background:var(--tint)}
+.vy .pass-atg{align-items:center;gap:10px}
+.vy .pass-atg .btn{padding:8px 15px;font-size:.84rem}
+.vy .pass-klickbar:hover{background:var(--tint)}
 
 /* Raderna i ett kort går kant i kant, med ett streck emellan. */
 .vy-lista > .pass,
@@ -3324,7 +3397,7 @@ a:has(> .adm-status){
 .vy-lista > .pl-mer{margin:10px clamp(14px,2vw,20px) 14px}
 
 /* ---------- personen som skrev ---------- */
-.vy:not(.vy-admin) .rb-brev .nx-avatar{width:40px;height:40px;font-size:.8rem;flex:none}
+.vy .rb-brev .nx-avatar{width:40px;height:40px;font-size:.8rem;flex:none}
 
 /* ---------- rapporten: ett brev från studiehjälparen ----------
    Samma kort under Bekräfta rapport, Efter passen och på passets sida
@@ -3420,12 +3493,12 @@ a:has(> .adm-status){
 .vy-valk.ar-forst span span{color:var(--acc-ink);opacity:.82}
 .vy-valk.ar-forst .vy-valk-ik{background:color-mix(in srgb,var(--acc-ink) 16%,transparent);color:var(--acc-ink)}
 .vy-valk[aria-busy="true"]{opacity:.7;cursor:progress}
-.vy:not(.vy-admin) .vy-valk{
+.vy .vy-valk{
   transition:background-color .22s var(--e),border-color .22s var(--e),box-shadow .25s var(--e),scale .5s var(--vy-fjader);
   -webkit-tap-highlight-color:transparent;
 }
-.vy:not(.vy-admin) .vy-valk:active:not(:disabled){scale:.97;transition-duration:.09s}
-@media (prefers-reduced-motion:reduce){.vy:not(.vy-admin) .vy-valk:active{scale:none}}
+.vy .vy-valk:active:not(:disabled){scale:.97;transition-duration:.09s}
+@media (prefers-reduced-motion:reduce){.vy .vy-valk:active{scale:none}}
 
 /* På en telefon: omdömet under namnet, och knapparna i foten på egen
    rad i full bredd, med Visa passet under. */
@@ -3486,51 +3559,51 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
    fakta i ETT kort med en ikon per rad, och det som inte är ett drag
    (föreslå ny tid, skriv, avboka) stilla längst ner. På en telefon
    står draget överst och resten under det, en sak i taget. */
-.vy:not(.vy-admin) .ps-huvud.har-dag{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px}
-.vy:not(.vy-admin) .ps-huvud .lage{margin-top:0}
-.vy:not(.vy-admin) .ps-dag{
+.vy .ps-huvud.har-dag{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px}
+.vy .ps-huvud .lage{margin-top:0}
+.vy .ps-dag{
   width:66px;padding:9px 0 10px;border-radius:20px;background:var(--bl);color:var(--pap);
   text-align:center;font-family:var(--f-mono);font-size:10px;font-weight:600;
   letter-spacing:.14em;text-transform:uppercase;line-height:1.3;
 }
-.vy:not(.vy-admin) .ps-dag small{display:block;font-size:inherit;opacity:.75}
-.vy:not(.vy-admin) .ps-dag b{display:block;font-family:var(--f-sans);font-size:1.75rem;font-weight:700;letter-spacing:-.04em;line-height:1.1}
-.vy:not(.vy-admin) .ps-titel{font-size:clamp(1.45rem,3vw,1.85rem);font-weight:700}
-.vy:not(.vy-admin) .ps-nar{margin-top:5px;font-size:.95rem}
+.vy .ps-dag small{display:block;font-size:inherit;opacity:.75}
+.vy .ps-dag b{display:block;font-family:var(--f-sans);font-size:1.75rem;font-weight:700;letter-spacing:-.04em;line-height:1.1}
+.vy .ps-titel{font-size:clamp(1.45rem,3vw,1.85rem);font-weight:700}
+.vy .ps-nar{margin-top:5px;font-size:.95rem}
 
-.vy:not(.vy-admin) .ps-vag{gap:8px;margin-top:22px}
-.vy:not(.vy-admin) .ps-steg{
+.vy .ps-vag{gap:8px;margin-top:22px}
+.vy .ps-steg{
   display:flex;align-items:center;gap:6px;padding-top:12px;
   font-family:var(--f-sans);font-size:.8rem;font-weight:600;letter-spacing:0;text-transform:none;
   color:var(--bl-3);min-width:0;
 }
-.vy:not(.vy-admin) .ps-steg::before{top:0;height:3px}
-.vy:not(.vy-admin) .ps-steg svg{width:14px;height:14px;flex:none;fill:none;stroke:var(--mossa);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.vy .ps-steg::before{top:0;height:3px}
+.vy .ps-steg svg{width:14px;height:14px;flex:none;fill:none;stroke:var(--mossa);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 
-.vy:not(.vy-admin) .ps-gor{
+.vy .ps-gor{
   margin-top:20px;padding:clamp(18px,2.2vw,22px);border-radius:clamp(22px,2.4vw,24px);
   background:var(--yta);border:1px solid var(--ln);box-shadow:var(--sk-1);
 }
-.vy:not(.vy-admin) .ps-gor.ar-fraga{border-color:color-mix(in srgb,var(--ockra) 40%,var(--ln))}
-.vy:not(.vy-admin) .ps-gor.ar-klart{border-color:color-mix(in srgb,var(--mossa) 40%,var(--ln))}
-.vy:not(.vy-admin) .ps-gor p{font-size:.97rem;line-height:1.55}
+.vy .ps-gor.ar-fraga{border-color:color-mix(in srgb,var(--ockra) 40%,var(--ln))}
+.vy .ps-gor.ar-klart{border-color:color-mix(in srgb,var(--mossa) 40%,var(--ln))}
+.vy .ps-gor p{font-size:.97rem;line-height:1.55}
 .ps-gor-topp{display:flex;align-items:flex-start;gap:18px}
 .ps-gor-topp p{flex:1;min-width:0}
 .ps-belopp{flex:none;text-align:right}
 .ps-belopp small{display:block;font-size:.76rem;color:var(--bl-3)}
 .ps-belopp b{display:block;font-size:1.35rem;font-weight:700;letter-spacing:-.025em;color:var(--bl);white-space:nowrap}
-.vy:not(.vy-admin) .ps-gor .vy-betalval{margin-top:16px}
-.vy:not(.vy-admin) .ps-gor .ps-knappar{margin-top:16px}
-.vy:not(.vy-admin) .ps-gor .vy-betalval + .ps-knappar{margin-top:10px}
-.vy:not(.vy-admin) .ps-alt{margin-top:12px}
+.vy .ps-gor .vy-betalval{margin-top:16px}
+.vy .ps-gor .ps-knappar{margin-top:16px}
+.vy .ps-gor .vy-betalval + .ps-knappar{margin-top:10px}
+.vy .ps-alt{margin-top:12px}
 
 /* Rubrikerna ovanför korten: text på papperet, som .vy-grupp. */
-.vy:not(.vy-admin) .ps-block{margin-top:28px}
-.vy:not(.vy-admin) .ps-block > h6{
+.vy .ps-block{margin-top:28px}
+.vy .ps-block > h6{
   font-family:var(--f-sans);font-size:1.03rem;font-weight:650;letter-spacing:-.015em;
   text-transform:none;color:var(--bl);margin:0 0 12px;
 }
-.vy:not(.vy-admin) .ps-block > p{font-size:.95rem;color:var(--bl-2)}
+.vy .ps-block > p{font-size:.95rem;color:var(--bl-2)}
 .ps-citat{
   margin:0;padding:2px 0 2px 16px;border-left:3px solid var(--ln-2);
   font-size:.97rem;font-style:italic;line-height:1.6;color:var(--bl);white-space:pre-wrap;
@@ -3564,27 +3637,27 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 
 /* Ett tidigare pass tonas ned, men inte det man ska trycka på i det:
    Till rapporten såg annars avstängd ut. */
-.vy:not(.vy-admin) .pl-tidigare .pass{opacity:1}
-.vy:not(.vy-admin) .pl-tidigare .pass :is(.pass-nar,.pass-vad){opacity:.72}
-.vy:not(.vy-admin) .pl-tidigare .pass:hover :is(.pass-nar,.pass-vad){opacity:1}
+.vy .pl-tidigare .pass{opacity:1}
+.vy .pl-tidigare .pass :is(.pass-nar,.pass-vad){opacity:.72}
+.vy .pl-tidigare .pass:hover :is(.pass-nar,.pass-vad){opacity:1}
 
 /* Månaden på en telefon: en kolumn är fyrtio pixlar, och tiden fick
    inte plats i rutan. Kolumnen växte då och veckan sköts utanför
    skärmen (fälla 2 i CLAUDE.md avsnitt 3). Nu är passet ett färgat
    streck, och tiden står i Kommande och på passets sida. */
-.vy:not(.vy-admin) .sch-manad{grid-template-columns:repeat(7,minmax(0,1fr))}
+.vy .sch-manad{grid-template-columns:repeat(7,minmax(0,1fr))}
 @container (max-width:460px){
-  .vy:not(.vy-admin) .sch-manad .sch-pass{padding:0;height:6px;background:none}
-  .vy:not(.vy-admin) .sch-manad .sch-pass i{width:100%;height:6px}
-  .vy:not(.vy-admin) .sch-manad .sch-pass b{display:none}
-  .vy:not(.vy-admin) .sch-manad .sch-dag{min-height:56px;padding:6px 4px}
+  .vy .sch-manad .sch-pass{padding:0;height:6px;background:none}
+  .vy .sch-manad .sch-pass i{width:100%;height:6px}
+  .vy .sch-manad .sch-pass b{display:none}
+  .vy .sch-manad .sch-dag{min-height:56px;padding:6px 4px}
 }
 
 @media (max-width:560px){
-  .vy:not(.vy-admin) .ps-huvud.har-dag{grid-template-columns:auto minmax(0,1fr);gap:14px}
-  .vy:not(.vy-admin) .ps-huvud.har-dag > .lage{grid-column:2;justify-self:start;margin-top:-6px}
-  .vy:not(.vy-admin) .ps-dag{width:58px}
-  .vy:not(.vy-admin) .ps-dag b{font-size:1.5rem}
+  .vy .ps-huvud.har-dag{grid-template-columns:auto minmax(0,1fr);gap:14px}
+  .vy .ps-huvud.har-dag > .lage{grid-column:2;justify-self:start;margin-top:-6px}
+  .vy .ps-dag{width:58px}
+  .vy .ps-dag b{font-size:1.5rem}
   .ps-gor-topp{flex-direction:column;gap:6px}
   .ps-belopp{text-align:left;display:flex;align-items:baseline;gap:8px}
   .ps-fakta{grid-template-columns:minmax(0,1fr)}
@@ -3611,10 +3684,10 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .ov-hittills{container-type:inline-size}
 .ov-hittills #stat-graf{margin-top:22px}
 
-.vy:not(.vy-admin) .stat-tal{background:none;border:0;border-radius:0;gap:10px}
-.vy:not(.vy-admin) .stat-tal div{background:var(--tint);border-radius:16px;padding:14px 16px}
-.vy:not(.vy-admin) .stat-tal b{font-size:clamp(1.3rem,2.4vw,1.6rem)}
-.vy:not(.vy-admin) .stat-tal span{
+.vy .stat-tal{background:none;border:0;border-radius:0;gap:10px}
+.vy .stat-tal div{background:var(--tint);border-radius:16px;padding:14px 16px}
+.vy .stat-tal b{font-size:clamp(1.3rem,2.4vw,1.6rem)}
+.vy .stat-tal span{
   margin-top:6px;font-family:var(--f-sans);font-size:.8rem;font-weight:500;
   letter-spacing:0;text-transform:none;color:var(--bl-2);
 }
@@ -3659,9 +3732,9 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .bet-sam > div.ar-gor{background:var(--acc-soft);border-color:color-mix(in srgb,var(--acc) 30%,var(--ln))}
 .bet-sam > div.ar-gor small,.bet-sam > div.ar-gor span{color:var(--acc-lugn)}
 .bet-sam:empty{display:none}
-.vy:not(.vy-admin) [data-sek="betalning"] .bet-erb-tips{margin:10px 4px 0;font-size:.84rem}
+.vy [data-sek="betalning"] .bet-erb-tips{margin:10px 4px 0;font-size:.84rem}
 .vy-finstilt{margin:12px 4px 0;font-size:.8rem;line-height:1.6;color:var(--bl-3)}
-.vy:not(.vy-admin) .pass-atg .vy-rad-belopp{font-size:.95rem}
+.vy .pass-atg .vy-rad-belopp{font-size:.95rem}
 
 @media (max-width:560px){
   .bet-sam{grid-template-columns:minmax(0,1fr);gap:8px}
@@ -3673,11 +3746,11 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 /* En rad med bara ett belopp till höger: på en telefon står beloppet
    under texten, inte på en egen rad under datumrutan. */
 @media (max-width:560px){
-  .vy:not(.vy-admin) .pass-klickbar .pass-atg:has(> .vy-rad-belopp:only-child){grid-column:2;margin-top:-2px}
+  .vy .pass-klickbar .pass-atg:has(> .vy-rad-belopp:only-child){grid-column:2;margin-top:-2px}
 }
 
 /* En varning på en passrad: tiden krockar med ett annat pass. */
-.vy:not(.vy-admin) .pass-vad .pass-varning{
+.vy .pass-vad .pass-varning{
   display:inline-flex;align-items:center;gap:6px;margin-top:6px;
   font-size:.82rem;font-weight:600;color:var(--acc-lugn);
 }
@@ -3685,25 +3758,25 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 /* Stegen på passets sida i två rader på en telefon: luft mellan raderna,
    annars läses andra radens streck som en understrykning av den första. */
 @media (max-width:560px){
-  .vy:not(.vy-admin) .ps-vag{row-gap:18px}
+  .vy .ps-vag{row-gap:18px}
 }
 
 /* Studiehjälparens nyckeltal: rutor på papperet som summan i
    familjens Betalning, med vanlig text under talet. */
-.vy:not(.vy-admin) .kpis{background:none;border:0;border-radius:0;gap:12px;margin-top:30px}
+.vy .kpis{background:none;border:0;border-radius:0;gap:12px;margin-top:30px}
 .vy-sek-topp + .kpis{margin-top:0}
-.vy:not(.vy-admin) .kpi{
+.vy .kpi{
   background:var(--yta);border:1px solid var(--ln);border-radius:20px;box-shadow:var(--sk-1);
   padding:16px 18px;
 }
-.vy:not(.vy-admin) .kpi b{display:block;font-size:clamp(1.4rem,2.4vw,1.8rem)}
-.vy:not(.vy-admin) .kpi span{
+.vy .kpi b{display:block;font-size:clamp(1.4rem,2.4vw,1.8rem)}
+.vy .kpi span{
   display:block;margin-top:4px;font-family:var(--f-sans);font-size:.82rem;font-weight:500;
   letter-spacing:0;text-transform:none;color:var(--bl-2);
 }
 @media (max-width:560px){
-  .vy:not(.vy-admin) .kpis{gap:8px}
-  .vy:not(.vy-admin) .kpi{padding:12px 14px;border-radius:16px}
+  .vy .kpis{gap:8px}
+  .vy .kpi{padding:12px 14px;border-radius:16px}
 }
 
 /* ---------- rapportrutan ----------
@@ -3711,18 +3784,18 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
    stället för spärrade versaler, ämnet som ett val med Byt ämne, och
    Spara i en fot som står kvar längst ner medan man scrollar i rutan.
    Rutan scrollar själv (.rp-box), så foten är sticky i den. */
-.vy:not(.vy-admin) .rp-box{background:var(--yta);padding:0 clamp(20px,3vw,30px)}
-.vy:not(.vy-admin) .rp-huvud{padding-top:clamp(20px,3vw,28px);margin-bottom:4px}
-.vy:not(.vy-admin) .rp-huvud h3{font-size:1.3rem;font-weight:700;letter-spacing:-.025em;line-height:1.25}
+.vy .rp-box{background:var(--yta);padding:0 clamp(20px,3vw,30px)}
+.vy .rp-huvud{padding-top:clamp(20px,3vw,28px);margin-bottom:4px}
+.vy .rp-huvud h3{font-size:1.3rem;font-weight:700;letter-spacing:-.025em;line-height:1.25}
 .rp-under{margin:4px 0 0;font-size:.92rem;color:var(--bl-2)}
 .rp-under:empty{display:none}
 .rp-intro{margin:10px 0 20px;font-size:.84rem;line-height:1.55;color:var(--bl-3)}
-.vy:not(.vy-admin) .rp-box .pay-field label,
-.vy:not(.vy-admin) .rp-box .fgroup > label{
+.vy .rp-box .pay-field label,
+.vy .rp-box .fgroup > label{
   font-family:var(--f-sans);font-size:.82rem;font-weight:600;letter-spacing:0;
   text-transform:none;color:var(--bl-2);
 }
-.vy:not(.vy-admin) .rp-fraga{font-size:.95rem;font-weight:650;color:var(--bl)}
+.vy .rp-fraga{font-size:.95rem;font-weight:650;color:var(--bl)}
 
 .rp-byt{margin-top:16px;border:1px solid var(--ln);border-radius:16px;background:var(--tint)}
 .rp-byt > summary{
@@ -3747,10 +3820,10 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .rp-amne-vald[hidden],#r-amne-val[hidden]{display:none}
 
 /* Tillvalen (kunskapsområde, läxa) som två rader med en ruta var. */
-.vy:not(.vy-admin) .rp-box :is(.rp-omrade, #rapport-form > .vy-fall){
+.vy .rp-box :is(.rp-omrade, #rapport-form > .vy-fall){
   margin-top:14px;padding:13px 14px;border:1px solid var(--ln);border-radius:16px;background:var(--tint);
 }
-.vy:not(.vy-admin) .rp-box :is(.rp-omrade, #rapport-form > .vy-fall) > label{font-size:.88rem}
+.vy .rp-box :is(.rp-omrade, #rapport-form > .vy-fall) > label{font-size:.88rem}
 
 .rp-fot{
   position:sticky;bottom:0;z-index:2;margin:20px calc(-1 * clamp(20px,3vw,30px)) 0;
@@ -3767,7 +3840,7 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 @media (max-width:560px){
   /* Tre omdömen under varandra: bredvid varandra bröt "Behöver följas
      upp" på två rader och hamnade ensam på en egen. */
-  .vy:not(.vy-admin) .rp-gick{grid-template-columns:minmax(0,1fr)}
+  .vy .rp-gick{grid-template-columns:minmax(0,1fr)}
 }
 
 /* Månadsstegaren (NXStudie.månadsval med stegare): pilarna, månaden i
@@ -3817,26 +3890,26 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
    ytorna rätt.
    ============================================================ */
 @media (max-width:560px), (pointer:coarse){
-  .vy:not(.vy-admin) :is(.btn-sm, .sel-sm, .vy-flik, .bk-slot, .vy-val button, .sch-val button, .chip, .pl-mer){min-height:44px}
-  .vy:not(.vy-admin) :is(.btn-sm, .bk-slot, .vy-val button, .sch-val button, .chip){display:inline-flex;align-items:center;justify-content:center}
+  .vy :is(.btn-sm, .sel-sm, .vy-flik, .bk-slot, .vy-val button, .sch-val button, .chip, .pl-mer){min-height:44px}
+  .vy :is(.btn-sm, .bk-slot, .vy-val button, .sch-val button, .chip){display:inline-flex;align-items:center;justify-content:center}
 
   /* Länkar i löptext och rubrikrader: ytan växer, raden står kvar. */
-  .vy:not(.vy-admin) :is(a.vy-lank, a.vy-mer, button.vy-lank){position:relative}
-  .vy:not(.vy-admin) :is(a.vy-lank, a.vy-mer, button.vy-lank)::after{content:"";position:absolute;inset:-11px -8px}
+  .vy :is(a.vy-lank, a.vy-mer, button.vy-lank){position:relative}
+  .vy :is(a.vy-lank, a.vy-mer, button.vy-lank)::after{content:"";position:absolute;inset:-11px -8px}
 
   /* Pilar och små fyrkanter. */
-  .vy:not(.vy-admin) :is(.nx-steg-pil, .bk-pil, .cal-nav button, .vy-fall-pil){width:44px;height:44px;min-width:44px}
-  .vy:not(.vy-admin) .sch-idag{height:44px}
-  .vy:not(.vy-admin) .ps-tillbaka{min-height:44px}
-  .vy:not(.vy-admin) .ps-fot-lank{min-height:44px}
+  .vy :is(.nx-steg-pil, .bk-pil, .cal-nav button, .vy-fall-pil){width:44px;height:44px;min-width:44px}
+  .vy .sch-idag{height:44px}
+  .vy .ps-tillbaka{min-height:44px}
+  .vy .ps-fot-lank{min-height:44px}
 
   /* Kalendern i Boka pass: inget inre kort på en telefon, och inget
      mellanrum mellan dagarna. Dagen är 41 × 44 px och ytorna möter
      varandra, så ett tryck mellan två dagar träffar alltid en av dem. */
-  .vy:not(.vy-admin) .bk-kal{padding:10px 4px;border-color:transparent;background:transparent}
-  .vy:not(.vy-admin) :is(.mv-grid, .mv-vd){column-gap:0}
-  .vy:not(.vy-admin) .mv-grid{row-gap:2px}
-  .vy:not(.vy-admin) .mv-dag{aspect-ratio:auto;min-height:44px;border-radius:14px}
+  .vy .bk-kal{padding:10px 4px;border-color:transparent;background:transparent}
+  .vy :is(.mv-grid, .mv-vd){column-gap:0}
+  .vy .mv-grid{row-gap:2px}
+  .vy .mv-dag{aspect-ratio:auto;min-height:44px;border-radius:14px}
 }
 
 /* Ett pass i månadens ruta är ett streck på en telefon (se ovan), och
@@ -3844,8 +3917,8 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
    rutan passets tryckyta; har den flera står de i Kommande och i
    listan ovanför, där de går att skilja åt. */
 @container (max-width:460px){
-  .vy:not(.vy-admin) .sch-manad .sch-dag{position:relative}
-  .vy:not(.vy-admin) .sch-manad .sch-dag:not(:has(.sch-pass ~ .sch-pass)) .sch-pass::after{content:"";position:absolute;inset:0}
+  .vy .sch-manad .sch-dag{position:relative}
+  .vy .sch-manad .sch-dag:not(:has(.sch-pass ~ .sch-pass)) .sch-pass::after{content:"";position:absolute;inset:0}
 }
 
 /* Sektionsraden står fast under sidhuvudet på en telefon och en
@@ -3854,7 +3927,12 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
    går kant i kant (skuggan och klippet), annars syns det som rullar
    under raden i sidornas marginaler. Höjden på huvudet sätter
    sidomenyn på raden (--vy-hdr-h). Den lodräta menyn på en dator står
-   redan fast. */
+   redan fast.
+
+   Adminvyn är undantagen, och det är det enda kvar av .vy:not(.vy-admin):
+   den har toppraden fast under sidhuvudet, och två fasta rader ovanför
+   innehållet tar 144 av 844 px på en telefon. Där ligger menyraden kvar i
+   flödet. */
 @media (max-width:899px){
   .vy:not(.vy-admin) .vy-sido{
     position:sticky;top:var(--vy-hdr-h,75px);z-index:40;
