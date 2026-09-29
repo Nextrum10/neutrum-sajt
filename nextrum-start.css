@@ -1112,7 +1112,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   grid-column:1/-1;
   padding:clamp(26px,4.4vw,60px);
 }
-.nx-rost-brev cite b{font-style:italic}
+.nx-rost-brev p,.nx-rost-brev cite{font-style:italic}
 .nx-rost-brev::before{font-size:clamp(3rem,5.2vw,4.6rem)}
 .nx-rost-brev p{
   font-size:clamp(1.14rem,1.9vw,1.5rem);
