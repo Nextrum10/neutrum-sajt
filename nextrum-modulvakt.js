@@ -34,9 +34,12 @@
     [typeof NX !== 'undefined' && typeof NX.esc === 'function', 'nextrum-app.js']
   ];
 
-  /* nextrum-studie.js: vakten över inloggningen kom sist (2026-09-29),
-     och alla tre vyerna anropar den i start(). */
-  var studieKlar = typeof NXStudie !== 'undefined' && !!NXStudie.vaktaInloggningen;
+  /* nextrum-studie.js: vakten över inloggningen och hämtaAlla kom sist
+     (2026-09-29), och alla tre vyerna anropar båda när de startar. En
+     gammal fil ur cachen utan hämtaAlla hade gett ett TypeError mitt i
+     hämtningen i stället för det här beskedet. */
+  var studieKlar = typeof NXStudie !== 'undefined' && !!NXStudie.vaktaInloggningen
+    && typeof NXStudie.hämtaAlla === 'function';
 
   if (ärAdmin) {
     krav.push(

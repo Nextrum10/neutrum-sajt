@@ -395,6 +395,71 @@ window.NXStudie = (function () {
     return svar;
   }
 
+  /* ---------- alla rader, inte de tusen första (2026-09-29) ----------
+     Leo: "de raderna ska inte försvinna efter 1000st". PostgREST lämnar
+     ut högst tusen rader per svar (max-rows), och svaret säger inte att
+     det finns fler: det ser helt ut. Adminvyn hämtade passen,
+     anmälningarna och resten med en fråga var, nyast först, så den dag
+     det fanns fler än tusen hade de äldsta försvunnit ur Lektioner,
+     Ekonomi och Löner utan att något blev rött. Studiehjälparvyn hämtar
+     sina pass äldst först, och där hade det varit de NYA som försvann:
+     passen att svara på och rapportera.
+
+     Sida efter sida tills databasens eget antal är nått (count på första
+     sidan). Antalet avgör, inte en kort sida: sänks max-rows under
+     sidans storlek är varje sida kort, och en hjälpare som slutade vid
+     första korta sidan hade kapat igen, lika tyst. Nästa sida börjar
+     efter så många rader som faktiskt kom.
+
+     Sorteringen slutar alltid på nyckeln (id, om inget annat anges):
+     sidorna är egna frågor, och två pass samma dag kan annars byta plats
+     mellan dem, så att ett kommer med två gånger och ett annat inte alls.
+     Skrivs en rad mellan två sidor kan den sista på en sida komma igen
+     först på nästa; den tas bort på nyckeln, så nyckeln ska finnas bland
+     kolumnerna. Tas en rad bort mellan två sidor kan en annan hoppas
+     över till nästa hämtning. Det är priset för sidor, och det rättar
+     sig självt.
+
+     bygg(q) lägger till filter och sortering. Svaret har samma form som
+     supabase-js ({ data, error }), och ett fel på en senare sida ger
+     felet, aldrig halva listan: en kapad lista är det här ska hindra.
+     Frågor med en avsiktlig gräns (de senaste 400 meddelandena, de
+     senaste 20 rapporterna) går inte hit: där är gränsen poängen.
+
+     supa skickas in, som till notisval: resten av filen rör ingen
+     databas. */
+  var SIDA = 1000;
+
+  async function hämtaAlla(supa, tabell, kolumner, bygg, nyckel) {
+    nyckel = nyckel || 'id';
+    var rader = [];
+    var från = 0, totalt = Infinity, sidor = 0;
+    while (från < totalt) {
+      var q = supa.from(tabell).select(kolumner, från === 0 ? { count: 'exact' } : undefined);
+      if (bygg) q = bygg(q);
+      var svar = await q.order(nyckel).range(från, från + SIDA - 1);
+      if (svar.error) return { data: null, error: svar.error };
+      var del = svar.data || [];
+      if (från === 0 && typeof svar.count === 'number') totalt = svar.count;
+      if (!del.length) break;
+      Array.prototype.push.apply(rader, del);
+      från += del.length;
+      sidor++;
+    }
+    if (sidor < 2) return { data: rader, error: null };
+    var sedda = new Set();
+    return {
+      data: rader.filter(function (r) {
+        var k = r[nyckel];
+        if (k == null) return true;
+        if (sedda.has(k)) return false;
+        sedda.add(k);
+        return true;
+      }),
+      error: null
+    };
+  }
+
   /* ---------- månadsväljaren (Fas 20.2) ----------
      Leo 2026-09-27: "man ska inte kunna se rapporter från juli idag i
      september ... gör det snyggt så man kan välja den månaden man vill
@@ -2742,6 +2807,7 @@ window.NXStudie = (function () {
     läxRad: läxRad, nivåMätare: nivåMätare, historikRad: historikRad, ämnesSammanfattning: ämnesSammanfattning,
     progressRad: progressRad, progressPerÄmne: progressPerÄmne,
     tomt: tomt, laddar: laddar, laddarFörsta: laddarFörsta, håll: håll, scrollaTill: scrollaTill, visaÖverst: visaÖverst,
+    hämtaAlla: hämtaAlla,
     månadsval: månadsval, månadsGräns: månadsGräns, månadsNamn: månadsNamn, månadIso: månadIso,
     passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,
     hämtaMöte: hämtaMöte, mötesRad: mötesRad,

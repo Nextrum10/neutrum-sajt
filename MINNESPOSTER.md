@@ -241,6 +241,11 @@ vyn, kön fylldes, schemat gick — och varje mejlrad märktes tyst
 inifrån.** Bygger du en strömbrytare i en tabell: bygg reglaget i
 adminvyn i samma ändring.
 
+**PostgREST lämnar ut högst tusen rader per svar och säger inte att det
+finns fler.** En lista som växer hämtas därför med `NXStudie.hämtaAlla`
+(sida efter sida tills `count` är nått), aldrig med en enda `select`.
+Detaljen: `CLAUDE.md` avsnitt 3, Tusen rader.
+
 ---
 
 ## `project-nextrum-sprak-kod`

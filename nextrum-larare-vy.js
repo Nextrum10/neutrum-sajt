@@ -1352,11 +1352,15 @@
        betalda med den eller fick övertiden ur den, och hur många minuter
        familjerna har kvar. Kan den inte läsas står passen ändå, utan
        timbanken; databasen tar minuterna oavsett vad vyn visar. */
+    /* Alla pass, inte de tusen första (NXStudie.hämtaAlla, 2026-09-29).
+       Listan är äldst först, så det som hade fallit bort efter tusen var
+       de NYA passen: de att svara på och rapportera. Uttagen följer
+       passen i antal och hämtas likadant. */
     const [pass, uttag, saldon] = await Promise.all([
-      supa.from('bookings')
-        .select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, avbokningsskal, betalning_status, fakturerbar, klippkort_id')
-        .eq('tutor_id', S.user.id).order('wanted_date', { ascending: true }),
-      supa.from('timbank_uttag').select('booking_id, sort, minuter'),
+      NXStudie.hämtaAlla(supa, 'bookings',
+        'id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, avbokningsskal, betalning_status, fakturerbar, klippkort_id',
+        q => q.eq('tutor_id', S.user.id).order('wanted_date', { ascending: true })),
+      NXStudie.hämtaAlla(supa, 'timbank_uttag', 'id, booking_id, sort, minuter'),
       supa.from('timbank_saldo').select('parent_id, saldo_min')
     ]);
     const { data, error } = pass;
