@@ -1,12 +1,10 @@
 -- ============================================================
 -- Månadskörningens svar blir en uppgift
 --
--- INTE KÖRD I DRIFTEN ÄN (2026-09-29). Den körs efter merge, med
--- apply_migration, och filen döps då om till versionen den får
--- (CLAUDE.md avsnitt 5). Jobbet som läser svaret kommer i en egen
--- migration, manadskorningens_svar_lases_den_forsta, när funktionen
--- körts och lästs för hand (Fas 7:s regel, DEPLOY-BETALNING.md
--- avsnitt 6).
+-- Körd 2026-09-29, efter att PR #128 mergats. Jobbet som läser svaret
+-- kommer i en egen migration, manadskorningens_svar_lases_den_forsta,
+-- när funktionen körts och lästs för hand (Fas 7:s regel,
+-- DEPLOY-BETALNING.md avsnitt 6).
 --
 -- pg_cron-jobbet manadskorning väcker fakturering den 1:a klockan
 -- 04:17 UTC, och ingen läser svaret. Gick det fel stod det under
