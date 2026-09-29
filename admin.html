@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
 <link rel="stylesheet" href="nextrum-vy.css?v=e4a5688c">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=741f87e6">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=71f5fbdc">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -513,7 +513,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Frågor</h2>
-              <p>Inkorgen från kontaktformuläret, och en insyn i chattarna mellan familj och studiehjälpare.</p>
+              <p>Inkorgen från kontaktformuläret, och chattarna mellan familj och studiehjälpare, som ni kan öppna och läsa.</p>
             </div>
           </div>
 
@@ -544,9 +544,12 @@
             <div class="dbox">
               <h5>Chattar <em>senaste raden i varje tråd</em></h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
-                Ni kan läsa trådarna, inte skriva i dem. Insynen finns för att en
-                förälder ska kunna lita på att plattformen inte är en privat kanal
-                till deras barn — inte för att ni ska delta i samtalet.
+                Öppna chatt visar hela tråden. Ni kan läsa den, inte skriva i den, och
+                familjen och studiehjälparen ser inte att ni läser: ingenting markeras
+                som läst och ingen notis går ut. Varje öppning står i auditloggen, utan
+                texten. Insynen finns för att en förälder ska kunna lita på att
+                plattformen inte är en privat kanal till deras barn, inte för att ni
+                ska delta i samtalet.
               </p>
               <div id="chatt-lista"><div class="loading">Hämtar</div></div>
             </div>
@@ -2271,6 +2274,7 @@
                   <option value="klientfel">Bortstädade fel</option>
                   <option value="bolagsfakta">Bolagsfakta</option>
                   <option value="handling">Dokument</option>
+                  <option value="chatt">Öppnade chattar</option>
                   <option value="konto">Raderade konton</option>
                   <option value="elev">Raderade elever</option>
                 </select>
@@ -2382,18 +2386,18 @@
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=9753e4b6"></script>
-<script src="nextrum-admin-detalj.js?v=de6d7e6e"></script>
+<script src="nextrum-admin-detalj.js?v=63fb7320"></script>
 <script src="nextrum-admin-oversikt.js?v=ed04b5a8"></script>
 <script src="nextrum-admin-kunder.js?v=155120f9"></script>
 <script src="nextrum-admin-rekrytering.js?v=d08ab262"></script>
 <script src="nextrum-admin-bibliotek.js?v=66dad1e3"></script>
-<script src="nextrum-admin-kommunikation.js?v=97c8d085"></script>
+<script src="nextrum-admin-kommunikation.js?v=a0deff07"></script>
 <script src="nextrum-admin-drift.js?v=9c99ca36"></script>
 <script src="nextrum-admin-ekonomi.js?v=3881c69e"></script>
 <script src="nextrum-admin-manaden.js?v=9d66770e"></script>
 <script src="nextrum-admin-loner.js?v=7138b540"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
-<script src="nextrum-admin-system.js?v=8006b686"></script>
+<script src="nextrum-admin-system.js?v=162e85f5"></script>
 <script src="nextrum-admin-automationer.js?v=df8e5586"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den

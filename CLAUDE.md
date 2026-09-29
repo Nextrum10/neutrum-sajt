@@ -735,6 +735,39 @@ Personens panel i adminvyn visar dokumenten under Översikt, med en
 länk till formuläret där personen redan är vald. Ingen notis går ut
 när något delas (avsnitt 11).
 
+**Admin läser chatten utan att parterna ser det** (2026-09-29, Leo:
+"vi på admin ska kunna gå in i elevers och lärares chattar utan att de
+ser det. det gör vi från vår admin genom att trycka på öppna chatt").
+**Öppna chatt** står på varje tråd under Frågor → Chattar och under
+Chatt på familjens och studiehjälparens Översikt, och öppnar hela
+tråden i personpanelen (`chatt:<familj>|<studiehjälpare>`), bara för
+läsning. Läsrätten fanns sedan schema-v4; det nya är vägen till en hel
+tråd och spåret efter den. Tre saker:
+- **Osynligt i stunden, aldrig hemligt.** Vyn läser genom
+  `chatt_las()` och aldrig genom `NXKontakt.tråd()`, som markerar det
+  den visar som läst: vår läsning hade tagit bort "oläst" hos den som
+  skrev. Ingen Realtime-kanal, ingen skrivruta, ingen notis. Att vi KAN
+  läsa står i integritetspolicyn på båda språken (Vem som kan se vad,
+  och 6.1 f under Varför vi får göra det) och i chatten själv ("det som
+  sägs här stannar mellan er och oss"). Ta inte bort det: att de inte
+  märker när vi läser är lagligt, att de inte vet att vi kan är det
+  inte (GDPR art. 5.1 a och 13).
+- **Varje öppning står i auditloggen** (`chatt.oppnad`: vem, när,
+  familjen som Gäller, studiehjälparen och antalet meddelanden, aldrig
+  texten), skriven av funktionen i samma transaktion som läsningen, som
+  personnumret (Fas 6.1). Tråden hämtas därför om vid varje öppning och
+  aldrig ur panelens cache. Loggen är ett spår, inte ett lås:
+  läsrätten på `messages` står kvar för chattlistans senaste rad och
+  familjens tidslinje.
+- **Syftena i policyn är de vi får läsa för**: barnens trygghet, tonen,
+  och att reda ut det som gått fel. Att läsa för att det går täcks inte
+  av dem, och en studiehjälpare ska ha fått veta i förväg att chatten
+  kan läsas (DATASKYDD.md avsnitt 8).
+`chatt_las()` ger de 500 senaste meddelandena, nyast först, och
+`totalt`: PostgREST kapar ett svar vid tusen rader, och en tråd hämtad i
+tidsordning hade tappat de nyaste. Migrationen är inte körd i driften än
+(avsnitt 11).
+
 ### Ordlistan (använd den, i kod och i text)
 
 | Ord | Betyder |
@@ -1503,6 +1536,10 @@ sitt dokument" på hinken `dokument`. Två villkor: en koppling till
 (`handlingar_person_id`), och bara en handling kopplad till en person
 kan delas (`handlingar_delas_med_en_person`). `delad_med_personen` står
 i auditloggens vitlista. Tabellen har fortfarande bara adminpolicyerna.
+`admin_oppnar_chatten` (2026-09-29, avsnitt 1) la till `chatt_las()`:
+tråden mellan en familj och en studiehjälpare för admin, SECURITY
+DEFINER med `is_admin()` på första raden, VOLATILE för att den skriver
+`chatt.oppnad` i `audit_logg`. Den rör aldrig `messages`.
 Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
 id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
 ingen roll utom ägaren når den). Se Notiserna nedan.
@@ -1539,6 +1576,11 @@ kontaktmeddelande, att ett klientfel städats bort och att bolagsfakta
 ett filnamn heter i praktiken "Provräkning Alva v42.pdf".
 `kund_skatteuppgifter` har ingen heller — funktionerna skriver redan
 sina egna rader, och en trigger hade dubbelloggat.
+
+Två LÄSNINGAR står också där, för att den de gäller inte märker dem:
+personnumret (`skatteuppgifter.lasta`, Fas 6.1) och en chatt som admin
+öppnar (`chatt.oppnad`, 2026-09-29). Båda skrivs av funktionen som
+läser, i samma transaktion.
 
 **Sökningen i loggen går genom `audit_sok()`** (Fas 9.8), som filtrerar
 OCH räknar i databasen. Totalen kommer ur `count(*) over ()` på den
@@ -2453,7 +2495,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 35 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-29, räknat i driften; den senaste är `driftkorningar`, och `mina_handlingar`, `radering_lage` och `radera_person` före den) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 38 SECURITY DEFINER-funktioner i `public` nåbara för `authenticated`, triggerfunktionerna oräknade (räknat i driften 2026-09-29 efter Fas 23.1; 39 med `chatt_las` när `admin_oppnar_chatten` är körd). Förut stod 35 här, räknat före Fas 23.1 och på ett sätt som inte skrevs ned. Bland de senaste: `chatt_las`, `driftkorningar`, `mina_handlingar`, `radering_lage` och `radera_person` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
@@ -3370,6 +3412,19 @@ tillbaka överst i avsnittet för 22.1.
   3. **En person per handling.** Något som ska nå alla studiehjälpare
      (handboken, en policy) är en egen regel, och byggs inte förrän den
      behövs.
+- **Chatten som admin öppnar (2026-09-29, avsnitt 1) är byggd, men
+  migrationen `admin_oppnar_chatten` är INTE körd i driften.** Provad mot
+  driften i en transaktion som rullades tillbaka, med filerna hämtade av
+  databasen från commiten och md5 prövad (avsnitt 9): hela `rls-test.sql`
+  gick igenom med migrationen, 873 av 873, och utan den föll bara
+  avsnittets egna fem rader (861 av 866). Ingenting blev kvar. Tills den är körd
+  står Öppna chatt i listorna, men panelen säger att migrationen saknas
+  och läser ingenting: en läsning utan rad i loggen ska inte gå att göra
+  från vyn. Kör den efter merge med versionen i filnamnet
+  (`20260929123125`), eller byt namnet till den version `apply_migration`
+  registrerar, och kör sedan hela `rls-test.sql`. Kvar som inte är kod:
+  säg till studiehjälparna och familjerna med konto att vi kan läsa
+  chatten (DATASKYDD.md avsnitt 8).
 
 ---
 

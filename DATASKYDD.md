@@ -45,7 +45,7 @@ finnas. Det här är det.
 | 3 | Barnet och undervisningen (`students`, `study_plans`, `homework`, `progress_items`, `lesson_reports`, `materials`, `niva_forsok`, `niva_svar`) | barn | namn, årskurs, skola, ämnen, mål, uppgifter, svaren på de digitala uppgifterna och rättningen av dem, rapporter | 6.1 f, berättigat intresse (barnet är inte part) | Supabase; Anthropic (förnamn, årskurs, maskade anteckningar) när studiehjälparen ber om utkast | som kontot |
 | 4 | Förälderns privata anteckningar (`student_notes`) | barn | fritext | 6.1 f | Supabase. Ingen hos oss har läsrätt | som kontot |
 | 5 | Pass och bokningar (`bookings`, `pass_moten`) | förälder, barn, studiehjälpare | datum, tid, ämne, plats (ofta en hemadress), avbokningsskäl | 6.1 b | Supabase; Google (Meet-rum, när kopplat) | som kontot; pass med betalning 7 år |
-| 6 | Chatt (`messages`) | förälder, studiehjälpare | meddelandetext | 6.1 b | Supabase | som kontot |
+| 6 | Chatt (`messages`) | förälder, studiehjälpare; barnet när det skrivs om | meddelandetext. Att någon av oss öppnat tråden står i `audit_logg` (`chatt.oppnad`: vem, när, familjen, studiehjälparen, antalet meddelanden, aldrig texten) | 6.1 b; att vi läser den: 6.1 f (barnens trygghet, tonen, reda ut det som gått fel) | Supabase | som kontot; loggraden så länge verksamheten finns (rad 13) |
 | 7 | Notiser och mejl (`notiser`, `notis_utskick`) | alla med konto | typ, datum, förnamn, ämne | 6.1 b | Resend | 180 dagar i vyn, 90 dagar för utskicken |
 | 8 | Betalning (`bookings.betalning_*`, `klippkort`, `pass_tillagg`, `timbank_uttag`, `stripe_handelser`, `stripe_tvister`, `invoices`) | förälder | belopp, tid, e-post, Stripe-id | 6.1 b; 6.1 c bokföringslagen | Stripe (e-post, belopp, ämne och datum) | 7 år |
 | 9 | Ersättning till studiehjälpare (`payouts`, `lon_anstallning`) | studiehjälpare | timmar, belopp, anställningsnummer | 6.1 b; 6.1 c | Fortnox (lönefil i PAXml som admin laddar upp: anställningsnummer, datum, timmar, belopp, inga namn) | 7 år |
@@ -175,6 +175,7 @@ och skickar varje utkast.
 | Intrång hos en leverantör | låg | hög | bara det som behövs går till var och en; incidentrutinen i avsnitt 7 | låg |
 | En sextonårings CV med personnummer sparas | medel | medel | hjälptext i formuläret, gallring efter 1 år, bara admin läser | låg |
 | Spårning utan samtycke | var säker (Vercel laddades direkt) | låg | inget skript som skickar data laddas före ja | låg |
+| Vi läser chatten mellan en familj och en studiehjälpare (ofta sexton) utan att de märker det (2026-09-29) | säker när Öppna chatt används | medel | står i integritetspolicyn på båda språken och i chatten själv; bara admin, genom `chatt_las()`, som skriver varje öppning i auditloggen utan texten; syftena i policyn är de enda vi läser för | låg, så länge vi läser för syftena och inte för att det går |
 
 **Slutsats.** Restrisken är acceptabel och kräver inget förhandssamråd
 med IMY (art. 36). Gör om bedömningen när något av följande ändras: en ny
@@ -199,6 +200,13 @@ som står på kontot, inte till en ny.
 anteckningar (`student_notes`) når vi inte; familjen ser dem själv. För
 en sökande: `applications` och CV-filen. Skicka som en fil, inte som
 text i ett mejl.
+
+Frågar en familj eller en studiehjälpare om vi läst deras chatt: svaret
+står i `audit_logg`, raderna `chatt.oppnad` för deras trådar
+(`objekt_id` är familjen, `efter ->> 'tutor_id'` studiehjälparen). Ge
+datumen och syftet i policyn. Vem av oss som läste behöver inte stå med
+(EU-domstolen C-579/21, Pankki S), utom när personen behöver det för att
+kunna ta tillvara sina rättigheter.
 
 **Rättelse (art. 16).** Redigera uppgifterna i personens panel i
 adminvyn: familj, elev, studiehjälpare, intresseanmälan och ansökan.
@@ -235,8 +243,11 @@ inga namn, och raderingen får en egen rad där (vem, när, sättet och
 antalen).
 
 **Invändning (art. 21).** Gäller allt som vilar på berättigat intresse
-(rad 3, 4, 10–13, 16). För barnets uppgifter betyder en invändning i
-praktiken att passen upphör, och det ska sägas rakt.
+(rad 3, 4, 6 där vi läser chatten, 10–13, 16). För barnets uppgifter
+betyder en invändning i praktiken att passen upphör, och det ska sägas
+rakt. En invändning mot att vi läser chatten väger mot barnens trygghet,
+som är skälet att vi kan läsa den; säg det lika rakt, och att chatten
+är för passen, inte för något annat.
 
 **Återkallat samtycke.** Görs av besökaren själv under Cookies och
 lagring. Inget för oss att göra.
@@ -302,7 +313,12 @@ Inget av det här går att göra i koden.
   filen innan bolaget registreras.
 - [ ] **Meddela familjerna med konto** att integritetspolicyn ändrats.
   Ändringen ger dem fler rättigheter, inte färre, så det räcker med ett
-  mejl.
+  mejl. Sedan 2026-09-29 står där också att vi kan läsa chatten; säg det
+  i samma mejl, inte bara i policyn.
+- [ ] **Säg till studiehjälparna att vi kan läsa chatten**, i handboken
+  och i avtalet, inte bara i policyn (2026-09-29). För dem är chatten en
+  arbetsplats, och en arbetsgivare som läser det anställda skriver ska ha
+  sagt det i förväg. Handboken finns inte i repot.
 - [ ] **Fortnox i policyn** innan första fakturan eller lönen går dit
   (CLAUDE.md avsnitt 11).
 - [ ] **Meta- eller Google-pixel:** innan ett id sätts, gör om

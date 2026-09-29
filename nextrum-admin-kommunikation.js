@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { S, kortDatum, matchar, namnFör, pill, rad, tabell, tomtText } = NXAdmin;
+  const { S, kortDatum, matchar, namnFör, pill, tabell, tomtText } = NXAdmin;
 
   /* ============================================================
      FRÅGOR
@@ -51,13 +51,22 @@
     ], rader, bara ? 'Inget ohanterat kvar' : tomtText(sök, 'Ingen fråga matchar filtret', 'Inga frågor än'));
   }
 
+  /* En rad per tråd, den senaste raden. Öppna chatt (2026-09-29) visar
+     hela tråden i panelen, genom chatt_las(), som skriver öppningen i
+     auditloggen och inte rör read_at: familjen och studiehjälparen ser
+     inte att vi läser (nextrum-admin-detalj.js, CHATTEN). */
   function ritaChattar() {
     $('#chatt-lista').innerHTML = !S.chattar.length
       ? tomt('Inga chattar än', 'Trådarna dyker upp när en matchad familj skriver.')
-      : S.chattar.slice(0, 40).map(m => rad(
-        namnFör(m.parent_id) + ' ↔ ' + namnFör(m.tutor_id),
-        (m.sender_id === m.parent_id ? 'Familjen: ' : 'Studiehjälparen: ') + m.body.slice(0, 120),
-        kortDatum(m.created_at))).join('');
+      : S.chattar.slice(0, 40).map(m => '<div class="mat" style="grid-template-columns:minmax(0,1fr) auto">'
+        + '<span class="mat-vad"><b>' + esc(namnFör(m.parent_id) + ' ↔ ' + namnFör(m.tutor_id)) + '</b>'
+        + '<span>' + esc((m.sender_id === m.parent_id ? 'Familjen: ' : 'Studiehjälparen: ')
+          + m.body.slice(0, 120)) + '</span></span>'
+        + '<span class="mat-atg" style="align-items:center">'
+        + '<span class="xsmall" style="color:var(--bl-3);white-space:nowrap">' + esc(kortDatum(m.created_at)) + '</span>'
+        + '<button class="btn btn-ghost btn-sm" type="button" data-dp="chatt:'
+        + esc(m.parent_id + '|' + m.tutor_id) + '">Öppna chatt</button></span>'
+        + '</div>').join('');
   }
 
 
