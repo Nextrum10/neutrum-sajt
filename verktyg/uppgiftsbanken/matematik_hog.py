@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Matematik åk 7–9 och Matematik 1 på gymnasiet. En bana per årskurs med
-fem nivåer ur det centrala innehållet (Lgr22 och Gy11): negativa tal,
-procent och förändringsfaktor, ekvationer, algebra, potenser, funktioner,
-geometri, statistik och sannolikhet, alltså det som nästa årskurs bygger på.
+"""Matematik åk 7–9 och Matematik 1 på gymnasiet. En bana per årskurs ur
+det centrala innehållet (Lgr22 och Gy11): negativa tal, procent och
+förändringsfaktor, ekvationer, algebra, potenser, funktioner, geometri,
+statistik och sannolikhet, alltså det som nästa årskurs bygger på. Åk 8
+har flest nivåer, för att den första riktiga eleven går där: varje område
+är en stig med introduktionen först och det svåraste sist.
 
 Varje facit räknas ut här, och de felaktiga alternativen prövas mot samma
 räkning (assert längre ner): ett fel facit lär barnet att det rätta svaret
@@ -10,10 +12,10 @@ räkning (assert längre ner): ett fel facit lär barnet att det rätta svaret
 """
 from fractions import Fraction as F
 from itertools import product
-from math import isqrt, sqrt
+from math import isqrt, pi, sqrt
 from statistics import multimode
 
-from grund import bana, niva, val, skriv, ordna, tal
+from grund import bana, niva, val, skriv, ordna, sant, para, tal
 
 UPPH = str.maketrans('0123456789-', '⁰¹²³⁴⁵⁶⁷⁸⁹⁻')
 
@@ -130,11 +132,70 @@ def typvarde(data):
     return typ[0]
 
 
+def samma2(f, g):
+    """Som samma(), för uttryck i två variabler: prövat i ett rutnät."""
+    return all(f(F(a), F(b)) == g(F(a), F(b)) for a in range(-3, 4) for b in range(-3, 4))
+
+
+def svtal(x):
+    """Ett tal i en text eller en bricka: heltal med mellanslag i tusental,
+    också fyrsiffriga (1 000), och annars som m()."""
+    x = F(x)
+    return tusental(x) if x.denominator == 1 else m(x)
+
+
+def procent(x):
+    """En andel som procent i en text: procent(F(1, 8)) → '12,5 %'."""
+    return '%s %%' % m(F(x) * 100)
+
+
+def faktor(p):
+    """Förändringsfaktorn när något ändras med p procent: faktor(-20) är 0,8."""
+    return 1 + F(p, 100)
+
+
+def andring(p):
+    """En ändring i procent som text, med tecken: +10 % och −10 %."""
+    return '%s%d %%' % ('+' if p > 0 else '−', abs(p))
+
+
+def parentesekvation(a, c, d):
+    """Ekvationen a(x + c) = d som text, och dess lösning."""
+    return '%d(x %s %d) = %s' % (a, '+' if c > 0 else '−', abs(c), m(d)), los(a, a * c, 0, d)
+
+
+def linje(k, mm, vanster='y'):
+    """Linjen y = kx + m som text, så som den skrivs: y = −x + 5, y = 0,5x + 4, y = 3x, y = 4."""
+    k, mm = F(k), F(mm)
+    kx = '' if k == 0 else 'x' if k == 1 else '−x' if k == -1 else m(k) + 'x'
+    if not kx:
+        return '%s = %s' % (vanster, m(mm))
+    if mm == 0:
+        return '%s = %s' % (vanster, kx)
+    return '%s = %s %s %s' % (vanster, kx, '+' if mm > 0 else '−', m(abs(mm)))
+
+
+def modell(d, sort):
+    """Ett belopp på 1 000 kr som ändras lika mycket varje år, med d kronor
+    eller d procent: förändringen i ord och funktionen, ur samma tal."""
+    text = '%s med %d %s per år' % ('Ökar' if d > 0 else 'Minskar', abs(d), sort)
+    if sort == 'kr':
+        return text, 'f(x) = 1 000 %s %dx' % ('+' if d > 0 else '−', abs(d))
+    return text, 'f(x) = 1 000 · %sˣ' % t(faktor(d))
+
+
 # ---------------------------------------------------------------- åk 7
 
 # Kontroller som inte ryms i en rad nedanför.
 assert [x for x in (F(3), F(12), F(7, 2)) if 4 * x + 1 == 13] == [3]
 assert F(10, 100) * 30 == 3 and F(10, 100) * 50 == 5 and F(50, 100) * 20 == 10 and F(25, 100) * 100 == 25
+# Tiopotenser och prefix: prefixen står som sina tiopotenser, och längderna
+# i sista frågan räknas om till millimeter.
+PREFIX = [('kilo', F(10) ** 3), ('hekto', F(10) ** 2), ('deci', F(10) ** -1), ('centi', F(10) ** -2),
+          ('milli', F(10) ** -3)]
+LANGDER = [('35 mm', F(35)), ('4 cm', 4 * F(10)), ('0,3 dm', F(3, 10) * 100), ('0,05 m', F(5, 100) * 1000)]
+assert [v for _, v in LANGDER] == [35, 40, 30, 50]
+assert 2 ** 3 == 8 and 3 ** 2 == 9 and 3 ** 4 == 81
 
 AK7 = bana('Matematik', 'ak7', [
     niva('ma-ak7-negativa-1', 'Räkna med negativa tal', 'Negativa tal', [
@@ -253,12 +314,39 @@ AK7 = bana('Matematik', 'ak7', [
                   [('%d%s' % (b, up(e)), b ** e) for b, e in ((5, 2), (2, 3), (2, 4), (3, 2))],
                   '2³ = 8, 3² = 9, 2⁴ = 16 och 5² = 25.'),
     ], beskrivning='Vad en potens betyder och hur man räknar ut den.'),
+
+    niva('ma-ak7-potenser-2', 'Tiopotenser och prefix', 'Potenser', [
+        para('Para ihop tiopotensen med talet.', [('10' + up(e), svtal(10 ** e)) for e in (2, 3, 5, 6)],
+             'Exponenten i en tiopotens visar hur många nollor talet har. 10⁵ = 100 000 har fem nollor, '
+             'och 10⁶ = 1 000 000 är en miljon.'),
+        sant('2⁴ är lika mycket som 4².', 2 ** 4 == 4 ** 2,
+             '2⁴ = 2 · 2 · 2 · 2 = 16 och 4² = 4 · 4 = 16. Det gäller inte alla tal: 2³ = 8 men 3² = 9.'),
+        val('Vilket tal är 3 · 10⁴?', [svtal(3 * 10 ** 4), svtal(3 * 10 ** 3), svtal(3 * 10 ** 5), svtal(3 ** 4)],
+            svtal(3 * 10 ** 4),
+            '10⁴ = 10 000, och 3 · 10 000 = 30 000. 81 får den som räknar 3⁴ i stället.'),
+        para('Para ihop prefixet med talet det står för. Prefixet står först i enheter som kilometer och milligram.',
+             [(namn, svtal(v)) for namn, v in PREFIX],
+             'Kilo är tusen, 1 000 = 10³, och hekto hundra, 100 = 10². Deci, centi och milli är en tiondel, '
+             'en hundradel och en tusendel: en millimeter är 0,001 meter.'),
+        skriv('Hur många meter är 4,5 km?', t(F(45, 10) * dict(PREFIX)['kilo']),
+              'Kilo betyder tusen, så 1 km = 1 000 m. 4,5 · 1 000 = 4 500 m.'),
+        sant('En millimeter är en hundradel av en meter.', dict(PREFIX)['milli'] == F(1, 100),
+             'Milli betyder en tusendel, så 1 mm = 0,001 m. En hundradel av en meter är en centimeter.'),
+        skriv('En påse lösgodis väger 3,5 hg. Hur många gram är det?', t(F(35, 10) * dict(PREFIX)['hekto']),
+              'Hekto betyder hundra, så 1 hg = 100 g. 3,5 · 100 = 350 g.'),
+        ordna_tal('Ordna längderna från kortast till längst.', LANGDER,
+                  'Gör om allt till millimeter: 0,3 dm = 30 mm, 4 cm = 40 mm och 0,05 m = 50 mm. '
+                  '35 mm hamnar mellan 30 och 40.'),
+    ], beskrivning='Tiopotenser som 10⁶ och prefix som kilo, centi och milli, som gör stora och små tal '
+                   'lättare att skriva.'),
 ])
 
 
 # ---------------------------------------------------------------- åk 8
-# Den första riktiga eleven går i åk 8. Nivåerna står i den ordning de
-# bygger på varandra: att förenkla uttryck behövs för x på båda sidor.
+# Den första riktiga eleven går i åk 8. Varje område är en stig i NexLäx
+# med minst två steg, introduktionen först, och områdena står i den ordning
+# de bygger på varandra: att förenkla uttryck behövs för x på båda sidor,
+# och förändringsfaktorn för flera förändringar i rad.
 
 # Algebra: rätt svar är samma uttryck, och de felaktiga är det inte.
 assert samma(lambda x: 3 * x + 5 * x, lambda x: 8 * x)
@@ -282,7 +370,95 @@ assert [s for s in TRIANGLAR if s[0] ** 2 + s[1] ** 2 == s[2] ** 2] == [(9, 12, 
 SLANT2 = list(product('KL', repeat=2))
 KULOR = {'Grön': 8, 'Vit': 1, 'Gul': 5, 'Röd': 2}
 
+# Algebrans ord: ekvationerna bland alternativen är samma ekvation, löst ett steg i taget.
+assert los(3, 5, 0, 20) == los(3, 0, 0, 15) == 5
+# Uttryck ur text: uttrycken i matchningen är olika uttryck, så bara en
+# parning stämmer, och bara ett alternativ är samma uttryck som texten.
+UTTRYCK_UR_TEXT = [('Dubbelt så stort som talet', '2n', lambda n: 2 * n),
+                   ('Tre mer än talet', 'n + 3', lambda n: n + 3),
+                   ('Tre mindre än talet', 'n − 3', lambda n: n - 3),
+                   ('Hälften av talet', 'n/2', lambda n: n / 2),
+                   ('Talet gånger sig självt', 'n²', lambda n: n * n)]
+assert not any(samma(a[2], b[2]) for i, a in enumerate(UTTRYCK_UR_TEXT) for b in UTTRYCK_UR_TEXT[i + 1:])
+assert not any(samma(lambda b: 2 * b + 45, g)
+               for g in (lambda b: 2 * (b + 45), lambda b: b + 90, lambda b: 2 * b + 90))
+assert samma(lambda x: x + 3 + x + 3, lambda x: 2 * x + 6)
+assert not any(samma(lambda x: 2 * x + 6, g) for g in (lambda x: 3 * x, lambda x: x + 3, lambda x: 2 * x + 3))
+assert not any(samma2(lambda h, k: 2 * h + 4 * k, g)
+               for g in (lambda h, k: 4 * h + 2 * k, lambda h, k: 6 * (h + k), lambda h, k: h + k + 6))
+assert 400 + 350 * 3 == 1450 and 3 * 25 + 40 == 115
+# Ekvationer med parenteser: de felaktiga svaren är vanliga misstag, och inget av dem stämmer.
+assert los(2, 8, 0, 18) == 5 and not any(2 * (x + 4) == 18 for x in (los(2, 4, 0, 18), F(18, 2)))
+assert los(4, 4, 2, 14) == 5 and not any(4 * (x + 1) == 2 * (x + 7) for x in (los(4, 1, 2, 7), 10))
+# 7 − (x − 3) = 4 är 10 − x = 4. Med fel tecken blir det 4 − x = 4 och x = 0.
+assert los(-1, 10, 0, 4) == 6 and 7 - (6 - 3) == 4 and los(-1, 4, 0, 4) == 0
+EKV_PARENTES = [parentesekvation(*e) for e in ((2, 1, 10), (3, -2, 9), (5, 2, 15), (3, 5, 6))]
+assert [x for _, x in EKV_PARENTES] == [4, 5, 1, -3]
+# Från text till ekvation: 3x + 4 = 25 har lösningen 7, och ingen av de andra ekvationerna har den.
+assert los(3, 4, 0, 25) == 7 and all(los(*e) != 7 for e in ((3, 12, 0, 25), (3, 0, 0, 25 + 4), (4, 3, 0, 25)))
+assert los(1, -5, 0, 20) == 25 and los(-1, 5, 0, 20) == -15
+assert los(4, 60, 0, 500) == 110 and los(2, 3, 0, 29) == 13 and los(6, 0, 0, 30) == 5 and los(2, -9, 0, 31) == 20
+# Procent, bråk och decimaltal.
+BRAK_PROCENT = [F(1, 2), F(1, 4), F(3, 4), F(1, 5), F(1, 10)]
+DECIMAL_PROCENT = [F(5, 100), F(5, 10), F(15, 100), F(15, 10)]
+PROCENTFORMER = [('1/4', F(1, 4)), ('0,3', F(3, 10)), ('35 %', F(35, 100)), ('2/5', F(2, 5))]
+assert F(12, 48) == F(1, 4) and F(25, 100) * 60 == 15
+# Flera förändringar i rad: fyra kedjor med fyra olika faktorer.
+KEDJOR = [(10, 10), (10, -10), (-10, -10), (20, -50)]
+assert [faktor(a) * faktor(b) for a, b in KEDJOR] == [F(121, 100), F(99, 100), F(81, 100), F(6, 10)]
+assert 500 * faktor(20) == 600 and faktor(20) * faktor(-30) == F(84, 100)
+assert faktor(-20) * faktor(-25) == F(6, 10) and faktor(25) * faktor(-20) == 1
+assert faktor(5) * faktor(-20) == F(84, 100) and 4000 * F(84, 100) == 3360
+# Area och volym, med π ≈ 3,14 som frågorna säger. Med π på räknaren blir
+# svaren 78,54 och 502,65, och samma alternativ är närmast.
+PI = F(314, 100)
+assert abs(float(PI * 5 ** 2) - pi * 5 ** 2) < 0.1 and abs(float(PI * 4 ** 2 * 10) - pi * 4 ** 2 * 10) < 0.5
+FIGURER = [('Kvadrat, sidan 4 cm', F(4 * 4)), ('Triangel, bas 10 cm, höjd 3 cm', F(10 * 3, 2)),
+           ('Cirkel, radien 2 cm', PI * 2 ** 2), ('Rektangel, sidorna 6 och 3 cm', F(6 * 3))]
+# Cirkeln är minst också med π på räknaren.
+assert pi * 2 ** 2 < min(v for namn, v in FIGURER if not namn.startswith('Cirkel'))
+# Utfall och kombinationer.
+TVA_TARNINGAR = list(product(range(1, 7), repeat=2))
+SUMMOR = {s: F(sum(1 for a, b in TVA_TARNINGAR if a + b == s), len(TVA_TARNINGAR)) for s in range(2, 13)}
+assert [SUMMOR[s] for s in (12, 10, 5, 7)] == [F(1, 36), F(3, 36), F(4, 36), F(6, 36)]
+TARNINGEN = [(namn, F(sum(1 for s in range(1, 7) if villkor(s)), 6)) for namn, villkor in (
+    ('En sexa', lambda s: s == 6), ('Inte en sexa', lambda s: s != 6), ('Ett udda tal', lambda s: s % 2 == 1),
+    ('Ett tal större än 4', lambda s: s > 4), ('En sjua', lambda s: s == 7))]
+assert [p for _, p in TARNINGEN] == [F(1, 6), F(5, 6), F(1, 2), F(1, 3), 0]
+
 AK8 = bana('Matematik', 'ak8', [
+    niva('ma-ak8-algebra-begrepp', 'Algebrans ord', 'Algebra', [
+        para('Para ihop ordet med vad det betyder.',
+             [('Variabel', 'En bokstav som kan stå för olika tal'),
+              ('Koefficient', 'Talet som står framför en variabel'),
+              ('Uttryck', 'Tal och variabler med räknetecken, utan likhetstecken'),
+              ('Likhet', 'Två uttryck med ett likhetstecken emellan')],
+             'I 5x + 2 är x en variabel och 5 dess koefficient. 5x + 2 är ett uttryck, och 5x + 2 = 12 är en '
+             'likhet, för där står ett likhetstecken mellan två uttryck. En likhet med ett okänt tal kallas ekvation.'),
+        para('Titta på uttrycket 4x + 9. Para ihop ordet med rätt del av uttrycket.',
+             [('Variabeln', 'x'), ('Koefficienten', '4'), ('Konstanttermen', '9')],
+             '4x betyder 4 · x. x är variabeln och 4 koefficienten framför den. 9 är en term utan variabel, '
+             'och en sådan term kallas konstantterm.'),
+        sant('Uttrycket 3x + 5 har tre termer.', False,
+             'Termerna skiljs åt av plus- och minustecken. 3x + 5 har två termer, 3x och 5. 3x är en enda term, '
+             'fast den består av både ett tal och en bokstav.'),
+        val('Tre av alternativen är ekvationer. Vilket är ett uttryck?', ['3x + 5', '3x + 5 = 20', '3x = 15', 'x = 5'],
+            '3x + 5',
+            'Ett uttryck har inget likhetstecken. De andra tre har det, och de är samma ekvation löst ett steg i taget.'),
+        sant('x och 1x betyder samma sak.', samma(lambda x: x, lambda x: 1 * x),
+             'x är samma sak som 1 · x. Ettan skrivs inte ut, men koefficienten framför x är 1.'),
+        val('Vilka två termer går att slå ihop till en term?', ['4x och 7x', '4x och 4y', '4x och 4', '4x och x²'],
+            '4x och 7x',
+            'Bara termer av samma sort går att slå ihop, alltså med samma variabel och samma exponent: '
+            '4x + 7x = 11x. x² är x · x, en annan sort än x, 4y har en annan variabel, och 4x + 4 går inte '
+            'att skriva kortare.'),
+        skriv('Vad är värdet av 2x om x = 3?', t(2 * 3),
+              '2x betyder 2 · x, och 2 · 3 = 6. Siffrorna ställs inte bredvid varandra, så 2x blir inte 23.'),
+        ordna_tal('Sätt in x = 2 och ordna uttrycken från minst till störst värde.',
+                  [('x + 2', 2 + 2), ('3x', 3 * 2), ('10 − x', 10 - 2), ('5x − 1', 5 * 2 - 1)],
+                  'Med x = 2 blir x + 2 = 4, 3x = 6, 10 − x = 8 och 5x − 1 = 9.'),
+    ], beskrivning='Orden i algebran: variabel, term, koefficient, konstantterm, uttryck och likhet.'),
+
     niva('ma-ak8-algebra-1', 'Förenkla uttryck', 'Algebra', [
         val('Förenkla 3x + 5x.', ['8x', '15x', '8x²', '8'], '8x',
             'Tre x plus fem x blir åtta x. Talen framför x läggs ihop, och x står kvar.'),
@@ -304,6 +480,36 @@ AK8 = bana('Matematik', 'ak8', [
               forklaring='Multiplicera först in 2 i parentesen: både x och 3 ska multipliceras med 2. '
                          'Slå sedan ihop x-termerna: 2x + 4x = 6x.'),
     ], beskrivning='Slå ihop termer, multiplicera in i parenteser och räkna ut värdet av ett uttryck.'),
+
+    niva('ma-ak8-algebra-2', 'Uttryck ur text', 'Algebra', [
+        para('Talet kallas n. Para ihop texten med uttrycket.', [(text, u) for text, u, _ in UTTRYCK_UR_TEXT],
+             'Tre mindre än talet är n − 3, inte 3 − n: du börjar med talet och drar bort 3. '
+             'Talet gånger sig självt är n · n, som skrivs n².'),
+        sant('”Fem mer än x” skrivs 5x.', samma(lambda x: 5 * x, lambda x: x + 5),
+             '5x betyder 5 · x, alltså fem gånger så mycket. Fem mer än x är x + 5.'),
+        skriv('I varje påse finns p kulor. Skriv ett uttryck för hur många kulor det finns i 7 påsar.', monom(7, 'p'),
+              'Sju påsar med p kulor i varje blir 7 · p kulor, och det skrivs 7p.'),
+        val('En biobiljett kostar b kr och en påse popcorn 45 kr. Vilket uttryck visar vad två biljetter och '
+            'en påse popcorn kostar tillsammans?',
+            ['2b + 45', '2(b + 45)', 'b + 90', '2b + 90'], '2b + 45',
+            'Två biljetter kostar 2 · b = 2b kr, och en påse popcorn 45 kr. Tillsammans blir det 2b + 45. '
+            '2(b + 45) hade varit två biljetter och två påsar popcorn.'),
+        val('En rektangel är x cm lång och 3 cm bred. Vilket uttryck ger omkretsen i cm?',
+            ['2x + 6', '3x', 'x + 3', '2x + 3'], '2x + 6',
+            'Omkretsen är alla fyra sidor: x + 3 + x + 3 = 2x + 6. 3x är rektangelns area.'),
+        skriv('En elektriker tar 400 kr för att komma och sedan 350 kr per timme. Kostnaden i kronor för t timmar '
+              'är 400 + 350t. Hur många kronor kostar det om hon arbetar i 3 timmar?', t(400 + 350 * 3),
+              'Sätt in t = 3: 400 + 350 · 3 = 400 + 1 050 = 1 450 kr.'),
+        val('På en gård finns h hönor och k kor. Vilket uttryck ger antalet ben?',
+            ['2h + 4k', '4h + 2k', '6(h + k)', 'h + k + 6'], '2h + 4k',
+            'En höna har 2 ben och en ko har 4. h hönor har 2h ben och k kor har 4k ben, tillsammans 2h + 4k.'),
+        ordna('En penna kostar p kr och en sax 40 kr. Ställ upp ett uttryck för tre pennor och en sax och räkna ut '
+              'priset när p = 25. Ordna stegen. En bricka blir över.',
+              ['3p + 40', '3 · 25 + 40', '%d + 40' % (3 * 25), '%d' % (3 * 25 + 40)], extra=['%d%d + 40' % (3, 25)],
+              forklaring='Tre pennor kostar 3p kr. Sätt sedan in 25 i stället för p: 3 · 25 = 75, och '
+                         '75 + 40 = 115 kr. 325 + 40 får den som ställer 3 och 25 bredvid varandra, '
+                         'men 3p betyder 3 · p.'),
+    ], beskrivning='Ställa upp uttryck ur vardagliga beskrivningar och räkna ut vad de är värda.'),
 
     niva('ma-ak8-ekvationer-1', 'x på båda sidor', 'Ekvationer', [
         val('Lös 5x = 2x + 9. Vad är x?', [t(los(5, 0, 2, 9)), t(9), t(9 * 3)], t(los(5, 0, 2, 9)),
@@ -332,6 +538,93 @@ AK8 = bana('Matematik', 'ak8', [
               forklaring='Samla först x-termerna på ena sidan genom att dra bort 2x. '
                          'Dra sedan bort 1 och dela till sist med 3.'),
     ], beskrivning='Lösa ekvationer där x står på båda sidor om likhetstecknet.'),
+
+    niva('ma-ak8-ekvationer-2', 'Ekvationer med parenteser', 'Ekvationer', [
+        val('Lös 2(x + 4) = 18. Vad är x?', [t(los(2, 8, 0, 18)), t(los(2, 4, 0, 18)), t(F(18, 2))],
+            t(los(2, 8, 0, 18)),
+            'Multiplicera in: 2x + 8 = 18. Dra bort 8: 2x = 10, så x = 5. Du kan också dela båda sidor med 2 '
+            'först: x + 4 = 9, och x = 5.'),
+        skriv('Lös 5(x − 2) = 30. Vad är x?', x_svar(los(5, -10, 0, 30)),
+              'Multiplicera in: 5x − 10 = 30. Lägg till 10: 5x = 40, så x = 8.'),
+        para('Para ihop ekvationen med dess lösning.', [(e, 'x = %s' % m(x)) for e, x in EKV_PARENTES],
+             'Dela båda sidor med talet framför parentesen, eller multiplicera in. 3(x + 5) = 6 ger x + 5 = 2, '
+             'så x = −3.'),
+        sant('Om 2(x + 3) = 14 så är x + 3 = 7.', los(2, 6, 0, 14) + 3 == 7,
+             'Dela båda sidor med 2: 2(x + 3) / 2 = x + 3 och 14 / 2 = 7. Ibland går det fortare att dela först '
+             'än att multiplicera in.'),
+        val('Lös 4(x + 1) = 2(x + 7). Vad är x?', [t(los(4, 4, 2, 14)), t(los(4, 1, 2, 7)), t(10)],
+            t(los(4, 4, 2, 14)),
+            'Multiplicera in på båda sidor: 4x + 4 = 2x + 14. Dra bort 2x och 4: 2x = 10, så x = 5.'),
+        skriv('Lös 7 − (x − 3) = 4. Vad är x?', x_svar(los(-1, 10, 0, 4)),
+              'Minustecknet framför parentesen byter tecken på allt inuti: 7 − x + 3 = 4, alltså 10 − x = 4. '
+              'Då är x = 6.'),
+        skriv('Lös 3(2x − 1) = 4x + 11. Vad är x?', x_svar(los(6, -3, 4, 11)),
+              'Multiplicera in: 6x − 3 = 4x + 11. Dra bort 4x: 2x − 3 = 11. Lägg till 3: 2x = 14, så x = 7.'),
+        ordna('Ordna stegen för att lösa 5(x + 2) = 3x + 16. En bricka blir över.',
+              ['5(x + 2) = 3x + 16', '5x + 10 = 3x + 16', '%dx + 10 = 16' % (5 - 3),
+               '%dx = %d' % (5 - 3, 16 - 10), 'x = %s' % t(los(5, 10, 3, 16))],
+              extra=['5x + 2 = 3x + 16'],
+              forklaring='Multiplicera först in 5 i parentesen, både x och 2. Dra sedan bort 3x och 10, och dela '
+                         'till sist med 2. 5x + 2 blir det om man glömmer att multiplicera 2 med 5.'),
+    ], beskrivning='Lösa ekvationer med parenteser, genom att multiplicera in eller dela först.'),
+
+    niva('ma-ak8-ekvationer-3', 'Från text till ekvation', 'Ekvationer', [
+        para('Talet kallas x. Para ihop texten med ekvationen.',
+             [('Talet plus 7 är 12', 'x + 7 = 12'), ('Dubbelt så mycket som talet är 12', '2x = 12'),
+              ('Talet minus 7 är 12', 'x − 7 = 12'), ('Hälften av talet är 12', 'x/2 = 12')],
+             'Översätt bit för bit: talet minus 7 blir x − 7, hälften av talet x/2, och ordet ”är” blir '
+             'likhetstecknet. Se upp med ”7 mindre än talet”, som också är x − 7.'),
+        sant('Om talet kallas x blir texten ”ett tal minskat med 5 är 20” ekvationen 5 − x = 20.',
+             los(-1, 5, 0, 20) == los(1, -5, 0, 20),
+             'Du börjar med talet och drar bort 5, alltså x − 5 = 20. 5 − x = 20 har ett helt annat svar.'),
+        val('Jag tänker på ett tal. Om jag multiplicerar det med 3 och lägger till 4 får jag 25. '
+            'Vilken ekvation passar?', ['3x + 4 = 25', '3(x + 4) = 25', '3x = 25 + 4', '3 + 4x = 25'], '3x + 4 = 25',
+            'Först gånger 3, som blir 3x, och sedan plus 4: 3x + 4. ”Får jag 25” blir = 25. '
+            '3(x + 4) hade betytt att man lägger till 4 först.'),
+        skriv('Jag tänker på ett tal. Om jag dubblar det och sedan drar bort 9 får jag 31. Vilket tal tänker jag på?',
+              t(los(2, -9, 0, 31)),
+              'Ekvationen är 2x − 9 = 31. Lägg till 9: 2x = 40, så x = 20. Pröva: 2 · 20 − 9 = 31.'),
+        skriv('Emma är 3 år äldre än sin bror Hugo. Tillsammans är de 29 år. Hur gammal är Hugo?',
+              t(los(2, 3, 0, 29)),
+              'Kalla Hugos ålder x. Då är Emma x + 3 år, och x + x + 3 = 29. Det ger 2x = 26, så Hugo är 13 år.'),
+        val('Sofia köper 4 böcker som kostar lika mycket. Hon betalar med en 500-lapp och får 60 kr tillbaka. '
+            'Hur mycket kostar en bok?',
+            ['%s kr' % t(v) for v in (los(4, 60, 0, 500), F(500, 4), F(500 + 60, 4), 500 - 60)],
+            '%s kr' % t(los(4, 60, 0, 500)),
+            'Kalla priset för en bok x. Böckerna och växeln är tillsammans 500 kr: 4x + 60 = 500. '
+            'Dra bort 60: 4x = 440, så en bok kostar 110 kr.'),
+        skriv('En rektangel är dubbelt så lång som den är bred. Omkretsen är 30 cm. Hur många centimeter bred är den?',
+              t(los(6, 0, 0, 30)),
+              'Kalla bredden x. Då är längden 2x, och omkretsen x + 2x + x + 2x = 6x. 6x = 30 ger x = 5.'),
+        ordna('Ett tal multipliceras med 4, och sedan dras 6 bort. Då blir det 30. Ordna stegen för att hitta '
+              'talet. En bricka blir över.',
+              ['4x − 6 = 30', '4x = %d' % (30 + 6), 'x = %s' % t(los(4, -6, 0, 30))], extra=['4(x − 6) = 30'],
+              forklaring='Först gånger 4 och sedan minus 6 blir 4x − 6. 4(x − 6) hade betytt att 6 dras bort '
+                         'först. Lägg till 6 på båda sidor och dela med 4: x = 9.'),
+    ], beskrivning='Ställa upp en ekvation ur en text, lösa den och pröva svaret.'),
+
+    niva('ma-ak8-procent-begrepp', 'Procent, bråk och decimaltal', 'Procent', [
+        para('Para ihop bråket med samma andel i procent.', [(br(x), procent(x)) for x in BRAK_PROCENT],
+             'Procent betyder hundradelar. 1/4 = 25/100 = 25 %, och 1/5 = 20/100 = 20 %.'),
+        para('Para ihop decimaltalet med samma tal i procent.', [(m(x), procent(x)) for x in DECIMAL_PROCENT],
+             'Multiplicera med 100, alltså flytta decimaltecknet två steg åt höger: 0,05 = 5 %, 0,5 = 50 % '
+             'och 1,5 = 150 %.'),
+        sant('0,3 är samma sak som 3 %.', F(3, 10) == F(3, 100),
+             '0,3 = 30/100 = 30 %. 3 % är 0,03, tio gånger mindre.'),
+        skriv('Skriv 3/5 i procent.', t(F(3, 5) * 100),
+              '3/5 = 6/10 = 60/100, alltså 60 %.'),
+        val('Hur många procent är 1/8?', [procent(F(1, 8)), '8 %', '%s %%' % m(F(1, 8)), procent(F(1, 80))],
+            procent(F(1, 8)),
+            '1/8 är hälften av 1/4. 1/4 = 25 %, så 1/8 = 12,5 %. Som decimaltal är 1/8 = 0,125, och 0,125 är '
+            '12,5 hundradelar.'),
+        skriv('Hur många procent är 12 av 48?', t(F(12, 48) * 100),
+              'Dela delen med det hela: 12 / 48 = 0,25 = 25 %. Det är samma sak som 1/4.'),
+        sant('25 % av 60 är lika mycket som 1/4 av 60.', F(25, 100) * 60 == F(1, 4) * 60,
+             '25 % och 1/4 är samma andel, så båda blir 15.'),
+        ordna_tal('Ordna från minst till störst.', PROCENTFORMER,
+                  'Skriv alla som decimaltal: 1/4 = 0,25, 35 % = 0,35 och 2/5 = 0,4. 0,3 hamnar mellan 0,25 '
+                  'och 0,35.'),
+    ], beskrivning='Samma andel skriven som bråk, decimaltal och procent, och hur man byter mellan dem.'),
 
     niva('ma-ak8-procent-1', 'Förändringsfaktor', 'Procent', [
         val('Ett pris höjs med 20 %. Vilken är förändringsfaktorn?', ['1,2', '0,2', '0,8', '120'],
@@ -362,6 +655,45 @@ AK8 = bana('Matematik', 'ak8', [
                   '0,7 är en minskning med 30 % och 0,95 en minskning med 5 %. '
                   '1,05 är en ökning med 5 % och 1,3 en ökning med 30 %.'),
     ], beskrivning='Räkna med förändringsfaktor när något ökar eller minskar i procent.'),
+
+    niva('ma-ak8-procent-2', 'Flera förändringar i rad', 'Procent', [
+        sant('Ett pris höjs med 10 %, och sedan sänks det nya priset med 10 %. Då är det tillbaka på samma pris '
+             'som från början.', faktor(10) * faktor(-10) == 1,
+             'Sänkningen räknas på det nya, högre priset. 1,1 · 0,9 = 0,99, så priset blir 99 % av det gamla, '
+             'alltså 1 % lägre.'),
+        skriv('En tröja kostar 500 kr. Priset höjs med 20 %, och sedan sänks det nya priset med 20 %. '
+              'Hur många kronor kostar tröjan nu?', t(500 * faktor(20) * faktor(-20)),
+              'Efter höjningen kostar den 500 · 1,2 = 600 kr. 20 % av 600 kr är 120 kr, så nu kostar den '
+              '600 − 120 = 480 kr. Snabbare: 500 · 1,2 · 0,8 = 480.'),
+        val('Ett pris höjs med 20 %, och sedan höjs det nya priset med 20 %. Med hur många procent har priset '
+            'höjts totalt?',
+            [procent(faktor(20) ** 2 - 1), '40 %', '20 %', procent(faktor(20) ** 2)], procent(faktor(20) ** 2 - 1),
+            '1,2 · 1,2 = 1,44. Det nya priset är 144 % av det gamla, alltså 44 % högre. Det blir mer än 40 %, '
+            'för den andra höjningen räknas på det högre priset.'),
+        para('Para ihop förändringarna med den totala förändringsfaktorn.',
+             [('%s och sedan %s' % (andring(a), andring(b)), t(faktor(a) * faktor(b))) for a, b in KEDJOR],
+             'Multiplicera faktorerna: 1,1 · 1,1 = 1,21, 1,1 · 0,9 = 0,99, 0,9 · 0,9 = 0,81 och 1,2 · 0,5 = 0,6.'),
+        sant('Att höja ett pris med 20 % och sedan sänka det med 30 % ger samma slutpris som att först sänka med '
+             '30 % och sedan höja med 20 %.', faktor(20) * faktor(-30) == faktor(-30) * faktor(20),
+             'Faktorerna multipliceras, och i en multiplikation spelar ordningen ingen roll: '
+             '1,2 · 0,7 = 0,7 · 1,2 = 0,84.'),
+        skriv('Ett pris sänks med 20 %, och sedan sänks det nya priset med 25 %. Med hur många procent har priset '
+              'sänkts totalt?', t((1 - faktor(-20) * faktor(-25)) * 100),
+              '0,8 · 0,75 = 0,6. Priset är 60 % av det gamla, så det har sänkts med 40 %, inte med 45 %.'),
+        val('Ett pris höjs med 25 %. Med hur många procent måste det nya priset sänkas för att bli det gamla igen?',
+            [procent(1 - 1 / faktor(25)), '25 %', '75 %', '80 %'], procent(1 - 1 / faktor(25)),
+            'Anta att priset var 100 kr. Efter höjningen är det 125 kr. Det ska ner 25 kr, och 25 av 125 är 20 %.'),
+        ordna('En cykel kostar 4 000 kr. Priset höjs med 5 %, och sedan sänks det nya priset med 20 %. '
+              'Ordna stegen för att räkna ut vad cykeln kostar nu. En bricka blir över.',
+              ['Faktorerna är %s och %s' % (t(faktor(5)), t(faktor(-20))),
+               '%s · %s · %s' % (tusental(4000), t(faktor(5)), t(faktor(-20))),
+               '%s · %s' % (tusental(4000), t(faktor(5) * faktor(-20))),
+               '%s kr' % tusental(4000 * faktor(5) * faktor(-20))],
+              extra=['%s · %s' % (tusental(4000), t(faktor(5 - 20)))],
+              forklaring='Faktorerna multipliceras: 1,05 · 0,8 = 0,84, och 4 000 · 0,84 = 3 360 kr. 0,85 får den '
+                         'som lägger ihop procenten, 5 − 20 = −15, men sänkningen räknas på det nya priset.'),
+    ], beskrivning='Räkna med flera procentuella förändringar efter varandra genom att multiplicera '
+                   'förändringsfaktorerna.'),
 
     niva('ma-ak8-geometri-1', 'Pythagoras sats', 'Geometri', [
         val('Vad kallas den längsta sidan i en rätvinklig triangel?',
@@ -394,6 +726,41 @@ AK8 = bana('Matematik', 'ak8', [
                'c = %s' % t(rot(5 ** 2 + 12 ** 2))],
               forklaring='Kvadrera kateterna, lägg ihop dem och dra till sist roten ur summan.'),
     ], beskrivning='Räkna ut en okänd sida i en rätvinklig triangel med Pythagoras sats.'),
+
+    niva('ma-ak8-geometri-2', 'Area och volym', 'Geometri', [
+        para('Para ihop med rätt formel.',
+             [('Arean av en triangel', 'basen · höjden / 2'), ('Arean av en parallellogram', 'basen · höjden'),
+              ('Arean av en cirkel', 'π · radien²'), ('Volymen av ett rätblock', 'längden · bredden · höjden'),
+              ('Volymen av en cylinder', 'π · radien² · höjden')],
+             'En triangel är hälften av en parallellogram med samma bas och höjd. Ett rätblock och en cylinder har '
+             'volymen basytans area gånger höjden, och en cylinders basyta är en cirkel.'),
+        skriv('En triangel har basen 8 cm och höjden 5 cm. Hur många cm² är arean?', t(F(8 * 5, 2)),
+              'Arean av en triangel är basen gånger höjden delat med 2: 8 · 5 / 2 = 40 / 2 = 20 cm².'),
+        val('En parallellogram har basen 7 cm och höjden 4 cm. Den sneda sidan är 5 cm. Hur stor är arean?',
+            ['%s cm²' % t(v) for v in (7 * 4, 7 * 5, F(7 * 4, 2), 7 * 4 * 5)], '%s cm²' % t(7 * 4),
+            'Arean är basen gånger höjden: 7 · 4 = 28 cm². Höjden står vinkelrätt mot basen, och den sneda '
+            'sidan behövs inte.'),
+        val('En cirkel har radien 5 cm. Hur stor är arean? Räkna med π ≈ 3,14.',
+            ['%s cm²' % t(v) for v in (PI * 5 ** 2, 2 * PI * 5, PI * 5, PI * 10 ** 2)], '%s cm²' % t(PI * 5 ** 2),
+            'π · r² = 3,14 · 5² = 3,14 · 25 = 78,5 cm². 31,4 är omkretsen i cm, och 314 får den som tar '
+            'diametern 10 i kvadrat i stället för radien.'),
+        sant('Om radien i en cirkel blir dubbelt så lång blir arean dubbelt så stor.',
+             PI * (2 * 3) ** 2 == 2 * PI * 3 ** 2,
+             'Radien står i kvadrat i π · r². Dubbelt så lång radie ger 2² = 4 gånger så stor area.'),
+        skriv('Ett akvarium har formen av ett rätblock. Det är 50 cm långt, 30 cm brett och 40 cm högt. '
+              'Hur många liter vatten rymmer det? 1 liter är 1 dm³.', t(F(50 * 30 * 40, 10 ** 3)),
+              'Räkna i dm, för 1 dm³ är 1 liter: 5 · 3 · 4 = 60 dm³, alltså 60 liter. I cm blir det '
+              '50 · 30 · 40 = 60 000 cm³, och 1 000 cm³ är 1 liter.'),
+        val('En burk har formen av en cylinder. Radien är 4 cm och höjden 10 cm. Hur stor är volymen? '
+            'Räkna med π ≈ 3,14.',
+            ['%s cm³' % t(v) for v in (PI * 4 ** 2 * 10, PI * 4 * 10, 2 * PI * 4 * 10, 4 ** 2 * 10)],
+            '%s cm³' % t(PI * 4 ** 2 * 10),
+            'Basytan är en cirkel: 3,14 · 4² = 3,14 · 16 = 50,24 cm². Volymen är basytan gånger höjden: '
+            '50,24 · 10 = 502,4 cm³.'),
+        ordna_tal('Ordna figurerna efter area, från minst till störst.', FIGURER,
+                  'Cirkeln har 3,14 · 2² ≈ 12,6 cm², triangeln 10 · 3 / 2 = 15 cm², kvadraten 4 · 4 = 16 cm² '
+                  'och rektangeln 6 · 3 = 18 cm².'),
+    ], beskrivning='Räkna ut arean av triangel, parallellogram och cirkel och volymen av rätblock och cylinder.'),
 
     niva('ma-ak8-sannolikhet-1', 'Hur troligt är det?', 'Sannolikhet', [
         val('Du slår en vanlig tärning. Hur stor är sannolikheten att få en sexa?',
@@ -428,6 +795,40 @@ AK8 = bana('Matematik', 'ak8', [
                   list(KULOR.items()),
                   'Ju fler kulor av en färg, desto större chans. Av 16 kulor är 1 vit, 2 röda, 5 gula och 8 gröna.'),
     ], beskrivning='Räkna ut sannolikhet som bråk, decimaltal och procent.'),
+
+    niva('ma-ak8-sannolikhet-2', 'Utfall och kombinationer', 'Sannolikhet', [
+        para('Du slår en vanlig tärning. Para ihop händelsen med dess sannolikhet.',
+             [(namn, br(p)) for namn, p in TARNINGEN],
+             'Räkna sidorna: udda är 1, 3 och 5, alltså 3/6 = 1/2, och större än 4 är 5 och 6, alltså 2/6 = 1/3. '
+             'Inte en sexa är allt utom sexan: 1 − 1/6 = 5/6. En sjua finns inte på tärningen, så den är omöjlig.'),
+        skriv('Du har 3 tröjor och 4 par byxor. På hur många olika sätt kan du välja en tröja och ett par byxor?',
+              t(len(list(product(range(3), range(4))))),
+              'Till varje tröja finns 4 byxor att välja. 3 tröjor ger 3 · 4 = 12 olika kombinationer.'),
+        val('Du slår en röd och en blå tärning. Hur många olika utfall finns det? Röd 2 och blå 5 är ett annat '
+            'utfall än röd 5 och blå 2.', [t(len(TVA_TARNINGAR)), '12', '11', '6'], t(len(TVA_TARNINGAR)),
+            'Den röda kan visa 6 olika, och för var och en av dem kan den blå visa 6 olika: 6 · 6 = 36. '
+            'Summorna är bara 11 olika, från 2 till 12, men de är inte lika troliga.'),
+        val('Du slår en röd och en blå tärning. Hur stor är sannolikheten att summan blir 7?',
+            [br(SUMMOR[7]), '7/36', '1/11', '1/12'], br(SUMMOR[7]),
+            'Sex av de 36 utfallen ger summan 7: 1 och 6, 2 och 5, 3 och 4, 4 och 3, 5 och 2, 6 och 1. '
+            '6/36 = 1/6.'),
+        sant('Med ett vanligt mynt har du fått krona fem gånger i rad. Då är chansen större att få klave nästa gång.',
+             False,
+             'Myntet minns inte vad som hänt förut. Varje gång är chansen 1/2 för krona och 1/2 för klave, '
+             'hur många kronor det än blivit innan.'),
+        skriv('Koden till ett cykellås har tre siffror, och varje siffra kan vara från 0 till 9. '
+              'Hur många olika koder finns det?', t(10 ** 3),
+              'Det finns 10 val för varje siffra: 10 · 10 · 10 = 1 000 koder, från 000 till 999.'),
+        val('I en påse finns 2 röda och 3 blå kulor. Du drar en kula, lägger tillbaka den och drar en gång till. '
+            'Hur stor är sannolikheten att båda kulorna är röda?',
+            [br(F(2, 5) ** 2), br(F(2, 5)), br(2 * F(2, 5)), br(F(2, 5) * F(1, 4))], br(F(2, 5) ** 2),
+            'Kulan läggs tillbaka, så chansen för röd är 2/5 båda gångerna. Två steg i rad multipliceras: '
+            '2/5 · 2/5 = 4/25.'),
+        ordna_tal('Du slår en röd och en blå tärning och lägger ihop det de visar. Ordna summorna från minst till '
+                  'mest sannolik.', [('Summan %d' % s, SUMMOR[s]) for s in (12, 10, 5, 7)],
+                  'Räkna utfallen: summan 12 går bara med 6 och 6, 10 går på 3 sätt, 5 på 4 sätt och 7 på 6 sätt. '
+                  '7 är den vanligaste summan.'),
+    ], beskrivning='Räkna utfall och kombinationer, sannolikhet i två steg och motsatta händelser.'),
 ])
 
 
@@ -453,6 +854,19 @@ KOMPISAR = [20, 25, 30, 25, 400]
 assert medel(KOMPISAR) == 100 and median(KOMPISAR) == 25 and typvarde(KOMPISAR) == 25
 assert medel(KOMPISAR[:4]) == 25 and median(KOMPISAR[:4]) == 25 and typvarde(KOMPISAR[:4]) == 25
 LAGESMATT = [2, 2, 3, 7, 11]
+# Funktioner i vardagen: formlerna skrivs ur k och m, och bara en formel i
+# varje fråga uppfyller villkoret.
+TAXOR = [(25, 0), (10, 0), (10, 25), (25, 10)]
+PROPFORMLER = [(linje(k, mm), k, mm) for k, mm in ((4, 0), (4, 1), (1, 4), (0, 4))]
+assert [n for n, k, mm in PROPFORMLER if mm == 0 and k != 0] == ['y = 4x']
+TABELL = [(1, 7), (2, 10), (3, 13), (4, 16)]
+TABELLFORMLER = [(linje(k, mm), k, mm) for k, mm in ((3, 4), (4, 3), (1, 6), (7, 0))]
+assert [n for n, k, mm in TABELLFORMLER if all(k * x + mm == y for x, y in TABELL)] == ['y = 3x + 4']
+# De felaktiga stämmer för första raden, som förklaringen säger.
+assert all(k * TABELL[0][0] + mm == TABELL[0][1] for _, k, mm in TABELLFORMLER)
+assert los(-2, 20, 0, 0) == 10 and F(76, 4) * 10 == 190 and F(20, 2) != 2
+VID_2 = [(5, -8), (-1, 5), (F(1, 2), 4), (3, 0)]
+assert [k * 2 + mm for k, mm in VID_2] == [2, 3, 5, 6]
 
 AK9 = bana('Matematik', 'ak9', [
     niva('ma-ak9-funktioner-1', 'Linjen y = kx + m', 'Funktioner', [
@@ -480,6 +894,43 @@ AK9 = bana('Matematik', 'ak9', [
                   [('y = 2x', 2), ('y = −4x + 1', -4), ('y = 5x − 2', 5), ('y = −x + 3', -1)],
                   'k-värdena är −4, −1, 2 och 5. Negativt k lutar nedåt och positivt uppåt.'),
     ], beskrivning='Läsa av k och m i y = kx + m och räkna ut värden i en linjär funktion.'),
+
+    niva('ma-ak9-funktioner-2', 'Funktioner i vardagen', 'Funktioner', [
+        para('Fyra ställen hyr ut kanoter. Para ihop priset med formeln, där x är antalet timmar och y priset '
+             'i kronor.',
+             [('%d kr per timme' % k + (' och %d kr i startavgift' % mm if mm else ''), linje(k, mm))
+              for k, mm in TAXOR],
+             'Priset per timme står framför x, för det betalas en gång för varje timme. Startavgiften betalas '
+             'en gång och läggs till. Utan startavgift är m = 0.'),
+        sant('Grafen till ett proportionellt samband är en rät linje som går genom origo.', True,
+             'Ett proportionellt samband har formen y = kx. När x = 0 är y = k · 0 = 0, så linjen går '
+             'genom origo, punkten (0, 0).'),
+        val('Vilken av formlerna beskriver ett proportionellt samband?', [n for n, _, _ in PROPFORMLER],
+            [n for n, k, mm in PROPFORMLER if mm == 0 and k != 0][0],
+            'Ett proportionellt samband har formen y = kx, utan något tal som läggs till. Då blir y dubbelt så '
+            'stort när x blir dubbelt så stort.'),
+        val('I en tabell är ' + ', '.join('y = %d när x = %d' % (y, x) for x, y in TABELL[:-1])
+            + ' och y = %d när x = %d. Vilken formel passar tabellen?' % (TABELL[-1][1], TABELL[-1][0]),
+            [n for n, _, _ in TABELLFORMLER], 'y = 3x + 4',
+            'y ökar med 3 varje gång x ökar med 1, så k = 3. När x = 1 är y = 3 + 4 = 7, så m = 4. '
+            'De andra formlerna stämmer också när x = 1, men inte för resten av tabellen.'),
+        val('Ett ljus är y cm långt efter x timmar, där y = 20 − 2x. Vad visar talet 2 i formeln?',
+            ['Ljuset blir 2 cm kortare varje timme', 'Ljuset är 2 cm långt från början', 'Ljuset räcker i 2 timmar',
+             'Ljuset blir 2 cm längre varje timme'], 'Ljuset blir 2 cm kortare varje timme',
+            'För varje timme dras 2 cm till bort, så k = −2 är förändringen per timme. 20 är längden när '
+            'ljuset tänds.'),
+        skriv('Ett ljus är y cm långt efter x timmar, där y = 20 − 2x. Efter hur många timmar har ljuset brunnit ut?',
+              t(los(-2, 20, 0, 0)),
+              'Ljuset har brunnit ut när längden är 0: 20 − 2x = 0 ger 2x = 20, så x = 10.'),
+        skriv('Priset för bensin är proportionellt mot antalet liter. 4 liter kostar 76 kr. Hur många kronor kostar '
+              '10 liter?', t(F(76, 4) * 10),
+              'Proportionellt betyder att literpriset är detsamma: 76 / 4 = 19 kr per liter. 10 liter kostar '
+              '19 · 10 = 190 kr.'),
+        ordna_tal('Sätt in x = 2 och ordna funktionerna efter y-värdet, från minst till störst.',
+                  [(linje(k, mm), k * 2 + mm) for k, mm in VID_2],
+                  'Med x = 2 blir 5 · 2 − 8 = 2, −2 + 5 = 3, 0,5 · 2 + 4 = 5 och 3 · 2 = 6.'),
+    ], beskrivning='Känna igen proportionella samband och ställa upp och tolka linjära funktioner ur text och '
+                   'tabeller.'),
 
     niva('ma-ak9-ekvationer-1', 'Andragradsekvationer', 'Ekvationer', [
         val('Lös ekvationen x² = 25.', ['x = 5 eller x = −5', 'x = 5', 'x = 12,5', 'x = −5'],
@@ -617,6 +1068,18 @@ assert F(sum(1 for s in TRE_SLAG if 6 in s), len(TRE_SLAG)) == 1 - F(5, 6) ** 3
 assert len({1 - F(5, 6) ** 3, 3 * F(1, 6), F(1, 6) ** 3, 1 - F(1, 6) ** 3}) == 4
 HANDELSER = [('En sexa på en tärning', F(1, 6)), ('Två sexor på två tärningar', F(1, 6) ** 2),
              ('Krona på ett slantsingel', F(1, 2)), ('Krona tre gånger i rad', F(1, 2) ** 3)]
+# Funktioner och f(x): ekvationen 2x + 3 = 11 har svaret 4, och bara en
+# punkt ligger på grafen till f(x) = 3x − 1.
+BEGREPP = [('2x + 3', 'Uttryck'), ('2x + 3 = 11', 'Ekvation'), ('2x + 3 < 11', 'Olikhet'),
+           ('f(x) = 2x + 3', 'Funktion')]
+assert los(2, 3, 0, 11) == 4
+PUNKTER = [(2, 5), (5, 2), (0, 1), (1, 3)]
+assert [p for p in PUNKTER if 3 * p[0] - 1 == p[1]] == [(2, 5)] and 3 * 5 - 1 == 14
+# Förändringen per år, i kronor eller procent: två linjära och två exponentiella.
+MODELLER = [(50, 'kr'), (5, '%'), (-50, 'kr'), (-5, '%')]
+# Tanken med 500 liter töms med 20 liter i minuten: tom efter 25 minuter, inte 10.
+assert 500 * 2 ** 3 == 4000 and 500 - 20 * 10 == 300 and F(500, 20) == 25
+assert los(3, 5, 0, 20) == 5 and 3 * 20 + 5 == 65
 
 GY1 = bana('Matematik', 'gy1', [
     niva('ma-gy1-algebra-1', 'Uttryck och ekvationer', 'Algebra', [
@@ -704,6 +1167,42 @@ GY1 = bana('Matematik', 'gy1', [
               forklaring='Räkna först ut k. Sätt sedan in en av punkterna för att få m, '
                          'och skriv till sist ekvationen.'),
     ], beskrivning='Räkna ut lutningen och ekvationen för en rät linje genom två punkter.'),
+
+    niva('ma-gy1-funktioner-2', 'Funktioner och f(x)', 'Funktioner', [
+        para('Para ihop med rätt begrepp.', BEGREPP,
+             'Ett uttryck har inget likhetstecken. En ekvation, som 2x + 3 = 11, stämmer för vissa x, här x = 4, '
+             'och en olikhet, som 2x + 3 < 11, för många x, här alla x under 4. En funktion ger ett värde f(x) '
+             'för varje x.'),
+        sant('f(3) betyder f gånger 3.', False,
+             'f(3) är funktionens värde när x = 3. Om f(x) = 2x + 1 är f(3) = 2 · 3 + 1 = 7. Parentesen visar '
+             'vilket x som sätts in, den betyder inte gånger.'),
+        skriv('f(x) = 2x + 7. Vad är f(5)?', x_svar(2 * 5 + 7, 'f(5)'),
+              'Sätt in 5 i stället för x: f(5) = 2 · 5 + 7 = 10 + 7 = 17.'),
+        val('Vilken punkt ligger på grafen till f(x) = 3x − 1?', ['(%d, %s)' % (a, m(b)) for a, b in PUNKTER],
+            '(%d, %s)' % [(a, m(b)) for a, b in PUNKTER if 3 * a - 1 == b][0],
+            'En punkt (x, y) ligger på grafen när y = f(x). f(2) = 3 · 2 − 1 = 5, så (2, 5) ligger på grafen. '
+            'f(5) = 14, inte 2.'),
+        para('Ett belopp är 1 000 kr från början. Para ihop förändringen med funktionen, där x är antalet år.',
+             [modell(d, sort) for d, sort in MODELLER],
+             'Samma ändring i kronor varje år ger en linjär funktion. Samma ändring i procent ger en '
+             'exponentialfunktion med förändringsfaktorn som bas: 1,05 när beloppet ökar med 5 % och 0,95 när '
+             'det minskar med 5 %.'),
+        sant('Om f(x) = 500 · 2ˣ så är f(3) = 4 000.', 500 * 2 ** 3 == 4000,
+             'f(3) = 500 · 2³ = 500 · 8 = 4 000. Funktionen fördubblas för varje steg i x: 500, 1 000, 2 000 '
+             'och 4 000.'),
+        val('Vattnet i en tank är V(t) = 500 − 20t liter efter t minuter. Vad betyder V(10) = 300?',
+            ['Efter 10 minuter finns det 300 liter i tanken', 'Efter 300 minuter finns det 10 liter i tanken',
+             'Tanken töms med 10 liter per minut', 'Det tar 10 minuter att tömma tanken'],
+            'Efter 10 minuter finns det 300 liter i tanken',
+            'V(10) är mängden vatten när t = 10: 500 − 20 · 10 = 300. Talet i parentesen är tiden, och V(10) är '
+            'hur mycket vatten som finns då.'),
+        ordna('f(x) = 3x + 5. Lös ekvationen f(x) = 20. Ordna stegen. En bricka blir över.',
+              ['3x + 5 = 20', '3x = %d' % (20 - 5), 'x = %s' % t(los(3, 5, 0, 20))],
+              extra=['f(20) = %d' % (3 * 20 + 5)],
+              forklaring='f(x) = 20 betyder att funktionens värde ska vara 20, alltså 3x + 5 = 20. Dra bort 5 och '
+                         'dela med 3: x = 5. f(20) = 65 svarar på en annan fråga: vad f är när x = 20.'),
+    ], beskrivning='Skillnaden mellan uttryck, ekvation, olikhet och funktion, vad f(x) betyder och linjära och '
+                   'exponentiella modeller.'),
 
     niva('ma-gy1-potenser-1', 'Potenslagar och tillväxt', 'Potenser', [
         val('Förenkla 2³ · 2⁴.', ['2⁷', '2¹²', '4⁷', '4¹²'], '2' + up(3 + 4),
