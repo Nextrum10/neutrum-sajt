@@ -382,8 +382,8 @@ const NXStart = (function () {
      illustrationen en bild med en beskrivning.
 
      Rundturen är en pekare som klickar sig igenom vyn: godkänner en
-     tid, föreslår ett pass, svarar i chatten, betalar, bockar av en
-     läxa. Den går bara när vyn syns, och börjar om efter en paus.
+     tid, föreslår ett pass, svarar i chatten, betalar, klarar en nivå
+     i NexLäx. Den går bara när vyn syns, och börjar om efter en paus.
      Klicken är programmatiska — el.click() — och inert stoppar bara
      det en människa gör, så de når fram.
 
@@ -494,15 +494,6 @@ const NXStart = (function () {
       $$('.sd-panel', app).forEach(p => p.classList.toggle('pa', p.dataset.sdPanel === namn));
     }
 
-    function läxor() {
-      const alla = $$('.sd-lax input', app);
-      const klara = alla.filter(i => i.checked).length;
-      const n = $('[data-sd-klara]', app);
-      if (n) n.textContent = String(klara);
-      const firande = $('.sd-lax-alla', app);
-      if (firande) firande.classList.toggle('bytt', klara === alla.length);
-    }
-
     function svara(b) {
       const nr = b.dataset.sdSvar;
       const egen = $('.sd-bubbla.sd-sen.egen', app);
@@ -532,9 +523,7 @@ const NXStart = (function () {
       else if ('sdForesla' in d) tänk(b, 500, () => händelse('foreslaget'));
       else if ('sdGodkann' in d) händelse('godkant');
       else if ('sdBetala' in d) tänk(b, 650, () => händelse('betalt'));
-    });
-    fönster.addEventListener('change', e => {
-      if (e.target.matches('.sd-lax input')) läxor();
+      else if ('sdNiva' in d) tänk(b, 800, () => händelse('niva'));
     });
 
     förbered();
@@ -553,8 +542,8 @@ const NXStart = (function () {
 
     /* ---------- rundturen ----------
        Ett tal är en paus. Pausen efter ett klick är så lång som det
-       klicket sätter igång: bubblorna i chatten, svaret, graferna i
-       Min utveckling. Kortas en paus under sin animation byter
+       klicket sätter igång: bubblorna i chatten, svaret, nivån i
+       NexLäx. Kortas en paus under sin animation byter
        pekaren sektion mitt i den. Leo 2026-09-26 ville ha den lite
        snabbare; ett varv tog 47 sekunder och tar nu runt 33. */
     const TUR = [
@@ -569,9 +558,8 @@ const NXStart = (function () {
       '[data-sd-svar="2"]', 2000,
       '.sd-sido [data-sd-visa="betalning"]',
       '[data-sd-betala]', 1400,
-      '.sd-sido [data-sd-visa="utveckling"]', 2000,
-      '.sd-sido [data-sd-visa="laxor"]',
-      '.sd-lax input:not(:checked)', 1100,
+      '.sd-sido [data-sd-visa="nexlax"]', 1000,
+      '[data-sd-niva]', 2200,
       '.sd-sido [data-sd-visa="oversikt"]'
     ];
     let tur = null, turSynlig = false;

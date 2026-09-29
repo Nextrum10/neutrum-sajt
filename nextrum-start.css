@@ -362,10 +362,11 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
 /* ============================================================
    8. STUDIEVYN — en illustration man kan röra vid
 
-   Byggd efter föräldravyn som den ser ut i dag: sidomenyn med
-   samma sju poster, hälsningen, Tider att svara på, I siffror,
-   bokningen som ett FÖRSLAG, passlistan med betalningen, läxorna,
-   femstegsskalan och chatten. Allt är exempel och står så under.
+   Byggd efter föräldravyn som den ser ut i dag: sidomenyn,
+   hälsningen, Tider att svara på, I siffror, bokningen som ett
+   FÖRSLAG, passlistan med betalningen, NexLäx (Fas 23.2: serien, XP,
+   banan och vägen, där Uppgifter och Min utveckling stod förut) och
+   chatten. Allt är exempel och står så under.
 
    Sektionerna ligger ovanpå varandra i samma rutnätscell. Höjden är
    alltså den högsta sektionens, och ett byte ändrar ingenting i
@@ -748,91 +749,72 @@ html.nx-sr .nx-sd.nx-in .sd-rum{opacity:1;transform:none}
 .sd-rapport p{font-size:.84rem;line-height:1.6;color:var(--bl-2)}
 .sd-rapport .sd-lage{display:inline-block;margin-bottom:10px}
 
-/* --- läxorna --- */
-.sd-lax{
-  display:flex;align-items:center;gap:11px;
-  padding:10px 12px;border-radius:14px;
-  border:1px solid var(--ln);background:var(--kort);
-  cursor:pointer;
-  transition:background .25s var(--e),border-color .25s var(--e);
+/* --- NexLäx (Fas 23.2) ---
+   Samma bark som toppen i den riktiga vyn (nextrum-uppgifter.css,
+   .nl-topp), i mindre skala. Rundturen trycker Fortsätt: .sd-nl och
+   vägens två rader får .bytt, och talen byter med .fore och .efter.
+   Mätaren skalas, den ritas inte om (CSS rör sig, skriptet sätter
+   klasser: avsnittet om startsidan i CLAUDE.md). */
+.sd-nl{
+  display:grid;gap:12px;
+  padding:16px;border-radius:18px;
+  background:
+    radial-gradient(110% 70% at 6% 0%, var(--nt-glod), transparent 55%),
+    linear-gradient(180deg, var(--nt), var(--nt-2));
+  color:var(--nt-fg);
 }
-.sd-lax + .sd-lax{margin-top:6px}
-.sd-lax input{
-  appearance:none;-webkit-appearance:none;margin:0;flex:none;
-  width:20px;height:20px;border-radius:7px;border:1.5px solid var(--ln-2);
-  display:grid;place-items:center;cursor:pointer;
-  transition:background .25s var(--e),border-color .25s var(--e),scale .4s var(--fjader);
+.sd-nl-stat{display:flex;flex-wrap:wrap;gap:8px}
+.sd-nl-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 11px;border-radius:100px;
+  background:rgba(239,230,214,.07);border:1px solid var(--nt-ln);
+  font-size:.74rem;color:var(--nt-mut);
 }
-.sd-lax input::after{
-  content:"";width:8px;height:4px;border:solid var(--pap);border-width:0 0 2px 2px;
-  rotate:-45deg;translate:0 -1px;scale:0;transition:scale .35s var(--fjader);
+.sd-nl-pill b{font-size:.9rem;font-weight:750;color:var(--nt-fg);font-variant-numeric:tabular-nums}
+.sd-nl-pill svg{width:15px;height:15px;fill:currentColor}
+.sd-nl-laga svg{color:var(--lera-l)}
+.sd-nl-xp svg{color:var(--ockra)}
+.sd-nl-bana{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.sd-nl-bana b{font-size:.9rem;font-weight:650}
+.sd-nl-bana strong{font-size:1.2rem;font-weight:750;font-variant-numeric:tabular-nums}
+.sd-nl-mat{display:block;height:8px;border-radius:100px;background:rgba(239,230,214,.12);overflow:hidden}
+.sd-nl-mat i{
+  display:block;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,var(--mossa-l),var(--ockra));
+  transform-origin:left;scale:.42 1;transition:scale .9s var(--e-ut) .2s;
 }
-.sd-lax input:checked{background:var(--mossa);border-color:var(--mossa);scale:1.08}
-.sd-lax input:checked::after{scale:1}
-.sd-lax input:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
-.sd-lax span{flex:1;min-width:0;font-size:.84rem;font-weight:500;position:relative}
-.sd-lax span::after{
-  content:"";position:absolute;left:0;top:52%;height:1.5px;width:100%;
-  background:var(--bl-3);transform:scaleX(0);transform-origin:left;
-  transition:transform .45s var(--e-ut);
+.sd-nl.bytt .sd-nl-mat i{scale:.5 1}
+.sd-nl-cta{
+  display:grid;gap:3px;justify-items:start;
+  padding:12px 14px;border-radius:14px;
+  background:rgba(239,230,214,.06);border:1px solid var(--nt-ln);
 }
-.sd-lax:has(input:checked) span{color:var(--bl-3)}
-.sd-lax:has(input:checked) span::after{transform:scaleX(1)}
-.sd-lax em{font-style:normal;font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--bl-3)}
-.sd-lax-alla{
-  display:none;align-items:center;gap:10px;margin-top:12px;
-  font-size:.84rem;font-weight:600;color:var(--mossa);
+.sd-nl-cta small{font-family:var(--f-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--lera-l)}
+.sd-nl-cta b{font-size:.92rem;font-weight:650}
+.sd-nl-cta span{font-size:.74rem;color:var(--nt-mut)}
+.sd-nl-cta .sd-knapp{margin-top:8px}
+.sd-nl-cta .sd-knapp svg{width:12px;height:12px;fill:currentColor}
+.sd-nl.bytt .sd-nl-cta .sd-knapp{display:none}
+.sd-nl-klar{display:none;align-items:center;gap:10px;margin:0;font-size:.8rem;font-weight:600;color:var(--nt-fg)}
+.sd-nl.bytt .sd-nl-klar{display:flex;animation:sd-pop .5s var(--fjader) both}
+.sd-nl.bytt .sd-nl-klar .sd-bock path{animation:sd-rita .6s var(--e-ut) .15s forwards}
+.sd-nl-omr{
+  display:grid;grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:10px;
+  padding:8px 0;border-bottom:1px solid var(--ln);
 }
-.sd-lax-alla.bytt{display:flex;animation:sd-pop .5s var(--fjader) both}
-.sd-lax-rakna{font-variant-numeric:tabular-nums}
-
-/* Konfetti: åtta prickar som flyger ut ur bocken när sista läxan är
-   klar. Riktningen står i --v på varje prick. */
-.sd-konfetti{position:relative;width:26px;height:26px;flex:none}
-.sd-konfetti i{
-  position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:2px;
-  background:var(--c,var(--acc));opacity:0;
-}
-.sd-lax-alla.bytt .sd-konfetti i{animation:sd-flyg .9s var(--e-ut) both}
-@keyframes sd-flyg{
-  0%{opacity:1;transform:rotate(var(--v)) translateX(0)}
-  100%{opacity:0;transform:rotate(var(--v)) translateX(26px) rotate(160deg)}
-}
-
-/* --- utvecklingen --- */
-.sd-omr{
-  display:grid;grid-template-columns:minmax(0,1fr) auto 86px;align-items:center;gap:12px;
-  padding:9px 0;border-bottom:1px solid var(--ln);
-}
-.sd-omr:last-child{border-bottom:0}
-.sd-omr b{display:block;font-size:.84rem;font-weight:600}
-.sd-omr small{display:block;font-size:.72rem;color:var(--bl-3);margin-top:1px}
-.sd-meter{display:flex;gap:3px}
-.sd-meter i{width:18px;height:8px;border-radius:3px;background:color-mix(in srgb,var(--bl) 10%,transparent);transform-origin:left}
-.sd-meter[data-steg="2"] i:nth-child(-n+2){background:var(--acc)}
-.sd-meter[data-steg="3"] i:nth-child(-n+3){background:var(--ockra)}
-.sd-meter[data-steg="4"] i:nth-child(-n+4){background:var(--mossa)}
-.sd-sek.pa .sd-meter i{animation:sd-dela .5s var(--e-ut) both;animation-delay:calc(var(--r,0) * 120ms + var(--n,0) * 60ms + 300ms)}
-.sd-meter i:nth-child(1){--n:0}.sd-meter i:nth-child(2){--n:1}.sd-meter i:nth-child(3){--n:2}
-.sd-meter i:nth-child(4){--n:3}.sd-meter i:nth-child(5){--n:4}
-.sd-omr em{font-style:normal;font-size:.74rem;color:var(--bl-2);text-align:right}
-.sd-upp{color:var(--mossa);font-weight:600}
-.sd-linje-hus{position:relative}
-/* Grafen dras ut på bredden (preserveAspectRatio none) och ritas fram
-   med en ridå från vänster. Strecket behåller sin tjocklek genom
-   non-scaling-stroke; pricken är html, för en cirkel i en utdragen
-   svg blir en ellips. */
-.sd-linje{width:100%;height:90px;display:block;overflow:visible}
-.sd-linje .yta{fill:color-mix(in srgb,var(--mossa) 12%,transparent)}
-.sd-linje .streck{fill:none;stroke:var(--mossa);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-.sd-sek.pa .sd-linje{animation:sd-rida 1.4s var(--e-ut) .3s both}
-@keyframes sd-rida{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
-.sd-linje-prick{
-  position:absolute;left:98.67%;top:23.9%;width:10px;height:10px;margin:-5px;border-radius:50%;
-  background:var(--kort);border:2px solid var(--mossa);
-}
-.sd-sek.pa .sd-linje-prick{animation:sd-pop .45s var(--fjader) 1.5s both}
-.sd-skala{display:flex;justify-content:space-between;margin-top:6px;font-family:var(--f-mono);font-size:9px;color:var(--bl-3);letter-spacing:.06em;text-transform:uppercase}
+.sd-nl-omr:last-child{border-bottom:0}
+.sd-nl-omr > i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--pap-2);color:var(--bl-3)}
+.sd-nl-omr > i svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.sd-nl-omr > i span{display:grid}
+.sd-nl-omr b{font-size:.84rem;font-weight:600}
+.sd-nl-omr em{font-style:normal;font-size:.74rem;color:var(--bl-3)}
+.sd-nl-omr.klart > i,.sd-nl-omr.aktuellt.bytt > i{background:var(--mossa);color:var(--pap)}
+.sd-nl-omr.aktuellt > i,.sd-nl-omr.nasta.bytt > i{background:var(--acc);color:var(--acc-ink)}
+.sd-nl-omr.aktuellt > i svg,.sd-nl-omr.nasta.bytt > i svg{fill:currentColor;stroke:none}
+.sd-nl-omr.aktuellt.bytt > i svg{fill:none;stroke:currentColor}
+.sd-nl-omr.klart em,.sd-nl-omr.aktuellt.bytt em{color:var(--mossa);font-weight:600}
+.sd-nl-omr.aktuellt em,.sd-nl-omr.nasta.bytt em{color:var(--acc);font-weight:600}
+.sd-nl-omr.last{opacity:.6}
 
 /* --- chatten --- */
 .sd-chatt{display:flex;flex-direction:column;height:100%;min-height:0}
@@ -973,8 +955,6 @@ html.nx-sr .nx-sd.nx-in .sd-rum{opacity:1;transform:none}
   .sd-tva{grid-template-columns:minmax(0,1fr)}
   .sd-sek{padding:16px}
   .sd-hej b{font-size:1.3rem}
-  .sd-omr{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}
-  .sd-omr em{grid-column:1/-1;text-align:left}
 }
 
 /* ============================================================
@@ -1150,4 +1130,5 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   .nx-apply-flow > .nx-apply-step,
   .nx-apply-flow:has(> .nx-apply-step:hover) > .nx-apply-step{scale:none !important}
   .sd-rum,.sd-fonster{transform:none !important}
+  .sd-nl-mat i{transition:none}
 }
