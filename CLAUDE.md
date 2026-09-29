@@ -2182,7 +2182,18 @@ att visa **rätt sida**, inte för att skydda data.
   `contact_messages` har längder på fälten (formulärets `maxlength`
   följer dem) och nekar över trettio meddelanden i timmen eller tre
   från samma adress (`intern.kontakt_broms()`). Båda sätter
-  `created_at` själva, som `leads` och `applications`.
+  `created_at` själva, som `leads` och `applications`. Bromsens egen
+  text når inte besökaren: en publik sida visar aldrig serverns text
+  (`NX.felText`), så formuläret säger "Något gick fel. Prova igen,
+  eller mejla oss på …".
+  Taken här, länken i biblioteket (avsnitt 5) och CV-hinkens tak ovan
+  kom i migrationen `anonyma_skrivningar_far_tak`. Den mergades med
+  PR #122 men kördes i driften först samma förmiddag, efter schemats,
+  som version `20260929094311`, och det driften sparade har samma md5
+  som filen. Fram till dess beskrev den här filen taken som om de
+  gällde. `rls-test.sql` har avsnittet Det anonyma har tak: 809 av 811
+  med migrationen inläst före körningen och lika efter, där de två är
+  Fas 23.1:s prov, och utan migrationen föll elva av avsnittets femton.
 - **Tar du bort en fil: filen först, raden sedan, och LÄS SVARET.**
   Sökvägen finns bara i raden. Försvinner raden först blir filen omöjlig
   att hitta och omöjlig att städa. Det stod som en kommentar i
