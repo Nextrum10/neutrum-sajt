@@ -1177,6 +1177,15 @@ Designen är samma hus som ovan; det här är skalet runt den.
   inte en 286 px hög ring med kön bredvid. `.adm-att-gora` finns inte
   längre; raderna är `.kon-rad` i `nextrum-admin-konsol.css`, i samma
   form som den hade.
+- **Att göra är bara vårt drag** (samma dag). Passförfrågningarna stod
+  där, men ett förslag väntar på svar från studiehjälparen, eller från
+  familjen efter ett motförslag. Leo: "det är inte något vi gör eller har
+  påverkan på". Hur många som väntar står i stället i Bokningars
+  rubrikrad, i ockra (`ritaFörfrågningar()`), och Önskat i
+  bokningslistan är ockra som i kalendern bredvid, inte lera. En rad i
+  Att göra räknas också i NEX-ringen, notisklockan och menyns siffror,
+  så det som väntar på en familj eller en studiehjälpare hör inte hemma
+  där.
 - **Bredden** är `--adm-bredd` (1760 px) på `body.vy-admin main.wrap`.
   `body` står framför med flit: `.vy main.wrap` under STORA SKÄRMAR väger
   annars lika mycket och står senare, och över 1500 px fastnade

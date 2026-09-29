@@ -786,6 +786,14 @@
   .vy-admin .adm-verktyg .adm-sok{flex-basis:100%}
 }
 
+/* Passförfrågningarna i Bokningars rubrikrad (2026-09-29). Raden ligger
+   i .vy-sek-topp som barnväljaren i studievyn: till höger om rubriken,
+   och under den på en smal skärm. */
+.adm-bok-forfragan{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;
+  padding-bottom:2px;
+}
+
 /* Tabellen står på kortet (2026-09-29, adminvyn i samma hus som
    studievyn): en låda i lådan är precis vad INNEHÅLLET-avsnittet längst
    ned tog bort. Rubrikraden är en ruta i --tint, raderna har streck
