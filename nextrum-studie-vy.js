@@ -691,19 +691,6 @@
       ritaOchHåll('[data-nl-nod="' + CSS.escape(id) + '"]', ritaVägen);
       return;
     }
-    /* Genvägen till ett område: direkt och utan animering, som ett
-       sektionsbyte (CLAUDE.md avsnitt 3, Tummen). scroll-margin-top på
-       området räknar sidhuvudet och den fasta raden. */
-    const hopp = e.target.closest('[data-nl-hopp]');
-    if (hopp) {
-      const mål = document.getElementById('nl-omr-' + hopp.dataset.nlHopp);
-      if (mål) {
-        mål.scrollIntoView({ block: 'start', behavior: 'instant' });
-        const knapp = mål.querySelector('.upg-nod.aktuell .upg-nod-knapp, .upg-nod.oppen .upg-nod-knapp');
-        if (knapp) knapp.focus({ preventScroll: true });
-      }
-      return;
-    }
     const alla = e.target.closest('[data-nl-alla]');
     if (alla) {
       const öppnar = !S.nl.alla;
