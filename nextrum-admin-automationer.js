@@ -11,9 +11,14 @@
    inloggning — ett schema som mejlar kunder medan ingen tittar är
    inte en automation, det är en risk.
 
-   Panelen finns för att kontrollerna ska gå att SE köra. En
-   automation som aldrig visats göra rätt får inte schemaläggas, och
-   det är därför knappen här kom före cron-jobbet.
+   DE GÅR BARA MED KNAPPEN, med flit. Panelen finns för att
+   kontrollerna ska gå att SE köra, och en automation som aldrig visats
+   göra rätt får inte köra av sig själv. När de ska schemaläggas är
+   Leos beslut. pg_cron finns och kör databasens egna jobb (notiserna,
+   timmarna, gallringarna, månadskörningen), och de står i rutan
+   Schemalagda körningar längst ned. Kontrollerna är inte bland dem.
+   Schemaläggs de ska texterna här och i admin.html säga det i samma
+   ändring.
 
    En del av adminvyn, som laddas efter kärnan
    (nextrum-admin-karna.js) och registrerar sina funktioner i
@@ -22,7 +27,7 @@
 (function () {
   'use strict';
 
-  const { $, esc, säg, rensa, felText } = NX;
+  const { $, esc, säg, rensa, felText, datumText } = NX;
   const { medan, tomt } = NXStudie;
 
   const { S, kortDatum, namnFör, pill, tabell } = NXAdmin;
@@ -56,18 +61,144 @@
   ];
 
   /* ------------------------------------------------------------
-     SCHEMAT
+     SCHEMAT (2026-09-29)
 
-     pg_cron är inte installerat än. Funktionen driftkorningar()
-     kommer med det, så dess existens ÄR svaret på frågan om
-     schemat finns — i stället för en text här som blir osann den
-     dag extensionen läggs in.
+     pg_cron kör databasens egna jobb, och driftkorningar() svarar med
+     en rad per jobb i cron.job: schemat, om det är på, den senaste
+     körningen och hur många av veckans körningar som misslyckades. En
+     rad per jobb och inte en per körning: notis-minut går 1 440 gånger
+     om dygnet, och en lista över körningarna hade gömt nattens jobb
+     bakom den. Kontrollerna ovan är inte bland jobben (se överst).
+
+     Fas 7 räknade med att funktionen skulle komma med pg_cron, och tog
+     ett saknat svar som ett saknat schema. pg_cron kom med notiserna
+     utan den, och rutan sa "Inget schema installerat" medan jobben gick
+     varje minut. Ett saknat svar betyder bara att migrationen inte är
+     körd, och det är vad rutan säger.
      ------------------------------------------------------------ */
+  const DAGAR = 7;   // pg_cron sparar körningarna i sju dagar (jobbet cron-stada)
+
+  /* Vad jobben gör, med samma ord som CLAUDE.md. Ett jobb som inte står
+     här visas med sitt namn: listan förklarar, den bestämmer inte vilka
+     jobb som syns. Det gör cron.job. */
+  const JOBB = {
+    'notis-minut': 'Notiserna köas och skickas',
+    'notis-stada': 'Gamla notiser städas bort',
+    'ansokan-besked': 'Nya försök med beskeden till sökande',
+    'utbildningsprov-paminn': 'Påminnelser om utbildningsprovet',
+    'timmar-betalar': 'Lediga timmar betalar nästa pass',
+    'timmar-gar-ut': 'Mejlet om timmar som snart går ut',
+    'manadskorning': 'Månadskörningen: lönespec och fakturautkast',
+    'leads-avidentifiering': 'Intresseanmälningar avidentifieras',
+    'ansokan-gallring': 'Ansökningar och CV:n gallras',
+    'kontakt-och-fel-gallring': 'Kontaktmeddelanden och klientfel gallras',
+    'ai-och-uppgifter-gallring': 'AI-texter och klara uppgifter gallras',
+    'konton-oanvanda': 'Oanvända konton blir uppgifter',
+    'cron-stada': 'Körningar äldre än en vecka städas bort'
+  };
+
+  /* Datum och klockslag i svensk tid. kortDatum räcker inte: den tar
+     datumet ur UTC-strängen, och en körning 23:30 UTC hade stått på fel
+     dag. sv-SE skriver datumet som 2026-09-29, vilket datumText läser. */
+  function tidText(iso) {
+    const d = new Date(iso);
+    if (!iso || isNaN(d)) return '—';
+    const dagen = x => x.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
+    const dag = dagen(d);
+    const klocka = d.toLocaleTimeString('sv-SE', { timeZone: 'Europe/Stockholm', hour: '2-digit', minute: '2-digit' });
+    if (dag === dagen(new Date())) return 'i dag ' + klocka;
+    if (dag === dagen(new Date(Date.now() - 864e5))) return 'i går ' + klocka;
+    return datumText(dag) + ' ' + klocka;
+  }
+
+  /* Schemat står i UTC. Formerna jobben har blir svenska, med nästa
+     körnings klockslag i svensk tid: 03:41 UTC är 05:41 på sommaren och
+     04:41 på vintern. Ett annat uttryck visas som det står. */
+  const VAR_N = { 2: 'varannan', 5: 'var femte', 10: 'var tionde', 15: 'var femtonde', 30: 'var trettionde' };
+
+  function nästaKlockslag(tim, min, dag) {
+    const nu = new Date();
+    let t = new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), dag || nu.getUTCDate(), tim, min));
+    if (t <= nu) {
+      t = dag ? new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth() + 1, dag, tim, min))
+        : new Date(t.getTime() + 864e5);
+    }
+    return t.toLocaleTimeString('sv-SE', { timeZone: 'Europe/Stockholm', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function schemaText(uttryck) {
+    const [min, tim, dag, mån, vdag, ...rest] = String(uttryck || '').trim().split(/\s+/);
+    const tal = s => (/^\d+$/.test(s || '') ? Number(s) : null);
+    const somDetStår = (uttryck || '—') + ' (UTC)';
+    if (rest.length || mån !== '*' || vdag !== '*') return somDetStår;
+    if (dag === '*' && tim === '*') {
+      if (min === '*') return 'varje minut';
+      const steg = /^\*\/(\d+)$/.exec(min);
+      if (steg) return (VAR_N[steg[1]] || 'var ' + steg[1] + ':e') + ' minut';
+      if (tal(min) !== null) return tal(min) + ' minuter över varje timme';
+    }
+    if (tal(min) === null || tal(tim) === null) return somDetStår;
+    if (dag === '*') return 'varje dag ' + nästaKlockslag(tal(tim), tal(min));
+    const n = tal(dag);
+    if (n === null) return somDetStår;
+    const ändelse = (n % 10 === 1 || n % 10 === 2) && n !== 11 && n !== 12 ? ':a' : ':e';
+    return 'den ' + n + ändelse + ' varje månad ' + nästaKlockslag(tal(tim), tal(min), n);
+  }
+
+  /* Färgen säger vems drag det är, som i resten av adminvyn: lera är
+     ett fel eller ett jobb som står av, ockra ett som pågår just nu,
+     mossa ett som gick igenom. Ett jobb som inte kört i fönstret är
+     grått: månadsjobben mitt i en månad ser ut så. */
+  function utfallMärke(r) {
+    if (!r.aktivt) return pill('Står av', 'ar-ny');
+    if (!r.status) return pill('Inte kört', '');
+    if (r.status === 'succeeded') return pill('Gick igenom', 'ar-klar');
+    if (r.status === 'failed') return pill('Misslyckades', 'ar-ny');
+    return pill('Pågår', 'ar-vantar');
+  }
+
+  const antal = n => Number(n || 0).toLocaleString('sv-SE');
+
+  function körningarText(r) {
+    const n = Number(r.korningar || 0);
+    const fel = Number(r.misslyckade || 0);
+    if (!n) return 'Inte kört den senaste veckan';
+    return 'Senast ' + tidText(r.startade) + ' · ' + antal(n) + (n === 1 ? ' körning' : ' körningar')
+      + ' den senaste veckan, ' + (fel ? antal(fel) + ' misslyckades' : 'inga fel');
+  }
+
+  /* Felet står en gång: den senaste körningens om det var den som
+     misslyckades, annars veckans senaste. */
+  function felRad(r) {
+    if (r.status === 'failed') return r.svar || '';
+    if (Number(r.misslyckade) > 0 && r.fel) return 'Senaste felet ' + tidText(r.senast_misslyckad) + ': ' + r.fel;
+    return '';
+  }
+
+  /* Det som behöver någon först: ett fel, ett jobb som står av, fel
+     tidigare i veckan. Sist de som inte kört alls. */
+  function vikt(r) {
+    if (r.aktivt && r.status === 'failed') return 0;
+    if (!r.aktivt) return 1;
+    if (Number(r.misslyckade) > 0) return 2;
+    return r.status ? 3 : 4;
+  }
+
+  function sammanfattning(rader) {
+    const fel = rader.filter(r => Number(r.misslyckade) > 0).length;
+    const av = rader.filter(r => !r.aktivt).length;
+    const delar = [rader.length + ' jobb i schemat.',
+      fel ? fel + ' av dem har misslyckats minst en gång den senaste veckan.'
+        : 'Inget har misslyckats den senaste veckan.'];
+    if (av) delar.push(av + ' står av och går inte alls.');
+    return '<p class="small" style="margin:0 0 12px">' + esc(delar.join(' ')) + '</p>';
+  }
+
   async function ritaSchema() {
     const host = $('#aut-schema');
     if (!host) return;
 
-    const res = await supa.rpc('driftkorningar', { dagar: 7 });
+    const res = await supa.rpc('driftkorningar', { dagar: DAGAR });
     if (res.error) {
       /* PGRST202 = PostgREST hittade ingen funktion med det namnet
          och den signaturen. Koden är entydig; texten är det inte —
@@ -78,26 +209,34 @@
       const saknas = res.error.code === 'PGRST202'
         || (!res.error.code && /Could not find the function/i.test(res.error.message || ''));
       host.innerHTML = saknas
-        ? tomt('Inget schema installerat',
-            'Kontrollerna körs med knappen ovan tills pg_cron är på plats. '
-            + 'Då visas varje körning här, med resultat och fel.')
+        ? tomt('Körningarna går inte att läsa härifrån än',
+            'Databasen har inte funktionen driftkorningar(): migrationen schemalagda_korningar_syns '
+            + 'är inte körd. Jobben går ändå, det är bara den här rutan som inte når dem.')
         : '<p class="xsmall" style="color:var(--fel)">Kunde inte läsa körningarna: '
           + esc(felText(res.error)) + '</p>';
       return;
     }
 
-    const rader = res.data || [];
+    const rader = (res.data || []).slice()
+      .sort((a, b) => vikt(a) - vikt(b) || String(a.jobb).localeCompare(String(b.jobb), 'sv'));
     if (!rader.length) {
-      host.innerHTML = tomt('Inga körningar än', 'Schemat har inte kört någon gång den senaste veckan.');
+      /* Ett tomt cron.job är ett fel, inte ett lugnt läge: då går
+         varken notiserna, gallringarna eller månadskörningen. */
+      host.innerHTML = '<p class="xsmall" style="color:var(--fel)">Schemat har inga jobb: ingenting går '
+        + 'av sig självt, varken notiserna, gallringarna eller månadskörningen.</p>';
       return;
     }
-    host.innerHTML = tabell([
-      { namn: 'Jobb', rita: r => '<b>' + esc(r.jobb || '—') + '</b>' },
-      { namn: 'Startade', rita: r => esc(r.startade ? kortDatum(r.startade) : '—') },
-      { namn: 'Utfall', rita: r => r.status === 'succeeded'
-        ? pill('Gick igenom', 'ar-klar') : pill(r.status || 'okänt', 'ar-ny') },
-      { namn: 'Svar', rita: r => '<span class="adm-und">' + esc(r.svar || '') + '</span>' }
-    ], rader, 'Inga körningar');
+    /* Rader och inte en tabell, samma form som kontrollerna ovanför.
+       En tabell rullar i sidled på en telefon, och utfallet stod då
+       utanför skärmen; här står märket alltid till höger. */
+    host.innerHTML = sammanfattning(rader) + rader.map(r => {
+      const fel = felRad(r);
+      return '<div class="dp-rad"><div><b>' + esc(JOBB[r.jobb] || r.jobb) + '</b>'
+        + '<span>' + esc(r.jobb + ' · ' + schemaText(r.schema)) + '</span>'
+        + '<span>' + esc(körningarText(r)) + '</span>'
+        + (fel ? '<span style="color:var(--fel)">' + esc(fel) + '</span>' : '')
+        + '</div><span class="dp-rad-hoger">' + utfallMärke(r) + '</span></div>';
+    }).join('');
   }
 
   /* ------------------------------------------------------------
@@ -141,10 +280,10 @@
   }
 
   /* Kontrollerna och listan ritas vid start — de läser bara det som
-     redan finns i S. Schemat frågas EFTER, när fliken öppnas: så
-     länge pg_cron inte är installerat svarar den frågan alltid 404,
-     och en garanterad 404 vid varje inloggning gör konsolen till ett
-     ställe man slutar titta på. */
+     redan finns i S. Schemat frågas EFTER, när fliken öppnas: frågan
+     räknar igenom veckans körningar i cron.job_run_details (runt
+     tolv tusen, de flesta notis-minut), och den som loggar in för att
+     svara på en anmälan behöver inte svaret. */
   function ritaAutomationer() {
     ritaKontroller();
     ritaMaskinUppgifter();
@@ -168,8 +307,9 @@
   /* ------------------------------------------------------------
      KÖR NU
 
-     Samma fyra kontroller som schemat kommer att köra, genom
-     kor_kontrollerna() som har adminvakten. Svaret säger hur många
+     De fyra kontrollerna, genom kor_kontrollerna() som har
+     adminvakten och kör dagliga_kontroller(). Inget schema kör dem
+     (se överst), så det här är enda vägen. Svaret säger hur många
      NYA uppgifter som skapades — körs den två gånger i rad ska den
      andra ge noll, och det är hela poängen med nycklarna.
      ------------------------------------------------------------ */

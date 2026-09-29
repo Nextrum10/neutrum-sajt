@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen och raderingen)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat och raderingen)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -42,8 +42,8 @@
 -- godkand_ansokan_gallras_tva_ar_efter_sista_passet,
 -- ai_texterna_och_avslutade_uppgifter_gallras, Fas 22.4 (timmen dras
 -- när förslaget skickas), manadskorningen_vacks_av_databasen,
--- manadskorningen_gar_den_forsta, Fas 23.1 (de digitala uppgifterna)
--- och personer_redigeras_och_raderas är körda.
+-- manadskorningen_gar_den_forsta, Fas 23.1 (de digitala uppgifterna),
+-- personer_redigeras_och_raderas och schemalagda_korningar_syns är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -6215,6 +6215,96 @@ select 'Månadskörning går den 1:a', count(*) = 1,
   from cron.job
  where jobname = 'manadskorning' and active and schedule = '17 4 1 * *'
    and command = 'select intern.manadskorning_vack()';
+
+-- ------------------------------------------------------------
+-- De schemalagda körningarna (2026-09-29)
+--
+-- driftkorningar() visar adminvyn varje pg_cron-jobb med sin senaste
+-- körning. Bara admin når den: anon har ingen EXECUTE, och en inloggad
+-- som inte är admin stoppas av vakten på första raden. Kommandot lämnas
+-- aldrig ut, och av ett fel bara första raden, med hemligheten, e-post
+-- och id:n utbytta.
+--
+-- Felet läggs in för hand med ett negativt runid, som pg_cron aldrig
+-- ger, och en starttid efter allt annat, så att det är jobbets senaste
+-- körning också om notis-minut hinner köra medan sviten går. Hemligheten
+-- är provets egen och saknar siffror, så att det är utbytet av just
+-- hemligheten som provas och inte regeln för långa nycklar. Driftens
+-- egen hade hamnat i detaljen om provet föll.
+-- ------------------------------------------------------------
+select pg_temp.prova('Schemat en familj ser inte körningarna', '00000000-0000-4000-8000-0000000000f1',
+  array['select * from public.driftkorningar(7)'], 'nekad');
+select pg_temp.prova('Schemat en studiehjälpare ser inte körningarna', '00000000-0000-4000-8000-0000000000a1',
+  array['select * from public.driftkorningar(7)'], 'nekad');
+select pg_temp.prova('Schemat anon ser inte körningarna', null,
+  array['select * from public.driftkorningar(7)'], 'nekad');
+
+insert into utfall (test, ok, detalj)
+select 'Schemat anon når inte funktionen, och ingen utifrån når felets tvätt',
+       coalesce(not has_function_privilege('anon', to_regprocedure('public.driftkorningar(integer)'), 'execute')
+            and has_function_privilege('authenticated', to_regprocedure('public.driftkorningar(integer)'), 'execute')
+            and not has_function_privilege('anon', to_regprocedure('intern.driftsvar(text,text[])'), 'execute')
+            and not has_function_privilege('authenticated', to_regprocedure('intern.driftsvar(text,text[])'), 'execute'),
+            false),
+       case when to_regprocedure('public.driftkorningar(integer)') is null then 'funktionen finns inte'
+            else 'anon/authenticated' end;
+
+insert into utfall (test, ok, detalj)
+select 'Schemat lämnar aldrig ut kommandot',
+       coalesce(pg_get_function_result(to_regprocedure('public.driftkorningar(integer)')) !~* 'command|kommando', false),
+       coalesce(pg_get_function_result(to_regprocedure('public.driftkorningar(integer)')), 'funktionen finns inte');
+
+do $$
+declare
+  adm   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  prov  constant text := 'RLS-PROV-HEMLIGHET-UTAN-SIFFROR';
+  ett bigint; namn text; jobben bigint; rader bigint; har_konfig boolean;
+  st text; sv text; missl int; senaste_fel text; fel text;
+begin
+  select count(*) into jobben from cron.job;
+  select j.jobid, coalesce(j.jobname, 'jobb ' || j.jobid) into ett, namn from cron.job j order by j.jobid limit 1;
+  if ett is null then
+    insert into utfall (test, ok, detalj) values ('Schemat', false, 'cron.job är tom: inget jobb att lägga felet på');
+    return;
+  end if;
+  select exists (select 1 from public.notis_konfig where id = 1) into har_konfig;
+
+  begin
+    update public.notis_konfig set hemlighet = prov where id = 1;
+    insert into cron.job_run_details (jobid, runid, job_pid, database, username, command, status,
+                                      return_message, start_time, end_time)
+    values (ett, -9101, 0, current_database(), 'postgres', 'select 1', 'failed',
+            'ERROR:  prov med ' || prov || ' för anna.berg@example.se och 2b1c8e2e-5f0a-4c1e-9a33-0d6c5f1d2e3f'
+              || E'\nDETAIL:  Failing row contains (Alva Berg).',
+            now() + interval '1 hour', now() + interval '1 hour');
+
+    perform pg_temp.bli(adm);
+    select count(*) into rader from public.driftkorningar(7);
+    select x.status, x.svar, x.misslyckade, x.fel into st, sv, missl, senaste_fel
+      from public.driftkorningar(7) x where x.jobb = namn;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Schemat', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Schemat admin får en rad per jobb, också de som inte kört i veckan', rader = jobben,
+      'rader: ' || rader || ', jobb i cron.job: ' || jobben),
+    ('Schemat den misslyckade körningen är jobbets senaste, med svaret',
+      st = 'failed' and sv is not null and missl >= 1 and senaste_fel = sv,
+      coalesce(st, 'null') || ', misslyckade: ' || coalesce(missl::text, 'null')),
+    ('Schemat svaret är första raden, utan hemligheten, e-posten eller id:t',
+      sv is not null and length(sv) <= 200
+        and position(prov in sv) = 0 and (not har_konfig or position('[hemlighet]' in sv) > 0)
+        and position('anna.berg' in sv) = 0 and position('2b1c8e2e' in sv) = 0
+        and position('Alva' in sv) = 0 and position('ERROR' in sv) = 0,
+      coalesce(sv, 'null'));
+end $$;
 
 -- ------------------------------------------------------------
 -- Fas 23.1: de digitala uppgifterna
