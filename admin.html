@@ -2294,9 +2294,14 @@
                en familj går fortfarande via knappen i Ekonomi, med
                inloggning.
 
-               Knappen finns före schemat med flit. En automation som
+               De går bara med knappen, med flit. En automation som
                ingen sett köra ska inte få köra av sig själv klockan
-               fem på morgonen. -->
+               fem på morgonen, och när kontrollerna ska schemaläggas
+               är Leos beslut. pg_cron finns och kör databasens egna
+               jobb (notiserna, timmarna, gallringarna,
+               månadskörningen). De står i Schemalagda körningar
+               längst ned, ur driftkorningar(), och kontrollerna är
+               inte bland dem. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="automationer"
                id="panel-automationer" aria-labelledby="flik-automationer" hidden>
             <div class="dbox">
@@ -2304,7 +2309,8 @@
                 <div>
                   <h3>Kontroller</h3>
                   <p class="small">Letar efter sådant som annars upptäcks för sent. Varje fynd
-                    blir en uppgift under Drift → Uppgifter. Ingenting skickas till någon.</p>
+                    blir en uppgift under Drift → Uppgifter. Ingenting skickas till någon.
+                    Kontrollerna går inte av sig själva, bara när du trycker på knappen.</p>
                 </div>
                 <button class="btn btn-primary" type="button" id="aut-kor">Kör kontrollerna nu</button>
               </div>
@@ -2331,8 +2337,15 @@
                 formuläret och lägena, når du härifrån.</p>
             </div>
 
+            <!-- Jobben pg_cron kör i databasen, en rad per jobb ur
+                 driftkorningar(). Rutan säger själv hur många de är och
+                 hur det gått: en siffra skriven här hade blivit osann
+                 med nästa jobb. -->
             <div class="dbox">
-              <h3 style="margin:0 0 10px">Schemalagda körningar</h3>
+              <h3 style="margin:0 0 6px">Schemalagda körningar</h3>
+              <p class="small" style="margin:0 0 12px">Det databasen gör av sig själv, med pg_cron:
+                notiserna, timmarna, gallringarna och månadskörningen. Kontrollerna ovan är
+                inte bland dem.</p>
               <div id="aut-schema"><div class="loading">Hämtar</div></div>
             </div>
           </div>
@@ -2376,7 +2389,7 @@
 <script src="nextrum-admin-loner.js?v=7138b540"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
 <script src="nextrum-admin-system.js?v=8006b686"></script>
-<script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
+<script src="nextrum-admin-automationer.js?v=4d4961ae"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->

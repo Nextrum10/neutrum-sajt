@@ -108,7 +108,8 @@ villkor vi bryter mot. Byt till Pro.
 ## 4. Gallringen
 
 Lagringstiderna i policyn hålls av databasen, inte av någon som kommer
-ihåg dem. Alla jobb körs av pg_cron och syns i `cron.job`.
+ihåg dem. Alla jobb körs av pg_cron och syns i `cron.job`, och i
+adminvyn under System → Automationer med sin senaste körning.
 
 | Jobb | När | Gör |
 |---|---|---|

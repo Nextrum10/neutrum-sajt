@@ -1414,7 +1414,69 @@ egen policy. Kontrollerna (`kontroll_saknade_rapporter`,
 `kontroll_ekonomiska_avvikelser`, `paminnelse_forfallna_fakturor`,
 `uppfoljning_leads_och_ansokningar`) SKAPAR bara uppgifter — ingen av
 dem skickar något, och ingen av dem är schemalagd. `kor_kontrollerna()`
-kör alla fyra från fliken System → Automationer.
+kör alla fyra från fliken System → Automationer. **Att de inte är
+schemalagda är med flit och Leos beslut att ändra**, inte något som
+väntar på pg_cron: pg_cron finns. Schemaläggs de ska texterna i
+`nextrum-admin-automationer.js` och `admin.html` säga det i samma
+ändring.
+
+**Schemat syns under System → Automationer** (2026-09-29). Rutan
+Schemalagda körningar läser `driftkorningar()` (migrationen
+`schemalagda_korningar_syns`, som körs i driften efter merge och sedan
+döps om till versionen driften registrerar). Fas 7 lät rutan tolka en
+saknad funktion (PGRST202) som att pg_cron saknades, för funktionen
+skulle komma med pg_cron. pg_cron kom med notiserna utan den, och rutan
+sa "Inget schema installerat" medan tretton jobb gick varje minut och
+varje natt. Ett saknat svar betyder nu bara att migrationen inte är
+körd, och rutan säger det. Fyra regler:
+
+1. **En rad per jobb, inte en per körning.** `cron.job_run_details` hade
+   11 800 körningar på en vecka, 10 355 av dem `notis-minut`. En lista
+   över körningarna hade PostgREST kapat vid tusen rader, och nattens jobb
+   hade aldrig syns. Svaret är varje jobb i `cron.job`, också ett som inte
+   kört i fönstret: schemat, om det är på, den senaste körningen, antalet
+   och de misslyckade, och det senaste felet.
+2. **Bara admin.** SECURITY DEFINER med `is_admin()` på första raden och
+   ingen EXECUTE för anon. Ett jobb som står av (`active = false`) står
+   som Står av, i lera: ett schema som står av och ett som går ska inte
+   se likadana ut (flaggan `notiser_mejl`, Notiserna nedan).
+3. **Kommandot lämnas aldrig ut, och svaret bara vid fel.** Av ett fel
+   bara första raden, för DETAIL bär radens värden ("Failing row contains
+   …"), med `notis_konfig`s två hemligheter, långa nycklar och id:n,
+   e-post och nummer utbytta (`intern.driftsvar()`), högst 200 tecken. I
+   dag bär inget kommando något hemligt: hemligheten går i headers genom
+   `intern.natanrop`. Funktionen litar inte på att det förblir så.
+4. **Sju dagar.** `cron-stada` tar bort körningar äldre än så, och rutan
+   frågar efter sju. Ett längre fönster ger samma svar.
+
+Ett nytt jobb syns i rutan av sig självt, med sitt namn; en rad i `JOBB`
+i `nextrum-admin-automationer.js` ger det en beskrivning.
+
+Provat mot driften 2026-09-29 med hela `rls-test.sql` i en transaktion
+som rullades tillbaka, på det sätt avsnitt 9 beskriver: 762 av 764 med
+migrationen, där de två är Fas 23.1:s prov, som väntar på sin egen, och
+754 av 762 utan den, där alla sex raderna för schemat föll. Med main
+inslagen (de delade dokumenten): 779 av 781, samma två. Provet lägger
+in en misslyckad körning i `cron.job_run_details` med runid −9101, och
+den försvinner med återrullningen.
+
+Jobben 2026-09-29, alla som `postgres`, tider i UTC:
+
+| Jobb | När | Gör |
+|---|---|---|
+| `notis-minut` | varje minut | köar påminnelserna och väcker `notis-ko` (Notiserna nedan) |
+| `ansokan-besked` | var femte minut | nya försök med beskeden till den som söker jobb |
+| `timmar-betalar` | var femte minut | obesvarade förslag lämnar tillbaka timmen, lediga timmar betalar nästa pass (Fas 22.3–22.4) |
+| `timmar-gar-ut` | :07 varje timme | mejlet tio dagar innan köpta timmar går ut (Fas 21.2) |
+| `utbildningsprov-paminn` | :13 varje timme | påminnelserna om utbildningsprovet |
+| `notis-stada` | 03:17 | städar notiserna och utskicken |
+| `cron-stada` | 03:23 | tar bort körningar äldre än sju dagar ur `cron.job_run_details` |
+| `ansokan-gallring` | 03:41 | ansökningar och CV:n efter ett år (Gallringen nedan) |
+| `kontakt-och-fel-gallring` | 03:44 | kontaktmeddelanden och klientfel |
+| `leads-avidentifiering` | 03:47 | intresseanmälningar sex månader efter senaste kontakten |
+| `ai-och-uppgifter-gallring` | 03:51 | AI-texterna och avslutade uppgifter |
+| `manadskorning` | den 1:a 04:17 | förra månadens underlag och fakturautkast (avsnitt 1) |
+| `konton-oanvanda` | den 1:a 04:53 | konton som inte använts på två år blir uppgifter |
 
 **Analysvyerna (Fas 9.6) bär tre regler.** `analys_leads_per_kalla`,
 `analys_konvertering`, `analys_aktiva`, `analys_ekonomi` och
@@ -2133,7 +2195,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 34 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-29, den senaste är `mina_handlingar`; `radering_lage` och `radera_person` före den) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 35 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-29, den senaste är `driftkorningar`; `mina_handlingar`, `radering_lage` och `radera_person` före den. 34 i driften tills `schemalagda_korningar_syns` är körd) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
