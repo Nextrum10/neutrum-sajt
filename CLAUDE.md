@@ -2028,6 +2028,44 @@ att visa **rätt sida**, inte för att skydda data.
   svarar funktionen 401 på varje anmälan emellan — de mejlen kommer
   aldrig. I en tabell byts båda i samma transaktion.
 
+### Inloggningen i vyerna (2026-09-29)
+
+Leo: "kontroller i admins inställning i automationer går inte att
+köra". Kontrollerna var hela, provkörda som admin i databasen. Det var
+adminvyn som var utloggad utan att veta om det, och båda felen satt i
+vyerna:
+
+- **Logga ut gäller bara den enheten** (`NXStudie.loggaUt()`,
+  `scope: 'local'`). supabase-js `signOut()` tar som förval bort ALLA
+  personens sessioner, på alla enheter. Auth-loggen visade mönstret
+  flera gånger samma dygn: en utloggning på en enhet, och på en annan
+  "Refresh Token Not Found" nästa gång den skulle förnya. Senast
+  loggade telefonen ut klockan 00:59, och adminvyn på datorn tappade
+  inloggningen när datorn vaknade på morgonen. Ska någon loggas ut
+  överallt (en förlorad dator, incidentrutinen i `DATASKYDD.md`) görs
+  det i databasen, som `radera_person()` gör: `delete from
+  auth.refresh_tokens where user_id = '<id>'` och `delete from
+  auth.sessions where user_id = '<id>'`. En access-token som redan
+  lämnats ut gäller tills den går ut, ungefär en timme.
+- **En vy som tappat inloggningen visar inloggningen**
+  (`NXStudie.vaktaInloggningen()`, i alla tre vyerna). Nekar Auth
+  förnyelsen tar supabase-js bort sessionen och säger `SIGNED_OUT`,
+  och varje fråga därefter går med den publika nyckeln, som anon.
+  Ingen vy lyssnade: adminvyn stod kvar med gårdagens listor, räknarna
+  i sidhuvudet blev noll utan fel (RLS ger anon noll rader), och
+  knappen svarade "permission denied for function kor_kontrollerna".
+  Nu byts vyn mot inloggningen, med ett besked och adressen ifylld, och
+  efter inloggningen öppnar vyn där man var. Loggar någon annan in i
+  samma webbläsare laddas vyn om: sessionen är delad mellan flikarna,
+  och adminvyn hade annars fortsatt fråga med den personens token.
+
+**Säger en inloggad vy "permission denied" eller visar tomma listor,
+titta i API-loggen först** (`edge_logs`). Står den publika nyckeln i
+`request.sb.apikey.authorization.prefix` (`sb_publishable_…`) i stället
+för en JWT med `request.sb.jwt.authorization.payload.subject` gick
+anropet utloggat, och felet sitter i sessionen, inte i policyn eller
+funktionen.
+
 ### Samtycket (2026-09-27)
 
 De öppna sidorna sätter inga cookies. Det som kräver samtycke

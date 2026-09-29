@@ -25,11 +25,8 @@
   /* ============ header ============ */
   function ritaHeader() { NXStudie.vyHuvud(S, 'Förälder', ritaNotiser); }
 
-  document.addEventListener('click', async e => {
-    if (e.target.closest('[data-logout]')) {
-      if (supa) await supa.auth.signOut();
-      location.reload();
-    }
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-logout]')) NXStudie.loggaUt(supa);
   });
 
   /* ============ inloggning ============ */
@@ -4324,6 +4321,10 @@
 
     S.user = await NX.hämtaSession();
     if (!S.user) { visa('view-auth'); ritaAuth(); return; }
+    /* Försvinner inloggningen medan fliken står öppen visas
+       inloggningen, inte en vy där varje knapp nekas (NXStudie). */
+    NXStudie.vaktaInloggningen({ supa, user: S.user,
+      utloggad: () => { läge = 'in'; ritaAuth(); visa('view-auth'); } });
 
     /* Katalogen hämtas medan profilen hämtas, inte efter. Den behövs
        först när vyn ritas, och en fråga i kö är en fråga för mycket. */
