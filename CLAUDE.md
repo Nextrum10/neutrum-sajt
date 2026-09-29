@@ -3255,8 +3255,10 @@ tillbaka överst i avsnittet för 22.1.
      behövs.
 - **Chatten som admin öppnar (2026-09-29, avsnitt 1) är byggd, men
   migrationen `admin_oppnar_chatten` är INTE körd i driften.** Provad mot
-  driften i en transaktion som rullades tillbaka: avsnittets tolv prov i
-  `rls-test.sql` gick igenom, och ingenting blev kvar. Tills den är körd
+  driften i en transaktion som rullades tillbaka, med filerna hämtade av
+  databasen från commiten och md5 prövad (avsnitt 9): hela `rls-test.sql`
+  gick igenom med migrationen, 873 av 873, och utan den föll bara
+  avsnittets egna fem rader (861 av 866). Ingenting blev kvar. Tills den är körd
   står Öppna chatt i listorna, men panelen säger att migrationen saknas
   och läser ingenting: en läsning utan rad i loggen ska inte gå att göra
   från vyn. Kör den efter merge med versionen i filnamnet
