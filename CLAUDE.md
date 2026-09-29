@@ -1500,6 +1500,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `leads-avidentifiering` | 03:47 | intresseanmälningar sex månader efter senaste kontakten |
 | `ai-och-uppgifter-gallring` | 03:51 | AI-texterna och avslutade uppgifter |
 | `manadskorning` | den 1:a 04:17 | förra månadens underlag och fakturautkast (avsnitt 1) |
+| `manadskorning-svar` | den 1:a 04:47 | månadskörningens svar: allt utom 200 blir en uppgift (ovan). Finns när `manadskorningens_svar_lases_den_forsta` är körd |
 | `konton-oanvanda` | den 1:a 04:53 | konton som inte använts på två år blir uppgifter |
 
 **Analysvyerna (Fas 9.6) bär tre regler.** `analys_leads_per_kalla`,

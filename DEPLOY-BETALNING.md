@@ -264,7 +264,8 @@ Ordningen efter merge, före den 1 oktober klockan 04:47 UTC:
    `ok` och `svar` 200, och ingen uppgift. Står det `vantar`, vänta en minut till.
    Något annat blir en uppgift för förra månaden: laga vägen, stäng uppgiften och
    gör om steget.
-3. Kör migrationen `manadskorningens_svar_lases_den_forsta`. Först då finns jobbet.
+3. Kör migrationen `manadskorningens_svar_lases_den_forsta`. Först då finns jobbet,
+   och det står under System → Automationer bredvid `manadskorning`.
 4. Döp om de två migrationsfilerna till versionerna `apply_migration` gav dem, och ta
    bort "INTE KÖRD I DRIFTEN ÄN" i dem och "Inte körd i driften än" i CLAUDE.md.
 5. Kör hela `verktyg/rls-test.sql` mot driften.
