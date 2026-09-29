@@ -525,6 +525,7 @@ window.NXStudie = (function () {
      månaden och första dagen i nästa, att fråga med gte och lt.
 
      o.antal     hur många månader bakåt, med den innevarande (12)
+     o.alla      true: alla månader från FÖRSTA_MÅNAD, i stället för antal
      o.framåt    hur många månader efter den innevarande (0)
      o.vald      förvald månad, 'ÅÅÅÅ-MM-01' (den innevarande)
      o.märke     fn(månad) → '' | text: ett litet märke på knappen,
@@ -618,7 +619,15 @@ window.NXStudie = (function () {
     var lista = [];
     /* framåt: månader efter den innevarande. Adminvyn visar två, för
        ett pass som bokats och betalats i förväg hör till sin egen månad. */
-    for (var i = (o.antal || 12) - 1; i >= -(o.framåt || 0); i--) {
+    /* alla (2026-09-29): adminvyns bokföringsrader visar varje månad
+       sedan starten. Med tolv hade september 2026 fallit ur Betalningar,
+       Månadens ekonomi och Löner i september 2027, och en månad som ska
+       gå att visa i sju år hade inte gått att välja. */
+    var bakåt = o.alla
+      ? (nu.getFullYear() - Number(FÖRSTA_MÅNAD.slice(0, 4))) * 12
+        + nu.getMonth() + 1 - Number(FÖRSTA_MÅNAD.slice(5, 7)) + 1
+      : (o.antal || 12);
+    for (var i = bakåt - 1; i >= -(o.framåt || 0); i--) {
       var m = månadIso(new Date(nu.getFullYear(), nu.getMonth() - i, 1, 12));
       if (m >= FÖRSTA_MÅNAD) lista.push(m);
     }

@@ -508,8 +508,8 @@ månaden. Raden ersatte väljaren 30 dagar, tre månader, hela tiden, och
 två saker den gav står kvar på annat sätt: en månad med hållna pass utan
 rapport är märkt i raden ("2 saknas"), så att larmet inte gömmer sig i en
 månad som inte är vald, och ett sök räknar upp sina träffar i andra
-månader med en knapp dit. Raden börjar vid det äldsta hållna passet,
-minst tolv månader bakåt: hela tiden nådde varje pass. Sedan samma dag
+månader med en knapp dit. Raden har varje månad sedan september 2026
+(`alla`): hela tiden nådde varje pass. Sedan samma dag
 hämtas alla pass, inte de tusen första (avsnitt 3, Tusen rader). Byts månaden mot
 en tom på en telefon klämmer sidan scrollen 15–25 px. Det är inte lagat,
 med flit: på en dator står raden så högt att det inte händer, och en
@@ -1253,6 +1253,15 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    september, och i driften låg inget pass, underlag, faktura eller köp
    före den. Gränsen döljer alltså ingenting; ändras den bakåt ska det
    vara för att något faktiskt ligger där.
+   **Adminvyns fyra rader har varje månad sedan dess** (`alla: true`,
+   samma kväll), inte de tolv senaste: med tolv hade september 2026
+   fallit ur Betalningar, Månadens ekonomi och Löner i september 2027,
+   och en bokförd månad hade inte gått att välja. Stegarna i studievyn
+   och studiehjälparvyn har kvar tolv. Blir raden för lång efter några
+   år är svaret att gruppera den per år, inte att flytta äldre månader
+   till ett eget dokument: ett dokument är en andra sanning som slutar
+   stämma, och det gallras inte (avsnitt 5, Gallringen). Bokföringen
+   som ska sparas i sju år är Fortnox, inte adminvyn.
 
 Och några saker som kostade en omgång: basrubriken `h5` bär en
 `margin-top` i em, som med den större rubriken blev 27 px luft överst i
