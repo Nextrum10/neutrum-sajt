@@ -84,21 +84,21 @@
     betalt_ej_hallet: h => ['Betalt men inte hållet: ' + st(h.antal, 'pass', 'pass')
         + (h.belopp_ore ? ', ' + kronor(h.belopp_ore) : ''),
       'Pengarna är familjens tills passen hålls. Avboka passen under Bokningar och betala tillbaka '
-        + 'kortbetalningarna under Ekonomi → Kortbetalningar. Timmar som betalat ett pass går '
+        + 'kortbetalningarna under Betalningar → Alla betalningar. Timmar som betalat ett pass går '
         + 'tillbaka till klippkortet av sig själva när passet avbokas.'],
     timmar_kvar: h => ['Timmar kvar: ' + kronor(h.belopp_ore || 0) + ' tillbaka',
       'Betala tillbaka det som är kvar på ' + (h.antal === 1 ? 'klippkortet' : 'klippkorten')
-        + ' i Stripes dashboard. Beloppet är det som står under Om de slutar i dag i Ekonomi → '
-        + 'Erbjudanden, och hindret försvinner när återbetalningen kommit fram.'],
+        + ' i Stripes dashboard. Beloppet är det som står under Om de slutar i dag i Betalningar → '
+        + 'Köpta timmar, och hindret försvinner när återbetalningen kommit fram.'],
     timbank_kvar: h => ['Minuter i timbanken: ' + (h.minuter || 0) + ' min, ' + kronor(h.belopp_ore || 0),
-      'Betala tillbaka värdet i Stripes dashboard och markera banken utbetald under Ekonomi → Erbjudanden.'],
+      'Betala tillbaka värdet i Stripes dashboard och markera banken utbetald under Betalningar → Köpta timmar.'],
     kassa_oppen: () => ['Ett köp av timmar står öppet i kassan',
       'Familjen har öppnat Stripes kassa för ett klippkort det senaste dygnet. Vänta tills dygnet gått. '
         + 'Betalas köpet under tiden ska det betalas tillbaka först.'],
     tvist_oppen: h => ['Korttvist som inte är avgjord' + (h.antal > 1 ? ' (' + h.antal + ')' : ''),
-      'Passet och rapporten är beviset i tvisten. Vänta tills Stripe avgjort den, under Ekonomi → Kortbetalningar.'],
+      'Passet och rapporten är beviset i tvisten. Vänta tills Stripe avgjort den, under Betalningar → Att göra.'],
     betalt_for_lange: h => ['Betalt för längre tid än passen höll: ' + kronor(h.belopp_ore || 0),
-      'Betala tillbaka skillnaden under Ekonomi → Kortbetalningar.'],
+      'Betala tillbaka skillnaden under Betalningar → Att göra.'],
     ej_rapporterat: h => [st(h.antal, 'pass', 'pass') + ' har börjat men saknar rapport',
       'Studiehjälparen får lön först när rapporten finns, och den går inte att skriva efteråt. Be hen '
         + 'skriva den, eller avboka passet under Bokningar om det aldrig hölls.'],
@@ -108,7 +108,7 @@
     kommande_betalda: h => [st(h.antal, 'kommande pass', 'kommande pass') + ' betalda med kort: '
         + kronor(h.belopp_ore || 0),
       'Familjerna har betalat för pass med hen. Låt passen hållas, eller avboka dem under Bokningar och '
-        + 'betala tillbaka under Ekonomi → Kortbetalningar.']
+        + 'betala tillbaka under Betalningar → Alla betalningar.']
   };
 
   const TAS_BORT = {
