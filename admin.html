@@ -20,8 +20,8 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
-<link rel="stylesheet" href="nextrum-vy.css?v=b97a95f6">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=981f1690">
+<link rel="stylesheet" href="nextrum-vy.css?v=e4a5688c">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=ac9ee2ff">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -2156,8 +2156,14 @@
                och datum — namnen slås upp här, när den visas. -->
           <!-- ============ DOKUMENT (Fas 9.10) ============
                Handlingar OM verksamheten: avtal, intyg, försäkringar,
-               bolagspapper. Hinken är privat och policyerna släpper
-               bara in admin — varken familjen eller studiehjälparen.
+               bolagspapper. Hinken är privat.
+
+               Sedan 2026-09-29 kan en handling gälla en person, och
+               personen kan få se den (dokument_delas_med_personen). Leo:
+               "anställningsavtal med lärare eller annat avtal med kund".
+               Personen läser den under Profil & inställningar →
+               Dokument i sin egen vy, och ingen annan gör det. Utan en
+               person, eller utan krysset, är den admin ensam som förut.
 
                Undervisningsmaterial hör INTE hit. Det har en egen hink
                vars policyer släpper in familjen och studiehjälparen,
@@ -2170,31 +2176,51 @@
           <div class="vy-flik-panel" role="tabpanel" data-flik="dokument"
                id="panel-dokument" aria-labelledby="flik-dokument" hidden>
             <div class="dbox">
-              <h5>Ny handling</h5>
-              <div class="adm-verktyg">
-                <select class="sel" id="dok-typ" aria-label="Sorts handling">
-                  <option value="avtal">Avtal</option>
-                  <option value="intyg">Intyg</option>
-                  <option value="forsakring">Försäkring</option>
-                  <option value="bolagshandling">Bolagshandling</option>
-                  <option value="policy">Policy</option>
-                  <option value="ovrigt">Övrigt</option>
-                </select>
-                <input class="inp" type="text" id="dok-titel" placeholder="Vad det är"
-                       aria-label="Titel" maxlength="140">
-                <input class="inp" type="date" id="dok-till" aria-label="Giltig till och med">
-                <input class="inp" type="file" id="dok-fil" aria-label="Fil">
-                <button class="btn btn-sm" type="button" id="dok-spara">Lägg till</button>
-              </div>
-              <p class="small" id="dok-msg" hidden></p>
+              <h5 id="dok-rubrik">Ny handling</h5>
+              <form id="dok-form" class="uppg-form" novalidate>
+                <div class="fgroup"><label for="dok-typ">Sort</label>
+                  <select class="sel" id="dok-typ">
+                    <option value="avtal">Avtal</option>
+                    <option value="intyg">Intyg</option>
+                    <option value="forsakring">Försäkring</option>
+                    <option value="bolagshandling">Bolagshandling</option>
+                    <option value="policy">Policy</option>
+                    <option value="ovrigt">Övrigt</option>
+                  </select></div>
+                <div class="fgroup"><label for="dok-titel">Vad det är</label>
+                  <input class="inp" type="text" id="dok-titel" maxlength="140"
+                         placeholder="t.ex. Anställningsavtal 2026"></div>
+                <div class="fgroup"><label for="dok-till">Giltig till <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
+                  <input class="inp" type="date" id="dok-till"></div>
+                <div class="fgroup" id="dok-fil-grupp"><label for="dok-fil">Fil</label>
+                  <input class="inp" type="file" id="dok-fil"></div>
+                <div class="fgroup uppg-bred"><label for="dok-person">Vem det gäller <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
+                  <select class="sel" id="dok-person" style="max-width:none">
+                    <option value="">Ingen person, bara vi</option>
+                  </select></div>
+                <label class="uppg-bred ag-kryss" for="dok-delad">
+                  <input type="checkbox" id="dok-delad" disabled>
+                  <span>Personen ser dokumentet under Profil &amp; inställningar → Dokument och kan öppna det</span>
+                </label>
+                <p class="uppg-bred xsmall" id="dok-person-not" style="margin:0;color:var(--muted-2);line-height:1.6" hidden></p>
+                <div class="uppg-fot">
+                  <button class="btn btn-primary btn-sm" type="submit" id="dok-spara">Lägg till</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="dok-avbryt" hidden>Avbryt</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="dok-ta-bort" hidden>Ta bort handlingen</button>
+                  <p class="ok-msg" id="dok-msg" style="margin:0"></p>
+                </div>
+              </form>
               <p class="graf-not">Giltig till är valfritt. Fyll i det på sådant som går ut —
-                en försäkring, ett intyg — så syns det i listan när datumet närmar sig.</p>
+                en försäkring, ett intyg — så syns det i listan när datumet närmar sig.
+                Ett avtal med en studiehjälpare eller en familj: välj personen, så ser hen
+                sin kopia i sin egen vy. Ingen annan gör det.</p>
             </div>
 
             <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
               <div class="adm-verktyg">
                 <select class="sel" id="dok-filter" aria-label="Visa sort">
                   <option value="">Alla sorter</option>
+                  <option value="delade">Delade med en person</option>
                   <option value="avtal">Avtal</option>
                   <option value="intyg">Intyg</option>
                   <option value="forsakring">Försäkringar</option>
@@ -2239,6 +2265,7 @@
                   <option value="kontaktmeddelande">Kontaktmeddelanden</option>
                   <option value="klientfel">Bortstädade fel</option>
                   <option value="bolagsfakta">Bolagsfakta</option>
+                  <option value="handling">Dokument</option>
                   <option value="konto">Raderade konton</option>
                   <option value="elev">Raderade elever</option>
                 </select>
@@ -2330,14 +2357,14 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=f83aadf2"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=8359f197"></script>
+<script src="nextrum-studie.js?v=ccbacf2e"></script>
 <script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
-<script src="nextrum-media.js?v=370e4cac"></script>
+<script src="nextrum-media.js?v=01adfb73"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=710e5977"></script>
-<script src="nextrum-admin-detalj.js?v=7ccf2625"></script>
+<script src="nextrum-admin-detalj.js?v=de6d7e6e"></script>
 <script src="nextrum-admin-oversikt.js?v=1311e21f"></script>
 <script src="nextrum-admin-kunder.js?v=155120f9"></script>
 <script src="nextrum-admin-rekrytering.js?v=d08ab262"></script>
@@ -2348,7 +2375,7 @@
 <script src="nextrum-admin-manaden.js?v=9d66770e"></script>
 <script src="nextrum-admin-loner.js?v=7138b540"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
-<script src="nextrum-admin-system.js?v=07cdfb67"></script>
+<script src="nextrum-admin-system.js?v=8006b686"></script>
 <script src="nextrum-admin-automationer.js?v=2207b6d6"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den

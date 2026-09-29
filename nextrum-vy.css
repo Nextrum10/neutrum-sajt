@@ -1791,6 +1791,30 @@ a.pass-lank:hover{color:var(--acc)}
   .nx-nval .chip{width:100%}
 }
 
+/* ------------------------------------------------------------
+   DOKUMENTEN — Profil → Dokument (2026-09-29)
+
+   Avtal och annat Nextrum delat med personen (NXStudie.dokument).
+   Samma rad som notisvalen ovanför: ikonen och texten till vänster,
+   knappen till höger. På en telefon hamnar knappen under i full
+   bredd, där tummen träffar den.
+   ------------------------------------------------------------ */
+.nx-dok{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 0;border-bottom:1px solid var(--line);
+}
+.nx-dok:first-child{padding-top:0}
+.nx-dok:last-child{border-bottom:0;padding-bottom:0}
+.nx-dok-text{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.nx-dok-text b{font-weight:600;font-size:.92rem;letter-spacing:-.01em;overflow-wrap:anywhere}
+.nx-dok-text .xsmall{color:var(--muted-2);line-height:1.5}
+.nx-dok .btn{flex:none}
+.nx-dok-tom{margin:0;color:var(--muted-2);line-height:1.6}
+@media (max-width:460px){
+  .nx-dok{flex-wrap:wrap}
+  .nx-dok .btn{width:100%;justify-content:center}
+}
+
 /* ============================================================
    ERBJUDANDEN (Fas 16.1)
    Planer och klippkort som kort i ett rutnät, och familjens egna

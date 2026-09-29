@@ -4031,6 +4031,10 @@
 
     fyllProfil();
 
+    /* Dokumenten under Profil → Dokument (2026-09-29): avtalet och annat
+       Nextrum delat med studiehjälparen. Samma modul som föräldravyn. */
+    NXStudie.dokument({ host: $('#dokument-lista'), supa: supa, msg: $('#dokument-msg') });
+
     $('#k-namn').value = S.profil.full_name || '';
     $('#k-tel').value = S.profil.phone || '';
     $('#k-epost').textContent = S.profil.email || S.user.email || '';
