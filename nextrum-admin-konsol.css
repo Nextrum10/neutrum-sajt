@@ -49,43 +49,31 @@
 .vy-admin .kon-lage-halva,
 .vy-admin .kon-prat{
   box-sizing:border-box;
-  background:var(--pap-2);
-  border:1px solid var(--ln-2);
-  border-radius:14px;
-  padding:clamp(16px,1.8vw,22px);
+  /* Samma ark som korten i studievyn (--yta, rundade hörn, mjuk skugga):
+     adminvyn ska vara samma hus, 2026-09-29. */
+  background:var(--yta);
+  border:1px solid var(--ln);
+  border-radius:clamp(22px,2.4vw,28px);
+  box-shadow:var(--sk-1);
+  padding:clamp(18px,2.2vw,26px);
   position:relative;
   display:flex;
   flex-direction:column;
   min-width:0;
 }
 
-/* Hörnmarkeringarna. Samma grepp som nyckeltalen, och av samma skäl
-   som står där: konsolen ska läsas som ett instrument, och två rutor
-   med hörn är en avläsning medan sextiotre är brus. */
-.vy-admin .kon-hero::before,
-.vy-admin .kon-hero::after,
-.vy-admin .kon-lage-halva::before,
-.vy-admin .kon-lage-halva::after,
-.vy-admin .kon-prat::before,
-.vy-admin .kon-prat::after{
-  content:"";position:absolute;width:15px;height:15px;pointer-events:none;
-  border:1.5px solid var(--acc);
-}
-.vy-admin .kon-hero::before,
-.vy-admin .kon-lage-halva::before,
-.vy-admin .kon-prat::before{top:-1px;left:-1px;border-width:1.5px 0 0 1.5px;border-radius:14px 0 0 0}
-.vy-admin .kon-hero::after,
-.vy-admin .kon-lage-halva::after,
-.vy-admin .kon-prat::after{bottom:-1px;right:-1px;border-width:0 1.5px 1.5px 0;border-radius:0 0 14px 0}
-
+/* Hörnmarkeringarna är borta (2026-09-29). De gjorde konsolen till ett
+   instrument, och det är det ena stället i adminvyn som inte liknade
+   studievyns kort. NEX-emblemet och lägesringarna står kvar: de är
+   innehållet, inte ramen. */
 .vy-admin .kon-topp{
   display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
   padding-bottom:12px;margin-bottom:14px;
   border-bottom:1px solid var(--ln);
 }
 .vy-admin .kon-et{
-  font-family:var(--f-mono);font-size:10px;font-weight:600;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--acc-text);
+  font-size:.94rem;font-weight:650;
+  letter-spacing:-.01em;text-transform:none;color:var(--bl);
   flex-grow:1;
 }
 /* Belopp och kommande pass, som en avläsningsremsa under NEX. De är
@@ -117,7 +105,7 @@
      bara blivit en rektangel till. */
   background:
     radial-gradient(60% 90% at 50% 42%, var(--acc-soft), transparent 70%),
-    var(--pap-2);
+    var(--yta);
 }
 .vy-admin .kon-hero-not{
   margin:18px auto 0;max-width:46ch;
@@ -259,15 +247,15 @@
 .vy-admin .kon-lista .loading{grid-column:1/-1}
 .vy-admin .kon-rad{
   display:flex;align-items:center;gap:11px;
-  padding:9px 12px;
-  background:var(--pap);
-  border:1px solid var(--ln-2);
-  border-radius:10px;
+  padding:10px 14px;
+  background:var(--tint);
+  border:0;
+  border-radius:14px;
   color:var(--bl-2);font-size:.86rem;line-height:1.35;
   text-decoration:none;
   transition:background .18s var(--e), border-color .18s var(--e);
 }
-.vy-admin .kon-rad:hover{background:var(--acc-soft);border-color:var(--acc-line);color:var(--bl)}
+.vy-admin .kon-rad:hover{background:var(--acc-soft);color:var(--bl)}
 .vy-admin .kon-rad i{flex:none;display:flex;color:var(--ockra)}
 .vy-admin .kon-rad i svg{width:10px;height:10px;fill:currentColor}
 .vy-admin .kon-rad.ar-problem i{color:var(--fel)}
