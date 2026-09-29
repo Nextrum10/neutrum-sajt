@@ -3528,8 +3528,13 @@ tillbaka överst i avsnittet för 22.1.
      pH-värden, svårigheten i programmering åk 9 (`global`,
      `continue`), och språkhistorien i svenska åk 9. Programmeringen
      förutsätter Python i åk 9; Lgr22 kräver inget visst språk.
-     **Körs i driften efter merge**, på samma sätt som punkt 3: banken
-     är 1,2 MB.
+     **I drift sedan 2026-09-29**, som `20260929155611`
+     (`uppgiftsbanken_fler_amnen`), körd efter att PR #144 mergats, och
+     det driften sparade har samma md5 som filen. Banken är 1,2 MB och
+     gick samma väg som punkt 3 och 4, och tillägget `http` togs bort
+     igen. Hela `rls-test.sql` gick igenom före, i en transaktion som
+     rullades tillbaka med migrationen inläst, och efter: 923 av 923.
+     Ingen fråga blev inaktiv, så gamla svar och XP står kvar.
 - **Avtalen som delas med personen (2026-09-29, avsnitt 1) är i drift.**
   Migrationen `dokument_delas_med_personen` kördes efter att PR #126
   mergats, som version `20260929080900`, och det driften sparade har
