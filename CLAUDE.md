@@ -354,6 +354,14 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   på dagen de betalades, och testbetalningar och testköp aldrig
   (`S.klippkortTest`). Timbankens pass känns igen på
   `timbank_uttag.sort = 'pass'` (`S.timbankPass`).
+  **Intäkt denna månad på Översikt räknar samma köp** (2026-09-29), med
+  passen och tilläggen för övertid: allt som kommit in på kort under
+  månaden, på betalningsdagen, utan testbetalningar. Förut räknade den
+  bara passen, med testbetalningarna, så ett köpt klippkort stod där
+  som "inget betalt än". Ett pass betalt med timmar har inget eget
+  kortbelopp, och räknas alltså inte två gånger. Köpen står också för
+  sig under talet ("varav … köpta timmar"): de är en skuld till familjen
+  tills timmarna använts.
 - **Fakturorna skapas från sidan med månadskörningen**, samma körning som
   under Ekonomi och Löner, och knapparna på varje faktura är desamma som
   under Ekonomi → Fakturor (`data-fakt-*`, lyssnarna i
@@ -3122,6 +3130,18 @@ tillbaka överst i avsnittet för 22.1.
   nedskriven blir en uppgift, och kassan stänger passets förra session. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
+- **Det enda köpet av timmar är märkt skarpt fast det gjordes i
+  testläge** (2026-09-29). Leo: "jag behöver se hur det ser ut när
+  någon faktiskt köper klippkort, från vår admins sida". Köpet är Leos
+  egen Standardplan, 4 timmar för 1 364 kr den 28 september, och
+  `stripe_skarp` sattes till true för hand. Det räknas därför som pengar
+  in i september, i Översikt och Månadens ekonomi, fast inga pengar kom
+  in. Ingen trigger och ingen auditrad följer kolumnen, så det syns bara
+  här. Bokslutet (`manad_lage()`) räknar inte köpta timmar, så en
+  stängd september fryser inte talet, och webhooken skriver bara om
+  kolumnen på ett köp som inte är betalt. **Det ska tillbaka när Leo
+  sett det**: `update public.klippkort set stripe_skarp = false where
+  id = '9f4f87ae-6c14-430d-a87c-61bef5d09a82';`, och sedan bort härifrån.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
   (Fas 18.1). Koden, tabellerna och Koppla-knappen finns; kopplingen
   kräver stegen hos Google i `INTEGRATIONER.md` och ett klick på

@@ -1004,8 +1004,11 @@
       { namn: 'Timmar', rita: k => '<span class="adm-tal">' + esc(String(k.kvar)) + ' av ' + esc(String(k.timmar)) + '</span>'
         + '<span class="adm-und">kvar</span>' },
       { namn: 'Gäller till', rita: k => esc(kortDatum(k.giltigt_till)) },
+      /* Ett testköp märks som testbetalningarna på passen och tilläggen
+         (2026-09-29). Förut såg det ut precis som ett riktigt köp här. */
       { namn: 'Betalt', rita: k => (k.betalt_ore != null ? '<span class="adm-tal">' + esc(kronor(k.betalt_ore)) + '</span>' : '—')
-        + (Number(k.aterbetald_ore || 0) > 0 ? '<span class="adm-und">' + esc(kronor(k.aterbetald_ore)) + ' tillbaka</span>' : '') },
+        + (Number(k.aterbetald_ore || 0) > 0 ? '<span class="adm-und">' + esc(kronor(k.aterbetald_ore)) + ' tillbaka</span>' : '')
+        + (S.klippkortTest && S.klippkortTest.has(k.id) ? ' ' + pill('Test', '') : '') },
       { namn: 'Om de slutar i dag', rita: k => {
         if (k.status !== 'betald') return '';
         const ånger = k.angerfrist_till && String(k.angerfrist_till) >= isoFor(new Date());
