@@ -1401,7 +1401,7 @@ körd, och rutan säger det. Fyra regler:
 2. **Bara admin.** SECURITY DEFINER med `is_admin()` på första raden och
    ingen EXECUTE för anon. Ett jobb som står av (`active = false`) står
    som Står av, i lera: ett schema som står av och ett som går ska inte
-   se likadana ut (flaggan `notiser_mejl` ovan).
+   se likadana ut (flaggan `notiser_mejl`, Notiserna nedan).
 3. **Kommandot lämnas aldrig ut, och svaret bara vid fel.** Av ett fel
    bara första raden, för DETAIL bär radens värden ("Failing row contains
    …"), med `notis_konfig`s två hemligheter, långa nycklar och id:n,
@@ -1412,8 +1412,16 @@ körd, och rutan säger det. Fyra regler:
    frågar efter sju. Ett längre fönster ger samma svar.
 
 Ett nytt jobb syns i rutan av sig självt, med sitt namn; en rad i `JOBB`
-i `nextrum-admin-automationer.js` ger det en beskrivning. Jobben
-2026-09-29, alla som `postgres`, tider i UTC:
+i `nextrum-admin-automationer.js` ger det en beskrivning.
+
+Provat mot driften 2026-09-29 med hela `rls-test.sql` i en transaktion
+som rullades tillbaka, på det sätt avsnitt 9 beskriver: 762 av 764 med
+migrationen, där de två är Fas 23.1:s prov, som väntar på sin egen, och
+754 av 762 utan den, där alla sex raderna för schemat föll. Provet lägger
+in en misslyckad körning i `cron.job_run_details` med runid −9101, och
+den försvinner med återrullningen.
+
+Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 
 | Jobb | När | Gör |
 |---|---|---|
