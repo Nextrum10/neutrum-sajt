@@ -336,7 +336,12 @@ window.NXStudie = (function () {
   function täcktÖverst() {
     var hdr = document.querySelector('.hdr');
     var nederkant = hdr ? hdr.getBoundingClientRect().bottom : 72;
-    var sido = document.querySelector('.vy:not(.vy-admin) .vy-sido');
+    /* Adminvyn har en egen topprad och göms sajtens sidhuvud när man är
+       inne (getBoundingClientRect ger då 0): raden står fast högst upp och
+       är det som täcker. Den finns bara i adminvyn och bara när den syns. */
+    var topp = document.querySelector('.adm-topp:not([hidden])');
+    if (topp) nederkant = Math.max(nederkant, topp.getBoundingClientRect().bottom);
+    var sido = document.querySelector('.vy .vy-sido');
     if (sido) {
       var cs = window.getComputedStyle(sido);
       if (cs.position === 'sticky' && cs.flexDirection !== 'column') {

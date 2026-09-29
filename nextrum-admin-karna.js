@@ -71,6 +71,15 @@ const NXAdmin = (function () {
     if (document.documentElement.dataset.modulfel && id !== 'view-fel') return;
     ['view-loading', 'view-auth', 'view-nekad', 'view-app', 'view-fel']
       .forEach(v => { const el = $('#' + v); if (el) el.hidden = (v !== id); });
+    /* Inne i vyn har sidan en egen topprad (#adm-topp), och sajtens
+       sidhuvud och sidfot göms: klassen är vad CSS:en vilar på. Före det,
+       i inloggningen och felvyerna, är det sajtens sidhuvud som gäller.
+       Raden göms här också: kastar start() efter att vyn visats hade
+       felvyn annars fått båda raderna överst. */
+    const inne = id === 'view-app';
+    document.body.classList.toggle('adm-inne', inne);
+    const topp = $('#adm-topp');
+    if (topp) topp.hidden = !inne;
   }
 
   /* ============================================================

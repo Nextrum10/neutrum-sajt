@@ -2,15 +2,16 @@
    NEXTRUM — driftkonsolen på Översikt
 
    Ersätter fotoheron som låg överst i adminvyn och sa hej. Namn och
-   roll står redan i sidomenyns fot och i sidhuvudet, så det blocket
-   bar ingen information som inte fanns någon annanstans.
+   roll står redan i toppradens konto, så det blocket bar ingen
+   information som inte fanns någon annanstans.
 
-   TRE BAND, OCH DE KOSTAR OLIKA MYCKET:
+   TVÅ DELAR, OCH DE KOSTAR OLIKA MYCKET:
 
    1. LÄGET läses ur S.lage, alltså vyn admin_lage, som redan är
-      hämtad av ritaÖversikt(). Det är en databasvy som räknar på
-      ALLA rader, inte bara de hämtningen råkade ta med. Den kostar
-      ingenting, är alltid färsk, och ritas vid varje sidladdning.
+      hämtad av ritaÖversikt(), och arbetskön ur S.problem och
+      S.attGora. Den kostar ingenting, är alltid färsk, och ritas vid
+      varje sidladdning: ringen och talet i NEX-bandet, och listan Att
+      göra under det.
 
    2. AGENTEN, alltså NEX som man talar med, körs BARA när någon
       frågar den något. Drift-agenten är
@@ -41,24 +42,26 @@
     'Sammanfatta veckan i siffror.'
   ];
 
-  function ikon(läge) {
-    /* Form, inte bara färg. Under deuteranopi ligger grönt och rött
-       på nästan samma ljushet, och då är cirkeln kontra romben det
-       enda som skiljer en klar rad från en trasig. */
-    if (läge === 'problem') return '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1l5 5-5 5-5-5z"/></svg>';
-    if (läge === 'vantar') return '<svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
-    return '<svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5"/></svg>';
+  /* En post ur S.problem eller S.attGora blir en rad: antalet, vad det
+     är, en mening om varför det väntar och vägen dit. Texten byggs med
+     samma ental/rubrik-par som notisklockan och menyns siffror, så att
+     de säger ordagrant samma sak. */
+  function rad(p) {
+    return '<a class="kon-rad" href="' + esc(p.till) + '">'
+      + '<span class="kon-rad-antal">' + esc(String(p.antal)) + '</span>'
+      + '<span class="kon-rad-text"><b>' + esc(p.antal === 1 ? p.ental : p.rubrik) + '</b>'
+      + '<span>' + esc(p.under) + '</span></span>'
+      + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7"/></svg></a>';
   }
 
-  /* En post ur S.problem eller S.attGora blir en rad. Texten byggs
-     med samma ental/rubrik-par som blocken under använder, så att
-     konsolen och de säger ordagrant samma sak. */
-  function rad(p, ärProblem) {
-    const text = p.antal === 1 ? p.ental : p.antal + ' ' + p.rubrik;
-    return '<a class="kon-rad' + (ärProblem ? ' ar-problem' : '') + '" href="' + esc(p.till) + '">'
-      + '<i aria-hidden="true">' + ikon(ärProblem ? 'problem' : 'vantar') + '</i>'
-      + '<span>' + esc(text) + '</span>'
-      + '<b aria-hidden="true">&#8250;</b></a>';
+  /* En grupp har en rubrik i ord, och gruppen med det som gått fel en egen
+     ton. Formen och ordet bär skillnaden, inte bara färgen: --fel och
+     --ockra ligger nära varandra för den som inte ser rött. */
+  function grupp(rubrik, poster, klass) {
+    if (!poster.length) return '';
+    return '<div class="kon-grupp' + (klass ? ' ' + klass : '') + '">'
+      + '<p class="kon-grupp-rubrik">' + esc(rubrik) + '</p>'
+      + poster.map(rad).join('') + '</div>';
   }
 
   function ritaKonsol() {
@@ -69,14 +72,15 @@
     /* KONSOLEN RÄKNAR INGENTING SJÄLV.
 
        byggAttGöra() och byggProblem() i nextrum-admin-oversikt.js är
-       redan husets definition av "väntar på en människa" respektive
-       "har gått fel", och de blocken står direkt under konsolen. En
-       egen lista här hade blivit ett tredje tal som säger något annat
-       än de två — alltså precis det fel hjältebildens kort en gång
-       gjorde, och som står dokumenterat i nextrum-admin.js.
+       husets definition av "väntar på en människa" respektive "har gått
+       fel". Listan här ÄR de två, och ritas bara här: förut stod de
+       också som två egna block under konsolen, med samma rader en gång
+       till. En egen räkning hade blivit ett tal som säger något annat än
+       notisklockan och menyn — precis det fel hjältebildens kort en
+       gång gjorde, och som står dokumenterat i nextrum-admin.js.
 
-       Summan i disken är de två listorna ihop, och eftersom båda
-       syns uppdelade strax under går talet att stämma av med ögat. */
+       Summan i ringen är de två listorna ihop, och eftersom båda syns
+       uppdelade strax under går talet att stämma av med ögat. */
     const problem = S.problem || [];
     const kö = S.attGora || [];
     const summa = problem.concat(kö).reduce((n, p) => n + p.antal, 0);
@@ -91,14 +95,20 @@
     $('#kon-disk-text').textContent =
       läge === 'problem' ? 'kräver åtgärd' : (läge === 'atgard' ? 'väntar på dig' : 'allt lugnt');
 
+    const antal = $('#kon-antal');
+    if (antal) antal.textContent = summa ? summa + ' st' : '';
+
     if (!problem.length && !kö.length) {
-      värd.innerHTML = '<p class="kon-tom">Ingenting väntar på en människa just nu. '
-        + 'Inga förfallna fakturor, inga pass utan rapport, inga obesvarade anmälningar.</p>';
+      värd.innerHTML = '<div class="adm-lugnt">'
+        + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>'
+        + '<span><b>Ingenting väntar just nu</b>'
+        + '<span>Inga förfallna fakturor, inga pass utan rapport och inga obesvarade anmälningar.</span></span>'
+        + '</div>';
     } else {
       /* Problemen först: det som gått fel är inte samma sak som det
          som väntar, och en lista som blandar dem säger ingenting. */
-      värd.innerHTML = problem.map(p => rad(p, true)).join('')
-        + kö.map(p => rad(p, false)).join('');
+      värd.innerHTML = grupp('Har gått fel', problem, 'ar-problem')
+        + grupp('Väntar på dig', kö, '');
     }
 
     const l = S.lage;
@@ -113,13 +123,13 @@
     }
 
     /* Obetalt och att betala ut står för sig: de är belopp, inte
-       arbetsposter, och hör inte hemma i kön ovanför. */
+       arbetsposter, och hör inte hemma i kön. Kommande pass stod här
+       också, bredvid samma tal bland nyckeltalen strax under. */
     const pengar = $('#kon-pengar');
     if (pengar) {
       pengar.innerHTML =
         '<span><b>' + esc(kronor(l.obetalt_ore || 0)) + '</b> utestående</span>'
-        + '<span><b>' + esc(kronor(l.att_betala_ut_ore || 0)) + '</b> att betala ut</span>'
-        + '<span><b>' + esc(String(l.kommande_pass || 0)) + '</b> kommande pass</span>';
+        + '<span><b>' + esc(kronor(l.att_betala_ut_ore || 0)) + '</b> att betala ut</span>';
     }
   }
 
@@ -139,7 +149,7 @@
 
     if (exempel) {
       exempel.innerHTML = EXEMPEL.map(f =>
-        '<button class="btn btn-ghost btn-sm" type="button">' + esc(f) + '</button>').join('');
+        '<button class="kon-exempel-knapp" type="button">' + esc(f) + '</button>').join('');
       exempel.addEventListener('click', e => {
         const b = e.target.closest('button');
         if (!b) return;

@@ -183,35 +183,11 @@
     ].filter(p => p.antal > 0);
   }
 
-  function ritaAttGöra() {
-    S.attGora = byggAttGöra();
-    const host = $('#adm-att-gora');
-    const summa = S.attGora.reduce((n, p) => n + p.antal, 0);
-    $('#adm-att-antal').textContent = summa ? summa + ' st' : '';
-
-    if (!S.attGora.length) {
-      host.innerHTML = '<div class="adm-lugnt">'
-        + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>'
-        + '<span><b>Ingenting väntar just nu</b>'
-        + '<span>Inkorgen är tom, alla konton är avgjorda och alla pass är bekräftade.</span></span>'
-        + '</div>';
-      return;
-    }
-
-    host.innerHTML = '<div class="adm-att-gora">' + S.attGora.map(p =>
-      '<a href="' + esc(p.till) + '">'
-      + '<span class="adm-att-antal">' + p.antal + '</span>'
-      + '<span class="adm-att-text"><b>' + esc(p.antal === 1 ? p.ental : p.rubrik) + '</b>'
-      + '<span>' + esc(p.under) + '</span></span>'
-      + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7"/></svg>'
-      + '</a>').join('') + '</div>';
-  }
-
   /* ============================================================
      PROBLEM (Fas 6)
 
-     Det som gått fel eller fastnat — det som INTE redan står i
-     "Kräver din uppmärksamhet" ovanför, så att ingenting räknas två
+     Det som gått fel eller fastnat — det som INTE redan står bland
+     det som väntar (byggAttGöra), så att ingenting räknas två
      gånger. Räknat i databasen (admin_lage, ekonomiska_avvikelser)
      där det går, annars ur det vyn redan har.
      ============================================================ */
@@ -249,38 +225,12 @@
     ].filter(p => p.antal > 0);
   }
 
-  function ritaProblem() {
-    const host = $('#adm-problem');
-    if (!host) return;
-    /* Sparas på S av samma skäl som S.attGora: driftkonsolen visar
-       samma poster och ska räkna dem EN gång, inte bygga en tredje
-       lista som kan säga något annat. */
-    const problem = S.problem = byggProblem();
-    const summa = problem.reduce((n, p) => n + p.antal, 0);
-    $('#adm-problem-antal').textContent = summa ? summa + ' st' : '';
-    if (!problem.length) {
-      host.innerHTML = '<div class="adm-lugnt">'
-        + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>'
-        + '<span><b>Inga problem just nu</b>'
-        + '<span>Inga obetalda pass, inga sena uppgifter och inga fel det senaste dygnet.</span></span>'
-        + '</div>';
-      return;
-    }
-    host.innerHTML = '<div class="adm-att-gora">' + problem.map(p =>
-      '<a href="' + esc(p.till) + '">'
-      + '<span class="adm-att-antal">' + p.antal + '</span>'
-      + '<span class="adm-att-text"><b>' + esc(p.antal === 1 ? p.ental : p.rubrik) + '</b>'
-      + '<span>' + esc(p.under) + '</span></span>'
-      + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7"/></svg>'
-      + '</a>').join('') + '</div>';
-  }
-
   /* Hur många händelser som ritas i Senaste aktivitet.
 
-     Blocket står bredvid Närmaste passen i samma rad, och en lista som
-     växer förbi grannen trycker ned allt under sig på Översikt. Fem är
-     valt för att blocket ska sluta där grannen slutar, inte för att
-     fem vore ett naturligt antal händelser.
+     Blocket står under Närmaste passen, bredvid Att göra, och en lista
+     som växer förbi grannen trycker ned allt under sig på Översikt. Fem
+     är valt för att kolumnen ska sluta ungefär där Att göra slutar, inte
+     för att fem vore ett naturligt antal händelser.
 
      Notisklockan i nextrum-admin.js har SIN EGEN gräns på samma flöde.
      Den är en annan sak — en klocka som visar det senaste, inte en yta
@@ -386,10 +336,13 @@
     S.lage = (!error && data && data.length) ? data[0] : null;
 
     ritaTal();
-    ritaAttGöra();
-    ritaProblem();
-    /* EFTER de två blocken: konsolen läser S.attGora och S.problem,
-       som de sätter. Ritas den före står den med tomma listor. */
+    /* Arbetskön räknas här, en gång, och läses av konsolen (Att göra),
+       notisklockan och menyns siffror. Två listor och inte en: det som
+       gått fel är inte samma sak som det som väntar. De ritades förut
+       också som två egna block under konsolen, som då visade samma
+       rader en gång till. */
+    S.attGora = byggAttGöra();
+    S.problem = byggProblem();
     if (NXAdmin.rita.ritaKonsol) NXAdmin.rita.ritaKonsol();
     ritaNärmastePass();
     ritaFlöde();

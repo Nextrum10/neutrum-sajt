@@ -316,7 +316,7 @@ låsta. Passets plats och rad till studiehjälparen går att TÖMMA men inte
 efter månaden.
 
 **Månadens ekonomi och Löner (2026-09-28)** är två egna sidor under
-Ekonomi i adminvyn, bredvid Betalningar & utbetalningar. Leo: "där ska
+Ekonomi i adminvyn, bredvid Betalningar. Leo: "där ska
 man aktuellt se hur många fakturor som ska skickas samt så många
 lektioner som är betalda för. hur många timmar är betalt samt ej ännu
 betalt ... detta för att ej ha problem om kassalikviditet", och "en till
@@ -719,7 +719,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-uppgifter.js` + `nextrum-uppgifter.css` | `NXUppgifter` (Fas 23.1): banan, spelaren, stjärnorna, märkena, rättningen per område och genomgången. Studievyn och studiehjälparvyn, CSS:en efter arbetsytan. Rättar ingenting själv och skriver inget resultat; det gör `niva_svara()` |
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
-| `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, sök, notiser, bevakning och `start()` |
+| `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, toppraden (sök, notiser, kontot), bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |
 | `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, manaden (Månadens ekonomi), loner (Löner), tjanster, system, automationer, ai, radera. Anropar varandra via `NXAdmin.rita`. En ny områdesfil ska in i `nextrum-modulvakt.js` också |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
@@ -979,6 +979,48 @@ knapp i varje sektion och rapporterar hopp över 40 px. Admin var ren.
 Den mäter `scrollY`, inte vad som står stilla på skärmen, så fällan i
 punkt 4 syntes inte i den: sidan scrollade inte, innehållet flyttade
 sig. Mät ett element före och efter trycket (`getBoundingClientRect`).
+
+### Adminvyns skal (2026-09-29)
+
+Leo: "för vår admin snyggare och enklare". Mätt i provbänken före: drygt
+160 px sidhuvud innan första raden, samma arbetskö tre gånger på
+Översikt (5 300 px lång på en telefon), nio menyrubriker där sex stod
+över en enda post, och en marknadssidfot. Inget av det ändrade vad vyn
+kan göra; allt står i `admin.html`, skalet i `nextrum-admin.js`,
+Översikt i `nextrum-admin-oversikt.js` och `-konsol.js`, och CSS:en i
+adminskalet (§6) i `nextrum-arbetsyta.css` och i `nextrum-admin-konsol.css`.
+
+- **En rad överst.** `#adm-topp` står utanför `<main>` och bär sök,
+  notiser och kontot (Studievyn, Studiehjälparvyn, Logga ut). Inne i
+  vyn göms sajtens sidhuvud och sidfot av `body.adm-inne`, som
+  `NXAdmin.visa()` sätter bara för `view-app`, och samma anrop göms
+  raden i alla andra vyer: inloggningen och felvyerna har sajtens
+  sidhuvud som förut. `täcktÖverst()` räknar raden. Måtten står en
+  gång, på `body.vy-admin` (`--adm-topp-h`, `--adm-bredd`, `--adm-pad`).
+- **Menyn** har fyra grupper under Översikt och Statistik, rubrikerna
+  till vänster, egen rullning när den är högre än fönstret, och
+  etiketten kortas med ellips i stället för att skjuta ut siffran.
+  Betalningar hette Betalningar & utbetalningar: namnet var bredare än
+  menyn, och siffran hamnade utanför den markerade posten. Sektionens
+  rubrik heter likadant.
+- **Arbetskön ritas en gång**, i Att göra under NEX, med det som gått
+  fel först under en egen rubrik. `S.attGora` och `S.problem` räknas i
+  `ritaÖversikt()` och läses av konsolen, notisklockan och menyns
+  siffror, precis som förut. NEX är ett band (ringen, läget, samtalet),
+  inte en 286 px hög ring med kön bredvid.
+- **Kontrollerna är mindre.** Cinemas `.btn` (padding 15px 26px) laddas
+  efter `nextrum.css` och vinner över dess `.btn-sm`: en liten knapp är
+  55 px hög, mätt i studievyn, och var det i adminvyn. Adminvyn sätter sina egna mått på
+  `.vy-admin .btn`, `.btn-sm`, `.inp` och `.sel`. Studievyn och
+  studiehjälparvyn har kvar det gamla, och TUMMEN räknar med det.
+  **Fälla:** en regel som ska vinna över `.vy-admin .inp` måste väga mer
+  än (0,2,0) eller stå efter den i filen; sökfältet i raden fick
+  `.adm-topp` framför sig när ikonen hamnade över texten.
+- **Flikarna i en sektion är understrukna**, som i detaljpanelen, och
+  nyckeltalens rad under talet är löptext i stället för halvfet mono.
+- **`color-scheme` är `light dark`.** Den stod på `dark` från tiden då
+  adminvyn var alltid mörk, och gav ljust läge mörka rullgardinslistor,
+  datumväljare och rullist.
 
 ---
 
