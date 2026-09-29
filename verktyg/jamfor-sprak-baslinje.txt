@@ -30,7 +30,7 @@
       122 42 Enskede
 
 === intresseanmalan.html  ->  en/intresseanmalan.html
-  STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
+  STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
 
 === lagring.html  ->  en/lagring.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>

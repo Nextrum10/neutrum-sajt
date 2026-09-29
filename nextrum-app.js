@@ -68,6 +68,14 @@ const NX = (function () {
                       'Thank you for your application. We read every one and will be in touch within 24 hours.'],
     tackIntresse:    ['Tack. Vi har tagit emot er intresseanmälan och hör av oss på {e} inom 24 timmar.',
                       'Thank you. We have received your enquiry and will get back to you at {e} within 24 hours.'],
+    /* Medan Nextrum bildas (uppstart() nedan). {om} är det uppstart()
+       räknat fram, "om ungefär tre veckor" eller "inom kort". */
+    tackIntresseUppstart: ['Tack. Vi har tagit emot er intresseanmälan och hör av oss på {e} inom 24 timmar, så planerar vi ert första pass till starten {om}.',
+                           'Thank you. We have received your enquiry and will get back to you at {e} within 24 hours to plan your first session for when we start {om}.'],
+    omVeckor:        ['om ungefär {n} veckor', 'in about {n} weeks'],
+    omEnVecka:       ['om ungefär en vecka', 'in about a week'],
+    omNagraDagar:    ['om några dagar', 'in a few days'],
+    inomKort:        ['inom kort', 'very soon'],
     tackKontakt:     ['Mottaget. Vi återkommer på mejlen du angav.',
                       'Received. We will reply to the email address you gave.'],
     ingenFil:        ['Ingen fil vald', 'No file chosen'],
@@ -100,6 +108,39 @@ const NX = (function () {
     let ut = par ? par[SPRÅK] : nyckel;
     if (vars) for (const k in vars) ut = ut.replace('{' + k + '}', vars[k]);
     return ut.replace('{oss}', CFG.EPOST || 'info@nextrum.se');
+  }
+
+  /* ============================================================
+     UPPSTARTEN (Leo 2026-09-29)
+     Nextrum AB är under bildande, och intresseanmälan säger när
+     läxhjälpen kan börja. Dagen står på rutan (data-uppstart), och
+     avståndet dit räknas här vid varje sidvisning. Skrivet för hand
+     hade "om ungefär tre veckor" varit fel efter en vecka, på en sida
+     som ska samla anmälningar under just de veckorna.
+
+     Svarar med det den skrev, eller tom sträng när rutan saknas: då
+     är uppstarten över och anroparen tackar som vanligt. När dagen
+     har passerat står "inom kort", aldrig ett datum bakåt i tiden.
+     ============================================================ */
+  /* Talen med bokstäver, som i resten av sajtens löptext. */
+  const VECKOTAL = [['två', 'tre', 'fyra', 'fem', 'sex'],
+                    ['two', 'three', 'four', 'five', 'six']][SPRÅK];
+  function uppstart() {
+    const ruta = $('[data-uppstart]');
+    if (!ruta) return '';
+    const [å, m, d] = String(ruta.getAttribute('data-uppstart')).split('-').map(Number);
+    const idag = new Date();
+    idag.setHours(0, 0, 0, 0);
+    /* Avrundat: dygnet då klockan ställs om är 23 eller 25 timmar. */
+    const dagar = Math.round((new Date(å, m - 1, d) - idag) / 864e5);
+    const veckor = Math.round(dagar / 7);
+    /* !(dagar > 0) tar också ett datum som inte gick att läsa (NaN). */
+    const om = !(dagar > 0) ? t('inomKort')
+      : dagar <= 4 ? t('omNagraDagar')
+      : veckor <= 1 ? t('omEnVecka')
+      : t('omVeckor', { n: VECKOTAL[veckor - 2] || veckor });
+    $$('[data-uppstart-om]', ruta).forEach(el => { el.textContent = om; });
+    return om;
   }
 
   const DAGAR = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'];
@@ -1060,7 +1101,7 @@ const NX = (function () {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling, spamskydd,
     initFaq, initPris, initErbjudanden, kopplaAnsökan, märkInloggad,
-    källa, händelse,
+    källa, händelse, uppstart,
     bildIntoning, initVagval,
     /* hämtaTillganglighet stod här i Fas 14.0-grenen. Main tog bort
        funktionen medan grenen låg öppen, så namnet exporterades utan

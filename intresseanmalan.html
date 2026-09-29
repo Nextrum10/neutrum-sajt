@@ -52,6 +52,8 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
+<!-- rutan om att Nextrum bildas; bara här och på den engelska sidan -->
+<link rel="stylesheet" href="nextrum-uppstart.css?v=f10d1d31">
 </head>
 <body>
 
@@ -125,12 +127,34 @@
 
 <main id="innehall">
 
-<section class="wrap nx-page-hero">
+<section class="wrap nx-page-hero nx-har-uppstart">
   <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
   <span class="nx-et acc" data-stig style="margin-top:22px">Intresseanmälan</span>
   <h1 class="nx-d1" data-avslöj>Berätta vad ni<br>behöver hjälp med.</h1>
   <p class="nx-lede" data-stig data-fördröj="1">Fyll i några enkla uppgifter
           så hör vi av oss inom 24 timmar. Att skicka in kostar ingenting och binder er inte vid något.</p>
+
+  <!-- UPPSTARTEN (Leo 2026-09-29). Nextrum AB är under bildande, och
+       den som anmäler sig ska veta när läxhjälpen kan börja.
+       data-uppstart är måndagen i veckan passen börjar. "Om ungefär tre
+       veckor" räknas om därifrån av NX.uppstart() vid varje visning:
+       skrivet för hand hade det varit fel efter en vecka. Texten här är
+       bara det som står innan skriptet hunnit. Flyttas starten: byt
+       datumet OCH veckan i banan, här och i en/intresseanmalan.html.
+       Tas bort när passen har börjat (se nextrum-uppstart.css). -->
+  <div class="nx-uppstart" data-uppstart="2026-10-19" data-stig data-fördröj="2">
+    <div class="nx-uppstart-topp">
+      <span class="nx-uppstart-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5v-8"/><path d="M12 12.5c0-3.4-2.4-5.8-6-5.8 0 3.4 2.4 5.8 6 5.8z"/><path d="M12 10.2c0-3.6 2.5-6 6.2-6 0 3.6-2.5 6-6.2 6z"/><path d="M7.5 20.5h9"/></svg></span>
+      <h2 class="nx-uppstart-rubrik">Just nu bildas Nextrum.</h2>
+    </div>
+    <p>Vi kan börja med läxhjälpen <span data-uppstart-om>om ungefär tre veckor</span>.
+      Skicka in anmälan redan nu, så hör vi av oss inom 24 timmar och planerar ert första
+      pass till starten.</p>
+    <ol class="nx-uppstart-bana">
+      <li><b>Nu</b><span>Anmälan är öppen</span></li>
+      <li><b>Vecka 43</b><span>Första passen</span></li>
+    </ol>
+  </div>
 </section>
 
 <section class="nx-yta nx-sek" id="intresse">
@@ -371,7 +395,7 @@
 <script src="nextrum-config.js?v=21cecc53"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=f83aadf2"></script>
+<script src="nextrum-app.js?v=8ffb028b"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-motion.js?v=58b3615b"></script>
@@ -392,6 +416,10 @@
   NXFin.allt();
   NX.bildIntoning();
   NX.initVagval();
+
+  /* "om ungefär tre veckor" i rutan om uppstarten, räknat ur dess
+     datum. Tomt när rutan är borttagen, och då tackar vi som vanligt. */
+  const uppstartOm = NX.uppstart();
 
   /* ==========================================================
      ROLLVÄLJAREN I INTRESSEANMÄLAN
@@ -535,7 +563,8 @@
 
       if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }
       leadForm.reset();
-      säg(msg, t('tackIntresse', { e: epost }), true);
+      säg(msg, uppstartOm ? t('tackIntresseUppstart', { e: epost, om: uppstartOm })
+                          : t('tackIntresse', { e: epost }), true);
       NX.händelse('intresseanmalan', {
         kanal: NX.källa().kanal || 'okänd',
         kampanj: NX.källa().kampanj || 'ingen',

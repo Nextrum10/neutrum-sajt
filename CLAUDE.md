@@ -32,6 +32,23 @@ Det här är inte en katalog man bläddrar i. Nextrum matchar.
 Föräldravyn låses upp först efter steg 4. Innan dess: väntläge, inte
 trasig sida.
 
+**Intresseanmälan säger att Nextrum bildas** (2026-09-29). Leo: "just
+nu ska vi samla in kunder men vi är inte registrerade ännu ... ska det
+stå att just nu bildas vi och vi kan påbörja läxhjälpen om ungefär 3
+veckor". En ruta i sidhuvudet på `intresseanmalan.html` och `/en/`,
+stilad i `nextrum-uppstart.css`, med en bana från Nu till vecka 43.
+Dagen står i `data-uppstart` (måndagen 19 oktober), och "om ungefär tre
+veckor" räknas om ur den av `NX.uppstart()` vid varje visning: skrivet
+för hand hade det varit fel efter en vecka, mitt i kampanjen. När dagen
+passerat står "inom kort", aldrig en dag bakåt i tiden. Tacket efter
+anmälan säger detsamma (`tackIntresseUppstart`) så länge rutan finns.
+Flyttas starten: byt `data-uppstart` OCH veckan i banan, på båda
+sidorna. **Rutan ska bort när passen har börjat**: den och klassen
+`nx-har-uppstart` på båda sidorna, och länken till och filen
+`nextrum-uppstart.css`. Tacket går tillbaka av sig självt. Villkoren och
+integritetspolicyn säger redan att Nextrum AB är under bildande; de
+ändras när bolaget är registrerat, vilket inte behöver vara samma dag.
+
 **Ett pass bokas i två steg (Fas 15.1).** Familjen trycker på en dag i
 en tom kalender, väljer ämne, tid och antal barn och FÖRESLÅR tiden.
 Studiehjälparen accepterar eller föreslår en annan under Föreslagna
@@ -1253,6 +1270,15 @@ Designen är samma hus som ovan; det här är skalet runt den.
   inte en 286 px hög ring med kön bredvid. `.adm-att-gora` finns inte
   längre; raderna är `.kon-rad` i `nextrum-admin-konsol.css`, i samma
   form som den hade.
+- **Att göra är bara vårt drag** (samma dag). Passförfrågningarna stod
+  där, men ett förslag väntar på svar från studiehjälparen, eller från
+  familjen efter ett motförslag. Leo: "det är inte något vi gör eller har
+  påverkan på". Hur många som väntar står i stället i Bokningars
+  rubrikrad, i ockra (`ritaFörfrågningar()`), och Önskat i
+  bokningslistan är ockra som i kalendern bredvid, inte lera. En rad i
+  Att göra räknas också i NEX-ringen, notisklockan och menyns siffror,
+  så det som väntar på en familj eller en studiehjälpare hör inte hemma
+  där.
 - **Bredden** är `--adm-bredd` (1760 px) på `body.vy-admin main.wrap`.
   `body` står framför med flit: `.vy main.wrap` under STORA SKÄRMAR väger
   annars lika mycket och står senare, och över 1500 px fastnade

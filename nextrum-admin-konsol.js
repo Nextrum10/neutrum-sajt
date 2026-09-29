@@ -72,10 +72,9 @@
     /* KONSOLEN RÄKNAR INGENTING SJÄLV.
 
        byggAttGöra() och byggProblem() i nextrum-admin-oversikt.js är
-       husets definition av "väntar på en människa" respektive "har gått
-       fel". Listan här ÄR de två, och ritas bara här: förut stod de
-       också som två egna block under konsolen, med samma rader en gång
-       till. En egen räkning hade blivit ett tal som säger något annat än
+       husets definition av "väntar på oss" respektive "har gått fel".
+       Listan här ÄR de två, och ritas bara här: förut stod de också som
+       två egna block under konsolen, med samma rader en gång till. En egen räkning hade blivit ett tal som säger något annat än
        notisklockan och menyn — precis det fel hjältebildens kort en
        gång gjorde, och som står dokumenterat i nextrum-admin.js.
 

@@ -170,8 +170,11 @@ const NXAdmin = (function () {
   const SH_LAGE = {
     pending: ['Väntar', 'ar-vantar'], approved: ['Godkänd', 'ar-klar'], rejected: ['Avböjd', '']
   };
+  /* Önskat är ockra sedan 2026-09-29, inte lera: förslaget väntar på
+     svar från den andra parten, inte på oss, och kalendern bredvid
+     visar det i ockra (Att göra i nextrum-admin-oversikt.js). */
   const BOK_LAGE = {
-    requested: ['Önskat', 'ar-ny'], confirmed: ['Bekräftat', 'ar-vantar'],
+    requested: ['Önskat', 'ar-vantar'], confirmed: ['Bekräftat', 'ar-vantar'],
     completed: ['Genomfört', 'ar-klar'], cancelled: ['Avbokat', '']
   };
   /* Fas 9.4. Koderna är databasens och står i en CHECK; texten är
