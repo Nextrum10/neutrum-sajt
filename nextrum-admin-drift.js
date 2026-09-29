@@ -620,7 +620,8 @@
       .reduce((a, m) => m < a ? m : a, NXStudie.månadIso(nu));
     const antal = Math.max(12, (nu.getFullYear() - Number(äldsta.slice(0, 4))) * 12
       + nu.getMonth() + 1 - Number(äldsta.slice(5, 7)) + 1);
-    förstaMånad = NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - antal + 1, 1, 12));
+    förstaMånad = [NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - antal + 1, 1, 12)),
+      NXStudie.FÖRSTA_MÅNAD || ''].sort().pop();
     MV = NXStudie.månadsval(host, {
       antal,
       märke: m => saknasPer[m] ? saknasPer[m] + ' saknas' : '',

@@ -83,12 +83,14 @@
   const periodIMånaden = period => !!period && månadFör(period) === valdMånad();
   const månadText = () => NXStudie.månadsNamn(valdMånad());
 
-  /* Väljaren har de tolv senaste månaderna. En månad utanför den (ett
-     pass som är bokat i nästa månad, eller något äldre än ett år) går
-     inte att hoppa till, och står därför som text i stället för knapp. */
+  /* Väljaren har de tolv senaste månaderna, men ingen före september
+     2026 (NXStudie.FÖRSTA_MÅNAD). En månad utanför den (ett pass som är
+     bokat i nästa månad, eller något äldre) går inte att hoppa till, och
+     står därför som text i stället för knapp. */
   function iVäljaren(m) {
     const nu = new Date();
-    const först = NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - 11, 1, 12));
+    const först = [NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - 11, 1, 12)),
+      NXStudie.FÖRSTA_MÅNAD || ''].sort().pop();
     return m >= först && m <= NXStudie.månadIso(nu);
   }
 

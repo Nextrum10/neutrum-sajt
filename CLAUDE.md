@@ -1151,7 +1151,15 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    mer, och den innevarande månaden har en dämpad prick, inte en kant.
    Den valda är mörk och flikarna under ljusa: i Betalningar står de två
    spåren efter varandra. Spåret (`.nx-manad-spar`) är det som rullar,
-   inte host. Pilarna göms på en telefon, där man drar.
+   inte host. Pilarna göms på en telefon, där man drar, och när hela
+   raden ryms.
+   **Ingen månadsväljare börjar före september 2026**
+   (`NXStudie.FÖRSTA_MÅNAD`, samma kväll, Leo: "ta bort allt som inte är
+   från september 2026 och framåt"), varken raderna i adminvyn eller
+   stegarna i studievyn och studiehjälparvyn. De första passen hölls i
+   september, och i driften låg inget pass, underlag, faktura eller köp
+   före den. Gränsen döljer alltså ingenting; ändras den bakåt ska det
+   vara för att något faktiskt ligger där.
 
 Och några saker som kostade en omgång: basrubriken `h5` bär en
 `margin-top` i em, som med den större rubriken blev 27 px luft överst i

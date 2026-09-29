@@ -552,6 +552,15 @@ window.NXStudie = (function () {
     };
   }
 
+  /* Ingen rad börjar före september 2026 (Leo 2026-09-29: "ta bort
+     allt som inte är från september 2026 och framåt"). Det är månaden
+     de första passen hölls, och varje månad före den var tom i varje
+     vy: elva knappar man inte hade någon nytta av. Kontrollerat i
+     driften samma dag: inget pass, underlag, faktura eller köp ligger
+     före den, så gränsen döljer ingenting. En rad kan fortfarande få
+     månader framåt (o.framåt). */
+  var FÖRSTA_MÅNAD = '2026-09-01';
+
   function månadsval(host, o) {
     o = o || {};
     if (!host) return null;
@@ -562,7 +571,8 @@ window.NXStudie = (function () {
     /* framåt: månader efter den innevarande. Adminvyn visar två, för
        ett pass som bokats och betalats i förväg hör till sin egen månad. */
     for (var i = (o.antal || 12) - 1; i >= -(o.framåt || 0); i--) {
-      lista.push(månadIso(new Date(nu.getFullYear(), nu.getMonth() - i, 1, 12)));
+      var m = månadIso(new Date(nu.getFullYear(), nu.getMonth() - i, 1, 12));
+      if (m >= FÖRSTA_MÅNAD) lista.push(m);
     }
     if (lista.indexOf(vald) === -1) vald = denna;
     if (o.stegare) return månadsstegare(host, o, lista, vald, denna);
@@ -619,6 +629,8 @@ window.NXStudie = (function () {
       ram.classList.toggle('mer-hoger', höger);
       host.querySelector('[data-rull="-1"]').disabled = !vänster;
       host.querySelector('[data-rull="1"]').disabled = !höger;
+      /* Ryms hela raden står den utan pilar, bara så bred som månaderna. */
+      host.classList.toggle('nx-manad-stilla', max <= 2);
     }
     function iBild() {
       var b = spår.querySelector('[aria-pressed="true"]');
@@ -2850,7 +2862,7 @@ window.NXStudie = (function () {
     progressRad: progressRad, progressPerÄmne: progressPerÄmne,
     tomt: tomt, laddar: laddar, laddarFörsta: laddarFörsta, håll: håll, scrollaTill: scrollaTill, visaÖverst: visaÖverst,
     hämtaAlla: hämtaAlla,
-    månadsval: månadsval, månadsGräns: månadsGräns, månadsNamn: månadsNamn, månadIso: månadIso,
+    månadsval: månadsval, FÖRSTA_MÅNAD: FÖRSTA_MÅNAD, månadsGräns: månadsGräns, månadsNamn: månadsNamn, månadIso: månadIso,
     passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,
     hämtaMöte: hämtaMöte, mötesRad: mötesRad,
     dagMedVeckodag: dagMedVeckodag, GICK: GICK,
