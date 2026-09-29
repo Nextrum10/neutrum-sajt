@@ -88,10 +88,19 @@ window.NEXTRUM_CONFIG = {
      vercel.json ska släppa in domänerna, och för Meta ska automatisk
      avancerad matchning vara AV i Events Manager. IMY har bötfällt
      svenska företag för Meta-pixeln 2024. Ett nytt id gör att rutan
-     frågar alla igen: ett ja till det gamla är inte ett ja till det. */
+     frågar alla igen: ett ja till det gamla är inte ett ja till det.
+
+     AVSTÄNGT TILLS VIDARE (2026-09-29, Leo: "inaktivera cookie banner
+     tills vidare"). Rutan är inte ett eget reglage: den visas när något
+     här är på. Båda av betyder ingen ruta, ingen länk i footern och
+     ingenting lagrat, och det betyder också att Vercels statistik inte
+     laddas och att en anmälan inte kan krediteras en annons (källan blir
+     okänd i analysvyerna). Att bara dölja rutan och låta skripten gå
+     vore att mäta utan samtycke. Slå på igen: STATISTIK och
+     KALLSPARNING till true, sedan satt-version.py. */
   SAMTYCKE: {
-    STATISTIK: true,
-    KALLSPARNING: true,
+    STATISTIK: false,
+    KALLSPARNING: false,
     META_PIXEL_ID: '',
     GOOGLE_TAG_ID: '',
     GOOGLE_ADS_LEAD: '',

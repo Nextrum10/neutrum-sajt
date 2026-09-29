@@ -2662,6 +2662,17 @@ bara när något där är på.** Är allt av finns ingen ruta, ingen länk i
 footern och ingenting lagras: en ruta som ber om lov till ingenting är
 brus.
 
+**Rutan är avstängd tills vidare sedan 2026-09-29** (Leo: "inaktivera
+cookie banner tills vidare"). `STATISTIK` och `KALLSPARNING` står på
+`false`, och det är hela avstängningen: rutan är inget eget reglage.
+Följden är att Vercels statistik inte laddas alls och att en anmälan
+inte kan krediteras en annons (källan blir `null`, alltså okänd i
+`analys_leads_per_kalla`). Dölj inte bara rutan med CSS och låt
+skripten gå: det är mätning utan samtycke. Slå på igen genom att sätta
+båda till `true` och köra `verktyg/satt-version.py`. `lagring.html`
+säger "det finns inget att samtycka till" så länge de står av, vilket
+är sant.
+
 - **Två syften, två val: statistik och annonser.** Rutan har Neka
   alla, Godkänn alla och en kryssruta per syfte (ingen förkryssad) med
   Spara mitt val. Svaret är `{v:2, val:{statistik, annonser}}`; ett
