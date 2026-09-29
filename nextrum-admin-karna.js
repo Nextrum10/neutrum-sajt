@@ -121,7 +121,11 @@ const NXAdmin = (function () {
     if (!rader.length) return tomt(o.tomt || 'Inget här', '');
     return '<ul class="adm-namnlista">' + rader.map(r => {
       const under = o.under ? o.under(r) : '';
+      /* Initialerna först (2026-09-29): ögat hittar en person på formen
+         innan det läst namnet, och en lista med bara text var en vägg. De
+         är aria-hidden; skärmläsaren läser namnet som förut. */
       return '<li><button type="button" class="adm-namn" data-dp="' + esc(o.typ + ':' + o.id(r)) + '">'
+        + M.avatar(o.namn(r) || '', null, { liten: true })
         + '<span class="adm-namn-text"><b>' + esc(o.namn(r) || '(namn saknas)') + '</b>'
         + (under ? '<span>' + esc(under) + '</span>' : '')
         + '</span>'

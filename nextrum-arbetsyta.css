@@ -1156,6 +1156,10 @@ body.adm-inne.vy main{
   padding-top:clamp(16px,2vw,26px);
   padding-bottom:clamp(48px,6vw,80px);
 }
+/* På en telefon börjar vyn med sektionsraden, som ska ligga direkt
+   under raden överst: med luft emellan syntes en remsa av sidan mellan
+   de två tills man rullat. */
+@media (max-width:899px){body.adm-inne.vy main{padding-top:0}}
 
 .adm-topp{
   position:sticky;top:0;z-index:800;
@@ -1447,7 +1451,7 @@ body.adm-inne.vy main{
    i mitten. Ingen meny-fot: Logga ut och kontot bor i toppraden.
    ------------------------------------------------------------ */
 .vy-admin .vy-sek{scroll-margin-top:calc(var(--adm-topp-h) + 12px)}
-.vy-admin .vy-sido a{padding:6px 12px;gap:10px;font-size:.88rem;line-height:1.35;border-radius:9px}
+.vy-admin .vy-sido a{padding:6px 10px;gap:10px;font-size:.88rem;line-height:1.35;border-radius:9px}
 @media (pointer:coarse) and (min-width:900px){.vy-admin .vy-sido a{padding:9px 12px}}
 .vy-admin .vy-sido a .adm-etikett{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis}
 /* Bara där menyn är en kolumn: på en telefon är rubriken ett lodrätt
@@ -1461,7 +1465,7 @@ body.adm-inne.vy main{
 
 @media (min-width:900px){
   .vy-admin .vy-layout{
-    grid-template-columns:232px minmax(0,1fr);
+    grid-template-columns:248px minmax(0,1fr);
     gap:clamp(24px,2.6vw,44px);
   }
   .vy-admin .vy-sido{
@@ -1481,8 +1485,8 @@ body.adm-inne.vy main{
     position:sticky;top:var(--adm-topp-h);z-index:40;
     margin-inline:calc(-1 * var(--adm-pad));
     padding:8px var(--adm-pad);
-    background:var(--pap);
-    border-bottom:1px solid var(--ln);
+    background:var(--yta);
+    border-bottom:1px solid var(--adm-kant);
   }
 }
 
@@ -1738,6 +1742,238 @@ body.adm-inne.vy main{
   .adm-pass-vad{order:3;flex:1 0 100%}
   .adm-pass-vem{margin-top:4px}
 }
+
+/* ============================================================
+   YTORNA (2026-09-29)
+   Leo: "gör designen mycket snyggare". Samma palett, samma typsnitt
+   och samma komponenter som studievyn och studiehjälparvyn — adminvyn
+   ska vara samma hus (2026-09-24). Det som gjorde den platt var
+   hantverket, och det är det här avsnittet ändrar:
+
+   1. Arken lyfter. Ett kort, en nyckeltalsruta, menyn och raden överst
+      är ett ljusare ark på papperet (--yta), som i de två andra vyerna,
+      med en kant blandad ur bläcket och en varm skugga. Förut hade
+      korten papperets egen färg, och bara kanten höll isär dem.
+   2. Inga kanter i kanter. En tabell eller en namnlista inne i ett kort
+      har ingen egen ram; raderna skiljs av luft och en ton.
+   3. Kortets rubrik är en rubrik: sans och halvfet. Den lilla mono-
+      etiketten med ett streck före var husets ögonbryn över en stor
+      rubrik på startsidan; här var den ensam, och tjugo kort i rad
+      läste som tjugo fotnoter.
+   4. Ett läge har en ton, inte bara en prick: lera är ert drag eller
+      ett fel, ockra väntar på någon annan, mossa är klart. Samma regel
+      och samma par som i vyerna (cinemas :root, kontrollerade mot AA).
+   5. Den valda posten i menyn är en ton av leran med en lerfärgad
+      ikon, inte en inverterad krämpill: den var det ljusaste på hela
+      skärmen i mörkt läge och drog blicken från innehållet.
+
+   Kanten och skuggan står som två variabler på body.vy-admin. De
+   blandas ur --bl, som byter värde med läget på :root och ärvs hit,
+   och ingen skriver om --bl under body: aliasfällan i CLAUDE.md
+   (avsnitt 3) gäller inte.
+   ============================================================ */
+body.vy-admin{
+  --adm-kant:color-mix(in srgb,var(--bl) 10%,transparent);
+  --adm-skugga:0 1px 2px rgba(28,24,18,.04),0 10px 28px -18px rgba(28,24,18,.24);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) body.vy-admin{
+    --adm-skugga:inset 0 1px 0 rgba(239,230,214,.035),0 14px 32px -20px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"] body.vy-admin{
+  --adm-skugga:inset 0 1px 0 rgba(239,230,214,.035),0 14px 32px -20px rgba(0,0,0,.7);
+}
+
+/* Ett svagt sken av lera uppe till höger och mossa till vänster, som
+   de mörka ytorna på sajten har. Stilla: det rullar med sidan och
+   ritas en gång. */
+/* no-repeat: bodyns bakgrund målas på hela duken, och en sida som är
+   kortare än skärmen fick annars skenet en gång till under sig, med
+   en skarv där det började om. */
+body.adm-inne{
+  background:
+    radial-gradient(1100px 520px at 92% -8%,color-mix(in srgb,var(--acc) 8%,transparent),transparent 70%) no-repeat,
+    radial-gradient(900px 480px at -10% 6%,color-mix(in srgb,var(--mossa) 6%,transparent),transparent 72%) no-repeat,
+    var(--pap);
+}
+
+/* Raden överst är ett ark, med kanten under. */
+.vy-admin .adm-topp{background:var(--yta);border-bottom-color:var(--adm-kant)}
+
+/* ---- rubrikerna ---- */
+.vy-admin .vy-sek-topp{margin-bottom:clamp(16px,1.6vw,20px)}
+.vy-admin .vy-sek h2{
+  font-size:clamp(1.45rem,2vw,1.85rem);font-weight:750;letter-spacing:-.036em;
+}
+.vy-admin .vy-sek-topp p{margin-top:6px;font-size:.92rem}
+
+/* ---- arken ---- */
+.vy-admin .dbox,
+.vy-admin .adm-kpi{
+  background:var(--yta);
+  border:1px solid var(--adm-kant);
+  box-shadow:var(--adm-skugga);
+}
+.vy-admin .dbox{border-radius:16px}
+.vy-admin .adm-kpi{border-radius:14px}
+/* En ruta inne i ett kort är en ton, inte ett ark till. */
+.vy-admin .dbox .adm-kpi{background:var(--tint);border-color:transparent;box-shadow:none}
+
+/* margin-top uttryckligen: webbläsarens egen för h5 är 1,67 em, och med
+   den större rubriken blev det 26 px luft ovanför varje kort-rubrik. En
+   rubrik längre ned i kortet får tillbaka luften. */
+.vy-admin .dbox h5{
+  font-family:var(--f-sans);font-size:.98rem;font-weight:680;
+  letter-spacing:-.012em;text-transform:none;color:var(--bl);
+  margin:0 0 14px;gap:10px;
+}
+.vy-admin .dbox * + h5{margin-top:24px}
+.vy-admin .dbox h5::before{content:none}
+.vy-admin .dbox h5 em{
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3);
+}
+
+/* ---- menyn ----
+   Ett eget ark på en dator; på en telefon en rad som förut. */
+@media (min-width:900px){
+  .vy-admin .vy-sido{
+    background:var(--yta);
+    border:1px solid var(--adm-kant);
+    border-radius:16px;
+    padding:10px 8px;
+    box-shadow:var(--adm-skugga);
+  }
+  .vy-admin .vy-layout.ar-hopfalld .vy-sido{padding:10px 6px}
+}
+.vy-admin .vy-sido a{color:var(--bl-2);font-weight:550}
+.vy-admin .vy-sido a > svg{color:var(--bl-3);transition:color .18s var(--e)}
+.vy-admin .vy-sido a:hover{background:var(--tint);color:var(--bl)}
+.vy-admin .vy-sido a:hover > svg{color:var(--bl-2)}
+.vy-admin .vy-sido a.ar-har,
+.vy-admin .vy-sido a.ar-har:hover{background:var(--acc-soft);color:var(--bl);font-weight:650}
+.vy-admin .vy-sido a.ar-har > svg{color:var(--acc)}
+.vy-admin .vy-sido a.ar-har .vy-sido-mark{background:var(--acc);color:var(--acc-ink)}
+
+/* ---- lägena ---- */
+.vy-admin .adm-status{
+  border:0;background:var(--tint);color:var(--bl-2);
+  padding:4px 10px 4px 9px;font-size:.78rem;
+}
+.vy-admin .adm-status.ar-ny{background:var(--acc-soft);color:var(--acc-text)}
+.vy-admin .adm-status.ar-vantar{background:var(--ockra-soft);color:var(--ockra-text)}
+.vy-admin .adm-status.ar-klar{background:var(--mossa-soft);color:var(--mossa-text)}
+.vy-admin .adm-status.ar-vantar::before{background:var(--ockra)}
+.vy-admin .adm-status.ar-klar::before{background:var(--mossa)}
+
+/* ---- tabellerna och namnlistorna inne i ett kort ---- */
+.vy-admin .dbox .adm-skal{border:0;background:transparent;border-radius:10px}
+.vy-admin table.adm th{background:var(--tint);border-bottom:0;color:var(--bl-3)}
+.vy-admin table.adm td{border-bottom-color:var(--adm-kant)}
+.vy-admin table.adm tbody tr:hover td{background:color-mix(in srgb,var(--tint) 65%,transparent)}
+
+.vy-admin .dbox .adm-namnlista{border:0;border-radius:0;background:transparent;overflow:visible}
+.vy-admin .adm-namnlista li + li{border-top:0}
+.vy-admin .adm-namn{padding:8px 10px;border-radius:11px;gap:12px}
+.vy-admin .adm-namn:hover{background:var(--tint)}
+.vy-admin .adm-namn .nx-avatar{width:34px;height:34px;font-size:.72rem;border:0;background:var(--bricka)}
+
+/* ---- Översikt ---- */
+.vy-admin .adm-kpi:has(.adm-kpi-ikon){position:relative;padding-right:60px}
+.vy-admin .adm-kpi-ikon{
+  position:absolute;top:14px;right:14px;
+  display:grid;place-items:center;
+  width:34px;height:34px;
+  border-radius:10px;background:var(--acc-soft);color:var(--acc);
+}
+/* På en smal ruta tog ikonen plats från texten; den är bara prydnad. */
+@media (max-width:560px){
+  .vy-admin .adm-kpi:has(.adm-kpi-ikon){padding-right:16px}
+  .vy-admin .adm-kpi-ikon{display:none}
+}
+.vy-admin .adm-kpi-ikon svg{
+  width:17px;height:17px;fill:none;stroke:currentColor;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+
+/* Närmaste passen: rader i kortet, inte kort i kortet. Tiden står i en
+   datumruta (--bricka), som i vyernas kort. */
+.vy-admin .adm-passrad{gap:2px}
+.vy-admin .adm-pass{
+  border:0;background:transparent;border-radius:12px;
+  padding:9px 10px 9px 8px;gap:14px;
+}
+.vy-admin .adm-pass:hover{background:var(--tint);transform:none;box-shadow:none}
+.vy-admin .adm-pass-nar{
+  min-width:74px;padding:8px 6px;border-right:0;border-radius:11px;
+  background:var(--bricka);
+}
+.vy-admin .adm-format{border:0;background:var(--tint);color:var(--bl-2)}
+.vy-admin .adm-format.ar-plats{background:var(--mossa-soft);color:var(--mossa-text)}
+@media (max-width:560px){
+  .vy-admin .adm-pass-nar{background:transparent;padding:0}
+}
+
+.vy-admin .adm-flode::before{background:var(--adm-kant)}
+.vy-admin .adm-flode-post::before{background:var(--yta)}
+.vy-admin .adm-flode-post.ar-ny::before{background:var(--acc)}
+
+/* ---- korten med en tjänst, en koppling eller en strömbrytare ----
+   Samma ark. Rubriken är en h6 med webbläsarens marginal (2,33 em),
+   som lade 35 px luft ovanför namnet på varje tjänst. */
+.vy-admin .adm-koppling-kort{
+  background:var(--yta);border-color:var(--adm-kant);
+  border-radius:16px;box-shadow:var(--adm-skugga);
+}
+.vy-admin .dbox .adm-koppling-kort{background:var(--tint);border-color:transparent;box-shadow:none}
+.vy-admin .adm-koppling-kort h6{margin:0}
+.vy-admin .adm-koppling-kort .adm-krav{border-top-color:var(--adm-kant)}
+
+/* ---- månadsraden ----
+   Samma markering som menyn: den valda månaden var en fylld krämpill,
+   det ljusaste på hela skärmen i mörkt läge. Den innevarande månaden
+   har en tydligare kant än de andra när den inte är vald. */
+.vy-admin .nx-manader button{
+  background:transparent;border-color:var(--adm-kant);
+  padding:7px 14px;font-size:.85rem;
+}
+.vy-admin .nx-manader button:hover{background:var(--tint);border-color:var(--adm-kant)}
+.vy-admin .nx-manader button[data-denna]:not([aria-pressed="true"]){
+  border-color:color-mix(in srgb,var(--bl) 30%,transparent);
+}
+.vy-admin .nx-manader button[aria-pressed="true"]{
+  background:var(--acc-soft);color:var(--bl);border-color:var(--acc-line);
+}
+
+/* ---- bytet ----
+   En sektion eller en flik tonar fram när den visas, en gång, i
+   opacitet och inget annat: ingen höjd som ändras (fälla 4 i avsnitt 3
+   i CLAUDE.md) och ingen transform, som hade gjort sektionen till
+   referens för det som står fast i den. Animationen startar av sig
+   själv när hidden tas bort, och ingenting rör sig efter det. */
+@keyframes adm-fram{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:no-preference){
+  .vy-admin .vy-sek:not([hidden]),
+  .vy-admin .vy-flik-panel:not([hidden]){animation:adm-fram .22s var(--e) both}
+}
+
+/* ---- det som dyker upp: panelerna, rutan, detaljpanelen ---- */
+.vy-admin .adm-panel{background:var(--yta);border-color:var(--adm-kant);box-shadow:var(--sk-2)}
+.vy-admin .empty{border-color:var(--adm-kant);background:color-mix(in srgb,var(--tint) 45%,transparent)}
+.vy-admin .dp{background:var(--yta);border-left-color:var(--adm-kant)}
+.vy-admin .dp-topp{background:var(--tint);border-bottom-color:var(--adm-kant)}
+.vy-admin .dp-flikar{border-bottom-color:var(--adm-kant)}
+/* Talen och uppgifterna i panelen: toner i stället för ett rutnät av
+   kanter. Rutorna lyfter ur panelen (--tint) i stället för att sjunka
+   ner i sidans botten (--pap), som de gjorde i mörkt läge. */
+.vy-admin .dp-tal,
+.vy-admin .dp-fakta{background:var(--adm-kant);border-color:transparent}
+.vy-admin .dp-tal > div,
+.vy-admin .dp-fakta > div{background:var(--tint)}
+.vy-admin .dp-rad + .dp-rad{border-top-color:var(--adm-kant)}
+.vy-admin .btn-ghost{border-color:color-mix(in srgb,var(--bl) 20%,transparent)}
+.vy-admin .btn-ghost:hover{background:var(--tint);border-color:color-mix(in srgb,var(--bl) 34%,transparent)}
 
 /* ============================================================
    7. MATCHNINGEN

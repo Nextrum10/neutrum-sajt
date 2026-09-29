@@ -34,13 +34,16 @@
   align-items:center;
   gap:clamp(18px,2.4vw,40px);
   padding:clamp(18px,2vw,26px) clamp(18px,2.2vw,30px);
-  border:1px solid var(--ln-2);
+  /* Samma ark som korten (YTORNA i nextrum-arbetsyta.css): --yta, en
+     kant ur bläcket och den varma skuggan. */
+  border:1px solid var(--adm-kant);
   border-radius:18px;
+  box-shadow:var(--adm-skugga);
   /* Ett svagt sken bakom emblemet, inte en ram runt det: bandet ska
      kännas som ett fönster in i maskinen. */
   background:
     radial-gradient(420px 260px at 12% 50%, var(--acc-soft), transparent 72%),
-    var(--pap-2);
+    var(--yta);
 }
 .vy-admin .kon-disk{grid-area:disk}
 .vy-admin .kon-prat{grid-area:prat;min-width:0}

@@ -1022,6 +1022,29 @@ adminskalet (§6) i `nextrum-arbetsyta.css` och i `nextrum-admin-konsol.css`.
   adminvyn var alltid mörk, och gav ljust läge mörka rullgardinslistor,
   datumväljare och rullist.
 
+**Ytorna** (samma dag, Leo: "gör designen mycket snyggare också"). Samma
+palett, typsnitt och komponenter; det som ändrades är hantverket, i
+avsnittet YTORNA i `nextrum-arbetsyta.css`. Kort, nyckeltal, menyn och
+raden överst är ark i `--yta` med kanten `--adm-kant` och skuggan
+`--adm-skugga` (båda på `body.vy-admin`, blandade ur `--bl`). En tabell
+eller namnlista inne i ett kort har ingen egen ram. Kortets rubrik
+(`.dbox h5`) är sans och halvfet i stället för mono med ett streck före.
+Lägespillren har lägets ton (lera, ockra, mossa: samma par som vyerna).
+Den valda posten i menyn och den valda månaden är en ton av leran, inte
+en inverterad krämpill. Namnlistorna har initialer, Översikts nyckeltal
+ikoner, och en sektion eller flik tonar fram i opacitet när den visas.
+
+- **Fälla:** `h5` och `h6` har webbläsarens egen marginal (1,67 och
+  2,33 em). Med den större sans-rubriken blev det 26 px luft ovanför
+  varje kortrubrik, så `.vy-admin .dbox h5` och `.adm-koppling-kort h6`
+  sätter sin marginal själva.
+- **Fälla:** i mörkt läge vinner `:root:not([data-theme="light"]) .vy
+  .dbox` (0,4,0) kortets bakgrund. `--yta` och `--pap-2` är samma ton där,
+  så det syns inte, men en ändring av kortets bakgrund i mörkt läge måste
+  möta den vikten (avsnitt 3, Två fällor när en palett byts).
+- NEX-bandets yta står i `nextrum-admin-konsol.css`, som laddas efter och
+  vinner på samma vikt; en regel för `.kon-*` i `arbetsyta.css` gör inget.
+
 ---
 
 ## 4. Språk

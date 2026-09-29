@@ -43,10 +43,20 @@
       + '</svg>';
   }
 
+  /* En ikon per tal (2026-09-29), i samma streck som menyns. Den säger
+     vad talet handlar om innan man läst etiketten; ingen färg som
+     betyder något, bara accenten. */
+  const KPI_IKON = {
+    elever: '<circle cx="12" cy="7.5" r="3.2"/><path d="M4.5 20c0-3.4 3.2-5.5 7.5-5.5s7.5 2.1 7.5 5.5"/>',
+    hjalpare: '<path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/>',
+    pass: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>',
+    intakt: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/>'
+  };
+
   /* Talet, etiketten, och en förändring bara när den är sann.
      jämför === null betyder "ingen föregående period", och då
      ritas raden inte alls. */
-  function kpi(tal, etikett, jämför, extra) {
+  function kpi(tal, etikett, jämför, extra, ikon) {
     let diff = '';
     if (jämför !== null && jämför !== undefined) {
       const upp = jämför >= 0;
@@ -55,7 +65,9 @@
     } else if (extra) {
       diff = '<span class="adm-kpi-diff">' + esc(extra) + '</span>';
     }
-    return '<div class="adm-kpi"><b>' + esc(String(tal)) + '</b>'
+    return '<div class="adm-kpi">'
+      + (ikon ? '<i class="adm-kpi-ikon" aria-hidden="true"><svg viewBox="0 0 24 24">' + KPI_IKON[ikon] + '</svg></i>' : '')
+      + '<b>' + esc(String(tal)) + '</b>'
       + '<span>' + esc(etikett) + '</span>' + diff + '</div>';
   }
 
@@ -106,13 +118,13 @@
        i stället, och den är entydig. */
     $('#adm-tal').innerHTML =
       kpi(nu, 'Aktiva elever', förr ? nu - förr : null,
-        förr ? null : 'pass senaste 30 dagarna')
+        förr ? null : 'pass senaste 30 dagarna', 'elever')
       + kpi(godkända.length, 'Aktiva studiehjälpare', null,
-        nyaShDennaMånad ? '+' + nyaShDennaMånad + ' denna månad' : 'godkända konton')
-      + kpi(kommande, 'Kommande lektioner', null, 'bekräftade och önskade')
+        nyaShDennaMånad ? '+' + nyaShDennaMånad + ' denna månad' : 'godkända konton', 'hjalpare')
+      + kpi(kommande, 'Kommande lektioner', null, 'bekräftade och önskade', 'pass')
       + kpi(kronor(belopp), 'Intäkt denna månad', null,
         förraBelopp ? 'förra månaden ' + kronor(förraBelopp)
-          : (belopp ? 'betalt hittills' : 'inget betalt än'));
+          : (belopp ? 'betalt hittills' : 'inget betalt än'), 'intakt');
   }
 
   /* ------------------------------------------------------------
