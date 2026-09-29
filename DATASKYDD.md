@@ -224,7 +224,7 @@ reglerna står i `radera_person()` (migrationen
   hållet, timmar eller minuter kvar, en öppen kassa eller tvist, ett
   pass som börjat utan rapport, eller (studiehjälpare) matchade elever.
   Rutan säger vad som ska göras först. Pengar personen är skyldig oss
-  hindrar inte; de står som larm under Ekonomi.
+  hindrar inte; de står som larm under Betalningar → Att göra.
 
 Filer först, raden sedan (CLAUDE.md avsnitt 6): adminvyn tar bort
 profilbilden, barnens mapp och CV:t innan raden, och databasen vägrar

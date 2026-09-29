@@ -155,6 +155,16 @@
     bytMånad();
   });
 
+  /* Månadens ekonomi länkar till Alla betalningar för sin månad. Utan
+     det hade länken visat den månad som råkade vara vald här, och
+     beloppen hade inte gått att stämma av mot varandra. */
+  function visaBetalningsmånad(m) {
+    startaMånadsval();
+    if (!MV || MV.vald() === m) return;
+    MV.sätt(m);
+    bytMånad();
+  }
+
   /* Till en annan flik i sektionen, från en knapp i innehållet. Adressen
      skrivs som när man trycker på fliken själv (replaceState: ett
      flikbyte är inte ett steg bakåtknappen ska ta), och står flikraden
@@ -847,10 +857,17 @@
     katalogen = NXTjanster.ladda().then(() => { ritaBetalningslistan(); ritaFakturor(); }, () => {});
   }
 
+  /* Raderna läses också av Månadens ekonomi (betalningsrader nedan),
+     som räknar pengarna på dem i stället för på sitt eget sätt. Därför
+     bär en rad familjen, passet, minuterna och om passet räknas: ett
+     pass som är bekräftat eller genomfört, inte undantaget och inte
+     betalt med testkort. Påminn står för sig, så att familjens rad där
+     kan ha knappen en gång i stället för på varje pass. */
   function nyRad(o) {
     return Object.assign({
-      filter: new Set(), meta: [], knappar: '', under: '', belopp: null, beloppText: null, sätt: '',
-      in: 0, attFåIn: 0, kommande: 0, tillbaka: 0, attÅterbetala: 0, avgift: 0, test: false, sök: ''
+      filter: new Set(), meta: [], knappar: '', påminn: '', under: '', belopp: null, beloppText: null, sätt: '',
+      in: 0, attFåIn: 0, kommande: 0, tillbaka: 0, attÅterbetala: 0, avgift: 0, oanvänt: 0, test: false, sök: '',
+      parent: null, booking: null, min: 0, räknas: false, fakturaläge: null
     }, o);
   }
 
@@ -861,11 +878,15 @@
       typ: 'pass', datum: b.wanted_date, tid: String(b.wanted_time || '').slice(0, 5), dp: 'pass:' + b.id,
       titel: [b.subject || 'Pass', elev && elev !== '—' ? elev : null].filter(Boolean).join(' · '),
       meta: [familjLänk(b.parent_id), b.tutor_id ? esc(namnFör(b.tutor_id)) : ''],
-      sök: [b.subject, elev, namnFör(b.parent_id), namnFör(b.tutor_id)].join(' ')
+      sök: [b.subject, elev, namnFör(b.parent_id), namnFör(b.tutor_id)].join(' '),
+      parent: b.parent_id, booking: b.id,
+      /* Den hållna tiden för ett genomfört pass, annars den bokade. */
+      min: b.status === 'completed' ? Number((u && u.debiterade_min) || b.duration_min || 60) : Number(b.duration_min || 60)
     });
     const betalt = Number(b.betalt_ore || 0), åter = Number(b.aterbetald_ore || 0), kvar = betalt - åter;
     r.test = b.stripe_skarp === false;
     if (r.test) r.filter.add('test');
+    r.räknas = b.status !== 'cancelled' && b.fakturerbar !== false && !r.test;
     /* Samma minuter som familjens vy och kassan: ett genomfört pass
        kostar den hållna tiden minus övertiden timbanken tog. */
     const minuter = b.status === 'completed'
@@ -965,6 +986,7 @@
         r.sätt = 'Faktura';
         if (fakt) {
           const fl = NXBetalning.fakturaLage(fakt.f);
+          r.fakturaläge = fl;
           r.belopp = Number(fakt.rad.belopp_ore || 0);
           r.under = 'faktura ' + (fakt.f.fortnox_fakturanummer || NXBetalning.periodText(fakt.f.period));
           if (fl === 'betald') { r.läge = ['Fakturan betald', 'ar-klar']; r.in = r.belopp; r.filter.add('betalda'); }
@@ -979,6 +1001,7 @@
         }
         const p = pris();
         r.belopp = p;
+        r.fakturaläge = 'saknas';
         const nästa = NXStudie.månadsGräns(månadFör(b.wanted_date)).till;
         const slut = isoFor(new Date()) >= nästa;
         r.läge = slut ? ['Ingen faktura än', 'ar-ny'] : ['Faktureras i ' + NXStudie.månadsNamn(nästa, false), 'ar-vantar'];
@@ -1001,7 +1024,7 @@
             : ['Inte betalt', 'ar-ny'];
           r.attFåIn = r.belopp || 0;
           r.filter.add('attbetala');
-          if (larmad) r.knappar = påminnKnapp(b.parent_id);
+          if (larmad) r.påminn = påminnKnapp(b.parent_id);
         } else {
           r.läge = st === 'vantar' ? ['Kassan öppnad', 'ar-vantar'] : st === 'misslyckad' ? ['Kortet nekades', 'ar-vantar']
             : ['Inte betalt än', ''];
@@ -1023,7 +1046,8 @@
       typ: 'tillagg', datum: b.wanted_date, tid: String(b.wanted_time || '').slice(0, 5), dp: 'pass:' + b.id,
       titel: 'Tillägg för ' + t.minuter + ' min övertid',
       meta: [familjLänk(b.parent_id), esc('passet ' + kortDatum(b.wanted_date) + ', ' + (b.subject || 'pass'))],
-      sätt: 'Kort', sök: [namnFör(b.parent_id), b.subject, 'tillägg övertid'].join(' ')
+      sätt: 'Kort', sök: [namnFör(b.parent_id), b.subject, 'tillägg övertid'].join(' '),
+      parent: b.parent_id, booking: b.id
     });
     r.test = t.stripe_skarp === false;
     if (r.test) r.filter.add('test');
@@ -1039,7 +1063,7 @@
       r.under = 'begärt';
       r.attFåIn = r.belopp;
       r.filter.add('attbetala');
-      if (larmad) r.knappar = påminnKnapp(b.parent_id);
+      if (larmad) r.påminn = påminnKnapp(b.parent_id);
     }
     return r;
   }
@@ -1057,7 +1081,8 @@
       typ: 'kop', datum: isoFor(new Date(k.betald_at)), tid: '', dp: 'familj:' + k.parent_id,
       titel: k.namn || 'Köpta timmar',
       meta: [familjLänk(k.parent_id), esc(k.kvar + ' av ' + k.timmar + ' timmar kvar')],
-      sätt: 'Kort', sök: [namnFör(k.parent_id), k.namn, 'klippkort plan timmar'].join(' ')
+      sätt: 'Kort', sök: [namnFör(k.parent_id), k.namn, 'klippkort plan timmar'].join(' '),
+      parent: k.parent_id
     });
     r.test = !!(S.klippkortTest && S.klippkortTest.has(k.id));
     if (r.test) r.filter.add('test');
@@ -1065,13 +1090,28 @@
     r.belopp = betalt;
     r.läge = r.test && k.status === 'betald' ? ['Testköp', ''] : (KK_LAGE[k.status] || [k.status, '']);
     if (!r.test) { r.in = betalt - åter; r.tillbaka = åter; }
+    /* Det som betalats för timmar som inte använts än, till köpets eget
+       timpris. Pengarna har kommit in, men de är familjens tills
+       timmarna använts: Månadens ekonomi säger det bredvid summan. */
+    if (!r.test && Number(k.timmar) > 0) {
+      r.oanvänt = Math.round(r.in * Math.max(Number(k.kvar || 0), 0) / Number(k.timmar));
+    }
     if (k.status === 'betald' && !r.test) r.filter.add('betalda');
     if (k.status === 'tvist') r.filter.add('tvist');
     if (åter > 0) { r.filter.add('tillbaka'); r.under = '−' + kronor(åter) + ' tillbaka'; }
     return r;
   }
 
-  function betalningsrader() {
+  /* Månadens betalningar. Utan månad den som är vald här; Månadens
+     ekonomi skickar sin egen och räknar sina pengar på samma rader, så
+     att samma månad aldrig har två belopp på två sidor. */
+  function betalningsrader(månad) {
+    const g = NXStudie.månadsGräns(månad || valdMånad());
+    const iMånaden = datum => {
+      if (!datum) return false;
+      const d = String(datum).slice(0, 10);
+      return d >= g.från && d < g.till;
+    };
     const pu = new Map((S.passunderlag || []).map(p => [p.id, p]));
     const påFaktura = new Map();
     (S.fakturor || []).forEach(f => (f.invoice_lines || []).forEach(l => {
@@ -1114,8 +1154,12 @@
     return rader.sort((a, b) => (String(b.datum) + (b.tid || '')).localeCompare(String(a.datum) + (a.tid || '')));
   }
 
-  function betRad(r) {
-    const meta = r.meta.concat(r.sätt ? [esc(r.sätt)] : []).filter(Boolean);
+  /* o.utanFamilj och o.utanPåminn: under familjens egen rad i Månadens
+     ekonomi står namnet och Påminn redan en gång. */
+  function betRad(r, o) {
+    o = o || {};
+    const familj = o.utanFamilj ? familjLänk(r.parent) : null;
+    const meta = r.meta.filter(m => m && m !== familj).concat(r.sätt ? [esc(r.sätt)] : []);
     const belopp = r.beloppText != null ? r.beloppText : r.belopp != null ? kronor(r.belopp) : '—';
     return '<div class="eko-rad">'
       + dagRuta(r.datum)
@@ -1123,7 +1167,7 @@
       + '<button type="button" class="eko-titel" data-dp="' + esc(r.dp) + '">' + esc(r.titel) + '</button>'
       + (meta.length ? '<span class="eko-meta">' + meta.map(m => '<span>' + m + '</span>').join('') + '</span>' : '')
       + '</span>'
-      + '<span class="eko-atg">' + (r.knappar || '') + '</span>'
+      + '<span class="eko-atg">' + (r.knappar || '') + (o.utanPåminn ? '' : r.påminn || '') + '</span>'
       + '<span class="eko-lage">' + pill(r.läge[0], r.läge[1])
       + (r.test && !/^test/i.test(r.läge[0]) ? ' ' + pill('Test', '') : '') + '</span>'
       + '<span class="eko-belopp"><b>' + esc(belopp) + '</b>'
@@ -1134,6 +1178,8 @@
   function ritaBetalningslistan() {
     const host = $('#bet-lista');
     if (!host) return;
+    /* En reserv från ett chip gäller inte en ny månad eller en ny rad. */
+    NXStudie.släppLista(host);
     laddaKatalogen();
     const alla = betalningsrader();
     const räkna = { alla: alla.length };
@@ -1171,7 +1217,7 @@
     const rader = alla.filter(r => (betFilter === 'alla' || r.filter.has(betFilter))
       && (!sök || (r.titel + ' ' + r.sök + ' ' + r.läge[0] + ' ' + r.sätt).toLowerCase().indexOf(sök) !== -1));
 
-    host.innerHTML = rader.length ? rader.map(betRad).join('')
+    host.innerHTML = rader.length ? rader.map(r => betRad(r)).join('')
       : tomt(alla.length ? 'Inga betalningar matchar' : 'Inga betalningar i ' + månadText(),
         alla.length ? 'Ändra sökningen eller välj Alla.' : 'Pass som bokas, betalas eller köps i månaden står här.');
 
@@ -1183,17 +1229,24 @@
     }
   }
 
+  /* Ett chip eller söket kan göra listan mycket kortare, och chippet
+     flyttade sig då 146 till 215 px under fingret (NXStudie.hållLista).
+     Ankaret är chipraden och sökfältet, inte chippet: chippen ritas om
+     med listan. */
   document.addEventListener('click', e => {
     const k = e.target.closest('[data-bet-filter]');
     if (!k) return;
     betFilter = k.dataset.betFilter;
-    /* Talen och chippen står kvar där de står; listan under byter
-       höjd. Hålls ändå, för en telefon (CLAUDE.md avsnitt 3, fälla 4). */
-    NXStudie.håll(k, () => ritaBetalningslistan());
+    NXStudie.hållLista($('#bet-lista'), $('#bet-chips'), ritaBetalningslistan);
+  });
+  document.addEventListener('input', e => {
+    if (!e.target) return;
+    if (e.target.id === 'kort-sok') NXStudie.hållLista($('#bet-lista'), e.target, ritaBetalningslistan);
+    if (e.target.id === 'fakt-sok') NXStudie.hållLista($('#fakt-lista'), e.target, ritaFakturor);
   });
 
-  /* Skalet ritar om efter en återbetalning, en körning och sökfältet
-     (#kort-sok). Namnet är det gamla, för skalet anropar det. */
+  /* Skalet ritar om efter en återbetalning och en körning. Namnet är
+     det gamla, för skalet anropar det. */
   function ritaKortbetalningar() {
     ritaBetalningslistan();
     ritaTimmar();
@@ -1275,6 +1328,7 @@
   function ritaFakturor() {
     const host = $('#fakt-lista');
     if (!host) return;
+    NXStudie.släppLista(host);
     märkEkonomi();
     const sök = String(($('#fakt-sok') || {}).value || '').trim();
     const flagga = S.fakturaFlagga;
@@ -2819,8 +2873,8 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    avvText, fyllPerioder, kandidater, laddaBokslut, laddaOmEkonomi, märkEkonomi, ritaAttGöra,
-    ritaAvvikelser, ritaBokslut, ritaFakturor, ritaKortbetalningar, ritaPris, ritaUtbetalningar,
-    sättKörningsperiod, utanRapport
+    avvText, betRad, betalningsrader, fakturaRad, fyllPerioder, kandidater, laddaBokslut, laddaOmEkonomi,
+    märkEkonomi, påminnKnapp, ritaAttGöra, ritaAvvikelser, ritaBokslut, ritaFakturor, ritaKortbetalningar,
+    ritaPris, ritaUtbetalningar, sättKörningsperiod, utanRapport, visaBetalningsmånad
   });
 })();

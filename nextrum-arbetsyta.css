@@ -1053,14 +1053,6 @@ button.fel-person:hover{border-color:var(--bl-3)}
    och ska se ut som i de andra vyerna. */
 .vy-admin main .btn-sm{padding:8px 16px;font-size:.84rem}
 
-/* Rubrikerna på Månadens ekonomi (Passen i september, Pengarna): text på
-   papperet som .vy-grupp i studievyn, inte spärrade versaler. */
-.vy-admin .man-rubrik{
-  margin:24px 0 12px;font-size:1.03rem;font-weight:650;
-  letter-spacing:-.015em;text-transform:none;color:var(--bl);
-}
-.vy-admin .man-rubrik:first-child{margin-top:0}
-
 /* Etiketterna i formulären: vanlig text, som i rapportrutan i studievyn.
    Fyra fält i en rad med spärrade versaler bredvid ett med vanlig text
    var två sorters formulär i samma ruta. */
@@ -4156,6 +4148,8 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
   .eko-dag{width:44px;align-self:start}
   .eko-lage,.eko-atg{justify-content:flex-start}
   .eko-atg:empty{display:none}
+  /* Undertexten under beloppet bryts hellre än rubriken bredvid. */
+  .eko-belopp small{max-width:7.5rem;margin-left:auto}
 }
 
 /* ---------- att göra ----------
@@ -4282,3 +4276,144 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 .eko-mer-rader{border-top:1px solid var(--ln)}
 .eko-mer-rader > summary{cursor:pointer;padding:12px clamp(14px,2vw,20px);font-size:.86rem;font-weight:600;color:var(--bl-2)}
 .eko-mer-rader > .eko-rad{border-top:1px solid var(--ln)}
+
+/* ============================================================
+   MÅNADENS EKONOMI (omgjord 2026-09-29)
+
+   Leo: "månadens ekonomi måste du göra mycket bättre också och
+   funktionell". Samma delar som Betalningar ovan: talen är samma
+   rutor som .bet-sam, fast knappar; familjerna och fakturorna är rader
+   med kolumner för knappen och beloppet, som .eko-rad.
+
+   Mätaren har en färg, mossa på papperets mörkare ton: den visar en
+   andel, och delarna står i talen under. Mossa, ockra och lera bredvid
+   varandra i en stapel går inte att skilja åt för den som är färgblind
+   (provat 2026-09-29: ockra mot lera ΔE 1,4 med deuteranopi), och här
+   bär de redan betydelsen ert drag, väntar och klart.
+
+   Pengarna är tre kolumner (kommit in, väntar, går ut) och det som
+   blir kvar under dem. Beloppen i kolumnerna står i tabelltal, så att
+   de linjerar; summorna ovanför i proportionella.
+   ============================================================ */
+
+/* ---------- läget ---------- */
+.man-lage{margin:0 0 12px}
+.man-lage-topp{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 14px}
+.man-lage-topp h3{margin:0;font-size:1.3rem;font-weight:700;letter-spacing:-.025em;color:var(--bl)}
+.man-lage-mening{margin:10px 0 0;font-size:1rem;line-height:1.4;color:var(--bl-2)}
+.man-lage-mening b{font-size:1.5rem;font-weight:700;letter-spacing:-.03em;color:var(--bl);font-variant-numeric:proportional-nums}
+.man-matare-rad{display:flex;align-items:center;gap:12px;margin:12px 0 0}
+.man-matare{flex:1 1 auto;display:block;height:10px;border-radius:100px;background:var(--pap-3);overflow:hidden}
+.man-matare i{display:block;height:100%;border-radius:inherit;background:var(--mossa)}
+.man-matare-rad b{flex:none;min-width:3.4em;text-align:right;font-size:.92rem;font-weight:650;color:var(--bl);font-variant-numeric:tabular-nums}
+.man-lage-not{margin:8px 0 0;font-size:.82rem;line-height:1.5;color:var(--bl-3)}
+
+/* ---------- talen: knappar i samma form som .bet-sam ---------- */
+.man-talen{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0}
+.man-talen:empty{display:none}
+.man-tal{
+  appearance:none;-webkit-appearance:none;
+  display:flex;flex-direction:column;align-items:flex-start;min-width:0;width:100%;margin:0;
+  padding:16px 18px;border-radius:20px;border:1px solid var(--ln);background:var(--yta);box-shadow:var(--sk-1);
+  font:inherit;text-align:left;color:var(--bl);cursor:pointer;
+}
+.man-tal small{font-size:.8rem;font-weight:600;color:var(--bl-3)}
+.man-tal b{margin-top:4px;font-size:1.45rem;font-weight:700;letter-spacing:-.03em;color:var(--bl);white-space:nowrap}
+.man-tal span{margin-top:2px;font-size:.82rem;line-height:1.4;color:var(--bl-2)}
+.man-tal:hover{border-color:var(--bl-3)}
+.man-tal:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+/* Valt: en tjockare kant, ingen ny färg. Trycket ändrar ingen höjd. */
+.man-tal[aria-pressed="true"]{border-color:var(--bl);box-shadow:inset 0 0 0 1px var(--bl),var(--sk-1)}
+.man-tal.ar-gor{background:var(--acc-soft);border-color:color-mix(in srgb,var(--acc) 30%,var(--ln))}
+.man-tal.ar-gor small,.man-tal.ar-gor span{color:var(--acc-lugn)}
+.man-tal.ar-gor[aria-pressed="true"]{border-color:var(--acc-lugn);box-shadow:inset 0 0 0 1px var(--acc-lugn),var(--sk-1)}
+@media (max-width:1100px){
+  .man-talen{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .man-talen{gap:8px}
+  .man-tal{padding:12px 14px;border-radius:16px}
+  .man-tal b{font-size:1.2rem}
+  .man-tal span{font-size:.78rem}
+}
+
+/* ---------- pengarna ---------- */
+.man-kolumner{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.man-kol{min-width:0;padding:0 clamp(14px,2vw,24px)}
+.man-kol:first-child{padding-left:0}
+.man-kol:last-child{padding-right:0}
+.man-kol + .man-kol{border-left:1px solid var(--ln)}
+.man-kol h4{margin:0;font-size:.84rem;font-weight:650;color:var(--bl-3)}
+.man-summa{display:block;margin:4px 0 10px;font-size:1.45rem;font-weight:700;letter-spacing:-.03em;color:var(--bl);white-space:nowrap;font-variant-numeric:proportional-nums}
+.man-kol dl{margin:0}
+.man-kol dl div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:7px 0;border-top:1px solid var(--ln)}
+.man-kol dt{min-width:0;font-size:.86rem;line-height:1.4;color:var(--bl-2)}
+.man-kol dt small{display:block;margin-top:1px;font-size:.76rem;color:var(--bl-3)}
+.man-kol dd{margin:0;font-size:.88rem;font-weight:600;color:var(--bl);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.man-kol-tom{margin:0;font-size:.86rem;color:var(--bl-3)}
+.man-kol-not{margin:10px 0 0;font-size:.8rem;line-height:1.5;color:var(--bl-3)}
+.man-kol-not b{font-weight:650;color:var(--acc-lugn)}
+.man-kol-not .eko-lank{font-size:inherit;color:var(--bl-2)}
+.man-kvar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid var(--ln)}
+.man-kvar-del{min-width:0;padding:12px 16px;border-radius:16px;background:var(--tint)}
+.man-kvar-del small{display:block;font-size:.8rem;font-weight:600;color:var(--bl-3)}
+.man-kvar-del b{display:block;margin-top:2px;font-size:1.3rem;font-weight:700;letter-spacing:-.02em;color:var(--bl);white-space:nowrap;font-variant-numeric:proportional-nums}
+.man-kvar-del span{display:block;margin-top:2px;font-size:.8rem;line-height:1.4;color:var(--bl-2)}
+.man-kvar-del.ar-gor{background:var(--acc-soft)}
+.man-kvar-del.ar-gor small,.man-kvar-del.ar-gor span{color:var(--acc-lugn)}
+@media (max-width:900px){
+  .man-kolumner{grid-template-columns:minmax(0,1fr)}
+  .man-kol,.man-kol:first-child,.man-kol:last-child{padding:0}
+  .man-kol + .man-kol{border-left:0;border-top:1px solid var(--ln);margin-top:16px;padding-top:14px}
+}
+@media (max-width:560px){
+  .man-kvar{grid-template-columns:minmax(0,1fr);gap:8px}
+}
+
+/* ---------- familjerna ----------
+   En rad per familj: vem, lägena, Påminn och beloppet, i samma
+   kolumner som .eko-rad. Passen och betalningarna fälls ut under, som
+   raderna i Alla betalningar. */
+.vy-lista > .man-fam + .man-fam{border-top:1px solid var(--ln)}
+.man-fam-rad{
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr) auto 7.5rem;
+  grid-template-areas:"av mitt atg belopp" "av lagen atg belopp";
+  align-items:center;gap:8px 14px;
+  padding:14px clamp(14px,2vw,20px) 6px;
+}
+.man-fam-rad > .nx-avatar{grid-area:av;align-self:start;width:40px;height:40px;font-size:.78rem}
+.man-fam-lagen{grid-area:lagen;display:flex;flex-wrap:wrap;gap:6px}
+.man-fam-lagen:empty{display:none}
+.man-fam-pass{padding:0 clamp(14px,2vw,20px) 12px calc(clamp(14px,2vw,20px) + 54px)}
+.man-fam-pass > summary{
+  display:inline-block;padding:4px 0;cursor:pointer;
+  font-size:.82rem;font-weight:600;color:var(--bl-3);
+}
+.man-fam-pass > summary:hover{color:var(--bl)}
+.man-fam-pass > summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.man-fam-rader{margin-top:8px;border:1px solid var(--ln);border-radius:16px;background:var(--tint);overflow:hidden}
+.man-fam-rader > .eko-rad{padding:10px 14px}
+.man-fam-rader > .eko-rad + .eko-rad{border-top:1px solid var(--ln)}
+.man-fam-rader .eko-dag{background:var(--yta)}
+/* På en telefon får märkena och Påminn hela bredden under namnet, i
+   stället för att tryckas ihop bredvid beloppet ett märke per rad. */
+@media (max-width:760px){
+  .man-fam-rad{
+    grid-template-columns:40px minmax(0,1fr) auto;
+    grid-template-areas:"av mitt belopp" ". lagen lagen" ". atg atg";
+    align-items:start;
+  }
+  .man-fam-rad .eko-atg{justify-content:flex-start}
+  .man-fam-rad .eko-atg:empty{display:none}
+}
+/* Passen under får hela kortets bredd; bara länken står i linje med
+   namnet. */
+@media (max-width:560px){
+  .man-fam-pass{padding-left:clamp(14px,2vw,20px)}
+  .man-fam-pass > summary{margin-left:54px}
+}
+
+/* ---------- fakturorna och körningen ---------- */
+.man-korning-rubrik{margin:0 0 6px;font-size:.95rem;font-weight:650;letter-spacing:-.01em;color:var(--bl)}
+.man-korning .adm-verktyg{margin-top:4px}

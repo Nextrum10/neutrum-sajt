@@ -421,8 +421,10 @@ sköts i Fortnox, med flit utan API-koppling hit (Fas 14.9 bytte Wint mot
 Fortnox). Lönen går dit som en PAXml-fil från Löner (2026-09-28);
 fakturorna läggs in för hand, för Fortnox läser inte in kundfakturor från
 fil. Ingen API-koppling förrän handarbetet kostar tid och ett
-Fortnox-konto med bankgiro finns. Adminvyns Månadens ekonomi visar per
-familj vad månadens pass dragit in och vad som väntar. Stripe ska bokföras genom en färdig integration som kopplas i
+Fortnox-konto med bankgiro finns. Adminvyns Betalningar är det som
+väntar på er och betalningarna en och en; Månadens ekonomi är månaden i
+stort, per familj och med vad som blir kvar efter lönerna, räknad på
+Betalningars rader så att samma månad aldrig har två belopp. Stripe ska bokföras genom en färdig integration som kopplas i
 Fortnox, utanför koden, före första skarpa betalningen och med revisorn.
 Google Workspace ger bara Meet-länkar till onlinepassen (Fas 18.1) och
 är inte kopplat förrän stegen i INTEGRATIONER.md är gjorda. Vidare:

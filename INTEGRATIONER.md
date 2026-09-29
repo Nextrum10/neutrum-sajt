@@ -62,7 +62,7 @@ Wint mot Fortnox. Ingenting härifrån når Fortnox automatiskt, och det
   valt faktura, läggs in för hand på några minuter.
 
 Fakturorna (Fas 14.6): månadskörningen skapar ett fakturautkast per
-familj under **Ekonomi → Fakturor**. **Underlag** kopierar det Fortnox
+familj under **Betalningar → Fakturor**. **Underlag** kopierar det Fortnox
 behöver. Fakturan läggs in i Fortnox, som skickar den. Fakturanumret i
 Fortnox och förfallodagen skrivs sedan in här med **Lagd i Fortnox**,
 och fakturan markeras **Betald** när Fortnox visar det. Påminnelserna i
@@ -70,14 +70,14 @@ Fortnox ställs utan avgift: villkoren nämner ingen, och då får ingen
 tas ut.
 
 Lönen: blir studiehjälparna anställda läggs underlaget den 25:e
-(`payouts`, **Ekonomi → Utbetalningar**) in i Fortnox Lön för hand.
+(`payouts`, **Löner**) in i Fortnox Lön, med lönefilen därifrån (PAXml).
 Anställningsformen är inte avgjord (`studiehjalpare_form` står på
 `oklart`). Revisor före första utbetalningen (CLAUDE.md avsnitt 11,
 DEPLOY-BETALNING.md 9.7).
 
 Kortbetalningarna: Stripe betalar ut till banken i klumpar, netto efter
-avgiften; avgiften och nettot per pass står under **Ekonomi →
-Kortbetalningar**. Betalningarna, avgifterna och utbetalningarna ska
+avgiften; avgiften och nettot per pass står under **Betalningar →
+Alla betalningar**. Betalningarna, avgifterna och utbetalningarna ska
 bokföras genom en färdig Stripe-integration som väljs och kopplas i
 Fortnox, på integrationsmarknaden där. Ingen kod här rör den. Koppla
 den, och bestäm med revisorn hur den bokar, innan den första skarpa
