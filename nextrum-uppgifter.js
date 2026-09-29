@@ -45,6 +45,22 @@ window.NXUppgifter = (function () {
 
   const esc = NX.esc;
 
+  /* Frågan i text: första raden är frågan, och det som står på raderna
+     efter den är kod eller en uppställning (programmeringen, sedan
+     2026-09-29). Den ritas i ett block med lika breda tecken, där
+     indragen står kvar: i rubrikens typsnitt och storlek gick
+     Pythonkoden knappt att läsa på en telefon, och indragen är det
+     som avgör vad koden gör. Ett <code> och inte ett <pre>, för blocket
+     står inne i frågans rubrik eller stycke. */
+  function frågaHtml(text) {
+    const t = String(text || '');
+    const i = t.indexOf('\n');
+    if (i < 0) return esc(t);
+    // Den tomma raden mellan frågan och koden hör till texten, inte till
+    // blocket: den stod som en tom första rad i det.
+    return esc(t.slice(0, i)) + '<code class="upg-kod">' + esc(t.slice(i + 1).replace(/^\n+/, '')) + '</code>';
+  }
+
   /* ---------- ikonerna ----------
      De flesta är streck. De fyllda bär klassen ik-fyll, och CSS:en
      ritar efter den i stället för efter var ikonen råkar stå. */
@@ -1458,7 +1474,7 @@ window.NXUppgifter = (function () {
       }
       kropp.innerHTML = '<div class="upg-fraga">'
         + '<p class="upg-fraga-typ">' + esc(typText(f)) + '</p>'
-        + '<h2 class="upg-fraga-text" tabindex="-1">' + esc(f.fraga) + '</h2>'
+        + '<h2 class="upg-fraga-text" tabindex="-1">' + frågaHtml(f.fraga) + '</h2>'
         + svar + '</div>';
       kropp.scrollTop = 0;
       const rubrik = kropp.querySelector('.upg-fraga-text');
@@ -1882,7 +1898,7 @@ window.NXUppgifter = (function () {
           const först = svar[0];
           const direkt = !!(först && först.ratt);
           return '<li class="' + (direkt ? 'direkt' : 'efter') + '">'
-            + '<p class="upg-genom-fraga"><span class="upg-genom-tecken">' + (direkt ? IKON.bock : IKON.kryss) + '</span>' + esc(q.fraga) + '</p>'
+            + '<p class="upg-genom-fraga"><span class="upg-genom-tecken">' + (direkt ? IKON.bock : IKON.kryss) + '</span><span class="upg-genom-q">' + frågaHtml(q.fraga) + '</span></p>'
             + '<div class="upg-genom-svar">' + svar.map((s, i) =>
                 '<span class="' + (s.ratt ? 'ratt' : 'fel') + '"><em>' + (i === 0 ? 'Svar' : 'Sedan') + '</em> ' + esc(svarText(q, s)) + '</span>').join('')
             + '</div>'
@@ -1963,7 +1979,7 @@ window.NXUppgifter = (function () {
       + (niva.lastext ? '<div class="upg-lastext upg-lastext-forhand">' + String(niva.lastext).split(/\n\s*\n/).map(s => '<p>' + esc(s.trim()) + '</p>').join('') + '</div>' : '')
       + '<ol class="upg-genom-lista">' + (data || []).map(q =>
         '<li class="forhand"><span class="upg-genom-typ">' + esc(typText(q)) + '</span>'
-        + '<p class="upg-genom-fraga">' + esc(q.fraga) + '</p>'
+        + '<p class="upg-genom-fraga">' + frågaHtml(q.fraga) + '</p>'
         + (q.typ === 'val' && !ärSant(q) ? '<p class="upg-genom-alt">' + (q.alternativ || []).map(a => esc(a)).join(' · ') + '</p>' : '')
         + (q.typ === 'ordna' && q.alternativ ? '<p class="upg-genom-alt">Extra brickor: ' + q.alternativ.map(a => esc(a)).join(' · ') + '</p>' : '')
         + '<p class="upg-genom-facit">Rätt svar: <b>' + esc(facit(q)) + '</b></p>'

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Matematik åk 1–3. Talen upp till 1000 med siffror och ord, plus och minus, de första tabellerna, att dela lika, klockan, veckan och året, pengar, längd och former, i korta vardagsnära frågor som en sjuåring kan läsa själv."""
+import re
+
 from grund import bana, niva, val, skriv, ordna, sant, para, tal
 
 
@@ -98,6 +100,230 @@ def _dag(dag, steg):
     """Veckodagen steg dagar efter dag, eller före med minus. Efter söndag
     börjar veckan om: _dag('fredag', 3) → 'måndag'."""
     return _VECKODAGAR[(_VECKODAGAR.index(dag) + steg) % len(_VECKODAGAR)]
+
+
+
+# ---------------------------------------------------------------------
+# Den andra nivån i varje område som bara hade en (2026-09-29). Ett
+# område med två nivåer får ett Mästarprov, och en väg med en nivå per
+# område tar slut fort. Den andra nivån är något svårare än den första
+# och står direkt efter den i banan.
+# ---------------------------------------------------------------------
+
+def _raknat(uttryck):
+    """'50 − 17' → 33, '16 / 4' → 4, räknat exakt. Brickorna och
+    alternativen räknas ur sin egen text, så att texten barnet ser och
+    värdet som sorterar dem aldrig kan skilja sig."""
+    from fractions import Fraction
+    kod = re.sub(r'(\d+)', r'_B(\1)', uttryck.replace('·', '*').replace('−', '-'))
+    return eval(kod, {'_B': Fraction})  # noqa: S307 — bara våra egna uttryck
+
+
+def _enda(alternativ, prov):
+    """Det enda alternativet som klarar provet. Klarar noll eller flera
+    det är frågan fel skriven."""
+    traffar = [a for a in alternativ if prov(a)]
+    assert len(traffar) == 1, 'väntade ett rätt alternativ i %r, fick %r' % (alternativ, traffar)
+    return traffar[0]
+
+
+def _monster(delar, antal):
+    """De första antal stegen i ett mönster som upprepas, och steget efter."""
+    visat = [delar[i % len(delar)] for i in range(antal)]
+    return visat, delar[antal % len(delar)]
+
+
+def _avrunda(n, steg):
+    """Avrundning till närmaste tiotal eller hundratal, fem uppåt som i skolan."""
+    return (n + steg // 2) // steg * steg
+
+
+def _klocka(minuter):
+    """Minuter efter midnatt som klockslaget skrivs i åk 1–3: 490 → '8:10'."""
+    h, m = divmod(minuter % (24 * 60), 60)
+    return '%d:%02d' % (h, m)
+
+
+# Åk 1, geometri.
+_FARGER, _NASTA_FARG = _monster(['röd', 'blå'], 5)
+_FORMER, _NASTA_FORM = _monster(['cirkel', 'cirkel', 'kvadrat'], 6)
+assert _NASTA_FARG == 'blå' and _NASTA_FORM == 'cirkel'
+# Bokstäverna: bara A är lika på båda sidor om ett lodrätt veck.
+_SYMMETRISKA = {'A', 'H', 'M', 'O', 'T', 'U', 'V', 'W', 'X', 'Y'}
+
+_AK1_GEOMETRI_2 = niva('ma-ak1-geometri-2', 'Mönster och former', 'Geometri', [
+    skriv('Två trianglar ligger bredvid varandra. Hur många hörn har de tillsammans?', _svar(3 + 3, 'hörn'),
+          'Varje triangel har tre hörn. 3 + 3 = 6.'),
+    val('Mönstret är %s. Vilken färg kommer sedan?' % ', '.join(_FARGER),
+        ['blå', 'röd', 'gul'], _NASTA_FARG,
+        'Färgerna byter hela tiden: röd, blå, röd, blå. Efter röd kommer blå.'),
+    val('Mönstret är %s. Vad kommer sedan?' % ', '.join(_FORMER),
+        ['cirkel', 'kvadrat', 'triangel'], _NASTA_FORM,
+        'Mönstret är cirkel, cirkel, kvadrat, och sedan börjar det om. Efter kvadraten kommer en cirkel.'),
+    ordna('Fortsätt mönstret 2, 4, 6. Lägg de tre tal som kommer sedan, i ordning. En bricka blir över.',
+          [tal(6 + 2 * k) for k in (1, 2, 3)], extra=['9'],
+          forklaring='Talen ökar med 2 varje gång: 6 + 2 = 8, 8 + 2 = 10 och 10 + 2 = 12. 9 hör inte till mönstret.'),
+    val('Vilken sak är rund som en cirkel?', ['en tallrik', 'en dörr', 'en bok'], 'en tallrik',
+        'En tallrik är rund. En dörr och en bok har raka sidor och fyra hörn, som en rektangel.'),
+    val('Kims snöre är 8 klossar långt. Elis snöre är 5 klossar långt. Hur många klossar längre är Kims snöre?',
+        [3, 13, 5], 8 - 5,
+        'Jämför snörena: 8 − 5 = 3. Kims snöre är 3 klossar längre.'),
+    val('Vilken bokstav kan du vika på mitten, uppifrån och ned, så att båda halvorna blir lika?',
+        ['A', 'F', 'G'], _enda(['A', 'F', 'G'], lambda b: b in _SYMMETRISKA),
+        'Viker du A på mitten hamnar vänster sida precis på höger sida. F och G ser olika ut på de två sidorna.'),
+    skriv('Tre kvadrater ligger en bit ifrån varandra. Hur många hörn har de tillsammans?', _svar(4 + 4 + 4, 'hörn'),
+          'Varje kvadrat har fyra hörn. 4 + 4 + 4 = 12.'),
+], beskrivning='Mönster med färger, former och tal, att jämföra längder och former i vardagen.')
+
+
+# Åk 2, taluppfattning.
+_JAMNA = [7, 12, 15, 9]
+_NARA_50 = [47, 55, 41, 60]
+assert sorted(abs(x - 50) for x in _NARA_50)[0] < sorted(abs(x - 50) for x in _NARA_50)[1]
+
+_AK2_TAL_2 = niva('ma-ak2-tal-2', 'Jämna tal och talföljder', 'Taluppfattning', [
+    val('Vilket tal är jämnt?', _JAMNA, _enda(_JAMNA, lambda x: x % 2 == 0),
+        'Ett jämnt tal går att dela i två lika stora högar. Jämna tal slutar på 0, 2, 4, 6 eller 8, som 12.'),
+    sant('Talet 35 är udda.', 35 % 2 == 1,
+         '35 slutar på 5. Tal som slutar på 1, 3, 5, 7 eller 9 är udda.'),
+    skriv('Räkna i femsteg: 15, 20, 25. Vilket tal kommer sedan?', _svar(25 + 5),
+          'Talen ökar med 5 varje gång. 25 + 5 = 30.'),
+    skriv('Räkna baklänges i tiosteg: 90, 80, 70. Vilket tal kommer sedan?', _svar(70 - 10),
+          'Talen minskar med 10 varje gång. 70 − 10 = 60.'),
+    val('Vilket tal ligger närmast 50?', _NARA_50, min(_NARA_50, key=lambda x: abs(x - 50)),
+        '47 ligger 3 steg från 50. 55 ligger 5 steg bort, 41 ligger 9 steg bort och 60 ligger 10 steg bort.'),
+    val('Vilket tiotal ligger 68 närmast?', [60, 70, 80], _avrunda(68, 10),
+        'Från 68 är det 2 steg till 70 men 8 steg till 60. Därför ligger 68 närmast 70.'),
+    ordna('Ordna talen från minst till störst.', _tal_stigande([73, 37, 70, 7]),
+          forklaring='7 har inga tiotal. 37 har 3 tiotal, och 70 och 73 har 7 tiotal. 73 har fler ental än 70.'),
+    skriv('Hur många tiotal är 90?', _svar(90 // 10, 'tiotal'),
+          '90 är 10 + 10 + 10 + 10 + 10 + 10 + 10 + 10 + 10. Det är 9 tiotal.'),
+], beskrivning='Jämna och udda tal, att räkna i steg framåt och bakåt, och vilket tal som ligger närmast.')
+
+
+# Åk 2, addition och subtraktion.
+_BUSS = 48 - 13 + 6
+_AK2_ADDITION_2 = niva('ma-ak2-addition-2', 'Plus och minus i flera steg', 'Addition och subtraktion', [
+    skriv('Vad är 27 + 15?', _svar(27 + 15),
+          'Ta tiotalen först: 20 + 10 = 30. Sedan entalen: 7 + 5 = 12. 30 + 12 = 42.'),
+    val('Vad är 63 − 27?', [36, 44, 34, 46], 63 - 27,
+        'Ta först bort 20: 63 − 20 = 43. Ta sedan bort 7: 43 − 7 = 36. '
+        '44 får den som tar 7 − 3 i stället för 3 − 7.'),
+    skriv('Vad är 25 + 25 + 25?', _svar(25 + 25 + 25),
+          '25 + 25 = 50, och 50 + 25 = 75.'),
+    val('Vad är 100 − 45?', [55, 65, 45], 100 - 45,
+        'Räkna upp från 45: 5 steg till 50 och sedan 50 steg till 100. 5 + 50 = 55.'),
+    skriv('Sam har 34 kort. Han får 19 kort till. Hur många kort har han nu?', _svar(34 + 19, 'kort'),
+          '34 + 20 = 54, men det var 19, alltså ett mindre: 54 − 1 = 53.'),
+    val('? − 20 = 45. Vilket tal fattas?', [65, 25, 55], 45 + 20,
+        'Talet minus 20 blir 45. Då är talet 20 mer än 45: 45 + 20 = 65.'),
+    skriv('I en buss sitter 48 personer. 13 kliver av och 6 kliver på. Hur många sitter i bussen nu?',
+          _svar(_BUSS, 'personer'),
+          'Först kliver 13 av: 48 − 13 = 35. Sedan kliver 6 på: 35 + 6 = 41.'),
+    ordna('Ordna så att svaren går från minst till störst.',
+          _stigande([(u, _raknat(u)) for u in ('50 − 17', '29 + 9', '70 − 45', '16 + 15')]),
+          forklaring='%s.' % _lista('%s = %s' % (u, _raknat(u)) for u in
+                                   sorted(('50 − 17', '29 + 9', '70 − 45', '16 + 15'), key=_raknat))),
+], beskrivning='Plus och minus över tiotalsgränsen och i flera steg, med svar upp till 100.')
+
+
+# Åk 2, mätning.
+_AK2_MATNING_2 = niva('ma-ak2-matning-2', 'Längd, vikt och volym', 'Mätning', [
+    val('Vilken enhet passar bäst för att mäta hur mycket vatten det finns i en hink?',
+        ['liter', 'meter', 'kilogram'], 'liter',
+        'Liter mäter hur mycket något rymmer. Meter mäter längd och kilogram mäter vikt.'),
+    val('Vilket väger ungefär 1 kilogram?', ['ett paket socker', 'en fjäder', 'en cykel'], 'ett paket socker',
+        'Ett vanligt paket socker väger 1 kilogram. En fjäder väger nästan ingenting, och en cykel väger mycket mer.'),
+    skriv('Hur många centimeter är 2 meter?', tal(2 * 100),
+          '1 meter är 100 centimeter. 2 meter är 100 + 100 = 200 centimeter.'),
+    skriv('En penna är 14 cm lång. Ett sudd är 5 cm långt. Hur många centimeter längre är pennan?',
+          _svar(14 - 5, 'centimeter'),
+          'Jämför längderna: 14 − 5 = 9.'),
+    skriv('Hur många deciliter är 1 liter?', _svar(10, 'deciliter'),
+          'En liter är 10 deciliter. En deciliter är alltså en tiondel av en liter.'),
+    val('Vilket är mest?', ['1 liter', '3 deciliter', '9 deciliter'], '1 liter',
+        '1 liter är 10 deciliter. Det är mer än både 3 och 9 deciliter.'),
+    val('Mira har 20 kronor. Hon köper två glassar som kostar 8 kronor var. Hur många kronor har hon kvar?',
+        [4, 12, 16], 20 - 2 * 8,
+        'Två glassar kostar 8 + 8 = 16 kronor. 20 − 16 = 4.'),
+    ordna('Ordna djuren från lättast till tyngst.',
+          _stigande([('en katt', 4), ('en mus', 0.02), ('en elefant', 4000), ('en häst', 500)]),
+          forklaring='En mus väger nästan ingenting, en katt några kilo, en häst flera hundra kilo och en elefant '
+                     'flera tusen kilo.'),
+], beskrivning='Att välja enhet och jämföra längd, vikt och volym, med meter, kilogram, liter och deciliter.')
+
+
+# Åk 3, taluppfattning.
+_AK3_TAL_2 = niva('ma-ak3-tal-2', 'Avrunda och jämföra', 'Taluppfattning', [
+    val('Avrunda 347 till närmaste tiotal.', [350, 340, 300], _avrunda(347, 10),
+        '347 ligger mellan 340 och 350. Entalssiffran är 7, alltså 5 eller mer, så man avrundar uppåt till 350.'),
+    val('Avrunda 682 till närmaste hundratal.', [700, 600, 680], _avrunda(682, 100),
+        '682 ligger mellan 600 och 700. Tiotalssiffran är 8, så 682 ligger närmare 700.'),
+    skriv('Vilket tal är 1 mindre än 700?', tal(700 - 1),
+          'Talet före 700 är 699. Räkna baklänges: 700, 699.'),
+    skriv('Hur många tiotal behöver du för att få 250?', _svar(250 // 10, 'tiotal'),
+          '100 är 10 tiotal, så 200 är 20 tiotal. 50 är 5 tiotal till. 20 + 5 = 25.'),
+    val('Vilket tal är störst?', [909, 990, 899, 919], max(909, 990, 899, 919),
+        'Jämför hundratalen först: tre av talen har 9 hundratal. Jämför sedan tiotalen: 990 har 9 tiotal.'),
+    sant('504 är större än 450.', 504 > 450,
+         '504 har 5 hundratal och 450 har bara 4. Då är 504 störst, hur många tiotal 450 än har.'),
+    ordna('Ordna talen från minst till störst.', _tal_stigande([608, 680, 86, 806]),
+          forklaring='86 har inga hundratal. 608 och 680 har 6 hundratal, och 680 har fler tiotal. 806 har 8 hundratal.'),
+    skriv('Vilket tal är 5 hundratal, 12 tiotal och 3 ental?', tal(5 * 100 + 12 * 10 + 3),
+          '5 hundratal är 500 och 12 tiotal är 120. 500 + 120 + 3 = 623.'),
+], beskrivning='Avrunda till tiotal och hundratal och jämföra tal upp till 1000.')
+
+
+# Åk 3, division.
+_SAMMA_SOM_20_5 = ['12 / 3', '20 / 4', '15 / 5']
+_AK3_DIVISION_2 = niva('ma-ak3-division-2', 'Division och multiplikation', 'Division', [
+    val('Vilken multiplikation hjälper dig att räkna ut 24 / 4?', ['4 · 6 = 24', '4 + 20 = 24', '24 − 4 = 20'],
+        _enda(['4 · 6 = 24', '4 + 20 = 24', '24 − 4 = 20'], lambda a: a.startswith('4 ·')),
+        'Division är multiplikation baklänges. 4 · 6 = 24, så 24 / 4 = 6.'),
+    skriv('Vad är 28 / 4?', _svar(28 // 4),
+          '4 · 7 = 28. Därför är 28 / 4 = 7.'),
+    skriv('Vad är 40 / 10?', _svar(40 // 10),
+          '10 · 4 = 40. Därför är 40 / 10 = 4.'),
+    val('18 / ? = 3. Vilket tal fattas?', [6, 15, 21, 5], 18 // 3,
+        '18 delat med något ska bli 3. 3 · 6 = 18, så det saknade talet är 6.'),
+    skriv('En kaka delas i 24 bitar. 6 barn delar lika. Hur många bitar får varje barn?', _svar(24 // 6, 'bitar'),
+          '6 · 4 = 24. Varje barn får 4 bitar.'),
+    val('Vilken division ger samma svar som 20 / 5?', _SAMMA_SOM_20_5,
+        _enda(_SAMMA_SOM_20_5, lambda u: _raknat(u) == 20 // 5),
+        '20 / 5 = 4 och 12 / 3 = 4. Men 20 / 4 = 5 och 15 / 5 = 3.'),
+    skriv('Vad är en tredjedel av 21?', _svar(21 // 3),
+          'En tredjedel betyder att man delar i tre lika delar. 21 / 3 = 7, för 3 · 7 = 21.'),
+    ordna('Ordna så att svaren går från minst till störst.',
+          _stigande([(u, _raknat(u)) for u in ('30 / 3', '16 / 4', '27 / 3', '14 / 2')]),
+          forklaring='%s.' % _lista('%s = %s' % (u, _raknat(u)) for u in
+                                   sorted(('30 / 3', '16 / 4', '27 / 3', '14 / 2'), key=_raknat))),
+], beskrivning='Division som multiplikation baklänges, och att dela i tre och fyra lika delar.')
+
+
+# Åk 3, tid.
+_LEO_FRAMME = _klocka(7 * 60 + 50 + 20)
+assert _LEO_FRAMME == '8:10'
+_AK3_TID_2 = niva('ma-ak3-tid-2', 'Räkna med tid', 'Tid', [
+    skriv('Hur många minuter är en halvtimme?', _svar(60 // 2, 'minuter'),
+          'En timme är 60 minuter. Hälften av 60 är 30.'),
+    val('Klockan är 8:45. Vad är klockan om en kvart?', ['9:00', '9:15', '8:30'], _klocka(8 * 60 + 45 + 15),
+        'En kvart är 15 minuter. 8:45 plus 15 minuter blir precis 9:00.'),
+    skriv('Lektionen börjar 10:00 och slutar 10:40. Hur många minuter är lektionen?', _svar(40, 'minuter'),
+          'Från 10:00 till 10:40 är det 40 minuter.'),
+    val('Klockan är halv fem på eftermiddagen. Hur skrivs det med 24-timmarsklocka?',
+        ['16:30', '4:30', '17:30', '15:30'], _klocka(12 * 60 + 4 * 60 + 30),
+        'På eftermiddagen lägger man till 12 timmar. Halv fem är 4:30, och 4 + 12 = 16. Det blir 16:30.'),
+    skriv('Hur många minuter är två timmar?', tal(2 * 60),
+          'En timme är 60 minuter. 60 + 60 = 120 minuter.'),
+    val('Leo går hemifrån 7:50. Det tar 20 minuter att gå till skolan. När är han framme?',
+        ['8:10', '7:70', '8:20', '8:00'], _LEO_FRAMME,
+        'Efter 10 minuter är klockan 8:00. Det är 10 minuter kvar att gå, så han är framme 8:10.'),
+    sant('En kvart är längre än 20 minuter.', 15 > 20,
+         'En kvart är 15 minuter. Det är kortare än 20 minuter.'),
+    ordna('Ordna tiderna från kortast till längst.',
+          _stigande([('en kvart', 15), ('en halvtimme', 30), ('tio minuter', 10), ('en timme', 60)]),
+          forklaring='Tio minuter är kortast. En kvart är 15 minuter, en halvtimme 30 minuter och en timme 60 minuter.'),
+], beskrivning='Hur lång tid något tar, vad klockan blir efter en stund, och 24-timmarsklockan.')
 
 
 BANOR = [
@@ -225,6 +451,8 @@ BANOR = [
                   _stigande([('kvadrat', 4), ('cirkel', 0), ('triangel', 3)]),
                   forklaring='En cirkel har inga hörn, en triangel har tre och en kvadrat har fyra.'),
         ], beskrivning='Enkla former som triangel, kvadrat och cirkel, och ord som säger var något är.'),
+
+        _AK1_GEOMETRI_2,
     ]),
 
     bana('Matematik', 'ak2', [
@@ -251,6 +479,8 @@ BANOR = [
                 'Varje gång läggs ett tiotal till. 50 + 10 = 60.'),
         ], beskrivning='Tal upp till 100 delade i tiotal och ental.'),
 
+        _AK2_TAL_2,
+
         niva('ma-ak2-addition-1', 'Plus och minus till 100', 'Addition och subtraktion', [
             skriv('Vad är 30 + 40?', _svar(30 + 40),
                   '3 tiotal och 4 tiotal blir 7 tiotal, alltså 70.'),
@@ -275,6 +505,8 @@ BANOR = [
                 [36, 46, 34, 44], 100 - 64,
                 'Från 64 till 70 är 6. Från 70 till 100 är 30. 6 + 30 = 36.'),
         ], beskrivning='Plus och minus med tiotal och ental, med svar upp till 100.'),
+
+        _AK2_ADDITION_2,
 
         niva('ma-ak2-tid-1', 'Hel och halv timme', 'Tid', [
             val('Klockan är 3:30. Hur säger man det?',
@@ -353,6 +585,8 @@ BANOR = [
                   _stigande([('1 m', 100), ('30 cm', 30), ('2 m', 200), ('70 cm', 70)]),
                   forklaring='1 m är 100 cm och 2 m är 200 cm. Därför kommer 30 cm och 70 cm först.'),
         ], beskrivning='Att räkna med kronor och att jämföra längder i centimeter och meter.'),
+
+        _AK2_MATNING_2,
     ]),
 
     bana('Matematik', 'ak3', [
@@ -378,6 +612,8 @@ BANOR = [
                 [295, 205, 300, 315], 305 - 10,
                 'Ta först bort 5, då blir det 300. Sedan 5 till: 300 − 5 = 295.'),
         ], beskrivning='Tal upp till 1000 med hundratal, tiotal och ental.'),
+
+        _AK3_TAL_2,
 
         niva('ma-ak3-multiplikation-1', '2:an, 5:an och 10:an', 'Multiplikation', [
             skriv('Vad är 5 · 3?', _svar(5 * 3),
@@ -455,6 +691,8 @@ BANOR = [
                 '5 · 7 = 35. Därför ryms 5 sju gånger i 35, och 35 / 5 = 7.'),
         ], beskrivning='Division som att dela lika och att se hur många grupper det blir.'),
 
+        _AK3_DIVISION_2,
+
         niva('ma-ak3-tid-1', 'Kvart över och kvart i', 'Tid', [
             val('Klockan är 3:15. Hur säger man det?',
                 ['kvart över tre', 'kvart i tre', 'kvart över fyra', 'kvart i fyra'], 'kvart över tre',
@@ -478,5 +716,7 @@ BANOR = [
                   ['klockan fyra', 'kvart över fyra', 'halv fem', 'kvart i fem'],
                   forklaring='Klockan fyra är 4:00, kvart över fyra är 4:15, halv fem är 4:30 och kvart i fem är 4:45.'),
         ], beskrivning='Klockan vid kvart över, kvart i och några minuter före och efter hel timme.'),
+
+        _AK3_TID_2,
     ]),
 ]
