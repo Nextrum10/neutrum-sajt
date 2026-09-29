@@ -69,8 +69,8 @@ betalt, och ett hållet pass ska betalas även utan bekräftelse. Spärren
 (2026-09-28); pg_cron-jobbet `manadskorning` skriver det den 1:a,
 påslaget sedan samma dag, och adminvyn visar om det är på. Svarar
 körningen något annat än 200 blir det en uppgift en halvtimme senare
-(`manadskorning-svar`), för svaret under System → Fel är borta efter sex
-timmar. Blir hen anställd
+(`manadskorning-svar`), som står kvar tills någon stänger den: System →
+Fel visar bara de senaste sex timmarna. Blir hen anställd
 går underlaget till Fortnox Lön som en PAXml-fil från adminvyns Löner,
 men anställningsformen är inte avgjord. Ett genomfört pass kostar den tid
 det faktiskt hölls, per påbörjad kvart (Fas 20.1): tiden och skälet står

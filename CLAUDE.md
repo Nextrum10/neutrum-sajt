@@ -1317,11 +1317,13 @@ inget svar. **Flyttas `manadskorning` ska `manadskorning-svar` flyttas
 med**; `rls-test.sql` prövar båda schemana. Byggt i databasen och inte
 i `fakturering`, för funktionen ser aldrig det som går fel innan den
 körs (grindens 401, 404, tidsgränsen), och hade behövt driftsättas
-igen. **Inte körd i driften än**: migrationerna
-`manadskorningens_svar_blir_en_uppgift` och
-`manadskorningens_svar_lases_den_forsta` körs efter merge, i den
-ordningen och med funktionen körd för hand emellan, före den 1 oktober
-04:47 UTC (DEPLOY-BETALNING.md avsnitt 6).
+igen. **I drift sedan 2026-09-29**: migrationerna kördes efter att PR
+#128 mergats, som `20260929093749` och `20260929093830`, och det
+driften sparade har samma md5 som filerna. Emellan torrkördes vägen och
+funktionen lästes för hand: 200 för augusti, ingen uppgift. Hela
+`rls-test.sql` gick igenom efteråt, 794 av 796, där de två är Fas
+23.1:s prov, som väntar på sin egen migration. Första skarpa läsningen
+är den 1 oktober 04:47 UTC.
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
@@ -1572,7 +1574,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `leads-avidentifiering` | 03:47 | intresseanmälningar sex månader efter senaste kontakten |
 | `ai-och-uppgifter-gallring` | 03:51 | AI-texterna och avslutade uppgifter |
 | `manadskorning` | den 1:a 04:17 | förra månadens underlag och fakturautkast (avsnitt 1) |
-| `manadskorning-svar` | den 1:a 04:47 | månadskörningens svar: allt utom 200 blir en uppgift (ovan). Finns när `manadskorningens_svar_lases_den_forsta` är körd |
+| `manadskorning-svar` | den 1:a 04:47 | månadskörningens svar: allt utom 200 blir en uppgift (ovan) |
 | `konton-oanvanda` | den 1:a 04:53 | konton som inte använts på två år blir uppgifter |
 
 **Analysvyerna (Fas 9.6) bär tre regler.** `analys_leads_per_kalla`,
