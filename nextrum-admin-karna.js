@@ -116,6 +116,8 @@ const NXAdmin = (function () {
      Läget står kvar till höger, för det är arbetskön: en ny anmälan
      ska synas som ny utan att någon öppnar den. o.under är för de två
      rekryteringsflikarna, där frågan är hur länge någon har väntat.
+     o.flik öppnar panelen på en annan flik än den första: från
+     rekryteringsflikarna på stegen, för det är dem de flikarna gäller.
      ============================================================ */
   function namnlista(rader, o) {
     if (!rader.length) return tomt(o.tomt || 'Inget här', '');
@@ -124,7 +126,8 @@ const NXAdmin = (function () {
       /* Initialerna först (2026-09-29): ögat hittar en person på formen
          innan det läst namnet, och en lista med bara text var en vägg. De
          är aria-hidden; skärmläsaren läser namnet som förut. */
-      return '<li><button type="button" class="adm-namn" data-dp="' + esc(o.typ + ':' + o.id(r)) + '">'
+      return '<li><button type="button" class="adm-namn" data-dp="' + esc(o.typ + ':' + o.id(r)) + '"'
+        + (o.flik ? ' data-dp-start="' + esc(o.flik) + '"' : '') + '>'
         + M.avatar(o.namn(r) || '', null, { liten: true })
         + '<span class="adm-namn-text"><b>' + esc(o.namn(r) || '(namn saknas)') + '</b>'
         + (under ? '<span>' + esc(under) + '</span>' : '')
@@ -170,8 +173,11 @@ const NXAdmin = (function () {
   const SH_LAGE = {
     pending: ['Väntar', 'ar-vantar'], approved: ['Godkänd', 'ar-klar'], rejected: ['Avböjd', '']
   };
+  /* Önskat är ockra sedan 2026-09-29, inte lera: förslaget väntar på
+     svar från den andra parten, inte på oss, och kalendern bredvid
+     visar det i ockra (Att göra i nextrum-admin-oversikt.js). */
   const BOK_LAGE = {
-    requested: ['Önskat', 'ar-ny'], confirmed: ['Bekräftat', 'ar-vantar'],
+    requested: ['Önskat', 'ar-vantar'], confirmed: ['Bekräftat', 'ar-vantar'],
     completed: ['Genomfört', 'ar-klar'], cancelled: ['Avbokat', '']
   };
   /* Fas 9.4. Koderna är databasens och står i en CHECK; texten är
@@ -287,17 +293,39 @@ const NXAdmin = (function () {
      HÄMTNINGEN
      ============================================================ */
 
+  /* ALLA RADER, INTE DE TUSEN FÖRSTA (2026-09-29). PostgREST lämnar ut
+     högst tusen rader per svar och säger inte att det finns fler, så
+     varje lista som växer hämtas sida för sida (NXStudie.hämtaAlla, där
+     skälen står). Den den gällde först var den här vyn: passen,
+     anmälningarna och resten hämtades med en fråga var, nyast först, och
+     de äldsta hade försvunnit ur Lektioner, Ekonomi, Löner och
+     Översiktens tal. Vakten i skalet, som jämför listornas längd med
+     databasens count, hade dessutom sett "nya" anmälningar vid varje
+     koll och hämtat om listorna för alltid.
+
+     Frågor med en avsiktlig gräns (de 400 senaste meddelandena, de 100
+     senaste klientfelen, de 40 senaste rapporterna, de 300 senaste i
+     auditloggen) och inställningarnas små tabeller går inte hit. */
+  const hämtaAlla = (tabell, kolumner, bygg, nyckel) =>
+    NXStudie.hämtaAlla(supa, tabell, kolumner, bygg, nyckel);
+
+  const nyastFörst = kolumn => q => q.order(kolumn, { ascending: false });
+
   async function hämtaAllt() {
     /* Alla kolumner, inte en lista (2026-09-28). raderad_at finns först
        när migrationen personer_redigeras_och_raderas är körd, och en
        lista som nämner en kolumn som saknas gör att HELA vyn dör på
        uppstarten. Med * följer den med när den finns. Listan hade dessutom
        tappat bio och formats, så "Om familjen" och studiehjälparens format
-       stod alltid tomma i panelen. */
+       stod alltid tomma i panelen.
+
+       I skapelseordning, som tabellen lämnade ut dem förut: sidorna måste
+       sorteras på något, och listorna som visar dem sorterar själva. */
+    const iOrdning = q => q.order('created_at');
     const [profiler, elever, tutorer] = await Promise.all([
-      supa.from('profiles').select('*'),
-      supa.from('students').select('*'),
-      supa.from('tutor_profiles').select('*')
+      hämtaAlla('profiles', '*', iOrdning),
+      hämtaAlla('students', '*', iOrdning),
+      hämtaAlla('tutor_profiles', '*', iOrdning)
     ]);
     if (profiler.error) throw profiler.error;
 
@@ -329,18 +357,18 @@ const NXAdmin = (function () {
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov,
            bankPass, kkSkarp] = await Promise.all([
-      supa.from('leads').select('*').order('created_at', { ascending: false }),
-      supa.from('applications').select('*').order('created_at', { ascending: false }),
-      supa.from('contact_messages').select('*').order('created_at', { ascending: false }),
+      hämtaAlla('leads', '*', nyastFörst('created_at')),
+      hämtaAlla('applications', '*', nyastFörst('created_at')),
+      hämtaAlla('contact_messages', '*', nyastFörst('created_at')),
       /* antal_barn, rabatt_ore, timpris_ore, extra_ore och startrabatt
          sedan 2026-09-28: Månadens ekonomi räknar vad ett obetalt pass
          kostar, med samma regel som familjens vy (NXBetalning.passpris). */
-      supa.from('bookings').select('id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, klippkort_id, antal_barn, rabatt_ore, timpris_ore, extra_ore, startrabatt').order('wanted_date', { ascending: false }),
+      hämtaAlla('bookings', 'id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, klippkort_id, antal_barn, rabatt_ore, timpris_ore, extra_ore, startrabatt', nyastFörst('wanted_date')),
       /* Raderna följer med (Fas 14.6): de är underlaget admin lägger in
          i Fortnox, och vilket pass som står på vilken faktura. */
-      supa.from('invoices').select('*, invoice_lines(id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)')
-        .order('period', { ascending: false }),
-      supa.from('payouts').select('*').order('period', { ascending: false }),
+      hämtaAlla('invoices', '*, invoice_lines(id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)',
+        nyastFörst('period')),
+      hämtaAlla('payouts', '*', nyastFörst('period')),
       supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400),
       supa.from('klientfel').select('*').order('created_at', { ascending: false }).limit(100),
       /* Notisutskick som inte gick fram. Funktionen är admin-only i
@@ -362,11 +390,11 @@ const NXAdmin = (function () {
          de här raderna används bara till att fylla listan över VEM
          man kan filtrera på. Därför en egen plats i S: annars hade
          sökningens svar och den här listan skrivit över varandra. */
-      supa.from('uppdrag').select('*').order('created_at', { ascending: false }),
-      supa.from('uppgifter').select('*').order('created_at', { ascending: false }),
+      hämtaAlla('uppdrag', '*', nyastFörst('created_at')),
+      hämtaAlla('uppgifter', '*', nyastFörst('created_at')),
       supa.from('rut_tak').select('*').order('ar', { ascending: false }),
       supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300),
-      supa.from('biblioteksmaterial').select('*').order('created_at', { ascending: false }),
+      hämtaAlla('biblioteksmaterial', '*', nyastFörst('created_at')),
       /* Fas 14.2: spärren "ingen betalning, inget pass". En rad i
          flaggor, som notismejlen. Slås om under Ekonomi →
          Kortbetalningar, där det den styr också syns. */
@@ -376,40 +404,41 @@ const NXAdmin = (function () {
       supa.from('flaggor').select('*').in('kod', ['kortsparr', 'faktura', 'erbjudanden']),
       /* Fas 14.3: korttvisterna, med sista dagen att svara. Bara admin
          ser tabellen; för alla andra är svaret tomt. */
-      supa.from('stripe_tvister').select('*').order('skapad', { ascending: false }),
+      hämtaAlla('stripe_tvister', '*', nyastFörst('skapad')),
       /* Fas 14.6: familjer som inte får välja faktura. */
-      supa.from('faktura_sparr').select('parent_id, satt_at'),
+      hämtaAlla('faktura_sparr', 'parent_id, satt_at', null, 'parent_id'),
       /* Fas 16.1: köpta planer och klippkort, med timmarna räknade i
          databasen och vad som går tillbaka om familjen slutar i dag. */
-      supa.from('klippkort_saldo').select('*').order('created_at', { ascending: false }),
+      hämtaAlla('klippkort_saldo', '*', nyastFörst('created_at')),
       /* Fas 16.1: vilka besked den som sökt jobb har fått. Tabellen
          bär ingen adress och ingen brödtext, bara steg och utfall.
-         Bara admin läser den. */
-      supa.from('ansokan_utskick').select('ansokan_id, steg, status, forsok, fel, skapad, uppdaterad')
-        .order('skapad', { ascending: false }),
+         Bara admin läser den. id följer med för att hämtaAlla() ska
+         kunna känna igen en rad som kom med på två sidor. */
+      hämtaAlla('ansokan_utskick', 'id, ansokan_id, steg, status, forsok, fel, skapad, uppdaterad',
+        nyastFörst('skapad')),
       /* Fas 20.1: övertiden på ett pass som redan var betalt, betald som
          en egen kortbetalning. En egen tabell och inte fler kolumner på
          passet: en återbetalning av tillägget hade annars skrivit över
          passets egen. Står under Kortbetalningar och i passets detalj. */
-      supa.from('pass_tillagg').select('id, booking_id, minuter, begart_ore, status, betalt_ore, '
-        + 'aterbetald_ore, betald_at, stripe_charge_id, stripe_skarp, created_at')
-        .order('created_at', { ascending: false }),
+      hämtaAlla('pass_tillagg', 'id, booking_id, minuter, begart_ore, status, betalt_ore, '
+        + 'aterbetald_ore, betald_at, stripe_charge_id, stripe_skarp, created_at',
+        nyastFörst('created_at')),
       /* Fas 22.1: familjernas timbank, räknad i databasen. Bara de som
          har minuter: det är pengar vi är skyldiga, och en lista med alla
          familjer på noll hade gömt dem. */
-      supa.from('timbank_saldo').select('parent_id, saldo_min, varde_ore').gt('saldo_min', 0),
+      hämtaAlla('timbank_saldo', 'parent_id, saldo_min, varde_ore', q => q.gt('saldo_min', 0), 'parent_id'),
       /* Fas 22.1: försöken på utbildningsprovet. Bara resultatet, inte
          svaren: rekryteringsrutan säger hur det gått, inte vad hen
          kryssade. Bara admin läser tabellen. */
-      supa.from('utbildningsprov_forsok').select('ansokan_id, ratt, antal, godkant, skapad')
-        .order('skapad', { ascending: false }),
+      hämtaAlla('utbildningsprov_forsok', 'id, ansokan_id, ratt, antal, godkant, skapad',
+        nyastFörst('skapad')),
       /* 2026-09-28, för Månadens ekonomi: vilka pass timbanken betalat
          hela (ett sådant pass är betalt utan kort och utan klippkort),
          och vilka köp av timmar som var testbetalningar. klippkort_saldo
          bär inte stripe_skarp, och ett testköp ska aldrig se ut som
          pengar in. */
-      supa.from('timbank_uttag').select('booking_id').eq('sort', 'pass'),
-      supa.from('klippkort').select('id, stripe_skarp')
+      hämtaAlla('timbank_uttag', 'id, booking_id', q => q.eq('sort', 'pass')),
+      hämtaAlla('klippkort', 'id, stripe_skarp')
     ]);
 
     S.leads = leads.data || [];
@@ -493,9 +522,9 @@ const NXAdmin = (function () {
      avvikelsefliken det, i stället för att hela vyn dör. */
   async function hämtaEkonomiunderlag() {
     const [pu, fri, avv] = await Promise.all([
-      supa.from('passunderlag').select('*').order('wanted_date', { ascending: false }),
-      supa.from('lesson_reports').select('id, student_id, tutor_id, lesson_date, created_at, raw_notes')
-        .is('booking_id', null).order('lesson_date', { ascending: false }),
+      hämtaAlla('passunderlag', '*', nyastFörst('wanted_date')),
+      hämtaAlla('lesson_reports', 'id, student_id, tutor_id, lesson_date, created_at, raw_notes',
+        q => q.is('booking_id', null).order('lesson_date', { ascending: false })),
       /* Fas 6: allt annat som inte går ihop, räknat i databasen. */
       supa.rpc('ekonomiska_avvikelser')
     ]);
@@ -801,7 +830,7 @@ const NXAdmin = (function () {
   return {
     ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
     TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
-    hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
+    hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, lönemånad, matchar, märkFlik, namnFör, namnlista, närText, pill, rad,
     ritaPanelen, senasteLönemånad, skriv, tabell, tomtText, visa, visaRuta, väljare, ärRaderad,
     rita

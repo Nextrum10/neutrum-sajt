@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { AVBOKNINGSSKAL, BOK_LAGE, S, dagarSedan, elevNamn, hämtaMatchunderlag,
+  const { AVBOKNINGSSKAL, BOK_LAGE, S, elevNamn, hämtaMatchunderlag,
           kortDatum, läge, matchar, namnFör, pill, skriv, tabell, tomtText,
           väljare } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
@@ -408,6 +408,18 @@
   }
 
   document.addEventListener('click', async e => {
+    /* Visa dem vid passförfrågningarna: listan med just dem. Söket
+       töms, annars visar listan färre än talet bredvid säger. */
+    if (e.target.closest('[data-bok-forfragan]')) {
+      const f = S.flikar.bokningar;
+      if (f) f.visa('lista');
+      $('#bok-sok').value = '';
+      $('#bok-status').value = 'requested';
+      $('#bok-nar').value = 'framat';
+      ritaBokningar();
+      return;
+    }
+
     const välj = e.target.closest('[data-mt-elev]');
     if (välj) {
       S.valdElev = välj.dataset.mtElev;
@@ -467,7 +479,31 @@
      BOKNINGAR
      ============================================================ */
 
+  /* Passförfrågningarna, i sektionens rubrikrad (2026-09-29). De stod
+     i Att göra på Översikt, men ett förslag väntar på svar från den
+     andra parten och inte på oss: här står bara hur många, i ockra,
+     som ett läge som väntar på någon annan. "På svar" och inte "på
+     studiehjälparen": efter ett motförslag är det familjen som ska
+     svara, och vem som föreslog hämtas inte hit. Talet gäller alla
+     kommande förfrågningar, inte filtret under: en siffra som ändrar
+     sig när man söker är en siffra ingen vågar citera. */
+  function ritaFörfrågningar() {
+    const host = $('#bok-forfragan');
+    if (!host) return;
+    const idag = isoFor(new Date());
+    const antal = S.bokningar.filter(b =>
+      b.status === 'requested' && b.wanted_date >= idag).length;
+    host.hidden = !antal;
+    host.innerHTML = antal
+      ? pill(antal + (antal === 1 ? ' passförfrågan väntar' : ' passförfrågningar väntar')
+          + ' på svar', 'ar-vantar')
+        + '<button class="vy-lank" type="button" data-bok-forfragan>'
+        + (antal === 1 ? 'Visa den' : 'Visa dem') + '</button>'
+      : '';
+  }
+
   function ritaBokningar() {
+    ritaFörfrågningar();
     const sök = $('#bok-sok').value.trim();
     const st = $('#bok-status').value;
     const när = $('#bok-nar').value;
@@ -535,6 +571,27 @@
      betalt för — varken familjen faktureras eller studiehjälparen
      ersätts. Därför är "rapport saknas" sektionens första siffra
      och dess enda larm.
+
+     MÅNAD FÖR MÅNAD (2026-09-29)
+
+     Leo: "lektioner, där ska man kunna filtrera för månader, i admin.
+     lättare att se över en mängd lektioner under en specifik tid".
+     Talen och listan gäller den månad som är vald i raden, på passets
+     datum. Raden är samma som i Ekonomi, Månadens ekonomi och Löner
+     (NXStudie.månadsval), men en egen: sidorna läses var för sig, och
+     en månad vald här ska inte flytta de andra.
+
+     Raden ersatte väljaren 30 dagar, tre månader, hela tiden, och två
+     saker den gav får inte försvinna med den:
+       1. Larmet räknade hela tiden. Nu räknar talet månaden, och varje
+          månad med pass utan rapport är märkt i raden: en rapport som
+          saknas i augusti ska inte se borta ut för att september är
+          vald.
+       2. Hela tiden gick att söka i. Ett sök räknar upp de andra
+          månader det har träffar i, med en knapp dit.
+     Raden börjar vid det äldsta hållna passet, och aldrig senare än
+     tolv månader bakåt: Lektioner är historiken, och hela tiden nådde
+     varje pass.
      ============================================================ */
 
   /* Pass som redan varit, oavsett om någon rapporterat dem.
@@ -545,26 +602,53 @@
       b.status !== 'cancelled' && String(b.wanted_date) < idag);
   }
 
-  function ritaLektionstal() {
+  const saknarRapport = b => b.status !== 'completed';
+  const passetsMånad = b => String(b.wanted_date).slice(0, 7) + '-01';
+
+  let MV = null;
+  let förstaMånad = null;
+  /* Pass utan rapport per månad, räknat en gång per uppritning och läst
+     av märket i raden. */
+  let saknasPer = {};
+
+  function startaMånadsval(hållna) {
+    if (MV) return;
+    const host = $('#lekt-manader');
+    if (!host) return;
+    const nu = new Date();
+    const äldsta = hållna.map(passetsMånad)
+      .reduce((a, m) => m < a ? m : a, NXStudie.månadIso(nu));
+    const antal = Math.max(12, (nu.getFullYear() - Number(äldsta.slice(0, 4))) * 12
+      + nu.getMonth() + 1 - Number(äldsta.slice(5, 7)) + 1);
+    förstaMånad = NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - antal + 1, 1, 12));
+    MV = NXStudie.månadsval(host, {
+      antal,
+      märke: m => saknasPer[m] ? saknasPer[m] + ' saknas' : '',
+      vidVal: () => ritaLektioner()
+    });
+  }
+
+  function ritaLektionstal(iMånaden, månad) {
     const host = $('#lekt-tal');
     if (!host) return;
-    const hållna = hållnaPass();
-    const genomförda = hållna.filter(b => b.status === 'completed');
-    const utanRapport = hållna.filter(b => b.status !== 'completed');
+    const genomförda = iMånaden.filter(b => b.status === 'completed');
+    const saknas = iMånaden.filter(saknarRapport);
     const minuter = genomförda.reduce((n, b) => n + (b.duration_min || 60), 0);
+    const pågår = månad === NXStudie.månadIso(new Date());
 
     /* Frånvaro räknas bara på pass där någon faktiskt fyllt i det.
        Ett tomt fält betyder "ingen sa något", inte "eleven kom". */
-    const markerade = hållna.filter(b => b.attendance);
+    const markerade = iMånaden.filter(b => b.attendance);
     const uteblev = markerade.filter(b => b.attendance === 'franvarande').length;
 
     host.innerHTML =
-      '<div class="adm-kpi' + (utanRapport.length ? ' ar-larm' : '') + '">'
-      + '<b>' + utanRapport.length + '</b><span>Rapport saknas</span>'
-      + '<span class="adm-kpi-diff">' + (utanRapport.length
-        ? 'faktureras inte förrän den skrivs' : 'allt hållet är rapporterat') + '</span></div>'
+      '<div class="adm-kpi' + (saknas.length ? ' ar-larm' : '') + '">'
+      + '<b>' + saknas.length + '</b><span>Rapport saknas</span>'
+      + '<span class="adm-kpi-diff">' + (saknas.length
+        ? 'kommer inte med på underlaget' : 'allt hållet är rapporterat') + '</span></div>'
       + '<div class="adm-kpi"><b>' + genomförda.length + '</b><span>Genomförda pass</span>'
-      + '<span class="adm-kpi-diff">totalt</span></div>'
+      + '<span class="adm-kpi-diff">' + (pågår ? 'hittills i ' : 'i ')
+        + esc(NXStudie.månadsNamn(månad, false)) + '</span></div>'
       + '<div class="adm-kpi"><b>' + NXBetalning.timmar(minuter) + '</b><span>Undervisad tid</span>'
       + '<span class="adm-kpi-diff">i genomförda pass</span></div>'
       + '<div class="adm-kpi"><b>' + uteblev + '</b><span>Uteblivna</span>'
@@ -573,34 +657,56 @@
   }
 
   function ritaLektioner() {
-    ritaLektionstal();
+    const hållna = hållnaPass();
+    saknasPer = {};
+    hållna.filter(saknarRapport).forEach(b => {
+      const m = passetsMånad(b);
+      saknasPer[m] = (saknasPer[m] || 0) + 1;
+    });
+    startaMånadsval(hållna);
+    if (MV) MV.märk();
+    const månad = MV ? MV.vald() : NXStudie.månadIso(new Date());
+    const namn = NXStudie.månadsNamn(månad);
+
+    const alla = hållna.filter(b => passetsMånad(b) === månad);
+    alla.sort((a, b) => String(b.wanted_date + (b.wanted_time || ''))
+      .localeCompare(String(a.wanted_date + (a.wanted_time || ''))));
+    ritaLektionstal(alla, månad);
+
     const host = $('#lekt-tabell');
     if (!host) return;
 
     const sök = $('#lekt-sok').value.trim().toLowerCase();
     const rapportFilter = $('#lekt-rapport').value;
-    const dagar = $('#lekt-period').value;
+    const passar = b => {
+      if (rapportFilter === 'saknas' && !saknarRapport(b)) return false;
+      if (rapportFilter === 'finns' && saknarRapport(b)) return false;
+      if (!sök) return true;
+      return [b.subject, b.format, elevNamn(b.student_id),
+        namnFör(b.parent_id), namnFör(b.tutor_id)]
+        .filter(Boolean).join(' ').toLowerCase().indexOf(sök) !== -1;
+    };
+    const rader = alla.filter(passar);
 
-    let alla = hållnaPass();
-    if (dagar) {
-      const från = dagarSedan(Number(dagar));
-      alla = alla.filter(b => String(b.wanted_date) >= från);
-    }
-    alla.sort((a, b) => String(b.wanted_date + (b.wanted_time || ''))
-      .localeCompare(String(a.wanted_date + (a.wanted_time || ''))));
-
-    const rader = alla
-      .filter(b => {
-        if (!rapportFilter) return true;
-        const har = b.status === 'completed';
-        return rapportFilter === 'finns' ? har : !har;
-      })
-      .filter(b => {
-        if (!sök) return true;
-        return [b.subject, b.format, elevNamn(b.student_id),
-          namnFör(b.parent_id), namnFör(b.tutor_id)]
-          .filter(Boolean).join(' ').toLowerCase().indexOf(sök) !== -1;
+    /* Söket i de andra månaderna. Bara när något är sökt: utan sök hade
+       raden räknat upp varje månad med pass, och det gör raden ovanför. */
+    const andra = $('#lekt-andra');
+    if (andra) {
+      const per = {};
+      if (sök) hållna.forEach(b => {
+        const m = passetsMånad(b);
+        if (m !== månad && passar(b)) per[m] = (per[m] || 0) + 1;
       });
+      const månader = Object.keys(per).sort();
+      andra.innerHTML = månader.length
+        ? '<p class="eko-andra">Träffar i andra månader: ' + månader.map(m => {
+          const text = esc(NXStudie.månadsNamn(m)) + ' (' + per[m] + ')';
+          return MV && m >= förstaMånad
+            ? '<button type="button" class="eko-lank" data-lekt-manad="' + m + '">' + text + '</button>'
+            : text;
+        }).join(', ') + '.</p>'
+        : '';
+    }
 
     $('#lekt-antal').textContent = rader.length + ' av ' + alla.length;
     host.innerHTML = tabell([
@@ -628,21 +734,33 @@
         return pill('Saknas', 'ar-ny')
           + '<span class="adm-und">Passet är ' + esc(BOK_LAGE[b.status] ? BOK_LAGE[b.status][0].toLowerCase() : b.status) + '</span>';
       } }
-    /* Periodfiltret står på 30 dagar från början, så det räknas inte
-       som ett filter användaren satt. Annars fick en tom databas
-       beskedet "matchar filtret", vilket skickar folk att leta efter
-       ett filter de aldrig rört. Finns det inga hållna pass alls är
-       det den sanningen som ska stå. */
-    ], rader, tomtText(hållnaPass().length && (sök || rapportFilter),
-      'Ingen lektion matchar filtret',
-      hållnaPass().length
-        ? 'Inga pass i den här perioden'
-        : 'Inga pass har hållits än'));
+    /* Månaden står på den innevarande från början, så den räknas inte
+       som ett filter användaren satt. Annars fick en tom månad beskedet
+       "matchar filtret", vilket skickar folk att leta efter ett filter
+       de aldrig rört. Finns det inga hållna pass alls är det den
+       sanningen som ska stå. */
+    ], rader, tomtText(alla.length && (sök || rapportFilter),
+      'Ingen lektion i ' + namn + ' matchar filtret',
+      !hållna.length ? 'Inga pass har hållits än'
+        : månad === NXStudie.månadIso(new Date()) ? 'Inga pass har hållits i ' + namn + ' än'
+        : 'Inga pass hölls i ' + namn));
   }
 
-  ['#lekt-sok', '#lekt-rapport', '#lekt-period'].forEach(id => {
+  ['#lekt-sok', '#lekt-rapport'].forEach(id => {
     const el = $(id);
     if (el) el.addEventListener('input', ritaLektioner);
+  });
+
+  /* En månad i söket. Talen ovanför kan byta höjd när månaden byts (en
+     text under ett tal som bryter om i den ena månaden men inte i den
+     andra: 17 px på en dator i provbänken), och då hade raden man
+     tryckte i flyttat sig under fingret. håll() håller den still. Raden
+     med månaderna behöver det inte: inget ovanför den ändras. */
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-lekt-manad]');
+    if (!k || !MV) return;
+    MV.sätt(k.dataset.lektManad);     // tyst: vidVal körs inte av sätt()
+    NXStudie.håll($('#lekt-andra'), ritaLektioner);
   });
 
 

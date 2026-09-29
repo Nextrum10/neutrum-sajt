@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten och taken för det anonyma)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma och chatten som admin öppnar)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -45,7 +45,8 @@
 -- manadskorningen_gar_den_forsta, Fas 23.1 (de digitala uppgifterna),
 -- personer_redigeras_och_raderas, dokument_delas_med_personen,
 -- schemalagda_korningar_syns, manadskorningens_svar_blir_en_uppgift,
--- manadskorningens_svar_lases_den_forsta och anonyma_skrivningar_far_tak
+-- manadskorningens_svar_lases_den_forsta, anonyma_skrivningar_far_tak,
+-- Fas 23.2 (NexLäx, fas23_2_nexlax, med sin bank) och admin_oppnar_chatten
 -- är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
@@ -7251,6 +7252,342 @@ begin
      and exists (select 1 from jsonb_array_elements_text(q.ratt) a where a !~ '^[0-9 ,.%]+$');
 end $$;
 
+-- ------------------------------------------------------------
+-- Fas 23.2: NexLäx
+--
+-- Ett eget område i en egen bana (Matematik gy3, som banken inte har)
+-- och en egen elev, så att banken och fixturrapporterna inte stör:
+-- en rapport är en dag i serien. Allt i ett block som rullas tillbaka.
+--
+-- Prövar matchningen (villkoret, rättningen, att facit inte lämnas
+-- ut), mästarprovet och repetitionen (frågorna dras ur områdets och
+-- banans nivåer, aldrig ur en lästext), XP-reglerna (10 för val, 20
+-- för skriv, ordna och para, EN gång per fråga, 50 för en nivå första
+-- gången, 100 för ett område, och 100 står kvar när området får en ny
+-- nivå), serien i dagar i svensk tid (ett pass med rapport räknas,
+-- frånvaro gör det inte, och den bryts först efter en hel dag), och
+-- vem som får läget: familjen, elevens studiehjälpare och admin.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut     jsonb := '[]'::jsonb;
+  fel    text;
+  r      jsonb;
+  l      jsonb;
+  forsok uuid;
+  n      int;
+  st     text;
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  B    constant uuid := '00000000-0000-4000-8000-0000000000b1';
+  ADM  constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  ELEV constant uuid := '00000000-0000-4000-8000-00000000d2e1';
+  N1   constant uuid := '00000000-0000-4000-8000-00000000d2a1';
+  N2   constant uuid := '00000000-0000-4000-8000-00000000d2a2';
+  NM   constant uuid := '00000000-0000-4000-8000-00000000d2a3';
+  NR   constant uuid := '00000000-0000-4000-8000-00000000d2a4';
+  NL   constant uuid := '00000000-0000-4000-8000-00000000d2a5';
+  F1   constant uuid := '00000000-0000-4000-8000-00000000d2b1';
+  F2   constant uuid := '00000000-0000-4000-8000-00000000d2b2';
+  F3   constant uuid := '00000000-0000-4000-8000-00000000d2b3';
+  F4   constant uuid := '00000000-0000-4000-8000-00000000d2b4';
+  F5   constant uuid := '00000000-0000-4000-8000-00000000d2b5';
+  F6   constant uuid := '00000000-0000-4000-8000-00000000d2b6';
+  FL   constant uuid := '00000000-0000-4000-8000-00000000d2b7';
+begin
+  begin
+    -- En egen elev hos familj P och studiehjälpare A: 05a1 har
+    -- fixturrapporter i dag, och en rapport är en dag i serien.
+    insert into public.students (id, parent_id, name, matched_tutor_id, match_status, created_at)
+    values (ELEV, P, 'NexLäx-prov', A, 'matched', now());
+
+    -- Ett eget område i en egen bana, så att banken inte stör.
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning, sort) values
+      (N1, 'nx-prov-1', 'Matematik', 'gy3', 'Provområde', 'Nivå ett', 1, 'vanlig'),
+      (N2, 'nx-prov-2', 'Matematik', 'gy3', 'Provområde', 'Nivå två', 2, 'vanlig'),
+      (NM, 'nx-prov-m', 'Matematik', 'gy3', 'Provområde', 'Mästarprov', 3, 'mastare'),
+      (NR, 'nx-prov-r', 'Matematik', 'gy3', 'Repetition', 'Repetition', 9, 'repetition');
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning, sort, lastext) values
+      (NL, 'nx-prov-l', 'Matematik', 'gy3', 'Läsning', 'Läs och svara', 4, 'vanlig', 'Katten sov på mattan hela dagen.');
+    insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt, forklaring) values
+      (F1, N1, 1, 'val',   'Vilket är störst?', '["1/2","1/3"]', '0', null),
+      (F2, N1, 2, 'para',  'Para ihop.', null, '[["2·3","6"],["2+3","5"],["2−3","−1"]]', 'Räkna varje.'),
+      (F3, N1, 3, 'skriv', 'Vad är 7·8?', null, '["56"]', null),
+      (F4, N2, 1, 'val',   'Sant eller falskt: 0 är jämnt.', '["Sant","Falskt"]', '0', null),
+      (F5, N2, 2, 'ordna', 'Minst först.', null, '["1","2","3"]', null),
+      (F6, N2, 3, 'skriv', 'Vad är 10−4?', null, '["6"]', null),
+      (FL, NL, 1, 'val',   'Var sov katten?', '["På mattan","I sängen"]', '0', null);
+
+    -- Enheter med snedstreck rättas som talet, som "12 cm".
+    ut := ut || jsonb_build_object('t', 'NX rättning: 15 km/h är 15', 'ok', intern.niva_lika('15', '15 km/h'), 'd', null)
+             || jsonb_build_object('t', 'NX rättning: 9.8 N/kg är 9,8', 'ok', intern.niva_lika('9,8', '9.8 N/kg'), 'd', null)
+             || jsonb_build_object('t', 'NX rättning: 20 cm2 och 60 dm^3 är talen', 'ok',
+                intern.niva_lika('20', '20 cm2') and intern.niva_lika('60', '60 dm^3') and intern.niva_lika('20', '20 cm²'), 'd', null)
+             || jsonb_build_object('t', 'NX rättning: 3x2 är inte 3', 'ok', not intern.niva_lika('3', '3x2'), 'd', null)
+             || jsonb_build_object('t', 'NX rättning: 5 är fortfarande inte 5y', 'ok', not intern.niva_lika('5y', '5'), 'd', null)
+             || jsonb_build_object('t', 'NX rättning: 3/4 är fortfarande inte 0,75', 'ok', not intern.niva_lika('0,75', '3/4'), 'd', null);
+
+    -- Villkoret på matchningen.
+    begin
+      insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt)
+      values (gen_random_uuid(), N1, 9, 'para', 'Trasig.', null, '[["a","b","c"],["d","e"]]');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NX para: ett par med tre delar nekas', 'ok', fel = '23514', 'd', fel);
+    begin
+      insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt)
+      values (gen_random_uuid(), N1, 9, 'para', 'Trasig.', null, '[["a",""],["d","e"]]');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NX para: en tom sida nekas', 'ok', fel = '23514', 'd', fel);
+    begin
+      insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt)
+      values (gen_random_uuid(), N1, 9, 'para', 'Trasig.', null, '["a","b"]');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NX para: par som inte är par nekas', 'ok', fel = '23514', 'd', fel);
+    begin
+      update public.nivaer set lastext = 'Text.' where id = NM;
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NX lästext bara på en vanlig nivå', 'ok', fel = '23514', 'd', fel);
+
+    -- Rättningen av matchningen.
+    ut := ut || jsonb_build_object('t', 'NX para: rätt i vänsterns ordning', 'ok',
+                intern.niva_ratta((select x from public.niva_fragor x where x.id = F2), '{"par":["6","5","−1"]}'), 'd', null)
+             || jsonb_build_object('t', 'NX para: två par bytta är fel', 'ok',
+                not intern.niva_ratta((select x from public.niva_fragor x where x.id = F2), '{"par":["5","6","−1"]}'), 'd', null)
+             || jsonb_build_object('t', 'NX para: för få par är fel', 'ok',
+                not intern.niva_ratta((select x from public.niva_fragor x where x.id = F2), '{"par":["6","5"]}'), 'd', null)
+             || jsonb_build_object('t', 'NX para: skräp är fel, inte ett fel', 'ok',
+                not intern.niva_ratta((select x from public.niva_fragor x where x.id = F2), '"x"'), 'd', null);
+    r := intern.niva_fraga_ut((select x from public.niva_fragor x where x.id = F2));
+    ut := ut || jsonb_build_object('t', 'NX para ut: vänster i ordning, höger blandad, inget facit', 'ok',
+                r -> 'vanster' = '["2·3","2+3","2−3"]'::jsonb and jsonb_array_length(r -> 'hoger') = 3
+                and r -> 'hoger' <> '["6","5","−1"]'::jsonb and not (r ? 'ratt'), 'd', r::text);
+
+    -- Repetitionen utan något gjort.
+    perform pg_temp.bli(P);
+    begin
+      r := public.niva_starta(NR, ELEV);
+      fel := 'gick';
+    exception when others then fel := sqlstate || ' ' || sqlerrm;
+    end;
+    ut := ut || jsonb_build_object('t', 'NX repetition utan något gjort säger det', 'ok', fel like 'P0002%', 'd', fel);
+
+    -- Mästarprovet: frågorna ur områdets två nivåer, inte ur lästexten.
+    r := public.niva_starta(NM, ELEV);
+    ut := ut || jsonb_build_object('t', 'NX mästarprovet drar områdets sex frågor', 'ok',
+                jsonb_array_length(r -> 'fragor') = 6 and r -> 'niva' ->> 'sort' = 'mastare'
+                and position('"ratt"' in r::text) = 0, 'd', left(r::text, 160));
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    delete from public.niva_forsok where niva_id = NM;
+
+    -- Nivå ett: val rätt, para fel och sedan rätt, skriv rätt.
+    perform pg_temp.bli(P);
+    r := public.niva_starta(N1, ELEV);
+    forsok := (r ->> 'forsok')::uuid;
+    ut := ut || jsonb_build_object('t', 'NX start: sort och ingen lästext', 'ok',
+                r -> 'niva' ->> 'sort' = 'vanlig' and (r -> 'niva' -> 'lastext') = 'null'::jsonb, 'd', r ->> 'niva');
+    r := public.niva_svara(forsok, F1, '{"val":0}');
+    ut := ut || jsonb_build_object('t', 'NX val rätt direkt ger 10 XP', 'ok', (r ->> 'xp')::int = 10, 'd', r::text);
+    r := public.niva_svara(forsok, F1, '{"val":0}');
+    ut := ut || jsonb_build_object('t', 'NX samma svar igen ger samma 10', 'ok', (r ->> 'xp')::int = 10, 'd', r::text);
+    r := public.niva_svara(forsok, F2, '{"par":["5","6","−1"]}');
+    ut := ut || jsonb_build_object('t', 'NX para fel ger 0 XP och facit', 'ok',
+                (r ->> 'xp')::int = 0 and not (r ->> 'ratt')::boolean and r -> 'facit' = '[["2·3","6"],["2+3","5"],["2−3","−1"]]'::jsonb, 'd', r::text);
+    r := public.niva_svara(forsok, F2, '{"par":["6","5","−1"]}');
+    ut := ut || jsonb_build_object('t', 'NX para rätt andra gången ger 0 XP', 'ok',
+                (r ->> 'xp')::int = 0 and (r ->> 'ratt')::boolean, 'd', r::text);
+    r := public.niva_svara(forsok, F3, '{"text":"56"}');
+    ut := ut || jsonb_build_object('t', 'NX skriv rätt direkt ger 20 XP', 'ok', (r ->> 'xp')::int = 20, 'd', r::text);
+    ut := ut || jsonb_build_object('t', 'NX nivån klar: 2 av 3 = 1 stjärna, 30 + 50 XP, området inte klart', 'ok',
+                (r ->> 'klar')::boolean and (r -> 'resultat' ->> 'stjarnor')::int = 1
+                and (r -> 'resultat' ->> 'xp_fragor')::int = 30 and (r -> 'resultat' ->> 'xp_niva')::int = 50
+                and (r -> 'resultat' ->> 'xp_omrade')::int = 0, 'd', r ->> 'resultat');
+
+    -- Samma nivå igen, allt rätt direkt: bara paret ger nya XP, inga nivå-XP.
+    r := public.niva_starta(N1, ELEV);
+    forsok := (r ->> 'forsok')::uuid;
+    perform public.niva_svara(forsok, F1, '{"val":0}');
+    r := public.niva_svara(forsok, F2, '{"par":["6","5","−1"]}');
+    ut := ut || jsonb_build_object('t', 'NX omgång två: den missade frågan ger sina 20 nu', 'ok', (r ->> 'xp')::int = 20, 'd', r::text);
+    r := public.niva_svara(forsok, F3, '{"text":"56"}');
+    ut := ut || jsonb_build_object('t', 'NX omgång två: 3 stjärnor, 20 XP frågor, 0 för nivån', 'ok',
+                (r -> 'resultat' ->> 'stjarnor')::int = 3 and (r -> 'resultat' ->> 'xp_fragor')::int = 20
+                and (r -> 'resultat' ->> 'xp_niva')::int = 0 and (r -> 'resultat' ->> 'forut')::int = 1, 'd', r ->> 'resultat');
+
+    -- Nivå två klarar området.
+    r := public.niva_starta(N2, ELEV);
+    forsok := (r ->> 'forsok')::uuid;
+    perform public.niva_svara(forsok, F4, '{"val":1}');
+    perform public.niva_svara(forsok, F4, '{"val":0}');
+    perform public.niva_svara(forsok, F5, '{"ordning":["1","2","3"]}');
+    r := public.niva_svara(forsok, F6, '{"text":"6"}');
+    ut := ut || jsonb_build_object('t', 'NX sista nivån i området: +50 och +100', 'ok',
+                (r -> 'resultat' ->> 'godkand')::boolean and (r -> 'resultat' ->> 'xp_niva')::int = 50
+                and (r -> 'resultat' ->> 'xp_omrade')::int = 100 and (r -> 'resultat' ->> 'xp_fragor')::int = 40, 'd', r ->> 'resultat');
+    r := public.niva_svara(forsok, F6, '{"text":"6"}');
+    ut := ut || jsonb_build_object('t', 'NX samma svar efter klar ger samma bonus', 'ok',
+                (r -> 'resultat' ->> 'xp_omrade')::int = 100 and (r -> 'resultat' ->> 'xp_niva')::int = 50, 'd', r ->> 'resultat');
+
+    -- Repetitionen: F4 (sant/falskt) missades senast första gången.
+    r := public.niva_starta(NR, ELEV);
+    ut := ut || jsonb_build_object('t', 'NX repetitionen tar den missade frågan och fyller på', 'ok',
+                r -> 'fragor' @> jsonb_build_array(jsonb_build_object('id', F4))
+                and jsonb_array_length(r -> 'fragor') = 6 and position(FL::text in r::text) = 0, 'd', left(r::text, 200));
+    forsok := (r ->> 'forsok')::uuid;
+    r := public.niva_svara(forsok, F4, '{"val":0}');
+    ut := ut || jsonb_build_object('t', 'NX den missade frågan rätt i repetitionen ger 10', 'ok', (r ->> 'xp')::int = 10, 'd', r::text);
+
+    -- Lästexten följer med.
+    r := public.niva_starta(NL, ELEV);
+    ut := ut || jsonb_build_object('t', 'NX lästexten lämnas ut med nivån', 'ok',
+                r -> 'niva' ->> 'lastext' = 'Katten sov på mattan hela dagen.', 'd', r ->> 'niva');
+
+    -- Läget.
+    l := public.nexlax_lage(ELEV);
+    -- XP: F1 10, F3 20, F2 20, F4 10, F5 20, F6 20 = 100; N1 50, N2 50 = 100; området 100. 300.
+    ut := ut || jsonb_build_object('t', 'NX läget: 300 XP', 'ok', (l ->> 'xp')::int = 300, 'd', l::text)
+             || jsonb_build_object('t', 'NX läget: allt i dag', 'ok', (l ->> 'xp_idag')::int = 300 and (l ->> 'xp_vecka')::int = 300, 'd', null)
+             || jsonb_build_object('t', 'NX läget: serien är en dag, i dag', 'ok',
+                (l -> 'serie' ->> 'nu')::int = 1 and (l -> 'serie' ->> 'idag')::boolean and (l -> 'serie' ->> 'basta')::int = 1, 'd', l ->> 'serie')
+             || jsonb_build_object('t', 'NX läget: området klart', 'ok', jsonb_array_length(l -> 'omraden') = 1, 'd', l ->> 'omraden')
+             || jsonb_build_object('t', 'NX läget: banan har 300', 'ok',
+                l -> 'banor' @> '[{"amne":"Matematik","arskurs":"gy3","xp":300}]', 'd', l ->> 'banor')
+             || jsonb_build_object('t', 'NX läget: nivå ett har 100 XP och 3 frågor direkt', 'ok',
+                (l -> 'nivaer' -> N1::text ->> 'xp')::int = 100 and (l -> 'nivaer' -> N1::text ->> 'direkt')::int = 3, 'd', l ->> 'nivaer')
+             || jsonb_build_object('t', 'NX läget: inget missat kvar', 'ok', jsonb_array_length(l -> 'missade') = 0, 'd', l ->> 'missade')
+             || jsonb_build_object('t', 'NX läget: reglerna', 'ok',
+                l -> 'regler' = '{"val":10,"svarare":20,"niva":50,"omrade":100}'::jsonb, 'd', l ->> 'regler');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    -- En nivå läggs till i området efteråt: XP står kvar.
+    -- created_at är klockan nu, inte transaktionens start: i en
+    -- transaktion är now() starttiden, och den ligger före försöken.
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning, sort, created_at)
+    values (gen_random_uuid(), 'nx-prov-ny', 'Matematik', 'gy3', 'Provområde', 'Ny nivå', 5, 'vanlig', clock_timestamp());
+    perform pg_temp.bli(P);
+    l := public.nexlax_lage(ELEV);
+    ut := ut || jsonb_build_object('t', 'NX en ny nivå i området tar inte tillbaka 100 XP', 'ok', (l ->> 'xp')::int = 300, 'd', l ->> 'xp');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    -- Serien över dagar: flytta försöken bakåt.
+    update public.niva_forsok set klar_at = klar_at - interval '1 day' where niva_id = N1;
+    update public.niva_forsok set klar_at = klar_at - interval '2 day' where niva_id = N2;
+    delete from public.niva_forsok where niva_id in (NR, NL);
+    insert into public.lesson_reports (student_id, tutor_id, raw_notes, lesson_date, narvaro)
+    values (ELEV, A, 'NexLäx-prov', (now() at time zone 'Europe/Stockholm')::date - 3, 'narvarande'),
+           (ELEV, A, 'NexLäx-prov', (now() at time zone 'Europe/Stockholm')::date - 5, 'franvarande');
+    perform pg_temp.bli(P);
+    l := public.nexlax_lage(ELEV);
+    ut := ut || jsonb_build_object('t', 'NX serien: i går, i förrgår och passet dagen före = 3, inte i dag', 'ok',
+                (l -> 'serie' ->> 'nu')::int = 3 and not (l -> 'serie' ->> 'idag')::boolean, 'd', l ->> 'serie');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    update public.niva_forsok set klar_at = klar_at - interval '1 day' where niva_id = N1;
+    perform pg_temp.bli(P);
+    l := public.nexlax_lage(ELEV);
+    ut := ut || jsonb_build_object('t', 'NX serien bryts efter en hel dag utan något', 'ok',
+                (l -> 'serie' ->> 'nu')::int = 0 and (l -> 'serie' ->> 'basta')::int = 2, 'd', l ->> 'serie');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    -- Vem får läget.
+    perform pg_temp.bli(Q);
+    begin l := public.nexlax_lage(ELEV); fel := 'gick'; exception when others then fel := sqlstate; end;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'NX annan familj får inget läge', 'ok', fel = '42501', 'd', fel);
+    perform pg_temp.bli(B);
+    begin l := public.nexlax_lage(ELEV); fel := 'gick'; exception when others then fel := sqlstate; end;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'NX annan studiehjälpare får inget läge', 'ok', fel = '42501', 'd', fel);
+    perform pg_temp.bli(null);
+    begin l := public.nexlax_lage(ELEV); fel := 'gick'; exception when others then fel := sqlstate; end;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'NX anon får inget läge', 'ok', fel = '42501', 'd', fel);
+    perform pg_temp.bli(A);
+    l := public.nexlax_lage(ELEV);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    -- 290: repetitionsförsöket, där F4 gav sina 10, togs bort ovan.
+    ut := ut || jsonb_build_object('t', 'NX elevens studiehjälpare får läget', 'ok', (l ->> 'xp')::int = 290, 'd', l ->> 'xp');
+    perform pg_temp.bli(ADM);
+    l := public.nexlax_lage(ELEV);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'NX admin får läget', 'ok', (l ->> 'xp')::int = 290, 'd', l ->> 'xp');
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('NX Fas 23.2', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- Fas 23.2: banken med de nya typerna. Varje matchning rättas rätt i
+-- sin egen ordning och fel när högersidan flyttas ett steg, Mästarprov
+-- och repetition har inga egna frågor (de dras ur nivåerna, och ett
+-- eget facit hade kunnat glida isär från dem), och varje Mästarprov har
+-- något att dra. Innan Fas 23.2 är körd blir det en röd rad som säger
+-- det, inte ett avbrott: en svit som inte går att köra provar ingenting.
+do $$
+begin
+  if to_regclass('public.niva_fragor') is null
+     or not exists (select 1 from information_schema.columns
+                     where table_schema = 'public' and table_name = 'nivaer' and column_name = 'sort') then
+    insert into utfall (test, ok, detalj)
+    values ('NX banken', false, 'Fas 23.2 är inte körd: nivaer.sort finns inte');
+    return;
+  end if;
+
+  insert into utfall (test, ok, detalj)
+  select 'NX banken: rätt parning rättas rätt, förskjuten fel', count(*) = 0,
+         coalesce(string_agg(q.id::text, ', '), 'inga')
+    from public.niva_fragor q
+   where q.aktiv and q.typ = 'para'
+     and (not intern.niva_ratta(q, jsonb_build_object('par',
+            (select jsonb_agg(p -> 1 order by n) from jsonb_array_elements(q.ratt) with ordinality y(p, n))))
+          or intern.niva_ratta(q, jsonb_build_object('par',
+            (select jsonb_agg(q.ratt -> (n::int % jsonb_array_length(q.ratt)) -> 1 order by n)
+               from jsonb_array_elements(q.ratt) with ordinality y(p, n)))));
+
+  insert into utfall (test, ok, detalj)
+  select 'NX banken: mästarprov och repetition har inga egna frågor', count(*) = 0,
+         coalesce(string_agg(distinct n.nyckel, ', '), 'inga')
+    from public.nivaer n
+    join public.niva_fragor q on q.niva_id = n.id and q.aktiv
+   where n.sort <> 'vanlig';
+
+  insert into utfall (test, ok, detalj)
+  select 'NX banken: varje Mästarprov har frågor att dra', count(*) = 0,
+         coalesce(string_agg(n.nyckel, ', '), 'inga')
+    from public.nivaer n
+   where n.aktiv and n.sort = 'mastare'
+     and coalesce(cardinality(intern.nexlax_mastarfragor(n)), 0) = 0;
+end $$;
+
 -- ============================================================
 -- RADERA EN PERSON (personer_redigeras_och_raderas)
 --
@@ -7914,6 +8251,126 @@ begin
     ('Radera ett barns digitala försök räknas i rutan', (lage -> 'tas_bort' ->> 'forsok')::int = 1, lage::text),
     ('Radera ett barns digitala försök tas bort när barnet avidentifieras',
       svar ->> 'gjort' = 'avidentifierad' and kvar = 0, svar::text || ' kvar: ' || kvar);
+end $$;
+
+-- ============================================================
+-- CHATTEN ÖPPNAS AV ADMIN (admin_oppnar_chatten)
+--
+-- chatt_las() är adminvyns Öppna chatt: hela tråden mellan en familj
+-- och en studiehjälpare, och en rad i auditloggen för varje öppning.
+-- Parterna ska inte märka något: read_at står kvar, och bara admin når
+-- funktionen. Tråden P–A är fixturens (Äldst är matchad med A); en
+-- tråd P–B finns för att visa att den andra tråden inte följer med.
+-- ============================================================
+
+select pg_temp.prova('Chatten anon öppnar ingen chatt', null,
+  array[$q$select * from public.chatt_las('00000000-0000-4000-8000-0000000000f1',
+                                          '00000000-0000-4000-8000-0000000000a1')$q$], 'nekad');
+select pg_temp.prova('Chatten familjen läser inte genom adminvägen', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select * from public.chatt_las('00000000-0000-4000-8000-0000000000f1',
+                                          '00000000-0000-4000-8000-0000000000a1')$q$], 'nekad');
+select pg_temp.prova('Chatten studiehjälparen läser inte genom adminvägen', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.chatt_las('00000000-0000-4000-8000-0000000000f1',
+                                          '00000000-0000-4000-8000-0000000000a1')$q$], 'nekad');
+
+insert into utfall (test, ok, detalj)
+select 'Chatten bara inloggade når funktionen, den är DEFINER och skriver (VOLATILE)',
+       coalesce(not has_function_privilege('anon', to_regprocedure('public.chatt_las(uuid,uuid)'), 'execute')
+            and has_function_privilege('authenticated', to_regprocedure('public.chatt_las(uuid,uuid)'), 'execute')
+            and p.prosecdef and p.provolatile = 'v', false),
+       case when p.oid is null then 'funktionen finns inte'
+            else 'definer: ' || p.prosecdef || ', volatile: ' || p.provolatile::text end
+  from (select 1) x
+  left join pg_proc p on p.oid = to_regprocedure('public.chatt_las(uuid,uuid)');
+
+do $$
+declare
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  a   constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  b   constant uuid := '00000000-0000-4000-8000-0000000000b1';
+  p   constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  m1  constant uuid := '00000000-0000-4000-8000-00000000dc01';
+  m2  constant uuid := '00000000-0000-4000-8000-00000000dc02';
+  fel text; kod text; slut text;
+  n bigint; totalt bigint; forsta uuid; andra_tradens bigint; olasta bigint;
+  n_audit bigint; audit public.audit_logg; n_audit_nekad bigint;
+  n_stor bigint; totalt_stor bigint; nyast_stor timestamptz; nyast_alla timestamptz;
+begin
+  begin
+    insert into public.messages (id, parent_id, tutor_id, sender_id, body, created_at) values
+      (m1, p, a, p, 'Hej Anna, Äldst har prov på fredag', now() - interval '2 hours'),
+      (m2, p, a, a, 'Då tar vi bråken på torsdag', now() - interval '1 hour');
+    insert into public.messages (parent_id, tutor_id, sender_id, body)
+    values (p, b, p, 'Hej Bo, det här är en annan tråd');
+
+    -- En familj som försöker skriver ingen rad i loggen.
+    perform pg_temp.bli(p);
+    begin
+      perform public.chatt_las(p, a);
+    exception when others then null;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into n_audit_nekad from public.audit_logg where handling = 'chatt.oppnad' and objekt_id = p::text;
+
+    perform pg_temp.bli(adm);
+    select count(*), max(c.totalt) into n, totalt from public.chatt_las(p, a) c;
+    select c.id into forsta from public.chatt_las(p, a) c limit 1;
+    select count(*) into andra_tradens from public.chatt_las(p, a) c where c.body like 'Hej Bo%';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    select count(*) into olasta from public.messages where id in (m1, m2) and read_at is null;
+    select count(*) into n_audit from public.audit_logg
+     where handling = 'chatt.oppnad' and objekt_id = p::text and aktor = adm;
+    select * into audit from public.audit_logg
+     where handling = 'chatt.oppnad' and objekt_id = p::text and aktor = adm order by id limit 1;
+
+    -- En tråd längre än 500: de 500 NYASTE kommer, och totalt säger hur
+    -- många tråden har.
+    insert into public.messages (parent_id, tutor_id, sender_id, body, created_at)
+    select p, a, p, 'rad ' || g, now() - interval '30 days' + g * interval '1 minute'
+      from generate_series(1, 510) g;
+    select max(created_at) into nyast_alla from public.messages where parent_id = p and tutor_id = a;
+    perform pg_temp.bli(adm);
+    select count(*), max(c.totalt), max(c.created_at) into n_stor, totalt_stor, nyast_stor
+      from public.chatt_las(p, a) c;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Utan någon av parterna finns ingen tråd att läsa.
+    perform pg_temp.bli(adm);
+    begin
+      perform public.chatt_las(p, null);
+      fel := 'gick igenom';
+    exception when others then fel := sqlerrm; kod := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    raise exception 'rulla tillbaka';
+  exception when others then slut := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if slut <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Chatten admin öppnar tråden', false, slut);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Chatten admin läser hela tråden, nyast först',
+      n = 2 and totalt = 2 and forsta = m2, 'rader: ' || n || ', totalt: ' || totalt),
+    ('Chatten den andra tråden följer inte med', andra_tradens = 0, 'rader: ' || andra_tradens),
+    ('Chatten parterna märker inget: read_at står kvar', olasta = 2, 'olästa: ' || olasta),
+    ('Chatten varje öppning står i auditloggen, med vem', n_audit = 3, 'rader: ' || n_audit),
+    ('Chatten loggraden bär studiehjälparen och antalet, aldrig texten',
+      audit.aktor_typ = 'admin' and audit.tabell = 'messages' and audit.fore is null
+      and audit.efter = jsonb_build_object('tutor_id', a, 'meddelanden', 2),
+      coalesce(audit.efter::text, 'ingen rad')),
+    ('Chatten ett nekat försök skriver ingen rad', n_audit_nekad = 0, 'rader: ' || n_audit_nekad),
+    ('Chatten en lång tråd ger de 500 nyaste och säger hur många det är',
+      n_stor = 500 and totalt_stor = 512 and nyast_stor = nyast_alla,
+      'rader: ' || n_stor || ', totalt: ' || totalt_stor),
+    ('Chatten utan studiehjälpare finns ingen tråd', kod = '22023', coalesce(kod, '') || ' ' || fel);
 end $$;
 
 select test, ok is true as ok, detalj from utfall order by nr;

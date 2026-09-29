@@ -671,43 +671,94 @@
   background:var(--bl);color:var(--pap);border-color:var(--bl);font-weight:650;
 }
 
-/* Månadsväljaren (Fas 20.2, NXStudie.månadsval). Samma piller som
-   valen ovan, i en rad som går att dra i sidled i stället för att bryta
-   om: tolv månader på tre rader är en vägg, inte ett val. Året står
-   litet ovanför den månad där det byts. overflow-x:auto och inte clip:
-   raden SKA gå att scrolla. Kanten tonas inte med mask-image — den
-   ritas om vid varje scrollsteg i Safari (avsnitt 3, startsidans punkt 3). */
+/* Månadsväljaren (Fas 20.2, NXStudie.månadsval), ritad om 2026-09-29.
+   Ett spår som flikarna under det, men den valda månaden är mörk och
+   fliken ljus: i Betalningar står de två raderna direkt efter varandra
+   och ska inte se ut som samma rad två gånger. Varje knapp är lika hög
+   med eller utan märke, så raden står rak. Spåret rullar i sidled i
+   stället för att bryta om: tolv månader på tre rader är en vägg, inte
+   ett val. Kanten tonas med två stilla gradienter ovanpå, inte med
+   mask-image, som ritas om vid varje rullsteg i Safari (avsnitt 3,
+   startsidans punkt 3). */
 .nx-manader{
-  display:flex;gap:6px;align-items:flex-end;
+  display:flex;align-items:center;gap:6px;
+  margin:0 0 18px;
+}
+.nx-manad-ram{
+  position:relative;flex:1 1 auto;min-width:0;
+  background:var(--pap-2);
+  border:1px solid var(--ln);
+  border-radius:100px;
+  overflow:hidden;
+}
+.nx-manad-ram::before,.nx-manad-ram::after{
+  content:"";position:absolute;top:0;bottom:0;width:44px;z-index:1;
+  pointer-events:none;opacity:0;transition:opacity .2s var(--e);
+}
+.nx-manad-ram::before{left:0;background:linear-gradient(90deg,var(--pap-2) 20%,transparent)}
+.nx-manad-ram::after{right:0;background:linear-gradient(270deg,var(--pap-2) 20%,transparent)}
+.nx-manad-ram.mer-vanster::before,.nx-manad-ram.mer-hoger::after{opacity:1}
+.nx-manad-spar{
+  position:relative;
+  display:flex;align-items:center;gap:2px;
+  padding:4px;
   overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
-  padding:2px 2px 4px;margin:0 0 18px;
 }
-.nx-manader::-webkit-scrollbar{display:none}
-.nx-manader button{
+.nx-manad-spar::-webkit-scrollbar{display:none}
+.nx-manad-spar button{
   flex:0 0 auto;position:relative;
-  display:flex;flex-direction:column;align-items:center;gap:1px;
-  min-width:0;padding:8px 15px;
-  border:1px solid var(--ln-2);border-radius:100px;
-  background:var(--pap);
-  font:inherit;font-size:.87rem;font-weight:550;color:var(--bl-2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  height:44px;min-width:0;padding:0 16px;
+  border:none;border-radius:100px;
+  background:transparent;
+  font:inherit;font-size:.88rem;font-weight:550;line-height:1.15;color:var(--bl-2);
   cursor:pointer;
-  transition:border-color .16s var(--e),background .16s var(--e),color .16s var(--e);
+  transition:background .16s var(--e),color .16s var(--e);
 }
-.nx-manader button span{text-transform:capitalize;white-space:nowrap}
-.nx-manader button small{
-  position:absolute;top:-15px;left:50%;transform:translateX(-50%);
-  font-size:.66rem;font-weight:650;letter-spacing:.04em;color:var(--bl-3);
+.nx-manad-spar button span{text-transform:capitalize;white-space:nowrap}
+.nx-manad-spar button:hover{background:var(--pap);color:var(--bl)}
+.nx-manad-spar button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+/* Den innevarande månaden: en dämpad prick i hörnet, inte en kant runt,
+   och inte i lera: lera är ert drag eller ett fel (INNEHÅLLET, regel 1).
+   På den valda syns den inte, där säger pillret redan var man är. */
+.nx-manad-spar button[data-denna]:not([aria-pressed="true"])::after{
+  content:"";position:absolute;top:6px;right:6px;
+  width:5px;height:5px;border-radius:50%;background:var(--bl-3);
 }
-.nx-manader:has(small){padding-top:17px}
-.nx-manader button:hover{border-color:var(--bl-3);color:var(--bl)}
-.nx-manader button[data-denna]:not([aria-pressed="true"]){border-color:var(--bl-3)}
-.nx-manader button[aria-pressed="true"]{
-  background:var(--bl);color:var(--pap);border-color:var(--bl);font-weight:650;
+.nx-manad-spar button[aria-pressed="true"]{
+  background:var(--bl);color:var(--pap);font-weight:650;
+  box-shadow:0 1px 3px rgba(46,42,32,.18);
 }
-/* Märket (t.ex. "Stängd" i adminvyn) står under namnet, i pillret. */
+/* Årtalet står i raden där det byts, med ett streck före. */
+.nx-manad-ar{
+  flex:0 0 auto;align-self:stretch;
+  display:flex;align-items:center;
+  padding:0 6px 0 12px;
+  font-size:.7rem;font-weight:650;letter-spacing:.06em;color:var(--bl-3);
+}
+.nx-manad-ar:not(:first-child){border-left:1px solid var(--ln-2);margin-left:6px}
+.nx-manad-ar:first-child{padding-left:10px}
+.nx-manad-pil{
+  flex:0 0 auto;display:grid;place-items:center;
+  width:40px;height:40px;padding:0;
+  border:1px solid var(--ln);border-radius:50%;
+  background:var(--pap-2);color:var(--bl);
+  cursor:pointer;
+  transition:border-color .16s var(--e),opacity .16s var(--e);
+}
+.nx-manad-pil svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nx-manad-pil:hover:not(:disabled){border-color:var(--bl-3)}
+.nx-manad-pil:disabled{opacity:.35;cursor:default}
+/* På en telefon drar man i spåret, och pilarna tar 90 px av 360. Den
+   tonade kanten säger fortfarande att det finns mer. */
+@media (max-width:560px), (pointer:coarse){
+  .nx-manad-pil{display:none}
+  .nx-manad-spar button{padding:0 13px}
+}
+/* Märket (t.ex. "Stängd" i adminvyn) står under namnet, i knappen. */
 .nx-manad-marke{
-  font-style:normal;font-size:.64rem;font-weight:650;letter-spacing:.03em;
-  text-transform:uppercase;opacity:.75;line-height:1;
+  font-style:normal;font-size:.6rem;font-weight:650;letter-spacing:.05em;
+  text-transform:uppercase;opacity:.7;line-height:1;
 }
 .nx-manad-marke[hidden]{display:none}
 
@@ -784,6 +835,14 @@
 @media (max-width:560px){
   .vy-admin .adm-verktyg :is(.inp,.sel){max-width:none;flex:1 1 130px;min-width:0}
   .vy-admin .adm-verktyg .adm-sok{flex-basis:100%}
+}
+
+/* Passförfrågningarna i Bokningars rubrikrad (2026-09-29). Raden ligger
+   i .vy-sek-topp som barnväljaren i studievyn: till höger om rubriken,
+   och under den på en smal skärm. */
+.adm-bok-forfragan{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;
+  padding-bottom:2px;
 }
 
 /* Tabellen står på kortet (2026-09-29, adminvyn i samma hus som
@@ -2271,6 +2330,17 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
   font-size:.87rem;line-height:1.65;color:var(--bl-2);
   white-space:pre-wrap;word-break:break-word;
   background:var(--tint);border-radius:16px;padding:14px 16px;
+}
+
+/* Chatten i panelen (2026-09-29, Öppna chatt). Samma bubblor som
+   tråden i vyerna (TRÅDEN i nextrum-vy.css), men tråden rullar med
+   panelen i stället för i en egen ruta: två rullningar i varandra, och
+   den inre var 460 px hög i en panel som redan rullar. Beskedet överst
+   säger att det bara är läsning och att parterna inte ser den. */
+.dp .tr{max-height:none;overflow:visible;padding-right:0;margin-top:6px}
+.dp-chatt-not{
+  margin:0;font-size:.84rem;line-height:1.55;color:var(--bl-2);
+  background:var(--tint);border-radius:14px;padding:11px 14px;
 }
 
 /* Knapprader i panelen: läget med sina knappar, och Redigera sist i

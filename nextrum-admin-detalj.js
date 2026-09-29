@@ -147,6 +147,11 @@
     } else if (typ === 'anmalan' || typ === 'ansokan') {
       /* Allt om en anmälan eller en ansökan finns redan i S: raden,
          besöken i mejlkön och provförsöken. Ingen fråga till. */
+    } else if (typ === 'chatt') {
+      /* Genom chatt_las() och inte en select: funktionen skriver
+         öppningen i auditloggen i samma transaktion som den läser. */
+      const [förälder, hjälpare] = String(id).split('|');
+      lägg('chatt', supa.rpc('chatt_las', { p_parent: förälder, p_tutor: hjälpare }));
     } else if (typ === 'studiehjalpare') {
       lägg('rapporter', supa.from('lesson_reports')
         .select('id, student_id, lesson_date, created_at').eq('tutor_id', id)
@@ -154,6 +159,11 @@
       lägg('noteringar', supa.from('admin_noteringar')
         .select('id, text, skriven_av, created_at').eq('om_profil', id)
         .order('created_at', { ascending: false }));
+      /* Vilka familjer hen har en tråd med. Bara vem och när, ingen text:
+         texten läses genom Öppna chatt, som står i loggen. */
+      lägg('tradar', supa.from('messages')
+        .select('parent_id, created_at').eq('tutor_id', id)
+        .order('created_at', { ascending: false }).limit(TRAD_MAX));
     } else {
       lägg('noteringar', supa.from('admin_noteringar')
         .select('id, text, skriven_av, created_at').eq('om_profil', id)
@@ -171,6 +181,11 @@
       lägg('meddelanden', supa.from('messages')
         .select('id, sender_id, body, created_at').eq('parent_id', id)
         .order('created_at', { ascending: false }).limit(60));
+      /* Vilka studiehjälpare familjen har en tråd med, också en äldre som
+         inte ryms bland de 60 i tidslinjen. */
+      lägg('tradar', supa.from('messages')
+        .select('tutor_id, created_at').eq('parent_id', id)
+        .order('created_at', { ascending: false }).limit(TRAD_MAX));
     }
 
     /* Varje fråga fångas var för sig.
@@ -190,7 +205,13 @@
 
     svar.forEach((r, i) => {
       d[namn[i]] = (r && r.data) || [];
-      if (r && r.error) d[namn[i] + 'Fel'] = felText(r.error);
+      if (r && r.error) {
+        d[namn[i] + 'Fel'] = felText(r.error);
+        /* En funktion som inte finns (migrationen är inte körd) ska
+           kunna sägas som vad den är, inte som ett obegripligt fel. */
+        d[namn[i] + 'Saknas'] = r.error.code === 'PGRST202'
+          || /could not find the function/i.test(String(r.error.message || ''));
+      }
     });
 
     S.detaljCache[nyckel] = d;
@@ -219,21 +240,32 @@
        är bara namn, och allt de skrev står här, med Redigera och Radera
        som för alla andra. Rekryteringens steg stod förut i en egen ruta. */
     anmalan:        [['oversikt', 'Anmälan']],
-    ansokan:        [['oversikt', 'Ansökan'], ['rekrytering', 'Rekryteringen']]
+    ansokan:        [['oversikt', 'Ansökan'], ['rekrytering', 'Rekryteringen']],
+    /* 2026-09-29: tråden mellan en familj och en studiehjälpare, öppnad
+       med Öppna chatt. Id:t är familjens och studiehjälparens, med ett
+       | emellan: tråden har inget eget id (schema-v4). */
+    chatt:          [['oversikt', 'Chatten']]
   };
 
-  async function öppnaDetalj(typ, id) {
+  async function öppnaDetalj(typ, id, flik) {
     if (!DP_FLIKAR[typ]) return;
     DP.redigera = false;
     /* Ett pass hämtas om varje gång. Tiden, tillägget och betalningen
        ändras av andra (studiehjälparen, familjen, Stripe), och ett
        cachat pass hade visat ett tillägg som obetalt efter att det
-       betalats. */
-    if (typ === 'pass') delete S.detaljCache[typ + ':' + id];
+       betalats.
+
+       En chatt likaså, och av ett skäl till: varje öppning är en rad i
+       auditloggen (chatt_las). En öppning ur cachen hade varit en
+       läsning som loggen inte vet om. */
+    if (typ === 'pass' || typ === 'chatt') delete S.detaljCache[typ + ':' + id];
+    DP.chattRitad = null;
     byggPanel();
     DP.sistaFokus = document.activeElement;
     DP.typ = typ; DP.id = id;
-    DP.flik = DP_FLIKAR[typ][0][0];
+    /* En lista kan be om en annan flik än den första (data-dp-start),
+       men bara en som typen har. */
+    DP.flik = DP_FLIKAR[typ].some(f => f[0] === flik) ? flik : DP_FLIKAR[typ][0][0];
 
     DP.bak.hidden = false;
     DP.panel.hidden = false;
@@ -591,6 +623,142 @@
       + esc(p.id) + '" data-dp-stang>Lägg till ett dokument</a></div>';
   }
 
+  /* ------------------------------------------------------------
+     CHATTEN (2026-09-29)
+
+     Leo: "vi på admin ska kunna gå in i elevers och lärares chattar
+     utan att de ser det. det gör vi från vår admin genom att trycka på
+     öppna chatt".
+
+     Tråden läses genom chatt_las() och aldrig genom NXKontakt.tråd().
+     Den markerar det den visar som läst, och i adminvyn hade det varit
+     vår läsning som tog bort "oläst" hos den som skrev: ett kvitto på
+     att mottagaren läst något hen aldrig sett. Databasen nekar det ändå
+     (admin har ingen update-policy på messages), men vyn försöker inte
+     ens. Ingen Realtime-kanal och ingen skrivruta heller: vi läser, vi
+     deltar inte i samtalet.
+
+     Osynligt för dem är inte hemligt för dem. Att vi kan läsa chatten
+     står i integritetspolicyn, och varje öppning står i auditloggen
+     (chatt.oppnad), skriven av funktionen i samma transaktion som
+     läsningen.
+     ------------------------------------------------------------ */
+
+  /* Raderna som säger vilka trådar en person har. PostgREST lämnar ändå
+     inte ut fler i ett svar, och en familj med över tusen meddelanden
+     har sina studiehjälpare bland dem. */
+  const TRAD_MAX = 1000;
+
+  function klockslag(iso) {
+    const d = new Date(iso);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  /* "Idag" och "Igår", som tråden i vyerna (NXKontakt.dagText, som
+     adminvyn inte laddar), men på den svenska dagen: ett meddelande
+     klockan halv ett på natten hör till den dag det skrevs. */
+  function chattDag(iso) {
+    const dag = isoFor(new Date(iso));
+    const igår = new Date(); igår.setDate(igår.getDate() - 1);
+    if (dag === isoFor(new Date())) return 'Idag';
+    if (dag === isoFor(igår)) return 'Igår';
+    return datumText(dag);
+  }
+
+  function dpChatt(t, d) {
+    if (d.chattSaknas) {
+      return tomt('Chatten går inte att öppna än',
+        'Funktionen chatt_las finns inte i databasen: migrationen admin_oppnar_chatten är inte körd. '
+        + 'Ingenting har lästs.');
+    }
+    if (d.chattFel) return tomt('Chatten gick inte att hämta', d.chattFel);
+
+    /* Nyast först ur databasen, äldst först här: tråden läses uppifrån
+       och ned, som i vyerna. */
+    const rader = (d.chatt || []).slice().reverse();
+    const totalt = rader.length ? (Number(rader[0].totalt) || rader.length) : 0;
+    /* Namnet under varje bubbla. I vyerna säger sidan vem som skrev
+       (egna till höger); här finns inget "jag". */
+    const vem = id => {
+      const n = namnFör(id);
+      if (n && n !== '—') return n.split(' ')[0];
+      return id === t.hjälpare ? 'Studiehjälparen' : 'Familjen';
+    };
+    const namn = (id, reserv) => {
+      const n = namnFör(id);
+      return n && n !== '—' ? n : reserv;
+    };
+
+    let h = '<p class="dp-chatt-not">Bara läsning. Familjen och studiehjälparen ser inte att du läser: '
+      + 'ingenting markeras som läst och ingen notis går ut. Att du öppnade chatten står i '
+      + 'auditloggen, utan texten.</p>';
+
+    if (!rader.length) {
+      h += '<div style="margin-top:16px">'
+        + tomt('Inga meddelanden än', 'Tråden fylls när familjen eller studiehjälparen skriver.') + '</div>';
+    } else {
+      if (totalt > rader.length) {
+        h += '<p class="xsmall" style="color:var(--bl-3);margin:12px 0 0">Visar de ' + rader.length
+          + ' senaste av ' + totalt + ' meddelanden.</p>';
+      }
+      h += '<div class="tr">';
+      let förraDagen = '';
+      rader.forEach(m => {
+        const dag = chattDag(m.created_at);
+        if (dag !== förraDagen) { h += '<div class="tr-dag">' + esc(dag) + '</div>'; förraDagen = dag; }
+        /* Familjen till vänster, studiehjälparen till höger. */
+        h += '<div class="tr-rad ' + (m.sender_id === t.hjälpare ? 'min' : 'deras') + '">'
+          + '<div class="tr-bubbla">' + esc(m.body) + '</div>'
+          + '<span class="tr-tid">' + esc(vem(m.sender_id) + ' · ' + klockslag(m.created_at))
+          + (m.read_at ? '' : ' · <span class="oläst" title="Mottagaren har inte öppnat det än">oläst</span>')
+          + '</span></div>';
+      });
+      h += '</div>';
+    }
+
+    return h + '<div class="dp-atgard" style="margin-top:22px">'
+      + '<button class="btn btn-ghost btn-sm" type="button" data-dp="familj:' + esc(t.förälder) + '">'
+      + esc(namn(t.förälder, 'Familjen')) + '</button>'
+      + '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(t.hjälpare) + '">'
+      + esc(namn(t.hjälpare, 'Studiehjälparen')) + '</button>'
+      + '</div>';
+  }
+
+  /* Trådarna på en familjs eller en studiehjälpares Översikt, med Öppna
+     chatt på var och en. En tråd finns när någon skrivit, och kan
+     finnas när de är matchade: då står den med utan datum, så att det
+     syns att ingen skrivit. Vem och när, aldrig texten. */
+  function dpChattar(p, d, sort) {
+    const ärFamilj = sort === 'familj';
+    const motpart = ärFamilj ? 'tutor_id' : 'parent_id';
+    const trådar = {};
+    /* Nyast först, så den första raden per motpart är den senaste. */
+    (d.tradar || []).forEach(m => {
+      const id = m[motpart];
+      if (id && !trådar[id]) trådar[id] = { id: id, senast: m.created_at };
+    });
+    const matchade = ärFamilj
+      ? (S.elever[p.id] || []).filter(e => e.matched_tutor_id && e.match_status === 'matched')
+          .map(e => e.matched_tutor_id)
+      : S.elevlista.filter(e => e.matched_tutor_id === p.id && e.match_status === 'matched')
+          .map(e => e.parent_id);
+    matchade.forEach(id => { if (id && !trådar[id]) trådar[id] = { id: id, senast: null }; });
+
+    const lista = Object.values(trådar).sort((a, b) =>
+      String(b.senast || '').localeCompare(String(a.senast || ''))
+      || namnFör(a.id).localeCompare(namnFör(b.id), 'sv'));
+
+    const rader = lista.map(t => dpRad(namnFör(t.id),
+      t.senast ? 'senast ' + kortDatum(t.senast) : 'ingen har skrivit än',
+      '<button class="btn btn-ghost btn-sm" type="button" data-dp="chatt:'
+        + esc(ärFamilj ? p.id + '|' + t.id : t.id + '|' + p.id) + '">Öppna chatt</button>')).join('');
+
+    return dpRubrik('Chatt', lista.length > 1 ? lista.length + ' trådar' : '')
+      + (d.tradarFel ? tomt('Chattarna gick inte att läsa', d.tradarFel)
+        : rader || '<p class="xsmall" style="color:var(--bl-3);margin:0 0 12px">'
+          + (ärFamilj ? 'Ingen studiehjälpare och ingen tråd än.' : 'Inga elever och ingen tråd än.') + '</p>');
+  }
+
   function dpFamilj(p, d) {
     const barn = S.elever[p.id] || [];
     const pass = passFör(b => b.parent_id === p.id);
@@ -672,6 +840,7 @@
             .filter(Boolean).join(' · '),
           läge(BOK_LAGE, nästa.status))
       : tomt('Inget pass inbokat', 'Familjen bokar i studievyn.'))
+    + dpChattar(p, d, 'familj')
     + dpDokument(p)
     + dpHantera('familj', p, {
         rubrik: 'Radera familjen',
@@ -855,6 +1024,7 @@
       ? '<button class="btn btn-ghost btn-sm" type="button" data-sh-kontakt="' + esc(p.id) + '">Kontakta</button>'
       : '')
     + '</div>'
+    + dpChattar(p, d, 'studiehjalpare')
     + dpDokument(p)
     + dpHantera('studiehjalpare', p, {
         rubrik: 'Radera studiehjälparen',
@@ -942,6 +1112,9 @@
     const epost = String(a.email || '').toLowerCase();
     const konto = epost && Object.values(S.personer).find(p =>
       p.role === 'tutor' && !ärRaderad(p) && String(p.email || '').toLowerCase() === epost);
+    /* Öppna provet härifrån (2026-09-29): steg 3 i fliken Rekryteringen
+       låg nedanför skärmkanten, och här stod bara "Inte öppnat". */
+    const provKnapp = kör('provKnapp', a) || '';
 
     return dpRubrik('Ansökan', 'kom in ' + kortDatum(a.created_at))
       + dpFakta([
@@ -956,7 +1129,7 @@
           ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(konto.id) + '">'
             + esc(konto.full_name || konto.email) + '</button>'
           : null, 'inget konto med adressen än'],
-        ['Provet', esc(kör('provKort', a) || '')]
+        ['Provet', esc(kör('provKort', a) || '') + (provKnapp ? ' ' + provKnapp : '')]
       ])
       + dpRubrik('Varför hen söker')
       + (text ? '<div class="dp-text">' + esc(text) + '</div>' : tomt('Inget skrivet', ''))
@@ -1544,6 +1717,12 @@
         .filter(x => x && x !== '—').join(' · ');
       märken = läge(BOK_LAGE, person.status)
         + (person.attendance === 'franvarande' ? ' ' + pill('Uteblev', 'ar-ny') : '');
+    } else if (DP.typ === 'chatt') {
+      const [förälder, hjälpare] = String(DP.id).split('|');
+      person = { förälder: förälder, hjälpare: hjälpare };
+      rubrik = namnFör(förälder) + ' och ' + namnFör(hjälpare);
+      under = 'Chatten mellan familjen och studiehjälparen';
+      märken = pill('Bara läsning', '');
     } else if (DP.typ === 'anmalan') {
       person = S.leads.find(x => x.id === DP.id);
       if (!person || ärRaderad(person)) { stängDetalj(); return; }
@@ -1584,8 +1763,10 @@
       if (person.is_admin) märken += ' ' + pill('Admin', 'ar-vantar');
     }
 
-    /* En raderad person har en flik, och inget att ändra. */
-    const raderad = DP.typ !== 'pass' && ärRaderad(person);
+    /* Ett pass och en chatt är ingen person: inget att radera eller
+       redigera här. En raderad person har en flik, och inget att ändra. */
+    const ärPerson = DP.typ !== 'pass' && DP.typ !== 'chatt';
+    const raderad = ärPerson && ärRaderad(person);
     if (raderad) {
       flikar = [['oversikt', 'Raderad']];
       DP.flik = 'oversikt';
@@ -1597,20 +1778,28 @@
     let kropp;
     if (laddarÄn || !d) kropp = laddar();
     else if (raderad) kropp = dpRaderad(DP.typ, person);
-    else if (DP.redigera && DP.typ !== 'pass') kropp = dpRedigera(DP.typ, person);
+    else if (DP.redigera && ärPerson) kropp = dpRedigera(DP.typ, person);
     else if (DP.typ === 'pass') kropp = dpPass(person, d);
+    else if (DP.typ === 'chatt') kropp = dpChatt(person, d);
     else if (DP.typ === 'anmalan') kropp = dpAnmalan(person);
     else if (DP.typ === 'ansokan') kropp = dpAnsokan(person);
     else if (DP.typ === 'familj') kropp = dpFamilj(person, d);
     else if (DP.typ === 'elev') kropp = dpElev(person, d);
     else kropp = dpStudiehjalpare(person, d);
 
+    /* Chatten ritas om när en lista gör det (ritaPanelen), och en ny
+       panel står överst. Den som läst sig bakåt i tråden ska stå kvar
+       där; första gången tråden ritas står den vid det senaste, som i
+       vyerna. */
+    const förraKropp = DP.panel.querySelector('.dp-kropp');
+    const rullning = DP.typ === 'chatt' && DP.chattRitad === DP.id && förraKropp ? förraKropp.scrollTop : null;
+
     DP.panel.innerHTML =
       '<div class="dp-topp">'
       /* Ett pass har inget ansikte; ämnet får ge initialen. Aldrig
          avatar_url: den är en sökväg i den privata hinken avatarer, inte
          en adress, och som bildadress blir den en trasig bild. */
-      + M.avatar(DP.typ === 'pass' ? (person.subject || 'Pass') : rubrik, null, {})
+      + M.avatar(DP.typ === 'pass' ? (person.subject || 'Pass') : DP.typ === 'chatt' ? 'Chatt' : rubrik, null, {})
       + '<span class="dp-namn"><b>' + esc(rubrik) + '</b>'
       + (under ? '<span>' + esc(under) + '</span>' : '')
       + (märken ? '<span class="dp-marken">' + märken + '</span>' : '')
@@ -1623,6 +1812,12 @@
         + ' aria-selected="' + (f[0] === DP.flik) + '">' + esc(f[1]) + '</button>').join('')
       + '</div>'
       + '<div class="dp-kropp">' + kropp + '</div>';
+
+    if (DP.typ === 'chatt' && d && !laddarÄn) {
+      const nyKropp = DP.panel.querySelector('.dp-kropp');
+      if (rullning != null) nyKropp.scrollTop = rullning;
+      else { nyKropp.scrollTop = nyKropp.scrollHeight; DP.chattRitad = DP.id; }
+    }
   }
 
   /* Öppnas från vilken lista som helst, och från panelen själv:
@@ -1631,7 +1826,7 @@
     const k = e.target.closest('[data-dp]');
     if (!k) return;
     const [typ, id] = String(k.dataset.dp).split(':');
-    öppnaDetalj(typ, id);
+    öppnaDetalj(typ, id, k.dataset.dpStart);
   });
 
   document.addEventListener('submit', async e => {

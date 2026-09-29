@@ -443,6 +443,71 @@ window.NXStudie = (function () {
     });
   }, { passive: true });
 
+  /* ---------- alla rader, inte de tusen första (2026-09-29) ----------
+     Leo: "de raderna ska inte försvinna efter 1000st". PostgREST lämnar
+     ut högst tusen rader per svar (max-rows), och svaret säger inte att
+     det finns fler: det ser helt ut. Adminvyn hämtade passen,
+     anmälningarna och resten med en fråga var, nyast först, så den dag
+     det fanns fler än tusen hade de äldsta försvunnit ur Lektioner,
+     Ekonomi och Löner utan att något blev rött. Studiehjälparvyn hämtar
+     sina pass äldst först, och där hade det varit de NYA som försvann:
+     passen att svara på och rapportera.
+
+     Sida efter sida tills databasens eget antal är nått (count på första
+     sidan). Antalet avgör, inte en kort sida: sänks max-rows under
+     sidans storlek är varje sida kort, och en hjälpare som slutade vid
+     första korta sidan hade kapat igen, lika tyst. Nästa sida börjar
+     efter så många rader som faktiskt kom.
+
+     Sorteringen slutar alltid på nyckeln (id, om inget annat anges):
+     sidorna är egna frågor, och två pass samma dag kan annars byta plats
+     mellan dem, så att ett kommer med två gånger och ett annat inte alls.
+     Skrivs en rad mellan två sidor kan den sista på en sida komma igen
+     först på nästa; den tas bort på nyckeln, så nyckeln ska finnas bland
+     kolumnerna. Tas en rad bort mellan två sidor kan en annan hoppas
+     över till nästa hämtning. Det är priset för sidor, och det rättar
+     sig självt.
+
+     bygg(q) lägger till filter och sortering. Svaret har samma form som
+     supabase-js ({ data, error }), och ett fel på en senare sida ger
+     felet, aldrig halva listan: en kapad lista är det här ska hindra.
+     Frågor med en avsiktlig gräns (de senaste 400 meddelandena, de
+     senaste 20 rapporterna) går inte hit: där är gränsen poängen.
+
+     supa skickas in, som till notisval: resten av filen rör ingen
+     databas. */
+  var SIDA = 1000;
+
+  async function hämtaAlla(supa, tabell, kolumner, bygg, nyckel) {
+    nyckel = nyckel || 'id';
+    var rader = [];
+    var från = 0, totalt = Infinity, sidor = 0;
+    while (från < totalt) {
+      var q = supa.from(tabell).select(kolumner, från === 0 ? { count: 'exact' } : undefined);
+      if (bygg) q = bygg(q);
+      var svar = await q.order(nyckel).range(från, från + SIDA - 1);
+      if (svar.error) return { data: null, error: svar.error };
+      var del = svar.data || [];
+      if (från === 0 && typeof svar.count === 'number') totalt = svar.count;
+      if (!del.length) break;
+      Array.prototype.push.apply(rader, del);
+      från += del.length;
+      sidor++;
+    }
+    if (sidor < 2) return { data: rader, error: null };
+    var sedda = new Set();
+    return {
+      data: rader.filter(function (r) {
+        var k = r[nyckel];
+        if (k == null) return true;
+        if (sedda.has(k)) return false;
+        sedda.add(k);
+        return true;
+      }),
+      error: null
+    };
+  }
+
   /* ---------- månadsväljaren (Fas 20.2) ----------
      Leo 2026-09-27: "man ska inte kunna se rapporter från juli idag i
      september ... gör det snyggt så man kan välja den månaden man vill
@@ -550,20 +615,37 @@ window.NXStudie = (function () {
     if (lista.indexOf(vald) === -1) vald = denna;
     if (o.stegare) return månadsstegare(host, o, lista, vald, denna);
 
+    /* Raden (2026-09-29, Leo: "ändra månaderna där så de ser bättre
+       ut"). Förut var varje månad ett eget piller med kant, och ett
+       piller med märke blev högre än de andra, så raden hackade.
+       Årtalet svävade ovanför och klipptes i kanten, och raden slutade
+       mitt i en månad utan att säga att det fanns fler. Nu står
+       månaderna i ett spår, lika höga med eller utan märke, årtalet står
+       i raden där det byts, och pilarna och den tonade kanten säger att
+       det går att rulla. Spåret är det som rullar, inte host. */
     host.classList.add('nx-manader');
     host.setAttribute('role', 'group');
     if (!host.getAttribute('aria-label')) host.setAttribute('aria-label', 'Välj månad');
-    host.innerHTML = lista.map(function (m, n) {
-      var år = m.slice(0, 4);
-      /* Året står bara där det byts, och på den första: tolv knappar
-         med "2026" på varje är brus. */
-      var visaÅr = n === 0 || år !== lista[n - 1].slice(0, 4);
-      return '<button type="button" data-manad="' + m + '" aria-pressed="' + (m === vald) + '"'
-        + (m === denna ? ' data-denna' : '') + '>'
-        + (visaÅr ? '<small>' + år + '</small>' : '')
-        + '<span>' + esc(månadsNamn(m, false)) + '</span>'
-        + '<i class="nx-manad-marke"></i></button>';
-    }).join('');
+    host.innerHTML =
+      '<button type="button" class="nx-manad-pil" data-rull="-1" aria-label="Tidigare månader" tabindex="-1">' + IKON.tillbaka + '</button>'
+      + '<div class="nx-manad-ram"><div class="nx-manad-spar">'
+      + lista.map(function (m, n) {
+        var år = m.slice(0, 4);
+        /* Året står där det byts, och först: tolv knappar med "2026" på
+           varje är brus. Knappens namn bär året ändå, för en skärmläsare
+           hör inte att årtalet stod tre knappar tidigare. */
+        var visaÅr = n === 0 || år !== lista[n - 1].slice(0, 4);
+        return (visaÅr ? '<span class="nx-manad-ar" aria-hidden="true">' + år + '</span>' : '')
+          + '<button type="button" data-manad="' + m + '" aria-pressed="' + (m === vald) + '"'
+          + ' aria-label="' + esc(månadsNamn(m)) + '"'
+          + (m === denna ? ' data-denna' : '') + '>'
+          + '<span>' + esc(månadsNamn(m, false)) + '</span>'
+          + '<i class="nx-manad-marke" hidden></i></button>';
+      }).join('')
+      + '</div></div>'
+      + '<button type="button" class="nx-manad-pil" data-rull="1" aria-label="Senare månader" tabindex="-1">' + IKON.pil + '</button>';
+    var spår = host.querySelector('.nx-manad-spar');
+    var ram = host.querySelector('.nx-manad-ram');
 
     function märk() {
       if (!o.märke) return;
@@ -572,15 +654,28 @@ window.NXStudie = (function () {
         var i = b.querySelector('.nx-manad-marke');
         i.textContent = text;
         i.hidden = !text;
+        b.setAttribute('aria-label', månadsNamn(b.dataset.manad) + (text ? ', ' + text : ''));
       });
     }
+    /* Pilarna och kanten följer var spåret står. Två attribut per
+       rullsteg och ingen stil: raden ritas inte om. */
+    function kanter() {
+      var max = spår.scrollWidth - spår.clientWidth;
+      var vänster = spår.scrollLeft > 2;
+      var höger = spår.scrollLeft < max - 2;
+      ram.classList.toggle('mer-vanster', vänster);
+      ram.classList.toggle('mer-hoger', höger);
+      host.querySelector('[data-rull="-1"]').disabled = !vänster;
+      host.querySelector('[data-rull="1"]').disabled = !höger;
+    }
     function iBild() {
-      var b = host.querySelector('[aria-pressed="true"]');
+      var b = spår.querySelector('[aria-pressed="true"]');
       if (!b) return;
-      var vänster = b.offsetLeft - host.offsetLeft;
-      if (vänster < host.scrollLeft || vänster + b.offsetWidth > host.scrollLeft + host.clientWidth) {
-        host.scrollLeft = Math.max(0, vänster - (host.clientWidth - b.offsetWidth) / 2);
+      var vänster = b.offsetLeft;
+      if (vänster < spår.scrollLeft || vänster + b.offsetWidth > spår.scrollLeft + spår.clientWidth) {
+        spår.scrollLeft = Math.max(0, vänster - (spår.clientWidth - b.offsetWidth) / 2);
       }
+      kanter();
     }
     function sätt(m, tyst) {
       if (lista.indexOf(m) === -1 || m === vald) return;
@@ -593,9 +688,20 @@ window.NXStudie = (function () {
     }
 
     host.addEventListener('click', function (e) {
+      var pil = e.target.closest('[data-rull]');
+      if (pil) {
+        spår.scrollBy({ left: Number(pil.dataset.rull) * spår.clientWidth * 0.75, behavior: 'smooth' });
+        return;
+      }
       var b = e.target.closest('[data-manad]');
       if (b) sätt(b.dataset.manad);
     });
+    var väntar = false;
+    spår.addEventListener('scroll', function () {
+      if (väntar) return;
+      väntar = true;
+      requestAnimationFrame(function () { väntar = false; kanter(); });
+    }, { passive: true });
     märk();
     /* Efter layout: offsetLeft är 0 innan raden syns. */
     requestAnimationFrame(iBild);
@@ -606,14 +712,15 @@ window.NXStudie = (function () {
        (den innevarande, sist i raden) utanför. Mätt i provbänken
        2026-09-28: 935 px in i en rad som var 308 px bred på en telefon
        och 759 px på en dator. Bara när bredden går från noll: en rad man
-       själv dragit i sidled ska inte hoppa tillbaka när fönstret ändras. */
+       själv dragit i sidled ska inte hoppa tillbaka när fönstret ändras.
+       Pilarna följer med vid varje storlek. */
     if (typeof ResizeObserver === 'function') {
-      var bredd = host.clientWidth;
+      var bredd = spår.clientWidth;
       new ResizeObserver(function () {
-        var ny = host.clientWidth;
-        if (!bredd && ny) iBild();
+        var ny = spår.clientWidth;
+        if (!bredd && ny) iBild(); else kanter();
         bredd = ny;
-      }).observe(host);
+      }).observe(spår);
     }
 
     return {
@@ -2791,6 +2898,7 @@ window.NXStudie = (function () {
     progressRad: progressRad, progressPerÄmne: progressPerÄmne,
     tomt: tomt, laddar: laddar, laddarFörsta: laddarFörsta, håll: håll, hållLista: hållLista, släppLista: släppLista,
     scrollaTill: scrollaTill, visaÖverst: visaÖverst,
+    hämtaAlla: hämtaAlla,
     månadsval: månadsval, månadsGräns: månadsGräns, månadsNamn: månadsNamn, månadIso: månadIso,
     passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,
     hämtaMöte: hämtaMöte, mötesRad: mötesRad,

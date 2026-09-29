@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { AVBOKNINGSSKAL, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, kontaktaRuta, kortDatum,
+  const { AVBOKNINGSSKAL, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, hämtaAlla, kontaktaRuta, kortDatum,
           märkFlik, namnFör, närText, pill, rad, ritaPanelen, skriv, tabell, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
@@ -753,12 +753,17 @@
     konto: 'Konto', elev: 'Elev',
     /* Fas 9.10 loggade handlingarna från början, men raden stod som
        "handling skapad". Sedan 2026-09-29 står delningen också där. */
-    handling: 'Dokument'
+    handling: 'Dokument',
+    /* 2026-09-29: chatt_las() skriver chatt.oppnad varje gång någon av
+       oss öppnar en tråd. Gäller är familjen, studiehjälparen står i
+       Ändring. Aldrig texten. */
+    chatt: 'Chatt'
   };
   const AUDIT_HANDLING = {
     skapad: 'skapad', borttagen: 'borttagen', andrad: 'ändrad', status: 'ny status',
     aktiverad: 'aktiverad', avaktiverad: 'avaktiverad', sparade: 'sparat', lasta: 'läst', raderade: 'raderat',
-    raderat: 'raderat', raderad: 'raderad', avidentifierat: 'avidentifierat', avidentifierad: 'avidentifierad'
+    raderat: 'raderat', raderad: 'raderad', avidentifierat: 'avidentifierat', avidentifierad: 'avidentifierad',
+    oppnad: 'öppnad'
   };
   const AUDIT_FALT = {
     status: 'läge', match_status: 'matchning', matched_tutor_id: 'studiehjälpare', parent_id: 'familj',
@@ -1192,8 +1197,8 @@
   }
 
   async function hämtaHandlingar() {
-    const { data, error } = await supa.from('handlingar').select('*')
-      .order('uppladdad', { ascending: false });
+    const { data, error } = await hämtaAlla('handlingar', '*',
+      q => q.order('uppladdad', { ascending: false }));
     S.handlingarFel = error ? felText(error) : null;
     S.handlingar = data || [];
     ritaDokument();

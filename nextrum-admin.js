@@ -41,7 +41,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { S, elevNamn, funktionsFel, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag,
+  const { S, elevNamn, funktionsFel, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag,
           hämtaMatchunderlag, kortDatum, namnFör, närText, skriv, tabell,
           visa, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
@@ -723,12 +723,17 @@
     /* Hämta om de tre listorna och rita om allt som räknar på dem.
        hämtaAllt() hade hämtat om hela vyn, inklusive fakturor och
        matchningsunderlag — fyra gånger så mycket arbete för en rad
-       som tillkommit. */
+       som tillkommit.
+
+       Alla rader, inte de tusen första (hämtaAlla i kärnan): längden
+       jämförs med databasens count nedan, och en lista kapad vid tusen
+       hade varit kortare än antalet vid varje koll, för alltid. */
     async function hämtaOmListorna(nytt) {
+      const nyast = q => q.order('created_at', { ascending: false });
       const [l2, a2, k2] = await Promise.all([
-        supa.from('leads').select('*').order('created_at', { ascending: false }),
-        supa.from('applications').select('*').order('created_at', { ascending: false }),
-        supa.from('contact_messages').select('*').order('created_at', { ascending: false })
+        hämtaAlla('leads', '*', nyast),
+        hämtaAlla('applications', '*', nyast),
+        hämtaAlla('contact_messages', '*', nyast)
       ]);
       S.leads = l2.data || S.leads;
       S.ansokningar = a2.data || S.ansokningar;

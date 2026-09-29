@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
 <link rel="stylesheet" href="nextrum-vy.css?v=a14920ad">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=2378c327">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=a93d0740">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -383,7 +383,9 @@
           <div class="ov-rutnat">
             <!-- ============ ATT GÖRA ============
                  Sidans viktigaste block. En rad per sak som ligger och
-                 väntar på en människa, och varje rad är vägen dit. Det
+                 väntar på oss, och varje rad är vägen dit. Det som väntar
+                 på en familj eller en studiehjälpare, som en passförfrågan,
+                 står inte här (nextrum-admin-oversikt.js). Det
                  som gått fel står först, under en egen rubrik: det är
                  inte samma sak som det som väntar, och en lista som
                  blandar dem säger ingenting. Ritas av ritaKonsol() ur
@@ -491,7 +493,7 @@
           <div class="vy-flik-panel" role="tabpanel" data-flik="utbildning"
                id="panel-ans-utbildning" aria-labelledby="flik-ans-utbildning" hidden>
             <div class="dbox">
-              <h5>Intervjuade, ska utbildas <em id="ans-utbildning-antal"></em></h5>
+              <h5>Ska utbildas <em id="ans-utbildning-antal"></em></h5>
               <div id="ans-utbildning"><div class="loading">Hämtar</div></div>
             </div>
           </div>
@@ -511,7 +513,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Frågor</h2>
-              <p>Inkorgen från kontaktformuläret, och en insyn i chattarna mellan familj och studiehjälpare.</p>
+              <p>Inkorgen från kontaktformuläret, och chattarna mellan familj och studiehjälpare, som ni kan öppna och läsa.</p>
             </div>
           </div>
 
@@ -542,9 +544,12 @@
             <div class="dbox">
               <h5>Chattar <em>senaste raden i varje tråd</em></h5>
               <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
-                Ni kan läsa trådarna, inte skriva i dem. Insynen finns för att en
-                förälder ska kunna lita på att plattformen inte är en privat kanal
-                till deras barn — inte för att ni ska delta i samtalet.
+                Öppna chatt visar hela tråden. Ni kan läsa den, inte skriva i den, och
+                familjen och studiehjälparen ser inte att ni läser: ingenting markeras
+                som läst och ingen notis går ut. Varje öppning står i auditloggen, utan
+                texten. Insynen finns för att en förälder ska kunna lita på att
+                plattformen inte är en privat kanal till deras barn, inte för att ni
+                ska delta i samtalet.
               </p>
               <div id="chatt-lista"><div class="loading">Hämtar</div></div>
             </div>
@@ -684,6 +689,11 @@
               <h2>Bokningar</h2>
               <p>Alla pass, alla familjer. Listan för att söka och ändra, kalendern för att se var de ligger.</p>
             </div>
+            <!-- Hur många passförfrågningar som väntar på svar. De står
+                 här och inte i Att göra på Översikt (2026-09-29): ett
+                 förslag är studiehjälparens eller familjens drag, inte
+                 vårt. Ritas av ritaFörfrågningar() i nextrum-admin-drift.js. -->
+            <div class="adm-bok-forfragan" id="bok-forfragan" hidden></div>
           </div>
 
           <div class="vy-flikar" role="tablist" aria-label="Lista eller kalender">
@@ -749,15 +759,22 @@
              när studiehjälparen skrivit den, och bara completed-pass
              kommer med på underlaget den 25:e. En saknad rapport är
              alltså en timme ingen får betalt för.
+
+             Månad för månad sedan 2026-09-29. Leo: "filtrera för
+             månader ... lättare att se över en mängd lektioner under
+             en specifik tid". Talen och listan gäller den månad som är
+             vald i raden, på passets datum, och en månad med pass utan
+             rapport är märkt där (nextrum-admin-drift.js).
              ============================================================ -->
         <section class="vy-sek" data-sek="lektioner" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Lektioner</h2>
-              <p>Pass som hållits. Utan rapport blir ett pass aldrig genomfört, och då kommer det inte med på studiehjälparens underlag.</p>
+              <p>Pass som hållits, månad för månad. Utan rapport blir ett pass aldrig genomfört, och då kommer det inte med på studiehjälparens underlag.</p>
             </div>
           </div>
 
+          <div id="lekt-manader" aria-label="Välj månad för lektionerna"></div>
           <div class="adm-tal-rad" id="lekt-tal"><div class="loading">Hämtar</div></div>
 
           <div class="dbox">
@@ -768,13 +785,10 @@
                 <option value="saknas">Rapport saknas</option>
                 <option value="finns">Rapport skriven</option>
               </select>
-              <select class="sel" id="lekt-period" aria-label="Filtrera på period">
-                <option value="30">Senaste 30 dagarna</option>
-                <option value="90">Senaste tre månaderna</option>
-                <option value="">Hela tiden</option>
-              </select>
               <span class="small" id="lekt-antal" style="margin-left:auto;color:var(--bl-2)"></span>
             </div>
+            <!-- Söket i de andra månaderna, med en knapp dit. -->
+            <div id="lekt-andra"></div>
             <div id="lekt-tabell"><div class="loading">Hämtar</div></div>
           </div>
         </section>
@@ -2108,6 +2122,7 @@
                   <option value="klientfel">Bortstädade fel</option>
                   <option value="bolagsfakta">Bolagsfakta</option>
                   <option value="handling">Dokument</option>
+                  <option value="chatt">Öppnade chattar</option>
                   <option value="konto">Raderade konton</option>
                   <option value="elev">Raderade elever</option>
                 </select>
@@ -2212,25 +2227,25 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=8ffb028b"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=4991e4de"></script>
+<script src="nextrum-studie.js?v=b53dd14a"></script>
 <script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
 <script src="nextrum-media.js?v=01adfb73"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=40b9e65e"></script>
-<script src="nextrum-admin-detalj.js?v=0af4e6b8"></script>
-<script src="nextrum-admin-oversikt.js?v=a4ec5b03"></script>
+<script src="nextrum-admin-karna.js?v=d76335e3"></script>
+<script src="nextrum-admin-detalj.js?v=4079c6a0"></script>
+<script src="nextrum-admin-oversikt.js?v=6abd671e"></script>
 <script src="nextrum-admin-kunder.js?v=155120f9"></script>
-<script src="nextrum-admin-rekrytering.js?v=d08ab262"></script>
-<script src="nextrum-admin-bibliotek.js?v=66dad1e3"></script>
-<script src="nextrum-admin-kommunikation.js?v=97c8d085"></script>
-<script src="nextrum-admin-drift.js?v=e5669055"></script>
+<script src="nextrum-admin-rekrytering.js?v=0941aacd"></script>
+<script src="nextrum-admin-bibliotek.js?v=a6e2cbda"></script>
+<script src="nextrum-admin-kommunikation.js?v=a0deff07"></script>
+<script src="nextrum-admin-drift.js?v=1091e164"></script>
 <script src="nextrum-admin-ekonomi.js?v=ab63025c"></script>
 <script src="nextrum-admin-manaden.js?v=8a3c0ed8"></script>
-<script src="nextrum-admin-loner.js?v=86e80a5e"></script>
+<script src="nextrum-admin-loner.js?v=a26fd8b7"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
-<script src="nextrum-admin-system.js?v=8006b686"></script>
+<script src="nextrum-admin-system.js?v=9f3128c4"></script>
 <script src="nextrum-admin-automationer.js?v=df8e5586"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
@@ -2238,8 +2253,8 @@
 <script src="nextrum-admin-radera.js?v=26dcfc26"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
-<script src="nextrum-admin-konsol.js?v=3f816e08"></script>
-<script src="nextrum-modulvakt.js?v=980a011f"></script>
-<script src="nextrum-admin.js?v=a6a938b8"></script>
+<script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
+<script src="nextrum-modulvakt.js?v=4c50590d"></script>
+<script src="nextrum-admin.js?v=720a0934"></script>
 </body>
 </html>

@@ -1,10 +1,14 @@
 /* ============================================================
-   NEXTRUM — uppgifterna (Fas 23.1)
-   Banan, spelaren, stjärnorna, märkena och rättningen. Laddas efter
-   nextrum-arbetsyta.css i studievyn och studiehjälparvyn.
+   NEXTRUM — NexLäx (Fas 23.1, 23.2)
+   Vägen, hemmet, utvecklingen, spelaren, stjärnorna, märkena och
+   rättningen. Laddas efter nextrum-arbetsyta.css i studievyn och
+   studiehjälparvyn.
 
    Inga hexkoder: allt är cinemas tokens, så mörkt läge följer med av
-   sig självt. Rätt är mossa, fel är lera, stjärnorna är ockra.
+   sig självt. Rätt är mossa, fel är lera, stjärnorna och XP är ockra.
+   Toppen i NexLäx är barken, samma mörka yta som resten av sajtens
+   mörka partier, och där gäller de ljusa syskonen (--lera-l,
+   --mossa-l, --ockra-l): de mörka faller under AA på bark.
 
    Tre regler från CLAUDE.md avsnitt 3 gäller extra här, för spelaren
    är det mest tryckta i hela vyn:
@@ -16,6 +20,10 @@
        ingen alls med prefers-reduced-motion
    ============================================================ */
 
+/* Ikonerna är streck, utom de fyllda (ik-fyll i nextrum-uppgifter.js). */
+.nl svg,.upg-spel svg,.upg-genom svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nl svg.ik-fyll,.upg-spel svg.ik-fyll,.upg-genom svg.ik-fyll,svg.ik-fyll{fill:currentColor;stroke:none}
+
 /* ---------- stjärnorna ---------- */
 .upg-stj{display:inline-flex;gap:2px;vertical-align:middle}
 .upg-stj i{display:block;width:18px;height:18px;color:var(--ln-2)}
@@ -24,52 +32,239 @@
 .upg-stj-sm i{width:14px;height:14px}
 
 /* ============================================================
-   BANAN
+   HEMMET
    ============================================================ */
-.upg-bana-val{
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
-  gap:10px 16px;margin-bottom:16px;min-width:0;
-}
-/* En rad man drar i sidled på en telefon, som ämnesraden i bokningen.
-   minmax(0,…) i föräldern och min-width:0 här: annars blir raden
-   sidans minsta bredd och hela vyn går att dra i sidled (fälla 2). */
-.upg-amnen{
-  display:flex;gap:8px;overflow-x:auto;min-width:0;flex:1 1 auto;
-  scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:2px;
-}
-.upg-amnen::-webkit-scrollbar{display:none}
-.upg-amnen .chip{flex:none;white-space:nowrap}
-.upg-arskurs{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--bl-3)}
-.upg-arskurs-en{font-size:.85rem;color:var(--bl-3)}
+.nl{min-width:0}
+.nl-grupp{display:flex;align-items:center;gap:10px;margin:30px 0 12px;min-height:26px}
+.nl-grupp:first-child{margin-top:0}
+.nl-grupp h3{font-size:1.03rem;font-weight:650;letter-spacing:-.015em;line-height:1.3;margin:0;color:var(--bl)}
+.nl-dold{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
-.upg-bana-lage{
-  display:flex;flex-direction:column;gap:10px;
-  padding:14px 16px;margin-bottom:8px;
-  border:1px solid var(--ln);border-radius:18px;background:var(--pap);
+/* ---------- toppen: barken ----------
+   Samma bakgrund som .nx-mork i cinema (DE MÖRKA YTORNA): leran uppe
+   till vänster, mossan till höger, ytan mörknar nedåt. */
+.nl-topp{
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;gap:18px;
+  padding:clamp(18px,3vw,26px);
+  border-radius:clamp(22px,2.4vw,28px);
+  background:
+    radial-gradient(110% 70% at 6% 0%, var(--nt-glod), transparent 55%),
+    radial-gradient(60% 45% at 100% 55%, var(--nt-mossa), transparent 62%),
+    linear-gradient(180deg, var(--nt), var(--nt-2));
+  color:var(--nt-fg);box-shadow:var(--sk-2);
 }
-.upg-bana-lage > div{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
-.upg-bana-lage b{font-weight:650;color:var(--bl)}
-.upg-bana-lage span{font-size:.85rem;color:var(--bl-3)}
-.upg-mat{display:block;height:10px;border-radius:10px;background:var(--pap-3);overflow:hidden}
-.upg-mat i{display:block;height:100%;border-radius:10px;background:var(--mossa);transition:width .6s var(--e-ut)}
+.nl-stat{display:flex;flex-wrap:wrap;gap:8px}
+.nl-stat-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 13px 6px 9px;border-radius:100px;
+  background:rgba(239,230,214,.07);border:1px solid var(--nt-ln);
+  font-size:.82rem;color:var(--nt-mut);white-space:nowrap;
+}
+.nl-stat-pill svg{width:20px;height:20px}
+.nl-stat-pill b{font-size:1.06rem;font-weight:750;letter-spacing:-.01em;color:var(--nt-fg);font-variant-numeric:tabular-nums}
+.nl-serie svg{color:var(--nt-mut);opacity:.55}
+.nl-serie.tand svg{color:var(--lera-l);opacity:1;animation:nl-flamma 2.6s var(--e-mjuk) infinite}
+@keyframes nl-flamma{0%,100%{scale:1}50%{scale:1.09}}
+.nl-xp svg{color:var(--ockra-l)}
+
+.nl-bana{display:flex;flex-direction:column;gap:8px}
+.nl-bana-rad{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-width:0}
+.nl-bana-rad b{font-size:clamp(1.12rem,3.2vw,1.32rem);font-weight:700;letter-spacing:-.02em;color:var(--nt-fg);line-height:1.25}
+.nl-bana-rad strong{font-size:clamp(1.5rem,4.4vw,1.85rem);font-weight:750;letter-spacing:-.03em;color:var(--nt-fg);font-variant-numeric:tabular-nums;line-height:1}
+.nl-bana-rad strong i{font-style:normal;font-size:.55em;color:var(--nt-mut);margin-left:1px}
+.nl-bana-not{font-size:.82rem;color:var(--nt-mut)}
+
+.nl-mat{display:block;height:12px;border-radius:12px;background:var(--pap-3);overflow:hidden}
+.nl-mat i{display:block;height:100%;border-radius:12px;background:var(--mossa);transition:width .8s var(--e-ut)}
+.nl-topp .nl-mat{background:rgba(239,230,214,.12)}
+.nl-topp .nl-mat i{background:linear-gradient(90deg,var(--mossa-l),var(--ockra-l))}
+
+/* Det primära steget: ett ljusare fält i barken med en stor knapp.
+   Knappen är leran i sin ljusa ton med barkens mörka text (6,2:1). */
+.nl-cta{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 18px;
+  padding:16px 16px 16px 18px;border-radius:20px;
+  background:rgba(239,230,214,.07);border:1px solid var(--nt-ln);
+}
+.nl-cta-et{grid-column:1;font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--lera-l)}
+.nl-cta-titel{grid-column:1;font-size:1.14rem;font-weight:700;letter-spacing:-.015em;line-height:1.3;color:var(--nt-fg);overflow-wrap:anywhere}
+.nl-cta-fakta{grid-column:1;font-size:.84rem;color:var(--nt-mut)}
+.nl-cta .nl-prickar{grid-column:1;margin-top:6px}
+.nl-cta-knapp{
+  grid-column:2;grid-row:1 / span 4;
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:54px;padding:0 24px;border:0;border-radius:100px;cursor:pointer;
+  background:var(--lera-l);color:var(--nt-2);
+  font:inherit;font-size:1.02rem;font-weight:750;letter-spacing:-.005em;white-space:nowrap;
+  box-shadow:0 5px 0 0 color-mix(in srgb,var(--lera-l) 50%,var(--nt-2));
+  transition:scale .45s var(--vy-fjader,ease), background-color .2s var(--e);
+  -webkit-tap-highlight-color:transparent;
+}
+.nl-cta-knapp svg{width:17px;height:17px}
+.nl-cta-knapp:hover{background:color-mix(in srgb,var(--lera-l) 88%,var(--nt-fg))}
+.nl-cta-knapp:active{scale:.95;transition-duration:.09s}
+.nl-cta-knapp:focus-visible{outline:3px solid var(--nt-fg);outline-offset:3px}
+.nl-cta-klar .nl-cta-et{color:var(--mossa-l)}
+@media (max-width:540px){
+  .nl-cta{grid-template-columns:minmax(0,1fr)}
+  .nl-cta-knapp{grid-column:1;grid-row:auto;width:100%;margin-top:10px}
+}
+
+.nl-mal{display:flex;align-items:center;gap:10px;margin:0;font-size:.85rem;line-height:1.45;color:var(--nt-mut)}
+.nl-mal-ikon{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:rgba(239,230,214,.08);color:var(--lera-l)}
+.nl-mal-ikon svg{width:16px;height:16px}
+.nl-mal.klart{color:var(--nt-fg)}
+.nl-mal-xp{color:var(--mossa-l);font-weight:700}
+.nl-mal.klart .nl-mal-ikon{background:var(--mossa-l);color:var(--nt-2)}
+.nl-mal.klart .nl-mal-ikon svg{stroke-width:3}
+
+/* Prickarna i en påbörjad nivå: en per uppgift. */
+.nl-prickar{display:flex;flex-wrap:wrap;gap:5px}
+.nl-prickar i{display:block;width:10px;height:10px;border-radius:50%;background:var(--pap-3)}
+.nl-prickar i.klar{background:var(--mossa)}
+.nl-topp .nl-prickar i{background:rgba(239,230,214,.16)}
+.nl-topp .nl-prickar i.klar{background:var(--mossa-l)}
+.nl-prickmat{display:block;width:100%;max-width:220px;height:8px;border-radius:8px;background:var(--pap-3);overflow:hidden}
+.nl-prickmat i{display:block;height:100%;background:var(--mossa)}
+.nl-nod-prickar{justify-content:center;max-width:170px;translate:calc(var(--x) * 38px) 0}
+
+/* ---------- från studiehjälparen ---------- */
+.nl-rek{
+  display:flex;flex-direction:column;gap:12px;min-width:0;
+  padding:16px clamp(16px,2vw,20px);
+  background:var(--yta);border:1px solid var(--ln);border-radius:22px;box-shadow:var(--sk-1);
+}
+.nl-rek + .nl-rek{margin-top:12px}
+.nl-rek-forst{border-color:var(--acc-line);background:linear-gradient(180deg,color-mix(in srgb,var(--acc) 6%,var(--yta)),var(--yta) 70%)}
+.nl-rek-et{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.8rem;font-weight:650;color:var(--acc-lugn)}
+.nl-rek-vem{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--acc-soft)}
+.nl-rek-vem svg{width:15px;height:15px;stroke-width:1.8}
+.nl-rek-et .lage{margin-left:auto}
+.nl-rek-kropp{display:flex;gap:14px;align-items:flex-start;min-width:0}
+.nl-rek-ik{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--acc-soft);color:var(--acc-lugn)}
+.nl-rek-ik svg{width:19px;height:19px}
+.nl-rek.nl-rek-klar .nl-rek-ik{background:var(--mossa-soft);color:var(--mossa-text)}
+.nl-rek-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.nl-rek-text b{font-size:1rem;font-weight:650;letter-spacing:-.015em;line-height:1.35;color:var(--bl);overflow-wrap:anywhere}
+.nl-rek-text p{margin:0;font-size:.9rem;line-height:1.5;color:var(--bl-2);overflow-wrap:anywhere}
+.nl-rek-fakta{font-size:.82rem;color:var(--bl-3)}
+.nl-rek-fakta.sen{color:var(--acc-lugn);font-weight:600}
+.nl-rek-text .nl-prickar{margin-top:4px}
+.nl-rek-text .upg-resultat{margin-top:4px}
+.nl-rek-mat{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 12px;border-radius:14px;background:var(--tint);font-size:.88rem;color:var(--bl-2)}
+.nl-rek-mat svg{width:17px;height:17px;color:var(--bl-3)}
+.nl-rek-mat span{flex:1;min-width:120px;overflow-wrap:anywhere}
+.nl-rek-atg{display:flex;flex-wrap:wrap;gap:8px}
+.nl-rek-spela svg{width:14px;height:14px;margin-right:6px;vertical-align:-2px}
+.nl-rek-not{font-size:.84rem;color:var(--bl-3)}
+.nl-rek-tomt{display:flex;align-items:center;gap:14px}
+.nl-rek-tomt p{margin:0;font-size:.92rem;line-height:1.5;color:var(--bl-2)}
+.nl-rek-tomt b{color:var(--bl)}
+.nl-rek-bock{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--mossa-soft);color:var(--mossa-text)}
+.nl-rek-bock svg{width:20px;height:20px;stroke-width:2.6}
+.nl-klara{margin-top:12px}
+.nl-klara summary{
+  display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;
+  padding:12px 4px;font-size:.9rem;font-weight:600;color:var(--bl-2);
+}
+.nl-klara summary::-webkit-details-marker{display:none}
+.nl-klara summary em{font-style:normal;font-weight:650;font-size:.75rem;padding:3px 8px;border-radius:100px;background:var(--bricka);color:var(--bl-2)}
+.nl-klara-pil{width:16px;height:16px;margin-left:auto;transition:rotate .2s var(--e)}
+.nl-klara[open] .nl-klara-pil{rotate:180deg}
+.nl-klara-lista .nl-rek{box-shadow:none;background:var(--yta)}
+
+/* ---------- från passet ---------- */
+.nl-pass{
+  display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:14px;
+  padding:14px 16px 14px 18px;border-radius:18px;background:var(--tint);
+  border-left:4px solid var(--mossa);
+}
+.nl-pass-et{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mossa-text)}
+.nl-pass p{margin:0;font-size:.9rem;line-height:1.5;color:var(--bl-2)}
+.nl-pass p em{font-style:normal;font-weight:650;color:var(--bl);margin-right:4px}
+.nl-pass .btn{margin-top:6px}
+
+/* ---------- ämnena ----------
+   En rad man drar i sidled på en telefon. minmax(0,…) i föräldern och
+   min-width:0 här: annars blir raden sidans minsta bredd och hela vyn
+   går att dra i sidled (fälla 2). */
+.nl-amnen{display:flex;gap:10px;overflow-x:auto;min-width:0;padding:2px 2px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.nl-amnen::-webkit-scrollbar{display:none}
+.nl-amne{
+  flex:none;display:flex;align-items:center;gap:12px;
+  min-width:176px;padding:10px 16px 10px 10px;border-radius:20px;cursor:pointer;
+  border:2px solid var(--ln);background:var(--yta);color:var(--bl);font:inherit;text-align:left;
+  transition:scale .45s var(--vy-fjader,ease), border-color .15s var(--e), background-color .15s var(--e);
+  -webkit-tap-highlight-color:transparent;
+}
+.nl-amne:active{scale:.96;transition-duration:.09s}
+.nl-amne[aria-pressed="true"]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 6%,var(--yta))}
+.nl-amne:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nl-amne-text{display:flex;flex-direction:column;min-width:0}
+.nl-amne-text b{font-size:.96rem;font-weight:650;letter-spacing:-.01em}
+.nl-amne-text span{font-size:.8rem;color:var(--bl-3)}
+.nl-ring{position:relative;flex:none;width:48px;height:48px}
+.nl-ring svg{width:100%;height:100%;rotate:-90deg}
+.nl-ring circle{fill:none;stroke-width:4.5}
+.nl-ring-bas{stroke:var(--pap-3)}
+.nl-ring-fyll{stroke:var(--mossa);stroke-linecap:round;transition:stroke-dasharray .8s var(--e-ut)}
+.nl-amne[aria-pressed="true"] .nl-ring-fyll{stroke:var(--acc)}
+.nl-ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:750;font-variant-numeric:tabular-nums;color:var(--bl)}
+.nl-ring b i{font-style:normal;font-size:.8em;color:var(--bl-3)}
+
+/* ============================================================
+   VÄGEN
+   ============================================================ */
+.nl-vag-rubrik .nl-arskurs{margin-left:auto}
+.nl-vag{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.nl-omr{
+  padding:14px 12px 18px;border-radius:24px;
+  background:var(--yta);border:1px solid var(--ln);box-shadow:var(--sk-1);
+}
+.nl-omr-huvud{display:flex;align-items:center;gap:12px;padding:0 4px 4px}
+.nl-omr-ik{
+  flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:14px;
+  background:var(--bricka);color:var(--bl-2);font-weight:750;font-size:1rem;font-variant-numeric:tabular-nums;
+}
+.nl-omr-ik svg{width:19px;height:19px}
+.nl-omr-text{flex:1;min-width:0;display:flex;flex-direction:column}
+.nl-omr-et{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3)}
+.nl-omr-text b{font-size:1.06rem;font-weight:700;letter-spacing:-.015em;line-height:1.3;color:var(--bl);overflow-wrap:anywhere}
+.nl-omr-lage{
+  flex:none;display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:100px;background:var(--bricka);color:var(--bl-2);
+  font-size:.76rem;font-weight:650;white-space:nowrap;
+}
+.nl-omr-lage em{font-style:normal;font-weight:500;color:var(--bl-3);font-variant-numeric:tabular-nums}
+/* Färgen säger var man står: mossa är klart, lera är här, ockra är nästa. */
+.nl-omr-klart .nl-omr-ik{background:var(--mossa);color:var(--pap)}
+.nl-omr-klart .nl-omr-ik svg{stroke-width:2.8}
+.nl-omr-klart .nl-omr-lage{background:var(--mossa-soft);color:var(--mossa-text)}
+.nl-omr-bem .nl-omr-ik{background:var(--ockra);color:var(--pap)}
+.nl-omr-bem .nl-omr-lage{background:var(--ockra-soft);color:var(--ockra-text)}
+.nl-omr-aktuellt{border-color:var(--acc-line)}
+.nl-omr-aktuellt .nl-omr-ik{background:var(--acc);color:var(--acc-ink)}
+.nl-omr-aktuellt .nl-omr-lage{background:var(--acc-soft);color:var(--acc-lugn)}
+.nl-omr-oppet .nl-omr-ik{background:var(--acc-soft);color:var(--acc-lugn)}
+.nl-omr-nasta .nl-omr-lage{background:var(--ockra-soft);color:var(--ockra-text)}
+.nl-omr-last{background:transparent;box-shadow:none;border-style:dashed;padding-bottom:14px}
+.nl-omr-last .nl-omr-text b{color:var(--bl-2)}
+.nl-omr-las{display:flex;align-items:center;gap:8px;margin:8px 4px 0 56px;font-size:.84rem;color:var(--bl-3)}
+.nl-omr-las svg{width:15px;height:15px;flex:none}
+.nl-mal-flagga{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border-radius:20px;background:var(--ockra-soft);color:var(--ockra-text);font-weight:650}
+.nl-mal-flagga span{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ockra);color:var(--pap)}
+.nl-mal-flagga svg{width:19px;height:19px}
 
 /* Stigen: noderna slingrar sig i sidled, som i Duolingo. --x är
    förskjutningen i steg om 38 px, satt per nod i nextrum-uppgifter.js.
    translate och inte margin: en nod som flyttas ska inte ändra
    radernas höjd. */
 .upg-stig{list-style:none;margin:0;padding:8px 0 4px;display:flex;flex-direction:column;align-items:center;gap:6px}
-.upg-avsnitt{
-  align-self:stretch;display:flex;flex-direction:column;align-items:center;gap:2px;
-  margin:18px 0 6px;padding-top:14px;border-top:1px dashed var(--ln-2);text-align:center;
-}
-.upg-stig > .upg-avsnitt:first-child{margin-top:4px;border-top:0;padding-top:0}
-.upg-avsnitt span{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3)}
-.upg-avsnitt b{font-size:1.02rem;font-weight:650;color:var(--bl)}
-
 .upg-nod{
   --x:0;
   display:flex;flex-direction:column;align-items:center;gap:6px;
-  width:min(100%,340px);padding:4px 0;
+  width:min(100%,360px);padding:4px 0;
 }
 .upg-nod > .upg-nod-knapp,
 .upg-nod > .upg-nod-namn,
@@ -79,7 +274,8 @@
   .upg-nod > .upg-nod-knapp,
   .upg-nod > .upg-nod-namn,
   .upg-nod > .upg-stj,
-  .upg-nod > .upg-nod-given{translate:calc(var(--x) * 26px) 0}
+  .upg-nod > .upg-nod-given,
+  .nl-nod-prickar{translate:calc(var(--x) * 26px) 0}
 }
 .upg-nod-knapp{
   position:relative;
@@ -93,22 +289,28 @@
   transition:scale .5s var(--vy-fjader,ease), background-color .2s var(--e), translate .2s var(--e);
   -webkit-tap-highlight-color:transparent;
 }
-.upg-nod-knapp svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.upg-nod.oppen .upg-nod-knapp svg,
-.upg-nod.aktuell .upg-nod-knapp svg{fill:currentColor;stroke:none}
+.upg-nod-knapp svg{width:30px;height:30px;stroke-width:2.2}
 .upg-nod-knapp:active{scale:.92;transition-duration:.09s}
 .upg-nod-knapp:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
 
 .upg-nod.klar .upg-nod-knapp{background:var(--mossa);color:var(--pap);box-shadow:0 6px 0 0 color-mix(in srgb,var(--mossa) 60%,var(--bl))}
+.upg-nod.klar .upg-nod-knapp svg{stroke-width:3}
 .upg-nod.aktuell .upg-nod-knapp{background:var(--acc);color:var(--acc-ink);box-shadow:0 6px 0 0 var(--acc-lugn)}
-.upg-nod.oppen .upg-nod-knapp{background:var(--pap);color:var(--acc);border:2px solid var(--acc-line)}
-.upg-nod.last .upg-nod-knapp{cursor:pointer;opacity:.8}
+.upg-nod.oppen .upg-nod-knapp{background:var(--yta);color:var(--acc);border:2px solid var(--acc-line)}
+.upg-nod.last .upg-nod-knapp{opacity:.8}
 .upg-nod.vald .upg-nod-knapp{outline:3px solid color-mix(in srgb,var(--acc) 30%,transparent);outline-offset:5px}
+/* Mästarprovet: en krona, större och i ockra när det är klarat. */
+.upg-nod.mastare .upg-nod-knapp{width:80px;height:80px;border-radius:26px}
+.upg-nod.mastare.klar .upg-nod-knapp{background:var(--ockra);box-shadow:0 6px 0 0 color-mix(in srgb,var(--ockra) 60%,var(--bl))}
+/* --bricka och inte --pap-2: i mörkt läge är --pap-2 samma färg som
+   kortet, och det låsta provet syntes bara som sin kant (CLAUDE.md
+   avsnitt 3, Adminvyns skal). */
+.upg-nod.mastare.last .upg-nod-knapp{background:var(--bricka);color:var(--bl-3)}
 
 /* Ringen runt den nivå man står på. En egen pseudo med opacity och
    scale, aldrig en skugga som växer. */
 .upg-nod.aktuell .upg-nod-knapp::after{
-  content:"";position:absolute;inset:-8px;border-radius:50%;
+  content:"";position:absolute;inset:-8px;border-radius:inherit;
   border:2px solid var(--acc-line);
   animation:upg-puls 2.2s var(--e-mjuk) infinite;
 }
@@ -132,6 +334,12 @@
 @keyframes upg-gunga{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 .upg-nod.aktuell{padding-top:34px}
 
+/* Det som just klarades och det som just öppnades rör sig en gång. */
+.upg-nod.nyss-klar .upg-nod-knapp{animation:nl-klarad .8s var(--vy-fjader,ease) both}
+.upg-nod.nyss-oppen .upg-nod-knapp{animation:nl-oppnad 1s var(--vy-fjader,ease) .25s both}
+@keyframes nl-klarad{0%{scale:.6}60%{scale:1.12}100%{scale:1}}
+@keyframes nl-oppnad{0%{scale:.7;opacity:.4;rotate:-12deg}70%{scale:1.1;opacity:1;rotate:4deg}100%{scale:1;rotate:0deg}}
+
 .upg-nod-namn{font-size:.86rem;font-weight:600;color:var(--bl);text-align:center;max-width:220px;line-height:1.3}
 .upg-nod.last .upg-nod-namn{color:var(--bl-3);font-weight:500}
 .upg-nod-given{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc-text)}
@@ -140,58 +348,114 @@
    på: det enda som flyttar sig är det som står under fingret. */
 .upg-nod-kort{
   width:100%;margin-top:8px;padding:16px;
-  border:1px solid var(--ln);border-radius:20px;background:var(--pap);
+  border:1px solid var(--ln);border-radius:20px;background:var(--yta);
   box-shadow:var(--sk-1);text-align:left;
   display:flex;flex-direction:column;align-items:flex-start;gap:8px;
   animation:upg-in .28s var(--e-ut) both;
 }
+.nl-omr .upg-nod-kort{background:var(--tint);box-shadow:none;border-color:transparent}
 .upg-nod-kort b{font-size:1rem;font-weight:650;color:var(--bl)}
 .upg-nod-kort p{margin:0;font-size:.88rem;line-height:1.5;color:var(--bl-2)}
 .upg-nod-kort .upg-nod-lage{color:var(--bl)}
-.upg-nod-fakta{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--bl-3)}
-.upg-nod-kort .btn{margin-top:4px}
+.upg-nod-fakta{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--bl-3);line-height:1.6}
+.upg-nod-atg{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:4px}
 @keyframes upg-in{from{opacity:0;translate:0 -6px}to{opacity:1;translate:0 0}}
 
-/* ---------- serien, stjärnorna och märkena ---------- */
-.upg-bel-tal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.upg-bel-tal > div{
-  display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;
-  padding:14px 8px;border:1px solid var(--ln);border-radius:18px;background:var(--pap);
+/* ---------- repetitionen ---------- */
+.nl-rep{
+  display:flex;align-items:center;gap:14px;margin-top:14px;
+  padding:14px 16px;border-radius:20px;border:1px dashed var(--ln-2);background:var(--yta);
 }
-.upg-bel-tal b{font-size:1.5rem;font-weight:750;letter-spacing:-.03em;color:var(--bl);line-height:1.1}
-.upg-bel-tal span{font-size:.78rem;color:var(--bl-3);line-height:1.3}
-.upg-bel-ikon{display:block;width:30px;height:30px}
-.upg-bel-ikon svg{width:100%;height:100%;fill:currentColor}
-.upg-bel-ikon.stj{color:var(--ockra)}
-.upg-bel-ikon.serie{color:var(--ln-2)}
-.upg-bel-ikon.serie.tand{color:var(--acc)}
-.upg-bel-ikon.pokal{color:var(--mossa)}
-.upg-bel-ikon.pokal svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
-.upg-bel-not{margin:12px 0 16px;font-size:.86rem;line-height:1.5;color:var(--bl-2)}
+.nl-rep-ik{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--ockra-soft);color:var(--ockra-text)}
+.nl-rep-ik svg{width:21px;height:21px}
+.nl-rep-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.nl-rep-text b{font-weight:650;color:var(--bl)}
+.nl-rep-text span{font-size:.84rem;line-height:1.45;color:var(--bl-2)}
+@media (max-width:480px){
+  .nl-rep{flex-wrap:wrap}
+  .nl-rep .btn{width:100%}
+}
 
+/* ============================================================
+   DIN UTVECKLING
+   ============================================================ */
+.nl-block .ut-forklaring{margin-top:-6px}
+.nl-tal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:760px){.nl-tal{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.nl-tal > div{position:relative;padding:14px;border-radius:18px;background:var(--tint);min-width:0}
+.nl-tal b{display:block;font-size:1.5rem;font-weight:750;letter-spacing:-.03em;color:var(--bl);line-height:1.15;font-variant-numeric:tabular-nums}
+.nl-tal b i{font-style:normal;font-size:.9rem;font-weight:500;color:var(--bl-3)}
+.nl-tal span{display:block;margin-top:2px;font-size:.84rem;font-weight:600;color:var(--bl)}
+.nl-tal small{display:block;margin-top:4px;font-size:.76rem;line-height:1.4;color:var(--bl-3)}
+.nl-tal-ik{position:absolute;top:12px;right:12px;width:22px;height:22px;color:var(--bl-3);opacity:.7}
+.nl-tal-ik svg{width:100%;height:100%}
+.nl-tal-ik svg.ik-fyll{color:var(--ockra)}
+.nl-tal-sma b{font-size:1.25rem}
+.nl-tal-sma{margin-bottom:14px}
+
+.nl-amnesrad + .nl-amnesrad{margin-top:16px}
+.nl-amnesrad-topp{display:flex;align-items:baseline;gap:10px;min-width:0;margin-bottom:6px}
+.nl-amnesrad-topp b{font-weight:650;color:var(--bl)}
+.nl-amnesrad-topp span{flex:1;font-size:.82rem;color:var(--ockra-text)}
+.nl-amnesrad-topp strong{font-family:var(--f-mono);font-size:.9rem;color:var(--bl)}
+.nl-amnesrad small{display:block;margin-top:6px;font-size:.8rem;color:var(--bl-3)}
+
+.upg-veckor{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;align-items:end;height:150px;padding-top:18px}
+.upg-vecka{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;min-width:0}
+.upg-vecka i{display:block;width:70%;max-width:34px;min-height:3px;border-radius:8px 8px 3px 3px;background:var(--ockra)}
+.upg-vecka.nu i{background:var(--acc)}
+.upg-vecka b{font-size:.74rem;font-weight:650;color:var(--bl);font-variant-numeric:tabular-nums}
+.upg-vecka span{font-family:var(--f-mono);font-size:9.5px;color:var(--bl-3)}
+
+/* De fyra senaste veckorna: en låga för varje dag med något gjort. */
+.nl-kal{display:flex;flex-direction:column;gap:6px;max-width:420px}
+.nl-kal-rad{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.nl-kal-huvud span{text-align:center;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--bl-3)}
+.nl-kal-dag{
+  aspect-ratio:1;display:grid;place-items:center;border-radius:12px;
+  background:var(--tint);color:var(--bl-3);font-size:.78rem;font-variant-numeric:tabular-nums;
+}
+.nl-kal-dag i{font-style:normal}
+.nl-kal-dag svg{width:58%;height:58%}
+.nl-kal-dag.aktiv{background:var(--acc-soft);color:var(--acc)}
+.nl-kal-dag.framtid{background:transparent;border:1px dashed var(--ln);color:var(--ln-2)}
+.nl-kal-dag.idag{outline:2px solid var(--acc-line);outline-offset:1px}
+
+.nl-skala{margin:0 0 14px;border-radius:14px;background:var(--tint)}
+.nl-skala summary{padding:10px 14px;cursor:pointer;font-size:.88rem;font-weight:600;color:var(--bl-2)}
+.nl-skala ol{list-style:none;margin:0;padding:0 14px 12px;display:flex;flex-direction:column;gap:6px}
+.nl-skala li{display:flex;gap:10px;font-size:.84rem;line-height:1.45;color:var(--bl-2)}
+.nl-skala li b{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--bricka);color:var(--bl);font-size:.78rem}
+.nl-skala li.ar-saker b{background:var(--mossa-soft);color:var(--mossa-text)}
+.nl-skala li strong{color:var(--bl)}
+.nl-regler{margin:14px 0 0}
+.nl-regler p{margin:0;padding:0 14px 12px;font-size:.84rem;line-height:1.5;color:var(--bl-2)}
+.nl-bed-lista{margin-top:14px}
+.nl-fokus{margin-top:4px}
+
+/* ---------- märkena ---------- */
 .upg-marken{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
 .upg-marke{
   display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;
-  padding:14px 10px 12px;border:1px solid var(--ln);border-radius:18px;background:var(--pap);
-  min-width:0;
+  padding:14px 10px 12px;border-radius:18px;background:var(--tint);min-width:0;
 }
 .upg-marke-ikon{
   display:grid;place-items:center;width:48px;height:48px;border-radius:50%;
   background:var(--pap-3);color:var(--bl-3);
 }
 .upg-marke-ikon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.upg-marke-ikon svg.ik-fyll{fill:currentColor;stroke:none}
 .upg-marke.klart .upg-marke-ikon{background:var(--ockra);color:var(--pap)}
-.upg-marke.klart .upg-marke-ikon svg{stroke:currentColor}
 .upg-marke b{font-size:.86rem;font-weight:650;color:var(--bl);line-height:1.25}
 .upg-marke:not(.klart) b{color:var(--bl-2)}
 .upg-marke-text{font-size:.76rem;line-height:1.4;color:var(--bl-3)}
 .upg-marke-mat{display:block;width:80%;height:6px;margin-top:2px;border-radius:6px;background:var(--pap-3);overflow:hidden}
 .upg-marke-mat i{display:block;height:100%;background:var(--ockra);border-radius:6px}
 .upg-marke-tal{font-family:var(--f-mono);font-size:10px;color:var(--bl-3)}
-.upg-marke.nytt{animation:upg-marke-in .7s var(--vy-fjader,ease) both;border-color:var(--ockra)}
+.upg-marke.nytt{animation:upg-marke-in .7s var(--vy-fjader,ease) both;box-shadow:inset 0 0 0 2px var(--ockra)}
 @keyframes upg-marke-in{from{opacity:0;scale:.6}to{opacity:1;scale:1}}
 
-/* ---------- raderna i uppgiftslistan ---------- */
+/* ---------- raderna i uppgiftslistan (studiehjälparvyn) ---------- */
 .upg-digital{
   display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;
   margin:10px 0 2px;padding:10px 12px;border-radius:14px;
@@ -218,6 +482,8 @@
 .lx-digital-rubrik span{font-weight:400;color:var(--bl-3)}
 .lx-digital .vy-form-rad{margin:0}
 .lx-digital-not{margin:10px 0 0;font-size:.84rem;line-height:1.5;color:var(--bl-2)}
+.lx-nexlax{margin:0 0 12px;font-size:.88rem;color:var(--bl-2);display:flex;align-items:center;gap:8px}
+.lx-nexlax svg{width:18px;height:18px;color:var(--ockra);flex:none}
 
 /* ============================================================
    SPELAREN
@@ -238,18 +504,27 @@ html.upg-spelar, html.upg-spelar body{overflow:hidden}
   display:flex;flex-direction:column;
   padding:max(10px,env(safe-area-inset-top)) 16px 0;
 }
-.upg-spel-topp{display:flex;align-items:center;gap:14px;padding:6px 0 10px}
-.upg-spel-stang{
+.upg-spel-topp{display:flex;align-items:center;gap:12px;padding:6px 0 10px}
+.upg-spel-stang,.upg-spel-textknapp{
   flex:none;width:40px;height:40px;border-radius:50%;border:0;background:none;
   display:grid;place-items:center;color:var(--bl-3);cursor:pointer;
   transition:scale .4s var(--vy-fjader,ease), background-color .2s var(--e);
 }
-.upg-spel-stang:hover{background:var(--pap-2)}
-.upg-spel-stang:active{scale:.88;transition-duration:.09s}
-.upg-spel-stang svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.upg-spel-stang:hover,.upg-spel-textknapp:hover{background:var(--bricka)}
+.upg-spel-stang:active,.upg-spel-textknapp:active{scale:.88;transition-duration:.09s}
+.upg-spel-stang svg,.upg-spel-textknapp svg{width:24px;height:24px;stroke-width:2.2}
+.upg-spel-textknapp[aria-pressed="true"]{background:var(--acc-soft);color:var(--acc-lugn)}
 .upg-spel-mat{flex:1;height:14px;border-radius:14px;background:var(--pap-3);overflow:hidden}
 .upg-spel-mat i{display:block;height:100%;width:0;border-radius:14px;background:var(--mossa);transition:width .45s var(--e-ut)}
-.upg-spel-tal{flex:none;min-width:38px;text-align:right;font-family:var(--f-mono);font-size:.8rem;color:var(--bl-3)}
+.upg-spel-tal{flex:none;min-width:34px;text-align:right;font-family:var(--f-mono);font-size:.8rem;color:var(--bl-3)}
+.upg-spel-xp{
+  flex:none;display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px 4px 7px;border-radius:100px;
+  background:var(--ockra-soft);color:var(--ockra-text);font-size:.8rem;font-weight:750;font-variant-numeric:tabular-nums;
+}
+.upg-spel-xp svg{width:15px;height:15px;color:var(--ockra)}
+.upg-spel-xp.studs{animation:nl-studs .5s var(--vy-fjader,ease)}
+@keyframes nl-studs{0%{scale:1}40%{scale:1.25}100%{scale:1}}
 
 .upg-spel-kropp{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:18px 2px 24px;min-height:0}
 .upg-spel-laddar,.upg-spel-fel{display:flex;flex-direction:column;gap:8px;padding:40px 4px;text-align:center}
@@ -257,7 +532,7 @@ html.upg-spelar, html.upg-spelar body{overflow:hidden}
 .upg-spel-laddar span{color:var(--bl-3)}
 .upg-spel-fel p{color:var(--bl-2);line-height:1.5}
 
-.upg-fraga{animation:upg-fraga-in .32s var(--e-ut) both}
+.upg-fraga,.upg-las{animation:upg-fraga-in .32s var(--e-ut) both}
 @keyframes upg-fraga-in{from{opacity:0;translate:18px 0}to{opacity:1;translate:0 0}}
 .upg-fraga-typ{margin:0 0 8px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc-text)}
 .upg-fraga-text{
@@ -266,12 +541,49 @@ html.upg-spelar, html.upg-spelar body{overflow:hidden}
   white-space:pre-line;overflow-wrap:anywhere;outline:none;
 }
 
+/* Kod under frågan (frågaHtml i nextrum-uppgifter.js): lika breda
+   tecken och indragen kvar, i brödtextens storlek. Blocket rullar i
+   sidled i stället för att bryta en rad kod mitt i, för en bruten rad
+   läses som två satser. */
+.upg-kod{
+  display:block;margin:12px 0 0;padding:12px 14px;border-radius:12px;
+  background:var(--tint);color:var(--bl);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.92rem;font-weight:500;line-height:1.55;letter-spacing:0;
+  white-space:pre;overflow-x:auto;overflow-wrap:normal;tab-size:4;
+}
+.upg-fraga-text .upg-kod{font-size:clamp(.88rem,3.4vw,1rem)}
+.upg-genom-q{min-width:0;flex:1}
+.upg-genom-q .upg-kod{font-size:.85rem;margin-top:8px}
+
+/* Lästexten: läsbar, inte en ruta i en ruta. */
+.upg-lastext p{margin:0 0 14px;font-size:1.06rem;line-height:1.7;color:var(--bl);max-width:62ch}
+.upg-lastext p:last-child{margin-bottom:0}
+.upg-las-not{display:flex;align-items:center;gap:8px;margin:22px 0 0;font-size:.86rem;color:var(--bl-3)}
+.upg-las-not svg{width:18px;height:18px;flex:none}
+.upg-lastext-forhand{margin:4px 0 12px;padding:14px;border-radius:14px;background:var(--tint)}
+.upg-lastext-forhand p{font-size:.92rem;line-height:1.6}
+.upg-textark{
+  position:absolute;inset:0;z-index:2;display:flex;align-items:flex-end;justify-content:center;
+  background:color-mix(in srgb,var(--bl) 40%,transparent);opacity:0;transition:opacity .2s var(--e);
+}
+.upg-textark.open{opacity:1}
+.upg-textark-box{
+  width:100%;max-width:680px;max-height:78dvh;display:flex;flex-direction:column;
+  background:var(--pap);border-radius:24px 24px 0 0;box-shadow:var(--sk-3);
+  translate:0 24px;transition:translate .3s var(--e-ut);
+}
+.upg-textark.open .upg-textark-box{translate:0 0}
+.upg-textark-topp{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 4px 20px}
+.upg-textark-topp b{font-size:1.05rem}
+.upg-textark-inne{overflow-y:auto;overscroll-behavior:contain;padding:8px 20px max(24px,env(safe-area-inset-bottom))}
+
 /* Alternativen: stora, lätta att träffa med tummen. */
 .upg-val{display:flex;flex-direction:column;gap:10px}
 .upg-alt{
   display:flex;align-items:center;gap:12px;width:100%;
   min-height:56px;padding:12px 16px;border-radius:16px;
-  border:2px solid var(--ln-2);background:var(--pap);color:var(--bl);
+  border:2px solid var(--ln-2);background:var(--yta);color:var(--bl);
   font:inherit;font-size:1.02rem;font-weight:550;text-align:left;cursor:pointer;
   box-shadow:0 4px 0 0 var(--ln-2);
   transition:scale .45s var(--vy-fjader,ease), border-color .15s var(--e), background-color .15s var(--e);
@@ -287,6 +599,13 @@ html.upg-spelar, html.upg-spelar body{overflow:hidden}
 .upg-alt.ar-ratt{border-color:var(--mossa);background:color-mix(in srgb,var(--mossa) 14%,var(--pap));box-shadow:0 4px 0 0 color-mix(in srgb,var(--mossa) 45%,transparent)}
 .upg-alt.ar-fel{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--pap))}
 .upg-alt:disabled{cursor:default}
+
+/* Sant eller falskt: två stora knappar bredvid varandra. */
+.upg-sant{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.upg-sant .upg-alt{flex-direction:column;justify-content:center;gap:8px;min-height:118px;text-align:center;font-size:1.12rem;font-weight:700}
+.upg-sant .upg-alt svg{width:34px;height:34px;stroke-width:2.6}
+.upg-sant-ja svg{color:var(--mossa)}
+.upg-sant-nej svg{color:var(--acc)}
 
 .upg-skriv.inp{
   width:100%;font-size:1.3rem;padding:16px 18px;border-radius:16px;border-width:2px;
@@ -308,15 +627,64 @@ html.upg-spelar, html.upg-spelar body{overflow:hidden}
 .upg-brickor{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .upg-bricka{
   min-height:44px;padding:9px 14px;border-radius:12px;
-  border:2px solid var(--ln-2);background:var(--pap);color:var(--bl);
+  border:2px solid var(--ln-2);background:var(--yta);color:var(--bl);
   font:inherit;font-size:1rem;font-weight:550;cursor:pointer;
   box-shadow:0 3px 0 0 var(--ln-2);
   transition:scale .45s var(--vy-fjader,ease), opacity .15s var(--e);
   -webkit-tap-highlight-color:transparent;
+  /* Brickan dras med fingret: ett drag på den ska inte rulla sidan. */
+  touch-action:none;
 }
 .upg-bricka:active:not(:disabled){scale:.94;transition-duration:.09s}
 /* En lagd bricka lämnar sin plats tom, med samma storlek. */
 .upg-brickor .upg-bricka.lagd{background:var(--pap-3);color:transparent;border-color:var(--pap-3);box-shadow:none;cursor:default}
+.upg-bricka.drar{opacity:.35}
+.upg-spoke{
+  position:fixed;left:0;top:0;z-index:5;pointer-events:none;margin:0;
+  box-shadow:var(--sk-2);border-color:var(--acc);scale:1.06;
+}
+/* Strecket som visar var brickan hamnar. Ingen bredd i flödet: de
+   andra brickorna flyttar sig inte medan man drar. */
+.upg-infoga{width:3px;margin:0 -1.5px;align-self:stretch;min-height:40px;border-radius:3px;background:var(--acc)}
+.upg-para-not{margin:14px 0 0;font-size:.84rem;color:var(--bl-3);text-align:center}
+
+/* Matchningen: två kolumner. Ett par har samma nummer och samma ton på
+   båda sidor; numret gör att det syns också utan färgen. */
+.upg-para{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.upg-para-kol{display:flex;flex-direction:column;gap:10px;min-width:0}
+.upg-par-knapp{
+  position:relative;display:flex;align-items:center;gap:10px;
+  min-height:54px;padding:10px 12px;border-radius:14px;
+  border:2px solid var(--ln-2);background:var(--yta);color:var(--bl);
+  font:inherit;font-size:.96rem;font-weight:550;text-align:left;cursor:pointer;
+  box-shadow:0 3px 0 0 var(--ln-2);overflow-wrap:anywhere;
+  transition:scale .45s var(--vy-fjader,ease), border-color .15s var(--e), background-color .15s var(--e);
+  -webkit-tap-highlight-color:transparent;
+}
+.upg-par-knapp:active:not(:disabled){scale:.96;transition-duration:.09s}
+.upg-par-text{flex:1;min-width:0}
+.upg-par-nr:empty{display:none}
+.upg-par-nr{
+  flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;
+  font-size:.78rem;font-weight:750;background:var(--bl);color:var(--pap);
+}
+.upg-par-knapp.vald{border-color:var(--acc);background:var(--acc-soft);box-shadow:0 3px 0 0 var(--acc-line)}
+.upg-par-knapp.parad{border-style:solid}
+.upg-par-knapp[data-ton="1"]{border-color:var(--mossa);background:var(--mossa-soft)}
+.upg-par-knapp[data-ton="1"] .upg-par-nr{background:var(--mossa);color:var(--pap)}
+.upg-par-knapp[data-ton="2"]{border-color:var(--ockra);background:var(--ockra-soft)}
+.upg-par-knapp[data-ton="2"] .upg-par-nr{background:var(--ockra);color:var(--pap)}
+.upg-par-knapp[data-ton="3"]{border-color:var(--acc);background:var(--acc-soft)}
+.upg-par-knapp[data-ton="3"] .upg-par-nr{background:var(--acc);color:var(--acc-ink)}
+.upg-par-knapp[data-ton="4"]{border-color:var(--bl-3);background:var(--tint)}
+.upg-par-knapp[data-ton="4"] .upg-par-nr{background:var(--bl-3);color:var(--pap)}
+.upg-par-knapp[data-ton="5"]{border-color:var(--mossa-text);background:color-mix(in srgb,var(--mossa) 8%,var(--yta))}
+.upg-par-knapp[data-ton="5"] .upg-par-nr{background:var(--mossa-text);color:var(--pap)}
+.upg-par-knapp[data-ton="6"]{border-color:var(--ockra-text);background:color-mix(in srgb,var(--ockra) 8%,var(--yta))}
+.upg-par-knapp[data-ton="6"] .upg-par-nr{background:var(--ockra-text);color:var(--pap)}
+.upg-par-knapp.ar-ratt{box-shadow:0 0 0 3px color-mix(in srgb,var(--mossa) 45%,transparent)}
+.upg-par-knapp.ar-fel{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 45%,transparent);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--acc) 60%,transparent)}
+.upg-par-knapp:disabled{cursor:default}
 
 /* Foten: beskedet och knappen. Beskedet ligger ovanpå foten och tonar
    in underifrån. */
@@ -336,9 +704,15 @@ html.upg-spelar, html.upg-spelar body{overflow:hidden}
 .upg-besked.ratt .upg-besked-topp b{color:var(--mossa)}
 .upg-besked.fel .upg-besked-topp b{color:var(--acc-text)}
 .upg-besked-ikon{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;flex:none}
-.upg-besked-ikon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.upg-besked-ikon svg{width:18px;height:18px;stroke-width:3}
 .upg-besked.ratt .upg-besked-ikon{background:var(--mossa);color:var(--pap)}
 .upg-besked.fel .upg-besked-ikon{background:var(--acc);color:var(--acc-ink)}
+.upg-besked-xp{
+  margin-left:auto;padding:5px 12px;border-radius:100px;
+  background:var(--ockra);color:var(--pap);font-weight:750;font-size:.9rem;font-variant-numeric:tabular-nums;
+  animation:nl-xp-in .55s var(--vy-fjader,ease) .08s both;
+}
+@keyframes nl-xp-in{0%{opacity:0;scale:.4;translate:0 8px}70%{opacity:1;scale:1.12;translate:0 0}100%{scale:1}}
 .upg-besked p{margin:8px 0 0;font-size:.95rem;line-height:1.5;color:var(--bl)}
 .upg-besked-facit span{font-weight:700}
 .upg-besked-varfor{color:var(--bl-2) !important}
@@ -359,27 +733,45 @@ html.upg-spelar, html.upg-spelar body{overflow:hidden}
 @keyframes upg-stjarna{from{opacity:0;scale:.2;rotate:-40deg}to{opacity:1;scale:1;rotate:0deg}}
 .upg-slut-rad{margin:0;font-size:1rem;color:var(--bl-2)}
 .upg-slut-rad b{color:var(--bl)}
+.upg-slut-xp{
+  width:100%;max-width:380px;margin-top:6px;padding:12px 16px;border-radius:18px;background:var(--ockra-soft);
+  display:flex;flex-direction:column;gap:6px;animation:upg-in .4s var(--e-ut) .5s both;
+}
+.upg-slut-xp > div{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.92rem;color:var(--ockra-text)}
+.upg-slut-xp > div b{font-variant-numeric:tabular-nums}
+.upg-slut-xp .summa{padding-top:8px;border-top:1px solid color-mix(in srgb,var(--ockra) 30%,transparent);font-weight:700}
+.upg-slut-xp .summa b{display:inline-flex;align-items:center;gap:4px;font-size:1.05rem}
+.upg-slut-xp .summa svg{width:17px;height:17px}
+.upg-slut-serie{
+  display:flex;align-items:center;gap:12px;width:100%;max-width:380px;
+  padding:12px 16px;border-radius:18px;background:var(--acc-soft);text-align:left;
+  animation:upg-in .4s var(--e-ut) both;
+}
+.upg-slut-serie b{display:block;font-size:1.02rem;color:var(--bl)}
+.upg-slut-serie small{display:block;font-size:.84rem;color:var(--bl-2)}
+.upg-slut-laga{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--yta);color:var(--bl-3)}
+.upg-slut-laga svg{width:26px;height:26px}
+.upg-slut-laga.tand{color:var(--acc)}
+.upg-slut-laga.tand svg{animation:nl-flamma 1.6s var(--e-mjuk) 3}
 .upg-slut-ny{
   margin:4px 0 0;padding:6px 14px;border-radius:100px;
   background:color-mix(in srgb,var(--ockra) 16%,var(--pap));color:var(--ockra);font-weight:700;
   animation:upg-marke-in .6s var(--vy-fjader,ease) .7s both;
 }
 .upg-slut-not{margin:4px 0 0;max-width:420px;font-size:.92rem;line-height:1.5;color:var(--bl-2)}
+.upg-slut-upp{
+  display:flex;align-items:center;gap:8px;margin:2px 0 0;padding:8px 14px;border-radius:100px;
+  background:var(--mossa-soft);color:var(--mossa-text);font-size:.9rem;font-weight:650;
+  animation:upg-marke-in .6s var(--vy-fjader,ease) .9s both;
+}
+.upg-slut-upp svg{width:18px;height:18px;flex:none}
 .upg-slut-marken{width:100%;max-width:420px;margin-top:14px}
 .upg-slut-marken > p{margin:0 0 8px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3)}
 .upg-slut-marken .upg-marke{margin-bottom:8px}
 
 /* ============================================================
-   RÄTTNINGEN (Min utveckling och genomgången)
+   RÄTTNINGEN (Din utveckling, genomgången och studiehjälparvyn)
    ============================================================ */
-.upg-sum{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:6px}
-@media (min-width:760px){.upg-sum{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.upg-sum > div{padding:14px;border:1px solid var(--ln);border-radius:18px;background:var(--pap);min-width:0}
-.upg-sum b{display:block;font-size:1.45rem;font-weight:750;letter-spacing:-.03em;color:var(--bl);line-height:1.15}
-.upg-sum b i{font-style:normal;font-size:.9rem;font-weight:500;color:var(--bl-3)}
-.upg-sum span{display:block;margin-top:2px;font-size:.84rem;font-weight:600;color:var(--bl)}
-.upg-sum small{display:block;margin-top:4px;font-size:.76rem;line-height:1.4;color:var(--bl-3)}
-
 .upg-omraden{display:flex;flex-direction:column;gap:14px}
 .upg-omrade-topp{display:flex;align-items:baseline;gap:8px;min-width:0}
 .upg-omrade-topp b{font-weight:650;color:var(--bl)}
@@ -411,19 +803,12 @@ html.upg-spelar, html.upg-spelar body{overflow:hidden}
   .upg-forsok-rad .btn{grid-column:auto}
 }
 
-.upg-veckor{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;align-items:end;height:150px;padding-top:18px}
-.upg-vecka{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;min-width:0}
-.upg-vecka i{display:block;width:70%;max-width:34px;min-height:3px;border-radius:8px 8px 3px 3px;background:var(--mossa)}
-.upg-vecka.nu i{background:var(--acc)}
-.upg-vecka b{font-size:.78rem;font-weight:650;color:var(--bl)}
-.upg-vecka span{font-family:var(--f-mono);font-size:9.5px;color:var(--bl-3)}
-
 .upg-pass-tidslinje{display:flex;flex-direction:column;gap:0}
 .upg-pass-rad{position:relative;padding:0 0 16px 22px;border-left:2px solid var(--ln)}
 .upg-pass-rad:last-child{border-left-color:transparent;padding-bottom:0}
 .upg-pass-rad::before{
   content:"";position:absolute;left:-7px;top:3px;width:12px;height:12px;border-radius:50%;
-  background:var(--pap);border:2px solid var(--mossa);
+  background:var(--yta);border:2px solid var(--mossa);
 }
 .upg-pass-rad time{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3)}
 .upg-pass-rad b{display:block;margin:2px 0 4px;font-weight:650;color:var(--bl)}
@@ -452,10 +837,10 @@ html.upg-genom-oppen, html.upg-genom-oppen body{overflow:hidden}
 }
 .upg-genom-stang{
   position:absolute;top:12px;right:12px;z-index:1;
-  width:40px;height:40px;border-radius:50%;border:0;background:var(--pap-2);
+  width:40px;height:40px;border-radius:50%;border:0;background:var(--bricka);
   display:grid;place-items:center;color:var(--bl-2);cursor:pointer;
 }
-.upg-genom-stang svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.upg-genom-stang svg{width:20px;height:20px;stroke-width:2.2}
 .upg-genom-inne{overflow-y:auto;overscroll-behavior:contain;padding:24px 20px max(24px,env(safe-area-inset-bottom))}
 .upg-genom-huvud{padding-right:44px;margin-bottom:12px}
 .upg-genom-etikett{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--bl-3)}
@@ -465,13 +850,13 @@ html.upg-genom-oppen, html.upg-genom-oppen body{overflow:hidden}
 .upg-genom-lista li{padding:14px 0;border-top:1px solid var(--ln)}
 .upg-genom-fraga{display:flex;gap:10px;margin:0;font-weight:600;color:var(--bl);line-height:1.45;white-space:pre-line;overflow-wrap:anywhere}
 .upg-genom-tecken{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;margin-top:1px}
-.upg-genom-tecken svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.upg-genom-tecken svg{width:13px;height:13px;stroke-width:3}
 li.direkt .upg-genom-tecken{background:var(--mossa);color:var(--pap)}
 li.efter .upg-genom-tecken{background:var(--acc);color:var(--acc-ink)}
 .upg-genom-typ{
   display:inline-block;margin:0 0 6px;padding:2px 6px;border-radius:6px;
   font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
-  background:var(--pap-2);color:var(--bl-3);font-weight:500;
+  background:var(--bricka);color:var(--bl-3);font-weight:500;
 }
 .upg-genom-svar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0 32px}
 .upg-genom-svar span{padding:4px 10px;border-radius:10px;font-size:.86rem;overflow-wrap:anywhere}
@@ -483,8 +868,35 @@ li.efter .upg-genom-tecken{background:var(--acc);color:var(--acc-ink)}
 li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-alt{margin-left:0}
 
 @media (prefers-reduced-motion:reduce){
-  .upg-nod.aktuell .upg-nod-knapp::after,.upg-nod-bubbla{animation:none}
-  .upg-fraga,.upg-besked,.upg-nod-kort,.upg-marke.nytt,.upg-slut-ny,.upg-slut-stj i.tand{animation:none}
-  .upg-mat i,.upg-spel-mat i{transition:none}
-  .upg-nod-knapp:active,.upg-alt:active,.upg-bricka:active,.upg-spel-stang:active{scale:none}
+  .upg-nod.aktuell .upg-nod-knapp::after,.upg-nod-bubbla,.nl-serie.tand svg,.upg-slut-laga.tand svg{animation:none}
+  .upg-fraga,.upg-las,.upg-besked,.upg-nod-kort,.upg-marke.nytt,.upg-slut-ny,.upg-slut-stj i.tand,
+  .upg-besked-xp,.upg-spel-xp.studs,.upg-slut-xp,.upg-slut-serie,.upg-slut-upp,
+  .upg-nod.nyss-klar .upg-nod-knapp,.upg-nod.nyss-oppen .upg-nod-knapp{animation:none}
+  .nl-mat i,.upg-spel-mat i,.nl-ring-fyll{transition:none}
+  .upg-nod-knapp:active,.upg-alt:active,.upg-bricka:active,.upg-par-knapp:active,.upg-spel-stang:active,
+  .upg-spel-textknapp:active,.nl-cta-knapp:active,.nl-amne:active{scale:none}
+}
+
+/* ---------- NexLäx i sidomenyn ----------
+   Leo 2026-09-29: posten ska vara lite mörkare och sticka ut på datorn.
+   Den är tonad mot --bl, inte fylld: den valda posten är redan fylld
+   med --bl, och med samma bark på NexLäx hade två poster sett valda ut
+   (provat, och Översikt och NexLäx gick inte att skilja åt). Samma
+   blandning blir en mörkare ton i ljust läge och en ljusare i mörkt,
+   så den står ut i båda. Ikonen är ockra, XP:ns färg, och vald NexLäx
+   får en ring i samma färg. Bara på en dator: på en telefon är menyn
+   en rad piller man drar i sidled, och där läses en tonad post som
+   vald. */
+@media (min-width:900px){
+  .vy .vy-sido a[data-sek="nexlax"]{
+    background:color-mix(in srgb, var(--bl) 13%, var(--pap));
+    color:var(--bl);font-weight:600;
+  }
+  .vy .vy-sido a[data-sek="nexlax"]:hover{background:color-mix(in srgb, var(--bl) 20%, var(--pap))}
+  .vy .vy-sido a[data-sek="nexlax"] svg{color:var(--ockra)}
+  .vy .vy-sido a[data-sek="nexlax"].ar-har{
+    background:var(--bl);color:var(--pap);
+    box-shadow:inset 0 0 0 2px var(--ockra);
+  }
+  .vy .vy-sido a[data-sek="nexlax"].ar-har svg{color:currentColor}
 }

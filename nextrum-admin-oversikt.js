@@ -96,20 +96,45 @@
        omställningen inte tappar sin intäkt.
 
        Betalningsdagen och inte passets dag: ett pass betalas innan det
-       hålls, och det som kom in i september kom in i september. */
+       hålls, och det som kom in i september kom in i september.
+
+       ALLA kortbetalningar sedan 2026-09-29: passen, köpta timmar (Fas
+       16.1) och tillägg för övertid (Fas 20.1). Förut räknades bara
+       passen, så ett köpt klippkort stod som "inget betalt än" här. Ett
+       pass betalt med timmarna har inget eget kortbelopp, så inget
+       räknas två gånger: pengarna kom in när timmarna köptes.
+       Testbetalningarna räknas aldrig, som i bokslutet och Månadens
+       ekonomi. Förut räknades testbetalningar på passen med här. */
     const period = idag.slice(0, 7);
     const förraPeriod = (() => {
       const d = new Date(); d.setMonth(d.getMonth() - 1);
       return isoFor(d).slice(0, 7);
     })();
-    const kortIn = mån => S.bokningar
-      .filter(b => b.betald_at && isoFor(new Date(b.betald_at)).slice(0, 7) === mån)
-      .reduce((n, b) => n + Number(b.betalt_ore || 0) - Number(b.aterbetald_ore || 0), 0);
+    const iMånad = (tid, mån) => !!tid && isoFor(new Date(tid)).slice(0, 7) === mån;
+    const netto = r => Number(r.betalt_ore || 0) - Number(r.aterbetald_ore || 0);
+    const BETALD = ['betald', 'aterbetald', 'tvist'];
+    const passIn = mån => S.bokningar
+      .filter(b => iMånad(b.betald_at, mån) && b.stripe_skarp !== false)
+      .reduce((n, b) => n + netto(b), 0);
+    // Samma urval som Köpta timmar i Månadens ekonomi.
+    const köptIn = mån => (S.klippkort || [])
+      .filter(k => BETALD.indexOf(k.status) !== -1 && iMånad(k.betald_at, mån)
+        && !(S.klippkortTest && S.klippkortTest.has(k.id)))
+      .reduce((n, k) => n + netto(k), 0);
+    const tilläggIn = mån => (S.tillagg || [])
+      .filter(t => BETALD.indexOf(t.status) !== -1 && iMånad(t.betald_at, mån) && t.stripe_skarp !== false)
+      .reduce((n, t) => n + netto(t), 0);
+    const kortIn = mån => passIn(mån) + köptIn(mån) + tilläggIn(mån);
     const fakturerat = mån => S.fakturor
       .filter(f => String(f.period || '').slice(0, 7) === mån && f.status !== 'makulerad')
       .reduce((n, f) => n + (f.belopp_ore || 0), 0);
     const belopp = kortIn(period) + fakturerat(period);
     const förraBelopp = kortIn(förraPeriod) + fakturerat(förraPeriod);
+    /* Köpta timmar är pengar in men en skuld till familjen tills
+       timmarna använts, och står därför för sig under talet. */
+    const köpt = köptIn(period);
+    const förraText = förraBelopp ? 'förra månaden ' + kronor(förraBelopp)
+      : belopp ? 'betalt hittills' : 'inget betalt än';
 
     /* Intäkten får INGEN procentjämförelse. Månaden är inte slut,
        och en halv månad mot en hel månad är alltid en nedgång —
@@ -123,16 +148,23 @@
         nyaShDennaMånad ? '+' + nyaShDennaMånad + ' denna månad' : 'godkända konton', 'hjalpare')
       + kpi(kommande, 'Kommande lektioner', null, 'bekräftade och önskade', 'pass')
       + kpi(kronor(belopp), 'Intäkt denna månad', null,
-        förraBelopp ? 'förra månaden ' + kronor(förraBelopp)
-          : (belopp ? 'betalt hittills' : 'inget betalt än'), 'intakt');
+        köpt ? 'varav ' + kronor(köpt) + ' köpta timmar' + (förraBelopp ? ' · ' + förraText : '')
+          : förraText, 'intakt');
   }
 
   /* ------------------------------------------------------------
      ARBETSKÖN
-     Varje post är en sak som ligger och väntar på en människa, och
-     varje post är vägen dit. Listan byggs ur admin_lage där den
-     finns och ur lokal data där den inte täcker — elever utan
-     studiehjälpare räknas här, för vyn känner bara till familjer.
+     Varje post är en sak som ligger och väntar på oss, och varje
+     post är vägen dit. Listan byggs ur admin_lage där den finns och
+     ur lokal data där den inte täcker — elever utan studiehjälpare
+     räknas här, för vyn känner bara till familjer.
+
+     Det som väntar på en familj eller en studiehjälpare står inte
+     här. Passförfrågningarna gjorde det till 2026-09-29, men ett
+     förslag väntar på svar från den andra parten (Leo: "det är inte
+     något vi gör eller har påverkan på"), och en post här räknas
+     också i NEX-ringen, notisklockan och menyns siffror. Hur många
+     som väntar står i stället överst i Bokningar (ritaFörfrågningar).
      ------------------------------------------------------------ */
   function byggAttGöra() {
     const l = S.lage || {};
@@ -152,8 +184,6 @@
     const attLäggaIn = S.fakturor.filter(f => f.status === 'utkast').length;
     const attBetalaUt = S.utbetalningar.filter(u =>
       u.status === 'utkast' || u.status === 'godkand').length;
-    const obekräftade = S.bokningar.filter(b =>
-      b.status === 'requested' && b.wanted_date >= idag).length;
 
     return [
       { antal: l.nya_leads != null ? l.nya_leads : S.leads.filter(x => x.status === 'new').length,
@@ -168,9 +198,6 @@
       { antal: utanHjälpare,
         rubrik: 'elever saknar studiehjälpare', ental: 'elev saknar studiehjälpare',
         under: 'Ingen är kopplad till dem än.', till: '#matchning' },
-      { antal: obekräftade,
-        rubrik: 'passförfrågningar väntar', ental: 'passförfrågan väntar',
-        under: 'Bokade men inte bekräftade av studiehjälparen.', till: '#bokningar' },
       { antal: l.ohanterade_meddelanden != null ? l.ohanterade_meddelanden
           : S.kontakt.filter(k => !k.hanterad_at).length,
         rubrik: 'frågor i inkorgen', ental: 'fråga i inkorgen',

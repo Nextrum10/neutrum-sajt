@@ -1,56 +1,88 @@
 /* ============================================================
-   NEXTRUM — uppgifterna (Fas 23.1)
+   NEXTRUM — NexLäx (Fas 23.1, 23.2)
 
    Leo 2026-09-28: läxorna ska vara roligare, "lite som duolingo, du
-   klarar en nivå och går vidare", gå att göra i mobilen i steg, och
-   ge något tillbaka ju fler man klarar. Min utveckling ska fungera
-   som rättningen av dem. I vyerna heter läxorna uppgifter.
+   klarar en nivå och går vidare". Leo 2026-09-29: Uppgifter och Min
+   utveckling blir EN sektion i studievyn, NexLäx, där eleven direkt
+   ser var hen är, vad hen klarat, vad som är nästa steg, hur långt hen
+   kommit och vad som låses upp. Med XP, en serie i dagar, och
+   studiehjälparen och passen inbyggda.
 
-   Delas av foralder.html och larare.html. Här ligger banan, spelaren,
-   stjärnorna och märkena, rättningen per område och genomgången av
-   ett klart försök. Varje vy äger sina egna frågor mot databasen för
-   uppgifterna (homework); det här är det som ska se likadant ut i båda.
+   Delas av foralder.html och larare.html. Här ligger vägen genom
+   ämnet, hemmet i NexLäx, utvecklingen, spelaren, märkena, rättningen
+   per område och genomgången av ett klart försök. Studievyn äger sina
+   frågor mot databasen och händelserna; det här ritar och räknar.
 
-   RÄTTNINGEN SKER I DATABASEN. Spelaren skickar varje svar till
-   niva_svara() och visar vad den säger. Ingenting här räknar ut om
-   ett svar är rätt, och ingenting skriver ett resultat: frågorna
-   kommer utan facit, och facit kommer först efter ett svar. Se
-   filhuvudet i fas23_1_uppgifterna_blir_digitala.sql.
+   RÄTTNINGEN SKER I DATABASEN, och XP räknas där. Spelaren skickar
+   varje svar till niva_svara() och visar vad den säger, också hur
+   många XP svaret gav. Ingenting här räknar ut om ett svar är rätt
+   eller hur mycket det är värt: frågorna kommer utan facit och utan
+   typens vikt. Totalen och serien kommer ur nexlax_lage(). Se
+   filhuvudena i fas23_1_uppgifterna_blir_digitala.sql och
+   fas23_2_nexlax.sql.
 
    UPPLÅSNINGEN SKER HÄR, och bara här. Den är en spelregel och inget
    skydd: niva_starta() startar vilken nivå som helst åt familjens eget
-   barn. En nivå är öppen när den är först i sin bana, när nivån före
-   är klarad, när den redan är klarad eller påbörjad, eller när
-   studiehjälparen gett den som uppgift.
+   barn. En vanlig nivå är öppen när den är den första i banan, när
+   den vanliga nivån före är klarad, när den redan är klarad eller
+   påbörjad, eller när studiehjälparen gett den. Ett Mästarprov öppnas
+   när varje vanlig nivå i området är klarad, och klaras det med minst
+   två stjärnor är området BEMÄSTRAT (BEMÄSTRAD nedan). Mästarprovet
+   stänger aldrig vägen: nästa område öppnas av områdets vanliga nivåer.
 
    MÄRKENA RÄKNAS UR RADERNA, de sparas inte. Ett märke som stod i en
    egen tabell hade kunnat säga något annat än försöken det bygger på.
-   Varje tal på sidan går därför att räkna fram ur niva_forsok och
-   homework, och försöken skrivs bara av databasen.
 
-   Inga serier som straffar. En veckoserie i stället för Duolingos
-   dagliga: barnen har uppgifter ett par gånger i veckan, och en serie
-   som bryts varje torsdag är en skuld, inte en belöning. Ingenting
-   här skickar en påminnelse om den.
+   SERIEN RÄKNAS I DAGAR sedan Fas 23.2 (Leo: "🔥 7 dagar"), av
+   databasen i svensk tid: en dag räknas när eleven gjort klart en
+   nivå, gjort klart något från studiehjälparen eller haft ett pass
+   med rapport. Den bryts först efter en hel dag utan något, ingenting
+   påminner om den, och rekordet står kvar. Texterna här säger aldrig
+   att något går förlorat.
    ============================================================ */
 window.NXUppgifter = (function () {
   'use strict';
 
   const esc = NX.esc;
 
-  /* ---------- ikonerna ---------- */
+  /* Frågan i text: första raden är frågan, och det som står på raderna
+     efter den är kod eller en uppställning (programmeringen, sedan
+     2026-09-29). Den ritas i ett block med lika breda tecken, där
+     indragen står kvar: i rubrikens typsnitt och storlek gick
+     Pythonkoden knappt att läsa på en telefon, och indragen är det
+     som avgör vad koden gör. Ett <code> och inte ett <pre>, för blocket
+     står inne i frågans rubrik eller stycke. */
+  function frågaHtml(text) {
+    const t = String(text || '');
+    const i = t.indexOf('\n');
+    if (i < 0) return esc(t);
+    // Den tomma raden mellan frågan och koden hör till texten, inte till
+    // blocket: den stod som en tom första rad i det.
+    return esc(t.slice(0, i)) + '<code class="upg-kod">' + esc(t.slice(i + 1).replace(/^\n+/, '')) + '</code>';
+  }
+
+  /* ---------- ikonerna ----------
+     De flesta är streck. De fyllda bär klassen ik-fyll, och CSS:en
+     ritar efter den i stället för efter var ikonen råkar stå. */
   const IKON = {
-    stjärna: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.95 6.45.83-4.72 4.47 1.2 6.4L12 17.1l-5.78 3.15 1.2-6.4L2.7 9.38l6.45-.83z"/></svg>',
+    stjärna: '<svg class="ik-fyll" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.95 6.45.83-4.72 4.47 1.2 6.4L12 17.1l-5.78 3.15 1.2-6.4L2.7 9.38l6.45-.83z"/></svg>',
     lås: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>',
     bock: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
     kryss: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>',
-    spela: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.5v13l10-6.5z"/></svg>',
-    låga: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.2c-3.9 0-6.6-2.6-6.6-6.2 0-3.2 2.1-5.3 3.7-7.1.4 1.9 1.4 3.1 2.6 3.7-.3-3.1 1.1-6 3.7-8.6.3 3.1 2.4 5 3.8 7.1a8 8 0 0 1 1.4 4.7c0 3.6-3 6.4-8.6 6.4z"/></svg>',
+    spela: '<svg class="ik-fyll" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.5v13l10-6.5z"/></svg>',
+    låga: '<svg class="ik-fyll" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.2c-3.9 0-6.6-2.6-6.6-6.2 0-3.2 2.1-5.3 3.7-7.1.4 1.9 1.4 3.1 2.6 3.7-.3-3.1 1.1-6 3.7-8.6.3 3.1 2.4 5 3.8 7.1a8 8 0 0 1 1.4 4.7c0 3.6-3 6.4-8.6 6.4z"/></svg>',
+    blixt: '<svg class="ik-fyll" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 2.5 4.8 13.4h6.1l-1.1 8.1 8.4-10.9h-6.1z"/></svg>',
+    krona: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 8.2l4.4 3.6L12 5.5l3.8 6.3 4.4-3.6-1.7 9.8H5.5z"/><path d="M5.5 20.3h13"/></svg>',
     flagga: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4M6 4.5h11l-2.2 4 2.2 4H6"/></svg>',
     pokal: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0zM7.5 6H4.5a3 3 0 0 0 3 4.2M16.5 6h3a3 3 0 0 1-3 4.2M12 13.5V17M8.5 20.5h7M9.5 17h5v3.5h-5z"/></svg>',
     uppåt: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5.5-5.5 3.5 3.5L20 8M15 8h5v5"/></svg>',
     klocka: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
-    böcker: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5h5v13h-5zM9.5 5.5h5v13h-5zM15 6.2l4.6-1.3 3 12.6-4.6 1.2z"/></svg>'
+    böcker: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5h5v13h-5zM9.5 5.5h5v13h-5zM15 6.2l4.6-1.3 3 12.6-4.6 1.2z"/></svg>',
+    bok: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h6a2.5 2.5 0 0 1 2.5 2.5v11a2 2 0 0 0-2-2H3.5z"/><path d="M20.5 5.5h-6A2.5 2.5 0 0 0 12 8v11a2 2 0 0 1 2-2h6.5z"/></svg>',
+    repetera: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 0 1 12.8-5.3L19.5 9M19.5 4.5V9H15M19.5 12a7.5 7.5 0 0 1-12.8 5.3L4.5 15M4.5 19.5V15H9"/></svg>',
+    pil: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
+    person: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8"/></svg>',
+    öppetLås: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 6.8-1.2"/></svg>'
   };
 
   /* Gränserna för stjärnorna. Samma tal står i niva_svara(), som är
@@ -61,41 +93,114 @@ window.NXUppgifter = (function () {
     'minst 80 procent rätt på första försöket',
     'allt rätt på första försöket'
   ];
+  /* Ett område är bemästrat när Mästarprovet klarats med minst så här
+     många stjärnor, alltså minst 80 procent rätt direkt. En spelregel,
+     som upplåsningen: databasen räknar stjärnorna, det här läser dem. */
+  const BEMÄSTRAD = 2;
+  /* Så många frågor Mästarprovet och repetitionen drar, högst. Samma tal
+     som intern.nexlax_mastarfragor() och nexlax_repetitionsfragor(). */
+  const MÄSTARPROV_MAX = 10;
+  const REPETITION_MAX = 8;
 
-  const TYPTEXT = { val: 'Välj rätt svar', skriv: 'Skriv svaret', ordna: 'Sätt i rätt ordning' };
+  const TYPTEXT = {
+    val: 'Välj rätt svar', skriv: 'Skriv svaret', ordna: 'Sätt i rätt ordning',
+    para: 'Para ihop', sant: 'Sant eller falskt?'
+  };
   const HEJA = ['Rätt!', 'Snyggt!', 'Precis!', 'Helt rätt!', 'Bra jobbat!', 'Klockrent!'];
+
+  /* Ett val med alternativen Sant och Falskt, i den ordningen, är en
+     sant-fråga (grund.sant() i verktyget). Den rättas som ett val. */
+  function ärSant(f) {
+    const a = f && f.alternativ;
+    return !!(f && f.typ === 'val' && a && a.length === 2 && a[0] === 'Sant' && a[1] === 'Falskt');
+  }
+  function typText(f) { return ärSant(f) ? TYPTEXT.sant : (TYPTEXT[f.typ] || ''); }
+
+  /* Tal som i en svensk text: 1 240, med ett hårt mellanslag. */
+  function tusen(n) {
+    return String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+  function xpText(n) { return tusen(n) + ' XP'; }
+  function kortÄmne(a) { return String(a || '').split(' / ')[0]; }
+  function banaNamn(amne, arskurs) { return kortÄmne(amne) + ' · ' + NX.årskursText(arskurs); }
 
   /* ============================================================
      DATAN
      ============================================================ */
   let katalogLöfte = null;
+  const saknas = e => !!e && (e.code === '42703' || e.code === 'PGRST202' || e.code === '42883'
+    || /does not exist|Could not find/i.test(e.message || ''));
 
   /* Alla aktiva nivåer, en gång per sidladdning. Katalogen är liten
      (några hundra rader i ett helt skolsystem) och läses av alla
-     inloggade, och med den i minnet byter banan ämne utan att vänta
-     på nätet. Svarar null om tabellen inte finns än: då står
-     uppgifterna kvar som förut, utan de digitala delarna. */
+     inloggade, och med den i minnet byter vägen ämne utan att vänta på
+     nätet. Utan Fas 23.2 i databasen finns inte sort och lastext: då är
+     alla nivåer vanliga, som i Fas 23.1. Svarar null om tabellen inte
+     finns alls: då står uppgifterna kvar, utan vägen. Sida för sida
+     (NXStudie.hämtaAlla, 2026-09-29): några hundra i dag, men tolv
+     årskurser gånger alla ämnen når tusen, och svaret säger inte att
+     resten saknas. */
   function laddaKatalog(supa) {
     if (!katalogLöfte) {
-      katalogLöfte = supa.from('nivaer')
-        .select('id, nyckel, amne, arskurs, omrade, titel, beskrivning, ordning, antal_fragor, aktiv')
-        .order('amne').order('arskurs').order('ordning')
-        .then(({ data, error }) => {
-          if (error) { katalogLöfte = null; console.warn('Nivåerna gick inte att läsa', error); return null; }
-          return data || [];
-        });
+      const bas = 'id, nyckel, amne, arskurs, omrade, titel, beskrivning, ordning, antal_fragor, aktiv';
+      const hämta = kol => NXStudie.hämtaAlla(supa, 'nivaer', kol,
+        q => q.order('amne').order('arskurs').order('ordning'));
+      katalogLöfte = hämta(bas + ', sort, lastext').then(async svar => {
+        if (svar.error && saknas(svar.error)) {
+          svar = await hämta(bas);
+          if (svar.data) svar.data.forEach(n => { n.sort = 'vanlig'; n.lastext = null; });
+        }
+        if (svar.error) { katalogLöfte = null; console.warn('Nivåerna gick inte att läsa', svar.error); return null; }
+        return (svar.data || []).map(n => { n.sort = n.sort || 'vanlig'; return n; });
+      });
     }
     return katalogLöfte;
   }
 
+  /* Alla försök, äldst först. Här stod .limit(2000), men PostgREST
+     lämnar ut högst tusen rader per svar, så vid tusen försök hade de
+     NYASTE fallit bort, och stjärnorna, XP:n och serien räknats på en
+     gammal elev (NXStudie.hämtaAlla, 2026-09-29). */
   function laddaFörsök(supa, elevId) {
-    return supa.from('niva_forsok')
-      .select('id, niva_id, student_id, startad_at, klar_at, antal, ratt_direkt, stjarnor, godkand')
-      .eq('student_id', elevId).order('startad_at', { ascending: true }).limit(2000)
+    return NXStudie.hämtaAlla(supa, 'niva_forsok',
+      'id, niva_id, student_id, startad_at, klar_at, antal, ratt_direkt, stjarnor, godkand',
+      q => q.eq('student_id', elevId).order('startad_at', { ascending: true }))
       .then(({ data, error }) => {
         if (error) { console.warn('Försöken gick inte att läsa', error); return null; }
         return data || [];
       });
+  }
+
+  /* De påbörjade försöken från det senaste dygnet, med hur många frågor
+     som redan är rätt besvarade: "3 av 8 klara" på vägen. Samma försök
+     som niva_starta() fortsätter i (det senaste per nivå). */
+  async function laddaPågående(supa, elevId) {
+    const sedan = new Date(Date.now() - 86400000).toISOString();
+    const { data, error } = await supa.from('niva_forsok')
+      .select('id, niva_id, fragor, startad_at')
+      .eq('student_id', elevId).is('klar_at', null).gt('startad_at', sedan)
+      .order('startad_at', { ascending: false }).limit(30);
+    if (error || !data || !data.length) return {};
+    const svar = await supa.from('niva_svar').select('forsok_id, fraga_id')
+      .in('forsok_id', data.map(f => f.id)).eq('ratt', true);
+    const rätt = {};
+    (svar.data || []).forEach(s => { (rätt[s.forsok_id] = rätt[s.forsok_id] || new Set()).add(s.fraga_id); });
+    const ut = {};
+    data.forEach(f => {
+      if (ut[f.niva_id]) return;
+      ut[f.niva_id] = { forsok: f.id, startad_at: f.startad_at, totalt: (f.fragor || []).length,
+                        klara: rätt[f.id] ? rätt[f.id].size : 0 };
+    });
+    return ut;
+  }
+
+  /* XP, serien och dagarna, räknade i databasen. null när funktionen
+     inte finns än (Fas 23.2 är inte körd): då visas vägen utan XP. */
+  function laddaLäge(supa, elevId) {
+    return supa.rpc('nexlax_lage', { p_elev: elevId }).then(({ data, error }) => {
+      if (error) { if (!saknas(error)) console.warn('NexLäx-läget gick inte att läsa', error); return null; }
+      return data || null;
+    });
   }
 
   function efterId(rader) {
@@ -106,16 +211,17 @@ window.NXUppgifter = (function () {
 
   /* Varje nivå eleven rört: bästa stjärnorna, om den klarats, det
      första klara försöket (det är det som räknas som rättningen: då
-     hade eleven inte sett svaren) och ett påbörjat försök från det
-     senaste dygnet, som spelaren fortsätter i. */
+     hade eleven inte sett svaren), det senaste klara och ett påbörjat
+     försök från det senaste dygnet, som spelaren fortsätter i. */
   function perNivå(forsok) {
     const m = {};
     const dygn = Date.now() - 86400000;
     (forsok || []).forEach(f => {
-      const x = m[f.niva_id] || (m[f.niva_id] = { klar: false, stjarnor: 0, klaraFörsök: 0, första: null, pågår: null });
+      const x = m[f.niva_id] || (m[f.niva_id] = { klar: false, stjarnor: 0, klaraFörsök: 0, första: null, senast: null, pågår: null });
       if (f.klar_at) {
         x.klaraFörsök++;
         if (!x.första) x.första = f;
+        x.senast = f;
         if (f.godkand) x.klar = true;
         x.stjarnor = Math.max(x.stjarnor, Number(f.stjarnor) || 0);
       } else if (Date.parse(f.startad_at) > dygn) {
@@ -123,32 +229,6 @@ window.NXUppgifter = (function () {
       }
     });
     return m;
-  }
-
-  function banansNivåer(katalog, amne, arskurs) {
-    return (katalog || []).filter(n => n.aktiv && n.amne === amne && n.arskurs === arskurs)
-      .sort((a, b) => a.ordning - b.ordning);
-  }
-
-  /* Banan som noder, i ordning, med läget för varje. */
-  function banan(katalog, amne, arskurs, forsok, uppgifter) {
-    const läge = perNivå(forsok);
-    const givna = {};
-    (uppgifter || []).forEach(h => { if (h.niva_id && h.status !== 'klar') givna[h.niva_id] = h; });
-    let förraKlar = true;
-    let aktuellFinns = false;
-    return banansNivåer(katalog, amne, arskurs).map((n, i) => {
-      const l = läge[n.id] || {};
-      const nod = {
-        niva: n, klar: !!l.klar, stjarnor: l.stjarnor || 0, pågår: !!l.pågår,
-        given: givna[n.id] || null,
-        öppen: i === 0 || förraKlar || !!l.klar || !!l.pågår || !!givna[n.id],
-        aktuell: false
-      };
-      if (!aktuellFinns && nod.öppen && !nod.klar) { nod.aktuell = true; aktuellFinns = true; }
-      förraKlar = !!l.klar;
-      return nod;
-    });
   }
 
   /* Vilka ämnen och årskurser som har en bana. */
@@ -164,6 +244,9 @@ window.NXUppgifter = (function () {
       ut[a] = Array.from(ämnen[a]).sort((x, y) => ordning.indexOf(x) - ordning.indexOf(y));
     });
     return ut;
+  }
+  function ämnenIOrdning(finns) {
+    return Object.keys(finns).sort((a, b) => NX.AMNEN.indexOf(a) - NX.AMNEN.indexOf(b));
   }
 
   /* Den årskurs banan öppnar i: elevens egen om den har en bana,
@@ -181,70 +264,185 @@ window.NXUppgifter = (function () {
     return årskurser[0];
   }
 
+  function banansSteg(katalog, amne, arskurs) {
+    return (katalog || []).filter(n => n.aktiv && n.amne === amne && n.arskurs === arskurs)
+      .sort((a, b) => a.ordning - b.ordning);
+  }
+
+  /* Hur många frågor en nivå har, och ungefär hur lång tid den tar. Ett
+     Mästarprov har inga egna frågor: det drar högst tio ur områdets
+     nivåer utan lästext. En repetition drar högst åtta. */
+  function antalFrågor(n, katalog) {
+    if (n.sort === 'mastare') {
+      const i = banansSteg(katalog, n.amne, n.arskurs)
+        .filter(m => m.sort === 'vanlig' && m.omrade === n.omrade && !m.lastext)
+        .reduce((s, m) => s + (Number(m.antal_fragor) || 0), 0);
+      return Math.min(MÄSTARPROV_MAX, i);
+    }
+    if (n.sort === 'repetition') return REPETITION_MAX;
+    return Number(n.antal_fragor) || 0;
+  }
+  function minuter(n, katalog) {
+    const frågor = antalFrågor(n, katalog);
+    const läsa = n.lastext ? Math.max(1, Math.round(n.lastext.length / 900)) : 0;
+    return Math.max(2, Math.round(frågor * 0.5) + läsa);
+  }
+  function omfattning(n, katalog) {
+    const f = antalFrågor(n, katalog);
+    if (!f) return '';
+    return (n.sort === 'repetition' ? 'upp till ' : '') + f + (f === 1 ? ' uppgift' : ' uppgifter')
+      + ' · ca ' + minuter(n, katalog) + ' min';
+  }
+
   /* ============================================================
-     STJÄRNOR, SERIER OCH MÄRKEN
+     VÄGEN
+     Banan som områden och steg, i ordning, med läget för varje.
+
+     o: { katalog, amne, arskurs, forsok, uppgifter, pågående, läge }
+       pågående: { niva_id: { klara, totalt } } ur laddaPågående
+       läge:     nexlax_lage() eller null
      ============================================================ */
-  function veckonyckel(t) {
-    const d = new Date(t);
-    const måndag = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
-    return NX.isoFor(måndag);
-  }
-  function veckanFöre(nyckel) {
-    const [å, m, d] = nyckel.split('-').map(Number);
-    return NX.isoFor(new Date(å, m - 1, d - 7));
-  }
-  /* ISO-veckans nummer, som det står i en svensk almanacka. */
-  function veckonummer(t) {
-    const d = new Date(t);
-    const tors = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7) + 3);
-    const förstaTors = new Date(tors.getFullYear(), 0, 4);
-    return 1 + Math.round(((tors - förstaTors) / 86400000 - 3 + ((förstaTors.getDay() + 6) % 7)) / 7);
-  }
+  function vägen(o) {
+    const alla = banansSteg(o.katalog, o.amne, o.arskurs);
+    const gjort = perNivå(o.forsok);
+    const givna = {};
+    (o.uppgifter || []).forEach(h => { if (h.niva_id && h.status !== 'klar') givna[h.niva_id] = h; });
+    const xpPer = (o.läge && o.läge.nivaer) || {};
 
-  /* Veckor med något klarat: en klarad nivå eller en uppgift från
-     studiehjälparen som bockats av. Serien räknas bakåt från den här
-     veckan, eller från förra om den här inte har något än — veckan är
-     inte slut, och en serie ska inte se bruten ut en måndag morgon. */
-  function veckoserie(forsok, uppgifter) {
-    const veckor = new Set();
-    (forsok || []).forEach(f => { if (f.klar_at && f.godkand) veckor.add(veckonyckel(f.klar_at)); });
-    (uppgifter || []).forEach(h => { if (h.status === 'klar' && h.completed_at) veckor.add(veckonyckel(h.completed_at)); });
+    const nod = n => {
+      const l = gjort[n.id] || {};
+      const p = o.pågående && o.pågående[n.id];
+      return {
+        niva: n, sort: n.sort || 'vanlig', klar: !!l.klar, stjarnor: l.stjarnor || 0,
+        pågår: !!(l.pågår || p), framsteg: p || null, första: l.första || null, senast: l.senast || null,
+        försök: l.klaraFörsök || 0, given: givna[n.id] || null, öppen: false, aktuell: false,
+        xp: xpPer[n.id] ? Number(xpPer[n.id].xp) || 0 : null
+      };
+    };
 
-    let v = veckonyckel(Date.now());
-    if (!veckor.has(v)) v = veckanFöre(v);
-    let nu = 0;
-    while (veckor.has(v)) { nu++; v = veckanFöre(v); }
-
-    const sorterade = Array.from(veckor).sort();
-    let bäst = 0, rad = 0, förra = null;
-    sorterade.forEach(k => {
-      rad = förra && veckanFöre(k) === förra ? rad + 1 : 1;
-      bäst = Math.max(bäst, rad);
-      förra = k;
+    const områden = [];
+    let repetition = null;
+    alla.forEach(n => {
+      if (n.sort === 'repetition') { repetition = nod(n); return; }
+      let a = områden[områden.length - 1];
+      if (!a || a.namn !== n.omrade) {
+        a = { namn: n.omrade, nivåer: [], mästare: null };
+        områden.push(a);
+      }
+      const x = nod(n);
+      if (x.sort === 'mastare') a.mästare = x; else a.nivåer.push(x);
     });
-    return { nu, bäst, dennaVecka: veckor.has(veckonyckel(Date.now())) };
+
+    /* De vanliga nivåerna öppnas en i taget, genom hela banan. */
+    let förraKlar = true;
+    områden.forEach(a => a.nivåer.forEach(x => {
+      x.öppen = förraKlar || x.klar || x.pågår || !!x.given;
+      förraKlar = x.klar;
+    }));
+    områden.forEach(a => {
+      a.klara = a.nivåer.filter(x => x.klar).length;
+      a.klart = a.nivåer.length > 0 && a.klara === a.nivåer.length;
+      const m = a.mästare;
+      if (m) m.öppen = a.klart || m.klar || m.pågår || !!m.given;
+      a.bemästrat = !!(m && m.klar && m.stjarnor >= BEMÄSTRAD);
+    });
+
+    /* Det aktuella steget: den första öppna vanliga nivån som inte är
+       klarad, annars det första öppna Mästarprovet. */
+    let aktuell = null;
+    områden.forEach(a => a.nivåer.forEach(x => { if (!aktuell && x.öppen && !x.klar) aktuell = x; }));
+    if (!aktuell) områden.forEach(a => { const m = a.mästare; if (!aktuell && m && m.öppen && !m.klar) aktuell = m; });
+    if (aktuell) aktuell.aktuell = true;
+
+    /* Nästa område är det som kommer direkt efter det aktuella. Ett
+       område längre fram kan redan vara öppet, för att studiehjälparen
+       gett en nivå där; det gör inte området efter det till nästa. */
+    const iAkt = aktuell ? områden.findIndex(a => a.nivåer.includes(aktuell) || a.mästare === aktuell) : -1;
+    områden.forEach((a, i) => {
+      if (a.klart) a.läge = 'klart';
+      else if (i === iAkt || a.nivåer.some(x => x.klar || x.pågår)) a.läge = 'aktuellt';
+      else if (a.nivåer.some(x => x.öppen)) a.läge = 'oppet';
+      else if (i === iAkt + 1) a.läge = 'nasta';
+      else a.läge = 'last';
+    });
+
+    /* Banans procent räknar de vanliga nivåerna, som området och
+       XP:n gör: ett område är klart när dess nivåer är det, och
+       Mästarprovet är kronan ovanpå. Räknades provet med stod ett
+       område som Klart 3/4 och banan nådde aldrig 100 utan det. */
+    const steg = [];
+    områden.forEach(a => { a.nivåer.forEach(x => steg.push(x)); if (a.mästare) steg.push(a.mästare); });
+    const vanliga = steg.filter(x => x.sort === 'vanlig');
+    const klara = vanliga.filter(x => x.klar).length;
+    return {
+      amne: o.amne, arskurs: o.arskurs, områden, repetition, steg, aktuell,
+      klara, totalt: vanliga.length,
+      procent: vanliga.length ? Math.round(klara / vanliga.length * 100) : 0,
+      helaKlar: vanliga.length > 0 && klara === vanliga.length,
+      bemästrade: områden.filter(a => a.bemästrat).length
+    };
   }
 
-  /* Allt märkena och talen räknas ur. */
-  function underlag(katalog, forsok, uppgifter) {
-    const nivå = efterId(katalog);
-    const läge = perNivå(forsok);
-    const d = { klaradeNivåer: 0, stjärnor: 0, treStjärnor: 0, helaAvsnitt: 0, helaBanor: 0,
-                förbättringar: 0, iTid: 0, ämnen: 0 };
+  /* Vad eleven ska göra nu. I ordning: ett påbörjat försök (i vilken
+     bana som helst), det aktuella steget i banan, ett Mästarprov som
+     inte är klarat, repetitionen när det finns missade frågor. */
+  function nästaSteg(o, väg) {
+    const n = efterId(o.katalog);
+    const påbörjade = Object.keys(o.pågående || {})
+      .map(id => ({ id, p: o.pågående[id], niva: n[id] }))
+      .filter(x => x.niva && x.niva.aktiv && x.p.klara < x.p.totalt)
+      .sort((a, b) => String(b.p.startad_at).localeCompare(String(a.p.startad_at)));
+    if (påbörjade.length) {
+      const x = påbörjade[0];
+      return { sort: 'fortsatt', niva: x.niva, framsteg: x.p, rubrik: 'Fortsätt där du slutade', knapp: 'Fortsätt' };
+    }
+    if (väg && väg.aktuell) {
+      const a = väg.aktuell;
+      const ingetGjort = !(o.forsok || []).some(f => f.klar_at);
+      return {
+        sort: a.sort === 'mastare' ? 'mastare' : 'nasta', niva: a.niva,
+        rubrik: ingetGjort ? 'Börja din väg' : a.sort === 'mastare' ? 'Dags för Mästarprovet' : 'Nästa steg',
+        knapp: a.sort === 'mastare' ? 'Gör provet' : ingetGjort ? 'Börja' : 'Starta'
+      };
+    }
+    if (väg && väg.repetition && antalMissade(o.läge, väg.amne, väg.arskurs) > 0) {
+      return { sort: 'repetition', niva: väg.repetition.niva, rubrik: 'Repetera det du missat', knapp: 'Repetera' };
+    }
+    return null;
+  }
+
+  function antalMissade(läge, amne, arskurs) {
+    const r = ((läge && läge.missade) || []).find(x => x.amne === amne && x.arskurs === arskurs);
+    return r ? Number(r.antal) || 0 : 0;
+  }
+
+  /* ============================================================
+     MÄRKENA
+     ============================================================ */
+  function underlag(o) {
+    const nivå = efterId(o.katalog);
+    const gjort = perNivå(o.forsok);
+    const d = { klaradeNivåer: 0, stjärnor: 0, treStjärnor: 0, helaOmråden: 0, bemästrade: 0, helaBanor: 0,
+                förbättringar: 0, iTid: 0, ämnen: 0, xp: null, bästaSerie: null };
     const ämnen = new Set();
-    Object.keys(läge).forEach(id => {
-      const l = läge[id];
+    Object.keys(gjort).forEach(id => {
+      const l = gjort[id];
+      const n = nivå[id];
       d.stjärnor += l.stjarnor;
       if (l.stjarnor === 3) d.treStjärnor++;
-      if (l.klar) { d.klaradeNivåer++; if (nivå[id]) ämnen.add(nivå[id].amne); }
+      if (l.klar) { d.klaradeNivåer++; if (n) ämnen.add(n.amne); }
+      if (n && n.sort === 'mastare' && l.klar && l.stjarnor >= BEMÄSTRAD) d.bemästrade++;
     });
     d.ämnen = ämnen.size;
+    /* Utan ett enda Mästarprov i katalogen (före Fas 23.2:s bank) finns
+       inget att bemästra, och märkena för det ska inte stå som ouppnådda. */
+    if (!(o.katalog || []).some(n => n.sort === 'mastare')) d.bemästrade = null;
 
     /* Bättre andra gången: ett klart försök med fler stjärnor än ett
        tidigare klart försök på samma nivå. */
     const bästHittills = {};
     const bättre = new Set();
-    (forsok || []).filter(f => f.klar_at).sort((a, b) => Date.parse(a.klar_at) - Date.parse(b.klar_at)).forEach(f => {
+    (o.forsok || []).filter(f => f.klar_at).sort((a, b) => Date.parse(a.klar_at) - Date.parse(b.klar_at)).forEach(f => {
       const s = Number(f.stjarnor) || 0;
       if (f.niva_id in bästHittills && s > bästHittills[f.niva_id]) bättre.add(f.niva_id);
       bästHittills[f.niva_id] = Math.max(bästHittills[f.niva_id] || 0, s);
@@ -252,47 +450,53 @@ window.NXUppgifter = (function () {
     d.förbättringar = bättre.size;
 
     const grupper = {}, banGrupper = {};
-    (katalog || []).filter(n => n.aktiv).forEach(n => {
+    (o.katalog || []).filter(n => n.aktiv && n.sort === 'vanlig').forEach(n => {
       const a = n.amne + '|' + n.arskurs + '|' + n.omrade, b = n.amne + '|' + n.arskurs;
       (grupper[a] = grupper[a] || []).push(n.id);
       (banGrupper[b] = banGrupper[b] || []).push(n.id);
     });
-    const allaKlara = ids => ids.every(id => läge[id] && läge[id].klar);
-    d.helaAvsnitt = Object.values(grupper).filter(allaKlara).length;
+    const allaKlara = ids => ids.every(id => gjort[id] && gjort[id].klar);
+    d.helaOmråden = Object.values(grupper).filter(allaKlara).length;
     d.helaBanor = Object.values(banGrupper).filter(allaKlara).length;
 
-    d.iTid = (uppgifter || []).filter(h => h.status === 'klar' && h.due_date && h.completed_at
+    d.iTid = (o.uppgifter || []).filter(h => h.status === 'klar' && h.due_date && h.completed_at
       && NX.isoFor(new Date(h.completed_at)) <= h.due_date).length;
 
-    const serie = veckoserie(forsok, uppgifter);
-    d.serie = serie.nu;
-    d.bästaSerie = serie.bäst;
-    d.dennaVecka = serie.dennaVecka;
+    if (o.läge) {
+      d.xp = Number(o.läge.xp) || 0;
+      d.bästaSerie = Number(o.läge.serie && o.läge.serie.basta) || 0;
+    }
     return d;
   }
 
+  /* Märken som bygger på XP eller serien visas bara när databasen
+     räknat dem (mät svarar null annars): ett märke som ser ouppnått ut
+     för att funktionen inte är körd än är fel, inte ett läge. */
   const MÄRKEN = [
     { id: 'forsta', namn: 'Första nivån', text: 'Klara en nivå.', ikon: 'flagga', mål: 1, mät: d => d.klaradeNivåer },
-    { id: 'stjarnor-10', namn: 'Tio stjärnor', text: 'Samla 10 stjärnor.', ikon: 'stjärna', mål: 10, mät: d => d.stjärnor },
+    { id: 'xp-100', namn: '100 XP', text: 'Samla 100 XP.', ikon: 'blixt', mål: 100, mät: d => d.xp },
+    { id: 'serie-3', namn: 'Tre dagar i rad', text: 'Gör något i NexLäx tre dagar i rad.', ikon: 'låga', mål: 3, mät: d => d.bästaSerie },
     { id: 'allt-ratt', namn: 'Allt rätt direkt', text: 'Klara en nivå utan ett enda fel.', ikon: 'bock', mål: 1, mät: d => d.treStjärnor },
-    { id: 'serie-3', namn: 'Tre veckor i rad', text: 'Klara något varje vecka, tre veckor i rad.', ikon: 'låga', mål: 3, mät: d => d.bästaSerie },
     { id: 'battre', namn: 'Bättre andra gången', text: 'Gör om en nivå och få fler stjärnor.', ikon: 'uppåt', mål: 1, mät: d => d.förbättringar },
+    { id: 'omrade', namn: 'Ett helt område', text: 'Klara alla nivåer i ett område.', ikon: 'flagga', mål: 1, mät: d => d.helaOmråden },
+    { id: 'serie-7', namn: 'En vecka i rad', text: 'Gör något i NexLäx sju dagar i rad.', ikon: 'låga', mål: 7, mät: d => d.bästaSerie },
     { id: 'i-tid', namn: 'I tid', text: 'Gör fem uppgifter från studiehjälparen i tid.', ikon: 'klocka', mål: 5, mät: d => d.iTid },
-    { id: 'avsnitt', namn: 'Ett helt avsnitt', text: 'Klara alla nivåer i ett avsnitt.', ikon: 'flagga', mål: 1, mät: d => d.helaAvsnitt },
-    { id: 'stjarnor-25', namn: '25 stjärnor', text: 'Samla 25 stjärnor.', ikon: 'stjärna', mål: 25, mät: d => d.stjärnor },
+    { id: 'mastare', namn: 'Mästare', text: 'Bemästra ett område i Mästarprovet.', ikon: 'krona', mål: 1, mät: d => d.bemästrade },
+    { id: 'xp-500', namn: '500 XP', text: 'Samla 500 XP.', ikon: 'blixt', mål: 500, mät: d => d.xp },
     { id: 'tva-amnen', namn: 'Två ämnen', text: 'Klara nivåer i två olika ämnen.', ikon: 'böcker', mål: 2, mät: d => d.ämnen },
     { id: 'allt-ratt-5', namn: 'Fem felfria', text: 'Klara fem nivåer utan ett enda fel.', ikon: 'bock', mål: 5, mät: d => d.treStjärnor },
-    { id: 'stjarnor-50', namn: '50 stjärnor', text: 'Samla 50 stjärnor.', ikon: 'stjärna', mål: 50, mät: d => d.stjärnor },
-    { id: 'serie-8', namn: 'Åtta veckor i rad', text: 'Klara något varje vecka, åtta veckor i rad.', ikon: 'låga', mål: 8, mät: d => d.bästaSerie },
+    { id: 'xp-1000', namn: '1 000 XP', text: 'Samla 1 000 XP.', ikon: 'blixt', mål: 1000, mät: d => d.xp },
+    { id: 'serie-30', namn: 'En månad i rad', text: 'Gör något i NexLäx trettio dagar i rad.', ikon: 'låga', mål: 30, mät: d => d.bästaSerie },
     { id: 'bana', namn: 'En hel bana', text: 'Klara alla nivåer i en bana.', ikon: 'pokal', mål: 1, mät: d => d.helaBanor },
-    { id: 'stjarnor-100', namn: '100 stjärnor', text: 'Samla 100 stjärnor.', ikon: 'pokal', mål: 100, mät: d => d.stjärnor }
+    { id: 'mastare-3', namn: 'Trefaldig mästare', text: 'Bemästra tre områden.', ikon: 'krona', mål: 3, mät: d => d.bemästrade }
   ];
 
   function märken(d) {
     return MÄRKEN.map(m => {
-      const har = Math.min(m.mål, m.mät(d) || 0);
-      return { id: m.id, namn: m.namn, text: m.text, ikon: m.ikon, mål: m.mål, har, klart: har >= m.mål };
-    });
+      const v = m.mät(d);
+      const har = v == null ? null : Math.min(m.mål, v || 0);
+      return { id: m.id, namn: m.namn, text: m.text, ikon: m.ikon, mål: m.mål, har, klart: har != null && har >= m.mål };
+    }).filter(m => m.har != null);
   }
 
   function stjärnRad(antal, max, klass) {
@@ -309,147 +513,610 @@ window.NXUppgifter = (function () {
       + '<b>' + esc(m.namn) + '</b>'
       + '<span class="upg-marke-text">' + esc(m.klart ? m.text.replace(/\.$/, '') + ' ✓' : m.text) + '</span>'
       + (!m.klart && m.mål > 1
-          ? '<span class="upg-marke-mat" aria-label="' + m.har + ' av ' + m.mål + '"><i style="width:'
-            + Math.round(m.har / m.mål * 100) + '%"></i></span><span class="upg-marke-tal">' + m.har + ' / ' + m.mål + '</span>'
+          ? '<span class="upg-marke-mat" aria-label="' + tusen(m.har) + ' av ' + tusen(m.mål) + '"><i style="width:'
+            + Math.round(m.har / m.mål * 100) + '%"></i></span><span class="upg-marke-tal">' + tusen(m.har) + ' / ' + tusen(m.mål) + '</span>'
           : '')
       + '</div>';
   }
 
-  /* Serien, stjärnorna och märkena. Ritas i Uppgifter, under banan. */
-  function ritaBelöningar(host, katalog, forsok, uppgifter) {
-    if (!host) return;
-    const d = underlag(katalog, forsok, uppgifter);
-    const lista = märken(d);
-    const klara = lista.filter(m => m.klart).length;
-    host.innerHTML = '<div class="upg-bel-tal">'
-      + '<div><span class="upg-bel-ikon stj">' + IKON.stjärna + '</span><b>' + d.stjärnor + '</b><span>stjärnor</span></div>'
-      + '<div><span class="upg-bel-ikon serie' + (d.dennaVecka ? ' tand' : '') + '">' + IKON.låga + '</span><b>' + d.serie + '</b><span>'
-        + (d.serie === 1 ? 'vecka i rad' : 'veckor i rad') + '</span></div>'
-      + '<div><span class="upg-bel-ikon pokal">' + IKON.pokal + '</span><b>' + klara + '</b><span>av ' + lista.length + ' märken</span></div>'
-      + '</div>'
-      + '<p class="upg-bel-not">' + esc(d.dennaVecka
-          ? 'Den här veckan är klar för serien.'
-          : d.serie ? 'Klara en nivå eller en uppgift den här veckan så fortsätter serien.'
-          : 'Klara en nivå eller en uppgift en vecka i taget så växer serien.') + '</p>'
-      + '<div class="upg-marken">' + lista.map(m => märkesHtml(m)).join('') + '</div>';
+  /* ============================================================
+     SERIEN
+     ============================================================ */
+  function serieText(s) {
+    if (!s) return '';
+    if (s.idag) return 'Dagens mål är klart. Kom tillbaka i morgon så blir det ' + (s.nu + 1) + ' dagar.';
+    if (s.nu) return 'Gör klart en nivå i dag så blir det ' + (s.nu + 1) + ' dagar i rad.';
+    return s.basta ? 'Gör klart en nivå i dag så börjar en ny serie. Ditt rekord är ' + s.basta + (s.basta === 1 ? ' dag.' : ' dagar.')
+      : 'Gör klart en nivå i dag så börjar din serie.';
   }
+  function dagarText(n) { return n === 1 ? 'dag i rad' : 'dagar i rad'; }
 
   /* ============================================================
-     BANAN
-     opts: { host, katalog, forsok, uppgifter, amne, arskurs, elevKod,
-             öppen (nivå-id vars kort är utfällt), onVal({amne, arskurs}),
-             onStarta(nivå) }
+     HEMMET: DIN VÄG
+     o: { host, katalog, forsok, uppgifter, pågående, läge, amne,
+          arskurs, elevKod, elevNamn, öppen, hjälpare: { namn },
+          rapporter, progress, nyss: { klar, oppen } }
      ============================================================ */
   const XLED = [0, 1, 2, 1, 0, -1, -2, -1];
 
-  function ritaBana(o) {
+  function ritaVäg(o) {
     const host = o.host;
-    if (!host) return;
+    if (!host) return null;
     const finns = banor(o.katalog);
-    const ämnen = Object.keys(finns).sort((a, b) => NX.AMNEN.indexOf(a) - NX.AMNEN.indexOf(b));
-    if (!ämnen.length) {
-      host.innerHTML = '<div class="empty"><b>Inga nivåer än</b><br><span>Banan fylls på med nivåer i fler ämnen och årskurser.</span></div>';
-      return;
-    }
-    const amne = finns[o.amne] ? o.amne : ämnen[0];
-    const årskurser = finns[amne];
+    const ämnen = ämnenIOrdning(finns);
+    const amne = finns[o.amne] ? o.amne : (ämnen[0] || '');
+    const årskurser = finns[amne] || [];
     const arskurs = årskurser.includes(o.arskurs) ? o.arskurs : förvaldÅrskurs(årskurser, o.elevKod);
-    const noder = banan(o.katalog, amne, arskurs, o.forsok, o.uppgifter);
-    const klara = noder.filter(n => n.klar).length;
-    const stj = noder.reduce((s, n) => s + n.stjarnor, 0);
+    const väg = amne ? vägen(Object.assign({}, o, { amne, arskurs })) : null;
+    const nästa = nästaSteg(o, väg);
 
-    let avsnitt = 0, förraOmråde = null, x = 0;
-    const rader = noder.map(n => {
-      let rubrik = '';
-      if (n.niva.omrade !== förraOmråde) {
-        avsnitt++;
-        förraOmråde = n.niva.omrade;
-        rubrik = '<li class="upg-avsnitt"><span>Avsnitt ' + avsnitt + '</span><b>' + esc(n.niva.omrade) + '</b></li>';
-      }
-      const läge = n.klar ? 'klar' : n.aktuell ? 'aktuell' : n.öppen ? 'oppen' : 'last';
-      const ärÖppen = o.öppen === n.niva.id;
-      const led = XLED[x++ % XLED.length];
-      return rubrik + '<li class="upg-nod ' + läge + (ärÖppen ? ' vald' : '') + '" style="--x:' + led + '">'
-        + '<button type="button" class="upg-nod-knapp" data-upg-nod="' + esc(n.niva.id) + '" aria-expanded="' + (ärÖppen ? 'true' : 'false') + '"'
-        + ' aria-label="' + esc(n.niva.titel + ', ' + (n.klar ? 'klar, ' + n.stjarnor + ' av 3 stjärnor' : n.öppen ? 'öppen' : 'låst')) + '">'
-        + (n.klar ? IKON.bock : n.öppen ? IKON.spela : IKON.lås)
-        + (n.aktuell ? '<span class="upg-nod-bubbla" aria-hidden="true">' + (n.pågår ? 'Fortsätt' : 'Börja') + '</span>' : '')
-        + '</button>'
-        + '<span class="upg-nod-namn">' + esc(n.niva.titel) + '</span>'
-        + (n.klar ? stjärnRad(n.stjarnor, 3, 'upg-stj-sm') : n.given ? '<span class="upg-nod-given">Från studiehjälparen</span>' : '')
-        + (ärÖppen ? nodKort(n, noder) : '')
-        + '</li>';
-    }).join('');
-
-    /* Ämnesraden är en rad man drar i sidled. Den ritas om med banan,
-       och utan det här hoppade ett ämne man dragit fram tillbaka till
-       början (samma fälla som bokningens ämnesrad, CLAUDE.md avsnitt 3). */
-    const förraRaden = host.querySelector('.upg-amnen');
+    /* Ämnesraden och den öppnade noden ritas om; en rad man dragit i
+       sidled ska inte hoppa tillbaka (samma fälla som bokningens
+       ämnesrad, CLAUDE.md avsnitt 3). */
+    const förraRaden = host.querySelector('.nl-amnen');
     const sidled = förraRaden ? förraRaden.scrollLeft : 0;
 
-    host.innerHTML =
-      '<div class="upg-bana-val">'
-      + '<div class="upg-amnen" role="group" aria-label="Ämne">' + ämnen.map(a =>
-          '<button type="button" class="chip" data-upg-amne="' + esc(a) + '" aria-pressed="' + (a === amne ? 'true' : 'false') + '">'
-          + esc(a.split(' / ')[0]) + '</button>').join('') + '</div>'
-      + (årskurser.length > 1
-          ? '<label class="upg-arskurs"><span>Årskurs</span><select class="sel sel-sm" data-upg-arskurs aria-label="Årskurs">'
-            + årskurser.map(k => '<option value="' + k + '"' + (k === arskurs ? ' selected' : '') + '>' + esc(NX.årskursText(k)) + '</option>').join('')
-            + '</select></label>'
-          : '<span class="upg-arskurs-en">' + esc(NX.årskursText(arskurs)) + '</span>')
-      + '</div>'
-      + '<div class="upg-bana-lage">'
-      + '<div><b>' + klara + ' av ' + noder.length + ' nivåer klara</b><span>' + stj + ' av ' + noder.length * 3 + ' stjärnor i banan</span></div>'
-      + '<span class="upg-mat" aria-hidden="true"><i style="width:' + (noder.length ? Math.round(klara / noder.length * 100) : 0) + '%"></i></span>'
-      + '</div>'
-      + '<ol class="upg-stig">' + rader + '</ol>';
+    host.innerHTML = toppHtml(o, väg, nästa)
+      + rekHtml(o)
+      + passHtml(o, väg)
+      + (ämnen.length ? ämnesradHtml(o, finns, ämnen, amne) : '')
+      + (väg ? vägHtml(o, väg, årskurser) : tommaVägen(o))
+      + (väg ? repetitionHtml(o, väg) : '');
 
     host.dataset.amne = amne;
     host.dataset.arskurs = arskurs;
-    const raden = host.querySelector('.upg-amnen');
+    const raden = host.querySelector('.nl-amnen');
     if (raden && sidled) raden.scrollLeft = sidled;
+    return { väg, nästa, amne, arskurs };
   }
 
-  function nodKort(n, noder) {
+  function tommaVägen(o) {
+    return '<div class="nl-grupp"><h3>Din väg</h3></div>'
+      + '<div class="vy-kort"><div class="vy-kort-kropp">'
+      + NXStudie.tomt(o.katalog ? 'Inga nivåer än' : 'Vägen gick inte att hämta',
+          o.katalog ? 'Banorna fylls på med nivåer i fler ämnen och årskurser.' : 'Ladda om sidan om en stund. Det din studiehjälpare gett står ovanför.')
+      + '</div></div>';
+  }
+
+  /* Toppen: serien, XP, banan och det primära steget. En mörk yta i
+     Nextrums bark, som resten av sajtens mörka partier: det är här
+     spelet börjar. */
+  function toppHtml(o, väg, nästa) {
+    const l = o.läge;
+    const s = l && l.serie;
+    const stat = l
+      ? '<div class="nl-stat" role="list">'
+        + '<span class="nl-stat-pill nl-serie' + (s && s.idag ? ' tand' : '') + '" role="listitem" aria-label="'
+          + esc((s ? s.nu : 0) + ' ' + dagarText(s ? s.nu : 0)) + '">'
+          + IKON.låga + '<b>' + (s ? s.nu : 0) + '</b><span>' + (s && s.nu === 1 ? 'dag' : 'dagar') + '</span></span>'
+        + '<span class="nl-stat-pill nl-xp" role="listitem" aria-label="' + esc(xpText(l.xp)) + '">'
+          + IKON.blixt + '<b>' + tusen(l.xp) + '</b><span>XP</span></span>'
+        + '</div>'
+      : '';
+
+    const bana = väg
+      ? '<div class="nl-bana">'
+        + '<div class="nl-bana-rad"><b>' + esc(banaNamn(väg.amne, väg.arskurs)) + '</b>'
+        + '<strong>' + väg.procent + '<i>%</i></strong></div>'
+        + '<span class="nl-mat" role="progressbar" aria-label="Hur långt du kommit i banan" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'
+          + väg.procent + '"><i style="width:' + väg.procent + '%"></i></span>'
+        + '<span class="nl-bana-not">' + väg.klara + ' av ' + väg.totalt + ' nivåer klara'
+          + (väg.områden.length ? ' · ' + väg.områden.filter(a => a.klart).length + ' av ' + väg.områden.length + ' områden' : '') + '</span>'
+        + '</div>'
+      : '';
+
+    let cta = '';
+    if (nästa) {
+      const n = nästa.niva;
+      const p = nästa.framsteg;
+      cta = '<div class="nl-cta">'
+        + '<span class="nl-cta-et">' + esc(nästa.rubrik) + '</span>'
+        + '<b class="nl-cta-titel">' + esc(stegTitel(n)) + '</b>'
+        + '<span class="nl-cta-fakta">' + esc([n.sort === 'repetition' ? banaNamn(n.amne, n.arskurs) : n.omrade,
+            p ? p.klara + ' av ' + p.totalt + ' klara' : omfattning(n, o.katalog)].filter(Boolean).join(' · ')) + '</span>'
+        + (p ? prickar(p.klara, p.totalt, 'nl-cta-prickar') : '')
+        + '<button type="button" class="nl-cta-knapp" data-nl-starta="' + esc(n.id) + '">'
+          + IKON.spela + '<span>' + esc(nästa.knapp) + '</span></button>'
+        + '</div>';
+    } else if (väg && väg.helaKlar) {
+      cta = '<div class="nl-cta nl-cta-klar">'
+        + '<span class="nl-cta-et">Banan är klar</span>'
+        + '<b class="nl-cta-titel">Allt i ' + esc(banaNamn(väg.amne, väg.arskurs)) + ' är klarat</b>'
+        + '<span class="nl-cta-fakta">Gör om en nivå för fler stjärnor, eller välj ett annat ämne nedanför.</span>'
+        + '</div>';
+    }
+
+    const idag = l && Number(l.xp_idag) ? '<b class="nl-mal-xp">+' + esc(xpText(l.xp_idag)) + ' i dag.</b> ' : '';
+    const mål = s ? '<p class="nl-mal' + (s.idag ? ' klart' : '') + '"><span class="nl-mal-ikon">'
+      + (s.idag ? IKON.bock : IKON.låga) + '</span><span>' + idag + esc(serieText(s)) + '</span></p>' : '';
+
+    return '<div class="nl-topp">' + stat + bana + cta + mål + '</div>';
+  }
+
+  function stegTitel(n) {
+    return n.sort === 'mastare' ? 'Mästarprov: ' + n.omrade : n.titel;
+  }
+
+  /* Prickarna i en påbörjad nivå: en per uppgift, fylld när den är rätt
+     besvarad. Fler än tolv blir en mätare. */
+  function prickar(klara, totalt, klass) {
+    if (!totalt) return '';
+    const etikett = klara + ' av ' + totalt + ' uppgifter klara';
+    if (totalt > 12) {
+      return '<span class="nl-prickmat ' + (klass || '') + '" role="img" aria-label="' + esc(etikett) + '"><i style="width:'
+        + Math.round(klara / totalt * 100) + '%"></i></span>';
+    }
+    let ut = '<span class="nl-prickar ' + (klass || '') + '" role="img" aria-label="' + esc(etikett) + '">';
+    for (let i = 0; i < totalt; i++) ut += '<i class="' + (i < klara ? 'klar' : '') + '"></i>';
+    return ut + '</span>';
+  }
+
+  /* ---------- från studiehjälparen ----------
+     Det studiehjälparen gett, öppet först: det mest försenade eller det
+     med närmast deadline överst, som ett eget kort ("Rekommenderat av"),
+     resten under. En digital uppgift startas härifrån och blir klar när
+     nivån klaras; en vanlig bockar familjen av själv. */
+  function rekOrdning(a, b) {
+    const da = a.due_date || '9999', db = b.due_date || '9999';
+    if (da !== db) return da.localeCompare(db);
+    return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+  }
+
+  function rekHtml(o) {
+    const alla = o.uppgifter || [];
+    if (!alla.length) return '';
+    const öppna = alla.filter(h => h.status !== 'klar').sort(rekOrdning);
+    const klara = alla.filter(h => h.status === 'klar')
+      .sort((a, b) => String(b.completed_at || '').localeCompare(String(a.completed_at || '')));
+    const vem = o.hjälpare && o.hjälpare.namn ? String(o.hjälpare.namn).split(' ')[0] : null;
+
+    let ut = '<div class="nl-grupp" id="nl-rek"><h3>Från din studiehjälpare</h3>'
+      + (öppna.length ? '<span class="vy-antal ar-gor">' + öppna.length + '</span>' : '') + '</div>';
+    if (öppna.length) {
+      ut += öppna.map((h, i) => rekKort(h, o, i === 0 ? { först: true, vem } : {})).join('');
+    } else {
+      ut += '<div class="vy-kort"><div class="vy-kort-kropp nl-rek-tomt">'
+        + '<span class="nl-rek-bock">' + IKON.bock + '</span>'
+        + '<p><b>Allt från ' + esc(vem || 'studiehjälparen') + ' är gjort.</b> Det som kommer nästa gång står här.</p></div></div>';
+    }
+    if (klara.length) {
+      ut += '<details class="nl-klara"><summary>Klara från studiehjälparen <em>' + klara.length + '</em>'
+        + '<svg class="nl-klara-pil" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 8l4.5 4.5L14.5 8"/></svg></summary>'
+        + '<div class="nl-klara-lista">' + klara.slice(0, 20).map(h => rekKort(h, o, { klar: true })).join('') + '</div></details>';
+    }
+    return ut;
+  }
+
+  function rekKort(h, o, opts) {
+    const x = opts || {};
+    const n = h.niva_id ? ((o.katalog || []).find(k => k.id === h.niva_id) || h.nivaer) : null;
+    const läge = NXStudie.läxläge(h);
+    const sen = läge === 'forsenad';
+    const p = n && o.pågående ? o.pågående[n.id] : null;
+    let knappar = '';
+    if (x.klar) {
+      knappar = n ? '' : '<button type="button" class="btn btn-ghost btn-sm" data-lax="pagaende" data-id="' + esc(h.id) + '">Ångra</button>';
+    } else if (h.niva_id) {
+      knappar = n && n.aktiv !== false
+        ? '<button type="button" class="btn btn-primary btn-sm nl-rek-spela" data-lax-starta="' + esc(h.id) + '">'
+          + IKON.spela + (p ? 'Fortsätt' : 'Börja') + '</button>'
+        : '<span class="nl-rek-not">Nivån finns inte längre. Fråga din studiehjälpare.</span>';
+    } else if (h.status === 'ej_paborjad') {
+      knappar = '<button type="button" class="btn btn-primary btn-sm" data-lax="klar" data-id="' + esc(h.id) + '">Klar</button>'
+        + '<button type="button" class="btn btn-ghost btn-sm" data-lax="pagaende" data-id="' + esc(h.id) + '">Jag har börjat</button>';
+    } else {
+      knappar = '<button type="button" class="btn btn-primary btn-sm" data-lax="klar" data-id="' + esc(h.id) + '">Klar</button>'
+        + '<button type="button" class="btn btn-ghost btn-sm" data-lax="ej_paborjad" data-id="' + esc(h.id) + '">Inte börjat än</button>';
+    }
+    const material = h.biblioteksmaterial
+      ? '<div class="nl-rek-mat">' + IKON.bok + '<span>' + esc(h.biblioteksmaterial.titel) + '</span>'
+        + '<button type="button" class="btn btn-ghost btn-sm" data-lax-mat="' + esc(h.bibliotek_id) + '">Öppna</button></div>'
+      : '';
+    const fakta = [
+      n ? (n.sort === 'mastare' ? 'Mästarprov' : n.sort === 'repetition' ? 'Repetition' : 'Nivå i NexLäx') : (h.subject || 'Uppgift'),
+      n ? omfattning(n, o.katalog) : '',
+      h.due_date ? (x.klar ? '' : 'Till ' + NXStudie.deadlineText(h.due_date).replace(/^./, c => c.toLowerCase())) : ''
+    ].filter(Boolean).join(' · ');
+
+    return '<article class="nl-rek' + (x.först ? ' nl-rek-forst' : '') + (x.klar ? ' nl-rek-klar' : '') + (sen ? ' sen' : '') + '">'
+      + (x.först
+          ? '<div class="nl-rek-et"><span class="nl-rek-vem">' + IKON.person + '</span>'
+            + '<span>Rekommenderat av ' + esc(x.vem || 'din studiehjälpare') + '</span>'
+            + (sen ? '<span class="lage sen">Försenad</span>' : '') + '</div>'
+          : '')
+      + '<div class="nl-rek-kropp">'
+      + '<span class="nl-rek-ik">' + (x.klar ? IKON.bock : n ? IKON.spela : IKON.flagga) + '</span>'
+      + '<div class="nl-rek-text"><b>' + esc(h.title) + '</b>'
+      + (h.instructions && !x.klar ? '<p>' + esc(h.instructions) + '</p>' : '')
+      + (fakta ? '<span class="nl-rek-fakta' + (sen ? ' sen' : '') + '">' + esc(fakta) + '</span>' : '')
+      + (p && !x.klar ? prickar(p.klara, p.totalt) : '')
+      + (n ? uppgiftsResultat(h, o.forsok) : '')
+      + '</div></div>'
+      + material
+      + (knappar ? '<div class="nl-rek-atg">' + knappar + '</div>' : '')
+      + '</article>';
+  }
+
+  /* ---------- från passet ----------
+     Lektionen och NexLäx hänger ihop: det senaste passets "öva mer på"
+     och "nästa fokus", och ett område i banan som heter likadant blir
+     en knapp dit. Bara de tre senaste veckorna: äldre än så är inte
+     det som ska tränas nu. */
+  function passHtml(o, väg) {
+    const rapporter = (o.rapporter || []).filter(r => r.needs_practice || r.next_focus)
+      .sort((a, b) => String(b.lesson_date).localeCompare(String(a.lesson_date)));
+    const r = rapporter[0];
+    if (!r || !r.lesson_date || Date.parse(r.lesson_date) < Date.now() - 21 * 86400000) return '';
+    const text = ((r.needs_practice || '') + ' ' + (r.next_focus || '')).toLowerCase();
+    const träff = väg ? väg.områden.find(a => a.namn && text.includes(a.namn.toLowerCase())) : null;
+    const nod = träff ? (träff.nivåer.find(x => x.öppen && !x.klar) || träff.nivåer.find(x => x.öppen) || null) : null;
+    return '<div class="nl-pass">'
+      + '<span class="nl-pass-et">Från passet ' + esc(NX.datumText(String(r.lesson_date).slice(0, 10))) + '</span>'
+      + (r.needs_practice ? '<p><em>Öva mer på</em> ' + esc(r.needs_practice) + '</p>' : '')
+      + (r.next_focus ? '<p><em>Nästa fokus</em> ' + esc(r.next_focus) + '</p>' : '')
+      + (nod ? '<button type="button" class="btn btn-ghost btn-sm" data-nl-starta="' + esc(nod.niva.id) + '">'
+          + 'Träna ' + esc(träff.namn) + ' i NexLäx</button>' : '')
+      + '</div>';
+  }
+
+  /* ---------- ämnena ----------
+     Ett kort per ämne med en bana, med hur långt eleven kommit i sin
+     årskurs. Kortet är också valet av bana. */
+  function ämnesradHtml(o, finns, ämnen, vald) {
+    return '<div class="nl-grupp"><h3>Dina ämnen</h3></div>'
+      + '<div class="nl-amnen" role="group" aria-label="Välj ämne">' + ämnen.map(a => {
+        const ak = a === vald && o.arskurs && finns[a].includes(o.arskurs) ? o.arskurs : förvaldÅrskurs(finns[a], o.elevKod);
+        const v = vägen(Object.assign({}, o, { amne: a, arskurs: ak }));
+        return '<button type="button" class="nl-amne" data-nl-amne="' + esc(a) + '" aria-pressed="' + (a === vald ? 'true' : 'false') + '">'
+          + ring(v.procent)
+          + '<span class="nl-amne-text"><b>' + esc(kortÄmne(a)) + '</b><span>' + esc(NX.årskursText(ak)) + '</span></span>'
+          + '</button>';
+      }).join('') + '</div>';
+  }
+
+  function ring(procent) {
+    const r = 17, omkrets = 2 * Math.PI * r;
+    return '<span class="nl-ring" aria-hidden="true"><svg viewBox="0 0 40 40">'
+      + '<circle class="nl-ring-bas" cx="20" cy="20" r="' + r + '"></circle>'
+      /* Vid noll ritas ingen båge: en rund ände på en tom båge är en prick. */
+      + (procent > 0 ? '<circle class="nl-ring-fyll" cx="20" cy="20" r="' + r + '" stroke-dasharray="'
+        + (omkrets * procent / 100).toFixed(1) + ' ' + omkrets.toFixed(1) + '"></circle>' : '') + '</svg>'
+      + '<b>' + procent + '<i>%</i></b></span>';
+  }
+
+  /* ---------- vägen ----------
+     Områdena i ordning, med stegen i sicksack som i Duolingo. Ett
+     område längre fram än nästa visar bara sitt namn och vad som låser
+     upp det: vägen är lång nog ändå på en telefon. */
+  function vägHtml(o, väg, årskurser) {
+    const välj = årskurser.length > 1
+      ? '<label class="nl-arskurs"><span class="nl-dold">Årskurs</span><select class="sel sel-sm" data-nl-arskurs aria-label="Årskurs">'
+        + årskurser.map(k => '<option value="' + k + '"' + (k === väg.arskurs ? ' selected' : '') + '>' + esc(NX.årskursText(k)) + '</option>').join('')
+        + '</select></label>'
+      : '';
+    let x = 0;
+    const områden = väg.områden.map((a, i) => {
+      const förra = i > 0 ? väg.områden[i - 1] : null;
+      const ikon = a.klart ? (a.bemästrat ? IKON.krona : IKON.bock) : a.läge === 'last' || a.läge === 'nasta' ? IKON.lås : String(i + 1);
+      const lägesText = a.bemästrat ? 'Bemästrat' : a.klart ? 'Klart' : a.läge === 'aktuellt' ? 'Pågår'
+        : a.läge === 'oppet' ? 'Öppet' : a.läge === 'nasta' ? 'Nästa område' : 'Låst';
+      const visaSteg = a.läge !== 'last';
+      const noder = visaSteg ? a.nivåer.concat(a.mästare ? [a.mästare] : []).map(n => nodHtml(n, o, väg, XLED[x++ % XLED.length])).join('') : '';
+      return '<li class="nl-omr nl-omr-' + a.läge + (a.bemästrat ? ' nl-omr-bem' : '') + '">'
+        + '<div class="nl-omr-huvud">'
+        + '<span class="nl-omr-ik" aria-hidden="true">' + ikon + '</span>'
+        + '<span class="nl-omr-text"><span class="nl-omr-et">Område ' + (i + 1) + '</span><b>' + esc(a.namn) + '</b></span>'
+        + '<span class="nl-omr-lage">' + esc(lägesText) + (a.bemästrat || !a.nivåer.length ? '' : '<em>' + a.klara + '/' + a.nivåer.length + '</em>') + '</span>'
+        + '</div>'
+        + (visaSteg
+            ? '<ol class="upg-stig nl-stig">' + noder + '</ol>'
+            : '<p class="nl-omr-las">' + IKON.lås + 'Öppnas när du klarat ' + esc(förra ? förra.namn : 'området före') + '.</p>')
+        + '</li>';
+    }).join('');
+    return '<div class="nl-grupp nl-vag-rubrik"><h3>Din väg</h3>' + välj + '</div>'
+      + '<ol class="nl-vag" aria-label="' + esc('Din väg i ' + banaNamn(väg.amne, väg.arskurs)) + '">' + områden
+      + (väg.helaKlar ? '<li class="nl-mal-flagga"><span>' + IKON.pokal + '</span><b>Banan är klar</b></li>' : '')
+      + '</ol>';
+  }
+
+  function nodHtml(n, o, väg, led) {
+    const läge = n.klar ? 'klar' : n.aktuell ? 'aktuell' : n.öppen ? 'oppen' : 'last';
+    const ärÖppen = o.öppen === n.niva.id;
+    const nyss = o.nyss || {};
+    const mästare = n.sort === 'mastare';
+    const ikon = mästare ? IKON.krona : n.klar ? IKON.bock : n.öppen ? IKON.spela : IKON.lås;
+    return '<li class="upg-nod ' + läge + (mästare ? ' mastare' : '') + (n.niva.lastext ? ' las' : '') + (ärÖppen ? ' vald' : '')
+      + (nyss.klar === n.niva.id ? ' nyss-klar' : '') + (nyss.oppen === n.niva.id ? ' nyss-oppen' : '') + '" style="--x:' + led + '">'
+      + '<button type="button" class="upg-nod-knapp" data-nl-nod="' + esc(n.niva.id) + '" aria-expanded="' + (ärÖppen ? 'true' : 'false') + '"'
+      + ' aria-label="' + esc(stegTitel(n.niva) + ', ' + (n.klar ? 'klar, ' + n.stjarnor + ' av 3 stjärnor' : n.aktuell ? 'nästa steg' : n.öppen ? 'öppen' : 'låst')) + '">'
+      + ikon
+      + (n.aktuell ? '<span class="upg-nod-bubbla" aria-hidden="true">' + (n.pågår ? 'Fortsätt' : mästare ? 'Provet' : 'Börja') + '</span>' : '')
+      + '</button>'
+      + '<span class="upg-nod-namn">' + esc(mästare ? 'Mästarprov' : n.niva.titel) + '</span>'
+      + (n.klar ? stjärnRad(n.stjarnor, 3, 'upg-stj-sm')
+          : n.framsteg ? prickar(n.framsteg.klara, n.framsteg.totalt, 'nl-nod-prickar')
+          : n.given ? '<span class="upg-nod-given">Från studiehjälparen</span>' : '')
+      + (ärÖppen ? nodKort(n, o, väg) : '')
+      + '</li>';
+  }
+
+  function nodKort(n, o, väg) {
     const niva = n.niva;
-    const i = noder.indexOf(n);
-    const förra = i > 0 ? noder[i - 1].niva : null;
-    const frågor = niva.antal_fragor ? niva.antal_fragor + ' frågor · ungefär ' + Math.max(2, Math.round(niva.antal_fragor * 0.5)) + ' minuter' : '';
-    let knapp, text;
+    const mästare = n.sort === 'mastare';
+    const i = väg.steg.indexOf(n);
+    const förra = i > 0 ? väg.steg.slice(0, i).reverse().find(x => x.sort === 'vanlig') : null;
+    let text = '', knapp = '';
     if (!n.öppen) {
-      text = 'Klara "' + (förra ? förra.titel : 'nivån före') + '" först, så öppnas den här.';
-      knapp = '';
+      text = mästare ? 'Klara alla nivåer i ' + niva.omrade + ' först, så öppnas provet.'
+        : 'Klara "' + (förra ? förra.niva.titel : 'nivån före') + '" först, så öppnas den här.';
     } else {
       text = n.klar
-        ? 'Klarad med ' + n.stjarnor + (n.stjarnor === 1 ? ' stjärna' : ' stjärnor') + '. Gör om den för fler, det bästa resultatet räknas.'
+        ? 'Klarad med ' + n.stjarnor + (n.stjarnor === 1 ? ' stjärna' : ' stjärnor')
+          + (mästare ? (n.stjarnor >= BEMÄSTRAD ? '. Området är bemästrat.' : '. Två stjärnor bemästrar området.') : '. Gör om den för fler, det bästa resultatet räknas.')
+        : n.framsteg ? 'Du har börjat: ' + n.framsteg.klara + ' av ' + n.framsteg.totalt + ' uppgifter klara. Det du svarat är sparat.'
         : n.pågår ? 'Du har börjat. Det du svarat är sparat.'
-        : n.given ? 'Din studiehjälpare har gett dig den här.' : '';
-      knapp = '<button type="button" class="btn btn-primary btn-sm" data-upg-starta="' + esc(niva.id) + '">'
-        + (n.klar ? 'Gör om' : n.pågår ? 'Fortsätt' : 'Starta') + '</button>';
+        : n.given ? 'Din studiehjälpare har gett dig den här.'
+        : mästare ? 'Blandade frågor ur hela området. Klarar du det med minst två stjärnor är området bemästrat.' : '';
+      knapp = '<button type="button" class="btn btn-primary btn-sm" data-nl-starta="' + esc(niva.id) + '">'
+        + (n.pågår ? 'Fortsätt' : n.klar ? 'Gör om' : mästare ? 'Gör provet' : 'Starta') + '</button>';
     }
+    const fakta = [omfattning(niva, o.katalog), niva.lastext ? 'Läsförståelse' : '',
+      n.xp ? 'Du har fått ' + xpText(n.xp) + ' här' : ''].filter(Boolean).join(' · ');
     return '<div class="upg-nod-kort">'
-      + '<b>' + esc(niva.titel) + '</b>'
+      + '<b>' + esc(stegTitel(niva)) + '</b>'
       + (niva.beskrivning ? '<p>' + esc(niva.beskrivning) + '</p>' : '')
-      + (frågor ? '<span class="upg-nod-fakta">' + esc(frågor) + '</span>' : '')
+      + (fakta ? '<span class="upg-nod-fakta">' + esc(fakta) + '</span>' : '')
+      + (n.framsteg ? prickar(n.framsteg.klara, n.framsteg.totalt) : '')
       + (text ? '<p class="upg-nod-lage">' + esc(text) + '</p>' : '')
-      + knapp
+      + '<div class="upg-nod-atg">' + knapp
+      + (n.första ? '<button type="button" class="upg-lank" data-upg-genomgang="' + esc((n.senast || n.första).id) + '">Se rättningen</button>' : '')
+      + '</div></div>';
+  }
+
+  /* ---------- repetitionen ---------- */
+  function repetitionHtml(o, väg) {
+    const r = väg.repetition;
+    if (!r) return '';
+    const missade = antalMissade(o.läge, väg.amne, väg.arskurs);
+    const någotKlart = väg.steg.some(x => x.klar);
+    if (!missade && !någotKlart) return '';
+    return '<div class="nl-rep">'
+      + '<span class="nl-rep-ik">' + IKON.repetera + '</span>'
+      + '<div class="nl-rep-text"><b>' + esc(missade ? 'Repetera det du missat' : 'Repetera blandat') + '</b>'
+      + '<span>' + esc(missade
+          ? missade + (missade === 1 ? ' uppgift' : ' uppgifter') + ' du svarat fel på förut. Sitter de nu ger de sina XP.'
+          : 'Blandade uppgifter ur nivåerna du klarat, så att det sitter kvar.') + '</span></div>'
+      + '<button type="button" class="btn btn-ghost btn-sm" data-nl-starta="' + esc(r.niva.id) + '">Repetera</button>'
       + '</div>';
   }
 
   /* ============================================================
-     RÄTTNINGEN PER OMRÅDE (Min utveckling)
+     DIN UTVECKLING
+     o: { host, katalog, forsok, uppgifter, läge, progress, historik,
+          rapporter, bokningar, elevNamn, alla (visa alla rättade) }
+     ============================================================ */
+  function ritaUtveckling(o) {
+    const host = o.host;
+    if (!host) return;
+    const l = o.läge;
+    const d = underlag(o);
+    const vem = o.elevNamn || 'eleven';
+    const f = o.forsok || [];
+    const klara = f.filter(x => x.klar_at).sort((a, b) => Date.parse(b.klar_at) - Date.parse(a.klar_at));
+
+    /* ---------- talen ---------- */
+    const u = l && l.uppgifter;
+    /* Mästarproven finns först med Fas 23.2:s bank, och bara i områden
+       med minst två nivåer. Texterna nämner dem inte innan de finns. */
+    const harProv = (o.katalog || []).some(n => n.aktiv && n.sort === 'mastare');
+    const ruta = (v, rubrik, förklaring, ikon) => '<div>'
+      + (ikon ? '<span class="nl-tal-ik">' + IKON[ikon] + '</span>' : '')
+      + '<b>' + v + '</b><span>' + esc(rubrik) + '</span><small>' + esc(förklaring) + '</small></div>';
+    const tal = '<div class="nl-tal">'
+      + (l ? ruta(tusen(l.xp), 'XP totalt', '+' + tusen(l.xp_vecka) + ' den här veckan.', 'blixt') : '')
+      + (l ? ruta(String(l.serie.nu) + '<i> ' + (l.serie.nu === 1 ? 'dag' : 'dagar') + '</i>', 'Serien',
+          l.serie.basta ? 'Rekordet är ' + l.serie.basta + (l.serie.basta === 1 ? ' dag.' : ' dagar.') : 'Den börjar med första klara nivån.', 'låga') : '')
+      + ruta(String(d.klaradeNivåer), 'Nivåer klarade', d.klaradeNivåer
+          ? (d.treStjärnor ? d.treStjärnor + ' med tre stjärnor.' : 'Tre stjärnor är allt rätt direkt.')
+          : 'Den första väntar under Din väg.', 'flagga')
+      + ruta(String(d.helaOmråden), 'Områden klara', d.bemästrade ? d.bemästrade + ' av dem bemästrade.'
+          : harProv ? 'Mästarprovet bemästrar ett område.' : 'Klart när varje nivå i det är klarad.', 'krona')
+      + (u ? ruta(tusen(u.klara), 'Uppgifter klarade', 'Olika uppgifter som ' + vem + ' svarat rätt på.', 'bock') : '')
+      + (u && u.forsta ? ruta(Math.round(u.forsta_ratt / u.forsta * 100) + '<i> %</i>', 'Rätt direkt',
+          tusen(u.forsta_ratt) + ' av ' + tusen(u.forsta) + ' första svar.', 'stjärna') : '')
+      + '</div>';
+
+    /* ---------- ämnena ---------- */
+    const finns = banor(o.katalog);
+    const medAktivitet = new Set();
+    f.forEach(x => { const n = (o.katalog || []).find(k => k.id === x.niva_id); if (n) medAktivitet.add(n.amne + '|' + n.arskurs); });
+    ((l && l.banor) || []).forEach(b => medAktivitet.add(b.amne + '|' + b.arskurs));
+    const banRader = Array.from(medAktivitet).map(k => k.split('|'))
+      .filter(([a, ak]) => finns[a] && finns[a].includes(ak))
+      .sort((a, b) => (NX.AMNEN.indexOf(a[0]) - NX.AMNEN.indexOf(b[0])) || a[1].localeCompare(b[1]))
+      .map(([a, ak]) => {
+        const v = vägen({ katalog: o.katalog, amne: a, arskurs: ak, forsok: o.forsok, uppgifter: o.uppgifter });
+        const xp = ((l && l.banor) || []).find(b => b.amne === a && b.arskurs === ak);
+        return '<div class="nl-amnesrad">'
+          + '<div class="nl-amnesrad-topp"><b>' + esc(banaNamn(a, ak)) + '</b>'
+          + (xp ? '<span>' + esc(xpText(xp.xp)) + '</span>' : '') + '<strong>' + v.procent + ' %</strong></div>'
+          + '<span class="nl-mat" aria-hidden="true"><i style="width:' + v.procent + '%"></i></span>'
+          + '<small>' + v.klara + ' av ' + v.totalt + ' nivåer · ' + v.områden.filter(x => x.klart).length + ' av ' + v.områden.length + ' områden'
+          + (v.områden.some(x => x.bemästrat) ? ' · ' + v.områden.filter(x => x.bemästrat).length + ' bemästrade' : '') + '</small>'
+          + '</div>';
+      }).join('');
+
+    /* ---------- veckorna och dagarna ---------- */
+    const dagar = veckorOchDagar(l);
+
+    host.innerHTML =
+      block('I siffror', null, tal + (l
+        /* Reglerna fälls ihop: de läses en gång, talen varje dag. */
+        ? '<details class="nl-skala nl-regler"><summary>Så får du XP</summary><p>'
+          + esc('XP ger den som klarar något nytt: ' + regelText(l) + ' En uppgift ger XP en gång, första gången den sitter direkt. '
+            + 'Serien räknar dagar: en dag med en klar nivå, något klart från studiehjälparen eller ett pass räknas, och den bryts först när en hel dag gått utan något.')
+          + '</p></details>'
+        : ''))
+      + block('Dina ämnen', 'Hur långt du kommit i varje bana du gjort något i, räknat i nivåer.' + (harProv ? ' Mästarproven är kronan ovanpå.' : ''),
+          banRader || NXStudie.tomt('Inget ämne än', 'Gör en nivå under Din väg så syns banan här.'))
+      + (l ? block('XP per vecka', 'De åtta senaste veckorna. Den sista är den här veckan.', dagar.veckor) : '')
+      + (l ? block('De fyra senaste veckorna', 'En låga för varje dag med en klar nivå, något från studiehjälparen eller ett pass.', dagar.kalender) : '')
+      + block('Område för område', 'Hur stor del som var rätt första gången, per område. Har studiehjälparen bedömt samma område står bedömningen bredvid.',
+          områdesHtml(o.katalog, o.forsok, o.progress) || NXStudie.tomt('Inget område än', 'Områdena fylls i när en nivå är klar.'))
+      + bedömningHtml(o)
+      + passenHtml(o)
+      + block('Rättade nivåer <em>' + (klara.length ? klara.length + ' st' : '') + '</em>',
+          'Varje klar omgång, senaste först. Rättningen visar varje uppgift, vad som svarades och rätt svar.',
+          klara.length
+            ? '<div class="upg-forsok-lista">' + (o.alla ? klara : klara.slice(0, 6)).map(x => försöksRad(x, efterId(o.katalog)[x.niva_id])).join('') + '</div>'
+              + (klara.length > 6 ? '<button type="button" class="pl-mer" data-nl-alla aria-expanded="' + (o.alla ? 'true' : 'false') + '">'
+                  + (o.alla ? 'Visa färre' : 'Visa alla ' + klara.length) + '</button>' : '')
+            : NXStudie.tomt('Inga rättade nivåer än', 'När ' + vem + ' gjort en nivå står rättningen här.'), true)
+      + block('Märken', 'Stjärnorna räknar det bästa försöket på varje nivå: en för minst 60 procent rätt på första försöket, två för minst 80 och tre för allt rätt.',
+          '<div class="upg-marken">' + märken(d).map(m => märkesHtml(m)).join('') + '</div>');
+  }
+
+  function block(rubrik, förklaring, innehåll, rubrikHtml) {
+    return '<section class="dbox nl-block"><h5>' + (rubrikHtml ? rubrik : esc(rubrik)) + '</h5>'
+      + (förklaring ? '<p class="ut-forklaring">' + esc(förklaring) + '</p>' : '')
+      + innehåll + '</section>';
+  }
+
+  function regelText(l) {
+    const r = (l && l.regler) || { val: 10, svarare: 20, niva: 50, omrade: 100 };
+    return r.val + ' för en uppgift du väljer svaret på, ' + r.svarare + ' för en du skriver, bygger eller parar ihop själv, '
+      + r.niva + ' när en nivå klaras första gången och ' + r.omrade + ' för ett helt område.';
+  }
+
+  /* XP per vecka och de fyra senaste veckorna som en kalender, ur
+     nexlax_lage().dagar. Dagen är svensk tid, räknad i databasen. */
+  function veckorOchDagar(l) {
+    const perDag = {};
+    ((l && l.dagar) || []).forEach(x => { perDag[x.dag] = x; });
+    const idag = l && l.idag ? new Date(l.idag + 'T12:00:00') : new Date();
+    const måndag = new Date(idag);
+    måndag.setDate(idag.getDate() - ((idag.getDay() + 6) % 7));
+    const iso = d => NX.isoFor(d);
+
+    const veckor = [];
+    for (let v = 7; v >= 0; v--) {
+      const start = new Date(måndag); start.setDate(måndag.getDate() - v * 7);
+      let xp = 0;
+      for (let i = 0; i < 7; i++) { const d = new Date(start); d.setDate(start.getDate() + i); xp += Number((perDag[iso(d)] || {}).xp) || 0; }
+      veckor.push({ start, xp, nu: v === 0, nr: veckonummer(start) });
+    }
+    const högst = Math.max(50, ...veckor.map(v => v.xp));
+    const vHtml = '<div class="upg-veckor nl-veckor">' + veckor.map(v =>
+      '<div class="upg-vecka' + (v.nu ? ' nu' : '') + '" aria-label="' + esc('Vecka ' + v.nr + ': ' + xpText(v.xp)) + '">'
+      + '<b>' + (v.xp ? tusen(v.xp) : '') + '</b><i style="height:' + Math.round(v.xp / högst * 100) + '%"></i>'
+      + '<span>v.' + v.nr + '</span></div>').join('') + '</div>';
+
+    const start = new Date(måndag); start.setDate(måndag.getDate() - 21);
+    let kal = '<div class="nl-kal" role="table" aria-label="De fyra senaste veckorna">'
+      + '<div class="nl-kal-rad nl-kal-huvud" role="row">' + ['Må', 'Ti', 'On', 'To', 'Fr', 'Lö', 'Sö'].map(x => '<span role="columnheader">' + x + '</span>').join('') + '</div>';
+    for (let v = 0; v < 4; v++) {
+      kal += '<div class="nl-kal-rad" role="row">';
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start); d.setDate(start.getDate() + v * 7 + i);
+        const k = iso(d), x = perDag[k];
+        const framtid = d > idag;
+        const aktiv = x && (x.nivaer || x.uppgifter || x.pass);
+        const idagen = k === iso(idag);
+        const vad = aktiv ? [x.nivaer ? x.nivaer + (x.nivaer === 1 ? ' nivå' : ' nivåer') : '', x.uppgifter ? 'uppgift från studiehjälparen' : '',
+          x.pass ? 'pass' : '', x.xp ? xpText(x.xp) : ''].filter(Boolean).join(', ') : framtid ? '' : 'inget';
+        kal += '<span role="cell" class="nl-kal-dag' + (aktiv ? ' aktiv' : '') + (framtid ? ' framtid' : '') + (idagen ? ' idag' : '') + '"'
+          + ' aria-label="' + esc(NX.datumText(k) + (vad ? ': ' + vad : '')) + '">'
+          + (aktiv ? IKON.låga : '<i>' + d.getDate() + '</i>') + '</span>';
+      }
+      kal += '</div>';
+    }
+    kal += '</div>';
+    return { veckor: vHtml, kalender: kal };
+  }
+
+  /* ISO-veckans nummer, som det står i en svensk almanacka. */
+  function veckonummer(t) {
+    const d = new Date(t);
+    const tors = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7) + 3);
+    const förstaTors = new Date(tors.getFullYear(), 0, 4);
+    return 1 + Math.round(((tors - förstaTors) / 86400000 - 3 + ((förstaTors.getDay() + 6) % 7)) / 7);
+  }
+
+  /* Studiehjälparens bedömning, femstegsskalan (Fas 15.3). En människas
+     omdöme: det står för sig, bredvid maskinens rättning men aldrig
+     ihopräknat med den. */
+  function bedömningHtml(o) {
+    const p = o.progress || [];
+    if (!p.length) {
+      return block('Studiehjälparens bedömning', 'Efter några pass bedömer studiehjälparen vilka områden som sitter och vilka som behöver mer träning.',
+        NXStudie.tomt('Inga bedömningar än', 'De fylls i efter de första passen.'));
+    }
+    const H = o.historik || {};
+    const steg = x => NXStudie.stegFör(x);
+    const säkra = p.filter(x => steg(x) >= 4).length;
+    const gräns = Date.now() - 30 * 86400000;
+    const upp = p.filter(x => {
+      const h = H[x.id] || [];
+      if (!h.length) return false;
+      const före = h.filter(y => Date.parse(y.bedomd_at) < gräns);
+      const bas = före.length ? före[före.length - 1] : (h.length > 1 ? h[0] : null);
+      return !!bas && steg(x) > Number(bas.steg);
+    }).length;
+    const skala = '<details class="nl-skala"><summary>Så läser du skalan</summary><ol>'
+      + [1, 2, 3, 4, 5].map(n => '<li' + (n >= 4 ? ' class="ar-saker"' : '') + '><b>' + n + '</b><span><strong>'
+        + esc(NXStudie.STEG[n].text) + '</strong> ' + esc(NXStudie.STEG[n].vad) + '</span></li>').join('')
+      + '</ol></details>';
+    return block('Studiehjälparens bedömning',
+      säkra + ' av ' + p.length + (p.length === 1 ? ' område sitter' : ' områden sitter') + ' säkert (steg 4 eller 5)'
+        + (upp ? ', och ' + upp + ' har gått upp de senaste 30 dagarna.' : '.') + ' Bedömningen görs av studiehjälparen efter passen.',
+      skala + NXStudie.ämnesSammanfattning(p, H)
+        + '<div class="nl-bed-lista">' + NXStudie.progressPerÄmne(p, { historik: x => NXStudie.historikRad(H[x.id]) }) + '</div>');
+  }
+
+  /* Passen med studiehjälparen: hur många, hur mycket tid, närvaron och
+     vad de senaste rapporterna sagt ska övas. Ur samma rader som Mina
+     lektioner. */
+  function passenHtml(o) {
+    const rapporter = (o.rapporter || []).slice().sort((a, b) => String(b.lesson_date).localeCompare(String(a.lesson_date)));
+    if (!rapporter.length) return '';
+    const pass = id => (o.bokningar || []).find(b => b.id === id);
+    const minuter = r => r.narvaro === 'franvarande' ? 0
+      : Number(r.hallna_min) || Number(r.debiterade_min) || ((pass(r.booking_id) || {}).duration_min) || 60;
+    const tid = rapporter.reduce((n, r) => n + minuter(r), 0);
+    const medNärvaro = rapporter.filter(r => r.narvaro);
+    const närvarande = medNärvaro.filter(r => r.narvaro !== 'franvarande').length;
+    const timText = m => (m >= 60 ? (Math.round(m / 6) / 10).toString().replace('.', ',') + ' h' : m + ' min');
+    const fokus = rapporter.filter(r => r.needs_practice || r.next_focus).slice(0, 3);
+    return block('Med studiehjälparen',
+      'Pass räknas när rapporten är skriven. Hela rapporterna står under Mina lektioner.',
+      '<div class="nl-tal nl-tal-sma">'
+      + '<div><b>' + rapporter.length + '</b><span>Pass med rapport</span></div>'
+      + '<div><b>' + esc(timText(tid)) + '</b><span>Tid på passen</span></div>'
+      + (medNärvaro.length ? '<div><b>' + närvarande + '<i> av ' + medNärvaro.length + '</i></b><span>Närvaro</span></div>' : '')
+      + '</div>'
+      + (fokus.length ? '<div class="upg-pass-tidslinje nl-fokus">' + fokus.map(r => '<div class="upg-pass-rad">'
+          + '<time>' + esc(NX.datumText(String(r.lesson_date).slice(0, 10))) + '</time>'
+          + '<b>' + esc(((pass(r.booking_id) || {}).subject) || r.amne || 'Pass') + '</b>'
+          + (r.needs_practice ? '<p><em>Öva mer på:</em> ' + esc(r.needs_practice) + '</p>' : '')
+          + (r.next_focus ? '<p><em>Nästa fokus:</em> ' + esc(r.next_focus) + '</p>' : '')
+          + '</div>').join('') + '</div>' : ''));
+  }
+
+  /* ============================================================
+     RÄTTNINGEN PER OMRÅDE
      Det FÖRSTA klara försöket på varje nivå räknas, inte det bästa:
      efter ett försök har eleven sett svaren, och ett andra försök
-     mäter minnet av dem. Stjärnorna i banan räknar det bästa, för där
-     är det spelet. Här är det rättningen.
+     mäter minnet av dem. Stjärnorna på vägen räknar det bästa, för där
+     är det spelet. Här är det rättningen. Mästarprov och repetitioner
+     står utanför: deras frågor kommer ur andra nivåer.
      ============================================================ */
   function perOmråde(katalog, forsok) {
     const nivå = efterId(katalog);
-    const läge = perNivå(forsok);
+    const gjort = perNivå(forsok);
     const g = {};
-    Object.keys(läge).forEach(id => {
-      const l = läge[id], n = nivå[id];
-      if (!n || !l.första) return;
+    Object.keys(gjort).forEach(id => {
+      const l = gjort[id], n = nivå[id];
+      if (!n || !l.första || (n.sort && n.sort !== 'vanlig')) return;
       const k = n.amne + '|' + n.omrade;
       const x = g[k] || (g[k] = { amne: n.amne, omrade: n.omrade, ratt: 0, antal: 0, nivåer: 0, klara: 0, senast: null });
       x.ratt += Number(l.första.ratt_direkt) || 0;
@@ -459,25 +1126,6 @@ window.NXUppgifter = (function () {
       if (!x.senast || l.första.klar_at > x.senast) x.senast = l.första.klar_at;
     });
     return Object.values(g).sort((a, b) => String(b.senast).localeCompare(String(a.senast)));
-  }
-
-  /* Klarade nivåer per vecka, de åtta senaste veckorna. */
-  function perVecka(forsok) {
-    const veckor = [];
-    let v = veckonyckel(Date.now());
-    for (let i = 0; i < 8; i++) { veckor.unshift({ nyckel: v, antal: 0, ratt: 0, frågor: 0 }); v = veckanFöre(v); }
-    const efterNyckel = {};
-    veckor.forEach(x => { efterNyckel[x.nyckel] = x; });
-    (forsok || []).forEach(f => {
-      if (!f.klar_at) return;
-      const x = efterNyckel[veckonyckel(f.klar_at)];
-      if (!x) return;
-      if (f.godkand) x.antal++;
-      x.ratt += Number(f.ratt_direkt) || 0;
-      x.frågor += Number(f.antal) || 0;
-    });
-    veckor.forEach(x => { const [å, m, d] = x.nyckel.split('-').map(Number); x.nr = veckonummer(new Date(å, m - 1, d)); });
-    return veckor;
   }
 
   /* Brickorna i en ordna-fråga som text. En mening (stor bokstav
@@ -491,14 +1139,20 @@ window.NXUppgifter = (function () {
     const mening = /^[A-ZÅÄÖ]/.test(b[0]) && /[.?!]$/.test(b[b.length - 1]);
     return mening ? b.join(' ').replace(/\s+([.,!?:;])/g, '$1') : b.join(' → ');
   }
+  /* Paren i en matchning som text: "atom ↔ minsta delen". */
+  function parText(par) {
+    return (par || []).map(p => String(p[0]) + ' ↔ ' + String(p[1])).join(' · ');
+  }
 
   /* ============================================================
      SPELAREN
-     En nivå i helskärm, en fråga i taget, med tummen. Frågorna kommer
+     En nivå i helskärm, en uppgift i taget, med tummen. Frågorna kommer
      från niva_starta() utan facit; varje svar går till niva_svara(),
-     som rättar det. Fel svar kommer tillbaka sist, tills allt är rätt.
+     som rättar det och säger hur många XP det gav. Fel svar kommer
+     tillbaka sist, tills allt är rätt.
 
-     o: { supa, niva, elev, katalog, forsok, uppgifter, onStäng(ändrat) }
+     o: { supa, niva, elev, katalog, forsok, uppgifter, pågående, läge,
+          hämtaLäge() → Promise<läge|null>, onStäng({ ändrat, klar, oppen }) }
      ============================================================ */
   let öppenSpelare = null;
 
@@ -513,8 +1167,10 @@ window.NXUppgifter = (function () {
       '<div class="upg-spel-ram">'
       + '<div class="upg-spel-topp">'
       + '<button type="button" class="upg-spel-stang" data-spel-stang aria-label="Sluta">' + IKON.kryss + '</button>'
-      + '<span class="upg-spel-mat" role="progressbar" aria-label="Rätt besvarade frågor" aria-valuemin="0"><i></i></span>'
+      + '<span class="upg-spel-mat" role="progressbar" aria-label="Rätt besvarade uppgifter" aria-valuemin="0"><i></i></span>'
       + '<span class="upg-spel-tal" aria-hidden="true"></span>'
+      + '<button type="button" class="upg-spel-textknapp" data-spel-text hidden aria-label="Visa texten">' + IKON.bok + '</button>'
+      + '<span class="upg-spel-xp" aria-live="polite" hidden></span>'
       + '</div>'
       + '<div class="upg-spel-kropp"></div>'
       + '<div class="upg-spel-fot">'
@@ -527,12 +1183,16 @@ window.NXUppgifter = (function () {
     const knappar = rot.querySelector('.upg-spel-knappar');
     const mätare = rot.querySelector('.upg-spel-mat');
     const talEl = rot.querySelector('.upg-spel-tal');
+    const xpEl = rot.querySelector('.upg-spel-xp');
+    const textKnapp = rot.querySelector('[data-spel-text]');
 
     let T = null;
     let ändrat = false;
     let stänger = false;
+    let senastKlar = null, senastÖppnad = null;
     let forsok = (o.forsok || []).slice();
-    const märkenFöre = new Set(märken(underlag(o.katalog, forsok, o.uppgifter)).filter(m => m.klart).map(m => m.id));
+    const märkenFöre = new Set(märken(underlag({ katalog: o.katalog, forsok, uppgifter: o.uppgifter, läge: o.läge }))
+      .filter(m => m.klart).map(m => m.id));
 
     /* ---------- in och ut ---------- */
     const bakom = Array.from(document.body.children).filter(el => el !== rot && !el.inert);
@@ -558,6 +1218,7 @@ window.NXUppgifter = (function () {
     async function påBakåt() {
       if (stänger) { städa(); return; }
       historik = false;
+      if (T && T.textÖppen) { stängText(); try { history.pushState({ upgSpel: true }, '', location.href); historik = true; } catch (e) { /* inbäddad */ } return; }
       if (mittINivån() && !(await frågaOmSluta())) {
         try { history.pushState({ upgSpel: true }, '', location.href); historik = true; } catch (e) { /* inbäddad */ }
         return;
@@ -595,20 +1256,29 @@ window.NXUppgifter = (function () {
       document.documentElement.classList.remove('upg-spelar');
       rot.remove();
       if (fokusFöre && fokusFöre.isConnected && fokusFöre.focus) fokusFöre.focus({ preventScroll: true });
-      if (typeof o.onStäng === 'function') o.onStäng(ändrat);
+      if (typeof o.onStäng === 'function') o.onStäng({ ändrat, klar: senastKlar, oppen: senastÖppnad });
     }
 
+    /* Ett drag med en bricka följs av ett klick på samma bricka. Det
+       klicket ska inte också flytta den. */
+    let draSlut = 0;
     rot.addEventListener('click', e => {
       if (e.target.closest('[data-spel-stang]')) { stäng(); return; }
+      if (e.target.closest('[data-spel-text]')) { T && T.textÖppen ? stängText() : visaText(); return; }
+      if (e.target.closest('[data-text-stang]')) { stängText(); return; }
+      if (Date.now() - draSlut < 350) return;
       const alt = e.target.closest('[data-alt]');
       if (alt && T && T.läge === 'svara') { väljAlt(Number(alt.dataset.alt)); return; }
       const bricka = e.target.closest('[data-bricka]');
       if (bricka && T && T.läge === 'svara') { flyttaBricka(Number(bricka.dataset.bricka)); return; }
+      const par = e.target.closest('[data-par]');
+      if (par && T && T.läge === 'svara') { väljPar(par.dataset.par, Number(par.dataset.i)); return; }
       const k = e.target.closest('[data-spel]');
       if (!k) return;
       const vad = k.dataset.spel;
       if (vad === 'kolla') kolla();
       else if (vad === 'vidare') vidare();
+      else if (vad === 'last') börjaFrågorna();
       else if (vad === 'igen') starta(T.niva);
       else if (vad === 'nasta' && T.nästa) starta(T.nästa);
       else if (vad === 'klar') stäng();
@@ -622,11 +1292,11 @@ window.NXUppgifter = (function () {
     });
     function tangent(e) {
       if (!T || öppenSpelare !== rot || document.querySelector('.nx-fraga')) return;
-      if (e.key === 'Escape') { e.preventDefault(); stäng(); return; }
+      if (e.key === 'Escape') { e.preventDefault(); if (T.textÖppen) stängText(); else stäng(); return; }
       if (e.key === 'Enter') {
         /* Enter på ett alternativ eller en bricka väljer den, som en
            knapp ska. Annars skickade Enter in det förra valet. */
-        if (e.target && e.target.closest && e.target.closest('.upg-alt, .upg-bricka, [data-spel-stang]')) return;
+        if (e.target && e.target.closest && e.target.closest('.upg-alt, .upg-bricka, .upg-par-knapp, [data-spel-stang], [data-spel-text]')) return;
         const k = knappar.querySelector('.btn-primary:not(:disabled)');
         if (k) { e.preventDefault(); k.click(); }
         return;
@@ -639,27 +1309,64 @@ window.NXUppgifter = (function () {
     }
     document.addEventListener('keydown', tangent);
 
+    /* ---------- lästexten ---------- */
+    function textHtml(t) {
+      return String(t || '').split(/\n\s*\n/).map(s => '<p>' + esc(s.trim()) + '</p>').join('');
+    }
+    function visaText() {
+      if (!T || !T.lastext || T.textÖppen) return;
+      T.textÖppen = true;
+      const ark = document.createElement('div');
+      ark.className = 'upg-textark';
+      ark.setAttribute('role', 'dialog');
+      ark.setAttribute('aria-label', 'Texten');
+      ark.innerHTML = '<div class="upg-textark-box"><div class="upg-textark-topp"><b>Texten</b>'
+        + '<button type="button" class="upg-spel-stang" data-text-stang aria-label="Stäng texten">' + IKON.kryss + '</button></div>'
+        + '<div class="upg-textark-inne upg-lastext">' + textHtml(T.lastext) + '</div></div>';
+      rot.appendChild(ark);
+      void ark.offsetWidth;
+      ark.classList.add('open');
+      textKnapp.setAttribute('aria-pressed', 'true');
+      const s = ark.querySelector('[data-text-stang]');
+      if (s) s.focus({ preventScroll: true });
+    }
+    function stängText() {
+      if (!T) return;
+      T.textÖppen = false;
+      const ark = rot.querySelector('.upg-textark');
+      if (ark) ark.remove();
+      textKnapp.setAttribute('aria-pressed', 'false');
+      textKnapp.focus({ preventScroll: true });
+    }
+
     /* ---------- en nivå ---------- */
     async function starta(niva) {
       T = { niva, data: null, kö: [], klara: 0, total: 0, svarade: 0, fråga: null, svar: null, ordning: null,
-            läge: 'hämtar', resultat: null, start: Date.now(), nästa: null, felSenast: null };
-      rot.setAttribute('aria-label', niva.titel);
+            läge: 'hämtar', resultat: null, start: Date.now(), nästa: null, xp: 0, lastext: null, textÖppen: false };
+      rot.setAttribute('aria-label', stegTitel(niva));
       besked.className = 'upg-besked';
       besked.innerHTML = '';
       knappar.innerHTML = '';
-      kropp.innerHTML = '<div class="upg-spel-laddar"><b>' + esc(niva.titel) + '</b><span>Hämtar frågorna</span></div>';
+      kropp.innerHTML = '<div class="upg-spel-laddar"><b>' + esc(stegTitel(niva)) + '</b><span>Hämtar uppgifterna</span></div>';
       mätare.firstChild.style.width = '0%';
       talEl.textContent = '';
+      xpEl.hidden = true;
+      xpEl.textContent = '';
+      textKnapp.hidden = true;
+      const ark = rot.querySelector('.upg-textark');
+      if (ark) ark.remove();
 
       const { data, error } = await supa.rpc('niva_starta', { p_niva: niva.id, p_elev: o.elev });
       if (öppenSpelare !== rot) return;
       if (error) {
-        kropp.innerHTML = '<div class="upg-spel-fel"><b>Nivån gick inte att starta</b><p>' + esc(NX.felText(error)) + '</p></div>';
+        kropp.innerHTML = '<div class="upg-spel-fel"><b>' + esc(niva.sort === 'repetition' ? 'Repetitionen gick inte att starta' : 'Nivån gick inte att starta')
+          + '</b><p>' + esc(NX.felText(error)) + '</p></div>';
         knappar.innerHTML = '<button type="button" class="btn btn-primary btn-block" data-spel="klar">Stäng</button>';
         return;
       }
       ändrat = true;
       T.data = data;
+      T.lastext = (data.niva && data.niva.lastext) || niva.lastext || null;
       const klara = new Set(data.klara || []);
       T.total = (data.fragor || []).length;
       T.klara = klara.size;
@@ -667,10 +1374,30 @@ window.NXUppgifter = (function () {
       T.kö = (data.fragor || []).filter(f => !klara.has(f.id));
       uppdateraMätare();
       if (!T.kö.length) {
-        kropp.innerHTML = '<div class="upg-spel-fel"><b>Den här nivån är redan klar</b><p>Stäng och starta den igen för ett nytt försök.</p></div>';
+        kropp.innerHTML = '<div class="upg-spel-fel"><b>Den här nivån är redan klar</b><p>Stäng och starta den igen för en ny omgång.</p></div>';
         knappar.innerHTML = '<button type="button" class="btn btn-primary btn-block" data-spel="klar">Stäng</button>';
         return;
       }
+      if (T.lastext) {
+        textKnapp.hidden = false;
+        T.läge = 'läser';
+        kropp.innerHTML = '<div class="upg-las">'
+          + '<p class="upg-fraga-typ">Läs texten</p>'
+          + '<h2 class="upg-fraga-text" tabindex="-1">' + esc(niva.titel) + '</h2>'
+          + '<div class="upg-lastext">' + textHtml(T.lastext) + '</div>'
+          + '<p class="upg-las-not">' + IKON.bok + 'Texten finns kvar under frågorna, bakom knappen med boken.</p></div>';
+        knappar.innerHTML = '<button type="button" class="btn btn-primary btn-block" data-spel="last">'
+          + (T.klara ? 'Fortsätt med frågorna' : 'Till frågorna') + '</button>';
+        const h = kropp.querySelector('h2');
+        if (h) h.focus({ preventScroll: true });
+        kropp.scrollTop = 0;
+        return;
+      }
+      nästaFråga();
+    }
+
+    function börjaFrågorna() {
+      if (!T || T.läge !== 'läser') return;
       nästaFråga();
     }
 
@@ -686,6 +1413,7 @@ window.NXUppgifter = (function () {
       T.fråga = T.kö.shift();
       T.svar = null;
       T.brickor = null;
+      T.par = null;
       T.läge = 'svara';
       besked.className = 'upg-besked';
       besked.innerHTML = '';
@@ -706,7 +1434,14 @@ window.NXUppgifter = (function () {
     function ritaFråga() {
       const f = T.fråga;
       let svar = '';
-      if (f.typ === 'val') {
+      if (ärSant(f)) {
+        /* Sant eller falskt: två stora knappar, alltid Sant till vänster. */
+        T.ordning = [0, 1];
+        svar = '<div class="upg-sant" role="group" aria-label="Sant eller falskt">'
+          + '<button type="button" class="upg-alt upg-sant-ja" data-alt="0" aria-pressed="false">' + IKON.bock + '<span>Sant</span></button>'
+          + '<button type="button" class="upg-alt upg-sant-nej" data-alt="1" aria-pressed="false">' + IKON.kryss + '<span>Falskt</span></button>'
+          + '</div>';
+      } else if (f.typ === 'val') {
         T.ordning = blandat((f.alternativ || []).length);
         svar = '<div class="upg-val" role="group" aria-label="Svarsalternativ">' + T.ordning.map((i, nr) =>
           '<button type="button" class="upg-alt" data-alt="' + i + '" aria-pressed="false">'
@@ -716,16 +1451,30 @@ window.NXUppgifter = (function () {
         svar = '<input class="upg-skriv inp" type="text" autocomplete="off" autocapitalize="off" autocorrect="off"'
           + ' spellcheck="false" enterkeyhint="done" maxlength="200" aria-label="Ditt svar" placeholder="Ditt svar"'
           + (f.numerisk ? ' inputmode="decimal"' : '') + '>';
+      } else if (f.typ === 'para') {
+        /* Matchning: vänstersidan i ordning, högersidan blandad av
+           databasen. Ett par får ett nummer och en ton på båda sidor,
+           så att det syns utan att färgen bär det ensam. */
+        T.par = { v: (f.vanster || []).slice(), h: (f.hoger || []).slice(), till: {}, vald: null };
+        svar = '<div class="upg-para" role="group" aria-label="Para ihop">'
+          + '<div class="upg-para-kol" aria-label="Vänster">' + T.par.v.map((t, i) =>
+            '<button type="button" class="upg-par-knapp" data-par="v" data-i="' + i + '" aria-pressed="false">'
+            + '<span class="upg-par-nr" aria-hidden="true"></span><span class="upg-par-text">' + esc(t) + '</span></button>').join('') + '</div>'
+          + '<div class="upg-para-kol" aria-label="Höger">' + T.par.h.map((t, i) =>
+            '<button type="button" class="upg-par-knapp" data-par="h" data-i="' + i + '" aria-pressed="false">'
+            + '<span class="upg-par-nr" aria-hidden="true"></span><span class="upg-par-text">' + esc(t) + '</span></button>').join('') + '</div>'
+          + '</div><p class="upg-para-not">Tryck på en ruta till vänster och sedan på den som hör ihop med den till höger.</p>';
       } else {
         T.brickor = (f.brickor || []).map((text, i) => ({ i, text, lagd: false }));
         T.rad = [];
         svar = '<div class="upg-rad" aria-label="Ditt svar"></div>'
           + '<div class="upg-brickor" role="group" aria-label="Brickor">' + T.brickor.map(b =>
-            '<button type="button" class="upg-bricka" data-bricka="' + b.i + '">' + esc(b.text) + '</button>').join('') + '</div>';
+            '<button type="button" class="upg-bricka" data-bricka="' + b.i + '">' + esc(b.text) + '</button>').join('') + '</div>'
+          + '<p class="upg-para-not">Tryck på brickorna i rätt ordning, eller dra dem dit.</p>';
       }
       kropp.innerHTML = '<div class="upg-fraga">'
-        + '<p class="upg-fraga-typ">' + esc(TYPTEXT[f.typ] || '') + '</p>'
-        + '<h2 class="upg-fraga-text" tabindex="-1">' + esc(f.fraga) + '</h2>'
+        + '<p class="upg-fraga-typ">' + esc(typText(f)) + '</p>'
+        + '<h2 class="upg-fraga-text" tabindex="-1">' + frågaHtml(f.fraga) + '</h2>'
         + svar + '</div>';
       kropp.scrollTop = 0;
       const rubrik = kropp.querySelector('.upg-fraga-text');
@@ -743,15 +1492,65 @@ window.NXUppgifter = (function () {
       sättKnapp();
     }
 
-    /* En bricka flyttas mellan banken och raden. I banken lämnar den
-       en tom plats efter sig: brickorna under ska inte hoppa när man
-       tar en, för det är nästa man ska trycka på. */
-    function flyttaBricka(i) {
+    /* ---------- matchningen ---------- */
+    /* Ett tryck på en parad ruta löser upp paret. Annars väljs rutan,
+       och ett tryck på en ruta på andra sidan gör ett par av dem, åt
+       vilket håll man än börjar. */
+    function väljPar(sida, i) {
+      const P = T.par;
+      if (!P) return;
+      const vIPar = sida === 'v' ? (i in P.till ? i : null)
+        : Object.keys(P.till).map(Number).find(k => P.till[k] === i);
+      if (vIPar !== null && vIPar !== undefined) {
+        delete P.till[vIPar];
+        P.vald = null;
+      } else if (!P.vald || P.vald.sida === sida) {
+        P.vald = P.vald && P.vald.sida === sida && P.vald.i === i ? null : { sida, i };
+      } else {
+        P.till[sida === 'v' ? i : P.vald.i] = sida === 'h' ? i : P.vald.i;
+        P.vald = null;
+      }
+      ritaPar();
+      T.svar = Object.keys(P.till).length === P.v.length ? P.v.map((_, k) => P.h[P.till[k]]) : null;
+      sättKnapp();
+    }
+    function ritaPar() {
+      const P = T.par;
+      const nummer = {};
+      Object.keys(P.till).map(Number).sort((a, b) => a - b).forEach((v, n) => { nummer['v' + v] = n + 1; nummer['h' + P.till[v]] = n + 1; });
+      kropp.querySelectorAll('.upg-par-knapp').forEach(b => {
+        const nr = nummer[b.dataset.par + b.dataset.i];
+        const vald = !!(P.vald && P.vald.sida === b.dataset.par && P.vald.i === Number(b.dataset.i));
+        b.classList.toggle('parad', !!nr);
+        b.classList.toggle('vald', vald);
+        b.dataset.ton = nr ? String((nr - 1) % 6 + 1) : '';
+        b.setAttribute('aria-pressed', vald || nr ? 'true' : 'false');
+        b.querySelector('.upg-par-nr').textContent = nr ? String(nr) : '';
+        b.setAttribute('aria-label', b.querySelector('.upg-par-text').textContent + (nr ? ', par ' + nr : vald ? ', vald' : ''));
+      });
+    }
+
+    /* ---------- brickorna ----------
+       En bricka flyttas mellan banken och raden med ett tryck, eller
+       dras dit. I banken lämnar den en tom plats efter sig: brickorna
+       under ska inte hoppa när man tar en, för det är nästa man ska
+       trycka på. */
+    function flyttaBricka(i, till) {
       const b = T.brickor[i];
       if (!b) return;
-      b.lagd = !b.lagd;
-      if (b.lagd) T.rad.push(i); else T.rad = T.rad.filter(x => x !== i);
+      if (till === undefined) {
+        b.lagd = !b.lagd;
+        if (b.lagd) T.rad.push(i); else T.rad = T.rad.filter(x => x !== i);
+      } else {
+        T.rad = T.rad.filter(x => x !== i);
+        if (till === null) { b.lagd = false; }
+        else { b.lagd = true; T.rad.splice(Math.max(0, Math.min(till, T.rad.length)), 0, i); }
+      }
+      ritaBrickor();
+    }
+    function ritaBrickor() {
       const rad = kropp.querySelector('.upg-rad');
+      if (!rad) return;
       rad.innerHTML = T.rad.map(x =>
         '<button type="button" class="upg-bricka" data-bricka="' + x + '">' + esc(T.brickor[x].text) + '</button>').join('');
       kropp.querySelectorAll('.upg-brickor .upg-bricka').forEach(k => {
@@ -763,6 +1562,75 @@ window.NXUppgifter = (function () {
       T.svar = T.rad.length ? T.rad.map(x => T.brickor[x].text) : null;
       sättKnapp();
     }
+
+    /* Dra och släpp. Ett drag börjar först när fingret rört sig: ett
+       tryck utan rörelse är ett klick, som förut. Spöket följer
+       fingret med transform och ritas ovanpå allt; raden visar var
+       brickan hamnar med ett streck. Ingen HTML5-drag: den finns inte
+       på en telefon. */
+    let drag = null;
+    rot.addEventListener('pointerdown', e => {
+      const b = e.target.closest('.upg-bricka');
+      if (!b || !T || T.läge !== 'svara' || !T.brickor || b.disabled || e.button > 0) return;
+      drag = { b, i: Number(b.dataset.bricka), x: e.clientX, y: e.clientY, id: e.pointerId, igång: false, spöke: null, streck: null, till: null };
+    });
+    rot.addEventListener('pointermove', e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.igång) {
+        if (Math.hypot(dx, dy) < 8) return;
+        drag.igång = true;
+        const r = drag.b.getBoundingClientRect();
+        drag.dx = drag.x - r.left; drag.dy = drag.y - r.top;
+        drag.spöke = drag.b.cloneNode(true);
+        drag.spöke.className = 'upg-bricka upg-spoke';
+        drag.spöke.style.width = r.width + 'px';
+        rot.appendChild(drag.spöke);
+        drag.b.classList.add('drar');
+        try { drag.b.setPointerCapture(e.pointerId); } catch (x) { /* äldre webbläsare */ }
+      }
+      e.preventDefault();
+      drag.spöke.style.transform = 'translate(' + (e.clientX - drag.dx) + 'px,' + (e.clientY - drag.dy) + 'px)';
+      dragMål(e.clientX, e.clientY);
+    });
+    function dragMål(x, y) {
+      const rad = kropp.querySelector('.upg-rad');
+      if (!rad) return;
+      const r = rad.getBoundingClientRect();
+      const iRaden = y >= r.top - 30 && y <= r.bottom + 30 && x >= r.left - 20 && x <= r.right + 20;
+      if (!iRaden) { drag.till = null; if (drag.streck) { drag.streck.remove(); drag.streck = null; } return; }
+      const brickor = Array.from(rad.querySelectorAll('.upg-bricka')).filter(k => Number(k.dataset.bricka) !== drag.i);
+      let plats = brickor.length;
+      for (let k = 0; k < brickor.length; k++) {
+        const br = brickor[k].getBoundingClientRect();
+        const sammaRad = y >= br.top - 6 && y <= br.bottom + 6;
+        if ((sammaRad && x < br.left + br.width / 2) || y < br.top - 6) { plats = k; break; }
+      }
+      drag.till = plats;
+      if (!drag.streck) { drag.streck = document.createElement('span'); drag.streck.className = 'upg-infoga'; drag.streck.setAttribute('aria-hidden', 'true'); }
+      const före = brickor[plats];
+      if (före) rad.insertBefore(drag.streck, före); else rad.appendChild(drag.streck);
+    }
+    function slutaDra(e, avbryt) {
+      if (!drag || (e && e.pointerId !== drag.id)) return;
+      const d = drag;
+      drag = null;
+      if (!d.igång) return;
+      draSlut = Date.now();
+      if (d.spöke) d.spöke.remove();
+      if (d.streck) d.streck.remove();
+      d.b.classList.remove('drar');
+      if (avbryt) return;
+      if (d.till !== null) {
+        /* Platsen räknades bland de ANDRA brickorna i raden, och det är
+           bland dem flyttaBricka sätter in den. */
+        flyttaBricka(d.i, d.till);
+      } else if (d.b.closest('.upg-rad')) {
+        flyttaBricka(d.i, null);
+      }
+    }
+    rot.addEventListener('pointerup', e => slutaDra(e, false));
+    rot.addEventListener('pointercancel', e => slutaDra(e, true));
 
     function harSvar() {
       if (!T.fråga) return false;
@@ -781,7 +1649,10 @@ window.NXUppgifter = (function () {
       if (T.läge !== 'svara' && T.läge !== 'nätfel') return;
       if (!harSvar()) return;
       const f = T.fråga;
-      const p_svar = f.typ === 'val' ? { val: T.svar } : f.typ === 'skriv' ? { text: String(T.svar).trim() } : { ordning: T.svar };
+      const p_svar = f.typ === 'val' ? { val: T.svar }
+        : f.typ === 'skriv' ? { text: String(T.svar).trim() }
+        : f.typ === 'para' ? { par: T.svar }
+        : { ordning: T.svar };
       T.läge = 'rättar';
       const knapp = knappar.querySelector('button');
       if (knapp) { knapp.setAttribute('aria-busy', 'true'); knapp.textContent = 'Rättar…'; }
@@ -805,12 +1676,14 @@ window.NXUppgifter = (function () {
     function facitText(f, facit) {
       if (f.typ === 'val') return f.alternativ[Number(facit)] || '';
       if (f.typ === 'ordna') return brickText(facit);
+      if (f.typ === 'para') return parText(facit);
       return String(facit || '');
     }
 
     function visaBesked(f, svar) {
       T.läge = 'besked';
       const rätt = !!svar.ratt;
+      const xp = Number(svar.xp) || 0;
       if (rätt) T.klara++;
       else T.kö.push(f);
       uppdateraMätare();
@@ -827,18 +1700,36 @@ window.NXUppgifter = (function () {
       } else if (f.typ === 'skriv') {
         const fält = kropp.querySelector('.upg-skriv');
         if (fält) fält.classList.add(rätt ? 'ar-ratt' : 'ar-fel');
+      } else if (f.typ === 'para') {
+        const ska = {};
+        (svar.facit || []).forEach(p => { ska[p[0]] = p[1]; });
+        kropp.querySelectorAll('.upg-par-knapp[data-par="v"]').forEach(b => {
+          const i = Number(b.dataset.i);
+          const gav = T.par.h[T.par.till[i]];
+          b.classList.add(gav === ska[T.par.v[i]] ? 'ar-ratt' : 'ar-fel');
+        });
       } else {
         const rad = kropp.querySelector('.upg-rad');
         if (rad) rad.classList.add(rätt ? 'ar-ratt' : 'ar-fel');
       }
 
+      if (xp) {
+        T.xp += xp;
+        xpEl.hidden = false;
+        xpEl.innerHTML = IKON.blixt + '<span>+' + tusen(T.xp) + '</span>';
+        xpEl.classList.remove('studs');
+        void xpEl.offsetWidth;
+        xpEl.classList.add('studs');
+      }
+
       const heja = HEJA[Math.floor(Math.random() * HEJA.length)];
       besked.className = 'upg-besked ' + (rätt ? 'ratt' : 'fel');
       besked.innerHTML = '<div class="upg-besked-topp"><span class="upg-besked-ikon">' + (rätt ? IKON.bock : IKON.kryss) + '</span>'
-        + '<b>' + esc(rätt ? heja : 'Inte riktigt') + '</b></div>'
+        + '<b>' + esc(rätt ? heja : 'Inte riktigt') + '</b>'
+        + (xp ? '<span class="upg-besked-xp">+' + xp + ' XP</span>' : '') + '</div>'
         + (!rätt ? '<p class="upg-besked-facit">Rätt svar: <span>' + esc(facitText(f, svar.facit)) + '</span></p>' : '')
         + (svar.forklaring ? '<p class="upg-besked-varfor">' + esc(svar.forklaring) + '</p>' : '')
-        + (!rätt ? '<p class="upg-besked-igen">Frågan kommer tillbaka i slutet.</p>' : '');
+        + (!rätt ? '<p class="upg-besked-igen">Uppgiften kommer tillbaka i slutet.</p>' : '');
 
       if (svar.klar && svar.resultat) T.resultat = svar.resultat;
       knappar.innerHTML = '<button type="button" class="btn btn-primary btn-block" data-spel="vidare">'
@@ -855,7 +1746,7 @@ window.NXUppgifter = (function () {
     }
 
     /* ---------- resultatet ---------- */
-    function slut() {
+    async function slut() {
       T.läge = 'slut';
       rot.classList.remove('ratt', 'fel');
       besked.className = 'upg-besked';
@@ -865,44 +1756,106 @@ window.NXUppgifter = (function () {
       const nya = Math.max(0, stj - (Number(r.forut) || 0));
       const sek = Math.round((Date.now() - T.start) / 1000);
       const tid = Math.floor(sek / 60) + ':' + String(sek % 60).padStart(2, '0');
+      const mästare = T.niva.sort === 'mastare';
 
-      /* Försöket läggs till lokalt, så att märkena och nästa nivå räknas
-         på det som just hände. Vyn hämtar om allt när spelaren stängs. */
+      /* Försöket läggs till lokalt, så att märkena och nästa steg räknas
+         på det som just hände. Vyn hämtar om allt när spelaren stängs.
+         Vägen före jämförs mot försöken i DEN HÄR spelaren, inte vyns:
+         efter "Nästa" har vyn inte sett nivån före. */
+      const förut = forsok;
       forsok = forsok.concat([{ id: T.data.forsok, niva_id: T.niva.id, startad_at: new Date(T.start).toISOString(),
         klar_at: r.klar_at || new Date().toISOString(), antal: r.antal, ratt_direkt: r.ratt_direkt,
         stjarnor: stj, godkand: !!r.godkand }]);
-      const nuKlara = märken(underlag(o.katalog, forsok, o.uppgifter)).filter(m => m.klart && !märkenFöre.has(m.id));
-      nuKlara.forEach(m => märkenFöre.add(m.id));
 
-      const noder = banan(o.katalog, T.niva.amne, T.niva.arskurs, forsok, o.uppgifter);
-      const här = noder.findIndex(n => n.niva.id === T.niva.id);
-      const nästa = here => noder.slice(here + 1).find(n => n.öppen && !n.klar);
-      const nn = r.godkand && här >= 0 ? nästa(här) : null;
-      T.nästa = nn ? nn.niva : null;
+      const vägFöre = vägen({ katalog: o.katalog, amne: T.niva.amne, arskurs: T.niva.arskurs, forsok: förut, uppgifter: o.uppgifter });
+      const väg = vägen({ katalog: o.katalog, amne: T.niva.amne, arskurs: T.niva.arskurs, forsok, uppgifter: o.uppgifter });
+      const öppnaFöre = new Set(vägFöre.steg.filter(x => x.öppen).map(x => x.niva.id));
+      const nyöppnad = väg.steg.find(x => x.öppen && !x.klar && !öppnaFöre.has(x.niva.id) && x.niva.id !== T.niva.id);
+      const omr = väg.områden.find(a => a.nivåer.some(x => x.niva.id === T.niva.id) || (a.mästare && a.mästare.niva.id === T.niva.id));
+      const omrFöre = vägFöre.områden.find(a => omr && a.namn === omr.namn);
+      const omrKlart = !!(omr && omr.klart && omrFöre && !omrFöre.klart);
+      const bemästrat = !!(mästare && omr && omr.bemästrat && !(omrFöre && omrFöre.bemästrat));
+      T.nästa = r.godkand ? (nyöppnad ? nyöppnad.niva : (väg.aktuell && väg.aktuell.niva.id !== T.niva.id ? väg.aktuell.niva : null)) : null;
+      if (r.godkand) senastKlar = T.niva.id;
+      if (nyöppnad) senastÖppnad = nyöppnad.niva.id;
+
+      const xpRader = [
+        Number(r.xp_fragor) ? ['Uppgifter', r.xp_fragor] : null,
+        Number(r.xp_niva) ? [mästare ? 'Mästarprovet klarat' : T.niva.sort === 'repetition' ? 'Repetitionen klar' : 'Nivån klarad', r.xp_niva] : null,
+        Number(r.xp_omrade) ? ['Området ' + T.niva.omrade + ' klart', r.xp_omrade] : null
+      ].filter(Boolean);
+      const xpSumma = xpRader.reduce((s, x) => s + Number(x[1]), 0);
+      const harXp = 'xp_fragor' in r;
+      /* Märket i toppen räknade det som kom i den här spelaren. En
+         omgång som fortsattes hade svar från förut, och nivåns XP kommer
+         först nu: märket visar omgångens summa, samma som raden nedanför. */
+      if (harXp && xpSumma) {
+        xpEl.hidden = false;
+        xpEl.innerHTML = IKON.blixt + '<span>+' + tusen(xpSumma) + '</span>';
+        xpEl.classList.remove('studs');
+        void xpEl.offsetWidth;
+        xpEl.classList.add('studs');
+      }
 
       kropp.innerHTML = '<div class="upg-slut' + (r.godkand ? ' klarad' : '') + '">'
         + '<div class="upg-slut-stj">' + [1, 2, 3].map(i =>
             '<i class="' + (i <= stj ? 'tand' : '') + '" style="--i:' + i + '">' + IKON.stjärna + '</i>').join('') + '</div>'
-        + '<h2 tabindex="-1">' + esc(r.godkand ? (stj === 3 ? 'Allt rätt direkt!' : 'Nivån klar!') : 'Nästan!') + '</h2>'
+        + '<h2 tabindex="-1">' + esc(r.godkand
+            ? (bemästrat ? 'Området är bemästrat!' : stj === 3 ? 'Allt rätt direkt!' : mästare ? 'Provet klart!' : 'Nivån klar!')
+            : 'Nästan!') + '</h2>'
         + '<p class="upg-slut-rad"><b>' + (r.ratt_direkt || 0) + ' av ' + (r.antal || 0) + '</b> rätt på första försöket · ' + esc(tid) + '</p>'
+        + (harXp
+            ? '<div class="upg-slut-xp">'
+              + (xpRader.length
+                  ? xpRader.map(x => '<div><span>' + esc(x[0]) + '</span><b>+' + tusen(x[1]) + ' XP</b></div>').join('')
+                    + '<div class="summa"><span>Den här omgången</span><b>' + IKON.blixt + '+' + tusen(xpSumma) + ' XP</b></div>'
+                  : '<div class="summa"><span>Inga nya XP</span><b>Du kunde redan det här</b></div>')
+              + '</div>'
+            : '')
+        + '<div class="upg-slut-serie" hidden></div>'
         + (r.godkand
             ? (nya ? '<p class="upg-slut-ny">+' + nya + (nya === 1 ? ' ny stjärna' : ' nya stjärnor') + '</p>'
                    : stj < 3 ? '<p class="upg-slut-not">Gör om nivån när du vill. Allt rätt direkt ger tre stjärnor.</p>' : '')
-            : '<p class="upg-slut-not">Du behöver minst 60 procent rätt på första försöket för att nästa nivå ska öppnas. Försök igen, nu har du sett svaren.</p>')
-        + (nuKlara.length
-            ? '<div class="upg-slut-marken"><p>' + (nuKlara.length === 1 ? 'Nytt märke' : 'Nya märken') + '</p>'
-              + nuKlara.map(m => märkesHtml(m, { nytt: true })).join('') + '</div>'
-            : '')
+            : '<p class="upg-slut-not">Du behöver minst 60 procent rätt på första försöket för att klara nivån. Försök igen, nu har du sett svaren.</p>')
+        + (omrKlart ? '<p class="upg-slut-upp">' + IKON.flagga + 'Området ' + esc(T.niva.omrade) + ' är klart.'
+            + (omr.mästare ? ' Mästarprovet är öppet.' : '') + '</p>' : '')
+        + (nyöppnad && !omrKlart ? '<p class="upg-slut-upp">' + IKON.öppetLås + 'Nu är ' + esc(stegTitel(nyöppnad.niva)) + ' öppen.</p>' : '')
+        + '<div class="upg-slut-marken" hidden></div>'
         + '</div>';
       const h = kropp.querySelector('h2');
       if (h) h.focus({ preventScroll: true });
       mätare.firstChild.style.width = '100%';
 
       knappar.innerHTML = r.godkand
-        ? (T.nästa ? '<button type="button" class="btn btn-primary btn-block" data-spel="nasta">Nästa nivå: ' + esc(T.nästa.titel) + '</button>' : '')
+        ? (T.nästa ? '<button type="button" class="btn btn-primary btn-block" data-spel="nasta">Nästa: ' + esc(stegTitel(T.nästa)) + '</button>' : '')
           + '<button type="button" class="btn ' + (T.nästa ? 'btn-ghost' : 'btn-primary') + ' btn-block" data-spel="klar">Klar</button>'
         : '<button type="button" class="btn btn-primary btn-block" data-spel="igen">Försök igen</button>'
           + '<button type="button" class="btn btn-ghost btn-block" data-spel="klar">Klar för nu</button>';
+
+      /* Serien och märkena efter omgången, ur databasen. Kommer de inte
+         står resultatet ändå. */
+      let läge = null;
+      if (typeof o.hämtaLäge === 'function') {
+        try { läge = await o.hämtaLäge(); } catch (e) { läge = null; }
+      }
+      if (öppenSpelare !== rot || !T || T.läge !== 'slut') return;
+      const serie = kropp.querySelector('.upg-slut-serie');
+      if (läge && läge.serie && serie) {
+        serie.hidden = false;
+        serie.innerHTML = '<span class="upg-slut-laga' + (läge.serie.idag ? ' tand' : '') + '">' + IKON.låga + '</span>'
+          + '<span><b>' + läge.serie.nu + ' ' + dagarText(läge.serie.nu) + '</b>'
+          + '<small>' + esc(läge.serie.idag ? 'Dagens mål är klart · ' + xpText(läge.xp) + ' totalt' : xpText(läge.xp) + ' totalt') + '</small></span>';
+      }
+      const nuKlara = märken(underlag({ katalog: o.katalog, forsok, uppgifter: o.uppgifter, läge: läge || o.läge }))
+        .filter(m => m.klart && !märkenFöre.has(m.id));
+      nuKlara.forEach(m => märkenFöre.add(m.id));
+      const mk = kropp.querySelector('.upg-slut-marken');
+      if (nuKlara.length && mk) {
+        mk.hidden = false;
+        mk.innerHTML = '<p>' + (nuKlara.length === 1 ? 'Nytt märke' : 'Nya märken') + '</p>'
+          + nuKlara.map(m => märkesHtml(m, { nytt: true })).join('');
+      }
+      if (läge) o.läge = läge;
     }
 
     starta(o.niva);
@@ -919,18 +1872,23 @@ window.NXUppgifter = (function () {
     if (!v) return '';
     if (q.typ === 'val') return (q.alternativ || [])[Number(v.val)] || '–';
     if (q.typ === 'skriv') return String(v.text || '');
+    if (q.typ === 'para') {
+      const vänster = (q.facit || []).map(p => p[0]);
+      return (v.par || []).map((h, i) => (vänster[i] || '?') + ' ↔ ' + h).join(' · ');
+    }
     return brickText(v.ordning);
   }
   function facitVisning(q) {
     if (q.typ === 'val') return (q.alternativ || [])[Number(q.facit)] || '';
     if (q.typ === 'ordna') return brickText(q.facit);
+    if (q.typ === 'para') return parText(q.facit);
     return String(q.facit || '');
   }
 
   function genomgångHtml(g) {
     const f = g.forsok, n = g.niva;
     return '<div class="upg-genom-huvud">'
-      + '<span class="upg-genom-etikett">' + esc([n.amne.split(' / ')[0], NX.årskursText(n.arskurs), n.omrade].join(' · ')) + '</span>'
+      + '<span class="upg-genom-etikett">' + esc([kortÄmne(n.amne), NX.årskursText(n.arskurs), n.omrade].join(' · ')) + '</span>'
       + '<h3 id="upg-genom-t">' + esc(n.titel) + '</h3>'
       + '<p>' + stjärnRad(f.stjarnor) + '<span><b>' + f.ratt_direkt + ' av ' + f.antal + '</b> rätt på första försöket · '
       + esc(NX.datumText(String(f.klar_at).slice(0, 10))) + '</span></p>'
@@ -940,7 +1898,7 @@ window.NXUppgifter = (function () {
           const först = svar[0];
           const direkt = !!(först && först.ratt);
           return '<li class="' + (direkt ? 'direkt' : 'efter') + '">'
-            + '<p class="upg-genom-fraga"><span class="upg-genom-tecken">' + (direkt ? IKON.bock : IKON.kryss) + '</span>' + esc(q.fraga) + '</p>'
+            + '<p class="upg-genom-fraga"><span class="upg-genom-tecken">' + (direkt ? IKON.bock : IKON.kryss) + '</span><span class="upg-genom-q">' + frågaHtml(q.fraga) + '</span></p>'
             + '<div class="upg-genom-svar">' + svar.map((s, i) =>
                 '<span class="' + (s.ratt ? 'ratt' : 'fel') + '"><em>' + (i === 0 ? 'Svar' : 'Sedan') + '</em> ' + esc(svarText(q, s)) + '</span>').join('')
             + '</div>'
@@ -987,24 +1945,42 @@ window.NXUppgifter = (function () {
 
   /* Studiehjälparens förhandsvisning: frågorna och facit, innan nivån
      ges som uppgift. Läser niva_fragor direkt; bara godkända
-     studiehjälpare och admin har en policy där. */
+     studiehjälpare och admin har en policy där. Ett Mästarprov och en
+     repetition har inga egna frågor: de dras när eleven startar, och
+     förhandsvisningen säger varifrån. */
   async function förhandsvisa(supa, niva) {
-    const g = ruta('<div class="loading">Hämtar frågorna</div>', niva.titel);
+    const g = ruta('<div class="loading">Hämtar frågorna</div>', stegTitel(niva));
+    const huvud = '<div class="upg-genom-huvud">'
+      + '<span class="upg-genom-etikett">' + esc([kortÄmne(niva.amne), NX.årskursText(niva.arskurs), niva.omrade].join(' · ')) + '</span>'
+      + '<h3 id="upg-genom-t">' + esc(stegTitel(niva)) + '</h3>'
+      + (niva.beskrivning ? '<p>' + esc(niva.beskrivning) + '</p>' : '')
+      + '</div>';
+    if (niva.sort === 'mastare' || niva.sort === 'repetition') {
+      const katalog = await laddaKatalog(supa) || [];
+      const källor = banansSteg(katalog, niva.amne, niva.arskurs)
+        .filter(n => n.sort === 'vanlig' && !n.lastext && (niva.sort === 'repetition' || n.omrade === niva.omrade));
+      g.sätt(huvud + '<p class="upg-genom-varfor" style="margin-left:0">'
+        + esc(niva.sort === 'mastare'
+          ? 'Mästarprovet drar högst ' + MÄSTARPROV_MAX + ' uppgifter ur områdets nivåer, i ny ordning varje gång. Klarat med minst två stjärnor är området bemästrat. Uppgifterna dras ur:'
+          : 'Repetitionen drar upp till ' + REPETITION_MAX + ' uppgifter eleven senast svarade fel på i banan, och fyller på ur nivåer eleven klarat. Uppgifterna dras ur:')
+        + '</p><ol class="upg-genom-lista">' + källor.map(n => '<li class="forhand"><p class="upg-genom-fraga">'
+          + esc(n.titel) + '</p><p class="upg-genom-alt">' + esc(n.omrade + ' · ' + (n.antal_fragor || 0) + ' uppgifter') + '</p></li>').join('') + '</ol>');
+      return;
+    }
     const { data, error } = await supa.from('niva_fragor')
       .select('id, ordning, typ, fraga, alternativ, ratt, forklaring')
       .eq('niva_id', niva.id).eq('aktiv', true).order('ordning');
     if (error) { g.sätt('<div class="empty"><b>Frågorna gick inte att hämta</b><br><span>' + esc(NX.felText(error)) + '</span></div>'); return; }
     const facit = q => q.typ === 'val' ? (q.alternativ || [])[Number(q.ratt)]
       : q.typ === 'skriv' ? (q.ratt || []).join(' eller ')
+      : q.typ === 'para' ? parText(q.ratt)
       : brickText(q.ratt);
-    g.sätt('<div class="upg-genom-huvud">'
-      + '<span class="upg-genom-etikett">' + esc([niva.amne.split(' / ')[0], NX.årskursText(niva.arskurs), niva.omrade].join(' · ')) + '</span>'
-      + '<h3 id="upg-genom-t">' + esc(niva.titel) + '</h3>'
-      + (niva.beskrivning ? '<p>' + esc(niva.beskrivning) + '</p>' : '')
-      + '</div><ol class="upg-genom-lista">' + (data || []).map(q =>
-        '<li class="forhand"><span class="upg-genom-typ">' + esc(TYPTEXT[q.typ]) + '</span>'
-        + '<p class="upg-genom-fraga">' + esc(q.fraga) + '</p>'
-        + (q.typ === 'val' ? '<p class="upg-genom-alt">' + (q.alternativ || []).map(a => esc(a)).join(' · ') + '</p>' : '')
+    g.sätt(huvud
+      + (niva.lastext ? '<div class="upg-lastext upg-lastext-forhand">' + String(niva.lastext).split(/\n\s*\n/).map(s => '<p>' + esc(s.trim()) + '</p>').join('') + '</div>' : '')
+      + '<ol class="upg-genom-lista">' + (data || []).map(q =>
+        '<li class="forhand"><span class="upg-genom-typ">' + esc(typText(q)) + '</span>'
+        + '<p class="upg-genom-fraga">' + frågaHtml(q.fraga) + '</p>'
+        + (q.typ === 'val' && !ärSant(q) ? '<p class="upg-genom-alt">' + (q.alternativ || []).map(a => esc(a)).join(' · ') + '</p>' : '')
         + (q.typ === 'ordna' && q.alternativ ? '<p class="upg-genom-alt">Extra brickor: ' + q.alternativ.map(a => esc(a)).join(' · ') + '</p>' : '')
         + '<p class="upg-genom-facit">Rätt svar: <b>' + esc(facit(q)) + '</b></p>'
         + (q.forklaring ? '<p class="upg-genom-varfor">' + esc(q.forklaring) + '</p>' : '')
@@ -1024,7 +2000,7 @@ window.NXUppgifter = (function () {
     const först = mina[0];
     return '<div class="upg-resultat">' + stjärnRad(Number(bäst.stjarnor) || 0, 3, 'upg-stj-sm')
       + '<span>' + esc(först.ratt_direkt + ' av ' + först.antal + ' rätt första gången'
-        + (mina.length > 1 ? ', ' + mina.length + ' försök' : '')) + '</span>'
+        + (mina.length > 1 ? ', ' + mina.length + ' omgångar' : '')) + '</span>'
       + '<button type="button" class="upg-lank" data-upg-genomgang="' + esc(först.id) + '">Se rättningen</button>'
       + '</div>';
   }
@@ -1037,17 +2013,17 @@ window.NXUppgifter = (function () {
     return '<div class="upg-digital">'
       + '<span class="upg-digital-ikon">' + IKON.spela + '</span>'
       + '<span class="upg-digital-text"><b>' + esc(n.titel) + '</b><span>'
-      + esc(['Digital uppgift', n.omrade, n.antal_fragor ? n.antal_fragor + ' frågor' : ''].filter(Boolean).join(' · '))
+      + esc(['Nivå i NexLäx', n.omrade, n.antal_fragor ? n.antal_fragor + ' uppgifter' : ''].filter(Boolean).join(' · '))
       + '</span></span></div>'
       + uppgiftsResultat(h, forsok);
   }
 
-  /* Ett klart försök som rad i listan Rättade uppgifter. */
+  /* Ett klart försök som rad i listan Rättade nivåer. */
   function försöksRad(f, niva) {
     const n = niva || { titel: 'Nivå', amne: '', omrade: '' };
     return '<div class="upg-forsok-rad">'
-      + '<div class="upg-forsok-text"><b>' + esc(n.titel) + '</b>'
-      + '<span>' + esc([n.amne ? n.amne.split(' / ')[0] : '', n.omrade, NX.datumText(String(f.klar_at).slice(0, 10))].filter(Boolean).join(' · ')) + '</span></div>'
+      + '<div class="upg-forsok-text"><b>' + esc(stegTitel(n)) + '</b>'
+      + '<span>' + esc([n.amne ? kortÄmne(n.amne) : '', n.sort === 'mastare' ? '' : n.omrade, NX.datumText(String(f.klar_at).slice(0, 10))].filter(Boolean).join(' · ')) + '</span></div>'
       + '<div class="upg-forsok-tal">' + stjärnRad(Number(f.stjarnor) || 0, 3, 'upg-stj-sm')
       + '<span>' + esc(f.ratt_direkt + ' av ' + f.antal) + '</span></div>'
       + '<button type="button" class="btn btn-ghost btn-sm" data-upg-genomgang="' + esc(f.id) + '">Se rättningen</button>'
@@ -1067,7 +2043,7 @@ window.NXUppgifter = (function () {
       const p = bedömd[(r.amne + '|' + r.omrade).toLowerCase()];
       const nivå = andel >= 80 ? 'hog' : andel >= 60 ? 'mellan' : 'lag';
       return '<div class="upg-omrade">'
-        + '<div class="upg-omrade-topp"><b>' + esc(r.omrade) + '</b><span>' + esc(r.amne.split(' / ')[0]) + '</span>'
+        + '<div class="upg-omrade-topp"><b>' + esc(r.omrade) + '</b><span>' + esc(kortÄmne(r.amne)) + '</span>'
         + '<strong class="' + nivå + '">' + andel + ' %</strong></div>'
         + '<span class="upg-omrade-mat ' + nivå + '" aria-hidden="true"><i style="width:' + andel + '%"></i></span>'
         + '<p>' + esc(r.ratt + ' av ' + r.antal + ' rätt första gången, i ' + r.nivåer + (r.nivåer === 1 ? ' nivå' : ' nivåer')
@@ -1077,11 +2053,21 @@ window.NXUppgifter = (function () {
     }).join('') + '</div>';
   }
 
+  /* En rad om eleven i NexLäx, för studiehjälparen: XP, serien och hur
+     många nivåer som är klara. Ur samma nexlax_lage() som familjen ser. */
+  function sammanfattning(läge, forsok) {
+    const klara = new Set((forsok || []).filter(f => f.godkand).map(f => f.niva_id)).size;
+    if (!läge) return klara ? klara + (klara === 1 ? ' nivå klarad' : ' nivåer klarade') : '';
+    return [xpText(läge.xp), läge.serie ? läge.serie.nu + ' ' + dagarText(läge.serie.nu) : '',
+      klara + (klara === 1 ? ' nivå klarad' : ' nivåer klarade'),
+      Number(läge.xp_vecka) ? '+' + xpText(läge.xp_vecka) + ' den här veckan' : ''].filter(Boolean).join(' · ');
+  }
+
   return {
-    IKON, STJÄRNGRÄNS,
-    laddaKatalog, laddaFörsök, perNivå, banan, banor, förvaldÅrskurs, efterId,
-    underlag, märken, veckoserie, perOmråde, perVecka, stjärnRad,
-    ritaBana, ritaBelöningar, spela, genomgång, förhandsvisa,
-    uppgiftsResultat, digitalRad, försöksRad, områdesHtml
+    IKON, STJÄRNGRÄNS, BEMÄSTRAD,
+    laddaKatalog, laddaFörsök, laddaPågående, laddaLäge, perNivå, banor, förvaldÅrskurs, efterId,
+    vägen, nästaSteg, underlag, märken, perOmråde, stjärnRad, stegTitel, xpText, tusen, ärSant,
+    ritaVäg, ritaUtveckling, spela, genomgång, förhandsvisa,
+    uppgiftsResultat, digitalRad, försöksRad, områdesHtml, sammanfattning
   };
 })();

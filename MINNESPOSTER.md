@@ -42,7 +42,7 @@ färskare än den här posten.**
 Stacken: inget byggsteg, ingen pakethanterare, inget ramverk. Statiska
 filer i repotroten serveras direkt. Vanilla JS som IIFE:er på `window`
 (NX, NXStudie, NXArbete, NXMedia, NXKontakt, NXBetalning, NXTjanster,
-NXAgent, NXMotion, NXSamtycke). Backend: Supabase plus Deno edge functions. Mejl via
+NXAgent, NXMotion, NXSamtycke, NXUppgifter). Backend: Supabase plus Deno edge functions. Mejl via
 Resend. Modeller från Anthropic, bara i edge functions.
 
 Affären: familjen skickar intresseanmälan, Nextrum ringer och väljer
@@ -53,8 +53,10 @@ Ordlista: studiehjälpare (aldrig "lärare" utåt; "privatlärare" står
 bara i FAQ:n, för att säga att de inte är det), pass, rapport, underlag,
 betalning, tjänst, uppgift (det eleven gör mellan passen, `homework`;
 hette läxa till Fas 23.1, och i adminvyn betyder Uppgifter fortfarande
-adminens att göra-lista) och nivå (en digital uppgift i en bana per ämne
-och årskurs, `nivaer`). Faktura är sedan Fas 14.6 ett betalsätt familjen kan
+adminens att göra-lista), nivå (en digital uppgift i en bana per ämne
+och årskurs, `nivaer`) och NexLäx (studievyns sektion för banan, det
+studiehjälparen gett och utvecklingen; ersatte Uppgifter och Min
+utveckling 2026-09-29). Faktura är sedan Fas 14.6 ett betalsätt familjen kan
 välja per pass, efter passet. Flaggan `faktura` är på sedan 2026-09-27,
 och texterna säger det sedan dagen efter.
 
@@ -107,6 +109,18 @@ betyget är första svaret på varje fråga (3 stjärnor allt rätt, 2 minst
 klar av sig själv. Innehållet skrivs i `verktyg/uppgiftsbanken/` och blir
 en migration med `verktyg/bygg-uppgifter.py`. Märkena räknas ur
 försöken, belöningarna är inte pengar, och barnet har inget eget konto.
+NexLäx (Fas 23.2) samlar det i en sektion i studievyn, `#nexlax`, med
+Din väg och Din utveckling. XP räknas ur svaren och sparas aldrig: 10
+för ett val, 20 för skriv, ordna och matchning, en gång per fråga, 50
+för en nivå första gången och 100 för ett område (`intern.nexlax_*`,
+`nexlax_lage()`). Serien räknar dagar i svensk tid, med passdagar
+inräknade, bryts först efter en hel dag utan något och påminns aldrig
+om. Mästarprovet (områden med minst två nivåer) och repetitionen drar
+sina frågor ur banan, och banans procent räknar bara de vanliga
+nivåerna. Banken (Fas 23.3) har 40 banor i sex ämnen, skrivna från
+grunden mot Lgr22: inget kopieras ur nationella prov eller från nätet,
+för det är skyddat eller icke-kommersiellt. En fråga ska gå att förstå
+ensam, för Mästarprovet och repetitionen drar den ur sin nivå.
 
 Koden är svensk: identifierare, kommentarer, commit-meddelanden, filnamn,
 kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
@@ -240,6 +254,11 @@ vyn, kön fylldes, schemat gick — och varje mejlrad märktes tyst
 `loggad`. **Ett avstängt system och ett trasigt system ser likadana ut
 inifrån.** Bygger du en strömbrytare i en tabell: bygg reglaget i
 adminvyn i samma ändring.
+
+**PostgREST lämnar ut högst tusen rader per svar och säger inte att det
+finns fler.** En lista som växer hämtas därför med `NXStudie.hämtaAlla`
+(sida efter sida tills `count` är nått), aldrig med en enda `select`.
+Detaljen: `CLAUDE.md` avsnitt 3, Tusen rader.
 
 ---
 

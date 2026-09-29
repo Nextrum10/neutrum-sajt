@@ -34,9 +34,12 @@
     [typeof NX !== 'undefined' && typeof NX.esc === 'function', 'nextrum-app.js']
   ];
 
-  /* nextrum-studie.js: vakten över inloggningen kom sist (2026-09-29),
-     och alla tre vyerna anropar den i start(). */
-  var studieKlar = typeof NXStudie !== 'undefined' && !!NXStudie.vaktaInloggningen;
+  /* nextrum-studie.js: vakten över inloggningen och hämtaAlla kom sist
+     (2026-09-29), och alla tre vyerna anropar båda när de startar. En
+     gammal fil ur cachen utan hämtaAlla hade gett ett TypeError mitt i
+     hämtningen i stället för det här beskedet. */
+  var studieKlar = typeof NXStudie !== 'undefined' && !!NXStudie.vaktaInloggningen
+    && typeof NXStudie.hämtaAlla === 'function';
 
   if (ärAdmin) {
     krav.push(
@@ -87,9 +90,9 @@
       [studieKlar, 'nextrum-studie.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],
       [typeof NXBetalning !== 'undefined' && !!NXBetalning.passpris, 'nextrum-betalning.js'],
-      /* Fas 23.1: banan och spelaren i Uppgifter. En gammal fil i
-         cachen saknar områdesrättningen, som kom sist. */
-      [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.områdesHtml, 'nextrum-uppgifter.js']
+      /* NexLäx (Fas 23.2): vägen och spelaren. En gammal fil i cachen,
+         från när sektionen hette Uppgifter, saknar vägen. */
+      [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg, 'nextrum-uppgifter.js']
     );
   }
 

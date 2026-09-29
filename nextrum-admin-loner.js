@@ -61,7 +61,7 @@
   const { $, esc, säg, felText, isoFor } = NX;
   const { bekräfta, medan, tomt } = NXStudie;
   const kronor = NXBetalning.kronor;
-  const { S, UTB_LAGE, fråga, lönemånad, namnFör, pill, senasteLönemånad, tabell, väljare } = NXAdmin;
+  const { S, UTB_LAGE, fråga, hämtaAlla, lönemånad, namnFör, pill, senasteLönemånad, tabell, väljare } = NXAdmin;
 
   /* Anställningsnumren och bolagsfakta. Hämtas när sidan ritas första
      gången, och om efter varje ändring härifrån. */
@@ -477,9 +477,12 @@
      pass som inte finns i minnet slås upp, och en rad utan pass (passet
      borttaget) får månadens sista dag. */
   async function filensRader(godkända, månad) {
-    const { data, error } = await supa.from('payout_lines')
-      .select('payout_id, booking_id, beskrivning, minuter, timpenning_ore, belopp_ore')
-      .in('payout_id', godkända.map(u => u.id));
+    /* Alla rader (hämtaAlla): en fil med de tusen första hade nekats av
+       kontrollen att raderna summerar till underlaget, men först efter
+       att någon letat efter felet i fel ände. */
+    const { data, error } = await hämtaAlla('payout_lines',
+      'id, payout_id, booking_id, beskrivning, minuter, timpenning_ore, belopp_ore',
+      q => q.in('payout_id', godkända.map(u => u.id)));
     if (error) throw error;
     const rader = data || [];
 
