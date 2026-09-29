@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen och raderingen)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, raderingen och de delade dokumenten)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -43,8 +43,9 @@
 -- ai_texterna_och_avslutade_uppgifter_gallras, Fas 22.4 (timmen dras
 -- när förslaget skickas), manadskorningen_vacks_av_databasen,
 -- manadskorningen_gar_den_forsta, Fas 23.1 (de digitala uppgifterna),
--- personer_redigeras_och_raderas, manadskorningens_svar_blir_en_uppgift
--- och manadskorningens_svar_lases_den_forsta är körda.
+-- personer_redigeras_och_raderas, dokument_delas_med_personen,
+-- manadskorningens_svar_blir_en_uppgift och
+-- manadskorningens_svar_lases_den_forsta är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -1601,6 +1602,168 @@ select pg_temp.prova('9.10 admin lägger en fil under handlingens id', '00000000
 insert into utfall (test, ok, detalj)
 select '9.10 hinken dokument är privat', not b.public, 'public = ' || b.public
 from storage.buckets b where b.id = 'dokument';
+
+-- ---------- dokumentet delas med personen (dokument_delas_med_personen) ----------
+-- Leo 2026-09-29: ett anställningsavtal eller ett avtal med en familj
+-- ska personen själv kunna läsa, under Profil & inställningar →
+-- Dokument. Admin väljer personen. Personen når aldrig tabellen, bara
+-- mina_handlingar() och exakt den fil raden pekar ut; en annan fil i
+-- samma mapp är inte hens. Allt byggs i en deltransaktion som rullas
+-- tillbaka, så att handlingarna inte står kvar för proven längre ned.
+do $$
+declare
+  adm  constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  a    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  b    constant uuid := '00000000-0000-4000-8000-0000000000b1';
+  p    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  h1   constant uuid := '00000000-0000-4000-8000-00000000d0d1';
+  h2   constant uuid := '00000000-0000-4000-8000-00000000d0d2';
+  h3   constant uuid := '00000000-0000-4000-8000-00000000d0d3';
+  f1   constant text := '00000000-0000-4000-8000-00000000d0d1/1500000000001-avtal.pdf';
+  f1b  constant text := '00000000-0000-4000-8000-00000000d0d1/1500000000002-annat.pdf';
+  f2   constant text := '00000000-0000-4000-8000-00000000d0d2/1500000000003-kundavtal.pdf';
+  fel text; kod text;
+  a_lista uuid[]; a_filer text[]; a_tabell bigint; a_andra bigint; a_flytta bigint; a_upp text;
+  b_lista bigint; b_filer bigint; q_lista bigint; q_filer bigint;
+  p_fore bigint; p_filer_fore bigint; p_lista uuid[]; p_filer text[];
+  utan_person text; versaler text; kvar_p jsonb; n_audit bigint;
+begin
+  if to_regprocedure('public.mina_handlingar()') is null then
+    insert into utfall (test, ok, detalj)
+    values ('Dokument delas: migrationen dokument_delas_med_personen är körd', false,
+            'mina_handlingar() finns inte');
+    return;
+  end if;
+
+  begin
+    insert into public.handlingar (id, typ, titel, fil, mimetyp, kopplad_tabell, kopplad_id,
+                                   delad_med_personen, uppladdad_av)
+    values (h1, 'avtal', 'Provanställning A', f1, 'application/pdf', 'profiles', a::text, true, adm),
+           (h2, 'avtal', 'Kundavtal P', f2, 'application/pdf', 'profiles', p::text, false, adm),
+           -- Uppladdningen pågår: raden finns, filen inte än.
+           (h3, 'avtal', 'Halvfärdigt P', null, null, 'profiles', p::text, true, adm);
+    insert into storage.objects (bucket_id, name, owner) values
+      ('dokument', f1, adm), ('dokument', f1b, adm), ('dokument', f2, adm);
+
+    -- Studiehjälparen A: sitt avtal, bara den fil raden pekar ut, och
+    -- inget att skriva.
+    perform pg_temp.bli(a);
+    select array_agg(x.id) into a_lista from public.mina_handlingar() x;
+    select array_agg(o.name order by o.name) into a_filer
+      from storage.objects o where o.bucket_id = 'dokument';
+    select count(*) into a_tabell from public.handlingar;
+    update public.handlingar set delad_med_personen = false where id = h1;
+    get diagnostics a_andra = row_count;
+    update storage.objects set name = f1b where bucket_id = 'dokument' and name = f1;
+    get diagnostics a_flytta = row_count;
+    begin
+      insert into storage.objects (bucket_id, name, owner)
+      values ('dokument', '00000000-0000-4000-8000-00000000d0d1/1500000000009-eget.pdf', a);
+      a_upp := 'gick igenom';
+    exception when others then a_upp := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Studiehjälparen B och familj Q har inget delat med sig.
+    perform pg_temp.bli(b);
+    select count(*) into b_lista from public.mina_handlingar();
+    select count(*) into b_filer from storage.objects where bucket_id = 'dokument';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    perform pg_temp.bli(q);
+    select count(*) into q_lista from public.mina_handlingar();
+    select count(*) into q_filer from storage.objects where bucket_id = 'dokument';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Familj P: kundavtalet är inte delat än, och den halvfärdiga
+    -- handlingen har ingen fil.
+    perform pg_temp.bli(p);
+    select count(*) into p_fore from public.mina_handlingar();
+    select count(*) into p_filer_fore from storage.objects where bucket_id = 'dokument';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Admin delar kundavtalet. Delningen står i auditloggen.
+    perform pg_temp.bli(adm);
+    update public.handlingar set delad_med_personen = true where id = h2;
+    kvar_p := public.radering_lage('familj', p) -> 'star_kvar';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into n_audit from public.audit_logg
+     where tabell = 'handlingar' and objekt_id = h2::text and aktor = adm
+       and (efter ->> 'delad_med_personen')::boolean;
+
+    perform pg_temp.bli(p);
+    select array_agg(x.id) into p_lista from public.mina_handlingar() x;
+    select array_agg(o.name) into p_filer from storage.objects o where o.bucket_id = 'dokument';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Villkoren: en delning utan person, och ett id med versaler som
+    -- auth.uid() aldrig skriver.
+    begin
+      update public.handlingar set kopplad_tabell = null, kopplad_id = null where id = h1;
+      utan_person := 'gick igenom';
+    exception when others then utan_person := sqlstate;
+    end;
+    begin
+      update public.handlingar set kopplad_id = upper(a::text) where id = h1;
+      versaler := 'gick igenom';
+    exception when others then versaler := sqlstate;
+    end;
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm; kod := sqlstate;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Dokument delas', false, coalesce(kod, '') || ' ' || fel);
+    return;
+  end if;
+
+  insert into utfall (test, ok, detalj) values
+    ('Dokument delas: studiehjälparen ser sitt avtal', a_lista = array[h1], coalesce(a_lista::text, 'inget')),
+    ('Dokument delas: studiehjälparen läser bara filen raden pekar ut',
+      a_filer = array[f1], coalesce(a_filer::text, 'ingen fil')),
+    ('Dokument delas: studiehjälparen läser fortfarande inte tabellen', a_tabell = 0, 'rader: ' || a_tabell),
+    ('Dokument delas: studiehjälparen ändrar inte delningen', a_andra = 0, 'rader: ' || a_andra),
+    ('Dokument delas: studiehjälparen flyttar inte filen', a_flytta = 0, 'rader: ' || a_flytta),
+    ('Dokument delas: studiehjälparen laddar inte upp i mappen', a_upp = '42501', a_upp),
+    ('Dokument delas: en annan studiehjälpare ser ingenting', b_lista = 0 and b_filer = 0,
+      'lista ' || b_lista || ', filer ' || b_filer),
+    ('Dokument delas: en annan familj ser ingenting', q_lista = 0 and q_filer = 0,
+      'lista ' || q_lista || ', filer ' || q_filer),
+    ('Dokument delas: ett odelat avtal syns inte för familjen', p_fore = 0 and p_filer_fore = 0,
+      'lista ' || p_fore || ', filer ' || p_filer_fore),
+    ('Dokument delas: familjen ser avtalet när admin delat det, och en rad utan fil står inte med',
+      p_lista = array[h2] and p_filer = array[f2],
+      coalesce(p_lista::text, 'inget') || ' ' || coalesce(p_filer::text, 'ingen fil')),
+    ('Dokument delas: delningen står i auditloggen', n_audit = 1, 'rader: ' || n_audit),
+    ('Dokument delas: raderingsrutan räknar familjens handlingar',
+      (kvar_p ->> 'handlingar')::int = 2, coalesce(kvar_p::text, 'null')),
+    ('Dokument delas: nekas utan person', utan_person = '23514', utan_person),
+    ('Dokument delas: nekas med ett id som auth.uid() aldrig skriver', versaler = '23514', versaler);
+end $$;
+
+select pg_temp.prova('Dokument delas: anon når inte mina_handlingar', null,
+  array[$q$select * from public.mina_handlingar()$q$], 'nekad');
+
+insert into utfall (test, ok, detalj)
+select 'Dokument delas: mina_handlingar lämnar inte ut anteckningen',
+       coalesce(pg_get_function_result(f) not like '%anteckning%', false),
+       coalesce(pg_get_function_result(f), 'funktionen finns inte')
+  from (select to_regprocedure('public.mina_handlingar()') f) x;
+
+insert into utfall (test, ok, detalj)
+select 'Dokument delas: hinkens hjälpare nås av inloggade, inte av anon',
+       coalesce(f is not null and has_function_privilege('authenticated', f, 'execute')
+                and not has_function_privilege('anon', f, 'execute'), false),
+       coalesce(f::text, 'intern.handling_delad_med_mig finns inte')
+  from (select to_regprocedure('intern.handling_delad_med_mig(text)') f) x;
 
 -- Auditloggens vitlistor får bara nämna kolumner som finns. En
 -- felstavad kolumn i tg_argv ger inget fel — den loggar bara
