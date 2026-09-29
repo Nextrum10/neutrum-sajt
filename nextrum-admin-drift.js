@@ -755,7 +755,7 @@
   /* Vart en uppgift pekar, och vad det heter. Hittas inte raden
      visas tabellens namn — hellre det än en länk till ingenting. */
   const UPPG_MAL = {
-    bookings: '#bokningar', invoices: '#ekonomi/fakturor', payouts: '#ekonomi/utbetalningar',
+    bookings: '#bokningar', invoices: '#ekonomi/fakturor', payouts: '#loner',
     leads: '#leads', applications: '#ansokningar', profiles: '#familjer', students: '#elever',
     uppdrag: '#uppdrag', tjanster: '#katalog/tjanster', lesson_reports: '#lektioner'
   };

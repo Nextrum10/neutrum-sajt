@@ -634,7 +634,7 @@
       + dpRad(spärrad ? 'Avstängd för den här familjen' : 'Tillåten',
           spärrad ? 'Familjen kan bara betala med kort. Pass som redan valts för faktura faktureras ändå.'
             : (S.fakturaFlagga && S.fakturaFlagga.aktiv ? 'Familjen kan välja faktura på ett pass.'
-              : 'Faktura är avstängt för alla just nu, under Ekonomi → Fakturor.'),
+              : 'Faktura är avstängt för alla just nu, under Betalningar → Inställningar.'),
           '<button class="btn btn-ghost btn-sm" type="button" data-fakturasparr="' + esc(p.id) + '" data-sparra="'
             + (spärrad ? '0' : '1') + '">' + (spärrad ? 'Tillåt faktura' : 'Stäng av faktura') + '</button>')
       + dpRubrik('Fakturor')

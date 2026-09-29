@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
 <link rel="stylesheet" href="nextrum-vy.css?v=e4a5688c">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=220bd9b0">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=16a29c3d">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -999,318 +999,150 @@
         </section>
 
         <!-- ============================================================
-             EKONOMI
-             Kortbetalningen från familjen och underlaget till
-             studiehjälparen är två sidor av samma pass. Två flikar, inte
-             två sidor. Familjens månadsfaktura revs i Fas 14.2; de
-             fakturor som finns står sist, som historik.
+             BETALNINGAR (omgjord 2026-09-29)
+
+             Leo: "gör om betalningar. den behöver vara mycket snyggare,
+             lätt tolkad, lättanvänd och mycket mer funktionell".
+
+             Familjernas pengar, i sex flikar. Att göra är allt som väntar
+             på er i alla månader, med knappen som gör det på raden; Alla
+             betalningar är månadens betalningar, en rad var; Fakturor är
+             flödet från fakturapass till betald faktura; Bokslut stänger
+             månaden; Köpta timmar är planerna, klippkorten och timbanken;
+             Inställningar är strömbrytarna och Stripe.
+
+             Studiehjälparnas underlag bor under Löner, som redan hade
+             samma rader och knappar, och månadskörningen under Fakturor,
+             där dess utkast hamnar. Gamla adresser (#ekonomi/kortbetalningar,
+             /avvikelser, /utbetalningar, /korning) leds rätt i FLYTTAT i
+             nextrum-admin.js. Allt ritas av nextrum-admin-ekonomi.js.
              ============================================================ -->
         <section class="vy-sek" data-sek="ekonomi" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Betalningar</h2>
-              <p>Vad familjerna har betalat och vad studiehjälparna ska få, månad för månad. Familjen betalar med kort eller mot faktura från Fortnox, och studiehjälparen får betalt den 25:e.</p>
+              <p>Familjernas betalningar: vad som kommit in, vad som väntar och vad ni behöver göra. Studiehjälparnas lön står under Löner.</p>
             </div>
           </div>
 
-          <!-- Fas 20.2: månaden. Allt under flikarna gäller den månad som
-               är vald här: pass och betalningar på passets datum, underlag
-               och fakturor på sin period. Leo: "filtrera och stänga böckerna
-               ... månadsvis". Raden ritas av NXStudie.månadsval, och en
-               stängd månad bär märket Stängd. -->
-          <div id="eko-manader" aria-label="Välj månad för ekonomin"></div>
-
-          <!-- Bokslutet först sedan Fas 20.2: när en månad väljs är frågan
-               först hur månaden ser ut och om den kan stängas. Kortbetalningarna
-               bredvid, som familjens vanliga betalväg. Fakturorna sedan
-               Fas 14.6, när familjen kan välja faktura och utkasten ska
-               läggas in i Fortnox. -->
-          <div class="vy-flikar" role="tablist" aria-label="Betalningar eller utbetalningar">
-            <button class="vy-flik" type="button" role="tab" data-flik="bokslut"
-                    id="flik-bokslut" aria-controls="panel-bokslut">Bokslut
-              <span class="vy-flik-mark" id="flik-bokslut-mark" hidden></span></button>
-            <button class="vy-flik" type="button" role="tab" data-flik="kortbetalningar"
-                    id="flik-kortbetalningar" aria-controls="panel-kortbetalningar">Kortbetalningar</button>
+          <div class="vy-flikar" role="tablist" aria-label="Delar av Betalningar">
+            <button class="vy-flik" type="button" role="tab" data-flik="attgora"
+                    id="flik-attgora" aria-controls="panel-attgora">Att göra
+              <span class="vy-flik-mark" id="flik-attgora-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="betalningar"
+                    id="flik-betalningar" aria-controls="panel-betalningar">Alla betalningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="fakturor"
                     id="flik-fakturor" aria-controls="panel-fakturor">Fakturor
               <span class="vy-flik-mark" id="flik-fakt-mark" hidden></span></button>
-            <button class="vy-flik" type="button" role="tab" data-flik="utbetalningar"
-                    id="flik-utbetalningar" aria-controls="panel-utbetalningar">Utbetalningar</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="avvikelser"
-                    id="flik-avvikelser" aria-controls="panel-avvikelser">Avvikelser
-              <span class="vy-flik-mark" id="flik-avv-mark" hidden></span></button>
-            <button class="vy-flik" type="button" role="tab" data-flik="korning"
-                    id="flik-korning" aria-controls="panel-korning">Månadskörning</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="bokslut"
+                    id="flik-bokslut" aria-controls="panel-bokslut">Bokslut
+              <span class="vy-flik-mark" id="flik-bokslut-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="timmar"
+                    id="flik-timmar" aria-controls="panel-timmar">Köpta timmar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="installningar"
+                    id="flik-eko-installningar" aria-controls="panel-eko-installningar">Inställningar</button>
+          </div>
+
+          <!-- Månaden gäller Alla betalningar och Bokslut, och syns bara där
+               (nextrum-arbetsyta.css, BETALNINGAR). Under flikraden och inte
+               över: en rad som kom och gick ovanför flikarna hade flyttat dem
+               under fingret (CLAUDE.md avsnitt 3, fälla 4). En stängd månad
+               bär märket Stängd. -->
+          <div class="eko-manadsrad" id="eko-manader" aria-label="Välj månad"></div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="attgora"
+               id="panel-attgora" aria-labelledby="flik-attgora">
+            <div id="eko-attgora" aria-live="polite"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="betalningar"
+               id="panel-betalningar" aria-labelledby="flik-betalningar" hidden>
+            <div class="bet-sam eko-sam" id="bet-sam"></div>
+            <div class="eko-verktyg">
+              <div class="chips eko-chips" id="bet-chips" role="group" aria-label="Visa betalningar"></div>
+              <input class="inp eko-sok" id="kort-sok" type="search" placeholder="Sök familj, elev, studiehjälpare eller ämne" aria-label="Sök betalning" autocomplete="off">
+            </div>
+            <div class="vy-kort"><div class="vy-lista" id="bet-lista"><div class="loading">Hämtar</div></div></div>
+            <p class="vy-finstilt" id="bet-fot"></p>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="fakturor"
+               id="panel-fakturor" aria-labelledby="flik-fakturor" hidden>
+            <!-- Flödet, inte en månad: en faktura för augustis pass hanteras
+                 i september, och ska synas då. -->
+            <ol class="fakt-flode" id="fakt-steg" aria-label="Fakturornas steg"></ol>
+            <div class="eko-verktyg">
+              <input class="inp eko-sok" id="fakt-sok" type="search" placeholder="Sök familj eller fakturanummer" aria-label="Sök faktura" autocomplete="off">
+            </div>
+            <div id="fakt-lista"><div class="loading">Hämtar</div></div>
+
+            <!-- data-kor-*: samma körning står under Löner och Månadens
+                 ekonomi (2026-09-28), och en lyssnare i
+                 nextrum-admin-ekonomi.js sköter alla tre rutorna. -->
+            <div class="vy-grupp" id="kor-rubrik"><h3>Månadskörningen</h3></div>
+            <div class="vy-kort"><div class="vy-kort-kropp" data-kor-ruta>
+              <p class="eko-text">Skapar ett fakturautkast per familj som valt faktura, och studiehjälparnas underlag, för en månad. Kör torrt först: den visar vad som skulle skapas utan att skriva något.</p>
+              <!-- Schemat står i cron.job, inte här: rutan frågar databasen
+                   (manadskorning_lage) om det är på. -->
+              <div id="kor-schema" class="kor-schema" aria-live="polite"><div class="loading">Hämtar</div></div>
+              <div class="adm-verktyg">
+                <select class="sel" id="kor-period" data-kor-period aria-label="Vilken månad körningen gäller"></select>
+                <button class="btn btn-ghost btn-sm" type="button" id="kor-torr" data-kor-torr>Torrkör</button>
+                <button class="btn btn-primary btn-sm" type="button" id="kor-skapa" data-kor-skapa disabled>Skapa utkast</button>
+              </div>
+              <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
+              <div id="kor-resultat" data-kor-resultat aria-live="polite"></div>
+              <details class="eko-mer">
+                <summary>Så fungerar den</summary>
+                <p class="eko-text">Alla genomförda och rapporterade pass samlas till ett underlag per studiehjälpare, det som betalas ut den 25:e, och familjer som valt faktura får ett fakturautkast. Andra pass betalas med kort, i förväg eller när familjen bekräftar rapporten, och pass som hölls utan betalning räknas upp i körningen i stället för att faktureras. Ett pass som rapporteras efter körningen kommer med nästa månad.</p>
+                <p class="eko-text">Med schemat på går den av sig själv den 1:a varje månad, tidigt på morgonen, för förra månaden: underlaget är studiehjälparens lönespecifikation. Här körs den med din inloggning, för en månad som aldrig kördes eller en körning som inte gick. Gick körningen den 1:a inte står det under System → Fel i sex timmar, och en halvtimme efter körningen blir allt utom ett helt lyckat svar en uppgift.</p>
+                <p class="eko-text"><b>Skapa utkast</b> skriver underlagen och fakturorna som utkast. Ingenting skickas och ingenting betalas ut härifrån: underlaget skickas per studiehjälpare under Löner, och fakturan skickas från Fortnox.</p>
+                <div class="sum-line"><span>Vilka pass</span><span class="adm-tal">genomförda och rapporterade, till och med månadens slut</span></div>
+                <div class="sum-line"><span>Utbetalning</span><span class="adm-tal">den 25:e, från banken</span></div>
+                <div class="sum-line total"><span>Pris per timme, för pass utan betalning</span><span class="adm-tal" id="kor-pris">—</span></div>
+              </details>
+            </div></div>
+            <p class="vy-finstilt">Beloppen går inte att ändra härifrån: de räknades av månadskörningen ur de pass som hållits, med samma pris som kortet tar. Stämmer något inte, ta bort utkastet, rätta passet och kör igen. Ingen påminnelseavgift och ingen fakturaavgift, för villkoren nämner ingen.</p>
           </div>
 
           <!-- Bokslutet (Fas 20.2). Månadens siffror och larm ur manad_lage,
                och knappen som stänger månaden. En stängd månad är låst i
                databasen: inga pass och inga rapporter i den går att ändra,
-               inte heller härifrån, förrän någon öppnar den med ett skäl.
-               Knappen är grå när månaden pågår eller har larm, men det är
-               stang_manad() som bestämmer. -->
+               inte heller härifrån, förrän någon öppnar den med ett skäl. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="bokslut"
-               id="panel-bokslut" aria-labelledby="flik-bokslut">
-            <div class="dbox">
-              <div id="bokslut"><div class="loading">Hämtar</div></div>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
-                Månaden är passets månad, inte betalningens: ett pass i september som betalas
-                i oktober hör till september. Testbetalningar räknas för sig och aldrig in i
-                summorna. Underlag och fakturor låses inte av stängningen, för de betalas
-                efter månadsskiftet.
-              </p>
-            </div>
+               id="panel-bokslut" aria-labelledby="flik-bokslut" hidden>
+            <div id="bokslut"><div class="loading">Hämtar</div></div>
           </div>
 
-          <!-- Fakturor (Fas 14.6). Familjen kan välja faktura på ett pass,
-               och månadskörningen samlar passen på ett utkast per familj.
-               Utkastet läggs in i Fortnox, som skickar fakturan och bokför
-               den. Härifrån skickas ingenting. -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="fakturor"
-               id="panel-fakturor" aria-labelledby="flik-fakturor" hidden>
-            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-              <h5>Faktura som betalsätt</h5>
-              <div id="fakt-flagga"><div class="loading">Hämtar</div></div>
-            </div>
-            <div class="dbox">
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-bottom:16px">
-                Familjer som valt faktura får en samlad faktura i början av månaden för förra
-                månadens pass. <b>Månadskörningen</b> skapar ett utkast per familj. Tryck
-                <b>Underlag</b> och lägg in fakturan i Fortnox med de uppgifterna, och tryck sedan
-                <b>Lagd i Fortnox</b> med fakturanumret i Fortnox och förfallodagen. Fortnox skickar
-                fakturan. Markera den <b>Betald</b> här när betalningen syns i Fortnox.
-              </p>
-              <p class="xsmall" id="fakt-vantar" style="color:var(--bl-3);margin:0 0 12px"></p>
-              <div class="adm-verktyg">
-                <input class="inp adm-sok" id="fakt-sok" type="search" placeholder="Sök familj eller fakturanummer" aria-label="Sök faktura" autocomplete="off">
-                <select class="sel" id="fakt-status" aria-label="Filtrera på läge">
-                  <option value="">Alla lägen</option>
-                  <option value="utkast">Inte inlagda i Fortnox</option>
-                  <option value="skickad">Skickade</option>
-                  <option value="forfallen">Förfallna</option>
-                  <option value="betald">Betalda</option>
-                  <option value="makulerad">Makulerade</option>
-                </select>
-                <span class="small" id="fakt-antal" style="margin-left:auto;color:var(--bl-3)"></span>
-              </div>
-              <div id="fakt-tabell"><div class="loading">Hämtar</div></div>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
-                Beloppen går inte att ändra härifrån. De räknades fram av edge-funktionen
-                <code>fakturering</code> ur de pass som faktiskt hållits, med samma pris som kortet
-                tar, och en trigger vägrar skriva om dem från en webbläsare. Stämmer något inte:
-                ta bort utkastet, rätta passet och kör månadskörningen igen.
-              </p>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
-                Ingen påminnelseavgift och ingen fakturaavgift: villkoren nämner ingen, och då
-                får ingen tas ut. Se till att påminnelserna i Fortnox står utan avgift.
-              </p>
-            </div>
+          <!-- Fas 16.1 och 22.1: planer, klippkort och timbanken. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="timmar"
+               id="panel-timmar" aria-labelledby="flik-timmar" hidden>
+            <div class="bet-sam eko-sam" id="timmar-sam"></div>
+            <p class="kor-not" id="timmar-not" hidden></p>
+            <div class="vy-grupp"><h3>Planer och klippkort</h3><span class="vy-antal" id="timmar-kop-antal"></span></div>
+            <div class="vy-kort"><div class="vy-lista" id="timmar-kop"><div class="loading">Hämtar</div></div></div>
+            <div class="vy-grupp"><h3>Timbanken</h3></div>
+            <div class="vy-kort"><div class="vy-lista" id="timmar-bank"><div class="loading">Hämtar</div></div></div>
+            <p class="vy-finstilt">Timmar och minuter familjerna betalat för men inte använt är deras tills de använts. Slutar en familj betalas det tillbaka som villkoren räknar: de använda timmarna till ordinarie pris, inom ångerfristen till det avtalade. Återbetalningen görs i Stripes dashboard, och webhooken stänger kortet när den kommer. Markera utbetald flyttar inga pengar.</p>
           </div>
 
-          <div class="vy-flik-panel" role="tabpanel" data-flik="utbetalningar"
-               id="panel-utbetalningar" aria-labelledby="flik-utbetalningar" hidden>
-            <div class="dbox">
-              <div class="adm-verktyg">
-                <input class="inp adm-sok" id="utb-sok" type="search" placeholder="Sök studiehjälpare" aria-label="Sök utbetalning" autocomplete="off">
-                <select class="sel" id="utb-status" aria-label="Filtrera på status">
-                  <option value="">Alla lägen</option>
-                  <option value="utkast">Utkast</option>
-                  <option value="godkand">Godkända</option>
-                  <option value="utbetald">Utbetalda</option>
-                  <option value="misslyckad">Misslyckade</option>
-                </select>
-                <span class="small" id="utb-antal" style="margin-left:auto;color:var(--bl-3)"></span>
-              </div>
-              <div id="utb-tabell"><div class="loading">Hämtar</div></div>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
-                <b>Skicka underlag</b> mejlar studiehjälparen vad hen kommer att få, så att
-                hen hinner säga ifrån innan pengarna går. Det ändrar ingen status — att
-                visa ett underlag är inte att godkänna det.
-              </p>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
-                Godkänd betyder att ni granskat underlaget. Utbetald betyder att pengarna
-                lämnat kontot. <b>Själva överföringen sker utanför plattformen</b> — det
-                finns ingen betaltjänst kopplad än, så ingen knapp här flyttar pengar. Att
-                sätta Utbetald innan ni faktiskt betalat är hur ett bokföringsfel börjar.
-              </p>
-            </div>
-          </div>
-
-          <!-- Avvikelser: det som hindrar ett genomfört pass från att
-               komma med på studiehjälparens underlag, och pass som hölls
-               utan att familjen betalat. Ett pass utan rapport tas aldrig
-               med av månadskörningen, och det ska synas här i stället för
-               att bara utebli från underlaget. -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="avvikelser"
-               id="panel-avvikelser" aria-labelledby="flik-avvikelser" hidden>
-            <!-- Fas 20.2: listorna nedan gäller den valda månaden. Det som
-                 hör till andra månader räknas upp här, så att en avvikelse
-                 som översikten larmar om aldrig ser ut att vara borta. -->
-            <div id="avv-andra"></div>
-            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-              <h5>Genomförda pass utan rapport</h5>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
-                ⚠️ Pass saknar rapport och kan därför inte behandlas automatiskt.
-                Koppla den rapport som hör till passet, eller undanta passet — ett
-                undantaget pass betalas inte av familjen och kommer inte med på
-                studiehjälparens underlag.
-              </p>
-              <div id="avv-utan-rapport"><div class="loading">Hämtar</div></div>
-            </div>
-            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-              <h5>Rapporter som inte hör till något pass</h5>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
-                Fristående rapporter kommer aldrig med på ett underlag av sig själva.
-                Hör en av dem till ett pass ovanför, koppla den därifrån.
-              </p>
-              <div id="avv-fristaende"><div class="loading">Hämtar</div></div>
-            </div>
-            <div class="dbox">
-              <h5>Undantagna pass</h5>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
-                Pass som någon undantagit, med anledningen. Ångra om det var fel —
-                passet kommer då med på nästa körning.
-              </p>
-              <div id="avv-undantagna"><div class="loading">Hämtar</div></div>
-            </div>
-            <!-- Allt annat som inte går ihop, räknat av databasen
-                 (ekonomiska_avvikelser): pass som hölls utan betalning,
-                 utbetalningar som väntar, pass utan ersättning, summor
-                 som inte stämmer, och det som gäller äldre fakturor. -->
-            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
-              <h5>Övriga ekonomiska avvikelser <em id="avv-ovriga-antal"></em></h5>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
-                Varje rad kan bli en uppgift, så att någon tar hand om den.
-              </p>
-              <div id="avv-ovriga"><div class="loading">Hämtar</div></div>
-            </div>
-          </div>
-
-          <div class="vy-flik-panel" role="tabpanel" data-flik="kortbetalningar"
-               id="panel-kortbetalningar" aria-labelledby="flik-kortbetalningar" hidden>
-            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-              <h5>Spärren</h5>
-              <div id="kort-sparr"><div class="loading">Hämtar</div></div>
-            </div>
-            <!-- Fas 16.1. Planer och klippkort: strömbrytaren och köpen,
-                 med timmarna kvar och vad som går tillbaka om familjen
-                 slutar i dag. Återbetalningen görs i Stripes dashboard;
-                 webhooken skriver ner den och stänger kortet. -->
-            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-              <h5>Erbjudanden <em id="erb-kop-antal"></em></h5>
-              <div id="erb-flagga"><div class="loading">Hämtar</div></div>
-              <div id="erb-kop" style="margin-top:18px"></div>
-              <!-- Fas 22.1. Timbanken: minuter familjerna har kvar när ett
-                   pass betalt med timmar slutade före en hel timme. -->
-              <div id="erb-bank" style="margin-top:18px"></div>
-            </div>
-            <!-- Fas 14.3, punkt 10 och 11 på MVP-listan. Frågar Stripe med
-                 servernyckeln genom stripe-lage. Läser bara: endpoints,
-                 kontouppgifter och kvitton ändras i Stripes dashboard. -->
-            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-              <h5>Stripe-läget</h5>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 12px">
-                Frågar Stripe om nyckeln, kontot, kontoutdraget och webhooken, och säger vad
-                som saknas. Ingenting ändras hos Stripe härifrån.
-              </p>
+          <!-- Strömbrytarna och Stripe. Fas 14.3: stripe-lage frågar Stripe
+               med servernyckeln och läser bara; endpoints, kontouppgifter
+               och kvitton ändras i Stripes dashboard. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="installningar"
+               id="panel-eko-installningar" aria-labelledby="flik-eko-installningar" hidden>
+            <div class="vy-grupp"><h3>Strömbrytare</h3></div>
+            <div class="vy-kort"><div class="vy-lista" id="eko-brytare"><div class="loading">Hämtar</div></div></div>
+            <div class="vy-grupp"><h3>Stripe</h3></div>
+            <div class="vy-kort"><div class="vy-kort-kropp">
+              <p class="eko-text">Frågar Stripe om nyckeln, kontot, kontoutdraget och webhooken, och säger vad som saknas. Ingenting ändras hos Stripe härifrån.</p>
               <div id="stripe-lage"></div>
-              <div style="margin-top:12px"><button class="btn btn-ghost btn-sm" type="button" data-stripe-lage>Kontrollera Stripe</button></div>
+              <div class="eko-knapprad"><button class="btn btn-ghost btn-sm" type="button" data-stripe-lage>Kontrollera Stripe</button></div>
               <!-- Fas 14.7: avgiften och läget för betalningar som kom in
                    innan webhooken tog emot charge.updated. -->
-              <div id="stripe-avstamning"></div>
-            </div>
-            <!-- Fas 14.3, punkt 9. Skrivs av stripe-webhook. Sista dagen att
-                 svara är det enda som inte går att reparera i efterhand. -->
-            <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-              <h5>Korttvister <em id="tvist-antal"></em></h5>
-              <div id="tvist-lista"><div class="loading">Hämtar</div></div>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:14px">
-                Underlaget skickas in i Stripes dashboard, under Tvister, och sparas aldrig här.
-                Missas sista dagen är tvisten förlorad, och då är både beloppet och Stripes
-                avgift för tvisten borta.
-              </p>
-            </div>
-            <div class="dbox">
-              <div class="adm-verktyg">
-                <input class="inp adm-sok" id="kort-sok" type="search" placeholder="Sök familj eller studiehjälpare" aria-label="Sök kortbetalning" autocomplete="off">
-                <select class="sel" id="kort-status" aria-label="Filtrera på läge">
-                  <option value="">Alla betalningar</option>
-                  <option value="obetald">Ej betalda pass</option>
-                  <option value="vantar">Väntar</option>
-                  <option value="betald">Betalda</option>
-                  <option value="aterbetald">Återbetalda</option>
-                  <option value="tvist">Tvist</option>
-                  <option value="misslyckad">Misslyckade</option>
-                </select>
-                <span class="small" id="kort-antal" style="margin-left:auto;color:var(--bl-3)"></span>
-              </div>
-              <div id="kort-tabell"><div class="loading">Hämtar</div></div>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:16px">
-                <b>Återbetala</b> skickar pengarna tillbaka till familjen. Hela beloppet
-                ligger hos Nextrum, så det finns ingen överföring att backa.
-              </p>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin-top:10px">
-                Studiehjälparens ersättning syns inte här. Den betalas den 25:e för
-                månadens rapporterade pass, och står under <b>Utbetalningar</b>. Den räknas
-                ur rapporten, inte ur betalningen: ett avbokat pass får ingen rapport och
-                kommer aldrig med, men ett hållet pass som återbetalats gör det.
-              </p>
-            </div>
-            <!-- Fas 20.1. Ett pass som redan var betalt och drog över betalas
-                 med ett tillägg för övertiden, med kort, när familjen
-                 bekräftar rapporten. Skrivs bara av stripe-checkout och
-                 stripe-webhook; här läses det. -->
-            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
-              <h5>Tillägg för övertid <em id="tillagg-antal"></em></h5>
-              <div id="tillagg-tabell"><div class="loading">Hämtar</div></div>
-            </div>
-          </div>
-
-          <div class="vy-flik-panel" role="tabpanel" data-flik="korning"
-               id="panel-korning" aria-labelledby="flik-korning" hidden>
-            <!-- data-kor-*: samma körning står under Löner och Månadens
-                 ekonomi (2026-09-28), och en lyssnare i
-                 nextrum-admin-ekonomi.js sköter alla tre rutorna. -->
-            <div class="dbox" data-kor-ruta>
-              <h5>Månadskörningen</h5>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:18px">
-                En gång i månaden samlas alla genomförda och rapporterade pass till
-                ett underlag per studiehjälpare — det som betalas ut den 25:e — och
-                familjer som valt faktura får ett fakturautkast, som läggs in i Fortnox under
-                <b>Fakturor</b>. Andra pass betalas med kort, i förväg eller när familjen
-                bekräftar rapporten, och pass som hölls utan betalning räknas upp i
-                körningen i stället för att faktureras.
-                Med schemat på går den av sig själv den 1:a varje månad, tidigt på
-                morgonen, för förra månaden: underlaget är studiehjälparens
-                lönespecifikation, och den ska finnas när månaden är slut. Här körs den
-                med din inloggning, för en månad som aldrig kördes eller en körning som
-                inte gick. Kör alltid torrt först: den räknar ut allt och visar vad som
-                <em>skulle</em> skapas, utan att skriva en rad.
-              </p>
-              <!-- Schemat står i cron.job, inte här: rutan frågar databasen
-                   (manadskorning_lage) om det är på. -->
-              <div id="kor-schema" class="kor-schema" aria-live="polite"><div class="loading">Hämtar</div></div>
-              <div class="adm-verktyg">
-                <select class="sel" id="kor-period" data-kor-period aria-label="Vilken månad underlaget gäller"></select>
-                <button class="btn btn-ghost btn-sm" type="button" id="kor-torr" data-kor-torr>Torrkör</button>
-                <button class="btn btn-primary btn-sm" type="button" id="kor-skapa" data-kor-skapa disabled>Skapa utkast</button>
-              </div>
-              <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
-              <div id="kor-resultat" data-kor-resultat aria-live="polite" style="margin:6px 0 18px"></div>
-              <div class="sum-line"><span>Vilka pass</span><span class="adm-tal">genomförda och rapporterade, till och med månadens slut</span></div>
-              <div class="sum-line"><span>Utbetalning</span><span class="adm-tal">den 25:e, från banken</span></div>
-              <div class="sum-line total"><span>Pris per timme</span><span class="adm-tal" id="kor-pris">—</span></div>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-top:16px">
-                <b>Skapa utkast</b> skriver underlagen och fakturorna som utkast. Ingenting
-                skickas och ingenting betalas ut härifrån — underlaget skickar du per
-                studiehjälpare under Utbetalningar, och fakturan skickas från Fortnox. Priset står med för att beloppen på pass som hölls
-                utan betalning räknas på det. Gick körningen den 1:a inte står det under
-                System → Fel i sex timmar. En halvtimme efter körningen blir allt utom ett helt
-                lyckat svar en uppgift som står kvar tills någon stänger den, också när körningen
-                bara skrev en del. Passen larmar som Inte utbetalt tills någon kört den här.
-                Ett pass som rapporteras efter körningen kommer med nästa månad.
-              </p>
-            </div>
+              <div class="eko-avstamning" id="stripe-avstamning"></div>
+            </div></div>
+            <p class="vy-finstilt">Korttvisternas underlag skickas in i Stripes dashboard, under Tvister, och sparas aldrig här. Missas sista dagen är tvisten förlorad, och då är både beloppet och Stripes avgift för tvisten borta. Öppna tvister står under Att göra.</p>
           </div>
         </section>
 
@@ -1346,8 +1178,8 @@
             <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 14px">
               Anställningsnumret ska vara samma som i Fortnox Lön: lönefilen matchar på det.
               Personnummer, adress, bankkonto och skattetabell läggs in i Fortnox, inte här.
-              Läget på underlaget ändras här eller under Ekonomi → Utbetalningar; godkänn det
-              när du granskat det, och sätt Utbetald när pengarna gått.
+              Läget på underlaget ändras här; godkänn det när du granskat det, och sätt
+              Utbetald när pengarna gått.
             </p>
             <div id="lon-personer"><div class="loading">Hämtar</div></div>
           </div>
@@ -2375,14 +2207,14 @@
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=40b9e65e"></script>
-<script src="nextrum-admin-detalj.js?v=de6d7e6e"></script>
-<script src="nextrum-admin-oversikt.js?v=ec092d07"></script>
+<script src="nextrum-admin-detalj.js?v=0af4e6b8"></script>
+<script src="nextrum-admin-oversikt.js?v=a4ec5b03"></script>
 <script src="nextrum-admin-kunder.js?v=155120f9"></script>
 <script src="nextrum-admin-rekrytering.js?v=d08ab262"></script>
 <script src="nextrum-admin-bibliotek.js?v=66dad1e3"></script>
 <script src="nextrum-admin-kommunikation.js?v=97c8d085"></script>
-<script src="nextrum-admin-drift.js?v=2437242e"></script>
-<script src="nextrum-admin-ekonomi.js?v=334c7477"></script>
+<script src="nextrum-admin-drift.js?v=e5669055"></script>
+<script src="nextrum-admin-ekonomi.js?v=8335d3c8"></script>
 <script src="nextrum-admin-manaden.js?v=9d66770e"></script>
 <script src="nextrum-admin-loner.js?v=7138b540"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
@@ -2391,11 +2223,11 @@
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->
-<script src="nextrum-admin-radera.js?v=54bcb289"></script>
+<script src="nextrum-admin-radera.js?v=26dcfc26"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=3f816e08"></script>
 <script src="nextrum-modulvakt.js?v=980a011f"></script>
-<script src="nextrum-admin.js?v=b61ceec2"></script>
+<script src="nextrum-admin.js?v=934d8dfc"></script>
 </body>
 </html>
