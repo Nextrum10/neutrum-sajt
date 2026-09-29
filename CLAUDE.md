@@ -766,8 +766,8 @@ tråd och spåret efter den. Tre saker:
   kan läsas (DATASKYDD.md avsnitt 8).
 `chatt_las()` ger de 500 senaste meddelandena, nyast först, och
 `totalt`: PostgREST kapar ett svar vid tusen rader, och en tråd hämtad i
-tidsordning hade tappat de nyaste. Migrationen är inte körd i driften än
-(avsnitt 11).
+tidsordning hade tappat de nyaste. I drift sedan 2026-09-29 (avsnitt
+11).
 
 ### Ordlistan (använd den, i kod och i text)
 
@@ -2496,7 +2496,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 38 SECURITY DEFINER-funktioner i `public` nåbara för `authenticated`, triggerfunktionerna oräknade (räknat i driften 2026-09-29 efter Fas 23.1; 39 med `chatt_las` när `admin_oppnar_chatten` är körd). Förut stod 35 här, räknat före Fas 23.1 och på ett sätt som inte skrevs ned. Bland de senaste: `chatt_las`, `driftkorningar`, `mina_handlingar`, `radering_lage` och `radera_person` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 40 SECURITY DEFINER-funktioner i `public` nåbara för `authenticated`, triggerfunktionerna oräknade (räknat i driften 2026-09-29, efter `admin_oppnar_chatten` och Fas 23.2). Förut stod 35 här, räknat före Fas 23.1 och på ett sätt som inte skrevs ned. Bland de senaste: `chatt_las`, `nexlax_lage`, `driftkorningar`, `mina_handlingar`, `radering_lage` och `radera_person` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
@@ -3415,19 +3415,22 @@ tillbaka överst i avsnittet för 22.1.
   3. **En person per handling.** Något som ska nå alla studiehjälpare
      (handboken, en policy) är en egen regel, och byggs inte förrän den
      behövs.
-- **Chatten som admin öppnar (2026-09-29, avsnitt 1) är byggd, men
-  migrationen `admin_oppnar_chatten` är INTE körd i driften.** Provad mot
-  driften i en transaktion som rullades tillbaka, med filerna hämtade av
-  databasen från commiten och md5 prövad (avsnitt 9): hela `rls-test.sql`
-  gick igenom med migrationen, 873 av 873, och utan den föll bara
-  avsnittets egna fem rader (861 av 866). Ingenting blev kvar. Tills den är körd
-  står Öppna chatt i listorna, men panelen säger att migrationen saknas
-  och läser ingenting: en läsning utan rad i loggen ska inte gå att göra
-  från vyn. Kör den efter merge med versionen i filnamnet
-  (`20260929123125`), eller byt namnet till den version `apply_migration`
-  registrerar, och kör sedan hela `rls-test.sql`. Kvar som inte är kod:
-  säg till studiehjälparna och familjerna med konto att vi kan läsa
-  chatten (DATASKYDD.md avsnitt 8).
+- **Chatten som admin öppnar (2026-09-29, avsnitt 1) är i drift.**
+  Migrationen `admin_oppnar_chatten` kördes efter att PR #137 mergats,
+  med versionen i filnamnet (`20260929123125`): raden i
+  `schema_migrations` skrevs i samma transaktion som migrationen, efter en
+  md5-prövning mot filen, så `created_by` är tom på just den, som för
+  Fas 23.1. Det driften sparade har samma md5 som filen. Hela
+  `rls-test.sql` från main gick igenom mot driften efteråt, 923 av 923,
+  också NexLäx (Fas 23.2), som en annan session kört samma eftermiddag
+  som `20260929150309` och `20260929150310`. Före merge provades den i en
+  transaktion som rullades tillbaka: 873 av 873 med migrationen, och
+  utan den föll bara avsnittets egna fem rader. En databas byggd utan
+  migrationen tål vyn: Öppna chatt står kvar i listorna, men panelen
+  säger att migrationen saknas och läser ingenting, för en läsning utan
+  rad i loggen ska inte gå att göra från vyn. Kvar som inte är kod: säg
+  till studiehjälparna och familjerna med konto att vi kan läsa chatten
+  (DATASKYDD.md avsnitt 8).
 
 ---
 
