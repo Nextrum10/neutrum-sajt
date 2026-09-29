@@ -749,6 +749,8 @@
 .nx-manad-pil svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nx-manad-pil:hover:not(:disabled){border-color:var(--bl-3)}
 .nx-manad-pil:disabled{opacity:.35;cursor:default}
+.nx-manad-stilla .nx-manad-pil{display:none}
+.nx-manad-stilla .nx-manad-ram{flex:0 1 auto}
 /* På en telefon drar man i spåret, och pilarna tar 90 px av 360. Den
    tonade kanten säger fortfarande att det finns mer. */
 @media (max-width:560px), (pointer:coarse){
