@@ -676,7 +676,8 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
   `intern.niva_ratta`, `intern.niva_fraga_ut` och `intern.niva_tal` i sin
   helhet, och avbryter om någon av dem inte har Fas 23.1:s md5 i
   databasen, läst i driften 2026-09-29 (avsnitt 5, flera sessioner).
-- **Vyn tål att migrationen saknas.** Utan `sort` och `lastext` är varje
+- **I drift sedan 2026-09-29** (avsnitt 11). **Vyn tål ändå att
+  migrationen saknas**, i en databas byggd utan den. Utan `sort` och `lastext` är varje
   nivå vanlig, utan `nexlax_lage()` syns vägen utan XP och serie, och
   utan XP i svaret från `niva_svara()` visar spelaren inga poäng. En
   fråga av typen `para` finns inte förrän banan med dem är inläst.
@@ -3369,15 +3370,17 @@ tillbaka överst i avsnittet för 22.1.
      före och efter, 861 av 861. Nästa bank som ändras blir lika stor:
      kör den på samma sätt. Vyerna tål fortfarande att tabellerna
      saknas: uppgifterna syns som förut, utan banan.
-  4. **NexLäx-migrationerna (Fas 23.2) är inte körda i driften.**
-     `20260929120000_fas23_2_nexlax.sql` och
-     `20260929120100_uppgiftsbanken_nexlax.sql` har preliminära versioner.
-     De körs efter merge, i den ordningen, och filerna döps om till
-     versionerna driften registrerar (avsnitt 5). Banken är 347 kB och
-     går den väg Fas 23.1:s gick (punkt 3). Vakten i den första avbryter
-     om någon av de fem funktionerna den skriver om har ändrats i driften
-     sedan 2026-09-29. Fram till dess visar studievyn NexLäx utan XP,
-     serie, Mästarprov och de nya frågorna (avsnitt 1).
+  4. **NexLäx-migrationerna (Fas 23.2) är i drift sedan 2026-09-29**,
+     som `20260929150309` (`fas23_2_nexlax`) och `20260929150310`
+     (`uppgiftsbanken_nexlax`), körda efter att PR #138 mergats, och det
+     driften sparade har samma md5 som filerna. Banken är 347 kB och
+     gick samma väg som Fas 23.1:s (punkt 3): databasen hämtade filerna
+     från main-commiten med tillägget `http`, prövade md5 och skrev
+     raderna i `schema_migrations` i samma transaktion, och tillägget
+     togs bort igen. Hela `rls-test.sql` gick igenom före, i en
+     transaktion som rullades tillbaka med båda migrationerna inlästa,
+     och efter: 911 av 911. Vakten släppte igenom: de fem funktionerna
+     var Fas 23.1:s.
   5. **Innehållet i Fas 23.2 är skrivet med AI**, av fyra skribenter per
      ämne, och läst en gång till av en granskare som räknade om varje
      facit. Granskaren hittade inga fel facit; två tvetydiga
