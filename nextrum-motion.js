@@ -716,11 +716,16 @@ const NXFin = (function () {
      vikt för en bakgrund som ingen bett om. Filen har därför ingen
      src i HTML:en alls; den sätts här, och bara när den ska synas.
 
-     Tre lägen visar affischbilden i stället, som redan ligger i
+     Två lägen visar affischbilden i stället, som redan ligger i
      poster-attributet och alltså inte kostar något extra:
-       - smal skärm, där rörelsen syns minst och datan kostar mest
        - besökaren har valt bort rörelse i sitt system
        - webbläsaren säger att uppkopplingen är dyr eller långsam
+
+     Smal skärm spelade förut inte alls (max-width:640px), och Leo
+     2026-09-29: "heron rullar ej automatiskt på mobil vy". Telefonen
+     får i stället en egen fil, data-video-mobil: 540 px hög och 255 kB
+     mot 5 MB, som slöjan och brightness(.54) gör omöjlig att skilja
+     från originalet. Det var datan som var skälet att avstå.
 
      Laddningen väntar dessutom på load, så att den aldrig konkurrerar
      med hjältens egen bild om bandbredden.
@@ -731,23 +736,44 @@ const NXFin = (function () {
 
     const n = navigator.connection || {};
     const avstå =
-      matchMedia('(max-width:640px)').matches ||
       matchMedia('(prefers-reduced-motion:reduce)').matches ||
       n.saveData === true ||
       /(^|-)(2g|slow-2g)$/.test(n.effectiveType || '');
     if (avstå) return;
 
+    function spela() {
+      const p = v.play();
+      if (p && p.catch) p.catch(nekad);
+    }
+
+    /* play() avvisas om webbläsaren nekar autouppspelning. Då står
+       affischbilden kvar, vilket är rätt utfall tills vidare. iPhone i
+       strömsparläge nekar också en tyst film, och där hjälper bara en
+       gest: första trycket på sidan startar den. touchend och click
+       räknas som gest, touchstart gör det inte. Lyssnarna sätts först
+       när play() faktiskt nekats, så de flesta besökare får inga. */
+    function nekad() {
+      function igen() {
+        document.removeEventListener('touchend', igen);
+        document.removeEventListener('click', igen);
+        if (v.paused) {
+          const p = v.play();
+          if (p && p.catch) p.catch(function () {});
+        }
+      }
+      document.addEventListener('touchend', igen, { passive: true });
+      document.addEventListener('click', igen);
+    }
+
     function ladda() {
       if (v.querySelector('source')) return;
       const s = document.createElement('source');
-      s.src = v.dataset.video;
+      const smal = matchMedia('(max-width:640px)').matches;
+      s.src = (smal && v.dataset.videoMobil) || v.dataset.video;
       s.type = 'video/mp4';
       v.appendChild(s);
       v.load();
-      /* play() avvisas om webbläsaren nekar autouppspelning. Då står
-         affischbilden kvar, vilket är precis rätt utfall. */
-      const p = v.play();
-      if (p && p.catch) p.catch(function () {});
+      spela();
     }
 
     if (document.readyState === 'complete') ladda();

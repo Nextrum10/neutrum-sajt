@@ -1039,6 +1039,22 @@ Hero är orörd med flit. Allt annat på startsidan bor i
 ingenting utan `html.nx-sr` — klassen sätts av skriptet, så en fil som
 inte laddar lämnar sidan i slutläget.
 
+**Hero-filmen spelar också på telefon** (2026-09-29, Leo: "heron rullar
+ej automatisk på mobil vy"). `heroVideo()` i `nextrum-motion.js` avstod
+förut på skärmar under 641 px för att spara data, och heron stod då
+stilla på sin poster. Nu får telefonen en egen fil, `data-video-mobil`
+(`bilder/08-teamet-orbit-mobil.mp4`, 540 px hög, 255 kB mot 5 MB),
+och det som fortfarande avstår är rörelse bortvald, `saveData` och 2G.
+Filen är gjord ur originalet med `ffmpeg -an -vf scale=-2:540 -c:v libx264
+-profile:v main -crf 27 -preset slow -movflags +faststart`; byts
+originalet ska den göras om, annars visar telefonen ett annat klipp.
+iPhone i strömsparläge nekar autouppspelning också för en tyst film:
+då startar första trycket på sidan den (`nekad()`), och tills dess står
+posterbilden kvar. Playwrights Chromium har ingen H.264, så uppspelning
+går inte att prova med mp4:n; servera samma klipp som VP9 genom en
+route och mät att `currentTime` går. Sidorna med hero-film är bara
+`index.html` och `en/index.html`.
+
 **Skriptet sätter klasser, CSS rör sig.** Första versionen räknade om
 kort, ord och ett blad över filmen för varje bildruta medan man
 scrollade, och studievyns lutning skrev CSS-variabler på fönstret.

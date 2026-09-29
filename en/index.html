@@ -215,11 +215,13 @@
          största: hero fyller skärmen med object-fit:cover, så en
          telefon på 390 px med tre bildpunkter per px visar bilden
          ungefär 3 400 px bred. 1280 sträcktes nästan tre gånger och
-         såg suddig ut där, och på telefon spelas filmen aldrig, så
-         bilden ÄR hero. 136 kB mot 48. -->
+         såg suddig ut där, och bilden är det som syns tills filmen
+         hunnit starta. 136 kB mot 48. Telefonen får den lätta filmen
+         i data-video-mobil (nextrum-motion.js, heroVideo). -->
     <video class="nx-hero-video" poster="/bilder/08-teamet-1920.webp"
            muted playsinline preload="none" autoplay loop
            data-video="/bilder/08-teamet-orbit.mp4"
+           data-video-mobil="/bilder/08-teamet-orbit-mobil.mp4"
            aria-hidden="true" tabindex="-1"></video>
     <span class="nx-hero-slöja" aria-hidden="true"></span>
   </div>
@@ -1113,7 +1115,7 @@
 <script src="../nextrum-fel.js?v=eae02b10"></script>
 <script src="../nextrum-app.js?v=8ffb028b"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
-<script src="../nextrum-motion.js?v=58b3615b"></script>
+<script src="../nextrum-motion.js?v=f1ce069c"></script>
 <!-- Startsidans rörelse. Startar av sig självt, så att inget
      anrop här nere kan kasta om filen saknas. -->
 <script src="../nextrum-start.js?v=1186dd6c"></script>
