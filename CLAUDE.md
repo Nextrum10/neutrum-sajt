@@ -2983,14 +2983,14 @@ tillbaka överst i avsnittet för 22.1.
      `uppgiftsbanken_startpaketet`, båda EFTER merge, och filerna döps om
      till versionerna driften registrerade (avsnitt 5). Vyerna tål att
      tabellerna saknas: uppgifterna syns som förut, utan banan.
-- **Avtalen som delas med personen (2026-09-29, avsnitt 1) är byggda,
-  men migrationen är inte körd när det här skrivs.**
-  `dokument_delas_med_personen` körs EFTER merge och filen döps om till
-  versionen driften registrerar (avsnitt 5). Den provades mot driften i
-  en transaktion som rullades tillbaka, med hela `rls-test.sql`: 771 av
-  773, där de två är Fas 23.1:s prov. Tills den är körd laddar System →
-  Dokument upp som förut, delningen säger att den inte finns än, och
-  Profil → Dokument står tom. Kvar:
+- **Avtalen som delas med personen (2026-09-29, avsnitt 1) är i drift.**
+  Migrationen `dokument_delas_med_personen` kördes efter att PR #126
+  mergats, som version `20260929080900`, och det driften sparade har
+  samma md5 som filen. Hela `rls-test.sql` gick igenom mot driften
+  efteråt: 771 av 773, där de två är Fas 23.1:s prov, som väntar på sin
+  egen migration. En databas byggd utan migrationen tål vyerna: System →
+  Dokument laddar upp som förut, delningen säger att den inte finns än,
+  och Profil → Dokument står tom. Kvar:
   1. **Ingen notis när något delas.** Personen får varken mejl eller
      en rad i vyn; säg till själv. En notistyp är fem steg
      (`DEPLOY-NOTISER.md`) och en driftsättning av `notis-ko`.
