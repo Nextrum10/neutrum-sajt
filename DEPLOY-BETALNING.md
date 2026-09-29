@@ -208,8 +208,9 @@ när någon kommit ihåg knappen. pg_cron-jobbet `manadskorning` kör
 `intern.manadskorning_vack()` den 1:a klockan 04:17 UTC, som väcker `fakturering`
 med hemligheten ur `notis_konfig` (adressen i `notis_konfig.fakturering_url`).
 Den vägen skriver alltid förra månaden, och samma underlag och fakturautkast som
-knappen. Gick det fel står det under System → Fel, och passen larmar som Inte
-utbetalt.
+knappen. Gick det fel står det under System → Fel i sex timmar, och passen larmar
+som Inte utbetalt. Ett svar som inte är 200 blir också en uppgift, som står kvar
+tills någon stänger den (Svaret blir en uppgift, nedan).
 
 Det är fortfarande ett aktivt beslut, inte något som råkar vara påslaget. Ordningen:
 
@@ -241,7 +242,39 @@ underlaget också. När lönespecen är sedd, och före den 1 november:
 
 Betala inte ut underlaget och lägg inte in fakturan i Fortnox.
 
-Stänga av: `select cron.unschedule('manadskorning');`, som en egen migration.
+### Svaret blir en uppgift (2026-09-29)
+
+Svaren i `net._http_response` finns i sex timmar, alltså till förmiddagen den 1:a.
+Den som tittade efter det såg bara larmen på passen, Inte utbetalt och
+Fakturapass utan faktura, och de säger inte att körningen misslyckades.
+pg_cron-jobbet `manadskorning-svar` kör `intern.manadskorning_svar(true)` den 1:a
+klockan 04:47 UTC, en halvtimme efter körningen, och allt utom 200 blir en uppgift
+under Uppgifter med nyckeln `manadskorning:svar:<månad>`: 207 (en del av
+skrivningarna gick fel), 4xx, 5xx, tidsgränsen, ett anrop som aldrig fick svar, och
+ett anrop som saknas för att jobbet inte gick eller föll före det. Uppgiften säger
+vad som hände och att månaden ska torrköras och skapas under Ekonomi →
+Månadskörning. Den står kvar tills någon stänger den, och en månad ger en uppgift,
+också när den stängts. Namn, belopp och svarets innehåll står inte i den.
+
+Ordningen efter merge, före den 1 oktober klockan 04:47 UTC:
+
+1. Kör migrationen `manadskorningens_svar_blir_en_uppgift`.
+2. Kör funktionen för hand, som postgres: `select intern.manadskorning_vack(true);`,
+   vänta en minut, och `select intern.manadskorning_svar();`. Svaret ska ha `lage`
+   `ok` och `svar` 200, och ingen uppgift. Står det `vantar`, vänta en minut till.
+   Något annat blir en uppgift för förra månaden: laga vägen, stäng uppgiften och
+   gör om steget.
+3. Kör migrationen `manadskorningens_svar_lases_den_forsta`. Först då finns jobbet,
+   och det står under System → Automationer bredvid `manadskorning`.
+4. Döp om de två migrationsfilerna till versionerna `apply_migration` gav dem, och ta
+   bort "INTE KÖRD I DRIFTEN ÄN" i dem och "Inte körd i driften än" i CLAUDE.md.
+5. Kör hela `verktyg/rls-test.sql` mot driften.
+
+Funktionen läser bara anrop från den senaste timmen, så flyttas `manadskorning` ska
+`manadskorning-svar` flyttas lika mycket.
+
+Stänga av: `select cron.unschedule('manadskorning');` och
+`select cron.unschedule('manadskorning-svar');`, som en egen migration.
 
 ## 6b. Utbetala
 

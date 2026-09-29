@@ -89,6 +89,7 @@
     'timmar-betalar': 'Lediga timmar betalar nästa pass',
     'timmar-gar-ut': 'Mejlet om timmar som snart går ut',
     'manadskorning': 'Månadskörningen: lönespec och fakturautkast',
+    'manadskorning-svar': 'Månadskörningens svar: fel blir en uppgift',
     'leads-avidentifiering': 'Intresseanmälningar avidentifieras',
     'ansokan-gallring': 'Ansökningar och CV:n gallras',
     'kontakt-och-fel-gallring': 'Kontaktmeddelanden och klientfel gallras',

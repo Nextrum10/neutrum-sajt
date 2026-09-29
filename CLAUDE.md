@@ -424,7 +424,9 @@ siffrorna är underlagets, frysta när månadskörningen skrev det
 (`NXBetalning.lonespec`). Månadskörningen skriver underlaget den 1:a
 varje månad, av sig själv sedan 2026-09-28 (pg_cron-jobbet
 `manadskorning`, avsnitt 5; läget står under Ekonomi → Månadskörning),
-så en månad har sin lönespec när den är slut. Ett pass som rapporteras
+så en månad har sin lönespec när den är slut. Svarar körningen något
+annat än 200 blir det en uppgift en halvtimme senare, som står kvar
+tills någon stänger den (avsnitt 5). Ett pass som rapporteras
 efter körningen kommer med nästa månad, och lönespecen säger det under
 summan, liksom pass som saknar rapport. Månaderna som har en lönespec
 är märkta i månadsraden. **Ingen skatt, med flit**: `studiehjalpare_form`
@@ -1285,7 +1287,8 @@ den 1:a klockan 04:17 UTC, och `notis_konfig.fakturering_url`.
 `intern.natanrop` med hemligheten i `x-nextrum-notis`, och den vägen
 skriver alltid förra månaden. Saknas adressen blir det en uppgift
 (`manadskorning:adress`) i stället för en tyst månad; går anropet fel
-står det under System → Fel och passen larmar som `ej_utbetalt`.
+står det under System → Fel i sex timmar och blir en uppgift (nedan),
+och passen larmar som `ej_utbetalt`.
 Adminvyn visar om jobbet är på (`manadskorning_lage()`, bara admin): ett
 schema som står av ser annars ut precis som ett som fungerar.
 **Jobbet är på sedan 2026-09-28**, efter stegen i DEPLOY-BETALNING.md
@@ -1298,6 +1301,27 @@ underlag på 240 kr och ett fakturautkast på 758 kr för det, som ska
 tas bort när lönespecen är sedd, inte betalas ut eller läggas in i
 Fortnox (DEPLOY-BETALNING.md avsnitt 6). Hela `rls-test.sql` gick
 igenom mot driften efteråt, 702 av 702.
+**Månadskörningens svar blir en uppgift** (2026-09-29). Ingen läste
+svaret, och `ej_utbetalt` säger inte att körningen misslyckades. En
+halvtimme efter körningen läser `intern.manadskorning_svar()` (pg_cron
+`manadskorning-svar`, 04:47 UTC) svaret, och allt utom 200 blir en
+uppgift, `manadskorning:svar:<månad>`, som står kvar tills någon stänger
+den: 207 (en del av skrivningarna gick fel), 4xx, 5xx, tidsgränsen, ett
+anrop som aldrig fick svar, och ett anrop som saknas för att jobbet inte
+gick eller föll före det. Uppgiften säger vad som hände och pekar på
+Ekonomi → Månadskörning, utan namn, belopp eller något ur svaret. En
+månad ger en uppgift, också när den stängts: det är samma körning.
+Funktionen läser bara anrop från den senaste timmen, för ett äldre svar
+kan pg_net redan ha tagit bort, och ett borttaget svar hade lästs som
+inget svar. **Flyttas `manadskorning` ska `manadskorning-svar` flyttas
+med**; `rls-test.sql` prövar båda schemana. Byggt i databasen och inte
+i `fakturering`, för funktionen ser aldrig det som går fel innan den
+körs (grindens 401, 404, tidsgränsen), och hade behövt driftsättas
+igen. **Inte körd i driften än**: migrationerna
+`manadskorningens_svar_blir_en_uppgift` och
+`manadskorningens_svar_lases_den_forsta` körs efter merge, i den
+ordningen och med funktionen körd för hand emellan, före den 1 oktober
+04:47 UTC (DEPLOY-BETALNING.md avsnitt 6).
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
@@ -1548,6 +1572,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `leads-avidentifiering` | 03:47 | intresseanmälningar sex månader efter senaste kontakten |
 | `ai-och-uppgifter-gallring` | 03:51 | AI-texterna och avslutade uppgifter |
 | `manadskorning` | den 1:a 04:17 | förra månadens underlag och fakturautkast (avsnitt 1) |
+| `manadskorning-svar` | den 1:a 04:47 | månadskörningens svar: allt utom 200 blir en uppgift (ovan). Finns när `manadskorningens_svar_lases_den_forsta` är körd |
 | `konton-oanvanda` | den 1:a 04:53 | konton som inte använts på två år blir uppgifter |
 
 **Analysvyerna (Fas 9.6) bär tre regler.** `analys_leads_per_kalla`,
@@ -1818,7 +1843,13 @@ syns bara när anropet görs.
   (avsnitt 7, `config.toml`); funktionen själv svarar 401 när
   hemligheten inte stämmer. Adminvyn säger vilket.
 - **Svaren finns i sex timmar** (`pg_net.ttl`), inte ett dygn. Listan
-  svarar på "gick det fram nyss?", inte på "vad hände i natt?".
+  svarar på "gick det fram nyss?", inte på "vad hände i natt?". Sex
+  timmar är minst, inte exakt: pg_net tar bort gamla svar när arbetaren
+  har något att göra, och 2026-09-29 låg fjorton timmar gamla svar kvar.
+  Läs alltså aldrig ett saknat svar på ett gammalt anrop som ett fel.
+  Månadskörningen är det enda utskicket vars svar också blir en uppgift
+  (`intern.manadskorning_svar()`, se `manadskorning` ovan), för den går
+  en gång i månaden och ingen tittar när den går.
 
 `DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
 sandlådan slås på innan något provas, och de fem stegen för att lägga

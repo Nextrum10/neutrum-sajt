@@ -43,8 +43,9 @@
 -- ai_texterna_och_avslutade_uppgifter_gallras, Fas 22.4 (timmen dras
 -- när förslaget skickas), manadskorningen_vacks_av_databasen,
 -- manadskorningen_gar_den_forsta, Fas 23.1 (de digitala uppgifterna),
--- personer_redigeras_och_raderas, dokument_delas_med_personen och
--- schemalagda_korningar_syns är körda.
+-- personer_redigeras_och_raderas, dokument_delas_med_personen,
+-- schemalagda_korningar_syns, manadskorningens_svar_blir_en_uppgift och
+-- manadskorningens_svar_lases_den_forsta är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -6378,6 +6379,249 @@ select 'Månadskörning går den 1:a', count(*) = 1,
   from cron.job
  where jobname = 'manadskorning' and active and schedule = '17 4 1 * *'
    and command = 'select intern.manadskorning_vack()';
+
+-- ------------------------------------------------------------
+-- Månadskörningens svar blir en uppgift (2026-09-29)
+--
+-- net._http_response glömmer svaren efter sex timmar, så en körning den
+-- 1:a som gick fel syntes under System → Fel bara till förmiddagen.
+-- intern.manadskorning_svar() läser svaret en halvtimme efter
+-- körningen, och allt utom 200 blir en uppgift som står kvar tills
+-- någon stänger den.
+--
+-- Anropen görs genom väckningen, som schemat gör dem, och flyttas en
+-- halvtimme bakåt: i provet står klockan still hela transaktionen, och
+-- ett anrop som inte har något svar än kan vara på väg. Svaren läggs in
+-- för hand med anropets id, och kroppen får inte synas i uppgiften.
+-- Varje fall rullas tillbaka för sig. Driftens egna anrop till
+-- fakturering och uppgifter om månadskörningens svar flyttas undan
+-- först, så att provet inte beror på vad driften råkar ha.
+-- ------------------------------------------------------------
+create function pg_temp.manadskorning_rent() returns void
+language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', '', true);
+  delete from public.uppgifter where nyckel like 'manadskorning:svar:%';
+  delete from intern.natanrop_logg where mal = 'fakturering';
+  update public.notis_konfig set fakturering_url = 'https://example.invalid/functions/v1/fakturering' where id = 1;
+end $$;
+
+-- Ett anrop genom väckningen, p_alder gammalt, och ett svar med samma
+-- id om p_svar. pg_net ser aldrig anropet: det rullas tillbaka.
+create function pg_temp.manadskorning_anrop(p_alder interval, p_kod integer default null,
+                                            p_svar boolean default true, p_tog_slut boolean default false,
+                                            p_huvuden jsonb default '{}'::jsonb)
+returns bigint language plpgsql as $$
+declare b bigint;
+begin
+  b := (intern.manadskorning_vack() ->> 'begaran')::bigint;
+  if b is null then
+    raise exception 'väckningen anropade inget';
+  end if;
+  update intern.natanrop_logg set skapad = now() - p_alder where id = b;
+  if p_svar then
+    insert into net._http_response (id, status_code, timed_out, error_msg, content, created, headers)
+    values (b, p_kod, p_tog_slut, case when p_tog_slut then 'Timeout of 60000 ms reached' end,
+            '{"problem": ["utbetalning SVARSKROPPEN: duplicate key value"]}', now() - p_alder, p_huvuden);
+  end if;
+  return b;
+end $$;
+
+do $$
+declare
+  -- Månaden fakturering räknar för ett anrop för en halvtimme sedan,
+  -- och för ett schema som inte anropade alls.
+  period    text := to_char(date_trunc('month', (now() - interval '30 minutes') at time zone 'Europe/Stockholm')
+                            - interval '1 month', 'YYYY-MM');
+  period_nu text := to_char(date_trunc('month', now() at time zone 'Europe/Stockholm')
+                            - interval '1 month', 'YYYY-MM');
+  b bigint;
+  r1 jsonb; r2 jsonb; r3 jsonb; u jsonb; kvar text; antal bigint;
+  r_forst jsonb; r_klar jsonb; antal_klar bigint;
+  ok200 jsonb; n200 bigint;
+  tid jsonb; tid_titel text;
+  inget jsonb; inget_titel text;
+  grind jsonb; grind_u jsonb;
+  vantar jsonb; n_vantar bigint;
+  schemat jsonb; for_hand jsonb; n_schemat bigint;
+  adress jsonb; n_adress bigint;
+  fel text;
+begin
+  -- En 207: en uppgift, samma månad igen ger ingen ny, och den står
+  -- kvar när pg_net tagit bort svaret och anropet blivit gammalt.
+  begin
+    perform pg_temp.manadskorning_rent();
+    b := pg_temp.manadskorning_anrop(interval '30 minutes', 207);
+    r1 := intern.manadskorning_svar(true);
+    select to_jsonb(x) into u from public.uppgifter x where x.id = (r1 ->> 'uppgift')::uuid;
+    r2 := intern.manadskorning_svar(true);
+    delete from net._http_response where id = b;
+    update intern.natanrop_logg set skapad = now() - interval '7 hours' where id = b;
+    r3 := intern.manadskorning_svar();
+    select x.status into kvar from public.uppgifter x where x.id = (r1 ->> 'uppgift')::uuid;
+    select count(*) into antal from public.uppgifter where nyckel like 'manadskorning:svar:%';
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, '207: ' || sqlerrm); end if;
+  end;
+
+  -- En stängd uppgift kommer inte tillbaka för samma månad: det är
+  -- samma körning.
+  begin
+    perform pg_temp.manadskorning_rent();
+    b := pg_temp.manadskorning_anrop(interval '30 minutes', 207);
+    r_forst := intern.manadskorning_svar(true);
+    update public.uppgifter set status = 'klar' where id = (r_forst ->> 'uppgift')::uuid;
+    r_klar := intern.manadskorning_svar(true);
+    select count(*) into antal_klar from public.uppgifter where nyckel like 'manadskorning:svar:%';
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, 'klar: ' || sqlerrm); end if;
+  end;
+
+  begin
+    perform pg_temp.manadskorning_rent();
+    b := pg_temp.manadskorning_anrop(interval '30 minutes', 200);
+    ok200 := intern.manadskorning_svar(true);
+    select count(*) into n200 from public.uppgifter where nyckel like 'manadskorning:svar:%';
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, '200: ' || sqlerrm); end if;
+  end;
+
+  begin
+    perform pg_temp.manadskorning_rent();
+    b := pg_temp.manadskorning_anrop(interval '30 minutes', null, true, true);
+    tid := intern.manadskorning_svar(true);
+    select x.titel into tid_titel from public.uppgifter x where x.id = (tid ->> 'uppgift')::uuid;
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, 'tidsgräns: ' || sqlerrm); end if;
+  end;
+
+  begin
+    perform pg_temp.manadskorning_rent();
+    b := pg_temp.manadskorning_anrop(interval '30 minutes', null, false);
+    inget := intern.manadskorning_svar(true);
+    select x.titel into inget_titel from public.uppgifter x where x.id = (inget ->> 'uppgift')::uuid;
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, 'inget svar: ' || sqlerrm); end if;
+  end;
+
+  -- 401 från Supabases grind, inte från funktionen: JWT-kravet är
+  -- påslaget igen, och det är config.toml som ska lagas.
+  begin
+    perform pg_temp.manadskorning_rent();
+    b := pg_temp.manadskorning_anrop(interval '30 minutes', 401, true, false,
+                                     '{"sb-error-code": "UNAUTHORIZED_NO_AUTH_HEADER"}'::jsonb);
+    grind := intern.manadskorning_svar(true);
+    select to_jsonb(x) into grind_u from public.uppgifter x where x.id = (grind ->> 'uppgift')::uuid;
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, 'grinden: ' || sqlerrm); end if;
+  end;
+
+  -- Ett anrop som nyss gjorts och inte har något svar kan vara på väg.
+  begin
+    perform pg_temp.manadskorning_rent();
+    b := pg_temp.manadskorning_anrop(interval '0', null, false);
+    vantar := intern.manadskorning_svar(true);
+    select count(*) into n_vantar from public.uppgifter where nyckel like 'manadskorning:svar:%';
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, 'väntar: ' || sqlerrm); end if;
+  end;
+
+  -- Inget anrop alls. Från schemat gick jobbet inte, eller föll före
+  -- anropet. För hand finns det bara inget att läsa. Kräver att jobbet
+  -- manadskorning finns och är på, som provet ovanför.
+  begin
+    perform pg_temp.manadskorning_rent();
+    for_hand := intern.manadskorning_svar();
+    schemat := intern.manadskorning_svar(true);
+    select count(*) into n_schemat from public.uppgifter where nyckel = 'manadskorning:svar:' || period_nu;
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, 'inget anrop: ' || sqlerrm); end if;
+  end;
+
+  -- Utan adress har väckningen gjort manadskorning:adress själv.
+  begin
+    perform pg_temp.manadskorning_rent();
+    update public.notis_konfig set fakturering_url = null where id = 1;
+    adress := intern.manadskorning_svar(true);
+    select count(*) into n_adress from public.uppgifter where nyckel like 'manadskorning:svar:%';
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, 'utan adress: ' || sqlerrm); end if;
+  end;
+
+  if fel is not null then
+    insert into utfall (test, ok, detalj) values ('Månadskörningens svar', false, fel);
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Månadskörningens svar: en 207 från schemat blir en öppen uppgift för månaden',
+     coalesce(r1 ->> 'lage' = 'delvis' and (r1 ->> 'ny')::boolean
+              and u ->> 'nyckel' = 'manadskorning:svar:' || period and u ->> 'typ' = 'problem'
+              and u ->> 'status' = 'oppen' and u ->> 'skapad_av_typ' = 'system'
+              and (u ->> 'forfallodag')::date = (now() at time zone 'Europe/Stockholm')::date, false),
+     coalesce(r1::text, 'inget svar') || ' ' || coalesce(u ->> 'titel', '')),
+    ('Månadskörningens svar: uppgiften pekar på Ekonomi → Månadskörning först, utan svarskropp, id eller belopp',
+     coalesce(position('Ekonomi → Månadskörning' in u ->> 'beskrivning')
+                between 1 and 160 - char_length('Ekonomi → Månadskörning')
+              and position('SVARSKROPPEN' in concat(u ->> 'titel', u ->> 'beskrivning')) = 0
+              and concat(u ->> 'titel', u ->> 'beskrivning') !~* '[0-9a-f]{8}-[0-9a-f]{4}-'
+              and concat(u ->> 'titel', u ->> 'beskrivning') !~* '\m(kr|kronor|öre)\M', false),
+     coalesce(u ->> 'beskrivning', 'ingen uppgift')),
+    ('Månadskörningens svar: samma månad igen ger ingen ny uppgift',
+     coalesce(r2 ->> 'uppgift' = r1 ->> 'uppgift' and not (r2 ->> 'ny')::boolean, false),
+     coalesce(r2::text, 'inget svar')),
+    ('Månadskörningens svar: uppgiften står kvar när pg_net tagit bort svaret',
+     coalesce(kvar = 'oppen' and antal = 1 and r3 ->> 'lage' = 'inget_anrop', false),
+     coalesce(kvar, 'borta') || ', uppgifter: ' || coalesce(antal::text, '?') || ', ' || coalesce(r3::text, '')),
+    ('Månadskörningens svar: en stängd uppgift kommer inte tillbaka för samma månad',
+     coalesce(antal_klar = 1 and r_klar ->> 'uppgift' = r_forst ->> 'uppgift', false),
+     'uppgifter: ' || coalesce(antal_klar::text, '?') || ', ' || coalesce(r_klar::text, '')),
+    ('Månadskörningens svar: en 200 ger ingen uppgift',
+     coalesce(ok200 ->> 'lage' = 'ok' and n200 = 0, false),
+     coalesce(ok200::text, 'inget svar') || ', uppgifter: ' || coalesce(n200::text, '?')),
+    ('Månadskörningens svar: tidsgränsen blir en uppgift',
+     coalesce(tid ->> 'lage' = 'tidsgrans' and tid_titel like '%svarade inte i tid', false),
+     coalesce(tid_titel, tid::text, 'inget svar')),
+    ('Månadskörningens svar: ett anrop utan svar blir en uppgift',
+     coalesce(inget ->> 'lage' = 'inget_svar' and inget_titel like '%fick inget svar', false),
+     coalesce(inget_titel, inget::text, 'inget svar')),
+    ('Månadskörningens svar: 401 från grinden pekar på config.toml',
+     coalesce(grind ->> 'lage' = 'nekad' and grind_u ->> 'titel' like '%nekades (401)'
+              and position('supabase/config.toml' in grind_u ->> 'beskrivning') > 0, false),
+     coalesce(grind_u ->> 'beskrivning', grind::text, 'inget svar')),
+    ('Månadskörningens svar: ett anrop som kan vara på väg väntar',
+     coalesce(vantar ->> 'lage' = 'vantar' and n_vantar = 0, false),
+     coalesce(vantar::text, 'inget svar') || ', uppgifter: ' || coalesce(n_vantar::text, '?')),
+    ('Månadskörningens svar: schemat utan anrop blir en uppgift, för hand inte',
+     coalesce(schemat ->> 'lage' = 'inget_anrop' and schemat ->> 'uppgift' is not null
+              and for_hand ->> 'lage' = 'inget_anrop' and for_hand ->> 'uppgift' is null
+              and n_schemat = 1, false),
+     coalesce(schemat::text, 'inget svar') || ' / ' || coalesce(for_hand::text, 'inget svar')),
+    ('Månadskörningens svar: utan adress ingen andra uppgift',
+     coalesce(adress ->> 'lage' = 'ingen_adress' and n_adress = 0, false),
+     coalesce(adress::text, 'inget svar'));
+end $$;
+
+select pg_temp.prova('Månadskörningens svar anon läser det inte', null,
+  array['select intern.manadskorning_svar()'], 'nekad');
+select pg_temp.prova('Månadskörningens svar inte admin heller, bara schemat', '00000000-0000-4000-8000-0000000000ad',
+  array['select intern.manadskorning_svar(true)'], 'nekad');
+
+-- En halvtimme efter körningen (17 4 1 * *, provet ovanför). Funktionen
+-- läser anrop från den senaste timmen, så de två schemana hör ihop.
+insert into utfall (test, ok, detalj)
+select 'Månadskörningens svar läses 04:47 den 1:a', count(*) = 1,
+       coalesce(string_agg(schedule || ' ' || command, '; '), 'inget jobb')
+  from cron.job
+ where jobname = 'manadskorning-svar' and active and schedule = '47 4 1 * *'
+   and command = 'select intern.manadskorning_svar(true)';
 
 -- ------------------------------------------------------------
 -- De schemalagda körningarna (2026-09-29)
