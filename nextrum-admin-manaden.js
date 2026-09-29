@@ -73,7 +73,7 @@
     const host = $('#man-manader');
     if (!host) return;
     MV = NXStudie.månadsval(host, {
-      antal: 12,
+      alla: true,
       framåt: 2,
       märke: m => S.stangdaManader && S.stangdaManader.has(m) ? 'Stängd' : '',
       vidVal: () => ritaMånaden()

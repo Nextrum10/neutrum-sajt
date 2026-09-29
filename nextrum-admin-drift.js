@@ -589,9 +589,9 @@
           vald.
        2. Hela tiden gick att söka i. Ett sök räknar upp de andra
           månader det har träffar i, med en knapp dit.
-     Raden börjar vid det äldsta hållna passet, och aldrig senare än
-     tolv månader bakåt: Lektioner är historiken, och hela tiden nådde
-     varje pass.
+     Raden börjar i september 2026, när de första passen hölls, och
+     har varje månad sedan dess: Lektioner är historiken, och hela
+     tiden nådde varje pass.
      ============================================================ */
 
   /* Pass som redan varit, oavsett om någon rapporterat dem.
@@ -615,14 +615,19 @@
     if (MV) return;
     const host = $('#lekt-manader');
     if (!host) return;
+    /* Varje månad sedan september 2026 (alla), som Betalningar,
+       Månadens ekonomi och Löner. Utan konstanten (en äldre
+       nextrum-studie.js ur cachen) räknas raden från det äldsta hållna
+       passet, som förut. */
     const nu = new Date();
     const äldsta = hållna.map(passetsMånad)
       .reduce((a, m) => m < a ? m : a, NXStudie.månadIso(nu));
     const antal = Math.max(12, (nu.getFullYear() - Number(äldsta.slice(0, 4))) * 12
       + nu.getMonth() + 1 - Number(äldsta.slice(5, 7)) + 1);
-    förstaMånad = [NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - antal + 1, 1, 12)),
-      NXStudie.FÖRSTA_MÅNAD || ''].sort().pop();
+    förstaMånad = NXStudie.FÖRSTA_MÅNAD
+      || NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - antal + 1, 1, 12));
     MV = NXStudie.månadsval(host, {
+      alla: true,
       antal,
       märke: m => saknasPer[m] ? saknasPer[m] + ' saknas' : '',
       vidVal: () => ritaLektioner()

@@ -82,7 +82,7 @@
     const host = $('#eko-manader');
     if (!host) return;
     MV = NXStudie.månadsval(host, {
-      antal: 12,
+      alla: true,
       framåt: 2,
       märke: m => S.stangdaManader && S.stangdaManader.has(m) ? 'Stängd' : '',
       vidVal: bytMånad
@@ -109,13 +109,14 @@
   const månadText = () => NXStudie.månadsNamn(valdMånad());
   const stor = s => String(s).charAt(0).toUpperCase() + String(s).slice(1);
 
-  /* Väljaren har de tolv senaste månaderna, men ingen före september
-     2026 (NXStudie.FÖRSTA_MÅNAD). En månad utanför den står som text i
-     stället för knapp. */
+  /* Väljaren har varje månad sedan september 2026
+     (NXStudie.FÖRSTA_MÅNAD). En månad utanför den står som text i
+     stället för knapp. Utan konstanten (en äldre nextrum-studie.js ur
+     cachen) har raden de tolv senaste. */
   function iVäljaren(m) {
     const nu = new Date();
-    const först = [NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - 11, 1, 12)),
-      NXStudie.FÖRSTA_MÅNAD || ''].sort().pop();
+    const först = NXStudie.FÖRSTA_MÅNAD
+      || NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - 11, 1, 12));
     return m >= först && m <= NXStudie.månadIso(nu);
   }
 

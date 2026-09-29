@@ -124,7 +124,7 @@
     if (!host) return;
     const nu = new Date();
     MV = NXStudie.månadsval(host, {
-      antal: 12,
+      alla: true,
       framåt: 1,
       vald: önskad || NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() + (nu.getDate() > 25 ? 1 : 0), 1, 12)),
       /* Utbetald när varje underlag för passen är det. Stängd (Fas 20.2)
