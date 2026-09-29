@@ -116,6 +116,8 @@ const NXAdmin = (function () {
      Läget står kvar till höger, för det är arbetskön: en ny anmälan
      ska synas som ny utan att någon öppnar den. o.under är för de två
      rekryteringsflikarna, där frågan är hur länge någon har väntat.
+     o.flik öppnar panelen på en annan flik än den första: från
+     rekryteringsflikarna på stegen, för det är dem de flikarna gäller.
      ============================================================ */
   function namnlista(rader, o) {
     if (!rader.length) return tomt(o.tomt || 'Inget här', '');
@@ -124,7 +126,8 @@ const NXAdmin = (function () {
       /* Initialerna först (2026-09-29): ögat hittar en person på formen
          innan det läst namnet, och en lista med bara text var en vägg. De
          är aria-hidden; skärmläsaren läser namnet som förut. */
-      return '<li><button type="button" class="adm-namn" data-dp="' + esc(o.typ + ':' + o.id(r)) + '">'
+      return '<li><button type="button" class="adm-namn" data-dp="' + esc(o.typ + ':' + o.id(r)) + '"'
+        + (o.flik ? ' data-dp-start="' + esc(o.flik) + '"' : '') + '>'
         + M.avatar(o.namn(r) || '', null, { liten: true })
         + '<span class="adm-namn-text"><b>' + esc(o.namn(r) || '(namn saknas)') + '</b>'
         + (under ? '<span>' + esc(under) + '</span>' : '')
