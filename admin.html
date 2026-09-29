@@ -749,15 +749,22 @@
              när studiehjälparen skrivit den, och bara completed-pass
              kommer med på underlaget den 25:e. En saknad rapport är
              alltså en timme ingen får betalt för.
+
+             Månad för månad sedan 2026-09-29. Leo: "filtrera för
+             månader ... lättare att se över en mängd lektioner under
+             en specifik tid". Talen och listan gäller den månad som är
+             vald i raden, på passets datum, och en månad med pass utan
+             rapport är märkt där (nextrum-admin-drift.js).
              ============================================================ -->
         <section class="vy-sek" data-sek="lektioner" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Lektioner</h2>
-              <p>Pass som hållits. Utan rapport blir ett pass aldrig genomfört, och då kommer det inte med på studiehjälparens underlag.</p>
+              <p>Pass som hållits, månad för månad. Utan rapport blir ett pass aldrig genomfört, och då kommer det inte med på studiehjälparens underlag.</p>
             </div>
           </div>
 
+          <div id="lekt-manader" aria-label="Välj månad för lektionerna"></div>
           <div class="adm-tal-rad" id="lekt-tal"><div class="loading">Hämtar</div></div>
 
           <div class="dbox">
@@ -768,13 +775,10 @@
                 <option value="saknas">Rapport saknas</option>
                 <option value="finns">Rapport skriven</option>
               </select>
-              <select class="sel" id="lekt-period" aria-label="Filtrera på period">
-                <option value="30">Senaste 30 dagarna</option>
-                <option value="90">Senaste tre månaderna</option>
-                <option value="">Hela tiden</option>
-              </select>
               <span class="small" id="lekt-antal" style="margin-left:auto;color:var(--bl-2)"></span>
             </div>
+            <!-- Söket i de andra månaderna, med en knapp dit. -->
+            <div id="lekt-andra"></div>
             <div id="lekt-tabell"><div class="loading">Hämtar</div></div>
           </div>
         </section>
@@ -2381,7 +2385,7 @@
 <script src="nextrum-admin-rekrytering.js?v=d08ab262"></script>
 <script src="nextrum-admin-bibliotek.js?v=66dad1e3"></script>
 <script src="nextrum-admin-kommunikation.js?v=97c8d085"></script>
-<script src="nextrum-admin-drift.js?v=2437242e"></script>
+<script src="nextrum-admin-drift.js?v=8718d3e7"></script>
 <script src="nextrum-admin-ekonomi.js?v=334c7477"></script>
 <script src="nextrum-admin-manaden.js?v=9d66770e"></script>
 <script src="nextrum-admin-loner.js?v=7138b540"></script>

@@ -429,6 +429,20 @@ bekräftat. Att bekräfta filtreras inte. Två saker kom fram i provbänken:
   behålla höjden tills tomrummet ligger under skärmkanten.
   Studiehjälparvyns två rader har bara `håll()`.
 
+**Adminvyns Lektioner likaså** (2026-09-29, Leo: "lektioner, där ska man
+kunna filtrera för månader, i admin. lättare att se över en mängd
+lektioner under en specifik tid"). Samma rad som Ekonomi, Månadens
+ekonomi och Löner, men en egen, på passets månad, och talen överst gäller
+månaden. Raden ersatte väljaren 30 dagar, tre månader, hela tiden, och
+två saker den gav står kvar på annat sätt: en månad med hållna pass utan
+rapport är märkt i raden ("2 saknas"), så att larmet inte gömmer sig i en
+månad som inte är vald, och ett sök räknar upp sina träffar i andra
+månader med en knapp dit. Raden börjar vid det äldsta hållna passet,
+minst tolv månader bakåt: hela tiden nådde varje pass. Byts månaden mot
+en tom på en telefon klämmer sidan scrollen 15–25 px. Det är inte lagat,
+med flit: på en dator står raden så högt att det inte händer, och en
+reserv som `rbBytMånad` lämnade 311 px tomrum kvar på en kort sida.
+
 **Varje avslutad månad har en lönespecifikation** (2026-09-28). Leo:
 "skriv lönespec för månaden efter att månaden är klar för
 studiehjälparen, under utbetalning för månaden. Så ska det vara för
@@ -1116,6 +1130,11 @@ språk, på sina egna namn:
 Headless Chromium döljer rullningslister som standard. Starta med
 `ignoreDefaultArgs: ['--hide-scrollbars']`, annars syns inte vad en list
 gör med menyns bredd.
+
+Playwrights `page.click()` rullar själv fram ett element som ligger under
+en fast rad (sektionsraden på en telefon), och flytten mäts då som ett
+hopp sidan aldrig gjorde: 190 px i provet av Lektioners månadsrad
+(2026-09-29). Mät ett tryck med `el.click()` i sidan (`page.evaluate`).
 
 **Kvar, medvetet inte gjort.** Granskat bild för bild med testdata, på
 dator och delvis på telefon och i mörkt läge: alla sektioner och flikar,
