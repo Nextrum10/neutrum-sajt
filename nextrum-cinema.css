@@ -140,6 +140,18 @@
   --ockra-soft:#F0E4C9;
   --ockra-text:#664510;
   --bricka:#E9E2D4;       /* datumrutan och ikonrutan i ett kort */
+  /* Ämnenas färger i NexLäx (2026-09-29, Leo: "lite mer färgig för att
+     navigera enklare"). En per ämne, så att man ser vilket ämne man är i
+     utan att läsa. Alla klarar AA mot papperet och --yta som text; -l är
+     syskonen för barken, som --lera-l. Resten av sajten använder dem
+     inte: lera, mossa och ockra säger fortfarande vems drag det är. */
+  --amne-ma:#2F6690; --amne-ma-l:#8DB9E0;
+  --amne-sv:#A63D3A; --amne-sv-l:#E7978F;
+  --amne-en:#6A4A99; --amne-en-l:#B9A1E0;
+  --amne-no:#3A7549; --amne-no-l:#93CBA0;
+  --amne-so:#8A5C12; --amne-so-l:#DDB266;
+  --amne-prog:#1D6F75; --amne-prog-l:#78C8CD;
+  --amne-ms:#9E4468; --amne-ms-l:#E4A0BD;
 
   /* --- rytm --- */
   --w-text:1180px;        /* text och formulär */
@@ -221,6 +233,8 @@
     --mossa-soft:rgba(157,173,134,.16); --mossa-text:#B8C6A2;
     --ockra-soft:rgba(192,138,46,.17); --ockra-text:#D9AE62;
     --bricka:#2C2921;
+    --amne-ma:#8DB9E0; --amne-sv:#E7978F; --amne-en:#B9A1E0; --amne-no:#93CBA0;
+    --amne-so:#DDB266; --amne-prog:#78C8CD; --amne-ms:#E4A0BD;
 
     /* Bastokens måste skrivas om HÄR, inte i det vanliga :root-blocket
        längre ner. nextrum.css sätter sina mörka färger med
@@ -265,6 +279,8 @@
   --mossa-soft:rgba(157,173,134,.16); --mossa-text:#B8C6A2;
   --ockra-soft:rgba(192,138,46,.17); --ockra-text:#D9AE62;
   --bricka:#2C2921;
+  --amne-ma:#8DB9E0; --amne-sv:#E7978F; --amne-en:#B9A1E0; --amne-no:#93CBA0;
+  --amne-so:#DDB266; --amne-prog:#78C8CD; --amne-ms:#E4A0BD;
   --bg:var(--pap-2); --fg:var(--bl); --muted:var(--bl-2); --muted-2:var(--bl-3);
   --line:var(--ln); --line-2:var(--ln-2); --surface:var(--pap-3); --surface-2:var(--pap-3);
   --btn-bg:var(--bl); --btn-fg:var(--pap); --focus:var(--bl);

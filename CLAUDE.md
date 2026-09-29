@@ -762,6 +762,23 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
 - Illustrationen av studievyn på startsidan och på För elever &
   föräldrar visar NexLäx i stället för de två gamla sektionerna, och
   rundturen klarar en nivå där (avsnitt 3).
+- **Varje ämne har en färg** (2026-09-29, Leo: "gör designen lite mer
+  interaktiv och lite mer färgig för att navigera enklare"). Matematik
+  blå, svenska röd, engelska lila, NO grön, SO ockra, programmering
+  turkos och moderna språk rosa, som `--amne-*` i cinemas `:root` och i
+  båda mörka blocken, med `-l`-syskon för barken. Alla klarar AA som
+  text mot papperet. Det valda ämnet sätter färgen på vägen
+  (`data-nl-f` på `#nl-vag`, satt av `ritaVäg`), och ämneskorten och
+  raderna i Din utveckling bär var sin: sken och mätare i toppen, det
+  område man står i, nästa nivå, de öppna nivåerna och pratbubblan.
+  Lägena har kvar sina färger: klart är mossa, bemästrat ockra, och
+  det primära steget i toppen lera, för det är ert drag. Färgen säger
+  VAR man är, inte vems drag det är, och resten av sajten använder den
+  inte. **Genvägarna till områdena** (`.nl-hopp`) står under Din väg,
+  med läget i samma färg som områdets huvud, och ett tryck lägger
+  området under sidhuvudet (`scroll-margin-top` på `.nl-omr`) och
+  fokuserar nästa nivå. En nivå lyfter med `scale` när pekaren står på
+  den, aldrig med `translate`: den äger sicksacken.
 
 En studiehjälpare syns publikt först när admin satt läget till
 **Godkänd**.
