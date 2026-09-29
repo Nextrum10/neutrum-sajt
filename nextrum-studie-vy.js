@@ -4458,6 +4458,10 @@
       msg: $('#notisval-msg')
     });
 
+    /* Dokumenten under Profil → Dokument (2026-09-29): avtal och annat
+       Nextrum delat med familjen. Samma modul som studiehjälparvyn. */
+    NXStudie.dokument({ host: $('#dokument-lista'), supa: supa, msg: $('#dokument-msg') });
+
     /* Barnen först: nästan allt nedan gäller det valda barnet. Studie-
        hjälparens kort — med en signerad profilbild, två frågor i rad —
        får inte hålla passen och läxorna i kö; chatten startar när

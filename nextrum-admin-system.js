@@ -17,7 +17,7 @@
   const M = NXMedia;
 
   const { AVBOKNINGSSKAL, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, kontaktaRuta, kortDatum,
-          märkFlik, namnFör, närText, pill, rad, skriv, tabell, ärRaderad } = NXAdmin;
+          märkFlik, namnFör, närText, pill, rad, ritaPanelen, skriv, tabell, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaDetalj = (...a) => NXAdmin.rita.ritaDetalj(...a);
@@ -750,7 +750,10 @@
     klientfel: 'Klientfel', bolagsfakta: 'Bolagsfakta',
     /* 2026-09-28: radera_person() skriver konto.raderat eller
        konto.avidentifierat, och elev.raderad eller elev.avidentifierad. */
-    konto: 'Konto', elev: 'Elev'
+    konto: 'Konto', elev: 'Elev',
+    /* Fas 9.10 loggade handlingarna från början, men raden stod som
+       "handling skapad". Sedan 2026-09-29 står delningen också där. */
+    handling: 'Dokument'
   };
   const AUDIT_HANDLING = {
     skapad: 'skapad', borttagen: 'borttagen', andrad: 'ändrad', status: 'ny status',
@@ -781,7 +784,10 @@
     studiehjalpare_form: 'studiehjälparnas form', bokforingssystem: 'bokföringssystem',
     /* Raderingen (2026-09-28). Bara antal, aldrig vem. */
     roll: 'roll', avbokade_pass: 'avbokade pass', barn: 'barn', anmalningar: 'anmälningar',
-    ansokningar: 'ansökningar', kontaktmeddelanden: 'frågor'
+    ansokningar: 'ansökningar', kontaktmeddelanden: 'frågor',
+    /* Dokumenten (Fas 9.10, delningen 2026-09-29) */
+    giltig_fran: 'giltig från', giltig_till: 'giltig till', uppladdad_av: 'uppladdad av',
+    delad_med_personen: 'personen ser den'
   };
 
 
@@ -958,8 +964,7 @@
      DOKUMENT (Fas 9.10)
 
      Handlingar OM verksamheten: avtal, intyg, försäkringar,
-     bolagspapper. Hinken är privat och policyerna släpper bara in
-     admin.
+     bolagspapper. Hinken är privat.
 
      TVÅ SAKER SOM INTE ÄR GODTYCKLIGA:
 
@@ -972,11 +977,33 @@
         Sökvägen finns bara i raden. Försvinner raden först blir
         filen omöjlig att hitta och omöjlig att städa — exakt det
         fel 9.2 rättade i materiallistan.
+
+     VEM DET GÄLLER, OCH VEM SOM SER DET (2026-09-29)
+
+     Leo: "man ska kunna spara dokument där och välja vilken person
+     som ska ha tillgång till det genom sina inställningar. dvs
+     anställningsavtal med lärare eller annat avtal med kund."
+
+     Personen står i kolumnerna kopplad_tabell och kopplad_id, som
+     fanns sedan 9.10 utan att någon vy satte dem; raderingsrutan
+     räknar redan på dem. delad_med_personen säger om personen ser
+     dokumentet under Profil & inställningar → Dokument i sin egen
+     vy (NXStudie.dokument). En person, inte en lista: ett avtal har
+     en motpart.
+
+     Kolumnen delad_med_personen skickas bara när den har något att
+     säga. Innan migrationen dokument_delas_med_personen är körd finns
+     den inte, och då ska en vanlig uppladdning fortfarande gå; bara
+     delningen säger att den inte finns än.
      ============================================================ */
   const DOK_TYP = {
     avtal: 'Avtal', intyg: 'Intyg', forsakring: 'Försäkring',
     bolagshandling: 'Bolagshandling', policy: 'Policy', ovrigt: 'Övrigt'
   };
+
+  /* Id:t på handlingen som ändras, eller null när formuläret lägger
+     till en ny. */
+  let dokÄndras = null;
 
   function dokFilnamn(h) {
     if (!h.fil) return null;
@@ -984,23 +1011,168 @@
     return String(h.fil).split('/').slice(1).join('/').replace(/^\d+-/, '');
   }
 
+  function dokPersonId(h) {
+    return h && h.kopplad_tabell === 'profiles' && h.kopplad_id ? h.kopplad_id : null;
+  }
+
+  /* De som kan ha ett avtal med oss: familjerna och studiehjälparna.
+     Inte admin, och inte den radera_person() redan tagit bort. */
+  function dokPersoner() {
+    return Object.keys(S.personer || {}).map(id => S.personer[id])
+      .filter(p => p && !p.is_admin && !ärRaderad(p) && (p.role === 'parent' || p.role === 'tutor'))
+      .sort((a, b) => namnFör(a.id).localeCompare(namnFör(b.id), 'sv'));
+  }
+
+  /* Rullgardinen byggs om när listan ritas, så att en familj som
+     skapat konto sedan sidan laddades finns med. Valet står kvar. */
+  function fyllDokPersoner() {
+    const väljare = $('#dok-person');
+    if (!väljare) return;
+    const vald = väljare.value;
+    const alla = dokPersoner();
+    const grupp = (rubrik, lista) => lista.length
+      ? '<optgroup label="' + esc(rubrik) + '">' + lista.map(p =>
+          '<option value="' + esc(p.id) + '">' + esc(namnFör(p.id)
+            + (p.email && p.email !== p.full_name ? ' · ' + p.email : '')) + '</option>').join('')
+        + '</optgroup>'
+      : '';
+    väljare.innerHTML = '<option value="">Ingen person, bara vi</option>'
+      + grupp('Familjer', alla.filter(p => p.role === 'parent'))
+      + grupp('Studiehjälpare', alla.filter(p => p.role === 'tutor'));
+    /* En person som ändras men inte längre står i listan (raderad
+       sedan dess) läggs till, så att valet inte byts tyst. */
+    if (vald && !väljare.querySelector('option[value="' + CSS.escape(vald) + '"]')) {
+      väljare.insertAdjacentHTML('beforeend', '<option value="' + esc(vald) + '">'
+        + esc(S.personer[vald] ? namnFör(vald) : 'Borttaget konto') + '</option>');
+    }
+    väljare.value = vald;
+  }
+
+  /* Säger vad valet betyder. Föräldravyn är låst tills familjen är
+     matchad, och studiehjälparvyn tills hen är godkänd: ett dokument
+     som delas innan dess syns först när vyn öppnas, och det ska den
+     som delar veta. */
+  function dokPersonNot() {
+    const id = ($('#dok-person') || {}).value || '';
+    const kryss = $('#dok-delad');
+    const not = $('#dok-person-not');
+    if (!kryss || !not) return;
+    kryss.disabled = !id;
+    if (!id) kryss.checked = false;
+    const p = id ? S.personer[id] : null;
+    let text = '';
+    if (p && kryss.checked) {
+      if (p.role === 'parent' && p.match_status !== 'matched') {
+        text = 'Familjen är inte matchad än, och föräldravyn är låst till dess. Dokumentet syns där när familjen matchats.';
+      } else if (p.role === 'tutor' && (S.tutorProfiler[id] || {}).status !== 'approved') {
+        text = 'Studiehjälparen är inte godkänd än, och vyn är låst till dess. Dokumentet syns där när hen godkänts.';
+      }
+    } else if (p && !kryss.checked) {
+      text = 'Bara vi ser dokumentet. Det står under personen i panelen, och raderingsrutan räknar det.';
+    }
+    not.textContent = text;
+    not.hidden = !text;
+  }
+
+  /* Formuläret tillbaka till en ny handling, med en person förvald när
+     man kommer från personens panel. */
+  function dokNy(förval) {
+    dokÄndras = null;
+    const form = $('#dok-form');
+    if (!form) return;
+    form.reset();
+    $('#dok-rubrik').textContent = 'Ny handling';
+    $('#dok-spara').textContent = 'Lägg till';
+    $('#dok-avbryt').hidden = true;
+    $('#dok-fil-grupp').hidden = false;
+    fyllDokPersoner();
+    $('#dok-person').value = förval && S.personer[förval] ? förval : '';
+    $('#dok-person').disabled = false;
+    /* Den som väljer en person vill oftast att personen ser avtalet:
+       det var hela frågan. Krysset går att ta bort. */
+    $('#dok-delad').checked = !!$('#dok-person').value;
+    dokPersonNot();
+  }
+
+  function dokÄndra(h) {
+    dokÄndras = h.id;
+    fyllDokPersoner();
+    $('#dok-rubrik').textContent = 'Ändra handlingen';
+    $('#dok-spara').textContent = 'Spara ändringen';
+    $('#dok-avbryt').hidden = false;
+    /* Filen byts inte här. En ny fil är en ny handling, och den gamla
+       tas bort för sig: annars hade personen kunnat ha den gamla
+       öppen medan den byttes under hen. */
+    $('#dok-fil-grupp').hidden = true;
+    $('#dok-typ').value = h.typ;
+    $('#dok-titel').value = h.titel || '';
+    $('#dok-till').value = h.giltig_till || '';
+    const person = dokPersonId(h);
+    const väljare = $('#dok-person');
+    if (person && !väljare.querySelector('option[value="' + CSS.escape(person) + '"]')) {
+      väljare.insertAdjacentHTML('beforeend', '<option value="' + esc(person) + '">'
+        + esc(S.personer[person] ? namnFör(person) : 'Borttaget konto') + '</option>');
+    }
+    väljare.value = person || '';
+    /* En handling kopplad till något annat än en person (ett uppdrag,
+       en faktura) byter inte koppling härifrån: rullgardinen hade tömt
+       den utan att någon bett om det. */
+    väljare.disabled = !!h.kopplad_tabell && h.kopplad_tabell !== 'profiles';
+    $('#dok-delad').checked = !!h.delad_med_personen;
+    dokPersonNot();
+    rensa($('#dok-msg'));
+    const ruta = $('#dok-form').closest('.dbox');
+    NXStudie.visaÖverst(ruta);
+    $('#dok-titel').focus({ preventScroll: true });
+  }
+
+  /* Felet när kolumnen inte finns än: PostgREST säger PGRST204 och
+     namnet på kolumnen. */
+  function dokDelningSaknas(fel) {
+    return !!fel && (fel.code === 'PGRST204' || /delad_med_personen/.test(String(fel.message || '')));
+  }
+  const DOK_EJ_KORD = 'Delningen finns inte i databasen än: migrationen dokument_delas_med_personen '
+    + 'är inte körd. Ingenting sparades.';
+
+  function dokPerson(h) {
+    const id = dokPersonId(h);
+    if (!id) {
+      /* En koppling till något annat än en person visas som förut. */
+      return h.kopplad_tabell
+        ? esc(String(h.kopplad_id || '').slice(0, 8))
+        : '<span style="color:var(--bl-3)">—</span>';
+    }
+    const p = S.personer[id];
+    const typ = p && p.role === 'tutor' ? 'studiehjalpare' : 'familj';
+    const namn = p && !ärRaderad(p)
+      ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="' + typ + ':' + esc(id) + '">'
+        + esc(namnFör(id)) + '</button>'
+      : esc(p ? namnFör(id) : 'Borttaget konto');
+    return namn + '<span class="adm-und">'
+      + (h.delad_med_personen ? 'Ser det under Profil' : 'Bara vi ser det') + '</span>';
+  }
+
   function ritaDokument() {
     const host = $('#dok-tabell');
     if (!host) return;
+    fyllDokPersoner();
+    dokPersonNot();
     const filter = ($('#dok-filter') || {}).value || '';
     const alla = S.handlingar || [];
-    const rader = alla.filter(h => !filter || h.typ === filter);
+    const rader = alla.filter(h => !filter
+      || (filter === 'delade' ? h.delad_med_personen : h.typ === filter));
     const idag = isoFor(new Date());
 
     $('#dok-antal').textContent = rader.length + ' av ' + alla.length;
+    if (S.handlingarFel) {
+      host.innerHTML = '<p class="fel">Handlingarna gick inte att hämta: ' + esc(S.handlingarFel) + '</p>';
+      return;
+    }
     host.innerHTML = tabell([
       { namn: 'Sort', rita: h => '<b>' + esc(DOK_TYP[h.typ] || h.typ) + '</b>' },
       { namn: 'Vad', rita: h => esc(h.titel)
         + (dokFilnamn(h) ? '<span class="adm-und">' + esc(dokFilnamn(h)) + '</span>' : '') },
-      { namn: 'Gäller', rita: h => h.kopplad_tabell
-        ? esc(S.personer && S.personer[h.kopplad_id]
-              ? namnFör(h.kopplad_id) : String(h.kopplad_id).slice(0, 8))
-        : '<span style="color:var(--bl-3)">—</span>' },
+      { namn: 'Person', rita: dokPerson },
       { namn: 'Giltig till', rita: h => h.giltig_till
         ? '<span class="adm-tal">' + esc(kortDatum(h.giltig_till)) + '</span>'
           + (h.giltig_till < idag ? ' ' + pill('Gått ut', 'ar-ny') : '')
@@ -1008,9 +1180,10 @@
       { namn: 'Uppladdad', rita: h => '<span class="adm-tal">' + esc(kortDatum(h.uppladdad)) + '</span>'
         + '<span class="adm-und">' + esc(h.uppladdad_av ? namnFör(h.uppladdad_av) : 'okänt') + '</span>' },
       { namn: '', höger: true, rita: h =>
-        (h.fil ? '<button class="btn btn-ghost btn-sm" data-dok-oppna="' + h.id + '">Öppna</button> ' : '')
-        + '<button class="btn btn-ghost btn-sm" data-dok-bort="' + h.id + '">Ta bort</button>' }
-    ], rader, filter ? 'Ingen handling av den sorten' : 'Inga handlingar än');
+        (h.fil ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button> ' : '')
+        + '<button class="btn btn-ghost btn-sm" type="button" data-dok-andra="' + esc(h.id) + '">Ändra</button> '
+        + '<button class="btn btn-ghost btn-sm" type="button" data-dok-bort="' + esc(h.id) + '">Ta bort</button>' }
+    ], rader, filter ? 'Ingen handling här' : 'Inga handlingar än');
   }
 
   async function hämtaHandlingar() {
@@ -1019,6 +1192,8 @@
     S.handlingarFel = error ? felText(error) : null;
     S.handlingar = data || [];
     ritaDokument();
+    /* Personens panel visar samma handlingar (dpDokument). */
+    ritaPanelen();
   }
 
   const dokFilter = $('#dok-filter');
@@ -1027,28 +1202,76 @@
   const dokFlik = $('#flik-dokument');
   if (dokFlik) dokFlik.addEventListener('click', hämtaHandlingar);
 
-  const dokSpara = $('#dok-spara');
-  if (dokSpara) dokSpara.addEventListener('click', async () => {
+  const dokPersonVal = $('#dok-person');
+  if (dokPersonVal) dokPersonVal.addEventListener('change', () => {
+    /* Ny person: krysset följer valet. Ingen person: inget att dela. */
+    $('#dok-delad').checked = !!dokPersonVal.value;
+    dokPersonNot();
+  });
+  const dokKryss = $('#dok-delad');
+  if (dokKryss) dokKryss.addEventListener('change', dokPersonNot);
+
+  const dokAvbryt = $('#dok-avbryt');
+  if (dokAvbryt) dokAvbryt.addEventListener('click', () => { dokNy(); rensa($('#dok-msg')); });
+
+  const dokForm = $('#dok-form');
+  if (dokForm) dokForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const knapp = $('#dok-spara');
+    if (knapp.getAttribute('aria-busy')) return;
     const msg = $('#dok-msg');
+    rensa(msg);
     const titel = $('#dok-titel').value.trim();
+    if (!titel) { säg(msg, 'Skriv vad handlingen är.', false); $('#dok-titel').focus(); return; }
+
+    const gammal = dokÄndras ? (S.handlingar || []).find(x => x.id === dokÄndras) : null;
+    if (dokÄndras && !gammal) { säg(msg, 'Handlingen finns inte längre. Ladda om listan.', false); return; }
+
+    const person = $('#dok-person').value || null;
+    const delad = !!person && $('#dok-delad').checked;
+    const rad = { typ: $('#dok-typ').value, titel: titel, giltig_till: $('#dok-till').value || null };
+    if (!$('#dok-person').disabled) {
+      rad.kopplad_tabell = person ? 'profiles' : null;
+      rad.kopplad_id = person;
+    }
+    if (delad || (gammal && gammal.delad_med_personen)) rad.delad_med_personen = delad;
+
+    /* ---------- ändra ---------- */
+    if (gammal) {
+      await medan(knapp, 'Sparar…', async () => {
+        const { error } = await supa.from('handlingar').update(rad).eq('id', gammal.id);
+        if (error) {
+          säg(msg, dokDelningSaknas(error) ? DOK_EJ_KORD : 'Kunde inte spara: ' + felText(error), false);
+          return;
+        }
+        const vem = person ? namnFör(person) : null;
+        dokNy();
+        säg(msg, delad ? '✓ Sparat. ' + vem + ' ser dokumentet under Profil & inställningar.'
+          : gammal.delad_med_personen ? '✓ Sparat. Personen ser inte dokumentet längre.'
+          : '✓ Handlingen är sparad.', true);
+        await hämtaHandlingar();
+      });
+      return;
+    }
+
+    /* ---------- ny ---------- */
     const fil = ($('#dok-fil').files || [])[0];
-    if (!titel) { säg(msg, 'Skriv vad handlingen är.', false); return; }
     if (!fil) { säg(msg, 'Välj en fil.', false); return; }
     const filfel = M.granskaFil(fil);
     if (filfel) { säg(msg, filfel, false); return; }
 
-    await medan(dokSpara, 'Laddar upp…', async () => {
+    await medan(knapp, 'Laddar upp…', async () => {
       /* Raden först: hinkpolicyn kräver att handlingen finns,
          eftersom sökvägen är radens id. */
-      const ny = await supa.from('handlingar').insert({
-        typ: $('#dok-typ').value,
-        titel: titel,
-        giltig_till: $('#dok-till').value || null,
+      const ny = await supa.from('handlingar').insert(Object.assign(rad, {
         mimetyp: fil.type || null,
         storlek: fil.size,
         uppladdad_av: S.user.id
-      }).select('id').single();
-      if (ny.error) { säg(msg, 'Kunde inte spara: ' + felText(ny.error), false); return; }
+      })).select('id').single();
+      if (ny.error) {
+        säg(msg, dokDelningSaknas(ny.error) ? DOK_EJ_KORD : 'Kunde inte spara: ' + felText(ny.error), false);
+        return;
+      }
 
       const rent = fil.name.replace(/[^\w.\-]+/g, '_').slice(-80);
       const sökväg = ny.data.id + '/' + Date.now() + '-' + rent;
@@ -1071,10 +1294,10 @@
         return;
       }
 
-      $('#dok-titel').value = '';
-      $('#dok-till').value = '';
-      $('#dok-fil').value = '';
-      säg(msg, 'Handlingen är sparad.', true);
+      dokNy();
+      säg(msg, delad
+        ? '✓ Handlingen är sparad. ' + namnFör(person) + ' ser den under Profil & inställningar → Dokument.'
+        : '✓ Handlingen är sparad.', true);
       await hämtaHandlingar();
     });
   });
@@ -1083,12 +1306,29 @@
     const öppna = e.target.closest('[data-dok-oppna]');
     if (öppna) {
       const h = (S.handlingar || []).find(x => x.id === öppna.dataset.dokOppna);
-      if (!h || !h.fil) return;
+      if (!h || !h.fil || öppna.getAttribute('aria-busy')) return;
+      /* öppnaFil öppnar fliken innan den väntar på något, och medan
+         anropar den direkt: allt sker i samma tryck, som Safari kräver. */
       await medan(öppna, 'Öppnar…', async () => {
-        const url = await M.signera('dokument', h.fil, 3600);
-        if (!url) { alert('Filen gick inte att öppna. Den kan ha tagits bort ur lagringen.'); return; }
-        window.open(url, '_blank', 'noopener');
+        const fel = await M.öppnaFil('dokument', h.fil, { mimetyp: h.mimetyp, namn: dokFilnamn(h) });
+        if (fel) alert(fel);
       });
+      return;
+    }
+
+    const ändra = e.target.closest('[data-dok-andra]');
+    if (ändra) {
+      const h = (S.handlingar || []).find(x => x.id === ändra.dataset.dokAndra);
+      if (h) dokÄndra(h);
+      return;
+    }
+
+    /* Från personens panel: länken leder hit (#system/dokument) och
+       stänger panelen; här väljs personen i formuläret. */
+    const förval = e.target.closest('[data-dok-ny]');
+    if (förval) {
+      dokNy(förval.dataset.dokNy);
+      rensa($('#dok-msg'));
       return;
     }
 
@@ -1096,9 +1336,12 @@
     if (bort) {
       const h = (S.handlingar || []).find(x => x.id === bort.dataset.dokBort);
       if (!h) return;
+      const person = dokPersonId(h);
       const ja = await bekräfta({
         titel: 'Ta bort handlingen?',
-        text: h.titel + '. Både raden och filen försvinner, och det går inte att ångra.',
+        text: h.titel + '. Både raden och filen försvinner, och det går inte att ångra.'
+          + (h.delad_med_personen && person
+            ? ' ' + namnFör(person) + ' ser den inte längre i sin vy.' : ''),
         knapp: 'Ta bort'
       });
       if (!ja) return;
@@ -1117,6 +1360,7 @@
         }
         const { error } = await supa.from('handlingar').delete().eq('id', h.id);
         if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
+        if (dokÄndras === h.id) dokNy();
         await hämtaHandlingar();
       });
     }
@@ -1423,6 +1667,8 @@
     /* Utåt heter sökningen ritaAudit: den som ritar vyn vill ha en
        färsk logg, inte en gammal lista i minnet. */
     ritaAdminanvandare, ritaAudit: sökAudit, ritaDokument: hämtaHandlingar,
+    /* Sortens namn, för personens panel (dpDokument). */
+    dokTyp: typ => DOK_TYP[typ] || typ,
     ritaFel, ritaInstallningar, ritaIntegrationer,
     /* Heter inte ritaNotiser: det namnet är taget av klockan i
        topplisten (nextrum-admin.js), och två olika saker på samma

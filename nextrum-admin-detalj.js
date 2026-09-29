@@ -567,6 +567,30 @@
     return pill(NXStudie.stegText(st), st >= 4 ? 'ar-klar' : st === 3 ? 'ar-vantar' : 'ar-ny');
   }
 
+  /* ------------------------------------------------------------
+     DOKUMENTEN (2026-09-29)
+
+     Avtalen och det andra under System → Dokument som gäller
+     personen, och om hen ser dem i sin egen vy. Samma rader som där
+     (S.handlingar, hämtade när vyn startar), samma Öppna, och en länk
+     dit med personen redan vald. Leo: "anställningsavtal med lärare
+     eller annat avtal med kund" — den som öppnar personen ska se att
+     avtalet finns utan att leta i en annan lista.
+     ------------------------------------------------------------ */
+  function dpDokument(p) {
+    const egna = (S.handlingar || []).filter(h => h.kopplad_tabell === 'profiles' && h.kopplad_id === p.id);
+    const rader = egna.map(h => dpRad(h.titel,
+      [kör('dokTyp', h.typ), h.delad_med_personen ? 'ser det under Profil' : 'bara vi ser det',
+       h.giltig_till ? 'giltigt till ' + kortDatum(h.giltig_till) : null].filter(Boolean).join(' · '),
+      h.fil ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button>' : ''
+    )).join('');
+    return dpRubrik('Dokument', egna.length ? String(egna.length) : '')
+      + (S.handlingarFel ? tomt('Dokumenten gick inte att läsa', S.handlingarFel)
+        : rader || '<p class="xsmall" style="color:var(--bl-3);margin:0 0 12px">Inga dokument.</p>')
+      + '<div class="dp-atgard"><a class="btn btn-ghost btn-sm" href="#system/dokument" data-dok-ny="'
+      + esc(p.id) + '" data-dp-stang>Lägg till ett dokument</a></div>';
+  }
+
   function dpFamilj(p, d) {
     const barn = S.elever[p.id] || [];
     const pass = passFör(b => b.parent_id === p.id);
@@ -648,6 +672,7 @@
             .filter(Boolean).join(' · '),
           läge(BOK_LAGE, nästa.status))
       : tomt('Inget pass inbokat', 'Familjen bokar i studievyn.'))
+    + dpDokument(p)
     + dpHantera('familj', p, {
         rubrik: 'Radera familjen',
         text: 'När familjen inte vill ha tjänsten längre. Kontot, barnen, chatten och det de skrivit '
@@ -830,6 +855,7 @@
       ? '<button class="btn btn-ghost btn-sm" type="button" data-sh-kontakt="' + esc(p.id) + '">Kontakta</button>'
       : '')
     + '</div>'
+    + dpDokument(p)
     + dpHantera('studiehjalpare', p, {
         rubrik: 'Radera studiehjälparen',
         text: 'När hen slutar eller inte ska anställas. Kontot, ansökan, chatten och profilen tas bort '

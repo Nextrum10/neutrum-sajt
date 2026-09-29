@@ -28,10 +28,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
-<link rel="stylesheet" href="nextrum-vy.css?v=b97a95f6">
+<link rel="stylesheet" href="nextrum-vy.css?v=e4a5688c">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=0aae3e61">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=96e497a8">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=4eac3aef">
 </head>
 <body class="vy">
@@ -830,9 +830,9 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Profil &amp; inställningar</h2>
-            <p>Ditt konto, barnen, timbanken och vad passen kostar. Kontot här är
-               ditt som förälder: det är du som står för betalningen,
-               oavsett hur många barn som pluggar.</p>
+            <p>Ditt konto, barnen, timbanken, vad passen kostar och dokumenten vi
+               delat med er. Kontot här är ditt som förälder: det är du som
+               står för betalningen, oavsett hur många barn som pluggar.</p>
           </div>
         </div>
 
@@ -845,6 +845,8 @@
                   id="flik-timbank" aria-controls="panel-timbank">Timbanken</button>
           <button class="vy-flik" type="button" role="tab" data-flik="pris"
                   id="flik-pris" aria-controls="panel-pris">Pris &amp; villkor</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="dokument"
+                  id="flik-dokument" aria-controls="panel-dokument">Dokument</button>
           <button class="vy-flik" type="button" role="tab" data-flik="notiser"
                   id="flik-notiser" aria-controls="panel-notiser">Notiser</button>
         </div>
@@ -1046,6 +1048,21 @@
             <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. Efter passet kan ni i stället välja faktura, som kommer i början av nästa månad med tio dagars betalningstid och utan avgift. Betalningarna står under Betalning.</p>
           </div>
         </div>
+
+        <!-- ============ DOKUMENTEN (2026-09-29) ============
+             Avtal och annat Nextrum delat med familjen. Admin väljer
+             personen under System → Dokument, och bara den här
+             inloggningen ser det. Listan ritas av NXStudie.dokument()
+             ur mina_handlingar(); samma flik står i studiehjälparvyn. -->
+        <div class="vy-flik-panel" role="tabpanel" data-flik="dokument"
+             id="panel-dokument" aria-labelledby="flik-dokument" hidden>
+          <div class="dbox">
+            <h5>Dokument från Nextrum</h5>
+            <p class="xsmall" style="margin:-6px 0 16px;color:var(--muted-2);line-height:1.6">Avtal och annat vi delar med er. Bara ni och Nextrum ser dem.</p>
+            <div id="dokument-lista"></div>
+            <p class="ok-msg" id="dokument-msg"></p>
+          </div>
+        </div>
         <!-- ============ NOTISER ============
              Vilka mejl man vill ha. Raderna ligger i notis_val, och RLS
              släpper bara igenom ens egna — listan behöver därför ingen
@@ -1102,12 +1119,12 @@
 <script src="nextrum-app.js?v=f83aadf2"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=63957b13"></script>
-<script src="nextrum-studie.js?v=a6e02354"></script>
+<script src="nextrum-studie.js?v=a98c5113"></script>
 <script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
-<script src="nextrum-media.js?v=370e4cac"></script>
+<script src="nextrum-media.js?v=01adfb73"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-uppgifter.js?v=8fe89b7f"></script>
 <script src="nextrum-modulvakt.js?v=d2b973be"></script>
-<script src="nextrum-studie-vy.js?v=171ab85a"></script>
+<script src="nextrum-studie-vy.js?v=2c3e27b8"></script>
 </body>
 </html>
