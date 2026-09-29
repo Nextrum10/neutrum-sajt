@@ -3157,11 +3157,17 @@ tillbaka överst i avsnittet för 22.1.
      den ska göras om den dagen barn får egna konton.
   2. **Adminvyn har ingen vy över nivåerna.** Banken ändras i
      `verktyg/uppgiftsbanken/` och går in genom en migration.
-  3. **Migrationerna är inte körda när det här skrivs.**
-     `fas23_1_uppgifterna_blir_digitala` först, sedan
-     `uppgiftsbanken_startpaketet`, båda EFTER merge, och filerna döps om
-     till versionerna driften registrerade (avsnitt 5). Vyerna tål att
-     tabellerna saknas: uppgifterna syns som förut, utan banan.
+  3. **Migrationerna är i drift sedan 2026-09-29**, som
+     `20260929100313` (`fas23_1_uppgifterna_blir_digitala`) och
+     `20260929100314` (`uppgiftsbanken_startpaketet`), och det driften
+     sparade har samma md5 som filerna. Banken är 225 kB och gick inte
+     att skicka genom `apply_migration`: databasen hämtade filerna själv
+     från main-commiten med tillägget `http` (avsnitt 9), prövade md5
+     och skrev raderna i `schema_migrations` i samma transaktion, så
+     `created_by` är tom på just de två. Hela `rls-test.sql` gick igenom
+     före och efter, 861 av 861. Nästa bank som ändras blir lika stor:
+     kör den på samma sätt. Vyerna tål fortfarande att tabellerna
+     saknas: uppgifterna syns som förut, utan banan.
 - **Avtalen som delas med personen (2026-09-29, avsnitt 1) är i drift.**
   Migrationen `dokument_delas_med_personen` kördes efter att PR #126
   mergats, som version `20260929080900`, och det driften sparade har
