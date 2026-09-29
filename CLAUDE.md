@@ -1142,6 +1142,16 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    alltid och tar sin plats, osynlig på den innevarande, annars sköt den
    ner allt under raden efter första trycket. Adminvyns Ekonomi har kvar
    raden: där jämför man månader bredvid varandra.
+   Raden är sedan 2026-09-29 ett spår med pilar (Leo: "ändra månaderna
+   där så de ser bättre ut"), i Betalningar, Månadens ekonomi, Löner och
+   Lektioner. Förut var varje månad ett piller med kant, ett piller med
+   märke blev högre än de andra, årtalet svävade ovanför och klipptes i
+   kanten, och raden slutade mitt i en månad. Nu är alla knappar 44 px
+   höga, årtalet står i raden där det byts, kanten tonas där det finns
+   mer, och den innevarande månaden har en dämpad prick, inte en kant.
+   Den valda är mörk och flikarna under ljusa: i Betalningar står de två
+   spåren efter varandra. Spåret (`.nx-manad-spar`) är det som rullar,
+   inte host. Pilarna göms på en telefon, där man drar.
 
 Och några saker som kostade en omgång: basrubriken `h5` bär en
 `margin-top` i em, som med den större rubriken blev 27 px luft överst i
