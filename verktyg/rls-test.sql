@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten och taken för det anonyma)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma och chatten som admin öppnar)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -45,8 +45,8 @@
 -- manadskorningen_gar_den_forsta, Fas 23.1 (de digitala uppgifterna),
 -- personer_redigeras_och_raderas, dokument_delas_med_personen,
 -- schemalagda_korningar_syns, manadskorningens_svar_blir_en_uppgift,
--- manadskorningens_svar_lases_den_forsta och anonyma_skrivningar_far_tak
--- är körda.
+-- manadskorningens_svar_lases_den_forsta, anonyma_skrivningar_far_tak
+-- och admin_oppnar_chatten är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -7914,6 +7914,126 @@ begin
     ('Radera ett barns digitala försök räknas i rutan', (lage -> 'tas_bort' ->> 'forsok')::int = 1, lage::text),
     ('Radera ett barns digitala försök tas bort när barnet avidentifieras',
       svar ->> 'gjort' = 'avidentifierad' and kvar = 0, svar::text || ' kvar: ' || kvar);
+end $$;
+
+-- ============================================================
+-- CHATTEN ÖPPNAS AV ADMIN (admin_oppnar_chatten)
+--
+-- chatt_las() är adminvyns Öppna chatt: hela tråden mellan en familj
+-- och en studiehjälpare, och en rad i auditloggen för varje öppning.
+-- Parterna ska inte märka något: read_at står kvar, och bara admin når
+-- funktionen. Tråden P–A är fixturens (Äldst är matchad med A); en
+-- tråd P–B finns för att visa att den andra tråden inte följer med.
+-- ============================================================
+
+select pg_temp.prova('Chatten anon öppnar ingen chatt', null,
+  array[$q$select * from public.chatt_las('00000000-0000-4000-8000-0000000000f1',
+                                          '00000000-0000-4000-8000-0000000000a1')$q$], 'nekad');
+select pg_temp.prova('Chatten familjen läser inte genom adminvägen', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select * from public.chatt_las('00000000-0000-4000-8000-0000000000f1',
+                                          '00000000-0000-4000-8000-0000000000a1')$q$], 'nekad');
+select pg_temp.prova('Chatten studiehjälparen läser inte genom adminvägen', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$select * from public.chatt_las('00000000-0000-4000-8000-0000000000f1',
+                                          '00000000-0000-4000-8000-0000000000a1')$q$], 'nekad');
+
+insert into utfall (test, ok, detalj)
+select 'Chatten bara inloggade når funktionen, den är DEFINER och skriver (VOLATILE)',
+       coalesce(not has_function_privilege('anon', to_regprocedure('public.chatt_las(uuid,uuid)'), 'execute')
+            and has_function_privilege('authenticated', to_regprocedure('public.chatt_las(uuid,uuid)'), 'execute')
+            and p.prosecdef and p.provolatile = 'v', false),
+       case when p.oid is null then 'funktionen finns inte'
+            else 'definer: ' || p.prosecdef || ', volatile: ' || p.provolatile::text end
+  from (select 1) x
+  left join pg_proc p on p.oid = to_regprocedure('public.chatt_las(uuid,uuid)');
+
+do $$
+declare
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  a   constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  b   constant uuid := '00000000-0000-4000-8000-0000000000b1';
+  p   constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  m1  constant uuid := '00000000-0000-4000-8000-00000000dc01';
+  m2  constant uuid := '00000000-0000-4000-8000-00000000dc02';
+  fel text; kod text; slut text;
+  n bigint; totalt bigint; forsta uuid; andra_tradens bigint; olasta bigint;
+  n_audit bigint; audit public.audit_logg; n_audit_nekad bigint;
+  n_stor bigint; totalt_stor bigint; nyast_stor timestamptz; nyast_alla timestamptz;
+begin
+  begin
+    insert into public.messages (id, parent_id, tutor_id, sender_id, body, created_at) values
+      (m1, p, a, p, 'Hej Anna, Äldst har prov på fredag', now() - interval '2 hours'),
+      (m2, p, a, a, 'Då tar vi bråken på torsdag', now() - interval '1 hour');
+    insert into public.messages (parent_id, tutor_id, sender_id, body)
+    values (p, b, p, 'Hej Bo, det här är en annan tråd');
+
+    -- En familj som försöker skriver ingen rad i loggen.
+    perform pg_temp.bli(p);
+    begin
+      perform public.chatt_las(p, a);
+    exception when others then null;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into n_audit_nekad from public.audit_logg where handling = 'chatt.oppnad' and objekt_id = p::text;
+
+    perform pg_temp.bli(adm);
+    select count(*), max(c.totalt) into n, totalt from public.chatt_las(p, a) c;
+    select c.id into forsta from public.chatt_las(p, a) c limit 1;
+    select count(*) into andra_tradens from public.chatt_las(p, a) c where c.body like 'Hej Bo%';
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    select count(*) into olasta from public.messages where id in (m1, m2) and read_at is null;
+    select count(*) into n_audit from public.audit_logg
+     where handling = 'chatt.oppnad' and objekt_id = p::text and aktor = adm;
+    select * into audit from public.audit_logg
+     where handling = 'chatt.oppnad' and objekt_id = p::text and aktor = adm order by id limit 1;
+
+    -- En tråd längre än 500: de 500 NYASTE kommer, och totalt säger hur
+    -- många tråden har.
+    insert into public.messages (parent_id, tutor_id, sender_id, body, created_at)
+    select p, a, p, 'rad ' || g, now() - interval '30 days' + g * interval '1 minute'
+      from generate_series(1, 510) g;
+    select max(created_at) into nyast_alla from public.messages where parent_id = p and tutor_id = a;
+    perform pg_temp.bli(adm);
+    select count(*), max(c.totalt), max(c.created_at) into n_stor, totalt_stor, nyast_stor
+      from public.chatt_las(p, a) c;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Utan någon av parterna finns ingen tråd att läsa.
+    perform pg_temp.bli(adm);
+    begin
+      perform public.chatt_las(p, null);
+      fel := 'gick igenom';
+    exception when others then fel := sqlerrm; kod := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    raise exception 'rulla tillbaka';
+  exception when others then slut := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if slut <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Chatten admin öppnar tråden', false, slut);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Chatten admin läser hela tråden, nyast först',
+      n = 2 and totalt = 2 and forsta = m2, 'rader: ' || n || ', totalt: ' || totalt),
+    ('Chatten den andra tråden följer inte med', andra_tradens = 0, 'rader: ' || andra_tradens),
+    ('Chatten parterna märker inget: read_at står kvar', olasta = 2, 'olästa: ' || olasta),
+    ('Chatten varje öppning står i auditloggen, med vem', n_audit = 3, 'rader: ' || n_audit),
+    ('Chatten loggraden bär studiehjälparen och antalet, aldrig texten',
+      audit.aktor_typ = 'admin' and audit.tabell = 'messages' and audit.fore is null
+      and audit.efter = jsonb_build_object('tutor_id', a, 'meddelanden', 2),
+      coalesce(audit.efter::text, 'ingen rad')),
+    ('Chatten ett nekat försök skriver ingen rad', n_audit_nekad = 0, 'rader: ' || n_audit_nekad),
+    ('Chatten en lång tråd ger de 500 nyaste och säger hur många det är',
+      n_stor = 500 and totalt_stor = 512 and nyast_stor = nyast_alla,
+      'rader: ' || n_stor || ', totalt: ' || totalt_stor),
+    ('Chatten utan studiehjälpare finns ingen tråd', kod = '22023', coalesce(kod, '') || ' ' || fel);
 end $$;
 
 select test, ok is true as ok, detalj from utfall order by nr;
