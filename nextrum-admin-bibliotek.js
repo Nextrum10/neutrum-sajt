@@ -32,7 +32,7 @@
   const { bekräfta, medan } = NXStudie;
   const M = NXMedia;
 
-  const { S, kortDatum, matchar, namnFör, pill, tabell, tomtText } = NXAdmin;
+  const { S, hämtaAlla, kortDatum, matchar, namnFör, pill, tabell, tomtText } = NXAdmin;
 
   /* Fil eller länk. Samma val som studiehjälparens materialruta, och
      med flit utan "anteckning": en anteckning utan fil och utan
@@ -60,8 +60,8 @@
   }
 
   async function hämtaBibliotek() {
-    const { data, error } = await supa.from('biblioteksmaterial')
-      .select('*').order('created_at', { ascending: false });
+    const { data, error } = await hämtaAlla('biblioteksmaterial', '*',
+      q => q.order('created_at', { ascending: false }));
     if (error) { console.warn('biblioteksmaterial:', error.message); return; }
     S.bibliotek = data || [];
   }

@@ -2607,12 +2607,17 @@
        säger vad ett genomfört pass kostar och om det drog över, och
        listorna ritas ur alla tre på en gång. Ett pass som ritats utan
        dem hade visat det bokade priset och bytt belopp under fingret. */
+    /* Alla pass, inte de tusen första (NXStudie.hämtaAlla, 2026-09-29):
+       listan är äldst först, så det hade varit de nya passen som föll
+       bort. Underlaget och tilläggen följer passen i antal. */
     const [pass, und, till] = await Promise.all([
-      supa.from('bookings').select('id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, created_by, created_at, avbokningsskal, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt')
-        .eq('parent_id', S.user.id).order('wanted_date', { ascending: true }),
-      supa.from('passunderlag').select('id, debiterade_min, betalda_min, timpris_ore, extra_ore, rabatt_ore, timbank_min')
-        .eq('parent_id', S.user.id),
-      supa.from('pass_tillagg').select('booking_id, minuter, begart_ore, status, betalt_ore, betald_at')
+      NXStudie.hämtaAlla(supa, 'bookings',
+        'id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, created_by, created_at, avbokningsskal, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt',
+        q => q.eq('parent_id', S.user.id).order('wanted_date', { ascending: true })),
+      NXStudie.hämtaAlla(supa, 'passunderlag',
+        'id, debiterade_min, betalda_min, timpris_ore, extra_ore, rabatt_ore, timbank_min',
+        q => q.eq('parent_id', S.user.id)),
+      NXStudie.hämtaAlla(supa, 'pass_tillagg', 'id, booking_id, minuter, begart_ore, status, betalt_ore, betald_at')
     ]);
     const { data, error } = pass;
 

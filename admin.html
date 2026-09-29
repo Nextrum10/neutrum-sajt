@@ -759,15 +759,22 @@
              när studiehjälparen skrivit den, och bara completed-pass
              kommer med på underlaget den 25:e. En saknad rapport är
              alltså en timme ingen får betalt för.
+
+             Månad för månad sedan 2026-09-29. Leo: "filtrera för
+             månader ... lättare att se över en mängd lektioner under
+             en specifik tid". Talen och listan gäller den månad som är
+             vald i raden, på passets datum, och en månad med pass utan
+             rapport är märkt där (nextrum-admin-drift.js).
              ============================================================ -->
         <section class="vy-sek" data-sek="lektioner" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Lektioner</h2>
-              <p>Pass som hållits. Utan rapport blir ett pass aldrig genomfört, och då kommer det inte med på studiehjälparens underlag.</p>
+              <p>Pass som hållits, månad för månad. Utan rapport blir ett pass aldrig genomfört, och då kommer det inte med på studiehjälparens underlag.</p>
             </div>
           </div>
 
+          <div id="lekt-manader" aria-label="Välj månad för lektionerna"></div>
           <div class="adm-tal-rad" id="lekt-tal"><div class="loading">Hämtar</div></div>
 
           <div class="dbox">
@@ -778,13 +785,10 @@
                 <option value="saknas">Rapport saknas</option>
                 <option value="finns">Rapport skriven</option>
               </select>
-              <select class="sel" id="lekt-period" aria-label="Filtrera på period">
-                <option value="30">Senaste 30 dagarna</option>
-                <option value="90">Senaste tre månaderna</option>
-                <option value="">Hela tiden</option>
-              </select>
               <span class="small" id="lekt-antal" style="margin-left:auto;color:var(--bl-2)"></span>
             </div>
+            <!-- Söket i de andra månaderna, med en knapp dit. -->
+            <div id="lekt-andra"></div>
             <div id="lekt-tabell"><div class="loading">Hämtar</div></div>
           </div>
         </section>
@@ -2379,25 +2383,25 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=8ffb028b"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=ae7d82bf"></script>
+<script src="nextrum-studie.js?v=d82196f1"></script>
 <script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
 <script src="nextrum-media.js?v=01adfb73"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=9753e4b6"></script>
+<script src="nextrum-admin-karna.js?v=aedab514"></script>
 <script src="nextrum-admin-detalj.js?v=63fb7320"></script>
 <script src="nextrum-admin-oversikt.js?v=ed04b5a8"></script>
 <script src="nextrum-admin-kunder.js?v=155120f9"></script>
 <script src="nextrum-admin-rekrytering.js?v=d08ab262"></script>
-<script src="nextrum-admin-bibliotek.js?v=66dad1e3"></script>
+<script src="nextrum-admin-bibliotek.js?v=a6e2cbda"></script>
 <script src="nextrum-admin-kommunikation.js?v=a0deff07"></script>
-<script src="nextrum-admin-drift.js?v=9c99ca36"></script>
+<script src="nextrum-admin-drift.js?v=5028a2f5"></script>
 <script src="nextrum-admin-ekonomi.js?v=3881c69e"></script>
 <script src="nextrum-admin-manaden.js?v=9d66770e"></script>
-<script src="nextrum-admin-loner.js?v=7138b540"></script>
+<script src="nextrum-admin-loner.js?v=c5aba3df"></script>
 <script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
-<script src="nextrum-admin-system.js?v=162e85f5"></script>
+<script src="nextrum-admin-system.js?v=9f3128c4"></script>
 <script src="nextrum-admin-automationer.js?v=df8e5586"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
@@ -2406,7 +2410,7 @@
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
-<script src="nextrum-modulvakt.js?v=afe9e14e"></script>
-<script src="nextrum-admin.js?v=b61ceec2"></script>
+<script src="nextrum-modulvakt.js?v=4c50590d"></script>
+<script src="nextrum-admin.js?v=08f1dac5"></script>
 </body>
 </html>

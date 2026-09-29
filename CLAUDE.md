@@ -437,6 +437,21 @@ bekräftat. Att bekräfta filtreras inte. Två saker kom fram i provbänken:
   behålla höjden tills tomrummet ligger under skärmkanten.
   Studiehjälparvyns två rader har bara `håll()`.
 
+**Adminvyns Lektioner likaså** (2026-09-29, Leo: "lektioner, där ska man
+kunna filtrera för månader, i admin. lättare att se över en mängd
+lektioner under en specifik tid"). Samma rad som Ekonomi, Månadens
+ekonomi och Löner, men en egen, på passets månad, och talen överst gäller
+månaden. Raden ersatte väljaren 30 dagar, tre månader, hela tiden, och
+två saker den gav står kvar på annat sätt: en månad med hållna pass utan
+rapport är märkt i raden ("2 saknas"), så att larmet inte gömmer sig i en
+månad som inte är vald, och ett sök räknar upp sina träffar i andra
+månader med en knapp dit. Raden börjar vid det äldsta hållna passet,
+minst tolv månader bakåt: hela tiden nådde varje pass. Sedan samma dag
+hämtas alla pass, inte de tusen första (avsnitt 3, Tusen rader). Byts månaden mot
+en tom på en telefon klämmer sidan scrollen 15–25 px. Det är inte lagat,
+med flit: på en dator står raden så högt att det inte händer, och en
+reserv som `rbBytMånad` lämnade 311 px tomrum kvar på en kort sida.
+
 **Varje avslutad månad har en lönespecifikation** (2026-09-28). Leo:
 "skriv lönespec för månaden efter att månaden är klar för
 studiehjälparen, under utbetalning för månaden. Så ska det vara för
@@ -1260,6 +1275,11 @@ Headless Chromium döljer rullningslister som standard. Starta med
 `ignoreDefaultArgs: ['--hide-scrollbars']`, annars syns inte vad en list
 gör med menyns bredd.
 
+Playwrights `page.click()` rullar själv fram ett element som ligger under
+en fast rad (sektionsraden på en telefon), och flytten mäts då som ett
+hopp sidan aldrig gjorde: 190 px i provet av Lektioners månadsrad
+(2026-09-29). Mät ett tryck med `el.click()` i sidan (`page.evaluate`).
+
 **Kvar, medvetet inte gjort.** Granskat bild för bild med testdata, på
 dator och delvis på telefon och i mörkt läge: alla sektioner och flikar,
 och personpanelen för en familj. Agentflikarna har egen
@@ -1358,6 +1378,57 @@ tabellerna och listorna, inte ytorna.
   ruta i stället för ett piller tills det fick `.adm-topp` framför sig.
 - NEX-bandets yta står i `nextrum-admin-konsol.css`, som laddas efter och
   vinner på samma vikt; en regel för `.kon-*` i `arbetsyta.css` gör inget.
+
+### Tusen rader (2026-09-29)
+
+Leo: "de raderna ska inte försvinna efter 1000st". PostgREST lämnar ut
+högst tusen rader per svar (`max-rows`) och säger inte att det finns
+fler: svaret ser helt ut, och ingenting blir rött. Vyerna hämtade varje
+lista med en enda fråga. Provat med en stubbad `supabase-js` som kapar
+som PostgREST, med 2 400 pass och 1 500 anmälningar:
+
+- **Adminvyn** (nyast först) hade 1 000 av 2 400 pass: allt före 22
+  januari 2026 saknades, elva månader, i Lektioner, Ekonomi, Löner och
+  talen. Passunderlaget och anmälningarna likadant.
+- **Studiehjälparvyn** (äldst först) tappade i stället de NYA: 0
+  kommande pass, där det fanns 59. Familjens vy sa "Inga kommande pass".
+- **Vakten i adminvyns skal** jämför listornas längd med databasens
+  `count`. Med listan kapad vid tusen såg den 501 nya anmälningar vid
+  varje koll, hämtade om listorna och stod på "(501)" i fliken för alltid.
+
+Nu går varje lista som växer genom `NXStudie.hämtaAlla(supa, tabell,
+kolumner, bygg, nyckel)` (adminvyn genom omslaget `hämtaAlla` i kärnan):
+sida efter sida tills databasens eget antal (`count` på första sidan)
+är nått, aldrig tills en kort sida kommer, för sänks `max-rows` är varje
+sida kort (provat med 500). Sorteringen slutar på en unik nyckel, oftast
+`id`, som också ska stå bland kolumnerna: sidorna är egna frågor, och en
+rad som hann komma med på två sidor tas bort på den. Ett fel på en
+senare sida ger felet, aldrig en halv lista.
+
+- **Vad som går genom den:** i adminvyn allt i `hämtaAllt()` och
+  `hämtaEkonomiunderlag()` utom inställningarna och frågorna med en
+  avsiktlig gräns (de 400 senaste meddelandena, 100 klientfel, 40
+  rapporter, 300 aktörer ur auditloggen), och dessutom skalets
+  omhämtning av anmälningarna, biblioteket, dokumenten och lönefilens
+  rader. I studiehjälparvyn passen och timbankens uttag, i familjens vy
+  passen, passunderlaget och tilläggen, och i NexLäx
+  (`nextrum-uppgifter.js`) nivåkatalogen och elevens försök. Det som
+  hämtas per månad, per person eller med en gräns hämtas som förut.
+- **En ny fråga som hämtar en hel tabell ska gå genom `hämtaAlla`.**
+  Felet syns inte förrän tabellen har tusen rader, och då syns det inte
+  heller: listan ser bara kortare ut.
+- **En `.limit()` över tusen är en gräns på tusen.** Försöken i NexLäx
+  (Fas 23.2) hämtades med `.limit(2000)`, äldst först, samma dag som
+  det här byggdes: vid tusen försök hade de nyaste fallit bort, och
+  stjärnorna, XP:n och serien räknats utan dem. En gräns som ska vara
+  poängen ska ligga under tusen; allt annat går genom `hämtaAlla`.
+- `nextrum-modulvakt.js` prövar `NXStudie.hämtaAlla`: en gammal
+  `nextrum-studie.js` ur cachen hade annars gett ett TypeError mitt i
+  hämtningen.
+- I driften fanns 7 pass när det här byggdes, så ingenting hade hunnit
+  försvinna. Priset är en `count` per lista när vyn laddas. Det som en
+  dag blir för tungt att hämta i sin helhet ska hämtas per månad, inte
+  kapas.
 
 ---
 

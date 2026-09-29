@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { AVBOKNINGSSKAL, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, kontaktaRuta, kortDatum,
+  const { AVBOKNINGSSKAL, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, hämtaAlla, kontaktaRuta, kortDatum,
           märkFlik, namnFör, närText, pill, rad, ritaPanelen, skriv, tabell, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
@@ -1197,8 +1197,8 @@
   }
 
   async function hämtaHandlingar() {
-    const { data, error } = await supa.from('handlingar').select('*')
-      .order('uppladdad', { ascending: false });
+    const { data, error } = await hämtaAlla('handlingar', '*',
+      q => q.order('uppladdad', { ascending: false }));
     S.handlingarFel = error ? felText(error) : null;
     S.handlingar = data || [];
     ritaDokument();
