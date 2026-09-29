@@ -57,23 +57,27 @@
      INTERVJU OCH UTBILDNING (Fas 6)
 
      Rekryteringens två steg som egna flikar: vem som väntar på en
-     intervju, och vem som intervjuats men inte utbildats. Namnen, och
-     under dem hur länge de väntat, för det är vad flikarna svarar på.
-     Stegen bockas av i panelen. Avböjda och godkända ligger bara under
-     Alla.
+     intervju, och vem som är i utbildningen men inte utbildad. Namnen,
+     och under dem hur länge de väntat, för det är vad flikarna svarar
+     på. Stegen bockas av i panelen, som öppnas på fliken Rekryteringen.
+     Avböjda och godkända ligger bara under Alla.
      ============================================================ */
   function ritaStegflikar() {
     const aktiva = S.ansokningar.filter(a => a.status !== 'rejected' && a.status !== 'approved');
-    const tillIntervju = aktiva.filter(a => !a.intervju_at)
+    /* Den som redan har ett utbildningsmöte hör hit, också utan att
+       mötet innan är avbockat (2026-09-29): provet går att öppna före
+       steg 2, och fliken var då tom medan provet pågick. */
+    const iUtbildning = a => !a.utbildad_at && (a.intervju_at || a.utbildningsmote_at || a.prov_sista_dag);
+    const tillIntervju = aktiva.filter(a => !a.intervju_at && !iUtbildning(a))
       .sort((a, b) => String(a.kontaktad_at || a.created_at).localeCompare(String(b.kontaktad_at || b.created_at)));
-    const tillUtbildning = aktiva.filter(a => a.intervju_at && !a.utbildad_at)
-      .sort((a, b) => String(a.intervju_at).localeCompare(String(b.intervju_at)));
+    const sedan = a => String(a.intervju_at || a.utbildningsmote_at || a.prov_sista_dag || '');
+    const tillUtbildning = aktiva.filter(iUtbildning).sort((a, b) => sedan(a).localeCompare(sedan(b)));
 
     const intervju = $('#ans-intervju');
     if (intervju) {
       $('#ans-intervju-antal').textContent = tillIntervju.length ? tillIntervju.length + ' st' : '';
       intervju.innerHTML = namnlista(tillIntervju, {
-        typ: 'ansokan', id: a => a.id,
+        typ: 'ansokan', id: a => a.id, flik: 'rekrytering',
         namn: a => a.name || a.email,
         under: a => a.kontaktad_at ? 'Kontaktad ' + kortDatum(a.kontaktad_at) : 'Inte kontaktad än',
         tomt: 'Ingen väntar på en intervju'
@@ -84,9 +88,10 @@
     if (utbildning) {
       $('#ans-utbildning-antal').textContent = tillUtbildning.length ? tillUtbildning.length + ' st' : '';
       utbildning.innerHTML = namnlista(tillUtbildning, {
-        typ: 'ansokan', id: a => a.id,
+        typ: 'ansokan', id: a => a.id, flik: 'rekrytering',
         namn: a => a.name || a.email,
-        under: a => 'Intervjuad ' + kortDatum(a.intervju_at) + ' · ' + provKort(a),
+        under: a => (a.intervju_at ? 'Intervjuad ' + kortDatum(a.intervju_at) : 'Utbildningsmöte '
+          + kortDatum(a.utbildningsmote_at || a.prov_sista_dag)) + ' · ' + provKort(a),
         tomt: 'Ingen väntar på utbildning'
       });
     }
@@ -267,6 +272,23 @@
       });
       if (!ändå) return;
     }
+    /* Att markera mötet öppnar provet och mejlar länken direkt. Knappen
+       står sedan 2026-09-29 också i översikten, ett tryck från att öppna
+       panelen, och ett mejl till den sökande går inte att ta tillbaka.
+       Samma fråga som när provet öppnas igen. */
+    if (kolumn === 'utbildningsmote_at' && nu) {
+      const sista = new Date();
+      sista.setDate(sista.getDate() + 3);
+      const ja = await bekräfta({
+        titel: 'Öppna provet',
+        text: 'Utbildningsmötet markeras som hållet, och provet öppnas till och med '
+          + provDag(isoFor(sista)) + '. ' + (a.name || 'Den sökande') + ' får ett mejl med '
+          + 'länken nu, en påminnelse i morgon och en sista dagen.',
+        knapp: 'Öppna provet',
+        avbryt: 'Avbryt'
+      });
+      if (!ja) return;
+    }
     /* Att ångra mötet stänger provet. Har hen redan börjat är det
        värt en fråga. */
     if (kolumn === 'utbildningsmote_at' && !nu && !a.prov_godkant_at
@@ -364,6 +386,29 @@
       'stängt': 'Stängt · ' + p.försök.length + ' försök' + res,
       'ej_öppnat': 'Inte öppnat'
     }[p.läge];
+  }
+
+  /* Knappen bredvid läget i panelens översikt (2026-09-29). Leo: "på
+     rekrytering och utbildning i admin kan man inte lägga in
+     utbildningsprovet". Knappen fanns, men bara i fliken Rekryteringen,
+     under steg 3 och nedanför skärmkanten, och översikten sa "Inte
+     öppnat" utan att säga hur. Samma data-attribut som stegens knappar,
+     så att det är samma handling med samma frågor. Tom när det inte
+     finns något att göra: provet är öppet eller klart, eller ansökan
+     är avgjord. */
+  function provKnapp(a) {
+    if (a.utbildad_at || a.status === 'approved' || a.status === 'rejected') return '';
+    const läge = provLäge(a).läge;
+    const id = esc(a.id);
+    if (läge === 'ej_öppnat') {
+      return '<button type="button" class="btn btn-ghost btn-sm" data-ans-steg="utbmote:' + id + '">'
+        + 'Öppna provet</button>';
+    }
+    if (läge === 'stängt') {
+      return '<button type="button" class="btn btn-ghost btn-sm" data-ans-prov-igen="' + id + '">'
+        + 'Öppna i tre dagar till</button>';
+    }
+    return '';
   }
 
   /* Faktarutan i rekryteringsrutan. */
@@ -499,8 +544,8 @@
       + (tid ? '<span class="ans-steg-tid">✓ ' + esc(kortDatum(tid)) + '</span>' : '')
       + '</h4>'
       + '<p>' + esc(varför) + '</p>'
-      + (extra || '')
       + '<div class="ans-steg-knappar">' + knappar + '</div>'
+      + (extra || '')
       + '</div></div>';
   }
 
@@ -845,6 +890,6 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    ansökansText, cvKnapp, provKort, ritaAnsokningar, spårLista
+    ansökansText, cvKnapp, provKort, provKnapp, ritaAnsokningar, spårLista
   });
 })();

@@ -2137,7 +2137,7 @@ applications (insert/update)
 | "Kontakt" | **inget** — admin skriver själv, med förslag på tider |
 | mötet sparas eller får ny tid/länk | `mote`: tid i svensk tid, länken som knapp |
 | "Mötet är hållet" | `utbildning`: tack, introduktionen är nästa steg |
-| "Utbildningsmötet är hållet" | `prov`: länken till provet, öppet i tre dagar (Fas 22.1) |
+| "Utbildningsmötet är hållet", eller Öppna provet i ansökans översikt | `prov`: länken till provet, öppet i tre dagar (Fas 22.1). Adminvyn frågar först |
 | dagen efter, och sista dagen, kl. 9 | `prov_paminnelse`, `prov_sista_dagen` (pg_cron `utbildningsprov-paminn`) |
 | "Öppna provet i tre dagar till" | `prov` igen, med den nya sista dagen |
 | provet klarat, eller "Markera utbildad" | `sista_steget`: skapa konto med samma e-post |
@@ -2230,6 +2230,16 @@ som det rätta, och Nextrum och rutinerna står också i fel svar.
 `utbildningsprov_test.ts` räknar vad "alltid längsta", "alltid
 kortaste" och "det som nämner Nextrum" ger, och taket ligger kring
 slumpen (8 av 30). Skriver du om en fråga, kör proven.
+
+**Provet öppnas från ansökans översikt** (2026-09-29). Leo: "på
+rekrytering och utbildning i admin kan man inte lägga in
+utbildningsprovet". Knappen fanns bara under steg 3 i panelens flik
+Rekryteringen, nedanför skärmkanten, och fliken Utbildning visade bara
+den vars möte i steg 2 var avbockat. Nu står Öppna provet på raden
+Provet (`provKnapp`), stegens knappar står direkt under skälet,
+flikarna Intervju och Utbildning öppnar panelen på Rekryteringen
+(`data-dp-start`), och Utbildning tar också den som har ett
+utbildningsmöte utan att steg 2 är avbockat.
 
 Utfallet syns i rekryteringsrutan vid det steg som skickade mejlet, och
 ett som inte gick fram är rött. Samma sort som kvittot till familjen:
