@@ -34,10 +34,14 @@
     [typeof NX !== 'undefined' && typeof NX.esc === 'function', 'nextrum-app.js']
   ];
 
+  /* nextrum-studie.js: vakten över inloggningen kom sist (2026-09-29),
+     och alla tre vyerna anropar den i start(). */
+  var studieKlar = typeof NXStudie !== 'undefined' && !!NXStudie.vaktaInloggningen;
+
   if (ärAdmin) {
     krav.push(
       [typeof NXTjanster !== 'undefined', 'nextrum-tjanster.js'],
-      [typeof NXStudie !== 'undefined' && !!NXStudie.bekräfta, 'nextrum-studie.js'],
+      [studieKlar, 'nextrum-studie.js'],
       [typeof NXArbete !== 'undefined', 'nextrum-arbetsyta.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],
       [typeof NXBetalning !== 'undefined' && !!NXBetalning.passpris, 'nextrum-betalning.js'],
@@ -80,7 +84,7 @@
   } else {
     krav.push(
       [typeof NXKontakt !== 'undefined', 'nextrum-kontakt.js'],
-      [typeof NXStudie !== 'undefined' && !!NXStudie.bekräfta, 'nextrum-studie.js'],
+      [studieKlar, 'nextrum-studie.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],
       [typeof NXBetalning !== 'undefined' && !!NXBetalning.passpris, 'nextrum-betalning.js'],
       /* Fas 23.1: banan och spelaren i Uppgifter. En gammal fil i

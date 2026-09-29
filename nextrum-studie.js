@@ -2388,6 +2388,87 @@ window.NXStudie = (function () {
     NX.rensa(NX.$('#auth-msg'));
   }
 
+  /* ============================================================
+     INLOGGNINGEN SOM FÖRSVINNER (2026-09-29)
+
+     Leo: "kontroller i admins inställning i automationer går inte att
+     köra". Kontrollerna var hela. Adminvyn var utloggad och visste det
+     inte.
+
+     supabase-js förnyar inloggningen i bakgrunden. Nekar Auth, för att
+     sessionen är borttagen, tar den bort sessionen ur webbläsaren och
+     säger SIGNED_OUT, och varje fråga därefter går med den publika
+     nyckeln, som anon. Ingen vy lyssnade. Adminvyn stod kvar med
+     gårdagens listor, räknarna i sidhuvudet blev noll utan fel (RLS ger
+     anon noll rader), och första knappen som skrev något svarade
+     "permission denied for function kor_kontrollerna": ett besked som
+     såg ut som ett fel i funktionen och betydde att man var utloggad.
+
+     Sessionen dog för att en utloggning på telefonen loggade ut datorn
+     också. Det är loggaUt() nedan.
+     ============================================================ */
+
+  /* Satt medan vyn själv loggar ut, så att vakten inte hinner visa
+     "du har blivit utloggad" för den som just tryckt på knappen. */
+  var loggarUt = false;
+
+  /* Logga ut här, inte överallt. signOut() tar som förval bort ALLA
+     personens sessioner, på alla enheter: den som loggade ut på
+     telefonen loggade ut adminvyn på datorn, och det märktes först när
+     datorn skulle förnya inloggningen nästa morgon. Ska någon loggas ut
+     överallt görs det i databasen (CLAUDE.md, avsnitt 6).
+
+     supa skickas in, som till notisval och vakten nedan. */
+  async function loggaUt(supa) {
+    loggarUt = true;
+    if (supa) await supa.auth.signOut({ scope: 'local' });
+    location.reload();
+  }
+
+  /* o.supa är klienten, o.user den som vyn visar, och o.utloggad()
+     byter till vyns inloggningsruta. Anropas när vyn vet vem som är
+     inloggad, i alla lägen: också en låst eller väntande vy frågar
+     databasen. */
+  function vaktaInloggningen(o) {
+    var supa = o && o.supa;
+    if (!supa || !supa.auth || !supa.auth.onAuthStateChange || !o.user) return;
+    var borta = false;
+    supa.auth.onAuthStateChange(function (händelse, session) {
+      if (loggarUt) return;
+      var vem = session && session.user ? session.user.id : null;
+      /* supabase-js håller sitt lås medan lyssnarna körs, och en fråga
+         härifrån hade väntat på det för alltid. Allt görs efteråt. */
+      if (borta) {
+        /* Inloggad igen, i rutan eller i en annan flik: börja om som
+           den som är inloggad nu. Adressen står kvar, så vyn öppnar där
+           man var. */
+        if (vem) setTimeout(function () { location.reload(); }, 0);
+        return;
+      }
+      if (vem === o.user.id) return;
+      if (vem) {
+        /* Någon annan loggade in i samma webbläsare, i en annan flik.
+           Sessionen är delad, så vyn hade fortsatt fråga och skriva med
+           den personens token, med den förras listor på skärmen. */
+        setTimeout(function () { location.reload(); }, 0);
+        return;
+      }
+      borta = true;
+      setTimeout(function () {
+        var na = NX.$('#nav-actions'), ma = NX.$('#m-actions');
+        if (na) na.innerHTML = '';
+        if (ma) ma.innerHTML = '';
+        o.utloggad();
+        var epost = NX.$('#a-email');
+        if (epost && !epost.value) epost.value = o.user.email || '';
+        NX.säg(NX.$('#auth-msg'), 'Du har blivit utloggad, till exempel för att inloggningen gått ut '
+          + 'eller för att du loggat ut i en annan flik. Logga in igen så kommer du tillbaka hit.');
+        var lösen = NX.$('#a-pass');
+        if (lösen) lösen.focus();
+      }, 0);
+    });
+  }
+
   /* Veckoschemat i #schema. Byggs en gång och får sedan nya
      bokningar; namn(b) säger vad som står på ett pass i just den här
      vyn. */
@@ -2553,7 +2634,7 @@ window.NXStudie = (function () {
   return {
     notisval: notisval,
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
-    inloggningsruta: inloggningsruta, schemaI: schemaI,
+    inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxLista: läxLista,
     fordelning: fordelning,
