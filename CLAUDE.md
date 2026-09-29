@@ -354,6 +354,14 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   på dagen de betalades, och testbetalningar och testköp aldrig
   (`S.klippkortTest`). Timbankens pass känns igen på
   `timbank_uttag.sort = 'pass'` (`S.timbankPass`).
+  **Intäkt denna månad på Översikt räknar samma köp** (2026-09-29), med
+  passen och tilläggen för övertid: allt som kommit in på kort under
+  månaden, på betalningsdagen, utan testbetalningar. Förut räknade den
+  bara passen, med testbetalningarna, så ett köpt klippkort stod där
+  som "inget betalt än". Ett pass betalt med timmar har inget eget
+  kortbelopp, och räknas alltså inte två gånger. Köpen står också för
+  sig under talet ("varav … köpta timmar"): de är en skuld till familjen
+  tills timmarna använts.
 - **Fakturorna skapas från sidan med månadskörningen**, samma körning som
   under Ekonomi och Löner, och knapparna på varje faktura är desamma som
   under Ekonomi → Fakturor (`data-fakt-*`, lyssnarna i
@@ -530,13 +538,15 @@ dem ska vara roligare, "lite som duolingo, du klarar en nivå och går
 vidare", i mobilen och i steg, med belöningar ju fler man klarar, och
 Min utveckling ska fungera som rättningen av dem. I studievyn och
 studiehjälparvyn heter de uppgifter. Tabellen heter fortfarande
-`homework`, sektionerna `uppgifter` (studievyn) och `laxor`
-(studiehjälparvyn), och i adminvyn står de kvar som läxor: där betyder
+`homework`, sektionerna `nexlax` (studievyn, sedan Fas 23.2; hette
+`uppgifter`) och `laxor` (studiehjälparvyn), och i adminvyn står de
+kvar som läxor: där betyder
 Uppgifter redan adminens att göra-lista (`uppgifter`, `skapa_uppgift()`).
 Läxhjälp är fortfarande tjänstens namn; skolan ger läxor, vi ger uppgifter.
 - **En nivå** (`nivaer`) är 5–12 frågor i en **bana** per ämne och
   årskurs. Tre frågetyper, för att det är de som en maskin kan rätta och
   en tumme kan göra: val, skriv och ordna (brickor i rätt ordning).
+  Fas 23.2 la till matchning (`para`) och läsförståelse (NexLäx nedan).
   Innehållet skrivs i `verktyg/uppgiftsbanken/` och blir en migration
   genom `verktyg/bygg-uppgifter.py` (avsnitt 8).
 - **Rättningen sker i databasen.** `niva_starta()` lämnar ut frågorna
@@ -570,27 +580,125 @@ Läxhjälp är fortfarande tjänstens namn; skolan ger läxor, vi ger uppgifter.
   studiehjälparen gett den. `niva_starta()` startar vilken nivå som helst
   åt familjens eget barn; den som hoppar fram genom API:t hoppar i sitt
   eget spel.
-- **Stjärnorna, veckoserien och märkena räknas ur försöken** och sparas
+- **Stjärnorna, serien och märkena räknas ur försöken** och sparas
   inte, så de kan aldrig säga något annat än raderna. Stjärnorna i banan
-  är det BÄSTA försöket per nivå (det är spelet). Rättningen i Min
+  är det BÄSTA försöket per nivå (det är spelet). Rättningen i Din
   utveckling är det FÖRSTA klara försöket per nivå: efter det har eleven
-  sett svaren. Serien räknar veckor, inte dagar: ett barn med uppgifter
-  två gånger i veckan ska inte ha en serie som bryts varje torsdag, och
-  ingenting påminner om den.
+  sett svaren. Serien räknade veckor här, för att ett barn med uppgifter
+  två gånger i veckan inte skulle ha en serie som bryts varje torsdag.
+  Sedan Fas 23.2 räknar den dagar, på Leos begäran, med passen inräknade
+  (NexLäx nedan). Ingenting påminner om den, då som nu.
 - **Belöningarna är märken, inte pengar.** Leo skrev "eventuellt". En
   belöning med ett värde i kronor (en rabatt, en bjuden timme) är ett
   pris som ändras och marknadsföring riktad till barn, och den gör
   fusket lönsamt. Det är ett beslut om affären och juridiken; fattas det
   ska det in här och i villkoren, inte bara i koden.
-- **Min utveckling har tre flikar**: Uppgifter (rättningen, rätt första
+- **Min utveckling hade tre flikar**: Uppgifter (rättningen, rätt första
   gången per kunskapsområde med studiehjälparens bedömning bredvid när
   området heter likadant, klarade nivåer per vecka och varje rättad nivå
-  med genomgången fråga för fråga), Passen (passen med rapport, tiden,
-  närvaron och vad rapporterna sagt) och Bedömningen (femstegsskalan, som
-  förut). Bedömningen är en människas omdöme och blandas inte ihop med
-  en maskins rättning.
+  med genomgången fråga för fråga), Passen och Bedömningen
+  (femstegsskalan). Sedan Fas 23.2 står allt det under NexLäx → Din
+  utveckling, och bedömningen är fortfarande en människas omdöme som
+  inte blandas ihop med en maskins rättning: den står i ett eget block,
+  Studiehjälparens bedömning.
 - Barnet har inget eget konto: nivåerna görs i familjens inloggning
   (avsnitt 11).
+
+**NexLäx (Fas 23.2, 2026-09-29).** Leo: Uppgifter och Min utveckling ska
+bort ur studievyn och bli EN sektion, NexLäx, "Nextrums egna
+Duolingo-liknande lärsystem för skolämnen", inte en egen app. Eleven ska
+se serien, XP:n, var hen är på vägen, vad som är klart och låst och
+nästa steg, och NexLäx ska hänga ihop med studiehjälparen och passen:
+"Lektion → NexLäx → träning hemma → progression → nästa lektion". Samma
+tabeller och samma rättning som Fas 23.1; migrationen `fas23_2_nexlax`
+lägger till fyra saker, och vyn är ombyggd. Sektionen är `#nexlax` med
+flikarna Din väg (`#nexlax/vag`) och Din utveckling
+(`#nexlax/utveckling`); de gamla adresserna (`#uppgifter`,
+`#utveckling`, `#laxor`, `#material`, `#uppgifter/marken`) leder dit.
+- **Din väg**, uppifrån: serien och XP:n, banans procent och nästa steg
+  med en knapp (en påbörjad nivå först, sedan det aktuella steget, ett
+  Mästarprov, repetitionen), det studiehjälparen gett ("Rekommenderat
+  av …", med Börja på en digital nivå), den senaste rapporten från de
+  tre senaste veckorna med "Öva mer på" och en knapp till området,
+  ämnena med procenten i en ring, och vägen: områdena i ordning med
+  nivåerna i sicksack, klart, aktuellt, öppet, nästa och låst. Ett
+  område längre fram än nästa visar bara vad som låser upp det.
+- **Din utveckling**: talen (XP, serien, nivåer, områden, rätt direkt),
+  varje ämne, XP per vecka, de fyra senaste veckorna som en kalender med
+  en låga per dag, rättningen område för område med studiehjälparens
+  bedömning bredvid, bedömningen själv (femstegsskalan), passen med
+  studiehjälparen, de rättade nivåerna med genomgången, och märkena.
+- **XP räknas, den sparas inte.** 10 för en fråga man väljer svaret på
+  (val, sant eller falskt), 20 för en man skriver, bygger eller parar
+  ihop (skriv, ordna, para), 50 när en nivå klaras första gången och 100
+  när varje vanlig nivå i ett område är klarad. En fråga ger XP EN gång:
+  första gången den sitter direkt, i vilket försök som helst, också i
+  ett Mästarprov eller en repetition. XP mäter vad eleven klarat, inte
+  hur många gånger hen tryckt, och minskar aldrig: ett område som får en
+  ny nivå behåller sina 100, för klarat räknas mot nivåerna som fanns då
+  (`nivaer.created_at`). Reglerna står bara i `intern.nexlax_*`, vyerna
+  får dem i `nexlax_lage().regler`, och `niva_svara()` säger vad ett
+  svar gav. Leo: "XP ska sparas mot den riktiga användaren". Det gör
+  den, i svaren och försöken som bara databasen skriver; en egen tabell
+  med poäng hade kunnat säga något annat än svaren, samma skäl som för
+  stjärnorna.
+- **Serien räknar dagar, i svensk tid** (`nexlax_lage().serie`). En dag
+  räknas när eleven klarat en nivå (också utan stjärnor: hen har till
+  slut svarat rätt på allt), gjort klart något från studiehjälparen,
+  eller haft ett pass med rapport utan att vara frånvarande. Passdagen
+  räknas med flit: ett barn med pass på tisdagen ska inte tappa serien
+  för att det inte också gjorde en nivå. Den bryts först när en hel dag
+  gått utan något, så den ser aldrig bruten ut på morgonen, och rekordet
+  står kvar. **Ingenting påminner om den**: ingen notistyp och inget
+  mejl. En påminnelse om en serie är en skuld riktad till ett barn; det
+  är ett beslut, inte något som saknas.
+- **Mästarprovet och repetitionen är nivåer utan egna frågor**
+  (`nivaer.sort`). Mästarprovet står sist i ett område med minst två
+  nivåer och drar högst tio frågor ur dem, i ny ordning varje gång. Det
+  öppnas när områdets nivåer är klarade, och med minst två stjärnor är
+  området bemästrat (en krona). Repetitionen, en per bana, drar det
+  eleven senast svarade fel på första gången, fyllt med frågor ur nivåer
+  hen klarat, högst åtta. En fråga ur en nivå med lästext dras aldrig:
+  den handlar om en text provet inte visar. `bygg-uppgifter.py` skriver
+  båda sorterna själv ur banan (avsnitt 8); ett område med en enda nivå
+  får inget prov, för det hade varit samma frågor i ny ordning och 50
+  XP för att göra om nivån.
+- **Banans procent räknar de vanliga nivåerna.** Ett område är klart när
+  dess nivåer är det, som XP:n säger, och Mästarprovet är kronan ovanpå.
+  Första versionen räknade provet som ett steg: ett klart område stod
+  som "Klart 3/4", och banan nådde aldrig 100 utan det.
+- **Tre nya sorters frågor.** Sant eller falskt är ett val med
+  alternativen Sant och Falskt (`grund.sant()`, i den ordningen), och
+  vyn ritar två stora knappar. Matchning (`para`) är 2–6 par, där
+  vänstersidan lämnas ut i sin ordning och högersidan blandad; svaret är
+  högersidan i vänsterns ordning, och rättas i databasen som de andra.
+  Läsförståelse är en nivå med `lastext`: texten först, sedan frågorna,
+  med en knapp tillbaka till texten. Ordna går också att dra, inte bara
+  trycka.
+- **En enhet med snedstreck eller exponent rättas som talet**: "15
+  km/h", "9,8 N/kg" och "20 cm2" är 15, 9,8 och 20, som "12 cm" var 12
+  (`intern.niva_tal`, `grund.talvarde`). Fysiken i åk 8 frågar efter
+  fart och tyngd och geometrin efter area, och ett tangentbord utan ²
+  skriver en tvåa. Exponenten godtas bara efter en längdenhet: "3x2" är
+  inte talet 3.
+- **Studiehjälparvyn** visar elevens XP och serie över Rättade nivåer,
+  och nivåväljaren kan ge ett Mästarprov eller repetitionen som uppgift.
+- **Upplåsningen är fortfarande en spelregel** (ovan), nu i `vägen()`:
+  de vanliga nivåerna öppnas en i taget genom hela banan, Mästarprovet
+  när områdets nivåer är klarade, och det studiehjälparen gett och det
+  som är påbörjat är öppet.
+- **Vakten.** Migrationen skriver om `niva_starta`, `niva_svara`,
+  `intern.niva_ratta`, `intern.niva_fraga_ut` och `intern.niva_tal` i sin
+  helhet, och avbryter om någon av dem inte har Fas 23.1:s md5 i
+  databasen, läst i driften 2026-09-29 (avsnitt 5, flera sessioner).
+- **I drift sedan 2026-09-29** (avsnitt 11). **Vyn tål ändå att
+  migrationen saknas**, i en databas byggd utan den. Utan `sort` och `lastext` är varje
+  nivå vanlig, utan `nexlax_lage()` syns vägen utan XP och serie, och
+  utan XP i svaret från `niva_svara()` visar spelaren inga poäng. En
+  fråga av typen `para` finns inte förrän banan med dem är inläst.
+- Illustrationen av studievyn på startsidan och på För elever &
+  föräldrar visar NexLäx i stället för de två gamla sektionerna, och
+  rundturen klarar en nivå där (avsnitt 3).
 
 En studiehjälpare syns publikt först när admin satt läget till
 **Godkänd**.
@@ -643,6 +751,39 @@ Personens panel i adminvyn visar dokumenten under Översikt, med en
 länk till formuläret där personen redan är vald. Ingen notis går ut
 när något delas (avsnitt 11).
 
+**Admin läser chatten utan att parterna ser det** (2026-09-29, Leo:
+"vi på admin ska kunna gå in i elevers och lärares chattar utan att de
+ser det. det gör vi från vår admin genom att trycka på öppna chatt").
+**Öppna chatt** står på varje tråd under Frågor → Chattar och under
+Chatt på familjens och studiehjälparens Översikt, och öppnar hela
+tråden i personpanelen (`chatt:<familj>|<studiehjälpare>`), bara för
+läsning. Läsrätten fanns sedan schema-v4; det nya är vägen till en hel
+tråd och spåret efter den. Tre saker:
+- **Osynligt i stunden, aldrig hemligt.** Vyn läser genom
+  `chatt_las()` och aldrig genom `NXKontakt.tråd()`, som markerar det
+  den visar som läst: vår läsning hade tagit bort "oläst" hos den som
+  skrev. Ingen Realtime-kanal, ingen skrivruta, ingen notis. Att vi KAN
+  läsa står i integritetspolicyn på båda språken (Vem som kan se vad,
+  och 6.1 f under Varför vi får göra det) och i chatten själv ("det som
+  sägs här stannar mellan er och oss"). Ta inte bort det: att de inte
+  märker när vi läser är lagligt, att de inte vet att vi kan är det
+  inte (GDPR art. 5.1 a och 13).
+- **Varje öppning står i auditloggen** (`chatt.oppnad`: vem, när,
+  familjen som Gäller, studiehjälparen och antalet meddelanden, aldrig
+  texten), skriven av funktionen i samma transaktion som läsningen, som
+  personnumret (Fas 6.1). Tråden hämtas därför om vid varje öppning och
+  aldrig ur panelens cache. Loggen är ett spår, inte ett lås:
+  läsrätten på `messages` står kvar för chattlistans senaste rad och
+  familjens tidslinje.
+- **Syftena i policyn är de vi får läsa för**: barnens trygghet, tonen,
+  och att reda ut det som gått fel. Att läsa för att det går täcks inte
+  av dem, och en studiehjälpare ska ha fått veta i förväg att chatten
+  kan läsas (DATASKYDD.md avsnitt 8).
+`chatt_las()` ger de 500 senaste meddelandena, nyast först, och
+`totalt`: PostgREST kapar ett svar vid tusen rader, och en tråd hämtad i
+tidsordning hade tappat de nyaste. I drift sedan 2026-09-29 (avsnitt
+11).
+
 ### Ordlistan (använd den, i kod och i text)
 
 | Ord | Betyder |
@@ -654,8 +795,10 @@ när något delas (avsnitt 11).
 | betalning | vad familjen betalat för ett pass: med kort, per pass, i förväg eller efter passet när rapporten bekräftas (`bookings.betalning_status`, `betalt_ore`). Eller mot faktura, när flaggan `faktura` är på (Fas 14.6) |
 | faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, efter passet. Påslaget sedan 2026-09-27 (flaggan `faktura`). Skickas från Fortnox, aldrig härifrån |
 | tjänst | rad i `tjanster`. `aktiv` avgör vad som syns, inget annat |
-| uppgift | i studievyn och studiehjälparvyn det eleven ska göra mellan passen (`homework`, Fas 23.1). Hette läxa. I adminvyn och i tabellen `uppgifter` betyder ordet fortfarande adminens att göra-lista; koden för elevens uppgifter säger `laxor` och `homework` |
-| nivå | en digital uppgift i banan (`nivaer`): 5–12 frågor som rättas i databasen. En **bana** är nivåerna i ett ämne och en årskurs |
+| uppgift | i studievyn (under NexLäx) och studiehjälparvyn det eleven ska göra mellan passen (`homework`, Fas 23.1). Hette läxa. I adminvyn och i tabellen `uppgifter` betyder ordet fortfarande adminens att göra-lista; koden för elevens uppgifter säger `laxor` och `homework` |
+| nivå | en digital uppgift i banan (`nivaer`): 5–12 frågor som rättas i databasen. En **bana** är nivåerna i ett ämne och en årskurs. Ett **Mästarprov** och **repetitionen** är nivåer som drar sina frågor ur banan (Fas 23.2) |
+| NexLäx | studievyns sektion för banan, det studiehjälparen gett och utvecklingen (Fas 23.2). Ersatte Uppgifter och Min utveckling. I koden `nexlax` och `NXUppgifter` |
+| XP | poäng som räknas ur svaren och försöken och aldrig sparas (Fas 23.2, reglerna i `intern.nexlax_*`) |
 
 ### Siffror som måste stämma överallt
 
@@ -780,7 +923,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
 | `nextrum-motion.js` | `NXImg` (bildmarkup), `NXMotion` (scrollmotor), `NXStory`. Tre lägen: full / lite / still |
 | `nextrum-studie.js`, `-arbetsyta.js`, `-kontakt.js`, `-betalning.js`, `-media.js`, `-tjanster.js` | Delat mellan vyerna |
-| `nextrum-uppgifter.js` + `nextrum-uppgifter.css` | `NXUppgifter` (Fas 23.1): banan, spelaren, stjärnorna, märkena, rättningen per område och genomgången. Studievyn och studiehjälparvyn, CSS:en efter arbetsytan. Rättar ingenting själv och skriver inget resultat; det gör `niva_svara()` |
+| `nextrum-uppgifter.js` + `nextrum-uppgifter.css` | `NXUppgifter` (Fas 23.1, NexLäx sedan Fas 23.2): vägen, spelaren, XP:n och serien ur `nexlax_lage()`, Din utveckling, stjärnorna, märkena, rättningen per område och genomgången. Studievyn och studiehjälparvyn, CSS:en efter arbetsytan. Rättar ingenting själv, räknar ingen XP och skriver inget resultat; det gör `niva_svara()` |
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, toppraden (sök, notiser, kontot), bevakning och `start()` |
@@ -1189,6 +1332,15 @@ Designen är samma hus som ovan; det här är skalet runt den.
   inte en 286 px hög ring med kön bredvid. `.adm-att-gora` finns inte
   längre; raderna är `.kon-rad` i `nextrum-admin-konsol.css`, i samma
   form som den hade.
+- **Att göra är bara vårt drag** (samma dag). Passförfrågningarna stod
+  där, men ett förslag väntar på svar från studiehjälparen, eller från
+  familjen efter ett motförslag. Leo: "det är inte något vi gör eller har
+  påverkan på". Hur många som väntar står i stället i Bokningars
+  rubrikrad, i ockra (`ritaFörfrågningar()`), och Önskat i
+  bokningslistan är ockra som i kalendern bredvid, inte lera. En rad i
+  Att göra räknas också i NEX-ringen, notisklockan och menyns siffror,
+  så det som väntar på en familj eller en studiehjälpare hör inte hemma
+  där.
 - **Bredden** är `--adm-bredd` (1760 px) på `body.vy-admin main.wrap`.
   `body` står framför med flit: `.vy main.wrap` under STORA SKÄRMAR väger
   annars lika mycket och står senare, och över 1500 px fastnade
@@ -1436,6 +1588,12 @@ admin läser, bara `niva_starta()` och `niva_svara()` skriver) och
 `homework.niva_id`. `niva_fragor` får aldrig en rad borttagen som har
 svar: en ändrad fråga får ett nytt id och den gamla blir inaktiv, så att
 gamla svar pekar på det som faktiskt frågades.
+Fas 23.2 (NexLäx, avsnitt 1) la till `nivaer.sort` (`vanlig`, `mastare`,
+`repetition`), `nivaer.lastext`, frågetypen `para` och `nexlax_lage()`:
+XP:n, serien, dagarna och underlaget för Din utveckling för ett barn,
+SECURITY DEFINER med vakten först (familjen, elevens studiehjälpare
+eller admin, annars 42501). XP-reglerna står i `intern.nexlax_*` och
+ingen annanstans. Ingen ny tabell: allt räknas ur svaren och försöken.
 `dokument_delas_med_personen` (2026-09-29, avsnitt 1) la till
 `handlingar.delad_med_personen`, `mina_handlingar()` (personens egna,
 med en fast kolumnlista, SECURITY DEFINER) och policyn "personen läser
@@ -1444,6 +1602,10 @@ sitt dokument" på hinken `dokument`. Två villkor: en koppling till
 (`handlingar_person_id`), och bara en handling kopplad till en person
 kan delas (`handlingar_delas_med_en_person`). `delad_med_personen` står
 i auditloggens vitlista. Tabellen har fortfarande bara adminpolicyerna.
+`admin_oppnar_chatten` (2026-09-29, avsnitt 1) la till `chatt_las()`:
+tråden mellan en familj och en studiehjälpare för admin, SECURITY
+DEFINER med `is_admin()` på första raden, VOLATILE för att den skriver
+`chatt.oppnad` i `audit_logg`. Den rör aldrig `messages`.
 Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
 id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
 ingen roll utom ägaren når den). Se Notiserna nedan.
@@ -1480,6 +1642,11 @@ kontaktmeddelande, att ett klientfel städats bort och att bolagsfakta
 ett filnamn heter i praktiken "Provräkning Alva v42.pdf".
 `kund_skatteuppgifter` har ingen heller — funktionerna skriver redan
 sina egna rader, och en trigger hade dubbelloggat.
+
+Två LÄSNINGAR står också där, för att den de gäller inte märker dem:
+personnumret (`skatteuppgifter.lasta`, Fas 6.1) och en chatt som admin
+öppnar (`chatt.oppnad`, 2026-09-29). Båda skrivs av funktionen som
+läser, i samma transaktion.
 
 **Sökningen i loggen går genom `audit_sok()`** (Fas 9.8), som filtrerar
 OCH räknar i databasen. Totalen kommer ur `count(*) over ()` på den
@@ -2394,7 +2561,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 35 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-29, räknat i driften; den senaste är `driftkorningar`, och `mina_handlingar`, `radering_lage` och `radera_person` före den) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 40 SECURITY DEFINER-funktioner i `public` nåbara för `authenticated`, triggerfunktionerna oräknade (räknat i driften 2026-09-29, efter `admin_oppnar_chatten` och Fas 23.2). Förut stod 35 här, räknat före Fas 23.1 och på ett sätt som inte skrevs ned. Bland de senaste: `chatt_las`, `nexlax_lage`, `driftkorningar`, `mina_handlingar`, `radering_lage` och `radera_person` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
@@ -2675,7 +2842,7 @@ hitta på ett pris, ett villkor eller ett löfte.
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i verktyget. Körs för hand (kräver Chromium), inte i CI. `--sql` ger raderna till `biblioteksmaterial` |
 | `?v=`-stämplarna på alla script- och link-taggar | `verktyg/satt-version.py` | filernas egen md5 |
 | `bilder/*.webp` | `verktyg/bygg-webp.py` | `bilder/*.jpg` |
-| `supabase/migrations/*_uppgiftsbanken_*.sql` (nivåerna och frågorna) | `verktyg/bygg-uppgifter.py --sql` | `verktyg/uppgiftsbanken/*.py`. Ändras banken skrivs en NY migration, den gamla står kvar. `--kolla` (CI) jämför den senaste med vad verktyget skriver nu, och `--visa` skriver ut frågorna med facit för den som ska läsa igenom dem |
+| `supabase/migrations/*_uppgiftsbanken_*.sql` (nivåerna och frågorna) | `verktyg/bygg-uppgifter.py --sql` | `verktyg/uppgiftsbanken/*.py`. Ändras banken skrivs en NY migration, den gamla står kvar. `--kolla` (CI) jämför den senaste med vad verktyget skriver nu, och `--visa` skriver ut frågorna med facit för den som ska läsa igenom dem. Sedan Fas 23.2 skriver verktyget också ett Mästarprov sist i varje område med minst två nivåer (`<prefix>-mastare-<område>`) och repetitionen sist i banan (`<prefix>-repetition`); områdena Mästarprov och Repetition är upptagna för handskrivna nivåer |
 
 CI kör om maskotsvaren, FAQ-schemat och kartan och gör `git diff
 --exit-code`. Ändrar du FAQ:n utan att bygga om blir bygget rött, och
@@ -3187,6 +3354,18 @@ tillbaka överst i avsnittet för 22.1.
   nedskriven blir en uppgift, och kassan stänger passets förra session. Kvar: en familj som inte är matchad når inte
   Erbjudanden (föräldravyn är låst till dess), så timmar köps först
   efter samtalet och matchningen.
+- **Det enda köpet av timmar är märkt skarpt fast det gjordes i
+  testläge** (2026-09-29). Leo: "jag behöver se hur det ser ut när
+  någon faktiskt köper klippkort, från vår admins sida". Köpet är Leos
+  egen Standardplan, 4 timmar för 1 364 kr den 28 september, och
+  `stripe_skarp` sattes till true för hand. Det räknas därför som pengar
+  in i september, i Översikt och Månadens ekonomi, fast inga pengar kom
+  in. Ingen trigger och ingen auditrad följer kolumnen, så det syns bara
+  här. Bokslutet (`manad_lage()`) räknar inte köpta timmar, så en
+  stängd september fryser inte talet, och webhooken skriver bara om
+  kolumnen på ett köp som inte är betalt. **Det ska tillbaka när Leo
+  sett det**: `update public.klippkort set stripe_skarp = false where
+  id = '9f4f87ae-6c14-430d-a87c-61bef5d09a82';`, och sedan bort härifrån.
 - **Google Workspace ger bara Meet-länkar, och är inte kopplat än**
   (Fas 18.1). Koden, tabellerna och Koppla-knappen finns; kopplingen
   kräver stegen hos Google i `INTEGRATIONER.md` och ett klick på
@@ -3227,6 +3406,12 @@ tillbaka överst i avsnittet för 22.1.
   Matematik från åk 1 till gymnasiet 1, engelska och svenska i tre
   årskurser var, NO i åk 5 och 8 — se `python3 verktyg/bygg-uppgifter.py`
   för vad som finns. SO, moderna språk och programmering har inga nivåer.
+  Fas 23.2 la till trettio nivåer (flest i matematik åk 8, där den enda
+  eleven i drift går), och banken har nu 109 nivåer och 872 frågor, med
+  27 Mästarprov och 18 repetitioner som drar ur dem. Det är fortfarande
+  tunt: flera banor har områden med en enda nivå (svenska åk 8 har
+  fyra), och en väg med en nivå per område tar slut fort. Det är
+  innehållet, inte vyn, som gör NexLäx djupt.
   Innehållet är skrivet med AI och granskat fråga för fråga, med facit
   uträknat i kod där det går; läs igenom en bana med `--visa` innan den
   används på riktigt, och låt en studiehjälpare som undervisar i ämnet
@@ -3250,6 +3435,34 @@ tillbaka överst i avsnittet för 22.1.
      före och efter, 861 av 861. Nästa bank som ändras blir lika stor:
      kör den på samma sätt. Vyerna tål fortfarande att tabellerna
      saknas: uppgifterna syns som förut, utan banan.
+  4. **NexLäx-migrationerna (Fas 23.2) är i drift sedan 2026-09-29**,
+     som `20260929150309` (`fas23_2_nexlax`) och `20260929150310`
+     (`uppgiftsbanken_nexlax`), körda efter att PR #138 mergats, och det
+     driften sparade har samma md5 som filerna. Banken är 347 kB och
+     gick samma väg som Fas 23.1:s (punkt 3): databasen hämtade filerna
+     från main-commiten med tillägget `http`, prövade md5 och skrev
+     raderna i `schema_migrations` i samma transaktion, och tillägget
+     togs bort igen. Hela `rls-test.sql` gick igenom före, i en
+     transaktion som rullades tillbaka med båda migrationerna inlästa,
+     och efter: 911 av 911. Vakten släppte igenom: de fem funktionerna
+     var Fas 23.1:s.
+  5. **Innehållet i Fas 23.2 är skrivet med AI**, av fyra skribenter per
+     ämne, och läst en gång till av en granskare som räknade om varje
+     facit. Granskaren hittade inga fel facit; två tvetydiga
+     slutsatsfrågor, två rätta svar som nekades och fyra förklaringar är
+     rättade. Det här bör en människa som undervisar i ämnet läsa innan
+     det används på riktigt: Allemansrätten (sv-ak6-lasforstaelse-1,
+     skriven ur minnet av Naturvårdsverkets regler; naturvardsverket.se
+     gick inte att nå från sessionen), uttrycken i sv-ak6-ordforrad-2,
+     slutsatsfrågan i Tomaterna på balkongen (sv-ak8-lasforstaelse-1),
+     att bara drunk och forgotten godtas i en-ak8-verb-3, och om
+     sannolikhet i två steg (ma-ak8-sannolikhet-2) och olikheter i
+     ma-gy1-funktioner-2 ligger rätt i årskursen. En ny nivå mitt i banan
+     står i kedjan: den som klarat nivån före men inte börjat nivån
+     efter får den nya först, och nivån efter är låst tills den nya är
+     klarad. En påbörjad, klarad eller given nivå står öppen, så ingen
+     förlorar något hen gjort, men en elev kan se en öppen nivå bli
+     låst efter att banken lästs in.
 - **Avtalen som delas med personen (2026-09-29, avsnitt 1) är i drift.**
   Migrationen `dokument_delas_med_personen` kördes efter att PR #126
   mergats, som version `20260929080900`, och det driften sparade har
@@ -3267,6 +3480,22 @@ tillbaka överst i avsnittet för 22.1.
   3. **En person per handling.** Något som ska nå alla studiehjälpare
      (handboken, en policy) är en egen regel, och byggs inte förrän den
      behövs.
+- **Chatten som admin öppnar (2026-09-29, avsnitt 1) är i drift.**
+  Migrationen `admin_oppnar_chatten` kördes efter att PR #137 mergats,
+  med versionen i filnamnet (`20260929123125`): raden i
+  `schema_migrations` skrevs i samma transaktion som migrationen, efter en
+  md5-prövning mot filen, så `created_by` är tom på just den, som för
+  Fas 23.1. Det driften sparade har samma md5 som filen. Hela
+  `rls-test.sql` från main gick igenom mot driften efteråt, 923 av 923,
+  också NexLäx (Fas 23.2), som en annan session kört samma eftermiddag
+  som `20260929150309` och `20260929150310`. Före merge provades den i en
+  transaktion som rullades tillbaka: 873 av 873 med migrationen, och
+  utan den föll bara avsnittets egna fem rader. En databas byggd utan
+  migrationen tål vyn: Öppna chatt står kvar i listorna, men panelen
+  säger att migrationen saknas och läser ingenting, för en läsning utan
+  rad i loggen ska inte gå att göra från vyn. Kvar som inte är kod: säg
+  till studiehjälparna och familjerna med konto att vi kan läsa chatten
+  (DATASKYDD.md avsnitt 8).
 
 ---
 

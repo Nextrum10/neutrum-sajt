@@ -677,9 +677,13 @@
     const nivåer = (S.katalog || []).filter(n => n.aktiv && n.amne === amne && n.arskurs === ak)
       .sort((a, b) => a.ordning - b.ordning);
     const gjort = U.perNivå(S.forsok);
+    /* Mästarprovet och repetitionen (Fas 23.2) har inget eget område att
+       stå inom parentes: provet bär områdets namn, repetitionen hela banan. */
     $('#lx-niva').innerHTML = '<option value="">Ingen, en vanlig uppgift</option>' + nivåer.map(n => {
       const g = gjort[n.id];
-      return '<option value="' + esc(n.id) + '">' + esc(n.ordning + '. ' + n.titel + ' (' + n.omrade + ')'
+      const sort = n.sort || 'vanlig';
+      return '<option value="' + esc(n.id) + '">' + esc(n.ordning + '. ' + U.stegTitel(n)
+        + (sort === 'vanlig' ? ' (' + n.omrade + ')' : sort === 'repetition' ? ' av det eleven missat' : '')
         + (g && g.klar ? ', klarad med ' + g.stjarnor + ' av 3' : '')) + '</option>';
     }).join('');
     $('#lx-niva').value = lx.niva && nivåer.some(n => n.id === lx.niva.id) ? lx.niva.id : '';
@@ -770,6 +774,7 @@
     if (!S.aktivElev) {
       S.laxor = [];
       S.forsok = [];
+      S.nexlax = null;
       host.innerHTML = tomt('Ingen elev vald', 'Välj en elev högst upp för att se uppgifterna.');
       ritaRättade();
       laxRakning();
@@ -785,10 +790,11 @@
       .eq('student_id', eleven)
       .order('due_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
-    const [svar0, katalog, forsok] = await Promise.all([
+    const [svar0, katalog, forsok, läge] = await Promise.all([
       hämta(', niva_id, nivaer(id, titel, amne, arskurs, omrade, beskrivning, antal_fragor, aktiv)'),
       U.laddaKatalog(supa),
-      U.laddaFörsök(supa, eleven)
+      U.laddaFörsök(supa, eleven),
+      U.laddaLäge(supa, eleven)
     ]);
     /* Utan Fas 23.1 i databasen finns varken niva_id eller nivaer.
        Uppgifterna ska synas ändå, som förut. */
@@ -798,6 +804,7 @@
     const { data, error } = svar;
     S.katalog = katalog;
     S.forsok = forsok || [];
+    S.nexlax = läge;
     ritaRättade();
     fyllPgFörslag(S.progress || []);
 
@@ -831,7 +838,9 @@
   }
 
   /* Rättade nivåer: området för området och varje klar nivå. Samma
-     siffror som familjen ser under Min utveckling → Uppgifter. */
+     siffror som familjen ser i NexLäx → Din utveckling, och överst
+     elevens XP och serie ur nexlax_lage() (Fas 23.2). Utan den
+     funktionen i databasen står bara antalet klarade nivåer där. */
   function ritaRättade() {
     const omr = $('#upg-rattade-omraden'), lista = $('#upg-rattade'), antal = $('#upg-rattade-antal');
     if (!lista) return;
@@ -844,12 +853,14 @@
     }
     const klara = (S.forsok || []).filter(f => f.klar_at).sort((a, b) => Date.parse(b.klar_at) - Date.parse(a.klar_at));
     antal.textContent = klara.length ? klara.length + ' st' : '';
+    const sam = U.sammanfattning(S.nexlax, S.forsok);
+    const topp = sam ? '<p class="lx-nexlax">' + U.IKON.blixt + '<span>I NexLäx: ' + esc(sam) + '</span></p>' : '';
     if (!klara.length) {
-      omr.innerHTML = '';
+      omr.innerHTML = topp;
       lista.innerHTML = tomt('Inga klara nivåer än', 'När eleven gjort en nivå, ur banan eller som uppgift från dig, står rättningen här.');
       return;
     }
-    omr.innerHTML = U.områdesHtml(S.katalog, S.forsok, S.progress);
+    omr.innerHTML = topp + U.områdesHtml(S.katalog, S.forsok, S.progress);
     const nivå = U.efterId(S.katalog);
     const synliga = S.rättadeAlla ? klara : klara.slice(0, 6);
     lista.innerHTML = '<div class="upg-forsok-lista" style="margin-top:14px">'
@@ -967,12 +978,12 @@
     const e = elev();
     const ämnen = Array.from(new Set([...((e && e.subjects) || []), ...rader.map(p => p.subject)]));
     /* Fas 23.1: områdena i banan för elevens årskurs står också bland
-       förslagen. Min utveckling ställer rättningen av nivåerna bredvid
+       förslagen. NexLäx ställer rättningen av nivåerna bredvid
        bedömningen när området heter likadant, och ett område som
-       stavas på två sätt hade blivit två. */
+       stavas på två sätt hade blivit två. Repetitionen är inget område. */
     const kod = NX.årskursKod(e && e.grade);
-    const iBanan = (S.katalog || []).filter(n => n.aktiv && (!kod || n.arskurs === kod)
-      && (!ämnen.length || ämnen.includes(n.amne))).map(n => n.omrade);
+    const iBanan = (S.katalog || []).filter(n => n.aktiv && (n.sort || 'vanlig') !== 'repetition'
+      && (!kod || n.arskurs === kod) && (!ämnen.length || ämnen.includes(n.amne))).map(n => n.omrade);
     const områden = Array.from(new Set(rader.map(p => p.area).concat(iBanan)));
     $('#pg-amnen').innerHTML = ämnen.map(a => '<option value="' + esc(a) + '">').join('');
     $('#pg-omraden').innerHTML = områden.map(a => '<option value="' + esc(a) + '">').join('');

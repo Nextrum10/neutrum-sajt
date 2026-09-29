@@ -786,6 +786,14 @@
   .vy-admin .adm-verktyg .adm-sok{flex-basis:100%}
 }
 
+/* Passförfrågningarna i Bokningars rubrikrad (2026-09-29). Raden ligger
+   i .vy-sek-topp som barnväljaren i studievyn: till höger om rubriken,
+   och under den på en smal skärm. */
+.adm-bok-forfragan{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;
+  padding-bottom:2px;
+}
+
 /* Tabellen står på kortet (2026-09-29, adminvyn i samma hus som
    studievyn): en låda i lådan är precis vad INNEHÅLLET-avsnittet längst
    ned tog bort. Rubrikraden är en ruta i --tint, raderna har streck
@@ -2279,6 +2287,17 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
   font-size:.87rem;line-height:1.65;color:var(--bl-2);
   white-space:pre-wrap;word-break:break-word;
   background:var(--tint);border-radius:16px;padding:14px 16px;
+}
+
+/* Chatten i panelen (2026-09-29, Öppna chatt). Samma bubblor som
+   tråden i vyerna (TRÅDEN i nextrum-vy.css), men tråden rullar med
+   panelen i stället för i en egen ruta: två rullningar i varandra, och
+   den inre var 460 px hög i en panel som redan rullar. Beskedet överst
+   säger att det bara är läsning och att parterna inte ser den. */
+.dp .tr{max-height:none;overflow:visible;padding-right:0;margin-top:6px}
+.dp-chatt-not{
+  margin:0;font-size:.84rem;line-height:1.55;color:var(--bl-2);
+  background:var(--tint);border-radius:14px;padding:11px 14px;
 }
 
 /* Knapprader i panelen: läget med sina knappar, och Redigera sist i

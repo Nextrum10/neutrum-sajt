@@ -408,6 +408,18 @@
   }
 
   document.addEventListener('click', async e => {
+    /* Visa dem vid passförfrågningarna: listan med just dem. Söket
+       töms, annars visar listan färre än talet bredvid säger. */
+    if (e.target.closest('[data-bok-forfragan]')) {
+      const f = S.flikar.bokningar;
+      if (f) f.visa('lista');
+      $('#bok-sok').value = '';
+      $('#bok-status').value = 'requested';
+      $('#bok-nar').value = 'framat';
+      ritaBokningar();
+      return;
+    }
+
     const välj = e.target.closest('[data-mt-elev]');
     if (välj) {
       S.valdElev = välj.dataset.mtElev;
@@ -467,7 +479,31 @@
      BOKNINGAR
      ============================================================ */
 
+  /* Passförfrågningarna, i sektionens rubrikrad (2026-09-29). De stod
+     i Att göra på Översikt, men ett förslag väntar på svar från den
+     andra parten och inte på oss: här står bara hur många, i ockra,
+     som ett läge som väntar på någon annan. "På svar" och inte "på
+     studiehjälparen": efter ett motförslag är det familjen som ska
+     svara, och vem som föreslog hämtas inte hit. Talet gäller alla
+     kommande förfrågningar, inte filtret under: en siffra som ändrar
+     sig när man söker är en siffra ingen vågar citera. */
+  function ritaFörfrågningar() {
+    const host = $('#bok-forfragan');
+    if (!host) return;
+    const idag = isoFor(new Date());
+    const antal = S.bokningar.filter(b =>
+      b.status === 'requested' && b.wanted_date >= idag).length;
+    host.hidden = !antal;
+    host.innerHTML = antal
+      ? pill(antal + (antal === 1 ? ' passförfrågan väntar' : ' passförfrågningar väntar')
+          + ' på svar', 'ar-vantar')
+        + '<button class="vy-lank" type="button" data-bok-forfragan>'
+        + (antal === 1 ? 'Visa den' : 'Visa dem') + '</button>'
+      : '';
+  }
+
   function ritaBokningar() {
+    ritaFörfrågningar();
     const sök = $('#bok-sok').value.trim();
     const st = $('#bok-status').value;
     const när = $('#bok-nar').value;
