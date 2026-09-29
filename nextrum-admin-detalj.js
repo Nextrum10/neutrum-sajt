@@ -247,7 +247,7 @@
     chatt:          [['oversikt', 'Chatten']]
   };
 
-  async function öppnaDetalj(typ, id) {
+  async function öppnaDetalj(typ, id, flik) {
     if (!DP_FLIKAR[typ]) return;
     DP.redigera = false;
     /* Ett pass hämtas om varje gång. Tiden, tillägget och betalningen
@@ -263,7 +263,9 @@
     byggPanel();
     DP.sistaFokus = document.activeElement;
     DP.typ = typ; DP.id = id;
-    DP.flik = DP_FLIKAR[typ][0][0];
+    /* En lista kan be om en annan flik än den första (data-dp-start),
+       men bara en som typen har. */
+    DP.flik = DP_FLIKAR[typ].some(f => f[0] === flik) ? flik : DP_FLIKAR[typ][0][0];
 
     DP.bak.hidden = false;
     DP.panel.hidden = false;
@@ -1110,6 +1112,9 @@
     const epost = String(a.email || '').toLowerCase();
     const konto = epost && Object.values(S.personer).find(p =>
       p.role === 'tutor' && !ärRaderad(p) && String(p.email || '').toLowerCase() === epost);
+    /* Öppna provet härifrån (2026-09-29): steg 3 i fliken Rekryteringen
+       låg nedanför skärmkanten, och här stod bara "Inte öppnat". */
+    const provKnapp = kör('provKnapp', a) || '';
 
     return dpRubrik('Ansökan', 'kom in ' + kortDatum(a.created_at))
       + dpFakta([
@@ -1124,7 +1129,7 @@
           ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(konto.id) + '">'
             + esc(konto.full_name || konto.email) + '</button>'
           : null, 'inget konto med adressen än'],
-        ['Provet', esc(kör('provKort', a) || '')]
+        ['Provet', esc(kör('provKort', a) || '') + (provKnapp ? ' ' + provKnapp : '')]
       ])
       + dpRubrik('Varför hen söker')
       + (text ? '<div class="dp-text">' + esc(text) + '</div>' : tomt('Inget skrivet', ''))
@@ -1821,7 +1826,7 @@
     const k = e.target.closest('[data-dp]');
     if (!k) return;
     const [typ, id] = String(k.dataset.dp).split(':');
-    öppnaDetalj(typ, id);
+    öppnaDetalj(typ, id, k.dataset.dpStart);
   });
 
   document.addEventListener('submit', async e => {

@@ -1142,6 +1142,16 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    alltid och tar sin plats, osynlig på den innevarande, annars sköt den
    ner allt under raden efter första trycket. Adminvyns Ekonomi har kvar
    raden: där jämför man månader bredvid varandra.
+   Raden är sedan 2026-09-29 ett spår med pilar (Leo: "ändra månaderna
+   där så de ser bättre ut"), i Betalningar, Månadens ekonomi, Löner och
+   Lektioner. Förut var varje månad ett piller med kant, ett piller med
+   märke blev högre än de andra, årtalet svävade ovanför och klipptes i
+   kanten, och raden slutade mitt i en månad. Nu är alla knappar 44 px
+   höga, årtalet står i raden där det byts, kanten tonas där det finns
+   mer, och den innevarande månaden har en dämpad prick, inte en kant.
+   Den valda är mörk och flikarna under ljusa: i Betalningar står de två
+   spåren efter varandra. Spåret (`.nx-manad-spar`) är det som rullar,
+   inte host. Pilarna göms på en telefon, där man drar.
 
 Och några saker som kostade en omgång: basrubriken `h5` bär en
 `margin-top` i em, som med den större rubriken blev 27 px luft överst i
@@ -2137,7 +2147,7 @@ applications (insert/update)
 | "Kontakt" | **inget** — admin skriver själv, med förslag på tider |
 | mötet sparas eller får ny tid/länk | `mote`: tid i svensk tid, länken som knapp |
 | "Mötet är hållet" | `utbildning`: tack, introduktionen är nästa steg |
-| "Utbildningsmötet är hållet" | `prov`: länken till provet, öppet i tre dagar (Fas 22.1) |
+| "Utbildningsmötet är hållet", eller Öppna provet i ansökans översikt | `prov`: länken till provet, öppet i tre dagar (Fas 22.1). Adminvyn frågar först |
 | dagen efter, och sista dagen, kl. 9 | `prov_paminnelse`, `prov_sista_dagen` (pg_cron `utbildningsprov-paminn`) |
 | "Öppna provet i tre dagar till" | `prov` igen, med den nya sista dagen |
 | provet klarat, eller "Markera utbildad" | `sista_steget`: skapa konto med samma e-post |
@@ -2230,6 +2240,16 @@ som det rätta, och Nextrum och rutinerna står också i fel svar.
 `utbildningsprov_test.ts` räknar vad "alltid längsta", "alltid
 kortaste" och "det som nämner Nextrum" ger, och taket ligger kring
 slumpen (8 av 30). Skriver du om en fråga, kör proven.
+
+**Provet öppnas från ansökans översikt** (2026-09-29). Leo: "på
+rekrytering och utbildning i admin kan man inte lägga in
+utbildningsprovet". Knappen fanns bara under steg 3 i panelens flik
+Rekryteringen, nedanför skärmkanten, och fliken Utbildning visade bara
+den vars möte i steg 2 var avbockat. Nu står Öppna provet på raden
+Provet (`provKnapp`), stegens knappar står direkt under skälet,
+flikarna Intervju och Utbildning öppnar panelen på Rekryteringen
+(`data-dp-start`), och Utbildning tar också den som har ett
+utbildningsmöte utan att steg 2 är avbockat.
 
 Utfallet syns i rekryteringsrutan vid det steg som skickade mejlet, och
 ett som inte gick fram är rött. Samma sort som kvittot till familjen:

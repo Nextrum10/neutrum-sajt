@@ -567,20 +567,37 @@ window.NXStudie = (function () {
     if (lista.indexOf(vald) === -1) vald = denna;
     if (o.stegare) return månadsstegare(host, o, lista, vald, denna);
 
+    /* Raden (2026-09-29, Leo: "ändra månaderna där så de ser bättre
+       ut"). Förut var varje månad ett eget piller med kant, och ett
+       piller med märke blev högre än de andra, så raden hackade.
+       Årtalet svävade ovanför och klipptes i kanten, och raden slutade
+       mitt i en månad utan att säga att det fanns fler. Nu står
+       månaderna i ett spår, lika höga med eller utan märke, årtalet står
+       i raden där det byts, och pilarna och den tonade kanten säger att
+       det går att rulla. Spåret är det som rullar, inte host. */
     host.classList.add('nx-manader');
     host.setAttribute('role', 'group');
     if (!host.getAttribute('aria-label')) host.setAttribute('aria-label', 'Välj månad');
-    host.innerHTML = lista.map(function (m, n) {
-      var år = m.slice(0, 4);
-      /* Året står bara där det byts, och på den första: tolv knappar
-         med "2026" på varje är brus. */
-      var visaÅr = n === 0 || år !== lista[n - 1].slice(0, 4);
-      return '<button type="button" data-manad="' + m + '" aria-pressed="' + (m === vald) + '"'
-        + (m === denna ? ' data-denna' : '') + '>'
-        + (visaÅr ? '<small>' + år + '</small>' : '')
-        + '<span>' + esc(månadsNamn(m, false)) + '</span>'
-        + '<i class="nx-manad-marke"></i></button>';
-    }).join('');
+    host.innerHTML =
+      '<button type="button" class="nx-manad-pil" data-rull="-1" aria-label="Tidigare månader" tabindex="-1">' + IKON.tillbaka + '</button>'
+      + '<div class="nx-manad-ram"><div class="nx-manad-spar">'
+      + lista.map(function (m, n) {
+        var år = m.slice(0, 4);
+        /* Året står där det byts, och först: tolv knappar med "2026" på
+           varje är brus. Knappens namn bär året ändå, för en skärmläsare
+           hör inte att årtalet stod tre knappar tidigare. */
+        var visaÅr = n === 0 || år !== lista[n - 1].slice(0, 4);
+        return (visaÅr ? '<span class="nx-manad-ar" aria-hidden="true">' + år + '</span>' : '')
+          + '<button type="button" data-manad="' + m + '" aria-pressed="' + (m === vald) + '"'
+          + ' aria-label="' + esc(månadsNamn(m)) + '"'
+          + (m === denna ? ' data-denna' : '') + '>'
+          + '<span>' + esc(månadsNamn(m, false)) + '</span>'
+          + '<i class="nx-manad-marke" hidden></i></button>';
+      }).join('')
+      + '</div></div>'
+      + '<button type="button" class="nx-manad-pil" data-rull="1" aria-label="Senare månader" tabindex="-1">' + IKON.pil + '</button>';
+    var spår = host.querySelector('.nx-manad-spar');
+    var ram = host.querySelector('.nx-manad-ram');
 
     function märk() {
       if (!o.märke) return;
@@ -589,15 +606,28 @@ window.NXStudie = (function () {
         var i = b.querySelector('.nx-manad-marke');
         i.textContent = text;
         i.hidden = !text;
+        b.setAttribute('aria-label', månadsNamn(b.dataset.manad) + (text ? ', ' + text : ''));
       });
     }
+    /* Pilarna och kanten följer var spåret står. Två attribut per
+       rullsteg och ingen stil: raden ritas inte om. */
+    function kanter() {
+      var max = spår.scrollWidth - spår.clientWidth;
+      var vänster = spår.scrollLeft > 2;
+      var höger = spår.scrollLeft < max - 2;
+      ram.classList.toggle('mer-vanster', vänster);
+      ram.classList.toggle('mer-hoger', höger);
+      host.querySelector('[data-rull="-1"]').disabled = !vänster;
+      host.querySelector('[data-rull="1"]').disabled = !höger;
+    }
     function iBild() {
-      var b = host.querySelector('[aria-pressed="true"]');
+      var b = spår.querySelector('[aria-pressed="true"]');
       if (!b) return;
-      var vänster = b.offsetLeft - host.offsetLeft;
-      if (vänster < host.scrollLeft || vänster + b.offsetWidth > host.scrollLeft + host.clientWidth) {
-        host.scrollLeft = Math.max(0, vänster - (host.clientWidth - b.offsetWidth) / 2);
+      var vänster = b.offsetLeft;
+      if (vänster < spår.scrollLeft || vänster + b.offsetWidth > spår.scrollLeft + spår.clientWidth) {
+        spår.scrollLeft = Math.max(0, vänster - (spår.clientWidth - b.offsetWidth) / 2);
       }
+      kanter();
     }
     function sätt(m, tyst) {
       if (lista.indexOf(m) === -1 || m === vald) return;
@@ -610,9 +640,20 @@ window.NXStudie = (function () {
     }
 
     host.addEventListener('click', function (e) {
+      var pil = e.target.closest('[data-rull]');
+      if (pil) {
+        spår.scrollBy({ left: Number(pil.dataset.rull) * spår.clientWidth * 0.75, behavior: 'smooth' });
+        return;
+      }
       var b = e.target.closest('[data-manad]');
       if (b) sätt(b.dataset.manad);
     });
+    var väntar = false;
+    spår.addEventListener('scroll', function () {
+      if (väntar) return;
+      väntar = true;
+      requestAnimationFrame(function () { väntar = false; kanter(); });
+    }, { passive: true });
     märk();
     /* Efter layout: offsetLeft är 0 innan raden syns. */
     requestAnimationFrame(iBild);
@@ -623,14 +664,15 @@ window.NXStudie = (function () {
        (den innevarande, sist i raden) utanför. Mätt i provbänken
        2026-09-28: 935 px in i en rad som var 308 px bred på en telefon
        och 759 px på en dator. Bara när bredden går från noll: en rad man
-       själv dragit i sidled ska inte hoppa tillbaka när fönstret ändras. */
+       själv dragit i sidled ska inte hoppa tillbaka när fönstret ändras.
+       Pilarna följer med vid varje storlek. */
     if (typeof ResizeObserver === 'function') {
-      var bredd = host.clientWidth;
+      var bredd = spår.clientWidth;
       new ResizeObserver(function () {
-        var ny = host.clientWidth;
-        if (!bredd && ny) iBild();
+        var ny = spår.clientWidth;
+        if (!bredd && ny) iBild(); else kanter();
         bredd = ny;
-      }).observe(host);
+      }).observe(spår);
     }
 
     return {
