@@ -279,6 +279,67 @@ window.NXMedia = (function () {
   function filEtikett(mime) { return FILTYPER[mime] || 'Fil'; }
 
   /* ============================================================
+     ÖPPNA EN PRIVAT FIL (2026-09-29)
+
+     Dokumenten under System → Dokument, och sedan samma dag deras
+     kopia hos familjen och studiehjälparen (Profil & inställningar →
+     Dokument). En knapp, två vägar:
+
+     En PDF eller en bild visas i en ny flik som öppnas I SAMMA TRYCK,
+     innan länken finns. Ett fönster som öppnas efter en väntan på
+     nätet räknas inte längre som användarens i Safari och stoppas
+     tyst: knappen hade sett ut att inte göra någonting, och det är på
+     en iPhone familjen öppnar sitt avtal. Samma fälla som CV:t under
+     Ansökningar (nextrum-admin-rekrytering.js).
+
+     Allt annat, Word och text, hämtas hit och sparas med sitt namn. I
+     en ny flik hade filen laddats ned och lämnat en tom flik efter sig.
+     En PDF kan inte gå den vägen: en blob-adress ärver vyns CSP, och
+     object-src 'none' stoppar webbläsarens PDF-visare.
+
+     Länken gäller fem minuter. Den står i adressfältet, och den som
+     har den öppnar filen utan inloggning så länge den gäller; ett
+     avtal kan bära ett personnummer.
+
+     Anropas direkt från klicket, utan await före: window.open måste
+     ske innan funktionen väntar på något. Svarar med null när det
+     gick, annars med en text att visa.
+     ============================================================ */
+  var VISAS_I_FLIK = /^(application\/pdf|image\/(jpeg|png|webp))$/;
+  var VISAS_I_FLIK_NAMN = /\.(pdf|jpe?g|png|webp)$/i;
+
+  async function öppnaFil(hink, sökväg, o) {
+    var opt = o || {};
+    if (!sökväg || !supa) return 'Filen finns inte.';
+    var namn = opt.namn || String(sökväg).split('/').pop();
+
+    if (VISAS_I_FLIK.test(opt.mimetyp || '') || (!opt.mimetyp && VISAS_I_FLIK_NAMN.test(sökväg))) {
+      var flik = window.open('', '_blank');
+      if (!flik) return 'Webbläsaren stoppade fliken. Tillåt popupfönster för nextrum.se och tryck igen.';
+      flik.opener = null;
+      var url = await signera(hink, sökväg, 300);
+      if (!url) {
+        flik.close();
+        return 'Filen gick inte att öppna. Den kan ha tagits bort.';
+      }
+      flik.location.replace(url);
+      return null;
+    }
+
+    var svar = await supa.storage.from(hink).download(sökväg);
+    if (svar.error || !svar.data) return 'Filen gick inte att hämta. Försök igen om en stund.';
+    var blob = URL.createObjectURL(svar.data);
+    var länk = document.createElement('a');
+    länk.href = blob;
+    länk.download = namn;
+    document.body.appendChild(länk);
+    länk.click();
+    länk.remove();
+    setTimeout(function () { URL.revokeObjectURL(blob); }, 60000);
+    return null;
+  }
+
+  /* ============================================================
      KONTOBILDEN (Fas 3)
 
      Här låg fram till Fas 13.3 också materialRad(), laddaMaterial()
@@ -303,7 +364,7 @@ window.NXMedia = (function () {
   return {
     kontoAvatar: kontoAvatar,
     filstorlek: filstorlek, filEtikett: filEtikett,
-    signera: signera, glömSignerad: glömSignerad,
+    signera: signera, glömSignerad: glömSignerad, öppnaFil: öppnaFil,
     avatar: avatar, avatarKarta: avatarKarta, initialer: initialer,
     beskär: beskär, granska: granska, granskaFil: granskaFil,
     sparaAvatar: sparaAvatar, taBortAvatar: taBortAvatar

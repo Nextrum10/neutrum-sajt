@@ -2388,6 +2388,87 @@ window.NXStudie = (function () {
     NX.rensa(NX.$('#auth-msg'));
   }
 
+  /* ============================================================
+     INLOGGNINGEN SOM FÖRSVINNER (2026-09-29)
+
+     Leo: "kontroller i admins inställning i automationer går inte att
+     köra". Kontrollerna var hela. Adminvyn var utloggad och visste det
+     inte.
+
+     supabase-js förnyar inloggningen i bakgrunden. Nekar Auth, för att
+     sessionen är borttagen, tar den bort sessionen ur webbläsaren och
+     säger SIGNED_OUT, och varje fråga därefter går med den publika
+     nyckeln, som anon. Ingen vy lyssnade. Adminvyn stod kvar med
+     gårdagens listor, räknarna i sidhuvudet blev noll utan fel (RLS ger
+     anon noll rader), och första knappen som skrev något svarade
+     "permission denied for function kor_kontrollerna": ett besked som
+     såg ut som ett fel i funktionen och betydde att man var utloggad.
+
+     Sessionen dog för att en utloggning på telefonen loggade ut datorn
+     också. Det är loggaUt() nedan.
+     ============================================================ */
+
+  /* Satt medan vyn själv loggar ut, så att vakten inte hinner visa
+     "du har blivit utloggad" för den som just tryckt på knappen. */
+  var loggarUt = false;
+
+  /* Logga ut här, inte överallt. signOut() tar som förval bort ALLA
+     personens sessioner, på alla enheter: den som loggade ut på
+     telefonen loggade ut adminvyn på datorn, och det märktes först när
+     datorn skulle förnya inloggningen nästa morgon. Ska någon loggas ut
+     överallt görs det i databasen (CLAUDE.md, avsnitt 6).
+
+     supa skickas in, som till notisval och vakten nedan. */
+  async function loggaUt(supa) {
+    loggarUt = true;
+    if (supa) await supa.auth.signOut({ scope: 'local' });
+    location.reload();
+  }
+
+  /* o.supa är klienten, o.user den som vyn visar, och o.utloggad()
+     byter till vyns inloggningsruta. Anropas när vyn vet vem som är
+     inloggad, i alla lägen: också en låst eller väntande vy frågar
+     databasen. */
+  function vaktaInloggningen(o) {
+    var supa = o && o.supa;
+    if (!supa || !supa.auth || !supa.auth.onAuthStateChange || !o.user) return;
+    var borta = false;
+    supa.auth.onAuthStateChange(function (händelse, session) {
+      if (loggarUt) return;
+      var vem = session && session.user ? session.user.id : null;
+      /* supabase-js håller sitt lås medan lyssnarna körs, och en fråga
+         härifrån hade väntat på det för alltid. Allt görs efteråt. */
+      if (borta) {
+        /* Inloggad igen, i rutan eller i en annan flik: börja om som
+           den som är inloggad nu. Adressen står kvar, så vyn öppnar där
+           man var. */
+        if (vem) setTimeout(function () { location.reload(); }, 0);
+        return;
+      }
+      if (vem === o.user.id) return;
+      if (vem) {
+        /* Någon annan loggade in i samma webbläsare, i en annan flik.
+           Sessionen är delad, så vyn hade fortsatt fråga och skriva med
+           den personens token, med den förras listor på skärmen. */
+        setTimeout(function () { location.reload(); }, 0);
+        return;
+      }
+      borta = true;
+      setTimeout(function () {
+        var na = NX.$('#nav-actions'), ma = NX.$('#m-actions');
+        if (na) na.innerHTML = '';
+        if (ma) ma.innerHTML = '';
+        o.utloggad();
+        var epost = NX.$('#a-email');
+        if (epost && !epost.value) epost.value = o.user.email || '';
+        NX.säg(NX.$('#auth-msg'), 'Du har blivit utloggad, till exempel för att inloggningen gått ut '
+          + 'eller för att du loggat ut i en annan flik. Logga in igen så kommer du tillbaka hit.');
+        var lösen = NX.$('#a-pass');
+        if (lösen) lösen.focus();
+      }, 0);
+    });
+  }
+
   /* Veckoschemat i #schema. Byggs en gång och får sedan nya
      bokningar; namn(b) säger vad som står på ett pass i just den här
      vyn. */
@@ -2550,10 +2631,118 @@ window.NXStudie = (function () {
     });
   }
 
+  /* ============================================================
+     DOKUMENTEN — det Nextrum delat med en (2026-09-29)
+
+     Leo: "man ska kunna spara dokument där och välja vilken person som
+     ska ha tillgång till det genom sina inställningar. dvs
+     anställningsavtal med lärare eller annat avtal med kund." Admin
+     väljer personen under System → Dokument, och personen läser det
+     här, under Profil & inställningar → Dokument, i båda vyerna.
+
+     Listan kommer ur mina_handlingar(), som bara svarar om den
+     inloggade och med en fast kolumnlista: tabellen handlingar har
+     ingen policy för familjen eller studiehjälparen, för den bär vår
+     egen anteckning. Filen öppnas genom NXMedia.öppnaFil, och hinken
+     släpper bara in exakt den fil raden pekar ut.
+
+     Bara läsa. Personen laddar inte upp och tar inte bort: det är vårt
+     dokument, och hen har en kopia.
+
+     Finns funktionen inte än (migrationen dokument_delas_med_personen
+     är inte körd) står listan tom, inte som ett fel: det finns inget
+     delat förrän den är det.
+
+     supa skickas in, som till notisval: resten av filen rör ingen
+     databas, och två vyer med var sin kopia av samma fråga glider isär.
+     ============================================================ */
+  var DOKTYP = {
+    avtal: 'Avtal', intyg: 'Intyg', forsakring: 'Försäkring',
+    bolagshandling: 'Bolagshandling', policy: 'Policy', ovrigt: 'Övrigt'
+  };
+  var DOK_IKON = '<svg viewBox="0 0 24 24" aria-hidden="true">'
+    + '<path d="M14 3.5H6.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9z"/>'
+    + '<path d="M14 3.5V9h5.5M8.5 13h7M8.5 16.5h5"/></svg>';
+
+  function dokument(o) {
+    var host = o.host;
+    var supa = o.supa;
+    var msg = o.msg || null;
+    var rader = [];
+    if (!host || !supa) return;
+
+    /* Samma regel som NXMedia.öppnaFil: det webbläsaren visar öppnas,
+       resten laddas ned. Knappen säger vilket av dem som händer. */
+    function iFlik(d) {
+      return /^(application\/pdf|image\/(jpeg|png|webp))$/.test(d.mimetyp || '');
+    }
+    /* Sökvägen är "<id>/<tidsstämpel>-<filnamn>". */
+    function filnamn(d) {
+      return String(d.fil || '').split('/').slice(1).join('/').replace(/^\d+-/, '');
+    }
+
+    function rita() {
+      if (!rader.length) {
+        host.innerHTML = '<p class="xsmall nx-dok-tom">Inga dokument än.</p>';
+        return;
+      }
+      var idag = NX.isoFor(new Date());
+      host.innerHTML = rader.map(function (d) {
+        var under = [DOKTYP[d.typ] || 'Dokument', NXMedia.filEtikett(d.mimetyp), NXMedia.filstorlek(d.storlek),
+                     d.uppladdad ? 'tillagt ' + NX.datumText(String(d.uppladdad).slice(0, 10)) : null];
+        if (d.giltig_till) {
+          under.push((d.giltig_till < idag ? 'gällde till ' : 'gäller till ') + NX.datumText(d.giltig_till));
+        }
+        return '<div class="nx-dok">'
+          + '<span class="vy-rad-ik ar-tyst">' + DOK_IKON + '</span>'
+          + '<div class="nx-dok-text"><b>' + esc(d.titel) + '</b>'
+          + '<span class="xsmall">' + esc(under.filter(Boolean).join(' · ')) + '</span></div>'
+          + '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(d.id) + '">'
+          + (iFlik(d) ? 'Öppna' : 'Ladda ned') + '</button>'
+          + '</div>';
+      }).join('');
+    }
+
+    /* medan() anropar jobbet direkt, och öppnaFil öppnar fliken innan
+       den väntar på något: allt sker i samma tryck, som Safari kräver.
+       Lyssnaren sitter på behållaren, som för notisvalen: raderna ritas
+       om, behållaren står kvar. */
+    host.addEventListener('click', function (e) {
+      var knapp = e.target.closest('[data-dok-oppna]');
+      if (!knapp || knapp.getAttribute('aria-busy')) return;
+      var d = rader.filter(function (x) { return x.id === knapp.dataset.dokOppna; })[0];
+      if (!d) return;
+      if (msg) NX.rensa(msg);
+      medan(knapp, iFlik(d) ? 'Öppnar…' : 'Hämtar…', function () {
+        return NXMedia.öppnaFil('dokument', d.fil, { mimetyp: d.mimetyp, namn: filnamn(d) });
+      }).then(function (fel) {
+        if (!fel) return;
+        if (msg) NX.säg(msg, fel, false);
+        else alert(fel);
+      });
+    });
+
+    host.innerHTML = '<div class="loading">Hämtar</div>';
+    supa.rpc('mina_handlingar').then(function (svar) {
+      if (svar.error) {
+        if (svar.error.code === 'PGRST202' || svar.error.code === '42883') {
+          rader = [];
+          rita();
+          return;
+        }
+        host.innerHTML = '<p class="xsmall nx-dok-tom">Dokumenten gick inte att hämta just nu. '
+          + 'Ladda om sidan, eller skriv till oss.</p>';
+        return;
+      }
+      rader = svar.data || [];
+      rita();
+    });
+  }
+
   return {
-    notisval: notisval,
+    notisval: notisval, dokument: dokument,
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
-    inloggningsruta: inloggningsruta, schemaI: schemaI,
+    inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxLista: läxLista,
     fordelning: fordelning,
