@@ -11,23 +11,25 @@
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 <title>Admin — Nextrum</title>
 <meta name="robots" content="noindex,nofollow">
-<!-- Adminvyn är alltid mörk, oavsett systeminställning. Utan den här
-     raden ritar webbläsaren sidans rullist, autofyll och datumväljare
-     i ljust läge ovanpå en nästan svart vy. -->
-<meta name="color-scheme" content="dark">
+<!-- Adminvyn följer systeminställningen sedan 2026-09-24: jordpaletten i
+     ljust och mörkt läge, som de två andra vyerna. Raden här sa "dark"
+     från tiden då vyn var alltid mörk, och gav ljust läge en mörk
+     rullist, mörka datumväljare och mörka rullgardinslistor ovanpå
+     papperet. -->
+<meta name="color-scheme" content="light dark">
 
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
 <link rel="stylesheet" href="nextrum-vy.css?v=e4a5688c">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=ac9ee2ff">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=220bd9b0">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
      densamma som i studievyn och studiehjälparvyn. -->
 <link rel="stylesheet" href="nextrum-admin-palett.css?v=510b6564">
-<link rel="stylesheet" href="nextrum-admin-konsol.css?v=734b2380">
+<link rel="stylesheet" href="nextrum-admin-konsol.css?v=b0f189d5">
 </head>
 <body class="vy vy-admin">
 
@@ -54,6 +56,68 @@
   <a class="m-link" href="/foralder">Studievyn <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <a class="m-link" href="/larare">Studiehjälparvyn <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
   <div class="m-actions" id="m-actions"></div>
+</div>
+
+<!-- ============================================================
+     TOPPRADEN
+     Den enda raden överst när man är inne i vyn. Sajtens sidhuvud
+     (#hdr ovan) står kvar för inloggningen och felvyerna, men göms av
+     body.adm-inne: två fasta rader och en marknadssidfot åt ett
+     verktyg man sitter i hela dagen åt upp drygt 160 px innan första
+     raden, och inloggad användare och Logga ut stod på två ställen.
+
+     Tre saker som gäller hela vyn och ingen enskild sektion: sök,
+     notiser och kontot. Var man är säger menyn (och rubriken under);
+     på en telefon, där menyn är en rad man sveper i, står sektionens
+     namn i raden här. Bor utanför <main> för att raden ska gå kant i
+     kant. Visas av start() när det är klart att den inloggade är admin.
+     ============================================================ -->
+<div class="adm-topp" id="adm-topp" hidden>
+  <div class="adm-topp-in">
+    <button class="adm-fall" id="adm-fall" type="button"
+            aria-expanded="true" aria-controls="adm-layout"
+            aria-label="Fäll ihop menyn">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+
+    <a href="/" class="adm-logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+
+    <div class="adm-topp-var">
+      <b id="adm-var">Översikt</b>
+    </div>
+
+    <div class="adm-verktygsfalt">
+      <div class="adm-sokfalt">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+        <input class="inp" id="adm-sok" type="search" autocomplete="off"
+               placeholder="Sök familj, elev, studiehjälpare…"
+               aria-label="Sök i adminvyn" aria-expanded="false"
+               aria-controls="adm-sokresultat">
+        <div class="adm-panel" id="adm-sokresultat" role="listbox" hidden></div>
+      </div>
+
+      <div class="adm-verktyg-pos">
+        <button class="adm-knapp" id="adm-notis-knapp" type="button"
+                aria-expanded="false" aria-controls="adm-notiser"
+                aria-label="Notiser">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16S18 14 18 9z"/><path d="M13.7 19a2 2 0 0 1-3.4 0"/></svg>
+        </button>
+        <div class="adm-panel" id="adm-notiser" hidden></div>
+      </div>
+
+      <!-- Kontot: vem som är inloggad, vägen till de andra vyerna och
+           Logga ut. Fylls av ritaAnvandare() i nextrum-admin.js. -->
+      <div class="adm-verktyg-pos">
+        <button class="adm-anv-knapp" id="adm-anv-knapp" type="button"
+                aria-expanded="false" aria-controls="adm-anv-panel"
+                aria-label="Konto"></button>
+        <div class="adm-panel adm-anv-panel" id="adm-anv-panel" hidden></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <main class="wrap" id="innehall">
@@ -130,59 +194,19 @@
   <!-- ============ SJÄLVA VYN ============ -->
   <div id="view-app" hidden>
 
-    <!-- Fotoheron låg här och sa hej på alla arton flikar. Namn och
-         roll står redan i sidomenyns fot och i sidhuvudet, så den bar
-         ingen information som inte fanns någon annanstans. Ersatt av
-         driftkonsolen överst på Översikt. -->
-
-
-
-    <!-- ============================================================
-         TOPPRADEN
-         Tre saker som gäller hela vyn och ingen enskild sektion:
-         var man är, global sök, och vad som hänt sedan sist.
-         ============================================================ -->
-    <div class="adm-topp" id="adm-topp" hidden>
-      <button class="adm-fall" id="adm-fall" type="button"
-              aria-expanded="true" aria-controls="adm-layout"
-              aria-label="Fäll ihop menyn">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-      </button>
-
-      <div class="adm-topp-var">
-        <span class="adm-topp-hem">Admin</span>
-        <span class="adm-topp-hem" id="adm-omrade" hidden></span>
-        <b id="adm-var">Översikt</b>
-      </div>
-
-      <div class="adm-verktygsfalt">
-        <div class="adm-sokfalt">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-          <input class="inp" id="adm-sok" type="search" autocomplete="off"
-                 placeholder="Sök familj, elev, studiehjälpare…"
-                 aria-label="Sök i adminvyn" aria-expanded="false"
-                 aria-controls="adm-sokresultat">
-          <div class="adm-panel" id="adm-sokresultat" role="listbox" hidden></div>
-        </div>
-
-        <div style="position:relative">
-          <button class="adm-knapp" id="adm-notis-knapp" type="button"
-                  aria-expanded="false" aria-controls="adm-notiser"
-                  aria-label="Notiser">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16S18 14 18 9z"/><path d="M13.7 19a2 2 0 0 1-3.4 0"/></svg>
-          </button>
-          <div class="adm-panel" id="adm-notiser" hidden></div>
-        </div>
-      </div>
-    </div>
+    <!-- Fotoheron låg här och sa hej på alla arton flikar; den är ersatt
+         av driftkonsolen överst på Översikt. Toppraden (sök, notiser,
+         konto) bor sedan 2026-09-29 utanför <main>, överst på sidan. -->
 
     <div class="vy-layout" id="adm-layout">
 
       <nav class="vy-sido" id="vy-sido" aria-label="Delar av adminvyn">
-        <!-- Nio områden (Fas 6), i masterplanens ordning. data-sek är
+        <!-- Fyra grupper under två fasta poster (2026-09-29). Det var nio
+             rubriker, och sex av dem stod över en enda post: en rubrik över
+             en post är brus, och menyn tog 90 px mer än posterna behövde.
+             Översikt och Statistik står överst utan rubrik. data-sek är
              desamma som förut, så gamla adresser fungerar; bara
-             grupperingen och rubrikerna är nya. -->
-        <span class="vy-sido-rubrik" aria-hidden="true">Översikt</span>
+             grupperingen är ny. -->
         <a href="#oversikt" data-sek="oversikt" title="Översikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg><span class="adm-etikett">Översikt</span></a>
         <a href="#statistik" data-sek="statistik" title="Statistik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="adm-etikett">Statistik</span></a>
 
@@ -204,6 +228,10 @@
         <a href="#lektioner" data-sek="lektioner" title="Lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h7a2 2 0 0 1 2 2V20a2 2 0 0 0-2-2H4z"/><path d="M20 5.5h-7a2 2 0 0 0-2 2V20a2 2 0 0 1 2-2h7z"/></svg><span class="adm-etikett">Lektioner</span></a>
         <a href="#uppdrag" data-sek="uppdrag" title="Uppdrag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8h17v11.5h-17z"/><path d="M9 8V5.5h6V8M3.5 13h17"/></svg><span class="adm-etikett">Uppdrag</span></a>
         <a href="#bibliotek" data-sek="bibliotek" title="Material"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h5.5a2 2 0 0 1 2 2V20a2 2 0 0 0-2-2H4z"/><path d="M20 5.5h-5.5a2 2 0 0 0-2 2V20a2 2 0 0 1 2-2H20z"/><path d="M6.5 9h2.5M15 9h2.5"/></svg><span class="adm-etikett">Material</span></a>
+        <!-- Frågor bor under Drift sedan 2026-09-29: gruppen Kommunikation
+             hade en enda post. Inkorgen läses av samma person som resten
+             av det som kommer in utifrån. -->
+        <a href="#meddelanden" data-sek="meddelanden" title="Frågor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Frågor</span></a>
         <!-- Uppgifter står inte längre i menyn. Sektionen finns kvar
              med samma id, och nås från System → Automationer, där
              rutan "Uppgifter kontrollerna skapat" redan visar samma
@@ -220,30 +248,20 @@
              Rutt: giltig() i nextrum-studie.js läser section[data-sek],
              inte menylänkarna, så #uppgifter fungerar utan menypost. -->
 
-        <span class="vy-sido-rubrik" aria-hidden="true">Kommunikation</span>
-        <a href="#meddelanden" data-sek="meddelanden" title="Frågor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg><span class="adm-etikett">Frågor</span></a>
-
         <span class="vy-sido-rubrik" aria-hidden="true">Ekonomi</span>
         <!-- Månadens ekonomi och Löner (2026-09-28): samma rader som
-             Betalningar & utbetalningar, lästa för två andra frågor.
+             Betalningar, lästa för två andra frågor.
              Vad har kommit in och vad väntar, och vad ska ut. -->
         <a href="#manaden" data-sek="manaden" title="Månadens ekonomi"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M8.5 17v-3M12 17v-4.5M15.5 17v-2"/></svg><span class="adm-etikett">Månadens ekonomi</span></a>
-        <a href="#ekonomi" data-sek="ekonomi" title="Betalningar &amp; utbetalningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg><span class="adm-etikett">Betalningar &amp; utbetalningar</span></a>
+        <a href="#ekonomi" data-sek="ekonomi" title="Betalningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg><span class="adm-etikett">Betalningar</span></a>
         <a href="#loner" data-sek="loner" title="Löner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3.2 2.5-5 5.5-5 1 0 1.9.2 2.7.5"/><circle cx="16.5" cy="15.5" r="4"/><path d="M16.5 13.5v4M15 14.5h2.2a1 1 0 0 1 0 2H15"/></svg><span class="adm-etikett">Löner</span></a>
 
-        <span class="vy-sido-rubrik" aria-hidden="true">Tjänster</span>
+        <span class="vy-sido-rubrik" aria-hidden="true">Inställningar</span>
         <a href="#katalog" data-sek="katalog" title="Tjänster &amp; priser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.3V4.5a1 1 0 0 1 1-1h7.8l8.2 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.6"/></svg><span class="adm-etikett">Tjänster &amp; priser</span></a>
 
-        <span class="vy-sido-rubrik" aria-hidden="true">AI</span>
         <a href="#agenter" data-sek="agenter" title="Agenter"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7.5" width="16" height="11" rx="3"/><path d="M12 7.5V4M9 12.5h.01M15 12.5h.01M9.5 15.5h5"/></svg><span class="adm-etikett">Agenter</span></a>
 
-        <span class="vy-sido-rubrik" aria-hidden="true">System</span>
         <a href="#system" data-sek="system" title="System"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h11M18 7.5h2.5M3.5 16.5h5M11.5 16.5h9"/><circle cx="16" cy="7.5" r="2.2"/><circle cx="10" cy="16.5" r="2.2"/></svg><span class="adm-etikett">System</span></a>
-
-        <!-- Vem som är inloggad, och vägen ut. Sitter här och inte i
-             sidhuvudet: i adminvyn är sidomenyn verktyget, sidhuvudet
-             är sajtens. Fylls av ritaSidofot(). -->
-        <div class="adm-sido-fot" id="adm-sido-fot" hidden></div>
       </nav>
 
       <div>
@@ -260,109 +278,98 @@
           </div>
 
           <!-- ============ DRIFTKONSOLEN ============
-               Tre band, uppifrån och ned, och ordningen är hela poängen:
+               NEX överst, och under NEX det som väntar på en människa.
 
-               1. NEX — företagets AI och sidans ansikte. Läget läses ur
-                  vyn admin_lage, som redan är hämtad. Gratis, alltid
-                  färskt, ritas vid varje sidladdning.
-               2. Samtalet. Drift-agenten körs BARA när någon frågar den
-                  något — ett betalt anrop med stegtak, och att köra det
-                  automatiskt vid varje laddning vore precis den räkning
-                  som växer medan ingen tittar.
-               3. Listan. Det som faktiskt väntar på en människa, med
-                  länk rakt in i rätt flik.
+               Förut stod samma arbetskö TRE gånger på sidan: i konsolen
+               ("Väntar på en människa"), i "Kräver din uppmärksamhet" och
+               i "Problem", med samma rader i samma ordning. På en telefon
+               var Översikt 5 300 px lång. Nu står kön en gång, i "Att
+               göra", med det som gått fel först och en mening om varje
+               rad (2026-09-29).
 
-               Den som bara vill veta hur det står till läser band ett
-               och slutar där. -->
+               NEX är ett band och inte ett torn: ringen, läget och
+               samtalet på en rad. Läget läses ur vyn admin_lage, som
+               redan är hämtad. Samtalet kör drift-agenten BARA när någon
+               frågar den något — ett betalt anrop med stegtak, och att
+               köra det vid varje laddning vore precis den räkning som
+               växer medan ingen tittar. Agenten har med flit inget
+               utgående verktyg (CLAUDE.md, AI-lagret). -->
           <div class="kon" id="adm-konsol">
-
-            <!-- BAND 1: NEX.
-                 Ringarna är streckmönster på vanliga cirklar, inte sextio
-                 enskilda streck: en dasharray på en tjock stroke ger exakt
-                 samma bild och går att snurra med en rad CSS. Ingen bildfil,
-                 ingen extra begäran, och färgen följer palettens tokens. -->
             <div class="kon-hero">
+
+              <!-- Ringarna är streckmönster på vanliga cirklar, inte sextio
+                   enskilda streck: en dasharray på en tjock stroke ger
+                   exakt samma bild och går att snurra med en rad CSS. -->
               <div class="kon-disk ar-okand" id="kon-disk">
-                <svg class="kon-nex" viewBox="0 0 200 200" aria-hidden="true">
-                  <g class="nex-yttre">
-                    <circle cx="100" cy="100" r="94" stroke-width="2.5"
-                            stroke-dasharray="40 107.65"/>
-                  </g>
-                  <g class="nex-tander">
-                    <circle cx="100" cy="100" r="84" stroke-width="9"
-                            stroke-dasharray="1.6 7.2" opacity=".55"/>
-                  </g>
-                  <circle cx="100" cy="100" r="75" stroke-width="1" opacity=".3"/>
-                  <g class="nex-band">
-                    <circle cx="100" cy="100" r="64" stroke-width="12"
-                            stroke-dasharray="38 12.27" opacity=".22"/>
-                    <circle cx="100" cy="100" r="64" stroke-width="12"
-                            stroke-dasharray="56 346.12" class="nex-batong"/>
-                  </g>
-                  <g class="nex-prickar">
-                    <circle cx="100" cy="100" r="50" stroke-width="3.5"
-                            stroke-dasharray="3 10.09" opacity=".7"/>
-                  </g>
-                  <circle cx="100" cy="100" r="40" stroke-width="1" opacity=".38"/>
-                  <g class="nex-inre">
-                    <circle cx="100" cy="100" r="31" stroke-width="1"
-                            stroke-dasharray="6 6.17" opacity=".3"/>
-                  </g>
-                </svg>
-                <span class="kon-nex-namn">NEX</span>
-                <span class="kon-nex-lage">
-                  <b id="kon-disk-tal">–</b>
-                  <span id="kon-disk-text">läser</span>
-                </span>
-              </div>
-              <p class="kon-hero-not" id="kon-hero-not">Läser verksamheten och siffrorna. Föreslår, utför inget.</p>
-              <div class="kon-pengar" id="kon-pengar"></div>
-            </div>
-
-            <!-- BAND 2: SAMTALET.
-                 Agenten har med flit inget utgående verktyg: en agent som
-                 både läser känsliga rader och kan hämta en adress kan bära
-                 ut dem, och det räcker med en rad injicerad text i en
-                 intresseanmälan för att försöket ska göras. -->
-            <div class="kon-prat">
-              <div class="kon-topp">
-                <span class="kon-et">Tala med NEX</span>
-              </div>
-              <div class="kon-exempel" id="kon-exempel"></div>
-              <div class="kon-falt">
-                <label class="nx-dold" for="kon-fraga">Fråga NEX</label>
-                <textarea class="inp" id="kon-fraga" rows="2"
-                          placeholder="Vad bör jag göra först idag?"></textarea>
-                <!-- Diktering. Knappen är dold tills nextrum-admin-konsol.js
-                     sett att webbläsaren faktiskt har taligenkänning — en knapp
-                     som inte gör något är värre än ingen knapp. Den skriver
-                     bara i textrutan; ingenting skickas förrän man trycker
-                     Fråga, så en feltolkning går att rätta innan den kostar
-                     ett agentanrop. -->
-                <button class="btn btn-ghost kon-mik" type="button" id="kon-mik"
-                        aria-pressed="false" hidden
-                        title="Diktera frågan">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/>
-                    <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"
-                          fill="none" stroke="currentColor" stroke-width="2"
-                          stroke-linecap="round"/>
+                <div class="kon-ring">
+                  <svg class="kon-nex" viewBox="0 0 200 200" aria-hidden="true">
+                    <g class="nex-yttre">
+                      <circle cx="100" cy="100" r="94" stroke-width="2.5"
+                              stroke-dasharray="40 107.65"/>
+                    </g>
+                    <g class="nex-tander">
+                      <circle cx="100" cy="100" r="84" stroke-width="9"
+                              stroke-dasharray="1.6 7.2" opacity=".55"/>
+                    </g>
+                    <circle cx="100" cy="100" r="75" stroke-width="1" opacity=".3"/>
+                    <g class="nex-band">
+                      <circle cx="100" cy="100" r="64" stroke-width="12"
+                              stroke-dasharray="38 12.27" opacity=".22"/>
+                      <circle cx="100" cy="100" r="64" stroke-width="12"
+                              stroke-dasharray="56 346.12" class="nex-batong"/>
+                    </g>
+                    <g class="nex-prickar">
+                      <circle cx="100" cy="100" r="50" stroke-width="3.5"
+                              stroke-dasharray="3 10.09" opacity=".7"/>
+                    </g>
+                    <circle cx="100" cy="100" r="40" stroke-width="1" opacity=".38"/>
+                    <g class="nex-inre">
+                      <circle cx="100" cy="100" r="31" stroke-width="1"
+                              stroke-dasharray="6 6.17" opacity=".3"/>
+                    </g>
                   </svg>
-                  <span class="nx-dold">Diktera frågan</span>
-                </button>
-                <button class="btn btn-primary" type="button" id="kon-skicka">Fråga</button>
+                  <span class="kon-nex-namn">NEX</span>
+                </div>
+                <div class="kon-status">
+                  <p class="kon-nex-lage">
+                    <b id="kon-disk-tal">–</b>
+                    <span id="kon-disk-text">läser</span>
+                  </p>
+                  <p class="kon-hero-not" id="kon-hero-not">Läser verksamheten och siffrorna. Föreslår, utför inget.</p>
+                  <div class="kon-pengar" id="kon-pengar"></div>
+                </div>
               </div>
-              <p class="kon-mik-not" id="kon-mik-not" hidden>Dikteringen sker hos din
-                webbläsares leverantör, inte hos oss. Läs inte upp namn på barn.</p>
-              <div class="kon-ut" id="kon-ut"></div>
-            </div>
 
-            <!-- BAND 3: LÄGET. -->
-            <div class="kon-lage-halva">
-              <div class="kon-topp">
-                <span class="kon-et">Väntar på en människa</span>
+              <div class="kon-prat">
+                <label class="kon-et" for="kon-fraga">Fråga NEX</label>
+                <div class="kon-falt">
+                  <textarea class="inp" id="kon-fraga" rows="1"
+                            placeholder="Vad bör jag göra först idag?"></textarea>
+                  <!-- Diktering. Knappen är dold tills nextrum-admin-konsol.js
+                       sett att webbläsaren faktiskt har taligenkänning — en
+                       knapp som inte gör något är värre än ingen knapp. Den
+                       skriver bara i textrutan; ingenting skickas förrän man
+                       trycker Fråga, så en feltolkning går att rätta innan den
+                       kostar ett agentanrop. -->
+                  <button class="btn btn-ghost kon-mik" type="button" id="kon-mik"
+                          aria-pressed="false" hidden
+                          title="Diktera frågan">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/>
+                      <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"
+                            fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round"/>
+                    </svg>
+                    <span class="nx-dold">Diktera frågan</span>
+                  </button>
+                  <button class="btn btn-primary" type="button" id="kon-skicka">Fråga</button>
+                </div>
+                <div class="kon-exempel" id="kon-exempel"></div>
+                <p class="kon-mik-not" id="kon-mik-not" hidden>Dikteringen sker hos din
+                  webbläsares leverantör, inte hos oss. Läs inte upp namn på barn.</p>
               </div>
-              <div class="kon-lista" id="kon-lage"><div class="loading">Hämtar</div></div>
+
+              <div class="kon-ut" id="kon-ut"></div>
             </div>
           </div>
 
@@ -373,28 +380,19 @@
                en förra månad att jämföra med. -->
           <div class="adm-tal-rad adm-tal-stor" id="adm-tal"><div class="loading">Hämtar</div></div>
 
-          <!-- ============ KRÄVER DIN UPPMÄRKSAMHET ============
-               Sidans viktigaste block. En rad per sak som ligger och
-               väntar på en människa, och varje rad är vägen dit.
-               Tomt block betyder att allt är avklarat, och det får
-               synas som ett besked. -->
-          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-            <h5>Kräver din uppmärksamhet <em id="adm-att-antal"></em></h5>
-            <div id="adm-att-gora"><div class="loading">Hämtar</div></div>
-          </div>
+          <div class="ov-rutnat">
+            <!-- ============ ATT GÖRA ============
+                 Sidans viktigaste block. En rad per sak som ligger och
+                 väntar på en människa, och varje rad är vägen dit. Det
+                 som gått fel står först, under en egen rubrik: det är
+                 inte samma sak som det som väntar, och en lista som
+                 blandar dem säger ingenting. Ritas av ritaKonsol() ur
+                 S.problem och S.attGora; en tom lista är ett besked. -->
+            <div class="dbox ov-att">
+              <h5>Att göra <em id="kon-antal"></em></h5>
+              <div id="kon-lage"><div class="loading">Hämtar</div></div>
+            </div>
 
-          <!-- ============ PROBLEM ============
-               Det som gått fel eller fastnat, räknat i databasen
-               (admin_lage och ekonomiska_avvikelser): pass utan
-               rapport, obetalda pass, försenade uppgifter, fel
-               hos användarna och notiser som inte gick fram. Tom ruta
-               är ett besked, inte en tom låda. -->
-          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
-            <h5>Problem <em id="adm-problem-antal"></em></h5>
-            <div id="adm-problem"><div class="loading">Hämtar</div></div>
-          </div>
-
-          <div class="split">
             <div class="stack">
               <div class="dbox">
                 <h5>Närmaste passen <em id="adm-pass-antal"></em></h5>
@@ -402,9 +400,7 @@
                 <a class="vy-mer" href="#bokningar">Alla bokningar
                   <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
               </div>
-            </div>
 
-            <div class="stack">
               <!-- ============ SENASTE AKTIVITET ============
                    Sammanställs i klienten ur leads, ansökningar,
                    bokningar, rapporter, meddelanden och betalningar.
@@ -427,7 +423,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Intresseanmälningar</h2>
-              <p>Familjer som hört av sig. Tryck på ett namn för allt de skrev och för knapparna: läget, Kontakta, Skapa elev, Redigera och Radera.</p>
+              <p>Familjer som hört av sig. Tryck på ett namn för att läsa anmälan och svara.</p>
             </div>
           </div>
           <div class="dbox">
@@ -453,7 +449,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Ansökningar</h2>
-              <p>Unga som vill jobba. Tryck på ett namn för ansökan, CV:t och rekryteringens steg, och för Redigera och Radera. Att godkänna ansökan är inte samma sak som att godkänna kontot — kontot ligger under Studiehjälpare, och skapas först när personen registrerat sig.</p>
+              <p>Unga som vill jobba. Tryck på ett namn för ansökan, CV:t och rekryteringens steg. Kontot godkänns under Studiehjälpare, när personen har registrerat sig.</p>
             </div>
           </div>
           <div class="vy-flikar" role="tablist" aria-label="Rekryteringens steg">
@@ -562,7 +558,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Familjer</h2>
-              <p>Familjer med konto. Tryck på ett namn för barnen, passen, betalningarna och tidslinjen, och för Redigera och Radera. Matchningen görs per barn, under Matchning.</p>
+              <p>Familjer med konto. Tryck på ett namn för barnen, passen och betalningarna. Matchningen görs per barn, under Matchning.</p>
             </div>
           </div>
           <div class="dbox">
@@ -593,7 +589,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Elever</h2>
-              <p>Alla elever i systemet. Tryck på ett namn för familjen, studiehjälparen, passen och studieplanen, och för Redigera och Radera.</p>
+              <p>Alla elever. Tryck på ett namn för familjen, studiehjälparen, passen och studieplanen.</p>
             </div>
           </div>
 
@@ -621,7 +617,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Studiehjälpare</h2>
-              <p>Poolen: alla som har en profil hos oss, godkända som väntande. En godkänd studiehjälpare kan matchas med en familj och kan visas på startsidan — två beslut, två knappar, båda i panelen när du trycker på namnet.</p>
+              <p>Alla med en profil hos oss. En godkänd studiehjälpare kan matchas och visas på startsidan: två beslut, båda i panelen när du trycker på namnet.</p>
             </div>
           </div>
           <!-- Sammanfattningen står FÖRE sökrutan med flit. Filtret
@@ -662,7 +658,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Matchning</h2>
-              <p>Välj en elev, se vilka studiehjälpare som passar och varför. Matchningen gäller eleven, inte familjen — syskon kan ha var sin.</p>
+              <p>Välj en elev och se vilka studiehjälpare som passar, och varför. Syskon kan ha var sin.</p>
             </div>
           </div>
 
@@ -827,7 +823,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Material</h2>
-              <p>Nextrums bank, som studiehjälparna hämtar ur. Ett ämne och en årskurs per post — det är de två de filtrerar på när de letar åt sin elev. Här syns också deras egna material, som bara de själva ser tills du lyfter in det.</p>
+              <p>Nextrums bank, som studiehjälparna hämtar ur, och deras egna material, som bara de ser tills du lyfter in det i banken.</p>
             </div>
           </div>
 
@@ -973,7 +969,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Månadens ekonomi</h2>
-              <p>Vad månadens pass har dragit in, vad som väntar och hos vem. Tryck på ett tal för att se familjerna bakom det, och på en familj för att öppna den.</p>
+              <p>Vad månadens pass har dragit in och vad som väntar. Tryck på ett tal för familjerna bakom det.</p>
             </div>
           </div>
 
@@ -1012,8 +1008,8 @@
         <section class="vy-sek" data-sek="ekonomi" hidden>
           <div class="vy-sek-topp">
             <div>
-              <h2>Ekonomi</h2>
-              <p>Vad familjerna har betalat och vad studiehjälparna ska få. Samma pass, två sidor av samma rad i bookings. Familjen betalar varje pass med kort, i förväg eller efter passet när de bekräftar rapporten, eller mot en månadsfaktura från Fortnox om de valt det; studiehjälparen får betalt den 25:e.</p>
+              <h2>Betalningar</h2>
+              <p>Vad familjerna har betalat och vad studiehjälparna ska få, månad för månad. Familjen betalar med kort eller mot faktura från Fortnox, och studiehjälparen får betalt den 25:e.</p>
             </div>
           </div>
 
@@ -1336,7 +1332,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Löner</h2>
-              <p>Lönen som betalas ut den 25:e i den valda månaden, för passen månaden före: oktober är lönen för septembers pass. Underlaget skapas av månadskörningen, och lönefilen går till Fortnox Lön.</p>
+              <p>Lönen som betalas ut den 25:e i den valda månaden, för passen månaden före. Underlaget skapas av månadskörningen, och lönefilen går till Fortnox Lön.</p>
             </div>
           </div>
 
@@ -2370,15 +2366,15 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=f83aadf2"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=ccbacf2e"></script>
+<script src="nextrum-studie.js?v=ae7d82bf"></script>
 <script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
 <script src="nextrum-media.js?v=01adfb73"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=710e5977"></script>
+<script src="nextrum-admin-karna.js?v=40b9e65e"></script>
 <script src="nextrum-admin-detalj.js?v=de6d7e6e"></script>
-<script src="nextrum-admin-oversikt.js?v=1311e21f"></script>
+<script src="nextrum-admin-oversikt.js?v=ec092d07"></script>
 <script src="nextrum-admin-kunder.js?v=155120f9"></script>
 <script src="nextrum-admin-rekrytering.js?v=d08ab262"></script>
 <script src="nextrum-admin-bibliotek.js?v=66dad1e3"></script>
@@ -2396,8 +2392,8 @@
 <script src="nextrum-admin-radera.js?v=54bcb289"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
-<script src="nextrum-admin-konsol.js?v=55760f40"></script>
+<script src="nextrum-admin-konsol.js?v=3f816e08"></script>
 <script src="nextrum-modulvakt.js?v=980a011f"></script>
-<script src="nextrum-admin.js?v=5e58bdce"></script>
+<script src="nextrum-admin.js?v=b61ceec2"></script>
 </body>
 </html>

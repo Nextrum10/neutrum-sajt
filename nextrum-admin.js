@@ -352,41 +352,26 @@
     meddelanden: 'Frågor', familjer: 'Familjer', elever: 'Elever',
     studiehjalpare: 'Studiehjälpare', matchning: 'Matchning', bokningar: 'Bokningar',
     lektioner: 'Lektioner', statistik: 'Statistik',
-    ekonomi: 'Betalningar & utbetalningar', manaden: 'Månadens ekonomi', loner: 'Löner',
+    ekonomi: 'Betalningar', manaden: 'Månadens ekonomi', loner: 'Löner',
     system: 'System',
     agenter: 'Agenter', uppdrag: 'Uppdrag', uppgifter: 'Uppgifter',
     bibliotek: 'Material', katalog: 'Tjänster & priser'
   };
 
-  /* Området varje sektion hör till (Fas 6) — samma nio rubriker som
-     i sidomenyn. Visas i brödsmulan när det inte bara upprepar
-     sektionens namn. */
-  const OMRADE = {
-    oversikt: 'Översikt', statistik: 'Översikt',
-    leads: 'Kunder', familjer: 'Kunder', elever: 'Kunder', studiehjalpare: 'Kunder',
-    matchning: 'Drift', bokningar: 'Drift', lektioner: 'Drift', uppdrag: 'Drift',
-    bibliotek: 'Drift',
-    /* Uppgifter ligger under System sedan menyposten togs bort —
-       listan nås från System → Automationer. Ansökningar flyttade till
-       Kunder: det som kommer in utifrån läses av samma person samma
-       morgon, och en egen grupp längst ned gjorde att ingen tittade. */
-    uppgifter: 'System',
-    meddelanden: 'Kommunikation', ekonomi: 'Ekonomi', manaden: 'Ekonomi', loner: 'Ekonomi',
-    ansokningar: 'Kunder',
-    katalog: 'Tjänster', agenter: 'AI', system: 'System'
-  };
-
+  /* Sektionens namn står i raden överst på en telefon, där menyn är en rad
+     man sveper i och rubriken ligger en skärm bort, och i fliktiteln. På
+     en dator säger menyn och rubriken var man är. Brödsmulan med området
+     (Admin / Kunder / Familjer) är borta sedan 2026-09-29: den sa samma
+     sak som menyn och rubriken, en tredje gång. */
   function ritaVar() {
     const sek = String(location.hash || '').replace(/^#/, '').split('/')[0] || 'oversikt';
     const namn = SEKTIONSNAMN[sek] || 'Översikt';
     const el = $('#adm-var');
     if (el) el.textContent = namn;
-    const område = $('#adm-omrade');
-    if (område) {
-      const o = OMRADE[sek] || '';
-      område.textContent = o;
-      område.hidden = !o || o === namn;
-    }
+    /* Titeln bär sektionen, så att flikarna går att skilja åt när flera
+       står öppna. Antalet nya, som sättTitel lägger först, bevaras. */
+    const nya = document.title.match(/^\(\d+\)\s*/);
+    document.title = (nya ? nya[0] : '') + namn + ' · Admin — Nextrum';
   }
 
   /* Adresser som flyttat. Tjänstekatalogen och rabattkoderna låg
@@ -425,28 +410,45 @@
   }
 
   /* ------------------------------------------------------------
-     MENYNS FOT
+     KONTOT
+     Vem som är inloggad, vägen till de andra vyerna och Logga ut, i en
+     meny bakom avataren i toppraden (2026-09-29). Det stod på tre ställen
+     förut: i sajtens sidhuvud, i menyns fot och i burgarmenyn. Sidhuvudet
+     göms nu när man är inne, och menyns fot fanns inte på en telefon, där
+     Logga ut annars hade legat i burgaren.
      ------------------------------------------------------------ */
-  function ritaSidofot() {
-    const host = $('#adm-sido-fot');
-    if (!host || !S.profil) return;
+  function ritaAnvandare() {
+    const knapp = $('#adm-anv-knapp'), panel = $('#adm-anv-panel');
+    if (!knapp || !panel || !S.profil) return;
     const namn = S.profil.full_name || S.user.email;
-    host.hidden = false;
-    host.innerHTML = M.avatar(namn, S.profil.avatar_url || null, { liten: true })
-      + '<span class="adm-sido-fot-text"><b>' + esc(namn) + '</b><span>Admin</span></span>'
-      + '<button class="adm-sido-ut" type="button" data-logout title="Logga ut" aria-label="Logga ut">'
+    const epost = S.profil.email || S.user.email || '';
+    const förnamn = String(namn).trim().split(/\s+/)[0];
+
+    knapp.innerHTML = M.avatar(namn, S.profil.avatar_url || null, { liten: true })
+      + '<span class="adm-anv-namn">' + esc(förnamn) + '</span>'
+      + '<svg class="adm-anv-pil" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg>';
+    knapp.setAttribute('aria-label', 'Konto: ' + namn);
+
+    const extern = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M6 4h6v6"/></svg>';
+    panel.innerHTML = '<div class="adm-anv-vem"><b>' + esc(namn) + '</b>'
+      + (epost && epost !== namn ? '<span>' + esc(epost) + '</span>' : '')
+      + '<span class="adm-anv-roll">Admin</span></div>'
+      + '<a class="adm-anv-rad" href="/foralder">Studievyn' + extern + '</a>'
+      + '<a class="adm-anv-rad" href="/larare">Studiehjälparvyn' + extern + '</a>'
+      + '<button class="adm-anv-rad ar-ut" type="button" data-logout>Logga ut'
       + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4.5H5.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H9"/>'
       + '<path d="M15.5 8.5 19 12l-3.5 3.5M19 12H9"/></svg></button>';
   }
 
   /* ------------------------------------------------------------
      PANELERNA
-     Sök och notiser öppnar var sin. Bara en åt gången, och ett
+     Sök, notiser och kontot öppnar var sin. Bara en åt gången, och ett
      klick utanför stänger — samma regel för båda, så att det
      bara finns ett sätt att stänga något.
      ------------------------------------------------------------ */
   function stängPaneler(utom) {
-    [['#adm-sokresultat', '#adm-sok'], ['#adm-notiser', '#adm-notis-knapp']].forEach(par => {
+    [['#adm-sokresultat', '#adm-sok'], ['#adm-notiser', '#adm-notis-knapp'],
+     ['#adm-anv-panel', '#adm-anv-knapp']].forEach(par => {
       if (par[0] === utom) return;
       const p = $(par[0]), k = $(par[1]);
       if (p) p.hidden = true;
@@ -815,6 +817,24 @@
     });
   })();
 
+  (function startaKonto() {
+    const knapp = $('#adm-anv-knapp');
+    if (!knapp) return;
+    knapp.addEventListener('click', () => {
+      const panel = $('#adm-anv-panel');
+      const öppen = !panel.hidden;
+      stängPaneler('#adm-anv-panel');
+      panel.hidden = öppen;
+      knapp.setAttribute('aria-expanded', öppen ? 'false' : 'true');
+    });
+    /* En länk i menyn tar en därifrån, och Logga ut laddar om sidan;
+       inget av det behöver stänga den. */
+  })();
+
+  /* Sajtens sidhuvud syns bara medan vyn laddas och i felvyerna (Inte
+     admin, Vyn kunde inte laddas): är man inne göms det av
+     body.adm-inne och kontot bor i toppraden. Det ritas ändå, för Logga
+     ut i "Du har inte behörighet hit" står i det. */
   function ritaHeader() {
     const na = $('#nav-actions'), ma = $('#m-actions');
     if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
@@ -882,9 +902,8 @@
         nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt'
       });
 
-      $('#adm-topp').hidden = false;
       startaFall();
-      ritaSidofot();
+      ritaAnvandare();
       ritaVar();
 
       function följHash() {

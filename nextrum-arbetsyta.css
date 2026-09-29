@@ -778,6 +778,13 @@
 .adm-verktyg .inp,
 .adm-verktyg .sel{max-width:230px}
 .adm-sok{flex:1 1 180px;max-width:300px}
+/* På en telefon tar söket hela raden och filtren delar nästa. Med
+   takten ovan stod de som tre smala fält under varandra med en tom
+   tredjedel till höger. */
+@media (max-width:560px){
+  .vy-admin .adm-verktyg :is(.inp,.sel){max-width:none;flex:1 1 130px;min-width:0}
+  .vy-admin .adm-verktyg .adm-sok{flex-basis:100%}
+}
 
 /* Tabellen står på kortet (2026-09-29, adminvyn i samma hus som
    studievyn): en låda i lådan är precis vad INNEHÅLLET-avsnittet längst
@@ -1074,12 +1081,13 @@ button.fel-person:hover{border-color:var(--bl-3)}
 }
 
 /* Adminvyn får vara bredare än familjevyn — tabeller mår illa av
-   att klämmas ihop, och den som sitter här sitter vid en skärm. */
-.vy-admin .vy-layout{max-width:var(--w-bred)}
+   att klämmas ihop, och den som sitter här sitter vid en skärm. Hur
+   bred står i adminskalet nedan (--adm-bredd under MÅTTEN), för
+   toppraden räknar på samma mått. */
 /* 244 px: "Intresseanmälningar" och märket bredvid går inte in i 212 med en
    rullningslist, och märket lade sig över ordet. */
 @media (min-width:900px){
-  .vy-admin .vy-layout{grid-template-columns:244px minmax(0,1fr)}
+  .vy-admin .vy-layout{grid-template-columns:244px minmax(0,1fr);gap:clamp(24px,2.6vw,44px)}
 }
 
 /* ============================================================
@@ -1162,64 +1170,103 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .vy-admin .vy-sido-rubrik{color:var(--bl-2)}
 
 /* ------------------------------------------------------------
-   TOPPRADEN
-   Sitter under det fixerade sidhuvudet och följer med när man
-   scrollar. Innehåller tre saker som gäller hela vyn och inte
-   någon enskild sektion: var man är, global sök, och vad som
-   hänt sedan sist.
+   MÅTTEN
+   Toppradens höjd och adminvyns bredd står här och ingen annanstans:
+   raden, sidomenyns fasta läge och sektionernas landningsplats
+   räknar alla på dem. Statiska, satta en gång på body — en variabel
+   som ändras ärvs av hela sidan och räknar om stilen för alla barn,
+   den här ändras aldrig.
 
-   Den är avsiktligt låg. Sidhuvudet tar redan en remsa, och två
-   fasta rader ovanför innehållet börjar bli en hiss.
+   Höjden är ett MÅTT och inte något innehållet råkar bli: sidomenyn
+   står fast under raden och räknar sin egen övre kant och höjd på det,
+   och en rad som växte eller krympte med sökfältet hade lämnat menyn
+   under skärmkanten.
 
-   Höjden är ett MÅTT (--adm-topp-h) och inte något innehållet råkar
-   bli: sidomenyn står fast under raden och räknar sin egen övre kant
-   och höjd på det, och en rad som växte eller krympte med sökfältet
-   hade lämnat menyn under skärmkanten. Sidhuvudets höjd är den
-   uppmätta (--vy-hdr-h, satt av sidomeny() i nextrum-studie.js). Fästet
-   var clamp(64px,7vw,84px), en gissning som stod 9 px under sidhuvudet
-   på en bred skärm (innehåll syntes glida förbi i springan) och 11 px in
-   under det på en telefon.
+   Bredden var 1216 px på en 1440-skärm, med drygt hundra px tomt på
+   varje sida. Tabeller mår illa av att klämmas ihop (adminvyn är
+   byggd för att sitta vid), så innehållet får skärmen, med samma
+   marginal som raden ovanför.
+
+   --adm-luft är både innehållets avstånd till raden överst på sidan och
+   menyns avstånd till den när den klistrat: med två olika mått hoppade
+   menyn när den fäste.
    ------------------------------------------------------------ */
-.vy-admin{--adm-topp-h:64px}
+body.vy-admin{
+  --adm-topp-h:56px;
+  --adm-bredd:1760px;
+  --adm-pad:clamp(16px,2.2vw,32px);
+  --adm-luft:20px;
+}
+@media (max-width:899px){body.vy-admin{--adm-topp-h:54px}}
+
+/* body framför: .vy main.wrap under STORA SKÄRMAR väger lika mycket och
+   står senare, och över 1500 px fastnade innehållet på 1560 medan
+   toppraden gick till 1760. */
+body.vy-admin main.wrap{max-width:var(--adm-bredd);padding-inline:var(--adm-pad)}
+.vy-admin .vy-layout{max-width:none}
+
+/* ------------------------------------------------------------
+   TOPPRADEN (2026-09-29)
+   Den enda raden överst när man är inne: loggan, sök, notiser och
+   kontot. Sajtens sidhuvud och sidfot göms av body.adm-inne, som
+   visa() i nextrum-admin-karna.js sätter. Sidhuvudet och en topprad
+   under det var två fasta rader ovanför innehållet, 139 px på en dator,
+   och sidfoten var en marknadssidfot åt ett verktyg. I inloggningen och
+   felvyerna gäller sajtens sidhuvud som förut.
+
+   Raden står fast högst upp, top:0: det finns inget sidhuvud ovanför
+   den att mäta. Den är helt täckande, för med en genomskinlig rad syns
+   texten som passerar.
+   ------------------------------------------------------------ */
+body.adm-inne .hdr,
+body.adm-inne .mobile-menu,
+body.adm-inne .ftr{display:none}
+/* Adminvyn har ingen hero. .vy main håller undan 150 px för den. */
+body.adm-inne.vy main{
+  padding-top:var(--adm-luft);
+  padding-bottom:clamp(48px,6vw,80px);
+}
+/* På en telefon börjar vyn med sektionsraden, som ska ligga direkt
+   under raden överst: med luft emellan syntes en remsa av sidan mellan
+   de två tills man rullat. */
+@media (max-width:899px){body.adm-inne.vy main{padding-top:0}}
+/* Sidomenyn rullar till sektionens topp, och rubriken ska landa under
+   raden, inte bakom den. */
+.vy-admin .vy-sek{scroll-margin-top:calc(var(--adm-topp-h) + 12px)}
+
 .adm-topp{
-  position:sticky;
-  top:var(--vy-hdr-h,75px);
-  z-index:30;
-  display:flex;align-items:center;gap:12px;
-  height:var(--adm-topp-h);box-sizing:border-box;
-  margin-bottom:20px;
-  background:var(--pap);
+  position:sticky;top:0;z-index:800;
+  background:var(--yta);
   border-bottom:1px solid var(--ln);
 }
-/* Adminvyn har ingen hero. .vy main håller undan 150 px för den, och det
-   blev ett tomt band mellan sidhuvudet och toppraden: raden låg 75 px för
-   lågt, och menyn under den hängde ut under skärmkanten på sidans topp. */
-.vy-admin main{padding-top:calc(var(--vy-hdr-h,75px) + 12px)}
-/* Sidomenyn rullar till sektionens topp. I adminvyn ligger den här
-   raden fast under sidhuvudet, så sektionen behöver landa så mycket
-   längre ner — annars hamnade rubriken bakom raden. Sidhuvudet
-   självt täcks av scroll-padding-top i nextrum.css. */
-.vy-admin .vy-sek{scroll-margin-top:calc(var(--vy-hdr-h,75px) + var(--adm-topp-h) + 12px)}
-.adm-topp-var{
-  display:flex;align-items:center;gap:9px;
-  min-width:0;flex:1;
+/* Raden MED sin kant är --adm-topp-h hög. Med kanten utanför måttet
+   stod menyn och sektionsraden 1 px lägre överst på sidan än när de
+   klistrat, och hoppade när de fäste. */
+.adm-topp-in{
+  position:relative;
+  max-width:var(--adm-bredd);margin-inline:auto;
+  padding:0 var(--adm-pad);
+  height:calc(var(--adm-topp-h) - 1px);
+  display:flex;align-items:center;gap:12px;
 }
-.adm-topp-var b{
-  font-size:1.02rem;font-weight:700;color:var(--bl);
-  letter-spacing:-.015em;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+
+.adm-logo{display:inline-flex;align-items:center;gap:9px;flex:none}
+.adm-logo .mark{width:24px;height:24px}
+.adm-logo .mark rect{fill:var(--bl)}
+.adm-logo .mark path{stroke:var(--pap);stroke-width:2.3;fill:none;stroke-linecap:square}
+.adm-logo .logo-text{font-size:1rem;font-weight:750;letter-spacing:-.03em;color:var(--bl)}
+@media (max-width:899px){.adm-logo .logo-text{display:none}}
+
+/* Sektionens namn i raden: bara där menyn är en rad man sveper i. På en
+   dator står det i menyn och i rubriken, och ett tredje ställe är brus. */
+.adm-topp-var{display:none}
+@media (max-width:899px){
+  .adm-topp-var{display:flex;align-items:center;min-width:0;flex:1}
+  .adm-topp-var b{
+    font-size:1rem;font-weight:700;color:var(--bl);letter-spacing:-.015em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
 }
-/* Var man är, före sidans namn. Vanlig text: spärrade versaler i
-   monospace är till små etiketter, inte till en väg. */
-.adm-topp-var .adm-topp-hem{
-  font-size:.82rem;font-weight:600;
-  letter-spacing:0;text-transform:none;color:var(--bl-3);
-  white-space:nowrap;
-}
-.adm-topp-var .adm-topp-hem::after{content:"/";margin-left:9px;opacity:.5}
-/* På en telefon fick sökfältet all plats och brödsmulan blev bara "Admin".
-   Var man är står redan i sektionsraden och i rubriken under. */
-@media (max-width:560px){.adm-topp-var{display:none}}
 
 /* Knappen som fäller ihop menyn. Bara på skärmar där menyn står
    som en kolumn — under det ligger den redan som en rad flikar
@@ -1241,17 +1288,19 @@ button.fel-person:hover{border-color:var(--bl-3)}
 }
 
 /* ------------------------------------------------------------
-   SÖK OCH NOTISER
-   Två knappar som öppnar var sin panel. De delar all styling
-   utom bredden: söket behöver plats för namn, notiserna för en
-   mening.
+   SÖK, NOTISER OCH KONTOT
+   Tre kontroller som öppnar var sin panel. De delar all styling utom
+   bredden: söket behöver plats för namn, notiserna för en mening. Alla
+   är 40 px höga, som knappen som fäller ihop menyn.
    ------------------------------------------------------------ */
-.adm-verktygsfalt{display:flex;align-items:center;gap:8px;flex:none}
+.adm-verktygsfalt{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
+.adm-verktyg-pos{position:relative}
 
-.adm-sokfalt{position:relative;flex:0 1 320px;min-width:0}
-@media (max-width:760px){.adm-sokfalt{flex:1 1 auto}}
-.adm-sokfalt .inp{
-  width:100%;padding-left:40px;
+.adm-sokfalt{position:relative;flex:0 1 340px;min-width:0;width:340px}
+/* .adm-topp framför: .vy-admin .inp under KONTROLLERNA har samma vikt
+   och hade annars lagt texten under ikonen. */
+.adm-topp .adm-sokfalt .inp{
+  width:100%;height:40px;padding:0 14px 0 40px;
   font-size:.88rem;border-radius:100px;
 }
 .adm-sokfalt > svg{
@@ -1259,6 +1308,33 @@ button.fel-person:hover{border-color:var(--bl-3)}
   width:15px;height:15px;pointer-events:none;
   fill:none;stroke:var(--bl-3);stroke-width:1.8;
   stroke-linecap:round;stroke-linejoin:round;
+}
+/* På en telefon är sökrutan en rund knapp som växer över hela raden när
+   man trycker på den. Tre kontroller och ett fält ryms inte i 390 px, och
+   sökning är något man gör, inte något som ska stå och ta plats. */
+@media (max-width:899px){
+  .adm-sokfalt{flex:none;width:40px}
+  .adm-sokfalt > svg{left:12.5px}
+  .adm-topp .adm-sokfalt .inp{padding:0;color:transparent;cursor:pointer;caret-color:transparent}
+  .adm-topp .adm-sokfalt .inp::placeholder{color:transparent}
+  .adm-topp .adm-sokfalt .inp::-webkit-search-cancel-button{display:none}
+  .adm-sokfalt:focus-within{
+    position:absolute;z-index:3;
+    left:var(--adm-pad);right:var(--adm-pad);top:calc((var(--adm-topp-h) - 41px) / 2);
+    width:auto;
+  }
+  .adm-sokfalt:focus-within > svg{left:15px}
+  .adm-topp .adm-sokfalt:focus-within .inp{
+    padding:0 14px 0 40px;color:var(--bl);cursor:text;caret-color:auto;
+  }
+  .adm-topp .adm-sokfalt:focus-within .inp::placeholder{color:var(--bl-3)}
+  .adm-topp .adm-sokfalt:focus-within .inp::-webkit-search-cancel-button{display:block}
+  /* Panelerna står under raden över hela bredden: vid en knapp i höger
+     kant gick en 360 px bred panel ut över vänsterkanten. */
+  .adm-topp .adm-panel{
+    position:fixed;left:var(--adm-pad);right:var(--adm-pad);
+    top:calc(var(--adm-topp-h) + 6px);width:auto;
+  }
 }
 
 .adm-knapp{
@@ -1283,6 +1359,56 @@ button.fel-person:hover{border-color:var(--bl-3)}
   background:var(--acc);
   box-shadow:0 0 0 2px var(--yta);
 }
+
+/* Kontot: avataren och förnamnet, på en telefon bara avataren. Menyns
+   fot bar det här förut, längst ned i en meny som rullar för sig. */
+.adm-anv-knapp{
+  display:inline-flex;align-items:center;gap:8px;
+  height:40px;padding:0 12px 0 4px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  background:var(--yta);color:var(--bl);
+  font-size:.86rem;font-weight:600;
+  transition:background .18s var(--e),border-color .18s var(--e);
+}
+.adm-anv-knapp:hover,
+.adm-anv-knapp[aria-expanded="true"]{background:var(--tint);border-color:var(--bl-3)}
+.adm-anv-knapp .nx-avatar{width:30px;height:30px;font-size:.66rem;flex:none}
+.adm-anv-pil{
+  width:11px;height:11px;flex:none;fill:none;stroke:currentColor;
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.65;
+}
+@media (max-width:899px){
+  .adm-anv-namn,.adm-anv-pil{display:none}
+  .adm-anv-knapp{width:40px;padding:0;justify-content:center}
+}
+.adm-anv-panel{width:min(268px,calc(100vw - 32px))}
+.adm-anv-vem{
+  padding:10px 12px 12px;margin-bottom:5px;
+  border-bottom:1px solid var(--ln);
+}
+.adm-anv-vem b{display:block;font-size:.92rem;font-weight:650;color:var(--bl);line-height:1.3}
+.adm-anv-vem span{
+  display:block;margin-top:2px;font-size:.8rem;line-height:1.4;color:var(--bl-2);
+  overflow-wrap:anywhere;
+}
+.adm-anv-vem .adm-anv-roll{
+  display:inline-block;margin-top:9px;padding:5px 10px;border-radius:100px;
+  background:var(--bricka);font-size:.74rem;font-weight:650;line-height:1;color:var(--bl-2);
+}
+.adm-anv-rad{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  width:100%;padding:10px 12px;border-radius:14px;
+  font-size:.88rem;font-weight:550;color:var(--bl);text-align:left;
+  transition:background .16s var(--e);
+}
+.adm-anv-rad:hover{background:var(--tint)}
+.adm-anv-rad svg{
+  width:15px;height:15px;flex:none;fill:none;stroke:var(--bl-3);
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+.adm-anv-rad.ar-ut{margin-top:5px;border-top:1px solid var(--ln);border-radius:0 0 14px 14px;padding-top:12px}
+.adm-anv-rad.ar-ut:hover{background:var(--acc-soft);color:var(--acc-lugn)}
+.adm-anv-rad.ar-ut:hover svg{stroke:var(--acc-lugn)}
 
 /* Panelen som fälls ut. Ligger absolut under sin knapp och
    stängs av ett klick utanför — samma mönster som noteringarna
@@ -1321,14 +1447,17 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .adm-rad{
   display:flex;align-items:flex-start;gap:11px;
   width:100%;text-align:left;
-  padding:10px 11px;border-radius:11px;
+  padding:10px 11px;border-radius:14px;
   transition:background .16s var(--e);
 }
-.adm-rad:hover{background:var(--pap-2)}
+/* --tint och --bricka, inte --pap-2: panelen är --yta, och i mörkt läge
+   är --pap-2 och --yta nästan samma färg. Hovringen och ikonrutan syntes
+   inte alls där. */
+.adm-rad:hover{background:var(--tint)}
 .adm-rad-ikon{
   display:flex;align-items:center;justify-content:center;
   width:30px;height:30px;flex:none;margin-top:1px;
-  border-radius:9px;background:var(--pap-2);color:var(--bl-2);
+  border-radius:50%;background:var(--bricka);color:var(--bl-2);
 }
 .adm-rad-ikon svg{
   width:15px;height:15px;fill:none;stroke:currentColor;
@@ -1393,38 +1522,23 @@ button.fel-person:hover{border-color:var(--bl-3)}
 }
 
 /* ------------------------------------------------------------
-   MENYNS FOT
-   Vem är inloggad, och vägen ut. Sitter längst ner i kolumnen
-   och inte i sidhuvudet, för i adminvyn är sidomenyn det man
-   tittar på — sidhuvudet är sajtens, inte verktygets.
+   MENYN
+   Fast under toppraden, och sin egen rullyta (2026-09-29, Leo: "när man
+   scrollar på sidbaren behöver allt annat scrollas ner för att komma
+   längre ned på sidbaren"). Den var 1 236 px hög: på en bärbar syntes
+   hälften, och resten nåddes först när HELA sidan rullats, med
+   Översiktens innehåll med sig. Nu har menyn en högsta höjd och rullar
+   för sig, och sidan för sig, med overscroll-behavior:contain så att
+   det ena aldrig drar med sig det andra.
+
+   Menyn står --adm-luft under raden både klistrad och överst på sidan,
+   där innehållet börjar lika långt ned, så högsta höjden gäller i båda
+   lägena, med 16 px kvar till skärmkanten. Ingen fot: kontot och Logga
+   ut bor i toppraden.
    ------------------------------------------------------------ */
-.adm-sido-fot{
-  margin-top:16px;padding-top:14px;
-  border-top:1px solid var(--ln);
-  display:flex;align-items:center;gap:10px;
-}
-
-/* Sidomenyn är klistrad, och nu ligger toppraden klistrad ovanför
-   den. Utan det här tillägget glider menyns första post in under
-   toppraden när man scrollar — offseten i vy-lagret räknar bara
-   med sidhuvudet, som är det enda klistrade i de andra vyerna.
-
-   Menyn är sin egen rullyta (2026-09-29, Leo: "när man scrollar på
-   sidbaren behöver allt annat scrollas ner för att komma längre ned på
-   sidbaren"). Den är 1 236 px hög: på en bärbar syntes hälften, och
-   resten nåddes först när HELA sidan rullats, med Översiktens innehåll
-   med sig. Nu har menyn en högsta höjd och rullar för sig, och sidan för
-   sig, med overscroll-behavior:contain så att det ena aldrig drar med
-   sig det andra.
-
-   Högsta höjden räknas på var menyn STÅR när den klistrat, och lådan
-   ska rymmas i fönstret också överst på sidan, där menyn ligger 12 px
-   lägre (huvudets padding-top): 16 px marginal längst ned ger 4 px kvar.
-   Räknades den på något annat hängde nederdelen, och foten med
-   utloggningen, under skärmkanten tills man rullat en bit. */
 @media (min-width:900px){
   .vy-admin .vy-sido{
-    --adm-sido-topp:calc(var(--vy-hdr-h,75px) + var(--adm-topp-h) + 20px);
+    --adm-sido-topp:calc(var(--adm-topp-h) + var(--adm-luft));
     top:var(--adm-sido-topp);
     max-height:calc(100vh - var(--adm-sido-topp) - 16px);
     overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
@@ -1434,45 +1548,27 @@ button.fel-person:hover{border-color:var(--bl-3)}
   /* Markeringen ritas inuti posten: en ring utanför den klipps av
      menyns egen rullning. */
   .vy-admin .vy-sido a:focus-visible{outline-offset:-2px}
-  /* "Betalningar & utbetalningar" är 199 px men får plats på 158: den
-     stack ut 29 px, och på den valda posten var slutet osynligt (ljus
-     text på sidans ljusa bakgrund utanför den mörka pillen). Med menyns
-     klippta sida hade det blivit en avhuggen etikett. Den bryter rad.
+  /* En etikett som är bredare än menyn bryter rad. "Betalningar &
+     utbetalningar" stack ut 29 px, och på den valda posten var slutet
+     osynligt (ljus text utanför den mörka pillen). Posten heter
+     Betalningar sedan samma dag, men regeln står kvar för nästa långa.
      Ord bryts aldrig mitt i. Hopfälld meny döljer etiketten som förut. */
   .vy-admin .vy-sido .adm-etikett{white-space:normal;min-width:0}
-  .vy-admin .vy-sido .adm-sido-fot{position:sticky;bottom:0;background:var(--pap)}
 }
-@media (max-width:899px){.adm-sido-fot{display:none}}
-.adm-sido-fot .nx-avatar{flex:none}
-.adm-sido-fot-text{min-width:0;flex:1}
 
-/* Logga ut är en ikon, inte en knapp med text. Raden har plats för
-   en avatar, ett namn och en sak till — och namnet är det som
-   måste få stå helt utskrivet. */
-.adm-sido-ut{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:32px;height:32px;flex:none;
-  border:1px solid var(--ln-2);border-radius:9px;
-  background:var(--pap);color:var(--bl-2);
-  transition:background .18s var(--e),color .18s var(--e),border-color .18s var(--e);
+/* Sektionsraden på en telefon står fast under toppraden, på samma sätt
+   som raden i de två andra vyerna står under sidhuvudet (TUMMEN längre
+   ned). Adminvyn var undantagen där medan sidhuvudet och en topprad
+   redan stod fast ovanför innehållet, 144 av 844 px. Nu är toppraden den
+   enda, och den och raden tar mindre än sidhuvudet och raden i de andra
+   vyerna. */
+@media (max-width:899px){
+  .vy-admin .vy-sido{
+    position:sticky;top:var(--adm-topp-h);z-index:40;
+    padding-top:8px;background:var(--pap);
+    box-shadow:0 0 0 100vmax var(--pap);clip-path:inset(0 -100vmax);
+  }
 }
-.adm-sido-ut:hover{background:var(--acc-soft);color:var(--acc-text);border-color:var(--acc-line)}
-.adm-sido-ut svg{
-  width:16px;height:16px;fill:none;stroke:currentColor;
-  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
-}
-.adm-sido-fot-text b{
-  display:block;font-size:.85rem;font-weight:650;color:var(--bl);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.adm-sido-fot-text span{
-  display:block;font-family:var(--f-mono);font-size:9.5px;
-  letter-spacing:.11em;text-transform:uppercase;color:var(--bl-2);
-  margin-top:2px;
-}
-.vy-layout.ar-hopfalld .adm-sido-fot{justify-content:center}
-.vy-layout.ar-hopfalld .adm-sido-fot-text,
-.vy-layout.ar-hopfalld .adm-sido-ut{display:none}
 
 /* ------------------------------------------------------------
    NYCKELTAL MED FÖRÄNDRING
@@ -1511,52 +1607,21 @@ button.fel-person:hover{border-color:var(--bl-3)}
 .adm-tal-stor .adm-kpi b{font-size:2.1rem}
 
 /* ------------------------------------------------------------
-   KRÄVER DIN UPPMÄRKSAMHET
-   Det viktigaste blocket på hela sidan. Varje rad är en sak som
-   ligger och väntar på en människa, och varje rad är en väg dit.
-
-   Tonen är avsiktligt lugn. Ett larmblock som skriker i rött
-   varje morgon slutar man se efter en vecka — accenten sitter på
-   siffran och pilen, inte på hela ytan.
+   ÖVERSIKTENS RUTNÄT
+   Att göra till vänster, passen och det som hänt till höger. Kön är
+   det man kom för, och den får den breda spalten. "Kräver din
+   uppmärksamhet" och "Problem" var egna block här till 2026-09-29, med
+   samma rader som NEX-konsolen redan visade; raderna står nu en gång, i
+   Att göra (nextrum-admin-konsol.css).
    ------------------------------------------------------------ */
-.adm-att-gora{display:flex;flex-direction:column;gap:2px}
-.adm-att-gora a{
-  display:flex;align-items:center;gap:13px;
-  padding:13px 14px;
-  border-radius:16px;
-  transition:background .16s var(--e);
+.ov-rutnat{
+  display:grid;
+  grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);
+  gap:clamp(14px,1.6vw,20px);
+  align-items:start;
 }
-.adm-att-gora a:hover{background:var(--tint)}
-.adm-att-gora a + a{box-shadow:0 -1px 0 var(--ln)}
-.adm-att-gora a:hover + a,
-.adm-att-gora a:hover{box-shadow:none}
-
-/* Siffran först. Ögat söker antal före ord när listan är en
-   arbetskö. */
-.adm-att-antal{
-  display:flex;align-items:center;justify-content:center;
-  min-width:32px;height:32px;flex:none;padding:0 9px;
-  border-radius:100px;
-  background:var(--acc-soft);color:var(--acc-lugn);
-  font-size:.88rem;font-weight:700;
-  font-variant-numeric:tabular-nums;
-}
-.adm-att-text{min-width:0;flex:1}
-.adm-att-text b{
-  display:block;font-size:.92rem;font-weight:650;color:var(--bl);
-  line-height:1.35;
-}
-.adm-att-text span{
-  display:block;margin-top:2px;
-  font-size:.81rem;line-height:1.45;color:var(--bl-2);
-}
-.adm-att-gora a > svg{
-  width:16px;height:16px;flex:none;
-  fill:none;stroke:var(--bl-3);stroke-width:1.8;
-  stroke-linecap:round;stroke-linejoin:round;
-  transition:stroke .16s var(--e),transform .16s var(--e);
-}
-.adm-att-gora a:hover > svg{stroke:var(--acc-text);transform:translateX(2px)}
+.ov-rutnat > .stack{display:flex;flex-direction:column;gap:clamp(14px,1.6vw,20px)}
+@media (max-width:1100px){.ov-rutnat{grid-template-columns:minmax(0,1fr)}}
 
 /* Allt avklarat. Den här ytan ska kännas som ett besked, inte som
    ett tomt block där något borde ha stått. */
@@ -1694,6 +1759,50 @@ button.fel-person:hover{border-color:var(--bl-3)}
   .adm-pass .adm-format{order:2;margin-left:auto}
   .adm-pass-vad{order:3;flex:1 0 100%}
   .adm-pass-vem{margin-top:4px}
+}
+
+/* ------------------------------------------------------------
+   DET SOM BLEV ÖVER (2026-09-29)
+   Småsaker som husets regler längre ned inte tar: webbläsarens egna
+   marginaler på rubrikerna, en ruta på en ruta, avatarerna i
+   namnlistorna och ikonerna på Översiktens nyckeltal.
+   ------------------------------------------------------------ */
+/* En andra rubrik i samma kort. INNEHÅLLET längre ned tar bort luften
+   ovanför kortens h5, som basrubriken bär i em, och då satt den andra
+   rubriken tätt mot listan ovanför. body framför: regeln där väger lika
+   mycket och står senare. */
+body.vy-admin .dbox * + h5{margin-top:24px}
+/* Tjänsternas och kopplingarnas namn är en h6 med webbläsarens marginal,
+   2,33 em, som lade 35 px luft ovanför namnet i varje kort. */
+.vy-admin .adm-koppling-kort h6{margin:0}
+/* Ett nyckeltal i ett kort är en ton, som talen i detaljpanelen, inte
+   ett ark med skugga på ett ark. */
+.vy-admin .dbox .adm-kpi{background:var(--tint);border-color:transparent;box-shadow:none}
+/* Tidslinjens prickar är fyllda med kortets färg, inte sidans. */
+.vy-admin .adm-flode-post::before{background:var(--yta)}
+.vy-admin .adm-flode-post.ar-ny::before{background:var(--acc)}
+
+/* Namnlistorna har en avatar före namnet, som detaljpanelen, så att en
+   lång lista går att skumma efter ett ansikte eller två bokstäver. */
+.vy-admin .adm-namn{padding-block:10px}
+.vy-admin .adm-namn .nx-avatar{width:36px;height:36px;font-size:.74rem}
+
+/* Översiktens fyra tal har en ikon i hörnet. Den är prydnad och går bort
+   på en smal ruta, där den tog plats från texten. */
+.vy-admin .adm-kpi:has(.adm-kpi-ikon){position:relative;padding-right:64px}
+.vy-admin .adm-kpi-ikon{
+  position:absolute;top:18px;right:18px;
+  display:grid;place-items:center;
+  width:36px;height:36px;border-radius:50%;
+  background:var(--acc-soft);color:var(--acc-lugn);
+}
+.vy-admin .adm-kpi-ikon svg{
+  width:17px;height:17px;fill:none;stroke:currentColor;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+@media (max-width:560px){
+  .vy-admin .adm-kpi:has(.adm-kpi-ikon){padding-right:21px}
+  .vy-admin .adm-kpi-ikon{display:none}
 }
 
 /* ============================================================
@@ -2522,9 +2631,9 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 }
 
 /* Adminvyn får mer. Den är tabeller och listor, och en kolumn till
-   är skillnaden mellan att se en månad och att skrolla efter den. */
-@media (min-width:1500px){ .vy-admin main.wrap{max-width:1680px} }
-@media (min-width:1900px){ .vy-admin main.wrap{max-width:1860px} }
+   är skillnaden mellan att se en månad och att skrolla efter den.
+   Måttet är --adm-bredd i adminskalet, inte här: toppraden räknar på
+   samma, och två mått hade glidit isär. */
 
 /* Rutnät som redan räknar själva får fler kolumner av att de får
    plats, utan att någon siffra behöver ändras här. Det här är de
@@ -3933,10 +4042,10 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
    sidomenyn på raden (--vy-hdr-h). Den lodräta menyn på en dator står
    redan fast.
 
-   Adminvyn är undantagen, och det är det enda kvar av .vy:not(.vy-admin):
-   den har toppraden fast under sidhuvudet, och två fasta rader ovanför
-   innehållet tar 144 av 844 px på en telefon. Där ligger menyraden kvar i
-   flödet. */
+   Adminvyn har en egen regel, och det är det enda kvar av
+   .vy:not(.vy-admin): sajtens sidhuvud är gömt där (--vy-hdr-h blir 0),
+   och raden står under adminvyns topprad i stället (MENYN i
+   adminskalet). */
 @media (max-width:899px){
   .vy:not(.vy-admin) .vy-sido{
     position:sticky;top:var(--vy-hdr-h,75px);z-index:40;
