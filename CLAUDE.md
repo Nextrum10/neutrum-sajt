@@ -774,11 +774,20 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
   Lägena har kvar sina färger: klart är mossa, bemästrat ockra, och
   det primära steget i toppen lera, för det är ert drag. Färgen säger
   VAR man är, inte vems drag det är, och resten av sajten använder den
-  inte. **Genvägarna till områdena** (`.nl-hopp`) står under Din väg,
-  med läget i samma färg som områdets huvud, och ett tryck lägger
-  området under sidhuvudet (`scroll-margin-top` på `.nl-omr`) och
-  fokuserar nästa nivå. En nivå lyfter med `scale` när pekaren står på
-  den, aldrig med `translate`: den äger sicksacken.
+  inte. **Varje område har en egen färg** (samma kväll, Leo: "gör också
+  de olika områdena olika färger"), ur samma palett (`områdesFärg`):
+  det första området har ämnets, och resten går runt. Den sitter som en
+  rand upptill och i nästa nivå; ett klarat område har kvar mossans
+  bock. **Översikten över områdena** (`.nl-hopp`) står under Din väg,
+  med läget och områdets färg, och går INTE att trycka på. Den hoppade
+  först till området, men Leo samma kväll: "de är jobbigt om man råkar
+  trycka och hamnar längre ner på sidan": raden dras i sidled, och ett
+  tryck mitt i ett drag flyttade sidan. Den ser därför inte ut som
+  knappar. **Din utveckling** har samma palett: talen och märkena går
+  runt i den, och området och den rättade nivån bär sitt ämnes färg.
+  Staplarna i Område för område behåller mossa, ockra och lera, för där
+  betyder färgen hur det gick. En nivå lyfter med `scale` när pekaren
+  står på den, aldrig med `translate`: den äger sicksacken.
 
 En studiehjälpare syns publikt först när admin satt läget till
 **Godkänd**.

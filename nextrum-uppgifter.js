@@ -131,6 +131,15 @@ window.NXUppgifter = (function () {
     'NO / Fysik / Kemi / Biologi': 'no', 'SO / Historia / Samhällskunskap': 'so',
     'Moderna språk': 'ms', 'Programmering': 'prog' };
   function ämnesKod(a) { return ÄMNESKOD[a] || ''; }
+  /* Varje område i banan har en egen färg (Leo samma kväll: "gör också
+     de olika områdena olika färger"), ur samma palett som ämnena. Det
+     första området har ämnets färg, och resten går runt i en ordning
+     där två grannar aldrig är lika varma eller lika kalla. */
+  const OMRÅDESFÄRGER = ['ma', 'so', 'no', 'ms', 'prog', 'sv', 'en'];
+  function områdesFärg(amne, i) {
+    const start = Math.max(0, OMRÅDESFÄRGER.indexOf(ämnesKod(amne)));
+    return OMRÅDESFÄRGER[(start + i) % OMRÅDESFÄRGER.length];
+  }
 
   /* ============================================================
      DATAN
@@ -811,7 +820,7 @@ window.NXUppgifter = (function () {
         : a.läge === 'oppet' ? 'Öppet' : a.läge === 'nasta' ? 'Nästa område' : 'Låst';
       const visaSteg = a.läge !== 'last';
       const noder = visaSteg ? a.nivåer.concat(a.mästare ? [a.mästare] : []).map(n => nodHtml(n, o, väg, XLED[x++ % XLED.length])).join('') : '';
-      return '<li class="nl-omr nl-omr-' + a.läge + (a.bemästrat ? ' nl-omr-bem' : '') + '" id="nl-omr-' + i + '">'
+      return '<li class="nl-omr nl-omr-' + a.läge + (a.bemästrat ? ' nl-omr-bem' : '') + '" data-nl-f="' + områdesFärg(väg.amne, i) + '">'
         + '<div class="nl-omr-huvud">'
         + '<span class="nl-omr-ik" aria-hidden="true">' + ikon + '</span>'
         + '<span class="nl-omr-text"><span class="nl-omr-et">Område ' + (i + 1) + '</span><b>' + esc(a.namn) + '</b></span>'
@@ -822,17 +831,19 @@ window.NXUppgifter = (function () {
             : '<p class="nl-omr-las">' + IKON.lås + 'Öppnas när du klarat ' + esc(förra ? förra.namn : 'området före') + '.</p>')
         + '</li>';
     }).join('');
-    /* Genvägarna till områdena (2026-09-29, Leo: "för att navigera
-       enklare"). Vägen är flera skärmar lång på en telefon; raden säger
-       var man står i den och hoppar dit. Läget har samma färg som i
-       områdets eget huvud. */
+    /* Översikten över områdena (2026-09-29): var man står i banan, med
+       läget och områdets färg som i områdets eget huvud. Den gick först
+       att trycka på och hoppade till området, men Leo samma kväll: "de
+       är jobbigt om man råkar trycka och hamnar längre ner på sidan".
+       Raden dras i sidled med tummen, och ett tryck mitt i ett drag
+       hoppade. Nu är den bara en rad att läsa. */
     const hopp = väg.områden.length > 1
-      ? '<nav class="nl-hopp" aria-label="Områdena i banan">' + väg.områden.map((a, i) =>
-          '<button type="button" class="nl-hopp-knapp nl-hopp-' + (a.bemästrat ? 'bem' : a.klart ? 'klart' : a.läge) + '" data-nl-hopp="' + i + '"'
+      ? '<ol class="nl-hopp" aria-label="Områdena i banan">' + väg.områden.map((a, i) =>
+          '<li class="nl-hopp-knapp nl-hopp-' + (a.bemästrat ? 'bem' : a.klart ? 'klart' : a.läge) + '" data-nl-f="' + områdesFärg(väg.amne, i) + '"'
           + (a.läge === 'aktuellt' ? ' aria-current="step"' : '') + '>'
           + '<span class="nl-hopp-ik" aria-hidden="true">' + (a.bemästrat ? IKON.krona : a.klart ? IKON.bock
               : a.läge === 'last' || a.läge === 'nasta' ? IKON.lås : String(i + 1)) + '</span>'
-          + '<span class="nl-hopp-namn">' + esc(a.namn) + '</span></button>').join('') + '</nav>'
+          + '<span class="nl-hopp-namn">' + esc(a.namn) + '</span></li>').join('') + '</ol>'
       : '';
     return '<div class="nl-grupp nl-vag-rubrik"><h3>Din väg</h3>' + välj + '</div>'
       + hopp
@@ -2043,9 +2054,10 @@ window.NXUppgifter = (function () {
   /* Ett klart försök som rad i listan Rättade nivåer. */
   function försöksRad(f, niva) {
     const n = niva || { titel: 'Nivå', amne: '', omrade: '' };
-    return '<div class="upg-forsok-rad">'
+    return '<div class="upg-forsok-rad" data-nl-f="' + ämnesKod(n.amne) + '">'
       + '<div class="upg-forsok-text"><b>' + esc(stegTitel(n)) + '</b>'
-      + '<span>' + esc([n.amne ? kortÄmne(n.amne) : '', n.sort === 'mastare' ? '' : n.omrade, NX.datumText(String(f.klar_at).slice(0, 10))].filter(Boolean).join(' · ')) + '</span></div>'
+      + '<span>' + (n.amne ? '<em class="nl-amnesmark">' + esc(kortÄmne(n.amne)) + '</em>' : '')
+      + esc([n.sort === 'mastare' ? '' : n.omrade, NX.datumText(String(f.klar_at).slice(0, 10))].filter(Boolean).join(' · ')) + '</span></div>'
       + '<div class="upg-forsok-tal">' + stjärnRad(Number(f.stjarnor) || 0, 3, 'upg-stj-sm')
       + '<span>' + esc(f.ratt_direkt + ' av ' + f.antal) + '</span></div>'
       + '<button type="button" class="btn btn-ghost btn-sm" data-upg-genomgang="' + esc(f.id) + '">Se rättningen</button>'
@@ -2064,8 +2076,8 @@ window.NXUppgifter = (function () {
       const andel = r.antal ? Math.round(r.ratt / r.antal * 100) : 0;
       const p = bedömd[(r.amne + '|' + r.omrade).toLowerCase()];
       const nivå = andel >= 80 ? 'hog' : andel >= 60 ? 'mellan' : 'lag';
-      return '<div class="upg-omrade">'
-        + '<div class="upg-omrade-topp"><b>' + esc(r.omrade) + '</b><span>' + esc(kortÄmne(r.amne)) + '</span>'
+      return '<div class="upg-omrade" data-nl-f="' + ämnesKod(r.amne) + '">'
+        + '<div class="upg-omrade-topp"><b>' + esc(r.omrade) + '</b><span class="nl-amnesmark">' + esc(kortÄmne(r.amne)) + '</span>'
         + '<strong class="' + nivå + '">' + andel + ' %</strong></div>'
         + '<span class="upg-omrade-mat ' + nivå + '" aria-hidden="true"><i style="width:' + andel + '%"></i></span>'
         + '<p>' + esc(r.ratt + ' av ' + r.antal + ' rätt första gången, i ' + r.nivåer + (r.nivåer === 1 ? ' nivå' : ' nivåer')

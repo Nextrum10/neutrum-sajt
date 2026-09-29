@@ -943,9 +943,18 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
   .nl-amne[data-nl-f]:hover{border-color:color-mix(in srgb,var(--nl-f) 60%,var(--ln))}
 }
 
-/* Områdena: det man står i bär ämnets färg, det öppna en ton av den. */
-.nl-omr{scroll-margin-top:136px}
-@media (min-width:900px){ .nl-omr{scroll-margin-top:110px} }
+/* Områdena: varje område bär sin egen färg (data-nl-f på .nl-omr,
+   satt av områdesFärg), som en rand upptill och i numret. Det man
+   står i fylls, det öppna tonas. Ett klarat område har kvar mossans
+   bock i huvudet, men randen i sin färg: klart ska se klart ut i alla
+   färger. */
+.nl-omr[data-nl-f]{
+  border-top:5px solid var(--nl-f);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--nl-f) 5%,var(--yta)) 0,var(--yta) 120px);
+}
+.nl-omr-last[data-nl-f]{border-top-color:color-mix(in srgb,var(--nl-f) 35%,transparent);background:transparent}
+.nl-omr-last[data-nl-f] .nl-omr-ik,.nl-omr-nasta[data-nl-f] .nl-omr-ik{color:var(--nl-f)}
+.nl-omr[data-nl-f] .nl-omr-et{color:var(--nl-f)}
 [data-nl-f] .nl-omr-aktuellt{
   border-color:color-mix(in srgb,var(--nl-f) 55%,transparent);
   background:linear-gradient(180deg,color-mix(in srgb,var(--nl-f) 9%,var(--yta)) 0,var(--yta) 160px);
@@ -976,9 +985,12 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
   .upg-nod-knapp:active{scale:.92}
 }
 
-/* Genvägarna till områdena: en rad man drar i sidled, med läget i
-   samma färger som områdenas huvuden. Minst 44 px (TUMMEN). */
+/* Översikten över områdena: en rad man drar i sidled, med läget och
+   områdets färg som i områdenas huvuden. Den går inte att trycka på,
+   och ser därför inte ut som knappar: ingen pekare, ingen hovring och
+   inget tryck. */
 .nl-hopp{
+  list-style:none;
   display:flex;gap:8px;overflow-x:auto;min-width:0;
   margin:-2px 0 12px;padding:2px 2px 6px;
   scrollbar-width:none;-webkit-overflow-scrolling:touch;
@@ -986,14 +998,11 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
 .nl-hopp::-webkit-scrollbar{display:none}
 .nl-hopp-knapp{
   flex:none;display:inline-flex;align-items:center;gap:8px;
-  min-height:44px;padding:5px 14px 5px 5px;border-radius:100px;cursor:pointer;
-  border:1.5px solid var(--ln);background:var(--yta);color:var(--bl);
-  font:inherit;font-size:.86rem;font-weight:600;white-space:nowrap;
-  transition:scale .45s var(--vy-fjader,ease), border-color .15s var(--e), background-color .15s var(--e);
-  -webkit-tap-highlight-color:transparent;
+  min-height:40px;padding:4px 14px 4px 4px;border-radius:100px;
+  border:1.5px solid color-mix(in srgb,var(--nl-f,var(--acc)) 30%,var(--ln));
+  background:color-mix(in srgb,var(--nl-f,var(--acc)) 5%,var(--yta));color:var(--bl);
+  font-size:.86rem;font-weight:600;white-space:nowrap;
 }
-.nl-hopp-knapp:active{scale:.95;transition-duration:.09s}
-.nl-hopp-knapp:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .nl-hopp-ik{
   flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;
   background:var(--bricka);color:var(--bl-2);font-size:.8rem;font-weight:750;font-variant-numeric:tabular-nums;
@@ -1006,9 +1015,6 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
 .nl-hopp-aktuellt .nl-hopp-ik{background:var(--nl-f,var(--acc));color:var(--yta)}
 .nl-hopp-oppet .nl-hopp-ik{background:color-mix(in srgb,var(--nl-f,var(--acc)) 15%,var(--yta));color:var(--nl-f,var(--acc))}
 .nl-hopp-last,.nl-hopp-nasta{color:var(--bl-3);border-style:dashed}
-@media (hover:hover){
-  .nl-hopp-knapp:hover{border-color:color-mix(in srgb,var(--nl-f,var(--acc)) 55%,var(--ln))}
-}
 
 /* Din utveckling: varje ämnes rad i sin färg. */
 .nl-amnesrad[data-nl-f] .nl-mat i{background:var(--nl-f)}
@@ -1018,6 +1024,57 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
 }
 
 @media (prefers-reduced-motion:reduce){
-  .nl-hopp-knapp,.upg-nod-knapp{transition:none}
+  .upg-nod-knapp{transition:none}
   .upg-nod-knapp:hover{scale:1}
+}
+.nl-omr[data-nl-f].nl-omr-aktuellt{border-top-color:var(--nl-f)}
+.nl-omr-last[data-nl-f]{border-top-style:solid}
+
+/* ============================================================
+   DIN UTVECKLING I FÄRG (2026-09-29, Leo: "och din utveckling också
+   med lite mer färger"). Samma palett som ämnena, men här betyder
+   färgen bara vilken ruta det är: talen och märkena går runt i
+   paletten, så att sex rutor bredvid varandra inte ser likadana ut.
+   Ämnet står i sin egen färg där en rad hör till ett ämne (området,
+   den rättade nivån). Staplarna i Område för område behåller mossa,
+   ockra och lera: där betyder färgen hur det gick.
+   ============================================================ */
+.nl-tal > :nth-child(6n+1){--nl-f:var(--amne-so)}
+.nl-tal > :nth-child(6n+2){--nl-f:var(--amne-sv)}
+.nl-tal > :nth-child(6n+3){--nl-f:var(--amne-ma)}
+.nl-tal > :nth-child(6n+4){--nl-f:var(--amne-en)}
+.nl-tal > :nth-child(6n+5){--nl-f:var(--amne-no)}
+.nl-tal > :nth-child(6n+6){--nl-f:var(--amne-prog)}
+.nl-tal > div{
+  background:color-mix(in srgb,var(--nl-f) 11%,var(--yta));
+  border:1px solid color-mix(in srgb,var(--nl-f) 22%,transparent);
+}
+.nl-tal b{color:var(--nl-f)}
+.nl-tal-ik{color:var(--nl-f);opacity:1}
+.nl-tal-ik svg.ik-fyll{color:var(--nl-f)}
+
+/* Märkena: ett klart märke i sin färg, ett som väntar grått som förut. */
+.upg-marken > .upg-marke:nth-child(7n+1){--nl-f:var(--amne-so)}
+.upg-marken > .upg-marke:nth-child(7n+2){--nl-f:var(--amne-ma)}
+.upg-marken > .upg-marke:nth-child(7n+3){--nl-f:var(--amne-sv)}
+.upg-marken > .upg-marke:nth-child(7n+4){--nl-f:var(--amne-no)}
+.upg-marken > .upg-marke:nth-child(7n+5){--nl-f:var(--amne-en)}
+.upg-marken > .upg-marke:nth-child(7n+6){--nl-f:var(--amne-prog)}
+.upg-marken > .upg-marke:nth-child(7n+7){--nl-f:var(--amne-ms)}
+.upg-marken > .upg-marke.klart{
+  background:color-mix(in srgb,var(--nl-f) 10%,var(--yta));
+  border-color:color-mix(in srgb,var(--nl-f) 30%,transparent);
+}
+.upg-marken > .upg-marke.klart .upg-marke-ikon{background:var(--nl-f);color:var(--yta)}
+.upg-marken > .upg-marke .upg-marke-mat i{background:var(--nl-f)}
+
+/* Ämnet som ett litet märke i sin färg, i Område för område och i
+   Rättade nivåer. */
+.nl-amnesmark{
+  display:inline-block;margin-right:6px;padding:1px 8px;border-radius:100px;
+  font-style:normal;font-size:.74rem;font-weight:650;line-height:1.6;
+  background:color-mix(in srgb,var(--nl-f,var(--bl-3)) 13%,var(--yta));color:var(--nl-f,var(--bl-2));
+}
+.upg-omrade[data-nl-f],.upg-forsok-rad[data-nl-f]{
+  border-left:4px solid var(--nl-f);padding-left:12px;
 }
