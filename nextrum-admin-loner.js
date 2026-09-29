@@ -234,16 +234,26 @@
   const attBetala = r => r.underlag ? Number(r.underlag.belopp_ore || 0) : r.beräknat.öre;
   const lönetid = r => r.underlag ? Number(r.underlag.minuter || 0) : r.beräknat.min;
 
-  /* Månadens ekonomi visar samma tal. */
+  /* Månadens ekonomi visar samma tal, och säger när lönen redan är
+     utbetald och när ett pass inte räknas för att timpenningen saknas:
+     annars hade en lön på noll kronor sett ut som en månad utan pass. */
   function lönFörMånad(månad) {
     const per = månadensLöner(månad);
-    let öre = 0, min = 0, beräknat = false;
+    let öre = 0, min = 0, beräknat = false, utanTimpenning = 0, underlag = 0, utbetalda = 0, utbetaltÖre = 0;
     per.forEach(r => {
       öre += attBetala(r);
       min += lönetid(r);
       if (!r.underlag && r.beräknat.pass) beräknat = true;
+      utanTimpenning += r.beräknat.utanTimpenning;
+      if (r.underlag) {
+        underlag++;
+        if (r.underlag.status === 'utbetald') { utbetalda++; utbetaltÖre += attBetala(r); }
+      }
     });
-    return { öre, min, beräknat };
+    return {
+      öre, min, beräknat, utanTimpenning, utbetaltÖre,
+      utbetald: underlag > 0 && utbetalda === underlag && !beräknat
+    };
   }
 
   /* ------------------------------------------------------------

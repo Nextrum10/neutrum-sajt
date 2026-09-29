@@ -153,7 +153,7 @@
        skrivs av en trigger. Se kommentaren i ritaFamiljer. */
 
     /* Fakturans läge hade en rullgardin här. Sedan Fas 14.6 har varje
-       läge sin egen knapp under Ekonomi → Fakturor (Lagd i Fortnox,
+       läge sin egen knapp under Betalningar → Fakturor (Lagd i Fortnox,
        Betald, Makulera), för Skickad utan fakturanumret i Fortnox och
        förfallodag är en rad ingen kan följa upp i Fortnox. */
 
@@ -234,7 +234,7 @@
         text: kortDatum(b.wanted_date) + ' hos ' + namnFör(b.tutor_id) + '. '
           + (b.betalning_status === 'betald' || b.betalning_status === 'tvist'
             ? 'Passet är betalt, och pengarna går inte tillbaka av sig själva — återbetala '
-              + 'under Ekonomi → Kortbetalningar.'
+              + 'under Betalningar → Att göra.'
             : b.betalning_status === 'faktura'
             ? 'Familjen betalar passet mot faktura. Står det redan på en faktura i Fortnox ska raden '
               + 'krediteras där; annars kommer det inte med på nästa faktura.'
@@ -307,10 +307,10 @@
    ['#msg-sok', ritaKontakt], ['#msg-ohanterade', ritaKontakt],
    ['#fam-sok', ritaFamiljer], ['#fam-status', ritaFamiljer],
    ['#sh-sok', ritaStudiehjalpare], ['#sh-status', ritaStudiehjalpare],
-   ['#bok-sok', ritaBokningar], ['#bok-status', ritaBokningar], ['#bok-nar', ritaBokningar],
-   ['#fakt-sok', ritaFakturor], ['#fakt-status', ritaFakturor],
-   ['#utb-sok', ritaUtbetalningar], ['#utb-status', ritaUtbetalningar],
-   ['#kort-sok', ritaKortbetalningar], ['#kort-status', ritaKortbetalningar]
+   ['#bok-sok', ritaBokningar], ['#bok-status', ritaBokningar], ['#bok-nar', ritaBokningar]
+   /* Betalningar (2026-09-29): lägena är knappar i sidan, och söken
+      (#kort-sok, #fakt-sok) sköts i nextrum-admin-ekonomi.js, med
+      listan stilla (NXStudie.hållLista). Underlagen söks under Löner. */
   ].forEach(([sel, fn]) => {
     const el = $(sel);
     if (el) el.addEventListener('input', fn);
@@ -379,7 +379,13 @@
      för #system är fortfarande en giltig adress. */
   const FLYTTAT = {
     'system/tjanster': 'katalog/tjanster',
-    'system/rabattkoder': 'katalog/rabattkoder'
+    'system/rabattkoder': 'katalog/rabattkoder',
+    /* Betalningar gjordes om 2026-09-29. Underlagen bor under Löner,
+       månadskörningen under Fakturor, och avvikelserna under Att göra. */
+    'ekonomi/kortbetalningar': 'ekonomi/betalningar',
+    'ekonomi/avvikelser': 'ekonomi/attgora',
+    'ekonomi/utbetalningar': 'loner',
+    'ekonomi/korning': 'ekonomi/fakturor'
   };
 
   /* ------------------------------------------------------------

@@ -209,7 +209,7 @@
         under: 'Hållna men orapporterade. De kommer inte med på underlaget.', till: '#lektioner' },
       { antal: utanRapport().length,
         rubrik: 'genomförda pass saknar rapport', ental: 'genomfört pass saknar rapport',
-        under: 'Pass saknar rapport och kan därför inte behandlas automatiskt.', till: '#ekonomi/avvikelser' },
+        under: 'Pass saknar rapport och kan därför inte behandlas automatiskt.', till: '#ekonomi/attgora' },
       { antal: attLäggaIn,
         rubrik: 'fakturor att lägga in i Fortnox', ental: 'faktura att lägga in i Fortnox',
         under: 'Månadskörningen har skapat dem. Familjen har inte fått dem än.', till: '#ekonomi/fakturor' },
@@ -218,7 +218,7 @@
         under: 'Skickade från Fortnox men inte betalda.', till: '#ekonomi/fakturor' },
       { antal: attBetalaUt,
         rubrik: 'utbetalningar att göra', ental: 'utbetalning att göra',
-        under: 'Studiehjälpare som väntar på sin ersättning.', till: '#ekonomi/utbetalningar' }
+        under: 'Studiehjälpare som väntar på sin ersättning.', till: '#loner' }
     ].filter(p => p.antal > 0);
   }
 
@@ -253,7 +253,7 @@
         under: 'Öppna efter dagen de skulle vara klara.', till: '#uppgifter' },
       { antal: övrigaAvvikelser().filter(a => EGEN_RAD.indexOf(a.typ) === -1).length,
         rubrik: 'ekonomiska avvikelser', ental: 'ekonomisk avvikelse',
-        under: 'Pass som hölls utan betalning, eller något i utbetalningarna som inte går ihop.', till: '#ekonomi/avvikelser' },
+        under: 'Pass som hölls utan betalning, eller något i utbetalningarna som inte går ihop.', till: '#ekonomi/attgora' },
       { antal: l.klientfel_24h != null ? l.klientfel_24h : 0, rubrik: 'fel hos användarna', ental: 'fel hos en användare',
         under: 'Rapporterade från webbläsarna det senaste dygnet.', till: '#system/fel' },
       { antal: (S.notisfel || []).length, rubrik: 'notiser som inte gick fram', ental: 'notis som inte gick fram',
@@ -388,14 +388,7 @@
     ritaNotiser();
 
     const l = S.lage;
-    if (l) {
-      /* Det som väntar på oss under Fakturor: utkast att lägga in i
-         Fortnox och fakturor som förfallit (Fas 14.6). En skickad faktura
-         som inte förfallit väntar på familjen, inte på oss. */
-      märkFlik('#flik-fakt-mark', Number(l.fakturor_att_lagga_in || 0) + Number(l.forfallna_fakturor || 0));
-      märkFlik('#flik-inkorg-mark', l.ohanterade_meddelanden);
-    }
-    märkFlik('#flik-avv-mark', utanRapport().length + övrigaAvvikelser().length);
+    if (l) märkFlik('#flik-inkorg-mark', l.ohanterade_meddelanden);
     if (S.sido) {
       /* Summan av allt som pekar dit. Förut räknades bara den första
          posten, så Ekonomi visade pass utan rapport men inte obetalda
@@ -410,7 +403,13 @@
       S.sido.märke('matchning', av('#matchning'));
       S.sido.märke('bokningar', av('#bokningar'));
       S.sido.märke('lektioner', av('#lektioner'));
-      S.sido.märke('ekonomi', av('#ekonomi'));
+      S.sido.märke('loner', av('#loner'));
+      /* Betalningar bär antalet rader under dess Att göra (2026-09-29),
+         samma tal som på fliken, och flikarnas siffror sätts där. Summan
+         av raderna här ovanför hade varit ett andra tal för samma sak:
+         de räknar inte obetalda pass, återbetalningar eller tvister. */
+      if (typeof NXAdmin.rita.märkEkonomi === 'function') NXAdmin.rita.märkEkonomi();
+      else S.sido.märke('ekonomi', av('#ekonomi'));
       /* Försenade uppgifter märks på SYSTEM, inte på uppgifter.
 
          Uppgifter har ingen menypost längre — listan nås från System →

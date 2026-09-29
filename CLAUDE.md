@@ -142,7 +142,7 @@ betald (`betalda_min`, och därmed lönen), och kassan och fakturan tar
 `debiterade_min` minus den. **Minuterna går inte ut.** Slutar familjen
 betalas de tillbaka till ordinarie timpris, samma pris som klippkortets
 använda timmar räknas till då (`timbank_saldo.varde_ore`), och admin
-markerar banken utbetald under Ekonomi → Erbjudanden. Studiehjälparen
+markerar banken utbetald under Betalningar → Köpta timmar. Studiehjälparen
 ser familjens minuter på passet, så att hen vet hur långt passet kan
 dra över utan kostnad, men inte vad de är värda. Villkoren säger det
 sedan samma dag (`#timbank`, båda språken). Familjen ser banken på två
@@ -305,7 +305,7 @@ rättar). Tre beslut av Leo samma dag:
    skriver återbetalningar och tvister på den rad som bär chargen, och
    en återbetald kvart hade annars skrivit över passets betalning.
    Förbetalt och kortare larmar `betalt_for_lange` med beloppet att
-   betala tillbaka (knappen under Kortbetalningar). Timmar på ett
+   betala tillbaka (Återbetala under Betalningar → Att göra). Timmar på ett
    klippkort går tillbaka av sig själva: klippkortet drar påbörjade
    timmar av det som hölls, upp till det bokade, och resten av den
    sista timmen går till timbanken (Fas 22.1).
@@ -317,8 +317,8 @@ webhooken ur sessionens metadata. Namnet börjar med `stripe_` med flit:
 `skydda_bokningsfalt` nekar redan varje sådan kolumn från en vy.
 Villkoren säger det sedan samma dag (`#hallen-tid`, båda språken).
 
-**Månaden stängs i bokföringen (Fas 20.2).** Adminvyns Ekonomi väljer
-månad (`NXStudie.månadsval`, samma rad som i studiehjälparvyn) och visar
+**Månaden stängs i bokföringen (Fas 20.2).** Adminvyns Betalningar →
+Bokslut väljer månad (`NXStudie.månadsval`, samma rad som i studiehjälparvyn) och visar
 `manad_lage()`: passen, tiden, pengarna, underlaget och larmen för
 PASSENS månad. **Stäng månaden** går bara när månadens larm är noll, och
 en stängd månad är låst i databasen: inget pass och ingen rapport i den
@@ -332,6 +332,45 @@ låsta. Passets plats och rad till studiehjälparen går att TÖMMA men inte
 (2026-09-28, avsnitt 5). Underlag och fakturor låses inte: de betalas
 efter månaden.
 
+**Betalningar (omgjord 2026-09-29).** Leo: "gör om betalningar. den
+behöver vara mycket snyggare, lätt tolkad, lättanvänd och mycket mer
+funktionell". Sektionen `ekonomi` i adminvyn (`nextrum-admin-ekonomi.js`)
+har sex flikar, med adressen `#ekonomi/<flik>`:
+- **Att göra** (`attgora`): allt som väntar på er, i alla månader, i
+  grupper (korttvister, pengar tillbaka, fakturor, inte betalt än,
+  rapporter, löner, övrigt), med knappen som gör det på raden:
+  Återbetala, Lagd i Fortnox, Betald, Koppla rapport, Undanta, Kör
+  månadskörningen, Öppna i Stripe och Påminn. Det är larmen ur
+  `ekonomiska_avvikelser()` och fakturorna som väntar; Avvikelser är
+  ingen egen flik längre. Menyns siffra är antalet rader här
+  (`märkEkonomi`).
+- **Alla betalningar** (`betalningar`): månadens pass, tillägg och köpta
+  timmar som rader (`betalningsrader()`), med läget i färg och beloppet i
+  en kolumn, filter med antal, sök, och fyra tal överst: inbetalt, att få
+  in, kommande och tillbaka till familjer.
+- **Fakturor**: flödet från fakturapass till betald faktura, oberoende av
+  månad, med månadskörningen längst ner. Förut filtrerades fakturorna på
+  sin period, och augustis utkast syntes inte i september förrän någon
+  valde augusti.
+- **Bokslut**: vad som krävs för att stänga månaden, talen i tre kort, och
+  larmen med samma rader och knappar som under Att göra.
+- **Köpta timmar** och **Inställningar** (strömbrytarna `faktura`,
+  `erbjudanden` och `kortsparr`, och Stripe: Kontrollera Stripe och Hämta
+  från Stripe).
+
+Månadsraden gäller Alla betalningar och Bokslut och syns bara där.
+**Påminn skriver ett utkast** i ert eget mejlprogram (`kontaktaRuta`),
+med det som inte är betalt och länken till passet eller till Bekräfta
+rapport; servern skickar ingenting. Fakturan nämns bara när flaggan är
+på, familjen inte är spärrad och brevet gäller ett pass: ett tillägg
+betalas bara med kort. **Utbetalningarna bor under Löner**, som redan
+hade samma underlag och knappar. De gamla adresserna leds rätt (`FLYTTAT`
+i `nextrum-admin.js`): `#ekonomi/kortbetalningar`, `/avvikelser`,
+`/utbetalningar` och `/korning`. Inget nytt i databasen: samma lyssnare
+som förut ändrar något. **Raden i listorna heter `.eko-rad`**, och alla
+dess delar börjar på `eko-`: `.bet-atg` fanns redan i familjens
+Betalning, och den första versionen flyttade knapparna där.
+
 **Månadens ekonomi och Löner (2026-09-28)** är två egna sidor under
 Ekonomi i adminvyn, bredvid Betalningar. Leo: "där ska
 man aktuellt se hur många fakturor som ska skickas samt så många
@@ -341,18 +380,41 @@ avdelning för löner, personer och deras uppgifter samt exportera löner
 till tex fortnox". Inget av dem ändrar databasen eller en edge function:
 allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
 är hela driftsättningen.
-- **Månadens ekonomi** (`#manaden`, `nextrum-admin-manaden.js`) ger
-  varje bekräftat eller genomfört pass i månaden ett läge (`läge()`):
-  betalt med kort, på betald faktura, med köpta timmar, ur timbanken,
-  eller varför det inte är betalt (ska faktureras, faktura inte inlagd i
-  Fortnox, fakturerat, förfallen faktura, hölls utan betalning, inte
-  hållet än). Talen är summor av lägena och är knappar: ett tryck visar
-  familjerna bakom talet, med passen och Öppna familjen (detaljpanelen).
+- **Månadens ekonomi** (`#manaden`, `nextrum-admin-manaden.js`, omgjord
+  2026-09-29: "månadens ekonomi måste du göra mycket bättre också och
+  funktionell") är månaden i stort: läget (betalda timmar av månadens,
+  som en mätare), fyra tal (betalda, hållna men inte betalda, kommande
+  och fakturor att skicka), pengarna, familjerna och fakturorna. De tre
+  första talen är knappar som visar familjerna bakom talet; fakturornas
+  leder till fakturorna. **Pengarna** är tre kolumner, kommit in, väntar
+  och går ut (lönerna den 25:e månaden efter och det som ska tillbaka
+  till familjer), och vad som blir kvar, i dag och när det som väntar har
+  kommit in. Kvar är efter Stripes avgift men före semesterersättning,
+  arbetsgivaravgifter och alla andra kostnader, och köpta timmar räknas
+  när de betalades fast de är familjens tills de använts. Sidan säger
+  båda; en siffra för kassan som tiger om dem hade sett bättre ut än den
+  är. **Allt räknas på Betalningars rader** (`betalningsrader(månad)`,
+  med sidans egen månad). Förut räknade sidan på sitt eget sätt, och
+  samma månad hade två belopp på två sidor: tillägget för övertid och ett
+  avbokat pass som betalats stod bara i Betalningar. Kommit in är därför
+  alltid samma tal som Inbetalt under Alla betalningar, och länken dit
+  öppnar samma månad (`visaBetalningsmånad`). Ett pass räknas (`räknas`
+  på raden) när det är bekräftat eller genomfört, inte undantaget och
+  inte betalt med testkort. Familjerna är en rad var med lägena som
+  märken, Påminn på raden och passen under (`betRad` med `utanFamilj`
+  och `utanPåminn`), och ett pass betalt med köpta timmar står som
+  timmar, inte som noll kronor. Lönen är Löners `lönFörMånad()`, som
+  också säger om den är beräknad eller utbetald och hur många pass som
+  saknar timpenning; har lönedagen passerat utan att underlagen
+  markerats som utbetalda säger kolumnen det. **Mätaren har en färg**,
+  mossa på papperets mörkare ton: mossa, ockra och lera bredvid varandra
+  går inte att skilja åt för den som är färgblind (ockra mot lera ΔE 1,4
+  med deuteranopi), och de bär redan ert drag, väntar och klart.
   Beloppet för det obetalda är vad passet kostar, med samma regel som
-  familjens vy: `NXBetalning.passpris`, flyttad dit ur studievyn samma dag
-  så att webbläsaren har en prisregel och inte två. Köpta timmar räknas
-  på dagen de betalades, och testbetalningar och testköp aldrig
-  (`S.klippkortTest`). Timbankens pass känns igen på
+  familjens vy: `NXBetalning.passpris`, flyttad dit ur studievyn
+  2026-09-28 så att webbläsaren har en prisregel och inte två. Köpta
+  timmar räknas på dagen de betalades, och testbetalningar och testköp
+  aldrig (`S.klippkortTest`). Timbankens pass känns igen på
   `timbank_uttag.sort = 'pass'` (`S.timbankPass`).
   **Intäkt denna månad på Översikt räknar samma köp** (2026-09-29), med
   passen och tilläggen för övertid: allt som kommit in på kort under
@@ -363,8 +425,8 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   sig under talet ("varav … köpta timmar"): de är en skuld till familjen
   tills timmarna använts.
 - **Fakturorna skapas från sidan med månadskörningen**, samma körning som
-  under Ekonomi och Löner, och knapparna på varje faktura är desamma som
-  under Ekonomi → Fakturor (`data-fakt-*`, lyssnarna i
+  under Betalningar → Fakturor och Löner, och knapparna på varje faktura
+  är desamma som där (`data-fakt-*` och `fakturaRad`, i
   `nextrum-admin-ekonomi.js`). Körningen är en ruta med `data-kor-ruta`
   som kan stå på flera ställen; torrkörningen hör till sin ruta, så en
   torrkörning på en sida ger ingen Skapa-knapp på en annan. **En månad
@@ -381,7 +443,7 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   lönekörning i Fortnox Lön. Förvalt är nästa lönedag (efter den 25:e
   nästa månad), och en månad märks Utbetald när alla dess underlag är
   det. Allt under raden räknas på passens månad, månaden före
-  (`passmånad`), och underlaget (`payouts.period`), körningen, Ekonomi,
+  (`passmånad`), och underlaget (`payouts.period`), körningen, Betalningar,
   Månadens ekonomi och studiehjälparens lönespec räknar fortfarande på
   passens månad. Länken från Månadens ekonomi öppnar därför månaden
   efter, och lönefilen heter efter utbetalningen. Anställningsnumret
@@ -434,7 +496,8 @@ bekräftat. Att bekräfta filtreras inte. Två saker kom fram i provbänken:
 - **`håll()` kan inte scrolla förbi sidans slut.** Listan står sist, och
   en kortare månad längst ned på sidan klämde scrollen: raden flyttade
   sig 84 px under fingret på en telefon. `rbBytMånad` låter listan
-  behålla höjden tills tomrummet ligger under skärmkanten.
+  behålla höjden tills tomrummet ligger under skärmkanten. Samma sak
+  finns sedan 2026-09-29 som `NXStudie.hållLista` (avsnitt 3, fälla 1).
   Studiehjälparvyns två rader har bara `håll()`.
 
 **Adminvyns Lektioner likaså** (2026-09-29, Leo: "lektioner, där ska man
@@ -463,7 +526,7 @@ den går att skriva ut eller spara som PDF. Den räknar ingenting själv:
 siffrorna är underlagets, frysta när månadskörningen skrev det
 (`NXBetalning.lonespec`). Månadskörningen skriver underlaget den 1:a
 varje månad, av sig själv sedan 2026-09-28 (pg_cron-jobbet
-`manadskorning`, avsnitt 5; läget står under Ekonomi → Månadskörning),
+`manadskorning`, avsnitt 5; läget står under Betalningar → Fakturor),
 så en månad har sin lönespec när den är slut. Svarar körningen något
 annat än 200 blir det en uppgift en halvtimme senare, som står kvar
 tills någon stänger den (avsnitt 5). Ett pass som rapporteras
@@ -928,7 +991,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, toppraden (sök, notiser, kontot), bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |
-| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, manaden (Månadens ekonomi), loner (Löner), tjanster, system, automationer, ai, radera. Anropar varandra via `NXAdmin.rita`. En ny områdesfil ska in i `nextrum-modulvakt.js` också |
+| `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi (Betalningar), manaden (Månadens ekonomi), loner (Löner), tjanster, system, automationer, ai, radera. Anropar varandra via `NXAdmin.rita`. En ny områdesfil ska in i `nextrum-modulvakt.js` också |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
 | `nextrum-maskot.js` + `-maskot-svar.js` | Hjälprutan. **Ingen språkmodell** |
 | `nextrum.css` → `-home.css` → `-cinema.css` → `-vy.css` → `-arbetsyta.css` → `-agent.css` | Stillagren, i laddningsordning. **Cinema är sanningen** — den skriver över nästan allt de två första sätter. `-vy`, `-agent` och `-typsnitt` innehåller noll hexkoder och konsumerar bara. Papperet är `#F2EDE3` på hela sajten sedan 2026-09-25 (var `#EFE6D6`); det står i cinemas `:root` och i de ljusa formulär-öarna i mörkt läge, och `theme-color` på varje sida följer med. Mejlen har sin egen kopia av paletten (`FARG` i `_delad/notiser/rendera.ts`) och följer INTE med av sig själva |
@@ -1064,8 +1127,12 @@ strypt processor och scroll anchoring avstängd (som Safari):
    scroll anchoring; **Safari har ingen**. Använd
    `NXStudie.laddarFörsta(host)`: "Hämtar" bara första gången, annars
    står listan kvar nedtonad tills den nya är ritad. Ett formulär som
-   stängs ovanför det man tittar på hålls med `NXStudie.håll(ankare, fn)`.
-   Samma sak inom en och samma omritning: tar man bort något och visar
+   stängs ovanför det man tittar på hålls med `NXStudie.håll(ankare, fn)`,
+   och en lista som ett filter eller ett sök kan göra kortare ritas om med
+   `NXStudie.hållLista(lista, ankare, fn)`: `håll()` kan inte scrolla förbi
+   sidans slut, och i adminvyns Betalningar och Månadens ekonomi hoppade
+   chippen 146 till 588 px (2026-09-29). Ankaret är chipraden, inte
+   chippet, som ritas om med listan. Samma sak inom en och samma omritning: tar man bort något och visar
    det som ersätter det först efteråt, räcker en påtvingad layout
    emellan (ett `focus()`, en `getBoundingClientRect`) för att scrollen
    ska klämmas. Visa det nya först (`ritaPlanElev`, 2026-09-28).
@@ -1140,8 +1207,8 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    Raden med tolv knappar låg i en dold flik när den ritades, så den
    innevarande månaden hamnade utanför kanten. "Den här månaden" står
    alltid och tar sin plats, osynlig på den innevarande, annars sköt den
-   ner allt under raden efter första trycket. Adminvyns Ekonomi har kvar
-   raden: där jämför man månader bredvid varandra.
+   ner allt under raden efter första trycket. Adminvyn har kvar raden:
+   där jämför man månader bredvid varandra.
    Raden är sedan 2026-09-29 ett spår med pilar (Leo: "ändra månaderna
    där så de ser bättre ut"), i Betalningar, Månadens ekonomi, Löner och
    Lektioner. Förut var varje månad ett piller med kant, ett piller med
@@ -1295,11 +1362,16 @@ dator och delvis på telefon och i mörkt läge: alla sektioner och flikar,
 och personpanelen för en familj. Agentflikarna har egen
 CSS (`nextrum-agent.css`) som inte rörts, och där har exempelfrågorna och
 fältetiketten kvar sin äldre form. Det som bara ritas med riktig data
-(Kortbetalningarnas listor, Avvikelser med rader, auditloggen med rader) har
-inte setts med innehåll.
+(auditloggen med rader) har inte setts med innehåll. Betalningar och
+Månadens ekonomi är granskade med testdata i alla flikar, på dator, på
+telefon och i mörkt läge (2026-09-29).
 
 Provbänken (`skanna.js` i en scratchpad, inte i repot) trycker på varje
 knapp i varje sektion och rapporterar hopp över 40 px. Admin var ren.
+Ett prov som lägger knappen vid skärmkanten mäter Playwrights egen
+rullning före klicket som ett hopp, och ett prov med knappen överst på
+sidan kan inte se att sidan kläms: lägg knappen en bit ned, på en sida
+som är scrollad (2026-09-29).
 Den mäter `scrollY`, inte vad som står stilla på skärmen, så fällan i
 punkt 4 syntes inte i den: sidan scrollade inte, innehållet flyttade
 sig. Mät ett element före och efter trycket (`getBoundingClientRect`).
@@ -1559,7 +1631,9 @@ uppgift, `manadskorning:svar:<månad>`, som står kvar tills någon stänger
 den: 207 (en del av skrivningarna gick fel), 4xx, 5xx, tidsgränsen, ett
 anrop som aldrig fick svar, och ett anrop som saknas för att jobbet inte
 gick eller föll före det. Uppgiften säger vad som hände och pekar på
-Ekonomi → Månadskörning, utan namn, belopp eller något ur svaret. En
+Ekonomi → Månadskörning (texten står i databasen; rutan står sedan
+2026-09-29 under Betalningar → Fakturor), utan namn, belopp eller något
+ur svaret. En
 månad ger en uppgift, också när den stängts: det är samma körning.
 Funktionen läser bara anrop från den senaste timmen, för ett äldre svar
 kan pg_net redan ha tagit bort, och ett borttaget svar hade lästs som
@@ -2661,7 +2735,7 @@ tillbaka en kopia.**
 | Funktion | Gör | Anropas av |
 |---|---|---|
 | `fakturering` | Månadskörningen: underlag per studiehjälpare, som är studiehjälparens lönespecifikation (2026-09-28), ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand | pg_cron `manadskorning` den 1:a (`x-nextrum-notis`, alltid förra månaden), admin, eller `x-fakturering-nyckel` |
-| `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Fortnox | Knapp under Ekonomi → Utbetalningar |
+| `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Fortnox | Knapp under Löner |
 | `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
 | `pass-notis`, `meddelande-notis` | **Anropas inte längre.** Se nedan | — |
@@ -2676,9 +2750,9 @@ tillbaka en kopia.**
 | `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`). Sedan 2026-09-28 också ett pass som valts för faktura och inte står på en faktura än: det står kvar som `faktura` tills webhooken skrivit betalningen | Knappen på passet i föräldravyn, Betala med kort nu på ett fakturapass, och Köp under Erbjudanden |
 | `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet. Med `timbank: true` dras minuterna i timbanken i stället, i `timbank_dra()` (Fas 22.1). Sedan Fas 22.2 betalar timmarna passen av sig själva i databasen, och knappen tar det de inte hann | Betala med timmar och Betala med timbanken i föräldravyn |
 | `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser`. Ett tillägg (Fas 20.1) bär `tillagg_booking_id` och skrivs, återbetalas och bestrids på sin egen rad | Stripe |
-| `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Knappen under Ekonomi → Kortbetalningar |
-| `stripe-avstamning` | Hämtar avgift, netto och läge (test eller skarpt) för betalningar som saknar dem (Fas 14.7). Högst femtio per tryck. Skriver bara de kolumnerna | Knappen Hämta från Stripe under Ekonomi → Kortbetalningar |
-| `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Ekonomi → Kortbetalningar |
+| `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Återbetala under Betalningar (Att göra, Alla betalningar, Bokslut) |
+| `stripe-avstamning` | Hämtar avgift, netto och läge (test eller skarpt) för betalningar som saknar dem (Fas 14.7). Högst femtio per tryck. Skriver bara de kolumnerna | Knappen Hämta från Stripe under Betalningar → Inställningar |
+| `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Betalningar → Inställningar |
 | `google-koppla` | Kopplingen till Google (Fas 18.1): adressen till Google, återkomsten med engångskoden, Prova och Koppla från. Koden byts mot en nyckel HÄR; vyn ser aldrig nyckeln eller klienthemligheten. Återkomsten bär ingen inloggning och skyddas av ett HMAC-signerat läge som gäller i tio minuter. Ett konto utanför nextrum.se nekas | Knapparna under System → Integrationer, och Googles omdirigering |
 | `google-meet` | Meet-länken till ett bekräftat onlinepass (Fas 18.1). Läser passet med anroparens token först, skapar ett öppet rum och sparar länken i `pass_moten`. Ett rum som inte blev öppet sparas inte | Passets sida i föräldravyn och studiehjälparvyn |
 | `utbildningsprov` | Provet efter utbildningsmötet (Fas 22.1). Lämnar ut frågorna utan facit, rättar, och sparar försöket genom `utbildningsprov_lamna()`. Skyddet är nyckeln i länken, inte en inloggning. I drift sedan 2026-09-27 | `/utbildningsprov`, från länken i mejlet |
@@ -3107,7 +3181,7 @@ tillbaka överst i avsnittet för 22.1.
   - **Stripes avgift kom inte med.** Balanstransaktionen, med avgiften,
     finns ofta inte ÄN när sessionen fullbordas. Webhooken tar nu emot
     `charge.updated`, som kommer när den finns, och `stripe-avstamning`
-    (knappen **Hämta från Stripe** under Kortbetalningar) hämtar den i
+    (knappen **Hämta från Stripe** under Betalningar → Inställningar) hämtar den i
     efterhand för betalningar som kom in före.
   - **Test och skarpt gick inte att skilja åt.** `livemode` sparas nu i
     `bookings.stripe_skarp` och `stripe_handelser.skarp`, och adminvyn
@@ -3195,7 +3269,7 @@ tillbaka överst i avsnittet för 22.1.
   **Det behöver inte gissas längre (Fas 14.3).** Miljön som skrev
   betalkoden når inte `api.stripe.com`, så nyckeln stod som "okänd
   härifrån" och versionen som "troligen". Knappen **Kontrollera
-  Stripe** under Kortbetalningar kör `stripe-lage`, som frågar Stripe
+  Stripe** under Betalningar → Inställningar kör `stripe-lage`, som frågar Stripe
   med servernyckeln och säger vad som är rött: nyckelns sort,
   kontot, kontoutdragets grunddel, endpointens adress, version och
   händelser, och leveranserna i `stripe_handelser`. Reglerna står i
@@ -3269,7 +3343,7 @@ tillbaka överst i avsnittet för 22.1.
     Stripe-integration som väljs och kopplas i Fortnox, utanför koden.
     Stripes utbetalning till banken är netto efter avgiften, i en klump
     för flera pass; avgiften och nettot per pass står under
-    Kortbetalningar. Koppla integrationen, och bestäm med revisorn hur
+    Betalningar → Alla betalningar. Koppla integrationen, och bestäm med revisorn hur
     den bokar kortbetalningarna, avgifterna och utbetalningarna, innan
     första skarpa betalningen (DEPLOY-BETALNING.md 9.7). Fortnox står
     bland leverantörerna i integritetspolicyn sedan 2026-09-28, på båda
@@ -3311,7 +3385,7 @@ tillbaka överst i avsnittet för 22.1.
     nekas det, med ett meddelande som säger varför. Ingen automatisk
     återbetalning: villkoren lovar sedan Fas 14.2 hela beloppet tillbaka
     för ett pass som aldrig hölls, men återbetalningen görs med en knapp
-    under Kortbetalningar, och `betald_men_avbokad` larmar tills den är
+    under Betalningar → Att göra, och `betald_men_avbokad` larmar tills den är
     gjord.
 
   `aterbetald_ore` nollas när en ny betalning kommer in — kolumnerna

@@ -395,6 +395,54 @@ window.NXStudie = (function () {
     return svar;
   }
 
+  /* håll() för en lista som ett filter eller ett sök kan göra mycket
+     kortare. håll() kan inte scrolla förbi sidans slut: blir sidan
+     kortare än det som står ovanför skärmens underkant klämmer
+     webbläsaren scrollen, och det man tryckte på flyttar sig uppåt.
+     Mätt 2026-09-29 i adminvyns Betalningar och Månadens ekonomi, med
+     scroll anchoring avstängd som i Safari: 146 till 588 px. Listan
+     behåller därför höjden tills tomrummet ligger under skärmkanten,
+     som Bekräftade i familjens vy (rbBytMånad).
+
+     Ankaret ska stå kvar när listan ritas om: chipraden, inte chippet,
+     som ritas om med den. jobb ska vara synkront, för höjden mäts när
+     det är klart. släppLista() tar bort reserven när listan ritas om av
+     något annat, till exempel en ny månad. */
+  var reserver = [];
+  function släppLista(lista) {
+    reserver = reserver.filter(function (r) {
+      if (r.lista !== lista) return true;
+      lista.style.minHeight = '';
+      return false;
+    });
+  }
+  function hållLista(lista, ankare, jobb) {
+    if (!lista) return håll(ankare, jobb);
+    /* Mäts med en reserv som redan står kvar, och släpps först inne i
+       håll(): släppt före mätningen hade sidan krympt och klämt
+       scrollen innan håll() ens sett var ankaret stod. */
+    var förut = lista.offsetHeight;
+    var underSkärmen = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+    return håll(ankare, function () {
+      släppLista(lista);
+      var svar = jobb ? jobb() : null;
+      var reserv = Math.max(0, förut - lista.offsetHeight - underSkärmen);
+      if (reserv) {
+        lista.style.minHeight = (lista.offsetHeight + reserv) + 'px';
+        reserver.push({ lista: lista, reserv: reserv });
+      }
+      return svar;
+    });
+  }
+  window.addEventListener('scroll', function () {
+    if (!reserver.length) return;
+    reserver = reserver.filter(function (r) {
+      if (r.lista.isConnected && r.lista.getBoundingClientRect().bottom - r.reserv < window.innerHeight) return true;
+      r.lista.style.minHeight = '';
+      return false;
+    });
+  }, { passive: true });
+
   /* ---------- alla rader, inte de tusen första (2026-09-29) ----------
      Leo: "de raderna ska inte försvinna efter 1000st". PostgREST lämnar
      ut högst tusen rader per svar (max-rows), och svaret säger inte att
@@ -2848,7 +2896,8 @@ window.NXStudie = (function () {
     läxläge: läxläge, deadlineText: deadlineText,
     läxRad: läxRad, nivåMätare: nivåMätare, historikRad: historikRad, ämnesSammanfattning: ämnesSammanfattning,
     progressRad: progressRad, progressPerÄmne: progressPerÄmne,
-    tomt: tomt, laddar: laddar, laddarFörsta: laddarFörsta, håll: håll, scrollaTill: scrollaTill, visaÖverst: visaÖverst,
+    tomt: tomt, laddar: laddar, laddarFörsta: laddarFörsta, håll: håll, hållLista: hållLista, släppLista: släppLista,
+    scrollaTill: scrollaTill, visaÖverst: visaÖverst,
     hämtaAlla: hämtaAlla,
     månadsval: månadsval, månadsGräns: månadsGräns, månadsNamn: månadsNamn, månadIso: månadIso,
     passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,

@@ -32,7 +32,7 @@ behövs om ni sätter upp en ny miljö.
 | 2. Priset | Satt: 37900 ören, alltså 379 kr — samma som prissidan |
 | 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
 | 4. Deploy `fakturering` | ACTIVE, version 32 (2026-09-28, från main, jämförd byte för byte). Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas |
-| 5. Torrkörning | **Gjord 2026-09-28** genom schemavägen: 200, augusti utan pass. Septembers enda pass är provpasset, se avsnitt 6. Knappen under Ekonomi → Månadskörning torrkör vilken månad som helst |
+| 5. Torrkörning | **Gjord 2026-09-28** genom schemavägen: 200, augusti utan pass. Septembers enda pass är provpasset, se avsnitt 6. Knappen under Betalningar → Fakturor (Månadskörningen) torrkör vilken månad som helst |
 | 6. Schemaläggning | **På sedan 2026-09-28**: pg_cron `manadskorning` den 1:a klockan 04:17 UTC, genom `intern.manadskorning_vack()`. Första skarpa körningen är den 1 oktober 2026, med provpasset kvar, se avsnitt 6 |
 | 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar. Se avsnitt 9 |
 | 8. Deploy `faktura-utskick` | ACTIVE, version 19. Skickar bara underlag sedan Fas 14.6 |
@@ -44,7 +44,7 @@ gör schemat den 1 oktober 2026.
 **Obs (17 september 2026):** alla pass i driften hör än så länge till adminkontot
 och till en enda studiehjälpare — det är provpass, inga riktiga kunder. Fyra av de
 fem genomförda passen skapades samtidigt den 2 september, och sedan Fas 14.2 står
-de under Betalningar → Avvikelser som **Inte betalt**. Ta ställning
+de under Betalningar → Att göra som **Inte betalt än**. Ta ställning
 till dem innan en skarp körning: undanta dem, annars betalar ni ut ersättning för
 provpass. Den 28 september stod ett enda pass klart för ett underlag, provpasset den
 27 september, och Leo valde att ha det kvar för att se lönespecen. Vad som ska
@@ -56,7 +56,7 @@ Ett pass kommer med om det är **genomfört, har en rapport kopplad och inte är
 undantaget**. Urvalet läses ur vyn `passunderlag`, som adminvyn också läser.
 
 - **Genomfört utan rapport** kommer inte med. Det räknas upp i svaret och syns
-  under Betalningar → **Avvikelser**, där admin antingen kopplar
+  under Betalningar → **Att göra**, där admin antingen kopplar
   rätt rapport eller undantar passet.
 - **Undantaget** (`bookings.fakturerbar = false`, med en anledning) ska varken
   betalas av familjen (Betala-knappen syns inte) eller komma med på
@@ -178,7 +178,7 @@ curl -X POST "https://DITT-PROJEKT-ID.supabase.co/functions/v1/fakturering" \
 Läs svaret. Stämmer antalet pass? Stämmer beloppen mot vad ni faktiskt kommit
 överens om med studiehjälparna? Står det något i `hoppade_over_utan_timpenning` —
 då saknar de studiehjälparna en timpenning, gå tillbaka till steg 3. Står det något
-i `hoppade_over_utan_rapport` — se Avvikelser. Står det något i `obetalda` hölls de
+i `hoppade_over_utan_rapport` — se Betalningar → Att göra. Står det något i `obetalda` hölls de
 passen utan att familjen betalat: Betala-knappen ligger kvar på passet i familjens
 vy, och det är familjen ni ska prata med, inte körningen.
 
@@ -217,7 +217,7 @@ Det är fortfarande ett aktivt beslut, inte något som råkar vara påslaget. Or
 
 1. Ta ställning till provpassen (Obs-rutan överst). Ett provpass som står klart
    när schemat går blir ett riktigt underlag och, om det står på faktura, ett
-   fakturautkast. Undanta dem under Avvikelser.
+   fakturautkast. Undanta dem under Betalningar → Att göra.
 2. Driftsätt `fakturering` från main och kör migrationen
    `manadskorningen_vacks_av_databasen`.
 3. Torrkör vägen, som postgres: `select intern.manadskorning_vack(true);` och
@@ -237,7 +237,7 @@ fakturautkast på 758 kr till adminfamiljen, för passet står på faktura. Får
 provpassen 29 och 30 september en rapport före körningen kommer de med på
 underlaget också. När lönespecen är sedd, och före den 1 november:
 
-1. Ta bort fakturautkastet under Ekonomi → Fakturor (Ta bort).
+1. Ta bort fakturautkastet under Betalningar → Fakturor (Ta bort).
 2. Ta bort underlaget. Det har ingen knapp, så det görs med SQL.
 3. Undanta provpassen, annars kommer de med på nästa månads underlag och faktura.
 
@@ -254,7 +254,8 @@ under Uppgifter med nyckeln `manadskorning:svar:<månad>`: 207 (en del av
 skrivningarna gick fel), 4xx, 5xx, tidsgränsen, ett anrop som aldrig fick svar, och
 ett anrop som saknas för att jobbet inte gick eller föll före det. Uppgiften säger
 vad som hände och att månaden ska torrköras och skapas under Ekonomi →
-Månadskörning. Den står kvar tills någon stänger den, och en månad ger en uppgift,
+Månadskörning (texten står i databasen; rutan står sedan 2026-09-29 under
+Betalningar → Fakturor). Den står kvar tills någon stänger den, och en månad ger en uppgift,
 också när den stängts. Namn, belopp och svarets innehåll står inte i den.
 
 Ordningen efter merge, före den 1 oktober klockan 04:47 UTC:
@@ -328,7 +329,7 @@ efterskrift har resonemanget.
 ## 8. Utskicket av underlag (fakturor skickas från Fortnox)
 
 `faktura-utskick` mejlar studiehjälparen underlaget, alltså vad hen kommer att få
-den 25:e. Knappen **Skicka underlag** under Ekonomi → Utbetalningar anropar den.
+den 25:e. Knappen **Skicka underlag** under Löner anropar den.
 Namnet är kvar från när den också skickade familjens faktura. **Sedan Fas 14.6
 vägrar den fakturor**: de skickas från Fortnox, som också sköter bokföringen och
 påminnelserna. Två ställen som skickar samma faktura är två ställen som kan
@@ -359,7 +360,7 @@ alltså aldrig studiehjälparen. Är domänen inte verifierad får ni ett fel.
    faktura för, som har en rapport och som inte står på någon faktura: förra
    månadens, och äldre som blivit kvar. Beloppet räknas som kortets:
    samma pris, samma tillägg för fler barn, samma frysta rabatt.
-2. **Ekonomi → Fakturor → Underlag** kopierar det Fortnox behöver: familjen, perioden,
+2. **Betalningar → Fakturor → Underlag** kopierar det Fortnox behöver: familjen, perioden,
    raderna och summan.
 3. **Lägg in fakturan i Fortnox** och skicka den därifrån.
 4. **Lagd i Fortnox** här: fakturanumret i Fortnox och förfallodagen. Fakturan står då som
@@ -430,7 +431,7 @@ hand (Fas 14.9); anställningsfrågan står i 9.7.
 
 ## Om en faktura ser fel ut
 
-**Ett utkast** tas bort med **Ta bort** under Ekonomi → Fakturor. Raderna följer
+**Ett utkast** tas bort med **Ta bort** under Betalningar → Fakturor. Raderna följer
 med, passen blir ofakturerade igen, och nästa månadskörning tar med dem. Rätta
 passet först.
 
@@ -477,7 +478,7 @@ kvar att köra innan ni rör en skarp nyckel, och innan spärren slås på (9.9)
 | `stripe-aterbetalning` | **ACTIVE**, version 6, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
 | `stripe-lage` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting. Fas 14.5: säger om den publicerbara nyckeln är satt och i samma läge som den hemliga |
 | `stripe-avstamning` | **ACTIVE**, version 1, `verify_jwt = true`. Bara för admin (Fas 14.7). Hämtar avgift, netto och läge för betalningar som saknar dem, högst femtio per tryck |
-| `STRIPE_SECRET_KEY` | **Visas i adminvyn** sedan Fas 14.3: Betalningar → Kortbetalningar → **Kontrollera Stripe** säger om den saknas, är en test- eller skarp nyckel, eller har fel format. Inte ett tecken mer än så |
+| `STRIPE_SECRET_KEY` | **Visas i adminvyn** sedan Fas 14.3: Betalningar → Inställningar → **Kontrollera Stripe** säger om den saknas, är en test- eller skarp nyckel, eller har fel format. Inte ett tecken mer än så |
 | `STRIPE_WEBHOOK_SECRET` | **Satt och provad**: en påhittad signatur faller på tidsstämpeln, inte på hemligheten (slutet av 9.4) |
 | Webhook-endpoint hos Stripe | **Skapad** i sandlådan, och två leveranser har kommit fram. **Saknar `charge.dispute.updated`** (Kontrollera Stripe sa det 2026-09-25) **och `charge.updated`**, som kom till i Fas 14.7 (9.4) |
 | Knappen hos familjen | Finns: på passet när det är bekräftat, och på ett genomfört pass som inte är betalt |
@@ -578,7 +579,7 @@ balanstransaktionen, som bär avgiften och nettot, ofta en stund EFTER att sessi
 fullbordats, så `checkout.session.completed` kommer med `balance_transaction = null`.
 Fas 14.7 lagade det två vägar: webhooken tar emot `charge.updated`, som Stripe
 skickar när balanstransaktionen finns, och knappen **Hämta från Stripe** under
-Kortbetalningar (`stripe-avstamning`) hämtar den för betalningar som kom in före.
+Betalningar → Inställningar (`stripe-avstamning`) hämtar den för betalningar som kom in före.
 Tryck på den en gång för de två provbetalningarna.
 
 Adressen är:
@@ -668,7 +669,7 @@ Stripes typ, kod och text till funktionens logg, med passets id. Leta efter
 I den här ordningen, för varje steg beror på det förra:
 
 Tryck först på **Kontrollera Stripe** under Betalningar →
-Kortbetalningar. Varje röd rad där är ett skäl till att stegen nedan inte kommer
+Inställningar. Varje röd rad där är ett skäl till att stegen nedan inte kommer
 att fungera, och det är billigare att se det där än att leta efter det i
 `stripe_handelser`.
 
@@ -690,16 +691,16 @@ att fungera, och det är billigare att se det där än att leta efter det i
    `misslyckad` och går att betala igen. Betala sedan i SAMMA kassa med 4242: före
    Fas 14.7 drogs pengarna då utan att passet blev betalt, för webhooken tog bara
    emot en betalning på ett pass som stod `vantar`.
-6. **Prova en återbetalning**, både hel och delvis, från Betalningar &
-   utbetalningar → Kortbetalningar.
+6. **Prova en återbetalning**, både hel och delvis, från Betalningar →
+   Alla betalningar (Återbetala på raden).
 7. **Prova en tvist** med `4000 0000 0000 0259`. Den ska landa i
    `stripe_tvister` med `lage = 'needs_response'` och en `svara_senast`, och en
    uppgift "Svara på korttvisten senast …" ska dyka upp under Uppgifter. Svara
    sedan med underlaget `winning_evidence` i Stripes dashboard: tvisten ska stängas
    som vunnen och passet bli `betald` igen.
 8. **Prova ett avbokat pass.** Öppna betalsidan, avboka passet i en annan flik och
-   betala sedan. Passet ska bli `betald` och dyka upp under Avvikelser som
-   **Betalt men avbokat** tills det återbetalats.
+   betala sedan. Passet ska bli `betald` och dyka upp under Betalningar → Att
+   göra, bland pengarna tillbaka till familjer, tills det återbetalats.
 
 Säljarens lista hade två prov till: **misslyckad transfer** och **misslyckad
 utbetalning**. Båda gällde anslutna konton och finns inte att prova sedan Fas 12.5.
@@ -815,8 +816,8 @@ det sant i systemet, och **den är av** tills kortvägen bevisligen fungerar.
 Påslagen utan en fungerande betalning hade den låst varje studiehjälpare från att
 rapportera ett enda pass.
 
-Den är flaggan `kortsparr` i `flaggor`, och slås om under Betalningar &
-utbetalningar → Kortbetalningar. Knappen visar vad som händer innan den gör något.
+Den är flaggan `kortsparr` i `flaggor`, och slås om under Betalningar →
+Inställningar. Knappen visar vad som händer innan den gör något.
 
 - **På:** en rapport på ett pass som inte är betalt nekas, med ett meddelande som
   säger varför. Studiehjälparen ser betalläget på passet och rapportknappen är
@@ -826,7 +827,7 @@ utbetalningar → Kortbetalningar. Knappen visar vad som händer innan den gör 
   rapporten, och utan knappen hade passet fastnat mellan två vyer som väntar på
   varandra. Hölls det inte avbokar studiehjälparen det.
 - **Av:** passen rapporteras som förut, och ett pass som hölls utan betalning syns
-  under Avvikelser som **Inte betalt**.
+  under Betalningar → Att göra som **Inte betalt än**.
 
 Slå på den när alla fyra stämmer. Flaggans egen rad säger samma sak (`vantar_pa`),
 och texten går inte att skriva om från en vy:
@@ -861,7 +862,7 @@ läses bara av admin; ingen, inte ens admin, skriver i den från en vy
 (`verktyg/rls-test.sql`, avsnittet 14.3).
 
 Adminvyn visar varje öppen tvist under Betalningar →
-Kortbetalningar → **Korttvister**, med dagar kvar, och en länk rakt till tvisten
+Att göra → **Korttvister att svara på**, med dagar kvar, och en länk rakt till tvisten
 i Stripes dashboard.
 
 **Vad en människa gör:**
@@ -961,7 +962,7 @@ meningen om faktura bort ur texterna i samma ändring (steg 5–6 baklänges).
 9. **Bankgironumret** (Fas 19.6). Skriv det i `BANKGIRO` i `nextrum-config.js`,
    som det står på fakturan i Fortnox. Rutan Fakturor att betala under Betalning
    visar det med en Kopiera-knapp; tomt står det "står på fakturan".
-10. **Slå på flaggan** under Ekonomi → Fakturor. Knappen säger vad den gör innan
+10. **Slå på flaggan** under Betalningar → Inställningar. Knappen säger vad den gör innan
    den gör det.
 11. **Provfakturera en familj**, gärna er egen: välj "Få faktura nästa månad" när
    rapporten bekräftas, kör månadskörningen i torrkörning och sedan skarpt, lägg in
@@ -1071,7 +1072,7 @@ står därför inte i `config.toml`.
 
 **Prova, i testläge, innan flaggan slås på.** Sätt notisernas sandlåda först.
 
-1. Slå på flaggan under Ekonomi → Kortbetalningar → Erbjudanden, med en testfamilj
+1. Slå på flaggan under Betalningar → Inställningar (Planer och klippkort), med en testfamilj
    inloggad i en annan flik.
 2. Köp Klippkort 10 timmar med testkortet `4242 4242 4242 4242`. Raden i
    `klippkort` ska bli `betald` med `stripe_skarp = false`, `giltigt_till` sex
