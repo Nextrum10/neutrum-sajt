@@ -201,8 +201,7 @@
 
   document.addEventListener('click', async e => {
     if (e.target.closest('[data-logout]')) {
-      if (supa) await supa.auth.signOut();
-      location.reload();
+      await NXStudie.loggaUt(supa);
       return;
     }
 
@@ -868,6 +867,9 @@
 
       S.user = await NX.hämtaSession();
       if (!S.user) { visa('view-auth'); return; }
+      /* Försvinner inloggningen medan fliken står öppen visas
+         inloggningen, inte en vy där varje knapp nekas (NXStudie). */
+      NXStudie.vaktaInloggningen({ supa, user: S.user, utloggad: () => visa('view-auth') });
 
       S.profil = await NX.hämtaProfil(S.user.id);
       ritaHeader();

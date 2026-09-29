@@ -325,22 +325,44 @@ window.NXStudie = (function () {
      för att gissas — en gissning lade tillbaka-länken under det. */
   function visaÖverst(el) {
     if (!el) return;
-    scrollaTill(el.getBoundingClientRect().top + window.scrollY - täcktÖverst() - 12);
+    scrollaTill(platsUtanInglidning(el) + window.scrollY - täcktÖverst() - 12);
+  }
+
+  /* Var elementets ruta ligger, utan inglidningen. En sektion som visas
+     tonar in med translate:0 12px till 0 (vy-in i nextrum-arbetsyta.css),
+     och den mäts i samma ögonblick som den släpps: en mätning då är 12 px
+     för låg. När inglidningen sedan var klar stod rubriken 12 px närmare
+     raden än den var lagd, tätt intill den i stället för med luft
+     (2026-09-29, mätt i adminvyn; samma i de två andra). */
+  function platsUtanInglidning(el) {
+    var topp = el.getBoundingClientRect().top;
+    var t = window.getComputedStyle(el).translate;
+    if (t && t !== 'none') topp -= parseFloat(t.split(' ')[1]) || 0;
+    return topp;
   }
 
   /* Hur mycket av skärmens överkant som är täckt: sidhuvudet, och på en
      telefon sektionsraden, som står fast under det sedan 2026-09-28
      (TUMMEN i nextrum-arbetsyta.css). Utan raden hade en ny sektion
      lagts med rubriken bakom den. Den lodräta menyn på en dator står
-     bredvid innehållet, inte över det, och räknas inte. */
+     bredvid innehållet, inte över det, och räknas inte.
+
+     Adminvyns topprad (.adm-topp) står fast högst upp när man är inne,
+     och då är sajtens sidhuvud gömt (dess nederkant blir 0). Den räknas
+     där den STÅR när den klistrat (top + höjd), inte där den ligger just
+     nu. Utan den landade rubriken bakom raden vid varje byte från ett
+     scrollat läge (2026-09-28). Under den står sektionsraden på en
+     telefon, som i de två andra vyerna, och räknas som där. */
   function täcktÖverst() {
     var hdr = document.querySelector('.hdr');
     var nederkant = hdr ? hdr.getBoundingClientRect().bottom : 72;
-    /* Adminvyn har en egen topprad och göms sajtens sidhuvud när man är
-       inne (getBoundingClientRect ger då 0): raden står fast högst upp och
-       är det som täcker. Den finns bara i adminvyn och bara när den syns. */
-    var topp = document.querySelector('.adm-topp:not([hidden])');
-    if (topp) nederkant = Math.max(nederkant, topp.getBoundingClientRect().bottom);
+    var topp = document.querySelector('.adm-topp');
+    if (topp && topp.offsetHeight) {
+      var ts = window.getComputedStyle(topp);
+      if (ts.position === 'sticky') {
+        nederkant = Math.max(nederkant, (parseFloat(ts.top) || 0) + topp.offsetHeight);
+      }
+    }
     var sido = document.querySelector('.vy .vy-sido');
     if (sido) {
       var cs = window.getComputedStyle(sido);
@@ -1804,7 +1826,19 @@ window.NXStudie = (function () {
          kanten; då dras raden, inte sidan (inte scrollIntoView, som
          kan rulla hela sidan: fälla 3 i CLAUDE.md, startsidan). */
       var vald_a = nav.querySelector('a.ar-har');
-      if (vald_a && nav.scrollWidth > nav.clientWidth + 1) {
+      if (vald_a && window.getComputedStyle(nav).flexDirection === 'column') {
+        /* Adminvyns meny på en dator är en kolumn med egen rullning
+           (nextrum-arbetsyta.css): den är högre än en bärbar. Nås en
+           post från en länk i innehållet, eller från en adress, kan den
+           stå utanför. Då dras menyn, aldrig sidan. */
+        if (nav.scrollHeight > nav.clientHeight + 1) {
+          var nedre = nav.clientHeight;
+          var dy = vald_a.getBoundingClientRect().top - nav.getBoundingClientRect().top;
+          if (dy < 0 || dy + vald_a.offsetHeight > nedre) {
+            nav.scrollTop += dy - (nedre - vald_a.offsetHeight) / 2;
+          }
+        }
+      } else if (vald_a && nav.scrollWidth > nav.clientWidth + 1) {
         var d = vald_a.getBoundingClientRect().left - nav.getBoundingClientRect().left;
         if (d < 0 || d + vald_a.offsetWidth > nav.clientWidth) {
           nav.scrollLeft += d - (nav.clientWidth - vald_a.offsetWidth) / 2;
@@ -1834,7 +1868,7 @@ window.NXStudie = (function () {
          (#lektioner/plan) ska inte skicka en uppåt. */
       if (!första && vald !== aktiv) {
         var sektion = rot.querySelector('section[data-sek="' + vald + '"]');
-        if (sektion && (window.scrollY < föreY || sektion.getBoundingClientRect().top < täcktÖverst() + 12)) visaÖverst(sektion);
+        if (sektion && (window.scrollY < föreY || platsUtanInglidning(sektion) < täcktÖverst() + 12)) visaÖverst(sektion);
       }
       if (!första) {
         var rubrik = rot.querySelector('section[data-sek="' + vald + '"] h2, section[data-sek="' + vald + '"] h5');
@@ -1916,7 +1950,9 @@ window.NXStudie = (function () {
     /* Sidhuvudets höjd, för sektionsraden som står fast under det på
        en telefon. Satt på raden och inte på :root: en variabel på
        roten ärvs av hela sidan och räknar om stilen för allt när den
-       ändras (CLAUDE.md, startsidan efter hero). */
+       ändras (CLAUDE.md, startsidan efter hero). Adminvyn läser den
+       inte: där är sidhuvudet gömt, och raden står under adminvyns
+       topprad, som har en fast höjd (--adm-topp-h). */
     var hdrEl = document.querySelector('.hdr');
     if (hdrEl && window.ResizeObserver) {
       new ResizeObserver(function () {
@@ -2343,6 +2379,87 @@ window.NXStudie = (function () {
     NX.rensa(NX.$('#auth-msg'));
   }
 
+  /* ============================================================
+     INLOGGNINGEN SOM FÖRSVINNER (2026-09-29)
+
+     Leo: "kontroller i admins inställning i automationer går inte att
+     köra". Kontrollerna var hela. Adminvyn var utloggad och visste det
+     inte.
+
+     supabase-js förnyar inloggningen i bakgrunden. Nekar Auth, för att
+     sessionen är borttagen, tar den bort sessionen ur webbläsaren och
+     säger SIGNED_OUT, och varje fråga därefter går med den publika
+     nyckeln, som anon. Ingen vy lyssnade. Adminvyn stod kvar med
+     gårdagens listor, räknarna i sidhuvudet blev noll utan fel (RLS ger
+     anon noll rader), och första knappen som skrev något svarade
+     "permission denied for function kor_kontrollerna": ett besked som
+     såg ut som ett fel i funktionen och betydde att man var utloggad.
+
+     Sessionen dog för att en utloggning på telefonen loggade ut datorn
+     också. Det är loggaUt() nedan.
+     ============================================================ */
+
+  /* Satt medan vyn själv loggar ut, så att vakten inte hinner visa
+     "du har blivit utloggad" för den som just tryckt på knappen. */
+  var loggarUt = false;
+
+  /* Logga ut här, inte överallt. signOut() tar som förval bort ALLA
+     personens sessioner, på alla enheter: den som loggade ut på
+     telefonen loggade ut adminvyn på datorn, och det märktes först när
+     datorn skulle förnya inloggningen nästa morgon. Ska någon loggas ut
+     överallt görs det i databasen (CLAUDE.md, avsnitt 6).
+
+     supa skickas in, som till notisval och vakten nedan. */
+  async function loggaUt(supa) {
+    loggarUt = true;
+    if (supa) await supa.auth.signOut({ scope: 'local' });
+    location.reload();
+  }
+
+  /* o.supa är klienten, o.user den som vyn visar, och o.utloggad()
+     byter till vyns inloggningsruta. Anropas när vyn vet vem som är
+     inloggad, i alla lägen: också en låst eller väntande vy frågar
+     databasen. */
+  function vaktaInloggningen(o) {
+    var supa = o && o.supa;
+    if (!supa || !supa.auth || !supa.auth.onAuthStateChange || !o.user) return;
+    var borta = false;
+    supa.auth.onAuthStateChange(function (händelse, session) {
+      if (loggarUt) return;
+      var vem = session && session.user ? session.user.id : null;
+      /* supabase-js håller sitt lås medan lyssnarna körs, och en fråga
+         härifrån hade väntat på det för alltid. Allt görs efteråt. */
+      if (borta) {
+        /* Inloggad igen, i rutan eller i en annan flik: börja om som
+           den som är inloggad nu. Adressen står kvar, så vyn öppnar där
+           man var. */
+        if (vem) setTimeout(function () { location.reload(); }, 0);
+        return;
+      }
+      if (vem === o.user.id) return;
+      if (vem) {
+        /* Någon annan loggade in i samma webbläsare, i en annan flik.
+           Sessionen är delad, så vyn hade fortsatt fråga och skriva med
+           den personens token, med den förras listor på skärmen. */
+        setTimeout(function () { location.reload(); }, 0);
+        return;
+      }
+      borta = true;
+      setTimeout(function () {
+        var na = NX.$('#nav-actions'), ma = NX.$('#m-actions');
+        if (na) na.innerHTML = '';
+        if (ma) ma.innerHTML = '';
+        o.utloggad();
+        var epost = NX.$('#a-email');
+        if (epost && !epost.value) epost.value = o.user.email || '';
+        NX.säg(NX.$('#auth-msg'), 'Du har blivit utloggad, till exempel för att inloggningen gått ut '
+          + 'eller för att du loggat ut i en annan flik. Logga in igen så kommer du tillbaka hit.');
+        var lösen = NX.$('#a-pass');
+        if (lösen) lösen.focus();
+      }, 0);
+    });
+  }
+
   /* Veckoschemat i #schema. Byggs en gång och får sedan nya
      bokningar; namn(b) säger vad som står på ett pass i just den här
      vyn. */
@@ -2508,7 +2625,7 @@ window.NXStudie = (function () {
   return {
     notisval: notisval,
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
-    inloggningsruta: inloggningsruta, schemaI: schemaI,
+    inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxLista: läxLista,
     fordelning: fordelning,

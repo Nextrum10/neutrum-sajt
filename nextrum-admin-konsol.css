@@ -33,12 +33,12 @@
   grid-template-areas:"disk prat";
   align-items:center;
   gap:clamp(18px,2.4vw,40px);
-  padding:clamp(18px,2vw,26px) clamp(18px,2.2vw,30px);
-  /* Samma ark som korten (YTORNA i nextrum-arbetsyta.css): --yta, en
-     kant ur bläcket och den varma skuggan. */
-  border:1px solid var(--adm-kant);
-  border-radius:18px;
-  box-shadow:var(--adm-skugga);
+  padding:clamp(18px,2.2vw,26px) clamp(20px,2.4vw,30px);
+  /* Samma ark som korten i studievyn (--yta, rundade hörn, mjuk skugga):
+     adminvyn ska vara samma hus, 2026-09-29. */
+  border:1px solid var(--ln);
+  border-radius:clamp(22px,2.4vw,28px);
+  box-shadow:var(--sk-1);
   /* Ett svagt sken bakom emblemet, inte en ram runt det: bandet ska
      kännas som ett fönster in i maskinen. */
   background:
@@ -55,20 +55,15 @@
   .vy-admin .kon-hero{grid-template-columns:minmax(0,1fr);grid-template-areas:"disk" "prat"}
 }
 
-/* Hörnmarkeringarna. Konsolen ska läsas som ett instrument, och en
-   ruta med hörn är en avläsning — sextiotre vore brus, så bara bandet. */
-.vy-admin .kon-hero::before,
-.vy-admin .kon-hero::after{
-  content:"";position:absolute;width:16px;height:16px;pointer-events:none;
-  border:1.5px solid var(--acc);
-}
-.vy-admin .kon-hero::before{top:-1px;left:-1px;border-width:1.5px 0 0 1.5px;border-radius:18px 0 0 0}
-.vy-admin .kon-hero::after{bottom:-1px;right:-1px;border-width:0 1.5px 1.5px 0;border-radius:0 0 18px 0}
+/* Hörnmarkeringarna är borta (2026-09-29). De gjorde konsolen till ett
+   instrument, och det är det ena stället i adminvyn som inte liknade
+   studievyns kort. NEX-emblemet och lägesringarna står kvar: de är
+   innehållet, inte ramen. */
 
 .vy-admin .kon-et{
   display:block;margin-bottom:10px;
-  font-family:var(--f-mono);font-size:10px;font-weight:600;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--acc-text);
+  font-size:.94rem;font-weight:650;
+  letter-spacing:-.01em;text-transform:none;color:var(--bl);
 }
 
 /* Beloppen under läget. De är fakta om verksamheten, inte arbetsposter,
@@ -217,35 +212,37 @@
    Två grupper, det som gått fel först. Siffran först i raden: ögat
    söker antal före ord när listan är en arbetskö. Tonen är lugn — ett
    block som skriker varje morgon slutar man se efter en vecka — och
-   accenten sitter på siffran, inte på ytan.
+   accenten sitter på siffran, inte på ytan. Siffran i lera, som i
+   studievyn: det som väntar på dig är ditt drag. Det som gått fel bär
+   adminvyns felfärg, och gruppens rubrik säger det i ord.
    ------------------------------------------------------------ */
-.vy-admin .kon-grupp + .kon-grupp{margin-top:16px}
+.vy-admin .kon-grupp + .kon-grupp{margin-top:18px}
 .vy-admin .kon-grupp-rubrik{
-  margin:0 0 4px;padding:0 12px;
-  font-family:var(--f-mono);font-size:9.5px;font-weight:600;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
+  margin:0 0 6px;padding:0 14px;
+  font-size:.84rem;font-weight:650;
+  letter-spacing:0;text-transform:none;color:var(--bl-2);
 }
 .vy-admin .kon-grupp.ar-problem .kon-grupp-rubrik{color:var(--fel)}
 .vy-admin .kon-rad{
   display:flex;align-items:center;gap:13px;
-  padding:10px 12px;border-radius:12px;
+  padding:11px 14px;border-radius:16px;
   color:var(--bl);text-decoration:none;
   transition:background .16s var(--e);
 }
-.vy-admin .kon-rad:hover{background:var(--pap-2)}
+.vy-admin .kon-rad:hover{background:var(--tint)}
 .vy-admin .kon-rad + .kon-rad{box-shadow:0 -1px 0 var(--ln)}
 .vy-admin .kon-rad:hover,
 .vy-admin .kon-rad:hover + .kon-rad{box-shadow:none}
 .vy-admin .kon-rad-antal{
   display:flex;align-items:center;justify-content:center;
-  min-width:30px;height:30px;flex:none;padding:0 7px;
-  border-radius:9px;
-  background:var(--pap-3);color:var(--bl);
-  font-family:var(--f-mono);font-size:.86rem;font-weight:700;
+  min-width:32px;height:32px;flex:none;padding:0 9px;
+  border-radius:100px;
+  background:var(--acc-soft);color:var(--acc-lugn);
+  font-size:.88rem;font-weight:700;
   font-variant-numeric:tabular-nums;
 }
 .vy-admin .kon-grupp.ar-problem .kon-rad-antal{
-  background:color-mix(in srgb,var(--fel) 13%,var(--pap-2));color:var(--fel);
+  background:color-mix(in srgb,var(--fel) 14%,var(--yta));color:var(--fel);
 }
 .vy-admin .kon-rad-text{min-width:0;flex:1}
 .vy-admin .kon-rad-text b{

@@ -901,9 +901,10 @@ tänder `:active` först med en touch-lyssnare på sidan; den står i
 Leo: "spalterna till vänster är snygga men innehållet kan bli
 snyggare", och sedan "det behöver se bra ut på mobil och enkelt att
 använda". Förslaget visades som skärmbilder bredvid skisser och godkändes
-("jätte bra"). Sidomenyn är orörd, och adminvyn också:
-allt står sist i `nextrum-arbetsyta.css` under `.vy:not(.vy-admin)`,
-avsnittet INNEHÅLLET. Sex regler:
+("jätte bra"). Sidomenyn var orörd då. Allt står sist i
+`nextrum-arbetsyta.css`, avsnittet INNEHÅLLET, först under
+`.vy:not(.vy-admin)` och sedan 2026-09-29 under `.vy`: adminvyn fick
+samma design (se Adminvyns rullning och design nedan). Sex regler:
 
 1. **Färgen på ett läge säger vems drag det är.** Lera är ert drag
    eller ett fel, ockra väntar på någon annan, mossa är klart. Förut
@@ -974,6 +975,107 @@ Sidhuvudet i vyerna är helt täckande sedan dess: med 97 % syntes text
 som rullade under det. Hälsningen överst tar fortfarande 446 px av en
 844 px hög telefon, med flit: nästa pass och meddelandena står där.
 
+**Adminvyns rullning och design** (2026-09-28 och 2026-09-29). Leo skrev
+först "skroll funktion i admin är konstig", och sedan, när det första
+svaret inte träffade: "när man scrollar på sidbaren behöver allt annat i
+exempelvis översikt scrollas ner för att komma längre ner på sidbaren på
+dator vyn", och att adminvyn ska få "samma design som studievyernas nya".
+Provbänken nedan hade sagt "Admin var ren", för den mäter hopp vid tryck.
+Allt här är mätt före och efter i Chromium på 1440×800 (och 1280×720,
+1920×1080, 1024×768, 390×844) med en stubbad `supabase-js` (en falsk
+`createClient` som svarar "inloggad admin", lagd över filen i `bibliotek/`
+med en route i Playwright) och påhittad testdata: familjer, elever, pass,
+fakturor. Inget av det ligger i repot.
+
+**Rullningen, fem saker:**
+
+1. **Menyn är en egen rullyta, och sidan en annan.** Den är 1 236 px hög,
+   och stod fast utan egen rullning: på en bärbar syntes hälften, och
+   resten nåddes först när HELA sidan rullats med Översiktens innehåll med
+   sig. Nu har den `max-height` och `overflow-y:auto` på en dator, med
+   `overscroll-behavior:contain`: hjulet över menyn rullar bara menyn (300
+   px mot 0 på sidan) och över innehållet bara sidan (0 mot 300). Geometrin
+   är mått, inte innehåll: toppraden är `--adm-topp-h` (56 px, 54 på en
+   telefon), menyns fäste är toppraden plus `--adm-luft` (20), och högsta
+   höjden är fönstret minus fästet minus 16. `main` har samma `--adm-luft`
+   som padding-top, så menyn står lika långt ned överst på sidan som när
+   den klistrat. Första versionen räknade högsta höjden på fästet men lät
+   `main` ha 150 px padding kvar från heron som togs bort i Fas 6:
+   nederdelen hängde 100 px under skärmkanten tills man rullat en bit.
+   (Här stod först sajtens sidhuvud ovanför toppraden och en fot med den
+   inloggade längst ned i menyn; se Adminvyns skal nedan.)
+2. **`sidomeny()` drar menyn, aldrig sidan**, så att den valda posten syns
+   när man kommer till den från en länk eller en adress. Bredden är 244 px: "Intresseanmälningar" plus
+   märket plus en rullningslist är 243, och märket lade sig över ordet i
+   212. Menyn klipper i sidled, och "Betalningar & utbetalningar" (199 px på
+   158) stack ut 29 px och var på den valda posten delvis osynlig (ljus text
+   på ljust): den bryter rad. Posten heter Betalningar sedan samma dag,
+   men en längre etikett måste också få bryta.
+3. **Ett sektionsbyte lade rubriken bakom toppraden.** `täcktÖverst()`
+   räknade sidhuvudet och telefonens sektionsrad men inte adminvyns
+   toppråd (`.adm-topp`). Från ett scrollat läge landade varje byte 66 px
+   för lågt, med rubriken och ingressen dolda. Raden räknas nu där den STÅR
+   när den klistrat (`top` + höjd), inte där den ligger just nu.
+4. **Inglidningen mättes med.** En sektion som visas tonar in med
+   `translate:0 12px` till 0 (`vy-in`), och `visaÖverst` mätte platsen i
+   samma ögonblick: 12 px för lågt, så rubriken stod tätt intill raden i
+   stället för med luft. `platsUtanInglidning()` drar bort översättningen.
+   Gällde alla tre vyerna; i familje- och studiehjälparvyn på telefon
+   landade rubriken på −1 och 0 px luft, nu 11 och 12. Mät var rubriken
+   hamnar mot radens nederkant, inte bara `scrollY`.
+5. **Sidan bakom personpanelen rullade** (756 px i provet).
+   `html:has(.dp:not([hidden]))` låser den, av panelens egen `hidden`, så
+   det finns inget lås att glömma att släppa, och `.dp-kropp` har
+   `overscroll-behavior:contain`. `scrollbar-gutter:stable` hindrar att
+   sidan hoppar när listen försvinner.
+
+**Designen.** KÄNSLAN och INNEHÅLLET (avsnitten längst ned i
+`nextrum-arbetsyta.css`) står nu på `.vy` och gäller alla tre vyerna. Det
+enda som är kvar av `.vy:not(.vy-admin)` är telefonens fasta sektionsrad,
+som i adminvyn står under toppraden i stället för under sidhuvudet
+(Adminvyns skal nedan). Adminvyns egna delar har översatts till samma
+språk, på sina egna namn:
+
+- `.adm-status` är `.lage`: `ar-ny` lera (ert drag, eller något som gick
+  fel), `ar-vantar` ockra, `ar-klar` mossa, utan färg mattgrå. Texten
+  står alltid kvar.
+- `.adm-kpi` är `.kpi` (ark i `--yta`, 20 px, skugga; `ar-larm` lera).
+  `table.adm` står på kortet utan egen ruta: rubrikraden är en ruta i
+  `--tint` med vanlig text (`border-collapse:separate`, för i det andra
+  läget går det inte att runda en cell), raderna har streck emellan.
+  `.adm-namnlista` är rader utan låda. `.adm-att-gora`, `.adm-pass`,
+  `.adm-format`, `.adm-lugnt`, `.adm-koppling-kort`, `.adm-panel`,
+  personpanelen (`.dp`: pillflikar, rutor i `--tint`, rundat hörn),
+  konsolen (`--yta`, inga hörnmarkeringar längre; NEX-emblemet och
+  ringarna står kvar) och toppraden (söket som pill, knapparna runda).
+- Mono-versaler bara till små etiketter och tekniska texter (stackspår,
+  JSON). Datum och tal i en tabellcell är sans med tabelltal, och
+  formuläretiketter är vanlig text (`.pay-field label`, `.fgroup > label`).
+- **`.btn-sm` har aldrig varit liten.** Den står i `nextrum.css` (10px 18px),
+  och cinemas `.btn` laddas efter den med samma tyngd och vinner, så alla
+  120 små knappar i adminvyn var 54 px höga. Studievyn löste det där
+  knapparna står. `.vy-admin main .btn-sm` är nu liten på riktigt (8px 16px,
+  .84rem), bara i innehållet: sidhuvudets Logga ut ska se ut som i de
+  andra vyerna.
+- **Specificiteten sjönk med ett steg** när `.vy:not(.vy-admin)` blev
+  `.vy` (`:not()` räknar sitt argument). Jämförd byte för byte: alla 36
+  sidbilder av familje- och studiehjälparvyn (alla sektioner, dator och
+  telefon) blev identiska med orörda filer. Ändras något i de två vyerna
+  oväntat efter en regel i det här avsnittet är det första stället att
+  titta.
+
+Headless Chromium döljer rullningslister som standard. Starta med
+`ignoreDefaultArgs: ['--hide-scrollbars']`, annars syns inte vad en list
+gör med menyns bredd.
+
+**Kvar, medvetet inte gjort.** Granskat bild för bild med testdata, på
+dator och delvis på telefon och i mörkt läge: alla sektioner och flikar,
+och personpanelen för en familj. Agentflikarna har egen
+CSS (`nextrum-agent.css`) som inte rörts, och där har exempelfrågorna och
+fältetiketten kvar sin äldre form. Det som bara ritas med riktig data
+(Kortbetalningarnas listor, Avvikelser med rader, auditloggen med rader) har
+inte setts med innehåll.
+
 Provbänken (`skanna.js` i en scratchpad, inte i repot) trycker på varje
 knapp i varje sektion och rapporterar hopp över 40 px. Admin var ren.
 Den mäter `scrollY`, inte vad som står stilla på skärmen, så fällan i
@@ -983,65 +1085,76 @@ sig. Mät ett element före och efter trycket (`getBoundingClientRect`).
 ### Adminvyns skal (2026-09-29)
 
 Leo: "för vår admin snyggare och enklare". Mätt i provbänken före: drygt
-160 px sidhuvud innan första raden, samma arbetskö tre gånger på
-Översikt (5 300 px lång på en telefon), nio menyrubriker där sex stod
-över en enda post, och en marknadssidfot. Inget av det ändrade vad vyn
-kan göra; allt står i `admin.html`, skalet i `nextrum-admin.js`,
-Översikt i `nextrum-admin-oversikt.js` och `-konsol.js`, och CSS:en i
-adminskalet (§6) i `nextrum-arbetsyta.css` och i `nextrum-admin-konsol.css`.
+160 px sidhuvud innan första raden (sajtens sidhuvud och en topprad under
+det), samma arbetskö tre gånger på Översikt (5 300 px lång på en
+telefon), nio menyrubriker där sex stod över en enda post, och en
+marknadssidfot. Inget av det ändrade vad vyn kan göra; allt står i
+`admin.html`, skalet i `nextrum-admin.js`, Översikt i
+`nextrum-admin-oversikt.js` och `-konsol.js`, och CSS:en i adminskalet
+(§6) i `nextrum-arbetsyta.css` och i `nextrum-admin-konsol.css`.
+Designen är samma hus som ovan; det här är skalet runt den.
 
-- **En rad överst.** `#adm-topp` står utanför `<main>` och bär sök,
-  notiser och kontot (Studievyn, Studiehjälparvyn, Logga ut). Inne i
-  vyn göms sajtens sidhuvud och sidfot av `body.adm-inne`, som
-  `NXAdmin.visa()` sätter bara för `view-app`, och samma anrop göms
-  raden i alla andra vyer: inloggningen och felvyerna har sajtens
-  sidhuvud som förut. `täcktÖverst()` räknar raden. Måtten står en
-  gång, på `body.vy-admin` (`--adm-topp-h`, `--adm-bredd`, `--adm-pad`).
-- **Menyn** har fyra grupper under Översikt och Statistik, rubrikerna
-  till vänster, egen rullning när den är högre än fönstret, och
-  etiketten kortas med ellips i stället för att skjuta ut siffran.
-  Betalningar hette Betalningar & utbetalningar: namnet var bredare än
-  menyn, och siffran hamnade utanför den markerade posten. Sektionens
-  rubrik heter likadant.
+- **En rad överst.** `#adm-topp` står utanför `<main>`, fast högst upp
+  (`top:0`), och bär loggan, sök, notiser och kontot (Studievyn,
+  Studiehjälparvyn, Logga ut). Inne i vyn göms sajtens sidhuvud och
+  sidfot av `body.adm-inne`, som `NXAdmin.visa()` sätter bara för
+  `view-app`, och samma anrop göms raden i alla andra vyer: inloggningen
+  och felvyerna har sajtens sidhuvud som förut, också när vakten över
+  inloggningen byter dit (avsnitt 6). Menyn har ingen fot längre; kontot
+  står i raden. `täcktÖverst()` räknar raden. Måtten står en gång, på
+  `body.vy-admin` (`--adm-topp-h`, `--adm-bredd`, `--adm-pad`,
+  `--adm-luft`). `--vy-hdr-h` läses inte i adminvyn: sidhuvudet den mäter
+  är gömt där.
+- **På en telefon** är söket en rund knapp som växer över raden,
+  panelerna står under raden över hela bredden, och sektionsraden står
+  fast under toppraden som raden i de andra vyerna står under
+  sidhuvudet. Adminvyn var undantagen i TUMMEN för att sidhuvudet och en
+  topprad redan tog 144 av 844 px; toppraden och sektionsraden tar nu
+  mindre än sidhuvudet och raden i de andra vyerna.
+- **Menyn** har fyra grupper under Översikt och Statistik. Betalningar
+  hette Betalningar & utbetalningar, och sektionens rubrik heter likadant.
 - **Arbetskön ritas en gång**, i Att göra under NEX, med det som gått
   fel först under en egen rubrik. `S.attGora` och `S.problem` räknas i
   `ritaÖversikt()` och läses av konsolen, notisklockan och menyns
   siffror, precis som förut. NEX är ett band (ringen, läget, samtalet),
-  inte en 286 px hög ring med kön bredvid.
-- **Kontrollerna är mindre.** Cinemas `.btn` (padding 15px 26px) laddas
-  efter `nextrum.css` och vinner över dess `.btn-sm`: en liten knapp är
-  55 px hög, mätt i studievyn, och var det i adminvyn. Adminvyn sätter sina egna mått på
-  `.vy-admin .btn`, `.btn-sm`, `.inp` och `.sel`. Studievyn och
-  studiehjälparvyn har kvar det gamla, och TUMMEN räknar med det.
-  **Fälla:** en regel som ska vinna över `.vy-admin .inp` måste väga mer
-  än (0,2,0) eller stå efter den i filen; sökfältet i raden fick
-  `.adm-topp` framför sig när ikonen hamnade över texten.
-- **Flikarna i en sektion är understrukna**, som i detaljpanelen, och
-  nyckeltalens rad under talet är löptext i stället för halvfet mono.
+  inte en 286 px hög ring med kön bredvid. `.adm-att-gora` finns inte
+  längre; raderna är `.kon-rad` i `nextrum-admin-konsol.css`, i samma
+  form som den hade.
+- **Bredden** är `--adm-bredd` (1760 px) på `body.vy-admin main.wrap`.
+  `body` står framför med flit: `.vy main.wrap` under STORA SKÄRMAR väger
+  annars lika mycket och står senare, och över 1500 px fastnade
+  innehållet på 1560 medan toppraden gick till 1760.
+- Namnlistorna har en avatar före namnet, Översiktens fyra tal en ikon i
+  hörnet, och sektionernas inledningar är en mening.
 - **`color-scheme` är `light dark`.** Den stod på `dark` från tiden då
   adminvyn var alltid mörk, och gav ljust läge mörka rullgardinslistor,
   datumväljare och rullist.
 
-**Ytorna** (samma dag, Leo: "gör designen mycket snyggare också"). Samma
-palett, typsnitt och komponenter; det som ändrades är hantverket, i
-avsnittet YTORNA i `nextrum-arbetsyta.css`. Kort, nyckeltal, menyn och
-raden överst är ark i `--yta` med kanten `--adm-kant` och skuggan
-`--adm-skugga` (båda på `body.vy-admin`, blandade ur `--bl`). En tabell
-eller namnlista inne i ett kort har ingen egen ram. Kortets rubrik
-(`.dbox h5`) är sans och halvfet i stället för mono med ett streck före.
-Lägespillren har lägets ton (lera, ockra, mossa: samma par som vyerna).
-Den valda posten i menyn och den valda månaden är en ton av leran, inte
-en inverterad krämpill. Namnlistorna har initialer, Översikts nyckeltal
-ikoner, och en sektion eller flik tonar fram i opacitet när den visas.
+**Samma hus, inte ett eget.** Samma dag gjorde en annan session om
+adminvyns design i samma filer (PR #123, ovan), och den mergades först.
+Den här grenen hade under tiden gett adminvyn egna ytor: mindre knappar
+och fält, understrukna flikar, en markering i lera för den valda
+menyposten och månaden, en egen kant och skugga på arken och en egen
+inglidning. Allt det togs bort när main kom in, för Leo bad om samma
+design som studievyerna, och varje sådan avvikelse gör adminvyn till ett
+annat hus igen. Det som skiljer adminvyn är skalet ovan och tätheten i
+tabellerna och listorna, inte ytorna.
 
 - **Fälla:** `h5` och `h6` har webbläsarens egen marginal (1,67 och
-  2,33 em). Med den större sans-rubriken blev det 26 px luft ovanför
-  varje kortrubrik, så `.vy-admin .dbox h5` och `.adm-koppling-kort h6`
-  sätter sin marginal själva.
-- **Fälla:** i mörkt läge vinner `:root:not([data-theme="light"]) .vy
-  .dbox` (0,4,0) kortets bakgrund. `--yta` och `--pap-2` är samma ton där,
-  så det syns inte, men en ändring av kortets bakgrund i mörkt läge måste
-  möta den vikten (avsnitt 3, Två fällor när en palett byts).
+  2,33 em). INNEHÅLLET nollar den ovanför kortens h5, också ovanför en
+  andra rubrik i samma kort, som då satt tätt mot listan ovanför;
+  `body.vy-admin .dbox * + h5` ger tillbaka luften. Tjänste- och
+  kopplingskortens h6 hade 35 px ovanför namnet
+  (`.adm-koppling-kort h6{margin:0}`).
+- **Fälla:** `--pap-2` och `--yta` är nästan samma färg i mörkt läge.
+  Hovringen och ikonrutorna i sök- och notispanelen stod på `--pap-2` i en
+  panel i `--yta` och syntes inte där; de är `--tint` och `--bricka` nu.
+  Samma sak gäller kortets bakgrund: i mörkt läge vinner
+  `:root:not([data-theme="light"]) .vy .dbox` (0,4,0), och en ändring av
+  den måste möta vikten (avsnitt 3, Två fällor när en palett byts).
+- **Fälla:** KÄNSLAN ger `.vy :is(.inp,.sel)` 16 px hörn och står sist
+  i filen. `.adm-sokfalt .inp` väger lika mycket, så söket var en rundad
+  ruta i stället för ett piller tills det fick `.adm-topp` framför sig.
 - NEX-bandets yta står i `nextrum-admin-konsol.css`, som laddas efter och
   vinner på samma vikt; en regel för `.kon-*` i `arbetsyta.css` gör inget.
 
@@ -1934,6 +2047,44 @@ att visa **rätt sida**, inte för att skydda data.
   secret och en webhook-header i två olika fönster glider isär, och då
   svarar funktionen 401 på varje anmälan emellan — de mejlen kommer
   aldrig. I en tabell byts båda i samma transaktion.
+
+### Inloggningen i vyerna (2026-09-29)
+
+Leo: "kontroller i admins inställning i automationer går inte att
+köra". Kontrollerna var hela, provkörda som admin i databasen. Det var
+adminvyn som var utloggad utan att veta om det, och båda felen satt i
+vyerna:
+
+- **Logga ut gäller bara den enheten** (`NXStudie.loggaUt()`,
+  `scope: 'local'`). supabase-js `signOut()` tar som förval bort ALLA
+  personens sessioner, på alla enheter. Auth-loggen visade mönstret
+  flera gånger samma dygn: en utloggning på en enhet, och på en annan
+  "Refresh Token Not Found" nästa gång den skulle förnya. Senast
+  loggade telefonen ut klockan 00:59, och adminvyn på datorn tappade
+  inloggningen när datorn vaknade på morgonen. Ska någon loggas ut
+  överallt (en förlorad dator, incidentrutinen i `DATASKYDD.md`) görs
+  det i databasen, som `radera_person()` gör: `delete from
+  auth.refresh_tokens where user_id = '<id>'` och `delete from
+  auth.sessions where user_id = '<id>'`. En access-token som redan
+  lämnats ut gäller tills den går ut, ungefär en timme.
+- **En vy som tappat inloggningen visar inloggningen**
+  (`NXStudie.vaktaInloggningen()`, i alla tre vyerna). Nekar Auth
+  förnyelsen tar supabase-js bort sessionen och säger `SIGNED_OUT`,
+  och varje fråga därefter går med den publika nyckeln, som anon.
+  Ingen vy lyssnade: adminvyn stod kvar med gårdagens listor, räknarna
+  i sidhuvudet blev noll utan fel (RLS ger anon noll rader), och
+  knappen svarade "permission denied for function kor_kontrollerna".
+  Nu byts vyn mot inloggningen, med ett besked och adressen ifylld, och
+  efter inloggningen öppnar vyn där man var. Loggar någon annan in i
+  samma webbläsare laddas vyn om: sessionen är delad mellan flikarna,
+  och adminvyn hade annars fortsatt fråga med den personens token.
+
+**Säger en inloggad vy "permission denied" eller visar tomma listor,
+titta i API-loggen först** (`edge_logs`). Står den publika nyckeln i
+`request.sb.apikey.authorization.prefix` (`sb_publishable_…`) i stället
+för en JWT med `request.sb.jwt.authorization.payload.subject` gick
+anropet utloggat, och felet sitter i sessionen, inte i policyn eller
+funktionen.
 
 ### Samtycket (2026-09-27)
 
