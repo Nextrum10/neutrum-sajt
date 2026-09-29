@@ -861,3 +861,27 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
   .upg-nod-knapp:active,.upg-alt:active,.upg-bricka:active,.upg-par-knapp:active,.upg-spel-stang:active,
   .upg-spel-textknapp:active,.nl-cta-knapp:active,.nl-amne:active{scale:none}
 }
+
+/* ---------- NexLäx i sidomenyn ----------
+   Leo 2026-09-29: posten ska vara lite mörkare och sticka ut på datorn.
+   Den är tonad mot --bl, inte fylld: den valda posten är redan fylld
+   med --bl, och med samma bark på NexLäx hade två poster sett valda ut
+   (provat, och Översikt och NexLäx gick inte att skilja åt). Samma
+   blandning blir en mörkare ton i ljust läge och en ljusare i mörkt,
+   så den står ut i båda. Ikonen är ockra, XP:ns färg, och vald NexLäx
+   får en ring i samma färg. Bara på en dator: på en telefon är menyn
+   en rad piller man drar i sidled, och där läses en tonad post som
+   vald. */
+@media (min-width:900px){
+  .vy .vy-sido a[data-sek="nexlax"]{
+    background:color-mix(in srgb, var(--bl) 13%, var(--pap));
+    color:var(--bl);font-weight:600;
+  }
+  .vy .vy-sido a[data-sek="nexlax"]:hover{background:color-mix(in srgb, var(--bl) 20%, var(--pap))}
+  .vy .vy-sido a[data-sek="nexlax"] svg{color:var(--ockra)}
+  .vy .vy-sido a[data-sek="nexlax"].ar-har{
+    background:var(--bl);color:var(--pap);
+    box-shadow:inset 0 0 0 2px var(--ockra);
+  }
+  .vy .vy-sido a[data-sek="nexlax"].ar-har svg{color:currentColor}
+}
