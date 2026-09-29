@@ -129,10 +129,17 @@
 
   /* ------------------------------------------------------------
      ARBETSKÖN
-     Varje post är en sak som ligger och väntar på en människa, och
-     varje post är vägen dit. Listan byggs ur admin_lage där den
-     finns och ur lokal data där den inte täcker — elever utan
-     studiehjälpare räknas här, för vyn känner bara till familjer.
+     Varje post är en sak som ligger och väntar på oss, och varje
+     post är vägen dit. Listan byggs ur admin_lage där den finns och
+     ur lokal data där den inte täcker — elever utan studiehjälpare
+     räknas här, för vyn känner bara till familjer.
+
+     Det som väntar på en familj eller en studiehjälpare står inte
+     här. Passförfrågningarna gjorde det till 2026-09-29, men ett
+     förslag väntar på svar från den andra parten (Leo: "det är inte
+     något vi gör eller har påverkan på"), och en post här räknas
+     också i NEX-ringen, notisklockan och menyns siffror. Hur många
+     som väntar står i stället överst i Bokningar (ritaFörfrågningar).
      ------------------------------------------------------------ */
   function byggAttGöra() {
     const l = S.lage || {};
@@ -152,8 +159,6 @@
     const attLäggaIn = S.fakturor.filter(f => f.status === 'utkast').length;
     const attBetalaUt = S.utbetalningar.filter(u =>
       u.status === 'utkast' || u.status === 'godkand').length;
-    const obekräftade = S.bokningar.filter(b =>
-      b.status === 'requested' && b.wanted_date >= idag).length;
 
     return [
       { antal: l.nya_leads != null ? l.nya_leads : S.leads.filter(x => x.status === 'new').length,
@@ -168,9 +173,6 @@
       { antal: utanHjälpare,
         rubrik: 'elever saknar studiehjälpare', ental: 'elev saknar studiehjälpare',
         under: 'Ingen är kopplad till dem än.', till: '#matchning' },
-      { antal: obekräftade,
-        rubrik: 'passförfrågningar väntar', ental: 'passförfrågan väntar',
-        under: 'Bokade men inte bekräftade av studiehjälparen.', till: '#bokningar' },
       { antal: l.ohanterade_meddelanden != null ? l.ohanterade_meddelanden
           : S.kontakt.filter(k => !k.hanterad_at).length,
         rubrik: 'frågor i inkorgen', ental: 'fråga i inkorgen',

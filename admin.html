@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=3df206ea">
 <link rel="stylesheet" href="nextrum-vy.css?v=e4a5688c">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=220bd9b0">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=741f87e6">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -383,7 +383,9 @@
           <div class="ov-rutnat">
             <!-- ============ ATT GÖRA ============
                  Sidans viktigaste block. En rad per sak som ligger och
-                 väntar på en människa, och varje rad är vägen dit. Det
+                 väntar på oss, och varje rad är vägen dit. Det som väntar
+                 på en familj eller en studiehjälpare, som en passförfrågan,
+                 står inte här (nextrum-admin-oversikt.js). Det
                  som gått fel står först, under en egen rubrik: det är
                  inte samma sak som det som väntar, och en lista som
                  blandar dem säger ingenting. Ritas av ritaKonsol() ur
@@ -684,6 +686,11 @@
               <h2>Bokningar</h2>
               <p>Alla pass, alla familjer. Listan för att söka och ändra, kalendern för att se var de ligger.</p>
             </div>
+            <!-- Hur många passförfrågningar som väntar på svar. De står
+                 här och inte i Att göra på Översikt (2026-09-29): ett
+                 förslag är studiehjälparens eller familjens drag, inte
+                 vårt. Ritas av ritaFörfrågningar() i nextrum-admin-drift.js. -->
+            <div class="adm-bok-forfragan" id="bok-forfragan" hidden></div>
           </div>
 
           <div class="vy-flikar" role="tablist" aria-label="Lista eller kalender">
@@ -2374,14 +2381,14 @@
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=40b9e65e"></script>
+<script src="nextrum-admin-karna.js?v=9753e4b6"></script>
 <script src="nextrum-admin-detalj.js?v=de6d7e6e"></script>
-<script src="nextrum-admin-oversikt.js?v=ec092d07"></script>
+<script src="nextrum-admin-oversikt.js?v=e3d7ba85"></script>
 <script src="nextrum-admin-kunder.js?v=155120f9"></script>
 <script src="nextrum-admin-rekrytering.js?v=d08ab262"></script>
 <script src="nextrum-admin-bibliotek.js?v=66dad1e3"></script>
 <script src="nextrum-admin-kommunikation.js?v=97c8d085"></script>
-<script src="nextrum-admin-drift.js?v=2437242e"></script>
+<script src="nextrum-admin-drift.js?v=9c99ca36"></script>
 <script src="nextrum-admin-ekonomi.js?v=334c7477"></script>
 <script src="nextrum-admin-manaden.js?v=9d66770e"></script>
 <script src="nextrum-admin-loner.js?v=7138b540"></script>
@@ -2394,7 +2401,7 @@
 <script src="nextrum-admin-radera.js?v=54bcb289"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
-<script src="nextrum-admin-konsol.js?v=3f816e08"></script>
+<script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
 <script src="nextrum-modulvakt.js?v=980a011f"></script>
 <script src="nextrum-admin.js?v=b61ceec2"></script>
 </body>
