@@ -120,11 +120,15 @@ window.NXUppgifter = (function () {
      inloggade, och med den i minnet byter vägen ämne utan att vänta på
      nätet. Utan Fas 23.2 i databasen finns inte sort och lastext: då är
      alla nivåer vanliga, som i Fas 23.1. Svarar null om tabellen inte
-     finns alls: då står uppgifterna kvar, utan vägen. */
+     finns alls: då står uppgifterna kvar, utan vägen. Sida för sida
+     (NXStudie.hämtaAlla, 2026-09-29): några hundra i dag, men tolv
+     årskurser gånger alla ämnen når tusen, och svaret säger inte att
+     resten saknas. */
   function laddaKatalog(supa) {
     if (!katalogLöfte) {
       const bas = 'id, nyckel, amne, arskurs, omrade, titel, beskrivning, ordning, antal_fragor, aktiv';
-      const hämta = kol => supa.from('nivaer').select(kol).order('amne').order('arskurs').order('ordning');
+      const hämta = kol => NXStudie.hämtaAlla(supa, 'nivaer', kol,
+        q => q.order('amne').order('arskurs').order('ordning'));
       katalogLöfte = hämta(bas + ', sort, lastext').then(async svar => {
         if (svar.error && saknas(svar.error)) {
           svar = await hämta(bas);
@@ -137,10 +141,14 @@ window.NXUppgifter = (function () {
     return katalogLöfte;
   }
 
+  /* Alla försök, äldst först. Här stod .limit(2000), men PostgREST
+     lämnar ut högst tusen rader per svar, så vid tusen försök hade de
+     NYASTE fallit bort, och stjärnorna, XP:n och serien räknats på en
+     gammal elev (NXStudie.hämtaAlla, 2026-09-29). */
   function laddaFörsök(supa, elevId) {
-    return supa.from('niva_forsok')
-      .select('id, niva_id, student_id, startad_at, klar_at, antal, ratt_direkt, stjarnor, godkand')
-      .eq('student_id', elevId).order('startad_at', { ascending: true }).limit(2000)
+    return NXStudie.hämtaAlla(supa, 'niva_forsok',
+      'id, niva_id, student_id, startad_at, klar_at, antal, ratt_direkt, stjarnor, godkand',
+      q => q.eq('student_id', elevId).order('startad_at', { ascending: true }))
       .then(({ data, error }) => {
         if (error) { console.warn('Försöken gick inte att läsa', error); return null; }
         return data || [];

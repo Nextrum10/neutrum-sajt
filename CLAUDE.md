@@ -1411,11 +1411,17 @@ senare sida ger felet, aldrig en halv lista.
   rapporter, 300 aktörer ur auditloggen), och dessutom skalets
   omhämtning av anmälningarna, biblioteket, dokumenten och lönefilens
   rader. I studiehjälparvyn passen och timbankens uttag, i familjens vy
-  passen, passunderlaget och tilläggen. Det som hämtas per månad, per
-  person eller med en gräns hämtas som förut.
+  passen, passunderlaget och tilläggen, och i NexLäx
+  (`nextrum-uppgifter.js`) nivåkatalogen och elevens försök. Det som
+  hämtas per månad, per person eller med en gräns hämtas som förut.
 - **En ny fråga som hämtar en hel tabell ska gå genom `hämtaAlla`.**
   Felet syns inte förrän tabellen har tusen rader, och då syns det inte
   heller: listan ser bara kortare ut.
+- **En `.limit()` över tusen är en gräns på tusen.** Försöken i NexLäx
+  (Fas 23.2) hämtades med `.limit(2000)`, äldst först, samma dag som
+  det här byggdes: vid tusen försök hade de nyaste fallit bort, och
+  stjärnorna, XP:n och serien räknats utan dem. En gräns som ska vara
+  poängen ska ligga under tusen; allt annat går genom `hämtaAlla`.
 - `nextrum-modulvakt.js` prövar `NXStudie.hämtaAlla`: en gammal
   `nextrum-studie.js` ur cachen hade annars gett ett TypeError mitt i
   hämtningen.
