@@ -3,7 +3,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 from fractions import Fraction
 
-from grund import bana, niva, val, skriv, ordna, tal
+from grund import bana, niva, val, skriv, ordna, sant, para, tal
 
 
 # ---------------------------------------------------------------------
@@ -29,6 +29,18 @@ def ordnat(poster, nyckel):
     if len(set(varden)) != len(varden):
         raise ValueError('Två brickor är lika stora, ordningen är inte entydig: %r' % (poster,))
     return sorted(poster, key=nyckel)
+
+
+def parvis(par, varde):
+    """Paren i en matchning, prövade: varje vänstersida ska vara lika
+    mycket som sin egen högersida och inte som någon annans. Hade två
+    par gått att byta hade det funnits två rätta svar, och rättningen
+    godtar bara det som står i paret."""
+    for i, (v, _) in enumerate(par):
+        for j, (_, h) in enumerate(par):
+            if (varde(v) == varde(h)) != (i == j):
+                raise ValueError('Matchningen är inte entydig: %r' % (par,))
+    return par
 
 
 def F(s):
@@ -83,6 +95,14 @@ def x_svar(x):
     return [s, 'x = ' + s, 'x=' + s, 'x =' + s, 'x= ' + s]
 
 
+def brak_svar(taljare, namnare):
+    """Ett bråk som svar: '4/10', med eller utan mellanslag runt
+    bråkstrecket. Ett bråk jämförs som text, så '4 / 10' är inte samma
+    svar som '4/10' för rättningen."""
+    t, n = tal(taljare), tal(namnare)
+    return [t + '/' + n, t + ' / ' + n, t + ' /' + n, t + '/ ' + n]
+
+
 def avrunda(s, steg):
     """Avrundning som i skolan (5 uppåt), exakt: avrunda('3,47', '0.1') → '3,5'."""
     d = Decimal(s.replace(',', '.')).quantize(Decimal(steg), rounding=ROUND_HALF_UP)
@@ -131,6 +151,29 @@ def andel(s):
 
 def procent_av(p, tal_):
     return heltal(Fraction(p, 100) * tal_)
+
+
+# Enheterna i en fråga om mått, med hur många av grundenheten de är:
+# centimeter för längd och deciliter för volym.
+_ENHET = {'m': ('längd', 100), 'dm': ('längd', 10), 'cm': ('längd', 1),
+          'l': ('volym', 10), 'dl': ('volym', 1)}
+
+
+def matt(s):
+    """Ett mått som text, exakt i grundenheten: '1,2 m' → ('längd', 120),
+    '5 dl' → ('volym', 5). Storheten följer med, så att en längd aldrig
+    kan räknas som lika med en volym."""
+    t, enhet = s.rsplit(' ', 1)
+    storhet, faktor = _ENHET[enhet]
+    return storhet, F(t) * faktor
+
+
+def cm(s):
+    """En längd som text i hela centimeter: '0,4 m' → 40."""
+    storhet, varde = matt(s)
+    if storhet != 'längd':
+        raise ValueError('%r är ingen längd' % s)
+    return heltal(varde)
 
 
 def vinkelsort(v):
@@ -239,6 +282,37 @@ def _ak4_tiondelar():
         val('Vad är 0,3 + 0,7?', summa, dec(F('0,3') + F('0,7')),
             '3 tiondelar + 7 tiondelar = 10 tiondelar. Tio tiondelar är en hel, alltså 1.'),
     ], beskrivning='Tiondelar som decimaltal, deras plats på tallinjen och enkel addition och subtraktion.')
+
+
+def _ak4_tiondelar_vardag():
+    meter = parvis([(m, '%s cm' % tal(cm(m))) for m in ['0,5 m', '0,8 m', '1,2 m', '2,3 m']], matt)
+    langst = ['98 cm', '1,2 m', '115 cm', '1,1 m']
+    rad = ordnat(['0,4 m', '35 cm', '1 m', '0,9 m', '95 cm'], cm)
+    kanna = F('0,6') + F('0,8')
+    return niva('ma-ak4-decimaltal-2', 'Tiondelar i vardagen', 'Decimaltal', [
+        para('Para ihop varje längd i meter med samma längd i centimeter.', meter,
+             'En meter är 100 cm, så en tiondels meter är 10 cm. 0,8 m är 8 · 10 = %s cm, '
+             'och 2,3 m är 200 + 30 = %s cm.' % (tal(cm('0,8 m')), tal(cm('2,3 m')))),
+        skriv('Hur många centimeter är 0,7 meter?', tal(cm('0,7 m')),
+              'En tiondels meter är 10 cm. 7 tiondelar är 7 · 10 = %s cm.' % tal(cm('0,7 m'))),
+        sant('1,5 meter är lika långt som 1 meter och 5 centimeter.', cm('1,5 m') == cm('1 m') + 5,
+             'Femman står på tiondelarnas plats. 0,5 meter är 5 tiondels meter, alltså %s cm. '
+             'Därför är 1,5 meter 1 meter och %s centimeter.' % (tal(cm('0,5 m')), tal(cm('0,5 m')))),
+        sant('0,5 liter är lika mycket som 5 deciliter.', matt('0,5 l') == matt('5 dl'),
+             'En liter är 10 deciliter, så en deciliter är en tiondels liter. '
+             '0,5 liter är 5 tiondelar, alltså 5 dl.'),
+        skriv('En flaska rymmer 1,5 liter. Hur många deciliter är det?', tal(heltal(matt('1,5 l')[1])),
+              '1 liter är 10 dl och 0,5 liter är 5 dl. 10 + 5 = %s dl.' % tal(heltal(matt('1,5 l')[1]))),
+        val('Vilken längd är längst?', langst, ett(langst, lambda s: cm(s) == max(cm(t) for t in langst)),
+            'Gör om till centimeter: 1,2 m = %d cm och 1,1 m = %d cm. %d cm är längre än både 115 cm och 98 cm.'
+            % (cm('1,2 m'), cm('1,1 m'), cm('1,2 m'))),
+        ordna('Ordna längderna från kortast till längst.', rad,
+              forklaring='Gör om allt till centimeter: %s cm. Då går de lätt att jämföra.'
+              % lista(tal(cm(s)) for s in rad)),
+        skriv('Du häller 0,6 liter vatten och 0,8 liter saft i en kanna. Hur många liter blir det?', dec(kanna),
+              '6 tiondelar + 8 tiondelar = %d tiondelar. Tio tiondelar är en hel liter, så det blir %s liter.'
+              % (heltal(kanna * 10), dec(kanna))),
+    ], beskrivning='Tiondelar i meter och liter, och att byta mellan meter och centimeter och mellan liter och deciliter.')
 
 
 def _ak4_omkrets_area():
@@ -375,6 +449,42 @@ def _ak5_brak_2():
         skriv('Vilket tal saknas? 2/5 = 6/?', tal(5 * heltal(Fraction(6, 2))),
               'Täljaren har blivit 3 gånger så stor, 2 · 3 = 6. Då ska nämnaren också gånger 3: 5 · 3 = 15.'),
     ], beskrivning='Att jämföra bråk och hitta bråk som är lika stora.')
+
+
+def _ak5_brak_3():
+    brak = parvis([(b, dec(F(b))) for b in ['1/2', '1/10', '3/10', '1/5']], F)
+    fyra_femtedelar = ['0,4', '0,8', '4,5', '0,45']
+    rad = ordnat(['0,7', '1/2', '1/5', '0,1', '9/10'], F)
+    ella, leo = F('0,6'), F('3/5')
+    vem = {'Ella': ella > leo, 'Leo': leo > ella, 'De har ätit lika mycket': ella == leo}
+    if ella != leo:
+        raise ValueError('Förklaringen säger att Ella och Leo har ätit lika mycket')
+    return niva('ma-ak5-brak-3', 'Bråk och decimaltal', 'Bråk', [
+        para('Para ihop bråket med decimaltalet som är lika stort.', brak,
+             'Gör om till tiondelar: 1/2 = %d/10 = %s och 1/5 = %d/10 = %s. '
+             '1/10 och 3/10 är redan tiondelar.'
+             % (heltal(F('1/2') * 10), dec(F('1/2')), heltal(F('1/5') * 10), dec(F('1/5')))),
+        skriv('Skriv 7/10 som decimaltal.', dec(F('7/10')),
+              '7/10 är sju tiondelar. Tiondelarna står närmast efter kommat, så det blir %s.' % dec(F('7/10'))),
+        sant('1/5 är lika mycket som 0,5.', F('1/5') == F('0,5'),
+             '0,5 är fem tiondelar, alltså en halv. 1/5 är en av fem lika delar: 1/5 = %d/10 = %s.'
+             % (heltal(F('1/5') * 10), dec(F('1/5')))),
+        val('Vilket decimaltal är lika stort som 4/5?', fyra_femtedelar,
+            ett(fyra_femtedelar, lambda a: F(a) == F('4/5')),
+            'Förläng med 2: 4/5 = %d/10. Åtta tiondelar skrivs %s.' % (heltal(F('4/5') * 10), dec(F('4/5')))),
+        skriv('Skriv 0,4 som ett bråk med nämnaren 10.', brak_svar(heltal(F('0,4') * 10), 10),
+              '0,4 är fyra tiondelar, och fyra tiondelar skrivs %s.' % brak_svar(heltal(F('0,4') * 10), 10)[0]),
+        sant('1/3 är mer än 0,3.', F('1/3') > F('0,3'),
+             'En tiondel av 30 är %d, så 0,3 av 30 är %d. En tredjedel av 30 är %d. Alltså är 1/3 lite mer än 0,3.'
+             % (heltal(F('1/10') * 30), heltal(F('0,3') * 30), heltal(F('1/3') * 30))),
+        ordna('Ordna talen från minst till störst.', rad,
+              forklaring='Gör om bråken till decimaltal: %s. Sedan jämför du tiondelarna.'
+              % lista('%s = %s' % (t, dec(F(t))) for t in rad if '/' in t)),
+        val('Ella har ätit 0,6 av en chokladkaka. Leo har ätit 3/5 av en likadan kaka. Vem har ätit mest?',
+            list(vem), ett(list(vem), lambda v: vem[v]),
+            '3/5 = %d/10, och sex tiondelar skrivs %s. De har alltså ätit lika mycket.'
+            % (heltal(leo * 10), dec(leo))),
+    ], beskrivning='Att skriva samma tal som bråk och som decimaltal, och att jämföra bråk med decimaltal.')
 
 
 def _ak5_decimaltal():
@@ -540,6 +650,65 @@ def _ak6_procent_2():
     ], beskrivning='Att skriva samma andel som bråk, decimaltal och procent.')
 
 
+def _ak6_procent_3():
+    def av(s):
+        """'3 av 10' → 3/10."""
+        del_, helhet = s.split(' av ')
+        return Fraction(int(del_), int(helhet))
+
+    def procent(s):
+        return heltal(av(s) * 100)
+
+    def liten(k):
+        """'Klass B' → 'klass B', mitt i en mening."""
+        return k[0].lower() + k[1:]
+
+    andelar = parvis([(s, '%d %%' % procent(s)) for s in ['1 av 4', '7 av 10', '2 av 5', '1 av 100']],
+                     lambda s: andel(s) if s.endswith('%') else av(s))
+    rad = ordnat(['3 av 10', '1 av 2', '2 av 5', '9 av 20', '1 av 5'], av)
+    # Flest som cyklar och störst andel ska vara olika klasser: det är
+    # hela poängen med frågan.
+    klasser = {'Klass A': '6 av 24', 'Klass B': '8 av 20', 'Klass C': '9 av 30'}
+    storst = ett(list(klasser), lambda k: av(klasser[k]) == max(av(v) for v in klasser.values()))
+    flest = ett(list(klasser), lambda k: int(klasser[k].split()[0]) == max(int(v.split()[0]) for v in klasser.values()))
+    if storst == flest:
+        raise ValueError('Klassen med flest cyklister ska inte vara den med störst andel')
+    jacka = 400 - procent_av(25, 400)
+    return niva('ma-ak6-procent-3', 'Hur många procent?', 'Procent', [
+        para('Para ihop andelen med samma andel i procent.', andelar,
+             'Gör om till hundradelar: %s. 1 av 100 är en hundradel, alltså 1 %%.'
+             % lista('%s = %d/100' % (s, procent(s)) for s, _ in andelar if s != '1 av 100')),
+        skriv('I en klass går 25 elever. 5 av dem spelar fotboll. Hur många procent spelar fotboll?',
+              tal(procent('5 av 25')),
+              '25 · %d = 100, så förläng med %d: 5/25 = %d/100. Det är %d %%.'
+              % (100 // 25, 100 // 25, procent('5 av 25'), procent('5 av 25'))),
+        sant('30 % av 200 kr är mer än 50 % av 100 kr.', procent_av(30, 200) > procent_av(50, 100),
+             '30 %% av 200 kr är %d kr och 50 %% av 100 kr är %d kr. '
+             '30 %% är mindre än 50 %%, men av ett större belopp blir det ändå mer.'
+             % (procent_av(30, 200), procent_av(50, 100))),
+        val('En jacka kostar 400 kr. Den säljs med 25 % rabatt. Vad kostar jackan nu?',
+            ['100 kr', '300 kr', '375 kr', '425 kr'], '%d kr' % jacka,
+            '25 %% är en fjärdedel. 400 / 4 = %d kr i rabatt, och 400 − %d = %d kr.'
+            % (procent_av(25, 400), procent_av(25, 400), jacka)),
+        skriv('Ett prov har 20 frågor. Sara har 17 rätt. Hur många procent rätt har hon?',
+              tal(procent('17 av 20')),
+              '20 · %d = 100, så förläng med %d: 17/20 = %d/100. Det är %d %%.'
+              % (100 // 20, 100 // 20, procent('17 av 20'), procent('17 av 20'))),
+        sant('25 % av en tårta är mer än en tredjedel av samma tårta.', Fraction(25, 100) > Fraction(1, 3),
+             '25 % är en fjärdedel. Delar man tårtan i tre blir bitarna större än om man delar den i fyra, '
+             'så en tredjedel är mer, ungefär 33 %.'),
+        ordna('Ordna andelarna från minst till störst.', rad,
+              forklaring='I procent: %s.' % lista('%s = %d %%' % (s, procent(s)) for s in rad)),
+        val('I klass A cyklar %s elever till skolan, i klass B %s och i klass C %s. '
+            'I vilken klass cyklar störst andel av eleverna?' % tuple(klasser.values()),
+            list(klasser), storst,
+            'I procent: %s. Flest cyklar i %s, men störst andel i %s.'
+            % (lista('%s %d %%' % (liten(k), procent(v)) for k, v in klasser.items()),
+               liten(flest), liten(storst))),
+    ], beskrivning='Att räkna ut hur många procent en del är av det hela, vad något kostar efter rabatt '
+                   'och att jämföra andelar.')
+
+
 def _ak6_koordinater():
     punkter = [(3, 5), (5, 3), (3, 3), (5, 5)]
     pt = ['(%d, %d)' % p for p in punkter]
@@ -639,12 +808,14 @@ BANOR = [
         _ak4_multiplikation(),
         _ak4_division(),
         _ak4_tiondelar(),
+        _ak4_tiondelar_vardag(),
         _ak4_omkrets_area(),
         _ak4_tid(),
     ]),
     bana('Matematik', 'ak5', [
         _ak5_brak_1(),
         _ak5_brak_2(),
+        _ak5_brak_3(),
         _ak5_decimaltal(),
         _ak5_medelvarde(),
         _ak5_negativa(),
@@ -652,6 +823,7 @@ BANOR = [
     bana('Matematik', 'ak6', [
         _ak6_procent_1(),
         _ak6_procent_2(),
+        _ak6_procent_3(),
         _ak6_koordinater(),
         _ak6_vinklar(),
         _ak6_ekvationer(),

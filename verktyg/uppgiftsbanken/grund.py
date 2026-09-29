@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Byggstenarna för uppgiftsbanken (Fas 23.1).
+"""Byggstenarna för uppgiftsbanken (Fas 23.1, NexLäx i Fas 23.2).
 
 Varje fil bredvid den här beskriver banorna i ett ämne och har en lista
 BANOR. verktyg/bygg-uppgifter.py läser dem, prövar dem och skriver SQL.
 
-    from grund import bana, niva, val, skriv, ordna, tal
+    from grund import bana, niva, val, skriv, ordna, sant, para, tal
 
     BANOR = [
         bana('Matematik', 'ak5', [
@@ -17,12 +17,17 @@ BANOR. verktyg/bygg-uppgifter.py läser dem, prövar dem och skriver SQL.
         ]),
     ]
 
-TRE FRÅGETYPER, för att det är de som går att rätta av en maskin
+FYRA FRÅGETYPER, för att det är de som går att rätta av en maskin
 och göra med en tumme:
 
     val    tryck på ett av 2–5 alternativ. Ange rätt svar som TEXTEN,
            inte som ett index: då kan ingen räkna fel på platsen, och
            ordningen blandas ändå i spelaren.
+    sant   sant eller falskt. Ett val med alternativen Sant och Falskt,
+           i den ordningen, och spelaren visar två stora knappar. Skriv
+           påståendet som en vanlig mening: spelaren säger "Sant eller
+           falskt?" själv. Ett påstående ska vara sant eller falskt för
+           alla, inte "oftast".
     skriv  skriv ett kort svar. Flera godtagna svar går att ange som
            en lista. Rättningen struntar i stora och små bokstäver,
            mellanslag och punkt sist, och tal jämförs som tal:
@@ -31,7 +36,23 @@ och göra med en tumme:
            ska enheten vara svaret, gör frågan till val.
     ordna  sätt brickor i rätt ordning, som att bygga en mening. Ange
            brickorna i rätt ordning; extra brickor som inte hör till
-           svaret får anges som extra.
+           svaret får anges som extra. I spelaren går de att dra eller
+           trycka på.
+    para   matchning: 2–6 par (vänster, höger), som ett begrepp och
+           dess förklaring. Vänstersidan visas i den ordning den står
+           här och högersidan blandad. Varje sida måste vara olika
+           inbördes, annars finns det två rätta svar.
+
+En NIVÅ kan ha en lästext (niva(..., text=...)): läsförståelse. Texten
+visas innan frågorna och går att öppna under dem. Frågor ur en nivå med
+lästext dras aldrig till Mästarprovet eller repetitionen, för där syns
+inte texten.
+
+MÄSTARPROVET OCH REPETITIONEN skrivs inte här. bygg-uppgifter.py lägger
+till ett Mästarprov sist i varje område och en repetition sist i varje
+bana, och databasen drar deras frågor ur nivåerna (Fas 23.2). Håll ett
+områdes nivåer intill varandra i banan: det är i den ordningen stegen
+står i NexLäx.
 
 RÄKNA UT FACIT I KOD när det går. tal(7 * 8) i stället för '56': ett
 facit som räknats fel är värre än en fråga som inte finns, för barnet
@@ -48,7 +69,10 @@ Förklaringen och ordningen går att ändra utan att id:t byts.
 import json
 import re
 
-TYPER = ('val', 'skriv', 'ordna')
+TYPER = ('val', 'skriv', 'ordna', 'para')
+
+# Alternativen i en sant-fråga, i den ordning spelaren känner igen dem.
+SANT, FALSKT = 'Sant', 'Falskt'
 
 
 def tal(x, decimaler=None):
@@ -112,9 +136,27 @@ def ordna(fraga, brickor, extra=None, forklaring=None):
                 ratt=[_text(b, 'en bricka') for b in brickor], forklaring=forklaring)
 
 
-def niva(nyckel, titel, omrade, fragor, beskrivning=None):
+def sant(pastaende, ar_sant, forklaring=None):
+    """Sant eller falskt. Ett val med alternativen Sant och Falskt, i den
+    ordningen: spelaren känner igen dem och ritar två stora knappar."""
+    if not isinstance(ar_sant, bool):
+        raise TypeError('ar_sant ska vara True eller False i: %s' % pastaende)
+    return val(pastaende, [SANT, FALSKT], SANT if ar_sant else FALSKT, forklaring)
+
+
+def para(fraga, par, forklaring=None):
+    """Matchning. par är 2–6 par (vänster, höger); vänstersidan visas i den
+    ordningen och högersidan blandad."""
+    par = [(_text(v if isinstance(v, str) else tal(v), 'en vänstersida'),
+            _text(h if isinstance(h, str) else tal(h), 'en högersida')) for v, h in par]
+    return dict(typ='para', fraga=_text(fraga, 'frågan'), alternativ=None,
+                ratt=[[v, h] for v, h in par], forklaring=forklaring)
+
+
+def niva(nyckel, titel, omrade, fragor, beskrivning=None, text=None):
+    """text är lästexten i en nivå med läsförståelse."""
     return dict(nyckel=nyckel, titel=titel, omrade=omrade, fragor=list(fragor),
-                beskrivning=beskrivning)
+                beskrivning=beskrivning, lastext=_text(text, 'lästexten') if text else None)
 
 
 def bana(amne, arskurs, nivaer):
@@ -133,11 +175,11 @@ def norm(t):
 
 def talvarde(t, enhet=True):
     """Samma som intern.niva_tal() i databasen. enhet=True för elevens
-    svar ("12 cm" är 12), enhet=False för facit: bara ett rent tal, med
+    svar ("12 cm", "15 km/h" och "20 cm2" är 12, 15 och 20), enhet=False för facit: bara ett rent tal, med
     ett procenttecken som enda tillägg. Ett facit som "5y" är inget tal."""
     t = re.sub(r'(\d) (\d)', r'\1\2', re.sub(r'(\d) (\d)', r'\1\2', t))
     if enhet:
-        m = re.match(r'^([-+]?(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*(?:%|[a-zåäö²³°ω]{1,12}\.?(?: [a-zåäö²³°ω]{1,12}\.?)?)?$', t)
+        m = re.match(r'^([-+]?(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*(?:%|(?:[kcdm]?m\^?[23]|[a-zåäö²³°ω]{1,12}(?:/[a-zåäö²³°ω]{1,12})?\.?)(?: [a-zåäö²³°ω]{1,12}(?:/[a-zåäö²³°ω]{1,12})?\.?)?)?$', t)
     else:
         m = re.match(r'^([-+]?(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*%?$', t)
     return float(m.group(1).replace(',', '.')) if m else None

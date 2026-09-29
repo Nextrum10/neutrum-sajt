@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Svenska åk 3, 6 och 8. Skrivregler, ordklasser, stavning och meningsbyggnad ur Lgr22:s centrala innehåll, med bara regler som Språkrådet och läromedlen är ense om.
+"""Svenska åk 3, 6 och 8. Skrivregler, ordklasser, stavning, meningsbyggnad och läsförståelse ur Lgr22:s centrala innehåll, med bara regler som Språkrådet och läromedlen är ense om.
 
-Tre saker styr hur frågorna är skrivna:
+Fyra saker styr hur frågorna är skrivna:
 
 - Rättningen struntar i stora och små bokstäver och i punkt sist. Allt
   som gäller stor bokstav eller skiljetecken är därför val eller ordna,
@@ -15,8 +15,54 @@ Tre saker styr hur frågorna är skrivna:
 - En ordna-mening med inte har ofta två rätta ordningar ("Jag tror inte
   att hon kommer" och "Jag tror att hon inte kommer"). Inte i bisatsen
   frågas därför som val, där de felaktiga alternativen är fel för alla.
+- Läsförståelsens texter är skrivna för banken, och varje fråga går att
+  besvara ur texten ensam. Ett sant eller falskt avgörs av det som står
+  där, inte av vad eleven vet sedan förut, och en slutsats frågas bara
+  när texten motsäger de felaktiga alternativen.
 """
-from grund import bana, niva, val, skriv, ordna, tal
+from grund import bana, niva, val, skriv, ordna, sant, para, tal
+
+# Lästexterna, ett stycke per element. Spelaren får dem åtskilda av en
+# tom rad.
+ALLEMANSRATTEN = '\n\n'.join([
+    'I Sverige får alla röra sig fritt i naturen, också i skogar och på ängar som någon '
+    'annan äger. Den friheten kallas allemansrätten.',
+    'Allemansrätten gör att du får gå, cykla och bada nästan var du vill. Du får också tälta '
+    'en natt eller två på samma ställe. Men du får inte gå in på någons tomt, alltså området '
+    'närmast ett hus där någon bor.',
+    'Du får plocka bär och de flesta svampar och blommor. Några sällsynta växter och svampar är fridlysta, '
+    'vilket betyder att de skyddas av lagen. Många av dem får man inte plocka alls. Du får '
+    'inte heller bryta grenar från levande träd.',
+    'Du får göra upp eld om det är säkert. När det är mycket torrt kan det bli '
+    'eldningsförbud, och då får man inte göra upp eld i naturen.',
+    'Allemansrätten är alltså ingen rätt att göra vad man vill. Den som är ute i naturen ska '
+    'ta med sig sitt skräp hem och inte störa djuren eller människorna som bor där. Man '
+    'brukar säga det kort så här: inte störa, inte förstöra.',
+])
+
+TOMATERNA = '\n\n'.join([
+    'Fru Lind bodde två våningar ovanför Amir. Innan hon reste till sin syster i Luleå gav '
+    'hon honom sin nyckel och en lapp. På lappen stod det att blommorna i fönstren skulle '
+    'vattnas varannan dag och att tomatplantorna på balkongen behövde vatten varje kväll.',
+    '”Du får femhundra kronor när jag kommer hem”, sa hon.',
+    'De första dagarna gick det bra. Sedan började fotbollslägret som Amir hade längtat efter '
+    'hela våren, och han kom hem så trött att han somnade i soffan med skorna på. Nyckeln '
+    'låg kvar i fruktskålen i hallen.',
+    'På fredagen fick han syn på den när han skulle ta ett äpple. Han sprang uppför trapporna '
+    'två steg i taget. På balkongen hängde tomatplantorna slokande över kanterna på krukorna, '
+    'och jorden hade spruckit som en torr åker. Han vattnade tills det rann ut under krukorna, '
+    'men en av plantorna reste sig aldrig igen.',
+    'På lördagen slängde han den döda plantan. Sedan cyklade han till en handelsträdgård och '
+    'köpte en ny planta för pengar som han hade sparat till en mobil. Den var mindre än de '
+    'andra och hade inga tomater än. Han ställde den längst in, bakom de andra.',
+    'När fru Lind kom hem på söndagen gick hon rakt ut på balkongen. Amir stod kvar i dörren '
+    'och tittade ner på sina skor.',
+    '”Så fina de är”, sa hon. ”Och den lilla längst in, den minns jag inte att jag har köpt.”',
+    'Hon log och räckte honom en femhundralapp. Amir tog emot den, men han visste inte var '
+    'han skulle göra av händerna.',
+    '”Nästa sommar kanske vi ska skriva en lista tillsammans”, sa fru Lind. ”Man glömmer så '
+    'lätt när det händer mycket.”',
+])
 
 BANOR = [
     bana('Svenska', 'ak3', [
@@ -88,6 +134,34 @@ BANOR = [
             ordna('Ordna vokalerna så som de står i alfabetet.', ['i', 'o', 'y', 'å', 'ö'],
                   forklaring='I kommer före o och o före y. Å och ö står sist i alfabetet.'),
         ], beskrivning='Tränar att skilja vokaler från konsonanter och att hitta vokalerna i ett ord.'),
+
+        # Påståendena gäller enskilda ord, aldrig regeln: efter en kort
+        # vokal kommer OFTAST två konsonanter (han, man och vem har en), och
+        # ett sant eller falskt ska vara sant för alla.
+        niva('sv-ak3-ljud-2', 'Korta och långa vokaler', 'Ljud och bokstäver', [
+            para('Orden låter nästan likadant. Para ihop ordet med vad det betyder.',
+                 [('glas', 'något man dricker ur'),
+                  ('glass', 'något kallt och gott som man äter'),
+                  ('tak', 'det som är högst upp på ett hus'),
+                  ('tack', 'det man säger när man får något')],
+                 'I glas och tak är a långt. I glass och tack är a kort, och då står det två '
+                 'konsonanter efter: ss och ck.'),
+            sant('I ordet ”katt” är a kort.', True,
+                 'Säg katt högt. A låter kort, och därför skriver man två t.'),
+            sant('I ordet ”sol” är o kort.', False,
+                 'Säg sol högt. O låter långt, och därför står det bara ett l efter.'),
+            val('Vilket ord har en kort vokal?', ['boll', 'bil', 'bok', 'mus'], 'boll',
+                'I boll är o kort, och då skriver man två l. I bil, bok och mus är vokalen lång.'),
+            val('Vilket ord fattas? ”Grodan kan … högt.”', ['hoppa', 'hopa', 'hobba'], 'hoppa',
+                'O är kort i hoppa, och därför skriver man två p. Med ett p hade o låtit långt.'),
+            skriv('Ett ord är felstavat: ”Nu är det somar och varmt.” Skriv ordet rätt.', 'sommar',
+                  'O är kort i sommar. Därför skriver man två m.'),
+            val('Vilket ord passar i meningen? ”Efter maten ska vi … en stund.”', ['vila', 'villa'], 'vila',
+                'I vila är i långt, och då skriver man ett l. En villa, med kort i och två l, är ett hus.'),
+            ordna('Bygg meningen. En bricka är felstavad och hör inte dit.',
+                  ['Min', 'docka', 'heter', 'Lisa.'], extra=['doka'],
+                  forklaring='O är kort i docka. Efter ett kort o skrivs k-ljudet ck.'),
+        ], beskrivning='Tränar att höra om en vokal är kort eller lång, och att stava ord där det gör skillnad.'),
 
         niva('sv-ak3-ordklasser-1', 'Substantiv och verb', 'Ordklasser', [
             val('Vilket ord är ett substantiv?', ['bord', 'springa', 'glad'], 'bord',
@@ -191,6 +265,45 @@ BANOR = [
                   forklaring='Pytteliten är mindre än liten, och enorm är större än stor.'),
         ], beskrivning='Tränar ord som betyder nästan samma sak och ord som betyder motsatsen.'),
 
+        # Ett uttryck som kan betyda två saker frågas inte. En skriv-fråga
+        # frågar bara efter ett ord som uttrycket inte har i någon annan form:
+        # prata bredvid mun heter också bredvid munnen, men ingen fara på
+        # taket heter bara så.
+        niva('sv-ak6-ordforrad-2', 'Uttryck och talesätt', 'Ordförråd', [
+            para('Para ihop uttrycket med vad det betyder.',
+                 [('ana ugglor i mossen', 'misstänka att något är fel'),
+                  ('ha tummen mitt i handen', 'vara klumpig med händerna'),
+                  ('lägga näsan i blöt', 'lägga sig i andras saker'),
+                  ('gå som katten kring het gröt', 'prata runt det viktiga i stället för att säga det')],
+                 'Uttrycken betyder något annat än orden var för sig. Den som anar ugglor i mossen '
+                 'har inte sett några ugglor, utan misstänker att något inte stämmer.'),
+            val('Vilket uttryck betyder att någon råkar avslöja en hemlighet?',
+                ['prata bredvid mun', 'hålla tummarna', 'sätta sig på tvären', 'ha is i magen'],
+                'prata bredvid mun',
+                'Den som pratar bredvid mun säger något som skulle ha varit hemligt, utan att mena det.'),
+            sant('Den som har is i magen blir lätt nervös.', False,
+                 'Att ha is i magen betyder att vara lugn och inte stressa, till exempel före en straffspark.'),
+            sant('Den som håller tummarna för en kompis hoppas att det ska gå bra för kompisen.', True,
+                 'Att hålla tummarna betyder att önska någon lycka, till exempel inför ett prov.'),
+            skriv('Skriv ordet som fattas i uttrycket ”Det är ingen fara på …”. '
+                  'Uttrycket betyder att det inte finns något att oroa sig för.', 'taket',
+                  'Det är ingen fara på taket betyder att allt är lugnt. Det handlar inte om något riktigt tak.'),
+            val('Vad betyder det att ”köpa grisen i säcken”?',
+                ['Att köpa något utan att veta hur det är', 'Att köpa något som är för dyrt',
+                 'Att köpa mat till ett husdjur', 'Att köpa något man inte behöver'],
+                'Att köpa något utan att veta hur det är',
+                'Att köpa grisen i säcken är att köpa något man inte har sett. Då vet man inte om det är bra.'),
+            val('”Hon lovade guld och gröna skogar.” Vad betyder det?',
+                ['Hon lovade mycket mer än hon kunde hålla', 'Hon lovade att plantera träd',
+                 'Hon lovade att ge bort smycken', 'Hon lovade att hålla tyst'],
+                'Hon lovade mycket mer än hon kunde hålla',
+                'Att lova guld och gröna skogar är att lova väldigt mycket, mer än det går att hålla.'),
+            ordna('Bygg meningen. Den betyder att Nils klarade två saker på en gång.',
+                  ['Nils', 'slog', 'två', 'flugor', 'i', 'en', 'smäll.'],
+                  forklaring='Att slå två flugor i en smäll är att klara två saker med en och samma '
+                             'handling. Nils har inte slagit några flugor på riktigt.'),
+        ], beskrivning='Tränar vanliga uttryck och talesätt, som betyder något annat än orden var för sig.'),
+
         niva('sv-ak6-meningsbyggnad-1', 'Bygg meningar', 'Meningsbyggnad', [
             ordna('Bygg meningen.', ['Efter', 'skolan', 'spelar', 'vi', 'fotboll.'],
                   forklaring='Efter skolan är meningens första del. Då kommer verbet spelar direkt efter, '
@@ -216,6 +329,51 @@ BANOR = [
             skriv('Vilket ord inleder bisatsen? ”Jag stannar inne eftersom det regnar.”', 'eftersom',
                   'Eftersom det regnar är en bisats. Den kan inte stå ensam som en hel mening.'),
         ], beskrivning='Tränar ordföljd i påståenden, frågor och meningar med bisats.'),
+
+        niva('sv-ak6-lasforstaelse-1', 'Allemansrätten', 'Läsförståelse', [
+            val('Vad är textens syfte?',
+                ['Att informera om vad man får och inte får göra i naturen',
+                 'Att berätta en spännande historia om en skog',
+                 'Att övertyga läsaren om att sluta tälta',
+                 'Att sälja tält och sovsäckar'],
+                'Att informera om vad man får och inte får göra i naturen',
+                'Texten förklarar regler och fakta, och det gör en text som vill informera. '
+                'Den handlar inte om någon särskild person och försöker inte sälja något.'),
+            sant('Allemansrätten gäller bara i skogar som ingen äger.', False,
+                 'Redan i första meningen står det att man får röra sig fritt också i skogar och '
+                 'på ängar som någon annan äger.'),
+            sant('Enligt texten får man tälta en natt eller två på samma ställe.', True,
+                 'Det står i andra stycket: du får tälta en natt eller två på samma ställe.'),
+            val('Vad betyder ordet ”tomt” i texten?',
+                ['Området närmast ett hus där någon bor', 'Att något saknar innehåll',
+                 'En plats där man får tälta', 'En stor äng'],
+                'Området närmast ett hus där någon bor',
+                'Tomt kan också betyda att något saknar innehåll, som ett tomt glas. Men här '
+                'förklarar texten själv vad ordet betyder: området närmast ett hus där någon bor.'),
+            skriv('Vad kallas växter som skyddas av lagen? Skriv ordet ur texten.',
+                  ['fridlysta', 'fridlyst', 'fridlysta växter'],
+                  'Fridlysta växter skyddas av lagen, och många av dem får man inte plocka.'),
+            skriv('Vad kallas det när man inte får göra upp eld i naturen? Skriv ordet ur texten.',
+                  ['eldningsförbud', 'eldningsförbudet', 'ett eldningsförbud'],
+                  'Det kan bli eldningsförbud när det är mycket torrt, för då sprider sig en brand lätt.'),
+            val('Pia vill plocka blåbär i en skog som en bonde äger. Vad säger texten om det?',
+                ['Det får hon, för allemansrätten gäller också där',
+                 'Det får hon inte, för skogen är bondens',
+                 'Det får hon bara om hon frågar bonden först',
+                 'Det får hon bara om hon tältar där'],
+                'Det får hon, för allemansrätten gäller också där',
+                'Allemansrätten gäller också på mark som någon annan äger, och bär får man plocka.'),
+            val('Vad menar texten med att allemansrätten är ”ingen rätt att göra vad man vill”?',
+                ['Den som är i naturen måste också ta hänsyn',
+                 'Man får inte vara i naturen utan lov',
+                 'Allemansrätten gäller bara vuxna',
+                 'Man måste betala för att få gå i skogen'],
+                'Den som är i naturen måste också ta hänsyn',
+                'Direkt efter står det att man ska ta med sig skräpet hem och inte störa djur och '
+                'människor. Friheten kommer med ett ansvar.'),
+        ], beskrivning='En saklig text om allemansrätten, med frågor om vad som står, vad ett ord betyder '
+                       'och vad texten vill.',
+            text=ALLEMANSRATTEN),
     ]),
 
     bana('Svenska', 'ak8', [
@@ -306,6 +464,46 @@ BANOR = [
                              'och subjektet din syster kommer direkt efter.'),
         ], beskrivning='Tränar att hitta subjekt och predikat, också när subjektet inte står först.'),
 
+        # Bara subjekt, predikat, objekt och adverbial. Predikatsfyllnaden
+        # heter också subjektsfyllnad eller predikativ, så meningarna här har
+        # ingen, och inte heller något indirekt objekt. Predikatet är ett
+        # enda verb: när det står två (har ätit) räknar läromedlen olika.
+        niva('sv-ak8-satsdelar-2', 'Objekt och adverbial', 'Satsdelar', [
+            para('Para ihop satsdelen med frågan man ställer för att hitta den.',
+                 [('predikat', 'Vad händer, eller vad gör någon?'),
+                  ('subjekt', 'Vem eller vad + predikatet?'),
+                  ('objekt', 'Vem eller vad + predikatet + subjektet?'),
+                  ('adverbial', 'När, var, hur eller varför?')],
+                 'Ta meningen ”Sam åt en macka på bussen.” Åt är predikatet. Vem åt? Sam, subjektet. '
+                 'Vad åt Sam? En macka, objektet. Var? På bussen, ett adverbial.'),
+            para('Para ihop delarna av meningen ”I går köpte Nora en ny cykel.” med rätt satsdel.',
+                 [('I går', 'adverbial'), ('köpte', 'predikat'), ('Nora', 'subjekt'),
+                  ('en ny cykel', 'objekt')],
+                 'Köpte är verbet, alltså predikatet. Vem köpte? Nora, subjektet. Vad köpte Nora? '
+                 'En ny cykel, objektet. I går säger när, och det gör ett adverbial.'),
+            val('Vilket ord är objekt i meningen ”Efter matchen tackade tränaren spelarna.”?',
+                ['spelarna', 'tränaren', 'tackade', 'matchen'], 'spelarna',
+                'Tackade är predikatet. Vem tackade? Tränaren, som alltså är subjekt. '
+                'Vilka blev tackade? Spelarna, och det är objektet.'),
+            sant('I meningen ”Hunden bet brevbäraren.” är brevbäraren subjekt.', False,
+                 'Vem bet? Hunden, och det är subjektet. Vem blev biten? Brevbäraren, som alltså är objekt.'),
+            sant('I meningen ”Vi badade efter skolan.” är ”efter skolan” ett adverbial.', True,
+                 'Efter skolan säger när vi badade, och det gör ett adverbial. '
+                 'Ett adverbial kan bestå av flera ord.'),
+            skriv('Skriv objektet i meningen: ”I helgen målade pappa staketet.”', 'staketet',
+                  'Målade är predikatet och pappa subjektet. Vad målade pappa? Staketet, som alltså är '
+                  'objektet. I helgen är ett adverbial.'),
+            val('Vilken satsdel är ”varje morgon” i meningen ”Varje morgon cyklar Leila till skolan.”?',
+                ['adverbial', 'subjekt', 'objekt', 'predikat'], 'adverbial',
+                'Varje morgon säger när Leila cyklar, och det gör ett adverbial. Det står först, '
+                'men subjektet är Leila: vem cyklar?'),
+            ordna('Bygg meningen så att adverbialet står först.',
+                  ['Efter', 'lunchen', 'har', 'vi', 'engelska.'],
+                  forklaring='Efter lunchen är ett adverbial som säger när. När det står först kommer '
+                             'predikatet har direkt efter, och subjektet vi efter predikatet.'),
+        ], beskrivning='Tränar att hitta objekt och adverbial, och att para ihop delarna i en mening med '
+                       'rätt satsdel.'),
+
         niva('sv-ak8-skiljetecken-1', 'Komma, kolon och repliker', 'Skiljetecken', [
             val('I vilken mening står kolonet rätt?',
                 ['Vi behöver tre saker till kalaset: ballonger, tårta och saft.',
@@ -346,5 +544,52 @@ BANOR = [
                   forklaring='Talstrecket står först. Frågetecknet avslutar frågan, och sedan kommer '
                              'frågade Ali med punkt sist.'),
         ], beskrivning='Tränar komma i uppräkningar, kolon och hur repliker skrivs med talstreck.'),
+
+        niva('sv-ak8-lasforstaelse-1', 'Tomaterna på balkongen', 'Läsförståelse', [
+            skriv('Vart reste fru Lind? Skriv namnet på staden.', ['Luleå', 'till Luleå'],
+                  'Det står i början av texten: hon reste till sin syster i Luleå.'),
+            sant('Tomatplantorna skulle vattnas varannan dag.', False,
+                 'På lappen stod det att tomatplantorna behövde vatten varje kväll. Det var blommorna '
+                 'i fönstren som skulle vattnas varannan dag.'),
+            sant('Amir glömde att vattna för att han hade tappat bort nyckeln.', False,
+                 'Nyckeln låg hela tiden i fruktskålen i hallen. Amir glömde för att han kom hem så '
+                 'trött från fotbollslägret.'),
+            val('Vad betyder ”slokande” i texten?',
+                ['Hängande och utan kraft', 'Täckta av röda tomater', 'Nyss planterade', 'Våta av regn'],
+                'Hängande och utan kraft',
+                'Plantorna hade inte fått vatten på flera dagar och orkade inte stå upp. '
+                'Något som slokar hänger ner, som en blomma som behöver vatten.'),
+            skriv('Vad hade Amir sparat pengarna till? Svara med ett ord ur texten.',
+                  ['mobil', 'en mobil', 'ny mobil', 'en ny mobil', 'mobilen', 'mobiltelefon',
+                   'en mobiltelefon', 'telefon', 'en telefon', 'en ny telefon',
+                   'till en mobil', 'till en ny mobil'],
+                  'Han köpte den nya plantan för pengar som han hade sparat till en mobil.'),
+            val('Varför ställde Amir den nya plantan längst in, bakom de andra?',
+                ['Han hoppades att fru Lind inte skulle märka att den var ny',
+                 'Fru Lind hade bett om det på lappen',
+                 'Den var störst och skymde de andra',
+                 'Han ville att fru Lind skulle se den först'],
+                'Han hoppades att fru Lind inte skulle märka att den var ny',
+                'Texten säger det inte rakt ut. Men den nya plantan var mindre och hade inga tomater, '
+                'och längst in, bakom de andra, syntes den minst. Lappen handlade bara om vattnet.'),
+            val('Vad förstår man om fru Lind i slutet av texten?',
+                ['Hon har märkt att en planta är ny, men hon är inte arg',
+                 'Hon märker inte att något är annorlunda på balkongen',
+                 'Hon är arg och vill inte ha hjälp igen',
+                 'Hon vill inte betala Amir'],
+                'Hon har märkt att en planta är ny, men hon är inte arg',
+                'Hon pekar ut den lilla plantan längst in och säger att hon inte minns att hon köpt den, '
+                'så hon har sett att den inte är en av hennes. Hon föreslår en lista, för man glömmer '
+                'lätt: hon förstår vad som hänt. Ändå ler hon, betalar och vill ha hjälp nästa sommar.'),
+            val('Vad är textens syfte?',
+                ['Att berätta en historia', 'Att lära ut hur man odlar tomater',
+                 'Att övertyga läsaren om att fotbollsläger är bra',
+                 'Att informera om hur man reser till Luleå'],
+                'Att berätta en historia',
+                'Texten har personer, en handling och känslor, och det har en berättelse. '
+                'Den ger inga råd och försöker inte övertyga någon.'),
+        ], beskrivning='En berättelse om ett löfte som glöms bort, med frågor om vad som står, vad ett ord '
+                       'betyder och vad man kan förstå mellan raderna.',
+            text=TOMATERNA),
     ]),
 ]

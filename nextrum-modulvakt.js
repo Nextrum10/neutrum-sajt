@@ -87,9 +87,9 @@
       [studieKlar, 'nextrum-studie.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],
       [typeof NXBetalning !== 'undefined' && !!NXBetalning.passpris, 'nextrum-betalning.js'],
-      /* Fas 23.1: banan och spelaren i Uppgifter. En gammal fil i
-         cachen saknar områdesrättningen, som kom sist. */
-      [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.områdesHtml, 'nextrum-uppgifter.js']
+      /* NexLäx (Fas 23.2): vägen och spelaren. En gammal fil i cachen,
+         från när sektionen hette Uppgifter, saknar vägen. */
+      [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg, 'nextrum-uppgifter.js']
     );
   }
 

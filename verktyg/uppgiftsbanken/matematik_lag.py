@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Matematik åk 1–3. Talen upp till 1000, plus och minus, de första tabellerna, att dela lika, klockan, pengar, längd och former, i korta vardagsnära frågor som en sjuåring kan läsa själv."""
-from grund import bana, niva, val, skriv, ordna, tal
+"""Matematik åk 1–3. Talen upp till 1000 med siffror och ord, plus och minus, de första tabellerna, att dela lika, klockan, veckan och året, pengar, längd och former, i korta vardagsnära frågor som en sjuåring kan läsa själv."""
+from grund import bana, niva, val, skriv, ordna, sant, para, tal
 
 
 def _stigande(par):
@@ -48,6 +48,58 @@ def _svar(n, enhet=None):
     return svar
 
 
+def _ord(n):
+    """Talet med bokstäver, 0–99: 14 → 'fjorton', 20 → 'tjugo', 31 → 'trettioett'."""
+    if n < 20:
+        return _ENTAL[n]
+    return _TIOTAL[n // 10] + (_ENTAL[n % 10] if n % 10 else '')
+
+
+# Orden tillbaka till talen, för att pröva en fråga som visar talet i ord.
+_VARDE = {_ord(n): n for n in range(100)}
+
+
+def _lista(delar):
+    """['a', 'b', 'c'] → 'a, b och c'."""
+    delar = list(delar)
+    return delar[0] if len(delar) == 1 else ', '.join(delar[:-1]) + ' och ' + delar[-1]
+
+
+def _entydiga(par, vanster, hoger=int):
+    """Paren i en matchning, prövade: varje vänstersida är lika mycket som
+    sin egen högersida och inte som någon annans. Hade två par gått att
+    byta hade det funnits två rätta svar, och rättningen godtar bara det
+    som står i paret."""
+    for i, (v, _) in enumerate(par):
+        for j, (_, h) in enumerate(par):
+            assert (vanster(v) == hoger(h)) == (i == j), 'matchningen är inte entydig: %r' % (par,)
+    return par
+
+
+def _tiotal_ental(t):
+    """'1 tiotal och 6 ental' → 16, '2 tiotal' → 20. Läser texten som
+    barnet ser, i stället för att lita på att den skrevs rätt."""
+    varde = {'tiotal': 10, 'ental': 1}
+    return sum(int(antal) * varde[sort] for antal, sort in (d.split() for d in t.split(' och ')))
+
+
+def _produkt(t):
+    """'3 · 4' → 12."""
+    a, b = t.split(' · ')
+    return int(a) * int(b)
+
+
+_VECKODAGAR = ['måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag', 'söndag']
+_MANADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti',
+            'september', 'oktober', 'november', 'december']
+
+
+def _dag(dag, steg):
+    """Veckodagen steg dagar efter dag, eller före med minus. Efter söndag
+    börjar veckan om: _dag('fredag', 3) → 'måndag'."""
+    return _VECKODAGAR[(_VECKODAGAR.index(dag) + steg) % len(_VECKODAGAR)]
+
+
 BANOR = [
     bana('Matematik', 'ak1', [
         niva('ma-ak1-tal-1', 'Talen 0–20', 'Taluppfattning', [
@@ -72,6 +124,34 @@ BANOR = [
             skriv('Talet 14 är 1 tiotal och några ental. Hur många ental?', _svar(14 - 10, 'ental'),
                   'Talet 14 är 10 + 4. Det är 1 tiotal och 4 ental.'),
         ], beskrivning='Att räkna, jämföra och hitta talet före och efter bland talen 0–20.'),
+
+        niva('ma-ak1-tal-2', 'Tal i ord och siffror', 'Taluppfattning', [
+            para('Para ihop talet i ord med samma tal i siffror.',
+                 _entydiga([(_ord(n), tal(n)) for n in (7, 12, 15, 20)], _VARDE.get),
+                 'Sju är 7 och tolv är 12. Talen 13 till 19 slutar på ton, som femton, 15. '
+                 'Tjugo är 2 tiotal, alltså 20.'),
+            skriv('Skriv talet arton med siffror.', tal(_VARDE['arton']),
+                  'Arton är 1 tiotal och 8 ental. 10 + 8 = 18.'),
+            sant('Talet tretton skrivs 31.', tal(_VARDE['tretton']) == '31',
+                 'Tretton är 1 tiotal och 3 ental, så det skrivs 13. Talet 31 heter trettioett.'),
+            val('Hur skrivs talet 14 med ord?',
+                [_ord(n) for n in (14, 40, 4, 44)], _ord(14),
+                'Fjorton är 14, alltså 1 tiotal och 4 ental. Fyrtio är 40, alltså 4 tiotal.'),
+            para('Para ihop tiotalen och entalen med rätt tal.',
+                 _entydiga([(t, tal(_tiotal_ental(t))) for t in
+                            ('1 tiotal och 2 ental', '2 tiotal', '1 tiotal och 6 ental', '6 ental')],
+                           _tiotal_ental),
+                 'Ett tiotal är 10. 2 tiotal är 10 + 10 = 20, men 1 tiotal och 2 ental är 10 + 2 = 12.'),
+            ordna('Ordna orden efter hur stort talet är, minst först.',
+                  _stigande([(_ord(n), n) for n in (9, 16, 4, 11)]),
+                  forklaring=_lista('%s är %d' % (_ord(n), n) for n in sorted((9, 16, 4, 11))).capitalize() + '.'),
+            val('Sju barn står i en kö. Emma står på femte plats. Hur många barn står före henne?',
+                [4, 5, 7 - 5, 6], 5 - 1,
+                'Barnen på plats ett, två, tre och fyra står före Emma. Det är 4 barn.'),
+            sant('Nitton är ett mindre än tjugo.', _VARDE['nitton'] == _VARDE['tjugo'] - 1,
+                 'Nitton är 19. Räknar man ett steg till kommer 20, tjugo.'),
+        ], beskrivning='Att läsa och skriva talen upp till 20 med ord och siffror, tiotal och ental, '
+                       'och ordningstal som femte.'),
 
         niva('ma-ak1-addition-1', 'Tiokamrater', 'Addition och subtraktion', [
             val('Vilket tal är tiokamrat med 7?',
@@ -221,6 +301,34 @@ BANOR = [
                   forklaring='Halv två är 1:30. Sedan kommer 2:00, halv tre är 2:30 och sist 3:00.'),
         ], beskrivning='Klockan vid hel och halv timme, i ord och med siffror.'),
 
+        niva('ma-ak2-tid-2', 'Dygn, veckor och år', 'Tid', [
+            para('Para ihop varje ord med hur lång tid det är.',
+                 [('en timme', '%d minuter' % 60), ('ett dygn', '%d timmar' % 24),
+                  ('en vecka', '%d dagar' % len(_VECKODAGAR)), ('ett år', '%d månader' % len(_MANADER))],
+                 'Ett dygn är en dag och en natt, 24 timmar. En vecka har %d dagar och ett år har %d månader.'
+                 % (len(_VECKODAGAR), len(_MANADER))),
+            sant('En vecka har 5 dagar.', len(_VECKODAGAR) == 5,
+                 'En vecka har %d dagar: %s.' % (len(_VECKODAGAR), _lista(_VECKODAGAR))),
+            skriv('Hur många dagar är två veckor?', _svar(2 * len(_VECKODAGAR), 'dagar'),
+                  'En vecka har 7 dagar. Två veckor är 7 + 7 = %d dagar.' % (2 * len(_VECKODAGAR))),
+            val('I dag är det måndag. Vilken dag var det i går?',
+                ['söndag', 'tisdag', 'lördag'], _dag('måndag', -1),
+                'I går är dagen före i dag. Dagen före måndag är %s.' % _dag('måndag', -1)),
+            val('I dag är det fredag. Vilken dag är det om tre dagar?',
+                ['lördag', 'söndag', 'måndag', 'tisdag'], _dag('fredag', 3),
+                'Räkna tre dagar framåt från fredag: %s.' % _lista(_dag('fredag', i) for i in (1, 2, 3))),
+            ordna('Året börjar i januari. Ordna månaderna i den ordning de kommer under året.',
+                  _stigande([(m, _MANADER.index(m)) for m in ('juli', 'februari', 'oktober', 'april')]),
+                  forklaring='Räkna från januari: %s.'
+                  % _lista('%s är nummer %d' % (m, _MANADER.index(m) + 1)
+                           for m in sorted(('juli', 'februari', 'oktober', 'april'), key=_MANADER.index))),
+            sant('Två dygn är 48 timmar.', 2 * 24 == 48,
+                 'Ett dygn är 24 timmar. Två dygn är 24 + 24 = %d timmar.' % (2 * 24)),
+            skriv('Hur många månader är ett halvt år?', _svar(len(_MANADER) // 2, 'månader'),
+                  'Ett år har 12 månader. Hälften av 12 är %d, för %d + %d = 12.'
+                  % ((len(_MANADER) // 2,) * 3)),
+        ], beskrivning='Hur långt ett dygn, en vecka och ett år är, och att räkna med veckodagar och månader.'),
+
         niva('ma-ak2-matning-1', 'Kronor och längd', 'Mätning', [
             skriv('Du har två femmor och en enkrona. Hur många kronor har du?', _svar(5 + 5 + 1, 'kronor'),
                   'En femma är 5 kronor och en enkrona är 1 krona. 5 + 5 + 1 = 11.'),
@@ -294,6 +402,34 @@ BANOR = [
                 ['4 · 5', '5 + 4', '5 · 5', '4 + 4'], '4 · 5',
                 'Man kan byta plats på talen när man multiplicerar. 5 · 4 och 4 · 5 blir båda 20.'),
         ], beskrivning='Multiplikation som upprepad addition, med 2:ans, 5:ans och 10:ans tabell.'),
+
+        niva('ma-ak3-multiplikation-2', '3:an och 4:an', 'Multiplikation', [
+            para('Para ihop uppgiften med svaret.',
+                 _entydiga([('%d · %d' % p, tal(p[0] * p[1])) for p in ((3, 4), (4, 4), (3, 7), (4, 6))],
+                           _produkt),
+                 'Räkna ut varje: %s.' % _lista('%d · %d = %d' % (a, b, a * b)
+                                                for a, b in ((3, 4), (4, 4), (3, 7), (4, 6)))),
+            skriv('Vad är 4 · 7?', _svar(4 * 7),
+                  '4 är dubbelt så mycket som 2. Räkna först 2 · 7 = %d och dubbla sedan: %d + %d = %d.'
+                  % (2 * 7, 2 * 7, 2 * 7, 4 * 7)),
+            val('Vad är 3 · 9?', [27, 24, 12, 30], 3 * 9,
+                '3 · 10 = %d. 3 · 9 är en trea mindre: %d − 3 = %d.' % (3 * 10, 3 * 10, 3 * 9)),
+            sant('Talet 14 finns i 3:ans tabell.', 14 % 3 == 0,
+                 '3:ans tabell är %s och så vidare. 14 finns inte med, för 3 · 4 = 12 och 3 · 5 = 15.'
+                 % ', '.join(str(3 * k) for k in range(1, 6))),
+            val('En trehjuling har 3 hjul. Hur många hjul har 6 trehjulingar?', [18, 9, 12, 21], 6 * 3,
+                'Det är sex treor: %s = %d. Alltså är 6 · 3 = %d.' % (' + '.join(['3'] * 6), 6 * 3, 6 * 3)),
+            ordna('Ordna så att svaren går från minst till störst.',
+                  _stigande([('%d · %d' % p, p[0] * p[1]) for p in ((3, 5), (4, 2), (4, 9), (3, 10))]),
+                  forklaring='%s.' % _lista('%d · %d = %d' % (a, b, a * b)
+                                            for a, b in sorted(((3, 5), (4, 2), (4, 9), (3, 10)),
+                                                               key=lambda p: p[0] * p[1]))),
+            skriv('4 · ? = 32. Vilket tal fattas?', _svar(32 // 4),
+                  'Räkna i 4:ans tabell: %s. Det är %d steg, så 4 · %d = 32.'
+                  % (', '.join(str(4 * k) for k in range(1, 32 // 4 + 1)), 32 // 4, 32 // 4)),
+            sant('3 · 8 är lika mycket som 4 · 6.', 3 * 8 == 4 * 6,
+                 '3 · 8 = %d och 4 · 6 = %d. Två olika uppgifter kan ha samma svar.' % (3 * 8, 4 * 6)),
+        ], beskrivning='Multiplikation med 3:ans och 4:ans tabell, och knep som att 4:an är dubbla 2:an.'),
 
         niva('ma-ak3-division-1', 'Dela lika', 'Division', [
             skriv('12 kulor delas lika mellan 3 barn. Hur många kulor får varje barn?', _svar(12 // 3, 'kulor'),

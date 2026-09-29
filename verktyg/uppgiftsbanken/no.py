@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
-"""NO åk 5 och åk 8. Kroppen, ekologin och vattnets kretslopp i åk 5, och grunderna i kemi, biologi och fysik i åk 8 (atomen, pH, cellen, fotosyntesen och Ohms lag), ur Lgr22:s centrala innehåll, eftersom det är där eleverna oftast ber om hjälp."""
+"""NO åk 5 och åk 8. Kroppen, ekologin, vattnets kretslopp och lösningarna i åk 5, och grunderna i kemi, biologi och fysik i åk 8 (atomen, molekyler och joner, pH, cellen, fotosyntesen, Ohms lag och kraft och rörelse), ur Lgr22:s centrala innehåll, eftersom det är där eleverna oftast ber om hjälp.
+
+Räknefrågornas facit räknas ut här, och de vanligaste felräkningarna prövas
+med assert mot samma räkning: ett fel som råkar ge rätt svar lär barnet att
+räkna fel. I en ordna-fråga räknas ordningen ur värdena, och två lika värden
+hade gett två rätta ordningar.
+"""
 from fractions import Fraction as F
 
-from grund import bana, niva, val, skriv, ordna, tal
+from grund import bana, niva, val, skriv, ordna, sant, para, tal
 
 
 def t(x):
@@ -27,6 +33,61 @@ LAMPOR_ORDNADE = sorted(LAMPOR, key=lambda lampa: LAMPOR_U / lampa[1])
 
 def lampa_bricka(lampa):
     return '%s: %s A' % (lampa[0], t(lampa[1]))
+
+
+# Kraft och rörelse, räknat i kod. g står i frågan, så att svaret inte beror
+# på om klassen räknar med 9,8, 9,82 eller 10 N/kg.
+G = F(98, 10)
+VASKA_M = F(5)
+CYKEL_KM, CYKEL_MIN = F(18), F(45)
+CYKEL_H = CYKEL_MIN / 60
+CYKEL_FART = CYKEL_KM / CYKEL_H
+# Jämna svar, och de vanliga felen ger inte rätt svar av en slump: kilogram
+# skrivet som newton, g = 10 i stället för det som står i frågan, att dela
+# med minuterna, att gånga med timmarna eller att strunta i tiden.
+assert (VASKA_M * G).denominator == 1 and CYKEL_FART.denominator == 1
+assert VASKA_M * G not in (VASKA_M, VASKA_M * 10, VASKA_M / G)
+assert CYKEL_FART not in (CYKEL_KM / CYKEL_MIN, CYKEL_KM * CYKEL_H, CYKEL_KM)
+
+SMA_SIFFROR = str.maketrans('0123456789', '₀₁₂₃₄₅₆₇₈₉')
+
+
+def formel(delar):
+    """Den kemiska formeln ur (tecken, antal, vad): C₆H₁₂O₆. En etta skrivs inte ut."""
+    return ''.join(tecken + (str(antal).translate(SMA_SIFFROR) if antal > 1 else '')
+                   for tecken, antal, _ in delar)
+
+
+def uppraknat(delar):
+    """a, b och c."""
+    delar = list(delar)
+    return ', '.join(delar[:-1]) + ' och ' + delar[-1] if len(delar) > 1 else ''.join(delar)
+
+
+def laddning(x):
+    """En jons laddning med tecken, som i läroboken: +2 och −1."""
+    assert x != 0
+    return '+%d' % x if x > 0 else '−%d' % -x
+
+
+# Glukos. Formeln i frågan och svaret räknas ur samma lista.
+GLUKOS = [('C', 6, 'kolatomer'), ('H', 12, 'väteatomer'), ('O', 6, 'syreatomer')]
+GLUKOS_ATOMER = sum(antal for _, antal, _ in GLUKOS)
+assert formel(GLUKOS) == 'C₆H₁₂O₆'
+
+# Fyra joner: (grundämne, protoner, elektroner). Laddningen är protonerna
+# minus elektronerna. Protonerna prövas mot atomnumret och laddningen mot
+# den jon grundämnet faktiskt bildar, så att ingen bricka beskriver en jon
+# som inte finns.
+JONER = [('Natrium', 11, 10), ('Klor', 17, 18), ('Magnesium', 12, 10), ('Syre', 8, 10)]
+ATOMNUMMER_OCH_LADDNING = {'Natrium': (11, 1), 'Klor': (17, -1), 'Magnesium': (12, 2), 'Syre': (8, -2)}
+assert all((p, p - e) == ATOMNUMMER_OCH_LADDNING[namn] for namn, p, e in JONER)
+assert len({p - e for _, p, e in JONER}) == len(JONER)
+JONER_ORDNADE = sorted(JONER, key=lambda jon: jon[1] - jon[2])
+
+
+def jon_bricka(jon):
+    return '%s: %d p, %d e' % jon
 
 
 BANOR = [
@@ -154,6 +215,54 @@ BANOR = [
                   'Vattenånga är osynlig. Det vita som syns över en kastrull med kokande vatten är '
                   'små vattendroppar som redan har kondenserat.'),
         ], beskrivning='Vattnets tre former och hur vattnet går runt mellan hav, luft och land.'),
+
+        niva('no-ak5-kemi-2', 'Lösningar och blandningar', 'Kemi', [
+            val('Vilket av de här löser sig i vatten?',
+                ['Socker', 'Sand', 'Matolja', 'En järnspik'], 'Socker',
+                'Sockret delas upp i så små delar att de inte syns, och vattnet blir sött. Sand, '
+                'olja och järn löser sig inte i vatten.'),
+            sant('När socker löser sig i vatten försvinner sockret.', False,
+                 'Sockret finns kvar i vattnet, men delarna är så små att du inte kan se dem. Det '
+                 'är därför vattnet smakar sött.'),
+            skriv('En blandning där ett ämne har löst sig i vatten, som socker i vatten, har ett eget '
+                  'namn. Vad heter en sådan blandning? Ett ord.',
+                  ['lösning', 'lösningen', 'lösningar', 'en lösning', 'sockerlösning',
+                   'sockerlösningen', 'vattenlösning', 'losning'],
+                  'Ämnet har löst sig i vattnet, och därför kallas blandningen en lösning. '
+                  'Sockervatten är en sockerlösning och saltvatten en saltlösning.'),
+            val('Du häller matolja i ett glas vatten och rör om ordentligt. Vad har hänt efter en '
+                'stund?',
+                ['Oljan ligger som ett lager överst', 'Oljan har löst sig i vattnet',
+                 'Oljan ligger på botten'],
+                'Oljan ligger som ett lager överst',
+                'Olja löser sig inte i vatten. En liter matolja är lättare än en liter vatten, så '
+                'oljan flyter upp och lägger sig överst.'),
+            sant('Socker löser sig snabbare i varmt vatten än i kallt vatten.', True,
+                 'I varmt vatten rör sig vattnets partiklar snabbare. De stöter oftare mot sockret '
+                 'och drar loss små delar av det, så att det löser sig fortare.'),
+            para('Para ihop varje sätt att dela upp en blandning med vad det kan användas till.',
+                 [('Filtrering', 'Skilja sand från vatten'),
+                  ('Avdunstning', 'Få tillbaka saltet ur saltvatten'),
+                  ('Magnet', 'Plocka ut järnspån ur sand')],
+                 'Sanden är för stor för att gå igenom ett filter. Saltet har löst sig och går '
+                 'igenom filtret, men när vattnet avdunstar blir saltet kvar. Och järnspånen dras '
+                 'till magneten, men sanden gör det inte.'),
+            val('Varför fastnar inte saltet i filtret när du häller saltvatten genom ett filter?',
+                ['Saltet har löst sig i så små delar att de går igenom filtret',
+                 'Saltet sjunker till botten innan det når filtret',
+                 'Saltet har smält i vattnet'],
+                'Saltet har löst sig i så små delar att de går igenom filtret',
+                'Saltet har inte smält, det har löst sig i så små delar att de följer med vattnet '
+                'rakt igenom. Ett filter stoppar bara det som är större än hålen i filtret.'),
+            ordna('Du har sand och salt blandat i en burk. Ordna stegen så att du får tillbaka både '
+                  'sanden och saltet.',
+                  ['Häll i vatten och rör om', 'Filtrera, så fastnar sanden',
+                   'Låt vattnet avdunsta', 'Saltet blir kvar'],
+                  forklaring='Saltet löser sig i vattnet men sanden gör det inte. Därför fastnar '
+                             'sanden i filtret medan saltvattnet rinner igenom. När vattnet sedan '
+                             'avdunstar blir saltet kvar.'),
+        ], beskrivning='Vad som löser sig i vatten, vart det tar vägen och hur man delar upp en '
+                       'blandning igen.'),
     ]),
 
     bana('NO / Fysik / Kemi / Biologi', 'ak8', [
@@ -192,6 +301,55 @@ BANOR = [
                   forklaring='Protonerna sitter i atomkärnan, kärnan är atomens mitt, och '
                              'atomer sitter ihop till molekyler.'),
         ], beskrivning='Atomens delar och kemiska tecken för vanliga grundämnen.'),
+
+        # Mellan atomen och syrorna: nivån efter bygger på jonerna, vätejoner
+        # och hydroxidjoner, och den här är där ordet jon först förklaras.
+        niva('no-ak8-kemi-begrepp', 'Molekyler, föreningar och joner', 'Kemi', [
+            para('Para ihop begreppet med vad det betyder.',
+                 [('Atom', 'Den minsta delen av ett grundämne som fortfarande är det grundämnet'),
+                  ('Molekyl', 'Två eller flera atomer som sitter ihop'),
+                  ('Grundämne', 'Ett ämne som bara består av ett slags atomer'),
+                  ('Kemisk förening', 'Ett ämne av två eller flera olika grundämnen som sitter ihop'),
+                  ('Jon', 'En atom eller atomgrupp som har en elektrisk laddning')],
+                 'Atomer är byggstenarna, och de kan sitta ihop i molekyler. Finns det bara ett '
+                 'slags atomer i ämnet är det ett grundämne, och är olika grundämnen bundna till '
+                 'varandra är det en kemisk förening. En jon har fått sin laddning genom att ta upp '
+                 'eller lämna ifrån sig elektroner.'),
+            sant('Vatten är ett grundämne.', False,
+                 'Vatten, H₂O, består av två grundämnen, väte och syre, som sitter ihop. Därför är '
+                 'vatten en kemisk förening och inget grundämne.'),
+            val('Vilket av de här ämnena är en kemisk förening?',
+                ['Koldioxid (CO₂)', 'Järn (Fe)', 'Kvävgas (N₂)', 'Guld (Au)'], 'Koldioxid (CO₂)',
+                'Koldioxid består av två grundämnen, kol och syre, som sitter ihop. Järn och guld '
+                'är grundämnen, och kvävgas är molekyler av bara kväve.'),
+            sant('Syrgas, O₂, består av molekyler men är ändå ett grundämne.', True,
+                 'En syremolekyl är två syreatomer som sitter ihop. Det finns bara ett slags atomer '
+                 'i den, och därför är syrgas ett grundämne och ingen kemisk förening.'),
+            skriv('Glukos har formeln %s. Hur många atomer finns det i en glukosmolekyl?'
+                  % formel(GLUKOS),
+                  tal(GLUKOS_ATOMER),
+                  'Den lilla siffran efter ett kemiskt tecken säger hur många atomer det finns av '
+                  'det grundämnet: %s = %s.'
+                  % (' + '.join('%d %s' % (antal, vad) for _, antal, vad in GLUKOS),
+                     tal(GLUKOS_ATOMER))),
+            val('Du löser salt i vatten. Vad är saltvattnet?',
+                ['En blandning', 'En kemisk förening', 'Ett grundämne'], 'En blandning',
+                'Saltet och vattnet bildar inget nytt ämne. Kokar du bort vattnet får du tillbaka '
+                'saltet. Därför är saltvatten en blandning och ingen kemisk förening.'),
+            val('En natriumatom lämnar ifrån sig en elektron. Vilken laddning får natriumjonen?',
+                ['Positiv', 'Negativ', 'Ingen laddning'], 'Positiv',
+                'Atomen hade lika många elektroner som protoner. När den lämnar ifrån sig en '
+                'negativ elektron blir det en positiv proton för mycket, och jonen blir positiv: '
+                'Na⁺.'),
+            ordna('Här är fyra joner. På varje bricka står grundämnet, antalet protoner (p) och '
+                  'antalet elektroner (e). Ordna jonerna från mest negativ till mest positiv '
+                  'laddning.',
+                  [jon_bricka(jon) for jon in JONER_ORDNADE],
+                  forklaring='Laddningen är protonerna minus elektronerna: ' + uppraknat(
+                      '%s %d − %d = %s' % (namn.lower(), p, e, laddning(p - e))
+                      for namn, p, e in JONER_ORDNADE) + '.'),
+        ], beskrivning='Vad som skiljer atomer, molekyler, grundämnen, kemiska föreningar, '
+                       'blandningar och joner åt.'),
 
         niva('no-ak8-kemi-2', 'Syror och baser', 'Kemi', [
             skriv('Vilket pH har en neutral lösning? Svara med ett tal.',
@@ -361,5 +519,56 @@ BANOR = [
                                                         t(LAMPOR_U / lampa[1]))
                                  for lampa in LAMPOR_ORDNADE) + '.'),
         ], beskrivning='Spänning, ström och resistans, och att räkna med Ohms lag U = R · I.'),
+
+        niva('no-ak8-fysik-2', 'Kraft och rörelse', 'Fysik', [
+            val('Vad kan en kraft göra med ett föremål?',
+                ['Ändra dess fart, riktning eller form', 'Ändra dess massa',
+                 'Ändra vilket ämne det består av'],
+                'Ändra dess fart, riktning eller form',
+                'En kraft kan sätta fart på något, bromsa det, få det att svänga eller ändra dess '
+                'form, som när du trycker ihop en boll. Massan och ämnet ändras inte.'),
+            para('Para ihop kraften med exemplet som den förklarar.',
+                 [('Tyngdkraft', 'Ett äpple faller mot marken'),
+                  ('Friktion', 'Skorna halkar inte på golvet'),
+                  ('Luftmotstånd', 'En fallskärm faller långsamt'),
+                  ('Normalkraft', 'En bok på ett bord faller inte igenom bordet')],
+                 'Tyngdkraften drar allt mot jorden, och bordets normalkraft trycker tillbaka så att '
+                 'boken ligger still. Friktionen mellan skon och golvet håller emot när du går, och '
+                 'luftmotståndet bromsar fallskärmen.'),
+            sant('Ett föremål har mindre massa på månen än på jorden.', False,
+                 'Massan är hur mycket materia föremålet består av, och den ändras inte när '
+                 'föremålet flyttas. Det som blir mindre på månen är tyngden, för månen drar '
+                 'svagare än jorden.'),
+            skriv('En skolväska har massan %s kg. Hur många newton är tyngdkraften på väskan? '
+                  'Räkna med g = %s N/kg.' % (t(VASKA_M), t(G)),
+                  t(VASKA_M * G),
+                  'Tyngdkraften är massan gånger g: F = m · g = %s · %s = %s N.'
+                  % (t(VASKA_M), t(G), t(VASKA_M * G))),
+            val('En ishockeypuck glider över isen. Tänk dig att ingenting bromsar den, varken '
+                'friktion eller luftmotstånd. Vad händer med pucken?',
+                ['Den fortsätter rakt fram i samma fart', 'Den saktar in och stannar',
+                 'Den glider allt fortare', 'Den svänger av åt sidan'],
+                'Den fortsätter rakt fram i samma fart',
+                'Ett föremål fortsätter i samma fart och riktning tills en kraft ändrar rörelsen. '
+                'Det kallas tröghetslagen. På riktig is stannar pucken till slut, för att '
+                'friktionen och luftmotståndet bromsar den.'),
+            sant('När du trycker på en vägg trycker väggen tillbaka på dig med lika stor kraft.', True,
+                 'Krafter kommer alltid i par, kraft och motkraft. De är lika stora, riktade åt '
+                 'motsatt håll och verkar på var sitt föremål: du på väggen och väggen på dig.'),
+            skriv('En cyklist cyklar %s km på %s minuter. Hur många kilometer i timmen är '
+                  'medelfarten? Svara med ett tal.' % (t(CYKEL_KM), t(CYKEL_MIN)),
+                  t(CYKEL_FART),
+                  '%s minuter är %s timmar. Medelfarten är sträckan delat med tiden: '
+                  '%s / %s = %s km/h.'
+                  % (t(CYKEL_MIN), t(CYKEL_H), t(CYKEL_KM), t(CYKEL_H), t(CYKEL_FART))),
+            ordna('En bilförare ser plötsligt ett hinder på vägen och bromsar. Ordna vad som '
+                  'händer, från början till slut.',
+                  ['Föraren ser hindret', 'Bilen kör vidare medan föraren reagerar',
+                   'Föraren trycker på bromsen', 'Bilen saktar in', 'Bilen står still'],
+                  forklaring='Under reaktionstiden hinner bilen köra en bit i samma fart, och det '
+                             'är reaktionssträckan. Sedan bromsar friktionen bilen tills den står '
+                             'still, och det är bromssträckan. Tillsammans blir de stoppsträckan.'),
+        ], beskrivning='Vad krafter gör, skillnaden mellan massa och tyngd, fart och varför en bil '
+                       'inte stannar på en gång.'),
     ]),
 ]
