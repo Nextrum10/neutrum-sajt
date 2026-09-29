@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen och de delade dokumenten)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten och taken för det anonyma)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -44,8 +44,9 @@
 -- när förslaget skickas), manadskorningen_vacks_av_databasen,
 -- manadskorningen_gar_den_forsta, Fas 23.1 (de digitala uppgifterna),
 -- personer_redigeras_och_raderas, dokument_delas_med_personen,
--- schemalagda_korningar_syns, manadskorningens_svar_blir_en_uppgift och
--- manadskorningens_svar_lases_den_forsta är körda.
+-- schemalagda_korningar_syns, manadskorningens_svar_blir_en_uppgift,
+-- manadskorningens_svar_lases_den_forsta och anonyma_skrivningar_far_tak
+-- är körda.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -5796,13 +5797,240 @@ select pg_temp.rakna('CV anon ser det inte', null,
       where bucket_id = 'cv' and name = '1700000000000-rlsprov-Prov_CV.pdf'$q$, 0);
 
 -- Formuläret laddar upp utan konto, och det ska det fortsätta göra.
+-- Sökvägen har den form NX.kopplaAnsökan bygger: tid, högst sex tecken
+-- slump och filnamnet (anonyma_skrivningar_far_tak). Filen ovan läggs
+-- in som postgres och prövas inte mot policyn.
 select pg_temp.prova('CV anon laddar fortfarande upp', null,
   array[$q$insert into storage.objects (bucket_id, name)
-           values ('cv', '1700000000001-rlsprov-Nytt_CV.pdf')$q$], 'ok');
+           values ('cv', '1700000000001-rlspro-Nytt_CV.pdf')$q$], 'ok');
 
 insert into utfall (test, ok, detalj)
 select 'CV hinken cv är privat', not b.public, 'public = ' || b.public
 from storage.buckets b where b.id = 'cv';
+
+-- ------------------------------------------------------------
+-- Det anonyma har tak (anonyma_skrivningar_far_tak)
+--
+-- Fyra vägar in tog emot vad som helst: länken i biblioteket,
+-- klientfel, kontaktformuläret och hinken cv. Taken räknar hela
+-- tabellen, också det driften fått den senaste minuten eller timmen,
+-- så proven räknar det först och fyller upp till taket i stället för
+-- att räkna med en tom tabell. En fil i en hink går dessutom inte att
+-- ta bort med SQL. Varje prov rullas tillbaka för sig.
+-- ------------------------------------------------------------
+
+-- En länk är en webbadress. Studiehjälparen lägger sitt eget material,
+-- och familjen öppnar länken med window.open: förut var det bara CSP:n
+-- som stoppade en javascript:-adress.
+do $$
+declare js text; mellanslag text; andrad text; versaler text;
+begin
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+    insert into public.biblioteksmaterial (titel, amne, arskurs, lank, delad, skapad_av)
+    values ('RLS javascript', 'Svenska', 'ak5', 'javascript:alert(1)', false,
+            '00000000-0000-4000-8000-0000000000a1');
+    raise exception using errcode = 'P0001', message = 'gick igenom';
+  exception when others then js := sqlstate;
+  end;
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+    insert into public.biblioteksmaterial (titel, amne, arskurs, lank, delad, skapad_av)
+    values ('RLS mellanslag', 'Svenska', 'ak5', 'https://exempel.invalid/a b', false,
+            '00000000-0000-4000-8000-0000000000a1');
+    raise exception using errcode = 'P0001', message = 'gick igenom';
+  exception when others then mellanslag := sqlstate;
+  end;
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+    update public.biblioteksmaterial set lank = 'javascript:alert(1)'
+     where id = '00000000-0000-4000-8000-0000000000e3';
+    raise exception using errcode = 'P0001', message = 'gick igenom';
+  exception when others then andrad := sqlstate;
+  end;
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000a1');
+    insert into public.biblioteksmaterial (titel, amne, arskurs, lank, delad, skapad_av)
+    values ('RLS versaler', 'Svenska', 'ak5', 'HTTPS://Exempel.invalid/Blad', false,
+            '00000000-0000-4000-8000-0000000000a1');
+    raise exception using errcode = 'P0001', message = 'gick igenom';
+  exception when others then versaler := case when sqlerrm = 'gick igenom' then 'gick igenom' else sqlstate end;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  insert into utfall (test, ok, detalj) values
+    ('Taken: en javascript:-länk nekas i biblioteket', js = '23514', 'sqlstate ' || coalesce(js, 'inget')),
+    ('Taken: en länk med mellanslag nekas', mellanslag = '23514', 'sqlstate ' || coalesce(mellanslag, 'inget')),
+    ('Taken: en länk går inte att ändra till javascript:', andrad = '23514', 'sqlstate ' || coalesce(andrad, 'inget')),
+    ('Taken: en https-adress går in, också i versaler', versaler = 'gick igenom', coalesce(versaler, 'inget'));
+end $$;
+
+-- klientfel kapas till samma längder som nextrum-fel.js skickar, och
+-- tiden är databasens. Över sextio rader på en minut tas raden tyst
+-- bort: felrapporteringen ska aldrig själv ge ett fel.
+do $$
+declare
+  b bigint; n bigint; i int; fel text;
+  lm int; ls int; lst int; lw int; tid timestamptz;
+begin
+  begin
+    select count(*) into b from public.klientfel where created_at > now() - interval '1 minute';
+    perform pg_temp.bli(null);
+    insert into public.klientfel (meddelande, sida, stack, webblasare, created_at)
+    values ('rls-tak-langd ' || repeat('m', 900), repeat('s', 400), repeat('t', 3000), repeat('w', 400),
+            now() - interval '3 days');
+    for i in 1 .. 60 loop
+      insert into public.klientfel (meddelande, sida) values ('rls-tak-flod ' || i, '/');
+    end loop;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select length(meddelande), length(sida), length(stack), length(webblasare), created_at
+      into lm, ls, lst, lw, tid
+      from public.klientfel where meddelande like 'rls-tak-langd %';
+    select count(*) into n from public.klientfel where meddelande like 'rls-tak-flod %';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Taken: klientfel', false, fel);
+  else
+    -- Raden med de långa fälten är en av sextio, så floden får plats
+    -- med 59 minus det som redan fanns.
+    insert into utfall (test, ok, detalj) values
+      ('Taken: klientfel kapas till samma längder som nextrum-fel.js',
+       lm = 500 and ls = 300 and lst = 2000 and lw = 300,
+       format('%s, %s, %s, %s', lm, ls, lst, lw)),
+      ('Taken: klientfel får databasens tid, inte den som postar', tid = now(), coalesce(tid::text, 'ingen rad')),
+      ('Taken: över sextio klientfel på en minut tas tyst bort', n = 59 - b,
+       format('%s av 60 kom in, %s fanns redan', n, b));
+  end if;
+end $$;
+
+-- Kontaktformuläret: fälten har en längd, och formuläret nekas med ett
+-- besked över tre meddelanden i timmen från samma adress eller trettio
+-- totalt. Adressen jämförs som den levereras (intern.epost_nyckel), och
+-- tiden är databasens: annars går bromsen runt med en bakdaterad rad.
+do $$
+declare
+  b bigint; i int; fel text;
+  lang text; n_samma bigint; tid timestamptz; fjarde text; fjarde_text text;
+  n_flod bigint; trettiofirsta text;
+begin
+  begin
+    perform pg_temp.bli(null);
+    insert into public.contact_messages (name, email, message)
+    values ('RLS Tak', 'rls-tak-lang@example.invalid', repeat('x', 5001));
+    raise exception using errcode = 'P0001', message = 'gick igenom';
+  exception when others then lang := sqlstate;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  begin
+    perform pg_temp.bli(null);
+    insert into public.contact_messages (name, email, message, created_at)
+    values ('RLS Tak', 'rls-tak@example.invalid', 'Ett', now() - interval '2 days');
+    insert into public.contact_messages (name, email, message)
+    values ('RLS Tak', 'RLS-Tak+tva@example.invalid', 'Två');
+    insert into public.contact_messages (name, email, message)
+    values ('RLS Tak', ' rls-tak+tre@Example.invalid ', 'Tre');
+    begin
+      insert into public.contact_messages (name, email, message)
+      values ('RLS Tak', 'rls-tak+fyra@example.invalid', 'Fyra');
+      fjarde := 'gick igenom';
+    exception when others then fjarde := sqlstate; fjarde_text := sqlerrm;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*), min(created_at) into n_samma, tid from public.contact_messages where name = 'RLS Tak';
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, 'samma adress: ' || sqlerrm); end if;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  begin
+    select count(*) into b from public.contact_messages where created_at > now() - interval '1 hour';
+    perform pg_temp.bli(null);
+    for i in 1 .. 30 - b loop
+      insert into public.contact_messages (name, email, message)
+      values ('RLS Flod', 'rls-flod-' || i || '@example.invalid', 'Hej');
+    end loop;
+    begin
+      insert into public.contact_messages (name, email, message)
+      values ('RLS Flod', 'rls-flod-sist@example.invalid', 'Hej');
+      trettiofirsta := 'gick igenom';
+    exception when others then trettiofirsta := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into n_flod from public.contact_messages where name = 'RLS Flod';
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := concat_ws('; ', fel, 'trettio: ' || sqlerrm); end if;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  insert into utfall (test, ok, detalj) values
+    ('Taken: ett kontaktmeddelande över 5 000 tecken nekas', lang = '23514', 'sqlstate ' || coalesce(lang, 'inget')),
+    ('Taken: tre meddelanden från samma adress går in, med databasens tid',
+     fel is null and n_samma = 3 and tid = now(),
+     coalesce(fel, format('%s rader, tidigast %s', n_samma, tid))),
+    ('Taken: det fjärde från samma adress nekas med ett besked',
+     fjarde = 'P0001' and fjarde_text like 'För många meddelanden%',
+     coalesce(fjarde, 'inget') || ': ' || coalesce(fjarde_text, '')),
+    ('Taken: över trettio meddelanden i timmen nekas',
+     fel is null and trettiofirsta = 'P0001' and n_flod = 30 - b,
+     coalesce(fel, format('%s kom in, %s fanns redan, den trettioförsta: %s', n_flod, b, trettiofirsta)));
+end $$;
+
+-- Hinken cv tar bara sökvägen formuläret bygger, och högst tjugo filer
+-- i timmen. Filerna före taket läggs in som postgres, för anon får inte
+-- läsa hinken tillbaka.
+select pg_temp.prova('Taken: anon laddar inte upp ett CV under eget namn', null,
+  array[$q$insert into storage.objects (bucket_id, name)
+           values ('cv', 'Alva_Berg_CV.pdf')$q$], 'nekad');
+select pg_temp.prova('Taken: anon laddar inte upp ett CV i en egen mapp', null,
+  array[$q$insert into storage.objects (bucket_id, name)
+           values ('cv', 'mapp/1700000000002-abc123-CV.pdf')$q$], 'nekad');
+
+do $$
+declare b bigint; i int; fel text; tjugonde text; tjugoforsta text;
+begin
+  begin
+    select count(*) into b from storage.objects
+     where bucket_id = 'cv' and created_at > now() - interval '1 hour';
+    for i in 1 .. 19 - b loop
+      insert into storage.objects (bucket_id, name)
+      values ('cv', (1700000001000 + i)::text || '-rlstak-CV.pdf');
+    end loop;
+    perform pg_temp.bli(null);
+    begin
+      insert into storage.objects (bucket_id, name) values ('cv', '1700000002000-rlstak-Tjugonde.pdf');
+      tjugonde := 'gick igenom';
+    exception when others then tjugonde := sqlstate;
+    end;
+    begin
+      insert into storage.objects (bucket_id, name) values ('cv', '1700000002001-rlstak-Over.pdf');
+      tjugoforsta := 'gick igenom';
+    exception when others then tjugoforsta := sqlstate;
+    end;
+    raise exception 'rulla tillbaka';
+  exception when others then
+    if sqlerrm <> 'rulla tillbaka' then fel := sqlerrm; end if;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  insert into utfall (test, ok, detalj) values
+    ('Taken: den tjugonde filen i timmen går in', fel is null and tjugonde = 'gick igenom',
+     coalesce(fel, format('%s fanns redan, den tjugonde: %s', b, tjugonde))),
+    ('Taken: den tjugoförsta nekas', fel is null and tjugoforsta = '42501',
+     coalesce(fel, 'den tjugoförsta: ' || coalesce(tjugoforsta, 'inget')));
+end $$;
 
 -- ------------------------------------------------------------
 -- Fas 19.6: fakturan bär sitt OCR-nummer
