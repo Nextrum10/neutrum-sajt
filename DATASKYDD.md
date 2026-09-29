@@ -56,7 +56,7 @@ finnas. Det här är det.
 | 14 | Besöksstatistik | besökare | sida, ungefärligt land, enhetstyp; unik besökare ur en hash som byts varje dygn | 6.1 a, samtycke (LEK 9:28) | Vercel | enligt Vercel |
 | 15 | Källspårning och annonsmätning | besökare som skickar anmälan | landningssida, hänvisare, UTM | 6.1 a, samtycke | ingen i dag; Meta och Google om ett id sätts | som anmälan |
 | 16 | Vår AI-assistent (drift-agenten) | barn, förälder | initialer, årskurs, ämne, maskad fritext | 6.1 f | Anthropic | Anthropics villkor; frågor, svar och steg i `agent_korningar` och `agent_steg` töms efter 90 dagar, AI-förslagens motivering 90 dagar efter beslutet |
-| 17 | Handlingar om verksamheten (`handlingar`, hinken `dokument`) | studiehjälpare | avtal, intyg | 6.1 b, 6.1 c | Supabase | så länge de gäller, sedan så länge lagen kräver |
+| 17 | Handlingar om verksamheten (`handlingar`, hinken `dokument`) | studiehjälpare, förälder | avtal, intyg; en handling som delats med personen den gäller läser hen själv under Profil & inställningar (2026-09-29) | 6.1 b, 6.1 c | Supabase | så länge de gäller, sedan så länge lagen kräver |
 | 18 | Vårt arbetsunderlag (`uppgifter`, `admin_noteringar`) | alla | titel och text vi skriver själva, kan nämna namn | 6.1 f | Supabase | uppgifter: 1 år efter att de stängts; anteckningar om en person: med personens konto |
 
 **Känsliga uppgifter (art. 9) samlas inte in.** Vi ber aldrig om hälsa

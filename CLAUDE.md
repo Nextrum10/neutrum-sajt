@@ -579,6 +579,36 @@ familj kunde skriva om vilken studiehjälpare som helst; sedan Fas 19.3
 måste `tutor_id` vara passets studiehjälpare och `student_id` passets
 elev.
 
+**Ett avtal delas med personen det gäller** (2026-09-29, Leo: "man ska
+kunna spara dokument där och välja vilken person som ska ha tillgång
+till det genom sina inställningar. dvs anställningsavtal med lärare
+eller annat avtal med kund"). Under System → Dokument väljer admin vem
+en handling gäller, en familj eller en studiehjälpare, och om personen
+ser den. Personen läser den under **Profil & inställningar → Dokument**
+i sin egen vy (`NXStudie.dokument`, samma i båda vyerna) och kan öppna
+eller ladda ned filen, men inte ändra något. Personen står i
+`kopplad_tabell = 'profiles'` och `kopplad_id`, kolumnerna som fanns
+sedan Fas 9.10 utan att någon vy satte dem, och delningen i
+`handlingar.delad_med_personen`. En person, inte en lista: ett avtal
+har en motpart, och en handbok till alla studiehjälpare är en annan
+regel som byggs när den behövs. Tre saker:
+- **Personen läser aldrig tabellen.** `handlingar` bär vår
+  `anteckning`, och RLS kan inte begränsa kolumner. `mina_handlingar()`
+  lämnar ut en fast kolumnlista för den inloggade själv, och hinken
+  släpper in exakt den fil raden pekar ut (`intern.handling_delad_med_mig`),
+  inte en annan fil i samma mapp.
+- **Vyerna är låsta tills de öppnas.** En familj ser ingenting förrän
+  den är matchad, och en studiehjälpare förrän hen är godkänd.
+  Formuläret säger det när personen väljs; dokumentet syns när vyn
+  öppnas.
+- **Öppna går i samma tryck** (`NXMedia.öppnaFil`): en PDF eller en bild
+  i en ny flik som öppnas innan länken finns, annars stoppar Safari den
+  tyst; Word laddas ned. Länken gäller fem minuter, för ett avtal kan
+  bära ett personnummer.
+Personens panel i adminvyn visar dokumenten under Översikt, med en
+länk till formuläret där personen redan är vald. Ingen notis går ut
+när något delas (avsnitt 11).
+
 ### Ordlistan (använd den, i kod och i text)
 
 | Ord | Betyder |
@@ -1298,6 +1328,14 @@ admin läser, bara `niva_starta()` och `niva_svara()` skriver) och
 `homework.niva_id`. `niva_fragor` får aldrig en rad borttagen som har
 svar: en ändrad fråga får ett nytt id och den gamla blir inaktiv, så att
 gamla svar pekar på det som faktiskt frågades.
+`dokument_delas_med_personen` (2026-09-29, avsnitt 1) la till
+`handlingar.delad_med_personen`, `mina_handlingar()` (personens egna,
+med en fast kolumnlista, SECURITY DEFINER) och policyn "personen läser
+sitt dokument" på hinken `dokument`. Två villkor: en koppling till
+`profiles` har ett id skrivet som `auth.uid()` skriver det
+(`handlingar_person_id`), och bara en handling kopplad till en person
+kan delas (`handlingar_delas_med_en_person`). `delad_med_personen` står
+i auditloggens vitlista. Tabellen har fortfarande bara adminpolicyerna.
 Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
 id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
 ingen roll utom ägaren når den). Se Notiserna nedan.
@@ -1581,6 +1619,15 @@ någon lista (`ärRaderad()` i kärnan), och en familj ser inte ett raderat
 barn (policyn `förälder ser egna barn`). Ett gammalt pass pekar
 fortfarande på dem, och panelen säger då varför namnet är borta.
 `intern.konton_oanvanda()` hoppar över raderade konton.
+
+**Avtalen under System → Dokument står kvar**, för familjen och för
+studiehjälparen, i båda sätten: ett anställningsavtal eller ett
+kundavtal är något vi kan behöva visa, och det är admin som tar bort
+det, inte raderingen. Rutan säger hur många (`star_kvar.handlingar`).
+Familjens rad kom med `dokument_delas_med_personen`, när en familj
+kunde få ett avtal; lappen i `intern.radering_underlag` görs med
+`replace()` och en vakt. Personens tillgång följer med kontot: en
+raderad inloggning läser ingenting.
 
 **Radera aldrig en person i dashboarden.** `bookings.parent_id` är ON
 DELETE CASCADE: ett konto som tas bort där tar med sig sina betalda pass,
@@ -2007,6 +2054,11 @@ att visa **rätt sida**, inte för att skydda data.
   tabellaliaset — familjen hade alltså aldrig kunnat se sitt barns
   material, och en policy som nekar för mycket ser ut som en tom lista,
   inte som ett fel.
+- **`dokument` släpper in en person till en fil** (2026-09-29): den som
+  en handling delats med läser filen raden pekar ut, prövat på HELA
+  sökvägen och inte bara mappen (`intern.handling_delad_med_mig`,
+  SECURITY DEFINER eftersom personen inte ser `handlingar`). Läsa, inget
+  annat: uppladdning, byte och borttagning är fortfarande admin ensam.
 - **`cv` är undantaget** (v11, läsrätten 2026-09-27). Den som söker
   har inget konto och ingen rad när filen laddas upp, så sökvägen är
   tid, slump och filnamnet, och kopplingen till ansökan är raden
@@ -2153,7 +2205,7 @@ igen 2026-09-27:**
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
-| 33 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-28, de senaste är `radering_lage` och `radera_person`, och `manadskorning_lage` före dem) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 34 SECURITY DEFINER-funktioner nåbara för `authenticated` (2026-09-29, den senaste är `mina_handlingar`; `radering_lage` och `radera_person` före den) | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
@@ -3003,6 +3055,23 @@ tillbaka överst i avsnittet för 22.1.
      `uppgiftsbanken_startpaketet`, båda EFTER merge, och filerna döps om
      till versionerna driften registrerade (avsnitt 5). Vyerna tål att
      tabellerna saknas: uppgifterna syns som förut, utan banan.
+- **Avtalen som delas med personen (2026-09-29, avsnitt 1) är i drift.**
+  Migrationen `dokument_delas_med_personen` kördes efter att PR #126
+  mergats, som version `20260929080900`, och det driften sparade har
+  samma md5 som filen. Hela `rls-test.sql` gick igenom mot driften
+  efteråt: 771 av 773, där de två är Fas 23.1:s prov, som väntar på sin
+  egen migration. En databas byggd utan migrationen tål vyerna: System →
+  Dokument laddar upp som förut, delningen säger att den inte finns än,
+  och Profil → Dokument står tom. Kvar:
+  1. **Ingen notis när något delas.** Personen får varken mejl eller
+     en rad i vyn; säg till själv. En notistyp är fem steg
+     (`DEPLOY-NOTISER.md`) och en driftsättning av `notis-ko`.
+  2. **Ingen underskrift.** Dokumentet är en kopia att läsa. Ett avtal
+     som ska skrivas under skrivs under någon annanstans, och den
+     påskrivna filen läggs upp som en ny handling.
+  3. **En person per handling.** Något som ska nå alla studiehjälpare
+     (handboken, en policy) är en egen regel, och byggs inte förrän den
+     behövs.
 
 ---
 

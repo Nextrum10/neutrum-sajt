@@ -767,6 +767,10 @@
 .uppg-form .fgroup{margin:0}
 .uppg-form .uppg-bred,.uppg-form .uppg-fot{grid-column:1/-1}
 .uppg-fot{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+/* En kryssruta som inte går att välja än ska se ut så, inte som ett
+   val någon redan gjort: dokumentets "personen ser det" står avstängd
+   tills en person är vald (2026-09-29). */
+.ag-kryss input:disabled,.ag-kryss input:disabled + span{opacity:.5}
 .adm-verktyg{
   display:flex;gap:9px;flex-wrap:wrap;align-items:center;
   margin-bottom:16px;
