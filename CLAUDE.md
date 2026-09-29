@@ -1455,7 +1455,8 @@ i `nextrum-admin-automationer.js` ger det en beskrivning.
 Provat mot driften 2026-09-29 med hela `rls-test.sql` i en transaktion
 som rullades tillbaka, på det sätt avsnitt 9 beskriver: 762 av 764 med
 migrationen, där de två är Fas 23.1:s prov, som väntar på sin egen, och
-754 av 762 utan den, där alla sex raderna för schemat föll. Provet lägger
+754 av 762 utan den, där alla sex raderna för schemat föll. Med main
+inslagen (de delade dokumenten): 779 av 781, samma två. Provet lägger
 in en misslyckad körning i `cron.job_run_details` med runid −9101, och
 den försvinner med återrullningen.
 
