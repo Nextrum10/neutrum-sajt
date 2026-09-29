@@ -209,8 +209,9 @@ när någon kommit ihåg knappen. pg_cron-jobbet `manadskorning` kör
 med hemligheten ur `notis_konfig` (adressen i `notis_konfig.fakturering_url`).
 Den vägen skriver alltid förra månaden, och samma underlag och fakturautkast som
 knappen. Gick det fel står det under System → Fel i sex timmar, och passen larmar
-som Inte utbetalt. Ett svar som inte är 200 blir också en uppgift, som står kvar
-tills någon stänger den (Svaret blir en uppgift, nedan).
+som Inte utbetalt. Allt utom 200, också en körning som bara skrev en del (207),
+blir dessutom en uppgift som står kvar tills någon stänger den (Svaret blir en
+uppgift, nedan).
 
 Det är fortfarande ett aktivt beslut, inte något som råkar vara påslaget. Ordningen:
 
@@ -269,6 +270,13 @@ Ordningen efter merge, före den 1 oktober klockan 04:47 UTC:
 4. Döp om de två migrationsfilerna till versionerna `apply_migration` gav dem, och ta
    bort "INTE KÖRD I DRIFTEN ÄN" i dem och "Inte körd i driften än" i CLAUDE.md.
 5. Kör hela `verktyg/rls-test.sql` mot driften.
+
+Alla fem gjordes 2026-09-29, efter att PR #128 mergats: migrationerna
+`20260929093749` och `20260929093830`, med samma md5 som filerna. Torrkörningen
+svarade 200 för augusti, och `intern.manadskorning_svar()` läste den som `ok`, utan
+uppgift. Hela `rls-test.sql` gick igenom med 794 av 796, där de två är Fas 23.1:s
+prov, som väntar på sin egen migration. Jobbet står på, och första skarpa
+läsningen är den 1 oktober 04:47 UTC.
 
 Funktionen läser bara anrop från den senaste timmen, så flyttas `manadskorning` ska
 `manadskorning-svar` flyttas lika mycket.

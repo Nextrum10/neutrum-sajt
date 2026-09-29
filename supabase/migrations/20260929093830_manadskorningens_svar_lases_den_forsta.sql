@@ -1,21 +1,18 @@
 -- ============================================================
 -- Månadskörningens svar läses den 1:a
 --
--- INTE KÖRD I DRIFTEN ÄN (2026-09-29). Körs efter
--- manadskorningens_svar_blir_en_uppgift, och först när funktionen körts
+-- Körd 2026-09-29, sist av stegen i DEPLOY-BETALNING.md avsnitt 6, när
+-- manadskorningens_svar_blir_en_uppgift var körd och funktionen körts
 -- och lästs för hand. Fas 7:s regel: ett jobb schemaläggs när det gått
--- att köra och läsa för hand, aldrig före. Som postgres:
+-- att köra och läsa för hand, aldrig före. Som postgres gav
 --
 --   select intern.manadskorning_vack(true);
 --
--- vänta en minut, och läs svaret:
+-- en torrkörning som svarade 200, för augusti, och
 --
 --   select intern.manadskorning_svar();
 --
--- Det ska vara lage ok och svar 200, utan uppgift. Döp sedan om filen
--- till versionen apply_migration ger den (CLAUDE.md avsnitt 5), och
--- gör det före den 1:a klockan 04:47 UTC, annars läses inte månadens
--- körning.
+-- läste den som lage ok och svar 200, utan uppgift.
 --
 -- Klockan 04:47 UTC den 1:a, en halvtimme efter manadskorning (04:17).
 -- Funktionen läser anrop från den senaste timmen, så flyttas det ena
