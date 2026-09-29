@@ -1084,6 +1084,8 @@
     $('#dok-rubrik').textContent = 'Ny handling';
     $('#dok-spara').textContent = 'Lägg till';
     $('#dok-avbryt').hidden = true;
+    $('#dok-ta-bort').hidden = true;
+    delete $('#dok-ta-bort').dataset.dokBort;
     $('#dok-fil-grupp').hidden = false;
     fyllDokPersoner();
     $('#dok-person').value = förval && S.personer[förval] ? förval : '';
@@ -1100,6 +1102,10 @@
     $('#dok-rubrik').textContent = 'Ändra handlingen';
     $('#dok-spara').textContent = 'Spara ändringen';
     $('#dok-avbryt').hidden = false;
+    /* Ta bort står här och inte på raden: två knappar per rad, som
+       förut, och det som inte går att ångra ett steg bort. */
+    $('#dok-ta-bort').hidden = false;
+    $('#dok-ta-bort').dataset.dokBort = h.id;
     /* Filen byts inte här. En ny fil är en ny handling, och den gamla
        tas bort för sig: annars hade personen kunnat ha den gamla
        öppen medan den byttes under hen. */
@@ -1145,11 +1151,11 @@
     const p = S.personer[id];
     const typ = p && p.role === 'tutor' ? 'studiehjalpare' : 'familj';
     const namn = p && !ärRaderad(p)
-      ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="' + typ + ':' + esc(id) + '">'
-        + esc(namnFör(id)) + '</button>'
+      ? '<button type="button" class="eko-lank" style="white-space:nowrap" data-dp="' + typ + ':' + esc(id) + '"><b>'
+        + esc(namnFör(id)) + '</b></button>'
       : esc(p ? namnFör(id) : 'Borttaget konto');
-    return namn + '<span class="adm-und">'
-      + (h.delad_med_personen ? 'Ser det under Profil' : 'Bara vi ser det') + '</span>';
+    return namn + '<span class="adm-und" style="white-space:nowrap">'
+      + (h.delad_med_personen ? 'Ser den i sin vy' : 'Bara vi ser den') + '</span>';
   }
 
   function ritaDokument() {
@@ -1181,8 +1187,7 @@
         + '<span class="adm-und">' + esc(h.uppladdad_av ? namnFör(h.uppladdad_av) : 'okänt') + '</span>' },
       { namn: '', höger: true, rita: h =>
         (h.fil ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button> ' : '')
-        + '<button class="btn btn-ghost btn-sm" type="button" data-dok-andra="' + esc(h.id) + '">Ändra</button> '
-        + '<button class="btn btn-ghost btn-sm" type="button" data-dok-bort="' + esc(h.id) + '">Ta bort</button>' }
+        + '<button class="btn btn-ghost btn-sm" type="button" data-dok-andra="' + esc(h.id) + '">Ändra</button>' }
     ], rader, filter ? 'Ingen handling här' : 'Inga handlingar än');
   }
 

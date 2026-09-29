@@ -2552,7 +2552,7 @@ window.NXStudie = (function () {
 
     function rita() {
       if (!rader.length) {
-        host.innerHTML = '<p class="xsmall nx-dok-tom">Inga dokument än. Avtal och annat vi delar med dig hamnar här.</p>';
+        host.innerHTML = '<p class="xsmall nx-dok-tom">Inga dokument än.</p>';
         return;
       }
       var idag = NX.isoFor(new Date());

@@ -580,7 +580,7 @@
   function dpDokument(p) {
     const egna = (S.handlingar || []).filter(h => h.kopplad_tabell === 'profiles' && h.kopplad_id === p.id);
     const rader = egna.map(h => dpRad(h.titel,
-      [kör('dokTyp', h.typ), h.delad_med_personen ? 'ser det under Profil' : 'bara vi ser det',
+      [kör('dokTyp', h.typ), h.delad_med_personen ? 'ser det i sin vy' : 'bara vi ser det',
        h.giltig_till ? 'giltigt till ' + kortDatum(h.giltig_till) : null].filter(Boolean).join(' · '),
       h.fil ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button>' : ''
     )).join('');
