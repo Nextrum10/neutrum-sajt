@@ -347,11 +347,12 @@ window.NXStudie = (function () {
      lagts med rubriken bakom den. Den lodräta menyn på en dator står
      bredvid innehållet, inte över det, och räknas inte.
 
-     Adminvyns toppråd (.adm-topp) är klistrad under sidhuvudet på alla
-     bredder och räknas alltid. Den räknas där den STÅR när den klistrat
-     (top + höjd), inte där den ligger just nu: överst på sidan ligger den
-     längre ned. Utan den landade rubriken bakom raden vid varje byte från
-     ett scrollat läge (2026-09-28). */
+     Adminvyns topprad (.adm-topp) står fast högst upp när man är inne,
+     och då är sajtens sidhuvud gömt (dess nederkant blir 0). Den räknas
+     där den STÅR när den klistrat (top + höjd), inte där den ligger just
+     nu. Utan den landade rubriken bakom raden vid varje byte från ett
+     scrollat läge (2026-09-28). Under den står sektionsraden på en
+     telefon, som i de två andra vyerna, och räknas som där. */
   function täcktÖverst() {
     var hdr = document.querySelector('.hdr');
     var nederkant = hdr ? hdr.getBoundingClientRect().bottom : 72;
@@ -362,7 +363,7 @@ window.NXStudie = (function () {
         nederkant = Math.max(nederkant, (parseFloat(ts.top) || 0) + topp.offsetHeight);
       }
     }
-    var sido = document.querySelector('.vy:not(.vy-admin) .vy-sido');
+    var sido = document.querySelector('.vy .vy-sido');
     if (sido) {
       var cs = window.getComputedStyle(sido);
       if (cs.position === 'sticky' && cs.flexDirection !== 'column') {
@@ -1829,12 +1830,9 @@ window.NXStudie = (function () {
         /* Adminvyns meny på en dator är en kolumn med egen rullning
            (nextrum-arbetsyta.css): den är högre än en bärbar. Nås en
            post från en länk i innehållet, eller från en adress, kan den
-           stå utanför. Då dras menyn, aldrig sidan. Nederkanten räknar
-           med fotens höjd: den är klistrad längst ned i menyn och täcker
-           annars posterna som står strax ovanför. */
+           stå utanför. Då dras menyn, aldrig sidan. */
         if (nav.scrollHeight > nav.clientHeight + 1) {
-          var fot = nav.querySelector('.adm-sido-fot');
-          var nedre = nav.clientHeight - (fot && fot.offsetHeight ? fot.offsetHeight + 16 : 0);
+          var nedre = nav.clientHeight;
           var dy = vald_a.getBoundingClientRect().top - nav.getBoundingClientRect().top;
           if (dy < 0 || dy + vald_a.offsetHeight > nedre) {
             nav.scrollTop += dy - (nedre - vald_a.offsetHeight) / 2;
@@ -1952,20 +1950,13 @@ window.NXStudie = (function () {
     /* Sidhuvudets höjd, för sektionsraden som står fast under det på
        en telefon. Satt på raden och inte på :root: en variabel på
        roten ärvs av hela sidan och räknar om stilen för allt när den
-       ändras (CLAUDE.md, startsidan efter hero). Adminvyns toppråd och
-       sidan runt den (main, vars överkant tidigare höll undan en hero
-       som inte finns) står utanför menyn och får därför var sin: toppraden
-       fäste förut på en gissad höjd (clamp), 9 px under sidhuvudet på en
-       bred skärm, så att innehåll syntes glida förbi i springan. */
+       ändras (CLAUDE.md, startsidan efter hero). Adminvyn läser den
+       inte: där är sidhuvudet gömt, och raden står under adminvyns
+       topprad, som har en fast höjd (--adm-topp-h). */
     var hdrEl = document.querySelector('.hdr');
     if (hdrEl && window.ResizeObserver) {
-      var toppEl = document.querySelector('.adm-topp');
-      var huvudEl = toppEl ? document.getElementById('innehall') : null;
       new ResizeObserver(function () {
-        var h = hdrEl.offsetHeight + 'px';
-        nav.style.setProperty('--vy-hdr-h', h);
-        if (toppEl) toppEl.style.setProperty('--vy-hdr-h', h);
-        if (huvudEl) huvudEl.style.setProperty('--vy-hdr-h', h);
+        nav.style.setProperty('--vy-hdr-h', hdrEl.offsetHeight + 'px');
       }).observe(hdrEl);
     }
 

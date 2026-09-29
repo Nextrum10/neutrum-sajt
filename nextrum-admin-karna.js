@@ -71,6 +71,15 @@ const NXAdmin = (function () {
     if (document.documentElement.dataset.modulfel && id !== 'view-fel') return;
     ['view-loading', 'view-auth', 'view-nekad', 'view-app', 'view-fel']
       .forEach(v => { const el = $('#' + v); if (el) el.hidden = (v !== id); });
+    /* Inne i vyn har sidan en egen topprad (#adm-topp), och sajtens
+       sidhuvud och sidfot göms: klassen är vad CSS:en vilar på. Före det,
+       i inloggningen och felvyerna, är det sajtens sidhuvud som gäller.
+       Raden göms här också: kastar start() efter att vyn visats hade
+       felvyn annars fått båda raderna överst. */
+    const inne = id === 'view-app';
+    document.body.classList.toggle('adm-inne', inne);
+    const topp = $('#adm-topp');
+    if (topp) topp.hidden = !inne;
   }
 
   /* ============================================================
@@ -112,7 +121,11 @@ const NXAdmin = (function () {
     if (!rader.length) return tomt(o.tomt || 'Inget här', '');
     return '<ul class="adm-namnlista">' + rader.map(r => {
       const under = o.under ? o.under(r) : '';
+      /* Initialerna först (2026-09-29): ögat hittar en person på formen
+         innan det läst namnet, och en lista med bara text var en vägg. De
+         är aria-hidden; skärmläsaren läser namnet som förut. */
       return '<li><button type="button" class="adm-namn" data-dp="' + esc(o.typ + ':' + o.id(r)) + '">'
+        + M.avatar(o.namn(r) || '', null, { liten: true })
         + '<span class="adm-namn-text"><b>' + esc(o.namn(r) || '(namn saknas)') + '</b>'
         + (under ? '<span>' + esc(under) + '</span>' : '')
         + '</span>'

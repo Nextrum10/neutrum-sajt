@@ -316,7 +316,7 @@ låsta. Passets plats och rad till studiehjälparen går att TÖMMA men inte
 efter månaden.
 
 **Månadens ekonomi och Löner (2026-09-28)** är två egna sidor under
-Ekonomi i adminvyn, bredvid Betalningar & utbetalningar. Leo: "där ska
+Ekonomi i adminvyn, bredvid Betalningar. Leo: "där ska
 man aktuellt se hur många fakturor som ska skickas samt så många
 lektioner som är betalda för. hur många timmar är betalt samt ej ännu
 betalt ... detta för att ej ha problem om kassalikviditet", och "en till
@@ -424,7 +424,9 @@ siffrorna är underlagets, frysta när månadskörningen skrev det
 (`NXBetalning.lonespec`). Månadskörningen skriver underlaget den 1:a
 varje månad, av sig själv sedan 2026-09-28 (pg_cron-jobbet
 `manadskorning`, avsnitt 5; läget står under Ekonomi → Månadskörning),
-så en månad har sin lönespec när den är slut. Ett pass som rapporteras
+så en månad har sin lönespec när den är slut. Svarar körningen något
+annat än 200 blir det en uppgift en halvtimme senare, som står kvar
+tills någon stänger den (avsnitt 5). Ett pass som rapporteras
 efter körningen kommer med nästa månad, och lönespecen säger det under
 summan, liksom pass som saknar rapport. Månaderna som har en lönespec
 är märkta i månadsraden. **Ingen skatt, med flit**: `studiehjalpare_form`
@@ -749,7 +751,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-uppgifter.js` + `nextrum-uppgifter.css` | `NXUppgifter` (Fas 23.1): banan, spelaren, stjärnorna, märkena, rättningen per område och genomgången. Studievyn och studiehjälparvyn, CSS:en efter arbetsytan. Rättar ingenting själv och skriver inget resultat; det gör `niva_svara()` |
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
-| `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, sök, notiser, bevakning och `start()` |
+| `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, toppraden (sök, notiser, kontot), bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |
 | `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi, manaden (Månadens ekonomi), loner (Löner), tjanster, system, automationer, ai, radera. Anropar varandra via `NXAdmin.rita`. En ny områdesfil ska in i `nextrum-modulvakt.js` också |
 | `nextrum-admin-agenter.js` | Agentfliken. Delar inget med resten av adminvyn |
@@ -1024,25 +1026,23 @@ fakturor. Inget av det ligger i repot.
    resten nåddes först när HELA sidan rullats med Översiktens innehåll med
    sig. Nu har den `max-height` och `overflow-y:auto` på en dator, med
    `overscroll-behavior:contain`: hjulet över menyn rullar bara menyn (300
-   px mot 0 på sidan) och över innehållet bara sidan (0 mot 300). Foten
-   med den inloggade är `position:sticky` längst ned i menyn. Geometrin är
-   mått, inte innehåll: toppraden är `--adm-topp-h` (64 px, fast),
-   sidhuvudet är den uppmätta `--vy-hdr-h` (75), menyns fäste är sidhuvud
-   plus topprad plus 20, och högsta höjden är fönstret minus fästet minus
-   16. `main` har 12 px padding-top (`.vy-admin main`), så menyn ligger 12
-   px lägre överst på sidan än när den klistrat, och lådan ryms ändå i
-   fönstret med 4 px kvar. Första versionen räknade högsta höjden på fästet
-   men lät `main` ha 150 px padding kvar från heron som togs bort i Fas 6:
-   nederdelen och utloggningen hängde 100 px under skärmkanten tills man
-   rullat en bit. Ett tomt band på 75 px mellan sidhuvudet och toppraden var
-   samma orsak.
+   px mot 0 på sidan) och över innehållet bara sidan (0 mot 300). Geometrin
+   är mått, inte innehåll: toppraden är `--adm-topp-h` (56 px, 54 på en
+   telefon), menyns fäste är toppraden plus `--adm-luft` (20), och högsta
+   höjden är fönstret minus fästet minus 16. `main` har samma `--adm-luft`
+   som padding-top, så menyn står lika långt ned överst på sidan som när
+   den klistrat. Första versionen räknade högsta höjden på fästet men lät
+   `main` ha 150 px padding kvar från heron som togs bort i Fas 6:
+   nederdelen hängde 100 px under skärmkanten tills man rullat en bit.
+   (Här stod först sajtens sidhuvud ovanför toppraden och en fot med den
+   inloggade längst ned i menyn; se Adminvyns skal nedan.)
 2. **`sidomeny()` drar menyn, aldrig sidan**, så att den valda posten syns
-   när man kommer till den från en länk eller en adress (nederkanten
-   räknar med fotens höjd). Bredden är 244 px: "Intresseanmälningar" plus
+   när man kommer till den från en länk eller en adress. Bredden är 244 px: "Intresseanmälningar" plus
    märket plus en rullningslist är 243, och märket lade sig över ordet i
    212. Menyn klipper i sidled, och "Betalningar & utbetalningar" (199 px på
    158) stack ut 29 px och var på den valda posten delvis osynlig (ljus text
-   på ljust): den bryter rad. En längre etikett måste också få göra det.
+   på ljust): den bryter rad. Posten heter Betalningar sedan samma dag,
+   men en längre etikett måste också få bryta.
 3. **Ett sektionsbyte lade rubriken bakom toppraden.** `täcktÖverst()`
    räknade sidhuvudet och telefonens sektionsrad men inte adminvyns
    toppråd (`.adm-topp`). Från ett scrollat läge landade varje byte 66 px
@@ -1063,10 +1063,10 @@ fakturor. Inget av det ligger i repot.
 
 **Designen.** KÄNSLAN och INNEHÅLLET (avsnitten längst ned i
 `nextrum-arbetsyta.css`) står nu på `.vy` och gäller alla tre vyerna. Det
-enda som är kvar av `.vy:not(.vy-admin)` är telefonens fasta sektionsrad:
-adminvyn har toppraden fast under sidhuvudet, och två fasta rader tar 144
-av 844 px, så där ligger menyraden kvar i flödet. Adminvyns egna delar
-har översatts till samma språk, på sina egna namn:
+enda som är kvar av `.vy:not(.vy-admin)` är telefonens fasta sektionsrad,
+som i adminvyn står under toppraden i stället för under sidhuvudet
+(Adminvyns skal nedan). Adminvyns egna delar har översatts till samma
+språk, på sina egna namn:
 
 - `.adm-status` är `.lage`: `ar-ny` lera (ert drag, eller något som gick
   fel), `ar-vantar` ockra, `ar-klar` mossa, utan färg mattgrå. Texten
@@ -1100,11 +1100,9 @@ Headless Chromium döljer rullningslister som standard. Starta med
 `ignoreDefaultArgs: ['--hide-scrollbars']`, annars syns inte vad en list
 gör med menyns bredd.
 
-**Kvar, medvetet inte gjort:** adminmenyn står inte fast på en telefon (se
-ovan), och på en telefon är brödsmulan i toppraden borta i stället för
-avhuggen: sektionen står redan i sektionsraden och i rubriken. Granskat bild
-för bild med testdata, på dator och delvis på telefon och i mörkt läge: alla
-sektioner och flikar, och personpanelen för en familj. Agentflikarna har egen
+**Kvar, medvetet inte gjort.** Granskat bild för bild med testdata, på
+dator och delvis på telefon och i mörkt läge: alla sektioner och flikar,
+och personpanelen för en familj. Agentflikarna har egen
 CSS (`nextrum-agent.css`) som inte rörts, och där har exempelfrågorna och
 fältetiketten kvar sin äldre form. Det som bara ritas med riktig data
 (Kortbetalningarnas listor, Avvikelser med rader, auditloggen med rader) har
@@ -1115,6 +1113,82 @@ knapp i varje sektion och rapporterar hopp över 40 px. Admin var ren.
 Den mäter `scrollY`, inte vad som står stilla på skärmen, så fällan i
 punkt 4 syntes inte i den: sidan scrollade inte, innehållet flyttade
 sig. Mät ett element före och efter trycket (`getBoundingClientRect`).
+
+### Adminvyns skal (2026-09-29)
+
+Leo: "för vår admin snyggare och enklare". Mätt i provbänken före: drygt
+160 px sidhuvud innan första raden (sajtens sidhuvud och en topprad under
+det), samma arbetskö tre gånger på Översikt (5 300 px lång på en
+telefon), nio menyrubriker där sex stod över en enda post, och en
+marknadssidfot. Inget av det ändrade vad vyn kan göra; allt står i
+`admin.html`, skalet i `nextrum-admin.js`, Översikt i
+`nextrum-admin-oversikt.js` och `-konsol.js`, och CSS:en i adminskalet
+(§6) i `nextrum-arbetsyta.css` och i `nextrum-admin-konsol.css`.
+Designen är samma hus som ovan; det här är skalet runt den.
+
+- **En rad överst.** `#adm-topp` står utanför `<main>`, fast högst upp
+  (`top:0`), och bär loggan, sök, notiser och kontot (Studievyn,
+  Studiehjälparvyn, Logga ut). Inne i vyn göms sajtens sidhuvud och
+  sidfot av `body.adm-inne`, som `NXAdmin.visa()` sätter bara för
+  `view-app`, och samma anrop göms raden i alla andra vyer: inloggningen
+  och felvyerna har sajtens sidhuvud som förut, också när vakten över
+  inloggningen byter dit (avsnitt 6). Menyn har ingen fot längre; kontot
+  står i raden. `täcktÖverst()` räknar raden. Måtten står en gång, på
+  `body.vy-admin` (`--adm-topp-h`, `--adm-bredd`, `--adm-pad`,
+  `--adm-luft`). `--vy-hdr-h` läses inte i adminvyn: sidhuvudet den mäter
+  är gömt där.
+- **På en telefon** är söket en rund knapp som växer över raden,
+  panelerna står under raden över hela bredden, och sektionsraden står
+  fast under toppraden som raden i de andra vyerna står under
+  sidhuvudet. Adminvyn var undantagen i TUMMEN för att sidhuvudet och en
+  topprad redan tog 144 av 844 px; toppraden och sektionsraden tar nu
+  mindre än sidhuvudet och raden i de andra vyerna.
+- **Menyn** har fyra grupper under Översikt och Statistik. Betalningar
+  hette Betalningar & utbetalningar, och sektionens rubrik heter likadant.
+- **Arbetskön ritas en gång**, i Att göra under NEX, med det som gått
+  fel först under en egen rubrik. `S.attGora` och `S.problem` räknas i
+  `ritaÖversikt()` och läses av konsolen, notisklockan och menyns
+  siffror, precis som förut. NEX är ett band (ringen, läget, samtalet),
+  inte en 286 px hög ring med kön bredvid. `.adm-att-gora` finns inte
+  längre; raderna är `.kon-rad` i `nextrum-admin-konsol.css`, i samma
+  form som den hade.
+- **Bredden** är `--adm-bredd` (1760 px) på `body.vy-admin main.wrap`.
+  `body` står framför med flit: `.vy main.wrap` under STORA SKÄRMAR väger
+  annars lika mycket och står senare, och över 1500 px fastnade
+  innehållet på 1560 medan toppraden gick till 1760.
+- Namnlistorna har en avatar före namnet, Översiktens fyra tal en ikon i
+  hörnet, och sektionernas inledningar är en mening.
+- **`color-scheme` är `light dark`.** Den stod på `dark` från tiden då
+  adminvyn var alltid mörk, och gav ljust läge mörka rullgardinslistor,
+  datumväljare och rullist.
+
+**Samma hus, inte ett eget.** Samma dag gjorde en annan session om
+adminvyns design i samma filer (PR #123, ovan), och den mergades först.
+Den här grenen hade under tiden gett adminvyn egna ytor: mindre knappar
+och fält, understrukna flikar, en markering i lera för den valda
+menyposten och månaden, en egen kant och skugga på arken och en egen
+inglidning. Allt det togs bort när main kom in, för Leo bad om samma
+design som studievyerna, och varje sådan avvikelse gör adminvyn till ett
+annat hus igen. Det som skiljer adminvyn är skalet ovan och tätheten i
+tabellerna och listorna, inte ytorna.
+
+- **Fälla:** `h5` och `h6` har webbläsarens egen marginal (1,67 och
+  2,33 em). INNEHÅLLET nollar den ovanför kortens h5, också ovanför en
+  andra rubrik i samma kort, som då satt tätt mot listan ovanför;
+  `body.vy-admin .dbox * + h5` ger tillbaka luften. Tjänste- och
+  kopplingskortens h6 hade 35 px ovanför namnet
+  (`.adm-koppling-kort h6{margin:0}`).
+- **Fälla:** `--pap-2` och `--yta` är nästan samma färg i mörkt läge.
+  Hovringen och ikonrutorna i sök- och notispanelen stod på `--pap-2` i en
+  panel i `--yta` och syntes inte där; de är `--tint` och `--bricka` nu.
+  Samma sak gäller kortets bakgrund: i mörkt läge vinner
+  `:root:not([data-theme="light"]) .vy .dbox` (0,4,0), och en ändring av
+  den måste möta vikten (avsnitt 3, Två fällor när en palett byts).
+- **Fälla:** KÄNSLAN ger `.vy :is(.inp,.sel)` 16 px hörn och står sist
+  i filen. `.adm-sokfalt .inp` väger lika mycket, så söket var en rundad
+  ruta i stället för ett piller tills det fick `.adm-topp` framför sig.
+- NEX-bandets yta står i `nextrum-admin-konsol.css`, som laddas efter och
+  vinner på samma vikt; en regel för `.kon-*` i `arbetsyta.css` gör inget.
 
 ---
 
@@ -1213,7 +1287,8 @@ den 1:a klockan 04:17 UTC, och `notis_konfig.fakturering_url`.
 `intern.natanrop` med hemligheten i `x-nextrum-notis`, och den vägen
 skriver alltid förra månaden. Saknas adressen blir det en uppgift
 (`manadskorning:adress`) i stället för en tyst månad; går anropet fel
-står det under System → Fel och passen larmar som `ej_utbetalt`.
+står det under System → Fel i sex timmar och blir en uppgift (nedan),
+och passen larmar som `ej_utbetalt`.
 Adminvyn visar om jobbet är på (`manadskorning_lage()`, bara admin): ett
 schema som står av ser annars ut precis som ett som fungerar.
 **Jobbet är på sedan 2026-09-28**, efter stegen i DEPLOY-BETALNING.md
@@ -1226,6 +1301,27 @@ underlag på 240 kr och ett fakturautkast på 758 kr för det, som ska
 tas bort när lönespecen är sedd, inte betalas ut eller läggas in i
 Fortnox (DEPLOY-BETALNING.md avsnitt 6). Hela `rls-test.sql` gick
 igenom mot driften efteråt, 702 av 702.
+**Månadskörningens svar blir en uppgift** (2026-09-29). Ingen läste
+svaret, och `ej_utbetalt` säger inte att körningen misslyckades. En
+halvtimme efter körningen läser `intern.manadskorning_svar()` (pg_cron
+`manadskorning-svar`, 04:47 UTC) svaret, och allt utom 200 blir en
+uppgift, `manadskorning:svar:<månad>`, som står kvar tills någon stänger
+den: 207 (en del av skrivningarna gick fel), 4xx, 5xx, tidsgränsen, ett
+anrop som aldrig fick svar, och ett anrop som saknas för att jobbet inte
+gick eller föll före det. Uppgiften säger vad som hände och pekar på
+Ekonomi → Månadskörning, utan namn, belopp eller något ur svaret. En
+månad ger en uppgift, också när den stängts: det är samma körning.
+Funktionen läser bara anrop från den senaste timmen, för ett äldre svar
+kan pg_net redan ha tagit bort, och ett borttaget svar hade lästs som
+inget svar. **Flyttas `manadskorning` ska `manadskorning-svar` flyttas
+med**; `rls-test.sql` prövar båda schemana. Byggt i databasen och inte
+i `fakturering`, för funktionen ser aldrig det som går fel innan den
+körs (grindens 401, 404, tidsgränsen), och hade behövt driftsättas
+igen. **Inte körd i driften än**: migrationerna
+`manadskorningens_svar_blir_en_uppgift` och
+`manadskorningens_svar_lases_den_forsta` körs efter merge, i den
+ordningen och med funktionen körd för hand emellan, före den 1 oktober
+04:47 UTC (DEPLOY-BETALNING.md avsnitt 6).
 Fas 16.1 la också till `ansokan_utskick` (beskeden till den som sökt jobb;
 skrivs bara av triggern och funktionen, läses bara av admin).
 Fas 22.1 (utbildningsprovet) la till `utbildningsprov_forsok` (varje
@@ -1477,6 +1573,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `leads-avidentifiering` | 03:47 | intresseanmälningar sex månader efter senaste kontakten |
 | `ai-och-uppgifter-gallring` | 03:51 | AI-texterna och avslutade uppgifter |
 | `manadskorning` | den 1:a 04:17 | förra månadens underlag och fakturautkast (avsnitt 1) |
+| `manadskorning-svar` | den 1:a 04:47 | månadskörningens svar: allt utom 200 blir en uppgift (ovan). Finns när `manadskorningens_svar_lases_den_forsta` är körd |
 | `konton-oanvanda` | den 1:a 04:53 | konton som inte använts på två år blir uppgifter |
 
 **Analysvyerna (Fas 9.6) bär tre regler.** `analys_leads_per_kalla`,
@@ -1747,7 +1844,13 @@ syns bara när anropet görs.
   (avsnitt 7, `config.toml`); funktionen själv svarar 401 när
   hemligheten inte stämmer. Adminvyn säger vilket.
 - **Svaren finns i sex timmar** (`pg_net.ttl`), inte ett dygn. Listan
-  svarar på "gick det fram nyss?", inte på "vad hände i natt?".
+  svarar på "gick det fram nyss?", inte på "vad hände i natt?". Sex
+  timmar är minst, inte exakt: pg_net tar bort gamla svar när arbetaren
+  har något att göra, och 2026-09-29 låg fjorton timmar gamla svar kvar.
+  Läs alltså aldrig ett saknat svar på ett gammalt anrop som ett fel.
+  Månadskörningen är det enda utskicket vars svar också blir en uppgift
+  (`intern.manadskorning_svar()`, se `manadskorning` ovan), för den går
+  en gång i månaden och ingen tittar när den går.
 
 `DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
 sandlådan slås på innan något provas, och de fem stegen för att lägga

@@ -44,7 +44,7 @@ gör schemat den 1 oktober 2026.
 **Obs (17 september 2026):** alla pass i driften hör än så länge till adminkontot
 och till en enda studiehjälpare — det är provpass, inga riktiga kunder. Fyra av de
 fem genomförda passen skapades samtidigt den 2 september, och sedan Fas 14.2 står
-de under Betalningar & utbetalningar → Avvikelser som **Inte betalt**. Ta ställning
+de under Betalningar → Avvikelser som **Inte betalt**. Ta ställning
 till dem innan en skarp körning: undanta dem, annars betalar ni ut ersättning för
 provpass. Den 28 september stod ett enda pass klart för ett underlag, provpasset den
 27 september, och Leo valde att ha det kvar för att se lönespecen. Vad som ska
@@ -56,7 +56,7 @@ Ett pass kommer med om det är **genomfört, har en rapport kopplad och inte är
 undantaget**. Urvalet läses ur vyn `passunderlag`, som adminvyn också läser.
 
 - **Genomfört utan rapport** kommer inte med. Det räknas upp i svaret och syns
-  under Betalningar & utbetalningar → **Avvikelser**, där admin antingen kopplar
+  under Betalningar → **Avvikelser**, där admin antingen kopplar
   rätt rapport eller undantar passet.
 - **Undantaget** (`bookings.fakturerbar = false`, med en anledning) ska varken
   betalas av familjen (Betala-knappen syns inte) eller komma med på
@@ -158,7 +158,7 @@ supabase functions deploy fakturering
 
 ## 5. Torrkör — gör inte detta senare
 
-**Enklast: adminvyn.** Betalningar & utbetalningar → Månadskörning → välj månad →
+**Enklast: adminvyn.** Betalningar → Månadskörning → välj månad →
 **Torrkör**. Du ser varje studiehjälpares underlag med belopp, vilka pass som
 hoppades över, och vilka pass som hölls utan att familjen betalat. Stämmer det:
 **Skapa utkast**. Underlagen skapas som utkast; ingenting skickas och inga pengar
@@ -208,8 +208,9 @@ när någon kommit ihåg knappen. pg_cron-jobbet `manadskorning` kör
 `intern.manadskorning_vack()` den 1:a klockan 04:17 UTC, som väcker `fakturering`
 med hemligheten ur `notis_konfig` (adressen i `notis_konfig.fakturering_url`).
 Den vägen skriver alltid förra månaden, och samma underlag och fakturautkast som
-knappen. Gick det fel står det under System → Fel, och passen larmar som Inte
-utbetalt.
+knappen. Gick det fel står det under System → Fel i sex timmar, och passen larmar
+som Inte utbetalt. Ett svar som inte är 200 blir också en uppgift, som står kvar
+tills någon stänger den (Svaret blir en uppgift, nedan).
 
 Det är fortfarande ett aktivt beslut, inte något som råkar vara påslaget. Ordningen:
 
@@ -241,7 +242,39 @@ underlaget också. När lönespecen är sedd, och före den 1 november:
 
 Betala inte ut underlaget och lägg inte in fakturan i Fortnox.
 
-Stänga av: `select cron.unschedule('manadskorning');`, som en egen migration.
+### Svaret blir en uppgift (2026-09-29)
+
+Svaren i `net._http_response` finns i sex timmar, alltså till förmiddagen den 1:a.
+Den som tittade efter det såg bara larmen på passen, Inte utbetalt och
+Fakturapass utan faktura, och de säger inte att körningen misslyckades.
+pg_cron-jobbet `manadskorning-svar` kör `intern.manadskorning_svar(true)` den 1:a
+klockan 04:47 UTC, en halvtimme efter körningen, och allt utom 200 blir en uppgift
+under Uppgifter med nyckeln `manadskorning:svar:<månad>`: 207 (en del av
+skrivningarna gick fel), 4xx, 5xx, tidsgränsen, ett anrop som aldrig fick svar, och
+ett anrop som saknas för att jobbet inte gick eller föll före det. Uppgiften säger
+vad som hände och att månaden ska torrköras och skapas under Ekonomi →
+Månadskörning. Den står kvar tills någon stänger den, och en månad ger en uppgift,
+också när den stängts. Namn, belopp och svarets innehåll står inte i den.
+
+Ordningen efter merge, före den 1 oktober klockan 04:47 UTC:
+
+1. Kör migrationen `manadskorningens_svar_blir_en_uppgift`.
+2. Kör funktionen för hand, som postgres: `select intern.manadskorning_vack(true);`,
+   vänta en minut, och `select intern.manadskorning_svar();`. Svaret ska ha `lage`
+   `ok` och `svar` 200, och ingen uppgift. Står det `vantar`, vänta en minut till.
+   Något annat blir en uppgift för förra månaden: laga vägen, stäng uppgiften och
+   gör om steget.
+3. Kör migrationen `manadskorningens_svar_lases_den_forsta`. Först då finns jobbet,
+   och det står under System → Automationer bredvid `manadskorning`.
+4. Döp om de två migrationsfilerna till versionerna `apply_migration` gav dem, och ta
+   bort "INTE KÖRD I DRIFTEN ÄN" i dem och "Inte körd i driften än" i CLAUDE.md.
+5. Kör hela `verktyg/rls-test.sql` mot driften.
+
+Funktionen läser bara anrop från den senaste timmen, så flyttas `manadskorning` ska
+`manadskorning-svar` flyttas lika mycket.
+
+Stänga av: `select cron.unschedule('manadskorning');` och
+`select cron.unschedule('manadskorning-svar');`, som en egen migration.
 
 ## 6b. Utbetala
 
@@ -436,7 +469,7 @@ kvar att köra innan ni rör en skarp nyckel, och innan spärren slås på (9.9)
 | `stripe-aterbetalning` | **ACTIVE**, version 6, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
 | `stripe-lage` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting. Fas 14.5: säger om den publicerbara nyckeln är satt och i samma läge som den hemliga |
 | `stripe-avstamning` | **ACTIVE**, version 1, `verify_jwt = true`. Bara för admin (Fas 14.7). Hämtar avgift, netto och läge för betalningar som saknar dem, högst femtio per tryck |
-| `STRIPE_SECRET_KEY` | **Visas i adminvyn** sedan Fas 14.3: Betalningar & utbetalningar → Kortbetalningar → **Kontrollera Stripe** säger om den saknas, är en test- eller skarp nyckel, eller har fel format. Inte ett tecken mer än så |
+| `STRIPE_SECRET_KEY` | **Visas i adminvyn** sedan Fas 14.3: Betalningar → Kortbetalningar → **Kontrollera Stripe** säger om den saknas, är en test- eller skarp nyckel, eller har fel format. Inte ett tecken mer än så |
 | `STRIPE_WEBHOOK_SECRET` | **Satt och provad**: en påhittad signatur faller på tidsstämpeln, inte på hemligheten (slutet av 9.4) |
 | Webhook-endpoint hos Stripe | **Skapad** i sandlådan, och två leveranser har kommit fram. **Saknar `charge.dispute.updated`** (Kontrollera Stripe sa det 2026-09-25) **och `charge.updated`**, som kom till i Fas 14.7 (9.4) |
 | Knappen hos familjen | Finns: på passet när det är bekräftat, och på ett genomfört pass som inte är betalt |
@@ -626,7 +659,7 @@ Stripes typ, kod och text till funktionens logg, med passets id. Leta efter
 
 I den här ordningen, för varje steg beror på det förra:
 
-Tryck först på **Kontrollera Stripe** under Betalningar & utbetalningar →
+Tryck först på **Kontrollera Stripe** under Betalningar →
 Kortbetalningar. Varje röd rad där är ett skäl till att stegen nedan inte kommer
 att fungera, och det är billigare att se det där än att leta efter det i
 `stripe_handelser`.
@@ -819,7 +852,7 @@ dagen som förfallodag, orsaken med våra ord och vad som ska samlas. Tabellen
 läses bara av admin; ingen, inte ens admin, skriver i den från en vy
 (`verktyg/rls-test.sql`, avsnittet 14.3).
 
-Adminvyn visar varje öppen tvist under Betalningar & utbetalningar →
+Adminvyn visar varje öppen tvist under Betalningar →
 Kortbetalningar → **Korttvister**, med dagar kvar, och en länk rakt till tvisten
 i Stripes dashboard.
 
