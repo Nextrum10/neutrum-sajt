@@ -288,7 +288,7 @@ Detaljer: `minne/sakerhet.md`.
   öppna rum.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
-  main i 16 av 23 funktioner, webhooken och avanmälan bland dem (`minne/funktioner.md`).
+  main i 16 av 23 funktioner; alla driftsattes samma kväll och är lika (`minne/funktioner.md`).
 - **Agentregeln**: hårt stegtak, källtvång i kod, bara verifierade `kallor` klickbara (aldrig
   med regex), `ekonomi` skriver aldrig, och agenterna läser källan, aldrig ur minnet.
 - **AI-lagret**: `drift` har inget utgående verktyg, och ingen AI-väg skriver i affärstabeller
