@@ -59,6 +59,16 @@ i main, i sin egen `index.ts` eller i `_delad/`. Det som gör skillnad:
   `generate-feedback` prövar API-nyckeln före behörigheten.
 - `lead-notis`, `ansokan-notis` och `faktura-utskick` bär äldre mallar
   (Wint, utan fakturameningen).
+**Alla sexton driftsattes samma kväll från main (8bad1d4)**, webhooken
+först och kassan sedan, och varje funktion hämtades tillbaka och
+jämfördes byte för byte innan nästa gick ut. Versionerna efteråt:
+`stripe-webhook` 13, `stripe-checkout` 17, `stripe-aterbetalning` 7,
+`klippkort-betala` 4, `stripe-lage` 5, `stripe-avstamning` 2,
+`notis-avanmal` 8, `lead-notis` 30, `ansokan-notis` 5,
+`faktura-utskick` 21, `juridik` 20, `ekonomi` 21, `generate-feedback`
+22, `generate-message` 22, `material-forslag` 8 och `bjud-in` 8.
+`verify_jwt` följer `config.toml`. Driften och main var då lika i alla
+23; styckena ovan beskriver läget före.
 **`bjud-in` (v7) var tvärtom NYARE i driften än i repot**: den kan
 bjuda in en studiehjälpare (`roll: 'tutor'`, eget `TILLBAKA` per roll),
 och koden fanns inte i någon gren. Leo samma dag: behåll den. Driftens
