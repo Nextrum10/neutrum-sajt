@@ -1,0 +1,209 @@
+# Edge functions, agenterna och AI-lagret
+
+Arkivet för avsnitt 7 i `CLAUDE.md`, ordagrant. Reglerna står i kärnan, `CLAUDE.md`. "Den här
+filen" i texten är `CLAUDE.md` före delningen, och "avsnitt N" är kärnans.
+
+---
+
+## 7. Edge functions (`supabase/functions/`)
+
+`_delad/` innehåller det som sju funktioner tidigare hade var sin kopia
+av — och kopiorna hade hunnit glida isär (två `esc()` escapade inte
+apostrofen, två hemlighetsjämförelser använde `===`). **Lägg inte
+tillbaka en kopia.**
+
+| Funktion | Gör | Anropas av |
+|---|---|---|
+| `fakturering` | Månadskörningen: underlag per studiehjälpare, som är studiehjälparens lönespecifikation (2026-09-28), ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand | pg_cron `manadskorning` den 1:a (`x-nextrum-notis`, alltid förra månaden), admin, eller `x-fakturering-nyckel` |
+| `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Fortnox | Knapp under Löner |
+| `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
+| `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
+| `pass-notis`, `meddelande-notis` | **Anropas inte längre.** Se nedan | — |
+| `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
+| `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
+| `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
+| `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
+| `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
+| `ansokan-notis` | Ett besked till den som sökt jobb (Fas 16.1): kvittot, eller mejlet om ett steg framåt med hela processen och var hen står. Databasen bestämmer vad, funktionen skickar | Triggern `ansokan_besked` och pg_cron `ansokan-besked`, via `notis_konfig.ansokan_url` |
+| `ansokan-gallring` | Tar bort ansökningar som inte ledde till anställning och CV-filer utan ansökan när de är ett år gamla (2026-09-27, avsnitt 5). Filen först genom Storage-API:t, sedan raden genom `ansokan_gallra()`, som vägrar medan filen finns. Svarar 500 om något inte gick | pg_cron `ansokan-gallring` via `intern.ansokan_gallring_vack()` och `notis_konfig.gallring_url` |
+| `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
+| `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`). Sedan 2026-09-28 också ett pass som valts för faktura och inte står på en faktura än: det står kvar som `faktura` tills webhooken skrivit betalningen | Knappen på passet i föräldravyn, Betala med kort nu på ett fakturapass, och Köp under Erbjudanden |
+| `klippkort-betala` | Betalar ett bekräftat pass med köpta timmar (Fas 16.1). Prövar familjens token och flaggan, drar i `klippkort_dra()` och stänger en öppen kortkassa för passet. Med `timbank: true` dras minuterna i timbanken i stället, i `timbank_dra()` (Fas 22.1). Sedan Fas 22.2 betalar timmarna passen av sig själva i databasen, och knappen tar det de inte hann | Betala med timmar och Betala med timbanken i föräldravyn |
+| `stripe-webhook` | Enda vägen som får sätta en betalning som betald. Signatur i konstant tid, idempotens via `stripe_handelser`. Ett tillägg (Fas 20.1) bär `tillagg_booking_id` och skrivs, återbetalas och bestrids på sin egen rad | Stripe |
+| `stripe-aterbetalning` | Återbetalning till familjen, hel eller delvis. Beloppet tas ur raden, aldrig ur anropet | Återbetala under Betalningar (Att göra, Alla betalningar, Bokslut) |
+| `stripe-avstamning` | Hämtar avgift, netto och läge (test eller skarpt) för betalningar som saknar dem (Fas 14.7). Högst femtio per tryck. Skriver bara de kolumnerna | Knappen Hämta från Stripe under Betalningar → Inställningar |
+| `stripe-lage` | Frågar Stripe om nyckeln, kontot, kontoutdraget och webhookens händelser, och säger vad som saknas (Fas 14.3). **Läser, skriver ingenting.** Nyckeln lämnar aldrig funktionen, bara om den är test eller skarp | Knappen Kontrollera Stripe under Betalningar → Inställningar |
+| `google-koppla` | Kopplingen till Google (Fas 18.1): adressen till Google, återkomsten med engångskoden, Prova och Koppla från. Koden byts mot en nyckel HÄR; vyn ser aldrig nyckeln eller klienthemligheten. Återkomsten bär ingen inloggning och skyddas av ett HMAC-signerat läge som gäller i tio minuter. Ett konto utanför nextrum.se nekas | Knapparna under System → Integrationer, och Googles omdirigering |
+| `google-meet` | Meet-länken till ett bekräftat onlinepass (Fas 18.1). Läser passet med anroparens token först, skapar ett öppet rum och sparar länken i `pass_moten`. Ett rum som inte blev öppet sparas inte | Passets sida i föräldravyn och studiehjälparvyn |
+| `utbildningsprov` | Provet efter utbildningsmötet (Fas 22.1). Lämnar ut frågorna utan facit, rättar, och sparar försöket genom `utbildningsprov_lamna()`. Skyddet är nyckeln i länken, inte en inloggning. I drift sedan 2026-09-27 | `/utbildningsprov`, från länken i mejlet |
+
+`supabase/config.toml` bär `verify_jwt = false` för de nio funktioner
+som anropas utan inloggad användare. Inställningen satt länge bara i
+dashboarden, och en `supabase functions deploy` utan filen hade slagit
+på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och
+eftersom anroparen är ett schema finns ingen som ser det. **Filen är
+sanningen, inte dashboarden.** Lägger du till en funktion utan
+inloggning: skriv raden där i samma ändring.
+
+### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
+
+Båda hade ingen anropare kvar: Runda 2 bytte webhookarna som ringde
+dem mot kötriggrar. Beslutet är taget — källan är borttagen ur repot
+och raderna ur `supabase/config.toml`.
+
+**KVAR ATT GÖRA FÖR HAND: de ligger fortfarande ACTIVE i driften.**
+Supabase CLI och MCP kan driftsätta en funktion men inte ta bort den;
+det görs i dashboarden under Edge Functions. Tills dess svarar de på
+sin adress, skyddade av den delade hemligheten i headern, men de gör
+ingenting någon ber om.
+
+Så här ser vägarna ut i dag:
+
+| Tabell | Trigger i dag | Funktion |
+|---|---|---|
+| `bookings` | `bookings_notis` | `notis_vid_pass` — köar |
+| `messages` | `messages_notis` | `notis_vid_meddelande` — köar |
+| `lesson_reports` | `lesson_reports_notis` | `notis_vid_rapport` — köar |
+| `leads` | `ny-intresseanmalan` | `http_request` → `lead-notis` |
+| `applications` | `ansokan_besked` | `intern.ansokan_besked` — köar i `ansokan_utskick` och väcker `ansokan-notis` (Fas 16.1) |
+
+`leads` är alltså den enda som fortfarande går via en webhook, och
+`lead-notis` den enda av de tre som lever.
+
+Det kostade en gång: `verktyg/rls-test.sql` stängde av
+`"nytt-passforslag"` på `bookings` och kraschade på den första satsen
+efter `begin` med 42704 — hela sviten gick inte att köra, och en svit
+som inte går att köra provar ingenting. Den slår nu upp triggrarna på
+FUNKTIONEN i stället för på namnet.
+
+`stripe-konto` hörde till samma sort och **är borttagen ur driften**
+(Fas 12.5). Den skapade anslutna Stripe-konton, och ingen knapp
+anropade den längre: studiehjälparen får betalt den 25:e genom
+`payouts`, så ett anslutet konto fyller ingen funktion.
+
+ACTIVE funktioner som ingen ringer är samma sorts halvfärdighet som
+gjorde att hela det här systemet inte fanns i repot. Det är därför de
+två ovan är avgjorda och inte utredda en gång till.
+
+### Notissystemet kom hem i efterhand
+
+`notis-ko` och `notis-avanmal` låg ACTIVE i driften utan att finnas i
+någon gren, och fjorton migrationer (`r2_fas1_1` till `r2_fas2_4`)
+hade körts utan att bli filer. Den här filen varnade för precis det
+och sa att det skulle redas ut **innan pg_cron installerades**.
+pg_cron installerades ändå. Varningen hann bli osann innan någon
+läste den, och beskrev sedan en äldre version av funktionerna: en
+`arbetare.ts` som inte längre finns, och en databasdel som sades vara
+okörd när den i själva verket var körd.
+
+Allt är nu hämtat hem ordagrant, varje migration kontrollerad mot
+databasens md5-summa och funktionsfilerna diffade mot driften.
+
+**Lärdomen är inte "kom ihåg att commit:a".** Den är att
+`apply_migration` och `functions deploy` ändrar driften direkt, medan
+git är ett skilt steg som ingen kontroll tvingar fram. Två system kan
+alltså glida isär utan att något blir rött. Kör frågan i avsnitt 5
+innan du tror på filerna — och när du driftsatt något, commit:a det
+i samma arbetspass, inte i nästa.
+
+Samma sak hände utbildningsprovet (Fas 22.1). Migrationerna, jobbet
+`utbildningsprov-paminn`, funktionen `utbildningsprov` och
+`ansokan-notis` med provstegen driftsattes 2026-09-27 från utkastet i
+PR #88, som inte var mergat. I ett dygn låg en trigger, ett schemajobb
+och mejlmallar i drift som main inte visste om, och en databas byggd ur
+main föll på gallringens migration, som läste provkolumnerna. PR #99
+tog hem databasdelen och funktionerna ordagrant 2026-09-28, och sidan
+och adminvyns del kom med PR #88. **Driftsätt aldrig från en gren som
+inte är mergad.**
+
+### Agentregeln
+
+`_delad/agent.ts` bär fyra regler som *är* agenterna:
+
+1. **Hårt stegtak.** En agent som loopar fritt mot betalda API-anrop är
+   en räkning som växer medan ingen tittar.
+2. **Källtvång som kod, inte som prompt.** Koden kontrollerar att varje
+   adress i svarets källista är en adress agenten **faktiskt hämtade**.
+   Påhittade adresser plockas bort. Blir listan tom kastas svaret.
+3. **Bara `kallor` blir klickbara i gränssnittet.** En påhittad adress
+   ritas överstruken i en varningsruta. Att linkifiera med regex vore
+   att bygga in precis det fel resten av systemet fångar.
+4. **`ekonomi` skriver aldrig.** Alla verktyg är läsande. Det är
+   designen, inte tillfällig försiktighet i väntan på bättre modeller.
+
+`verktyg/testa-agent.js` och `_delad/agent_test.ts` vaktar spärrarna.
+Testfallen med värdnamn i sökväg och `https://riksdagen.se@evil.com/`
+står kvar för att det är så en naiv `indexOf` går sönder.
+
+### AI-lagret (Fas 8)
+
+Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
+rättskällor och bolagets siffror. Den tredje läser verksamheten —
+anmälningar, omatchade elever, kommande pass, saknade rapporter — och
+**har med flit inget utgående verktyg**: en agent som både läser
+känsliga rader och kan hämta en adress kan bära ut dem, och det räcker
+med en rad injicerad text i en intresseanmälan för att försöket ska
+göras.
+
+**Regeln "ingen AI-väg skriver i affärstabeller" bor i databasen, inte
+i TypeScript.** Rollen `nextrum_ai` har inga tabellrättigheter alls.
+Den kan köra sju funktioner, och dörren `ai_verktyg` — den enda väg
+drift-agenten talar med databasen genom — **ägs av den rollen**.
+Försöker något i dörren skriva i `students` svarar databasen
+`permission denied`. Det första den garantin stoppade var dörrens egen
+kontroll av att eleven fanns; den fick bli `ai_finns()`.
+
+- **AI:n formulerar aldrig en nyckel eller en titel.** Nycklar byggs av
+  kod ur typ och id. Modellens text får bara hamna i `motivering` och
+  `beskrivning`, fält som INTE står i auditloggens vitlistor —
+  auditloggen går inte att rätta.
+- **Förslag, inte åtgärder.** `ai_forslag` bär det AI:n vill göra. En
+  nyckel är ett förslag, för alltid: avvisas ett par kommer just det
+  paret inte tillbaka. `godkann_forslag()` utför, i SQL, med
+  **adminens egen token**, så att `skydda_*`-triggrarna och
+  `logga_andring` fungerar precis som när en människa klickar. En gren
+  per typ, aldrig `update <tabell> set <payload>`.
+- **Databasutdata märks innan modellen ser det.** `somDatabasData()` i
+  `_delad/agent.ts` lindar svaret i ett block med ett slumptal per
+  anrop, så att texten inte kan stänga sitt eget block. Ett verktyg
+  som svarar med `data` i stället för `text` lindas av motorn — att
+  låta varje agent göra det själv vore att lita på att ingen glömmer.
+- **Domänspärren gäller efter varje omdirigering.** `hamta()` följer
+  hoppen för hand och prövar listan vid varje steg; förut kunde en
+  tillåten källa svara 302 till vad som helst.
+- **Läsverktygen lämnar inte ut namnKOLUMNERNA**, e-postadresser eller
+  `bookings.location` (fältet är i praktiken en hemadress). Elever
+  visas med initialer — det är en minimering, inte en avidentifiering:
+  i Nextrums storlek pekar initialer plus årskurs i praktiken ut ett
+  barn. Fritexten maskas på e-post och sifferföljder och kapas, men
+  **den kan fortfarande innehålla namn**: familjen skriver ofta
+  "Elsa behöver hjälp med matten" i rutan. Det är en avvägning, inte
+  ett skydd som håller tätt.
+- Matchningspoängen ligger i `matchningspoang()`. Adminvyn hämtar
+  svaret och skriver meningarna själv — databasen svarar med koder,
+  aldrig med svensk text, så att samma svar kan läsas av en agent utan
+  att den får namn på köpet.
+- **Analysvyerna når agenten bara genom omslag.** `ai_analys()` och
+  `ai_avvikelser()` (Fas 9.9) är SECURITY DEFINER och ägs av postgres,
+  eftersom `nextrum_ai` inte kan läsa en invoker-vy: rollen har inga
+  tabellrättigheter, så svaret hade blivit `permission denied`, inte en
+  tom lista. Omslagen lämnar ut en FAST kolumnlista, aldrig `select *`.
+  Källfälten (`kalla`, `kampanj`, `sokord` …) står med flit inte i den:
+  de skrivs av en anonym besökare i adressraden, och en modellprompt är
+  fel ställe för text en främling formulerat.
+- `verktyg/testa-agent.js` vaktar drift-agentens verktygslista i CI:
+  exakt nio verktyg, inget utgående, och ett stegtak som är satt.
+
+**Provbänken `_prov-admin-*` får aldrig checkas in.** Den laddar de
+riktiga filerna mot en stubbad databas vars `auth` alltid svarar
+"inloggad admin" — alltså hela adminvyn utan inloggning — och
+`.vercelignore` är en nekande lista som inte täcker den. Den står i
+`.gitignore` sedan den en gång följde med en commit.
+
+### Maskoten har med flit ingen modell
+
+En publik chatt mot en API-nyckel har sin adress i sidans JavaScript.
+Utan spärr kan vem som helst köra den i en slinga på Nextrums räkning,
+och en spärr i webbläsaren går att gå runt. Svaren är dessutom en känd,
+ändlig mängd som redan står på `faq.html`. Maskoten kan därför inte
+hitta på ett pris, ett villkor eller ett löfte.

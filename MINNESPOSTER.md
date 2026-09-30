@@ -9,17 +9,20 @@ samma commit.
 
 ## Principen: minnet är tunt och pekar på repot
 
-Detaljen bor i `CLAUDE.md`, som alltid är färskare än en minnespost.
-Posterna nedan säger vad som gäller och var det står, inte allt som står
-där. Ett minne som försöker innehålla hela sanningen blir fel i samma
-sekund som någon ändrar koden, och då är det värre än inget minne.
+Kärnan bor i `CLAUDE.md`, som läses i varje session, och detaljen och
+historien i `minne/`, en fil per område. Båda är alltid färskare än en
+minnespost. Posterna nedan säger vad som gäller och var det står, inte
+allt som står där. Ett minne som försöker innehålla hela sanningen blir
+fel i samma sekund som någon ändrar koden, och då är det värre än inget
+minne.
 
 ## När den här filen ändras
 
-Ändrar du en regel i `CLAUDE.md` som också står här: ändra båda, i samma
-commit, och klistra om den berörda posten i projektet. Två sanningar som
-glider isär är exakt det fel resten av kodbasen är byggd för att hindra
-(se `_delad/`, `konstanter.ts`, `kolla-betalningsvillkor.py`).
+Ändrar du en regel i `CLAUDE.md` eller `minne/` som också står här: ändra
+alla ställen, i samma commit, och klistra om den berörda posten i
+projektet. Två sanningar som glider isär är exakt det fel resten av
+kodbasen är byggd för att hindra (se `_delad/`, `konstanter.ts`,
+`kolla-betalningsvillkor.py`).
 
 ## Posten som inte står här
 
@@ -36,8 +39,8 @@ läst båda.
 Nextrum: läxhjälpsförmedling i Stockholm. Repo `Nextrum10/neutrum-sajt`,
 driftsatt på Vercel som `nextrum.se`. Supabase-projekt `ddkfiuvcppalutfulvbi`.
 
-**Projektminnet ligger i `CLAUDE.md` i repotroten. Läs den först. Den är
-färskare än den här posten.**
+**Projektminnet ligger i `CLAUDE.md` i repotroten, med detaljerna i
+`minne/`. Läs kärnan först. Den är färskare än den här posten.**
 
 Stacken: inget byggsteg, ingen pakethanterare, inget ramverk. Statiska
 filer i repotroten serveras direkt. Vanilla JS som IIFE:er på `window`
@@ -130,7 +133,7 @@ kolumnnamn. Skriv inte engelsk kod i den här kodbasen.
 ## `project-nextrum-sakerhet`
 
 Säkerhetsmodellen i Nextrum, det som förklarar större delen av koden.
-Detaljen: `CLAUDE.md` avsnitt 6.
+Detaljen: `CLAUDE.md` avsnitt 6 och `minne/sakerhet.md`.
 
 **Allt skydd ligger i RLS. Ingenting ligger i gränssnittet.** Adminvyn
 hämtar med samma anon-nyckel som alla andra vyer. Att gömma en knapp är
@@ -192,7 +195,7 @@ aldrig i dashboarden: `bookings.parent_id` är ON DELETE CASCADE, och ett
 konto som tas bort där tar bokföringen med sig. Databasen väljer helt
 eller avidentifierad, vägrar så länge pengar inte är uppgjorda, och
 vägrar medan personens filer finns kvar. Detaljen: `CLAUDE.md` avsnitt
-5, Rätta och radera en person.
+5 och `minne/databasen.md`, Rätta och radera en person.
 
 Ett resultat som går att skriva från en vy är ett påstående. Därför
 rättas uppgifterna i databasen (Fas 23.1): frågorna lämnas ut utan
@@ -213,8 +216,8 @@ inte heller Vercels besöksstatistik.
 
 ## `project-nextrum-databas`
 
-Migrationsreglerna i Nextrum. Detaljen: `CLAUDE.md` avsnitt 5 och
-`supabase/migrations/arkiv/README.md`.
+Migrationsreglerna i Nextrum. Detaljen: `CLAUDE.md` avsnitt 5,
+`minne/databasen.md` och `supabase/migrations/arkiv/README.md`.
 
 **Sanningen om vad som är kört står i databasen, inte i filnamnen:**
 `select version, name from supabase_migrations.schema_migrations order by version;`
@@ -258,7 +261,7 @@ adminvyn i samma ändring.
 **PostgREST lämnar ut högst tusen rader per svar och säger inte att det
 finns fler.** En lista som växer hämtas därför med `NXStudie.hämtaAlla`
 (sida efter sida tills `count` är nått), aldrig med en enda `select`.
-Detaljen: `CLAUDE.md` avsnitt 3, Tusen rader.
+Detaljen: `CLAUDE.md` avsnitt 3 och `minne/vyerna.md`, Tusen rader.
 
 ---
 
@@ -294,7 +297,7 @@ Uppdatera baslinjen bara när avvikelsen är avsiktlig.
 ## `project-nextrum-genererat`
 
 Filer i Nextrum som aldrig ändras för hand, och vad CI vaktar.
-Detaljen: `CLAUDE.md` avsnitt 8 och 9.
+Detaljen: `CLAUDE.md` avsnitt 8 och 9 och `minne/genererat-och-ci.md`.
 
 Genererat:
 - `nextrum-maskot-svar.js` byggs av `verktyg/bygg-maskotsvar.py` ur
@@ -340,7 +343,8 @@ utbytt ortnamn är doorway pages.
 ## `project-nextrum-agenter`
 
 Reglerna för Nextrums AI-delar. Detaljen: `CLAUDE.md` avsnitt 7,
-`DEPLOY-AGENTER.md`, `supabase/functions/_delad/agent.ts`.
+`minne/funktioner.md`, `DEPLOY-AGENTER.md`,
+`supabase/functions/_delad/agent.ts`.
 
 Fyra regler bär agenterna `juridik` och `ekonomi`:
 
@@ -385,7 +389,8 @@ Följden: maskoten kan inte hitta på ett pris, ett villkor eller ett löfte.
 
 ## `project-nextrum-arbetssatt`
 
-Hur arbetet i Nextrum bedrivs. Detaljen: `CLAUDE.md` avsnitt 10 och 11.
+Hur arbetet i Nextrum bedrivs. Detaljen: `CLAUDE.md` avsnitt 10 och 11,
+`minne/grunden.md` och, för betalningen, `minne/betalning.md`.
 
 Commit-meddelanden är svenska och beskriver följden, inte diffen:
 "Fas 2.5: en faktura skickas bara en gång", inte "fix invoice bug".
@@ -410,7 +415,8 @@ använd `NXStudie.laddarFörsta`. Det som står ovanför det man trycker
 på får inte byta höjd av trycket; gör det det ändå, håll det man
 tryckte på med `NXStudie.håll`. `1fr` i ett grid ska vara
 `minmax(0,1fr)`. Inget som rör sig i onödan (video, zoom, oskärpa).
-Detaljen: `CLAUDE.md` avsnitt 3, "Fyra fällor som gör vyerna hackiga".
+Detaljen: `CLAUDE.md` avsnitt 3, "Fyra fällor som gör vyerna hackiga",
+och `minne/vyerna.md`.
 
 Inte byggt än: en skarp betalning. Sedan Fas 19.2 betalar familjen
 varje pass med kort, i förväg eller efter passet när de bekräftar
