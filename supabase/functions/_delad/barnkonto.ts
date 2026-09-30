@@ -13,9 +13,17 @@
 // barnets inloggning är förälderns sak. Först därefter används
 // service_role.
 //
-// Användarnamnets regel står också i databasen (students_anvandarnamn_form
-// och auth_barnkonto_skapas) och i barninloggningen (nextrum-barn-vy.js).
-// Ändras den ena ska de andra följa med.
+// KONTOT SKAPAS GENOM ETT FÖNSTER (barnkonto_skapas_genom_auth). GoTrue
+// skriver raden i auth.users innan anropets app_metadata finns på den,
+// så databasen kan inte se familjen i anropet. Funktionen väljer därför
+// kontots id, öppnar ett skapandefönster med id:t, barnet och
+// användarnamnet, och ger Auth samma id. Databasen släpper bara in en
+// barnadress med ett öppet fönster för exakt det id:t och skriver
+// app_metadata själv. En registrering genom signUp får sitt id av Auth.
+//
+// Användarnamnets regel står också i databasen (students_anvandarnamn_form,
+// auth_barnkonto_skapas och fönstrets villkor) och i barninloggningen
+// (nextrum-barn-vy.js). Ändras den ena ska de andra följa med.
 // ============================================================
 
 export const BARN_DOMAN = 'barn.nextrum.se';
@@ -103,11 +111,6 @@ export function tolkaAnrop(kropp: unknown): Tolkat {
   return { ok: true, anrop: { atgard: atgard as 'pausa' | 'aktivera' | 'ta_bort_inloggning', barnId } };
 }
 
-/** Det Auth får i app_metadata, som bara service_role kan skriva. */
-export function barnMetadata(foraldId: string, barnId: string): Record<string, string> {
-  return { roll: 'barn', forald_id: foraldId, barn_id: barnId };
-}
-
 /** Ett fel från Auth som betyder att adressen redan finns. */
 export function arUpptagen(meddelande: unknown): boolean {
   return /already|exists|registered|duplicate/i.test(String(meddelande ?? ''));
@@ -135,8 +138,13 @@ export type Beroenden = {
   /** Samma rad med service_role, med inloggningens kolumner. */
   lasBarn: (barnId: string) => Promise<Barnrad | null>;
   anvandarnamnUpptaget: (anvandarnamn: string) => Promise<boolean>;
+  /** Id:t det nya kontot ska få, valt här och inte av Auth. */
+  nyttId: () => string;
+  /** Skapandefönstret: databasen släpper in exakt det här kontot. */
+  oppnaSkapandefonster: (barnId: string, userId: string, anvandarnamn: string) => Promise<string | null>;
+  /** Kontot i Auth, med id:t ur fönstret. app_metadata skriver databasen. */
   skapaAnvandare: (a: {
-    epost: string; losenord: string; appMetadata: Record<string, string>;
+    id: string; epost: string; losenord: string;
   }) => Promise<{ id: string | null; fel: string | null }>;
   /** Barnets rad efter att triggern kopplat kontot. */
   kopplad: (barnId: string) => Promise<string | null>;
@@ -144,7 +152,9 @@ export type Beroenden = {
   sattPaus: (userId: string, banTid: string) => Promise<string | null>;
   sattAktiv: (barnId: string, aktiv: boolean) => Promise<string | null>;
   taBortAnvandare: (userId: string) => Promise<string | null>;
+  /** Fönstret för ett lösenordsbyte. */
   oppnaFonster: (barnId: string) => Promise<string | null>;
+  /** Stänger barnets fönster, båda sorterna. */
   stangFonster: (barnId: string) => Promise<void>;
   loggaUt: (barnId: string) => Promise<void>;
 };
@@ -175,19 +185,26 @@ export async function hanteraBarnkonto(kropp: unknown, b: Beroenden): Promise<Sv
   if (a.atgard === 'skapa') {
     if (barn.user_id) return nej(409, 'Barnet har redan en inloggning.');
     if (await b.anvandarnamnUpptaget(a.anvandarnamn)) return nej(409, 'Användarnamnet är upptaget');
-    const ny = await b.skapaAnvandare({
-      epost: barnEpost(a.anvandarnamn),
-      losenord: a.losenord,
-      appMetadata: barnMetadata(b.anvandare, a.barnId),
-    });
+    // Fönstret först, med kontots id. Det stängs alltid, också när Auth
+    // säger nej: ett fönster som står kvar är ett konto till som får
+    // skapas, fast bara med id:t, som ingen annan har.
+    const id = b.nyttId();
+    const oppet = await b.oppnaSkapandefonster(a.barnId, id, a.anvandarnamn);
+    if (oppet) return nej(500, 'Inloggningen gick inte att skapa. Försök igen.');
+    let ny: { id: string | null; fel: string | null };
+    try {
+      ny = await b.skapaAnvandare({ id, epost: barnEpost(a.anvandarnamn), losenord: a.losenord });
+    } finally {
+      await b.stangFonster(a.barnId);
+    }
     if (ny.fel || !ny.id) {
       return arUpptagen(ny.fel) ? nej(409, 'Användarnamnet är upptaget')
         : nej(502, 'Inloggningen gick inte att skapa. Försök igen om en stund.');
     }
     // Databasen kopplar kontot i samma transaktion som det skapas. Står
-    // barnet ändå utan koppling tas kontot bort, hellre än att en
-    // inloggning finns som inte hör till något barn.
-    if (await b.kopplad(a.barnId) !== ny.id) {
+    // barnet ändå utan koppling, eller fick kontot ett annat id, tas det
+    // bort, hellre än att en inloggning finns som inte hör till något barn.
+    if (ny.id !== id || await b.kopplad(a.barnId) !== id) {
       await b.taBortAnvandare(ny.id);
       return nej(500, 'Inloggningen gick inte att koppla till barnet. Försök igen.');
     }

@@ -229,9 +229,12 @@ Detaljer: `minne/grunden.md`.
   `is_admin()` är superadmin och `har_behorighet()` resten; en ny adminpolicy väljer en av dem.
   Reglerna står i triggern `admin_roller_vakt`, och `admin_logg` går inte att ändra.
 - **Barnets roll** `nextrum_barn` har inga tabellrättigheter; en ny tabell eller vy ger den
-  ingenting, och en ny barnfunktion hittar barnet med `intern.mitt_barn()`. `auth.users` har
-  triggrar som spärrar barnets adress och återställning; lösenordet byts bara i ett fönster som
-  `barn-konto` öppnar (`barn_andringsfonster`). Prövat lokalt, inte mot riktiga Supabase.
+  ingenting, och en ny barnfunktion hittar barnet med `intern.mitt_barn()`. **GoTrue skriver
+  raden i `auth.users` före `app_metadata`**: ett barnkonto skapas bara genom ett fönster som
+  `barn-konto` öppnar för kontots eget id, och lösenordet byts bara i ett fönster
+  (`barn_andringsfonster`). Databasen skriver tillbaka barnets `app_metadata`, spärrar adress
+  och återställning, och håller `*_sent_at` år 2999 så att Auth aldrig mejlar ett barn. Prova
+  i GoTrues ordning, aldrig med raden färdig i en INSERT.
 - **Rätta och radera en person** i adminvyns panel (`radera_person()`), **aldrig i
   dashboarden**: `bookings.parent_id` är ON DELETE CASCADE. Databasen väljer helt eller
   avidentifierat och vägrar medan pengar inte är uppgjorda eller filer finns kvar. Ett
@@ -311,6 +314,8 @@ Detaljer: `minne/sakerhet.md`.
   main i 16 av 23 funktioner; alla driftsattes samma kväll och är lika (`minne/funktioner.md`).
 - `barn-konto` prövar föräldern och `admin-skapa` skriver rollen med anroparens token; bara det
   Auth kräver görs med `service_role`, och ett barnkonto skapas aldrig utan vårdnadshavarens ja.
+  `barn-konto` väljer barnkontots id och ger Auth varken `app_metadata` eller roll: det skriver
+  databasen, ur fönstret.
 - **Agentregeln**: hårt stegtak, källtvång i kod, bara verifierade `kallor` klickbara (aldrig
   med regex), `ekonomi` skriver aldrig, och agenterna läser källan, aldrig ur minnet.
 - **AI-lagret**: `drift` har inget utgående verktyg, och ingen AI-väg skriver i affärstabeller

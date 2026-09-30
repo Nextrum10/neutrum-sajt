@@ -12,6 +12,7 @@
 //   · förälder A kan aldrig skapa, ändra eller ta bort en inloggning
 //     åt förälder B:s barn, och en admin är ingen förälder
 //   · ett barn ändrar inte sin egen inloggning
+//   · kontot skapas inom ett fönster med kontots id, som alltid stängs
 //   · lösenordsbytet sker inom ett fönster som alltid stängs
 // ============================================================
 
@@ -28,18 +29,26 @@ const BARN_A = '00000000-0000-4000-8000-0000000005a1';
 const BARN_B = '00000000-0000-4000-8000-0000000005b1';
 const KONTO_A = '00000000-0000-4000-8000-0000000000c1';
 
+type Skapandefonster = { barnId: string; userId: string; namn: string };
+
 type Varld = {
   b: Beroenden;
   barn: Record<string, Barnrad>;
   logg: string[];
   fonster: string[];
+  skapandefonster: Skapandefonster[];
 };
 
 /**
  * Två familjer. A:s barn har ingen inloggning, B:s har en. lasEgetBarn
- * gör som RLS: föräldern ser sina egna barn, admin ser alla.
+ * gör som RLS: föräldern ser sina egna barn, admin ser alla. Låtsas-Auth
+ * gör som databasen (auth_barnkonto_skapas): en barnadress skapas bara
+ * med ett öppet skapandefönster för samma id och användarnamn, och
+ * familjen tas ur fönstret.
  */
-function varld(vem: string, o: { roll?: string; skapaFel?: string; kopplas?: boolean; bytFel?: string } = {}): Varld {
+function varld(vem: string, o: {
+  roll?: string; skapaFel?: string; kopplas?: boolean; bytFel?: string; fonsterFel?: string; annatId?: string;
+} = {}): Varld {
   const barn: Record<string, Barnrad> = {
     [BARN_A]: { id: BARN_A, parent_id: FORALDER_A, user_id: null, anvandarnamn: null, barn_aktiv: true, raderad_at: null },
     [BARN_B]: { id: BARN_B, parent_id: FORALDER_B, user_id: '00000000-0000-4000-8000-0000000000c2', anvandarnamn: 'bert',
@@ -47,6 +56,7 @@ function varld(vem: string, o: { roll?: string; skapaFel?: string; kopplas?: boo
   };
   const logg: string[] = [];
   const fonster: string[] = [];
+  const skapandefonster: Skapandefonster[] = [];
   const b: Beroenden = {
     anvandare: vem,
     appMetadata: o.roll ? { roll: o.roll } : {},
@@ -56,16 +66,27 @@ function varld(vem: string, o: { roll?: string; skapaFel?: string; kopplas?: boo
     },
     lasBarn: (id) => Promise.resolve(barn[id] ? { ...barn[id] } : null),
     anvandarnamnUpptaget: (namn) => Promise.resolve(Object.values(barn).some((r) => r.anvandarnamn === namn)),
+    nyttId: () => KONTO_A,
+    oppnaSkapandefonster: (barnId, userId, namn) => {
+      logg.push(`skapandefönster ${barnId} ${userId} ${namn}`);
+      if (o.fonsterFel) return Promise.resolve(o.fonsterFel);
+      skapandefonster.push({ barnId, userId, namn });
+      return Promise.resolve(null);
+    },
     skapaAnvandare: (a) => {
-      logg.push(`skapa ${a.epost} ${JSON.stringify(a.appMetadata)}`);
+      logg.push(`skapa ${a.id} ${a.epost}`);
       if (o.skapaFel) return Promise.resolve({ id: null, fel: o.skapaFel });
+      const id = o.annatId ?? a.id;
+      const namn = a.epost.split('@')[0];
+      const i = skapandefonster.findIndex((f) => f.userId === id && f.namn === namn);
+      if (i < 0) return Promise.resolve({ id: null, fel: 'Database error creating new user' });
+      const [f] = skapandefonster.splice(i, 1);
       // Databasen kopplar kontot i samma transaktion (auth_barnkonto_kopplas).
       if (o.kopplas !== false) {
-        const r = barn[a.appMetadata.barn_id];
-        r.user_id = KONTO_A;
-        r.anvandarnamn = a.epost.split('@')[0];
+        barn[f.barnId].user_id = id;
+        barn[f.barnId].anvandarnamn = namn;
       }
-      return Promise.resolve({ id: KONTO_A, fel: null });
+      return Promise.resolve({ id, fel: null });
     },
     kopplad: (id) => Promise.resolve(barn[id]?.user_id ?? null),
     bytLosenord: (userId) => {
@@ -80,10 +101,16 @@ function varld(vem: string, o: { roll?: string; skapaFel?: string; kopplas?: boo
       return Promise.resolve(null);
     },
     oppnaFonster: (id) => { fonster.push(id); logg.push('fönster öppnat'); return Promise.resolve(null); },
-    stangFonster: (id) => { fonster.splice(fonster.indexOf(id), 1); logg.push('fönster stängt'); return Promise.resolve(); },
+    stangFonster: (id) => {
+      // Båda sorterna, som i databasen: delete where barn_id = ...
+      for (let i = fonster.length - 1; i >= 0; i--) if (fonster[i] === id) fonster.splice(i, 1);
+      for (let i = skapandefonster.length - 1; i >= 0; i--) if (skapandefonster[i].barnId === id) skapandefonster.splice(i, 1);
+      logg.push('fönster stängt');
+      return Promise.resolve();
+    },
     loggaUt: (id) => { logg.push(`utloggad ${id}`); return Promise.resolve(); },
   };
-  return { b, barn, logg, fonster };
+  return { b, barn, logg, fonster, skapandefonster };
 }
 
 const skapa = (barn = BARN_A, extra: Record<string, unknown> = {}) => ({
@@ -126,14 +153,44 @@ Deno.test('anropet: okänd åtgärd, fel barn-id och ett ja som inte är true ne
   assertEquals(t.ok && t.anrop.atgard === 'skapa' && t.anrop.anvandarnamn, 'alva.b');
 });
 
-Deno.test('föräldern skapar barnets inloggning med barnadressen och app_metadata', async () => {
+Deno.test('föräldern skapar barnets inloggning: fönstret först, med kontots id, och stängt efteråt', async () => {
   const v = varld(FORALDER_A);
   const s = await hanteraBarnkonto(skapa(), v.b);
   assertEquals(s, { status: 200, kropp: { ok: true, anvandarnamn: 'alva.b' } });
   assertEquals(v.logg, [
-    `skapa alva.b@barn.nextrum.se {"roll":"barn","forald_id":"${FORALDER_A}","barn_id":"${BARN_A}"}`,
+    `skapandefönster ${BARN_A} ${KONTO_A} alva.b`,
+    `skapa ${KONTO_A} alva.b@barn.nextrum.se`,
+    'fönster stängt',
   ]);
   assertEquals(v.barn[BARN_A].user_id, KONTO_A);
+  assertEquals(v.skapandefonster, []);
+});
+
+Deno.test('kan fönstret inte öppnas anropas inte Auth', async () => {
+  const v = varld(FORALDER_A, { fonsterFel: 'nekad' });
+  const s = await hanteraBarnkonto(skapa(), v.b);
+  assertEquals(s.status, 500);
+  assertEquals(v.logg, [`skapandefönster ${BARN_A} ${KONTO_A} alva.b`]);
+  assertEquals(v.barn[BARN_A].user_id, null);
+});
+
+Deno.test('fönstret stängs också när Auth säger nej', async () => {
+  const v = varld(FORALDER_A, { skapaFel: 'Database error creating new user' });
+  const s = await hanteraBarnkonto(skapa(), v.b);
+  assertEquals(s.status, 502);
+  assertEquals(v.logg.at(-1), 'fönster stängt');
+  assertEquals(v.skapandefonster, []);
+});
+
+Deno.test('ett konto med ett annat id än fönstrets tas bort igen', async () => {
+  const annat = '00000000-0000-4000-8000-0000000000c9';
+  const v = varld(FORALDER_A, { annatId: annat });
+  // Databasen hade nekat det (inget fönster för id:t); låtsas-Auth gör
+  // likadant, så provet ger det också ett fönster för att nå kontrollen.
+  v.skapandefonster.push({ barnId: BARN_A, userId: annat, namn: 'alva.b' });
+  const s = await hanteraBarnkonto(skapa(), v.b);
+  assertEquals(s.status, 500);
+  assertEquals(v.logg.at(-1), `ta bort ${annat}`);
 });
 
 Deno.test('utan vårdnadshavarens ja skapas ingenting', async () => {
@@ -182,6 +239,7 @@ Deno.test('ett upptaget användarnamn: samma svar oavsett om databasen eller Aut
   const v2 = varld(FORALDER_A, { skapaFel: 'A user with this email address has already been registered' });
   const s2 = await hanteraBarnkonto(skapa(), v2.b);
   assertEquals(s2, { status: 409, kropp: { error: 'Användarnamnet är upptaget' } });
+  assertEquals(v2.skapandefonster, []);
 });
 
 Deno.test('ett konto som inte kopplades tas bort igen', async () => {

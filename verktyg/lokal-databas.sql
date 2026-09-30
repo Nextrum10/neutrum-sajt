@@ -42,7 +42,10 @@ alter table auth.users
   add column if not exists email_change_token_current text default '',
   add column if not exists email_change_token_new text default '',
   add column if not exists phone_change_token text default '',
-  add column if not exists reauthentication_token text default '';
+  add column if not exists reauthentication_token text default '',
+  -- barnkonto_skapas_genom_auth: mejlspärren står i de här.
+  add column if not exists phone_change_sent_at timestamptz,
+  add column if not exists reauthentication_sent_at timestamptz;
 alter table auth.refresh_tokens
   add column if not exists session_id uuid,
   add column if not exists parent text;

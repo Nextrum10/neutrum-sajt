@@ -6,9 +6,10 @@ står i `CLAUDE.md`; här står varför och fällorna.
 
 Allt kom i en migration, `supabase/migrations/20261001000000_barnkonton_och_admin.sql`,
 med två edge-funktioner (`barn-konto`, `admin-skapa`) och deras rena delar i
-`_delad/barnkonto.ts` och `_delad/adminbehorighet.ts`. Versionen i filnamnet
-är gissad: den som kör migrationen döper om filen till den version
-`apply_migration` registrerar (`kolla-migrationer.py`).
+`_delad/barnkonto.ts` och `_delad/adminbehorighet.ts`, och en rättelse samma
+kväll, `20261001000200_barnkonto_skapas_genom_auth.sql`: barnkontot gick inte
+att skapa genom riktiga Auth (se Auth nedan). Versionerna i filnamnen är de
+som står i `supabase_migrations.schema_migrations` i driften.
 
 ## Del 1: barnets inloggning
 
@@ -18,9 +19,11 @@ med två edge-funktioner (`barn-konto`, `admin-skapa`) och deras rena delar i
   kryssruta där föräldern bekräftar att hen är vårdnadshavare och godkänner
   att barnet använder Nextrum, med länk till `/integritetspolicy#barn`.
 - `barn-konto` prövar föräldern med ANROPARENS token (barnet läses genom RLS,
-  sedan `parent_id = anroparen`) och skapar kontot med `service_role`:
-  adressen `<användarnamn>@barn.nextrum.se`, `email_confirm`, `app_metadata
-  {roll: 'barn', forald_id, barn_id}` och `role: 'nextrum_barn'`.
+  sedan `parent_id = anroparen`), väljer kontots id, öppnar ett
+  skapandefönster för det och skapar kontot med `service_role`: id:t,
+  adressen `<användarnamn>@barn.nextrum.se` och `email_confirm`. Rollen,
+  `app_metadata {roll: 'barn', forald_id, barn_id}` och kopplingen till
+  barnet skriver databasen (se Auth nedan).
 - Barnet loggar in på `/barn` med användarnamnet. Adressen byggs i
   webbläsaren och barnet ser den aldrig. Felet är alltid "Fel användarnamn
   eller lösenord", utom när nätet inte svarar eller Supabase säger 429 för
@@ -62,42 +65,84 @@ rapporterna. **Timmarna är genomförda och bokade pass, aldrig timbanken
 eller klippkortet**: det är familjens pengar, och barnet ska inte se pengar.
 Ett påhittat saldo fanns inte att visa, så vyn säger vad som hänt.
 
-### Auth: vad som spärras i auth.users
-Tre triggrar på `auth.users`:
-1. `auth_barnkonto_skapas` (BEFORE INSERT): en adress på barndomänen måste ha
-   `roll = barn`, och `roll = barn` måste ha en giltig adress, ett barn med
-   förälder och inget konto sedan tidigare. Sätter `role = nextrum_barn` och
-   tömmer `user_metadata`. Så går det inte att registrera sig själv på
-   domänen genom `signUp`.
+### Auth: hur kontot skapas, och vad som spärras i auth.users
+**GoTrue skapar ett konto i flera steg**, i en och samma transaktion
+(supabase/auth, `internal/api/admin.go`, `adminUserCreate`): raden skrivs
+med ett id och `app_metadata {provider, providers}`, och anropets
+`app_metadata`, rollen, bekräftelsen och `user_metadata.email_verified`
+kommer i var sin UPDATE efteråt. Den första spärren krävde `roll = barn`
+redan vid INSERT och nekade därför varje barnkonto. Det syntes först när
+kedjan provades mot riktiga Auth i driften 2026-09-30 (500 från
+`POST /admin/users`, "Adresser på barn.nextrum.se är barnkonton ..."), för
+`rls-test.sql` skrev raderna direkt, med `app_metadata` redan i INSERT.
+**Prova i GoTrues ordning**: provet "kontot skapas som GoTrue gör det" gör
+nu så.
+
+Rättelsen är ett **skapandefönster**. `barn-konto` väljer kontots id
+(`crypto.randomUUID()`), öppnar en rad i `barn_andringsfonster` med
+`andring = 'skapa'`, id:t, barnet och användarnamnet, och anropar
+`auth.admin.createUser({ id, email, password, email_confirm })` utan
+`app_metadata` och utan roll. Fönstret stängs i `finally`. Att Auth tar
+emot ett id står i `adminUserCreate` (`params.Id`), och supabase-js 2.116.0
+skickar det.
+
+Tre triggrar på `auth.users`, och mejlspärren i två av dem:
+1. `auth_barnkonto_skapas` (BEFORE INSERT): en adress på barndomänen, eller
+   `roll = barn`, släpps bara in med ett öppet skapandefönster för exakt
+   det id:t och användarnamnet, högst 60 sekunder gammalt, och barnet ska
+   finnas, inte vara raderat och inte ha en inloggning. Familjen tas ur
+   fönstret och barnets rad, aldrig ur anropet (står den ändå i anropet ska
+   den vara fönstrets). Triggern skriver `app_metadata {roll, barn_id,
+   forald_id}` och `role = nextrum_barn`, tömmer `user_metadata`, sätter
+   mejlspärren och förbrukar fönstret. **En registrering genom `signUp` får
+   sitt id av Auth och hittar inget fönster**, också medan föräldern skapar
+   samma användarnamn. Därför är id:t bundet, inte bara namnet: ett fönster
+   på namnet hade varit en kapplöpning den som vet användarnamnet kan vinna.
 2. `auth_barnkonto_kopplas` (AFTER INSERT): sätter `students.user_id`.
-3. `auth_barnkonto_las` (BEFORE UPDATE): för ett barn kan `app_metadata.roll`,
-   `barn_id` och `forald_id` inte ändras, rollen tvingas tillbaka, och adress,
-   `email_change`, token för återställning och byte, och telefonen går inte
-   att röra. Lösenordet (`encrypted_password`) går bara att ändra när
-   `barn_andringsfonster` har en öppen rad för barnet, högst 60 sekunder
-   gammal, och raden förbrukas. Allt annat GoTrue skriver (senaste inloggning,
-   `banned_until`, `updated_at`) går igenom; `senast_inloggad` följer med till
-   `students` i ett eget undantagsblock, så att ett fel där aldrig stoppar en
-   inloggning.
+3. `auth_barnkonto_las` (BEFORE UPDATE): för ett barn skrivs `roll`,
+   `barn_id` och `forald_id` tillbaka ur den gamla raden och rollen tvingas
+   till `nextrum_barn`, vad uppdateringen än säger. GoTrue skriver
+   `app_metadata` ur sitt minne, och en skrivning utan rollen ska varken göra
+   barnet till ett vanligt konto eller fälla Auth; förut nekades den (42501),
+   och det hade fällt skapandet en gång till. Ett vanligt konto som får
+   `roll = barn` nekas som förut. Adress, `email_change`, token för
+   återställning och byte, och telefonen går inte att röra (42501).
+   Lösenordet (`encrypted_password`) går bara att ändra med ett öppet
+   lösenordsfönster (`andring = 'losenord'`, högst 60 sekunder, förbrukas).
+   Allt annat GoTrue skriver (senaste inloggning, `banned_until`,
+   `updated_at`, `user_metadata`) går igenom; `senast_inloggad` följer med
+   till `students` i ett eget undantagsblock, så att ett fel där aldrig
+   stoppar en inloggning.
+
+**Mejlspärren.** GoTrue skickar sina mejl INNAN den sparar token
+(`internal/api/mail.go`, till exempel `sendPasswordRecovery`), så spärren på
+`recovery_token` ensam hade låtit mejlet gå till en adress som inte finns.
+Men GoTrue prövar först `*_sent_at` plus frekvensen mot nu. På ett barnkonto
+står därför `confirmation_sent_at`, `recovery_sent_at`,
+`email_change_sent_at` och `reauthentication_sent_at` år 2999
+(`intern.barnkonto_mejlsparr()`), och båda triggrarna skriver tillbaka dem
+(ett lösenordsbyte genom Auth nollar dem, `UpdatePassword`). Återställning,
+magisk länk, ny bekräftelse, omautentisering och adressbyte svarar då 429
+innan något mejl går. Inbjudan har ingen sådan spärr, men den kräver
+`service_role`, och `admin-skapa` nekar barnadresser.
 
 `handle_new_user` ger inget föräldrakonto till ett barn (`roll = barn` går
-förbi den).
+förbi den; AFTER-triggern ser det BEFORE-triggern skrev).
 
-Fällor, provade lokalt men inte mot riktiga GoTrue:
-- **GoTrue skickar ett återställningsmejl INNAN token sparas.** Spärren
-  hindrar att token sparas, så länken fungerar aldrig, men GoTrue kan ha
-  hunnit försöka skicka. Adressen kan inte ta emot post, och en null-MX
-  på `barn.nextrum.se` gör det säkert (DEPLOY-filen).
-- **Ett 500-svar från `/recover`** kan i teorin skilja ett barnkonto från en
-  adress som inte finns. Domänen är känd ändå (användarnamnet är inte
-  hemligt), så risken är liten, men den står här.
-- **Skriver GoTrue om hashen vid en inloggning** (kryptering av hasharna
-  eller byte av algoritm, inget av det är på som förval) är det en ändring
-  av `encrypted_password` utan fönster. Triggern säger nej, och barnet kommer
-  inte in. Den går inte att skilja från ett försök att byta lösenordet, så
-  den släpps inte igenom. Prova i driften att ett barn kan logga in två
-  gånger i rad, och slå inte på hashkrypteringen i Auth utan att tänka på
-  det här.
+Fällor:
+- **Rättelsen står på tre saker i GoTrue**: att `createUser` tar ett id,
+  att raden skrivs före `app_metadata`, och att frekvensspärren prövas före
+  mejlet. En uppgradering av Auth som ändrar något av det syns som ett 500
+  när en förälder skapar en inloggning (id:t eller ordningen), eller som
+  mejl till barnadresser (spärren). Null-MX:en på `barn.nextrum.se` är
+  andra lagret: post dit studsar direkt i stället för att hamna någonstans.
+- **Skriver GoTrue om hashen vid en inloggning** är det en ändring av
+  `encrypted_password` utan fönster. Triggern säger nej, och barnet kommer
+  inte in. `Authenticate` (`internal/models/user.go`) räknar om hashen i
+  minnet när bcrypt-kostnaden är över 10 eller exakt 4, men skriver den bara när
+  hashkrypteringen är på (`shouldReEncrypt`, `internal/api/token.go`).
+  Barnens hashar görs av GoTrue med kostnad 10. Slå inte på
+  hashkrypteringen i Auth utan att tänka på det här.
 - "Secure email change" ska vara på i Auth, och manuell länkning av
   identiteter av.
 
@@ -229,8 +274,13 @@ studiehjälparvyn till `/admin`.
   barnet når, `auth.users`-spärrarna (adress, återställning, lösenord med
   och utan fönster, ett fönster som bara räcker en gång, ban och
   inloggning går igenom), varje adminregel, loggen som inte går att ändra,
-  och att en barnadress aldrig tas ut ur mejlkön. Hela filen var grön
-  (1139 rader) mot en lokal databas med alla 152 migrationer.
+  och att en barnadress aldrig tas ut ur mejlkön. Avsnitt 7b (rättelsen):
+  kontot skapat i GoTrues ordning, en registrering på samma adress medan
+  fönstret är öppet, fel användarnamn, fel familj och ett utgånget fönster,
+  fönstrets villkor, och mejlspärren (står på, överlever ett lösenordsbyte
+  som Auth gör det, går inte att flytta bakåt, rör inte vanliga konton).
+  Hela filen var grön (1151 rader) mot en lokal databas med alla 154
+  migrationer, och utan rättelsen föll 16 av dem.
 - Deno: `_delad/barnkonto_test.ts`, `_delad/adminbehorighet_test.ts` och
   ett nytt prov i `notiser/ko_test.ts`.
 - Webbläsaren: `verktyg/prova-barnkonton.js` (96 prov, gröna), mot en

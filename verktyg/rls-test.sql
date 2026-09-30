@@ -9164,6 +9164,28 @@ end $$;
 reset role;
 select set_config('request.jwt.claims', null, true);
 
+-- Ett barnkonto skapas bara genom ett skapandefönster för just sitt id
+-- (barnkonto_skapas_genom_auth), som barn-konto öppnar. Tiden tas ur
+-- klockan: now() står still hela sviten, och fönstret prövas mot
+-- clock_timestamp(). I ett block: före rättelsen finns inte kolumnerna,
+-- och då skapas kontona som förut.
+create function pg_temp.skapandefonster(p_barn uuid, p_konto uuid, p_namn text, p_alder interval default '0 seconds')
+returns void language plpgsql as $$
+declare
+  t timestamptz := clock_timestamp() - p_alder;
+begin
+  insert into public.barn_andringsfonster (barn_id, andring, user_id, anvandarnamn, skapad, giltig_till)
+  values (p_barn, 'skapa', p_konto, p_namn, t, t + interval '60 seconds');
+end $$;
+
+do $$
+begin
+  perform pg_temp.skapandefonster('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000bc0c1', 'aldst.p');
+  perform pg_temp.skapandefonster('00000000-0000-4000-8000-0000000005c1', '00000000-0000-4000-8000-0000000bc0c2', 'annan.q');
+exception when others then
+  raise notice 'skapandefönstret: %', sqlerrm;
+end $$;
+
 insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
   ('00000000-0000-4000-8000-0000000bc0c1', 'aldst.p@barn.nextrum.se',
    '{"provider":"email","roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005a1","forald_id":"00000000-0000-4000-8000-0000000000f1"}',
@@ -9716,15 +9738,22 @@ select 'Barn: rollen går inte att byta tillbaka till authenticated', r = 'nextr
           $q$update auth.users set role = 'authenticated' where id = '00000000-0000-4000-8000-0000000bc0c1'
              returning role$q$) r) x
 union all
-select 'Barn: ett barnkonto förblir ett barnkonto', r like 'FEL 42501%', r
+select 'Barn: ett barnkonto förblir ett barnkonto när GoTrue skriver app_metadata ur minnet',
+       r = 'barn|00000000-0000-4000-8000-0000000005a1|nextrum_barn', r
   from (select pg_temp.som(null, null,
-          $q$update auth.users set raw_app_meta_data = raw_app_meta_data - 'roll'
-              where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+          $q$with u as (update auth.users set raw_app_meta_data = '{"provider":"email","providers":["email"]}',
+                                              role = 'authenticated'
+                         where id = '00000000-0000-4000-8000-0000000bc0c1' returning raw_app_meta_data, role)
+             select (raw_app_meta_data ->> 'roll') || '|' || (raw_app_meta_data ->> 'barn_id') || '|' || role from u$q$) r) x
 union all
-select 'Barn: ett barnkonto byter inte barn', r like 'FEL 42501%', r
+select 'Barn: ett barnkonto byter inte barn eller familj',
+       r = '00000000-0000-4000-8000-0000000005a1|00000000-0000-4000-8000-0000000000f1', r
   from (select pg_temp.som(null, null,
-          $q$update auth.users set raw_app_meta_data = raw_app_meta_data || '{"barn_id":"00000000-0000-4000-8000-0000000005b1"}'
-              where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+          $q$with u as (update auth.users
+                           set raw_app_meta_data = raw_app_meta_data
+                               || '{"barn_id":"00000000-0000-4000-8000-0000000005b1","forald_id":"00000000-0000-4000-8000-0000000000f2"}'
+                         where id = '00000000-0000-4000-8000-0000000bc0c1' returning raw_app_meta_data)
+             select (raw_app_meta_data ->> 'barn_id') || '|' || (raw_app_meta_data ->> 'forald_id') from u$q$) r) x
 union all
 select 'Barn: GoTrues egna fält i app_metadata går igenom', r = '1', r
   from (select pg_temp.som(null, null,
@@ -9747,15 +9776,17 @@ select 'Barn: en barnadress går inte att byta till', r like 'FEL 42501%', r
           $q$update auth.users set email_change = 'aldst.p2@barn.nextrum.se'
               where id = '00000000-0000-4000-8000-0000000000f1' returning id::text$q$) r) x
 union all
-select 'Barn: ett andra barnkonto för samma barn nekas', r like 'FEL 42501%', r
-  from (select pg_temp.som(null, null,
+select 'Barn: ett andra barnkonto för samma barn nekas, också med ett fönster', r like 'FEL 42501%', r
+  from (select pg_temp.som(null,
+          array[$q$select pg_temp.skapandefonster('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000bc0c7', 'andra.p')$q$],
           $q$insert into auth.users (id, email, raw_app_meta_data) values
                ('00000000-0000-4000-8000-0000000bc0c7', 'andra.p@barn.nextrum.se',
                 '{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005a1","forald_id":"00000000-0000-4000-8000-0000000000f1"}')
              returning id::text$q$) r) x
 union all
 select 'Barn: ett upptaget användarnamn nekas', r like 'FEL 23505%', r
-  from (select pg_temp.som(null, null,
+  from (select pg_temp.som(null,
+          array[$q$select pg_temp.skapandefonster('00000000-0000-4000-8000-0000000005b1', '00000000-0000-4000-8000-0000000bc0c6', 'aldst.p')$q$],
           $q$insert into auth.users (id, email, raw_app_meta_data) values
                ('00000000-0000-4000-8000-0000000bc0c6', 'aldst.p@barn.nextrum.se',
                 '{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005b1","forald_id":"00000000-0000-4000-8000-0000000000f1"}')
@@ -9766,6 +9797,113 @@ select 'Barn: vanliga konton påverkas inte av låset', r = '1', r
           $q$with u as (update auth.users set encrypted_password = 'nytt', email = 'rls-p2@example.invalid'
                          where id = '00000000-0000-4000-8000-0000000000f1' returning 1)
              select count(*)::text from u$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 7b. Skapandefönstret och mejlspärren (barnkonto_skapas_genom_auth)
+--
+-- GoTrue skriver raden med app_metadata {provider, providers} och lägger
+-- till roll, bekräftelse och resten i UPDATE efteråt (admin.go,
+-- adminUserCreate). Det första provet gör exakt så; fixturerna ovan skrev
+-- app_metadata i INSERT och kunde aldrig se att det inte gick.
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Barn: kontot skapas som GoTrue gör det, raden först och resten efteråt',
+       r = 'nextrum_barn|barn|00000000-0000-4000-8000-0000000005b1|00000000-0000-4000-8000-0000000000f1|yngst.p|true|0|0|{"email_verified": true}',
+       r
+  from (select pg_temp.som(null,
+          array[$q$select pg_temp.skapandefonster('00000000-0000-4000-8000-0000000005b1', '00000000-0000-4000-8000-0000000bc0d1', 'yngst.p')$q$,
+                $q$insert into auth.users (id, email, role, raw_app_meta_data, raw_user_meta_data,
+                                           confirmation_token, recovery_token, email_change_token_new, email_change)
+                   values ('00000000-0000-4000-8000-0000000bc0d1', 'yngst.p@barn.nextrum.se', '',
+                           '{"provider":"email","providers":["email"]}', '{}', '', '', '', '')$q$,
+                $q$update auth.users set role = 'authenticated' where id = '00000000-0000-4000-8000-0000000bc0d1'$q$,
+                $q$update auth.users set confirmation_token = '', email_confirmed_at = now()
+                    where id = '00000000-0000-4000-8000-0000000bc0d1'$q$,
+                $q$update auth.users set raw_user_meta_data = '{"email_verified": true}'
+                    where id = '00000000-0000-4000-8000-0000000bc0d1'$q$],
+          $q$select concat_ws('|', u.role, u.raw_app_meta_data ->> 'roll', u.raw_app_meta_data ->> 'barn_id',
+                              u.raw_app_meta_data ->> 'forald_id', s.anvandarnamn, (s.user_id = u.id)::text,
+                              (select count(*) from public.barn_andringsfonster f where f.barn_id = s.id)::text,
+                              (select count(*) from public.profiles p where p.id = u.id)::text,
+                              u.raw_user_meta_data::text)
+               from auth.users u join public.students s on s.id = '00000000-0000-4000-8000-0000000005b1'
+              where u.id = '00000000-0000-4000-8000-0000000bc0d1'$q$) r) x
+union all
+select 'Barn: en registrering på barnadressen nekas också medan fönstret är öppet', r like 'FEL 42501%', r
+  from (select pg_temp.som(null,
+          array[$q$select pg_temp.skapandefonster('00000000-0000-4000-8000-0000000005b1', '00000000-0000-4000-8000-0000000bc0d1', 'yngst.p')$q$],
+          $q$insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
+               ('00000000-0000-4000-8000-0000000bc0d2', 'yngst.p@barn.nextrum.se',
+                '{"provider":"email","providers":["email"]}', '{"role":"parent"}') returning id::text$q$) r) x
+union all
+select 'Barn: fönstret gäller bara sitt användarnamn', r like 'FEL 42501%', r
+  from (select pg_temp.som(null,
+          array[$q$select pg_temp.skapandefonster('00000000-0000-4000-8000-0000000005b1', '00000000-0000-4000-8000-0000000bc0d1', 'yngst.p')$q$],
+          $q$insert into auth.users (id, email, raw_app_meta_data) values
+               ('00000000-0000-4000-8000-0000000bc0d1', 'annat.p@barn.nextrum.se', '{"provider":"email"}') returning id::text$q$) r) x
+union all
+select 'Barn: ett utgånget skapandefönster nekas', r like 'FEL 42501%', r
+  from (select pg_temp.som(null,
+          array[$q$select pg_temp.skapandefonster('00000000-0000-4000-8000-0000000005b1', '00000000-0000-4000-8000-0000000bc0d1',
+                                                  'yngst.p', interval '2 minutes')$q$],
+          $q$insert into auth.users (id, email, raw_app_meta_data) values
+               ('00000000-0000-4000-8000-0000000bc0d1', 'yngst.p@barn.nextrum.se', '{"provider":"email"}') returning id::text$q$) r) x
+union all
+select 'Barn: familjen i anropet ska vara fönstrets', r like 'FEL 42501%', r
+  from (select pg_temp.som(null,
+          array[$q$select pg_temp.skapandefonster('00000000-0000-4000-8000-0000000005b1', '00000000-0000-4000-8000-0000000bc0d1', 'yngst.p')$q$],
+          $q$insert into auth.users (id, email, raw_app_meta_data) values
+               ('00000000-0000-4000-8000-0000000bc0d1', 'yngst.p@barn.nextrum.se',
+                '{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005b1","forald_id":"00000000-0000-4000-8000-0000000000f2"}')
+             returning id::text$q$) r) x
+union all
+select 'Barn: föräldern öppnar inget skapandefönster själv', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$insert into public.barn_andringsfonster (barn_id, andring, user_id, anvandarnamn)
+             values ('00000000-0000-4000-8000-0000000005b1', 'skapa', '00000000-0000-4000-8000-0000000bc0d1', 'yngst.p')
+             returning id::text$q$) r) x
+union all
+select 'Barn: ett skapandefönster har ett id och ett giltigt användarnamn', r like 'FEL 23514%', r
+  from (select pg_temp.som(null, null,
+          $q$insert into public.barn_andringsfonster (barn_id, andring, anvandarnamn)
+             values ('00000000-0000-4000-8000-0000000005b1', 'skapa', 'Yngst P') returning id::text$q$) r) x
+union all
+select 'Barn: ett lösenordsfönster bär inget id', r like 'FEL 23514%', r
+  from (select pg_temp.som(null, null,
+          $q$insert into public.barn_andringsfonster (barn_id, user_id)
+             values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000bc0c1') returning id::text$q$) r) x
+union all
+select 'Barn: Auth skickar inga mejl till ett barnkonto (spärren i *_sent_at)', r = 'true|true|true|true', r
+  from (select pg_temp.som(null, null,
+          $q$select concat_ws('|', (confirmation_sent_at > now() + interval '900 years')::text,
+                              (recovery_sent_at > now() + interval '900 years')::text,
+                              (email_change_sent_at > now() + interval '900 years')::text,
+                              (reauthentication_sent_at > now() + interval '900 years')::text)
+               from auth.users where id = '00000000-0000-4000-8000-0000000bc0c1'$q$) r) x
+union all
+select 'Barn: mejlspärren står kvar när lösenordet byts som Auth byter det', r = 'true|true', r
+  from (select pg_temp.som(null,
+          array[$q$insert into public.barn_andringsfonster (barn_id) values ('00000000-0000-4000-8000-0000000005a1')$q$,
+                $q$update auth.users
+                      set encrypted_password = 'nytt', confirmation_token = '', confirmation_sent_at = null,
+                          recovery_token = '', recovery_sent_at = null, email_change_token_current = '',
+                          email_change_token_new = '', email_change_sent_at = null, phone_change_token = '',
+                          phone_change_sent_at = null, reauthentication_token = '', reauthentication_sent_at = null
+                    where id = '00000000-0000-4000-8000-0000000bc0c1'$q$],
+          $q$select (encrypted_password = 'nytt')::text || '|' || (recovery_sent_at > now() + interval '900 years')::text
+               from auth.users where id = '00000000-0000-4000-8000-0000000bc0c1'$q$) r) x
+union all
+select 'Barn: mejlspärren går inte att flytta bakåt', r = 'true', r
+  from (select pg_temp.som(null, null,
+          $q$with u as (update auth.users set recovery_sent_at = now() - interval '1 day'
+                         where id = '00000000-0000-4000-8000-0000000bc0c1' returning recovery_sent_at)
+             select (recovery_sent_at > now() + interval '900 years')::text from u$q$) r) x
+union all
+select 'Barn: vanliga konton får ingen mejlspärr', r = 'true', r
+  from (select pg_temp.som(null, null,
+          $q$with u as (update auth.users set recovery_sent_at = now() - interval '1 day'
+                         where id = '00000000-0000-4000-8000-0000000000f1' returning recovery_sent_at)
+             select (recovery_sent_at < now())::text from u$q$) r) x;
 
 -- ------------------------------------------------------------
 -- 8. Städningen
@@ -9784,6 +9922,7 @@ select 'Barn: tas barnet bort tas inloggningen bort', r = '0', r
   from (select pg_temp.som(null,
           array[$q$insert into public.students (id, parent_id, name) values
                    ('00000000-0000-4000-8000-0000000bc5a3', '00000000-0000-4000-8000-0000000000f1', 'Nytt barn')$q$,
+                $q$select pg_temp.skapandefonster('00000000-0000-4000-8000-0000000bc5a3', '00000000-0000-4000-8000-0000000bc0c3', 'nytt.p')$q$,
                 $q$insert into auth.users (id, email, raw_app_meta_data) values
                    ('00000000-0000-4000-8000-0000000bc0c3', 'nytt.p@barn.nextrum.se',
                     '{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000bc5a3","forald_id":"00000000-0000-4000-8000-0000000000f1"}')$q$,
