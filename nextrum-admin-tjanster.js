@@ -338,7 +338,11 @@
         + S.tjanster.map(t => '<option value="' + esc(t.kod) + '">' + esc(t.namn) + '</option>').join('');
     }
 
-    $('#rk-antal').textContent = S.rabattkoder.length ? S.rabattkoder.length + ' st' : '';
+    /* TIPS är ingen kod någon skriver in, utan markeringen på ett pass
+       med en timme på köpet för ett tips (2026-09-30). Den kan aldrig
+       slås på, och står under Intresseanmälningar → Tips och kampanjer. */
+    const koder = S.rabattkoder.filter(r => r.kod !== 'TIPS');
+    $('#rk-antal').textContent = koder.length ? koder.length + ' st' : '';
 
     host.innerHTML = tabell([
       { namn: 'Kod', rita: r => '<b style="font-family:var(--f-mono);letter-spacing:.06em">'
@@ -361,7 +365,7 @@
         } },
       { namn: '', höger: true, rita: r => '<button class="btn btn-ghost btn-sm" data-rk-vaxla="'
           + esc(r.kod) + '">' + (r.aktiv ? 'Stäng av' : 'Slå på') + '</button>' }
-    ], S.rabattkoder, 'Inga rabattkoder än');
+    ], koder, 'Inga rabattkoder än');
   }
 
   /* ============ rabattkoderna ============ */

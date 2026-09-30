@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar och svaret på en föreslagen tid)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid och tipskoderna)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -46,8 +46,8 @@
 -- personer_redigeras_och_raderas, dokument_delas_med_personen,
 -- schemalagda_korningar_syns, manadskorningens_svar_blir_en_uppgift,
 -- manadskorningens_svar_lases_den_forsta, anonyma_skrivningar_far_tak,
--- Fas 23.2 (NexLäx, fas23_2_nexlax, med sin bank), admin_oppnar_chatten
--- och avbokningar_och_svar är körda.
+-- Fas 23.2 (NexLäx, fas23_2_nexlax, med sin bank), admin_oppnar_chatten,
+-- avbokningar_och_svar och tipskoder_och_kampanjkoder är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -8867,6 +8867,281 @@ select pg_temp.prova('Svar anon kör inte gallringen', null,
 insert into utfall (test, ok, detalj)
 select 'Svar gallringen är schemalagd varje natt', count(*) = 1, 'jobb: ' || count(*)
   from cron.job where jobname = 'svar-gallring' and active and command = 'select intern.svar_gallra()';
+
+-- ============================================================
+-- TIPSKODER OCH KAMPANJKODER (2026-09-30)
+--
+-- En kod per familj och godkänd studiehjälpare, skapad av mina_tips(),
+-- och kampanjkoder som admin skapar. Koden följer med anmälan, och en
+-- okänd kod fäller aldrig anmälan. Familjen som tipsat får en timme
+-- på köpet per ny familj som haft sitt första pass: samma rabatt som
+-- prissidans första timme, märkt rabattkod 'TIPS'.
+-- ============================================================
+
+select pg_temp.prova('Tips anon läser inga koder', null,
+  array['select * from public.tipskoder'], 'nekad');
+select pg_temp.prova('Tips anon får ingen kod', null,
+  array['select public.mina_tips()'], 'nekad');
+select pg_temp.prova('Tips familjen ser inte adminens lista', '00000000-0000-4000-8000-0000000000f1',
+  array['select * from public.tipskoder_lage()'], 'nekad');
+select pg_temp.prova('Tips familjen skapar ingen kampanjkod', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.tipskoder (kod, sort, namn) values ('RLS-FAMILJ', 'kampanj', 'Prov')$q$], 'nekad');
+select pg_temp.prova('Tips familjen skapar ingen personkod åt sig själv', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.tipskoder (kod, sort, person_id) values ('RLS-EGEN', 'familj', '00000000-0000-4000-8000-0000000000f1')$q$], 'nekad');
+select pg_temp.prova('Tips admin skapar en kampanjkod', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into public.tipskoder (kod, sort, namn) values ('RLS-AFFISCH', 'kampanj', 'Prov affisch')$q$], 'ok');
+select pg_temp.prova('Tips admin skapar ingen personkod i någons namn', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into public.tipskoder (kod, sort, person_id) values ('RLS-ANNAN', 'familj', '00000000-0000-4000-8000-0000000000f2')$q$], 'nekad');
+
+-- 'TIPS' är markeringen på ett pass med tipstimmen. Raden finns i
+-- rabattkoder (bookings.rabattkod pekar dit) och kan aldrig slås på:
+-- då hade en familj kunnat skriva in den själv.
+do $$
+declare v_fel text := 'gick igenom'; v_aktiv boolean;
+begin
+  select r.aktiv into v_aktiv from public.rabattkoder r where r.kod = 'TIPS';
+  begin
+    update public.rabattkoder r set aktiv = true where r.kod = 'TIPS';
+    raise exception 'rulla tillbaka';
+  exception
+    when check_violation then v_fel := sqlstate;
+    when others then if sqlerrm <> 'rulla tillbaka' then v_fel := sqlstate; end if;
+  end;
+  insert into utfall (test, ok, detalj) values
+    ('Tips markeringen TIPS finns som avstängd rabattkod', v_aktiv is false, coalesce(v_aktiv::text, 'saknas')),
+    ('Tips markeringen TIPS går inte att slå på', v_fel = '23514', v_fel);
+end $$;
+
+-- ---------- koden, läsningen och anmälan ----------
+do $$
+declare
+  p   constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  a   constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  b   constant uuid := '00000000-0000-4000-8000-0000000000b1';
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  l1  constant uuid := '00000000-0000-4000-8000-00000000d101';
+  l2  constant uuid := '00000000-0000-4000-8000-00000000d102';
+  l3  constant uuid := '00000000-0000-4000-8000-00000000d103';
+  l4  constant uuid := '00000000-0000-4000-8000-00000000d104';
+  jp jsonb; jp2 jsonb; ja jsonb; k_b text; n_p bigint; n_a bigint; n_adm bigint;
+  u_p text; kod1 text; kod2 text; kod3 text; kod4 text; lage bigint; fel text;
+begin
+  begin
+    perform pg_temp.bli(p);
+    jp := public.mina_tips();
+    jp2 := public.mina_tips();
+    select count(*) into n_p from public.tipskoder;
+    perform pg_temp.bli(a);
+    ja := public.mina_tips();
+    select count(*) into n_a from public.tipskoder;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    u_p := pg_temp.svar_som(p, format($q$update public.tipskoder set aktiv = false where kod = %L$q$, jp->>'kod'));
+
+    update public.tutor_profiles set status = 'pending' where id = b;
+    k_b := pg_temp.svar_som(b, 'select public.mina_tips()');
+
+    perform pg_temp.bli(adm);
+    select count(*) into n_adm from public.tipskoder;
+    insert into public.tipskoder (kod, sort, namn, aktiv) values ('RLS-AV', 'kampanj', 'Avstängd affisch', false);
+    select count(*) into lage from public.tipskoder_lage();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Anon skickar anmälningar: koden med gemener och mellanslag, en
+    -- kod som inte finns, en avstängd kod och skräp.
+    perform pg_temp.bli(null);
+    insert into public.leads (id, parent_name, email, kod)
+    values (l1, 'Tips Ett', 'tips-ett@example.invalid', ' ' || lower(jp->>'kod') || ' ');
+    insert into public.leads (id, parent_name, email, kod)
+    values (l2, 'Tips Två', 'tips-tva@example.invalid', 'FINNS-INTE');
+    insert into public.leads (id, parent_name, email, kod)
+    values (l3, 'Tips Tre', 'tips-tre@example.invalid', 'RLS-AV');
+    insert into public.leads (id, parent_name, email, kod)
+    values (l4, 'Tips Fyra', 'tips-fyra@example.invalid', '<script>');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select kod into kod1 from public.leads where id = l1;
+    select kod into kod2 from public.leads where id = l2;
+    select kod into kod3 from public.leads where id = l3;
+    select kod into kod4 from public.leads where id = l4;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Tips koden och anmälan', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Tips familjen får en kod med sex tecken', jp->>'kod' ~ '^[A-HJ-NP-Z2-9]{6}$' and jp->>'sort' = 'familj',
+      coalesce(jp::text, 'inget svar')),
+    ('Tips samma kod andra gången', jp->>'kod' = jp2->>'kod', coalesce(jp2->>'kod', 'ingen')),
+    ('Tips familjen räknas från noll',
+      (jp->>'anmalda')::int = 0 and (jp->>'kvar')::int = 0 and (jp->>'timme_ges')::boolean,
+      coalesce(jp::text, 'inget svar')),
+    ('Tips familjen ser bara sin egen kod', n_p = 1, 'rader: ' || n_p),
+    ('Tips studiehjälparen får en kod utan timmar',
+      ja->>'sort' = 'studiehjalpare' and ja->'timmar' = 'null'::jsonb and n_a = 1,
+      coalesce(ja::text, 'inget svar')),
+    ('Tips familjen stänger inte av sin kod själv', u_p = 'noll', u_p),
+    ('Tips en studiehjälpare som inte är godkänd får ingen kod', k_b = '42501', k_b),
+    ('Tips admin ser alla koder', n_adm >= 2 and lage = n_adm + 1, n_adm || ' och ' || lage),
+    ('Tips koden sparas med versaler och utan mellanslag', kod1 = jp->>'kod', coalesce(kod1, 'null')),
+    ('Tips en kod som inte finns fäller inte anmälan', kod2 is null, coalesce(kod2, 'null')),
+    ('Tips en avstängd kod följer inte med', kod3 is null, coalesce(kod3, 'null')),
+    ('Tips skräp i kodfältet blir null', kod4 is null, coalesce(kod4, 'null'));
+end $$;
+
+-- ---------- timmen på köpet ----------
+--
+-- Familj Q anmäler sig med familj P:s kod, blir kund och har sitt
+-- första pass. P:s nästa förslag får en timme bjuden och nästa pass
+-- efter det fullt pris. Avböjs passet med timmen kommer den tillbaka.
+-- Q är ny i fixturerna (Fas 19.5 räknar med samma sak). Erbjudandena
+-- slås på, så att det syns att köpta timmar inte betalar passet.
+do $$
+declare
+  p   constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  q   constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  a   constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  sp  constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  sq  constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  lq  constant uuid := '00000000-0000-4000-8000-00000000d1a1';
+  qb  constant uuid := '00000000-0000-4000-8000-00000000d1b1';
+  pb0 constant uuid := '00000000-0000-4000-8000-00000000d1c0';
+  pb1 constant uuid := '00000000-0000-4000-8000-00000000d1c1';
+  pb2 constant uuid := '00000000-0000-4000-8000-00000000d1c2';
+  pb3 constant uuid := '00000000-0000-4000-8000-00000000d1c3';
+  pb4 constant uuid := '00000000-0000-4000-8000-00000000d1c4';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  jp jsonb; j1 jsonb; j2 jsonb; fore_ny int; efter_gammal int; efter_stangd int;
+  r1 record; r2 record; r3 record; r4 record; fal record;
+  k_forfalska text; k_andra text; kod_efter text; fel text;
+begin
+  begin
+    -- Prissidans första timme går före tipstimmen. P har redan fått
+    -- den i fixturerna, eller får den här.
+    if not exists (select 1 from public.bookings where parent_id = p and startrabatt and status <> 'cancelled') then
+      update public.bookings set startrabatt = true where id = '00000000-0000-4000-8000-00000000b0e1';
+    end if;
+
+    perform pg_temp.bli(p);
+    jp := public.mina_tips();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Utan intjänad timme: en familj kan inte märka sitt eget pass.
+    k_forfalska := pg_temp.svar_som(p, format($q$insert into public.bookings
+        (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, rabattkod, rabatt_ore)
+        values (%L, %L, %L, %L, %L, %L, '13:00', 60, 'requested', 'TIPS', 37900)$q$,
+      pb0, p, a, sp, p, idag + 74));
+    select rabattkod, rabatt_ore, startrabatt into fal from public.bookings where id = pb0;
+    delete from public.bookings where id = pb0;
+
+    -- Q anmäler sig med koden, blir kund och har ett hållet pass.
+    perform pg_temp.bli(null);
+    insert into public.leads (id, parent_name, email, kod)
+    values (lq, 'Test Familj Q', 'rls-q@example.invalid', jp->>'kod');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    update public.leads set kund_id = q where id = lq;
+    update public.students set matched_tutor_id = a, match_status = 'matched' where id = sq;
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (qb, q, a, sq, q, idag - 2, '12:00', 60, 'confirmed');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values (sq, a, qb, 'fixtur', idag - 2, 'narvarande');
+
+    -- Anmälan står på i dag och passet hölls i förrgår: Q hade redan
+    -- haft pass när koden skickades, och det ger ingen timme.
+    efter_gammal := intern.tipstimmar_intjanade(p);
+    -- Anmälan kom före passet: Q var ny.
+    update public.leads set created_at = now() - interval '10 days' where id = lq;
+    fore_ny := intern.tipstimmar_intjanade(p);
+
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+
+    -- P föreslår två pass. Det första får timmen, det andra inte.
+    perform pg_temp.bli(p);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (pb1, p, a, sp, p, idag + 70, '13:00', 120, 'requested');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (pb2, p, a, sp, p, idag + 71, '13:00', 60, 'requested');
+    j1 := public.mina_tips();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    k_andra := pg_temp.svar_som(p, format($q$update public.bookings set rabattkod = null where id = %L$q$, pb1));
+    select startrabatt, rabattkod, rabatt_ore, timpris_ore, klippkort_id into r1 from public.bookings where id = pb1;
+    select startrabatt, rabattkod, rabatt_ore, klippkort_id into r2 from public.bookings where id = pb2;
+
+    -- Passet med timmen avböjs: timmen kommer tillbaka och går till nästa.
+    update public.bookings set status = 'cancelled' where id = pb1;
+    perform pg_temp.bli(p);
+    j2 := public.mina_tips();
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (pb3, p, a, sp, p, idag + 72, '13:00', 60, 'requested');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select startrabatt, rabattkod, rabatt_ore, timpris_ore into r3 from public.bookings where id = pb3;
+
+    -- Med flaggan av ges det som tjänats in innan den stängdes.
+    update public.bookings set status = 'cancelled' where id = pb3;
+    update public.flaggor set aktiv = false where kod = 'tipstimme';
+    perform pg_temp.bli(p);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (pb4, p, a, sp, p, idag + 73, '13:00', 60, 'requested');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select startrabatt, rabattkod, rabatt_ore into r4 from public.bookings where id = pb4;
+    -- Stängdes den innan Q:s första pass räknas Q inte. stampla_flaggan
+    -- sätter alltid uppdaterad till nu, så den stängs av en stund.
+    alter table public.flaggor disable trigger flaggor_stampla;
+    update public.flaggor set uppdaterad = now() - interval '5 days' where kod = 'tipstimme';
+    alter table public.flaggor enable trigger flaggor_stampla;
+    efter_stangd := intern.tipstimmar_intjanade(p);
+
+    -- P avidentifieras: koden försvinner, och anmälan tappar den.
+    update public.profiles set raderad_at = now() where id = p;
+    select kod into kod_efter from public.leads where id = lq;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Tips timmen på köpet', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Tips familjen märker inte ett eget pass som tipstimme',
+      k_forfalska = 'ok' and fal.rabattkod is null and fal.rabatt_ore is null and not fal.startrabatt,
+      k_forfalska || ' ' || coalesce(fal.rabattkod, 'null') || '/' || coalesce(fal.rabatt_ore::text, 'null')),
+    ('Tips en familj som redan haft pass ger ingen timme', efter_gammal = 0, efter_gammal::text),
+    ('Tips en ny familj som haft sitt första pass ger en timme', fore_ny = 1, fore_ny::text),
+    ('Tips nästa förslag får en timme bjuden',
+      r1.startrabatt and r1.rabattkod = 'TIPS' and r1.rabatt_ore = r1.timpris_ore,
+      r1.startrabatt || ' ' || coalesce(r1.rabattkod, 'null') || '/' || coalesce(r1.rabatt_ore::text, 'null')),
+    ('Tips köpta timmar betalar inte passet med timmen', r1.klippkort_id is null,
+      coalesce(r1.klippkort_id::text, 'null')),
+    ('Tips en timme per familj, och nästa pass betalas som vanligt',
+      not r2.startrabatt and r2.rabattkod is null and r2.rabatt_ore is null and r2.klippkort_id is not null,
+      r2.startrabatt || ' ' || coalesce(r2.rabattkod, 'null') || ' kort ' || coalesce(r2.klippkort_id::text, 'null')),
+    ('Tips vyn ser att timmen är använd', (j1->>'timmar')::int = 1 and (j1->>'kvar')::int = 0
+      and (j1->>'anmalda')::int = 1 and (j1->>'kunder')::int = 1, coalesce(j1::text, 'inget svar')),
+    ('Tips familjen tar inte bort markeringen', k_andra = '42501', k_andra),
+    ('Tips ett avböjt pass lämnar tillbaka timmen', (j2->>'kvar')::int = 1, coalesce(j2::text, 'inget svar')),
+    ('Tips timmen går till nästa pass', r3.startrabatt and r3.rabattkod = 'TIPS' and r3.rabatt_ore = r3.timpris_ore,
+      r3.startrabatt || ' ' || coalesce(r3.rabattkod, 'null')),
+    ('Tips med flaggan av ges timmen som redan tjänats in', r4.startrabatt and r4.rabattkod = 'TIPS',
+      r4.startrabatt || ' ' || coalesce(r4.rabattkod, 'null')),
+    ('Tips med flaggan av räknas inte en familj vars första pass kom efter', efter_stangd = 0,
+      efter_stangd::text),
+    ('Tips en raderad familjs kod försvinner ur anmälan', kod_efter is null, coalesce(kod_efter, 'null'));
+end $$;
 
 select test, ok is true as ok, detalj from utfall order by nr;
 

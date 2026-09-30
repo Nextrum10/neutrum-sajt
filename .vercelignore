@@ -10,6 +10,8 @@
 # ska komma med utan att någon behöver minnas den här filen.
 
 *.md
+# Projektminnets arkiv, uteslutet också den dag *.md-raden ändras.
+/minne
 *.sql
 /supabase
 /verktyg

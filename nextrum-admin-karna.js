@@ -356,14 +356,14 @@ const NXAdmin = (function () {
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov,
-           bankPass, kkSkarp] = await Promise.all([
+           bankPass, kkSkarp, tips] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       hämtaAlla('applications', '*', nyastFörst('created_at')),
       hämtaAlla('contact_messages', '*', nyastFörst('created_at')),
       /* antal_barn, rabatt_ore, timpris_ore, extra_ore och startrabatt
          sedan 2026-09-28: Månadens ekonomi räknar vad ett obetalt pass
          kostar, med samma regel som familjens vy (NXBetalning.passpris). */
-      hämtaAlla('bookings', 'id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, klippkort_id, antal_barn, rabatt_ore, timpris_ore, extra_ore, startrabatt', nyastFörst('wanted_date')),
+      hämtaAlla('bookings', 'id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, klippkort_id, antal_barn, rabatt_ore, timpris_ore, extra_ore, startrabatt, rabattkod', nyastFörst('wanted_date')),
       /* Raderna följer med (Fas 14.6): de är underlaget admin lägger in
          i Fortnox, och vilket pass som står på vilken faktura. */
       hämtaAlla('invoices', '*, invoice_lines(id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)',
@@ -401,7 +401,8 @@ const NXAdmin = (function () {
       /* Fas 14.6: och strömbrytaren för faktura som betalsätt, samma
          sort. Båda i en fråga. */
       /* Fas 16.1: och erbjudandena, samma sort. */
-      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'faktura', 'erbjudanden']),
+      /* 2026-09-30: och timmen på köpet för ett tips, samma sort. */
+      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'faktura', 'erbjudanden', 'tipstimme']),
       /* Fas 14.3: korttvisterna, med sista dagen att svara. Bara admin
          ser tabellen; för alla andra är svaret tomt. */
       hämtaAlla('stripe_tvister', '*', nyastFörst('skapad')),
@@ -438,7 +439,12 @@ const NXAdmin = (function () {
          bär inte stripe_skarp, och ett testköp ska aldrig se ut som
          pengar in. */
       hämtaAlla('timbank_uttag', 'id, booking_id', q => q.eq('sort', 'pass')),
-      hämtaAlla('klippkort', 'id, stripe_skarp')
+      hämtaAlla('klippkort', 'id, stripe_skarp'),
+      /* 2026-09-30: tipskoderna och kampanjkoderna, med vad var och en
+         gett, räknat i databasen med samma regler som timmen på köpet.
+         En rad per kod: en per familj och studiehjälpare som öppnat
+         sin flik, och en per affisch. */
+      supa.rpc('tipskoder_lage')
     ]);
 
     S.leads = leads.data || [];
@@ -476,6 +482,14 @@ const NXAdmin = (function () {
     S.kortsparrFel = flaggor.error ? felText(flaggor.error) : null;
     S.fakturaFlagga = (flaggor.data || []).find(f => f.kod === 'faktura') || null;
     S.erbFlagga = (flaggor.data || []).find(f => f.kod === 'erbjudanden') || null;
+    S.tipsFlagga = (flaggor.data || []).find(f => f.kod === 'tipstimme') || null;
+    /* Saknas funktionen (migrationen tipskoder_och_kampanjkoder är inte
+       körd) är listan tom och säger det, i stället för att fälla vyn. */
+    S.tipskoder = tips.data || [];
+    S.tipskoderFel = tips.error
+      ? (tips.error.code === 'PGRST202' || tips.error.code === '42883' ? 'saknas' : felText(tips.error)) : null;
+    S.tipskod = {};
+    S.tipskoder.forEach(k => { S.tipskod[k.kod] = k; });
     S.klippkort = kk.data || [];
     S.klippkortFel = kk.error ? felText(kk.error) : null;
     S.fakturaSparr = new Set((fsparr.data || []).map(r => r.parent_id));

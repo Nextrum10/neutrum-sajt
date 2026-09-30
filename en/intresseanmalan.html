@@ -242,6 +242,11 @@
               <textarea class="inp" id="l-msg" name="message" placeholder="What is hard going right now? Is there anything we should know to choose the right person?"></textarea>
               <p class="nx-fil-hjalp">Please don't write diagnoses, personal identity numbers or anything else sensitive here. What the student needs help with is enough; we'll cover the rest in the call.</p>
             </div>
+            <!-- KODEN (2026-09-30). Se intresseanmalan.html. -->
+            <div class="pay-field full"><label for="l-kod">Code <span class="lbl-valfri">optional</span></label>
+              <input class="inp" id="l-kod" name="kod" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. from a poster">
+              <p class="nx-fil-hjalp">From a poster, or from someone who recommended us. Whoever gave you the code can see how many signed up with it, not who.</p>
+            </div>
 
             <label class="nx-samtycke full" for="l-gdpr">
               <input type="checkbox" id="l-gdpr" required>
@@ -417,6 +422,21 @@
   const uppstartOm = NX.uppstart();
 
   /* ==========================================================
+     KODEN (2026-09-30)
+     Tipslänken och affischens QR-kod går hit med ?kod=. Koden står i
+     ett fält familjen ser och kan tömma; ingenting lagras i
+     webbläsaren. Databasen prövar den (intern.leads_tipskod), och en
+     okänd kod blir bara tom i anmälan.
+     ========================================================== */
+  const kodInp = $('#l-kod');
+  const renKod = v => String(v || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 24);
+  if (kodInp) {
+    let frånAdressen = '';
+    try { frånAdressen = renKod(new URLSearchParams(location.search).get('kod')); } catch (e) { /* ingen kod */ }
+    if (frånAdressen) kodInp.value = frånAdressen;
+  }
+
+  /* ==========================================================
      ROLLVÄLJAREN I INTRESSEANMÄLAN
      Byter mellan de två formulären. Båda fanns redan och skriver
      till samma tabeller som förut.
@@ -552,7 +572,8 @@
         annonsvariant: k.innehåll,
         sokord: k.term,
         hanvisare: k.hänvisare,
-        landningssida: k.landning
+        landningssida: k.landning,
+        kod: kodInp ? (renKod(kodInp.value) || null) : null
       });
       knapp.removeAttribute('aria-busy');
 

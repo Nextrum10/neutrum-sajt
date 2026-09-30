@@ -25,7 +25,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=ac8ac9d1">
-<link rel="stylesheet" href="nextrum-vy.css?v=f3ae56b0">
+<link rel="stylesheet" href="nextrum-vy.css?v=92e16976">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      veckorutnätet för tider. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=28dce140">
@@ -1075,14 +1075,16 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Profil &amp; inställningar</h2>
-            <p>Det familjer ser om dig, din inloggning, dokumenten vi delat med dig och vilka mejl du vill ha.</p>
+            <p>Det familjer ser om dig, din inloggning, dokumenten vi delat med dig, din kod att tipsa familjer med och vilka mejl du vill ha.</p>
           </div>
         </div>
-        <div class="vy-flikar" role="tablist" aria-label="Profil, dokument eller notiser">
+        <div class="vy-flikar" role="tablist" aria-label="Profil, dokument, tips eller notiser">
           <button class="vy-flik" type="button" role="tab" data-flik="minprofil"
                   id="flik-minprofil" aria-controls="panel-minprofil">Min profil</button>
           <button class="vy-flik" type="button" role="tab" data-flik="dokument"
                   id="flik-dokument" aria-controls="panel-dokument">Dokument</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="tips"
+                  id="flik-tips" aria-controls="panel-tips">Tipsa en familj</button>
           <button class="vy-flik" type="button" role="tab" data-flik="notiser"
                   id="flik-notiser" aria-controls="panel-notiser">Notiser</button>
         </div>
@@ -1186,6 +1188,18 @@
             <p class="ok-msg" id="dokument-msg"></p>
           </div>
         </div>
+        <!-- ============ TIPSA EN FAMILJ (2026-09-30) ============
+             Studiehjälparens egen kod och länken till intresseanmälan.
+             Ett tips ger ingen ersättning, med flit: studiehjälparna är
+             ofta sexton, och en belöning för att värva kunder är lön.
+             Ritas av NXStudie.tipsa(); samma flik står i föräldravyn. -->
+        <div class="vy-flik-panel" role="tabpanel" data-flik="tips"
+             id="panel-tips" aria-labelledby="flik-tips" hidden>
+          <div class="dbox">
+            <h5>Tipsa en familj</h5>
+            <div id="tips-ruta"></div>
+          </div>
+        </div>
         <!-- ============ NOTISER ============
              Vilka mejl man vill ha. Raderna ligger i notis_val, och RLS
              släpper bara igenom ens egna — listan behöver därför ingen
@@ -1242,12 +1256,12 @@
 <script src="nextrum-app.js?v=8ffb028b"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=63957b13"></script>
-<script src="nextrum-studie.js?v=ae8faece"></script>
-<script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
+<script src="nextrum-studie.js?v=2bcbdc4f"></script>
+<script src="nextrum-arbetsyta.js?v=6c1e8e1a"></script>
 <script src="nextrum-media.js?v=01adfb73"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-uppgifter.js?v=def906fb"></script>
-<script src="nextrum-modulvakt.js?v=67b7e652"></script>
-<script src="nextrum-larare-vy.js?v=5689ed08"></script>
+<script src="nextrum-modulvakt.js?v=559a241f"></script>
+<script src="nextrum-larare-vy.js?v=ec214a43"></script>
 </body>
 </html>

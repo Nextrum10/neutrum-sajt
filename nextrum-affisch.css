@@ -1,0 +1,98 @@
+/* ============================================================
+   NEXTRUM — affischen (2026-09-30)
+
+   Bara affisch.html. Laddas efter cinema och läser dess färger och
+   typsnitt; papperet är vitt, för det är vad skrivaren har. Måtten
+   står i millimeter, så att utskriften blir en A4 oavsett skärm.
+   Leran och mossan är text och streck, inga ytor: en skrivare utan
+   "skriv ut bakgrunder" hade lämnat en yta tom.
+   ============================================================ */
+
+.aff-sida{background:var(--pap-2);margin:0}
+
+/* ---------- verktygen, bara på skärmen ---------- */
+.aff-verktyg{background:var(--pap);border-bottom:1px solid var(--ln);padding:18px 16px}
+.aff-verktyg-inre{max-width:210mm;margin:0 auto}
+.aff-verktyg-rubrik{margin:0 0 8px;font-size:1.05rem;font-weight:650;color:var(--bl)}
+.aff-verktyg-rubrik b{font-family:var(--f-mono);letter-spacing:.06em;margin-left:6px}
+.aff-varning{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:var(--pap-2);color:var(--acc-lugn);line-height:1.5}
+.aff-val{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.aff-val label{font-size:.9rem;color:var(--bl-2)}
+.aff-val select{min-width:12rem}
+.aff-kryss{display:inline-flex;align-items:center;gap:6px}
+.aff-hjalp{margin:12px 0 0;font-size:.85rem;line-height:1.55;color:var(--bl-3)}
+
+/* ---------- affischen ---------- */
+.affisch{
+  position:relative;box-sizing:border-box;display:flex;flex-direction:column;
+  width:210mm;height:297mm;margin:24px auto;padding:16mm 16mm 0;overflow:hidden;
+  background:white;color:var(--bl);font-family:var(--f-sans);
+  box-shadow:0 10px 40px rgba(43,34,28,.18);
+}
+.aff-topp{display:flex;align-items:center;gap:3mm}
+.aff-mark{width:11mm;height:11mm;flex:none}
+.aff-mark rect{fill:var(--acc)}
+.aff-mark path{fill:none;stroke:white;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.aff-namn{font-size:7mm;font-weight:700;letter-spacing:-.02em}
+.aff-slogan{margin-left:auto;font-size:4.2mm;color:var(--bl-3)}
+
+.aff-rubrik{
+  margin:14mm 0 6mm;font-size:18mm;line-height:1.02;font-weight:700;letter-spacing:-.03em;
+  overflow-wrap:anywhere;
+}
+.aff-rubrik em{font-style:normal;color:var(--acc)}
+.aff-lede{margin:0;max-width:165mm;font-size:6mm;line-height:1.4;color:var(--bl-2)}
+
+.aff-fakta{list-style:none;margin:11mm 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5mm}
+.aff-fakta li{border-top:.7mm solid var(--bl);padding-top:3mm}
+.aff-fakta b{display:block;font-size:7mm;line-height:1.1;letter-spacing:-.01em}
+.aff-fakta span{display:block;margin-top:1.2mm;font-size:4.2mm;line-height:1.35;color:var(--bl-2)}
+
+.aff-start{margin:8mm 0 0;font-size:5.4mm;font-weight:700;color:var(--mossa)}
+
+.aff-qr-rad{
+  margin-top:auto;display:grid;grid-template-columns:62mm minmax(0,1fr);gap:9mm;align-items:center;
+  padding:8mm 0 7mm;border-top:.4mm solid var(--ln-2);
+}
+.aff-qr svg{display:block;width:62mm;height:62mm}
+.aff-qr-text p{margin:0 0 3mm;font-size:4.4mm;line-height:1.45;color:var(--bl-2)}
+.aff-qr-text .aff-qr-rubrik{font-size:8mm;line-height:1.15;font-weight:700;letter-spacing:-.02em;color:var(--bl)}
+.aff-adress b{color:var(--bl)}
+.aff-kod{
+  display:inline-block;margin-left:1mm;padding:.4mm 2mm;border:.4mm solid var(--bl);border-radius:1.6mm;
+  font-family:var(--f-mono);font-size:5mm;letter-spacing:.08em;
+}
+.aff-fin{margin:0 0 6mm;font-size:3.3mm;line-height:1.4;color:var(--bl-3)}
+
+/* Rivlapparna: en rad att klippa i, åtta lappar med adressen och
+   koden. Texten står på tvären, läsbar när lappen rivits av. Den slutar
+   7 mm från papperets kant: de flesta skrivare lämnar 4–5 mm tomt runt
+   om, och en adress som klipps där är en lapp ingen kan använda. */
+.aff-lappar{
+  display:grid;grid-template-columns:repeat(8,minmax(0,1fr));height:52mm;margin:0 -9mm;
+  padding-bottom:7mm;border-top:.45mm dashed var(--bl-3);
+}
+.aff-lappar[hidden]{display:none}
+.aff-lapp{display:flex;align-items:center;justify-content:center;border-left:.45mm dashed var(--bl-3);overflow:hidden}
+.aff-lapp:first-child{border-left:0}
+.aff-lapp span{
+  writing-mode:vertical-rl;transform:rotate(180deg);
+  font-size:3mm;line-height:1.3;text-align:center;color:var(--bl);
+}
+.aff-lapp b{display:block;font-size:3.6mm}
+.aff-lapp i{display:block;font-style:normal;font-family:var(--f-mono);letter-spacing:.05em}
+
+/* En telefon ser affischen förminskad, hel. Den skrivs inte ut därifrån. */
+@media screen and (max-width:860px){
+  .affisch{zoom:.8}
+}
+@media screen and (max-width:680px){
+  .affisch{zoom:.45;margin:16px auto}
+}
+
+@media print{
+  @page{size:A4 portrait;margin:0}
+  .aff-sida{background:white}
+  .aff-verktyg{display:none}
+  .affisch{margin:0;box-shadow:none;zoom:1}
+}

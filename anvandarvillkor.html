@@ -229,8 +229,8 @@
         ni timmar, eller kommer timmar tillbaka, medan ni har förslag eller bokade pass framför er
         som inte är betalda, betalar de dem i datumordning, så långt de räcker. Varje påbörjad timme av passet drar en timme, och det
         som blir över av den sista timmen sparas i er <a href="#timbank">timbank</a>.
-        Timmarna gäller pass med ett barn; ett pass med fler barn betalas med kort, liksom passet
-        där första timmen är på köpet och ett pass som timmarna inte räcker till.</li>
+        Timmarna gäller pass med ett barn; ett pass med fler barn betalas med kort, liksom ett pass
+        där en timme är på köpet och ett pass som timmarna inte räcker till.</li>
       <li id="timbank"><b>Timbanken.</b> Slutar ett pass som betalats med timmar före en hel timme
         sparas resten i er timbank, räknat per påbörjad kvart: höll ett pass på två timmar i 1 timme
         och 45 minuter sparas 15 minuter. Drar ett senare pass över tas tiden ur timbanken först,
@@ -256,6 +256,36 @@
       timpriset under tiden kostar timmarna ni redan köpt inte mer, och ni betalar aldrig någon
       mellanskillnad. Slutar ni räknas de använda timmarna till det ordinarie timpris som gällde
       när ni köpte, inte till ett senare och högre.</p>
+
+    <!-- 2026-09-30. Timmen ges av forsta_timmen_bjuds i databasen och
+         räknas ur raderna (intern.tipstimmar_intjanade): en per ny familj
+         som anmält sig med familjens kod och haft sitt första pass.
+         Flaggan tipstimme stänger av erbjudandet, och det som tjänats in
+         innan ges ändå, som sista punkten lovar. Stängs den av ska den
+         här punkten ändras i samma veva. -->
+    <h2 id="tips">Tipsa en familj</h2>
+    <p>Varje familj och studiehjälpare med konto har en egen kod, under Profil i vyn. En familj som
+      anmäler sig med koden, genom länken eller genom att skriva den i intresseanmälan, har fått
+      tipset av er.</p>
+    <ul>
+      <li><b>En timme på köpet.</b> När en ny familj som anmält sig med er kod har haft sitt första
+        pass får ni en timme läxhjälp på köpet. Ny betyder att familjen inte haft något pass hos oss
+        innan den anmälde sig. Ni får en timme per familj ni tipsat, och har en familj fått flera
+        koder räknas den första den anmälde sig med.</li>
+      <li><b>Hur timmen används.</b> Den dras av på nästa läxhjälpspass ni föreslår, en timme per
+        pass, till passets eget timpris. Resten av ett längre pass betalar ni som vanligt, med kort
+        eller faktura; köpta timmar betalar inte ett pass där en timme är på köpet. Avbokas passet,
+        eller säger studiehjälparen nej till tiden, kommer timmen tillbaka.</li>
+      <li><b>Timmen är inte pengar.</b> Den går inte att växla in, och den betalas inte tillbaka om
+        ni slutar.</li>
+      <li><b>Vad ni ser.</b> Ni ser hur många som anmält sig med er kod och hur många av dem som
+        blivit kunder, men inte vilka.</li>
+      <li><b>För dig som är studiehjälpare.</b> Din kod visar att tipset kom från dig. Den ger ingen
+        ersättning, varken pengar eller timmar.</li>
+      <li>Vi kan stänga av en kod som används på ett sätt den inte är till för, till exempel i
+        reklam som ser ut att komma från oss. Erbjudandet kan ändras eller upphöra; timmar ni
+        redan tjänat in står kvar.</li>
+    </ul>
 
     <!-- Lagen om distansavtal (2005:59), 2 kap. Informationen är ett
          krav i sig: saknas den förlängs ångerfristen med upp till tolv
@@ -336,7 +366,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 27 september 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 30 september 2026.</p>
   </div>
 </section>
 

@@ -40,7 +40,7 @@ finnas. Det här är det.
 
 | # | Behandling | Registrerade | Uppgifter | Grund (art. 6) | Mottagare utanför oss | Lagringstid |
 |---|---|---|---|---|---|---|
-| 1 | Intresseanmälan (`leads`) | förälder, barn | förälderns namn, e-post, telefon; barnets namn, årskurs, ämne; fritext; varifrån besöket kom | 6.1 b, åtgärd före avtal | Supabase, Resend (kvitto och avisering) | avidentifieras 6 mån efter senaste kontakt |
+| 1 | Intresseanmälan (`leads`) | förälder, barn | förälderns namn, e-post, telefon; barnets namn, årskurs, ämne; fritext; varifrån besöket kom; koden om familjen skrev en (rad 19) | 6.1 b, åtgärd före avtal | Supabase, Resend (kvitto och avisering) | avidentifieras 6 mån efter senaste kontakt |
 | 2 | Konto (`profiles`) | förälder, studiehjälpare | namn, e-post, telefon, profilbild | 6.1 b, avtal | Supabase | så länge det används; granskas efter 2 år utan användning |
 | 3 | Barnet och undervisningen (`students`, `study_plans`, `homework`, `progress_items`, `lesson_reports`, `materials`, `niva_forsok`, `niva_svar`) | barn | namn, årskurs, skola, ämnen, mål, uppgifter, svaren på de digitala uppgifterna och rättningen av dem, rapporter | 6.1 f, berättigat intresse (barnet är inte part) | Supabase; Anthropic (förnamn, årskurs, maskade anteckningar) när studiehjälparen ber om utkast | som kontot |
 | 4 | Förälderns privata anteckningar (`student_notes`) | barn | fritext | 6.1 f | Supabase. Ingen hos oss har läsrätt | som kontot |
@@ -58,6 +58,7 @@ finnas. Det här är det.
 | 16 | Vår AI-assistent (drift-agenten) | barn, förälder | initialer, årskurs, ämne, maskad fritext | 6.1 f | Anthropic | Anthropics villkor; frågor, svar och steg i `agent_korningar` och `agent_steg` töms efter 90 dagar, AI-förslagens motivering 90 dagar efter beslutet |
 | 17 | Handlingar om verksamheten (`handlingar`, hinken `dokument`) | studiehjälpare, förälder | avtal, intyg; en handling som delats med personen den gäller läser hen själv under Profil & inställningar (2026-09-29) | 6.1 b, 6.1 c | Supabase | så länge de gäller, sedan så länge lagen kräver |
 | 18 | Vårt arbetsunderlag (`uppgifter`, `admin_noteringar`) | alla | titel och text vi skriver själva, kan nämna namn | 6.1 f | Supabase | uppgifter: 1 år efter att de stängts; anteckningar om en person: med personens konto |
+| 19 | Tipskoder och kampanjkoder (`tipskoder`, `leads.kod`, 2026-09-30) | förälder och studiehjälpare som tipsar; familjen som anmäler sig | en kod per familj och godkänd studiehjälpare (slumpad, inget namn), vilken kod en anmälan bar; kampanjkoder bär en plats, ingen person. Den som tipsat ser antal anmälda och kunder, aldrig vilka; admin ser vem som tipsat vem | 6.1 f (vilka tips och affischer som leder till anmälan); för den bjudna timmen 6.1 b (villkoren #tips) | Supabase | koden så länge kontot finns (tas bort när kontot raderas eller avidentifieras, och kopplingen i anmälan med den); koden på anmälan står kvar när anmälan avidentifieras |
 
 **Känsliga uppgifter (art. 9) samlas inte in.** Vi ber aldrig om hälsa
 eller diagnoser, men fritexten kan få dem ändå ("Elsa har ADHD"). Därför
@@ -177,6 +178,7 @@ och skickar varje utkast.
 | En sextonårings CV med personnummer sparas | medel | medel | hjälptext i formuläret, gallring efter 1 år, bara admin läser | låg |
 | Spårning utan samtycke | var säker (Vercel laddades direkt) | låg | inget skript som skickar data laddas före ja | låg |
 | Vi läser chatten mellan en familj och en studiehjälpare (ofta sexton) utan att de märker det (2026-09-29) | säker när Öppna chatt används | medel | står i integritetspolicyn på båda språken och i chatten själv; bara admin, genom `chatt_las()`, som skriver varje öppning i auditloggen utan texten; syftena i policyn är de enda vi läser för | låg, så länge vi läser för syftena och inte för att det går |
+| Den som tipsat får veta att en familj hen tipsat anmält sig och blivit kund (tipskoderna, 2026-09-30) | säker, det är hur tipset fungerar | låg | bara antal, aldrig vilka; står under kodfältet i anmälan och i integritetspolicyn på båda språken; fältet går att tömma innan anmälan skickas; ingen belöning till studiehjälpare, som ofta är sexton | låg |
 
 **Slutsats.** Restrisken är acceptabel och kräver inget förhandssamråd
 med IMY (art. 36). Gör om bedömningen när något av följande ändras: en ny
