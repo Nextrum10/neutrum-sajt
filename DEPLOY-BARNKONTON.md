@@ -85,8 +85,15 @@ Båda kräver inloggning, så ingen rad i `supabase/config.toml` behövs.
   `https://nextrum.se/admin` ska vara tillåten. Inbjudan leder dit, och
   utan raden leder den till Site URL i stället, där ingen ber om ett
   lösenord. **Den är redan tillåten** (provat 2026-09-30: en `verify` med
-  en ogiltig token skickade tillbaka till `/admin` och `/foralder`, men
-  till Site URL för en främmande adress), så här finns inget att göra.
+  en ogiltig token skickade tillbaka till `/admin`, `/foralder`, `/larare`
+  och `/barn`, men till Site URL för en främmande adress), så här finns
+  inget att göra. Glömt lösenordet leder till samma vägar.
+- **Authentication → Emails → SMTP Settings:** egen SMTP ska vara på.
+  Supabases inbyggda mejl går bara till medlemmarna i organisationen, så
+  varken inbjudan eller Glömt lösenordet når någon annan utan den
+  (`minne/sakerhet.md`).
+- **Authentication → Email Templates → Reset password:** den svenska
+  mallen står i `minne/sakerhet.md`, under Glömt lösenordet.
 - **Authentication → Providers → Email:** slå på *Secure email change*.
 - **Authentication → Settings:** *Allow manual linking* ska vara av.
 - **Authentication → Email Templates → Invite user:** skriv mallen på

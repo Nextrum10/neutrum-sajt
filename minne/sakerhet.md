@@ -186,6 +186,78 @@ för en JWT med `request.sb.jwt.authorization.payload.subject` gick
 anropet utloggat, och felet sitter i sessionen, inte i policyn eller
 funktionen.
 
+### Glömt lösenordet (2026-09-30)
+
+Leo: "reset password står på engelska". Mallen gick att översätta, men
+ingen vy kunde be om mejlet: den som glömt sitt lösenord hade ingen väg
+tillbaka utom att mejla oss, och vi hade fått skicka länken från
+Supabase-panelen. Nu har inloggningen i studievyn, studiehjälparvyn och
+adminvyn en knapp, **Glömt lösenordet?**, som byter rutan till ett läge
+med bara e-postfältet (`NXStudie.inloggningsruta(… 'glomt' …)`,
+`glömtSkicka()`). Barnens vy har ingen: där står sedan förut att
+föräldern byter lösenordet.
+
+- **Länken leder tillbaka till vyn där man bad om den**
+  (`resetPasswordForEmail(epost, { redirectTo: vyns adress })`). Auth
+  tillåter `/foralder`, `/larare`, `/admin` och `/barn` som redirect
+  (provat mot driften 2026-09-30: `verify` med en ogiltig token skickade
+  tillbaka till varje väg, och till Site URL för en främmande adress).
+  En adress som inte är tillåten, eller ett mejl skickat från
+  Supabase-panelen, landar på Site URL, alltså startsidan.
+  `nextrum-app.js` skickar det vidare till `/foralder` med adressen orörd,
+  och skapar med flit ingen klient på startsidan: den hade loggat in där
+  och tömt adressen innan den nya sidan hann öppnas.
+- **`type=recovery` läses innan klienten skapas** (`NX.återställning`,
+  samma mönster som `NX.inbjudan`): supabase-js loggar in med länken och
+  tömmer adressen, och efter det syns inte att personen kom från ett
+  återställningsmejl. Vyn frågar då efter ett nytt lösenord
+  (`NXStudie.nyttLösenord()`, minst 6 tecken som i profilen, 8 i
+  adminvyn) direkt efter `skickaBarnHem`, och **rutan väntas in före
+  rolldirigeringen**: ett konto som bara är admin skickas annars till
+  `/admin` mitt i rutan. Rutan stänger inte av ett tryck utanför, och
+  Inte nu stänger utan att spara; lösenordet går att byta i profilen
+  senare.
+- **Samma besked oavsett konto.** Auth svarar likadant för en adress som
+  inte finns, och rutan gör det också: "det finns inget konto med den
+  adressen" hade svarat på vem som är kund hos oss, för vem som helst.
+  429 med "only request this after N seconds" betyder att samma adress
+  fick en länk för mindre än en minut sedan, och får samma besked. Det
+  gemensamma taket för mejl ("Email rate limit exceeded") får ett ärligt
+  besked, för då har inget mejl gått. Ingen servertext visas; felet står
+  i konsolen.
+- **En barnadress** (`@barn.nextrum.se`) får beskedet att föräldern byter
+  lösenordet, utan anrop. Auth hade ändå inte skickat något
+  (`barnkonto_mejlsparr`).
+- **En länk som gått ut eller redan använts** kommer tillbaka med
+  `#error_code=otp_expired` i stället. `nextrum-app.js` tar felet ur
+  adressen innan klienten ser det (adminvyn och studievyn läser adressen
+  som en sektion), och vyn öppnar Glömt lösenordet med förklaringen
+  överst (`NX.länkfel`, `NXStudie.länkenGickInte()`). Samma sak när
+  länken inte gick att logga in med.
+- **Mejlet kräver egen SMTP.** Supabases inbyggda mejl går bara till
+  medlemmarna i organisationen i Supabase. För alla andra svarar Auth
+  `email_address_not_authorized`, och rutan säger att mejlet inte gick
+  att skicka; för en adress utan konto svarar Auth 200 som vanligt, så
+  skillnaden avslöjar också vilka konton som finns. Egen SMTP ställs in
+  under Authentication → Emails → SMTP Settings. Prova med en adress som
+  inte är med i organisationen.
+- **Mallen står i panelen, som saknar historik**, så texten står här.
+  Authentication → Emails → Templates → Reset password:
+
+  Ämne: `Återställ ditt lösenord hos Nextrum`
+
+  ```html
+  <h2>Välj ett nytt lösenord</h2>
+  <p>Klicka på länken och välj ett nytt lösenord.</p>
+  <p><a href="{{ .ConfirmationURL }}">Välj nytt lösenord</a></p>
+  <p>Har du inte bett om det här kan du strunta i mejlet. Ditt lösenord är detsamma som förut.</p>
+  <p>Nextrum</p>
+  ```
+
+  `{{ .ConfirmationURL }}` är länken Auth bygger, med vyns adress i sig;
+  byt den inte mot `{{ .SiteURL }}`, då landar alla på startsidan.
+- Provas i `verktyg/prova-aterstallning.js` (`minne/genererat-och-ci.md`).
+
 ### Samtycket (2026-09-27)
 
 De öppna sidorna sätter inga cookies. Det som kräver samtycke

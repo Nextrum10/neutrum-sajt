@@ -285,7 +285,10 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   (`NXMedia.öppnaFil`): Safari stoppar ett fönster som öppnas efter en väntan.
 - **Inloggningen i vyerna**: logga ut med `scope: 'local'` (`NXStudie.loggaUt()`); ut överallt
   görs i databasen. `NXStudie.vaktaInloggningen()` byter en utloggad vy mot inloggningen.
-  "permission denied" eller tomma listor: titta i API-loggen först.
+  "permission denied" eller tomma listor: titta i API-loggen först. **Glömt lösenordet**:
+  länken leder tillbaka till vyn där man bad om den, `type=recovery` läses innan klienten
+  skapas, rutan för nytt lösenord väntas in före rolldirigeringen, och beskedet är detsamma
+  oavsett om kontot finns. Mejlet går genom Supabase Auth, med mallen i `minne/sakerhet.md`.
 - **Samtycket**: öppna sidor sätter inga cookies; det som kräver samtycke går genom
   `NXSamtycke`, och rutan visas bara när något i `SAMTYCKE` är på (av sedan 2026-09-29). Dölj
   den aldrig med CSS medan skripten går. Vercels statistik laddas först efter ja, aldrig med

@@ -52,12 +52,16 @@
     });
   }
   $$('[data-auth]').forEach(b => b.addEventListener('click', () => { läge = b.dataset.auth; ritaAuth(); }));
+  /* Glömt lösenordet? är ett tredje läge i samma ruta (NXStudie). */
+  function sättLäge(l) { läge = l; ritaAuth(); }
+  NXStudie.glömtLänkar(sättLäge);
 
   $('#auth-form').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#auth-msg'), knapp = $('#auth-submit');
     rensa(msg);
     if (!supa) { säg(msg, 'Databasen är inte kopplad. Fyll i nextrum-config.js.', false); return; }
+    if (läge === 'glomt') { await NXStudie.glömtSkicka(supa); return; }
 
     const epost = $('#a-email').value.trim();
     const lösen = $('#a-pass').value;
@@ -4006,7 +4010,7 @@
     }
 
     S.user = await NX.hämtaSession();
-    if (!S.user) { visa('view-auth'); ritaAuth(); return; }
+    if (!S.user) { visa('view-auth'); ritaAuth(); NXStudie.länkenGickInte(sättLäge); return; }
     /* Ett barnkonto har sin egen vy (barnkonton_och_admin). Det har ingen
        profil, och det här hade annars blivit "kontot saknar profil". */
     if (NX.skickaBarnHem(S.user)) return;
@@ -4014,6 +4018,10 @@
        inloggningen, inte en vy där varje knapp nekas (NXStudie). */
     NXStudie.vaktaInloggningen({ supa, user: S.user,
       utloggad: () => { läge = 'in'; ritaAuth(); visa('view-auth'); } });
+    /* Från länken i ett återställningsmejl: det nya lösenordet först.
+       Rutan väntas in, så att dirigeringen nedan inte byter sida under
+       den. */
+    if (NX.återställning) await NXStudie.nyttLösenord(supa, { epost: S.user.email });
 
     /* Katalogen hämtas medan profilen hämtas, inte efter. Den behövs
        först när vyn ritas, och en fråga i kö är en fråga för mycket. */
