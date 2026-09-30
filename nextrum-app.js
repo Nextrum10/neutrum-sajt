@@ -12,9 +12,28 @@ const CFG = window.NEXTRUM_CONFIG || {};
    än. Adminvyn frågar efter ett då (barnkonton_och_admin). */
 const INBJUDAN = /(?:^|[#&])type=invite(?:&|$)/.test(String(location.hash || ''));
 
+/* GLÖMT LÖSENORDET (2026-09-30). Länken i återställningsmejlet loggar in
+   personen och sätter type=recovery i adressen, som supabase-js tömmer
+   precis som inbjudans; vyn ber om ett nytt lösenord när den ser det
+   här. En länk som gått ut eller redan använts kommer tillbaka med
+   error_code i stället, och vyn säger det i stället för att visa en
+   inloggning utan förklaring. Felet tas ur adressen här, innan klienten
+   ser det: adminvyn och studievyn läser adressen som en sektion.
+
+   Länken landar i vyn där personen bad om den. Startsidan får den bara
+   när adressen inte gick att använda, som i ett mejl skickat från
+   Supabase-panelen (Site URL); den skickas då vidare till studievyn
+   utan att klienten skapas här, för klienten hade loggat in på
+   startsidan och tömt adressen innan den nya sidan hann öppnas. */
+const ÅTERSTÄLLNING = /(?:^|[#&])type=recovery(?:&|$)/.test(String(location.hash || ''));
+const LÄNKFEL = (/(?:^|[#&])error_code=([^&]*)/.exec(String(location.hash || '')) || [])[1] || '';
+const TILL_VYN = (ÅTERSTÄLLNING || LÄNKFEL) && !/^\/(foralder|larare|admin|barn)(\.html)?\/?$/.test(location.pathname);
+if (TILL_VYN) location.replace('/foralder' + location.hash);
+else if (LÄNKFEL) history.replaceState(history.state, '', location.pathname + location.search);
+
 /* Supabase-klienten. null om nycklarna inte är ifyllda än, då visar
    sidorna en tydlig ruta istället för att bara vara trasiga. */
-const supa = (String(CFG.SUPABASE_URL || '').startsWith('https://') && window.supabase)
+const supa = (!TILL_VYN && String(CFG.SUPABASE_URL || '').startsWith('https://') && window.supabase)
   ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY)
   : null;
 
@@ -1143,7 +1162,7 @@ const NX = (function () {
        odefinierat namn kastar ReferenceError, och hela NX dör vid
        inladdning på varje sida. Mains lista gäller. */
     hämtaSession, hämtaProfil, vyFörRoll, vyFör, ärBarn, skickaBarnHem,
-    inbjudan: INBJUDAN,
+    inbjudan: INBJUDAN, återställning: ÅTERSTÄLLNING, länkfel: LÄNKFEL,
     hämtaUpptagna, tiderFörDatum,
     MANADER, DAGAR, CFG, AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod
   };

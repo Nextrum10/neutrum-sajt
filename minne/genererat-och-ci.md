@@ -263,3 +263,10 @@ Kör det lokalt, med bilder i en mapp om du vill se dem:
 Det är ingen `_prov-*`-bänk: det serverar ingen sida, och `/verktyg`
 står i `.vercelignore`.
 
+`verktyg/prova-aterstallning.js` (Glömt lösenordet, 2026-09-30) är byggt
+likadant och provar läget i inloggningsrutan i alla tre vyerna, vad som
+skickas till `/auth/v1/recover` och vilket besked varje svar från Auth
+ger, rutan för nytt lösenord när vyn öppnas med länkens adress, en länk
+som gått ut, startsidan som skickar länken vidare och modulvakten mot en
+gammal `nextrum-studie.js`. Samma körsätt, egen port (8962).
+

@@ -359,6 +359,20 @@ html:has(> body.vy){scroll-behavior:auto}
   font-size:.86rem;line-height:1.7;color:var(--bl-2);
 }
 .vy .auth-alt a{color:var(--acc-lugn);text-decoration:underline;text-underline-offset:3px}
+/* Glömt lösenordet? (NXStudie, 2026-09-30). Länken står under
+   lösenordsfältet, till höger där man letar efter den, och Tillbaka
+   under beskedet. Knappar, inte länkar: de byter läge i rutan och går
+   ingenstans. 44 px höga för tummen fast texten är liten. Flikraden är
+   flex, och hidden räcker inte mot en display-regel. */
+.vy .auth-tabs[hidden]{display:none}
+.vy .auth-glomt{display:flex;justify-content:flex-end;margin:-8px 0 6px}
+.vy .auth-glomt[data-glomt-tillbaka]{justify-content:center;margin:6px 0 0}
+.vy .auth-glomt[hidden]{display:none}
+.vy .auth-lank{
+  display:inline-flex;align-items:center;min-height:44px;padding:0 4px;
+  font-size:.86rem;color:var(--acc-lugn);
+  text-decoration:underline;text-underline-offset:3px;
+}
 
 /* väntlägena (ej matchad / ej godkänd / fel roll) */
 .vy .locked{
@@ -634,6 +648,8 @@ body.betalar .hdr.bort{transform:none}
   font-size:.86rem;font-weight:600;color:var(--bl);
 }
 .nx-fraga-box .nx-skal-not{margin-top:12px;font-size:.84rem;color:var(--bl-3)}
+/* Det nya lösenordet efter en återställningslänk (NXStudie.nyttLösenord). */
+.nx-fraga-box form[data-nylos]{margin-top:18px}
 /* Svaret på en föreslagen tid (NXStudie.svarRuta, och flytta-rutan när
    studiehjälparen svarar med en annan tid, 2026-09-30). Räknaren står
    under fältet till höger och har tabelltal, så att den inte flyttar

@@ -317,11 +317,25 @@
   });
 
   /* ============ inloggning ============ */
+  /* Glömt lösenordet? (NXStudie). Adminvyn har inga flikar och inget
+     konto att skapa, så rutan byter bara mellan inloggningen och det
+     läget. */
+  let glömt = false;
+  function sättLäge(l) {
+    glömt = l === 'glomt';
+    NXStudie.inloggningsruta(l, {
+      titel: 'Adminvyn',
+      under: 'För dig som jobbar på Nextrum. Intresseanmälningar, matchning, bokningar, betalningar och utbetalningar.'
+    });
+  }
+  NXStudie.glömtLänkar(sättLäge);
+
   $('#auth-form').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#auth-msg'), knapp = $('#auth-submit');
     rensa(msg);
     if (!supa) { säg(msg, 'Databasen är inte kopplad. Fyll i nextrum-config.js.', false); return; }
+    if (glömt) { await NXStudie.glömtSkicka(supa); return; }
 
     const epost = $('#a-email').value.trim();
     const lösen = $('#a-pass').value;
@@ -888,13 +902,17 @@
       }
 
       S.user = await NX.hämtaSession();
-      if (!S.user) { visa('view-auth'); return; }
+      if (!S.user) { visa('view-auth'); NXStudie.länkenGickInte(sättLäge); return; }
       /* Ett barnkonto hör hemma i sin egen vy. Här hade det ändå fått
          tomma svar: barnets roll i databasen når inga tabeller. */
       if (NX.skickaBarnHem(S.user)) return;
       /* Försvinner inloggningen medan fliken står öppen visas
          inloggningen, inte en vy där varje knapp nekas (NXStudie). */
       NXStudie.vaktaInloggningen({ supa, user: S.user, utloggad: () => visa('view-auth') });
+      /* Från länken i ett återställningsmejl: det nya lösenordet först,
+         före behörigheten. Den som bad om länken här ska få byta
+         lösenordet också om kontot inte är admin. */
+      if (NX.återställning) await NXStudie.nyttLösenord(supa, { minsta: 8, epost: S.user.email });
 
       S.profil = await NX.hämtaProfil(S.user.id);
       /* Adminrollen avgör vilken SIDA som visas och vilka sektioner som

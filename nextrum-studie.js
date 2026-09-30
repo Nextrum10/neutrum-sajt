@@ -2784,20 +2784,228 @@ window.NXStudie = (function () {
     } catch (e) { /* ingen länk, inget annat */ }
   }
 
-  /* Inloggningsrutan i läge 'in' eller 'up'. t har titel, titelUpp,
-     under och underUpp. */
+  /* Inloggningsrutan i läge 'in', 'up' eller 'glomt'. t har titel,
+     titelUpp, under och underUpp. Adminvyn har inga flikar och inget
+     namnfält, och byter bara mellan 'in' och 'glomt'. */
   function inloggningsruta(läge, t) {
-    var upp = läge === 'up';
+    var upp = läge === 'up', glömt = läge === 'glomt';
     NX.$$('[data-auth]').forEach(function (b) {
       b.setAttribute('aria-selected', String(b.dataset.auth === läge));
     });
-    NX.$('#namn-grupp').hidden = !upp;
-    NX.$('#a-name').required = upp;
-    NX.$('#a-pass').autocomplete = upp ? 'new-password' : 'current-password';
-    NX.$('#auth-title').textContent = upp ? t.titelUpp : t.titel;
-    NX.$('#auth-sub').textContent = upp ? t.underUpp : t.under;
-    NX.$('#auth-submit').textContent = upp ? 'Skapa konto' : 'Logga in';
+    var flikar = NX.$('.auth-tabs'), namn = NX.$('#namn-grupp'), namnfält = NX.$('#a-name');
+    if (flikar) flikar.hidden = glömt;
+    if (namn) namn.hidden = !upp;
+    if (namnfält) namnfält.required = upp;
+    var lösen = NX.$('#a-pass');
+    lösen.autocomplete = upp ? 'new-password' : 'current-password';
+    lösen.required = !glömt;
+    lösen.closest('.fgroup').hidden = glömt;
+    NX.$$('[data-glomt]').forEach(function (el) { el.hidden = läge !== 'in'; });
+    NX.$$('[data-glomt-tillbaka]').forEach(function (el) { el.hidden = !glömt; });
+    NX.$('#auth-title').textContent = glömt ? 'Glömt lösenordet?' : upp ? t.titelUpp : t.titel;
+    NX.$('#auth-sub').textContent = glömt ? GLÖMT_UNDER : upp ? t.underUpp : t.under;
+    NX.$('#auth-submit').textContent = glömt ? 'Skicka länken' : upp ? 'Skapa konto' : 'Logga in';
     NX.rensa(NX.$('#auth-msg'));
+  }
+
+  /* ============================================================
+     GLÖMT LÖSENORDET (2026-09-30)
+
+     Leo: "reset password står på engelska". Mallen gick att översätta,
+     men ingen vy kunde be om mejlet: den som glömt sitt lösenord hade
+     ingen väg tillbaka utom att mejla oss. Nu ber inloggningen i
+     studievyn, studiehjälparvyn och adminvyn Supabase om en länk,
+     och länken öppnar samma vy med en ruta för ett nytt lösenord.
+
+     SAMMA BESKED OAVSETT KONTO. Supabase svarar likadant för en adress
+     som inte finns, och rutan gör det också: ett formulär som säger
+     "det finns inget konto med den adressen" svarar på vem som är kund
+     hos oss, för vem som helst som frågar. Samma sak när samma adress
+     bett om en länk nyss: då har ett mejl redan gått.
+
+     Ett barnkonto får inget mejl alls (barnkonto_mejlsparr), så en
+     barnadress får ett besked om att föräldern byter lösenordet.
+     ============================================================ */
+  var GLÖMT_UNDER = 'Skriv e-postadressen du loggar in med, så skickar vi en länk där du väljer ett nytt lösenord.';
+  var LÄNKFEL_UNDER = 'Länken i mejlet gick inte att använda. Den kan ha gått ut eller redan ha använts. '
+    + 'Skriv e-postadressen du loggar in med, så skickar vi en ny.';
+
+  function ossAdress() { return (NX.CFG && NX.CFG.EPOST) || 'info@nextrum.se'; }
+
+  /* Länkarna Glömt lösenordet? och Tillbaka till inloggningen. sätt()
+     byter vyns läge och ritar om rutan. Fokus flyttas med, för knappen
+     man tryckte på döljs. Inget byte medan inloggningen eller länken
+     skickas: svaret hade hamnat i fel läge, och medan() hade satt
+     tillbaka fel text på knappen. */
+  function glömtLänkar(sätt) {
+    document.addEventListener('click', function (e) {
+      var till = e.target.closest('[data-glomt] button') ? 'glomt'
+        : e.target.closest('[data-glomt-tillbaka] button') ? 'in' : null;
+      if (!till || NX.$('#auth-submit').hasAttribute('aria-busy')) return;
+      sätt(till);
+      var epost = NX.$('#a-email');
+      (till === 'in' && epost.value ? NX.$('#a-pass') : epost).focus();
+    });
+  }
+
+  /* Vyn öppnades från en länk i ett mejl men ingen är inloggad: länken
+     har gått ut, använts, eller gick inte att logga in med
+     (NX.länkfel, NX.återställning). Rutan går rakt till Glömt
+     lösenordet med förklaringen överst. Svarar true om den gjorde det.
+     En token som supabase-js inte kunde använda står kvar i adressen,
+     och tas bort här. */
+  function länkenGickInte(sätt) {
+    if (!NX.länkfel && !NX.återställning) return false;
+    if (/access_token=/.test(location.hash)) history.replaceState(history.state, '', location.pathname + location.search);
+    sätt('glomt');
+    NX.$('#auth-sub').textContent = LÄNKFEL_UNDER;
+    return true;
+  }
+
+  /* Skickar länken. Anropas från vyns inloggningsformulär i läget
+     'glomt'. Länken leder tillbaka till samma vy: adresserna står i
+     Supabase under Authentication, URL Configuration (Redirect URLs),
+     och en adress som inte står där leder till startsidan, som skickar
+     den vidare till studievyn (nextrum-app.js). */
+  async function glömtSkicka(supa) {
+    var msg = NX.$('#auth-msg'), fält = NX.$('#a-email');
+    var epost = fält.value.trim();
+    NX.rensa(msg);
+    if (!epost) { NX.säg(msg, 'Skriv e-postadressen du loggar in med.', false); fält.focus(); return; }
+    if (!NX.epostOk(epost)) {
+      NX.säg(msg, 'Kontrollera e-postadressen. Den ser inte ut som en adress.', false);
+      fält.focus();
+      return;
+    }
+    if (/@barn\.nextrum\.se$/i.test(epost)) {
+      NX.säg(msg, 'Ett barns lösenord byts av föräldern, i studievyn under Profil. Barnet loggar sedan in på nextrum.se/barn.', false);
+      return;
+    }
+    await medan(NX.$('#auth-submit'), 'Skickar…', async function () {
+      var svar;
+      try {
+        svar = await supa.auth.resetPasswordForEmail(epost, { redirectTo: location.origin + location.pathname });
+      } catch (e) { svar = { error: e }; }
+      var fel = svar && svar.error, m = String((fel && (fel.message || fel)) || '');
+      /* "For security purposes, you can only request this after N
+         seconds": adressen fick en länk för mindre än en minut sedan. */
+      if (!fel || /only request this after|for security purposes/i.test(m)) {
+        NX.säg(msg, 'Om adressen hör till ett konto hos oss har vi skickat en länk dit. Öppna den och välj ett nytt lösenord. '
+          + 'Hittar du inget mejl inom några minuter, titta i skräpposten eller mejla oss på ' + ossAdress() + '.', true);
+        return;
+      }
+      console.warn('Glömt lösenordet:', m);
+      if (/rate limit|too many/i.test(m)) {
+        NX.säg(msg, 'Vi kan inte skicka fler mejl just nu. Vänta en stund och försök igen, eller mejla oss på ' + ossAdress() + '.', false);
+      } else if (/Failed to fetch|NetworkError|Load failed/i.test(m)) {
+        NX.säg(msg, NX.t('felNatverk'), false);
+      } else {
+        NX.säg(msg, 'Mejlet gick inte att skicka. Försök igen om en stund, eller mejla oss på ' + ossAdress() + '.', false);
+      }
+    });
+  }
+
+  /* Felet när ett nytt lösenord inte sparades, på svenska. */
+  function lösenordsfel(fel) {
+    var kod = String((fel && fel.code) || ''), m = String((fel && (fel.message || fel)) || '');
+    if (kod === 'same_password' || /different from the old/i.test(m)) {
+      return 'Det nya lösenordet måste vara ett annat än det gamla.';
+    }
+    var minst = /at least (\d+) characters/i.exec(m);
+    if (minst) return 'Lösenordet måste ha minst ' + minst[1] + ' tecken.';
+    if (kod === 'weak_password') return 'Lösenordet är för lätt att gissa. Välj ett längre, gärna med siffror och andra tecken.';
+    if (kod === 'session_not_found' || /session missing|session_not_found/i.test(m)) {
+      return 'Inloggningen från länken har gått ut. Be om en ny länk med Glömt lösenordet? vid inloggningen.';
+    }
+    return NX.felText(fel);
+  }
+
+  /* Rutan för ett nytt lösenord, när vyn öppnats från länken i
+     återställningsmejlet (NX.återställning). Länken har loggat in
+     personen, som inte har något lösenord hen minns. o.minsta är den
+     kortaste längden (adminvyn 8, annars 6 som i profilen), o.epost
+     adressen som lösenordshanteraren sparar lösenordet under. Svarar
+     true när lösenordet är sparat.
+
+     Ett tryck utanför stänger inte rutan, till skillnad från de andra:
+     länken går bara att använda en gång, och ett snett tryck på
+     telefonen hade krävt ett nytt mejl. Inte nu stänger, och lösenordet
+     går att byta i profilen senare. */
+  function nyttLösenord(supa, o) {
+    var minsta = (o && o.minsta) || 6;
+    return new Promise(function (klar) {
+      var ruta = document.createElement('div');
+      ruta.className = 'nx-fraga';
+      ruta.innerHTML =
+        '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="nylos-t">'
+        + '<h3 id="nylos-t">Välj ett nytt lösenord</h3>'
+        + '<p>Du är inloggad med länken i mejlet. Välj ett nytt lösenord med minst ' + minsta
+        + ' tecken, så loggar du in med det nästa gång.</p>'
+        + '<form data-nylos novalidate>'
+        + '<input type="email" autocomplete="username" value="' + esc((o && o.epost) || '') + '" hidden readonly>'
+        + '<div class="fgroup"><label for="nylos-1">Nytt lösenord</label>'
+        + '<input class="inp" id="nylos-1" type="password" autocomplete="new-password" minlength="' + minsta + '"></div>'
+        + '<div class="fgroup"><label for="nylos-2">Upprepa lösenordet</label>'
+        + '<input class="inp" id="nylos-2" type="password" autocomplete="new-password"></div>'
+        + '<p class="ok-msg" id="nylos-msg" role="alert"></p>'
+        + '<div class="nx-fraga-knappar">'
+        + '<button type="button" class="btn btn-ghost" data-nylos-nej>Inte nu</button>'
+        + '<button type="submit" class="btn btn-primary">Spara lösenordet</button>'
+        + '</div></form></div>';
+
+      var sparat = false;
+      var sistaFokus = document.activeElement;
+      function stäng() {
+        ruta.remove();
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', tangent);
+        if (sistaFokus && sistaFokus.focus) sistaFokus.focus();
+        klar(sparat);
+      }
+      function tangent(e) {
+        if (e.key === 'Escape') stäng();
+        if (e.key === 'Tab') {
+          var kan = ruta.querySelectorAll('.inp, button');
+          var f = kan[0], s = kan[kan.length - 1];
+          if (e.shiftKey && document.activeElement === f) { e.preventDefault(); s.focus(); }
+          else if (!e.shiftKey && document.activeElement === s) { e.preventDefault(); f.focus(); }
+        }
+      }
+
+      var form = ruta.querySelector('form'), msg = ruta.querySelector('#nylos-msg');
+      var ett = ruta.querySelector('#nylos-1'), två = ruta.querySelector('#nylos-2');
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        NX.rensa(msg);
+        if (ett.value.length < minsta) {
+          NX.säg(msg, 'Lösenordet måste ha minst ' + minsta + ' tecken.', false);
+          ett.focus();
+          return;
+        }
+        if (ett.value !== två.value) { NX.säg(msg, 'Lösenorden är inte lika.', false); två.focus(); return; }
+        await medan(form.querySelector('[type="submit"]'), 'Sparar…', async function () {
+          var svar;
+          try { svar = await supa.auth.updateUser({ password: ett.value }); } catch (err) { svar = { error: err }; }
+          if (svar && svar.error) { NX.säg(msg, lösenordsfel(svar.error), false); return; }
+          sparat = true;
+          ruta.querySelector('.nx-fraga-box').innerHTML =
+            '<h3 id="nylos-t">Lösenordet är bytt</h3>'
+            + '<p>Nästa gång loggar du in med din e-postadress och det nya lösenordet.</p>'
+            + '<div class="nx-fraga-knappar"><button type="button" class="btn btn-primary" data-nylos-klar>Fortsätt</button></div>';
+          ruta.querySelector('[data-nylos-klar]').focus();
+        });
+      });
+      ruta.addEventListener('click', function (e) {
+        if (e.target.closest('[data-nylos-nej], [data-nylos-klar]')) stäng();
+      });
+      document.addEventListener('keydown', tangent);
+
+      document.body.appendChild(ruta);
+      document.body.style.overflow = 'hidden';
+      void ruta.offsetWidth;
+      ruta.classList.add('open');
+      ett.focus();
+    });
   }
 
   /* ============================================================
@@ -3297,6 +3505,7 @@ window.NXStudie = (function () {
     notisval: notisval, dokument: dokument, tipsa: tipsa,
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
     inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
+    glömtLänkar: glömtLänkar, länkenGickInte: länkenGickInte, glömtSkicka: glömtSkicka, nyttLösenord: nyttLösenord,
     adminroll: adminroll,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxLista: läxLista,

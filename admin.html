@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=ac8ac9d1">
-<link rel="stylesheet" href="nextrum-vy.css?v=92e16976">
+<link rel="stylesheet" href="nextrum-vy.css?v=28e93927">
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=a20da120">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
@@ -137,8 +137,8 @@
     <div class="auth-wrap">
       <div class="auth-card">
         <span class="nx-et acc">Logga in</span>
-        <h1 style="margin-top:16px">Adminvyn</h1>
-        <p class="nx-lede">För dig som jobbar på Nextrum. Intresseanmälningar, matchning, bokningar, betalningar och utbetalningar.</p>
+        <h1 id="auth-title" style="margin-top:16px">Adminvyn</h1>
+        <p class="nx-lede" id="auth-sub">För dig som jobbar på Nextrum. Intresseanmälningar, matchning, bokningar, betalningar och utbetalningar.</p>
 
         <form id="auth-form" novalidate>
           <div class="fgroup">
@@ -149,8 +149,10 @@
             <label for="a-pass">Lösenord</label>
             <input class="inp" id="a-pass" type="password" autocomplete="current-password" required minlength="6">
           </div>
+          <p class="auth-glomt" data-glomt><button type="button" class="auth-lank">Glömt lösenordet?</button></p>
           <button class="btn btn-primary btn-block" type="submit" id="auth-submit">Logga in</button>
           <p class="ok-msg" id="auth-msg" style="margin-top:16px"></p>
+          <p class="auth-glomt" data-glomt-tillbaka hidden><button type="button" class="auth-lank">Tillbaka till inloggningen</button></p>
         </form>
 
         <p class="auth-alt">
@@ -2284,9 +2286,9 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=ae9d5f14"></script>
+<script src="nextrum-app.js?v=183275d5"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=c38e3617"></script>
+<script src="nextrum-studie.js?v=ba3fe44c"></script>
 <script src="nextrum-arbetsyta.js?v=6c1e8e1a"></script>
 <script src="nextrum-media.js?v=01adfb73"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
@@ -2314,7 +2316,7 @@
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
-<script src="nextrum-modulvakt.js?v=a1c84ddc"></script>
-<script src="nextrum-admin.js?v=cb2e4b31"></script>
+<script src="nextrum-modulvakt.js?v=03314bb9"></script>
+<script src="nextrum-admin.js?v=87afbcec"></script>
 </body>
 </html>

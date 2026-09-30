@@ -44,10 +44,11 @@
      hämtningen i stället för det här beskedet. passMedSvar kom sist
      (2026-09-30): familjens vy och studiehjälparvyn hämtar passen
      genom den. tipsa kom samma kväll, och båda vyerna anropar den när
-     de startar. */
+     de startar. glömtLänkar kom med Glömt lösenordet, och de tre vyerna
+     med inloggning anropar den så fort skriptet laddat. */
   var studieKlar = typeof NXStudie !== 'undefined' && !!NXStudie.vaktaInloggningen
     && typeof NXStudie.hämtaAlla === 'function' && typeof NXStudie.passMedSvar === 'function'
-    && typeof NXStudie.tipsa === 'function';
+    && typeof NXStudie.tipsa === 'function' && typeof NXStudie.glömtLänkar === 'function';
 
   if (ärBarn) {
     /* Barnets vy (barn.html) laddar bara NX och NXStudie: inga
