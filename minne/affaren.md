@@ -455,9 +455,18 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
   av med OpenCV ur en skärmbild i provet. Planen står i
   `AFFISCHKAMPANJ.md`.
 - **Provat** lokalt: 1009 av 1009 i `rls-test.sql`; utan migrationen
-  faller de elva nya raderna och inga andra. Migrationen körs efter
-  merge, och vyerna tål att den saknas: fliken står tyst och adminlistan
-  säger att migrationen saknas.
+  faller de elva nya raderna och inga andra. Vyerna tål att den saknas:
+  fliken står tyst och adminlistan säger att migrationen saknas.
+- **I drift sedan 2026-09-30.** Migrationen kördes efter att PR #157
+  mergats, med versionen i filnamnet (`20260930190000`): databasen
+  hämtade filen från merge-commiten med tillägget `http`, prövade md5,
+  körde den och skrev raden i `schema_migrations` i samma transaktion, så
+  `created_by` är tom, och tillägget togs bort igen. Det driften sparade
+  har samma md5 som filen. Hela `rls-test.sql` från merge-commiten gick
+  igenom mot driften före, i en transaktion som rullades tillbaka med
+  migrationen inläst, och efter: 1009 av 1009. Säkerhetsadvisorn fick två
+  väntade rader till, `mina_tips` och `tipskoder_lage` (`minne/sakerhet.md`).
+  Flaggan `tipstimme` står på, och ingen kod fanns när migrationen kördes.
 
 ---
 

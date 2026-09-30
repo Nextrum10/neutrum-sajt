@@ -351,8 +351,8 @@ Detaljer: `minne/grunden.md`.
 - **Med flit inte**: en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
   passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
   villkorsändringarna och om att vi kan läsa chatten.
-- **Tipskoderna** (2026-09-30): migrationen `tipskoder_och_kampanjkoder` körs efter merge; tills
-  dess står fliken tyst. Affischerna sätts upp enligt `AFFISCHKAMPANJ.md`.
+- **Affischerna** (2026-09-30): tipskoderna och `/affisch` är i drift; att sätta upp dem enligt
+  `AFFISCHKAMPANJ.md` återstår.
 - **Barnet har inget eget konto**, adminvyn ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Delade dokument: ingen notis, ingen underskrift, en person per
   handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
