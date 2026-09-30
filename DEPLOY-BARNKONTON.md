@@ -17,8 +17,9 @@ Varför det ser ut som det gör står i `minne/barnkonton-och-admin.md`.
 migrationerna är körda, `barn-konto` och `admin-skapa` är driftsatta, och
 kedjan är provad mot riktiga Auth med en testfamilj som sedan togs bort
 (`minne/barnkonton-och-admin.md`, Driften). **Kvar för hand:** steg 4
-(Auth-inställningarna, i Supabase-panelen), steg 5 (null-MX:en, i
-Cloudflare), 6.5 (en skarp inbjudan) och 7 (säga till familjerna).
+(Auth-inställningarna i Supabase-panelen; Redirect URL är redan rätt),
+steg 5 (null-MX:en, i Cloudflare), 6.5 (en skarp inbjudan) och 7 (säga
+till familjerna).
 
 ---
 
@@ -80,9 +81,12 @@ Båda kräver inloggning, så ingen rad i `supabase/config.toml` behövs.
 
 ## 4. Auth-inställningarna i Supabase
 
-- **Authentication → URL Configuration → Redirect URLs:** lägg till
-  `https://nextrum.se/admin`. Inbjudan leder dit, och utan raden leder den
-  till Site URL i stället, där ingen ber om ett lösenord.
+- **Authentication → URL Configuration → Redirect URLs:**
+  `https://nextrum.se/admin` ska vara tillåten. Inbjudan leder dit, och
+  utan raden leder den till Site URL i stället, där ingen ber om ett
+  lösenord. **Den är redan tillåten** (provat 2026-09-30: en `verify` med
+  en ogiltig token skickade tillbaka till `/admin` och `/foralder`, men
+  till Site URL för en främmande adress), så här finns inget att göra.
 - **Authentication → Providers → Email:** slå på *Secure email change*.
 - **Authentication → Settings:** *Allow manual linking* ska vara av.
 - **Authentication → Email Templates → Invite user:** skriv mallen på

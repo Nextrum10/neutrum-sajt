@@ -384,9 +384,10 @@ Detaljer: `minne/grunden.md`.
   `AFFISCHKAMPANJ.md` återstår.
 - **Barnkontona och adminbehörigheterna** är i drift sedan 2026-09-30 (båda migrationerna,
   `barn-konto` v2, `admin-skapa` v1), och barnets hela kedja är provad mot riktiga Auth. Kvar
-  (`DEPLOY-BARNKONTON.md`): Auth-inställningarna, med Redirect URL för inbjudan, null-MX:en i
-  Cloudflare, en skarp inbjudan genom `admin-skapa`, och att säga till familjerna. En admin med
-  behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen säger nej.
+  (`DEPLOY-BARNKONTON.md`): tre Auth-inställningar (Redirect URL för inbjudan är redan rätt),
+  null-MX:en i Cloudflare, en skarp inbjudan genom `admin-skapa`, och att säga till familjerna.
+  En admin med behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen
+  säger nej.
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Delade dokument: ingen notis, ingen underskrift, en person per
   handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
