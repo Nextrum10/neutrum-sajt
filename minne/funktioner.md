@@ -237,3 +237,20 @@ Utan spärr kan vem som helst köra den i en slinga på Nextrums räkning,
 och en spärr i webbläsaren går att gå runt. Svaren är dessutom en känd,
 ändlig mängd som redan står på `faq.html`. Maskoten kan därför inte
 hitta på ett pris, ett villkor eller ett löfte.
+
+### `barn-konto` och `admin-skapa` (barnkonton_och_admin, 2026-09-30)
+Två funktioner, med det rena i `_delad/barnkonto.ts` och
+`_delad/adminbehorighet.ts` och omvärlden som beroenden (samma mönster som
+`notiser/ko.ts`), så att varje väg har ett prov.
+- `barn-konto`: skapa, byt lösenord, pausa, aktivera, ta bort. Barnet läses
+  med ANROPARENS token (RLS), och `parent_id` måste vara anroparen; en admin
+  är inte förälder här. Först sedan `service_role`. Lösenordet byts i ett
+  fönster på 60 sekunder som stängs i `finally`, och barnet loggas ut
+  överallt efter ett byte och en paus. Inga lösenord i loggen, bara namn,
+  kod och status på felet.
+- `admin-skapa`: frågar `admin_kan_ge()` med anroparens token innan
+  inbjudan, bjuder in med `redirectTo` `https://nextrum.se/admin`, sätter
+  profilens `role = 'admin'` och skriver rollen med `gor_till_admin` och
+  anroparens token. Nekas rollen tas kontot bort igen. En adress med konto
+  får 409 och pekas mot Befintlig användare.
+Se `minne/barnkonton-och-admin.md`.

@@ -16,11 +16,10 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { AVBOKNINGSSKAL, DP, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, hämtaAlla, kontaktaRuta, kortDatum,
+  const { AVBOKNINGSSKAL, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, hämtaAlla, kontaktaRuta, kortDatum,
           märkFlik, namnFör, närText, pill, rad, ritaPanelen, skriv, tabell, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
-  const ritaDetalj = (...a) => NXAdmin.rita.ritaDetalj(...a);
   const träffar = (...a) => NXAdmin.rita.träffar(...a);
   const laddaOmEkonomi = (...a) => NXAdmin.rita.laddaOmEkonomi(...a);
   const skapaUppgift = (...a) => NXAdmin.rita.skapaUppgift(...a);
@@ -518,130 +517,11 @@
 
   /* ============================================================
      ADMINANVÄNDARE
-
-     is_admin är den enda flaggan som avgör vem som ser den här
-     sidan. Att sätta den har krävt Table Editor, vilket betyder att
-     den som skulle ge en kollega behörighet först behövde
-     databasåtkomst — alltså mer än behörigheten själv ger.
-
-     Triggern skydda_profilfalt släpper igenom en admin, så det går
-     från appen. Två saker går inte, och ska inte gå:
-
-       1. Ta bort sin EGEN behörighet. En ensam admin som klickar
-          fel låser ut hela bolaget ur adminvyn, och vägen tillbaka
-          är Table Editor — precis det vi försöker slippa.
-
-       2. Ta bort den sista. Samma sak, en klick senare.
-
-     Båda är spärrade i knapparna OCH kontrollerade igen precis
-     innan skrivningen. Det första är för att det ska synas, det
-     andra för att en dold knapp inte är ett skydd.
+     Flyttade till nextrum-admin-behorighet.js med adminrollerna
+     (barnkonton_och_admin). Flaggan is_admin sätts inte längre härifrån:
+     den speglar admin_roller, och triggern profiles_spegel_admin vägrar
+     en inloggad som skriver den.
      ============================================================ */
-
-  function adminer() {
-    return Object.values(S.personer)
-      .filter(p => p.is_admin)
-      .sort((a, b) => String(a.full_name || a.email || '')
-        .localeCompare(String(b.full_name || b.email || ''), 'sv'));
-  }
-
-  function ritaAdminanvandare() {
-    const host = $('#adm-anv');
-    if (!host) return;
-    const lista = adminer();
-    $('#adm-anv-antal').textContent = lista.length
-      + (lista.length === 1 ? ' person' : ' personer');
-
-    host.innerHTML = lista.map(p => {
-      const jag = p.id === S.user.id;
-      const ensam = lista.length === 1;
-      return '<div class="dp-rad"><div>'
-        + '<b>' + esc(p.full_name || p.email || '—') + (jag ? ' (du)' : '') + '</b>'
-        + '<span>' + esc([p.email, p.role === 'tutor' ? 'studiehjälpare'
-            : p.role === 'parent' ? 'förälder' : p.role].filter(Boolean).join(' · ')) + '</span>'
-        + '</div><span class="dp-rad-hoger">'
-        + (jag || ensam
-          ? '<span class="xsmall" style="color:var(--bl-2)">'
-            + (jag ? 'kan inte tas bort av dig' : 'sista adminen') + '</span>'
-          : '<button class="btn btn-ghost btn-sm" data-admin-bort="' + esc(p.id) + '">Ta bort</button>')
-        + '</span></div>';
-    }).join('');
-  }
-
-  function ritaAdminTraffar() {
-    const host = $('#adm-anv-traffar');
-    const fält = $('#adm-anv-sok');
-    if (!host || !fält) return;
-    const sök = fält.value.trim().toLowerCase();
-    if (sök.length < 2) { host.innerHTML = ''; return; }
-
-    const träffar = Object.values(S.personer)
-      .filter(p => !p.is_admin && !ärRaderad(p))
-      .filter(p => [p.full_name, p.email].filter(Boolean).join(' ')
-        .toLowerCase().indexOf(sök) !== -1)
-      .slice(0, 8);
-
-    host.innerHTML = träffar.length
-      ? träffar.map(p => '<div class="dp-rad"><div>'
-          + '<b>' + esc(p.full_name || p.email || '—') + '</b>'
-          + '<span>' + esc(p.email || '') + '</span></div>'
-          + '<span class="dp-rad-hoger">'
-          + '<button class="btn btn-primary btn-sm" data-admin-ge="' + esc(p.id) + '">Gör till admin</button>'
-          + '</span></div>').join('')
-      : tomt('Ingen matchar', 'Personen måste ha ett konto på sidan först.');
-  }
-
-  const admSök = $('#adm-anv-sok');
-  if (admSök) admSök.addEventListener('input', ritaAdminTraffar);
-
-  async function sättAdmin(profilId, värde) {
-    const p = S.personer[profilId];
-    if (!p) return;
-
-    /* Kontrollerad igen, inte bara i knappen. En dold knapp är
-       inget skydd — den som öppnar konsolen ser samma DOM. */
-    if (!värde) {
-      if (profilId === S.user.id) {
-        alert('Du kan inte ta bort din egen behörighet härifrån.');
-        return;
-      }
-      if (adminer().length <= 1) {
-        alert('Det här är den sista adminen. Ge någon annan behörighet först.');
-        return;
-      }
-    }
-
-    const namn = p.full_name || p.email || 'personen';
-    const ja = await bekräfta(värde ? {
-      titel: 'Ge ' + namn + ' adminbehörighet?',
-      text: 'Hen kommer åt alla familjers och studiehjälpares uppgifter, alla meddelanden, '
-        + 'alla fakturor och alla utbetalningar. Det går att ta bort igen.',
-      knapp: 'Ge behörighet'
-    } : {
-      titel: 'Ta bort adminbehörigheten för ' + namn + '?',
-      text: 'Hen blir utelåst ur adminvyn direkt. Kontot i övrigt påverkas inte.',
-      knapp: 'Ta bort'
-    });
-    if (!ja) return;
-
-    const gammalt = p.is_admin;
-    p.is_admin = värde;
-    if (!await skriv('profiles', profilId, { is_admin: värde })) {
-      p.is_admin = gammalt;
-      return;
-    }
-    ritaAdminanvandare();
-    ritaAdminTraffar();
-    /* Panelen kan stå öppen på samma person och visa gamla märken. */
-    if (DP.typ && DP.id === profilId) ritaDetalj();
-  }
-
-  document.addEventListener('click', async e => {
-    const ge = e.target.closest('[data-admin-ge]');
-    if (ge) { await sättAdmin(ge.dataset.adminGe, true); return; }
-    const bort = e.target.closest('[data-admin-bort]');
-    if (bort) await sättAdmin(bort.dataset.adminBort, false);
-  });
 
   /* ============================================================
      INSTÄLLNINGAR (Fas 6)
@@ -672,7 +552,7 @@
         ['Tjänster och priser', 'Pris, ersättning, RUT-andel och villkor per tjänst.', '#katalog/tjanster'],
         ['Rabattkoder', 'Koder, värden och giltighet.', '#katalog/rabattkoder'],
         ['Integrationer', 'Google Meet-länkar till onlinepassen. Bokföringen sköts i Fortnox, utan koppling hit.', '#system/integrationer'],
-        ['Adminanvändare', 'Vem som ser den här vyn.', '#system/adminanvandare']
+        ['Adminhantering', 'Vem som ser den här vyn, och vad var och en får göra.', '#system/adminanvandare']
       ];
       pekare.innerHTML = PEKARE.map(([namn, text, mål]) =>
         '<div class="dp-rad"><div><b>' + esc(namn) + '</b><span class="adm-und">' + esc(text) + '</span></div>'
@@ -1676,7 +1556,7 @@
   Object.assign(NXAdmin.rita, {
     /* Utåt heter sökningen ritaAudit: den som ritar vyn vill ha en
        färsk logg, inte en gammal lista i minnet. */
-    ritaAdminanvandare, ritaAudit: sökAudit, ritaDokument: hämtaHandlingar,
+    ritaAudit: sökAudit, ritaDokument: hämtaHandlingar,
     /* Sortens namn, för personens panel (dpDokument). */
     dokTyp: typ => DOK_TYP[typ] || typ,
     ritaFel, ritaInstallningar, ritaIntegrationer,

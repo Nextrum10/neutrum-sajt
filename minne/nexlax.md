@@ -77,8 +77,10 @@ Läxhjälp är fortfarande tjänstens namn; skolan ger läxor, vi ger uppgifter.
   utveckling, och bedömningen är fortfarande en människas omdöme som
   inte blandas ihop med en maskins rättning: den står i ett eget block,
   Studiehjälparens bedömning.
-- Barnet har inget eget konto: nivåerna görs i familjens inloggning
-  (avsnitt 11).
+- Nivåerna görs i familjens inloggning (avsnitt 11). Barnet kan sedan
+  2026-09-30 få en egen inloggning (`barn.html`), men den visar bara pass,
+  timmar, studieplan och notiser: barnets roll når inga tabeller, och ett
+  försök är en skrivning.
 
 ## NexLäx (Fas 23.2)
 
@@ -245,12 +247,13 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
   uträknat i kod där det går; läs igenom en bana med `--visa` innan den
   används på riktigt, och låt en studiehjälpare som undervisar i ämnet
   göra det. Kvar:
-  1. **Barnet har inget eget konto.** Nivåerna görs i familjens
-     inloggning, alltså med betalning, bokning och meddelanden en knapp
-     bort. Ett elevkonto, eller en länk per barn som bara öppnar
-     Uppgifter (som utbildningsprovets nyckel), rör Auth och ska göras
-     för sig. Konsekvensbedömningen i `DATASKYDD.md` säger redan att
-     den ska göras om den dagen barn får egna konton.
+  1. **Nivåerna görs i familjens inloggning**, alltså med betalning,
+     bokning och meddelanden en knapp bort. Barnets egen inloggning
+     (barnkonton_och_admin, 2026-09-30) når inte NexLäx: rollen
+     `nextrum_barn` har inga tabellrättigheter, och `niva_starta` och
+     `niva_svara` skriver. Ska barnet göra nivåerna själv behöver de två
+     en väg för rollen som prövar barnet med `intern.mitt_barn()`, och
+     konsekvensbedömningen i `DATASKYDD.md` ska göras om för det.
   2. **Adminvyn har ingen vy över nivåerna.** Banken ändras i
      `verktyg/uppgiftsbanken/` och går in genom en migration.
   3. **Migrationerna är i drift sedan 2026-09-29**, som

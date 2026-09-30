@@ -31,7 +31,7 @@
 <link rel="stylesheet" href="nextrum-vy.css?v=92e16976">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=28dce140">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=a20da120">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=5e3e3bc2">
 </head>
 <body class="vy">
@@ -858,6 +858,28 @@
               <p class="ok-msg" id="barn-msg"></p>
             </form>
           </div>
+
+          <!-- ============ BARNENS INLOGGNING (barnkonton_och_admin) ============
+               Ett barn kan få en egen inloggning på nextrum.se/barn. Barnet
+               ser sina pass, sin studieplan, sina timmar och sina notiser,
+               och rapporterna om ni slår på dem. Aldrig priser, betalningar
+               eller något om er.
+
+               Rutan är dold tills mina_barnkonton() svarar: saknas
+               migrationen visas den inte alls. Allt i den ritas av
+               ritaBarnkonton() med textContent, och barnets lösenord visas
+               aldrig: det finns bara i Auth, som en hash. -->
+          <div class="dbox" id="bi-ruta" style="margin-top:clamp(16px,1.8vw,22px)" hidden>
+            <h5>Barnens inloggning <em>egen vy på nextrum.se/barn</em></h5>
+            <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
+              Ett barn kan få en egen inloggning. Barnet ser sina pass, sin studieplan,
+              sina timmar och sina notiser, men aldrig priser, betalningar eller era
+              uppgifter, och kan inte boka eller avboka något. Ni väljer själva om
+              barnet får läsa rapporterna.
+            </p>
+            <div id="bi-lista"></div>
+            <p class="ok-msg" id="bi-msg" role="status"></p>
+          </div>
         </div>
 
         <!-- ============ TIMBANKEN ============
@@ -984,15 +1006,15 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=8ffb028b"></script>
+<script src="nextrum-app.js?v=ae9d5f14"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=63957b13"></script>
-<script src="nextrum-studie.js?v=2bcbdc4f"></script>
+<script src="nextrum-studie.js?v=c38e3617"></script>
 <script src="nextrum-arbetsyta.js?v=6c1e8e1a"></script>
 <script src="nextrum-media.js?v=01adfb73"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-uppgifter.js?v=def906fb"></script>
-<script src="nextrum-modulvakt.js?v=559a241f"></script>
-<script src="nextrum-studie-vy.js?v=3ec40ec2"></script>
+<script src="nextrum-modulvakt.js?v=a1c84ddc"></script>
+<script src="nextrum-studie-vy.js?v=44a2c633"></script>
 </body>
 </html>

@@ -55,10 +55,17 @@ jobs:
       - name: Uppgiftsbanken är prövad och har sin migration
         run: python3 verktyg/bygg-uppgifter.py --kolla
 
-      # /admin, /larare och /foralder har skarp CSP (vercel.json).
+      # /admin, /larare, /foralder och /barn har skarp CSP (vercel.json).
       # Inline-kod där fungerar inte i produktion.
       - name: Vyerna tål den skarpa CSP:n
         run: python3 verktyg/kolla-csp.py
+
+      # barnkonton_och_admin: behörigheterna står i databasen, i
+      # edge-funktionen och i adminvyn, och barnens användarnamn och
+      # domän prövas på fyra ställen. Glider de isär säger en av dem nej
+      # till det en annan släppt igenom.
+      - name: Behörigheterna och barnkontona säger samma sak överallt
+        run: python3 verktyg/kolla-behorigheter.py
 
       # Varje bilder/*.jpg ska ha en .webp bredvid sig. Sidorna
       # serverar dem genom <picture>, så en saknad webp går inte

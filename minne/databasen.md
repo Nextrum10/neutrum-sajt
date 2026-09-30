@@ -639,3 +639,15 @@ de två är Fas 23.1:s prov, som väntar på sin egen migration.
 varje ändring. Adminvyn tål att funktionerna saknas (en databas byggd
 utan migrationen): Radera säger då att raderingen inte finns, och
 ingenting raderas.
+
+### Barnkontona och adminrollerna (2026-09-30)
+Migrationen `barnkonton_och_admin` lade till `admin_roller`, `admin_logg`
+(går inte att ändra eller tömma), `barn_notiser`, `barn_andringsfonster`
+och sex kolumner på `students`, rollen `nextrum_barn`, triggrar på
+`auth.users` och jobbet `barnkonton-gallring` (03.59 UTC). `is_admin()`
+byttes med en md5-vakt och läser nu `admin_roller`; sex funktioner
+lappades med `replace()` och en vakt som räknar träffarna. Triggern
+`profiles_spegel_admin` sorterar efter `profiles_skydda`, och
+`bookings_barnnotis` är en AFTER-trigger och påverkar inte ordningen
+bland before-triggrarna på `bookings`. `rls-test.sql` har avsnittet
+BARNKONTON OCH ADMIN MED BEHÖRIGHETER. Se `minne/barnkonton-och-admin.md`.

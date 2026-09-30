@@ -113,7 +113,12 @@ Körs på varje push och PR. Ska vara grön före merge.
 3. `verktyg/kolla-betalningsvillkor.py` (betalningslöftet, och att det gamla är borta)
 4. `verktyg/kolla-migrationer.py`, och `verktyg/bygg-uppgifter.py --kolla`
    (uppgiftsbankens form, och att den har sin migration)
-5. `verktyg/kolla-csp.py`
+5. `verktyg/kolla-csp.py` (fyra vyer sedan `/barn`), och
+   `verktyg/kolla-behorigheter.py`: adminbehörigheterna står lika i
+   migrationen (villkoret och `intern.admin_behorigheter()`), i
+   `_delad/adminbehorighet.ts` och i `nextrum-admin-behorighet.js`, och
+   barnens användarnamn och domän prövas lika i databasen, `barn-konto`,
+   barnets inloggning och föräldrarnas ruta (barnkonton_och_admin)
 6. `verktyg/kolla-webp.py`
 7. `verktyg/satt-version.py --kolla`
 8. Genererade filer är aktuella (bygg om + `git diff --exit-code`):
@@ -232,3 +237,17 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
 b6c1 från Fas 14.6 står bekräftat och obetalt, så sex prov för
 timmarna (22.1–22.3) föll i varje hel körning. Fixturerna ställs nu
 tillbaka överst i avsnittet för 22.1.
+
+### Webbläsarprovet för barnkontona och adminbehörigheterna (2026-09-30)
+`verktyg/prova-barnkonton.js` kör barnets vy, föräldrarnas ruta och
+adminvyn med behörigheter i Chromium, mot en falsk Supabase på
+`https://supabase.test` (`nextrum-config.js` byts i farten, Realtime
+fångas, och ett anrop till den riktiga adressen stoppas och fäller
+provet). Det ligger inte i CI: Playwright är ingen del av repot.
+Kör det lokalt, med bilder i en mapp om du vill se dem:
+
+    NODE_PATH="$(npm root -g)" node verktyg/prova-barnkonton.js /tmp/bilder
+
+Det är ingen `_prov-*`-bänk: det serverar ingen sida, och `/verktyg`
+står i `.vercelignore`.
+

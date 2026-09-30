@@ -3042,6 +3042,42 @@ a:has(> .adm-status){
 .barn-form-rubrik{margin:0 0 14px;font-size:1rem;font-weight:650;color:var(--bl)}
 .barn-form .vy-val{margin-top:2px}
 
+/* Barnens inloggning (barnkonton_och_admin): ett kort per barn. Läget
+   är husets .lage: mossa när barnet kan logga in, annars neutralt, för
+   en pausad eller saknad inloggning är ett val och inget fel. */
+.bi-kort{padding:16px 0}
+.bi-kort + .bi-kort{border-top:1px solid var(--ln)}
+.bi-kort:first-child{padding-top:4px}
+.bi-topp{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.bi-topp b{font-size:.95rem;font-weight:650;color:var(--bl)}
+.bi-fakta{
+  display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px;
+  margin:0 0 14px;font-size:.86rem;line-height:1.5;
+}
+.bi-fakta dt{color:var(--bl-2)}
+.bi-fakta dd{margin:0;color:var(--bl);font-weight:600;overflow-wrap:anywhere}
+.bi-rapporter{border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);padding:13px 0}
+.bi-rapporter:first-child{padding-top:13px}
+.bi-rapporter:last-child{border-bottom:1px solid var(--ln);padding-bottom:13px}
+/* Två fält med hjälptext under: de ska börja på samma höjd, inte sluta. */
+.bi-form .vy-form-rad{align-items:start}
+.bi-form + .bi-knappar{margin-top:10px}
+.bi-kort > .bi-form:not(:first-child){margin-top:14px}
+.bi-hjalp{margin:6px 0 0;color:var(--bl-2);line-height:1.5}
+.bi-form > .bi-hjalp{margin-top:10px}
+/* Kryssrutan är ett ja från vårdnadshavaren. Hela raden är tryckytan. */
+.bi-ja{
+  display:flex;align-items:flex-start;gap:10px;margin-top:14px;min-height:44px;
+  font-size:.86rem;line-height:1.55;color:var(--bl);cursor:pointer;
+}
+.bi-ja input{flex:none;width:20px;height:20px;margin:1px 0 0;accent-color:var(--acc)}
+.bi-ja a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+@media (max-width:480px){
+  .bi-fakta{grid-template-columns:minmax(0,1fr);gap:2px}
+  .bi-fakta dd + dt{margin-top:8px}
+  .bi-knappar .btn{flex:1 1 100%}
+}
+
 /* Inloggningen: adressen man kommer in med står ensam och tydligt,
    så att den inte läses som en del av kontaktuppgifterna. */
 .konto-inlogg{
@@ -4530,3 +4566,100 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 /* ---------- fakturorna och körningen ---------- */
 .man-korning-rubrik{margin:0 0 6px;font-size:.95rem;font-weight:650;letter-spacing:-.01em;color:var(--bl)}
 .man-korning .adm-verktyg{margin-top:4px}
+
+/* ============================================================
+   BARNETS VY (barn.html, barnkonton_och_admin)
+   En spalt, samma kort och rader som studievyn. Ingen sidomeny och
+   ingen hälsningsfilm: vyn har sju saker att visa och en av dem är
+   hälsningen. Bara tokens, så att mörkt läge följer med av sig självt.
+   ============================================================ */
+.vy-barn .bv{max-width:760px;margin-inline:auto}
+/* Ingen meny bakom tre streck här: namnet och Logga ut står kvar i
+   sidhuvudet i alla bredder, längst till höger. På en smal telefon går
+   namnet, för hälsningen säger det redan. */
+.vy-barn .hdr .nav-actions{display:flex;margin-left:auto}
+@media (max-width:480px){.vy-barn .hdr .who-chip{display:none}}
+/* En grupp som står först i sin del har ingen luft ovanför sig
+   (.vy-grupp:first-child); rapporterna ligger i en egen del. */
+.bv-del > .vy-grupp:first-child{margin-top:30px}
+.bv-hej{margin:0 0 clamp(22px,3vw,34px)}
+.bv-hej h1{
+  margin:14px 0 0;
+  font-size:clamp(2rem,5vw,3rem);line-height:1.04;letter-spacing:-.04em;font-weight:800;
+  color:var(--bl);
+}
+.bv-hej h1:focus{outline:none}
+.bv-lede{margin-top:10px;max-width:52ch;font-size:1rem;line-height:1.55;color:var(--bl-2)}
+.bv-lede:empty{display:none}
+
+/* Två tal bredvid varandra, under varandra på en smal telefon. */
+.bv-timmar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.bv-tal{padding:14px 16px;border-radius:18px;background:var(--tint)}
+.bv-tal b{display:block;font-size:clamp(1.6rem,4vw,2.1rem);font-weight:750;letter-spacing:-.035em;line-height:1.1;color:var(--bl)}
+.bv-tal span{display:block;margin-top:4px;font-size:.86rem;line-height:1.4;color:var(--bl-2)}
+@media (max-width:360px){.bv-timmar{grid-template-columns:minmax(0,1fr)}}
+
+/* En oläst notis har en prick framför texten. Läst står kvar, dämpad. */
+.bv-notis:not(.ar-ny) .vy-rad-titel{font-weight:500;color:var(--bl-2)}
+.bv-notis.ar-ny .vy-rad-titel::before{
+  content:"";display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--acc);margin-right:8px;vertical-align:.12em;
+}
+.bv-notis .vy-rad-titel{overflow-wrap:anywhere}
+.bv-notis .btn{min-height:44px}
+
+.bv-plan-amne{
+  margin:0 0 10px;font-family:var(--f-mono);font-size:10px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);
+}
+.bv-plan-mal{padding:12px 14px;border-radius:14px;background:var(--tint);margin-bottom:14px}
+.bv-plan-mal b{display:block;font-size:.8rem;font-weight:650;color:var(--bl-2);margin-bottom:3px}
+.bv-plan-mal p{margin:0;color:var(--bl);line-height:1.55;overflow-wrap:anywhere}
+.bv-plan-text{margin:0;color:var(--bl);line-height:1.65;white-space:pre-line;overflow-wrap:anywhere}
+.bv-plan-datum{margin:14px 0 0;color:var(--bl-3)}
+
+.bv-rapport{padding:16px clamp(14px,2vw,20px)}
+.bv-rapport + .bv-rapport{border-top:1px solid var(--ln)}
+.bv-rapport-topp{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.bv-rapport-topp b{font-size:.95rem;font-weight:650;color:var(--bl)}
+.bv-rapport p{margin:0;color:var(--bl);line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
+.bv-rapport p + p{margin-top:8px}
+.bv-rapport-rad b{font-weight:650}
+
+.bv-fraga{
+  margin:clamp(30px,4vw,44px) 0 0;padding:16px 18px;border-radius:18px;
+  background:var(--tint);color:var(--bl-2);font-size:.95rem;line-height:1.55;text-align:center;
+}
+
+/* ============================================================
+   ADMINHANTERINGEN (System → Adminhantering, barnkonton_och_admin)
+   En rad per admin med märkena för behörigheterna, och kryssrutor med
+   en mening var om vad behörigheten öppnar. Bara tokens.
+   ============================================================ */
+.ah-rad{padding:14px 0}
+.ah-rad + .ah-rad{border-top:1px solid var(--ln)}
+.ah-rad-topp{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start}
+.ah-rad-topp b{display:block;font-size:.9rem;font-weight:650;color:var(--bl);line-height:1.35}
+.ah-rad-topp > div > span{display:block;margin-top:2px;font-size:.8rem;line-height:1.45;color:var(--bl-2);overflow-wrap:anywhere}
+.ah-rad-topp .ah-markar{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ah-rad-knappar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center;max-width:280px}
+.ah-rad-knappar .adm-und{font-size:.78rem;line-height:1.4;color:var(--bl-2);text-align:right}
+.ah-form{margin-top:12px}
+.ah-valen{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-top:14px}
+.ah-val{
+  display:flex;align-items:flex-start;gap:10px;min-height:44px;
+  padding:10px 12px;border:1px solid var(--ln);border-radius:14px;background:var(--yta);cursor:pointer;
+}
+.ah-val input{flex:none;width:18px;height:18px;margin:2px 0 0;accent-color:var(--acc)}
+.ah-val > span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ah-val b{font-size:.86rem;font-weight:650;color:var(--bl)}
+.ah-val .adm-und{font-size:.78rem;line-height:1.45;color:var(--bl-2)}
+.ah-val.ar-av{cursor:default;opacity:.62}
+.ah-val:has(input:disabled){cursor:default}
+.ah-super{grid-column:1 / -1;border-color:var(--acc-line);background:var(--acc-soft)}
+.ah-vald .dp-rad{padding-top:4px}
+@media (max-width:560px){
+  .ah-rad-topp{grid-template-columns:minmax(0,1fr)}
+  .ah-rad-knappar{justify-content:flex-start;max-width:none}
+  .ah-rad-knappar .adm-und{text-align:left}
+}

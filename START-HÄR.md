@@ -8,7 +8,8 @@ hittar de inte varandra.
 | `index.html` | Huvudsidan. Publik. Exempel på studiehjälpare + intresseanmälan. |
 | `foralder.html` | Studievyn. Elev och förälder. Låst tills ni matchat familjen. |
 | `larare.html` | Studiehjälparvyn. Låst tills ni godkänt personen. |
-| `admin.html` | **Adminvyn.** Ledningens arbetsyta. Kräver `is_admin` på din profilrad. |
+| `admin.html` | **Adminvyn.** Ledningens arbetsyta. Kräver en adminroll: superadmin, eller de behörigheter någon gett dig under System → Adminhantering. |
+| `barn.html` | Barnets egen vy. Föräldern skapar inloggningen i studievyn; barnet ser sina pass, timmar, studieplan och notiser. Se `DEPLOY-BARNKONTON.md`. |
 | `nextrum-config.js` | **Den enda filen du behöver ändra i.** Nycklarna hit. |
 | `nextrum.css` | Utseendet. Delas av alla sidor. |
 | `nextrum-app.js` | Delad kod (inloggning, kalender, felmeddelanden). |
@@ -107,12 +108,19 @@ Registrera ett konto på sidan först. Sedan Supabase → **SQL Editor**:
 update public.profiles set is_admin = true where email = 'din@adress.se';
 ```
 
-Då kommer du in på `admin.html`.
+Då kommer du in på `admin.html` som **superadmin**: allt, som admin var
+förut. Sedan barnkonton_och_admin (2026-09-30) är sanningen tabellen
+`admin_roller`, och raden ovan skapar din rad där. Andra admins lägger du
+till i adminvyn under **System → Adminhantering**, med bara de
+behörigheter de behöver: en ny person bjuds in med mejl, en som redan har
+ett konto läggs till direkt.
 
 Det går **inte** att sätta flaggan från någon av vyerna, inte ens som
 admin. Triggern i `supabase/migrations/arkiv/schema-v3.sql` vägrar ändra `is_admin` från en inloggad
-session, och det är med flit: den som kan göra sig själv till admin i sin
-egen vy är inte begränsad av något.
+session, och sedan barnkonton_och_admin gör `profiles_spegel_admin` det också.
+Det är med flit: den som kan göra sig själv till admin i sin egen vy är inte
+begränsad av något. Ingen kan heller ändra sin egen adminroll, och den sista
+superadminen går inte att ta bort.
 
 ---
 

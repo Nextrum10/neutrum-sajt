@@ -297,3 +297,13 @@ dashboarden, inte härifrån, och har inte det här skalet.
   Fas 18.1). Sedan Fas 22.1 har utbildningen ett prov systemet läser
   resultatet av, men det prövar att hen läst handboken, inte vem hen
   är.
+
+### Barnen får inga mejl (barnkonton_och_admin, 2026-09-30)
+Ett barnkonto får aldrig ett mejl. `notis_utskick_ta` hoppar över
+barnkonton och adresser på `barn.nextrum.se`, och `notis-ko` gör det en
+gång till (`arBarnadress` i `_delad/barnkonto.ts`), så att en rad som ändå
+kommer ut ur kön blir `loggad` utan att skickas. `notis_konfig.lage` rördes
+inte. Barnets notiser står i en egen tabell, `barn_notiser`, som fylls av
+`bookings_barnnotis`: en mening utan pris och utan föräldern, och ett fel
+blir en rad i `notis_fel` i stället för att stoppa passet. Se
+`minne/barnkonton-och-admin.md`.

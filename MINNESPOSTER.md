@@ -111,7 +111,8 @@ betyget är första svaret på varje fråga (3 stjärnor allt rätt, 2 minst
 80 %, 1 minst 60 %, under det inte klarad), och en digital uppgift blir
 klar av sig själv. Innehållet skrivs i `verktyg/uppgiftsbanken/` och blir
 en migration med `verktyg/bygg-uppgifter.py`. Märkena räknas ur
-försöken, belöningarna är inte pengar, och barnet har inget eget konto.
+försöken, belöningarna är inte pengar, och nivåerna görs i familjens
+inloggning, också sedan barnet kan få en egen (2026-09-30).
 NexLäx (Fas 23.2) samlar det i en sektion i studievyn, `#nexlax`, med
 Din väg och Din utveckling. XP räknas ur svaren och sparas aldrig: 10
 för ett val, 20 för skriv, ordna och matchning, en gång per fråga, 50
@@ -149,8 +150,10 @@ ingen kontroll. `_delad/auth.ts` har en väg per fråga, uppfinn inte en ny.
 
 Postgres RLS kan inte begränsa enskilda kolumner. Därför vaktas
 `is_admin`, `matched_tutor_id`, `status` och bokningsfälten av triggers
-som vägrar ändringen från en inloggad session. Admin sätts med SQL, inte
-från någon vy.
+som vägrar ändringen från en inloggad session. Admin ges under System →
+Adminhantering eller med SQL (`is_admin = true` blir superadmin), och
+`is_admin` skrivs aldrig från en vy: sanningen är `admin_roller`
+(barnkonton_och_admin, 2026-09-30, `minne/barnkonton-och-admin.md`).
 
 `invoices` och `payouts` har med flit ingen INSERT-policy för användare.
 `integrationer` har ingen skrivpolicy alls: adminvyn rapporterar status.
