@@ -6051,6 +6051,11 @@ end $$;
 -- inloggad: utfall ägs av postgres, så första raden nekades, och det
 -- enda som stod kvar var "19.6 OCR: permission denied for table
 -- utfall". Hade skrivningen gått igenom hade återrullningen tagit den.
+--
+-- Perioden är en månad ingen annan fixtur räknar fram. Den stod som
+-- 2026-09-01, och 2026-10-01 blev det förra månaden: fakturan för Fas
+-- 14.6 (förra månaden, samma familj) krockade med den, och hela
+-- sviten var röd från midnatt.
 -- ------------------------------------------------------------
 do $$
 declare
@@ -6058,7 +6063,7 @@ declare
 begin
   begin
     insert into public.invoices (id, parent_id, period, status, belopp_ore)
-    values ('00000000-0000-4000-8000-0000000019f6', '00000000-0000-4000-8000-0000000000f1', '2026-09-01', 'utkast', 37900);
+    values ('00000000-0000-4000-8000-0000000019f6', '00000000-0000-4000-8000-0000000000f1', '2025-01-01', 'utkast', 37900);
 
     perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
     update public.invoices set status = 'skickad', fortnox_fakturanummer = '1001', ocr = '49927398716'
