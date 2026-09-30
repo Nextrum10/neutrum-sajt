@@ -44,7 +44,7 @@ finnas. Det här är det.
 | 2 | Konto (`profiles`) | förälder, studiehjälpare | namn, e-post, telefon, profilbild | 6.1 b, avtal | Supabase | så länge det används; granskas efter 2 år utan användning |
 | 3 | Barnet och undervisningen (`students`, `study_plans`, `homework`, `progress_items`, `lesson_reports`, `materials`, `niva_forsok`, `niva_svar`) | barn | namn, årskurs, skola, ämnen, mål, uppgifter, svaren på de digitala uppgifterna och rättningen av dem, rapporter | 6.1 f, berättigat intresse (barnet är inte part) | Supabase; Anthropic (förnamn, årskurs, maskade anteckningar) när studiehjälparen ber om utkast | som kontot |
 | 4 | Förälderns privata anteckningar (`student_notes`) | barn | fritext | 6.1 f | Supabase. Ingen hos oss har läsrätt | som kontot |
-| 5 | Pass och bokningar (`bookings`, `pass_moten`) | förälder, barn, studiehjälpare | datum, tid, ämne, plats (ofta en hemadress), avbokningsskäl | 6.1 b | Supabase; Google (Meet-rum, när kopplat) | som kontot; pass med betalning 7 år |
+| 5 | Pass och bokningar (`bookings`, `pass_moten`) | förälder, barn, studiehjälpare | datum, tid, ämne, plats (ofta en hemadress), avbokningsskäl, vem som avbokade; studiehjälparens svar på en föreslagen tid (`svar_meddelande`, fritext, högst 500 tecken, kan nämna barnet) | 6.1 b | Supabase; Google (Meet-rum, när kopplat). Svaret går aldrig till en notis, ett mejl, auditloggen eller en AI | som kontot; pass med betalning 7 år; svaret 30 dagar efter avslaget eller passet |
 | 6 | Chatt (`messages`) | förälder, studiehjälpare; barnet när det skrivs om | meddelandetext. Att någon av oss öppnat tråden står i `audit_logg` (`chatt.oppnad`: vem, när, familjen, studiehjälparen, antalet meddelanden, aldrig texten) | 6.1 b; att vi läser den: 6.1 f (barnens trygghet, tonen, reda ut det som gått fel) | Supabase | som kontot; loggraden så länge verksamheten finns (rad 13) |
 | 7 | Notiser och mejl (`notiser`, `notis_utskick`) | alla med konto | typ, datum, förnamn, ämne | 6.1 b | Resend | 180 dagar i vyn, 90 dagar för utskicken |
 | 8 | Betalning (`bookings.betalning_*`, `klippkort`, `pass_tillagg`, `timbank_uttag`, `stripe_handelser`, `stripe_tvister`, `invoices`) | förälder | belopp, tid, e-post, Stripe-id | 6.1 b; 6.1 c bokföringslagen | Stripe (e-post, belopp, ämne och datum) | 7 år |
@@ -118,6 +118,7 @@ adminvyn under System → Automationer med sin senaste körning.
 | `kontakt-och-fel-gallring` | varje natt 03.44 UTC | tar bort kontaktmeddelanden efter 6 mån och klientfel efter 90 dagar |
 | `notis-stada` | varje natt 03.17 UTC | notiser 180 dagar, utskick och fel 90 dagar, körningar 30 dagar |
 | `ai-och-uppgifter-gallring` | varje natt 03.51 UTC | agentloggens text efter 90 dagar, AI-förslagens motivering 90 dagar efter beslut, klara och avbrutna uppgifter efter 1 år |
+| `svar-gallring` | varje natt 03.53 UTC | tömmer studiehjälparens svar på en föreslagen tid 30 dagar efter avslaget, eller 30 dagar efter passet; passet står kvar |
 | `konton-oanvanda` | den 1:a varje månad | gör varje konto som inte använts på 2 år till en uppgift i adminvyn |
 | `cron-stada` | varje natt | jobbens egen logg efter 7 dagar |
 

@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma och chatten som admin öppnar)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar och svaret på en föreslagen tid)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -46,8 +46,11 @@
 -- personer_redigeras_och_raderas, dokument_delas_med_personen,
 -- schemalagda_korningar_syns, manadskorningens_svar_blir_en_uppgift,
 -- manadskorningens_svar_lases_den_forsta, anonyma_skrivningar_far_tak,
--- Fas 23.2 (NexLäx, fas23_2_nexlax, med sin bank) och admin_oppnar_chatten
--- är körda.
+-- Fas 23.2 (NexLäx, fas23_2_nexlax, med sin bank), admin_oppnar_chatten
+-- och avbokningar_och_svar är körda.
+--
+-- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
+-- hela filen mot den.
 -- Körs filen före dem är det väntat att de berörda raderna faller —
 -- det är så man ser att testerna faktiskt mäter något.
 -- ============================================================
@@ -5437,8 +5440,9 @@ begin
                                  wanted_date, wanted_time, duration_min, format, status)
     values (p, a, s, p, 'Matematik', 'laxhjalp', 1, idag + 5, '19:00', 60, 'Online', 'requested')
     returning id into f2;
+    -- Sedan 2026-09-30 säger studiehjälparen varför (avbokningar_och_svar).
     perform pg_temp.bli(a);
-    update public.bookings set status = 'cancelled' where id = f2;
+    update public.bookings set status = 'cancelled', svar_meddelande = 'Den tiden har jag träning.' where id = f2;
     reset role;
     perform set_config('request.jwt.claims', '', true);
     select betalning_status into st4 from public.bookings where id = f2;
@@ -7723,9 +7727,10 @@ begin
     values (fam::text, fam, jsonb_build_object('sub', fam::text, 'email', 'rls-radera-g@example.invalid'), 'email');
     insert into public.students (id, parent_id, name, school, goals, matched_tutor_id, match_status)
     values (elev, fam, 'Radera Alva', 'Raderskolan', 'Klara bråken', a, 'matched');
+    -- Svaret (avbokningar_och_svar) töms som adressen, också i en stängd månad.
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
-                                 duration_min, status, location, note)
-    values (hallet, fam, a, elev, fam, dag, '06:00', 60, 'confirmed', 'Hemgatan 2', 'Ring på');
+                                 duration_min, status, location, note, svar_meddelande)
+    values (hallet, fam, a, elev, fam, dag, '06:00', 60, 'confirmed', 'Hemgatan 2', 'Ring på', 'Alva hade feber sist');
     insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, went_well)
     values (rapport, elev, a, hallet, 'Alva räknade bråk', dag, 'narvarande', 'Bråken satt');
     update public.bookings
@@ -7785,7 +7790,8 @@ begin
     ('Radera rapporten står kvar, utan text', rp.id is not null and rp.raw_notes = '' and rp.went_well is null
       and rp.narvaro = 'narvarande', coalesce(rp.raw_notes, 'borta')),
     ('Radera det betalda passet står kvar i den stängda månaden, utan adress',
-      bh.id is not null and bh.betalt_ore = 37900 and bh.location is null and bh.note is null,
+      bh.id is not null and bh.betalt_ore = 37900 and bh.location is null and bh.note is null
+      and bh.svar_meddelande is null,
       coalesce(bh.location, 'ingen adress') || ', ' || coalesce(bh.betalt_ore::text, 'inget belopp')),
     ('Radera det kommande passet avbokas', bk.status = 'cancelled' and bk.avbokningsskal = 'familjen_avslutar',
       coalesce(bk.status, 'borta') || ' ' || coalesce(bk.avbokningsskal, '')),
@@ -7966,6 +7972,8 @@ begin
                                  duration_min, status)
     values (hallet, q, t, qelev, q, idag - 30, '06:00', 60, 'confirmed'),
            (kommande, q, t, qelev, q, idag + 48, '06:00', 60, 'confirmed');
+    -- Studiehjälparens svar på ett förslag är hens ord, som chatten.
+    update public.bookings set svar_meddelande = 'Den tiden kan jag inte' where id = hallet;
     insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
     values (rapport, qelev, t, hallet, 'Bra pass', idag - 30, 'narvarande');
     insert into public.messages (parent_id, tutor_id, sender_id, body) values (q, t, t, 'Hej från Lärd');
@@ -7980,6 +7988,7 @@ begin
     select count(*) into n_rapport from public.lesson_reports where id = rapport and tutor_id = t;
     select * into bk from public.bookings where id = kommande;
     select count(*) into n_medd from public.messages where tutor_id = t;
+    n_medd := n_medd + (select count(*) from public.bookings where tutor_id = t and svar_meddelande is not null);
     raise exception 'rulla tillbaka';
   exception when others then fel := sqlerrm;
   end;
@@ -8001,7 +8010,7 @@ begin
     ('Radera det kommande passet avbokas med skälet ingen studiehjälpare',
       bk.status = 'cancelled' and bk.avbokningsskal = 'ingen_hjalpare',
       coalesce(bk.status, 'borta') || ' ' || coalesce(bk.avbokningsskal, '')),
-    ('Radera chatten med studiehjälparen tas bort', n_medd = 0, 'kvar: ' || n_medd);
+    ('Radera chatten och svaren på förslagen tas bort', n_medd = 0, 'kvar: ' || n_medd);
 end $$;
 
 -- 10. En intresseanmälan avidentifieras, med alla anmälningar och
@@ -8225,6 +8234,8 @@ begin
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
                                  duration_min, status)
     values (pass, q, a, barn, q, idag - 41, '06:00', 60, 'confirmed');
+    -- Studiehjälparens svar om barnet töms med barnet (avbokningar_och_svar).
+    update public.bookings set svar_meddelande = 'Nivåbarnet var sjukt' where id = pass;
     insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
     values (barn, a, pass, 'Nivåbarnet räknade', idag - 41, 'narvarande');
     execute 'insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning)
@@ -8238,6 +8249,7 @@ begin
     reset role;
     perform set_config('request.jwt.claims', '', true);
     execute 'select count(*) from public.niva_forsok where student_id = $1' into kvar using barn;
+    kvar := kvar + (select count(*) from public.bookings where id = pass and svar_meddelande is not null);
     raise exception 'rulla tillbaka';
   exception when others then fel := sqlerrm;
   end;
@@ -8249,7 +8261,7 @@ begin
   end if;
   insert into utfall (test, ok, detalj) values
     ('Radera ett barns digitala försök räknas i rutan', (lage -> 'tas_bort' ->> 'forsok')::int = 1, lage::text),
-    ('Radera ett barns digitala försök tas bort när barnet avidentifieras',
+    ('Radera ett barns digitala försök och svaren om barnet tas bort när barnet avidentifieras',
       svar ->> 'gjort' = 'avidentifierad' and kvar = 0, svar::text || ' kvar: ' || kvar);
 end $$;
 
@@ -8372,6 +8384,489 @@ begin
       'rader: ' || n_stor || ', totalt: ' || totalt_stor),
     ('Chatten utan studiehjälpare finns ingen tråd', kod = '22023', coalesce(kod, '') || ' ' || fel);
 end $$;
+
+-- ============================================================
+-- SVARET PÅ FÖRSLAGET OCH AVBOKADE PASS (avbokningar_och_svar)
+--
+-- Studiehjälparen avslår en tid familjen föreslagit och skriver varför,
+-- eller föreslår en annan tid med några rader. Den som fick ett
+-- motförslag svarar ja eller nej. avbokad_fran säger om ett avbokat
+-- pass var bekräftat (en avbokning) eller ett förslag (inte en), och
+-- stämplas av databasen. Svaret töms efter 30 dagar.
+--
+-- Fixturerna ligger långt fram och klockan 11, där inget annat prov
+-- har något hos A: s1 och s2 är familjen P:s förslag, s3 ett
+-- bekräftat pass och s4 studiehjälparen A:s eget förslag.
+-- ============================================================
+
+insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, subject, tjanst, format,
+                             antal_barn, wanted_date, wanted_time, duration_min, status) values
+  ('00000000-0000-4000-8000-000000009301', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1', 'Matematik', 'laxhjalp', 'Online',
+   1, (now() at time zone 'Europe/Stockholm')::date + 40, '11:00', 60, 'requested'),
+  ('00000000-0000-4000-8000-000000009302', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1', 'Matematik', 'laxhjalp', 'Online',
+   1, (now() at time zone 'Europe/Stockholm')::date + 41, '11:00', 60, 'requested'),
+  ('00000000-0000-4000-8000-000000009303', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1', 'Matematik', 'laxhjalp', 'Online',
+   1, (now() at time zone 'Europe/Stockholm')::date + 42, '11:00', 60, 'confirmed'),
+  ('00000000-0000-4000-8000-000000009304', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+   '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1', 'Matematik', 'laxhjalp', 'Online',
+   1, (now() at time zone 'Europe/Stockholm')::date + 43, '11:00', 60, 'requested');
+
+-- Ett steg i ett flöde: kör en sats som uid och svara 'ok', 'noll'
+-- (RLS träffade ingen rad) eller felkoden. Ett lyckat steg står kvar
+-- till nästa steg i samma block; ett nekat rullas tillbaka för sig.
+create function pg_temp.svar_som(p_uid uuid, p_sql text) returns text
+language plpgsql as $$
+declare
+  kod text;
+  n   bigint;
+begin
+  begin
+    perform pg_temp.bli(p_uid);
+    execute p_sql;
+    get diagnostics n = row_count;
+    kod := case when n > 0 then 'ok' else 'noll' end;
+  exception when others then
+    kod := sqlstate;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  return kod;
+end $$;
+
+-- ---------- stämplarna sätts bara av databasen ----------
+select pg_temp.prova('Svar familjen skriver inte avbokad_fran själv', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set avbokad_fran = 'confirmed' where id = '00000000-0000-4000-8000-000000009303'$q$],
+  'nekad');
+select pg_temp.prova('Svar familjen skriver inte avbokad_at själv', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set avbokad_at = now() where id = '00000000-0000-4000-8000-000000009303'$q$],
+  'nekad');
+select pg_temp.prova('Svar studiehjälparen skriver inte motforslag_at själv', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set motforslag_at = now() where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'nekad');
+select pg_temp.rakna_efter('Svar ett nytt pass från en vy bär inga stämplar och inget svar',
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, format,
+            antal_barn, wanted_date, wanted_time, duration_min, status,
+            avbokad_at, avbokad_av, avbokad_fran, motforslag_at, svar_meddelande)
+          values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1', 'Matematik', 'laxhjalp',
+            'Online', 1, (now() at time zone 'Europe/Stockholm')::date + 44, '11:00', 60, 'requested',
+            now(), '00000000-0000-4000-8000-0000000000f1', 'confirmed', now(), 'påhittat')$q$],
+  $q$select count(*) from public.bookings
+      where wanted_date = (now() at time zone 'Europe/Stockholm')::date + 44 and wanted_time = '11:00'
+        and parent_id = '00000000-0000-4000-8000-0000000000f1'
+        and avbokad_at is null and avbokad_av is null and avbokad_fran is null
+        and motforslag_at is null and svar_meddelande is null$q$, 1);
+
+-- ---------- avbokningarna räknas rätt ----------
+select pg_temp.rakna_efter('Svar ett bekräftat pass som familjen avbokar räknas, av familjen',
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom'
+            where id = '00000000-0000-4000-8000-000000009303'$q$],
+  $q$select count(*) from public.bookings where id = '00000000-0000-4000-8000-000000009303'
+      and avbokad_fran = 'confirmed' and avbokad_av = parent_id and avbokad_at is not null$q$, 1);
+select pg_temp.rakna_efter('Svar ett bekräftat pass som studiehjälparen avbokar räknas, av studiehjälparen',
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'forhinder'
+            where id = '00000000-0000-4000-8000-000000009303'$q$],
+  $q$select count(*) from public.bookings where id = '00000000-0000-4000-8000-000000009303'
+      and avbokad_fran = 'confirmed' and avbokad_av = tutor_id$q$, 1);
+select pg_temp.rakna_efter('Svar ett förslag som familjen drar tillbaka räknas inte som avbokning',
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled', avbokningsskal = 'annat'
+            where id = '00000000-0000-4000-8000-000000009301'$q$],
+  $q$select count(*) from public.bookings where id = '00000000-0000-4000-8000-000000009301'
+      and status = 'cancelled' and avbokad_fran = 'requested'$q$, 1);
+
+do $$
+declare
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  s3  constant uuid := '00000000-0000-4000-8000-000000009303';
+  k1 text; k2 text; forr timestamptz; efter timestamptz; fran text; fel text;
+begin
+  begin
+    update public.bookings set status = 'cancelled' where id = s3;
+    update public.bookings set avbokad_at = '2026-09-01 10:00+02' where id = s3;
+    -- En andra "avbokning" är ingen övergång och stämplar ingenting.
+    k1 := pg_temp.svar_som(adm, $q$update public.bookings set status = 'cancelled', avbokningsskal = 'annat'
+                                   where id = '00000000-0000-4000-8000-000000009303'$q$);
+    k2 := pg_temp.svar_som('00000000-0000-4000-8000-0000000000f1',
+      $q$update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-000000009303'$q$);
+    select avbokad_at, avbokad_fran into efter, fran from public.bookings where id = s3;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Svar en avbokning stämplas en gång', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Svar en avbokning stämplas en gång', k1 = 'ok' and efter = '2026-09-01 10:00+02' and fran = 'confirmed',
+      k1 || ' ' || coalesce(efter::text, 'null') || ' ' || coalesce(fran, 'null')),
+    ('Svar familjen väcker inte ett avbokat pass', k2 = '42501', k2);
+end $$;
+
+-- ---------- vem som får svara ----------
+select pg_temp.rakna('Svar familj Q ser inte familj P:s pass och svar', '00000000-0000-4000-8000-0000000000f2',
+  $q$select count(*) from public.bookings where id in ('00000000-0000-4000-8000-000000009301',
+     '00000000-0000-4000-8000-000000009302', '00000000-0000-4000-8000-000000009303',
+     '00000000-0000-4000-8000-000000009304')$q$, 0);
+select pg_temp.prova('Svar familj Q svarar inte på familj P:s förslag', '00000000-0000-4000-8000-0000000000f2',
+  array[$q$update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-000000009304'$q$],
+  'nekad');
+select pg_temp.prova('Svar studiehjälpare B svarar inte på ett förslag till A', '00000000-0000-4000-8000-0000000000b1',
+  array[$q$update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'nekad');
+select pg_temp.prova('Svar studiehjälpare B avslår inte ett förslag till A', '00000000-0000-4000-8000-0000000000b1',
+  array[$q$update public.bookings set status = 'cancelled', svar_meddelande = 'Nej'
+            where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'nekad');
+select pg_temp.prova('Svar studiehjälpare B föreslår inte tid för en familj hen inte är matchad med',
+  '00000000-0000-4000-8000-0000000000b1',
+  array[$q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, format,
+            antal_barn, wanted_date, wanted_time, duration_min, status)
+          values ('00000000-0000-4000-8000-0000000000f2', '00000000-0000-4000-8000-0000000000b1',
+            '00000000-0000-4000-8000-0000000005c1', '00000000-0000-4000-8000-0000000000b1', 'Matematik', 'laxhjalp',
+            'Online', 1, (now() at time zone 'Europe/Stockholm')::date + 44, '12:00', 60, 'requested')$q$],
+  'nekad');
+select pg_temp.prova('Svar familjen skriver inget svar på sitt eget förslag', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set svar_meddelande = 'Hej' where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'nekad');
+select pg_temp.prova('Svar familjen avböjer inte med ett svar, som studiehjälparen', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled', svar_meddelande = 'Nej tack'
+            where id = '00000000-0000-4000-8000-000000009304'$q$],
+  'nekad');
+select pg_temp.prova('Svar familjen avböjer studiehjälparens förslag utan svar', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-000000009304'$q$],
+  'ok');
+select pg_temp.prova('Svar studiehjälparen bekräftar inte sitt eget förslag', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'confirmed' where id = '00000000-0000-4000-8000-000000009304'$q$],
+  'nekad');
+
+-- ---------- statusövergångarna ----------
+select pg_temp.prova('Svar ett framtida förslag blir inte genomfört', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'completed' where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'nekad');
+select pg_temp.prova('Svar ett bekräftat pass blir inte förslag igen utan ny tid', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'requested' where id = '00000000-0000-4000-8000-000000009303'$q$],
+  'nekad');
+select pg_temp.prova_med('Svar ett avslaget förslag går inte att väcka igen',
+  array[$q$update public.bookings set status = 'cancelled', svar_meddelande = 'Nej'
+            where id = '00000000-0000-4000-8000-000000009301'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set status = 'requested' where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'nekad');
+select pg_temp.prova('Svar svaret skrivs inte på ett bekräftat pass', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set svar_meddelande = 'Ta med boken' where id = '00000000-0000-4000-8000-000000009303'$q$],
+  'nekad');
+select pg_temp.prova('Svar svaret skrivs inte när studiehjälparen accepterar', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'confirmed', svar_meddelande = 'Kul'
+            where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'nekad');
+
+-- ---------- avslaget kräver ett svar, högst 500 tecken ----------
+select pg_temp.prova('Svar avslag utan svar nekas', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'nekad');
+select pg_temp.prova('Svar avslag med bara blanktecken nekas', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'cancelled', svar_meddelande = E'  \n\t '
+            where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'nekad');
+select pg_temp.prova('Svar avslag med 501 tecken nekas', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'cancelled', svar_meddelande = repeat('å', 501)
+            where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'nekad');
+select pg_temp.prova('Svar avslag med 500 tecken går igenom', '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'cancelled', svar_meddelande = repeat('å', 500)
+            where id = '00000000-0000-4000-8000-000000009301'$q$],
+  'ok');
+select pg_temp.rakna_efter('Svar texten sparas som den skrevs och avslaget är inte en avbokning',
+  '00000000-0000-4000-8000-0000000000a1',
+  array[$q$update public.bookings set status = 'cancelled', svar_meddelande = '<script>alert(1)</script>'
+            where id = '00000000-0000-4000-8000-000000009301'$q$],
+  $q$select count(*) from public.bookings where id = '00000000-0000-4000-8000-000000009301'
+      and svar_meddelande = '<script>alert(1)</script>' and avbokad_fran = 'requested'
+      and avbokad_av = tutor_id and avbokningsskal is null$q$, 1);
+
+do $$
+declare
+  a  constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  s1 constant uuid := '00000000-0000-4000-8000-000000009301';
+  k text; n_status bigint; n_text bigint; fel text;
+begin
+  begin
+    k := pg_temp.svar_som(a, $q$update public.bookings set status = 'cancelled', svar_meddelande = 'Hemligt om Äldst'
+                               where id = '00000000-0000-4000-8000-000000009301'$q$);
+    select count(*) into n_status from public.audit_logg
+     where tabell = 'bookings' and objekt_id = s1::text and efter ->> 'status' = 'cancelled';
+    select count(*) into n_text from public.audit_logg
+     where objekt_id = s1::text and (coalesce(fore::text, '') || coalesce(efter::text, '')) like '%Hemligt%';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Svar auditloggen', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Svar avslaget står i auditloggen, utan texten', k = 'ok' and n_status = 1 and n_text = 0,
+      k || ', statusrader: ' || n_status || ', med texten: ' || n_text),
+    ('Svar notisen läser aldrig svaret',
+      position('svar_meddelande' in pg_get_functiondef('public.notis_vid_pass'::regproc)) = 0, 'notis_vid_pass');
+end $$;
+
+-- ---------- motförslaget ----------
+-- Familjen P föreslog s2. A svarar med en annan tid och några rader.
+do $$
+declare
+  p  constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  a  constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  s2 constant uuid := '00000000-0000-4000-8000-000000009302';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  k_mot text; k_familj_flytt text; k_egen_ja text; k_andra text; k_ja text; k_krock text; k_gamla text;
+  mot_at timestamptz; mot_at2 timestamptz; bk public.bookings; fel text;
+begin
+  begin
+    k_mot := pg_temp.svar_som(a, format($q$update public.bookings
+        set wanted_date = %L, wanted_time = '12:00', status = 'requested', created_by = %L,
+            svar_meddelande = 'Klockan 11 har jag träning. Går 12?'
+      where id = %L$q$, idag + 45, a, s2));
+    select motforslag_at into mot_at from public.bookings where id = s2;
+    -- Familjen svarar inte med en tredje tid.
+    k_familj_flytt := pg_temp.svar_som(p, format($q$update public.bookings
+        set wanted_date = %L, wanted_time = '14:00', status = 'requested', created_by = %L where id = %L$q$,
+      idag + 45, p, s2));
+    -- Studiehjälparen bekräftar inte sitt eget motförslag.
+    k_egen_ja := pg_temp.svar_som(a, format($q$update public.bookings set status = 'confirmed' where id = %L$q$, s2));
+    -- Men ändrar det, innan familjen svarat.
+    k_andra := pg_temp.svar_som(a, format($q$update public.bookings
+        set wanted_date = %L, wanted_time = '13:00', status = 'requested', created_by = %L,
+            svar_meddelande = 'Förlåt, 13 i stället.'
+      where id = %L$q$, idag + 45, a, s2));
+    select motforslag_at into mot_at2 from public.bookings where id = s2;
+    -- Den ursprungliga tiden är ledig direkt.
+    k_gamla := pg_temp.svar_som(p, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+        subject, tjanst, format, antal_barn, wanted_date, wanted_time, duration_min, status)
+      values (%L, %L, '00000000-0000-4000-8000-0000000005a1', %L, 'Engelska', 'laxhjalp', 'Online', 1, %L, '11:00', 60,
+              'requested')$q$, p, a, p, idag + 41));
+    -- Familjen säger ja.
+    k_ja := pg_temp.svar_som(p, format($q$update public.bookings set status = 'confirmed' where id = %L$q$, s2));
+    select * into bk from public.bookings where id = s2;
+    -- Den nya tiden är upptagen.
+    k_krock := pg_temp.svar_som(p, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+        subject, tjanst, format, antal_barn, wanted_date, wanted_time, duration_min, status)
+      values (%L, %L, '00000000-0000-4000-8000-0000000005a1', %L, 'Engelska', 'laxhjalp', 'Online', 1, %L, '13:00', 60,
+              'requested')$q$, p, a, p, idag + 45));
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Svar motförslaget', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Svar studiehjälparen föreslår en annan tid med några rader', k_mot = 'ok' and mot_at is not null, k_mot),
+    ('Svar familjen svarar inte på ett motförslag med en tredje tid', k_familj_flytt = '42501', k_familj_flytt),
+    ('Svar studiehjälparen bekräftar inte sitt eget motförslag', k_egen_ja = '42501', k_egen_ja),
+    ('Svar studiehjälparen ändrar sitt motförslag innan familjen svarat, och det är fortfarande ett motförslag',
+      k_andra = 'ok' and mot_at2 is not null, k_andra),
+    ('Svar den ursprungliga tiden är ledig direkt efter motförslaget', k_gamla = 'ok', k_gamla),
+    ('Svar familjen säger ja, och passet står bekräftat på den nya tiden',
+      k_ja = 'ok' and bk.status = 'confirmed' and bk.wanted_date = idag + 45 and bk.wanted_time = '13:00'
+      and bk.svar_meddelande = 'Förlåt, 13 i stället.',
+      k_ja || ' ' || coalesce(bk.status, '') || ' ' || coalesce(bk.wanted_time, '')),
+    ('Svar den nya tiden är bokad', k_krock in ('23P01', '23505'), k_krock);
+end $$;
+
+-- Två motförslag på samma tid, och ett motförslag på ett bekräftat pass.
+do $$
+declare
+  a  constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  k1 text; k2 text; k3 text; fel text;
+begin
+  begin
+    k1 := pg_temp.svar_som(a, format($q$update public.bookings
+        set wanted_date = %L, wanted_time = '14:00', status = 'requested', created_by = %L
+      where id = '00000000-0000-4000-8000-000000009301'$q$, idag + 46, a));
+    k2 := pg_temp.svar_som(a, format($q$update public.bookings
+        set wanted_date = %L, wanted_time = '14:00', status = 'requested', created_by = %L
+      where id = '00000000-0000-4000-8000-000000009302'$q$, idag + 46, a));
+    -- s3 är bekräftat idag + 42 klockan 11.
+    k3 := pg_temp.svar_som(a, format($q$update public.bookings
+        set wanted_date = %L, wanted_time = '11:00', status = 'requested', created_by = %L
+      where id = '00000000-0000-4000-8000-000000009302'$q$, idag + 42, a));
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Svar krockarna', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Svar två motförslag på samma tid: det andra krockar', k1 = 'ok' and k2 in ('23P01', '23505'), k1 || ' ' || k2),
+    ('Svar ett motförslag på ett bekräftat pass krockar', k3 in ('23P01', '23505'), k3);
+end $$;
+
+-- Studiehjälparens eget förslag s4: familjen svarar med en annan tid,
+-- och då är det studiehjälparen som svarar ja eller nej.
+do $$
+declare
+  p  constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  a  constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  s4 constant uuid := '00000000-0000-4000-8000-000000009304';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  k_familj text; k_hjalp_flytt text; k_utan text; k_med text; mot_at timestamptz; fel text;
+begin
+  begin
+    k_familj := pg_temp.svar_som(p, format($q$update public.bookings
+        set wanted_date = %L, wanted_time = '15:00', status = 'requested', created_by = %L where id = %L$q$,
+      idag + 43, p, s4));
+    select motforslag_at into mot_at from public.bookings where id = s4;
+    k_hjalp_flytt := pg_temp.svar_som(a, format($q$update public.bookings
+        set wanted_date = %L, wanted_time = '16:00', status = 'requested', created_by = %L where id = %L$q$,
+      idag + 43, a, s4));
+    k_utan := pg_temp.svar_som(a, format($q$update public.bookings set status = 'cancelled' where id = %L$q$, s4));
+    k_med := pg_temp.svar_som(a, format($q$update public.bookings set status = 'cancelled',
+        svar_meddelande = 'Den dagen är jag bortrest.' where id = %L$q$, s4));
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Svar familjens motförslag', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Svar familjen svarar på studiehjälparens förslag med en annan tid', k_familj = 'ok' and mot_at is not null, k_familj),
+    ('Svar studiehjälparen svarar inte på familjens motförslag med en tredje tid', k_hjalp_flytt = '42501', k_hjalp_flytt),
+    ('Svar studiehjälparen avslår familjens motförslag bara med ett svar', k_utan = '42501' and k_med = 'ok',
+      k_utan || ' ' || k_med);
+end $$;
+
+-- Kortpengar på passet: nej går inte härifrån, så ett motförslag får
+-- en ny tid som svar.
+select pg_temp.prova_med('Svar ett motförslag på ett kortbetalt pass får besvaras med en ny tid',
+  array[$q$update public.bookings set wanted_date = (now() at time zone 'Europe/Stockholm')::date + 47,
+            wanted_time = '11:00', created_by = '00000000-0000-4000-8000-0000000000a1'
+            where id = '00000000-0000-4000-8000-000000009302'$q$,
+        $q$update public.bookings set betalning_status = 'betald', betalt_ore = 37900, betald_at = now(),
+            stripe_payment_intent_id = 'pi_rls_svar' where id = '00000000-0000-4000-8000-000000009302'$q$],
+  '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.bookings set wanted_date = (now() at time zone 'Europe/Stockholm')::date + 47,
+            wanted_time = '15:00', status = 'requested', created_by = '00000000-0000-4000-8000-0000000000f1'
+            where id = '00000000-0000-4000-8000-000000009302'$q$],
+  'ok');
+
+-- Ett bekräftat pass som flyttas är ett nytt förslag, och ett gammalt
+-- svar hör till en tid som inte gäller.
+do $$
+declare
+  p  constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  s3 constant uuid := '00000000-0000-4000-8000-000000009303';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  k text; bk public.bookings; fel text;
+begin
+  begin
+    update public.bookings set svar_meddelande = 'Gammalt svar', motforslag_at = now() where id = s3;
+    k := pg_temp.svar_som(p, format($q$update public.bookings
+        set wanted_date = %L, wanted_time = '16:00', status = 'requested', created_by = %L where id = %L$q$,
+      idag + 47, p, s3));
+    select * into bk from public.bookings where id = s3;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Svar ett flyttat pass', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Svar ett bekräftat pass som flyttas blir ett nytt förslag utan gammalt svar',
+      k = 'ok' and bk.status = 'requested' and bk.svar_meddelande is null and bk.motforslag_at is null,
+      k || ' ' || coalesce(bk.svar_meddelande, 'inget svar'));
+end $$;
+
+-- ---------- månadslåset ----------
+do $$
+declare
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  s3  constant uuid := '00000000-0000-4000-8000-000000009303';
+  dag date := (date_trunc('month', (now() at time zone 'Europe/Stockholm')) - interval '4 months')::date + 11;
+  k_tom text; k_byt text; fel text;
+begin
+  begin
+    -- Två satser: ett bekräftat pass som flyttas tappar sitt svar (stampla_avbokningen).
+    update public.bookings set wanted_date = dag where id = s3;
+    update public.bookings set svar_meddelande = 'Svar i en stängd månad' where id = s3;
+    insert into public.manadsbokslut (manad, stangd, stangd_at) values (date_trunc('month', dag)::date, true, now());
+    k_byt := pg_temp.svar_som(adm, format($q$update public.bookings set svar_meddelande = 'Ett annat svar' where id = %L$q$, s3));
+    k_tom := pg_temp.svar_som(adm, format($q$update public.bookings set svar_meddelande = null where id = %L$q$, s3));
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Svar månadslåset', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Svar i en stängd månad går svaret att tömma men inte ändra', k_byt = '42501' and k_tom = 'ok',
+      k_byt || ' ' || k_tom);
+end $$;
+
+-- ---------- gallringen ----------
+do $$
+declare
+  s1 constant uuid := '00000000-0000-4000-8000-000000009301';
+  s2 constant uuid := '00000000-0000-4000-8000-000000009302';
+  s3 constant uuid := '00000000-0000-4000-8000-000000009303';
+  s4 constant uuid := '00000000-0000-4000-8000-000000009304';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  fore_rader jsonb; efter_rader jsonb; n integer; n_rader bigint; t1 text; t2 text; t3 text; fel text;
+begin
+  begin
+    -- s1: avslaget för 31 dagar sedan. s2: för 29 dagar sedan.
+    -- s3: ett motförslag som blev ett pass för 31 dagar sedan.
+    update public.bookings set status = 'cancelled', svar_meddelande = 'Gammalt nej' where id = s1;
+    update public.bookings set avbokad_at = now() - interval '31 days' where id = s1;
+    update public.bookings set status = 'cancelled', svar_meddelande = 'Nytt nej' where id = s2;
+    update public.bookings set avbokad_at = now() - interval '29 days' where id = s2;
+    update public.bookings set wanted_date = idag - 31 where id = s3;
+    update public.bookings set svar_meddelande = 'Går 12?' where id = s3;
+    select jsonb_object_agg(id, to_jsonb(b) - 'svar_meddelande') into fore_rader
+      from public.bookings b where id in (s1, s2, s3, s4);
+    n := intern.svar_gallra();
+    select jsonb_object_agg(id, to_jsonb(b) - 'svar_meddelande') into efter_rader
+      from public.bookings b where id in (s1, s2, s3, s4);
+    select count(*) into n_rader from public.bookings where id in (s1, s2, s3, s4);
+    select svar_meddelande into t1 from public.bookings where id = s1;
+    select svar_meddelande into t2 from public.bookings where id = s2;
+    select svar_meddelande into t3 from public.bookings where id = s3;
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Svar gallringen', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Svar gallringen tömmer svaret 30 dagar efter avslaget och passet',
+      n = 2 and t1 is null and t3 is null, 'tömda: ' || n),
+    ('Svar gallringen rör inte ett svar som är yngre', t2 = 'Nytt nej', coalesce(t2, 'tomt')),
+    ('Svar gallringen tar inte bort några pass och ändrar inget annat',
+      n_rader = 4 and fore_rader = efter_rader, 'rader: ' || n_rader);
+end $$;
+
+select pg_temp.prova('Svar familjen kör inte gallringen', '00000000-0000-4000-8000-0000000000f1',
+  array['select intern.svar_gallra()'], 'nekad');
+select pg_temp.prova('Svar studiehjälparen kör inte gallringen', '00000000-0000-4000-8000-0000000000a1',
+  array['select intern.svar_gallra()'], 'nekad');
+select pg_temp.prova('Svar anon kör inte gallringen', null,
+  array['select intern.svar_gallra()'], 'nekad');
+insert into utfall (test, ok, detalj)
+select 'Svar gallringen är schemalagd varje natt', count(*) = 1, 'jobb: ' || count(*)
+  from cron.job where jobname = 'svar-gallring' and active and command = 'select intern.svar_gallra()';
 
 select test, ok is true as ok, detalj from utfall order by nr;
 

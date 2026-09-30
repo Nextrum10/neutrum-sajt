@@ -508,6 +508,24 @@ window.NXStudie = (function () {
     };
   }
 
+  /* Passen med svaret på förslaget (avbokningar_och_svar, 2026-09-30).
+     Vyerna driftsätts när grenen mergas, migrationen körs efteråt för
+     hand, och en fråga efter en kolumn som inte finns ger 42703 för HELA
+     listan: "Kunde inte hämta passen" i båda vyerna. Saknas kolumnerna
+     hämtas passen utan dem, och S.svarSaknas säger till vyn att svaret
+     inte går att skriva än. */
+  var SVARSKOLUMNER = ', avbokad_fran, motforslag_at, svar_meddelande';
+  async function passMedSvar(supa, S, kolumner, bygg) {
+    var svar = await hämtaAlla(supa, 'bookings', kolumner + SVARSKOLUMNER, bygg);
+    var kod = svar.error && svar.error.code;
+    if (kod === '42703' || kod === 'PGRST204') {
+      S.svarSaknas = true;
+      return hämtaAlla(supa, 'bookings', kolumner, bygg);
+    }
+    S.svarSaknas = false;
+    return svar;
+  }
+
   /* ---------- månadsväljaren (Fas 20.2) ----------
      Leo 2026-09-27: "man ska inte kunna se rapporter från juli idag i
      september ... gör det snyggt så man kan välja den månaden man vill
@@ -919,6 +937,110 @@ window.NXStudie = (function () {
     });
   }
 
+  /* ---------- svaret på en föreslagen tid (2026-09-30) ----------
+     Studiehjälparen som avslår en tid familjen föreslagit skriver
+     varför, och kan skriva några rader med ett motförslag. Fritext, till
+     skillnad från avbokningens skäl ovan: "den tiden har jag träning" är
+     inget av fyra fasta skäl, och familjen har bett om en tid. Därför
+     står texten bara i vyn. Inget mejl, ingen notis och ingen rad i
+     auditloggen bär den, och databasen tömmer den efter 30 dagar
+     (intern.svar_gallra). Databasen kräver den vid ett avslag och håller
+     taket (skydda_bokningsfalt); rutan säger samma sak innan.
+
+     maxlength räknar UTF-16, Postgres räknar tecken: en emoji är två
+     här och en där, så taket här är aldrig högre än databasens. */
+  var SVAR_MAX = 500;
+
+  function svarFält(id, värde, etikett, valfritt) {
+    var v = String(värde || '');
+    return '<div class="nx-svar-falt">'
+      + '<label for="' + id + '">' + esc(etikett) + (valfritt ? ' <em>valfritt</em>' : '') + '</label>'
+      + '<textarea class="inp" id="' + id + '" rows="4" maxlength="' + SVAR_MAX + '" data-svar-text'
+      + ' aria-describedby="' + id + '-antal">' + esc(v) + '</textarea>'
+      + '<span class="nx-svar-antal" id="' + id + '-antal" data-svar-antal>' + v.length + '/' + SVAR_MAX + '</span>'
+      + '</div>';
+  }
+
+  // Räknaren följer texten. En lyssnare på rutan, så att den överlever att rutan ritas om.
+  function räknaSvar(ruta, efter) {
+    ruta.addEventListener('input', function (e) {
+      if (!e.target.matches('[data-svar-text]')) return;
+      var antal = e.target.parentNode.querySelector('[data-svar-antal]');
+      if (antal) antal.textContent = e.target.value.length + '/' + SVAR_MAX;
+      if (efter) efter(e.target.value);
+    });
+  }
+
+  function rensaSvar(text) { return String(text || '').replace(/^\s+|\s+$/g, ''); }
+
+  /* Returnerar texten, eller null om man ångrade sig. */
+  function svarRuta(opts) {
+    var o = opts || {};
+    return new Promise(function (klar) {
+      var ruta = document.createElement('div');
+      ruta.className = 'nx-fraga';
+      ruta.innerHTML =
+        '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="svar-t">'
+        + '<h3 id="svar-t">' + esc(o.titel || 'Avslå tiden?') + '</h3>'
+        + (o.text ? '<p>' + esc(o.text) + '</p>' : '')
+        + svarFält('svar-text', o.varde, o.etikett || 'Varför passar tiden inte?', false)
+        + (o.not ? '<p class="nx-skal-not">' + esc(o.not) + '</p>' : '')
+        + '<p class="ok-msg" id="svar-msg" role="alert"></p>'
+        + '<div class="nx-fraga-knappar">'
+        + '<button type="button" class="btn btn-ghost" data-svr="nej">' + esc(o.avbryt || 'Tillbaka') + '</button>'
+        + '<button type="button" class="btn btn-primary" data-svr="ja">' + esc(o.knapp || 'Avslå') + '</button>'
+        + '</div></div>';
+
+      var fält = ruta.querySelector('textarea');
+      var sistaFokus = document.activeElement;
+      function stäng(svar) {
+        ruta.remove();
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', tangent);
+        if (sistaFokus && sistaFokus.focus) sistaFokus.focus();
+        klar(svar);
+      }
+      function tangent(e) {
+        if (e.key === 'Escape') stäng(null);
+        if (e.key === 'Tab') {
+          var kan = ruta.querySelectorAll('textarea, button');
+          var f = kan[0], s = kan[kan.length - 1];
+          if (e.shiftKey && document.activeElement === f) { e.preventDefault(); s.focus(); }
+          else if (!e.shiftKey && document.activeElement === s) { e.preventDefault(); f.focus(); }
+        }
+      }
+
+      räknaSvar(ruta, function () { NX.rensa(ruta.querySelector('#svar-msg')); });
+      ruta.addEventListener('click', function (e) {
+        if (e.target === ruta) return stäng(null);
+        var k = e.target.closest('[data-svr]');
+        if (!k) return;
+        if (k.dataset.svr === 'nej') return stäng(null);
+        /* Knappen är inte avstängd medan rutan är tom, av samma skäl som
+           avbokningens: en avstängd knapp säger inte varför. */
+        var text = rensaSvar(fält.value);
+        if (!text) {
+          NX.säg(ruta.querySelector('#svar-msg'), 'Skriv några rader till familjen först.', false);
+          fält.focus();
+          return;
+        }
+        if (text.length > SVAR_MAX) {
+          NX.säg(ruta.querySelector('#svar-msg'), 'Högst ' + SVAR_MAX + ' tecken.', false);
+          fält.focus();
+          return;
+        }
+        stäng(text);
+      });
+      document.addEventListener('keydown', tangent);
+
+      document.body.appendChild(ruta);
+      document.body.style.overflow = 'hidden';
+      void ruta.offsetWidth;
+      ruta.classList.add('open');
+      fält.focus();
+    });
+  }
+
   /* ---------- knapp som håller på ----------
      Låser knappen, byter texten, och släpper igen när det är klart —
      även om det gick fel. Utan det andra argumentet står den kvar
@@ -931,12 +1053,19 @@ window.NXStudie = (function () {
        data-medan och är det enda som byter text. */
     var mål = knapp.querySelector('[data-medan]') || knapp;
     var original = mål.textContent;
+    /* aria-busy stoppar musen (.btn[aria-busy] i nextrum.css), inte
+       Enter på en knapp som har fokus: två tryck blev två skrivningar,
+       och den andra ett fel om ett svar som redan gått fram
+       (2026-09-30). En knapp stängs av; en länk har ingen disabled. */
+    var avstängd = knapp.tagName === 'BUTTON' ? knapp.disabled : null;
     knapp.setAttribute('aria-busy', 'true');
+    if (avstängd !== null) knapp.disabled = true;
     mål.textContent = text;
     try {
       return await jobb();
     } finally {
       knapp.removeAttribute('aria-busy');
+      if (avstängd !== null) knapp.disabled = avstängd;
       mål.textContent = original;
     }
   }
@@ -966,10 +1095,15 @@ window.NXStudie = (function () {
      Förut var det ett datumfält och en rullgardin, sedan en veckovy.
      Leo ville ha en vanlig kalender, och det är den här.
      ============================================================ */
+  /* opts.meddelande ({ etikett, varde }): en valfri rad till motparten,
+     bara där databasen tar emot den, alltså när studiehjälparen svarar
+     på familjens förslag med en annan tid (2026-09-30). Rutan ritas om
+     vid varje tryck, så texten hålls i en variabel och inte i fältet. */
   function flyttaRuta(opts) {
     var o = opts || {};
     return new Promise(function (klar) {
       var idag = isoFor(new Date());
+      var meddelande = o.meddelande ? String(o.meddelande.varde || '') : null;
       var månad = NXArbete.månadFör(o.datum && o.datum >= idag ? o.datum : idag);
       var dag = o.datum && o.datum >= idag ? o.datum : null;
       var valt = null;
@@ -1041,6 +1175,7 @@ window.NXStudie = (function () {
             })
           + '</div>'
           + '</div>'
+          + (meddelande !== null ? svarFält('fl-svar', meddelande, o.meddelande.etikett || 'Några rader till familjen', true) : '')
           + '<p class="ok-msg" id="fl-msg"></p>'
           + '<div class="nx-fraga-knappar">'
           + '<button type="button" class="btn btn-ghost" data-flytt="nej">Avbryt</button>'
@@ -1089,9 +1224,12 @@ window.NXStudie = (function () {
           NX.säg(ruta.querySelector('#fl-msg'), '⚠️ Det är samma tid som passet redan har.', false);
           return;
         }
-        stäng({ datum: valt.datum, tid: valt.tid });
+        var svar = { datum: valt.datum, tid: valt.tid };
+        if (meddelande !== null) svar.meddelande = rensaSvar(meddelande).slice(0, SVAR_MAX) || null;
+        stäng(svar);
       });
 
+      räknaSvar(ruta, function (v) { meddelande = v; });
       document.addEventListener('keydown', tangent);
 
       rita();
@@ -2417,6 +2555,25 @@ window.NXStudie = (function () {
     var tidigare = alla.filter(function (b) { return !ärKommande(b); })
       .sort(function (a, c) { return nyckel(c).localeCompare(nyckel(a)); });
 
+    /* AVBOKADE PASS (2026-09-30). Leo: avbokade pass ska inte ligga
+       kvar och ta plats, men antalet ska gå att se över tid. Med
+       o.avbokade står de i en egen hopfälld grupp sist, och bara de från
+       de senaste 30 dagarna. Raderna tas INTE bort ur databasen: ett
+       avbokat pass kan bära en återbetalning, en tvist eller timmar, och
+       det är bokföring (migrationen avbokningar_och_svar).
+
+       Antalet räknar bara bekräftade pass som avbokats (avbokad_fran),
+       inte förslag som avslagits eller dragits tillbaka, och det räknar
+       alla, också de äldre än listan. o.avbokade.vem(b) säger vem som
+       avbokade, sett från den som tittar: 'jag', 'motpart' eller
+       'nextrum'. */
+    var avb = o.avbokade;
+    var avbokade = [];
+    if (avb) {
+      avbokade = tidigare.filter(function (b) { return b.status === 'cancelled'; });
+      tidigare = tidigare.filter(function (b) { return b.status !== 'cancelled'; });
+    }
+
     if (!alla.length) {
       host.innerHTML = o.tomtAllt || tomt('Inga pass än', '');
       return;
@@ -2448,7 +2605,24 @@ window.NXStudie = (function () {
         + '</div>';
     }
 
+    if (avb) ut += avbokadeGrupp(host, avbokade, avb, o.rad);
+
     host.innerHTML = ut;
+
+    var avbKnapp = host.querySelector('[data-pl-avbokade]');
+    if (avbKnapp) {
+      avbKnapp.addEventListener('click', function () {
+        var inne = host.querySelector('.pl-avb-inne');
+        var öppet = !inne.hidden;
+        function växla() {
+          inne.hidden = öppet;
+          avbKnapp.setAttribute('aria-expanded', öppet ? 'false' : 'true');
+        }
+        // Samma skäl som Visa färre nedan: gruppen står sist på sidan.
+        if (öppet) håll(avbKnapp, växla); else växla();
+        PL_UTFÄLLD[host.id + ':avbokade'] = !öppet;
+      });
+    }
 
     var knapp = host.querySelector('[data-pl-mer]');
     if (knapp) {
@@ -2471,6 +2645,46 @@ window.NXStudie = (function () {
     }
   }
   var PL_UTFÄLLD = {};
+
+  var AVBOKADE_DAGAR = 30;
+
+  function avbokadeGrupp(host, avbokade, avb, rad) {
+    var gräns = Date.now() - AVBOKADE_DAGAR * 864e5;
+    // Avbokningens dag, och passets för rader avbokade före Fas 9.4.
+    function när(b) {
+      var t = b.avbokad_at ? Date.parse(b.avbokad_at) : Date.parse(String(b.wanted_date || '') + 'T12:00:00');
+      return isNaN(t) ? 0 : t;
+    }
+    var nyliga = avbokade.filter(function (b) { return när(b) >= gräns; })
+      .sort(function (a, c) { return när(c) - när(a); });
+
+    var tal = { jag: 0, motpart: 0, nextrum: 0 };
+    avbokade.forEach(function (b) {
+      if (b.avbokad_fran !== 'confirmed') return;
+      var v = avb.vem(b);
+      tal[v] = (tal[v] || 0) + 1;
+    });
+    var talText = 'Avbokade av ' + avb.jag + ': ' + tal.jag + '. '
+      + 'Avbokade av ' + avb.motpart + ': ' + tal.motpart + '.'
+      + (tal.nextrum ? ' Avbokade av Nextrum: ' + tal.nextrum + '.' : '');
+
+    var öppen = !!PL_UTFÄLLD[host.id + ':avbokade'];
+    var id = host.id + '-avbokade';
+    return '<div class="pl-grupp pl-avbokade">'
+      + '<button type="button" class="pl-avb-knapp" data-pl-avbokade aria-expanded="' + (öppen ? 'true' : 'false') + '"'
+      + ' aria-controls="' + esc(id) + '">'
+      + '<span>Avbokade pass</span>'
+      + (nyliga.length ? '<em>' + nyliga.length + ' st</em>' : '')
+      + '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5l3-3"/></svg>'
+      + '</button>'
+      + '<div class="pl-avb-inne" id="' + esc(id) + '"' + (öppen ? '' : ' hidden') + '>'
+      + '<p class="pl-avb-tal">' + esc(talText) + '</p>'
+      + (nyliga.length
+          ? nyliga.map(rad).join('')
+          : '<div class="pl-inget">' + (avbokade.length ? 'Inga avbokade pass de senaste 30 dagarna.' : 'Inga avbokade pass.') + '</div>')
+      + '<p class="pl-avb-not">Avbokade pass står här i 30 dagar. Antalet räknar alla, också äldre.</p>'
+      + '</div></div>';
+  }
 
   /* Antalet syns i fliken också — man har sällan vyn framme. */
   function sättTitel(n) {
@@ -2919,13 +3133,14 @@ window.NXStudie = (function () {
     progressRad: progressRad, progressPerÄmne: progressPerÄmne,
     tomt: tomt, laddar: laddar, laddarFörsta: laddarFörsta, håll: håll, hållLista: hållLista, släppLista: släppLista,
     scrollaTill: scrollaTill, visaÖverst: visaÖverst,
-    hämtaAlla: hämtaAlla,
+    hämtaAlla: hämtaAlla, passMedSvar: passMedSvar,
     månadsval: månadsval, FÖRSTA_MÅNAD: FÖRSTA_MÅNAD, månadsGräns: månadsGräns, månadsNamn: månadsNamn, månadIso: månadIso,
     passSida: passSida, relativDag: relativDag, tidsspann: tidsspann, skälText: skälText,
     hämtaMöte: hämtaMöte, mötesRad: mötesRad,
     dagMedVeckodag: dagMedVeckodag, GICK: GICK,
     rapportKort: rapportKort,
     radLank: radLank, betalval: betalval, IKON: IKON, längdText: längdText,
-    bekräfta: bekräfta, avbokaRuta: avbokaRuta, medan: medan, kolla: kolla
+    bekräfta: bekräfta, avbokaRuta: avbokaRuta, svarRuta: svarRuta, SVAR_MAX: SVAR_MAX,
+    medan: medan, kolla: kolla
   };
 })();
