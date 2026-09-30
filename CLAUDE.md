@@ -308,7 +308,7 @@ Detaljer: `minne/sakerhet.md`.
   öppna rum.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
-  main i 16 av 23 funktioner, webhooken och avanmälan bland dem (`minne/funktioner.md`).
+  main i 16 av 23 funktioner; alla driftsattes samma kväll och är lika (`minne/funktioner.md`).
 - `barn-konto` prövar föräldern och `admin-skapa` skriver rollen med anroparens token; bara det
   Auth kräver görs med `service_role`, och ett barnkonto skapas aldrig utan vårdnadshavarens ja.
 - **Agentregeln**: hårt stegtak, källtvång i kod, bara verifierade `kallor` klickbara (aldrig
@@ -373,8 +373,8 @@ Detaljer: `minne/grunden.md`.
 - **Med flit inte**: en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
   passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
   villkorsändringarna och om att vi kan läsa chatten.
-- **Tipskoderna** (2026-09-30): migrationen `tipskoder_och_kampanjkoder` körs efter merge; tills
-  dess står fliken tyst. Affischerna sätts upp enligt `AFFISCHKAMPANJ.md`.
+- **Affischerna** (2026-09-30): tipskoderna och `/affisch` är i drift; att sätta upp dem enligt
+  `AFFISCHKAMPANJ.md` återstår.
 - **Barnkontona och adminbehörigheterna** (2026-09-30) är byggda men inte i drift: migrationen,
   `barn-konto`, `admin-skapa` och Auth-inställningarna står i `DEPLOY-BARNKONTON.md`. En admin med
   behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen säger nej.
