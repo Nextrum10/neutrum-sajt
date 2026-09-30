@@ -39,9 +39,11 @@
      gammal fil ur cachen utan hämtaAlla hade gett ett TypeError mitt i
      hämtningen i stället för det här beskedet. passMedSvar kom sist
      (2026-09-30): familjens vy och studiehjälparvyn hämtar passen
-     genom den. */
+     genom den. tipsa kom samma kväll, och båda vyerna anropar den när
+     de startar. */
   var studieKlar = typeof NXStudie !== 'undefined' && !!NXStudie.vaktaInloggningen
-    && typeof NXStudie.hämtaAlla === 'function' && typeof NXStudie.passMedSvar === 'function';
+    && typeof NXStudie.hämtaAlla === 'function' && typeof NXStudie.passMedSvar === 'function'
+    && typeof NXStudie.tipsa === 'function';
 
   if (ärAdmin) {
     krav.push(

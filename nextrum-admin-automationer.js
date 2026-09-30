@@ -78,7 +78,7 @@
      ------------------------------------------------------------ */
   const DAGAR = 7;   // pg_cron sparar körningarna i sju dagar (jobbet cron-stada)
 
-  /* Vad jobben gör, med samma ord som CLAUDE.md. Ett jobb som inte står
+  /* Vad jobben gör, med samma ord som minne/databasen.md. Ett jobb som inte står
      här visas med sitt namn: listan förklarar, den bestämmer inte vilka
      jobb som syns. Det gör cron.job. */
   const JOBB = {

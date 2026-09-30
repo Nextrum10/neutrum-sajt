@@ -1057,6 +1057,22 @@
      person i taget. Tabellerna visade ett nittio tecken långt utdrag ur
      det familjen och den sökande skrivit; här står hela texten.
      ------------------------------------------------------------ */
+  /* Koden familjen skickade med (2026-09-30): vem som tipsade, eller
+     vilken affisch. Personen öppnas i panelen; namnet står i profiles
+     och aldrig på koden. */
+  function dpKod(l) {
+    if (!l.kod) return null;
+    const k = (S.tipskod || {})[l.kod];
+    if (!k) return esc(l.kod);
+    if (k.sort === 'kampanj') {
+      return esc(k.namn || 'Kampanj') + ' <span class="xsmall">' + esc(k.kod) + (k.aktiv ? '' : ', avstängd') + '</span>';
+    }
+    const typ = k.sort === 'studiehjalpare' ? 'studiehjalpare' : 'familj';
+    return 'Tipsad av <button class="btn btn-ghost btn-sm" type="button" data-dp="' + typ + ':' + esc(k.person_id) + '">'
+      + esc(namnFör(k.person_id)) + '</button> <span class="xsmall">'
+      + (typ === 'studiehjalpare' ? 'studiehjälpare' : 'familj') + ', ' + esc(k.kod) + '</span>';
+  }
+
   function dpAnmalan(l) {
     const familj = kör('anmälansFamilj', l);
     const källa = kör('källText', l);
@@ -1072,6 +1088,7 @@
         /* Tomt är okänt, inte "direkt" (Fas 9.5). */
         ['Källa', källa ? '<span title="' + esc(kör('källTitel', l) || '') + '">' + esc(källa) + '</span>' : null,
           'okänd'],
+        ['Kod', dpKod(l), 'ingen'],
         ['Kontaktad', l.kontaktad_at ? esc(kortDatum(l.kontaktad_at)) : null, 'inte än'],
         ['Familj', familj
           ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="familj:' + esc(familj.id) + '">'

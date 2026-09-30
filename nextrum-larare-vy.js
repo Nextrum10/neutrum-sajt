@@ -4161,6 +4161,9 @@
     /* Dokumenten under Profil → Dokument (2026-09-29): avtalet och annat
        Nextrum delat med studiehjälparen. Samma modul som föräldravyn. */
     NXStudie.dokument({ host: $('#dokument-lista'), supa: supa, msg: $('#dokument-msg') });
+    /* Koden att tipsa familjer med, under Profil → Tipsa en familj
+       (2026-09-30). Ingen ersättning, och rutan säger det. */
+    NXStudie.tipsa({ host: $('#tips-ruta'), supa: supa, roll: 'tutor' });
 
     $('#k-namn').value = S.profil.full_name || '';
     $('#k-tel').value = S.profil.phone || '';

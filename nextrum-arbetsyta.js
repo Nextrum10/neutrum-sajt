@@ -311,12 +311,6 @@ window.NXArbete = (function () {
 
   function idagISO() { return NX.isoFor(new Date()); }
 
-  function plusDagar(iso, n) {
-    var d = new Date(iso + 'T12:00:00');
-    d.setDate(d.getDate() + n);
-    return NX.isoFor(d);
-  }
-
   /* Första dagen i månaden, som ISO. Månader räknas alltid från den
      första, så att jämförelser mellan månader är strängjämförelser. */
   function månadFör(iso) { return String(iso).slice(0, 8) + '01'; }
@@ -619,7 +613,9 @@ window.NXArbete = (function () {
     /* Första timmen bjuds (Fas 19.5). o.bjuden(minuter) svarar om
        förslaget blir passet som får timmen; databasen avgör
        (forsta_timmen_bjuds), det här visar bara priset i förväg. En
-       timme till passets timpris, aldrig mer än passet kostar. */
+       timme till passets timpris, aldrig mer än passet kostar. Svaret
+       'tips' är en timme på köpet för ett tips (2026-09-30): samma
+       rabatt, en annan rad under priset. */
     function bjudenOre() {
       if (!o.bjuden || !o.bjuden(st.minuter)) return 0;
       return Math.min(timprisOre() + (st.barn > 1 ? extraOre() : 0), bruttoOre());
@@ -789,7 +785,8 @@ window.NXArbete = (function () {
         + '<div class="bk-sum-pris">' + (tim
           ? '<b>' + esc(tim.titel) + '</b><span>' + esc(tim.under) + '</span>'
           : '<b>' + esc(kr((bruttoOre() - bjuden) / 100)) + '</b>'
-            + '<span>' + esc(bjuden ? 'Första timmen på köpet' : längdText()) + '</span>')
+            + '<span>' + esc(!bjuden ? längdText()
+              : o.bjuden(st.minuter) === 'tips' ? 'En timme på köpet för ert tips' : 'Första timmen på köpet') + '</span>')
         + '</div>'
         + '<button class="btn btn-primary" id="bk-boka" type="button"'
         + (klar ? '' : ' disabled') + '>Föreslå tiden</button>'

@@ -246,6 +246,17 @@
               <textarea class="inp" id="l-msg" name="message" placeholder="Vad går trögt just nu? Finns det något vi bör veta för att välja rätt person?"></textarea>
               <p class="nx-fil-hjalp">Skriv inte diagnoser, personnummer eller annat känsligt här. Det räcker med vad eleven behöver hjälp med, resten tar vi i samtalet.</p>
             </div>
+            <!-- KODEN (2026-09-30). En tipskod från en familj eller en
+                 studiehjälpare, eller en kampanjkod från en affisch.
+                 Länken och QR-koden fyller i fältet ur ?kod=, och familjen
+                 ser det och kan tömma det. Ingenting lagras i webbläsaren.
+                 Databasen prövar koden (intern.leads_tipskod): en okänd
+                 kod blir tom, och anmälan går in ändå. Samma fält står i
+                 en/intresseanmalan.html. -->
+            <div class="pay-field full"><label for="l-kod">Kod <span class="lbl-valfri">valfritt</span></label>
+              <input class="inp" id="l-kod" name="kod" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="t.ex. från en affisch">
+              <p class="nx-fil-hjalp">Från en affisch eller från någon som tipsat er. Den som gav er koden ser hur många som anmält sig med den, inte vilka.</p>
+            </div>
 
             <label class="nx-samtycke full" for="l-gdpr">
               <input type="checkbox" id="l-gdpr" required>
@@ -422,6 +433,21 @@
   const uppstartOm = NX.uppstart();
 
   /* ==========================================================
+     KODEN (2026-09-30)
+     Tipslänken och affischens QR-kod går hit med ?kod=. Koden står i
+     ett fält familjen ser och kan tömma; ingenting lagras i
+     webbläsaren. Databasen prövar den (intern.leads_tipskod), och en
+     okänd kod blir bara tom i anmälan.
+     ========================================================== */
+  const kodInp = $('#l-kod');
+  const renKod = v => String(v || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 24);
+  if (kodInp) {
+    let frånAdressen = '';
+    try { frånAdressen = renKod(new URLSearchParams(location.search).get('kod')); } catch (e) { /* ingen kod */ }
+    if (frånAdressen) kodInp.value = frånAdressen;
+  }
+
+  /* ==========================================================
      ROLLVÄLJAREN I INTRESSEANMÄLAN
      Byter mellan de två formulären. Båda fanns redan och skriver
      till samma tabeller som förut.
@@ -557,7 +583,8 @@
         annonsvariant: k.innehåll,
         sokord: k.term,
         hanvisare: k.hänvisare,
-        landningssida: k.landning
+        landningssida: k.landning,
+        kod: kodInp ? (renKod(kodInp.value) || null) : null
       });
       knapp.removeAttribute('aria-busy');
 

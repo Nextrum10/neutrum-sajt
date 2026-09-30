@@ -1019,7 +1019,11 @@
         const p = pris();
         r.belopp = st !== 'ingen' && b.begart_ore ? Number(b.begart_ore) : p;
         /* Ett pass på noll kronor är inte obetalt (Fas 19.5). */
-        if (st === 'ingen' && p === 0) { r.läge = ['Första timmen bjuden', '']; r.belopp = 0; return r; }
+        if (st === 'ingen' && p === 0) {
+          r.läge = [b.rabattkod === 'TIPS' ? 'Timme bjuden för tips' : 'Första timmen bjuden', ''];
+          r.belopp = 0;
+          return r;
+        }
         if (r.belopp == null) r.under = 'pris saknas';
         else if (st !== 'ingen') r.under = 'begärt';
         if (b.status === 'completed') {
@@ -2115,7 +2119,7 @@
     const host = $('#eko-brytare');
     if (host) {
       const saknas = kod => tomt('Strömbrytaren gick inte att läsa', S.kortsparrFel || 'Raden ' + kod + ' saknas i flaggor.');
-      const fa = S.fakturaFlagga, er = S.erbFlagga, ks = S.kortsparr;
+      const fa = S.fakturaFlagga, er = S.erbFlagga, ks = S.kortsparr, ti = S.tipsFlagga;
       const spärrade = S.fakturaSparr ? S.fakturaSparr.size : 0;
       const n = kortbetalda();
       host.innerHTML = (fa ? brytare({
@@ -2135,6 +2139,18 @@
           knapp: '<button class="btn ' + (er.aktiv ? 'btn-ghost' : 'btn-primary') + ' btn-sm" type="button" data-erbflagga="'
             + (er.aktiv ? '0' : '1') + '">' + (er.aktiv ? 'Stäng av' : 'Slå på') + '</button>'
         }) : saknas('erbjudanden'))
+        /* 2026-09-30: timmen på köpet för ett tips. Saknas raden är
+           migrationen tipskoder_och_kampanjkoder inte körd, och då finns
+           ingen timme att stänga av: raden står inte med. */
+        + (ti ? brytare({
+          titel: 'En timme på köpet för ett tips', på: ti.aktiv, påText: ti.aktiv ? 'På' : 'Av',
+          text: ti.beskrivning || 'En familj får en timme på köpet för varje ny familj som anmält sig med familjens kod.',
+          krav: !ti.aktiv && ti.vantar_pa ? 'Ska vara avgjort först: ' + ti.vantar_pa : '',
+          not: 'Står den av räknas koderna och anmälningarna som förut, och timmar som tjänats in innan ges ändå. Ändrad '
+            + kortDatum(ti.uppdaterad) + '.',
+          knapp: '<button class="btn ' + (ti.aktiv ? 'btn-ghost' : 'btn-primary') + ' btn-sm" type="button" data-tipsflagga="'
+            + (ti.aktiv ? '0' : '1') + '">' + (ti.aktiv ? 'Stäng av' : 'Slå på') + '</button>'
+        }) : '')
         + (ks ? brytare({
           titel: 'Ingen betalning, inget pass', på: ks.aktiv, påText: ks.aktiv ? 'På' : 'Av',
           text: ks.beskrivning || '',
@@ -2201,6 +2217,30 @@
       if (data) S.erbFlagga = data;
       ritaInställningar();
       ritaTimmar();
+    });
+  });
+
+  document.addEventListener('click', async e => {
+    const knappen = e.target.closest('[data-tipsflagga]');
+    if (!knappen) return;
+    const på = knappen.dataset.tipsflagga === '1';
+    const ja = await bekräfta({
+      titel: på ? 'Slå på timmen för tips?' : 'Stäng av timmen för tips?',
+      text: på
+        ? 'Från och med nu får en familj en timme på köpet på nästa pass den föreslår, för varje ny familj som '
+          + 'anmält sig med familjens kod och haft sitt första pass. Villkoren ska säga det.'
+        : 'En familj som tipsats efter i dag ger ingen timme. Timmar som redan tjänats in ges ändå, '
+          + 'för villkoren lovade dem. Villkoren ska ändras i samma veva.',
+      knapp: på ? 'Slå på' : 'Stäng av'
+    });
+    if (!ja) return;
+    await medan(knappen, på ? 'Slår på…' : 'Stänger av…', async () => {
+      const { error } = await supa.from('flaggor').update({ aktiv: på }).eq('kod', 'tipstimme');
+      if (error) { alert('Kunde inte ändra strömbrytaren: ' + felText(error)); return; }
+      // Läses tillbaka: en nekad uppdatering ger noll rader, inget fel.
+      const { data } = await supa.from('flaggor').select('*').eq('kod', 'tipstimme').maybeSingle();
+      if (data) S.tipsFlagga = data;
+      ritaInställningar();
     });
   });
 

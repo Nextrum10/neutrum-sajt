@@ -52,8 +52,9 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 20
+=== svenska sidor utan engelsk tvilling: 21
   admin.html
+  affisch.html
   barnet-vill-inte-gora-laxorna.html
   foralder.html
   hjalpa-barn-med-lasforstaelse.html
