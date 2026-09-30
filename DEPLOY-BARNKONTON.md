@@ -36,6 +36,12 @@ lappade funktionerna räknar sina träffar. Stannar den: läs funktionen i
 driften (`select pg_get_functiondef('public.is_admin(uuid)'::regprocedure);`)
 och skriv om migrationen, gissa inte.
 
+**Sedan rättelsen**, `supabase/migrations/20261001000200_barnkonto_skapas_genom_auth.sql`
+med namnet `barnkonto_skapas_genom_auth`. Utan den går inget barnkonto att
+skapa: GoTrue skriver raden i `auth.users` innan `app_metadata` finns på
+den, och den första spärren nekade det (`minne/barnkonton-och-admin.md`).
+Den har md5-vakter på de två triggerfunktionerna den skriver om.
+
 Efteråt, i SQL Editor:
 
 ```sql
@@ -101,7 +107,8 @@ Med en testfamilj, i ett privat fönster per person:
    `await supa.from('students').select('*')` ska ge `permission denied`,
    och `await supa.rpc('barn_oversikt')` ska svara.
 3. `await supa.auth.resetPasswordForEmail('<användarnamn>@barn.nextrum.se')`
-   ska inte ge någon fungerande länk. Kontrollera i SQL att
+   ska svara 429 (mejlspärren i `recovery_sent_at`) och inget mejl ska gå,
+   varken i Auths logg eller hos Resend. Kontrollera i SQL att
    `recovery_token` för kontot fortfarande är tom.
 4. Pausa inloggningen i studievyn: barnet ska loggas ut inom en minut och
    se "Din inloggning är pausad". Aktivera, byt lösenord, ta bort.

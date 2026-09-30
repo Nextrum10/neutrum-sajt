@@ -9,11 +9,12 @@
 //   ta_bort_inloggning  kontot i Auth; databasen tömmer resten
 //
 // Barnet blir en egen användare i Auth med den syntetiska adressen
-// <användarnamn>@barn.nextrum.se, bekräftad från början, och
-// app_metadata { roll: 'barn', forald_id, barn_id }. Rollen i databasen
-// blir nextrum_barn (triggern auth_barnkonto_skapas sätter den vad
-// anropet än säger), och kopplingen till barnet görs av databasen i
-// samma transaktion som kontot skapas.
+// <användarnamn>@barn.nextrum.se, bekräftad från början. Kontots id
+// väljs här och står i ett skapandefönster i databasen innan Auth
+// anropas; databasen släpper bara in en barnadress med ett sådant
+// fönster, och skriver själv app_metadata { roll: 'barn', forald_id,
+// barn_id }, rollen nextrum_barn och kopplingen till barnet, i samma
+// transaktion som kontot skapas (barnkonto_skapas_genom_auth).
 //
 // SÄKERHET
 // verify_jwt är PÅ. Förälderns egen token prövas mot Auth och mot RLS
@@ -65,16 +66,21 @@ Deno.serve(async (req) => {
         if (error) throw new Error('students anvandarnamn ' + (error.code ?? ''));
         return (data ?? []).length > 0;
       },
-      skapaAnvandare: async ({ epost, losenord, appMetadata }) => {
+      nyttId: () => crypto.randomUUID(),
+      oppnaSkapandefonster: async (barnId, userId, anvandarnamn) => {
+        const { error } = await db.from('barn_andringsfonster')
+          .insert({ barn_id: barnId, andring: 'skapa', user_id: userId, anvandarnamn });
+        return error ? logga('skapandefönster', error) : null;
+      },
+      skapaAnvandare: async ({ id, epost, losenord }) => {
+        // Ingen app_metadata och ingen roll: GoTrue skriver raden innan den
+        // lägger till dem, så databasen tar dem ur fönstret i stället
+        // (auth_barnkonto_skapas). Id:t är fönstrets.
         const { data, error } = await db.auth.admin.createUser({
+          id,
           email: epost,
           password: losenord,
           email_confirm: true,
-          app_metadata: appMetadata,
-          user_metadata: {},
-          // Databasen sätter rollen själv (auth_barnkonto_skapas); den
-          // står här för att svaret från Auth ska säga samma sak.
-          role: 'nextrum_barn',
         });
         if (error) return { id: null, fel: logga('skapa', error) };
         return { id: data?.user?.id ?? null, fel: null };

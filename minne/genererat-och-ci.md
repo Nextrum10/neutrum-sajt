@@ -205,6 +205,18 @@ svit går att köra med och utan en ny migration. Lokalt först; driften
 bara när något där måste provas. I en molnsession går Docker att starta
 med `dockerd &`.
 
+**Sviten ser bara det den skriver själv** (2026-09-30). Ett prov som
+lägger en färdig rad i `auth.users` med en INSERT säger ingenting om
+GoTrue, som skriver raden först och resten i UPDATE efteråt: barnkontona
+var gröna här (1139 av 1139) och gick ändå inte att skapa i driften. Prova
+det Auth gör i Auths ordning (avsnitt 7b), och prova hela kedjan mot
+riktiga Auth innan något kallas klart. Två andra saker driften lärde
+samma kväll: `auth.sessions.id` har inget förval där, och ett prov som
+lägger en faktura på "förra månaden" krockar med en fixtur som gör
+detsamma när sviten körs den första i månaden (Fas 19.6 står därför på
+januari 2025). `lokal-databas.sql` fick `phone_change_sent_at` och
+`reauthentication_sent_at`, som bilden saknade och driften har.
+
 **Deno i en molnsession** (2026-09-30): `deno.land` och `esm.sh` är
 stängda i nätet, men npm och jsr är öppna. `npm i deno@2` ger binären,
 och en importkarta utanför repot som pekar

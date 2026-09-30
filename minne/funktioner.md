@@ -244,9 +244,13 @@ Två funktioner, med det rena i `_delad/barnkonto.ts` och
 `notiser/ko.ts`), så att varje väg har ett prov.
 - `barn-konto`: skapa, byt lösenord, pausa, aktivera, ta bort. Barnet läses
   med ANROPARENS token (RLS), och `parent_id` måste vara anroparen; en admin
-  är inte förälder här. Först sedan `service_role`. Lösenordet byts i ett
-  fönster på 60 sekunder som stängs i `finally`, och barnet loggas ut
-  överallt efter ett byte och en paus. Inga lösenord i loggen, bara namn,
+  är inte förälder här. Först sedan `service_role`. Kontot skapas med ett id
+  som funktionen väljer (`crypto.randomUUID()`) och ett skapandefönster för
+  just det id:t, och `createUser` får varken `app_metadata` eller roll:
+  GoTrue skriver raden innan den lägger till dem, så databasen skriver dem ur
+  fönstret (barnkonto_skapas_genom_auth, 2026-09-30). Lösenordet byts i ett
+  fönster på 60 sekunder. Båda fönstren stängs i `finally`, och barnet loggas
+  ut överallt efter ett byte och en paus. Inga lösenord i loggen, bara namn,
   kod och status på felet.
 - `admin-skapa`: frågar `admin_kan_ge()` med anroparens token innan
   inbjudan, bjuder in med `redirectTo` `https://nextrum.se/admin`, sätter
