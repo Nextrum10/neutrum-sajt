@@ -197,7 +197,16 @@ ungefär 20 sekunder. Första körningen gav 923 av 923, samma som driften.
 Det bilden saknar av Auth och Storage står i `verktyg/lokal-databas.sql`.
 `STOPP=<migration>.sql` bygger till och med den migrationen, så att samma
 svit går att köra med och utan en ny migration. Lokalt först; driften
-bara när något där måste provas.
+bara när något där måste provas. I en molnsession går Docker att starta
+med `dockerd &`.
+
+**Deno i en molnsession** (2026-09-30): `deno.land` och `esm.sh` är
+stängda i nätet, men npm och jsr är öppna. `npm i deno@2` ger binären,
+och en importkarta utanför repot som pekar
+`https://esm.sh/@supabase/supabase-js@2.116.0` på `npm:` och
+`https://deno.land/std@0.224.0/assert/mod.ts` på `jsr:@std/assert@0.224.0`
+räcker för `deno check --import-map=…` och `deno test --import-map=…`.
+Checka inte in kartan: CI når båda adresserna.
 
 **Filen är för stor för ett enda `execute_sql` från en session** (350
 kB). Låt databasen hämta den själv, i en transaktion som rullas

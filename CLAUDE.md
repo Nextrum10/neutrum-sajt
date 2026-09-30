@@ -287,8 +287,8 @@ Detaljer: `minne/sakerhet.md`.
   tar bara kort, `faktura-utskick` skickar mejlet före statusen, och `google-meet` sparar bara
   öppna rum.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
-  och **driftsätt aldrig från en gren som inte är mergad**. `pass-notis` och `meddelande-notis`
-  ligger ACTIVE utan anropare och tas bort i dashboarden.
+  och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
+  main i 16 av 23 funktioner, webhooken och avanmälan bland dem (`minne/funktioner.md`).
 - **Agentregeln**: hårt stegtak, källtvång i kod, bara verifierade `kallor` klickbara (aldrig
   med regex), `ekonomi` skriver aldrig, och agenterna läser källan, aldrig ur minnet.
 - **AI-lagret**: `drift` har inget utgående verktyg, och ingen AI-väg skriver i affärstabeller
@@ -325,6 +325,7 @@ Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
   flaggan `erbjudanden` av, och en fixtur syns för resten av filen. Lokalt först, med
   `verktyg/lokal-databas.sh` (`STOPP=`); driften i en transaktion som rullas tillbaka, hämtad
   med tillägget `http` från en commit.
+  I en molnsession: `dockerd &`, och Deno ur npm med en importkarta (`minne/genererat-och-ci.md`).
 
 Detaljer: `minne/genererat-och-ci.md`.
 

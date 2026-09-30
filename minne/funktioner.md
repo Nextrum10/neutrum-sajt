@@ -16,9 +16,8 @@ tillbaka en kopia.**
 |---|---|---|
 | `fakturering` | Månadskörningen: underlag per studiehjälpare, som är studiehjälparens lönespecifikation (2026-09-28), ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand | pg_cron `manadskorning` den 1:a (`x-nextrum-notis`, alltid förra månaden), admin, eller `x-fakturering-nyckel` |
 | `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Fortnox | Knapp under Löner |
-| `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
+| `bjud-in` | Auth-inbjudan till en familj, eller med `roll: 'tutor'` en studiehjälpare, utan konto. Rollen vitlistas i funktionen: allt utom `tutor` blir förälder, och en inbjuden studiehjälpare hamnar i väntläge tills admin godkänner | Adminvyn (bara familjer än) |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
-| `pass-notis`, `meddelande-notis` | **Anropas inte längre.** Se nedan | — |
 | `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
 | `juridik`, `ekonomi` | Agenter. Läser aldrig ur minnet, läser bara | Adminvyn |
@@ -45,17 +44,38 @@ eftersom anroparen är ett schema finns ingen som ser det. **Filen är
 sanningen, inte dashboarden.** Lägger du till en funktion utan
 inloggning: skriv raden där i samma ändring.
 
+**Driften och main, 2026-09-30.** Varje funktion hämtades ur driften
+och jämfördes byte för byte med main (b21df9e). Sju var identiska:
+`fakturering`, `notis-ko`, `drift`, `google-koppla`, `google-meet`,
+`utbildningsprov` och `ansokan-gallring`. Resten var ÄLDRE i driften än
+i main, i sin egen `index.ts` eller i `_delad/`. Det som gör skillnad:
+- `stripe-webhook` (v12) saknar 2026-09-29: en tvist äger läget vid
+  `charge.refunded`, och ett läs- eller skrivfel kastas så att Stripe
+  försöker igen. `stripe-aterbetalning` (v6) nekar inte ett pass i
+  tvist. Kärnan och `betalning.md` beskriver båda som om de gällde.
+- `notis-avanmal` (v7) har en `typer.ts` utan `timmar_gar_ut`, så
+  avanmälningslänken i det mejlet nekas som okänd typ.
+- `juridik` och `ekonomi` prövar inte behörigheten först, och
+  `generate-feedback` prövar API-nyckeln före behörigheten.
+- `lead-notis`, `ansokan-notis` och `faktura-utskick` bär äldre mallar
+  (Wint, utan fakturameningen).
+**`bjud-in` (v7) var tvärtom NYARE i driften än i repot**: den kan
+bjuda in en studiehjälpare (`roll: 'tutor'`, eget `TILLBAKA` per roll),
+och koden fanns inte i någon gren. Leo samma dag: behåll den. Driftens
+`index.ts` är hemtagen ordagrant; `_delad/auth.ts` är repots, för
+driftens kopia hade den opinnade `supabase-js@2`. Ingen vy skickar
+`roll` än, så i adminvyn bjuds bara familjer in.
+
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
 Båda hade ingen anropare kvar: Runda 2 bytte webhookarna som ringde
 dem mot kötriggrar. Beslutet är taget — källan är borttagen ur repot
 och raderna ur `supabase/config.toml`.
 
-**KVAR ATT GÖRA FÖR HAND: de ligger fortfarande ACTIVE i driften.**
-Supabase CLI och MCP kan driftsätta en funktion men inte ta bort den;
-det görs i dashboarden under Edge Functions. Tills dess svarar de på
-sin adress, skyddade av den delade hemligheten i headern, men de gör
-ingenting någon ber om.
+De är borttagna ur driften också (kontrollerat 2026-09-30: driften och
+repot har samma 23 funktioner). Supabase CLI och MCP kan driftsätta en
+funktion men inte ta bort den; det görs i dashboarden under Edge
+Functions.
 
 Så här ser vägarna ut i dag:
 
