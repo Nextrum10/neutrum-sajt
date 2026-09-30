@@ -268,3 +268,7 @@ förslagen, annars betalar förslagen sig själva. Blocken för 22.3 och
   märkningen `stripe_skarp`, alltså om köpet räknas som pengar in i
   Översikt och Månadens ekonomi, aldrig kortet eller timmarna, och den
   körs inte utan att Leo ber om just den.
+
+  **Leo samma kväll bad om den ("fixa de")**, och den kördes 2026-09-30:
+  köpet är märkt som test igen och räknas inte längre som pengar in i
+  september. Kortet, dess fyra pass och timmarna är orörda.

@@ -365,9 +365,9 @@ Detaljer: `minne/grunden.md`.
 - **Fakturan** är på, men bolaget, bankgirot, beskedet till befintliga familjer och
   provfaktureringen återstår (DEPLOY-BETALNING.md 9.11); när bolaget är registrerat ändras
   villkoren och integritetspolicyn. Spärren "ingen betalning, inget pass" kan inte slås på.
-- **Timmarna**: provköpet (DEPLOY-BETALNING.md 9.12) är ogjort. Leos testköp är märkt skarpt
-  (`stripe_skarp`); klippkortet och timmarna står kvar till kortets sista dag, och öppet är bara
-  om märkningen, att köpet räknas som intäkt, ska tillbaka.
+- **Timmarna**: provköpet (DEPLOY-BETALNING.md 9.12) är ogjort. Leos testköp står kvar med
+  sina timmar till kortets sista dag, och är sedan 2026-09-30 märkt som test igen
+  (`stripe_skarp = false`): det räknas inte längre som intäkt.
 - **Skatt och anställning av minderåriga**: `studiehjalpare_form = oklart`; revisor före första
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
 - **Med flit inte**: en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter

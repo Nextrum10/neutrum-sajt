@@ -272,6 +272,11 @@ igen 2026-09-27:**
 | `publika_studiehjalpare` nåbar för `anon` | Den ÄR den publika listan: förnamn, ålder, stad, ämnen, bio, bara godkända med `visa_publikt` |
 | `extension_in_public` för `btree_gist` och `pg_net` | `btree_gist` bär överlappsvillkoret på `bookings` (v9), och `pg_net` går inte att flytta med `set schema`. Att flytta dem vinner ingenting och riskerar det som hänger på dem |
 
+**`function_search_path_mutable` ska vara tom.** Den larmade 2026-09-30 på tolv NexLäx-funktioner
+i `intern` (Fas 23.1 och 23.2), och `20261001000100_nexlax_fast_search_path` gav dem
+`public, pg_temp` med `alter function … set`. En funktion som skrivs om med `create or replace`
+tappar sin SET om den inte står med i den nya texten, så nästa larm där är ett äkta.
+
 **Triggerfunktioner har ingen EXECUTE** (v14b, v16c, Fas 19.4). Supabases
 förval ger varje ny funktion EXECUTE för anon och authenticated, och
 Fas 16.1 fick tillbaka tre. En trigger prövar rättigheten när den
