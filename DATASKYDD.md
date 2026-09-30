@@ -59,6 +59,8 @@ finnas. Det här är det.
 | 17 | Handlingar om verksamheten (`handlingar`, hinken `dokument`) | studiehjälpare, förälder | avtal, intyg; en handling som delats med personen den gäller läser hen själv under Profil & inställningar (2026-09-29) | 6.1 b, 6.1 c | Supabase | så länge de gäller, sedan så länge lagen kräver |
 | 18 | Vårt arbetsunderlag (`uppgifter`, `admin_noteringar`) | alla | titel och text vi skriver själva, kan nämna namn | 6.1 f | Supabase | uppgifter: 1 år efter att de stängts; anteckningar om en person: med personens konto |
 | 19 | Tipskoder och kampanjkoder (`tipskoder`, `leads.kod`, 2026-09-30) | förälder och studiehjälpare som tipsar; familjen som anmäler sig | en kod per familj och godkänd studiehjälpare (slumpad, inget namn), vilken kod en anmälan bar; kampanjkoder bär en plats, ingen person. Den som tipsat ser antal anmälda och kunder, aldrig vilka; admin ser vem som tipsat vem | 6.1 f (vilka tips och affischer som leder till anmälan); för den bjudna timmen 6.1 b (villkoren #tips) | Supabase | koden så länge kontot finns (tas bort när kontot raderas eller avidentifieras, och kopplingen i anmälan med den); koden på anmälan står kvar när anmälan avidentifieras |
+| 20 | Barnets egen inloggning (`students.user_id`, `anvandarnamn`, `barn_aktiv`, `visa_rapporter`, `vardnadshavare_godkand_at`, `senast_inloggad`; kontot i `auth.users` med `app_metadata.roll = barn`; `barn_notiser`; `barn_andringsfonster`; barnkonton_och_admin, 2026-09-30) | barn; föräldern (godkännandet) | användarnamn, lösenordets hash (i Auth, aldrig läsbar för oss), när vårdnadshavaren godkände, senaste inloggning, notiserna i barnets vy (typ, passet, en mening om passet) | 6.1 b: föräldern ber om inloggningen, skapar den och kan ta bort den, och bekräftar att hen är vårdnadshavare (tidpunkten sparas) | Supabase (Auth). Ingen e-post: adressen `<användarnamn>@barn.nextrum.se` tar aldrig emot något, `notis-ko` hoppar över den och databasen ger den ingen mejlnotis | så länge föräldern låter den finnas; tas bort direkt när föräldern tar bort den eller barnet raderas eller avidentifieras; notiserna 180 dagar; ändringsfönstret för ett lösenordsbyte högst 60 sekunder |
+| 21 | Adminroller (`admin_roller`, `admin_logg`, 2026-09-30) | vi som är admins | vem som är admin, behörigheterna, vem som gav dem och när; loggen bär aktörens och personens id, handlingen och behörigheterna före och efter, aldrig namn | 6.1 f: att kunna visa vem som gett vem åtkomst till uppgifterna | Supabase | rollen så länge den gäller (försvinner med kontot); loggen så länge verksamheten finns, och den går inte att ändra |
 
 **Känsliga uppgifter (art. 9) samlas inte in.** Vi ber aldrig om hälsa
 eller diagnoser, men fritexten kan få dem ändå ("Elsa har ADHD"). Därför
@@ -120,6 +122,7 @@ adminvyn under System → Automationer med sin senaste körning.
 | `notis-stada` | varje natt 03.17 UTC | notiser 180 dagar, utskick och fel 90 dagar, körningar 30 dagar |
 | `ai-och-uppgifter-gallring` | varje natt 03.51 UTC | agentloggens text efter 90 dagar, AI-förslagens motivering 90 dagar efter beslut, klara och avbrutna uppgifter efter 1 år |
 | `svar-gallring` | varje natt 03.53 UTC | tömmer studiehjälparens svar på en föreslagen tid 30 dagar efter avslaget, eller 30 dagar efter passet; passet står kvar |
+| `barnkonton-gallring` | varje natt 03.59 UTC | notiserna i barnens vy efter 180 dagar, och ändringsfönster för ett lösenordsbyte som gått ut (barnkonton_och_admin) |
 | `konton-oanvanda` | den 1:a varje månad | gör varje konto som inte använts på 2 år till en uppgift i adminvyn |
 | `cron-stada` | varje natt | jobbens egen logg efter 7 dagar |
 
@@ -179,11 +182,15 @@ och skickar varje utkast.
 | Spårning utan samtycke | var säker (Vercel laddades direkt) | låg | inget skript som skickar data laddas före ja | låg |
 | Vi läser chatten mellan en familj och en studiehjälpare (ofta sexton) utan att de märker det (2026-09-29) | säker när Öppna chatt används | medel | står i integritetspolicyn på båda språken och i chatten själv; bara admin, genom `chatt_las()`, som skriver varje öppning i auditloggen utan texten; syftena i policyn är de enda vi läser för | låg, så länge vi läser för syftena och inte för att det går |
 | Den som tipsat får veta att en familj hen tipsat anmält sig och blivit kund (tipskoderna, 2026-09-30) | säker, det är hur tipset fungerar | låg | bara antal, aldrig vilka; står under kodfältet i anmälan och i integritetspolicyn på båda språken; fältet går att tömma innan anmälan skickas; ingen belöning till studiehjälpare, som ofta är sexton | låg |
+| Ett barn med egen inloggning ser något det inte ska: priser, betalningar, förälderns uppgifter, andra barn (2026-09-30) | låg | medel | barnets roll i databasen (`nextrum_barn`) har inga tabellrättigheter alls, bara tre funktioner som svarar om barnet i token och prövar det mot `students.user_id`; prövat i `rls-test.sql` med en slinga över varje tabell och vy | låg |
+| Någon tar över ett barns inloggning, genom att gissa lösenordet eller genom att byta adress eller återställa lösenordet (2026-09-30) | låg | medel | minst 8 tecken; lösenordet byts bara av föräldern genom `barn-konto`, i ett fönster på 60 sekunder; adress, återställning och telefon spärras i `auth.users` av en trigger; föräldern kan pausa, vilket loggar ut barnet överallt; barnet får aldrig ett mejl | låg till medel: mot gissning finns bara Supabases egna gränser för inloggningsförsök |
+| En admin med begränsad behörighet ser mer än uppgiften kräver (2026-09-30) | låg | medel | behörigheterna gäller i RLS, inte bara i vyn; ingen kan ge det den inte har, och varje ändring står i `admin_logg`, som inte går att ändra | låg |
 
 **Slutsats.** Restrisken är acceptabel och kräver inget förhandssamråd
 med IMY (art. 36). Gör om bedömningen när något av följande ändras: en ny
-AI-funktion, en ny leverantör som får uppgifter om barn, pixlarna slås
-på, eller barn får egna konton.
+AI-funktion, en ny leverantör som får uppgifter om barn, eller pixlarna
+slås på. Barnens egna inloggningar (2026-09-30) är de tre sista raderna
+ovan; bedömningen av dem är vår, och en jurist har inte läst den (avsnitt 8).
 
 ---
 
@@ -198,7 +205,7 @@ som står på kontot, inte till en ny.
 `study_plans`, `homework`, `progress_items`, `lesson_reports`,
 `niva_forsok` och `niva_svar` (Fas 23.1: svaren på de digitala uppgifterna),
 `bookings`, `messages`, `leads` (om den inte är gallrad), `klippkort`,
-`timbank_rorelser`,
+`timbank_rorelser`, barnets inloggning (kolumnerna i rad 20 och `barn_notiser`),
 `invoices`, `rapport_bekraftelser`, `notis_val`. Förälderns egna
 anteckningar (`student_notes`) når vi inte; familjen ser dem själv. För
 en sökande: `applications` och CV-filen. Skicka som en fil, inte som
@@ -230,6 +237,9 @@ reglerna står i `radera_person()` (migrationen
   `niva_svar`) och rapporternas text tas bort, inloggningen stängs,
   och betalda pass, `klippkort`, `invoices`, `payouts` och `stripe_*`
   står kvar utan namn i sju år.
+- Barnets egen inloggning försvinner med barnet: triggern
+  `students_barnkonto_stadas` tar bort kontot i Auth och barnets notiser
+  när barnet raderas eller avidentifieras (barnkonton_och_admin).
 - Anmälningar med samma adress avidentifieras som i nattjobbet (raden
   står kvar för statistiken). Ansökningar, CV och frågor med samma
   adress tas bort.
@@ -314,6 +324,10 @@ Inget av det här går att göra i koden.
   → Policies (HaveIBeenPwned).
 - [ ] **Låt en jurist läsa** integritetspolicyn, villkoren och den här
   filen innan bolaget registreras.
+- [ ] **Barnens inloggning (2026-09-30):** låt juristen läsa grunden
+  (6.1 b med vårdnadshavarens ja, rad 20) och raderna i
+  konsekvensbedömningen innan det första barnkontot skapas, och säg till
+  familjerna i samma mejl som policyändringen.
 - [ ] **Meddela familjerna med konto** att integritetspolicyn ändrats.
   Ändringen ger dem fler rättigheter, inte färre, så det räcker med ett
   mejl. Sedan 2026-09-29 står där också att vi kan läsa chatten; säg det

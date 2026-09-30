@@ -48,7 +48,7 @@
      NXAdmin.rita, som fylls när alla filer laddats. */
   const byggFlöde = (...a) => NXAdmin.rita.byggFlöde(...a);
   const fyllPerioder = (...a) => NXAdmin.rita.fyllPerioder(...a);
-  const ritaAdminanvandare = (...a) => NXAdmin.rita.ritaAdminanvandare(...a);
+  const ritaAdminhantering = (...a) => NXAdmin.rita.ritaAdminhantering(...a);
   const ritaAnsokningar = (...a) => NXAdmin.rita.ritaAnsokningar(...a);
   const ritaBibliotek = (...a) => NXAdmin.rita.ritaBibliotek(...a);
   const ritaAvvikelser = (...a) => NXAdmin.rita.ritaAvvikelser(...a);
@@ -364,7 +364,12 @@
      (Admin / Kunder / Familjer) är borta sedan 2026-09-29: den sa samma
      sak som menyn och rubriken, en tredje gång. */
   function ritaVar() {
-    const sek = String(location.hash || '').replace(/^#/, '').split('/')[0] || 'oversikt';
+    /* Sektionen som faktiskt står framme. För en admin med vissa
+       behörigheter kan adressen peka på en sektion hen inte har, och då
+       visar menyn en annan (barnkonton_och_admin). */
+    const framme = $('#view-app section.vy-sek[data-sek]:not([hidden])');
+    const sek = (framme && framme.dataset.sek)
+      || String(location.hash || '').replace(/^#/, '').split('/')[0] || 'oversikt';
     const namn = SEKTIONSNAMN[sek] || 'Översikt';
     const el = $('#adm-var');
     if (el) el.textContent = namn;
@@ -438,9 +443,15 @@
     const extern = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M6 4h6v6"/></svg>';
     panel.innerHTML = '<div class="adm-anv-vem"><b>' + esc(namn) + '</b>'
       + (epost && epost !== namn ? '<span>' + esc(epost) + '</span>' : '')
-      + '<span class="adm-anv-roll">Admin</span></div>'
-      + '<a class="adm-anv-rad" href="/foralder">Studievyn' + extern + '</a>'
-      + '<a class="adm-anv-rad" href="/larare">Studiehjälparvyn' + extern + '</a>'
+      + '<span class="adm-anv-roll">' + esc(NXAdmin.rita.rollText()) + '</span></div>'
+      /* Ett konto som bara är admin (admin-skapa) har ingen studievy att
+         gå till; de andra vyerna skickar det tillbaka hit. */
+      + (S.profil.role === 'admin' ? ''
+        : '<a class="adm-anv-rad" href="/foralder">Studievyn' + extern + '</a>'
+          + '<a class="adm-anv-rad" href="/larare">Studiehjälparvyn' + extern + '</a>')
+      + '<button class="adm-anv-rad" type="button" data-byt-losen>Byt lösenord'
+      + '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/>'
+      + '<path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></button>'
       + '<button class="adm-anv-rad ar-ut" type="button" data-logout>Logga ut'
       + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4.5H5.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H9"/>'
       + '<path d="M15.5 8.5 19 12l-3.5 3.5M19 12H9"/></svg></button>';
@@ -851,7 +862,7 @@
     if (!S.user) { na.innerHTML = ''; ma.innerHTML = ''; return; }
     const namn = (S.profil && S.profil.full_name) || S.user.email;
     na.innerHTML = '<span class="who-chip">' + M.avatar(namn, null, { liten: true })
-      + '<b>' + esc(namn) + '</b><span class="roll">Admin</span></span>'
+      + '<b>' + esc(namn) + '</b><span class="roll">' + esc(NXAdmin.rita.rollText()) + '</span></span>'
       + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
     ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
   }
@@ -878,18 +889,32 @@
 
       S.user = await NX.hämtaSession();
       if (!S.user) { visa('view-auth'); return; }
+      /* Ett barnkonto hör hemma i sin egen vy. Här hade det ändå fått
+         tomma svar: barnets roll i databasen når inga tabeller. */
+      if (NX.skickaBarnHem(S.user)) return;
       /* Försvinner inloggningen medan fliken står öppen visas
          inloggningen, inte en vy där varje knapp nekas (NXStudie). */
       NXStudie.vaktaInloggningen({ supa, user: S.user, utloggad: () => visa('view-auth') });
 
       S.profil = await NX.hämtaProfil(S.user.id);
+      /* Adminrollen avgör vilken SIDA som visas och vilka sektioner som
+         står i menyn (barnkonton_och_admin). Vad som går att LÄSA avgörs
+         av RLS i databasen, och den frågar inte den här filen om lov. En
+         manipulerad webbläsare kommer alltså in i markupen och får tomma
+         tabeller. */
+      S.behorighet = await NXAdmin.rita.läsBehörighet();
       ritaHeader();
 
-      /* is_admin avgör vilken SIDA som visas. Vad som går att LÄSA
-         avgörs av RLS i databasen, och den frågar inte den här
-         filen om lov. En manipulerad webbläsare kommer alltså in i
-         markupen och får tomma tabeller. */
-      if (!S.profil || !S.profil.is_admin) { visa('view-nekad'); return; }
+      if (!S.profil || !S.behorighet.admin) {
+        const studievyn = $('#nekad-studievyn');
+        if (studievyn && S.profil && S.profil.role === 'admin') studievyn.hidden = true;
+        visa('view-nekad');
+        return;
+      }
+      const full = S.behorighet.superadmin;
+      /* En admin med vissa behörigheter: flikarna hen inte har tas bort
+         och det hen inte får se ritas inte (nextrum-admin-behorighet.js). */
+      NXAdmin.rita.begränsaVyn();
 
       visa('view-app');
 
@@ -907,11 +932,14 @@
          här, där vi vet att den inloggade är admin, men INTE med
          await: en agentfråga som tar nittio sekunder att hämta logg
          för ska inte hålla resten av vyn tom under tiden. */
-      if (typeof NXAdminAgenter !== 'undefined') NXAdminAgenter.start();
+      if (full && typeof NXAdminAgenter !== 'undefined') NXAdminAgenter.start();
 
       S.sido = NXStudie.sidomeny({
-        nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt'
+        nav: $('#vy-sido'), rot: $('#view-app'),
+        standard: full ? 'oversikt' : NXAdmin.rita.förstaSektion(),
+        tillåten: full ? null : NXAdmin.rita.tillåten
       });
+      NXAdmin.rita.städaMenyn();
 
       startaFall();
       ritaAnvandare();
@@ -932,8 +960,12 @@
          Driftkonsolen på Översikt ersätter den och säger något som
          ändras. */
 
+      /* Den som bjudits in har inget lösenord än (NX.inbjudan). Rutan
+         väntas inte in: vyn laddar bakom den. */
+      if (NX.inbjudan) NXAdmin.rita.väljLösenord(true);
+
       await hämtaAllt();
-      await hämtaEkonomiunderlag();
+      if (full) await hämtaEkonomiunderlag();
 
       ritaLeads();
       ritaAnsokningar();
@@ -941,13 +973,13 @@
       ritaChattar();
       ritaFamiljer();
       ritaElever();
-      await hämtaMatchunderlag();
+      if (NXAdmin.rita.tillåten('matchning')) await hämtaMatchunderlag();
       ritaMatchning();
       ritaStudiehjalpare();
       ritaBokningar();
       ritaKalender();
       ritaLektioner();
-      await hämtaAnalys();
+      if (full) await hämtaAnalys();
       ritaStatistik();
       ritaFakturor();
       ritaUtbetalningar();
@@ -958,7 +990,7 @@
       ritaMånaden();
       ritaLöner();
       ritaIntegrationer();
-      ritaAdminanvandare();
+      ritaAdminhantering();
       ritaPris();
       ritaTjanster();
       ritaRabattkoder();

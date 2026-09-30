@@ -20,6 +20,7 @@
    ============================================================ */
 (function () {
   var ärAdmin = !!(document.body && document.body.classList.contains('vy-admin'));
+  var ärBarn = !!(document.body && document.body.classList.contains('vy-barn'));
 
   /* MODULERNA NÅS SOM IDENTIFIERARE, ALDRIG SOM window[...].
      Hälften av dem deklareras `const NXAgent = (function(){…})()` på
@@ -30,8 +31,11 @@
      kör efter vakten och ritar över felrutan syntes det inte ens.
      De som skriver window.NXStudie = … fungerar båda vägarna; de
      andra gör det inte, så det här är enda formen som håller. */
+  /* skickaBarnHem kom med barnkontona: alla fyra vyerna anropar den
+     när de startar. */
   var krav = [
-    [typeof NX !== 'undefined' && typeof NX.esc === 'function', 'nextrum-app.js']
+    [typeof NX !== 'undefined' && typeof NX.esc === 'function' && typeof NX.skickaBarnHem === 'function',
+      'nextrum-app.js']
   ];
 
   /* nextrum-studie.js: vakten över inloggningen och hämtaAlla kom
@@ -45,7 +49,12 @@
     && typeof NXStudie.hämtaAlla === 'function' && typeof NXStudie.passMedSvar === 'function'
     && typeof NXStudie.tipsa === 'function';
 
-  if (ärAdmin) {
+  if (ärBarn) {
+    /* Barnets vy (barn.html) laddar bara NX och NXStudie: inga
+       betalningar, ingen kontakt, ingen bokning. adminroll kom samma
+       dag som vyn och är ett tecken på att filen är ny nog. */
+    krav.push([studieKlar && typeof NXStudie.adminroll === 'function', 'nextrum-studie.js']);
+  } else if (ärAdmin) {
     krav.push(
       [typeof NXTjanster !== 'undefined', 'nextrum-tjanster.js'],
       [studieKlar, 'nextrum-studie.js'],
@@ -77,6 +86,7 @@
         ritaLöner:         'nextrum-admin-loner.js',
         ritaTjanster:      'nextrum-admin-tjanster.js',
         ritaAudit:         'nextrum-admin-system.js',
+        ritaAdminhantering: 'nextrum-admin-behorighet.js',
         ritaAutomationer:  'nextrum-admin-automationer.js',
         ritaAI:            'nextrum-admin-ai.js',
         visaRadering:      'nextrum-admin-radera.js',
@@ -119,7 +129,7 @@
   document.documentElement.dataset.modulfel = '1';
 
   var visa = function (id) {
-    ['view-loading', 'view-auth', 'view-nekad', 'view-app', 'view-fel'].forEach(function (v) {
+    ['view-loading', 'view-auth', 'view-nekad', 'view-annan', 'view-stopp', 'view-app', 'view-fel'].forEach(function (v) {
       var el = document.getElementById(v);
       if (el) el.hidden = (v !== id);
     });

@@ -4007,6 +4007,9 @@
 
     S.user = await NX.hämtaSession();
     if (!S.user) { visa('view-auth'); ritaAuth(); return; }
+    /* Ett barnkonto har sin egen vy (barnkonton_och_admin). Det har ingen
+       profil, och det här hade annars blivit "kontot saknar profil". */
+    if (NX.skickaBarnHem(S.user)) return;
     /* Försvinner inloggningen medan fliken står öppen visas
        inloggningen, inte en vy där varje knapp nekas (NXStudie). */
     NXStudie.vaktaInloggningen({ supa, user: S.user,
@@ -4024,6 +4027,12 @@
       säg($('#auth-msg'), 'Kontot finns men saknar profil i databasen. Har du kört schema.sql i Supabase?', false);
       return;
     }
+
+    /* Ett konto som bara är admin (admin-skapa) hör hemma i adminvyn. Den
+       som också är förälder eller studiehjälpare stannar här, med länken
+       Adminvy i sidhuvudet. */
+    if (S.profil.role === 'admin') { location.replace('/admin'); return; }
+    NXStudie.adminroll(supa, S, ritaHeader);
 
     if (S.profil.role !== 'tutor') { visa('view-wrongrole'); return; }
 

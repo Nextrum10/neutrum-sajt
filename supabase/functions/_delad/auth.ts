@@ -48,7 +48,15 @@ export function serviceklient(): SupabaseClient {
   );
 }
 
-export type Inloggad = { ok: true; anvandare: string; klient: SupabaseClient };
+/**
+ * appMetadata är Auths app_metadata, som bara service_role skriver.
+ * Barnkontona (roll = 'barn', barnkonton_och_admin) känns igen på den;
+ * user_metadata skriver användaren själv och används aldrig till något
+ * som avgör vad någon får.
+ */
+export type Inloggad = {
+  ok: true; anvandare: string; klient: SupabaseClient; appMetadata: Record<string, unknown>;
+};
 export type Nekad = { ok: false; svar: Response };
 
 /** Kräver en giltig inloggning. Svarar med klienten som agerar som den inloggade. */
@@ -61,10 +69,18 @@ export async function kravInloggad(authHeader: string | null): Promise<Inloggad 
   if (error || !u?.user) {
     return { ok: false, svar: json({ error: 'Inloggningen gick inte att verifiera.' }, 401) };
   }
-  return { ok: true, anvandare: u.user.id, klient };
+  return { ok: true, anvandare: u.user.id, klient, appMetadata: u.user.app_metadata ?? {} };
 }
 
-/** Är den inloggade admin? Läst med den inloggades egen token. */
+/**
+ * Är den inloggade admin? Läst med den inloggades egen token.
+ *
+ * Admin betyder FULL admin (superadmin) sedan barnkonton_och_admin:
+ * profiles.is_admin speglar admin_roller.ar_superadmin. En admin med
+ * bara vissa behörigheter släpps alltså inte in här, och varje
+ * funktion som kräver admin förblir stängd för hen tills den
+ * uttryckligen frågar efter en behörighet (harBehorighet nedan).
+ */
 export async function arAdmin(klient: SupabaseClient, anvandare: string): Promise<boolean> {
   const { data } = await klient.from('profiles').select('is_admin').eq('id', anvandare).maybeSingle();
   return data?.is_admin === true;
@@ -78,6 +94,16 @@ export async function kravAdmin(authHeader: string | null): Promise<Inloggad | N
     return { ok: false, svar: json({ error: 'Den här funktionen är bara för admin.' }, 403) };
   }
   return vem;
+}
+
+/**
+ * Har den inloggade en adminbehörighet (eller är superadmin)? Frågat
+ * med den inloggades egen token, så att det är databasens svar och
+ * inte anropets. En databas utan migrationen svarar nej.
+ */
+export async function harBehorighet(klient: SupabaseClient, behorighet: string): Promise<boolean> {
+  const { data, error } = await klient.rpc('har_behorighet', { p_behorighet: behorighet });
+  return !error && data === true;
 }
 
 /** Jämför två hemligheter utan att svarstiden avslöjar hur mycket som stämde. */

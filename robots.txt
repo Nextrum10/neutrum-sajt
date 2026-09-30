@@ -11,5 +11,6 @@ Allow: /
 Disallow: /foralder
 Disallow: /larare
 Disallow: /admin
+Disallow: /barn
 
 Sitemap: https://nextrum.se/sitemap.xml

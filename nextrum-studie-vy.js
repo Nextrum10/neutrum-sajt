@@ -195,6 +195,7 @@
     ritaBarnLista();
     ritaBarnväxel();
     laddaBokning();
+    laddaBarnkonton();
   }
 
   /* Listan över barnen. Visar det som faktiskt är ifyllt — ett tomt
@@ -460,6 +461,309 @@
       await laddaBarn();
     });
   });
+
+  /* ============================================================
+     BARNENS INLOGGNING (barnkonton_och_admin)
+
+     Per barn: skapa en inloggning (användarnamn, lösenord och
+     vårdnadshavarens ja), byt lösenordet, pausa eller aktivera, ta bort
+     inloggningen, och om barnet får läsa rapporterna. Allt utom
+     rapportvalet går genom edge-funktionen barn-konto, som prövar att
+     den inloggade är barnets förälder och öppnar det fönster databasen
+     kräver för ett nytt lösenord. Rapportvalet är en kolumn på barnet
+     som bara föräldern får ändra (skydda_studentfalt).
+
+     Allt ritas med textContent, inte med innerHTML: namnet kommer ur
+     databasen, och i rutan skrivs ett lösenord. Barnets lösenord visas
+     aldrig, och vyn har ingenting att visa: det finns bara som en hash i
+     Auth.
+
+     Reglerna för användarnamn och lösenord är samma som i
+     _delad/barnkonto.ts; funktionen prövar dem igen.
+     ============================================================ */
+  const BI_NAMN = /^[a-z0-9._-]{3,20}$/;
+  S.barnkonton = null;
+  S.biÖppen = {};
+
+  async function laddaBarnkonton() {
+    const ruta = $('#bi-ruta');
+    if (!ruta) return;
+    const { data, error } = await supa.rpc('mina_barnkonton');
+    if (error) {
+      /* PGRST202: funktionen finns inte, migrationen är inte körd. Då
+         står rutan dold i stället för att visa ett fel. */
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.warn('mina_barnkonton:', error.message);
+      S.barnkonton = null;
+      ruta.hidden = true;
+      return;
+    }
+    S.barnkonton = {};
+    (data || []).forEach(r => { S.barnkonton[r.barn_id] = r; });
+    ruta.hidden = !S.barn.length;
+    ritaBarnkonton();
+  }
+
+  /* Ett element med text. Inget innerHTML: det som står i text kommer
+     ofta ur databasen. */
+  function biEl(tag, attr, ...barn) {
+    const e = document.createElement(tag);
+    Object.entries(attr || {}).forEach(([k, v]) => {
+      if (v === true) e.setAttribute(k, '');
+      else if (v != null && v !== false) e.setAttribute(k, String(v));
+    });
+    barn.flat().forEach(b => {
+      if (b == null || b === false) return;
+      e.appendChild(typeof b === 'string' ? document.createTextNode(b) : b);
+    });
+    return e;
+  }
+
+  function biNär(ts) {
+    if (!ts) return 'Aldrig';
+    const d = new Date(ts);
+    return datumText(isoFor(d)) + ' kl. '
+      + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  function biFält(id, text, input, hjälp) {
+    return biEl('div', { class: 'fgroup' },
+      biEl('label', { for: id }, text), input,
+      hjälp ? biEl('p', { class: 'xsmall bi-hjalp' }, hjälp) : null);
+  }
+
+  function biSkapaForm(b) {
+    const namn = b.name;
+    return biEl('form', { class: 'bi-form', 'data-bi-skapa': b.id, novalidate: true },
+      biEl('div', { class: 'vy-form-rad' },
+        biFält('bi-anv-' + b.id, 'Användarnamn',
+          biEl('input', { class: 'inp', id: 'bi-anv-' + b.id, 'data-bi-anv': true, maxlength: 20,
+            autocomplete: 'off', autocapitalize: 'none', spellcheck: 'false', inputmode: 'text' }),
+          'Små bokstäver a–z, siffror, punkt, bindestreck eller understreck, 3–20 tecken.'),
+        biFält('bi-los-' + b.id, 'Lösenord',
+          biEl('input', { class: 'inp', id: 'bi-los-' + b.id, 'data-bi-los': true, type: 'password',
+            autocomplete: 'new-password', minlength: 8 }),
+          'Minst 8 tecken. Det visas aldrig igen, varken för er eller för oss.')),
+      biFält('bi-los2-' + b.id, 'Upprepa lösenordet',
+        biEl('input', { class: 'inp', id: 'bi-los2-' + b.id, 'data-bi-los2': true, type: 'password',
+          autocomplete: 'new-password' })),
+      biEl('label', { class: 'bi-ja' },
+        biEl('input', { type: 'checkbox', 'data-bi-ja': true }),
+        biEl('span', {},
+          'Jag är vårdnadshavare för ' + namn + ' och godkänner att ' + namn + ' använder Nextrum. ',
+          biEl('a', { href: '/integritetspolicy#barn', target: '_blank', rel: 'noopener' },
+            'Så hanterar vi barnens uppgifter'))),
+      biEl('div', { class: 'vy-knapprad' },
+        biEl('button', { class: 'btn btn-primary btn-sm', type: 'submit' }, 'Skapa inloggning')));
+  }
+
+  function biLösenForm(b) {
+    return biEl('form', { class: 'bi-form', 'data-bi-losenform': b.id, novalidate: true },
+      biEl('div', { class: 'vy-form-rad' },
+        biFält('bi-ny-' + b.id, 'Nytt lösenord',
+          biEl('input', { class: 'inp', id: 'bi-ny-' + b.id, 'data-bi-los': true, type: 'password',
+            autocomplete: 'new-password', minlength: 8 })),
+        biFält('bi-ny2-' + b.id, 'Upprepa lösenordet',
+          biEl('input', { class: 'inp', id: 'bi-ny2-' + b.id, 'data-bi-los2': true, type: 'password',
+            autocomplete: 'new-password' }))),
+      biEl('p', { class: 'xsmall bi-hjalp' },
+        b.name + ' loggas ut på alla enheter och loggar in med det nya lösenordet.'),
+      biEl('div', { class: 'vy-knapprad' },
+        biEl('button', { class: 'btn btn-primary btn-sm', type: 'submit' }, 'Spara lösenordet'),
+        biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-losen': b.id }, 'Avbryt')));
+  }
+
+  function biKonto(b, k) {
+    const aktiv = k.barn_aktiv !== false;
+    const rapporter = !!k.visa_rapporter;
+    return [
+      biEl('dl', { class: 'bi-fakta' },
+        biEl('dt', {}, 'Användarnamn'), biEl('dd', {}, k.anvandarnamn),
+        biEl('dt', {}, 'Loggar in på'), biEl('dd', {}, 'nextrum.se/barn'),
+        biEl('dt', {}, 'Senast inloggad'), biEl('dd', {}, biNär(k.senast_inloggad))),
+      biEl('div', { class: 'nx-nval bi-rapporter' },
+        biEl('div', { class: 'nx-nval-text' },
+          biEl('b', {}, 'Visa lektionsrapporter för ' + b.name),
+          biEl('span', { class: 'xsmall' }, rapporter
+            ? b.name + ' läser vad studiehjälparen skrev efter varje pass.'
+            : 'Av: bara ni läser rapporterna.')),
+        biEl('button', { class: 'chip', type: 'button', 'data-bi-rapporter': b.id,
+          'aria-pressed': rapporter ? 'true' : 'false' }, rapporter ? 'På' : 'Av')),
+      S.biÖppen[b.id] === 'losen' ? biLösenForm(b) : null,
+      biEl('div', { class: 'vy-knapprad bi-knappar' },
+        S.biÖppen[b.id] === 'losen' ? null
+          : biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-losen': b.id }, 'Byt lösenord'),
+        biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-paus': b.id,
+          'data-bi-aktiv': aktiv ? '1' : '0' }, aktiv ? 'Pausa inloggningen' : 'Aktivera inloggningen'),
+        biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-bort': b.id }, 'Ta bort inloggningen'))
+    ];
+  }
+
+  function ritaBarnkonton() {
+    const host = $('#bi-lista');
+    if (!host || !S.barnkonton) return;
+    const kort = S.barn.map(b => {
+      const k = S.barnkonton[b.id] || {};
+      const har = !!k.anvandarnamn;
+      const läge = !har ? 'Ingen inloggning' : k.barn_aktiv === false ? 'Pausad' : 'Aktiv';
+      return biEl('div', { class: 'bi-kort', 'data-bi': b.id },
+        biEl('div', { class: 'bi-topp' },
+          biEl('b', {}, b.name),
+          biEl('span', { class: 'lage' + (har && k.barn_aktiv !== false ? ' klar' : '') }, läge)),
+        har ? biKonto(b, k) : biSkapaForm(b));
+    });
+    host.replaceChildren(...kort);
+  }
+
+  /* Funktionens egen text ligger i error.context, inte i data (samma
+     som i startaKassa). */
+  async function barnkontoAnrop(body) {
+    const svar = await supa.functions.invoke('barn-konto', { body });
+    if (!svar.error) return { ok: true, data: svar.data || {} };
+    let text = felText(svar.error);
+    try {
+      const kropp = await svar.error.context.json();
+      if (kropp && kropp.error) text = kropp.error;
+    } catch (_) { /* behåll texten ovan */ }
+    return { ok: false, text };
+  }
+
+  function biBarn(id) { return S.barn.find(x => x.id === id) || null; }
+
+  function biLösenKoll(form, anvandarnamn) {
+    const a = $('[data-bi-los]', form).value, b = $('[data-bi-los2]', form).value;
+    if (a.length < 8) return { fel: 'Lösenordet måste ha minst 8 tecken.', fält: $('[data-bi-los]', form) };
+    if (a !== b) return { fel: 'Lösenorden är inte lika.', fält: $('[data-bi-los2]', form) };
+    const jämför = a.trim().toLowerCase();
+    if (anvandarnamn && (jämför === anvandarnamn || jämför === anvandarnamn + '@barn.nextrum.se')) {
+      return { fel: 'Lösenordet får inte vara samma som användarnamnet.', fält: $('[data-bi-los]', form) };
+    }
+    return { fel: null, lösen: a };
+  }
+
+  const biRuta = $('#bi-lista');
+  if (biRuta) {
+    biRuta.addEventListener('submit', async e => {
+      const form = e.target;
+      const msg = $('#bi-msg');
+      if (form.matches('[data-bi-skapa]')) {
+        e.preventDefault();
+        rensa(msg);
+        const barn = biBarn(form.dataset.biSkapa);
+        if (!barn) return;
+        const anvandarnamn = $('[data-bi-anv]', form).value.trim().toLowerCase();
+        if (!BI_NAMN.test(anvandarnamn)) {
+          säg(msg, '⚠️ Användarnamnet ska vara 3–20 tecken: a–z, siffror, punkt, bindestreck eller understreck.', false);
+          $('[data-bi-anv]', form).focus();
+          return;
+        }
+        const k = biLösenKoll(form, anvandarnamn);
+        if (k.fel) { säg(msg, '⚠️ ' + k.fel, false); k.fält.focus(); return; }
+        if (!$('[data-bi-ja]', form).checked) {
+          säg(msg, '⚠️ Kryssa i att du är vårdnadshavare och godkänner att ' + barn.name + ' använder Nextrum.', false);
+          $('[data-bi-ja]', form).focus();
+          return;
+        }
+        await medan(form.querySelector('button[type="submit"]'), 'Skapar…', async () => {
+          const svar = await barnkontoAnrop({ atgard: 'skapa', barn_id: barn.id, anvandarnamn,
+            losenord: k.lösen, vardnadshavare_godkand: true });
+          if (!svar.ok) { säg(msg, svar.text, false); return; }
+          await laddaBarnkonton();
+          säg(msg, '✓ ' + barn.name + ' loggar nu in som ' + anvandarnamn + ' på nextrum.se/barn.', true);
+        });
+        return;
+      }
+      if (form.matches('[data-bi-losenform]')) {
+        e.preventDefault();
+        rensa(msg);
+        const barn = biBarn(form.dataset.biLosenform);
+        if (!barn) return;
+        const konto = (S.barnkonton || {})[barn.id] || {};
+        const k = biLösenKoll(form, konto.anvandarnamn || '');
+        if (k.fel) { säg(msg, '⚠️ ' + k.fel, false); k.fält.focus(); return; }
+        await medan(form.querySelector('button[type="submit"]'), 'Sparar…', async () => {
+          const svar = await barnkontoAnrop({ atgard: 'byt_losenord', barn_id: barn.id, losenord: k.lösen });
+          if (!svar.ok) { säg(msg, svar.text, false); return; }
+          delete S.biÖppen[barn.id];
+          ritaBarnkonton();
+          säg(msg, '✓ Lösenordet är bytt. ' + barn.name + ' är utloggad och loggar in med det nya.', true);
+        });
+      }
+    });
+
+    biRuta.addEventListener('click', async e => {
+      const msg = $('#bi-msg');
+      const losen = e.target.closest('[data-bi-losen]');
+      if (losen) {
+        const id = losen.dataset.biLosen;
+        if (S.biÖppen[id] === 'losen') delete S.biÖppen[id]; else S.biÖppen[id] = 'losen';
+        rensa(msg);
+        ritaBarnkonton();
+        const fält = $('[data-bi-losenform="' + id + '"] [data-bi-los]', biRuta);
+        if (fält) fält.focus();
+        return;
+      }
+
+      const rapp = e.target.closest('[data-bi-rapporter]');
+      if (rapp) {
+        const barn = biBarn(rapp.dataset.biRapporter);
+        if (!barn) return;
+        const på = rapp.getAttribute('aria-pressed') !== 'true';
+        rensa(msg);
+        await medan(rapp, 'Sparar…', async () => {
+          const { error } = await supa.from('students').update({ visa_rapporter: på }).eq('id', barn.id);
+          if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
+          await laddaBarnkonton();
+        });
+        return;
+      }
+
+      const paus = e.target.closest('[data-bi-paus]');
+      if (paus) {
+        const barn = biBarn(paus.dataset.biPaus);
+        if (!barn) return;
+        const pausa = paus.dataset.biAktiv === '1';
+        if (pausa) {
+          const ja = await bekräfta({
+            titel: 'Pausa ' + barn.name + 's inloggning?',
+            text: barn.name + ' loggas ut och kommer inte in förrän ni aktiverar inloggningen igen. '
+              + 'Inget försvinner.',
+            knapp: 'Pausa'
+          });
+          if (!ja) return;
+        }
+        rensa(msg);
+        await medan(paus, pausa ? 'Pausar…' : 'Aktiverar…', async () => {
+          const svar = await barnkontoAnrop({ atgard: pausa ? 'pausa' : 'aktivera', barn_id: barn.id });
+          if (!svar.ok) { säg(msg, svar.text, false); return; }
+          await laddaBarnkonton();
+          säg(msg, pausa ? '✓ Inloggningen är pausad.' : '✓ Inloggningen är aktiv igen.', true);
+        });
+        return;
+      }
+
+      const bort = e.target.closest('[data-bi-bort]');
+      if (bort) {
+        const barn = biBarn(bort.dataset.biBort);
+        if (!barn) return;
+        const ja = await bekräfta({
+          titel: 'Ta bort ' + barn.name + 's inloggning?',
+          text: 'Användarnamnet och notiserna i barnets vy tas bort, och ' + barn.name
+            + ' loggas ut. Studieplanen, passen och rapporterna står kvar hos er. '
+            + 'Ni kan skapa en ny inloggning när ni vill.',
+          knapp: 'Ta bort'
+        });
+        if (!ja) return;
+        rensa(msg);
+        await medan(bort, 'Tar bort…', async () => {
+          const svar = await barnkontoAnrop({ atgard: 'ta_bort_inloggning', barn_id: barn.id });
+          if (!svar.ok) { säg(msg, svar.text, false); return; }
+          delete S.biÖppen[barn.id];
+          await laddaBarnkonton();
+          säg(msg, '✓ Inloggningen är borttagen.', true);
+        });
+      }
+    });
+  }
 
   /* ============================================================
      NEXLÄX (Fas 23.2)
@@ -4127,6 +4431,9 @@
 
     S.user = await NX.hämtaSession();
     if (!S.user) { visa('view-auth'); ritaAuth(); return; }
+    /* Ett barnkonto har sin egen vy (barnkonton_och_admin). Det har ingen
+       profil, och det här hade annars blivit "kontot saknar profil". */
+    if (NX.skickaBarnHem(S.user)) return;
     /* Försvinner inloggningen medan fliken står öppen visas
        inloggningen, inte en vy där varje knapp nekas (NXStudie). */
     NXStudie.vaktaInloggningen({ supa, user: S.user,
@@ -4144,6 +4451,12 @@
       säg($('#auth-msg'), 'Kontot finns men saknar profil i databasen. Har du kört schema.sql i Supabase? Triggern som skapar profilraden ligger där.', false);
       return;
     }
+
+    /* Ett konto som bara är admin (admin-skapa) hör hemma i adminvyn. Den
+       som också är förälder eller studiehjälpare stannar här, med länken
+       Adminvy i sidhuvudet. */
+    if (S.profil.role === 'admin') { location.replace('/admin'); return; }
+    NXStudie.adminroll(supa, S, ritaHeader);
 
     if (S.profil.role === 'tutor') { visa('view-wrongrole'); return; }
     if (S.profil.match_status !== 'matched') { visa('view-locked'); return; }

@@ -14,6 +14,7 @@ Varför, historien och proven står i `minne/`, som läses när arbetet rör omr
 - `minne/sakerhet.md`: säkerheten, inloggningen, samtycket, advisorn, CSP
 - `minne/funktioner.md`: edge functions, agenterna, AI-lagret, maskoten
 - `minne/genererat-och-ci.md`: genererade filer, sidornas innehåll, CI, `rls-test.sql`
+- `minne/barnkonton-och-admin.md`: barnens inloggning, rollen `nextrum_barn`, adminrollerna
 
 **Ändras en regel: ändra kärnan och filen i `minne/` i samma commit**, och `MINNESPOSTER.md` om
 regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
@@ -71,6 +72,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Frågorna**: talregeln i `intern.niva_tal` och i Pythons `grund.lika()` ändras tillsammans.
   En fråga med svar tas aldrig bort, en ändrad får nytt id. De skrivs från grunden mot Lgr22,
   aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används.
+- **Barnkontona** (2026-09-30): barnet loggar in på `/barn` med ett användarnamn, och adressen
+  `<namn>@barn.nextrum.se` tar aldrig emot mejl. Bara föräldern skapar, pausar och tar bort
+  inloggningen, genom `barn-konto`. Barnet kan inte boka, avboka, svara eller ändra något, och
+  ser aldrig priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade
+  pass, aldrig timbanken. NexLäx görs fortfarande i familjens inloggning.
 ### Ordlistan (använd den, i kod och i text)
 | Ord | Betyder |
 |---|---|
@@ -88,6 +94,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | XP | poäng ur svaren och försöken, aldrig sparade |
 | tipskod | en familjs eller studiehjälpares egen kod i intresseanmälan (`tipskoder`); en kampanjkod är en affischs |
 | tipstimme | en timme på köpet för ett tips: `startrabatt` och `rabattkod = 'TIPS'` på passet |
+| barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
+| superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
 ### Siffror som måste stämma överallt
 - **379 kr/tim** (`PRIS_PER_TIMME`); **69 kr/tim** för fler barn, fast (tre barn: 448, inte
   517).
@@ -114,10 +122,11 @@ Detaljer: `minne/grunden.md`.
 ## 3. Filkartan
 - `nextrum-config.js` är enda filen som ändras vid uppsättning; `nextrum-fel.js` laddas före
   `nextrum-app.js` (`NX`); bildvägar står bara i `nextrum-images.js`; `nextrum-samtycke.js` bara
-  på öppna sidor. `nextrum-modulvakt.js` prövar en funktion per fil i alla tre vyerna, moduler
+  på öppna sidor. `nextrum-modulvakt.js` prövar en funktion per fil i alla fyra vyerna, moduler
   nås som identifierare (aldrig `window[...]`), och en ny `nextrum-admin-*.js` ska in där.
-- Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy` och
-  `nextrum-admin.js`, med `-admin-karna.js` först och ett område per `-admin-*.js`.
+- Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX
+  och NXStudie) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
+  `-admin-*.js`; `-admin-behorighet.js` avgör vad en admin med behörigheter ser.
 - CSS: `nextrum.css`, `-home`, `-cinema`, `-vy`, `-arbetsyta`, `-agent`. **Cinema är
   sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F2EDE3`) tar
   `theme-color` med sig, men mejlens `FARG` ändras för sig. Adminpaletten laddas sist.
@@ -216,6 +225,13 @@ Detaljer: `minne/grunden.md`.
   avidentifieras, konton raderas aldrig av sig själva, ett jobb som fastnat blir en uppgift, och
   `landningssida` bär bara våra utm-taggar. Ett nytt rekryteringssteg med tidsstämpel ska in i
   `intern.ansokan_gallras_fran()`.
+- **Adminrollerna**: sanningen är `admin_roller`, och `profiles.is_admin` speglar superadmin.
+  `is_admin()` är superadmin och `har_behorighet()` resten; en ny adminpolicy väljer en av dem.
+  Reglerna står i triggern `admin_roller_vakt`, och `admin_logg` går inte att ändra.
+- **Barnets roll** `nextrum_barn` har inga tabellrättigheter; en ny tabell eller vy ger den
+  ingenting, och en ny barnfunktion hittar barnet med `intern.mitt_barn()`. `auth.users` har
+  triggrar som spärrar barnets adress och återställning; lösenordet byts bara i ett fönster som
+  `barn-konto` öppnar (`barn_andringsfonster`). Prövat lokalt, inte mot riktiga Supabase.
 - **Rätta och radera en person** i adminvyns panel (`radera_person()`), **aldrig i
   dashboarden**: `bookings.parent_id` är ON DELETE CASCADE. Databasen väljer helt eller
   avidentifierat och vägrar medan pengar inte är uppgjorda eller filer finns kvar. Ett
@@ -227,6 +243,8 @@ Detaljer: `minne/grunden.md`.
   genom `fornamn()`, och `rapport` mejlas aldrig. Typlistorna i databasen och i `typer.ts`
   ändras tillsammans. En saknad rad i `notis_val` betyder PÅ, avanmälan skriver bara där, och
   länken i mejlet kan aldrig slå på något och har med flit ingen utgångstid.
+- Ett barnkonto får aldrig ett mejl: `notis_utskick_ta` och `notis-ko` hoppar över
+  `@barn.nextrum.se`, och barnets notiser står i `barn_notiser`.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot styrs av en INSERT, möteslänken är https, ett steg mejlas en
@@ -247,7 +265,9 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
 - **Ett CHECK-villkor körs som anroparen**: revoke aldrig en funktion som backar ett villkor,
   flytta den till `intern`.
 - RLS begränsar inte kolumner: `is_admin`, `matched_tutor_id`, `status` och bokningsfälten
-  vaktas av triggrar. Admin sätts med SQL, aldrig från en vy. En policy som nekar för mycket ser
+  vaktas av triggrar. Admin ges under System → Adminhantering (`gor_till_admin`, `ta_bort_admin`,
+  `admin-skapa`) eller med SQL (`is_admin = true` blir superadmin); ingen vy skriver `is_admin`,
+  ingen ändrar sin egen roll, och ett barn blir aldrig admin. En policy som nekar för mycket ser
   ut som en tom lista, inte som ett fel.
 - En funktion som svarar om en PERSON har `is_admin`s vakt på första raden. Supabase ger varje
   ny funktion EXECUTE som förval; en triggerfunktion ska inte ha den.
@@ -271,7 +291,7 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   med; före ett pixel-id, se `minne/sakerhet.md`.
 - **Advisorn** larmar om det som är med flit (listan i `minne/sakerhet.md`). Läckta lösenord
   kontrolleras inte, och `kolla_rabattkod` får ett tak med den första koden.
-- **Content-Security-Policy**: `/admin`, `/larare` och `/foralder` har `script-src 'self'`,
+- **Content-Security-Policy**: `/admin`, `/larare`, `/barn` och `/foralder` har `script-src 'self'`,
   alltså **ingen inline-JavaScript** där (`kolla-csp.py`). `/foralder` släpper in Stripe, som
   aldrig vendoras. **Två skarpa CSP-rader får aldrig matcha samma sida.**
 
@@ -289,6 +309,8 @@ Detaljer: `minne/sakerhet.md`.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
   main i 16 av 23 funktioner, webhooken och avanmälan bland dem (`minne/funktioner.md`).
+- `barn-konto` prövar föräldern och `admin-skapa` skriver rollen med anroparens token; bara det
+  Auth kräver görs med `service_role`, och ett barnkonto skapas aldrig utan vårdnadshavarens ja.
 - **Agentregeln**: hårt stegtak, källtvång i kod, bara verifierade `kallor` klickbara (aldrig
   med regex), `ekonomi` skriver aldrig, och agenterna läser källan, aldrig ur minnet.
 - **AI-lagret**: `drift` har inget utgående verktyg, och ingen AI-väg skriver i affärstabeller
@@ -314,7 +336,7 @@ Detaljer: `minne/genererat-och-ci.md`.
 ## 9. CI — `.github/workflows/kontroll.yml`
 Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
 `kolla-betalningsvillkor.py`, `kolla-migrationer.py`, `bygg-uppgifter.py --kolla`,
-`kolla-csp.py`, `kolla-webp.py`, `satt-version.py --kolla`, de genererade filerna
+`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `satt-version.py --kolla`, de genererade filerna
 (`git diff --exit-code`), språkdiffen (också attributnamn), `deno check` och `deno test`.
 - `node --check` ser bara syntax; ett namn som inte hämtats ur `NXAdmin` smäller vid körning.
 - `indexnow.yml` är ingen kontroll. Nyckeln står i roten och i `verktyg/indexnow.py`: byt båda.
@@ -353,7 +375,10 @@ Detaljer: `minne/grunden.md`.
   villkorsändringarna och om att vi kan läsa chatten.
 - **Tipskoderna** (2026-09-30): migrationen `tipskoder_och_kampanjkoder` körs efter merge; tills
   dess står fliken tyst. Affischerna sätts upp enligt `AFFISCHKAMPANJ.md`.
-- **Barnet har inget eget konto**, adminvyn ingen vy över nivåerna, och banken är skriven med AI
+- **Barnkontona och adminbehörigheterna** (2026-09-30) är byggda men inte i drift: migrationen,
+  `barn-konto`, `admin-skapa` och Auth-inställningarna står i `DEPLOY-BARNKONTON.md`. En admin med
+  behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen säger nej.
+- Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Delade dokument: ingen notis, ingen underskrift, en person per
   handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
 

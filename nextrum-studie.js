@@ -2111,8 +2111,19 @@ window.NXStudie = (function () {
     var rot = o.rot || document;
     if (!nav) return null;
 
+    /* o.tillåten(namn) säger vilka sektioner som finns för den här
+       inloggningen (adminvyn med behörigheter, barnkonton_och_admin).
+       De andra står kvar i sidan, dolda, så att ingen ritning letar
+       förgäves efter sina element, men de går inte att nå, inte heller
+       med en adress. Datan i dem är ändå tom: det är RLS som bestämmer. */
+    var tillåten = typeof o.tillåten === 'function' ? o.tillåten : function () { return true; };
     var länkar = NX.$$('a[data-sek]', nav);
-    var sektioner = NX.$$('section[data-sek]', rot);
+    var sektioner = NX.$$('section[data-sek]', rot).filter(function (s) {
+      if (tillåten(s.dataset.sek)) return true;
+      s.hidden = true;
+      return false;
+    });
+    länkar.forEach(function (a) { if (!tillåten(a.dataset.sek)) a.hidden = true; });
     var namn = sektioner.map(function (s) { return s.dataset.sek; });
     if (!namn.length) return null;
     var standard = namn.indexOf(o.standard) !== -1 ? o.standard : namn[0];
@@ -2746,11 +2757,31 @@ window.NXStudie = (function () {
     na.innerHTML = '<span class="nx-notis-hus" id="notis-hus"></span>'
       + '<span class="who-chip">' + NXMedia.avatar(namn, S.minAvatar, { liten: true })
       + '<b>' + esc(namn) + '</b><span class="roll">' + esc(roll) + '</span></span>'
-      + (S.profil && S.profil.is_admin
-        ? '<a class="btn btn-ghost btn-sm" href="/admin">Admin</a>' : '')
+      /* Den som är både förälder eller studiehjälpare och admin landar i
+         sin vanliga vy, med vägen till adminvyn här. is_admin är full
+         admin; en admin med vissa behörigheter känns igen på S.adminroll
+         (adminroll() nedan). */
+      + (S.profil && (S.profil.is_admin || S.adminroll)
+        ? '<a class="btn btn-ghost btn-sm" href="/admin">Adminvy</a>' : '')
       + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
     if (efter) efter();
     ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
+  }
+
+  /* Är den inloggade admin med vissa behörigheter (barnkonton_och_admin)?
+     is_admin på profilen är full admin; en begränsad roll står bara i
+     admin_roller, och mina_behorigheter() svarar om den inloggade själv.
+     Saknas funktionen (migrationen inte körd) är svaret nej och ingenting
+     ritas om. rita() ritar om sidhuvudet med länken Adminvy. */
+  async function adminroll(supa, S, rita) {
+    if (!supa || !S || (S.profil && S.profil.is_admin)) return;
+    try {
+      var svar = await supa.rpc('mina_behorigheter');
+      if (!svar.error && svar.data && svar.data.admin) {
+        S.adminroll = true;
+        if (rita) rita();
+      }
+    } catch (e) { /* ingen länk, inget annat */ }
   }
 
   /* Inloggningsrutan i läge 'in' eller 'up'. t har titel, titelUpp,
@@ -3266,6 +3297,7 @@ window.NXStudie = (function () {
     notisval: notisval, dokument: dokument, tipsa: tipsa,
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
     inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
+    adminroll: adminroll,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxLista: läxLista,
     fordelning: fordelning,

@@ -354,30 +354,38 @@ const NXAdmin = (function () {
     S.tutorProfiler = {};
     (tutorer.data || []).forEach(t => { S.tutorProfiler[t.id] = t; });
 
+    /* En admin med vissa behörigheter (barnkonton_och_admin) frågar inte
+       efter det som bara en superadmin får läsa. Svaret hade varit tomt
+       eller "permission denied", och det senare står i API-loggen som ett
+       fel och skickar nästa felsökning åt fel håll. S.behorighet sätts av
+       nextrum-admin.js innan hämtningen; saknas den är det som förut. */
+    const full = !S.behorighet || S.behorighet.superadmin;
+    const bara = fråga => full ? fråga() : Promise.resolve({ data: [], error: null });
+
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov,
            bankPass, kkSkarp, tips] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
-      hämtaAlla('applications', '*', nyastFörst('created_at')),
-      hämtaAlla('contact_messages', '*', nyastFörst('created_at')),
+      bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
+      bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
       /* antal_barn, rabatt_ore, timpris_ore, extra_ore och startrabatt
          sedan 2026-09-28: Månadens ekonomi räknar vad ett obetalt pass
          kostar, med samma regel som familjens vy (NXBetalning.passpris). */
       hämtaAlla('bookings', 'id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, klippkort_id, antal_barn, rabatt_ore, timpris_ore, extra_ore, startrabatt, rabattkod', nyastFörst('wanted_date')),
       /* Raderna följer med (Fas 14.6): de är underlaget admin lägger in
          i Fortnox, och vilket pass som står på vilken faktura. */
-      hämtaAlla('invoices', '*, invoice_lines(id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)',
-        nyastFörst('period')),
-      hämtaAlla('payouts', '*', nyastFörst('period')),
-      supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400),
-      supa.from('klientfel').select('*').order('created_at', { ascending: false }).limit(100),
+      bara(() => hämtaAlla('invoices', '*, invoice_lines(id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)',
+        nyastFörst('period'))),
+      bara(() => hämtaAlla('payouts', '*', nyastFörst('period'))),
+      bara(() => supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400)),
+      bara(() => supa.from('klientfel').select('*').order('created_at', { ascending: false }).limit(100)),
       /* Notisutskick som inte gick fram. Funktionen är admin-only i
          databasen; en icke-admin som anropar den får noll rader. */
       supa.rpc('notisfel', { timmar: 24 }),
       supa.from('prissattning').select('*').limit(1),
-      supa.from('integrationer').select('*'),
+      bara(() => supa.from('integrationer').select('*')),
       supa.from('tjanster').select('*').order('ordning'),
-      supa.from('rabattkoder').select('*').order('skapad', { ascending: false }),
+      bara(() => supa.from('rabattkoder').select('*').order('skapad', { ascending: false })),
       /* Rapporterna används bara av aktivitetsflödet, och bara de
          senaste. Ett "lektion genomförd" i flödet är ett pass som
          faktiskt rapporterats, inte ett pass vars datum passerat. */
@@ -390,11 +398,11 @@ const NXAdmin = (function () {
          de här raderna används bara till att fylla listan över VEM
          man kan filtrera på. Därför en egen plats i S: annars hade
          sökningens svar och den här listan skrivit över varandra. */
-      hämtaAlla('uppdrag', '*', nyastFörst('created_at')),
-      hämtaAlla('uppgifter', '*', nyastFörst('created_at')),
-      supa.from('rut_tak').select('*').order('ar', { ascending: false }),
-      supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300),
-      hämtaAlla('biblioteksmaterial', '*', nyastFörst('created_at')),
+      bara(() => hämtaAlla('uppdrag', '*', nyastFörst('created_at'))),
+      bara(() => hämtaAlla('uppgifter', '*', nyastFörst('created_at'))),
+      bara(() => supa.from('rut_tak').select('*').order('ar', { ascending: false })),
+      bara(() => supa.from('audit_logg').select('aktor').order('tid', { ascending: false }).limit(300)),
+      bara(() => hämtaAlla('biblioteksmaterial', '*', nyastFörst('created_at'))),
       /* Fas 14.2: spärren "ingen betalning, inget pass". En rad i
          flaggor, som notismejlen. Slås om under Ekonomi →
          Kortbetalningar, där det den styr också syns. */
@@ -405,46 +413,46 @@ const NXAdmin = (function () {
       supa.from('flaggor').select('*').in('kod', ['kortsparr', 'faktura', 'erbjudanden', 'tipstimme']),
       /* Fas 14.3: korttvisterna, med sista dagen att svara. Bara admin
          ser tabellen; för alla andra är svaret tomt. */
-      hämtaAlla('stripe_tvister', '*', nyastFörst('skapad')),
+      bara(() => hämtaAlla('stripe_tvister', '*', nyastFörst('skapad'))),
       /* Fas 14.6: familjer som inte får välja faktura. */
-      hämtaAlla('faktura_sparr', 'parent_id, satt_at', null, 'parent_id'),
+      bara(() => hämtaAlla('faktura_sparr', 'parent_id, satt_at', null, 'parent_id')),
       /* Fas 16.1: köpta planer och klippkort, med timmarna räknade i
          databasen och vad som går tillbaka om familjen slutar i dag. */
-      hämtaAlla('klippkort_saldo', '*', nyastFörst('created_at')),
+      bara(() => hämtaAlla('klippkort_saldo', '*', nyastFörst('created_at'))),
       /* Fas 16.1: vilka besked den som sökt jobb har fått. Tabellen
          bär ingen adress och ingen brödtext, bara steg och utfall.
          Bara admin läser den. id följer med för att hämtaAlla() ska
          kunna känna igen en rad som kom med på två sidor. */
-      hämtaAlla('ansokan_utskick', 'id, ansokan_id, steg, status, forsok, fel, skapad, uppdaterad',
-        nyastFörst('skapad')),
+      bara(() => hämtaAlla('ansokan_utskick', 'id, ansokan_id, steg, status, forsok, fel, skapad, uppdaterad',
+        nyastFörst('skapad'))),
       /* Fas 20.1: övertiden på ett pass som redan var betalt, betald som
          en egen kortbetalning. En egen tabell och inte fler kolumner på
          passet: en återbetalning av tillägget hade annars skrivit över
          passets egen. Står under Kortbetalningar och i passets detalj. */
-      hämtaAlla('pass_tillagg', 'id, booking_id, minuter, begart_ore, status, betalt_ore, '
+      bara(() => hämtaAlla('pass_tillagg', 'id, booking_id, minuter, begart_ore, status, betalt_ore, '
         + 'aterbetald_ore, betald_at, stripe_charge_id, stripe_skarp, created_at',
-        nyastFörst('created_at')),
+        nyastFörst('created_at'))),
       /* Fas 22.1: familjernas timbank, räknad i databasen. Bara de som
          har minuter: det är pengar vi är skyldiga, och en lista med alla
          familjer på noll hade gömt dem. */
-      hämtaAlla('timbank_saldo', 'parent_id, saldo_min, varde_ore', q => q.gt('saldo_min', 0), 'parent_id'),
+      bara(() => hämtaAlla('timbank_saldo', 'parent_id, saldo_min, varde_ore', q => q.gt('saldo_min', 0), 'parent_id')),
       /* Fas 22.1: försöken på utbildningsprovet. Bara resultatet, inte
          svaren: rekryteringsrutan säger hur det gått, inte vad hen
          kryssade. Bara admin läser tabellen. */
-      hämtaAlla('utbildningsprov_forsok', 'id, ansokan_id, ratt, antal, godkant, skapad',
-        nyastFörst('skapad')),
+      bara(() => hämtaAlla('utbildningsprov_forsok', 'id, ansokan_id, ratt, antal, godkant, skapad',
+        nyastFörst('skapad'))),
       /* 2026-09-28, för Månadens ekonomi: vilka pass timbanken betalat
          hela (ett sådant pass är betalt utan kort och utan klippkort),
          och vilka köp av timmar som var testbetalningar. klippkort_saldo
          bär inte stripe_skarp, och ett testköp ska aldrig se ut som
          pengar in. */
-      hämtaAlla('timbank_uttag', 'id, booking_id', q => q.eq('sort', 'pass')),
-      hämtaAlla('klippkort', 'id, stripe_skarp'),
+      bara(() => hämtaAlla('timbank_uttag', 'id, booking_id', q => q.eq('sort', 'pass'))),
+      bara(() => hämtaAlla('klippkort', 'id, stripe_skarp')),
       /* 2026-09-30: tipskoderna och kampanjkoderna, med vad var och en
          gett, räknat i databasen med samma regler som timmen på köpet.
          En rad per kod: en per familj och studiehjälpare som öppnat
          sin flik, och en per affisch. */
-      supa.rpc('tipskoder_lage')
+      bara(() => supa.rpc('tipskoder_lage'))
     ]);
 
     S.leads = leads.data || [];

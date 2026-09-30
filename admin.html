@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=ac8ac9d1">
 <link rel="stylesheet" href="nextrum-vy.css?v=92e16976">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=28dce140">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=a20da120">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -127,10 +127,11 @@
   <!-- ============================================================
        INLOGGNING
        Inget "skapa konto" här, med flit. Ett adminkonto är ett
-       vanligt konto med profiles.is_admin = true, och flaggan går
-       bara att sätta i Table Editor — triggern i schema-v3.sql
-       vägrar ändra den från en inloggad session. Ett registrerings-
-       formulär på den här sidan hade antytt något annat.
+       vanligt konto med en rad i admin_roller (barnkonton_och_admin),
+       som bara en superadmin eller den som får hantera admins ger,
+       under System → Adminhantering. En ny person bjuds in därifrån
+       och väljer sitt lösenord när länken i mejlet öppnas. Ett
+       registreringsformulär på den här sidan hade antytt något annat.
        ============================================================ -->
   <div id="view-auth" hidden>
     <div class="auth-wrap">
@@ -154,7 +155,7 @@
 
         <p class="auth-alt">
           Du loggar in med samma konto som i de andra vyerna.<br>
-          Saknar du behörighet? Be någon sätta <code>is_admin</code> på din rad.
+          Saknar du behörighet? Be en superadmin lägga till dig under System → Adminhantering.
         </p>
       </div>
     </div>
@@ -169,10 +170,10 @@
     <div class="locked">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
       <h2>Du har inte behörighet hit</h2>
-      <p>Kontot fungerar, men det är inte markerat som admin. Adminvyn visar alla familjers och studiehjälpares uppgifter, så den öppnas inte automatiskt för någon.</p>
-      <p style="margin-top:16px">Ska du ha åtkomst: be någon som redan är admin sätta <code>is_admin</code> på din rad i Supabase.</p>
+      <p>Kontot fungerar, men det är inte admin. Adminvyn visar familjers och studiehjälpares uppgifter, så den öppnas inte automatiskt för någon.</p>
+      <p style="margin-top:16px">Ska du ha åtkomst: be en superadmin lägga till dig under System → Adminhantering.</p>
       <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
-        <a class="btn btn-primary" href="/foralder">Till studievyn</a>
+        <a class="btn btn-primary" href="/foralder" id="nekad-studievyn">Till studievyn</a>
         <button class="btn btn-ghost" data-logout>Logga ut</button>
       </div>
     </div>
@@ -447,7 +448,7 @@
                familjernas och studiehjälparnas egna och en per affisch.
                Ritas av ritaKoder() i nextrum-admin-kunder.js ur
                tipskoder_lage(). Affischen skrivs ut från /affisch. -->
-          <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+          <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)" data-bara-super>
             <div class="adm-verktyg">
               <h5 style="margin:0">Tips och kampanjer</h5>
               <span class="small" id="koder-antal" style="margin-left:auto;color:var(--bl-3)"></span>
@@ -1813,7 +1814,7 @@
             <button class="vy-flik" type="button" role="tab" data-flik="integrationer"
                     id="flik-integrationer" aria-controls="panel-integrationer">Integrationer</button>
             <button class="vy-flik" type="button" role="tab" data-flik="adminanvandare"
-                    id="flik-adminanvandare" aria-controls="panel-adminanvandare">Adminanvändare</button>
+                    id="flik-adminanvandare" aria-controls="panel-adminanvandare">Adminhantering</button>
             <button class="vy-flik" type="button" role="tab" data-flik="fel"
                     id="flik-fel" aria-controls="panel-fel">Fel
               <span class="vy-flik-mark" id="flik-fel-mark" hidden></span></button>
@@ -1830,39 +1831,78 @@
                     id="flik-automationer" aria-controls="panel-automationer">Automationer</button>
           </div>
 
-          <!-- ============ ADMINANVÄNDARE ============
-               is_admin är den enda flaggan i systemet som avgör vem
-               som ser den här sidan. Att sätta den har krävt Table
-               Editor, vilket betyder att den som skulle ge en ny
-               kollega behörighet behövde databasåtkomst — och då har
-               hen redan mer än behörigheten ger.
+          <!-- ============ ADMINHANTERING (barnkonton_och_admin) ============
+               Vem som är admin och vad var och en får göra. Sanningen är
+               admin_roller; profiles.is_admin speglar bara superadmin, och
+               en inloggad kan inte skriva den. Allt här går genom
+               gor_till_admin, ta_bort_admin och edge-funktionen
+               admin-skapa, och reglerna står i triggern admin_roller_vakt:
+               ingen ändrar sig själv, ingen ger det den inte har, bara en
+               superadmin gör någon till superadmin, och den sista
+               superadminen går inte att ta bort.
 
-               Triggern skydda_profilfalt släpper igenom en admin, så
-               det går från appen. Det som INTE går, och inte ska gå,
-               är att ta bort sin egen: en ensam admin som klickar
-               fel låser ut hela bolaget ur sin egen adminvy. -->
+               Adressen är fortfarande #system/adminanvandare, så att gamla
+               länkar leder hit. Allt ritas av nextrum-admin-behorighet.js. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="adminanvandare"
                id="panel-adminanvandare" aria-labelledby="flik-adminanvandare" hidden>
             <div class="dbox">
-              <h5>Har behörighet <em id="adm-anv-antal"></em></h5>
+              <h5>Admins <em id="ah-antal"></em></h5>
               <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
-                En admin ser alla familjers och studiehjälpares uppgifter, alla meddelanden,
-                alla betalningar och alla utbetalningar. Ge den bara till den som ska ha den.
+                Vem som kommer in i adminvyn och vad var och en får göra. Behörigheterna gäller i
+                databasen, inte bara här: den som saknar en ser tomma listor där.
               </p>
-              <div id="adm-anv"><div class="loading">Hämtar</div></div>
+              <div id="ah-lista"><div class="loading">Hämtar</div></div>
+              <p class="ok-msg" id="ah-msg" role="status"></p>
             </div>
 
-            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
-              <h5>Ge behörighet</h5>
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)" data-ah-kraver-migrering>
+              <h5>Bjud in en ny admin <em>får ett mejl</em></h5>
               <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:14px">
-                Personen behöver ha ett konto på sidan först. Sök på namn eller e-post.
+                För den som inte har något konto hos oss. Personen får ett mejl med en länk till
+                adminvyn och väljer ett lösenord där. Har adressen redan ett konto: lägg till personen
+                under Befintlig användare i stället.
+              </p>
+              <form id="ah-ny-form" class="ah-form" novalidate>
+                <div class="vy-form-rad">
+                  <div class="fgroup">
+                    <label for="ah-ny-epost">E-post</label>
+                    <input class="inp" id="ah-ny-epost" type="email" autocomplete="off" maxlength="200">
+                  </div>
+                  <div class="fgroup">
+                    <label for="ah-ny-namn">Namn</label>
+                    <input class="inp" id="ah-ny-namn" autocomplete="off" maxlength="120">
+                  </div>
+                </div>
+                <div id="ah-ny-valen"></div>
+                <div class="vy-knapprad">
+                  <button class="btn btn-primary btn-sm" type="submit">Skicka inbjudan</button>
+                </div>
+                <p class="ok-msg" id="ah-ny-msg" role="status"></p>
+              </form>
+            </div>
+
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)" data-ah-kraver-migrering>
+              <h5>Befintlig användare</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:14px">
+                För den som redan har ett konto, som förälder eller studiehjälpare. Personen loggar in
+                som vanligt och ser adminvyn med de behörigheter du väljer, och har kvar sin vanliga vy.
               </p>
               <div class="adm-verktyg">
-                <input class="inp adm-sok" id="adm-anv-sok" type="search"
+                <input class="inp adm-sok" id="ah-bef-sok" type="search"
                        placeholder="Sök namn eller e-post" aria-label="Sök person" autocomplete="off"
                        style="max-width:none">
               </div>
-              <div id="adm-anv-traffar"></div>
+              <div id="ah-bef-traffar"></div>
+              <p class="ok-msg" id="ah-bef-msg" role="status"></p>
+            </div>
+
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)" data-ah-kraver-migrering>
+              <h5>Loggen <em>går inte att ändra</em></h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:14px">
+                Varje ny, ändrad och borttagen admin, vem som gjorde det och när. Databasen skriver
+                loggen själv, och ingen kan ändra eller tömma den.
+              </p>
+              <div id="ah-logg"><div class="loading">Hämtar</div></div>
             </div>
           </div>
 
@@ -2244,15 +2284,15 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=8ffb028b"></script>
+<script src="nextrum-app.js?v=ae9d5f14"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=2bcbdc4f"></script>
+<script src="nextrum-studie.js?v=c38e3617"></script>
 <script src="nextrum-arbetsyta.js?v=6c1e8e1a"></script>
 <script src="nextrum-media.js?v=01adfb73"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=7cd3b70d"></script>
+<script src="nextrum-admin-karna.js?v=1a66dc3d"></script>
 <script src="nextrum-admin-detalj.js?v=be392451"></script>
 <script src="nextrum-admin-oversikt.js?v=6abd671e"></script>
 <script src="nextrum-admin-kunder.js?v=09fbce10"></script>
@@ -2264,7 +2304,8 @@
 <script src="nextrum-admin-manaden.js?v=e9a6bb1c"></script>
 <script src="nextrum-admin-loner.js?v=6b1c06fd"></script>
 <script src="nextrum-admin-tjanster.js?v=997de096"></script>
-<script src="nextrum-admin-system.js?v=9f3128c4"></script>
+<script src="nextrum-admin-system.js?v=db07019e"></script>
+<script src="nextrum-admin-behorighet.js?v=4e952a41"></script>
 <script src="nextrum-admin-automationer.js?v=ae242f1e"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
@@ -2273,7 +2314,7 @@
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
-<script src="nextrum-modulvakt.js?v=559a241f"></script>
-<script src="nextrum-admin.js?v=720a0934"></script>
+<script src="nextrum-modulvakt.js?v=a1c84ddc"></script>
+<script src="nextrum-admin.js?v=cb2e4b31"></script>
 </body>
 </html>

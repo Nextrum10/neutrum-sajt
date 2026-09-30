@@ -112,6 +112,16 @@ Deno.test('ett mejl skickas, markeras klart och räknas', async () => {
   assertEquals(r, { behandlade: 1, skickade: 1, misslyckade: 0, meddelande: null, fel: false, mejlStoppat: false });
 });
 
+Deno.test('ett barnkonto får aldrig ett mejl, inte ens om kön lämnar ut det', async () => {
+  const k = bank([rad({ epost: 'alva.b@barn.nextrum.se' }), rad({ epost: ' ALVA.B@Barn.Nextrum.se ' })]);
+  const r = await korKon(k.b);
+
+  assertEquals(k.skickade.length, 0);
+  assertEquals(k.klara.map((x) => [x.ok, x.permanent, x.fel]),
+    [[false, true, 'Barnkonton får inga mejl.'], [false, true, 'Barnkonton får inga mejl.']]);
+  assertEquals(r.skickade, 0);
+});
+
 Deno.test('varje rad får sin egen idempotensnyckel', async () => {
   const rader = [rad(), rad(), rad()];
   const k = bank(rader);

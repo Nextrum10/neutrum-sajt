@@ -544,3 +544,16 @@ senare sida ger felet, aldrig en halv lista.
   försvinna. Priset är en `count` per lista när vyn laddas. Det som en
   dag blir för tungt att hämta i sin helhet ska hämtas per månad, inte
   kapas.
+
+### Barnets vy och adminvyn med behörigheter (barnkonton_och_admin, 2026-09-30)
+- `barn.html`: en spalt, samma kort och rader som studievyn (`.vy-kort`,
+  `.vy-rad`, `.lage`), och `.bv-*` i `nextrum-arbetsyta.css`, bara tokens.
+  Ingen hälsningsfilm, ingen meny, ingen länk till föräldervyn.
+- Föräldrarnas ruta Barnens inloggning heter `bi-*` (`#bi-ruta`,
+  `data-bi-*`), för `bk-*` och `#bk-msg` är bokningens och stod redan i
+  samma sida.
+- En admin med behörigheter får sina sektioner genom `o.tillåten` i
+  `NXStudie.sidomeny` (de andra döljs och går inte att nå med en adress),
+  flikarna hen inte har tas bort ur DOM:en, och en rubrik utan synlig post
+  göms (`städaMenyn`). Knapparna i en synlig sektion är fortfarande
+  superadminens; databasen säger nej. Se `minne/barnkonton-och-admin.md`.

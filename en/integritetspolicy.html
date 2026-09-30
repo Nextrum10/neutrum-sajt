@@ -179,6 +179,9 @@
         question, whether it was right and when. The marking is automatic, but it decides nothing
         about the child: it shows the child, you and the tutor what has stuck</li>
       <li>Reports after each session: what you did, how it went, what needs practice</li>
+      <li>If you have given the child a login of their own: the username, when you as guardian
+        approved it, when the child last logged in and the notifications in the child’s view. We
+        never see the password</li>
     </ul>
     <p class="jur-vikt">Your own notes about the child are private even from us. They sit in a separate table where
       neither tutor nor administrator has read access — that is a technical barrier in the
@@ -255,6 +258,9 @@
         (Article 6(1)(f)). The child is not a party to the contract, but help for the child is
         what you asked for, and it cannot be given without the data. The child’s interests
         weigh the most in that balance, which is why we only collect what teaching needs.</li>
+      <li><b>The child’s own login</b>: the contract with you (Article 6(1)(b)). You are the ones
+        who ask for it, create it and can remove it, and when you create it you confirm that you
+        are the guardian and approve of the child using Nextrum. We store when that was done.</li>
       <li><b>Accounting records</b>: legal obligation (Article 6(1)(c)), the Swedish Accounting
         Act.</li>
       <li><b>Job applications</b>: legitimate interest (Article 6(1)(f)), being able to hire the
@@ -283,8 +289,14 @@
         and the answers to them, material, messages and the agreements we have shared with them.</li>
       <li><b>A family</b> sees only their own children, sessions, payments, messages and the
         agreements we have shared with them.</li>
+      <li><b>A child with their own login</b> sees only their own sessions, hours, study plan and
+        notifications, and the reports if the parent has turned that on. Never prices, payments,
+        offers, the parent’s details or anything about other families, and the child cannot
+        book, cancel or change anything. The barrier is in the database: the child’s login
+        reaches no tables, only what is the child’s own.</li>
       <li><b>We</b> can reach what is needed to run the service and solve problems — with the exception of
-        your private notes, described above.</li>
+        your private notes, described above. Each of us sees only what their own permissions
+        cover, and none of us can see or change a child’s password.</li>
       <li><b>The chat</b> between family and tutor is something we can open and read. We do so to
         keep the children safe, to make sure the tone is right and to be able to sort things out
         if something has gone wrong. We never write in it. You get no notification when we read
@@ -295,7 +307,9 @@
         work for long.</li>
     </ul>
     <p>We also keep a log of who on our side changed what and when: a match, an invoice, a session,
-      a permission. It also records every time one of us has opened a chat. The log carries
+      a permission. It also records every time one of us has opened a chat. Who made someone an
+      admin, and with which permissions, is recorded in a separate log that cannot be altered
+      either. The log carries
       states, links and timestamps — never names, addresses, message
       texts or anything written about a child. It cannot be altered or deleted afterwards, not by
       us either, and that is the whole point of it.</p>
@@ -366,6 +380,9 @@
         This happens automatically every night. The session itself remains.</li>
       <li><b>Notifications and sent emails</b>: the notifications in the views are deleted after
         180 days, and the records of each sent email after 90 days.</li>
+      <li><b>The child’s login</b>: as long as you keep it. If you remove it, or the child is
+        deleted, the username, the login and the child’s notifications are deleted at once.
+        Otherwise the notifications in the child’s view are deleted after 180 days.</li>
       <li><b>Accounting records</b>: payments and payout records, seven years. That is required
         by the Swedish Accounting Act and not something we can shorten, not even on request.</li>
       <li><b>The change log</b>: as long as the business exists. It carries states and times,
@@ -380,11 +397,16 @@
       overwritten. Nobody uses them for anything other than restoring the service after a
       failure.</p>
 
-    <h2>Children’s data</h2>
+    <h2 id="barn">Children’s data</h2>
     <p>The service is about children, so their data is the most sensitive thing we handle.</p>
     <ul>
-      <li>Children have no accounts of their own. The parent registers, accepts the terms and
-        enters the details about the child.</li>
+      <li>A child cannot create an account on their own. The parent registers, accepts the terms
+        and enters the details about the child.</li>
+      <li>The parent can give the child a login of their own to a simple view with sessions,
+        hours, study plan and notifications, and pause or remove it at any time. The login is a
+        username and a password, not an email address: the technical address it needs (the
+        username at barn.nextrum.se) never receives any email, and we send nothing to the
+        child.</li>
       <li>We only collect what teaching needs: school year, school, subjects and goals. We never
         ask for personal identity numbers, diagnoses or grades, and ask you not to write such
         things in the text boxes.</li>
@@ -399,6 +421,9 @@
         your school year, your subjects, your tasks, how you answered the digital ones and what you
         and your tutor did in the sessions.</li>
       <li>Only your parent, your tutor and we at Nextrum can see it.</li>
+      <li>If your parent has given you a login of your own, you see your sessions, your hours,
+        your study plan and your notifications at nextrum.se/barn. Nobody sees your password, not
+        even us. If you want to change something, ask your parent.</li>
       <li>We never sell it and never show it to anyone else.</li>
       <li>Do you want to know what is stored about you, or want something removed? Tell your
         parent, or email us at <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</li>
@@ -571,7 +596,7 @@
 <script src="../nextrum-config.js?v=fdfed591"></script>
 <script src="../nextrum-images.js?v=50260f9d"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=8ffb028b"></script>
+<script src="../nextrum-app.js?v=ae9d5f14"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=f1ce069c"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och

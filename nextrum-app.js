@@ -6,6 +6,12 @@
 
 const CFG = window.NEXTRUM_CONFIG || {};
 
+/* Kom sidan från länken i en inbjudan? Läses FÖRE klienten skapas:
+   supabase-js tar hand om inloggningen i adressen och tömmer den, och
+   efter det går det inte att se att personen inte har något lösenord
+   än. Adminvyn frågar efter ett då (barnkonton_och_admin). */
+const INBJUDAN = /(?:^|[#&])type=invite(?:&|$)/.test(String(location.hash || ''));
+
 /* Supabase-klienten. null om nycklarna inte är ifyllda än, då visar
    sidorna en tydlig ruta istället för att bara vara trasiga. */
 const supa = (String(CFG.SUPABASE_URL || '').startsWith('https://') && window.supabase)
@@ -978,8 +984,9 @@ const NX = (function () {
     if (!supa) return;
     const user = await hämtaSession();
     if (!user) return;
-    const profil = await hämtaProfil(user.id);
-    const mål = vyFörRoll(profil && profil.role);
+    /* Ett barn har ingen profil att fråga efter. */
+    const profil = ärBarn(user) ? null : await hämtaProfil(user.id);
+    const mål = vyFör(user, profil);
     $$('#login-link, .m-actions a[href="foralder.html"], .ftr a[data-vagval]').forEach(a => {
       a.href = mål;
       a.textContent = 'Min vy';
@@ -990,9 +997,36 @@ const NX = (function () {
   }
 
   /* Vart hör den här användaren hemma? Används av inloggningen på
-     huvudsidan för att skicka rätt person till rätt vy. */
+     huvudsidan för att skicka rätt person till rätt vy.
+
+     'admin' är ett konto som bara är admin: det skapas av edge-
+     funktionen admin-skapa och har ingen familj och inga elever. Rollen
+     är en adress, aldrig en behörighet; vad kontot får står i
+     admin_roller (barnkonton_och_admin). */
   function vyFörRoll(role) {
-    return role === 'tutor' ? '/larare' : '/foralder';
+    return role === 'tutor' ? '/larare' : role === 'admin' ? '/admin' : '/foralder';
+  }
+
+  /* ROLLDIRIGERINGEN (barnkonton_och_admin). Ett barnkonto känns igen på
+     app_metadata, som bara service_role skriver; user_metadata skriver
+     användaren själv och avgör ingenting. Dirigeringen visar rätt SIDA,
+     den skyddar inget: barnets roll i databasen (nextrum_barn) når inga
+     tabeller, vilken sida som än öppnas. */
+  function ärBarn(user) {
+    return !!(user && user.app_metadata && user.app_metadata.roll === 'barn');
+  }
+
+  function vyFör(user, profil) {
+    return ärBarn(user) ? '/barn' : vyFörRoll(profil && profil.role);
+  }
+
+  /* Ett barn som öppnar studievyn, studiehjälparvyn eller adminvyn
+     skickas till sin egen. Svarar true när sidan byts, så att vyn slutar
+     starta. */
+  function skickaBarnHem(user) {
+    if (!ärBarn(user)) return false;
+    location.replace('/barn');
+    return true;
   }
 
   /* ---------- kalender ----------
@@ -1108,7 +1142,8 @@ const NX = (function () {
        att peka på något: `return { …, hämtaTillganglighet }` med ett
        odefinierat namn kastar ReferenceError, och hela NX dör vid
        inladdning på varje sida. Mains lista gäller. */
-    hämtaSession, hämtaProfil, vyFörRoll,
+    hämtaSession, hämtaProfil, vyFörRoll, vyFör, ärBarn, skickaBarnHem,
+    inbjudan: INBJUDAN,
     hämtaUpptagna, tiderFörDatum,
     MANADER, DAGAR, CFG, AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod
   };

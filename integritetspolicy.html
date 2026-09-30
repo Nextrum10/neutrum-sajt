@@ -179,6 +179,9 @@
         om det var rätt och när. Rättningen görs automatiskt, men den avgör ingenting om barnet:
         den visar barnet, er och studiehjälparen vad som sitter</li>
       <li>Rapporter efter varje pass: vad ni gjorde, hur det gick, vad som behöver tränas</li>
+      <li>Har ni gett barnet en egen inloggning: användarnamnet, när ni som vårdnadshavare
+        godkände den, när barnet senast loggade in och notiserna i barnets vy. Lösenordet ser vi
+        aldrig</li>
     </ul>
     <p class="jur-vikt">Era egna anteckningar om barnet är privata även för oss. De ligger i en
       egen tabell där varken studiehjälpare eller administratör har läsrätt — det är en teknisk
@@ -254,6 +257,9 @@
         (artikel 6.1 f). Barnet är inte själv part i avtalet, men det är hjälpen till barnet ni
         har bett om, och den går inte att ge utan uppgifterna. Barnets intressen väger tyngst i
         den avvägningen, och därför samlar vi bara det som behövs för undervisningen.</li>
+      <li><b>Barnets egen inloggning</b>: avtalet med er (artikel 6.1 b). Det är ni som ber om
+        den, skapar den och kan ta bort den, och när ni skapar den bekräftar ni att ni är
+        vårdnadshavare och godkänner att barnet använder Nextrum. Vi sparar när det gjordes.</li>
       <li><b>Bokföringsunderlag</b>: rättslig förpliktelse (artikel 6.1 c), bokföringslagen.</li>
       <li><b>Jobbansökningar</b>: berättigat intresse (artikel 6.1 f), att kunna anställa rätt
         studiehjälpare. Blir du anställd gäller avtalet.</li>
@@ -280,8 +286,14 @@
         uppgifter och svaren på dem, material, meddelanden och de avtal vi delat med hen.</li>
       <li><b>En familj</b> ser bara sina egna barn, pass, betalningar, meddelanden och de avtal vi
         delat med dem.</li>
+      <li><b>Ett barn med egen inloggning</b> ser bara sina egna pass, timmar, studieplan och
+        notiser, och rapporterna om föräldern slagit på det. Aldrig priser, betalningar,
+        erbjudanden, förälderns uppgifter eller något om andra familjer, och barnet kan inte boka,
+        avboka eller ändra något. Spärren sitter i databasen: barnets inloggning når inga
+        tabeller, bara det som är barnets eget.</li>
       <li><b>Vi</b> kommer åt det som behövs för att driva tjänsten och lösa problem — med
-        undantag för era privata anteckningar, som beskrivs ovan.</li>
+        undantag för era privata anteckningar, som beskrivs ovan. Var och en hos oss ser bara det
+        den egna behörigheten täcker, och ingen av oss kan se eller byta ett barns lösenord.</li>
       <li><b>Chatten</b> mellan familj och studiehjälpare kan vi öppna och läsa. Det gör vi för
         att barnen ska vara trygga, för att tonen ska vara rätt och för att kunna reda ut det om
         något gått fel. Vi skriver aldrig i den. Ni får ingen notis när vi läser och ingenting
@@ -292,7 +304,9 @@
         fungerar den inte länge.</li>
     </ul>
     <p>Vi för också en logg över vem hos oss som ändrat vad och när: en matchning, en faktura,
-      ett pass, en behörighet. Där står också varje gång någon av oss öppnat en chatt.
+      ett pass, en behörighet. Där står också varje gång någon av oss öppnat en chatt. Vem som
+      gjort någon till admin, och med vilka behörigheter, står i en egen logg som inte heller går
+      att ändra.
       Loggen bär tillstånd, kopplingar och tidpunkter — aldrig namn,
       adresser, meddelandetexter eller något som skrivits om ett barn. Den går inte att ändra
       eller radera i efterhand, inte heller av oss, och det är hela poängen med den.</p>
@@ -363,6 +377,9 @@
         passet. Det sker automatiskt varje natt. Passet står kvar.</li>
       <li><b>Notiser och mejlutskick</b>: notiserna i vyerna tas bort efter 180 dagar, och
         uppgifterna om varje skickat mejl efter 90 dagar.</li>
+      <li><b>Barnets inloggning</b>: så länge ni låter den finnas. Tar ni bort den, eller raderas
+        barnet, tas användarnamnet, inloggningen och barnets notiser bort direkt. Notiserna i
+        barnets vy tas annars bort efter 180 dagar.</li>
       <li><b>Bokföringsunderlag</b>: betalningar och ersättningsunderlag, sju år. Det är
         bokföringslagens krav och något vi inte kan förkorta, inte ens på begäran.</li>
       <li><b>Ändringsloggen</b>: så länge verksamheten finns. Den bär tillstånd och tidpunkter,
@@ -376,11 +393,16 @@
       de skrivs över. Ingen använder dem till något annat än att återställa tjänsten efter ett
       fel.</p>
 
-    <h2>Barns uppgifter</h2>
+    <h2 id="barn">Barns uppgifter</h2>
     <p>Tjänsten handlar om barn, och deras uppgifter är därför det känsligaste vi hanterar.</p>
     <ul>
-      <li>Barn har inga egna konton. Det är föräldern som registrerar sig, godkänner villkoren
-        och lägger in uppgifterna om barnet.</li>
+      <li>Ett barn kan inte skapa ett konto själv. Det är föräldern som registrerar sig,
+        godkänner villkoren och lägger in uppgifterna om barnet.</li>
+      <li>Föräldern kan ge barnet en egen inloggning till en enkel vy med pass, timmar,
+        studieplan och notiser, och pausa eller ta bort den när som helst. Inloggningen är ett
+        användarnamn och ett lösenord, ingen e-postadress: den tekniska adress den behöver
+        (användarnamnet på barn.nextrum.se) tar aldrig emot något mejl, och vi skickar ingenting
+        till barnet.</li>
       <li>Vi samlar bara in det som behövs för undervisningen: årskurs, skola, ämnen och mål. Vi
         ber aldrig om personnummer, diagnoser eller betyg, och ber er att inte skriva sådant i
         rutorna.</li>
@@ -394,6 +416,9 @@
         namn, din årskurs, dina ämnen, dina uppgifter, hur du svarat på de digitala uppgifterna och
         vad du och din studiehjälpare gjort på passen.</li>
       <li>Bara din förälder, din studiehjälpare och vi på Nextrum kan se det.</li>
+      <li>Har din förälder gett dig en egen inloggning ser du dina pass, dina timmar, din
+        studieplan och dina notiser på nextrum.se/barn. Ditt lösenord ser ingen, inte ens vi.
+        Vill du ändra något, fråga din förälder.</li>
       <li>Vi säljer det aldrig och visar det aldrig för någon annan.</li>
       <li>Vill du veta vad som står om dig, eller vill du att något tas bort? Säg till din
         förälder, eller mejla oss på <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</li>
@@ -565,7 +590,7 @@
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=8ffb028b"></script>
+<script src="nextrum-app.js?v=ae9d5f14"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=f1ce069c"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och

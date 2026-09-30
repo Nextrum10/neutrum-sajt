@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid och tipskoderna)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona och adminbehörigheterna)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -47,7 +47,8 @@
 -- schemalagda_korningar_syns, manadskorningens_svar_blir_en_uppgift,
 -- manadskorningens_svar_lases_den_forsta, anonyma_skrivningar_far_tak,
 -- Fas 23.2 (NexLäx, fas23_2_nexlax, med sin bank), admin_oppnar_chatten,
--- avbokningar_och_svar och tipskoder_och_kampanjkoder är körda.
+-- avbokningar_och_svar, tipskoder_och_kampanjkoder och
+-- barnkonton_och_admin är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -9142,6 +9143,1009 @@ begin
       efter_stangd::text),
     ('Tips en raderad familjs kod försvinner ur anmälan', kod_efter is null, coalesce(kod_efter, 'null'));
 end $$;
+
+-- ============================================================
+-- BARNKONTON OCH ADMIN MED BEHÖRIGHETER (barnkonton_och_admin)
+--
+-- Barnet provas som PostgREST provar det: rollen nextrum_barn och
+-- token med app_metadata (roll, barn_id, forald_id). Två barnkonton:
+-- Äldst i familj P och Annan familj i familj Q. Yngst (familj P) har
+-- ingen inloggning. Fyra begränsade admins och två blivande.
+--
+-- Fixturerna står i huvudtransaktionen, sist i filen: inget prov
+-- efter dem kan se dem. Varje prov rullas tillbaka.
+-- ============================================================
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
+  ('00000000-0000-4000-8000-0000000bc0c1', 'aldst.p@barn.nextrum.se',
+   '{"provider":"email","roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005a1","forald_id":"00000000-0000-4000-8000-0000000000f1"}',
+   '{"role":"tutor","full_name":"Försök till studiehjälpare"}'),
+  ('00000000-0000-4000-8000-0000000bc0c2', 'annan.q@barn.nextrum.se',
+   '{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005c1","forald_id":"00000000-0000-4000-8000-0000000000f2"}',
+   '{}');
+
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-4000-8000-0000000bcad1', 'rls-l1@example.invalid', '{"full_name":"Test Leads"}'),
+  ('00000000-0000-4000-8000-0000000bcad2', 'rls-l2@example.invalid', '{"full_name":"Test Hanterar"}'),
+  ('00000000-0000-4000-8000-0000000bcad3', 'rls-l3@example.invalid', '{"full_name":"Test Matchar"}'),
+  ('00000000-0000-4000-8000-0000000bcad4', 'rls-l4@example.invalid', '{"full_name":"Test Notiser"}'),
+  ('00000000-0000-4000-8000-0000000bcad5', 'rls-s2@example.invalid', '{"full_name":"Test Blivande Super"}'),
+  ('00000000-0000-4000-8000-0000000bcad6', 'rls-t6@example.invalid', '{"full_name":"Test Blivande"}');
+
+-- I ett block: körs filen före migrationen finns inte admin_roller, och
+-- då ska raderna nedan bli röda i stället för att hela körningen faller.
+do $$
+begin
+  insert into public.admin_roller (user_id, behorigheter) values
+    ('00000000-0000-4000-8000-0000000bcad1', '{leads}'),
+    ('00000000-0000-4000-8000-0000000bcad2', '{admin_hantera,leads}'),
+    ('00000000-0000-4000-8000-0000000bcad3', '{matchning,anvandare_las}'),
+    ('00000000-0000-4000-8000-0000000bcad4', '{notiskonfig}');
+exception when others then
+  raise notice 'admin_roller: %', sqlerrm;
+end $$;
+
+insert into public.leads (id, parent_name, email, child_name, grade, subject, tjanst, message)
+values ('00000000-0000-4000-8000-0000000bc1e1', 'Test Anmälan', 'rls-anmalan@example.invalid', 'Barn', 'Åk 5',
+        'Matte', 'laxhjalp', 'Hej');
+
+-- Kör p_forst som postgres och p_sql som barnet; svaret är sista satsens
+-- värde som text, eller "FEL <kod>: <text>". Allt rullas tillbaka.
+create function pg_temp.som_barn(p_uid uuid, p_barn uuid, p_forald uuid, p_forst text[], p_sql text)
+returns text language plpgsql as $$
+declare
+  ut  text;
+  fel text;
+  kod text;
+  det text;
+  s   text;
+begin
+  begin
+    foreach s in array coalesce(p_forst, '{}') loop
+      execute s;
+    end loop;
+    perform set_config('request.jwt.claims', json_build_object(
+      'sub', p_uid, 'role', 'nextrum_barn',
+      'app_metadata', json_build_object('roll', 'barn', 'barn_id', p_barn, 'forald_id', p_forald))::text, true);
+    execute 'set local role nextrum_barn';
+    execute p_sql into ut;
+    raise exception using message = 'SOM_KLAR', detail = coalesce(ut, '<null>');
+  exception when others then
+    get stacked diagnostics fel = message_text, kod = returned_sqlstate, det = pg_exception_detail;
+  end;
+  if fel = 'SOM_KLAR' then
+    return det;
+  end if;
+  return 'FEL ' || kod || ': ' || fel;
+end $$;
+
+-- Samma sak för en inloggad (authenticated), eller för systemet med null.
+create function pg_temp.som(p_uid uuid, p_forst text[], p_sql text)
+returns text language plpgsql as $$
+declare
+  ut  text;
+  fel text;
+  kod text;
+  det text;
+  s   text;
+begin
+  begin
+    foreach s in array coalesce(p_forst, '{}') loop
+      execute s;
+    end loop;
+    if p_uid is not null then
+      perform pg_temp.bli(p_uid);
+    end if;
+    execute p_sql into ut;
+    raise exception using message = 'SOM_KLAR', detail = coalesce(ut, '<null>');
+  exception when others then
+    get stacked diagnostics fel = message_text, kod = returned_sqlstate, det = pg_exception_detail;
+  end;
+  if fel = 'SOM_KLAR' then
+    return det;
+  end if;
+  return 'FEL ' || kod || ': ' || fel;
+end $$;
+
+-- Svaret som jsonb, eller null när det var ett fel: ett felsvar som
+-- tolkas som json hade fällt hela körningen, inte bara provet.
+create function pg_temp.j(t text) returns jsonb language plpgsql immutable as $$
+begin
+  return t::jsonb;
+exception when others then
+  return null;
+end $$;
+
+create function pg_temp.i(t text) returns bigint language plpgsql immutable as $$
+begin
+  return t::bigint;
+exception when others then
+  return null;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- ------------------------------------------------------------
+-- 1. Kontot: rollen, ingen profil, kopplingen
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Barn: kontot får rollen nextrum_barn', coalesce(role = 'nextrum_barn', false), coalesce(role, 'inget konto')
+  from auth.users where id = '00000000-0000-4000-8000-0000000bc0c1'
+union all
+select 'Barn: kontot får ingen profil och ingen studiehjälparprofil',
+       not exists (select 1 from public.profiles where id = '00000000-0000-4000-8000-0000000bc0c1')
+       and not exists (select 1 from public.tutor_profiles where id = '00000000-0000-4000-8000-0000000bc0c1'),
+       'user_metadata bad om rollen tutor'
+union all
+select 'Barn: kontot kopplas till barnet med användarnamn och godkännande', r = 'true', r
+  from (select pg_temp.som(null, null,
+          $q$select (user_id = '00000000-0000-4000-8000-0000000bc0c1' and anvandarnamn = 'aldst.p'
+                     and barn_aktiv and not visa_rapporter and vardnadshavare_godkand_at is not null)::text
+               from public.students where id = '00000000-0000-4000-8000-0000000005a1'$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 2. Barnet når ingenting direkt. Loopen tar varje tabell och vy i
+--    public, så att en tabell som läggs till i morgon provas av sig själv.
+-- ------------------------------------------------------------
+do $$
+declare
+  t       record;
+  s       text;
+  lackor  text[] := '{}';
+  prov    integer := 0;
+  fel     text;
+  kod     text;
+  n       bigint;
+  forsta  text;
+begin
+  if not exists (select 1 from pg_roles where rolname = 'nextrum_barn') then
+    insert into utfall (test, ok, detalj) values
+      ('Barn: ingen tabell eller vy i public går att läsa eller skriva (loop)', false, 'rollen nextrum_barn finns inte');
+    return;
+  end if;
+  for t in
+    select c.relname, c.relkind
+      from pg_class c join pg_namespace ns on ns.oid = c.relnamespace
+     where ns.nspname = 'public' and c.relkind in ('r', 'v', 'm', 'p', 'f')
+     order by c.relname
+  loop
+    select a.attname into forsta from pg_attribute a
+     where a.attrelid = format('public.%I', t.relname)::regclass and a.attnum > 0 and not a.attisdropped
+     order by a.attnum limit 1;
+    foreach s in array array[
+      format('select 1 from public.%I', t.relname),
+      format('insert into public.%I default values', t.relname),
+      format('update public.%I set %I = %I', t.relname, forsta, forsta),
+      format('delete from public.%I', t.relname)]
+    loop
+      prov := prov + 1;
+      n := 0;
+      begin
+        perform set_config('request.jwt.claims', json_build_object(
+          'sub', '00000000-0000-4000-8000-0000000bc0c1', 'role', 'nextrum_barn',
+          'app_metadata', json_build_object('roll', 'barn',
+            'barn_id', '00000000-0000-4000-8000-0000000005a1',
+            'forald_id', '00000000-0000-4000-8000-0000000000f1'))::text, true);
+        execute 'set local role nextrum_barn';
+        execute s;
+        get diagnostics n = row_count;
+        raise exception using message = 'PROVA_KLAR:' || n;
+      exception when others then
+        get stacked diagnostics fel = message_text, kod = returned_sqlstate;
+      end;
+      -- Ett läckage är en sats som gick igenom och gav eller rörde rader.
+      -- Ett fel av annat slag (en vy som inte går att skriva, en
+      -- identitetskolumn) är ingen väg in; att rollen saknar rättigheter
+      -- helt provas för sig nedan.
+      if fel like 'PROVA_KLAR:%' and fel <> 'PROVA_KLAR:0' then
+        lackor := lackor || (s || ' → ' || coalesce(kod, '') || ' ' || coalesce(fel, ''));
+      end if;
+    end loop;
+  end loop;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  insert into utfall (test, ok, detalj) values
+    ('Barn: ingen tabell eller vy i public går att läsa eller skriva (loop)', cardinality(lackor) = 0,
+     case when cardinality(lackor) = 0 then prov || ' satser prövade, ingen gav eller rörde en rad'
+          else array_to_string(lackor[1:5], ' | ') end);
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+insert into utfall (test, ok, detalj)
+select 'Barn: rollen har ingen rättighet på någon relation i public eller storage', r = 'inga', r
+  from (select pg_temp.som(null, null,
+          $q$select coalesce(string_agg(n.nspname || '.' || c.relname, ', '), 'inga')
+               from pg_class c join pg_namespace n on n.oid = c.relnamespace
+              where n.nspname in ('public', 'storage') and c.relkind in ('r', 'v', 'm', 'p', 'f')
+                and (has_table_privilege('nextrum_barn', c.oid, 'select') or has_table_privilege('nextrum_barn', c.oid, 'insert')
+                     or has_table_privilege('nextrum_barn', c.oid, 'update') or has_table_privilege('nextrum_barn', c.oid, 'delete'))$q$) r) x;
+
+-- Barnet kan köra en SECURITY DEFINER-funktion bara om den är en av
+-- barnets tre, eller en av hjälparna som bara svarar om auth.uid()
+-- själv. En ny funktion som glömt sitt revoke från PUBLIC fångas här.
+insert into utfall (test, ok, detalj)
+select 'Barn: kör bara sina egna funktioner bland SECURITY DEFINER', r = 'inga', r
+  from (select pg_temp.som(null, null,
+          $q$select coalesce(string_agg(p.oid::regprocedure::text, ', '), 'inga')
+               from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+              where n.nspname = 'public' and p.prosecdef and p.prorettype <> 'trigger'::regtype
+                and has_function_privilege('nextrum_barn', p.oid, 'execute')
+                and p.proname not in ('barn_oversikt', 'barn_notiser', 'barn_markera_last',
+                                      'ar_matchade', 'ar_min_elev', 'is_admin', 'is_matched_tutor_of',
+                                      'is_my_matched_tutor', 'is_my_student')$q$) r) x;
+
+insert into utfall (test, ok, detalj)
+select 'Barn: rabattkoderna går inte att pröva', r = 'false|true|true', r
+  from (select pg_temp.som(null, null,
+          $q$select has_function_privilege('nextrum_barn', 'public.kolla_rabattkod(text, text, bigint)'::regprocedure, 'execute')::text
+                    || '|' || has_function_privilege('anon', 'public.kolla_rabattkod(text, text, bigint)'::regprocedure, 'execute')::text
+                    || '|' || has_function_privilege('authenticated', 'public.kolla_rabattkod(text, text, bigint)'::regprocedure, 'execute')::text$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 3. barn_oversikt
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Barn: översikten är barnets egen', (pg_temp.j(r) ->> 'lage') = 'ok' and (pg_temp.j(r) ->> 'fornamn') = 'Äldst'
+       and (pg_temp.j(r) ->> 'studiehjalpare') = 'Test', left(r, 200)
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1', null, 'select public.barn_oversikt()::text') r) x
+union all
+select 'Barn: översikten bär inget om föräldern, priser eller syskon',
+       r not like 'FEL%' and r not like '%rls-p@%' and r not like '%Familj%' and r not like '%Yngst%'
+       and r not like '%Annan familj%' and r not like '%_ore%' and r not like '%pris%'
+       and r not like '%betal%' and r not like '%telefon%' and r not like '%phone%', left(r, 200)
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1', null, 'select public.barn_oversikt()::text') r) x
+union all
+select 'Barn: kommande och genomförda pass, timmar och studieplan finns',
+       pg_temp.j(r) ? 'kommande' and jsonb_array_length(pg_temp.j(r) -> 'kommande') >= 1
+       and jsonb_array_length(pg_temp.j(r) -> 'genomforda') >= 1
+       and (pg_temp.j(r) -> 'timmar' ->> 'genomforda')::numeric > 0 and pg_temp.j(r) ? 'studieplan', left(r, 200)
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1',
+          array[$q$insert into public.study_plans (student_id, tutor_id, subject, goals, plan_text)
+                   values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                           'Matematik', 'Klara E', 'Bråk varje vecka')$q$,
+                $q$insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+                   values ('00000000-0000-4000-8000-0000000bcb11', '00000000-0000-4000-8000-0000000000f1',
+                           '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000005a1',
+                           '00000000-0000-4000-8000-0000000000f1', (now() at time zone 'Europe/Stockholm')::date + 17,
+                           '19:00', 60, 'confirmed'),
+                          ('00000000-0000-4000-8000-0000000bcb12', '00000000-0000-4000-8000-0000000000f1',
+                           '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000005a1',
+                           '00000000-0000-4000-8000-0000000000f1', (now() at time zone 'Europe/Stockholm')::date - 11,
+                           '12:00', 60, 'confirmed')$q$,
+                $q$insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+                   values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+                           '00000000-0000-4000-8000-0000000bcb12', 'Bra', (now() at time zone 'Europe/Stockholm')::date - 11,
+                           'narvarande')$q$],
+          'select public.barn_oversikt()::text') r) x
+union all
+select 'Barn: med rapporterna av syns inga rapporter', (pg_temp.j(r) -> 'rapporter') = 'null'::jsonb
+       and (pg_temp.j(r) ->> 'visa_rapporter') = 'false', left(r, 200)
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1', null, 'select public.barn_oversikt()::text') r) x
+union all
+select 'Barn: föräldern slår på rapporterna, och barnet ser dem',
+       jsonb_array_length(pg_temp.j(r) -> 'rapporter') >= 1 and r not like '%raw_notes%', left(r, 200)
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1',
+          array[$q$select pg_temp.bli('00000000-0000-4000-8000-0000000000f1')$q$,
+                $q$update public.students set visa_rapporter = true where id = '00000000-0000-4000-8000-0000000005a1'$q$,
+                'reset role'],
+          'select public.barn_oversikt()::text') r) x
+union all
+select 'Barn: ett pausat barn får ingenting', pg_temp.j(r) = '{"lage": "pausad"}'::jsonb, left(r, 200)
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1',
+          array[$q$update public.students set barn_aktiv = false where id = '00000000-0000-4000-8000-0000000005a1'$q$],
+          'select public.barn_oversikt()::text') r) x
+union all
+select 'Barn: token och koppling måste säga samma sak', (pg_temp.j(r) ->> 'lage') = 'saknas', left(r, 200)
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005c1',
+          '00000000-0000-4000-8000-0000000000f2', null, 'select public.barn_oversikt()::text') r) x
+union all
+select 'Barn: rollen utan roll barn i app_metadata får ingenting', (pg_temp.j(r) ->> 'lage') = 'saknas', left(r, 200)
+  from (select pg_temp.som(null,
+          array[$q$select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000bc0c1","role":"nextrum_barn","user_metadata":{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005a1","forald_id":"00000000-0000-4000-8000-0000000000f1"}}', true)$q$,
+                'set local role nextrum_barn'],
+          'select public.barn_oversikt()::text') r) x
+union all
+select 'Barn: föräldern kan inte köra barnets funktioner', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null, 'select public.barn_oversikt()::text') r) x;
+
+-- ------------------------------------------------------------
+-- 4. Barnet bokar, avbokar och svarar inte
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Barn: kan inte boka', r like 'FEL 42501%', r
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1', null,
+          $q$insert into public.bookings (parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+             values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+                     '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000bc0c1',
+                     current_date + 30, '15:00', 60, 'requested') returning id::text$q$) r) x
+union all
+select 'Barn: kan inte avboka', r like 'FEL 42501%', r
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1', null,
+          $q$update public.bookings set status = 'cancelled', avbokningsskal = 'annat'
+              where id = '00000000-0000-4000-8000-00000000b0d1' returning id::text$q$) r) x
+union all
+select 'Barn: kan inte svara på ett förslag', r like 'FEL 42501%', r
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1', null,
+          $q$update public.bookings set status = 'confirmed'
+              where id = '00000000-0000-4000-8000-00000000b0f1' returning id::text$q$) r) x
+union all
+select 'Barn: kan inte ändra sin egen rad i students', r like 'FEL 42501%', r
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1', null,
+          $q$update public.students set visa_rapporter = true, barn_aktiv = true
+              where id = '00000000-0000-4000-8000-0000000005a1' returning id::text$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 5. Barnets notiser
+-- ------------------------------------------------------------
+do $$
+declare
+  f1 text; f2 text; f3 text; f4 text; f5 text; f6 text; lista text; markerad text; annans text; fel text;
+  nytt uuid := '00000000-0000-4000-8000-0000000bcb01';
+begin
+  begin
+    -- Ett förslag från familjen om tre veckor, som studiehjälparen svarar på.
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (nytt, '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000f1',
+            (now() at time zone 'Europe/Stockholm')::date + 21, '16:00', 60, 'requested');
+    select count(*)::text into f1 from public.barn_notiser where pass_id = nytt;
+
+    update public.bookings set status = 'confirmed' where id = nytt;
+    select string_agg(typ || ':' || text, ' | ') into f2 from public.barn_notiser where pass_id = nytt;
+
+    update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id = nytt;
+    select string_agg(typ, ',' order by skapad, typ) into f3 from public.barn_notiser where pass_id = nytt;
+
+    -- Yngst har ingen inloggning och får inga notiser.
+    update public.bookings set status = 'cancelled', avbokningsskal = 'annat'
+     where student_id = '00000000-0000-4000-8000-0000000005b1' and status in ('requested', 'confirmed');
+    select count(*)::text into f4 from public.barn_notiser where barn_id = '00000000-0000-4000-8000-0000000005b1';
+
+    -- Ett genomfört pass (rapport med närvaro) ger en notis. Passet
+    -- skapas bekräftat, och den notisen tas bort först.
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values ('00000000-0000-4000-8000-0000000bcb02', '00000000-0000-4000-8000-0000000000f1',
+            '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000005a1',
+            '00000000-0000-4000-8000-0000000000f1', (now() at time zone 'Europe/Stockholm')::date - 12,
+            '13:00', 60, 'confirmed');
+    delete from public.barn_notiser where pass_id = '00000000-0000-4000-8000-0000000bcb02';
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
+            '00000000-0000-4000-8000-0000000bcb02', 'Bra pass', (now() at time zone 'Europe/Stockholm')::date - 12,
+            'narvarande');
+    select string_agg(typ, ',') into f5 from public.barn_notiser where pass_id = '00000000-0000-4000-8000-0000000bcb02';
+    select count(*)::text into f6 from public.notis_utskick u
+      join auth.users a on a.id = u.mottagare where lower(a.email) like '%@barn.nextrum.se';
+
+    lista := pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+      '00000000-0000-4000-8000-0000000000f1', null, 'select count(*)::text from public.barn_notiser()');
+    markerad := pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+      '00000000-0000-4000-8000-0000000000f1', null,
+      format('select public.barn_markera_last(%L)::text', (select id from public.barn_notiser where pass_id = nytt limit 1)));
+    annans := pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c2', '00000000-0000-4000-8000-0000000005c1',
+      '00000000-0000-4000-8000-0000000000f2', null,
+      format('select public.barn_markera_last(%L)::text', (select id from public.barn_notiser where pass_id = nytt limit 1)));
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Barn: notiserna', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Barn: ett nytt förslag är ingen notis', f1 = '0', f1),
+    ('Barn: ett bekräftat pass blir en notis utan namn', f2 like 'bekraftat:Ditt pass % är bekräftat.'
+      and f2 not like '%Test%', coalesce(f2, 'ingen')),
+    ('Barn: ett avbokat pass blir en notis', f3 = 'avbokat,bekraftat' or f3 = 'bekraftat,avbokat', coalesce(f3, 'ingen')),
+    ('Barn: ett barn utan inloggning får inga notiser', f4 = '0', f4),
+    ('Barn: ett genomfört pass blir en notis', f5 = 'genomfort', coalesce(f5, 'ingen')),
+    ('Barn: ingen notis köas som mejl till en barnadress', f6 = '0', f6),
+    ('Barn: barnet läser sina notiser', pg_temp.i(lista) >= 2, lista),
+    ('Barn: barnet markerar sin notis som läst', markerad = 'true', markerad),
+    ('Barn: ett annat barn markerar den inte', annans = 'false', annans);
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+insert into utfall (test, ok, detalj)
+select 'Barn: ett pausat barn ser inga notiser och markerar ingenting', r = '0|false', r
+  from (select pg_temp.som_barn('00000000-0000-4000-8000-0000000bc0c1', '00000000-0000-4000-8000-0000000005a1',
+          '00000000-0000-4000-8000-0000000000f1',
+          array[$q$insert into public.barn_notiser (id, barn_id, typ, text) values
+                   ('00000000-0000-4000-8000-0000000bcf02', '00000000-0000-4000-8000-0000000005a1', 'avbokat', 'Prov')$q$,
+                $q$update public.students set barn_aktiv = false where id = '00000000-0000-4000-8000-0000000005a1'$q$],
+          $q$select (select count(*) from public.barn_notiser())::text || '|' ||
+                    public.barn_markera_last('00000000-0000-4000-8000-0000000bcf02')::text$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 6. Föräldern: sina egna barn, aldrig en annan familjs
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Barn: föräldern ser sina barns inloggningar', r = '1', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$select count(*)::text from public.mina_barnkonton() where anvandarnamn is not null$q$) r) x
+union all
+select 'Barn: förälder A ser inte förälder B:s barns inloggning', r = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$select (count(*) + (select count(*) from public.mina_barnkonton() where barn_id = '00000000-0000-4000-8000-0000000005c1'))::text
+               from public.students where id = '00000000-0000-4000-8000-0000000005c1'$q$) r) x
+union all
+select 'Barn: förälder A ändrar inte förälder B:s barn', r = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$with u as (update public.students set visa_rapporter = true
+                         where id = '00000000-0000-4000-8000-0000000005c1' returning 1)
+             select count(*)::text from u$q$) r) x
+union all
+select 'Barn: förälder A kan inte skapa en inloggning åt förälder B:s barn', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$insert into auth.users (id, email, raw_app_meta_data) values
+               ('00000000-0000-4000-8000-0000000bc0c9', 'kapning@barn.nextrum.se',
+                '{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005c1","forald_id":"00000000-0000-4000-8000-0000000000f1"}')
+             returning id::text$q$) r) x
+union all
+select 'Barn: föräldern ändrar inte inloggningens kolumner själv',
+       r = 'aldst.p|true|00000000-0000-4000-8000-0000000bc0c1', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$with u as (update public.students set anvandarnamn = 'kapad', barn_aktiv = false, user_id = null
+                         where id = '00000000-0000-4000-8000-0000000005a1' returning anvandarnamn, barn_aktiv, user_id)
+             select anvandarnamn || '|' || barn_aktiv || '|' || user_id from u$q$) r) x
+union all
+select 'Barn: föräldern slår på rapporterna', r = 'true', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$with u as (update public.students set visa_rapporter = true
+                         where id = '00000000-0000-4000-8000-0000000005a1' returning visa_rapporter)
+             select visa_rapporter::text from u$q$) r) x
+union all
+select 'Barn: en admin ändrar inte barnets inloggning eller rapportvalet',
+       r = 'aldst.p|true|false', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000ad', null,
+          $q$with u as (update public.students set anvandarnamn = 'admin', barn_aktiv = false, visa_rapporter = true
+                         where id = '00000000-0000-4000-8000-0000000005a1'
+                         returning anvandarnamn, barn_aktiv, visa_rapporter)
+             select anvandarnamn || '|' || barn_aktiv || '|' || visa_rapporter from u$q$) r) x
+union all
+select 'Barn: ändringsfönstret når ingen inloggad, inte ens admin', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000ad', null,
+          $q$select count(*)::text from public.barn_andringsfonster$q$) r) x
+union all
+select 'Barn: föräldern öppnar inget fönster själv', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$insert into public.barn_andringsfonster (barn_id) values ('00000000-0000-4000-8000-0000000005a1') returning id::text$q$) r) x
+union all
+select 'Barn: föräldern loggar inte ut barnet själv, det gör edge-funktionen', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$select public.barnkonto_logga_ut('00000000-0000-4000-8000-0000000005a1')::text$q$) r) x
+union all
+select 'Barn: utloggningen tar barnets sessioner', r = '0', r
+  from (select pg_temp.som(null,
+          array[$q$insert into auth.sessions (user_id) values ('00000000-0000-4000-8000-0000000bc0c1')$q$,
+                $q$select public.barnkonto_logga_ut('00000000-0000-4000-8000-0000000005a1')$q$],
+          $q$select count(*)::text from auth.sessions where user_id = '00000000-0000-4000-8000-0000000bc0c1'$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 7. auth.users: låset, fönstret och barnadresserna
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Barn: lösenordet byts inte utan fönster', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$update auth.users set encrypted_password = 'nytt' where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+union all
+select 'Barn: lösenordet byts med ett giltigt fönster, som förbrukas', r = 'true|0', r
+  from (select pg_temp.som(null,
+          array[$q$insert into public.barn_andringsfonster (barn_id) values ('00000000-0000-4000-8000-0000000005a1')$q$,
+                $q$update auth.users set encrypted_password = 'nytt' where id = '00000000-0000-4000-8000-0000000bc0c1'$q$],
+          $q$select (select (encrypted_password = 'nytt')::text from auth.users where id = '00000000-0000-4000-8000-0000000bc0c1')
+                    || '|' || (select count(*) from public.barn_andringsfonster
+                                where barn_id = '00000000-0000-4000-8000-0000000005a1')::text$q$) r) x
+union all
+select 'Barn: ett fönster räcker till ett byte', r like 'FEL 42501%', r
+  from (select pg_temp.som(null,
+          array[$q$insert into public.barn_andringsfonster (barn_id) values ('00000000-0000-4000-8000-0000000005a1')$q$,
+                $q$update auth.users set encrypted_password = 'ett' where id = '00000000-0000-4000-8000-0000000bc0c1'$q$],
+          $q$update auth.users set encrypted_password = 'två' where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+union all
+select 'Barn: ett utgånget fönster nekas', r like 'FEL 42501%', r
+  from (select pg_temp.som(null,
+          array[$q$insert into public.barn_andringsfonster (barn_id, skapad, giltig_till)
+                   values ('00000000-0000-4000-8000-0000000005a1', now() - interval '2 minutes', now() - interval '1 minute')$q$],
+          $q$update auth.users set encrypted_password = 'nytt' where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+union all
+select 'Barn: ett fönster för ett annat barn gäller inte', r like 'FEL 42501%', r
+  from (select pg_temp.som(null,
+          array[$q$insert into public.barn_andringsfonster (barn_id) values ('00000000-0000-4000-8000-0000000005c1')$q$],
+          $q$update auth.users set encrypted_password = 'nytt' where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+union all
+select 'Barn: fönstret kan inte göras längre än en minut', r like 'FEL 23514%', r
+  from (select pg_temp.som(null, null,
+          $q$insert into public.barn_andringsfonster (barn_id, giltig_till)
+             values ('00000000-0000-4000-8000-0000000005a1', now() + interval '1 hour') returning id::text$q$) r) x
+union all
+select 'Barn: e-posten byts inte, inte heller med ett fönster', r like 'FEL 42501%', r
+  from (select pg_temp.som(null,
+          array[$q$insert into public.barn_andringsfonster (barn_id) values ('00000000-0000-4000-8000-0000000005a1')$q$],
+          $q$update auth.users set email = 'riktig@example.invalid' where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+union all
+select 'Barn: e-postbytet påbörjas inte', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$update auth.users set email_change = 'riktig@example.invalid', email_change_token_new = 'x'
+              where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+union all
+select 'Barn: återställningen sparar ingen token', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$update auth.users set recovery_token = 'x', recovery_sent_at = now()
+              where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+union all
+select 'Barn: inloggningen går igenom och stämplas för föräldern', r = 'true', r
+  from (select pg_temp.som(null,
+          array[$q$update auth.users set last_sign_in_at = now(), updated_at = now()
+                   where id = '00000000-0000-4000-8000-0000000bc0c1'$q$],
+          $q$select (senast_inloggad is not null)::text from public.students
+              where id = '00000000-0000-4000-8000-0000000005a1'$q$) r) x
+union all
+select 'Barn: pausen (banned_until) går igenom', r = '1', r
+  from (select pg_temp.som(null, null,
+          $q$with u as (update auth.users set banned_until = now() + interval '100 years'
+                         where id = '00000000-0000-4000-8000-0000000bc0c1' returning 1)
+             select count(*)::text from u$q$) r) x
+union all
+select 'Barn: rollen går inte att byta tillbaka till authenticated', r = 'nextrum_barn', r
+  from (select pg_temp.som(null, null,
+          $q$update auth.users set role = 'authenticated' where id = '00000000-0000-4000-8000-0000000bc0c1'
+             returning role$q$) r) x
+union all
+select 'Barn: ett barnkonto förblir ett barnkonto', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$update auth.users set raw_app_meta_data = raw_app_meta_data - 'roll'
+              where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+union all
+select 'Barn: ett barnkonto byter inte barn', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$update auth.users set raw_app_meta_data = raw_app_meta_data || '{"barn_id":"00000000-0000-4000-8000-0000000005b1"}'
+              where id = '00000000-0000-4000-8000-0000000bc0c1' returning id::text$q$) r) x
+union all
+select 'Barn: GoTrues egna fält i app_metadata går igenom', r = '1', r
+  from (select pg_temp.som(null, null,
+          $q$with u as (update auth.users set raw_app_meta_data = raw_app_meta_data || '{"providers":["email"]}'
+                         where id = '00000000-0000-4000-8000-0000000bc0c1' returning 1)
+             select count(*)::text from u$q$) r) x
+union all
+select 'Barn: ett vanligt konto blir inte ett barnkonto', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$update auth.users set raw_app_meta_data = '{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005b1","forald_id":"00000000-0000-4000-8000-0000000000f1"}'
+              where id = '00000000-0000-4000-8000-0000000000f1' returning id::text$q$) r) x
+union all
+select 'Barn: en barnadress utan roll barn nekas vid registrering', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$insert into auth.users (id, email, raw_user_meta_data) values
+               ('00000000-0000-4000-8000-0000000bc0c8', 'ockupant@barn.nextrum.se', '{"role":"parent"}') returning id::text$q$) r) x
+union all
+select 'Barn: en barnadress går inte att byta till', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$update auth.users set email_change = 'aldst.p2@barn.nextrum.se'
+              where id = '00000000-0000-4000-8000-0000000000f1' returning id::text$q$) r) x
+union all
+select 'Barn: ett andra barnkonto för samma barn nekas', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$insert into auth.users (id, email, raw_app_meta_data) values
+               ('00000000-0000-4000-8000-0000000bc0c7', 'andra.p@barn.nextrum.se',
+                '{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005a1","forald_id":"00000000-0000-4000-8000-0000000000f1"}')
+             returning id::text$q$) r) x
+union all
+select 'Barn: ett upptaget användarnamn nekas', r like 'FEL 23505%', r
+  from (select pg_temp.som(null, null,
+          $q$insert into auth.users (id, email, raw_app_meta_data) values
+               ('00000000-0000-4000-8000-0000000bc0c6', 'aldst.p@barn.nextrum.se',
+                '{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000005b1","forald_id":"00000000-0000-4000-8000-0000000000f1"}')
+             returning id::text$q$) r) x
+union all
+select 'Barn: vanliga konton påverkas inte av låset', r = '1', r
+  from (select pg_temp.som(null, null,
+          $q$with u as (update auth.users set encrypted_password = 'nytt', email = 'rls-p2@example.invalid'
+                         where id = '00000000-0000-4000-8000-0000000000f1' returning 1)
+             select count(*)::text from u$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 8. Städningen
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Barn: tas inloggningen bort följer namnet och notiserna med', r = 'null|true|false|0', r
+  from (select pg_temp.som(null,
+          array[$q$insert into public.barn_notiser (barn_id, typ, text) values ('00000000-0000-4000-8000-0000000005a1', 'avbokat', 'Prov')$q$,
+                $q$update public.students set visa_rapporter = true where id = '00000000-0000-4000-8000-0000000005a1'$q$,
+                $q$delete from auth.users where id = '00000000-0000-4000-8000-0000000bc0c1'$q$],
+          $q$select coalesce(anvandarnamn, 'null') || '|' || barn_aktiv || '|' || visa_rapporter || '|' ||
+                    (select count(*) from public.barn_notiser where barn_id = s.id)
+               from public.students s where s.id = '00000000-0000-4000-8000-0000000005a1'$q$) r) x
+union all
+select 'Barn: tas barnet bort tas inloggningen bort', r = '0', r
+  from (select pg_temp.som(null,
+          array[$q$insert into public.students (id, parent_id, name) values
+                   ('00000000-0000-4000-8000-0000000bc5a3', '00000000-0000-4000-8000-0000000000f1', 'Nytt barn')$q$,
+                $q$insert into auth.users (id, email, raw_app_meta_data) values
+                   ('00000000-0000-4000-8000-0000000bc0c3', 'nytt.p@barn.nextrum.se',
+                    '{"roll":"barn","barn_id":"00000000-0000-4000-8000-0000000bc5a3","forald_id":"00000000-0000-4000-8000-0000000000f1"}')$q$,
+                $q$delete from public.students where id = '00000000-0000-4000-8000-0000000bc5a3'$q$],
+          $q$select count(*)::text from auth.users where id = '00000000-0000-4000-8000-0000000bc0c3'$q$) r) x
+union all
+select 'Barn: avidentifieras barnet tas inloggningen bort', r = '0|null', r
+  from (select pg_temp.som(null,
+          array[$q$update public.students set raderad_at = now() where id = '00000000-0000-4000-8000-0000000005a1'$q$],
+          $q$select (select count(*) from auth.users where id = '00000000-0000-4000-8000-0000000bc0c1')::text || '|' ||
+                    coalesce((select user_id::text from public.students where id = '00000000-0000-4000-8000-0000000005a1'), 'null')$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 9. Notiskön mejlar aldrig ett barnkonto
+--
+-- Ett barn kan inte stå som mottagare (ingen profil). Provet ger
+-- därför ett barnkonto en profil i blocket, med triggrarna förbi, och
+-- köar ett utskick till det: raden ska hoppas över och aldrig lämnas ut.
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Barn: notiskön hoppar över ett barnkonto', r = '0|hoppad|barnkonton får inga mejl', r
+  from (select pg_temp.som(null,
+          array[$q$update public.flaggor set aktiv = true where kod = 'notiser_mejl'$q$,
+                $q$insert into public.profiles (id, role, full_name, email)
+                   values ('00000000-0000-4000-8000-0000000bc0c2', 'parent', 'Konstgjord', 'annan.q@barn.nextrum.se')$q$,
+                $q$insert into public.notis_utskick (id, mottagare, kanal, typ, data, idempotens, skicka_efter)
+                   values ('00000000-0000-4000-8000-0000000bcf01', '00000000-0000-4000-8000-0000000bc0c2', 'mejl',
+                           'timmar_gar_ut', '{}', 'barnprov', '2000-01-01')$q$,
+                $q$create temp table barn_ko_svar as select id from public.notis_utskick_ta(100)$q$],
+          $q$select (select count(*) from barn_ko_svar where id = '00000000-0000-4000-8000-0000000bcf01')::text || '|' ||
+                    (select status || '|' || coalesce(fel, '') from public.notis_utskick
+                      where id = '00000000-0000-4000-8000-0000000bcf01')$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 10. Admin: sanningen, spegeln och frågorna
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Admin: dagens admin blev superadmin', r = 'true', r
+  from (select pg_temp.som(null, null,
+          $q$select ar_superadmin::text from public.admin_roller
+              where user_id = '00000000-0000-4000-8000-0000000000ad'$q$) r) x
+union all
+select 'Admin: listan i villkoret och i funktionen är samma', r = 'true', r
+  from (select pg_temp.som(null, null,
+          $q$select (pg_get_constraintdef(c.oid) like '%' || array_to_string(array(select quote_literal(b) || '::text'
+                       from unnest(intern.admin_behorigheter()) b), ', ') || '%')::text
+               from pg_constraint c where c.conname = 'admin_roller_behorigheter_kanda'$q$) r) x
+union all
+select 'Admin: profiles.is_admin speglar superadmin, inte en begränsad roll',
+       (select is_admin from public.profiles where id = '00000000-0000-4000-8000-0000000000ad')
+       and not (select is_admin from public.profiles where id = '00000000-0000-4000-8000-0000000bcad1'), 'ad/l1'
+union all
+select 'Admin: en begränsad admin är inte is_admin men har sin behörighet', r = 'false|true|false', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$select public.is_admin()::text || '|' || public.har_behorighet('leads')::text || '|' ||
+                    public.har_behorighet('bokningar_las')::text$q$) r) x
+union all
+select 'Admin: mina_behorigheter säger vad den inloggade får', r = '{"admin": true, "superadmin": false, "behorigheter": ["leads"]}', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null, $q$select public.mina_behorigheter()::text$q$) r) x
+union all
+select 'Admin: en superadmin har alla behörigheter', r = 'true|9', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000ad', null,
+          $q$select (public.mina_behorigheter() ->> 'superadmin') || '|' ||
+                    jsonb_array_length(public.mina_behorigheter() -> 'behorigheter')::text$q$) r) x
+union all
+select 'Admin: receptet i SQL ger en superadmin', r = 'true|true', r
+  from (select pg_temp.som(null,
+          array[$q$update public.profiles set is_admin = true where id = '00000000-0000-4000-8000-0000000bcad6'$q$],
+          $q$select (select ar_superadmin::text from public.admin_roller where user_id = '00000000-0000-4000-8000-0000000bcad6')
+                    || '|' || (select is_admin::text from public.profiles where id = '00000000-0000-4000-8000-0000000bcad6')$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 11. Admin: behörigheten X krävs för X
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Admin leads: läser och ändrar intresseanmälningar', r = '1|contacted', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$with u as (update public.leads set status = 'contacted', notering = 'Ringt'
+                         where id = '00000000-0000-4000-8000-0000000bc1e1' returning status)
+             select (select count(*) from public.leads where id = '00000000-0000-4000-8000-0000000bc1e1')::text
+                    || '|' || (select status from u)$q$) r) x
+union all
+select 'Admin utan leads: ser inga intresseanmälningar', r = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad3', null,
+          $q$select count(*)::text from public.leads$q$) r) x
+union all
+select 'Admin leads: ser inga pass, rapporter, betalningar eller chattar', r = '0|0|0|0|0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$select (select count(*) from public.bookings)::text || '|' || (select count(*) from public.lesson_reports)
+               || '|' || (select count(*) from public.invoices) || '|' || (select count(*) from public.messages)
+               || '|' || (select count(*) from public.audit_logg)$q$) r) x
+union all
+select 'Admin leads: ser bara sin egen profil', r = '1', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$select count(*)::text from public.profiles$q$) r) x
+union all
+select 'Admin leads: kan inte radera en person', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$select public.radera_person('familj', '00000000-0000-4000-8000-0000000000f2')::text$q$) r) x
+union all
+select 'Admin leads: kan inte läsa en chatt', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$select count(*)::text from public.chatt_las('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000a1')$q$) r) x
+union all
+select 'Admin matchning: matchar en elev med en godkänd studiehjälpare', r = '00000000-0000-4000-8000-0000000000b1|matched', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad3', null,
+          $q$with u as (update public.students set matched_tutor_id = '00000000-0000-4000-8000-0000000000b1', match_status = 'matched'
+                         where id = '00000000-0000-4000-8000-0000000005c1' returning matched_tutor_id, match_status)
+             select matched_tutor_id::text || '|' || match_status from u$q$) r) x
+union all
+select 'Admin matchning: ändrar inget annat på eleven', r = 'Annan familj|00000000-0000-4000-8000-0000000000b1', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad3', null,
+          $q$with u as (update public.students set name = 'Nytt namn', school = 'Ny skola',
+                                matched_tutor_id = '00000000-0000-4000-8000-0000000000b1', match_status = 'matched'
+                         where id = '00000000-0000-4000-8000-0000000005c1' returning name, matched_tutor_id)
+             select name || '|' || matched_tutor_id from u$q$) r) x
+union all
+select 'Admin matchning: ser matchningsförslagen', r not like 'FEL%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad3', null,
+          $q$select count(*)::text from public.matchningsforslag('00000000-0000-4000-8000-0000000005c1')$q$) r) x
+union all
+select 'Admin utan matchning: matchar inte', r = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$with u as (update public.students set matched_tutor_id = '00000000-0000-4000-8000-0000000000b1', match_status = 'matched'
+                         where id = '00000000-0000-4000-8000-0000000005c1' returning 1)
+             select count(*)::text from u$q$) r) x
+union all
+select 'Admin utan matchning: ser inte matchningsförslagen', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$select count(*)::text from public.matchningsforslag('00000000-0000-4000-8000-0000000005c1')$q$) r) x
+union all
+select 'Admin matchning: en studiehjälpare matchar inte sig själv', r = '00000000-0000-4000-8000-0000000000a1', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000b1',
+          array[$q$insert into public.admin_roller (user_id, behorigheter) values ('00000000-0000-4000-8000-0000000000b1', '{matchning}')$q$],
+          $q$with u as (update public.students set matched_tutor_id = '00000000-0000-4000-8000-0000000000b1'
+                         where id = '00000000-0000-4000-8000-0000000005a1' returning matched_tutor_id)
+             select coalesce((select matched_tutor_id::text from u), 'ingen rad')$q$) r) x
+union all
+select 'Admin anvandare_las: läser familjer, elever och studiehjälpare', r not like 'FEL%' and pg_temp.i(split_part(r, '|', 1)) > 3
+       and pg_temp.i(split_part(r, '|', 2)) >= 3 and pg_temp.i(split_part(r, '|', 3)) >= 2, r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad3', null,
+          $q$select (select count(*) from public.profiles)::text || '|' || (select count(*) from public.students)
+               || '|' || (select count(*) from public.tutor_profiles)$q$) r) x
+union all
+select 'Admin utan anvandare_redigera: ändrar inte en profil', r = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad3', null,
+          $q$with u as (update public.profiles set full_name = 'Ändrad' where id = '00000000-0000-4000-8000-0000000000f2' returning 1)
+             select count(*)::text from u$q$) r) x
+union all
+select 'Admin anvandare_redigera: ändrar namnet men inte rollen eller matchningen',
+       r = 'Ändrad|' || (select role || '|' || match_status from public.profiles
+                          where id = '00000000-0000-4000-8000-0000000000f2'), r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad6',
+          array[$q$insert into public.admin_roller (user_id, behorigheter) values ('00000000-0000-4000-8000-0000000bcad6', '{anvandare_las,anvandare_redigera}')$q$],
+          $q$with u as (update public.profiles set full_name = 'Ändrad', role = 'tutor', match_status = 'matched'
+                         where id = '00000000-0000-4000-8000-0000000000f2' returning full_name, role, match_status)
+             select full_name || '|' || role || '|' || match_status from u$q$) r) x
+union all
+select 'Admin studiehjalpare_godkann: sätter läget på en studiehjälpare men inte timpenningen', r = 'rejected|150.00', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad6',
+          array[$q$insert into public.admin_roller (user_id, behorigheter) values ('00000000-0000-4000-8000-0000000bcad6', '{studiehjalpare_godkann}')$q$],
+          $q$with u as (update public.tutor_profiles set status = 'rejected', hourly_rate = 999
+                         where id = '00000000-0000-4000-8000-0000000000b1' returning status, hourly_rate)
+             select status || '|' || hourly_rate from u$q$) r) x
+union all
+select 'Admin studiehjalpare_godkann: godkänner inte sig själv', r = 'pending', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad6',
+          array[$q$insert into public.tutor_profiles (id, status) values ('00000000-0000-4000-8000-0000000bcad6', 'pending')$q$,
+                $q$insert into public.admin_roller (user_id, behorigheter) values ('00000000-0000-4000-8000-0000000bcad6', '{studiehjalpare_godkann}')$q$],
+          $q$with u as (update public.tutor_profiles set status = 'approved'
+                         where id = '00000000-0000-4000-8000-0000000bcad6' returning status)
+             select status from u$q$) r) x
+union all
+select 'Admin utan studiehjalpare_godkann: godkänner inte', r = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$with u as (update public.tutor_profiles set status = 'rejected'
+                         where id = '00000000-0000-4000-8000-0000000000b1' returning 1)
+             select count(*)::text from u$q$) r) x
+union all
+select 'Admin bokningar_las: läser passen men ändrar dem inte', pg_temp.i(split_part(r, '|', 1)) > 0 and split_part(r, '|', 2) = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad6',
+          array[$q$insert into public.admin_roller (user_id, behorigheter) values ('00000000-0000-4000-8000-0000000bcad6', '{bokningar_las}')$q$],
+          $q$with u as (update public.bookings set status = 'cancelled' where id = '00000000-0000-4000-8000-00000000b0d1' returning 1)
+             select (select count(*) from public.bookings)::text || '|' || (select count(*) from u)$q$) r) x
+union all
+select 'Admin rapporter_las: läser rapporterna men inte passen', pg_temp.i(split_part(r, '|', 1)) > 0 and split_part(r, '|', 2) = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad6',
+          array[$q$insert into public.admin_roller (user_id, behorigheter) values ('00000000-0000-4000-8000-0000000bcad6', '{rapporter_las}')$q$],
+          $q$select (select count(*) from public.lesson_reports)::text || '|' || (select count(*) from public.bookings)$q$) r) x
+union all
+select 'Admin notiskonfig: ser notisernas läge och slår om mejlen', r like '{%|1', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad4', null,
+          $q$with u as (update public.flaggor set aktiv = not aktiv where kod = 'notiser_mejl' returning 1)
+             select left(public.notis_lage()::text, 20) || '|' || (select count(*) from u)$q$) r) x
+union all
+select 'Admin notiskonfig: slår inte om andra flaggor', r = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad4', null,
+          $q$with u as (update public.flaggor set aktiv = not aktiv where kod = 'faktura' returning 1)
+             select count(*)::text from u$q$) r) x
+union all
+select 'Admin utan notiskonfig: ser inte notisernas läge', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null, $q$select public.notis_lage()::text$q$) r) x
+union all
+select 'Admin: en begränsad admin står som admin i auditloggen', r = 'admin', r
+  from (select pg_temp.som(null,
+          array[$q$select pg_temp.bli('00000000-0000-4000-8000-0000000bcad1')$q$,
+                $q$update public.leads set status = 'contacted' where id = '00000000-0000-4000-8000-0000000bc1e1'$q$,
+                'reset role'],
+          $q$select aktor_typ from public.audit_logg where objekt_id = '00000000-0000-4000-8000-0000000bc1e1'
+              and aktor = '00000000-0000-4000-8000-0000000bcad1' order by tid desc limit 1$q$) r) x
+union all
+select 'Admin: ett begränsat adminkonto raderas inte', r like '%adminkonto%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000ad',
+          array[$q$update public.profiles set role = 'parent' where id = '00000000-0000-4000-8000-0000000bcad1'$q$],
+          $q$select public.radering_lage('familj', '00000000-0000-4000-8000-0000000bcad1')::text$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 12. Admin: vem får ändra vem
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Admin hantera: gör någon till admin med en behörighet hen har', r like '%"leads"%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null,
+          $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad6', '{leads}')::text$q$) r) x
+union all
+select 'Admin hantera: ger inte en behörighet hen saknar', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null,
+          $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad6', '{leads,bokningar_las}')::text$q$) r) x
+union all
+select 'Admin hantera: skapar ingen superadmin', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null,
+          $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad6', '{}', true)::text$q$) r) x
+union all
+select 'Admin hantera: ändrar inte sina egna behörigheter', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null,
+          $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad2', '{leads}')::text$q$) r) x
+union all
+select 'Admin hantera: rör inte en superadmin', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null,
+          $q$select public.ta_bort_admin('00000000-0000-4000-8000-0000000000ad')::text$q$) r) x
+union all
+select 'Admin hantera: rör inte den som har mer än hen själv', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null,
+          $q$select public.ta_bort_admin('00000000-0000-4000-8000-0000000bcad3')::text$q$) r) x
+union all
+select 'Admin hantera: tar bort en admin med mindre än hen själv', r = 'true', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null,
+          $q$select public.ta_bort_admin('00000000-0000-4000-8000-0000000bcad1')::text$q$) r) x
+union all
+select 'Admin utan admin_hantera: gör ingen till admin', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad6', '{leads}')::text$q$) r) x
+union all
+select 'Admin: redigera kräver läs', r like 'FEL 22023%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000ad', null,
+          $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad6', '{anvandare_redigera}')::text$q$) r) x
+union all
+select 'Admin: okänd behörighet nekas', r like 'FEL 22023%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000ad', null,
+          $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad6', '{betalningar}')::text$q$) r) x
+union all
+select 'Admin: pre-kollen säger samma sak som vakten', r = 'Du kan inte ge en behörighet du inte har själv.|<null>', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null,
+          $q$select coalesce(public.admin_kan_ge('{bokningar_las}'), '<null>') || '|' ||
+                    coalesce(public.admin_kan_ge('{leads}'), '<null>')$q$) r) x
+union all
+select 'Admin: en superadmin skapar en superadmin', r like '%"superadmin": true%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000ad', null,
+          $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad5', '{}', true)::text$q$) r) x
+union all
+select 'Admin: den sista superadminen tas inte bort', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$delete from public.admin_roller where user_id = '00000000-0000-4000-8000-0000000000ad' returning user_id::text$q$) r) x
+union all
+select 'Admin: den sista superadminen nedgraderas inte', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$update public.admin_roller set ar_superadmin = false, behorigheter = '{leads}'
+              where user_id = '00000000-0000-4000-8000-0000000000ad' returning user_id::text$q$) r) x
+union all
+select 'Admin: med två superadmins tar den ena bort den andra', r = 'true', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad5',
+          array[$q$insert into public.admin_roller (user_id, ar_superadmin) values ('00000000-0000-4000-8000-0000000bcad5', true)$q$],
+          $q$select public.ta_bort_admin('00000000-0000-4000-8000-0000000000ad')::text$q$) r) x
+union all
+select 'Admin: ett barnkonto blir aldrig admin', r like 'FEL 42501%barnkonto%', r
+  from (select pg_temp.som(null, null,
+          $q$insert into public.admin_roller (user_id, ar_superadmin) values ('00000000-0000-4000-8000-0000000bc0c2', true)
+             returning user_id::text$q$) r) x
+union all
+select 'Admin: ett barnkonto görs inte till admin från vyn', r like 'FEL%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000ad', null,
+          $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bc0c2', '{leads}')::text$q$) r) x
+union all
+select 'Admin: en icke-admin skriver inte i admin_roller', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$insert into public.admin_roller (user_id, ar_superadmin) values ('00000000-0000-4000-8000-0000000000f1', true)
+             returning user_id::text$q$) r) x
+union all
+select 'Admin: en icke-admin gör sig inte till admin med gor_till_admin', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000000f1', '{}', true)::text$q$) r) x
+union all
+select 'Admin: en icke-admin gör sig inte till admin på profilen', r = 'false|false', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$with u as (update public.profiles set is_admin = true where id = '00000000-0000-4000-8000-0000000000f1' returning is_admin)
+             select coalesce((select is_admin::text from u), 'ingen rad') || '|' || public.is_admin()::text$q$) r) x
+union all
+select 'Admin: en begränsad admin gör sig inte till superadmin på profilen', r = 'false|false', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null,
+          $q$with u as (update public.profiles set is_admin = true where id = '00000000-0000-4000-8000-0000000bcad2' returning is_admin)
+             select coalesce((select is_admin::text from u), 'ingen rad') || '|' || public.is_admin()::text$q$) r) x
+union all
+select 'Admin: en superadmin ändrar inte behörigheter på profilen', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000ad', null,
+          $q$update public.profiles set is_admin = true where id = '00000000-0000-4000-8000-0000000bcad6' returning id::text$q$) r) x
+union all
+select 'Admin: en begränsad admin ser bara sin egen roll utan admin_hantera', r = '1', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null,
+          $q$select count(*)::text from public.admin_roller$q$) r) x
+union all
+select 'Admin hantera: ser alla roller', pg_temp.i(r) >= 5, r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null,
+          $q$select count(*)::text from public.admin_roller$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 13. Adminloggen skrivs av databasen och går inte att ändra
+-- ------------------------------------------------------------
+insert into utfall (test, ok, detalj)
+select 'Adminlogg: en ny admin loggas med vem och vad', r = 'skapad|00000000-0000-4000-8000-0000000000ad|gor_till_admin|["leads"]', r
+  from (select pg_temp.som(null,
+          array[$q$select pg_temp.bli('00000000-0000-4000-8000-0000000000ad')$q$,
+                $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad6', '{leads}')$q$,
+                'reset role'],
+          $q$select handling || '|' || aktor || '|' || (detaljer ->> 'via') || '|' || (detaljer -> 'efter' -> 'behorigheter')::text
+               from public.admin_logg where mal_anvandare = '00000000-0000-4000-8000-0000000bcad6'
+              order by id desc limit 1$q$) r) x
+union all
+select 'Adminlogg: en ändring och en borttagning loggas', r = 'andrad,borttagen', r
+  from (select pg_temp.som(null,
+          array[$q$select pg_temp.bli('00000000-0000-4000-8000-0000000000ad')$q$,
+                $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad4', '{notiskonfig,leads}')$q$,
+                $q$select public.ta_bort_admin('00000000-0000-4000-8000-0000000bcad4')$q$,
+                'reset role'],
+          $q$select string_agg(handling, ',' order by id) from public.admin_logg
+              where mal_anvandare = '00000000-0000-4000-8000-0000000bcad4' and aktor = '00000000-0000-4000-8000-0000000000ad'$q$) r) x
+union all
+select 'Adminlogg: går inte att ändra', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null,
+          $q$update public.admin_logg set handling = 'andrad' returning id::text$q$) r) x
+union all
+select 'Adminlogg: går inte att radera', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null, $q$delete from public.admin_logg returning id::text$q$) r) x
+union all
+select 'Adminlogg: går inte att tömma', r like 'FEL 42501%', r
+  from (select pg_temp.som(null, null, $q$truncate public.admin_logg$q$) r) x
+union all
+select 'Adminlogg: en inloggad skriver inte i den', r like 'FEL 42501%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000ad', null,
+          $q$insert into public.admin_logg (handling, mal_anvandare) values ('skapad', '00000000-0000-4000-8000-0000000000ad') returning id::text$q$) r) x
+union all
+select 'Adminlogg: läses inte utan admin_hantera', r = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad1', null, $q$select count(*)::text from public.admin_logg$q$) r) x
+union all
+select 'Adminlogg: läses med admin_hantera', pg_temp.i(r) > 0, r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null, $q$select count(*)::text from public.admin_logg$q$) r) x;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
 
 select test, ok is true as ok, detalj from utfall order by nr;
 

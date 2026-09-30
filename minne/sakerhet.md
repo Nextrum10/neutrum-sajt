@@ -58,10 +58,21 @@ att visa **rätt sida**, inte för att skydda data.
   `is_admin`, `matched_tutor_id`, `status` och bokningsfälten av
   **triggers** som vägrar ändringen från en inloggad session. Det går
   inte att göra sig själv till admin från någon vy, med flit.
-  Admin sätts med SQL:
+  Sedan barnkonton_och_admin (2026-09-30) är `admin_roller` sanningen och
+  `is_admin` en spegel av superadmin. Admin ges under System →
+  Adminhantering (`gor_till_admin`, `ta_bort_admin`, `admin-skapa`), av en
+  superadmin eller den med `admin_hantera`, eller med SQL, som ger en
+  superadmin:
   ```sql
   update public.profiles set is_admin = true where email = '…';
   ```
+  Reglerna (ingen ändrar sig själv, ingen ger det den inte har, den sista
+  superadminen står kvar, ett barn blir aldrig admin) står i triggern
+  `admin_roller_vakt`; se `minne/barnkonton-och-admin.md`.
+- **Barnets inloggning har en egen Postgres-roll**, `nextrum_barn`, utan
+  en enda tabellrättighet. Barnet når tre funktioner och inget annat, och
+  `auth.users` har triggrar som spärrar barnets adress, återställning och
+  lösenord (utom i föräldrarnas fönster). Se `minne/barnkonton-och-admin.md`.
 - **`invoices` och `payouts` har med flit ingen INSERT-policy för
   användare.** Kan ingen skriva belopp från webbläsaren kan ingen
   skriva fel belopp. Beloppen sätts av `fakturering` med `service_role`.
@@ -255,6 +266,7 @@ igen 2026-09-27:**
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser` och (sedan Fas 18.1) `google_koppling` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan |
 | 40 SECURITY DEFINER-funktioner i `public` nåbara för `authenticated`, triggerfunktionerna oräknade (räknat i driften 2026-09-29, efter `admin_oppnar_chatten` och Fas 23.2). Förut stod 35 här, räknat före Fas 23.1 och på ett sätt som inte skrevs ned. Bland de senaste: `chatt_las`, `nexlax_lage`, `driftkorningar`, `mina_handlingar`, `radering_lage` och `radera_person` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
+| Barnkontonas och adminrollernas funktioner (2026-09-30): `har_behorighet`, `har_nagon_behorighet`, `mina_behorigheter`, `admin_kan_ge`, `gor_till_admin`, `ta_bort_admin`, `mina_barnkonton` | Alla svarar om den inloggade själv eller prövar anroparen i triggern `admin_roller_vakt`. `har_behorighet` och `har_nagon_behorighet` är nåbara för `anon` för att de står i policyer `to public` (Fas 10-fällan); med `auth.uid()` null svarar de nej. Barnets tre funktioner når bara rollen `nextrum_barn` |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
 | `publika_studiehjalpare` nåbar för `anon` | Den ÄR den publika listan: förnamn, ålder, stad, ämnen, bio, bara godkända med `visa_publikt` |

@@ -46,6 +46,7 @@ import { smsText, type SmsSvar, type SmsUt } from '../sms.ts';
 import { renderaMejl, KONTAKT, type ProvLage } from './rendera.ts';
 import { skapaToken } from './token.ts';
 import { arMejlbar } from './typer.ts';
+import { arBarnadress } from '../barnkonto.ts';
 
 export const FRAN = 'Nextrum <no-reply@nextrum.se>';
 
@@ -153,6 +154,10 @@ function arTidsgrans(e: unknown): boolean {
 async function mejla(r: UtskickRad, b: Beroenden, nu: Date): Promise<Utfall> {
   const typ = r.typ;
   if (!epostOk(r.epost)) return klart(r.id, false, 'Ogiltig e-postadress.', true);
+  // Barnkontonas adresser (barnkonton_och_admin) finns inte, och ett
+  // barn ska aldrig få ett mejl från oss. notis_utskick_ta hoppar redan
+  // över dem; det här är andra spärren, för en kö som lämnat ut en ändå.
+  if (arBarnadress(r.epost)) return klart(r.id, false, 'Barnkonton får inga mejl.', true);
   if (!arMejlbar(typ)) return klart(r.id, false, 'Typen mejlas inte.', true);
 
   const prov: ProvLage = r.till_sandlada === true ? 'sandlada'

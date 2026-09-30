@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
+<link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
+<title>Min vy · Nextrum</title>
+<meta name="robots" content="noindex">
+<!-- Barnets vy (barnkonton_och_admin). Samma lager som studievyn, så att
+     den ser ut som resten av Nextrum, men bara det barnet får se: det
+     barn_oversikt() och barn_notiser() svarar, inget annat. Barnets roll
+     i databasen (nextrum_barn) når inga tabeller alls, så sidan KAN inte
+     hämta mer än så, vad som än står i skriptet. -->
+<link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
+<link rel="stylesheet" href="nextrum-cinema.css?v=ac8ac9d1">
+<link rel="stylesheet" href="nextrum-vy.css?v=92e16976">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=a20da120">
+</head>
+<body class="vy vy-barn">
+
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
+<!-- Ingen meny och inga länkar till föräldervyn eller till kontot. Loggan
+     leder tillbaka hit, inte till startsidan. -->
+<header class="hdr stuck" id="hdr">
+  <div class="wrap nav">
+    <a href="/barn" class="logo" aria-label="Nextrum, till början av din vy">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+    <div class="nav-actions" id="nav-actions"></div>
+  </div>
+</header>
+
+<main class="wrap" id="innehall">
+
+  <div id="view-loading"><div class="loading">Laddar din vy</div></div>
+
+  <!-- ============ INLOGGNING ============
+       Användarnamn och lösenord. Adressen byggs i skriptet
+       (<användarnamn>@barn.nextrum.se), och felet är alltid detsamma, så
+       att sidan inte svarar på vilka användarnamn som finns. -->
+  <div id="view-auth" hidden>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <span class="nx-et acc">Logga in</span>
+        <h1 style="margin-top:16px">Din egen vy</h1>
+        <p class="nx-lede">Här ser du dina pass, din studieplan och vad som hänt. Logga in med användarnamnet och lösenordet du fått av din förälder.</p>
+
+        <form id="bv-form" novalidate>
+          <div class="fgroup">
+            <label for="bv-anv">Användarnamn</label>
+            <input class="inp" id="bv-anv" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="40" required>
+          </div>
+          <div class="fgroup">
+            <label for="a-pass">Lösenord</label>
+            <input class="inp" id="a-pass" type="password" autocomplete="current-password" required>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="bv-logga-in">Logga in</button>
+          <p class="ok-msg" id="auth-msg" role="alert" style="margin-top:16px"></p>
+        </form>
+
+        <p class="auth-alt">Har du glömt lösenordet? Fråga din förälder, så kan de byta det.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ NÅGON ANNAN ÄR INLOGGAD ============
+       Inloggningen delas av alla sidor på nextrum.se i samma webbläsare.
+       Är en vuxen inloggad visas ingenting av dennes, bara vägen ut. -->
+  <div id="view-annan" hidden>
+    <div class="locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8"/></svg>
+      <h2>Någon annan är inloggad</h2>
+      <p>I den här webbläsaren är någon annan inloggad just nu. Logga ut först, så kan du logga in med ditt eget användarnamn.</p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
+        <button class="btn btn-primary" data-logout>Logga ut</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PAUSAD ELLER BORTTAGEN ============ -->
+  <div id="view-stopp" hidden>
+    <div class="locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+      <h2 id="bv-stopp-rubrik">Din inloggning är pausad</h2>
+      <p id="bv-stopp-text">Du kommer in igen när din förälder slår på inloggningen.</p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
+        <button class="btn btn-ghost" data-logout>Logga ut</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ NÅGOT GICK FEL ============ -->
+  <div id="view-fel" hidden>
+    <div class="locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <h2>Vyn kunde inte laddas</h2>
+      <p id="fel-text">Något gick fel när vyn skulle hämtas.</p>
+      <p class="xsmall" id="fel-detalj" style="margin-top:14px;font-family:var(--f-mono);font-size:10px;color:var(--muted-2);word-break:break-word"></p>
+      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
+        <button class="btn btn-primary" id="fel-igen">Försök igen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SJÄLVA VYN ============
+       Allt nedan ritas av nextrum-barn-vy.js med textContent, ur det
+       barn_oversikt() och barn_notiser() svarar. -->
+  <div id="view-app" hidden>
+    <div class="bv">
+      <section class="bv-hej" aria-labelledby="bv-rubrik">
+        <span class="nx-et acc">Din vy</span>
+        <h1 id="bv-rubrik" tabindex="-1">Hej!</h1>
+        <p class="bv-lede" id="bv-lede"></p>
+      </section>
+
+      <div class="vy-grupp"><h3>Dina timmar</h3></div>
+      <div class="vy-kort"><div class="vy-kort-kropp bv-timmar" id="bv-timmar"></div></div>
+
+      <div class="vy-grupp"><h3>Kommande pass</h3><span class="vy-antal" id="bv-kommande-antal"></span></div>
+      <div class="vy-kort vy-lista" id="bv-kommande"></div>
+
+      <div class="vy-grupp"><h3>Notiser</h3><span class="vy-antal ar-gor" id="bv-notiser-antal"></span></div>
+      <div class="vy-kort vy-lista" id="bv-notiser"></div>
+
+      <div class="vy-grupp"><h3>Studieplan</h3></div>
+      <div class="vy-kort"><div class="vy-kort-kropp" id="bv-plan"></div></div>
+
+      <div class="vy-grupp"><h3>Genomförda pass</h3></div>
+      <div class="vy-kort vy-lista" id="bv-genomforda"></div>
+
+      <div class="bv-del" id="bv-rapporter-del" hidden>
+        <div class="vy-grupp"><h3>Rapporter</h3></div>
+        <div class="vy-kort vy-lista" id="bv-rapporter"></div>
+      </div>
+
+      <p class="bv-fraga">Vill du ändra något? Fråga din förälder.</p>
+    </div>
+  </div>
+
+</main>
+
+<script src="bibliotek/supabase-js-2.116.0.js"></script>
+<script src="nextrum-config.js?v=fdfed591"></script>
+<script src="nextrum-fel.js?v=eae02b10"></script>
+<script src="nextrum-app.js?v=ae9d5f14"></script>
+<script src="nextrum-studie.js?v=c38e3617"></script>
+<script src="nextrum-modulvakt.js?v=a1c84ddc"></script>
+<script src="nextrum-barn-vy.js?v=81ab8d12"></script>
+</body>
+</html>
