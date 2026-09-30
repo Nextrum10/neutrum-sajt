@@ -634,6 +634,15 @@ body.betalar .hdr.bort{transform:none}
   font-size:.86rem;font-weight:600;color:var(--bl);
 }
 .nx-fraga-box .nx-skal-not{margin-top:12px;font-size:.84rem;color:var(--bl-3)}
+/* Svaret på en föreslagen tid (NXStudie.svarRuta, och flytta-rutan när
+   studiehjälparen svarar med en annan tid, 2026-09-30). Räknaren står
+   under fältet till höger och har tabelltal, så att den inte flyttar
+   något när den byter antal siffror. */
+.nx-svar-falt{display:grid;gap:6px;margin-top:16px}
+.nx-svar-falt label{font-size:.86rem;font-weight:600;color:var(--bl)}
+.nx-svar-falt label em{font-style:normal;font-weight:500;color:var(--bl-3)}
+.nx-svar-falt textarea{width:100%;min-height:96px;resize:vertical;font:inherit;line-height:1.45}
+.nx-svar-antal{justify-self:end;font-size:.78rem;color:var(--bl-3);font-variant-numeric:tabular-nums}
 
 /* ============================================================
    TOMMA LÄGEN

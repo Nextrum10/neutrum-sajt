@@ -1157,6 +1157,50 @@
      ============================================================ */
   function ärFörslag(b) { return b.status === 'requested' && !harBörjat(b); }
 
+  /* ============================================================
+     SVARET PÅ FÖRSLAGET (2026-09-30)
+     Ett motförslag är ett förslag där den som fick det svarade med en
+     annan tid (motforslag_at, stämplat av databasen). Den som fick
+     motförslaget svarar ja eller nej, inte med en tredje tid: det nekar
+     skydda_bokningsfalt, och knappen står inte här. Undantaget är ett
+     pass med kortpengar på, som inte går att avslå härifrån (Fas 14.1);
+     där är en ny tid det enda svaret utom ja, i databasen och här.
+
+     Att avslå familjens tid kräver några rader om varför (svarRuta).
+     Texten står på passet, bara i vyerna, och töms efter 30 dagar.
+     ============================================================ */
+  const ärMotförslag = b => b.status === 'requested' && !!b.motforslag_at;
+  const kortpengar = b => b.betalning_status === 'tvist'
+    || (b.betalning_status === 'betald' && !b.klippkort_id && !bankPass(b));
+
+  /* Vem som avbokade, sett härifrån: du, familjen eller Nextrum (admin
+     eller ett schema). Samma jämförelse som analys_avbokningar. */
+  function avbokadAv(b) {
+    if (b.avbokad_av && b.avbokad_av === S.user.id) return 'jag';
+    if (b.avbokad_av && b.avbokad_av === b.parent_id) return 'motpart';
+    return 'nextrum';
+  }
+  function avbokadText(b) {
+    const av = avbokadAv(b);
+    if (b.avbokad_fran === 'requested') {
+      if (b.avbokad_av && b.avbokad_av === b.created_by) {
+        return av === 'jag' ? 'Du drog tillbaka ditt förslag' : 'Familjen drog tillbaka sitt förslag';
+      }
+      return av === 'jag' ? 'Du avslog tiden' : av === 'motpart' ? 'Familjen avböjde tiden' : 'Avböjd av Nextrum';
+    }
+    const skäl = NXStudie.skälText(b.avbokningsskal);
+    return (av === 'jag' ? 'Avbokat av dig' : av === 'motpart' ? 'Avbokat av familjen' : 'Avbokat av Nextrum')
+      + (skäl ? ' · ' + skäl.toLowerCase() : '');
+  }
+
+  /* Svaret som ett block på passets sida. Texten går genom esc() i
+     passSida som allt annat: den är skriven av en människa och ritas
+     aldrig som HTML. */
+  function svarBlock(b, rubrik) {
+    if (!b.svar_meddelande) return null;
+    return { rubrik, forst: true, html: '<p class="ps-svar">' + esc(b.svar_meddelande) + '</p>' };
+  }
+
   /* Vem passet gäller, efter ämnet i raden: "Matematik med Alva".
      Utan elev står familjens namn. Tiden och platsen ritar passRad själv
      (2026-09-28): förut fogade varje lista in dem i sin egen rad, med
@@ -1172,8 +1216,8 @@
      eller ett annat förslag som ännu står öppet (2026-09-28). Förut
      fick man jämföra med schemat själv, en sektion bort, och ett ja på
      två förslag samma timme gav två familjer samma tid. Databasen nekar
-     två bekräftade pass på samma starttid (bookings_tutor_slot_unique),
-     men inte två som överlappar. */
+     också två pass som överlappar, bekräftade eller föreslagna
+     (bookings_ingen_overlapp, v9), men först när någon trycker. */
   function krockFör(b) {
     const min = t => { const d = String(t || '').slice(0, 5).split(':'); return Number(d[0]) * 60 + Number(d[1] || 0); };
     if (!b.wanted_time) return null;
@@ -1213,17 +1257,17 @@
 
     $('#forslag-antal').textContent = tillDig.length ? tillDig.length + ' st' : '';
     host.innerHTML = tillDig.length
-      ? tillDig.map(b => förslagRad(b, 'Familjen föreslog den här tiden',
-          '<button type="button" class="btn btn-primary btn-sm" data-acceptera="' + esc(b.id) + '">Acceptera</button>'
-          + '<button type="button" class="btn btn-ghost btn-sm" data-flytta="' + esc(b.id) + '" data-motforslag="1">Föreslå annan tid</button>'
-        )).join('')
+      ? tillDig.map(b => förslagRad(b,
+          ärMotförslag(b) ? 'Familjen svarade med en annan tid' : 'Familjen föreslog den här tiden',
+          svarsKnappar(b, true))).join('')
       : tomt('Inga förslag som väntar', 'När en familj föreslår en tid står den här, och du får en notis.');
 
     const box = $('#forslag-vantar-box');
     if (box) {
       box.hidden = !dina.length;
       $('#forslag-vantar-antal').textContent = dina.length ? dina.length + ' st' : '';
-      $('#forslag-vantar').innerHTML = dina.map(b => förslagRad(b, 'Ditt förslag — familjen svarar',
+      $('#forslag-vantar').innerHTML = dina.map(b => förslagRad(b,
+        ärMotförslag(b) ? 'Ditt motförslag. Väntar på svar från familjen' : 'Väntar på svar från familjen',
         '<button type="button" class="btn btn-ghost btn-sm" data-flytta="' + esc(b.id) + '" data-motforslag="1">Ändra tiden</button>'
       )).join('');
     }
@@ -1233,6 +1277,55 @@
        någon annan. */
     if (S.sido) S.sido.märke('tider', tillDig.length);
   }
+
+  /* Tre svar på familjens tid: ja, nej med några rader, eller en annan
+     tid. På ett motförslag från familjen två: ja eller nej. Nej står
+     inte på ett pass med kortpengar, för det nekar databasen. */
+  function svarsKnappar(b, små) {
+    const s = små ? ' btn-sm' : '';
+    const betalt = kortpengar(b);
+    return '<button type="button" class="btn btn-primary' + s + '" data-acceptera="' + esc(b.id) + '">Acceptera</button>'
+      + (betalt ? '' : '<button type="button" class="btn btn-ghost' + s + '" data-avsla="' + esc(b.id) + '">Avslå</button>')
+      + (ärMotförslag(b) && !betalt ? ''
+        : '<button type="button" class="btn btn-ghost' + s + '" data-flytta="' + esc(b.id) + '" data-motforslag="1">Föreslå annan tid</button>');
+  }
+
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-avsla]');
+    if (!k) return;
+    const b = (S.bokningar || []).find(x => x.id === k.dataset.avsla);
+    if (!b) return;
+    /* Utan migrationen avbokningar_och_svar finns ingen kolumn för
+       texten, och databasen kräver den inte: då avslås tiden som förut. */
+    if (S.svarSaknas) {
+      const ja = await bekräfta({ titel: 'Avslå tiden?', knapp: 'Avslå',
+        text: 'Familjen ser att tiden inte passade. Passar en annan tid bättre kan du föreslå den i stället.' });
+      if (!ja) return;
+      await medan(k, 'Avslår…', async () => {
+        const { error } = await supa.from('bookings').update({ status: 'cancelled' }).eq('id', b.id);
+        if (error) { alert('Kunde inte avslå: ' + felText(error)); return; }
+        await laddaPass();
+        fyllPassVal();
+        await Promise.all([laddaUpptagna(), laddaTimmar()]);
+      });
+      return;
+    }
+    const text = await NXStudie.svarRuta({
+      titel: 'Avslå tiden?',
+      text: 'Familjen ser att tiden inte passar och läser det du skriver här. Passar en annan tid bättre kan du föreslå den i stället.',
+      etikett: 'Varför passar tiden inte?',
+      not: 'Familjen får ett mejl om att tiden inte passade, utan din text. Den läser de i Nextrum.',
+      knapp: 'Avslå'
+    });
+    if (!text) return;
+    await medan(k, 'Avslår…', async () => {
+      const { error } = await supa.from('bookings').update({ status: 'cancelled', svar_meddelande: text }).eq('id', b.id);
+      if (error) { alert('Kunde inte avslå: ' + felText(error)); return; }
+      await laddaPass();
+      fyllPassVal();
+      await Promise.all([laddaUpptagna(), laddaTimmar()]);
+    });
+  });
 
   document.addEventListener('click', async e => {
     const k = e.target.closest('[data-acceptera]');
@@ -1281,7 +1374,7 @@
     if (väntar) {
       poster.push({
         rubrik: väntar === 1 ? 'En föreslagen tid' : väntar + ' föreslagna tider',
-        text: 'En familj har föreslagit en tid. Acceptera eller föreslå en annan.',
+        text: 'En familj har föreslagit en tid. Acceptera, avslå eller föreslå en annan.',
         mål: '#forslag-lista'
       });
     }
@@ -1368,8 +1461,8 @@
        de NYA passen: de att svara på och rapportera. Uttagen följer
        passen i antal och hämtas likadant. */
     const [pass, uttag, saldon] = await Promise.all([
-      NXStudie.hämtaAlla(supa, 'bookings',
-        'id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, created_by, avbokningsskal, betalning_status, fakturerbar, klippkort_id',
+      NXStudie.passMedSvar(supa, S,
+        'id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, status, attendance, student_id, parent_id, tutor_id, created_by, avbokningsskal, avbokad_at, avbokad_av, betalning_status, fakturerbar, klippkort_id',
         q => q.eq('tutor_id', S.user.id).order('wanted_date', { ascending: true })),
       NXStudie.hämtaAlla(supa, 'timbank_uttag', 'id, booking_id, sort, minuter'),
       supa.from('timbank_saldo').select('parent_id, saldo_min')
@@ -1425,6 +1518,7 @@
       host: host,
       bokningar: lektioner,
       tomtKommande: 'Inga kommande pass. När du accepterat en föreslagen tid står passet här.',
+      avbokade: { vem: avbokadAv, jag: 'dig', motpart: 'familjerna' },
       rad: b => {
       const mitt = b.created_by === S.user.id;
       const kan = b.status === 'requested' || b.status === 'confirmed';
@@ -1465,8 +1559,10 @@
           ? 'Inte betalt än. Håll inte passet förrän familjen har betalat.'
           : b.status === 'requested'
           ? (mitt ? 'Ditt förslag — väntar på svar' : 'Familjen önskade den här tiden')
+          : b.status === 'cancelled' ? avbokadText(b)
           : (b.attendance === 'franvarande' ? 'Eleven uteblev'
             : b.attendance === 'sen' ? 'Eleven kom sent' : null),
+        not: b.status === 'cancelled' && b.svar_meddelande ? NXKontakt.kortNot(b.svar_meddelande) : null,
         /* Betalmärket bara med spärren på. Av betyder att passen hålls
            som förut, och då hade "Ej betalt" varit en order ingen gett. */
         märke: S.kortsparr ? NXKontakt.betalMärke(b) : null,
@@ -1838,19 +1934,13 @@
     const btn = e.target.closest('[data-status]');
     if (!btn) return;
 
-    /* Avböja ett önskemål frågar inte efter skäl — det passet fanns
-       aldrig. Att avboka ett pass gör det, och skälet skrivs i samma
+    /* Att avboka ett pass frågar efter skäl, och skälet skrivs i samma
        uppdatering som statusen: två skrivningar hade blivit två mejl,
-       och det första hade saknat skälet. */
+       och det första hade saknat skälet. Att avslå familjens tid går
+       genom [data-avsla] ovan, med några rader i stället för ett skäl
+       (2026-09-30). */
     const fält = { status: btn.dataset.status };
-    if (btn.dataset.status === 'cancelled' && btn.dataset.avboj) {
-      const ja = await bekräfta({
-        titel: 'Avböj önskemålet?',
-        text: 'Familjen ser att tiden inte passade. Passar en annan tid bättre kan du föreslå den i stället för att avböja.',
-        knapp: 'Avböj'
-      });
-      if (!ja) return;
-    } else if (btn.dataset.status === 'cancelled') {
+    if (btn.dataset.status === 'cancelled') {
       const skäl = await NXStudie.avbokaRuta({
         titel: 'Avboka passet?',
         text: 'Vill du hellre byta tid, välj Föreslå ny tid i stället — då ligger passet kvar tills familjen svarat.',
@@ -1880,6 +1970,10 @@
        som en flytt, men det är ett svar på familjens förslag och ska
        heta så. */
     const mot = !!k.dataset.motforslag;
+    /* Några rader följer med när du svarar på familjens tid med en
+       annan, eller ändrar ditt eget motförslag innan de svarat. Bara
+       där tar databasen emot dem (skydda_bokningsfalt). */
+    const medRader = !S.svarSaknas && b.status === 'requested' && (b.created_by !== S.user.id || !!b.motforslag_at);
     const ny = await NXStudie.flyttaRuta(Object.assign({
       datum: b.wanted_date,
       tid: b.wanted_time,
@@ -1889,21 +1983,29 @@
       titel: 'Föreslå en annan tid',
       fraga: b.created_by === S.user.id ? 'Ditt förslag ligger nu' : 'Familjen föreslog',
       knapp: 'Föreslå tiden'
+    } : {}, medRader ? {
+      meddelande: { etikett: 'Några rader till familjen', varde: b.created_by === S.user.id ? b.svar_meddelande : '' }
     } : {}));
     if (!ny) return;
 
     await medan(k, 'Flyttar…', async () => {
-      const { error } = await supa.from('bookings').update({
+      const fält = {
         wanted_date: ny.datum,
         wanted_time: ny.tid,
         status: 'requested',
         created_by: S.user.id
-      }).eq('id', b.id);
+      };
+      if (medRader) fält.svar_meddelande = ny.meddelande || null;
+      const { error } = await supa.from('bookings').update(fält).eq('id', b.id);
 
       if (error) {
-        alert(error.code === '23505' || error.code === '23P01'
+        const krock = error.code === '23505' || error.code === '23P01';
+        alert(krock
           ? 'Den tiden hann bli upptagen. Välj en annan.'
           : 'Kunde inte flytta passet: ' + felText(error));
+        /* Kalendern hämtas om, så att tiden som hann tas syns som
+           upptagen nästa gång rutan öppnas. */
+        if (krock) { await laddaPass(); await laddaUpptagna(); }
         return;
       }
       await laddaPass();
@@ -3688,22 +3790,32 @@
        länkar, inte knappar lika stora som Skriv rapport. */
     const flytta = (text, mot) => '<button type="button" class="btn btn-ghost btn-sm" data-flytta="' + esc(b.id) + '"'
       + (mot ? ' data-motforslag="1"' : '') + '>' + text + '</button>';
-    const avboka = (text, avböj) => '<button type="button" class="ps-fot-lank ar-fara" data-status="cancelled" data-id="' + esc(b.id) + '"'
-      + (avböj ? ' data-avboj="1"' : '') + '>' + text + '</button>';
+    const avboka = text => '<button type="button" class="ps-fot-lank ar-fara" data-status="cancelled" data-id="' + esc(b.id) + '">'
+      + text + '</button>';
 
     let besked = null, atgarder = '', fot = skriv;
+    /* Svaret du skrev står på passet medan det väntar och när du avslagit
+       tiden, som familjen ser det (2026-09-30). */
+    const dittSvar = svarBlock(b, 'Det du skrev till familjen');
     if (b.status === 'cancelled') {
       const skäl = NXStudie.skälText(b.avbokningsskal);
-      besked = { text: 'Passet är avbokat' + (skäl ? ' — ' + skäl.toLowerCase() + '.' : '.'), ton: 'lugn' };
+      besked = b.avbokad_fran === 'requested'
+        ? { text: avbokadText(b) + '.', ton: 'lugn' }
+        : { text: 'Passet är avbokat' + (skäl ? ' — ' + skäl.toLowerCase() + '.' : '.'), ton: 'lugn' };
     } else if (b.status === 'requested' && !mitt && !varit) {
       const krock = krockFör(b);
-      besked = { text: 'Familjen föreslår den här tiden. Acceptera den, eller föreslå en annan — då får familjen bekräfta.'
+      /* Nej och en annan tid står bredvid ja: de är svar, inte något som
+         alltid går. På ett motförslag från familjen är svaret ja eller
+         nej (skydda_bokningsfalt). */
+      besked = { text: (ärMotförslag(b)
+          ? 'Familjen svarade med en annan tid. Acceptera den, eller avslå den och skriv varför.'
+          : 'Familjen föreslår den här tiden. Acceptera den, avslå den med några rader om varför, eller föreslå en annan tid.')
         + (krock ? ' ' + krock + '.' : '') + (betalt ? viaNextrum : ''), ton: 'fraga' };
-      atgarder = '<button type="button" class="btn btn-primary" data-acceptera="' + esc(b.id) + '">Acceptera</button>'
-        + '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '" data-motforslag="1">Föreslå annan tid</button>';
-      fot = skriv + (betalt ? '' : avboka('Avböj tiden', true));
+      atgarder = svarsKnappar(b, false);
     } else if (b.status === 'requested' && mitt && !varit) {
-      besked = { text: 'Ditt förslag. Familjen bekräftar tiden eller föreslår en annan, och du får ett mejl när de svarat.'
+      besked = { text: (ärMotförslag(b)
+          ? 'Ditt motförslag. Familjen svarar ja eller nej, och du får ett mejl när de svarat.'
+          : 'Ditt förslag. Familjen bekräftar tiden eller föreslår en annan, och du får ett mejl när de svarat.')
         + (betalt ? viaNextrum : ''), ton: 'vantar' };
       fot = flytta('Ändra tiden', true) + skriv + (betalt ? '' : avboka('Dra tillbaka förslaget'));
     } else if (varit && rapporterbart(b)) {
@@ -3819,7 +3931,7 @@
           bokat: Number(b.duration_min || 60), deb: Number(rapport.debiterade_min || 0),
           bank: bankÖvertid(b) || 0, skal: rapport.avvikelse_skal, skalAv: 'Du'
         } : null
-      }) }] : []).concat(block)
+      }) }] : []).concat(dittSvar && (b.status === 'requested' || b.status === 'cancelled') ? [dittSvar] : [], block)
     });
 
     rita(rapportFör[b.id] || null);

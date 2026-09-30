@@ -990,6 +990,43 @@
     return barn && barn.name ? 'med ' + String(barn.name).trim().split(/\s+/)[0] : '';
   }
 
+  /* ============================================================
+     SVARET PÅ FÖRSLAGET (2026-09-30)
+     Ett motförslag är en tid studiehjälparen svarat med när familjen
+     föreslagit en annan (motforslag_at, stämplat av databasen). Det
+     besvaras med ja eller nej, inte med en tredje tid: det nekar
+     skydda_bokningsfalt, och knappen står inte här. Passar den nya
+     tiden inte föreslår familjen en ny under Boka pass. Undantaget är
+     ett pass med kortpengar på, som inte går att avböja härifrån.
+
+     Avslår studiehjälparen familjens tid står det varför på passet
+     (svar_meddelande). Texten ritas genom esc(), som allt annat.
+     ============================================================ */
+  const ärMotförslag = b => b.status === 'requested' && !!b.motforslag_at;
+
+  /* Vem som avbokade, sett härifrån: ni, studiehjälparen eller Nextrum
+     (admin eller ett schema). Samma jämförelse som analys_avbokningar. */
+  function avbokadAv(b) {
+    if (b.avbokad_av && b.avbokad_av === S.user.id) return 'jag';
+    if (b.avbokad_av && b.avbokad_av === b.tutor_id) return 'motpart';
+    return 'nextrum';
+  }
+  function avbokadText(b) {
+    const av = avbokadAv(b);
+    if (b.avbokad_fran === 'requested') {
+      if (b.avbokad_av && b.avbokad_av === b.created_by) {
+        return av === 'jag' ? 'Ni drog tillbaka förslaget' : 'Studiehjälparen drog tillbaka sitt förslag';
+      }
+      return av === 'jag' ? 'Ni avböjde tiden' : av === 'motpart' ? 'Avslagen av studiehjälparen' : 'Avböjd av Nextrum';
+    }
+    const skäl = NXStudie.skälText(b.avbokningsskal);
+    return (av === 'jag' ? 'Avbokat av er' : av === 'motpart' ? 'Avbokat av studiehjälparen' : 'Avbokat av Nextrum')
+      + (skäl ? ' · ' + skäl.toLowerCase() : '');
+  }
+  // Studiehjälparen avslog familjens tid, och skrev varför.
+  const avslagen = b => b.status === 'cancelled' && b.avbokad_fran === 'requested'
+    && avbokadAv(b) === 'motpart' && b.avbokad_av !== b.created_by;
+
   function svarsKnappar(b, små) {
     const s = små ? ' btn-sm' : '';
     /* Ett betalt pass som flyttats är en förfrågan igen, men att avböja
@@ -997,7 +1034,8 @@
        ingen tid är det Nextrum som betalar tillbaka — passets sida
        säger det. Ett pass betalt med timmar går att avböja (Fas 21.1). */
     const betalt = pengarPå(b);
-    return '<button type="button" class="btn btn-primary' + s + '" data-passvar="confirmed" data-id="' + esc(b.id) + '">Passar bra</button>'
+    return '<button type="button" class="btn btn-primary' + s + '" data-passvar="confirmed" data-id="' + esc(b.id) + '">'
+         + (ärMotförslag(b) ? 'Acceptera ny tid' : 'Passar bra') + '</button>'
          + (betalt ? '' : '<button type="button" class="btn btn-ghost' + s + '" data-passvar="cancelled" data-id="' + esc(b.id) + '">Avböj</button>');
   }
 
@@ -1031,11 +1069,32 @@
     const rader = föreslagna.map(b => NXKontakt.passRad(b, {
       href: '#pass/' + b.id,
       med: medBarn(b),
-      not: NXKontakt.kortNot(b.note),
-      vem: hjälpare ? hjälpare + ' föreslår den här tiden' : 'Föreslaget av er studiehjälpare',
+      /* På ett motförslag är studiehjälparens rader det man läser, inte
+         familjens egen anteckning (2026-09-30). */
+      not: NXKontakt.kortNot(ärMotförslag(b) && b.svar_meddelande ? b.svar_meddelande : b.note),
+      vem: ärMotförslag(b)
+        ? (hjälpare ? hjälpare + ' kan inte er tid och föreslår den här' : 'Motförslag från er studiehjälpare')
+        : hjälpare ? hjälpare + ' föreslår den här tiden' : 'Föreslaget av er studiehjälpare',
       lage: null,
       atgarder: svarsKnappar(b, true)
     }));
+
+    /* En tid studiehjälparen avslagit den senaste veckan, som inte har
+       passerat: nästa drag är familjens, att föreslå en ny. Utan raden
+       stod avslaget bara i den hopfällda gruppen Avbokade pass, och
+       familjen fick veta det genom mejlet och ingen annanstans. */
+    const vecka = Date.now() - 7 * 864e5;
+    const avslagna = (S.bokningar || [])
+      .filter(b => avslagen(b) && b.wanted_date >= idag && b.avbokad_at && Date.parse(b.avbokad_at) >= vecka)
+      .sort((a, c) => String(c.avbokad_at).localeCompare(String(a.avbokad_at)));
+    avslagna.forEach(b => rader.push(NXKontakt.passRad(b, {
+      href: '#pass/' + b.id,
+      med: medBarn(b),
+      not: b.svar_meddelande ? NXKontakt.kortNot(b.svar_meddelande) : null,
+      vem: (hjälpare || 'Studiehjälparen') + ' kan inte den tiden',
+      lage: { text: 'Avslagen', klass: 'avbokad' },
+      atgarder: '<a class="btn btn-primary btn-sm" href="#boka">Föreslå ny tid</a>'
+    })));
 
     /* Rapporterna räknas först när både de och passen finns, som under
        Bekräfta rapport: utan passen ser ett obetalt pass betalt ut. */
@@ -1069,7 +1128,7 @@
     /* Dold, inte tom: en ruta som står kvar och säger "inget att
        göra" tar plats överst varje gång man öppnar vyn. */
     grupp.hidden = !rader.length;
-    $('#ov-gora-antal').textContent = rader.length ? String(föreslagna.length + att.length + sena.length) : '';
+    $('#ov-gora-antal').textContent = rader.length ? String(föreslagna.length + avslagna.length + att.length + sena.length) : '';
     host.innerHTML = rader.join('');
   }
 
@@ -2611,8 +2670,8 @@
        listan är äldst först, så det hade varit de nya passen som föll
        bort. Underlaget och tilläggen följer passen i antal. */
     const [pass, und, till] = await Promise.all([
-      NXStudie.hämtaAlla(supa, 'bookings',
-        'id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, created_by, created_at, avbokningsskal, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt',
+      NXStudie.passMedSvar(supa, S,
+        'id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, parent_id, tutor_id, created_by, created_at, avbokningsskal, avbokad_at, avbokad_av, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt',
         q => q.eq('parent_id', S.user.id).order('wanted_date', { ascending: true })),
       NXStudie.hämtaAlla(supa, 'passunderlag',
         'id, debiterade_min, betalda_min, timpris_ore, extra_ore, rabatt_ore, timbank_min',
@@ -2671,6 +2730,7 @@
       host: host,
       bokningar: S.bokningar,
       tomtKommande: 'Inga kommande pass. Boka en tid under Boka pass, så står passet här.',
+      avbokade: { vem: avbokadAv, jag: 'er', motpart: 'studiehjälparen' },
       rad: b => {
       /* Ett förslag från studiehjälparen ser likadant ut i databasen
          som en egen bokning — created_by är det enda som skiljer, och
@@ -2708,8 +2768,13 @@
         href: '#pass/' + b.id,
         med: medBarn(b),
         nu: b.wanted_date === isoFor(new Date()) && b.status !== 'cancelled',
-        vem: derasFörslag && b.status === 'requested' ? 'Föreslaget av er studiehjälpare'
-          : b.status === 'requested' ? 'Väntar på svar från er studiehjälpare' : null,
+        vem: derasFörslag && ärMotförslag(b) ? 'Motförslag från er studiehjälpare'
+          : derasFörslag && b.status === 'requested' ? 'Föreslaget av er studiehjälpare'
+          : b.status === 'requested' ? 'Väntar på svar från er studiehjälpare'
+          : b.status === 'cancelled' ? avbokadText(b) : null,
+        /* Studiehjälparens rader, kapade: hela står på passets sida. */
+        not: b.svar_meddelande && (b.status === 'cancelled' || ärMotförslag(b))
+          ? NXKontakt.kortNot(b.svar_meddelande) : null,
         märke: NXKontakt.betalMärke(b),
         atgarder: knappar
       });
@@ -2782,18 +2847,30 @@
         : medTimmar(passet) ? ' Timmarna ni betalade med kommer tillbaka.'
         : medBanken(passet) ? ' Minuterna ni betalade med kommer tillbaka till timbanken.' : '';
       if (svar.dataset.passvar === 'cancelled') {
-        const nej = await NXStudie.bekräfta({
+        const nej = await NXStudie.bekräfta(passet && ärMotförslag(passet) ? {
+          titel: 'Avböj den nya tiden?',
+          text: 'Er studiehjälpare ser att tiden inte passade. Vill ni ha en annan tid föreslår ni den under Boka pass, och skriv gärna i chatten vilka tider som fungerar.' + tillbaka,
+          knapp: 'Avböj'
+        } : {
           titel: 'Avböj tiden?',
           text: 'Er studiehjälpare ser att tiden inte passade. Skriv gärna i chatten vilka tider som fungerar.' + tillbaka,
           knapp: 'Avböj'
         });
         if (!nej) return;
       }
-      svar.setAttribute('aria-busy', 'true');
-      const { error } = await supa.from('bookings').update({ status: svar.dataset.passvar }).eq('id', svar.dataset.id);
-      svar.removeAttribute('aria-busy');
-      if (error) { alert('Kunde inte svara: ' + felText(error)); return; }
-      await Promise.all([laddaPass(), laddaBokning()].concat(tillbaka ? [laddaErbjudanden()] : []));
+      /* medan() låser knappen, också för Enter: ett andra tryck hade
+         blivit ett andra svar på ett pass som redan besvarats. */
+      await medan(svar, svar.dataset.passvar === 'cancelled' ? 'Avböjer…' : 'Bekräftar…', async () => {
+        const { error } = await supa.from('bookings').update({ status: svar.dataset.passvar }).eq('id', svar.dataset.id);
+        if (error) {
+          alert(error.code === '23505' || error.code === '23P01'
+            ? 'Tiden hann bli upptagen av ett annat pass. Föreslå en ny under Boka pass.'
+            : 'Kunde inte svara: ' + felText(error));
+          await laddaPass();
+          return;
+        }
+        await Promise.all([laddaPass(), laddaBokning()].concat(tillbaka ? [laddaErbjudanden()] : []));
+      });
       return;
     }
 
@@ -3725,10 +3802,30 @@
     const bokaNästa = primär => '<a class="btn ' + (primär ? 'btn-primary' : 'btn-ghost btn-sm') + '" href="#boka">Boka nästa pass</a>';
 
     let besked = null, atgarder = '', alternativ = '', val = '', fot = skriv;
+    /* Det studiehjälparen skrev när hen avslog tiden eller föreslog en
+       annan (2026-09-30). Står på passet, aldrig i mejlet. */
+    const svaret = b.svar_meddelande && (b.status === 'cancelled' || b.status === 'requested')
+      ? { rubrik: förnamn + ' skriver', forst: true, html: '<p class="ps-svar">' + esc(b.svar_meddelande) + '</p>' } : null;
     if (b.status === 'cancelled') {
       const skäl = NXStudie.skälText(b.avbokningsskal);
-      besked = { text: 'Passet är avbokat' + (skäl ? ' — ' + skäl.toLowerCase() + '.' : '.'), ton: 'lugn' };
+      besked = avslagen(b)
+        ? { text: förnamn + ' kan inte den tiden' + (b.svar_meddelande ? ' och skriver varför nedan.' : '.')
+            + ' Föreslå gärna en ny tid, så svarar ' + förnamn + ' på den.', ton: 'lugn' }
+        : b.avbokad_fran === 'requested'
+        ? { text: avbokadText(b) + '.', ton: 'lugn' }
+        : { text: 'Passet är avbokat' + (skäl ? ' — ' + skäl.toLowerCase() + '.' : '.'), ton: 'lugn' };
       atgarder = '<a class="btn btn-primary" href="#boka">Föreslå en ny tid</a>';
+    } else if (b.status === 'requested' && derasFörslag && framåt && ärMotförslag(b)) {
+      /* Motförslaget: ja eller nej. En tredje tid nekar databasen, utom
+         på ett pass med kortpengar, som inte går att avböja härifrån. */
+      const timmarna = medTimmar(b) ? ' Passet är betalt med era timmar, och de följer med till den här tiden. Avböjer ni kommer de tillbaka.'
+        : medBanken(b) ? ' Passet är betalt med timbanken, och minuterna följer med till den här tiden. Avböjer ni kommer de tillbaka.'
+        : '';
+      besked = { text: förnamn + ' kan inte tiden ni föreslog och föreslår den här i stället. Passar den? '
+        + (betalt ? 'Passar den inte kan ni föreslå en annan.' + viaOss
+          : 'Passar den inte, avböj den och föreslå en ny tid under Boka pass.' + timmarna), ton: 'fraga' };
+      atgarder = svarsKnappar(b, false)
+        + (betalt ? '<button type="button" class="btn btn-ghost" data-flytta="' + esc(b.id) + '">Föreslå annan tid</button>' : '');
     } else if (b.status === 'requested' && derasFörslag && framåt) {
       /* Fas 22.4: timmarna betalade förslaget när det skickades, och ett
          motförslag flyttar bara tiden. Leo 2026-09-28: det är den timmen
@@ -3941,7 +4038,7 @@
          inte passets elev och dag; de tas från passet. */
       block: (rapport ? [{ rubrik: 'Rapporten', forst: true, html:
         rbBrev(Object.assign({ student_id: b.student_id, lesson_date: b.wanted_date }, rapport), b)
-      }] : []).concat(block)
+      }] : []).concat(svaret ? [svaret] : [], block)
     });
 
     /* Rapporten ur Bekräfta rapport finns ofta redan, med samma fält:

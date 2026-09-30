@@ -280,6 +280,59 @@ plats alls. Förval ur förra passet och barnets `format_onskemal`.
 Platsen ändras inte när tiden flyttas — `skydda_bokningsfalt` släpper
 bara igenom tid och status på ett befintligt pass.
 
+**Svaret på en föreslagen tid och avbokade pass (2026-09-30).** Leo bad
+om tre svar på familjens tid: acceptera, avslå med ett obligatoriskt
+meddelande, eller föreslå en annan tid med ett valfritt, och att
+familjen svarar ja eller nej på motförslaget ("ingen pingpong"). Och att
+avbokade pass inte ska ta plats, men att antalet ska synas över tid.
+Migrationen `avbokningar_och_svar` bygger det på Fas 15.1:s modell.
+- **Inga nya statusar, med flit.** Beställningen ville ha `avslagen`,
+  `motforslag` och `motforslag_avbojt`. Ett motförslag ÄR fortfarande en
+  flyttad tid på ett `requested`, och ett avslag ÄR `cancelled`:
+  `klippkort_saldo`, timmarnas jobb, krockvillkoret, raderingen och ett
+  trettiotal funktioner räknar på de fyra statusarna, och ett avslag med
+  en ny status hade behållit familjens köpta timme utan att något blev
+  rött.
+- **Inga pass tas bort, med flit.** Beställningen ville radera avbokade
+  pass efter 30 dagar. Ett avbokat pass kan bära en återbetalning, en
+  tvist, ett timbanksuttag och ligga i en stängd månad, och
+  `analys_avbokningar` räknar ur raderna. Vyerna visar avbokade pass i en
+  hopfälld grupp sist i passlistan (`o.avbokade` i `NXStudie.passLista`),
+  bara de senaste 30 dagarna, och antalet räknas ur raderna.
+- **`avbokad_fran`** är statusen när passet avbokades, stämplad av
+  `stampla_avbokningen`. Räknaren i gruppen räknar bara `confirmed`: ett
+  förslag som avslås eller dras tillbaka är ingen avbokning. Vem som
+  avbokade läses ur `avbokad_av` mot `parent_id` och `tutor_id`, som
+  `analys_avbokningar` gör. Fylld bakåt ur auditloggen; pass avbokade
+  före Fas 6.1 står som null, okänt.
+- **`svar_meddelande`** är studiehjälparens rader, högst 500 tecken:
+  KRÄVS när hen avslår en tid familjen föreslagit, valfritt med ett
+  motförslag, och skrivs av passets studiehjälpare i samma skrivning
+  (`skydda_bokningsfalt`). Fritext, till skillnad från avbokningens
+  fasta skäl (Fas 15.2): "den tiden har jag träning" är inget av fyra
+  skäl. Därför står den bara i vyerna: inte i auditloggens vitlista,
+  inte i någon notis eller något AI-verktyg, och `svar-gallring` tömmer
+  den 30 dagar efter avslaget eller passet. `radera_person()` tömmer den,
+  och månadslåset släpper igenom tömningen som för plats och rad.
+- **`motforslag_at`** stämplas när den som fick ett förslag svarar med
+  en annan tid. Den som fick motförslaget svarar ja eller nej och flyttar
+  inte tiden igen; den som gav det får ändra sitt eget tills det är
+  besvarat. Undantaget är kortpengar på passet: då går nej inte härifrån
+  (Fas 14.1), och en ny tid är det enda svaret utom ja. Ett bekräftat
+  pass som flyttas är ett nytt förslag, och tappar det gamla svaret.
+- **Mejlen är orörda.** `pass_avbojt` och `pass_flyttat` sa redan att ett
+  svar finns, med knappen till `#lektioner/pass`, och bär aldrig texten.
+  `notis-ko` behövde inte driftsättas.
+- Familjen ser ett avslag från den senaste veckan under Översikt, med
+  Föreslå ny tid: i den hopfällda gruppen hade det bara stått i mejlet.
+- **Vyerna tål att migrationen saknas** (`NXStudie.passMedSvar`): de
+  driftsätts vid merge och migrationen körs efteråt, och en fråga efter
+  en kolumn som inte finns ger 42703 för hela listan. Utan kolumnerna
+  avslår studiehjälparen som förut, utan text.
+- `NXStudie.medan()` stänger av knappen medan anropet pågår. Förut
+  stoppade `aria-busy` bara musen: Enter på en knapp med fokus gav ett
+  andra svar på ett pass som redan besvarats.
+
 **Ett bekräftat onlinepass har en Meet-länk (Fas 18.1).** Den står under
 Var på passets sida, likadan hos familjen och studiehjälparen, och
 skapas av `google-meet` första gången någon öppnar passet, inte av en
@@ -329,7 +382,8 @@ redan hänt hos Stripe ska gå att skriva ner. Rapportens TEXT går att
 skriva om i en stängd månad; bara pass, elev, datum, närvaro och tid är
 låsta. Passets plats och rad till studiehjälparen går att TÖMMA men inte
 ändra: det är vad `radera_person()` gör när en familj slutar
-(2026-09-28, avsnitt 5). Underlag och fakturor låses inte: de betalas
+(2026-09-28, avsnitt 5). Studiehjälparens svar på ett förslag likaså
+(2026-09-30). Underlag och fakturor låses inte: de betalas
 efter månaden.
 
 **Betalningar (omgjord 2026-09-29).** Leo: "gör om betalningar. den
@@ -887,6 +941,7 @@ tidsordning hade tappat de nyaste. I drift sedan 2026-09-29 (avsnitt
 | uppgift | i studievyn (under NexLäx) och studiehjälparvyn det eleven ska göra mellan passen (`homework`, Fas 23.1). Hette läxa. I adminvyn och i tabellen `uppgifter` betyder ordet fortfarande adminens att göra-lista; koden för elevens uppgifter säger `laxor` och `homework` |
 | nivå | en digital uppgift i banan (`nivaer`): 5–12 frågor som rättas i databasen. En **bana** är nivåerna i ett ämne och en årskurs. Ett **Mästarprov** och **repetitionen** är nivåer som drar sina frågor ur banan (Fas 23.2) |
 | NexLäx | studievyns sektion för banan, det studiehjälparen gett och utvecklingen (Fas 23.2). Ersatte Uppgifter och Min utveckling. I koden `nexlax` och `NXUppgifter` |
+| motförslag | en annan tid som svar på ett förslag: samma pass, flyttat, med `motforslag_at` (2026-09-30). Besvaras med ja eller nej. Ett avslag är `cancelled` med studiehjälparens svar i `svar_meddelande` |
 | XP | poäng som räknas ur svaren och försöken och aldrig sparas (Fas 23.2, reglerna i `intern.nexlax_*`) |
 
 ### Siffror som måste stämma överallt
@@ -1755,6 +1810,14 @@ i auditloggens vitlista. Tabellen har fortfarande bara adminpolicyerna.
 tråden mellan en familj och en studiehjälpare för admin, SECURITY
 DEFINER med `is_admin()` på första raden, VOLATILE för att den skriver
 `chatt.oppnad` i `audit_logg`. Den rör aldrig `messages`.
+`avbokningar_och_svar` (2026-09-30, avsnitt 1) la till
+`bookings.avbokad_fran`, `motforslag_at` och `svar_meddelande`,
+`intern.svar_gallra()` med pg_cron-jobbet `svar-gallring`, och gör
+`bookings_stampla_avbokning` till en trigger på insert och varje update:
+den känner igen motförslaget på tiden och `created_by`, och en
+`UPDATE OF status` hade inte sett det. `skydda_bokningsfalt`,
+`intern.las_stangd_manad` och `radera_person` lappas med `replace()` och
+en vakt, och migrationen går att köra två gånger.
 Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
 id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
 ingen roll utom ägaren når den). Se Notiserna nedan.
@@ -1972,6 +2035,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `kontakt-och-fel-gallring` | 03:44 | kontaktmeddelanden och klientfel |
 | `leads-avidentifiering` | 03:47 | intresseanmälningar sex månader efter senaste kontakten |
 | `ai-och-uppgifter-gallring` | 03:51 | AI-texterna och avslutade uppgifter |
+| `svar-gallring` | 03:53 | studiehjälparens svar på ett förslag, 30 dagar efter avslaget eller passet (2026-09-30, i drift först när migrationen körts) |
 | `manadskorning` | den 1:a 04:17 | förra månadens underlag och fakturautkast (avsnitt 1) |
 | `manadskorning-svar` | den 1:a 04:47 | månadskörningens svar: allt utom 200 blir en uppgift (ovan) |
 | `konton-oanvanda` | den 1:a 04:53 | konton som inte använts på två år blir uppgifter |
@@ -2028,6 +2092,10 @@ registret; det här är det som rör koden.
   avbrutna uppgifter ett år efter att de stängdes. `frys_forslaget`
   släpper igenom exakt den tömningen: till null, på ett avgjort förslag,
   utan inloggad användare. Allt annat i ett förslag är fortfarande fryst.
+- **Studiehjälparens svar på ett förslag** (2026-09-30,
+  `intern.svar_gallra()`, pg_cron `svar-gallring`) töms 30 dagar efter
+  avslaget, eller 30 dagar efter passets dag för ett motförslag som blev
+  ett pass. Passet står kvar: det är bokföring.
 - **`landningssida` bär bara våra egna utm-taggar.** `NX.källa()` sparade
   förut hela adressen, med annonsnätverkens klick-id (`gclid`,
   `fbclid`), som går att koppla till en person hos Google och Meta.
@@ -2071,7 +2139,8 @@ avgör vad rutan lovar och vad som händer. Sju regler:
    genom nycklarna. *Avidentifieras* annars: kontot heter "Raderad
    familj" eller "Raderad studiehjälpare", barnen "Raderad elev",
    adress, telefon, profilbild, chatten, läxorna, planerna, försöken på
-   de digitala uppgifterna och rapporternas text är borta, och
+   de digitala uppgifterna, rapporternas text och studiehjälparens svar
+   på förslagen (2026-09-30) är borta, och
    inloggningen stängs som GoTrues egen mjuka radering gör. Försöken
    (`niva_forsok`, Fas 23.1) tas bort bara när tabellen finns, så att
    de två migrationerna kan köras i vilken ordning som helst. Vad som är bokföring står i
@@ -3185,6 +3254,15 @@ null visas som false sedan 2026-09-28: tre prov stod null i en lista
 över ok utan att någon såg det. Kör den efter varje ändring i en policy
 eller en trigger.
 
+**Sviten går att köra lokalt** (2026-09-30): `verktyg/lokal-databas.sh`
+bygger databasen i Docker (`supabase/postgres`) ur arkivet och alla
+migrationer, i README:ns ordning, och kör hela `rls-test.sql` mot den, på
+ungefär 20 sekunder. Första körningen gav 923 av 923, samma som driften.
+Det bilden saknar av Auth och Storage står i `verktyg/lokal-databas.sql`.
+`STOPP=<migration>.sql` bygger till och med den migrationen, så att samma
+svit går att köra med och utan en ny migration. Lokalt först; driften
+bara när något där måste provas.
+
 **Filen är för stor för ett enda `execute_sql` från en session** (350
 kB). Låt databasen hämta den själv, i en transaktion som rullas
 tillbaka: `begin; create extension if not exists http with schema
@@ -3712,6 +3790,18 @@ tillbaka överst i avsnittet för 22.1.
   rad i loggen ska inte gå att göra från vyn. Kvar som inte är kod: säg
   till studiehjälparna och familjerna med konto att vi kan läsa chatten
   (DATASKYDD.md avsnitt 8).
+
+- **Svaret på en föreslagen tid och avbokade pass (2026-09-30, avsnitt
+  1) är INTE i drift.** Migrationen `20260930000000_avbokningar_och_svar`
+  är provad lokalt (`verktyg/lokal-databas.sh`): hela `rls-test.sql`, 975
+  av 975 med den, och utan den föll 31 rader, alla i det nya avsnittet
+  eller i de tre prov som utökades. Den har inte körts mot driften.
+  Ordningen: merga först, för vyerna tål att kolumnerna saknas, och kör
+  sedan migrationen. Tvärtom står gamla vyer ute en stund, och deras
+  Avböj utan text nekas då av databasen. Versionen i filnamnet ska vara
+  den som registreras: `supabase db push` tar den ur filnamnet, men
+  `apply_migration` sätter en egen, och då ska filen byta namn. Kör
+  `rls-test.sql` mot driften efteråt, som för varje migration.
 
 ---
 

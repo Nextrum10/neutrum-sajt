@@ -2666,6 +2666,40 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 }
 .pl-mer:hover{border-color:var(--bl-3);color:var(--bl)}
 
+/* Avbokade pass (2026-09-30): en hopfälld grupp sist, med antalet
+   överst. Knappen ser ut som rubriken ovanför, för den ÄR en rubrik som
+   går att fälla ut, och den är 44 px hög för tummen. */
+.pl-avbokade{
+  margin-top:clamp(18px,2.2vw,26px);
+  padding-top:clamp(6px,1vw,10px);
+  border-top:1px solid var(--ln);
+}
+.pl-avb-knapp{
+  display:flex;align-items:center;gap:9px;width:100%;min-height:44px;
+  padding:0;border:0;background:transparent;cursor:pointer;text-align:left;
+  font:inherit;font-size:.72rem;font-weight:650;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--bl-2);
+}
+.pl-avb-knapp em{
+  font-style:normal;font-weight:500;letter-spacing:0;text-transform:none;
+  font-size:.78rem;color:var(--bl-3);
+}
+.pl-avb-knapp svg{
+  width:12px;height:12px;margin-left:auto;
+  fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;
+  transition:rotate .18s var(--e);
+}
+.pl-avb-knapp[aria-expanded="true"] svg{rotate:180deg}
+.pl-avb-knapp:hover{color:var(--bl)}
+.pl-avb-knapp:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+.pl-avb-inne{padding-top:4px}
+/* Utan tabelltal: husets typsnitt byter då kolon och siffror mot
+   smala glyfer, och "er: 1." såg ut som kod. */
+.pl-avb-tal{margin:0 0 12px;font-size:.9rem;color:var(--bl)}
+.pl-avb-not{margin:12px 0 0;font-size:.8rem;color:var(--bl-3)}
+.pl-avbokade .pass :is(.pass-nar,.pass-vad){opacity:.72}
+.pl-avbokade .pass:hover :is(.pass-nar,.pass-vad){opacity:1}
+
 /* ============================================================
    STORA SKÄRMAR
 
@@ -3781,6 +3815,13 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   text-transform:none;color:var(--bl);margin:0 0 12px;
 }
 .vy .ps-block > p{font-size:.95rem;color:var(--bl-2)}
+/* Studiehjälparens svar på en föreslagen tid, som det skrevs:
+   radbrytningarna står kvar, och en lång adress bryts i stället för att
+   spilla över kanten. Texten ritas genom esc(), aldrig som HTML. */
+.vy .ps-block > .ps-svar{
+  white-space:pre-line;overflow-wrap:anywhere;
+  padding:14px 16px;border-radius:14px;background:var(--tint);color:var(--bl);
+}
 .ps-citat{
   margin:0;padding:2px 0 2px 16px;border-left:3px solid var(--ln-2);
   font-size:.97rem;font-style:italic;line-height:1.6;color:var(--bl);white-space:pre-wrap;
