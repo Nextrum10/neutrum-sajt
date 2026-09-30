@@ -2035,7 +2035,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `kontakt-och-fel-gallring` | 03:44 | kontaktmeddelanden och klientfel |
 | `leads-avidentifiering` | 03:47 | intresseanmälningar sex månader efter senaste kontakten |
 | `ai-och-uppgifter-gallring` | 03:51 | AI-texterna och avslutade uppgifter |
-| `svar-gallring` | 03:53 | studiehjälparens svar på ett förslag, 30 dagar efter avslaget eller passet (2026-09-30, i drift först när migrationen körts) |
+| `svar-gallring` | 03:53 | studiehjälparens svar på ett förslag, 30 dagar efter avslaget eller passet (2026-09-30) |
 | `manadskorning` | den 1:a 04:17 | förra månadens underlag och fakturautkast (avsnitt 1) |
 | `manadskorning-svar` | den 1:a 04:47 | månadskörningens svar: allt utom 200 blir en uppgift (ovan) |
 | `konton-oanvanda` | den 1:a 04:53 | konton som inte använts på två år blir uppgifter |
@@ -3792,16 +3792,20 @@ tillbaka överst i avsnittet för 22.1.
   (DATASKYDD.md avsnitt 8).
 
 - **Svaret på en föreslagen tid och avbokade pass (2026-09-30, avsnitt
-  1) är INTE i drift.** Migrationen `20260930000000_avbokningar_och_svar`
-  är provad lokalt (`verktyg/lokal-databas.sh`): hela `rls-test.sql`, 975
-  av 975 med den, och utan den föll 31 rader, alla i det nya avsnittet
-  eller i de tre prov som utökades. Den har inte körts mot driften.
-  Ordningen: merga först, för vyerna tål att kolumnerna saknas, och kör
-  sedan migrationen. Tvärtom står gamla vyer ute en stund, och deras
-  Avböj utan text nekas då av databasen. Versionen i filnamnet ska vara
-  den som registreras: `supabase db push` tar den ur filnamnet, men
-  `apply_migration` sätter en egen, och då ska filen byta namn. Kör
-  `rls-test.sql` mot driften efteråt, som för varje migration.
+  1) är i drift sedan 2026-09-30.** Migrationen kördes efter att PR #155
+  mergats, med versionen i filnamnet (`20260930000000`): databasen
+  hämtade filen från merge-commiten med tillägget `http`, prövade md5,
+  körde den och skrev raden i `schema_migrations` i samma transaktion,
+  så `created_by` är tom, och tillägget togs bort igen. Det driften
+  sparade har samma md5 som filen. Innan dess hade de fyra funktionerna
+  migrationen lappar samma md5 i driften som i en databas byggd ur
+  filerna (`verktyg/lokal-databas.sh`), så vakterna träffade det de
+  letar efter. Hela `rls-test.sql` gick igenom före, i en transaktion
+  som rullades tillbaka med migrationen inläst, och efter: 975 av 975.
+  Lokalt föll 32 rader utan migrationen, alla i det nya avsnittet eller
+  i de fyra prov som utökades. Bakfyllnaden gav alla sju avbokade pass i
+  driften en `avbokad_fran`: fem bekräftade, två förslag. Vyerna gick ut
+  vid merge och tålde att kolumnerna saknades under tiden.
 
 ---
 
