@@ -69,6 +69,18 @@ jämfördes byte för byte innan nästa gick ut. Versionerna efteråt:
 22, `generate-message` 22, `material-forslag` 8 och `bjud-in` 8.
 `verify_jwt` följer `config.toml`. Driften och main var då lika i alla
 23; styckena ovan beskriver läget före.
+**Efter barnkonton_och_admin, samma kväll**, driftsattes två nya
+funktioner från main: `admin-skapa` (v1) och `barn-konto` (v2, med
+rättelsen barnkonto_skapas_genom_auth), båda hämtade tillbaka och lika med
+main. Sedan dess skiljer driften från main i två saker, och båda är
+kända: `notis-ko` (v20) saknar barnadresskollen i `notiser/ko.ts`
+(`arBarnadress`). Databasen tar redan aldrig ut en barnadress ur kön
+(`notis_utskick_ta`, provat i `rls-test.sql`), så kollen är ett andra
+lager. Funktionen är 94 kB med sina beroenden, och genom MCP skrivs
+varje fil för hand; driftsätt den med `supabase functions deploy
+notis-ko` från en dator med CLI:t. Och de andra funktionernas
+`_delad/auth.ts` saknar `appMetadata` i `Inloggad` och `harBehorighet`,
+som ingen av dem använder.
 **`bjud-in` (v7) var tvärtom NYARE i driften än i repot**: den kan
 bjuda in en studiehjälpare (`roll: 'tutor'`, eget `TILLBAKA` per roll),
 och koden fanns inte i någon gren. Leo samma dag: behåll den. Driftens

@@ -45,11 +45,11 @@ Fällan: **en ny tabell eller vy ska inte ge `nextrum_barn` något**, och en
 `grant ... to public` gör det. Ett förval i `alter default privileges`
 som nämner `public` gör det också.
 
-Att det fungerar mot riktiga Supabase är INTE provat. Lokalt (Postgres i
-Docker, samma roller) går `set role nextrum_barn` och PostgREST-mönstret.
-På den hostade Supabase ska någon, efter migrationen, logga in som ett
-barn och se att `barn_oversikt` svarar och att `from('students')` ger
-`permission denied` (`DEPLOY-BARNKONTON.md`).
+Det fungerar mot riktiga Supabase, provat 2026-09-30 (se Driften nedan):
+`grant nextrum_barn to authenticator` gick igenom, GoTrue satte
+`role: nextrum_barn` i barnets token, `barn_oversikt` och `barn_notiser`
+svarade, och `students`, `profiles`, `bookings` och `mina_behorigheter`
+gav 403 `permission denied` (42501).
 
 ### Barnet hittas i databasen
 `intern.mitt_barn()`: `students.user_id = auth.uid()` OCH `app_metadata`
@@ -266,6 +266,43 @@ En admin som också är förälder eller studiehjälpare landar i sin vanliga
 vy med länken Adminvy i sidhuvudet (`NXStudie.adminroll`). Ett konto som
 bara är admin (`profiles.role = 'admin'`) skickas från studievyn och
 studiehjälparvyn till `/admin`.
+
+## Driften (2026-09-30)
+- Migrationerna `20261001000000_barnkonton_och_admin` och
+  `20261001000200_barnkonto_skapas_genom_auth` är körda, med sina rader i
+  `schema_migrations` (texten hämtad från merge-commiten och prövad mot
+  sin md5). Båda torrkördes först med hela `rls-test.sql` i en
+  transaktion som rullades tillbaka: 1139 av 1139 och sedan 1151 av 1151.
+  Dagens superadmin blev superadmin i `admin_roller`.
+- `barn-konto` (v2) och `admin-skapa` (v1) är driftsatta från main och
+  hämtade tillbaka, lika med main. `notis-ko` är inte omdriftsatt; se
+  `minne/funktioner.md`.
+- **Kedjan provad mot riktiga Auth**, med en testförälder på
+  `example.com` och ett testbarn, genom tillägget `http` från databasen
+  (containern når inte `supabase.co`): förälderns token till `barn-konto`,
+  barnets inloggning genom `/auth/v1/token` och barnets anrop genom
+  PostgREST. Första försöket visade felet som rättelsen fixar (500 vid
+  skapandet). Efter rättelsen gick alla 36 stegen som väntat: skapa (400
+  utan vårdnadshavarens ja, 200 med), kontot med `role nextrum_barn`,
+  `app_metadata` ur fönstret, hash `$2a$10$`, mejlspärren och fönstret
+  stängt; barnet in två gånger i rad; barnets funktioner svarar och
+  tabellerna nekar; `admin-skapa` och `barn-konto` nekar barnet (403);
+  barnets eget lösenordsbyte i Auth nekas (500, "Barnets lösenord byts av
+  föräldern i studievyn") och det gamla gäller; `/recover` svarar 429 och
+  Auths logg visar inget mejl; `admin-skapa` nekar en förälder (403);
+  föräldern byter lösenordet (det gamla slutar gälla, mejlspärren står
+  kvar), pausar (inloggningen nekas som `user_banned`, sessionerna är
+  borta, en redan utlämnad token får `pausad`), aktiverar och tar bort
+  (kontot borta, användarnamnet tomt, inga fönster och inga notiser
+  kvar). Testfamiljen är borttagen; kvar finns bara auditloggens rader
+  med id:n (4 för barnet, 4 för uppdraget), som inte går att ta bort.
+- **Inte provat skarpt**: en inbjudan genom `admin-skapa` (den skickar ett
+  riktigt mejl och kräver en superadmins token), och vyerna mot driften
+  (webbläsarprovet går mot en falsk Supabase, och containern når inte
+  sajten). Vyerna skickar samma anrop som kedjeprovet.
+- Lösenorden i provet stod i SQL-satserna, och **driftens Postgres-logg
+  sparar satserna som körs genom MCP**. Kontona är borttagna, men lägg
+  aldrig en riktig hemlighet i en sats som körs så.
 
 ## Proven
 - `verktyg/rls-test.sql`, avsnittet BARNKONTON OCH ADMIN MED BEHÖRIGHETER:

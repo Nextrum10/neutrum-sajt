@@ -12,7 +12,14 @@ Grenen `barnkonton_och_admin` (2026-09-30) byggde två saker:
   användare.
 
 Varför det ser ut som det gör står i `minne/barnkonton-och-admin.md`.
-Ingenting här är kört mot driften. Gör stegen i ordning.
+
+**Läget 2026-09-30:** steg 1, 2, 3 och 6 (utom 6.5) är gjorda. Båda
+migrationerna är körda, `barn-konto` och `admin-skapa` är driftsatta, och
+kedjan är provad mot riktiga Auth med en testfamilj som sedan togs bort
+(`minne/barnkonton-och-admin.md`, Driften). **Kvar för hand:** steg 4
+(Auth-inställningarna i Supabase-panelen; Redirect URL är redan rätt),
+steg 5 (null-MX:en, i Cloudflare), 6.5 (en skarp inbjudan) och 7 (säga
+till familjerna).
 
 ---
 
@@ -74,9 +81,12 @@ Båda kräver inloggning, så ingen rad i `supabase/config.toml` behövs.
 
 ## 4. Auth-inställningarna i Supabase
 
-- **Authentication → URL Configuration → Redirect URLs:** lägg till
-  `https://nextrum.se/admin`. Inbjudan leder dit, och utan raden leder den
-  till Site URL i stället, där ingen ber om ett lösenord.
+- **Authentication → URL Configuration → Redirect URLs:**
+  `https://nextrum.se/admin` ska vara tillåten. Inbjudan leder dit, och
+  utan raden leder den till Site URL i stället, där ingen ber om ett
+  lösenord. **Den är redan tillåten** (provat 2026-09-30: en `verify` med
+  en ogiltig token skickade tillbaka till `/admin` och `/foralder`, men
+  till Site URL för en främmande adress), så här finns inget att göra.
 - **Authentication → Providers → Email:** slå på *Secure email change*.
 - **Authentication → Settings:** *Allow manual linking* ska vara av.
 - **Authentication → Email Templates → Invite user:** skriv mallen på
@@ -95,7 +105,15 @@ varje avsändare:
 barn.nextrum.se.  MX  0 .
 ```
 
-Ingen A- eller AAAA-post för namnet.
+Ingen A- eller AAAA-post för namnet. Zonen ligger hos **Cloudflare**
+(`DEPLOY-EPOST.md`), inte hos Vercel: DNS → Records → Add record, typ MX,
+namn `barn`, mail server `.`, prioritet 0. Tar Cloudflare inte `.` som
+mail server: låt bli hellre än att peka på en påhittad server. Auth
+skickar ändå inget dit (nästa stycke).
+
+Sedan rättelsen (mejlspärren i `*_sent_at`) skickar Auth inget till en
+barnadress, provat i driften. Null-MX:en är andra lagret: skulle en
+uppgradering av Auth ändra ordningen studsar posten direkt.
 
 ## 6. Prova i driften
 

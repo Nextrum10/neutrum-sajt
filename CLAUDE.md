@@ -311,7 +311,8 @@ Detaljer: `minne/sakerhet.md`.
   öppna rum.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
-  main i 16 av 23 funktioner; alla driftsattes samma kväll och är lika (`minne/funktioner.md`).
+  main i 16 av 23 funktioner; alla driftsattes samma kväll. Sedan dess skiljer bara `notis-ko`
+  i sak (barnadresskollen, ett andra lager; `minne/funktioner.md`).
 - `barn-konto` prövar föräldern och `admin-skapa` skriver rollen med anroparens token; bara det
   Auth kräver görs med `service_role`, och ett barnkonto skapas aldrig utan vårdnadshavarens ja.
   `barn-konto` väljer barnkontots id och ger Auth varken `app_metadata` eller roll: det skriver
@@ -377,12 +378,16 @@ Detaljer: `minne/grunden.md`.
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
 - **Med flit inte**: en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
   passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
-  villkorsändringarna och om att vi kan läsa chatten.
+  villkorsändringarna och om att vi kan läsa chatten, och familjerna om barnens inloggning
+  (integritetspolicyn, 2026-09-30).
 - **Affischerna** (2026-09-30): tipskoderna och `/affisch` är i drift; att sätta upp dem enligt
   `AFFISCHKAMPANJ.md` återstår.
-- **Barnkontona och adminbehörigheterna** (2026-09-30) är byggda men inte i drift: migrationen,
-  `barn-konto`, `admin-skapa` och Auth-inställningarna står i `DEPLOY-BARNKONTON.md`. En admin med
-  behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen säger nej.
+- **Barnkontona och adminbehörigheterna** är i drift sedan 2026-09-30 (båda migrationerna,
+  `barn-konto` v2, `admin-skapa` v1), och barnets hela kedja är provad mot riktiga Auth. Kvar
+  (`DEPLOY-BARNKONTON.md`): tre Auth-inställningar (Redirect URL för inbjudan är redan rätt),
+  null-MX:en i Cloudflare, en skarp inbjudan genom `admin-skapa`, och att säga till familjerna.
+  En admin med behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen
+  säger nej.
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Delade dokument: ingen notis, ingen underskrift, en person per
   handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
