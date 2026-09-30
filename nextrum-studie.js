@@ -3120,8 +3120,150 @@ window.NXStudie = (function () {
     });
   }
 
+  /* ============================================================
+     TIPSA EN FAMILJ (2026-09-30)
+
+     Familjens och studiehjälparens egen kod, med länken till
+     intresseanmälan. mina_tips() skapar koden första gången och svarar
+     med hur många som anmält sig med den och hur många av dem som blivit
+     kunder, aldrig vilka. Familjen ser också timmarna på köpet: en per
+     ny familj som haft sitt första pass, räknade i databasen
+     (forsta_timmen_bjuds). Studiehjälparen får ingen ersättning för ett
+     tips, med flit, och rutan säger det.
+
+     Länken går direkt till intresseanmälan, där formuläret fyller i
+     koden i ett fält familjen ser. Ingenting lagras i webbläsaren på
+     vägen (CLAUDE.md avsnitt 6, Samtycket).
+
+     Svarar med datan, så att bokningen kan visa timmen på köpet i
+     förväg. Finns funktionen inte än (migrationen
+     tipskoder_och_kampanjkoder är inte körd) står rutan tyst.
+     ============================================================ */
+  var TIPS_ADRESS = 'https://nextrum.se/intresseanmalan?kod=';
+
+  function tipsa(o) {
+    var host = o.host;
+    var supa = o.supa;
+    var familj = o.roll === 'parent';
+    var data = null;
+    if (!host || !supa) return Promise.resolve(null);
+    /* Ett andra anrop hämtar om i samma ruta, med samma lyssnare. Efter
+       ett förslag har timmen kanske dragits. */
+    if (host.__tipsa) return host.__tipsa();
+
+    function länk() { return TIPS_ADRESS + encodeURIComponent(data.kod); }
+    function antal(n, en, fler) { return n === 1 ? en : n + ' ' + fler; }
+
+    /* Texten följer med i dela-rutan och går att ändra där. Timmen står
+       i den, för den som får tipset ska veta att den som tipsar får
+       något för det. */
+    function delaText() {
+      return familj
+        ? 'Läxhjälp i Stockholm genom Nextrum. Skriv vår kod ' + data.kod
+          + ' i anmälan. Vi får en timme på köpet när ni haft ert första pass.'
+        : 'Läxhjälp i Stockholm genom Nextrum, där jag är studiehjälpare. Skriv min kod '
+          + data.kod + ' i anmälan.';
+    }
+
+    function rita() {
+      if (!data) {
+        host.innerHTML = '<p class="xsmall nx-dok-tom">Tipsa en familj finns inte här än.</p>';
+        return;
+      }
+      var n = Number(data.anmalda || 0);
+      var k = Number(data.kunder || 0);
+      var kvar = Number(data.kvar || 0);
+      var tal = [];
+      if (n) tal.push(antal(n, 'En familj har anmält sig med koden', 'familjer har anmält sig med koden'));
+      if (k) tal.push(antal(k, 'en har blivit kund', 'har blivit kunder'));
+
+      var intro = familj
+        ? 'Känner ni en familj som behöver hjälp med skolan? Dela er länk, eller be dem skriva koden i intresseanmälan.'
+          + (data.timme_ges
+            ? ' När en ny familj som anmält sig med er kod har haft sitt första pass får ni en timme läxhjälp på köpet.'
+            : '')
+        : 'Känner du en familj som behöver läxhjälp? Dela din länk, eller be dem skriva koden i intresseanmälan. '
+          + 'Då ser vi att tipset kom från dig.';
+
+      host.innerHTML = '<p class="nx-tips-intro">' + esc(intro) + '</p>'
+        + (data.aktiv
+          ? '<div class="nx-tips-kod"><span class="nx-tips-et">' + (familj ? 'Er kod' : 'Din kod') + '</span>'
+            + '<b translate="no">' + esc(data.kod) + '</b></div>'
+            + '<label class="nx-tips-et" for="tips-lank">Länken</label>'
+            + '<input class="inp nx-tips-lank" id="tips-lank" readonly value="' + esc(länk()) + '">'
+            + '<div class="nx-tips-knappar">'
+            + (navigator.share ? '<button class="btn btn-primary btn-sm" type="button" data-tips-dela>Dela länken</button>' : '')
+            + '<button class="btn ' + (navigator.share ? 'btn-ghost' : 'btn-primary') + ' btn-sm" type="button" data-tips-kopiera>Kopiera länken</button>'
+            + '</div>'
+          : '<p class="nx-tips-av">Koden är avstängd. Skriv till oss om du undrar varför.</p>')
+        + (kvar && familj
+          ? '<p class="nx-tips-timme"><b>' + esc(antal(kvar, 'En timme', 'timmar')) + ' på köpet.</b> '
+            + 'Den dras på nästa läxhjälpspass ni föreslår, en timme per pass.</p>'
+          : '')
+        + (tal.length ? '<p class="nx-tips-tal">' + esc(tal.join(', ')) + '.</p>' : '')
+        + '<p class="xsmall nx-tips-not">'
+        + (familj
+          ? 'Ni ser hur många som anmält sig med er kod, inte vilka. Timmen på köpet går inte att växla in mot pengar. '
+          : 'Tipset ger ingen ersättning, varken pengar eller timmar. Du ser hur många som anmält sig med din kod, inte vilka. ')
+        + '<a href="/anvandarvillkor#tips">Villkoren för tips</a></p>';
+    }
+
+    /* Kopiera faller tillbaka på att markera länken: utan https eller
+       med en äldre Safari finns inget urklipp att skriva till. */
+    function kopiera(knapp) {
+      var fält = host.querySelector('#tips-lank');
+      function klart(text) {
+        knapp.textContent = text;
+        setTimeout(function () { knapp.textContent = 'Kopiera länken'; }, 2200);
+      }
+      function markera() {
+        if (fält) { fält.focus(); fält.select(); }
+        klart('Markerad, kopiera den');
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(länk()).then(function () { klart('Kopierad'); }, markera);
+      } else {
+        markera();
+      }
+    }
+
+    host.addEventListener('click', function (e) {
+      if (!data) return;
+      var dela = e.target.closest('[data-tips-dela]');
+      if (dela && navigator.share) {
+        /* Avbryter man delningen kastar den. Det är inget fel. */
+        navigator.share({ title: 'Nextrum', text: delaText(), url: länk() }).catch(function () {});
+        return;
+      }
+      var k = e.target.closest('[data-tips-kopiera]');
+      if (k) kopiera(k);
+    });
+
+    var FEL = '<p class="xsmall nx-dok-tom">Koden gick inte att hämta just nu. Ladda om sidan, eller skriv till oss.</p>';
+    /* "Hämtar" bara första gången: rutan byts inte mot en laddning när
+       den redan har innehåll (avsnitt 3, fälla 1). */
+    function hämta() {
+      if (!data) host.innerHTML = '<div class="loading">Hämtar</div>';
+      return supa.rpc('mina_tips').then(function (svar) {
+        if (svar.error) {
+          if (svar.error.code === 'PGRST202' || svar.error.code === '42883') { data = null; rita(); return null; }
+          if (!data) host.innerHTML = FEL;
+          return data;
+        }
+        data = svar.data || null;
+        rita();
+        return data;
+      }, function () {
+        if (!data) host.innerHTML = FEL;
+        return data;
+      });
+    }
+    host.__tipsa = hämta;
+    return hämta();
+  }
+
   return {
-    notisval: notisval, dokument: dokument,
+    notisval: notisval, dokument: dokument, tipsa: tipsa,
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
     inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,

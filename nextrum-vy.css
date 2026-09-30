@@ -1824,6 +1824,30 @@ a.pass-lank:hover{color:var(--acc)}
   .nx-dok .btn{width:100%;justify-content:center}
 }
 
+/* ------------------------------------------------------------
+   TIPSA EN FAMILJ — Profil → Tipsa en familj (2026-09-30)
+
+   Koden stor, så att den går att läsa av i telefon, och länken i ett
+   fält som går att markera där urklippet inte finns
+   (NXStudie.tipsa). Knapparna i full bredd på en telefon.
+   ------------------------------------------------------------ */
+.nx-tips-intro{margin:0 0 16px;line-height:1.6;color:var(--muted)}
+.nx-tips-et{display:block;font-size:.78rem;font-weight:600;color:var(--muted-2);margin:0 0 6px}
+.nx-tips-kod{margin:0 0 16px}
+.nx-tips-kod b{
+  display:inline-block;font-size:1.7rem;font-weight:700;letter-spacing:.14em;
+  font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere
+}
+.nx-tips-lank{width:100%;font-size:.88rem}
+.nx-tips-knappar{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.nx-tips-timme{margin:18px 0 0;padding:12px 14px;border-radius:14px;background:var(--mossa-soft);color:var(--mossa-text);line-height:1.55}
+.nx-tips-tal{margin:14px 0 0;line-height:1.55}
+.nx-tips-av{margin:0;line-height:1.6}
+.nx-tips-not{margin:16px 0 0;color:var(--muted-2);line-height:1.6}
+@media (max-width:460px){
+  .nx-tips-knappar .btn{flex:1 1 100%;justify-content:center}
+}
+
 /* ============================================================
    ERBJUDANDEN (Fas 16.1)
    Planer och klippkort som kort i ett rutnät, och familjens egna

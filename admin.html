@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=ac8ac9d1">
-<link rel="stylesheet" href="nextrum-vy.css?v=f3ae56b0">
+<link rel="stylesheet" href="nextrum-vy.css?v=92e16976">
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=28dce140">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
@@ -441,6 +441,25 @@
               <span class="small" id="leads-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
             <div id="leads-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- TIPS OCH KAMPANJER (2026-09-30). Koderna i intresseanmälan:
+               familjernas och studiehjälparnas egna och en per affisch.
+               Ritas av ritaKoder() i nextrum-admin-kunder.js ur
+               tipskoder_lage(). Affischen skrivs ut från /affisch. -->
+          <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+            <div class="adm-verktyg">
+              <h5 style="margin:0">Tips och kampanjer</h5>
+              <span class="small" id="koder-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+            </div>
+            <p class="xsmall" style="margin:4px 0 14px;color:var(--bl-3);line-height:1.6">Varje familj och studiehjälpare har en egen kod under Profil i sin vy, och en affisch har en kampanjkod. Kunder är familjer som anmält sig med koden och inte hade haft pass förut; första pass är de av dem som haft ett. En familj som tipsat får en timme på köpet för varje sådan.</p>
+            <div id="koder-tabell"><div class="loading">Hämtar</div></div>
+            <form id="koder-form" class="adm-verktyg" style="margin-top:16px;flex-wrap:wrap">
+              <input class="inp" id="koder-kod" maxlength="24" placeholder="Kod, t.ex. FARSTA-BIB" aria-label="Kampanjkod" autocomplete="off" style="max-width:15rem">
+              <input class="inp" id="koder-namn" maxlength="80" placeholder="Var den sitter, t.ex. Affisch Farsta bibliotek" aria-label="Var koden sitter" autocomplete="off" style="flex:1;min-width:14rem">
+              <button class="btn btn-primary btn-sm" type="submit" id="koder-spara">Skapa kampanjkod</button>
+            </form>
+            <p class="ok-msg" id="koder-msg"></p>
           </div>
         </section>
 
@@ -2227,24 +2246,24 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=8ffb028b"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=ae8faece"></script>
-<script src="nextrum-arbetsyta.js?v=0cfe9ed8"></script>
+<script src="nextrum-studie.js?v=2bcbdc4f"></script>
+<script src="nextrum-arbetsyta.js?v=6c1e8e1a"></script>
 <script src="nextrum-media.js?v=01adfb73"></script>
 <script src="nextrum-betalning.js?v=91457326"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=d76335e3"></script>
-<script src="nextrum-admin-detalj.js?v=4079c6a0"></script>
+<script src="nextrum-admin-karna.js?v=7cd3b70d"></script>
+<script src="nextrum-admin-detalj.js?v=be392451"></script>
 <script src="nextrum-admin-oversikt.js?v=6abd671e"></script>
-<script src="nextrum-admin-kunder.js?v=155120f9"></script>
+<script src="nextrum-admin-kunder.js?v=09fbce10"></script>
 <script src="nextrum-admin-rekrytering.js?v=0941aacd"></script>
 <script src="nextrum-admin-bibliotek.js?v=a6e2cbda"></script>
 <script src="nextrum-admin-kommunikation.js?v=a0deff07"></script>
 <script src="nextrum-admin-drift.js?v=a4c6e085"></script>
-<script src="nextrum-admin-ekonomi.js?v=560eaf70"></script>
+<script src="nextrum-admin-ekonomi.js?v=741c14bf"></script>
 <script src="nextrum-admin-manaden.js?v=e9a6bb1c"></script>
 <script src="nextrum-admin-loner.js?v=6b1c06fd"></script>
-<script src="nextrum-admin-tjanster.js?v=4524cd73"></script>
+<script src="nextrum-admin-tjanster.js?v=997de096"></script>
 <script src="nextrum-admin-system.js?v=9f3128c4"></script>
 <script src="nextrum-admin-automationer.js?v=df8e5586"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
@@ -2254,7 +2273,7 @@
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
-<script src="nextrum-modulvakt.js?v=67b7e652"></script>
+<script src="nextrum-modulvakt.js?v=559a241f"></script>
 <script src="nextrum-admin.js?v=720a0934"></script>
 </body>
 </html>

@@ -18,7 +18,7 @@
 
   const { LEAD_LAGE, S, SH_LAGE, elevHjälpare, funktionsFel, hämtaAllt,
           hämtaMatchunderlag, kontaktaRuta, kortDatum, läge, matchar, namnFör,
-          namnlista, pill, ritaPanelen, tomtText, visaRuta, ärRaderad } = NXAdmin;
+          namnlista, pill, ritaPanelen, tabell, tomtText, visaRuta, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
@@ -63,7 +63,7 @@
     const rader = alla
       .filter(l => !st || l.status === st)
       .filter(l => matchar(l, ['parent_name', 'email', 'child_name', 'subject', 'grade',
-                               'message', 'kalla', 'kampanj'], sök));
+                               'message', 'kalla', 'kampanj', 'kod'], sök));
 
     $('#leads-antal').textContent = rader.length + ' av ' + alla.length;
     $('#leads-tabell').innerHTML = namnlista(rader, {
@@ -76,8 +76,130 @@
         + gallrade + (gallrade === 1 ? ' anmälan är avidentifierad' : ' anmälningar är avidentifierade')
         + ' och räknas bara i statistiken.</p>'
       : '');
+    ritaKoder();
     ritaPanelen();
   }
+
+  /* ============================================================
+     TIPS OCH KAMPANJER (2026-09-30)
+
+     Koderna i intresseanmälan: familjernas och studiehjälparnas egna,
+     och en per affisch. Talen räknas i databasen (tipskoder_lage) med
+     samma regler som timmen på köpet: en kund är en familj vars FÖRSTA
+     anmälan med en kod bar den här, och som inte hade haft pass förut.
+     Första pass är de av dem som haft ett genomfört pass med rapport.
+
+     Personkoder utan anmälningar står inte med: varje familj som
+     öppnat sin flik har en, och listan hade blivit en namnlista.
+
+     En kod tas aldrig bort, den stängs av: anmälningarna pekar på den,
+     och en borttagen kod hade tagit kopplingen med sig.
+     ============================================================ */
+  const KOD_SORT = { familj: 'Familj', studiehjalpare: 'Studiehjälpare', kampanj: 'Kampanj' };
+
+  function ritaKoder() {
+    const host = $('#koder-tabell');
+    if (!host) return;
+    if (S.tipskoderFel === 'saknas') {
+      host.innerHTML = tomt('Koderna finns inte i databasen än', 'Migrationen tipskoder_och_kampanjkoder är inte körd.');
+      return;
+    }
+    if (S.tipskoderFel) {
+      host.innerHTML = tomt('Koderna gick inte att läsa', S.tipskoderFel);
+      return;
+    }
+    const rader = (S.tipskoder || []).filter(k => k.sort === 'kampanj' || k.anmalda > 0);
+    const tim = S.tipsFlagga;
+    $('#koder-antal').textContent = rader.length ? rader.length + ' st' : '';
+    host.innerHTML = (tim && !tim.aktiv
+        ? '<p class="xsmall" style="margin:0 0 12px;color:var(--bl-3)">Timmen på köpet för ett tips är avstängd, '
+          + 'under Betalningar → Inställningar. Koderna räknas som förut, och timmar som tjänats in innan ges ändå.</p>'
+        : '')
+      + tabell([
+        { namn: 'Kod', rita: k => '<b style="font-family:var(--f-mono);letter-spacing:.06em">' + esc(k.kod) + '</b>'
+            + '<span class="adm-und">' + esc(k.sort === 'kampanj' ? (k.namn || '') : namnFör(k.person_id)) + '</span>' },
+        { namn: 'Sort', rita: k => esc(KOD_SORT[k.sort] || k.sort) },
+        { namn: 'Anmälda', rita: k => '<span class="adm-tal">' + (k.anmalda || 0) + '</span>' },
+        { namn: 'Kunder', rita: k => '<span class="adm-tal">' + (k.kunder || 0) + '</span>' },
+        { namn: 'Första pass', rita: k => '<span class="adm-tal">' + (k.forsta_pass || 0) + '</span>'
+            + (k.sort === 'familj' && k.forsta_pass
+              ? '<span class="adm-und">' + (k.timmar_anvanda || 0) + ' av ' + k.forsta_pass + ' timmar på köpet använda</span>'
+              : '') },
+        { namn: 'Läge', rita: k => k.aktiv ? pill('Aktiv', 'ar-klar') : pill('Avstängd', '') },
+        { namn: '', höger: true, rita: k => (k.sort === 'kampanj'
+            ? '<a class="btn btn-ghost btn-sm" href="/affisch?kod=' + encodeURIComponent(k.kod)
+              + '" target="_blank" rel="noopener">Affisch</a> '
+            : '')
+            + '<button class="btn btn-ghost btn-sm" type="button" data-kod-vaxla="' + esc(k.kod) + '">'
+            + (k.aktiv ? 'Stäng av' : 'Slå på') + '</button>' }
+      ], rader, 'Inga koder med anmälningar än. Skapa en kampanjkod för en affisch nedan.');
+  }
+
+  async function hämtaKoder() {
+    const { data, error } = await supa.rpc('tipskoder_lage');
+    if (error) {
+      S.tipskoderFel = error.code === 'PGRST202' || error.code === '42883' ? 'saknas' : felText(error);
+      return;
+    }
+    S.tipskoderFel = null;
+    S.tipskoder = data || [];
+    S.tipskod = {};
+    S.tipskoder.forEach(k => { S.tipskod[k.kod] = k; });
+  }
+
+  (function kopplaKoder() {
+    const form = $('#koder-form');
+    if (!form) return;
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const msg = $('#koder-msg');
+      rensa(msg);
+      /* Samma form som tipskoder_kod_form i databasen. Å, ä och ö blir
+         a och o: koden ska gå att skriva av på vilket tangentbord som
+         helst. Det här är ett besked, inte skyddet. */
+      const kod = String($('#koder-kod').value || '').trim().toUpperCase()
+        .replace(/[ÅÄ]/g, 'A').replace(/Ö/g, 'O').replace(/\s+/g, '-');
+      const namn = String($('#koder-namn').value || '').trim();
+      if (!/^[A-Z0-9][A-Z0-9-]{2,23}$/.test(kod)) {
+        säg(msg, 'Koden får bara innehålla A–Z, 0–9 och bindestreck, 3–24 tecken.', false); return;
+      }
+      if (!namn) { säg(msg, 'Skriv var koden sitter, till exempel "Affisch Farsta bibliotek".', false); return; }
+      await medan($('#koder-spara'), 'Skapar…', async () => {
+        const { error } = await supa.from('tipskoder').insert({ kod, sort: 'kampanj', namn: namn.slice(0, 80) });
+        if (error) {
+          säg(msg, error.code === '23505' ? 'Det finns redan en kod som heter ' + kod + '.'
+            : 'Kunde inte skapa: ' + felText(error), false);
+          return;
+        }
+        await hämtaKoder();
+        ritaKoder();
+        form.reset();
+        säg(msg, '✓ ' + kod + ' är skapad. Affischen står på raden.', true);
+      });
+    });
+  })();
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-kod-vaxla]');
+    if (!knapp) return;
+    const k = (S.tipskod || {})[knapp.dataset.kodVaxla];
+    if (!k) return;
+    if (k.aktiv) {
+      const ja = await bekräfta({
+        titel: 'Stänga av ' + k.kod + '?',
+        text: 'En anmälan med koden går fortfarande in, men utan koden. Det som redan kommit in med den står kvar.'
+          + (k.sort === 'familj' ? ' Timmar på köpet som redan tjänats in står kvar.' : ''),
+        knapp: 'Stäng av'
+      });
+      if (!ja) return;
+    }
+    await medan(knapp, '…', async () => {
+      const { error } = await supa.from('tipskoder').update({ aktiv: !k.aktiv }).eq('kod', k.kod);
+      if (error) { alert('Kunde inte ändra: ' + felText(error)); return; }
+      await hämtaKoder();
+      ritaKoder();
+    });
+  });
 
   /* ============================================================
      FAMILJER
@@ -621,6 +743,6 @@
   /* Det andra områden anropar. källText, källTitel och anmälansFamilj
      läser anmälans panel. */
   Object.assign(NXAdmin.rita, {
-    anmälansFamilj, källText, källTitel, ritaElever, ritaFamiljer, ritaLeads, ritaStudiehjalpare
+    anmälansFamilj, källText, källTitel, ritaElever, ritaFamiljer, ritaKoder, ritaLeads, ritaStudiehjalpare
   });
 })();

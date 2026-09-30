@@ -1222,11 +1222,6 @@
   const rbAttBekräfta = () => S.rb.rapporter.filter(r => !S.rb.bekräftade[r.id] || rbObetald(r)
     || !!(rbPass(r) && tillägg(rbPass(r))));
 
-  function rbRubrik(r, b) {
-    const barn = S.barn.find(x => x.id === r.student_id);
-    return [(b && b.subject) || r.amne || 'Pass', barn ? barn.name.split(' ')[0] : null].filter(Boolean).join(' · ');
-  }
-
   /* Rubriken på brevet: "Engelska med Theo". */
   function rbTitel(r, b) {
     const barn = S.barn.find(x => x.id === r.student_id);
@@ -1385,7 +1380,7 @@
         + '<button type="button" class="btn btn-primary" data-tillagg="' + esc(b.id) + '">Betala tillägget</button></div></div>';
     } else {
       const läge = !b || b.fakturerbar === false ? ''
-        : ingetAttBetala(b) ? 'Passet kostar ingenting: första timmen är på köpet.'
+        : ingetAttBetala(b) ? 'Passet kostar ingenting: ' + påKöpet(b).replace(' på köpet', ' är på köpet') + '.'
         : b.betalning_status === 'faktura' ? 'Passet betalas mot faktura.'
         : b.betalning_status === 'betald' ? (b.klippkort_id ? 'Passet är betalt med timmar.'
           : medBanken(b) ? 'Passet är betalt med timbanken.' : 'Passet är betalt.')
@@ -1613,6 +1608,21 @@
     S.kortsparr = !!(flagga.data && flagga.data.aktiv);
     S.faktura = faktura.data === true;
   }
+
+  /* ============================================================
+     TIPSA EN FAMILJ (2026-09-30)
+
+     Koden och timmarna på köpet, under Profil → Tipsa en familj. Läses
+     före passen och bokningen: förslaget visar i förväg om en timme
+     är på köpet, och databasen avgör (forsta_timmen_bjuds). Ett pass
+     med tipstimmen bär rabattkod TIPS och startrabatt, så det betalas
+     som passet med första timmen: med kort, aldrig med köpta timmar.
+     ============================================================ */
+  async function laddaTips() {
+    S.tips = await NXStudie.tipsa({ host: $('#tips-ruta'), supa: supa, roll: 'parent' });
+  }
+  const påKöpet = b => b && b.rabattkod === 'TIPS' ? 'en timme på köpet för ert tips' : 'första timmen på köpet';
+
   /* ============================================================
      ERBJUDANDEN (Fas 16.1)
 
@@ -2594,7 +2604,7 @@
       + 'ett pass dras timmarna från det kort som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
       + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka, och det gör de också när ett förslag ingen '
       + 'svarat på har passerat. Köper ni timmar, eller kommer timmar tillbaka, betalar de era pass i datumordning. '
-      + 'Ett pass med fler barn, och passet där första timmen är på köpet, '
+      + 'Ett pass med fler barn, och ett pass där en timme är på köpet, '
       + 'betalas med kort. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för timmarna</a></p>'
       + kort.map(k => kortRad(k, kortetsPass(k))).join('');
   }
@@ -2671,7 +2681,7 @@
        bort. Underlaget och tilläggen följer passen i antal. */
     const [pass, und, till] = await Promise.all([
       NXStudie.passMedSvar(supa, S,
-        'id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, parent_id, tutor_id, created_by, created_at, avbokningsskal, avbokad_at, avbokad_av, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt',
+        'id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, parent_id, tutor_id, created_by, created_at, avbokningsskal, avbokad_at, avbokad_av, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt, rabattkod',
         q => q.eq('parent_id', S.user.id).order('wanted_date', { ascending: true })),
       NXStudie.hämtaAlla(supa, 'passunderlag',
         'id, debiterade_min, betalda_min, timpris_ore, extra_ore, rabatt_ore, timbank_min',
@@ -3109,9 +3119,15 @@
     bjuden: minuter => {
       const aktiva = (S.bokningar || []).filter(b => b.status !== 'cancelled'
         && b.fakturerbar !== false && (b.tjanst || 'laxhjalp') === 'laxhjalp');
-      if (aktiva.some(b => b.startrabatt)) return false;
-      const före = aktiva.reduce((a, b) => a + (Number(b.duration_min) || 60), 0);
-      return före < 120 && före + minuter >= 120;
+      /* Ett pass med tipstimmen (rabattkod TIPS) är inte prissidans
+         första timme. Den går först; annars tipstimmen, om det finns en
+         kvar (2026-09-30). kvar räknas i databasen och gäller också när
+         erbjudandet stängts: det som tjänats in innan ges ändå. */
+      if (!aktiva.some(b => b.startrabatt && b.rabattkod !== 'TIPS')) {
+        const före = aktiva.reduce((a, b) => a + (Number(b.duration_min) || 60), 0);
+        if (före < 120 && före + minuter >= 120) return true;
+      }
+      return S.tips && Number(S.tips.kvar) > 0 ? 'tips' : false;
     },
     /* Köpta timmar i stället för priset vid knappen (2026-09-28). */
     timmar: (minuter, datum, barn) => timmarFörFörslag(minuter, datum, barn),
@@ -3163,7 +3179,7 @@
         location: v.plats || null,
         note: v.not || null,
         status: 'requested'
-      }).select('id, status, klippkort_id, betalning_status').single();
+      }).select('id, status, klippkort_id, betalning_status, rabattkod').single();
       if (error) {
         /* 23505 = samma starttid, 23P01 = passet krockar med ett annat
            som redan ligger där. Samma sak för den som föreslår. */
@@ -3182,6 +3198,8 @@
          på Föreslå tiden ska få svaret när databasen gett det. */
       laddaPass();
       if (betalt) laddaErbjudanden().catch(() => {});
+      /* Timmen på köpet för ett tips drogs i samma skrivning. */
+      if (data && data.rabattkod === 'TIPS') laddaTips().catch(() => {});
       return { status: data ? data.status : null, id: data ? data.id : null, betalt: betalt };
     }
   });
@@ -3985,7 +4003,7 @@
         under: [barn && (b.antal_barn || 1) > 1 ? b.antal_barn + ' barn på passet' : null,
           S.tutor && S.tutor.full_name ? 'Med ' + S.tutor.full_name + ', studiehjälpare' : 'Med er studiehjälpare'].filter(Boolean).join(' · ') },
       { ikon: 'kort', etikett: 'Pris',
-        varde: pris === null ? betalning : NXBetalning.kronor(pris) + (b.startrabatt ? ', första timmen på köpet' : ''),
+        varde: pris === null ? betalning : NXBetalning.kronor(pris) + (b.startrabatt ? ', ' + påKöpet(b) : ''),
         under: pris === null ? tilläggText : prisUnder }
     ];
 
@@ -4260,7 +4278,7 @@
        får inte hålla passen och läxorna i kö; chatten startar när
        namnet finns. */
     /* Erbjudandena före passen: knappen Betala med timmar ritas ur dem. */
-    await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden()]);
+    await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden(), laddaTips()]);
     await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaNexlax(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor(), laddaBekrafta()]);
     /* Uppgifterna hämtas först, så märket ritas om när de finns. */
     ritaÖvLaxor();

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
+<link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+<title>Affisch — Nextrum</title>
+<meta name="description" content="Utskrivbar affisch med QR-kod till intresseanmälan.">
+<!-- ============================================================
+     AFFISCHEN (2026-09-30)
+
+     En A4 att skriva ut och sätta upp, med en QR-kod till
+     intresseanmälan. Adminvyn öppnar den från Intresseanmälningar →
+     Tips och kampanjer, med kampanjkoden i ?kod=. QR-koden bär koden
+     och utm-taggarna affisch/qr, så att anmälan får både platsen
+     (koden) och kanalen (källan) utan att webbläsaren sparar något på
+     vägen: formuläret läser dem ur sin egen adress.
+
+     Ingen sida länkar hit utom adminvyn, och den ska inte hittas i
+     sök. Sidan tar ingen fritext ur adressen: koden prövas mot samma
+     form som i databasen, och området väljs ur en fast lista i
+     nextrum-affisch.js. Annars hade vem som helst kunnat skriva ut en
+     affisch med vår logga och vilken text som helst.
+
+     Finns bara på svenska, med flit: affischerna sätts upp i
+     Stockholm, och den engelska anmälan har samma kodfält.
+     ============================================================ -->
+<meta name="robots" content="noindex,nofollow">
+<link rel="canonical" href="https://nextrum.se/affisch">
+<meta name="theme-color" content="#F2EDE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light">
+
+<link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-cinema.css?v=ac8ac9d1">
+<link rel="stylesheet" href="nextrum-affisch.css?v=9181fa4d">
+</head>
+<body class="aff-sida">
+
+<!-- Bara på skärmen: val och utskrift. -->
+<div class="aff-verktyg">
+  <div class="aff-verktyg-inre">
+    <p class="aff-verktyg-rubrik">Affisch <b id="aff-kod-rubrik"></b></p>
+    <p class="aff-varning" id="aff-varning" hidden>Ingen kampanjkod i adressen. Affischen fungerar, men anmälningarna från
+      den går inte att skilja från andra affischer. Öppna den från adminvyn: Intresseanmälningar → Tips och kampanjer.</p>
+    <div class="aff-val">
+      <label for="aff-omrade">Område</label>
+      <select id="aff-omrade">
+        <option value="">Stockholm</option>
+      </select>
+      <label class="aff-kryss"><input type="checkbox" id="aff-lappar" checked> Rivlappar längst ner</label>
+      <button class="btn btn-primary btn-sm" type="button" id="aff-skriv">Skriv ut</button>
+    </div>
+    <p class="aff-hjalp">A4, stående. Stäng av sidhuvud och sidfot i utskriftsrutan. Sätt bara upp den där det är tillåtet:
+      på anslagstavlor som är till för det, eller hos en butik, ett bibliotek eller en förening som sagt ja. På husväggar,
+      stolpar och staket mot gatan krävs normalt polisens tillstånd (kommunens lokala ordningsföreskrifter).</p>
+  </div>
+</div>
+
+<article class="affisch" id="affisch" aria-label="Affischen">
+  <header class="aff-topp">
+    <svg class="aff-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+    <span class="aff-namn">Nextrum</span>
+    <span class="aff-slogan">Av unga, för unga.</span>
+  </header>
+
+  <h1 class="aff-rubrik">Läxhjälp i <em id="aff-plats">Stockholm</em>.</h1>
+  <p class="aff-lede">En studiehjälpare som nyligen läst samma kurser själv. Hemma hos er eller online,
+    i matte, svenska, engelska, NO och mer.</p>
+
+  <ul class="aff-fakta">
+    <li><b>379 kr</b><span>i timmen</span></li>
+    <li><b>Första timmen</b><span>på köpet när ni bokar två timmar</span></li>
+    <li><b>Ingen</b><span>bindningstid</span></li>
+  </ul>
+
+  <p class="aff-start" id="aff-start" hidden>Första passen i vecka 43. Anmäl er redan nu.</p>
+
+  <div class="aff-qr-rad">
+    <div class="aff-qr" id="aff-qr" role="img" aria-label="QR-kod till intresseanmälan"></div>
+    <div class="aff-qr-text">
+      <p class="aff-qr-rubrik">Skanna och anmäl intresse.</p>
+      <p>Vi hör av oss inom 24 timmar. Att anmäla sig kostar ingenting och binder er inte vid något.</p>
+      <p class="aff-adress">Eller gå till <b>nextrum.se/intresseanmalan</b><span id="aff-kod-rad"> och skriv koden
+        <b class="aff-kod" id="aff-kod">KOD</b></span>.</p>
+    </div>
+  </div>
+
+  <p class="aff-fin">Starterbjudandet gäller nya familjer. Nextrum AB under bildande · info@nextrum.se · nextrum.se</p>
+
+  <div class="aff-lappar" id="aff-lappar-rad" aria-hidden="true"></div>
+</article>
+
+<!-- QR-kodaren ligger hos oss, med fast version, som supabase-js:
+     qrcode-generator 1.4.4 av Kazuhiko Arase, MIT-licens (se filens
+     huvud), hämtad från npm-registret 2026-09-30 och oförändrad.
+     sha256 18ae399f81182bc9de916e9c77b195df20cc58d6f2d55a62b085a299f1bf1780.
+     Uppgradering är ett beslut: byt filen, byt raden, skanna en utskrift. -->
+<script src="bibliotek/qrcode-generator-1.4.4.js"></script>
+<script src="nextrum-affisch.js?v=a1ee2b0e"></script>
+</body>
+</html>
