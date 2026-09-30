@@ -9636,7 +9636,7 @@ select 'Barn: föräldern loggar inte ut barnet själv, det gör edge-funktionen
 union all
 select 'Barn: utloggningen tar barnets sessioner', r = '0', r
   from (select pg_temp.som(null,
-          array[$q$insert into auth.sessions (user_id) values ('00000000-0000-4000-8000-0000000bc0c1')$q$,
+          array[$q$insert into auth.sessions (id, user_id) values (gen_random_uuid(), '00000000-0000-4000-8000-0000000bc0c1')$q$,
                 $q$select public.barnkonto_logga_ut('00000000-0000-4000-8000-0000000005a1')$q$],
           $q$select count(*)::text from auth.sessions where user_id = '00000000-0000-4000-8000-0000000bc0c1'$q$) r) x;
 
@@ -10049,11 +10049,13 @@ select 'Admin: en superadmin skapar en superadmin', r like '%"superadmin": true%
           $q$select public.gor_till_admin('00000000-0000-4000-8000-0000000bcad5', '{}', true)::text$q$) r) x
 union all
 select 'Admin: den sista superadminen tas inte bort', r like 'FEL 42501%', r
-  from (select pg_temp.som(null, null,
+  from (select pg_temp.som(null,
+          array[$q$delete from public.admin_roller where ar_superadmin and user_id <> '00000000-0000-4000-8000-0000000000ad'$q$],
           $q$delete from public.admin_roller where user_id = '00000000-0000-4000-8000-0000000000ad' returning user_id::text$q$) r) x
 union all
 select 'Admin: den sista superadminen nedgraderas inte', r like 'FEL 42501%', r
-  from (select pg_temp.som(null, null,
+  from (select pg_temp.som(null,
+          array[$q$delete from public.admin_roller where ar_superadmin and user_id <> '00000000-0000-4000-8000-0000000000ad'$q$],
           $q$update public.admin_roller set ar_superadmin = false, behorigheter = '{leads}'
               where user_id = '00000000-0000-4000-8000-0000000000ad' returning user_id::text$q$) r) x
 union all
