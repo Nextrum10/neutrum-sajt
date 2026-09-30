@@ -2875,7 +2875,7 @@ tillbaka en kopia.**
 |---|---|---|
 | `fakturering` | Månadskörningen: underlag per studiehjälpare, som är studiehjälparens lönespecifikation (2026-09-28), ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand | pg_cron `manadskorning` den 1:a (`x-nextrum-notis`, alltid förra månaden), admin, eller `x-fakturering-nyckel` |
 | `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Fortnox | Knapp under Löner |
-| `bjud-in` | Auth-inbjudan till familj utan konto. Ger bara rollen förälder | Adminvyn |
+| `bjud-in` | Auth-inbjudan till en familj, eller med `roll: 'tutor'` en studiehjälpare, utan konto. Rollen vitlistas i funktionen: allt utom `tutor` blir förälder, och en inbjuden studiehjälpare hamnar i väntläge tills admin godkänner | Adminvyn (bara familjer än) |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
 | `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
@@ -2918,11 +2918,12 @@ i main, i sin egen `index.ts` eller i `_delad/`. Det som gör skillnad:
   `generate-feedback` prövar API-nyckeln före behörigheten.
 - `lead-notis`, `ansokan-notis` och `faktura-utskick` bär äldre mallar
   (Wint, utan fakturameningen).
-**`bjud-in` (v7) är tvärtom NYARE i driften än i repot**: den kan bjuda
-in en studiehjälpare (`roll: 'tutor'`, eget `TILLBAKA` per roll), och
-den koden finns inte i någon gren här. Ingen vy anropar den med
-`roll`, men en driftsättning ur main tar bort möjligheten. Ta hem koden
-eller bestäm att den ska bort, innan `bjud-in` driftsätts igen.
+**`bjud-in` (v7) var tvärtom NYARE i driften än i repot**: den kan
+bjuda in en studiehjälpare (`roll: 'tutor'`, eget `TILLBAKA` per roll),
+och koden fanns inte i någon gren. Leo samma dag: behåll den. Driftens
+`index.ts` är hemtagen ordagrant; `_delad/auth.ts` är repots, för
+driftens kopia hade den opinnade `supabase-js@2`. Ingen vy skickar
+`roll` än, så i adminvyn bjuds bara familjer in.
 
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
