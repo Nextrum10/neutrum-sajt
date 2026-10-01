@@ -45,12 +45,13 @@
      (2026-09-30): familjens vy och studiehjälparvyn hämtar passen
      genom den. tipsa kom samma kväll, och båda vyerna anropar den när
      de startar. glömtLänkar kom med Glömt lösenordet, och de tre vyerna
-     med inloggning anropar den så fort skriptet laddat. loggaInBarn kom
-     2026-10-01: barnets vy och studievyn loggar in ett barn genom den. */
+     med inloggning anropar den så fort skriptet laddat. loggaIn kom
+     2026-10-01: alla fyra vyerna loggar in genom den, med e-post eller
+     användarnamn. */
   var studieKlar = typeof NXStudie !== 'undefined' && !!NXStudie.vaktaInloggningen
     && typeof NXStudie.hämtaAlla === 'function' && typeof NXStudie.passMedSvar === 'function'
     && typeof NXStudie.tipsa === 'function' && typeof NXStudie.glömtLänkar === 'function'
-    && typeof NXStudie.loggaInBarn === 'function';
+    && typeof NXStudie.loggaIn === 'function' && typeof NXStudie.loggaInHär === 'function';
 
   if (ärBarn) {
     /* Barnets vy (barn.html) laddar bara NX och NXStudie: inga

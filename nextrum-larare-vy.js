@@ -75,20 +75,22 @@
     ]);
     if (fel) { säg(msg, fel, false); return; }
 
-    await medan(knapp, läge === 'up' ? 'Skapar…' : 'Loggar in…', async () => {
-      const res = läge === 'up'
-        ? await supa.auth.signUp({ email: epost, password: lösen, options: {
+    /* E-post eller användarnamn, som i alla vyer: ett barn som loggar in
+       här skickas till /barn (NXStudie.loggaInHär). */
+    if (läge === 'in') { await NXStudie.loggaInHär(supa, epost, lösen); return; }
+
+    await medan(knapp, 'Skapar…', async () => {
+      const res = await supa.auth.signUp({ email: epost, password: lösen, options: {
             data: { full_name: namn, role: 'tutor' },
             /* Utan den här landar bekräftelselänken på Site URL i
                Supabase — alltså startsidan, eller värre: localhost.
                Nu kommer man tillbaka hit, till vyn man skapade
                kontot i, oavsett var sajten körs. */
             emailRedirectTo: location.origin + location.pathname
-          } })
-        : await supa.auth.signInWithPassword({ email: epost, password: lösen });
+          } });
 
       if (res.error) { säg(msg, felText(res.error), false); return; }
-      if (läge === 'up' && res.data && res.data.session === null) {
+      if (res.data && res.data.session === null) {
         säg(msg, 'Kontot är skapat. Vi har skickat en bekräftelse till ' + epost + '. Klicka på länken i mejlet och logga sedan in här.', true);
         return;
       }

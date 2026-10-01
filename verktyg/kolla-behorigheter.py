@@ -16,9 +16,9 @@ blir det tyst fel: en ruta i vyn som databasen vägrar spara, eller en
 inbjudan som går iväg med en behörighet villkoret sedan säger nej till.
 
 Samma sak för barnens användarnamn och domän: databasen, edge-
-funktionen barn-konto, barnets inloggning (nextrum-studie.js, som
-barnets vy och studievyn delar sedan 2026-10-01) och föräldrarnas ruta
-prövar dem var för sig.
+funktionen barn-konto, inloggningen (nextrum-studie.js, som alla fyra
+vyerna delar sedan 2026-10-01) och föräldrarnas ruta prövar dem var för
+sig.
 
 Den nyaste migrationen som definierar något gäller.
 """

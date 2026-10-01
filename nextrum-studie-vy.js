@@ -41,7 +41,7 @@
       under: 'För dig som är förälder eller elev: studieplanen, bokningen, kontakten med er studiehjälpare och rapporten efter varje pass.',
       underUpp: 'Kontot är gratis. Vyn låses upp så fort vi matchat er med en studiehjälpare.',
       /* Ett barn med egen inloggning kommer hit från Logga in på sajten
-         och loggar in med sitt användarnamn (submit nedan). */
+         och loggar in med sitt användarnamn (NXStudie.loggaIn). */
       etikett: 'E-post eller användarnamn'
     });
   }
@@ -55,7 +55,7 @@
     const msg = $('#auth-msg'), knapp = $('#auth-submit');
     rensa(msg);
     if (!supa) { säg(msg, 'Databasen är inte kopplad. Fyll i nextrum-config.js.', false); return; }
-    if (läge === 'glomt') { await NXStudie.glömtSkicka(supa, { barn: true }); return; }
+    if (läge === 'glomt') { await NXStudie.glömtSkicka(supa); return; }
 
     const epost = $('#a-email').value.trim();
     const lösen = $('#a-pass').value;
@@ -66,49 +66,30 @@
       return;
     }
 
-    /* Ett barns användarnamn (eller barnadressen): barnet loggas in som
-       på /barn, med barnvyns besked, och skickas till sin vy. En adress
-       med @ på en annan domän är alltid en vuxen, så föräldrarnas
-       inloggning är densamma som förut. */
-    const barnAdress = läge === 'in' ? NXStudie.barnAdress(epost) : null;
-    if (barnAdress) {
-      await medan(knapp, 'Loggar in…', async () => {
-        const svar = await NXStudie.loggaInBarn(supa, barnAdress, lösen);
-        if (svar.fel) {
-          säg(msg, svar.fel, false);
-          $('#a-pass').value = '';
-          $('#a-pass').focus();
-          return;
-        }
-        location.replace('/barn');
-      });
-      return;
-    }
-    if (läge === 'up' && !namn) { säg(msg, 'Fyll i ditt namn.', false); return; }
-    if (läge === 'up' && lösen.length < 6) { säg(msg, 'Lösenordet måste vara minst 6 tecken.', false); return; }
+    /* E-post eller användarnamn: ett barn skickas till /barn, en vuxen
+       laddar om vyn (NXStudie.loggaInHär). */
+    if (läge === 'in') { await NXStudie.loggaInHär(supa, epost, lösen); return; }
+
+    if (!namn) { säg(msg, 'Fyll i ditt namn.', false); return; }
+    if (lösen.length < 6) { säg(msg, 'Lösenordet måste vara minst 6 tecken.', false); return; }
 
     knapp.setAttribute('aria-busy', 'true');
-    let res;
-    if (läge === 'up') {
-      res = await supa.auth.signUp({
-        email: epost, password: lösen,
-        options: {
-            data: { full_name: namn, role: 'parent' },
-            /* Utan den här landar bekräftelselänken på Site URL i
-               Supabase — alltså startsidan, eller värre: localhost.
-               Nu kommer man tillbaka hit, till vyn man skapade
-               kontot i, oavsett var sajten körs. */
-            emailRedirectTo: location.origin + location.pathname
-          }
-      });
-    } else {
-      res = await supa.auth.signInWithPassword({ email: epost, password: lösen });
-    }
+    const res = await supa.auth.signUp({
+      email: epost, password: lösen,
+      options: {
+          data: { full_name: namn, role: 'parent' },
+          /* Utan den här landar bekräftelselänken på Site URL i
+             Supabase — alltså startsidan, eller värre: localhost.
+             Nu kommer man tillbaka hit, till vyn man skapade
+             kontot i, oavsett var sajten körs. */
+          emailRedirectTo: location.origin + location.pathname
+        }
+    });
     knapp.removeAttribute('aria-busy');
 
     if (res.error) { säg(msg, felText(res.error), false); return; }
 
-    if (läge === 'up' && res.data && res.data.session === null) {
+    if (res.data && res.data.session === null) {
       säg(msg, 'Kontot är skapat. Vi har skickat en bekräftelse till ' + epost + '. Klicka på länken i mejlet och logga sedan in här.', true);
       return;
     }

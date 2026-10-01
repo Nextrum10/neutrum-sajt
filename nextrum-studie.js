@@ -2802,9 +2802,11 @@ window.NXStudie = (function () {
     lösen.closest('.fgroup').hidden = glömt;
     NX.$$('[data-glomt]').forEach(function (el) { el.hidden = läge !== 'in'; });
     NX.$$('[data-glomt-tillbaka]').forEach(function (el) { el.hidden = !glömt; });
-    /* Studievyn tar också ett barns användarnamn när man loggar in
-       (t.etikett), men bara där: ett konto skapas och en länk skickas
-       alltid till en e-postadress. */
+    /* Varje inloggning tar e-post eller användarnamn (loggaIn), men
+       etiketten säger det bara i studievyn (t.etikett), dit både barn
+       och vuxna kommer; i studiehjälparvyn och adminvyn har ingen ett
+       användarnamn. Ett konto skapas och en länk skickas alltid till en
+       e-postadress. */
     var etikett = NX.$('label[for="a-email"]');
     if (etikett) etikett.textContent = (läge === 'in' && t.etikett) || 'E-post';
     NX.$('#auth-title').textContent = glömt ? 'Glömt lösenordet?' : upp ? t.titelUpp : t.titel;
@@ -2814,58 +2816,106 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
-     BARNETS ANVÄNDARNAMN I EN INLOGGNING (2026-10-01)
+     E-POST ELLER ANVÄNDARNAMN, I VARJE INLOGGNING (2026-10-01)
 
-     Barnet loggar in med ett användarnamn, och adressen
-     <namn>@barn.nextrum.se byggs här, i webbläsaren. Det första
-     riktiga barnkontot gick inte att logga in med: Logga in på sajten
-     leder till studievyn, där fältet hette E-post och ett användarnamn
-     fick Fel e-post eller lösenord, och /barn nås bara om man skriver
-     adressen. Därför tar studievyn användarnamnet också, och barnet
-     hamnar i sin vy. Barnets vy och studievyn loggar in barnet med
-     samma två funktioner.
+     Leo: "man kan logga in med användarnamn eller epost ... barns
+     konton ska bara vara användarnamn och lösenord som styrs av
+     föräldern". Det första riktiga barnkontot gick inte att logga in
+     med: Logga in på sajten leder till studievyn, där fältet hette
+     E-post, och /barn nås bara om man skriver adressen. Nu gäller en
+     regel i alla fyra inloggningarna, och den läser bara formen på det
+     som skrivs:
+     - med @ är det en vuxens e-postadress, som Auth får som förut;
+     - utan @ är det ett barns användarnamn, och barnet hamnar på /barn;
+     - barnkontots tekniska adress, <namn>@barn.nextrum.se, nekas utan
+       att Auth tillfrågas. Supabase Auth tar ett lösenord bara ihop med
+       en e-postadress eller ett telefonnummer, så adressen finns i Auth,
+       byggd ur användarnamnet. Den tar aldrig emot mejl, och ingen ska
+       behöva skriva den: ett barn loggar in med användarnamnet, och
+       föräldern styr det och lösenordet.
 
-     Regeln är ANVANDARNAMN i _delad/barnkonto.ts och villkoret i
-     databasen: a–z, siffror, punkt, bindestreck och understreck,
-     3–20 tecken. Hela adressen godtas också. Allt annat är null, och
-     då går ingen fråga till Auth.
+     Användarnamnets regel är ANVANDARNAMN i _delad/barnkonto.ts och
+     villkoret i databasen (kolla-behorigheter.py jämför dem): a–z,
+     siffror, punkt, bindestreck och understreck, 3–20 tecken.
      ============================================================ */
   var BARNNAMN = /^[a-z0-9._-]{3,20}$/;
   var BARNDOMÄN = '@barn.nextrum.se';
+
+  /* Adressen i Auth för ett användarnamn, annars null. */
   function barnAdress(text) {
     var t = String(text == null ? '' : text).trim().toLowerCase();
-    if (t.slice(-BARNDOMÄN.length) === BARNDOMÄN) t = t.slice(0, -BARNDOMÄN.length);
     return BARNNAMN.test(t) ? t + BARNDOMÄN : null;
   }
 
-  /* Samma besked för okänt användarnamn, fel lösenord och pausad
-     inloggning: sidan svarar inte på vilka användarnamn som finns. Två
-     undantag, och inget av dem säger något om kontot: taket gäller per
-     uppkoppling, och ett nät som inte svarar har inte hunnit fråga
-     någon. Svarar { user } eller { fel }. */
-  var BARN_FEL = 'Fel användarnamn eller lösenord';
-  async function loggaInBarn(supa, adress, lösen) {
-    var svar;
+  function ärBarnadress(text) {
+    var t = String(text == null ? '' : text).trim().toLowerCase();
+    return t.slice(-BARNDOMÄN.length) === BARNDOMÄN;
+  }
+
+  async function försökLogga(supa, epost, lösen) {
     try {
-      svar = await supa.auth.signInWithPassword({ email: adress, password: lösen });
-    } catch (e) { svar = { error: e }; }
-    var fel = svar && svar.error;
-    if (fel) {
-      var text = String(fel.message || fel);
-      if (fel.status === 429) return { fel: 'För många försök. Vänta en stund och försök igen.' };
-      if (!fel.status && /fetch|network|load failed/i.test(text)) {
-        return { fel: 'Det gick inte att nå Nextrum. Kolla att du är uppkopplad och försök igen.' };
+      var svar = await supa.auth.signInWithPassword({ email: epost, password: lösen });
+      return { error: svar.error || null, user: (svar.data && svar.data.user) || null };
+    } catch (e) { return { error: e, user: null }; }
+  }
+
+  /* Ett användarnamn får samma besked när det inte finns, när lösenordet
+     är fel och när inloggningen är pausad: sidan svarar inte på vilka
+     användarnamn som finns. Två undantag, och inget av dem säger något
+     om kontot: taket gäller per uppkoppling, och ett nät som inte svarar
+     har inte hunnit fråga någon. */
+  var BARN_FEL = 'Fel användarnamn eller lösenord';
+  function barnfel(fel) {
+    var text = String((fel && fel.message) || fel || '');
+    if (fel && fel.status === 429) return 'För många försök. Vänta en stund och försök igen.';
+    if (!(fel && fel.status) && /fetch|network|load failed/i.test(text)) {
+      return 'Det gick inte att nå Nextrum. Kolla att du är uppkopplad och försök igen.';
+    }
+    return BARN_FEL;
+  }
+
+  /* Loggar in med det som skrevs i fältet, efter regeln ovan. Svarar
+     { user, barn } när det gick och { fel, barn } när det inte gick;
+     barn säger att det var ett barnkonto, så att vyn skickar barnet
+     till /barn och tömmer lösenordet efter ett fel. */
+  async function loggaIn(supa, text, lösen) {
+    var t = String(text == null ? '' : text).trim();
+    if (t.indexOf('@') < 0) {
+      var adress = barnAdress(t);
+      /* Ett namn som inte kan finnas får samma besked som ett som inte
+         finns, och ingen fråga går iväg. */
+      if (!adress) return { fel: BARN_FEL, barn: true };
+      var b = await försökLogga(supa, adress, lösen);
+      if (b.error) return { fel: barnfel(b.error), barn: true };
+      /* Domänen går inte att registrera utan att vara ett barnkonto
+         (databasen), men vyn litar inte på det heller. */
+      if (!NX.ärBarn(b.user)) {
+        await supa.auth.signOut({ scope: 'local' });
+        return { fel: BARN_FEL, barn: true };
       }
-      return { fel: BARN_FEL };
+      return { user: b.user, barn: true };
     }
-    var user = svar.data && svar.data.user;
-    /* Domänen går inte att registrera utan att vara ett barnkonto
-       (databasen), men vyn litar inte på det heller. */
-    if (!NX.ärBarn(user)) {
-      await supa.auth.signOut({ scope: 'local' });
-      return { fel: BARN_FEL };
-    }
-    return { user: user };
+    if (ärBarnadress(t)) return { fel: NX.t('felLosen'), barn: false };
+    var v = await försökLogga(supa, t, lösen);
+    if (v.error) return { fel: NX.felText(v.error), barn: false };
+    return { user: v.user, barn: NX.ärBarn(v.user) };
+  }
+
+  /* Inloggningen i studievyn, studiehjälparvyn och adminvyn: knappen,
+     beskedet och vart man hamnar. Ett barn går till /barn, och en vuxen
+     laddar om vyn, som dirigerar efter rollen som förut. */
+  async function loggaInHär(supa, text, lösen) {
+    var msg = NX.$('#auth-msg'), lösenfält = NX.$('#a-pass');
+    await medan(NX.$('#auth-submit'), 'Loggar in…', async function () {
+      var svar = await loggaIn(supa, text, lösen);
+      if (svar.fel) {
+        NX.säg(msg, svar.fel, false);
+        if (svar.barn) { lösenfält.value = ''; lösenfält.focus(); }
+        return;
+      }
+      if (svar.barn) location.replace('/barn');
+      else location.reload();
+    });
   }
 
   /* ============================================================
@@ -2927,16 +2977,16 @@ window.NXStudie = (function () {
      Supabase under Authentication, URL Configuration (Redirect URLs),
      och en adress som inte står där leder till startsidan, som skickar
      den vidare till studievyn (nextrum-app.js). */
-  async function glömtSkicka(supa, o) {
+  async function glömtSkicka(supa) {
     var msg = NX.$('#auth-msg'), fält = NX.$('#a-email');
     var epost = fält.value.trim();
     NX.rensa(msg);
     if (!epost) { NX.säg(msg, 'Skriv e-postadressen du loggar in med.', false); fält.focus(); return; }
-    /* I studievyn kan det stå ett barns användarnamn (o.barn); i de
-       andra vyerna är ett ord utan @ bara en ofullständig adress. */
-    var barnet = /@barn\.nextrum\.se$/i.test(epost) || (!!(o && o.barn) && !!barnAdress(epost));
-    if (barnet) {
-      NX.säg(msg, 'Ett barns lösenord byts av föräldern, i studievyn under Profil. Barnet loggar sedan in på nextrum.se/barn.', false);
+    /* Ett användarnamn, eller barnkontots tekniska adress: ett barn har
+       ingen e-post att få en länk till. */
+    if (barnAdress(epost) || ärBarnadress(epost)) {
+      NX.säg(msg, 'Ett barns lösenord byts av föräldern, i studievyn under Profil. '
+        + 'Har du ett eget konto: skriv e-postadressen du loggar in med.', false);
       return;
     }
     if (!NX.epostOk(epost)) {
@@ -3579,7 +3629,7 @@ window.NXStudie = (function () {
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
     inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
     glömtLänkar: glömtLänkar, länkenGickInte: länkenGickInte, glömtSkicka: glömtSkicka, nyttLösenord: nyttLösenord,
-    barnAdress: barnAdress, loggaInBarn: loggaInBarn, BARN_FEL: BARN_FEL,
+    loggaIn: loggaIn, loggaInHär: loggaInHär,
     adminroll: adminroll,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxLista: läxLista,
