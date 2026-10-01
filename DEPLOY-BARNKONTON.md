@@ -92,12 +92,14 @@ Båda kräver inloggning, så ingen rad i `supabase/config.toml` behövs.
   Supabases inbyggda mejl går bara till medlemmarna i organisationen, så
   varken inbjudan eller Glömt lösenordet når någon annan utan den
   (`minne/sakerhet.md`).
-- **Authentication → Email Templates → Reset password:** den svenska
-  mallen står i `minne/sakerhet.md`, under Glömt lösenordet.
+- **Authentication → Email Templates → Reset password** och **Confirm
+  sign up:** de svenska mallarna står i `minne/sakerhet.md`, under
+  Kontomejlen.
 - **Authentication → Providers → Email:** slå på *Secure email change*.
 - **Authentication → Settings:** *Allow manual linking* ska vara av.
 - **Authentication → Email Templates → Invite user:** skriv mallen på
-  svenska. Förvalet är engelska ("You have been invited").
+  svenska. Förvalet är engelska ("You have been invited"). Texten står i
+  `minne/sakerhet.md`, under Kontomejlen, med de andra mallarna.
 - Slå inte på kryptering av lösenordshasharna utan att läsa
   `minne/barnkonton-och-admin.md` först: en omskriven hash vid inloggning
   stoppas av spärren på barnkontona.

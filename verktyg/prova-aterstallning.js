@@ -176,8 +176,8 @@ const väntaText = (page, sel, mönster) => page.waitForFunction(([s, m]) => {
 }, [sel, mönster], { timeout: 6000 }).catch(() => {});
 
 /* Länken i mejlet som Auth skickar tillbaka den (implicit flow). */
-const länk = id => '#access_token=' + jwt(id, 'authenticated')
-  + '&expires_in=3600&refresh_token=prov-' + id + '&sb=&token_type=bearer&type=recovery';
+const länk = (id, typ) => '#access_token=' + jwt(id, 'authenticated')
+  + '&expires_in=3600&refresh_token=prov-' + id + '&sb=&token_type=bearer&type=' + (typ || 'recovery');
 const UTGÅNGEN = '#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired&sb=';
 
 const VYER = [
@@ -428,6 +428,53 @@ async function provaLänken(webb) {
     prova('token som inte godtas: token är borta ur adressen', !/access_token/.test(page.url()), page.url());
     const övriga = konsol.filter(k => !/status of 401/.test(k));
     prova('token som inte godtas: inga andra fel i konsolen', övriga.length === 0, övriga.join(' | '));
+    await context.close();
+  }
+
+  /* En inbjudan från bjud-in (2026-10-01): studievyn och studiehjälparvyn ber om ett lösenord. */
+  for (const [väg, id, sedan] of [['/foralder', 'foralder-1', '#view-locked'], ['/larare', 'handledare-1', '#view-pending']]) {
+    const v = väg.slice(1);
+    const { context, page, S, konsol } = await öppna(webb, {});
+    await page.goto(BAS + väg + länk(id, 'invite'));
+    await page.waitForSelector('.nx-fraga.open #nylos-t', { timeout: 8000 }).catch(() => {});
+    prova(v + ' inbjudan: rutan ber om ett lösenord', (await text(page, '#nylos-t')) === 'Välj ditt lösenord', await text(page, '#nylos-t'));
+    prova(v + ' inbjudan: rutan välkomnar', (await text(page, '#nylos-t + p')).startsWith('Välkommen till Nextrum!'), await text(page, '#nylos-t + p'));
+    prova(v + ' inbjudan: fältet heter Lösenord', (await text(page, 'label[for="nylos-1"]')) === 'Lösenord');
+    if (väg === '/foralder') await bild(page, 'foralder-inbjudan');
+    await page.fill('#nylos-1', 'mitt-forsta-losen');
+    await page.fill('#nylos-2', 'mitt-forsta-losen');
+    await page.click('form[data-nylos] [type="submit"]');
+    await page.waitForSelector('[data-nylos-klar]', { timeout: 6000 }).catch(() => {});
+    prova(v + ' inbjudan: lösenordet sparas med inbjudans inloggning',
+      S.logg.some(r => r.väg === '/auth/v1/user' && r.metod === 'PUT' && r.vem === id && r.kropp && r.kropp.password === 'mitt-forsta-losen'));
+    prova(v + ' inbjudan: Lösenordet är sparat', (await text(page, '#nylos-t')) === 'Lösenordet är sparat', await text(page, '#nylos-t'));
+    await page.click('[data-nylos-klar]');
+    await page.waitForSelector(sedan + ':not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova(v + ' inbjudan: vyn fortsätter efter rutan', await synlig(page, sedan));
+    prova(v + ' inbjudan: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+    await context.close();
+  }
+  {
+    const { context, page } = await öppna(webb, {});
+    await page.goto(BAS + '/foralder' + länk('okand-1', 'invite'));
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('inbjudan som inte godtas: Glömt lösenordet med förklaringen',
+      (await text(page, '#auth-sub')).startsWith('Länken i mejlet gick inte att använda'), await text(page, '#auth-sub'));
+    prova('inbjudan som inte godtas: token är borta ur adressen', !/access_token/.test(page.url()), page.url());
+    await context.close();
+  }
+  {
+    const { context, page } = await öppna(webb, {});
+    const frånStartsidan = [];
+    page.on('request', r => {
+      if (/supabase\.test/.test(r.url()) && new URL(page.url()).pathname === '/') frånStartsidan.push(r.url());
+    });
+    await page.goto(BAS + '/' + länk('foralder-1', 'invite'));
+    await page.waitForURL(u => new URL(u).pathname === '/foralder', { timeout: 8000 }).catch(() => {});
+    await page.waitForSelector('.nx-fraga.open #nylos-t', { timeout: 8000 }).catch(() => {});
+    prova('startsidan: en inbjudan går vidare till studievyn och ber om ett lösenord',
+      new URL(page.url()).pathname === '/foralder' && (await text(page, '#nylos-t')) === 'Välj ditt lösenord', page.url());
+    prova('startsidan: inbjudan rörde inte inloggningen där', frånStartsidan.length === 0, frånStartsidan.join(', '));
     await context.close();
   }
 
