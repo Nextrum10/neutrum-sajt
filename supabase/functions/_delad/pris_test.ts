@@ -19,8 +19,8 @@
 
 import { assert, assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
-  belopp, byggFakturor, byggUnderlag, familjebelopp, type Pass, passpris, radtext, rutFor, sammanfatta,
-  minuterspris, sorteraPass, standardTjanst, tillaggsbelopp, type Tjanst,
+  belopp, byggFakturor, byggUnderlag, familjebelopp, manadenArSlut, manadenNu, type Pass, passpris, radtext,
+  rutFor, sammanfatta, minuterspris, sorteraPass, standardTjanst, tillaggsbelopp, type Tjanst,
 } from './pris.ts';
 import { MANADER } from './konstanter.ts';
 
@@ -534,4 +534,27 @@ Deno.test('ett pass där första timmen bjuds och täcker allt är varken obetal
     tjanster: KATALOG, timprisOre: 37900,
   });
   assertEquals(f.get(P)!.map((r) => r.booking_id), ['b-halv']);
+});
+
+Deno.test('månaden räknas i svensk tid, också strax efter midnatt den 1:a', () => {
+  // Sommartid: 00.30 den 1 oktober i Stockholm är 22.30 den 30 september i UTC.
+  assertEquals(manadenNu(new Date('2026-09-30T22:30:00Z')), '2026-10-01');
+  assertEquals(manadenNu(new Date('2026-09-30T21:59:59Z')), '2026-09-01');
+  // Vintertid: 00.30 den 1 december är 23.30 den 30 november, och nyår byter år.
+  assertEquals(manadenNu(new Date('2026-11-30T23:30:00Z')), '2026-12-01');
+  assertEquals(manadenNu(new Date('2026-12-31T23:00:00Z')), '2027-01-01');
+});
+
+Deno.test('en månad går att skapa först när nästa har börjat i svensk tid', () => {
+  const sistaKvallen = new Date('2026-09-30T21:30:00Z'); // 23.30 den 30 september
+  const forstaNatten = new Date('2026-09-30T22:30:00Z'); // 00.30 den 1 oktober
+  assertEquals(manadenArSlut('2026-09-01', sistaKvallen), false);
+  assertEquals(manadenArSlut('2026-09-01', forstaNatten), true);
+  assertEquals(manadenArSlut('2026-08-01', sistaKvallen), true);
+  // Den som pågår och den som inte har börjat.
+  assertEquals(manadenArSlut('2026-10-01', forstaNatten), false);
+  assertEquals(manadenArSlut('2026-11-01', forstaNatten), false);
+  // Schemat går den 1:a 04.17 UTC och tar förra månaden, som alltid är slut.
+  assertEquals(manadenArSlut('2026-09-01', new Date('2026-10-01T04:17:00Z')), true);
+  assertEquals(manadenArSlut('2026-12-01', new Date('2027-01-01T04:17:00Z')), true);
 });

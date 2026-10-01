@@ -76,6 +76,14 @@
 // till förra körningen kommer med på nästa i stället för att falla
 // bort. Pass efter perioden väntar till nästa månad.
 //
+// En månad skapas bara när den är slut i svensk tid (2026-10-01), och
+// en skarp körning för en som pågår eller inte har börjat får 409.
+// Studiehjälparen har ett underlag per månad (unique(tutor_id,
+// period)), så allt som rapporterades efter en körning mitt i månaden
+// fick vänta en månad på sin lön, och schemat svarade 207 den 1:a. Det
+// hände september 2026, som kördes med knappen den 29:e. Torrkörningen
+// skriver ingenting och går för vilken månad som helst.
+//
 // KÖR TORRT FÖRST
 // Med { "torrkorning": true } räknar den ut allt och svarar med vad
 // som SKULLE skapas, utan att skriva en rad. Gör alltid det innan
@@ -86,7 +94,7 @@ import { cors, json as jsonMed, preflight } from '../_delad/http.ts';
 import { kravAdmin, lika, serviceklient } from '../_delad/auth.ts';
 import { hemlighetOk } from '../_delad/notis.ts';
 import {
-  byggFakturor, byggUnderlag, minuterSum, type Pass, sammanfatta, sorteraPass,
+  byggFakturor, byggUnderlag, manadenArSlut, manadenNu, minuterSum, type Pass, sammanfatta, sorteraPass,
   standardTjanst, summa, type Tjanst,
 } from '../_delad/pris.ts';
 
@@ -102,13 +110,12 @@ const json = (body: unknown, status: number) => jsonMed(body, status, CORS);
 // kan skapa dubbletter — den krockar i stället, vilket är precis vad
 // vi vill.
 //
-// Månaden räknas i svensk tid. I UTC är klockan 00.30 den 1:a
-// fortfarande förra månaden, och då hade körningen tagit fel månad
-// varannan gång den startades strax efter midnatt.
+// Månaden räknas i svensk tid (manadenNu i _delad/pris.ts). I UTC är
+// klockan 00.30 den 1:a fortfarande förra månaden, och då hade
+// körningen tagit fel månad varannan gång den startades strax efter
+// midnatt.
 function forraManaden(nu: Date): string {
-  const [ar, man] = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit',
-  }).format(nu).split('-').map(Number);
+  const [ar, man] = manadenNu(nu).split('-').map(Number);
   const a = man === 1 ? ar - 1 : ar;
   const m = man === 1 ? 12 : man - 1;
   return `${a}-${String(m).padStart(2, '0')}-01`;
@@ -197,6 +204,13 @@ Deno.serve(async (req) => {
       : tolkaPeriod(kropp.period);
     if (!period) return json({ error: 'Perioden ska skrivas ÅÅÅÅ-MM, till exempel 2026-09.' }, 400);
     const slut = periodSlut(period);
+    // En månad skapas först när den är slut, oavsett väg in (PERIODEN
+    // ovan). Torrkörningen skriver ingenting och får visa en som pågår.
+    if (!torrkorning && !manadenArSlut(period, new Date())) {
+      return json({
+        error: `Månaden är inte slut. Underlag och fakturor för ${period.slice(0, 7)} går att skapa från ${slut}.`,
+      }, 409);
+    }
 
     const db = serviceklient();
 

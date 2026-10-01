@@ -76,13 +76,20 @@ schema som står av ser annars ut precis som ett som fungerar.
 **Jobbet är på sedan 2026-09-28**, efter stegen i DEPLOY-BETALNING.md
 avsnitt 6: `fakturering` version 32 driftsatt från main och jämförd
 byte för byte, väckningen torrkörd, och sist migrationen med jobbet.
-Det som körs skarpt skriver underlag och fakturautkast för allt som
-står klart, och provpasset den 27 september undantogs inte: Leo ville
-se hur lönespecen ser ut. Körningen den 1 oktober skriver därför ett
-underlag på 240 kr och ett fakturautkast på 758 kr för det, som ska
-tas bort när lönespecen är sedd, inte betalas ut eller läggas in i
-Fortnox (DEPLOY-BETALNING.md avsnitt 6). Hela `rls-test.sql` gick
-igenom mot driften efteråt, 702 av 702.
+Hela `rls-test.sql` gick igenom mot driften efteråt, 702 av 702. Det
+som körs skarpt skriver underlag och fakturautkast för allt som står
+klart, och provpasset den 27 september undantogs inte: Leo ville se hur
+lönespecen ser ut. Underlaget på 240 kr och fakturautkastet på 758 kr
+skrevs redan den 29 september, när september kördes med knappen medan
+den pågick, och ska tas bort när lönespecen är sedd, inte betalas ut
+eller läggas in i Fortnox (DEPLOY-BETALNING.md avsnitt 6). Schemat gick
+den 1 oktober som det skulle och svarade 207: ett pass den 29 september
+hade rapporterats efter knappen, och en studiehjälpare har ett underlag
+per månad (`unique(tutor_id, period)`), så passet fick vänta en månad på
+sin lön. **Sedan 2026-10-01 skapas en månad bara när den är slut**:
+`fakturering` nekar en skarp körning för en månad som pågår eller inte
+har börjat med 409 (`manadenArSlut` i `_delad/pris.ts`, i svensk tid),
+och rutan i adminvyn låter bara torrköra den.
 **Månadskörningens svar blir en uppgift** (2026-09-29). Ingen läste
 svaret, och `ej_utbetalt` säger inte att körningen misslyckades. En
 halvtimme efter körningen läser `intern.manadskorning_svar()` (pg_cron

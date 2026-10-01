@@ -175,6 +175,25 @@ export function radtext(subject: string | null, datum: string): string {
   return `${subject || 'Pass'} ${Number(d)} ${MANADER[Number(m) - 1]}`;
 }
 
+// Månaden en tidpunkt hör till, i svensk tid, som ÅÅÅÅ-MM-01. I UTC är
+// klockan 00.30 den 1:a fortfarande förra månaden.
+export function manadenNu(nu: Date): string {
+  const [ar, man] = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit',
+  }).format(nu).split('-').map(Number);
+  return `${ar}-${String(man).padStart(2, '0')}-01`;
+}
+
+// Är perioden (ÅÅÅÅ-MM-01) slut i svensk tid? Underlag och fakturor
+// skapas först då (2026-10-01). Den 29 september kördes september med
+// knappen medan den pågick, och ett pass som rapporterades samma kväll
+// fick inte plats: en studiehjälpare har ett underlag per månad, så
+// schemat svarade 207 den 1 oktober och passet fick vänta en månad på
+// sin lön.
+export function manadenArSlut(period: string, nu: Date): boolean {
+  return period < manadenNu(nu);
+}
+
 // Tjänsten ett pass utan tjänst räknas som: den första aktiva som
 // kunder kan köpa, annars den första i katalogen. Samma regel som
 // standard_tjanst() i databasen. I dag läxhjälp.

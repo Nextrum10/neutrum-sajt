@@ -2598,8 +2598,17 @@
      periodens slut som inte står på ett underlag, så en körning för
      oktober mitt i september hade lagt septembers pass på oktobers
      underlag, och lönen för dem hade kommit en månad för sent. En
-     pågående månad går att köra, som förut, och en månad efter en som
-     saknar underlag också, men rutan säger vad som händer med passen.
+     månad efter en som saknar underlag går att köra, men rutan säger
+     vad som händer med passen.
+
+     EN MÅNAD SOM PÅGÅR GÅR INTE ATT SKAPA (2026-10-01). Den gick förut,
+     med en varning. September kördes den 29:e, och passet som
+     rapporterades samma kväll fick inte plats: en studiehjälpare har ett
+     underlag per månad, så schemat svarade 207 den 1 oktober och passet
+     fick vänta en månad på sin lön. Leo valde samma dag att bara en
+     avslutad månad ska gå att skapa. Torrkörningen går fortfarande, den
+     skriver ingenting. fakturering nekar samma sak med 409, så knappen
+     är inte skyddet.
      ============================================================ */
   /* SCHEMAT (2026-09-28). pg_cron-jobbet manadskorning skriver förra
      månadens underlag den 1:a, och underlaget är studiehjälparens
@@ -2646,14 +2655,21 @@
   }
 
   /* Vad rutan säger om sin månad, och om den går att köra: EN MÅNAD
-     SOM INTE HAR BÖRJAT GÅR INTE ATT KÖRA, ovan. */
+     SOM INTE HAR BÖRJAT GÅR INTE ATT KÖRA och EN MÅNAD SOM PÅGÅR GÅR
+     INTE ATT SKAPA, ovan. spärr: ingen körning alls. skapaSpärr:
+     torrkörningen går, Skapa inte. */
   function körningensLäge(period) {
     const p = String(period || '').slice(0, 7) + '-01';
     const nu = NXStudie.månadIso(new Date());
     const namn = m => NXStudie.månadsNamn(m, false);
     if (p > nu) {
-      return { spärr: true, text: stor(namn(p)) + ' har inte börjat och går inte att köra än. En körning nu '
+      return { spärr: true, skapaSpärr: true, text: stor(namn(p)) + ' har inte börjat och går inte att köra än. En körning nu '
         + 'hade lagt tidigare månaders pass på underlaget för ' + namn(p) + '.' };
+    }
+    if (p === nu) {
+      return { spärr: false, skapaSpärr: true, text: stor(namn(p)) + ' pågår. Torrkörningen visar läget hittills, '
+        + 'men underlag och fakturor skapas först när månaden är slut, från den 1 '
+        + namn(NXStudie.månadsGräns(p).till) + '.' };
     }
     /* Månader före den här som har pass att betala men inga underlag
        (NXAdmin.lönemånad). Körs den här först tar den deras pass. */
@@ -2672,8 +2688,7 @@
         + ' har inga underlag än. Kör ' + (en ? 'den' : 'dem') + ' först, annars kommer '
         + (en ? 'dess' : 'deras') + ' pass med på underlaget för ' + namn(p) + '.');
     }
-    if (p === nu) texter.push(stor(namn(p)) + ' pågår. Pass som hålls efter körningen kommer med nästa månad.');
-    return { spärr: false, text: texter.join(' ') };
+    return { spärr: false, skapaSpärr: false, text: texter.join(' ') };
   }
 
   function ritaKörningsnot(ruta) {
@@ -2687,6 +2702,8 @@
     const torr = ruta.querySelector('[data-kor-torr]');
     if (torr) torr.disabled = läge.spärr;
     if (läge.spärr) glömKörning(ruta);
+    const skapa = ruta.querySelector('[data-kor-skapa]');
+    if (skapa && läge.skapaSpärr) skapa.disabled = true;
   }
 
   /* Efter en körning, och när passen hämtats om, kan en tidigare månad
@@ -2860,10 +2877,12 @@
     const host = ruta.querySelector('[data-kor-resultat]');
     const skapaKnapp = ruta.querySelector('[data-kor-skapa]');
     if (!period || !host || !skapaKnapp) return;
-    /* Knappen är grå för en månad som inte har börjat. En körning som
-       lagt passen på fel månads underlag går inte att ta tillbaka
-       härifrån, så frågan ställs här också och inte bara i knappen. */
-    if (körningensLäge(period).spärr) { ritaKörningsnot(ruta); return; }
+    /* Knapparna är grå för en månad som inte har börjat, och Skapa för
+       en som pågår. En körning som lagt passen på fel månads underlag går
+       inte att ta tillbaka härifrån, så frågan ställs här också och inte
+       bara i knappen. */
+    const läge = körningensLäge(period);
+    if (läge.spärr || (skapa && läge.skapaSpärr)) { ritaKörningsnot(ruta); return; }
 
     if (torr) {
       glömKörning(ruta);
@@ -2875,7 +2894,8 @@
       if (fel) { host.innerHTML = tomt('Torrkörningen gick inte', await funktionsFel(fel)); return; }
       torrkörda.set(ruta, { period, torr: res.data });
       host.innerHTML = ritaKörning(res.data, true);
-      skapaKnapp.disabled = !(res.data.utbetalningar || []).length && !(res.data.fakturor || []).length;
+      skapaKnapp.disabled = körningensLäge(period).skapaSpärr
+        || (!(res.data.utbetalningar || []).length && !(res.data.fakturor || []).length);
       return;
     }
 

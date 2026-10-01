@@ -49,7 +49,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **En stängd månad** (Fas 20.2) är låst i databasen, också för admin, tills den öppnas.
 - **Betalningar, Månadens ekonomi och Löner** räknar på `betalningsrader()` och
   `NXBetalning.passpris`, så en månad har ett belopp; testbetalningar räknas aldrig. En månad
-  som inte börjat körs inte, och ett pass hör till EN lönemånad. PAXml tar bara godkända, inte
+  skapas först när den är slut: `fakturering` nekar en som pågår med 409, och rutan låter bara
+  torrköra den (2026-10-01). Ett pass hör till EN lönemånad. PAXml tar bara godkända, inte
   utbetalda underlag och är inte provläst i Fortnox. Personnummer, bankkonto och skatt står i
   Fortnox, aldrig här, och lönespecen räknar inget och drar ingen skatt.
 - **Timmarna**: `bookings_timmarna_tillbaka` är den SISTA before-triggern på `bookings`

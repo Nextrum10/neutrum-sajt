@@ -72,7 +72,9 @@ betalt, och ett hållet pass ska betalas även utan bekräftelse. Spärren
 `kortsparr` kan inte slås på sedan dess. Studiehjälparen får betalt den
 25:e och ser underlaget som månadens lönespecifikation, före skatt
 (2026-09-28); pg_cron-jobbet `manadskorning` skriver det den 1:a,
-påslaget sedan samma dag, och adminvyn visar om det är på. Svarar
+påslaget sedan samma dag, och adminvyn visar om det är på. En månad
+skapas först när den är slut: körd mitt i månaden fick resten vänta en
+månad på lönen, så `fakturering` nekar det med 409 (2026-10-01). Svarar
 körningen något annat än 200 blir det en uppgift en halvtimme senare
 (`manadskorning-svar`), som står kvar tills någon stänger den: System →
 Fel visar bara de senaste sex timmarna. Blir hen anställd
