@@ -52,7 +52,7 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 22
+=== svenska sidor utan engelsk tvilling: 23
   admin.html
   affisch.html
   barn.html
@@ -60,6 +60,7 @@
   foralder.html
   hjalpa-barn-med-lasforstaelse.html
   hjalpa-barn-med-matte.html
+  lank.html
   larare.html
   laxhjalp-bromma.html
   laxhjalp-engelska.html

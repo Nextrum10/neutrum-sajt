@@ -268,6 +268,9 @@ likadant och provar läget i inloggningsrutan i alla tre vyerna, vad som
 skickas till `/auth/v1/recover` och vilket besked varje svar från Auth
 ger, rutan för nytt lösenord när vyn öppnas med länkens adress, rutan
 för en inbjudan i studievyn och studiehjälparvyn (2026-10-01), en länk
-som gått ut, startsidan som skickar länken vidare och modulvakten mot en
-gammal `nextrum-studie.js`. Samma körsätt, egen port (8962).
+som gått ut, startsidan som skickar länken vidare, modulvakten mot en
+gammal `nextrum-studie.js`, och `/lank` (2026-10-01): mallens länk kodad
+som Supabase kodar den, knappen hela vägen genom en falsk `verify` till
+vyn, och att allt annat än vårt Supabase blir "Länken är inte hel".
+Samma körsätt, egen port (8962).
 

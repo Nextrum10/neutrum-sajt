@@ -289,7 +289,8 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   länken leder tillbaka till vyn där man bad om den, `type=recovery` och `type=invite` läses
   innan klienten skapas, rutan för lösenord väntas in före rolldirigeringen (också för en
   inbjudan, i alla tre vyerna), och beskedet är detsamma oavsett om kontot finns.
-  Kontomejlen skickas av Supabase Auth, med mallarna i `minne/sakerhet.md`.
+  Kontomejlen skickas av Supabase Auth (Googles SMTP som info@), med mallarna i
+  `minne/sakerhet.md`; deras länk går genom knappen på `/lank`, aldrig rakt till Auth.
 - **Samtycket**: öppna sidor sätter inga cookies; det som kräver samtycke går genom
   `NXSamtycke`, och rutan visas bara när något i `SAMTYCKE` är på (av sedan 2026-09-29). Dölj
   den aldrig med CSS medan skripten går. Vercels statistik laddas först efter ja, aldrig med
@@ -298,7 +299,7 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   med; före ett pixel-id, se `minne/sakerhet.md`.
 - **Advisorn** larmar om det som är med flit (listan i `minne/sakerhet.md`). Läckta lösenord
   kontrolleras inte, och `kolla_rabattkod` får ett tak med den första koden.
-- **Content-Security-Policy**: `/admin`, `/larare`, `/barn` och `/foralder` har `script-src 'self'`,
+- **Content-Security-Policy**: `/admin`, `/larare`, `/barn`, `/lank` och `/foralder` har `script-src 'self'`,
   alltså **ingen inline-JavaScript** där (`kolla-csp.py`). `/foralder` släpper in Stripe, som
   aldrig vendoras. **Två skarpa CSP-rader får aldrig matcha samma sida.**
 
@@ -392,8 +393,9 @@ Detaljer: `minne/grunden.md`.
   null-MX:en i Cloudflare, en skarp inbjudan genom `admin-skapa`, och att säga till familjerna.
   En admin med behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen
   säger nej.
-- **Kontomejlen**: mallarna klistras in i Supabase för hand, och en länk som ett jobbmejl
-  öppnat i förväg är förbrukad; ingen kod i stället för länken (`minne/sakerhet.md`).
+- **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
+  mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
+  länken (`minne/sakerhet.md`).
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Delade dokument: ingen notis, ingen underskrift, en person per
   handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.

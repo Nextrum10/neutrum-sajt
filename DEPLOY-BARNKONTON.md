@@ -88,13 +88,15 @@ Båda kräver inloggning, så ingen rad i `supabase/config.toml` behövs.
   en ogiltig token skickade tillbaka till `/admin`, `/foralder`, `/larare`
   och `/barn`, men till Site URL för en främmande adress), så här finns
   inget att göra. Glömt lösenordet leder till samma vägar.
-- **Authentication → Emails → SMTP Settings:** egen SMTP ska vara på.
-  Supabases inbyggda mejl går bara till medlemmarna i organisationen, så
-  varken inbjudan eller Glömt lösenordet når någon annan utan den
+- **Authentication → Emails → SMTP Settings:** egen SMTP är på (Googles
+  SMTP som info@nextrum.se; provat 2026-10-01 med en adress utanför
+  organisationen, mejlet låg i inkorgen efter en sekund). Supabases
+  inbyggda mejl hade bara nått medlemmarna i organisationen
   (`minne/sakerhet.md`).
 - **Authentication → Email Templates → Reset password** och **Confirm
   sign up:** de svenska mallarna står i `minne/sakerhet.md`, under
-  Kontomejlen.
+  Kontomejlen. Länken i dem går genom `/lank`, så sidan ska vara
+  driftsatt innan mallarna klistras in.
 - **Authentication → Providers → Email:** slå på *Secure email change*.
 - **Authentication → Settings:** *Allow manual linking* ska vara av.
 - **Authentication → Email Templates → Invite user:** skriv mallen på

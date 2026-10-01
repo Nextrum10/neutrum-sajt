@@ -244,13 +244,17 @@ föräldern byter lösenordet.
   som en sektion), och vyn öppnar Glömt lösenordet med förklaringen
   överst (`NX.länkfel`, `NXStudie.länkenGickInte()`). Samma sak när
   länken inte gick att logga in med.
-- **Mejlet kräver egen SMTP.** Supabases inbyggda mejl går bara till
-  medlemmarna i organisationen i Supabase. För alla andra svarar Auth
-  `email_address_not_authorized`, och rutan säger att mejlet inte gick
-  att skicka; för en adress utan konto svarar Auth 200 som vanligt, så
-  skillnaden avslöjar också vilka konton som finns. Egen SMTP ställs in
-  under Authentication → Emails → SMTP Settings. Prova med en adress som
-  inte är med i organisationen.
+- **Mejlet kräver egen SMTP, och den är på.** Supabases inbyggda mejl
+  går bara till medlemmarna i organisationen i Supabase. För alla andra
+  svarar Auth `email_address_not_authorized`, och rutan säger att mejlet
+  inte gick att skicka; för en adress utan konto svarar Auth 200 som
+  vanligt, så skillnaden hade också avslöjat vilka konton som finns.
+  Provat 2026-10-01 med en registrering till en plusadress (som ingen
+  medlem har): Auth svarade 200, mejlet låg i inkorgen efter en sekund,
+  och provkontot togs bort. Auth skickar genom Googles SMTP som
+  info@nextrum.se, inte genom Resend: mejlen syns också under Skickat i
+  den inkorgen. Inställningen står under Authentication → Emails → SMTP
+  Settings.
 - **Mallen** (Reset password) står under Kontomejlen nedan.
 - Provas i `verktyg/prova-aterstallning.js` (`minne/genererat-och-ci.md`).
 
@@ -268,24 +272,35 @@ förvalen är engelska. Ändras en mall i panelen ändras den här också.
   password (Glömt lösenordet). Magic link, Change email address och
   Reauthentication skickas bara från panelen eller API:t; texterna står
   ändå här, så att inget i panelen är på engelska.
-- **`{{ .ConfirmationURL }}` står kvar** i varje mall med en länk. Den
-  bär vyns adress (`redirect_to`); `{{ .SiteURL }}` leder till
+- **Länken går genom `/lank`**: `https://nextrum.se/lank#{{ .ConfirmationURL }}`.
+  `{{ .ConfirmationURL }}` står kvar i varje mall med en länk; den bär
+  vyns adress (`redirect_to`), och `{{ .SiteURL }}` leder till
   startsidan.
 - **Inga villkor på `{{ .Data }}`.** En inbjudan från panelen har ingen
   metadata, och en mall som inte går att fylla i kan stoppa mejlet.
-- **Länken går att använda en gång**, och vissa jobbmejl (Microsoft
-  Defender Safe Links) öppnar länkar innan personen gör det. Länken är då
-  förbrukad, och vyn säger att den inte gick att använda
-  (`NXStudie.länkenGickInte()`). En ny länk går samma väg. Lösningen är
-  en egen sida med en knapp till länken, eller en kod (`{{ .Token }}`)
-  i stället för länken; ingen av dem är byggd.
+- **Knappen på `/lank` använder länken, inte mejlet** (2026-10-01).
+  Länken går att använda en gång, och vissa mejlfilter (Supabase nämner
+  Microsoft Defender för Office 365) öppnar varje länk innan personen gör
+  det. Länken var då förbrukad, vyn sa att den inte gick att använda, och
+  en ny länk gick samma väg. Nu leder mejlet till `/lank`, där Auths länk
+  står efter `#`: ett fragment når aldrig servern, och sidan går
+  ingenstans förrän knappen trycks. Knappen är en `<button>`, inte en
+  `<a href>`, så att ett filter som följer sidans länkar inte kommer åt
+  den. `nextrum-lank.js` godtar bara `verify` hos vårt eget Supabase med
+  en token, och avkodar en gång: Supabase fyller mallarna med Go:s
+  `html/template`, som procentkodar allt efter `#` (i en vanlig href
+  blev `&` till `&amp;`, provat samma dag). Sidan har den skarpa CSP:n
+  och ingen Supabase-klient. Samma skäl som knappen på `/avanmal`. En kod
+  (`{{ .Token }}`) i stället för länken hade skyddat också mot ett filter
+  som trycker på knappar, men kostar varje familj sex siffror att skriva
+  av; den är inte byggd.
 
 **Confirm sign up**, ämne `Bekräfta din e-postadress hos Nextrum`:
 
 ```html
 <h2>Bekräfta din e-postadress</h2>
 <p>Klicka på länken för att bekräfta din e-postadress, så är kontot klart.</p>
-<p><a href="{{ .ConfirmationURL }}">Bekräfta e-postadressen</a></p>
+<p><a href="https://nextrum.se/lank#{{ .ConfirmationURL }}">Bekräfta e-postadressen</a></p>
 <p>Har du inte skapat något konto hos Nextrum kan du strunta i mejlet.</p>
 <p>Nextrum</p>
 ```
@@ -295,7 +310,7 @@ förvalen är engelska. Ändras en mall i panelen ändras den här också.
 ```html
 <h2>Välkommen till Nextrum</h2>
 <p>Du har fått ett konto hos Nextrum. Klicka på länken och välj ett lösenord.</p>
-<p><a href="{{ .ConfirmationURL }}">Välj lösenord</a></p>
+<p><a href="https://nextrum.se/lank#{{ .ConfirmationURL }}">Välj lösenord</a></p>
 <p>Sedan loggar du in med den här e-postadressen och lösenordet du valde.</p>
 <p>Väntade du dig inte det här mejlet kan du strunta i det.</p>
 <p>Nextrum</p>
@@ -306,7 +321,7 @@ förvalen är engelska. Ändras en mall i panelen ändras den här också.
 ```html
 <h2>Välj ett nytt lösenord</h2>
 <p>Klicka på länken och välj ett nytt lösenord.</p>
-<p><a href="{{ .ConfirmationURL }}">Välj nytt lösenord</a></p>
+<p><a href="https://nextrum.se/lank#{{ .ConfirmationURL }}">Välj nytt lösenord</a></p>
 <p>Har du inte bett om det här kan du strunta i mejlet. Ditt lösenord är detsamma som förut.</p>
 <p>Nextrum</p>
 ```
@@ -316,7 +331,7 @@ förvalen är engelska. Ändras en mall i panelen ändras den här också.
 ```html
 <h2>Logga in</h2>
 <p>Klicka på länken för att logga in hos Nextrum.</p>
-<p><a href="{{ .ConfirmationURL }}">Logga in</a></p>
+<p><a href="https://nextrum.se/lank#{{ .ConfirmationURL }}">Logga in</a></p>
 <p>Har du inte bett om att logga in kan du strunta i mejlet.</p>
 <p>Nextrum</p>
 ```
@@ -326,7 +341,7 @@ förvalen är engelska. Ändras en mall i panelen ändras den här också.
 ```html
 <h2>Bekräfta din nya e-postadress</h2>
 <p>Klicka på länken för att byta e-postadress från {{ .Email }} till {{ .NewEmail }}.</p>
-<p><a href="{{ .ConfirmationURL }}">Byt e-postadress</a></p>
+<p><a href="https://nextrum.se/lank#{{ .ConfirmationURL }}">Byt e-postadress</a></p>
 <p>Har du inte bett om att byta e-postadress kan du strunta i mejlet.</p>
 <p>Nextrum</p>
 ```
@@ -473,6 +488,9 @@ inga `onclick="…"`, inga `javascript:`-adresser.**
 
 `verktyg/kolla-csp.py` kontrollerar det i CI. De publika sidorna har
 kvar policyn i Report-Only eftersom de fortfarande har inline-skript.
+`/barn` fick samma rad som `/admin` och `/larare` med barnkontona, och
+`/lank` (2026-10-01): sidan bär Auths engångslänk i adressen, och ett
+skript som inte är vårt hade kunnat läsa den.
 
 **`/foralder` släpper in Stripe, och bara Stripe** (Fas 14.5). Kassan
 ritas i en panel på sidan i stället för på Stripes egen, och Stripe.js
