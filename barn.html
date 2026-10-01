@@ -13,7 +13,8 @@
 <meta name="robots" content="noindex">
 <!-- Barnets vy (barnkonton_och_admin). Samma lager som studievyn, så att
      den ser ut som resten av Nextrum, men bara det barnet får se: det
-     barn_oversikt() och barn_notiser() svarar, inget annat. Barnets roll
+     barn_oversikt(), barn_notiser(), barn_nexlax() och
+     barn_installningar() svarar, inget annat. Barnets roll
      i databasen (nextrum_barn) når inga tabeller alls, så sidan KAN inte
      hämta mer än så, vad som än står i skriptet. -->
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
@@ -21,7 +22,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=ac8ac9d1">
 <link rel="stylesheet" href="nextrum-vy.css?v=28e93927">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=a20da120">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=0a60891b">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=5e3e3bc2">
 </head>
 <body class="vy vy-barn">
@@ -45,9 +46,11 @@
   <div id="view-loading"><div class="loading">Laddar din vy</div></div>
 
   <!-- ============ INLOGGNING ============
-       Användarnamn och lösenord. Adressen byggs i skriptet
-       (<användarnamn>@barn.nextrum.se), och felet är alltid detsamma, så
-       att sidan inte svarar på vilka användarnamn som finns. -->
+       Användarnamn eller e-post, och lösenord. För ett användarnamn byggs
+       adressen i skriptet (<användarnamn>@barn.nextrum.se); en e-post är
+       barnets egen, om föräldern lagt till den och barnet bekräftat den
+       (barnets_epost), eller en vuxens. Felet är alltid detsamma, så att
+       sidan inte svarar på vilka användarnamn och adresser som finns. -->
   <div id="view-auth" hidden>
     <div class="auth-wrap">
       <div class="auth-card">
@@ -57,8 +60,8 @@
 
         <form id="bv-form" novalidate>
           <div class="fgroup">
-            <label for="bv-anv">Användarnamn</label>
-            <input class="inp" id="bv-anv" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="40" required>
+            <label for="bv-anv">Användarnamn eller e-post</label>
+            <input class="inp" id="bv-anv" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254" required>
           </div>
           <div class="fgroup">
             <label for="a-pass">Lösenord</label>
@@ -69,6 +72,24 @@
         </form>
 
         <p class="auth-alt">Har du glömt lösenordet? Fråga din förälder, så kan de byta det.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ BEKRÄFTA E-POSTEN ============
+       Länken i bekräftelsemejlet (barnets_epost) leder hit, med koden i
+       ?bekrafta=. Ingenting bekräftas förrän knappen trycks: program som
+       granskar länkar i mejl öppnar dem, men trycker inte på knappar.
+       Fungerar utan inloggning, och oavsett vem som är inloggad. -->
+  <div id="view-bekrafta" hidden>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <span class="nx-et acc">E-post</span>
+        <h1 style="margin-top:16px" id="bv-bek-rubrik" tabindex="-1">Bekräfta din e-post</h1>
+        <p class="nx-lede" id="bv-bek-text">Din förälder har lagt till den här adressen för ditt konto hos Nextrum. Tryck på knappen om adressen är din.</p>
+        <button class="btn btn-primary btn-block" type="button" id="bv-bek-knapp">Bekräfta adressen</button>
+        <p class="ok-msg" id="bv-bek-msg" role="alert" style="margin-top:16px"></p>
+        <p class="auth-alt"><a href="/barn" id="bv-bek-vidare">Till inloggningen</a></p>
       </div>
     </div>
   </div>
@@ -166,6 +187,16 @@
         <div class="vy-kort vy-lista" id="bv-rapporter"></div>
       </div>
 
+      <!-- Inställningar (barnets_epost): vem barnet är inloggat som, och
+           vilka mejl barnet vill ha, när föräldern slagit på dem. Det
+           barnet kan ändra är bara de valen; adressen och lösenordet är
+           förälderns. Länken "Ändra dina val" i mejlen leder hit. -->
+      <div class="bv-del" id="installningar" hidden>
+        <div class="vy-grupp"><h3>Inställningar</h3></div>
+        <div class="vy-kort"><div class="vy-kort-kropp" id="bv-inst"></div></div>
+        <p class="ok-msg" id="bv-inst-msg" role="alert"></p>
+      </div>
+
       <p class="bv-fraga">Vill du ändra något? Fråga din förälder.</p>
     </div>
   </div>
@@ -176,9 +207,9 @@
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=dc44f5b8"></script>
-<script src="nextrum-studie.js?v=8e237476"></script>
+<script src="nextrum-studie.js?v=82d80d53"></script>
 <script src="nextrum-uppgifter.js?v=d8af91ab"></script>
 <script src="nextrum-modulvakt.js?v=3e5cc0cd"></script>
-<script src="nextrum-barn-vy.js?v=68de9d7e"></script>
+<script src="nextrum-barn-vy.js?v=448f2503"></script>
 </body>
 </html>

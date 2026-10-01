@@ -36,6 +36,23 @@ export const MEJLBARA = [
 
 export type MejlbarTyp = typeof MEJLBARA[number];
 
+/**
+ * BARNETS MEJL (barnets_epost). Sorterna ett barn kan få till sin egen
+ * bekräftade adress, samma lista som intern.barn_mejltyper() i
+ * databasen; ändras den ena ändras den andra. Bekräftelsen av adressen
+ * är en fjärde sort som inte står här: den går inte att välja bort och
+ * har ingen avanmälan, den är svaret på något föräldern just gjort.
+ */
+export const BARN_MEJLTYPER = ['barn_pass_bokat', 'barn_pass_avbokat', 'barn_paminnelse'] as const;
+
+export type BarnMejltyp = typeof BARN_MEJLTYPER[number];
+
+export const BARN_BEKRAFTA = 'barn_bekrafta_epost';
+
+export function arBarnMejltyp(v: unknown): v is BarnMejltyp {
+  return typeof v === 'string' && (BARN_MEJLTYPER as readonly string[]).includes(v);
+}
+
 export type Kanal = 'mejl' | 'sms';
 
 /** Databasen svarar 'parent' eller 'tutor'. Allt annat läses som familj. */
@@ -101,6 +118,10 @@ export type RenData = {
   betalsatt: Betalsatt | null;
   /** Fas 21.2. Köpta timmar som är kvar på ett kort som snart går ut. */
   kvar: number | null;
+  /** barnets_epost. Koden i länken som bekräftar barnets adress:
+   *  barnets id, en punkt och en HMAC. Ingen personuppgift: den räknas
+   *  fram när mejlet skickas och sparas ingenstans. */
+  kod: string | null;
   prov: boolean;
 };
 
@@ -128,6 +149,9 @@ function kvarOk(v: unknown): number | null {
   return Number.isInteger(n) && n >= 1 && n <= 200 ? n : null;
 }
 
+/** intern.barn_epost_kod(): ett uuid, en punkt, 43 tecken base64url. */
+const KOD = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[A-Za-z0-9_-]{43}$/;
+
 const STATUSAR = ['requested', 'confirmed', 'cancelled', 'completed'] as const;
 
 /** Koderna intern.betalsatt_kod() skickar. Allt annat blir null. */
@@ -151,6 +175,7 @@ export function renData(v: unknown): RenData {
     skal: AVBOKNINGSSKAL.find((k) => k === d.skal) ?? null,
     betalsatt: BETALSATT.find((k) => k === d.betalsatt) ?? null,
     kvar: kvarOk(d.kvar),
+    kod: typeof d.kod === 'string' && KOD.test(d.kod) ? d.kod : null,
     prov: d.prov === true,
   };
 }

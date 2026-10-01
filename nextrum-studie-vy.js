@@ -490,15 +490,26 @@
 
      Reglerna för användarnamn och lösenord är samma som i
      _delad/barnkonto.ts; funktionen prövar dem igen.
+
+     BARNETS EGEN E-POST (barnets_epost). Under en inloggning kan
+     föräldern lägga till barnets egen adress. Den används till
+     ingenting förrän barnet tryckt på länken i mejlet som går dit; sedan
+     kan barnet logga in med den, och få mejl om sina pass om föräldern
+     slår på det. Allt går genom databasens funktioner (barn_epost_satt,
+     _skicka_igen, _ta_bort, _notiser), som prövar att den inloggade är
+     barnets förälder. Med flaggan barn_epost av syns rutan bara för den
+     som redan har en adress, och då bara för att ta bort den.
      ============================================================ */
   const BI_NAMN = /^[a-z0-9._-]{3,20}$/;
   S.barnkonton = null;
+  S.barnEpost = null;
   S.biÖppen = {};
 
   async function laddaBarnkonton() {
     const ruta = $('#bi-ruta');
     if (!ruta) return;
-    const { data, error } = await supa.rpc('mina_barnkonton');
+    const [{ data, error }, epost] = await Promise.all([
+      supa.rpc('mina_barnkonton'), supa.rpc('mina_barns_epost')]);
     if (error) {
       /* PGRST202: funktionen finns inte, migrationen är inte körd. Då
          står rutan dold i stället för att visa ett fel. */
@@ -509,6 +520,17 @@
     }
     S.barnkonton = {};
     (data || []).forEach(r => { S.barnkonton[r.barn_id] = r; });
+    /* Barnets e-post är ett tillägg: utan funktionen (barnets_epost inte
+       körd) eller med ett fel ritas inloggningen som förut. */
+    if (epost.error || !epost.data) {
+      if (epost.error && epost.error.code !== 'PGRST202' && epost.error.code !== '42883') {
+        console.warn('mina_barns_epost:', epost.error.message);
+      }
+      S.barnEpost = null;
+    } else {
+      S.barnEpost = { pa: !!epost.data.pa, per: {} };
+      (epost.data.barn || []).forEach(r => { S.barnEpost.per[r.barn_id] = r; });
+    }
     ruta.hidden = !S.barn.length;
     ritaBarnkonton();
   }
@@ -604,8 +626,82 @@
           : biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-losen': b.id }, 'Byt lösenord'),
         biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-paus': b.id,
           'data-bi-aktiv': aktiv ? '1' : '0' }, aktiv ? 'Pausa inloggningen' : 'Aktivera inloggningen'),
-        biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-bort': b.id }, 'Ta bort inloggningen'))
+        biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-bort': b.id }, 'Ta bort inloggningen')),
+      biEpost(b)
     ];
+  }
+
+  /* Barnets egen e-post, under inloggningen. */
+  function biEpost(b) {
+    const be = S.barnEpost;
+    if (!be) return null;
+    const e = be.per[b.id] || {};
+    const har = !!e.epost;
+    if (!be.pa && !har) return null;
+    const namn = b.name;
+    const öppen = S.biÖppen[b.id] === 'epost';
+    const delar = [biEl('p', { class: 'bi-epost-rubrik' }, 'E-post för ' + namn)];
+
+    if (har) {
+      delar.push(biEl('dl', { class: 'bi-fakta' },
+        biEl('dt', {}, 'Adress'), biEl('dd', {}, e.epost),
+        biEl('dt', {}, 'Läge'), biEl('dd', {},
+          e.bekraftad ? 'Bekräftad ' + biNär(e.bekraftad)
+            : e.gammal ? 'Inte bekräftad. Länken har gått ut; skicka en ny.'
+              : 'Väntar på att ' + namn + ' trycker på länken i mejlet. Skickad ' + biNär(e.skickad) + '.')));
+      if (e.bekraftad && be.pa) {
+        const på = !!e.notiser;
+        delar.push(biEl('div', { class: 'nx-nval bi-epost-mejl' },
+          biEl('div', { class: 'nx-nval-text' },
+            biEl('b', {}, 'Mejl till ' + namn),
+            biEl('span', { class: 'xsmall' }, på
+              ? namn + ' får ett mejl när ett pass bokas eller avbokas, och en påminnelse före passet. '
+                + namn + ' kan välja bort dem i sin vy.'
+              : 'Av: inga mejl går till ' + namn + '. Adressen fungerar ändå för att logga in.')),
+          biEl('button', { class: 'chip', type: 'button', 'data-bi-epost-mejl': b.id,
+            'aria-pressed': på ? 'true' : 'false' }, på ? 'På' : 'Av')));
+      }
+    }
+    if (be.pa && (öppen || !har)) delar.push(biEpostForm(b, har));
+
+    const knappar = [];
+    if (har && be.pa && !e.bekraftad) {
+      knappar.push(biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-epost-igen': b.id },
+        'Skicka länken igen'));
+    }
+    if (har && be.pa && !öppen) {
+      knappar.push(biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-epost-byt': b.id },
+        'Byt adress'));
+    }
+    if (har) {
+      knappar.push(biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-epost-bort': b.id },
+        'Ta bort adressen'));
+    }
+    if (knappar.length) delar.push(biEl('div', { class: 'vy-knapprad bi-knappar' }, ...knappar));
+    return biEl('div', { class: 'bi-epost' }, ...delar);
+  }
+
+  function biEpostForm(b, byt) {
+    return biEl('form', { class: 'bi-form', 'data-bi-epostform': b.id, novalidate: true },
+      biFält('bi-epost-' + b.id, byt ? 'Ny adress' : 'Barnets e-post (valfri)',
+        biEl('input', { class: 'inp', id: 'bi-epost-' + b.id, 'data-bi-epost': true, type: 'email',
+          autocomplete: 'off', autocapitalize: 'none', spellcheck: 'false', inputmode: 'email', maxlength: 254 }),
+        'Barnets egen adress, inte din. ' + b.name + ' kan logga in med den, och får mejl om sina pass om ni slår på det. '
+          + 'Vi skickar en länk dit som ' + b.name + ' trycker på först; tills dess används adressen inte. '
+          + 'Lösenordet är detsamma, och det styr ni.'),
+      biEl('p', { class: 'xsmall bi-hjalp' },
+        biEl('a', { href: '/integritetspolicy#barn', target: '_blank', rel: 'noopener' }, 'Så hanterar vi barnens uppgifter')),
+      biEl('div', { class: 'vy-knapprad' },
+        biEl('button', { class: 'btn btn-primary btn-sm', type: 'submit' },
+          byt ? 'Byt och skicka länken' : 'Lägg till och skicka länken'),
+        byt ? biEl('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bi-epost-byt': b.id }, 'Avbryt') : null));
+  }
+
+  /* Databasens egna besked (barnets_epost) är skrivna för föräldern och
+     visas som de är; annat går genom felText. */
+  function biEpostFel(error) {
+    return /^(P0001|22023|55000|42501)$/.test(String(error && error.code || ''))
+      ? String(error.message || '') : 'Kunde inte spara: ' + felText(error);
   }
 
   function ritaBarnkonton() {
@@ -697,6 +793,30 @@
           ritaBarnkonton();
           säg(msg, '✓ Lösenordet är bytt. ' + barn.name + ' är utloggad och loggar in med det nya.', true);
         });
+        return;
+      }
+      if (form.matches('[data-bi-epostform]')) {
+        e.preventDefault();
+        rensa(msg);
+        const barn = biBarn(form.dataset.biEpostform);
+        if (!barn) return;
+        const fält = $('[data-bi-epost]', form);
+        const epost = fält.value.trim();
+        if (!NX.epostOk(epost)) {
+          säg(msg, '⚠️ Det ser inte ut som en e-postadress.', false);
+          fält.focus();
+          return;
+        }
+        await medan(form.querySelector('button[type="submit"]'), 'Skickar…', async () => {
+          const { data, error } = await supa.rpc('barn_epost_satt', { p_barn: barn.id, p_epost: epost });
+          if (error) { säg(msg, biEpostFel(error), false); return; }
+          delete S.biÖppen[barn.id];
+          await laddaBarnkonton();
+          säg(msg, data && data.bekraftad
+            ? '✓ Adressen är redan bekräftad.'
+            : '✓ Vi har skickat en länk till ' + epost.toLowerCase() + '. Be ' + barn.name
+              + ' öppna mejlet och trycka på knappen. Länken gäller i sju dagar.', true);
+        });
       }
     });
 
@@ -710,6 +830,67 @@
         ritaBarnkonton();
         const fält = $('[data-bi-losenform="' + id + '"] [data-bi-los]', biRuta);
         if (fält) fält.focus();
+        return;
+      }
+
+      const byt = e.target.closest('[data-bi-epost-byt]');
+      if (byt) {
+        const id = byt.dataset.biEpostByt;
+        if (S.biÖppen[id] === 'epost') delete S.biÖppen[id]; else S.biÖppen[id] = 'epost';
+        rensa(msg);
+        ritaBarnkonton();
+        const fält = $('[data-bi-epostform="' + id + '"] [data-bi-epost]', biRuta);
+        if (fält) fält.focus();
+        return;
+      }
+
+      const igen = e.target.closest('[data-bi-epost-igen]');
+      if (igen) {
+        const barn = biBarn(igen.dataset.biEpostIgen);
+        if (!barn) return;
+        rensa(msg);
+        await medan(igen, 'Skickar…', async () => {
+          const { error } = await supa.rpc('barn_epost_skicka_igen', { p_barn: barn.id });
+          if (error) { säg(msg, biEpostFel(error), false); return; }
+          await laddaBarnkonton();
+          säg(msg, '✓ En ny länk är på väg. Den förra gäller inte längre.', true);
+        });
+        return;
+      }
+
+      const mejl = e.target.closest('[data-bi-epost-mejl]');
+      if (mejl) {
+        const barn = biBarn(mejl.dataset.biEpostMejl);
+        if (!barn) return;
+        const på = mejl.getAttribute('aria-pressed') !== 'true';
+        rensa(msg);
+        await medan(mejl, 'Sparar…', async () => {
+          const { error } = await supa.rpc('barn_epost_notiser', { p_barn: barn.id, p_pa: på });
+          if (error) { säg(msg, biEpostFel(error), false); return; }
+          await laddaBarnkonton();
+        });
+        return;
+      }
+
+      const epostBort = e.target.closest('[data-bi-epost-bort]');
+      if (epostBort) {
+        const barn = biBarn(epostBort.dataset.biEpostBort);
+        if (!barn) return;
+        const ja = await bekräfta({
+          titel: 'Ta bort ' + barn.name + 's e-post?',
+          text: barn.name + ' kan inte längre logga in med adressen, och inga mejl går dit. '
+            + 'Användarnamnet fungerar som förut.',
+          knapp: 'Ta bort'
+        });
+        if (!ja) return;
+        rensa(msg);
+        await medan(epostBort, 'Tar bort…', async () => {
+          const { error } = await supa.rpc('barn_epost_ta_bort', { p_barn: barn.id });
+          if (error) { säg(msg, biEpostFel(error), false); return; }
+          delete S.biÖppen[barn.id];
+          await laddaBarnkonton();
+          säg(msg, '✓ Adressen är borttagen.', true);
+        });
         return;
       }
 
@@ -757,7 +938,7 @@
         if (!barn) return;
         const ja = await bekräfta({
           titel: 'Ta bort ' + barn.name + 's inloggning?',
-          text: 'Användarnamnet och notiserna i barnets vy tas bort, och ' + barn.name
+          text: 'Användarnamnet, e-posten om ni lagt till en, och notiserna i barnets vy tas bort, och ' + barn.name
             + ' loggas ut. Studieplanen, passen och rapporterna står kvar hos er. '
             + 'Ni kan skapa en ny inloggning när ni vill.',
           knapp: 'Ta bort'

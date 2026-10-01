@@ -182,6 +182,10 @@
       <li>Har ni gett barnet en egen inloggning: användarnamnet, när ni som vårdnadshavare
         godkände den, när barnet senast loggade in och notiserna i barnets vy. Lösenordet ser vi
         aldrig</li>
+      <li>Har ni lagt till barnets egen e-post: adressen, när barnet bekräftade den, om ni slagit
+        på mejl till barnet och vilka mejl barnet själv valt bort. Adressen ser bara ni, barnet och
+        vi, inte studiehjälparen. Försök att logga in med adressen räknas i ett dygn, för att
+        skydda barnets inloggning, utan att adressen eller IP-numret sparas i klartext</li>
     </ul>
     <p class="jur-vikt">Era egna anteckningar om barnet är privata även för oss. De ligger i en
       egen tabell där varken studiehjälpare eller administratör har läsrätt — det är en teknisk
@@ -260,6 +264,10 @@
       <li><b>Barnets egen inloggning</b>: avtalet med er (artikel 6.1 b). Det är ni som ber om
         den, skapar den och kan ta bort den, och när ni skapar den bekräftar ni att ni är
         vårdnadshavare och godkänner att barnet använder Nextrum. Vi sparar när det gjordes.</li>
+      <li><b>Barnets egen e-post och mejlen till barnet</b>: avtalet med er (artikel 6.1 b). Det
+        är ni som lägger till adressen, slår på mejlen och kan ta bort båda, och adressen används
+        först när barnet bekräftat den. Att vi räknar försöken att logga in med den är berättigat
+        intresse (artikel 6.1 f): att skydda barnets inloggning mot gissning.</li>
       <li><b>Bokföringsunderlag</b>: rättslig förpliktelse (artikel 6.1 c), bokföringslagen.</li>
       <li><b>Jobbansökningar</b>: berättigat intresse (artikel 6.1 f), att kunna anställa rätt
         studiehjälpare. Blir du anställd gäller avtalet.</li>
@@ -283,7 +291,8 @@
       begränsningen gäller även för den som skulle försöka gå runt sidan.</p>
     <ul>
       <li><b>En studiehjälpare</b> ser bara de elever hen är matchad med, och bara sina egna pass,
-        uppgifter och svaren på dem, material, meddelanden och de avtal vi delat med hen.</li>
+        uppgifter och svaren på dem, material, meddelanden och de avtal vi delat med hen. Barnets
+        egen e-post ser hen inte.</li>
       <li><b>En familj</b> ser bara sina egna barn, pass, betalningar, meddelanden och de avtal vi
         delat med dem.</li>
       <li><b>Ett barn med egen inloggning</b> ser bara sina egna pass, timmar, studieplan,
@@ -323,7 +332,8 @@
         IP och webbläsartyp med ett salt som byts varje dygn, och den råa IP-adressen sparas
         inte. Studievyn och studiehjälparvyn mäts inte.</li>
       <li><b>Resend</b> (USA): skickar våra mejl, som bokningsbekräftelser, påminnelser och
-        notiser. Resend får mottagarens adress och mejlets innehåll.</li>
+        notiser, och mejlen till ett barns egen adress när ni slagit på dem. Resend får
+        mottagarens adress och mejlets innehåll.</li>
       <li><b>Anthropic</b> (USA): när en studiehjälpare väljer det formulerar Anthropics AI om
         hens anteckningar efter ett pass till en rapport, och föreslår korta hälsningar.
         Anthropic får anteckningarna och elevens förnamn och årskurs. Personnummer,
@@ -381,6 +391,10 @@
       <li><b>Barnets inloggning</b>: så länge ni låter den finnas. Tar ni bort den, eller raderas
         barnet, tas användarnamnet, inloggningen och barnets notiser bort direkt. Notiserna i
         barnets vy tas annars bort efter 180 dagar.</li>
+      <li><b>Barnets egen e-post</b>: så länge ni låter den finnas och inloggningen finns. Tar ni
+        bort den eller inloggningen, eller raderas barnet, tas den bort direkt. En adress som
+        aldrig bekräftats tas bort 30 dagar efter att vi skickade länken, och försöken att logga
+        in med en adress efter ett dygn. Det sker automatiskt varje natt.</li>
       <li><b>Bokföringsunderlag</b>: betalningar och ersättningsunderlag, sju år. Det är
         bokföringslagens krav och något vi inte kan förkorta, inte ens på begäran.</li>
       <li><b>Ändringsloggen</b>: så länge verksamheten finns. Den bär tillstånd och tidpunkter,
@@ -401,9 +415,14 @@
         godkänner villkoren och lägger in uppgifterna om barnet.</li>
       <li>Föräldern kan ge barnet en egen inloggning till en enkel vy med NexLäx, pass, timmar,
         studieplan och notiser, och pausa eller ta bort den när som helst. Inloggningen är ett
-        användarnamn och ett lösenord, ingen e-postadress: den tekniska adress den behöver
-        (användarnamnet på barn.nextrum.se) tar aldrig emot något mejl, och vi skickar ingenting
-        till barnet.</li>
+        användarnamn och ett lösenord. Den tekniska adress den behöver (användarnamnet på
+        barn.nextrum.se) tar aldrig emot något mejl.</li>
+      <li>Föräldern kan också lägga till barnets egen e-post. Vi skickar en länk dit, och först när
+        barnet tryckt på den används adressen. Sedan kan barnet logga in med den, och få mejl om
+        sina pass om föräldern slår på det: när ett pass bokas eller avbokas, och en påminnelse
+        före passet. Mejlen nämner aldrig priser eller betalningar, barnet kan välja bort dem, och
+        föräldern kan stänga av dem och ta bort adressen när som helst. Lösenordet styr föräldern,
+        och vi skickar aldrig något om inloggningen eller lösenordet till barnet.</li>
       <li>Vi samlar bara in det som behövs för undervisningen: årskurs, skola, ämnen och mål. Vi
         ber aldrig om personnummer, diagnoser eller betyg, och ber er att inte skriva sådant i
         rutorna.</li>
@@ -420,6 +439,10 @@
       <li>Har din förälder gett dig en egen inloggning gör du NexLäx och ser dina pass, dina
         timmar, din studieplan och dina notiser på nextrum.se/barn. Ditt lösenord ser ingen, inte ens vi.
         Vill du ändra något, fråga din förälder.</li>
+      <li>Har din förälder lagt till din e-post får du ett mejl där du bekräftar att den är din.
+        Sedan kan du logga in med den, och få mejl om dina pass om din förälder slår på det. Vilka
+        mejl du får väljer du under Inställningar i din vy, och i varje mejl finns en länk för att
+        slippa dem.</li>
       <li>Vi säljer det aldrig och visar det aldrig för någon annan.</li>
       <li>Vill du veta vad som står om dig, eller vill du att något tas bort? Säg till din
         förälder, eller mejla oss på <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</li>

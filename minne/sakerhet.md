@@ -70,9 +70,21 @@ att visa **rätt sida**, inte för att skydda data.
   superadminen står kvar, ett barn blir aldrig admin) står i triggern
   `admin_roller_vakt`; se `minne/barnkonton-och-admin.md`.
 - **Barnets inloggning har en egen Postgres-roll**, `nextrum_barn`, utan
-  en enda tabellrättighet. Barnet når tre funktioner och inget annat, och
+  en enda tabellrättighet. Barnet når bara sina egna funktioner (listan
+  står i `rls-test.sql`), och
   `auth.users` har triggrar som spärrar barnets adress, återställning och
   lösenord (utom i föräldrarnas fönster). Se `minne/barnkonton-och-admin.md`.
+- **Barnets egen e-post når aldrig Auth** (barnets_epost, 2026-10-01). Den
+  står i `barn_epost`, som ingen inloggad har några rättigheter till, och
+  inloggningen med den går genom `barn-inloggning`: databasen slår upp den
+  tekniska adressen (bara `service_role`) och räknar försöket per adress
+  och IP-nummer som en HMAC med `notis_konfig.barn_nyckel`, innan Auth
+  prövar lösenordet. Samma besked och minst 0,9 sekunder för varje nej, så
+  att varken svaret eller tiden säger vilka adresser som är barnens. Ett
+  misslyckat vuxeninlogg med @ provas också som barnadress
+  (`NXStudie.loggaIn`): lösenordet passerar då vår funktion, loggas aldrig
+  och når bara Auth om adressen är ett barns. Bekräftelsekoden är en HMAC
+  som inte sparas, och den jämförs som hash.
 - **`invoices` och `payouts` har med flit ingen INSERT-policy för
   användare.** Kan ingen skriva belopp från webbläsaren kan ingen
   skriva fel belopp. Beloppen sätts av `fakturering` med `service_role`.

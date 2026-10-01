@@ -255,7 +255,9 @@ tillbaka överst i avsnittet för 22.1.
 ### Webbläsarprovet för barnkontona och adminbehörigheterna (2026-09-30)
 `verktyg/prova-barnkonton.js` kör barnets vy, NexLäx i barnets vy och
 e-post eller användarnamn i alla fyra inloggningarna (2026-10-01),
-föräldrarnas ruta och adminvyn med behörigheter i Chromium, mot en
+föräldrarnas ruta, barnets egen e-post (barnets_epost: förälderns del,
+barnets inställningar, länken i bekräftelsen och inloggningen med
+adressen) och adminvyn med behörigheter i Chromium, mot en
 falsk Supabase på
 `https://supabase.test` (`nextrum-config.js` byts i farten, Realtime
 fångas, och ett anrop till den riktiga adressen stoppas och fäller
@@ -263,6 +265,10 @@ provet). Det ligger inte i CI: Playwright är ingen del av repot.
 Kör det lokalt, med bilder i en mapp om du vill se dem:
 
     NODE_PATH="$(npm root -g)" node verktyg/prova-barnkonton.js /tmp/bilder
+
+En vy är lång, och en helsidesbild av den svår att läsa. `bild()` tar
+därför ett tredje argument, en väljare, och sparar då också bara den delen
+(`<namn>-del.png`).
 
 Det är ingen `_prov-*`-bänk: det serverar ingen sida, och `/verktyg`
 står i `.vercelignore`.

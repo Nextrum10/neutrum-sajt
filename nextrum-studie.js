@@ -2837,6 +2837,15 @@ window.NXStudie = (function () {
      Användarnamnets regel är ANVANDARNAMN i _delad/barnkonto.ts och
      villkoret i databasen (kolla-behorigheter.py jämför dem): a–z,
      siffror, punkt, bindestreck och understreck, 3–20 tecken.
+
+     BARNETS EGEN E-POST (barnets_epost). Ett barn vars förälder lagt
+     till en adress, och som bekräftat den, kan logga in med den. Auth
+     känner bara barnkontots tekniska adress, så när en adress med @ får
+     "fel lösenord" av Auth frågas edge-funktionen barn-inloggning, som
+     slår upp barnet och loggar in med den tekniska adressen. Svaret är
+     barnets session. Hör adressen inte till ett barn blir beskedet
+     detsamma som förut, den vuxnas, så sidan svarar inte på vilka
+     adresser som är barnens.
      ============================================================ */
   var BARNNAMN = /^[a-z0-9._-]{3,20}$/;
   var BARNDOMÄN = '@barn.nextrum.se';
@@ -2874,6 +2883,41 @@ window.NXStudie = (function () {
     return BARN_FEL;
   }
 
+  /* Auths "fel e-post eller lösenord", och inget annat: en obekräftad
+     adress, ett tak eller ett nät som inte svarar är inte ett barns. */
+  function felInloggning(fel) {
+    return !!fel && fel.status === 400
+      && (fel.code === 'invalid_credentials' || /invalid login credentials/i.test(String(fel.message || '')));
+  }
+
+  /* Barnets egen e-post (barnets_epost). Svarar { user } när det gick,
+     { sparrad: true } när databasen spärrat försöken en stund, annars {}.
+     Sessionen läggs på plats här, och en session som inte är ett barns
+     loggas ut igen: funktionen ska bara kunna ge ett barns. */
+  async function barnMedEpost(supa, epost, lösen) {
+    var svar;
+    try {
+      svar = await supa.functions.invoke('barn-inloggning', { body: { epost: epost, losenord: lösen } });
+    } catch (_) { return {}; }
+    if (svar.error) {
+      var status = svar.error.context && svar.error.context.status;
+      return { sparrad: status === 429 };
+    }
+    var d = svar.data || {};
+    if (typeof d.access_token !== 'string' || typeof d.refresh_token !== 'string') return {};
+    var s;
+    try {
+      s = await supa.auth.setSession({ access_token: d.access_token, refresh_token: d.refresh_token });
+    } catch (_) { return {}; }
+    var user = s && s.data && s.data.user;
+    if ((s && s.error) || !user) return {};
+    if (!NX.ärBarn(user)) {
+      await supa.auth.signOut({ scope: 'local' });
+      return {};
+    }
+    return { user: user };
+  }
+
   /* Loggar in med det som skrevs i fältet, efter regeln ovan. Svarar
      { user, barn } när det gick och { fel, barn } när det inte gick;
      barn säger att det var ett barnkonto, så att vyn skickar barnet
@@ -2897,7 +2941,14 @@ window.NXStudie = (function () {
     }
     if (ärBarnadress(t)) return { fel: NX.t('felLosen'), barn: false };
     var v = await försökLogga(supa, t, lösen);
-    if (v.error) return { fel: NX.felText(v.error), barn: false };
+    if (v.error) {
+      if (felInloggning(v.error)) {
+        var bm = await barnMedEpost(supa, t, lösen);
+        if (bm.user) return { user: bm.user, barn: true };
+        if (bm.sparrad) return { fel: 'För många försök. Vänta en stund och försök igen.', barn: false };
+      }
+      return { fel: NX.felText(v.error), barn: false };
+    }
     return { user: v.user, barn: NX.ärBarn(v.user) };
   }
 

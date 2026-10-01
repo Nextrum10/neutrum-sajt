@@ -3,11 +3,11 @@
 #
 # FILEN FINNS FÖR ATT EN DRIFTSÄTTNING INTE SKA SLÅ PÅ JWT-KRAVET
 #
-# Nio funktioner anropas av något som inte har en inloggad användare:
+# Tio funktioner anropas av något som inte har en inloggad användare:
 # en databaswebhook, en trigger, ett pg_cron-jobb, Stripe, en knapp i
-# ett mejlprogram, Googles omdirigering tillbaka efter ett godkännande
-# eller den som gör utbildningsprovet innan hen har ett konto. De har
-# därför verify_jwt av.
+# ett mejlprogram, Googles omdirigering tillbaka efter ett godkännande,
+# den som gör utbildningsprovet innan hen har ett konto, eller ett barn
+# som loggar in med sin egen e-post. De har därför verify_jwt av.
 #
 # Den inställningen satt länge BARA i dashboarden. En `supabase
 # functions deploy` läser den här filen, och saknas raden för en
@@ -34,7 +34,9 @@
 # HMAC-signerat läge som bara en inloggad admin kan ha fått, och
 # prövar adminens token själv på alla andra vägar. utbildningsprov
 # kräver den slumpade nyckeln ur provlänken och kan bara läsa provets
-# läge och spara ett försök.
+# läge och spara ett försök. barn-inloggning ger bara en session till
+# den som har ett barns bekräftade adress och lösenordet, som Auth
+# prövar, och databasen räknar och spärrar försöken.
 #
 # Att verify_jwt är av betyder alltså inte att funktionen är
 # oskyddad. Det betyder att skyddet inte är Supabases Auth.
@@ -127,4 +129,14 @@ verify_jwt = false
 # som bara öppnar provet för en ansökan. Funktionen når databasen bara
 # genom utbildningsprov_lage och utbildningsprov_lamna.
 [functions.utbildningsprov]
+verify_jwt = false
+
+# Barnets inloggning med sin egen e-post (barnets_epost, 2026-10-01).
+# Den som loggar in har ingen session än. Funktionen slår upp barnets
+# tekniska adress i databasen (barn_inloggning_uppslag, bara
+# service_role) och loggar in med den hos Auth, som prövar lösenordet.
+# Databasen räknar varje försök per adress och per IP-nummer, och
+# svaret är detsamma oavsett om adressen finns (_delad/barninloggning.ts).
+# Med flaggan barn_epost av säger den nej till allt.
+[functions.barn-inloggning]
 verify_jwt = false

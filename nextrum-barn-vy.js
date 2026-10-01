@@ -18,13 +18,19 @@
    Barnet kan inte boka, avboka, svara på ett förslag, byta lösenord eller
    ändra något om sig själv. Allt sådant gör föräldern, och vyn säger det.
    Det barnet gör själv är NexLäx och bocken på en vanlig uppgift.
+
+   BARNETS EGEN E-POST (barnets_epost). Under Inställningar ser barnet
+   sitt användarnamn och sin adress, och väljer bort mejl det inte vill
+   ha (barn_installningar, barn_notisval), när föräldern slagit på dem.
+   Länken i bekräftelsemejlet öppnar vyn med ?bekrafta=, och då visas
+   bara knappen som bekräftar (barn_epost_bekrafta), utan inloggning.
    ============================================================ */
 (function () {
   'use strict';
   const { $, datumText } = NX;
 
-  const VYER = ['view-loading', 'view-auth', 'view-annan', 'view-stopp', 'view-app', 'view-fel'];
-  const S = { user: null, data: null, notiser: [], hämtad: 0, laddar: false };
+  const VYER = ['view-loading', 'view-auth', 'view-bekrafta', 'view-annan', 'view-stopp', 'view-app', 'view-fel'];
+  const S = { user: null, data: null, notiser: [], inst: null, hämtad: 0, laddar: false, tillVal: false };
 
   function visa(id) { NXStudie.visaVy(VYER, id); }
 
@@ -84,9 +90,11 @@
      E-post eller användarnamn, som i alla vyer (NXStudie.loggaIn). Barnet
      loggar in med användarnamnet: adressen i Auth byggs i webbläsaren,
      barnet ser den aldrig, och den tar aldrig emot något mejl (notis-ko
-     hoppar över domänen, och i Auth kan den inte bytas). En vuxen som
-     skriver sin e-post här kommer till sin egen vy. Det är ingen länk
-     dit: det krävs den vuxnes lösenord. */
+     hoppar över domänen, och i Auth kan den inte bytas). Har föräldern
+     lagt till barnets egen e-post, och barnet bekräftat den, går den
+     också (barn-inloggning). En vuxen som skriver sin e-post här kommer
+     till sin egen vy. Det är ingen länk dit: det krävs den vuxnes
+     lösenord. */
   $('#bv-form').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#auth-msg'), knapp = $('#bv-logga-in'), lösenfält = $('#a-pass');
@@ -95,7 +103,7 @@
 
     const anv = $('#bv-anv').value.trim();
     const lösen = lösenfält.value;
-    if (!anv || !lösen) { NX.säg(msg, 'Fyll i användarnamn och lösenord.', false); return; }
+    if (!anv || !lösen) { NX.säg(msg, 'Fyll i användarnamn eller e-post, och lösenord.', false); return; }
 
     await NXStudie.medan(knapp, 'Loggar in…', async () => {
       const svar = await NXStudie.loggaIn(supa, anv, lösen);
@@ -129,7 +137,8 @@
     if (S.laddar) return;
     S.laddar = true;
     try {
-      const [ö, n] = await Promise.all([supa.rpc('barn_oversikt'), supa.rpc('barn_notiser')]);
+      const [ö, n, inst] = await Promise.all([
+        supa.rpc('barn_oversikt'), supa.rpc('barn_notiser'), supa.rpc('barn_installningar')]);
       if (ö.error) throw ö.error;
       const d = ö.data || {};
       S.hämtad = Date.now();
@@ -140,12 +149,23 @@
         return;
       }
       S.data = d;
-      /* Notiserna är inte vyns viktigaste: går de inte att hämta visas
-         resten ändå. */
+      /* Notiserna och inställningarna är inte vyns viktigaste: går de
+         inte att hämta visas resten ändå. En databas utan barnets_epost
+         svarar PGRST202, och då står Inställningar dold. */
       S.notiser = n.error ? null : (n.data || []);
+      S.inst = inst.error || !inst.data || inst.data.lage !== 'ok' ? null : inst.data;
+      if (inst.error && inst.error.code !== 'PGRST202' && inst.error.code !== '42883') {
+        console.warn('barn_installningar:', inst.error.message);
+      }
       ritaHuvud(d.fornamn || null);
       ritaAllt();
       visa('view-app');
+      /* Länken "Ändra dina val" i ett mejl: rakt till inställningarna,
+         en gång, utan mjuk scrollning. */
+      if (S.tillVal && S.inst) {
+        S.tillVal = false;
+        $('#installningar').scrollIntoView({ block: 'start' });
+      }
       /* NexLäx väntar inte resten av vyn in: banan ritas när den kommer. */
       laddaNexlax();
     } catch (fel) {
@@ -173,7 +193,74 @@
     ritaPlan();
     ritaGenomförda();
     ritaRapporter();
+    ritaInställningar();
   }
+
+  /* ============ inställningarna (barnets_epost) ============
+     Vem barnet är inloggat som, adressen om föräldern lagt till en, och
+     en rad per sorts mejl. Valen går att ändra bara när föräldern slagit
+     på mejlen och adressen är bekräftad; annars säger rutan varför. Med
+     flaggan barn_epost av står bara användarnamnet här. */
+  const MEJLSORTER = {
+    barn_pass_bokat: ['När ett pass är bokat', 'Ett mejl när ett nytt pass är bokat åt dig.'],
+    barn_pass_avbokat: ['När ett pass är avbokat', 'Ett mejl när ett pass inte blir av.'],
+    barn_paminnelse: ['Påminnelse före ett pass', 'Ett mejl en stund innan passet börjar.']
+  };
+
+  function ritaInställningar() {
+    const del = $('#installningar'), host = $('#bv-inst');
+    const i = S.inst;
+    if (!del || !host) return;
+    if (!i) { del.hidden = true; return; }
+    del.hidden = false;
+
+    const fakta = el('dl', { class: 'bi-fakta' },
+      el('dt', {}, 'Användarnamn'), el('dd', {}, i.anvandarnamn || ''));
+    if (i.pa) {
+      fakta.append(el('dt', {}, 'E-post'), el('dd', {},
+        !i.epost ? 'Ingen. Din förälder kan lägga till din e-post.'
+          : i.bekraftad ? i.epost
+            : i.epost + ' (väntar på att du bekräftar den: titta efter ett mejl från Nextrum)'));
+    }
+    const delar = [fakta];
+
+    if (i.pa) {
+      /* Valen sparas också innan föräldern slagit på mejlen; de gäller
+         från den dagen. Utan bekräftad adress finns inget att välja. */
+      const varför = !i.epost || !i.bekraftad
+        ? 'När din e-post är bekräftad och din förälder har slagit på mejl kan du välja här vilka mejl du får.'
+        : !i.notiser ? 'Din förälder har inte slagit på mejl till dig. Ditt val sparas till dess.'
+          : 'Välj vilka mejl du vill få. Det du stänger av här får du inte.';
+      delar.push(el('p', { class: 'xsmall bi-hjalp bv-inst-text' }, varför));
+      (i.typer || []).forEach(t => {
+        const ord = MEJLSORTER[t.typ];
+        if (!ord) return;
+        delar.push(el('div', { class: 'nx-nval' },
+          el('div', { class: 'nx-nval-text' }, el('b', {}, ord[0]), el('span', { class: 'xsmall' }, ord[1])),
+          el('button', { class: 'chip', type: 'button', 'data-bv-val': t.typ,
+            'aria-pressed': t.pa ? 'true' : 'false', disabled: !(i.epost && i.bekraftad) },
+            t.pa ? 'På' : 'Av')));
+      });
+    }
+    host.replaceChildren(...delar);
+  }
+
+  document.addEventListener('click', async e => {
+    const val = e.target.closest('[data-bv-val]');
+    if (!val || !S.inst) return;
+    const msg = $('#bv-inst-msg');
+    NX.rensa(msg);
+    const på = val.getAttribute('aria-pressed') !== 'true';
+    await NXStudie.medan(val, 'Sparar…', async () => {
+      const { data, error } = await supa.rpc('barn_notisval', { p_typ: val.dataset.bvVal, p_pa: på });
+      if (error || !data || data.lage !== 'ok') {
+        NX.säg(msg, 'Valet gick inte att spara. Försök igen om en stund.', false);
+        return;
+      }
+      S.inst = data;
+    });
+    ritaInställningar();
+  });
 
   function ritaHej() {
     const d = S.data;
@@ -524,8 +611,48 @@
     ladda();
   });
 
+  /* ============ bekräftelsen av barnets e-post (barnets_epost) ============
+     Koden tas ur adressen direkt, så att den inte står kvar i historiken
+     eller följer med om sidan delas. Knappen skickar den; ett ord kommer
+     tillbaka. Samma vy oavsett vem som är inloggad i webbläsaren. */
+  const BEKRÄFTAT = {
+    ok: ['Klart, din e-post är bekräftad', 'Nu kan du logga in med den på nextrum.se/barn, med lösenordet du fått av din förälder.'],
+    redan: ['Adressen är redan bekräftad', 'Du kan logga in med den på nextrum.se/barn.'],
+    gammal: ['Länken har gått ut', 'Den gällde i sju dagar. Be din förälder skicka en ny från Nextrum.'],
+    upptagen: ['Adressen används redan', 'Den hör redan till ett annat barnkonto hos Nextrum. Be din förälder om hjälp.'],
+    av: ['Det går inte just nu', 'Adresser går inte att bekräfta just nu. Försök igen senare.'],
+    ogiltig: ['Länken gäller inte', 'Öppna den från mejlet igen, eller be din förälder skicka en ny. Bara den senaste länken gäller.']
+  };
+
+  function visaBekräftelse(kod) {
+    visa('view-bekrafta');
+    const knapp = $('#bv-bek-knapp'), msg = $('#bv-bek-msg');
+    knapp.addEventListener('click', async () => {
+      NX.rensa(msg);
+      await NXStudie.medan(knapp, 'Bekräftar…', async () => {
+        const { data, error } = await supa.rpc('barn_epost_bekrafta', { p_kod: kod });
+        if (error) {
+          NX.säg(msg, 'Det gick inte att nå Nextrum. Försök igen om en stund.', false);
+          return;
+        }
+        const [rubrik, text] = BEKRÄFTAT[data] || BEKRÄFTAT.ogiltig;
+        $('#bv-bek-rubrik').textContent = rubrik;
+        $('#bv-bek-text').textContent = text;
+        knapp.hidden = true;
+        $('#bv-bek-rubrik').focus();
+      });
+    });
+  }
+
   /* ============ uppstart ============ */
   (async function () {
+    const sök = new URLSearchParams(location.search);
+    const kod = sök.get('bekrafta');
+    if (kod != null) {
+      history.replaceState(history.state, '', location.pathname);
+      if (supa) { visaBekräftelse(kod.slice(0, 200)); return; }
+    }
+    S.tillVal = location.hash === '#installningar';
     if (!supa) {
       visa('view-auth');
       NX.säg($('#auth-msg'), 'Inloggningen fungerar inte just nu. Försök igen senare.', false);

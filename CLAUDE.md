@@ -86,6 +86,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   NexLäx och bocken på en vanlig uppgift (`nexlax_for_barnet`, 2026-10-01), och ser aldrig
   priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade pass,
   aldrig timbanken. NexLäx görs i barnets vy och i familjens inloggning, med samma rader.
+- **Barnets egen e-post** (`barnets_epost`, 2026-10-01; flaggan `barn_epost` står AV tills
+  juristen läst): föräldern lägger till den, barnet bekräftar den med en knapp, och först då
+  används den, till inloggning (`barn-inloggning`) och, om föräldern slår på det, till mejl om
+  bokat, avbokat och påminnelse. Den står i `barn_epost`, aldrig i Auth, och ingen inloggad når
+  tabellen. Föräldern styr adressen, mejlen och lösenordet; barnet väljer bara bort sorter.
+  Ta bort och stäng av går alltid, också med flaggan av.
 ### Ordlistan (använd den, i kod och i text)
 | Ord | Betyder |
 |---|---|
@@ -256,8 +262,12 @@ Detaljer: `minne/grunden.md`.
   genom `fornamn()`, och `rapport` mejlas aldrig. Typlistorna i databasen och i `typer.ts`
   ändras tillsammans. En saknad rad i `notis_val` betyder PÅ, avanmälan skriver bara där, och
   länken i mejlet kan aldrig slå på något och har med flit ingen utgångstid.
-- Ett barnkonto får aldrig ett mejl: `notis_utskick_ta` och `notis-ko` hoppar över
-  `@barn.nextrum.se`, och barnets notiser står i `barn_notiser`.
+- Barnkontots tekniska adress får aldrig ett mejl: `notis_utskick_ta` och `notis-ko` hoppar
+  över `@barn.nextrum.se`, och barnets notiser står i `barn_notiser`. Ett barns egen bekräftade
+  adress får mejl bara som en rad med `barn_id` (aldrig `mottagare`), som `notis_utskick_ta`
+  prövar igen när den ska gå; barnets mallar (`barn.ts`) har aldrig pris, betalning eller skäl,
+  bekräftelsen hälsar inte med namn och har ingen avanmälan, och barnets avanmälningstoken har
+  fem delar, så den aldrig kan läsas som en vuxens.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot styrs av en INSERT, möteslänken är https, ett steg mejlas en
@@ -332,6 +342,10 @@ Detaljer: `minne/sakerhet.md`.
   Auth kräver görs med `service_role`, och ett barnkonto skapas aldrig utan vårdnadshavarens ja.
   `barn-konto` väljer barnkontots id och ger Auth varken `app_metadata` eller roll: det skriver
   databasen, ur fönstret.
+- `barn-inloggning` (verify_jwt av) är en inloggning, inte en anropare med token: den slår upp
+  barnets tekniska adress med `service_role` och låter Auth pröva lösenordet. Samma svar och
+  minst 0,9 sekunder för varje nej; databasen räknar försöken som HMAC. Ett vuxeninlogg som
+  får "fel lösenord" provas också som barnadress (`NXStudie.loggaIn`).
 - **Agentregeln**: hårt stegtak, källtvång i kod, bara verifierade `kallor` klickbara (aldrig
   med regex), `ekonomi` skriver aldrig, och agenterna läser källan, aldrig ur minnet.
 - **AI-lagret**: `drift` har inget utgående verktyg, och ingen AI-väg skriver i affärstabeller
@@ -405,6 +419,9 @@ Detaljer: `minne/grunden.md`.
   null-MX:en i Cloudflare, en skarp inbjudan genom `admin-skapa`, och att säga till familjerna.
   En admin med behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen
   säger nej.
+- **Barnets egen e-post** (2026-10-01) är byggd och provad men inte på: flaggan `barn_epost`
+  står av tills juristen läst policyn, registrets rad 22 och konsekvensbedömningen
+  (`DEPLOY-BARNKONTON.md`). Adminvyn visar inte barnens inloggningar, och inte adressen.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

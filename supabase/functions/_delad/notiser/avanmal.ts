@@ -25,11 +25,17 @@
 // finns och en trasig databas ger korta svar utan interna detaljer.
 // Den som provar sig fram ska inte få veta vilka id som finns.
 //
+// ETT BARNS LÄNK (barnets_epost) går samma väg, med barnets form av
+// tokenen. Den stänger av en sort i barnets egna val i barn_epost och
+// rör ingenting annat, varken förälderns val eller någon profil.
+//
 // Hanteringen ligger här i stället för i index.ts för att testerna i
 // _delad/ ska kunna köra den (CI testar bara _delad/).
 // ============================================================
 
-import { lasToken, type Avregistrering, type TokenTyp } from './token.ts';
+import {
+  lasBarnToken, lasToken, type Avregistrering, type BarnAvregistrering, type BarnTokenTyp, type TokenTyp,
+} from './token.ts';
 import type { Kanal } from './typer.ts';
 
 export const TILLATNA_URSPRUNG = ['https://nextrum.se', 'https://www.nextrum.se'];
@@ -45,6 +51,8 @@ export type AvregBeroenden = {
   nyckel: () => Promise<string>;
   /** rpc notis_avregistrera(p_profil, p_typ, p_kanal). */
   avregistrera: (uid: string, typ: TokenTyp, kanal: Kanal) => Promise<AvregUtfall>;
+  /** rpc barn_notis_avregistrera(p_barn, p_typ), för en länk i ett mejl till ett barn (barnets_epost). */
+  avregistreraBarn: (barn: string, typ: BarnTokenTyp) => Promise<AvregUtfall>;
 };
 
 export const MAX_KROPP = 4096;
@@ -154,22 +162,28 @@ export async function hanteraAvregistrering(req: Request, b: AvregBeroenden): Pr
     return svar({ error: 'Det går inte att avregistrera just nu. Försök igen om en stund.' }, 503, h);
   }
 
+  // En vuxens länk har fyra delar och ett barns fem; bara en av dem kan
+  // stämma (token.ts).
   let vem: Avregistrering | null;
+  let barn: BarnAvregistrering | null = null;
   try {
     vem = await lasToken(token, nyckel);
+    if (!vem) barn = await lasBarnToken(token, nyckel);
   } catch {
     return svar({ error: 'Det går inte att avregistrera just nu. Försök igen om en stund.' }, 503, h);
   }
-  if (!vem) return svar({ error: 'Länken är ogiltig.' }, 403, h);
+  if (!vem && !barn) return svar({ error: 'Länken är ogiltig.' }, 403, h);
 
   let utfall: AvregUtfall;
   try {
-    utfall = await b.avregistrera(vem.uid, vem.typ, vem.kanal);
+    utfall = vem ? await b.avregistrera(vem.uid, vem.typ, vem.kanal) : await b.avregistreraBarn(barn!.barn, barn!.typ);
   } catch {
     utfall = 'fel';
   }
   if (utfall === 'ogiltig') return svar({ error: 'Länken gäller inte längre.' }, 400, h);
   if (utfall === 'fel') return svar({ error: 'Det gick inte att spara. Försök igen om en stund.' }, 500, h);
 
-  return svar({ ok: true, typ: vem.typ, kanal: vem.kanal }, 200, h);
+  return vem
+    ? svar({ ok: true, typ: vem.typ, kanal: vem.kanal }, 200, h)
+    : svar({ ok: true, typ: barn!.typ, kanal: 'mejl' }, 200, h);
 }

@@ -200,10 +200,77 @@ Fällor:
 `barn_notiser` fylls av `bookings_barnnotis` (bekräftat, avbokat, avslaget,
 motförslag, genomfört), en mening utan pris och utan namn på föräldern.
 Triggern kastar aldrig: ett fel blir en rad i `notis_fel`, som i
-`notis_vid_pass`. **Barnet får aldrig ett mejl**: `notis_utskick_ta`
-hoppar över barnkonton och barnadresser, och `notis-ko` gör det en gång till
-(`arBarnadress`). `notis_konfig.lage` rördes inte. Gallras efter 180 dagar
-(`barnkonton-gallring`, 03.59 UTC).
+`notis_vid_pass`. **Kontots tekniska adress får aldrig ett mejl**:
+`notis_utskick_ta` hoppar över barnkonton och barnadresser, och `notis-ko`
+gör det en gång till (`arBarnadress`). `notis_konfig.lage` rördes inte.
+Gallras efter 180 dagar (`barnkonton-gallring`, 03.59 UTC). Barnets egen,
+bekräftade adress kan få mejl sedan 2026-10-01, se nästa avsnitt.
+
+### Barnets egen e-post (barnets_epost, 2026-10-01)
+Leo: "gör också att man kan lägga till epost för sitt barn och att man kan
+logga in med specifik epost för barn vyn, fixa med gdpr ... inställningar
+för profil samt notiser". Valt: inloggning och mejlnotiser; föräldern styr
+lösenordet; Auth mejlar aldrig ett barn; juristen läser innan det går
+live. **Flaggan `barn_epost` står av** tills dess (`flaggor`, `vantar_pa`
+säger vad som väntas), och med den av syns rutan inte, inloggningen med
+adressen nekas och inga mejl går till barn. Ta bort och stäng av går alltid.
+
+Varför adressen inte ligger i Auth: barnkontots identitet är den tekniska
+adressen, och alla spärrar i `auth_barnkonto_las` bygger på den. En riktig
+adress i `auth.users` hade gjort att Auth kunde mejla barnet (bara
+`*_sent_at` år 2999 hade stått emellan), krockat med vuxna konton på samma
+adress, och gjort adressbyten till en Auth-fråga. Nu:
+- **`barn_epost`** (en rad per barn, FK med cascade): `epost` (gemener,
+  aldrig `@barn.nextrum.se`), `bekraftad`, `kod_omgang`, `kod_skapad`,
+  `notiser` (förälderns val), `av` (barnets egna avstängda sorter). RLS på,
+  inga rättigheter för anon, authenticated eller `nextrum_barn`:
+  studiehjälparen, som läser `students` för sina elever, ser den aldrig.
+  En bekräftad adress är unik; obekräftade får krocka, och den som äger
+  inkorgen avgör (`upptagen` om en annan redan bekräftat den).
+- **Föräldern** (`authenticated`): `mina_barns_epost()` (flaggan och
+  adresserna för barnen med inloggning), `barn_epost_satt`,
+  `barn_epost_skicka_igen`, `barn_epost_ta_bort`, `barn_epost_notiser`.
+  Alla prövar föräldern i `intern.barn_epost_forald` (radlås, inte ett
+  barns token); att lägga till, skicka och slå på kräver flaggan och en
+  inloggning, att ta bort och slå av gör det inte. Förälderns egen adress
+  nekas. Varje händelse skrivs i `audit_logg` (`barnepost.*`), aldrig
+  adressen.
+- **Bekräftelsen**: koden är `<barn_id>.<HMAC>` över barnet, adressen och
+  omgången med `notis_konfig.barn_nyckel`. Den sparas ingenstans: kön bär
+  bara `omgang`, och `notis_utskick_ta` räknar fram koden när mejlet ska
+  gå (samma kod vid ett omförsök). Ny adress eller Skicka igen ger en ny
+  omgång, så bara den senaste länken gäller; den gäller sju dagar. Taket är
+  ett mejl i minuten och fem om dygnet per barn, räknat på kön, så att det
+  inte nollställs av att adressen tas bort och läggs till. Länken går till
+  `/barn?bekrafta=<kod>`; vyn tar koden ur adressen direkt och bekräftar
+  bara när knappen trycks (`barn_epost_bekrafta`, för anon, authenticated
+  och `nextrum_barn`; svarar ok, redan, gammal, upptagen, av eller
+  ogiltig). Hasharna jämförs, inte koderna.
+- **Inloggningen**: edge-funktionen `barn-inloggning` (verify_jwt av)
+  tar `{ epost, losenord }`, frågar `barn_inloggning_uppslag` (bara
+  `service_role`), som räknar försöket per adress och IP-nummer (HMAC i
+  `intern.barn_inloggning_forsok`, tio respektive tjugo på en kvart, ett
+  dygn) innan den slår upp, och loggar in med den tekniska adressen hos
+  Auth. Svaret är sessionen; vyn lägger den på plats med `setSession`.
+  Varje nej tar minst 0,9 sekunder och säger samma sak. I vyerna:
+  `NXStudie.loggaIn` provar en adress med @ hos Auth som förut, och bara
+  när Auth svarar `invalid_credentials` provas den som barnadress; beskedet
+  är då den vuxnas. Auth ser funktionens IP-nummer (att skicka barnets
+  kräver en ny sorts hemlig nyckel, `Sb-Forwarded-For`), därav taket per
+  nummer: en ensam angripare ska inte tömma Auths kvot.
+- **Mejlen**: `intern.barn_passmejl_koa` från `intern.barnnotis_vid_pass`
+  (bokat och avbokat, samma samlingsnyckel per pass i tre minuter) och
+  `intern.barn_paminnelse_koa` från `notis_planera` (samma tider som
+  familjens). Raden har `barn_id` och ingen `mottagare`
+  (`notis_utskick_en_mottagare`). `notis_utskick_ta` prövar en barnrad
+  först i varvet: flaggan, adressen, förälderns val, barnets val, aktiv
+  inloggning och att passet fortfarande är bokat på den tiden; rollen i
+  svaret är `barn`. `notis-ko` skriver den med `barn.ts`, och barnets
+  avanmälan (`barn.<id>.mejl.<typ>.<sig>`) går till
+  `barn_notis_avregistrera`, som bara stänger av i `av`.
+- **Städningen**: tas inloggningen bort tar `barnkonto_stadas` adressen och
+  barnets rader i kön; `barnkonton_gallra` tar en obekräftad adress efter
+  30 dagar och försöken efter ett dygn.
 
 ### Vyerna
 - `barn.html` + `nextrum-barn-vy.js`: NX, NXStudie och, sedan
@@ -222,7 +289,15 @@ hoppar över barnkonton och barnadresser, och `notis-ko` gör det en gång till
 - Föräldrarnas ruta: `mina_barnkonton()` (tål att migrationen saknas:
   PGRST202 döljer rutan), `visa_rapporter` skrivs direkt på `students`
   och bara föräldern får ändra den (`skydda_studentfalt`). Klasserna heter
-  `bi-*` och data-attributen `data-bi-*`; `bk-*` är bokningens.
+  `bi-*` och data-attributen `data-bi-*`; `bk-*` är bokningens. Barnets
+  e-post är en egen del under inloggningens knappar (`.bi-epost`,
+  `data-bi-epost-*`), ur `mina_barns_epost()`; utan den funktionen ritas
+  inloggningen som förut.
+- Barnets Inställningar (`#installningar` i `barn.html`): användarnamnet,
+  adressen och en rad per sort med valet, ur `barn_installningar()`; ett
+  tryck skickar `barn_notisval`. Länken "Ändra dina val" i mejlen går hit
+  (`#installningar`, utan mjuk scrollning, `scroll-margin-top` under
+  sidhuvudet).
 - Felrapporterna (`nextrum-fel.js`) når inte fram från ett inloggat barn:
   rollen får inte skriva i `klientfel`. Det är med flit (inga rättigheter),
   men det betyder att fel i barnets vy bara syns före inloggningen.
@@ -361,10 +436,16 @@ studiehjälparvyn till `/admin`.
   barnets vy, 2026-10-01): barnet läser sin bana, startar, svarar, ser
   rättningen och läget, bockar av en vanlig uppgift men inte en digital,
   och gör inget av det åt ett annat barn, med fel familj i token eller med
-  en pausad inloggning; 1173 rader gröna lokalt.
-- Deno: `_delad/barnkonto_test.ts`, `_delad/adminbehorighet_test.ts` och
-  ett nytt prov i `notiser/ko_test.ts`.
-- Webbläsaren: `verktyg/prova-barnkonton.js` (155 prov, gröna), mot en
+  en pausad inloggning; 1173 rader gröna lokalt. Avsnitt 15 (barnets egen
+  e-post, 2026-10-01): 47 prov för förälderns funktioner, vem som inte når
+  tabellen, koden, uppslaget och båda taken, barnets val, kön och
+  omprövningen, avanmälan, gallringen och flaggan av; 1220 rader gröna
+  lokalt, och de som ska falla föll när tabellen öppnades.
+- Deno: `_delad/barnkonto_test.ts`, `_delad/adminbehorighet_test.ts`,
+  `_delad/barninloggning_test.ts`, `notiser/barn_test.ts`, och barnets
+  rader i `notiser/ko_test.ts`, `token_test.ts`, `avanmal_test.ts` och
+  `typer_test.ts` (308 prov).
+- Webbläsaren: `verktyg/prova-barnkonton.js` (200 prov, gröna), mot en
   falsk Supabase på en adress som inte finns: barnets inloggning och vy i
   ljust, mörkt och på telefon, text ur databasen som text, att barnet bara
   frågar sina egna funktioner, NexLäx i barnets vy (vägen, en nivå spelad
@@ -372,5 +453,7 @@ studiehjälparvyn till `/admin`.
   telefonen), e-post eller användarnamn i alla fyra
   inloggningarna och den tekniska adressen som nekas (2026-10-01; de nya
   proven föll mot koden före, med samma anrop som i driften),
-  föräldrarnas ruta, och adminvyn för en superadmin, en begränsad admin,
+  föräldrarnas ruta, barnets egen e-post (förälderns del, barnets
+  inställningar, länken i bekräftelsen och inloggningen med adressen, i
+  dator och telefon), och adminvyn för en superadmin, en begränsad admin,
   en utan roll och en inbjuden. Se `minne/genererat-och-ci.md`.

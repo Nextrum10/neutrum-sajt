@@ -260,10 +260,13 @@ async function öppna(webb, o) {
   return { context, page, S, riktiga, konsol };
 }
 
-async function bild(page, namn) {
+async function bild(page, namn, sel) {
   if (!BILDER) return;
   fs.mkdirSync(BILDER, { recursive: true });
   await page.screenshot({ path: path.join(BILDER, namn + '.png'), fullPage: true });
+  /* En lång vy blir en lång bild. Med sel sparas också bara den delen,
+     som går att läsa utan att leta. */
+  if (sel) await page.locator(sel).first().screenshot({ path: path.join(BILDER, namn + '-del.png') }).catch(() => {});
 }
 
 const synlig = (page, sel) => page.locator(sel).first().isVisible().catch(() => false);
@@ -272,8 +275,8 @@ const vänta = ms => new Promise(r => setTimeout(r, ms));
 
 /* ============ barnets vy ============ */
 /* Det enda barnets vy får fråga databasen om (nexlax_for_barnet lade
-   till NexLäx). */
-const BARNETS_FUNKTIONER = /\/rpc\/(barn_(oversikt|notiser|markera_last|nexlax|uppgift)|nexlax_lage|niva_(starta|svara|genomgang))$/;
+   till NexLäx, barnets_epost inställningarna och valen). */
+const BARNETS_FUNKTIONER = /\/rpc\/(barn_(oversikt|notiser|markera_last|nexlax|uppgift|installningar|notisval)|nexlax_lage|niva_(starta|svara|genomgang))$/;
 
 function barnRpc(extra) {
   return Object.assign({
@@ -1060,6 +1063,332 @@ async function provaAdminvyn(webb) {
   }
 }
 
+/* ============ barnets egen e-post (barnets_epost, 2026-10-01) ============
+   Föräldern lägger till adressen och styr mejlen, barnet bekräftar med
+   länken och väljer bort det hen inte vill ha, och barnet loggar in med
+   adressen genom barn-inloggning. Databasens regler provas i
+   rls-test.sql avsnitt 15; här provas det en människa ser och vad som
+   skickas. */
+const KOD = 'barn-1.' + 'A'.repeat(43);
+
+function epostRad(o) {
+  return Object.assign({ barn_id: 'barn-1', epost: 'alva@example.org', bekraftad: null, notiser: false,
+                         skickad: nu(-5), gammal: false }, o || {});
+}
+
+async function provaBarnetsEpost(webb) {
+  const konton = [
+    { barn_id: 'barn-1', anvandarnamn: 'alva.a', barn_aktiv: true, visa_rapporter: false,
+      vardnadshavare_godkand_at: '2026-09-30T10:00:00Z', senast_inloggad: '2026-09-30T15:30:00Z' },
+    { barn_id: 'barn-2', anvandarnamn: null, barn_aktiv: true, visa_rapporter: false,
+      vardnadshavare_godkand_at: null, senast_inloggad: null }
+  ];
+
+  /* 1. Föräldern: lägger till, skickar igen, får databasens besked. */
+  {
+    const läge = { pa: true, rad: { barn_id: 'barn-1' }, igenFel: false };
+    const { context, page, S, riktiga } = await öppna(webb, {
+      inloggad: 'foralder-1',
+      rpc: {
+        mina_barnkonton: () => konton,
+        mina_barns_epost: () => ({ pa: läge.pa, barn: [läge.rad] }),
+        barn_epost_satt: k => { läge.rad = epostRad({ epost: String(k.p_epost).trim().toLowerCase() }); return läge.rad; },
+        barn_epost_skicka_igen: () => läge.igenFel
+          ? { __fel: { code: 'P0001', message: 'Vänta en minut innan du skickar ett nytt bekräftelsemejl.' } } : läge.rad,
+        barn_epost_notiser: k => { läge.rad.notiser = k.p_pa; return läge.rad; },
+        barn_epost_ta_bort: () => { läge.rad = { barn_id: 'barn-1' }; return null; }
+      }
+    });
+    await page.goto(BAS + '/foralder#profil/barn');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    const flik = page.locator('section[data-sek="profil"] .vy-flik[data-flik="barn"]');
+    if (await flik.count()) await flik.click();
+    await page.waitForSelector('.bi-kort[data-bi="barn-1"] .bi-epost', { timeout: 5000 }).catch(() => {});
+    const alva = '.bi-kort[data-bi="barn-1"]';
+    prova('e-post förälder: Alva har en ruta för e-post, med fältet', await synlig(page, alva + ' [data-bi-epost]'));
+    prova('e-post förälder: ett barn utan inloggning har ingen', (await page.locator('.bi-kort[data-bi="barn-2"] .bi-epost').count()) === 0);
+    prova('e-post förälder: rutan säger att barnet bekräftar först och att lösenordet är förälderns',
+      /trycker på först/.test(await text(page, alva + ' .bi-epost')) && /det styr ni/.test(await text(page, alva + ' .bi-epost')));
+    await bild(page, 'epost-foralder-tom', alva);
+
+    await page.fill(alva + ' [data-bi-epost]', 'inte en adress');
+    await page.click(alva + ' [data-bi-epostform] button[type="submit"]');
+    prova('e-post förälder: något som inte är en adress stoppas i rutan',
+      (await text(page, '#bi-msg')).includes('inte ut som en e-postadress') && !S.logg.some(r => /barn_epost_satt/.test(r.väg)),
+      await text(page, '#bi-msg'));
+
+    await page.fill(alva + ' [data-bi-epost]', '  Alva@Example.org ');
+    await page.click(alva + ' [data-bi-epostform] button[type="submit"]');
+    await page.waitForFunction(() => /skickat en länk/.test(document.querySelector('#bi-msg').textContent), null, { timeout: 5000 }).catch(() => {});
+    const satt = S.logg.find(r => /\/rpc\/barn_epost_satt$/.test(r.väg));
+    prova('e-post förälder: Lägg till skickar barnet och adressen',
+      satt && satt.kropp && satt.kropp.p_barn === 'barn-1' && satt.kropp.p_epost === 'Alva@Example.org', JSON.stringify(satt && satt.kropp));
+    prova('e-post förälder: beskedet säger vart länken gick',
+      (await text(page, '#bi-msg')).includes('alva@example.org'), await text(page, '#bi-msg'));
+    prova('e-post förälder: läget är Väntar, med Skicka igen, Byt och Ta bort',
+      /Väntar på att Alva trycker/.test(await text(page, alva + ' .bi-epost'))
+      && await synlig(page, alva + ' [data-bi-epost-igen]') && await synlig(page, alva + ' [data-bi-epost-byt]')
+      && await synlig(page, alva + ' [data-bi-epost-bort]') && !(await synlig(page, alva + ' [data-bi-epost-mejl]')),
+      await text(page, alva + ' .bi-epost'));
+    await bild(page, 'epost-foralder-vantar', alva);
+
+    läge.igenFel = true;
+    await page.click(alva + ' [data-bi-epost-igen]');
+    await page.waitForFunction(() => /Vänta en minut/.test(document.querySelector('#bi-msg').textContent), null, { timeout: 5000 }).catch(() => {});
+    prova('e-post förälder: databasens besked visas som det är',
+      (await text(page, '#bi-msg')).trim() === 'Vänta en minut innan du skickar ett nytt bekräftelsemejl.', await text(page, '#bi-msg'));
+
+    /* Bekräftad: mejlen kan slås på. */
+    läge.rad = epostRad({ bekraftad: nu(-1) });
+    await page.click(alva + ' [data-bi-epost-byt]');
+    await page.click(alva + ' [data-bi-epost-byt]');
+    await page.waitForSelector(alva + ' [data-bi-epost-mejl]', { timeout: 5000 }).catch(() => {});
+    await page.evaluate(() => document.querySelector('#bi-msg').textContent = '');
+    /* Rutan läses om efter en ändring; Byt och Avbryt ritar bara om. Ladda om. */
+    await page.reload();
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    if (await flik.count()) await flik.click();
+    await page.waitForSelector(alva + ' [data-bi-epost-mejl]', { timeout: 5000 }).catch(() => {});
+    prova('e-post förälder: bekräftad adress har valet Mejl till Alva, avslaget',
+      (await page.getAttribute(alva + ' [data-bi-epost-mejl]', 'aria-pressed').catch(() => null)) === 'false'
+      && /Bekräftad/.test(await text(page, alva + ' .bi-epost')));
+    await page.click(alva + ' [data-bi-epost-mejl]');
+    await page.waitForFunction(sel => document.querySelector(sel) && document.querySelector(sel).getAttribute('aria-pressed') === 'true',
+      alva + ' [data-bi-epost-mejl]', { timeout: 5000 }).catch(() => {});
+    const not = S.logg.filter(r => /\/rpc\/barn_epost_notiser$/.test(r.väg)).pop();
+    prova('e-post förälder: Mejl till Alva skickar barnet och på',
+      not && not.kropp && not.kropp.p_barn === 'barn-1' && not.kropp.p_pa === true, JSON.stringify(not && not.kropp));
+    await bild(page, 'epost-foralder-bekraftad', alva);
+
+    page.removeAllListeners('dialog');
+    await page.click(alva + ' [data-bi-epost-bort]');
+    await page.waitForSelector('.nx-fraga.open', { timeout: 3000 }).catch(() => {});
+    prova('e-post förälder: Ta bort adressen frågar först', await synlig(page, '.nx-fraga'));
+    await page.click('.nx-fraga [data-svar="ja"]');
+    await page.waitForFunction(() => /borttagen/.test(document.querySelector('#bi-msg').textContent), null, { timeout: 5000 }).catch(() => {});
+    prova('e-post förälder: adressen tas bort, och fältet är tillbaka',
+      S.logg.some(r => /\/rpc\/barn_epost_ta_bort$/.test(r.väg) && r.kropp && r.kropp.p_barn === 'barn-1')
+      && await synlig(page, alva + ' [data-bi-epost]'));
+    prova('e-post förälder: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+    await context.close();
+  }
+
+  /* 2. Föräldern i telefon, och med flaggan av. */
+  {
+    const { context, page } = await öppna(webb, {
+      inloggad: 'foralder-1',
+      context: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
+      rpc: { mina_barnkonton: () => konton, mina_barns_epost: () => ({ pa: true, barn: [epostRad({ bekraftad: nu(-1), notiser: true })] }) }
+    });
+    await page.goto(BAS + '/foralder#profil/barn');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    const flik = page.locator('section[data-sek="profil"] .vy-flik[data-flik="barn"]');
+    if (await flik.count()) await flik.click();
+    await page.waitForSelector('.bi-epost', { timeout: 5000 }).catch(() => {});
+    const bredd = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    prova('e-post förälder telefon: ingen sidledsscroll', bredd <= 0, bredd + ' px');
+    const små = await page.evaluate(() => Array.from(document.querySelectorAll('.bi-epost button'))
+      .filter(b => b.offsetParent).map(b => b.getBoundingClientRect()).filter(r => r.height < 44).length);
+    prova('e-post förälder telefon: knapparna är minst 44 px', små === 0, små + ' lägre');
+    await page.locator('.bi-epost').first().scrollIntoViewIfNeeded().catch(() => {});
+    await bild(page, 'epost-foralder-telefon', '.bi-kort[data-bi="barn-1"]');
+    await context.close();
+  }
+  for (const [namn, rad, väntat] of [
+    ['flaggan av utan adress', { barn_id: 'barn-1' }, 0],
+    ['flaggan av med en adress', epostRad({ bekraftad: nu(-1), notiser: true }), 1]
+  ]) {
+    const { context, page } = await öppna(webb, {
+      inloggad: 'foralder-1',
+      rpc: { mina_barnkonton: () => konton, mina_barns_epost: () => ({ pa: false, barn: [rad] }) }
+    });
+    await page.goto(BAS + '/foralder#profil/barn');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    const flik = page.locator('section[data-sek="profil"] .vy-flik[data-flik="barn"]');
+    if (await flik.count()) await flik.click();
+    await page.waitForSelector('#bi-ruta:not([hidden])', { timeout: 5000 }).catch(() => {});
+    await vänta(200);
+    const rutor = await page.locator('.bi-epost').count();
+    const knappar = await page.locator('.bi-epost button').count();
+    prova('e-post förälder, ' + namn + ': ' + (väntat ? 'bara Ta bort adressen' : 'ingen ruta'),
+      rutor === väntat && (väntat === 0 || (knappar === 1 && await synlig(page, '[data-bi-epost-bort]'))),
+      rutor + ' rutor, ' + knappar + ' knappar');
+    await context.close();
+  }
+
+  /* 3. Barnets inställningar. */
+  const inst = o => Object.assign({ lage: 'ok', fornamn: 'Alva', anvandarnamn: 'alva.a', pa: true,
+    epost: 'alva@example.org', bekraftad: '2026-10-01T10:00:00Z', notiser: true,
+    typer: [{ typ: 'barn_pass_bokat', pa: true }, { typ: 'barn_pass_avbokat', pa: true }, { typ: 'barn_paminnelse', pa: false }] }, o || {});
+  {
+    let val = inst();
+    const { context, page, S } = await öppna(webb, {
+      inloggad: 'barnkonto-1',
+      rpc: barnRpc({
+        barn_installningar: () => val,
+        barn_notisval: k => {
+          val = inst({ typer: val.typer.map(t => t.typ === k.p_typ ? { typ: t.typ, pa: k.p_pa } : t) });
+          return val;
+        }
+      })
+    });
+    await page.goto(BAS + '/barn#installningar');
+    await page.waitForSelector('#installningar:not([hidden])', { timeout: 5000 }).catch(() => {});
+    prova('e-post barnet: Inställningar syns, med användarnamnet och adressen',
+      (await text(page, '#bv-inst')).includes('alva.a') && (await text(page, '#bv-inst')).includes('alva@example.org'),
+      await text(page, '#bv-inst'));
+    const tryck = await page.$$eval('#bv-inst [data-bv-val]', b => b.map(x => x.getAttribute('aria-pressed')).join(','));
+    prova('e-post barnet: tre sorter, med barnets val', tryck === 'true,true,false', tryck);
+    /* Sidan är för kort för att sektionen ska nå toppen; den ska synas,
+       och rubriken ska inte ligga under sidhuvudet. */
+    const [topp, rullat, höjd] = await page.evaluate(() =>
+      [document.querySelector('#installningar').getBoundingClientRect().top, window.scrollY, window.innerHeight]);
+    prova('e-post barnet: länken Ändra dina val går till inställningarna', rullat > 0 && topp >= 70 && topp < höjd - 100,
+      topp + ' px, rullat ' + rullat);
+    await page.click('#bv-inst [data-bv-val="barn_pass_bokat"]');
+    await page.waitForFunction(() => document.querySelector('#bv-inst [data-bv-val="barn_pass_bokat"]').getAttribute('aria-pressed') === 'false',
+      null, { timeout: 5000 }).catch(() => {});
+    const v = S.logg.filter(r => /\/rpc\/barn_notisval$/.test(r.väg)).pop();
+    prova('e-post barnet: ett val skickar sorten och av',
+      v && v.kropp && v.kropp.p_typ === 'barn_pass_bokat' && v.kropp.p_pa === false, JSON.stringify(v && v.kropp));
+    prova('e-post barnet: bara barnets egna funktioner frågades',
+      S.logg.filter(r => r.väg.startsWith('/rest/')).every(r => BARNETS_FUNKTIONER.test(r.väg)),
+      S.logg.filter(r => r.väg.startsWith('/rest/')).map(r => r.väg).join(', '));
+    await bild(page, 'epost-barnet-installningar', '#installningar');
+    await context.close();
+  }
+  for (const [namn, o, koll] of [
+    ['flaggan av', { pa: false, epost: null, bekraftad: null, notiser: false },
+      async page => !(await text(page, '#bv-inst')).includes('E-post') && (await page.locator('#bv-inst [data-bv-val]').count()) === 0],
+    ['obekräftad adress', { bekraftad: null, notiser: false },
+      async page => /väntar på att du bekräftar/.test(await text(page, '#bv-inst'))
+        && (await page.$$eval('#bv-inst [data-bv-val]', b => b.every(x => x.disabled)))],
+    ['föräldern har inte slagit på mejlen', { notiser: false },
+      async page => /inte slagit på mejl/.test(await text(page, '#bv-inst'))
+        && (await page.$$eval('#bv-inst [data-bv-val]', b => b.every(x => !x.disabled)))]
+  ]) {
+    const { context, page } = await öppna(webb, { inloggad: 'barnkonto-1', rpc: barnRpc({ barn_installningar: () => inst(o) }) });
+    await page.goto(BAS + '/barn');
+    await page.waitForSelector('#installningar:not([hidden])', { timeout: 5000 }).catch(() => {});
+    prova('e-post barnet, ' + namn, await koll(page), await text(page, '#bv-inst'));
+    await context.close();
+  }
+  for (const [namn, context] of [
+    ['epost-barnet-telefon', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }],
+    ['epost-barnet-telefon-mork', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, colorScheme: 'dark' }]
+  ]) {
+    const { context: c, page } = await öppna(webb, { inloggad: 'barnkonto-1', context, rpc: barnRpc({ barn_installningar: () => inst() }) });
+    await page.goto(BAS + '/barn');
+    await page.waitForSelector('#installningar:not([hidden])', { timeout: 5000 }).catch(() => {});
+    const bredd = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    prova(namn + ': ingen sidledsscroll', bredd <= 0, bredd + ' px');
+    const små = await page.evaluate(() => Array.from(document.querySelectorAll('#installningar button'))
+      .filter(b => b.offsetParent).map(b => b.getBoundingClientRect()).filter(r => r.height < 44).length);
+    prova(namn + ': valen är minst 44 px', små === 0, små + ' lägre');
+    await page.locator('#installningar').scrollIntoViewIfNeeded().catch(() => {});
+    await bild(page, namn, '#installningar');
+    await c.close();
+  }
+
+  /* 4. Länken i bekräftelsemejlet. */
+  for (const [svar, rubrik] of [['ok', 'Klart, din e-post är bekräftad'], ['gammal', 'Länken har gått ut'],
+                                ['upptagen', 'Adressen används redan'], ['ogiltig', 'Länken gäller inte']]) {
+    const { context, page, S } = await öppna(webb, { rpc: { barn_epost_bekrafta: () => svar } });
+    await page.goto(BAS + '/barn?bekrafta=' + encodeURIComponent(KOD));
+    await page.waitForSelector('#view-bekrafta:not([hidden])', { timeout: 5000 }).catch(() => {});
+    if (svar === 'ok') {
+      prova('e-post länken: vyn Bekräfta visas utan inloggning', await synlig(page, '#bv-bek-knapp'));
+      prova('e-post länken: koden tas ur adressen direkt', !page.url().includes('bekrafta'), page.url());
+      prova('e-post länken: ingenting bekräftas innan knappen trycks', !S.logg.some(r => /barn_epost_bekrafta/.test(r.väg)));
+      await bild(page, 'epost-lanken');
+    }
+    await page.click('#bv-bek-knapp');
+    await page.waitForFunction(r => document.querySelector('#bv-bek-rubrik').textContent === r, rubrik, { timeout: 5000 }).catch(() => {});
+    const anrop = S.logg.find(r => /\/rpc\/barn_epost_bekrafta$/.test(r.väg));
+    prova('e-post länken, ' + svar + ': rätt besked, och koden skickades som den var',
+      (await text(page, '#bv-bek-rubrik')) === rubrik && anrop && anrop.kropp && anrop.kropp.p_kod === KOD
+      && !(await synlig(page, '#bv-bek-knapp')), (await text(page, '#bv-bek-rubrik')) + ' ' + JSON.stringify(anrop && anrop.kropp));
+    if (svar === 'ok') await bild(page, 'epost-lanken-klar');
+    await context.close();
+  }
+  {
+    const { context, page } = await öppna(webb, { inloggad: 'foralder-1', rpc: { barn_epost_bekrafta: () => 'ok' } });
+    await page.goto(BAS + '/barn?bekrafta=' + encodeURIComponent(KOD));
+    await page.waitForSelector('#view-bekrafta:not([hidden])', { timeout: 5000 }).catch(() => {});
+    prova('e-post länken: fungerar också när en vuxen är inloggad i webbläsaren',
+      (await synlig(page, '#bv-bek-knapp')) && !(await synlig(page, '#view-annan')));
+    await context.close();
+  }
+
+  /* 5. Barnet loggar in med sin adress. */
+  const barnInlogg = (ref, utfall) => kropp => {
+    ref.anrop.push(kropp);
+    if (utfall === 'ok') {
+      ref.S.inloggad.id = 'barnkonto-1';
+      const s = ref.S.session('barnkonto-1');
+      return [200, { access_token: s.access_token, refresh_token: s.refresh_token, expires_in: 3600,
+                     expires_at: s.expires_at, token_type: 'bearer' }];
+    }
+    if (utfall === 'tak') return [429, { error: 'För många försök. Vänta en stund och försök igen.' }];
+    return [400, { error: 'Fel e-post eller lösenord.' }];
+  };
+  for (const [vy, fält, knapp] of [['/barn', '#bv-anv', '#bv-logga-in'], ['/foralder', '#a-email', '#auth-submit']]) {
+    const ref = { anrop: [] };
+    const o = { rpc: Object.assign(barnRpc(), { mina_barnkonton: () => [] }), funktioner: { 'barn-inloggning': barnInlogg(ref, 'ok') } };
+    const { context, page, S } = await öppna(webb, o);
+    ref.S = S;
+    await page.goto(BAS + vy);
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await page.fill(fält, ' Alva@Example.org ');
+    await page.fill('#a-pass', 'alva-losen-1');
+    await page.click(knapp);
+    await page.waitForURL(/\/barn$/, { timeout: 5000 }).catch(() => {});
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 5000 }).catch(() => {});
+    prova('e-post inloggning ' + vy + ': barnets adress öppnar barnets vy',
+      /\/barn$/.test(page.url()) && (await text(page, '#bv-rubrik')) === 'Hej, Alva!', page.url() + ' ' + await text(page, '#bv-rubrik'));
+    prova('e-post inloggning ' + vy + ': Auth först, sedan barn-inloggning med adressen och lösenordet',
+      ref.anrop.length === 1 && ref.anrop[0].epost === 'Alva@Example.org' && ref.anrop[0].losenord === 'alva-losen-1'
+      && S.logg.some(r => r.väg === '/auth/v1/token' && r.kropp && r.kropp.email === 'Alva@Example.org'),
+      JSON.stringify(ref.anrop));
+    await context.close();
+  }
+  for (const [utfall, besked] of [['fel', 'Fel e-post eller lösenord.'], ['tak', 'För många försök. Vänta en stund och försök igen.']]) {
+    const ref = { anrop: [] };
+    const { context, page, S } = await öppna(webb, { rpc: barnRpc(), funktioner: { 'barn-inloggning': barnInlogg(ref, utfall) } });
+    ref.S = S;
+    await page.goto(BAS + '/barn');
+    await page.waitForSelector('#view-auth:not([hidden])');
+    await page.fill('#bv-anv', 'alva@example.org');
+    await page.fill('#a-pass', 'fel');
+    await page.click('#bv-logga-in');
+    await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
+    prova('e-post inloggning, ' + utfall + ': ' + besked,
+      (await text(page, '#auth-msg')).trim() === besked && (await synlig(page, '#view-auth')), await text(page, '#auth-msg'));
+    await context.close();
+  }
+  {
+    /* En förälder med rätt lösenord når aldrig barn-inloggning; med fel
+       provas adressen också som ett barns, och beskedet är detsamma. */
+    const ref = { anrop: [] };
+    const { context, page, S } = await öppna(webb, { rpc: { mina_barnkonton: () => [] },
+      funktioner: { 'barn-inloggning': barnInlogg(ref, 'fel') } });
+    ref.S = S;
+    await page.goto(BAS + '/foralder');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await page.fill('#a-email', 'anna@example.se');
+    await page.fill('#a-pass', 'fel');
+    await page.click('#auth-submit');
+    await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
+    prova('e-post inloggning: en förälders fel lösenord provas som barnadress, med samma besked',
+      ref.anrop.length === 1 && (await text(page, '#auth-msg')).trim() === 'Fel e-post eller lösenord.', await text(page, '#auth-msg'));
+    await page.fill('#a-pass', 'anna-losen');
+    await page.click('#auth-submit');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('e-post inloggning: rätt lösenord når aldrig barn-inloggning', ref.anrop.length === 1 && (await synlig(page, '#view-app')));
+    await context.close();
+  }
+}
+
 /* ============ körningen ============ */
 (async function () {
   const server = spawn('python3', [path.join(ROT, '.claude', 'serve.py'), String(PORT)], { stdio: 'ignore' });
@@ -1073,6 +1402,7 @@ async function provaAdminvyn(webb) {
     await provaBarnetsNexlax(webb);
     await provaFamiljensInloggning(webb);
     await provaBarnpanelen(webb);
+    await provaBarnetsEpost(webb);
     await provaAdminvyn(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);

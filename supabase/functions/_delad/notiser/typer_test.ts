@@ -16,7 +16,7 @@
 
 import { assertEquals, assertNotEquals } from 'jsr:@std/assert@1';
 import {
-  antalOk, arKanal, arMejlbar, arNotisTyp, fornamn, MEJLBARA,
+  antalOk, arBarnMejltyp, arKanal, arMejlbar, arNotisTyp, BARN_BEKRAFTA, BARN_MEJLTYPER, fornamn, MEJLBARA,
   NOTIS_TYPER, renData, tillRoll,
 } from './typer.ts';
 
@@ -45,7 +45,7 @@ Deno.test('renData släpper bara igenom de vitlistade fälten', () => {
   // överst innan det går igenom.
   assertEquals(Object.keys(rad).sort(), [
     'amne', 'betalsatt', 'datum', 'elev', 'fran', 'franDatum', 'franTid',
-    'kvar', 'prov', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
+    'kod', 'kvar', 'prov', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
   ]);
 
   // Ingen av texterna finns kvar någonstans i svaret.
@@ -191,4 +191,27 @@ Deno.test('avbokningens skäl är en av de fasta koderna, aldrig text', () => {
   assertEquals(renData({ skal: 'SJUKDOM' }).skal, null, 'skiftläget ska stämma exakt');
   assertEquals(renData({ skal: ['sjukdom'] }).skal, null);
   assertEquals(renData({}).skal, null);
+});
+
+Deno.test('bekräftelsekoden följer bara med i sin egen form (barnets_epost)', () => {
+  const kod = '6ba7b810-9dad-11d1-80b4-00c04fd430c8.' + 'A'.repeat(42) + 'b';
+  assertEquals(renData({ kod }).kod, kod);
+  // En adress, en länk, text eller en kod med något efter blir null.
+  for (const fel of [
+    'alva@example.org', `https://evil.example/?k=${kod}`, `${kod}"><script>`, `${kod}.x`,
+    kod.replace('.', ''), 'skräp', 42, null,
+  ]) {
+    assertEquals(renData({ kod: fel }).kod, null, String(fel));
+  }
+});
+
+Deno.test('barnets sorter är tre, och ingen av dem är en vuxens', () => {
+  assertEquals([...BARN_MEJLTYPER], ['barn_pass_bokat', 'barn_pass_avbokat', 'barn_paminnelse']);
+  for (const t of BARN_MEJLTYPER) {
+    assertEquals(arBarnMejltyp(t), true);
+    assertEquals(arNotisTyp(t), false);
+    assertEquals(arMejlbar(t), false);
+  }
+  assertEquals(arBarnMejltyp(BARN_BEKRAFTA), false);
+  assertEquals(arBarnMejltyp('pass_nytt'), false);
 });
