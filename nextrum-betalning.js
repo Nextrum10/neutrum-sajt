@@ -238,6 +238,7 @@ window.NXBetalning = (function () {
       + (antal ? '<span>' + antal + ' pass</span>' : '') + '</th>'
       + '<td class="lonespec-tal">' + esc(timmar(p.minuter)) + '</td>'
       + '<td class="lonespec-tal">' + esc(kronor(p.belopp_ore)) + '</td></tr></tfoot></table>'
+      + '<p class="lonespec-not">Timpenningen är inklusive semesterersättning.</p>'
       + (p.status === 'misslyckad' && p.fel ? '<p class="lonespec-not lonespec-fel">' + esc(p.fel) + '</p>' : '')
       + (o.noter || []).map(function (n) { return '<p class="lonespec-not">' + esc(n) + '</p>'; }).join('')
       + '<p class="lonespec-fraga">Frågor om lönen: <a href="mailto:' + esc(epost) + '">' + esc(epost) + '</a></p>'

@@ -55,7 +55,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`malmanad`, `NXBetalning.lonemanad`); Godkänd och Lagd i Fortnox sparas bara om beloppet är
   det som visades. PAXml tar bara godkända, inte
   utbetalda underlag och är inte provläst i Fortnox. Personnummer, bankkonto och skatt står i
-  Fortnox, aldrig här, och lönespecen räknar inget och drar ingen skatt.
+  Fortnox, aldrig här, och lönespecen räknar inget och drar ingen skatt. **Timpenningen är
+  inklusive semesterersättning** (2026-10-01): filen lägger inget på, och Fortnox får inte heller
+  (löneart som inte är semestergrundande, ingen semesterersättning inställd på personen).
 - **Timmarna**: `bookings_timmarna_tillbaka` är den SISTA before-triggern på `bookings`
   (namnordning), och klippkortets triggrar rör inte `skydda_bokningsfalt`. Timmen dras bara i
   `klippkort_dra()`, när förslaget skapas, och kommer tillbaka vid nej, avbokning eller

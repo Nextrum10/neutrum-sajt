@@ -42,9 +42,17 @@
    timlön (foretagsfakta.lonart_timlon), passets datum, timmarna,
    timpenningen och beloppet, ur underlagets rader. Fortnox matchar på
    anställningsnumret, så ett nummer som saknas stoppar filen i stället
-   för att en persons timmar försvinner ur den. Semesterersättningen
-   står inte i filen: Fortnox lägger på den själv, och hade filen också
-   gjort det hade den betalats två gånger.
+   för att en persons timmar försvinner ur den.
+
+   SEMESTERERSÄTTNINGEN ingår i timpenningen (2026-10-01, Leo: "120 kr
+   är inklusive semesterersättning, så det ska inte läggas på någon
+   semesterersättning i fortnox"). Filen skriver därför inget extra, och
+   Fortnox får inte lägga på något: lönearten i bolagsfakta ska vara en
+   som inte är semestergrundande, och personerna ska inte ha
+   semesterersättning inställd i personalregistret. Det går inte att
+   säga i PAXml-filen, utan avgörs av löneartens och personens
+   inställningar i Fortnox, så sidan och dialogen säger det i stället.
+   Lägger Fortnox på den ändå betalas den två gånger.
 
    Bara GODKÄNDA underlag kommer med. Godkänd betyder att någon granskat
    underlaget (Fas 2.6), och en fil med ogranskade timmar ska inte gå
@@ -449,8 +457,9 @@
 
   /* PAXml 2.0. En lönetransaktion per rad: anställningsnummer, löneart,
      datum, antal timmar, timpris och belopp, i kronor med punkt som
-     decimaltecken. Ingen semesterersättning (se filhuvudet), och inget
-     personnummer: Fortnox matchar på anstid. */
+     decimaltecken. Timpenningen är inklusive semesterersättning och
+     beloppet likaså (se filhuvudet), och inget personnummer: Fortnox
+     matchar på anstid. */
   function paxml(rader, skapad) {
     const x = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const två = n => String(n).padStart(2, '0');
@@ -637,7 +646,7 @@
       if (!tp) { alert(namnFör(id) + ' har ingen profil som studiehjälpare.'); return; }
       const kr = await fråga({
         titel: 'Timpenning för ' + namnFör(id),
-        text: 'Kronor per timme, före skatt. Gäller pass som kommer med på nästa underlag: underlag som redan '
+        text: 'Kronor per timme, före skatt och inklusive semesterersättning. Gäller pass som kommer med på nästa underlag: underlag som redan '
           + 'skapats är räknade och ändras inte. En tjänst med egen ersättning (Tjänster & priser) går före timpenningen.',
         innehåll: '<div class="fgroup" style="margin-top:14px"><label for="lon-timpenning">Timpenning, kronor</label>'
           + '<input class="inp" id="lon-timpenning" type="number" min="1" max="2000" step="0.01" inputmode="decimal" value="'
@@ -665,7 +674,9 @@
     const svar = await fråga({
       titel: 'Löneart för timlön',
       text: 'Numret på lönearten för timlön i Fortnox Lön. Alla timmar i lönefilen skrivs på den. '
-        + 'Semesterersättningen lägger Fortnox på själv, och den står inte i filen.',
+        + 'Timpenningen är inklusive semesterersättning, så lönearten ska vara en som inte är '
+        + 'semestergrundande, och personerna ska inte ha semesterersättning inställd i Fortnox. '
+        + 'Annars lägger Fortnox på den en gång till.',
       innehåll: '<div class="fgroup" style="margin-top:14px"><label for="lon-lonart">Löneart</label>'
         + '<input class="inp" id="lon-lonart" autocomplete="off" maxlength="10" value="' + esc(nu) + '"></div>',
       knapp: 'Spara',

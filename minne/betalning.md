@@ -224,8 +224,9 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   leder till fakturorna. **Pengarna** är tre kolumner, kommit in, väntar
   och går ut (lönerna den 25:e månaden efter och det som ska tillbaka
   till familjer), och vad som blir kvar, i dag och när det som väntar har
-  kommit in. Kvar är efter Stripes avgift men före semesterersättning,
-  arbetsgivaravgifter och alla andra kostnader, och köpta timmar räknas
+  kommit in. Kvar är efter Stripes avgift och semesterersättningen (den
+  ingår i timpenningen) men före arbetsgivaravgifter och alla andra
+  kostnader, och köpta timmar räknas
   när de betalades fast de är familjens tills de använts. Sidan säger
   båda; en siffra för kassan som tiger om dem hade sett bättre ut än den
   är. **Allt räknas på Betalningars rader** (`betalningsrader(månad)`,
@@ -333,8 +334,19 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   underlag markerat Utbetald kan inte läsas in igen. Filen byggs inte om
   lönearten saknas, om någon med godkänt underlag saknar nummer, om
   raderna inte summerar till underlaget, eller om bolagsfakta säger att
-  studiehjälparna är uppdragstagare. Semesterersättningen står inte i
-  filen: Fortnox lägger på den. **Filen är byggd efter standarden men
+  studiehjälparna är uppdragstagare. **Timpenningen är inklusive
+  semesterersättning** (2026-10-01, Leo: "120 kr är inklusive
+  semesterersättning, så det ska inte läggas på någon semesterersättning
+  i fortnox"): filen skriver inget extra, och PAXml har inget fält som
+  stänger av den. Fortnox lägger på den om lönearten är
+  semestergrundande eller personen har semesterersättning inställd, så
+  `lonart_timlon` ska vara en löneart som inte är det, och det kontrolleras
+  i Fortnox, inte här. Läs den första filen och se att ingen
+  semesterersättning tillkommit. Lönespecen säger att timpenningen är
+  inklusive den. Semesterlagen kräver att en sådan inräkning görs öppet
+  och tydligt, och bevisbördan ligger på arbetsgivaren; anställningsavtalet
+  ska säga det, och det är revisorns fråga tillsammans med
+  anställningsformen. **Filen är byggd efter standarden men
   inte provläst i Fortnox** (Fortnox hjälpsidor och paxml.se nåddes inte
   från sessionen som byggde den). Läs in den första i en löneperiod som
   går att kontrollera; nekar Fortnox den är det `paxml()` som ska rättas.
@@ -631,8 +643,9 @@ då ska lönespecen här säga var det finns i stället för att räkna själv.
   utbetalningen, inte efter. Att lönen ska läggas in i Fortnox Lön
   (Fas 14.9) avgör inte frågan: `studiehjalpare_form` står på `oklart`.
   Därför räknar lönespecifikationen i studiehjälparvyn (2026-09-28)
-  ingen skatt och ingen semesterersättning: den visar underlaget, före
-  skatt. En lönespec med skatteavdrag är ett lönebesked, och det gör
+  ingen skatt och ingen semesterersättning på toppen: den visar
+  underlaget, före skatt, och säger att timpenningen är inklusive
+  semesterersättning. En lönespec med skatteavdrag är ett lönebesked, och det gör
   Fortnox Lön den dag frågan är avgjord. Den 25 oktober 2026, första
   utbetalningsdagen efter att lönespecen kom, är en söndag; vilken
   bankdag lönen går då är inte bestämt, och lönespecen visar den 25:e.

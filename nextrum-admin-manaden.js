@@ -479,7 +479,7 @@
       + kvar('När det som väntar har kommit in', p.kvarSen, 'om allt som väntar betalas')
       + '</div>'
       + '</div></div>'
-      + '<p class="vy-finstilt">Lönen är underlaget, utan semesterersättning och arbetsgivaravgifter. '
+      + '<p class="vy-finstilt">Lönen är underlaget, med semesterersättning (den ingår i timpenningen) men utan arbetsgivaravgifter. '
       + 'Andra kostnader står inte här. Samma belopp som '
       + '<a class="eko-lank" href="#ekonomi/betalningar" data-man-betalningar>Alla betalningar i ' + esc(månadNamn()) + '</a>.</p>';
   }
