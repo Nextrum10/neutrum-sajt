@@ -68,7 +68,10 @@ den 1:a klockan 04:17 UTC, och `notis_konfig.fakturering_url`. Sedan
 2026-10-01 går det varje natt 04:17 (`manadskorningen_gar_varje_natt`),
 för förra månaden som förut: den 1:a skapar det månadens underlag och
 fakturautkast, och resten av månaden lägger det sent rapporterade pass
-på sin månads utkast (Passets månad, `minne/betalning.md`).
+på sin månads utkast (Passets månad, `minne/betalning.md`). I drift
+samma dag efter PR #171, efter `fakturering` version 34: migrationen
+hämtad från merge-commiten och prövad mot sin md5, och hela
+`rls-test.sql` 1151 av 1151 mot driften.
 `intern.manadskorning_vack()` väcker `fakturering` genom
 `intern.natanrop` med hemligheten i `x-nextrum-notis`, och den vägen
 skriver alltid förra månaden. Saknas adressen blir det en uppgift
