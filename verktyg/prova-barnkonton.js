@@ -543,6 +543,155 @@ async function provaBarnpanelen(webb) {
   }
 }
 
+/* ============ ett barn i familjens inloggning (2026-10-01) ============
+   Logga in på sajten leder till studievyn, och där prövades det första
+   riktiga barnkontot. Barnets användarnamn ska fungera där, barnet
+   hamna i sin vy, och föräldrarnas inloggning vara som förut. */
+async function provaFamiljensInloggning(webb) {
+  /* 1. Etiketten följer läget, och fel lösenord ger barnvyns besked. */
+  {
+    const { context, page, S, riktiga } = await öppna(webb, { rpc: barnRpc() });
+    await page.goto(BAS + '/foralder');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    const etikett = () => text(page, 'label[for="a-email"]');
+    prova('familjen: fältet heter E-post eller användarnamn när man loggar in',
+      (await etikett()) === 'E-post eller användarnamn', await etikett());
+    await page.click('[data-auth="up"]');
+    prova('familjen: och E-post när man skapar konto', (await etikett()) === 'E-post', await etikett());
+    await page.click('[data-auth="in"]');
+    await bild(page, 'familjen-inloggning');
+
+    await page.click('#auth-submit');
+    prova('familjen: tomma fält nämner användarnamnet',
+      (await text(page, '#auth-msg')).trim() === 'Fyll i e-post eller användarnamn och lösenord.', await text(page, '#auth-msg'));
+
+    await page.fill('#a-email', ' Alva.A ');
+    await page.fill('#a-pass', 'fel-losen');
+    await page.click('#auth-submit');
+    await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.includes('användarnamn eller lösenord'),
+      null, { timeout: 5000 }).catch(() => {});
+    prova('familjen: ett användarnamn med fel lösenord får barnvyns besked',
+      (await text(page, '#auth-msg')).trim() === 'Fel användarnamn eller lösenord', await text(page, '#auth-msg'));
+    const försök = S.logg.filter(r => r.väg === '/auth/v1/token').pop();
+    prova('familjen: användarnamnet blir barnadressen, med gemener',
+      försök && försök.kropp && försök.kropp.email === 'alva.a@barn.nextrum.se', JSON.stringify(försök && försök.kropp));
+    prova('familjen: lösenordsfältet töms efter ett fel', (await page.inputValue('#a-pass')) === '');
+    prova('familjen: sidan står kvar efter ett fel', /\/foralder$/.test(page.url()), page.url());
+
+    /* 2. Rätt lösenord: barnet hamnar i sin vy, och familjens uppgifter
+       hämtas aldrig med barnets inloggning. */
+    await page.fill('#a-pass', 'alva-losen-1');
+    await page.click('#auth-submit');
+    await page.waitForURL(/\/barn$/, { timeout: 5000 }).catch(() => {});
+    prova('familjen: barnets användarnamn leder till /barn', /\/barn$/.test(page.url()), page.url());
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 5000 }).catch(() => {});
+    prova('familjen: barnets vy öppnas inloggad', (await text(page, '#bv-rubrik')) === 'Hej, Alva!', await text(page, '#bv-rubrik'));
+    const familjens = S.logg.filter(r => /^\/rest\/v1\/(profiles|students|bookings|lesson_reports)/.test(r.väg));
+    prova('familjen: inget av familjens hämtades', familjens.length === 0, familjens.map(r => r.väg).join(', '));
+    prova('familjen: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+    await context.close();
+  }
+
+  /* 3. Hela barnadressen fungerar också. */
+  {
+    const { context, page } = await öppna(webb, { rpc: barnRpc() });
+    await page.goto(BAS + '/foralder');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await page.fill('#a-email', 'alva.a@barn.nextrum.se');
+    await page.fill('#a-pass', 'alva-losen-1');
+    await page.click('#auth-submit');
+    await page.waitForURL(/\/barn$/, { timeout: 5000 }).catch(() => {});
+    prova('familjen: hela barnadressen leder också till /barn', /\/barn$/.test(page.url()), page.url());
+    await context.close();
+  }
+
+  /* 4. En förälder loggar in som förut. */
+  {
+    const { context, page, S } = await öppna(webb, { rpc: { mina_barnkonton: () => [] } });
+    await page.goto(BAS + '/foralder');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await page.fill('#a-email', 'anna@example.se');
+    await page.fill('#a-pass', 'fel');
+    await page.click('#auth-submit');
+    await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
+    prova('familjen: en förälder med fel lösenord får samma besked som förut',
+      (await text(page, '#auth-msg')).trim() === 'Fel e-post eller lösenord.', await text(page, '#auth-msg'));
+    await page.fill('#a-pass', 'anna-losen');
+    await page.click('#auth-submit');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    const adresser = S.logg.filter(r => r.väg === '/auth/v1/token' && r.kropp && r.kropp.email).map(r => r.kropp.email);
+    prova('familjen: föräldern loggar in med sin adress och ser studievyn',
+      (await synlig(page, '#view-app')) && /\/foralder$/.test(page.url()) && adresser.length === 2
+      && adresser.every(a => a === 'anna@example.se'), page.url() + ' ' + adresser.join(', '));
+    await context.close();
+  }
+
+  /* 5. Glömt lösenordet med ett användarnamn: inget mejl, föräldern byter. */
+  {
+    const { context, page, S } = await öppna(webb, {});
+    await page.goto(BAS + '/foralder');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await page.click('[data-glomt] button');
+    prova('familjen: i Glömt lösenordet heter fältet E-post', (await text(page, 'label[for="a-email"]')) === 'E-post');
+    await page.fill('#a-email', 'alva.a');
+    await page.click('#auth-submit');
+    await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
+    prova('familjen: ett användarnamn i Glömt lösenordet får förälderbeskedet',
+      (await text(page, '#auth-msg')).includes('byts av föräldern'), await text(page, '#auth-msg'));
+    prova('familjen: och inget mejl begärs', !S.logg.some(r => r.väg === '/auth/v1/recover'));
+    await context.close();
+  }
+
+  /* 6. Studiehjälparvyn: ett ord utan @ är en ofullständig adress, inget barn. */
+  {
+    const { context, page, S } = await öppna(webb, {});
+    await page.goto(BAS + '/larare');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('studiehjälpare: fältet heter E-post', (await text(page, 'label[for="a-email"]')) === 'E-post');
+    await page.click('[data-glomt] button');
+    await page.fill('#a-email', 'alva.a');
+    await page.click('#auth-submit');
+    await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
+    prova('studiehjälpare: ett ord utan @ i Glömt lösenordet är en ofullständig adress',
+      (await text(page, '#auth-msg')).startsWith('Kontrollera e-postadressen'), await text(page, '#auth-msg'));
+    prova('studiehjälpare: och inget mejl begärs', !S.logg.some(r => r.väg === '/auth/v1/recover'));
+    await context.close();
+  }
+
+  /* 7. Barnets vy tar också hela barnadressen. */
+  {
+    const { context, page, S } = await öppna(webb, { rpc: barnRpc() });
+    await page.goto(BAS + '/barn');
+    await page.waitForSelector('#view-auth:not([hidden])');
+    await page.fill('#bv-anv', 'Alva.A@barn.nextrum.se');
+    await page.fill('#a-pass', 'alva-losen-1');
+    await page.click('#bv-logga-in');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 5000 }).catch(() => {});
+    const försök = S.logg.filter(r => r.väg === '/auth/v1/token').pop();
+    prova('barn: hela barnadressen fungerar också',
+      (await synlig(page, '#view-app')) && försök && försök.kropp && försök.kropp.email === 'alva.a@barn.nextrum.se',
+      JSON.stringify(försök && försök.kropp));
+    await context.close();
+  }
+
+  /* 8. Telefonen: den längre etiketten får plats. */
+  {
+    const { context, page } = await öppna(webb, {
+      context: { viewport: { width: 360, height: 780 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }
+    });
+    await page.goto(BAS + '/foralder');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    const bredd = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    prova('familjen telefon: ingen sidledsscroll', bredd <= 0, bredd + ' px');
+    /* Lösenord står alltid på en rad: lika hög är en rad. */
+    const höjd = await page.evaluate(() => ['a-email', 'a-pass'].map(id =>
+      document.querySelector('label[for="' + id + '"]').getBoundingClientRect().height));
+    prova('familjen telefon: etiketten står på en rad', höjd[0] <= höjd[1] + 1, höjd.join(' mot ') + ' px');
+    await bild(page, 'familjen-inloggning-telefon');
+    await context.close();
+  }
+}
+
 /* ============ adminvyn ============ */
 const ALLA = ['leads', 'matchning', 'anvandare_las', 'anvandare_redigera', 'studiehjalpare_godkann',
   'bokningar_las', 'rapporter_las', 'notiskonfig', 'admin_hantera'];
@@ -737,6 +886,7 @@ async function provaAdminvyn(webb) {
   const webb = await pw.chromium.launch();
   try {
     await provaBarnvyn(webb);
+    await provaFamiljensInloggning(webb);
     await provaBarnpanelen(webb);
     await provaAdminvyn(webb);
   } catch (e) {

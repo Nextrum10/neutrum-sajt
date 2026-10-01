@@ -39,7 +39,10 @@
       titel: 'Studievyn',
       titelUpp: 'Skapa föräldrakonto',
       under: 'För dig som är förälder eller elev: studieplanen, bokningen, kontakten med er studiehjälpare och rapporten efter varje pass.',
-      underUpp: 'Kontot är gratis. Vyn låses upp så fort vi matchat er med en studiehjälpare.'
+      underUpp: 'Kontot är gratis. Vyn låses upp så fort vi matchat er med en studiehjälpare.',
+      /* Ett barn med egen inloggning kommer hit från Logga in på sajten
+         och loggar in med sitt användarnamn (submit nedan). */
+      etikett: 'E-post eller användarnamn'
     });
   }
   $$('[data-auth]').forEach(b => b.addEventListener('click', () => { läge = b.dataset.auth; ritaAuth(); }));
@@ -52,13 +55,35 @@
     const msg = $('#auth-msg'), knapp = $('#auth-submit');
     rensa(msg);
     if (!supa) { säg(msg, 'Databasen är inte kopplad. Fyll i nextrum-config.js.', false); return; }
-    if (läge === 'glomt') { await NXStudie.glömtSkicka(supa); return; }
+    if (läge === 'glomt') { await NXStudie.glömtSkicka(supa, { barn: true }); return; }
 
     const epost = $('#a-email').value.trim();
     const lösen = $('#a-pass').value;
     const namn = $('#a-name').value.trim();
 
-    if (!epost || !lösen) { säg(msg, 'Fyll i e-post och lösenord.', false); return; }
+    if (!epost || !lösen) {
+      säg(msg, läge === 'in' ? 'Fyll i e-post eller användarnamn och lösenord.' : 'Fyll i e-post och lösenord.', false);
+      return;
+    }
+
+    /* Ett barns användarnamn (eller barnadressen): barnet loggas in som
+       på /barn, med barnvyns besked, och skickas till sin vy. En adress
+       med @ på en annan domän är alltid en vuxen, så föräldrarnas
+       inloggning är densamma som förut. */
+    const barnAdress = läge === 'in' ? NXStudie.barnAdress(epost) : null;
+    if (barnAdress) {
+      await medan(knapp, 'Loggar in…', async () => {
+        const svar = await NXStudie.loggaInBarn(supa, barnAdress, lösen);
+        if (svar.fel) {
+          säg(msg, svar.fel, false);
+          $('#a-pass').value = '';
+          $('#a-pass').focus();
+          return;
+        }
+        location.replace('/barn');
+      });
+      return;
+    }
     if (läge === 'up' && !namn) { säg(msg, 'Fyll i ditt namn.', false); return; }
     if (läge === 'up' && lösen.length < 6) { säg(msg, 'Lösenordet måste vara minst 6 tecken.', false); return; }
 

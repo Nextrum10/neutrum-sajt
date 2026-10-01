@@ -237,7 +237,9 @@ föräldern byter lösenordet.
   i konsolen.
 - **En barnadress** (`@barn.nextrum.se`) får beskedet att föräldern byter
   lösenordet, utan anrop. Auth hade ändå inte skickat något
-  (`barnkonto_mejlsparr`).
+  (`barnkonto_mejlsparr`). I studievyn gäller det också ett användarnamn
+  utan @, för där loggar barnet in med det (2026-10-01,
+  `minne/barnkonton-och-admin.md`).
 - **En länk som gått ut eller redan använts** kommer tillbaka med
   `#error_code=otp_expired` i stället. `nextrum-app.js` tar felet ur
   adressen innan klienten ser det (adminvyn och studievyn läser adressen
