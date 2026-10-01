@@ -97,6 +97,16 @@
   --ockra:#7E5714;        /* ockra — sifferrader, understrykningar */
   --ockra-l:#C08A2E;      /* ockra ljus — endast på bark */
 
+  /* orange — bara "Betala i förväg" (2026-10-01, Leo). Ett val och inget
+     drag, så den står utanför lera, ockra och mossa och betyder inget
+     läge. Bläcket är mörkt, inte kräm: ett kräm som klarar AA på en
+     ren orange måste ha en så mörk botten att den läses som lera.
+       bark #1A1813 på orange #F07A1E → 6,4:1
+       bark #1A1813 på hover  #D9650F → 4,9:1 */
+  --orange:#F07A1E;
+  --orange-lugn:#D9650F;
+  --orange-ink:#1A1813;
+
   /* --- de mörka banden ---
      Banden låg kvar i det gamla schemat: kallsvart botten, rent vitt
      bläck. De gränsar direkt till footern, som är bark — två olika
@@ -214,7 +224,10 @@
     --acc-lugn:#E89A6D;
     --mossa:#9DAD86;
     --ockra:#C08A2E;
-
+    /* orange ljusnar på hover här, som lera; bark på orange 7,1:1 */
+    --orange:#F28A2E;
+    --orange-lugn:#F9A055;
+    --orange-ink:#1A1813;
 
 
 
@@ -271,6 +284,7 @@
   --nt:#262319; --nt-fg:#EFE6D6; --nt-mut:#A99E88; --nt-ln:rgba(239,230,214,.16);
   --nt-2:#262319; --nt-glod:rgba(217,129,79,.09); --nt-mossa:rgba(157,173,134,.07); --nt-film:#262319;
   --acc:#D9814F; --acc-lugn:#E89A6D; --mossa:#9DAD86; --ockra:#C08A2E;
+  --orange:#F28A2E; --orange-lugn:#F9A055; --orange-ink:#1A1813;
   --band-bg:#22201A; --band-fg:#EFE6D6; --band-muted:#A99E88;
   --band-line:rgba(239,230,214,.14); --band-surface:rgba(239,230,214,.05);
   --acc-ink:#1A1813; --acc-text:#D9814F;
@@ -595,6 +609,8 @@ body .mobile-menu{display:block}
   border-color:var(--ln-2);color:var(--bl);background:transparent;
 }
 .btn-ghost:hover{border-color:var(--bl);background:color-mix(in srgb,var(--bl) 4%,transparent)}
+.btn-orange{background:var(--orange);color:var(--orange-ink);box-shadow:var(--sk-1)}
+.btn-orange:hover{background:var(--orange-lugn);box-shadow:var(--sk-2)}
 .btn-lg{padding:17px 30px;font-size:1rem}
 
 .on-band .btn-primary,.on-nt .btn-primary{background:var(--nt-fg);color:var(--nt)}

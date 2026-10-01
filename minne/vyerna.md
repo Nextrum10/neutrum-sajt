@@ -202,6 +202,10 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    (`--mossa-soft`, `--ockra-soft` och texttonerna), `--yta`,
    `--yta-fot`, `--tint` och `--bricka` står i cinemas `:root`, i båda
    mörka blocken; avsnittet i arbetsyta har inga egna hexkoder.
+   **Orange är inget läge** (2026-10-01, Leo): `--orange`, `--orange-lugn`
+   och `--orange-ink` bär bara knappen Betala i förväg (`.btn-orange`,
+   `radBetala()`), ett val och inget drag. Bläcket är mörkt: kräm klarar
+   inte AA på en ren orange. Använd den inte som lägesfärg.
 2. **Ett drag överst, resten längst ner.** Passets sida
    (`NXStudie.passSida`) tar `datum`, `val` (betalvalen), `belopp`,
    `fakta` och `fot`, och ett block med `forst` står direkt under
