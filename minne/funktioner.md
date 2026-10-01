@@ -87,6 +87,16 @@ och koden fanns inte i någon gren. Leo samma dag: behåll den. Driftens
 `index.ts` är hemtagen ordagrant; `_delad/auth.ts` är repots, för
 driftens kopia hade den opinnade `supabase-js@2`. Ingen vy skickar
 `roll` än, så i adminvyn bjuds bara familjer in.
+**`fakturering` version 33, 2026-10-01**: driftsatt från main (7fa4286)
+efter PR #167, en månad skapas först när den är slut, och hämtad
+tillbaka och lika med main i alla sju filerna. Version 32 hade också den
+äldre `_delad/auth.ts` ovan; nu har den mains. Provad mot driften: 401
+utan inloggning, och schemats väg torrt gav 200 för september
+(`manadenNu` i driftens körmiljö). Spärren själv, 409 för en månad som
+inte är slut, är inte provad i driften: den nås bara med en
+admininloggning eller `x-fakturering-nyckel`, för schemats väg tar alltid
+förra månaden. Regeln den bygger på, `manadenArSlut`, är provad i
+`pris_test.ts`.
 
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
