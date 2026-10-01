@@ -175,7 +175,8 @@ knappen stängs med `NXStudie.medan()`.
 ### Innehållet i studievyn och studiehjälparvyn
 Lägets färg säger vems drag det är: lera ert drag eller fel, ockra väntar, mossa klart (tokens i
 cinemas `:root` och båda mörka blocken); som serier skiljs de inte åt av färgblinda, och
-ämnesfärgerna finns bara i NexLäx. Ett drag överst, en knapp per listrad, tid och plats genom
+ämnesfärgerna finns bara i NexLäx. Orange (`--orange`) är inget läge: den bär bara knappen
+Betala i förväg. Ett drag överst, en knapp per listrad, tid och plats genom
 `NXKontakt.passRad`, betalvalen i `.vy-betalval`. En månadsrad i en dold sektion har bredden
 noll; adminvyns rader har varje månad. **Tummen**: tryckytor minst 44 px, och `::after` provas
 med `elementFromPoint`.

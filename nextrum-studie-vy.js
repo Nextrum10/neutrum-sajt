@@ -2301,7 +2301,7 @@
     if (bank) return '<button type="button" class="btn btn-primary btn-sm" data-timbank="' + esc(b.id) + '">Betala med timbanken</button>';
     return b.betalning_status === 'misslyckad'
       ? '<button type="button" class="btn btn-primary btn-sm" data-betala="' + esc(b.id) + '">Försök betala igen</button>'
-      : '<button type="button" class="btn btn-ghost btn-sm" data-betala="' + esc(b.id) + '">Betala i förväg</button>';
+      : '<button type="button" class="btn btn-orange btn-sm" data-betala="' + esc(b.id) + '">Betala i förväg</button>';
   }
   const BETALNING_TEXT = {
     ingen: 'Inte betalt än',
