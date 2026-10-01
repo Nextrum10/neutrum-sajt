@@ -75,6 +75,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-barn-vy.js` | Bara `barn.html`, barnets egen vy (barnkonton_och_admin). Laddar bara NX och NXStudie och ritar det `barn_oversikt()` och `barn_notiser()` svarar, med `textContent`. Se `minne/barnkonton-och-admin.md` |
+| `lank.html` + `nextrum-lank.js` | `/lank` (2026-10-01): knappen som kontomejlens länk leder till, så att ett mejlfilter som öppnar länken i förväg inte förbrukar den. Ingen Supabase-klient, skarp CSP. Se `minne/sakerhet.md`, Kontomejlen |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, toppraden (sök, notiser, kontot), bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |
 | `nextrum-admin-*.js` | Ett område var: detalj, oversikt, kunder, rekrytering, bibliotek, kommunikation, drift, ekonomi (Betalningar), manaden (Månadens ekonomi), loner (Löner), tjanster, system, behorighet (vad en admin med behörigheter ser, och System → Adminhantering), automationer, ai, radera. Anropar varandra via `NXAdmin.rita`. En ny områdesfil ska in i `nextrum-modulvakt.js` också |

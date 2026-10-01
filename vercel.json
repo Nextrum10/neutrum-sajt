@@ -34,7 +34,7 @@
       ]
     },
     {
-      "source": "/(admin|larare|barn)",
+      "source": "/(admin|larare|barn|lank)",
       "headers": [
         {
           "key": "Content-Security-Policy",

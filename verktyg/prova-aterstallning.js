@@ -115,6 +115,18 @@ function falskSupabase(o) {
       }
       return svar(route, 200, anv);
     }
+    if (p === '/auth/v1/verify' && metod === 'GET') {
+      /* Länken i mejlet: Auth förbrukar token och skickar vidare till
+         redirect_to med inloggningen i fragmentet, eller med felet när
+         token inte finns. tok-<id> är en token för kontot <id>. */
+      const token = url.searchParams.get('token') || '';
+      const id = token.startsWith('tok-') ? token.slice(4) : null;
+      const hash = id && ANVANDARE[id] && !o.förbrukad
+        ? '#access_token=' + jwt(id, 'authenticated') + '&expires_in=3600&refresh_token=prov-' + id
+          + '&token_type=bearer&type=' + (url.searchParams.get('type') || '')
+        : UTGÅNGEN;
+      return route.fulfill({ status: 303, headers: { location: (url.searchParams.get('redirect_to') || BAS + '/') + hash } });
+    }
     if (p === '/auth/v1/logout') return svar(route, 204);
     if (p.startsWith('/auth/v1/')) return svar(route, 200, {});
 
@@ -516,6 +528,115 @@ async function provaLänken(webb) {
 }
 
 /* ============ på en telefon ============ */
+/* ============ 3. /lank, knappen före länken (2026-10-01) ============ */
+/* Mallens länk som Supabase fyller den: html/template procentkodar allt
+   efter # utom A–Z, a–z, 0–9 och -._~, med små hexsiffror. */
+const goKoda = s => Array.from(Buffer.from(s, 'utf8')).map(b => {
+  const c = String.fromCharCode(b);
+  return /[A-Za-z0-9\-._~]/.test(c) ? c : '%' + b.toString(16).padStart(2, '0');
+}).join('');
+const verify = (token, typ, till) => FALSK + '/auth/v1/verify?token=' + token + '&type=' + typ
+  + '&redirect_to=' + BAS + (till || '/foralder');
+
+async function provaMellansidan(webb) {
+  /* Återställningen, kodad som i mejlet: knappen, och sedan hela vägen till rutan. */
+  {
+    const { context, page, S, konsol, riktiga } = await öppna(webb, {});
+    await page.goto(BAS + '/lank#' + goKoda(verify('tok-foralder-1', 'recovery')));
+    await page.waitForSelector('#lank-knapp', { timeout: 8000 }).catch(() => {});
+    prova('lank: rubriken efter typen', (await text(page, '#lank-titel')) === 'Välj ett nytt lösenord', await text(page, '#lank-titel'));
+    prova('lank: knappen efter typen', (await text(page, '#lank-knapp')) === 'Välj nytt lösenord', await text(page, '#lank-knapp'));
+    prova('lank: ingenting hämtas innan knappen trycks', S.logg.length === 0, JSON.stringify(S.logg.map(r => r.väg)));
+    const länkar = await page.locator('a').evaluateAll(as => as.map(a => a.getAttribute('href') || ''));
+    prova('lank: Auths länk står inte i någon href som ett filter kan följa', !länkar.some(h => /supabase|verify/.test(h)), länkar.join(' '));
+    const höjd = await page.locator('#lank-knapp').evaluate(b => b.getBoundingClientRect().height);
+    prova('lank: knappen är minst 44 px hög', höjd >= 44, höjd);
+    await bild(page, 'lank-aterstallning');
+    await page.click('#lank-knapp');
+    await page.waitForURL(u => new URL(u).pathname === '/foralder', { timeout: 8000 }).catch(() => {});
+    await page.waitForSelector('.nx-fraga.open #nylos-t', { timeout: 8000 }).catch(() => {});
+    const v = S.logg.filter(r => r.väg === '/auth/v1/verify');
+    prova('lank: knappen använder länken en gång', v.length === 1 && v[0].sök.get('token') === 'tok-foralder-1'
+      && v[0].sök.get('type') === 'recovery', JSON.stringify(v.map(r => r.sök.toString())));
+    prova('lank: vidare till studievyn och rutan för nytt lösenord', (await text(page, '#nylos-t')) === 'Välj ett nytt lösenord',
+      page.url() + ' ' + (await text(page, '#nylos-t')));
+    prova('lank: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+    prova('lank: inget anrop till den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+    await context.close();
+  }
+
+  /* En okodad länk godtas också; inbjudan och bekräftelsen får sina texter. */
+  {
+    const { context, page } = await öppna(webb, {});
+    await page.goto(BAS + '/lank#' + verify('tok-foralder-1', 'invite'));
+    await page.waitForSelector('#lank-knapp', { timeout: 8000 }).catch(() => {});
+    prova('lank okodad: inbjudan', (await text(page, '#lank-titel')) === 'Välkommen till Nextrum'
+      && (await text(page, '#lank-knapp')) === 'Välj lösenord', await text(page, '#lank-titel'));
+    await page.click('#lank-knapp');
+    await page.waitForSelector('.nx-fraga.open #nylos-t', { timeout: 8000 }).catch(() => {});
+    prova('lank okodad: vidare till rutan för inbjudan', (await text(page, '#nylos-t')) === 'Välj ditt lösenord', await text(page, '#nylos-t'));
+    await context.close();
+  }
+  {
+    const { context, page } = await öppna(webb, {});
+    await page.goto(BAS + '/lank#' + goKoda(verify('tok-handledare-1', 'signup', '/larare')));
+    await page.waitForSelector('#lank-knapp', { timeout: 8000 }).catch(() => {});
+    prova('lank: bekräftelsen av ett nytt konto', (await text(page, '#lank-titel')) === 'Bekräfta din e-postadress'
+      && (await text(page, '#lank-knapp')) === 'Bekräfta e-postadressen', await text(page, '#lank-titel'));
+    await page.click('#lank-knapp');
+    await page.waitForURL(u => new URL(u).pathname === '/larare', { timeout: 8000 }).catch(() => {});
+    await page.waitForSelector('#view-pending:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('lank: bekräftelsen loggar in i studiehjälparvyn utan ruta', await synlig(page, '#view-pending')
+      && (await page.locator('#nylos-t').count()) === 0, page.url());
+    await context.close();
+  }
+
+  /* En förbrukad länk: knappen leder vidare, och vyn säger att den inte gick att använda. */
+  {
+    const { context, page } = await öppna(webb, { förbrukad: true });
+    await page.goto(BAS + '/lank#' + goKoda(verify('tok-foralder-1', 'recovery')));
+    await page.waitForSelector('#lank-knapp', { timeout: 8000 }).catch(() => {});
+    await page.click('#lank-knapp');
+    await page.waitForURL(u => new URL(u).pathname === '/foralder', { timeout: 8000 }).catch(() => {});
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('lank förbrukad: Glömt lösenordet med förklaringen', (await text(page, '#auth-sub')).startsWith('Länken i mejlet gick inte att använda'),
+      await text(page, '#auth-sub'));
+    await context.close();
+  }
+
+  /* Allt som inte är en länk till verify hos vårt Supabase, med token: ingen knapp. */
+  for (const [namn, hash] of [
+    ['en annan webbplats', '#' + goKoda('https://elak.example/auth/v1/verify?token=tok-foralder-1&type=recovery')],
+    ['vårt Supabase men inte verify', '#' + goKoda(FALSK + '/auth/v1/logout?token=tok-foralder-1')],
+    ['ingen token', '#' + goKoda(FALSK + '/auth/v1/verify?type=recovery')],
+    ['javascript:', '#javascript:alert(1)'],
+    ['ingen länk alls', '']
+  ]) {
+    const { context, page, S, konsol } = await öppna(webb, {});
+    await page.goto(BAS + '/lank' + hash);
+    await page.waitForSelector('#lank-titel', { timeout: 8000 }).catch(() => {});
+    await vänta(150);
+    prova('lank ' + namn + ': Länken är inte hel', (await text(page, '#lank-titel')) === 'Länken är inte hel', await text(page, '#lank-titel'));
+    prova('lank ' + namn + ': ingen knapp', (await page.locator('#lank-knapp').count()) === 0);
+    prova('lank ' + namn + ': väg till inloggningen', (await page.locator('#lank-varfor a[href="/foralder"]').count()) === 1);
+    prova('lank ' + namn + ': inga anrop och inga fel', S.logg.length === 0 && konsol.length === 0, konsol.join(' | '));
+    await context.close();
+  }
+
+  /* Telefonen. */
+  {
+    const { context, page } = await öppna(webb, { context: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } });
+    await page.goto(BAS + '/lank#' + goKoda(verify('tok-foralder-1', 'signup')));
+    await page.waitForSelector('#lank-knapp', { timeout: 8000 }).catch(() => {});
+    const bredd = await page.evaluate(() => document.documentElement.scrollWidth);
+    prova('lank telefon: ingen sidledsrullning', bredd <= 390, bredd);
+    const ruta = await page.locator('#lank-knapp').boundingBox();
+    prova('lank telefon: knappen syns utan att rulla', ruta && ruta.y + ruta.height <= 844, JSON.stringify(ruta));
+    await bild(page, 'lank-telefon');
+    await context.close();
+  }
+}
+
 async function provaTelefonen(webb) {
   const { context, page } = await öppna(webb, { context: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } });
   await page.goto(BAS + '/foralder');
@@ -545,6 +666,7 @@ async function provaTelefonen(webb) {
   try {
     await provaInloggningen(webb);
     await provaLänken(webb);
+    await provaMellansidan(webb);
     await provaTelefonen(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);

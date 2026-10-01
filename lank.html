@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
+<link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
+<title>Fortsätt till Nextrum</title>
+<meta name="robots" content="noindex,nofollow">
+<!-- Länken i mejlet bär Auths engångslänk efter #, och den lämnar aldrig
+     webbläsaren: ett fragment skickas inte till servern och inte som
+     Referer. Raden nedan tar bort också sidans egen adress ur Referer när
+     knappen leder vidare till Supabase. -->
+<meta name="referrer" content="no-referrer">
+<link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
+<!-- Samma lager som vyerna, så att kortet ser ut som inloggningen. -->
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
+<link rel="stylesheet" href="nextrum-cinema.css?v=ac8ac9d1">
+<link rel="stylesheet" href="nextrum-vy.css?v=28e93927">
+</head>
+<body class="vy">
+
+<header class="hdr stuck" id="hdr">
+  <div class="wrap nav">
+    <a href="/" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+  </div>
+</header>
+
+<main class="wrap" id="innehall">
+  <!-- ============================================================
+       LÄNKEN I KONTOMEJLEN (2026-10-01)
+       Mallarna i Supabase leder hit, med Auths länk efter #
+       (minne/sakerhet.md, Kontomejlen). Länken går bara att använda en
+       gång, och vissa mejlfilter öppnar varje länk i ett mejl innan
+       människan gör det. Utan den här sidan var länken då förbrukad, och
+       personen möttes av "länken gick inte att använda" varje gång, också
+       med en ny länk. Samma skäl som knappen på /avanmal.
+
+       Bara knappen använder länken. Den är en knapp och inte en länk med
+       href, så att ett filter som följer länkarna på sidan inte heller
+       kommer åt den, och sidan går ingenstans av sig själv.
+       Texterna sätts av nextrum-lank.js efter länkens typ.
+       ============================================================ -->
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <span class="nx-et acc">Länken i mejlet</span>
+      <h1 id="lank-titel" style="margin-top:16px">Fortsätt till Nextrum</h1>
+      <p class="nx-lede" id="lank-text" style="margin-bottom:22px">Tryck på knappen för att fortsätta.</p>
+      <button class="btn btn-primary btn-block" type="button" id="lank-knapp">Fortsätt</button>
+      <p class="auth-alt" id="lank-varfor">Vi frågar först eftersom vissa mejlprogram öppnar länkar i förväg för att leta efter virus. Länken går bara att använda en gång, så den hade annars redan varit förbrukad när du klickade.</p>
+    </div>
+  </div>
+</main>
+
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-bot" style="border:none;padding-top:0">
+      <span>© <span id="year"></span> Nextrum</span>
+      <a href="mailto:info@nextrum.se">info@nextrum.se</a>
+    </div>
+  </div>
+</footer>
+
+<script src="nextrum-config.js?v=fdfed591"></script>
+<script src="nextrum-lank.js?v=cff6485e"></script>
+</body>
+</html>

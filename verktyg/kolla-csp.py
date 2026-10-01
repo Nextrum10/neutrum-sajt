@@ -5,7 +5,8 @@
 
 Sedan Fas 3.5 skickar vercel.json en skarp Content-Security-Policy för
 /admin, /larare och /foralder, med script-src 'self'. /barn fick samma
-policy när barnkontona kom (barnkonton_och_admin). Det betyder att
+policy när barnkontona kom (barnkonton_och_admin), och /lank, sidan med
+knappen för länken i kontomejlen, 2026-10-01. Det betyder att
 webbläsaren vägrar köra all JavaScript som står direkt i sidan:
 
   · <script> utan src
@@ -23,7 +24,7 @@ Stilattribut (style="…") är tillåtna, eftersom style-src har
 import io, os, re, sys
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VYER = ['admin.html', 'larare.html', 'foralder.html', 'barn.html']
+VYER = ['admin.html', 'larare.html', 'foralder.html', 'barn.html', 'lank.html']
 
 # Samma filer som vyerna laddar och som bygger html av strängar.
 SKRIPT = ['nextrum-app.js', 'nextrum-kontakt.js', 'nextrum-studie.js', 'nextrum-arbetsyta.js',
@@ -36,7 +37,7 @@ SKRIPT = ['nextrum-app.js', 'nextrum-kontakt.js', 'nextrum-studie.js', 'nextrum-
           'nextrum-admin-system.js', 'nextrum-admin-behorighet.js', 'nextrum-admin-automationer.js',
           'nextrum-admin-ai.js', 'nextrum-admin-konsol.js',
           'nextrum-larare-vy.js', 'nextrum-studie-vy.js', 'nextrum-barn-vy.js', 'nextrum-uppgifter.js',
-          'nextrum-tjanster.js', 'nextrum-modulvakt.js', 'nextrum-fel.js']
+          'nextrum-tjanster.js', 'nextrum-modulvakt.js', 'nextrum-fel.js', 'nextrum-lank.js']
 
 
 def main():
