@@ -50,7 +50,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Betalningar, Månadens ekonomi och Löner** räknar på `betalningsrader()` och
   `NXBetalning.passpris`, så en månad har ett belopp; testbetalningar räknas aldrig. En månad
   skapas först när den är slut: `fakturering` nekar en som pågår med 409, och rutan låter bara
-  torrköra den (2026-10-01). Ett pass hör till EN lönemånad. PAXml tar bara godkända, inte
+  torrköra den (2026-10-01). Ett pass hör till EN lönemånad och EN faktura: sin egen månads
+  så länge den är ett utkast, och körningen går varje natt och lägger sena pass där
+  (`malmanad`, `NXBetalning.lonemanad`); Godkänd och Lagd i Fortnox sparas bara om beloppet är
+  det som visades. PAXml tar bara godkända, inte
   utbetalda underlag och är inte provläst i Fortnox. Personnummer, bankkonto och skatt står i
   Fortnox, aldrig här, och lönespecen räknar inget och drar ingen skatt.
 - **Timmarna**: `bookings_timmarna_tillbaka` är den SISTA before-triggern på `bookings`
@@ -382,6 +385,8 @@ Detaljer: `minne/grunden.md`.
   (`stripe_skarp = false`): det räknas inte längre som intäkt.
 - **Skatt och anställning av minderåriga**: `studiehjalpare_form = oklart`; revisor före första
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
+- **Obetalda pass på månadens faktura av sig själva** är beslutat (2026-10-01), inte byggt: en
+  villkorsändring på alla 36 ställen och i mejlen, i en egen PR (`minne/betalning.md`).
 - **Med flit inte**: en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
   passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
   villkorsändringarna och om att vi kan läsa chatten, och familjerna om barnens inloggning

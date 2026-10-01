@@ -273,7 +273,30 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   som rapporterades samma kväll fick inte plats på septembers underlag
   och fick vänta en månad på lönen. `fakturering` nekar detsamma med 409,
   så knappen är inte skyddet. Rutan säger när en tidigare månad har pass
-  men inga underlag (`data-kor-not`).
+  men inga underlag alls, alltså aldrig körts (`data-kor-not`): en
+  körning skapar bara sin egen månads underlag.
+- **Passets månad** (2026-10-01, samma kväll). Leo: "passen som är
+  hållna i september ska spärras av för september". Ett pass hamnar på
+  sin egen månads underlag och faktura så länge personens dokument för
+  den månaden är ett utkast eller inte skapat än; körningen lägger raden
+  på utkastet och räknar om summan ur raderna. Bara ett låst dokument
+  (godkänt, utbetalt, skickat, betalt, makulerat) skickar passet vidare,
+  till den första senare månaden som tar emot det, och ett nytt dokument
+  skapas bara för körningens period. Regeln är `malmanad()` i
+  `_delad/pris.ts` och, för vyerna, `NXBetalning.lonemanad`. **Körningen
+  går varje natt** för förra månaden (`manadskorningen_gar_varje_natt`):
+  den 1:a skapar den, resten av månaden lägger den till det som
+  rapporterats eller satts på faktura sedan natten före. Förut tog
+  körningen allt som inte stod på ett underlag till periodens: september
+  kördes med knappen den 29:e, tre pass den 29 och 30 september
+  rapporterades efter det och hade hamnat på oktobers underlag (720 kr,
+  betalt den 25 november), och fakturapasset den 30:e på oktobers
+  faktura. Studiehjälparvyn visade 960 kr för september bredvid en
+  lönespec på 240. Leo valde samma kväll att september är 960 kr den 25
+  oktober, och utkasten från den 29:e togs bort och september kördes om
+  (underlag 960 kr, faktura 1 516 kr). **Lagd i Fortnox och Godkänd
+  sparas bara om beloppet är det som visades** (`skrivOmOförändrad`):
+  natten kan ha lagt ett pass på utkastet.
 - **Löner** (`#loner`, `nextrum-admin-loner.js`) listar de godkända
   studiehjälparna och alla med något att få för månaden.
   **Månadsraden är utbetalningsmånaden** (samma kväll, Leo: "september
@@ -288,21 +311,20 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   efter, och lönefilen heter efter utbetalningen. Anställningsnumret
   (`lon_anstallning`, Fas 17.1) och
   timpenningen sätts där; personnummer, adress, bankkonto och
-  skattetabell står i Fortnox Lön och inte här, med flit. Finns passens
-  underlag gäller underlagets tal; annars räknas de pass som månadens
-  körning kommer att ta (genomförda, rapporterade, inte undantagna, inte
-  på ett underlag) och märks beräknat. **Varje pass räknas i EN månad**
-  (`NXAdmin.lönemånad`): sin egen, eller, när den månaden eller en senare
-  redan har underlag, månaden efter den senaste med underlag. Leo samma
-  kväll: "septembers pass räknar för lön i sep och okt". Körningen tar
-  allt till och med periodens slut som inte står på ett underlag, och
+  skattetabell står i Fortnox Lön och inte här, med flit. Månadens lön
+  är underlaget plus de pass en körning lägger på det eller skapar det
+  med (genomförda, rapporterade, inte undantagna, inte på ett underlag);
+  de senare märks beräknat. **Varje pass räknas i EN månad**
+  (`NXAdmin.lönemånad`, Passets månad ovan): sin egen, och en senare
+  bara när den egna månadens underlag är godkänt eller utbetalt. Leo
+  2026-09-28: "septembers pass räknar för lön i sep och okt". Körningen
+  tar allt till och med periodens slut som inte står på ett underlag, och
   sidan räknade först likadant, så septembers pass stod som lön både i
-  september och i oktober, också i Månadens ekonomi. Ett pass som
-  rapporterats efter att dess månad fått underlag står i sin månad som
-  "på nästa underlag" och i nästa som "från tidigare månader". Bara
-  underlagen räknas som körda, inte fakturorna: körningen skapar
-  fakturorna först, och står en månad med fakturor men utan underlag ska
-  den köras igen.
+  september och i oktober, också i Månadens ekonomi. Sedan stod ett pass
+  i månaden efter den senaste med något underlag alls, tills regeln blev
+  passets månad (2026-10-01). Ett pass vars månad redan är låst står i
+  sin månad som "på nästa underlag" och i den som tar det som "från
+  tidigare månader".
 - **Lönefilen är PAXml 2.0**, som Fortnox Lön läser in under Lön →
   Kalender → Importera löneunderlag och matchar på anställningsnumret.
   En `lonetrans` per underlagsrad: anstid, löneart
@@ -331,12 +353,17 @@ siffrorna är underlagets, frysta när månadskörningen skrev det
 (`NXBetalning.lonespec`). Månadskörningen skriver underlaget den 1:a
 varje månad, av sig själv sedan 2026-09-28 (pg_cron-jobbet
 `manadskorning`, avsnitt 5; läget står under Betalningar → Fakturor),
-så en månad har sin lönespec när den är slut. Svarar körningen något
+så en månad har sin lönespec när den är slut. Sedan 2026-10-01 går den
+varje natt och lägger ett pass som rapporteras sent på lönespecen, så
+länge den inte är godkänd (Passets månad ovan). Svarar körningen något
 annat än 200 blir det en uppgift en halvtimme senare, som står kvar
-tills någon stänger den (avsnitt 5). Ett pass som rapporteras
-efter körningen kommer med nästa månad, och lönespecen säger det under
-summan, liksom pass som saknar rapport. Månaderna som har en lönespec
-är märkta i månadsraden. **Ingen skatt, med flit**: `studiehjalpare_form`
+tills någon stänger den (avsnitt 5). Rutan ovanför lönespecen är
+månadens lön: lönespecen plus det som läggs till vid nästa körning, och
+lönespecen säger under summan hur många pass som läggs till, vilka av
+månadens pass som står på en senare (för att den här var godkänd), och
+vilka som saknar rapport. Förut räknade rutan alla pass med datum i
+månaden, och september stod som 960 kr bredvid en lönespec på 240.
+Månaderna som har en lönespec är märkta i månadsraden. **Ingen skatt, med flit**: `studiehjalpare_form`
 står på `oklart` (avsnitt 11), och utan anställningsform finns ingen
 skattetabell att dra efter. Summan står "före skatt". Blir
 studiehjälparna anställda gör Fortnox Lön lönebeskedet med skatten, och
@@ -346,6 +373,15 @@ då ska lönespecen här säga var det finns i stället för att räkna själv.
 
 ## 11. Vad som inte är byggt: betalningen
 
+- **Obetalda pass på månadens faktura av sig själva** (beslutat
+  2026-10-01, inte byggt). Leo: en familj som har ett pass den 30
+  september och bekräftar i oktober "ska inte kunna välja hur de betalar
+  utan bekräftar de inte läggs det automatiskt på faktura". Det ändrar
+  villkoren: meningen på 36 ställen i 23 filer och i mejlen, på båda
+  språken, och familjerna ska få veta. Leo valde en egen PR efter
+  Passets månad (avsnitt Månadens ekonomi och Löner). Förslaget var att
+  stänga kortet först när passet faktiskt står på en faktura: att stänga
+  det vid månadsskiftet ger bara pengarna senare.
 - **Betalning.** Familjen betalar varje pass med kort, **i förväg eller
   efter passet när de bekräftar rapporten** (Fas 19.2; före passet från
   Fas 14.2). Faktura finns sedan Fas 14.6 som andra betalsätt, **byggt

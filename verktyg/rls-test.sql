@@ -47,8 +47,8 @@
 -- schemalagda_korningar_syns, manadskorningens_svar_blir_en_uppgift,
 -- manadskorningens_svar_lases_den_forsta, anonyma_skrivningar_far_tak,
 -- Fas 23.2 (NexLäx, fas23_2_nexlax, med sin bank), admin_oppnar_chatten,
--- avbokningar_och_svar, tipskoder_och_kampanjkoder och
--- barnkonton_och_admin är körda.
+-- avbokningar_och_svar, tipskoder_och_kampanjkoder,
+-- barnkonton_och_admin och manadskorningen_gar_varje_natt är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -6612,11 +6612,13 @@ select pg_temp.prova('Månadskörning en familj ser inte schemat', '00000000-000
 select pg_temp.prova('Månadskörning anon ser inte schemat', null,
   array['select public.manadskorning_lage()'], 'nekad');
 
+-- Varje natt sedan manadskorningen_gar_varje_natt (2026-10-01): sent
+-- rapporterade pass läggs till på sin månads utkast.
 insert into utfall (test, ok, detalj)
-select 'Månadskörning går den 1:a', count(*) = 1,
+select 'Månadskörning går varje natt', count(*) = 1,
        coalesce(string_agg(schedule || ' ' || command, '; '), 'inget jobb')
   from cron.job
- where jobname = 'manadskorning' and active and schedule = '17 4 1 * *'
+ where jobname = 'manadskorning' and active and schedule = '17 4 * * *'
    and command = 'select intern.manadskorning_vack()';
 
 -- ------------------------------------------------------------
@@ -6853,13 +6855,13 @@ select pg_temp.prova('Månadskörningens svar anon läser det inte', null,
 select pg_temp.prova('Månadskörningens svar inte admin heller, bara schemat', '00000000-0000-4000-8000-0000000000ad',
   array['select intern.manadskorning_svar(true)'], 'nekad');
 
--- En halvtimme efter körningen (17 4 1 * *, provet ovanför). Funktionen
+-- En halvtimme efter körningen (17 4 * * *, provet ovanför). Funktionen
 -- läser anrop från den senaste timmen, så de två schemana hör ihop.
 insert into utfall (test, ok, detalj)
-select 'Månadskörningens svar läses 04:47 den 1:a', count(*) = 1,
+select 'Månadskörningens svar läses 04:47 varje natt', count(*) = 1,
        coalesce(string_agg(schedule || ' ' || command, '; '), 'inget jobb')
   from cron.job
- where jobname = 'manadskorning-svar' and active and schedule = '47 4 1 * *'
+ where jobname = 'manadskorning-svar' and active and schedule = '47 4 * * *'
    and command = 'select intern.manadskorning_svar(true)';
 
 -- ------------------------------------------------------------

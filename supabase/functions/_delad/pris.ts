@@ -194,6 +194,15 @@ export function manadenArSlut(period: string, nu: Date): boolean {
   return period < manadenNu(nu);
 }
 
+// Månaden efter, som ÅÅÅÅ-MM-01. December går till januari året efter.
+export function nastaManad(manad: string): string {
+  const [ar, man] = manad.split('-').map(Number);
+  return man === 12 ? `${ar + 1}-01-01` : `${ar}-${String(man + 1).padStart(2, '0')}-01`;
+}
+
+// Månaden ett datum (ÅÅÅÅ-MM-DD) hör till, som ÅÅÅÅ-MM-01.
+export const manadFor = (datum: string) => `${String(datum).slice(0, 7)}-01`;
+
 // Tjänsten ett pass utan tjänst räknas som: den första aktiva som
 // kunder kan köpa, annars den första i katalogen. Samma regel som
 // standard_tjanst() i databasen. I dag läxhjälp.
@@ -357,6 +366,85 @@ export function byggFakturor(o: { pass: Pass[]; tjanster: Tjanst[]; timprisOre: 
   return perFamilj;
 }
 
+// ---------- vilken månad ett pass hamnar på (2026-10-01) ----------
+
+// Ett underlag (payouts) eller en faktura (invoices) som redan finns.
+export type Dokument = { id: string; period: string; status: string };
+
+/**
+ * Månaden ett pass hamnar på, på personens underlag eller faktura.
+ *
+ * Leo 2026-10-01: "passen som är hållna i september ska spärras av för
+ * september". Förut tog körningen allt som inte stod på ett underlag och
+ * lade det på periodens: ett pass den 30 september som rapporterades
+ * efter körningen den 1 oktober hamnade på oktobers underlag och
+ * oktobers faktura, och betalades en månad för sent åt båda hållen.
+ *
+ * Nu går passet till sin egen månad, så länge personens dokument för den
+ * är ett utkast eller inte skapat än. Är det låst (godkänt, skickat,
+ * betalt, makulerat) har någon redan gått igenom det, och då går passet
+ * till den första senare månaden som har ett utkast, eller till
+ * periodens.
+ *
+ *   manad   passets månad, ÅÅÅÅ-MM-01
+ *   period  körningens månad. Ett nytt dokument skapas bara för den: en
+ *           äldre månad som aldrig fick ett hade fått en lönedag och en
+ *           faktura som redan borde ha kommit.
+ *   lagen   personens dokument, månad → status
+ *
+ * null när ingen månad till och med perioden tar emot passet. Det väntar
+ * då på nästa månads körning, och står i svaret.
+ */
+export function malmanad(manad: string, period: string, lagen: Map<string, string>): string | null {
+  for (let m = manad; m <= period; m = nastaManad(m)) {
+    const s = lagen.get(m);
+    if (s === 'utkast' || (s === undefined && m === period)) return m;
+  }
+  return null;
+}
+
+export type Post<R> = { person: string; manad: string; dokument: Dokument | null; rader: R[] };
+export type Vantande = { person: string; booking_id: string; manad: string };
+export type Fordelning<R> = { poster: Post<R>[]; vantar: Vantande[] };
+
+/**
+ * Fördelar raderna på personernas dokument, med malmanad(). En post per
+ * person och månad: med dokumentet läggs raderna till på utkastet, utan
+ * skapas ett nytt för perioden.
+ *
+ *   rader     person → raderna körningen räknat fram
+ *   datumFor  passets datum, per booking_id
+ *   dokument  person → dokumenten som redan finns
+ */
+export function fordela<R extends { booking_id: string }>(o: {
+  rader: Map<string, R[]>;
+  datumFor: Map<string, string>;
+  dokument: Map<string, Dokument[]>;
+  period: string;
+}): Fordelning<R> {
+  const poster: Post<R>[] = [];
+  const vantar: Vantande[] = [];
+  for (const [person, rader] of o.rader) {
+    const egna = new Map((o.dokument.get(person) ?? []).map((d) => [String(d.period).slice(0, 10), d]));
+    const lagen = new Map([...egna].map(([m, d]) => [m, d.status]));
+    const per = new Map<string, R[]>();
+    for (const r of rader) {
+      // Ett pass utan datum kan inte höra till en månad. Det läggs på
+      // periodens, som körningen gjorde förut, i stället för att falla bort.
+      const manad = o.datumFor.has(r.booking_id) ? manadFor(o.datumFor.get(r.booking_id)!) : o.period;
+      const mal = malmanad(manad, o.period, lagen);
+      if (!mal) { vantar.push({ person, booking_id: r.booking_id, manad }); continue; }
+      const lista = per.get(mal) ?? [];
+      lista.push(r);
+      per.set(mal, lista);
+    }
+    for (const manad of [...per.keys()].sort()) {
+      poster.push({ person, manad, dokument: egna.get(manad) ?? null, rader: per.get(manad)! });
+    }
+  }
+  return { poster, vantar };
+}
+
 /**
  * Vad ett pass kostar familjen för ett antal minuter: tjänstens timpris,
  * tillägget för flera barn, och rabatten som frystes vid bokningen.
@@ -389,6 +477,10 @@ export const minuterSum = (rader: Rad[]) => rader.reduce((a, r) => a + r.minuter
 
 // Svaret. `obetalda` står alltid med, också tom: en tom lista är ett
 // besked ("alla hållna pass är betalda"), en saknad nyckel är en fråga.
+//
+// Varje underlag och faktura säger sin månad, och `tillagg` om raderna
+// läggs till på ett utkast som redan finns (2026-10-01). Utan en
+// fördelning går allt till periodens, som när ingen har ett dokument än.
 export function sammanfatta(o: {
   korningAv: 'nyckel' | 'schema' | 'admin';
   period: string;
@@ -398,17 +490,31 @@ export function sammanfatta(o: {
   fakturor?: ReturnType<typeof byggFakturor>;
   utanRapport: ReturnType<typeof sorteraPass>['utanRapport'];
   undantagna: string[];
+  utbetalningarFordelade?: Fordelning<Rad>;
+  fakturorFordelade?: Fordelning<Fakturarad>;
 }) {
   const u = o.underlag;
+  const tom = { datumFor: new Map<string, string>(), dokument: new Map<string, Dokument[]>(), period: o.period };
+  const utb = o.utbetalningarFordelade ?? fordela({ ...tom, rader: u.perTutor });
+  const fakt = o.fakturorFordelade ?? fordela({ ...tom, rader: o.fakturor ?? new Map<string, Fakturarad[]>() });
   return {
     korning_av: o.korningAv,
     period: o.period,
     pass_till_och_med: new Date(Date.parse(o.slut) - 86_400_000).toISOString().slice(0, 10),
     pris_per_timme_ore: o.timprisOre,
-    utbetalningar: [...u.perTutor].map(([id, r]) => ({ tutor_id: id, pass: r.length, belopp_ore: summa(r) })),
+    utbetalningar: utb.poster.map((p) => ({
+      tutor_id: p.person, period: p.manad, tillagg: p.dokument !== null, pass: p.rader.length, belopp_ore: summa(p.rader),
+    })),
     // Fas 14.6. Står alltid med, också tom, av samma skäl som obetalda.
-    fakturor: [...(o.fakturor ?? new Map<string, Fakturarad[]>())]
-      .map(([id, r]) => ({ parent_id: id, pass: r.length, belopp_ore: summa(r) })),
+    fakturor: fakt.poster.map((p) => ({
+      parent_id: p.person, period: p.manad, tillagg: p.dokument !== null, pass: p.rader.length, belopp_ore: summa(p.rader),
+    })),
+    // Pass vars månad redan är låst, liksom allt efter den till och med
+    // perioden. Nästa månads körning tar dem. Står alltid med.
+    vantar: {
+      underlag: utb.vantar.map((v) => ({ tutor_id: v.person, booking_id: v.booking_id, manad: v.manad })),
+      fakturor: fakt.vantar.map((v) => ({ parent_id: v.person, booking_id: v.booking_id, manad: v.manad })),
+    },
     obetalda: u.obetalda,
     hoppade_over_utan_timpenning: [...new Set(u.utanTimpenning)],
     hoppade_over_utan_rapport: o.utanRapport,

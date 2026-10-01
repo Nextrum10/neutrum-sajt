@@ -238,37 +238,35 @@ const NXAdmin = (function () {
     return datumText(String(iso).slice(0, 10));
   }
 
-  /* VILKEN MÅNADS LÖN ETT PASS HÖR TILL (2026-09-28)
-     Månadskörningen (fakturering) tar alla pass till och med periodens
-     sista dag som inte står på ett underlag, inte bara periodens egna:
-     ett pass som rapporteras efter körningen kommer med nästa gång. Löner
-     räknade därför septembers pass både i september och i oktober, för
-     båda körningarna hade tagit dem så länge ingen av dem var gjord. Leo:
-     "septembers pass räknar för lön i sep och okt".
+  /* VILKEN MÅNADS LÖN ETT PASS HÖR TILL (2026-09-28, om 2026-10-01)
+     Leo 2026-09-28: "septembers pass räknar för lön i sep och okt". Löner
+     räknade ett pass i varje månad vars körning hade kunnat ta det, och
+     ett pass ska räknas i en.
 
-     Ett pass hör till sin egen månads lön. Har den månaden, eller en
-     senare, redan underlag hör passet till månaden efter den senaste med
-     underlag: det är den körningen som tar passet när månaderna körs i
-     tur och ordning. Bara underlagen räknas, inte fakturorna. Körningen
-     skapar fakturorna först, och gick underlagen inte in står månaden
-     med fakturor men utan löner; då ska månaden köras igen, och det är
-     vad sidan ska säga. */
-  function senasteLönemånad() {
-    let senast = null;
+     Leo 2026-10-01: "passen som är hållna i september ska spärras av för
+     september". Ett pass hör till sin egen månads lön, så länge
+     studiehjälparens underlag för den är ett utkast eller inte skapat:
+     körningen, som går varje natt, lägger det på utkastet. Bara ett låst
+     underlag (godkänt, utbetalt) skickar passet vidare, till den första
+     senare månaden som tar emot det. Regeln är NXBetalning.lonemanad,
+     samma som malmanad() i fakturering.
+
+     Förut flyttades passet till månaden efter den senaste med något
+     underlag alls, och tre pass den 29 och 30 september hamnade på
+     oktobers lön för att september körts med knappen den 29:e. */
+  function underlagslägen() {
+    const per = {};
     (S.utbetalningar || []).forEach(u => {
-      const p = String(u.period || '').slice(0, 10);
-      if (p && (!senast || p > senast)) senast = p;
+      if (!u.tutor_id) return;
+      (per[u.tutor_id] = per[u.tutor_id] || {})[String(u.period || '').slice(0, 10)] = u.status;
     });
-    return senast;
+    return per;
   }
 
-  /* Datumet är passets. senast skickas med av den som räknar många pass. */
-  function lönemånad(datum, senast) {
-    const egen = String(datum).slice(0, 7) + '-01';
-    const s = senast === undefined ? senasteLönemånad() : senast;
-    if (!s) return egen;
-    const efter = NXStudie.månadsGräns(s).till;
-    return egen > efter ? egen : efter;
+  /* Datumet är passets. lägen (underlagslägen) skickas med av den som
+     räknar många pass. */
+  function lönemånad(datum, tutorId, lägen) {
+    return NXBetalning.lonemanad(datum, (lägen || underlagslägen())[tutorId] || {});
   }
 
   /* Tom lista eller tomt filter är två olika besked. "Inga familjer
@@ -779,6 +777,21 @@ const NXAdmin = (function () {
     return true;
   }
 
+  /* Skriver bara om raden fortfarande har värdena i villkor (2026-10-01).
+     Månadskörningen går varje natt och lägger sent rapporterade pass på
+     månadens utkast, så ett underlag eller en faktura kan ha vuxit sedan
+     sidan hämtades. Godkänns eller skickas det då, gäller beslutet ett
+     belopp ingen har sett. Svarar true, false vid fel, och 'ändrad' när
+     raden inte längre har värdena: en uppdatering som inte träffar något
+     ger inget fel, bara noll rader. */
+  async function skrivOmOförändrad(tabellNamn, id, fält, villkor) {
+    let q = supa.from(tabellNamn).update(fält).eq('id', id);
+    Object.keys(villkor).forEach(k => { q = q.eq(k, villkor[k]); });
+    const { data, error } = await q.select('id');
+    if (error) { alert('Kunde inte spara: ' + felText(error)); return false; }
+    return data && data.length ? true : 'ändrad';
+  }
+
   /* ============================================================
      KONTAKTRUTAN
 
@@ -854,7 +867,7 @@ const NXAdmin = (function () {
     TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, lönemånad, matchar, märkFlik, namnFör, namnlista, närText, pill, rad,
-    ritaPanelen, senasteLönemånad, skriv, tabell, tomtText, visa, visaRuta, väljare, ärRaderad,
-    rita
+    ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
+    ärRaderad, rita
   };
 })();

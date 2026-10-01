@@ -64,7 +64,11 @@ betala nästa bekräftade pass. Fas 22.4 la till
 `intern.obesvarade_forslag_slapper_timmarna`: timmen dras när förslaget
 skapas och kommer tillbaka om ingen svarat när dagen gått.
 Lönespecifikationen (2026-09-28) la till pg_cron-jobbet `manadskorning`,
-den 1:a klockan 04:17 UTC, och `notis_konfig.fakturering_url`.
+den 1:a klockan 04:17 UTC, och `notis_konfig.fakturering_url`. Sedan
+2026-10-01 går det varje natt 04:17 (`manadskorningen_gar_varje_natt`),
+för förra månaden som förut: den 1:a skapar det månadens underlag och
+fakturautkast, och resten av månaden lägger det sent rapporterade pass
+på sin månads utkast (Passets månad, `minne/betalning.md`).
 `intern.manadskorning_vack()` väcker `fakturering` genom
 `intern.natanrop` med hemligheten i `x-nextrum-notis`, och den vägen
 skriver alltid förra månaden. Saknas adressen blir det en uppgift
@@ -101,7 +105,10 @@ gick eller föll före det. Uppgiften säger vad som hände och pekar på
 Ekonomi → Månadskörning (texten står i databasen; rutan står sedan
 2026-09-29 under Betalningar → Fakturor), utan namn, belopp eller något
 ur svaret. En
-månad ger en uppgift, också när den stängts: det är samma körning.
+månad ger en uppgift, också när den stängts: det var samma körning när
+jobbet gick en gång i månaden. Sedan det går varje natt (2026-10-01)
+blir en natt som går fel efter att månadens uppgift stängts ingen ny
+uppgift; den står under System → Fel.
 Funktionen läser bara anrop från den senaste timmen, för ett äldre svar
 kan pg_net redan ha tagit bort, och ett borttaget svar hade lästs som
 inget svar. **Flyttas `manadskorning` ska `manadskorning-svar` flyttas
@@ -411,8 +418,8 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `leads-avidentifiering` | 03:47 | intresseanmälningar sex månader efter senaste kontakten |
 | `ai-och-uppgifter-gallring` | 03:51 | AI-texterna och avslutade uppgifter |
 | `svar-gallring` | 03:53 | studiehjälparens svar på ett förslag, 30 dagar efter avslaget eller passet (2026-09-30) |
-| `manadskorning` | den 1:a 04:17 | förra månadens underlag och fakturautkast (avsnitt 1) |
-| `manadskorning-svar` | den 1:a 04:47 | månadskörningens svar: allt utom 200 blir en uppgift (ovan) |
+| `manadskorning` | 04:17 (varje natt sedan 2026-10-01) | förra månadens underlag och fakturautkast den 1:a, sedan sena pass på utkasten (avsnitt 1) |
+| `manadskorning-svar` | 04:47 (varje natt sedan 2026-10-01) | månadskörningens svar: allt utom 200 blir en uppgift (ovan) |
 | `konton-oanvanda` | den 1:a 04:53 | konton som inte använts på två år blir uppgifter |
 
 **Analysvyerna (Fas 9.6) bär tre regler.** `analys_leads_per_kalla`,

@@ -208,7 +208,8 @@ per månad (`unique (tutor_id, period)`).
 **Påslaget 2026-09-28.** Leo ville ha en lönespecifikation för varje
 månad när den är slut, och lönespecen är underlaget: utan schemat finns den först
 när någon kommit ihåg knappen. pg_cron-jobbet `manadskorning` kör
-`intern.manadskorning_vack()` den 1:a klockan 04:17 UTC, som väcker `fakturering`
+`intern.manadskorning_vack()` den 1:a klockan 04:17 UTC, och sedan 2026-10-01 varje natt
+(Passets månad, nedan), som väcker `fakturering`
 med hemligheten ur `notis_konfig` (adressen i `notis_konfig.fakturering_url`).
 Den vägen skriver alltid förra månaden, och samma underlag och fakturautkast som
 knappen. Gick det fel står det under System → Fel i sex timmar, och passen larmar
@@ -247,11 +248,21 @@ månad (`unique (tutor_id, period)`). Passet kommer med på oktobers underlag de
 sedan 2026-10-01 bara när den är slut**, i `fakturering` (409) och i rutan, som
 fortfarande torrkör en månad som pågår.
 
+**Samma dag kördes september om** (2026-10-01, Leo: passen i september hör till
+september). Utkasten från den 29:e togs bort med SQL, båda fortfarande utkast och
+aldrig i Fortnox, och `intern.manadskorning_vack()` torrkördes och kördes skarpt som
+postgres. Svaret var 200: underlaget för leo är **960 kr** (alla fyra provpassen i
+september, 8 h à 120 kr) och fakturautkastet till adminfamiljen **1 516 kr** (27/9 och
+30/9, båda på faktura). Uppgiften "Månadskörningen för september 2026 skrev bara en del"
+gäller körningen före omkörningen och kan stängas.
+
 När lönespecen är sedd, och före den 1 november:
 
-1. Ta bort fakturautkastet under Betalningar → Fakturor (Ta bort).
-2. Ta bort underlaget. Det har ingen knapp, så det görs med SQL.
-3. Undanta provpassen, annars kommer de med på nästa månads underlag och faktura.
+1. Undanta provpassen under Betalningar → Att göra, **samma dag som steg 2 och 3**:
+   körningen går varje natt (Passets månad, nedan) och skriver annars ett nytt utkast av
+   passen natten efter.
+2. Ta bort fakturautkastet under Betalningar → Fakturor (Ta bort).
+3. Ta bort underlaget. Det har ingen knapp, så det görs med SQL.
 
 Betala inte ut underlaget och lägg inte in fakturan i Fortnox.
 
@@ -303,6 +314,27 @@ månaden: har en studiehjälpare pass kvar fast hen redan har månadens underlag
 det det här fallet, och uppgiften stängs. Sedan 2026-10-01 går en månad inte att
 skapa medan den pågår, så det fallet uppstår bara om någon kör förra månaden på den
 1:a före 04.17 UTC.
+
+### Passets månad: körningen går varje natt (2026-10-01)
+
+Leo: "passen som är hållna i september ska spärras av för september". Ett pass som
+rapporteras, eller sätts på faktura, efter att månaden körts läggs på sin egen månads
+underlag och faktura så länge de är utkast, i stället för på nästa månads
+(`malmanad()` i `_delad/pris.ts`). Bara ett godkänt, utbetalt, skickat eller betalt
+dokument skickar passet vidare. Det hjälper bara om körningen går efter rapporten, så
+jobbet går varje natt för förra månaden: den 1:a skapar det, resten av månaden lägger
+det till. Svaret säger per rad vilken månad den går till och om den läggs till
+(`period`, `tillagg`), och vilka pass som väntar på en senare månad (`vantar`). Lagd i
+Fortnox och Godkänd sparas bara om beloppet är det som visades.
+
+Ordningen efter merge. Funktionen före schemat: den gamla funktionen hade krockat med
+månadens underlag varje natt och svarat 207.
+
+1. Driftsätt `fakturering` från main och jämför den med filen.
+2. Torrkör som postgres: `select intern.manadskorning_vack(true);`, och läs svaret i
+   `net._http_response` (200, med `vantar` och `tillagg` i svaret).
+3. Kör migrationen `manadskorningen_gar_varje_natt`, med versionen i filnamnet.
+4. Kör hela `verktyg/rls-test.sql` mot driften: de två schemaproven ska vara gröna.
 
 Stänga av: `select cron.unschedule('manadskorning');` och
 `select cron.unschedule('manadskorning-svar');`, som en egen migration.

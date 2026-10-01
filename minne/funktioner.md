@@ -14,7 +14,7 @@ tillbaka en kopia.**
 
 | Funktion | Gör | Anropas av |
 |---|---|---|
-| `fakturering` | Månadskörningen: underlag per studiehjälpare, som är studiehjälparens lönespecifikation (2026-09-28), ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand | pg_cron `manadskorning` den 1:a (`x-nextrum-notis`, alltid förra månaden), admin, eller `x-fakturering-nyckel` |
+| `fakturering` | Månadskörningen: underlag per studiehjälpare, som är studiehjälparens lönespecifikation (2026-09-28), ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand. Ett sent pass läggs på sin egen månads utkast (`malmanad`, 2026-10-01) | pg_cron `manadskorning` varje natt sedan 2026-10-01 (`x-nextrum-notis`, alltid förra månaden), admin, eller `x-fakturering-nyckel` |
 | `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Fortnox | Knapp under Löner |
 | `bjud-in` | Auth-inbjudan till en familj, eller med `roll: 'tutor'` en studiehjälpare, utan konto. Rollen vitlistas i funktionen: allt utom `tutor` blir förälder, och en inbjuden studiehjälpare hamnar i väntläge tills admin godkänner | Adminvyn (bara familjer än) |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |

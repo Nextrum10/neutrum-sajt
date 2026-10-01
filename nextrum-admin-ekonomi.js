@@ -49,8 +49,8 @@
   const tim = m => NXBetalning.timmar(m);
 
   const { DAG, FAKT_LAGE, S, TILLAGG_LAGE, elevNamn, fråga, funktionsFel, hämtaAllt,
-          hämtaEkonomiunderlag, kontaktaRuta, kortDatum, lönemånad, matchar, märkFlik, namnFör,
-          pill, senasteLönemånad, skriv } = NXAdmin;
+          hämtaEkonomiunderlag, kontaktaRuta, kortDatum, matchar, märkFlik, namnFör,
+          pill, skriv, skrivOmOförändrad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
@@ -1535,10 +1535,30 @@
       });
       if (!värde) return;
       await medan(fortnox, 'Sparar…', async () => {
-        if (await skriv('invoices', f.id, {
+        /* Bara om det är samma utkast som visades (2026-10-01). Körningen
+           går varje natt och kan ha lagt ett sent fakturapass på det, och
+           då stämmer det inte med fakturan som skrevs in i Fortnox. */
+        const svar = await skrivOmOförändrad('invoices', f.id, {
           status: 'skickad', skickad_at: new Date().toISOString(),
           fortnox_fakturanummer: värde.nr, ocr: värde.ocr, forfaller: värde.dag
-        })) {
+        }, { status: 'utkast', belopp_ore: f.belopp_ore });
+        if (svar === 'ändrad') {
+          await hämtaAllt();
+          await laddaOmEkonomi();
+          const ny = (S.fakturor || []).find(x => x.id === f.id);
+          /* Noll rader utan att något ändrats är databasen som nekar, inte
+             natten som lagt till ett pass. */
+          const sammaSom = ny && ny.status === 'utkast' && Number(ny.belopp_ore) === Number(f.belopp_ore);
+          alert(sammaSom
+            ? 'Fakturan gick inte att spara. Ingenting ändrades.'
+            : ny && ny.status === 'utkast'
+            ? 'Utkastet har ändrats sedan sidan hämtades: det är nu ' + kronor(ny.belopp_ore) + ' i stället för '
+              + kronor(f.belopp_ore) + ', för ett pass har lagts till. Ändra fakturan i Fortnox efter Underlag, '
+              + 'och tryck Lagd i Fortnox igen. Ingenting sparades.'
+            : 'Utkastet har ändrats sedan sidan hämtades. Ingenting sparades, och listan är hämtad på nytt.');
+          return;
+        }
+        if (svar) {
           Object.assign(f, { status: 'skickad', fortnox_fakturanummer: värde.nr, ocr: värde.ocr, forfaller: värde.dag });
           ritaFakturor(); await laddaOmEkonomi();
         }
@@ -1593,8 +1613,8 @@
       if (!f || f.status !== 'utkast') return;
       const ja = await bekräfta({
         titel: 'Ta bort utkastet?',
-        text: 'Passen på det blir kvar som fakturapass och kommer med nästa gång månadskörningen körs '
-          + 'för samma månad eller senare. Ingenting har skickats.',
+        text: 'Passen på det blir kvar som fakturapass. Körningen går varje natt och lägger dem på ett nytt '
+          + 'utkast, om de inte undantas under Att göra. Ingenting har skickats.',
         knapp: 'Ta bort'
       });
       if (!ja) return;
@@ -2609,9 +2629,17 @@
      avslutad månad ska gå att skapa. Torrkörningen går fortfarande, den
      skriver ingenting. fakturering nekar samma sak med 409, så knappen
      är inte skyddet.
+
+     PASSETS MÅNAD (2026-10-01, samma kväll). Leo: "passen som är hållna
+     i september ska spärras av för september". Ett pass som rapporteras
+     eller sätts på faktura efter körningen läggs på sin månads utkast,
+     och svaret säger vilken månad varje rad går till och om den läggs
+     till (tillagg). Pass vars månad redan är godkänd eller skickad står
+     under vantar och tas av nästa månads körning.
      ============================================================ */
   /* SCHEMAT (2026-09-28). pg_cron-jobbet manadskorning skriver förra
-     månadens underlag den 1:a, och underlaget är studiehjälparens
+     månadens underlag den 1:a, och sedan 2026-10-01 varje natt det som
+     rapporterats sent, och underlaget är studiehjälparens
      lönespecifikation. Jobbet finns bara i cron.job, och ett schema som
      står av ser härifrån ut precis som ett som fungerar. Rutan frågar
      därför databasen i stället för att texten ovanför påstår något. */
@@ -2641,17 +2669,25 @@
     }
     /* Nästa körning i svensk tid. Schemat står i UTC, och 04:17 UTC är
        05:17 på vintern och 06:17 på sommaren. Ett annat schema än det
-       migrationen satte visas som det står. */
-    let när = 'enligt schemat ' + d.schema + ' (UTC)';
-    if (d.schema === '17 4 1 * *') {
-      const nu = new Date();
+       migrationerna satte visas som det står. Varje natt sedan
+       manadskorningen_gar_varje_natt (2026-10-01). */
+    const nu = new Date();
+    const klockan = tid => tid.toLocaleString('sv-SE', {
+      timeZone: 'Europe/Stockholm', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
+    });
+    let när = 'enligt schemat ' + d.schema + ' (UTC), för förra månaden.';
+    if (d.schema === '17 4 * * *') {
+      let nästa = new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), nu.getUTCDate(), 4, 17));
+      if (nästa <= nu) nästa = new Date(nästa.getTime() + 86400000);
+      när = 'varje natt för förra månaden, nästa gång ' + klockan(nästa) + '. Den 1:a skapas underlagen '
+        + 'och fakturautkasten, och resten av månaden läggs pass som rapporterats sent till på utkasten, '
+        + 'så länge de inte är godkända eller skickade.';
+    } else if (d.schema === '17 4 1 * *') {
       let nästa = new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), 1, 4, 17));
       if (nästa <= nu) nästa = new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth() + 1, 1, 4, 17));
-      när = 'den 1:a varje månad, nästa gång ' + nästa.toLocaleString('sv-SE', {
-        timeZone: 'Europe/Stockholm', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
-      });
+      när = 'den 1:a varje månad för förra månaden, nästa gång ' + klockan(nästa) + '.';
     }
-    host.innerHTML = rad(pill('På', 'ar-klar'), 'Går av sig själv ' + när + ', för förra månaden.');
+    host.innerHTML = rad(pill('På', 'ar-klar'), 'Går av sig själv ' + när);
   }
 
   /* Vad rutan säger om sin månad, och om den går att köra: EN MÅNAD
@@ -2671,14 +2707,16 @@
         + 'men underlag och fakturor skapas först när månaden är slut, från den 1 '
         + namn(NXStudie.månadsGräns(p).till) + '.' };
     }
-    /* Månader före den här som har pass att betala men inga underlag
-       (NXAdmin.lönemånad). Körs den här först tar den deras pass. */
-    const senast = senasteLönemånad();
+    /* Månader före den här som har pass att betala men inte ett enda
+       underlag: de har aldrig körts. En körning skapar bara sin egen
+       månads underlag (malmanad i fakturering), så körs den här först tar
+       den deras pass. */
+    const körda = new Set((S.utbetalningar || []).map(u => String(u.period || '').slice(0, 10)));
     const före = new Set();
     (S.passunderlag || []).forEach(x => {
       if (!x.fakturerbar || !x.har_rapport || x.pa_underlag || !x.wanted_date) return;
-      const m = lönemånad(x.wanted_date, senast);
-      if (m < p) före.add(m);
+      const m = String(x.wanted_date).slice(0, 7) + '-01';
+      if (m < p && !körda.has(m)) före.add(m);
     });
     const texter = [];
     if (före.size) {
@@ -2807,12 +2845,16 @@
       + ' <span class="xsmall" style="color:var(--bl-3)">pass till och med '
       + esc(kortDatum(d.pass_till_och_med)) + '</span></p>';
 
-    h += underlag.map(u => rad(esc(namnFör(u.tutor_id)) + ' · ' + u.pass + ' pass',
+    /* Ett sent pass läggs på sin månads utkast (PASSETS MÅNAD ovan), som
+       kan vara en annan månad än den som körs. */
+    const vart = x => x.tillagg ? ' · läggs till på utkastet för ' + NXBetalning.periodText(x.period) : '';
+
+    h += underlag.map(u => rad(esc(namnFör(u.tutor_id)) + ' · ' + u.pass + ' pass' + esc(vart(u)),
       esc(kronor(u.belopp_ore)))).join('');
     h += rad('Studiehjälparna, ' + underlag.length + ' underlag', esc(kronor(summa(underlag))), true);
 
     if (fakturor.length) {
-      h += fakturor.map(f => rad(esc(namnFör(f.parent_id)) + ' · ' + f.pass + ' pass',
+      h += fakturor.map(f => rad(esc(namnFör(f.parent_id)) + ' · ' + f.pass + ' pass' + esc(vart(f)),
         esc(kronor(f.belopp_ore)))).join('');
       h += rad('Fakturor att lägga in i Fortnox, ' + fakturor.length + ' st', esc(kronor(summa(fakturor))), true);
     }
@@ -2842,10 +2884,20 @@
     (d.hoppade_over_utan_timpenning || []).forEach(id => noter.push('⚠️ ' + esc(namnFör(id))
       + ' har ingen timpenning, så hens pass väntar till nästa körning.'));
     if (d.undantagna_pass) noter.push(d.undantagna_pass + ' undantagna pass räknades inte.');
-    if (d.skapade) {
+    const väntar = ((d.vantar && d.vantar.underlag) || []).length + ((d.vantar && d.vantar.fakturor) || []).length;
+    if (väntar) {
+      noter.push(väntar + ' pass hör till en månad vars underlag eller faktura redan är godkänd eller skickad, '
+        + 'och tas av nästa månads körning.');
+    }
+    const fakturorna = n => n + (n === 1 ? ' faktura' : ' fakturor');
+    if (d.skapade && (d.skapade.utbetalningar || d.skapade.fakturor)) {
       noter.push('Skapade: ' + d.skapade.utbetalningar + ' underlag'
-        + (d.skapade.fakturor ? ' och ' + d.skapade.fakturor + (d.skapade.fakturor === 1 ? ' faktura' : ' fakturor') : '')
+        + (d.skapade.fakturor ? ' och ' + fakturorna(d.skapade.fakturor) : '')
         + ', alla som utkast.' + (d.skapade.fakturor ? ' Lägg in fakturorna i Fortnox under <a href="#ekonomi/fakturor">Fakturor</a>.' : ''));
+    }
+    if (d.tillagda && (d.tillagda.utbetalningar || d.tillagda.fakturor)) {
+      noter.push('Lade till pass på ' + d.tillagda.utbetalningar + ' underlag'
+        + (d.tillagda.fakturor ? ' och ' + fakturorna(d.tillagda.fakturor) : '') + ' som redan var utkast.');
     }
     (d.problem || []).forEach(p => noter.push('⚠️ ' + esc(p)));
     if (!underlag.length && !fakturor.length && torr) noter.push('Inget underlag och ingen faktura att skapa för den här månaden.');
@@ -2908,7 +2960,7 @@
       titel: 'Skapa utkast för ' + NXBetalning.periodText(t.period) + '?',
       text: t.utbetalningar.length + ' underlag på ' + kronor(summa(t.utbetalningar))
         + (fakt.length ? ' och ' + fakt.length + (fakt.length === 1 ? ' faktura' : ' fakturor') + ' på ' + kronor(summa(fakt)) : '')
-        + '. De skapas som utkast — ingenting skickas och ingenting betalas ut härifrån.',
+        + '. De skapas som utkast, eller läggs till på utkast som redan finns — ingenting skickas och ingenting betalas ut härifrån.',
       knapp: 'Skapa utkast'
     });
     if (!ja) return;
