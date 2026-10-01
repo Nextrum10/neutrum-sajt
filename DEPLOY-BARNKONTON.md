@@ -4,7 +4,8 @@ Grenen `barnkonton_och_admin` (2026-09-30) byggde två saker:
 
 - **Barnens egen inloggning.** Föräldern skapar den i studievyn (Profil &
   inställningar → Barn → Barnens inloggning), och barnet loggar in på
-  `nextrum.se/barn` med ett användarnamn. Barnet ser sina pass, timmar,
+  `nextrum.se/barn` med ett användarnamn, eller med samma användarnamn
+  under Logga in på sajten, som skickar barnet dit (2026-10-01). Barnet ser sina pass, timmar,
   studieplan och notiser, och rapporterna om föräldern slår på det.
 - **Admins med behörigheter.** Superadmin har allt, som admin hade förut.
   Andra admins får de behörigheter de behöver, under System →
