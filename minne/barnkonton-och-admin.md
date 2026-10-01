@@ -28,21 +28,38 @@ som står i `supabase_migrations.schema_migrations` i driften.
   webbläsaren och barnet ser den aldrig. Felet är alltid "Fel användarnamn
   eller lösenord", utom när nätet inte svarar eller Supabase säger 429 för
   många försök; inget av dem säger något om vilka användarnamn som finns.
-- **Också i studievyns inloggning (2026-10-01).** Det första riktiga
-  barnkontot gick inte att logga in med. Logga in på sajten leder till
-  studievyn ("Förälder eller elev"), där fältet hette E-post och ett
-  användarnamn fick "Fel e-post eller lösenord", och `/barn` nås bara om
-  man skriver adressen; ingen länk dit, och ingen från `/barn` till
-  föräldervyn. Auths logg visade två nekade försök minuten efter att
-  kontot skapats. Nu heter fältet "E-post eller användarnamn" när man
-  loggar in, och ett användarnamn eller en hel barnadress loggas in som
-  på `/barn` och skickas dit; en adress med @ på en annan domän är en
-  vuxen, som förut. Båda vyerna går genom `NXStudie.barnAdress` (regeln
-  ANVANDARNAMN) och `NXStudie.loggaInBarn` (beskeden och kollen att
-  kontot är ett barn), och familjens uppgifter hämtas aldrig med barnets
-  inloggning. Glömt lösenordet i studievyn ger ett användarnamn samma
-  besked som en barnadress. Studiehjälparvyn och adminvyn tar inga
-  användarnamn: där är ett ord utan @ en ofullständig adress.
+- **E-post eller användarnamn, i varje inloggning (2026-10-01).** Det
+  första riktiga barnkontot gick inte att logga in med. Logga in på
+  sajten leder till studievyn ("Förälder eller elev"), där fältet hette
+  E-post och ett användarnamn fick "Fel e-post eller lösenord", och
+  `/barn` nås bara om man skriver adressen; ingen länk dit, och ingen
+  från `/barn` till föräldervyn. Auths logg visade två nekade försök
+  minuten efter att kontot skapats. Samma dag, Leo: "man kan logga in
+  med användarnamn eller epost ... barns konton ska bara vara
+  användarnamn och lösenord som styrs av föräldern", för att inte
+  krångla med registret och integritetspolicyn. Nu går alla fyra
+  inloggningarna (studievyn, studiehjälparvyn, adminvyn och `/barn`)
+  genom `NXStudie.loggaIn`, som bara läser formen på det som skrivs:
+  med @ är det en vuxens e-post, som Auth får som förut; utan @ är det
+  ett barns användarnamn (regeln ANVANDARNAMN), och barnet hamnar på
+  `/barn`; barnkontots tekniska adress nekas med "Fel e-post eller
+  lösenord" utan att Auth tillfrågas. En vuxen som skriver sin e-post på
+  `/barn` kommer till sin egen vy; det är ingen länk dit, för det krävs
+  den vuxnes lösenord. Fältet heter "E-post eller användarnamn" bara i
+  studievyn, dit både barn och vuxna kommer; i studiehjälparvyn och
+  adminvyn heter det E-post, för ingen vuxen har ett användarnamn, och
+  på `/barn` Användarnamn. Familjens uppgifter hämtas aldrig med
+  barnets inloggning, och barnets funktioner aldrig med en vuxens.
+  Glömt lösenordet ger ett användarnamn och den tekniska adressen
+  beskedet att föräldern byter lösenordet, i alla vyer.
+- **Varför den tekniska adressen finns.** Supabase Auth tar ett lösenord
+  bara ihop med en e-postadress eller ett telefonnummer ("sign in with a
+  password connected to their email or phone number", dokumentationen
+  2026-10-01). Adressen byggs ur användarnamnet, och den är inte en
+  uppgift till om barnet: integritetspolicyn och `DATASKYDD.md` (rad 20)
+  säger redan att inloggningen är ett användarnamn och ett lösenord,
+  ingen e-postadress. Att ta bort den hade krävt en egen inloggning
+  bredvid Auth, med egna tokens; det är inte gjort, med flit.
 
 ### Rollen nextrum_barn, och varför en egen roll
 Det stod i uppdraget att allt för barnet ska vara stängt som förval. Två
@@ -335,10 +352,11 @@ studiehjälparvyn till `/admin`.
   migrationer, och utan rättelsen föll 16 av dem.
 - Deno: `_delad/barnkonto_test.ts`, `_delad/adminbehorighet_test.ts` och
   ett nytt prov i `notiser/ko_test.ts`.
-- Webbläsaren: `verktyg/prova-barnkonton.js` (119 prov, gröna), mot en
+- Webbläsaren: `verktyg/prova-barnkonton.js` (133 prov, gröna), mot en
   falsk Supabase på en adress som inte finns: barnets inloggning och vy i
   ljust, mörkt och på telefon, text ur databasen som text, att barnet bara
-  frågar sina tre funktioner, barnets inloggning i studievyn (2026-10-01;
-  nio av de nya proven föll mot koden före), föräldrarnas ruta, och
-  adminvyn för en superadmin, en begränsad admin, en utan roll och en
-  inbjuden. Se `minne/genererat-och-ci.md`.
+  frågar sina tre funktioner, e-post eller användarnamn i alla fyra
+  inloggningarna och den tekniska adressen som nekas (2026-10-01; de nya
+  proven föll mot koden före, med samma anrop som i driften),
+  föräldrarnas ruta, och adminvyn för en superadmin, en begränsad admin,
+  en utan roll och en inbjuden. Se `minne/genererat-och-ci.md`.

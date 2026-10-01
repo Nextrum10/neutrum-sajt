@@ -77,11 +77,12 @@
   });
 
   /* ============ inloggningen ============
-     Användarnamnet blir en adress i webbläsaren (NXStudie.barnAdress).
-     Barnet behöver aldrig se den, och den tar aldrig emot något mejl
-     (notis-ko hoppar över domänen, och i Auth kan den inte bytas).
-     Besked och kontroller står i NXStudie.loggaInBarn, som studievyn
-     också använder när ett barn loggar in där. */
+     E-post eller användarnamn, som i alla vyer (NXStudie.loggaIn). Barnet
+     loggar in med användarnamnet: adressen i Auth byggs i webbläsaren,
+     barnet ser den aldrig, och den tar aldrig emot något mejl (notis-ko
+     hoppar över domänen, och i Auth kan den inte bytas). En vuxen som
+     skriver sin e-post här kommer till sin egen vy. Det är ingen länk
+     dit: det krävs den vuxnes lösenord. */
   $('#bv-form').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#auth-msg'), knapp = $('#bv-logga-in'), lösenfält = $('#a-pass');
@@ -91,16 +92,14 @@
     const anv = $('#bv-anv').value.trim();
     const lösen = lösenfält.value;
     if (!anv || !lösen) { NX.säg(msg, 'Fyll i användarnamn och lösenord.', false); return; }
-    /* Ett namn som inte kan finnas får samma besked som ett som inte
-       finns, och ingen fråga går iväg. */
-    const adress = NXStudie.barnAdress(anv);
-    if (!adress) { NX.säg(msg, NXStudie.BARN_FEL, false); lösenfält.value = ''; lösenfält.focus(); return; }
 
     await NXStudie.medan(knapp, 'Loggar in…', async () => {
-      const svar = await NXStudie.loggaInBarn(supa, adress, lösen);
+      const svar = await NXStudie.loggaIn(supa, anv, lösen);
       lösenfält.value = '';
       if (svar.fel) { NX.säg(msg, svar.fel, false); lösenfält.focus(); return; }
-      await starta(svar.user);
+      if (svar.barn) { await starta(svar.user); return; }
+      const profil = await NX.hämtaProfil(svar.user.id);
+      location.replace(NX.vyFör(svar.user, profil));
     });
   });
 

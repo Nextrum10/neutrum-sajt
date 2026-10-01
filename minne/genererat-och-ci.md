@@ -119,8 +119,8 @@ Körs på varje push och PR. Ska vara grön före merge.
    migrationen (villkoret och `intern.admin_behorigheter()`), i
    `_delad/adminbehorighet.ts` och i `nextrum-admin-behorighet.js`, och
    barnens användarnamn och domän prövas lika i databasen, `barn-konto`,
-   barnets inloggning (`nextrum-studie.js` sedan 2026-10-01, delad av
-   barnets vy och studievyn) och föräldrarnas ruta (barnkonton_och_admin)
+   inloggningen (`nextrum-studie.js` sedan 2026-10-01, delad av alla
+   fyra vyerna) och föräldrarnas ruta (barnkonton_och_admin)
 6. `verktyg/kolla-webp.py`
 7. `verktyg/satt-version.py --kolla`
 8. Genererade filer är aktuella (bygg om + `git diff --exit-code`):
@@ -253,9 +253,9 @@ timmarna (22.1–22.3) föll i varje hel körning. Fixturerna ställs nu
 tillbaka överst i avsnittet för 22.1.
 
 ### Webbläsarprovet för barnkontona och adminbehörigheterna (2026-09-30)
-`verktyg/prova-barnkonton.js` kör barnets vy, barnets inloggning i
-studievyn (2026-10-01), föräldrarnas ruta och adminvyn med
-behörigheter i Chromium, mot en falsk Supabase på
+`verktyg/prova-barnkonton.js` kör barnets vy, e-post eller
+användarnamn i alla fyra inloggningarna (2026-10-01), föräldrarnas ruta
+och adminvyn med behörigheter i Chromium, mot en falsk Supabase på
 `https://supabase.test` (`nextrum-config.js` byts i farten, Realtime
 fångas, och ett anrop till den riktiga adressen stoppas och fäller
 provet). Det ligger inte i CI: Playwright är ingen del av repot.

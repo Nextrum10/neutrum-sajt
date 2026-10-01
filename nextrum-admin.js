@@ -361,7 +361,7 @@
 
   $('#auth-form').addEventListener('submit', async e => {
     e.preventDefault();
-    const msg = $('#auth-msg'), knapp = $('#auth-submit');
+    const msg = $('#auth-msg');
     rensa(msg);
     if (!supa) { säg(msg, 'Databasen är inte kopplad. Fyll i nextrum-config.js.', false); return; }
     if (glömt) { await NXStudie.glömtSkicka(supa); return; }
@@ -370,16 +370,9 @@
     const lösen = $('#a-pass').value;
     if (!epost || !lösen) { säg(msg, 'Fyll i e-post och lösenord.', false); return; }
 
-    knapp.setAttribute('aria-busy', 'true');
-    const res = await supa.auth.signInWithPassword({ email: epost, password: lösen });
-    knapp.removeAttribute('aria-busy');
-
-    if (res.error) {
-      säg(msg, res.error.message === 'Invalid login credentials'
-        ? 'Fel e-post eller lösenord.' : felText(res.error), false);
-      return;
-    }
-    location.reload();
+    /* E-post eller användarnamn, som i alla vyer: ett barn som loggar in
+       här skickas till /barn (NXStudie.loggaInHär). */
+    await NXStudie.loggaInHär(supa, epost, lösen);
   });
 
   /* ============ header ============ */

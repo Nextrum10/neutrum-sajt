@@ -543,10 +543,11 @@ async function provaBarnpanelen(webb) {
   }
 }
 
-/* ============ ett barn i familjens inloggning (2026-10-01) ============
+/* ============ e-post eller användarnamn, i varje inloggning (2026-10-01) ============
    Logga in på sajten leder till studievyn, och där prövades det första
-   riktiga barnkontot. Barnets användarnamn ska fungera där, barnet
-   hamna i sin vy, och föräldrarnas inloggning vara som förut. */
+   riktiga barnkontot. Varje inloggning tar e-post eller användarnamn:
+   ett barn hamnar i sin vy, en vuxen i sin, och barnkontots tekniska
+   adress nekas utan fråga till Auth. */
 async function provaFamiljensInloggning(webb) {
   /* 1. Etiketten följer läget, och fel lösenord ger barnvyns besked. */
   {
@@ -592,16 +593,21 @@ async function provaFamiljensInloggning(webb) {
     await context.close();
   }
 
-  /* 3. Hela barnadressen fungerar också. */
-  {
-    const { context, page } = await öppna(webb, { rpc: barnRpc() });
-    await page.goto(BAS + '/foralder');
+  /* 3. Barnkontots tekniska adress nekas i alla fyra, utan fråga till
+     Auth: ett barn loggar bara in med användarnamnet. */
+  for (const [vy, fält, knapp] of [['/foralder', '#a-email', '#auth-submit'], ['/larare', '#a-email', '#auth-submit'],
+                                   ['/admin', '#a-email', '#auth-submit'], ['/barn', '#bv-anv', '#bv-logga-in']]) {
+    const { context, page, S } = await öppna(webb, { rpc: barnRpc() });
+    await page.goto(BAS + vy);
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
-    await page.fill('#a-email', 'alva.a@barn.nextrum.se');
+    await page.fill(fält, 'Alva.A@barn.nextrum.se');
     await page.fill('#a-pass', 'alva-losen-1');
-    await page.click('#auth-submit');
-    await page.waitForURL(/\/barn$/, { timeout: 5000 }).catch(() => {});
-    prova('familjen: hela barnadressen leder också till /barn', /\/barn$/.test(page.url()), page.url());
+    await page.click(knapp);
+    await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
+    prova(vy.slice(1) + ': barnkontots tekniska adress nekas',
+      (await text(page, '#auth-msg')).trim() === 'Fel e-post eller lösenord.' && page.url().endsWith(vy),
+      (await text(page, '#auth-msg')) + ' ' + page.url());
+    prova(vy.slice(1) + ': och Auth tillfrågas inte', !S.logg.some(r => r.väg === '/auth/v1/token'));
     await context.close();
   }
 
@@ -642,35 +648,63 @@ async function provaFamiljensInloggning(webb) {
     await context.close();
   }
 
-  /* 6. Studiehjälparvyn: ett ord utan @ är en ofullständig adress, inget barn. */
+  /* 6. Studiehjälparvyn och adminvyn tar också ett användarnamn, fast
+     fältet heter E-post där: ingen vuxen har ett. Barnet hamnar på /barn. */
+  for (const vy of ['/larare', '/admin']) {
+    const { context, page, S } = await öppna(webb, { rpc: barnRpc() });
+    await page.goto(BAS + vy);
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova(vy.slice(1) + ': fältet heter E-post', (await text(page, 'label[for="a-email"]')) === 'E-post');
+    await page.fill('#a-email', 'alva.a');
+    await page.fill('#a-pass', 'alva-losen-1');
+    await page.click('#auth-submit');
+    await page.waitForURL(/\/barn$/, { timeout: 5000 }).catch(() => {});
+    const försök = S.logg.filter(r => r.väg === '/auth/v1/token').pop();
+    prova(vy.slice(1) + ': ett användarnamn loggar in barnet och leder till /barn',
+      /\/barn$/.test(page.url()) && försök && försök.kropp && försök.kropp.email === 'alva.a@barn.nextrum.se',
+      page.url() + ' ' + JSON.stringify(försök && försök.kropp));
+    await context.close();
+  }
   {
     const { context, page, S } = await öppna(webb, {});
     await page.goto(BAS + '/larare');
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova('studiehjälpare: fältet heter E-post', (await text(page, 'label[for="a-email"]')) === 'E-post');
     await page.click('[data-glomt] button');
     await page.fill('#a-email', 'alva.a');
     await page.click('#auth-submit');
     await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
-    prova('studiehjälpare: ett ord utan @ i Glömt lösenordet är en ofullständig adress',
+    prova('studiehjälpare: ett användarnamn i Glömt lösenordet får förälderbeskedet',
+      (await text(page, '#auth-msg')).startsWith('Ett barns lösenord'), await text(page, '#auth-msg'));
+    await page.fill('#a-email', 'sara svensson');
+    await page.click('#auth-submit');
+    await page.waitForFunction(() => /Kontrollera/.test(document.querySelector('#auth-msg').textContent), null, { timeout: 5000 }).catch(() => {});
+    prova('studiehjälpare: något som varken är adress eller användarnamn stoppas',
       (await text(page, '#auth-msg')).startsWith('Kontrollera e-postadressen'), await text(page, '#auth-msg'));
     prova('studiehjälpare: och inget mejl begärs', !S.logg.some(r => r.väg === '/auth/v1/recover'));
     await context.close();
   }
 
-  /* 7. Barnets vy tar också hela barnadressen. */
+  /* 7. Barnets vy tar också en vuxens e-post, och den vuxne hamnar i sin
+     egen vy. Inte genom en länk: det krävs den vuxnes lösenord. */
   {
-    const { context, page, S } = await öppna(webb, { rpc: barnRpc() });
+    const { context, page, S } = await öppna(webb, { rpc: Object.assign(barnRpc(), { mina_barnkonton: () => [] }) });
     await page.goto(BAS + '/barn');
     await page.waitForSelector('#view-auth:not([hidden])');
-    await page.fill('#bv-anv', 'Alva.A@barn.nextrum.se');
-    await page.fill('#a-pass', 'alva-losen-1');
+    await page.fill('#bv-anv', 'anna@example.se');
+    await page.fill('#a-pass', 'fel');
     await page.click('#bv-logga-in');
-    await page.waitForSelector('#view-app:not([hidden])', { timeout: 5000 }).catch(() => {});
-    const försök = S.logg.filter(r => r.väg === '/auth/v1/token').pop();
-    prova('barn: hela barnadressen fungerar också',
-      (await synlig(page, '#view-app')) && försök && försök.kropp && försök.kropp.email === 'alva.a@barn.nextrum.se',
-      JSON.stringify(försök && försök.kropp));
+    await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
+    prova('barn: en vuxens e-post med fel lösenord får vuxnas besked',
+      (await text(page, '#auth-msg')).trim() === 'Fel e-post eller lösenord.' && (await page.inputValue('#a-pass')) === '',
+      await text(page, '#auth-msg'));
+    await page.fill('#a-pass', 'anna-losen');
+    await page.click('#bv-logga-in');
+    await page.waitForURL(/\/foralder$/, { timeout: 5000 }).catch(() => {});
+    prova('barn: en vuxens e-post leder till den vuxnes vy', /\/foralder$/.test(page.url()), page.url());
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('barn: och den vuxne är inloggad där', await synlig(page, '#view-app'));
+    const barnets = S.logg.filter(r => /\/rpc\/barn_/.test(r.väg));
+    prova('barn: barnets funktioner frågades aldrig med den vuxnes inloggning', barnets.length === 0, barnets.map(r => r.väg).join(', '));
     await context.close();
   }
 
