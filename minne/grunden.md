@@ -74,7 +74,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-uppgifter.js` + `nextrum-uppgifter.css` | `NXUppgifter` (Fas 23.1, NexLäx sedan Fas 23.2): vägen, spelaren, XP:n och serien ur `nexlax_lage()`, Din utveckling, stjärnorna, märkena, rättningen per område och genomgången. Studievyn och studiehjälparvyn, CSS:en efter arbetsytan. Rättar ingenting själv, räknar ingen XP och skriver inget resultat; det gör `niva_svara()` |
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
-| `nextrum-barn-vy.js` | Bara `barn.html`, barnets egen vy (barnkonton_och_admin). Laddar bara NX och NXStudie och ritar det `barn_oversikt()` och `barn_notiser()` svarar, med `textContent`. Se `minne/barnkonton-och-admin.md` |
+| `nextrum-barn-vy.js` | Bara `barn.html`, barnets egen vy (barnkonton_och_admin). Laddar NX, NXStudie och NXUppgifter (NexLäx, 2026-10-01) och ritar det `barn_oversikt()`, `barn_notiser()` och `barn_nexlax()` svarar, med `textContent` utom NexLäx, som NXUppgifter ritar med `esc()`. Se `minne/barnkonton-och-admin.md` |
 | `lank.html` + `nextrum-lank.js` | `/lank` (2026-10-01): knappen som kontomejlens länk leder till, så att ett mejlfilter som öppnar länken i förväg inte förbrukar den. Ingen Supabase-klient, skarp CSP. Se `minne/sakerhet.md`, Kontomejlen |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, toppraden (sök, notiser, kontot), bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |

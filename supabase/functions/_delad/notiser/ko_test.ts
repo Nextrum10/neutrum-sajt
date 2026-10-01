@@ -350,3 +350,71 @@ Deno.test('snabba mejl tar fortfarande hela omgångar', async () => {
   assertEquals(r.behandlade, 25, 'hela kön ska hinna');
   assertEquals(r.skickade, 25);
 });
+
+// ------------------------------------------------------------
+// Ett barns egen adress (barnets_epost)
+// ------------------------------------------------------------
+
+const BARN = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+const KOD = `${BARN}.` + 'A'.repeat(43);
+
+function barnrad(extra: Partial<UtskickRad> = {}): UtskickRad {
+  return rad({
+    mottagare: BARN, roll: 'barn', typ: 'barn_pass_bokat', fornamn: 'Alva', epost: 'alva@example.org',
+    data: { datum: '2026-10-14', tid: '16:00', amne: 'Matematik', studiehjalpare: 'Tove' }, ...extra,
+  });
+}
+
+Deno.test('ett barn får sitt mejl med barnets mall och barnets avanmälan', async () => {
+  const k = bank([barnrad()]);
+  await korKon(k.b);
+
+  assertEquals(k.skickade.length, 1);
+  assertEquals(k.skickade[0].till, ['alva@example.org']);
+  assertStringIncludes(k.skickade[0].amne, 'Ditt pass är bokat');
+  assertStringIncludes(k.skickade[0].text, 'https://nextrum.se/barn');
+  const h = k.skickade[0].headers ?? {};
+  assertStringIncludes(h['List-Unsubscribe'], encodeURIComponent(`barn.${BARN}.mejl.barn_pass_bokat.`));
+  assertEquals(h['List-Unsubscribe-Post'], 'List-Unsubscribe=One-Click');
+  assertEquals(k.klara[0].ok, true);
+});
+
+Deno.test('bekräftelsen till ett barn går utan avanmälan och utan namn', async () => {
+  const k = bank([barnrad({ typ: 'barn_bekrafta_epost', fornamn: null, data: { kod: KOD } })]);
+  await korKon(k.b);
+
+  assertEquals(k.skickade.length, 1);
+  assertEquals(k.skickade[0].headers?.['List-Unsubscribe'], undefined);
+  assertStringIncludes(k.skickade[0].text, `https://nextrum.se/barn?bekrafta=${encodeURIComponent(KOD)}`);
+  assertEquals(k.klara[0].ok, true);
+});
+
+Deno.test('ett barn får aldrig en vuxens sort, och aldrig på den tekniska adressen', async () => {
+  const k = bank([
+    barnrad({ typ: 'pass_nytt' }),
+    barnrad({ typ: 'meddelande' }),
+    barnrad({ epost: 'alva.b@barn.nextrum.se' }),
+  ]);
+  await korKon(k.b);
+
+  assertEquals(k.skickade.length, 0);
+  assertEquals(k.klara.map((x) => [x.ok, x.permanent, x.fel]), [
+    [false, true, 'Typen mejlas inte till barn.'],
+    [false, true, 'Typen mejlas inte till barn.'],
+    [false, true, 'Barnkonton får inga mejl.'],
+  ]);
+});
+
+Deno.test('en vuxens rad får aldrig barnets sort', async () => {
+  const k = bank([rad({ typ: 'barn_pass_bokat' })]);
+  await korKon(k.b);
+  assertEquals(k.skickade.length, 0);
+  assertEquals(k.klara[0].fel, 'Typen mejlas inte.');
+});
+
+Deno.test('en bekräftelse utan giltig kod skickas inte', async () => {
+  const k = bank([barnrad({ typ: 'barn_bekrafta_epost', data: { kod: 'skräp' } })]);
+  await korKon(k.b);
+  assertEquals(k.skickade.length, 0);
+  assertEquals(k.klara[0].ok, false);
+});

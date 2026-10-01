@@ -996,8 +996,11 @@ window.NXUppgifter = (function () {
       + (l ? block('De fyra senaste veckorna', 'En låga för varje dag med en klar nivå, något från studiehjälparen eller ett pass.', dagar.kalender) : '')
       + block('Område för område', 'Hur stor del som var rätt första gången, per område. Har studiehjälparen bedömt samma område står bedömningen bredvid.',
           områdesHtml(o.katalog, o.forsok, o.progress) || NXStudie.tomt('Inget område än', 'Områdena fylls i när en nivå är klar.'))
-      + bedömningHtml(o)
-      + passenHtml(o)
+      /* Barnets egen vy (o.barnvy, 2026-10-01) visar maskinens rättning
+         men inte studiehjälparens bedömning eller passen: rapporterna
+         når barnet bara när föräldern slagit på dem, och de står då i
+         barnets vy för sig. */
+      + (o.barnvy ? '' : bedömningHtml(o) + passenHtml(o))
       + block('Rättade nivåer <em>' + (klara.length ? klara.length + ' st' : '') + '</em>',
           'Varje klar omgång, senaste först. Rättningen visar varje uppgift, vad som svarades och rätt svar.',
           klara.length

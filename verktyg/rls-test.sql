@@ -9397,8 +9397,10 @@ select 'Barn: rollen har ingen rättighet på någon relation i public eller sto
                      or has_table_privilege('nextrum_barn', c.oid, 'update') or has_table_privilege('nextrum_barn', c.oid, 'delete'))$q$) r) x;
 
 -- Barnet kan köra en SECURITY DEFINER-funktion bara om den är en av
--- barnets tre, eller en av hjälparna som bara svarar om auth.uid()
--- själv. En ny funktion som glömt sitt revoke från PUBLIC fångas här.
+-- barnets egna, en av NexLäx-funktionerna som prövar barnet själva
+-- (nexlax_for_barnet, avsnitt 14), eller en av hjälparna som bara svarar
+-- om auth.uid() själv. En ny funktion som glömt sitt revoke från PUBLIC
+-- fångas här.
 insert into utfall (test, ok, detalj)
 select 'Barn: kör bara sina egna funktioner bland SECURITY DEFINER', r = 'inga', r
   from (select pg_temp.som(null, null,
@@ -9407,6 +9409,11 @@ select 'Barn: kör bara sina egna funktioner bland SECURITY DEFINER', r = 'inga'
               where n.nspname = 'public' and p.prosecdef and p.prorettype <> 'trigger'::regtype
                 and has_function_privilege('nextrum_barn', p.oid, 'execute')
                 and p.proname not in ('barn_oversikt', 'barn_notiser', 'barn_markera_last',
+                                      'barn_nexlax', 'barn_uppgift',
+                                      -- barnets_epost: inställningarna, valen och länken
+                                      -- i bekräftelsemejlet (den är öppen för alla).
+                                      'barn_installningar', 'barn_notisval', 'barn_epost_bekrafta',
+                                      'niva_starta', 'niva_svara', 'niva_genomgang', 'nexlax_lage',
                                       'ar_matchade', 'ar_min_elev', 'is_admin', 'is_matched_tutor_of',
                                       'is_my_matched_tutor', 'is_my_student')$q$) r) x;
 
@@ -10291,6 +10298,607 @@ select 'Adminlogg: läses inte utan admin_hantera', r = '0', r
 union all
 select 'Adminlogg: läses med admin_hantera', pg_temp.i(r) > 0, r
   from (select pg_temp.som('00000000-0000-4000-8000-0000000bcad2', null, $q$select count(*)::text from public.admin_logg$q$) r) x;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- ------------------------------------------------------------
+-- 14. NexLäx i barnets vy (nexlax_for_barnet)
+--
+-- Barnet spelar själv: startar, svarar, ser rättningen, sitt läge och
+-- sin bana, och bockar av en vanlig uppgift. Bara sitt eget, bara med
+-- aktiv inloggning, och fortfarande utan tabellrättigheter (avsnitt 2).
+-- Allt i ett block som rullas tillbaka; utfallet samlas i en variabel.
+-- ------------------------------------------------------------
+create function pg_temp.bli_barn(p_uid uuid, p_barn uuid, p_forald uuid) returns void
+language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', json_build_object(
+    'sub', p_uid, 'role', 'nextrum_barn',
+    'app_metadata', json_build_object('roll', 'barn', 'barn_id', p_barn, 'forald_id', p_forald))::text, true);
+  execute 'set local role nextrum_barn';
+end $$;
+
+do $$
+declare
+  ut     jsonb := '[]'::jsonb;
+  fel    text;
+  r      jsonb;
+  forsok uuid;
+  st     text;
+  av     uuid;
+  klar   timestamptz;
+  E   constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  EQ  constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  KE  constant uuid := '00000000-0000-4000-8000-0000000bc0c1';
+  P   constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q   constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A   constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  N   constant uuid := '00000000-0000-4000-8000-00000000c4a1';
+  F   constant uuid := '00000000-0000-4000-8000-00000000c4b1';
+  FQ  constant uuid := '00000000-0000-4000-8000-00000000c4e1';
+  HV  constant uuid := '00000000-0000-4000-8000-00000000c4c1';
+  HD  constant uuid := '00000000-0000-4000-8000-00000000c4c2';
+  HQ  constant uuid := '00000000-0000-4000-8000-00000000c4c3';
+  HL  constant uuid := '00000000-0000-4000-8000-00000000c4c4';
+  HF  constant uuid := '00000000-0000-4000-8000-00000000c4c5';
+  ML  constant uuid := '00000000-0000-4000-8000-00000000c4d1';
+  MF  constant uuid := '00000000-0000-4000-8000-00000000c4d2';
+begin
+  begin
+    -- Fixturen, som postgres.
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning)
+    values (N, 'rls-barnets-niva', 'Matematik', 'ak6', 'Bråk', 'RLS-barnets nivå', 1);
+    insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt, forklaring)
+    values (F, N, 1, 'val', 'Vilket är störst?', '["1/2","1/3"]', '0', 'Halva är mest.');
+    insert into public.biblioteksmaterial (id, titel, amne, arskurs, lank)
+    values (ML, 'RLS-länk', 'Matematik', 'ak6', 'https://example.org/brak');
+    insert into public.biblioteksmaterial (id, titel, amne, arskurs, filvag)
+    values (MF, 'RLS-fil', 'Matematik', 'ak6', 'rls/hemlig-fil.pdf');
+    insert into public.homework (id, student_id, tutor_id, title, niva_id, bibliotek_id) values
+      (HV, E, A, 'RLS barnets vanliga', null, null),
+      (HD, E, A, 'RLS barnets digitala', N, null),
+      (HQ, EQ, A, 'RLS en annan familjs', null, null),
+      (HL, E, A, 'RLS med länk', null, ML),
+      (HF, E, A, 'RLS med fil', null, MF);
+    insert into public.niva_forsok (id, niva_id, student_id, fragor)
+    values (FQ, N, EQ, array[F]);
+
+    perform pg_temp.bli_barn(KE, E, P);
+
+    r := public.barn_nexlax();
+    ut := ut || jsonb_build_object('t', 'NL barn: banan är barnets egen', 'ok',
+            r ->> 'lage' = 'ok' and (r ->> 'elev')::uuid = E
+            and jsonb_array_length(r -> 'katalog') > 0
+            and exists (select 1 from jsonb_array_elements(r -> 'uppgifter') x where (x ->> 'id')::uuid = HV)
+            and not exists (select 1 from jsonb_array_elements(r -> 'uppgifter') x where (x ->> 'student_id')::uuid <> E)
+            and not exists (select 1 from jsonb_array_elements(r -> 'forsok') x where (x ->> 'student_id')::uuid <> E),
+            'd', left(r::text, 200));
+    ut := ut || jsonb_build_object('t', 'NL barn: material följer med som länk, aldrig som fil', 'ok',
+            (select x -> 'biblioteksmaterial' ->> 'lank' from jsonb_array_elements(r -> 'uppgifter') x
+              where (x ->> 'id')::uuid = HL) = 'https://example.org/brak'
+            and (select x -> 'biblioteksmaterial' from jsonb_array_elements(r -> 'uppgifter') x
+                  where (x ->> 'id')::uuid = HF) = 'null'::jsonb
+            and position('hemlig-fil' in r::text) = 0 and position('filvag' in r::text) = 0,
+            'd', null);
+
+    -- Spela: starta, svara, se rättningen och läget.
+    r := public.niva_starta(N, E);
+    forsok := (r ->> 'forsok')::uuid;
+    ut := ut || jsonb_build_object('t', 'NL barn: startar en nivå åt sig själv, utan facit', 'ok',
+            forsok is not null and jsonb_array_length(r -> 'fragor') = 1
+            and not exists (select 1 from jsonb_array_elements(r -> 'fragor') fr where fr ? 'ratt')
+            and position('Halva' in r::text) = 0,
+            'd', left(r::text, 200));
+    r := public.barn_nexlax();
+    ut := ut || jsonb_build_object('t', 'NL barn: det påbörjade försöket syns', 'ok',
+            (r -> 'pagaende' -> N::text ->> 'forsok')::uuid = forsok
+            and (r -> 'pagaende' -> N::text ->> 'totalt')::int = 1
+            and (r -> 'pagaende' -> N::text ->> 'klara')::int = 0,
+            'd', (r -> 'pagaende')::text);
+    r := public.niva_svara(forsok, F, '{"val":0}');
+    ut := ut || jsonb_build_object('t', 'NL barn: svarar, och nivån blir klar', 'ok',
+            (r ->> 'ratt')::boolean and (r ->> 'klar')::boolean, 'd', left(r::text, 200));
+    r := public.niva_genomgang(forsok);
+    ut := ut || jsonb_build_object('t', 'NL barn: ser rättningen av sitt försök', 'ok', r ? 'fragor', 'd', null);
+    r := public.nexlax_lage(E);
+    ut := ut || jsonb_build_object('t', 'NL barn: ser sitt läge', 'ok', r is not null and r ? 'xp', 'd', left(coalesce(r::text, 'null'), 120));
+
+    -- Bara sitt eget.
+    begin
+      perform public.niva_starta(N, EQ);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NL barn: startar ingen nivå åt ett annat barn', 'ok', fel = '42501', 'd', fel);
+    begin
+      perform public.niva_svara(FQ, F, '{"val":0}');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NL barn: svarar inte i ett annat barns försök', 'ok', fel = '42501', 'd', fel);
+    begin
+      perform public.niva_genomgang(FQ);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NL barn: ser inte ett annat barns rättning', 'ok', fel = '42501', 'd', fel);
+    begin
+      perform public.nexlax_lage(EQ);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NL barn: läser inte ett annat barns läge', 'ok', fel = '42501', 'd', fel);
+
+    -- Bocka av.
+    perform public.barn_uppgift(HV, 'klar');
+    begin
+      perform public.barn_uppgift(HD, 'pagaende');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NL barn: en digital uppgift bockas inte av', 'ok', fel = '42501', 'd', fel);
+    begin
+      perform public.barn_uppgift(HQ, 'klar');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NL barn: bockar inte ett annat barns uppgift', 'ok', fel = '42501', 'd', fel);
+    begin
+      perform public.barn_uppgift(HV, 'raderad');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NL barn: ett okänt läge nekas', 'ok', fel = '22023', 'd', fel);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    select status, completed_at into st, klar from public.homework where id = HV;
+    ut := ut || jsonb_build_object('t', 'NL barn: den vanliga uppgiften är bockad', 'ok', st = 'klar' and klar is not null, 'd', st);
+    select status into st from public.homework where id = HD;
+    ut := ut || jsonb_build_object('t', 'NL barn: en klarad nivå gör den digitala uppgiften klar', 'ok', st = 'klar', 'd', st);
+    select startad_av into av from public.niva_forsok where id = forsok;
+    ut := ut || jsonb_build_object('t', 'NL barn: barnets försök har ingen startad_av', 'ok', av is null, 'd', coalesce(av::text, 'null'));
+
+    -- Föräldern spelar som förut, och står som den som startade.
+    perform pg_temp.bli(P);
+    r := public.niva_starta(N, E);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select startad_av into av from public.niva_forsok where id = (r ->> 'forsok')::uuid;
+    ut := ut || jsonb_build_object('t', 'NL föräldern: startar som förut och står som startad_av', 'ok', av = P, 'd', coalesce(av::text, 'null'));
+
+    -- En token som inte stämmer med tabellen: ingenting.
+    perform pg_temp.bli_barn(KE, E, Q);
+    r := public.barn_nexlax();
+    begin
+      perform public.niva_starta(N, E);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NL barn: fel familj i token ger ingen bana och ingen nivå', 'ok',
+            r ->> 'lage' = 'saknas' and fel = '42501', 'd', (r ->> 'lage') || ' ' || fel);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    -- Pausad inloggning: en token som fortfarande gäller spelar inte.
+    update public.students set barn_aktiv = false where id = E;
+    perform pg_temp.bli_barn(KE, E, P);
+    r := public.barn_nexlax();
+    begin
+      perform public.niva_starta(N, E);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NL barn: en pausad inloggning får ingen bana och startar ingen nivå', 'ok',
+            r ->> 'lage' = 'pausad' and fel = '42501', 'd', (r ->> 'lage') || ' ' || fel);
+    begin
+      perform public.barn_uppgift(HV, 'pagaende');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'NL barn: en pausad inloggning bockar inte', 'ok', fel = '42501', 'd', fel);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    -- Barnets två funktioner är bara barnets.
+    ut := ut || jsonb_build_object('t', 'NL: barn_nexlax och barn_uppgift går inte att köra som vuxen eller anonym', 'ok',
+            not has_function_privilege('authenticated', 'public.barn_nexlax()', 'execute')
+            and not has_function_privilege('anon', 'public.barn_nexlax()', 'execute')
+            and not has_function_privilege('authenticated', 'public.barn_uppgift(uuid, text)', 'execute')
+            and not has_function_privilege('anon', 'public.barn_uppgift(uuid, text)', 'execute'),
+            'd', null);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('NL NexLäx i barnets vy', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- ------------------------------------------------------------
+-- 15. Barnets egen e-post (barnets_epost)
+--
+-- Föräldern lägger till, den som har inkorgen bekräftar, inloggningen
+-- slår upp och räknar, kön tar barnets rader och prövar allt igen, och
+-- ingen annan når adressen. Flaggan slås på och av här inne. Allt i ett
+-- block som rullas tillbaka; utfallet samlas i en variabel.
+--
+-- Inga alias som e, p, q, a eller y nedan: PL/pgSQL skiljer inte på
+-- stora och små bokstäver, och konstanterna heter så.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  r     jsonb;
+  bk    text;
+  bk2   text;
+  rad   record;
+  n     integer;
+  E     constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  Y     constant uuid := '00000000-0000-4000-8000-0000000005b1';
+  EQ    constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  KE    constant uuid := '00000000-0000-4000-8000-0000000bc0c1';
+  P     constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q     constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A     constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  PASS1 constant uuid := '00000000-0000-4000-8000-00000000e5a1';
+begin
+  begin
+    -- Flaggan av: ingen adress går att lägga till.
+    update public.flaggor set aktiv = false where flaggor.kod = 'barn_epost';
+    perform pg_temp.bli(P);
+    begin
+      perform public.barn_epost_satt(E, 'alva@example.org');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE: med flaggan av går ingen adress att lägga till', 'ok', fel = '55000', 'd', fel);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    update public.flaggor set aktiv = true where flaggor.kod in ('barn_epost', 'notiser_mejl');
+    update public.notis_drift set mejl_sandlada = null where notis_drift.id = 1;
+
+    -- Föräldern lägger till.
+    perform pg_temp.bli(P);
+    r := public.barn_epost_satt(E, '  Alva@Example.ORG ');
+    ut := ut || jsonb_build_object('t', 'BE förälder: lägger till barnets adress, i små bokstäver och obekräftad', 'ok',
+            r ->> 'epost' = 'alva@example.org' and r ->> 'bekraftad' is null and not (r ->> 'notiser')::boolean,
+            'd', left(r::text, 200));
+    begin
+      perform public.barn_epost_satt(Y, 'yngst@example.org');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE förälder: ett barn utan inloggning får ingen adress', 'ok', fel = '55000', 'd', fel);
+    begin
+      perform public.barn_epost_satt(E, 'RLS-P@example.invalid');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE förälder: förälderns egen adress nekas', 'ok', fel = '22023', 'd', fel);
+    begin
+      perform public.barn_epost_satt(E, 'nagon@barn.nextrum.se');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE förälder: en teknisk barnadress nekas', 'ok', fel = '22023', 'd', fel);
+    begin
+      perform public.barn_epost_satt(E, 'inte en adress');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE förälder: något som inte är en adress nekas', 'ok', fel = '22023', 'd', fel);
+    begin
+      perform public.barn_epost_skicka_igen(E);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE förälder: ett nytt bekräftelsemejl inom en minut nekas', 'ok', fel = 'P0001', 'd', fel);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    -- En annan förälder, studiehjälparen och barnet.
+    perform pg_temp.bli(Q);
+    begin
+      perform public.barn_epost_satt(E, 'q@example.org');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE: en annan förälder lägger inte till en adress åt barnet', 'ok', fel = '42501', 'd', fel);
+    begin
+      perform public.barn_epost_ta_bort(E);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE: en annan förälder tar inte bort barnets adress', 'ok', fel = '42501', 'd', fel);
+    r := public.mina_barns_epost();
+    ut := ut || jsonb_build_object('t', 'BE: en annan förälder ser inte barnets adress', 'ok',
+            position('alva@' in r::text) = 0, 'd', left(r::text, 200));
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    perform pg_temp.bli(A);
+    begin
+      perform count(*) from public.barn_epost;
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE: studiehjälparen läser inte barn_epost', 'ok', fel = '42501', 'd', fel);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    perform pg_temp.bli_barn(KE, E, P);
+    begin
+      perform count(*) from public.barn_epost;
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE: barnet läser inte barn_epost direkt', 'ok', fel = '42501', 'd', fel);
+    begin
+      perform public.barn_epost_satt(E, 'jag@example.org');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE: barnet lägger inte till eller byter adressen', 'ok', fel = '42501', 'd', fel);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    -- Kön: bekräftelsen väntar, utan adress och utan kod.
+    select ue.* into rad from public.notis_utskick ue
+     where ue.barn_id = E and ue.typ = 'barn_bekrafta_epost' and ue.status = 'vantar';
+    ut := ut || jsonb_build_object('t', 'BE kön: bekräftelsen väntar, utan adress och utan kod', 'ok',
+            rad.id is not null and rad.mottagare is null and position('alva' in rad.data::text) = 0
+            and not (rad.data ? 'kod') and rad.data ? 'omgang',
+            'd', coalesce(rad.data::text, 'ingen rad'));
+
+    select * into rad from public.notis_utskick_ta(100) tx where tx.mottagare = E;
+    bk := rad.data ->> 'kod';
+    ut := ut || jsonb_build_object('t', 'BE kön: bekräftelsen går till barnets adress, med koden och utan namn', 'ok',
+            rad.roll = 'barn' and rad.epost = 'alva@example.org' and rad.fornamn is null
+            and bk ~ ('^' || E::text || '\.[A-Za-z0-9_-]{43}$'),
+            'd', coalesce(rad.roll, '') || ' ' || coalesce(rad.epost, '') || ' ' || coalesce(bk, ''));
+
+    -- Bekräftelsen, utan inloggning.
+    perform pg_temp.bli(null);
+    ut := ut || jsonb_build_object('t', 'BE: en ändrad eller trasig kod bekräftar ingenting', 'ok',
+            public.barn_epost_bekrafta(left(bk, length(bk) - 1) || case when right(bk, 1) = 'A' then 'B' else 'A' end) = 'ogiltig'
+            and public.barn_epost_bekrafta(EQ::text || substr(bk, 37)) = 'ogiltig'
+            and public.barn_epost_bekrafta('skräp') = 'ogiltig'
+            and public.barn_epost_bekrafta(null) = 'ogiltig',
+            'd', null);
+    ut := ut || jsonb_build_object('t', 'BE: koden bekräftar adressen, utan inloggning', 'ok',
+            public.barn_epost_bekrafta(bk) = 'ok', 'd', null);
+    ut := ut || jsonb_build_object('t', 'BE: samma kod en gång till säger redan', 'ok',
+            public.barn_epost_bekrafta(bk) = 'redan', 'd', null);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    ut := ut || jsonb_build_object('t', 'BE: händelserna loggas, adressen aldrig', 'ok',
+            (select count(*) from public.audit_logg al where al.tabell = 'barn_epost' and al.objekt_id = E::text) >= 2
+            and not exists (select 1 from public.audit_logg al where al.tabell = 'barn_epost'
+                             and (coalesce(al.fore::text, '') || coalesce(al.efter::text, '')) like '%example%'),
+            'd', null);
+
+    -- Inloggningen: uppslaget och spärrarna.
+    r := public.barn_inloggning_uppslag(' ALVA@example.org', '192.0.2.1');
+    ut := ut || jsonb_build_object('t', 'BE inloggning: en bekräftad adress ger barnets tekniska adress', 'ok',
+            r ->> 'lage' = 'ok' and r ->> 'adress' = 'aldst.p@barn.nextrum.se', 'd', left(r::text, 120));
+    perform public.barn_inloggning_lyckades(r ->> 'e', r ->> 'i');
+    ut := ut || jsonb_build_object('t', 'BE inloggning: en lyckad inloggning nollar adressens försök', 'ok',
+            not exists (select 1 from intern.barn_inloggning_forsok f where f.nyckel = r ->> 'e'), 'd', null);
+    r := public.barn_inloggning_uppslag('okand@example.org', '192.0.2.2');
+    ut := ut || jsonb_build_object('t', 'BE inloggning: en okänd adress ger inget', 'ok',
+            r ->> 'lage' = 'okand' and not (r ? 'adress'), 'd', left(r::text, 120));
+    for n in 1 .. 9 loop
+      perform public.barn_inloggning_uppslag('okand@example.org', '192.0.2.' || (10 + n));
+    end loop;
+    r := public.barn_inloggning_uppslag('okand@example.org', '192.0.2.99');
+    ut := ut || jsonb_build_object('t', 'BE inloggning: tio försök på en adress, sedan nekas den en stund', 'ok',
+            r ->> 'lage' = 'sparrad', 'd', r ->> 'lage');
+    for n in 1 .. 20 loop
+      perform public.barn_inloggning_uppslag('nummer' || n || '@example.org', '198.51.100.7');
+    end loop;
+    r := public.barn_inloggning_uppslag('alva@example.org', '198.51.100.7');
+    ut := ut || jsonb_build_object('t', 'BE inloggning: tjugo försök från ett nummer, sedan nekas det en stund', 'ok',
+            r ->> 'lage' = 'sparrad', 'd', r ->> 'lage');
+    ut := ut || jsonb_build_object('t', 'BE inloggning: försöken sparas utan adress och nummer', 'ok',
+            not exists (select 1 from intern.barn_inloggning_forsok f
+                         where f.nyckel like '%example%' or f.nyckel like '%198.51%' or f.nyckel like '%192.0%')
+            and not exists (select 1 from intern.barn_inloggning_forsok f where f.nyckel !~ '^[ei]:[0-9a-f]{64}$'),
+            'd', null);
+
+    -- Barnets inställningar och val.
+    perform pg_temp.bli_barn(KE, E, P);
+    r := public.barn_installningar();
+    ut := ut || jsonb_build_object('t', 'BE barnet: ser sin bekräftade adress och att mejlen inte är påslagna', 'ok',
+            r ->> 'lage' = 'ok' and r ->> 'epost' = 'alva@example.org' and r ->> 'bekraftad' is not null
+            and not (r ->> 'notiser')::boolean and jsonb_array_length(r -> 'typer') = 3
+            and not exists (select 1 from jsonb_array_elements(r -> 'typer') x where not (x ->> 'pa')::boolean),
+            'd', left(r::text, 200));
+    r := public.barn_notisval('barn_paminnelse', false);
+    ut := ut || jsonb_build_object('t', 'BE barnet: stänger av påminnelserna själv', 'ok',
+            exists (select 1 from jsonb_array_elements(r -> 'typer') x
+                     where x ->> 'typ' = 'barn_paminnelse' and not (x ->> 'pa')::boolean),
+            'd', (r -> 'typer')::text);
+    begin
+      perform public.barn_notisval('pass_nytt', false);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE barnet: en sort som inte är barnets nekas', 'ok', fel = '22023', 'd', fel);
+    begin
+      perform public.barn_epost_notiser(E, true);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE barnet: slår inte på mejlen åt sig själv', 'ok', fel = '42501', 'd', fel);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    perform pg_temp.bli_barn(KE, E, Q);
+    r := public.barn_installningar();
+    begin
+      perform public.barn_notisval('barn_pass_bokat', false);
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE barnet: fel familj i token ger inga inställningar och inga val', 'ok',
+            r ->> 'lage' = 'saknas' and fel = '42501', 'd', (r ->> 'lage') || ' ' || fel);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    -- Föräldern slår på barnets mejl.
+    perform pg_temp.bli(P);
+    r := public.barn_epost_notiser(E, true);
+    ut := ut || jsonb_build_object('t', 'BE förälder: slår på barnets mejl', 'ok', (r ->> 'notiser')::boolean, 'd', left(r::text, 200));
+    r := public.mina_barns_epost();
+    ut := ut || jsonb_build_object('t', 'BE förälder: ser flaggan, adressen och att den är bekräftad', 'ok',
+            (r ->> 'pa')::boolean
+            and exists (select 1 from jsonb_array_elements(r -> 'barn') x
+                         where (x ->> 'barn_id')::uuid = E and x ->> 'epost' = 'alva@example.org' and x ->> 'bekraftad' is not null)
+            and not exists (select 1 from jsonb_array_elements(r -> 'barn') x where (x ->> 'barn_id')::uuid = Y),
+            'd', left(r::text, 300));
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    ut := ut || jsonb_build_object('t', 'BE: barnet vill ha bokade pass men inte påminnelser, och ett annat barn ingenting', 'ok',
+            intern.barn_vill_mejl(E, 'barn_pass_bokat') and not intern.barn_vill_mejl(E, 'barn_paminnelse')
+            and not intern.barn_vill_mejl(EQ, 'barn_pass_bokat') and not intern.barn_vill_mejl(E, 'pass_nytt'),
+            'd', null);
+
+    -- Ett bokat pass köar ett mejl till barnet; avbokat inom samlingstiden blir ett.
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, subject, wanted_date, wanted_time,
+                                 duration_min, status)
+    values (PASS1, P, A, E, P, 'Matematik', current_date + 20, '17:00', 60, 'confirmed');
+    select ue.* into rad from public.notis_utskick ue where ue.barn_id = E and ue.pass_id = PASS1 and ue.status = 'vantar';
+    ut := ut || jsonb_build_object('t', 'BE kön: ett bokat pass köar ett mejl till barnet, utan betalning och adress', 'ok',
+            rad.typ = 'barn_pass_bokat' and rad.data ->> 'tid' = '17:00'
+            and rad.data ->> 'datum' = (current_date + 20)::text and rad.data ->> 'amne' = 'Matematik'
+            and not (rad.data ? 'betalsatt') and position('example' in rad.data::text) = 0,
+            'd', coalesce(rad.typ, 'ingen rad') || ' ' || coalesce(rad.data::text, ''));
+    update public.bookings set status = 'cancelled', avbokningsskal = 'forhinder' where bookings.id = PASS1;
+    select count(*), max(ue.typ) into n, fel from public.notis_utskick ue
+     where ue.barn_id = E and ue.pass_id = PASS1 and ue.status = 'vantar';
+    ut := ut || jsonb_build_object('t', 'BE kön: avbokat inom samlingstiden blir ett mejl, om avbokningen', 'ok',
+            n = 1 and fel = 'barn_pass_avbokat', 'd', n || ' ' || coalesce(fel, ''));
+
+    -- Kön prövar igen när det är dags: en pausad inloggning får inget.
+    update public.notis_utskick ue set skicka_efter = now() where ue.barn_id = E and ue.pass_id = PASS1 and ue.status = 'vantar';
+    update public.students set barn_aktiv = false where students.id = E;
+    perform * from public.notis_utskick_ta(100);
+    select ue.status, ue.fel into rad from public.notis_utskick ue where ue.barn_id = E and ue.pass_id = PASS1;
+    ut := ut || jsonb_build_object('t', 'BE kön: en pausad inloggning får inget mejl, prövat när det ska gå', 'ok',
+            rad.status = 'hoppad' and rad.fel = 'avstängt för barnet',
+            'd', coalesce(rad.status, '') || ' ' || coalesce(rad.fel, ''));
+    update public.students set barn_aktiv = true where students.id = E;
+
+    -- Avanmälan ur mejlet: bara av, bara barnets.
+    perform public.barn_notis_avregistrera(E, 'barn_pass_bokat');
+    ut := ut || jsonb_build_object('t', 'BE avanmälan: stänger av en sort för barnet', 'ok',
+            not intern.barn_vill_mejl(E, 'barn_pass_bokat') and intern.barn_vill_mejl(E, 'barn_pass_avbokat'), 'd', null);
+    begin
+      perform public.barn_notis_avregistrera(Y, 'barn_pass_bokat');
+      fel := 'gick';
+    exception when others then fel := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BE avanmälan: ett barn utan adress ger ogiltig', 'ok', fel = '22023', 'd', fel);
+
+    -- Samma adress för ett annat barn, och en gammal kod.
+    perform pg_temp.bli(Q);
+    perform public.barn_epost_satt(EQ, 'alva@example.org');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select * into rad from public.notis_utskick_ta(100) tx where tx.mottagare = EQ;
+    bk2 := rad.data ->> 'kod';
+    perform pg_temp.bli(null);
+    ut := ut || jsonb_build_object('t', 'BE: en adress som är bekräftad för ett annat barn går inte att bekräfta igen', 'ok',
+            public.barn_epost_bekrafta(bk2) = 'upptagen', 'd', null);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    update public.barn_epost set kod_skapad = now() - interval '8 days' where barn_epost.barn_id = EQ;
+    perform pg_temp.bli(null);
+    ut := ut || jsonb_build_object('t', 'BE: en kod äldre än sju dagar bekräftar inte', 'ok',
+            public.barn_epost_bekrafta(bk2) = 'gammal', 'd', null);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    -- Gallringen.
+    perform intern.barnkonton_gallra();
+    ut := ut || jsonb_build_object('t', 'BE gallring: en obekräftad adress står kvar efter åtta dagar', 'ok',
+            exists (select 1 from public.barn_epost be2 where be2.barn_id = EQ), 'd', null);
+    update public.barn_epost set kod_skapad = now() - interval '31 days' where barn_epost.barn_id = EQ;
+    insert into intern.barn_inloggning_forsok (nyckel, tid) values ('e:' || repeat('0', 64), now() - interval '2 days');
+    perform intern.barnkonton_gallra();
+    ut := ut || jsonb_build_object('t', 'BE gallring: obekräftad efter 30 dagar och försök efter ett dygn tas bort', 'ok',
+            not exists (select 1 from public.barn_epost be2 where be2.barn_id = EQ)
+            and not exists (select 1 from intern.barn_inloggning_forsok f where f.tid < now() - interval '1 day')
+            and exists (select 1 from public.barn_epost be2 where be2.barn_id = E),
+            'd', null);
+
+    -- Flaggan av: inloggningen och mejlen stannar, men föräldern kan
+    -- alltid slå av och ta bort.
+    update public.flaggor set aktiv = false where flaggor.kod = 'barn_epost';
+    r := public.barn_inloggning_uppslag('alva@example.org', '192.0.2.50');
+    ut := ut || jsonb_build_object('t', 'BE flaggan av: inloggningen med barnets adress nekas', 'ok', r ->> 'lage' = 'av', 'd', r ->> 'lage');
+    ut := ut || jsonb_build_object('t', 'BE flaggan av: inga mejl till barnet', 'ok',
+            not intern.barn_vill_mejl(E, 'barn_pass_avbokat'), 'd', null);
+    perform pg_temp.bli(P);
+    r := public.barn_epost_notiser(E, false);
+    perform public.barn_epost_ta_bort(E);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'BE flaggan av: föräldern slår av och tar bort adressen ändå', 'ok',
+            not exists (select 1 from public.barn_epost be2 where be2.barn_id = E), 'd', null);
+
+    -- Inloggningen borta: adressen och barnets rader i kön följer med.
+    insert into public.barn_epost (barn_id, epost, kod_omgang, bekraftad) values (E, 'alva@example.org', 1, now());
+    delete from auth.users where users.id = KE;
+    ut := ut || jsonb_build_object('t', 'BE: tas inloggningen bort följer adressen och barnets rader i kön med', 'ok',
+            not exists (select 1 from public.barn_epost be2 where be2.barn_id = E)
+            and not exists (select 1 from public.notis_utskick ue where ue.barn_id = E),
+            'd', null);
+
+    ut := ut || jsonb_build_object('t', 'BE rättigheter: tabellen och uppslaget är stängda, länken öppen', 'ok',
+            not has_table_privilege('authenticated', 'public.barn_epost', 'select')
+            and not has_table_privilege('anon', 'public.barn_epost', 'select')
+            and not has_table_privilege('nextrum_barn', 'public.barn_epost', 'select')
+            and not has_function_privilege('anon', 'public.barn_inloggning_uppslag(text, text)', 'execute')
+            and not has_function_privilege('authenticated', 'public.barn_inloggning_uppslag(text, text)', 'execute')
+            and not has_function_privilege('nextrum_barn', 'public.barn_inloggning_uppslag(text, text)', 'execute')
+            and not has_function_privilege('authenticated', 'public.barn_inloggning_lyckades(text, text)', 'execute')
+            and not has_function_privilege('authenticated', 'public.barn_notis_avregistrera(uuid, text)', 'execute')
+            and not has_function_privilege('authenticated', 'public.barn_installningar()', 'execute')
+            and not has_function_privilege('anon', 'public.barn_epost_satt(uuid, text)', 'execute')
+            and has_function_privilege('anon', 'public.barn_epost_bekrafta(text)', 'execute')
+            and has_function_privilege('nextrum_barn', 'public.barn_installningar()', 'execute'),
+            'd', null);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('BE Barnets egen e-post', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
 
 reset role;
 select set_config('request.jwt.claims', null, true);

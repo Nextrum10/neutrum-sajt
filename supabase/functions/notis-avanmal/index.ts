@@ -17,9 +17,9 @@
 //
 // SÄKERHET: verify_jwt är av (config.toml), för länken måste fungera
 // utan inloggning. Det som skyddar är HMAC-signaturen i tokenen
-// (_delad/notiser/token.ts). service_role används bara till de två
-// funktionerna ovan, som bara kan läsa nyckeln och stänga av, aldrig
-// slå på, och som aldrig rör profiles.
+// (_delad/notiser/token.ts). service_role används bara till funktionerna
+// ovan och barn_notis_avregistrera (barnets_epost), som bara kan läsa
+// nyckeln och stänga av, aldrig slå på, och som aldrig rör profiles.
 // ============================================================
 
 import { serviceklient } from '../_delad/auth.ts';
@@ -38,6 +38,15 @@ Deno.serve((req) => hanteraAvregistrering(req, {
     // känner igen). Det är länken som är fel, inte servern.
     if (error.code === '22023') return 'ogiltig';
     console.error('notis-avanmal: notis_avregistrera', error.code ?? '');
+    return 'fel';
+  },
+  // Ett mejl till ett barn (barnets_epost). Stänger bara av, i barnets
+  // egna val; 22023 är ett barn som inte har någon adress längre.
+  avregistreraBarn: async (barn, typ) => {
+    const { error } = await serviceklient().rpc('barn_notis_avregistrera', { p_barn: barn, p_typ: typ });
+    if (!error) return 'ok';
+    if (error.code === '22023') return 'ogiltig';
+    console.error('notis-avanmal: barn_notis_avregistrera', error.code ?? '');
     return 'fel';
   },
 }));

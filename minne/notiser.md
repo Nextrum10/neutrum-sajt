@@ -299,8 +299,8 @@ Texterna står i `minne/sakerhet.md` (Kontomejlen).
   resultatet av, men det prövar att hen läst handboken, inte vem hen
   är.
 
-### Barnen får inga mejl (barnkonton_och_admin, 2026-09-30)
-Ett barnkonto får aldrig ett mejl. `notis_utskick_ta` hoppar över
+### Barnkontots tekniska adress får inga mejl (barnkonton_och_admin, 2026-09-30)
+Kontots adress, `<namn>@barn.nextrum.se`, får aldrig ett mejl. `notis_utskick_ta` hoppar över
 barnkonton och adresser på `barn.nextrum.se`, och `notis-ko` gör det en
 gång till (`arBarnadress` i `_delad/barnkonto.ts`), så att en rad som ändå
 kommer ut ur kön blir `loggad` utan att skickas. `notis_konfig.lage` rördes
@@ -308,3 +308,27 @@ inte. Barnets notiser står i en egen tabell, `barn_notiser`, som fylls av
 `bookings_barnnotis`: en mening utan pris och utan föräldern, och ett fel
 blir en rad i `notis_fel` i stället för att stoppa passet. Se
 `minne/barnkonton-och-admin.md`.
+
+### Mejl till barnets egen adress (barnets_epost, 2026-10-01)
+Bakom flaggan `barn_epost`, som står av tills juristen läst. En rad i
+`notis_utskick` har antingen `mottagare` (ett konto i `profiles`) eller
+`barn_id` (ett barn i `students`), aldrig båda
+(`notis_utskick_en_mottagare`); mottagaren kan alltså vara null nu, och
+allt som läser kön ska tåla det. Barnets rader köas av
+`intern.barn_mejl_koa` (samma samlingsregel som `notis_koa`) och prövas
+FÖRST i varvet i `notis_utskick_ta`, med läget just då: flaggan, en
+bekräftad adress, förälderns val (`barn_epost.notiser`), barnets val
+(`barn_epost.av`), aktiv inloggning och att passet fortfarande är bokat på
+tiden i raden. Adressen tas ur `barn_epost`, sandlådan och `notiser_mejl`
+gäller som för alla, och svaret har rollen `barn` och barnets id som
+mottagare. Sorterna: `barn_pass_bokat`, `barn_pass_avbokat`,
+`barn_paminnelse` (`intern.barn_mejltyper()` och `BARN_MEJLTYPER` i
+`typer.ts`, ändras tillsammans), och bekräftelsen `barn_bekrafta_epost`,
+vars kod bara finns i svaret, aldrig i kön. `notis-ko` skriver barnets
+mejl med `notiser/barn.ts`: knappen till `/barn`, inget pris, ingen
+betalning, inget avbokningsskäl, och bekräftelsen utan namn och utan
+avanmälan. Barnets avanmälningstoken har fem delar
+(`barn.<id>.mejl.<typ>.<sig>`, `skapaBarnToken`/`lasBarnToken`) och går
+genom `notis-avanmal` till `barn_notis_avregistrera`, som bara stänger av
+i `barn_epost.av`. `/avanmal` behandlar tokenen som text och behövde
+ingen ändring. Se `minne/barnkonton-och-admin.md`.

@@ -668,3 +668,14 @@ lappades med `replace()` och en vakt som räknar träffarna. Triggern
 `bookings_barnnotis` är en AFTER-trigger och påverkar inte ordningen
 bland before-triggrarna på `bookings`. `rls-test.sql` har avsnittet
 BARNKONTON OCH ADMIN MED BEHÖRIGHETER. Se `minne/barnkonton-och-admin.md`.
+
+### Barnets egen e-post (barnets_epost, 2026-10-01)
+Tabellen `barn_epost` (en rad per barn, inga rättigheter för någon
+inloggad), `intern.barn_inloggning_forsok` (HMAC:ar, ett dygn), sekvensen
+`intern.barn_epost_omgang`, kolumnen `notis_konfig.barn_nyckel`, flaggan
+`barn_epost` (av), och `notis_utskick.barn_id` med villkoret att en rad
+har antingen `mottagare` eller `barn_id`; `mottagare` är inte längre NOT
+NULL. Fem funktioner lappades med `replace()` och en vakt som räknar
+träffarna: `notis_utskick_ta` (två lappar), `intern.barnnotis_vid_pass`,
+`notis_planera`, `intern.barnkonto_stadas` och `intern.barnkonton_gallra`.
+`rls-test.sql` avsnitt 15. Se `minne/barnkonton-och-admin.md`.

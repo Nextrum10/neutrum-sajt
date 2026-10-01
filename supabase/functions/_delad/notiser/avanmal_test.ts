@@ -19,14 +19,15 @@ import {
   AVANMAL_SIDA, MAX_KROPP, TILLATNA_URSPRUNG, hanteraAvregistrering,
   lasTokenUrAnrop, type AvregBeroenden, type AvregUtfall,
 } from './avanmal.ts';
-import { skapaToken } from './token.ts';
+import { skapaBarnToken, skapaToken } from './token.ts';
 import type { Kanal } from './typer.ts';
 
 const NYCKEL = btoa(String.fromCharCode(...new Uint8Array(32).fill(7)));
 const UID = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
+const BARN = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
 const ADRESS = 'https://x.supabase.co/functions/v1/notis-avanmal';
 
-type Kall = { uid: string; typ: string; kanal: Kanal };
+type Kall = { uid: string; typ: string; kanal: Kanal; barn?: true };
 
 function beroenden(o: { utfall?: AvregUtfall; nyckelKastar?: boolean; nyckel?: string } = {}) {
   const kallade: Kall[] = [];
@@ -36,6 +37,10 @@ function beroenden(o: { utfall?: AvregUtfall; nyckelKastar?: boolean; nyckel?: s
       : Promise.resolve(o.nyckel ?? NYCKEL),
     avregistrera: (uid, typ, kanal) => {
       kallade.push({ uid, typ, kanal });
+      return Promise.resolve(o.utfall ?? 'ok');
+    },
+    avregistreraBarn: (barn, typ) => {
+      kallade.push({ uid: barn, typ, kanal: 'mejl', barn: true });
       return Promise.resolve(o.utfall ?? 'ok');
     },
   };
@@ -210,4 +215,49 @@ Deno.test('svaren cachas aldrig', async () => {
   const t = await skapaToken(UID, 'mejl', 'meddelande', NYCKEL);
   const r = await hanteraAvregistrering(post(JSON.stringify({ t })), b);
   assertEquals(r.headers.get('cache-control'), 'no-store');
+});
+
+// ------------------------------------------------------------
+// Ett barns länk (barnets_epost)
+// ------------------------------------------------------------
+
+Deno.test('ett barns länk stänger av sorten i barnets egna val, och bara där', async () => {
+  const { b, kallade } = beroenden();
+  const t = await skapaBarnToken(BARN, 'barn_paminnelse', NYCKEL);
+  const r = await hanteraAvregistrering(post(JSON.stringify({ t })), b);
+
+  assertEquals(r.status, 200);
+  assertEquals(await r.json(), { ok: true, typ: 'barn_paminnelse', kanal: 'mejl' });
+  assertEquals(kallade, [{ uid: BARN, typ: 'barn_paminnelse', kanal: 'mejl', barn: true }]);
+});
+
+Deno.test('ett barns länk går aldrig till en vuxens val, och tvärtom', async () => {
+  const { b, kallade } = beroenden();
+  const vuxen = await skapaToken(UID, 'mejl', 'paminnelse', NYCKEL);
+  const barn = await skapaBarnToken(BARN, 'barn_paminnelse', NYCKEL);
+
+  await hanteraAvregistrering(post(JSON.stringify({ t: vuxen })), b);
+  await hanteraAvregistrering(post(JSON.stringify({ t: barn })), b);
+  assertEquals(kallade.map((k) => k.barn === true), [false, true]);
+
+  // Barnets signatur under en vuxens form, och en vuxens under barnets.
+  const sigBarn = barn.split('.')[4];
+  const sigVuxen = vuxen.split('.')[3];
+  for (const fel of [
+    `${BARN}.mejl.paminnelse.${sigBarn}`,
+    `barn.${UID}.mejl.barn_paminnelse.${sigVuxen}`,
+    `barn.${BARN}.mejl.paminnelse.${sigBarn}`,
+    `barn.${BARN}.sms.barn_paminnelse.${sigBarn}`,
+    `barn.${UID}.mejl.barn_paminnelse.${sigBarn}`,
+  ]) {
+    const r = await hanteraAvregistrering(post(JSON.stringify({ t: fel })), b);
+    assertEquals(r.status, 403, fel);
+  }
+  assertEquals(kallade.length, 2);
+});
+
+Deno.test('ett barn utan adress längre är länkens fel', async () => {
+  const t = await skapaBarnToken(BARN, 'alla', NYCKEL);
+  const borta = beroenden({ utfall: 'ogiltig' });
+  assertEquals((await hanteraAvregistrering(post(JSON.stringify({ t })), borta.b)).status, 400);
 });

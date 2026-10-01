@@ -22,9 +22,22 @@
 // Ingen utgångstid, med flit: en länk i ett mejl från i våras ska
 // fortfarande fungera. Byts nyckeln i notis_konfig slutar alla gamla
 // länkar att gälla, och inget annat händer.
+//
+// BARNETS LÄNK (barnets_epost) har en egen form, med fem delar:
+//
+//   barn.<barn_id>.mejl.<typ>.<base64url(HMAC-SHA256(nyckel,
+//        "avanmal:v2:barn:" + barn_id + ":mejl:" + typ))>
+//
+// Ett barn har inget konto i profiles, och dess val står i barn_epost.
+// Formen och texten som signeras skiljer sig båda från en vuxens, så en
+// vuxens token kan aldrig läsas som ett barns eller tvärtom: lasToken
+// tar bara fyra delar, lasBarnToken bara fem, och ett uuid kan inte
+// innehålla "barn:". Tokenen stänger av en sort för ett barn, inget mer.
 // ============================================================
 
-import { arKanal, arNotisTyp, type Kanal, type NotisTyp } from './typer.ts';
+import {
+  arBarnMejltyp, arKanal, arNotisTyp, type BarnMejltyp, type Kanal, type NotisTyp,
+} from './typer.ts';
 
 export type TokenTyp = NotisTyp | 'alla';
 export type Avregistrering = { uid: string; kanal: Kanal; typ: TokenTyp };
@@ -104,7 +117,41 @@ export async function lasToken(token: unknown, nyckelB64: string): Promise<Avreg
   if (!SIGNATUR.test(sig)) return null;
 
   const vantad = b64url(await signera(nyckelB64, meddelande(uid, kanal, typ)));
+  return samma(sig, vantad) ? { uid, kanal, typ } : null;
+}
+
+/** Tecken för tecken, utan att avbryta vid första skillnaden. */
+function samma(sig: string, vantad: string): boolean {
   let skillnad = 0;
   for (let i = 0; i < SIGNATUR_LANGD; i++) skillnad |= sig.charCodeAt(i) ^ vantad.charCodeAt(i);
-  return skillnad === 0 ? { uid, kanal, typ } : null;
+  return skillnad === 0;
+}
+
+export type BarnTokenTyp = BarnMejltyp | 'alla';
+export type BarnAvregistrering = { barn: string; typ: BarnTokenTyp };
+
+function barnTypOk(v: unknown): v is BarnTokenTyp {
+  return v === 'alla' || arBarnMejltyp(v);
+}
+
+function barnMeddelande(barn: string, typ: BarnTokenTyp): string {
+  return `avanmal:v2:barn:${barn}:mejl:${typ}`;
+}
+
+export async function skapaBarnToken(barn: string, typ: BarnTokenTyp, nyckelB64: string): Promise<string> {
+  if (!UUID.test(barn) || !barnTypOk(typ)) {
+    throw new Error('Barnets token kan bara göras för ett barn och en av barnets sorter.');
+  }
+  return `barn.${barn}.mejl.${typ}.${b64url(await signera(nyckelB64, barnMeddelande(barn, typ)))}`;
+}
+
+/** Som lasToken, för barnets form. Null om den inte är äkta. */
+export async function lasBarnToken(token: unknown, nyckelB64: string): Promise<BarnAvregistrering | null> {
+  const delar = String(token ?? '').trim().split('.');
+  if (delar.length !== 5) return null;
+  const [form, barn, kanal, typ, sig] = delar;
+  if (form !== 'barn' || kanal !== 'mejl' || !UUID.test(barn) || !barnTypOk(typ)) return null;
+  if (!SIGNATUR.test(sig)) return null;
+  const vantad = b64url(await signera(nyckelB64, barnMeddelande(barn, typ)));
+  return samma(sig, vantad) ? { barn, typ } : null;
 }

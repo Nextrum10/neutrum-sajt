@@ -54,10 +54,12 @@
     && typeof NXStudie.loggaIn === 'function' && typeof NXStudie.loggaInHär === 'function';
 
   if (ärBarn) {
-    /* Barnets vy (barn.html) laddar bara NX och NXStudie: inga
-       betalningar, ingen kontakt, ingen bokning. adminroll kom samma
-       dag som vyn och är ett tecken på att filen är ny nog. */
-    krav.push([studieKlar && typeof NXStudie.adminroll === 'function', 'nextrum-studie.js']);
+    /* Barnets vy (barn.html) laddar NX, NXStudie och, sedan 2026-10-01,
+       NXUppgifter för NexLäx: inga betalningar, ingen kontakt, ingen
+       bokning. adminroll kom samma dag som vyn och är ett tecken på att
+       filen är ny nog. */
+    krav.push([studieKlar && typeof NXStudie.adminroll === 'function', 'nextrum-studie.js'],
+              [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg, 'nextrum-uppgifter.js']);
   } else if (ärAdmin) {
     krav.push(
       [typeof NXTjanster !== 'undefined', 'nextrum-tjanster.js'],

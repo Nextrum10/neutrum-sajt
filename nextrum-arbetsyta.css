@@ -3072,6 +3072,14 @@ a:has(> .adm-status){
 }
 .bi-ja input{flex:none;width:20px;height:20px;margin:1px 0 0;accent-color:var(--acc)}
 .bi-ja a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+/* Barnets egen e-post (barnets_epost): en egen del under inloggningens
+   knappar, med en linje emellan, så att dess knappar inte läses som
+   inloggningens. */
+.bi-epost{margin-top:16px;padding-top:14px;border-top:1px solid var(--ln)}
+.bi-epost-rubrik{margin:0 0 10px;font-size:.88rem;font-weight:650;color:var(--bl)}
+.bi-epost .nx-nval{border-top:1px solid var(--ln);padding-top:13px}
+.bi-epost .bi-hjalp a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.bi-epost .bi-form:not(:first-child){margin-top:12px}
 @media (max-width:480px){
   .bi-fakta{grid-template-columns:minmax(0,1fr);gap:2px}
   .bi-fakta dd + dt{margin-top:8px}
@@ -4625,6 +4633,19 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 .bv-rapport p{margin:0;color:var(--bl);line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
 .bv-rapport p + p{margin-top:8px}
 .bv-rapport-rad b{font-weight:650}
+
+/* Inställningarna (barnets_epost): användarnamnet och adressen överst,
+   en rad per sorts mejl under. */
+.bv-inst-text{margin:0 0 4px}
+#bv-inst .nx-nval:first-of-type{border-top:1px solid var(--ln);padding-top:13px}
+#bv-inst-msg:empty{display:none}
+#bv-inst-msg{margin-top:12px}
+/* Länken "Ändra dina val" i ett mejl hoppar hit: rubriken ska hamna
+   under sidhuvudet (70 px, fast), inte bakom det. */
+.vy-barn #installningar{scroll-margin-top:86px}
+/* Bekräftelsen av adressen: samma kort som inloggningen, utan formulär
+   mellan texten och knappen. */
+#bv-bek-knapp{margin-top:24px}
 
 .bv-fraga{
   margin:clamp(30px,4vw,44px) 0 0;padding:16px 18px;border-radius:18px;

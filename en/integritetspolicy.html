@@ -182,6 +182,11 @@
       <li>If you have given the child a login of their own: the username, when you as guardian
         approved it, when the child last logged in and the notifications in the child’s view. We
         never see the password</li>
+      <li>If you have added the child’s own email: the address, when the child confirmed it,
+        whether you have turned on emails to the child and which emails the child has turned off.
+        Only you, the child and we see the address, not the tutor. Attempts to log in with the
+        address are counted for a day, to protect the child’s login, without the address or the
+        IP address being stored in plain text</li>
     </ul>
     <p class="jur-vikt">Your own notes about the child are private even from us. They sit in a separate table where
       neither tutor nor administrator has read access — that is a technical barrier in the
@@ -261,6 +266,11 @@
       <li><b>The child’s own login</b>: the contract with you (Article 6(1)(b)). You are the ones
         who ask for it, create it and can remove it, and when you create it you confirm that you
         are the guardian and approve of the child using Nextrum. We store when that was done.</li>
+      <li><b>The child’s own email and the emails to the child</b>: the contract with you
+        (Article 6(1)(b)). You are the ones who add the address, turn on the emails and can remove
+        both, and the address is used only once the child has confirmed it. Counting attempts to
+        log in with it is legitimate interest (Article 6(1)(f)): protecting the child’s login
+        against guessing.</li>
       <li><b>Accounting records</b>: legal obligation (Article 6(1)(c)), the Swedish Accounting
         Act.</li>
       <li><b>Job applications</b>: legitimate interest (Article 6(1)(f)), being able to hire the
@@ -286,14 +296,16 @@
       restriction holds even for someone who tried to go around the site.</p>
     <ul>
       <li><b>A tutor</b> sees only the students they are matched with, and only their own sessions, tasks
-        and the answers to them, material, messages and the agreements we have shared with them.</li>
+        and the answers to them, material, messages and the agreements we have shared with them.
+        They never see the child’s own email.</li>
       <li><b>A family</b> sees only their own children, sessions, payments, messages and the
         agreements we have shared with them.</li>
-      <li><b>A child with their own login</b> sees only their own sessions, hours, study plan and
-        notifications, and the reports if the parent has turned that on. Never prices, payments,
-        offers, the parent’s details or anything about other families, and the child cannot
-        book, cancel or change anything. The barrier is in the database: the child’s login
-        reaches no tables, only what is the child’s own.</li>
+      <li><b>A child with their own login</b> sees only their own sessions, hours, study plan,
+        notifications and NexLäx, and the reports if the parent has turned that on. Never prices,
+        payments, offers, the parent’s details or anything about other families. The child can do
+        their NexLäx levels and tick off their tasks, but cannot book, cancel or change anything
+        else. The barrier is in the database: the child’s login reaches no tables, only what is
+        the child’s own.</li>
       <li><b>We</b> can reach what is needed to run the service and solve problems — with the exception of
         your private notes, described above. Each of us sees only what their own permissions
         cover, and none of us can see or change a child’s password.</li>
@@ -325,7 +337,8 @@
         from a hash of IP and browser type with a salt that changes every day, and the raw IP
         address is not stored. The student view and the tutor view are not measured.</li>
       <li><b>Resend</b> (USA): sends our emails, such as booking confirmations, reminders and
-        notifications. Resend gets the recipient’s address and the email’s content.</li>
+        notifications, and the emails to a child’s own address when you have turned them on.
+        Resend gets the recipient’s address and the email’s content.</li>
       <li><b>Anthropic</b> (USA): when a tutor chooses to, Anthropic’s AI rewrites the tutor’s
         notes after a session into a report, and suggests short greetings. Anthropic gets the
         notes and the student’s first name and school year. Personal identity numbers, phone
@@ -383,6 +396,10 @@
       <li><b>The child’s login</b>: as long as you keep it. If you remove it, or the child is
         deleted, the username, the login and the child’s notifications are deleted at once.
         Otherwise the notifications in the child’s view are deleted after 180 days.</li>
+      <li><b>The child’s own email</b>: as long as you keep it and the login exists. If you
+        remove it or the login, or the child is deleted, it is deleted at once. An address that
+        was never confirmed is deleted 30 days after we sent the link, and attempts to log in
+        with an address after a day. This happens automatically every night.</li>
       <li><b>Accounting records</b>: payments and payout records, seven years. That is required
         by the Swedish Accounting Act and not something we can shorten, not even on request.</li>
       <li><b>The change log</b>: as long as the business exists. It carries states and times,
@@ -402,11 +419,17 @@
     <ul>
       <li>A child cannot create an account on their own. The parent registers, accepts the terms
         and enters the details about the child.</li>
-      <li>The parent can give the child a login of their own to a simple view with sessions,
-        hours, study plan and notifications, and pause or remove it at any time. The login is a
-        username and a password, not an email address: the technical address it needs (the
-        username at barn.nextrum.se) never receives any email, and we send nothing to the
-        child.</li>
+      <li>The parent can give the child a login of their own to a simple view with NexLäx,
+        sessions, hours, study plan and notifications, and pause or remove it at any time. The login is a
+        username and a password. The technical address it needs (the username at
+        barn.nextrum.se) never receives any email.</li>
+      <li>The parent can also add the child’s own email. We send a link there, and the address is
+        used only once the child has clicked it. After that the child can log in with it, and get
+        emails about their sessions if the parent turns that on: when a session is booked or
+        cancelled, and a reminder before the session. The emails never mention prices or
+        payments, the child can turn them off, and the parent can turn them off and remove the
+        address at any time. The parent controls the password, and we never send the child
+        anything about the login or the password.</li>
       <li>We only collect what teaching needs: school year, school, subjects and goals. We never
         ask for personal identity numbers, diagnoses or grades, and ask you not to write such
         things in the text boxes.</li>
@@ -421,9 +444,13 @@
         your school year, your subjects, your tasks, how you answered the digital ones and what you
         and your tutor did in the sessions.</li>
       <li>Only your parent, your tutor and we at Nextrum can see it.</li>
-      <li>If your parent has given you a login of your own, you see your sessions, your hours,
-        your study plan and your notifications at nextrum.se/barn. Nobody sees your password, not
+      <li>If your parent has given you a login of your own, you do NexLäx and see your sessions,
+        your hours, your study plan and your notifications at nextrum.se/barn. Nobody sees your password, not
         even us. If you want to change something, ask your parent.</li>
+      <li>If your parent has added your email, you get an email where you confirm that it is
+        yours. After that you can log in with it, and get emails about your sessions if your
+        parent turns that on. You choose which emails you get under Inställningar (Settings) in
+        your view, and every email has a link to stop them.</li>
       <li>We never sell it and never show it to anyone else.</li>
       <li>Do you want to know what is stored about you, or want something removed? Tell your
         parent, or email us at <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</li>
@@ -466,7 +493,7 @@
     <p>If we change anything material we update the date below, and contact those of you with an
       account if the change affects you.</p>
 
-    <p class="jur-datum">Last updated 30 September 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 1 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 

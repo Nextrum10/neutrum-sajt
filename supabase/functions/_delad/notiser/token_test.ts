@@ -14,7 +14,7 @@
 // ============================================================
 
 import { assertEquals, assertRejects } from 'jsr:@std/assert@1';
-import { lasToken, skapaToken } from './token.ts';
+import { lasBarnToken, lasToken, skapaBarnToken, skapaToken } from './token.ts';
 
 /** 32 byte, som databasens notis_avregistreringsnyckel(). */
 function nyckel(fyllnad: number): string {
@@ -113,4 +113,44 @@ Deno.test('en för kort eller trasig nyckel signerar ingenting tyst', async () =
   await assertRejects(() => skapaToken(UID, 'mejl', 'meddelande', btoa('kort')));
   await assertRejects(() => skapaToken(UID, 'mejl', 'meddelande', 'inte base64 alls!!'));
   await assertRejects(() => lasToken(`${UID}.mejl.meddelande.${'A'.repeat(43)}`, btoa('kort')));
+});
+
+// ------------------------------------------------------------
+// Ett barns token (barnets_epost)
+// ------------------------------------------------------------
+
+Deno.test('ett barns token har fem delar och går att läsa tillbaka', async () => {
+  const t = await skapaBarnToken(UID2, 'barn_pass_bokat', NYCKEL);
+  const delar = t.split('.');
+  assertEquals(delar.length, 5);
+  assertEquals(delar.slice(0, 4), ['barn', UID2, 'mejl', 'barn_pass_bokat']);
+  assertEquals(delar[4].length, 43);
+  assertEquals(await lasBarnToken(t, NYCKEL), { barn: UID2, typ: 'barn_pass_bokat' });
+  assertEquals(await lasBarnToken(await skapaBarnToken(UID2, 'alla', NYCKEL), NYCKEL), { barn: UID2, typ: 'alla' });
+});
+
+Deno.test('ett barns token och en vuxens kan aldrig läsas som varandra', async () => {
+  const barn = await skapaBarnToken(UID2, 'barn_paminnelse', NYCKEL);
+  const vuxen = await skapaToken(UID, 'mejl', 'paminnelse', NYCKEL);
+  assertEquals(await lasToken(barn, NYCKEL), null);
+  assertEquals(await lasBarnToken(vuxen, NYCKEL), null);
+  // Signaturen flyttad till den andra formen.
+  assertEquals(await lasToken(`${UID2}.mejl.paminnelse.${barn.split('.')[4]}`, NYCKEL), null);
+  assertEquals(await lasBarnToken(`barn.${UID}.mejl.barn_paminnelse.${vuxen.split('.')[3]}`, NYCKEL), null);
+});
+
+Deno.test('ett barns token: byt barn, sort, kanal eller nyckel, och den gäller inte', async () => {
+  const t = await skapaBarnToken(UID2, 'barn_pass_bokat', NYCKEL);
+  const [, , , , sig] = t.split('.');
+  assertEquals(await lasBarnToken(`barn.${UID}.mejl.barn_pass_bokat.${sig}`, NYCKEL), null);
+  assertEquals(await lasBarnToken(`barn.${UID2}.mejl.alla.${sig}`, NYCKEL), null);
+  assertEquals(await lasBarnToken(`barn.${UID2}.sms.barn_pass_bokat.${sig}`, NYCKEL), null);
+  assertEquals(await lasBarnToken(`barn.${UID2}.mejl.pass_nytt.${sig}`, NYCKEL), null);
+  assertEquals(await lasBarnToken(t, ANNAN), null);
+});
+
+Deno.test('ett barns token görs bara för ett barn och en av barnets sorter', async () => {
+  await assertRejects(() => skapaBarnToken('inte-ett-uuid', 'barn_pass_bokat', NYCKEL));
+  // @ts-expect-error: en vuxens sort är inte barnets
+  await assertRejects(() => skapaBarnToken(UID2, 'pass_nytt', NYCKEL));
 });

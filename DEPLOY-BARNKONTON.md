@@ -157,6 +157,47 @@ avsnitt 8).
 
 ---
 
+## 8. Barnets egen e-post (barnets_epost, 2026-10-01)
+
+Föräldern lägger till barnets egen adress under barnets inloggning,
+barnet bekräftar den med knappen i ett mejl, och sedan kan barnet logga in
+med den och, om föräldern slår på det, få mejl om bokade och avbokade pass
+och en påminnelse före passet. Barnet väljer bort sorter under
+Inställningar i sin vy. Varför det ser ut som det gör:
+`minne/barnkonton-och-admin.md`, Barnets egen e-post.
+
+**Allt står bakom flaggan `barn_epost`, som står av.** Med den av syns
+inget av det, inloggningen med en barnadress nekas och inga mejl går till
+barn. Gör så här, i ordning:
+
+1. **Merga**, och kör migrationen med `apply_migration` och namnet
+   `barnets_epost` (efter `nexlax_for_barnet`). Döp om filen
+   (`supabase/migrations/20261001160000_barnets_epost.sql`) till den
+   version som registrerades, i en egen commit.
+2. **Driftsätt från main**: `barn-inloggning` (ny; `verify_jwt = false`
+   står i `config.toml`), `notis-ko` och `notis-avanmal`. Hämta tillbaka
+   dem och jämför med main. Gamla `notis-ko` känner inte barnets rader,
+   men de finns inte förrän flaggan är på.
+3. **Kör `verktyg/rls-test.sql` mot driften** i en transaktion som rullas
+   tillbaka. Avsnitt 15 slår på flaggan inne i transaktionen.
+4. **Juristen läser** registrets rad 22, de tre raderna från 2026-10-01 i
+   konsekvensbedömningen (`DATASKYDD.md` avsnitt 5) och avsnitten om barn
+   i integritetspolicyn, på båda språken. Frågorna att ställa: räcker 6.1 b
+   genom föräldern för barnets adress och mejlen, är 6.1 f rätt för
+   räknaren, och hur gör vi med ett barn under 13 som har en egen adress.
+5. **Prova i sandlådan.** Sätt `notis_drift.mejl_sandlada`, slå på
+   flaggan, lägg till en adress åt ett testbarn och se bekräftelsen komma
+   till sandlådan. Tryck på knappen (den bekräftar på riktigt), logga in
+   med adressen på `/barn`, slå på mejlen, boka ett pass och se mejlet.
+   Prova Avsluta i mejlet och Ta bort i studievyn. Ta bort sandlådan
+   efteråt.
+6. **Säg till familjerna** i samma mejl som policyändringen (steg 7).
+
+Stänga av: sätt flaggan till av. Adresserna ligger kvar och går att ta
+bort; inloggningen med dem och mejlen stannar direkt.
+
+---
+
 ## Stänga av barnkontona snabbt
 
 Pausa alla barn på en gång, i SQL Editor (triggern släpper igenom SQL):

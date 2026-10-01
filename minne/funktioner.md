@@ -286,3 +286,19 @@ Två funktioner, med det rena i `_delad/barnkonto.ts` och
   anroparens token. Nekas rollen tas kontot bort igen. En adress med konto
   får 409 och pekas mot Befintlig användare.
 Se `minne/barnkonton-och-admin.md`.
+
+### `barn-inloggning` (barnets_epost, 2026-10-01)
+Ett barn loggar in med sin egen bekräftade e-post. Det rena i
+`_delad/barninloggning.ts` (prov: `barninloggning_test.ts`), omvärlden som
+beroenden. verify_jwt är av och står i `config.toml`: den som loggar in
+har ingen token, så regeln om anroparens token har inget att pröva.
+`service_role` används till exakt två funktioner, `barn_inloggning_uppslag`
+och `barn_inloggning_lyckades`, och lösenordet prövas av Auth
+(`/auth/v1/token?grant_type=password` med den publika nyckeln och den
+tekniska adressen). CORS bara för nextrum.se, `no-store` på svaret,
+kroppen läst med tak (`lasKropp` ur `notiser/avanmal.ts`). Auth ser
+funktionens IP-nummer: `Sb-Forwarded-For` kräver en ny sorts hemlig nyckel
+(sb_secret) och en inställning i projektet, och används inte. Samma
+ändring rörde `notis-ko` (barnets rader, `notiser/barn.ts`) och
+`notis-avanmal` (barnets token); alla tre driftsätts från main när
+migrationen är körd, och flaggan slås på först efter juristen.

@@ -116,7 +116,7 @@ betyget är första svaret på varje fråga (3 stjärnor allt rätt, 2 minst
 klar av sig själv. Innehållet skrivs i `verktyg/uppgiftsbanken/` och blir
 en migration med `verktyg/bygg-uppgifter.py`. Märkena räknas ur
 försöken, belöningarna är inte pengar, och nivåerna görs i familjens
-inloggning, också sedan barnet kan få en egen (2026-09-30).
+inloggning och, sedan 2026-10-01, i barnets egen vy (`nexlax_for_barnet`).
 NexLäx (Fas 23.2) samlar det i en sektion i studievyn, `#nexlax`, med
 Din väg och Din utveckling. XP räknas ur svaren och sparas aldrig: 10
 för ett val, 20 för skriv, ordna och matchning, en gång per fråga, 50

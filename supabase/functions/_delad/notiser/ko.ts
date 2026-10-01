@@ -19,7 +19,13 @@
 // ETT MEJL UTAN AVREGISTRERING SKICKAS INTE. Tokenen kräver mottagarens
 // id, som notis_utskick_ta lämnar ut sedan 2.3d. Saknas det ändå blir
 // raden ett tillfälligt fel och prövas igen, i stället för att gå ut
-// utan länk.
+// utan länk. Undantaget är bekräftelsen av ett barns adress, som är
+// svaret på något föräldern just gjort och inte går att välja bort.
+//
+// ETT BARNS RAD (barnets_epost) har roll 'barn' och barnets id som
+// mottagare. Den skrivs med barnets mallar (barn.ts) och får barnets
+// form av token; adressen är barnets egen, bekräftade, aldrig kontots
+// tekniska, och den andra spärren nedan står kvar för den.
 //
 // ETT FEL PÅ KONTOT STOPPAR KÖRNINGEN. Svarar Resend 401 eller 403 är
 // det nyckeln eller avsändardomänen, inte mejlet. Att fortsätta rad
@@ -43,9 +49,10 @@
 import { mejlfelSort, type Mejl, type Mejlfel } from '../mejl.ts';
 import { epostOk } from '../http.ts';
 import { smsText, type SmsSvar, type SmsUt } from '../sms.ts';
-import { renderaMejl, KONTAKT, type ProvLage } from './rendera.ts';
-import { skapaToken } from './token.ts';
-import { arMejlbar } from './typer.ts';
+import { renderaMejl, KONTAKT, type ProvLage, type Renderat } from './rendera.ts';
+import { renderaBarnMejl } from './barn.ts';
+import { skapaBarnToken, skapaToken } from './token.ts';
+import { arBarnMejltyp, arMejlbar, BARN_BEKRAFTA } from './typer.ts';
 import { arBarnadress } from '../barnkonto.ts';
 
 export const FRAN = 'Nextrum <no-reply@nextrum.se>';
@@ -53,7 +60,8 @@ export const FRAN = 'Nextrum <no-reply@nextrum.se>';
 /** En rad ur notis_utskick_ta() (2.3d). */
 export type UtskickRad = {
   id: string;
-  /** Mottagarens id i profiles. Tokenen i avregistreringslänken signeras för det. */
+  /** Mottagarens id i profiles, eller barnets id i students när roll är 'barn'.
+   *  Tokenen i avregistreringslänken signeras för det. */
   mottagare: string | null;
   kanal: string;
   typ: string;
@@ -154,10 +162,12 @@ function arTidsgrans(e: unknown): boolean {
 async function mejla(r: UtskickRad, b: Beroenden, nu: Date): Promise<Utfall> {
   const typ = r.typ;
   if (!epostOk(r.epost)) return klart(r.id, false, 'Ogiltig e-postadress.', true);
-  // Barnkontonas adresser (barnkonton_och_admin) finns inte, och ett
-  // barn ska aldrig få ett mejl från oss. notis_utskick_ta hoppar redan
-  // över dem; det här är andra spärren, för en kö som lämnat ut en ändå.
+  // Barnkontonas tekniska adresser (barnkonton_och_admin) finns inte, och
+  // tar aldrig emot något. notis_utskick_ta hoppar redan över dem; det
+  // här är andra spärren, för en kö som lämnat ut en ändå. Ett barns egen
+  // adress (barnets_epost) är en riktig adress och spärras inte här.
   if (arBarnadress(r.epost)) return klart(r.id, false, 'Barnkonton får inga mejl.', true);
+  if (r.roll === 'barn') return await mejlaBarn(r, b, nu);
   if (!arMejlbar(typ)) return klart(r.id, false, 'Typen mejlas inte.', true);
 
   const prov: ProvLage = r.till_sandlada === true ? 'sandlada'
@@ -176,7 +186,30 @@ async function mejla(r: UtskickRad, b: Beroenden, nu: Date): Promise<Utfall> {
     typ, roll: r.roll ?? 'parent', fornamn: r.fornamn, antal: r.antal ?? 1,
     data: r.data, token, prov, nu,
   });
+  return await skicka(r, b, m, token);
+}
 
+/** Ett mejl till ett barns egen adress (barnets_epost). */
+async function mejlaBarn(r: UtskickRad, b: Beroenden, nu: Date): Promise<Utfall> {
+  const typ = r.typ;
+  const bekrafta = typ === BARN_BEKRAFTA;
+  if (!bekrafta && !arBarnMejltyp(typ)) return klart(r.id, false, 'Typen mejlas inte till barn.', true);
+  // Provmejl finns inte för barn; bara sandlådan.
+  const prov: ProvLage = r.till_sandlada === true ? 'sandlada' : 'nej';
+
+  // Bekräftelsen har ingen avanmälan; de andra har barnets egen.
+  let token: string | null = null;
+  if (arBarnMejltyp(typ) && prov !== 'sandlada') {
+    if (!r.mottagare) return klart(r.id, false, 'Barnet saknades i raden. Inget skickades utan avregistreringslänk.');
+    token = await skapaBarnToken(r.mottagare, typ, b.nyckel);
+  }
+
+  const m = renderaBarnMejl({ typ, fornamn: r.fornamn, data: r.data, token, prov, nu });
+  return await skicka(r, b, m, token);
+}
+
+/** Resend, och vad svaret betyder för raden. */
+async function skicka(r: UtskickRad, b: Beroenden, m: Renderat, token: string | null): Promise<Utfall> {
   const headers: Record<string, string> = {};
   if (token) {
     headers['List-Unsubscribe'] =

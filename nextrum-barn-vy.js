@@ -1,26 +1,36 @@
 /* ============================================================
    NEXTRUM — barnets vy (barn.html), barnkonton_och_admin
 
-   Ett barn med egen inloggning ser sina pass, sina timmar, sin
-   studieplan, sina notiser och, om föräldern slagit på det, rapporterna.
-   Aldrig priser, betalningar, erbjudanden, förälderns uppgifter eller
-   något om andra familjer. Det är inte den här filen som ser till det:
-   barnets roll i databasen (nextrum_barn) når inga tabeller, bara de tre
-   funktionerna barn_oversikt(), barn_notiser() och barn_markera_last(),
-   och de svarar bara om barnet i token. Filen ritar det de svarar.
+   Ett barn med egen inloggning gör NexLäx och ser sina pass, sina
+   timmar, sin studieplan, sina notiser och, om föräldern slagit på det,
+   rapporterna. Aldrig priser, betalningar, erbjudanden, förälderns
+   uppgifter eller något om andra familjer. Det är inte den här filen som
+   ser till det: barnets roll i databasen (nextrum_barn) når inga
+   tabeller, bara barnets egna funktioner (barn_oversikt, barn_notiser,
+   barn_markera_last, barn_nexlax, barn_uppgift) och NexLäx-funktionerna
+   som prövar att det är barnets eget id (nexlax_for_barnet). Filen ritar
+   det de svarar.
 
-   Allt ritas med textContent. Namn, ämnen och rapporttexter kommer ur
-   databasen och skrivs av andra än barnet.
+   Allt utom NexLäx ritas med textContent. Namn, ämnen och rapporttexter
+   kommer ur databasen och skrivs av andra än barnet. NexLäx ritas av
+   NXUppgifter, som i studievyn, med esc() på allt ur databasen.
 
    Barnet kan inte boka, avboka, svara på ett förslag, byta lösenord eller
    ändra något om sig själv. Allt sådant gör föräldern, och vyn säger det.
+   Det barnet gör själv är NexLäx och bocken på en vanlig uppgift.
+
+   BARNETS EGEN E-POST (barnets_epost). Under Inställningar ser barnet
+   sitt användarnamn och sin adress, och väljer bort mejl det inte vill
+   ha (barn_installningar, barn_notisval), när föräldern slagit på dem.
+   Länken i bekräftelsemejlet öppnar vyn med ?bekrafta=, och då visas
+   bara knappen som bekräftar (barn_epost_bekrafta), utan inloggning.
    ============================================================ */
 (function () {
   'use strict';
   const { $, datumText } = NX;
 
-  const VYER = ['view-loading', 'view-auth', 'view-annan', 'view-stopp', 'view-app', 'view-fel'];
-  const S = { user: null, data: null, notiser: [], hämtad: 0, laddar: false };
+  const VYER = ['view-loading', 'view-auth', 'view-bekrafta', 'view-annan', 'view-stopp', 'view-app', 'view-fel'];
+  const S = { user: null, data: null, notiser: [], inst: null, hämtad: 0, laddar: false, tillVal: false };
 
   function visa(id) { NXStudie.visaVy(VYER, id); }
 
@@ -80,9 +90,11 @@
      E-post eller användarnamn, som i alla vyer (NXStudie.loggaIn). Barnet
      loggar in med användarnamnet: adressen i Auth byggs i webbläsaren,
      barnet ser den aldrig, och den tar aldrig emot något mejl (notis-ko
-     hoppar över domänen, och i Auth kan den inte bytas). En vuxen som
-     skriver sin e-post här kommer till sin egen vy. Det är ingen länk
-     dit: det krävs den vuxnes lösenord. */
+     hoppar över domänen, och i Auth kan den inte bytas). Har föräldern
+     lagt till barnets egen e-post, och barnet bekräftat den, går den
+     också (barn-inloggning). En vuxen som skriver sin e-post här kommer
+     till sin egen vy. Det är ingen länk dit: det krävs den vuxnes
+     lösenord. */
   $('#bv-form').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#auth-msg'), knapp = $('#bv-logga-in'), lösenfält = $('#a-pass');
@@ -91,7 +103,7 @@
 
     const anv = $('#bv-anv').value.trim();
     const lösen = lösenfält.value;
-    if (!anv || !lösen) { NX.säg(msg, 'Fyll i användarnamn och lösenord.', false); return; }
+    if (!anv || !lösen) { NX.säg(msg, 'Fyll i användarnamn eller e-post, och lösenord.', false); return; }
 
     await NXStudie.medan(knapp, 'Loggar in…', async () => {
       const svar = await NXStudie.loggaIn(supa, anv, lösen);
@@ -125,7 +137,8 @@
     if (S.laddar) return;
     S.laddar = true;
     try {
-      const [ö, n] = await Promise.all([supa.rpc('barn_oversikt'), supa.rpc('barn_notiser')]);
+      const [ö, n, inst] = await Promise.all([
+        supa.rpc('barn_oversikt'), supa.rpc('barn_notiser'), supa.rpc('barn_installningar')]);
       if (ö.error) throw ö.error;
       const d = ö.data || {};
       S.hämtad = Date.now();
@@ -136,12 +149,25 @@
         return;
       }
       S.data = d;
-      /* Notiserna är inte vyns viktigaste: går de inte att hämta visas
-         resten ändå. */
+      /* Notiserna och inställningarna är inte vyns viktigaste: går de
+         inte att hämta visas resten ändå. En databas utan barnets_epost
+         svarar PGRST202, och då står Inställningar dold. */
       S.notiser = n.error ? null : (n.data || []);
+      S.inst = inst.error || !inst.data || inst.data.lage !== 'ok' ? null : inst.data;
+      if (inst.error && inst.error.code !== 'PGRST202' && inst.error.code !== '42883') {
+        console.warn('barn_installningar:', inst.error.message);
+      }
       ritaHuvud(d.fornamn || null);
       ritaAllt();
       visa('view-app');
+      /* Länken "Ändra dina val" i ett mejl: rakt till inställningarna,
+         en gång, utan mjuk scrollning. */
+      if (S.tillVal && S.inst) {
+        S.tillVal = false;
+        $('#installningar').scrollIntoView({ block: 'start' });
+      }
+      /* NexLäx väntar inte resten av vyn in: banan ritas när den kommer. */
+      laddaNexlax();
     } catch (fel) {
       NXStudie.felvy(visa, fel, 'din vy skulle hämtas');
     } finally {
@@ -167,13 +193,80 @@
     ritaPlan();
     ritaGenomförda();
     ritaRapporter();
+    ritaInställningar();
   }
+
+  /* ============ inställningarna (barnets_epost) ============
+     Vem barnet är inloggat som, adressen om föräldern lagt till en, och
+     en rad per sorts mejl. Valen går att ändra bara när föräldern slagit
+     på mejlen och adressen är bekräftad; annars säger rutan varför. Med
+     flaggan barn_epost av står bara användarnamnet här. */
+  const MEJLSORTER = {
+    barn_pass_bokat: ['När ett pass är bokat', 'Ett mejl när ett nytt pass är bokat åt dig.'],
+    barn_pass_avbokat: ['När ett pass är avbokat', 'Ett mejl när ett pass inte blir av.'],
+    barn_paminnelse: ['Påminnelse före ett pass', 'Ett mejl en stund innan passet börjar.']
+  };
+
+  function ritaInställningar() {
+    const del = $('#installningar'), host = $('#bv-inst');
+    const i = S.inst;
+    if (!del || !host) return;
+    if (!i) { del.hidden = true; return; }
+    del.hidden = false;
+
+    const fakta = el('dl', { class: 'bi-fakta' },
+      el('dt', {}, 'Användarnamn'), el('dd', {}, i.anvandarnamn || ''));
+    if (i.pa) {
+      fakta.append(el('dt', {}, 'E-post'), el('dd', {},
+        !i.epost ? 'Ingen. Din förälder kan lägga till din e-post.'
+          : i.bekraftad ? i.epost
+            : i.epost + ' (väntar på att du bekräftar den: titta efter ett mejl från Nextrum)'));
+    }
+    const delar = [fakta];
+
+    if (i.pa) {
+      /* Valen sparas också innan föräldern slagit på mejlen; de gäller
+         från den dagen. Utan bekräftad adress finns inget att välja. */
+      const varför = !i.epost || !i.bekraftad
+        ? 'När din e-post är bekräftad och din förälder har slagit på mejl kan du välja här vilka mejl du får.'
+        : !i.notiser ? 'Din förälder har inte slagit på mejl till dig. Ditt val sparas till dess.'
+          : 'Välj vilka mejl du vill få. Det du stänger av här får du inte.';
+      delar.push(el('p', { class: 'xsmall bi-hjalp bv-inst-text' }, varför));
+      (i.typer || []).forEach(t => {
+        const ord = MEJLSORTER[t.typ];
+        if (!ord) return;
+        delar.push(el('div', { class: 'nx-nval' },
+          el('div', { class: 'nx-nval-text' }, el('b', {}, ord[0]), el('span', { class: 'xsmall' }, ord[1])),
+          el('button', { class: 'chip', type: 'button', 'data-bv-val': t.typ,
+            'aria-pressed': t.pa ? 'true' : 'false', disabled: !(i.epost && i.bekraftad) },
+            t.pa ? 'På' : 'Av')));
+      });
+    }
+    host.replaceChildren(...delar);
+  }
+
+  document.addEventListener('click', async e => {
+    const val = e.target.closest('[data-bv-val]');
+    if (!val || !S.inst) return;
+    const msg = $('#bv-inst-msg');
+    NX.rensa(msg);
+    const på = val.getAttribute('aria-pressed') !== 'true';
+    await NXStudie.medan(val, 'Sparar…', async () => {
+      const { data, error } = await supa.rpc('barn_notisval', { p_typ: val.dataset.bvVal, p_pa: på });
+      if (error || !data || data.lage !== 'ok') {
+        NX.säg(msg, 'Valet gick inte att spara. Försök igen om en stund.', false);
+        return;
+      }
+      S.inst = data;
+    });
+    ritaInställningar();
+  });
 
   function ritaHej() {
     const d = S.data;
     $('#bv-rubrik').textContent = d.fornamn ? 'Hej, ' + d.fornamn + '!' : 'Hej!';
     $('#bv-lede').textContent = (d.studiehjalpare ? 'Du pluggar med ' + d.studiehjalpare + '. ' : '')
-      + 'Här ser du dina pass, din studieplan och vad som hänt.';
+      + 'Här gör du NexLäx och ser dina pass, din studieplan och vad som hänt.';
   }
 
   /* Timmarna räknas ur passen: genomförda är pass med en rapport där
@@ -299,6 +392,216 @@
       r.nasta ? el('p', { class: 'bv-rapport-rad' }, el('b', {}, 'Nästa gång: '), r.nasta) : null)));
   }
 
+  /* ============ NexLäx (nexlax_for_barnet, 2026-10-01) ============
+     Leo: "Nexläx syns inte i barnens vy". Samma bana, spelare och
+     rättning som i studievyn (NXUppgifter), men barnets roll når inga
+     tabeller: banan kommer ur barn_nexlax(), och nivåerna startas och
+     rättas i samma funktioner som familjens, som prövar att det är
+     barnets eget id och att inloggningen är aktiv. En vanlig uppgift
+     bockas av med barn_uppgift(). Studiehjälparens bedömning och passen
+     visas inte här (barnvy i NXUppgifter); det barnet får läsa om passen
+     står under Rapporter, och "Från passet" på vägen, när föräldern slagit
+     på rapporterna. */
+  const U = NXUppgifter;
+  S.nl = { data: null, läge: null, öppen: null, nyss: null, alla: false, val: { amne: '', arskurs: '' } };
+
+  async function laddaNexlax() {
+    const sek = $('#bv-nexlax');
+    if (!sek) return;
+    const { data, error } = await supa.rpc('barn_nexlax');
+    if (error) {
+      /* PGRST202: funktionen finns inte, migrationen är inte körd. Då står
+         NexLäx dold och resten av vyn som förut. */
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.warn('barn_nexlax:', error.message);
+      sek.hidden = true;
+      return;
+    }
+    const d = data || {};
+    if (d.lage !== 'ok') { sek.hidden = true; return; }
+    S.nl.data = d;
+    /* XP och serien är ett tillägg: utan dem ritas vägen ändå. */
+    S.nl.läge = await U.laddaLäge(supa, d.elev);
+    sek.hidden = false;
+    ritaNexlax();
+  }
+
+  /* "Från passet" på vägen läser rapporterna, i studievyns form. */
+  function nlRapporter() {
+    if (!S.data || !S.data.visa_rapporter) return [];
+    return (S.data.rapporter || []).map(r => ({
+      lesson_date: r.datum, amne: r.amne, needs_practice: r.trana, next_focus: r.nasta
+    }));
+  }
+
+  function nlUnderlag() {
+    const d = S.nl.data || {};
+    return {
+      katalog: d.katalog || [], forsok: d.forsok || [], uppgifter: d.uppgifter || [],
+      pågående: d.pagaende || {}, läge: S.nl.läge,
+      elevKod: NX.årskursKod(d.arskurs), elevNamn: 'du',
+      rapporter: nlRapporter(), progress: [], historik: {}, bokningar: []
+    };
+  }
+
+  /* Banan vägen öppnar i: den barnet valt, annars det första av barnets
+     ämnen som har en bana, sedan ämnet i en öppen digital uppgift,
+     annars matematik (samma ordning som i studievyn). */
+  function nlBana() {
+    const d = S.nl.data || {};
+    const finns = U.banor(d.katalog || []);
+    const given = (d.uppgifter || []).find(h => h.niva_id && h.status !== 'klar' && h.nivaer);
+    const amne = (S.nl.val.amne && finns[S.nl.val.amne]) ? S.nl.val.amne
+      : (d.amnen || []).find(a => finns[a])
+        || (given && finns[given.nivaer.amne] ? given.nivaer.amne : null)
+        || (finns.Matematik ? 'Matematik' : null);
+    return { amne, arskurs: S.nl.val.arskurs || '' };
+  }
+
+  function ritaVägen() {
+    const host = $('#bv-nl-vag');
+    if (!host || !S.nl.data) return;
+    const b = nlBana();
+    const ut = U.ritaVäg(Object.assign(nlUnderlag(), {
+      host, amne: b.amne, arskurs: b.arskurs, öppen: S.nl.öppen, nyss: S.nl.nyss,
+      hjälpare: S.data && S.data.studiehjalpare ? { namn: S.data.studiehjalpare } : null
+    }));
+    S.nl.nyss = null;
+    if (ut && ut.amne && !S.nl.val.amne) S.nl.val = { amne: ut.amne, arskurs: '' };
+  }
+
+  function ritaUtveckling() {
+    const host = $('#bv-nl-utveckling');
+    if (!host || !S.nl.data) return;
+    U.ritaUtveckling(Object.assign(nlUnderlag(), { host, alla: S.nl.alla, barnvy: true }));
+  }
+
+  function ritaNexlax() {
+    ritaVägen();
+    ritaUtveckling();
+  }
+
+  /* Flikarna, utan arbetsytan: barnets vy laddar bara NX, NXStudie och
+     NXUppgifter. Pilarna flyttar mellan flikarna, som en flikrad lovar. */
+  function visaFlik(namn) {
+    NX.$$('#bv-nexlax .vy-flik').forEach(k => {
+      const vald = k.dataset.flik === namn;
+      k.setAttribute('aria-selected', vald ? 'true' : 'false');
+      k.tabIndex = vald ? 0 : -1;
+    });
+    NX.$$('#bv-nexlax .vy-flik-panel').forEach(p => { p.hidden = p.dataset.flik !== namn; });
+  }
+  NX.$$('#bv-nexlax .vy-flik').forEach((k, i, alla) => {
+    k.addEventListener('click', () => visaFlik(k.dataset.flik));
+    k.addEventListener('keydown', e => {
+      const steg = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!steg) return;
+      e.preventDefault();
+      const nästa = alla[(i + steg + alla.length) % alla.length];
+      visaFlik(nästa.dataset.flik);
+      nästa.focus();
+    });
+  });
+
+  /* Vägen ritas om, så knappen man tryckte på är en ny: den mäts före
+     och efter och sidan flyttas med skillnaden (som i studievyn). */
+  function ritaOchHåll(sel, fn) {
+    const före = $(sel);
+    const y = före ? före.getBoundingClientRect().top : null;
+    fn();
+    const ny = $(sel);
+    if (ny && y !== null) {
+      const efter = ny.getBoundingClientRect().top;
+      if (Math.abs(efter - y) > 1) NXStudie.scrollaTill(window.scrollY + efter - y);
+      ny.focus({ preventScroll: true });
+    }
+  }
+
+  function spelaNivå(niva) {
+    const d = S.nl.data;
+    if (!niva || !d) return;
+    U.spela({
+      supa, niva, elev: d.elev,
+      katalog: d.katalog || [], forsok: d.forsok || [], uppgifter: d.uppgifter || [],
+      pågående: d.pagaende || {}, läge: S.nl.läge,
+      hämtaLäge: () => U.laddaLäge(supa, d.elev),
+      onStäng: ut => {
+        if (!ut || !ut.ändrat) return;
+        S.nl.öppen = null;
+        S.nl.nyss = { klar: ut.klar, oppen: ut.oppen };
+        laddaNexlax();
+      }
+    });
+  }
+
+  document.addEventListener('click', async e => {
+    if (!S.nl.data) return;
+    const amne = e.target.closest('[data-nl-amne]');
+    if (amne) {
+      S.nl.val = { amne: amne.dataset.nlAmne, arskurs: '' };
+      S.nl.öppen = null;
+      ritaOchHåll('[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"]', ritaVägen);
+      return;
+    }
+    const nod = e.target.closest('[data-nl-nod]');
+    if (nod) {
+      const id = nod.dataset.nlNod;
+      S.nl.öppen = S.nl.öppen === id ? null : id;
+      ritaOchHåll('[data-nl-nod="' + CSS.escape(id) + '"]', ritaVägen);
+      return;
+    }
+    const alla = e.target.closest('[data-nl-alla]');
+    if (alla) {
+      const öppnar = !S.nl.alla;
+      if (öppnar) { S.nl.alla = true; ritaUtveckling(); }
+      else ritaOchHåll('[data-nl-alla]', () => { S.nl.alla = false; ritaUtveckling(); });
+      return;
+    }
+    const k = e.target.closest('[data-nl-starta]');
+    if (k) {
+      spelaNivå((S.nl.data.katalog || []).find(n => n.id === k.dataset.nlStarta));
+      return;
+    }
+    const u = e.target.closest('[data-lax-starta]');
+    if (u) {
+      const h = (S.nl.data.uppgifter || []).find(x => x.id === u.dataset.laxStarta);
+      if (!h || !h.nivaer) return;
+      spelaNivå((S.nl.data.katalog || []).find(n => n.id === h.niva_id) || h.nivaer);
+      return;
+    }
+    const g = e.target.closest('[data-upg-genomgang]');
+    if (g) { U.genomgång(supa, g.dataset.upgGenomgang); return; }
+
+    /* Materialet: bara länkar kommer hit (barn_nexlax). En fil öppnas
+       i familjens inloggning. */
+    const mat = e.target.closest('[data-lax-mat]');
+    if (mat) {
+      const h = (S.nl.data.uppgifter || []).find(x => x.bibliotek_id === mat.dataset.laxMat);
+      const lank = h && h.biblioteksmaterial && h.biblioteksmaterial.lank;
+      if (lank && /^https?:\/\//i.test(lank)) window.open(lank, '_blank', 'noopener');
+      return;
+    }
+
+    /* Klar, Jag har börjat och Ångra på en vanlig uppgift. */
+    const lax = e.target.closest('[data-lax]');
+    if (lax) {
+      const msg = $('#bv-nl-msg');
+      NX.rensa(msg);
+      await NXStudie.medan(lax, '…', async () => {
+        const { error } = await supa.rpc('barn_uppgift', { p_id: lax.dataset.id, p_status: lax.dataset.lax });
+        if (error) { NX.säg(msg, 'Uppgiften gick inte att spara. Försök igen om en stund.', false); return; }
+        await laddaNexlax();
+      });
+    }
+  });
+  document.addEventListener('change', e => {
+    const sel = e.target.closest('[data-nl-arskurs]');
+    if (!sel || !S.nl.data) return;
+    const host = $('#bv-nl-vag');
+    S.nl.val = { amne: host ? host.dataset.amne : '', arskurs: sel.value };
+    S.nl.öppen = null;
+    ritaVägen();
+  });
+
   /* Den som låter fliken stå öppen ska se nya pass och notiser när den
      kommer tillbaka, utan att vyn blinkar: listorna byts först när det
      nya har kommit. */
@@ -308,8 +611,48 @@
     ladda();
   });
 
+  /* ============ bekräftelsen av barnets e-post (barnets_epost) ============
+     Koden tas ur adressen direkt, så att den inte står kvar i historiken
+     eller följer med om sidan delas. Knappen skickar den; ett ord kommer
+     tillbaka. Samma vy oavsett vem som är inloggad i webbläsaren. */
+  const BEKRÄFTAT = {
+    ok: ['Klart, din e-post är bekräftad', 'Nu kan du logga in med den på nextrum.se/barn, med lösenordet du fått av din förälder.'],
+    redan: ['Adressen är redan bekräftad', 'Du kan logga in med den på nextrum.se/barn.'],
+    gammal: ['Länken har gått ut', 'Den gällde i sju dagar. Be din förälder skicka en ny från Nextrum.'],
+    upptagen: ['Adressen används redan', 'Den hör redan till ett annat barnkonto hos Nextrum. Be din förälder om hjälp.'],
+    av: ['Det går inte just nu', 'Adresser går inte att bekräfta just nu. Försök igen senare.'],
+    ogiltig: ['Länken gäller inte', 'Öppna den från mejlet igen, eller be din förälder skicka en ny. Bara den senaste länken gäller.']
+  };
+
+  function visaBekräftelse(kod) {
+    visa('view-bekrafta');
+    const knapp = $('#bv-bek-knapp'), msg = $('#bv-bek-msg');
+    knapp.addEventListener('click', async () => {
+      NX.rensa(msg);
+      await NXStudie.medan(knapp, 'Bekräftar…', async () => {
+        const { data, error } = await supa.rpc('barn_epost_bekrafta', { p_kod: kod });
+        if (error) {
+          NX.säg(msg, 'Det gick inte att nå Nextrum. Försök igen om en stund.', false);
+          return;
+        }
+        const [rubrik, text] = BEKRÄFTAT[data] || BEKRÄFTAT.ogiltig;
+        $('#bv-bek-rubrik').textContent = rubrik;
+        $('#bv-bek-text').textContent = text;
+        knapp.hidden = true;
+        $('#bv-bek-rubrik').focus();
+      });
+    });
+  }
+
   /* ============ uppstart ============ */
   (async function () {
+    const sök = new URLSearchParams(location.search);
+    const kod = sök.get('bekrafta');
+    if (kod != null) {
+      history.replaceState(history.state, '', location.pathname);
+      if (supa) { visaBekräftelse(kod.slice(0, 200)); return; }
+    }
+    S.tillVal = location.hash === '#installningar';
     if (!supa) {
       visa('view-auth');
       NX.säg($('#auth-msg'), 'Inloggningen fungerar inte just nu. Försök igen senare.', false);

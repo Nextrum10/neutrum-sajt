@@ -82,9 +82,16 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   Varje inloggning tar e-post eller användarnamn (`NXStudie.loggaIn`, 2026-10-01): med @ en
   vuxen, utan @ ett barn, som hamnar på `/barn`. Adressen `<namn>@barn.nextrum.se` finns bara
   för att Auth kräver en, nekas i inloggningen och tar aldrig emot mejl. Bara föräldern skapar, pausar och tar bort
-  inloggningen, genom `barn-konto`. Barnet kan inte boka, avboka, svara eller ändra något, och
-  ser aldrig priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade
-  pass, aldrig timbanken. NexLäx görs fortfarande i familjens inloggning.
+  inloggningen, genom `barn-konto`. Barnet kan inte boka, avboka, svara eller ändra något utöver
+  NexLäx och bocken på en vanlig uppgift (`nexlax_for_barnet`, 2026-10-01), och ser aldrig
+  priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade pass,
+  aldrig timbanken. NexLäx görs i barnets vy och i familjens inloggning, med samma rader.
+- **Barnets egen e-post** (`barnets_epost`, 2026-10-01; flaggan `barn_epost` står AV tills
+  juristen läst): föräldern lägger till den, barnet bekräftar den med en knapp, och först då
+  används den, till inloggning (`barn-inloggning`) och, om föräldern slår på det, till mejl om
+  bokat, avbokat och påminnelse. Den står i `barn_epost`, aldrig i Auth, och ingen inloggad når
+  tabellen. Föräldern styr adressen, mejlen och lösenordet; barnet väljer bara bort sorter.
+  Ta bort och stäng av går alltid, också med flaggan av.
 ### Ordlistan (använd den, i kod och i text)
 | Ord | Betyder |
 |---|---|
@@ -132,8 +139,8 @@ Detaljer: `minne/grunden.md`.
   `nextrum-app.js` (`NX`); bildvägar står bara i `nextrum-images.js`; `nextrum-samtycke.js` bara
   på öppna sidor. `nextrum-modulvakt.js` prövar en funktion per fil i alla fyra vyerna, moduler
   nås som identifierare (aldrig `window[...]`), och en ny `nextrum-admin-*.js` ska in där.
-- Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX
-  och NXStudie) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
+- Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX,
+  NXStudie och NXUppgifter) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
   `-admin-*.js`; `-admin-behorighet.js` avgör vad en admin med behörigheter ser.
 - CSS: `nextrum.css`, `-home`, `-cinema`, `-vy`, `-arbetsyta`, `-agent`. **Cinema är
   sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F2EDE3`) tar
@@ -237,7 +244,8 @@ Detaljer: `minne/grunden.md`.
   `is_admin()` är superadmin och `har_behorighet()` resten; en ny adminpolicy väljer en av dem.
   Reglerna står i triggern `admin_roller_vakt`, och `admin_logg` går inte att ändra.
 - **Barnets roll** `nextrum_barn` har inga tabellrättigheter; en ny tabell eller vy ger den
-  ingenting, och en ny barnfunktion hittar barnet med `intern.mitt_barn()`. **GoTrue skriver
+  ingenting, och en ny barnfunktion hittar barnet med `intern.mitt_barn()`, eller med
+  `intern.mitt_aktiva_barn()` när en pausad inloggning inte ska kunna göra den. **GoTrue skriver
   raden i `auth.users` före `app_metadata`**: ett barnkonto skapas bara genom ett fönster som
   `barn-konto` öppnar för kontots eget id, och lösenordet byts bara i ett fönster
   (`barn_andringsfonster`). Databasen skriver tillbaka barnets `app_metadata`, spärrar adress
@@ -254,8 +262,12 @@ Detaljer: `minne/grunden.md`.
   genom `fornamn()`, och `rapport` mejlas aldrig. Typlistorna i databasen och i `typer.ts`
   ändras tillsammans. En saknad rad i `notis_val` betyder PÅ, avanmälan skriver bara där, och
   länken i mejlet kan aldrig slå på något och har med flit ingen utgångstid.
-- Ett barnkonto får aldrig ett mejl: `notis_utskick_ta` och `notis-ko` hoppar över
-  `@barn.nextrum.se`, och barnets notiser står i `barn_notiser`.
+- Barnkontots tekniska adress får aldrig ett mejl: `notis_utskick_ta` och `notis-ko` hoppar
+  över `@barn.nextrum.se`, och barnets notiser står i `barn_notiser`. Ett barns egen bekräftade
+  adress får mejl bara som en rad med `barn_id` (aldrig `mottagare`), som `notis_utskick_ta`
+  prövar igen när den ska gå; barnets mallar (`barn.ts`) har aldrig pris, betalning eller skäl,
+  bekräftelsen hälsar inte med namn och har ingen avanmälan, och barnets avanmälningstoken har
+  fem delar, så den aldrig kan läsas som en vuxens.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot styrs av en INSERT, möteslänken är https, ett steg mejlas en
@@ -330,6 +342,10 @@ Detaljer: `minne/sakerhet.md`.
   Auth kräver görs med `service_role`, och ett barnkonto skapas aldrig utan vårdnadshavarens ja.
   `barn-konto` väljer barnkontots id och ger Auth varken `app_metadata` eller roll: det skriver
   databasen, ur fönstret.
+- `barn-inloggning` (verify_jwt av) är en inloggning, inte en anropare med token: den slår upp
+  barnets tekniska adress med `service_role` och låter Auth pröva lösenordet. Samma svar och
+  minst 0,9 sekunder för varje nej; databasen räknar försöken som HMAC. Ett vuxeninlogg som
+  får "fel lösenord" provas också som barnadress (`NXStudie.loggaIn`).
 - **Agentregeln**: hårt stegtak, källtvång i kod, bara verifierade `kallor` klickbara (aldrig
   med regex), `ekonomi` skriver aldrig, och agenterna läser källan, aldrig ur minnet.
 - **AI-lagret**: `drift` har inget utgående verktyg, och ingen AI-väg skriver i affärstabeller
@@ -403,6 +419,9 @@ Detaljer: `minne/grunden.md`.
   null-MX:en i Cloudflare, en skarp inbjudan genom `admin-skapa`, och att säga till familjerna.
   En admin med behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen
   säger nej.
+- **Barnets egen e-post** (2026-10-01) är byggd och provad men inte på: flaggan `barn_epost`
+  står av tills juristen läst policyn, registrets rad 22 och konsekvensbedömningen
+  (`DEPLOY-BARNKONTON.md`). Adminvyn visar inte barnens inloggningar, och inte adressen.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
