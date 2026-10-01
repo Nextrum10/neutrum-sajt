@@ -82,9 +82,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   Varje inloggning tar e-post eller användarnamn (`NXStudie.loggaIn`, 2026-10-01): med @ en
   vuxen, utan @ ett barn, som hamnar på `/barn`. Adressen `<namn>@barn.nextrum.se` finns bara
   för att Auth kräver en, nekas i inloggningen och tar aldrig emot mejl. Bara föräldern skapar, pausar och tar bort
-  inloggningen, genom `barn-konto`. Barnet kan inte boka, avboka, svara eller ändra något, och
-  ser aldrig priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade
-  pass, aldrig timbanken. NexLäx görs fortfarande i familjens inloggning.
+  inloggningen, genom `barn-konto`. Barnet kan inte boka, avboka, svara eller ändra något utöver
+  NexLäx och bocken på en vanlig uppgift (`nexlax_for_barnet`, 2026-10-01), och ser aldrig
+  priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade pass,
+  aldrig timbanken. NexLäx görs i barnets vy och i familjens inloggning, med samma rader.
 ### Ordlistan (använd den, i kod och i text)
 | Ord | Betyder |
 |---|---|
@@ -132,8 +133,8 @@ Detaljer: `minne/grunden.md`.
   `nextrum-app.js` (`NX`); bildvägar står bara i `nextrum-images.js`; `nextrum-samtycke.js` bara
   på öppna sidor. `nextrum-modulvakt.js` prövar en funktion per fil i alla fyra vyerna, moduler
   nås som identifierare (aldrig `window[...]`), och en ny `nextrum-admin-*.js` ska in där.
-- Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX
-  och NXStudie) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
+- Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX,
+  NXStudie och NXUppgifter) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
   `-admin-*.js`; `-admin-behorighet.js` avgör vad en admin med behörigheter ser.
 - CSS: `nextrum.css`, `-home`, `-cinema`, `-vy`, `-arbetsyta`, `-agent`. **Cinema är
   sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F2EDE3`) tar
@@ -237,7 +238,8 @@ Detaljer: `minne/grunden.md`.
   `is_admin()` är superadmin och `har_behorighet()` resten; en ny adminpolicy väljer en av dem.
   Reglerna står i triggern `admin_roller_vakt`, och `admin_logg` går inte att ändra.
 - **Barnets roll** `nextrum_barn` har inga tabellrättigheter; en ny tabell eller vy ger den
-  ingenting, och en ny barnfunktion hittar barnet med `intern.mitt_barn()`. **GoTrue skriver
+  ingenting, och en ny barnfunktion hittar barnet med `intern.mitt_barn()`, eller med
+  `intern.mitt_aktiva_barn()` när en pausad inloggning inte ska kunna göra den. **GoTrue skriver
   raden i `auth.users` före `app_metadata`**: ett barnkonto skapas bara genom ett fönster som
   `barn-konto` öppnar för kontots eget id, och lösenordet byts bara i ett fönster
   (`barn_andringsfonster`). Databasen skriver tillbaka barnets `app_metadata`, spärrar adress

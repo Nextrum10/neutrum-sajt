@@ -77,10 +77,20 @@ Läxhjälp är fortfarande tjänstens namn; skolan ger läxor, vi ger uppgifter.
   utveckling, och bedömningen är fortfarande en människas omdöme som
   inte blandas ihop med en maskins rättning: den står i ett eget block,
   Studiehjälparens bedömning.
-- Nivåerna görs i familjens inloggning (avsnitt 11). Barnet kan sedan
-  2026-09-30 få en egen inloggning (`barn.html`), men den visar bara pass,
-  timmar, studieplan och notiser: barnets roll når inga tabeller, och ett
-  försök är en skrivning.
+- Nivåerna görs i familjens inloggning och, sedan 2026-10-01, i barnets
+  egen vy (`barn.html`, migrationen `nexlax_for_barnet`). Leo: "Nexläx syns
+  inte i barnens vy". Barnets roll når fortfarande inga tabeller: de fyra
+  funktionerna NexLäx bygger på (`niva_starta`, `niva_svara`,
+  `niva_genomgang`, `nexlax_lage`) släpper in barnet för dess eget id och
+  bara med aktiv inloggning (`intern.mitt_aktiva_barn`), banan läses genom
+  `barn_nexlax()` och en vanlig uppgift bockas av genom `barn_uppgift()`.
+  Ett försök barnet startar har `startad_av` tom: kolumnen pekar på
+  `profiles`, och ett barnkonto har ingen. Barnets vy ritar vägen, spelaren
+  och Din utveckling med samma NXUppgifter, men utan studiehjälparens
+  bedömning och passen (`barnvy`); "Från passet" på vägen och rapporterna
+  syns bara när föräldern slagit på rapporterna. Material följer med bara
+  som länk: en fil kräver en signerad adress ur en privat hink, och den
+  vägen har barnet inte.
 
 ## NexLäx (Fas 23.2)
 
@@ -247,13 +257,11 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
   uträknat i kod där det går; läs igenom en bana med `--visa` innan den
   används på riktigt, och låt en studiehjälpare som undervisar i ämnet
   göra det. Kvar:
-  1. **Nivåerna görs i familjens inloggning**, alltså med betalning,
-     bokning och meddelanden en knapp bort. Barnets egen inloggning
-     (barnkonton_och_admin, 2026-09-30) når inte NexLäx: rollen
-     `nextrum_barn` har inga tabellrättigheter, och `niva_starta` och
-     `niva_svara` skriver. Ska barnet göra nivåerna själv behöver de två
-     en väg för rollen som prövar barnet med `intern.mitt_barn()`, och
-     konsekvensbedömningen i `DATASKYDD.md` ska göras om för det.
+  1. **Nivåerna görs också i barnets egen vy sedan 2026-10-01**
+     (`nexlax_for_barnet`, se ovan). Funktionerna prövar barnet med
+     `intern.mitt_aktiva_barn()`, konsekvensbedömningen i `DATASKYDD.md`
+     har en rad för det, och `rls-test.sql` avsnitt 14 provar att barnet
+     bara spelar sitt eget och inte med en pausad inloggning.
   2. **Adminvyn har ingen vy över nivåerna.** Banken ändras i
      `verktyg/uppgiftsbanken/` och går in genom en migration.
   3. **Migrationerna är i drift sedan 2026-09-29**, som

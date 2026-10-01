@@ -271,6 +271,10 @@ const text = (page, sel) => page.locator(sel).first().textContent().catch(() => 
 const vänta = ms => new Promise(r => setTimeout(r, ms));
 
 /* ============ barnets vy ============ */
+/* Det enda barnets vy får fråga databasen om (nexlax_for_barnet lade
+   till NexLäx). */
+const BARNETS_FUNKTIONER = /\/rpc\/(barn_(oversikt|notiser|markera_last|nexlax|uppgift)|nexlax_lage|niva_(starta|svara|genomgang))$/;
+
 function barnRpc(extra) {
   return Object.assign({
     barn_oversikt: () => ({
@@ -353,9 +357,10 @@ async function provaBarnvyn(webb) {
     prova('barn: inga priser, inga betalningar, inga länkar ut',
       !/\bkr\b|betal|faktura|erbjud|klippkort|timbank/i.test(hela)
       && (await page.locator('#view-app a').count()) === 0, hela.slice(0, 200));
-    prova('barn: bara barnets tre funktioner och Auth frågades',
-      S.logg.filter(r => r.väg.startsWith('/rest/')).every(r => /\/rpc\/barn_(oversikt|notiser|markera_last)$/.test(r.väg)),
+    prova('barn: bara barnets egna funktioner och Auth frågades',
+      S.logg.filter(r => r.väg.startsWith('/rest/')).every(r => BARNETS_FUNKTIONER.test(r.väg)),
       S.logg.filter(r => r.väg.startsWith('/rest/')).map(r => r.väg).join(', '));
+    prova('barn: utan barn_nexlax i databasen står NexLäx dold', !(await synlig(page, '#bv-nexlax')));
     await bild(page, 'barn-vyn-ljus');
 
     /* 3. Läst. */
@@ -539,6 +544,151 @@ async function provaBarnpanelen(webb) {
     await vänta(500);
     prova('förälder utan migrationen: vyn laddar och rutan är dold',
       (await synlig(p, '#view-app')) && !(await synlig(p, '#bi-ruta')));
+    await c.close();
+  }
+}
+
+/* ============ NexLäx i barnets vy (nexlax_for_barnet, 2026-10-01) ============
+   Leo: "Nexläx syns inte i barnens vy". Samma bana och spelare som i
+   studievyn, ur barn_nexlax(), och nivåerna startas och rättas med
+   barnets eget id. Ingen bedömning och inga pass i Din utveckling. */
+function nexlaxRpc(extra) {
+  const anrop = [];
+  const N1 = { id: 'niva-1', nyckel: 'ma-6-brak-1', amne: 'Matematik', arskurs: 'ak6', omrade: 'Bråk',
+               titel: 'Jämför bråk', beskrivning: 'Vilket bråk är störst?', ordning: 1, antal_fragor: 1,
+               aktiv: true, sort: 'vanlig', lastext: null };
+  const N2 = Object.assign({}, N1, { id: 'niva-2', nyckel: 'ma-6-brak-2', titel: 'Förläng bråk', ordning: 2 });
+  const rpc = Object.assign(barnRpc(), {
+    barn_nexlax: () => {
+      anrop.push(['barn_nexlax']);
+      return {
+        lage: 'ok', elev: 'barn-1', arskurs: 'Åk 6', amnen: ['Matematik'],
+        katalog: [N1, N2], forsok: [], pagaende: {},
+        uppgifter: [
+          { id: 'lax-1', student_id: 'barn-1', title: 'Läs kapitel 3', instructions: ELAK + 'Sidorna 40 till 45.',
+            subject: 'Matematik', due_date: dagar(3), status: 'ej_paborjad', completed_at: null, created_at: nu(-600),
+            niva_id: null, bibliotek_id: null, biblioteksmaterial: null, nivaer: null },
+          { id: 'lax-2', student_id: 'barn-1', title: 'Gör nivån Jämför bråk', instructions: null,
+            subject: 'Matematik', due_date: dagar(4), status: 'ej_paborjad', completed_at: null, created_at: nu(-500),
+            niva_id: 'niva-1', bibliotek_id: null, biblioteksmaterial: null,
+            nivaer: { id: 'niva-1', titel: 'Jämför bråk', amne: 'Matematik', arskurs: 'ak6', omrade: 'Bråk',
+                      beskrivning: 'Vilket bråk är störst?', antal_fragor: 1, aktiv: true } }
+        ]
+      };
+    },
+    nexlax_lage: k => {
+      anrop.push(['nexlax_lage', k]);
+      return { xp: 120, xp_vecka: 40, serie: { nu: 2, basta: 3 }, dagar: [], banor: [],
+               uppgifter: { klara: 5, forsta: 6, forsta_ratt: 4 }, idag: dagar(0) };
+    },
+    niva_starta: k => {
+      anrop.push(['niva_starta', k]);
+      return { forsok: 'forsok-1',
+               niva: { id: 'niva-1', titel: 'Jämför bråk', amne: 'Matematik', omrade: 'Bråk', arskurs: 'ak6', sort: 'vanlig', lastext: null },
+               fragor: [{ id: 'fr-1', typ: 'val', fraga: 'Vilket är störst?', alternativ: ['1/2', '1/3'] }], klara: [] };
+    },
+    niva_svara: k => {
+      anrop.push(['niva_svara', k]);
+      return { ratt: true, facit: '0', forklaring: 'Halva är mest.', klar: true, xp: 10,
+               resultat: { antal: 1, ratt_direkt: 1, stjarnor: 3, godkand: true, forut: 0, klar_at: nu(0),
+                           xp_fragor: 10, xp_niva: 50, xp_omrade: 0 } };
+    },
+    barn_uppgift: k => { anrop.push(['barn_uppgift', k]); return true; }
+  }, extra || {});
+  return { rpc, anrop };
+}
+
+async function provaBarnetsNexlax(webb) {
+  {
+    const { rpc, anrop } = nexlaxRpc();
+    const { context, page, S, riktiga, konsol } = await öppna(webb, { rpc, inloggad: 'barnkonto-1' });
+    await page.goto(BAS + '/barn');
+    await page.waitForSelector('#bv-nexlax:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('barn nexlax: sektionen syns', await synlig(page, '#bv-nexlax'));
+    await page.waitForFunction(() => /Jämför bråk/.test(document.querySelector('#bv-nl-vag').textContent), null, { timeout: 5000 }).catch(() => {});
+    const väg = await text(page, '#bv-nl-vag');
+    prova('barn nexlax: vägen visar banans nivåer', väg.includes('Jämför bråk'), väg.slice(0, 160));
+    prova('barn nexlax: det studiehjälparen gett står på vägen', väg.includes('Läs kapitel 3') && väg.includes('Rekommenderat av Sara'),
+      väg.slice(0, 200));
+    prova('barn nexlax: text ur databasen ritas som text',
+      (await page.locator('#bv-nexlax img[data-elak]').count()) === 0 && väg.includes('<img src=x data-elak=1>'));
+    prova('barn nexlax: läget hämtas med barnets id', anrop.some(a => a[0] === 'nexlax_lage' && a[1].p_elev === 'barn-1'),
+      JSON.stringify(anrop.filter(a => a[0] === 'nexlax_lage')));
+    await bild(page, 'barn-nexlax-vag');
+
+    /* En vanlig uppgift bockas av. */
+    await page.click('[data-lax="klar"][data-id="lax-1"]');
+    await page.waitForFunction(() => true, null, { timeout: 500 }).catch(() => {});
+    await vänta(400);
+    const bock = anrop.find(a => a[0] === 'barn_uppgift');
+    prova('barn nexlax: Klar bockar av uppgiften med barn_uppgift',
+      bock && bock[1].p_id === 'lax-1' && bock[1].p_status === 'klar', JSON.stringify(bock));
+
+    /* En nivå: start, svar, resultat. */
+    await page.click('[data-lax-starta="lax-2"]');
+    await page.waitForSelector('.upg-spel', { timeout: 5000 }).catch(() => {});
+    prova('barn nexlax: spelaren öppnas', await synlig(page, '.upg-spel'));
+    const start = anrop.find(a => a[0] === 'niva_starta');
+    prova('barn nexlax: nivån startas med barnets eget id', start && start[1].p_niva === 'niva-1' && start[1].p_elev === 'barn-1',
+      JSON.stringify(start));
+    await page.click('.upg-spel .upg-alt[data-alt="0"]');
+    await page.click('.upg-spel [data-spel="kolla"]');
+    await page.waitForSelector('.upg-spel [data-spel="vidare"]', { timeout: 5000 }).catch(() => {});
+    const svar = anrop.find(a => a[0] === 'niva_svara');
+    prova('barn nexlax: svaret rättas i databasen', svar && svar[1].p_forsok === 'forsok-1' && svar[1].p_fraga === 'fr-1'
+      && svar[1].p_svar && svar[1].p_svar.val === 0, JSON.stringify(svar));
+    await bild(page, 'barn-nexlax-spelaren');
+    await page.click('.upg-spel [data-spel="vidare"]');
+    await page.waitForSelector('.upg-spel [data-spel="klar"]', { timeout: 5000 }).catch(() => {});
+    const före = anrop.filter(a => a[0] === 'barn_nexlax').length;
+    await page.click('.upg-spel [data-spel="klar"]');
+    await page.waitForFunction(() => !document.querySelector('.upg-spel'), null, { timeout: 5000 }).catch(() => {});
+    await vänta(400);
+    prova('barn nexlax: spelaren stängs och banan hämtas om', !(await synlig(page, '.upg-spel'))
+      && anrop.filter(a => a[0] === 'barn_nexlax').length > före, String(anrop.filter(a => a[0] === 'barn_nexlax').length));
+
+    /* Din utveckling: talen, men ingen bedömning och inga pass. */
+    await page.click('#bv-flik-utveckling');
+    await page.waitForSelector('#bv-panel-utveckling:not([hidden])', { timeout: 3000 }).catch(() => {});
+    const utv = await text(page, '#bv-nl-utveckling');
+    prova('barn nexlax: Din utveckling visar XP', utv.includes('XP totalt'), utv.slice(0, 120));
+    prova('barn nexlax: ingen bedömning och inga pass i Din utveckling',
+      !utv.includes('Studiehjälparens bedömning') && !utv.includes('Med studiehjälparen'), utv.slice(0, 200));
+    prova('barn nexlax: flikarna säger vilken som är vald',
+      (await page.getAttribute('#bv-flik-utveckling', 'aria-selected')) === 'true'
+      && (await page.getAttribute('#bv-flik-vag', 'aria-selected')) === 'false' && !(await synlig(page, '#bv-panel-vag')));
+    await bild(page, 'barn-nexlax-utveckling');
+
+    const hela = await page.locator('#view-app').innerText();
+    prova('barn nexlax: inga priser, inga betalningar, inga länkar ut',
+      !/\bkr\b|betal|faktura|erbjud|klippkort|timbank/i.test(hela) && (await page.locator('#view-app a').count()) === 0,
+      hela.slice(0, 160));
+    prova('barn nexlax: bara barnets egna funktioner frågades',
+      S.logg.filter(r => r.väg.startsWith('/rest/')).every(r => BARNETS_FUNKTIONER.test(r.väg)),
+      S.logg.filter(r => r.väg.startsWith('/rest/')).map(r => r.väg).join(', '));
+    prova('barn nexlax: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+    const fel = konsol.filter(t => !/Failed to load resource/.test(t));
+    prova('barn nexlax: inga fel i konsolen', fel.length === 0, fel.join(' | ').slice(0, 300));
+    await context.close();
+  }
+
+  /* Telefonen, ljust och mörkt: vägen får plats och tummen når. */
+  for (const [namn, context] of [
+    ['barn-nexlax-telefon', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }],
+    ['barn-nexlax-telefon-mork', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, colorScheme: 'dark' }]
+  ]) {
+    const { rpc } = nexlaxRpc();
+    const { context: c, page } = await öppna(webb, { rpc, inloggad: 'barnkonto-1', context });
+    await page.goto(BAS + '/barn');
+    await page.waitForSelector('#bv-nexlax:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await page.waitForFunction(() => /Jämför bråk/.test(document.querySelector('#bv-nl-vag').textContent), null, { timeout: 5000 }).catch(() => {});
+    const bredd = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    prova(namn + ': ingen sidledsscroll', bredd <= 0, bredd + ' px');
+    const små = await page.evaluate(() => Array.from(document.querySelectorAll('#bv-nexlax button'))
+      .filter(b => b.offsetParent).map(b => ({ t: b.textContent.trim().slice(0, 20), h: b.getBoundingClientRect().height }))
+      .filter(r => r.h < 44));
+    prova(namn + ': tryckytorna i NexLäx är minst 44 px', små.length === 0, JSON.stringify(små).slice(0, 200));
+    await bild(page, namn);
     await c.close();
   }
 }
@@ -920,6 +1070,7 @@ async function provaAdminvyn(webb) {
   const webb = await pw.chromium.launch();
   try {
     await provaBarnvyn(webb);
+    await provaBarnetsNexlax(webb);
     await provaFamiljensInloggning(webb);
     await provaBarnpanelen(webb);
     await provaAdminvyn(webb);

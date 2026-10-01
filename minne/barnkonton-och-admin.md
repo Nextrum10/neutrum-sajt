@@ -68,10 +68,15 @@ som glömmer policyn är öppen), eller en egen Postgres-roll som inte har
 några rättigheter alls. Vi valde rollen. PostgREST byter till rollen i
 tokens `role`-anspråk, som GoTrue sätter från `auth.users.role`.
 `authenticator` är medlem i `nextrum_barn`, och rollen har `usage` på
-`public` och EXECUTE på exakt tre funktioner: `barn_oversikt()`,
-`barn_notiser()` och `barn_markera_last(id)`. `rls-test.sql` prövar det
-med en slinga över varje tabell och vy, och med katalogen
-(`has_table_privilege`, `has_function_privilege`).
+`public` och EXECUTE på barnets egna funktioner: `barn_oversikt()`,
+`barn_notiser()`, `barn_markera_last(id)` och, sedan 2026-10-01,
+`barn_nexlax()` och `barn_uppgift(id, status)`, och på de fyra NexLäx-
+funktionerna (`niva_starta`, `niva_svara`, `niva_genomgang`,
+`nexlax_lage`), som prövar att det är barnets eget id och att
+inloggningen är aktiv (`intern.mitt_aktiva_barn`, `nexlax_for_barnet`).
+`rls-test.sql` prövar det med en slinga över varje tabell och vy, med
+katalogen (`has_table_privilege`, `has_function_privilege`) och med
+avsnitt 14 för NexLäx.
 
 Fällan: **en ny tabell eller vy ska inte ge `nextrum_barn` något**, och en
 `grant ... to public` gör det. Ett förval i `alter default privileges`
@@ -201,11 +206,14 @@ hoppar över barnkonton och barnadresser, och `notis-ko` gör det en gång till
 (`barnkonton-gallring`, 03.59 UTC).
 
 ### Vyerna
-- `barn.html` + `nextrum-barn-vy.js`: bara NX och NXStudie (ingen
-  kontakt, ingen betalning, ingen bokning), skarp CSP (`/barn` i
-  `vercel.json`), `noindex` och `Disallow` i `robots.txt`. Ingen länk till
-  föräldervyn och ingen kontoinställning; "Vill du ändra något? Fråga din
-  förälder." Allt ritas med `textContent`.
+- `barn.html` + `nextrum-barn-vy.js`: NX, NXStudie och, sedan
+  2026-10-01, NXUppgifter för NexLäx (ingen kontakt, ingen betalning,
+  ingen bokning), skarp CSP (`/barn` i `vercel.json`), `noindex` och
+  `Disallow` i `robots.txt`. Ingen länk till föräldervyn och ingen
+  kontoinställning; "Vill du ändra något? Fråga din förälder." Allt utom
+  NexLäx ritas med `textContent`; NexLäx ritas av NXUppgifter med `esc()`,
+  som i studievyn, i läget `barnvy` (ingen bedömning, inga pass i Din
+  utveckling). Se `minne/nexlax.md`.
 - En vuxen som är inloggad i samma webbläsare och öppnar `/barn` ser bara
   "Någon annan är inloggad" och Logga ut, aldrig sin egen vy därifrån.
 - Rolldirigeringen: `NX.ärBarn(user)` läser `app_metadata`, aldrig
@@ -349,13 +357,19 @@ studiehjälparvyn till `/admin`.
   fönstrets villkor, och mejlspärren (står på, överlever ett lösenordsbyte
   som Auth gör det, går inte att flytta bakåt, rör inte vanliga konton).
   Hela filen var grön (1151 rader) mot en lokal databas med alla 154
-  migrationer, och utan rättelsen föll 16 av dem.
+  migrationer, och utan rättelsen föll 16 av dem. Avsnitt 14 (NexLäx i
+  barnets vy, 2026-10-01): barnet läser sin bana, startar, svarar, ser
+  rättningen och läget, bockar av en vanlig uppgift men inte en digital,
+  och gör inget av det åt ett annat barn, med fel familj i token eller med
+  en pausad inloggning; 1173 rader gröna lokalt.
 - Deno: `_delad/barnkonto_test.ts`, `_delad/adminbehorighet_test.ts` och
   ett nytt prov i `notiser/ko_test.ts`.
-- Webbläsaren: `verktyg/prova-barnkonton.js` (133 prov, gröna), mot en
+- Webbläsaren: `verktyg/prova-barnkonton.js` (155 prov, gröna), mot en
   falsk Supabase på en adress som inte finns: barnets inloggning och vy i
   ljust, mörkt och på telefon, text ur databasen som text, att barnet bara
-  frågar sina tre funktioner, e-post eller användarnamn i alla fyra
+  frågar sina egna funktioner, NexLäx i barnets vy (vägen, en nivå spelad
+  hela vägen med barnets id, bocken, Din utveckling utan bedömning, och
+  telefonen), e-post eller användarnamn i alla fyra
   inloggningarna och den tekniska adressen som nekas (2026-10-01; de nya
   proven föll mot koden före, med samma anrop som i driften),
   föräldrarnas ruta, och adminvyn för en superadmin, en begränsad admin,

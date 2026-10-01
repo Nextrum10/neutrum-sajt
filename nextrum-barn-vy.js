@@ -1,19 +1,23 @@
 /* ============================================================
    NEXTRUM — barnets vy (barn.html), barnkonton_och_admin
 
-   Ett barn med egen inloggning ser sina pass, sina timmar, sin
-   studieplan, sina notiser och, om föräldern slagit på det, rapporterna.
-   Aldrig priser, betalningar, erbjudanden, förälderns uppgifter eller
-   något om andra familjer. Det är inte den här filen som ser till det:
-   barnets roll i databasen (nextrum_barn) når inga tabeller, bara de tre
-   funktionerna barn_oversikt(), barn_notiser() och barn_markera_last(),
-   och de svarar bara om barnet i token. Filen ritar det de svarar.
+   Ett barn med egen inloggning gör NexLäx och ser sina pass, sina
+   timmar, sin studieplan, sina notiser och, om föräldern slagit på det,
+   rapporterna. Aldrig priser, betalningar, erbjudanden, förälderns
+   uppgifter eller något om andra familjer. Det är inte den här filen som
+   ser till det: barnets roll i databasen (nextrum_barn) når inga
+   tabeller, bara barnets egna funktioner (barn_oversikt, barn_notiser,
+   barn_markera_last, barn_nexlax, barn_uppgift) och NexLäx-funktionerna
+   som prövar att det är barnets eget id (nexlax_for_barnet). Filen ritar
+   det de svarar.
 
-   Allt ritas med textContent. Namn, ämnen och rapporttexter kommer ur
-   databasen och skrivs av andra än barnet.
+   Allt utom NexLäx ritas med textContent. Namn, ämnen och rapporttexter
+   kommer ur databasen och skrivs av andra än barnet. NexLäx ritas av
+   NXUppgifter, som i studievyn, med esc() på allt ur databasen.
 
    Barnet kan inte boka, avboka, svara på ett förslag, byta lösenord eller
    ändra något om sig själv. Allt sådant gör föräldern, och vyn säger det.
+   Det barnet gör själv är NexLäx och bocken på en vanlig uppgift.
    ============================================================ */
 (function () {
   'use strict';
@@ -142,6 +146,8 @@
       ritaHuvud(d.fornamn || null);
       ritaAllt();
       visa('view-app');
+      /* NexLäx väntar inte resten av vyn in: banan ritas när den kommer. */
+      laddaNexlax();
     } catch (fel) {
       NXStudie.felvy(visa, fel, 'din vy skulle hämtas');
     } finally {
@@ -173,7 +179,7 @@
     const d = S.data;
     $('#bv-rubrik').textContent = d.fornamn ? 'Hej, ' + d.fornamn + '!' : 'Hej!';
     $('#bv-lede').textContent = (d.studiehjalpare ? 'Du pluggar med ' + d.studiehjalpare + '. ' : '')
-      + 'Här ser du dina pass, din studieplan och vad som hänt.';
+      + 'Här gör du NexLäx och ser dina pass, din studieplan och vad som hänt.';
   }
 
   /* Timmarna räknas ur passen: genomförda är pass med en rapport där
@@ -298,6 +304,216 @@
       r.trana ? el('p', { class: 'bv-rapport-rad' }, el('b', {}, 'Träna på: '), r.trana) : null,
       r.nasta ? el('p', { class: 'bv-rapport-rad' }, el('b', {}, 'Nästa gång: '), r.nasta) : null)));
   }
+
+  /* ============ NexLäx (nexlax_for_barnet, 2026-10-01) ============
+     Leo: "Nexläx syns inte i barnens vy". Samma bana, spelare och
+     rättning som i studievyn (NXUppgifter), men barnets roll når inga
+     tabeller: banan kommer ur barn_nexlax(), och nivåerna startas och
+     rättas i samma funktioner som familjens, som prövar att det är
+     barnets eget id och att inloggningen är aktiv. En vanlig uppgift
+     bockas av med barn_uppgift(). Studiehjälparens bedömning och passen
+     visas inte här (barnvy i NXUppgifter); det barnet får läsa om passen
+     står under Rapporter, och "Från passet" på vägen, när föräldern slagit
+     på rapporterna. */
+  const U = NXUppgifter;
+  S.nl = { data: null, läge: null, öppen: null, nyss: null, alla: false, val: { amne: '', arskurs: '' } };
+
+  async function laddaNexlax() {
+    const sek = $('#bv-nexlax');
+    if (!sek) return;
+    const { data, error } = await supa.rpc('barn_nexlax');
+    if (error) {
+      /* PGRST202: funktionen finns inte, migrationen är inte körd. Då står
+         NexLäx dold och resten av vyn som förut. */
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.warn('barn_nexlax:', error.message);
+      sek.hidden = true;
+      return;
+    }
+    const d = data || {};
+    if (d.lage !== 'ok') { sek.hidden = true; return; }
+    S.nl.data = d;
+    /* XP och serien är ett tillägg: utan dem ritas vägen ändå. */
+    S.nl.läge = await U.laddaLäge(supa, d.elev);
+    sek.hidden = false;
+    ritaNexlax();
+  }
+
+  /* "Från passet" på vägen läser rapporterna, i studievyns form. */
+  function nlRapporter() {
+    if (!S.data || !S.data.visa_rapporter) return [];
+    return (S.data.rapporter || []).map(r => ({
+      lesson_date: r.datum, amne: r.amne, needs_practice: r.trana, next_focus: r.nasta
+    }));
+  }
+
+  function nlUnderlag() {
+    const d = S.nl.data || {};
+    return {
+      katalog: d.katalog || [], forsok: d.forsok || [], uppgifter: d.uppgifter || [],
+      pågående: d.pagaende || {}, läge: S.nl.läge,
+      elevKod: NX.årskursKod(d.arskurs), elevNamn: 'du',
+      rapporter: nlRapporter(), progress: [], historik: {}, bokningar: []
+    };
+  }
+
+  /* Banan vägen öppnar i: den barnet valt, annars det första av barnets
+     ämnen som har en bana, sedan ämnet i en öppen digital uppgift,
+     annars matematik (samma ordning som i studievyn). */
+  function nlBana() {
+    const d = S.nl.data || {};
+    const finns = U.banor(d.katalog || []);
+    const given = (d.uppgifter || []).find(h => h.niva_id && h.status !== 'klar' && h.nivaer);
+    const amne = (S.nl.val.amne && finns[S.nl.val.amne]) ? S.nl.val.amne
+      : (d.amnen || []).find(a => finns[a])
+        || (given && finns[given.nivaer.amne] ? given.nivaer.amne : null)
+        || (finns.Matematik ? 'Matematik' : null);
+    return { amne, arskurs: S.nl.val.arskurs || '' };
+  }
+
+  function ritaVägen() {
+    const host = $('#bv-nl-vag');
+    if (!host || !S.nl.data) return;
+    const b = nlBana();
+    const ut = U.ritaVäg(Object.assign(nlUnderlag(), {
+      host, amne: b.amne, arskurs: b.arskurs, öppen: S.nl.öppen, nyss: S.nl.nyss,
+      hjälpare: S.data && S.data.studiehjalpare ? { namn: S.data.studiehjalpare } : null
+    }));
+    S.nl.nyss = null;
+    if (ut && ut.amne && !S.nl.val.amne) S.nl.val = { amne: ut.amne, arskurs: '' };
+  }
+
+  function ritaUtveckling() {
+    const host = $('#bv-nl-utveckling');
+    if (!host || !S.nl.data) return;
+    U.ritaUtveckling(Object.assign(nlUnderlag(), { host, alla: S.nl.alla, barnvy: true }));
+  }
+
+  function ritaNexlax() {
+    ritaVägen();
+    ritaUtveckling();
+  }
+
+  /* Flikarna, utan arbetsytan: barnets vy laddar bara NX, NXStudie och
+     NXUppgifter. Pilarna flyttar mellan flikarna, som en flikrad lovar. */
+  function visaFlik(namn) {
+    NX.$$('#bv-nexlax .vy-flik').forEach(k => {
+      const vald = k.dataset.flik === namn;
+      k.setAttribute('aria-selected', vald ? 'true' : 'false');
+      k.tabIndex = vald ? 0 : -1;
+    });
+    NX.$$('#bv-nexlax .vy-flik-panel').forEach(p => { p.hidden = p.dataset.flik !== namn; });
+  }
+  NX.$$('#bv-nexlax .vy-flik').forEach((k, i, alla) => {
+    k.addEventListener('click', () => visaFlik(k.dataset.flik));
+    k.addEventListener('keydown', e => {
+      const steg = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!steg) return;
+      e.preventDefault();
+      const nästa = alla[(i + steg + alla.length) % alla.length];
+      visaFlik(nästa.dataset.flik);
+      nästa.focus();
+    });
+  });
+
+  /* Vägen ritas om, så knappen man tryckte på är en ny: den mäts före
+     och efter och sidan flyttas med skillnaden (som i studievyn). */
+  function ritaOchHåll(sel, fn) {
+    const före = $(sel);
+    const y = före ? före.getBoundingClientRect().top : null;
+    fn();
+    const ny = $(sel);
+    if (ny && y !== null) {
+      const efter = ny.getBoundingClientRect().top;
+      if (Math.abs(efter - y) > 1) NXStudie.scrollaTill(window.scrollY + efter - y);
+      ny.focus({ preventScroll: true });
+    }
+  }
+
+  function spelaNivå(niva) {
+    const d = S.nl.data;
+    if (!niva || !d) return;
+    U.spela({
+      supa, niva, elev: d.elev,
+      katalog: d.katalog || [], forsok: d.forsok || [], uppgifter: d.uppgifter || [],
+      pågående: d.pagaende || {}, läge: S.nl.läge,
+      hämtaLäge: () => U.laddaLäge(supa, d.elev),
+      onStäng: ut => {
+        if (!ut || !ut.ändrat) return;
+        S.nl.öppen = null;
+        S.nl.nyss = { klar: ut.klar, oppen: ut.oppen };
+        laddaNexlax();
+      }
+    });
+  }
+
+  document.addEventListener('click', async e => {
+    if (!S.nl.data) return;
+    const amne = e.target.closest('[data-nl-amne]');
+    if (amne) {
+      S.nl.val = { amne: amne.dataset.nlAmne, arskurs: '' };
+      S.nl.öppen = null;
+      ritaOchHåll('[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"]', ritaVägen);
+      return;
+    }
+    const nod = e.target.closest('[data-nl-nod]');
+    if (nod) {
+      const id = nod.dataset.nlNod;
+      S.nl.öppen = S.nl.öppen === id ? null : id;
+      ritaOchHåll('[data-nl-nod="' + CSS.escape(id) + '"]', ritaVägen);
+      return;
+    }
+    const alla = e.target.closest('[data-nl-alla]');
+    if (alla) {
+      const öppnar = !S.nl.alla;
+      if (öppnar) { S.nl.alla = true; ritaUtveckling(); }
+      else ritaOchHåll('[data-nl-alla]', () => { S.nl.alla = false; ritaUtveckling(); });
+      return;
+    }
+    const k = e.target.closest('[data-nl-starta]');
+    if (k) {
+      spelaNivå((S.nl.data.katalog || []).find(n => n.id === k.dataset.nlStarta));
+      return;
+    }
+    const u = e.target.closest('[data-lax-starta]');
+    if (u) {
+      const h = (S.nl.data.uppgifter || []).find(x => x.id === u.dataset.laxStarta);
+      if (!h || !h.nivaer) return;
+      spelaNivå((S.nl.data.katalog || []).find(n => n.id === h.niva_id) || h.nivaer);
+      return;
+    }
+    const g = e.target.closest('[data-upg-genomgang]');
+    if (g) { U.genomgång(supa, g.dataset.upgGenomgang); return; }
+
+    /* Materialet: bara länkar kommer hit (barn_nexlax). En fil öppnas
+       i familjens inloggning. */
+    const mat = e.target.closest('[data-lax-mat]');
+    if (mat) {
+      const h = (S.nl.data.uppgifter || []).find(x => x.bibliotek_id === mat.dataset.laxMat);
+      const lank = h && h.biblioteksmaterial && h.biblioteksmaterial.lank;
+      if (lank && /^https?:\/\//i.test(lank)) window.open(lank, '_blank', 'noopener');
+      return;
+    }
+
+    /* Klar, Jag har börjat och Ångra på en vanlig uppgift. */
+    const lax = e.target.closest('[data-lax]');
+    if (lax) {
+      const msg = $('#bv-nl-msg');
+      NX.rensa(msg);
+      await NXStudie.medan(lax, '…', async () => {
+        const { error } = await supa.rpc('barn_uppgift', { p_id: lax.dataset.id, p_status: lax.dataset.lax });
+        if (error) { NX.säg(msg, 'Uppgiften gick inte att spara. Försök igen om en stund.', false); return; }
+        await laddaNexlax();
+      });
+    }
+  });
+  document.addEventListener('change', e => {
+    const sel = e.target.closest('[data-nl-arskurs]');
+    if (!sel || !S.nl.data) return;
+    const host = $('#bv-nl-vag');
+    S.nl.val = { amne: host ? host.dataset.amne : '', arskurs: sel.value };
+    S.nl.öppen = null;
+    ritaVägen();
+  });
 
   /* Den som låter fliken stå öppen ska se nya pass och notiser när den
      kommer tillbaka, utan att vyn blinkar: listorna byts först när det
