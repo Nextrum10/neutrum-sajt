@@ -3223,34 +3223,28 @@
     const rate = S.tutorProfil && S.tutorProfil.hourly_rate;
     const timpenningOre = rate ? Math.round(Number(rate) * 100) : null;
 
+    /* PASSETS MÅNAD (2026-10-01). Leo: "passen som är hållna i september
+       ska spärras av för september". Rutan räknade förut alla pass med
+       datum i månaden, och september stod som 960 kr fast lönespecen var
+       240: tre pass hade rapporterats efter att september körts, och
+       hamnade på oktobers. Nu lägger körningen, som går varje natt, ett
+       sent pass på sin månads lönespecifikation så länge den inte är
+       godkänd, och rutan räknar med samma regel (NXBetalning.lonemanad):
+       månadens lön är lönespecifikationen plus det som läggs till på den.
+
+       Månadens egna pass, och äldre som inte står på ett underlag än: ett
+       sådant hamnar på den här månadens lönespecifikation när dess egen
+       månads redan var godkänd. Alla underlag, inte bara månadens: listan
+       behövs för märkena i månadsraden, för regeln, och för att veta
+       vilken månads specifikation ett pass står på. */
     const [passen, ut] = await Promise.all([
-      supa.from('passunderlag').select('id, lon_min, duration_min, fakturerbar, har_rapport, pa_underlag')
-        .eq('tutor_id', S.user.id).gte('wanted_date', gräns.från).lt('wanted_date', gräns.till),
-      /* Alla underlag, inte bara månadens. Det är ett per månad, och
-         listan behövs för märkena i månadsraden och för att veta vilken
-         månads specifikation ett sent rapporterat pass hamnade på. */
+      NXStudie.hämtaAlla(supa, 'passunderlag', 'id, wanted_date, lon_min, duration_min, fakturerbar, har_rapport, pa_underlag',
+        q => q.eq('tutor_id', S.user.id).lt('wanted_date', gräns.till)
+          .or('pa_underlag.eq.false,wanted_date.gte.' + gräns.från)),
       supa.from('payouts').select('id, period, status, belopp_ore, minuter, fel, utbetald_at')
         .eq('tutor_id', S.user.id)
     ]);
     if (nr !== ersFråga) return;
-
-    const räknade = (passen.data || []).filter(p => p.fakturerbar && p.har_rapport);
-    const e = { pass: räknade.length, minuter: räknade.reduce((a, p) => a + Number(p.lon_min || p.duration_min || 0), 0) };
-    pag.innerHTML = passen.error
-      ? tomt('Kunde inte hämta passen', felText(passen.error))
-      : timpenningOre
-      ? B.pagaende({
-          pass: e.pass, minuter: e.minuter,
-          belopp_ore: Math.round((Number(e.minuter || 0) / 60) * timpenningOre),
-          not: 'Räknat på ' + B.kronor(timpenningOre) + ' i timmen. '
-             + (denna ? 'Lönespecifikationen skrivs när månaden är slut. ' : '')
-             + 'Ett pass räknas först när du skrivit rapporten, och på den tid det hölls. '
-             + 'Drog det över räknas övertiden när familjen har betalat den.',
-          tomRubrik: denna ? 'Inget att få betalt för än' : 'Inga rapporterade pass den månaden',
-          tomText: denna ? 'Passen räknas ihop här när du rapporterat dem.' : 'Välj en annan månad ovanför.'
-        })
-      : tomt('Din timpenning är inte satt än',
-             'Utan den går ersättningen inte att räkna ut. Hör av dig till oss så fyller vi i den.');
 
     /* INGET UTBETALNINGSKONTO HÄR, och det är ett beslut (Fas 12.5).
        Ersättningen betalas den 25:e, som en löning, i en klump för
@@ -3267,15 +3261,39 @@
       + 'betalar efter, så hör av dig i god tid om något ser fel ut. '
       + 'Kontouppgifterna har vi av dig sedan tidigare, och de ligger inte här.</p>';
 
-    if (ut.error) { lista.innerHTML = tomt('Kunde inte hämta lönespecifikationerna', felText(ut.error)); return; }
+    if (passen.error || ut.error) {
+      const fel = felText(passen.error || ut.error);
+      pag.innerHTML = tomt('Kunde inte hämta lönen', fel);
+      lista.innerHTML = tomt('Kunde inte hämta lönespecifikationerna', fel);
+      return;
+    }
     ersSpecar = {};
-    (ut.data || []).forEach(p => { ersSpecar[String(p.period).slice(0, 10)] = p; });
+    const lagen = {};
+    (ut.data || []).forEach(p => {
+      const per = String(p.period).slice(0, 10);
+      ersSpecar[per] = p;
+      lagen[per] = p.status;
+    });
     if (ersMånad) ersMånad.märk();
     const spec = ersSpecar[m] || null;
 
-    /* Var månadens rapporterade pass står: på månadens egen
-       specifikation, på en senare, eller ingenstans än. */
-    const påUnderlag = räknade.filter(p => p.pa_underlag).map(p => p.id);
+    const räknade = (passen.data || []).filter(p => p.fakturerbar && p.har_rapport);
+    // Månadens egna pass, var de än står.
+    const egna = räknade.filter(p => String(p.wanted_date) >= gräns.från);
+    // Pass som inte står på ett underlag, och månaden de hamnar på.
+    const mål = p => B.lonemanad(p.wanted_date, lagen);
+    const hit = räknade.filter(p => !p.pa_underlag && mål(p) === m);
+    const tidigare = hit.filter(p => String(p.wanted_date) < gräns.från).length;
+    const senare = {};
+    egna.forEach(p => {
+      if (p.pa_underlag) return;
+      const t = mål(p);
+      if (t !== m) senare[t] = (senare[t] || 0) + 1;
+    });
+
+    /* Var månadens rapporterade pass som redan står på ett underlag står:
+       på månadens egen specifikation, eller på en senare. */
+    const påUnderlag = egna.filter(p => p.pa_underlag).map(p => p.id);
     const [linjer, plats] = await Promise.all([
       spec ? supa.from('payout_lines')
         .select('booking_id, beskrivning, minuter, timpenning_ore, belopp_ore')
@@ -3285,33 +3303,75 @@
     ]);
     if (nr !== ersFråga) return;
 
-    const noter = [];
     const mNamn = NXStudie.månadsNamn(m, false);
+    const nästa = NXStudie.månadsNamn(gräns.till, false);
+
+    /* Månadens lön: lönespecifikationen, och det som läggs till på den
+       eller skapar den. Det tillagda räknas pass för pass, som körningen
+       räknar, och är ett beräknat tal. */
+    const lönMin = p => Number(p.lon_min || p.duration_min || 0);
+    const väntMin = hit.reduce((a, p) => a + lönMin(p), 0);
+    const väntÖre = timpenningOre ? hit.reduce((a, p) => a + Math.round((lönMin(p) / 60) * timpenningOre), 0) : 0;
+    const specPass = spec ? (linjer && !linjer.error ? (linjer.data || []).length : null) : 0;
+    const tidigareText = tidigare
+      ? tidigare + ' av passen hölls en tidigare månad, vars lönespecifikation redan var godkänd. '
+      : '';
+    if (hit.length && !timpenningOre) {
+      pag.innerHTML = tomt('Din timpenning är inte satt än',
+        'Utan den går ersättningen inte att räkna ut. Hör av dig till oss så fyller vi i den.');
+    } else if (specPass === null) {
+      pag.innerHTML = tomt('Kunde inte hämta passen', felText(linjer.error));
+    } else if (spec) {
+      pag.innerHTML = B.pagaende({
+        pass: specPass + hit.length,
+        minuter: Number(spec.minuter || 0) + väntMin,
+        belopp_ore: Number(spec.belopp_ore || 0) + väntÖre,
+        not: (hit.length
+          ? 'Lönespecifikationen nedan, och ' + hit.length + ' pass som läggs till på den vid nästa körning, '
+            + 'räknade på ' + B.kronor(timpenningOre) + ' i timmen. ' + tidigareText
+          : 'Lönespecifikationen nedan. ')
+          + (spec.status === 'utbetald' ? 'Den är utbetald.' : 'Lönen betalas den 25 ' + nästa + '.')
+      });
+    } else {
+      pag.innerHTML = B.pagaende({
+        pass: hit.length, minuter: väntMin, belopp_ore: väntÖre,
+        not: (timpenningOre ? 'Räknat på ' + B.kronor(timpenningOre) + ' i timmen. ' : '')
+           + (denna ? 'Lönespecifikationen skrivs när månaden är slut. ' : '')
+           + tidigareText
+           + 'Ett pass räknas först när du skrivit rapporten, och på den tid det hölls. '
+           + 'Drog det över räknas övertiden när familjen har betalat den.',
+        tomRubrik: denna ? 'Inget att få betalt för än'
+          : egna.length ? 'Inget att få betalt för i ' + mNamn : 'Inga rapporterade pass den månaden',
+        tomText: denna ? 'Passen räknas ihop här när du rapporterat dem.'
+          : egna.length ? 'Passen från ' + mNamn + ' står på en senare lönespecifikation, och varför står nedan.'
+          : 'Välj en annan månad ovanför.'
+      });
+    }
+
+    const noter = [];
     const rapporten = n => n === 1 ? 'rapporten' : 'rapporterna';
-    let väntar = 0;
     /* Går det inte att läsa var passen står sägs ingenting om dem. En
        gissning hade kunnat säga att ett betalt pass väntar. */
-    const platsFel = passen.error || (plats && plats.error) || null;
+    const platsFel = (plats && plats.error) || null;
     if (!platsFel) {
-      const periodFör = {};
       const periodPerId = {};
       Object.keys(ersSpecar).forEach(k => { periodPerId[ersSpecar[k].id] = k; });
-      ((plats && plats.data) || []).forEach(l => { periodFör[l.booking_id] = periodPerId[l.payout_id]; });
-      const senare = {};
-      räknade.forEach(p => {
-        const per = periodFör[p.id];
-        if (per === m) return;
-        if (per) senare[per] = (senare[per] || 0) + 1;
+      const påSenare = {};
+      ((plats && plats.data) || []).forEach(l => {
+        const per = periodPerId[l.payout_id];
         // Står det på ett underlag vi inte ser är det inte vårt att förklara.
-        else if (!p.pa_underlag) väntar++;
+        if (per && per !== m) påSenare[per] = (påSenare[per] || 0) + 1;
       });
-      Object.keys(senare).sort().forEach(per => noter.push(senare[per] + ' pass från ' + mNamn
-        + ' står på lönespecifikationen för ' + B.periodText(per) + ', för ' + rapporten(senare[per])
-        + ' skrevs efter att ' + mNamn + ' hade räknats.'));
-      if (spec && väntar) {
-        noter.push(väntar + ' pass från ' + mNamn + ' kommer med på nästa lönespecifikation, för '
-          + rapporten(väntar) + ' skrevs efter att ' + mNamn + ' hade räknats.');
-      }
+      Object.keys(påSenare).sort().forEach(per => noter.push(påSenare[per] + ' pass från ' + mNamn
+        + ' står på lönespecifikationen för ' + B.periodText(per) + ', för ' + rapporten(påSenare[per])
+        + ' skrevs efter att lönespecifikationen för ' + mNamn + ' var klar.'));
+    }
+    Object.keys(senare).sort().forEach(per => noter.push(senare[per] + ' pass från ' + mNamn
+      + ' kommer med på lönespecifikationen för ' + B.periodText(per) + ', för ' + rapporten(senare[per])
+      + ' skrevs efter att lönespecifikationen för ' + mNamn + ' var godkänd.'));
+    if (spec && hit.length) {
+      noter.push(hit.length + ' pass läggs till på lönespecifikationen vid nästa körning'
+        + (tidigare ? ', varav ' + tidigare + ' från en tidigare månad' : '') + '. Summan ovanför är räknad utan dem.');
     }
     const utanRapport = S.bokningar.filter(b => String(b.wanted_date || '') >= gräns.från
       && String(b.wanted_date || '') < gräns.till && rapporterbart(b) && harBörjat(b)).length;
@@ -3334,7 +3394,6 @@
     }
 
     const noterHtml = noter.map(n => '<p class="lonespec-not">' + esc(n) + '</p>').join('');
-    const nästa = NXStudie.månadsNamn(gräns.till, false);
 
     if (denna) {
       /* Månaden pågår. Finns förra månadens lönespecifikation är den
@@ -3355,18 +3414,19 @@
       return;
     }
 
-    if (väntar) {
-      /* Skrivs den 1:a. En vecka in i nästa månad är den försenad, och
-         då ska det inte stå att den kommer. */
-      const sen = isoFor(new Date()) >= gräns.till.slice(0, 8) + '08';
-      lista.innerHTML = tomt('Lönespecifikationen för ' + mNamn + ' är inte skriven än', sen
-          ? 'Den skulle ha skrivits i början av ' + nästa + '. Hör av dig till oss, så tittar vi på det.'
-          : 'Den skrivs i början av ' + nästa + ', och lönen betalas den 25 ' + nästa + '.')
+    if (hit.length) {
+      /* Körningen går varje natt, och skriver lönespecifikationen natten
+         efter att det första passet rapporterats. Förut stod här att den
+         var försenad en vecka in i nästa månad, men ett pass som
+         rapporteras sent får sin lönespecifikation först då, och det är
+         inte ett fel. */
+      lista.innerHTML = tomt('Lönespecifikationen för ' + mNamn + ' är inte skriven än',
+          'Den skrivs natten efter att rapporten skrevs, och lönen betalas den 25 ' + nästa + '.')
         + noterHtml;
       return;
     }
 
-    lista.innerHTML = (räknade.length
+    lista.innerHTML = (egna.length
         ? tomt('Ingen lönespecifikation för ' + mNamn, '')
         : tomt('Ingen lön för ' + mNamn, 'Du hade inga rapporterade pass den månaden.'))
       + noterHtml;

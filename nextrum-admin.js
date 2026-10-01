@@ -42,7 +42,7 @@
   const M = NXMedia;
 
   const { S, elevNamn, funktionsFel, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag,
-          hämtaMatchunderlag, kortDatum, namnFör, närText, skriv, tabell,
+          hämtaMatchunderlag, kortDatum, namnFör, närText, skriv, skrivOmOförändrad, tabell,
           visa, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
@@ -192,6 +192,35 @@
       const fält = { status: el.value };
       if (el.value === 'utbetald' && !u.utbetald_at) fält.utbetald_at = new Date().toISOString();
       if (el.value !== 'utbetald') fält.utbetald_at = null;
+
+      /* Ett utkast som godkänns ska vara det som visades (2026-10-01).
+         Månadskörningen går varje natt och lägger sent rapporterade pass
+         på utkastet, så beloppet kan ha vuxit sedan sidan hämtades. */
+      if (u.status === 'utkast' && el.value !== 'utkast') {
+        const svar = await skrivOmOförändrad('payouts', u.id, fält, { status: 'utkast', belopp_ore: u.belopp_ore });
+        if (svar === 'ändrad') {
+          await hämtaAllt();
+          await laddaOmEkonomi();
+          const ny = S.utbetalningar.find(x => x.id === u.id);
+          /* Noll rader utan att något ändrats är databasen som nekar, inte
+             natten som lagt till ett pass. */
+          const sammaSom = ny && ny.status === 'utkast' && Number(ny.belopp_ore) === Number(u.belopp_ore);
+          alert(sammaSom
+            ? 'Underlaget gick inte att spara. Ingenting ändrades.'
+            : ny && ny.status === 'utkast'
+            ? 'Underlaget har ändrats sedan sidan hämtades: det är nu ' + kronor(ny.belopp_ore) + ' i stället för '
+              + kronor(u.belopp_ore) + ', för ett pass har lagts till. Granska det och välj igen. Ingenting sparades.'
+            : 'Underlaget har ändrats sedan sidan hämtades. Ingenting sparades, och listan är hämtad på nytt.');
+        } else if (svar) {
+          Object.assign(u, fält);
+        } else {
+          el.value = u.status;
+        }
+        ritaUtbetalningar(); ritaLöner();
+        if (svar === true) await laddaOmEkonomi();
+        return;
+      }
+
       Object.assign(u, fält);
       await skriv('payouts', u.id, fält);
       ritaUtbetalningar(); await laddaOmEkonomi();

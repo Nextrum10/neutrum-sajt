@@ -20,21 +20,21 @@
    Fortnox Lön och inte här, med flit: filen behöver dem inte, och
    studiehjälparna är ofta sexton.
 
-   TIMMARNA ATT BETALA UT. Finns månadens underlag är det underlagets
-   tal. Finns det inte än räknas de pass som månadens körning kommer
-   att ta (NXAdmin.lönemånad): genomförda, med rapport, inte
-   undantagna och inte redan på ett underlag, med lönetiden ur
-   passunderlaget (lon_min) och tjänstens ersättning eller
-   studiehjälparens timpenning. Det är ett beräknat tal och märks så;
-   underlaget är det som betalas.
+   TIMMARNA ATT BETALA UT. Månadens underlag, och de pass som en
+   körning kommer att lägga på det (NXAdmin.lönemånad): genomförda, med
+   rapport, inte undantagna och inte redan på ett underlag, med
+   lönetiden ur passunderlaget (lon_min) och tjänstens ersättning eller
+   studiehjälparens timpenning. De passen är ett beräknat tal och märks
+   så; underlaget är det som betalas.
 
-   Varje pass räknas i EN månad. Körningen tar allt till och med
-   periodens slut som inte står på ett underlag, och första versionen
-   räknade som körningen: septembers pass stod både i september och i
-   oktober, och Månadens ekonomi visade dem som lön båda månaderna.
-   Ett pass som rapporterats efter att dess månad körts står nu i nästa
-   körnings månad, märkt "från tidigare månader", och i sin egen som
-   "på nästa underlag".
+   Varje pass räknas i EN månad, sin egen (2026-10-01, Leo: "passen som
+   är hållna i september ska spärras av för september"). Körningen går
+   varje natt och lägger ett sent rapporterat pass på sin månads
+   underlag så länge det är ett utkast, så månaden kan ha både ett
+   underlag och pass som väntar på att läggas till. Bara ett godkänt
+   eller utbetalt underlag skickar passet vidare: det står då i sin egen
+   månad som "på nästa underlag", och i den som tar det som "från
+   tidigare månader".
 
    LÖNEFILEN (Fas 17.1 byggde halvan i databasen). PAXml 2.0, som
    Fortnox Lön läser in under Lön → Kalender → Importera löneunderlag.
@@ -61,7 +61,7 @@
   const { $, esc, säg, felText, isoFor } = NX;
   const { bekräfta, medan, tomt } = NXStudie;
   const kronor = NXBetalning.kronor;
-  const { S, UTB_LAGE, fråga, hämtaAlla, lönemånad, namnFör, pill, senasteLönemånad, tabell, väljare } = NXAdmin;
+  const { S, UTB_LAGE, fråga, hämtaAlla, lönemånad, namnFör, pill, tabell, underlagslägen, väljare } = NXAdmin;
 
   /* Anställningsnumren och bolagsfakta. Hämtas när sidan ritas första
      gången, och om efter varje ändring härifrån. */
@@ -180,18 +180,18 @@
   });
 
   /* En rad per studiehjälpare för månaden. underlag är månadens
-     underlag om det finns; beräknat är vad månadens körning tar med om
-     det inte finns, och tidigare hur många av de passen som hölls en
-     tidigare månad; senare är månadens egna pass som väntar på en
-     senare körning; utanRapport är månadens egna pass som inte kommer
-     med förrän rapporten finns.
+     underlag om det finns; beräknat är de pass en körning lägger på det,
+     eller skapar det med, och tidigare hur många av dem som hölls en
+     tidigare månad; senare är månadens egna pass som en senare månad
+     tar, för att månadens underlag redan är låst; utanRapport är
+     månadens egna pass som inte kommer med förrän rapporten finns.
 
-     Ett pass räknas bara i den månad vars körning tar det. Här stod
-     förut samma urval som körningen gör, allt till och med månadens
-     slut, och då stod septembers pass i oktober också. */
+     Ett pass räknas bara i den månad det hamnar på. Här stod förut
+     samma urval som körningen gör, allt till och med månadens slut, och
+     då stod septembers pass i oktober också. */
   function månadensLöner(månad) {
     const g = NXStudie.månadsGräns(månad);
-    const senast = senasteLönemånad();
+    const lägen = underlagslägen();
     const per = new Map();
     const post = id => {
       if (!per.has(id)) per.set(id, tomRad(id));
@@ -214,9 +214,9 @@
         if (egen) { const r = post(p.tutor_id); r.utanRapport.pass++; r.utanRapport.min += min; }
         return;
       }
-      /* En månad med underlag är körd, så ett pass som inte står på det
-         tas av en senare körning. */
-      if (lönemånad(d, senast) !== g.från) {
+      /* Ett låst underlag (godkänt, utbetalt) tar inte emot fler pass, så
+         ett pass som inte står på det tas av en senare månad. */
+      if (lönemånad(d, p.tutor_id, lägen) !== g.från) {
         if (egen) { const r = post(p.tutor_id); r.senare.pass++; r.senare.min += min; }
         return;
       }
@@ -231,8 +231,10 @@
     return per;
   }
 
-  const attBetala = r => r.underlag ? Number(r.underlag.belopp_ore || 0) : r.beräknat.öre;
-  const lönetid = r => r.underlag ? Number(r.underlag.minuter || 0) : r.beräknat.min;
+  /* Underlaget och det som läggs till på det. Ett låst underlag tar inte
+     emot fler pass (lönemånad), så där är det beräknade alltid noll. */
+  const attBetala = r => (r.underlag ? Number(r.underlag.belopp_ore || 0) : 0) + r.beräknat.öre;
+  const lönetid = r => (r.underlag ? Number(r.underlag.minuter || 0) : 0) + r.beräknat.min;
 
   /* Månadens ekonomi visar samma tal, och säger när lönen redan är
      utbetald och när ett pass inte räknas för att timpenningen saknas:
@@ -243,7 +245,7 @@
     per.forEach(r => {
       öre += attBetala(r);
       min += lönetid(r);
-      if (!r.underlag && r.beräknat.pass) beräknat = true;
+      if (r.beräknat.pass) beräknat = true;
       utanTimpenning += r.beräknat.utanTimpenning;
       if (r.underlag) {
         underlag++;
@@ -288,12 +290,13 @@
     const g = NXStudie.månadsGräns(månad);
     const öre = rader.reduce((n, r) => n + attBetala(r), 0);
     const min = rader.reduce((n, r) => n + lönetid(r), 0);
-    const pass = rader.reduce((n, r) => n + (r.underlag ? 0 : r.beräknat.pass), 0);
-    const tidigare = rader.reduce((n, r) => n + (r.underlag ? 0 : r.tidigare), 0);
+    const pass = rader.reduce((n, r) => n + r.beräknat.pass, 0);
+    const tidigare = rader.reduce((n, r) => n + r.tidigare, 0);
     const underlag = rader.filter(r => r.underlag).map(r => r.underlag);
     const godkända = underlag.filter(u => u.status === 'godkand').length;
     const utbetalda = underlag.filter(u => u.status === 'utbetald').length;
-    const beräknat = rader.some(r => !r.underlag && r.beräknat.pass);
+    const beräknat = rader.some(r => r.beräknat.pass);
+    const passText = pass + ' pass med rapport' + (tidigare ? ', ' + tidigare + ' från tidigare månader' : '');
     const utanRapport = rader.reduce((n, r) => n + r.utanRapport.pass, 0);
     const utanNummer = rader.filter(r => harNågotAttFå(r) && !L.anst.has(r.id)).length;
     const utanTimpenning = rader.reduce((n, r) => n + r.beräknat.utanTimpenning, 0);
@@ -301,11 +304,11 @@
     host.innerHTML = '<div class="adm-tal-rad">'
       + kpi(kronor(öre), 'Att betala ut', (beräknat ? 'beräknat · ' : '') + 'den 25 ' + namn(g.till, false)
         + ', pass i ' + namn(månad, false))
-      /* En körd månad har inga beräknade pass: det som inte står på
-         underlaget tas av nästa körning (NXAdmin.lönemånad). */
-      + kpi(tim(min), 'Lönetid', underlag.length ? 'ur underlagen'
-        : pass ? pass + ' pass med rapport' + (tidigare ? ', ' + tidigare + ' från tidigare månader' : '')
-          : 'inga pass att betala för')
+      /* Ett utkast kan få fler pass av nattens körning (NXAdmin.lönemånad),
+         och de står då bredvid underlagen. */
+      + kpi(tim(min), 'Lönetid', underlag.length
+        ? 'ur underlagen' + (pass ? ', och ' + passText + ' som läggs till' : '')
+        : pass ? passText : 'inga pass att betala för')
       + kpi(underlag.length, 'Underlag',
         underlag.length ? godkända + ' godkända · ' + utbetalda + ' utbetalda' : 'inte skapade än')
       + kpi(utanRapport, 'Pass utan rapport', utanRapport ? 'kommer inte med förrän rapporten finns' : 'alla har rapport',
@@ -352,7 +355,8 @@
       { namn: 'Att få', rita: r => {
         const öre = attBetala(r);
         return '<span class="adm-tal">' + esc(öre ? kronor(öre) : '—') + '</span>'
-          + (r.underlag ? '<span class="adm-und">underlag</span>'
+          + (r.underlag ? '<span class="adm-und">underlag'
+              + (r.beräknat.pass ? ' + ' + r.beräknat.pass + ' pass som läggs till' : '') + '</span>'
             : r.beräknat.pass ? '<span class="adm-und">beräknat</span>' : '')
           + (r.beräknat.utanTimpenning ? '<span class="adm-und" style="color:var(--acc-text)">'
             + r.beräknat.utanTimpenning + ' pass utan timpenning</span>' : '');

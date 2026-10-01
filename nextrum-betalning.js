@@ -246,6 +246,42 @@ window.NXBetalning = (function () {
       + '</article>';
   }
 
+  /* ---------- vilken månads lön ett pass hör till (2026-10-01) ----------
+     Leo: "passen som är hållna i september ska spärras av för september".
+     Samma regel som malmanad() i fakturering (_delad/pris.ts), så att
+     Löner, Månadens ekonomi och studiehjälparens lönespec säger det
+     körningen gör: passets egen månad, så länge studiehjälparens underlag
+     för den är ett utkast eller inte skapat. Ett låst underlag (godkänt,
+     utbetalt) skickar passet till den första senare månaden som tar emot
+     det.
+
+     Körningen går varje natt för förra månaden och skapar bara ett nytt
+     underlag för den. En äldre månad som aldrig fick ett tar därför inte
+     emot passet, och det går till förra månaden eller senare.
+
+     datum  passets, 'ÅÅÅÅ-MM-DD'
+     lagen  studiehjälparens underlag: 'ÅÅÅÅ-MM-01' → status */
+  function manadEfter(m) {
+    var d = String(m).split('-');
+    var år = Number(d[0]), mån = Number(d[1]);
+    return mån === 12 ? (år + 1) + '-01-01' : år + '-' + String(mån + 1).padStart(2, '0') + '-01';
+  }
+
+  function lonemanad(datum, lagen) {
+    var nu = new Date();
+    var förra = new Date(nu.getFullYear(), nu.getMonth() - 1, 1, 12);
+    var förraIso = förra.getFullYear() + '-' + String(förra.getMonth() + 1).padStart(2, '0') + '-01';
+    var m = String(datum).slice(0, 7) + '-01';
+    /* En månad som pågår eller inte har börjat har inget underlag, så
+       slingan stannar senast vid förra månaden plus de låsta efter den. */
+    for (var i = 0; i < 600; i++) {
+      var s = (lagen || {})[m];
+      if (s === 'utkast' || (!s && m >= förraIso)) return m;
+      m = manadEfter(m);
+    }
+    return m;
+  }
+
   /* ---------- det som ännu inte fakturerats ----------
      Den viktigaste siffran för båda parter: vad har vuxit fram den
      här månaden? Den är en uppskattning tills fakturan är skapad,
@@ -267,7 +303,7 @@ window.NXBetalning = (function () {
   return {
     kronor: kronor, timmar: timmar, periodText: periodText,
     FAKTURA: FAKTURA, UTBETALNING: UTBETALNING, fakturaLage: fakturaLage,
-    fakturaRad: fakturaRad, lonespec: lonespec, ocrGiltigt: ocrGiltigt,
-    pagaende: pagaende, passpris: passpris
+    fakturaRad: fakturaRad, lonemanad: lonemanad, lonespec: lonespec, manadEfter: manadEfter,
+    ocrGiltigt: ocrGiltigt, pagaende: pagaende, passpris: passpris
   };
 })();
