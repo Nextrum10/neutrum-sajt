@@ -97,6 +97,12 @@ inte är slut, är inte provad i driften: den nås bara med en
 admininloggning eller `x-fakturering-nyckel`, för schemats väg tar alltid
 förra månaden. Regeln den bygger på, `manadenArSlut`, är provad i
 `pris_test.ts`.
+**`fakturering` version 34, 2026-10-01**: driftsatt från main (847446d)
+efter PR #171, passets månad (ett sent pass läggs på sin månads utkast,
+`malmanad`), och hämtad tillbaka och lika med main i alla sju filerna;
+bara `index.ts` och `_delad/pris.ts` skilde sig från version 33.
+Schemats väg torrt gav 200 för september med det nya fältet `vantar`.
+Migrationen `manadskorningen_gar_varje_natt` kördes efter funktionen.
 
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 

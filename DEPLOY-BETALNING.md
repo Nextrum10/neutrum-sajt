@@ -31,9 +31,9 @@ behövs om ni sätter upp en ny miljö.
 | 1. Schemat | Applicerat |
 | 2. Priset | Satt: 37900 ören, alltså 379 kr — samma som prissidan |
 | 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
-| 4. Deploy `fakturering` | ACTIVE, version 33 (2026-10-01, från main, jämförd byte för byte). Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas. En skarp körning för en månad som inte är slut får 409 (2026-10-01). Provad i driften: 401 utan inloggning, och schemats torrkörning 200 för september; 409 nås bara med en admininloggning, och regeln (`manadenArSlut`) är provad i `pris_test.ts` |
+| 4. Deploy `fakturering` | ACTIVE, version 34 (2026-10-01, från main efter PR #171, jämförd byte för byte). Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas. Ett sent pass läggs på sin månads utkast (Passets månad, avsnitt 6). En skarp körning för en månad som inte är slut får 409 (2026-10-01). Provad i driften: 401 utan inloggning, och schemats torrkörning 200 för september; 409 nås bara med en admininloggning, och regeln (`manadenArSlut`) är provad i `pris_test.ts` |
 | 5. Torrkörning | **Gjord 2026-09-28** genom schemavägen: 200, augusti utan pass. Knappen under Betalningar → Fakturor (Månadskörningen) torrkör en avslutad eller pågående månad, och skapar bara en avslutad |
-| 6. Schemaläggning | **På sedan 2026-09-28**: pg_cron `manadskorning` den 1:a klockan 04:17 UTC, genom `intern.manadskorning_vack()`. Den första skarpa körningen gjordes med knappen den 29 september, medan månaden pågick. Schemat gick första gången den 1 oktober och svarade 207, se avsnitt 6 |
+| 6. Schemaläggning | **På sedan 2026-09-28**: pg_cron `manadskorning` klockan 04:17 UTC genom `intern.manadskorning_vack()`, den 1:a och **varje natt sedan 2026-10-01** (`manadskorningen_gar_varje_natt`). Den första skarpa körningen gjordes med knappen den 29 september, medan månaden pågick. Schemat gick första gången den 1 oktober och svarade 207, se avsnitt 6 |
 | 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar. Se avsnitt 9 |
 | 8. Deploy `faktura-utskick` | ACTIVE, version 19. Skickar bara underlag sedan Fas 14.6 |
 
@@ -335,6 +335,14 @@ månadens underlag varje natt och svarat 207.
    `net._http_response` (200, med `vantar` och `tillagg` i svaret).
 3. Kör migrationen `manadskorningen_gar_varje_natt`, med versionen i filnamnet.
 4. Kör hela `verktyg/rls-test.sql` mot driften: de två schemaproven ska vara gröna.
+
+Alla fyra gjordes 2026-10-01, efter att PR #171 mergats (847446d): `fakturering`
+version 34, hämtad tillbaka och lika med main i alla sju filerna; torrkörningen svarade
+200 för september, med `vantar` i svaret; migrationen `20261001120000` hämtades från
+merge-commiten med tillägget `http`, prövades mot sin md5 och skrev sin rad i
+`schema_migrations` i samma transaktion, och tillägget togs bort igen; hela
+`rls-test.sql` från samma commit gick igenom mot driften i en transaktion som rullades
+tillbaka, 1151 av 1151. Första nattliga körningen är den 2 oktober 04:17 UTC.
 
 Stänga av: `select cron.unschedule('manadskorning');` och
 `select cron.unschedule('manadskorning-svar');`, som en egen migration.
