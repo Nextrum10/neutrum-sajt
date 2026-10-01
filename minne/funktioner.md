@@ -72,15 +72,13 @@ jämfördes byte för byte innan nästa gick ut. Versionerna efteråt:
 **Efter barnkonton_och_admin, samma kväll**, driftsattes två nya
 funktioner från main: `admin-skapa` (v1) och `barn-konto` (v2, med
 rättelsen barnkonto_skapas_genom_auth), båda hämtade tillbaka och lika med
-main. Sedan dess skiljer driften från main i två saker, och båda är
-kända: `notis-ko` (v20) saknar barnadresskollen i `notiser/ko.ts`
-(`arBarnadress`). Databasen tar redan aldrig ut en barnadress ur kön
-(`notis_utskick_ta`, provat i `rls-test.sql`), så kollen är ett andra
-lager. Funktionen är 94 kB med sina beroenden, och genom MCP skrivs
-varje fil för hand; driftsätt den med `supabase functions deploy
-notis-ko` från en dator med CLI:t. Och de andra funktionernas
-`_delad/auth.ts` saknar `appMetadata` i `Inloggad` och `harBehorighet`,
-som ingen av dem använder.
+main. Därefter skilde driften från main i två saker, och båda var
+kända: `notis-ko` (v20) saknade barnadresskollen i `notiser/ko.ts`
+(`arBarnadress`), ett andra lager, för databasen tar redan aldrig ut en
+barnadress ur kön (`notis_utskick_ta`, provat i `rls-test.sql`). Den gick
+ut 2026-10-01, se nedan. Och de andra funktionernas `_delad/auth.ts`
+saknar `appMetadata` i `Inloggad` och `harBehorighet`, som ingen av dem
+använder.
 **`bjud-in` (v7) var tvärtom NYARE i driften än i repot**: den kan
 bjuda in en studiehjälpare (`roll: 'tutor'`, eget `TILLBAKA` per roll),
 och koden fanns inte i någon gren. Leo samma dag: behåll den. Driftens
@@ -103,6 +101,27 @@ efter PR #171, passets månad (ett sent pass läggs på sin månads utkast,
 bara `index.ts` och `_delad/pris.ts` skilde sig från version 33.
 Schemats väg torrt gav 200 för september med det nya fältet `vantar`.
 Migrationen `manadskorningen_gar_varje_natt` kördes efter funktionen.
+**`notis-ko` v21, `notis-avanmal` v9 och `barn-inloggning` v1,
+2026-10-01**: driftsatta från main (ffa5b6b) efter PR #175 och
+migrationerna `nexlax_for_barnet` och `barnets_epost`, hämtade tillbaka
+och lika med main i alla filer (15, 6 och 8). `notis-ko` är 115 kB med
+sina beroenden och gick genom MCP, varje fil utskriven; det går, men
+jämför md5 per fil efteråt, för ett felskrivet tecken i en kommentar syns
+inte i ett prov. Driftens v20 innehöll bara sådant som finns i repots
+historik, så ingenting gick förlorat. Provat mot driften med flaggan av:
+`barn-inloggning` svarar 400 direkt utan att skriva ett försök, 400 efter
+golvet för en teknisk barnadress, 405 på GET och CORS bara för
+nextrum.se; `notis-avanmal` skickar GET vidare med 303 och svarar 403 på
+en barntoken med fel signatur; `notis-ko` svarar 401 utan hemlighet, så
+hela dess modulgraf laddar. En molnsession når inte `*.supabase.co`
+(nätpolicyn), så anropen gick från databasen med tillägget `http` i en
+transaktion som rullades tillbaka.
+Kvar i driften, utan betydelse i sak: `ansokan-notis`, `faktura-utskick`,
+`generate-feedback`, `generate-message` och `lead-notis` bär
+`notiser/typer.ts` från 2026-09-30, utan barnets typer och `kod`, och
+`stripe-checkout` bär `_delad/pris.ts` utan faktureringens tillägg (den
+importerar bara prisfunktionerna). Driftsätts de av annat skäl följer
+mains kopior med.
 
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
@@ -300,5 +319,5 @@ kroppen läst med tak (`lasKropp` ur `notiser/avanmal.ts`). Auth ser
 funktionens IP-nummer: `Sb-Forwarded-For` kräver en ny sorts hemlig nyckel
 (sb_secret) och en inställning i projektet, och används inte. Samma
 ändring rörde `notis-ko` (barnets rader, `notiser/barn.ts`) och
-`notis-avanmal` (barnets token); alla tre driftsätts från main när
-migrationen är körd, och flaggan slås på först efter juristen.
+`notis-avanmal` (barnets token); alla tre är driftsatta från main sedan
+2026-10-01 (se ovan), och flaggan slås på först efter juristen.

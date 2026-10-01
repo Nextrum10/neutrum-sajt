@@ -78,8 +78,9 @@ Läxhjälp är fortfarande tjänstens namn; skolan ger läxor, vi ger uppgifter.
   inte blandas ihop med en maskins rättning: den står i ett eget block,
   Studiehjälparens bedömning.
 - Nivåerna görs i familjens inloggning och, sedan 2026-10-01, i barnets
-  egen vy (`barn.html`, migrationen `nexlax_for_barnet`). Leo: "Nexläx syns
-  inte i barnens vy". Barnets roll når fortfarande inga tabeller: de fyra
+  egen vy (`barn.html`, migrationen `nexlax_for_barnet`, i drift samma
+  dag). Leo: "Nexläx syns inte i barnens vy". Barnets roll når
+  fortfarande inga tabeller: de fyra
   funktionerna NexLäx bygger på (`niva_starta`, `niva_svara`,
   `niva_genomgang`, `nexlax_lage`) släpper in barnet för dess eget id och
   bara med aktiv inloggning (`intern.mitt_aktiva_barn`), banan läses genom

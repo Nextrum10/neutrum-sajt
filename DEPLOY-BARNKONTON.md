@@ -170,16 +170,18 @@ Inställningar i sin vy. Varför det ser ut som det gör:
 inget av det, inloggningen med en barnadress nekas och inga mejl går till
 barn. Gör så här, i ordning:
 
-1. **Merga**, och kör migrationen med `apply_migration` och namnet
-   `barnets_epost` (efter `nexlax_for_barnet`). Döp om filen
-   (`supabase/migrations/20261001160000_barnets_epost.sql`) till den
-   version som registrerades, i en egen commit.
-2. **Driftsätt från main**: `barn-inloggning` (ny; `verify_jwt = false`
-   står i `config.toml`), `notis-ko` och `notis-avanmal`. Hämta tillbaka
-   dem och jämför med main. Gamla `notis-ko` känner inte barnets rader,
-   men de finns inte förrän flaggan är på.
-3. **Kör `verktyg/rls-test.sql` mot driften** i en transaktion som rullas
-   tillbaka. Avsnitt 15 slår på flaggan inne i transaktionen.
+1. **Gjort 2026-10-01: mergat och kört.** PR #175 (ffa5b6b), och sedan
+   `nexlax_for_barnet` och `barnets_epost` i driften, registrerade med
+   filernas egna versioner (20261001140000 och 20261001160000) och samma
+   md5 som filerna, så ingen fil behövde döpas om.
+2. **Gjort 2026-10-01: driftsatt från main.** `barn-inloggning` v1
+   (`verify_jwt = false` står i `config.toml`), `notis-ko` v21 och
+   `notis-avanmal` v9, hämtade tillbaka och lika med main fil för fil, och
+   provade mot driften med flaggan av (`minne/funktioner.md`).
+3. **Gjort 2026-10-01: `verktyg/rls-test.sql` mot driften**, i en
+   transaktion som rullades tillbaka, både före och efter migrationerna:
+   1220 rader gröna. Avsnitt 15 slår på flaggan inne i transaktionen; i
+   driften står den av.
 4. **Juristen läser** registrets rad 22, de tre raderna från 2026-10-01 i
    konsekvensbedömningen (`DATASKYDD.md` avsnitt 5) och avsnitten om barn
    i integritetspolicyn, på båda språken. Frågorna att ställa: räcker 6.1 b
