@@ -282,8 +282,9 @@ på det gamla papperet samma dag som sajtens ljusnade. Papperet står på
 kastar body-stilen: tas ett av dem bort blir det vitt i det programmet.
 Det vita som ändå syns runt ett mejl i Gmail på datorn är Gmails eget
 och går inte att nå inifrån ett mejl. Kontomejlen (bekräfta konto,
-inbjudan från `bjud-in`) skickas av Supabase Auth med mallar i
-dashboarden, inte härifrån, och har inte det här skalet.
+inbjudan från `bjud-in`, Glömt lösenordet) skickas av Supabase Auth med
+mallar i dashboarden, inte härifrån, och har inte det här skalet.
+Texterna står i `minne/sakerhet.md` (Kontomejlen).
 
 ---
 

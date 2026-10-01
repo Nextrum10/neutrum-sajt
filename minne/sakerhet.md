@@ -217,6 +217,16 @@ föräldern byter lösenordet.
   `/admin` mitt i rutan. Rutan stänger inte av ett tryck utanför, och
   Inte nu stänger utan att spara; lösenordet går att byta i profilen
   senare.
+- **En inbjudan ber om ett lösenord i alla tre vyerna** (2026-10-01).
+  `bjud-in` bjuder in familjer till `/foralder` och studiehjälpare till
+  `/larare`, men bara adminvyn frågade efter ett lösenord
+  (`NX.inbjudan`): en familj som bjudits in ur en intresseanmälan blev
+  inloggad av länken en gång och hade sedan inget lösenord att logga in
+  med. Nu öppnar `type=invite` samma ruta i studievyn och
+  studiehjälparvyn, med inbjudans text (`nyttLösenord(…, { inbjuden })`),
+  och en inbjudan som landar på startsidan skickas vidare till
+  studievyn, som en återställning gör. Adminvyn behåller sin egen ruta
+  (`väljLösenord`).
 - **Samma besked oavsett konto.** Auth svarar likadant för en adress som
   inte finns, och rutan gör det också: "det finns inget konto med den
   adressen" hade svarat på vem som är kund hos oss, för vem som helst.
@@ -241,22 +251,94 @@ föräldern byter lösenordet.
   skillnaden avslöjar också vilka konton som finns. Egen SMTP ställs in
   under Authentication → Emails → SMTP Settings. Prova med en adress som
   inte är med i organisationen.
-- **Mallen står i panelen, som saknar historik**, så texten står här.
-  Authentication → Emails → Templates → Reset password:
-
-  Ämne: `Återställ ditt lösenord hos Nextrum`
-
-  ```html
-  <h2>Välj ett nytt lösenord</h2>
-  <p>Klicka på länken och välj ett nytt lösenord.</p>
-  <p><a href="{{ .ConfirmationURL }}">Välj nytt lösenord</a></p>
-  <p>Har du inte bett om det här kan du strunta i mejlet. Ditt lösenord är detsamma som förut.</p>
-  <p>Nextrum</p>
-  ```
-
-  `{{ .ConfirmationURL }}` är länken Auth bygger, med vyns adress i sig;
-  byt den inte mot `{{ .SiteURL }}`, då landar alla på startsidan.
+- **Mallen** (Reset password) står under Kontomejlen nedan.
 - Provas i `verktyg/prova-aterstallning.js` (`minne/genererat-och-ci.md`).
+
+### Kontomejlen från Supabase Auth (2026-10-01)
+
+Bekräftelsen av ett nytt konto, inbjudan och återställningen skickas av
+Supabase Auth, med mallar i panelen (Authentication → Emails →
+Templates), inte av `notis-ko`, och har inte mejlens skal
+(`minne/notiser.md`). Panelen saknar historik, så texterna står här, och
+förvalen är engelska. Ändras en mall i panelen ändras den här också.
+
+- **Tre mallar skickas av sajten**: Confirm sign up (`signUp` i
+  studievyn och studiehjälparvyn), Invite user (`bjud-in` till
+  `/foralder` och `/larare`, `admin-skapa` till `/admin`) och Reset
+  password (Glömt lösenordet). Magic link, Change email address och
+  Reauthentication skickas bara från panelen eller API:t; texterna står
+  ändå här, så att inget i panelen är på engelska.
+- **`{{ .ConfirmationURL }}` står kvar** i varje mall med en länk. Den
+  bär vyns adress (`redirect_to`); `{{ .SiteURL }}` leder till
+  startsidan.
+- **Inga villkor på `{{ .Data }}`.** En inbjudan från panelen har ingen
+  metadata, och en mall som inte går att fylla i kan stoppa mejlet.
+- **Länken går att använda en gång**, och vissa jobbmejl (Microsoft
+  Defender Safe Links) öppnar länkar innan personen gör det. Länken är då
+  förbrukad, och vyn säger att den inte gick att använda
+  (`NXStudie.länkenGickInte()`). En ny länk går samma väg. Lösningen är
+  en egen sida med en knapp till länken, eller en kod (`{{ .Token }}`)
+  i stället för länken; ingen av dem är byggd.
+
+**Confirm sign up**, ämne `Bekräfta din e-postadress hos Nextrum`:
+
+```html
+<h2>Bekräfta din e-postadress</h2>
+<p>Klicka på länken för att bekräfta din e-postadress, så är kontot klart.</p>
+<p><a href="{{ .ConfirmationURL }}">Bekräfta e-postadressen</a></p>
+<p>Har du inte skapat något konto hos Nextrum kan du strunta i mejlet.</p>
+<p>Nextrum</p>
+```
+
+**Invite user**, ämne `Du har fått ett konto hos Nextrum`:
+
+```html
+<h2>Välkommen till Nextrum</h2>
+<p>Du har fått ett konto hos Nextrum. Klicka på länken och välj ett lösenord.</p>
+<p><a href="{{ .ConfirmationURL }}">Välj lösenord</a></p>
+<p>Sedan loggar du in med den här e-postadressen och lösenordet du valde.</p>
+<p>Väntade du dig inte det här mejlet kan du strunta i det.</p>
+<p>Nextrum</p>
+```
+
+**Reset password**, ämne `Återställ ditt lösenord hos Nextrum`:
+
+```html
+<h2>Välj ett nytt lösenord</h2>
+<p>Klicka på länken och välj ett nytt lösenord.</p>
+<p><a href="{{ .ConfirmationURL }}">Välj nytt lösenord</a></p>
+<p>Har du inte bett om det här kan du strunta i mejlet. Ditt lösenord är detsamma som förut.</p>
+<p>Nextrum</p>
+```
+
+**Magic link**, ämne `Logga in hos Nextrum`:
+
+```html
+<h2>Logga in</h2>
+<p>Klicka på länken för att logga in hos Nextrum.</p>
+<p><a href="{{ .ConfirmationURL }}">Logga in</a></p>
+<p>Har du inte bett om att logga in kan du strunta i mejlet.</p>
+<p>Nextrum</p>
+```
+
+**Change email address**, ämne `Bekräfta din nya e-postadress hos Nextrum`:
+
+```html
+<h2>Bekräfta din nya e-postadress</h2>
+<p>Klicka på länken för att byta e-postadress från {{ .Email }} till {{ .NewEmail }}.</p>
+<p><a href="{{ .ConfirmationURL }}">Byt e-postadress</a></p>
+<p>Har du inte bett om att byta e-postadress kan du strunta i mejlet.</p>
+<p>Nextrum</p>
+```
+
+**Reauthentication**, ämne `Din kod hos Nextrum`:
+
+```html
+<h2>Bekräfta att det är du</h2>
+<p>Din kod: <b>{{ .Token }}</b></p>
+<p>Har du inte bett om en kod kan du strunta i mejlet.</p>
+<p>Nextrum</p>
+```
 
 ### Samtycket (2026-09-27)
 

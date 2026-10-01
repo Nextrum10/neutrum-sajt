@@ -266,7 +266,8 @@ står i `.vercelignore`.
 `verktyg/prova-aterstallning.js` (Glömt lösenordet, 2026-09-30) är byggt
 likadant och provar läget i inloggningsrutan i alla tre vyerna, vad som
 skickas till `/auth/v1/recover` och vilket besked varje svar från Auth
-ger, rutan för nytt lösenord när vyn öppnas med länkens adress, en länk
+ger, rutan för nytt lösenord när vyn öppnas med länkens adress, rutan
+för en inbjudan i studievyn och studiehjälparvyn (2026-10-01), en länk
 som gått ut, startsidan som skickar länken vidare och modulvakten mot en
 gammal `nextrum-studie.js`. Samma körsätt, egen port (8962).
 

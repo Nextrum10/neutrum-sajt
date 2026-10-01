@@ -2850,12 +2850,12 @@ window.NXStudie = (function () {
 
   /* Vyn öppnades från en länk i ett mejl men ingen är inloggad: länken
      har gått ut, använts, eller gick inte att logga in med
-     (NX.länkfel, NX.återställning). Rutan går rakt till Glömt
+     (NX.länkfel, NX.återställning, NX.inbjudan). Rutan går rakt till Glömt
      lösenordet med förklaringen överst. Svarar true om den gjorde det.
      En token som supabase-js inte kunde använda står kvar i adressen,
      och tas bort här. */
   function länkenGickInte(sätt) {
-    if (!NX.länkfel && !NX.återställning) return false;
+    if (!NX.länkfel && !NX.återställning && !NX.inbjudan) return false;
     if (/access_token=/.test(location.hash)) history.replaceState(history.state, '', location.pathname + location.search);
     sätt('glomt');
     NX.$('#auth-sub').textContent = LÄNKFEL_UNDER;
@@ -2920,30 +2920,39 @@ window.NXStudie = (function () {
     return NX.felText(fel);
   }
 
-  /* Rutan för ett nytt lösenord, när vyn öppnats från länken i
-     återställningsmejlet (NX.återställning). Länken har loggat in
-     personen, som inte har något lösenord hen minns. o.minsta är den
-     kortaste längden (adminvyn 8, annars 6 som i profilen), o.epost
-     adressen som lösenordshanteraren sparar lösenordet under. Svarar
-     true när lösenordet är sparat.
+  /* Rutan för ett lösenord, när vyn öppnats från länken i
+     återställningsmejlet (NX.återställning) eller i en inbjudan från
+     bjud-in (NX.inbjudan, o.inbjuden). Länken har loggat in personen,
+     som inte har något lösenord hen minns, eller inget alls. o.minsta
+     är den kortaste längden (adminvyn 8, annars 6 som i profilen),
+     o.epost adressen som lösenordshanteraren sparar lösenordet under.
+     Svarar true när lösenordet är sparat.
+
+     INBJUDAN (2026-10-01). Adminvyn har frågat efter ett lösenord sedan
+     barnkonton_och_admin, men studievyn och studiehjälparvyn gjorde det
+     aldrig: en familj som bjudits in ur en intresseanmälan blev inloggad
+     av länken en gång och hade sedan inget lösenord att logga in med.
 
      Ett tryck utanför stänger inte rutan, till skillnad från de andra:
      länken går bara att använda en gång, och ett snett tryck på
-     telefonen hade krävt ett nytt mejl. Inte nu stänger, och lösenordet
-     går att byta i profilen senare. */
+     telefonen hade krävt ett nytt mejl. Inte nu stänger; lösenordet går
+     att byta i profilen eller med Glömt lösenordet senare. */
   function nyttLösenord(supa, o) {
-    var minsta = (o && o.minsta) || 6;
+    var minsta = (o && o.minsta) || 6, inbjuden = !!(o && o.inbjuden);
     return new Promise(function (klar) {
       var ruta = document.createElement('div');
       ruta.className = 'nx-fraga';
       ruta.innerHTML =
         '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="nylos-t">'
-        + '<h3 id="nylos-t">Välj ett nytt lösenord</h3>'
-        + '<p>Du är inloggad med länken i mejlet. Välj ett nytt lösenord med minst ' + minsta
-        + ' tecken, så loggar du in med det nästa gång.</p>'
+        + '<h3 id="nylos-t">' + (inbjuden ? 'Välj ditt lösenord' : 'Välj ett nytt lösenord') + '</h3>'
+        + '<p>' + (inbjuden
+          ? 'Välkommen till Nextrum! Du loggade in med länken i inbjudan. Välj ett lösenord med minst ' + minsta
+            + ' tecken, så loggar du in med din e-postadress och det nästa gång.'
+          : 'Du är inloggad med länken i mejlet. Välj ett nytt lösenord med minst ' + minsta
+            + ' tecken, så loggar du in med det nästa gång.') + '</p>'
         + '<form data-nylos novalidate>'
         + '<input type="email" autocomplete="username" value="' + esc((o && o.epost) || '') + '" hidden readonly>'
-        + '<div class="fgroup"><label for="nylos-1">Nytt lösenord</label>'
+        + '<div class="fgroup"><label for="nylos-1">' + (inbjuden ? 'Lösenord' : 'Nytt lösenord') + '</label>'
         + '<input class="inp" id="nylos-1" type="password" autocomplete="new-password" minlength="' + minsta + '"></div>'
         + '<div class="fgroup"><label for="nylos-2">Upprepa lösenordet</label>'
         + '<input class="inp" id="nylos-2" type="password" autocomplete="new-password"></div>'
@@ -2989,8 +2998,9 @@ window.NXStudie = (function () {
           if (svar && svar.error) { NX.säg(msg, lösenordsfel(svar.error), false); return; }
           sparat = true;
           ruta.querySelector('.nx-fraga-box').innerHTML =
-            '<h3 id="nylos-t">Lösenordet är bytt</h3>'
-            + '<p>Nästa gång loggar du in med din e-postadress och det nya lösenordet.</p>'
+            '<h3 id="nylos-t">' + (inbjuden ? 'Lösenordet är sparat' : 'Lösenordet är bytt') + '</h3>'
+            + '<p>Nästa gång loggar du in med din e-postadress och '
+            + (inbjuden ? 'lösenordet du valde' : 'det nya lösenordet') + '.</p>'
             + '<div class="nx-fraga-knappar"><button type="button" class="btn btn-primary" data-nylos-klar>Fortsätt</button></div>';
           ruta.querySelector('[data-nylos-klar]').focus();
         });

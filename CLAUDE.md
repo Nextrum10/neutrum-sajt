@@ -286,9 +286,10 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
 - **Inloggningen i vyerna**: logga ut med `scope: 'local'` (`NXStudie.loggaUt()`); ut överallt
   görs i databasen. `NXStudie.vaktaInloggningen()` byter en utloggad vy mot inloggningen.
   "permission denied" eller tomma listor: titta i API-loggen först. **Glömt lösenordet**:
-  länken leder tillbaka till vyn där man bad om den, `type=recovery` läses innan klienten
-  skapas, rutan för nytt lösenord väntas in före rolldirigeringen, och beskedet är detsamma
-  oavsett om kontot finns. Mejlet går genom Supabase Auth, med mallen i `minne/sakerhet.md`.
+  länken leder tillbaka till vyn där man bad om den, `type=recovery` och `type=invite` läses
+  innan klienten skapas, rutan för lösenord väntas in före rolldirigeringen (också för en
+  inbjudan, i alla tre vyerna), och beskedet är detsamma oavsett om kontot finns.
+  Kontomejlen skickas av Supabase Auth, med mallarna i `minne/sakerhet.md`.
 - **Samtycket**: öppna sidor sätter inga cookies; det som kräver samtycke går genom
   `NXSamtycke`, och rutan visas bara när något i `SAMTYCKE` är på (av sedan 2026-09-29). Dölj
   den aldrig med CSS medan skripten går. Vercels statistik laddas först efter ja, aldrig med
@@ -391,6 +392,8 @@ Detaljer: `minne/grunden.md`.
   null-MX:en i Cloudflare, en skarp inbjudan genom `admin-skapa`, och att säga till familjerna.
   En admin med behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen
   säger nej.
+- **Kontomejlen**: mallarna klistras in i Supabase för hand, och en länk som ett jobbmejl
+  öppnat i förväg är förbrukad; ingen kod i stället för länken (`minne/sakerhet.md`).
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Delade dokument: ingen notis, ingen underskrift, en person per
   handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.

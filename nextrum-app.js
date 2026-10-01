@@ -9,7 +9,8 @@ const CFG = window.NEXTRUM_CONFIG || {};
 /* Kom sidan från länken i en inbjudan? Läses FÖRE klienten skapas:
    supabase-js tar hand om inloggningen i adressen och tömmer den, och
    efter det går det inte att se att personen inte har något lösenord
-   än. Adminvyn frågar efter ett då (barnkonton_och_admin). */
+   än. Vyn frågar efter ett då: adminvyn sedan barnkonton_och_admin,
+   studievyn och studiehjälparvyn sedan 2026-10-01 (bjud-in). */
 const INBJUDAN = /(?:^|[#&])type=invite(?:&|$)/.test(String(location.hash || ''));
 
 /* GLÖMT LÖSENORDET (2026-09-30). Länken i återställningsmejlet loggar in
@@ -24,10 +25,13 @@ const INBJUDAN = /(?:^|[#&])type=invite(?:&|$)/.test(String(location.hash || '')
    när adressen inte gick att använda, som i ett mejl skickat från
    Supabase-panelen (Site URL); den skickas då vidare till studievyn
    utan att klienten skapas här, för klienten hade loggat in på
-   startsidan och tömt adressen innan den nya sidan hann öppnas. */
+   startsidan och tömt adressen innan den nya sidan hann öppnas. Samma
+   sak med en inbjudan från panelen: på startsidan hade ingen frågat
+   efter ett lösenord. */
 const ÅTERSTÄLLNING = /(?:^|[#&])type=recovery(?:&|$)/.test(String(location.hash || ''));
 const LÄNKFEL = (/(?:^|[#&])error_code=([^&]*)/.exec(String(location.hash || '')) || [])[1] || '';
-const TILL_VYN = (ÅTERSTÄLLNING || LÄNKFEL) && !/^\/(foralder|larare|admin|barn)(\.html)?\/?$/.test(location.pathname);
+const TILL_VYN = (ÅTERSTÄLLNING || INBJUDAN || LÄNKFEL)
+  && !/^\/(foralder|larare|admin|barn)(\.html)?\/?$/.test(location.pathname);
 if (TILL_VYN) location.replace('/foralder' + location.hash);
 else if (LÄNKFEL) history.replaceState(history.state, '', location.pathname + location.search);
 

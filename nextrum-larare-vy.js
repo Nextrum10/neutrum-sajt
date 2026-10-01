@@ -4018,10 +4018,12 @@
        inloggningen, inte en vy där varje knapp nekas (NXStudie). */
     NXStudie.vaktaInloggningen({ supa, user: S.user,
       utloggad: () => { läge = 'in'; ritaAuth(); visa('view-auth'); } });
-    /* Från länken i ett återställningsmejl: det nya lösenordet först.
-       Rutan väntas in, så att dirigeringen nedan inte byter sida under
-       den. */
-    if (NX.återställning) await NXStudie.nyttLösenord(supa, { epost: S.user.email });
+    /* Från länken i ett återställningsmejl eller en inbjudan från
+       bjud-in: lösenordet först. Rutan väntas in, så att dirigeringen
+       nedan inte byter sida under den. */
+    if (NX.återställning || NX.inbjudan) {
+      await NXStudie.nyttLösenord(supa, { inbjuden: NX.inbjudan, epost: S.user.email });
+    }
 
     /* Katalogen hämtas medan profilen hämtas, inte efter. Den behövs
        först när vyn ritas, och en fråga i kö är en fråga för mycket. */
