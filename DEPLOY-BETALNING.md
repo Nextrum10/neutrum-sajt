@@ -31,15 +31,16 @@ behövs om ni sätter upp en ny miljö.
 | 1. Schemat | Applicerat |
 | 2. Priset | Satt: 37900 ören, alltså 379 kr — samma som prissidan |
 | 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
-| 4. Deploy `fakturering` | ACTIVE, version 32 (2026-09-28, från main, jämförd byte för byte). Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas |
-| 5. Torrkörning | **Gjord 2026-09-28** genom schemavägen: 200, augusti utan pass. Septembers enda pass är provpasset, se avsnitt 6. Knappen under Betalningar → Fakturor (Månadskörningen) torrkör vilken månad som helst |
-| 6. Schemaläggning | **På sedan 2026-09-28**: pg_cron `manadskorning` den 1:a klockan 04:17 UTC, genom `intern.manadskorning_vack()`. Första skarpa körningen är den 1 oktober 2026, med provpasset kvar, se avsnitt 6 |
+| 4. Deploy `fakturering` | ACTIVE, version 32 (2026-09-28, från main, jämförd byte för byte). Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas. Att en månad skapas först när den är slut (2026-10-01) kommer med nästa version, som driftsätts från main efter merge |
+| 5. Torrkörning | **Gjord 2026-09-28** genom schemavägen: 200, augusti utan pass. Knappen under Betalningar → Fakturor (Månadskörningen) torrkör en avslutad eller pågående månad, och skapar bara en avslutad |
+| 6. Schemaläggning | **På sedan 2026-09-28**: pg_cron `manadskorning` den 1:a klockan 04:17 UTC, genom `intern.manadskorning_vack()`. Den första skarpa körningen gjordes med knappen den 29 september, medan månaden pågick. Schemat gick första gången den 1 oktober och svarade 207, se avsnitt 6 |
 | 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar. Se avsnitt 9 |
 | 8. Deploy `faktura-utskick` | ACTIVE, version 19. Skickar bara underlag sedan Fas 14.6 |
 
-Databasen är tom på fakturor och underlag: `invoices`, `invoice_lines`, `payouts`
-och `payout_lines` har noll rader (28 september 2026). Den första skarpa körningen
-gör schemat den 1 oktober 2026.
+Den första skarpa körningen gjordes med knappen den 29 september 2026, för september
+medan den pågick: ett underlag på 240 kr och ett fakturautkast på 758 kr, båda för
+provpasset den 27 september. Före den hade `invoices`, `invoice_lines`, `payouts` och
+`payout_lines` noll rader.
 
 **Obs (17 september 2026):** alla pass i driften hör än så länge till adminkontot
 och till en enda studiehjälpare — det är provpass, inga riktiga kunder. Fyra av de
@@ -182,7 +183,9 @@ i `hoppade_over_utan_rapport` — se Betalningar → Att göra. Står det något
 passen utan att familjen betalat: Betala-knappen ligger kvar på passet i familjens
 vy, och det är familjen ni ska prata med, inte körningen.
 
-Vill du köra en annan månad än förra: lägg till `"period": "2026-09"`.
+Vill du köra en annan månad än förra: lägg till `"period": "2026-09"`. Den måste vara
+slut för en skarp körning: en månad som pågår eller inte har börjat får 409 (sedan
+2026-10-01, se avsnitt 6). Torrkörningen går för vilken månad som helst.
 
 När det ser rätt ut, kör skarpt genom att ta bort `torrkorning`:
 
@@ -231,11 +234,20 @@ utan pass. Fel hemlighet gav 401, och rätt hemlighet som bad om september fick
 ändå augusti.
 
 **Steg 1 avgjordes åt andra hållet: provpasset står kvar.** Leo ville se hur
-lönespecen ser ut. Den 1 oktober skriver körningen därför ett underlag på 240 kr
-till studiehjälparen leo (Matematik 27 september, 2 h à 120 kr) och ett
-fakturautkast på 758 kr till adminfamiljen, för passet står på faktura. Får
-provpassen 29 och 30 september en rapport före körningen kommer de med på
-underlaget också. När lönespecen är sedd, och före den 1 november:
+lönespecen ser ut. Underlaget på 240 kr till studiehjälparen leo (Matematik
+27 september, 2 h à 120 kr) och fakturautkastet på 758 kr till adminfamiljen, för
+passet står på faktura, skrevs den 29 september klockan 14.30, när september kördes
+med knappen medan den pågick.
+
+Schemat gick den 1 oktober klockan 06.17 och svarade **207**. Provpasset den 29
+september (Matematik, 1 h, 120 kr) hade rapporterats efter knappen, och ett andra
+underlag för leo i september gick inte att spara: en studiehjälpare har ett per
+månad (`unique (tutor_id, period)`). Passet kommer med på oktobers underlag den
+1 november, och septembers lönespec säger det under summan. **Därför skapas en månad
+sedan 2026-10-01 bara när den är slut**, i `fakturering` (409) och i rutan, som
+fortfarande torrkör en månad som pågår.
+
+När lönespecen är sedd, och före den 1 november:
 
 1. Ta bort fakturautkastet under Betalningar → Fakturor (Ta bort).
 2. Ta bort underlaget. Det har ingen knapp, så det görs med SQL.
@@ -281,6 +293,16 @@ läsningen är den 1 oktober 04:47 UTC.
 
 Funktionen läser bara anrop från den senaste timmen, så flyttas `manadskorning` ska
 `manadskorning-svar` flyttas lika mycket.
+
+**Den 1 oktober 2026 blev det en uppgift**, "Månadskörningen för september 2026
+skrev bara en del", för 207-svaret ovan. Den säger "torrkör och skapa det som
+saknas", men det som saknades var ett andra underlag för en studiehjälpare som redan
+hade ett för september, och det går inte att skapa: en ny körning ger samma 207.
+Passet kommer med nästa månad. Uppgiften bär med flit inget ur svaret, så torrkör
+månaden: har en studiehjälpare pass kvar fast hen redan har månadens underlag, är
+det det här fallet, och uppgiften stängs. Sedan 2026-10-01 går en månad inte att
+skapa medan den pågår, så det fallet uppstår bara om någon kör förra månaden på den
+1:a före 04.17 UTC.
 
 Stänga av: `select cron.unschedule('manadskorning');` och
 `select cron.unschedule('manadskorning-svar');`, som en egen migration.

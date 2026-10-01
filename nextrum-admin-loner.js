@@ -388,7 +388,11 @@
     if (!godkända.length) {
       hinder.push(underlag.length
         ? 'Inget av underlagen för pass i ' + namn(månad) + ' är godkänt. Godkänn dem i listan ovanför när du granskat dem.'
-        : 'Underlagen för pass i ' + namn(månad) + ' är inte skapade. Kör månadskörningen först.');
+        : 'Underlagen för pass i ' + namn(månad) + ' är inte skapade. '
+          /* En månad skapas först när den är slut (2026-10-01). */
+          + (månad >= NXStudie.månadIso(new Date())
+            ? 'De skapas när månaden är slut, den 1 ' + namn(NXStudie.månadsGräns(månad).till) + '.'
+            : 'Kör månadskörningen först.'));
     }
     if (utanNummer.length) {
       hinder.push('Anställningsnummer saknas för ' + utanNummer.map(u => namnFör(u.tutor_id)).join(', ') + '.');

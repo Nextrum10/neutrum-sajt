@@ -268,7 +268,11 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   som inte har börjat går inte att köra** från någon av rutorna
   (`körningensLäge`): sidorna visar kommande månader, och en körning för
   oktober i september hade lagt septembers pass på oktobers underlag.
-  Rutan säger också när månaden pågår, och när en tidigare månad har pass
+  **En månad som pågår går att torrköra men inte skapa** (2026-10-01).
+  Den gick förut, med en varning, och september kördes den 29:e: passet
+  som rapporterades samma kväll fick inte plats på septembers underlag
+  och fick vänta en månad på lönen. `fakturering` nekar detsamma med 409,
+  så knappen är inte skyddet. Rutan säger när en tidigare månad har pass
   men inga underlag (`data-kor-not`).
 - **Löner** (`#loner`, `nextrum-admin-loner.js`) listar de godkända
   studiehjälparna och alla med något att få för månaden.
