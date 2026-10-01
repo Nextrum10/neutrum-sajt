@@ -76,7 +76,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Frågorna**: talregeln i `intern.niva_tal` och i Pythons `grund.lika()` ändras tillsammans.
   En fråga med svar tas aldrig bort, en ändrad får nytt id. De skrivs från grunden mot Lgr22,
   aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används.
-- **Barnkontona** (2026-09-30): barnet loggar in på `/barn` med ett användarnamn, och adressen
+- **Barnkontona** (2026-09-30): barnet loggar in med ett användarnamn, på `/barn` eller i
+  studievyns inloggning, dit Logga in leder (`NXStudie.loggaInBarn`, 2026-10-01), och adressen
   `<namn>@barn.nextrum.se` tar aldrig emot mejl. Bara föräldern skapar, pausar och tar bort
   inloggningen, genom `barn-konto`. Barnet kan inte boka, avboka, svara eller ändra något, och
   ser aldrig priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade

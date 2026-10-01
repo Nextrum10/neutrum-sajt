@@ -2802,10 +2802,70 @@ window.NXStudie = (function () {
     lösen.closest('.fgroup').hidden = glömt;
     NX.$$('[data-glomt]').forEach(function (el) { el.hidden = läge !== 'in'; });
     NX.$$('[data-glomt-tillbaka]').forEach(function (el) { el.hidden = !glömt; });
+    /* Studievyn tar också ett barns användarnamn när man loggar in
+       (t.etikett), men bara där: ett konto skapas och en länk skickas
+       alltid till en e-postadress. */
+    var etikett = NX.$('label[for="a-email"]');
+    if (etikett) etikett.textContent = (läge === 'in' && t.etikett) || 'E-post';
     NX.$('#auth-title').textContent = glömt ? 'Glömt lösenordet?' : upp ? t.titelUpp : t.titel;
     NX.$('#auth-sub').textContent = glömt ? GLÖMT_UNDER : upp ? t.underUpp : t.under;
     NX.$('#auth-submit').textContent = glömt ? 'Skicka länken' : upp ? 'Skapa konto' : 'Logga in';
     NX.rensa(NX.$('#auth-msg'));
+  }
+
+  /* ============================================================
+     BARNETS ANVÄNDARNAMN I EN INLOGGNING (2026-10-01)
+
+     Barnet loggar in med ett användarnamn, och adressen
+     <namn>@barn.nextrum.se byggs här, i webbläsaren. Det första
+     riktiga barnkontot gick inte att logga in med: Logga in på sajten
+     leder till studievyn, där fältet hette E-post och ett användarnamn
+     fick Fel e-post eller lösenord, och /barn nås bara om man skriver
+     adressen. Därför tar studievyn användarnamnet också, och barnet
+     hamnar i sin vy. Barnets vy och studievyn loggar in barnet med
+     samma två funktioner.
+
+     Regeln är ANVANDARNAMN i _delad/barnkonto.ts och villkoret i
+     databasen: a–z, siffror, punkt, bindestreck och understreck,
+     3–20 tecken. Hela adressen godtas också. Allt annat är null, och
+     då går ingen fråga till Auth.
+     ============================================================ */
+  var BARNNAMN = /^[a-z0-9._-]{3,20}$/;
+  var BARNDOMÄN = '@barn.nextrum.se';
+  function barnAdress(text) {
+    var t = String(text == null ? '' : text).trim().toLowerCase();
+    if (t.slice(-BARNDOMÄN.length) === BARNDOMÄN) t = t.slice(0, -BARNDOMÄN.length);
+    return BARNNAMN.test(t) ? t + BARNDOMÄN : null;
+  }
+
+  /* Samma besked för okänt användarnamn, fel lösenord och pausad
+     inloggning: sidan svarar inte på vilka användarnamn som finns. Två
+     undantag, och inget av dem säger något om kontot: taket gäller per
+     uppkoppling, och ett nät som inte svarar har inte hunnit fråga
+     någon. Svarar { user } eller { fel }. */
+  var BARN_FEL = 'Fel användarnamn eller lösenord';
+  async function loggaInBarn(supa, adress, lösen) {
+    var svar;
+    try {
+      svar = await supa.auth.signInWithPassword({ email: adress, password: lösen });
+    } catch (e) { svar = { error: e }; }
+    var fel = svar && svar.error;
+    if (fel) {
+      var text = String(fel.message || fel);
+      if (fel.status === 429) return { fel: 'För många försök. Vänta en stund och försök igen.' };
+      if (!fel.status && /fetch|network|load failed/i.test(text)) {
+        return { fel: 'Det gick inte att nå Nextrum. Kolla att du är uppkopplad och försök igen.' };
+      }
+      return { fel: BARN_FEL };
+    }
+    var user = svar.data && svar.data.user;
+    /* Domänen går inte att registrera utan att vara ett barnkonto
+       (databasen), men vyn litar inte på det heller. */
+    if (!NX.ärBarn(user)) {
+      await supa.auth.signOut({ scope: 'local' });
+      return { fel: BARN_FEL };
+    }
+    return { user: user };
   }
 
   /* ============================================================
@@ -2867,18 +2927,21 @@ window.NXStudie = (function () {
      Supabase under Authentication, URL Configuration (Redirect URLs),
      och en adress som inte står där leder till startsidan, som skickar
      den vidare till studievyn (nextrum-app.js). */
-  async function glömtSkicka(supa) {
+  async function glömtSkicka(supa, o) {
     var msg = NX.$('#auth-msg'), fält = NX.$('#a-email');
     var epost = fält.value.trim();
     NX.rensa(msg);
     if (!epost) { NX.säg(msg, 'Skriv e-postadressen du loggar in med.', false); fält.focus(); return; }
+    /* I studievyn kan det stå ett barns användarnamn (o.barn); i de
+       andra vyerna är ett ord utan @ bara en ofullständig adress. */
+    var barnet = /@barn\.nextrum\.se$/i.test(epost) || (!!(o && o.barn) && !!barnAdress(epost));
+    if (barnet) {
+      NX.säg(msg, 'Ett barns lösenord byts av föräldern, i studievyn under Profil. Barnet loggar sedan in på nextrum.se/barn.', false);
+      return;
+    }
     if (!NX.epostOk(epost)) {
       NX.säg(msg, 'Kontrollera e-postadressen. Den ser inte ut som en adress.', false);
       fält.focus();
-      return;
-    }
-    if (/@barn\.nextrum\.se$/i.test(epost)) {
-      NX.säg(msg, 'Ett barns lösenord byts av föräldern, i studievyn under Profil. Barnet loggar sedan in på nextrum.se/barn.', false);
       return;
     }
     await medan(NX.$('#auth-submit'), 'Skickar…', async function () {
@@ -3516,6 +3579,7 @@ window.NXStudie = (function () {
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
     inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
     glömtLänkar: glömtLänkar, länkenGickInte: länkenGickInte, glömtSkicka: glömtSkicka, nyttLösenord: nyttLösenord,
+    barnAdress: barnAdress, loggaInBarn: loggaInBarn, BARN_FEL: BARN_FEL,
     adminroll: adminroll,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxLista: läxLista,

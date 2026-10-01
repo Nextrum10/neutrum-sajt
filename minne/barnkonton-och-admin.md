@@ -28,6 +28,21 @@ som står i `supabase_migrations.schema_migrations` i driften.
   webbläsaren och barnet ser den aldrig. Felet är alltid "Fel användarnamn
   eller lösenord", utom när nätet inte svarar eller Supabase säger 429 för
   många försök; inget av dem säger något om vilka användarnamn som finns.
+- **Också i studievyns inloggning (2026-10-01).** Det första riktiga
+  barnkontot gick inte att logga in med. Logga in på sajten leder till
+  studievyn ("Förälder eller elev"), där fältet hette E-post och ett
+  användarnamn fick "Fel e-post eller lösenord", och `/barn` nås bara om
+  man skriver adressen; ingen länk dit, och ingen från `/barn` till
+  föräldervyn. Auths logg visade två nekade försök minuten efter att
+  kontot skapats. Nu heter fältet "E-post eller användarnamn" när man
+  loggar in, och ett användarnamn eller en hel barnadress loggas in som
+  på `/barn` och skickas dit; en adress med @ på en annan domän är en
+  vuxen, som förut. Båda vyerna går genom `NXStudie.barnAdress` (regeln
+  ANVANDARNAMN) och `NXStudie.loggaInBarn` (beskeden och kollen att
+  kontot är ett barn), och familjens uppgifter hämtas aldrig med barnets
+  inloggning. Glömt lösenordet i studievyn ger ett användarnamn samma
+  besked som en barnadress. Studiehjälparvyn och adminvyn tar inga
+  användarnamn: där är ett ord utan @ en ofullständig adress.
 
 ### Rollen nextrum_barn, och varför en egen roll
 Det stod i uppdraget att allt för barnet ska vara stängt som förval. Två
@@ -320,9 +335,10 @@ studiehjälparvyn till `/admin`.
   migrationer, och utan rättelsen föll 16 av dem.
 - Deno: `_delad/barnkonto_test.ts`, `_delad/adminbehorighet_test.ts` och
   ett nytt prov i `notiser/ko_test.ts`.
-- Webbläsaren: `verktyg/prova-barnkonton.js` (96 prov, gröna), mot en
+- Webbläsaren: `verktyg/prova-barnkonton.js` (119 prov, gröna), mot en
   falsk Supabase på en adress som inte finns: barnets inloggning och vy i
   ljust, mörkt och på telefon, text ur databasen som text, att barnet bara
-  frågar sina tre funktioner, föräldrarnas ruta, och adminvyn för en
-  superadmin, en begränsad admin, en utan roll och en inbjuden. Se
-  `minne/genererat-och-ci.md`.
+  frågar sina tre funktioner, barnets inloggning i studievyn (2026-10-01;
+  nio av de nya proven föll mot koden före), föräldrarnas ruta, och
+  adminvyn för en superadmin, en begränsad admin, en utan roll och en
+  inbjuden. Se `minne/genererat-och-ci.md`.

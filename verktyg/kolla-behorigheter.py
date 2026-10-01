@@ -16,8 +16,9 @@ blir det tyst fel: en ruta i vyn som databasen vägrar spara, eller en
 inbjudan som går iväg med en behörighet villkoret sedan säger nej till.
 
 Samma sak för barnens användarnamn och domän: databasen, edge-
-funktionen barn-konto, barnets inloggning och föräldrarnas ruta prövar
-dem var för sig.
+funktionen barn-konto, barnets inloggning (nextrum-studie.js, som
+barnets vy och studievyn delar sedan 2026-10-01) och föräldrarnas ruta
+prövar dem var för sig.
 
 Den nyaste migrationen som definierar något gäller.
 """
@@ -75,7 +76,7 @@ def main():
         fynd.append('Hittar inte villkoret students_anvandarnamn_form i migrationerna.')
     else:
         for fil, rx in [('supabase/functions/_delad/barnkonto.ts', r"export const ANVANDARNAMN = /(.*?)/;"),
-                        ('nextrum-barn-vy.js', r"const NAMN = /(.*?)/;"),
+                        ('nextrum-studie.js', r"var BARNNAMN = /(.*?)/;"),
                         ('nextrum-studie-vy.js', r"const BI_NAMN = /(.*?)/;")]:
             m = re.search(rx, las(fil))
             if not m or m.group(1) != monster:
@@ -87,8 +88,8 @@ def main():
     if not doman:
         fynd.append('Hittar inte BARN_DOMAN i _delad/barnkonto.ts.')
     else:
-        if "const DOMAN = '@%s';" % doman not in las('nextrum-barn-vy.js'):
-            fynd.append('nextrum-barn-vy.js bygger adressen med en annan domän än %s.' % doman)
+        if "var BARNDOMÄN = '@%s';" % doman not in las('nextrum-studie.js'):
+            fynd.append('nextrum-studie.js bygger adressen med en annan domän än %s.' % doman)
         sql = '\n'.join(io.open(f, encoding='utf-8').read() for f in migrationer())
         if "'%%@%s'" % doman not in sql:
             fynd.append('Ingen migration spärrar domänen %s.' % doman)

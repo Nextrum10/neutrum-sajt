@@ -19,13 +19,6 @@
   'use strict';
   const { $, datumText } = NX;
 
-  /* Samma regel som i _delad/barnkonto.ts och i databasen. */
-  const DOMAN = '@barn.nextrum.se';
-  const NAMN = /^[a-z0-9._-]{3,20}$/;
-  /* Samma besked för okänt användarnamn, fel lösenord och pausad
-     inloggning: sidan svarar inte på vilka användarnamn som finns. */
-  const FEL = 'Fel användarnamn eller lösenord';
-
   const VYER = ['view-loading', 'view-auth', 'view-annan', 'view-stopp', 'view-app', 'view-fel'];
   const S = { user: null, data: null, notiser: [], hämtad: 0, laddar: false };
 
@@ -84,55 +77,30 @@
   });
 
   /* ============ inloggningen ============
-     Användarnamnet blir en adress här, i webbläsaren. Barnet behöver
-     aldrig se den, och den tar aldrig emot något mejl (notis-ko hoppar
-     över domänen, och i Auth kan den inte bytas). */
-  function inloggningsfel(error) {
-    const status = error && error.status;
-    const text = String((error && error.message) || '');
-    /* Två undantag från samma besked, och inget av dem säger något om
-       kontot: taket gäller per uppkoppling, och ett nät som inte svarar
-       har inte hunnit fråga någon. Allt annat, också ett serverfel, är
-       samma besked. */
-    if (status === 429) return 'För många försök. Vänta en stund och försök igen.';
-    if (!status && /fetch|network|load failed/i.test(text)) {
-      return 'Det gick inte att nå Nextrum. Kolla att du är uppkopplad och försök igen.';
-    }
-    return FEL;
-  }
-
+     Användarnamnet blir en adress i webbläsaren (NXStudie.barnAdress).
+     Barnet behöver aldrig se den, och den tar aldrig emot något mejl
+     (notis-ko hoppar över domänen, och i Auth kan den inte bytas).
+     Besked och kontroller står i NXStudie.loggaInBarn, som studievyn
+     också använder när ett barn loggar in där. */
   $('#bv-form').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#auth-msg'), knapp = $('#bv-logga-in'), lösenfält = $('#a-pass');
     NX.rensa(msg);
     if (!supa) { NX.säg(msg, 'Inloggningen fungerar inte just nu. Försök igen senare.', false); return; }
 
-    const anv = $('#bv-anv').value.trim().toLowerCase();
+    const anv = $('#bv-anv').value.trim();
     const lösen = lösenfält.value;
     if (!anv || !lösen) { NX.säg(msg, 'Fyll i användarnamn och lösenord.', false); return; }
     /* Ett namn som inte kan finnas får samma besked som ett som inte
        finns, och ingen fråga går iväg. */
-    if (!NAMN.test(anv)) { NX.säg(msg, FEL, false); lösenfält.value = ''; lösenfält.focus(); return; }
+    const adress = NXStudie.barnAdress(anv);
+    if (!adress) { NX.säg(msg, NXStudie.BARN_FEL, false); lösenfält.value = ''; lösenfält.focus(); return; }
 
     await NXStudie.medan(knapp, 'Loggar in…', async () => {
-      const { data, error } = await supa.auth.signInWithPassword({ email: anv + DOMAN, password: lösen });
-      if (error) {
-        NX.säg(msg, inloggningsfel(error), false);
-        lösenfält.value = '';
-        lösenfält.focus();
-        return;
-      }
-      const user = data && data.user;
-      /* Domänen går inte att registrera utan att vara ett barnkonto
-         (databasen), men vyn litar inte på det heller. */
-      if (!NX.ärBarn(user)) {
-        await supa.auth.signOut({ scope: 'local' });
-        NX.säg(msg, FEL, false);
-        lösenfält.value = '';
-        return;
-      }
+      const svar = await NXStudie.loggaInBarn(supa, adress, lösen);
       lösenfält.value = '';
-      await starta(user);
+      if (svar.fel) { NX.säg(msg, svar.fel, false); lösenfält.focus(); return; }
+      await starta(svar.user);
     });
   });
 
