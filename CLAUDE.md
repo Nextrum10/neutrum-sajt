@@ -336,8 +336,9 @@ Detaljer: `minne/sakerhet.md`.
   öppna rum.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
-  main i 16 av 23 funktioner; alla driftsattes samma kväll. Sedan dess skiljer bara `notis-ko`
-  i sak (barnadresskollen, ett andra lager; `minne/funktioner.md`).
+  main i 16 av 23 funktioner; alla driftsattes samma kväll, och `notis-ko`, `notis-avanmal` och
+  `barn-inloggning` 2026-10-01. Ingen skiljer i sak från main: en äldre kopia av en delad fil
+  saknar bara tillägg som funktionen inte använder (`minne/funktioner.md`).
 - `barn-konto` prövar föräldern och `admin-skapa` skriver rollen med anroparens token; bara det
   Auth kräver görs med `service_role`, och ett barnkonto skapas aldrig utan vårdnadshavarens ja.
   `barn-konto` väljer barnkontots id och ger Auth varken `app_metadata` eller roll: det skriver
@@ -419,9 +420,10 @@ Detaljer: `minne/grunden.md`.
   null-MX:en i Cloudflare, en skarp inbjudan genom `admin-skapa`, och att säga till familjerna.
   En admin med behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen
   säger nej.
-- **Barnets egen e-post** (2026-10-01) är byggd och provad men inte på: flaggan `barn_epost`
-  står av tills juristen läst policyn, registrets rad 22 och konsekvensbedömningen
-  (`DEPLOY-BARNKONTON.md`). Adminvyn visar inte barnens inloggningar, och inte adressen.
+- **Barnets egen e-post** (2026-10-01) är i drift men inte på: migrationen och de tre
+  funktionerna gick ut samma dag, och flaggan `barn_epost` står av tills juristen läst policyn,
+  registrets rad 22 och konsekvensbedömningen; sedan ett prov i sandlådan
+  (`DEPLOY-BARNKONTON.md` 8). Adminvyn visar inte barnens inloggningar, och inte adressen.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

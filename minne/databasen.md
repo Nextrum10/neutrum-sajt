@@ -678,4 +678,8 @@ har antingen `mottagare` eller `barn_id`; `mottagare` är inte längre NOT
 NULL. Fem funktioner lappades med `replace()` och en vakt som räknar
 träffarna: `notis_utskick_ta` (två lappar), `intern.barnnotis_vid_pass`,
 `notis_planera`, `intern.barnkonto_stadas` och `intern.barnkonton_gallra`.
-`rls-test.sql` avsnitt 15. Se `minne/barnkonton-och-admin.md`.
+`rls-test.sql` avsnitt 15. Körd i driften 2026-10-01 efter
+`nexlax_for_barnet`, båda med filens egen version och samma md5 som
+filen, och hela `rls-test.sql` (1220 rader) gick igenom mot driften före
+och efter, i en transaktion som rullades tillbaka. Se
+`minne/barnkonton-och-admin.md`.

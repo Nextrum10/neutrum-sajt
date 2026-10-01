@@ -214,6 +214,8 @@ lösenordet; Auth mejlar aldrig ett barn; juristen läser innan det går
 live. **Flaggan `barn_epost` står av** tills dess (`flaggor`, `vantar_pa`
 säger vad som väntas), och med den av syns rutan inte, inloggningen med
 adressen nekas och inga mejl går till barn. Ta bort och stäng av går alltid.
+Migrationen och de tre funktionerna är i drift sedan 2026-10-01; det som
+väntar är juristen och ett prov i sandlådan (`DEPLOY-BARNKONTON.md` 8).
 
 Varför adressen inte ligger i Auth: barnkontots identitet är den tekniska
 adressen, och alla spärrar i `auth_barnkonto_las` bygger på den. En riktig
