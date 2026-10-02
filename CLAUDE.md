@@ -274,13 +274,16 @@ Detaljer: `minne/grunden.md`.
   prövar igen när den ska gå; barnets mallar (`barn.ts`) har aldrig pris, betalning eller skäl,
   bekräftelsen hälsar inte med namn och har ingen avanmälan, och barnets avanmälningstoken har
   fem delar, så den aldrig kan läsas som en vuxens.
-- **Att göra mejlas** (2026-10-02, i drift samma dag): pg_cron `admin-paminnelse` (var femte minut) → `intern.admin_paminnelse_koa()`
-  → `admin-paminnelse` → Resend. En sak som legat en timme i Att göra mejlas EN gång, till superadmins
-  (Att göra är bara deras vy), i ett mejl med högst ett per kvart: antal och sort, aldrig namn eller text.
-  Listan står både i `byggAttGöra` och i `intern.admin_att_gora()` och ändras tillsammans; rapporten som
-  familjen inte bekräftat och uppgifter systemet lagt finns bara i databasen. Det som stod i listan när
-  migrationen kördes räknas som mejlat. Av slås det genom att jobbet stängs av med `cron.alter_job`; det syns
-  då under System → Automationer.
+- **Mejl till admin** (2026-10-02): en intresseanmälan mejlas direkt, en gång, av `lead-notis`; en jobbansökan
+  direkt, en gång, av triggern `admin_ansokan_direkt` (ingen uppgift om vem som sökt, och högst fem på tio
+  minuter). **Resten av Att göra går i ETT mejl kl. 9 svensk tid**: pg_cron `admin-paminnelse` (var femte minut)
+  → `intern.admin_paminnelse_koa()` → `admin-paminnelse` → Resend. Klockan avgörs i funktionen
+  (`Europe/Stockholm`, bara timmen 9), aldrig i schemat, som går i UTC. Varje sak mejlas EN gång, aldrig en
+  intresseanmälan eller en ansökan (de mejlas direkt), aldrig namn eller text, och inget mejl en dag utan något nytt.
+  Till superadmins och `info@`. Listan står både i `byggAttGöra` och i `intern.admin_att_gora()` och ändras
+  tillsammans; rapporten som familjen inte bekräftat och uppgifter systemet lagt finns bara i databasen. Morgonmejlet
+  slås av genom att jobbet stängs av med `cron.alter_job` (syns under System → Automationer); det direkta
+  följer triggern, inte jobbet.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot styrs av en INSERT, möteslänken är https, ett steg mejlas en

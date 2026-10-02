@@ -85,7 +85,7 @@
     'notis-minut': 'Notiserna köas och skickas',
     'notis-stada': 'Gamla notiser städas bort',
     'ansokan-besked': 'Nya försök med beskeden till sökande',
-    'admin-paminnelse': 'Mejl till superadmins när något legat en timme i Att göra',
+    'admin-paminnelse': 'Morgonmejl kl. 9 till admin med det som ligger kvar i Att göra',
     'utbildningsprov-paminn': 'Påminnelser om utbildningsprovet',
     'timmar-betalar': 'Lediga timmar betalar nästa pass',
     'timmar-gar-ut': 'Mejlet om timmar som snart går ut',

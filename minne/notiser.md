@@ -304,63 +304,74 @@ inbjudan från `bjud-in`, Glömt lösenordet) skickas av Supabase Auth med
 mallar i dashboarden, inte härifrån, och har inte det här skalet.
 Texterna står i `minne/sakerhet.md` (Kontomejlen).
 
-### Påminnelserna till admin (2026-10-02)
+### Mejlen till admin (2026-10-02)
 
-Leo: "varje gång det kommer upp en sak att göra i admin, efter en timme om den saken är kvar att göra,
-skicka mail till administratörerna", med en jobbansökan, en intresseanmälan och en rapport som familjen
-inte bekräftat en timme efter att passet blev genomfört som exempel.
+Leo: "intresseanmälning och jobbansökan skickar en notis direkt till alla i admin om att det har kommit in,
+bara en gång dock. Rapporter och andra notiser såsom uteblivna rapporter ska skickas en notis genom mail till
+admin mailen dagen efter kl 9." **Första versionen läste jag fel** (ett mejl en timme efter att något dök upp,
+för allt) och den var i drift en kort stund, pausad så fort felet påpekades, utan att något mejl till admin
+hann gå. Migrationen `20261002170000` rättade den; `20261002120000` står kvar som den var, som historik.
 
 ```
-pg_cron "admin-paminnelse"  var femte minut, intern.admin_paminnelse_koa()
-  → admin_paminnelser       en rad per sak i Att göra: typ + id + när den först syntes
-  → admin_paminnelse_utskick  ETT mejl för det som mognat (antal per sort)
-  → pg_net → admin-paminnelse → admin_paminnelse_ta() → Resend → admin_paminnelse_klar()
+INTRESSEANMÄLAN  lead-notis (DB-webhook på leads) → Resend, direkt, till TILL (båda superadmins + info@). Rörs inte.
+JOBBANSÖKAN      trigger admin_ansokan_direkt (AFTER INSERT på applications)
+                 → admin_paminnelse_utskick (slag direkt) → pg_net → admin-paminnelse
+ALLT ANNAT       pg_cron "admin-paminnelse", var femte minut, intern.admin_paminnelse_koa() → _kor(now())
+                 → admin_paminnelser (en rad per sak: typ + id + när den först syntes + om den mejlats)
+                 → kl. 9 svensk tid: admin_paminnelse_utskick (slag morgon) → pg_net → admin-paminnelse
+admin-paminnelse → admin_paminnelse_ta() → Resend → admin_paminnelse_klar()
 ```
 
-Sju regler bär det:
+Åtta regler bär det:
 
-1. **Listan står på två ställen.** Att göra räknas i webbläsaren (`byggAttGöra`), men ett mejl kan inte
-   vänta på att någon har vyn öppen, så `intern.admin_att_gora()` räknar samma poster, en rad per sak.
-   Ändras den ena ändras den andra, med en kommentar i båda. Två sorter finns bara i databasen:
-   `rapport_obekraftad` (rapporten är skriven, familjen har inte bekräftat den) och `uppgift` (bara de
-   systemet lagt, `skapad_av_typ` system eller ai, aldrig de en människa skrev själv). Problemlistan
-   (klientfel, notiser som inte gick fram, avvikelser) är inte med: den räknar händelser i ett fönster,
-   inte saker att göra.
-2. **"Genomfört" är att rapporten finns, och timmen räknas från att saken syntes i listan.** Ett pass
-   som aldrig fick en rapport står i Att göra som "pass saknar rapport" först dagen efter, och mejlas
-   en timme efter det.
-3. **En sak mejlas en gång.** `forst_sedd_at` och `mejlad_at` sitter på raden, och raden raderas när saken
-   lämnar listan: en sak som kommer tillbaka är en ny sak med ny klocka. En sak som hanteras före timmen
-   får aldrig något mejl.
-4. **Högst ett mejl per kvart**, och det som mognar under tiden går med i nästa. En studiehjälpare som
-   rapporterar fem pass på kvällen ger ett mejl, inte fem.
-5. **Bara superadmins.** Att göra är deras vy (`BARA_SUPER`), och en admin med behörigheter ska inte få veta
-   att det finns fakturor att lägga in. Adresserna läses i `admin_paminnelse_ta()`, gemener, utan dubbletter,
-   utan raderade konton, och lämnar aldrig databasen utom till funktionen.
-6. **Inget ur raderna i mejlet.** Antal per sort (`ADMIN_SORTER` i `_delad/notiser/admin.ts`, som speglar
-   typlistan i tabellens CHECK) och en knapp till `/admin#oversikt`. En sort som databasen skickar men som
-   inte står i listan tas inte med. Ingen avanmälan: strömbrytaren är jobbet.
-7. **Det som stod i listan när migrationen kördes räknas som mejlat.** Annars hade allt som legat och väntat
-   kommit som ett mejl en timme efter driftsättningen.
+1. **Direkt är direkt, och en gång.** En ansökan ger ett mejl, vid INSERT, utan en uppgift om vem som sökt
+   ("Någon har skickat en jobbansökan", en knapp till `/admin#ansokningar`). Triggern sväljer varje fel
+   (`raise warning`): ett uteblivet mejl är mindre fel än en ansökan som inte sparas, och raden som inte gick
+   iväg prövas igen av jobbet (tre försök, senaste dygnet). Fler än fem direktmejl på tio minuter betyder att
+   något annat än jobbsökande håller på: de överskjutande mejlas inte (de syns ändå i Att göra i vyn).
+2. **Kl. 9 räknas i svensk tid i funktionen, aldrig i schemat.** pg_cron går i UTC, och 9 svensk tid är
+   07:00 UTC på sommaren och 08:00 på vintern. Jobbet går därför var femte minut och
+   `intern.admin_paminnelse_kor(p_nu)` tittar på `Europe/Stockholm`: bara timmen 9 skriver ett mejl, aldrig
+   "9 eller senare" (en driftsättning mitt på dagen ska inte skicka ett mejl på stående fot), och ett unikt
+   index (`admin_paminnelse_utskick_ett_morgonmejl_per_dag`) ger databasen sista ordet: ett morgonmejl per dag.
+   Tiden är ett argument just för att sommartid, vintertid och 08:59 ska gå att prova.
+3. **Morgonmejlet tar allt som ligger kvar och inte mejlats, inte bara det som är en dag gammalt.** Ett pass
+   som saknar rapport hamnar i Att göra vid midnatt efter passet, så det kommer kl. 9 samma morgon: dagen
+   efter passet, som Leo bad om. En rapport familjen inte bekräftat kommer nästa morgon. Det som uppstår
+   mellan midnatt och 9 kommer samma morgon, som mest några timmar gammalt.
+4. **En sak mejlas en gång.** `forst_sedd_at` och `mejlad_at` sitter på raden, och raden raderas när saken
+   lämnar listan: en sak som kommer tillbaka är en ny sak. En sak som hanteras före kl. 9 får inget mejl.
+   En morgon utan något nytt ger inget mejl.
+5. **Leads och ansökningar är aldrig med i morgonmejlet.** `intern.admin_att_gora()` har dem inte, och
+   `ADMIN_SORTER` (tio sorter) hoppar över dem om de ändå kommer med i en rad. De står i Att göra i vyn, men
+   är redan mejlade direkt.
+6. **Listan står på två ställen.** Att göra räknas i webbläsaren (`byggAttGöra`); morgonmejlet kan inte vänta
+   på att någon har vyn öppen, så `intern.admin_att_gora()` räknar samma poster, en rad per sak, minus
+   det som mejlas direkt. Ändras den ena ändras den andra. Två sorter finns bara i databasen:
+   `rapport_obekraftad` och `uppgift` (bara de systemet lagt, aldrig de en människa skrev själv).
+   Problemlistan (klientfel, notiser som inte gick fram, avvikelser) är inte med: den räknar händelser i ett
+   fönster, inte saker att göra.
+7. **Till superadmins och `info@`.** Superadminarna läses i `admin_paminnelse_ta()` (gemener, utan dubbletter,
+   utan raderade konton, lämnar aldrig databasen utom till funktionen) och `info@` läggs till i funktionen
+   (`ADMIN_EXTRA_TILL`), som aviseringen om en intresseanmälan. "Alla i admin" är i dag två personer, båda
+   superadmins. Att göra är bara deras vy (`BARA_SUPER`): en admin med behörigheter får inte morgonmejlet.
+   Vill du ha mejlet till en annan adress är det `ADMIN_EXTRA_TILL`.
+8. **Inget ur raderna i mejlet, och inget val per mejl.** Antal per sort och en knapp till `/admin#oversikt`;
+   ingen avanmälan, strömbrytaren är jobbet (morgon) eller triggern (direkt). Ett testmejl är slaget `prov`:
+   ämnet börjar med "[Test]", brevet säger det, och jobbet köar eller prövar aldrig om ett (`slag` följer med
+   i `antal`-objektet från `admin_paminnelse_ta()`, som har samma signatur som förut: att byta returvärdet går
+   inte utan att ta bort funktionen).
 
-Intresseanmälan mejlas dessutom direkt av `lead-notis` (aviseringen), som förut. En jobbansökan mejlas bara
-här, en timme efter att den kom, och bara om den fortfarande har läget ny. **Att mejla ansökan direkt är inte
-byggt, och det är ett beslut att fatta.** Mejlen går inte till `info@`, som aviseringen om en anmälan gör:
-mottagarna är superadminarna med en adress i `profiles`.
+Det som stod i Att göra när första migrationen kördes lades in som "redan mejlat" (för det gamla jobbet).
+Migrationen rättade det: de raderna räknas som ännu inte mejlade och går med i första morgonmejlet, eftersom
+det som ligger och väntar är vad mejlet finns till för. En ansökan som redan låg i Att göra får ändå inget mejl.
 
-**I drift 2026-10-02** (migrationen `20261002120000`, edge-funktionen v1, jobb 38). Det som då stod i
-Att göra och räknades som mejlat var en faktura att lägga in i Fortnox, en ny jobbansökan, två pass utan
-rapport, en uppgift från systemet och en utbetalning: *ingen av dem mejlas*, så titta i Att göra själv.
-Utskicket provades i driften mot Resends testadress `delivered@resend.dev` (mottagarfunktionen byttes i
-några sekunder, och kontrollsumman på kroppen visade att den återställdes exakt): rendering, nyckel,
-avsändardomän och kvittering fungerar. Rensningen av gamla utskick är en egen funktion,
+Av slås morgonmejlet genom att stänga av jobbet `admin-paminnelse` (`cron.alter_job(jobid, active := false)`,
+syns under System → Automationer); det direkta mejlet om en ansökan följer triggern
+`admin_ansokan_direkt`, inte jobbet. Rensningen av gamla utskick är en egen funktion,
 `intern.admin_paminnelse_stada()`, för att verktyget ber om en bekräftelse för en funktion med två `delete`
-(`minne/databasen.md`).
-
-Av slås det genom att stänga av jobbet `admin-paminnelse` (`cron.alter_job(jobid, active := false)`, syns
-under System → Automationer). Tabellerna följer inte med medan det står av. Slås jobbet på igen rensas
-det som lämnat listan i första varvet, och det som legat kvar sedan förut mejlas i ett mejl.
-`rls-test.sql` avsnitt 16 prövar listan, timmen, kvarten, mottagarna och rättigheterna.
+(`minne/databasen.md`). `rls-test.sql` avsnitt 16 prövar listan, klockan (sommartid, vintertid, 08:59, en gång
+per dag), direktmejlet, bromsen, mottagarna och rättigheterna.
 
 ---
 
