@@ -350,6 +350,12 @@ som den skapas, och en funktion som inte förstår `slag` skulle skicka fel mejl
    `_ansokan_direkt`, `_paminnelse_skicka`, `_paminnelse_stada`, `public.admin_paminnelse_ta`, `_klar`) med filen.
 4. Kör `verktyg/rls-test.sql` (hela filen, avsnitt 16 är omskrivet). Lokalt, med `verktyg/lokal-databas.sh`.
 
+**Gjort 2026-10-02:** funktionen driftsatt (v2), migrationen körd avsnitt för avsnitt (funktionerna i ett svep per
+avsnitt, ingen sats med `drop` eller två `delete`) och registrerad med rätt md5, funktionskropparna jämförda med
+filen, jobbet på igen och ett testmejl provat mot de riktiga mottagarna. **Kvar:** hela `rls-test.sql` mot det riktiga
+schemat (avsnitt 16 är bara körd mot en stubbad databas, eftersom Docker-bilden inte gick att hämta från sessionen), och
+att se det första morgonmejlet 2026-10-03 kl. 9.
+
 **Testmejl.** Ett testmejl till admin är en rad i `admin_paminnelse_utskick` med `slag = 'prov'` och de
 sorter som ska visas i `antal`, följd av `select intern.admin_paminnelse_skicka(<id>)`. Mejlet går till de
 riktiga mottagarna, märkt "[Test]" i ämnet och i brevet, och jobbet köar eller prövar aldrig om ett.
