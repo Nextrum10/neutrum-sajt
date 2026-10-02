@@ -27,6 +27,15 @@
    Ingen supabase-js, inget NX utom sidhuvudets beteenden, som startas
    om de finns. Går något annat på sidan sönder ska provet ändå gå att
    göra. Sidan är bara svensk, så texterna står här direkt.
+
+   PROVLÄGET FÖR ADMIN (?prova, 2026-10-02)
+
+   Admin öppnar samma sida från adminvyn och gör provet som den som
+   söker gör det. Anropet bär adminens egen inloggning i stället för en
+   nyckel, och edge-funktionen prövar att det är admin innan något
+   lämnas ut. Ingenting sparas, och efteråt står genomgången fråga för
+   fråga med facit, som funktionen skickar bara i det här läget. Bara
+   här används supabase-js, och bara för att läsa inloggningen.
    ============================================================ */
 (function () {
   'use strict';
@@ -38,6 +47,8 @@
   const MANADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti',
                    'september', 'oktober', 'november', 'december'];
   const DAGAR = ['söndag', 'måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag'];
+
+  const PROVA = new URLSearchParams(location.search).has('prova');
 
   let nyckel = '';
   let fragor = [];
@@ -82,13 +93,31 @@
   }
 
   /* ---------- anropet ---------- */
+  /* Adminens token i provläget. supa är en const på toppnivå i
+     nextrum-app.js och nås därför som identifierare, inte via window. */
+  async function adminToken() {
+    try {
+      if (typeof supa === 'undefined' || !supa) return '';
+      const { data } = await supa.auth.getSession();
+      return (data && data.session && data.session.access_token) || '';
+    } catch (e) { return ''; }
+  }
+
   async function anropa(kropp) {
     let svar;
+    const headers = { 'content-type': 'application/json' };
+    let grund = { t: nyckel };
+    if (PROVA) {
+      const token = await adminToken();
+      if (!token) return { status: 401, data: {} };
+      headers.authorization = 'Bearer ' + token;
+      grund = { prova: true };
+    }
     try {
       svar = await fetch(ADRESS, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(Object.assign({ t: nyckel }, kropp))
+        headers: headers,
+        body: JSON.stringify(Object.assign(grund, kropp))
       });
     } catch (e) {
       return { natet: true };
@@ -109,8 +138,8 @@
   async function start() {
     startaSidhuvudet();
 
-    nyckel = (new URLSearchParams(location.search).get('t') || '').trim();
-    if (!UUID.test(nyckel)) {
+    nyckel = PROVA ? 'prova' : (new URLSearchParams(location.search).get('t') || '').trim();
+    if (!PROVA && !UUID.test(nyckel)) {
       felruta('Länken saknar sin kod. Öppna länken i mejlet en gång till, eller skriv till '
         + EPOST + ' så skickar vi den igen.');
       return;
@@ -120,6 +149,16 @@
     const r = await anropa({ handling: 'hamta' });
     if (r.natet) {
       felruta('Ingen kontakt med servern. Kontrollera uppkopplingen och ladda om sidan.');
+      return;
+    }
+    if (PROVA && (r.status === 401 || r.status === 403)) {
+      lage('<div class="nx-panel"><p style="margin:0"><b>Provläget är bara för admin.</b> '
+        + 'Logga in i <a href="/admin">adminvyn</a> och öppna provet därifrån.</p></div>');
+      return;
+    }
+    if (PROVA && r.status === 404) {
+      /* Den gamla funktionen kräver en nyckel och svarar 404 utan den. */
+      felruta('Provläget finns inte i driften än: edge-funktionen utbildningsprov behöver driftsättas.');
       return;
     }
     if (r.status === 404) {
@@ -152,6 +191,14 @@
     }
 
     fragor = Array.isArray(d.fragor) ? d.fragor : [];
+    if (PROVA) {
+      lage('<div class="nx-panel prov-provlage"><p style="margin:0"><b>Provläge för admin.</b> '
+        + 'Det här är provet som den som söker ser, med ' + fragor.length + ' frågor och '
+        + krav + ' rätt för godkänt. Ingenting sparas och ingen ansökan påverkas. '
+        + 'Efteråt ser du facit fråga för fråga, vilket den som söker aldrig gör.</p></div>');
+      ritaProvet();
+      return;
+    }
     lage('<p style="margin:0">' + hej + 'Provet är öppet till och med <b>'
       + esc(dagText(d.sista_dag)) + '</b>. Det har ' + fragor.length + ' frågor och du behöver '
       + krav + ' rätt för att bli godkänd. Välj det svar som stämmer bäst med handboken.'
@@ -245,6 +292,10 @@
       $('prov-besvarade').textContent = 'Ingen kontakt med servern. Svaren finns kvar, försök igen.';
       return;
     }
+    if (PROVA && (r.status === 401 || r.status === 403)) {
+      $('prov-besvarade').textContent = 'Inloggningen som admin har gått ut. Logga in i adminvyn i en annan flik och försök igen.';
+      return;
+    }
     if (r.status !== 200) {
       $('prov-besvarade').textContent = r.status === 404
         ? 'Länken gäller inte längre. Skriv till ' + EPOST + '.'
@@ -274,7 +325,7 @@
       '<li class="' + (a.ratt < a.antal ? 'ar-miss' : '') + '"><span>' + esc(a.namn) + '</span>'
       + '<b>' + a.ratt + ' av ' + a.antal + '</b></li>').join('') + '</ul>';
 
-    ruta.innerHTML = d.godkant
+    ruta.innerHTML = PROVA ? provlagetsResultat(d, lista) : d.godkant
       ? '<h2>Grattis, du klarade provet!</h2>'
         + '<p class="prov-poang">' + d.ratt + ' av ' + d.antal + '</p>'
         + '<p>Introduktionen är klar. Nu kommer ett mejl om sista steget: att skapa ditt konto på '
@@ -302,6 +353,29 @@
       window.scrollTo(0, 0);
       start();
     });
+  }
+
+  /* Provläget: poängen, avsnitten och genomgången med facit. Bara här,
+     och bara för att funktionen skickar genomgången till admin. */
+  function provlagetsResultat(d, lista) {
+    const gg = Array.isArray(d.genomgang) ? d.genomgang : [];
+    const fel = gg.filter(g => !g.stammer).length;
+    return '<h2>' + (d.godkant ? 'Godkänt' : 'Inte godkänt') + ' (provläge)</h2>'
+      + '<p class="prov-poang">' + d.ratt + ' av ' + d.antal + '</p>'
+      + '<p>Godkänt kräver ' + d.krav + ' rätt. Inget av det här sparades. Den som söker ser '
+      + 'bara avsnitten nedan, aldrig vilka frågor som blev fel.</p>'
+      + lista
+      + '<h3 class="prov-gg-rubrik">Facit fråga för fråga' + (fel ? ', ' + fel + ' fel' : '') + '</h3>'
+      + '<ol class="prov-gg">' + gg.map(g =>
+          '<li class="' + (g.stammer ? 'ar-ratt' : 'ar-fel') + '">'
+          + '<p class="prov-gg-fraga"><em>' + g.nr + '.</em> ' + esc(g.fraga) + '</p>'
+          + (g.stammer
+            ? '<p class="prov-gg-svar"><b>Rätt:</b> ' + esc(g.ratt) + '</p>'
+            : '<p class="prov-gg-svar prov-gg-ditt"><b>Ditt svar:</b> ' + esc(g.ditt || 'inget') + '</p>'
+              + '<p class="prov-gg-svar"><b>Rätt svar:</b> ' + esc(g.ratt) + '</p>')
+          + '</li>').join('') + '</ol>'
+      + '<div class="nx-cta-rad"><button type="button" class="btn btn-primary btn-lg" id="prov-igen">'
+      + 'Gör om provet</button></div>';
   }
 
   /* Sidhuvudet (menyn, inloggningslänken) om NX laddade. Utan NX
