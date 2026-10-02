@@ -366,7 +366,7 @@ Det som stod i Att göra när första migrationen kördes lades in som "redan me
 Migrationen rättade det: de raderna räknas som ännu inte mejlade och går med i första morgonmejlet, eftersom
 det som ligger och väntar är vad mejlet finns till för. En ansökan som redan låg i Att göra får ändå inget mejl.
 
-**I drift 2026-10-02** (migrationen `20261002170000`, registrerad med samma md5 som filen; edge-funktionen v2;
+**I drift 2026-10-02** (migrationen `20261002170000`, registrerad med samma md5 som filen; edge-funktionen v3;
 jobb 38 aktivt igen). Funktionskropparna jämfördes med filen (md5) och ingen inloggad roll kan köra dem. Ett
 testmejl (slag `prov`) skickades till alla tre mottagarna och landade i inkorgen, märkt "[Test]". Det första
 riktiga morgonmejlet kommer 2026-10-03 kl. 9 med det som då ligger kvar: i dag fem saker (två pass utan rapport,
@@ -374,8 +374,8 @@ en faktura att lägga in i Fortnox, en utbetalning, en uppgift från systemet). 
 vid driftsättningen får inget mejl. Hela `rls-test.sql` kördes lokalt mot det riktiga schemat
 (`verktyg/lokal-databas.sh`, alla 159 migrationer): **1267 av 1267 ok**, varav 47 i avsnitt 16, också att `anon`
 kan skicka en ansökan med triggern på. **Inte provat i driften:** triggern på en riktig ansökan (en falsk
-ansökan hade gett er ett falskt larm). Den driftsatta funktionen skiljer sig från main i tre ord i kommentarer
-(inklistringen), inte i kod; nästa driftsättning rättar det. Mina provrester i driften (`zz_prov_*`, en tabell och
+ansökan hade gett er ett falskt larm). Edge-funktionen är v3 och jämförd fil för fil mot main: alla elva filer
+identiska (v2 hade tre ord fel i kommentarer från inklistringen, och rättades). Mina provrester i driften (`zz_prov_*`, en tabell och
 två utskicksrader) väntar på en bekräftelse av verktygets `drop`/`delete`-spärr.
 
 Av slås morgonmejlet genom att stänga av jobbet `admin-paminnelse` (`cron.alter_job(jobid, active := false)`,

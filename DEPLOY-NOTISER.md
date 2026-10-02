@@ -350,7 +350,7 @@ som den skapas, och en funktion som inte förstår `slag` skulle skicka fel mejl
    `_ansokan_direkt`, `_paminnelse_skicka`, `_paminnelse_stada`, `public.admin_paminnelse_ta`, `_klar`) med filen.
 4. Kör `verktyg/rls-test.sql` (hela filen, avsnitt 16 är omskrivet). Lokalt, med `verktyg/lokal-databas.sh`.
 
-**Gjort 2026-10-02:** funktionen driftsatt (v2), migrationen körd avsnitt för avsnitt (funktionerna i ett svep per
+**Gjort 2026-10-02:** funktionen driftsatt (v3, jämförd fil för fil mot main), migrationen körd avsnitt för avsnitt (funktionerna i ett svep per
 avsnitt, ingen sats med `drop` eller två `delete`) och registrerad med rätt md5, funktionskropparna jämförda med
 filen, jobbet på igen och ett testmejl provat mot de riktiga mottagarna. Hela `rls-test.sql` kördes lokalt mot det
 riktiga schemat: 1267 av 1267 ok. **Kvar:** att se det första morgonmejlet 2026-10-03 kl. 9, och att bekräfta
