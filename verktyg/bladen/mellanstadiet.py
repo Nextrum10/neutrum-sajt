@@ -80,13 +80,13 @@ BLAD = [
          instruktion=['Synonymer är ord som betyder ungefär samma sak: glad och lycklig.',
                       'Motsatsord betyder tvärtom: varm och kall.',
                       'Ett ord kan bilda ett nytt ord tillsammans med ett annat: skola + bok = skolbok.'],
-         uppgifter=[('Skriv ett synonym till rolig: ___', 0), ('Skriv ett synonym till snabb: ___', 0),
-                    ('Skriv ett synonym till arg: ___', 0), ('Skriv ett synonym till vacker: ___', 0),
+         uppgifter=[('Skriv en synonym till rolig: ___', 0), ('Skriv en synonym till snabb: ___', 0),
+                    ('Skriv en synonym till arg: ___', 0), ('Skriv en synonym till vacker: ___', 0),
                     ('Skriv motsatsen: varm ___, tung ___, ung ___, mörk ___', 0),
                     ('Skriv motsatsen: öppna ___, vinna ___, komma ___, glömma ___', 0),
                     ('Ringa in synonymen till trött: utvilad – sömnig – pigg', 0),
                     ('Sätt ihop orden till ett nytt ord: snö + boll = ___, tand + borste = ___, regn + jacka = ___', 0),
-                    ('Dela upp orden i de ord de består av:\nskolgård = ___ + ___   cykelhjälm = ___ + ___', 0),
+                    ('Dela upp orden i de ord de består av:\nskolgård = ___ + ___\ncykelhjälm = ___ + ___', 0),
                     ('Skriv en mening där du använder ett ord och dess motsats.', 2)],
          beskrivning='Synonymer, motsatsord och sammansatta ord: hitta, sortera och bilda egna.'),
 
@@ -132,7 +132,7 @@ BLAD = [
                     ('En rektangel har omkretsen 20 cm och den ena sidan är 6 cm. Hur lång är den andra sidan? [] cm', 0),
                     ('En rektangel har arean 36 cm² och den ena sidan är 9 cm. Hur lång är den andra sidan? [] cm', 0),
                     ('Ett rum är 4 m brett och 5 m långt. Hur många kvadratmeter är golvet? [] m²', 0),
-                    ('Rita två olika rektanglar som båda har arean 12 cm². Skriv sidornas längder. En ruta är 1 cm.', 'ruta')],
+                    ('Rita två olika rektanglar som båda har arean 12 cm². Skriv sidornas längder. Låt varje ruta ha sidan 1 cm.', 'ruta')],
          beskrivning='Omkrets och area av rektanglar och kvadrater: räkna, räkna baklänges och rita.'),
 
     dict(fil='ak5-matematik-diagram-och-medelvarde', arskurs='ak5', amne='Matematik',
@@ -190,7 +190,7 @@ BLAD = [
                'Vikingarna handlade med silver, pälsar och slavar, och en del plundrade också kloster och '
                'städer. Vikingar från Sverige reste ofta österut, genom det som i dag är Ryssland och Ukraina och vidare mot Konstantinopel. '
                'De trodde på många gudar, till exempel Oden, Tor och Frej. Viktiga frågor avgjordes på tinget, '
-               'där fria människor samlades. För att skriva använde vikingarna runor, som ristades i sten och trä.'),
+               'där fria män samlades. För att skriva använde vikingarna runor, som ristades i sten och trä.'),
          uppgifter=[('När var vikingatiden ungefär?', 1),
                     ('Vad kallades de smala skeppen som vikingarna seglade i?', 1),
                     ('Nämn två saker som vikingarna handlade med.', 1),
